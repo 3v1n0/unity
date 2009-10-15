@@ -1,0 +1,39 @@
+bin_PROGRAMS = test-unity
+
+test_unity_CPPFLAGS = \
+  -I$(top_builddir)/src \
+  $(BASE_CFLAGS) \
+  $(MAINTAINER_CFLAGS)
+
+test_unity_LDADD = \
+  $(top_builddir)/src/libunity-static.la \
+  $(BASE_LIBS) \
+  $(MAINTAINER_LIBS)
+
+test_unity_VALAFLAGS = \
+  --vapidir=$(top_builddir)/src \
+  --pkg gtk+-2.0 \
+  --pkg gee-1.0 \
+  --pkg unity-static \
+  $(MAINTAINER_VALAFLAGS)
+
+test_unity_SOURCES = \
+  test-unity.vala
+
+# GTester stuff
+XML_REPORT = unity-check-results.xml
+HTML_REPORT = unity-check-results.html
+
+unity-tester: test-unity
+	@gtester -o=$(XML_REPORT) ./test-unity
+
+check-report:
+	@gtester -o=$(XML_REPORT) -k ./test-unity \
+	&& (gtester-report $(XML_REPORT) \
+			| sed 's/GTester Unit Test Report</>GTester Unit Test Report (normal)</' \
+			> $(HTML_REPORT)) \
+	&& gnome-open $(HTML_REPORT)
+
+check-local: unity-tester
+
+CLEANFILES = *.stamp $(XML_REPORT) $(HTML_REPORT)
