@@ -42,6 +42,8 @@ namespace Unity
       this.app.closed.connect(this.on_app_closed);
       
       button_press_event.connect(this.on_pressed);
+      
+      set_reactive(true);
     }
     
     /** 
