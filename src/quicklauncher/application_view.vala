@@ -38,8 +38,10 @@ namespace Unity
       add_actor(this.icon);
       generate_view_from_app ();
       
-      this.app.connect.opened(this.on_app_opened);
-      this.app.connect.closed(this.on_app_closed);
+      this.app.opened.connect(this.on_app_opened);
+      this.app.closed.connect(this.on_app_closed);
+      
+      button_press_event.connect(this.on_pressed);
     }
     
     /** 
@@ -99,14 +101,20 @@ namespace Unity
       this.icon.set_from_pixbuf (pixbuf);
     }
  
-    private on_app_opened (void *wnckapp, void *p1) 
+    private void on_app_opened (void *wnckapp, void *p1) 
     {
       /* the launcherapi needs metadata fixes here first */
     }
 
-    private on_app_closed (void *wnckapp, void *p1) 
+    private void on_app_closed (void *wnckapp, void *p1) 
     {
       /* the launcherapi needs metadata fixes here first */
+    }
+    
+    private bool on_pressed(Clutter.Event src) 
+    {
+      app.launch ();
+      return true;
     }
 
   }
