@@ -33,21 +33,20 @@ namespace Unity
     }
     
     private Launcher.Appman appman;
+    private Launcher.Session session;
     
     public QuickLauncher (Clutter.Stage stage)
     { 
+      this.appman = Launcher.Appman.get_default ();
+      this.session = Launcher.Session.get_default ();
       view = Ctk.Toplevel.get_default_for_stage (stage);
       stage.add_actor (view);
-      this.appman = Launcher.Appman.get_default ();
+      
       var myview = view as Ctk.Toplevel;
       var firefox = this.appman.get_application_for_desktop_file("/usr/share/applications/firefox-3.0.desktop");
       var tmpactor = new Unity.ApplicationView (firefox);
       
       myview.add_actor (tmpactor);
-      
-      
-      
-      
     }
   }
 }

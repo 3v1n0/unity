@@ -104,14 +104,14 @@ namespace Unity
       this.icon.set_from_pixbuf (pixbuf);
     }
  
-    private void on_app_opened (void *wnckapp, void *p1) 
+    private void on_app_opened (Wnck.Application wnck_app) 
     {
-      /* the launcherapi needs metadata fixes here first */
+      debug("app %s opened", app.name);
     }
 
-    private void on_app_closed (void *wnckapp, void *p1) 
+    private void on_app_closed (Wnck.Application wnck_app) 
     {
-      /* the launcherapi needs metadata fixes here first */
+      debug("app %s closed", app.name);
     }
     
     private bool on_pressed(Clutter.Event src) 

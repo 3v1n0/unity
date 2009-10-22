@@ -33,8 +33,8 @@ namespace Launcher {
 		public string name { get; }
 		public bool running { get; }
 		public string unique_string { get; }
-		public virtual signal void closed (void* wnckapp, void* p1);
-		public virtual signal void opened (void* wnckapp, void* p1);
+		public virtual signal void closed (Wnck.Application wnckapp);
+		public virtual signal void opened (Wnck.Application wnckapp);
 	}
 	[CCode (cheader_filename = "launcher/launcher.h")]
 	public class Appman : GLib.Object {
