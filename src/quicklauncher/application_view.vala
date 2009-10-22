@@ -98,7 +98,7 @@ namespace Unity
     private void generate_view_from_app ()
     {
       debug("%s", app.name);
-      var pixbuf = make_icon (app.name);
+      var pixbuf = make_icon (app.icon_name);
       this.icon.set_from_pixbuf (pixbuf);
     }
  
