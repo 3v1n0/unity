@@ -18,12 +18,27 @@
  */
 
 namespace Unity
-{
+{  
+  
   public class QuickLauncher : Object
   {
-    public QuickLauncher ()
+
+    /* this is just a toplevel for now, until some sort of api between unity
+     * and its interfaces is standardised
+     */
+    public Clutter.Actor _view;
+    public Clutter.Actor view {
+        get { return _view; }
+        set { _view = value; }
+    }
+    
+    public QuickLauncher (Clutter.Stage stage)
     { 
-      stdout.printf ("QuickLauncher Init");
+      view = Ctk.Toplevel.get_default_for_stage (stage);
+      var myview = view as Ctk.Toplevel;
+      var tmpactor = new Ctk.Text("Foobar");
+      myview.add_actor(tmpactor);
+      
     }
   }
 }

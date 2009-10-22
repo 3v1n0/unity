@@ -71,6 +71,8 @@ PKG_CHECK_MODULES(BASE,
                   gee-1.0
                   clutter-1.0 >= 1.0
                   clutter-gtk-0.10 >= 0.10
+                  clutk-0.3 >= 0.3
+                  launcher-0.3 >= 0.3
                   )
 AC_SUBST(BASE_CFLAGS)
 AC_SUBST(BASE_LIBS)
