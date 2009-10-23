@@ -36,7 +36,8 @@ namespace Unity.Quicklauncher
   {
     
     private Ctk.VBox container;
-    private Gee.ArrayList<ApplicationView> apps;
+    private Gee.ArrayList<ApplicationView> widgets;
+    private Gee.ArrayList<Launcher.Application> apps;
     
     private Launcher.Appman appman;
     private Launcher.Session session;
@@ -47,27 +48,77 @@ namespace Unity.Quicklauncher
       this.appman = Launcher.Appman.get_default ();
       this.session = Launcher.Session.get_default ();
       
-      this.apps = new Gee.ArrayList<ApplicationView> ();
-    
+      this.widgets = new Gee.ArrayList<ApplicationView> ();
+      this.apps = new Gee.ArrayList<Launcher.Application> ();
+      
       container = new Ctk.VBox (2);
       add_actor (container);
       
-      /* for now just add some hard-coded applications here */
-      var firefox = this.appman.get_application_for_desktop_file("/usr/share/applications/firefox-3.0.desktop");
-      var evolution = this.appman.get_application_for_desktop_file("/usr/share/applications/evolution.desktop");
-      var empathy = this.appman.get_application_for_desktop_file("/usr/share/applications/empathy.desktop");
+      build_favorites ();
       
-      var tmpactor = new ApplicationView (firefox);
-      apps.add (tmpactor);
-      container.pack(tmpactor, false, false);
+      this.session.application_opened.connect (handle_session_application);
       
-      tmpactor = new ApplicationView (evolution);
-      apps.add (tmpactor);
-      container.pack(tmpactor, false, false);
+    }
+    
+    /**
+     * goes though our favorites and addds them to the container
+     * marks them as sticky also
+     */
+    private void build_favorites () 
+    {
+      var favorites = Launcher.Favorites.get_default ();
       
-      tmpactor = new ApplicationView (empathy);
-      apps.add (tmpactor);
-      container.pack(tmpactor, false, false);
+      unowned SList<string> favorite_list = favorites.get_favorites();
+      foreach (weak string uid in favorite_list)
+        {
+          
+          // we only want favorite *applications* for the moment 
+          var type = favorites.get_string(uid, "type");
+          if (type != "application")
+              continue;
+              
+          string desktop_file = favorites.get_string(uid, "desktop_file");
+          assert (desktop_file != "");
+          
+          var newapp = appman.get_application_for_desktop_file (desktop_file);
+          add_application (newapp);
+        }
+    }
+    
+    private void handle_session_application (Launcher.Application app) 
+    {
+      /* before passing applications to add_application, we want to handle each
+       * one to make sure its not a panel or whatever
+       */
+      /* this is *alkward*, have to go though the wnckapplications and then the 
+       * wnckapplication windows and make sure that we have a valid window
+       * i'll transfer this type of code to liblauncher soonish 
+       * something like Launcher.Application.is_visible
+       */
+      bool app_is_visible = false;
+      
+      unowned GLib.SList<Wnck.Application> wnckapps = app.get_wnckapps ();
+      foreach (Wnck.Application wnckapp in wnckapps)
+        {
+          unowned GLib.List<Wnck.Window> windows = wnckapp.get_windows ();
+          foreach (Wnck.Window window in windows)
+            {
+              var type = window.get_window_type ();
+              if (!(type == Wnck.WindowType.DESKTOP
+                || type == Wnck.WindowType.DOCK
+                || type == Wnck.WindowType.SPLASHSCREEN
+                || type == Wnck.WindowType.MENU))
+                {
+                  app_is_visible = true;
+                }
+            }
+        }
+        
+      if (app_is_visible)
+        {
+          add_application(app);
+        }
+        
     }
     
     /**
@@ -81,8 +132,9 @@ namespace Unity.Quicklauncher
         return;
         
       var app_view = new ApplicationView (app);
-      apps.add (app_view);
-      container.pack(tmpactor, false, false);
+      apps.add (app);
+      widgets.add (app_view);
+      container.pack(app_view, false, false);
     }
     
   }

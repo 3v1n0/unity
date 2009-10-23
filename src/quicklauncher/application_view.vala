@@ -25,6 +25,28 @@ namespace Unity.Quicklauncher
     
     public Launcher.Application app;
     private Ctk.Image icon;
+    private int num_apps;
+    private bool _is_sticky;
+    
+    /* if we are not sticky anymore and we are not running, request remove */
+    public bool is_sticky {
+      get { return _is_sticky; }
+      set {
+        if (value == false && !is_running) 
+          this.request_remove ();
+        _is_sticky = value;
+      }
+    }
+    
+    public bool is_running {
+      get { return app.running; }
+    }
+    
+    /**
+     * signal is called when the application is not marked as sticky and 
+     * it is not running
+     */
+    public signal void request_remove ();
     
     public ApplicationView (Launcher.Application app)
     {
@@ -32,7 +54,7 @@ namespace Unity.Quicklauncher
        * it will (hopefully) be able to launch, track when this application 
        * opens and closes and be able to get desktop file info
        */
-      
+      num_apps = 0;
       this.app = app;
       this.icon = new Ctk.Image (42);
       add_actor(this.icon);
@@ -42,6 +64,8 @@ namespace Unity.Quicklauncher
       this.app.closed.connect(this.on_app_closed);
       
       button_press_event.connect(this.on_pressed);
+      
+      this.app.notify["running"].connect(this.notify_on_is_running);
       
       set_reactive(true);
     }
@@ -119,6 +143,17 @@ namespace Unity.Quicklauncher
       app.launch ();
       return true;
     }
+    
+    /**
+     * if the application is not running anymore and we are not sticky, we
+     * request to be removed
+     */
+    private void notify_on_is_running ()
+    {
+      if (!this.is_running && !this.is_sticky)
+          this.request_remove ();      
+    }
+          
 
   }
 }

@@ -16,7 +16,6 @@
  * Authored by Gordon Allott <gord.allott@canonical.com>
  *
  */
-using GtkClutter;
 
 namespace Unity {
   
