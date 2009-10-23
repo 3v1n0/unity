@@ -30,22 +30,23 @@ namespace Unity.Quicklauncher
         get { return _view; }
         set { _view = value; }
     }
-    
-    private Launcher.Appman appman;
-    private Launcher.Session session;
+  
+    private ApplicationStore store;
     
     public Main (Clutter.Stage stage)
     { 
-      this.appman = Launcher.Appman.get_default ();
-      this.session = Launcher.Session.get_default ();
       view = Ctk.Toplevel.get_default_for_stage (stage);
       stage.add_actor (view);
       
       var myview = view as Ctk.Toplevel;
-      var firefox = this.appman.get_application_for_desktop_file("/usr/share/applications/firefox-3.0.desktop");
-      var tmpactor = new ApplicationView (firefox);
+      store = new ApplicationStore ();
+      myview.add_actor (store);
+//      var firefox = this.appman.get_application_for_desktop_file("/usr/share/applications/firefox-3.0.desktop");
+//      var tmpactor = new ApplicationView (firefox);
       
-      myview.add_actor (tmpactor);
+      
+      
+      //myview.add_actor (tmpactor);
     }
   }
 }

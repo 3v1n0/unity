@@ -21,7 +21,9 @@ libunity_quicklauncher_la_LIBADD = \
   $(BASE_LIBS) 
 
 libunity_quicklauncher_la_SOURCES = \
-  quicklauncher.vala \
-  application_view.vala
+  application_view.vala \
+  application_store.vala \
+  quicklauncher.vala
+  
 
 CLEANFILES = *.stamp
