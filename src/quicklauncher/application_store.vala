@@ -17,6 +17,19 @@
  *
  */
 
+/*
+ * Notes!
+ * 
+ * this application store object exists to half-manage the ApplicationView objects
+ * this does not mean that it handles *everything* about them. for example the 
+ * applicationview objects contain the LauncherApplication data provider so 
+ * only they know when they truely need to be removed, if ever. (for example, 
+ * sticky applications will never remove themselfs).
+ * 
+ * however we need a mechanism of loading new applications that are not sticky
+ * and loading default favorites
+ */
+
 namespace Unity.Quicklauncher
 {
   class ApplicationStore : Ctk.Bin
@@ -57,8 +70,20 @@ namespace Unity.Quicklauncher
       container.pack(tmpactor, false, false);
     }
     
-    
-    
+    /**
+     * adds the Launcher.Application @app to this container
+     */
+    private void add_application (Launcher.Application app) 
+    {
+      if (app in this.apps)
+        /* the application object will signal itself, we don't need to 
+         * do a thing */
+        return;
+        
+      var app_view = new ApplicationView (app);
+      apps.add (app_view);
+      container.pack(tmpactor, false, false);
+    }
     
   }
 }

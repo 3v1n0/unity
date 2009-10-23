@@ -23,7 +23,7 @@ namespace Unity.Quicklauncher
   public class ApplicationView : Ctk.Bin
   {
     
-    private Launcher.Application app;
+    public Launcher.Application app;
     private Ctk.Image icon;
     
     public ApplicationView (Launcher.Application app)
