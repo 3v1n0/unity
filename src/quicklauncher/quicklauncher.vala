@@ -17,10 +17,9 @@
  *
  */
 
-namespace Unity
+namespace Unity.Quicklauncher
 {  
-  
-  public class QuickLauncher : Object
+  public class Main : Object
   {
 
     /* this is just a toplevel for now, until some sort of api between unity
@@ -35,7 +34,7 @@ namespace Unity
     private Launcher.Appman appman;
     private Launcher.Session session;
     
-    public QuickLauncher (Clutter.Stage stage)
+    public Main (Clutter.Stage stage)
     { 
       this.appman = Launcher.Appman.get_default ();
       this.session = Launcher.Session.get_default ();
@@ -44,7 +43,7 @@ namespace Unity
       
       var myview = view as Ctk.Toplevel;
       var firefox = this.appman.get_application_for_desktop_file("/usr/share/applications/firefox-3.0.desktop");
-      var tmpactor = new Unity.ApplicationView (firefox);
+      var tmpactor = new ApplicationView (firefox);
       
       myview.add_actor (tmpactor);
     }

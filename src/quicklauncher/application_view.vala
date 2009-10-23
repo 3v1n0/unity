@@ -17,7 +17,7 @@
  *
  */
 
-namespace Unity
+namespace Unity.Quicklauncher
 {  
   
   public class ApplicationView : Ctk.Bin

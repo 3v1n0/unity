@@ -29,7 +29,7 @@ public class Main
     window = new Unity.Window ();
     window.set_fullscreen ();
     
-    var quicklauncher = new Unity.QuickLauncher (window.stage);
+    var quicklauncher = new Unity.Quicklauncher.Main (window.stage);
     window.stage.show_all ();
     stdout.printf ("Hello World!\n");
 
