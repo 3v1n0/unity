@@ -28,7 +28,8 @@ libunity_static_la_LIBADD = \
   $(BASE_LIBS)
 
 libunity_static_la_SOURCES = \
-  unity.vala
+  unity.vala \
+  window.vala
 
 # unity binary
 unity_CPPFLAGS = \
@@ -54,9 +55,7 @@ unity_LDADD = \
   $(BASE_LIBS)
 
 unity_SOURCES = \
-  main.vala \
-  unity.vala \
-  window.vala
+  main.vala
   
 
 CLEANFILES = *.stamp
