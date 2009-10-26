@@ -9,7 +9,7 @@ libunity_quicklauncher_la_CPPFLAGS = \
 libunity_quicklauncher_la_VALAFLAGS = \
   -H unity-quicklauncher.h -d . \
   --library unity-quicklauncher \
-  --vapidir=../../vapi/ \
+  --vapidir=$(top_builddir)/vapi/ \
   --pkg clutter-1.0 \
   --pkg clutk-0.3 \
   --pkg launcher-0.3 \

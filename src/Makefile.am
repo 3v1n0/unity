@@ -15,7 +15,7 @@ libunity_static_la_CPPFLAGS = \
 libunity_static_la_VALAFLAGS = \
   -H unity-static.h -d . \
   --library unity-static \
-  --vapidir=../vapi/ \
+  --vapidir=$(top_builddir)/vapi/ \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg gtk+-2.0 \
@@ -40,9 +40,7 @@ unity_CPPFLAGS = \
 unity_VALAFLAGS = \
   --vapidir=./quicklauncher \
   --vapidir=./ \
-  --vapidir=../vapi/ \
-  --vapidir=./vapi/ \
-  --vapidir=../../vapi/ \
+  --vapidir=$(top_builddir)/vapi/ \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg gtk+-2.0 \

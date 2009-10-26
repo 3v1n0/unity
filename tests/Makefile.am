@@ -15,7 +15,7 @@ test_unity_LDADD = \
 test_unity_VALAFLAGS = \
   --vapidir=$(top_builddir)/src \
   --vapidir=$(top_builddir)/src/quicklauncher \
-  --vapidir=../vapi/ \
+  --vapidir=$(top_builddir)/vapi/ \
   --vapidir=./ \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
