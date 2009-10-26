@@ -1,5 +1,3 @@
-BASEDIR=./
-
 SUBDIRS = src tests
 
 # Test reports
