@@ -17,13 +17,30 @@
  *
  */
 
-namespace Unity
-{
-  public class QuickLauncher : Object
+namespace Unity.Quicklauncher
+{  
+  public class Main : Object
   {
-    public QuickLauncher ()
-    { 
-      stdout.printf ("QuickLauncher Init");
+
+    /* this is just a toplevel for now, until some sort of api between unity
+     * and its interfaces is standardised
+     */
+    public Clutter.Actor _view;
+    public Clutter.Actor view {
+        get { return _view; }
+        set { _view = value; }
     }
+  
+    private ApplicationStore store;
+    
+    public Main (Clutter.Stage stage)
+    { 
+      view = Ctk.Toplevel.get_default_for_stage (stage);
+      stage.add_actor (view);
+      
+      var myview = view as Ctk.Toplevel;
+      store = new ApplicationStore ();
+      myview.add_actor (store);
+	}
   }
 }

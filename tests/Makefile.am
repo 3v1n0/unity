@@ -2,17 +2,20 @@ bin_PROGRAMS = test-unity
 
 test_unity_CPPFLAGS = \
   -I$(top_builddir)/src \
+  -I$(top_builddir)/src/quicklauncher \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS)
 
 test_unity_LDADD = \
   $(top_builddir)/src/libunity-static.la \
+  $(top_builddir)/src/quicklauncher/libunity-quicklauncher.la \
   $(BASE_LIBS) \
   $(MAINTAINER_LIBS)
 
 test_unity_VALAFLAGS = \
   --vapidir=$(top_builddir)/src \
-  --vapidir=../vapi/ \
+  --vapidir=$(top_builddir)/src/quicklauncher \
+  --vapidir=$(top_builddir)/vapi/ \
   --vapidir=./ \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
@@ -22,7 +25,10 @@ test_unity_VALAFLAGS = \
   --pkg x11 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
+  --pkg clutk-0.3 \
+  --pkg launcher-0.3 \
   --pkg unity-static \
+  --pkg unity-quicklauncher \
   $(MAINTAINER_VALAFLAGS)
 
 test_unity_SOURCES = \

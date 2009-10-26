@@ -2,7 +2,7 @@ SUBDIRS = \
   quicklauncher
 
 noinst_LTLIBRARIES = \
-  libunity-static.la
+  libunity-static.la 
 
 bin_PROGRAMS = \
   unity
@@ -15,7 +15,7 @@ libunity_static_la_CPPFLAGS = \
 libunity_static_la_VALAFLAGS = \
   -H unity-static.h -d . \
   --library unity-static \
-  --vapidir=../vapi/ \
+  --vapidir=$(top_builddir)/vapi/ \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg gtk+-2.0 \
@@ -34,11 +34,13 @@ libunity_static_la_SOURCES = \
 # unity binary
 unity_CPPFLAGS = \
   $(BASE_CFLAGS) \
-  $(MAINTAINER_CFLAGS)
+  $(MAINTAINER_CFLAGS) \
+  -I quicklauncher/
 
 unity_VALAFLAGS = \
-  --vapidir=../vapi/ \
+  --vapidir=./quicklauncher \
   --vapidir=./ \
+  --vapidir=$(top_builddir)/vapi/ \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg gtk+-2.0 \
@@ -47,15 +49,18 @@ unity_VALAFLAGS = \
   --pkg x11 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
+  --pkg clutk-0.3 \
+  --pkg launcher-0.3 \
   --pkg unity-static \
+  --pkg unity-quicklauncher \
   $(MAINTAINER_VALAFLAGS)
 
 unity_LDADD = \
   libunity-static.la \
+  quicklauncher/libunity-quicklauncher.la \
   $(BASE_LIBS)
 
 unity_SOURCES = \
   main.vala
-  
 
 CLEANFILES = *.stamp

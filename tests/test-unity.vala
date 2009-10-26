@@ -1,3 +1,4 @@
+/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
  * Copyright (C) 2009 Canonical Ltd
  *
@@ -16,13 +17,14 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
+using Unity;
 
 public class Main
 {
   public static int main (string[] args)
   {
     Gtk.init (ref args);
-	GtkClutter.init (ref args);
+    GtkClutter.init (ref args);
     Test.init (ref args);
 
     add_launcher_tests ();
@@ -48,5 +50,22 @@ public class Main
         assert (window.visible);
       }      
     );
+
+	Test.add_func ("/Unity/Quicklauncher/ApplicationView", () => {
+		var app = new Launcher.Application.from_desktop_file (
+				"/usr/share/applications/firefox.desktop");
+			
+		var appview = new Quicklauncher.ApplicationView (app);
+		assert (appview is Quicklauncher.ApplicationView);
+		assert (appview.app is Launcher.Application);
+		}
+		);
+
+  Test.add_func ("/Unity/Quicklauncher/ApplicationStore", () => {
+      var appstore = new Quicklauncher.ApplicationStore ();
+      assert (appstore is Quicklauncher.ApplicationStore);
+    }
+    );
+
   }
 }

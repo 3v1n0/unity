@@ -9,14 +9,21 @@ libunity_quicklauncher_la_CPPFLAGS = \
 libunity_quicklauncher_la_VALAFLAGS = \
   -H unity-quicklauncher.h -d . \
   --library unity-quicklauncher \
+  --vapidir=$(top_builddir)/vapi/ \
+  --pkg clutter-1.0 \
+  --pkg clutk-0.3 \
+  --pkg launcher-0.3 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
   $(MAINTAINER_VALAFLAGS)
 
 libunity_quicklauncher_la_LIBADD = \
-  $(BASE_LIBS)
+  $(BASE_LIBS) 
 
 libunity_quicklauncher_la_SOURCES = \
+  application_view.vala \
+  application_store.vala \
   quicklauncher.vala
+  
 
 CLEANFILES = *.stamp

@@ -28,7 +28,9 @@ public class Main
     
     window = new Unity.Window ();
     window.set_fullscreen ();
-    stdout.printf ("Hello World!\n");
+    
+    var quicklauncher = new Unity.Quicklauncher.Main (window.stage);
+    window.stage.show_all ();
 
     Gtk.main ();
 
