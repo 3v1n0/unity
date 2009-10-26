@@ -170,7 +170,7 @@ namespace Unity.Quicklauncher
     private void on_app_closed (Wnck.Application app) 
     {
       debug("app closed: %s", this.app.name);
-      if (!this.is_running) 
+      if (!this.is_running && !this.is_sticky) 
         this.request_remove (this);
       
     }
