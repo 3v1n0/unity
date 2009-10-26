@@ -33,7 +33,7 @@ namespace Unity.Quicklauncher
       get { return _is_sticky; }
       set {
         if (value == false && !is_running) 
-          this.request_remove ();
+          this.request_remove (this);
         _is_sticky = value;
       }
     }
@@ -46,7 +46,7 @@ namespace Unity.Quicklauncher
      * signal is called when the application is not marked as sticky and 
      * it is not running
      */
-    public signal void request_remove ();
+    public signal void request_remove (ApplicationView app);
     
     public ApplicationView (Launcher.Application app)
     {
@@ -164,10 +164,15 @@ namespace Unity.Quicklauncher
   
     private void on_app_opened (Wnck.Application app) 
     {
+      debug("app opened: %s", this.app.name);
     }
 
     private void on_app_closed (Wnck.Application app) 
     {
+      debug("app closed: %s", this.app.name);
+      if (!this.is_running) 
+        this.request_remove (this);
+      
     }
     
     private bool on_pressed(Clutter.Event src) 
@@ -189,7 +194,7 @@ namespace Unity.Quicklauncher
     private void notify_on_is_running ()
     {
       if (!this.is_running && !this.is_sticky)
-          this.request_remove ();      
+          this.request_remove (this);      
     }
           
 

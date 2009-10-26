@@ -137,7 +137,21 @@ namespace Unity.Quicklauncher
       apps.add (app);
       widgets.add (app_view);
       container.pack(app_view, false, false);
+      
+      app_view.request_remove.connect(remove_application);
     }
+    
+    
+    private void remove_application (ApplicationView app)
+    {
+      // for now just remove the application quickly. at some point
+      // i would assume we have to pretty fading though, thats trivial to do
+      
+      this.container.remove_actor(app);
+      apps.remove (app.app);
+      widgets.remove (app);
+      
+    } 
     
   }
 }
