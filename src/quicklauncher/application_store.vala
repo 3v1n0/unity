@@ -20,7 +20,8 @@
 /*
  * Notes!
  * 
- * this application store object exists to half-manage the ApplicationView objects
+ * this application store object exists to half-manage the ApplicationView 
+ * objects
  * this does not mean that it handles *everything* about them. for example the 
  * applicationview objects contain the LauncherApplication data provider so 
  * only they know when they truely need to be removed, if ever. (for example, 
@@ -32,7 +33,7 @@
 
 namespace Unity.Quicklauncher
 {
-  class ApplicationStore : Ctk.Bin
+  public class ApplicationStore : Ctk.Bin
   {
     
     private Ctk.VBox container;

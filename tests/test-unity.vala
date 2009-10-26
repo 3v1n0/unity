@@ -17,13 +17,14 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
+using Unity;
 
 public class Main
 {
   public static int main (string[] args)
   {
     Gtk.init (ref args);
-	GtkClutter.init (ref args);
+    GtkClutter.init (ref args);
     Test.init (ref args);
 
     add_launcher_tests ();
@@ -54,11 +55,17 @@ public class Main
 		var app = new Launcher.Application.from_desktop_file (
 				"/usr/share/applications/firefox.desktop");
 			
-		var appview = new Unity.Quicklauncher.ApplicationView (app);
-		assert (appview is Unity.Quicklauncher.ApplicationView);
+		var appview = new Quicklauncher.ApplicationView (app);
+		assert (appview is Quicklauncher.ApplicationView);
 		assert (appview.app is Launcher.Application);
 		}
 		);
+
+  Test.add_func ("/Unity/Quicklauncher/ApplicationStore", () => {
+      var appstore = new Quicklauncher.ApplicationStore ();
+      assert (appstore is Quicklauncher.ApplicationStore);
+    }
+    );
 
   }
 }
