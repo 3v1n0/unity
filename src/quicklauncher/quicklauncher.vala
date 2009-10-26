@@ -41,12 +41,6 @@ namespace Unity.Quicklauncher
       var myview = view as Ctk.Toplevel;
       store = new ApplicationStore ();
       myview.add_actor (store);
-//      var firefox = this.appman.get_application_for_desktop_file("/usr/share/applications/firefox-3.0.desktop");
-//      var tmpactor = new ApplicationView (firefox);
-      
-      
-      
-      //myview.add_actor (tmpactor);
-    }
+	}
   }
 }
