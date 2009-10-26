@@ -15,15 +15,21 @@ libunity_static_la_CPPFLAGS = \
 libunity_static_la_VALAFLAGS = \
   -H unity-static.h -d . \
   --library unity-static \
+  --vapidir=../vapi/ \
+  --pkg clutter-1.0 \
+  --pkg clutter-gtk-0.10 \
   --pkg gtk+-2.0 \
+  --pkg gdk-2.0 \
   --pkg gee-1.0 \
+  --pkg x11 \
   $(MAINTAINER_VALAFLAGS)
 
 libunity_static_la_LIBADD = \
   $(BASE_LIBS)
 
 libunity_static_la_SOURCES = \
-  unity.vala
+  unity.vala \
+  window.vala
 
 # unity binary
 unity_CPPFLAGS = \
@@ -31,7 +37,14 @@ unity_CPPFLAGS = \
   $(MAINTAINER_CFLAGS)
 
 unity_VALAFLAGS = \
+  --vapidir=../vapi/ \
   --vapidir=./ \
+  --pkg clutter-1.0 \
+  --pkg clutter-gtk-0.10 \
+  --pkg gtk+-2.0 \
+  --pkg gdk-2.0 \
+  --pkg gee-1.0 \
+  --pkg x11 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
   --pkg unity-static \
@@ -43,5 +56,6 @@ unity_LDADD = \
 
 unity_SOURCES = \
   main.vala
+  
 
 CLEANFILES = *.stamp

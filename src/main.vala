@@ -24,8 +24,10 @@ public class Main
     Unity.Window window;
 
     Gtk.init (ref args);
-
+    GtkClutter.init (ref args);
+    
     window = new Unity.Window ();
+    window.set_fullscreen ();
     stdout.printf ("Hello World!\n");
 
     Gtk.main ();

@@ -19,12 +19,5 @@
 
 namespace Unity
 {
-  public class Window : Gtk.Window
-  {
-    public Window ()
-    { 
-      this.title = "Unity";
-      this.show_all ();
-    }
-  }
+
 }

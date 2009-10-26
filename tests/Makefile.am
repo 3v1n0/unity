@@ -12,6 +12,14 @@ test_unity_LDADD = \
 
 test_unity_VALAFLAGS = \
   --vapidir=$(top_builddir)/src \
+  --vapidir=../vapi/ \
+  --vapidir=./ \
+  --pkg clutter-1.0 \
+  --pkg clutter-gtk-0.10 \
+  --pkg gtk+-2.0 \
+  --pkg gdk-2.0 \
+  --pkg gee-1.0 \
+  --pkg x11 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
   --pkg unity-static \
