@@ -1,3 +1,4 @@
+/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
  * Copyright (C) 2009 Canonical Ltd
  *
@@ -47,5 +48,16 @@ public class Main
         assert (window.visible);
       }      
     );
+
+	Test.add_func ("/Unity/Quicklauncher/ApplicationView", () => {
+		var app = new Launcher.Application.from_desktop_file (
+				"/usr/share/applications/firefox.desktop");
+			
+		var appview = new Unity.Quicklauncher.ApplicationView (app);
+		assert (appview is Unity.Quicklauncher.ApplicationView);
+		assert (appview.app is Launcher.Application);
+		}
+		);
+
   }
 }
