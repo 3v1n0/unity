@@ -77,6 +77,14 @@ namespace Unity.Quicklauncher
      */
     static Gdk.Pixbuf make_icon(string? icon_name) 
     {
+      /*
+       * This code somehow manages to miss a lot of icon names 
+       * (non found icons are replaced with stock missing image icons)
+       * which is a little strange as I ported this code fron netbook launcher
+       * pixbuf-cache.c i think, If anyone else has a better idea for this then
+       * please give it a go. otherwise i will revisit this code the last week 
+       * of the month sprint
+       */
       Gdk.Pixbuf pixbuf;
       Gtk.IconTheme theme = new Gtk.IconTheme();
       
@@ -156,12 +164,10 @@ namespace Unity.Quicklauncher
   
     private void on_app_opened (Wnck.Application app) 
     {
-    debug("app %s opened", app.get_name ());
     }
 
     private void on_app_closed (Wnck.Application app) 
     {
-    debug("app %s closed", app.get_name ());
     }
     
     private bool on_pressed(Clutter.Event src) 
