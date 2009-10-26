@@ -94,6 +94,7 @@ namespace Unity.Quicklauncher
        * wnckapplication windows and make sure that we have a valid window
        * i'll transfer this type of code to liblauncher soonish 
        * something like Launcher.Application.is_visible
+     * would like to do this the last week of the month sprint
        */
       bool app_is_visible = false;
       
@@ -124,12 +125,14 @@ namespace Unity.Quicklauncher
     /**
      * adds the Launcher.Application @app to this container
      */
-    private void add_application (Launcher.Application app) 
+  private void add_application (Launcher.Application app)
     {
-      if (app in this.apps)
-        /* the application object will signal itself, we don't need to 
-         * do a thing */
-        return;
+    if (app.name == "") 
+      return;
+    if (app in this.apps)
+      /* the application object will signal itself, we don't need to 
+       * do a thing */
+      return;
         
       var app_view = new ApplicationView (app);
       apps.add (app);

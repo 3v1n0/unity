@@ -75,14 +75,30 @@ namespace Unity.Quicklauncher
      * netbook launcher. needs to be improved at some point to deal
      * with all cases, it will miss some apps at the moment
      */
-    protected static Gdk.Pixbuf make_icon(string icon_name) 
+    static Gdk.Pixbuf make_icon(string? icon_name) 
     {
       Gdk.Pixbuf pixbuf;
       Gtk.IconTheme theme = new Gtk.IconTheme();
       
+      if (icon_name == null)
+        {
+          pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 42, 0);
+          return pixbuf;
+        }
+        
       if (icon_name.has_prefix("file://")) 
         {
-          string filename = Filename.from_uri(icon_name);
+          string filename = "";
+          /* this try/catch sort of isn't needed... but it makes valac stop 
+           * printing warning messages
+           */
+          try 
+          {
+            filename = Filename.from_uri(icon_name);
+          } 
+          catch (GLib.ConvertError e)
+          {
+          }
           if (filename != "") 
             {
               pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name, 42, 42, true);
@@ -106,14 +122,25 @@ namespace Unity.Quicklauncher
       if (info != null) 
         {
           string filename = info.get_filename();
-          pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename, 42, 42, true);
-          
-          if (pixbuf is Gdk.Pixbuf)
-            return pixbuf;
+          if (FileUtils.test(filename, FileTest.EXISTS)) 
+            {
+              pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename, 42, 42, true);
+            
+              if (pixbuf is Gdk.Pixbuf)
+                return pixbuf;
+            }
         }
       
-      pixbuf = theme.load_icon(icon_name, 42, Gtk.IconLookupFlags.FORCE_SVG);
-      
+      try 
+      {
+        pixbuf = theme.load_icon(icon_name, 42, Gtk.IconLookupFlags.FORCE_SVG);
+      }
+      catch (GLib.Error e) 
+      {
+        warning ("could not load icon for %s - %s", icon_name, e.message);
+        pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 42, 0);
+        return pixbuf;
+      }
       return pixbuf;
           
     }
@@ -123,24 +150,29 @@ namespace Unity.Quicklauncher
      */
     private void generate_view_from_app ()
     {
-      debug("%s", app.name);
       var pixbuf = make_icon (app.icon_name);
       this.icon.set_from_pixbuf (pixbuf);
     }
- 
-    private void on_app_opened (Wnck.Application wnck_app) 
+  
+    private void on_app_opened (Wnck.Application app) 
     {
-      debug("app %s opened", app.name);
+    debug("app %s opened", app.get_name ());
     }
 
-    private void on_app_closed (Wnck.Application wnck_app) 
+    private void on_app_closed (Wnck.Application app) 
     {
-      debug("app %s closed", app.name);
+    debug("app %s closed", app.get_name ());
     }
     
     private bool on_pressed(Clutter.Event src) 
     {
-      app.launch ();
+      try 
+      {
+        app.launch ();
+      } catch (GLib.Error e)
+      {
+        critical ("could not launch application %s: %s", this.name, e.message);
+      }
       return true;
     }
     

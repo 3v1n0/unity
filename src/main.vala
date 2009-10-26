@@ -31,7 +31,6 @@ public class Main
     
     var quicklauncher = new Unity.Quicklauncher.Main (window.stage);
     window.stage.show_all ();
-    stdout.printf ("Hello World!\n");
 
     Gtk.main ();
 
