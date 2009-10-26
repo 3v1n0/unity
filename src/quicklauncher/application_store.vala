@@ -81,7 +81,10 @@ namespace Unity.Quicklauncher
           assert (desktop_file != "");
           
           var newapp = appman.get_application_for_desktop_file (desktop_file);
-          add_application (newapp);
+          
+          var appview = add_application (newapp);
+          if (appview != null) 
+            appview.is_sticky = true;
         }
     }
     
@@ -126,12 +129,12 @@ namespace Unity.Quicklauncher
     /**
      * adds the Launcher.Application @app to this container
      */
-    private void add_application (Launcher.Application app)
+    private ApplicationView add_application (Launcher.Application app)
     {
       if (app in this.apps)
         /* the application object will signal itself, we don't need to 
          * do a thing */
-        return;
+        return null;
           
       var app_view = new ApplicationView (app);
       apps.add (app);
@@ -139,6 +142,8 @@ namespace Unity.Quicklauncher
       container.pack(app_view, false, false);
       
       app_view.request_remove.connect(remove_application);
+      
+      return app_view;
     }
     
     
