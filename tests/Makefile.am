@@ -32,7 +32,7 @@ test_unity_VALAFLAGS = \
   $(MAINTAINER_VALAFLAGS)
 
 test_unity_SOURCES = \
-  test-unity.vala 
+  test-unity.vala
 
 # GTester stuff
 XML_REPORT = unity-check-results.xml

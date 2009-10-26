@@ -3,7 +3,7 @@ SUBDIRS = \
 
 noinst_LTLIBRARIES = \
   libunity-static.la 
-	
+
 bin_PROGRAMS = \
   unity
 
@@ -63,6 +63,6 @@ unity_LDADD = \
   $(BASE_LIBS)
 
 unity_SOURCES = \
-  main.vala 
+  main.vala
 
 CLEANFILES = *.stamp
