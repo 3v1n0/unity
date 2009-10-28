@@ -1,3 +1,4 @@
+/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
  * Copyright (C) 2009 Canonical Ltd
  *
@@ -27,6 +28,11 @@ namespace Unity.Quicklauncher
     private Ctk.Image icon;
     private int num_apps;
     private bool _is_sticky;
+
+    private Clutter.Group container;
+    private Ctk.Image throbber;
+    private Ctk.Image focused_indicator;
+    private Ctk.Image running_indicator;
     
     /* if we are not sticky anymore and we are not running, request remove */
     public bool is_sticky {
@@ -56,10 +62,18 @@ namespace Unity.Quicklauncher
        */
       num_apps = 0;
       this.app = app;
+
+      this.container = new Clutter.Group ();
+      add_actor (this.container);
+
       this.icon = new Ctk.Image (42);
-      add_actor(this.icon);
+      this.container.add_actor(this.icon);
+
       generate_view_from_app ();
       
+      load_textures ();
+      
+  
       this.app.opened.connect(this.on_app_opened);
       this.app.closed.connect(this.on_app_closed);
       
@@ -68,6 +82,46 @@ namespace Unity.Quicklauncher
       this.app.notify["running"].connect(this.notify_on_is_running);
       
       set_reactive(true);
+    }
+
+    private void load_textures ()
+    {
+      var throbpix = new Gdk.Pixbuf.from_file ("data/quicklauncher_throbber.svg");
+      this.throbber = new Ctk.Image.from_pixbuf (20, throbpix);
+      this.container.add_actor (this.throbber);
+
+      var focuspix = new Gdk.Pixbuf.from_file_at_scale("data/quicklauncher_focused_indicator.svg", 
+                                                       8, 8, true);
+      this.focused_indicator = new Ctk.Image.from_pixbuf (8, focuspix);
+      this.container.add_actor (this.focused_indicator);
+
+      var runningpix = new Gdk.Pixbuf.from_file_at_scale ("data/quicklauncher_running_indicator.svg",
+                                                          8, 8, true);
+      this.running_indicator = new Ctk.Image.from_pixbuf (8, runningpix);
+      this.container.add_actor (this.running_indicator);
+      
+
+      this.throbber.set_opacity (0);
+      this.focused_indicator.set_opacity (0);
+      this.running_indicator.set_opacity (0);
+    
+      relayout ();
+    }
+
+    /**
+     * re-layouts the various indicators and throbbers in out view 
+     */
+    private void relayout ()
+    {
+      this.throbber.set_position (this.container.width - this.throbber.width,
+                                  2);
+      float mid_point_y = this.container.height / 2.0f;
+      float focus_halfy = this.focused_indicator.height / 2.0f;
+
+      this.focused_indicator.set_position(this.container.width - this.focused_indicator.width
+                                          , mid_point_y - focus_halfy);
+      this.running_indicator.set_position (0, mid_point_y - focus_halfy);
+
     }
     
     /** 
@@ -193,6 +247,15 @@ namespace Unity.Quicklauncher
      */
     private void notify_on_is_running ()
     {
+      /* we need to show the running indicator when we are running */
+      if (this.is_running)
+      {
+        this.running_indicator.set_opacity (255);
+      }
+      else 
+      {
+        this.running_indicator.set_opacity (0);
+      }
       if (!this.is_running && !this.is_sticky)
           this.request_remove (this);      
     }
