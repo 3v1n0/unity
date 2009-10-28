@@ -39,17 +39,15 @@ namespace Unity.Quicklauncher
       get { return _busy; }
       set {
         if (value)
-        {
-          debug ("animate in");
+         
           this.anim = this.throbber.animate (Clutter.AnimationMode.EASE_IN_QUAD,
                                              1000, "opacity", 255);
-        }
+        
         else 
-        {
-          debug ("animate out");
+        
           this.anim = this.throbber.animate (Clutter.AnimationMode.EASE_IN_QUAD,
                                              1000, "opacity", 0);
-        }
+        
         _busy = value;
       }
     }
@@ -119,7 +117,7 @@ namespace Unity.Quicklauncher
     }
 
     private void load_textures ()
-    {
+    {      
       var throbpix = new Gdk.Pixbuf.from_file ("data/quicklauncher_throbber.svg");
       this.throbber = new Ctk.Image.from_pixbuf (20, throbpix);
       this.container.add_actor (this.throbber);

@@ -1,3 +1,8 @@
+DATADIR = $(datadir)
+
+VALAFLAGS = \
+  -DDATADIR=\"$(DATADIR)\"
+
 SUBDIRS = \
   quicklauncher
 
