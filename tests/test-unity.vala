@@ -1,4 +1,4 @@
-/* -*- Mode: C; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
+/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
  * Copyright (C) 2009 Canonical Ltd
  *
@@ -67,5 +67,13 @@ public class Main
     }
     );
 
+  Test.add_func ("/Unity/Widgets/Scroller", () => {
+      var scroller = new Widgets.Scroller (Ctk.Orientation.VERTICAL, 0);
+      assert (scroller is Widgets.Scroller);
+
+      scroller = new Widgets.Scroller (Ctk.Orientation.HORIZONTAL, 0);
+      assert (scroller is Widgets.Scroller);
+    }
+    );
   }
 }

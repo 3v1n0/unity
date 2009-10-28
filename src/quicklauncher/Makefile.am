@@ -23,7 +23,8 @@ libunity_quicklauncher_la_LIBADD = \
 libunity_quicklauncher_la_SOURCES = \
   application_view.vala \
   application_store.vala \
-  quicklauncher.vala
+  quicklauncher.vala \
+  unity-scroller.vala
   
 
 CLEANFILES = *.stamp

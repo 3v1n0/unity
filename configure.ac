@@ -54,7 +54,7 @@ MAINTAINER_CFLAGS=""
 MAINTAINER_VALAFLAGS=""
 AS_IF([test "x$enable_maintainer_flags" = "xyes" && test "x$GCC" = "xyes"],
       [
-        MAINTAINER_CFLAGS="-g -Wall -Werror -Wshadow -Wcast-align -Wno-unintialized -Wempty-body -Wformat-security -Winit-self"
+        MAINTAINER_CFLAGS="-g -Wall -Wshadow -Wcast-align -Wno-unintialized -Wempty-body -Wformat-security -Winit-self"
         MAINTAINER_VALAFLAGS="-g --save-temps"
       ]
 )
