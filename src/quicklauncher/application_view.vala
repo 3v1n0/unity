@@ -33,6 +33,40 @@ namespace Unity.Quicklauncher
     private Ctk.Image throbber;
     private Ctk.Image focused_indicator;
     private Ctk.Image running_indicator;
+
+    private bool _busy = false;
+    public bool busy {
+      get { return _busy; }
+      set {
+        if (value)
+        {
+          debug ("animate in");
+          this.anim = this.throbber.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                                             1000, "opacity", 255);
+        }
+        else 
+        {
+          debug ("animate out");
+          this.anim = this.throbber.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                                             1000, "opacity", 0);
+        }
+        _busy = value;
+      }
+    }
+          
+
+    /* animation support */
+    private Clutter.Animation _anim;
+    public Clutter.Animation anim { 
+      get { return _anim; }
+      set {
+        if (_anim != null) { 
+          assert (_anim is Clutter.Animation);
+          _anim.completed();
+        }
+        _anim = value;
+      }
+    }
     
     /* if we are not sticky anymore and we are not running, request remove */
     public bool is_sticky {
@@ -219,6 +253,7 @@ namespace Unity.Quicklauncher
     private void on_app_opened (Wnck.Application app) 
     {
       debug("app opened: %s", this.app.name);
+      this.busy = false;
     }
 
     private void on_app_closed (Wnck.Application app) 
@@ -231,13 +266,22 @@ namespace Unity.Quicklauncher
     
     private bool on_pressed(Clutter.Event src) 
     {
+      bool successful = false;
       try 
       {
         app.launch ();
+        successful = true;
       } catch (GLib.Error e)
       {
         critical ("could not launch application %s: %s", this.name, e.message);
       }
+      
+      if (successful)
+      {
+        /* do the throbber */
+        this.busy = true;
+      }
+      
       return true;
     }
     
