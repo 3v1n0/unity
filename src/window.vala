@@ -46,6 +46,12 @@ namespace Unity
           this.decorated = true;
           this.skip_taskbar_hint = false;
           this.skip_pager_hint = false;
+          this.delete_event.connect (() => 
+            {
+              Gtk.main_quit ();
+              return false;
+            }
+          );
         }
       else
         {
@@ -53,6 +59,7 @@ namespace Unity
           this.decorated = false;
           this.skip_taskbar_hint = true;
           this.skip_pager_hint = true;
+          this.delete_event.connect (() => { return true; });
         }
       
       /* Gtk.ClutterEmbed */
@@ -102,32 +109,6 @@ namespace Unity
       
       debug ("hello");
     }
-
-    /*    
-    public void WindowD ()
-    {
-      this.workarea_size = new Workarea ();
-      this.workarea_size.update_net_workarea ();
-      
-      setup_window ();
-      
-      this.gtk_clutter = new GtkClutter.Embed ();
-      this.add (this.gtk_clutter);
-      this.gtk_clutter.realize ();
-
-      this.stage = (Clutter.Stage)this.gtk_clutter.get_stage ();
-      Clutter.Color stage_bg = Clutter.Color ()
-        { 
-          red = 0x00,
-          green = 0x00,
-          blue = 0x00,
-          alpha = 0xB0
-        };
-      this.stage.set_color (stage_bg);
-      this.show_all ();
-      this.stage.show_all ();
-    }
-    */
 
     /*
      * SHELL IMPLEMENTATION
