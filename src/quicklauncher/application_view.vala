@@ -131,10 +131,7 @@ namespace Unity.Quicklauncher
 
     private void load_textures ()
     {      
-      debug ("foo %s bar ", Unity.DATADIR);
-
-      this.throbber = new Ctk.Image.from_filename (20, 
-                                                   THROBBER_FILE);
+      this.throbber = new Ctk.Image.from_filename (20, THROBBER_FILE);
       this.container.add_actor (this.throbber);
                                 
       this.focused_indicator = new Ctk.Image.from_filename (8, FOCUSED_FILE);

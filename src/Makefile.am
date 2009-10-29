@@ -42,6 +42,7 @@ unity_CPPFLAGS = \
 unity_VALAFLAGS = \
   --vapidir=./quicklauncher \
   --vapidir=./ \
+  --vapidir=$(top_builddir)/libunity/ \
   --vapidir=$(top_builddir)/vapi/ \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
@@ -53,6 +54,7 @@ unity_VALAFLAGS = \
   --pkg gee-1.0 \
   --pkg clutk-0.3 \
   --pkg launcher-0.3 \
+  --pkg unity \
   --pkg unity-static \
   --pkg unity-quicklauncher \
   $(MAINTAINER_VALAFLAGS)
