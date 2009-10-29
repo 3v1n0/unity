@@ -21,17 +21,17 @@ public class Main
 {
   public static int main (string[] args)
   {
-    Unity.Window window;
+    Unity.UnderlayWindow window;
 
     Gtk.init (ref args);
     GtkClutter.init (ref args);
     
-    window = new Unity.Window ();
-    window.set_fullscreen ();
-    
-    var quicklauncher = new Unity.Quicklauncher.Main (window.stage);
-    window.stage.show_all ();
+    window = new Unity.UnderlayWindow (false, 0, 0);
+        
+    var quicklauncher = new Unity.Quicklauncher.Main (window.get_stage ());
+    //window.stage.show_all ();
 
+    window.show ();
     Gtk.main ();
 
     return 0;

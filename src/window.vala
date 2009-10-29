@@ -17,63 +17,75 @@
  *
  */
 
-namespace Unity {
-  
-  public interface UnderlayWindow : Gtk.Window
-  {
-    public abstract void setup_window ();
-    public abstract void set_fullscreen ();
-  }
-  
-  public class Workarea 
-  {
-    public signal void workarea_changed ();
-    public int left;
-    public int top;
-    public int right;
-    public int bottom;
-    
-    public Workarea ()
-    {
-      left = 0;
-      right = 0;
-      top = 0;
-      bottom = 0;
-      
-      update_net_workarea ();
-    }
-    
+namespace Unity
+{
 
-    public void update_net_workarea () 
-    {
-      /* FIXME - steal code from the old liblauncher to do this (launcher-session.c)
-       * this is just fake code to get it running
-       */
-      
-      left = 0;
-      right = 800;
-      top = 0;
-      bottom = 600;
-    }
-  }
-  
-  public class Window : Gtk.Window, UnderlayWindow
+  public class UnderlayWindow : Gtk.Window, Shell
   {
+    private bool is_popup;
+    private int  popup_width;
+    private int  popup_height;
     
-    private GtkClutter.Embed gtk_clutter;
-    public Clutter.Stage stage;
     private Workarea workarea_size;
-    
-    public void setup_window ()
+
+    private GtkClutter.Embed gtk_clutter;
+    private Clutter.Stage    stage;
+
+    public UnderlayWindow (bool popup, int width, int height)
     {
-      this.decorated = false;
-      this.skip_taskbar_hint = true;
-      this.skip_pager_hint = true;
-      this.type_hint = Gdk.WindowTypeHint.NORMAL;
+      this.workarea_size = new Workarea ();
+      this.workarea_size.update_net_workarea ();
+
+      this.is_popup = popup;
+      this.popup_width = width;
+      this.popup_height = height;
       
+      if (this.is_popup)
+        {
+          this.type_hint = Gdk.WindowTypeHint.NORMAL;
+          this.decorated = true;
+          this.skip_taskbar_hint = false;
+          this.skip_pager_hint = false;
+        }
+      else
+        {
+          this.type_hint = Gdk.WindowTypeHint.DESKTOP;
+          this.decorated = false;
+          this.skip_taskbar_hint = true;
+          this.skip_pager_hint = true;
+        }
+      this.resize_window ();
       this.realize ();
     }
+
+    private void resize_window ()
+    {
+      int width, height;
+
+      if (this.is_popup)
+        {
+          width = this.popup_width;
+          height = this.popup_height;
+        }
+      else
+        {
+          Gdk.Rectangle size;
+
+          this.screen.get_monitor_geometry (0, out size);
+          width = size.width 
+                  - this.workarea_size.right
+                  - this.workarea_size.left;
+          height = size.height
+                   - this.workarea_size.top
+                   - this.workarea_size.bottom;
+        }
+
+      debug ("UnderlayWindow:resize:%dx%d", width, height);
+
+      this.resize (width, height);
+    }
     
+  
     public void set_fullscreen ()
     {
       int width;
@@ -86,8 +98,9 @@ namespace Unity {
       this.stage.set_size(width, height);
       
     }
-    
-    public Window ()
+
+    /*    
+    public void WindowD ()
     {
       this.workarea_size = new Workarea ();
       this.workarea_size.update_net_workarea ();
@@ -110,6 +123,49 @@ namespace Unity {
       this.show_all ();
       this.stage.show_all ();
     }
-    
+    */
+
+    /*
+     * SHELL IMPLEMENTATION
+     */
+    public Clutter.Stage get_stage ()
+    {
+      return this.stage;
+    }
+
+    public ShellMode get_mode ()
+    {
+      return ShellMode.UNDERLAY;
+    }
   }
+ 
+  public class Workarea 
+  {
+    public signal void workarea_changed ();
+    public int left;
+    public int top;
+    public int right;
+    public int bottom;
+    
+    public Workarea ()
+    {
+      left = 0;
+      right = 0;
+      top = 0;
+      bottom = 0;
+      
+      update_net_workarea ();
+    }
+
+    public void update_net_workarea () 
+    {
+      /* FIXME - steal code from the old liblauncher to do this
+       * (launcher-session.c) this is just fake code to get it running
+       */
+      left = 0;
+      right = 0;
+      top = 24;
+      bottom = 0;
+    }
+  }  
 }
