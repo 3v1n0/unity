@@ -19,28 +19,21 @@
 
 namespace Unity.Quicklauncher
 {  
-  public class Main : Object
+  public class View : Ctk.Bin
   {
+    private Shell shell;
 
-    /* this is just a toplevel for now, until some sort of api between unity
-     * and its interfaces is standardised
-     */
-    public Clutter.Actor _view;
-    public Clutter.Actor view {
-        get { return _view; }
-        set { _view = value; }
-    }
-  
     private ApplicationStore store;
     
-    public Main (Clutter.Stage stage)
+    public View (Shell shell)
     { 
-      view = Ctk.Toplevel.get_default_for_stage (stage);
-      stage.add_actor (view);
-      
-      var myview = view as Ctk.Toplevel;
-      store = new ApplicationStore ();
-      myview.add_actor (store);
-	}
+      this.shell = shell;
+  	}
+
+    construct
+    {
+      this.store = new ApplicationStore ();
+      this.add_actor (store);
+    }
   }
 }

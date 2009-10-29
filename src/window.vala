@@ -22,23 +22,28 @@ namespace Unity
 
   public class UnderlayWindow : Gtk.Window, Shell
   {
-    private bool is_popup;
-    private int  popup_width;
-    private int  popup_height;
+    public bool is_popup { get; construct; }
+    public int  popup_width { get; construct; }
+    public int  popup_height { get; construct; }
     
     private Workarea workarea_size;
 
     private GtkClutter.Embed gtk_clutter;
     private Clutter.Stage    stage;
+    
+    private Quicklauncher.View quicklauncher;
 
     public UnderlayWindow (bool popup, int width, int height)
     {
-      this.workarea_size = new Workarea ();
-      this.workarea_size.update_net_workarea ();
-
       this.is_popup = popup;
       this.popup_width = width;
       this.popup_height = height;
+    }
+    
+    construct
+    {
+      this.workarea_size = new Workarea ();
+      this.workarea_size.update_net_workarea ();
       
       if (this.is_popup)
         {
@@ -68,8 +73,21 @@ namespace Unity
       this.gtk_clutter = new GtkClutter.Embed ();
       this.add (this.gtk_clutter);
       this.gtk_clutter.realize ();
-      this.stage = (Clutter.Stage)this.gtk_clutter.get_stage ();
       
+      this.stage = (Clutter.Stage)this.gtk_clutter.get_stage ();
+      Clutter.Color stage_bg = Clutter.Color () { 
+          red = 0x00,
+          green = 0x00,
+          blue = 0x00,
+          alpha = 0xff 
+        };
+      this.stage.set_color (stage_bg);
+
+      /* Components */
+      this.quicklauncher = new Quicklauncher.View (this);
+      this.stage.add_actor (this.quicklauncher);
+      
+      /* Layout everything */
       this.resize_window ();
     }
 
@@ -95,10 +113,14 @@ namespace Unity
                    - this.workarea_size.bottom;
         }
 
-      debug ("UnderlayWindow:resize:%dx%d", width, height);
+      debug ("UnderlayWindow: resize: %dx%d", width, height);
 
       this.resize (width, height);
       this.stage.set_size (width, height);
+      
+      this.quicklauncher.set_size (48, height);
+      this.quicklauncher.set_position (this.workarea_size.left,
+                                       this.workarea_size.top);
     }
 
     public override void show ()
@@ -106,8 +128,6 @@ namespace Unity
       base.show ();
       this.gtk_clutter.show ();
       this.stage.show_all ();
-      
-      debug ("hello");
     }
 
     /*

@@ -97,9 +97,7 @@ public class Main
 
     /* Things seem to be okay, load the main window */
     window = new Unity.UnderlayWindow (popup_mode, popup_width, popup_height);
-        
-    var quicklauncher = new Unity.Quicklauncher.Main (window.get_stage ());
-    
+   
     window.show ();
     Gtk.main ();
 
