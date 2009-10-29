@@ -37,7 +37,7 @@ namespace Unity.Widgets
       this.orientation = orientation;
       this.spacing = spacing;
       children = new Gee.ArrayList<Clutter.Actor> ();
-      set_reactive (true);
+      //set_reactive (true);
     }
 
     /* Clutter methods */
@@ -202,7 +202,10 @@ namespace Unity.Widgets
     {
       base.pick (color);
 
-      //this.paint ();
+      foreach (Clutter.Actor child in children)
+      {
+        child.paint ();
+      }
     }
 
     public override void paint ()
