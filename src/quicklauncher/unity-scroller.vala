@@ -36,9 +36,6 @@ namespace Unity.Widgets
     {
       this.orientation = orientation;
       this.spacing = spacing;
-    }
-
-    construct {
       children = new Gee.ArrayList<Clutter.Actor> ();
       set_reactive (true);
     }
@@ -48,6 +45,9 @@ namespace Unity.Widgets
                                      out float minimum_width, 
                                      out float natural_width)
     {
+      minimum_width = 0;
+      natural_width = 0;
+
 
       // if we are vertical, just figure out the width of the widest
       // child
@@ -92,53 +92,52 @@ namespace Unity.Widgets
     {
       minimum_height = 0.0f;
       natural_height = 0.0f;
+      
+
+      float cnat_height = 0.0f;
+      float cmin_height = 0.0f;
+      
+      float all_child_height = 0.0f;
 
       if (orientation == Ctk.Orientation.VERTICAL) 
       {
-        
-        float all_child_height = 0.0f;
-        float max_child_height = 0.0f;
 
         foreach (Clutter.Actor child in this.children)
         {
-          float cnat_height = 0.0f;
-          float cmin_height = 0.0f;
+          cnat_height = 0.0f;
+          cmin_height = 0.0f;
           child.get_preferred_height (for_width, 
                                       out cmin_height, 
                                       out cnat_height);
-
-          debug ("cnat_height: %f", cnat_height);
-
-          //all_child_height += cnat_height + spacing;
-          //all_child_height += 42 + spacing;
-          max_child_height = max_child_height.max (max_child_height, 
-                                                   cnat_height);
           
+          all_child_height += cnat_height;
         }
-
-        debug ("all child height; %f", all_child_height);
 
         minimum_height = all_child_height + padding.top + padding.bottom;
         natural_height = all_child_height + padding.top + padding.bottom;
-        
-        debug ("min/nat height: %f - %f", minimum_height, natural_height);
-
+   
         return;
       }
 
       error ("Does not support Horizontal yet");
 
     }
-
+                         
     public override void allocate (Clutter.ActorBox box, 
                                    Clutter.AllocationFlags flags)
     {
 
-      float width;
-      float height;
-
-      width = (box.x2 - box.x1) - padding.left - padding.right;
-      height = (box.y2 - box.y1) - padding.top - padding.bottom;
+      base.allocate (box, flags);
+      
+      float cwidth;
+      float cheight;
+      //box.get_size(out cwidth, out cheight);
+      //float cox;
+      //float coy;
+      //box.get_origin (out cox, out coy);
+      
+      cwidth = (box.x2 - box.x1) - padding.left - padding.right;
+      cheight = (box.y2 - box.y1) - padding.top - padding.bottom;
 
       foreach (Clutter.Actor child in this.children)
       {
@@ -152,18 +151,17 @@ namespace Unity.Widgets
 
         child.get_preferred_height(box.x2 - box.x1,
                                    out min_height, out nat_height);
-
+        
         if (orientation == Ctk.Orientation.VERTICAL)
         {
           child.width = min_width;
-          child.height = height;
+          child.height = min_height;
         }
         else 
         {
-          child.width = width;
+          child.width = cwidth;
           child.height = min_height;
         }
-
       }
 
       // position the actors
@@ -180,13 +178,14 @@ namespace Unity.Widgets
         
         child_width = child.width;
         child_height = child.height;
+        
 
         if (orientation == Ctk.Orientation.VERTICAL)
         {
-          child_box.x1 = (float)Math.floor (x);
-          child_box.x2 = (float)Math.floor (x + child_width);
-          child_box.y1 = (float)Math.floor (y);
-          child_box.y2 = (float)Math.floor (y + child_height);
+          child_box.x1 = x;
+          child_box.x2 = x + child_width;
+          child_box.y1 = y;
+          child_box.y2 = y + child_height;
           
           y += child_height + spacing;
         }
@@ -199,29 +198,27 @@ namespace Unity.Widgets
       }
     }
 
-    public override void pick (Clutter.Color color) 
+    public override void pick (Clutter.Color color)
     {
-      /* FIXME! - vala wants to use clutter_actor_get_visible but clutter
-       * does not expose that method.. not sure how to fix that yet
-       */
       base.pick (color);
 
-      bool is_visible = false;
-      uint32 vis = flags & Clutter.ActorFlags.VISIBLE;
-      if (vis != 0)
-        is_visible = true;
-
-      if (is_visible)
-        paint ();
+      //this.paint ();
     }
-    
+
     public override void paint ()
     {
-      base.paint ();
+      //base.paint ();
+      float width, height;
+      Clutter.ActorBox box;
+      get_allocation_box (out box);
+      box.get_size(out width, out height);
       
+      float cox, coy;
+      box.get_origin (out cox, out coy);
+
       foreach (Clutter.Actor child in children) 
       {
-        if ((child.flags & Clutter.ActorFlags.VISIBLE) != 0)
+        //if ((child.flags & Clutter.ActorFlags.VISIBLE) != 0)
           child.paint ();
       }
 
@@ -291,6 +288,10 @@ namespace Unity.Widgets
 
     public void foreach_with_internals (Clutter.Callback callback)
     {
+      foreach (Clutter.Actor child in this.children)
+      {
+        callback (child, null);
+      }
     }
 
     public void sort_depth_order ()
