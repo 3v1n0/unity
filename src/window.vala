@@ -66,6 +66,7 @@ namespace Unity
           this.skip_pager_hint = true;
           this.delete_event.connect (() => { return true; });
         }
+      this.title = "Unity";
       
       /* Gtk.ClutterEmbed */
       this.realize ();
