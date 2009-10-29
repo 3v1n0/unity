@@ -29,8 +29,7 @@ public class Main
     window = new Unity.UnderlayWindow (false, 0, 0);
         
     var quicklauncher = new Unity.Quicklauncher.Main (window.get_stage ());
-    //window.stage.show_all ();
-
+    
     window.show ();
     Gtk.main ();
 

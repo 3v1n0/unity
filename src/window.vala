@@ -54,8 +54,16 @@ namespace Unity
           this.skip_taskbar_hint = true;
           this.skip_pager_hint = true;
         }
-      this.resize_window ();
+      
+      /* Gtk.ClutterEmbed */
       this.realize ();
+
+      this.gtk_clutter = new GtkClutter.Embed ();
+      this.add (this.gtk_clutter);
+      this.gtk_clutter.realize ();
+      this.stage = (Clutter.Stage)this.gtk_clutter.get_stage ();
+      
+      this.resize_window ();
     }
 
     private void resize_window ()
@@ -83,20 +91,16 @@ namespace Unity
       debug ("UnderlayWindow:resize:%dx%d", width, height);
 
       this.resize (width, height);
+      this.stage.set_size (width, height);
     }
-    
-  
-    public void set_fullscreen ()
-    {
-      int width;
-      int height;
-      
-      width = this.workarea_size.right - this.workarea_size.left;
-      height = this.workarea_size.bottom - this.workarea_size.top;
 
-      resize (width, height);
-      this.stage.set_size(width, height);
+    public override void show ()
+    {
+      base.show ();
+      this.gtk_clutter.show ();
+      this.stage.show_all ();
       
+      debug ("hello");
     }
 
     /*    
