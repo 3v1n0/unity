@@ -13,6 +13,7 @@ test_unity_LDADD = \
   $(MAINTAINER_LIBS)
 
 test_unity_VALAFLAGS = \
+  --vapidir=$(top_builddir)/libunity \
   --vapidir=$(top_builddir)/src \
   --vapidir=$(top_builddir)/src/quicklauncher \
   --vapidir=$(top_builddir)/vapi/ \
@@ -27,6 +28,7 @@ test_unity_VALAFLAGS = \
   --pkg gee-1.0 \
   --pkg clutk-0.3 \
   --pkg launcher-0.3 \
+  --pkg unity \
   --pkg unity-static \
   --pkg unity-quicklauncher \
   $(MAINTAINER_VALAFLAGS)

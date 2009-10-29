@@ -81,6 +81,7 @@ AC_SUBST(BASE_LIBS)
 dnl Create the Makefiles
 AC_OUTPUT([
   Makefile
+  libunity/Makefile
   src/Makefile
   src/quicklauncher/Makefile
   tests/Makefile

@@ -51,3 +51,16 @@ tests/test_unity_vala.stamp
 tests/unity-check-results.html
 tests/unity-check-results.xml
 src/unity
+.deps
+.libs
+libunity.la
+libunity_la-shell.lo
+libunity_la_vala.stamp
+shell.c
+unity.h
+unity.vapi
+*.lo
+*.ls
+src/window.c
+src/quicklauncher/application_store.c
+src/quicklauncher/application_view.c

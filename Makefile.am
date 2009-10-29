@@ -1,4 +1,4 @@
-SUBDIRS = src tests
+SUBDIRS = libunity src tests
 
 # Test reports
 .PHONY: check-report
