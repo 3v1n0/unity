@@ -20,15 +20,16 @@
 
 namespace Unity.Quicklauncher
 {  
-  
+  const string THROBBER_FILE = Unity.PKGDATADIR + "/quicklauncher_throbber.svg";
+  const string FOCUSED_FILE  = Unity.PKGDATADIR + "/quicklauncher_focused_indicator.svg";
+  const string RUNNING_FILE  = Unity.PKGDATADIR + "/quicklauncher_running_indicator.svg";
+
   public class ApplicationView : Ctk.Bin
   {
     
     public Launcher.Application app;
     private Ctk.Image icon;
-    private int num_apps;
     private bool _is_sticky;
-
     private Clutter.Group container;
     private Ctk.Image throbber;
     private Ctk.Image focused_indicator;
@@ -39,17 +40,22 @@ namespace Unity.Quicklauncher
       get { return _busy; }
       set {
         if (value)
-          this.anim = this.throbber.animate (Clutter.AnimationMode.EASE_IN_QUAD,
-                                             1000, "opacity", 255);
+          this.anim_throbber = this.throbber.animate (
+            Clutter.AnimationMode.EASE_IN_QUAD,
+            1000, 
+            "opacity", 
+            255);
         
         else 
-          this.anim = this.throbber.animate (Clutter.AnimationMode.EASE_IN_QUAD,
-                                             1000, "opacity", 0);
+          this.anim_throbber = this.throbber.animate (
+            Clutter.AnimationMode.EASE_IN_QUAD,
+            1000, 
+            "opacity", 
+            0);
         
         _busy = value;
       }
     }
-          
 
     /* animation support */
     private Clutter.Animation _anim;
@@ -61,6 +67,16 @@ namespace Unity.Quicklauncher
           _anim.completed();
         }
         _anim = value;
+      }
+    }
+
+    private Clutter.Animation _anim_throbber;
+    private Clutter.Animation anim_throbber {
+      //get { return _anim_throbber; }
+      set {
+        if (_anim_throbber != null)
+          _anim_throbber.completed ();
+        _anim_throbber = value;
       }
     }
     
@@ -83,16 +99,13 @@ namespace Unity.Quicklauncher
      * it is not running
      */
     public signal void request_remove (ApplicationView app);
-    
     public ApplicationView (Launcher.Application app)
     {
       /* This is a 'view' for a launcher application object
        * it will (hopefully) be able to launch, track when this application 
        * opens and closes and be able to get desktop file info
        */
-      num_apps = 0;
       this.app = app;
-
       this.container = new Clutter.Group ();
       add_actor (this.container);
 
@@ -100,34 +113,34 @@ namespace Unity.Quicklauncher
       this.container.add_actor(this.icon);
 
       generate_view_from_app ();
-      
       load_textures ();
-      
-  
+        
       this.app.opened.connect(this.on_app_opened);
       this.app.closed.connect(this.on_app_closed);
       
       button_press_event.connect(this.on_pressed);
       
-      this.app.notify["running"].connect(this.notify_on_is_running);
+      this.app.notify["running"].connect (this.notify_on_is_running);
+      this.app.notify["focused"].connect (this.notify_on_is_focused);
       
+      notify_on_is_running ();
+      notify_on_is_focused ();
+
       set_reactive(true);
     }
 
     private void load_textures ()
     {      
-      var throbpix = new Gdk.Pixbuf.from_file ("data/quicklauncher_throbber.svg");
-      this.throbber = new Ctk.Image.from_pixbuf (20, throbpix);
-      this.container.add_actor (this.throbber);
+      debug ("foo %s bar ", Unity.DATADIR);
 
-      var focuspix = new Gdk.Pixbuf.from_file_at_scale("data/quicklauncher_focused_indicator.svg", 
-                                                       8, 8, true);
-      this.focused_indicator = new Ctk.Image.from_pixbuf (8, focuspix);
+      this.throbber = new Ctk.Image.from_filename (20, 
+                                                   THROBBER_FILE);
+      this.container.add_actor (this.throbber);
+                                
+      this.focused_indicator = new Ctk.Image.from_filename (8, FOCUSED_FILE);
       this.container.add_actor (this.focused_indicator);
 
-      var runningpix = new Gdk.Pixbuf.from_file_at_scale ("data/quicklauncher_running_indicator.svg",
-                                                          8, 8, true);
-      this.running_indicator = new Ctk.Image.from_pixbuf (8, runningpix);
+      this.running_indicator = new Ctk.Image.from_filename (8, RUNNING_FILE);
       this.container.add_actor (this.running_indicator);
       
 
@@ -145,11 +158,13 @@ namespace Unity.Quicklauncher
     {
       this.throbber.set_position (this.container.width - this.throbber.width,
                                   2);
+
       float mid_point_y = this.container.height / 2.0f;
       float focus_halfy = this.focused_indicator.height / 2.0f;
+      float focus_halfx = this.container.width - this.focused_indicator.width;
 
-      this.focused_indicator.set_position(this.container.width - this.focused_indicator.width
-                                          , mid_point_y - focus_halfy);
+      this.focused_indicator.set_position(focus_halfx, 
+                                          mid_point_y - focus_halfy);
       this.running_indicator.set_position (0, mid_point_y - focus_halfy);
 
     }
@@ -193,7 +208,8 @@ namespace Unity.Quicklauncher
           }
           if (filename != "") 
             {
-              pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name, 42, 42, true);
+              pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name, 
+                                                         42, 42, true);
               if (pixbuf is Gdk.Pixbuf)
                   return pixbuf;
             }
@@ -203,7 +219,8 @@ namespace Unity.Quicklauncher
         {
           if (FileUtils.test(icon_name, FileTest.EXISTS)) 
             {
-              pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name, 42, 42, true);
+              pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name, 
+                                                         42, 42, true);
 
               if (pixbuf is Gdk.Pixbuf)
                 return pixbuf;
@@ -216,7 +233,8 @@ namespace Unity.Quicklauncher
           string filename = info.get_filename();
           if (FileUtils.test(filename, FileTest.EXISTS)) 
             {
-              pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename, 42, 42, true);
+              pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename, 
+                                                         42, 42, true);
             
               if (pixbuf is Gdk.Pixbuf)
                 return pixbuf;
@@ -248,13 +266,11 @@ namespace Unity.Quicklauncher
   
     private void on_app_opened (Wnck.Application app) 
     {
-      debug("app opened: %s", this.app.name);
       this.busy = false;
     }
 
     private void on_app_closed (Wnck.Application app) 
     {
-      debug("app closed: %s", this.app.name);
       if (!this.is_running && !this.is_sticky) 
         this.request_remove (this);
       
@@ -262,21 +278,21 @@ namespace Unity.Quicklauncher
     
     private bool on_pressed(Clutter.Event src) 
     {
-      debug ("is app running? %s", app.running ? "yes" : "no");
+      
       if (app.running)
-      { 
+      {
         // we only want to switch to the application, not launch it
         app.show ();
       }
       else 
       {
-        
         bool successful = false;
         try 
         {
           app.launch ();
           successful = true;
-        } catch (GLib.Error e)
+        } 
+        catch (GLib.Error e)
         {
           critical ("could not launch application %s: %s", 
                     this.name, 
@@ -285,10 +301,8 @@ namespace Unity.Quicklauncher
         }
         
         if (successful)
-        {
           /* do the throbber */
           this.busy = true;
-        }
       }
       
       return true;
@@ -302,17 +316,20 @@ namespace Unity.Quicklauncher
     {
       /* we need to show the running indicator when we are running */
       if (this.is_running)
-      {
         this.running_indicator.set_opacity (255);
-      }
       else 
-      {
         this.running_indicator.set_opacity (0);
-      }
+
       if (!this.is_running && !this.is_sticky)
           this.request_remove (this);      
     }
-          
-
+   
+    private void notify_on_is_focused ()
+    {
+      if (app.focused)
+        this.focused_indicator.set_opacity (255);
+      else
+        this.focused_indicator.set_opacity (0);
+    }
   }
 }
