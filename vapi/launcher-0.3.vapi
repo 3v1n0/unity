@@ -22,6 +22,7 @@ namespace Launcher {
     public unowned string get_unique_string ();
     public unowned GLib.SList get_wnckapps ();
     public bool launch () throws GLib.Error;
+	public void show ();
     public void set_desktop_file (string desktop_file);
     public GLib.SList categories { get; }
     public string comment { get; }

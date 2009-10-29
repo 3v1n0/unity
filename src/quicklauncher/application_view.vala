@@ -39,12 +39,10 @@ namespace Unity.Quicklauncher
       get { return _busy; }
       set {
         if (value)
-         
           this.anim = this.throbber.animate (Clutter.AnimationMode.EASE_IN_QUAD,
                                              1000, "opacity", 255);
         
         else 
-        
           this.anim = this.throbber.animate (Clutter.AnimationMode.EASE_IN_QUAD,
                                              1000, "opacity", 0);
         
@@ -264,20 +262,33 @@ namespace Unity.Quicklauncher
     
     private bool on_pressed(Clutter.Event src) 
     {
-      bool successful = false;
-      try 
-      {
-        app.launch ();
-        successful = true;
-      } catch (GLib.Error e)
-      {
-        critical ("could not launch application %s: %s", this.name, e.message);
+      debug ("is app running? %s", app.running ? "yes" : "no");
+      if (app.running)
+      { 
+        // we only want to switch to the application, not launch it
+        app.show ();
       }
-      
-      if (successful)
+      else 
       {
-        /* do the throbber */
-        this.busy = true;
+        
+        bool successful = false;
+        try 
+        {
+          app.launch ();
+          successful = true;
+        } catch (GLib.Error e)
+        {
+          critical ("could not launch application %s: %s", 
+                    this.name, 
+                    e.message);
+          return false;
+        }
+        
+        if (successful)
+        {
+          /* do the throbber */
+          this.busy = true;
+        }
       }
       
       return true;
