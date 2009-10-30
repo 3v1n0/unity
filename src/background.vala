@@ -31,16 +31,6 @@ namespace Unity
 
     private Clutter.Texture bg;
     
-    public Background ()
-    {
-
-    }
-
-    ~Background ()
-    {
-      //this.bg.unparent ();
-    }
-
     construct
     {
       var client = GConf.Client.get_default ();
