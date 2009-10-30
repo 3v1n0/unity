@@ -1,6 +1,7 @@
 bin_PROGRAMS = test-unity
 
 test_unity_CPPFLAGS = \
+  -I$(top_builddir)/libunity \
   -I$(top_builddir)/src \
   -I$(top_builddir)/src/quicklauncher \
   $(BASE_CFLAGS) \

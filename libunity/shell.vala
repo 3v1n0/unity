@@ -19,8 +19,14 @@
 
 namespace Unity
 {
-  public interface Shell : Object
+  public enum ShellMode {
+    UNDERLAY,
+    OVERLAY
+  }
+
+  public interface Shell : Gtk.Window
   {
-    public abstract void search (string search_string);
+    public abstract ShellMode     get_mode ();
+    public abstract Clutter.Stage get_stage ();
   }
 }

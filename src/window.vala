@@ -17,14 +17,134 @@
  *
  */
 
-namespace Unity {
-  
-  public interface UnderlayWindow : Gtk.Window
+namespace Unity
+{
+
+  public class UnderlayWindow : Gtk.Window, Shell
   {
-    public abstract void setup_window ();
-    public abstract void set_fullscreen ();
+    public bool is_popup { get; construct; }
+    public int  popup_width { get; construct; }
+    public int  popup_height { get; construct; }
+    
+    private Workarea workarea_size;
+
+    private GtkClutter.Embed gtk_clutter;
+    private Clutter.Stage    stage;
+    
+    private Quicklauncher.View quicklauncher;
+
+    public UnderlayWindow (bool popup, int width, int height)
+    {
+      this.is_popup = popup;
+      this.popup_width = width;
+      this.popup_height = height;
+    }
+    
+    construct
+    {
+      this.workarea_size = new Workarea ();
+      this.workarea_size.update_net_workarea ();
+      
+      if (this.is_popup)
+        {
+          this.type_hint = Gdk.WindowTypeHint.NORMAL;
+          this.decorated = true;
+          this.skip_taskbar_hint = false;
+          this.skip_pager_hint = false;
+          this.delete_event.connect (() => 
+            {
+              Gtk.main_quit ();
+              return false;
+            }
+          );
+        }
+      else
+        {
+          this.type_hint = Gdk.WindowTypeHint.DESKTOP;
+          this.decorated = false;
+          this.skip_taskbar_hint = true;
+          this.skip_pager_hint = true;
+          this.delete_event.connect (() => { return true; });
+        }
+      this.title = "Unity";
+      
+      /* Gtk.ClutterEmbed */
+      this.realize ();
+
+      this.gtk_clutter = new GtkClutter.Embed ();
+      this.add (this.gtk_clutter);
+      this.gtk_clutter.realize ();
+      
+      this.stage = (Clutter.Stage)this.gtk_clutter.get_stage ();
+      Clutter.Color stage_bg = Clutter.Color () { 
+          red = 0x00,
+          green = 0x00,
+          blue = 0x00,
+          alpha = 0xff 
+        };
+      this.stage.set_color (stage_bg);
+
+      /* Components */
+      this.quicklauncher = new Quicklauncher.View (this);
+      this.stage.add_actor (this.quicklauncher);
+      
+      /* Layout everything */
+      this.resize_window ();
+    }
+
+    private void resize_window ()
+    {
+      int width, height;
+
+      if (this.is_popup)
+        {
+          width = this.popup_width;
+          height = this.popup_height;
+        }
+      else
+        {
+          Gdk.Rectangle size;
+
+          this.screen.get_monitor_geometry (0, out size);
+          width = size.width 
+                  - this.workarea_size.right
+                  - this.workarea_size.left;
+          height = size.height
+                   - this.workarea_size.top
+                   - this.workarea_size.bottom;
+        }
+
+      debug ("UnderlayWindow: resize: %dx%d", width, height);
+
+      this.resize (width, height);
+      this.stage.set_size (width, height);
+      
+      this.quicklauncher.set_size (48, height);
+      this.quicklauncher.set_position (this.workarea_size.left,
+                                       this.workarea_size.top);
+    }
+
+    public override void show ()
+    {
+      base.show ();
+      this.gtk_clutter.show ();
+      this.stage.show_all ();
+    }
+
+    /*
+     * SHELL IMPLEMENTATION
+     */
+    public Clutter.Stage get_stage ()
+    {
+      return this.stage;
+    }
+
+    public ShellMode get_mode ()
+    {
+      return ShellMode.UNDERLAY;
+    }
   }
-  
+ 
   public class Workarea 
   {
     public signal void workarea_changed ();
@@ -42,74 +162,16 @@ namespace Unity {
       
       update_net_workarea ();
     }
-    
 
     public void update_net_workarea () 
     {
-      /* FIXME - steal code from the old liblauncher to do this (launcher-session.c)
-       * this is just fake code to get it running
+      /* FIXME - steal code from the old liblauncher to do this
+       * (launcher-session.c) this is just fake code to get it running
        */
-      
       left = 0;
-      right = 800;
-      top = 0;
-      bottom = 600;
+      right = 0;
+      top = 24;
+      bottom = 0;
     }
-  }
-  
-  public class Window : Gtk.Window, UnderlayWindow
-  {
-    
-    private GtkClutter.Embed gtk_clutter;
-    public Clutter.Stage stage;
-    private Workarea workarea_size;
-    
-    public void setup_window ()
-    {
-      this.decorated = false;
-      this.skip_taskbar_hint = true;
-      this.skip_pager_hint = true;
-      this.type_hint = Gdk.WindowTypeHint.NORMAL;
-      
-      this.realize ();
-    }
-    
-    public void set_fullscreen ()
-    {
-      int width;
-      int height;
-      
-      width = this.workarea_size.right - this.workarea_size.left;
-      height = this.workarea_size.bottom - this.workarea_size.top;
-
-      resize (width, height);
-      this.stage.set_size(width, height);
-      
-    }
-    
-    public Window ()
-    {
-      this.workarea_size = new Workarea ();
-      this.workarea_size.update_net_workarea ();
-      
-      setup_window ();
-      
-      this.gtk_clutter = new GtkClutter.Embed ();
-      this.add (this.gtk_clutter);
-      this.gtk_clutter.realize ();
-
-      this.stage = (Clutter.Stage)this.gtk_clutter.get_stage ();
-      Clutter.Color stage_bg = Clutter.Color ()
-        { 
-          red = 0x00,
-          green = 0x00,
-          blue = 0x00,
-          alpha = 0xB0
-        };
-      this.stage.set_color (stage_bg);
-      this.show_all ();
-      this.stage.show_all ();
-    }
-    
-  }
+  }  
 }

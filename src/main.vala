@@ -17,21 +17,88 @@
  *
  */
 
+static bool popup_mode   = false;
+static int  popup_width  = 1024;
+static int  popup_height = 600;
+static bool show_version = false;
+
+const OptionEntry[] options = {
+  {
+    "popup",
+    'p',
+    0,
+    OptionArg.NONE,
+    ref popup_mode,
+    "Popup the Unity window (for debugging)",
+    null
+  },
+  {
+    "width",
+    'w',
+    0,
+    OptionArg.INT,
+    ref popup_width,
+    "Width of Unity window (use with --popup/-p). Default: 1024",
+    null
+  },
+  {
+    "height",
+    'h',
+    0,
+    OptionArg.INT,
+    ref popup_height,
+    "Height of Unity window (use with --popup/-p). Default: 600",
+    null
+  },
+  {
+    "version",
+    'v',
+    0,
+    OptionArg.NONE,
+    ref show_version,
+    "Show the version and exit",
+    null
+  },
+  {
+    null
+  }
+};
+
 public class Main
 {
   public static int main (string[] args)
   {
-    Unity.Window window;
+    Unity.UnderlayWindow window;
 
+    /* Parse options */
     Gtk.init (ref args);
     GtkClutter.init (ref args);
-    
-    window = new Unity.Window ();
-    window.set_fullscreen ();
-    
-    var quicklauncher = new Unity.Quicklauncher.Main (window.stage);
-    window.stage.show_all ();
+    try
+      {
+        var opt_context = new OptionContext ("-- Unity");
+        opt_context.set_help_enabled (true);
+        opt_context.add_main_entries (options, null);
+        opt_context.parse (ref args);
+      }
+    catch (OptionError e)
+      {
+        warning ("Unable to parse arguments: %s", e.message);
+        warning ("Run '%s --help' to see a full list of available command line options",
+                 args[0]);
+        return 1;
+      }
 
+    if (show_version)
+      {
+        /* FIXME: Add VERSION define */
+        print ("\nUnity %s\n", "0.1.0");
+        return 0;
+      }
+
+    /* Things seem to be okay, load the main window */
+    window = new Unity.UnderlayWindow (popup_mode, popup_width, popup_height);
+   
+    window.show ();
     Gtk.main ();
 
     return 0;
