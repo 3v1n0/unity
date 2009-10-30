@@ -28,6 +28,7 @@ libunity_static_la_VALAFLAGS = \
   --pkg gtk+-2.0 \
   --pkg gdk-2.0 \
   --pkg gee-1.0 \
+  --pkg gconf-2.0 \
   --pkg launcher-0.3 \
   --pkg x11 \
   --pkg unity \
@@ -41,6 +42,7 @@ libunity_static_la_LIBADD = \
 
 libunity_static_la_SOURCES = \
   unity-utils.c \
+  background.vala \
   unity.vala \
   utils.vala \
   window.vala

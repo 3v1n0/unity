@@ -31,7 +31,8 @@ namespace Unity
 
     private GtkClutter.Embed gtk_clutter;
     private Clutter.Stage    stage;
-    
+
+    private Background         background;
     private Quicklauncher.View quicklauncher;
 
     public UnderlayWindow (bool popup, int width, int height)
@@ -86,6 +87,10 @@ namespace Unity
       this.stage.set_color (stage_bg);
 
       /* Components */
+      this.background = new Background ();
+      this.stage.add_actor (this.background);
+      this.background.show ();
+
       this.quicklauncher = new Quicklauncher.View (this);
       this.stage.add_actor (this.quicklauncher);
       
@@ -107,20 +112,21 @@ namespace Unity
           Gdk.Rectangle size;
 
           this.screen.get_monitor_geometry (0, out size);
-          width = size.width 
-                  - this.workarea_size.right
-                  - this.workarea_size.left;
-          height = size.height
-                   - this.workarea_size.top
-                   - this.workarea_size.bottom;
+          width = size.width;
+          height = size.height;
         }
 
       debug ("UnderlayWindow: resize: %dx%d", width, height);
 
       this.resize (width, height);
       this.stage.set_size (width, height);
+
       if (!this.is_popup)
-        Utils.set_strut ((Gtk.Window)this, 48, 0, height);
+        Utils.set_strut ((Gtk.Window)this, 54, 0, height);
+
+      /* Update component layouts */
+      this.background.set_position (0, 0);
+      this.background.set_size (width, height);
       
       this.quicklauncher.set_size (54, height);
       this.quicklauncher.set_position (this.workarea_size.left,
