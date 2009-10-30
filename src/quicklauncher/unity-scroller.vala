@@ -113,8 +113,6 @@ namespace Unity.Widgets
         minimum_width = pmin_width;
         natural_width = pnat_width;
 
-        debug ("min/nat width: %f - %f", minimum_width, natural_width);
-
         return;
       }
       
@@ -232,9 +230,8 @@ namespace Unity.Widgets
 
       Clutter.ActorBox bgbox;
       get_allocation_box (out bgbox);
-      debug ("boxheight: %f", bgbox.get_height ());
-      debug ("childheight: %f", y);
       bgbox.y2 = y;
+
       bgtex.allocate (bgbox, flags);
       gradient.width = bgbox.get_width();
       gradient.allocate (bgbox, flags);
@@ -243,8 +240,8 @@ namespace Unity.Widgets
     public override void pick (Clutter.Color color)
     {
       base.pick (color);
-      bgtex.paint ();
 
+      bgtex.paint ();
       gradient.paint ();
       foreach (Clutter.Actor child in children)
       {
@@ -254,15 +251,6 @@ namespace Unity.Widgets
 
     public override void paint ()
     {
-      //base.paint ();
-      float width, height;
-      Clutter.ActorBox box;
-      get_allocation_box (out box);
-      box.get_size(out width, out height);
-      
-      float cox, coy;
-      box.get_origin (out cox, out coy);
-
       bgtex.paint ();
       gradient.paint ();
 
@@ -280,7 +268,6 @@ namespace Unity.Widgets
     }
 
     public void add_actor (Clutter.Actor actor)
-    //  requires (!(actor in this.children))
       requires (this.get_parent () != null)
     {
       this.children.add (actor);
@@ -295,7 +282,6 @@ namespace Unity.Widgets
 
     }
     public void remove_actor (Clutter.Actor actor)
-    //  requires (actor in this.children)
     {
       this.children.remove (actor);
       actor.unparent ();
@@ -313,6 +299,18 @@ namespace Unity.Widgets
       }
     }
     
+    public void foreach_with_internals (Clutter.Callback callback, 
+                                        void* userdata)
+    {
+      callback (bgtex, null);
+      callback (gradient, null);
+      foreach (Clutter.Actor child in this.children)
+      {
+        callback (child, null);
+      }
+    }
+
+
     /* empty interface methods */
     public void create_child_meta (Clutter.Actor actor) 
     {
@@ -335,18 +333,6 @@ namespace Unity.Widgets
     public Clutter.ChildMeta get_child_meta (Clutter.Actor actor)
     {
       return null;
-    }
-
-
-    public void foreach_with_internals (Clutter.Callback callback, 
-                                        void* userdata)
-    {
-      callback (bgtex, null);
-      callback (gradient, null);
-      foreach (Clutter.Actor child in this.children)
-      {
-        callback (child, null);
-      }
     }
 
     public void sort_depth_order ()
