@@ -1,8 +1,13 @@
+DATADIR = $(datadir)
+PKGDATADIR = $(datadir)/unity
+
 noinst_LTLIBRARIES = \
   libunity-quicklauncher.la
 
 # unity-quicklauncher static lib
 libunity_quicklauncher_la_CPPFLAGS = \
+  -DDATADIR=\"$(DATADIR)\" \
+  -DPKGDATADIR=\"$(PKGDATADIR)\" \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS)
 
@@ -15,6 +20,7 @@ libunity_quicklauncher_la_VALAFLAGS = \
   --pkg launcher-0.3 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
+  --pkg unity-const \
   $(MAINTAINER_VALAFLAGS)
 
 libunity_quicklauncher_la_LIBADD = \
