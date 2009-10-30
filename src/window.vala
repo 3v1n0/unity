@@ -79,7 +79,7 @@ namespace Unity
       this.stage = (Clutter.Stage)this.gtk_clutter.get_stage ();
       Clutter.Color stage_bg = Clutter.Color () { 
           red = 0x00,
-          green = 0x00,
+          green = 0xff,
           blue = 0x00,
           alpha = 0xff 
         };
@@ -88,6 +88,7 @@ namespace Unity
       /* Components */
       this.background = new Background ();
       this.stage.add_actor (this.background);
+      this.background.show ();
 
       this.quicklauncher = new Quicklauncher.View (this);
       this.stage.add_actor (this.quicklauncher);
@@ -120,6 +121,7 @@ namespace Unity
       this.stage.set_size (width, height);
 
       /* Update component layouts */
+      this.background.set_position (0, 0);
       this.background.set_size (width, height);
       
       this.quicklauncher.set_size (48,

@@ -19,7 +19,7 @@
 
 namespace Unity
 {
-  public class Background : Ctk.Actor
+  public class Background : Ctk.Bin
   {
     /* Gnome Desktop background gconf keys */
     private string BG_DIR    = "/desktop/gnome/background";
@@ -28,10 +28,17 @@ namespace Unity
     
     private string filename;
     private string option;
+
+    private Clutter.Texture bg;
     
     public Background ()
     {
 
+    }
+
+    ~Background ()
+    {
+      //this.bg.unparent ();
     }
 
     construct
@@ -55,7 +62,8 @@ namespace Unity
         }
       catch (Error e)
         {
-          warning ("Background: Unable to monitor background: %s", e.message);
+          warning ("Background: Unable to monitor background filename: %s",
+                   e.message);
         }
 
       this.option = client.get_string (this.BG_OPTION);
@@ -65,10 +73,17 @@ namespace Unity
         }
       catch (Error e)
         {
-          warning ("Background: Unable to monitor background: %s", e.message);
+          warning ("Background: Unable to monitor background options: %s",
+                   e.message);
         }
 
-      debug ("Background: %s %s", this.filename, this.option);
+      /* The texture that will show the background */
+      this.bg = new Clutter.Texture ();
+      this.add_actor (this.bg);
+      this.bg.show ();
+
+      /* Load the texture */
+      this.ensure_layout ();
     }
 
     private void on_filename_changed (GConf.Client client,
@@ -81,7 +96,7 @@ namespace Unity
         return;
       
       this.filename = new_filename;
-      debug ("Background: FilenameChanged: %s\n", this.filename);
+      this.ensure_layout ();
     }
 
     private void on_option_changed (GConf.Client client,
@@ -93,9 +108,24 @@ namespace Unity
       if (new_option == this.option)
         return;
 
-      this.option = new_option;
-      debug ("Background: OptionsChanged: %s\n", this.option);
+      this.option = new_option;    
+      this.ensure_layout ();
+    }
+
+    private void ensure_layout ()
+    {
+      try
+        {
+          this.bg.set_from_file (this.filename);
+        }
+      catch (Error e)
+        {
+          warning ("Background: Unable to load background file %s: %s",
+                   this.filename,
+                   e.message);
+        }
+
+      this.queue_relayout ();
     }
   }
-
 }
