@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by Gordon Allott <gord.allott@canonical.com>
+ *             Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
 
@@ -79,7 +80,7 @@ namespace Unity
       this.stage = (Clutter.Stage)this.gtk_clutter.get_stage ();
       Clutter.Color stage_bg = Clutter.Color () { 
           red = 0x00,
-          green = 0xff,
+          green = 0x00,
           blue = 0x00,
           alpha = 0xff 
         };
@@ -120,14 +121,14 @@ namespace Unity
       this.resize (width, height);
       this.stage.set_size (width, height);
 
+      if (!this.is_popup)
+        Utils.set_strut ((Gtk.Window)this, 54, 0, height);
+
       /* Update component layouts */
       this.background.set_position (0, 0);
       this.background.set_size (width, height);
       
-      this.quicklauncher.set_size (48,
-                                   height
-                                    - this.workarea_size.top 
-                                    - this.workarea_size.bottom);
+      this.quicklauncher.set_size (54, height);
       this.quicklauncher.set_position (this.workarea_size.left,
                                        this.workarea_size.top);
     }

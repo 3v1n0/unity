@@ -41,8 +41,10 @@ libunity_static_la_LIBADD = \
   quicklauncher/libunity-quicklauncher.la
 
 libunity_static_la_SOURCES = \
+  unity-utils.c \
   background.vala \
   unity.vala \
+  utils.vala \
   window.vala
 
 # unity binary
