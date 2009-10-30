@@ -64,3 +64,4 @@ unity.vapi
 src/window.c
 src/quicklauncher/application_store.c
 src/quicklauncher/application_view.c
+src/unity.c
