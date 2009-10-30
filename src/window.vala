@@ -119,7 +119,7 @@ namespace Unity
       this.resize (width, height);
       this.stage.set_size (width, height);
       
-      this.quicklauncher.set_size (48, height);
+      this.quicklauncher.set_size (54, height);
       this.quicklauncher.set_position (this.workarea_size.left,
                                        this.workarea_size.top);
     }

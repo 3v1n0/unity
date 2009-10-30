@@ -304,7 +304,7 @@ namespace Unity.Widgets
       this.actor_removed (actor);
     }
 
-    public void @foreach (Clutter.Callback callback)
+    public void @foreach (Clutter.Callback callback, void* userdata)
     {
       foreach (Clutter.Actor child in this.children)
       {
@@ -314,14 +314,6 @@ namespace Unity.Widgets
     }
     
     /* empty interface methods */
-    public void lower (Clutter.Actor actor, Clutter.Actor sibling)
-    {
-    }
-
-    public void raise (Clutter.Actor actor, Clutter.Actor sibling)
-    {
-    }
-
     public void create_child_meta (Clutter.Actor actor) 
     {
     }
@@ -330,13 +322,24 @@ namespace Unity.Widgets
     {
     }
 
+    public new void lower (Clutter.Actor actor, Clutter.Actor sibling)
+    {
+    }
+
+		public new void raise (Clutter.Actor actor, Clutter.Actor sibling)
+    {
+    }
+    /* has to return something, implimentation does not have ? so we can't
+     * return null without a warning =\
+     */
     public Clutter.ChildMeta get_child_meta (Clutter.Actor actor)
     {
       return null;
     }
 
 
-    public void foreach_with_internals (Clutter.Callback callback)
+    public void foreach_with_internals (Clutter.Callback callback, 
+                                        void* userdata)
     {
       callback (bgtex, null);
       callback (gradient, null);
