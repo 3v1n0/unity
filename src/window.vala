@@ -67,6 +67,10 @@ namespace Unity
           this.skip_taskbar_hint = true;
           this.skip_pager_hint = true;
           this.delete_event.connect (() => { return true; });
+          this.screen.size_changed.connect ((s) => 
+                                            { this.relayout (); });
+          this.screen.monitors_changed.connect ((s) =>
+                                                { this.relayout (); });
         }
       this.title = "Unity";
       
@@ -95,15 +99,17 @@ namespace Unity
       this.stage.add_actor (this.quicklauncher);
       
       /* Layout everything */
-      this.resize_window ();
+      this.relayout ();
     }
 
-    private void resize_window ()
+    private void relayout ()
     {
-      int width, height;
+      int x, y, width, height;
 
       if (this.is_popup)
         {
+          x = 0;
+          y = 0;
           width = this.popup_width;
           height = this.popup_height;
         }
@@ -112,12 +118,15 @@ namespace Unity
           Gdk.Rectangle size;
 
           this.screen.get_monitor_geometry (0, out size);
+          x = size.x;
+          y = size.y;
           width = size.width;
           height = size.height;
         }
 
-      debug ("UnderlayWindow: resize: %dx%d", width, height);
+      debug ("relayout: %dx%d - %dx%d", x, y, width, height);
 
+      this.move (x, y);
       this.resize (width, height);
       this.stage.set_size (width, height);
 
