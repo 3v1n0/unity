@@ -38,7 +38,7 @@ const OptionEntry[] options = {
     0,
     OptionArg.INT,
     ref popup_width,
-    "Width of Unity window (must be used with --popup/-p). Default: 1024",
+    "Width of Unity window (use with --popup/-p). Default: 1024",
     null
   },
   {
@@ -47,7 +47,7 @@ const OptionEntry[] options = {
     0,
     OptionArg.INT,
     ref popup_height,
-    "Height of Unity window (must be used with --popup/ip). Default: 600",
+    "Height of Unity window (use with --popup/-p). Default: 600",
     null
   },
   {
