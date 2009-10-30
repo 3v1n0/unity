@@ -36,7 +36,7 @@ namespace Unity.Quicklauncher
   public class ApplicationStore : Ctk.Bin
   {
     
-    private Ctk.VBox container;
+    private Unity.Widgets.Scroller container;
     private Gee.ArrayList<ApplicationView> widgets;
     private Gee.ArrayList<Launcher.Application> apps;
     
@@ -52,7 +52,8 @@ namespace Unity.Quicklauncher
       this.widgets = new Gee.ArrayList<ApplicationView> ();
       this.apps = new Gee.ArrayList<Launcher.Application> ();
       
-      container = new Ctk.VBox (2);
+      container = new Unity.Widgets.Scroller (Ctk.Orientation.VERTICAL,
+											  6);
       add_actor (container);
       
       build_favorites ();
@@ -140,7 +141,7 @@ namespace Unity.Quicklauncher
       var app_view = new ApplicationView (app);
       apps.add (app);
       widgets.add (app_view);
-      container.pack(app_view, false, false);
+      container.add_actor(app_view);
       
       app_view.request_remove.connect(remove_application);
       
@@ -153,7 +154,7 @@ namespace Unity.Quicklauncher
       // for now just remove the application quickly. at some point
       // i would assume we have to pretty fading though, thats trivial to do
       
-      this.container.remove_actor(app);
+      this.container.remove_actor (app);
       apps.remove (app.app);
       widgets.remove (app);
       

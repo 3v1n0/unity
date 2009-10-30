@@ -122,7 +122,7 @@ namespace Unity
       if (!this.is_popup)
         Utils.set_strut ((Gtk.Window)this, 48, 0, height);
       
-      this.quicklauncher.set_size (48, height);
+      this.quicklauncher.set_size (54, height);
       this.quicklauncher.set_position (this.workarea_size.left,
                                        this.workarea_size.top);
     }
