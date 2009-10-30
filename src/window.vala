@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by Gordon Allott <gord.allott@canonical.com>
+ *             Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
 
@@ -118,6 +119,8 @@ namespace Unity
 
       this.resize (width, height);
       this.stage.set_size (width, height);
+      if (!this.is_popup)
+        Utils.set_strut ((Gtk.Window)this, 48, 0, height);
       
       this.quicklauncher.set_size (48, height);
       this.quicklauncher.set_position (this.workarea_size.left,
