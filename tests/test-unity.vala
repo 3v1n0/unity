@@ -44,9 +44,11 @@ public class Main
   private static void add_launcher_tests ()
   {
     Test.add_func ("/Unity/Window", () => {
-        var window = new Unity.Window ();
+        var window = new Unity.UnderlayWindow (false, 0, 0);
         
         assert (window is Gtk.Window);
+
+        window.show ();
         assert (window.visible);
       }      
     );

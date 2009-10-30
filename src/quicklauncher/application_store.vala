@@ -131,7 +131,7 @@ namespace Unity.Quicklauncher
     /**
      * adds the Launcher.Application @app to this container
      */
-    private ApplicationView add_application (Launcher.Application app)
+    private ApplicationView? add_application (Launcher.Application app)
     {
       if (app in this.apps)
         /* the application object will signal itself, we don't need to 
