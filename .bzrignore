@@ -68,3 +68,4 @@ src/background.c
 src/unity.c
 src/quicklauncher/unity-scroller.c
 src/utils.c
+src/application.c

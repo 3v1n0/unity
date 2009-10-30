@@ -76,6 +76,7 @@ PKG_CHECK_MODULES(BASE,
                   clutk-0.3 >= 0.3
                   launcher-0.3 >= 0.3
                   libwnck-1.0 >= 2.28.0
+                  unique-1.0
                   x11
                   )
 AC_SUBST(BASE_CFLAGS)
