@@ -23,6 +23,9 @@ namespace Unity.Widgets
   public class Scroller : Ctk.Actor, Clutter.Container
   {
     
+    private Clutter.Texture bgtex;
+    private Clutter.Texture gradient;
+
     private int _spacing;
     public int spacing {
       get { return _spacing; }
@@ -37,9 +40,43 @@ namespace Unity.Widgets
       this.orientation = orientation;
       this.spacing = spacing;
       children = new Gee.ArrayList<Clutter.Actor> ();
-      //set_reactive (true);
     }
 
+    construct {
+      children = new Gee.ArrayList<Clutter.Actor> ();
+      bgtex = new Clutter.Texture.from_file (
+        Unity.PKGDATADIR + "/honeycomb.png"
+        );
+      assert (bgtex is Clutter.Texture);
+
+      gradient = new Clutter.Texture.from_file (
+        Unity.PKGDATADIR + "/gradient.png"
+        );
+      assert (gradient is Clutter.Texture);
+
+      var mypadding = this.padding;
+      
+      mypadding.left = 6.0f;
+      mypadding.right = 6.0f;
+
+      this.padding = mypadding;
+      
+      bgtex.set_repeat (true, true);
+      bgtex.set_opacity (0xA0);
+
+      gradient.set_repeat (false, true);
+      gradient.set_opacity (0x20);
+
+      bgtex.set_parent (this);
+      bgtex.queue_relayout ();
+      
+      gradient.set_parent (this);
+      gradient.queue_relayout ();
+      
+
+      set_reactive (true);
+    }
+    
     /* Clutter methods */
     public override void get_preferred_width (float for_height, 
                                      out float minimum_width, 
@@ -131,10 +168,6 @@ namespace Unity.Widgets
       
       float cwidth;
       float cheight;
-      //box.get_size(out cwidth, out cheight);
-      //float cox;
-      //float coy;
-      //box.get_origin (out cox, out coy);
       
       cwidth = (box.x2 - box.x1) - padding.left - padding.right;
       cheight = (box.y2 - box.y1) - padding.top - padding.bottom;
@@ -196,12 +229,23 @@ namespace Unity.Widgets
 
         child.allocate (child_box, flags);
       }
+
+      Clutter.ActorBox bgbox;
+      get_allocation_box (out bgbox);
+      debug ("boxheight: %f", bgbox.get_height ());
+      debug ("childheight: %f", y);
+      bgbox.y2 = y;
+      bgtex.allocate (bgbox, flags);
+      gradient.width = bgbox.get_width();
+      gradient.allocate (bgbox, flags);
     }
 
     public override void pick (Clutter.Color color)
     {
       base.pick (color);
+      bgtex.paint ();
 
+      gradient.paint ();
       foreach (Clutter.Actor child in children)
       {
         child.paint ();
@@ -219,9 +263,12 @@ namespace Unity.Widgets
       float cox, coy;
       box.get_origin (out cox, out coy);
 
+      bgtex.paint ();
+      gradient.paint ();
+
       foreach (Clutter.Actor child in children) 
       {
-        //if ((child.flags & Clutter.ActorFlags.VISIBLE) != 0)
+        if ((child.flags & Clutter.ActorFlags.VISIBLE) != 0)
           child.paint ();
       }
 
@@ -291,6 +338,8 @@ namespace Unity.Widgets
 
     public void foreach_with_internals (Clutter.Callback callback)
     {
+      callback (bgtex, null);
+      callback (gradient, null);
       foreach (Clutter.Actor child in this.children)
       {
         callback (child, null);
