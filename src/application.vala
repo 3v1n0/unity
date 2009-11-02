@@ -48,12 +48,20 @@ namespace Unity
                                                 Unique.MessageData data,
                                                 uint               time_)
     {
+      Unique.Response res = Unique.Response.OK;
+
       debug ("Message Received: %d '%s' %d",
              command,
              data.get_text (),
              (int)time_);
 
-      return Unique.Response.OK;
+      if (command == ApplicationCommands.SHOW)
+        {
+          if (this.shell is Shell)
+            this.shell.show_unity ();
+        }
+
+      return res;
     }
   }
 }

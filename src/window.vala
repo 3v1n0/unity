@@ -73,6 +73,7 @@ namespace Unity
                                                 { this.relayout (); });
         }
       this.title = "Unity";
+      this.icon_name = "distributor-logo";
       
       /* Gtk.ClutterEmbed */
       this.realize ();
@@ -160,6 +161,11 @@ namespace Unity
     public ShellMode get_mode ()
     {
       return ShellMode.UNDERLAY;
+    }
+
+    public void show_unity ()
+    {
+      debug ("FIXME: Show the unity window");
     }
   }
  

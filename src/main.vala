@@ -124,13 +124,10 @@ public class Main
         
         return response == Unique.Response.OK ? 0 : 1;
       }
-    else
-      {
-        /*Init real */
-      }
 
     /* Things seem to be okay, load the main window */
     window = new Unity.UnderlayWindow (popup_mode, popup_width, popup_height);
+    app.shell = window;
    
     window.show ();
     Gtk.main ();

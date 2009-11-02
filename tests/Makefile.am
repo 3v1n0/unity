@@ -29,6 +29,7 @@ test_unity_VALAFLAGS = \
   --pkg gee-1.0 \
   --pkg clutk-0.3 \
   --pkg launcher-0.3 \
+  --pkg unique-1.0 \
   --pkg unity \
   --pkg unity-static \
   --pkg unity-quicklauncher \
