@@ -184,7 +184,7 @@ namespace Unity.Quicklauncher
        * of the month sprint
        */
       Gdk.Pixbuf pixbuf;
-      Gtk.IconTheme theme = new Gtk.IconTheme();
+      Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
       
       if (icon_name == null)
         {
