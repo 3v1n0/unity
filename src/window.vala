@@ -192,7 +192,7 @@ namespace Unity
 
     public void show_unity ()
     {
-      debug ("FIXME: Show the unity window");
+      this.wnck_screen.toggle_showing_desktop (true);
     }
   }
  
