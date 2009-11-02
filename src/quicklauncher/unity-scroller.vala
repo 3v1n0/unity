@@ -57,9 +57,6 @@ namespace Unity.Widgets
       this.spacing = spacing;
       children = new Gee.ArrayList<Clutter.Actor> ();
 
-      // to make gcc shut up for now
-      var foo = scroll_value_as_px;
-
       scroll_pos = 1.0f;
     }
 
@@ -79,6 +76,8 @@ namespace Unity.Widgets
       
       mypadding.left = 6.0f;
       mypadding.right = 6.0f;
+      mypadding.top = 6.0f;
+      mypadding.bottom = 6.0f;
 
       this.padding = mypadding;
       
@@ -97,9 +96,14 @@ namespace Unity.Widgets
       action_negative = new Ctk.Image.from_filename (
         24, Unity.PKGDATADIR + "/action_vert_neg.svg"
         );
+      assert (action_negative is Ctk.Image);
+      action_negative.set_parent (this);
+
       action_positive = new Ctk.Image.from_filename (
         24, Unity.PKGDATADIR + "/action_vert_pos.svg"
         );
+      assert (action_positive is Ctk.Image);
+      action_positive.set_parent (this);
       
 
       set_reactive (true);
@@ -204,9 +208,6 @@ namespace Unity.Widgets
 
       base.allocate (box, flags);
 
-      debug ("scroll px: %f", this.scroll_value_as_px);
-
-
       foreach (Clutter.Actor child in this.children)
       {
         float min_width = 0.0f;
@@ -228,7 +229,6 @@ namespace Unity.Widgets
       float x = padding.left;
       float y = padding.top + (-(float)this.scroll_value_as_px);
 
-      // first position the negative action actor
       float child_width;
       float child_height;
       Clutter.ActorBox child_box;
@@ -242,6 +242,13 @@ namespace Unity.Widgets
       child_box.x2 = padding.left + action_negative.width;
       action_negative.allocate (child_box, flags);
 
+      action_positive.get_allocation_box (out child_box);
+      child_box.y2 = box.y2 - padding.bottom;
+      child_box.y1 = child_box.y2 - action_positive.height;
+      child_box.x1 = padding.left;
+      child_box.x2 = padding.left + action_positive.width;
+      action_positive.allocate (child_box, flags);
+
       
       foreach (Clutter.Actor child in this.children)
       {
@@ -254,7 +261,7 @@ namespace Unity.Widgets
         if (orientation == Ctk.Orientation.VERTICAL)
         {
           child_box.x1 = x;
-          child_box.x2 = x + child_width;
+          child_box.x2 = x + child_width + padding.right;
           child_box.y1 = y;
           child_box.y2 = y + child_height;
           
@@ -267,8 +274,6 @@ namespace Unity.Widgets
 
         child.allocate (child_box, flags);
       }
-
-
 
       bgtex.allocate (box, flags);
       gradient.width = box.get_width();
@@ -299,6 +304,7 @@ namespace Unity.Widgets
           child.paint ();
       }
 
+      action_positive.paint (); 
       action_negative.paint ();
     }
     
@@ -344,6 +350,8 @@ namespace Unity.Widgets
     {
       callback (bgtex, null);
       callback (gradient, null);
+      callback (action_positive, null);
+      callback (action_negative, null);
       foreach (Clutter.Actor child in this.children)
       {
         callback (child, null);

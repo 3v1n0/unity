@@ -112,6 +112,15 @@ namespace Unity.Quicklauncher
       this.icon = new Ctk.Image (42);
       this.container.add_actor(this.icon);
 
+      var mypadding = Ctk.Padding () {
+        left = 0.0f,
+        top = 0.0f,
+        bottom = 0.0f,
+        right = 0.0f
+      };
+      this.padding = mypadding;
+        
+
       generate_view_from_app ();
       load_textures ();
         
@@ -222,6 +231,17 @@ namespace Unity.Quicklauncher
               if (pixbuf is Gdk.Pixbuf)
                 return pixbuf;
             }
+        }
+
+      if (FileUtils.test ("/usr/share/pixmaps/" + icon_name, 
+                          FileTest.IS_REGULAR))
+        {
+          pixbuf = new Gdk.Pixbuf.from_file_at_scale (
+            "/usr/share/pixmaps/" + icon_name, 42, 42, true
+            );
+          
+          if (pixbuf is Gdk.Pixbuf)
+            return pixbuf;
         }
       
       Gtk.IconInfo info = theme.lookup_icon(icon_name, 42, 0);
