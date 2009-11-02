@@ -27,7 +27,8 @@ namespace Unity
     public int  popup_width { get; construct; }
     public int  popup_height { get; construct; }
     
-    private Workarea workarea_size;
+    private Wnck.Screen wnck_screen;
+    private Workarea    workarea_size;
 
     private GtkClutter.Embed gtk_clutter;
     private Clutter.Stage    stage;
@@ -101,6 +102,10 @@ namespace Unity
       
       /* Layout everything */
       this.relayout ();
+
+      /* Window management */
+      this.wnck_screen = Wnck.Screen.get_default ();
+      this.wnck_screen.active_window_changed.connect (this.on_active_window_changed);
     }
 
     private void relayout ()
@@ -148,6 +153,28 @@ namespace Unity
       base.show ();
       this.gtk_clutter.show ();
       this.stage.show_all ();
+    }
+
+    /*
+     * UNDERLAY WINDOW MANAGEMENT
+     */
+    public void on_active_window_changed (Wnck.Window? previous_window)
+    {
+      Wnck.Window new_window = this.wnck_screen.get_active_window ();
+
+      /* FIXME: We want the second check to be a class_name or pid check */
+      if (new_window.get_type () != Wnck.WindowType.DESKTOP
+          && new_window.get_name () == "Unity")
+        {
+          this.wnck_screen.toggle_showing_desktop (true);
+        }
+      else
+        {
+          /* FIXME: We want to suppress events getting to the stage at this
+           * point, to stop the user accidently activating a control when they
+           * just want to switch to the launcher
+           */
+        }
     }
 
     /*
