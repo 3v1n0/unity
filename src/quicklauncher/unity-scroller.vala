@@ -163,12 +163,7 @@ namespace Unity.Widgets
     {
 
       base.allocate (box, flags);
-      
-      float cwidth;
-      float cheight;
-      
-      cwidth = (box.x2 - box.x1) - padding.left - padding.right;
-      cheight = (box.y2 - box.y1) - padding.top - padding.bottom;
+
 
       foreach (Clutter.Actor child in this.children)
       {
@@ -182,17 +177,8 @@ namespace Unity.Widgets
 
         child.get_preferred_height(box.x2 - box.x1,
                                    out min_height, out nat_height);
-        
-        if (orientation == Ctk.Orientation.VERTICAL)
-        {
-          child.width = min_width;
-          child.height = min_height;
-        }
-        else 
-        {
-          child.width = cwidth;
-          child.height = min_height;
-        }
+        child.width = min_width;
+        child.height = min_height;
       }
 
       // position the actors
@@ -227,14 +213,9 @@ namespace Unity.Widgets
 
         child.allocate (child_box, flags);
       }
-
-      Clutter.ActorBox bgbox;
-      get_allocation_box (out bgbox);
-      bgbox.y2 = y;
-
-      bgtex.allocate (bgbox, flags);
-      gradient.width = bgbox.get_width();
-      gradient.allocate (bgbox, flags);
+      bgtex.allocate (box, flags);
+      gradient.width = box.get_width();
+      gradient.allocate (box, flags);
     }
 
     public override void pick (Clutter.Color color)
