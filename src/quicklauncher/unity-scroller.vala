@@ -23,8 +23,22 @@ namespace Unity.Widgets
   public class Scroller : Ctk.Actor, Clutter.Container
   {
     
+    public double scroll_pos;
+
+    private double scroll_value_as_px {
+      get 
+      { 
+        var pos = scroll_pos * (this.total_child_height - this.height);
+        return pos.max(0.0, pos);
+      }
+    }
+
     private Clutter.Texture bgtex;
     private Clutter.Texture gradient;
+
+    // our two action images, positive and negative
+    private Ctk.Image action_negative;
+    private Ctk.Image action_positive;
 
     private int _spacing;
     public int spacing {
@@ -35,11 +49,18 @@ namespace Unity.Widgets
 
     private Gee.ArrayList<Clutter.Actor> children;
 
+    private double total_child_height;
+
     public Scroller (Ctk.Orientation orientation, int spacing) 
     {
       this.orientation = orientation;
       this.spacing = spacing;
       children = new Gee.ArrayList<Clutter.Actor> ();
+
+      // to make gcc shut up for now
+      var foo = scroll_value_as_px;
+
+      scroll_pos = 1.0f;
     }
 
     construct {
@@ -72,6 +93,13 @@ namespace Unity.Widgets
       
       gradient.set_parent (this);
       gradient.queue_relayout ();
+
+      action_negative = new Ctk.Image.from_filename (
+        24, Unity.PKGDATADIR + "/action_vert_neg.svg"
+        );
+      action_positive = new Ctk.Image.from_filename (
+        24, Unity.PKGDATADIR + "/action_vert_pos.svg"
+        );
       
 
       set_reactive (true);
@@ -137,6 +165,17 @@ namespace Unity.Widgets
       if (orientation == Ctk.Orientation.VERTICAL) 
       {
 
+        this.action_positive.get_preferred_height (for_width, 
+                                                   out cmin_height, 
+                                                   out cnat_height);
+        
+        all_child_height += cnat_height;
+        
+        this.action_negative.get_preferred_height (for_width, 
+                                                   out cmin_height, 
+                                                   out cnat_height);
+
+        all_child_height += cnat_height;
         foreach (Clutter.Actor child in this.children)
         {
           cnat_height = 0.0f;
@@ -151,6 +190,7 @@ namespace Unity.Widgets
         minimum_height = all_child_height + padding.top + padding.bottom;
         natural_height = all_child_height + padding.top + padding.bottom;
    
+        this.total_child_height = all_child_height; 
         return;
       }
 
@@ -163,6 +203,8 @@ namespace Unity.Widgets
     {
 
       base.allocate (box, flags);
+
+      debug ("scroll px: %f", this.scroll_value_as_px);
 
 
       foreach (Clutter.Actor child in this.children)
@@ -184,13 +226,25 @@ namespace Unity.Widgets
       // position the actors
 
       float x = padding.left;
-      float y = padding.top;
+      float y = padding.top + (-(float)this.scroll_value_as_px);
 
+      // first position the negative action actor
+      float child_width;
+      float child_height;
+      Clutter.ActorBox child_box;
+
+      //allocate the size of our action actors
+
+      action_negative.get_allocation_box (out child_box);
+      child_box.y1 = padding.top;
+      child_box.x1 = padding.left;
+      child_box.y2 = padding.top + action_negative.height;
+      child_box.x2 = padding.left + action_negative.width;
+      action_negative.allocate (child_box, flags);
+
+      
       foreach (Clutter.Actor child in this.children)
       {
-        float child_width;
-        float child_height;
-        Clutter.ActorBox child_box;
         child.get_allocation_box (out child_box);
         
         child_width = child.width;
@@ -213,6 +267,9 @@ namespace Unity.Widgets
 
         child.allocate (child_box, flags);
       }
+
+
+
       bgtex.allocate (box, flags);
       gradient.width = box.get_width();
       gradient.allocate (box, flags);
@@ -235,12 +292,14 @@ namespace Unity.Widgets
       bgtex.paint ();
       gradient.paint ();
 
+      
       foreach (Clutter.Actor child in children) 
       {
         if ((child.flags & Clutter.ActorFlags.VISIBLE) != 0)
           child.paint ();
       }
 
+      action_negative.paint ();
     }
     
 
