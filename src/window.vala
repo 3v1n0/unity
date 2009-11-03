@@ -167,7 +167,8 @@ namespace Unity
       Wnck.Window new_window = this.wnck_screen.get_active_window ();
 
       /* FIXME: We want the second check to be a class_name or pid check */
-      if (new_window.get_type () != Wnck.WindowType.DESKTOP
+      if (new_window is Wnck.Window 
+          && new_window.get_type () != Wnck.WindowType.DESKTOP
           && new_window.get_name () == "Unity")
         {
           this.wnck_screen.toggle_showing_desktop (true);
