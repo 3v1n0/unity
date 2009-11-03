@@ -120,9 +120,12 @@ namespace Unity.Quicklauncher
       this.app.closed.connect(this.on_app_closed);
       
       button_press_event.connect(this.on_pressed);
+
+      /* hook up glow for enter/leave events */
       enter_event.connect(this.on_mouse_enter);
       leave_event.connect(this.on_mouse_leave);
 
+      /* hook up tooltip for enter/leave events */
       this.tooltip = Unity.TooltipManager.get_default().create (this.app.name);
       this.icon.enter_event.connect (this.on_enter);
       this.icon.leave_event.connect (this.on_leave);
@@ -284,14 +287,14 @@ namespace Unity.Quicklauncher
     private bool on_enter (Clutter.Event event)
     {
       Unity.TooltipManager.get_default().show (this.tooltip, (int) x, (int) y);
-      return true;
+      return false;
     } 
 
     private bool on_leave (Clutter.Event event)
     {
       Unity.TooltipManager.get_default().hide (this.tooltip);
-      return true;
-    } 
+      return false;
+    }
 
     private bool on_pressed(Clutter.Event src) 
     {
@@ -336,14 +339,16 @@ namespace Unity.Quicklauncher
       fx.set_factor(6.5f);
       this.icon.add_effect(fx);
       this.icon.queue_relayout();
-      return true;
+
+      return false;
     }
 
     private bool on_mouse_leave(Clutter.Event src) 
     {
       this.icon.remove_all_effects();
       this.icon.queue_relayout();
-      return true;
+
+      return false;
     }
     
     /**
