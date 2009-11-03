@@ -84,6 +84,7 @@ public class Main
     /* Parse options */
     Gtk.init (ref args);
     GtkClutter.init (ref args);
+    Wnck.set_client_type (Wnck.ClientType.PAGER);
     try
       {
         var opt_context = new OptionContext ("-- Unity");
