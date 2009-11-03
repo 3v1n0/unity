@@ -64,6 +64,7 @@ namespace Unity
       else
         {
           this.type_hint = Gdk.WindowTypeHint.DESKTOP;
+          this.set_keep_below (true);
           this.decorated = false;
           this.skip_taskbar_hint = true;
           this.skip_pager_hint = true;
@@ -101,6 +102,7 @@ namespace Unity
       this.stage.add_actor (this.quicklauncher);
       
       /* Layout everything */
+      this.move (0, 0);
       this.relayout ();
 
       /* Window management */
@@ -132,7 +134,6 @@ namespace Unity
 
       debug ("relayout: %dx%d - %dx%d", x, y, width, height);
 
-      this.move (x, y);
       this.resize (width, height);
       this.stage.set_size (width, height);
 
