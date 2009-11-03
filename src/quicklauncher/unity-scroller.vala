@@ -20,11 +20,17 @@
 
 namespace Unity.Widgets
 {
+  private struct ScrollerItemInfo
+  {
+    float position;
+    float height;
+    float width;
+  }
+
   public class Scroller : Ctk.Actor, Clutter.Container
   {
     
     public double scroll_pos;
-
     private double scroll_value_as_px {
       get 
       { 
@@ -45,19 +51,26 @@ namespace Unity.Widgets
       get { return _spacing; }
       set { queue_relayout (); _spacing = value; }
     }
-    private Ctk.Orientation orientation;
+    private Ctk.Orientation orientation = Ctk.Orientation.VERTICAL;
 
     private Gee.ArrayList<Clutter.Actor> children;
 
     private double total_child_height;
+
+    private Gee.HashMap<Clutter.Actor, Clutter.Animation> fadeout_stack;
+    private Gee.HashMap<Clutter.Actor, Clutter.Animation> fadein_stack;
+    private Gee.HashMap<Clutter.Actor, Clutter.Animation> anim_stack;
 
     public Scroller (Ctk.Orientation orientation, int spacing) 
     {
       this.orientation = orientation;
       this.spacing = spacing;
       children = new Gee.ArrayList<Clutter.Actor> ();
+      fadeout_stack = new Gee.HashMap<Clutter.Actor, Clutter.Animation> ();
+      fadein_stack = new Gee.HashMap<Clutter.Actor, Clutter.Animation> ();
+      anim_stack = new Gee.HashMap<Clutter.Actor, Clutter.Animation> ();
 
-      scroll_pos = 1.0f;
+      scroll_pos = 0.0f;
     }
 
     construct {
@@ -105,11 +118,80 @@ namespace Unity.Widgets
       assert (action_positive is Ctk.Image);
       action_positive.set_parent (this);
       
-
       set_reactive (true);
+
+      this.notify["scroll_pos"].connect (this.on_scrollpos_changed);
+      this.on_scrollpos_changed ();
     }
     
-    /* Clutter methods */
+    private void refresh_items ()
+    {
+      /* checks each item, if they have stepped out of the "hot" area
+         their transparancy is changed and made unresponsive 
+      */
+
+      foreach (Clutter.Actor item in children)
+      {
+      }
+    }
+
+    private void show_hide_actions ()
+    {
+      refresh_items ();
+      debug ("if %f > %f", total_child_height, height);
+      if (total_child_height > this.height)
+        {
+          debug ("can scroll %f - %f", this.total_child_height, this.height);
+          if (scroll_pos <= 0.0)
+            {
+              this.action_negative.set_opacity (0);
+            } 
+          else
+            {
+              this.action_negative.set_opacity (255);
+            }
+          if (scroll_pos >= 1.0)
+            {
+              this.action_positive.set_opacity (0);
+            }
+          else
+            {
+              this.action_positive.set_opacity (255);
+            }
+        }
+      else 
+        {
+          debug ("can not scroll %f - %f", this.total_child_height, this.height);
+          this.action_negative.set_opacity (0);
+          this.action_positive.set_opacity (0);
+        }
+    }
+    
+    /**
+     * called when the scroll_pos changes so that we always know
+     * if we should have the action icon's visble
+     */
+    private void on_scrollpos_changed ()
+    {
+      debug ("scroll pos changed");
+      show_hide_actions ();
+    }
+
+    private void on_fadein_completed (Clutter.Animation anim)
+    {
+      Clutter.Actor child = anim.get_object () as Clutter.Actor;
+      this.fadein_stack.remove (child);
+    }
+    
+    private void on_fadeout_completed (Clutter.Animation anim)
+    {
+      Clutter.Actor child = anim.get_object () as Clutter.Actor;
+      this.fadeout_stack.remove (child);
+    }
+
+    /* 
+     * Clutter methods 
+     */
     public override void get_preferred_width (float for_height, 
                                      out float minimum_width, 
                                      out float natural_width)
@@ -165,6 +247,7 @@ namespace Unity.Widgets
       float cmin_height = 0.0f;
       
       float all_child_height = 0.0f;
+      total_child_height = 0.0f;
 
       if (orientation == Ctk.Orientation.VERTICAL) 
       {
@@ -189,12 +272,13 @@ namespace Unity.Widgets
                                       out cnat_height);
           
           all_child_height += cnat_height;
+          total_child_height += cmin_height;
         }
 
         minimum_height = all_child_height + padding.top + padding.bottom;
         natural_height = all_child_height + padding.top + padding.bottom;
    
-        this.total_child_height = all_child_height; 
+        //this.total_child_height = all_child_height; 
         return;
       }
 
@@ -207,6 +291,7 @@ namespace Unity.Widgets
     {
 
       base.allocate (box, flags);
+      this.height = box.y2 - box.y1;
 
       foreach (Clutter.Actor child in this.children)
       {
@@ -234,20 +319,30 @@ namespace Unity.Widgets
       Clutter.ActorBox child_box;
 
       //allocate the size of our action actors
-
+      float boxwidth = 0.0f;
       action_negative.get_allocation_box (out child_box);
+      boxwidth = (box.get_width () - padding.left - padding.right) 
+        - child_box.get_width();
       child_box.y1 = padding.top;
-      child_box.x1 = padding.left;
-      child_box.y2 = padding.top + action_negative.height;
-      child_box.x2 = padding.left + action_negative.width;
+      child_box.x1 = padding.left + (boxwidth / 2.0f);
+      child_box.y2 = child_box.y1 + action_negative.height;
+      child_box.x2 = child_box.x1 + action_negative.width;
       action_negative.allocate (child_box, flags);
+      float hot_negative = child_box.y2;
 
       action_positive.get_allocation_box (out child_box);
-      child_box.y2 = box.y2 - padding.bottom;
-      child_box.y1 = child_box.y2 - action_positive.height;
-      child_box.x1 = padding.left;
-      child_box.x2 = padding.left + action_positive.width;
+      boxwidth = (box.get_width () - padding.left - padding.right) 
+        - child_box.get_width();
+
+      child_box.y2 = box.y2 - padding.bottom - 4.0f;
+      child_box.y1 = child_box.y2 - action_positive.height - padding.bottom;
+      child_box.x1 = padding.left + (boxwidth / 2.0f);
+      child_box.x2 = child_box.x1 + action_positive.width;
       action_positive.allocate (child_box, flags);
+
+      float hot_positive = child_box.y1;
+
+      y = hot_negative;
 
       
       foreach (Clutter.Actor child in this.children)
@@ -272,7 +367,44 @@ namespace Unity.Widgets
           error ("Does not support Horizontal yet");
         }
 
+        // if the item is outside our "hot" area then we fade it out
+        if (orientation == Ctk.Orientation.VERTICAL)
+        {
+          if ((child_box.y1 < hot_negative) || (child_box.y2 > hot_positive))
+          {
+            if (child.get_reactive ())
+            {
+              if (!(child in this.fadeout_stack))
+              {
+                var anim = child.animate (Clutter.AnimationMode.EASE_IN_QUAD, 
+                                          200, "opacity", 64);
+                anim.completed.connect (this.on_fadeout_completed);
+                this.fadeout_stack.set (child, anim);
+              }
+              child.set_reactive (false);
+            }
+          }
+          else
+          {
+            if (!child.get_reactive ())
+            {
+              if (!(child in this.fadein_stack))
+              {
+                var anim = child.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                                          200, "opacity", 255);
+                anim.completed.connect (this.on_fadein_completed);
+                this.fadein_stack.set (child, anim);
+              }
+              child.set_reactive (true);
+            }
+          }
+          
+        }
+
         child.allocate (child_box, flags);
+
+        if (y > box.y2)  
+          break;
       }
 
       bgtex.allocate (box, flags);
@@ -321,6 +453,7 @@ namespace Unity.Widgets
 
       this.queue_relayout ();
       this.actor_added (actor);
+      this.show_hide_actions ();
     }
 
     public void remove (Clutter.Actor actor)
