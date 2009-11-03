@@ -37,15 +37,6 @@ namespace Unity
       public Gtk.Window window = null;
       public string     text   = "";
 
-      public Tooltip ()
-      {
-      }
-
-      ~Tooltip ()
-      {
-        // delete this.window;
-      }
-
       private void
       _draw_round_rect (ref Cairo.Context cr,
                         double            aspect,
@@ -189,8 +180,6 @@ namespace Unity
     {
       stdout.printf ("tooltip-listsize: %d\n", this._tooltips.size);
       GLib.Source.remove (this._motion_handler_id);
-      //foreach (Tooltip tooltip in this._tooltips)
-      //  delete tooltip;
       stdout.printf ("tooltip-listsize: %d\n", this._tooltips.size);
     }
 
