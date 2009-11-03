@@ -27,7 +27,8 @@ namespace Unity
     public int  popup_width { get; construct; }
     public int  popup_height { get; construct; }
     
-    private Workarea workarea_size;
+    private Wnck.Screen wnck_screen;
+    private Workarea    workarea_size;
 
     private GtkClutter.Embed gtk_clutter;
     private Clutter.Stage    stage;
@@ -63,12 +64,18 @@ namespace Unity
       else
         {
           this.type_hint = Gdk.WindowTypeHint.DESKTOP;
+          this.set_keep_below (true);
           this.decorated = false;
           this.skip_taskbar_hint = true;
           this.skip_pager_hint = true;
           this.delete_event.connect (() => { return true; });
+          this.screen.size_changed.connect ((s) => 
+                                            { this.relayout (); });
+          this.screen.monitors_changed.connect ((s) =>
+                                                { this.relayout (); });
         }
       this.title = "Unity";
+      this.icon_name = "distributor-logo";
       
       /* Gtk.ClutterEmbed */
       this.realize ();
@@ -95,15 +102,25 @@ namespace Unity
       this.stage.add_actor (this.quicklauncher);
       
       /* Layout everything */
-      this.resize_window ();
+      this.move (0, 0);
+      this.relayout ();
+
+      /* Window management */
+      this.wnck_screen = Wnck.Screen.get_default ();
+      if (!this.is_popup)
+        {
+          this.wnck_screen.active_window_changed.connect (this.on_active_window_changed);
+        }
     }
 
-    private void resize_window ()
+    private void relayout ()
     {
-      int width, height;
+      int x, y, width, height;
 
       if (this.is_popup)
         {
+          x = 0;
+          y = 0;
           width = this.popup_width;
           height = this.popup_height;
         }
@@ -112,11 +129,13 @@ namespace Unity
           Gdk.Rectangle size;
 
           this.screen.get_monitor_geometry (0, out size);
+          x = size.x;
+          y = size.y;
           width = size.width;
           height = size.height;
         }
 
-      debug ("UnderlayWindow: resize: %dx%d", width, height);
+      debug ("relayout: %dx%d - %dx%d", x, y, width, height);
 
       this.resize (width, height);
       this.stage.set_size (width, height);
@@ -141,6 +160,28 @@ namespace Unity
     }
 
     /*
+     * UNDERLAY WINDOW MANAGEMENT
+     */
+    public void on_active_window_changed (Wnck.Window? previous_window)
+    {
+      Wnck.Window new_window = this.wnck_screen.get_active_window ();
+
+      /* FIXME: We want the second check to be a class_name or pid check */
+      if (new_window.get_type () != Wnck.WindowType.DESKTOP
+          && new_window.get_name () == "Unity")
+        {
+          this.wnck_screen.toggle_showing_desktop (true);
+        }
+      else
+        {
+          /* FIXME: We want to suppress events getting to the stage at this
+           * point, to stop the user accidently activating a control when they
+           * just want to switch to the launcher
+           */
+        }
+    }
+
+    /*
      * SHELL IMPLEMENTATION
      */
     public Clutter.Stage get_stage ()
@@ -151,6 +192,11 @@ namespace Unity
     public ShellMode get_mode ()
     {
       return ShellMode.UNDERLAY;
+    }
+
+    public void show_unity ()
+    {
+      this.wnck_screen.toggle_showing_desktop (true);
     }
   }
  
