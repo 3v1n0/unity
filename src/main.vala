@@ -130,8 +130,12 @@ public class Main
     window = new Unity.UnderlayWindow (popup_mode, popup_width, popup_height);
     app.shell = window;
    
+    Unity.TooltipManager.get_default().top_level = window;
+
     window.show ();
     Gtk.main ();
+
+    Unity.TooltipManager.get_default().terminate ();
 
     return 0;
   }
