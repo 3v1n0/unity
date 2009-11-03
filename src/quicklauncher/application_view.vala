@@ -119,6 +119,8 @@ namespace Unity.Quicklauncher
       this.app.closed.connect(this.on_app_closed);
       
       button_press_event.connect(this.on_pressed);
+      enter_event.connect(this.on_mouse_enter);
+      leave_event.connect(this.on_mouse_leave);
       
       this.app.notify["running"].connect (this.notify_on_is_running);
       this.app.notify["focused"].connect (this.notify_on_is_focused);
@@ -275,7 +277,6 @@ namespace Unity.Quicklauncher
     
     private bool on_pressed(Clutter.Event src) 
     {
-      
       if (app.running)
       {
         // we only want to switch to the application, not launch it
@@ -302,6 +303,28 @@ namespace Unity.Quicklauncher
           this.busy = true;
       }
       
+      return true;
+    }
+    
+    private bool on_mouse_enter(Clutter.Event src) 
+    {
+      Ctk.EffectGlow fx = new Ctk.EffectGlow();
+      Clutter.Color c = Clutter.Color();
+      c.red = 255;
+      c.green = 5;
+      c.blue = 5;
+      c.alpha = 255;
+      fx.set_color(c);
+      fx.set_factor(6.5f);
+      this.icon.add_effect(fx);
+      this.icon.queue_relayout();
+      return true;
+    }
+
+    private bool on_mouse_leave(Clutter.Event src) 
+    {
+      this.icon.remove_all_effects();
+      this.icon.queue_relayout();
       return true;
     }
     
