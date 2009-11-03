@@ -173,8 +173,9 @@ namespace Clutter {
 		public virtual signal void paint ();
 		public virtual signal void parent_set (Clutter.Actor old_parent);
 		public virtual signal void pick (Clutter.Color color);
-		[HasEmitter]
-		public virtual signal void queue_redraw (Clutter.Actor origin);
+		public void queue_redraw ();
+		//[HasEmitter]
+		//public virtual signal void queue_redraw (Clutter.Actor origin);
 		[HasEmitter]
 		public virtual signal void realize ();
 		public virtual signal bool scroll_event (Clutter.Event event);
