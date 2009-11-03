@@ -34,6 +34,7 @@ namespace Unity.Quicklauncher
     private Ctk.Image throbber;
     private Ctk.Image focused_indicator;
     private Ctk.Image running_indicator;
+    public Unity.TooltipManager.Tooltip  tooltip;
 
     private bool _busy = false;
     public bool busy {
@@ -121,6 +122,11 @@ namespace Unity.Quicklauncher
       button_press_event.connect(this.on_pressed);
       enter_event.connect(this.on_mouse_enter);
       leave_event.connect(this.on_mouse_leave);
+
+      this.tooltip = Unity.TooltipManager.get_default().create (this.app.name);
+      this.icon.enter_event.connect (this.on_enter);
+      this.icon.leave_event.connect (this.on_leave);
+      this.icon.set_reactive (true);
       
       this.app.notify["running"].connect (this.notify_on_is_running);
       this.app.notify["focused"].connect (this.notify_on_is_focused);
@@ -274,7 +280,19 @@ namespace Unity.Quicklauncher
         this.request_remove (this);
       
     }
-    
+
+    private bool on_enter (Clutter.Event event)
+    {
+      Unity.TooltipManager.get_default().show (this.tooltip, (int) x, (int) y);
+      return true;
+    } 
+
+    private bool on_leave (Clutter.Event event)
+    {
+      Unity.TooltipManager.get_default().hide (this.tooltip);
+      return true;
+    } 
+
     private bool on_pressed(Clutter.Event src) 
     {
       if (app.running)

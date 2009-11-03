@@ -34,6 +34,7 @@ libunity_quicklauncher_la_SOURCES = \
   application_view.vala \
   application_store.vala \
   quicklauncher.vala \
+  tooltipmanager.vala \
   unity-scroller.vala
   
 
