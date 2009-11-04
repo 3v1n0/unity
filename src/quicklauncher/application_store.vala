@@ -1,3 +1,4 @@
+/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
  * Copyright (C) 2009 Canonical Ltd
  *
@@ -110,14 +111,17 @@ namespace Unity.Quicklauncher
           unowned GLib.List<Wnck.Window> windows = wnckapp.get_windows ();
           foreach (Wnck.Window window in windows)
             {
+			        // if we have our own window, lets just ignore it. causes bugs
+			        if (window.get_name() == "Unity") return;
+			       
               var type = window.get_window_type ();
               if (!(type == Wnck.WindowType.DESKTOP
-                || type == Wnck.WindowType.DOCK
-                || type == Wnck.WindowType.SPLASHSCREEN
-                || type == Wnck.WindowType.MENU))
-                {
-                  app_is_visible = true;
-                }
+                    || type == Wnck.WindowType.DOCK
+                    || type == Wnck.WindowType.SPLASHSCREEN
+                    || type == Wnck.WindowType.MENU))
+              {
+                app_is_visible = true;
+              }
             }
         }
         

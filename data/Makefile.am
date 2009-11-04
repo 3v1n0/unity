@@ -1,4 +1,6 @@
 dist_default_DATA = \
+  action_vert_neg.svg \
+  action_vert_pos.svg \
   honeycomb.png \
   honeycomb-mask.png \
   gradient.png \

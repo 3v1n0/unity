@@ -100,6 +100,8 @@ namespace Unity.Quicklauncher
      * it is not running
      */
     public signal void request_remove (ApplicationView app);
+    public signal void request_attention (ApplicationView app);
+
     public ApplicationView (Launcher.Application app)
     {
       /* This is a 'view' for a launcher application object
@@ -233,6 +235,17 @@ namespace Unity.Quicklauncher
               if (pixbuf is Gdk.Pixbuf)
                 return pixbuf;
             }
+        }
+
+      if (FileUtils.test ("/usr/share/pixmaps/" + icon_name, 
+                          FileTest.IS_REGULAR))
+        {
+          pixbuf = new Gdk.Pixbuf.from_file_at_scale (
+            "/usr/share/pixmaps/" + icon_name, 42, 42, true
+            );
+          
+          if (pixbuf is Gdk.Pixbuf)
+            return pixbuf;
         }
       
       Gtk.IconInfo info = theme.lookup_icon(icon_name, 42, 0);
@@ -369,8 +382,10 @@ namespace Unity.Quicklauncher
    
     private void notify_on_is_focused ()
     {
-      if (app.focused)
+      if (app.focused) {
         this.focused_indicator.set_opacity (255);
+        this.request_attention (this);
+      }
       else
         this.focused_indicator.set_opacity (0);
     }
