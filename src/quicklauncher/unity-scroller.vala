@@ -604,6 +604,7 @@ namespace Unity.Widgets
         
         this.queue_relayout ();
         this.actor_removed (actor);
+        actor.remove_clip ();
       }
     }
 
