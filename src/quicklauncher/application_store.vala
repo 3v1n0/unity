@@ -110,7 +110,9 @@ namespace Unity.Quicklauncher
           unowned GLib.List<Wnck.Window> windows = wnckapp.get_windows ();
           foreach (Wnck.Window window in windows)
             {
-              var type = window.get_window_type ();
+			  // if we have our own window, lets just ignore it. causes bugs
+			  if (window.get_name() == "Unity") return;
+			  var type = window.get_window_type ();
               if (!(type == Wnck.WindowType.DESKTOP
                 || type == Wnck.WindowType.DOCK
                 || type == Wnck.WindowType.SPLASHSCREEN
