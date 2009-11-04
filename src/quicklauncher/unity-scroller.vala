@@ -120,7 +120,7 @@ namespace Unity.Widgets
       this.padding = mypadding;
       
       bgtex.set_repeat (true, true);
-      bgtex.set_opacity (0xA0);
+      bgtex.set_opacity (0xE0);
 
       gradient.set_repeat (false, true);
       gradient.set_opacity (0x20);
@@ -574,6 +574,9 @@ namespace Unity.Widgets
         Unity.Quicklauncher.ApplicationView app = actor as Unity.Quicklauncher.ApplicationView;
         app.request_attention.connect (on_request_attention);
       }
+
+      /* set a clip on the actor */
+      actor.set_clip (0, -200, 56, 400);
 
       this.queue_relayout ();
       this.actor_added (actor);
