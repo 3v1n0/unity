@@ -229,7 +229,7 @@ namespace Unity
       left = 0;
       right = 0;
       top = 24;
-      bottom = 64;
+      bottom = 0;
     }
   }  
 }

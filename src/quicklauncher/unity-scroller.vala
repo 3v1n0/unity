@@ -227,7 +227,7 @@ namespace Unity.Widgets
           /* we have a container greater than the 'hotarea' 
            * we should scroll to that
            */
-          double scroll_px = box.y2 + scroll_value_as_px - hot_height - hot_start;
+          double scroll_px = box.y2 + scroll_value_as_px - hot_height - hot_start + spacing;
           return (float)(scroll_px / (total_child_height - hot_height));
         } 
       }
@@ -586,9 +586,6 @@ namespace Unity.Widgets
     }
     public void remove_actor (Clutter.Actor actor)
     {
-      /*
-       * FIXME , needs to work with the container 
-       */
       ScrollerChild found_container = null;
       foreach (ScrollerChild container in this.children) {
         if (container.child == actor)
@@ -651,7 +648,7 @@ namespace Unity.Widgets
     /* has to return something, implimentation does not have ? so we can't
      * return null without a warning =\
      */
-    public Clutter.ChildMeta get_child_meta (Clutter.Actor actor)
+    public Clutter.ChildMeta? get_child_meta (Clutter.Actor actor)
     {
       return null;
     }

@@ -173,9 +173,8 @@ namespace Clutter {
 		public virtual signal void paint ();
 		public virtual signal void parent_set (Clutter.Actor old_parent);
 		public virtual signal void pick (Clutter.Color color);
-		public void queue_redraw ();
-		//[HasEmitter]
-		//public virtual signal void queue_redraw (Clutter.Actor origin);
+		[HasEmitter]
+		public virtual signal void queue_redraw (Clutter.Actor origin);
 		[HasEmitter]
 		public virtual signal void realize ();
 		public virtual signal bool scroll_event (Clutter.Event event);
@@ -925,7 +924,7 @@ namespace Clutter {
 		public unowned Clutter.Actor find_child_by_name (string child_name);
 		public abstract void @foreach (Clutter.Callback callback, void *userdata);
 		public abstract void foreach_with_internals (Clutter.Callback callback, void *userdata);
-		public abstract Clutter.ChildMeta get_child_meta (Clutter.Actor actor);
+		public abstract Clutter.ChildMeta? get_child_meta (Clutter.Actor actor);
 		public unowned GLib.List get_children ();
 		public abstract void lower (Clutter.Actor actor, Clutter.Actor sibling);
 		public void lower_child (Clutter.Actor actor, Clutter.Actor sibling);

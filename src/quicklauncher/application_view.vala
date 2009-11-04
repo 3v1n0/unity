@@ -115,15 +115,6 @@ namespace Unity.Quicklauncher
       this.icon = new Ctk.Image (42);
       this.container.add_actor(this.icon);
 
-      var mypadding = Ctk.Padding () {
-        left = 0.0f,
-        top = 0.0f,
-        bottom = 0.0f,
-        right = 0.0f
-      };
-      this.padding = mypadding;
-        
-
       generate_view_from_app ();
       load_textures ();
         
