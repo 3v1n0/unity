@@ -50,8 +50,6 @@ namespace Unity.Widgets
       get { return this._scroll_pos; }
       set {
         this._scroll_pos = value;
-        this.notify_property ("scroll_pos");
-        this.scrolled ();
         this.queue_relayout ();
       }
     }
@@ -62,8 +60,6 @@ namespace Unity.Widgets
         return pos.max(0.0, pos);
       }
     }
-
-    public signal void scrolled ();
 
     private Clutter.Texture bgtex;
     private Clutter.Texture gradient;
@@ -80,17 +76,12 @@ namespace Unity.Widgets
     private Ctk.Orientation orientation = Ctk.Orientation.VERTICAL;
 
     private Gee.ArrayList<ScrollerChild> children;
-
     private double total_child_height;
 
     private Gee.HashMap<Clutter.Actor, Clutter.Animation> fadeout_stack;
     private Gee.HashMap<Clutter.Actor, Clutter.Animation> fadein_stack;
     private Gee.HashMap<Clutter.Actor, Clutter.Animation> anim_stack;
-
     private Clutter.Animation scroll_anim;
-
-    private double next_pos_scroll = 1.0;
-    private double next_neg_scroll = 0.0;
 
     private double hot_height = 0.0;
     private float hot_start = 0.0f;
@@ -105,8 +96,7 @@ namespace Unity.Widgets
       anim_stack = new Gee.HashMap<Clutter.Actor, Clutter.Animation> ();
 
       scroll_pos = 0.0f;
-      this.scrolled.connect (this.on_scrollpos_changed);
-
+      this.notify["scroll_pos"].connect (on_scrollpos_changed);
     }
 
     construct {
@@ -158,13 +148,9 @@ namespace Unity.Widgets
 
       action_positive.set_parent (this);
 
-
-      
       set_reactive (true);
 
-      //this.notify["scroll_pos"].connect (this.on_scrollpos_changed);
-      this.scrolled.connect (this.on_scrollpos_changed);
-   
+      this.notify["scroll_pos"].connect (this.on_scrollpos_changed);
       this.on_scrollpos_changed ();
     }
 
@@ -366,11 +352,9 @@ namespace Unity.Widgets
     {
       minimum_height = 0.0f;
       natural_height = 0.0f;
-      
 
       float cnat_height = 0.0f;
       float cmin_height = 0.0f;
-      
       float all_child_height = 0.0f;
 
       if (orientation == Ctk.Orientation.VERTICAL) 
@@ -435,16 +419,16 @@ namespace Unity.Widgets
 
       float x = padding.left;
       float y = padding.top;
-
-      float child_width;
-      float child_height;
       Clutter.ActorBox child_box;
 
       //allocate the size of our action actors
+      
+      // negative action first
       float boxwidth = 0.0f;
       action_negative.get_allocation_box (out child_box);
       boxwidth = (box.get_width () - padding.left - padding.right) 
         - child_box.get_width();
+
       child_box.y1 = padding.top;
       child_box.x1 = padding.left + (boxwidth / 2.0f);
       child_box.y2 = child_box.y1 + action_negative.height;
@@ -454,6 +438,7 @@ namespace Unity.Widgets
       float hot_negative = child_box.y2;
       this.hot_start = hot_negative;
 
+      // positive action now
       action_positive.get_allocation_box (out child_box);
       boxwidth = (box.get_width () - padding.left - padding.right) 
         - child_box.get_width();
@@ -469,23 +454,23 @@ namespace Unity.Widgets
       y = hot_start - (float)this.scroll_value_as_px;
       hot_height = hot_positive - hot_negative;
 
+      /* itterate though each child and position correctly
+       * also whist we are here we check to see if the child is outside of our
+       * "hot" area, if so, mark it as unresponsive and fade it out
+       */
       foreach (ScrollerChild childcontainer in this.children)
       {
         Clutter.Actor child = childcontainer.child;
         child.get_allocation_box (out child_box);
-        
-        child_width = child.width;
-        child_height = child.height;
-        
-
         if (orientation == Ctk.Orientation.VERTICAL)
         {
-          child_box.x1 = x;
-          child_box.x2 = x + child_width + padding.right;
-          child_box.y1 = y;
-          child_box.y2 = y + child_height;
           
-          y += child_height + spacing;
+          child_box.x1 = x;
+          child_box.x2 = x + child.width + padding.right;
+          child_box.y1 = y;
+          child_box.y2 = y + child.height;
+          
+          y += child.height + spacing;
         }
         else 
         {
@@ -527,15 +512,15 @@ namespace Unity.Widgets
         
         childcontainer.box = child_box;
         child.allocate (child_box, flags);
-
       }
 
+      /* also allocate our background graphics */
       bgtex.allocate (box, flags);
       gradient.width = box.get_width();
       gradient.allocate (box, flags);
 
-     
-      this.scrolled();
+      // we need to know if we show our action arrows or not
+      this.show_hide_actions ();
     }
 
     public override void pick (Clutter.Color color)
@@ -549,7 +534,6 @@ namespace Unity.Widgets
         Clutter.Actor child = childcontainer.child;
         child.paint ();
       }
-      
       action_positive.paint ();
       action_negative.paint ();
     }
@@ -558,7 +542,6 @@ namespace Unity.Widgets
     {
       bgtex.paint ();
       gradient.paint ();
-
       
       foreach (ScrollerChild childcontainer in this.children)
       {
@@ -566,7 +549,6 @@ namespace Unity.Widgets
         if ((child.flags & Clutter.ActorFlags.VISIBLE) != 0)
           child.paint ();
       }
-
       action_positive.paint (); 
       action_negative.paint ();
     }
@@ -607,11 +589,23 @@ namespace Unity.Widgets
       /*
        * FIXME , needs to work with the container 
        */
-      //this.children.remove (actor);
-      //actor.unparent ();
-      
-      this.queue_relayout ();
-      this.actor_removed (actor);
+      ScrollerChild found_container = null;
+      foreach (ScrollerChild container in this.children) {
+        if (container.child == actor)
+        {
+          found_container = container;
+          break;
+        }
+      }
+      if (found_container is ScrollerChild)
+      {
+        found_container.child = null;
+        this.children.remove (found_container);
+        actor.unparent ();
+        
+        this.queue_relayout ();
+        this.actor_removed (actor);
+      }
     }
 
     public void @foreach (Clutter.Callback callback, void* userdata)
