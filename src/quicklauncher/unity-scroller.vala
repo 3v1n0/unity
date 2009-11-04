@@ -21,6 +21,27 @@
 namespace Unity.Widgets
 {
 
+  public class ScrollerChild : Object
+  {
+    /* just a container for our children, we use an object basically just for
+     * memory management. if the gobjectifying becomes an issue it should
+     * be trivial to revert it to a struct with manual memory management
+     * (ie: use no gobject features)
+     */
+    
+    public float width = 0.0f;
+    public float height = 0.0f;
+
+    public float position = 0.0f;
+    
+    public Clutter.Actor child;
+    public Clutter.ActorBox box;
+
+    public ScrollerChild ()
+    {
+    } 
+  }
+
   public class Scroller : Ctk.Actor, Clutter.Container
   {
     
@@ -58,7 +79,7 @@ namespace Unity.Widgets
     }
     private Ctk.Orientation orientation = Ctk.Orientation.VERTICAL;
 
-    private Gee.ArrayList<Clutter.Actor> children;
+    private Gee.ArrayList<ScrollerChild> children;
 
     private double total_child_height;
 
@@ -72,12 +93,13 @@ namespace Unity.Widgets
     private double next_neg_scroll = 0.0;
 
     private double hot_height = 0.0;
+    private float hot_start = 0.0f;
 
     public Scroller (Ctk.Orientation orientation, int spacing) 
     {
       this.orientation = orientation;
       this.spacing = spacing;
-      children = new Gee.ArrayList<Clutter.Actor> ();
+      children = new Gee.ArrayList<ScrollerChild> ();
       fadeout_stack = new Gee.HashMap<Clutter.Actor, Clutter.Animation> ();
       fadein_stack = new Gee.HashMap<Clutter.Actor, Clutter.Animation> ();
       anim_stack = new Gee.HashMap<Clutter.Actor, Clutter.Animation> ();
@@ -88,7 +110,6 @@ namespace Unity.Widgets
     }
 
     construct {
-      children = new Gee.ArrayList<Clutter.Actor> ();
       bgtex = new Clutter.Texture.from_file (
         Unity.PKGDATADIR + "/honeycomb.png"
         );
@@ -181,6 +202,50 @@ namespace Unity.Widgets
         }
     }
 
+    private float get_next_pos_position () 
+    {
+      /* returns the scroll to position of the next pos item */
+      foreach (ScrollerChild container in this.children)
+      {
+        Clutter.ActorBox box = container.box;
+
+        double hot_end = hot_start + hot_height;
+        if (box.y1 > hot_end)
+        {
+          /* we have a container greater than the 'hotarea' 
+           * we should scroll to that
+           */
+          double  scroll_px = box.y2 + scroll_value_as_px - hot_height - hot_start;
+          return (float)(scroll_px / (total_child_height - hot_height));
+        } 
+      }
+      return 1.0f;   
+    }
+
+    private float get_next_neg_position ()
+    {
+      /* returns the scroll to position of the next neg item */
+      /* *sigh* gee has no reverse() method for its container so we can't
+       * easily reverse the itteration, have to just do it manually 
+       */
+      for (var i = this.children.size - 1; i >= 0; i--)
+      {
+        ScrollerChild container = this.children.get(i); 
+        Clutter.ActorBox box = container.box;
+        if (box.y1 == 0.0 && box.y2 == 0.0) continue;
+        
+        if (box.y1 < hot_start)
+        {
+          /* we have a container lower than the 'hotarea' */
+          double scroll_px = box.y1 + scroll_value_as_px - hot_start - 1;
+          float val = (float)(scroll_px / (total_child_height - hot_height));
+          return val;
+        }
+      }
+
+      return 0.0f;
+    }
+
     private bool on_action_negative_clicked (Clutter.Event event)
     {
       if (scroll_anim is Clutter.Animation)
@@ -188,7 +253,7 @@ namespace Unity.Widgets
 
       scroll_anim = animate (Clutter.AnimationMode.EASE_IN_QUAD,
                              400, "scroll_pos",
-                             this.next_neg_scroll / this.total_child_height);
+                             get_next_neg_position ());
 
       return true;
     }
@@ -201,10 +266,7 @@ namespace Unity.Widgets
 
       scroll_anim = animate (Clutter.AnimationMode.EASE_IN_QUAD, 
                              400, "scroll_pos", 
-                             this.next_pos_scroll / this.total_child_height);
-      
-      debug ("next pos scroll: %f", this.next_pos_scroll / this.total_child_height);
-     
+                             this.get_next_pos_position ());     
       return true;
     }
 
@@ -249,8 +311,9 @@ namespace Unity.Widgets
         float pmin_width = 0.0f;
         float pnat_width = 0.0f;
 
-        foreach (Clutter.Actor child in this.children)
+        foreach (ScrollerChild childcontainer in this.children)
         {
+          Clutter.Actor child = childcontainer.child;
           float cmin_width = 0.0f;
           float cnat_width = 0.0f;
 
@@ -305,8 +368,9 @@ namespace Unity.Widgets
                                                    out cnat_height);
 
         all_child_height += cnat_height;
-        foreach (Clutter.Actor child in this.children)
+        foreach (ScrollerChild childcontainer in this.children)
         {
+          Clutter.Actor child = childcontainer.child;
           cnat_height = 0.0f;
           cmin_height = 0.0f;
           child.get_preferred_height (for_width, 
@@ -336,8 +400,9 @@ namespace Unity.Widgets
       base.allocate (box, flags);
       this.height = box.y2 - box.y1;
 
-      foreach (Clutter.Actor child in this.children)
+      foreach (ScrollerChild childcontainer in this.children)
       {
+        Clutter.Actor child = childcontainer.child;
         float min_width = 0.0f;
         float min_height = 0.0f;
         float nat_width = 0.0f;
@@ -384,16 +449,19 @@ namespace Unity.Widgets
       action_positive.allocate (child_box, flags);
 
       float hot_positive = child_box.y1;
+     
 
       y = hot_negative + (-(float)this.scroll_value_as_px);
-      
+      this.hot_start = hot_negative;
+
       this.next_pos_scroll = this.total_child_height;
       this.next_neg_scroll = -0.0;
 
       hot_height = hot_positive - hot_negative;
 
-      foreach (Clutter.Actor child in this.children)
+      foreach (ScrollerChild childcontainer in this.children)
       {
+        Clutter.Actor child = childcontainer.child;
         child.get_allocation_box (out child_box);
         
         child_width = child.width;
@@ -431,11 +499,11 @@ namespace Unity.Widgets
             }
             
             if (child_box.y2 > hot_positive) {
-              debug ("y2: %f nps: %f", child_box.y2 + this.scroll_value_as_px, this.next_pos_scroll);
+              //debug ("y2: %f nps: %f", child_box.y2 + this.scroll_value_as_px, this.next_pos_scroll);
               if ((child_box.y2 + this.scroll_value_as_px) - hot_height<
                   this.next_pos_scroll)
               {
-                debug ("saving next pos scroll!");
+                // debug ("saving next pos scroll!");
                 this.next_pos_scroll = child_box.y2 + this.scroll_value_as_px - hot_height;
               }
             }
@@ -469,7 +537,8 @@ namespace Unity.Widgets
           }
           
         }
-
+        
+        childcontainer.box = child_box;
         child.allocate (child_box, flags);
 
         if (y > box.y2)  
@@ -490,8 +559,9 @@ namespace Unity.Widgets
 
       bgtex.paint ();
       gradient.paint ();
-      foreach (Clutter.Actor child in children)
+      foreach (ScrollerChild childcontainer in this.children)
       {
+        Clutter.Actor child = childcontainer.child;
         child.paint ();
       }
       
@@ -505,8 +575,9 @@ namespace Unity.Widgets
       gradient.paint ();
 
       
-      foreach (Clutter.Actor child in children) 
+      foreach (ScrollerChild childcontainer in this.children)
       {
+        Clutter.Actor child = childcontainer.child;
         if ((child.flags & Clutter.ActorFlags.VISIBLE) != 0)
           child.paint ();
       }
@@ -523,7 +594,9 @@ namespace Unity.Widgets
     public void add_actor (Clutter.Actor actor)
       requires (this.get_parent () != null)
     {
-      this.children.add (actor);
+      var container = new ScrollerChild ();
+      container.child = actor;
+      this.children.add (container);
       actor.set_parent (this);
 
       this.queue_relayout ();
@@ -537,8 +610,11 @@ namespace Unity.Widgets
     }
     public void remove_actor (Clutter.Actor actor)
     {
-      this.children.remove (actor);
-      actor.unparent ();
+      /*
+       * FIXME , needs to work with the container 
+       */
+      //this.children.remove (actor);
+      //actor.unparent ();
       
       this.queue_relayout ();
       this.actor_removed (actor);
@@ -546,9 +622,9 @@ namespace Unity.Widgets
 
     public void @foreach (Clutter.Callback callback, void* userdata)
     {
-      foreach (Clutter.Actor child in this.children)
+      foreach (ScrollerChild childcontainer in this.children)
       {
-        
+        Clutter.Actor child = childcontainer.child;
         callback (child, null);
       }
     }
@@ -560,8 +636,9 @@ namespace Unity.Widgets
       callback (gradient, null);
       callback (action_positive, null);
       callback (action_negative, null);
-      foreach (Clutter.Actor child in this.children)
+      foreach (ScrollerChild childcontainer in this.children)
       {
+        Clutter.Actor child = childcontainer.child;
         callback (child, null);
       }
     }
