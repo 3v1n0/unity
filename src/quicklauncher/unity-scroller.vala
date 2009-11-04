@@ -577,7 +577,6 @@ namespace Unity.Widgets
 
       this.queue_relayout ();
       this.actor_added (actor);
-      this.show_hide_actions ();
     }
 
     public void remove (Clutter.Actor actor)
