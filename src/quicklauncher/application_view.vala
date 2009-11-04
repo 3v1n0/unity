@@ -173,9 +173,11 @@ namespace Unity.Quicklauncher
       float focus_halfy = this.focused_indicator.height / 2.0f;
       float focus_halfx = this.container.width - this.focused_indicator.width;
 
-      this.focused_indicator.set_position(focus_halfx, 
+      this.focused_indicator.set_position(focus_halfx + 12, 
                                           mid_point_y - focus_halfy);
       this.running_indicator.set_position (0, mid_point_y - focus_halfy);
+
+      this.icon.set_position (6, 0);
 
     }
     
@@ -343,11 +345,12 @@ namespace Unity.Quicklauncher
     private bool on_mouse_enter(Clutter.Event src) 
     {
       Ctk.EffectGlow fx = new Ctk.EffectGlow();
-      Clutter.Color c = Clutter.Color();
-      c.red = 255;
-      c.green = 5;
-      c.blue = 5;
-      c.alpha = 255;
+      Clutter.Color c = Clutter.Color() {
+        red = 255,
+        green = 255,
+        blue = 255,
+        alpha = 255
+      };
       fx.set_color(c);
       fx.set_factor(6.5f);
       this.icon.add_effect(fx);
