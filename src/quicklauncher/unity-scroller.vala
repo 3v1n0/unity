@@ -168,6 +168,30 @@ namespace Unity.Widgets
       this.on_scrollpos_changed ();
     }
 
+    private void on_request_attention (Unity.Quicklauncher.ApplicationView app)
+    {
+      /* when the app requests attention we need to scroll to it */
+      
+      // find the app in our list
+      Clutter.Actor actor = app as Clutter.Actor;
+      foreach (ScrollerChild container in this.children) 
+      {
+        if (container.child == actor)
+        {
+          double scroll_px = container.box.y2 + scroll_value_as_px - hot_height - hot_start;
+          double scroll = (scroll_px / (total_child_height - hot_height));
+
+          if (scroll_anim is Clutter.Animation)
+            scroll_anim.completed ();
+
+          scroll_anim = animate (Clutter.AnimationMode.EASE_IN_QUAD, 
+                                 400, "scroll_pos", 
+                                 scroll);
+          return;
+        }
+      }     
+    }
+
     private void show_hide_actions ()
     {
       if (total_child_height > this.hot_height)
@@ -205,17 +229,19 @@ namespace Unity.Widgets
     private float get_next_pos_position () 
     {
       /* returns the scroll to position of the next pos item */
+      double hot_end = hot_start + hot_height - 1;
       foreach (ScrollerChild container in this.children)
       {
         Clutter.ActorBox box = container.box;
-
-        double hot_end = hot_start + hot_height;
+        if (container == this.children.last())
+          return 1.0f;
+        
         if (box.y1 > hot_end)
         {
           /* we have a container greater than the 'hotarea' 
            * we should scroll to that
            */
-          double  scroll_px = box.y2 + scroll_value_as_px - hot_height - hot_start;
+          double scroll_px = box.y2 + scroll_value_as_px - hot_height - hot_start;
           return (float)(scroll_px / (total_child_height - hot_height));
         } 
       }
@@ -232,8 +258,7 @@ namespace Unity.Widgets
       {
         ScrollerChild container = this.children.get(i); 
         Clutter.ActorBox box = container.box;
-        if (box.y1 == 0.0 && box.y2 == 0.0) continue;
-        
+        if (box.y1 == 0.0 && box.y2 == 0.0) continue; 
         if (box.y1 < hot_start)
         {
           /* we have a container lower than the 'hotarea' */
@@ -242,7 +267,6 @@ namespace Unity.Widgets
           return val;
         }
       }
-
       return 0.0f;
     }
 
@@ -254,13 +278,11 @@ namespace Unity.Widgets
       scroll_anim = animate (Clutter.AnimationMode.EASE_IN_QUAD,
                              400, "scroll_pos",
                              get_next_neg_position ());
-
       return true;
     }
     
     private bool on_action_positive_clicked (Clutter.Event event)
     {
-      //debug ("action positive clicked");
       if (scroll_anim is Clutter.Animation)
         scroll_anim.completed ();
 
@@ -277,7 +299,6 @@ namespace Unity.Widgets
      */
     private void on_scrollpos_changed ()
     {
-      //debug ("scroll pos changed");
       show_hide_actions ();
     }
 
@@ -302,7 +323,6 @@ namespace Unity.Widgets
     {
       minimum_width = 0;
       natural_width = 0;
-
 
       // if we are vertical, just figure out the width of the widest
       // child
@@ -352,7 +372,6 @@ namespace Unity.Widgets
       float cmin_height = 0.0f;
       
       float all_child_height = 0.0f;
-      total_child_height = 0.0f;
 
       if (orientation == Ctk.Orientation.VERTICAL) 
       {
@@ -378,20 +397,13 @@ namespace Unity.Widgets
                                       out cnat_height);
           
           all_child_height += cnat_height;
-          total_child_height += cmin_height;
         }
 
         minimum_height = all_child_height + padding.top + padding.bottom;
         natural_height = all_child_height + padding.top + padding.bottom;
-  
-        //this.total_child_height = all_child_height; 
         return;
       }
-
-      
-
       error ("Does not support Horizontal yet");
-
     }
                          
     public override void allocate (Clutter.ActorBox box, 
@@ -400,6 +412,7 @@ namespace Unity.Widgets
       base.allocate (box, flags);
       this.height = box.y2 - box.y1;
 
+      total_child_height = 0.0f;
       foreach (ScrollerChild childcontainer in this.children)
       {
         Clutter.Actor child = childcontainer.child;
@@ -415,6 +428,7 @@ namespace Unity.Widgets
                                    out min_height, out nat_height);
         child.width = min_width;
         child.height = min_height;
+        total_child_height += child.height + spacing;
       }
 
       // position the actors
@@ -436,7 +450,9 @@ namespace Unity.Widgets
       child_box.y2 = child_box.y1 + action_negative.height;
       child_box.x2 = child_box.x1 + action_negative.width;
       action_negative.allocate (child_box, flags);
+      
       float hot_negative = child_box.y2;
+      this.hot_start = hot_negative;
 
       action_positive.get_allocation_box (out child_box);
       boxwidth = (box.get_width () - padding.left - padding.right) 
@@ -449,14 +465,8 @@ namespace Unity.Widgets
       action_positive.allocate (child_box, flags);
 
       float hot_positive = child_box.y1;
-     
 
-      y = hot_negative + (-(float)this.scroll_value_as_px);
-      this.hot_start = hot_negative;
-
-      this.next_pos_scroll = this.total_child_height;
-      this.next_neg_scroll = -0.0;
-
+      y = hot_start - (float)this.scroll_value_as_px;
       hot_height = hot_positive - hot_negative;
 
       foreach (ScrollerChild childcontainer in this.children)
@@ -485,30 +495,8 @@ namespace Unity.Widgets
         // if the item is outside our "hot" area then we fade it out
         if (orientation == Ctk.Orientation.VERTICAL)
         {
-          // whilst we are here we can find out what the 'next' item position
-          // is for per-item scrolling
-          if ((child_box.y1 < hot_negative) || (child_box.y2 > hot_positive))
+          if (((child_box.y1 < hot_negative) || (child_box.y2 > hot_positive)))
           {
-            
-            if (child_box.y1 < hot_negative) {
-              if ((child_box.y1 + this.scroll_value_as_px) > 
-                  this.next_neg_scroll)
-              {
-                this.next_neg_scroll = child_box.y1 + this.scroll_value_as_px;
-              }
-            }
-            
-            if (child_box.y2 > hot_positive) {
-              //debug ("y2: %f nps: %f", child_box.y2 + this.scroll_value_as_px, this.next_pos_scroll);
-              if ((child_box.y2 + this.scroll_value_as_px) - hot_height<
-                  this.next_pos_scroll)
-              {
-                // debug ("saving next pos scroll!");
-                this.next_pos_scroll = child_box.y2 + this.scroll_value_as_px - hot_height;
-              }
-            }
-
-
             if (child.get_reactive ())
             {
               if (!(child in this.fadeout_stack))
@@ -535,14 +523,11 @@ namespace Unity.Widgets
               child.set_reactive (true);
             }
           }
-          
         }
         
         childcontainer.box = child_box;
         child.allocate (child_box, flags);
 
-        if (y > box.y2)  
-          break;
       }
 
       bgtex.allocate (box, flags);
@@ -598,6 +583,15 @@ namespace Unity.Widgets
       container.child = actor;
       this.children.add (container);
       actor.set_parent (this);
+
+      /* if we have an ApplicationView we need to tie it to our attention 
+       * grabber
+       */
+      if (actor is Unity.Quicklauncher.ApplicationView)
+      {
+        Unity.Quicklauncher.ApplicationView app = actor as Unity.Quicklauncher.ApplicationView;
+        app.request_attention.connect (on_request_attention);
+      }
 
       this.queue_relayout ();
       this.actor_added (actor);

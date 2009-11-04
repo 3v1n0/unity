@@ -99,6 +99,8 @@ namespace Unity.Quicklauncher
      * it is not running
      */
     public signal void request_remove (ApplicationView app);
+    public signal void request_attention (ApplicationView app);
+
     public ApplicationView (Launcher.Application app)
     {
       /* This is a 'view' for a launcher application object
@@ -343,8 +345,10 @@ namespace Unity.Quicklauncher
    
     private void notify_on_is_focused ()
     {
-      if (app.focused)
+      if (app.focused) {
         this.focused_indicator.set_opacity (255);
+        this.request_attention (this);
+      }
       else
         this.focused_indicator.set_opacity (0);
     }
