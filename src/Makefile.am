@@ -30,6 +30,8 @@ libunity_static_la_VALAFLAGS = \
   --pkg gee-1.0 \
   --pkg gconf-2.0 \
   --pkg launcher-0.3 \
+  --pkg unique-1.0 \
+  --pkg libwnck-1.0 \
   --pkg x11 \
   --pkg unity \
   --pkg unity-quicklauncher \
@@ -42,6 +44,7 @@ libunity_static_la_LIBADD = \
 
 libunity_static_la_SOURCES = \
   unity-utils.c \
+  application.vala \
   background.vala \
   unity.vala \
   utils.vala \
@@ -67,6 +70,8 @@ unity_VALAFLAGS = \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
   --pkg launcher-0.3 \
+  --pkg libwnck-1.0 \
+  --pkg unique-1.0 \
   --pkg unity \
   --pkg unity-static \
   $(MAINTAINER_VALAFLAGS)

@@ -34,6 +34,7 @@ namespace Unity.Quicklauncher
     private Ctk.Image throbber;
     private Ctk.Image focused_indicator;
     private Ctk.Image running_indicator;
+    public Unity.TooltipManager.Tooltip  tooltip;
 
     private bool _busy = false;
     public bool busy {
@@ -130,6 +131,16 @@ namespace Unity.Quicklauncher
       this.app.closed.connect(this.on_app_closed);
       
       button_press_event.connect(this.on_pressed);
+
+      /* hook up glow for enter/leave events */
+      enter_event.connect(this.on_mouse_enter);
+      leave_event.connect(this.on_mouse_leave);
+
+      /* hook up tooltip for enter/leave events */
+      this.tooltip = Unity.TooltipManager.get_default().create (this.app.name);
+      this.icon.enter_event.connect (this.on_enter);
+      this.icon.leave_event.connect (this.on_leave);
+      this.icon.set_reactive (true);
       
       this.app.notify["running"].connect (this.notify_on_is_running);
       this.app.notify["focused"].connect (this.notify_on_is_focused);
@@ -294,10 +305,21 @@ namespace Unity.Quicklauncher
         this.request_remove (this);
       
     }
-    
+
+    private bool on_enter (Clutter.Event event)
+    {
+      Unity.TooltipManager.get_default().show (this.tooltip, (int) x, (int) y);
+      return false;
+    } 
+
+    private bool on_leave (Clutter.Event event)
+    {
+      Unity.TooltipManager.get_default().hide (this.tooltip);
+      return false;
+    }
+
     private bool on_pressed(Clutter.Event src) 
     {
-      
       if (app.running)
       {
         // we only want to switch to the application, not launch it
@@ -325,6 +347,30 @@ namespace Unity.Quicklauncher
       }
       
       return true;
+    }
+    
+    private bool on_mouse_enter(Clutter.Event src) 
+    {
+      Ctk.EffectGlow fx = new Ctk.EffectGlow();
+      Clutter.Color c = Clutter.Color();
+      c.red = 255;
+      c.green = 5;
+      c.blue = 5;
+      c.alpha = 255;
+      fx.set_color(c);
+      fx.set_factor(6.5f);
+      this.icon.add_effect(fx);
+      this.icon.queue_relayout();
+
+      return false;
+    }
+
+    private bool on_mouse_leave(Clutter.Event src) 
+    {
+      this.icon.remove_all_effects();
+      this.icon.queue_relayout();
+
+      return false;
     }
     
     /**

@@ -44,38 +44,39 @@ public class Main
   private static void add_launcher_tests ()
   {
     Test.add_func ("/Unity/Window", () => {
-        var window = new Unity.UnderlayWindow (false, 0, 0);
+      var window = new Unity.UnderlayWindow (false, 0, 0);
         
-        assert (window is Gtk.Window);
+      assert (window is Gtk.Window);
 
-        window.show ();
-        assert (window.visible);
-      }      
-    );
+      window.show ();
+      assert (window.visible);
+    });
 
-	Test.add_func ("/Unity/Quicklauncher/ApplicationView", () => {
-		var app = new Launcher.Application.from_desktop_file (
-				"/usr/share/applications/firefox.desktop");
-			
-		var appview = new Quicklauncher.ApplicationView (app);
-		assert (appview is Quicklauncher.ApplicationView);
-		assert (appview.app is Launcher.Application);
-		}
-		);
+    Test.add_func ("/Unity/Background", () => {
+      var bg = new Unity.Background ();
+      assert (bg is Clutter.Actor);
+    });
 
-  Test.add_func ("/Unity/Quicklauncher/ApplicationStore", () => {
+    Test.add_func ("/Unity/Quicklauncher/ApplicationView", () => {
+      var app = new Launcher.Application.from_desktop_file (
+                    "/usr/share/applications/firefox.desktop");
+
+  		var appview = new Quicklauncher.ApplicationView (app);
+      assert (appview is Quicklauncher.ApplicationView);
+      assert (appview.app is Launcher.Application);
+		});
+
+    Test.add_func ("/Unity/Quicklauncher/ApplicationStore", () => {
       var appstore = new Quicklauncher.ApplicationStore ();
       assert (appstore is Quicklauncher.ApplicationStore);
-    }
-    );
+    });
 
-  Test.add_func ("/Unity/Widgets/Scroller", () => {
+    Test.add_func ("/Unity/Widgets/Scroller", () => {
       var scroller = new Widgets.Scroller (Ctk.Orientation.VERTICAL, 0);
       assert (scroller is Widgets.Scroller);
 
       scroller = new Widgets.Scroller (Ctk.Orientation.HORIZONTAL, 0);
       assert (scroller is Widgets.Scroller);
-    }
-    );
+    });
   }
 }

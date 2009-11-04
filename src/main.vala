@@ -17,12 +17,22 @@
  *
  */
 
+static bool show_unity   = false;
 static bool popup_mode   = false;
 static int  popup_width  = 1024;
 static int  popup_height = 600;
 static bool show_version = false;
 
 const OptionEntry[] options = {
+  {
+    "show",
+    's',
+    0,
+    OptionArg.NONE,
+    ref show_unity,
+    "Show Unity to the user",
+    null
+  },
   {
     "popup",
     'p',
@@ -68,11 +78,13 @@ public class Main
 {
   public static int main (string[] args)
   {
+    Unity.Application    app;
     Unity.UnderlayWindow window;
 
     /* Parse options */
     Gtk.init (ref args);
     GtkClutter.init (ref args);
+    Wnck.set_client_type (Wnck.ClientType.PAGER);
     try
       {
         var opt_context = new OptionContext ("-- Unity");
@@ -95,9 +107,29 @@ public class Main
         return 0;
       }
 
+    /* Unique instancing */
+    app = new Unity.Application ();
+    if (app.is_running)
+      {
+        Unique.Response response = Unique.Response.OK;
+        
+        if (show_unity)
+          {
+            print ("Showing Unity window\n");
+            response = app.send_message (Unity.ApplicationCommands.SHOW, null);
+          }
+        else
+          {
+            print ("There already another instance of Unity running\n");
+          }
+        
+        return response == Unique.Response.OK ? 0 : 1;
+      }
+
     /* Things seem to be okay, load the main window */
     window = new Unity.UnderlayWindow (popup_mode, popup_width, popup_height);
-   
+    app.shell = window;
+
     window.show ();
     Gtk.main ();
 
