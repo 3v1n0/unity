@@ -201,7 +201,7 @@ namespace Unity
     }
 
     public bool
-    show (Tooltip tooltip, int x, int y)
+    show (Tooltip? tooltip, int x, int y)
     {
       if (tooltip == null)
         return false;
