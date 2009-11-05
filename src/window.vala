@@ -32,6 +32,7 @@ namespace Unity
 
     private GtkClutter.Embed gtk_clutter;
     private Clutter.Stage    stage;
+    private bool             is_showing;
 
     private Background         background;
     private Quicklauncher.View quicklauncher;
@@ -76,6 +77,7 @@ namespace Unity
         }
       this.title = "Unity";
       this.icon_name = "distributor-logo";
+      this.is_showing = false;
       
       /* Gtk.ClutterEmbed */
       this.realize ();
@@ -92,6 +94,7 @@ namespace Unity
           alpha = 0xff 
         };
       this.stage.set_color (stage_bg);
+      this.stage.button_press_event.connect (this.on_stage_button_press);
 
       /* Components */
       this.background = new Background ();
@@ -171,7 +174,8 @@ namespace Unity
           && new_window.get_type () != Wnck.WindowType.DESKTOP
           && new_window.get_name () == "Unity")
         {
-          this.wnck_screen.toggle_showing_desktop (true);
+          //this.wnck_screen.toggle_showing_desktop (true);
+          this.is_showing = true;
         }
       else
         {
@@ -179,7 +183,22 @@ namespace Unity
            * point, to stop the user accidently activating a control when they
            * just want to switch to the launcher
            */
+          this.is_showing = false;
         }
+    }
+
+    public bool on_stage_button_press (Clutter.Event src)
+    {
+      Clutter.ButtonEvent event = src.button;
+      if (this.is_showing)
+        {
+          ;
+        }
+      else
+        {
+          this.wnck_screen.toggle_showing_desktop (true);
+        }
+      return false;
     }
 
     /*
