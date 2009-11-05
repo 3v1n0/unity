@@ -6,5 +6,6 @@ dist_default_DATA = \
   gradient.png \
   quicklauncher_focused_indicator.svg \
   quicklauncher_running_indicator.svg \
-  quicklauncher_throbber.svg
+  quicklauncher_spinner.png
+
 defaultdir = $(pkgdatadir)

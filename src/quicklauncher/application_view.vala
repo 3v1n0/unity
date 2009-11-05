@@ -21,7 +21,7 @@
 namespace Unity.Quicklauncher
 {  
   const string THROBBER_FILE = Unity.PKGDATADIR 
-    + "/quicklauncher_throbber.svg";
+    + "/quicklauncher_spinner.png";
   const string FOCUSED_FILE  = Unity.PKGDATADIR 
     + "/quicklauncher_focused_indicator.svg";
   const string RUNNING_FILE  = Unity.PKGDATADIR 
@@ -40,26 +40,58 @@ namespace Unity.Quicklauncher
     private Ctk.Image running_indicator;
     public Unity.TooltipManager.Tooltip  tooltip;
 
-    private bool _busy = false;
-    public bool busy {
+    private bool _busy;
+    private bool is_starting {
       get { return _busy; }
       set {
-        if (value)
-          this.anim_throbber = this.throbber.animate (
-            Clutter.AnimationMode.EASE_IN_QUAD,
-            200, 
-            "opacity", 
-            255);
-        
-        else 
-          this.anim_throbber = this.throbber.animate (
-            Clutter.AnimationMode.EASE_IN_QUAD,
-            200, 
-            "opacity", 
-            0);
-        
-        _busy = value;
+	if (value)
+	{
+	  if (! _busy)
+	    throbber_start ();
+	} else {
+	  throbber_hide ();
+	}
+	_busy = value;
       }
+    }
+
+    private Clutter.Animation anim_throbber;
+
+    private void throbber_start ()
+    {
+      if (anim_throbber != null)
+	anim_throbber.completed ();
+
+      this.throbber.opacity = 255;
+      this.throbber.set_z_rotation_from_gravity (0.0f, Clutter.Gravity.CENTER);
+      this.anim_throbber = 
+	this.throbber.animate (Clutter.AnimationMode.LINEAR, 1200,
+			       "rotation-angle-z", 360.0f);
+      this.anim_throbber.loop = true;
+
+      GLib.Timeout.add_seconds (15, on_launch_timeout);
+    }
+
+    private void throbber_fadeout ()
+    {
+      if (this.throbber.opacity == 0)
+	return;
+
+      if (anim_throbber != null)
+	anim_throbber.completed ();
+
+      this.anim_throbber =
+	this.throbber.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+			       200, 
+			       "opacity", 
+			       0);
+      this.anim_throbber.loop = false;
+    }
+
+    private void throbber_hide ()
+    {
+      if (this.throbber.opacity > 0)
+	throbber_fadeout ();
     }
 
     /* animation support */
@@ -75,16 +107,6 @@ namespace Unity.Quicklauncher
       }
     }
 
-    private Clutter.Animation _anim_throbber;
-    private Clutter.Animation anim_throbber {
-      //get { return _anim_throbber; }
-      set {
-        if (_anim_throbber != null)
-          _anim_throbber.completed ();
-        _anim_throbber = value;
-      }
-    }
-    
     private Clutter.Animation hover_anim;
     
     /* if we are not sticky anymore and we are not running, request remove */
@@ -156,6 +178,7 @@ namespace Unity.Quicklauncher
     private void load_textures ()
     {      
       this.throbber = new Ctk.Image.from_filename (20, THROBBER_FILE);
+      this.throbber.set_z_rotation_from_gravity (0.0f, Clutter.Gravity.CENTER);
       this.container.add_actor (this.throbber);
                                 
       this.focused_indicator = new Ctk.Image.from_filename (8, FOCUSED_FILE);
@@ -177,7 +200,7 @@ namespace Unity.Quicklauncher
     private void relayout ()
     {
       this.throbber.set_position (this.container.width - this.throbber.width,
-                                  2);
+                                  this.container.height - this.throbber.height);
 
       float mid_point_y = this.container.height / 2.0f;
       float focus_halfy = this.focused_indicator.height / 2.0f;
@@ -298,13 +321,14 @@ namespace Unity.Quicklauncher
   
     private void on_app_opened (Wnck.Application app) 
     {
-      this.busy = false;
+      this.is_starting = false;
     }
 
     private void on_app_closed (Wnck.Application app) 
     {
+      this.is_starting = false;
       if (!this.is_running && !this.is_sticky) 
-        this.request_remove (this); 
+        this.request_remove (this);
     }
 
     private bool on_enter (Clutter.Event event)
@@ -321,6 +345,13 @@ namespace Unity.Quicklauncher
 
     private bool on_pressed(Clutter.Event src) 
     {
+      /* hide the tooltip, to prevent it from stealing focus when
+	 the app starts and is focused */
+      Unity.TooltipManager.get_default().hide (this.tooltip);
+
+      if (is_starting)
+	return true;
+
       if (app.running)
       {
         // we only want to switch to the application, not launch it
@@ -328,23 +359,18 @@ namespace Unity.Quicklauncher
       }
       else 
       {
-        bool successful = false;
+	this.is_starting = true;
         try 
         {
           app.launch ();
-          successful = true;
         } 
         catch (GLib.Error e)
         {
           critical ("could not launch application %s: %s", 
                     this.name, 
                     e.message);
-          return false;
+	  this.is_starting = false;
         }
-        
-        if (successful)
-          /* do the throbber */
-          this.busy = true;
       }
       
       return true;
@@ -372,6 +398,13 @@ namespace Unity.Quicklauncher
       return false;
     }
     
+    private bool on_launch_timeout ()
+    {
+      this.is_starting = false;
+
+      return false;
+    }
+
     private void on_hover_anim_completed ()
     {
       if (is_hovering)
@@ -409,24 +442,37 @@ namespace Unity.Quicklauncher
      */
     private void notify_on_is_running ()
     {
+      this.is_starting = false;
+
       /* we need to show the running indicator when we are running */
       if (this.is_running)
+      {
+	/* stdout.printf ("notify_on_is_running (%s)\n", app.name); */
         this.running_indicator.set_opacity (255);
-      else 
+      }
+      else
+      {
         this.running_indicator.set_opacity (0);
+        this.focused_indicator.set_opacity (0);
+      }       
 
       if (!this.is_running && !this.is_sticky)
-          this.request_remove (this);      
+          this.request_remove (this);
     }
    
     private void notify_on_is_focused ()
     {
       if (app.focused) {
+	/* stdout.printf ("notify_on_is_focused (%s)\n", app.name); */
         this.focused_indicator.set_opacity (255);
         this.request_attention (this);
       }
       else
         this.focused_indicator.set_opacity (0);
+
+      this.is_starting = false;
     }
+
   }
+
 }
