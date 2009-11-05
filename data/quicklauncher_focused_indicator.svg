@@ -14,7 +14,7 @@
    id="svg2"
    version="1.1"
    inkscape:version="0.47pre4 r22446"
-   sodipodi:docname="quicklauncher_running_indicator.svg">
+   sodipodi:docname="quicklauncher_focused_indicator.svg">
   <defs
      id="defs4">
     <inkscape:perspective
@@ -33,7 +33,7 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="31.678384"
-     inkscape:cx="3.5425488"
+     inkscape:cx="4.0160578"
      inkscape:cy="3.1693514"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
@@ -61,7 +61,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -72,7 +72,7 @@
      transform="translate(0,-1044.3622)">
     <path
        style="fill:#ffffff;fill-opacity:1;stroke:none"
-       d="m 7,1045.3622 -6,3 6,3 0,-6 z"
+       d="m 8,1045.3622 -6,3 6,3 0,-6 z"
        id="path2818" />
   </g>
 </svg>

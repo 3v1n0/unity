@@ -63,6 +63,7 @@ namespace Unity.Widgets
 
     private Clutter.Texture bgtex;
     private Clutter.Texture gradient;
+    private Clutter.Rectangle edge;
 
     // our two action images, positive and negative
     private Ctk.Image action_negative;
@@ -112,25 +113,35 @@ namespace Unity.Widgets
 
       var mypadding = this.padding;
       
-      mypadding.left = 6.0f;
-      mypadding.right = 6.0f;
+      mypadding.left = 0.0f;
+      mypadding.right = 0.0f;
       mypadding.top = 6.0f;
       mypadding.bottom = 6.0f;
 
       this.padding = mypadding;
       
       bgtex.set_repeat (true, true);
-      bgtex.set_opacity (0xA0);
+      bgtex.set_opacity (0xE0);
 
       gradient.set_repeat (false, true);
-      gradient.set_opacity (0x20);
+      gradient.set_opacity (0x30);
 
       bgtex.set_parent (this);
       bgtex.queue_relayout ();
       
       gradient.set_parent (this);
       gradient.queue_relayout ();
-
+      
+      var edge_color = Clutter.Color ()
+      {
+        red = 0xff,
+        green = 0xff,
+        blue = 0xff,
+        alpha = 0x80
+      };
+      edge = new Clutter.Rectangle.with_color (edge_color);
+      edge.set_parent (this);
+      
       action_negative = new Ctk.Image.from_filename (
         24, Unity.PKGDATADIR + "/action_vert_neg.svg"
         );
@@ -157,7 +168,10 @@ namespace Unity.Widgets
     private void on_request_attention (Unity.Quicklauncher.ApplicationView app)
     {
       /* when the app requests attention we need to scroll to it */
-      
+      // check to make sure we can actually scroll
+      if (this.total_child_height > this.hot_height)
+        return;
+
       // find the app in our list
       Clutter.Actor actor = app as Clutter.Actor;
       foreach (ScrollerChild container in this.children) 
@@ -170,8 +184,8 @@ namespace Unity.Widgets
           if (scroll_anim is Clutter.Animation)
             scroll_anim.completed ();
 
-          scroll_anim = animate (Clutter.AnimationMode.EASE_IN_QUAD, 
-                                 400, "scroll_pos", 
+          scroll_anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD, 
+                                 200, "scroll_pos", 
                                  scroll);
           return;
         }
@@ -261,8 +275,8 @@ namespace Unity.Widgets
       if (scroll_anim is Clutter.Animation)
         scroll_anim.completed ();
 
-      scroll_anim = animate (Clutter.AnimationMode.EASE_IN_QUAD,
-                             400, "scroll_pos",
+      scroll_anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                             200, "scroll_pos",
                              get_next_neg_position ());
       return true;
     }
@@ -272,8 +286,8 @@ namespace Unity.Widgets
       if (scroll_anim is Clutter.Animation)
         scroll_anim.completed ();
 
-      scroll_anim = animate (Clutter.AnimationMode.EASE_IN_QUAD, 
-                             400, "scroll_pos", 
+      scroll_anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD, 
+                             200, "scroll_pos", 
                              this.get_next_pos_position ());     
       return true;
     }
@@ -519,6 +533,16 @@ namespace Unity.Widgets
       gradient.width = box.get_width();
       gradient.allocate (box, flags);
 
+      edge.width = 1;
+      edge.height = box.get_height ();
+      Clutter.ActorBox edge_box;
+      edge.get_allocation_box (out edge_box);
+      edge_box.y1 = box.y1;
+      edge_box.y2 = box.y2;
+      edge_box.x2 = box.x2+1;
+      edge_box.x1 = box.x2;
+      edge.allocate (edge_box, flags);
+
       // we need to know if we show our action arrows or not
       this.show_hide_actions ();
     }
@@ -551,6 +575,8 @@ namespace Unity.Widgets
       }
       action_positive.paint (); 
       action_negative.paint ();
+
+      edge.paint ();
     }
     
 
@@ -574,6 +600,9 @@ namespace Unity.Widgets
         Unity.Quicklauncher.ApplicationView app = actor as Unity.Quicklauncher.ApplicationView;
         app.request_attention.connect (on_request_attention);
       }
+
+      /* set a clip on the actor */
+      actor.set_clip (0, -200, 56, 400);
 
       this.queue_relayout ();
       this.actor_added (actor);
@@ -601,6 +630,7 @@ namespace Unity.Widgets
         
         this.queue_relayout ();
         this.actor_removed (actor);
+        actor.remove_clip ();
       }
     }
 
@@ -620,6 +650,7 @@ namespace Unity.Widgets
       callback (gradient, null);
       callback (action_positive, null);
       callback (action_negative, null);
+      callback (edge, null);
       foreach (ScrollerChild childcontainer in this.children)
       {
         Clutter.Actor child = childcontainer.child;

@@ -32,11 +32,11 @@ namespace Ctk {
 		public virtual signal void child_focus_changed (Clutter.ActorBox box);
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class Bin : Ctk.Actor, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class Bin : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
 		public unowned Clutter.Actor get_child ();
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class Box : Ctk.Actor, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class Box : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
 		public bool get_homogeneous ();
 		public Ctk.Orientation get_orientation ();
 		public int get_spacing ();
@@ -54,7 +54,7 @@ namespace Ctk {
 	public class BoxChild {
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class Button : Ctk.Bin, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class Button : Ctk.Bin, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
 		[CCode (type = "ClutterActor*", has_construct_function = false)]
 		public Button (Ctk.Orientation orientation);
 		public unowned Ctk.Image get_image ();
@@ -73,7 +73,9 @@ namespace Ctk {
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class Effect : GLib.InitiallyUnowned {
+		public unowned Clutter.Animation animate (ulong mode, uint duration, ...);
 		public unowned Clutter.Actor get_actor ();
+		public unowned Clutter.Animation get_animation ();
 		public virtual void paint ();
 		public void set_actor (Clutter.Actor actor);
 		public void* actor { get; set; }
@@ -118,20 +120,21 @@ namespace Ctk {
 	public class EffectGlow : Ctk.Effect {
 		[CCode (type = "CtkEffect*", has_construct_function = false)]
 		public EffectGlow ();
-		public void get_color (Clutter.Color color);
+		public void get_color (out Clutter.Color color);
 		public float get_factor ();
+		public void set_background_texture (Gdk.Pixbuf pixbuf);
 		public void set_color (Clutter.Color c);
 		public void set_factor (float factor);
 		public Clutter.Color color { get; set; }
 		public float factor { get; set; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class HBox : Ctk.Box, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class HBox : Ctk.Box, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
 		[CCode (type = "ClutterActor*", has_construct_function = false)]
 		public HBox (uint spacing);
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class IconView : Ctk.Actor, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class IconView : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
 		[CCode (type = "ClutterActor*", has_construct_function = false)]
 		public IconView ();
 		public int get_spacing ();
@@ -197,7 +200,7 @@ namespace Ctk {
 		public static void unbind ();
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class ScrollView : Ctk.Bin, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class ScrollView : Ctk.Bin, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
 		[CCode (type = "ClutterActor*", has_construct_function = false)]
 		public ScrollView ();
 		public bool can_scroll ();
@@ -240,7 +243,7 @@ namespace Ctk {
 		public string label { get; set; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class Toplevel : Ctk.Bin, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class Toplevel : Ctk.Bin, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
 		public static unowned Clutter.Actor get_default_for_stage (Clutter.Actor stage);
 		public unowned Clutter.Actor get_stage ();
 		public void set_focus (Ctk.Focusable focusable);
@@ -248,7 +251,7 @@ namespace Ctk {
 		public Clutter.Stage stage { owned get; set construct; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class VBox : Ctk.Box, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class VBox : Ctk.Box, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
 		[CCode (type = "ClutterActor*", has_construct_function = false)]
 		public VBox (uint spacing);
 	}
@@ -358,6 +361,8 @@ namespace Ctk {
 	public static void custom_render_quad_alpha_mask (Ctk.RenderTarget rt, float red, float green, float blue, float alpha, int window_w, int window_h, int x, int y, int w, int h);
 	[CCode (cname = "custom_render_quad_gaussian_blur_separable", cheader_filename = "clutk/clutk.h")]
 	public static void custom_render_quad_gaussian_blur_separable (Ctk.RenderTarget rt, Ctk.ShaderProgram shader, float sigma, int window_w, int window_h, int x, int y, int w, int h);
+	[CCode (cname = "custom_render_quad_texture_mask", cheader_filename = "clutk/clutk.h")]
+	public static void custom_render_quad_texture_mask (Ctk.RenderTarget fbo, uint texid, uint texture_width, uint texture_height, Ctk.ShaderProgram shader, int window_w, int window_h, int x, int y, int w, int h);
 	[CCode (cname = "delete_shader_program", cheader_filename = "clutk/clutk.h")]
 	public static void delete_shader_program (Ctk.ShaderProgram sh);
 	[CCode (cname = "ogldraw_render_fullscreen_quad", cheader_filename = "clutk/clutk.h")]

@@ -1,3 +1,4 @@
+/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
  * Copyright (C) 2009 Canonical Ltd
  *
@@ -168,7 +169,9 @@ namespace Unity
     public void on_active_window_changed (Wnck.Window? previous_window)
     {
       Wnck.Window new_window = this.wnck_screen.get_active_window ();
-
+      if (new_window == null)
+        return;
+	  
       /* FIXME: We want the second check to be a class_name or pid check */
       if (new_window.get_type () != Wnck.WindowType.DESKTOP
           && new_window.get_name () == "Unity")
