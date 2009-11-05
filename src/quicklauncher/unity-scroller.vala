@@ -168,7 +168,6 @@ namespace Unity.Widgets
     private void on_request_attention (Unity.Quicklauncher.ApplicationView app)
     {
       /* when the app requests attention we need to scroll to it */
-      debug ("foo?");
       // check to make sure we can actually scroll
       if (this.total_child_height > this.hot_height)
         return;

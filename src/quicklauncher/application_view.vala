@@ -117,18 +117,28 @@ namespace Unity.Quicklauncher
        * opens and closes and be able to get desktop file info
        */
       this.app = app;
+      generate_view_from_app ();
+      this.app.opened.connect(this.on_app_opened);
+      this.app.closed.connect(this.on_app_closed);
+
+      this.tooltip = Unity.TooltipManager.get_default().create (this.app.name);
+
+      this.app.notify["running"].connect (this.notify_on_is_running);
+      this.app.notify["focused"].connect (this.notify_on_is_focused);
+      notify_on_is_running ();
+      notify_on_is_focused ();
+    }
+
+    construct 
+    {
       this.container = new Clutter.Group ();
       add_actor (this.container);
 
       this.icon = new Ctk.Image (42);
       this.container.add_actor(this.icon);
 
-      generate_view_from_app ();
       load_textures ();
         
-      this.app.opened.connect(this.on_app_opened);
-      this.app.closed.connect(this.on_app_closed);
-      
       button_press_event.connect(this.on_pressed);
 
       /* hook up glow for enter/leave events */
@@ -136,17 +146,10 @@ namespace Unity.Quicklauncher
       leave_event.connect(this.on_mouse_leave);
 
       /* hook up tooltip for enter/leave events */
-      this.tooltip = Unity.TooltipManager.get_default().create (this.app.name);
       this.icon.enter_event.connect (this.on_enter);
       this.icon.leave_event.connect (this.on_leave);
       this.icon.set_reactive (true);
       
-      this.app.notify["running"].connect (this.notify_on_is_running);
-      this.app.notify["focused"].connect (this.notify_on_is_focused);
-      
-      notify_on_is_running ();
-      notify_on_is_focused ();
-
       set_reactive(true);
     }
 

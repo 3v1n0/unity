@@ -163,7 +163,7 @@ namespace Unity
         {
           this.show_quicklist (this._shown_tooltip);
           return false;
-	}
+        }
       }
 
       return true;
