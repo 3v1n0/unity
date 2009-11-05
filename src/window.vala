@@ -70,6 +70,8 @@ namespace Unity
           this.decorated = false;
           this.skip_taskbar_hint = true;
           this.skip_pager_hint = true;
+          this.accept_focus = false;
+          this.can_focus = false;
           this.delete_event.connect (() => { return true; });
           this.screen.size_changed.connect ((s) => 
                                             { this.relayout (); });
