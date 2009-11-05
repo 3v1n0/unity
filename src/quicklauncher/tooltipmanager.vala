@@ -1,3 +1,4 @@
+/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
  * Copyright (C) 2009 Canonical Ltd
  *
@@ -223,9 +224,9 @@ namespace Unity
     }
 
     public bool
-    hide (Tooltip tooltip)
+    hide (Tooltip? tooltip)
     {
-      if (tooltip == null)
+      if (tooltip == null) 
         return false;
 
       GLib.Source.remove (this._motion_handler_id);

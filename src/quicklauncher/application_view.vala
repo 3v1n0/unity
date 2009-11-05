@@ -20,9 +20,12 @@
 
 namespace Unity.Quicklauncher
 {  
-  const string THROBBER_FILE = Unity.PKGDATADIR + "/quicklauncher_throbber.svg";
-  const string FOCUSED_FILE  = Unity.PKGDATADIR + "/quicklauncher_focused_indicator.svg";
-  const string RUNNING_FILE  = Unity.PKGDATADIR + "/quicklauncher_running_indicator.svg";
+  const string THROBBER_FILE = Unity.PKGDATADIR 
+    + "/quicklauncher_throbber.svg";
+  const string FOCUSED_FILE  = Unity.PKGDATADIR 
+    + "/quicklauncher_focused_indicator.svg";
+  const string RUNNING_FILE  = Unity.PKGDATADIR 
+    + "/quicklauncher_running_indicator.svg";
 
   public class ApplicationView : Ctk.Bin
   {
@@ -43,14 +46,14 @@ namespace Unity.Quicklauncher
         if (value)
           this.anim_throbber = this.throbber.animate (
             Clutter.AnimationMode.EASE_IN_QUAD,
-            1000, 
+            200, 
             "opacity", 
             255);
         
         else 
           this.anim_throbber = this.throbber.animate (
             Clutter.AnimationMode.EASE_IN_QUAD,
-            1000, 
+            200, 
             "opacity", 
             0);
         
