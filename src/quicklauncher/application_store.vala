@@ -46,7 +46,10 @@ namespace Unity.Quicklauncher
     
     public ApplicationStore ()
     {
+    }
     
+    construct 
+    {
       this.appman = Launcher.Appman.get_default ();
       this.session = Launcher.Session.get_default ();
       
@@ -60,9 +63,8 @@ namespace Unity.Quicklauncher
       build_favorites ();
       
       this.session.application_opened.connect (handle_session_application);
-      
     }
-    
+
     /**
      * goes though our favorites and addds them to the container
      * marks them as sticky also
@@ -104,6 +106,8 @@ namespace Unity.Quicklauncher
        * a little tight for this type of thing right now.
        */
       bool app_is_visible = false;
+
+      debug ("loading session: %s", app.name);
       
       unowned GLib.SList<Wnck.Application> wnckapps = app.get_wnckapps ();
       foreach (Wnck.Application wnckapp in wnckapps)
@@ -111,9 +115,6 @@ namespace Unity.Quicklauncher
           unowned GLib.List<Wnck.Window> windows = wnckapp.get_windows ();
           foreach (Wnck.Window window in windows)
             {
-			        // if we have our own window, lets just ignore it. causes bugs
-			        if (window.get_name() == "Unity") return;
-			       
               var type = window.get_window_type ();
               if (!(type == Wnck.WindowType.DESKTOP
                     || type == Wnck.WindowType.DOCK
