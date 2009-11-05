@@ -20,20 +20,25 @@
 
 namespace Unity.Quicklauncher
 {  
-  const string THROBBER_FILE = Unity.PKGDATADIR + "/quicklauncher_throbber.svg";
-  const string FOCUSED_FILE  = Unity.PKGDATADIR + "/quicklauncher_focused_indicator.svg";
-  const string RUNNING_FILE  = Unity.PKGDATADIR + "/quicklauncher_running_indicator.svg";
+  const string THROBBER_FILE = Unity.PKGDATADIR 
+    + "/quicklauncher_throbber.svg";
+  const string FOCUSED_FILE  = Unity.PKGDATADIR 
+    + "/quicklauncher_focused_indicator.svg";
+  const string RUNNING_FILE  = Unity.PKGDATADIR 
+    + "/quicklauncher_running_indicator.svg";
 
   public class ApplicationView : Ctk.Bin
   {
     
     public Launcher.Application app;
     private Ctk.Image icon;
+    private Ctk.EffectGlow icon_effect;
     private bool _is_sticky;
     private Clutter.Group container;
     private Ctk.Image throbber;
     private Ctk.Image focused_indicator;
     private Ctk.Image running_indicator;
+    public Unity.TooltipManager.Tooltip  tooltip;
 
     private bool _busy = false;
     public bool busy {
@@ -42,14 +47,14 @@ namespace Unity.Quicklauncher
         if (value)
           this.anim_throbber = this.throbber.animate (
             Clutter.AnimationMode.EASE_IN_QUAD,
-            1000, 
+            200, 
             "opacity", 
             255);
         
         else 
           this.anim_throbber = this.throbber.animate (
             Clutter.AnimationMode.EASE_IN_QUAD,
-            1000, 
+            200, 
             "opacity", 
             0);
         
@@ -80,6 +85,8 @@ namespace Unity.Quicklauncher
       }
     }
     
+    private Clutter.Animation hover_anim;
+    
     /* if we are not sticky anymore and we are not running, request remove */
     public bool is_sticky {
       get { return _is_sticky; }
@@ -94,11 +101,15 @@ namespace Unity.Quicklauncher
       get { return app.running; }
     }
     
+    public bool is_hovering = false;
+
     /**
      * signal is called when the application is not marked as sticky and 
      * it is not running
      */
     public signal void request_remove (ApplicationView app);
+    public signal void request_attention (ApplicationView app);
+
     public ApplicationView (Launcher.Application app)
     {
       /* This is a 'view' for a launcher application object
@@ -106,26 +117,39 @@ namespace Unity.Quicklauncher
        * opens and closes and be able to get desktop file info
        */
       this.app = app;
+      generate_view_from_app ();
+      this.app.opened.connect(this.on_app_opened);
+      this.app.closed.connect(this.on_app_closed);
+
+      this.tooltip = Unity.TooltipManager.get_default().create (this.app.name);
+
+      this.app.notify["running"].connect (this.notify_on_is_running);
+      this.app.notify["focused"].connect (this.notify_on_is_focused);
+      notify_on_is_running ();
+      notify_on_is_focused ();
+    }
+
+    construct 
+    {
       this.container = new Clutter.Group ();
       add_actor (this.container);
 
       this.icon = new Ctk.Image (42);
       this.container.add_actor(this.icon);
 
-      generate_view_from_app ();
       load_textures ();
         
-      this.app.opened.connect(this.on_app_opened);
-      this.app.closed.connect(this.on_app_closed);
-      
       button_press_event.connect(this.on_pressed);
-      
-      this.app.notify["running"].connect (this.notify_on_is_running);
-      this.app.notify["focused"].connect (this.notify_on_is_focused);
-      
-      notify_on_is_running ();
-      notify_on_is_focused ();
 
+      /* hook up glow for enter/leave events */
+      enter_event.connect(this.on_mouse_enter);
+      leave_event.connect(this.on_mouse_leave);
+
+      /* hook up tooltip for enter/leave events */
+      this.icon.enter_event.connect (this.on_enter);
+      this.icon.leave_event.connect (this.on_leave);
+      this.icon.set_reactive (true);
+      
       set_reactive(true);
     }
 
@@ -140,7 +164,6 @@ namespace Unity.Quicklauncher
       this.running_indicator = new Ctk.Image.from_filename (8, RUNNING_FILE);
       this.container.add_actor (this.running_indicator);
       
-
       this.throbber.set_opacity (0);
       this.focused_indicator.set_opacity (0);
       this.running_indicator.set_opacity (0);
@@ -160,10 +183,11 @@ namespace Unity.Quicklauncher
       float focus_halfy = this.focused_indicator.height / 2.0f;
       float focus_halfx = this.container.width - this.focused_indicator.width;
 
-      this.focused_indicator.set_position(focus_halfx, 
+      this.focused_indicator.set_position(focus_halfx + 12, 
                                           mid_point_y - focus_halfy);
       this.running_indicator.set_position (0, mid_point_y - focus_halfy);
 
+      this.icon.set_position (6, 0);
     }
     
     /** 
@@ -223,6 +247,17 @@ namespace Unity.Quicklauncher
                 return pixbuf;
             }
         }
+
+      if (FileUtils.test ("/usr/share/pixmaps/" + icon_name, 
+                          FileTest.IS_REGULAR))
+        {
+          pixbuf = new Gdk.Pixbuf.from_file_at_scale (
+            "/usr/share/pixmaps/" + icon_name, 42, 42, true
+            );
+          
+          if (pixbuf is Gdk.Pixbuf)
+            return pixbuf;
+        }
       
       Gtk.IconInfo info = theme.lookup_icon(icon_name, 42, 0);
       if (info != null) 
@@ -269,13 +304,23 @@ namespace Unity.Quicklauncher
     private void on_app_closed (Wnck.Application app) 
     {
       if (!this.is_running && !this.is_sticky) 
-        this.request_remove (this);
-      
+        this.request_remove (this); 
     }
-    
+
+    private bool on_enter (Clutter.Event event)
+    {
+      Unity.TooltipManager.get_default().show (this.tooltip, (int) x, (int) y);
+      return false;
+    } 
+
+    private bool on_leave (Clutter.Event event)
+    {
+      Unity.TooltipManager.get_default().hide (this.tooltip);
+      return false;
+    }
+
     private bool on_pressed(Clutter.Event src) 
     {
-      
       if (app.running)
       {
         // we only want to switch to the application, not launch it
@@ -305,6 +350,59 @@ namespace Unity.Quicklauncher
       return true;
     }
     
+    private bool on_mouse_enter(Clutter.Event src) 
+    {
+      this.is_hovering = true;
+      icon_effect = new Ctk.EffectGlow();
+      Clutter.Color c = Clutter.Color() {
+        red = 255,
+        green = 255,
+        blue = 255,
+        alpha = 255
+      };
+      icon_effect.set_color(c);
+      icon_effect.set_factor(1.0f);
+      this.icon.add_effect(icon_effect);
+      this.icon.queue_relayout();
+
+      this.hover_anim = icon_effect.animate (
+        Clutter.AnimationMode.EASE_IN_OUT_SINE, 600, "factor", 8.0f);
+      this.hover_anim.completed.connect (on_hover_anim_completed);
+
+      return false;
+    }
+    
+    private void on_hover_anim_completed ()
+    {
+      if (is_hovering)
+      {
+        Idle.add (do_new_anim);
+      }
+    }
+
+    private bool do_new_anim ()
+    {
+      float fadeto = 1.0f;
+      if (icon_effect.get_factor() <= 1.1f)
+        fadeto = 8.0f;
+
+      this.hover_anim = icon_effect.animate(
+        Clutter.AnimationMode.EASE_IN_OUT_CIRC, 600, "factor", fadeto);
+      this.hover_anim.completed.connect (on_hover_anim_completed);
+      return false;
+    }
+    
+    
+    private bool on_mouse_leave(Clutter.Event src) 
+    {
+      this.is_hovering = false;
+      this.hover_anim.completed ();
+      this.icon.remove_all_effects();
+      this.icon.queue_relayout();
+
+      return false;
+    }
+    
     /**
      * if the application is not running anymore and we are not sticky, we
      * request to be removed
@@ -323,8 +421,10 @@ namespace Unity.Quicklauncher
    
     private void notify_on_is_focused ()
     {
-      if (app.focused)
+      if (app.focused) {
         this.focused_indicator.set_opacity (255);
+        this.request_attention (this);
+      }
       else
         this.focused_indicator.set_opacity (0);
     }

@@ -129,7 +129,7 @@ public class Main
     /* Things seem to be okay, load the main window */
     window = new Unity.UnderlayWindow (popup_mode, popup_width, popup_height);
     app.shell = window;
-   
+
     window.show ();
     Gtk.main ();
 

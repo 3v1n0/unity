@@ -1,3 +1,4 @@
+/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
  * Copyright (C) 2009 Canonical Ltd
  *
@@ -45,7 +46,10 @@ namespace Unity.Quicklauncher
     
     public ApplicationStore ()
     {
+    }
     
+    construct 
+    {
       this.appman = Launcher.Appman.get_default ();
       this.session = Launcher.Session.get_default ();
       
@@ -59,9 +63,8 @@ namespace Unity.Quicklauncher
       build_favorites ();
       
       this.session.application_opened.connect (handle_session_application);
-      
     }
-    
+
     /**
      * goes though our favorites and addds them to the container
      * marks them as sticky also
@@ -103,6 +106,8 @@ namespace Unity.Quicklauncher
        * a little tight for this type of thing right now.
        */
       bool app_is_visible = false;
+
+      debug ("loading session: %s", app.name);
       
       unowned GLib.SList<Wnck.Application> wnckapps = app.get_wnckapps ();
       foreach (Wnck.Application wnckapp in wnckapps)
@@ -112,12 +117,12 @@ namespace Unity.Quicklauncher
             {
               var type = window.get_window_type ();
               if (!(type == Wnck.WindowType.DESKTOP
-                || type == Wnck.WindowType.DOCK
-                || type == Wnck.WindowType.SPLASHSCREEN
-                || type == Wnck.WindowType.MENU))
-                {
-                  app_is_visible = true;
-                }
+                    || type == Wnck.WindowType.DOCK
+                    || type == Wnck.WindowType.SPLASHSCREEN
+                    || type == Wnck.WindowType.MENU))
+              {
+                app_is_visible = true;
+              }
             }
         }
         

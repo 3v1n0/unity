@@ -1,3 +1,4 @@
+/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
  * Copyright (C) 2009 Canonical Ltd
  *
@@ -114,6 +115,9 @@ namespace Unity
         {
           this.wnck_screen.active_window_changed.connect (this.on_active_window_changed);
         }
+
+      /* inform TooltipManager about window */
+      Unity.TooltipManager.get_default().top_level = this;
     }
 
     private void relayout ()
@@ -168,7 +172,9 @@ namespace Unity
     public void on_active_window_changed (Wnck.Window? previous_window)
     {
       Wnck.Window new_window = this.wnck_screen.get_active_window ();
-
+      if (new_window == null)
+        return;
+	  
       /* FIXME: We want the second check to be a class_name or pid check */
       if (new_window is Wnck.Window 
           && new_window.get_type () != Wnck.WindowType.DESKTOP
