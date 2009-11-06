@@ -163,6 +163,8 @@ namespace Unity.Widgets
 
       this.notify["scroll_pos"].connect (this.on_scrollpos_changed);
       this.on_scrollpos_changed ();
+
+      this.scroll_event.connect (this.on_scroll_event);
     }
 
     private void on_request_attention (Unity.Quicklauncher.ApplicationView app)
@@ -270,28 +272,47 @@ namespace Unity.Widgets
       return 0.0f;
     }
 
-    private bool on_action_negative_clicked (Clutter.Event event)
+    /**
+     * scrolls a single item negatively (false) or positively (true)
+     */
+    private void scroll_single_item (bool direction) 
     {
       if (scroll_anim is Clutter.Animation)
         scroll_anim.completed ();
 
-      scroll_anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD,
-                             200, "scroll_pos",
-                             get_next_neg_position ());
-      return true;
+      var next_pos = 0.0f;
+      if (!direction)
+        next_pos = get_next_neg_position ();
+      else
+        next_pos = get_next_pos_position ();
+
+      scroll_anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, 
+                             "scroll_pos", next_pos);
+    }
+
+    private bool on_action_negative_clicked (Clutter.Event event)
+    {
+      scroll_single_item (false);
+      return true; 
     }
     
     private bool on_action_positive_clicked (Clutter.Event event)
     {
-      if (scroll_anim is Clutter.Animation)
-        scroll_anim.completed ();
-
-      scroll_anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD, 
-                             200, "scroll_pos", 
-                             this.get_next_pos_position ());     
+      scroll_single_item (true);
       return true;
     }
 
+    private bool on_scroll_event (Clutter.Event event)
+    {
+      Clutter.ScrollEvent scrollevent = event.scroll;
+      if (scrollevent.direction == Clutter.ScrollDirection.UP)
+        scroll_single_item (false);
+      else if (scrollevent.direction == Clutter.ScrollDirection.DOWN)
+        scroll_single_item (true);
+      
+      return true;
+    }
+    
     
     /**
      * called when the scroll_pos changes so that we always know

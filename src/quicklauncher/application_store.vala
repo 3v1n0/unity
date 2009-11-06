@@ -106,8 +106,6 @@ namespace Unity.Quicklauncher
        * a little tight for this type of thing right now.
        */
       bool app_is_visible = false;
-
-      debug ("loading session: %s", app.name);
       
       unowned GLib.SList<Wnck.Application> wnckapps = app.get_wnckapps ();
       foreach (Wnck.Application wnckapp in wnckapps)
