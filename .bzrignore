@@ -69,3 +69,4 @@ src/unity.c
 src/quicklauncher/unity-scroller.c
 src/utils.c
 src/application.c
+src/quicklauncher/tooltipmanager.c
