@@ -217,7 +217,7 @@ namespace Unity
       int root_x;
       int root_y;
       this.top_level.get_position (out root_x, out root_y);
-      tooltip.window.move (root_x + x + 32, root_y + y + 30);
+      tooltip.window.move (root_x + x, root_y + y);
       tooltip.window.show ();
 
       return true;
