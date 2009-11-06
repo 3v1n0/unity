@@ -236,7 +236,7 @@ namespace Unity.Widgets
         if (container == this.children.last())
           return 1.0f;
         
-        if (box.y1 > hot_end)
+        if (box.y2 > hot_end)
         {
           /* we have a container greater than the 'hotarea' 
            * we should scroll to that

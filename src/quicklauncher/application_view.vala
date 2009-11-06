@@ -26,19 +26,23 @@ namespace Unity.Quicklauncher
     + "/quicklauncher_focused_indicator.svg";
   const string RUNNING_FILE  = Unity.PKGDATADIR 
     + "/quicklauncher_running_indicator.svg";
+  const string HONEYCOMB_MASK_FILE = Unity.PKGDATADIR 
+    + "/honeycomb-mask.png";
 
   public class ApplicationView : Ctk.Bin
   {
     
     public Launcher.Application app;
     private Ctk.Image icon;
-    private Ctk.EffectGlow icon_effect;
+    private Ctk.EffectGlow icon_glow_effect;
     private bool _is_sticky;
     private Clutter.Group container;
     private Ctk.Image throbber;
     private Ctk.Image focused_indicator;
     private Ctk.Image running_indicator;
+    private Gdk.Pixbuf honeycomb_mask;
     public Unity.TooltipManager.Tooltip  tooltip;
+    
 
     private bool _busy;
     private bool is_starting {
@@ -190,6 +194,8 @@ namespace Unity.Quicklauncher
       this.throbber.set_opacity (0);
       this.focused_indicator.set_opacity (0);
       this.running_indicator.set_opacity (0);
+      
+      this.honeycomb_mask = new Gdk.Pixbuf.from_file(HONEYCOMB_MASK_FILE);
     
       relayout ();
     }
@@ -379,19 +385,20 @@ namespace Unity.Quicklauncher
     private bool on_mouse_enter(Clutter.Event src) 
     {
       this.is_hovering = true;
-      icon_effect = new Ctk.EffectGlow();
+      icon_glow_effect = new Ctk.EffectGlow();
       Clutter.Color c = Clutter.Color() {
         red = 255,
         green = 255,
         blue = 255,
         alpha = 255
       };
-      icon_effect.set_color(c);
-      icon_effect.set_factor(1.0f);
-      this.icon.add_effect(icon_effect);
+      icon_glow_effect.set_background_texture(honeycomb_mask);
+      icon_glow_effect.set_color(c);
+      icon_glow_effect.set_factor(1.0f);
+      this.icon.add_effect(icon_glow_effect);
       this.icon.queue_relayout();
 
-      this.hover_anim = icon_effect.animate (
+      this.hover_anim = icon_glow_effect.animate (
         Clutter.AnimationMode.EASE_IN_OUT_SINE, 600, "factor", 8.0f);
       this.hover_anim.completed.connect (on_hover_anim_completed);
 
@@ -416,10 +423,10 @@ namespace Unity.Quicklauncher
     private bool do_new_anim ()
     {
       float fadeto = 1.0f;
-      if (icon_effect.get_factor() <= 1.1f)
+      if (icon_glow_effect.get_factor() <= 1.1f)
         fadeto = 8.0f;
 
-      this.hover_anim = icon_effect.animate(
+      this.hover_anim = icon_glow_effect.animate(
         Clutter.AnimationMode.EASE_IN_OUT_CIRC, 600, "factor", fadeto);
       this.hover_anim.completed.connect (on_hover_anim_completed);
       return false;
