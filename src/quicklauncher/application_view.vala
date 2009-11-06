@@ -339,7 +339,14 @@ namespace Unity.Quicklauncher
 
     private bool on_enter (Clutter.Event event)
     {
-      Unity.TooltipManager.get_default().show (this.tooltip, (int) x, (int) y);
+      float xx, xy;
+
+      get_transformed_position (out xx, out xy);
+      xx += width + 4;
+      /* TODO: 30 is the default tooltip height */
+      xy += (height - 30) / 2;
+      Unity.TooltipManager.get_default().show (this.tooltip, (int) xx, (int) xy);
+
       return false;
     } 
 
@@ -454,7 +461,6 @@ namespace Unity.Quicklauncher
       /* we need to show the running indicator when we are running */
       if (this.is_running)
       {
-	/* stdout.printf ("notify_on_is_running (%s)\n", app.name); */
         this.running_indicator.set_opacity (255);
       }
       else
@@ -470,7 +476,6 @@ namespace Unity.Quicklauncher
     private void notify_on_is_focused ()
     {
       if (app.focused) {
-	/* stdout.printf ("notify_on_is_focused (%s)\n", app.name); */
         this.focused_indicator.set_opacity (255);
         this.request_attention (this);
       }
