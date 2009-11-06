@@ -35,6 +35,7 @@ namespace Unity.Quicklauncher
     public Launcher.Application app;
     private Ctk.Image icon;
     private Ctk.EffectGlow icon_glow_effect;
+    private Ctk.EffectDropShadow icon_dropshadow_effect;
     private bool _is_sticky;
     private Clutter.Group container;
     private Ctk.Image throbber;
@@ -175,6 +176,10 @@ namespace Unity.Quicklauncher
       this.icon.enter_event.connect (this.on_enter);
       this.icon.leave_event.connect (this.on_leave);
       this.icon.set_reactive (true);
+      
+      icon_dropshadow_effect = new Ctk.EffectDropShadow(6, 3, 3);
+      this.icon.add_effect(icon_dropshadow_effect);
+      this.icon.queue_relayout();
       
       set_reactive(true);
     }
