@@ -24,7 +24,7 @@ public class Main
   public static int main (string[] args)
   {
     Gtk.init (ref args);
-    GtkClutter.init (ref args);
+    Ctk.init (ref args);
     Test.init (ref args);
 
     add_launcher_tests ();
