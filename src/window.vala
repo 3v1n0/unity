@@ -197,6 +197,9 @@ namespace Unity
 
     public bool on_stage_button_press (Clutter.Event src)
     {
+      if (this.is_popup)
+        return false;
+
       Clutter.ButtonEvent event = src.button;
       if (this.is_showing)
         {
