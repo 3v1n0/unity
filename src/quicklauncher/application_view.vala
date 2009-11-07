@@ -177,7 +177,7 @@ namespace Unity.Quicklauncher
       this.icon.leave_event.connect (this.on_leave);
       this.icon.set_reactive (true);
       
-      icon_dropshadow_effect = new Ctk.EffectDropShadow(6, 3, 3);
+      icon_dropshadow_effect = new Ctk.EffectDropShadow(3, 1, 1);
       this.icon.add_effect(icon_dropshadow_effect);
       this.icon.queue_relayout();
       
@@ -449,7 +449,7 @@ namespace Unity.Quicklauncher
     {
       this.is_hovering = false;
       this.hover_anim.completed ();
-      this.icon.remove_all_effects();
+      this.icon.remove_effect(this.icon_glow_effect);
       this.icon.queue_relayout();
 
       return false;
