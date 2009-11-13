@@ -49,14 +49,14 @@ namespace Unity.Quicklauncher
     private bool is_starting {
       get { return _busy; }
       set {
-	if (value)
-	{
-	  if (! _busy)
-	    throbber_start ();
-	} else {
-	  throbber_hide ();
-	}
-	_busy = value;
+        if (value)
+        {
+          if (!_busy)
+            throbber_start ();
+        } else {
+          throbber_hide ();
+        }
+        _busy = value;
       }
     }
 
@@ -65,13 +65,14 @@ namespace Unity.Quicklauncher
     private void throbber_start ()
     {
       if (anim_throbber != null)
-	anim_throbber.completed ();
+        anim_throbber.completed ();
 
       this.throbber.opacity = 255;
       this.throbber.set_z_rotation_from_gravity (0.0f, Clutter.Gravity.CENTER);
-      this.anim_throbber = 
-	this.throbber.animate (Clutter.AnimationMode.LINEAR, 1200,
-			       "rotation-angle-z", 360.0f);
+      this.anim_throbber = this.throbber.animate (
+        Clutter.AnimationMode.LINEAR, 1200,
+        "rotation-angle-z", 360.0f
+        );
       this.anim_throbber.loop = true;
 
       GLib.Timeout.add_seconds (15, on_launch_timeout);
@@ -80,25 +81,25 @@ namespace Unity.Quicklauncher
     private void throbber_fadeout ()
     {
       if (this.throbber.opacity == 0)
-	return;
-
+        return;
+      
       if (anim_throbber != null)
-	anim_throbber.completed ();
-
+        anim_throbber.completed ();
+      
       this.anim_throbber =
-	this.throbber.animate (Clutter.AnimationMode.EASE_IN_QUAD,
-			       200, 
-			       "opacity", 
-			       0);
+      this.throbber.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                             200, 
+                             "opacity", 
+                             0);
       this.anim_throbber.loop = false;
     }
-
+    
     private void throbber_hide ()
     {
       if (this.throbber.opacity > 0)
-	throbber_fadeout ();
+        throbber_fadeout ();
     }
-
+    
     /* animation support */
     private Clutter.Animation _anim;
     public Clutter.Animation anim { 
@@ -111,7 +112,7 @@ namespace Unity.Quicklauncher
         _anim = value;
       }
     }
-
+    
     private Clutter.Animation hover_anim;
     
     /* if we are not sticky anymore and we are not running, request remove */
@@ -129,14 +130,14 @@ namespace Unity.Quicklauncher
     }
     
     public bool is_hovering = false;
-
+    
     /**
      * signal is called when the application is not marked as sticky and 
      * it is not running
      */
     public signal void request_remove (ApplicationView app);
     public signal void request_attention (ApplicationView app);
-
+    
     public ApplicationView (Launcher.Application app)
     {
       /* This is a 'view' for a launcher application object
@@ -166,7 +167,7 @@ namespace Unity.Quicklauncher
 
       load_textures ();
         
-      button_press_event.connect(this.on_pressed);
+      button_release_event.connect(this.on_pressed);
 
       /* hook up glow for enter/leave events */
       enter_event.connect(this.on_mouse_enter);
@@ -177,8 +178,8 @@ namespace Unity.Quicklauncher
       this.icon.leave_event.connect (this.on_leave);
       this.icon.set_reactive (true);
       
-      icon_dropshadow_effect = new Ctk.EffectDropShadow(3, 1, 1);
-      this.icon.add_effect(icon_dropshadow_effect);
+      //icon_dropshadow_effect = new Ctk.EffectDropShadow(3, 1, 1);
+      //this.icon.add_effect(icon_dropshadow_effect);
       this.icon.queue_relayout();
       
       set_reactive(true);
