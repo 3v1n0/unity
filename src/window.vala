@@ -200,7 +200,6 @@ namespace Unity
       if (this.is_popup)
         return false;
 
-      Clutter.ButtonEvent event = src.button;
       if (this.is_showing)
         {
           ;
