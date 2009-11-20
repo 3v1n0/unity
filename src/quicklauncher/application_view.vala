@@ -49,14 +49,14 @@ namespace Unity.Quicklauncher
     private bool is_starting {
       get { return _busy; }
       set {
-	if (value)
-	{
-	  if (! _busy)
-	    throbber_start ();
-	} else {
-	  throbber_hide ();
-	}
-	_busy = value;
+        if (value)
+        {
+          if (! _busy)
+            throbber_start ();
+        } else {
+          throbber_hide ();
+        }
+        _busy = value;
       }
     }
 
@@ -65,40 +65,40 @@ namespace Unity.Quicklauncher
     private void throbber_start ()
     {
       if (anim_throbber != null)
-	anim_throbber.completed ();
-
+        anim_throbber.completed ();
+      
       this.throbber.opacity = 255;
       this.throbber.set_z_rotation_from_gravity (0.0f, Clutter.Gravity.CENTER);
       this.anim_throbber = 
-	this.throbber.animate (Clutter.AnimationMode.LINEAR, 1200,
-			       "rotation-angle-z", 360.0f);
+      this.throbber.animate (Clutter.AnimationMode.LINEAR, 1200,
+                             "rotation-angle-z", 360.0f);
       this.anim_throbber.loop = true;
-
+      
       GLib.Timeout.add_seconds (15, on_launch_timeout);
     }
-
+    
     private void throbber_fadeout ()
     {
       if (this.throbber.opacity == 0)
-	return;
-
+        return;
+      
       if (anim_throbber != null)
-	anim_throbber.completed ();
-
+        anim_throbber.completed ();
+      
       this.anim_throbber =
-	this.throbber.animate (Clutter.AnimationMode.EASE_IN_QUAD,
-			       200, 
-			       "opacity", 
-			       0);
+      this.throbber.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                             200, 
+                             "opacity", 
+                             0);
       this.anim_throbber.loop = false;
     }
-
+    
     private void throbber_hide ()
     {
       if (this.throbber.opacity > 0)
-	throbber_fadeout ();
+        throbber_fadeout ();
     }
-
+    
     /* animation support */
     private Clutter.Animation _anim;
     public Clutter.Animation anim { 
@@ -360,16 +360,16 @@ namespace Unity.Quicklauncher
       Unity.TooltipManager.get_default().hide (this.tooltip);
       return false;
     }
-
+    
     private bool on_pressed(Clutter.Event src) 
     {
       /* hide the tooltip, to prevent it from stealing focus when
-	 the app starts and is focused */
+         the app starts and is focused */
       Unity.TooltipManager.get_default().hide (this.tooltip);
 
       if (is_starting)
-	return true;
-
+        return true;
+      
       if (app.running)
       {
         // we only want to switch to the application, not launch it
@@ -377,7 +377,7 @@ namespace Unity.Quicklauncher
       }
       else 
       {
-	this.is_starting = true;
+        this.is_starting = true;
         try 
         {
           app.launch ();
@@ -387,7 +387,7 @@ namespace Unity.Quicklauncher
           critical ("could not launch application %s: %s", 
                     this.name, 
                     e.message);
-	  this.is_starting = false;
+          this.is_starting = false;
         }
       }
       
@@ -437,7 +437,7 @@ namespace Unity.Quicklauncher
       float fadeto = 1.0f;
       if (icon_glow_effect.get_factor() <= 1.1f)
         fadeto = 8.0f;
-
+      
       this.hover_anim = icon_glow_effect.animate(
         Clutter.AnimationMode.EASE_IN_OUT_CIRC, 600, "factor", fadeto);
       this.hover_anim.completed.connect (on_hover_anim_completed);
@@ -462,7 +462,7 @@ namespace Unity.Quicklauncher
     private void notify_on_is_running ()
     {
       this.is_starting = false;
-
+      
       /* we need to show the running indicator when we are running */
       if (this.is_running)
       {
@@ -473,11 +473,13 @@ namespace Unity.Quicklauncher
         this.running_indicator.set_opacity (0);
         this.focused_indicator.set_opacity (0);
       }       
-
+      
       if (!this.is_running && !this.is_sticky)
-          this.request_remove (this);
+      {
+        this.request_remove (this);
+      }
     }
-   
+    
     private void notify_on_is_focused ()
     {
       if (app.focused) {
@@ -486,7 +488,7 @@ namespace Unity.Quicklauncher
       }
       else
         this.focused_indicator.set_opacity (0);
-
+      
       this.is_starting = false;
     }
 
