@@ -44,6 +44,7 @@ namespace Unity.Quicklauncher
     private Gdk.Pixbuf honeycomb_mask;
     public Unity.TooltipManager.Tooltip  tooltip;
     
+    private uint32 last_pressed_time;
 
     private bool _busy;
     private bool is_starting {
@@ -137,7 +138,8 @@ namespace Unity.Quicklauncher
      */
     public signal void request_remove (ApplicationView app);
     public signal void request_attention (ApplicationView app);
-    
+    public signal void clicked (ApplicationView app);
+
     public ApplicationView (Launcher.Application app)
     {
       /* This is a 'view' for a launcher application object
@@ -167,8 +169,8 @@ namespace Unity.Quicklauncher
 
       load_textures ();
         
-      button_release_event.connect(this.on_pressed);
-
+      button_press_event.connect (this.on_pressed);
+      button_release_event.connect (this.on_released);
       /* hook up glow for enter/leave events */
       enter_event.connect(this.on_mouse_enter);
       leave_event.connect(this.on_mouse_leave);
@@ -177,6 +179,8 @@ namespace Unity.Quicklauncher
       this.icon.enter_event.connect (this.on_enter);
       this.icon.leave_event.connect (this.on_leave);
       this.icon.set_reactive (true);
+
+      this.clicked.connect (this.on_clicked);
       
       //icon_dropshadow_effect = new Ctk.EffectDropShadow(3, 1, 1);
       //this.icon.add_effect(icon_dropshadow_effect);
@@ -352,24 +356,20 @@ namespace Unity.Quicklauncher
       /* TODO: 30 is the default tooltip height */
       xy += (height - 30) / 2;
       Unity.TooltipManager.get_default().show (this.tooltip, (int) xx, (int) xy);
-
       return false;
     } 
 
-    private bool on_leave (Clutter.Event event)
+    private void on_clicked (ApplicationView appview)
     {
-      Unity.TooltipManager.get_default().hide (this.tooltip);
-      return false;
-    }
-
-    private bool on_pressed(Clutter.Event src) 
-    {
+      debug ("clicked");
       /* hide the tooltip, to prevent it from stealing focus when
-	 the app starts and is focused */
-      Unity.TooltipManager.get_default().hide (this.tooltip);
-
+         the app starts and is focused */
+      Unity.TooltipManager.get_default().hide (tooltip);
+      
       if (is_starting)
-	return true;
+      {
+        return;
+      }
 
       if (app.running)
       {
@@ -378,7 +378,7 @@ namespace Unity.Quicklauncher
       }
       else 
       {
-	this.is_starting = true;
+        this.is_starting = true;
         try 
         {
           app.launch ();
@@ -388,10 +388,35 @@ namespace Unity.Quicklauncher
           critical ("could not launch application %s: %s", 
                     this.name, 
                     e.message);
-	  this.is_starting = false;
+          this.is_starting = false;
         }
       }
-      
+    }
+
+    private bool on_leave (Clutter.Event event)
+    {
+      Unity.TooltipManager.get_default().hide (this.tooltip);
+      return false;
+    }
+
+    private bool on_pressed(Clutter.Event src) 
+    {
+      var bevent = src.button;
+      if (bevent.button == 1)
+      {
+        last_pressed_time = bevent.time;
+      }      
+      return true;
+    }
+
+    private bool on_released (Clutter.Event src)
+    {
+      var bevent = src.button;
+      if (bevent.button == 1 &&
+          (bevent.time - last_pressed_time) < 500)
+      {
+        this.clicked (this);
+      }
       return true;
     }
     
