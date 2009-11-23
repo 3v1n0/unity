@@ -34,7 +34,7 @@ namespace Unity
 
     public Application ()
     {
-      this.name = "com.canonical.Unity";
+      Object (name: "com.canonical.Unity");
     }
 
     construct

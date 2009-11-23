@@ -40,9 +40,7 @@ namespace Unity
 
     public UnderlayWindow (bool popup, int width, int height)
     {
-      this.is_popup = popup;
-      this.popup_width = width;
-      this.popup_height = height;
+      Object(is_popup: popup, popup_width: width, popup_height: height);
     }
     
     construct
