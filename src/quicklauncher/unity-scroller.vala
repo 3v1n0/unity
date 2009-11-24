@@ -167,6 +167,8 @@ namespace Unity.Widgets
       this.button_release_event.connect (this.on_button_release_event);
       this.motion_event.connect (this.on_motion_event);
       this.leave_event.connect (this.on_leave_event);
+
+      this.drag_pos = 0.0f;
     }
 
     private void on_request_attention (Unity.Quicklauncher.ApplicationView app)
@@ -238,7 +240,7 @@ namespace Unity.Widgets
       return 0.0f;
     }
 
-
+    private uint fling_accumulated_frames = 0;
     private void on_fling_frame (Clutter.Timeline timeline, int msecs)
     {
       if (fling_velocity < 1.0f && fling_velocity > -1.0f) 
@@ -253,16 +255,28 @@ namespace Unity.Widgets
        */
 
       uint delta = timeline.get_delta ();
-      if (delta < 1) //should never be <1 but lets check anyway
+      if (delta < 1) //should never be < 1 but lets check anyway
         {
           return;
         }
-      float delta_mod = (float)(delta) / 16.666666666668f;
-      float velocity_drag = 1.0f - (0.05f * delta_mod);
-      fling_velocity *= velocity_drag;
 
-      this.drag_pos -= fling_velocity;
-
+      fling_accumulated_frames = delta;
+      while (fling_accumulated_frames > 16)
+        {
+          // we missed a frame
+          fling_accumulated_frames -= 16;
+          fling_velocity *= 0.90f;
+          
+          // could be sped up by avoiding the drag_pos setter here
+          this.drag_pos -= fling_velocity;
+        }
+      if (fling_accumulated_frames > 0)
+        {
+          float vel_mod = (float)fling_accumulated_frames / 16.0f;
+          fling_velocity *= 1.0f - (0.1f * vel_mod);
+          this.drag_pos -= fling_velocity;
+          fling_accumulated_frames = 0;
+        }
     }
 
     /**
@@ -303,6 +317,7 @@ namespace Unity.Widgets
     private bool on_button_release_event (Clutter.Event event)
     {
       // FIXME do a button check on event
+      debug ("got release event");
       this.is_dragging = false;
       //scroll_single_item (true);
 
@@ -560,14 +575,11 @@ namespace Unity.Widgets
     public override void pick (Clutter.Color color)
     {
       base.pick (color);
-      if (!this.is_dragging)
+      foreach (ScrollerChild childcontainer in this.children)
       {
-        foreach (ScrollerChild childcontainer in this.children)
-        {
-          Clutter.Actor child = childcontainer.child;
-          child.paint ();
-          child.pick (color);
-        }
+        Clutter.Actor child = childcontainer.child;
+        child.paint ();
+        child.pick (color);
       }
     }
     
