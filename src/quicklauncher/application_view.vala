@@ -406,7 +406,7 @@ namespace Unity.Quicklauncher
       {
         last_pressed_time = bevent.time;
       }      
-      return true;
+      return false;
     }
 
     private bool on_released (Clutter.Event src)
@@ -417,7 +417,7 @@ namespace Unity.Quicklauncher
       {
         this.clicked (this);
       }
-      return true;
+      return false;
     }
     
     private bool on_mouse_enter(Clutter.Event src) 

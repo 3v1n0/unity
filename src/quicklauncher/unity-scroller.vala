@@ -74,10 +74,20 @@ namespace Unity.Widgets
         this.queue_relayout ();
       }
     }
-    private bool is_dragging = false;
+    private bool _is_dragging = false;
+    private bool is_dragging {
+        get { return this._is_dragging; }
+        set 
+          {  
+            foreach (ScrollerChild child in children)
+              {
+                child.child.set_reactive (!value);
+              }
+            this._is_dragging = value;
+          }
+    }
     private float last_drag_pos = 0.0f;
     private float fling_velocity = 0.0f;
-
     private float previous_y = -1000000000.0f;
 
     private Clutter.Texture bgtex;
@@ -103,6 +113,7 @@ namespace Unity.Widgets
     private float hot_start = 0.0f;
 
     private Clutter.Timeline fling_timeline;
+    private bool button_down = false;
 
     public Scroller (Ctk.Orientation orientation, int spacing) 
     {
@@ -166,7 +177,6 @@ namespace Unity.Widgets
       this.button_press_event.connect (this.on_button_click_event);
       this.button_release_event.connect (this.on_button_release_event);
       this.motion_event.connect (this.on_motion_event);
-      this.leave_event.connect (this.on_leave_event);
 
       this.drag_pos = 0.0f;
     }
@@ -197,50 +207,7 @@ namespace Unity.Widgets
       }     
     }
 
-    private float get_next_pos_position () 
-    {
-      /* returns the scroll to position of the next pos item */
-      double hot_end = hot_start + hot_height - 1;
-      foreach (ScrollerChild container in this.children)
-      {
-        Clutter.ActorBox box = container.box;
-        if (container == this.children.last())
-          return 1.0f;
-        
-        if (box.y2 > hot_end)
-        {
-          /* we have a container greater than the 'hotarea' 
-           * we should scroll to that
-           */
-          double scroll_px = box.y2 + drag_pos - hot_height - hot_start + spacing;
-          return (float)scroll_px;
-        } 
-      }
-      return 1.0f;   
-    }
 
-    private float get_next_neg_position ()
-    {
-      /* returns the scroll to position of the next neg item */
-      /* *sigh* gee has no reverse() method for its container so we can't
-       * easily reverse the itteration, have to just do it manually 
-       */
-      for (var i = this.children.size - 1; i >= 0; i--)
-      {
-        ScrollerChild container = this.children.get(i); 
-        Clutter.ActorBox box = container.box;
-        if (box.y1 == 0.0 && box.y2 == 0.0) continue; 
-        if (box.y1 < hot_start)
-        {
-          /* we have a container lower than the "hotarea" */
-          double scroll_px = box.y1 + drag_pos - hot_start + 5;
-          return (float)scroll_px;
-        }
-      }
-      return 0.0f;
-    }
-
-    private uint fling_accumulated_frames = 0;
     private void on_fling_frame (Clutter.Timeline timeline, int msecs)
     {
       if (fling_velocity < 1.0f && fling_velocity > -1.0f) 
@@ -260,28 +227,27 @@ namespace Unity.Widgets
           return;
         }
 
-      fling_accumulated_frames = delta;
-      while (fling_accumulated_frames > 16)
+      while (delta > 16)
         {
           // we missed a frame
-          fling_accumulated_frames -= 16;
+          delta -= 16;
           fling_velocity *= 0.90f;
           
           // could be sped up by avoiding the drag_pos setter here
           this.drag_pos -= fling_velocity;
         }
-      if (fling_accumulated_frames > 0)
+      if (delta > 0)
         {
-          float vel_mod = (float)fling_accumulated_frames / 16.0f;
-          fling_velocity *= 1.0f - (0.1f * vel_mod);
+          fling_velocity *= 1.0f - (0.1f * (float)delta / 16.0f);
           this.drag_pos -= fling_velocity;
-          fling_accumulated_frames = 0;
+          delta = 0;
         }
     }
 
     /**
      * scrolls a single item negatively (false) or positively (true)
      */
+    /*
     private void scroll_single_item (bool direction) 
     {
       //if (scroll_anim is Clutter.Animation)
@@ -296,19 +262,15 @@ namespace Unity.Widgets
       scroll_anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, 
                              "drag_pos", next_pos);
     }
-
+*/
     private bool on_button_click_event (Clutter.Event event)
     {
-      // FIXME do button check on event
-      debug ("got click event");
-      foreach (ScrollerChild childcontainer in this.children)
-      {
-        Clutter.Actor child = childcontainer.child;
-        child.set_reactive (false);
-      }
-
+      if (event.button.button != 1)
+        {
+           return false;
+        }
+      this.button_down = true; 
       Clutter.ButtonEvent buttonevent = event.button;
-      this.is_dragging = true;
       this.previous_y = buttonevent.y;
       this.last_drag_pos = (float)this.drag_pos;
       return true;
@@ -316,11 +278,12 @@ namespace Unity.Widgets
 
     private bool on_button_release_event (Clutter.Event event)
     {
-      // FIXME do a button check on event
-      debug ("got release event");
+      if (event.button.button != 1)
+        {
+           return false;
+        }
+      this.button_down = false;
       this.is_dragging = false;
-      //scroll_single_item (true);
-
       this.fling_timeline.start ();
 
       return true;
@@ -328,11 +291,17 @@ namespace Unity.Widgets
 
     private bool on_motion_event (Clutter.Event event)
     {
+      if (this.button_down)
+        {
+          this.is_dragging = true;
+        }
       if (this.is_dragging == false)
-        return true;
+        {
+          return true;
+        }
       Clutter.MotionEvent motionevent = event.motion;
       float vel_y = 0.0f;
-
+      
       if (previous_y <= -1000000000.0)
       {
         vel_y = 0.0f;
@@ -348,28 +317,18 @@ namespace Unity.Widgets
       return true;
     }
 
-    private bool on_leave_event (Clutter.Event event)
-    {
-      debug ("leaving");
-      if (this.is_dragging)
-      {
-        this.is_dragging = false;
-        scroll_anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD, 
-                               600, "drag_pos", this.last_drag_pos);
-      }
-      return true;
-    }
-
     private bool on_scroll_event (Clutter.Event event)
     {
       Clutter.ScrollEvent scrollevent = event.scroll;
       if (scrollevent.direction == Clutter.ScrollDirection.UP)
       {
-        scroll_single_item (false);
+        this.fling_velocity = 16.0f;
+        this.fling_timeline.start ();
       }
       else if (scrollevent.direction == Clutter.ScrollDirection.DOWN)
       {
-        scroll_single_item (true);
+        this.fling_velocity = -16.0f;
+        this.fling_timeline.start ();
       }
       return true;
     }
