@@ -86,6 +86,7 @@ namespace Unity.Widgets
             this._is_dragging = value;
           }
     }
+    private const float friction = 0.9f; 
     private float last_drag_pos = 0.0f;
     private float fling_velocity = 0.0f;
     private float previous_y = -1000000000.0f;
@@ -207,12 +208,13 @@ namespace Unity.Widgets
       }     
     }
 
-
+    private uint stored_delta = 0;
     private void on_fling_frame (Clutter.Timeline timeline, int msecs)
     {
       if (fling_velocity < 1.0f && fling_velocity > -1.0f) 
         {
           timeline.pause ();
+          debug ("actual end position: %f", this.drag_pos);
         }
 
       /* this code is slightly alkward, physics engines really need to tick
@@ -222,26 +224,39 @@ namespace Unity.Widgets
        */
 
       uint delta = timeline.get_delta ();
-      if (delta < 1) //should never be < 1 but lets check anyway
+      delta += stored_delta;
+      if (delta <= 16)
         {
+          stored_delta = delta;
           return;
         }
 
+      float d = 0.0f;
       while (delta > 16)
         {
-          // we missed a frame
           delta -= 16;
-          fling_velocity *= 0.90f;
-          
-          // could be sped up by avoiding the drag_pos setter here
-          this.drag_pos -= fling_velocity;
+          fling_velocity *= this.friction;
+          d -= fling_velocity;
         }
-      if (delta > 0)
+      this.drag_pos += d;
+      stored_delta = delta;
+    }
+
+    private void calculate_anchor (out int iterations, out float position)
+    {
+      float d = 0.0f;
+      float v = fling_velocity;
+      iterations = 0;
+      while (v >= 1.0f || v <= -1.0)
         {
-          fling_velocity *= 1.0f - (0.1f * (float)delta / 16.0f);
-          this.drag_pos -= fling_velocity;
-          delta = 0;
+          iterations += 1;
+          v *= this.friction;
+          d -= v;
         }
+      position = (float)this.drag_pos + d;
+      return;
+      
+      //debug ("end pos: %f - d: %f - v: %f", this.drag_pos + d, d, fling_velocity);
     }
 
     /**
@@ -285,7 +300,13 @@ namespace Unity.Widgets
       this.button_down = false;
       this.is_dragging = false;
       this.fling_timeline.start ();
+      debug ("start pos: %f", this.drag_pos);
+      
+      int iters = 0;
+      float position = 0.0f;
 
+      calculate_anchor (out iters, out position);
+      debug ("iters: %i, position: %f", iters, position);
       return true;
     }
 
