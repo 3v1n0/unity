@@ -66,8 +66,8 @@ namespace Unity.Widgets
 
   public class Scroller : Ctk.Actor, Clutter.Container
   {
-    private double _drag_pos = -0.0;
-    public double drag_pos {
+    private float _drag_pos = -0.0f;
+    public float drag_pos {
       get { return this._drag_pos; }
       set {
         this._drag_pos = value;
@@ -90,7 +90,6 @@ namespace Unity.Widgets
     private float last_drag_pos = 0.0f;
     private float fling_velocity = 0.0f;
     private float previous_y = -1000000000.0f;
-    private float anchor = 0.0f;
 
     private Clutter.Texture bgtex;
     private Clutter.Texture gradient;
@@ -173,7 +172,6 @@ namespace Unity.Widgets
       this.fling_timeline = new Clutter.Timeline (1000);
       this.fling_timeline.loop = true;
       this.fling_timeline.new_frame.connect (this.on_fling_frame);
-      this.fling_timeline.completed.connect (() => { debug ("completed");});
       set_reactive (true);
 
       this.scroll_event.connect (this.on_scroll_event);
@@ -197,14 +195,14 @@ namespace Unity.Widgets
       {
         if (container.child == actor)
         {
-          double scroll_px = container.box.y2 + drag_pos - hot_height - hot_start;
+          double scroll_px = container.box.y2 - hot_height - hot_start;
 
           if (scroll_anim is Clutter.Animation)
             scroll_anim.completed ();
 
-          /*scroll_anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD, 
+          scroll_anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD, 
                                  200, "drag_pos", 
-                                 scroll_px);*/
+                                 scroll_px);
           return;
         }
       }     
@@ -218,9 +216,7 @@ namespace Unity.Widgets
           timeline.pause ();
 
           // we want to scroll to a nice position from here 
-          float position = get_next_neg_position ();
-          debug ("current position: %f", drag_pos);
-          debug ("next position:    %f", position);
+          float position = get_next_neg_position (this.drag_pos);
           this.scroll_anim = this.animate ( 
                               Clutter.AnimationMode.EASE_OUT_QUAD,
                               1500, 
@@ -250,6 +246,7 @@ namespace Unity.Widgets
           d -= fling_velocity;
         }
       this.drag_pos += d;
+
       stored_delta = delta;
     }
 
@@ -268,7 +265,7 @@ namespace Unity.Widgets
       return;
     }
 
-    private float get_next_neg_position ()
+    private float get_next_neg_position (float target_pos)
     {
       /* returns the scroll to position of the next neg item */
       /* *sigh* gee has no reverse() method for its container so we can't
@@ -276,13 +273,13 @@ namespace Unity.Widgets
        */
       for (var i = this.children.size - 1; i >= 0; i--)
       {
-        ScrollerChild container = this.children.get(i); 
+        ScrollerChild container = this.children.get(i);
         Clutter.ActorBox box = container.box;
-        if (box.y1 == 0.0 && box.y2 == 0.0) continue; 
+        if (box.y1 == 0.0 && box.y2 == 0.0) continue;
         if (box.y1 < hot_start)
         {
           /* we have a container lower than the "hotarea" */
-          double scroll_px = box.y1 + drag_pos - hot_start;
+          double scroll_px = box.y1 + target_pos - hot_start;
           return (float)scroll_px - this.padding.top;
         }
       }
@@ -298,7 +295,6 @@ namespace Unity.Widgets
 
       if (this.get_animation() is Clutter.Animation)
         {
-          debug ("stopping animation");
           this.get_animation().completed ();
         }
       this.button_down = true; 
@@ -316,16 +312,33 @@ namespace Unity.Widgets
         }
       this.button_down = false;
       this.is_dragging = false;
-          
-      this.fling_timeline.start ();
-      return true;
+         
       int iters = 0;
       float position = 0.0f;
 
       calculate_anchor (out iters, out position);
-      this.scroll_anim = this.animate (
-            Clutter.AnimationMode.EASE_OUT_QUAD,
-            16 * iters, "drag_pos", position);
+
+      if ((position < 0.0 || position > this.total_child_height)
+          || this.total_child_height < this.height)
+        {
+          /* because we are flinging outside of our target area we have to
+           * do a "real" fling, per frame calculated and then swing back
+           * to a nice position
+           */
+          this.fling_timeline.start ();
+        }
+      else 
+        {
+          /* because we are flinging inside our target area then we can do
+           * a fake fling and just use clutters animation system, should
+           * hopefully give a nicer feel
+           */
+          position = get_next_neg_position (position);
+          this.scroll_anim = this.animate (
+                                    Clutter.AnimationMode.EASE_OUT_QUAD,
+                                    16 * iters, "drag_pos", position);
+        }
+
       return true;
     }
 
@@ -339,6 +352,7 @@ namespace Unity.Widgets
         {
           return true;
         }
+
       Clutter.MotionEvent motionevent = event.motion;
       float vel_y = 0.0f;
       
@@ -612,7 +626,6 @@ namespace Unity.Widgets
       actor.set_parent (this);
 
       /* if we have an ApplicationView we need to tie it to our attention 
-
        * grabber
        */
       if (actor is Unity.Quicklauncher.ApplicationView)
