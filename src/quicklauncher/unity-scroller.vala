@@ -90,6 +90,7 @@ namespace Unity.Widgets
     private float last_drag_pos = 0.0f;
     private float fling_velocity = 0.0f;
     private float previous_y = -1000000000.0f;
+    private float anchor = 0.0f;
 
     private Clutter.Texture bgtex;
     private Clutter.Texture gradient;
@@ -172,6 +173,7 @@ namespace Unity.Widgets
       this.fling_timeline = new Clutter.Timeline (1000);
       this.fling_timeline.loop = true;
       this.fling_timeline.new_frame.connect (this.on_fling_frame);
+      this.fling_timeline.completed.connect (() => { debug ("completed");});
       set_reactive (true);
 
       this.scroll_event.connect (this.on_scroll_event);
@@ -200,9 +202,9 @@ namespace Unity.Widgets
           if (scroll_anim is Clutter.Animation)
             scroll_anim.completed ();
 
-          scroll_anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD, 
+          /*scroll_anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD, 
                                  200, "drag_pos", 
-                                 scroll_px);
+                                 scroll_px);*/
           return;
         }
       }     
@@ -214,7 +216,16 @@ namespace Unity.Widgets
       if (fling_velocity < 1.0f && fling_velocity > -1.0f) 
         {
           timeline.pause ();
-          debug ("actual end position: %f", this.drag_pos);
+
+          // we want to scroll to a nice position from here 
+          float position = get_next_neg_position ();
+          debug ("current position: %f", drag_pos);
+          debug ("next position:    %f", position);
+          this.scroll_anim = this.animate ( 
+                              Clutter.AnimationMode.EASE_OUT_QUAD,
+                              1500, 
+                              "drag_pos", position);
+          
         }
 
       /* this code is slightly alkward, physics engines really need to tick
@@ -255,34 +266,40 @@ namespace Unity.Widgets
         }
       position = (float)this.drag_pos + d;
       return;
-      
-      //debug ("end pos: %f - d: %f - v: %f", this.drag_pos + d, d, fling_velocity);
     }
 
-    /**
-     * scrolls a single item negatively (false) or positively (true)
-     */
-    /*
-    private void scroll_single_item (bool direction) 
+    private float get_next_neg_position ()
     {
-      //if (scroll_anim is Clutter.Animation)
-      //  scroll_anim.completed ();
+      /* returns the scroll to position of the next neg item */
+      /* *sigh* gee has no reverse() method for its container so we can't
+       * easily reverse the itteration, have to just do it manually 
+       */
+      for (var i = this.children.size - 1; i >= 0; i--)
+      {
+        ScrollerChild container = this.children.get(i); 
+        Clutter.ActorBox box = container.box;
+        if (box.y1 == 0.0 && box.y2 == 0.0) continue; 
+        if (box.y1 < hot_start)
+        {
+          /* we have a container lower than the "hotarea" */
+          double scroll_px = box.y1 + drag_pos - hot_start;
+          return (float)scroll_px - this.padding.top;
+        }
+      }
+      return 0.0f;
+    }   
 
-      var next_pos = 0.0f;
-      if (!direction)
-        next_pos = get_next_neg_position ();
-      else
-        next_pos = get_next_pos_position ();
-
-      scroll_anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, 
-                             "drag_pos", next_pos);
-    }
-*/
     private bool on_button_click_event (Clutter.Event event)
     {
       if (event.button.button != 1)
         {
            return false;
+        }
+
+      if (this.get_animation() is Clutter.Animation)
+        {
+          debug ("stopping animation");
+          this.get_animation().completed ();
         }
       this.button_down = true; 
       Clutter.ButtonEvent buttonevent = event.button;
@@ -299,14 +316,16 @@ namespace Unity.Widgets
         }
       this.button_down = false;
       this.is_dragging = false;
+          
       this.fling_timeline.start ();
-      debug ("start pos: %f", this.drag_pos);
-      
+      return true;
       int iters = 0;
       float position = 0.0f;
 
       calculate_anchor (out iters, out position);
-      debug ("iters: %i, position: %f", iters, position);
+      this.scroll_anim = this.animate (
+            Clutter.AnimationMode.EASE_OUT_QUAD,
+            16 * iters, "drag_pos", position);
       return true;
     }
 
@@ -499,8 +518,8 @@ namespace Unity.Widgets
 
       /* also allocate our background graphics */
       bgtex.get_allocation_box (out child_box);
-      child_box.y1 = box.y1 - (float)drag_pos - box.get_height ();
-      child_box.y2 = box.y2 - (float)drag_pos + box.get_height ();
+      child_box.y1 = box.y1 - (float)drag_pos - box.get_height () * 2;
+      child_box.y2 = box.y2 - (float)drag_pos + box.get_height () * 2;
       child_box.x1 = box.x1;
       child_box.x2 = box.x2;
       bgtex.allocate (child_box, flags);
