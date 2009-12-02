@@ -54,9 +54,9 @@ namespace Unity.Quicklauncher
         {
           if (!_busy)
             throbber_start ();
-        } else {
-          throbber_hide ();
-        }
+          } else {
+            throbber_hide ();
+          }
         _busy = value;
       }
     }
@@ -74,11 +74,11 @@ namespace Unity.Quicklauncher
         Clutter.AnimationMode.LINEAR, 1200,
         "rotation-angle-z", 360.0f
         );
-      this.anim_throbber.loop = true;
 
+      this.anim_throbber.loop = true;
       GLib.Timeout.add_seconds (15, on_launch_timeout);
     }
-
+    
     private void throbber_fadeout ()
     {
       if (this.throbber.opacity == 0)
@@ -361,10 +361,9 @@ namespace Unity.Quicklauncher
 
     private void on_clicked (ApplicationView appview)
     {
-      debug ("clicked");
       /* hide the tooltip, to prevent it from stealing focus when
          the app starts and is focused */
-      Unity.TooltipManager.get_default().hide (tooltip);
+      Unity.TooltipManager.get_default().hide (this.tooltip);
       
       if (is_starting)
       {
@@ -463,7 +462,7 @@ namespace Unity.Quicklauncher
       float fadeto = 1.0f;
       if (icon_glow_effect.get_factor() <= 1.1f)
         fadeto = 8.0f;
-
+      
       this.hover_anim = icon_glow_effect.animate(
         Clutter.AnimationMode.EASE_IN_OUT_CIRC, 600, "factor", fadeto);
       this.hover_anim.completed.connect (on_hover_anim_completed);
@@ -488,7 +487,7 @@ namespace Unity.Quicklauncher
     private void notify_on_is_running ()
     {
       this.is_starting = false;
-
+      
       /* we need to show the running indicator when we are running */
       if (this.is_running)
       {
@@ -499,11 +498,13 @@ namespace Unity.Quicklauncher
         this.running_indicator.set_opacity (0);
         this.focused_indicator.set_opacity (0);
       }       
-
+      
       if (!this.is_running && !this.is_sticky)
-          this.request_remove (this);
+      {
+        this.request_remove (this);
+      }
     }
-   
+    
     private void notify_on_is_focused ()
     {
       if (app.focused) {
@@ -512,7 +513,7 @@ namespace Unity.Quicklauncher
       }
       else
         this.focused_indicator.set_opacity (0);
-
+      
       this.is_starting = false;
     }
 
