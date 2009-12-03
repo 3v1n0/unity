@@ -73,7 +73,10 @@ namespace Clutter {
 		public void move_anchor_point_from_gravity (Clutter.Gravity gravity);
 		public void move_by (float dx, float dy);
 		public void queue_relayout ();
-		public void raise (Clutter.Actor? below);
+    [CCode (cname = "clutter_actor_queue_redraw")]
+    public void do_queue_redraw ();
+
+    public void raise (Clutter.Actor? below);
 		public void raise_top ();
 		public void remove_clip ();
 		public void reparent (Clutter.Actor new_parent);
