@@ -33,6 +33,8 @@ libunity_quicklauncher_la_LIBADD = \
 libunity_quicklauncher_la_SOURCES = \
   application_view.vala \
   application_store.vala \
+  launcher_store.vala \
+  launcher_view.vala \
   quicklauncher.vala \
   tooltipmanager.vala \
   unity-scroller.vala
