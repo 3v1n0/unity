@@ -108,6 +108,7 @@ namespace Unity
       this.quicklauncher = new Quicklauncher.View (this);
       this.homescreen = new Homescreen.View (this);
       this.stage.add_actor (this.quicklauncher);
+      this.stage.add_actor (this.homescreen);
       
       /* Layout everything */
       this.move (0, 0);
