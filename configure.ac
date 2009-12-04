@@ -89,6 +89,7 @@ AC_OUTPUT([
   libunity/Makefile
   src/Makefile
   src/quicklauncher/Makefile
+  src/homescreen/Makefile
   tests/Makefile
 ])
 

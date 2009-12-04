@@ -37,6 +37,7 @@ namespace Unity
 
     private Background         background;
     private Quicklauncher.View quicklauncher;
+    private Homescreen.View    homescreen;
 
     public UnderlayWindow (bool popup, int width, int height)
     {
@@ -105,6 +106,7 @@ namespace Unity
       this.background.show ();
 
       this.quicklauncher = new Quicklauncher.View (this);
+      this.homescreen = new Homescreen.View (this);
       this.stage.add_actor (this.quicklauncher);
       
       /* Layout everything */
