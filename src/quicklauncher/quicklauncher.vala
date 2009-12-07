@@ -23,17 +23,17 @@ namespace Unity.Quicklauncher
   {
     private Shell shell;
 
-    private ApplicationStore store;
+    private Manager manager;
     
     public View (Shell shell)
     { 
       this.shell = shell;
-  	}
+    }
 
     construct
     {
-      this.store = new ApplicationStore ();
-      this.add_actor (store);
+      this.manager = new Manager ();
+      this.add_actor (manager);
     }
   }
 }

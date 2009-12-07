@@ -17,7 +17,7 @@
  * Authored by Gordon Allott <gord.allott@canonical.com>
  *
  */
-
+using Unity.Quicklauncher;
 namespace Unity.Widgets
 {
 
@@ -182,7 +182,7 @@ namespace Unity.Widgets
       this.drag_pos = 0.0f;
     }
 
-    private void on_request_attention (Unity.Quicklauncher.ApplicationView app)
+    private void on_request_attention (LauncherView view)
     {
       /* when the app requests attention we need to scroll to it */
       // check to make sure we can actually scroll
@@ -190,7 +190,7 @@ namespace Unity.Widgets
         return;
 
       // find the app in our list
-      Clutter.Actor actor = app as Clutter.Actor;
+      Clutter.Actor actor = view as Clutter.Actor;
       foreach (ScrollerChild container in this.children) 
       {
         if (container.child == actor)
@@ -625,13 +625,13 @@ namespace Unity.Widgets
       this.children.add (container);
       actor.set_parent (this);
 
-      /* if we have an ApplicationView we need to tie it to our attention 
+      /* if we have an LauncherView we need to tie it to our attention 
        * grabber
        */
-      if (actor is Unity.Quicklauncher.ApplicationView)
+      if (actor is LauncherView)
       {
-        Unity.Quicklauncher.ApplicationView app = actor as Unity.Quicklauncher.ApplicationView;
-        app.request_attention.connect (on_request_attention);
+        LauncherView view = actor as LauncherView;
+        view.request_attention.connect (on_request_attention);
       }
 
       /* set a clip on the actor */
@@ -703,7 +703,7 @@ namespace Unity.Widgets
     {
     }
 
-		public new void raise (Clutter.Actor actor, Clutter.Actor sibling)
+    public new void raise (Clutter.Actor actor, Clutter.Actor sibling)
     {
     }
     /* has to return something, implimentation does not have ? so we can't

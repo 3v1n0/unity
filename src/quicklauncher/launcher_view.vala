@@ -21,7 +21,7 @@ using Unity.Quicklauncher.Stores;
 
 namespace Unity.Quicklauncher
 {
-  /*const string THROBBER_FILE = Unity.PKGDATADIR 
+  const string THROBBER_FILE = Unity.PKGDATADIR 
     + "/quicklauncher_spinner.png";
   const string FOCUSED_FILE  = Unity.PKGDATADIR 
     + "/quicklauncher_focused_indicator.svg";
@@ -29,7 +29,7 @@ namespace Unity.Quicklauncher
     + "/quicklauncher_running_indicator.svg";
   const string HONEYCOMB_MASK_FILE = Unity.PKGDATADIR 
     + "/honeycomb-mask.png";
-  */
+  
   const uint SHORT_DELAY = 400;
   const uint MEDIUM_DELAY = 800;
   const uint LONG_DELAY = 1600;
@@ -102,8 +102,8 @@ namespace Unity.Quicklauncher
       {
         /* this is a "view" for a launcherstore object */
         this.store = store;
-        this.store.notify["is_active"].connect (this.notify_on_is_running);
-        this.store.notify["is_focused"].connect (this.notify_on_is_focused);
+        this.store.notify_active.connect (this.notify_on_is_running);
+        this.store.notify_focused.connect (this.notify_on_is_focused);
 
         notify_on_is_running ();
         notify_on_is_focused ();

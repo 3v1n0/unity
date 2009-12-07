@@ -18,150 +18,190 @@
  *
  */
 
-/*
- * Notes!
- * 
- * this application store object exists to half-manage the ApplicationView 
- * objects
- * this does not mean that it handles *everything* about them. for example the 
- * applicationview objects contain the LauncherApplication data provider so 
- * only they know when they truely need to be removed, if ever. (for example, 
- * sticky applications will never remove themselfs).
- * 
- * however we need a mechanism of loading new applications that are not sticky
- * and loading default favorites
- */
-
-namespace Unity.Quicklauncher
+namespace Unity.Quicklauncher.Stores
 {
-  public class ApplicationStore : Ctk.Bin
+  
+  
+  public class ApplicationStore : GLib.Object, LauncherStore 
   {
+    private Gdk.Pixbuf _icon;
+    private Launcher.Application app;
+    private Launcher.Appman manager;
     
-    private Unity.Widgets.Scroller container;
-    private Gee.ArrayList<ApplicationView> widgets;
-    private Gee.ArrayList<Launcher.Application> apps;
+    public ApplicationStore (string desktop_uri)
+    {
+      this.manager = Launcher.Appman.get_default ();
+      this.app = this.manager.get_application_for_desktop_file (desktop_uri);
+      this.app.opened.connect(this.on_app_opened);
+
+      this.app.notify["focused"].connect (this.notify_on_focused);
+      this.app.notify["running"].connect (this.notify_on_running);
+      
+      this._icon = make_icon (app.icon_name);
+    }
     
-    private Launcher.Appman appman;
-    private Launcher.Session session;
-    
-    public ApplicationStore ()
+    construct
     {
     }
     
-    construct 
+    private void on_app_opened (Wnck.Application app) 
     {
-      this.appman = Launcher.Appman.get_default ();
-      this.session = Launcher.Session.get_default ();
-      
-      this.widgets = new Gee.ArrayList<ApplicationView> ();
-      this.apps = new Gee.ArrayList<Launcher.Application> ();
-      
-      container = new Unity.Widgets.Scroller (Ctk.Orientation.VERTICAL,
-											  6);
-      add_actor (container);
-      
-      build_favorites ();
-      
-      this.session.application_opened.connect (handle_session_application);
+      this.request_attention ();
+    }
+    
+    private void notify_on_focused ()
+    {
+      if (app.focused) {
+        this.request_attention ();
+      }
+      notify_focused();
     }
 
-    /**
-     * goes though our favorites and addds them to the container
-     * marks them as sticky also
-     */
-    private void build_favorites () 
+    private void notify_on_running () 
     {
-      var favorites = Launcher.Favorites.get_default ();
-      
-      unowned SList<string> favorite_list = favorites.get_favorites();
-      foreach (weak string uid in favorite_list)
-        {
-          
-          // we only want favorite *applications* for the moment 
-          var type = favorites.get_string(uid, "type");
-          if (type != "application")
-              continue;
-              
-          string desktop_file = favorites.get_string(uid, "desktop_file");
-          assert (desktop_file != "");
-          
-          var newapp = appman.get_application_for_desktop_file (desktop_file);
-          
-          var appview = add_application (newapp);
-          if (appview != null) 
-            appview.is_sticky = true;
-        }
+      notify_active ();     
+    }
+
+    public bool is_active 
+    {
+      get { return this.app.running; }
+    }
+    public bool is_focused 
+    {
+      get { return this.app.focused; }
+    }
+    public Gdk.Pixbuf icon 
+    {
+      get { return _icon; }
     }
     
-    private void handle_session_application (Launcher.Application app) 
+    private bool _is_sticky;
+    public bool is_sticky 
     {
-      /* before passing applications to add_application, we want to handle each
-       * one to make sure its not a panel or whatever
-       */
-      /* this is *alkward*, have to go though the wnckapplications and then the 
-       * wnckapplication windows and make sure that we have a valid window
-       * i'll transfer this type of code to liblauncher soonish 
-       * something like Launcher.Application.is_visible
-       * would like to do this the last week of the month sprint since time is 
-       * a little tight for this type of thing right now.
-       */
-      bool app_is_visible = false;
-      
-      unowned GLib.SList<Wnck.Application> wnckapps = app.get_wnckapps ();
-      foreach (Wnck.Application wnckapp in wnckapps)
+      get { return _is_sticky; }
+      set { _is_sticky = value; }
+    }
+
+    public void activate ()
+    {
+      if (app.running)
         {
-          unowned GLib.List<Wnck.Window> windows = wnckapp.get_windows ();
-          foreach (Wnck.Window window in windows)
+          // we only want to switch to the application, not launch it
+          app.show ();
+        }
+      else 
+        {
+          try
             {
-              var type = window.get_window_type ();
-              if (!(type == Wnck.WindowType.DESKTOP
-                    || type == Wnck.WindowType.DOCK
-                    || type == Wnck.WindowType.SPLASHSCREEN
-                    || type == Wnck.WindowType.MENU))
-              {
-                app_is_visible = true;
-              }
+              app.launch ();
+            } 
+          catch (GLib.Error e)
+            {
+              critical ("could not launch application %s: %s", 
+                        this.app.name, 
+                        e.message);
             }
         }
-        
-      if (app_is_visible)
+    }
+  }
+  
+/** 
+     * taken from the prototype code and shamelessly stolen from
+     * netbook launcher. needs to be improved at some point to deal
+     * with all cases, it will miss some apps at the moment
+     */
+    static Gdk.Pixbuf make_icon(string? icon_name) 
+    {
+      /*
+       * This code somehow manages to miss a lot of icon names 
+       * (non found icons are replaced with stock missing image icons)
+       * which is a little strange as I ported this code fron netbook launcher
+       * pixbuf-cache.c i think, If anyone else has a better idea for this then
+       * please give it a go. otherwise i will revisit this code the last week 
+       * of the month sprint
+       */
+      Gdk.Pixbuf pixbuf;
+      Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
+      
+      if (icon_name == null)
         {
-          add_application(app);
+          pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 42, 0);
+          return pixbuf;
         }
         
-    }
-    
-    /**
-     * adds the Launcher.Application @app to this container
-     */
-    private ApplicationView? add_application (Launcher.Application app)
-    {
-      if (app in this.apps)
-        /* the application object will signal itself, we don't need to 
-         * do a thing */
-        return null;
+      if (icon_name.has_prefix("file://")) 
+        {
+          string filename = "";
+          /* this try/catch sort of isn't needed... but it makes valac stop 
+           * printing warning messages
+           */
+          try 
+          {
+            filename = Filename.from_uri(icon_name);
+          } 
+          catch (GLib.ConvertError e)
+          {
+          }
+          if (filename != "") 
+            {
+              pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name, 
+                                                         42, 42, true);
+              if (pixbuf is Gdk.Pixbuf)
+                  return pixbuf;
+            }
+        }
+      
+      if (Path.is_absolute(icon_name))
+        {
+          if (FileUtils.test(icon_name, FileTest.EXISTS)) 
+            {
+              pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name, 
+                                                         42, 42, true);
+
+              if (pixbuf is Gdk.Pixbuf)
+                return pixbuf;
+            }
+        }
+
+      if (FileUtils.test ("/usr/share/pixmaps/" + icon_name, 
+                          FileTest.IS_REGULAR))
+        {
+          pixbuf = new Gdk.Pixbuf.from_file_at_scale (
+            "/usr/share/pixmaps/" + icon_name, 42, 42, true
+            );
           
-      var app_view = new ApplicationView (app);
-      apps.add (app);
-      widgets.add (app_view);
-      container.add_actor(app_view);
+          if (pixbuf is Gdk.Pixbuf)
+            return pixbuf;
+        }
       
-      app_view.request_remove.connect(remove_application);
+      Gtk.IconInfo info = theme.lookup_icon(icon_name, 42, 0);
+      if (info != null) 
+        {
+          string filename = info.get_filename();
+          if (FileUtils.test(filename, FileTest.EXISTS)) 
+            {
+              pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename, 
+                                                         42, 42, true);
+            
+              if (pixbuf is Gdk.Pixbuf)
+                return pixbuf;
+            }
+        }
       
-      return app_view;
+      try 
+      {
+        pixbuf = theme.load_icon(icon_name, 42, Gtk.IconLookupFlags.FORCE_SVG);
+      }
+      catch (GLib.Error e) 
+      {
+        warning ("could not load icon for %s - %s", icon_name, e.message);
+        pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 42, 0);
+        return pixbuf;
+      }
+      return pixbuf;
+          
     }
-    
-    
-    private void remove_application (ApplicationView app)
-    {
-      // for now just remove the application quickly. at some point
-      // i would assume we have to pretty fading though, thats trivial to do
-      
-      this.container.remove_actor (app);
-      apps.remove (app.app);
-      widgets.remove (app);
-      
-    } 
-    
-  }
+  
+  
 }
+

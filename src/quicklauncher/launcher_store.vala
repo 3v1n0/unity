@@ -26,8 +26,10 @@ namespace Unity.Quicklauncher.Stores
     public abstract bool is_active {get;}
     public abstract bool is_focused {get;}
     public abstract Gdk.Pixbuf icon {get;}
-    public abstract bool is_sticky {get;}
+    public abstract bool is_sticky {get; set;}
   
+    public abstract signal void notify_active ();
+    public abstract signal void notify_focused ();
     public abstract signal void request_attention ();
 
     public abstract void activate ();
