@@ -36,16 +36,20 @@ namespace Unity.Homescreen
 			this.homogeneous = false;
 
 			this.set_reactive (true);
-			this.enter_event.connect (this.on_enter);
-			this.leave_event.connect (this.on_leave);
+			//this.enter_event.connect (this.on_enter);
+			//this.leave_event.connect (this.on_leave);
 			//this.clicked_event.connect (this.on_clicked);
 
 			//this.padding = pad;
 			this.spacing = spacing;
 			this.width   = size;
+
 			this.icon    = new Ctk.Image.from_stock (size,
 								 icon_name);
+			this.icon.set_reactive (true);
+
 			this.primary_label = new Clutter.Text ();
+			this.primary_label.set_reactive (true);
 			this.primary_label.width = size;
 			this.primary_label.set_markup (primary_text);
 			this.primary_label.justify = true;
@@ -54,12 +58,16 @@ namespace Unity.Homescreen
 			this.primary_label.line_wrap = false;
 
 			this.secondary_label = new Clutter.Text ();
+			this.secondary_label.set_reactive (true);
 			this.secondary_label.width = size;
 			this.secondary_label.text = secondary_text;
 			this.secondary_label.justify = true;
 			this.secondary_label.color = color;
 			this.secondary_label.ellipsize = Pango.EllipsizeMode.END;
 			this.secondary_label.line_wrap = true;
+			this.enter_event.connect (this.on_enter);
+			this.leave_event.connect (this.on_leave);
+			this.secondary_label.opacity = 0;
 
 			this.pack (this.icon, false, false);
 			this.pack (this.primary_label, false, false);
@@ -68,13 +76,13 @@ namespace Unity.Homescreen
 
 		public bool on_enter ()
 		{
-			stdout.printf ("on_enter() called\n");
+			this.secondary_label.opacity = 255;
 			return false;
 		}
 
 		public bool on_leave ()
 		{
-			stdout.printf ("on_leave() called\n");
+			this.secondary_label.opacity = 0;
 			return false;
 		}
 
