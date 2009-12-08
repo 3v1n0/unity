@@ -635,7 +635,7 @@ namespace Unity.Widgets
       }
 
       /* set a clip on the actor */
-      actor.set_clip (0, -200, 56, 400);
+      actor.set_clip (0, -200, 58, 400);
 
       this.queue_relayout ();
       this.actor_added (actor);

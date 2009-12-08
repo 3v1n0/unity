@@ -101,7 +101,10 @@ namespace Unity.Quicklauncher
           {
             ApplicationStore store = get_store_for_desktop_file (desktop_file);
             LauncherView view = get_view_for_store (store);
-            add_view (view);
+            if (view.get_parent () == null)
+            {
+              add_view (view);
+            }
           }
         }
     }
