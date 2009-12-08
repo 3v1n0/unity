@@ -57,18 +57,22 @@ public class Main
       assert (bg is Clutter.Actor);
     });
 
-    Test.add_func ("/Unity/Quicklauncher/ApplicationView", () => {
-      var app = new Launcher.Application.from_desktop_file (
-                    "/usr/share/applications/firefox.desktop");
-
-  		var appview = new Quicklauncher.ApplicationView (app);
-      assert (appview is Quicklauncher.ApplicationView);
-      assert (appview.app is Launcher.Application);
-		});
-
     Test.add_func ("/Unity/Quicklauncher/ApplicationStore", () => {
-      var appstore = new Quicklauncher.ApplicationStore ();
-      assert (appstore is Quicklauncher.ApplicationStore);
+      var store = new Quicklauncher.Stores.ApplicationStore ("firefox.desktop");
+      assert (store is Quicklauncher.Stores.ApplicationStore);
+    });
+    
+    Test.add_func ("/Unity/Quicklauncher/LauncherView", () => {
+      var store = new Quicklauncher.Stores.ApplicationStore ("firefox.desktop");
+                    
+      var view = new Quicklauncher.LauncherView (store);
+      assert (view is Quicklauncher.LauncherView);
+    });
+      
+
+    Test.add_func ("/Unity/Quicklauncher/Manager", () => {
+      var manager = new Quicklauncher.Manager ();
+      assert (manager is Quicklauncher.Manager);
     });
 
     Test.add_func ("/Unity/Widgets/Scroller", () => {
