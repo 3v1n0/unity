@@ -75,6 +75,11 @@ public class Main
       assert (manager is Quicklauncher.Manager);
     });
 
+    Test.add_func ("/Unity/Quicklauncher/Prism", () => {
+      var webapp = new Quicklauncher.Prism ("www.google.com");
+      assert (webapp is Quicklauncher.Prism);
+      });
+
     Test.add_func ("/Unity/Widgets/Scroller", () => {
       var scroller = new Widgets.Scroller (Ctk.Orientation.VERTICAL, 0);
       assert (scroller is Widgets.Scroller);
