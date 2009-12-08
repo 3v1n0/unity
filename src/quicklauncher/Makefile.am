@@ -31,9 +31,12 @@ libunity_quicklauncher_la_LIBADD = \
   $(top_builddir)/libunity/libunity.la
 
 libunity_quicklauncher_la_SOURCES = \
-  application_view.vala \
   application_store.vala \
+  launcher_store.vala \
+  launcher_view.vala \
+  prism_handler.vala \
   quicklauncher.vala \
+  quicklauncher_manager.vala \
   tooltipmanager.vala \
   unity-scroller.vala
   
