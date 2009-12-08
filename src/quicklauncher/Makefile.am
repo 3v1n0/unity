@@ -34,6 +34,7 @@ libunity_quicklauncher_la_SOURCES = \
   application_store.vala \
   launcher_store.vala \
   launcher_view.vala \
+  prism_handler.vala \
   quicklauncher.vala \
   quicklauncher_manager.vala \
   tooltipmanager.vala \
