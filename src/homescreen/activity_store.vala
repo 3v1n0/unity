@@ -31,7 +31,7 @@ namespace Unity.Homescreen
 				       string primary_text,
 				       string secondary_text)
 		{
-			//Clutter.Color color = {255, 255, 255, 255};
+			Clutter.Color color = {255, 255, 255, 255};
 			//Ctk.Padding pad = {padding, padding, padding, padding};
 			this.homogeneous = false;
 
@@ -47,9 +47,9 @@ namespace Unity.Homescreen
 								 icon_name);
 			this.primary_label = new Clutter.Text ();
 			this.primary_label.width = size;
-			this.primary_label.text = primary_text;
+			this.primary_label.set_markup (primary_text);
 			this.primary_label.justify = true;
-			//this.primary_label.color = color;
+			this.primary_label.color = color;
 			this.primary_label.ellipsize = Pango.EllipsizeMode.NONE;
 			this.primary_label.line_wrap = false;
 
@@ -57,7 +57,7 @@ namespace Unity.Homescreen
 			this.secondary_label.width = size;
 			this.secondary_label.text = secondary_text;
 			this.secondary_label.justify = true;
-			//this.secondary_label.color = color;
+			this.secondary_label.color = color;
 			this.secondary_label.ellipsize = Pango.EllipsizeMode.END;
 			this.secondary_label.line_wrap = true;
 
@@ -104,52 +104,52 @@ namespace Unity.Homescreen
 			widget1 = new ActivityWidget (0,
 						      128,
 						      "applications-internet",
-						      "Web",
+						      "<b>Web</b>",
 						      "Search, Suft & Download");
 			widget2 = new ActivityWidget (0,
 						      128,
 						      "rhythmbox",
-						      "Music",
+						      "<b>Music</b>",
 						      "Jukebox, Radio & Podcasts");
 			widget3 = new ActivityWidget (0,
 						      128,
 						      "applications-multimedia",
-						      "Videos",
+						      "<b>Videos</b>",
 						      "YouTube & More");
 			widget4 = new ActivityWidget (0,
 						      128,
 						      "applications-graphics",
-						      "Photos",
+						      "<b>Photos</b>",
 						      "Organize, Edit & Share");
 			widget5 = new ActivityWidget (0,
 						      128,
 						      "applications-office",
-						      "Work",
+						      "<b>Work</b>",
 						      "Office Documents, Spreadsheets & Presentations");
 			widget6 = new ActivityWidget (0,
 						      128,
 						      "evolution",
-						      "Email",
+						      "<b>Email</b>",
 						      "Read & Write Email");
 			widget7 = new ActivityWidget (0,
 						      128,
 						      "empathy",
-						      "Chat",
+						      "<b>Chat</b>",
 						      "AIM, Yahoo, Skype & MSN");
 			widget8 = new ActivityWidget (0,
 						      128,
 						      "softwarecenter",
-						      "Get New Apps",
+						      "<b>Get New Apps</b>",
 						      "Ubuntu Software Center");
-			vbox = new Ctk.VBox (128);
+			vbox = new Ctk.VBox (0);
 			vbox.homogeneous = false;
-			hbox1 = new Ctk.HBox (128);
+			hbox1 = new Ctk.HBox (64);
 			hbox1.homogeneous = false;
 			hbox1.pack (widget5, false, false);
 			hbox1.pack (widget6, false, false);
 			hbox1.pack (widget7, false, false);
 			hbox1.pack (widget8, false, false);
-			hbox2 = new Ctk.HBox (128);
+			hbox2 = new Ctk.HBox (64);
 			hbox2.homogeneous = false;
 			hbox2.pack (widget1, false, false);
 			hbox2.pack (widget2, false, false);
