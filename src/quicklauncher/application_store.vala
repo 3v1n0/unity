@@ -74,6 +74,10 @@ namespace Unity.Quicklauncher.Stores
     {
       get { return _icon; }
     }
+    public string name 
+    {
+      get { return this.app.name; }
+    }
     
     private bool _is_sticky;
     public bool is_sticky 
