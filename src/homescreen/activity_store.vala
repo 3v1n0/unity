@@ -42,7 +42,7 @@ namespace Unity.Homescreen
 
 			//this.padding = pad;
 			this.spacing = spacing;
-			this.width   = size;
+			//this.width   = size + 32;
 			this.icon    = new Ctk.Image.from_stock (size,
 								 icon_name);
 			this.icon.set_reactive (true);
@@ -59,13 +59,14 @@ namespace Unity.Homescreen
 
 			this.secondary_label = new Clutter.Text ();
 			this.secondary_label.set_reactive (true);
-			this.secondary_label.width = size;
+			this.secondary_label.width = size + spacing;
 			this.secondary_label.text = secondary_text;
-			this.secondary_label.justify = true;
+			this.secondary_label.justify = false;
 			this.secondary_label.color = color;
-			this.secondary_label.ellipsize = Pango.EllipsizeMode.END;
+			//this.secondary_label.ellipsize = Pango.EllipsizeMode.END;
 			this.secondary_label.line_wrap = true;
 			this.secondary_label.line_alignment = Pango.Alignment.CENTER;
+			this.secondary_label.line_wrap_mode = Pango.WrapMode.WORD_CHAR;
 			this.enter_event.connect (this.on_enter);
 			this.leave_event.connect (this.on_leave);
 			this.secondary_label.opacity = 0;
@@ -164,8 +165,8 @@ namespace Unity.Homescreen
 			hbox2.pack (widget2, false, false);
 			hbox2.pack (widget3, false, false);
 			hbox2.pack (widget4, false, false);
-			vbox.pack (hbox2, false, true);
-			vbox.pack (hbox1, false, true);
+			vbox.pack (hbox2, false, false);
+			vbox.pack (hbox1, false, false);
 			add_actor (vbox);
 			show_all ();
 		}
