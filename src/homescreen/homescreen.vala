@@ -66,7 +66,6 @@ namespace Unity.Homescreen
 	{
 		private Shell         shell;
 		private ActivityStore store;
-		private ActivityView  view;
 
 		public View (Shell shell)
 		{ 

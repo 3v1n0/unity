@@ -162,6 +162,9 @@ namespace Unity
       this.quicklauncher.set_size (54, height);
       this.quicklauncher.set_position (this.workarea_size.left,
                                        this.workarea_size.top);
+      this.homescreen.set_position (this.workarea_size.left + 54,
+                                    this.workarea_size.top);
+      this.homescreen.set_size (width - 54, height);
     }
 
     public override void show ()
