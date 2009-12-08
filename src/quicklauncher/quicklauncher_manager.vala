@@ -44,10 +44,6 @@ namespace Unity.Quicklauncher
 
       build_favorites ();
       this.session.application_opened.connect (handle_session_application);
-      
-      var webapp = new Prism ("http://www.google.com/ig");
-      webapp.add_to_favorites ();
-      var yahoo = new Prism ("http://www.yahoo.com");
     }
 
     private void build_favorites () 
