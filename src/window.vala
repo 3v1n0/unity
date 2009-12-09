@@ -163,7 +163,7 @@ namespace Unity
       this.quicklauncher.set_position (this.workarea_size.left,
                                        this.workarea_size.top);
 
-      this.places.set_size (width - 54, 50);
+      this.places.set_size (width - 54, height);
       this.places.set_position (this.workarea_size.left + 54,
                                     this.workarea_size.top);
 

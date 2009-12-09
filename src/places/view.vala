@@ -19,15 +19,18 @@
 
 namespace Unity.Places
 {
-  public class View : Ctk.Bin
+  public class View : Ctk.Box
   {
     private Unity.Places.Bar.View     bar_view;
     private Unity.Places.Default.View default_view;
 
     public View ()
     {
+      this.orientation  = Ctk.Orientation.VERTICAL;
       this.bar_view     = new Unity.Places.Bar.View ();
       this.default_view = new Unity.Places.Default.View ();
+      this.add_actor (this.bar_view);
+      this.add_actor (this.default_view);
     }
 
     construct

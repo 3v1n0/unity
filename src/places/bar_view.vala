@@ -19,16 +19,24 @@
 
 namespace Unity.Places.Bar
 {
-  public class View : Ctk.HBox
+  public class View : Ctk.Box
   {
     private Gee.ArrayList<Unity.Places.Bar.Model> places;
 
     public View ()
     {
       Unity.Places.Bar.Model place;
+      int                    i;
+      Ctk.Image              icon;
+      int                    icon_size = 64;
+
+      this.homogeneous  = false;
+      this.spacing      = icon_size;
+      this.orientation  = Ctk.Orientation.HORIZONTAL; // this sucks
 
       this.places = new Gee.ArrayList<Unity.Places.Bar.Model> ();
 
+      // populate places-bar with hard-coded contents for the moment
       place = new Unity.Places.Bar.Model ("Home",
                                           "folder-home",
                                           "Default View");
@@ -40,7 +48,7 @@ namespace Unity.Places.Bar
       this.places.add (place);
 
       place = new Unity.Places.Bar.Model ("Files",
-                                          "files",
+                                          "folder",
                                           "Your files stored locally");
       this.places.add (place);
 
@@ -48,6 +56,15 @@ namespace Unity.Places.Bar
                                           "trashcan_empty",
                                           "Your piece of waste");
       this.places.add (place);
+
+      // create all image-actors for icons
+      for (i = 0; i < this.places.size ; i++)
+      {
+        icon = new Ctk.Image.from_stock (icon_size, this.places[i].icon_name);
+        this.pack (icon, false, false);
+      }
+
+      this.show_all ();
     }
 
     construct

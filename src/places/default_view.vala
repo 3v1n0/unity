@@ -19,6 +19,82 @@
 
 namespace Unity.Places.Default
 {
+  public class ActivityWidget : Ctk.Box
+  {
+    private Ctk.Image    icon;
+    private Clutter.Text primary_label;
+    private Clutter.Text secondary_label;
+
+    public ActivityWidget (int    spacing,
+                           int    size,
+                           string icon_name,
+                           string primary_text,
+                           string secondary_text)
+    {
+      Clutter.Color color = {255, 255, 255, 255};
+
+      this.homogeneous = false;
+      this.orientation = Ctk.Orientation.VERTICAL;
+      this.set_reactive (true);
+      //this.padding = pad;
+      this.spacing = spacing;
+      //this.width   = size + 32;
+      this.icon    = new Ctk.Image.from_stock (size, icon_name);
+      this.icon.set_reactive (true);
+
+      this.primary_label = new Clutter.Text ();
+      this.primary_label.set_reactive (true);
+      this.primary_label.width = size;
+      this.primary_label.set_markup (primary_text);
+      this.primary_label.justify = true;
+      this.primary_label.color = color;
+      this.primary_label.ellipsize = Pango.EllipsizeMode.NONE;
+      this.primary_label.line_wrap = true;
+      this.primary_label.line_alignment = Pango.Alignment.CENTER;
+
+      this.secondary_label = new Clutter.Text ();
+      this.secondary_label.set_reactive (true);
+      this.secondary_label.width = size + spacing;
+      //this.secondary_label.get_layout().set_height (-2);
+      this.secondary_label.text = secondary_text;
+      this.secondary_label.justify = false;
+      this.secondary_label.color = color;
+      //this.secondary_label.ellipsize = Pango.EllipsizeMode.END;
+      this.secondary_label.line_wrap = true;
+      this.secondary_label.line_alignment = Pango.Alignment.CENTER;
+      this.secondary_label.line_wrap_mode = Pango.WrapMode.WORD_CHAR;
+      this.enter_event.connect (this.on_enter);
+      this.leave_event.connect (this.on_leave);
+      this.secondary_label.opacity = 0;
+
+      this.pack (this.icon, false, false);
+      this.pack (this.primary_label, false, false);
+      this.pack (this.secondary_label, false, false);
+    }
+
+    construct
+    {
+    }
+
+    public bool on_enter ()
+    {
+      this.secondary_label.opacity = 255;
+      return false;
+    }
+
+    public bool on_leave ()
+    {
+      this.secondary_label.opacity = 0;
+      return false;
+    }
+     public bool on_clicked ()
+    {
+      stdout.printf ("on_clicked() called\n");
+      return false;
+    }
+     
+  }
+
   public class View : Ctk.IconView
   {
     private Gee.ArrayList<Unity.Places.Default.Model> activities;
@@ -26,9 +102,13 @@ namespace Unity.Places.Default
     public View ()
     {
       Unity.Places.Default.Model activity;
+      int                        i;
+      ActivityWidget             widget;
+      int                        widget_size = 128;
 
       this.activities = new Gee.ArrayList<Unity.Places.Default.Model> ();
 
+      // populate defaultview with hard-coded contents for the moment
       activity = new Unity.Places.Default.Model ("applications-internet",
                                                  "<b>Web</b>",
                                                  "Search, Suft & Download");
@@ -68,6 +148,19 @@ namespace Unity.Places.Default
                                                  "<b>Get New Apps</b>",
                                                  "Ubuntu Software Center");
       this.activities.add (activity);
+
+      // create image-actors now
+      for (i = 0; i < this.activities.size; i++)
+      {
+        widget = new ActivityWidget (0,
+                                     widget_size,
+                                     this.activities[i].icon_name,
+                                     this.activities[i].primary_text,
+                                     this.activities[i].secondary_text);
+        this.add_actor (widget);
+      }
+
+      this.show_all ();
     }
 
     construct
