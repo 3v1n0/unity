@@ -80,3 +80,10 @@ src/homescreen/libunity_homescreen_la_vala.stamp
 *.anjuta
 TODO.tasks
 .anjuta_sym_db.db
+src/homescreen/activity_store.c
+src/homescreen/activity_view.c
+src/homescreen/default_model.c
+src/homescreen/default_view.c
+src/homescreen/homescreen.c
+src/homescreen/places_model.c
+src/homescreen/places_view.c
