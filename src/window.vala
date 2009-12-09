@@ -37,8 +37,7 @@ namespace Unity
 
     private Background          background;
     private Quicklauncher.View  quicklauncher;
-    private Unity.Views.Places  places_view;
-    private Unity.Views.Default default_view;
+    private Unity.Places.View   places;
 
     public UnderlayWindow (bool popup, int width, int height)
     {
@@ -107,11 +106,9 @@ namespace Unity
       this.background.show ();
 
       this.quicklauncher = new Quicklauncher.View (this);
-      this.places_view = new Unity.Views.Places ();
-      this.default_view = new Unity.Views.Default ();
+      this.places = new Unity.Places.View ();
       this.stage.add_actor (this.quicklauncher);
-      this.stage.add_actor (this.places_view);
-      this.stage.add_actor (this.default_view);
+      this.stage.add_actor (this.places);
       
       /* Layout everything */
       this.move (0, 0);
@@ -166,13 +163,10 @@ namespace Unity
       this.quicklauncher.set_position (this.workarea_size.left,
                                        this.workarea_size.top);
 
-      this.places_view.set_size (width - 54, 50);
-      this.places_view.set_position (this.workarea_size.left + 54,
+      this.places.set_size (width - 54, 50);
+      this.places.set_position (this.workarea_size.left + 54,
                                     this.workarea_size.top);
 
-      this.default_view.set_size (width - 54, height - 50);
-      this.default_view.set_position (this.workarea_size.left + 54,
-                                    this.workarea_size.top + 50);
     }
 
     public override void show ()
@@ -242,11 +236,6 @@ namespace Unity
     public void show_unity ()
     {
       this.wnck_screen.toggle_showing_desktop (true);
-    }
-
-    public void show_default_view ()
-    {
-      // FIXME: toggle between default-view and that "other thing"
     }
 
   }
