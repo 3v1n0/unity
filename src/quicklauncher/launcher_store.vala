@@ -1,3 +1,4 @@
+/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
  * Copyright (C) 2009 Canonical Ltd
  *
@@ -13,27 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
+ * Authored by Gordon Allott <gord.allott@canonical.com>
  *
  */
 
-namespace Unity.Quicklauncher
-{  
-  public class View : Ctk.Bin
+namespace Unity.Quicklauncher.Stores
+{
+  
+  public interface LauncherStore : GLib.Object 
   {
-    private Shell shell;
-
-    private Manager manager;
+    public abstract bool is_active {get;}
+    public abstract bool is_focused {get;}
+    public abstract Gdk.Pixbuf icon {get;}
+    public abstract bool is_sticky {get; set;}
     
-    public View (Shell shell)
-    { 
-      this.shell = shell;
-    }
+    public abstract string name {get;}
+  
+    public abstract signal void notify_active ();
+    public abstract signal void notify_focused ();
+    public abstract signal void request_attention ();
 
-    construct
-    {
-      this.manager = new Manager ();
-      this.add_actor (manager);
-    }
+    public abstract void activate ();
   }
+
 }

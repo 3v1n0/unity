@@ -156,7 +156,7 @@ namespace Unity
       this.background.set_position (0, 0);
       this.background.set_size (width, height);
       
-      this.quicklauncher.set_size (54, height);
+      this.quicklauncher.set_size (58, height);
       this.quicklauncher.set_position (this.workarea_size.left,
                                        this.workarea_size.top);
     }
@@ -176,7 +176,7 @@ namespace Unity
       Wnck.Window new_window = this.wnck_screen.get_active_window ();
       if (new_window == null)
         return;
-	  
+    
       /* FIXME: We want the second check to be a class_name or pid check */
       if (new_window is Wnck.Window 
           && new_window.get_type () != Wnck.WindowType.DESKTOP
