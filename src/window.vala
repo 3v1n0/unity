@@ -89,6 +89,18 @@ namespace Unity
       this.add (this.gtk_clutter);
       this.gtk_clutter.realize ();
       
+      //setup dnd
+      Gtk.TargetEntry[] target_list = {
+        Gtk.TargetEntry () {target="STRING", flags=0, info=Unity.dnd_targets.TARGET_STRING },
+        Gtk.TargetEntry () {target="text/plain", flags=0, info=Unity.dnd_targets.TARGET_STRING },
+        Gtk.TargetEntry () {target="text/uri-list", flags=0, info=Unity.dnd_targets.TARGET_URL },
+        Gtk.TargetEntry () {target="x-url/http", flags=0, info=Unity.dnd_targets.TARGET_URL },
+        Gtk.TargetEntry () {target="x-url/ftp", flags=0, info=Unity.dnd_targets.TARGET_URL },
+        Gtk.TargetEntry () {target="_NETSCAPE_URL", flags=0, info=Unity.dnd_targets.TARGET_URL }
+      };
+
+      Ctk.dnd_init (this.gtk_clutter, target_list);
+            
       this.stage = (Clutter.Stage)this.gtk_clutter.get_stage ();
       Clutter.Color stage_bg = Clutter.Color () { 
           red = 0x00,

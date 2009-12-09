@@ -33,13 +33,13 @@ namespace Ctk {
 		public virtual signal void child_focus_changed (Clutter.ActorBox box);
 		public virtual signal void drag_begin (Gdk.DragContext context);
 		public virtual signal void drag_data_delete (Gdk.DragContext context);
-		public virtual signal void drag_data_get (Gdk.DragContext context, Gtk.SelectionData data, uint info, uint time);
-		public virtual signal void drag_data_received (Gdk.DragContext context, int x, int y, Gtk.SelectionData data, uint info, uint time);
-		public virtual signal bool drag_drop (Gdk.DragContext context, int x, int y, uint time);
+		public virtual signal void drag_data_get (Gdk.DragContext context, Gtk.SelectionData data, uint info, uint time_);
+		public virtual signal void drag_data_received (Gdk.DragContext context, int x, int y, Gtk.SelectionData data, uint info, uint time_);
+		public virtual signal bool drag_drop (Gdk.DragContext context, int x, int y, uint time_);
 		public virtual signal void drag_end (Gdk.DragContext context);
 		public virtual signal bool drag_failed (Gdk.DragContext context, Gtk.DragResult result);
-		public virtual signal void drag_leave (Gdk.DragContext context, uint time);
-		public virtual signal bool drag_motion (Gdk.DragContext context, int x, int y, uint time);
+		public virtual signal void drag_leave (Gdk.DragContext context, uint time_);
+		public virtual signal bool drag_motion (Gdk.DragContext context, int x, int y, uint time_);
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class Bin : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
