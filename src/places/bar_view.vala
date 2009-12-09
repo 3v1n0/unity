@@ -31,7 +31,7 @@ namespace Unity.Places.Bar
       int                    icon_size = 64;
 
       this.homogeneous  = false;
-      this.spacing      = icon_size;
+      this.spacing      = icon_size/2;
       this.orientation  = Ctk.Orientation.HORIZONTAL; // this sucks
 
       this.places = new Gee.ArrayList<Unity.Places.Bar.Model> ();

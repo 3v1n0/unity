@@ -158,6 +158,7 @@ namespace Unity.Places.Default
                                      this.activities[i].primary_text,
                                      this.activities[i].secondary_text);
         this.add_actor (widget);
+
       }
 
       this.show_all ();

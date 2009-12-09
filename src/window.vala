@@ -163,10 +163,12 @@ namespace Unity
       this.quicklauncher.set_position (this.workarea_size.left,
                                        this.workarea_size.top);
 
-      this.places.set_size (width - 54, height);
-      this.places.set_position (this.workarea_size.left + 54,
-                                    this.workarea_size.top);
+      this.places.set_size (600, 600+75);
+      this.places.set_position (this.workarea_size.left+84,
+                                this.workarea_size.top+10);
 
+      this.places.do_stuff (50,    50, 300,  75,
+                            50, 50+75+100, 600, 600);
     }
 
     public override void show ()
