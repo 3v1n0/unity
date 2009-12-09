@@ -44,6 +44,7 @@ namespace Unity.Quicklauncher
     private Gdk.Pixbuf honeycomb_mask;
     public Unity.TooltipManager.Tooltip  tooltip;
     
+    private uint32 last_pressed_time;
 
     private bool _busy;
     private bool is_starting {
@@ -51,11 +52,11 @@ namespace Unity.Quicklauncher
       set {
         if (value)
         {
-          if (! _busy)
+          if (!_busy)
             throbber_start ();
-        } else {
-          throbber_hide ();
-        }
+          } else {
+            throbber_hide ();
+          }
         _busy = value;
       }
     }
@@ -66,14 +67,15 @@ namespace Unity.Quicklauncher
     {
       if (anim_throbber != null)
         anim_throbber.completed ();
-      
+
       this.throbber.opacity = 255;
       this.throbber.set_z_rotation_from_gravity (0.0f, Clutter.Gravity.CENTER);
-      this.anim_throbber = 
-      this.throbber.animate (Clutter.AnimationMode.LINEAR, 1200,
-                             "rotation-angle-z", 360.0f);
+      this.anim_throbber = this.throbber.animate (
+        Clutter.AnimationMode.LINEAR, 1200,
+        "rotation-angle-z", 360.0f
+        );
+
       this.anim_throbber.loop = true;
-      
       GLib.Timeout.add_seconds (15, on_launch_timeout);
     }
     
@@ -111,7 +113,7 @@ namespace Unity.Quicklauncher
         _anim = value;
       }
     }
-
+    
     private Clutter.Animation hover_anim;
     
     /* if we are not sticky anymore and we are not running, request remove */
@@ -129,13 +131,14 @@ namespace Unity.Quicklauncher
     }
     
     public bool is_hovering = false;
-
+    
     /**
      * signal is called when the application is not marked as sticky and 
      * it is not running
      */
     public signal void request_remove (ApplicationView app);
     public signal void request_attention (ApplicationView app);
+    public signal void clicked (ApplicationView app);
 
     public ApplicationView (Launcher.Application app)
     {
@@ -166,8 +169,8 @@ namespace Unity.Quicklauncher
 
       load_textures ();
         
-      button_press_event.connect(this.on_pressed);
-
+      button_press_event.connect (this.on_pressed);
+      button_release_event.connect (this.on_released);
       /* hook up glow for enter/leave events */
       enter_event.connect(this.on_mouse_enter);
       leave_event.connect(this.on_mouse_leave);
@@ -176,8 +179,10 @@ namespace Unity.Quicklauncher
       this.icon.enter_event.connect (this.on_enter);
       this.icon.leave_event.connect (this.on_leave);
       this.icon.set_reactive (true);
+
+      this.clicked.connect (this.on_clicked);
       
-      icon_dropshadow_effect = new Ctk.EffectDropShadow(3, 1, 1);
+      icon_dropshadow_effect = new Ctk.EffectDropShadow(3, 5, 5);
       this.icon.add_effect(icon_dropshadow_effect);
       this.icon.queue_relayout();
       
@@ -351,25 +356,20 @@ namespace Unity.Quicklauncher
       /* TODO: 30 is the default tooltip height */
       xy += (height - 30) / 2;
       Unity.TooltipManager.get_default().show (this.tooltip, (int) xx, (int) xy);
-
       return false;
     } 
 
-    private bool on_leave (Clutter.Event event)
-    {
-      Unity.TooltipManager.get_default().hide (this.tooltip);
-      return false;
-    }
-    
-    private bool on_pressed(Clutter.Event src) 
+    private void on_clicked (ApplicationView appview)
     {
       /* hide the tooltip, to prevent it from stealing focus when
          the app starts and is focused */
       Unity.TooltipManager.get_default().hide (this.tooltip);
-
-      if (is_starting)
-        return true;
       
+      if (is_starting)
+      {
+        return;
+      }
+
       if (app.running)
       {
         // we only want to switch to the application, not launch it
@@ -390,8 +390,33 @@ namespace Unity.Quicklauncher
           this.is_starting = false;
         }
       }
-      
-      return true;
+    }
+
+    private bool on_leave (Clutter.Event event)
+    {
+      Unity.TooltipManager.get_default().hide (this.tooltip);
+      return false;
+    }
+
+    private bool on_pressed(Clutter.Event src) 
+    {
+      var bevent = src.button;
+      if (bevent.button == 1)
+      {
+        last_pressed_time = bevent.time;
+      }      
+      return false;
+    }
+
+    private bool on_released (Clutter.Event src)
+    {
+      var bevent = src.button;
+      if (bevent.button == 1 &&
+          (bevent.time - last_pressed_time) < 500)
+      {
+        this.clicked (this);
+      }
+      return false;
     }
     
     private bool on_mouse_enter(Clutter.Event src) 
@@ -411,7 +436,7 @@ namespace Unity.Quicklauncher
       this.icon.queue_relayout();
 
       this.hover_anim = icon_glow_effect.animate (
-        Clutter.AnimationMode.EASE_IN_OUT_SINE, 600, "factor", 8.0f);
+        Clutter.AnimationMode.EASE_IN_OUT_SINE, 600, "factor", 0.0f);
       this.hover_anim.completed.connect (on_hover_anim_completed);
 
       return false;
@@ -434,9 +459,9 @@ namespace Unity.Quicklauncher
 
     private bool do_new_anim ()
     {
-      float fadeto = 1.0f;
-      if (icon_glow_effect.get_factor() <= 1.1f)
-        fadeto = 8.0f;
+      float fadeto = 0.0f;
+      if (icon_glow_effect.get_factor() <= 0.0f)
+        fadeto = 1.0f;
       
       this.hover_anim = icon_glow_effect.animate(
         Clutter.AnimationMode.EASE_IN_OUT_CIRC, 600, "factor", fadeto);
