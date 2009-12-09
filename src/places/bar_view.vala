@@ -43,6 +43,11 @@ namespace Unity.Places.Bar
                                           "files",
                                           "Your files stored locally");
       this.places.add (place);
+
+      place = new Unity.Places.Bar.Model ("Trash",
+                                          "trashcan_empty",
+                                          "Your piece of waste");
+      this.places.add (place);
     }
 
     construct
