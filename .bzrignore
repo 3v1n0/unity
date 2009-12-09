@@ -87,3 +87,12 @@ src/homescreen/default_view.c
 src/homescreen/homescreen.c
 src/homescreen/places_model.c
 src/homescreen/places_view.c
+src/places/bar_model.c
+src/places/bar_view.c
+src/places/default_model.c
+src/places/default_view.c
+src/places/view.c
+src/places/libunity-places.la
+src/places/libunity_places_la_vala.stamp
+src/places/unity-places.h
+src/places/unity-places.vapi
