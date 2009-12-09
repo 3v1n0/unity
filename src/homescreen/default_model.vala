@@ -13,22 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
+ * Authored by Mirco "MacSlow" Müller <mirco.mueller@canonical.com>
  *
  */
 
-namespace Unity
-{
-  public enum ShellMode {
-    UNDERLAY,
-    OVERLAY
-  }
+using GLib;
 
-  public interface Shell : Gtk.Window
-  {
-    public abstract ShellMode     get_mode ();
-    public abstract Clutter.Stage get_stage ();
-    public abstract void          show_unity ();
-    public abstract void          show_default_view ();
-  }
+namespace Unity.Models
+{
+	public class Default : Object
+	{
+		public string icon_name;
+		public string primary_text;
+		public string secondary_text;
+
+		public Default (string icon_name,
+				string primary_text,
+				string secondary_text)
+		{
+			this.icon_name      = icon_name;
+			this.primary_text   = primary_text;
+			this.secondary_text = secondary_text;
+		}
+
+		construct
+		{
+		}
+	}
 }

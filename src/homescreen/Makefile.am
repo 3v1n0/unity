@@ -31,6 +31,10 @@ libunity_homescreen_la_LIBADD = \
   $(top_builddir)/libunity/libunity.la
 
 libunity_homescreen_la_SOURCES = \
+  default_model.vala \
+  default_view.vala \
+  places_model.vala \
+  places_view.vala \
   activity_view.vala \
   activity_store.vala \
   homescreen.vala

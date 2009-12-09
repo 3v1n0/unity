@@ -60,6 +60,7 @@ namespace Unity.Homescreen
 			this.secondary_label = new Clutter.Text ();
 			this.secondary_label.set_reactive (true);
 			this.secondary_label.width = size + spacing;
+			//this.secondary_label.get_layout().set_height (-2);
 			this.secondary_label.text = secondary_text;
 			this.secondary_label.justify = false;
 			this.secondary_label.color = color;
