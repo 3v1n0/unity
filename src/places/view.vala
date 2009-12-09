@@ -33,14 +33,14 @@ namespace Unity.Places
       this.add_actor (this.default_view);
     }
 
-    public void do_stuff (int bar_x,
-                          int bar_y,
-                          int bar_w,
-                          int bar_h,
-                          int def_view_x,
-                          int def_view_y,
-                          int def_view_w,
-                          int def_view_h)
+    public void set_size_and_position (int bar_x,
+                                       int bar_y,
+                                       int bar_w,
+                                       int bar_h,
+                                       int def_view_x,
+                                       int def_view_y,
+                                       int def_view_w,
+                                       int def_view_h)
     {
       this.bar_view.x      = bar_x;
       this.bar_view.y      = bar_y;
