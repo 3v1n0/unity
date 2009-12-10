@@ -75,6 +75,8 @@ namespace Clutter {
 		public void queue_relayout ();
     [CCode (cname = "clutter_actor_queue_redraw")]
     public void do_queue_redraw ();
+    [CCode (cname = "clutter_actor_event")]
+    public void do_event (Clutter.Event e, bool capture_phase);
 
     public void raise (Clutter.Actor? below);
 		public void raise_top ();
