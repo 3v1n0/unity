@@ -45,7 +45,15 @@ namespace Unity
           warning ("Background: Unable to monitor background: %s", e.message);
         }
 
-      this.filename = client.get_string (this.BG_FILE);
+      try
+        {
+          this.filename = client.get_string (this.BG_FILE);
+        }
+      catch (Error e)
+        {
+          this.filename = "/usr/share/backgrounds/warty-final.png";
+        }
+
       try
         {
           client.notify_add (this.BG_FILE, this.on_filename_changed);
@@ -55,8 +63,14 @@ namespace Unity
           warning ("Background: Unable to monitor background filename: %s",
                    e.message);
         }
-
-      this.option = client.get_string (this.BG_OPTION);
+      try
+        {
+          this.option = client.get_string (this.BG_OPTION);
+        }
+      catch (Error e)
+        {
+          this.option = "wallpaper";
+        }
       try
         {
           client.notify_add (this.BG_OPTION, this.on_option_changed);

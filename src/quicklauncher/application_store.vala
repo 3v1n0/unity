@@ -167,12 +167,21 @@ namespace Unity.Quicklauncher.Stores
        * please give it a go. otherwise i will revisit this code the last week 
        * of the month sprint
        */
-      Gdk.Pixbuf pixbuf;
+      Gdk.Pixbuf pixbuf = null;
       Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
       
       if (icon_name == null)
         {
-          pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 42, 0);
+          try 
+            {
+              pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 42, 0);
+            }
+          catch (Error e)
+            {
+              warning ("Unable to load stock image: %s", e.message);
+              pixbuf = null;
+            }
+
           return pixbuf;
         }
         
@@ -191,8 +200,17 @@ namespace Unity.Quicklauncher.Stores
           }
           if (filename != "") 
             {
-              pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name, 
-                                                         42, 42, true);
+              try
+                {
+                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name, 
+                                                             42, 42, true);
+                }
+              catch (Error e)
+                {
+                  warning ("Unable to load pixbuf from file '%s': %s",
+                           icon_name,
+                           e.message);
+                }
               if (pixbuf is Gdk.Pixbuf)
                   return pixbuf;
             }
@@ -202,8 +220,17 @@ namespace Unity.Quicklauncher.Stores
         {
           if (FileUtils.test(icon_name, FileTest.EXISTS)) 
             {
-              pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name, 
-                                                         42, 42, true);
+              try
+                {
+                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name, 
+                                                             42, 42, true);
+                }
+              catch (Error e)
+                {
+                  warning ("Unable to load image from file '%s': %s",
+                           icon_name,
+                           e.message);
+                }
 
               if (pixbuf is Gdk.Pixbuf)
                 return pixbuf;
@@ -213,9 +240,17 @@ namespace Unity.Quicklauncher.Stores
       if (FileUtils.test ("/usr/share/pixmaps/" + icon_name, 
                           FileTest.IS_REGULAR))
         {
-          pixbuf = new Gdk.Pixbuf.from_file_at_scale (
-            "/usr/share/pixmaps/" + icon_name, 42, 42, true
-            );
+          try
+            {
+              pixbuf = new Gdk.Pixbuf.from_file_at_scale (
+                    "/usr/share/pixmaps/" + icon_name, 42, 42, true);
+            }
+          catch (Error e)
+            {
+              warning ("Unable to load image from file '%s': %s",
+                       "/usr/share/pixmaps/" + icon_name,
+                       e.message);
+            }
           
           if (pixbuf is Gdk.Pixbuf)
             return pixbuf;
@@ -227,8 +262,17 @@ namespace Unity.Quicklauncher.Stores
           string filename = info.get_filename();
           if (FileUtils.test(filename, FileTest.EXISTS)) 
             {
-              pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename, 
-                                                         42, 42, true);
+              try
+                {
+                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename, 
+                                                             42, 42, true);
+                }
+              catch (Error e)
+                {
+                  warning ("Unable to load image from file '%s': %s",
+                           filename,
+                           e.message);
+                }
             
               if (pixbuf is Gdk.Pixbuf)
                 return pixbuf;
@@ -242,7 +286,14 @@ namespace Unity.Quicklauncher.Stores
       catch (GLib.Error e) 
       {
         warning ("could not load icon for %s - %s", icon_name, e.message);
-        pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 42, 0);
+        try
+          {
+            pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 42, 0);
+          }
+        catch (Error err)
+          {
+            warning ("Unable to load icon for %s: %s", icon_name, err.message);
+          }
         return pixbuf;
       }
       return pixbuf;

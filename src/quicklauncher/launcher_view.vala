@@ -49,8 +49,7 @@ namespace Unity.Quicklauncher
     private Clutter.Group container;
 
     private Ctk.EffectGlow effect_icon_glow;
-    private Ctk.EffectDropShadow effect_icon_dropshadow;
-
+    
     /* internal view logic datatypes */
     private uint32 last_pressed_time;
 
@@ -158,7 +157,16 @@ namespace Unity.Quicklauncher
       this.focused_indicator.set_opacity (0);
       this.running_indicator.set_opacity (0);
       
-      this.honeycomb_mask = new Gdk.Pixbuf.from_file(HONEYCOMB_MASK_FILE);
+      try
+        {
+          this.honeycomb_mask = new Gdk.Pixbuf.from_file(HONEYCOMB_MASK_FILE);
+        }
+      catch (Error e)
+        {
+          warning ("Unable to load asset %s: %s",
+                   HONEYCOMB_MASK_FILE,
+                   e.message);
+        }
     
       relayout ();
     }

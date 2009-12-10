@@ -127,16 +127,29 @@ namespace Unity.Widgets
     }
 
     construct {
-      bgtex = new Clutter.Texture.from_file (
-        Unity.PKGDATADIR + "/honeycomb.png"
-        );
-      assert (bgtex is Clutter.Texture);
-
-      gradient = new Clutter.Texture.from_file (
-        Unity.PKGDATADIR + "/gradient.png"
-        );
-      assert (gradient is Clutter.Texture);
-
+        try
+          {
+            bgtex = new Clutter.Texture.from_file (
+                                        Unity.PKGDATADIR + "/honeycomb.png");
+          }
+        catch (Error e)
+          {
+            error ("Unable to load texture '%s': %s",
+                     Unity.PKGDATADIR + "/honeycomb.png",
+                     e.message);
+          }
+      try
+        {
+          gradient = new Clutter.Texture.from_file (
+                                           Unity.PKGDATADIR + "/gradient.png");
+        }
+      catch (Error e)
+        {
+          error ("Unable to load texture: '%s': %s",
+                   Unity.PKGDATADIR + "/gradient.png",
+                   e.message);
+        }
+      
       var mypadding = this.padding;
       
       mypadding.left = 0.0f;
