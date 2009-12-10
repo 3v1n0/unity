@@ -24,6 +24,24 @@ namespace Unity.Places
     private Unity.Places.Bar.View     bar_view;
     private Unity.Places.Default.View default_view;
 
+    public override void allocate (Clutter.ActorBox        box, 
+                                   Clutter.AllocationFlags flags)
+    {
+      base.allocate (box, flags);
+      Clutter.ActorBox child_box = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+      child_box.x1 = this.padding.left;
+      child_box.x2 = box.x2 - box.x1 - this.padding.left - this.padding.right;
+      child_box.y1 = this.padding.top;
+      child_box.y2 = child_box.y1 + 64;
+
+      this.bar_view.allocate (child_box, flags);
+      child_box.y1 = this.padding.top + 64;
+      child_box.y2 = box.y2 - box.y1 - this.padding.top -this.padding.bottom - 64;
+
+      this.default_view.allocate (child_box, flags);
+    }
+
     public View ()
     {
       this.orientation  = Ctk.Orientation.VERTICAL;
@@ -31,6 +49,9 @@ namespace Unity.Places
       this.default_view = new Unity.Places.Default.View ();
       this.add_actor (this.bar_view);
       this.add_actor (this.default_view);
+
+      Ctk.Padding padding = { 0.0f, 0.0f, 0.0f, 12.0f };
+      this.set_padding (padding);     
     }
 
     public void set_size_and_position (int bar_x,

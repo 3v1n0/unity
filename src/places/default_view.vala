@@ -99,6 +99,31 @@ namespace Unity.Places.Default
   {
     private Gee.ArrayList<Unity.Places.Default.Model> activities;
 
+    public override void allocate (Clutter.ActorBox box,
+                                   Clutter.AllocationFlags flags)
+    {
+      Ctk.Padding padding = { 0.0f, 0.0f, 0.0f, 0.0f };
+      float       real_width;
+      float       real_height;
+      float       min_height_p;
+      float       natural_height_p;
+
+      real_width     = box.x2 - box.x1;
+      real_height    = box.y2 - box.y1;
+      padding.left   = (real_width - 600.0f) / 2.0f;
+      padding.right  = padding.left;
+
+      this.get_preferred_height (real_width,
+                                 out min_height_p,
+                                 out natural_height_p);
+
+      padding.top    = (real_height - min_height_p) / 2.0f;
+      padding.bottom = padding.top;
+	
+      this.set_padding (padding);
+      base.allocate (box, flags);
+    }
+
     public View ()
     {
       Unity.Places.Default.Model activity;
