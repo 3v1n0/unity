@@ -62,15 +62,18 @@ namespace Unity.Quicklauncher
     {
       if (context.targets != null)
       {
-        var target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_OTHER);
-        Ctk.drag_get_data (actor, context, target_type, time_);
-        target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_URL);
-        Ctk.drag_get_data (actor, context, target_type, time_);
-        target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_STRING);
+        Gdk.Atom target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_URL);
+        if (target_type.name () == "")
+        {
+          warning ("bad DND type");
+          return false;
+        }
+
         Ctk.drag_get_data (actor, context, target_type, time_);
       } else 
       {
         warning ("got a strange dnd");
+        return false;
       }
       return true;
     }
@@ -82,7 +85,6 @@ namespace Unity.Quicklauncher
     {
       bool dnd_success = false;
       bool delete_selection_data = false;
-      debug ("got drag data received");
       // Deal with what we are given from source
       if ((data != null) && (data.length >= 0)) {
         if (context.action == Gdk.DragAction.MOVE) {
@@ -92,7 +94,6 @@ namespace Unity.Quicklauncher
         switch (target_type) {
         case Unity.dnd_targets.TARGET_URL:
           // we got a uri, forward it to the uri handler
-          debug ("got uri: %s", (string) data.data);
           dnd_success = handle_uri ((string) data.data);
           break;
         default:
