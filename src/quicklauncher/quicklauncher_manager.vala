@@ -68,8 +68,15 @@ namespace Unity.Quicklauncher
           warning ("bad DND type");
           return false;
         }
-
         Ctk.drag_get_data (actor, context, target_type, time_);
+        target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_STRING);
+        if (target_type.name () == "")
+        {
+          warning ("bad DND type");
+          return false;
+        }
+        Ctk.drag_get_data (actor, context, target_type, time_);
+        debug ("asking for data");
       } else 
       {
         warning ("got a strange dnd");
@@ -85,6 +92,7 @@ namespace Unity.Quicklauncher
     {
       bool dnd_success = false;
       bool delete_selection_data = false;
+      debug ("got dnd data");
       // Deal with what we are given from source
       if ((data != null) && (data.length >= 0)) {
         if (context.action == Gdk.DragAction.MOVE) {
