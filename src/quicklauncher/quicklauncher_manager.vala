@@ -62,9 +62,11 @@ namespace Unity.Quicklauncher
     {
       if (context.targets != null)
       {
-        var target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_STRING);
+        var target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_OTHER);
         Ctk.drag_get_data (actor, context, target_type, time_);
         target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_URL);
+        Ctk.drag_get_data (actor, context, target_type, time_);
+        target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_STRING);
         Ctk.drag_get_data (actor, context, target_type, time_);
       } else 
       {
@@ -80,7 +82,7 @@ namespace Unity.Quicklauncher
     {
       bool dnd_success = false;
       bool delete_selection_data = false;
-
+      debug ("got drag data received");
       // Deal with what we are given from source
       if ((data != null) && (data.length >= 0)) {
         if (context.action == Gdk.DragAction.MOVE) {
@@ -90,6 +92,7 @@ namespace Unity.Quicklauncher
         switch (target_type) {
         case Unity.dnd_targets.TARGET_URL:
           // we got a uri, forward it to the uri handler
+          debug ("got uri: %s", (string) data.data);
           dnd_success = handle_uri ((string) data.data);
           break;
         default:
@@ -105,10 +108,11 @@ namespace Unity.Quicklauncher
     
     private bool handle_uri (string uri)
     {
-      string clean_uri = uri;
+      string clean_uri = uri.split("\n", 2)[0].split("\r", 2)[0];
+
       try {
         var regex = new Regex ("\\s");
-        clean_uri = regex.replace (uri, -1, 0, "");
+        clean_uri = regex.replace (clean_uri, -1, 0, "");
       } catch (RegexError e) {
         warning ("%s", e.message);
       }
@@ -118,7 +122,7 @@ namespace Unity.Quicklauncher
       if ("http" in split_uri[0])
       {
         //we have a http url, prism it
-        var webapp = new Prism (uri);
+        var webapp = new Prism (clean_uri);
         webapp.add_to_favorites ();
       }
       

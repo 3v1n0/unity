@@ -27,6 +27,7 @@ namespace Unity
     TARGET_INT32,
     TARGET_STRING,
     TARGET_URL,
+    TARGET_OTHER
   }
   public interface Shell : Gtk.Window
   {
