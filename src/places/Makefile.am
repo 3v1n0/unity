@@ -2,19 +2,19 @@ DATADIR = $(datadir)
 PKGDATADIR = $(datadir)/unity
 
 noinst_LTLIBRARIES = \
-  libunity-quicklauncher.la
+  libunity-places.la
 
-# unity-quicklauncher static lib
-libunity_quicklauncher_la_CPPFLAGS = \
+# unity-places static lib
+libunity_places_la_CPPFLAGS = \
   -DDATADIR=\"$(DATADIR)\" \
   -DPKGDATADIR=\"$(PKGDATADIR)\" \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS) \
   -I$(top_builddir)/libunity/
 
-libunity_quicklauncher_la_VALAFLAGS = \
-  -H unity-quicklauncher.h -d . \
-  --library unity-quicklauncher \
+libunity_places_la_VALAFLAGS = \
+  -H unity-places.h -d . \
+  --library unity-places \
   --vapidir=$(top_builddir)/vapi/ \
   --vapidir=$(top_builddir)/libunity \
   --pkg clutter-1.0 \
@@ -22,24 +22,19 @@ libunity_quicklauncher_la_VALAFLAGS = \
   --pkg launcher-0.3 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
-  --pkg gio-unix-2.0 \
   --pkg unity-const \
   --pkg unity \
   $(MAINTAINER_VALAFLAGS)
 
-libunity_quicklauncher_la_LIBADD = \
+libunity_places_la_LIBADD = \
   $(BASE_LIBS) \
   $(top_builddir)/libunity/libunity.la
 
-libunity_quicklauncher_la_SOURCES = \
-  application_store.vala \
-  launcher_store.vala \
-  launcher_view.vala \
-  prism_handler.vala \
-  quicklauncher.vala \
-  quicklauncher_manager.vala \
-  tooltipmanager.vala \
-  unity-scroller.vala
-  
+libunity_places_la_SOURCES = \
+  bar_model.vala \
+  bar_view.vala \
+  default_model.vala \
+  default_view.vala \
+  view.vala
 
 CLEANFILES = *.stamp

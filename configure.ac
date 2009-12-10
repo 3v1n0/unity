@@ -69,6 +69,7 @@ PKG_CHECK_MODULES(BASE,
                   gobject-2.0 >= $GLIB_REQUIRED
                   gtk+-2.0 >= $GTK_REQUIRED
                   gdk-x11-2.0 >= $GTK_REQUIRED
+                  gio-2.0 >= $GTK_REQUIRED
                   gee-1.0
                   gconf-2.0
                   clutter-1.0 >= 1.0
@@ -89,6 +90,7 @@ AC_OUTPUT([
   libunity/Makefile
   src/Makefile
   src/quicklauncher/Makefile
+  src/places/Makefile
   tests/Makefile
 ])
 

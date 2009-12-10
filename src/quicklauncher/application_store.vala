@@ -151,7 +151,26 @@ namespace Unity.Quicklauncher.Stores
     public bool is_sticky 
     {
       get { return _is_sticky; }
-      set { _is_sticky = value; }
+      set 
+        { 
+          var favorites = Launcher.Favorites.get_default ();
+          string uid = get_fav_uid ();
+          if (uid != "" && !value) 
+            {
+              // we are a favorite and we need to be unfavorited
+              favorites.remove_favorite (uid);
+            }
+          else if (uid == "" && value)
+            {
+              string desktop_path = app.get_desktop_file ();
+              uid = "app-" + Path.get_basename (desktop_path);
+              // we are not a favorite and we need to be favorited!
+              favorites.set_string (uid, "type", "application");
+              favorites.set_string (uid, "desktop_file", desktop_path);
+              favorites.add_favorite (uid);
+            }
+          _is_sticky = value;
+        }
     }
 
     public Gee.ArrayList<ShortcutItem> get_menu_shortcuts ()
@@ -217,9 +236,33 @@ namespace Unity.Quicklauncher.Stores
             }
         }
     }
-  }
+    
+    /**
+     * gets the favorite uid for this desktop file
+     */
+    private string get_fav_uid ()
+    {
+      string myuid = "";
+      string my_desktop_path = app.get_desktop_file ();
+      var favorites = Launcher.Favorites.get_default ();
+      unowned SList<string> favorite_list = favorites.get_favorites();
+      foreach (weak string uid in favorite_list)
+        {
+          // we only want favorite *applications* for the moment 
+          var type = favorites.get_string(uid, "type");
+          if (type != "application")
+              continue;
+              
+          string desktop_file = favorites.get_string(uid, "desktop_file");
+          if (desktop_file == my_desktop_path)
+            {
+              myuid = uid;
+            }
+        }
+      return myuid;
+    }
   
-/** 
+    /** 
      * taken from the prototype code and shamelessly stolen from
      * netbook launcher. needs to be improved at some point to deal
      * with all cases, it will miss some apps at the moment
@@ -315,7 +358,6 @@ namespace Unity.Quicklauncher.Stores
       return pixbuf;
           
     }
-  
-  
+  }
 }
 

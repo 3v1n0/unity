@@ -1,7 +1,8 @@
 DATADIR = $(datadir)
 
 SUBDIRS = \
-  quicklauncher
+  quicklauncher \
+  places
 
 noinst_LTLIBRARIES = \
   libunity-static.la 
@@ -14,7 +15,8 @@ libunity_static_la_CPPFLAGS = \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS) \
   -I$(top_builddir)/libunity/ \
-  -I quicklauncher/
+  -I quicklauncher/ \
+  -I places/
 
 libunity_static_la_VALAFLAGS = \
   -H unity-static.h -d . \
@@ -22,6 +24,7 @@ libunity_static_la_VALAFLAGS = \
   --vapidir=$(top_builddir)/vapi/ \
   --vapidir=$(top_builddir)/libunity/ \
   --vapidir=./quicklauncher/ \
+  --vapidir=./places/ \
   --pkg clutk-0.3 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
@@ -35,12 +38,14 @@ libunity_static_la_VALAFLAGS = \
   --pkg x11 \
   --pkg unity \
   --pkg unity-quicklauncher \
+  --pkg unity-places \
   $(MAINTAINER_VALAFLAGS)
 
 libunity_static_la_LIBADD = \
   $(BASE_LIBS) \
   $(top_builddir)/libunity/libunity.la \
-  quicklauncher/libunity-quicklauncher.la
+  quicklauncher/libunity-quicklauncher.la \
+  places/libunity-places.la
 
 libunity_static_la_SOURCES = \
   unity-utils.c \
