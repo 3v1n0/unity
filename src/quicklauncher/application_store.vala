@@ -36,15 +36,6 @@ namespace Unity.Quicklauncher.Stores
     {
       debug ("activated %s - %s", this.name, this.exec);
       Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
-      
-//      gdk_app_launch_context_set_screen (context, gdk_screen_get_default ());
-//  gdk_app_launch_context_set_timestamp (context, GDK_CURRENT_TIME);
-  
-//  g_object_get(application, "icon-name", &icon_name, NULL);
-//  gdk_app_launch_context_set_icon_name (context, icon_name);
-
-//  g_app_info_launch ((GAppInfo *)info, NULL, (GAppLaunchContext*)context,
-//                     error);
       try 
       {
         var desktop_file = new KeyFile ();

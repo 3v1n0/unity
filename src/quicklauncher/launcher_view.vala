@@ -390,11 +390,6 @@ namespace Unity.Quicklauncher
                                                     shortcut.get_name ()); 
         this.menu.append (menuitem);
         menuitem.activated.connect (shortcut.activated);
-        menuitem.activated.connect ((a) => {
-          debug ("activated! :D");
-          //shortcut.activated ();
-        });
-        
         menuitem.activated.connect (this.close_menu);
       }
       
