@@ -186,6 +186,8 @@ namespace Ctk {
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class Menu : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
+		[CCode (has_construct_function = false)]
+		public Menu ();
 		public void append (Ctk.MenuItem item);
 		public int get_spacing ();
 		public void prepend (Ctk.MenuItem item);
