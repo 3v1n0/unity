@@ -37,6 +37,7 @@ libunity_static_la_VALAFLAGS = \
   --pkg libwnck-1.0 \
   --pkg x11 \
   --pkg unity \
+  --pkg unity-const \
   --pkg unity-quicklauncher \
   --pkg unity-places \
   $(MAINTAINER_VALAFLAGS)

@@ -19,8 +19,8 @@
  */
 
 namespace Unity {
-	[CCode (cname = "DATADIR")]
-	public static const string DATADIR;
-	[CCode (cname = "PKGDATADIR")]
-	public static const string PKGDATADIR;
+  [CCode (cname = "DATADIR")]
+  public static const string DATADIR;
+  [CCode (cname = "PKGDATADIR")]
+  public static const string PKGDATADIR;
 }

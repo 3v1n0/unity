@@ -44,6 +44,124 @@ namespace Unity.Quicklauncher
 
       build_favorites ();
       this.session.application_opened.connect (handle_session_application);
+      
+      Ctk.drag_dest_start (this.container);
+      this.container.drag_motion.connect (on_drag_motion);
+      this.container.drag_drop.connect (on_drag_drop);
+      this.container.drag_data_received.connect (on_drag_data_received);
+    }
+    
+    private bool on_drag_motion (Ctk.Actor actor, Gdk.DragContext context, 
+                                 int x, int y, uint time_)
+    {
+      return true;
+    }
+    
+    private bool on_drag_drop (Ctk.Actor actor, Gdk.DragContext context, 
+                               int x, int y, uint time_)
+    {
+      if (context.targets != null)
+      {
+        Gdk.Atom target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_URL);
+        if (target_type.name () == "")
+        {
+          warning ("bad DND type");
+          return false;
+        }
+        Ctk.drag_get_data (actor, context, target_type, time_);
+        target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_STRING);
+        if (target_type.name () == "")
+        {
+          warning ("bad DND type");
+          return false;
+        }
+        Ctk.drag_get_data (actor, context, target_type, time_);
+        debug ("asking for data");
+      } else 
+      {
+        warning ("got a strange dnd");
+        return false;
+      }
+      return true;
+    }
+
+    private void on_drag_data_received (Ctk.Actor actor, 
+                                        Gdk.DragContext context, int x, int y, 
+                                        Gtk.SelectionData data, uint target_type, 
+                                        uint time_)
+    {
+      bool dnd_success = false;
+      bool delete_selection_data = false;
+      debug ("got dnd data");
+      // Deal with what we are given from source
+      if ((data != null) && (data.length >= 0)) {
+        if (context.action == Gdk.DragAction.MOVE) {
+          delete_selection_data = true;
+        }
+
+        switch (target_type) {
+        case Unity.dnd_targets.TARGET_URL:
+          // we got a uri, forward it to the uri handler
+          dnd_success = handle_uri ((string) data.data);
+          break;
+        default:
+          break;
+        }
+      }
+
+      if (dnd_success == false) {
+        warning ("dnd transfer failed");
+      }
+      Gtk.drag_finish (context, dnd_success, delete_selection_data, time_);
+    }
+    
+    private bool handle_uri (string uri)
+    {
+      string clean_uri = uri.split("\n", 2)[0].split("\r", 2)[0];
+
+      try {
+        var regex = new Regex ("\\s");
+        clean_uri = regex.replace (clean_uri, -1, 0, "");
+      } catch (RegexError e) {
+        warning ("%s", e.message);
+      }
+      clean_uri.strip();
+      
+      var split_uri = clean_uri.split ("://", 2); 
+      if ("http" in split_uri[0])
+      {
+        //we have a http url, prism it
+        var webapp = new Prism (clean_uri);
+        webapp.add_to_favorites ();
+      }
+      
+      else if (".desktop" in Path.get_basename (clean_uri))
+      {
+        // we have a potential desktop file, test it.
+        try 
+        {
+          var desktop_file = new KeyFile ();
+          desktop_file.load_from_file (split_uri[1], 0);
+        } catch (Error e)
+        {
+          // not a desktop file
+          error (e.message);
+          return false;
+        }
+        
+        var favorites = Launcher.Favorites.get_default ();
+        string uid = "app-" + Path.get_basename (clean_uri);
+        favorites.set_string (uid, "type", "application");
+        favorites.set_string (uid, "desktop_file", split_uri[1]);
+        favorites.add_favorite (uid);
+      }
+      else 
+      {
+        return false;
+      }
+      
+      build_favorites ();
+      return true;
     }
 
     private void build_favorites () 
@@ -62,11 +180,14 @@ namespace Unity.Quicklauncher
           string desktop_file = favorites.get_string(uid, "desktop_file");
           assert (desktop_file != "");
           
-          ApplicationStore store = get_store_for_desktop_file (desktop_file);
-          store.is_sticky = true;
-          LauncherView view = get_view_for_store (store);
+          if (!(desktop_file in desktop_file_map.keys))
+            {
+              ApplicationStore store = get_store_for_desktop_file (desktop_file);
+              store.is_sticky = true;
+              LauncherView view = get_view_for_store (store);
           
-          add_view (view);
+              add_view (view);
+            }
         }
     }
 

@@ -23,7 +23,12 @@ namespace Unity
     UNDERLAY,
     OVERLAY
   }
-
+  public enum dnd_targets {
+    TARGET_INT32,
+    TARGET_STRING,
+    TARGET_URL,
+    TARGET_OTHER
+  }
   public interface Shell : Gtk.Window
   {
     public abstract ShellMode     get_mode ();
