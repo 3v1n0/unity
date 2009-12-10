@@ -96,3 +96,7 @@ src/places/libunity-places.la
 src/places/libunity_places_la_vala.stamp
 src/places/unity-places.h
 src/places/unity-places.vapi
+src/quicklauncher/launcher_store.c
+src/quicklauncher/launcher_view.c
+src/quicklauncher/prism_handler.c
+src/quicklauncher/quicklauncher_manager.c
