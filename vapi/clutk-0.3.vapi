@@ -105,6 +105,7 @@ namespace Ctk {
 	public class EffectContext : GLib.Object {
 		public static unowned Ctk.EffectContext get_default_for_actor (Clutter.Actor actor);
 		public static unowned Ctk.EffectContext get_default_for_stage (Clutter.Stage stage);
+		public unowned Ctk.RenderTarget get_utility_render_target ();
 		public unowned Ctk.RenderTarget grab_render_target ();
 		public unowned Ctk.RenderTarget grab_render_target_for_actor (Clutter.Actor actor);
 		public unowned Ctk.RenderTarget grab_render_target_for_size (uint width, uint height);
@@ -118,16 +119,16 @@ namespace Ctk {
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class EffectDropShadow : Ctk.Effect {
 		[CCode (has_construct_function = false)]
-		public EffectDropShadow (uint size, int offset_x, int offset_y);
+		public EffectDropShadow (float blurfactor, int offset_x, int offset_y);
+		public float get_blur_factor ();
 		public int get_offset_x ();
 		public int get_offset_y ();
-		public uint get_size ();
+		public void set_blur_factor (float size);
 		public void set_offset_x (int offset_x);
 		public void set_offset_y (int offset_y);
-		public void set_size (uint size);
+		public float blur_factor { get; set; }
 		public int offset_x { get; set; }
 		public int offset_y { get; set; }
-		public uint size { get; set; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class EffectGlow : Ctk.Effect {
@@ -193,27 +194,6 @@ namespace Ctk {
 		[NoAccessorMethod]
 		public string stock_id { owned get; set; }
 	}
-	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class Menu : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
-		[CCode (has_construct_function = false)]
-		public Menu ();
-		public void append (Ctk.MenuItem item);
-		public int get_spacing ();
-		public void prepend (Ctk.MenuItem item);
-		public void set_spacing (int spacing);
-		public int spacing { get; set; }
-	}
-	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class MenuItem : Ctk.Bin, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
-		[CCode (has_construct_function = false)]
-		public MenuItem ();
-		public unowned string get_label ();
-		public void set_label (string label);
-		[CCode (has_construct_function = false)]
-		public MenuItem.with_label (string label);
-		public string label { get; set construct; }
-		public virtual signal void activated ();
-	}
 	[Compact]
 	[CCode (type_id = "CTK_TYPE_RENDER_TARGET", cheader_filename = "clutk/clutk.h")]
 	public class RenderTarget {
@@ -248,13 +228,6 @@ namespace Ctk {
 		[NoAccessorMethod]
 		public Ctk.ScrollbarType scrollbar_type { get; set; }
 		public float value { get; set; }
-	}
-	[Compact]
-	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class ShaderProgram {
-		public uint shfrag;
-		public uint shprog;
-		public uint shvert;
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class Text : Clutter.Text, Clutter.Scriptable {
@@ -362,55 +335,25 @@ namespace Ctk {
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public const int EFFECT_DROP_SHADOW_DEFAULT_OFFSET_Y;
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public const int EFFECT_DROP_SHADOW_DEFAULT_SIZE;
-	[CCode (cheader_filename = "clutk/clutk.h")]
 	public const int EFFECT_DROP_SHADOW_MAX_OFFSET_X;
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public const int EFFECT_DROP_SHADOW_MAX_OFFSET_Y;
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public const int EFFECT_DROP_SHADOW_MAX_SIZE;
-	[CCode (cheader_filename = "clutk/clutk.h")]
 	public const int EFFECT_DROP_SHADOW_MIN_OFFSET_X;
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public const int EFFECT_DROP_SHADOW_MIN_OFFSET_Y;
-	[CCode (cheader_filename = "clutk/clutk.h")]
-	public const int EFFECT_DROP_SHADOW_MIN_SIZE;
 	[CCode (cname = "CheckGLError", cheader_filename = "clutk/clutk.h")]
 	public static int CheckGLError (string glCall, string file, int line);
-	[CCode (cname = "CreateAlphaMaskShader", cheader_filename = "clutk/clutk.h")]
-	public static unowned Ctk.ShaderProgram CreateAlphaMaskShader ();
-	[CCode (cname = "CreateBlurH0Shader", cheader_filename = "clutk/clutk.h")]
-	public static unowned Ctk.ShaderProgram CreateBlurH0Shader ();
-	[CCode (cname = "CreateBlurH1Shader", cheader_filename = "clutk/clutk.h")]
-	public static unowned Ctk.ShaderProgram CreateBlurH1Shader ();
-	[CCode (cname = "CreateBlurV0Shader", cheader_filename = "clutk/clutk.h")]
-	public static unowned Ctk.ShaderProgram CreateBlurV0Shader ();
-	[CCode (cname = "CreateBlurV1Shader", cheader_filename = "clutk/clutk.h")]
-	public static unowned Ctk.ShaderProgram CreateBlurV1Shader ();
-	[CCode (cname = "CreateColorMaskShader", cheader_filename = "clutk/clutk.h")]
-	public static unowned Ctk.ShaderProgram CreateColorMaskShader ();
-	[CCode (cname = "CreateExponentShader", cheader_filename = "clutk/clutk.h")]
-	public static unowned Ctk.ShaderProgram CreateExponentShader ();
-	[CCode (cname = "CreatePassThroughShader", cheader_filename = "clutk/clutk.h")]
-	public static unowned Ctk.ShaderProgram CreatePassThroughShader ();
-	[CCode (cname = "copy_rendertarget_to_rendertarget", cheader_filename = "clutk/clutk.h")]
-	public static void copy_rendertarget_to_rendertarget (Ctk.RenderTarget rt_src, float u0, float v0, float u1, float v1, Ctk.RenderTarget rt_dst, int x_dst, int y_dst, int w_dst, int h_dst);
-	[CCode (cname = "custom_render_quad_alpha_mask", cheader_filename = "clutk/clutk.h")]
-	public static void custom_render_quad_alpha_mask (Ctk.RenderTarget rt, float red, float green, float blue, float alpha, int window_w, int window_h, int x, int y, int w, int h);
-	[CCode (cname = "custom_render_quad_gaussian_blur_separable", cheader_filename = "clutk/clutk.h")]
-	public static void custom_render_quad_gaussian_blur_separable (Ctk.RenderTarget rt, Ctk.ShaderProgram shader, float sigma, int window_w, int window_h, int x, int y, int w, int h);
-	[CCode (cname = "custom_render_quad_texture_mask", cheader_filename = "clutk/clutk.h")]
-	public static void custom_render_quad_texture_mask (Ctk.RenderTarget fbo, uint texid, uint texture_width, uint texture_height, Ctk.ShaderProgram shader, int window_w, int window_h, int x, int y, int w, int h);
-	[CCode (cname = "delete_shader_program", cheader_filename = "clutk/clutk.h")]
-	public static void delete_shader_program (Ctk.ShaderProgram sh);
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public static void cleanup ();
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static void dnd_init (Gtk.Widget widget, Gtk.TargetEntry[] targets);
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public static bool drag_dest_is_dest (Ctk.Actor widget);
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static void drag_dest_start (Ctk.Actor widget);
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static void drag_get_data (Ctk.Actor actor, Gdk.DragContext context, Gdk.Atom target, uint32 time_);
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static void init ([CCode (array_length_pos = 0.9)] ref unowned string[] argv);
-	[CCode (cname = "ogldraw_render_fullscreen_quad", cheader_filename = "clutk/clutk.h")]
-	public static void ogldraw_render_fullscreen_quad (Ctk.RenderTarget fbo, Ctk.ShaderProgram shader, int window_w, int window_h, int x, int y, int w, int h);
 }
