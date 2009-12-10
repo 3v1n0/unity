@@ -229,7 +229,7 @@ namespace Unity
         }
       else
         {
-          this.wnck_screen.toggle_showing_desktop (true);
+          //this.wnck_screen.toggle_showing_desktop (true);
         }
       return false;
     }

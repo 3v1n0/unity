@@ -48,6 +48,9 @@ namespace Unity.Quicklauncher
     private Gdk.Pixbuf honeycomb_mask;
     private Clutter.Group container;
 
+    private Ctk.Menu menu;
+    private Gee.List<ShortcutItem> offline_shortcuts;
+
     private Ctk.EffectGlow effect_icon_glow;
     
     /* internal view logic datatypes */
@@ -361,8 +364,52 @@ namespace Unity.Quicklauncher
       if (bevent.button == 1)
       {
         last_pressed_time = bevent.time;
-      }      
+      } 
+      else 
+      {
+        build_quicklist ();
+      }
       return false;
+    }
+    
+    private void build_quicklist ()
+    {
+      var items = this.store.get_menu_shortcuts ();
+      this.offline_shortcuts = items;
+      this.menu = new Ctk.Menu ();
+      Clutter.Stage stage = this.get_stage() as Clutter.Stage;
+      stage.add_actor (this.menu);
+      
+      float x, y;
+      this.get_transformed_position (out x, out y);
+       
+      this.menu.set_position (x + 64, y);
+      
+      
+      Ctk.Padding padding = Ctk.Padding () {
+        left = 6, 
+        right = 6,
+        top = 6,
+        bottom = 6
+      };
+      this.menu.set_padding (padding);
+      this.menu.show ();
+      
+      foreach (ShortcutItem shortcut in offline_shortcuts)
+      {
+        Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (
+                                                    shortcut.get_name ()); 
+        this.menu.append (menuitem);
+        menuitem.activated.connect (shortcut.activated);
+        menuitem.activated.connect (this.close_menu);
+      }
+      
+    }
+    
+    private void close_menu ()
+    {
+      Clutter.Stage stage = this.get_stage() as Clutter.Stage;
+      stage.remove_actor (this.menu);
     }
 
     private bool on_released (Clutter.Event src)
@@ -386,5 +433,6 @@ namespace Unity.Quicklauncher
     }
   }
 }
+
 
 

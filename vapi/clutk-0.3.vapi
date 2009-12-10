@@ -7,6 +7,7 @@ namespace Ctk {
 		public void add_effect (Ctk.Effect effect);
 		public unowned Clutter.Actor get_background ();
 		public unowned Clutter.Actor get_background_for_state (Ctk.ActorState state);
+		public bool get_damaged ();
 		public static Gtk.TextDirection get_default_direction ();
 		public unowned GLib.SList get_effects ();
 		public bool get_effects_painting ();
@@ -14,10 +15,12 @@ namespace Ctk {
 		public Ctk.ActorState get_state ();
 		public void get_stored_allocation (Clutter.ActorBox box);
 		public unowned string get_tooltip_text ();
+		public void recurse_get_stored_allocation_box (Clutter.ActorBox box);
 		public void remove_all_effects ();
 		public void remove_effect (Ctk.Effect effect);
 		public void set_background (Clutter.Actor bg);
 		public void set_background_for_state (Ctk.ActorState state, Clutter.Actor bg);
+		public void set_damaged (bool damaged);
 		public static void set_default_direction (Gtk.TextDirection dir);
 		public void set_effects_painting (bool painting);
 		public void set_padding (Ctk.Padding padding);
@@ -86,7 +89,7 @@ namespace Ctk {
 		public unowned Clutter.Animation animate (ulong mode, uint duration, ...);
 		public unowned Clutter.Actor get_actor ();
 		public unowned Clutter.Animation get_animation ();
-		public virtual void paint (Ctk.EffectPaintFunc func);
+		public virtual void paint (Ctk.EffectPaintFunc func, bool is_last_effect);
 		public void set_actor (Clutter.Actor actor);
 		public void* actor { get; set; }
 	}
@@ -189,6 +192,27 @@ namespace Ctk {
 		public int size { get; set; }
 		[NoAccessorMethod]
 		public string stock_id { owned get; set; }
+	}
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public class Menu : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
+		[CCode (has_construct_function = false)]
+		public Menu ();
+		public void append (Ctk.MenuItem item);
+		public int get_spacing ();
+		public void prepend (Ctk.MenuItem item);
+		public void set_spacing (int spacing);
+		public int spacing { get; set; }
+	}
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public class MenuItem : Ctk.Bin, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
+		[CCode (has_construct_function = false)]
+		public MenuItem ();
+		public unowned string get_label ();
+		public void set_label (string label);
+		[CCode (has_construct_function = false)]
+		public MenuItem.with_label (string label);
+		public string label { get; set construct; }
+		public virtual signal void activated ();
 	}
 	[Compact]
 	[CCode (type_id = "CTK_TYPE_RENDER_TARGET", cheader_filename = "clutk/clutk.h")]
@@ -369,6 +393,8 @@ namespace Ctk {
 	public static unowned Ctk.ShaderProgram CreateExponentShader ();
 	[CCode (cname = "CreatePassThroughShader", cheader_filename = "clutk/clutk.h")]
 	public static unowned Ctk.ShaderProgram CreatePassThroughShader ();
+	[CCode (cname = "copy_rendertarget_to_rendertarget", cheader_filename = "clutk/clutk.h")]
+	public static void copy_rendertarget_to_rendertarget (Ctk.RenderTarget rt_src, float u0, float v0, float u1, float v1, Ctk.RenderTarget rt_dst, int x_dst, int y_dst, int w_dst, int h_dst);
 	[CCode (cname = "custom_render_quad_alpha_mask", cheader_filename = "clutk/clutk.h")]
 	public static void custom_render_quad_alpha_mask (Ctk.RenderTarget rt, float red, float green, float blue, float alpha, int window_w, int window_h, int x, int y, int w, int h);
 	[CCode (cname = "custom_render_quad_gaussian_blur_separable", cheader_filename = "clutk/clutk.h")]

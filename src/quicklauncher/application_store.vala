@@ -20,9 +20,68 @@
 
 namespace Unity.Quicklauncher.Stores
 {
+  public class ApplicationShortcut : Object, ShortcutItem
+  {
+    
+    public string exec;
+    public string name; 
+    public string desktop_location;
+    
+    public string get_name ()
+    {
+      return this.name;
+    }
+    
+    public void activated ()
+    {
+      debug ("activated %s - %s", this.name, this.exec);
+      Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
+      try 
+      {
+        var desktop_file = new KeyFile ();
+        desktop_file.load_from_file (this.desktop_location, 0);
+        desktop_file.set_string ("Desktop Entry", "Exec", exec);
+        AppInfo appinfo = new DesktopAppInfo.from_keyfile (desktop_file);
+        appinfo.create_from_commandline (this.exec, this.name, 0);
+        context.set_screen (Gdk.Display.get_default ().get_default_screen ());
+        context.set_timestamp (Gdk.CURRENT_TIME);
+        
+        appinfo.launch (null, context);
+      } catch (Error e)
+      {
+        warning (e.message);
+      }
+      
+    }
+  }
   
+  public class LibLauncherShortcut : Object, ShortcutItem 
+  {
+    public Launcher.Application app;
+    public string name;
+    
+    public string get_name ()
+    {
+      if (this.name == "")
+      {
+        return this.app.name;
+      }
+      return this.name;
+    }
+    
+    public void activated ()
+    {
+      try
+      {
+        this.app.launch ();
+      } catch (Error e)
+      {
+        warning (e.message);
+      }
+    }
+  }
   
-  public class ApplicationStore : GLib.Object, LauncherStore 
+  public class ApplicationStore : Object, LauncherStore 
   {
     private Gdk.Pixbuf _icon;
     private Launcher.Application app;
@@ -103,6 +162,48 @@ namespace Unity.Quicklauncher.Stores
             }
           _is_sticky = value;
         }
+    }
+
+    public Gee.ArrayList<ShortcutItem> get_menu_shortcuts ()
+    {
+      // get the desktop file
+      Gee.ArrayList<ShortcutItem> ret_list = new Gee.ArrayList<ShortcutItem> ();
+      var desktop_file = new KeyFile ();
+      desktop_file.load_from_file (app.get_desktop_file (), 0);
+      
+      var groups = desktop_file.get_groups ();
+      for (int a = 0; a < groups.length; a++)
+      {
+        if ("QuickList Entry" in groups[a])
+          {
+            string exec = "";
+            string name = "";
+            try
+              { 
+                exec = desktop_file.get_value (groups[a], "Exec");
+                name = desktop_file.get_value (groups[a], "Name");
+              } catch (Error e)
+              {
+                warning (e.message);
+                continue;
+              }
+              var shortcut = new ApplicationShortcut ();
+              shortcut.exec = exec;
+              shortcut.name = name;
+              shortcut.desktop_location = app.get_desktop_file ();
+              ret_list.add (shortcut);
+          }
+      }
+      var name_entry = new ApplicationShortcut ();
+      name_entry.exec = "";
+      name_entry.name = app.name;
+      ret_list.add (name_entry);
+      
+      var open_entry = new LibLauncherShortcut ();
+      open_entry.app = this.app;
+      open_entry.name = "Open";
+      ret_list.add (open_entry);
+      return ret_list;
     }
 
     public void activate ()

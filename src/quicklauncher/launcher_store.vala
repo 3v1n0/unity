@@ -33,8 +33,17 @@ namespace Unity.Quicklauncher.Stores
     public abstract signal void notify_active ();
     public abstract signal void notify_focused ();
     public abstract signal void request_attention ();
+    
+    public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcuts (); 
 
     public abstract void activate ();
+  }
+
+  public interface ShortcutItem : GLib.Object
+  {
+    public abstract string get_name ();
+    
+    public abstract void activated ();
   }
 
 }
