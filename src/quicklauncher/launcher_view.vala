@@ -336,10 +336,13 @@ namespace Unity.Quicklauncher
 
     private bool on_mouse_leave(Clutter.Event src) 
     {
-      this.is_hovering = false;
-      this.hover_anim.completed ();
-      this.icon.remove_effect(this.effect_icon_glow);
-      this.icon.queue_relayout();
+      if (this.is_hovering)
+        {
+          this.is_hovering = false;
+          this.hover_anim.completed ();
+          this.icon.remove_effect(this.effect_icon_glow);
+          this.icon.queue_relayout();
+        }
 
       return false;
     }

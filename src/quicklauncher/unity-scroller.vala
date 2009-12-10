@@ -311,7 +311,12 @@ namespace Unity.Widgets
            return false;
         }
       this.button_down = false;
-      this.is_dragging = false;
+    
+      if (this.is_dragging)
+        {
+          this.is_dragging = false;
+          Clutter.ungrab_pointer ();
+        }
          
       int iters = 0;
       float position = 0.0f;
@@ -347,6 +352,28 @@ namespace Unity.Widgets
       if (this.button_down)
         {
           this.is_dragging = true;
+
+          Clutter.grab_pointer (this);
+
+          /* Disable any animations on the children */
+          foreach (ScrollerChild container in this.children)
+            {
+              Clutter.Actor child = container.child;
+
+              if (child is Clutter.Actor)
+                {
+                  Clutter.Event e = { 0 };
+                  e.type = Clutter.EventType.LEAVE;
+                  e.crossing.time = event.motion.time;
+                  e.crossing.flags = event.motion.flags;
+                  e.crossing.stage = event.motion.stage;
+                  e.crossing.source = child;
+                  e.crossing.x = event.motion.x;
+                  e.crossing.y = event.motion.y;
+
+                  child.do_event (e, false);
+                }
+            }
         }
       if (this.is_dragging == false)
         {

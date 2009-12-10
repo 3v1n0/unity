@@ -472,10 +472,15 @@ namespace Unity.Quicklauncher
     
     private bool on_mouse_leave(Clutter.Event src) 
     {
-      this.is_hovering = false;
-      this.hover_anim.completed ();
-      this.icon.remove_effect(this.icon_glow_effect);
-      this.icon.queue_relayout();
+      if (this.is_hovering)
+        {
+          this.is_hovering = false;
+          this.hover_anim.completed ();
+          this.icon.remove_effect(this.icon_glow_effect);
+          this.icon.queue_relayout();
+          print ("stopped animation");
+          return true;
+        }
 
       return false;
     }
