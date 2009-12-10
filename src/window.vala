@@ -35,8 +35,9 @@ namespace Unity
     private Clutter.Stage    stage;
     private bool             is_showing;
 
-    private Background         background;
-    private Quicklauncher.View quicklauncher;
+    private Background          background;
+    private Quicklauncher.View  quicklauncher;
+    private Unity.Places.View   places;
 
     public UnderlayWindow (bool popup, int width, int height)
     {
@@ -117,7 +118,9 @@ namespace Unity
       this.background.show ();
 
       this.quicklauncher = new Quicklauncher.View (this);
+      this.places = new Unity.Places.View ();
       this.stage.add_actor (this.quicklauncher);
+      this.stage.add_actor (this.places);
       
       /* Layout everything */
       this.move (0, 0);
@@ -171,6 +174,16 @@ namespace Unity
       this.quicklauncher.set_size (58, height);
       this.quicklauncher.set_position (this.workarea_size.left,
                                        this.workarea_size.top);
+
+       this.places.set_size (width -
+                             this.workarea_size.left -
+                             this.workarea_size.right -
+                             54,
+                             height -
+                             this.workarea_size.top -
+                             this.workarea_size.bottom);
+       this.places.set_position (this.workarea_size.left + 54,
+                                 this.workarea_size.top);
     }
 
     public override void show ()
@@ -241,6 +254,7 @@ namespace Unity
     {
       this.wnck_screen.toggle_showing_desktop (true);
     }
+
   }
  
   public class Workarea 

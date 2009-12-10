@@ -13,27 +13,31 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
+ * Authored by Mirco "MacSlow" Müller <mirco.mueller@canonical.com>
  *
  */
 
-namespace Unity
+using GLib;
+
+namespace Unity.Places.Bar
 {
-  public enum ShellMode {
-    UNDERLAY,
-    OVERLAY
-  }
-  public enum dnd_targets {
-    TARGET_INT32,
-    TARGET_STRING,
-    TARGET_URL,
-    TARGET_OTHER
-  }
-  public interface Shell : Gtk.Window
+  public class Model : Object
   {
-    public abstract ShellMode     get_mode ();
-    public abstract Clutter.Stage get_stage ();
-    public abstract void          show_unity ();
-    //public abstract signal void   show_unity ();
+    public string name;
+    public string icon_name;
+    public string tooltip;
+
+    public Model (string name,
+                  string icon_name,
+                  string tooltip)
+    {
+      this.name      = name;
+      this.icon_name = icon_name;
+      this.tooltip   = tooltip;
+    }
+
+    construct
+    {
+    }
   }
 }
