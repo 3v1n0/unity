@@ -35,6 +35,7 @@ AC_SUBST(DL_VERSION)
 dnl Init the other things we depend on
 AM_MAINTAINER_MODE
 AM_PROG_VALAC([0.7.6])
+AS_IF([test -z "$VALAC"], [AC_MSG_ERROR(["No valac compiler found."])])
 AC_PROG_CC
 AM_PROG_CC_C_O
 AC_STDC_HEADERS
