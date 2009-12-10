@@ -66,6 +66,21 @@ namespace Unity.Places.Bar
                                           "Your files stored locally");
       this.places.add (place);
 
+      place = new Unity.Places.Bar.Model ("Music",
+                                          MUSIC_FILE,
+                                          "Soothing sounds and vibes");
+      this.places.add (place);
+
+      place = new Unity.Places.Bar.Model ("People",
+                                          PEOPLE_FILE,
+                                          "Friends, pals, mates and folks");
+      this.places.add (place);
+
+      place = new Unity.Places.Bar.Model ("Photos",
+                                          PHOTOS_FILE,
+                                          "Pretty pictures presented by pixels");
+      this.places.add (place);
+
       place = new Unity.Places.Bar.Model ("Trash",
                                           TRASH_FILE,
                                           "Your piece of waste");
