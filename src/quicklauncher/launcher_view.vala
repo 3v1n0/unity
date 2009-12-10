@@ -49,6 +49,7 @@ namespace Unity.Quicklauncher
     private Clutter.Group container;
 
     private Ctk.EffectGlow effect_icon_glow;
+    private Ctk.EffectDropShadow effect_icon_dropshadow;
     
     /* internal view logic datatypes */
     private uint32 last_pressed_time;
@@ -135,6 +136,9 @@ namespace Unity.Quicklauncher
         this.clicked.connect (this.on_clicked);
         this.icon.do_queue_redraw ();
 
+        effect_icon_dropshadow = new Ctk.EffectDropShadow(3, 5, 5);
+        this.icon.add_effect(effect_icon_dropshadow);
+      
         set_reactive (true);
       }
 
@@ -235,7 +239,7 @@ namespace Unity.Quicklauncher
     {
       this.hover_anim = effect_icon_glow.animate (
         Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY, 
-        "factor", 8.0f);
+        "factor", 1.0f);
       this.hover_anim.completed.connect (on_hover_anim_completed);
     }
 
@@ -249,9 +253,9 @@ namespace Unity.Quicklauncher
 
     private bool do_new_hover_anim ()
     {
-      float fadeto = 1.0f;
-      if (effect_icon_glow.get_factor() <= 1.1f)
-        fadeto = 8.0f;
+      float fadeto = 0.0f;
+      if (effect_icon_glow.get_factor() <= 0.0f)
+        fadeto = 1.0f;
       
       this.hover_anim = effect_icon_glow.animate(
         Clutter.AnimationMode.EASE_IN_OUT_CIRC, 600, "factor", fadeto);
