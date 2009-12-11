@@ -86,17 +86,17 @@ namespace Unity.Places.Bar
                                           "Your piece of waste");
       this.places.add (place);
 
-      glow = new Ctk.EffectGlow ();
-      glow.set_color (white);
-      glow.set_factor (9.0f);
-      this.add_effect (glow);
-
       // create all image-actors for icons
       for (i = 0; i < this.places.size ; i++)
       {
         //icon = new Ctk.Image.from_stock (icon_size, this.places[i].icon_name);
         icon = new Ctk.Image.from_filename (icon_size, this.places[i].icon_name);
         icon.set_reactive (true);
+
+        glow = new Ctk.EffectGlow ();
+        glow.set_color (white);
+        glow.set_factor (1.0f);
+        icon.add_effect (glow);
 
         this.pack (icon, false, false);
         icon.enter_event.connect (this.on_enter);
