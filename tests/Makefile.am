@@ -1,8 +1,11 @@
 bin_PROGRAMS = test-unity
 
+TESTDIR = $(top_srcdir)/tests
+
 test_unity_CPPFLAGS = \
   -I$(top_srcdir)/libunity \
   -I$(top_srcdir)/src \
+  -DTESTDIR=\"$(TESTDIR)\" \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS)
 
@@ -27,6 +30,7 @@ test_unity_VALAFLAGS = \
   --pkg clutk-0.3 \
   --pkg launcher-0.3 \
   --pkg libwnck-1.0 \
+  --pkg test-const \
   --pkg unique-1.0 \
   --pkg unity \
   --pkg unity-static \
