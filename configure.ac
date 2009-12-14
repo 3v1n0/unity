@@ -92,12 +92,7 @@ AC_ARG_ENABLE(localinstall,
               with_localinstall=$enableval,
               with_localinstall=no)
 
-if test "x$with_localinstall" = "xyes"; then
-  PKGDATADIR="${top_srcdir}/data"
-else
-  PKGDATADIR="${datadir}/unity"
-fi
-AC_SUBST(PKGDATADIR)
+AM_CONDITIONAL([HAVE_LOCALINSTALL], [test "x$with_localinstall" = "xyes"])
 
 dnl Create the Makefiles
 AC_OUTPUT([

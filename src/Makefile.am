@@ -4,6 +4,11 @@ EXTRA_DIST =
   
 DATADIR = $(datadir)
 
+if HAVE_LOCALINSTALL
+PKGDATADIR=$(top_srcdir)/data
+else
+PKGDATADIR=$(datadir)/unity
+endif
 noinst_LTLIBRARIES = \
   libunity-static.la 
 
