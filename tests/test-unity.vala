@@ -43,6 +43,7 @@ public class Main
 
   private static void add_launcher_tests ()
   {
+    /*
     Test.add_func ("/Unity/Window", () => {
       var window = new Unity.UnderlayWindow (false, 0, 0);
         
@@ -51,12 +52,13 @@ public class Main
       window.show ();
       assert (window.visible);
     });
+    */
 
     Test.add_func ("/Unity/Background", () => {
       var bg = new Unity.Background ();
       assert (bg is Clutter.Actor);
     });
-
+    /*
     Test.add_func ("/Unity/Quicklauncher/ApplicationStore", () => {
       var store = new Quicklauncher.Stores.ApplicationStore ("firefox.desktop");
       assert (store is Quicklauncher.Stores.ApplicationStore);
@@ -87,5 +89,6 @@ public class Main
       scroller = new Widgets.Scroller (Ctk.Orientation.HORIZONTAL, 0);
       assert (scroller is Widgets.Scroller);
     });
+    */
   }
 }

@@ -4,3 +4,5 @@ SUBDIRS = data libunity src tests
 .PHONY: check-report
 check-report:
 	$(MAKE) -C tests/ $(@)
+
+DISTCHECK_CONFIGURE_FLAGS = --enable-localinstall

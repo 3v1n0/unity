@@ -84,6 +84,21 @@ PKG_CHECK_MODULES(BASE,
 AC_SUBST(BASE_CFLAGS)
 AC_SUBST(BASE_LIBS)
 
+dnl local install for distcheck and stand-alone running
+with_localinstall="no"
+AC_ARG_ENABLE(localinstall,
+              AS_HELP_STRING([--enable-localinstall],
+                             [Install all of the files locally instead of in system directories (for distcheck)]),
+              with_localinstall=$enableval,
+              with_localinstall=no)
+
+if test "x$with_localinstall" = "xyes"; then
+  PKGDATADIR="${top_srcdir}/data"
+else
+  PKGDATADIR="${datadir}/unity"
+fi
+AC_SUBST(PKGDATADIR)
+
 dnl Create the Makefiles
 AC_OUTPUT([
   Makefile
