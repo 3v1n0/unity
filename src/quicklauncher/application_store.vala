@@ -169,7 +169,17 @@ namespace Unity.Quicklauncher.Stores
       // get the desktop file
       Gee.ArrayList<ShortcutItem> ret_list = new Gee.ArrayList<ShortcutItem> ();
       var desktop_file = new KeyFile ();
-      desktop_file.load_from_file (app.get_desktop_file (), 0);
+      try
+        {
+          desktop_file.load_from_file (app.get_desktop_file (), 0);
+        }
+      catch (Error e)
+        {
+          warning ("Unable to load desktop file '%s': %s",
+                   app.get_desktop_file (),
+                   e.message);
+          return ret_list;
+        }
       
       var groups = desktop_file.get_groups ();
       for (int a = 0; a < groups.length; a++)
