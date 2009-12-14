@@ -55,4 +55,5 @@ check-report:
 
 check-local: unity-tester
 
+EXTRA_DIST = test-const.vapi firefox.desktop
 CLEANFILES = *.stamp $(XML_REPORT) $(HTML_REPORT)
