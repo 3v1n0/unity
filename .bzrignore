@@ -100,3 +100,15 @@ src/quicklauncher/launcher_store.c
 src/quicklauncher/launcher_view.c
 src/quicklauncher/prism_handler.c
 src/quicklauncher/quicklauncher_manager.c
+src/libunity_static_la.vala
+src/libunity_static_la.vala.stamp
+src/unity.vala.stamp
+src/places/bar-model.c
+src/places/bar-view.c
+src/places/default-model.c
+src/places/default-view.c
+src/quicklauncher/application-store.c
+src/quicklauncher/launcher-store.c
+src/quicklauncher/launcher-view.c
+src/quicklauncher/prism-handler.c
+src/quicklauncher/quicklauncher-manager.c

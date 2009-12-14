@@ -1,24 +1,24 @@
 bin_PROGRAMS = test-unity
 
+TESTDIR = $(top_srcdir)/tests
+
 test_unity_CPPFLAGS = \
-  -I$(top_builddir)/libunity \
-  -I$(top_builddir)/src \
-  -I$(top_builddir)/src/quicklauncher \
+  -I$(top_srcdir)/libunity \
+  -I$(top_srcdir)/src \
+  -DTESTDIR=\"$(TESTDIR)\" \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS)
 
 test_unity_LDADD = \
   $(top_builddir)/src/libunity-static.la \
-  $(top_builddir)/src/quicklauncher/libunity-quicklauncher.la \
   $(BASE_LIBS) \
   $(MAINTAINER_LIBS)
 
 test_unity_VALAFLAGS = \
-  --vapidir=$(top_builddir)/libunity \
-  --vapidir=$(top_builddir)/src \
-  --vapidir=$(top_builddir)/src/quicklauncher \
-  --vapidir=$(top_builddir)/vapi/ \
-  --vapidir=./ \
+  --vapidir=$(top_srcdir)/libunity \
+  --vapidir=$(top_srcdir)/src \
+  --vapidir=$(top_srcdir)/vapi/ \
+  --vapidir=$(top_srcdir)/tests \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg gtk+-2.0 \
@@ -30,10 +30,10 @@ test_unity_VALAFLAGS = \
   --pkg clutk-0.3 \
   --pkg launcher-0.3 \
   --pkg libwnck-1.0 \
+  --pkg test-const \
   --pkg unique-1.0 \
   --pkg unity \
   --pkg unity-static \
-  --pkg unity-quicklauncher \
   $(MAINTAINER_VALAFLAGS)
 
 test_unity_SOURCES = \
@@ -55,4 +55,5 @@ check-report:
 
 check-local: unity-tester
 
+EXTRA_DIST = test-const.vapi firefox.desktop
 CLEANFILES = *.stamp $(XML_REPORT) $(HTML_REPORT)

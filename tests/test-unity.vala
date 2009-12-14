@@ -21,6 +21,7 @@ using Unity;
 
 public class Main
 {
+  public const string firefox_desktop = Unity.Tests.TESTDIR+"/firefox.desktop";
   public static int main (string[] args)
   {
     Gtk.init (ref args);
@@ -52,18 +53,18 @@ public class Main
       assert (window.visible);
     });
 
+
     Test.add_func ("/Unity/Background", () => {
       var bg = new Unity.Background ();
       assert (bg is Clutter.Actor);
     });
-
     Test.add_func ("/Unity/Quicklauncher/ApplicationStore", () => {
-      var store = new Quicklauncher.Stores.ApplicationStore ("firefox.desktop");
+      var store = new Quicklauncher.Stores.ApplicationStore (firefox_desktop);
       assert (store is Quicklauncher.Stores.ApplicationStore);
     });
     
     Test.add_func ("/Unity/Quicklauncher/LauncherView", () => {
-      var store = new Quicklauncher.Stores.ApplicationStore ("firefox.desktop");
+      var store = new Quicklauncher.Stores.ApplicationStore (firefox_desktop);
                     
       var view = new Quicklauncher.LauncherView (store);
       assert (view is Quicklauncher.LauncherView);
@@ -76,7 +77,7 @@ public class Main
     });
 
     Test.add_func ("/Unity/Quicklauncher/Prism", () => {
-      var webapp = new Quicklauncher.Prism ("www.google.com");
+      var webapp = new Quicklauncher.Prism ("http://www.google.com");
       assert (webapp is Quicklauncher.Prism);
       });
 
