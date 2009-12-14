@@ -9,14 +9,12 @@ test_unity_CPPFLAGS = \
 
 test_unity_LDADD = \
   $(top_builddir)/src/libunity-static.la \
-  $(top_builddir)/src/quicklauncher/libunity-quicklauncher.la \
   $(BASE_LIBS) \
   $(MAINTAINER_LIBS)
 
 test_unity_VALAFLAGS = \
   --vapidir=$(top_builddir)/libunity \
   --vapidir=$(top_builddir)/src \
-  --vapidir=$(top_builddir)/src/quicklauncher \
   --vapidir=$(top_builddir)/vapi/ \
   --vapidir=./ \
   --pkg clutter-1.0 \
@@ -33,7 +31,6 @@ test_unity_VALAFLAGS = \
   --pkg unique-1.0 \
   --pkg unity \
   --pkg unity-static \
-  --pkg unity-quicklauncher \
   $(MAINTAINER_VALAFLAGS)
 
 test_unity_SOURCES = \
