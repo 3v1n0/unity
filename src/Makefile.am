@@ -3,7 +3,7 @@ CLEANFILES =
 EXTRA_DIST = 
   
 DATADIR = $(datadir)
-PKGDATADIR = $(pkgdatadir)
+PKGDATADIR = $(datadir)/unity
 
 noinst_LTLIBRARIES = \
   libunity-static.la 

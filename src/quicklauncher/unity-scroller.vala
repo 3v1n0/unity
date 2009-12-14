@@ -91,8 +91,8 @@ namespace Unity.Widgets
     private float fling_velocity = 0.0f;
     private float previous_y = -1000000000.0f;
 
-    private Clutter.Texture bgtex;
-    private Clutter.Texture gradient;
+    private Clutter.Texture? bgtex;
+    private Clutter.Texture? gradient;
     private Clutter.Rectangle edge;
 
     private int _spacing;
