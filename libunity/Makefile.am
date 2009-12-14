@@ -31,6 +31,7 @@ libunity_la_VALASOURCES = \
   shell.vala
 
 libunity_la_APIFILES = \
+  unity.h \
   unity.vapi
 
 BUILT_SOURCES += libunity_la_vala.stamp
@@ -40,7 +41,7 @@ EXTRA_DIST += \
   $(libunity_la_VALASOURCES)
 
 $(BUILT_SOURCES) $(libunity_la_APIFILES): $(libunity_la_VALASOURCES)
-	$(VALAC) $(libunity_la_VALAFLAGS) $^
+	$(AM_V_GEN) $(VALAC) $(libunity_la_VALAFLAGS) $^
 	touch libunity_la_vala.stamp														
 
 CLEANFILES += \

@@ -1,9 +1,8 @@
 bin_PROGRAMS = test-unity
 
 test_unity_CPPFLAGS = \
-  -I$(top_builddir)/libunity \
-  -I$(top_builddir)/src \
-  -I$(top_builddir)/src/quicklauncher \
+  -I$(top_srcdir)/libunity \
+  -I$(top_srcdir)/src \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS)
 
@@ -13,10 +12,10 @@ test_unity_LDADD = \
   $(MAINTAINER_LIBS)
 
 test_unity_VALAFLAGS = \
-  --vapidir=$(top_builddir)/libunity \
-  --vapidir=$(top_builddir)/src \
-  --vapidir=$(top_builddir)/vapi/ \
-  --vapidir=./ \
+  --vapidir=$(top_srcdir)/libunity \
+  --vapidir=$(top_srcdir)/src \
+  --vapidir=$(top_srcdir)/vapi/ \
+  --vapidir=$(top_srcdir)/tests \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg gtk+-2.0 \

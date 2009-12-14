@@ -90,7 +90,6 @@ AC_OUTPUT([
   data/Makefile
   libunity/Makefile
   src/Makefile
-  src/places/Makefile
   tests/Makefile
 ])
 

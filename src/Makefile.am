@@ -17,16 +17,17 @@ libunity_static_la_CPPFLAGS = \
   -DPKGDATADIR=\"$(PKGDATADIR)\" \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS) \
-  -I$(top_builddir)/libunity/ \
-	-I places/ \
-  -I quicklauncher/
+  -I$(top_srcdir)/libunity/ \
+  -I$(top_srcdir)/src
+	-I$(top_srcdir)/places/ \
+  -I$(top_srcdir)/quicklauncher/
 
 libunity_static_la_VALAFLAGS = \
   -C \
   -H unity-static.h -d . \
   --library unity-static \
-  --vapidir=$(top_builddir)/vapi/ \
-  --vapidir=$(top_builddir)/libunity/ \
+  --vapidir=$(top_srcdir)/vapi/ \
+  --vapidir=$(top_srcdir)/libunity/ \
   --pkg clutk-0.3 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
@@ -81,7 +82,7 @@ libunity_static_la_SOURCES = \
   unity-utils.c \
   $(libunity_static_la_VALASOURCES:.vala=.c)
 
-libunity_static_la_APIFILES = unity-static.vapi
+libunity_static_la_APIFILES = unity-static.vapi unity-static.h
 
 BUILT_SOURCES += libunity_static_la.vala.stamp
 EXTRA_DIST += \
@@ -90,20 +91,20 @@ EXTRA_DIST += \
   $(libunity_static_la_VALASOURCES)
 
 libunity_static_la.vala.stamp $(libunity_static_la_APIFILES): $(libunity_static_la_VALASOURCES)
-	$(VALAC) $(libunity_static_la_VALAFLAGS) $^
+	$(AM_V_GEN) $(VALAC) $(libunity_static_la_VALAFLAGS) $^
 	touch libunity_static_la.vala.stamp
 
 # unity binary
 unity_CPPFLAGS = \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS) \
-  -I$(top_builddir)/libunity/
+  -I$(top_srcdir)/libunity/
 
 unity_VALAFLAGS = \
   -C \
   --vapidir=./ \
-  --vapidir=$(top_builddir)/libunity/ \
-  --vapidir=$(top_builddir)/vapi/ \
+  --vapidir=$(top_srcdir)/libunity/ \
+  --vapidir=$(top_srcdir)/vapi/ \
   --pkg clutk-0.3 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
@@ -135,7 +136,7 @@ BUILT_SOURCES += unity.vala.stamp
 EXTRA_DIST += unity.vala.stamp $(unity_VALASOURCES)
 
 unity.vala.stamp: $(unity_VALASOURCES)
-	$(VALAC) $(unity_VALAFLAGS) $^
+	$(AM_V_GEN) $(VALAC) $(unity_VALAFLAGS) $^
 	touch unity.vala.stamp
 
 CLEANFILES += *.stamp *.h *.vapi quicklauncher/*.c places/*.c
