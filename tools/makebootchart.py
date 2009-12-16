@@ -39,40 +39,14 @@ def sort_by_domain (x, y):
   domain_x = x["name"].split("/")
   domain_y = y["name"].split("/")
   
-  def recurse_domain (a, b, pos, xstart, ystart):
-    
-    if len(a) > len(b):
-      #check to see if the last item of the shortest is the same
-      if a[len(b)-1] == b[-1]:
-        return -1
-      
-      #not in the same tree, 
-      return int(ystart - xstart)
-      
-    if len(b) > len(a):
-      if b[len(a)-1] == a[-1]:
-        return -1
-      
-      return int(ystart - xstart)
-    
-    if pos + 1 > len(a):
-      return -1
-    if pos + 1 > len(b):
-      return +1
-    
-    if (pos+2 > len(a) and pos+2 > len(b)):
-      return int(ystart - xstart)
-    
-    if a[pos] == b[pos]:
-      return recurse_domain(a, b, pos+1, xstart, ystart)
-      
-    if a[pos] < b[pos]:
-      return -1
-    
-    if a[pos] > b[pos]:
-      return +1
+  if x["name"] > y["name"]:
+    return +1
   
-  return recurse_domain (domain_x, domain_y, 0, x['start'], y['start'])
+  if x["name"] < y["name"]:
+    return -1
+  
+  return 0
+
     
     
 def gatherinfo (filename):
@@ -135,7 +109,7 @@ def draw_bg_graph (ctx, seconds, height):
 def build_graph (data, filename, info):
   
   padding_left = 6
-  padding_right = 6
+  padding_right = 100
   padding_top = 6
   padding_bottom = 6
   
@@ -145,7 +119,7 @@ def build_graph (data, filename, info):
       total_size = item['end']
       
   width = total_size * width_multiplier + padding_left + padding_right
-  height = len(data) * (bar_height+6) + 60 + padding_left + padding_right
+  height = len(data) * (bar_height+6) + 60 + padding_bottom + padding_top
   surface = cairo.SVGSurface(filename, width, height)
   
   ctx = cairo.Context (surface)
@@ -159,7 +133,7 @@ def build_graph (data, filename, info):
   info['total_time'] = "%s secs" % total_size
   sheader = header.substitute(info)
   
-  ctx.translate (padding_left, padding_right)
+  ctx.translate (padding_left, padding_top)
   ctx.set_source_rgb (0, 0, 0)
   for line in sheader.split("\n"):
     ctx.translate (0, 12)
@@ -203,7 +177,9 @@ def build_data_structure (input):
     start = float(row[1])
     end = float(row[2])
     structure.append ({"name": name, "start": start, "end": end})
-    
+  
+  
+  structure.sort (sort_by_domain)
   return structure
     
 

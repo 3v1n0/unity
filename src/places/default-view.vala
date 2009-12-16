@@ -119,7 +119,7 @@ namespace Unity.Places.Default
 
       padding.top    = (real_height - min_height_p) / 2.0f;
       padding.bottom = padding.top;
-	
+  
       this.set_padding (padding);
       base.allocate (box, flags);
     }
@@ -130,6 +130,8 @@ namespace Unity.Places.Default
       int                        i;
       ActivityWidget             widget;
       int                        widget_size = 128;
+      
+      Unity.TimelineLogger.get_default().start_process ("/Unity/Places/Default");
 
       this.activities = new Gee.ArrayList<Unity.Places.Default.Model> ();
 
@@ -177,16 +179,18 @@ namespace Unity.Places.Default
       // create image-actors now
       for (i = 0; i < this.activities.size; i++)
       {
+        Unity.TimelineLogger.get_default().start_process ("/Unity/Places/Default/ActivityWidget-" + this.activities[i].icon_name);
         widget = new ActivityWidget (0,
                                      widget_size,
                                      this.activities[i].icon_name,
                                      this.activities[i].primary_text,
                                      this.activities[i].secondary_text);
         this.add_actor (widget);
-
+        Unity.TimelineLogger.get_default().end_process ("/Unity/Places/Default/ActivityWidget-" + this.activities[i].icon_name);
       }
 
       this.show_all ();
+      Unity.TimelineLogger.get_default().end_process ("/Unity/Places/Default");
     }
 
     construct

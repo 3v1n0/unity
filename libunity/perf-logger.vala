@@ -33,7 +33,7 @@ namespace Unity
     public double end;
   }
   
-  public TimelineLogger? timeline_singleton;
+  public static TimelineLogger? timeline_singleton;
   
   public class TimelineLogger : Object
   {

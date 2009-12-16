@@ -90,6 +90,7 @@ public class Main
   {
     Unity.Application    app;
     Unity.UnderlayWindow window;
+    Unity.TimelineLogger.get_default().start_process ("/Unity/");
 
     /* Parse options */
     Gtk.init (ref args);
@@ -118,7 +119,7 @@ public class Main
       }
 
     /* Unique instancing */
-    Unity.TimelineLogger.get_default().start_process ("/Unity");
+    Unity.TimelineLogger.get_default().start_process ("/Unity/Application");
     app = new Unity.Application ();
     if (app.is_running)
       {
@@ -136,14 +137,17 @@ public class Main
         
         return response == Unique.Response.OK ? 0 : 1;
       }
-    Unity.TimelineLogger.get_default().end_process ("/Unity");
+    Unity.TimelineLogger.get_default().end_process ("/Unity/Applicaiton");
 
     /* Things seem to be okay, load the main window */
     Unity.TimelineLogger.get_default().start_process ("/Unity/Window");
     window = new Unity.UnderlayWindow (popup_mode, popup_width, popup_height);
+    Unity.TimelineLogger.get_default().end_process ("/Unity/Window");
     app.shell = window;
     window.show ();
-    Unity.TimelineLogger.get_default().end_process ("/Unity/Window");
+    
+    Unity.TimelineLogger.get_default().end_process ("/Unity/");
+    
     
     if (boot_logging_filename != null)
     {
