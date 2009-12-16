@@ -1,4 +1,4 @@
-SUBDIRS = data libunity src tests
+SUBDIRS = data libunity src mutter-plugin tests
 
 # Test reports
 .PHONY: check-report

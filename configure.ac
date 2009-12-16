@@ -94,12 +94,31 @@ AC_ARG_ENABLE(localinstall,
 
 AM_CONDITIONAL([HAVE_LOCALINSTALL], [test "x$with_localinstall" = "xyes"])
 
+dnl Mutter support
+AC_ARG_ENABLE([mutter],
+              [AC_HELP_STRING([--enable-mutter=@<:@no/yes@:>@],
+                              [Enable compiling mutter plugin.])],
+              [enable_mutter=$enableval],
+              [enable_mutter=yes])
+AS_IF([test "x$enable_mutter" = "xyes"],
+      [
+        AC_DEFINE([ENABLE_MUTTER], 1, [Enable Mutter plugin])
+        PKG_CHECK_MODULES(MUTTER, mutter-plugins)
+        AC_SUBST(MUTTER_CFLAGS)
+        AC_SUBST(MUTTER_LIBS)
+        MUTTER_PLUGIN_DIR=`$PKG_CONFIG --variable=plugindir mutter-plugins`
+        AC_SUBST(MUTTER_PLUGIN_DIR)
+      ]
+)
+AM_CONDITIONAL(ENABLE_MUTTER, [test "x$enable_mutter" = "xyes"])
+
 dnl Create the Makefiles
 AC_OUTPUT([
   Makefile
   data/Makefile
   libunity/Makefile
   src/Makefile
+  mutter-plugin/Makefile
   tests/Makefile
 ])
 
@@ -110,6 +129,10 @@ AC_MSG_NOTICE([
   ----------------------
 
   Prefix         : ${prefix}
+  Localinstall   : ${with_localinstall}
+
+  Mutter plugin  : ${enable_mutter}
+
   Extra CFlags   : $MAINTAINER_CFLAGS
   Extra ValaFlags: $MAINTAINER_VALAFLAGS
 ])
