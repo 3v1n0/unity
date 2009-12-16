@@ -1,4 +1,4 @@
-SUBDIRS = data libunity src tests
+SUBDIRS = data libunity src tests tools vapi
 
 # Test reports
 .PHONY: check-report

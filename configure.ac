@@ -101,6 +101,8 @@ AC_OUTPUT([
   libunity/Makefile
   src/Makefile
   tests/Makefile
+  tools/Makefile
+  vapi/Makefile
 ])
 
 dnl Output the results
