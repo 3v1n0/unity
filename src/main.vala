@@ -76,7 +76,7 @@ const OptionEntry[] options = {
     OptionFlags.FILENAME,
     OptionArg.FILENAME,
     ref boot_logging_filename,
-    "show the boobady bah and foo",
+    "enables boot logging, requires filename argument",
     null
   },
   {
@@ -138,7 +138,7 @@ public class Main
         
         return response == Unique.Response.OK ? 0 : 1;
       }
-    timeline_logger.end_process ("/Unity/Applicaiton");
+    timeline_logger.end_process ("/Unity/Application");
 
     /* Things seem to be okay, load the main window */
     timeline_logger.start_process ("/Unity/Window");
