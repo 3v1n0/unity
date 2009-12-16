@@ -32,6 +32,7 @@ namespace Unity.Quicklauncher
 
     construct
     {
+      Unity.TimelineLogger.get_default().start_process ("/Unity/Quicklauncher");
       this.manager = new Manager ();
       this.add_actor (manager);
     }

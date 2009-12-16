@@ -99,8 +99,11 @@ namespace Unity
       };
 
       Ctk.dnd_init (this.gtk_clutter, target_list);
-            
+      
+      Unity.TimelineLogger.get_default().start_process ("/Unity/Stage/Pre-Paint");
       this.stage = (Clutter.Stage)this.gtk_clutter.get_stage ();
+      this.stage.paint.connect (this.first_stage_paint);
+      
       Clutter.Color stage_bg = Clutter.Color () { 
           red = 0x00,
           green = 0x00,
@@ -133,6 +136,12 @@ namespace Unity
 
       /* inform TooltipManager about window */
       Unity.TooltipManager.get_default().top_level = this;
+    }
+
+    private void first_stage_paint ()
+    {
+      this.stage.paint.disconnect (this.first_stage_paint);
+      Unity.TimelineLogger.get_default().end_process ("/Unity/Stage/Pre-Paint");
     }
 
     private void relayout ()

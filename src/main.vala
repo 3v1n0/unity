@@ -22,6 +22,7 @@ static bool popup_mode   = false;
 static int  popup_width  = 1024;
 static int  popup_height = 600;
 static bool show_version = false;
+static string? boot_logging_filename = null;
 
 const OptionEntry[] options = {
   {
@@ -70,6 +71,15 @@ const OptionEntry[] options = {
     null
   },
   {
+    "enable-boot-logging",
+    'b',
+    OptionFlags.FILENAME,
+    OptionArg.FILENAME,
+    ref boot_logging_filename,
+    "show the boobady bah and foo",
+    null
+  },
+  {
     null
   }
 };
@@ -108,6 +118,7 @@ public class Main
       }
 
     /* Unique instancing */
+    Unity.TimelineLogger.get_default().start_process ("/Unity");
     app = new Unity.Application ();
     if (app.is_running)
       {
@@ -125,13 +136,26 @@ public class Main
         
         return response == Unique.Response.OK ? 0 : 1;
       }
+    Unity.TimelineLogger.get_default().end_process ("/Unity");
 
     /* Things seem to be okay, load the main window */
+    Unity.TimelineLogger.get_default().start_process ("/Unity/Window");
     window = new Unity.UnderlayWindow (popup_mode, popup_width, popup_height);
     app.shell = window;
-
     window.show ();
+    Unity.TimelineLogger.get_default().end_process ("/Unity/Window");
+    
+    if (boot_logging_filename != null)
+    {
+      Timeout.add_seconds (3, () => {
+        Unity.TimelineLogger.get_default().write_log ("stats.log");
+        return false;
+      });
+    }
     Gtk.main ();
+
+    
+    
 
     return 0;
   }

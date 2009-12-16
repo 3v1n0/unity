@@ -49,6 +49,8 @@ namespace Unity.Quicklauncher
       this.container.drag_motion.connect (on_drag_motion);
       this.container.drag_drop.connect (on_drag_drop);
       this.container.drag_data_received.connect (on_drag_data_received);
+      
+      Unity.TimelineLogger.get_default().end_process ("/Unity/Quicklauncher");
     }
     
     private bool on_drag_motion (Ctk.Actor actor, Gdk.DragContext context, 
@@ -166,6 +168,7 @@ namespace Unity.Quicklauncher
 
     private void build_favorites () 
     {
+      Unity.TimelineLogger.get_default().start_process ("/Unity/Quicklauncher/Favorites");
       var favorites = Launcher.Favorites.get_default ();
       
       unowned SList<string> favorite_list = favorites.get_favorites();
@@ -189,6 +192,8 @@ namespace Unity.Quicklauncher
               add_view (view);
             }
         }
+      
+      Unity.TimelineLogger.get_default().end_process ("/Unity/Quicklauncher/Favorites");
     }
 
 
