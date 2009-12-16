@@ -102,10 +102,6 @@ def draw_bg_graph (ctx, seconds, height):
     per_ten += 1
     per_ten %= 10
 
-    
-
-    
-
 def build_graph (data, filename, info):
   
   padding_left = 6
@@ -164,10 +160,7 @@ def build_graph (data, filename, info):
     ctx.fill()
     
     ctx.translate (-x-8, 6)
-    
 
-  
-  
 def build_data_structure (input):
   reader = csv.reader(open(input))
   structure = []
@@ -177,7 +170,6 @@ def build_data_structure (input):
     start = float(row[1])
     end = float(row[2])
     structure.append ({"name": name, "start": start, "end": end})
-  
   
   structure.sort (sort_by_domain)
   return structure
