@@ -32,6 +32,7 @@ namespace Unity.Quicklauncher
 
     construct 
     {
+      logger_start_process ("/Unity/Quicklauncher");
       this.appman = Launcher.Appman.get_default ();
       this.session = Launcher.Session.get_default ();
       
@@ -50,7 +51,7 @@ namespace Unity.Quicklauncher
       this.container.drag_drop.connect (on_drag_drop);
       this.container.drag_data_received.connect (on_drag_data_received);
       
-      Unity.TimelineLogger.get_default().end_process ("/Unity/Quicklauncher");
+      logger_end_process ("/Unity/Quicklauncher");
     }
     
     private bool on_drag_motion (Ctk.Actor actor, Gdk.DragContext context, 
@@ -168,13 +169,14 @@ namespace Unity.Quicklauncher
 
     private void build_favorites () 
     {
-      Unity.TimelineLogger.get_default().start_process ("/Unity/Quicklauncher/Favorites");
+      string Domain = "/Unity/Quicklauncher/Favorites/";
+      logger_start_process (Domain);
       var favorites = Launcher.Favorites.get_default ();
       
       unowned SList<string> favorite_list = favorites.get_favorites();
       foreach (weak string uid in favorite_list)
         {
-          
+          logger_start_process (Domain + uid);
           // we only want favorite *applications* for the moment 
           var type = favorites.get_string(uid, "type");
           if (type != "application")
@@ -191,9 +193,11 @@ namespace Unity.Quicklauncher
           
               add_view (view);
             }
+          
+          logger_end_process (Domain + uid);
         }
       
-      Unity.TimelineLogger.get_default().end_process ("/Unity/Quicklauncher/Favorites");
+      logger_end_process (Domain);
     }
 
 

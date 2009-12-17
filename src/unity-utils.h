@@ -1,9 +1,8 @@
-/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
  * Copyright (C) 2009 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
- * idst under the terms of the GNU General Public License version 3 as
+ * it under the terms of the GNU General Public License version 3 as
  * published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
@@ -15,18 +14,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by Gordon Allott <gord.allott@canonical.com>
- *
+ * 
  */
+#include <unity.h>
 
-namespace Unity {
-  [CCode (cname = "DATADIR")]
-  public static const string DATADIR;
-  [CCode (cname = "PKGDATADIR")]
-  public static const string PKGDATADIR;
-  
-  [CCode (cheader_filename = "unity-utils.h", cname = "LOGGER_START_PROCESS")]
-  public static void logger_start_process (string name);
-  
-  [CCode (cheader_filename = "unity-utils.h", cname = "LOGGER_END_PROCESS")]
-  public static void logger_end_process (string name);
-}
+#define LOGGER_START_PROCESS(process) if (unity_is_logging) { unity_timeline_logger_start_process (unity_timeline_logger_get_default(), process);}
+#define LOGGER_END_PROCESS(process) if (unity_is_logging) { unity_timeline_logger_end_process (unity_timeline_logger_get_default(), process);}

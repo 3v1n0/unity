@@ -87,7 +87,7 @@ libunity_static_la_SOURCES = \
   unity-utils.c \
   $(libunity_static_la_VALASOURCES:.vala=.c)
 
-libunity_static_la_APIFILES = unity-static.vapi unity-static.h
+libunity_static_la_APIFILES = unity-static.vapi unity-static.h unity-utils.h
 
 BUILT_SOURCES += libunity_static_la.vala.stamp
 EXTRA_DIST += \
@@ -124,6 +124,7 @@ unity_VALAFLAGS = \
   --pkg libwnck-1.0 \
   --pkg unique-1.0 \
   --pkg unity \
+  --pkg unity-const \
   --pkg unity-static \
   $(MAINTAINER_VALAFLAGS)
 
@@ -145,4 +146,4 @@ unity.vala.stamp: $(unity_VALASOURCES)
 	$(AM_V_GEN) $(VALAC) $(unity_VALAFLAGS) $^
 	touch unity.vala.stamp
 
-CLEANFILES += *.stamp *.h *.vapi quicklauncher/*.c places/*.c
+CLEANFILES += *.stamp *.vapi quicklauncher/*.c places/*.c

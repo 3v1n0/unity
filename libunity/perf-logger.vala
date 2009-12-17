@@ -34,6 +34,7 @@ namespace Unity
   }
   
   public static TimelineLogger? timeline_singleton;
+  public static bool is_logging; 
   
   public class TimelineLogger : Object
   {

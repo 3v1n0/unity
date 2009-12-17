@@ -16,6 +16,7 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
+using Unity;
 
 static bool show_unity   = false;
 static bool popup_mode   = false;
@@ -90,9 +91,8 @@ public class Main
   {
     Unity.Application    app;
     Unity.UnderlayWindow window;
-    var timeline_logger = Unity.TimelineLogger.get_default();
-    timeline_logger.start_process ("/Unity/");
-
+    Unity.TimelineLogger.get_default(); // just inits the timer for logging
+    
     /* Parse options */
     Gtk.init (ref args);
     Ctk.init (ref args);
@@ -118,9 +118,24 @@ public class Main
         print ("\nUnity %s\n", "0.1.0");
         return 0;
       }
+      
+    if (boot_logging_filename != null)
+      {
+        Unity.is_logging = true;
+        Timeout.add_seconds (3, () => {
+          Unity.TimelineLogger.get_default().write_log (boot_logging_filename);
+          return false;
+        });
+      } 
+    else 
+      { 
+        Unity.is_logging = false;
+      }
+
+    logger_start_process ("/Unity/");
 
     /* Unique instancing */
-    timeline_logger.start_process ("/Unity/Application");
+    logger_start_process ("/Unity/Application");
     app = new Unity.Application ();
     if (app.is_running)
       {
@@ -138,28 +153,20 @@ public class Main
         
         return response == Unique.Response.OK ? 0 : 1;
       }
-    timeline_logger.end_process ("/Unity/Application");
+    logger_end_process ("/Unity/Application");
 
     /* Things seem to be okay, load the main window */
-    timeline_logger.start_process ("/Unity/Window");
+    logger_start_process ("/Unity/Window");
     window = new Unity.UnderlayWindow (popup_mode, popup_width, popup_height);
-    timeline_logger.end_process ("/Unity/Window");
+    logger_end_process ("/Unity/Window");
     
-    timeline_logger.start_process ("/Unity/Window/show");
+    logger_start_process ("/Unity/Window/show");
     app.shell = window;
     window.show ();
-    timeline_logger.end_process ("/Unity/Window/show");
+    logger_end_process ("/Unity/Window/show");
     
-    timeline_logger.end_process ("/Unity/");
+    logger_end_process ("/Unity/");
     
-    
-    if (boot_logging_filename != null)
-    {
-      Timeout.add_seconds (3, () => {
-        Unity.TimelineLogger.get_default().write_log ("stats.log");
-        return false;
-      });
-    }
     Gtk.main ();
 
     

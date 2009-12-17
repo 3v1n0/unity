@@ -31,6 +31,8 @@ namespace Unity.Places.Default
                            string primary_text,
                            string secondary_text)
     {
+      string Domain = "/Unity/Places/ActivityWidget/";
+      logger_start_process (Domain + icon_name);
       Clutter.Color color = {255, 255, 255, 255};
 
       this.homogeneous = false;
@@ -70,6 +72,7 @@ namespace Unity.Places.Default
       this.pack (this.icon, false, false);
       this.pack (this.primary_label, false, false);
       this.pack (this.secondary_label, false, false);
+      logger_end_process (Domain + icon_name);
     }
 
     construct
@@ -126,12 +129,13 @@ namespace Unity.Places.Default
 
     public View ()
     {
+      string Domain = "/Unity/Places/Default/";
       Unity.Places.Default.Model activity;
       int                        i;
       ActivityWidget             widget;
       int                        widget_size = 128;
       
-      Unity.TimelineLogger.get_default().start_process ("/Unity/Places/Default");
+      logger_start_process (Domain);
 
       this.activities = new Gee.ArrayList<Unity.Places.Default.Model> ();
 
@@ -179,18 +183,16 @@ namespace Unity.Places.Default
       // create image-actors now
       for (i = 0; i < this.activities.size; i++)
       {
-        Unity.TimelineLogger.get_default().start_process ("/Unity/Places/Default/ActivityWidget-" + this.activities[i].icon_name);
         widget = new ActivityWidget (0,
                                      widget_size,
                                      this.activities[i].icon_name,
                                      this.activities[i].primary_text,
                                      this.activities[i].secondary_text);
         this.add_actor (widget);
-        Unity.TimelineLogger.get_default().end_process ("/Unity/Places/Default/ActivityWidget-" + this.activities[i].icon_name);
       }
 
       this.show_all ();
-      Unity.TimelineLogger.get_default().end_process ("/Unity/Places/Default");
+      logger_end_process (Domain);
     }
 
     construct
