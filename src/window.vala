@@ -46,6 +46,7 @@ namespace Unity
     
     construct
     {
+      START_FUNCTION ();
       this.workarea_size = new Workarea ();
       this.workarea_size.update_net_workarea ();
       
@@ -100,9 +101,7 @@ namespace Unity
 
       Ctk.dnd_init (this.gtk_clutter, target_list);
       
-      logger_start_process ("/Unity/Stage/Pre-Paint");
       this.stage = (Clutter.Stage)this.gtk_clutter.get_stage ();
-      this.stage.paint.connect (this.first_stage_paint);
       
       Clutter.Color stage_bg = Clutter.Color () { 
           red = 0x00,
@@ -136,12 +135,7 @@ namespace Unity
 
       /* inform TooltipManager about window */
       Unity.TooltipManager.get_default().top_level = this;
-    }
-
-    private void first_stage_paint ()
-    {
-      this.stage.paint.disconnect (this.first_stage_paint);
-      logger_end_process ("/Unity/Stage/Pre-Paint");
+      END_FUNCTION ();
     }
 
     private void relayout ()

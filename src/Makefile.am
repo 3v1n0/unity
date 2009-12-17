@@ -3,6 +3,9 @@ CLEANFILES =
 EXTRA_DIST = 
   
 DATADIR = $(datadir)
+if HAVE_TESTING
+BASE_CFLAGS+=-DTESTING
+endif
 
 if HAVE_LOCALINSTALL
 PKGDATADIR=$(top_srcdir)/data

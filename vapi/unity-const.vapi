@@ -25,8 +25,14 @@ namespace Unity {
   public static const string PKGDATADIR;
   
   [CCode (cheader_filename = "unity-utils.h", cname = "LOGGER_START_PROCESS")]
-  public static void logger_start_process (string name);
+  public static void LOGGER_START_PROCESS (string name);
   
   [CCode (cheader_filename = "unity-utils.h", cname = "LOGGER_END_PROCESS")]
-  public static void logger_end_process (string name);
+  public static void LOGGER_END_PROCESS (string name);
+  
+  [CCode (cheader_filename = "unity-utils.h", cname = "START_FUNCTION")]
+  public static void START_FUNCTION ();
+  
+  [CCode (cheader_filename = "unity-utils.h", cname = "END_FUNCTION")]
+  public static void END_FUNCTION ();
 }

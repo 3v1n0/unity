@@ -36,18 +36,10 @@ GPU: $gpu
 time: $total_time""")
 
 def sort_by_domain (x, y):
-  domain_x = x["name"].split("/")
-  domain_y = y["name"].split("/")
-  
-  if x["name"] > y["name"]:
-    return +1
-  
-  if x["name"] < y["name"]:
+  if x["start"] - y["start"] < 0:
     return -1
-  
-  return 0
-
-    
+  else:
+    return +1    
     
 def gatherinfo (filename):
   date =  datetime.fromtimestamp(os.path.getmtime(filename))
@@ -115,7 +107,7 @@ def build_graph (data, filename, info):
       total_size = item['end']
       
   width = total_size * width_multiplier + padding_left + padding_right
-  height = len(data) * (bar_height+6) + 60 + padding_bottom + padding_top
+  height = (len(data) * (bar_height)) + 80 + padding_bottom + padding_top
   surface = cairo.SVGSurface(filename, width, height)
   
   ctx = cairo.Context (surface)

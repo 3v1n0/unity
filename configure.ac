@@ -81,6 +81,16 @@ PKG_CHECK_MODULES(BASE,
                   unique-1.0
                   x11
                   )
+                
+dnl testing for logging boot metrics and instrumenting
+with_testing="no"
+AC_ARG_ENABLE(testing,
+              AS_HELP_STRING([--enable-testing],
+                             [Enables instrumenting and boot metric logging]),
+              with_testing=$enableval,
+              with_testing=no)
+AM_CONDITIONAL([HAVE_TESTING], [test "x$with_testing" = "xyes"])
+                
 AC_SUBST(BASE_CFLAGS)
 AC_SUBST(BASE_LIBS)
 
@@ -112,6 +122,6 @@ AC_MSG_NOTICE([
   ----------------------
 
   Prefix         : ${prefix}
-  Extra CFlags   : $MAINTAINER_CFLAGS
-  Extra ValaFlags: $MAINTAINER_VALAFLAGS
+  Extra CFlags   : ${CPPFLAGS} $MAINTAINER_CFLAGS
+  Extra ValaFlags: ${CPPFLAGS} $MAINTAINER_VALAFLAGS
 ])

@@ -92,11 +92,6 @@ public class Main
     Unity.Application    app;
     Unity.UnderlayWindow window;
     Unity.TimelineLogger.get_default(); // just inits the timer for logging
-    
-    /* Parse options */
-    Gtk.init (ref args);
-    Ctk.init (ref args);
-
     try
       {
         var opt_context = new OptionContext ("-- Unity");
@@ -131,11 +126,13 @@ public class Main
       { 
         Unity.is_logging = false;
       }
-
-    logger_start_process ("/Unity/");
+    START_FUNCTION ();
+    
+    /* Parse options */
+    Gtk.init (ref args);
+    Ctk.init (ref args);
 
     /* Unique instancing */
-    logger_start_process ("/Unity/Application");
     app = new Unity.Application ();
     if (app.is_running)
       {
@@ -153,19 +150,13 @@ public class Main
         
         return response == Unique.Response.OK ? 0 : 1;
       }
-    logger_end_process ("/Unity/Application");
 
     /* Things seem to be okay, load the main window */
-    logger_start_process ("/Unity/Window");
     window = new Unity.UnderlayWindow (popup_mode, popup_width, popup_height);
-    logger_end_process ("/Unity/Window");
-    
-    logger_start_process ("/Unity/Window/show");
     app.shell = window;
     window.show ();
-    logger_end_process ("/Unity/Window/show");
     
-    logger_end_process ("/Unity/");
+    END_FUNCTION ();
     
     Gtk.main ();
 

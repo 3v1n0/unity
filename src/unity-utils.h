@@ -18,5 +18,25 @@
  */
 #include <unity.h>
 
+#ifdef TESTING
+#define START_FUNCTION() G_STMT_START { if (unity_is_logging) \
+                          unity_timeline_logger_start_process (unity_timeline_logger_get_default(), G_STRFUNC);\
+                       } G_STMT_END
 #define LOGGER_START_PROCESS(process) if (unity_is_logging) { unity_timeline_logger_start_process (unity_timeline_logger_get_default(), process);}
+#else
+#define START_FUNCTION() G_STMT_START { } G_STMT_END
+#define LOGGER_START_PROCESS(process) { }
+#endif
+
+#ifdef TESTING
+#define END_FUNCTION() G_STMT_START { if (unity_is_logging) \
+                          unity_timeline_logger_end_process (unity_timeline_logger_get_default(), G_STRFUNC);\
+                       } G_STMT_END
 #define LOGGER_END_PROCESS(process) if (unity_is_logging) { unity_timeline_logger_end_process (unity_timeline_logger_get_default(), process);}
+#else
+#define END_FUNCTION() G_STMT_START { } G_STMT_END
+#define LOGGER_END_PROCESS(process) { }
+#endif
+
+
+
