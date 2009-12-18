@@ -49,6 +49,7 @@ namespace Unity.Quicklauncher
     private Clutter.Group container;
 
     private Ctk.Menu menu;
+    private Ctk.EffectDropShadow menu_dropshadow;
     private Gee.List<ShortcutItem> offline_shortcuts;
 
     private Ctk.EffectGlow effect_icon_glow;
@@ -386,9 +387,7 @@ namespace Unity.Quicklauncher
       
       float x, y;
       this.get_transformed_position (out x, out y);
-       
-      this.menu.set_position (x + 64, y);
-      
+      this.menu.attach_to_actor (this);
       
       Ctk.Padding padding = Ctk.Padding () {
         left = 6, 
@@ -397,7 +396,6 @@ namespace Unity.Quicklauncher
         bottom = 6
       };
       this.menu.set_padding (padding);
-      this.menu.show ();
       
       foreach (ShortcutItem shortcut in offline_shortcuts)
       {
@@ -407,11 +405,15 @@ namespace Unity.Quicklauncher
         menuitem.activated.connect (shortcut.activated);
         menuitem.activated.connect (this.close_menu);
       }
+      menu_dropshadow = new Ctk.EffectDropShadow(3, 5, 5);
+      this.icon.add_effect(menu_dropshadow);
+      this.menu.show ();
       
     }
     
     private void close_menu ()
     {
+      this.menu.remove_effect(this.menu_dropshadow);
       Clutter.Stage stage = this.get_stage() as Clutter.Stage;
       stage.remove_actor (this.menu);
     }
