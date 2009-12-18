@@ -72,8 +72,8 @@ places_sources = \
   places/view.vala
 
 quicklauncher_sources = \
-  quicklauncher/application-store.vala \
-  quicklauncher/launcher-store.vala \
+  quicklauncher/application-model.vala \
+  quicklauncher/launcher-model.vala \
   quicklauncher/launcher-view.vala \
   quicklauncher/prism-handler.vala \
   quicklauncher/quicklauncher-manager.vala \

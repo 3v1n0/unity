@@ -58,19 +58,17 @@ public class Main
       var bg = new Unity.Background ();
       assert (bg is Clutter.Actor);
     });
-    Test.add_func ("/Unity/Quicklauncher/ApplicationStore", () => {
-      var store = new Quicklauncher.Stores.ApplicationStore (firefox_desktop);
-      assert (store is Quicklauncher.Stores.ApplicationStore);
+    Test.add_func ("/Unity/Quicklauncher/ApplicationModel", () => {
+      var model = new Quicklauncher.Models.ApplicationModel (firefox_desktop);
+      assert (model is Quicklauncher.Models.ApplicationModel);
     });
     
     Test.add_func ("/Unity/Quicklauncher/LauncherView", () => {
-      var store = new Quicklauncher.Stores.ApplicationStore (firefox_desktop);
-                    
-      var view = new Quicklauncher.LauncherView (store);
+      var model = new Quicklauncher.Models.ApplicationModel (firefox_desktop);
+      var view = new Quicklauncher.LauncherView (model);
       assert (view is Quicklauncher.LauncherView);
     });
       
-
     Test.add_func ("/Unity/Quicklauncher/Manager", () => {
       var manager = new Quicklauncher.Manager ();
       assert (manager is Quicklauncher.Manager);

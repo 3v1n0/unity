@@ -18,10 +18,10 @@
  *
  */
 
-namespace Unity.Quicklauncher.Stores
+namespace Unity.Quicklauncher.Models
 {
   
-  public interface LauncherStore : GLib.Object 
+  public interface LauncherModel : GLib.Object 
   {
     public abstract bool is_active {get;}
     public abstract bool is_focused {get;}
@@ -34,7 +34,8 @@ namespace Unity.Quicklauncher.Stores
     public abstract signal void notify_focused ();
     public abstract signal void request_attention ();
     
-    public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcuts (); 
+    public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcuts ();
+    public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ();
 
     public abstract void activate ();
   }

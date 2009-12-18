@@ -17,7 +17,7 @@
  * Authored by Gordon Allott <gord.allott@canonical.com>
  *
  */
-using Unity.Quicklauncher.Stores;
+using Unity.Quicklauncher.Models;
 
 namespace Unity.Quicklauncher
 {
@@ -38,7 +38,7 @@ namespace Unity.Quicklauncher
   public class LauncherView : Ctk.Bin
   {
 
-    public LauncherStore? store;
+    public LauncherModel? model;
 
     /* the prettys */
     private Ctk.Image icon;
@@ -49,7 +49,9 @@ namespace Unity.Quicklauncher
     private Clutter.Group container;
 
     private Ctk.Menu menu;
-    private Gee.List<ShortcutItem> offline_shortcuts;
+    private Ctk.EffectDropShadow menu_dropshadow;
+    private Gee.ArrayList<ShortcutItem> offline_shortcuts;
+    private Gee.ArrayList<ShortcutItem> shortcut_actions;
 
     private Ctk.EffectGlow effect_icon_glow;
     private Ctk.EffectDropShadow effect_icon_dropshadow;
@@ -101,19 +103,19 @@ namespace Unity.Quicklauncher
     private Clutter.Animation hover_anim;
 
   /* constructors */
-    public LauncherView (LauncherStore store)
+    public LauncherView (LauncherModel model)
       {
-        /* this is a "view" for a launcherstore object */
-        this.store = store;
-        this.store.notify_active.connect (this.notify_on_is_running);
-        this.store.notify_focused.connect (this.notify_on_is_focused);
+        /* this is a "view" for a launchermodel object */
+        this.model = model;
+        this.model.notify_active.connect (this.notify_on_is_running);
+        this.model.notify_focused.connect (this.notify_on_is_focused);
 
         notify_on_is_running ();
         notify_on_is_focused ();
 
-        /* get the graphic from the store */
+        /* get the graphic from the model */
         this.notify_on_icon ();
-        this.store.notify["icon"].connect (this.notify_on_icon);
+        this.model.notify["icon"].connect (this.notify_on_icon);
       }
 
     construct 
@@ -266,12 +268,12 @@ namespace Unity.Quicklauncher
       return false;
     }
 
-    /* callbacks on store */
+    /* callbacks on model */
     private void notify_on_icon ()
       {
-        if (store.icon is Gdk.Pixbuf)
+        if (this.model.icon is Gdk.Pixbuf)
           {
-            this.icon.set_from_pixbuf (store.icon);
+            this.icon.set_from_pixbuf (this.model.icon);
           }
         else 
           {
@@ -288,7 +290,7 @@ namespace Unity.Quicklauncher
       this.is_starting = false;
       
       /* we need to show the running indicator when we are running */
-      if (store.is_active)
+      if (this.model.is_active)
         {
           this.running_indicator.set_opacity (255);
         }
@@ -298,7 +300,7 @@ namespace Unity.Quicklauncher
           this.focused_indicator.set_opacity (0);
         }        
       
-      if (!store.is_active && !store.is_sticky)
+      if (!this.model.is_active && !this.model.is_sticky)
         {
           this.request_remove ();
         }
@@ -306,7 +308,7 @@ namespace Unity.Quicklauncher
 
     private void notify_on_is_focused ()
     {
-      if (store.is_focused) 
+      if (this.model.is_focused) 
         {
           this.focused_indicator.set_opacity (255);
         }
@@ -378,17 +380,16 @@ namespace Unity.Quicklauncher
     
     private void build_quicklist ()
     {
-      var items = this.store.get_menu_shortcuts ();
-      this.offline_shortcuts = items;
+      this.offline_shortcuts = this.model.get_menu_shortcuts ();
+      this.shortcut_actions = this.model.get_menu_shortcut_actions ();
+      
       this.menu = new Ctk.Menu ();
       Clutter.Stage stage = this.get_stage() as Clutter.Stage;
       stage.add_actor (this.menu);
       
       float x, y;
       this.get_transformed_position (out x, out y);
-       
-      this.menu.set_position (x + 64, y);
-      
+      this.menu.attach_to_actor (this);
       
       Ctk.Padding padding = Ctk.Padding () {
         left = 6, 
@@ -397,9 +398,8 @@ namespace Unity.Quicklauncher
         bottom = 6
       };
       this.menu.set_padding (padding);
-      this.menu.show ();
       
-      foreach (ShortcutItem shortcut in offline_shortcuts)
+      foreach (ShortcutItem shortcut in this.offline_shortcuts)
       {
         Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (
                                                     shortcut.get_name ()); 
@@ -408,10 +408,38 @@ namespace Unity.Quicklauncher
         menuitem.activated.connect (this.close_menu);
       }
       
+      // add a seperator and a menu label
+      var seperator = new Ctk.MenuSeperator ();
+      this.menu.append (seperator);
+      
+      var name_label = new Ctk.MenuItem.with_label (this.model.name);
+      this.menu.append (name_label);
+      name_label.set_reactive (false);
+      
+      seperator = new Ctk.MenuSeperator ();
+      this.menu.append (seperator);
+      
+      // parse the menu actions
+
+      foreach (ShortcutItem shortcut in this.shortcut_actions)
+      {
+        Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (
+                                                    shortcut.get_name ()); 
+        this.menu.append (menuitem);
+        menuitem.activated.connect (shortcut.activated);
+        menuitem.activated.connect (this.close_menu);
+      }
+      
+      
+      menu_dropshadow = new Ctk.EffectDropShadow(3, 5, 5);
+      this.icon.add_effect(menu_dropshadow);
+      this.menu.show ();
+      
     }
     
     private void close_menu ()
     {
+      this.menu.remove_effect(this.menu_dropshadow);
       Clutter.Stage stage = this.get_stage() as Clutter.Stage;
       stage.remove_actor (this.menu);
     }
@@ -433,7 +461,7 @@ namespace Unity.Quicklauncher
       {
         return;
       }
-      store.activate ();
+      this.model.activate ();
     }
   }
 }

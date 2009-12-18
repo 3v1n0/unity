@@ -17,15 +17,15 @@
  * Authored by Gordon Allott <gord.allott@canonical.com>
  *
  */
-using Unity.Quicklauncher.Stores;
+using Unity.Quicklauncher.Models;
 namespace Unity.Quicklauncher
 {
  
   public class Manager : Ctk.Bin 
   {
     private Unity.Widgets.Scroller container;
-    private Gee.HashMap<string,ApplicationStore> desktop_file_map;
-    private Gee.HashMap<LauncherStore, LauncherView> store_map;
+    private Gee.HashMap<string,ApplicationModel> desktop_file_map;
+    private Gee.HashMap<LauncherModel, LauncherView> model_map;
 
     private Launcher.Appman appman;
     private Launcher.Session session;
@@ -36,8 +36,8 @@ namespace Unity.Quicklauncher
       this.appman = Launcher.Appman.get_default ();
       this.session = Launcher.Session.get_default ();
       
-      this.desktop_file_map = new Gee.HashMap<string, ApplicationStore> ();
-      this.store_map = new Gee.HashMap<LauncherStore, LauncherView> ();
+      this.desktop_file_map = new Gee.HashMap<string, ApplicationModel> ();
+      this.model_map = new Gee.HashMap<LauncherModel, LauncherView> ();
 
       this.container = new Unity.Widgets.Scroller (Ctk.Orientation.VERTICAL,
                                                    6);
@@ -186,9 +186,9 @@ namespace Unity.Quicklauncher
           
           if (!(desktop_file in desktop_file_map.keys))
             {
-              ApplicationStore store = get_store_for_desktop_file (desktop_file);
-              store.is_sticky = true;
-              LauncherView view = get_view_for_store (store);
+              ApplicationModel model = get_model_for_desktop_file (desktop_file);
+              model.is_sticky = true;
+              LauncherView view = get_view_for_model (model);
           
               add_view (view);
             }
@@ -226,8 +226,8 @@ namespace Unity.Quicklauncher
           var desktop_file = app.get_desktop_file ();
           if (desktop_file != null) 
           {
-            ApplicationStore store = get_store_for_desktop_file (desktop_file);
-            LauncherView view = get_view_for_store (store);
+            ApplicationModel model = get_model_for_desktop_file (desktop_file);
+            LauncherView view = get_view_for_model (model);
             if (view.get_parent () == null)
             {
               add_view (view);
@@ -237,30 +237,30 @@ namespace Unity.Quicklauncher
     }
     
 
-    private ApplicationStore get_store_for_desktop_file (string uri)
+    private ApplicationModel get_model_for_desktop_file (string uri)
     {
       /* we check to see if we already have this desktop file loaded, 
-       * if so, we just use that one instead of creating a new store
+       * if so, we just use that one instead of creating a new model
        */
       if (uri in desktop_file_map.keys)
         {
           return desktop_file_map[uri];
         }
 
-      ApplicationStore store = new ApplicationStore (uri);
-      desktop_file_map[uri] = store;
-      return store;
+      ApplicationModel model = new ApplicationModel (uri);
+      desktop_file_map[uri] = model;
+      return model;
     }
     
-    private LauncherView get_view_for_store (LauncherStore store)
+    private LauncherView get_view_for_model (LauncherModel model)
     {
-      if (store in store_map.keys)
+      if (model in this.model_map.keys)
         {
-          return store_map[store];
+          return this.model_map[model];
         }
         
-      LauncherView view = new LauncherView (store);
-      store_map[store] = view;
+      LauncherView view = new LauncherView (model);
+      this.model_map[model] = view;
       return view;
     } 
     
