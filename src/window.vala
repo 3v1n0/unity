@@ -46,6 +46,7 @@ namespace Unity
     
     construct
     {
+      START_FUNCTION ();
       this.workarea_size = new Workarea ();
       this.workarea_size.update_net_workarea ();
       
@@ -99,8 +100,9 @@ namespace Unity
       };
 
       Ctk.dnd_init (this.gtk_clutter, target_list);
-            
+      
       this.stage = (Clutter.Stage)this.gtk_clutter.get_stage ();
+      
       Clutter.Color stage_bg = Clutter.Color () { 
           red = 0x00,
           green = 0x00,
@@ -133,6 +135,7 @@ namespace Unity
 
       /* inform TooltipManager about window */
       Unity.TooltipManager.get_default().top_level = this;
+      END_FUNCTION ();
     }
 
     private void relayout ()

@@ -32,6 +32,7 @@ namespace Unity.Quicklauncher
 
     construct 
     {
+      START_FUNCTION ();
       this.appman = Launcher.Appman.get_default ();
       this.session = Launcher.Session.get_default ();
       
@@ -49,6 +50,8 @@ namespace Unity.Quicklauncher
       this.container.drag_motion.connect (on_drag_motion);
       this.container.drag_drop.connect (on_drag_drop);
       this.container.drag_data_received.connect (on_drag_data_received);
+      
+      END_FUNCTION ();
     }
     
     private bool on_drag_motion (Ctk.Actor actor, Gdk.DragContext context, 
@@ -166,12 +169,13 @@ namespace Unity.Quicklauncher
 
     private void build_favorites () 
     {
+      START_FUNCTION ();
       var favorites = Launcher.Favorites.get_default ();
       
       unowned SList<string> favorite_list = favorites.get_favorites();
       foreach (weak string uid in favorite_list)
         {
-          
+          LOGGER_START_PROCESS ("favorite-" + uid);
           // we only want favorite *applications* for the moment 
           var type = favorites.get_string(uid, "type");
           if (type != "application")
@@ -188,14 +192,16 @@ namespace Unity.Quicklauncher
           
               add_view (view);
             }
+          
+          LOGGER_END_PROCESS ("favorite-" + uid);
         }
+      
+      END_FUNCTION ();
     }
 
 
    private void handle_session_application (Launcher.Application app) 
     { 
-      
-
       bool app_is_visible = false;
       
       unowned GLib.SList<Wnck.Application> wnckapps = app.get_wnckapps ();
