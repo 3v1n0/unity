@@ -50,7 +50,8 @@ namespace Unity.Quicklauncher
 
     private Ctk.Menu menu;
     private Ctk.EffectDropShadow menu_dropshadow;
-    private Gee.List<ShortcutItem> offline_shortcuts;
+    private Gee.ArrayList<ShortcutItem> offline_shortcuts;
+    private Gee.ArrayList<ShortcutItem> shortcut_actions;
 
     private Ctk.EffectGlow effect_icon_glow;
     private Ctk.EffectDropShadow effect_icon_dropshadow;
@@ -379,8 +380,9 @@ namespace Unity.Quicklauncher
     
     private void build_quicklist ()
     {
-      var items = this.model.get_menu_shortcuts ();
-      this.offline_shortcuts = items;
+      this.offline_shortcuts = this.model.get_menu_shortcuts ();
+      this.shortcut_actions = this.model.get_menu_shortcut_actions ();
+      
       this.menu = new Ctk.Menu ();
       Clutter.Stage stage = this.get_stage() as Clutter.Stage;
       stage.add_actor (this.menu);
@@ -397,7 +399,7 @@ namespace Unity.Quicklauncher
       };
       this.menu.set_padding (padding);
       
-      foreach (ShortcutItem shortcut in offline_shortcuts)
+      foreach (ShortcutItem shortcut in this.offline_shortcuts)
       {
         Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (
                                                     shortcut.get_name ()); 
@@ -405,6 +407,30 @@ namespace Unity.Quicklauncher
         menuitem.activated.connect (shortcut.activated);
         menuitem.activated.connect (this.close_menu);
       }
+      
+      // add a seperator and a menu label
+      var seperator = new Ctk.MenuSeperator ();
+      this.menu.append (seperator);
+      
+      var name_label = new Ctk.MenuItem.with_label (this.model.name);
+      this.menu.append (name_label);
+      name_label.set_reactive (false);
+      
+      seperator = new Ctk.MenuSeperator ();
+      this.menu.append (seperator);
+      
+      // parse the menu actions
+
+      foreach (ShortcutItem shortcut in this.shortcut_actions)
+      {
+        Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (
+                                                    shortcut.get_name ()); 
+        this.menu.append (menuitem);
+        menuitem.activated.connect (shortcut.activated);
+        menuitem.activated.connect (this.close_menu);
+      }
+      
+      
       menu_dropshadow = new Ctk.EffectDropShadow(3, 5, 5);
       this.icon.add_effect(menu_dropshadow);
       this.menu.show ();

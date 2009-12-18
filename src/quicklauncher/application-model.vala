@@ -22,7 +22,6 @@ namespace Unity.Quicklauncher.Models
 {
   public class ApplicationShortcut : Object, ShortcutItem
   {
-    
     public string exec;
     public string name; 
     public string desktop_location;
@@ -204,15 +203,18 @@ namespace Unity.Quicklauncher.Models
               ret_list.add (shortcut);
           }
       }
-      var name_entry = new ApplicationShortcut ();
-      name_entry.exec = "";
-      name_entry.name = app.name;
-      ret_list.add (name_entry);
+      return ret_list;
+    }
+    
+    public Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ()
+    {
+      Gee.ArrayList<ShortcutItem> ret_list = new Gee.ArrayList<ShortcutItem> ();
       
       var open_entry = new LibLauncherShortcut ();
       open_entry.app = this.app;
-      open_entry.name = "Open";
+      open_entry.name = "Open..";
       ret_list.add (open_entry);
+      
       return ret_list;
     }
 
