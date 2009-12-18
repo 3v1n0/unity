@@ -17,7 +17,7 @@
  * Authored by Gordon Allott <gord.allott@canonical.com>
  *
  */
-using Unity.Quicklauncher.Stores;
+using Unity.Quicklauncher.Models;
 
 namespace Unity.Quicklauncher
 {
@@ -38,7 +38,7 @@ namespace Unity.Quicklauncher
   public class LauncherView : Ctk.Bin
   {
 
-    public LauncherStore? store;
+    public LauncherModel? model;
 
     /* the prettys */
     private Ctk.Image icon;
@@ -102,19 +102,19 @@ namespace Unity.Quicklauncher
     private Clutter.Animation hover_anim;
 
   /* constructors */
-    public LauncherView (LauncherStore store)
+    public LauncherView (LauncherModel model)
       {
-        /* this is a "view" for a launcherstore object */
-        this.store = store;
-        this.store.notify_active.connect (this.notify_on_is_running);
-        this.store.notify_focused.connect (this.notify_on_is_focused);
+        /* this is a "view" for a launchermodel object */
+        this.model = model;
+        this.model.notify_active.connect (this.notify_on_is_running);
+        this.model.notify_focused.connect (this.notify_on_is_focused);
 
         notify_on_is_running ();
         notify_on_is_focused ();
 
-        /* get the graphic from the store */
+        /* get the graphic from the model */
         this.notify_on_icon ();
-        this.store.notify["icon"].connect (this.notify_on_icon);
+        this.model.notify["icon"].connect (this.notify_on_icon);
       }
 
     construct 
@@ -267,12 +267,12 @@ namespace Unity.Quicklauncher
       return false;
     }
 
-    /* callbacks on store */
+    /* callbacks on model */
     private void notify_on_icon ()
       {
-        if (store.icon is Gdk.Pixbuf)
+        if (this.model.icon is Gdk.Pixbuf)
           {
-            this.icon.set_from_pixbuf (store.icon);
+            this.icon.set_from_pixbuf (this.model.icon);
           }
         else 
           {
@@ -289,7 +289,7 @@ namespace Unity.Quicklauncher
       this.is_starting = false;
       
       /* we need to show the running indicator when we are running */
-      if (store.is_active)
+      if (this.model.is_active)
         {
           this.running_indicator.set_opacity (255);
         }
@@ -299,7 +299,7 @@ namespace Unity.Quicklauncher
           this.focused_indicator.set_opacity (0);
         }        
       
-      if (!store.is_active && !store.is_sticky)
+      if (!this.model.is_active && !this.model.is_sticky)
         {
           this.request_remove ();
         }
@@ -307,7 +307,7 @@ namespace Unity.Quicklauncher
 
     private void notify_on_is_focused ()
     {
-      if (store.is_focused) 
+      if (this.model.is_focused) 
         {
           this.focused_indicator.set_opacity (255);
         }
@@ -379,7 +379,7 @@ namespace Unity.Quicklauncher
     
     private void build_quicklist ()
     {
-      var items = this.store.get_menu_shortcuts ();
+      var items = this.model.get_menu_shortcuts ();
       this.offline_shortcuts = items;
       this.menu = new Ctk.Menu ();
       Clutter.Stage stage = this.get_stage() as Clutter.Stage;
@@ -435,7 +435,7 @@ namespace Unity.Quicklauncher
       {
         return;
       }
-      store.activate ();
+      this.model.activate ();
     }
   }
 }

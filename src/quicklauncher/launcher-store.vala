@@ -18,10 +18,10 @@
  *
  */
 
-namespace Unity.Quicklauncher.Stores
+namespace Unity.Quicklauncher.Models
 {
   
-  public interface LauncherStore : GLib.Object 
+  public interface LauncherModel : GLib.Object 
   {
     public abstract bool is_active {get;}
     public abstract bool is_focused {get;}

@@ -18,7 +18,7 @@
  *
  */
 
-namespace Unity.Quicklauncher.Stores
+namespace Unity.Quicklauncher.Models
 {
   public class ApplicationShortcut : Object, ShortcutItem
   {
@@ -81,13 +81,13 @@ namespace Unity.Quicklauncher.Stores
     }
   }
   
-  public class ApplicationStore : Object, LauncherStore 
+  public class ApplicationModel : Object, LauncherModel 
   {
     private Gdk.Pixbuf _icon;
     private Launcher.Application app;
     private Launcher.Appman manager;
     
-    public ApplicationStore (string desktop_uri)
+    public ApplicationModel (string desktop_uri)
     {
       this.manager = Launcher.Appman.get_default ();
       this.app = this.manager.get_application_for_desktop_file (desktop_uri);
