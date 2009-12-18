@@ -191,7 +191,7 @@ namespace Unity.Quicklauncher.Stores
             try
               { 
                 exec = desktop_file.get_value (groups[a], "Exec");
-                name = desktop_file.get_value (groups[a], "Name");
+                name = desktop_file.get_locale_string  (groups[a], "Name", "");
               } catch (Error e)
               {
                 warning (e.message);
