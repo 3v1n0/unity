@@ -108,13 +108,13 @@ namespace Unity.Places.Bar
 
     public bool on_enter ()
     {
-      stdout.printf ("on_enter() called\n");
+      /* stdout.printf ("on_enter() called\n"); */
       return false;
     }
 
     public bool on_leave ()
     {
-      stdout.printf ("on_leave() called\n");
+      /* stdout.printf ("on_leave() called\n"); */
       return false;
     }
 
