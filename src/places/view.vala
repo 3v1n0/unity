@@ -29,15 +29,16 @@ namespace Unity.Places
     {
       base.allocate (box, flags);
       Clutter.ActorBox child_box = { 0.0f, 0.0f, 0.0f, 0.0f };
+      int bar_icon_size = 48;
 
       child_box.x1 = this.padding.left;
       child_box.x2 = box.x2 - box.x1 - this.padding.left - this.padding.right;
       child_box.y1 = this.padding.top;
-      child_box.y2 = child_box.y1 + 64;
+      child_box.y2 = child_box.y1 + bar_icon_size;
 
       this.bar_view.allocate (child_box, flags);
-      child_box.y1 = this.padding.top + 64;
-      child_box.y2 = box.y2 - box.y1 - this.padding.top -this.padding.bottom - 64;
+      child_box.y1 = this.padding.top + bar_icon_size;
+      child_box.y2 = box.y2 - box.y1 - this.padding.top -this.padding.bottom - bar_icon_size;
 
       this.default_view.allocate (child_box, flags);
     }
