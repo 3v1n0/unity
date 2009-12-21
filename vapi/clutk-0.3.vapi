@@ -3,7 +3,7 @@
 [CCode (cprefix = "Ctk", lower_case_cprefix = "ctk_")]
 namespace Ctk {
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class Actor : Clutter.Actor, Clutter.Scriptable, Ctk.Focusable {
+	public class Actor : Clutter.Actor, Ctk.Focusable, Clutter.Scriptable {
 		public void add_effect (Ctk.Effect effect);
 		public unowned Clutter.Actor get_background ();
 		public unowned Clutter.Actor get_background_for_state (Ctk.ActorState state);
@@ -45,11 +45,11 @@ namespace Ctk {
 		public virtual signal bool drag_motion (Gdk.DragContext context, int x, int y, uint time_);
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class Bin : Ctk.Actor, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class Bin : Ctk.Actor, Ctk.Focusable, Clutter.Scriptable, Clutter.Container {
 		public unowned Clutter.Actor get_child ();
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class Box : Ctk.Actor, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class Box : Ctk.Actor, Ctk.Focusable, Clutter.Scriptable, Clutter.Container {
 		public bool get_homogeneous ();
 		public Ctk.Orientation get_orientation ();
 		public int get_spacing ();
@@ -67,7 +67,7 @@ namespace Ctk {
 	public class BoxChild {
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class Button : Ctk.Bin, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class Button : Ctk.Bin, Ctk.Focusable, Clutter.Scriptable, Clutter.Container {
 		[CCode (type = "ClutterActor*", has_construct_function = false)]
 		public Button (Ctk.Orientation orientation);
 		public unowned Ctk.Image get_image ();
@@ -143,12 +143,12 @@ namespace Ctk {
 		public float factor { get; set; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class HBox : Ctk.Box, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class HBox : Ctk.Box, Ctk.Focusable, Clutter.Scriptable, Clutter.Container {
 		[CCode (type = "ClutterActor*", has_construct_function = false)]
 		public HBox (uint spacing);
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class IconView : Ctk.Actor, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class IconView : Ctk.Actor, Ctk.Focusable, Clutter.Scriptable, Clutter.Container {
 		[CCode (type = "ClutterActor*", has_construct_function = false)]
 		public IconView ();
 		public int get_spacing ();
@@ -156,7 +156,7 @@ namespace Ctk {
 		public int spacing { get; set construct; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class Image : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable {
+	public class Image : Ctk.Actor, Ctk.Focusable, Clutter.Scriptable {
 		[CCode (type = "ClutterActor*", has_construct_function = false)]
 		public Image (uint size);
 		[CCode (type = "ClutterActor*", has_construct_function = false)]
@@ -195,7 +195,7 @@ namespace Ctk {
 		public string stock_id { owned get; set; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class Menu : Ctk.Actor, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class Menu : Ctk.Actor, Ctk.Focusable, Clutter.Scriptable, Clutter.Container {
 		[CCode (has_construct_function = false)]
 		public Menu ();
 		public void append (Clutter.Actor item);
@@ -206,7 +206,7 @@ namespace Ctk {
 		public int spacing { get; set; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class MenuItem : Ctk.Bin, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class MenuItem : Ctk.Bin, Ctk.Focusable, Clutter.Scriptable, Clutter.Container {
 		[CCode (has_construct_function = false)]
 		public MenuItem ();
 		public unowned string get_label ();
@@ -217,7 +217,7 @@ namespace Ctk {
 		public virtual signal void activated ();
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class MenuSeperator : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable {
+	public class MenuSeperator : Ctk.Actor, Ctk.Focusable, Clutter.Scriptable {
 		[CCode (has_construct_function = false)]
 		public MenuSeperator ();
 	}
@@ -241,7 +241,7 @@ namespace Ctk {
 		public static void unbind ();
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class ScrollView : Ctk.Bin, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class ScrollView : Ctk.Bin, Ctk.Focusable, Clutter.Scriptable, Clutter.Container {
 		[CCode (type = "ClutterActor*", has_construct_function = false)]
 		public ScrollView ();
 		public bool can_scroll ();
@@ -264,7 +264,7 @@ namespace Ctk {
 		public void set_alignment (Pango.Alignment alignment);
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class Tooltip : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable {
+	public class Tooltip : Ctk.Actor, Ctk.Focusable, Clutter.Scriptable {
 		[CCode (type = "ClutterActor*", has_construct_function = false)]
 		public Tooltip (Clutter.Actor actor);
 		public unowned Clutter.Actor get_actor ();
@@ -277,7 +277,7 @@ namespace Ctk {
 		public string label { get; set; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class Toplevel : Ctk.Bin, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class Toplevel : Ctk.Bin, Ctk.Focusable, Clutter.Scriptable, Clutter.Container {
 		public static unowned Clutter.Actor get_default_for_stage (Clutter.Actor stage);
 		public unowned Clutter.Actor get_stage ();
 		public void set_focus (Ctk.Focusable focusable);
@@ -285,7 +285,7 @@ namespace Ctk {
 		public Clutter.Stage stage { owned get; set construct; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class VBox : Ctk.Box, Clutter.Container, Clutter.Scriptable, Ctk.Focusable {
+	public class VBox : Ctk.Box, Ctk.Focusable, Clutter.Scriptable, Clutter.Container {
 		[CCode (type = "ClutterActor*", has_construct_function = false)]
 		public VBox (uint spacing);
 	}
