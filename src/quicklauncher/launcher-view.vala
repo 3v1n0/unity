@@ -432,7 +432,7 @@ namespace Unity.Quicklauncher
       
       
       menu_dropshadow = new Ctk.EffectDropShadow(3, 5, 5);
-      this.icon.add_effect(menu_dropshadow);
+      this.menu.add_effect(menu_dropshadow);
       this.menu.show ();
       
     }
