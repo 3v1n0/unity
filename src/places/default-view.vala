@@ -89,7 +89,8 @@ namespace Unity.Places.Default
       this.secondary_label.opacity = 0;
       return false;
     }
-     public bool on_clicked ()
+
+    public bool on_clicked ()
     {
       stdout.printf ("on_clicked() called\n");
       return false;

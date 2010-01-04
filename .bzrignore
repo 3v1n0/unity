@@ -112,3 +112,4 @@ src/quicklauncher/launcher-store.c
 src/quicklauncher/launcher-view.c
 src/quicklauncher/prism-handler.c
 src/quicklauncher/quicklauncher-manager.c
+

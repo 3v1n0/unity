@@ -431,10 +431,9 @@ namespace Unity.Quicklauncher
         menuitem.activated.connect (shortcut.activated);
         menuitem.activated.connect (this.close_menu);
       }
-
       try {
         var bg_tex = new Clutter.Texture.from_file (MENU_BG_FILE);
-        //bg_tex.set_opacity (38);
+        bg_tex.set_opacity (38);
 
         bg_tex.set_repeat (true, true);
         this.menu.set_texture(bg_tex);
@@ -445,7 +444,6 @@ namespace Unity.Quicklauncher
 
       this.menu_dropshadow = new Ctk.EffectDropShadow(3, 5, 5);
       this.menu.add_effect(this.menu_dropshadow);
-
       this.menu.show ();
 
     }
