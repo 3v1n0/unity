@@ -27,67 +27,133 @@ namespace Unity
 
     private Ctk.EffectGlow effect_glow;
 
-    public PlacesBackground ()
+    /* (X, Y) origine of Places Bar: The top-left corner of the screen */
+    private int PlaceX = 0;   
+    private int PlaceY = 0;
+
+    /* Places Bar width and height. The width is set the the width of the window. */
+    private int PlaceW = 760;
+    private int PlaceH = 55;
+
+    private int PlaceBottom; //PlaceY + PlaceH;
+
+    /* Margin outside of the cairo texture. We draw outside to complete the line loop
+     * and we don't want the line loop to be visible in some parts of the screen. 
+     * */
+    private int Margin = 20;
+
+    /* Menu area width and height */
+    private int MenuH = 22;
+    private int MenuW = 216;
+
+
+    private int Rounding = 12;
+    private int RoundingSmall = 8;
+
+    private int MenuBottom; //PlaceY + MenuH;
+
+    private int TabX = 170;
+    private int TabW = 70;
+    private int TabH = 50;
+
+    /* The squirl area width */
+    private int SquirlW = 70;
+
+    struct TabRect
+	  {
+	    public int left;
+	    public int right;
+	    public int top;
+	    public int bottom;
+	  }
+	
+  	void drawAroundMenu (Cairo.Context cairoctx)
+  	{
+	    cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY + MenuH);
+  	  cairoctx.line_to (PlaceX + PlaceW - MenuW + Rounding, PlaceY + MenuH);
+	    cairoctx.curve_to ( 
+    		PlaceX + PlaceW - MenuW, PlaceY + MenuH,
+    		PlaceX + PlaceW - MenuW, PlaceY + MenuH,
+	    	PlaceX + PlaceW - MenuW, PlaceY + MenuH + Rounding);
+  	  cairoctx.line_to (PlaceX + PlaceW - MenuW, PlaceY + PlaceH - Rounding); 
+	    cairoctx.curve_to (
+        PlaceX + PlaceW - MenuW, PlaceY + PlaceH,
+    		PlaceX + PlaceW - MenuW, PlaceY + PlaceH,
+    		PlaceX + PlaceW - MenuW - Rounding, PlaceY + PlaceH);
+  	}
+
+	  void drawTab(Cairo.Context cairoctx, TabRect tab)
+  	{
+	    cairoctx.line_to (tab.right + RoundingSmall, PlaceBottom );
+  	  cairoctx.curve_to ( 
+	    	tab.right, PlaceBottom,
+  	  	tab.right, PlaceBottom,
+    		tab.right, PlaceBottom - RoundingSmall);
+  	  cairoctx.line_to (tab.right, tab.top + Rounding);
+  	  cairoctx.curve_to (
+    		tab.right, tab.top,
+    		tab.right, tab.top,
+    		tab.right - Rounding, tab.top);
+  	  cairoctx.line_to (tab.left + Rounding, tab.top);
+	    cairoctx.curve_to (
+    		tab.left, tab.top,
+    		tab.left, tab.top,
+    		tab.left, tab.top + Rounding);
+  	  cairoctx.line_to (tab.left, PlaceBottom - RoundingSmall);
+  	  cairoctx.curve_to (
+        tab.left, PlaceBottom,
+    		tab.left, PlaceBottom,
+    		tab.left - RoundingSmall, PlaceBottom);
+  	}
+
+	  void drawSquirl(Cairo.Context cairoctx)
+  	{
+  	  cairoctx.line_to (PlaceX + SquirlW + RoundingSmall, PlaceBottom);
+  	  cairoctx.curve_to (
+    		PlaceX + SquirlW, PlaceBottom,
+    		PlaceX + SquirlW, PlaceBottom,
+    		PlaceX + SquirlW, PlaceBottom - RoundingSmall);
+  	  cairoctx.line_to (PlaceX + SquirlW, MenuBottom + Rounding );
+  	  cairoctx.curve_to (
+    		PlaceX + SquirlW, MenuBottom,
+    		PlaceX + SquirlW, MenuBottom,
+    		PlaceX + SquirlW - Rounding, MenuBottom);
+  	  cairoctx.line_to (PlaceX - Margin, MenuBottom);
+	  }
+	
+    public PlacesBackground (int WindowWidth, int WindowHeight)
     {
-      int W = 600;
-      int H = 70;
+      PlaceW = WindowWidth;
+      PlaceBottom = PlaceY + PlaceH;
+      MenuBottom = PlaceY + MenuH;
 
-      int h1 = 32;
-      int h2 = 12;
-      int h3 = 36;      
-      int X0 = 0;
-      int Y0 = h1;
-      int w0 = 4;
-      int w1 = 44;
-      int cp0 = 12;
-      int cp1 = 4;
-
-      cairotxt = new Clutter.CairoTexture(W, H);
+      cairotxt = new Clutter.CairoTexture(PlaceW, PlaceH);
       Cairo.Context cairoctx = cairotxt.create();
       {
-      	cairoctx.scale (1.0f, 1.0f);
-        cairoctx.set_operator (Cairo.Operator.CLEAR);
-        cairoctx.paint ();
-        cairoctx.set_operator (Cairo.Operator.OVER);
-        cairoctx.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
-        cairoctx.move_to (X0, Y0);
-        cairoctx.line_to (X0+w0, Y0);
+    		cairoctx.set_source_rgba (1, 1, 1, 1.0);
+		    cairoctx.set_line_width (1.0);
 
-        cairoctx.curve_to (
-			    X0+w0+cp0, Y0,
-			    X0+w0+cp0, Y0,
-			    X0+w0+cp0, Y0-cp0);
+    		cairoctx.move_to (PlaceX - Margin, PlaceY - Margin);
+    		cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY - Margin);
 
-        X0 = X0+w0+cp0; 
-        Y0 = Y0-cp0;
-        cairoctx.line_to (X0, Y0-h2);
-        cairoctx.curve_to (X0, Y0-h2-cp1,
-                  X0, Y0-h2-cp1,
-                  X0+cp1, Y0-h2-cp1);
-        X0 = X0+cp1;
-        Y0 = Y0-h2-cp1;
+		    drawAroundMenu (cairoctx);
 
-        cairoctx.line_to (X0+w1, Y0);
-        cairoctx.curve_to (X0+w1+cp1, Y0,
-                  X0+w1+cp1, Y0,
-                  X0+w1+cp1, Y0+cp1);
-        X0 = X0+w1+cp1;
-        Y0 = Y0+cp1;
+    		Unity.PlacesBackground.TabRect tab = Unity.PlacesBackground.TabRect();
+    		tab.left = TabX;
+    		tab.right = tab.left + TabW;
+    		tab.top = PlaceY + PlaceH - TabH;
+    		tab.bottom = PlaceY + PlaceH;
 
-        cairoctx.line_to (X0, Y0+h3);
-        cairoctx.curve_to (X0, Y0+h3+cp0,
-                  X0, Y0+h3+cp0,
-                  X0+cp0, Y0+h3+cp0);
+		    drawTab(cairoctx, tab);
 
-        X0 = X0+cp0;
-        Y0 = Y0+h3+cp0;
+    		drawSquirl (cairoctx);
 
-        cairoctx.line_to (X0 + 408, Y0);
-        cairoctx.curve_to (X0 + 408 + 80, Y0,
-                 X0 + 408+80, Y0-80,
-                 X0 + 408+80, Y0-80);
+    		/* close the path */
+		    cairoctx.line_to (PlaceX - Margin, PlaceY - Margin);
 
-        cairoctx.stroke ();
+    		cairoctx.stroke_preserve ();
+		    cairoctx.set_source_rgba (1, 1, 1, 0.15);
+    		cairoctx.fill ();
       }
 
       cairotxt.set_opacity (0xFF);
@@ -221,7 +287,9 @@ namespace Unity
       PlacesDecorationOffsetX = 6;
       PlacesDecorationOffsetY = 6;
 
-      this.placesbackground = new PlacesBackground ();
+      Gdk.Rectangle size;
+      this.screen.get_monitor_geometry (0, out size);
+      this.placesbackground = new PlacesBackground (size.width, size.height);
       this.stage.add_actor (this.placesbackground);
       this.placesbackground.show ();
 
