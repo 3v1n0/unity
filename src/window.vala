@@ -59,12 +59,12 @@ namespace Unity
     /* The squirl area width */
     private int SquirlW = 70;
 
-    struct TabRect
+    public struct TabRect
 	  {
-	    public int left;
-	    public int right;
-	    public int top;
-	    public int bottom;
+	     int left;
+	     int right;
+	     int top;
+	     int bottom;
 	  }
 	
   	void drawAroundMenu (Cairo.Context cairoctx)
@@ -138,7 +138,7 @@ namespace Unity
 
 		    drawAroundMenu (cairoctx);
 
-    		Unity.PlacesBackground.TabRect tab = Unity.PlacesBackground.TabRect();
+    		TabRect tab = TabRect();
     		tab.left = TabX;
     		tab.right = tab.left + TabW;
     		tab.top = PlaceY + PlaceH - TabH;
