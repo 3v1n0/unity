@@ -205,7 +205,7 @@ namespace Unity.Places
       this.default_view.allocate (child_box, flags);
 
       child_box.x1 = 0;
-      child_box.x2 = 1600;
+      child_box.x2 = 800; /* HARDCODED */
       child_box.y1 = 0;
       child_box.y2 = 55;
 
