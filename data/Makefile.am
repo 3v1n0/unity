@@ -1,7 +1,7 @@
 //Please keep alphabetical :-)
 
 dist_default_DATA = \
-	applications.png \
+  applications.png \
   files.png \
   gadgets.png \
   gradient.png \
