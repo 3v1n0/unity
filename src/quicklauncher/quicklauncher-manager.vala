@@ -181,10 +181,10 @@ namespace Unity.Quicklauncher
           if (type != "application")
               continue;
               
-          string desktop_file = favorites.get_string(uid, "desktop_file");
+          string? desktop_file = favorites.get_string(uid, "desktop_file");
           assert (desktop_file != "");
           
-          if (!(desktop_file in desktop_file_map.keys))
+          if (desktop_file != null && !(desktop_file in desktop_file_map.keys))
             {
               ApplicationModel model = get_model_for_desktop_file (desktop_file);
               model.is_sticky = true;
