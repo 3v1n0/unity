@@ -441,6 +441,14 @@ namespace Unity.Quicklauncher
       {
         critical (e.message);
       }
+      Clutter.Color color = Clutter.Color ()
+      {
+        red = 0x00,
+        green = 0x00,
+        blue = 0x00,
+        alpha = (uint8) (0xFF * 0.30)
+      };
+      this.menu.set_color (color);
 
       this.menu_dropshadow = new Ctk.EffectDropShadow(3, 5, 5);
       this.menu.add_effect(this.menu_dropshadow);

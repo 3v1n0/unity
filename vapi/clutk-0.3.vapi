@@ -201,8 +201,9 @@ namespace Ctk {
 		public void append (Clutter.Actor item);
 		public void attach_to_actor (Ctk.Actor actor);
 		public int get_spacing ();
-		public unowned Clutter.Actor get_texture ();
+		public unowned Clutter.Texture get_texture ();
 		public void prepend (Clutter.Actor item);
+		public void set_color (Clutter.Color color);
 		public void set_spacing (int spacing);
 		public void set_texture (Clutter.Texture actor);
 		[CCode (has_construct_function = false)]
