@@ -21,163 +21,6 @@
 
 namespace Unity
 {
-  public class PlacesBackground : Ctk.Bin
-  {
-    public Clutter.CairoTexture cairotxt;
-
-    private Ctk.EffectGlow effect_glow;
-
-    /* (X, Y) origine of Places Bar: The top-left corner of the screen */
-    private int PlaceX = 0;   
-    private int PlaceY = 0;
-
-    /* Places Bar width and height. The width is set the the width of the window. */
-    private int PlaceW = 760;
-    private int PlaceH = 55;
-
-    private int PlaceBottom; //PlaceY + PlaceH;
-
-    /* Margin outside of the cairo texture. We draw outside to complete the line loop
-     * and we don't want the line loop to be visible in some parts of the screen. 
-     * */
-    private int Margin = 20;
-
-    /* Menu area width and height */
-    private int MenuH = 22;
-    private int MenuW = 216;
-
-
-    private int Rounding = 12;
-    private int RoundingSmall = 8;
-
-    private int MenuBottom; //PlaceY + MenuH;
-
-    private int TabX = 170;
-    private int TabW = 70;
-    private int TabH = 50;
-
-    /* The squirl area width */
-    private int SquirlW = 70;
-
-    public struct TabRect
-	  {
-	     int left;
-	     int right;
-	     int top;
-	     int bottom;
-	  }
-	
-  	void drawAroundMenu (Cairo.Context cairoctx)
-  	{
-	    cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY + MenuH);
-  	  cairoctx.line_to (PlaceX + PlaceW - MenuW + Rounding, PlaceY + MenuH);
-	    cairoctx.curve_to ( 
-    		PlaceX + PlaceW - MenuW, PlaceY + MenuH,
-    		PlaceX + PlaceW - MenuW, PlaceY + MenuH,
-	    	PlaceX + PlaceW - MenuW, PlaceY + MenuH + Rounding);
-  	  cairoctx.line_to (PlaceX + PlaceW - MenuW, PlaceY + PlaceH - Rounding); 
-	    cairoctx.curve_to (
-        PlaceX + PlaceW - MenuW, PlaceY + PlaceH,
-    		PlaceX + PlaceW - MenuW, PlaceY + PlaceH,
-    		PlaceX + PlaceW - MenuW - Rounding, PlaceY + PlaceH);
-  	}
-
-	  void drawTab(Cairo.Context cairoctx, TabRect tab)
-  	{
-	    cairoctx.line_to (tab.right + RoundingSmall, PlaceBottom );
-  	  cairoctx.curve_to ( 
-	    	tab.right, PlaceBottom,
-  	  	tab.right, PlaceBottom,
-    		tab.right, PlaceBottom - RoundingSmall);
-  	  cairoctx.line_to (tab.right, tab.top + Rounding);
-  	  cairoctx.curve_to (
-    		tab.right, tab.top,
-    		tab.right, tab.top,
-    		tab.right - Rounding, tab.top);
-  	  cairoctx.line_to (tab.left + Rounding, tab.top);
-	    cairoctx.curve_to (
-    		tab.left, tab.top,
-    		tab.left, tab.top,
-    		tab.left, tab.top + Rounding);
-  	  cairoctx.line_to (tab.left, PlaceBottom - RoundingSmall);
-  	  cairoctx.curve_to (
-        tab.left, PlaceBottom,
-    		tab.left, PlaceBottom,
-    		tab.left - RoundingSmall, PlaceBottom);
-  	}
-
-	  void drawSquirl(Cairo.Context cairoctx)
-  	{
-  	  cairoctx.line_to (PlaceX + SquirlW + RoundingSmall, PlaceBottom);
-  	  cairoctx.curve_to (
-    		PlaceX + SquirlW, PlaceBottom,
-    		PlaceX + SquirlW, PlaceBottom,
-    		PlaceX + SquirlW, PlaceBottom - RoundingSmall);
-  	  cairoctx.line_to (PlaceX + SquirlW, MenuBottom + Rounding );
-  	  cairoctx.curve_to (
-    		PlaceX + SquirlW, MenuBottom,
-    		PlaceX + SquirlW, MenuBottom,
-    		PlaceX + SquirlW - Rounding, MenuBottom);
-  	  cairoctx.line_to (PlaceX - Margin, MenuBottom);
-	  }
-	
-    public PlacesBackground (int WindowWidth, int WindowHeight)
-    {
-      PlaceW = WindowWidth;
-      PlaceBottom = PlaceY + PlaceH;
-      MenuBottom = PlaceY + MenuH;
-
-      cairotxt = new Clutter.CairoTexture(PlaceW, PlaceH);
-      Cairo.Context cairoctx = cairotxt.create();
-      {
-    		cairoctx.set_source_rgba (1, 1, 1, 1.0);
-		    cairoctx.set_line_width (1.0);
-
-    		cairoctx.move_to (PlaceX - Margin, PlaceY - Margin);
-    		cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY - Margin);
-
-		    drawAroundMenu (cairoctx);
-
-    		TabRect tab = TabRect();
-    		tab.left = TabX;
-    		tab.right = tab.left + TabW;
-    		tab.top = PlaceY + PlaceH - TabH;
-    		tab.bottom = PlaceY + PlaceH;
-
-		    drawTab(cairoctx, tab);
-
-    		drawSquirl (cairoctx);
-
-    		/* close the path */
-		    cairoctx.line_to (PlaceX - Margin, PlaceY - Margin);
-
-    		cairoctx.stroke_preserve ();
-		    cairoctx.set_source_rgba (1, 1, 1, 0.15);
-    		cairoctx.fill ();
-      }
-
-      cairotxt.set_opacity (0xFF);
-      this.add_actor (cairotxt);
-
-      effect_glow = new Ctk.EffectGlow ();
-      Clutter.Color c = Clutter.Color ()
-      {
-        red = 255,
-        green = 255,
-        blue = 255,
-        alpha = 255
-      };
-
-      effect_glow.set_color (c);
-      effect_glow.set_factor (1.0f);
-      this.add_effect (effect_glow);
-    }
-
-    construct
-    {
-    }
-  }
-
   public class UnderlayWindow : Gtk.Window, Shell
   {
     public bool is_popup { get; construct; }
@@ -194,11 +37,6 @@ namespace Unity
     private Background          background;
     private Quicklauncher.View  quicklauncher;
     private Unity.Places.View   places;
-
-    private PlacesBackground  placesbackground;
-    /* These parameters are temporary until we get the right metrics for the places bar */
-    private int               PlacesDecorationOffsetX;
-    private int               PlacesDecorationOffsetY;
 
     public UnderlayWindow (bool popup, int width, int height)
     {
@@ -283,16 +121,6 @@ namespace Unity
       this.stage.add_actor (this.quicklauncher);
       this.stage.add_actor (this.places);
      
-      /* Places Background */
-      PlacesDecorationOffsetX = 6;
-      PlacesDecorationOffsetY = 6;
-
-      Gdk.Rectangle size;
-      this.screen.get_monitor_geometry (0, out size);
-      this.placesbackground = new PlacesBackground (size.width, size.height);
-      this.stage.add_actor (this.placesbackground);
-      this.placesbackground.show ();
-
       /* Layout everything */
       this.move (0, 0);
       this.relayout ();
@@ -354,10 +182,8 @@ namespace Unity
                              height -
                              this.workarea_size.top -
                              this.workarea_size.bottom);
-       this.places.set_position (this.workarea_size.left + 54 + PlacesDecorationOffsetX,
-                                 this.workarea_size.top + PlacesDecorationOffsetY);
-
-       this.placesbackground.set_position (this.workarea_size.left + 58, this.workarea_size.top);
+       this.places.set_position (this.workarea_size.left + 54,
+                                 this.workarea_size.top);
     }
 
     public override void show ()

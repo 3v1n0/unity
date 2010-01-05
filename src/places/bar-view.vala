@@ -35,6 +35,8 @@ namespace Unity.Places.Bar
   {
     private Gee.ArrayList<Unity.Places.Bar.Model> places;
 
+    public signal void sig_active_icon_index (int i);
+
     public View ()
     {
       Unity.Places.Bar.Model place;
@@ -101,6 +103,7 @@ namespace Unity.Places.Bar
         this.pack (icon, false, false);
         icon.enter_event.connect (this.on_enter);
         icon.leave_event.connect (this.on_leave);
+        icon.button_press_event.connect (this.on_button_press);
       }
 
       this.show_all ();
@@ -115,6 +118,13 @@ namespace Unity.Places.Bar
     public bool on_leave ()
     {
       /* stdout.printf ("on_leave() called\n"); */
+      return false;
+    }
+
+    public bool on_button_press (Clutter.Event event)
+    {
+      /* stdout.printf ("on_button_press() called\n"); */
+      sig_active_icon_index(123);
       return false;
     }
 
