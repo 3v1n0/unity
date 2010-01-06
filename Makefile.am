@@ -5,4 +5,4 @@ SUBDIRS = data libunity src mutter-plugin tests
 check-report:
 	$(MAKE) -C tests/ $(@)
 
-DISTCHECK_CONFIGURE_FLAGS = --enable-localinstall
+DISTCHECK_CONFIGURE_FLAGS = --enable-localinstall --enable-mutter

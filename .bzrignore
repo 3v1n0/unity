@@ -116,3 +116,4 @@ mutter-plugin/libunity-mutter.la
 mutter-plugin/libunity_mutter_la_vala.stamp
 mutter-plugin/plugin.c
 mutter-plugin/window-management.c
+mutter-plugin/libunity_mutter_la.vala.stamp
