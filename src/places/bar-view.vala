@@ -34,6 +34,7 @@ namespace Unity.Places.Bar
   public class View : Ctk.Box
   {
     private Gee.ArrayList<Unity.Places.Bar.Model> places;
+    private Gee.ArrayList<Ctk.Image> icon_view;
 
     public signal void sig_active_icon_index (int i);
 
@@ -51,6 +52,7 @@ namespace Unity.Places.Bar
       this.orientation  = Ctk.Orientation.HORIZONTAL; // this sucks
 
       this.places = new Gee.ArrayList<Unity.Places.Bar.Model> ();
+      this.icon_view = new Gee.ArrayList<Ctk.Image> ();
 
       // populate places-bar with hard-coded contents for the moment
       place = new Unity.Places.Bar.Model ("Home",
@@ -88,10 +90,9 @@ namespace Unity.Places.Bar
                                           "Your piece of waste");
       this.places.add (place);
 
-      // create all image-actors for icons
+      /* create all image-actors for icons */
       for (i = 0; i < this.places.size ; i++)
       {
-        //icon = new Ctk.Image.from_stock (icon_size, this.places[i].icon_name);
         icon = new Ctk.Image.from_filename (icon_size, this.places[i].icon_name);
         icon.set_reactive (true);
 
@@ -100,6 +101,7 @@ namespace Unity.Places.Bar
         glow.set_factor (1.0f);
         icon.add_effect (glow);
 
+        this.icon_view.add (icon);
         this.pack (icon, false, false);
         icon.enter_event.connect (this.on_enter);
         icon.leave_event.connect (this.on_leave);
@@ -107,6 +109,11 @@ namespace Unity.Places.Bar
       }
 
       this.show_all ();
+    }
+
+    public int get_number_of_items ()
+    {
+      return this.places.size;
     }
 
     public bool on_enter ()
@@ -123,8 +130,16 @@ namespace Unity.Places.Bar
 
     public bool on_button_press (Clutter.Event event)
     {
-      /* stdout.printf ("on_button_press() called\n"); */
-      sig_active_icon_index(123);
+      int i;
+      Clutter.Actor actor;
+      actor = event.button.source;
+
+      for (i = 0; i < this.icon_view.size ; i++)
+      {
+        if (actor == this.icon_view[i])
+          sig_active_icon_index(i);
+      }
+
       return false;
     }
 

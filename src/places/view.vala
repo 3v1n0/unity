@@ -33,7 +33,7 @@ namespace Unity.Places
     private int PlaceW = 760;
     private int PlaceH = 55;
 
-    private int PlaceBottom; //PlaceY + PlaceH;
+    private int PlaceBottom; /* PlaceY + PlaceH */
 
     /* Margin outside of the cairo texture. We draw outside to complete the line loop
      * and we don't want the line loop to be visible in some parts of the screen. 
@@ -44,13 +44,11 @@ namespace Unity.Places
     private int MenuH = 22;
     private int MenuW = 216;
 
-    private int Rounding = 12;
+    private int Rounding = 16;
     private int RoundingSmall = 8;
 
-    private int MenuBottom; //PlaceY + MenuH;
+    private int MenuBottom; /* PlaceY + MenuH */
 
-    private int TabX = 170;
-    private int TabW = 70;
     private int TabH = 50;
 
     /* The squirl area width */
@@ -63,8 +61,10 @@ namespace Unity.Places
 	     int top;
 	     int bottom;
 	  }
-	
-  	void drawAroundMenu (Cairo.Context cairoctx)
+	  
+    public int PlaceWidth;
+
+  	void DrawAroundMenu (Cairo.Context cairoctx)
   	{
 	    cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY + MenuH);
   	  cairoctx.line_to (PlaceX + PlaceW - MenuW + Rounding, PlaceY + MenuH);
@@ -79,7 +79,7 @@ namespace Unity.Places
     		PlaceX + PlaceW - MenuW - Rounding, PlaceY + PlaceH);
   	}
 
-	  void drawTab(Cairo.Context cairoctx, TabRect tab)
+	  void DrawTab(Cairo.Context cairoctx, TabRect tab)
   	{
 	    cairoctx.line_to (tab.right + RoundingSmall, PlaceBottom );
   	  cairoctx.curve_to ( 
@@ -103,7 +103,7 @@ namespace Unity.Places
     		tab.left - RoundingSmall, PlaceBottom);
   	}
 
-	  void drawSquirl(Cairo.Context cairoctx)
+	  void DrawSquirl(Cairo.Context cairoctx)
   	{
   	  cairoctx.line_to (PlaceX + SquirlW + RoundingSmall, PlaceBottom);
   	  cairoctx.curve_to (
@@ -118,11 +118,23 @@ namespace Unity.Places
   	  cairoctx.line_to (PlaceX - Margin, MenuBottom);
 	  }
 	
-    public PlacesBackground (int WindowWidth, int WindowHeight)
+    public PlacesBackground ()
     {
+      PlaceWidth = 0;
+    }
+
+    public void CreatePlacesBackground (int WindowWidth,
+      int WindowHeight,
+      int TabPositionX,
+      int TabWidth)
+    {
+      PlaceWidth = WindowWidth;
       PlaceW = WindowWidth;
       PlaceBottom = PlaceY + PlaceH;
       MenuBottom = PlaceY + MenuH;
+
+      if (cairotxt != null)
+        this.remove_actor (cairotxt);
 
       cairotxt = new Clutter.CairoTexture(PlaceW, PlaceH);
       Cairo.Context cairoctx = cairotxt.create();
@@ -133,17 +145,17 @@ namespace Unity.Places
     		cairoctx.move_to (PlaceX - Margin, PlaceY - Margin);
     		cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY - Margin);
 
-		    drawAroundMenu (cairoctx);
+		    DrawAroundMenu (cairoctx);
 
     		TabRect tab = TabRect();
-    		tab.left = TabX;
-    		tab.right = tab.left + TabW;
+    		tab.left = TabPositionX;
+    		tab.right = tab.left + TabWidth;
     		tab.top = PlaceY + PlaceH - TabH;
     		tab.bottom = PlaceY + PlaceH;
 
-		    drawTab(cairoctx, tab);
+		    DrawTab(cairoctx, tab);
 
-    		drawSquirl (cairoctx);
+    		DrawSquirl (cairoctx);
 
     		/* close the path */
 		    cairoctx.line_to (PlaceX - Margin, PlaceY - Margin);
@@ -179,12 +191,10 @@ namespace Unity.Places
   {
     private Unity.Places.Bar.View     bar_view;
     private Unity.Places.Default.View default_view;
+    private Gee.ArrayList<PlacesBackground> background_array;
+    private int current_tab_index;
 
-    private PlacesBackground  placesbackground;
     /* These parameters are temporary until we get the right metrics for the places bar */
-    private int               PlacesDecorationOffsetX;
-    private int               PlacesDecorationOffsetY;
-
 
     public override void allocate (Clutter.ActorBox        box, 
                                    Clutter.AllocationFlags flags)
@@ -192,45 +202,67 @@ namespace Unity.Places
       base.allocate (box, flags);
       Clutter.ActorBox child_box = { 0.0f, 0.0f, 0.0f, 0.0f };
       int bar_icon_size = 48;
+      int icon_margin = 4;
+      int offset = 94; /* offset to first icon */
+      int NewPlaceWidth = (int) (box.x2 - box.x1);
 
-      child_box.x1 = this.padding.left;
+      child_box.x1 = offset; //this.padding.left;
       child_box.x2 = box.x2 - box.x1 - this.padding.left - this.padding.right;
-      child_box.y1 = this.padding.top;
+      child_box.y1 = this.padding.top + 8;
       child_box.y2 = child_box.y1 + bar_icon_size;
-
       this.bar_view.allocate (child_box, flags);
+
       child_box.y1 = this.padding.top + bar_icon_size;
       child_box.y2 = box.y2 - box.y1 - this.padding.top -this.padding.bottom - bar_icon_size;
 
       this.default_view.allocate (child_box, flags);
 
       child_box.x1 = 0;
-      child_box.x2 = 800; /* HARDCODED */
+      child_box.x2 = NewPlaceWidth;
       child_box.y1 = 0;
       child_box.y2 = 55;
 
-      this.placesbackground.allocate (child_box, flags);
+      int spacing = this.bar_view.spacing;
+      int i;
+      for (i = 0; i < this.background_array.size; i++)
+        {
+          if (this.background_array[i].PlaceWidth != NewPlaceWidth)
+            {
+              this.background_array[i].CreatePlacesBackground (NewPlaceWidth, 55,
+              offset + i*(bar_icon_size + spacing) - icon_margin,
+              2*icon_margin + bar_icon_size);
+            }
+          this.background_array[i].allocate (child_box, flags);
+        }
     }
 
     public View ()
     {
+      int i;
+      int NunItems;
+      PlacesBackground placesbackground;
+
+      this.background_array = new Gee.ArrayList<PlacesBackground> ();
+
+      this.current_tab_index = 0;
       this.orientation  = Ctk.Orientation.VERTICAL;
       this.bar_view     = new Unity.Places.Bar.View ();
+      this.bar_view.sig_active_icon_index.connect(this.on_signal_active_icon);
+      
       this.default_view = new Unity.Places.Default.View ();
+
+      NunItems = this.bar_view.get_number_of_items ();      
+      for (i = 0; i < NunItems; i++)
+      {
+        placesbackground = new PlacesBackground ();
+        this.add_actor (placesbackground);
+        this.background_array.add (placesbackground);
+        placesbackground.hide ();
+      }
+      this.background_array[0].show ();
+
       this.add_actor (this.bar_view);
       this.add_actor (this.default_view);
-
-      this.bar_view.sig_active_icon_index.connect(this.on_signal_active_icon);
-
-      /* Places Background */
-      PlacesDecorationOffsetX = 6;
-      PlacesDecorationOffsetY = 6;
-
-      /* Gdk.Rectangle size;
-      this.screen.get_monitor_geometry (0, out size); */
-      this.placesbackground = new PlacesBackground (800, 55);  /* HARDCODED */
-      this.add_actor (this.placesbackground);
-      this.placesbackground.show ();
 
       Ctk.Padding padding = { 0.0f, 0.0f, 0.0f, 12.0f };
       this.set_padding (padding);
@@ -262,7 +294,12 @@ namespace Unity.Places
 
     public void on_signal_active_icon (int i)
     {
-      stdout.printf ("on_signal_active_icon() called: %d\n", i);
+      if (i >= this.background_array.size)
+        return;
+
+      this.background_array[this.current_tab_index].hide ();
+      this.current_tab_index = i;
+      this.background_array[this.current_tab_index].show ();
     }
   }
 }

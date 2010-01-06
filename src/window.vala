@@ -177,12 +177,11 @@ namespace Unity
 
        this.places.set_size (width -
                              this.workarea_size.left -
-                             this.workarea_size.right -
-                             54,
+                             this.workarea_size.right,
                              height -
                              this.workarea_size.top -
                              this.workarea_size.bottom);
-       this.places.set_position (this.workarea_size.left + 54,
+       this.places.set_position (0,
                                  this.workarea_size.top);
     }
 
