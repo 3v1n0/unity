@@ -16,12 +16,14 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
+using Unity;
 
 static bool show_unity   = false;
 static bool popup_mode   = false;
 static int  popup_width  = 1024;
 static int  popup_height = 600;
 static bool show_version = false;
+static string? boot_logging_filename = null;
 
 const OptionEntry[] options = {
   {
@@ -70,6 +72,15 @@ const OptionEntry[] options = {
     null
   },
   {
+    "enable-boot-logging",
+    'b',
+    OptionFlags.FILENAME,
+    OptionArg.FILENAME,
+    ref boot_logging_filename,
+    "enables boot logging, requires filename argument",
+    null
+  },
+  {
     null
   }
 };
@@ -80,11 +91,7 @@ public class Main
   {
     Unity.Application    app;
     Unity.UnderlayWindow window;
-
-    /* Parse options */
-    Gtk.init (ref args);
-    Ctk.init (ref args);
-
+    Unity.TimelineLogger.get_default(); // just inits the timer for logging
     try
       {
         var opt_context = new OptionContext ("-- Unity");
@@ -106,6 +113,24 @@ public class Main
         print ("\nUnity %s\n", "0.1.0");
         return 0;
       }
+      
+    if (boot_logging_filename != null)
+      {
+        Unity.is_logging = true;
+        Timeout.add_seconds (3, () => {
+          Unity.TimelineLogger.get_default().write_log (boot_logging_filename);
+          return false;
+        });
+      } 
+    else 
+      { 
+        Unity.is_logging = false;
+      }
+    START_FUNCTION ();
+    
+    /* Parse options */
+    Gtk.init (ref args);
+    Ctk.init (ref args);
 
     /* Unique instancing */
     app = new Unity.Application ();
@@ -129,9 +154,14 @@ public class Main
     /* Things seem to be okay, load the main window */
     window = new Unity.UnderlayWindow (popup_mode, popup_width, popup_height);
     app.shell = window;
-
     window.show ();
+    
+    END_FUNCTION ();
+    
     Gtk.main ();
+
+    
+    
 
     return 0;
   }

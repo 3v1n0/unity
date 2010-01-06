@@ -2,7 +2,11 @@ BUILT_SOURCES =
 CLEANFILES = 
 EXTRA_DIST = 
 
+if HAVE_LOCALINSTALL
+mutterlibdir = /tmp/mutter-plugin/
+else
 mutterlibdir = $(MUTTER_PLUGIN_DIR)
+endif
 mutterlib_LTLIBRARIES = \
   libunity-mutter.la
 

@@ -18,6 +18,7 @@ libunity_la_VALAFLAGS = \
   -H unity.h -d . \
   --library unity \
   --vapidir=$(top_builddir)/vapi/ \
+  --thread \
   --pkg clutter-1.0 \
   --pkg clutk-0.3 \
   --pkg gtk+-2.0 \
@@ -28,6 +29,7 @@ libunity_la_SOURCES = \
   $(libunity_la_VALASOURCES:.vala=.c)
 
 libunity_la_VALASOURCES = \
+  perf-logger.vala \
   shell.vala
 
 libunity_la_APIFILES = \

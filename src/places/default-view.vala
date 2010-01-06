@@ -31,6 +31,8 @@ namespace Unity.Places.Default
                            string primary_text,
                            string secondary_text)
     {
+      string process_name = "activity_widget" + icon_name;
+      LOGGER_START_PROCESS (process_name);
       Clutter.Color color = {255, 255, 255, 255};
 
       this.homogeneous = false;
@@ -70,6 +72,7 @@ namespace Unity.Places.Default
       this.pack (this.icon, false, false);
       this.pack (this.primary_label, false, false);
       this.pack (this.secondary_label, false, false);
+      LOGGER_END_PROCESS (process_name);
     }
 
     construct
@@ -87,12 +90,13 @@ namespace Unity.Places.Default
       this.secondary_label.opacity = 0;
       return false;
     }
-     public bool on_clicked ()
+
+    public bool on_clicked ()
     {
       stdout.printf ("on_clicked() called\n");
       return false;
     }
-     
+
   }
 
   public class View : Ctk.IconView
@@ -119,13 +123,14 @@ namespace Unity.Places.Default
 
       padding.top    = (real_height - min_height_p) / 2.0f;
       padding.bottom = padding.top;
-	
+
       this.set_padding (padding);
       base.allocate (box, flags);
     }
 
     public View ()
     {
+      START_FUNCTION ();
       Unity.Places.Default.Model activity;
       int                        i;
       ActivityWidget             widget;
@@ -183,10 +188,10 @@ namespace Unity.Places.Default
                                      this.activities[i].primary_text,
                                      this.activities[i].secondary_text);
         this.add_actor (widget);
-
       }
 
       this.show_all ();
+      END_FUNCTION ();
     }
 
     construct

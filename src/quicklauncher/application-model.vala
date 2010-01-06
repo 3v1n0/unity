@@ -18,11 +18,10 @@
  *
  */
 
-namespace Unity.Quicklauncher.Stores
+namespace Unity.Quicklauncher.Models
 {
   public class ApplicationShortcut : Object, ShortcutItem
   {
-    
     public string exec;
     public string name; 
     public string desktop_location;
@@ -81,13 +80,13 @@ namespace Unity.Quicklauncher.Stores
     }
   }
   
-  public class ApplicationStore : Object, LauncherStore 
+  public class ApplicationModel : Object, LauncherModel 
   {
     private Gdk.Pixbuf _icon;
     private Launcher.Application app;
     private Launcher.Appman manager;
     
-    public ApplicationStore (string desktop_uri)
+    public ApplicationModel (string desktop_uri)
     {
       this.manager = Launcher.Appman.get_default ();
       this.app = this.manager.get_application_for_desktop_file (desktop_uri);
@@ -191,7 +190,7 @@ namespace Unity.Quicklauncher.Stores
             try
               { 
                 exec = desktop_file.get_value (groups[a], "Exec");
-                name = desktop_file.get_value (groups[a], "Name");
+                name = desktop_file.get_locale_string  (groups[a], "Name", "");
               } catch (Error e)
               {
                 warning (e.message);
@@ -204,15 +203,18 @@ namespace Unity.Quicklauncher.Stores
               ret_list.add (shortcut);
           }
       }
-      var name_entry = new ApplicationShortcut ();
-      name_entry.exec = "";
-      name_entry.name = app.name;
-      ret_list.add (name_entry);
+      return ret_list;
+    }
+    
+    public Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ()
+    {
+      Gee.ArrayList<ShortcutItem> ret_list = new Gee.ArrayList<ShortcutItem> ();
       
       var open_entry = new LibLauncherShortcut ();
       open_entry.app = this.app;
-      open_entry.name = "Open";
+      open_entry.name = "Open..";
       ret_list.add (open_entry);
+      
       return ret_list;
     }
 

@@ -3,6 +3,9 @@ CLEANFILES =
 EXTRA_DIST = 
   
 DATADIR = $(datadir)
+if HAVE_TESTING
+BASE_CFLAGS+=-DTESTING
+endif
 
 if HAVE_LOCALINSTALL
 PKGDATADIR=$(top_srcdir)/data
@@ -29,6 +32,7 @@ libunity_static_la_CPPFLAGS = \
 libunity_static_la_VALAFLAGS = \
   -C \
   -H unity-static.h -d . \
+  --thread \
   --library unity-static \
   --vapidir=$(top_srcdir)/vapi/ \
   --vapidir=$(top_srcdir)/libunity/ \
@@ -68,8 +72,8 @@ places_sources = \
   places/view.vala
 
 quicklauncher_sources = \
-  quicklauncher/application-store.vala \
-  quicklauncher/launcher-store.vala \
+  quicklauncher/application-model.vala \
+  quicklauncher/launcher-model.vala \
   quicklauncher/launcher-view.vala \
   quicklauncher/prism-handler.vala \
   quicklauncher/quicklauncher-manager.vala \
@@ -86,7 +90,7 @@ libunity_static_la_SOURCES = \
   unity-utils.c \
   $(libunity_static_la_VALASOURCES:.vala=.c)
 
-libunity_static_la_APIFILES = unity-static.vapi unity-static.h
+libunity_static_la_APIFILES = unity-static.vapi unity-static.h unity-utils.h
 
 BUILT_SOURCES += libunity_static_la.vala.stamp
 EXTRA_DIST += \
@@ -109,6 +113,7 @@ unity_VALAFLAGS = \
   --vapidir=./ \
   --vapidir=$(top_srcdir)/libunity/ \
   --vapidir=$(top_srcdir)/vapi/ \
+  --thread \
   --pkg clutk-0.3 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
@@ -122,6 +127,7 @@ unity_VALAFLAGS = \
   --pkg libwnck-1.0 \
   --pkg unique-1.0 \
   --pkg unity \
+  --pkg unity-const \
   --pkg unity-static \
   $(MAINTAINER_VALAFLAGS)
 
@@ -143,4 +149,4 @@ unity.vala.stamp: $(unity_VALASOURCES)
 	$(AM_V_GEN) $(VALAC) $(unity_VALAFLAGS) $^
 	touch unity.vala.stamp
 
-CLEANFILES += *.stamp *.h *.vapi quicklauncher/*.c places/*.c
+CLEANFILES += *.stamp *.vapi quicklauncher/*.c places/*.c
