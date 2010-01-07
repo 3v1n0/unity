@@ -123,13 +123,23 @@ namespace Unity
     {
       if (this.places_showing)
         {
-          this.places.opacity = 0;
           this.places_showing = false;
+          this.places.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
+                               "opacity", 0);
+          this.plugin.set_stage_input_area (0,
+                                            24,
+                                            54,
+                                            (int)(this.stage.height - 24));
         }
       else
         {
-          this.places.opacity = 255;
           this.places_showing = true;
+          this.places.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
+                               "opacity", 255);
+          this.plugin.set_stage_input_area (0,
+                                            24,
+                                            (int)this.stage.width,
+                                            (int)this.stage.height-24);
         }
       this.places.queue_relayout ();
 

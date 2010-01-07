@@ -117,3 +117,8 @@ mutter-plugin/libunity_mutter_la_vala.stamp
 mutter-plugin/plugin.c
 mutter-plugin/window-management.c
 mutter-plugin/libunity_mutter_la.vala.stamp
+libunity/application.
+libunity/application.c
+libunity/perf-logger.c
+src/quicklauncher/application-model.c
+src/quicklauncher/launcher-model.c
