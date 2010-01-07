@@ -21,97 +21,6 @@
 
 namespace Unity
 {
-  public class PlacesBackground : Ctk.Bin
-  {
-    public Clutter.CairoTexture cairotxt;
-
-    private Ctk.EffectGlow effect_glow;
-
-    public PlacesBackground ()
-    {
-      int W = 600;
-      int H = 70;
-
-      int h1 = 32;
-      int h2 = 12;
-      int h3 = 36;      
-      int X0 = 0;
-      int Y0 = h1;
-      int w0 = 4;
-      int w1 = 44;
-      int cp0 = 12;
-      int cp1 = 4;
-
-      cairotxt = new Clutter.CairoTexture(W, H);
-      Cairo.Context cairoctx = cairotxt.create();
-      {
-      	cairoctx.scale (1.0f, 1.0f);
-        cairoctx.set_operator (Cairo.Operator.CLEAR);
-        cairoctx.paint ();
-        cairoctx.set_operator (Cairo.Operator.OVER);
-        cairoctx.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
-        cairoctx.move_to (X0, Y0);
-        cairoctx.line_to (X0+w0, Y0);
-
-        cairoctx.curve_to (
-			    X0+w0+cp0, Y0,
-			    X0+w0+cp0, Y0,
-			    X0+w0+cp0, Y0-cp0);
-
-        X0 = X0+w0+cp0; 
-        Y0 = Y0-cp0;
-        cairoctx.line_to (X0, Y0-h2);
-        cairoctx.curve_to (X0, Y0-h2-cp1,
-                  X0, Y0-h2-cp1,
-                  X0+cp1, Y0-h2-cp1);
-        X0 = X0+cp1;
-        Y0 = Y0-h2-cp1;
-
-        cairoctx.line_to (X0+w1, Y0);
-        cairoctx.curve_to (X0+w1+cp1, Y0,
-                  X0+w1+cp1, Y0,
-                  X0+w1+cp1, Y0+cp1);
-        X0 = X0+w1+cp1;
-        Y0 = Y0+cp1;
-
-        cairoctx.line_to (X0, Y0+h3);
-        cairoctx.curve_to (X0, Y0+h3+cp0,
-                  X0, Y0+h3+cp0,
-                  X0+cp0, Y0+h3+cp0);
-
-        X0 = X0+cp0;
-        Y0 = Y0+h3+cp0;
-
-        cairoctx.line_to (X0 + 408, Y0);
-        cairoctx.curve_to (X0 + 408 + 80, Y0,
-                 X0 + 408+80, Y0-80,
-                 X0 + 408+80, Y0-80);
-
-        cairoctx.stroke ();
-      }
-
-      cairotxt.set_opacity (0xFF);
-      this.add_actor (cairotxt);
-
-      effect_glow = new Ctk.EffectGlow ();
-      Clutter.Color c = Clutter.Color ()
-      {
-        red = 255,
-        green = 255,
-        blue = 255,
-        alpha = 255
-      };
-
-      effect_glow.set_color (c);
-      effect_glow.set_factor (1.0f);
-      this.add_effect (effect_glow);
-    }
-
-    construct
-    {
-    }
-  }
-
   public class UnderlayWindow : Gtk.Window, Shell
   {
     public bool is_popup { get; construct; }
@@ -128,11 +37,6 @@ namespace Unity
     private Background          background;
     private Quicklauncher.View  quicklauncher;
     private Unity.Places.View   places;
-
-    private PlacesBackground  placesbackground;
-    /* These parameters are temporary until we get the right metrics for the places bar */
-    private int               PlacesDecorationOffsetX;
-    private int               PlacesDecorationOffsetY;
 
     public UnderlayWindow (bool popup, int width, int height)
     {
@@ -217,14 +121,6 @@ namespace Unity
       this.stage.add_actor (this.quicklauncher);
       this.stage.add_actor (this.places);
      
-      /* Places Background */
-      PlacesDecorationOffsetX = 6;
-      PlacesDecorationOffsetY = 6;
-
-      this.placesbackground = new PlacesBackground ();
-      this.stage.add_actor (this.placesbackground);
-      this.placesbackground.show ();
-
       /* Layout everything */
       this.move (0, 0);
       this.relayout ();
@@ -281,15 +177,11 @@ namespace Unity
 
        this.places.set_size (width -
                              this.workarea_size.left -
-                             this.workarea_size.right -
-                             54,
+                             this.workarea_size.right,
                              height -
                              this.workarea_size.top -
                              this.workarea_size.bottom);
-       this.places.set_position (this.workarea_size.left + 54 + PlacesDecorationOffsetX,
-                                 this.workarea_size.top + PlacesDecorationOffsetY);
-
-       this.placesbackground.set_position (this.workarea_size.left + 58, this.workarea_size.top);
+       this.places.set_position (0, 0);
     }
 
     public override void show ()
