@@ -53,6 +53,7 @@ namespace Unity
     private WindowManagement wm;
 
     /* Unity Components */
+    private Background         background;
     private Quicklauncher.View quicklauncher;
     private Places.View        places;
 
@@ -75,6 +76,10 @@ namespace Unity
       this.wm = new WindowManagement (this);
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
 
+      this.background = new Background ();
+      this.stage.add_actor (this.background);
+      this.background.lower_bottom ();
+
       this.quicklauncher = new Quicklauncher.View (this);
       this.quicklauncher.opacity = 0;
       this.stage.add_actor (this.quicklauncher);
@@ -94,6 +99,9 @@ namespace Unity
       float width, height;
 
       this.stage.get_size (out width, out height);
+
+      this.background.set_size (width, height);
+      this.background.set_position (0, 0);
 
       this.quicklauncher.set_size (54, height-24);
       this.quicklauncher.set_position (0, 24);
@@ -126,6 +134,7 @@ namespace Unity
           this.places_showing = false;
           this.places.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
                                "opacity", 0);
+          this.plugin.get_window_group ().animate (Clutter.AnimationMode.EASE_IN_SINE, 300, "opacity", 255);
           this.plugin.set_stage_input_area (0,
                                             24,
                                             54,
@@ -136,6 +145,7 @@ namespace Unity
           this.places_showing = true;
           this.places.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
                                "opacity", 255);
+          this.plugin.get_window_group ().animate (Clutter.AnimationMode.EASE_IN_SINE, 300, "opacity", 0);
           this.plugin.set_stage_input_area (0,
                                             24,
                                             (int)this.stage.width,
