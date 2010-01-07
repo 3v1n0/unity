@@ -50,14 +50,17 @@ namespace Unity
 
     private Clutter.Stage    stage;
 
-    private WindowManagement wm;
+    private WindowManagement   wm;
+
+    /* Unity Components */
     private Quicklauncher.View quicklauncher;
+    private Places.View        places;
 
     construct
     {
-      //string[] args = { "mutter" };
+      string[] args = { "mutter" };
 
-      //Ctk.init (ref args);
+      Ctk.init_after (ref args);
       
       var app = new Unity.Application ();
     }
@@ -73,6 +76,9 @@ namespace Unity
       this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 400,
                                   "opacity", 255);
 
+      this.places = new Places.View ();
+      this.stage.add_actor (this.places);
+
       this.relayout ();
     }
 
@@ -83,7 +89,10 @@ namespace Unity
       this.stage.get_size (out width, out height);
 
       this.quicklauncher.set_size (54, height-24);
-      this.quicklauncher.set_position (0, 24); 
+      this.quicklauncher.set_position (0, 24);
+
+      this.places.set_size (width - 54, height -23);
+      this.places.set_position (54, 23);
 
       this.plugin.set_stage_input_area (0, 24, 54, (int)(height - 24));
       //this.plugin.set_stage_input_region (uint region);
