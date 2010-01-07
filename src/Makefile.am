@@ -1,7 +1,7 @@
-BUILT_SOURCES = 
-CLEANFILES = 
-EXTRA_DIST = 
-  
+BUILT_SOURCES =
+CLEANFILES =
+EXTRA_DIST =
+
 DATADIR = $(datadir)
 if HAVE_TESTING
 BASE_CFLAGS+=-DTESTING
@@ -13,12 +13,12 @@ else
 PKGDATADIR=$(datadir)/unity
 endif
 noinst_LTLIBRARIES = \
-  libunity-static.la 
+  libunity-static.la
 
 bin_PROGRAMS = \
   unity
 
-# unity static lib 
+# unity static lib
 libunity_static_la_CPPFLAGS = \
   -DDATADIR=\"$(DATADIR)\" \
   -DPKGDATADIR=\"$(PKGDATADIR)\" \
@@ -39,6 +39,7 @@ libunity_static_la_VALAFLAGS = \
   --pkg clutk-0.3 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
+  --pkg cogl-1.0 \
   --pkg gconf-2.0 \
   --pkg gdk-2.0 \
   --pkg gee-1.0 \
@@ -117,6 +118,7 @@ unity_VALAFLAGS = \
   --pkg clutk-0.3 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
+  --pkg cogl-1.0 \
   --pkg gtk+-2.0 \
   --pkg gdk-2.0 \
   --pkg gee-1.0 \

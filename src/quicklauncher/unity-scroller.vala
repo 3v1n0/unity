@@ -577,6 +577,8 @@ namespace Unity.Widgets
       child_box.x1 = box.x1;
       child_box.x2 = box.x2;
       bgtex.allocate (child_box, flags);
+      bgtex.set_clip (box.x1, drag_pos + box.get_height () * 2,
+                      box.get_width (), box.get_height ());
 
       gradient.width = box.get_width();
       gradient.allocate (box, flags);
@@ -622,6 +624,7 @@ namespace Unity.Widgets
 
     public void add (Clutter.Actor actor)
     {
+      this.add_actor (actor);
     }
 
     public void add_actor (Clutter.Actor actor)
@@ -650,8 +653,9 @@ namespace Unity.Widgets
 
     public void remove (Clutter.Actor actor)
     {
-
+      this.remove_actor (actor);
     }
+
     public void remove_actor (Clutter.Actor actor)
     {
       ScrollerChild found_container = null;
