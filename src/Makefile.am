@@ -58,7 +58,6 @@ libunity_static_la_LIBADD = \
 
 # Vala Sources
 src_sources = \
-  application.vala \
   background.vala \
   unity.vala \
   utils.vala \

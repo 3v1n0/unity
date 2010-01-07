@@ -49,12 +49,15 @@ namespace Unity
     }
 
     private Clutter.Stage    stage;
-
-    private WindowManagement   wm;
+    private Application      app;
+    private WindowManagement wm;
 
     /* Unity Components */
     private Quicklauncher.View quicklauncher;
     private Places.View        places;
+
+    /* Places toggle */
+    private bool places_showing;
 
     construct
     {
@@ -62,7 +65,9 @@ namespace Unity
 
       Ctk.init_after (ref args);
       
-      var app = new Unity.Application ();
+      /* Unique instancing */
+      this.app = new Unity.Application ();
+      this.app.shell = this;
     }
 
     private void real_construct ()
@@ -77,7 +82,9 @@ namespace Unity
                                   "opacity", 255);
 
       this.places = new Places.View ();
+      this.places.opacity = 0;
       this.stage.add_actor (this.places);
+      this.places_showing = false;
 
       this.relayout ();
     }
@@ -114,7 +121,19 @@ namespace Unity
 
     public void show_unity ()
     {
-      //this.wnck_screen.toggle_showing_desktop (true);
+      if (this.places_showing)
+        {
+          this.places.opacity = 0;
+          this.places_showing = false;
+        }
+      else
+        {
+          this.places.opacity = 255;
+          this.places_showing = true;
+        }
+      this.places.queue_relayout ();
+
+      debug ("Places showing: %s", this.places_showing ? "true":"false");
     }
 
     /*
