@@ -60,12 +60,12 @@ namespace Unity.Places
       int right;
       int top;
       int bottom;
-	  }
+    }
 	  
     public int PlaceWidth;
 
     void DrawAroundMenu (Cairo.Context cairoctx)
-  	{
+    {
       cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY + MenuH);
       cairoctx.line_to (PlaceX + PlaceW - MenuW + Rounding, PlaceY + MenuH);
       cairoctx.curve_to ( 
@@ -182,7 +182,7 @@ namespace Unity.Places
       this.add_effect (effect_glow);
     }
 
-  construct
+    construct
     {
     }
   }
