@@ -181,8 +181,7 @@ namespace Unity
                              height -
                              this.workarea_size.top -
                              this.workarea_size.bottom);
-       this.places.set_position (0,
-                                 this.workarea_size.top);
+       this.places.set_position (0, 0);
     }
 
     public override void show ()
