@@ -55,69 +55,69 @@ namespace Unity.Places
     private int SquirlW = 70;
 
     public struct TabRect
-	  {
-	     int left;
-	     int right;
-	     int top;
-	     int bottom;
+    {
+      int left;
+      int right;
+      int top;
+      int bottom;
 	  }
 	  
     public int PlaceWidth;
 
-  	void DrawAroundMenu (Cairo.Context cairoctx)
+    void DrawAroundMenu (Cairo.Context cairoctx)
   	{
-	    cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY + MenuH);
-  	  cairoctx.line_to (PlaceX + PlaceW - MenuW + Rounding, PlaceY + MenuH);
-	    cairoctx.curve_to ( 
-    		PlaceX + PlaceW - MenuW, PlaceY + MenuH,
-    		PlaceX + PlaceW - MenuW, PlaceY + MenuH,
-	    	PlaceX + PlaceW - MenuW, PlaceY + MenuH + Rounding);
-  	  cairoctx.line_to (PlaceX + PlaceW - MenuW, PlaceY + PlaceH - Rounding); 
-	    cairoctx.curve_to (
+      cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY + MenuH);
+      cairoctx.line_to (PlaceX + PlaceW - MenuW + Rounding, PlaceY + MenuH);
+      cairoctx.curve_to ( 
+        PlaceX + PlaceW - MenuW, PlaceY + MenuH,
+        PlaceX + PlaceW - MenuW, PlaceY + MenuH,
+        PlaceX + PlaceW - MenuW, PlaceY + MenuH + Rounding);
+      cairoctx.line_to (PlaceX + PlaceW - MenuW, PlaceY + PlaceH - Rounding); 
+      cairoctx.curve_to (
         PlaceX + PlaceW - MenuW, PlaceY + PlaceH,
-    		PlaceX + PlaceW - MenuW, PlaceY + PlaceH,
-    		PlaceX + PlaceW - MenuW - Rounding, PlaceY + PlaceH);
-  	}
+        PlaceX + PlaceW - MenuW, PlaceY + PlaceH,
+        PlaceX + PlaceW - MenuW - Rounding, PlaceY + PlaceH);
+    }
 
-	  void DrawTab(Cairo.Context cairoctx, TabRect tab)
-  	{
-	    cairoctx.line_to (tab.right + RoundingSmall, PlaceBottom );
-  	  cairoctx.curve_to ( 
-	    	tab.right, PlaceBottom,
-  	  	tab.right, PlaceBottom,
-    		tab.right, PlaceBottom - RoundingSmall);
-  	  cairoctx.line_to (tab.right, tab.top + Rounding);
-  	  cairoctx.curve_to (
-    		tab.right, tab.top,
-    		tab.right, tab.top,
-    		tab.right - Rounding, tab.top);
-  	  cairoctx.line_to (tab.left + Rounding, tab.top);
-	    cairoctx.curve_to (
-    		tab.left, tab.top,
-    		tab.left, tab.top,
-    		tab.left, tab.top + Rounding);
-  	  cairoctx.line_to (tab.left, PlaceBottom - RoundingSmall);
-  	  cairoctx.curve_to (
+    void DrawTab(Cairo.Context cairoctx, TabRect tab)
+    {
+      cairoctx.line_to (tab.right + RoundingSmall, PlaceBottom );
+      cairoctx.curve_to ( 
+        tab.right, PlaceBottom,
+        tab.right, PlaceBottom,
+        tab.right, PlaceBottom - RoundingSmall);
+      cairoctx.line_to (tab.right, tab.top + Rounding);
+      cairoctx.curve_to (
+        tab.right, tab.top,
+        tab.right, tab.top,
+        tab.right - Rounding, tab.top);
+      cairoctx.line_to (tab.left + Rounding, tab.top);
+      cairoctx.curve_to (
+      tab.left, tab.top,
+        tab.left, tab.top,
+        tab.left, tab.top + Rounding);
+      cairoctx.line_to (tab.left, PlaceBottom - RoundingSmall);
+      cairoctx.curve_to (
         tab.left, PlaceBottom,
-    		tab.left, PlaceBottom,
-    		tab.left - RoundingSmall, PlaceBottom);
-  	}
+        tab.left, PlaceBottom,
+        tab.left - RoundingSmall, PlaceBottom);
+    }
 
-	  void DrawSquirl(Cairo.Context cairoctx)
-  	{
-  	  cairoctx.line_to (PlaceX + SquirlW + RoundingSmall, PlaceBottom);
-  	  cairoctx.curve_to (
-    		PlaceX + SquirlW, PlaceBottom,
-    		PlaceX + SquirlW, PlaceBottom,
-    		PlaceX + SquirlW, PlaceBottom - RoundingSmall);
-  	  cairoctx.line_to (PlaceX + SquirlW, MenuBottom + Rounding );
-  	  cairoctx.curve_to (
-    		PlaceX + SquirlW, MenuBottom,
-    		PlaceX + SquirlW, MenuBottom,
-    		PlaceX + SquirlW - Rounding, MenuBottom);
-  	  cairoctx.line_to (PlaceX - Margin, MenuBottom);
-	  }
-	
+    void DrawSquirl(Cairo.Context cairoctx)
+    {
+      cairoctx.line_to (PlaceX + SquirlW + RoundingSmall, PlaceBottom);
+      cairoctx.curve_to (
+        PlaceX + SquirlW, PlaceBottom,
+        PlaceX + SquirlW, PlaceBottom,
+        PlaceX + SquirlW, PlaceBottom - RoundingSmall);
+      cairoctx.line_to (PlaceX + SquirlW, MenuBottom + Rounding );
+      cairoctx.curve_to (
+        PlaceX + SquirlW, MenuBottom,
+        PlaceX + SquirlW, MenuBottom,
+        PlaceX + SquirlW - Rounding, MenuBottom);
+      cairoctx.line_to (PlaceX - Margin, MenuBottom);
+    }
+
     public PlacesBackground ()
     {
       PlaceWidth = 0;
@@ -139,30 +139,30 @@ namespace Unity.Places
       cairotxt = new Clutter.CairoTexture(PlaceW, PlaceH);
       Cairo.Context cairoctx = cairotxt.create();
       {
-    		cairoctx.set_source_rgba (1, 1, 1, 1.0);
-		    cairoctx.set_line_width (1.0);
+        cairoctx.set_source_rgba (1, 1, 1, 1.0);
+        cairoctx.set_line_width (1.0);
 
-    		cairoctx.move_to (PlaceX - Margin, PlaceY - Margin);
-    		cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY - Margin);
+        cairoctx.move_to (PlaceX - Margin, PlaceY - Margin);
+        cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY - Margin);
 
-		    DrawAroundMenu (cairoctx);
+        DrawAroundMenu (cairoctx);
 
-    		TabRect tab = TabRect();
-    		tab.left = TabPositionX;
-    		tab.right = tab.left + TabWidth;
-    		tab.top = PlaceY + PlaceH - TabH;
-    		tab.bottom = PlaceY + PlaceH;
+        TabRect tab = TabRect();
+        tab.left = TabPositionX;
+        tab.right = tab.left + TabWidth;
+        tab.top = PlaceY + PlaceH - TabH;
+        tab.bottom = PlaceY + PlaceH;
 
-		    DrawTab(cairoctx, tab);
+        DrawTab(cairoctx, tab);
 
-    		DrawSquirl (cairoctx);
+        DrawSquirl (cairoctx);
 
-    		/* close the path */
-		    cairoctx.line_to (PlaceX - Margin, PlaceY - Margin);
+        /* close the path */
+        cairoctx.line_to (PlaceX - Margin, PlaceY - Margin);
 
-    		cairoctx.stroke_preserve ();
-		    cairoctx.set_source_rgba (1, 1, 1, 0.15);
-    		cairoctx.fill ();
+        cairoctx.stroke_preserve ();
+        cairoctx.set_source_rgba (1, 1, 1, 0.15);
+        cairoctx.fill ();
       }
 
       cairotxt.set_opacity (0xFF);
@@ -182,7 +182,7 @@ namespace Unity.Places
       this.add_effect (effect_glow);
     }
 
-    construct
+  construct
     {
     }
   }
