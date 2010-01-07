@@ -514,8 +514,8 @@ namespace Unity.Widgets
       this.total_child_height = 0.0f;
       float x = padding.left;
       float y = padding.top;
-      float hot_negative = padding.top;
-      float hot_positive = box.get_height () + this.padding.top - this.padding.bottom;
+      float hot_negative = 0;
+      float hot_positive = box.get_height ();// + this.padding.top - this.padding.bottom;
       this.hot_start = hot_negative;
       Clutter.ActorBox child_box;
 
@@ -550,13 +550,30 @@ namespace Unity.Widgets
 
         // if the child is outside our hot area, we fade it out and make it
         // unresponsive
-        if (((child_box.y1 < hot_negative) || (child_box.y2 > hot_positive)))
+        if ((child_box.y1 < hot_negative) || (child_box.y2 > hot_positive))
           {
             if (!childcontainer.is_hidden)
               {
                 childcontainer.is_hidden = true;
                 child.set_reactive (false);
               }
+
+            // we need to set a clip on each actor
+            if (child_box.y1 < hot_negative)
+              {
+                var yclip = hot_negative - child_box.y1;
+                child.set_clip (0, yclip,
+                                child_box.get_width (),
+                                child_box.get_height () - yclip);
+              }
+            else if (child_box.y2 > hot_positive)
+              {
+                var yclip = child_box.y2 - hot_positive;
+                child.set_clip (0, 0,
+                                child_box.get_width (),
+                                child_box.get_height () - yclip);
+              }
+
           }
         else
           {
@@ -565,7 +582,11 @@ namespace Unity.Widgets
                 childcontainer.is_hidden = false;
                 child.set_reactive (true);
               }
+              child.set_clip (0, 0,
+                              child_box.get_width (), child_box.get_height ());
           }
+
+
       }
 
       this.total_child_height = y;
