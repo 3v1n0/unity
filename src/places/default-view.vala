@@ -111,17 +111,19 @@ namespace Unity.Places.Default
       float       real_height;
       float       min_height_p;
       float       natural_height_p;
+      int         hor_spacing;
 
+      hor_spacing    = this.get_spacing ();
       real_width     = box.x2 - box.x1;
       real_height    = box.y2 - box.y1;
-      padding.left   = (real_width - 600.0f) / 2.0f;
+      padding.left   = (real_width - 4*128 -3*hor_spacing) / 2.0f; /* HARDCODED: 4 colum matrix */
       padding.right  = padding.left;
 
       this.get_preferred_height (real_width,
                                  out min_height_p,
                                  out natural_height_p);
 
-      padding.top    = (real_height - min_height_p) / 2.0f;
+      padding.top    = (real_height - 400) / 2.0f; /* HARDCODED */
       padding.bottom = padding.top;
 
       this.set_padding (padding);
@@ -134,7 +136,7 @@ namespace Unity.Places.Default
       Unity.Places.Default.Model activity;
       int                        i;
       ActivityWidget             widget;
-      int                        widget_size = 128;
+      int                        widget_size = 128; /* HARDCODED */
 
       this.activities = new Gee.ArrayList<Unity.Places.Default.Model> ();
 
