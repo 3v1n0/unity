@@ -39,34 +39,34 @@ StartupWMClass=Prism
 StartupNotify=true
 Icon=/usr/share/pixmaps/prism.png
 """;
- 
+
   public class Prism : Object
   {
     public string url {get; construct;}
-    public string name; 
+    public string name;
     public string id;
-    string webapp_dir; 
-    
+    string webapp_dir;
+
     public Prism (string address)
     {
       Object (url:address);
     }
-    
-    construct 
+
+    construct
     {
       //FIXME - we need to get a "name" for webapps somehow, not sure how...
-      var split_url = url.split ("://", 2); 
+      var split_url = url.split ("://", 2);
       name = split_url[1];
-      
+
       try {
         var regex = new Regex ("(/)");
         name = regex.replace (name, -1, 0, "-");
       } catch (RegexError e) {
         warning ("%s", e.message);
       }
-      
+
       id = name;
-      webapp_dir = Environment.get_home_dir () + 
+      webapp_dir = Environment.get_home_dir () +
                     "/.webapps/%s@unity.app".printf (id);
 
       bool exists = check_existance_of_app ();
@@ -75,7 +75,7 @@ Icon=/usr/share/pixmaps/prism.png
         build_webapp ();
       }
     }
-    
+
     /* checks for the webapp given based on the url stored */
     private bool check_existance_of_app ()
     {
@@ -83,7 +83,7 @@ Icon=/usr/share/pixmaps/prism.png
       {
         return true;
       }
-      
+
       var webapp_dir_file = File.new_for_path (webapp_dir);
       if (webapp_dir_file.query_exists (null))
       {
@@ -91,7 +91,7 @@ Icon=/usr/share/pixmaps/prism.png
       }
       return false;
     }
-    
+
     private void build_webapp ()
     {
 
@@ -101,30 +101,29 @@ Icon=/usr/share/pixmaps/prism.png
       var webapp_directory = File.new_for_path (webapp_dir);
       try
       {
-        debug ("webapp_dir: %s", webapp_dir);
         webapp_directory.make_directory_with_parents (null);
       } catch (Error e)
       {
         warning ("%s", e.message);
         return;
       }
-      
+
       var inifile = File.new_for_path (webapp_dir + "/webapp.ini");
-      try 
+      try
       {
         var file_stream = inifile.create (FileCreateFlags.NONE, null);
         var data_stream = new DataOutputStream (file_stream);
         data_stream.put_string (webapp_ini, null);
-        
+
       } catch (Error e)
       {
         warning ("%s", e.message);
         return;
       }
-      
-      var desktop_file = File.new_for_path (webapp_dir + 
+
+      var desktop_file = File.new_for_path (webapp_dir +
                                             "/%s.desktop".printf (name));
-      try 
+      try
       {
         var file_stream = desktop_file.create (FileCreateFlags.NONE, null);
         var data_stream = new DataOutputStream (file_stream);
@@ -135,7 +134,7 @@ Icon=/usr/share/pixmaps/prism.png
         return;
       }
     }
-    
+
     public void add_to_favorites ()
     {
       var favorites = Launcher.Favorites.get_default ();
@@ -146,7 +145,7 @@ Icon=/usr/share/pixmaps/prism.png
           warning ("%s is already a favorite", name);
           return;
         }
-        
+
       string desktop_path = webapp_dir + "/%s.desktop".printf (name);
       uid = "webapp-" + Path.get_basename (desktop_path);
       // we are not a favorite and we need to be favorited!
@@ -154,8 +153,8 @@ Icon=/usr/share/pixmaps/prism.png
       favorites.set_string (uid, "desktop_file", desktop_path);
       favorites.add_favorite (uid);
     }
-    
-    
+
+
      /**
      * gets the favorite uid for this desktop file
      */
@@ -167,11 +166,11 @@ Icon=/usr/share/pixmaps/prism.png
       unowned SList<string> favorite_list = favorites.get_favorites();
       foreach (weak string uid in favorite_list)
         {
-          // we only want favorite *applications* for the moment 
+          // we only want favorite *applications* for the moment
           var type = favorites.get_string(uid, "type");
           if (type != "application")
               continue;
-              
+
           string desktop_file = favorites.get_string(uid, "desktop_file");
           if (desktop_file == my_desktop_path)
             {
@@ -181,5 +180,5 @@ Icon=/usr/share/pixmaps/prism.png
       return myuid;
     }
   }
-  
+
 }
