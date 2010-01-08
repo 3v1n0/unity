@@ -201,7 +201,7 @@ namespace Unity.Places
     {
       base.allocate (box, flags);
       Clutter.ActorBox child_box = { 0.0f, 0.0f, 0.0f, 0.0f };
-      int bar_icon_size = 48;
+      int bar_icon_size = 48; /* HARDCODED: height of icons in places bar */
       int icon_margin = 4;
       int offset = 94; /* offset to first icon */
       int NewPlaceWidth = (int) (box.x2 - box.x1);
@@ -212,8 +212,11 @@ namespace Unity.Places
       child_box.y2 = child_box.y1 + bar_icon_size;
       this.bar_view.allocate (child_box, flags);
 
-      child_box.y1 = this.padding.top + bar_icon_size;
-      child_box.y2 = box.y2 - box.y1 - this.padding.top -this.padding.bottom - bar_icon_size;
+
+      child_box.x1 = box.x1 + 58 /* HARDCODED: width of quicklauncher */;
+      child_box.x2 = box.x2;
+      child_box.y1 = box.y1 + 55 /* HARDCODED: height of Places bar */;
+      child_box.y2 = box.y2;
 
       this.default_view.allocate (child_box, flags);
 

@@ -23,8 +23,8 @@ libunity_mutter_la_VALAFLAGS = \
   -H unity-mutter.h -d . \
   --library unity-mutter \
   --vapidir=$(top_srcdir)/vapi/ \
-  --vapidir=$(top_builddir)/src/ \
-  --vapidir=$(top_builddir)/libunity \
+  --vapidir=$(top_srcdir)/src/ \
+  --vapidir=$(top_srcdir)/libunity \
   --pkg clutter-1.0 \
   --pkg clutk-0.3 \
   --pkg gtk+-2.0 \
