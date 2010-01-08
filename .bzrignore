@@ -122,3 +122,5 @@ libunity/application.c
 libunity/perf-logger.c
 src/quicklauncher/application-model.c
 src/quicklauncher/launcher-model.c
+mutter-plugin/unity-mutter.h
+unity-0.1.5.tar.gz
