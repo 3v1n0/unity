@@ -25,7 +25,7 @@ libunity_static_la_CPPFLAGS = \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS) \
   -I$(top_srcdir)/libunity/ \
-  -I$(top_srcdir)/src
+  -I$(top_srcdir)/src/ \
 	-I$(top_srcdir)/places/ \
   -I$(top_srcdir)/quicklauncher/
 
@@ -59,7 +59,6 @@ libunity_static_la_LIBADD = \
 
 # Vala Sources
 src_sources = \
-  application.vala \
   background.vala \
   unity.vala \
   utils.vala \
@@ -151,4 +150,15 @@ unity.vala.stamp: $(unity_VALASOURCES)
 	$(AM_V_GEN) $(VALAC) $(unity_VALAFLAGS) $^
 	touch unity.vala.stamp
 
-CLEANFILES += *.stamp *.vapi quicklauncher/*.c places/*.c
+CLEANFILES += \
+  *.stamp \
+  *.vapi \
+  quicklauncher/*.c \
+  places/*.c \
+  $(unity_VALASOURCES:.vala=.c) \
+  $(libunity_static_la_VALASOURCES:.vala=.c) \
+  unity-static.h
+
+clean-local:
+	rm -f `echo $(quicklauncher_sources:.vala=.c) | sed "s/quicklauncher\///g"`
+	rm -f `echo $(places_sources:.vala=.c) | sed "s/places\///g"`

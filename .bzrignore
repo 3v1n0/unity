@@ -112,4 +112,16 @@ src/quicklauncher/launcher-store.c
 src/quicklauncher/launcher-view.c
 src/quicklauncher/prism-handler.c
 src/quicklauncher/quicklauncher-manager.c
-
+mutter-plugin/libunity-mutter.la
+mutter-plugin/libunity_mutter_la_vala.stamp
+mutter-plugin/plugin.c
+mutter-plugin/window-management.c
+mutter-plugin/libunity_mutter_la.vala.stamp
+libunity/application.
+libunity/application.c
+libunity/perf-logger.c
+src/quicklauncher/application-model.c
+src/quicklauncher/launcher-model.c
+mutter-plugin/unity-mutter.h
+unity-0.1.5.tar.gz
+mutter-plugin/unity-mutter.vapi

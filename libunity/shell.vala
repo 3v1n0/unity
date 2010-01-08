@@ -29,7 +29,7 @@ namespace Unity
     TARGET_URL,
     TARGET_OTHER
   }
-  public interface Shell : Gtk.Window
+  public interface Shell : Object
   {
     public abstract ShellMode     get_mode ();
     public abstract Clutter.Stage get_stage ();

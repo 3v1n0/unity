@@ -1,8 +1,8 @@
-SUBDIRS = data libunity src tests tools vapi
+SUBDIRS = data libunity src mutter-plugin tests tools vapi
 
 # Test reports
 .PHONY: check-report
 check-report:
 	$(MAKE) -C tests/ $(@)
 
-DISTCHECK_CONFIGURE_FLAGS = --enable-localinstall
+DISTCHECK_CONFIGURE_FLAGS = --enable-localinstall --enable-mutter

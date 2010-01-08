@@ -389,4 +389,6 @@ namespace Ctk {
 	public static void drag_get_data (Ctk.Actor actor, Gdk.DragContext context, Gdk.Atom target, uint32 time_);
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static void init ([CCode (array_length_pos = 0.9)] ref unowned string[] argv);
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public static void init_after ([CCode (array_length_pos = 0.9)] ref unowned string[] argv);
 }
