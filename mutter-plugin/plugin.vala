@@ -64,7 +64,7 @@ namespace Unity
     }
 
     private static const int PANEL_HEIGHT        = 23;
-    private static const int QUICKLAUNCHER_WIDTH = 54;
+    private static const int QUICKLAUNCHER_WIDTH = 58;
     
     private Clutter.Stage    stage;
     private Application      app;
