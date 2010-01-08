@@ -79,6 +79,17 @@ namespace Unity.Widgets
         get { return this._is_dragging; }
         set
           {
+            if (!this.is_dragging)
+              {
+                this.fling_timeline.stop ();
+                if (this.scroll_anim is Clutter.Animation)
+                  {
+                    if (this.scroll_anim.has_property ("drag_pos"))
+                      {
+                        this.scroll_anim.unbind_property ("drag_pos");
+                      }
+                  }
+              }
             foreach (ScrollerChild child in children)
               {
                 child.child.set_reactive (!value);
@@ -90,6 +101,7 @@ namespace Unity.Widgets
     private float last_drag_pos = 0.0f;
     private float fling_velocity = 0.0f;
     private float previous_y = -1000000000.0f;
+    private float fling_target = 0.0f;
 
     private Clutter.Texture? bgtex;
     private Clutter.Texture? gradient;
@@ -103,14 +115,14 @@ namespace Unity.Widgets
     private Ctk.Orientation orientation = Ctk.Orientation.VERTICAL;
 
     private Gee.ArrayList<ScrollerChild> children;
-    private double total_child_height;
+    private float total_child_height;
 
     private Gee.HashMap<Clutter.Actor, Clutter.Animation> fadeout_stack;
     private Gee.HashMap<Clutter.Actor, Clutter.Animation> fadein_stack;
     private Gee.HashMap<Clutter.Actor, Clutter.Animation> anim_stack;
     private Clutter.Animation scroll_anim;
 
-    private double hot_height = 0.0;
+    private float hot_height = 0.0f;
     private float hot_start = 0.0f;
 
     private Clutter.Timeline fling_timeline;
@@ -208,7 +220,8 @@ namespace Unity.Widgets
       {
         if (container.child == actor)
         {
-          double scroll_px = container.box.y2 - hot_height - hot_start;
+          float scroll_px;
+          scroll_px = container.box.y2 - hot_height - hot_start;
 
           if (scroll_anim is Clutter.Animation)
             scroll_anim.completed ();
@@ -224,17 +237,22 @@ namespace Unity.Widgets
     private uint stored_delta = 0;
     private void on_fling_frame (Clutter.Timeline timeline, int msecs)
     {
-      if (fling_velocity < 1.0f && fling_velocity > -1.0f)
+
+      // the jist here is that we are doing a *real* per frame fling so we need
+      // to head towards a given goal, bouncing around on the way
+
+      float difference = this.drag_pos - this.fling_target;
+      this.fling_velocity += difference * 0.005f;
+
+
+      if (difference < 1.0f && difference > -1.0f)
         {
-          timeline.pause ();
-
-          // we want to scroll to a nice position from here
-          float position = get_next_neg_position (this.drag_pos);
-          this.scroll_anim = this.animate (
-                              Clutter.AnimationMode.EASE_OUT_QUAD,
-                              1500,
-                              "drag_pos", position);
-
+          // we have arrived at our destination.
+          timeline.stop ();
+          this.last_drag_pos = this.fling_target;
+          this.drag_pos = this.fling_target;
+          this.stored_delta = 0;
+          this.previous_y = this.drag_pos;
         }
 
       /* this code is slightly alkward, physics engines really need to tick
@@ -244,10 +262,10 @@ namespace Unity.Widgets
        */
 
       uint delta = timeline.get_delta ();
-      delta += stored_delta;
+      delta += this.stored_delta;
       if (delta <= 16)
         {
-          stored_delta = delta;
+          this.stored_delta = delta;
           return;
         }
 
@@ -255,12 +273,12 @@ namespace Unity.Widgets
       while (delta > 16)
         {
           delta -= 16;
-          fling_velocity *= this.friction;
-          d -= fling_velocity;
+          this.fling_velocity *= this.friction;
+          d -= this.fling_velocity;
         }
       this.drag_pos += d;
 
-      stored_delta = delta;
+      this.stored_delta = delta;
     }
 
     private void calculate_anchor (out int iterations, out float position)
@@ -292,7 +310,7 @@ namespace Unity.Widgets
         if (box.y1 < hot_start)
         {
           /* we have a container lower than the "hotarea" */
-          double scroll_px = box.y1 + target_pos - hot_start;
+          float scroll_px = box.y1 + target_pos - hot_start;
           return (float)scroll_px - this.padding.top;
         }
       }
@@ -336,13 +354,22 @@ namespace Unity.Widgets
 
       calculate_anchor (out iters, out position);
 
-      if ((position < 0.0 || position > this.total_child_height)
-          || this.total_child_height < this.height)
+      if (position < 0.0 || position > this.total_child_height - this.height)
         {
           /* because we are flinging outside of our target area we have to
            * do a "real" fling, per frame calculated and then swing back
            * to a nice position
            */
+          // because we are out of bounds with our target position we clamp
+          // the value to the top item or the bottom item#
+          if (position < 0.0 || this.total_child_height < this.height)
+            {
+              this.fling_target = 0.0f;
+            }
+          else
+            {
+              this.fling_target = this.total_child_height - this.height + 32;
+            }
           this.fling_timeline.start ();
         }
       else
@@ -351,6 +378,11 @@ namespace Unity.Widgets
            * a fake fling and just use clutters animation system, should
            * hopefully give a nicer feel
            */
+          if (this.scroll_anim is Clutter.Animation)
+            {
+              this.scroll_anim.completed ();
+            }
+
           position = get_next_neg_position (position);
           this.scroll_anim = this.animate (
                                     Clutter.AnimationMode.EASE_OUT_QUAD,
@@ -529,16 +561,19 @@ namespace Unity.Widgets
       foreach (ScrollerChild childcontainer in this.children)
       {
         Clutter.Actor child = childcontainer.child;
+        float min_height, natural_height;
         child.get_allocation_box (out child_box);
+        child.get_preferred_height (box.get_width (), out min_height, out natural_height);
         if (orientation == Ctk.Orientation.VERTICAL)
         {
 
           child_box.x1 = x;
           child_box.x2 = x + child.width + padding.right;
           child_box.y1 = y;
-          child_box.y2 = y + child.height;
+          child_box.y2 = y + min_height;
 
           y += child.height + spacing;
+          this.total_child_height += child.height + spacing;
         }
         else
         {
@@ -588,8 +623,6 @@ namespace Unity.Widgets
 
 
       }
-
-      this.total_child_height = y;
 
       /* also allocate our background graphics */
       bgtex.get_allocation_box (out child_box);
