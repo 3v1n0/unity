@@ -92,7 +92,9 @@ namespace Unity
     private void real_construct ()
     {
       this.wm = new WindowManagement (this);
+    
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
+      this.stage.actor_added.connect (this.on_stage_actor_added);
 
       this.drag_dest = new DragDest ();
       this.drag_dest.show ();
@@ -168,6 +170,24 @@ namespace Unity
        * this.plugin.set_stage_input_region (uint region);
 		   * this.plugin.set_stage_reactive (true);
        */
+    }
+
+    private void on_stage_actor_added (Clutter.Actor actor)
+    {
+      if (actor is Ctk.Menu)
+        {
+          actor.destroy.connect (() =>
+            {
+              this.plugin.set_stage_input_area (0,
+                                                this.PANEL_HEIGHT,
+                                                this.QUICKLAUNCHER_WIDTH,
+                                                (int)(this.stage.height
+                                                      -this.PANEL_HEIGHT));
+            });
+          this.plugin.set_stage_input_area (0, 0,
+                                            (int)this.stage.width,
+                                            (int)this.stage.height);
+        }
     }
 
     /*
