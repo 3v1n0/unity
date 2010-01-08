@@ -48,6 +48,9 @@ namespace Unity
       set { _plugin = value; this.real_construct (); }
     }
 
+    private static const int PANEL_HEIGHT        = 23;
+    private static const int QUICKLAUNCHER_WIDTH = 54;
+    
     private Clutter.Stage    stage;
     private Application      app;
     private WindowManagement wm;
@@ -83,12 +86,15 @@ namespace Unity
       this.quicklauncher = new Quicklauncher.View (this);
       this.quicklauncher.opacity = 0;
       this.stage.add_actor (this.quicklauncher);
+      this.stage.raise_child (this.quicklauncher,
+                              this.plugin.get_window_group());
       this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 400,
                                   "opacity", 255);
 
       this.places = new Places.View ();
       this.places.opacity = 0;
       this.stage.add_actor (this.places);
+      this.stage.raise_child (this.places, this.quicklauncher);
       this.places_showing = false;
 
       this.relayout ();
@@ -103,15 +109,26 @@ namespace Unity
       this.background.set_size (width, height);
       this.background.set_position (0, 0);
 
-      this.quicklauncher.set_size (54, height-24);
-      this.quicklauncher.set_position (0, 24);
+      this.quicklauncher.set_size (this.QUICKLAUNCHER_WIDTH,
+                                   height-this.PANEL_HEIGHT);
+      this.quicklauncher.set_position (0, this.PANEL_HEIGHT);
+      this.quicklauncher.set_clip (0, 0,
+                                   this.QUICKLAUNCHER_WIDTH,
+                                   height-this.PANEL_HEIGHT);
 
-      this.places.set_size (width - 54, height -23);
-      this.places.set_position (54, 23);
+      this.places.set_size (width, height);
+      this.places.set_position (0, 0);
 
-      this.plugin.set_stage_input_area (0, 24, 54, (int)(height - 24));
-      //this.plugin.set_stage_input_region (uint region);
-		  //this.plugin.set_stage_reactive (true);
+      this.plugin.set_stage_input_area (0,
+                                        this.PANEL_HEIGHT,
+                                        this.QUICKLAUNCHER_WIDTH,
+                                        (int)(height - this.PANEL_HEIGHT));
+
+      /* Leaving this here to remind me that we need to use these when 
+       * there are fullscreen windows etc
+       * this.plugin.set_stage_input_region (uint region);
+		   * this.plugin.set_stage_reactive (true);
+       */
     }
 
     /*
@@ -134,25 +151,32 @@ namespace Unity
           this.places_showing = false;
           this.places.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
                                "opacity", 0);
-          this.plugin.get_window_group ().animate (Clutter.AnimationMode.EASE_IN_SINE, 300, "opacity", 255);
+          var win_group = this.plugin.get_window_group ();
+          win_group.animate (Clutter.AnimationMode.EASE_IN_SINE, 300,
+                             "opacity", 255);
+
           this.plugin.set_stage_input_area (0,
-                                            24,
-                                            54,
-                                            (int)(this.stage.height - 24));
+                                            this.PANEL_HEIGHT,
+                                            this.QUICKLAUNCHER_WIDTH,
+                                            (int)(this.stage.height 
+                                                    - this.PANEL_HEIGHT));
         }
       else
         {
           this.places_showing = true;
-          this.places.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
+          this.places.animate (Clutter.AnimationMode.EASE_IN_SINE, 300,
                                "opacity", 255);
-          this.plugin.get_window_group ().animate (Clutter.AnimationMode.EASE_IN_SINE, 300, "opacity", 0);
+          
+          var win_group = this.plugin.get_window_group ();
+          win_group.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
+                              "opacity", 0);
+          
           this.plugin.set_stage_input_area (0,
-                                            24,
+                                            this.PANEL_HEIGHT,
                                             (int)this.stage.width,
-                                            (int)this.stage.height-24);
+                                            (int)this.stage.height
+                                                    - this.PANEL_HEIGHT);
         }
-      this.places.queue_relayout ();
-
       debug ("Places showing: %s", this.places_showing ? "true":"false");
     }
 
