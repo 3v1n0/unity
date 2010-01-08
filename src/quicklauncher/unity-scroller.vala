@@ -369,21 +369,21 @@ namespace Unity.Widgets
           Clutter.grab_pointer (this);
 
           /* Disable any animations on the children */
+          Clutter.Event e = { 0 };
+          e.type = Clutter.EventType.LEAVE;
+          e.crossing.time = event.motion.time;
+          e.crossing.flags = event.motion.flags;
+          e.crossing.stage = event.motion.stage;
+          e.crossing.x = event.motion.x;
+          e.crossing.y = event.motion.y;
+
           foreach (ScrollerChild container in this.children)
             {
               Clutter.Actor child = container.child;
 
               if (child is Clutter.Actor)
                 {
-                  Clutter.Event e = { 0 };
-                  e.type = Clutter.EventType.LEAVE;
-                  e.crossing.time = event.motion.time;
-                  e.crossing.flags = event.motion.flags;
-                  e.crossing.stage = event.motion.stage;
                   e.crossing.source = child;
-                  e.crossing.x = event.motion.x;
-                  e.crossing.y = event.motion.y;
-
                   child.do_event (e, false);
                 }
             }
