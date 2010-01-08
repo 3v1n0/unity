@@ -22,7 +22,7 @@ libunity_mutter_la_VALAFLAGS = \
   -C \
   -H unity-mutter.h -d . \
   --library unity-mutter \
-  --vapidir=$(top_builddir)/vapi/ \
+  --vapidir=$(top_srcdir)/vapi/ \
   --vapidir=$(top_builddir)/src/ \
   --vapidir=$(top_builddir)/libunity \
   --pkg clutter-1.0 \
@@ -69,7 +69,7 @@ $(BUILT_SOURCES) $(libunity_mutter_la_APIFILES): $(libunity_mutter_la_VALASOURCE
 
 CLEANFILES += \
   *.stamp \
-  *.vapi \
+  unity-mutter.vapi \
   plugin.c \
   window-management.c \
   $(libunity_mutter_la_APIFILES)

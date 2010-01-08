@@ -35,7 +35,7 @@ libunity_static_la_VALAFLAGS = \
   --thread \
   --library unity-static \
   --vapidir=$(top_srcdir)/vapi/ \
-  --vapidir=$(top_srcdir)/libunity/ \
+  --vapidir=$(top_builddir)/libunity/ \
   --pkg clutk-0.3 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
@@ -110,7 +110,7 @@ unity_CPPFLAGS = \
 unity_VALAFLAGS = \
   -C \
   --vapidir=./ \
-  --vapidir=$(top_srcdir)/libunity/ \
+  --vapidir=$(top_builddir)/libunity/ \
   --vapidir=$(top_srcdir)/vapi/ \
   --thread \
   --pkg clutk-0.3 \

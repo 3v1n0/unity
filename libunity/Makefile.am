@@ -17,7 +17,7 @@ libunity_la_VALAFLAGS = \
 	-C \
   -H unity.h -d . \
   --library unity \
-  --vapidir=$(top_builddir)/vapi/ \
+  --vapidir=$(top_srcdir)/vapi/ \
   --thread \
   --pkg clutter-1.0 \
   --pkg clutk-0.3 \
