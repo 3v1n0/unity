@@ -1,1 +1,1 @@
-EXTRA_DIST = makebootchart.py unity-xepyhr.py
+EXTRA_DIST = makebootchart.py unity-xephyr.py
