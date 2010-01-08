@@ -3,6 +3,10 @@
 [CCode (cprefix = "Unity", lower_case_cprefix = "unity_")]
 namespace Unity {
 	[CCode (cheader_filename = "unity-mutter.h")]
+	public class DragDest : Gtk.Window {
+		public DragDest ();
+	}
+	[CCode (cheader_filename = "unity-mutter.h")]
 	public class Plugin : GLib.Object, Unity.Shell {
 		public Plugin ();
 		public void destroy (Mutter.Window window);

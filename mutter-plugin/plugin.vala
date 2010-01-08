@@ -19,6 +19,21 @@
 
 namespace Unity
 {
+  public class DragDest: Gtk.Window
+  {
+    public DragDest ()
+      {
+        Object (type:Gtk.WindowType.TOPLEVEL,
+                type_hint:Gdk.WindowTypeHint.DOCK,
+                opacity:0.0);
+      }
+
+    construct
+    {
+      ;  
+    }
+  }
+
   public class Plugin : Object, Shell
   {
     /* Signals */
@@ -60,8 +75,8 @@ namespace Unity
     private Quicklauncher.View quicklauncher;
     private Places.View        places;
 
-    /* Places toggle */
-    private bool places_showing;
+    private DragDest drag_dest;
+    private bool     places_showing;
 
     construct
     {
@@ -78,6 +93,26 @@ namespace Unity
     {
       this.wm = new WindowManagement (this);
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
+
+      this.drag_dest = new DragDest ();
+      this.drag_dest.show ();
+      Gtk.TargetEntry[] target_list = {
+        Gtk.TargetEntry () {target="STRING", flags=0,
+                            info=Unity.dnd_targets.TARGET_STRING },
+        Gtk.TargetEntry () {target="text/plain", flags=0,
+                            info=Unity.dnd_targets.TARGET_STRING },
+        Gtk.TargetEntry () {target="text/uri-list", flags=0,
+                            info=Unity.dnd_targets.TARGET_URL },
+        Gtk.TargetEntry () {target="x-url/http",
+                            flags=0, info=Unity.dnd_targets.TARGET_URL },
+        Gtk.TargetEntry () {target="x-url/ftp",
+                            flags=0, info=Unity.dnd_targets.TARGET_URL },
+        Gtk.TargetEntry () {target="_NETSCAPE_URL", flags=0,
+                            info=Unity.dnd_targets.TARGET_URL }
+      };
+
+      Ctk.dnd_init ((Gtk.Widget)this.drag_dest, target_list);
+
 
       this.background = new Background ();
       this.stage.add_actor (this.background);
@@ -106,11 +141,15 @@ namespace Unity
 
       this.stage.get_size (out width, out height);
 
+      this.drag_dest.resize (this.QUICKLAUNCHER_WIDTH,
+                             (int)height - this.PANEL_HEIGHT);
+      this.drag_dest.move (0, this.PANEL_HEIGHT);
+
       this.background.set_size (width, height);
       this.background.set_position (0, 0);
 
       this.quicklauncher.set_size (this.QUICKLAUNCHER_WIDTH,
-                                   height-this.PANEL_HEIGHT);
+                                   (height-this.PANEL_HEIGHT));
       this.quicklauncher.set_position (0, this.PANEL_HEIGHT);
       this.quicklauncher.set_clip (0, 0,
                                    this.QUICKLAUNCHER_WIDTH,
