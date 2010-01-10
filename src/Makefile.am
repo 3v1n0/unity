@@ -64,6 +64,10 @@ src_sources = \
   utils.vala \
   window.vala
 
+panel_sources = \
+  panel/panel-tray.vala \
+  panel/panel-view.vala
+
 places_sources = \
   places/bar-model.vala \
   places/bar-view.vala \
@@ -83,6 +87,7 @@ quicklauncher_sources = \
 
 libunity_static_la_VALASOURCES = \
   $(src_sources) \
+  $(panel_sources) \
   $(places_sources) \
   $(quicklauncher_sources)
 

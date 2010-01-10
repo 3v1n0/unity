@@ -125,3 +125,5 @@ src/quicklauncher/launcher-model.c
 mutter-plugin/unity-mutter.h
 unity-0.1.5.tar.gz
 mutter-plugin/unity-mutter.vapi
+src/panel/panel-tray.c
+src/panel/panel-view.c

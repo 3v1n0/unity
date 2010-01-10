@@ -36,7 +36,8 @@ namespace Unity
 
     private Background          background;
     private Quicklauncher.View  quicklauncher;
-    private Unity.Places.View   places;
+    private Places.View         places;
+    private Panel.View          panel;
 
     public UnderlayWindow (bool popup, int width, int height)
     {
@@ -120,6 +121,10 @@ namespace Unity
       this.places = new Unity.Places.View ();
       this.stage.add_actor (this.quicklauncher);
       this.stage.add_actor (this.places);
+
+      this.panel = new Panel.View (this);
+      this.stage.add_actor (this.panel);
+      this.panel.show ();
      
       /* Layout everything */
       this.move (0, 0);
@@ -159,8 +164,6 @@ namespace Unity
           height = size.height;
         }
 
-      debug ("relayout: %dx%d - %dx%d", x, y, width, height);
-
       this.resize (width, height);
       this.stage.set_size (width, height);
 
@@ -182,6 +185,9 @@ namespace Unity
                              this.workarea_size.top -
                              this.workarea_size.bottom);
        this.places.set_position (0, 0);
+
+       this.panel.set_size (width, 24);
+       this.panel.set_position (0, 0);
     }
 
     public override void show ()
