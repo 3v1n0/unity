@@ -52,6 +52,7 @@ namespace Unity.Panel.Tray
       unowned X.Screen screen;
       string           selection_atom_name;
       int              screen_number;
+      uint32           timestamp;
 
       this.screen = Gdk.Screen.get_default ();
 
@@ -68,10 +69,27 @@ namespace Unity.Panel.Tray
       selection_atom_name = @"_NET_SYSTEM_TRAY_S$screen_number";
       this.selection_atom = Gdk.Atom.intern (selection_atom_name, false);
 
-      this.set_visual_property ();
+      this.set_properties ();
+
+      timestamp = Gdk.x11_get_server_time (this.invisible.window);
+
+      if (Gdk.selection_owner_set_for_display (display,
+                                               this.invisible.window,
+                                               this.selection_atom,
+                                               timestamp,
+                                               true))
+        {
+
+        }
+      else
+        {
+          this.invisible.destroy ();
+          this.invisible = null;
+          this.screen = null;
+        }
     }
 
-    private void set_visual_property ()
+    private void set_properties ()
     {
       Gdk.Display      display;
       unowned X.Visual xvisual;
