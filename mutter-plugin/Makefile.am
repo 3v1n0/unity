@@ -2,6 +2,8 @@ BUILT_SOURCES =
 CLEANFILES = 
 EXTRA_DIST = 
 
+if ENABLE_MUTTER
+
 if HAVE_LOCALINSTALL
 mutterlibdir = /tmp/mutter-plugin/
 else
@@ -73,3 +75,6 @@ CLEANFILES += \
   plugin.c \
   window-management.c \
   $(libunity_mutter_la_APIFILES)
+
+else
+endif
