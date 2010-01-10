@@ -1,5 +1,4 @@
-/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
-/*
+/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- *//*
  * Copyright (C) 2009 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
@@ -35,4 +34,10 @@ namespace Unity {
   
   [CCode (cheader_filename = "unity-utils.h", cname = "END_FUNCTION")]
   public static void END_FUNCTION ();
+
+  [CCode (cheader_filename = "gdk/gdkx.h", cname = "gdk_x11_visual_get_xvisual")]
+  public static unowned X.Visual _x11_visual_get_xvisual (Gdk.Visual visual);
+
+  [CCode (cheader_filename = "unity-utils.h", cname = "XVisualIDFromVisual")]
+  public static ulong _x_visual_id_from_visual (X.Visual visual);
 }

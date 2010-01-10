@@ -23,6 +23,7 @@ namespace Unity.Panel
   public class View : Ctk.Actor
   {
     private Shell shell;
+    private Tray.View tray;
 
     private Clutter.Rectangle rect;
 
@@ -40,6 +41,8 @@ namespace Unity.Panel
       this.rect = new Clutter.Rectangle.with_color (color);
       this.rect.set_parent (this);
       this.rect.show ();
+
+      tray = new Tray.View ();
 
       END_FUNCTION ();
     }

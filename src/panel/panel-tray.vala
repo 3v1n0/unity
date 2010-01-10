@@ -18,17 +18,106 @@
  *
  */
 
-namespace Unity.Panel
+namespace Unity.Panel.Tray
 {
-  public class Tray : Ctk.Box
+  public class View : Ctk.Box
   {
-    public Tray ()
+    private Manager manager;
+
+    public View ()
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL);
     }
 
     construct
-    {  
+    {
+      this.manager = new Manager ();
+    }
+  }
+
+  public class Manager : Object
+  {
+    private Gdk.Screen screen;
+    private Gtk.Widget invisible;
+    private Gdk.Atom   selection_atom;
+
+    public Manager ()
+    {
+      ;
+    }
+
+    construct
+    {
+      Gdk.Display      display;
+      unowned X.Screen screen;
+      string           selection_atom_name;
+      int              screen_number;
+
+      this.screen = Gdk.Screen.get_default ();
+
+      display = this.screen.get_display ();
+      screen = Gdk.x11_screen_get_xscreen (this.screen);
+      
+      this.invisible = new Gtk.Invisible.for_screen (this.screen);
+      this.invisible.realize ();
+
+      this.invisible.add_events (Gdk.EventMask.PROPERTY_CHANGE_MASK
+                                 | Gdk.EventMask.STRUCTURE_MASK);
+
+      screen_number = this.screen.get_number ();
+      selection_atom_name = @"_NET_SYSTEM_TRAY_S$screen_number";
+      this.selection_atom = Gdk.Atom.intern (selection_atom_name, false);
+
+      this.set_visual_property ();
+    }
+
+    private void set_visual_property ()
+    {
+      Gdk.Display      display;
+      unowned X.Visual xvisual;
+      X.Atom           visual_atom;
+      uchar[]          data = { 0 };
+      X.Atom           orientation_atom;
+
+      /* First the visual atom */
+      display = this.invisible.get_display ();
+      visual_atom = Gdk.x11_get_xatom_by_name_for_display (display,
+                                             "_NET_SYSTEM_TRAY_VISUAL");
+
+      if (this.screen.get_rgba_visual () != null &&
+          display.supports_composite ())
+        {
+          Gdk.Visual gvisual = this.screen.get_rgba_visual ();
+          xvisual = _x11_visual_get_xvisual (gvisual);
+        }
+      else
+        {
+          Gdk.Colormap colormap;
+
+          colormap = this.screen.get_default_colormap ();
+          xvisual = _x11_visual_get_xvisual (colormap.get_visual ());
+        }
+
+      data[0] = (uchar)_x_visual_id_from_visual (xvisual);
+
+      unowned X.Display xdisplay = Gdk.x11_display_get_xdisplay (display);
+      xdisplay.change_property (Gdk.x11_drawable_get_xid (this.invisible.window),
+                         visual_atom,
+                         (X.Atom)32, 32,
+                         X.PropMode.Replace,
+                         data, 1);
+
+      /* Now the orientation atom */
+      orientation_atom = Gdk.x11_get_xatom_by_name_for_display (display,
+                                         "_NET_SYSTEM_TRAY_ORIENTATION");
+      data[0] = 0; /* Orientation */
+
+      xdisplay.change_property (Gdk.x11_drawable_get_xid (this.invisible.window),
+                                orientation_atom,
+                                (X.Atom)6, /* XA_CARDINAL */
+                                32,
+                                X.PropMode.Replace,
+                                data, 1);
     }
   }
 }

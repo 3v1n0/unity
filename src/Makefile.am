@@ -42,6 +42,7 @@ libunity_static_la_VALAFLAGS = \
   --pkg cogl-1.0 \
   --pkg gconf-2.0 \
   --pkg gdk-2.0 \
+  --pkg gdk-x11-2.0 \
   --pkg gee-1.0 \
   --pkg gio-unix-2.0 \
   --pkg gtk+-2.0 \
