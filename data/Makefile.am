@@ -11,8 +11,8 @@ dist_default_DATA = \
   music.png \
   people.png \
   photos.png \
-  quicklauncher_focused_indicator.svg \
-  quicklauncher_running_indicator.svg \
+  quicklauncher_focused_indicator.png \
+  quicklauncher_running_indicator.png \
   quicklauncher_spinner.png \
   software_centre.png \
   tight_check_4px.png \

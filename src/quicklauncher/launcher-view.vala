@@ -24,9 +24,9 @@ namespace Unity.Quicklauncher
   const string THROBBER_FILE = Unity.PKGDATADIR
     + "/quicklauncher_spinner.png";
   const string FOCUSED_FILE  = Unity.PKGDATADIR
-    + "/quicklauncher_focused_indicator.svg";
+    + "/quicklauncher_focused_indicator.png";
   const string RUNNING_FILE  = Unity.PKGDATADIR
-    + "/quicklauncher_running_indicator.svg";
+    + "/quicklauncher_running_indicator.png";
   const string HONEYCOMB_MASK_FILE = Unity.PKGDATADIR
     + "/honeycomb-mask.png";
   const string MENU_BG_FILE = Unity.PKGDATADIR
@@ -45,8 +45,8 @@ namespace Unity.Quicklauncher
     /* the prettys */
     private Ctk.Image icon;
     private Ctk.Image throbber;
-    private Ctk.Image focused_indicator;
-    private Ctk.Image running_indicator;
+    private Clutter.Texture focused_indicator;
+    private Clutter.Texture running_indicator;
     private Gdk.Pixbuf honeycomb_mask;
     private Clutter.Group container;
 
@@ -156,12 +156,24 @@ namespace Unity.Quicklauncher
                                                  Clutter.Gravity.CENTER);
       this.container.add_actor (this.throbber);
 
-      this.focused_indicator = new Ctk.Image.from_filename (8,
-                                                            FOCUSED_FILE);
+      try
+        {
+          this.focused_indicator = new Clutter.Texture.from_file (FOCUSED_FILE);
+        } catch (Error e)
+        {
+          this.focused_indicator = new Clutter.Texture ();
+          warning ("loading focused indicator failed, %s", e.message);
+        }
       this.container.add_actor (this.focused_indicator);
 
-      this.running_indicator = new Ctk.Image.from_filename (8,
-                                                            RUNNING_FILE);
+      try
+        {
+          this.running_indicator = new Clutter.Texture.from_file (RUNNING_FILE);
+        } catch (Error e)
+        {
+          this.running_indicator = new Clutter.Texture ();
+          warning ("loading running indicator failed, %s", e.message);
+        }
       this.container.add_actor (this.running_indicator);
 
       this.throbber.set_opacity (0);
