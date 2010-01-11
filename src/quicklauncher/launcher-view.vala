@@ -56,7 +56,6 @@ namespace Unity.Quicklauncher
     private Gee.ArrayList<ShortcutItem> shortcut_actions;
 
     private Ctk.EffectGlow effect_icon_glow;
-    private Ctk.EffectDropShadow effect_icon_dropshadow;
 
     /* internal view logic datatypes */
     private uint32 last_pressed_time;
@@ -142,9 +141,6 @@ namespace Unity.Quicklauncher
 
         this.clicked.connect (this.on_clicked);
         this.icon.do_queue_redraw ();
-
-        effect_icon_dropshadow = new Ctk.EffectDropShadow(3, 5, 5);
-        this.icon.add_effect(effect_icon_dropshadow);
 
         set_reactive (true);
       }
