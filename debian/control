@@ -28,5 +28,17 @@ Vcs-Browser: http://bazaar.launchpad.net/~canonical-dx-team/unity/packaging
 Package: unity
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}
+Conflicts: netbook-launcher (<< 0.1.5+r61)
+Replaces: netbook-launcher (<< 0.1.5+r61)
+Provides: netbook-launcher (<< 0.1.5+r61)
 Description: Launcher
  Unity launcher.
+
+Package: netbook-launcher
+Section: oldlibs
+Architecture: all
+Depends: unity
+Description: transitional package
+ unity supersedes netbook-launcher. This package ensures a clean upgrade path,
+ and can be safely removed after the upgrade. 
+
