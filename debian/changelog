@@ -1,3 +1,9 @@
+unity (0.1.5+r60) lucid; urgency=low
+
+  * configure with libmutter-dev
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 12 Jan 2010 14:23:23 +0100
+
 unity (0.1.5+r58) lucid; urgency=low
 
   * New release from trunk
