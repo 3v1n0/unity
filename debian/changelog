@@ -5,6 +5,8 @@ unity (0.1.5+r62) UNRELEASED; urgency=low
   * Add debian/unity.install (now needed because we build two binaries).
   * debian/control: Explicitly add mutter dependency, since it's not covered
     by shlibs.
+  * Add debian/unity.preinst: Remove netbook-launcher autostart .desktop
+    conffile on upgrade.
 
  -- Martin Pitt <martin.pitt@ubuntu.com>  Tue, 12 Jan 2010 16:03:16 +0100
 
