@@ -13,7 +13,6 @@ dist_default_DATA = \
   photos.png \
   quicklauncher_focused_indicator.png \
   quicklauncher_running_indicator.png \
-  quicklauncher_spinner.png \
   software_centre.png \
   tight_check_4px.png \
   trash.png \
