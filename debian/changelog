@@ -1,4 +1,4 @@
-unity (0.1.5+100112-0ubuntu1) lucid; urgency=low
+unity (0.1.5+100112) lucid; urgency=low
 
   * New release from trunk
   * debian/control

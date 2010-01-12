@@ -19,7 +19,7 @@ Build-Depends: cdbs,
                libglib2.0-dev (>= 2.22.2-0ubuntu1wncksync3),
                libgtk2.0-dev (>= 2.18.0),
                gnome-common,
-               mutter
+               libmutter-dev
 Standards-Version: 3.8.3
 Homepage: https://launchpad.net/ayatana
 Vcs-Bzr: https://code.launchpad.net/~canonical-dx-team/unity/packaging
