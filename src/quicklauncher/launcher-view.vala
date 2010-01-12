@@ -21,8 +21,6 @@ using Unity.Quicklauncher.Models;
 
 namespace Unity.Quicklauncher
 {
-  const string THROBBER_FILE = Unity.PKGDATADIR
-    + "/quicklauncher_spinner.png";
   const string FOCUSED_FILE  = Unity.PKGDATADIR
     + "/quicklauncher_focused_indicator.png";
   const string RUNNING_FILE  = Unity.PKGDATADIR
@@ -44,7 +42,6 @@ namespace Unity.Quicklauncher
 
     /* the prettys */
     private Ctk.Image icon;
-    private Ctk.Image throbber;
     private Clutter.Texture focused_indicator;
     private Clutter.Texture running_indicator;
     private Gdk.Pixbuf honeycomb_mask;
@@ -101,8 +98,6 @@ namespace Unity.Quicklauncher
       }
     }
 
-    private Clutter.Animation hover_anim;
-
   /* constructors */
     public LauncherView (LauncherModel model)
       {
@@ -110,6 +105,7 @@ namespace Unity.Quicklauncher
         this.model = model;
         this.model.notify_active.connect (this.notify_on_is_running);
         this.model.notify_focused.connect (this.notify_on_is_focused);
+        this.model.activated.connect (this.on_activated);
 
         notify_on_is_running ();
         notify_on_is_focused ();
@@ -147,11 +143,6 @@ namespace Unity.Quicklauncher
 
     private void load_textures ()
     {
-      this.throbber = new Ctk.Image.from_filename (20, THROBBER_FILE);
-      this.throbber.set_z_rotation_from_gravity (0.0f,
-                                                 Clutter.Gravity.CENTER);
-      this.container.add_actor (this.throbber);
-
       try
         {
           this.focused_indicator = new Clutter.Texture.from_file (FOCUSED_FILE);
@@ -171,8 +162,6 @@ namespace Unity.Quicklauncher
           warning ("loading running indicator failed, %s", e.message);
         }
       this.container.add_actor (this.running_indicator);
-
-      this.throbber.set_opacity (0);
       this.focused_indicator.set_opacity (0);
       this.running_indicator.set_opacity (0);
 
@@ -191,13 +180,10 @@ namespace Unity.Quicklauncher
     }
 
     /**
-     * re-layouts the various indicators and throbbers in out view
+     * re-layouts the various indicators
      */
     private void relayout ()
     {
-      this.throbber.set_position (container.width - this.throbber.width,
-                                  container.height - this.throbber.height);
-
       float mid_point_y = this.container.height / 2.0f;
       float focus_halfy = this.focused_indicator.height / 2.0f;
       float focus_halfx = container.width - this.focused_indicator.width;
@@ -212,73 +198,83 @@ namespace Unity.Quicklauncher
     /* animation logic */
     private void throbber_start ()
     {
-      if (anim_throbber != null)
-        anim_throbber.completed ();
 
-      this.throbber.opacity = 255;
-      this.throbber.set_z_rotation_from_gravity (0.0f,
-                                                 Clutter.Gravity.CENTER);
-      this.anim_throbber = this.throbber.animate (
-        Clutter.AnimationMode.LINEAR, LONG_DELAY,
-        "rotation-angle-z", 360.0f
-        );
+      effect_icon_glow = new Ctk.EffectGlow ();
+      Clutter.Color c = Clutter.Color () {
+        red = 255,
+        green = 255,
+        blue = 255,
+        alpha = 255
+      };
+      effect_icon_glow.set_background_texture (honeycomb_mask);
+      effect_icon_glow.set_color (c);
+      effect_icon_glow.set_factor (0.0f);
+      this.icon.add_effect (effect_icon_glow);
+      this.icon.do_queue_redraw ();
 
-      this.anim_throbber.loop = true;
+      this.anim_throbber = effect_icon_glow.animate (
+                          Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
+                          "factor", 1.0f);
+
+      Signal.connect_after (this.anim_throbber, "completed",
+                            (Callback)do_anim_throbber_loop, this);
+
       GLib.Timeout.add_seconds (8, on_launch_timeout);
+    }
+
+    private static void do_anim_throbber_loop (Object sender, LauncherView self)
+      requires (self is LauncherView)
+    {
+      if (self.is_starting)
+        {
+          // we are still starting so do another loop
+          float factor = 0.0f;
+          if (self.effect_icon_glow.factor < 0.5)
+            {
+              factor = 1.0f;
+            }
+
+          self.anim_throbber = self.effect_icon_glow.animate (
+                                        Clutter.AnimationMode.EASE_IN_OUT_SINE,
+                                        SHORT_DELAY,
+                                        "factor", factor);
+          Signal.connect_after (self.anim_throbber, "completed",
+                                (Callback)do_anim_throbber_loop, self);
+        }
+      else
+        {
+          // we should fadeout if we are too bright, otherwise remove effect
+          if (self.effect_icon_glow.factor >= 0.1)
+            {
+              self.anim_throbber = self.effect_icon_glow.animate (
+                                        Clutter.AnimationMode.EASE_IN_OUT_SINE,
+                                        SHORT_DELAY,
+                                        "factor", 0.0);
+            }
+          else
+            {
+              self.icon.remove_effect (self.effect_icon_glow);
+            }
+        }
     }
 
     private void throbber_fadeout ()
     {
-      if (this.throbber.opacity == 0)
-        return;
-
-      if (anim_throbber != null)
-        anim_throbber.completed ();
-
-      this.anim_throbber =
-      this.throbber.animate (Clutter.AnimationMode.EASE_IN_QUAD,
-                             SHORT_DELAY,
-                             "opacity",
-                             0);
-      this.anim_throbber.loop = false;
+      return;
     }
 
     private void throbber_hide ()
     {
-      if (this.throbber.opacity > 0)
-        throbber_fadeout ();
+      throbber_fadeout ();
     }
 
-
-    private void start_hover_anim ()
-    {
-      this.hover_anim = effect_icon_glow.animate (
-        Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
-        "factor", 1.0f);
-      this.hover_anim.completed.connect (on_hover_anim_completed);
-    }
-
-    private void on_hover_anim_completed ()
-    {
-      if (is_hovering)
-      {
-        Idle.add (do_new_hover_anim);
-      }
-    }
-
-    private bool do_new_hover_anim ()
-    {
-      float fadeto = 0.0f;
-      if (effect_icon_glow.get_factor() <= 0.0f)
-        fadeto = 1.0f;
-
-      this.hover_anim = effect_icon_glow.animate(
-        Clutter.AnimationMode.EASE_IN_OUT_CIRC, 600, "factor", fadeto);
-      this.hover_anim.completed.connect (on_hover_anim_completed);
-      return false;
-    }
 
     /* callbacks on model */
+    private void on_activated ()
+    {
+      this.is_starting = false;
+    }
+
     private void notify_on_icon ()
       {
         if (this.model.icon is Gdk.Pixbuf)
@@ -330,26 +326,11 @@ namespace Unity.Quicklauncher
       this.is_starting = false;
     }
 
-
     /* callbacks on self */
 
     private bool on_mouse_enter (Clutter.Event event)
     {
       this.is_hovering = true;
-      effect_icon_glow = new Ctk.EffectGlow ();
-      Clutter.Color c = Clutter.Color () {
-        red = 255,
-        green = 255,
-        blue = 255,
-        alpha = 255
-      };
-      effect_icon_glow.set_background_texture (honeycomb_mask);
-      effect_icon_glow.set_color (c);
-      effect_icon_glow.set_factor (1.0f);
-      this.icon.add_effect (effect_icon_glow);
-      this.icon.do_queue_redraw ();
-
-      start_hover_anim ();
 
       return false;
     }
@@ -363,14 +344,7 @@ namespace Unity.Quicklauncher
 
     private bool on_mouse_leave(Clutter.Event src)
     {
-      if (this.is_hovering)
-        {
-          this.is_hovering = false;
-          this.hover_anim.completed ();
-          this.icon.remove_effect(this.effect_icon_glow);
-          this.icon.queue_relayout();
-        }
-
+      this.is_hovering = false;
       return false;
     }
 
@@ -388,6 +362,7 @@ namespace Unity.Quicklauncher
       return false;
     }
 
+    /* menu handling */
     private void build_quicklist ()
     {
       this.offline_shortcuts = this.model.get_menu_shortcuts ();
