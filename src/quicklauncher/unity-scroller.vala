@@ -383,10 +383,14 @@ namespace Unity.Widgets
               this.scroll_anim.completed ();
             }
 
-          position = get_next_neg_position (position);
-          this.scroll_anim = this.animate (
+          if (iters > 0)
+            {
+
+              position = get_next_neg_position (position);
+              this.scroll_anim = this.animate (
                                     Clutter.AnimationMode.EASE_OUT_QUAD,
                                     16 * iters, "drag_pos", position);
+            }
         }
 
       return true;
