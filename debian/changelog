@@ -1,3 +1,11 @@
+unity (0.1.5+100112-0ubuntu1) lucid; urgency=low
+
+  * New release from trunk
+  * debian/control
+    - Add mutter as a dependency
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 12 Jan 2010 11:27:57 +0100
+
 unity (0.1.5-0ubuntu2) lucid; urgency=low
 
   * debian/control
