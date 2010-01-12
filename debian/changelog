@@ -1,4 +1,4 @@
-unity (0.1.5+r62) UNRELEASED; urgency=low
+unity (0.1.5+r68) lucid; urgency=low
 
   * debian/control: Add transitional netbook-launcher package, and have unity
     C/R/P: netbook-launcher. This can be dropped after lucid's release.
@@ -12,7 +12,7 @@ unity (0.1.5+r62) UNRELEASED; urgency=low
   * debian/rules: Force an epoch on the transitional netbook-launcher package,
     since the original package has a higher version.
 
- -- Martin Pitt <martin.pitt@ubuntu.com>  Tue, 12 Jan 2010 16:03:16 +0100
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Tue, 12 Jan 2010 17:25:43 +0100
 
 unity (0.1.5+r60) lucid; urgency=low
 
