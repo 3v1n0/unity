@@ -1,0 +1,32 @@
+unity (0.1.5-0ubuntu2) lucid; urgency=low
+
+  * debian/control
+    - Bumping build depends for libgee-dev to libgee-dev (>= 0.5.0)
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Mon, 21 Dec 2009 21:31:19 -0500
+
+unity (0.1.5-0ubuntu1) lucid; urgency=low
+
+  * New snapshot
+    - Build-Depend on valac and libvala-dev (>= 0.7.8)
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Fri, 18 Dec 2009 15:57:55 -0500
+
+unity (0.1.5) karmic; urgency=low
+
+  * New release
+
+ -- Neil J. Patel <neil.patel@canonical.com>  Tue, 15 Dec 2009 12:24:03 +0000
+
+unity (0.1.0~ppa2) karmic; urgency=low
+
+  * debian/control
+    - Added build dep for valac
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Fri, 06 Nov 2009 11:53:38 -0500
+
+unity (0.1.0~ppa1) karmic; urgency=low
+
+  * Initial Packaging (LP: #474944)
+
+ -- Ken VanDine <ken.vandine@canonical.com>  Fri, 06 Nov 2009 08:40:43 -0500

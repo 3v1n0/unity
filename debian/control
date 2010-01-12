@@ -1,0 +1,31 @@
+Source: unity
+Section: gnome
+Priority: optional
+Maintainer: Ken VanDine <ken.vandine@canonical.com>
+Build-Depends: cdbs,
+               debhelper (>= 7),
+               autotools-dev,
+               pkg-config,
+               valac (>= 0.7.8),
+               libvala-dev (>= 0.7.8),
+               libgee-dev (>= 0.5.0),
+               libunique-dev,
+               libclutter-1.0-dev,
+               libclutter-gtk-0.10-dev (>=0.10.2-1ubuntu1),
+               libclutk-dev (>= 0.3.0),
+               liblauncher-0.3-dev (>= 0.3.0),
+               libwnck-dev (>= 2.28.0),
+               libwncksync-dev (>= 0.2.0),
+               libglib2.0-dev (>= 2.22.2-0ubuntu1wncksync3),
+               libgtk2.0-dev (>= 2.18.0),
+               gnome-common
+Standards-Version: 3.8.3
+Homepage: https://launchpad.net/ayatana
+Vcs-Bzr: https://code.launchpad.net/~canonical-dx-team/unity/packaging
+Vcs-Browser: http://bazaar.launchpad.net/~canonical-dx-team/unity/packaging
+
+Package: unity
+Architecture: any
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: Launcher
+ Unity launcher.

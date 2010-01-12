@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+
+include /usr/share/cdbs/1/rules/debhelper.mk
+include /usr/share/cdbs/1/rules/simple-patchsys.mk
+include /usr/share/cdbs/1/class/autotools.mk
+
+DEB_CONFIGURE_SCRIPT = $(CURDIR)/autogen.sh
+
+# List any files which are not installed
+include /usr/share/cdbs/1/rules/utils.mk
+common-binary-post-install-arch:: list-missing
+
+binary-pre-install::
+	find debian/tmp/usr/lib -name \*.la -exec rm {} \;
+	find debian/tmp/usr/lib -name \*.a -exec rm {} \;
+
