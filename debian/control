@@ -30,7 +30,7 @@ Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, mutter
 Conflicts: netbook-launcher (<< 0.1.5+r61)
 Replaces: netbook-launcher (<< 0.1.5+r61)
-Provides: netbook-launcher (<< 0.1.5+r61)
+Provides: netbook-launcher
 Description: Launcher
  Unity launcher.
 
