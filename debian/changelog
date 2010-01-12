@@ -2,6 +2,7 @@ unity (0.1.5+r60) UNRELEASED; urgency=low
 
   * debian/control: Add transitional netbook-launcher package, and have unity
     C/R/P: netbook-launcher. This can be dropped after lucid's release.
+  * Add debian/unity.install (now needed because we build two binaries).
 
  -- Martin Pitt <martin.pitt@ubuntu.com>  Tue, 12 Jan 2010 16:03:16 +0100
 
