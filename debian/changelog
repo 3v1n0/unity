@@ -9,6 +9,8 @@ unity (0.1.5+r62) UNRELEASED; urgency=low
     conffile on upgrade.
   * debian/rules: Don't generate shlibs/maintainer script code for private
     shared libraries.
+  * debian/rules: Force an epoch on the transitional netbook-launcher package,
+    since the original package has a higher version.
 
  -- Martin Pitt <martin.pitt@ubuntu.com>  Tue, 12 Jan 2010 16:03:16 +0100
 
