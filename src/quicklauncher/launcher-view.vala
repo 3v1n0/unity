@@ -33,6 +33,8 @@ namespace Unity.Quicklauncher
   const uint SHORT_DELAY = 400;
   const uint MEDIUM_DELAY = 800;
   const uint LONG_DELAY = 1600;
+  
+  static bool quicklist_open = false;
 
 
   public class LauncherView : Ctk.Bin
@@ -47,10 +49,10 @@ namespace Unity.Quicklauncher
     private Gdk.Pixbuf honeycomb_mask;
     private Clutter.Group container;
 
-    private Ctk.Menu menu;
-    private Ctk.EffectDropShadow menu_dropshadow;
     private Gee.ArrayList<ShortcutItem> offline_shortcuts;
     private Gee.ArrayList<ShortcutItem> shortcut_actions;
+    
+    private QuicklistController? menu_controller;
 
     private Ctk.EffectGlow effect_icon_glow;
 
@@ -81,7 +83,6 @@ namespace Unity.Quicklauncher
     public signal void request_remove ();
     public signal void request_attention ();
     public signal void clicked ();
-
 
     /* animations */
 
@@ -139,6 +140,8 @@ namespace Unity.Quicklauncher
         this.icon.do_queue_redraw ();
 
         set_reactive (true);
+        
+        this.menu_controller = null;
       }
 
     private void load_textures ()
@@ -325,13 +328,18 @@ namespace Unity.Quicklauncher
 
       this.is_starting = false;
     }
-
-    /* callbacks on self */
-
     private bool on_mouse_enter (Clutter.Event event)
     {
       this.is_hovering = true;
-
+      
+      if (quicklist_open == false)
+        {
+          var stage = this.get_stage() as Clutter.Stage;
+          this.menu_controller = new QuicklistController (this.model.name, this, 
+                                                          stage);
+          this.menu_controller.menu.set_detect_clicks (false);
+          this.menu_controller.menu.destroy.connect (this.on_quicklist_destroy);
+        }
       return false;
     }
 
@@ -345,6 +353,11 @@ namespace Unity.Quicklauncher
     private bool on_mouse_leave(Clutter.Event src)
     {
       this.is_hovering = false;
+      if (quicklist_open == false && this.menu_controller != null)
+        {
+          this.menu_controller.menu.fadeout_and_destroy ();
+          this.menu_controller = null;
+        }
       return false;
     }
 
@@ -357,7 +370,10 @@ namespace Unity.Quicklauncher
       }
       else
       {
-        build_quicklist ();
+        if (quicklist_open == false)
+          {
+            build_quicklist ();
+          }
       }
       return false;
     }
@@ -365,87 +381,28 @@ namespace Unity.Quicklauncher
     /* menu handling */
     private void build_quicklist ()
     {
+      quicklist_open = true;
       this.offline_shortcuts = this.model.get_menu_shortcuts ();
       this.shortcut_actions = this.model.get_menu_shortcut_actions ();
-
-      this.menu = new Ctk.Menu ();
-      Clutter.Stage stage = this.get_stage() as Clutter.Stage;
-      stage.add_actor (this.menu);
-
-      float x, y;
-      this.get_transformed_position (out x, out y);
-      this.menu.attach_to_actor (this);
-
-      Ctk.Padding padding = Ctk.Padding () {
-        left = 6,
-        right = 6,
-        top = 6,
-        bottom = 6
-      };
-      this.menu.set_padding (padding);
-
+      
       foreach (ShortcutItem shortcut in this.offline_shortcuts)
       {
-        Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (
-                                                    shortcut.get_name ());
-        this.menu.append (menuitem);
-        menuitem.activated.connect (shortcut.activated);
-        menuitem.activated.connect (this.close_menu);
+        this.menu_controller.add_action (shortcut, true);
       }
-
-      // add a seperator and a menu label
-      var seperator = new Ctk.MenuSeperator ();
-      this.menu.append (seperator);
-
-      var name_label = new Ctk.MenuItem.with_label (this.model.name);
-      this.menu.append (name_label);
-      name_label.set_reactive (false);
-
-      seperator = new Ctk.MenuSeperator ();
-      this.menu.append (seperator);
-
-      // parse the menu actions
-
+      
       foreach (ShortcutItem shortcut in this.shortcut_actions)
       {
-        Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (
-                                                    shortcut.get_name ());
-        this.menu.append (menuitem);
-        menuitem.activated.connect (shortcut.activated);
-        menuitem.activated.connect (this.close_menu);
+        this.menu_controller.add_action (shortcut, false);
       }
-      try {
-        var bg_tex = new Clutter.Texture.from_file (MENU_BG_FILE);
-        bg_tex.set_opacity (38);
-
-        bg_tex.set_repeat (true, true);
-        this.menu.set_texture(bg_tex);
-      } catch (Error e)
-      {
-        critical (e.message);
-      }
-      Clutter.Color color = Clutter.Color ()
-      {
-        red = 0x00,
-        green = 0x00,
-        blue = 0x00,
-        alpha = (uint8) (0xFF * 0.30)
-      };
-      this.menu.set_color (color);
-
-      this.menu_dropshadow = new Ctk.EffectDropShadow(3, 5, 5);
-      this.menu.add_effect(this.menu_dropshadow);
-      this.menu.show ();
-
+      this.menu_controller.menu.set_detect_clicks (true);
     }
-
-    private void close_menu ()
+    
+    private void on_quicklist_destroy ()
     {
-      this.menu.remove_effect(this.menu_dropshadow);
-      Clutter.Stage stage = this.get_stage() as Clutter.Stage;
-      stage.remove_actor (this.menu);
+      quicklist_open = false;
+      this.menu_controller = null;
     }
-
+    
     private bool on_released (Clutter.Event src)
     {
       var bevent = src.button;
