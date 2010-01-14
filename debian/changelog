@@ -1,3 +1,10 @@
+unity (0.1.5+r70) UNRELEASED; urgency=low
+
+  * debian/control: Drop Vcs-Bzr headers, until unity is properly registered
+    in Launchpad.
+
+ -- Martin Pitt <martin.pitt@ubuntu.com>  Thu, 14 Jan 2010 14:46:10 +0100
+
 unity (0.1.5+r69) lucid; urgency=low
 
   * debian/rules: Fix the dpkg-gencontrol invocation.

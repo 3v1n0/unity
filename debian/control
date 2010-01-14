@@ -22,8 +22,6 @@ Build-Depends: cdbs,
                libmutter-dev
 Standards-Version: 3.8.3
 Homepage: https://launchpad.net/ayatana
-Vcs-Bzr: https://code.launchpad.net/~canonical-dx-team/unity/packaging
-Vcs-Browser: http://bazaar.launchpad.net/~canonical-dx-team/unity/packaging
 
 Package: unity
 Architecture: any
