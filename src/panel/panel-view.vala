@@ -22,14 +22,21 @@ namespace Unity.Panel
 {
   public class View : Ctk.Actor
   {
-    private Shell shell;
+    private Shell _shell;
+    public  Shell shell {
+      get { return _shell; }
+      set { _shell = value; }
+    }
+
     private Tray.View tray;
 
     private Clutter.Rectangle rect;
 
     public View (Shell shell)
     {
-      this.shell = shell;
+      debug ("View");
+      Object (shell:shell);
+      this.tray.manage_stage (this.shell.get_stage ());
     }
 
     construct
@@ -42,7 +49,10 @@ namespace Unity.Panel
       this.rect.set_parent (this);
       this.rect.show ();
 
-      tray = new Tray.View ();
+      this.tray = new Tray.View ();
+      this.tray.set_parent (this);
+      this.tray.show ();
+      //this.tray.manage_stage (this._shell.get_stage ());
 
       END_FUNCTION ();
     }
@@ -52,24 +62,31 @@ namespace Unity.Panel
     {
       Clutter.ActorBox child_box = { 0, 0, box.x2 - box.x1, box.y2 - box.y1 };
       this.rect.allocate (child_box, flags);
+
+      child_box.x1 = 100;
+      child_box.x2 = 200;
+      this.tray.allocate (child_box, flags);
     }
 
     private override void paint ()
     {
       base.paint ();
       this.rect.paint ();
+      this.tray.paint ();
     }
 
     private override void map ()
     {
       base.map ();
       this.rect.map ();
+      this.tray.map ();
     }
 
     private override void unmap ()
     {
       base.unmap ();
       this.rect.unmap ();
+      this.tray.unmap ();
     }
   }
 }

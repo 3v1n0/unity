@@ -50,6 +50,7 @@ libunity_static_la_VALAFLAGS = \
   --pkg libwnck-1.0 \
   --pkg unity \
   --pkg unity-const \
+  --pkg unity-misc \
   --pkg unique-1.0 \
   --pkg x11 \
   $(MAINTAINER_VALAFLAGS)

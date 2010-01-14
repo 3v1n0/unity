@@ -74,6 +74,7 @@ namespace Unity
     private Background         background;
     private Quicklauncher.View quicklauncher;
     private Places.View        places;
+    private Panel.View         panel;
 
     private DragDest drag_dest;
     private bool     places_showing;
@@ -134,6 +135,11 @@ namespace Unity
       this.stage.raise_child (this.places, this.quicklauncher);
       this.places_showing = false;
 
+      this.panel = new Panel.View (this);
+      this.stage.add_actor (this.panel);
+      this.stage.raise_child (this.panel, this.places);
+      this.panel.show ();
+
       this.relayout ();
     }
 
@@ -165,6 +171,9 @@ namespace Unity
                                         this.PANEL_HEIGHT,
                                         this.QUICKLAUNCHER_WIDTH,
                                         (int)(height - this.PANEL_HEIGHT));
+
+      this.panel.set_size (width, 23);
+      this.panel.set_position (0, 0);
 
       /* Leaving this here to remind me that we need to use these when 
        * there are fullscreen windows etc

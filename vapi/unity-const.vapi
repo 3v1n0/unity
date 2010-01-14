@@ -31,13 +31,7 @@ namespace Unity {
   
   [CCode (cheader_filename = "unity-utils.h", cname = "START_FUNCTION")]
   public static void START_FUNCTION ();
-  
+ 
   [CCode (cheader_filename = "unity-utils.h", cname = "END_FUNCTION")]
   public static void END_FUNCTION ();
-
-  [CCode (cheader_filename = "gdk/gdkx.h", cname = "gdk_x11_visual_get_xvisual")]
-  public static unowned X.Visual _x11_visual_get_xvisual (Gdk.Visual visual);
-
-  [CCode (cheader_filename = "unity-utils.h", cname = "XVisualIDFromVisual")]
-  public static ulong _x_visual_id_from_visual (X.Visual visual);
 }

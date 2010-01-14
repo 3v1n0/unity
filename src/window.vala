@@ -186,7 +186,7 @@ namespace Unity
                              this.workarea_size.bottom);
        this.places.set_position (0, 0);
 
-       this.panel.set_size (width, 24);
+       this.panel.set_size (width, 23);
        this.panel.set_position (0, 0);
     }
 

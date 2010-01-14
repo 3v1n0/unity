@@ -22,7 +22,8 @@ namespace Unity.Panel.Tray
 {
   public class View : Ctk.Box
   {
-    private Manager manager;
+    private TrayManager manager;
+    private Clutter.Stage stage;
 
     public View ()
     {
@@ -31,111 +32,38 @@ namespace Unity.Panel.Tray
 
     construct
     {
-      this.manager = new Manager ();
-    }
-  }
-
-  public class Manager : Object
-  {
-    private Gdk.Screen screen;
-    private Gtk.Widget invisible;
-    private Gdk.Atom   selection_atom;
-
-    public Manager ()
-    {
-      ;
+      Clutter.Color color = { 0, 0, 0, 255 };
+      this.manager = new TrayManager ();
+      this.manager.tray_icon_added.connect (this.on_tray_icon_added);
+      this.manager.tray_icon_removed.connect (this.on_tray_icon_removed);
     }
 
-    construct
+    public void manage_stage (Clutter.Stage stage)
     {
-      Gdk.Display      display;
-      unowned X.Screen screen;
-      string           selection_atom_name;
-      int              screen_number;
-      uint32           timestamp;
-
-      this.screen = Gdk.Screen.get_default ();
-
-      display = this.screen.get_display ();
-      screen = Gdk.x11_screen_get_xscreen (this.screen);
-      
-      this.invisible = new Gtk.Invisible.for_screen (this.screen);
-      this.invisible.realize ();
-
-      this.invisible.add_events (Gdk.EventMask.PROPERTY_CHANGE_MASK
-                                 | Gdk.EventMask.STRUCTURE_MASK);
-
-      screen_number = this.screen.get_number ();
-      selection_atom_name = @"_NET_SYSTEM_TRAY_S$screen_number";
-      this.selection_atom = Gdk.Atom.intern (selection_atom_name, false);
-
-      this.set_properties ();
-
-      timestamp = Gdk.x11_get_server_time (this.invisible.window);
-
-      if (Gdk.selection_owner_set_for_display (display,
-                                               this.invisible.window,
-                                               this.selection_atom,
-                                               timestamp,
-                                               true))
-        {
-
-        }
-      else
-        {
-          this.invisible.destroy ();
-          this.invisible = null;
-          this.screen = null;
-        }
+      this.stage = stage;
+      //this.manager.manage_stage (stage);
+      Idle.add (this.manage_tray_idle);
     }
 
-    private void set_properties ()
+    private bool manage_tray_idle ()
     {
-      Gdk.Display      display;
-      unowned X.Visual xvisual;
-      X.Atom           visual_atom;
-      uchar[]          data = { 0 };
-      X.Atom           orientation_atom;
+      this.manager.manage_stage (this.stage);
+      return false;
+    }
 
-      /* First the visual atom */
-      display = this.invisible.get_display ();
-      visual_atom = Gdk.x11_get_xatom_by_name_for_display (display,
-                                             "_NET_SYSTEM_TRAY_VISUAL");
+    private void on_tray_icon_added (Clutter.Actor icon)
+    {
+      debug ("Icon added");
+      this.add_actor (icon);
+      icon.opacity = 100;
+      icon.set_size (23, 23);
+      icon.show ();
+    }
 
-      if (this.screen.get_rgba_visual () != null &&
-          display.supports_composite ())
-        {
-          Gdk.Visual gvisual = this.screen.get_rgba_visual ();
-          xvisual = _x11_visual_get_xvisual (gvisual);
-        }
-      else
-        {
-          Gdk.Colormap colormap;
-
-          colormap = this.screen.get_default_colormap ();
-          xvisual = _x11_visual_get_xvisual (colormap.get_visual ());
-        }
-
-      data[0] = (uchar)_x_visual_id_from_visual (xvisual);
-
-      unowned X.Display xdisplay = Gdk.x11_display_get_xdisplay (display);
-      xdisplay.change_property (Gdk.x11_drawable_get_xid (this.invisible.window),
-                         visual_atom,
-                         (X.Atom)32, 32,
-                         X.PropMode.Replace,
-                         data, 1);
-
-      /* Now the orientation atom */
-      orientation_atom = Gdk.x11_get_xatom_by_name_for_display (display,
-                                         "_NET_SYSTEM_TRAY_ORIENTATION");
-      data[0] = 0; /* Orientation */
-
-      xdisplay.change_property (Gdk.x11_drawable_get_xid (this.invisible.window),
-                                orientation_atom,
-                                (X.Atom)6, /* XA_CARDINAL */
-                                32,
-                                X.PropMode.Replace,
-                                data, 1);
+    private void on_tray_icon_removed (Clutter.Actor icon)
+    {
+      debug ("Icon removed");
+      this.remove_actor (icon);
     }
   }
 }
