@@ -43,6 +43,11 @@ namespace Unity.Quicklauncher
       this.menu.show ();
     }
     
+    ~QuicklistController () 
+    {
+      this.menu.fadeout_and_destroy ();
+    }
+    
     construct 
     {
     }
