@@ -2,6 +2,8 @@ BUILT_SOURCES =
 CLEANFILES = 
 EXTRA_DIST = 
 
+if ENABLE_MUTTER
+
 if HAVE_TESTING
 BASE_CFLAGS+=-DTESTING
 endif
@@ -78,3 +80,6 @@ CLEANFILES += \
   plugin.c \
   window-management.c \
   $(libunity_mutter_la_APIFILES)
+
+else
+endif
