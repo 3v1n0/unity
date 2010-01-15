@@ -2,6 +2,10 @@ BUILT_SOURCES =
 CLEANFILES = 
 EXTRA_DIST = 
 
+if HAVE_TESTING
+BASE_CFLAGS+=-DTESTING
+endif
+
 if HAVE_LOCALINSTALL
 mutterlibdir = /tmp/mutter-plugin/
 else
@@ -34,6 +38,7 @@ libunity_mutter_la_VALAFLAGS = \
   --pkg libwnck-1.0 \
   --pkg unique-1.0 \
   --pkg x11 \
+  --pkg unity-const \
   --pkg unity-static \
   --pkg unity \
   $(MAINTAINER_VALAFLAGS)

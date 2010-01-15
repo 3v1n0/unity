@@ -148,7 +148,7 @@ def build_graph (data, filename, info):
     
     ctx.translate (8, 10)
     ctx.set_source_rgb (0.0, 0.0, 0.0)
-    ctx.show_text (item['name'])
+    ctx.show_text ("%s %.2f seconds" % (item['name'], round (item["end"] - item["start"], 2)))
     ctx.fill()
     
     ctx.translate (-x-8, 6)
