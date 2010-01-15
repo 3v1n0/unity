@@ -19,6 +19,11 @@
 
 namespace Unity.Places
 {
+  /* Margin outside of the cairo texture. We draw outside to complete the line loop
+  * and we don't want the line loop to be visible in some parts of the screen. 
+  * */
+  private int Margin = 5;
+
   public class PlacesBackground : Ctk.Bin
   {
     public Clutter.CairoTexture cairotxt;
@@ -34,11 +39,6 @@ namespace Unity.Places
     private int PlaceH = 55;
 
     private int PlaceBottom; /* PlaceY + PlaceH */
-
-    /* Margin outside of the cairo texture. We draw outside to complete the line loop
-     * and we don't want the line loop to be visible in some parts of the screen. 
-     * */
-    private int Margin = 20;
 
     /* Menu area width and height */
     private int MenuH = 22;
@@ -136,7 +136,7 @@ namespace Unity.Places
       if (cairotxt != null)
         this.remove_actor (cairotxt);
 
-      cairotxt = new Clutter.CairoTexture(PlaceW, PlaceH);
+      cairotxt = new Clutter.CairoTexture(PlaceW, PlaceH + Margin);
       Cairo.Context cairoctx = cairotxt.create();
       {
         cairoctx.set_source_rgba (1, 1, 1, 1.0);
@@ -179,6 +179,7 @@ namespace Unity.Places
 
       effect_glow.set_color (c);
       effect_glow.set_factor (1.0f);
+      effect_glow.set_margin (5);
       this.add_effect (effect_glow);
     }
 
@@ -191,7 +192,10 @@ namespace Unity.Places
   {
     private Unity.Places.Bar.View     bar_view;
     private Unity.Places.Default.View default_view;
-    private Gee.ArrayList<PlacesBackground> background_array;
+    private Gee.ArrayList<PlacesBackground> PlacesBackgroundArray;
+    private Gee.ArrayList<PlacesBackground> DevicesBackgroundArray;
+    PlacesBackground                        TrashBackground;
+
     private int current_tab_index;
 
     /* These parameters are temporary until we get the right metrics for the places bar */
@@ -203,14 +207,23 @@ namespace Unity.Places
       Clutter.ActorBox child_box = { 0.0f, 0.0f, 0.0f, 0.0f };
       int bar_icon_size = 48; /* HARDCODED: height of icons in places bar */
       int icon_margin = 4;
-      int offset = 94; /* offset to first icon */
+      int PlacesPosition = 0; /* HARDCODED: Places X origin. Should be 0 in practice. */
       int NewPlaceWidth = (int) (box.x2 - box.x1);
 
-      child_box.x1 = offset; //this.padding.left;
-      child_box.x2 = box.x2 - box.x1 - this.padding.left - this.padding.right;
+      this.bar_view.IconSize = bar_icon_size;
+      this.bar_view.FirstPlaceIconPosition = 100; /* HARDCODED: Offset from the left of the Places bar to the first Icon */
+      this.bar_view.PlaceIconSpacing = 24;
+      
+      child_box.x1 = PlacesPosition;
+      child_box.x2 = box.x2 - box.x1;
       child_box.y1 = this.padding.top + 8;
       child_box.y2 = child_box.y1 + bar_icon_size;
+
+      this.bar_view.TrashPosition = (int)(box.x2 - 216 - bar_icon_size - 80); /* HARDCODED: Menu width in the places bar */
+      this.bar_view.SeparatorPosition = (int)(this.bar_view.TrashPosition - 20); /* HARDCODED: Menu width in the places bar */
+
       this.bar_view.allocate (child_box, flags);
+
 
 
       child_box.x1 = box.x1 + 58 /* HARDCODED: width of quicklauncher */;
@@ -223,46 +236,72 @@ namespace Unity.Places
       child_box.x1 = 0;
       child_box.x2 = NewPlaceWidth;
       child_box.y1 = 0;
-      child_box.y2 = 55;
+      child_box.y2 = 55 + Margin; /* HARDCODED: height of Places bar */;
 
-      int spacing = this.bar_view.spacing;
+      int spacing = this.bar_view.PlaceIconSpacing;
       int i;
-      for (i = 0; i < this.background_array.size; i++)
+      for (i = 0; i < this.PlacesBackgroundArray.size; i++)
         {
-          if (this.background_array[i].PlaceWidth != NewPlaceWidth)
+          if (this.PlacesBackgroundArray[i].PlaceWidth != NewPlaceWidth)
             {
-              this.background_array[i].CreatePlacesBackground (NewPlaceWidth, 55,
-              offset + i*(bar_icon_size + spacing) - icon_margin,
+              this.PlacesBackgroundArray[i].CreatePlacesBackground (NewPlaceWidth, 55,
+              PlacesPosition + this.bar_view.FirstPlaceIconPosition + i*(bar_icon_size + spacing) - icon_margin,
               2*icon_margin + bar_icon_size);
             }
-          this.background_array[i].allocate (child_box, flags);
+          this.PlacesBackgroundArray[i].allocate (child_box, flags);
         }
+
+      if (this.TrashBackground.PlaceWidth != NewPlaceWidth)
+        {
+          this.TrashBackground.CreatePlacesBackground (NewPlaceWidth, 55,
+          PlacesPosition + this.bar_view.TrashPosition - icon_margin,
+          2*icon_margin + bar_icon_size);
+        }
+      this.TrashBackground.allocate (child_box, flags);
+      
     }
 
     public View ()
     {
       int i;
       int NunItems;
-      PlacesBackground placesbackground;
+      PlacesBackground background;
 
-      this.background_array = new Gee.ArrayList<PlacesBackground> ();
+      this.PlacesBackgroundArray = new Gee.ArrayList<PlacesBackground> ();
+      this.DevicesBackgroundArray = new Gee.ArrayList<PlacesBackground> ();
 
       this.current_tab_index = 0;
       this.orientation  = Ctk.Orientation.VERTICAL;
       this.bar_view     = new Unity.Places.Bar.View ();
-      this.bar_view.sig_active_icon_index.connect(this.on_signal_active_icon);
-      
+      this.bar_view.sig_places_active_icon_index.connect(this.on_signal_active_icon);
+      this.bar_view.sig_devices_active_icon_index.connect(this.on_signal_device_active_icon);
+      this.bar_view.sig_trash_active_icon_index.connect(this.on_signal_trash_active_icon);
+
       this.default_view = new Unity.Places.Default.View ();
 
-      NunItems = this.bar_view.get_number_of_items ();      
+      NunItems = this.bar_view.get_number_of_places ();      
       for (i = 0; i < NunItems; i++)
       {
-        placesbackground = new PlacesBackground ();
-        this.add_actor (placesbackground);
-        this.background_array.add (placesbackground);
-        placesbackground.hide ();
+        background = new PlacesBackground ();
+        this.add_actor (background);
+        this.PlacesBackgroundArray.add (background);
+        background.hide ();
       }
-      this.background_array[0].show ();
+      this.PlacesBackgroundArray[0].show ();
+
+      NunItems = this.bar_view.get_number_of_devices ();      
+      for (i = 0; i < NunItems; i++)
+      {
+        background = new PlacesBackground ();
+        this.add_actor (background);
+        this.DevicesBackgroundArray.add (background);
+        background.hide ();
+      }
+
+      TrashBackground = new PlacesBackground ();
+      this.add_actor (TrashBackground);
+      TrashBackground.hide ();
+
 
       this.add_actor (this.bar_view);
       this.add_actor (this.default_view);
@@ -297,13 +336,53 @@ namespace Unity.Places
 
     public void on_signal_active_icon (int i)
     {
-      if (i >= this.background_array.size)
+      if (i >= this.PlacesBackgroundArray.size)
         return;
 
-      this.background_array[this.current_tab_index].hide ();
+      int j;
+      for (j = 0; j < this.DevicesBackgroundArray.size; j++)
+        {
+          this.DevicesBackgroundArray[j].hide ();
+        }
+      TrashBackground.hide ();        
+
+      this.PlacesBackgroundArray[this.current_tab_index].hide ();
       this.current_tab_index = i;
-      this.background_array[this.current_tab_index].show ();
+      this.PlacesBackgroundArray[this.current_tab_index].show ();
     }
+
+    public void on_signal_device_active_icon (int i)
+    {
+      if (i >= this.DevicesBackgroundArray.size)
+        return;
+
+      int j;
+      for (j = 0; j < this.PlacesBackgroundArray.size; j++)
+        {
+          this.PlacesBackgroundArray[j].hide ();
+        }
+      TrashBackground.hide ();        
+
+      this.DevicesBackgroundArray[this.current_tab_index].hide ();
+      this.current_tab_index = i;
+      this.DevicesBackgroundArray[this.current_tab_index].show ();
+    }
+
+    public void on_signal_trash_active_icon ()
+    {
+      int j;
+      for (j = 0; j < this.PlacesBackgroundArray.size; j++)
+        {
+          this.PlacesBackgroundArray[j].hide ();
+        }
+      for (j = 0; j < this.DevicesBackgroundArray.size; j++)
+        {
+          this.DevicesBackgroundArray[j].hide ();
+        }
+
+      TrashBackground.show ();
+    }
+
   }
 }
 
