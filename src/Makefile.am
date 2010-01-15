@@ -78,6 +78,8 @@ quicklauncher_sources = \
   quicklauncher/prism-handler.vala \
   quicklauncher/quicklauncher-manager.vala \
   quicklauncher/quicklauncher.vala \
+  quicklauncher/quicklist-controller.vala \
+  quicklauncher/quicklist-view.vala \
   quicklauncher/tooltipmanager.vala \
   quicklauncher/unity-scroller.vala
 
