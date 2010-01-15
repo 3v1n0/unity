@@ -82,12 +82,15 @@ namespace Unity
       this.is_showing = false;
       
       /* Gtk.ClutterEmbed */
+      LOGGER_START_PROCESS ("unity_underlay_window_realize");
       this.realize ();
+      LOGGER_END_PROCESS ("unity_underlay_window_realize");
 
       this.gtk_clutter = new GtkClutter.Embed ();
       this.add (this.gtk_clutter);
+      LOGGER_START_PROCESS ("gtk_clutter_realize");
       this.gtk_clutter.realize ();
-      
+      LOGGER_END_PROCESS ("gtk_clutter_realize");
       //setup dnd
       Gtk.TargetEntry[] target_list = {
         Gtk.TargetEntry () {target="STRING", flags=0, info=Unity.dnd_targets.TARGET_STRING },
@@ -98,7 +101,9 @@ namespace Unity
         Gtk.TargetEntry () {target="_NETSCAPE_URL", flags=0, info=Unity.dnd_targets.TARGET_URL }
       };
 
+      LOGGER_START_PROCESS ("ctk_dnd_init");
       Ctk.dnd_init (this.gtk_clutter, target_list);
+      LOGGER_END_PROCESS ("ctk_dnd_init");
       
       this.stage = (Clutter.Stage)this.gtk_clutter.get_stage ();
       

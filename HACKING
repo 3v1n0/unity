@@ -26,3 +26,13 @@ Exec=foobar --thingthree
 
   Name and Exec follow standard Desktop file specifications and can be
   translated in the same mannar as standard desktop files.
+
+Bootperformance Logging:
+  To enable boot performance logging, set the environment variable 
+  UNITY_BOOTLOG_FILENAME to a path to the log file and make sure unity is built
+  with --enable-testing. eg:
+  UNITY_BOOTLOG_FILENAME=/tmp/unity.log unity -p
+  
+  you can then produce a bootchart with this by running the tools/makebootchart.py
+  script:
+  ./tools/makebootchart.py --input=/tmp/unity.log --output=/tmp/unity.svg 

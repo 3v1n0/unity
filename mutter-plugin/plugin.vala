@@ -16,6 +16,8 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
+using Unity;
+static string? boot_logging_filename = null; 
 
 namespace Unity
 {
@@ -80,17 +82,35 @@ namespace Unity
 
     construct
     {
+      Unity.TimelineLogger.get_default(); // just inits the timer for logging
+      // attempt to get a boot logging filename
+      boot_logging_filename = Environment.get_variable ("UNITY_BOOTLOG_FILENAME");
+      if (boot_logging_filename != null)
+        {
+          Unity.is_logging = true;
+        } 
+      else 
+        { 
+          Unity.is_logging = false;
+        }
+      START_FUNCTION ();
       string[] args = { "mutter" };
 
-      Ctk.init_after (ref args);
+      LOGGER_START_PROCESS ("ctk_init");
+      Ctk.init (ref args);
+      LOGGER_END_PROCESS ("ctk_init");
       
       /* Unique instancing */
+      LOGGER_START_PROCESS ("unity_application_constructor");
       this.app = new Unity.Application ();
       this.app.shell = this;
+      LOGGER_END_PROCESS ("unity_application_constructor");
+      END_FUNCTION ();
     }
 
     private void real_construct ()
     {
+      START_FUNCTION ();
       this.wm = new WindowManagement (this);
     
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
@@ -135,10 +155,20 @@ namespace Unity
       this.places_showing = false;
 
       this.relayout ();
+      END_FUNCTION ();
+      
+      if (boot_logging_filename != null)
+        {
+          Timeout.add_seconds (5, () => {
+            Unity.TimelineLogger.get_default().write_log (boot_logging_filename);
+            return false;
+          });
+        }
     }
 
     private void relayout ()
     {
+      START_FUNCTION ();
       float width, height;
 
       this.stage.get_size (out width, out height);
@@ -165,7 +195,7 @@ namespace Unity
                                         this.PANEL_HEIGHT,
                                         this.QUICKLAUNCHER_WIDTH,
                                         (int)(height - this.PANEL_HEIGHT));
-
+      END_FUNCTION ();
       /* Leaving this here to remind me that we need to use these when 
        * there are fullscreen windows etc
        * this.plugin.set_stage_input_region (uint region);

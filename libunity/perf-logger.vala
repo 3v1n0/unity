@@ -107,10 +107,13 @@ namespace Unity
           string outline = "%s, %f, %f\n".printf(info.name, info.start, info.end);
             output_stream.put_string (outline, null); 
         }
+        
+        file_stream.close (null);
       } catch (Error e)
       {
         warning (e.message);
       }
+      debug ("Done writing performance log file: %s", filename);
     }
   }
 }
