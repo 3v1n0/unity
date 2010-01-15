@@ -97,7 +97,7 @@ namespace Unity
       string[] args = { "mutter" };
 
       LOGGER_START_PROCESS ("ctk_init");
-      Ctk.init (ref args);
+      Ctk.init_after (ref args);
       LOGGER_END_PROCESS ("ctk_init");
       
       /* Unique instancing */
