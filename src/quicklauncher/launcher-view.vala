@@ -331,8 +331,7 @@ namespace Unity.Quicklauncher
     private bool on_mouse_enter (Clutter.Event event)
     {
       this.is_hovering = true;
-      
-      if (quicklist_open == false)
+      if (quicklist_open == false && this.menu_controller == null)
         {
           var stage = this.get_stage() as Clutter.Stage;
           this.menu_controller = new QuicklistController (this.model.name, this, 
@@ -355,7 +354,6 @@ namespace Unity.Quicklauncher
       this.is_hovering = false;
       if (quicklist_open == false && this.menu_controller != null)
         {
-          this.menu_controller.menu.fadeout_and_destroy ();
           this.menu_controller = null;
         }
       return false;
