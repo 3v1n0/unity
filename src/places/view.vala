@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by Mirco "MacSlow" Müller <mirco.mueller@canonical.com>
+ * Authored by Jay Taoko <jay.taoko@canonical.com>
  *
  */
 
@@ -197,7 +198,8 @@ namespace Unity.Places
 
   public class View : Ctk.Box
   {
-    private Unity.Places.Bar.View     bar_view;
+    private Unity.Places.Bar.View       bar_view;
+    private Unity.Places.File.FileView  file_view;
     private Unity.Places.Default.View default_view;
     private Gee.ArrayList<PlacesBackground> PlacesBackgroundArray;
     private Gee.ArrayList<PlacesBackground> DevicesBackgroundArray;
@@ -230,6 +232,7 @@ namespace Unity.Places
       this.bar_view.SeparatorPosition = (int)(this.bar_view.TrashPosition - 20); /* HARDCODED: Menu width in the places bar */
 
       this.bar_view.allocate (child_box, flags);
+      this.file_view.allocate (child_box, flags);
 
 
 
@@ -280,6 +283,7 @@ namespace Unity.Places
       this.current_tab_index = 0;
       this.orientation  = Ctk.Orientation.VERTICAL;
       this.bar_view     = new Unity.Places.Bar.View ();
+      this.file_view    = new Unity.Places.File.FileView ();
       this.bar_view.sig_places_active_icon_index.connect(this.on_signal_active_icon);
       this.bar_view.sig_devices_active_icon_index.connect(this.on_signal_device_active_icon);
       this.bar_view.sig_trash_active_icon_index.connect(this.on_signal_trash_active_icon);
@@ -311,6 +315,7 @@ namespace Unity.Places
 
 
       this.add_actor (this.bar_view);
+      this.add_actor (this.file_view);
       this.add_actor (this.default_view);
 
       Ctk.Padding padding = { 0.0f, 0.0f, 0.0f, 12.0f };
@@ -330,6 +335,11 @@ namespace Unity.Places
       this.bar_view.y      = bar_y;
       this.bar_view.width  = bar_w;
       this.bar_view.height = bar_h;
+
+      this.file_view.x      = bar_x;
+      this.file_view.y      = bar_y;
+      this.file_view.width  = bar_w;
+      this.file_view.height = bar_h;
 
       this.default_view.x      = def_view_x;
       this.default_view.y      = def_view_y;

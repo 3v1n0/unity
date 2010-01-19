@@ -69,7 +69,9 @@ places_sources = \
   places/bar-view.vala \
   places/default-model.vala \
   places/default-view.vala \
+  places/file-place.vala \
   places/view.vala
+
 
 quicklauncher_sources = \
   quicklauncher/application-model.vala \

@@ -86,7 +86,6 @@ namespace Unity.Places.Bar
     }
   }
 
-
   public class PlaceIcon
   {
     private Unity.Places.Bar.Model model;
