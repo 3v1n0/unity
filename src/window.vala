@@ -26,7 +26,7 @@ namespace Unity
     public bool is_popup { get; construct; }
     public int  popup_width { get; construct; }
     public int  popup_height { get; construct; }
-    
+
     private Wnck.Screen wnck_screen;
     private Workarea    workarea_size;
 
@@ -36,26 +36,28 @@ namespace Unity
 
     private Background          background;
     private Quicklauncher.View  quicklauncher;
+
+    private Places.Controller   controller;
     private Unity.Places.View   places;
 
     public UnderlayWindow (bool popup, int width, int height)
     {
       Object(is_popup: popup, popup_width: width, popup_height: height);
     }
-    
+
     construct
     {
       START_FUNCTION ();
       this.workarea_size = new Workarea ();
       this.workarea_size.update_net_workarea ();
-      
+
       if (this.is_popup)
         {
           this.type_hint = Gdk.WindowTypeHint.NORMAL;
           this.decorated = true;
           this.skip_taskbar_hint = false;
           this.skip_pager_hint = false;
-          this.delete_event.connect (() => 
+          this.delete_event.connect (() =>
             {
               Gtk.main_quit ();
               return false;
@@ -72,7 +74,7 @@ namespace Unity
           this.accept_focus = false;
           this.can_focus = false;
           this.delete_event.connect (() => { return true; });
-          this.screen.size_changed.connect ((s) => 
+          this.screen.size_changed.connect ((s) =>
                                             { this.relayout (); });
           this.screen.monitors_changed.connect ((s) =>
                                                 { this.relayout (); });
@@ -80,7 +82,7 @@ namespace Unity
       this.title = "Unity";
       this.icon_name = "distributor-logo";
       this.is_showing = false;
-      
+
       /* Gtk.ClutterEmbed */
       LOGGER_START_PROCESS ("unity_underlay_window_realize");
       this.realize ();
@@ -104,14 +106,14 @@ namespace Unity
       LOGGER_START_PROCESS ("ctk_dnd_init");
       Ctk.dnd_init (this.gtk_clutter, target_list);
       LOGGER_END_PROCESS ("ctk_dnd_init");
-      
+
       this.stage = (Clutter.Stage)this.gtk_clutter.get_stage ();
-      
-      Clutter.Color stage_bg = Clutter.Color () { 
+
+      Clutter.Color stage_bg = Clutter.Color () {
           red = 0x00,
           green = 0x00,
           blue = 0x00,
-          alpha = 0xff 
+          alpha = 0xff
         };
       this.stage.set_color (stage_bg);
       this.stage.button_press_event.connect (this.on_stage_button_press);
@@ -122,10 +124,12 @@ namespace Unity
       this.background.show ();
 
       this.quicklauncher = new Quicklauncher.View (this);
-      this.places = new Unity.Places.View ();
+
+      this.controller = new Places.Controller ();
+      this.places = this.controller.get_view ();
       this.stage.add_actor (this.quicklauncher);
       this.stage.add_actor (this.places);
-     
+
       /* Layout everything */
       this.move (0, 0);
       this.relayout ();
@@ -164,8 +168,6 @@ namespace Unity
           height = size.height;
         }
 
-      debug ("relayout: %dx%d - %dx%d", x, y, width, height);
-
       this.resize (width, height);
       this.stage.set_size (width, height);
 
@@ -175,7 +177,7 @@ namespace Unity
       /* Update component layouts */
       this.background.set_position (0, 0);
       this.background.set_size (width, height);
-      
+
       this.quicklauncher.set_size (58, height);
       this.quicklauncher.set_position (this.workarea_size.left,
                                        this.workarea_size.top);
@@ -204,9 +206,9 @@ namespace Unity
       Wnck.Window new_window = this.wnck_screen.get_active_window ();
       if (new_window == null)
         return;
-    
+
       /* FIXME: We want the second check to be a class_name or pid check */
-      if (new_window is Wnck.Window 
+      if (new_window is Wnck.Window
           && new_window.get_type () != Wnck.WindowType.DESKTOP
           && new_window.get_name () == "Unity")
         {
@@ -258,26 +260,26 @@ namespace Unity
     }
 
   }
- 
-  public class Workarea 
+
+  public class Workarea
   {
     public signal void workarea_changed ();
     public int left;
     public int top;
     public int right;
     public int bottom;
-    
+
     public Workarea ()
     {
       left = 0;
       right = 0;
       top = 0;
       bottom = 0;
-      
+
       update_net_workarea ();
     }
 
-    public void update_net_workarea () 
+    public void update_net_workarea ()
     {
       /* FIXME - steal code from the old liblauncher to do this
        * (launcher-session.c) this is just fake code to get it running
@@ -287,5 +289,5 @@ namespace Unity
       top = 24;
       bottom = 0;
     }
-  }  
+  }
 }

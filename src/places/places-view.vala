@@ -20,7 +20,7 @@
 namespace Unity.Places
 {
   /* Margin outside of the cairo texture. We draw outside to complete the line loop
-  * and we don't want the line loop to be visible in some parts of the screen. 
+  * and we don't want the line loop to be visible in some parts of the screen.
   * */
   private int Margin = 5;
 
@@ -31,7 +31,7 @@ namespace Unity.Places
     private Ctk.EffectGlow effect_glow;
 
     /* (X, Y) origine of Places Bar: The top-left corner of the screen */
-    private int PlaceX = 0;   
+    private int PlaceX = 0;
     private int PlaceY = 0;
 
     /* Places Bar width and height. The width is set the the width of the window. */
@@ -61,18 +61,18 @@ namespace Unity.Places
       int top;
       int bottom;
     }
-	  
+
     public int PlaceWidth;
 
     void DrawAroundMenu (Cairo.Context cairoctx)
     {
       cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY + MenuH);
       cairoctx.line_to (PlaceX + PlaceW - MenuW + Rounding, PlaceY + MenuH);
-      cairoctx.curve_to ( 
+      cairoctx.curve_to (
         PlaceX + PlaceW - MenuW, PlaceY + MenuH,
         PlaceX + PlaceW - MenuW, PlaceY + MenuH,
         PlaceX + PlaceW - MenuW, PlaceY + MenuH + Rounding);
-      cairoctx.line_to (PlaceX + PlaceW - MenuW, PlaceY + PlaceH - Rounding); 
+      cairoctx.line_to (PlaceX + PlaceW - MenuW, PlaceY + PlaceH - Rounding);
       cairoctx.curve_to (
         PlaceX + PlaceW - MenuW, PlaceY + PlaceH,
         PlaceX + PlaceW - MenuW, PlaceY + PlaceH,
@@ -82,7 +82,7 @@ namespace Unity.Places
     void DrawTab(Cairo.Context cairoctx, TabRect tab)
     {
       cairoctx.line_to (tab.right + RoundingSmall, PlaceBottom );
-      cairoctx.curve_to ( 
+      cairoctx.curve_to (
         tab.right, PlaceBottom,
         tab.right, PlaceBottom,
         tab.right, PlaceBottom - RoundingSmall);
@@ -198,9 +198,12 @@ namespace Unity.Places
 
     private int current_tab_index;
 
-    /* These parameters are temporary until we get the right metrics for the places bar */
+    public Model model { get; construct; }
 
-    public override void allocate (Clutter.ActorBox        box, 
+    /* These parameters are temporary until we get the right metrics for
+     * the places bar
+     */
+    public override void allocate (Clutter.ActorBox        box,
                                    Clutter.AllocationFlags flags)
     {
       base.allocate (box, flags);
@@ -213,7 +216,7 @@ namespace Unity.Places
       this.bar_view.IconSize = bar_icon_size;
       this.bar_view.FirstPlaceIconPosition = 100; /* HARDCODED: Offset from the left of the Places bar to the first Icon */
       this.bar_view.PlaceIconSpacing = 24;
-      
+
       child_box.x1 = PlacesPosition;
       child_box.x2 = box.x2 - box.x1;
       child_box.y1 = this.padding.top + 8;
@@ -258,14 +261,16 @@ namespace Unity.Places
           2*icon_margin + bar_icon_size);
         }
       this.TrashBackground.allocate (child_box, flags);
-      
+
     }
 
-    public View ()
+    public View (Model model)
     {
       int i;
       int NunItems;
       PlacesBackground background;
+
+      Object (model:model);
 
       this.PlacesBackgroundArray = new Gee.ArrayList<PlacesBackground> ();
       this.DevicesBackgroundArray = new Gee.ArrayList<PlacesBackground> ();
@@ -279,7 +284,7 @@ namespace Unity.Places
 
       this.default_view = new Unity.Places.Default.View ();
 
-      NunItems = this.bar_view.get_number_of_places ();      
+      NunItems = this.bar_view.get_number_of_places ();
       for (i = 0; i < NunItems; i++)
       {
         background = new PlacesBackground ();
@@ -289,7 +294,7 @@ namespace Unity.Places
       }
       this.PlacesBackgroundArray[0].show ();
 
-      NunItems = this.bar_view.get_number_of_devices ();      
+      NunItems = this.bar_view.get_number_of_devices ();
       for (i = 0; i < NunItems; i++)
       {
         background = new PlacesBackground ();
@@ -344,7 +349,7 @@ namespace Unity.Places
         {
           this.DevicesBackgroundArray[j].hide ();
         }
-      TrashBackground.hide ();        
+      TrashBackground.hide ();
 
       this.PlacesBackgroundArray[this.current_tab_index].hide ();
       this.current_tab_index = i;
@@ -361,7 +366,7 @@ namespace Unity.Places
         {
           this.PlacesBackgroundArray[j].hide ();
         }
-      TrashBackground.hide ();        
+      TrashBackground.hide ();
 
       this.DevicesBackgroundArray[this.current_tab_index].hide ();
       this.current_tab_index = i;
