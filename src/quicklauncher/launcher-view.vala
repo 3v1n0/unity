@@ -353,10 +353,13 @@ namespace Unity.Quicklauncher
     private bool on_mouse_leave(Clutter.Event src)
     {
       this.is_hovering = false;
-      if (this.quicklist_controller.is_label)
-        {
-          this.quicklist_controller.close_menu ();
-        }
+      if (this.quicklist_controller is QuicklistController)
+      {
+        if (this.quicklist_controller.is_label)
+          {
+            this.quicklist_controller.close_menu ();
+          }
+      }
       return false;
     }
 

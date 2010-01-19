@@ -209,16 +209,21 @@ namespace Ctk {
 		public Menu ();
 		public void append (Clutter.Actor item);
 		public void attach_to_actor (Ctk.Actor actor);
+		public void fadeout_and_destroy ();
+		public unowned Ctk.Actor get_attached_actor ();
+		public unowned Clutter.Actor get_background ();
 		public int get_spacing ();
-		public unowned Clutter.Texture get_texture ();
 		public void prepend (Clutter.Actor item);
+		public void remove_all ();
+		public void set_background (Clutter.Actor background);
 		public void set_color (Clutter.Color color);
+		public void set_detect_clicks (bool value);
 		public void set_spacing (int spacing);
-		public void set_texture (Clutter.Texture actor);
 		[CCode (has_construct_function = false)]
-		public Menu.with_texture (Clutter.Actor texture);
+		public Menu.with_background (Clutter.Actor background);
+		public Clutter.Actor background { get; set; }
 		public int spacing { get; set; }
-		public Clutter.Texture texture { get; set; }
+		public virtual signal void closed ();
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class MenuItem : Ctk.Bin, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
@@ -409,5 +414,11 @@ namespace Ctk {
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static void drag_get_data (Ctk.Actor actor, Gdk.DragContext context, Gdk.Atom target, uint32 time_);
 	[CCode (cheader_filename = "clutk/clutk.h")]
+	public static double em_to_pixel (double em_value);
+	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static void init ([CCode (array_length_pos = 0.9)] ref unowned string[] argv);
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public static void init_after ([CCode (array_length_pos = 0.9)] ref unowned string[] argv);
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public static double pixel_to_em (int pixel_value);
 }

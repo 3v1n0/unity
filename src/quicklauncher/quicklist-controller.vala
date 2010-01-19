@@ -74,7 +74,7 @@ namespace Unity.Quicklauncher
     {
       this.menu = new QuicklistMenu () as Ctk.Menu;
       Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (this.label);
-      this.menu.append (menuitem);
+      this.menu.prepend (menuitem);
       this.menu.attach_to_actor (this.attached_widget);
       stage.add_actor (this.menu);
     }
