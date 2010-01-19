@@ -102,6 +102,8 @@ namespace Unity.Places.Bar
 
   public class View : Ctk.Box
   {
+    public Places.Model model { get; construct; }
+
     public int IconSize = 0;
     public int FirstPlaceIconPosition = 0;
     public int PlaceIconSpacing = 0;
@@ -122,7 +124,7 @@ namespace Unity.Places.Bar
     public signal void sig_devices_active_icon_index (int i);
     public signal void sig_trash_active_icon_index ();
 
-    public override void allocate (Clutter.ActorBox        box, 
+    public override void allocate (Clutter.ActorBox        box,
                                    Clutter.AllocationFlags flags)
     {
       Clutter.ActorBox        base_box = {0, 0, 0, 0};
@@ -133,7 +135,7 @@ namespace Unity.Places.Bar
       base.allocate (base_box, flags);
 
       int i;
-      
+
       base_box.x1 = FirstPlaceIconPosition;
       for (i = 0; i < this.PlacesIconArray.size; i++)
       {
@@ -177,7 +179,7 @@ namespace Unity.Places.Bar
       this.Separator.allocate (base_box, flags);
     }
 
-    public View ()
+    public View (Places.Model model)
     {
       PlaceIcon place;
       int                    i;
@@ -185,11 +187,13 @@ namespace Unity.Places.Bar
       Ctk.EffectGlow         glow;
       Clutter.Color          white = {255, 255, 255, 255};
 
+      Object (model:model);
+
       this.homogeneous  = false;
       this.orientation  = Ctk.Orientation.HORIZONTAL; // this sucks
 
       this.PlacesIconArray = new Gee.ArrayList<PlaceIcon> ();
-      this.DevicesIconArray = new Gee.ArrayList<PlaceIcon> ();      
+      this.DevicesIconArray = new Gee.ArrayList<PlaceIcon> ();
 
       // populate places-bar with hard-coded contents for the moment
       place = new PlaceIcon (icon_size, "Home",
@@ -288,7 +292,7 @@ namespace Unity.Places.Bar
       return this.DevicesIconArray.size;
     }
 
-   
+
     public bool on_enter ()
     {
       /* stdout.printf ("on_enter() called\n"); */

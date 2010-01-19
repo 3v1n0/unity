@@ -200,6 +200,58 @@ namespace Unity.Places
 
     public Model model { get; construct; }
 
+    public View (Model model)
+    {
+      int i;
+      int NunItems;
+      PlacesBackground background;
+
+      Object (model:model);
+
+      this.PlacesBackgroundArray = new Gee.ArrayList<PlacesBackground> ();
+      this.DevicesBackgroundArray = new Gee.ArrayList<PlacesBackground> ();
+
+      this.current_tab_index = 0;
+      this.orientation  = Ctk.Orientation.VERTICAL;
+
+      this.bar_view     = new Unity.Places.Bar.View (this.model);
+      this.bar_view.sig_places_active_icon_index.connect(this.on_signal_active_icon);
+      this.bar_view.sig_devices_active_icon_index.connect(this.on_signal_device_active_icon);
+      this.bar_view.sig_trash_active_icon_index.connect(this.on_signal_trash_active_icon);
+
+      this.default_view = new Unity.Places.Default.View ();
+
+      NunItems = this.bar_view.get_number_of_places ();
+      for (i = 0; i < NunItems; i++)
+      {
+        background = new PlacesBackground ();
+        this.add_actor (background);
+        this.PlacesBackgroundArray.add (background);
+        background.hide ();
+      }
+      this.PlacesBackgroundArray[0].show ();
+
+      NunItems = this.bar_view.get_number_of_devices ();
+      for (i = 0; i < NunItems; i++)
+      {
+        background = new PlacesBackground ();
+        this.add_actor (background);
+        this.DevicesBackgroundArray.add (background);
+        background.hide ();
+      }
+
+      TrashBackground = new PlacesBackground ();
+      this.add_actor (TrashBackground);
+      TrashBackground.hide ();
+
+
+      this.add_actor (this.bar_view);
+      this.add_actor (this.default_view);
+
+      Ctk.Padding padding = { 0.0f, 0.0f, 0.0f, 12.0f };
+      this.set_padding (padding);
+    }
+
     /* These parameters are temporary until we get the right metrics for
      * the places bar
      */
@@ -264,56 +316,6 @@ namespace Unity.Places
 
     }
 
-    public View (Model model)
-    {
-      int i;
-      int NunItems;
-      PlacesBackground background;
-
-      Object (model:model);
-
-      this.PlacesBackgroundArray = new Gee.ArrayList<PlacesBackground> ();
-      this.DevicesBackgroundArray = new Gee.ArrayList<PlacesBackground> ();
-
-      this.current_tab_index = 0;
-      this.orientation  = Ctk.Orientation.VERTICAL;
-      this.bar_view     = new Unity.Places.Bar.View ();
-      this.bar_view.sig_places_active_icon_index.connect(this.on_signal_active_icon);
-      this.bar_view.sig_devices_active_icon_index.connect(this.on_signal_device_active_icon);
-      this.bar_view.sig_trash_active_icon_index.connect(this.on_signal_trash_active_icon);
-
-      this.default_view = new Unity.Places.Default.View ();
-
-      NunItems = this.bar_view.get_number_of_places ();
-      for (i = 0; i < NunItems; i++)
-      {
-        background = new PlacesBackground ();
-        this.add_actor (background);
-        this.PlacesBackgroundArray.add (background);
-        background.hide ();
-      }
-      this.PlacesBackgroundArray[0].show ();
-
-      NunItems = this.bar_view.get_number_of_devices ();
-      for (i = 0; i < NunItems; i++)
-      {
-        background = new PlacesBackground ();
-        this.add_actor (background);
-        this.DevicesBackgroundArray.add (background);
-        background.hide ();
-      }
-
-      TrashBackground = new PlacesBackground ();
-      this.add_actor (TrashBackground);
-      TrashBackground.hide ();
-
-
-      this.add_actor (this.bar_view);
-      this.add_actor (this.default_view);
-
-      Ctk.Padding padding = { 0.0f, 0.0f, 0.0f, 12.0f };
-      this.set_padding (padding);
-    }
 
     public void set_size_and_position (int bar_x,
                                        int bar_y,
