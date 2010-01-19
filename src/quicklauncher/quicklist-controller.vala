@@ -124,7 +124,7 @@ namespace Unity.Quicklauncher
         {
           var label = shortcut.get_name ();
           Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (label);
-          this.menu.prepend (menuitem);
+          this.menu.append (menuitem);
           menuitem.activated.connect (shortcut.activated);
           menuitem.activated.connect (this.close_menu);
         }
