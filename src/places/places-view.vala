@@ -220,7 +220,7 @@ namespace Unity.Places
       this.bar_view.sig_trash_active_icon_index.connect(this.on_signal_trash_active_icon);
 
       this.default_view = new Unity.Places.Default.View ();
-
+/*
       NunItems = this.bar_view.get_number_of_places ();
       for (i = 0; i < NunItems; i++)
       {
@@ -230,7 +230,7 @@ namespace Unity.Places
         background.hide ();
       }
       this.PlacesBackgroundArray[0].show ();
-
+*/
       NunItems = this.bar_view.get_number_of_devices ();
       for (i = 0; i < NunItems; i++)
       {

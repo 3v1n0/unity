@@ -124,6 +124,82 @@ namespace Unity.Places.Bar
     public signal void sig_devices_active_icon_index (int i);
     public signal void sig_trash_active_icon_index ();
 
+    public View (Places.Model model)
+    {
+      int                    i;
+      int                    icon_size = 48;
+      Ctk.EffectGlow         glow;
+      Clutter.Color          white = {255, 255, 255, 255};
+
+      Object (model:model);
+      this.model.place_added.connect (this.on_place_added);
+
+      this.homogeneous  = false;
+      this.orientation  = Ctk.Orientation.HORIZONTAL; // this sucks
+
+      this.PlacesIconArray = new Gee.ArrayList<PlaceIcon> ();
+      this.DevicesIconArray = new Gee.ArrayList<PlaceIcon> ();
+
+      /* create all image-actors for icons */
+      for (i = 0; i < this.DevicesIconArray.size ; i++)
+      {
+        glow = new Ctk.EffectGlow ();
+        glow.set_color (white);
+        glow.set_factor (1.0f);
+        glow.set_margin (6);
+        this.DevicesIconArray[i].view.add_effect (glow);
+
+        this.pack (this.DevicesIconArray[i].view, false, false);
+        this.DevicesIconArray[i].view.enter_event.connect (this.on_enter);
+        this.DevicesIconArray[i].view.leave_event.connect (this.on_leave);
+        this.DevicesIconArray[i].view.button_press_event.connect (this.on_button_press);
+      }
+
+      {
+        TrashIcon = new PlaceIcon (icon_size, "Trash",
+                                            TRASH_FILE,
+                                            "Your piece of waste");
+        glow = new Ctk.EffectGlow ();
+        glow.set_color (white);
+        glow.set_factor (1.0f);
+        glow.set_margin (6);
+        this.TrashIcon.view.add_effect (glow);
+
+        this.pack (this.TrashIcon.view, false, false);
+        this.TrashIcon.view.enter_event.connect (this.on_enter);
+        this.TrashIcon.view.leave_event.connect (this.on_leave);
+        this.TrashIcon.view.button_press_event.connect (this.on_button_press);
+      }
+
+      Separator = new PlacesVSeparator ();
+      this.pack (this.Separator, false, false);
+
+      this.show_all ();
+    }
+
+    private void on_place_added (Place place)
+    {
+      int           icon_size = 48;
+      Clutter.Color white = {255, 255, 255, 255};
+
+      var icon = new PlaceIcon (icon_size,
+                                place.name,
+                                place.icon_name,
+                                "");
+      this.PlacesIconArray.add (icon);
+
+      var glow = new Ctk.EffectGlow ();
+      glow.set_color (white);
+      glow.set_factor (1.0f);
+      glow.set_margin (6);
+      icon.view.add_effect (glow);
+
+      this.pack (icon.view, false, false);
+      icon.view.enter_event.connect (this.on_enter);
+      icon.view.leave_event.connect (this.on_leave);
+      icon.view.button_press_event.connect (this.on_button_press);
+    }
+
     public override void allocate (Clutter.ActorBox        box,
                                    Clutter.AllocationFlags flags)
     {
@@ -177,109 +253,6 @@ namespace Unity.Places.Bar
       base_box.y1 = 4;
       base_box.y2 = 44;
       this.Separator.allocate (base_box, flags);
-    }
-
-    public View (Places.Model model)
-    {
-      PlaceIcon place;
-      int                    i;
-      int                    icon_size = 48;
-      Ctk.EffectGlow         glow;
-      Clutter.Color          white = {255, 255, 255, 255};
-
-      Object (model:model);
-
-      this.homogeneous  = false;
-      this.orientation  = Ctk.Orientation.HORIZONTAL; // this sucks
-
-      this.PlacesIconArray = new Gee.ArrayList<PlaceIcon> ();
-      this.DevicesIconArray = new Gee.ArrayList<PlaceIcon> ();
-
-      // populate places-bar with hard-coded contents for the moment
-      place = new PlaceIcon (icon_size, "Home",
-                                        HOME_FILE,
-                                        "Default View");
-      this.PlacesIconArray.add (place);
-
-      place = new PlaceIcon (icon_size, "Files",
-                                        FILES_FILE,
-                                        "Your files stored locally");
-      this.PlacesIconArray.add (place);
-
-      place = new PlaceIcon (icon_size, "Applications",
-                                        APPS_FILE,
-                                        "Programs installed locally");
-      this.PlacesIconArray.add (place);
-
-      place = new PlaceIcon (icon_size, "Music",
-                                        MUSIC_FILE,
-                                        "Soothing sounds and vibes");
-      this.PlacesIconArray.add (place);
-
-      place = new PlaceIcon (icon_size, "People",
-                                        PEOPLE_FILE,
-                                        "Friends, pals, mates and folks");
-      this.PlacesIconArray.add (place);
-
-      place = new PlaceIcon (icon_size, "Photos",
-                                        PHOTOS_FILE,
-                                        "Pretty pictures presented by pixels");
-      this.PlacesIconArray.add (place);
-
-      /*place = new PlaceIcon (icon_size, "Trash",
-                                        TRASH_FILE,
-                                        "Your piece of waste");
-      this.PlacesIconArray.add (place);*/
-
-      /* create all image-actors for icons */
-      for (i = 0; i < this.PlacesIconArray.size ; i++)
-      {
-        glow = new Ctk.EffectGlow ();
-        glow.set_color (white);
-        glow.set_factor (1.0f);
-        glow.set_margin (6);
-        this.PlacesIconArray[i].view.add_effect (glow);
-
-        this.pack (this.PlacesIconArray[i].view, false, false);
-        this.PlacesIconArray[i].view.enter_event.connect (this.on_enter);
-        this.PlacesIconArray[i].view.leave_event.connect (this.on_leave);
-        this.PlacesIconArray[i].view.button_press_event.connect (this.on_button_press);
-      }
-
-      for (i = 0; i < this.DevicesIconArray.size ; i++)
-      {
-        glow = new Ctk.EffectGlow ();
-        glow.set_color (white);
-        glow.set_factor (1.0f);
-        glow.set_margin (6);
-        this.DevicesIconArray[i].view.add_effect (glow);
-
-        this.pack (this.DevicesIconArray[i].view, false, false);
-        this.DevicesIconArray[i].view.enter_event.connect (this.on_enter);
-        this.DevicesIconArray[i].view.leave_event.connect (this.on_leave);
-        this.DevicesIconArray[i].view.button_press_event.connect (this.on_button_press);
-      }
-
-      {
-        TrashIcon = new PlaceIcon (icon_size, "Trash",
-                                            TRASH_FILE,
-                                            "Your piece of waste");
-        glow = new Ctk.EffectGlow ();
-        glow.set_color (white);
-        glow.set_factor (1.0f);
-        glow.set_margin (6);
-        this.TrashIcon.view.add_effect (glow);
-
-        this.pack (this.TrashIcon.view, false, false);
-        this.TrashIcon.view.enter_event.connect (this.on_enter);
-        this.TrashIcon.view.leave_event.connect (this.on_leave);
-        this.TrashIcon.view.button_press_event.connect (this.on_button_press);
-      }
-
-      Separator = new PlacesVSeparator ();
-      this.pack (this.Separator, false, false);
-
-      this.show_all ();
     }
 
     public int get_number_of_places ()
