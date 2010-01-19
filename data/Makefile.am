@@ -2,6 +2,7 @@
 
 dist_default_DATA = \
   applications.png \
+  dash_background.png \
   files.png \
   gadgets.png \
   gradient.png \

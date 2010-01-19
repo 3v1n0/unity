@@ -161,8 +161,15 @@ namespace Unity.Places
         cairoctx.line_to (PlaceX - Margin, PlaceY - Margin);
 
         cairoctx.stroke_preserve ();
-        cairoctx.set_source_rgba (1, 1, 1, 0.15);
-        cairoctx.fill ();
+
+        cairoctx.clip ();
+
+        Cairo.Surface surface = new Cairo.ImageSurface.from_png (Unity.PKGDATADIR + "/dash_background.png");
+        Cairo.Pattern pattern = new Cairo.Pattern.for_surface (surface);
+        pattern.set_extend (Cairo.Extend.REPEAT);
+        cairoctx.set_source (pattern);
+
+        cairoctx.paint_with_alpha (0.1);
       }
 
       cairotxt.set_opacity (0xFF);
