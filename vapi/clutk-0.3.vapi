@@ -89,9 +89,18 @@ namespace Ctk {
 		public unowned Clutter.Animation animate (ulong mode, uint duration, ...);
 		public unowned Clutter.Actor get_actor ();
 		public unowned Clutter.Animation get_animation ();
+		public int get_margin ();
+		public float get_opacity ();
+		public int get_strength ();
 		public virtual void paint (Ctk.EffectPaintFunc func, bool is_last_effect);
 		public void set_actor (Clutter.Actor actor);
+		public void set_margin (int m);
+		public void set_opacity (float m);
+		public void set_strength (int strength);
 		public void* actor { get; set; }
+		public int margin { get; set; }
+		public float opacity { get; set; }
+		public int strength { get; set; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class EffectBlur : Ctk.Effect {
@@ -364,6 +373,10 @@ namespace Ctk {
 	[CCode (cheader_filename = "clutk/clutk.h", has_target = false)]
 	public delegate void EffectPaintFunc (Clutter.Actor actor);
 	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int EFFECT_DEFAULT_MARGIN;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int EFFECT_DEFAULT_STRENGTH;
+	[CCode (cheader_filename = "clutk/clutk.h")]
 	public const int EFFECT_DROP_SHADOW_DEFAULT_OFFSET_X;
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public const int EFFECT_DROP_SHADOW_DEFAULT_OFFSET_Y;
@@ -375,6 +388,14 @@ namespace Ctk {
 	public const int EFFECT_DROP_SHADOW_MIN_OFFSET_X;
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public const int EFFECT_DROP_SHADOW_MIN_OFFSET_Y;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int EFFECT_MAX_MARGIN;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int EFFECT_MAX_STRENGTH;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int EFFECT_MIN_MARGIN;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int EFFECT_MIN_STRENGTH;
 	[CCode (cname = "CheckGLError", cheader_filename = "clutk/clutk.h")]
 	public static int CheckGLError (string glCall, string file, int line);
 	[CCode (cheader_filename = "clutk/clutk.h")]
