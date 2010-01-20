@@ -3,12 +3,15 @@
 dist_default_DATA = \
   applications.png \
   dash_background.png \
+  favourites.png \
   files.png \
   gadgets.png \
   gradient.png \
   home.png \
   honeycomb.png \
   honeycomb-mask.png \
+  maximize_up.png \
+  minimize_up.png \
   music.png \
   people.png \
   photos.png \

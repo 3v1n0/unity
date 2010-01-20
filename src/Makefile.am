@@ -65,11 +65,15 @@ src_sources = \
   window.vala
 
 places_sources = \
+  places/application-place.vala \
   places/bar-model.vala \
   places/bar-view.vala \
   places/default-model.vala \
   places/default-view.vala \
+  places/file-place.vala \
+  places/cairo-drawing.vala \
   places/view.vala
+
 
 quicklauncher_sources = \
   quicklauncher/application-model.vala \

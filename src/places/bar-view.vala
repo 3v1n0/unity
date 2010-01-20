@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by Mirco "MacSlow" Müller <mirco.mueller@canonical.com>
+ * Authored by Jay Taoko <jay.taoko@canonical.com>
  *
  */
 
@@ -30,62 +31,6 @@ namespace Unity.Places.Bar
   const string TRASH_FILE = Unity.PKGDATADIR + "/trash.png";
   const string VIDEOS_FILE = Unity.PKGDATADIR + "/videos.png";
   const string WEB_FILE = Unity.PKGDATADIR + "/web.png";
-
-
-  public class PlacesVSeparator : Ctk.Bin
-  {
-    public int Width = 0;
-    public int Height = 0;
-
-    public Clutter.CairoTexture cairotxt;
-    public PlacesVSeparator ()
-    {
-    }
-
-    public void CreateSeparator (int W, int H)
-    {
-      Width = W;
-      Height = H;
-
-      if (cairotxt != null)
-        this.remove_actor (cairotxt);
-
-      cairotxt = new Clutter.CairoTexture(Width, Height);
-      Cairo.Context cairoctx = cairotxt.create();
-      {
-        cairoctx.set_source_rgba (1, 1, 1, 1.0);
-        cairoctx.set_line_width (1.0);
-
-        cairoctx.move_to (Width/2.0, 0);
-        cairoctx.line_to (Width/2.0, Height);
-
-        cairoctx.stroke ();
-        cairoctx.set_source_rgba (1, 1, 1, 0.15);
-      }
-
-      cairotxt.set_opacity (0xFF);
-      this.add_actor (cairotxt);
-
-      Ctk.EffectGlow effect_glow = new Ctk.EffectGlow ();
-      Clutter.Color c = Clutter.Color ()
-      {
-        red = 255,
-        green = 255,
-        blue = 255,
-        alpha = 255
-      };
-
-      effect_glow.set_color (c);
-      effect_glow.set_factor (1.0f);
-      effect_glow.set_margin (5);
-      this.add_effect (effect_glow);
-    }
-
-    construct
-    {
-    }
-  }
-
 
   public class PlaceIcon
   {
@@ -116,11 +61,14 @@ namespace Unity.Places.Bar
     private Gee.ArrayList<PlaceIcon> DevicesIconArray;
     private PlaceIcon                TrashIcon;
 
-    private PlacesVSeparator Separator;
+    private Unity.Places.CairoDrawing.PlacesVSeparator Separator;
 
     public signal void sig_places_active_icon_index (int i);
     public signal void sig_devices_active_icon_index (int i);
     public signal void sig_trash_active_icon_index ();
+    public signal void sig_activate_home_place ();
+    public signal void sig_activate_file_place ();
+    public signal void sig_activate_application_place ();
 
     public override void allocate (Clutter.ActorBox        box, 
                                    Clutter.AllocationFlags flags)
@@ -222,10 +170,6 @@ namespace Unity.Places.Bar
                                         "Pretty pictures presented by pixels");
       this.PlacesIconArray.add (place);
 
-      /*place = new PlaceIcon (icon_size, "Trash",
-                                        TRASH_FILE,
-                                        "Your piece of waste");
-      this.PlacesIconArray.add (place);*/
 
       /* create all image-actors for icons */
       for (i = 0; i < this.PlacesIconArray.size ; i++)
@@ -272,7 +216,7 @@ namespace Unity.Places.Bar
         this.TrashIcon.view.button_press_event.connect (this.on_button_press);
       }
 
-      Separator = new PlacesVSeparator ();
+      Separator = new Unity.Places.CairoDrawing.PlacesVSeparator ();
       this.pack (this.Separator, false, false);
 
       this.show_all ();
@@ -312,6 +256,12 @@ namespace Unity.Places.Bar
           if (actor == this.PlacesIconArray[i].view)
             {
               sig_places_active_icon_index (i);
+              if(i == 0)
+                sig_activate_home_place ();
+              if(i == 1)
+                sig_activate_file_place ();
+              if(i == 2)
+                sig_activate_application_place ();
               return false;
             }
         }
