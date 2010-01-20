@@ -10,6 +10,8 @@ dist_default_DATA = \
   home.png \
   honeycomb.png \
   honeycomb-mask.png \
+  maximize_up.png \
+  minimize_up.png \
   music.png \
   people.png \
   photos.png \

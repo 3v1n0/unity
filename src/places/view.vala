@@ -25,185 +25,16 @@ namespace Unity.Places
   * */
   private int Margin = 5;
 
-  public class PlacesBackground : Ctk.Bin
-  {
-    public Clutter.CairoTexture cairotxt;
-
-    private Ctk.EffectGlow effect_glow;
-
-    /* (X, Y) origine of Places Bar: The top-left corner of the screen */
-    private int PlaceX = 0;   
-    private int PlaceY = 0;
-
-    /* Places Bar width and height. The width is set the the width of the window. */
-    private int PlaceW = 760;
-    private int PlaceH = 55;
-
-    private int PlaceBottom; /* PlaceY + PlaceH */
-
-    /* Menu area width and height */
-    private int MenuH = 22;
-    private int MenuW = 216;
-
-    private int Rounding = 16;
-    private int RoundingSmall = 8;
-
-    private int MenuBottom; /* PlaceY + MenuH */
-
-    private int TabH = 50;
-
-    /* The squirl area width */
-    private int SquirlW = 70;
-
-    public struct TabRect
-    {
-      int left;
-      int right;
-      int top;
-      int bottom;
-    }
-	  
-    public int PlaceWidth;
-
-    void DrawAroundMenu (Cairo.Context cairoctx)
-    {
-      cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY + MenuH);
-      cairoctx.line_to (PlaceX + PlaceW - MenuW + Rounding, PlaceY + MenuH);
-      cairoctx.curve_to ( 
-        PlaceX + PlaceW - MenuW, PlaceY + MenuH,
-        PlaceX + PlaceW - MenuW, PlaceY + MenuH,
-        PlaceX + PlaceW - MenuW, PlaceY + MenuH + Rounding);
-      cairoctx.line_to (PlaceX + PlaceW - MenuW, PlaceY + PlaceH - Rounding); 
-      cairoctx.curve_to (
-        PlaceX + PlaceW - MenuW, PlaceY + PlaceH,
-        PlaceX + PlaceW - MenuW, PlaceY + PlaceH,
-        PlaceX + PlaceW - MenuW - Rounding, PlaceY + PlaceH);
-    }
-
-    void DrawTab(Cairo.Context cairoctx, TabRect tab)
-    {
-      cairoctx.line_to (tab.right + RoundingSmall, PlaceBottom );
-      cairoctx.curve_to ( 
-        tab.right, PlaceBottom,
-        tab.right, PlaceBottom,
-        tab.right, PlaceBottom - RoundingSmall);
-      cairoctx.line_to (tab.right, tab.top + Rounding);
-      cairoctx.curve_to (
-        tab.right, tab.top,
-        tab.right, tab.top,
-        tab.right - Rounding, tab.top);
-      cairoctx.line_to (tab.left + Rounding, tab.top);
-      cairoctx.curve_to (
-      tab.left, tab.top,
-        tab.left, tab.top,
-        tab.left, tab.top + Rounding);
-      cairoctx.line_to (tab.left, PlaceBottom - RoundingSmall);
-      cairoctx.curve_to (
-        tab.left, PlaceBottom,
-        tab.left, PlaceBottom,
-        tab.left - RoundingSmall, PlaceBottom);
-    }
-
-    void DrawSquirl(Cairo.Context cairoctx)
-    {
-      cairoctx.line_to (PlaceX + SquirlW + RoundingSmall, PlaceBottom);
-      cairoctx.curve_to (
-        PlaceX + SquirlW, PlaceBottom,
-        PlaceX + SquirlW, PlaceBottom,
-        PlaceX + SquirlW, PlaceBottom - RoundingSmall);
-      cairoctx.line_to (PlaceX + SquirlW, MenuBottom + Rounding );
-      cairoctx.curve_to (
-        PlaceX + SquirlW, MenuBottom,
-        PlaceX + SquirlW, MenuBottom,
-        PlaceX + SquirlW - Rounding, MenuBottom);
-      cairoctx.line_to (PlaceX - Margin, MenuBottom);
-    }
-
-    public PlacesBackground ()
-    {
-      PlaceWidth = 0;
-    }
-
-    public void CreatePlacesBackground (int WindowWidth,
-      int WindowHeight,
-      int TabPositionX,
-      int TabWidth)
-    {
-      PlaceWidth = WindowWidth;
-      PlaceW = WindowWidth;
-      PlaceBottom = PlaceY + PlaceH;
-      MenuBottom = PlaceY + MenuH;
-
-      if (cairotxt != null)
-        this.remove_actor (cairotxt);
-
-      cairotxt = new Clutter.CairoTexture(PlaceW, PlaceH + Margin);
-      Cairo.Context cairoctx = cairotxt.create();
-      {
-        cairoctx.set_source_rgba (1, 1, 1, 1.0);
-        cairoctx.set_line_width (1.0);
-
-        cairoctx.move_to (PlaceX - Margin, PlaceY - Margin);
-        cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY - Margin);
-
-        DrawAroundMenu (cairoctx);
-
-        TabRect tab = TabRect();
-        tab.left = TabPositionX;
-        tab.right = tab.left + TabWidth;
-        tab.top = PlaceY + PlaceH - TabH;
-        tab.bottom = PlaceY + PlaceH;
-
-        DrawTab(cairoctx, tab);
-
-        DrawSquirl (cairoctx);
-
-        /* close the path */
-        cairoctx.line_to (PlaceX - Margin, PlaceY - Margin);
-
-        cairoctx.stroke_preserve ();
-
-        cairoctx.clip ();
-
-        Cairo.Surface surface = new Cairo.ImageSurface.from_png (Unity.PKGDATADIR + "/dash_background.png");
-        Cairo.Pattern pattern = new Cairo.Pattern.for_surface (surface);
-        pattern.set_extend (Cairo.Extend.REPEAT);
-        cairoctx.set_source (pattern);
-
-        cairoctx.paint_with_alpha (0.1);
-      }
-
-      cairotxt.set_opacity (0xFF);
-      this.add_actor (cairotxt);
-
-      effect_glow = new Ctk.EffectGlow ();
-      Clutter.Color c = Clutter.Color ()
-      {
-        red = 255,
-        green = 255,
-        blue = 255,
-        alpha = 255
-      };
-
-      effect_glow.set_color (c);
-      effect_glow.set_factor (1.0f);
-      effect_glow.set_margin (5);
-      this.add_effect (effect_glow);
-    }
-
-    construct
-    {
-    }
-  }
-
   public class View : Ctk.Box
   {
     private Unity.Places.Bar.View       bar_view;
     private Unity.Places.File.FileView  file_view;
-    private Unity.Places.Default.View default_view;
-    private Gee.ArrayList<PlacesBackground> PlacesBackgroundArray;
-    private Gee.ArrayList<PlacesBackground> DevicesBackgroundArray;
-    PlacesBackground                        TrashBackground;
+    private Unity.Places.Application.ApplicationView  app_view;
+    private Unity.Places.Default.View   default_view;
+
+    private Gee.ArrayList<Unity.Places.CairoDrawing.PlacesBackground> places_background_array;
+    private Gee.ArrayList<Unity.Places.CairoDrawing.PlacesBackground> devices_background_array;
+    Unity.Places.CairoDrawing.PlacesBackground                        TrashBackground;
 
     private int current_tab_index;
 
@@ -232,7 +63,13 @@ namespace Unity.Places
       this.bar_view.SeparatorPosition = (int)(this.bar_view.TrashPosition - 20); /* HARDCODED: Menu width in the places bar */
 
       this.bar_view.allocate (child_box, flags);
+  
+      child_box.x1 = PlacesPosition;
+      child_box.x2 = box.x2 - box.x1;
+      child_box.y1 = this.padding.top + 8 + bar_icon_size;
+      child_box.y2 = box.y2 - child_box.y1;
       this.file_view.allocate (child_box, flags);
+      this.app_view.allocate (child_box, flags);
 
 
 
@@ -250,15 +87,15 @@ namespace Unity.Places
 
       int spacing = this.bar_view.PlaceIconSpacing;
       int i;
-      for (i = 0; i < this.PlacesBackgroundArray.size; i++)
+      for (i = 0; i < this.places_background_array.size; i++)
         {
-          if (this.PlacesBackgroundArray[i].PlaceWidth != NewPlaceWidth)
+          if (this.places_background_array[i].PlaceWidth != NewPlaceWidth)
             {
-              this.PlacesBackgroundArray[i].CreatePlacesBackground (NewPlaceWidth, 55,
+              this.places_background_array[i].CreatePlacesBackground (NewPlaceWidth, 55,
               PlacesPosition + this.bar_view.FirstPlaceIconPosition + i*(bar_icon_size + spacing) - icon_margin,
               2*icon_margin + bar_icon_size);
             }
-          this.PlacesBackgroundArray[i].allocate (child_box, flags);
+          this.places_background_array[i].allocate (child_box, flags);
         }
 
       if (this.TrashBackground.PlaceWidth != NewPlaceWidth)
@@ -275,48 +112,58 @@ namespace Unity.Places
     {
       int i;
       int NunItems;
-      PlacesBackground background;
+      Unity.Places.CairoDrawing.PlacesBackground background;
 
-      this.PlacesBackgroundArray = new Gee.ArrayList<PlacesBackground> ();
-      this.DevicesBackgroundArray = new Gee.ArrayList<PlacesBackground> ();
+      this.places_background_array = new Gee.ArrayList<Unity.Places.CairoDrawing.PlacesBackground> ();
+      this.devices_background_array = new Gee.ArrayList<Unity.Places.CairoDrawing.PlacesBackground> ();
 
       this.current_tab_index = 0;
       this.orientation  = Ctk.Orientation.VERTICAL;
       this.bar_view     = new Unity.Places.Bar.View ();
       this.file_view    = new Unity.Places.File.FileView ();
+      this.app_view    = new Unity.Places.Application.ApplicationView ();
       this.bar_view.sig_places_active_icon_index.connect(this.on_signal_active_icon);
       this.bar_view.sig_devices_active_icon_index.connect(this.on_signal_device_active_icon);
       this.bar_view.sig_trash_active_icon_index.connect(this.on_signal_trash_active_icon);
+
+      this.bar_view.sig_activate_home_place.connect(this.on_home_place_active);
+      this.bar_view.sig_activate_file_place.connect(this.on_file_place_active);
+      this.bar_view.sig_activate_application_place.connect(this.on_application_place_active);
+
 
       this.default_view = new Unity.Places.Default.View ();
 
       NunItems = this.bar_view.get_number_of_places ();      
       for (i = 0; i < NunItems; i++)
       {
-        background = new PlacesBackground ();
+        background = new Unity.Places.CairoDrawing.PlacesBackground ();
         this.add_actor (background);
-        this.PlacesBackgroundArray.add (background);
+        this.places_background_array.add (background);
         background.hide ();
       }
-      this.PlacesBackgroundArray[0].show ();
+      this.places_background_array[0].show ();
 
       NunItems = this.bar_view.get_number_of_devices ();      
       for (i = 0; i < NunItems; i++)
       {
-        background = new PlacesBackground ();
+        background = new Unity.Places.CairoDrawing.PlacesBackground ();
         this.add_actor (background);
-        this.DevicesBackgroundArray.add (background);
+        this.devices_background_array.add (background);
         background.hide ();
       }
 
-      TrashBackground = new PlacesBackground ();
+      TrashBackground = new Unity.Places.CairoDrawing.PlacesBackground ();
       this.add_actor (TrashBackground);
       TrashBackground.hide ();
 
 
       this.add_actor (this.bar_view);
       this.add_actor (this.file_view);
+      this.add_actor (this.app_view);
       this.add_actor (this.default_view);
+
+      this.file_view.hide ();
+      this.app_view.hide ();
 
       Ctk.Padding padding = { 0.0f, 0.0f, 0.0f, 12.0f };
       this.set_padding (padding);
@@ -336,11 +183,6 @@ namespace Unity.Places
       this.bar_view.width  = bar_w;
       this.bar_view.height = bar_h;
 
-      this.file_view.x      = bar_x;
-      this.file_view.y      = bar_y;
-      this.file_view.width  = bar_w;
-      this.file_view.height = bar_h;
-
       this.default_view.x      = def_view_x;
       this.default_view.y      = def_view_y;
       this.default_view.width  = def_view_w;
@@ -351,53 +193,86 @@ namespace Unity.Places
     {
     }
 
+    public void on_home_place_active ()
+    {
+      this.default_view.show ();
+      this.file_view.hide ();
+      this.app_view.hide ();
+    }
+
+    public void on_file_place_active ()
+    {
+      this.file_view.show ();
+      this.default_view.hide ();
+      this.app_view.hide ();
+    }
+
+    public void on_application_place_active ()
+    {
+      this.file_view.hide ();
+      this.default_view.hide ();
+      this.app_view.show ();
+    }
+
     public void on_signal_active_icon (int i)
     {
-      if (i >= this.PlacesBackgroundArray.size)
+      if (i >= this.places_background_array.size)
         return;
 
       int j;
-      for (j = 0; j < this.DevicesBackgroundArray.size; j++)
+      for (j = 0; j < this.devices_background_array.size; j++)
         {
-          this.DevicesBackgroundArray[j].hide ();
+          this.devices_background_array[j].hide ();
         }
       TrashBackground.hide ();        
 
-      this.PlacesBackgroundArray[this.current_tab_index].hide ();
+      this.places_background_array[this.current_tab_index].hide ();
       this.current_tab_index = i;
-      this.PlacesBackgroundArray[this.current_tab_index].show ();
+      this.places_background_array[this.current_tab_index].show ();
+
+      this.file_view.hide ();
+      this.default_view.hide ();
+      this.app_view.hide ();
     }
 
     public void on_signal_device_active_icon (int i)
     {
-      if (i >= this.DevicesBackgroundArray.size)
+      if (i >= this.devices_background_array.size)
         return;
 
       int j;
-      for (j = 0; j < this.PlacesBackgroundArray.size; j++)
+      for (j = 0; j < this.places_background_array.size; j++)
         {
-          this.PlacesBackgroundArray[j].hide ();
+          this.places_background_array[j].hide ();
         }
       TrashBackground.hide ();        
 
-      this.DevicesBackgroundArray[this.current_tab_index].hide ();
+      this.devices_background_array[this.current_tab_index].hide ();
       this.current_tab_index = i;
-      this.DevicesBackgroundArray[this.current_tab_index].show ();
+      this.devices_background_array[this.current_tab_index].show ();
+
+      this.file_view.hide ();
+      this.default_view.hide ();
+      this.app_view.hide ();
     }
 
     public void on_signal_trash_active_icon ()
     {
       int j;
-      for (j = 0; j < this.PlacesBackgroundArray.size; j++)
+      for (j = 0; j < this.places_background_array.size; j++)
         {
-          this.PlacesBackgroundArray[j].hide ();
+          this.places_background_array[j].hide ();
         }
-      for (j = 0; j < this.DevicesBackgroundArray.size; j++)
+      for (j = 0; j < this.devices_background_array.size; j++)
         {
-          this.DevicesBackgroundArray[j].hide ();
+          this.devices_background_array[j].hide ();
         }
 
       TrashBackground.show ();
+
+      this.file_view.hide ();
+      this.default_view.hide ();
+      this.app_view.hide ();
     }
 
   }
