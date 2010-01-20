@@ -13,7 +13,7 @@ namespace Ctk {
 		public bool get_effects_painting ();
 		public void get_padding (Ctk.Padding padding);
 		public Ctk.ActorState get_state ();
-		public void get_stored_allocation (Clutter.ActorBox box);
+		public void get_stored_allocation (out Clutter.ActorBox box);
 		public unowned string get_tooltip_text ();
 		public void recurse_get_stored_allocation_box (Clutter.ActorBox box);
 		public void remove_all_effects ();
