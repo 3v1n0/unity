@@ -29,8 +29,20 @@ namespace Unity.Places
     /* Properties */
     public string     name      { get; construct; }
     public string     icon_name { get; construct; }
-    public Gdk.Pixbuf icon      { get; construct; }
     public string     comment   { get; construct; }
+
+    private bool      _active;
+    public  bool      active
+      {
+        get { return _active; }
+        set { if (_active != value)
+                {
+                  _active = value;
+                  if (_active)
+                    this.activated ();
+                }
+            }
+      }
 
     /* Signals */
     public signal void activated ();
@@ -42,14 +54,6 @@ namespace Unity.Places
 
     construct
     {
-      try
-        {
-          this.icon = new Gdk.Pixbuf.from_file (this.icon_name);
-        }
-      catch (Error e)
-        {
-          warning (@"Unable to load '$icon_name' for '$name': %s", e.message);
-        }
     }
   }
 }

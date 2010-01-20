@@ -32,7 +32,6 @@ namespace Unity.Places
 
     public Controller ()
     {
-
     }
 
     construct
@@ -50,15 +49,23 @@ namespace Unity.Places
        * information from the drive
        */
       var place = new Place ("Home", PKGDATADIR + "/home.png");
+      place.activated.connect (this.on_place_activated);
       this.model.add (place);
 
       place = new Place ("Applications", PKGDATADIR + "/applications.png");
+      place.activated.connect (this.on_place_activated);
       this.model.add (place);
 
       place = new Place ("Files & Folders", PKGDATADIR + "/files.png");
+      place.activated.connect (this.on_place_activated);
       this.model.add (place);
 
       return false;
+    }
+
+    private void on_place_activated (Place place)
+    {
+      debug ("Place activated: %s", place.name);
     }
 
     /* Public Methods */

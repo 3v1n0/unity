@@ -70,7 +70,7 @@ namespace Unity.Places.Bar
       this.trash_icon.add_effect (glow);
 
       this.pack (this.trash_icon, false, false);
-      this.trash_icon.button_press_event.connect (this.on_button_press);
+      this.trash_icon.button_release_event.connect (this.on_button_release);
 
       /* Create the separator */
       this.separator = new PlacesVSeparator ();
@@ -83,10 +83,7 @@ namespace Unity.Places.Bar
     {
       Clutter.Color white = {255, 255, 255, 255};
 
-      var icon = new PlaceIcon (ICON_SIZE,
-                                place.name,
-                                place.icon_name,
-                                "");
+      var icon = new PlaceIcon.from_place (ICON_SIZE, place);
       this.places_icons.add (icon);
 
       var glow = new Ctk.EffectGlow ();
@@ -96,7 +93,7 @@ namespace Unity.Places.Bar
       icon.add_effect (glow);
 
       this.pack (icon, false, false);
-      icon.button_press_event.connect (this.on_button_press);
+      icon.button_release_event.connect (this.on_button_release);
 
       if (this.places_icons.size == 1)
         {
@@ -167,18 +164,45 @@ namespace Unity.Places.Bar
       this.separator.allocate (child_box, flags);
     }
 
-    public bool on_button_press (Clutter.Event event)
+    public bool on_button_release (Clutter.Event event)
     {
       Clutter.Actor actor;
       actor = event.button.source;
 
       if (actor is PlaceIcon)
         {
-          Clutter.Actor stage = actor.get_stage ();
-          this.bg.create_places_background ((int)stage.width,
-                                            (int)stage.height,
-                                            (int)actor.x,
-                                            80);
+          PlaceIcon     icon = actor as PlaceIcon;
+
+          /* Do something with the click */
+          if (actor == this.trash_icon)
+            {
+              try
+                {
+                  Process.spawn_command_line_async ("xdg-open trash:///");
+                }
+              catch (SpawnError e)
+                {
+                  warning ("Unable to show Trash: %s", e.message);
+                }
+            }
+          else if (icon.place is Place)
+            {
+              Clutter.Actor stage = actor.get_stage ();
+
+              /* Update the background */
+              this.bg.create_places_background ((int)stage.width,
+                                                (int)stage.height,
+                                                (int)actor.x,
+                                                80);
+
+              /* Set the place as active, unset the others */
+              foreach (PlaceIcon picon in this.places_icons)
+                {
+                  if (picon.place is Place)
+                    picon.place.active = (picon == icon) ? true : false;
+                }
+            }
+
           return true;
         }
 
@@ -186,17 +210,40 @@ namespace Unity.Places.Bar
     }
   }
 
-  /* margin outside of the cairo texture. We draw outside to complete the
-   * line loop and we don't want the line loop to be visible in some parts of
-   * the screen.
-   */
-  private int margin = 5;
+  public class PlaceIcon : Ctk.Image
+  {
+    public Place? place { get; set; }
+
+    public PlaceIcon (int       width,
+                      string name,
+                      string    icon_name,
+                      string    tooltip)
+    {
+      Object (size:width);
+
+      this.set_from_filename (icon_name);
+      this.reactive = true;
+    }
+
+    public PlaceIcon.from_place (int size, Place place)
+    {
+      this(size, place.name, place.icon_name, "");
+      this.place = place;
+    }
+  }
 
   public class PlacesBackground : Ctk.Bin
   {
     public Clutter.CairoTexture cairotxt;
 
     private Ctk.EffectGlow effect_glow;
+
+
+    /* margin outside of the cairo texture. We draw outside to complete the
+     * line loop and we don't want the line loop to be visible in some parts of
+     * the screen.
+     */
+    private int margin = 5;
 
     /* (X, Y) origine of Places Bar: The top-left corner of the screen */
     private int place_x = 0;
@@ -406,23 +453,6 @@ namespace Unity.Places.Bar
       effect_glow.set_margin (5);
       this.add_effect (effect_glow);
       */
-    }
-  }
-
-
-  public class PlaceIcon : Ctk.Image
-  {
-    public Ctk.Image view;
-
-    public PlaceIcon (int       width,
-                      string name,
-                      string    icon_name,
-                      string    tooltip)
-    {
-      Object (size:width);
-
-      this.set_from_filename (icon_name);
-      this.reactive = true;
     }
   }
 }
