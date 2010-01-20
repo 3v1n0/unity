@@ -74,7 +74,7 @@ namespace Unity.Quicklauncher
     {
       this.menu = new QuicklistMenu () as Ctk.Menu;
       Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (this.label);
-      this.menu.prepend (menuitem);
+      this.menu.append (menuitem, true);
       this.menu.attach_to_actor (this.attached_widget);
       stage.add_actor (this.menu);
     }
@@ -115,7 +115,7 @@ namespace Unity.Quicklauncher
         {
           var label = shortcut.get_name ();
           Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (label);
-          this.menu.prepend (menuitem);
+          this.menu.prepend (menuitem, false);
           menuitem.activated.connect (shortcut.activated);
           menuitem.activated.connect (this.close_menu);
         }
@@ -124,7 +124,7 @@ namespace Unity.Quicklauncher
         {
           var label = shortcut.get_name ();
           Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (label);
-          this.menu.append (menuitem);
+          this.menu.append (menuitem, false);
           menuitem.activated.connect (shortcut.activated);
           menuitem.activated.connect (this.close_menu);
         }
