@@ -24,7 +24,6 @@ namespace Unity.Quicklauncher
   /* we call this instead of Ctk.Menu so you can alter this to look right */
   public class QuicklistMenu : Ctk.Menu
   {
-    Ctk.EffectDropShadow drop_shadow;
     Clutter.Rectangle ql_background;
     construct 
     {
@@ -44,16 +43,6 @@ namespace Unity.Quicklauncher
         bottom = 6
       };
       this.set_padding (padding);
-      
-      // triggers a bug in the effects framework, only first frame is cached.
-      // can't do the work-around of waiting for the menu to have all its 
-      // elements before attaching the effects anymore as we need to account
-      // for the menu being a small label.
-      //removed for now - broken on mutter - makes gord's brain bleed.
-/*
-      this.drop_shadow = new Ctk.EffectDropShadow(3, 5, 5);
-      add_effect(this.drop_shadow);
-*/
     }
   } 
 }
