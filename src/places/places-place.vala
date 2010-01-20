@@ -19,7 +19,7 @@
 
 namespace Unity.Places
 {
-  public class Place : Object
+  public abstract class Place : Object
   {
     /**
      * Represents a Place (icon, view etc). Will eventually be able to be
@@ -54,7 +54,10 @@ namespace Unity.Places
 
     construct
     {
+      _active = false;
     }
+
+    public abstract Clutter.Actor get_view ();
   }
 }
 

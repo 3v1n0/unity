@@ -24,35 +24,25 @@ namespace Unity.Places
   {
     public Model model { get; construct; }
 
-    private Bar.View     bar_view;
-    private Default.View default_view;
+    private Bar.View       bar_view;
+    private Clutter.Actor? content_view;
 
     public View (Model model)
     {
-      Ctk.Padding bpadding = { 0.0f, 0.0f, 0.0f, 68.0f };
+      Ctk.Padding padding = { 0.0f, 0.0f, 0.0f, 68.0f };
 
       Object (model:model);
 
       this.orientation  = Ctk.Orientation.VERTICAL;
 
       this.bar_view = new Bar.View (this.model);
-      this.bar_view.padding = bpadding;
-
-      this.default_view = new Default.View ();
+      this.bar_view.padding = padding;
       this.add_actor (this.bar_view);
-      this.add_actor (this.default_view);
-
-      Ctk.Padding padding = { 0.0f, 0.0f, 0.0f, 12.0f };
-      this.set_padding (padding);
     }
 
-    /* These parameters are temporary until we get the right metrics for
-     * the places bar
-     */
     public override void allocate (Clutter.ActorBox        box,
                                    Clutter.AllocationFlags flags)
     {
-      base.allocate (box, flags);
       Clutter.ActorBox child_box = { 0.0f, 0.0f, 0.0f, 0.0f };
 
       child_box.x1 = 0;
@@ -62,12 +52,40 @@ namespace Unity.Places
 
       this.bar_view.allocate (child_box, flags);
 
-      child_box.x1 = box.x1 + 58 /* HARDCODED: width of quicklauncher */;
-      child_box.x2 = box.x2;
-      child_box.y1 = box.y1 + 55 /* HARDCODED: height of Places bar */;
-      child_box.y2 = box.y2;
+      child_box.x1 = 58;
+      child_box.x2 = box.x2 - box.x1;
+      child_box.y1 = box.y1 + 62;
+      child_box.y2 = box.y2 - box.y1;
 
-      this.default_view.allocate (child_box, flags);
+      if (this.content_view is Clutter.Actor)
+        {
+          this.content_view.allocate (child_box, flags);
+        }
+    }
+
+    /* Public methods */
+    public void set_content_view (Clutter.Actor actor)
+    {
+      if (this.content_view is Clutter.Actor)
+      {
+        this.content_view.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 300,
+                                   "opacity", 0,
+                                   "signal::completed", on_fade_out_done,
+                                   this.content_view);
+      }
+
+      this.content_view = actor;
+      this.add_actor (this.content_view);
+      this.content_view.show ();
+
+      actor.opacity = 0;
+      actor.animate (Clutter.AnimationMode.EASE_IN_QUAD, 300,
+                     "opacity", 255);
+    }
+
+    static void on_fade_out_done (Clutter.Animation anim, Clutter.Actor actor)
+    {
+      actor.destroy ();
     }
   }
 }

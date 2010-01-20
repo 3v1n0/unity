@@ -48,15 +48,16 @@ namespace Unity.Places
        * utility functions in libunity-places to load in the actual places
        * information from the drive
        */
-      var place = new Place ("Home", PKGDATADIR + "/home.png");
+      var homeplace = new HomePlace ();
+      homeplace.activated.connect (this.on_place_activated);
+      this.model.add (homeplace);
+
+      var place = new FakePlace ("Applications",
+                                 PKGDATADIR + "/applications.png");
       place.activated.connect (this.on_place_activated);
       this.model.add (place);
 
-      place = new Place ("Applications", PKGDATADIR + "/applications.png");
-      place.activated.connect (this.on_place_activated);
-      this.model.add (place);
-
-      place = new Place ("Files & Folders", PKGDATADIR + "/files.png");
+      place = new FakePlace ("Files & Folders", PKGDATADIR + "/files.png");
       place.activated.connect (this.on_place_activated);
       this.model.add (place);
 
@@ -66,12 +67,42 @@ namespace Unity.Places
     private void on_place_activated (Place place)
     {
       debug ("Place activated: %s", place.name);
+
+      this.view.set_content_view (place.get_view ());
     }
 
     /* Public Methods */
     public View get_view ()
     {
       return this.view;
+    }
+  }
+
+  private class HomePlace : Place
+  {
+    public HomePlace ()
+    {
+      Object (name:"Home",
+              icon_name:PKGDATADIR + "/home.png",
+              comment:"");
+    }
+
+    public override Clutter.Actor get_view ()
+    {
+      return new Default.View ();
+    }
+  }
+
+  private class FakePlace : Place
+  {
+    public FakePlace (string name, string icon_name)
+    {
+      Object (name:name, icon_name:icon_name, comment:"");
+    }
+
+    public override Clutter.Actor get_view ()
+    {
+      return new Clutter.Rectangle ();
     }
   }
 }
