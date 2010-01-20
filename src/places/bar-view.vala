@@ -102,6 +102,8 @@ namespace Unity.Places.Bar
                                             (int)stage.height,
                                             (int)(this.padding.left + QL_PAD),
                                             (int)ICON_VIEW_WIDTH);
+
+          icon.place.active = true;
         }
     }
 
