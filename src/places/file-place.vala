@@ -33,7 +33,7 @@ namespace Unity.Places.File
     private Gee.ArrayList<FileIcon> file_icon_array;
 
 
-    public override void allocate (Clutter.ActorBox        box, 
+    public override void allocate (Clutter.ActorBox        box,
                                    Clutter.AllocationFlags flags)
     {
       int IconWidth = 48;
@@ -46,9 +46,9 @@ namespace Unity.Places.File
       int IconBorderPositionY = 100;
       int LineBorderPositionX = 0;
       int LineBorderPositionY = 90;
-      
+
       Clutter.ActorBox child_box = { 0.0f, 0.0f, 0.0f, 0.0f };
-     
+
       base.allocate (box, flags);
 
       child_box.x1 = IconBorderPositionX;
@@ -101,6 +101,23 @@ namespace Unity.Places.File
       this.maximize_button.allocate (child_box, flags);
       this.minimize_button.allocate (child_box, flags);
     }
+
+    public override void get_preferred_width (float for_height,
+                                              out float minimum_width,
+                                              out float natural_width)
+    {
+      minimum_width = 800.0f;
+      natural_width = 800.0f;
+    }
+
+    public override void get_preferred_height (float for_width,
+                                               out float minimum_height,
+                                               out float natural_height)
+    {
+      minimum_height = 150.0f;
+      natural_height = 150.0f;
+    }
+
 
     public FileGroup (string group_name)
     {
@@ -170,25 +187,37 @@ namespace Unity.Places.File
     public FileGroup recent_file_group;
     public FileGroup favourite_folder_group;
     public FileGroup downloaded_file_group;
-    public override void allocate (Clutter.ActorBox        box, 
+    public override void allocate (Clutter.ActorBox        box,
                                    Clutter.AllocationFlags flags)
     {
-      base.allocate (box, flags);
-      
       Clutter.ActorBox child_box = { 0.0f, 0.0f, 0.0f, 0.0f };
-      child_box.x1 = ((box.x2 - box.x1)-800)/2.0f;
-      child_box.x2 = 800;
+      float            width, height;
+      float            child_width, child_height;
 
-      child_box.y1 = ((box.y2 - box.y1)-450)/2.0f;
-      child_box.y2 = child_box.y1 + 150;
+      base.allocate (box, flags);
+
+      width = box.x2 - box.x1;
+      height = box.y2 - box.y1;
+
+      this.recent_file_group.get_preferred_width (height,
+                                                  out child_width,
+                                                  out child_width);
+      this.recent_file_group.get_preferred_height (width,
+                                                   out child_height,
+                                                   out child_height);
+      child_box.x1 = (width - child_width)/2.0f;
+      child_box.x2 = child_box.x1 + child_width;
+      child_box.y1 = 0.0f;
+      child_box.y2 = child_height;
       recent_file_group.allocate (child_box, flags);
-      child_box.y1 += 150;
-      child_box.y2 = child_box.y1 + 150;
-      favourite_folder_group.allocate (child_box, flags);
-      child_box.y1 += 150;
-      child_box.y2 = child_box.y1 + 150;
-      downloaded_file_group.allocate (child_box, flags);
 
+      child_box.y1 += child_height;
+      child_box.y2 = child_box.y1 + child_height;
+      favourite_folder_group.allocate (child_box, flags);
+
+      child_box.y1 += child_height;
+      child_box.y2 = child_box.y1 + child_height;
+      downloaded_file_group.allocate (child_box, flags);
     }
 
     public FileView ()
@@ -196,7 +225,7 @@ namespace Unity.Places.File
       recent_file_group = new FileGroup ("Recent Files");
       favourite_folder_group = new FileGroup ("Favourite Files");
       downloaded_file_group = new FileGroup ("Downloaded Files");
-      
+
       this.add_actor (recent_file_group);
       this.add_actor (favourite_folder_group);
       this.add_actor (downloaded_file_group);
