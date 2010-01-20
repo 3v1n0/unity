@@ -33,9 +33,6 @@ namespace Unity.Quicklauncher
   const uint SHORT_DELAY = 400;
   const uint MEDIUM_DELAY = 800;
   const uint LONG_DELAY = 1600;
-  
-  static bool quicklist_open = false;
-
 
   public class LauncherView : Ctk.Bin
   {
@@ -52,7 +49,7 @@ namespace Unity.Quicklauncher
     private Gee.ArrayList<ShortcutItem> offline_shortcuts;
     private Gee.ArrayList<ShortcutItem> shortcut_actions;
     
-    private QuicklistController? menu_controller;
+    private QuicklistController? quicklist_controller;
 
     private Ctk.EffectGlow effect_icon_glow;
 
@@ -107,6 +104,7 @@ namespace Unity.Quicklauncher
         this.model.notify_active.connect (this.notify_on_is_running);
         this.model.notify_focused.connect (this.notify_on_is_focused);
         this.model.activated.connect (this.on_activated);
+        this.name = "Unity.Quicklauncher.LauncherView-" + this.model.name;
 
         notify_on_is_running ();
         notify_on_is_focused ();
@@ -140,8 +138,7 @@ namespace Unity.Quicklauncher
         this.icon.do_queue_redraw ();
 
         set_reactive (true);
-        
-        this.menu_controller = null;
+        this.quicklist_controller = null;
       }
 
     private void load_textures ()
@@ -331,13 +328,17 @@ namespace Unity.Quicklauncher
     private bool on_mouse_enter (Clutter.Event event)
     {
       this.is_hovering = true;
-      if (quicklist_open == false && this.menu_controller == null)
+      if (this.quicklist_controller == null)
         {
-          var stage = this.get_stage() as Clutter.Stage;
-          this.menu_controller = new QuicklistController (this.model.name, this, 
-                                                          stage);
-          this.menu_controller.menu.set_detect_clicks (false);
-          this.menu_controller.menu.destroy.connect (this.on_quicklist_destroy);
+          this.quicklist_controller = new QuicklistController (this.model.name,
+                                                               this,
+                                                               this.get_stage () as Clutter.Stage
+                                                               );
+          this.build_quicklist ();
+        }
+      if (!this.quicklist_controller.is_label)
+        {
+          this.quicklist_controller.show_label ();
         }
       return false;
     }
@@ -352,10 +353,13 @@ namespace Unity.Quicklauncher
     private bool on_mouse_leave(Clutter.Event src)
     {
       this.is_hovering = false;
-      if (quicklist_open == false && this.menu_controller != null)
-        {
-          this.menu_controller = null;
-        }
+      if (this.quicklist_controller is QuicklistController)
+      {
+        if (this.quicklist_controller.is_label)
+          {
+            this.quicklist_controller.close_menu ();
+          }
+      }
       return false;
     }
 
@@ -368,9 +372,9 @@ namespace Unity.Quicklauncher
       }
       else
       {
-        if (quicklist_open == false)
+        if (this.quicklist_controller.is_label)
           {
-            build_quicklist ();
+            this.quicklist_controller.show_menu ();
           }
       }
       return false;
@@ -378,27 +382,18 @@ namespace Unity.Quicklauncher
 
     /* menu handling */
     private void build_quicklist ()
-    {
-      quicklist_open = true;
+    {         
       this.offline_shortcuts = this.model.get_menu_shortcuts ();
       this.shortcut_actions = this.model.get_menu_shortcut_actions ();
-      
       foreach (ShortcutItem shortcut in this.offline_shortcuts)
       {
-        this.menu_controller.add_action (shortcut, true);
+        this.quicklist_controller.add_action (shortcut, true);
       }
       
       foreach (ShortcutItem shortcut in this.shortcut_actions)
       {
-        this.menu_controller.add_action (shortcut, false);
+        this.quicklist_controller.add_action (shortcut, false);
       }
-      this.menu_controller.menu.set_detect_clicks (true);
-    }
-    
-    private void on_quicklist_destroy ()
-    {
-      quicklist_open = false;
-      this.menu_controller = null;
     }
     
     private bool on_released (Clutter.Event src)

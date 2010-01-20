@@ -214,6 +214,7 @@ namespace Ctk {
 		public unowned Clutter.Actor get_background ();
 		public int get_spacing ();
 		public void prepend (Clutter.Actor item);
+		public void remove_all ();
 		public void set_background (Clutter.Actor background);
 		public void set_color (Clutter.Color color);
 		public void set_detect_clicks (bool value);
@@ -222,6 +223,7 @@ namespace Ctk {
 		public Menu.with_background (Clutter.Actor background);
 		public Clutter.Actor background { get; set; }
 		public int spacing { get; set; }
+		public virtual signal void closed ();
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class MenuItem : Ctk.Bin, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
