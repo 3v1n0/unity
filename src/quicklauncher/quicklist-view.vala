@@ -17,16 +17,15 @@
  * Authored by Gordon Allott <gord.allott@canonical.com>
  *
  */
- 
+
 namespace Unity.Quicklauncher
 {
 
   /* we call this instead of Ctk.Menu so you can alter this to look right */
   public class QuicklistMenu : Ctk.Menu
   {
-    Ctk.EffectDropShadow drop_shadow;
     Clutter.Rectangle ql_background;
-    construct 
+    construct
     {
       Clutter.Color color = Clutter.Color () {
         red = 0x20,
@@ -35,7 +34,7 @@ namespace Unity.Quicklauncher
         alpha = 0xff
       };
       this.ql_background = new Clutter.Rectangle.with_color (color);
-      
+
       this.set_background (this.ql_background);
       Ctk.Padding padding = Ctk.Padding () {
         left = 6,
@@ -44,9 +43,9 @@ namespace Unity.Quicklauncher
         bottom = 6
       };
       this.set_padding (padding);
-      
+
       // triggers a bug in the effects framework, only first frame is cached.
-      // can't do the work-around of waiting for the menu to have all its 
+      // can't do the work-around of waiting for the menu to have all its
       // elements before attaching the effects anymore as we need to account
       // for the menu being a small label.
       //removed for now - broken on mutter - makes gord's brain bleed.
@@ -55,5 +54,5 @@ namespace Unity.Quicklauncher
       add_effect(this.drop_shadow);
 */
     }
-  } 
+  }
 }

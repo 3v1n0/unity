@@ -68,12 +68,14 @@ places_sources = \
   places/application-place.vala \
   places/bar-model.vala \
   places/bar-view.vala \
+  places/cairo-drawing.vala \
   places/default-model.vala \
   places/default-view.vala \
   places/file-place.vala \
-  places/cairo-drawing.vala \
-  places/view.vala
-
+  places/places-controller.vala \
+  places/places-model.vala \
+  places/places-place.vala \
+  places/places-view.vala
 
 quicklauncher_sources = \
   quicklauncher/application-model.vala \
