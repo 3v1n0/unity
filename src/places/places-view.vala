@@ -24,8 +24,8 @@ namespace Unity.Places
   {
     public Model model { get; construct; }
 
-    private Unity.Places.Bar.View     bar_view;
-    private Unity.Places.Default.View default_view;
+    private Bar.View     bar_view;
+    private Default.View default_view;
 
     public View (Model model)
     {
@@ -35,10 +35,10 @@ namespace Unity.Places
 
       this.orientation  = Ctk.Orientation.VERTICAL;
 
-      this.bar_view = new Unity.Places.Bar.View (this.model);
+      this.bar_view = new Bar.View (this.model);
       this.bar_view.padding = bpadding;
 
-      this.default_view = new Unity.Places.Default.View ();
+      this.default_view = new Default.View ();
       this.add_actor (this.bar_view);
       this.add_actor (this.default_view);
 
