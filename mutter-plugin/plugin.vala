@@ -17,7 +17,7 @@
  *
  */
 using Unity;
-static string? boot_logging_filename = null; 
+static string? boot_logging_filename = null;
 
 namespace Unity
 {
@@ -32,7 +32,7 @@ namespace Unity
 
     construct
     {
-      ;  
+      ;
     }
   }
 
@@ -67,7 +67,7 @@ namespace Unity
 
     private static const int PANEL_HEIGHT        = 23;
     private static const int QUICKLAUNCHER_WIDTH = 58;
-    
+
     private Clutter.Stage    stage;
     private Application      app;
     private WindowManagement wm;
@@ -75,6 +75,7 @@ namespace Unity
     /* Unity Components */
     private Background         background;
     private Quicklauncher.View quicklauncher;
+    private Places.Controller  places_controller;
     private Places.View        places;
 
     private DragDest drag_dest;
@@ -88,9 +89,9 @@ namespace Unity
       if (boot_logging_filename != null)
         {
           Unity.is_logging = true;
-        } 
-      else 
-        { 
+        }
+      else
+        {
           Unity.is_logging = false;
         }
       START_FUNCTION ();
@@ -99,7 +100,7 @@ namespace Unity
       LOGGER_START_PROCESS ("ctk_init");
       Ctk.init_after (ref args);
       LOGGER_END_PROCESS ("ctk_init");
-      
+
       /* Unique instancing */
       LOGGER_START_PROCESS ("unity_application_constructor");
       this.app = new Unity.Application ();
@@ -112,7 +113,7 @@ namespace Unity
     {
       START_FUNCTION ();
       this.wm = new WindowManagement (this);
-    
+
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
       this.stage.actor_added.connect (this.on_stage_actor_added);
 
@@ -148,7 +149,8 @@ namespace Unity
       this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 400,
                                   "opacity", 255);
 
-      this.places = new Places.View ();
+      this.places_controller = new Places.Controller (this);
+      this.places = this.places_controller.get_view ();
       this.places.opacity = 0;
       this.stage.add_actor (this.places);
       this.stage.raise_child (this.places, this.quicklauncher);
@@ -156,7 +158,7 @@ namespace Unity
 
       this.relayout ();
       END_FUNCTION ();
-      
+
       if (boot_logging_filename != null)
         {
           Timeout.add_seconds (5, () => {
@@ -196,7 +198,7 @@ namespace Unity
                                         this.QUICKLAUNCHER_WIDTH,
                                         (int)(height - this.PANEL_HEIGHT));
       END_FUNCTION ();
-      /* Leaving this here to remind me that we need to use these when 
+      /* Leaving this here to remind me that we need to use these when
        * there are fullscreen windows etc
        * this.plugin.set_stage_input_region (uint region);
 		   * this.plugin.set_stage_reactive (true);
@@ -248,7 +250,7 @@ namespace Unity
           this.plugin.set_stage_input_area (0,
                                             this.PANEL_HEIGHT,
                                             this.QUICKLAUNCHER_WIDTH,
-                                            (int)(this.stage.height 
+                                            (int)(this.stage.height
                                                     - this.PANEL_HEIGHT));
         }
       else
@@ -256,11 +258,11 @@ namespace Unity
           this.places_showing = true;
           this.places.animate (Clutter.AnimationMode.EASE_IN_SINE, 300,
                                "opacity", 255);
-          
+
           var win_group = this.plugin.get_window_group ();
           win_group.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
                               "opacity", 0);
-          
+
           this.plugin.set_stage_input_area (0,
                                             this.PANEL_HEIGHT,
                                             (int)this.stage.width,

@@ -17,7 +17,7 @@
  * Authored by Gordon Allott <gord.allott@canonical.com>
  *
  */
- 
+
 namespace Unity.Quicklauncher
 {
 
@@ -25,7 +25,7 @@ namespace Unity.Quicklauncher
   public class QuicklistMenu : Ctk.Menu
   {
     Clutter.Rectangle ql_background;
-    construct 
+    construct
     {
       Clutter.Color color = Clutter.Color () {
         red = 0x20,
@@ -34,7 +34,7 @@ namespace Unity.Quicklauncher
         alpha = 0xff
       };
       this.ql_background = new Clutter.Rectangle.with_color (color);
-      
+
       this.set_background (this.ql_background);
       Ctk.Padding padding = Ctk.Padding () {
         left = 6,
@@ -44,5 +44,5 @@ namespace Unity.Quicklauncher
       };
       this.set_padding (padding);
     }
-  } 
+  }
 }

@@ -63,6 +63,7 @@ namespace Unity.Quicklauncher
     private bool on_drag_drop (Ctk.Actor actor, Gdk.DragContext context,
                                int x, int y, uint time_)
     {
+      debug ("on_drag_drop called");
       if (context.targets != null)
       {
         Gdk.Atom target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_URL);
@@ -93,18 +94,20 @@ namespace Unity.Quicklauncher
                                         Gtk.SelectionData data, uint target_type,
                                         uint time_)
     {
+      debug ("on_drag_data_recieved called");
       bool dnd_success = false;
       bool delete_selection_data = false;
-      debug ("got dnd data");
       // Deal with what we are given from source
       if ((data != null) && (data.length >= 0)) {
         if (context.action == Gdk.DragAction.MOVE) {
           delete_selection_data = true;
+          debug ("delete_selection_data = true");
         }
 
         switch (target_type) {
         case Unity.dnd_targets.TARGET_URL:
           // we got a uri, forward it to the uri handler
+          debug ("got a TARGET_URL");
           dnd_success = handle_uri ((string) data.data);
           break;
         default:
@@ -120,6 +123,7 @@ namespace Unity.Quicklauncher
 
     private bool handle_uri (string uri)
     {
+      debug ("handling uri: " + uri);
       string clean_uri = uri.split("\n", 2)[0].split("\r", 2)[0];
 
       try {
@@ -129,6 +133,8 @@ namespace Unity.Quicklauncher
         warning ("%s", e.message);
       }
       clean_uri.strip();
+      
+      debug ("clean uri: " + clean_uri);
 
       var split_uri = clean_uri.split ("://", 2);
       if ("http" in split_uri[0])
@@ -154,6 +160,7 @@ namespace Unity.Quicklauncher
 
         var favorites = Launcher.Favorites.get_default ();
         string uid = "app-" + Path.get_basename (clean_uri);
+        debug ("adding to favourites: " + uid);
         favorites.set_string (uid, "type", "application");
         favorites.set_string (uid, "desktop_file", split_uri[1]);
         favorites.add_favorite (uid);
