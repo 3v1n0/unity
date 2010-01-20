@@ -33,7 +33,7 @@ namespace Unity.Places.Application
     private Gee.ArrayList<ApplicationIcon> application_icon_array;
 
 
-    public override void allocate (Clutter.ActorBox        box, 
+    public override void allocate (Clutter.ActorBox        box,
                                    Clutter.AllocationFlags flags)
     {
       int IconWidth = 48;
@@ -46,9 +46,9 @@ namespace Unity.Places.Application
       int IconBorderPositionY = 100;
       int LineBorderPositionX = 0;
       int LineBorderPositionY = 90;
-      
+
       Clutter.ActorBox child_box = { 0.0f, 0.0f, 0.0f, 0.0f };
-     
+
       base.allocate (box, flags);
 
       child_box.x1 = IconBorderPositionX;
@@ -100,6 +100,22 @@ namespace Unity.Places.Application
       child_box.y2 = HeaderBorderPositionY + 19;
       this.maximize_button.allocate (child_box, flags);
       this.minimize_button.allocate (child_box, flags);
+    }
+
+    public override void get_preferred_width (float for_height,
+                                              out float minimum_width,
+                                              out float natural_width)
+    {
+      minimum_width = 800.0f;
+      natural_width = 800.0f;
+    }
+
+    public override void get_preferred_height (float for_width,
+                                               out float minimum_height,
+                                               out float natural_height)
+    {
+      minimum_height = 150.0f;
+      natural_height = 150.0f;
     }
 
     public ApplicationGroup (string group_name)
@@ -168,25 +184,37 @@ namespace Unity.Places.Application
     public ApplicationGroup recent_app_group;
     public ApplicationGroup yesterday_app_group;
     public ApplicationGroup lastweek_app_group;
-    public override void allocate (Clutter.ActorBox        box, 
+    public override void allocate (Clutter.ActorBox        box,
                                    Clutter.AllocationFlags flags)
     {
-      base.allocate (box, flags);
-      
       Clutter.ActorBox child_box = { 0.0f, 0.0f, 0.0f, 0.0f };
-      child_box.x1 = ((box.x2 - box.x1)-800)/2.0f;
-      child_box.x2 = 800;
+      float            width, height;
+      float            child_width, child_height;
 
-      child_box.y1 = ((box.y2 - box.y1)-450)/2.0f;
-      child_box.y2 = child_box.y1 + 150;
+      base.allocate (box, flags);
+
+      width = box.x2 - box.x1;
+      height = box.y2 - box.y1;
+
+      this.recent_app_group.get_preferred_width (height,
+                                                 out child_width,
+                                                 out child_width);
+      this.recent_app_group.get_preferred_height (width,
+                                                  out child_height,
+                                                  out child_height);
+      child_box.x1 = (width - child_width)/2.0f;
+      child_box.x2 = child_box.x1 + child_width;
+      child_box.y1 = 0.0f;
+      child_box.y2 = child_height;
       recent_app_group.allocate (child_box, flags);
-      child_box.y1 += 150;
-      child_box.y2 = child_box.y1 + 150;
-      yesterday_app_group.allocate (child_box, flags);
-      child_box.y1 += 150;
-      child_box.y2 = child_box.y1 + 150;
-      lastweek_app_group.allocate (child_box, flags);
 
+      child_box.y1 += child_height;
+      child_box.y2 = child_box.y1 + child_height;
+      yesterday_app_group.allocate (child_box, flags);
+
+      child_box.y1 += child_height;
+      child_box.y2 = child_box.y1 + child_height;
+      lastweek_app_group.allocate (child_box, flags);
     }
 
     public ApplicationView ()
@@ -194,7 +222,7 @@ namespace Unity.Places.Application
       recent_app_group = new ApplicationGroup ("Recent apps");
       yesterday_app_group = new ApplicationGroup ("Yesterday apps");
       lastweek_app_group = new ApplicationGroup ("Last week apps");
-      
+
       this.add_actor (recent_app_group);
       this.add_actor (yesterday_app_group);
       this.add_actor (lastweek_app_group);
