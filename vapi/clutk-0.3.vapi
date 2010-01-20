@@ -207,13 +207,13 @@ namespace Ctk {
 	public class Menu : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
 		[CCode (has_construct_function = false)]
 		public Menu ();
-		public void append (Clutter.Actor item);
+		public void append (Clutter.Actor item, bool is_special);
 		public void attach_to_actor (Ctk.Actor actor);
 		public void fadeout_and_destroy ();
 		public unowned Ctk.Actor get_attached_actor ();
 		public unowned Clutter.Actor get_background ();
 		public int get_spacing ();
-		public void prepend (Clutter.Actor item);
+		public void prepend (Clutter.Actor item, bool is_special);
 		public void remove_all ();
 		public void set_background (Clutter.Actor background);
 		public void set_color (Clutter.Color color);
