@@ -14,107 +14,80 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by Mirco "MacSlow" Müller <mirco.mueller@canonical.com>
+ *             Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
 
 namespace Unity.Places.Bar
 {
+  const float PANEL_HEIGHT    = 24;
+  const int   ICON_SIZE       = 48;
+  const float ICON_VIEW_WIDTH = 80.0f;
+  const float ICON_VIEW_Y1    = 8.0f;
+  const float QL_PAD          = 12.0f;
+
   const string TRASH_FILE = Unity.PKGDATADIR + "/trash.png";
 
   public class View : Ctk.Box
   {
     public Places.Model model { get; construct; }
 
-    public int IconSize = 0;
-    public int FirstPlaceIconPosition = 0;
-    public int PlaceIconSpacing = 0;
-    public int SeparatorPosition = 0;
-
-    public int FirstDevicePosition = 0;
-    public int DeviceIconSpacing = 0;
-
-    public int TrashPosition = 0;
-
-    private Gee.ArrayList<PlaceIcon> PlacesIconArray;
-    private Gee.ArrayList<PlaceIcon> DevicesIconArray;
+    private Gee.ArrayList<PlaceIcon> places_icons;
     private PlaceIcon                trash_icon;
 
-    private PlacesVSeparator Separator;
+    private PlacesVSeparator separator;
     private PlacesBackground bg;
-
-    public signal void sig_places_active_icon_index (int i);
-    public signal void sig_devices_active_icon_index (int i);
-    public signal void sig_trash_active_icon_index ();
 
     public View (Places.Model model)
     {
-      int                    i;
-      int                    icon_size = 48;
       Ctk.EffectGlow         glow;
       Clutter.Color          white = {255, 255, 255, 255};
 
       Object (model:model);
-      this.model.place_added.connect (this.on_place_added);
 
+      /* We do our own allocation, but this doesn't hurt */
       this.homogeneous  = false;
       this.orientation  = Ctk.Orientation.HORIZONTAL;
-      this.spacing = 18;
 
+      /* The background of the entire places bar */
       this.bg = new PlacesBackground ();
       this.bg.set_parent (this);
       this.bg.show ();
 
-      this.PlacesIconArray = new Gee.ArrayList<PlaceIcon> ();
-      this.DevicesIconArray = new Gee.ArrayList<PlaceIcon> ();
+      /* This'll be populated in an idle by the model */
+      this.places_icons = new Gee.ArrayList<PlaceIcon> ();
+      this.model.place_added.connect (this.on_place_added);
 
-      /* create all image-actors for icons */
-      for (i = 0; i < this.DevicesIconArray.size ; i++)
-      {
-        glow = new Ctk.EffectGlow ();
-        glow.set_color (white);
-        glow.set_factor (1.0f);
-        glow.set_margin (6);
-        this.DevicesIconArray[i].add_effect (glow);
+      /* Create trash icon */
+      this.trash_icon = new PlaceIcon (ICON_SIZE,
+                                       "Trash",
+                                       TRASH_FILE,
+                                       "Your piece of waste");
+      glow = new Ctk.EffectGlow ();
+      glow.set_color (white);
+      glow.set_factor (1.0f);
+      glow.set_margin (6);
+      this.trash_icon.add_effect (glow);
 
-        this.pack (this.DevicesIconArray[i], false, false);
-        this.DevicesIconArray[i].enter_event.connect (this.on_enter);
-        this.DevicesIconArray[i].leave_event.connect (this.on_leave);
-        this.DevicesIconArray[i].button_press_event.connect (this.on_button_press);
-      }
+      this.pack (this.trash_icon, false, false);
+      this.trash_icon.button_press_event.connect (this.on_button_press);
 
-      {
-        trash_icon = new PlaceIcon (icon_size,
-                                   "Trash",
-                                   TRASH_FILE,
-                                   "Your piece of waste");
-        glow = new Ctk.EffectGlow ();
-        glow.set_color (white);
-        glow.set_factor (1.0f);
-        glow.set_margin (6);
-        this.trash_icon.add_effect (glow);
-
-        this.pack (this.trash_icon, false, false);
-        this.trash_icon.enter_event.connect (this.on_enter);
-        this.trash_icon.leave_event.connect (this.on_leave);
-        this.trash_icon.button_press_event.connect (this.on_button_press);
-      }
-
-      Separator = new PlacesVSeparator ();
-      this.pack (this.Separator, false, false);
+      /* Create the separator */
+      this.separator = new PlacesVSeparator ();
+      this.pack (this.separator, false, false);
 
       this.show_all ();
     }
 
     private void on_place_added (Place place)
     {
-      int           icon_size = 48;
       Clutter.Color white = {255, 255, 255, 255};
 
-      var icon = new PlaceIcon (icon_size,
+      var icon = new PlaceIcon (ICON_SIZE,
                                 place.name,
                                 place.icon_name,
                                 "");
-      this.PlacesIconArray.add (icon);
+      this.places_icons.add (icon);
 
       var glow = new Ctk.EffectGlow ();
       glow.set_color (white);
@@ -123,17 +96,15 @@ namespace Unity.Places.Bar
       icon.add_effect (glow);
 
       this.pack (icon, false, false);
-      icon.enter_event.connect (this.on_enter);
-      icon.leave_event.connect (this.on_leave);
       icon.button_press_event.connect (this.on_button_press);
 
-      if (this.PlacesIconArray.size == 1)
+      if (this.places_icons.size == 1)
         {
           Clutter.Actor stage = icon.get_stage ();
           this.bg.create_places_background ((int)stage.width,
                                             (int)stage.height,
-                                            (int)this.padding.left + 12,
-                                            80);
+                                            (int)(this.padding.left + QL_PAD),
+                                            (int)ICON_VIEW_WIDTH);
         }
     }
 
@@ -167,14 +138,16 @@ namespace Unity.Places.Bar
       this.bg.allocate (child_box, flags);
 
       /* Allocate the places icons */
-      child_box.x1 = this.padding.left + 24;
-      child_box.y1 = 8;
-      child_box.y2 = child_box.y1 + 48;
       var n_places = 0;
-      foreach (PlaceIcon place in this.PlacesIconArray)
+      var lpadding = this.padding.left + QL_PAD;
+
+      child_box.y1 = ICON_VIEW_Y1;
+      child_box.y2 = child_box.y1 + ICON_SIZE;
+
+      foreach (PlaceIcon place in this.places_icons)
         {
-          child_box.x1 = this.padding.left + 12.0f + (80.0f * n_places);
-          child_box.x2 = child_box.x1 +  80.0f;
+          child_box.x1 = lpadding +  (ICON_VIEW_WIDTH * n_places);
+          child_box.x2 = child_box.x1 +  ICON_VIEW_WIDTH;
 
           place.allocate (child_box, flags);
 
@@ -182,38 +155,16 @@ namespace Unity.Places.Bar
         }
 
       /* Allocate the Trash */
-      child_box.x1 = box.x2 - box.x1 - 266 - 80.0f;
-      child_box.x2 = child_box.x1 + 80.0f;
+      child_box.x1 = box.x2 - box.x1 - 266 - ICON_VIEW_WIDTH;
+      child_box.x2 = child_box.x1 + ICON_VIEW_WIDTH;
       this.trash_icon.allocate (child_box, flags);
 
       /* Allocate the seperator */
       child_box.x1 -= 12.0f;
       child_box.x2 = child_box.x1 + 5;
       child_box.y1 = 10;
-      child_box.y2 = 48;
-      this.Separator.allocate (child_box, flags);
-    }
-
-    public int get_number_of_places ()
-    {
-      return this.PlacesIconArray.size;
-    }
-
-    public int get_number_of_devices ()
-    {
-      return this.DevicesIconArray.size;
-    }
-
-    public bool on_enter ()
-    {
-      /* stdout.printf ("on_enter() called\n"); */
-      return false;
-    }
-
-    public bool on_leave ()
-    {
-      /* stdout.printf ("on_leave() called\n"); */
-      return false;
+      child_box.y2 = ICON_SIZE;
+      this.separator.allocate (child_box, flags);
     }
 
     public bool on_button_press (Clutter.Event event)
@@ -232,10 +183,6 @@ namespace Unity.Places.Bar
         }
 
       return false;
-    }
-
-    construct
-    {
     }
   }
 
@@ -411,12 +358,13 @@ namespace Unity.Places.Bar
     public int Height = 0;
 
     public Clutter.CairoTexture cairotxt;
+
     public PlacesVSeparator ()
     {
-      this.CreateSeparator (5, 48);
+      this.create_separator (5, 48);
     }
 
-    public void CreateSeparator (int W, int H)
+    public void create_separator (int W, int H)
     {
       Width = W;
       Height = H;
