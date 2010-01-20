@@ -27,11 +27,13 @@ namespace Unity.Places
      * This class takes care of reading in the places, creating the view and
      * keeping it up-to-date
      **/
+    public  Shell shell { get; construct; }
     private Model model;
     private View view;
 
-    public Controller ()
+    public Controller (Shell shell)
     {
+      Object (shell:shell);
     }
 
     construct

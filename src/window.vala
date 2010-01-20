@@ -125,7 +125,7 @@ namespace Unity
 
       this.quicklauncher = new Quicklauncher.View (this);
 
-      this.controller = new Places.Controller ();
+      this.controller = new Places.Controller (this);
       this.places = this.controller.get_view ();
       this.stage.add_actor (this.quicklauncher);
       this.stage.add_actor (this.places);
