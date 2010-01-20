@@ -161,8 +161,15 @@ namespace Unity.Places
         cairoctx.line_to (PlaceX - Margin, PlaceY - Margin);
 
         cairoctx.stroke_preserve ();
-        cairoctx.set_source_rgba (1, 1, 1, 0.15);
-        cairoctx.fill ();
+
+        cairoctx.clip ();
+
+        Cairo.Surface surface = new Cairo.ImageSurface.from_png (Unity.PKGDATADIR + "/dash_background.png");
+        Cairo.Pattern pattern = new Cairo.Pattern.for_surface (surface);
+        pattern.set_extend (Cairo.Extend.REPEAT);
+        cairoctx.set_source (pattern);
+
+        cairoctx.paint_with_alpha (0.1);
       }
 
       cairotxt.set_opacity (0xFF);
@@ -215,6 +222,9 @@ namespace Unity.Places
       this.orientation  = Ctk.Orientation.VERTICAL;
 
       this.bar_view     = new Unity.Places.Bar.View (this.model);
+      Ctk.Padding bpadding = { 0.0f, 0.0f, 0.0f, 68.0f };
+      this.bar_view.padding = bpadding;
+
       this.bar_view.sig_places_active_icon_index.connect(this.on_signal_active_icon);
       this.bar_view.sig_devices_active_icon_index.connect(this.on_signal_device_active_icon);
       this.bar_view.sig_trash_active_icon_index.connect(this.on_signal_trash_active_icon);
@@ -260,6 +270,16 @@ namespace Unity.Places
     {
       base.allocate (box, flags);
       Clutter.ActorBox child_box = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+      child_box.x1 = 0;
+      child_box.x2 = box.x2 - box.x1;
+      child_box.y1 = 0;
+      child_box.y2 = 62;
+
+      this.bar_view.allocate (child_box, flags);
+
+      if (true) return;
+
       int bar_icon_size = 48; /* HARDCODED: height of icons in places bar */
       int icon_margin = 4;
       int PlacesPosition = 0; /* HARDCODED: Places X origin. Should be 0 in practice. */
