@@ -131,3 +131,7 @@ src/places/places-place.c
 src/places/places-view.c
 src/quicklauncher/quicklist-controller.c
 src/quicklauncher/quicklist-view.c
+src/places/application-place.c
+src/places/application-place.c
+src/places/cairo-drawing.c
+src/places/file-place.c

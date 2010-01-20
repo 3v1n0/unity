@@ -68,8 +68,6 @@ namespace Unity.Places
 
     private void on_place_activated (Place place)
     {
-      debug ("Place activated: %s", place.name);
-
       this.view.set_content_view (place.get_view ());
     }
 
@@ -104,7 +102,10 @@ namespace Unity.Places
 
     public override Clutter.Actor get_view ()
     {
-      return new Clutter.Rectangle ();
+      if (this.name == "Applications")
+        return new Application.ApplicationView ();
+
+      return new File.FileView ();
     }
   }
 }
