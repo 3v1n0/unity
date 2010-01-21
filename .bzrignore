@@ -125,3 +125,13 @@ src/quicklauncher/launcher-model.c
 mutter-plugin/unity-mutter.h
 unity-0.1.5.tar.gz
 mutter-plugin/unity-mutter.vapi
+src/places/places-controller.c
+src/places/places-model.c
+src/places/places-place.c
+src/places/places-view.c
+src/quicklauncher/quicklist-controller.c
+src/quicklauncher/quicklist-view.c
+src/places/application-place.c
+src/places/application-place.c
+src/places/cairo-drawing.c
+src/places/file-place.c

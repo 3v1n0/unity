@@ -1,9 +1,13 @@
-unity (0.1.5+r70) UNRELEASED; urgency=low
+unity (0.1.8-0ubuntu1~dxppa1) UNRELEASED; urgency=low
 
+  [ Martin Pitt ]
   * debian/control: Drop Vcs-Bzr headers, until unity is properly registered
     in Launchpad.
 
- -- Martin Pitt <martin.pitt@ubuntu.com>  Thu, 14 Jan 2010 14:46:10 +0100
+  [ Didier Roche ]
+  * bump version
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 21 Jan 2010 14:03:46 +0100
 
 unity (0.1.5+r69) lucid; urgency=low
 

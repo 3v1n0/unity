@@ -13,12 +13,17 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by Mirco "MacSlow" Müller <mirco.mueller@canonical.com>
+ * Authored by Jay Taoko <jay.taoko@canonical.com>
  *
  */
 
-namespace Unity.Places
+namespace Unity.Places.CairoDrawing
 {
+  /* Margin outside of the cairo texture. We draw outside to complete the line loop
+  * and we don't want the line loop to be visible in some parts of the screen. 
+  * */
+  private int Margin = 5;
+
   public class PlacesBackground : Ctk.Bin
   {
     public Clutter.CairoTexture cairotxt;
@@ -34,11 +39,6 @@ namespace Unity.Places
     private int PlaceH = 55;
 
     private int PlaceBottom; /* PlaceY + PlaceH */
-
-    /* Margin outside of the cairo texture. We draw outside to complete the line loop
-     * and we don't want the line loop to be visible in some parts of the screen. 
-     * */
-    private int Margin = 20;
 
     /* Menu area width and height */
     private int MenuH = 22;
@@ -123,7 +123,7 @@ namespace Unity.Places
       PlaceWidth = 0;
     }
 
-    public void CreatePlacesBackground (int WindowWidth,
+    public void create_places_background (int WindowWidth,
       int WindowHeight,
       int TabPositionX,
       int TabWidth)
@@ -133,12 +133,19 @@ namespace Unity.Places
       PlaceBottom = PlaceY + PlaceH;
       MenuBottom = PlaceY + MenuH;
 
-      if (cairotxt != null)
-        this.remove_actor (cairotxt);
+      if (this.get_child () is Clutter.Actor)
+      {
+        this.remove_actor (this.get_child ());
+      }
 
-      cairotxt = new Clutter.CairoTexture(PlaceW, PlaceH);
+      cairotxt = new Clutter.CairoTexture(PlaceW, PlaceH + Margin);
       Cairo.Context cairoctx = cairotxt.create();
       {
+        /* Clear */
+        /*cairoctx.set_operator (Cairo.Operator.CLEAR);
+        cairoctx.paint ();
+        cairoctx.set_operator (Cairo.Operator.OVER);*/
+
         cairoctx.set_source_rgba (1, 1, 1, 1.0);
         cairoctx.set_line_width (1.0);
 
@@ -161,13 +168,25 @@ namespace Unity.Places
         cairoctx.line_to (PlaceX - Margin, PlaceY - Margin);
 
         cairoctx.stroke_preserve ();
-        cairoctx.set_source_rgba (1, 1, 1, 0.15);
-        cairoctx.fill ();
+
+        cairoctx.clip ();
+
+        Cairo.Surface surface = new Cairo.ImageSurface.from_png (Unity.PKGDATADIR + "/dash_background.png");
+        Cairo.Pattern pattern = new Cairo.Pattern.for_surface (surface);
+        pattern.set_extend (Cairo.Extend.REPEAT);
+        cairoctx.set_source (pattern);
+
+        cairoctx.paint_with_alpha (0.1);
       }
 
       cairotxt.set_opacity (0xFF);
       this.add_actor (cairotxt);
 
+      /* Remove all effects set on this actor */
+      this.remove_all_effects ();
+
+      /* Create a new effect and add it to this actor */
+      /* The new effect will use the newly created drawing as a base */
       effect_glow = new Ctk.EffectGlow ();
       Clutter.Color c = Clutter.Color ()
       {
@@ -179,6 +198,7 @@ namespace Unity.Places
 
       effect_glow.set_color (c);
       effect_glow.set_factor (1.0f);
+      effect_glow.set_margin (5);
       this.add_effect (effect_glow);
     }
 
@@ -187,122 +207,127 @@ namespace Unity.Places
     }
   }
 
-  public class View : Ctk.Box
+
+  public class PlacesVSeparator : Ctk.Bin
   {
-    private Unity.Places.Bar.View     bar_view;
-    private Unity.Places.Default.View default_view;
-    private Gee.ArrayList<PlacesBackground> background_array;
-    private int current_tab_index;
+    public int Width = 0;
+    public int Height = 0;
 
-    /* These parameters are temporary until we get the right metrics for the places bar */
-
-    public override void allocate (Clutter.ActorBox        box, 
-                                   Clutter.AllocationFlags flags)
+    public Clutter.CairoTexture cairotxt;
+    public PlacesVSeparator ()
     {
-      base.allocate (box, flags);
-      Clutter.ActorBox child_box = { 0.0f, 0.0f, 0.0f, 0.0f };
-      int bar_icon_size = 48; /* HARDCODED: height of icons in places bar */
-      int icon_margin = 4;
-      int offset = 94; /* offset to first icon */
-      int NewPlaceWidth = (int) (box.x2 - box.x1);
-
-      child_box.x1 = offset; //this.padding.left;
-      child_box.x2 = box.x2 - box.x1 - this.padding.left - this.padding.right;
-      child_box.y1 = this.padding.top + 8;
-      child_box.y2 = child_box.y1 + bar_icon_size;
-      this.bar_view.allocate (child_box, flags);
-
-
-      child_box.x1 = box.x1 + 58 /* HARDCODED: width of quicklauncher */;
-      child_box.x2 = box.x2;
-      child_box.y1 = box.y1 + 55 /* HARDCODED: height of Places bar */;
-      child_box.y2 = box.y2;
-
-      this.default_view.allocate (child_box, flags);
-
-      child_box.x1 = 0;
-      child_box.x2 = NewPlaceWidth;
-      child_box.y1 = 0;
-      child_box.y2 = 55;
-
-      int spacing = this.bar_view.spacing;
-      int i;
-      for (i = 0; i < this.background_array.size; i++)
-        {
-          if (this.background_array[i].PlaceWidth != NewPlaceWidth)
-            {
-              this.background_array[i].CreatePlacesBackground (NewPlaceWidth, 55,
-              offset + i*(bar_icon_size + spacing) - icon_margin,
-              2*icon_margin + bar_icon_size);
-            }
-          this.background_array[i].allocate (child_box, flags);
-        }
     }
 
-    public View ()
+    public void CreateSeparator (int W, int H)
     {
-      int i;
-      int NunItems;
-      PlacesBackground placesbackground;
+      Width = W;
+      Height = H;
 
-      this.background_array = new Gee.ArrayList<PlacesBackground> ();
-
-      this.current_tab_index = 0;
-      this.orientation  = Ctk.Orientation.VERTICAL;
-      this.bar_view     = new Unity.Places.Bar.View ();
-      this.bar_view.sig_active_icon_index.connect(this.on_signal_active_icon);
-      
-      this.default_view = new Unity.Places.Default.View ();
-
-      NunItems = this.bar_view.get_number_of_items ();      
-      for (i = 0; i < NunItems; i++)
+      if (this.get_child () is Clutter.Actor)
       {
-        placesbackground = new PlacesBackground ();
-        this.add_actor (placesbackground);
-        this.background_array.add (placesbackground);
-        placesbackground.hide ();
+        this.remove_actor (this.get_child ());
       }
-      this.background_array[0].show ();
 
-      this.add_actor (this.bar_view);
-      this.add_actor (this.default_view);
+      cairotxt = new Clutter.CairoTexture(Width, Height);
+      Cairo.Context cairoctx = cairotxt.create();
+      {
+        cairoctx.set_source_rgba (1, 1, 1, 1.0);
+        cairoctx.set_line_width (1.0);
 
-      Ctk.Padding padding = { 0.0f, 0.0f, 0.0f, 12.0f };
-      this.set_padding (padding);
-    }
+        cairoctx.move_to (Width/2.0, 0);
+        cairoctx.line_to (Width/2.0, Height);
 
-    public void set_size_and_position (int bar_x,
-                                       int bar_y,
-                                       int bar_w,
-                                       int bar_h,
-                                       int def_view_x,
-                                       int def_view_y,
-                                       int def_view_w,
-                                       int def_view_h)
-    {
-      this.bar_view.x      = bar_x;
-      this.bar_view.y      = bar_y;
-      this.bar_view.width  = bar_w;
-      this.bar_view.height = bar_h;
+        cairoctx.stroke ();
+        cairoctx.set_source_rgba (1, 1, 1, 0.15);
+      }
 
-      this.default_view.x      = def_view_x;
-      this.default_view.y      = def_view_y;
-      this.default_view.width  = def_view_w;
-      this.default_view.height = def_view_h;
+      cairotxt.set_opacity (0xFF);
+      this.add_actor (cairotxt);
+
+      /* Remove all effects set on this actor */
+      this.remove_all_effects ();
+
+      /* Create a new effect and add it to this actor */
+      /* The new effect will use the newly created drawing as a base */
+      Ctk.EffectGlow effect_glow = new Ctk.EffectGlow ();
+      Clutter.Color c = Clutter.Color ()
+      {
+        red = 255,
+        green = 255,
+        blue = 255,
+        alpha = 255
+      };
+
+      effect_glow.set_color (c);
+      effect_glow.set_factor (1.0f);
+      effect_glow.set_margin (5);
+      this.add_effect (effect_glow);
     }
 
     construct
     {
     }
+  }
 
-    public void on_signal_active_icon (int i)
+  public class PlacesHSeparator : Ctk.Bin
+  {
+    public int Width = 0;
+    public int Height = 0;
+
+    public Clutter.CairoTexture cairotxt;
+    public PlacesHSeparator ()
     {
-      if (i >= this.background_array.size)
-        return;
+    }
 
-      this.background_array[this.current_tab_index].hide ();
-      this.current_tab_index = i;
-      this.background_array[this.current_tab_index].show ();
+    public void CreateSeparator (int W, int H)
+    {
+      Width = W;
+      Height = H;
+
+      if (this.get_child () is Clutter.Actor)
+      {
+        this.remove_actor (this.get_child ());
+      }
+
+      cairotxt = new Clutter.CairoTexture(Width, Height);
+      Cairo.Context cairoctx = cairotxt.create();
+      {
+        cairoctx.set_source_rgba (1, 1, 1, 1.0);
+        cairoctx.set_line_width (1.0);
+
+        cairoctx.move_to (0, Height/2.0);
+        cairoctx.line_to (Width, Height/2.0);
+
+        cairoctx.stroke ();
+        cairoctx.set_source_rgba (1, 1, 1, 0.15);
+      }
+
+      cairotxt.set_opacity (0xFF);
+      this.add_actor (cairotxt);
+
+      /* Remove all effects set on this actor */
+      this.remove_all_effects ();
+
+      /* Create a new effect and add it to this actor */
+      /* The new effect will use the newly created drawing as a base */
+
+      Ctk.EffectGlow effect_glow = new Ctk.EffectGlow ();
+      Clutter.Color c = Clutter.Color ()
+      {
+        red = 255,
+        green = 255,
+        blue = 255,
+        alpha = 255
+      };
+
+      effect_glow.set_color (c);
+      effect_glow.set_factor (1.0f);
+      effect_glow.set_margin (5);
+      this.add_effect (effect_glow);
+    }
+
+    construct
+    {
     }
   }
 }

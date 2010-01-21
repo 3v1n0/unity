@@ -23,7 +23,7 @@ static bool popup_mode   = false;
 static int  popup_width  = 1024;
 static int  popup_height = 600;
 static bool show_version = false;
-static string? boot_logging_filename = null;
+static string? boot_logging_filename = null; 
 
 const OptionEntry[] options = {
   {
@@ -72,15 +72,6 @@ const OptionEntry[] options = {
     null
   },
   {
-    "enable-boot-logging",
-    'b',
-    OptionFlags.FILENAME,
-    OptionArg.FILENAME,
-    ref boot_logging_filename,
-    "enables boot logging, requires filename argument",
-    null
-  },
-  {
     null
   }
 };
@@ -113,14 +104,11 @@ public class Main
         print ("\nUnity %s\n", "0.1.0");
         return 0;
       }
-      
+    // attempt to get a boot logging filename
+    boot_logging_filename = Environment.get_variable ("UNITY_BOOTLOG_FILENAME");
     if (boot_logging_filename != null)
       {
         Unity.is_logging = true;
-        Timeout.add_seconds (3, () => {
-          Unity.TimelineLogger.get_default().write_log (boot_logging_filename);
-          return false;
-        });
       } 
     else 
       { 
@@ -129,11 +117,17 @@ public class Main
     START_FUNCTION ();
     
     /* Parse options */
+    LOGGER_START_PROCESS ("gtk_init");
     Gtk.init (ref args);
+    LOGGER_END_PROCESS ("gtk_init");
+    LOGGER_START_PROCESS ("ctk_init");
     Ctk.init (ref args);
+    LOGGER_END_PROCESS ("ctk_init");
 
     /* Unique instancing */
+    LOGGER_START_PROCESS ("unity_application_constructor");
     app = new Unity.Application ();
+    LOGGER_END_PROCESS ("unity_application_constructor");
     if (app.is_running)
       {
         Unique.Response response = Unique.Response.OK;
@@ -154,10 +148,19 @@ public class Main
     /* Things seem to be okay, load the main window */
     window = new Unity.UnderlayWindow (popup_mode, popup_width, popup_height);
     app.shell = window;
+    LOGGER_START_PROCESS ("unity_underlay_window_show");
     window.show ();
+    LOGGER_END_PROCESS ("unity_underlay_window_show");
     
     END_FUNCTION ();
     
+    if (boot_logging_filename != null)
+      {
+        Timeout.add_seconds (1, () => {
+          Unity.TimelineLogger.get_default().write_log (boot_logging_filename);
+          return false;
+        });
+      }
     Gtk.main ();
 
     

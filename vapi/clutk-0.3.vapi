@@ -13,7 +13,7 @@ namespace Ctk {
 		public bool get_effects_painting ();
 		public void get_padding (Ctk.Padding padding);
 		public Ctk.ActorState get_state ();
-		public void get_stored_allocation (Clutter.ActorBox box);
+		public void get_stored_allocation (out Clutter.ActorBox box);
 		public unowned string get_tooltip_text ();
 		public void recurse_get_stored_allocation_box (Clutter.ActorBox box);
 		public void remove_all_effects ();
@@ -89,9 +89,18 @@ namespace Ctk {
 		public unowned Clutter.Animation animate (ulong mode, uint duration, ...);
 		public unowned Clutter.Actor get_actor ();
 		public unowned Clutter.Animation get_animation ();
+		public int get_margin ();
+		public float get_opacity ();
+		public int get_strength ();
 		public virtual void paint (Ctk.EffectPaintFunc func, bool is_last_effect);
 		public void set_actor (Clutter.Actor actor);
+		public void set_margin (int m);
+		public void set_opacity (float m);
+		public void set_strength (int strength);
 		public void* actor { get; set; }
+		public int margin { get; set; }
+		public float opacity { get; set; }
+		public int strength { get; set; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class EffectBlur : Ctk.Effect {
@@ -198,18 +207,23 @@ namespace Ctk {
 	public class Menu : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
 		[CCode (has_construct_function = false)]
 		public Menu ();
-		public void append (Clutter.Actor item);
+		public void append (Clutter.Actor item, bool is_special);
 		public void attach_to_actor (Ctk.Actor actor);
+		public void fadeout_and_destroy ();
+		public unowned Ctk.Actor get_attached_actor ();
+		public unowned Clutter.Actor get_background ();
 		public int get_spacing ();
-		public unowned Clutter.Texture get_texture ();
-		public void prepend (Clutter.Actor item);
+		public void prepend (Clutter.Actor item, bool is_special);
+		public void remove_all ();
+		public void set_background (Clutter.Actor background);
 		public void set_color (Clutter.Color color);
+		public void set_detect_clicks (bool value);
 		public void set_spacing (int spacing);
-		public void set_texture (Clutter.Texture actor);
 		[CCode (has_construct_function = false)]
-		public Menu.with_texture (Clutter.Actor texture);
+		public Menu.with_background (Clutter.Actor background);
+		public Clutter.Actor background { get; set; }
 		public int spacing { get; set; }
-		public Clutter.Texture texture { get; set; }
+		public virtual signal void closed ();
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class MenuItem : Ctk.Bin, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
@@ -364,6 +378,10 @@ namespace Ctk {
 	[CCode (cheader_filename = "clutk/clutk.h", has_target = false)]
 	public delegate void EffectPaintFunc (Clutter.Actor actor);
 	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int EFFECT_DEFAULT_MARGIN;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int EFFECT_DEFAULT_STRENGTH;
+	[CCode (cheader_filename = "clutk/clutk.h")]
 	public const int EFFECT_DROP_SHADOW_DEFAULT_OFFSET_X;
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public const int EFFECT_DROP_SHADOW_DEFAULT_OFFSET_Y;
@@ -375,6 +393,14 @@ namespace Ctk {
 	public const int EFFECT_DROP_SHADOW_MIN_OFFSET_X;
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public const int EFFECT_DROP_SHADOW_MIN_OFFSET_Y;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int EFFECT_MAX_MARGIN;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int EFFECT_MAX_STRENGTH;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int EFFECT_MIN_MARGIN;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int EFFECT_MIN_STRENGTH;
 	[CCode (cname = "CheckGLError", cheader_filename = "clutk/clutk.h")]
 	public static int CheckGLError (string glCall, string file, int line);
 	[CCode (cheader_filename = "clutk/clutk.h")]
@@ -388,7 +414,11 @@ namespace Ctk {
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static void drag_get_data (Ctk.Actor actor, Gdk.DragContext context, Gdk.Atom target, uint32 time_);
 	[CCode (cheader_filename = "clutk/clutk.h")]
+	public static double em_to_pixel (double em_value);
+	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static void init ([CCode (array_length_pos = 0.9)] ref unowned string[] argv);
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static void init_after ([CCode (array_length_pos = 0.9)] ref unowned string[] argv);
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public static double pixel_to_em (int pixel_value);
 }

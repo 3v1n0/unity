@@ -66,6 +66,8 @@ namespace Unity.Widgets
 
   public class Scroller : Ctk.Actor, Clutter.Container
   {
+    private uint drag_sensitivity = 3;
+    private float click_start_pos = 0;
     private float _drag_pos = -0.0f;
     public float drag_pos {
       get { return this._drag_pos; }
@@ -141,8 +143,9 @@ namespace Unity.Widgets
     construct {
         try
           {
-            bgtex = new Clutter.Texture.from_file (
-                                        Unity.PKGDATADIR + "/honeycomb.png");
+            bgtex = new Clutter.Texture ();
+            bgtex.set_load_async (true);
+            bgtex.set_from_file (Unity.PKGDATADIR + "/honeycomb.png");
           }
         catch (Error e)
           {
@@ -152,8 +155,9 @@ namespace Unity.Widgets
           }
       try
         {
-          gradient = new Clutter.Texture.from_file (
-                                           Unity.PKGDATADIR + "/gradient.png");
+          gradient = new Clutter.Texture ();
+          gradient.set_load_async (true);
+          gradient.set_from_file (Unity.PKGDATADIR + "/gradient.png");
         }
       catch (Error e)
         {
@@ -244,7 +248,6 @@ namespace Unity.Widgets
       float difference = this.drag_pos - this.fling_target;
       this.fling_velocity += difference * 0.005f;
 
-
       if (difference < 1.0f && difference > -1.0f)
         {
           // we have arrived at our destination.
@@ -332,6 +335,7 @@ namespace Unity.Widgets
       Clutter.ButtonEvent buttonevent = event.button;
       this.previous_y = buttonevent.y;
       this.last_drag_pos = (float)this.drag_pos;
+      this.click_start_pos = buttonevent.y;
       return true;
     }
 
@@ -383,10 +387,14 @@ namespace Unity.Widgets
               this.scroll_anim.completed ();
             }
 
-          position = get_next_neg_position (position);
-          this.scroll_anim = this.animate (
+          if (iters > 0)
+            {
+
+              position = get_next_neg_position (position);
+              this.scroll_anim = this.animate (
                                     Clutter.AnimationMode.EASE_OUT_QUAD,
                                     16 * iters, "drag_pos", position);
+            }
         }
 
       return true;
@@ -394,10 +402,17 @@ namespace Unity.Widgets
 
     private bool on_motion_event (Clutter.Event event)
     {
-      if (this.button_down)
+      if (this.button_down && this.is_dragging == false)
         {
-          this.is_dragging = true;
-
+          var diff = event.motion.y - this.click_start_pos;
+          if (diff > this.drag_sensitivity || -diff > this.drag_sensitivity)
+            {
+              this.is_dragging = true;
+            }
+        }
+        
+      if (this.button_down && this.is_dragging)
+        {
           Clutter.grab_pointer (this);
 
           /* Disable any animations on the children */
@@ -620,8 +635,6 @@ namespace Unity.Widgets
               child.set_clip (0, 0,
                               child_box.get_width (), child_box.get_height ());
           }
-
-
       }
 
       /* also allocate our background graphics */
@@ -655,7 +668,6 @@ namespace Unity.Widgets
       {
         Clutter.Actor child = childcontainer.child;
         child.paint ();
-        child.pick (color);
       }
     }
 
