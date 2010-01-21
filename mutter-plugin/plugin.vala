@@ -143,9 +143,12 @@ namespace Unity
 
       this.quicklauncher = new Quicklauncher.View (this);
       this.quicklauncher.opacity = 0;
-      this.stage.add_actor (this.quicklauncher);
-      this.stage.raise_child (this.quicklauncher,
-                              this.plugin.get_window_group());
+      ((Clutter.Container) this.plugin.get_window_group ()).add_actor (this.quicklauncher);
+      ((Clutter.Container) this.plugin.get_window_group ()).raise_child (this.quicklauncher,
+                                                   this.plugin.get_normal_window_group ());
+      //this.stage.add_actor (this.quicklauncher);
+      //this.stage.raise_child (this.quicklauncher,
+      //                        this.plugin.get_window_group());
       this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 400,
                                   "opacity", 255);
 
