@@ -9,6 +9,7 @@ unity (0.1.8-0ubuntu1~dxppa1) UNRELEASED; urgency=low
   * debian/control:
     + remove uneeded gnome-common build-dep (don't run autogen during build)
     + bump clutk build-dep
+    + change maintainer field
   * debian/rules: remove DEB_CONFIGURE_SCRIPT (don't run autogen)
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 21 Jan 2010 14:03:46 +0100
