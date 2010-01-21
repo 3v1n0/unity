@@ -143,8 +143,9 @@ namespace Unity.Widgets
     construct {
         try
           {
-            bgtex = new Clutter.Texture.from_file (
-                                        Unity.PKGDATADIR + "/honeycomb.png");
+            bgtex = new Clutter.Texture ();
+            bgtex.set_load_async (true);
+            bgtex.set_from_file (Unity.PKGDATADIR + "/honeycomb.png");
           }
         catch (Error e)
           {
@@ -154,8 +155,9 @@ namespace Unity.Widgets
           }
       try
         {
-          gradient = new Clutter.Texture.from_file (
-                                           Unity.PKGDATADIR + "/gradient.png");
+          gradient = new Clutter.Texture ();
+          gradient.set_load_async (true);
+          gradient.set_from_file (Unity.PKGDATADIR + "/gradient.png");
         }
       catch (Error e)
         {
