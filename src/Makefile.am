@@ -65,10 +65,13 @@ src_sources = \
   window.vala
 
 places_sources = \
+  places/application-place.vala \
   places/bar-model.vala \
   places/bar-view.vala \
+  places/cairo-drawing.vala \
   places/default-model.vala \
   places/default-view.vala \
+  places/file-place.vala \
   places/places-controller.vala \
   places/places-model.vala \
   places/places-place.vala \

@@ -35,8 +35,8 @@ namespace Unity.Places.Bar
     private Gee.ArrayList<PlaceIcon> places_icons;
     private PlaceIcon                trash_icon;
 
-    private PlacesVSeparator separator;
-    private PlacesBackground bg;
+    private Unity.Places.CairoDrawing.PlacesVSeparator separator;
+    private Unity.Places.CairoDrawing.PlacesBackground bg;
 
     public View (Places.Model model)
     {
@@ -50,7 +50,7 @@ namespace Unity.Places.Bar
       this.orientation  = Ctk.Orientation.HORIZONTAL;
 
       /* The background of the entire places bar */
-      this.bg = new PlacesBackground ();
+      this.bg = new Unity.Places.CairoDrawing.PlacesBackground ();
       this.bg.set_parent (this);
       this.bg.show ();
 
@@ -73,7 +73,7 @@ namespace Unity.Places.Bar
       this.trash_icon.button_release_event.connect (this.on_button_release);
 
       /* Create the separator */
-      this.separator = new PlacesVSeparator ();
+      this.separator = new Unity.Places.CairoDrawing.PlacesVSeparator ();
       this.pack (this.separator, false, false);
 
       this.show_all ();
@@ -231,230 +231,6 @@ namespace Unity.Places.Bar
     {
       this(size, place.name, place.icon_name, "");
       this.place = place;
-    }
-  }
-
-  public class PlacesBackground : Ctk.Bin
-  {
-    public Clutter.CairoTexture cairotxt;
-
-    private Ctk.EffectGlow effect_glow;
-
-
-    /* margin outside of the cairo texture. We draw outside to complete the
-     * line loop and we don't want the line loop to be visible in some parts of
-     * the screen.
-     */
-    private int margin = 5;
-
-    /* (X, Y) origine of Places Bar: The top-left corner of the screen */
-    private int place_x = 0;
-    private int place_y = 0;
-
-    /* Places Bar width and height. The width is set the the width of the
-     * window.
-     */
-    private int place_w = 760;
-    private int place_h = 55;
-
-    private int place_bottom; /* place_y + place_h */
-
-    /* Menu area width and height */
-    private int menu_h = 22;
-    private int menu_w = 216;
-
-    private int rounding = 16;
-    private int rounding_small = 8;
-
-    private int menu_bottom; /* place_y + menu_h */
-
-    private int tab_h = 50;
-
-    /* The squirl area width */
-    private int squirl_w = 70;
-
-    public struct TabRect
-    {
-      int left;
-      int right;
-      int top;
-      int bottom;
-    }
-
-    public int place_width;
-
-    public PlacesBackground ()
-    {
-      place_width = 0;
-    }
-
-    construct
-    {
-      effect_glow = new Ctk.EffectGlow ();
-      Clutter.Color c = Clutter.Color ()
-      {
-        red = 255,
-        green = 255,
-        blue = 255,
-        alpha = 255
-      };
-
-      effect_glow.set_color (c);
-      effect_glow.set_factor (1.0f);
-      effect_glow.set_margin (5);
-      this.add_effect (effect_glow);
-    }
-
-    private void draw_around_menu (Cairo.Context cairoctx)
-    {
-      cairoctx.line_to (place_x + place_w + margin, place_y + menu_h);
-      cairoctx.line_to (place_x + place_w - menu_w + rounding,
-                        place_y + menu_h);
-      cairoctx.curve_to (place_x + place_w - menu_w, place_y + menu_h,
-                         place_x + place_w - menu_w, place_y + menu_h,
-                         place_x + place_w - menu_w, place_y+menu_h+rounding);
-      cairoctx.line_to (place_x + place_w - menu_w,
-                        place_y + place_h - rounding);
-      cairoctx.curve_to (place_x + place_w - menu_w, place_y + place_h,
-                         place_x + place_w - menu_w, place_y + place_h,
-                         place_x + place_w - menu_w - rounding,
-                         place_y + place_h);
-    }
-
-    private void draw_tab (Cairo.Context cairoctx, TabRect tab)
-    {
-      cairoctx.line_to (tab.right + rounding_small, place_bottom );
-      cairoctx.curve_to (tab.right, place_bottom,
-                         tab.right, place_bottom,
-                         tab.right, place_bottom - rounding_small);
-      cairoctx.line_to (tab.right, tab.top + rounding);
-      cairoctx.curve_to (tab.right, tab.top,
-                         tab.right, tab.top,
-                         tab.right - rounding, tab.top);
-      cairoctx.line_to (tab.left + rounding, tab.top);
-      cairoctx.curve_to (tab.left, tab.top,
-                         tab.left, tab.top,
-                         tab.left, tab.top + rounding);
-      cairoctx.line_to (tab.left, place_bottom - rounding_small);
-      cairoctx.curve_to (tab.left, place_bottom,
-                         tab.left, place_bottom,
-                         tab.left - rounding_small, place_bottom);
-    }
-
-    private void draw_squirl(Cairo.Context cairoctx)
-    {
-      cairoctx.line_to (place_x + squirl_w + rounding_small, place_bottom);
-      cairoctx.curve_to (place_x + squirl_w, place_bottom,
-                         place_x + squirl_w, place_bottom,
-                         place_x + squirl_w, place_bottom - rounding_small);
-      cairoctx.line_to (place_x + squirl_w, menu_bottom + rounding );
-      cairoctx.curve_to (place_x + squirl_w, menu_bottom,
-                         place_x + squirl_w, menu_bottom,
-                         place_x + squirl_w - rounding, menu_bottom);
-      cairoctx.line_to (place_x - margin, menu_bottom);
-    }
-
-    public void create_places_background (int window_width,
-                                          int window_height,
-                                          int tab_position_x,
-                                          int tab_width)
-    {
-      place_width = window_width;
-      place_w = window_width;
-      place_bottom = place_y + place_h;
-      menu_bottom = place_y + menu_h;
-
-      if (this.get_child () is Clutter.Actor)
-        this.remove_actor (this.get_child ());
-
-      cairotxt = new Clutter.CairoTexture(place_w, place_h + margin);
-      Cairo.Context cairoctx = cairotxt.create();
-      {
-        cairoctx.set_source_rgba (1, 1, 1, 1.0);
-        cairoctx.set_line_width (1.0);
-
-        cairoctx.move_to (place_x - margin, place_y - margin);
-        cairoctx.line_to (place_x + place_w + margin, place_y - margin);
-
-        draw_around_menu (cairoctx);
-
-        TabRect tab = TabRect();
-        tab.left = tab_position_x;
-        tab.right = tab.left + tab_width;
-        tab.top = place_y + place_h - tab_h;
-        tab.bottom = place_y + place_h;
-
-        draw_tab(cairoctx, tab);
-
-        draw_squirl (cairoctx);
-
-        /* close the path */
-        cairoctx.line_to (place_x - margin, place_y - margin);
-
-        cairoctx.stroke_preserve ();
-        cairoctx.set_source_rgba (1, 1, 1, 0.15);
-        cairoctx.fill ();
-      }
-
-      cairotxt.set_opacity (0xFF);
-      this.add_actor (cairotxt);
-    }
-  }
-
-  public class PlacesVSeparator : Ctk.Bin
-  {
-    public int Width = 0;
-    public int Height = 0;
-
-    public Clutter.CairoTexture cairotxt;
-
-    public PlacesVSeparator ()
-    {
-      this.create_separator (5, 48);
-    }
-
-    public void create_separator (int W, int H)
-    {
-      Width = W;
-      Height = H;
-
-      if (this.get_child () is Clutter.Actor)
-        this.remove_actor (this.get_child ());
-
-      cairotxt = new Clutter.CairoTexture(Width, Height);
-      Cairo.Context cairoctx = cairotxt.create();
-      {
-        cairoctx.set_source_rgba (1, 1, 1, 1.0);
-        cairoctx.set_line_width (1.0);
-
-        cairoctx.move_to (Width/2.0, 0);
-        cairoctx.line_to (Width/2.0, Height);
-
-        cairoctx.stroke ();
-        cairoctx.set_source_rgba (1, 1, 1, 0.15);
-      }
-
-      cairotxt.set_opacity (0xFF);
-      this.add_actor (cairotxt);
-    }
-
-    construct
-    {
-      /*
-      Ctk.EffectGlow effect_glow = new Ctk.EffectGlow ();
-      Clutter.Color c = Clutter.Color ()
-      {
-        red = 255,
-        green = 255,
-        blue = 255,
-        alpha = 255
-      };
-
-      effect_glow.set_color (c);
-      effect_glow.set_factor (1.0f);
-      effect_glow.set_margin (5);
-      this.add_effect (effect_glow);
-      */
     }
   }
 }
