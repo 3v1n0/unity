@@ -5,7 +5,7 @@ unity (0.1.8-0ubuntu1~dxppa1) UNRELEASED; urgency=low
     in Launchpad.
 
   [ Didier Roche ]
-  * bump version
+  * new upstream release
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 21 Jan 2010 14:03:46 +0100
 
