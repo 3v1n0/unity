@@ -84,6 +84,7 @@ namespace Unity
 
       /* The texture that will show the background */
       this.bg = new Clutter.Texture ();
+      this.bg.set_load_async (true);
       this.add_actor (this.bg);
       this.bg.show ();
 

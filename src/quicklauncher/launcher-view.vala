@@ -145,7 +145,9 @@ namespace Unity.Quicklauncher
     {
       try
         {
-          this.focused_indicator = new Clutter.Texture.from_file (FOCUSED_FILE);
+          this.focused_indicator = new Clutter.Texture ();
+          this.focused_indicator.set_load_async (true);
+          this.focused_indicator.set_from_file (FOCUSED_FILE);
         } catch (Error e)
         {
           this.focused_indicator = new Clutter.Texture ();
@@ -155,7 +157,9 @@ namespace Unity.Quicklauncher
 
       try
         {
-          this.running_indicator = new Clutter.Texture.from_file (RUNNING_FILE);
+          this.running_indicator = new Clutter.Texture ();
+          this.running_indicator.set_load_async (true);
+          this.running_indicator.set_from_file (RUNNING_FILE);
         } catch (Error e)
         {
           this.running_indicator = new Clutter.Texture ();
