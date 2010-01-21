@@ -1,10 +1,10 @@
-unity (0.1.8-0ubuntu1~dxppa2) UNRELEASED; urgency=low
+unity (0.1.8-0ubuntu1~dxppa2) lucid; urgency=low
 
   * Add DEBHELPER token to debian/unity.preinst
   * debian/control: add unused ${misc:Depends} to netbook-launcher for
     lintian cleaning
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 21 Jan 2010 14:34:49 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 21 Jan 2010 14:40:03 +0100
 
 unity (0.1.8-0ubuntu1~dxppa1) lucid; urgency=low
 
