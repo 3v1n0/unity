@@ -34,7 +34,7 @@ Description: Launcher
 Package: netbook-launcher
 Section: oldlibs
 Architecture: all
-Depends: unity
+Depends: unity, ${misc:Depends}
 Description: transitional package
  unity supersedes netbook-launcher. This package ensures a clean upgrade path,
  and can be safely removed after the upgrade. 
