@@ -123,7 +123,7 @@ namespace Unity.Places.CairoDrawing
       PlaceWidth = 0;
     }
 
-    public void CreatePlacesBackground (int WindowWidth,
+    public void create_places_background (int WindowWidth,
       int WindowHeight,
       int TabPositionX,
       int TabWidth)
@@ -133,12 +133,19 @@ namespace Unity.Places.CairoDrawing
       PlaceBottom = PlaceY + PlaceH;
       MenuBottom = PlaceY + MenuH;
 
-      if (cairotxt != null)
-        this.remove_actor (cairotxt);
+      if (this.get_child () is Clutter.Actor)
+      {
+        this.remove_actor (this.get_child ());
+      }
 
       cairotxt = new Clutter.CairoTexture(PlaceW, PlaceH + Margin);
       Cairo.Context cairoctx = cairotxt.create();
       {
+        /* Clear */
+        /*cairoctx.set_operator (Cairo.Operator.CLEAR);
+        cairoctx.paint ();
+        cairoctx.set_operator (Cairo.Operator.OVER);*/
+
         cairoctx.set_source_rgba (1, 1, 1, 1.0);
         cairoctx.set_line_width (1.0);
 
@@ -175,6 +182,11 @@ namespace Unity.Places.CairoDrawing
       cairotxt.set_opacity (0xFF);
       this.add_actor (cairotxt);
 
+      /* Remove all effects set on this actor */
+      this.remove_all_effects ();
+
+      /* Create a new effect and add it to this actor */
+      /* The new effect will use the newly created drawing as a base */
       effect_glow = new Ctk.EffectGlow ();
       Clutter.Color c = Clutter.Color ()
       {
@@ -211,8 +223,10 @@ namespace Unity.Places.CairoDrawing
       Width = W;
       Height = H;
 
-      if (cairotxt != null)
-        this.remove_actor (cairotxt);
+      if (this.get_child () is Clutter.Actor)
+      {
+        this.remove_actor (this.get_child ());
+      }
 
       cairotxt = new Clutter.CairoTexture(Width, Height);
       Cairo.Context cairoctx = cairotxt.create();
@@ -230,6 +244,11 @@ namespace Unity.Places.CairoDrawing
       cairotxt.set_opacity (0xFF);
       this.add_actor (cairotxt);
 
+      /* Remove all effects set on this actor */
+      this.remove_all_effects ();
+
+      /* Create a new effect and add it to this actor */
+      /* The new effect will use the newly created drawing as a base */
       Ctk.EffectGlow effect_glow = new Ctk.EffectGlow ();
       Clutter.Color c = Clutter.Color ()
       {
@@ -265,8 +284,10 @@ namespace Unity.Places.CairoDrawing
       Width = W;
       Height = H;
 
-      if (cairotxt != null)
-        this.remove_actor (cairotxt);
+      if (this.get_child () is Clutter.Actor)
+      {
+        this.remove_actor (this.get_child ());
+      }
 
       cairotxt = new Clutter.CairoTexture(Width, Height);
       Cairo.Context cairoctx = cairotxt.create();
@@ -283,6 +304,12 @@ namespace Unity.Places.CairoDrawing
 
       cairotxt.set_opacity (0xFF);
       this.add_actor (cairotxt);
+
+      /* Remove all effects set on this actor */
+      this.remove_all_effects ();
+
+      /* Create a new effect and add it to this actor */
+      /* The new effect will use the newly created drawing as a base */
 
       Ctk.EffectGlow effect_glow = new Ctk.EffectGlow ();
       Clutter.Color c = Clutter.Color ()
