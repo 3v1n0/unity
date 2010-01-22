@@ -80,6 +80,43 @@ namespace Unity.Quicklauncher.Models
     }
   }
 
+  public class LauncherPinningShortcut : Object, ShortcutItem
+  {
+    public ApplicationModel app_model {get; construct;}
+    public string name {
+      get {
+        if (this.app_model.is_sticky)
+          {
+            return "Remove from Launcher";
+          }
+        else
+          {
+            return "Add to Launcher";
+          }
+      }
+    }
+
+    public LauncherPinningShortcut (ApplicationModel model)
+      {
+        Object (app_model: model);
+      }
+
+    construct
+      {
+
+      }
+
+    public string get_name ()
+    {
+      return this.name;
+    }
+
+    public void activated ()
+    {
+      this.app_model.is_sticky = !this.app_model.is_sticky;
+    }
+  }
+
   public class ApplicationModel : Object, LauncherModel
   {
     private Gdk.Pixbuf _icon;
@@ -215,6 +252,9 @@ namespace Unity.Quicklauncher.Models
       open_entry.app = this.app;
       open_entry.name = "Open..";
       ret_list.add (open_entry);
+
+      var pin_entry = new LauncherPinningShortcut (this);
+      ret_list.add (pin_entry);
 
       return ret_list;
     }
