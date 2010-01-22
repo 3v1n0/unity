@@ -219,6 +219,7 @@ namespace Unity.Quicklauncher
       this.anim_throbber = effect_icon_glow.animate (
                           Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
                           "opacity", 1.0f);
+      this.effect_icon_glow.set_margin (6);
 
       Signal.connect_after (this.anim_throbber, "completed",
                             (Callback)do_anim_throbber_loop, this);
