@@ -48,7 +48,7 @@ namespace Unity.Quicklauncher
 
     private Gee.ArrayList<ShortcutItem> offline_shortcuts;
     private Gee.ArrayList<ShortcutItem> shortcut_actions;
-    
+
     private QuicklistController? quicklist_controller;
 
     private Ctk.EffectGlow effect_icon_glow;
@@ -212,13 +212,13 @@ namespace Unity.Quicklauncher
       };
       effect_icon_glow.set_background_texture (honeycomb_mask);
       effect_icon_glow.set_color (c);
-      effect_icon_glow.set_factor (0.0f);
+      effect_icon_glow.set_opacity (0.0f);
       this.icon.add_effect (effect_icon_glow);
       this.icon.do_queue_redraw ();
 
       this.anim_throbber = effect_icon_glow.animate (
                           Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
-                          "factor", 1.0f);
+                          "opacity", 1.0f);
 
       Signal.connect_after (this.anim_throbber, "completed",
                             (Callback)do_anim_throbber_loop, this);
@@ -233,7 +233,7 @@ namespace Unity.Quicklauncher
         {
           // we are still starting so do another loop
           float factor = 0.0f;
-          if (self.effect_icon_glow.factor < 0.5)
+          if (self.effect_icon_glow.opacity < 0.5)
             {
               factor = 1.0f;
             }
@@ -241,19 +241,19 @@ namespace Unity.Quicklauncher
           self.anim_throbber = self.effect_icon_glow.animate (
                                         Clutter.AnimationMode.EASE_IN_OUT_SINE,
                                         SHORT_DELAY,
-                                        "factor", factor);
+                                        "opacity", factor);
           Signal.connect_after (self.anim_throbber, "completed",
                                 (Callback)do_anim_throbber_loop, self);
         }
       else
         {
           // we should fadeout if we are too bright, otherwise remove effect
-          if (self.effect_icon_glow.factor >= 0.1)
+          if (self.effect_icon_glow.opacity >= 0.1)
             {
               self.anim_throbber = self.effect_icon_glow.animate (
                                         Clutter.AnimationMode.EASE_IN_OUT_SINE,
                                         SHORT_DELAY,
-                                        "factor", 0.0);
+                                        "opacity", 0.0);
             }
           else
             {
@@ -386,20 +386,20 @@ namespace Unity.Quicklauncher
 
     /* menu handling */
     private void build_quicklist ()
-    {         
+    {
       this.offline_shortcuts = this.model.get_menu_shortcuts ();
       this.shortcut_actions = this.model.get_menu_shortcut_actions ();
       foreach (ShortcutItem shortcut in this.offline_shortcuts)
       {
         this.quicklist_controller.add_action (shortcut, true);
       }
-      
+
       foreach (ShortcutItem shortcut in this.shortcut_actions)
       {
         this.quicklist_controller.add_action (shortcut, false);
       }
     }
-    
+
     private bool on_released (Clutter.Event src)
     {
       var bevent = src.button;
