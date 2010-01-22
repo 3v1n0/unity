@@ -146,7 +146,6 @@ namespace Unity.Quicklauncher
       try
         {
           this.focused_indicator = new Clutter.Texture ();
-          this.focused_indicator.set_load_async (true);
           this.focused_indicator.set_from_file (FOCUSED_FILE);
         } catch (Error e)
         {
@@ -158,7 +157,6 @@ namespace Unity.Quicklauncher
       try
         {
           this.running_indicator = new Clutter.Texture ();
-          this.running_indicator.set_load_async (true);
           this.running_indicator.set_from_file (RUNNING_FILE);
         } catch (Error e)
         {
@@ -190,7 +188,7 @@ namespace Unity.Quicklauncher
     {
       float mid_point_y = this.container.height / 2.0f;
       float focus_halfy = this.focused_indicator.height / 2.0f;
-      float focus_halfx = container.width + this.focused_indicator.width + 1;
+      float focus_halfx = container.width + this.focused_indicator.width + 2;
 
       this.focused_indicator.set_position(focus_halfx,
                                           mid_point_y - focus_halfy);

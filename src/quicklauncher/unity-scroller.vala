@@ -242,7 +242,7 @@ namespace Unity.Widgets
     private void on_fling_frame (Clutter.Timeline timeline, int msecs)
     {
 
-      // the jist here is that we are doing a *real* per frame fling so we need
+      // the gist here is that we are doing a *real* per frame fling so we need
       // to head towards a given goal, bouncing around on the way
 
       float difference = this.drag_pos - this.fling_target;
@@ -410,7 +410,7 @@ namespace Unity.Widgets
               this.is_dragging = true;
             }
         }
-        
+
       if (this.button_down && this.is_dragging)
         {
           Clutter.grab_pointer (this);

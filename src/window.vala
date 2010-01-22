@@ -149,7 +149,7 @@ namespace Unity
     private void relayout ()
     {
       int x, y, width, height;
-
+      float ql_width;
       if (this.is_popup)
         {
           x = 0;
@@ -167,18 +167,19 @@ namespace Unity
           width = size.width;
           height = size.height;
         }
-
+      ql_width = this.quicklauncher.get_width ();
       this.resize (width, height);
       this.stage.set_size (width, height);
 
       if (!this.is_popup)
-        Utils.set_strut ((Gtk.Window)this, 54, 0, height);
+        Utils.set_strut ((Gtk.Window)this, (uint)(ql_width), 0, height);
 
       /* Update component layouts */
       this.background.set_position (0, 0);
       this.background.set_size (width, height);
 
-      this.quicklauncher.set_size (58, height);
+
+      this.quicklauncher.set_size (ql_width, height);
       this.quicklauncher.set_position (this.workarea_size.left,
                                        this.workarea_size.top);
 
