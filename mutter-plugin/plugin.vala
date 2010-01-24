@@ -259,7 +259,8 @@ namespace Unity
           var win_group = this.plugin.get_window_group ();
           win_group.animate (Clutter.AnimationMode.EASE_IN_SINE, 300,
                              "opacity", 255);
-
+          this.places.opacity = 255;
+          win_group.opacity = 0;
           this.panel.set_indicator_mode (false);
           this.restore_input_region ();
         }
@@ -272,6 +273,8 @@ namespace Unity
           var win_group = this.plugin.get_window_group ();
           win_group.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
                               "opacity", 0);
+          this.places.opacity = 0;
+          win_group.opacity = 255;
 
           this.panel.set_indicator_mode (true);
 
