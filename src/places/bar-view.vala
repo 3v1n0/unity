@@ -169,7 +169,7 @@ namespace Unity.Places.Bar
         }
 
       /* Allocate the Trash (24 = Padding) */
-      var i_width = this.shell.get_indicators_width () - 24;
+      var i_width = this.shell.get_indicators_width () + 8;
       child_box.x1 = box.x2 - box.x1 - i_width - ICON_VIEW_WIDTH;
       child_box.x2 = child_box.x1 + ICON_VIEW_WIDTH;
       this.trash_icon.allocate (child_box, flags);
