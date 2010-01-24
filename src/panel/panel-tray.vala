@@ -27,7 +27,7 @@ namespace Unity.Panel.Tray
     private TrayManager manager;
     private Clutter.Stage stage;
 
-    private int n_icons = 0;
+    private int n_icons = 1;
 
     public View ()
     {
