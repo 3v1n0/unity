@@ -21,12 +21,10 @@ using Unity.Quicklauncher.Models;
 
 namespace Unity.Quicklauncher
 {
-  const string THROBBER_FILE = Unity.PKGDATADIR
-    + "/quicklauncher_spinner.png";
   const string FOCUSED_FILE  = Unity.PKGDATADIR
-    + "/quicklauncher_focused_indicator.svg";
+    + "/quicklauncher_focused_indicator.png";
   const string RUNNING_FILE  = Unity.PKGDATADIR
-    + "/quicklauncher_running_indicator.svg";
+    + "/quicklauncher_running_indicator.png";
   const string HONEYCOMB_MASK_FILE = Unity.PKGDATADIR
     + "/honeycomb-mask.png";
   const string MENU_BG_FILE = Unity.PKGDATADIR
@@ -36,7 +34,6 @@ namespace Unity.Quicklauncher
   const uint MEDIUM_DELAY = 800;
   const uint LONG_DELAY = 1600;
 
-
   public class LauncherView : Ctk.Bin
   {
 
@@ -44,19 +41,17 @@ namespace Unity.Quicklauncher
 
     /* the prettys */
     private Ctk.Image icon;
-    private Ctk.Image throbber;
-    private Ctk.Image focused_indicator;
-    private Ctk.Image running_indicator;
+    private Clutter.Texture focused_indicator;
+    private Clutter.Texture running_indicator;
     private Gdk.Pixbuf honeycomb_mask;
     private Clutter.Group container;
 
-    private Ctk.Menu menu;
-    private Ctk.EffectDropShadow menu_dropshadow;
     private Gee.ArrayList<ShortcutItem> offline_shortcuts;
     private Gee.ArrayList<ShortcutItem> shortcut_actions;
 
+    private QuicklistController? quicklist_controller;
+
     private Ctk.EffectGlow effect_icon_glow;
-    private Ctk.EffectDropShadow effect_icon_dropshadow;
 
     /* internal view logic datatypes */
     private uint32 last_pressed_time;
@@ -86,7 +81,6 @@ namespace Unity.Quicklauncher
     public signal void request_attention ();
     public signal void clicked ();
 
-
     /* animations */
 
     private Clutter.Animation anim_throbber;
@@ -102,8 +96,6 @@ namespace Unity.Quicklauncher
       }
     }
 
-    private Clutter.Animation hover_anim;
-
   /* constructors */
     public LauncherView (LauncherModel model)
       {
@@ -111,6 +103,8 @@ namespace Unity.Quicklauncher
         this.model = model;
         this.model.notify_active.connect (this.notify_on_is_running);
         this.model.notify_focused.connect (this.notify_on_is_focused);
+        this.model.activated.connect (this.on_activated);
+        this.name = "Unity.Quicklauncher.LauncherView-" + this.model.name;
 
         notify_on_is_running ();
         notify_on_is_focused ();
@@ -143,28 +137,33 @@ namespace Unity.Quicklauncher
         this.clicked.connect (this.on_clicked);
         this.icon.do_queue_redraw ();
 
-        effect_icon_dropshadow = new Ctk.EffectDropShadow(3, 5, 5);
-        this.icon.add_effect(effect_icon_dropshadow);
-
         set_reactive (true);
+        this.quicklist_controller = null;
       }
 
     private void load_textures ()
     {
-      this.throbber = new Ctk.Image.from_filename (20, THROBBER_FILE);
-      this.throbber.set_z_rotation_from_gravity (0.0f,
-                                                 Clutter.Gravity.CENTER);
-      this.container.add_actor (this.throbber);
-
-      this.focused_indicator = new Ctk.Image.from_filename (8,
-                                                            FOCUSED_FILE);
+      try
+        {
+          this.focused_indicator = new Clutter.Texture ();
+          this.focused_indicator.set_from_file (FOCUSED_FILE);
+        } catch (Error e)
+        {
+          this.focused_indicator = new Clutter.Texture ();
+          warning ("loading focused indicator failed, %s", e.message);
+        }
       this.container.add_actor (this.focused_indicator);
 
-      this.running_indicator = new Ctk.Image.from_filename (8,
-                                                            RUNNING_FILE);
+      try
+        {
+          this.running_indicator = new Clutter.Texture ();
+          this.running_indicator.set_from_file (RUNNING_FILE);
+        } catch (Error e)
+        {
+          this.running_indicator = new Clutter.Texture ();
+          warning ("loading running indicator failed, %s", e.message);
+        }
       this.container.add_actor (this.running_indicator);
-
-      this.throbber.set_opacity (0);
       this.focused_indicator.set_opacity (0);
       this.running_indicator.set_opacity (0);
 
@@ -183,18 +182,15 @@ namespace Unity.Quicklauncher
     }
 
     /**
-     * re-layouts the various indicators and throbbers in out view
+     * re-layouts the various indicators
      */
     private void relayout ()
     {
-      this.throbber.set_position (container.width - this.throbber.width,
-                                  container.height - this.throbber.height);
-
       float mid_point_y = this.container.height / 2.0f;
       float focus_halfy = this.focused_indicator.height / 2.0f;
-      float focus_halfx = container.width - this.focused_indicator.width;
+      float focus_halfx = container.width + this.focused_indicator.width + 2;
 
-      this.focused_indicator.set_position(focus_halfx + 12,
+      this.focused_indicator.set_position(focus_halfx,
                                           mid_point_y - focus_halfy);
       this.running_indicator.set_position (0, mid_point_y - focus_halfy);
 
@@ -204,73 +200,84 @@ namespace Unity.Quicklauncher
     /* animation logic */
     private void throbber_start ()
     {
-      if (anim_throbber != null)
-        anim_throbber.completed ();
 
-      this.throbber.opacity = 255;
-      this.throbber.set_z_rotation_from_gravity (0.0f,
-                                                 Clutter.Gravity.CENTER);
-      this.anim_throbber = this.throbber.animate (
-        Clutter.AnimationMode.LINEAR, LONG_DELAY,
-        "rotation-angle-z", 360.0f
-        );
+      effect_icon_glow = new Ctk.EffectGlow ();
+      Clutter.Color c = Clutter.Color () {
+        red = 255,
+        green = 255,
+        blue = 255,
+        alpha = 255
+      };
+      effect_icon_glow.set_background_texture (honeycomb_mask);
+      effect_icon_glow.set_color (c);
+      effect_icon_glow.set_opacity (0.0f);
+      this.icon.add_effect (effect_icon_glow);
+      this.icon.do_queue_redraw ();
 
-      this.anim_throbber.loop = true;
+      this.anim_throbber = effect_icon_glow.animate (
+                          Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
+                          "opacity", 1.0f);
+      this.effect_icon_glow.set_margin (6);
+
+      Signal.connect_after (this.anim_throbber, "completed",
+                            (Callback)do_anim_throbber_loop, this);
+
       GLib.Timeout.add_seconds (8, on_launch_timeout);
+    }
+
+    private static void do_anim_throbber_loop (Object sender, LauncherView self)
+      requires (self is LauncherView)
+    {
+      if (self.is_starting)
+        {
+          // we are still starting so do another loop
+          float factor = 0.0f;
+          if (self.effect_icon_glow.opacity < 0.5)
+            {
+              factor = 1.0f;
+            }
+
+          self.anim_throbber = self.effect_icon_glow.animate (
+                                        Clutter.AnimationMode.EASE_IN_OUT_SINE,
+                                        SHORT_DELAY,
+                                        "opacity", factor);
+          Signal.connect_after (self.anim_throbber, "completed",
+                                (Callback)do_anim_throbber_loop, self);
+        }
+      else
+        {
+          // we should fadeout if we are too bright, otherwise remove effect
+          if (self.effect_icon_glow.opacity >= 0.1)
+            {
+              self.anim_throbber = self.effect_icon_glow.animate (
+                                        Clutter.AnimationMode.EASE_IN_OUT_SINE,
+                                        SHORT_DELAY,
+                                        "opacity", 0.0);
+            }
+          else
+            {
+              self.icon.remove_effect (self.effect_icon_glow);
+            }
+        }
     }
 
     private void throbber_fadeout ()
     {
-      if (this.throbber.opacity == 0)
-        return;
-
-      if (anim_throbber != null)
-        anim_throbber.completed ();
-
-      this.anim_throbber =
-      this.throbber.animate (Clutter.AnimationMode.EASE_IN_QUAD,
-                             SHORT_DELAY,
-                             "opacity",
-                             0);
-      this.anim_throbber.loop = false;
+      return;
     }
 
     private void throbber_hide ()
     {
-      if (this.throbber.opacity > 0)
-        throbber_fadeout ();
+      throbber_fadeout ();
     }
 
-
-    private void start_hover_anim ()
-    {
-      this.hover_anim = effect_icon_glow.animate (
-        Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
-        "factor", 1.0f);
-      this.hover_anim.completed.connect (on_hover_anim_completed);
-    }
-
-    private void on_hover_anim_completed ()
-    {
-      if (is_hovering)
-      {
-        Idle.add (do_new_hover_anim);
-      }
-    }
-
-    private bool do_new_hover_anim ()
-    {
-      float fadeto = 0.0f;
-      if (effect_icon_glow.get_factor() <= 0.0f)
-        fadeto = 1.0f;
-
-      this.hover_anim = effect_icon_glow.animate(
-        Clutter.AnimationMode.EASE_IN_OUT_CIRC, 600, "factor", fadeto);
-      this.hover_anim.completed.connect (on_hover_anim_completed);
-      return false;
-    }
 
     /* callbacks on model */
+    private void on_activated ()
+    {
+      this.is_starting = false;
+    }
+
     private void notify_on_icon ()
       {
         if (this.model.icon is Gdk.Pixbuf)
@@ -321,28 +328,21 @@ namespace Unity.Quicklauncher
 
       this.is_starting = false;
     }
-
-
-    /* callbacks on self */
-
     private bool on_mouse_enter (Clutter.Event event)
     {
       this.is_hovering = true;
-      effect_icon_glow = new Ctk.EffectGlow ();
-      Clutter.Color c = Clutter.Color () {
-        red = 255,
-        green = 255,
-        blue = 255,
-        alpha = 255
-      };
-      effect_icon_glow.set_background_texture (honeycomb_mask);
-      effect_icon_glow.set_color (c);
-      effect_icon_glow.set_factor (1.0f);
-      this.icon.add_effect (effect_icon_glow);
-      this.icon.do_queue_redraw ();
-
-      start_hover_anim ();
-
+      if (this.quicklist_controller == null)
+        {
+          this.quicklist_controller = new QuicklistController (this.model.name,
+                                                               this,
+                                                               this.get_stage () as Clutter.Stage
+                                                               );
+          this.build_quicklist ();
+        }
+      if (!this.quicklist_controller.is_label)
+        {
+          this.quicklist_controller.show_label ();
+        }
       return false;
     }
 
@@ -355,14 +355,14 @@ namespace Unity.Quicklauncher
 
     private bool on_mouse_leave(Clutter.Event src)
     {
-      if (this.is_hovering)
-        {
-          this.is_hovering = false;
-          this.hover_anim.completed ();
-          this.icon.remove_effect(this.effect_icon_glow);
-          this.icon.queue_relayout();
-        }
-
+      this.is_hovering = false;
+      if (this.quicklist_controller is QuicklistController)
+      {
+        if (this.quicklist_controller.is_label)
+          {
+            this.quicklist_controller.close_menu ();
+          }
+      }
       return false;
     }
 
@@ -375,92 +375,28 @@ namespace Unity.Quicklauncher
       }
       else
       {
-        build_quicklist ();
+        if (this.quicklist_controller.is_label)
+          {
+            this.quicklist_controller.show_menu ();
+          }
       }
       return false;
     }
 
+    /* menu handling */
     private void build_quicklist ()
     {
       this.offline_shortcuts = this.model.get_menu_shortcuts ();
       this.shortcut_actions = this.model.get_menu_shortcut_actions ();
-
-      this.menu = new Ctk.Menu ();
-      Clutter.Stage stage = this.get_stage() as Clutter.Stage;
-      stage.add_actor (this.menu);
-
-      float x, y;
-      this.get_transformed_position (out x, out y);
-      this.menu.attach_to_actor (this);
-
-      Ctk.Padding padding = Ctk.Padding () {
-        left = 6,
-        right = 6,
-        top = 6,
-        bottom = 6
-      };
-      this.menu.set_padding (padding);
-
       foreach (ShortcutItem shortcut in this.offline_shortcuts)
       {
-        Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (
-                                                    shortcut.get_name ());
-        this.menu.append (menuitem);
-        menuitem.activated.connect (shortcut.activated);
-        menuitem.activated.connect (this.close_menu);
+        this.quicklist_controller.add_action (shortcut, true);
       }
-
-      // add a seperator and a menu label
-      var seperator = new Ctk.MenuSeperator ();
-      this.menu.append (seperator);
-
-      var name_label = new Ctk.MenuItem.with_label (this.model.name);
-      this.menu.append (name_label);
-      name_label.set_reactive (false);
-
-      seperator = new Ctk.MenuSeperator ();
-      this.menu.append (seperator);
-
-      // parse the menu actions
 
       foreach (ShortcutItem shortcut in this.shortcut_actions)
       {
-        Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (
-                                                    shortcut.get_name ());
-        this.menu.append (menuitem);
-        menuitem.activated.connect (shortcut.activated);
-        menuitem.activated.connect (this.close_menu);
+        this.quicklist_controller.add_action (shortcut, false);
       }
-      try {
-        var bg_tex = new Clutter.Texture.from_file (MENU_BG_FILE);
-        bg_tex.set_opacity (38);
-
-        bg_tex.set_repeat (true, true);
-        this.menu.set_texture(bg_tex);
-      } catch (Error e)
-      {
-        critical (e.message);
-      }
-      Clutter.Color color = Clutter.Color ()
-      {
-        red = 0x00,
-        green = 0x00,
-        blue = 0x00,
-        alpha = (uint8) (0xFF * 0.30)
-      };
-      this.menu.set_color (color);
-
-      this.menu_dropshadow = new Ctk.EffectDropShadow(3, 5, 5);
-      this.menu.add_effect(this.menu_dropshadow);
-      this.menu.show ();
-
-    }
-
-    private void close_menu ()
-    {
-      this.menu.remove_effect(this.menu_dropshadow);
-      Clutter.Stage stage = this.get_stage() as Clutter.Stage;
-      stage.remove_actor (this.menu);
     }
 
     private bool on_released (Clutter.Event src)

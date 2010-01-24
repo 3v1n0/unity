@@ -68,7 +68,12 @@ public class Main
       var view = new Quicklauncher.LauncherView (model);
       assert (view is Quicklauncher.LauncherView);
     });
-      
+    
+    Test.add_func ("/Unity/Quicklauncher/Quicklist-view", () => {
+      var view = new Quicklauncher.QuicklistMenu ();
+      assert (view is Quicklauncher.QuicklistMenu);
+    });
+
     Test.add_func ("/Unity/Quicklauncher/Manager", () => {
       var manager = new Quicklauncher.Manager ();
       assert (manager is Quicklauncher.Manager);

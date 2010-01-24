@@ -71,11 +71,17 @@ panel_sources = \
   panel/panel-view.vala
 
 places_sources = \
+  places/application-place.vala \
   places/bar-model.vala \
   places/bar-view.vala \
+  places/cairo-drawing.vala \
   places/default-model.vala \
   places/default-view.vala \
-  places/view.vala
+  places/file-place.vala \
+  places/places-controller.vala \
+  places/places-model.vala \
+  places/places-place.vala \
+  places/places-view.vala
 
 quicklauncher_sources = \
   quicklauncher/application-model.vala \
@@ -84,6 +90,8 @@ quicklauncher_sources = \
   quicklauncher/prism-handler.vala \
   quicklauncher/quicklauncher-manager.vala \
   quicklauncher/quicklauncher.vala \
+  quicklauncher/quicklist-controller.vala \
+  quicklauncher/quicklist-view.vala \
   quicklauncher/tooltipmanager.vala \
   quicklauncher/unity-scroller.vala
 

@@ -1,14 +1,19 @@
-BUILT_SOURCES = 
-CLEANFILES = 
-EXTRA_DIST = 
+BUILT_SOURCES =
+CLEANFILES =
+EXTRA_DIST =
 
 if ENABLE_MUTTER
+
+if HAVE_TESTING
+BASE_CFLAGS+=-DTESTING
+endif
 
 if HAVE_LOCALINSTALL
 mutterlibdir = /tmp/mutter-plugin/
 else
 mutterlibdir = $(MUTTER_PLUGIN_DIR)
 endif
+
 mutterlib_LTLIBRARIES = \
   libunity-mutter.la
 
@@ -36,6 +41,7 @@ libunity_mutter_la_VALAFLAGS = \
   --pkg libwnck-1.0 \
   --pkg unique-1.0 \
   --pkg x11 \
+  --pkg unity-const \
   --pkg unity-static \
   --pkg unity \
   $(MAINTAINER_VALAFLAGS)
@@ -67,7 +73,7 @@ EXTRA_DIST += \
 
 $(BUILT_SOURCES) $(libunity_mutter_la_APIFILES): $(libunity_mutter_la_VALASOURCES)
 	$(AM_V_GEN) $(VALAC) $(libunity_mutter_la_VALAFLAGS) $^
-	touch libunity_mutter_la.vala.stamp														
+	touch libunity_mutter_la.vala.stamp
 
 CLEANFILES += \
   *.stamp \

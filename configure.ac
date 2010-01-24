@@ -1,6 +1,6 @@
 m4_define([unity_major], [0])
 m4_define([unity_minor], [1])
-m4_define([unity_micro], [6])
+m4_define([unity_micro], [8])
 
 m4_define([unity_api],
           [unity_major.unity_minor])
@@ -82,7 +82,7 @@ PKG_CHECK_MODULES(BASE,
                   unity-misc
                   x11
                   )
-                
+
 dnl testing for logging boot metrics and instrumenting
 with_testing="no"
 AC_ARG_ENABLE(testing,
@@ -91,7 +91,7 @@ AC_ARG_ENABLE(testing,
               with_testing=$enableval,
               with_testing=no)
 AM_CONDITIONAL([HAVE_TESTING], [test "x$with_testing" = "xyes"])
-                
+
 AC_SUBST(BASE_CFLAGS)
 AC_SUBST(BASE_LIBS)
 

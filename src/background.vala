@@ -33,6 +33,7 @@ namespace Unity
     
     construct
     {
+      START_FUNCTION ();
       var client = GConf.Client.get_default ();
 
       /* Setup the initial properties and notifies */
@@ -83,11 +84,13 @@ namespace Unity
 
       /* The texture that will show the background */
       this.bg = new Clutter.Texture ();
+      this.bg.set_load_async (true);
       this.add_actor (this.bg);
       this.bg.show ();
 
       /* Load the texture */
       this.ensure_layout ();
+      END_FUNCTION ();
     }
 
     private void on_filename_changed (GConf.Client client,

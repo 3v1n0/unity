@@ -34,7 +34,6 @@ namespace Unity.Panel
 
     public View (Shell shell)
     {
-      debug ("View");
       Object (shell:shell);
       this.tray.manage_stage (this.shell.get_stage ());
     }

@@ -14,137 +14,223 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by Mirco "MacSlow" Müller <mirco.mueller@canonical.com>
+ *             Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
 
 namespace Unity.Places.Bar
 {
-  const string APPS_FILE = Unity.PKGDATADIR + "/applications.png";
-  const string FILES_FILE = Unity.PKGDATADIR + "/files.png";
-  const string GADGETS_FILE = Unity.PKGDATADIR + "/gadgets.png";
-  const string HOME_FILE = Unity.PKGDATADIR + "/home.png";
-  const string MUSIC_FILE = Unity.PKGDATADIR + "/music.png";
-  const string PEOPLE_FILE = Unity.PKGDATADIR + "/people.png";
-  const string PHOTOS_FILE = Unity.PKGDATADIR + "/photos.png";
-  const string SOFTWARECENTER_FILE = Unity.PKGDATADIR + "/software_centre.png";
+  const float PANEL_HEIGHT    = 24;
+  const int   ICON_SIZE       = 48;
+  const float ICON_VIEW_WIDTH = 80.0f;
+  const float ICON_VIEW_Y1    = 8.0f;
+  const float QL_PAD          = 12.0f;
+
   const string TRASH_FILE = Unity.PKGDATADIR + "/trash.png";
-  const string VIDEOS_FILE = Unity.PKGDATADIR + "/videos.png";
-  const string WEB_FILE = Unity.PKGDATADIR + "/web.png";
 
   public class View : Ctk.Box
   {
-    private Gee.ArrayList<Unity.Places.Bar.Model> places;
-    private Gee.ArrayList<Ctk.Image> icon_view;
+    public Places.Model model { get; construct; }
 
-    public signal void sig_active_icon_index (int i);
+    private Gee.ArrayList<PlaceIcon> places_icons;
+    private PlaceIcon                trash_icon;
 
-    public View ()
+    private Unity.Places.CairoDrawing.PlacesVSeparator separator;
+    private Unity.Places.CairoDrawing.PlacesBackground bg;
+
+    public View (Places.Model model)
     {
-      Unity.Places.Bar.Model place;
-      int                    i;
-      Ctk.Image              icon;
-      int                    icon_size = 48;
       Ctk.EffectGlow         glow;
       Clutter.Color          white = {255, 255, 255, 255};
 
+      Object (model:model);
+
+      /* We do our own allocation, but this doesn't hurt */
       this.homogeneous  = false;
-      this.spacing      = icon_size/2;
-      this.orientation  = Ctk.Orientation.HORIZONTAL; // this sucks
+      this.orientation  = Ctk.Orientation.HORIZONTAL;
 
-      this.places = new Gee.ArrayList<Unity.Places.Bar.Model> ();
-      this.icon_view = new Gee.ArrayList<Ctk.Image> ();
+      /* The background of the entire places bar */
+      this.bg = new Unity.Places.CairoDrawing.PlacesBackground ();
+      this.bg.set_parent (this);
+      this.bg.show ();
 
-      // populate places-bar with hard-coded contents for the moment
-      place = new Unity.Places.Bar.Model ("Home",
-                                          HOME_FILE,
-                                          "Default View");
-      this.places.add (place);
+      /* This'll be populated in an idle by the model */
+      this.places_icons = new Gee.ArrayList<PlaceIcon> ();
+      this.model.place_added.connect (this.on_place_added);
 
-      place = new Unity.Places.Bar.Model ("Applications",
-                                          APPS_FILE,
-                                          "Programs installed locally");
-      this.places.add (place);
+      /* Create trash icon */
+      this.trash_icon = new PlaceIcon (ICON_SIZE,
+                                       "Trash",
+                                       TRASH_FILE,
+                                       "Your piece of waste");
+      glow = new Ctk.EffectGlow ();
+      glow.set_color (white);
+      glow.set_factor (1.0f);
+      glow.set_margin (6);
+      this.trash_icon.add_effect (glow);
 
-      place = new Unity.Places.Bar.Model ("Files",
-                                          FILES_FILE,
-                                          "Your files stored locally");
-      this.places.add (place);
+      this.pack (this.trash_icon, false, false);
+      this.trash_icon.button_release_event.connect (this.on_button_release);
 
-      place = new Unity.Places.Bar.Model ("Music",
-                                          MUSIC_FILE,
-                                          "Soothing sounds and vibes");
-      this.places.add (place);
-
-      place = new Unity.Places.Bar.Model ("People",
-                                          PEOPLE_FILE,
-                                          "Friends, pals, mates and folks");
-      this.places.add (place);
-
-      place = new Unity.Places.Bar.Model ("Photos",
-                                          PHOTOS_FILE,
-                                          "Pretty pictures presented by pixels");
-      this.places.add (place);
-
-      place = new Unity.Places.Bar.Model ("Trash",
-                                          TRASH_FILE,
-                                          "Your piece of waste");
-      this.places.add (place);
-
-      /* create all image-actors for icons */
-      for (i = 0; i < this.places.size ; i++)
-      {
-        icon = new Ctk.Image.from_filename (icon_size, this.places[i].icon_name);
-        icon.set_reactive (true);
-
-        glow = new Ctk.EffectGlow ();
-        glow.set_color (white);
-        glow.set_factor (1.0f);
-        icon.add_effect (glow);
-
-        this.icon_view.add (icon);
-        this.pack (icon, false, false);
-        icon.enter_event.connect (this.on_enter);
-        icon.leave_event.connect (this.on_leave);
-        icon.button_press_event.connect (this.on_button_press);
-      }
+      /* Create the separator */
+      this.separator = new Unity.Places.CairoDrawing.PlacesVSeparator ();
+      this.pack (this.separator, false, false);
 
       this.show_all ();
     }
 
-    public int get_number_of_items ()
+    private void on_place_added (Place place)
     {
-      return this.places.size;
+      Clutter.Color white = {255, 255, 255, 255};
+
+      var icon = new PlaceIcon.from_place (ICON_SIZE, place);
+      this.places_icons.add (icon);
+
+      var glow = new Ctk.EffectGlow ();
+      glow.set_color (white);
+      glow.set_factor (1.0f);
+      glow.set_margin (6);
+      icon.add_effect (glow);
+
+      this.pack (icon, false, false);
+      icon.button_release_event.connect (this.on_button_release);
+
+      if (this.places_icons.size == 1)
+        {
+          Clutter.Actor stage = icon.get_stage ();
+          this.bg.create_places_background ((int)stage.width,
+                                            (int)stage.height,
+                                            (int)(this.padding.left + QL_PAD),
+                                            (int)ICON_VIEW_WIDTH);
+
+          icon.place.active = true;
+        }
     }
 
-    public bool on_enter ()
+    public override void map ()
     {
-      /* stdout.printf ("on_enter() called\n"); */
-      return false;
+      base.map ();
+      this.bg.map ();
     }
 
-    public bool on_leave ()
+    public override void unmap ()
     {
-      /* stdout.printf ("on_leave() called\n"); */
-      return false;
+      base.unmap ();
+      this.bg.unmap ();
     }
 
-    public bool on_button_press (Clutter.Event event)
+    public override void paint ()
     {
-      int i;
+     this.bg.paint ();
+     base.paint ();
+    }
+
+    public override void allocate (Clutter.ActorBox        box,
+                                   Clutter.AllocationFlags flags)
+    {
+      Clutter.ActorBox        child_box = {0, 0, 0, 0};
+      child_box.x1 = 0.0f;
+      child_box.x2 = box.x2 - box.x1;
+      child_box.y1 = 0.0f;
+      child_box.y2 = box.y2 - box.y1;
+
+      this.bg.allocate (child_box, flags);
+
+      /* Allocate the places icons */
+      var n_places = 0;
+      var lpadding = this.padding.left + QL_PAD;
+
+      child_box.y1 = ICON_VIEW_Y1;
+      child_box.y2 = child_box.y1 + ICON_SIZE;
+
+      foreach (PlaceIcon place in this.places_icons)
+        {
+          child_box.x1 = lpadding +  (ICON_VIEW_WIDTH * n_places);
+          child_box.x2 = child_box.x1 +  ICON_VIEW_WIDTH;
+
+          place.allocate (child_box, flags);
+
+          n_places++;
+        }
+
+      /* Allocate the Trash */
+      child_box.x1 = box.x2 - box.x1 - 266 - ICON_VIEW_WIDTH;
+      child_box.x2 = child_box.x1 + ICON_VIEW_WIDTH;
+      this.trash_icon.allocate (child_box, flags);
+
+      /* Allocate the seperator */
+      child_box.x1 -= 12.0f;
+      child_box.x2 = child_box.x1 + 5;
+      child_box.y1 = 10;
+      child_box.y2 = ICON_SIZE;
+      this.separator.allocate (child_box, flags);
+    }
+
+    public bool on_button_release (Clutter.Event event)
+    {
       Clutter.Actor actor;
       actor = event.button.source;
 
-      for (i = 0; i < this.icon_view.size ; i++)
-      {
-        if (actor == this.icon_view[i])
-          sig_active_icon_index(i);
-      }
+      if (actor is PlaceIcon)
+        {
+          PlaceIcon     icon = actor as PlaceIcon;
+
+          /* Do something with the click */
+          if (actor == this.trash_icon)
+            {
+              try
+                {
+                  Process.spawn_command_line_async ("xdg-open trash:///");
+                }
+              catch (SpawnError e)
+                {
+                  warning ("Unable to show Trash: %s", e.message);
+                }
+            }
+          else if (icon.place is Place)
+            {
+              Clutter.Actor stage = actor.get_stage ();
+
+              /* Update the background */
+              this.bg.create_places_background ((int)stage.width,
+                                                (int)stage.height,
+                                                (int)actor.x,
+                                                80);
+
+              /* Set the place as active, unset the others */
+              foreach (PlaceIcon picon in this.places_icons)
+                {
+                  if (picon.place is Place)
+                    picon.place.active = (picon == icon) ? true : false;
+                }
+            }
+
+          return true;
+        }
 
       return false;
     }
+  }
 
-    construct
+  public class PlaceIcon : Ctk.Image
+  {
+    public Place? place { get; set; }
+
+    public PlaceIcon (int       width,
+                      string name,
+                      string    icon_name,
+                      string    tooltip)
     {
+      Object (size:width);
+
+      this.set_from_filename (icon_name);
+      this.reactive = true;
+    }
+
+    public PlaceIcon.from_place (int size, Place place)
+    {
+      this(size, place.name, place.icon_name, "");
+      this.place = place;
     }
   }
 }

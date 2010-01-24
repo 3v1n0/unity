@@ -34,4 +34,7 @@ namespace Unity {
  
   [CCode (cheader_filename = "unity-utils.h", cname = "END_FUNCTION")]
   public static void END_FUNCTION ();
+
+  [CCode (cheader_filename = "unity-utils.h", cname = "END_FUNCTION")]
+  public static void STRFUNC ();
 }

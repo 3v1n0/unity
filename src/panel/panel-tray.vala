@@ -18,6 +18,8 @@
  *
  */
 
+using Gee;
+
 namespace Unity.Panel.Tray
 {
   public class View : Ctk.Box
@@ -27,12 +29,12 @@ namespace Unity.Panel.Tray
 
     public View ()
     {
-      Object (orientation:Ctk.Orientation.HORIZONTAL);
+      Object (orientation:Ctk.Orientation.HORIZONTAL,
+              spacing:6);
     }
 
     construct
     {
-      Clutter.Color color = { 0, 0, 0, 255 };
       this.manager = new TrayManager ();
       this.manager.tray_icon_added.connect (this.on_tray_icon_added);
       this.manager.tray_icon_removed.connect (this.on_tray_icon_removed);
@@ -41,7 +43,7 @@ namespace Unity.Panel.Tray
     public void manage_stage (Clutter.Stage stage)
     {
       this.stage = stage;
-      //this.manager.manage_stage (stage);
+
       Idle.add (this.manage_tray_idle);
     }
 
@@ -53,7 +55,6 @@ namespace Unity.Panel.Tray
 
     private void on_tray_icon_added (Clutter.Actor icon)
     {
-      debug ("Icon added");
       this.add_actor (icon);
       icon.opacity = 100;
       icon.set_size (23, 23);
@@ -62,7 +63,6 @@ namespace Unity.Panel.Tray
 
     private void on_tray_icon_removed (Clutter.Actor icon)
     {
-      debug ("Icon removed");
       this.remove_actor (icon);
     }
   }
