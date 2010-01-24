@@ -145,11 +145,13 @@ namespace Unity
       this.stage.add_actor (this.background);
       this.background.lower_bottom ();
 
+      Clutter.Group window_group = (Clutter.Group) this.plugin.get_window_group ();
+
       this.quicklauncher = new Quicklauncher.View (this);
       this.quicklauncher.opacity = 0;
-      this.stage.add_actor (this.quicklauncher);
-      this.stage.raise_child (this.quicklauncher,
-                              this.plugin.get_window_group());
+      window_group.add_actor (this.quicklauncher);
+      window_group.raise_child (this.quicklauncher,
+                                this.plugin.get_normal_window_group ());
       this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 400,
                                   "opacity", 255);
 
@@ -161,8 +163,8 @@ namespace Unity
       this.places_showing = false;
 
       this.panel = new Panel.View (this);
-      this.stage.add_actor (this.panel);
-      this.stage.raise_child (this.panel, this.places);
+      window_group.add_actor (this.panel);
+      window_group.raise_child (this.panel, this.quicklauncher);
       this.panel.show ();
 
       this.relayout ();

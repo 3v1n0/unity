@@ -161,8 +161,6 @@ on_restore_input_region (UnityPlugin *plugin, MutterPlugin *self)
 
   mutter_plugin_query_screen_size (self, &width, &height);
 
-  g_debug ("Signal: %d %d", width, height);
-
   rects = g_new (XRectangle, 2);
 
   /* Panel first */
