@@ -124,6 +124,13 @@ AS_IF([test "x$enable_mutter" = "xyes"],
 )
 AM_CONDITIONAL(ENABLE_MUTTER, [test "x$enable_mutter" = "xyes"])
 
+dnl Indicator support
+INDICATORDIR=`$PKG_CONFIG --variable=indicatordir indicator`
+INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir indicator`
+
+AC_SUBST(INDICATORDIR)
+AC_SUBST(INDICATORICONSDIR)
+
 dnl Create the Makefiles
 AC_OUTPUT([
   Makefile

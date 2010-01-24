@@ -29,6 +29,7 @@ namespace Unity.Panel
     private Clutter.Rectangle rect;
     private Tray.View         tray;
     private HomeButton        home;
+    private Indicators.View   indicators;
 
     private int indicators_width = 0;
 
@@ -47,6 +48,10 @@ namespace Unity.Panel
       this.rect = new Clutter.Rectangle.with_color (color);
       this.rect.set_parent (this);
       this.rect.show ();
+
+      this.indicators = new Indicators.View ();
+      this.indicators.set_parent (this);
+      this.indicators.show ();
 
       this.tray = new Tray.View ();
       this.tray.set_parent (this);
@@ -78,6 +83,16 @@ namespace Unity.Panel
       child_box.y1 = 0;
       child_box.y2 = PANEL_HEIGHT;
       this.home.allocate (child_box, flags);
+
+      /* Indicators */
+      this.indicators.get_preferred_width (PANEL_HEIGHT,
+                                           out child_width,
+                                           out child_width);
+      child_box.x1 = width - child_width;
+      child_box.x2 = width;
+      this.indicators.allocate (child_box, flags);
+
+      width -= child_width + 6; /* 6 = space between icons */
 
       /* Systray */
       this.tray.get_preferred_width (PANEL_HEIGHT,

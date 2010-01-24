@@ -22,11 +22,13 @@ bin_PROGRAMS = \
 libunity_static_la_CPPFLAGS = \
   -DDATADIR=\"$(DATADIR)\" \
   -DPKGDATADIR=\"$(PKGDATADIR)\" \
+  -DINDICATORDIR=\""$(INDICATORDIR)"\" \
+  -DINDICATORICONSDIR=\""$(INDICATORICONSDIR)"\" \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS) \
   -I$(top_srcdir)/libunity/ \
   -I$(top_srcdir)/src/ \
-	-I$(top_srcdir)/places/ \
+  -I$(top_srcdir)/places/ \
   -I$(top_srcdir)/quicklauncher/
 
 libunity_static_la_VALAFLAGS = \
@@ -46,6 +48,7 @@ libunity_static_la_VALAFLAGS = \
   --pkg gee-1.0 \
   --pkg gio-unix-2.0 \
   --pkg gtk+-2.0 \
+  --pkg indicator \
   --pkg launcher-0.3 \
   --pkg libwnck-1.0 \
   --pkg unity \
@@ -68,6 +71,7 @@ src_sources = \
 
 panel_sources = \
   panel/panel-home.vala \
+  panel/panel-indicators.vala \
   panel/panel-tray.vala \
   panel/panel-view.vala
 
