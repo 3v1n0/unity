@@ -254,27 +254,32 @@ namespace Unity
       if (this.places_showing)
         {
           this.places_showing = false;
-          this.places.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
-                               "opacity", 0);
-          var win_group = this.plugin.get_window_group ();
-          win_group.animate (Clutter.AnimationMode.EASE_IN_SINE, 300,
-                             "opacity", 255);
-          this.places.opacity = 255;
-          win_group.opacity = 0;
+          //this.places.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
+            //                   "opacity", 0);
+          //var win_group = this.plugin.get_window_group ();
+          //win_group.animate (Clutter.AnimationMode.EASE_IN_SINE, 300,
+            //                 "opacity", 255);
+          this.places.opacity = 0;
+          this.plugin.get_above_window_group ().opacity = 255;
+          this.plugin.get_normal_window_group ().opacity = 255;
+          this.plugin.get_below_window_group().opacity = 255;
+
           this.panel.set_indicator_mode (false);
           this.restore_input_region ();
         }
       else
         {
           this.places_showing = true;
-          this.places.animate (Clutter.AnimationMode.EASE_IN_SINE, 300,
-                               "opacity", 255);
+          //this.places.animate (Clutter.AnimationMode.EASE_IN_SINE, 300,
+            //                   "opacity", 255);
 
-          var win_group = this.plugin.get_window_group ();
-          win_group.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
-                              "opacity", 0);
-          this.places.opacity = 0;
-          win_group.opacity = 255;
+          //var win_group = this.plugin.get_window_group ();
+          //win_group.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
+            //                  "opacity", 0);
+          this.places.opacity = 255;
+          this.plugin.get_above_window_group ().opacity = 0;
+          this.plugin.get_normal_window_group ().opacity = 0;
+          this.plugin.get_below_window_group().opacity = 0;
 
           this.panel.set_indicator_mode (true);
 

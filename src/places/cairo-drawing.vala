@@ -202,7 +202,7 @@ namespace Unity.Places.CairoDrawing
       effect_glow.set_color (c);
       effect_glow.set_factor (1.0f);
       effect_glow.set_margin (5);
-      this.add_effect (effect_glow);
+      //this.add_effect (effect_glow);
     }
 
     construct

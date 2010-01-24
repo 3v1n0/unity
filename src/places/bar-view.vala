@@ -119,6 +119,7 @@ namespace Unity.Places.Bar
                                         (int)(this.padding.left + QL_PAD),
                                         (int)ICON_VIEW_WIDTH,
                                         width);
+      this.queue_relayout ();
     }
 
     public override void map ()
@@ -167,8 +168,9 @@ namespace Unity.Places.Bar
           n_places++;
         }
 
-      /* Allocate the Trash */
-      child_box.x1 = box.x2 - box.x1 - 266 - ICON_VIEW_WIDTH;
+      /* Allocate the Trash (24 = Padding) */
+      var i_width = this.shell.get_indicators_width () - 24;
+      child_box.x1 = box.x2 - box.x1 - i_width - ICON_VIEW_WIDTH;
       child_box.x2 = child_box.x1 + ICON_VIEW_WIDTH;
       this.trash_icon.allocate (child_box, flags);
 

@@ -26,8 +26,8 @@ namespace Unity.Panel
 
     public HomeButton (Shell shell)
     {
-      Object (filename:PKGDATADIR + "/bfb.png",
-              size:22,
+      Object (size:22,
+              filename:PKGDATADIR + "/bfb.png",
               reactive:true,
               shell:shell);
     }
