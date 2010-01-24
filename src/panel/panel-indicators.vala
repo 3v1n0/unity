@@ -18,8 +18,6 @@
  *
  */
 
-using Gee;
-
 namespace Unity.Panel.Indicators
 {
   public class View : Ctk.Box
@@ -38,6 +36,28 @@ namespace Unity.Panel.Indicators
     {
       print ("%s\n", INDICATORDIR);
       print ("%s\n", INDICATORICONSDIR);
+
+      print ("Reading indicators from: %s\n", INDICATORDIR);
+
+      var dir = File.new_for_path (INDICATORDIR);
+
+      try
+        {
+          var e = dir.enumerate_children (FILE_ATTRIBUTE_STANDARD_NAME,
+                                          0,
+                                          null);
+
+          FileInfo file_info;
+          while ((file_info = e.next_file (null)) != null)
+            {
+              print ("\t%s\n", file_info.get_name ());
+            }
+        }
+      catch (Error error)
+        {
+          print ("Unable to read indicators: %s\n", error.message);
+        }
+
       return false;
     }
   }
