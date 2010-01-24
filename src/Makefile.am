@@ -67,6 +67,7 @@ src_sources = \
   window.vala
 
 panel_sources = \
+  panel/panel-home.vala \
   panel/panel-tray.vala \
   panel/panel-view.vala
 

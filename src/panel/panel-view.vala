@@ -20,17 +20,15 @@
 
 namespace Unity.Panel
 {
+  static const int PANEL_HEIGHT = 24;
+
   public class View : Ctk.Actor
   {
-    private Shell _shell;
-    public  Shell shell {
-      get { return _shell; }
-      set { _shell = value; }
-    }
-
-    private Tray.View tray;
+    public Shell shell { get; construct;}
 
     private Clutter.Rectangle rect;
+    private Tray.View         tray;
+    private HomeButton        home;
 
     public View (Shell shell)
     {
@@ -51,7 +49,10 @@ namespace Unity.Panel
       this.tray = new Tray.View ();
       this.tray.set_parent (this);
       this.tray.show ();
-      //this.tray.manage_stage (this._shell.get_stage ());
+
+      this.home = new HomeButton (this.shell);
+      this.home.set_parent (this);
+      this.home.show ();
 
       END_FUNCTION ();
     }
@@ -60,10 +61,27 @@ namespace Unity.Panel
                                     Clutter.AllocationFlags flags)
     {
       Clutter.ActorBox child_box = { 0, 0, box.x2 - box.x1, box.y2 - box.y1 };
+      float            width;
+      float            child_width;
+
+      width = box.x2 - box.x1;
+
+      /* First the background */
       this.rect.allocate (child_box, flags);
 
-      child_box.x1 = 100;
-      child_box.x2 = 200;
+      /* Home button */
+      child_box.x1 = 17; /* (QL_width - logo_width)/2.0 */
+      child_box.x2 = child_box.x1 + PANEL_HEIGHT;
+      child_box.y1 = 0;
+      child_box.y2 = PANEL_HEIGHT;
+      this.home.allocate (child_box, flags);
+
+      /* Systray */
+      this.tray.get_preferred_width (PANEL_HEIGHT,
+                                     out child_width,
+                                     out child_width);
+      child_box.x1 = width - child_width;
+      child_box.x2 = width;
       this.tray.allocate (child_box, flags);
     }
 
@@ -72,6 +90,13 @@ namespace Unity.Panel
       base.paint ();
       this.rect.paint ();
       this.tray.paint ();
+      this.home.paint ();
+    }
+
+    private override void pick (Clutter.Color color)
+    {
+      this.tray.paint ();
+      this.home.paint ();
     }
 
     private override void map ()
@@ -79,6 +104,7 @@ namespace Unity.Panel
       base.map ();
       this.rect.map ();
       this.tray.map ();
+      this.home.map ();
     }
 
     private override void unmap ()
@@ -86,6 +112,12 @@ namespace Unity.Panel
       base.unmap ();
       this.rect.unmap ();
       this.tray.unmap ();
+      this.home.unmap ();
+    }
+
+    public int get_indicators_width ()
+    {
+      return (int)this.tray.width;
     }
   }
 }

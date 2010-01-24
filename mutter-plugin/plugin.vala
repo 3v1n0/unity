@@ -159,12 +159,12 @@ namespace Unity
       this.places = this.places_controller.get_view ();
       this.places.opacity = 0;
       this.stage.add_actor (this.places);
-      this.stage.raise_child (this.places, this.quicklauncher);
+      this.places.raise_top ();
       this.places_showing = false;
 
       this.panel = new Panel.View (this);
-      window_group.add_actor (this.panel);
-      window_group.raise_child (this.panel, this.quicklauncher);
+      this.stage.add_actor (this.panel);
+      this.stage.raise_child (this.panel, window_group);
       this.panel.show ();
 
       this.relayout ();
@@ -206,7 +206,7 @@ namespace Unity
       this.places.set_size (width, height);
       this.places.set_position (0, 0);
 
-      this.panel.set_size (width, 23);
+      this.panel.set_size (width, 24);
       this.panel.set_position (0, 0);
 
       /* Leaving this here to remind me that we need to use these when
@@ -242,6 +242,11 @@ namespace Unity
     public ShellMode get_mode ()
     {
       return ShellMode.UNDERLAY;
+    }
+
+    public int get_indicators_width ()
+    {
+      return this.panel.get_indicators_width ();
     }
 
     public void show_unity ()

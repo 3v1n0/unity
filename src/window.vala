@@ -265,6 +265,11 @@ namespace Unity
       this.wnck_screen.toggle_showing_desktop (true);
     }
 
+    public int get_indicators_width ()
+    {
+      return this.get_indicators_width ();
+    }
+
   }
 
   public class Workarea

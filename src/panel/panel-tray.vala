@@ -56,8 +56,7 @@ namespace Unity.Panel.Tray
     private void on_tray_icon_added (Clutter.Actor icon)
     {
       this.add_actor (icon);
-      icon.opacity = 100;
-      icon.set_size (23, 23);
+      icon.set_size (22, 22);
       icon.show ();
     }
 

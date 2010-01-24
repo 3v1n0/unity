@@ -1,5 +1,6 @@
+/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
- * Copyright (C) 2009 Canonical Ltd
+ * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,23 +18,30 @@
  *
  */
 
-namespace Unity
+namespace Unity.Panel
 {
-  public enum ShellMode {
-    UNDERLAY,
-    OVERLAY
-  }
-  public enum dnd_targets {
-    TARGET_INT32,
-    TARGET_STRING,
-    TARGET_URL,
-    TARGET_OTHER
-  }
-  public interface Shell : Object
+  public class HomeButton : Ctk.Image
   {
-    public abstract ShellMode     get_mode ();
-    public abstract Clutter.Stage get_stage ();
-    public abstract void          show_unity ();
-    public abstract int           get_indicators_width ();
+    public Shell shell { get; construct; }
+
+    public HomeButton (Shell shell)
+    {
+      Object (filename:PKGDATADIR + "/bfb.png",
+              size:22,
+              reactive:true,
+              shell:shell);
+    }
+
+    construct
+    {
+      this.button_release_event.connect (this.on_button_release);
+    }
+
+    private bool on_button_release (Clutter.Event event)
+    {
+      shell.show_unity ();
+
+      return false;
+    }
   }
 }

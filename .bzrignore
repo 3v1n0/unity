@@ -138,3 +138,4 @@ src/places/application-place.c
 src/places/cairo-drawing.c
 src/places/file-place.c
 
+src/panel/panel-home.c
