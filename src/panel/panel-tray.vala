@@ -27,6 +27,8 @@ namespace Unity.Panel.Tray
     private TrayManager manager;
     private Clutter.Stage stage;
 
+    private int n_icons = 0;
+
     public View ()
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
@@ -53,11 +55,26 @@ namespace Unity.Panel.Tray
       return false;
     }
 
+    private int order_icons (Clutter.Actor a, Clutter.Actor b)
+    {
+      weak string stra = (string)a.get_data ("n_icon");
+      weak string strb = (string)b.get_data ("n_icon");
+
+      return strcmp ((stra != null) ? stra : "",
+                     (strb != null) ? strb : "");
+    }
+
     private void on_tray_icon_added (Clutter.Actor icon)
     {
       this.add_actor (icon);
       icon.set_size (22, 22);
       icon.show ();
+
+      icon.set_data ("n_icon", (void*)"%d".printf (this.n_icons));
+
+      this.sort_children ((CompareFunc)this.order_icons);
+
+      this.n_icons++;
     }
 
     private void on_tray_icon_removed (Clutter.Actor icon)
