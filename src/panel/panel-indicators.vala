@@ -50,7 +50,7 @@ namespace Unity.Panel.Indicators
           FileInfo file_info;
           while ((file_info = e.next_file (null)) != null)
             {
-              print ("\t%s\n", file_info.get_name ());
+              this.load_indicator (INDICATORDIR + file_info.get_name ());
             }
         }
       catch (Error error)
@@ -59,6 +59,16 @@ namespace Unity.Panel.Indicators
         }
 
       return false;
+    }
+
+    private void load_indicator (string filename)
+    {
+      Indicator.Object o;
+
+      o = new Indicator.Object.from_file (filename);
+
+      if (o is Indicator.Object)
+        print ("Successful: %s\n", filename);
     }
   }
 }
