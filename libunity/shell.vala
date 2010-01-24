@@ -35,5 +35,7 @@ namespace Unity
     public abstract Clutter.Stage get_stage ();
     public abstract void          show_unity ();
     public abstract int           get_indicators_width ();
+
+    public signal void indicators_changed (int width);
   }
 }

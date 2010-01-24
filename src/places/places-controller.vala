@@ -39,7 +39,7 @@ namespace Unity.Places
     construct
     {
       this.model = new Model ();
-      this.view = new View (this.model);
+      this.view = new View (this.model, this.shell);
 
       Idle.add (this.load_places);
     }

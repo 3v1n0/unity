@@ -159,12 +159,12 @@ namespace Unity
       this.places = this.places_controller.get_view ();
       this.places.opacity = 0;
       this.stage.add_actor (this.places);
-      this.places.raise_top ();
+      this.stage.raise_child (this.places, window_group);
       this.places_showing = false;
 
       this.panel = new Panel.View (this);
       this.stage.add_actor (this.panel);
-      this.stage.raise_child (this.panel, window_group);
+      this.stage.raise_child (this.panel, this.places);
       this.panel.show ();
 
       this.relayout ();
@@ -260,6 +260,7 @@ namespace Unity
           win_group.animate (Clutter.AnimationMode.EASE_IN_SINE, 300,
                              "opacity", 255);
 
+          this.panel.set_indicator_mode (false);
           this.restore_input_region ();
         }
       else
@@ -271,6 +272,8 @@ namespace Unity
           var win_group = this.plugin.get_window_group ();
           win_group.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
                               "opacity", 0);
+
+          this.panel.set_indicator_mode (true);
 
           this.plugin.set_stage_input_area (0,
                                             0,

@@ -30,6 +30,8 @@ namespace Unity.Panel
     private Tray.View         tray;
     private HomeButton        home;
 
+    private int indicators_width = 0;
+
     public View (Shell shell)
     {
       Object (shell:shell);
@@ -40,7 +42,7 @@ namespace Unity.Panel
     {
       START_FUNCTION ();
 
-      Clutter.Color color = { 0, 0, 0, 180 };
+      Clutter.Color color = { 25, 25, 25, 255 };
 
       this.rect = new Clutter.Rectangle.with_color (color);
       this.rect.set_parent (this);
@@ -63,6 +65,7 @@ namespace Unity.Panel
       Clutter.ActorBox child_box = { 0, 0, box.x2 - box.x1, box.y2 - box.y1 };
       float            width;
       float            child_width;
+      float            i_width;
 
       width = box.x2 - box.x1;
 
@@ -83,6 +86,13 @@ namespace Unity.Panel
       child_box.x1 = width - child_width;
       child_box.x2 = width;
       this.tray.allocate (child_box, flags);
+
+      i_width = child_box.x2 - child_box.x1;
+      if (this.indicators_width != (int)i_width)
+        {
+          this.indicators_width = (int)i_width;
+          this.shell.indicators_changed (this.indicators_width);
+        }
     }
 
     private override void paint ()
@@ -118,6 +128,18 @@ namespace Unity.Panel
     public int get_indicators_width ()
     {
       return (int)this.tray.width;
+    }
+
+    public void set_indicator_mode (bool mode)
+    {
+      float x;
+
+      x = mode ? this.width - this.get_indicators_width () : 0;
+
+      this.rect.set_clip (x,
+                          0,
+                          mode ? this.get_indicators_width () : this.width,
+                          this.height);
     }
   }
 }
