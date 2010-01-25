@@ -92,7 +92,7 @@ namespace Unity.Panel
       child_box.x2 = width;
       this.indicators.allocate (child_box, flags);
 
-      width -= child_width + 6; /* 6 = space between icons */
+      width -= child_width + 12; /* 12 = space between icons */
 
       /* Systray */
       this.tray.get_preferred_width (PANEL_HEIGHT,
@@ -159,7 +159,7 @@ namespace Unity.Panel
       this.rect.set_clip (x,
                           0,
                           mode ? this.get_indicators_width () : this.width,
-                          this.height);
+                          mode ? PANEL_HEIGHT -1 : PANEL_HEIGHT);
     }
   }
 }
