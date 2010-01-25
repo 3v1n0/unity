@@ -176,7 +176,7 @@ namespace Unity.Widgets
       this.padding = mypadding;
 
       bgtex.set_repeat (true, true);
-      bgtex.set_opacity (0xE0);
+      bgtex.set_opacity (0xFF);
 
       gradient.set_repeat (false, true);
       gradient.set_opacity (0x30);
