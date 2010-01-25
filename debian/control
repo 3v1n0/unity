@@ -18,6 +18,7 @@ Build-Depends: cdbs,
                libwncksync-dev (>= 0.2.0),
                libglib2.0-dev (>= 2.22.2-0ubuntu1wncksync3),
                libgtk2.0-dev (>= 2.18.0),
+               libindicator-dev (>= 0.3.1),
                libmutter-dev
 Standards-Version: 3.8.3
 Homepage: https://launchpad.net/ayatana
