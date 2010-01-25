@@ -201,7 +201,9 @@ namespace Unity
       this.quicklauncher.set_clip (0, 0,
                                    this.QUICKLAUNCHER_WIDTH,
                                    height-this.PANEL_HEIGHT);
-      Utils.set_strut ((Gtk.Window)this.drag_dest, 58, 0, (uint32)height);
+      Utils.set_strut ((Gtk.Window)this.drag_dest,
+                       58, 0, (uint32)height,
+                       PANEL_HEIGHT, 0, (uint32)width);
 
       this.places.set_size (width, height);
       this.places.set_position (0, 0);

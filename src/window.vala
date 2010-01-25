@@ -181,7 +181,9 @@ namespace Unity
       this.stage.set_size (width, height);
 
       if (!this.is_popup)
-        Utils.set_strut ((Gtk.Window)this, (uint)(ql_width), 0, height);
+        Utils.set_strut ((Gtk.Window)this,
+                         (uint)(ql_width), 0, height,
+                         24, 0, width);
 
       /* Update component layouts */
       this.background.set_position (0, 0);
