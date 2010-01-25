@@ -25,7 +25,7 @@ namespace Unity.Panel.Indicators
     public View ()
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
-              spacing:6,
+              spacing:12,
               homogeneous:false);
     }
 
@@ -93,7 +93,7 @@ namespace Unity.Panel.Indicators
     public IndicatorItem ()
     {
       Object (orientation: Ctk.Orientation.HORIZONTAL,
-              spacing:6,
+              spacing:12,
               homogeneous:false);
     }
 
@@ -125,25 +125,36 @@ namespace Unity.Panel.Indicators
     }
   }
 
-  public class IndicatorEntry : Ctk.Button
+  public class IndicatorEntry : Ctk.Box
   {
     public unowned Indicator.ObjectEntry entry { get; construct; }
 
+    private Ctk.Image image;
+    private Ctk.Text  text;
+
     public IndicatorEntry (Indicator.ObjectEntry entry)
     {
-      Object (label:"",
-              entry:entry,
-              orientation:Ctk.Orientation.HORIZONTAL);
+      Object (entry:entry,
+              orientation:Ctk.Orientation.HORIZONTAL,
+              spacing:2,
+              reactive:true);
     }
 
     construct
     {
-      this.image.size = 22;
-      this.image.stock_id = this.entry.image.icon_name;
-      this.label = this.entry.label.label;
+      this.image = new Ctk.Image (22);
+      this.add_actor (this.image);
+      this.image.show ();
 
-      this.set_text (new Ctk.Text ("sjpatel"));
-      this.get_text ().show ();
+      this.text = new Ctk.Text ("");
+      this.add_actor (this.text);
+      this.text.show ();
+
+      if (this.entry.image is Gtk.Image)
+        this.image.stock_id = this.entry.image.icon_name;
+
+      if (this.entry.label is Gtk.Label)
+        this.text.text = this.entry.label.label;
 
       this.button_release_event.connect ((e) =>
         {

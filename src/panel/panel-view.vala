@@ -102,7 +102,8 @@ namespace Unity.Panel
       child_box.x2 = width;
       this.tray.allocate (child_box, flags);
 
-      i_width = child_box.x2 - child_box.x1;
+      width -= child_box.x2 - child_box.x1;
+      i_width = box.x2 - box.x1 - width;
       if (this.indicators_width != (int)i_width)
         {
           this.indicators_width = (int)i_width;
@@ -146,7 +147,7 @@ namespace Unity.Panel
 
     public int get_indicators_width ()
     {
-      return (int)this.tray.width;
+      return (int)this.indicators_width;
     }
 
     public void set_indicator_mode (bool mode)

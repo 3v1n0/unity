@@ -27,6 +27,7 @@ test_unity_VALAFLAGS = \
   --pkg x11 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
+  --pkg indicator \
   --pkg clutk-0.3 \
   --pkg launcher-0.3 \
   --pkg libwnck-1.0 \

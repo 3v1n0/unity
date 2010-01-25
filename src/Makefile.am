@@ -142,6 +142,7 @@ unity_VALAFLAGS = \
   --pkg gtk+-2.0 \
   --pkg gdk-2.0 \
   --pkg gee-1.0 \
+  --pkg indicator \
   --pkg x11 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \

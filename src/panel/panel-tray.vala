@@ -32,7 +32,7 @@ namespace Unity.Panel.Tray
     public View ()
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
-              spacing:6);
+              spacing:12);
     }
 
     construct
@@ -51,7 +51,11 @@ namespace Unity.Panel.Tray
 
     private bool manage_tray_idle ()
     {
-      this.manager.manage_stage (this.stage);
+      string? disable_tray = Environment.get_variable ("UNITY_DISABLE_TRAY");
+
+      if (disable_tray == null)
+        this.manager.manage_stage (this.stage);
+
       return false;
     }
 
