@@ -116,12 +116,14 @@ namespace Unity.Panel
       this.rect.paint ();
       this.tray.paint ();
       this.home.paint ();
+      this.indicators.paint ();
     }
 
     private override void pick (Clutter.Color color)
     {
       this.tray.paint ();
       this.home.paint ();
+      this.indicators.paint ();
     }
 
     private override void map ()
@@ -130,6 +132,7 @@ namespace Unity.Panel
       this.rect.map ();
       this.tray.map ();
       this.home.map ();
+      this.indicators.map ();
     }
 
     private override void unmap ()
@@ -138,6 +141,7 @@ namespace Unity.Panel
       this.rect.unmap ();
       this.tray.unmap ();
       this.home.unmap ();
+      this.indicators.unmap ();
     }
 
     public int get_indicators_width ()

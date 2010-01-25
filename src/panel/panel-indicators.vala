@@ -34,8 +34,7 @@ namespace Unity.Panel.Indicators
 
     private bool load_indicators ()
     {
-      print ("%s\n", INDICATORDIR);
-      print ("%s\n", INDICATORICONSDIR);
+      Gtk.IconTheme.get_default ().append_search_path (INDICATORICONSDIR);
 
       print ("Reading indicators from: %s\n", INDICATORDIR);
 
@@ -55,8 +54,7 @@ namespace Unity.Panel.Indicators
         }
       catch (Error error)
         {
-          print ("Unable to read indicators: %s\n", error.message);
-        }
+          print ("Unable to read indicators: %s\n", error.message);        }
 
       return false;
     }
@@ -68,7 +66,76 @@ namespace Unity.Panel.Indicators
       o = new Indicator.Object.from_file (filename);
 
       if (o is Indicator.Object)
-        print ("Successful: %s\n", filename);
+        {
+          print ("Successfully loaded: %s\n", filename);
+
+          var i = new IndicatorItem ();
+          i.set_object (o);
+          this.add_actor (i);
+          i.show ();
+        }
+      else
+        {
+          warning ("Unable to load %s\n", filename);
+        }
+    }
+  }
+
+  public class IndicatorItem : Ctk.Box
+  {
+    /**
+     * Represents one Indicator.Object
+     **/
+    private Indicator.Object object;
+
+    public IndicatorItem ()
+    {
+      Object (orientation: Ctk.Orientation.HORIZONTAL,
+              spacing:6);
+    }
+
+    construct
+    {
+    }
+
+    public void set_object (Indicator.Object object)
+    {
+      this.object = object;
+
+      unowned List list = object.get_entries ();
+
+      for (int i = 0; i < list.length (); i++)
+        {
+          unowned Indicator.ObjectEntry entry;
+
+          entry = (Indicator.ObjectEntry) list.nth_data (i);
+
+          IndicatorEntry e = new IndicatorEntry (entry);
+          this.add_actor (e);
+          this.show ();
+        }
+    }
+
+    public Indicator.Object get_object ()
+    {
+      return this.object;
+    }
+  }
+
+  public class IndicatorEntry : Ctk.Button
+  {
+    public unowned Indicator.ObjectEntry entry { get; construct; }
+
+    public IndicatorEntry (Indicator.ObjectEntry entry)
+    {
+      Object (label:"", entry:entry);
+    }
+
+    construct
+    {
+      this.image.size = 22;
+      this.image.stock_id = this.entry.image.icon_name;
+      this.label = this.entry.label.label;
     }
   }
 }

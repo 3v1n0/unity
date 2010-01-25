@@ -108,6 +108,7 @@ libunity_static_la_VALASOURCES = \
 
 libunity_static_la_SOURCES = \
   unity-utils.c \
+  unity-utils.h \
   $(libunity_static_la_VALASOURCES:.vala=.c)
 
 libunity_static_la_APIFILES = unity-static.vapi unity-static.h unity-utils.h
