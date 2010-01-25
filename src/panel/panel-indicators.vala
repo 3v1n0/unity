@@ -65,8 +65,11 @@ namespace Unity.Panel.Indicators
           FileInfo file_info;
           while ((file_info = e.next_file (null)) != null)
             {
-              this.load_indicator (INDICATORDIR + file_info.get_name (),
-                                   file_info.get_name ());
+              string leaf = file_info.get_name ();
+
+              if (leaf[leaf.len()-2:leaf.len()] == "so")
+                this.load_indicator (INDICATORDIR + file_info.get_name (),
+                                     file_info.get_name ());
             }
         }
       catch (Error error)
@@ -193,16 +196,12 @@ namespace Unity.Panel.Indicators
 
     construct
     {
-      this.image = new Ctk.Image (22);
-      this.add_actor (this.image);
-      this.image.show ();
-
-      this.text = new Ctk.Text ("");
-      this.add_actor (this.text);
-      this.text.show ();
-
       if (this.entry.image is Gtk.Image)
         {
+          this.image = new Ctk.Image (22);
+          this.add_actor (this.image);
+          this.image.show ();
+
           this.image.stock_id = this.entry.image.icon_name;
 
           this.entry.image.notify["icon-name"].connect (() =>
@@ -213,6 +212,10 @@ namespace Unity.Panel.Indicators
 
       if (this.entry.label is Gtk.Label)
         {
+          this.text = new Ctk.Text ("");
+          this.add_actor (this.text);
+          this.text.show ();
+
           this.text.text = this.entry.label.label;
 
           this.entry.label.notify["label"].connect (() =>

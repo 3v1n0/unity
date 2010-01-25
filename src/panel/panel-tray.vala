@@ -59,7 +59,7 @@ namespace Unity.Panel.Tray
       return false;
     }
 
-    private int order_icons (Clutter.Actor a, Clutter.Actor b)
+    private static int order_icons (Clutter.Actor a, Clutter.Actor b)
     {
       weak string stra = (string)a.get_data ("n_icon");
       weak string strb = (string)b.get_data ("n_icon");
@@ -76,7 +76,7 @@ namespace Unity.Panel.Tray
 
       icon.set_data ("n_icon", (void*)"%d".printf (this.n_icons));
 
-      this.sort_children ((CompareFunc)this.order_icons);
+      this.sort_children ((CompareFunc)order_icons);
 
       this.n_icons++;
     }
