@@ -24,7 +24,9 @@ namespace Unity.Panel.Indicators
   {
     public View ()
     {
-      Object (orientation:Ctk.Orientation.HORIZONTAL, spacing:6);
+      Object (orientation:Ctk.Orientation.HORIZONTAL,
+              spacing:6,
+              homogeneous:false);
     }
 
     construct
@@ -91,7 +93,8 @@ namespace Unity.Panel.Indicators
     public IndicatorItem ()
     {
       Object (orientation: Ctk.Orientation.HORIZONTAL,
-              spacing:6);
+              spacing:6,
+              homogeneous:false);
     }
 
     construct
@@ -128,7 +131,9 @@ namespace Unity.Panel.Indicators
 
     public IndicatorEntry (Indicator.ObjectEntry entry)
     {
-      Object (label:"", entry:entry);
+      Object (label:"",
+              entry:entry,
+              orientation:Ctk.Orientation.HORIZONTAL);
     }
 
     construct
@@ -136,6 +141,20 @@ namespace Unity.Panel.Indicators
       this.image.size = 22;
       this.image.stock_id = this.entry.image.icon_name;
       this.label = this.entry.label.label;
+
+      this.set_text (new Ctk.Text ("sjpatel"));
+      this.get_text ().show ();
+
+      this.button_release_event.connect ((e) =>
+        {
+          this.entry.menu.popup (null,
+                                 null,
+                                 null,
+                                 e.button.button,
+                                 e.button.time);
+
+          return true;
+        });
     }
   }
 }
