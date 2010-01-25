@@ -20,7 +20,7 @@
 namespace Unity.Places.CairoDrawing
 {
   /* Margin outside of the cairo texture. We draw outside to complete the line loop
-  * and we don't want the line loop to be visible in some parts of the screen. 
+  * and we don't want the line loop to be visible in some parts of the screen.
   * */
   private int Margin = 5;
 
@@ -31,7 +31,7 @@ namespace Unity.Places.CairoDrawing
     private Ctk.EffectGlow effect_glow;
 
     /* (X, Y) origine of Places Bar: The top-left corner of the screen */
-    private int PlaceX = 0;   
+    private int PlaceX = 0;
     private int PlaceY = 0;
 
     /* Places Bar width and height. The width is set the the width of the window. */
@@ -42,7 +42,7 @@ namespace Unity.Places.CairoDrawing
 
     /* Menu area width and height */
     private int MenuH = 22;
-    private int MenuW = 216;
+    private int MenuW = 100;
 
     private int Rounding = 16;
     private int RoundingSmall = 8;
@@ -61,18 +61,18 @@ namespace Unity.Places.CairoDrawing
       int top;
       int bottom;
     }
-	  
+
     public int PlaceWidth;
 
     void DrawAroundMenu (Cairo.Context cairoctx)
     {
       cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY + MenuH);
       cairoctx.line_to (PlaceX + PlaceW - MenuW + Rounding, PlaceY + MenuH);
-      cairoctx.curve_to ( 
+      cairoctx.curve_to (
         PlaceX + PlaceW - MenuW, PlaceY + MenuH,
         PlaceX + PlaceW - MenuW, PlaceY + MenuH,
         PlaceX + PlaceW - MenuW, PlaceY + MenuH + Rounding);
-      cairoctx.line_to (PlaceX + PlaceW - MenuW, PlaceY + PlaceH - Rounding); 
+      cairoctx.line_to (PlaceX + PlaceW - MenuW, PlaceY + PlaceH - Rounding);
       cairoctx.curve_to (
         PlaceX + PlaceW - MenuW, PlaceY + PlaceH,
         PlaceX + PlaceW - MenuW, PlaceY + PlaceH,
@@ -82,7 +82,7 @@ namespace Unity.Places.CairoDrawing
     void DrawTab(Cairo.Context cairoctx, TabRect tab)
     {
       cairoctx.line_to (tab.right + RoundingSmall, PlaceBottom );
-      cairoctx.curve_to ( 
+      cairoctx.curve_to (
         tab.right, PlaceBottom,
         tab.right, PlaceBottom,
         tab.right, PlaceBottom - RoundingSmall);
@@ -126,12 +126,15 @@ namespace Unity.Places.CairoDrawing
     public void create_places_background (int WindowWidth,
       int WindowHeight,
       int TabPositionX,
-      int TabWidth)
+      int TabWidth,
+      int menu_width)
     {
       PlaceWidth = WindowWidth;
       PlaceW = WindowWidth;
       PlaceBottom = PlaceY + PlaceH;
       MenuBottom = PlaceY + MenuH;
+
+      MenuW = menu_width;
 
       if (this.get_child () is Clutter.Actor)
       {
@@ -199,7 +202,7 @@ namespace Unity.Places.CairoDrawing
       effect_glow.set_color (c);
       effect_glow.set_factor (1.0f);
       effect_glow.set_margin (5);
-      this.add_effect (effect_glow);
+      //this.add_effect (effect_glow);
     }
 
     construct

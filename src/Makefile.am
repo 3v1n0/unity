@@ -22,11 +22,13 @@ bin_PROGRAMS = \
 libunity_static_la_CPPFLAGS = \
   -DDATADIR=\"$(DATADIR)\" \
   -DPKGDATADIR=\"$(PKGDATADIR)\" \
+  -DINDICATORDIR=\""$(INDICATORDIR)"\" \
+  -DINDICATORICONSDIR=\""$(INDICATORICONSDIR)"\" \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS) \
   -I$(top_srcdir)/libunity/ \
   -I$(top_srcdir)/src/ \
-	-I$(top_srcdir)/places/ \
+  -I$(top_srcdir)/places/ \
   -I$(top_srcdir)/quicklauncher/
 
 libunity_static_la_VALAFLAGS = \
@@ -42,13 +44,16 @@ libunity_static_la_VALAFLAGS = \
   --pkg cogl-1.0 \
   --pkg gconf-2.0 \
   --pkg gdk-2.0 \
+  --pkg gdk-x11-2.0 \
   --pkg gee-1.0 \
   --pkg gio-unix-2.0 \
   --pkg gtk+-2.0 \
+  --pkg indicator \
   --pkg launcher-0.3 \
   --pkg libwnck-1.0 \
   --pkg unity \
   --pkg unity-const \
+  --pkg unity-misc \
   --pkg unique-1.0 \
   --pkg x11 \
   $(MAINTAINER_VALAFLAGS)
@@ -63,6 +68,12 @@ src_sources = \
   unity.vala \
   utils.vala \
   window.vala
+
+panel_sources = \
+  panel/panel-home.vala \
+  panel/panel-indicators.vala \
+  panel/panel-tray.vala \
+  panel/panel-view.vala
 
 places_sources = \
   places/application-place.vala \
@@ -91,11 +102,13 @@ quicklauncher_sources = \
 
 libunity_static_la_VALASOURCES = \
   $(src_sources) \
+  $(panel_sources) \
   $(places_sources) \
   $(quicklauncher_sources)
 
 libunity_static_la_SOURCES = \
   unity-utils.c \
+  unity-utils.h \
   $(libunity_static_la_VALASOURCES:.vala=.c)
 
 libunity_static_la_APIFILES = unity-static.vapi unity-static.h unity-utils.h
@@ -129,6 +142,7 @@ unity_VALAFLAGS = \
   --pkg gtk+-2.0 \
   --pkg gdk-2.0 \
   --pkg gee-1.0 \
+  --pkg indicator \
   --pkg x11 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \

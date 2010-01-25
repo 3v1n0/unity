@@ -812,23 +812,20 @@ namespace Mutter {
 		public weak GLib.Object parent;
 		public bool begin_modal (X.Window grab_window, uint cursor, Mutter.MetaModalOptions options, uint32 timestamp);
 		public bool debug_mode ();
-		[NoWrapper]
-		public virtual void destroy (Mutter.Window actor);
 		public bool disabled ();
 		public void effect_completed (Mutter.Window actor, uint event);
 		public void end_modal (uint32 timestamp);
 		public ulong features ();
+		public unowned Clutter.Actor get_above_window_group ();
+		public unowned Clutter.Actor get_below_window_group ();
 		public unowned Mutter.PluginInfo get_info ();
+		public unowned Clutter.Actor get_normal_window_group ();
 		public unowned Clutter.Actor get_overlay_group ();
 		public unowned Mutter.MetaScreen get_screen ();
 		public unowned Clutter.Actor get_stage ();
 		public unowned Clutter.Actor get_window_group ();
 		public unowned GLib.List get_windows ();
 		public unowned X.Display get_xdisplay ();
-		[NoWrapper]
-		public virtual void map (Mutter.Window actor);
-		[NoWrapper]
-		public virtual void minimize (Mutter.Window actor);
 		public void query_screen_size (int width, int height);
 		public bool running ();
 		public void set_stage_input_area (int x, int y, int width, int height);

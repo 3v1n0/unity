@@ -23,7 +23,7 @@ static bool popup_mode   = false;
 static int  popup_width  = 1024;
 static int  popup_height = 600;
 static bool show_version = false;
-static string? boot_logging_filename = null; 
+static string? boot_logging_filename = null;
 
 const OptionEntry[] options = {
   {
@@ -109,13 +109,13 @@ public class Main
     if (boot_logging_filename != null)
       {
         Unity.is_logging = true;
-      } 
-    else 
-      { 
+      }
+    else
+      {
         Unity.is_logging = false;
       }
     START_FUNCTION ();
-    
+
     /* Parse options */
     LOGGER_START_PROCESS ("gtk_init");
     Gtk.init (ref args);
@@ -128,10 +128,12 @@ public class Main
     LOGGER_START_PROCESS ("unity_application_constructor");
     app = new Unity.Application ();
     LOGGER_END_PROCESS ("unity_application_constructor");
-    if (app.is_running)
+
+    string? disable_unique = Environment.get_variable ("UNITY_NO_UNIQUE");
+    if (app.is_running && disable_unique == null)
       {
         Unique.Response response = Unique.Response.OK;
-        
+
         if (show_unity)
           {
             print ("Showing Unity window\n");
@@ -141,7 +143,7 @@ public class Main
           {
             print ("There already another instance of Unity running\n");
           }
-        
+
         return response == Unique.Response.OK ? 0 : 1;
       }
 
@@ -151,9 +153,9 @@ public class Main
     LOGGER_START_PROCESS ("unity_underlay_window_show");
     window.show ();
     LOGGER_END_PROCESS ("unity_underlay_window_show");
-    
+
     END_FUNCTION ();
-    
+
     if (boot_logging_filename != null)
       {
         Timeout.add_seconds (1, () => {
@@ -163,8 +165,8 @@ public class Main
       }
     Gtk.main ();
 
-    
-    
+
+
 
     return 0;
   }

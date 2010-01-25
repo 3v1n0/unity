@@ -36,9 +36,11 @@ namespace Unity
 
     private Background          background;
     private Quicklauncher.View  quicklauncher;
-
+    private Panel.View          panel;
     private Places.Controller   controller;
     private Unity.Places.View   places;
+
+    private bool showing_places;
 
     public UnderlayWindow (bool popup, int width, int height)
     {
@@ -129,6 +131,12 @@ namespace Unity
       this.places = this.controller.get_view ();
       this.stage.add_actor (this.quicklauncher);
       this.stage.add_actor (this.places);
+      this.places.opacity = 0;
+      this.showing_places = false;
+
+      this.panel = new Panel.View (this);
+      this.stage.add_actor (this.panel);
+      this.panel.show ();
 
       /* Layout everything */
       this.move (0, 0);
@@ -167,12 +175,15 @@ namespace Unity
           width = size.width;
           height = size.height;
         }
+
       ql_width = this.quicklauncher.get_width ();
       this.resize (width, height);
       this.stage.set_size (width, height);
 
       if (!this.is_popup)
-        Utils.set_strut ((Gtk.Window)this, (uint)(ql_width), 0, height);
+        Utils.set_strut ((Gtk.Window)this,
+                         (uint)(ql_width), 0, height,
+                         24, 0, width);
 
       /* Update component layouts */
       this.background.set_position (0, 0);
@@ -186,6 +197,9 @@ namespace Unity
        this.places.set_size (width,
                              height);
        this.places.set_position (0, 0);
+
+       this.panel.set_size (width, 23);
+       this.panel.set_position (0, 0);
     }
 
     public override void show ()
@@ -253,7 +267,25 @@ namespace Unity
 
     public void show_unity ()
     {
-      this.wnck_screen.toggle_showing_desktop (true);
+      if (this.showing_places)
+        {
+          this.showing_places = false;
+          this.panel.set_indicator_mode (true);
+          this.places.opacity = 255;
+        }
+      else
+        {
+          this.showing_places = true;
+          this.panel.set_indicator_mode (false);
+          this.places.opacity = 0;
+        }
+
+      this.places.do_queue_redraw ();
+    }
+
+    public int get_indicators_width ()
+    {
+      return this.panel.get_indicators_width ();
     }
 
   }
