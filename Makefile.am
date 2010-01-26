@@ -1,4 +1,4 @@
-SUBDIRS = data libunity src mutter-plugin tests tools vapi
+SUBDIRS = data libunity libunity-places src mutter-plugin tests tools vapi
 
 # Test reports
 .PHONY: check-report
