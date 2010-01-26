@@ -146,3 +146,5 @@ unity-place-server.h
 unity-places.pc
 libunity-places/unity-place-marshal.h
 libunity-places/unity-place-marshal.c
+unity-places/unity-place-marshal.h
+unity-places/unity-place-marshal.c
