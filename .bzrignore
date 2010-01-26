@@ -144,3 +144,5 @@ libunity-places.la
 unity-place-client.h
 unity-place-server.h
 unity-places.pc
+libunity-places/unity-place-marshal.h
+libunity-places/unity-place-marshal.c

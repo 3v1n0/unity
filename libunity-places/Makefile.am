@@ -10,9 +10,8 @@ placesincludedir = $(includedir)/unity-places/unity-places
 places_headers = \
   unity-places.h \
   unity-place.h \
-  unity-place-client.h \
-  unity-place-proxy.h \
-  unity-place-server.h
+  unity-place-marshal.h \
+  unity-place-proxy.h
 
 placesinclude_HEADERS = \
   $(places_headers)
@@ -21,7 +20,10 @@ lib_LTLIBRARIES = libunity-places.la
 
 libunity_places_la_SOURCES = \
   unity-place.c \
-  unity-place-proxy.c
+  unity-place-client.h \
+  unity-place-marshal.c \
+  unity-place-proxy.c \
+  unity-place-server.h
 
 libunity_places_la_LIBADD = \
   $(BASE_LIBS)
@@ -68,3 +70,24 @@ BUILT_SOURCES += \
 CLEANFILES += $(BUILT_SOURCES)
 
 EXTRA_DIST += $(DBUS_SPECS)
+
+##
+# Signal Marshallers
+##
+unity-place-marshal.h: $(srcdir)/unity-place-marshal.list
+	glib-genmarshal --header \
+		--prefix=_unity_place_marshal $(srcdir)/unity-place-marshal.list \
+	 	> unity-place-marshal.h
+
+unity-place-marshal.c: $(srcdir)/unity-place-marshal.list
+	glib-genmarshal --body \
+		--prefix=_unity_place_marshal $(srcdir)/unity-place-marshal.list \
+		> unity-place-marshal.c
+
+BUILT_SOURCES += \
+	unity-place-marshal.c \
+	unity-place-marshal.h
+
+EXTRA_DIST += unity-place-marshal.list
+
+

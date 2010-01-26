@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Just issues the commands to create the vapi file
+# Would be nice to get autotools to make this at some point, but it sort
+# of requires the package to be installed (and called from pkg-config) first
+# so its a little messy
+
+vala-gen-introspect unity-places .
+vapigen --pkg gobject-2.0 --pkg glib-2.0 --pkg dbus-glib-1 --library unity-places unity-places.gi unity-places-custom.vala

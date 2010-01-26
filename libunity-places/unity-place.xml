@@ -28,7 +28,7 @@ License version 3 and version 2.1 along with this program.  If not, see
 <http://www.gnu.org/licenses/>
 -->
 <node name="/com/canonical/Unity/Place">
-	<interface name="com.canonical.Unity.Place">
+  <interface name="com.canonical.Unity.Place">
     <annotation name="com.canonical.DBus.GLib.CSymbol" value="unity_place"/>
 
 <!-- Properties -->
@@ -37,10 +37,19 @@ License version 3 and version 2.1 along with this program.  If not, see
     <property name="tooltip" type="s" access="read" />
 
 <!-- Methods -->
+    <method name="SetActive">
+      <arg name="is_active" type="b" direction="in" />
+    </method>
 
 <!-- Signals -->
+    <signal name="ViewChanged">
+      <arg name="properties" type="a{ss}" />
+    </signal>
+
+    <signal name="IsActive">
+      <arg name="is_active" type="b" />
+    </signal>
 
 <!-- End of interesting stuff -->
-
-	</interface>
+  </interface>
 </node>

@@ -46,7 +46,7 @@ public class Main
   {
     Test.add_func ("/Unity/Window", () => {
       var window = new Unity.UnderlayWindow (false, 0, 0);
-        
+
       assert (window is Gtk.Window);
 
       window.show ();
@@ -62,13 +62,13 @@ public class Main
       var model = new Quicklauncher.Models.ApplicationModel (firefox_desktop);
       assert (model is Quicklauncher.Models.ApplicationModel);
     });
-    
+
     Test.add_func ("/Unity/Quicklauncher/LauncherView", () => {
       var model = new Quicklauncher.Models.ApplicationModel (firefox_desktop);
       var view = new Quicklauncher.LauncherView (model);
       assert (view is Quicklauncher.LauncherView);
     });
-    
+
     Test.add_func ("/Unity/Quicklauncher/Quicklist-view", () => {
       var view = new Quicklauncher.QuicklistMenu ();
       assert (view is Quicklauncher.QuicklistMenu);
@@ -91,5 +91,19 @@ public class Main
       scroller = new Widgets.Scroller (Ctk.Orientation.HORIZONTAL, 0);
       assert (scroller is Widgets.Scroller);
     });
+
+    Test.add_func ("/Unity/Places/TestPlace", () => {
+      var place = new TestPlace ();
+
+      assert (place is TestPlace);
+    });
+  }
+
+  public class TestPlace : Place
+  {
+    public TestPlace ()
+    {
+      ;
+    }
   }
 }

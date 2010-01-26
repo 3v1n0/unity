@@ -31,6 +31,7 @@
 #endif
 
 #include "unity-place.h"
+#include "unity-place-marshal.h"
 
 G_DEFINE_TYPE (UnityPlace, unity_place, G_TYPE_OBJECT)
 
@@ -42,12 +43,15 @@ struct _UnityPlacePrivate
   gchar *name;
   gchar *icon_name;
   gchar *tooltip;
+
+  gboolean is_active;
 };
 
 /* Globals */
 enum
 {
   VIEW_CHANGED,
+  IS_ACTIVE,
 
   LAST_SIGNAL
 };
@@ -64,6 +68,10 @@ static guint32 _place_signals[LAST_SIGNAL] = { 0 };
 static GQuark  unity_place_error_quark     = 0;
 
 /* DBus Forwards (needed above the generated dbus header) */
+static gboolean _unity_place_server_set_active (UnityPlace *place,
+                                                gboolean    is_active,
+                                                GError    **error);
+
 #include "unity-place-server.h"
 
 /* Forwards */
@@ -173,7 +181,26 @@ unity_place_class_init (UnityPlaceClass *klass)
   obj_class->get_property = unity_place_get_property;
 
   /* Signals */
-  if (0) _place_signals[0] = 32;
+  _place_signals[VIEW_CHANGED] =
+    g_signal_new ("view-changed",
+                  G_OBJECT_CLASS_TYPE (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                  0,
+                  NULL, NULL,
+                  _unity_place_marshal_VOID__STRING_BOXED,
+                  G_TYPE_NONE, 2,
+                  G_TYPE_STRING,
+                  DBUS_TYPE_G_STRING_STRING_HASHTABLE);
+
+  _place_signals[IS_ACTIVE] =
+    g_signal_new ("is-active",
+                  G_OBJECT_CLASS_TYPE (klass),
+                  G_SIGNAL_RUN_LAST | G_SIGNAL_DETAILED,
+                  0,
+                  NULL, NULL,
+                  g_cclosure_marshal_VOID__BOOLEAN,
+                  G_TYPE_NONE, 1,
+                  G_TYPE_BOOLEAN);
 
   /* Properties */
   pspec = g_param_spec_string ("name", "Name",
@@ -205,7 +232,7 @@ unity_place_class_init (UnityPlaceClass *klass)
 static void
 unity_place_init (UnityPlace *place)
 {
-  UnityPlacePrivate *priv;
+  UnityPlacePrivate      *priv;
 
   priv = place->priv = UNITY_PLACE_GET_PRIVATE (place);
 
@@ -214,3 +241,17 @@ unity_place_init (UnityPlace *place)
 }
 
 /* Private methods */
+
+static gboolean
+_unity_place_server_set_active (UnityPlace *self,
+                                gboolean    is_active,
+                                GError    **error)
+{
+  g_return_val_if_fail (UNITY_IS_PLACE (self), FALSE);
+
+  self->priv->is_active = is_active;
+
+  g_signal_emit (self, _place_signals[IS_ACTIVE], 0, is_active);
+
+  return FALSE;
+}

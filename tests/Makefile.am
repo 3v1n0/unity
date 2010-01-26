@@ -4,18 +4,21 @@ TESTDIR = $(top_srcdir)/tests
 
 test_unity_CPPFLAGS = \
   -I$(top_srcdir)/libunity \
+  -I$(top_srcdir)/libunity-places \
   -I$(top_srcdir)/src \
   -DTESTDIR=\"$(TESTDIR)\" \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS)
 
 test_unity_LDADD = \
+  $(top_builddir)/libunity-places/libunity-places.la \
   $(top_builddir)/src/libunity-static.la \
   $(BASE_LIBS) \
   $(MAINTAINER_LIBS)
 
 test_unity_VALAFLAGS = \
   --vapidir=$(top_srcdir)/libunity \
+  --vapidir=$(top_srcdir)/libunity-places \
   --vapidir=$(top_srcdir)/src \
   --vapidir=$(top_srcdir)/vapi/ \
   --vapidir=$(top_srcdir)/tests \
@@ -34,6 +37,7 @@ test_unity_VALAFLAGS = \
   --pkg test-const \
   --pkg unique-1.0 \
   --pkg unity \
+  --pkg unity-places \
   --pkg unity-static \
   $(MAINTAINER_VALAFLAGS)
 
