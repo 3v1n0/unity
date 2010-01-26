@@ -136,8 +136,8 @@ AC_OUTPUT([
   Makefile
   data/Makefile
   libunity/Makefile
-  libunity-places/Makefile
-  libunity-places/unity-places.pc
+  unity-places/Makefile
+  unity-places/unity-places.pc
   src/Makefile
   mutter-plugin/Makefile
   tests/Makefile
