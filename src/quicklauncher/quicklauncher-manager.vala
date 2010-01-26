@@ -66,7 +66,14 @@ namespace Unity.Quicklauncher
       debug ("on_drag_drop called");
       if (context.targets != null)
       {
-        Gdk.Atom target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_URL);
+        Gtk.TargetList tl;
+        Gdk.Atom target_type;
+        Gtk.TargetEntry[]? targets = null;
+        tl = new Gtk.TargetList (targets);
+        tl.add_uri_targets (0);
+        
+        target_type = Ctk.drag_dest_find_target (context, tl);
+
         if (target_type.name () == "")
         {
           warning ("bad DND type");
