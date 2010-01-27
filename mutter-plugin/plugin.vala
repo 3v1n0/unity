@@ -86,6 +86,7 @@ namespace Unity
 
     construct
     {
+      Unity.global_shell = this;
       Unity.TimelineLogger.get_default(); // just inits the timer for logging
       // attempt to get a boot logging filename
       boot_logging_filename = Environment.get_variable ("UNITY_BOOTLOG_FILENAME");
@@ -217,6 +218,23 @@ namespace Unity
        * this.plugin.set_stage_reactive (true);
        */
       END_FUNCTION ();
+    }
+
+    public void set_in_menu (bool is_in_menu)
+    {
+      // we need to modify the stage input area so that the menus are responsive
+      // and they detect clicks elsewhere
+      float width, height;
+      this.stage.get_size (out width, out height);
+
+      if (is_in_menu)
+        {
+          this.plugin.set_stage_input_area(0, 0, (int)(width), (int)(height));
+        }
+      else
+        {
+          this.restore_input_region ();
+        }
     }
 
     private void on_stage_actor_added (Clutter.Actor actor)
