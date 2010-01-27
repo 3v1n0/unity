@@ -2,6 +2,7 @@
 
 dist_default_DATA = \
   applications.png \
+  bfb.png \
   dash_background.png \
   favourites.png \
   files.png \

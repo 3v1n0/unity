@@ -1,5 +1,6 @@
+/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
- * Copyright (C) 2009 Canonical Ltd
+ * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,28 +18,30 @@
  *
  */
 
-namespace Unity.Quicklauncher
+namespace Unity.Panel
 {
-  public class View : Ctk.Bin
+  public class HomeButton : Ctk.Image
   {
-    private Shell shell;
+    public Shell shell { get; construct; }
 
-    private Manager manager;
-
-    public View (Shell shell)
+    public HomeButton (Shell shell)
     {
-      this.shell = shell;
+      Object (size:22,
+              filename:PKGDATADIR + "/bfb.png",
+              reactive:true,
+              shell:shell);
     }
 
     construct
     {
-      this.manager = new Manager ();
-      this.add_actor (manager);
+      this.button_release_event.connect (this.on_button_release);
     }
 
-    public new float get_width ()
+    private bool on_button_release (Clutter.Event event)
     {
-      return 58;
+      shell.show_unity ();
+
+      return false;
     }
   }
 }

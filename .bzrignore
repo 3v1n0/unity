@@ -125,6 +125,8 @@ src/quicklauncher/launcher-model.c
 mutter-plugin/unity-mutter.h
 unity-0.1.5.tar.gz
 mutter-plugin/unity-mutter.vapi
+src/panel/panel-tray.c
+src/panel/panel-view.c
 src/places/places-controller.c
 src/places/places-model.c
 src/places/places-place.c
@@ -135,3 +137,6 @@ src/places/application-place.c
 src/places/application-place.c
 src/places/cairo-drawing.c
 src/places/file-place.c
+
+src/panel/panel-home.c
+src/panel/panel-indicators.c

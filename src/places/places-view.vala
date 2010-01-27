@@ -23,19 +23,20 @@ namespace Unity.Places
   public class View : Ctk.Box
   {
     public Model model { get; construct; }
+    public Shell shell { get; construct; }
 
     private Bar.View       bar_view;
     private Clutter.Actor? content_view;
 
-    public View (Model model)
+    public View (Model model, Shell shell)
     {
       Ctk.Padding padding = { 0.0f, 0.0f, 0.0f, 68.0f };
 
-      Object (model:model);
+      Object (model:model, shell:shell);
 
       this.orientation  = Ctk.Orientation.VERTICAL;
 
-      this.bar_view = new Bar.View (this.model);
+      this.bar_view = new Bar.View (this.model, this.shell);
       this.bar_view.padding = padding;
       this.add_actor (this.bar_view);
     }

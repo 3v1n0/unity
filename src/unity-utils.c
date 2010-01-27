@@ -51,9 +51,12 @@ static Atom net_wm_strut_partial      = 0;
 
 void
 utils_set_strut (GtkWindow *gtk_window,
-                 guint32    strut_size,
-                 guint32    strut_start,
-                 guint32    strut_end)
+                 guint32    left_size,
+                 guint32    left_start,
+                 guint32    left_end,
+                 guint32    top_size,
+                 guint32    top_start,
+                 guint32    top_end)
 {
   Display   *display;
   Window     window;
@@ -62,7 +65,7 @@ utils_set_strut (GtkWindow *gtk_window,
 
   g_return_if_fail (GTK_IS_WINDOW (gtk_window));
 
-  if (!strut_size)
+  if (!left_size)
     return;
 
   gdk_window = gtk_widget_get_window (GTK_WIDGET (gtk_window));
@@ -74,9 +77,13 @@ utils_set_strut (GtkWindow *gtk_window,
   if (net_wm_strut_partial == None)
     net_wm_strut_partial = XInternAtom (display, "_NET_WM_STRUT_PARTIAL",False);
 
-  struts [STRUT_LEFT] = strut_size;
-  struts [STRUT_LEFT_START] = strut_start;
-  struts [STRUT_LEFT_END] = strut_end;
+  struts [STRUT_LEFT] = left_size;
+  struts [STRUT_LEFT_START] = left_start;
+  struts [STRUT_LEFT_END] = left_end;
+
+  struts [STRUT_TOP] = top_size;
+  struts [STRUT_TOP_START] = top_start;
+  struts [STRUT_TOP_END] = top_end;
 
   gdk_error_trap_push ();
   XChangeProperty (display, window, net_wm_strut,
@@ -87,4 +94,3 @@ utils_set_strut (GtkWindow *gtk_window,
                    (guchar *) &struts, 12);
   gdk_error_trap_pop ();
 }
-

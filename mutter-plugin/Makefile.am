@@ -1,6 +1,6 @@
-BUILT_SOURCES = 
-CLEANFILES = 
-EXTRA_DIST = 
+BUILT_SOURCES =
+CLEANFILES =
+EXTRA_DIST =
 
 if ENABLE_MUTTER
 
@@ -13,6 +13,7 @@ mutterlibdir = /tmp/mutter-plugin/
 else
 mutterlibdir = $(MUTTER_PLUGIN_DIR)
 endif
+
 mutterlib_LTLIBRARIES = \
   libunity-mutter.la
 
@@ -35,6 +36,7 @@ libunity_mutter_la_VALAFLAGS = \
   --pkg clutk-0.3 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
+  --pkg indicator \
   --pkg mutter-2.28 \
   --pkg launcher-0.3 \
   --pkg libwnck-1.0 \
@@ -72,7 +74,7 @@ EXTRA_DIST += \
 
 $(BUILT_SOURCES) $(libunity_mutter_la_APIFILES): $(libunity_mutter_la_VALASOURCES)
 	$(AM_V_GEN) $(VALAC) $(libunity_mutter_la_VALAFLAGS) $^
-	touch libunity_mutter_la.vala.stamp														
+	touch libunity_mutter_la.vala.stamp
 
 CLEANFILES += \
   *.stamp \

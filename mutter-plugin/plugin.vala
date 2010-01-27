@@ -58,6 +58,8 @@ namespace Unity
                                            Mutter.Window window,
                                            ulong         events);
 
+    public signal void restore_input_region ();
+
     /* Properties */
     private Mutter.Plugin? _plugin;
     public  Mutter.Plugin? plugin {
@@ -77,6 +79,7 @@ namespace Unity
     private Quicklauncher.View quicklauncher;
     private Places.Controller  places_controller;
     private Places.View        places;
+    private Panel.View         panel;
 
     private DragDest drag_dest;
     private bool     places_showing;
@@ -120,20 +123,21 @@ namespace Unity
 
       this.drag_dest = new DragDest ();
       this.drag_dest.show ();
-      Gtk.TargetEntry[] target_list = {
-        Gtk.TargetEntry () {target="STRING", flags=0,
-                            info=Unity.dnd_targets.TARGET_STRING },
-        Gtk.TargetEntry () {target="text/plain", flags=0,
-                            info=Unity.dnd_targets.TARGET_STRING },
-        Gtk.TargetEntry () {target="text/uri-list", flags=0,
-                            info=Unity.dnd_targets.TARGET_URL },
-        Gtk.TargetEntry () {target="x-url/http",
-                            flags=0, info=Unity.dnd_targets.TARGET_URL },
-        Gtk.TargetEntry () {target="x-url/ftp",
-                            flags=0, info=Unity.dnd_targets.TARGET_URL },
-        Gtk.TargetEntry () {target="_NETSCAPE_URL", flags=0,
-                            info=Unity.dnd_targets.TARGET_URL }
-      };
+      Gtk.TargetEntry[] target_list =
+        {
+          Gtk.TargetEntry () {target="STRING", flags=0,
+                              info=Unity.dnd_targets.TARGET_STRING },
+          Gtk.TargetEntry () {target="text/plain", flags=0,
+                              info=Unity.dnd_targets.TARGET_STRING },
+          Gtk.TargetEntry () {target="text/uri-list", flags=0,
+                              info=Unity.dnd_targets.TARGET_URL },
+          Gtk.TargetEntry () {target="x-url/http",
+                              flags=0, info=Unity.dnd_targets.TARGET_URL },
+          Gtk.TargetEntry () {target="x-url/ftp",
+                              flags=0, info=Unity.dnd_targets.TARGET_URL },
+          Gtk.TargetEntry () {target="_NETSCAPE_URL", flags=0,
+                              info=Unity.dnd_targets.TARGET_URL }
+        };
 
       Ctk.dnd_init ((Gtk.Widget)this.drag_dest, target_list);
 
@@ -142,11 +146,13 @@ namespace Unity
       this.stage.add_actor (this.background);
       this.background.lower_bottom ();
 
+      Clutter.Group window_group = (Clutter.Group) this.plugin.get_window_group ();
+
       this.quicklauncher = new Quicklauncher.View (this);
       this.quicklauncher.opacity = 0;
-      this.stage.add_actor (this.quicklauncher);
-      this.stage.raise_child (this.quicklauncher,
-                              this.plugin.get_window_group());
+      window_group.add_actor (this.quicklauncher);
+      window_group.raise_child (this.quicklauncher,
+                                this.plugin.get_normal_window_group ());
       this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 400,
                                   "opacity", 255);
 
@@ -154,8 +160,13 @@ namespace Unity
       this.places = this.places_controller.get_view ();
       this.places.opacity = 0;
       this.stage.add_actor (this.places);
-      this.stage.raise_child (this.places, this.quicklauncher);
+      this.stage.raise_child (this.places, window_group);
       this.places_showing = false;
+
+      this.panel = new Panel.View (this);
+      this.stage.add_actor (this.panel);
+      this.stage.raise_child (this.panel, this.places);
+      this.panel.show ();
 
       this.relayout ();
       END_FUNCTION ();
@@ -167,6 +178,8 @@ namespace Unity
             return false;
           });
         }
+
+      this.restore_input_region ();
     }
 
     private void relayout ()
@@ -189,21 +202,22 @@ namespace Unity
       this.quicklauncher.set_clip (0, 0,
                                    this.QUICKLAUNCHER_WIDTH,
                                    height-this.PANEL_HEIGHT);
-      Utils.set_strut ((Gtk.Window)this.drag_dest, 58, 0, (uint32)height);
+      Utils.set_strut ((Gtk.Window)this.drag_dest,
+                       58, 0, (uint32)height,
+                       PANEL_HEIGHT, 0, (uint32)width);
 
       this.places.set_size (width, height);
       this.places.set_position (0, 0);
 
-      this.plugin.set_stage_input_area (0,
-                                        this.PANEL_HEIGHT,
-                                        this.QUICKLAUNCHER_WIDTH,
-                                        (int)(height - this.PANEL_HEIGHT));
-      END_FUNCTION ();
+      this.panel.set_size (width, 24);
+      this.panel.set_position (0, 0);
+
       /* Leaving this here to remind me that we need to use these when
        * there are fullscreen windows etc
        * this.plugin.set_stage_input_region (uint region);
-		   * this.plugin.set_stage_reactive (true);
+       * this.plugin.set_stage_reactive (true);
        */
+      END_FUNCTION ();
     }
 
     public void set_in_menu (bool is_in_menu)
@@ -219,10 +233,7 @@ namespace Unity
         }
       else
         {
-          this.plugin.set_stage_input_area (0,
-                                            this.PANEL_HEIGHT,
-                                            this.QUICKLAUNCHER_WIDTH,
-                                            (int)(height - this.PANEL_HEIGHT));
+          this.restore_input_region ();
         }
     }
 
@@ -232,11 +243,7 @@ namespace Unity
         {
           actor.destroy.connect (() =>
             {
-              this.plugin.set_stage_input_area (0,
-                                                this.PANEL_HEIGHT,
-                                                this.QUICKLAUNCHER_WIDTH,
-                                                (int)(this.stage.height
-                                                      -this.PANEL_HEIGHT));
+              this.restore_input_region ();
             });
           this.plugin.set_stage_input_area (0, 0,
                                             (int)this.stage.width,
@@ -257,38 +264,41 @@ namespace Unity
       return ShellMode.UNDERLAY;
     }
 
+    public int get_indicators_width ()
+    {
+      return this.panel.get_indicators_width ();
+    }
+
     public void show_unity ()
     {
       if (this.places_showing)
         {
           this.places_showing = false;
-          this.places.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
-                               "opacity", 0);
-          var win_group = this.plugin.get_window_group ();
-          win_group.animate (Clutter.AnimationMode.EASE_IN_SINE, 300,
-                             "opacity", 255);
 
-          this.plugin.set_stage_input_area (0,
-                                            this.PANEL_HEIGHT,
-                                            this.QUICKLAUNCHER_WIDTH,
-                                            (int)(this.stage.height
-                                                    - this.PANEL_HEIGHT));
+          this.places.opacity = 0;
+          this.plugin.get_above_window_group ().opacity = 255;
+          this.plugin.get_normal_window_group ().opacity = 255;
+          this.plugin.get_below_window_group().opacity = 255;
+
+          this.panel.set_indicator_mode (false);
+
+          this.restore_input_region ();
         }
       else
         {
           this.places_showing = true;
-          this.places.animate (Clutter.AnimationMode.EASE_IN_SINE, 300,
-                               "opacity", 255);
 
-          var win_group = this.plugin.get_window_group ();
-          win_group.animate (Clutter.AnimationMode.EASE_OUT_SINE, 300,
-                              "opacity", 0);
+          this.places.opacity = 255;
+          this.plugin.get_above_window_group ().opacity = 0;
+          this.plugin.get_normal_window_group ().opacity = 0;
+          this.plugin.get_below_window_group().opacity = 0;
+
+          this.panel.set_indicator_mode (true);
 
           this.plugin.set_stage_input_area (0,
-                                            this.PANEL_HEIGHT,
+                                            0,
                                             (int)this.stage.width,
-                                            (int)this.stage.height
-                                                    - this.PANEL_HEIGHT);
+                                            (int)this.stage.height);
         }
       debug ("Places showing: %s", this.places_showing ? "true":"false");
     }
@@ -339,8 +349,17 @@ namespace Unity
 
     public void kill_effect (Mutter.Window window, ulong events)
     {
-      debug ("Window kill event");
       this.window_kill_effect (this, window, events);
+    }
+
+    public int get_panel_height ()
+    {
+      return PANEL_HEIGHT;
+    }
+
+    public int get_launcher_width ()
+    {
+      return QUICKLAUNCHER_WIDTH;
     }
   }
 }

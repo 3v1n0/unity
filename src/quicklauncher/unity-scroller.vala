@@ -102,6 +102,7 @@ namespace Unity.Widgets
     private const float friction = 0.9f;
     private float last_drag_pos = 0.0f;
     private float fling_velocity = 0.0f;
+    private uint fling_delta = 0;
     private float previous_y = -1000000000.0f;
     private float fling_target = 0.0f;
 
@@ -176,7 +177,7 @@ namespace Unity.Widgets
       this.padding = mypadding;
 
       bgtex.set_repeat (true, true);
-      bgtex.set_opacity (0xE0);
+      bgtex.set_opacity (0xFF);
 
       gradient.set_repeat (false, true);
       gradient.set_opacity (0x30);
@@ -451,9 +452,17 @@ namespace Unity.Widgets
       {
         vel_y = motionevent.y - previous_y;
       }
+
+      uint delta = motionevent.time - this.fling_delta;
+      if (delta > 200)
+        {
+          delta = 1000/60;
+        }
+
+      this.fling_delta = delta;
       previous_y = motionevent.y;
       this.drag_pos -= vel_y;
-      this.fling_velocity = vel_y;
+      this.fling_velocity = vel_y * (delta / (1000.0f/60.0f));
 
       return true;
     }
