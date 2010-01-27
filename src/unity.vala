@@ -19,5 +19,5 @@
 
 namespace Unity
 {
-
+  public static const string UNITY_CONF_PATH = "/apps/unity";
 }

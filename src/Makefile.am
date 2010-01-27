@@ -90,6 +90,7 @@ places_sources = \
 
 quicklauncher_sources = \
   quicklauncher/application-model.vala \
+  quicklauncher/chrome-handler.vala \
   quicklauncher/launcher-model.vala \
   quicklauncher/launcher-view.vala \
   quicklauncher/prism-handler.vala \

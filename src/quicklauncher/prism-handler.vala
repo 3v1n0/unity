@@ -20,7 +20,10 @@
 
 namespace Unity.Quicklauncher
 {
-  const string webapp_ini_template = """[Parameters]
+
+  public class Prism : Object
+  {
+    static const string webapp_ini_template = """[Parameters]
 id=%s@unity.app
 name=%s
 uri=%s
@@ -29,7 +32,7 @@ location=no
 sidebar=no
 navigation=no""";
 
-  const string webapp_desktop_template = """[Desktop Entry]
+    static const string webapp_desktop_template = """[Desktop Entry]
 Name=%s
 Type=Application
 Comment=Web Application
@@ -40,8 +43,6 @@ StartupNotify=true
 Icon=/usr/share/pixmaps/prism.png
 """;
 
-  public class Prism : Object
-  {
     public string url {get; construct;}
     public string name;
     public string id;
@@ -148,6 +149,14 @@ Icon=/usr/share/pixmaps/prism.png
 
       string desktop_path = webapp_dir + "/%s.desktop".printf (name);
       uid = "webapp-" + Path.get_basename (desktop_path);
+      try {
+        var regex = new Regex ("""\+""");
+        uid = regex.replace (uid, -1, 0, "");
+      } catch (Error e)
+      {
+        warning ("regular expression error: %s", e.message);
+      }
+
       // we are not a favorite and we need to be favorited!
       favorites.set_string (uid, "type", "application");
       favorites.set_string (uid, "desktop_file", desktop_path);
