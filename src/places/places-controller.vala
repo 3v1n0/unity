@@ -121,6 +121,7 @@ namespace Unity.Places
           warning (@"Unable to load place '$filename': %s", e.message);
         }
     }
+
     private void on_place_activated (Place place)
     {
       this.view.set_content_view (place.get_view ());
