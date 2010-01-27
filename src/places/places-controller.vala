@@ -63,9 +63,64 @@ namespace Unity.Places
       place.activated.connect (this.on_place_activated);
       this.model.add (place);
 
+      this.load_remote_places ();
+
       return false;
     }
 
+    public void load_remote_places ()
+    {
+      string placesdir = PKGDATADIR + "/places";
+
+      var dir = GLib.File.new_for_path (placesdir);
+      try
+        {
+          var enumerator = dir.enumerate_children (FILE_ATTRIBUTE_STANDARD_NAME,
+                                                   0,
+                                                   null);
+          FileInfo file_info;
+          while ((file_info = enumerator.next_file (null)) != null)
+            {
+              var filename = placesdir + "/" + file_info.get_name ();
+              this.load_place (filename);
+            }
+        }
+      catch (Error error)
+        {
+          message (@"Unable to read places from $placesdir: %s", error.message);
+        }
+    }
+
+    private void load_place (string filename)
+    {
+      string group = "Place";
+
+      var file = new KeyFile ();
+
+      try
+        {
+          file.load_from_file (filename,
+                               KeyFileFlags.KEEP_COMMENTS
+                                | KeyFileFlags.KEEP_TRANSLATIONS);
+
+          var name = file.get_string (group, "Name");
+          var comment = file.get_string (group, "Comment");
+          var icon_name = file.get_string (group, "Icon");
+          var path = file.get_string (group, "Path");
+
+          Place place = new PlaceProxy (name, icon_name, comment, path);
+
+          if (place is Place)
+            {
+              place.activated.connect (this.on_place_activated);
+              this.model.add (place);
+            }
+        }
+      catch (Error e)
+        {
+          warning (@"Unable to load place '$filename': %s", e.message);
+        }
+    }
     private void on_place_activated (Place place)
     {
       this.view.set_content_view (place.get_view ());

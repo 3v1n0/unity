@@ -88,6 +88,7 @@ places_sources = \
   places/places-controller.vala \
   places/places-model.vala \
   places/places-place.vala \
+  places/places-place-proxy.vala \
   places/places-view.vala
 
 quicklauncher_sources = \

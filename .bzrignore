@@ -148,3 +148,4 @@ libunity-places/unity-place-marshal.h
 libunity-places/unity-place-marshal.c
 unity-places/unity-place-marshal.h
 unity-places/unity-place-marshal.c
+src/places/places-place-proxy.c
