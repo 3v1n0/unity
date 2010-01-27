@@ -3,6 +3,7 @@ bin_PROGRAMS = test-unity
 TESTDIR = $(top_srcdir)/tests
 
 test_unity_CPPFLAGS = \
+  -I$(top_srcdir) \
   -I$(top_srcdir)/libunity \
   -I$(top_srcdir)/unity-places \
   -I$(top_srcdir)/src \
