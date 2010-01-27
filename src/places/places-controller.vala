@@ -106,9 +106,14 @@ namespace Unity.Places
           var name = file.get_string (group, "Name");
           var comment = file.get_string (group, "Comment");
           var icon_name = file.get_string (group, "Icon");
-          var path = file.get_string (group, "Path");
+          var dbus_name = file.get_string (group, "DBusName");
+          var dbus_path = file.get_string (group, "DBusPath");
 
-          Place place = new PlaceProxy (name, icon_name, comment, path);
+          Place place = new PlaceProxy (name,
+                                        icon_name,
+                                        comment,
+                                        dbus_name,
+                                        dbus_path);
 
           if (place is Place)
             {

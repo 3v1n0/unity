@@ -26,19 +26,25 @@ namespace Unity.Places
      **/
 
     /* Properties */
-    public string path { get; construct; }
+    public string dbus_name { get; construct; }
+    public string dbus_path { get; construct; }
+
+    private DBus.Connection?     conn;
+    private dynamic DBus.Object? service;
 
     /* Signals */
 
     public PlaceProxy (string name,
                        string icon_name,
                        string comment,
-                       string path)
+                       string dbus_name,
+                       string dbus_path)
     {
       Object (name:name,
               icon_name:PKGDATADIR + "/applications.png",
               comment:comment,
-              path:path);
+              dbus_name:dbus_name,
+              dbus_path:dbus_path);
     }
 
     construct
@@ -48,6 +54,25 @@ namespace Unity.Places
 
     public override Clutter.Actor get_view ()
     {
+      /* Dump this in here for the moment */
+      if (conn == null)
+        {
+          try
+            {
+              this.conn = DBus.Bus.get (DBus.BusType.SESSION);
+              this.service = conn.get_object (this.dbus_name,
+                                              this.dbus_path,
+                                              "com.canonical.Unity.Place");
+              this.service.set_active (true);
+            }
+          catch (Error e)
+            {
+              warning ("Unable to start service %s: %s",
+                       this.dbus_name,
+                       e.message);
+            }
+        }
+
       return new Clutter.Rectangle ();
     }
   }
