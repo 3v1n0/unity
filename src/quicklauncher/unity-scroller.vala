@@ -698,8 +698,8 @@ namespace Unity.Widgets
       
       this.top_shadow.allocate (child_box, flags);
 
-      child_box.y1 = box.y2 - 64;
-      child_box.y2 = box.y2 - 24;
+      child_box.y1 = box.get_height() - 32;
+      child_box.y2 = box.get_height();
       
       this.bottom_fade.allocate (child_box, flags);
 

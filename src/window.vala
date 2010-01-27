@@ -190,7 +190,7 @@ namespace Unity
       this.background.set_size (width, height);
 
 
-      this.quicklauncher.set_size (ql_width, height);
+      this.quicklauncher.set_size (ql_width, height - 23);
       this.quicklauncher.set_position (this.workarea_size.left,
                                        this.workarea_size.top);
 
