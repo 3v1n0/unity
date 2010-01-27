@@ -7,8 +7,7 @@ test_unity_CPPFLAGS = \
   -I$(top_srcdir)/unity-places \
   -I$(top_srcdir)/src \
   -DTESTDIR=\"$(TESTDIR)\" \
-  $(BASE_CFLAGS) \
-  $(MAINTAINER_CFLAGS)
+  $(BASE_CFLAGS)
 
 test_unity_LDADD = \
   $(top_builddir)/unity-places/libunity-places.la \
@@ -24,6 +23,7 @@ test_unity_VALAFLAGS = \
   --vapidir=$(top_srcdir)/tests \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
+  --pkg dbus-glib-1 \
   --pkg gtk+-2.0 \
   --pkg gdk-2.0 \
   --pkg gee-1.0 \
@@ -37,6 +37,7 @@ test_unity_VALAFLAGS = \
   --pkg test-const \
   --pkg unique-1.0 \
   --pkg unity \
+  --pkg unity-const \
   --pkg unity-places \
   --pkg unity-static \
   $(MAINTAINER_VALAFLAGS)
@@ -61,4 +62,4 @@ check-report:
 check-local: unity-tester
 
 EXTRA_DIST = test-const.vapi firefox.desktop
-CLEANFILES = *.stamp $(XML_REPORT) $(HTML_REPORT)
+CLEANFILES = *.stamp $(XML_REPORT) $(HTML_REPORT) *.c

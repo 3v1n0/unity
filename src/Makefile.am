@@ -42,6 +42,7 @@ libunity_static_la_VALAFLAGS = \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg cogl-1.0 \
+  --pkg dbus-glib-1 \
   --pkg gconf-2.0 \
   --pkg gdk-2.0 \
   --pkg gdk-x11-2.0 \
@@ -139,6 +140,7 @@ unity_VALAFLAGS = \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg cogl-1.0 \
+  --pkg dbus-glib-1 \
   --pkg gtk+-2.0 \
   --pkg gdk-2.0 \
   --pkg gee-1.0 \

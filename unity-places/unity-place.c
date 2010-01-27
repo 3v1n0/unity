@@ -253,5 +253,5 @@ _unity_place_server_set_active (UnityPlace *self,
 
   g_signal_emit (self, _place_signals[IS_ACTIVE], 0, is_active);
 
-  return FALSE;
+  return TRUE;
 }

@@ -96,14 +96,34 @@ public class Main
       var place = new TestPlace ();
 
       assert (place is TestPlace);
+
+      var loop = new MainLoop (null, false);
+
+      try
+        {
+          DBus.Connection conn = DBus.Bus.get (DBus.BusType.SESSION);
+
+          Utils.register_object_on_dbus (conn,
+                                  "/com/canonical/Unity/Place",
+                                  place);
+        }
+      catch (Error e)
+        {
+          warning ("TestPlace error: %s", e.message);
+        }
     });
   }
 
-  public class TestPlace : Place
+  public class TestPlace : Unity.Place
   {
     public TestPlace ()
     {
-      ;
+      Object (name:"neil", icon_name:"gtk-apply", tooltip:"hello");
+    }
+
+    construct
+    {
+      this.is_active.connect ((a) => {print (@"$a\n");});
     }
   }
 }
