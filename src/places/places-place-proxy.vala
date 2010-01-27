@@ -52,25 +52,44 @@ namespace Unity.Places
 
     }
 
+    private void setup_service ()
+    {
+      try
+        {
+          this.conn = DBus.Bus.get (DBus.BusType.SESSION);
+          this.service = conn.get_object (this.dbus_name,
+                                          this.dbus_path,
+                                          "com.canonical.Unity.Place");
+
+          this.service.ViewChanged += this.on_view_changed;
+
+          this.service.set_active (false);
+        }
+      catch (Error e)
+        {
+          warning ("Unable to start service %s: %s",
+                   this.dbus_name,
+                   e.message);
+        }
+    }
+
+    private void on_view_changed (dynamic DBus.Object       s,
+                                  string                    view_name,
+                                  HashTable<string, string> view_properties)
+    {
+      print (@"ViewChanged: $view_name, %d\n", view_properties.size ());
+
+      print ("\t%s, %s\n",
+            view_properties.lookup ("Hello"),
+            view_properties.lookup ("Neil"));
+    }
+
     public override Clutter.Actor get_view ()
     {
       /* Dump this in here for the moment */
-      if (conn == null)
+      if (!(this.service is DBus.Object))
         {
-          try
-            {
-              this.conn = DBus.Bus.get (DBus.BusType.SESSION);
-              this.service = conn.get_object (this.dbus_name,
-                                              this.dbus_path,
-                                              "com.canonical.Unity.Place");
-              this.service.set_active (true);
-            }
-          catch (Error e)
-            {
-              warning ("Unable to start service %s: %s",
-                       this.dbus_name,
-                       e.message);
-            }
+          this.setup_service ();
         }
 
       return new Clutter.Rectangle ();
