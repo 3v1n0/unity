@@ -48,7 +48,16 @@ namespace Unity.Quicklauncher
     
     ~QuicklistController () 
     {
-      this.menu.fadeout_and_destroy ();
+      if (active_menu == this.menu)
+        {
+          active_menu = null;
+        }
+      var menu = this.menu;
+      this.menu = null;
+      if (menu is Ctk.Menu)
+        {
+          menu.fadeout_and_destroy ();
+        }
     }
     
     construct 

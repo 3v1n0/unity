@@ -139,7 +139,20 @@ namespace Unity.Quicklauncher
 
         set_reactive (true);
         this.quicklist_controller = null;
+
+        // connect to the reactive property so that we can disable menus if we
+        // are not reactive (scroll, out of bounds)
+        this.notify["reactive"].connect (this.on_reactive);
       }
+
+    private void on_reactive ()
+    {
+      if (this.quicklist_controller is QuicklistController)
+        {
+          //this.quicklist_controller.close_menu ();
+          this.quicklist_controller = null;
+        }
+    }
 
     private void load_textures ()
     {
@@ -331,17 +344,20 @@ namespace Unity.Quicklauncher
     private bool on_mouse_enter (Clutter.Event event)
     {
       this.is_hovering = true;
-      if (this.quicklist_controller == null)
+      if (this.reactive)
         {
-          this.quicklist_controller = new QuicklistController (this.model.name,
-                                                               this,
-                                                               this.get_stage () as Clutter.Stage
-                                                               );
-          this.build_quicklist ();
-        }
-      if (!this.quicklist_controller.is_label)
-        {
-          this.quicklist_controller.show_label ();
+          if (!(this.quicklist_controller is QuicklistController))
+            {
+              this.quicklist_controller = new QuicklistController (this.model.name,
+                                                                   this,
+                                                                   this.get_stage () as Clutter.Stage
+                                                                   );
+              this.build_quicklist ();
+            }
+          if (!this.quicklist_controller.is_label)
+            {
+              this.quicklist_controller.show_label ();
+            }
         }
       return false;
     }
@@ -356,13 +372,16 @@ namespace Unity.Quicklauncher
     private bool on_mouse_leave(Clutter.Event src)
     {
       this.is_hovering = false;
-      if (this.quicklist_controller is QuicklistController)
-      {
-        if (this.quicklist_controller.is_label)
-          {
-            this.quicklist_controller.close_menu ();
-          }
-      }
+      if (this.reactive)
+        {
+          if (this.quicklist_controller is QuicklistController)
+            {
+              if (this.quicklist_controller.is_label)
+                {
+                  this.quicklist_controller.close_menu ();
+                }
+            }
+        }
       return false;
     }
 
