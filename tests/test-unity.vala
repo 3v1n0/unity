@@ -106,6 +106,8 @@ public class Main
           Utils.register_object_on_dbus (conn,
                                   "/com/canonical/Unity/Place",
                                   place);
+
+          loop.run ();
         }
       catch (Error e)
         {

@@ -72,7 +72,7 @@ struct _UnityPlaceClass
   void (*_unity_place_4) (void);
 };
 
-GType unity_place_get_type         (void) G_GNUC_CONST;
+GType  unity_place_get_type         (void) G_GNUC_CONST;
 
 G_END_DECLS
 

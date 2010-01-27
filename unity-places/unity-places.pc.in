@@ -3,6 +3,8 @@ exec_prefix=@exec_prefix@
 libdir=@libdir@
 includedir=@includedir@
 
+placesdir=@datarootdir@/@PACKAGE@/places/
+
 Name: libunity-places
 Description: A library to build places for Unity
 Version: @VERSION@

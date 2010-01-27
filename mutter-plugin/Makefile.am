@@ -34,6 +34,7 @@ libunity_mutter_la_VALAFLAGS = \
   --vapidir=$(top_srcdir)/libunity \
   --pkg clutter-1.0 \
   --pkg clutk-0.3 \
+  --pkg dbus-glib-1 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
   --pkg indicator \
