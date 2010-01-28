@@ -40,6 +40,12 @@ namespace Unity
     private Places.Controller   controller;
     private Unity.Places.View   places;
 
+    public void set_in_menu (bool is_in_menu)
+      {
+        /* we don't care if we are in a menu */
+        return;
+      }
+
     private bool showing_places;
 
     public UnderlayWindow (bool popup, int width, int height)
@@ -50,6 +56,7 @@ namespace Unity
     construct
     {
       START_FUNCTION ();
+      Unity.global_shell = this;
       this.workarea_size = new Workarea ();
       this.workarea_size.update_net_workarea ();
 
@@ -190,7 +197,7 @@ namespace Unity
       this.background.set_size (width, height);
 
 
-      this.quicklauncher.set_size (ql_width, height);
+      this.quicklauncher.set_size (ql_width, height - 23);
       this.quicklauncher.set_position (this.workarea_size.left,
                                        this.workarea_size.top);
 

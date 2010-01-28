@@ -68,7 +68,7 @@ namespace Unity
     }
 
     private static const int PANEL_HEIGHT        = 23;
-    private static const int QUICKLAUNCHER_WIDTH = 58;
+    private static const int QUICKLAUNCHER_WIDTH = 60;
 
     private Clutter.Stage    stage;
     private Application      app;
@@ -86,6 +86,7 @@ namespace Unity
 
     construct
     {
+      Unity.global_shell = this;
       Unity.TimelineLogger.get_default(); // just inits the timer for logging
       // attempt to get a boot logging filename
       boot_logging_filename = Environment.get_variable ("UNITY_BOOTLOG_FILENAME");
@@ -202,7 +203,7 @@ namespace Unity
                                    this.QUICKLAUNCHER_WIDTH,
                                    height-this.PANEL_HEIGHT);
       Utils.set_strut ((Gtk.Window)this.drag_dest,
-                       58, 0, (uint32)height,
+                       this.QUICKLAUNCHER_WIDTH, 0, (uint32)height,
                        PANEL_HEIGHT, 0, (uint32)width);
 
       this.places.set_size (width, height);
@@ -217,6 +218,23 @@ namespace Unity
        * this.plugin.set_stage_reactive (true);
        */
       END_FUNCTION ();
+    }
+
+    public void set_in_menu (bool is_in_menu)
+    {
+      // we need to modify the stage input area so that the menus are responsive
+      // and they detect clicks elsewhere
+      float width, height;
+      this.stage.get_size (out width, out height);
+
+      if (is_in_menu)
+        {
+          this.plugin.set_stage_input_area(0, 0, (int)(width), (int)(height));
+        }
+      else
+        {
+          this.restore_input_region ();
+        }
     }
 
     private void on_stage_actor_added (Clutter.Actor actor)
