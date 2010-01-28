@@ -32,7 +32,7 @@ namespace Unity.Places
     private DBus.Connection?     conn;
     private dynamic DBus.Object? service;
 
-    /* Signals */
+    private Ctk.Box view;
 
     public PlaceProxy (string name,
                        string icon_name,
@@ -77,11 +77,23 @@ namespace Unity.Places
                                   string                    view_name,
                                   HashTable<string, string> view_properties)
     {
-      print (@"ViewChanged: $view_name, %d\n", view_properties.size ());
+      /**
+       * This is just to get something working, in the future they'll be a
+       * view_loader class that handles loading internal and extenal views
+       * (from models), and doing the string => GType conversion. Views just
+       * need to implement PlaceView interface
+       **/
+      if (view_name == "ResultsView")
+        {
+          var new_view = new Views.ResultsView ();
+          new_view.init_with_properties (view_properties);
 
-      print ("\t%s, %s\n",
-            view_properties.lookup ("Hello"),
-            view_properties.lookup ("Neil"));
+          this.view.add_actor (new_view);
+        }
+      else
+        {
+          warning (@"Unknown view: $view_name");
+        }
     }
 
     public override Clutter.Actor get_view ()
@@ -92,7 +104,12 @@ namespace Unity.Places
           this.setup_service ();
         }
 
-      return new Clutter.Rectangle ();
+      if (!(this.view is Ctk.Box))
+        {
+          this.view = new Ctk.VBox (0);
+        }
+
+      return this.view;
     }
   }
 }

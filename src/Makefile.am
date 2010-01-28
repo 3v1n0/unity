@@ -44,6 +44,7 @@ libunity_static_la_VALAFLAGS = \
   --pkg dbus-glib-1 \
   --pkg cogl-1.0 \
   --pkg dbus-glib-1 \
+  --pkg dbusmodel \
   --pkg gconf-2.0 \
   --pkg gdk-2.0 \
   --pkg gdk-x11-2.0 \
@@ -89,6 +90,8 @@ places_sources = \
   places/places-model.vala \
   places/places-place.vala \
   places/places-place-proxy.vala \
+  places/places-place-view.vala \
+  places/places-results-view.vala \
   places/places-view.vala
 
 quicklauncher_sources = \
@@ -143,6 +146,7 @@ unity_VALAFLAGS = \
   --pkg clutter-gtk-0.10 \
   --pkg cogl-1.0 \
   --pkg dbus-glib-1 \
+  --pkg dbusmodel \
   --pkg gtk+-2.0 \
   --pkg gdk-2.0 \
   --pkg gee-1.0 \
