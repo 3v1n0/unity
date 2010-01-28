@@ -146,10 +146,9 @@ namespace Unity.Quicklauncher
       cr.set_operator (Cairo.Operator.CLEAR);
       cr.paint ();
 
-      // setup correct line-drawing
+      // setup correct filled-drawing
       cr.set_operator (Cairo.Operator.SOURCE);
       cr.scale (1.0f, 1.0f);
-      cr.set_line_width (Ctk.em_to_pixel (LINE_WIDTH));
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
 
       // draw actual outline
@@ -169,10 +168,37 @@ namespace Unity.Quicklauncher
       cr.fill ();
     }
 
-    /*private void
-    _negative_mask (Cairo.Context cr)
+    private void
+    _negative_mask (Cairo.Context cr,
+                    int           w,
+                    int           h,
+                    int           item)
     {
-    }*/
+      // clear context
+      cr.set_operator (Cairo.Operator.SOURCE);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+      cr.paint ();
+
+      // setup correct mask-drawing
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.scale (1.0f, 1.0f);
+
+      // draw actual outline
+      _round_rect_anchor (cr,
+                          1.0f,
+                          Ctk.em_to_pixel (BORDER) +
+                          Ctk.em_to_pixel (ANCHOR_WIDTH),
+                          Ctk.em_to_pixel (BORDER),
+                          Ctk.em_to_pixel (BORDER),
+                          (double) w,
+                          (double) h, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
+                          Ctk.em_to_pixel (ANCHOR_WIDTH),
+                          Ctk.em_to_pixel (ANCHOR_HEIGHT),
+                          Ctk.em_to_pixel (BORDER),
+                          item * Ctk.em_to_pixel (ITEM_HEIGHT) -
+                          Ctk.em_to_pixel (ITEM_HEIGHT) / 2.0f);
+      cr.fill ();
+    }
 
     /*private void
     _dotted_bg (Cairo.Context cr)
@@ -202,6 +228,7 @@ namespace Unity.Quicklauncher
       };
 
       this.ql_background = new Ctk.LayerActor (TMP_BG_WIDTH, TMP_BG_HEIGHT);
+
       Ctk.Layer outline_layer = new Ctk.Layer (TMP_BG_WIDTH,
                                                TMP_BG_HEIGHT,
                                                Ctk.LayerRepeatMode.NONE,
@@ -211,14 +238,24 @@ namespace Unity.Quicklauncher
                                             Ctk.LayerRepeatMode.NONE,
                                             Ctk.LayerRepeatMode.NONE);
 
+      /*Ctk.Layer shadow_layer = new Ctk.Layer (TMP_BG_WIDTH,
+                                              TMP_BG_HEIGHT,
+                                              Ctk.LayerRepeatMode.NONE,
+                                              Ctk.LayerRepeatMode.NONE);*/
+
       Cairo.Surface outline_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
                                                            TMP_BG_WIDTH,
                                                            TMP_BG_HEIGHT);
       Cairo.Surface fill_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
                                                         TMP_BG_WIDTH,
                                                         TMP_BG_HEIGHT);
+      Cairo.Surface negative_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
+                                                            TMP_BG_WIDTH,
+                                                            TMP_BG_HEIGHT);
+
       Cairo.Context outline_cr = new Cairo.Context (outline_surf);
       Cairo.Context fill_cr = new Cairo.Context (fill_surf);
+      Cairo.Context negative_cr = new Cairo.Context (negative_surf);
 
       _outline_mask (outline_cr,
                      TMP_BG_WIDTH,
@@ -228,11 +265,19 @@ namespace Unity.Quicklauncher
                   TMP_BG_WIDTH,
                   TMP_BG_HEIGHT,
                   2);
-      //_negative_mask (cr);
+      _negative_mask (negative_cr,
+                      TMP_BG_WIDTH,
+                      TMP_BG_HEIGHT,
+                      2);
+
       //_dotted_bg (cr);
       //_highlight_bg (cr);
       //outline_surf.write_to_png ("/tmp/outline_surf.png");
       //fill_surf.write_to_png ("/tmp/fill_surf.png");
+      //negative_surf.write_to_png ("/tmp/negative_surf.png");
+
+      //shadow_layer.set_mask_from_surface (negative_surf);
+      //shadow_layer.set_image_from_surface (shadow_surf);
 
       fill_layer.set_mask_from_surface (fill_surf);
       fill_layer.set_color (fill_color);
