@@ -36,7 +36,7 @@ namespace Unity.Places.Views
     URI
   }
 
-  public class ResultsView : Ctk.Bin, Unity.Places.PlaceView
+  public class ResultsView : Ctk.Box, Unity.Places.PlaceView
   {
     /**
      * This is a results view as defined by the design team. It consists of a
@@ -64,15 +64,44 @@ namespace Unity.Places.Views
     private Dbus.Model? groups_model;
     private Dbus.Model? results_model;
 
+    private GroupView group_view;
+
     public ResultsView ()
     {
-      Object ();
+      Object (orientation:Ctk.Orientation.VERTICAL);
     }
 
     construct
     {
-
+      this.group_view = new GroupView ();
+      this.add_actor (group_view);
+      this.group_view.show ();
     }
+
+    /**
+     * CLUTTER RELATED METHODS
+     **/
+    private override void allocate (Clutter.ActorBox        box,
+                                    Clutter.AllocationFlags flags)
+    {
+      Clutter.ActorBox child_box = {0, 0, 0, 0};
+      float width, height;
+      float padding = 24;
+
+      width = box.x2 - box.x1 - padding * 2;
+      height = box.y2 - box.y1 - padding * 2;
+
+      child_box.x1 = padding;
+      child_box.x2 = width;
+      child_box.y1 = padding;
+      child_box.y2 = padding * 2;
+
+      this.group_view.allocate (child_box, flags);
+    }
+
+    /**
+     * MODEL RELATED METHODS
+     **/
 
     public void init_with_properties (HashTable<string, string> props)
     {
@@ -96,7 +125,7 @@ namespace Unity.Places.Views
 
     private void on_group_added (Dbus.Model model, ModelIter iter)
     {
-      print ("Group: %s\n", model.get_string (iter, GroupColumns.NAME));
+      this.group_view.add (model, iter);
     }
 
     private void on_group_changed (Dbus.Model model, ModelIter iter)
@@ -122,6 +151,98 @@ namespace Unity.Places.Views
     private void on_result_removed (Dbus.Model model, ModelIter iter)
     {
 
+    }
+  }
+
+  private class GroupView : Ctk.Box
+  {
+    public GroupView ()
+    {
+      Object (orientation:Ctk.Orientation.HORIZONTAL,
+              spacing:12,
+              homogeneous:false);
+    }
+
+    construct
+    {
+
+    }
+
+    public void add (Dbus.Model model, ModelIter iter)
+    {
+      var text = new GroupLabel (model, iter);
+
+      this.add_actor (text);
+      text.show ();
+    }
+  }
+
+  private class GroupLabel : Ctk.Text
+  {
+    public unowned Dbus.Model model { get; construct; }
+    public unowned ModelIter  iter  { get; construct; }
+
+    private Clutter.Actor bg;
+
+    public GroupLabel (Dbus.Model model, ModelIter iter)
+    {
+      Object (model:model,
+              iter:iter,
+              text:model.get_string (iter, GroupColumns.NAME));
+      //this.set_alignment (Pango.Alignment.CENTER);
+    }
+
+    construct
+    {
+      Clutter.Color white = { 0xff, 0xff, 0xff, 0x33 };
+
+      var rect = new Clutter.Rectangle.with_color (white);
+
+      this.bg = (Clutter.Actor)rect;
+      this.bg.set_parent (this);
+      this.bg.show ();
+    }
+
+    private override void allocate (Clutter.ActorBox        box,
+                                    Clutter.AllocationFlags flags)
+    {
+      base.allocate (box, flags);
+
+      Clutter.ActorBox child_box = { 0, 0, 0, 0 };
+      child_box.x2 = box.x2 - box.x1;
+      child_box.y2 = box.y2 - box.y1 - 3;
+
+      this.bg.allocate (child_box, flags);
+    }
+
+    private override void map ()
+    {
+      base.map ();
+      this.bg.map ();
+    }
+
+    private override void unmap ()
+    {
+      base.unmap ();
+      this.bg.unmap ();
+    }
+
+    private override void show ()
+    {
+      base.show ();
+      this.bg.show ();
+    }
+
+    private override void hide ()
+    {
+      base.hide ();
+      this.bg.hide ();
+    }
+
+    private override void paint ()
+    {
+      this.bg.paint ();
+      base.paint ();
     }
   }
 }
