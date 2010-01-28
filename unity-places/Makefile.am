@@ -10,8 +10,7 @@ placesincludedir = $(includedir)/unity-places/unity-places
 places_headers = \
   unity-places.h \
   unity-place.h \
-  unity-place-marshal.h \
-  unity-place-proxy.h
+  unity-place-marshal.h
 
 placesinclude_HEADERS = \
   $(places_headers)
@@ -22,7 +21,6 @@ libunity_places_la_SOURCES = \
   unity-place.c \
   unity-place-client.h \
   unity-place-marshal.c \
-  unity-place-proxy.c \
   unity-place-server.h
 
 libunity_places_la_LIBADD = \

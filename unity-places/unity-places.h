@@ -21,6 +21,5 @@
 #define _UNITY_PLACES_H_
 
 #include <unity-places/unity-place.h>
-#include <unity-places/unity-place-proxy.h>
 
 #endif /* _UNITY_PLACES_H_ */
