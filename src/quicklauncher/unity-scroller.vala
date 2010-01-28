@@ -633,8 +633,26 @@ namespace Unity.Widgets
         childcontainer.box = child_box;
         child.allocate (child_box, flags);
 
-        // if the child is outside our hot area, we fade it out and make it
-        // unresponsive
+        // we need to set a clip on each actor
+        if (child_box.y1 < hot_negative)
+          {
+            var yclip = hot_negative - child_box.y1;
+            child.set_clip (0, yclip,
+                            child_box.get_width (),
+                            child_box.get_height () - yclip);
+          }
+        else if (child_box.y2 > hot_positive)
+          {
+            var yclip = child_box.y2 - hot_positive;
+            child.set_clip (0, 0,
+                            child_box.get_width (),
+                            child_box.get_height () - yclip);
+          }
+        else
+          {
+            child.set_clip (0, 0, child_box.get_width (), child_box.get_height ());
+          }
+        // if the child is outside our hot area, we hide it and set unreactive
         if ((child_box.y2 < hot_negative) || (child_box.y1 > hot_positive))
           {
             if (!childcontainer.is_hidden)
@@ -642,23 +660,6 @@ namespace Unity.Widgets
                 childcontainer.is_hidden = true;
                 child.set_reactive (false);
               }
-
-            // we need to set a clip on each actor
-            if (child_box.y1 < hot_negative)
-              {
-                var yclip = hot_negative - child_box.y1;
-                child.set_clip (0, yclip,
-                                child_box.get_width (),
-                                child_box.get_height () - yclip);
-              }
-            else if (child_box.y2 > hot_positive)
-              {
-                var yclip = child_box.y2 - hot_positive;
-                child.set_clip (0, 0,
-                                child_box.get_width (),
-                                child_box.get_height () - yclip);
-              }
-
           }
         else
           {
@@ -667,8 +668,6 @@ namespace Unity.Widgets
                 childcontainer.is_hidden = false;
                 child.set_reactive (true);
               }
-              child.set_clip (0, 0,
-                              child_box.get_width (), child_box.get_height ());
           }
       }
 
@@ -679,7 +678,9 @@ namespace Unity.Widgets
       child_box.x1 = box.x1;
       child_box.x2 = box.x2;
       this.bgtex.allocate (child_box, flags);
-
+      this.bgtex.set_clip (box.x1, drag_pos + box.get_height () * 2,
+                           box.get_width (), box.get_height ());
+                      
       this.gradient.width = box.get_width();
       this.gradient.allocate (box, flags);
 
