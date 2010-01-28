@@ -151,3 +151,4 @@ unity-places/unity-place-marshal.c
 src/places/places-place-proxy.c
 src/places/places-place-view.c
 src/places/places-results-view.c
+src/quicklauncher/chrome-handler.c
