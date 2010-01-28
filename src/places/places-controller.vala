@@ -46,24 +46,15 @@ namespace Unity.Places
 
     private bool load_places ()
     {
-      /* Currently we have a static list, in the future we'll be using the
-       * utility functions in libunity-places to load in the actual places
-       * information from the drive
-       */
       var homeplace = new HomePlace ();
       homeplace.activated.connect (this.on_place_activated);
       this.model.add (homeplace);
 
-      var place = new FakePlace ("Applications",
-                                 PKGDATADIR + "/applications.png");
-      place.activated.connect (this.on_place_activated);
-      this.model.add (place);
-
-      place = new FakePlace ("Files & Folders", PKGDATADIR + "/files.png");
-      place.activated.connect (this.on_place_activated);
-      this.model.add (place);
-
       this.load_remote_places ();
+
+      var place = new FakePlace ("Files & Folders", PKGDATADIR + "/files.png");
+      place.activated.connect (this.on_place_activated);
+      this.model.add (place);
 
       return false;
     }

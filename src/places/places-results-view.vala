@@ -18,6 +18,8 @@
  */
 
 using Dbus;
+using Gee;
+using Unity.Places.Application;
 
 namespace Unity.Places.Views
 {
@@ -64,7 +66,10 @@ namespace Unity.Places.Views
     private Dbus.Model? groups_model;
     private Dbus.Model? results_model;
 
-    private GroupView group_view;
+    private GroupView   group_view;
+    private Ctk.VBox    results_view;
+
+    private HashMap<string, ApplicationGroup> groups;
 
     public ResultsView ()
     {
@@ -76,6 +81,13 @@ namespace Unity.Places.Views
       this.group_view = new GroupView ();
       this.add_actor (group_view);
       this.group_view.show ();
+
+      this.results_view = new Ctk.VBox (12);
+      this.results_view.homogeneous = false;
+      this.add_actor (results_view);
+      this.results_view.show ();
+
+      this.groups = new HashMap<string, ApplicationGroup> ();
     }
 
     /**
@@ -87,6 +99,7 @@ namespace Unity.Places.Views
       Clutter.ActorBox child_box = {0, 0, 0, 0};
       float width, height;
       float padding = 24;
+      float natheight = 0;
 
       width = box.x2 - box.x1 - padding * 2;
       height = box.y2 - box.y1 - padding * 2;
@@ -95,8 +108,14 @@ namespace Unity.Places.Views
       child_box.x2 = width;
       child_box.y1 = padding;
       child_box.y2 = padding * 2;
-
       this.group_view.allocate (child_box, flags);
+
+      this.results_view.get_preferred_height (width,
+                                              out natheight,
+                                              out natheight);
+      child_box.y1 += child_box.y2;
+      child_box.y2 = child_box.y1 + natheight;
+      this.results_view.allocate (child_box, flags);
     }
 
     /**
@@ -140,7 +159,35 @@ namespace Unity.Places.Views
 
     private void on_result_added (Dbus.Model model, ModelIter iter)
     {
+      var group_name = model.get_string (iter, ResultsColumns.GROUP);
 
+      ApplicationGroup? group = this.groups[group_name];
+
+      if (group is ApplicationGroup)
+        {
+          if (group.n_items < 6)
+            {
+              ApplicationIcon app;
+              string name = model.get_string (iter, ResultsColumns.NAME);
+              string icon_name = model.get_string (iter, ResultsColumns.ICON_NAME);
+              string comment = model.get_string (iter, ResultsColumns.COMMENT);
+
+              app = new ApplicationIcon (48,
+                                         name,
+                                         icon_name,
+                                         comment);
+
+              group.add_icon (app);
+            }
+        }
+      else
+        {
+          group = new ApplicationGroup (group_name);
+          this.results_view.add_actor (group);
+          group.show ();
+
+          this.groups[group_name] = group;
+        }
     }
 
     private void on_result_changed (Dbus.Model model, ModelIter iter)
@@ -189,7 +236,6 @@ namespace Unity.Places.Views
       Object (model:model,
               iter:iter,
               text:model.get_string (iter, GroupColumns.NAME));
-      //this.set_alignment (Pango.Alignment.CENTER);
     }
 
     construct
