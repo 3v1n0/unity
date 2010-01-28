@@ -34,6 +34,10 @@ namespace Unity
     public abstract ShellMode     get_mode ();
     public abstract Clutter.Stage get_stage ();
     public abstract void          show_unity ();
-    //public abstract signal void   show_unity ();
+    public abstract int           get_indicators_width ();
+    public abstract void          set_in_menu (bool is_in_menu);
+    public signal void indicators_changed (int width);
   }
+
+  public Shell? global_shell; // our global shell
 }

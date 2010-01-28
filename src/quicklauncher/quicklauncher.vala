@@ -18,15 +18,15 @@
  */
 
 namespace Unity.Quicklauncher
-{  
+{
   public class View : Ctk.Bin
   {
     private Shell shell;
 
     private Manager manager;
-    
+
     public View (Shell shell)
-    { 
+    {
       this.shell = shell;
     }
 
@@ -34,6 +34,11 @@ namespace Unity.Quicklauncher
     {
       this.manager = new Manager ();
       this.add_actor (manager);
+    }
+
+    public new float get_width ()
+    {
+      return 60;
     }
   }
 }

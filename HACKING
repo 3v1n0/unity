@@ -36,3 +36,8 @@ Bootperformance Logging:
   you can then produce a bootchart with this by running the tools/makebootchart.py
   script:
   ./tools/makebootchart.py --input=/tmp/unity.log --output=/tmp/unity.svg 
+
+
+Webapp switching:
+  Unity can use two webapp systems, prism and chromium, you can toggle between
+  the two by setting the gconf key "/apps/unity/webapp_use_chromium" on or off

@@ -1,5 +1,4 @@
-/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
-/*
+/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- *//*
  * Copyright (C) 2009 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
@@ -23,6 +22,10 @@ namespace Unity {
   public static const string DATADIR;
   [CCode (cname = "PKGDATADIR")]
   public static const string PKGDATADIR;
+  [CCode (cname = "INDICATORDIR")]
+  public static const string INDICATORDIR;
+  [CCode (cname = "INDICATORICONSDIR")]
+  public static const string INDICATORICONSDIR;
   
   [CCode (cheader_filename = "unity-utils.h", cname = "LOGGER_START_PROCESS")]
   public static void LOGGER_START_PROCESS (string name);
@@ -32,7 +35,7 @@ namespace Unity {
   
   [CCode (cheader_filename = "unity-utils.h", cname = "START_FUNCTION")]
   public static void START_FUNCTION ();
-  
+ 
   [CCode (cheader_filename = "unity-utils.h", cname = "END_FUNCTION")]
   public static void END_FUNCTION ();
 }

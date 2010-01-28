@@ -14,7 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by Gordon Allott <gord.allott@canonical.com>
- * 
+ *
  */
 #include <unity.h>
 
@@ -38,5 +38,4 @@
 #define LOGGER_END_PROCESS(process) { }
 #endif
 
-
-
+#define INDICATOR_TYPE_OBJECT INDICATOR_OBJECT_TYPE

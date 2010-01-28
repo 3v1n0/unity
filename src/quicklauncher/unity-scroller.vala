@@ -41,23 +41,18 @@ namespace Unity.Widgets
     public bool is_hidden {
       get { return this._is_hidden; }
       set {
-        if (hide_anim is Clutter.Animation)
-          hide_anim.completed ();
+        if (value && !this._is_hidden)
+          {
+            this.child.hide ();
+          }
+        if (!value && this._is_hidden)
+          {
+            this.child.show ();
+          }
 
-        if (_is_hidden && value == false)
-          this.hide_anim = this.child.animate (
-            Clutter.AnimationMode.EASE_OUT_QUAD,
-            200, "opacity", 255);
-
-        if (!_is_hidden && value == true)
-          this.hide_anim = this.child.animate (
-            Clutter.AnimationMode.EASE_OUT_QUAD,
-            200, "opacity", 64);
-        this._is_hidden = value;
-      }
+         this._is_hidden = value;
+        }
     }
-
-    private Clutter.Animation hide_anim;
 
     public ScrollerChild ()
     {
@@ -102,11 +97,14 @@ namespace Unity.Widgets
     private const float friction = 0.9f;
     private float last_drag_pos = 0.0f;
     private float fling_velocity = 0.0f;
+    private uint fling_delta = 0;
     private float previous_y = -1000000000.0f;
     private float fling_target = 0.0f;
 
     private Clutter.Texture? bgtex;
     private Clutter.Texture? gradient;
+    private Clutter.Texture? top_shadow;
+    private Clutter.Texture? bottom_fade;
     private Clutter.Rectangle edge;
 
     private int _spacing;
@@ -141,31 +139,8 @@ namespace Unity.Widgets
     }
 
     construct {
-        try
-          {
-            bgtex = new Clutter.Texture ();
-            bgtex.set_load_async (true);
-            bgtex.set_from_file (Unity.PKGDATADIR + "/honeycomb.png");
-          }
-        catch (Error e)
-          {
-            error ("Unable to load texture '%s': %s",
-                     Unity.PKGDATADIR + "/honeycomb.png",
-                     e.message);
-          }
-      try
-        {
-          gradient = new Clutter.Texture ();
-          gradient.set_load_async (true);
-          gradient.set_from_file (Unity.PKGDATADIR + "/gradient.png");
-        }
-      catch (Error e)
-        {
-          error ("Unable to load texture: '%s': %s",
-                   Unity.PKGDATADIR + "/gradient.png",
-                   e.message);
-        }
 
+      this.load_textures ();
       var mypadding = this.padding;
 
       mypadding.left = 0.0f;
@@ -175,23 +150,11 @@ namespace Unity.Widgets
 
       this.padding = mypadding;
 
-      bgtex.set_repeat (true, true);
-      bgtex.set_opacity (0xE0);
-
-      gradient.set_repeat (false, true);
-      gradient.set_opacity (0x30);
-
-      bgtex.set_parent (this);
-      bgtex.queue_relayout ();
-
-      gradient.set_parent (this);
-      gradient.queue_relayout ();
-
       var edge_color = Clutter.Color ()
       {
-        red = 0xff,
-        green = 0xff,
-        blue = 0xff,
+        red = 0x00,
+        green = 0x00,
+        blue = 0x00,
         alpha = 0x80
       };
       edge = new Clutter.Rectangle.with_color (edge_color);
@@ -209,6 +172,70 @@ namespace Unity.Widgets
       this.motion_event.connect (this.on_motion_event);
 
       this.drag_pos = 0.0f;
+    }
+
+    private void load_textures ()
+    {
+      try {
+        this.bgtex = new Clutter.Texture ();
+        this.bgtex.set_load_async (true);
+        this.bgtex.set_from_file (Unity.PKGDATADIR + "/honeycomb.png");
+      }
+      catch (Error e) {
+        error ("Unable to load texture '%s': %s",
+                 Unity.PKGDATADIR + "/honeycomb.png",
+                 e.message);
+      }
+      
+      try {
+        this.gradient = new Clutter.Texture ();
+        this.gradient.set_load_async (true);
+        this.gradient.set_from_file (Unity.PKGDATADIR + "/gradient.png");
+      }
+      catch (Error e) {
+        error ("Unable to load texture: '%s': %s",
+                 Unity.PKGDATADIR + "/gradient.png",
+                 e.message);
+      }
+
+      try {
+        this.top_shadow = new Clutter.Texture ();
+        this.top_shadow.set_load_async (true);
+        this.top_shadow.set_from_file (Unity.PKGDATADIR + "/scroller-shadow.png");
+      }
+      catch (Error e) {
+        error ("Unable to load texture: '%s': %s",
+                 Unity.PKGDATADIR + "/scroller-shadow.png",
+                 e.message);
+      }
+
+      try {
+        this.bottom_fade = new Clutter.Texture ();
+        this.bottom_fade.set_load_async (true);
+        this.bottom_fade.set_from_file (Unity.PKGDATADIR + "/scroller-fade.png");
+      }
+      catch (Error e) {
+        error ("Unable to load texture: '%s': %s",
+                 Unity.PKGDATADIR + "/scroller-fade.png",
+                 e.message);
+      }
+
+      this.bgtex.set_repeat (true, true);
+      this.bgtex.set_opacity (0xFF);
+
+      this.gradient.set_repeat (false, true);
+      this.gradient.set_opacity (0x30);
+
+      this.top_shadow.set_repeat (true, false);
+      this.top_shadow.set_opacity (0xA0);
+
+      this.bottom_fade.set_repeat (true, false);
+
+      this.bgtex.set_parent (this);
+      this.gradient.set_parent (this);
+      this.top_shadow.set_parent (this);
+      this.bottom_fade.set_parent (this);
+
     }
 
     private void on_request_attention (LauncherView view)
@@ -242,7 +269,7 @@ namespace Unity.Widgets
     private void on_fling_frame (Clutter.Timeline timeline, int msecs)
     {
 
-      // the jist here is that we are doing a *real* per frame fling so we need
+      // the gist here is that we are doing a *real* per frame fling so we need
       // to head towards a given goal, bouncing around on the way
 
       float difference = this.drag_pos - this.fling_target;
@@ -410,7 +437,7 @@ namespace Unity.Widgets
               this.is_dragging = true;
             }
         }
-        
+
       if (this.button_down && this.is_dragging)
         {
           Clutter.grab_pointer (this);
@@ -451,9 +478,17 @@ namespace Unity.Widgets
       {
         vel_y = motionevent.y - previous_y;
       }
+
+      uint delta = motionevent.time - this.fling_delta;
+      if (delta > 200)
+        {
+          delta = 1000/60;
+        }
+
+      this.fling_delta = delta;
       previous_y = motionevent.y;
       this.drag_pos -= vel_y;
-      this.fling_velocity = vel_y;
+      this.fling_velocity = vel_y * (delta / (1000.0f/60.0f));
 
       return true;
     }
@@ -598,32 +633,33 @@ namespace Unity.Widgets
         childcontainer.box = child_box;
         child.allocate (child_box, flags);
 
-        // if the child is outside our hot area, we fade it out and make it
-        // unresponsive
-        if ((child_box.y1 < hot_negative) || (child_box.y2 > hot_positive))
+        // we need to set a clip on each actor
+        if (child_box.y1 < hot_negative)
+          {
+            var yclip = hot_negative - child_box.y1;
+            child.set_clip (0, yclip,
+                            child_box.get_width (),
+                            child_box.get_height () - yclip);
+          }
+        else if (child_box.y2 > hot_positive)
+          {
+            var yclip = child_box.y2 - hot_positive;
+            child.set_clip (0, 0,
+                            child_box.get_width (),
+                            child_box.get_height () - yclip);
+          }
+        else
+          {
+            child.set_clip (0, 0, child_box.get_width (), child_box.get_height ());
+          }
+        // if the child is outside our hot area, we hide it and set unreactive
+        if ((child_box.y2 < hot_negative) || (child_box.y1 > hot_positive))
           {
             if (!childcontainer.is_hidden)
               {
                 childcontainer.is_hidden = true;
                 child.set_reactive (false);
               }
-
-            // we need to set a clip on each actor
-            if (child_box.y1 < hot_negative)
-              {
-                var yclip = hot_negative - child_box.y1;
-                child.set_clip (0, yclip,
-                                child_box.get_width (),
-                                child_box.get_height () - yclip);
-              }
-            else if (child_box.y2 > hot_positive)
-              {
-                var yclip = child_box.y2 - hot_positive;
-                child.set_clip (0, 0,
-                                child_box.get_width (),
-                                child_box.get_height () - yclip);
-              }
-
           }
         else
           {
@@ -632,33 +668,42 @@ namespace Unity.Widgets
                 childcontainer.is_hidden = false;
                 child.set_reactive (true);
               }
-              child.set_clip (0, 0,
-                              child_box.get_width (), child_box.get_height ());
           }
       }
 
       /* also allocate our background graphics */
-      bgtex.get_allocation_box (out child_box);
+      this.bgtex.get_allocation_box (out child_box);
       child_box.y1 = box.y1 - (float)drag_pos - box.get_height () * 2;
       child_box.y2 = box.y2 - (float)drag_pos + box.get_height () * 2;
       child_box.x1 = box.x1;
       child_box.x2 = box.x2;
-      bgtex.allocate (child_box, flags);
-      bgtex.set_clip (box.x1, drag_pos + box.get_height () * 2,
-                      box.get_width (), box.get_height ());
+      this.bgtex.allocate (child_box, flags);
+      this.bgtex.set_clip (box.x1, drag_pos + box.get_height () * 2,
+                           box.get_width (), box.get_height ());
+                      
+      this.gradient.width = box.get_width();
+      this.gradient.allocate (box, flags);
 
-      gradient.width = box.get_width();
-      gradient.allocate (box, flags);
-
-      edge.width = 1;
-      edge.height = box.get_height ();
+      this.edge.width = 1;
+      this.edge.height = box.get_height ();
       Clutter.ActorBox edge_box;
-      edge.get_allocation_box (out edge_box);
+      this.edge.get_allocation_box (out edge_box);
       edge_box.y1 = box.y1;
       edge_box.y2 = box.y2;
       edge_box.x2 = box.x2+1;
       edge_box.x1 = box.x2;
-      edge.allocate (edge_box, flags);
+      this.edge.allocate (edge_box, flags);
+
+      child_box.y1 = box.y1 - 1;
+      child_box.y2 = box.y1 + 9;
+      
+      this.top_shadow.allocate (child_box, flags);
+
+      child_box.y1 = box.get_height() - 32;
+      child_box.y2 = box.get_height();
+      
+      this.bottom_fade.allocate (child_box, flags);
+
     }
 
     public override void pick (Clutter.Color color)
@@ -683,7 +728,8 @@ namespace Unity.Widgets
         if ((child.flags & Clutter.ActorFlags.VISIBLE) != 0)
           child.paint ();
       }
-
+      this.top_shadow.paint ();
+      this.bottom_fade.paint ();
       edge.paint ();
     }
 
@@ -756,9 +802,11 @@ namespace Unity.Widgets
     public void foreach_with_internals (Clutter.Callback callback,
                                         void* userdata)
     {
-      callback (bgtex, null);
-      callback (gradient, null);
-      callback (edge, null);
+      callback (this.bgtex, null);
+      callback (this.gradient, null);
+      callback (this.edge, null);
+      callback (this.top_shadow, null);
+      callback (this.bottom_fade, null);
       foreach (ScrollerChild childcontainer in this.children)
       {
         Clutter.Actor child = childcontainer.child;

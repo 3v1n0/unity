@@ -23,5 +23,13 @@ namespace Utils
     public extern void set_strut (Gtk.Window *window,
                                   uint32      strut_size,
                                   uint32      strut_start,
-                                  uint32      strut_end);
+                                  uint32      strut_end,
+                                  uint32      top_size,
+                                  uint32      top_start,
+                                  uint32      top_end);
+
+  [CCode (lower_case_prefix = "utils_")]
+    public extern void register_object_on_dbus (DBus.Connection conn,
+                                                string path,
+                                                GLib.Object object);
 }

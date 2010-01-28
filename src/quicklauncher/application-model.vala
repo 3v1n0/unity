@@ -80,6 +80,43 @@ namespace Unity.Quicklauncher.Models
     }
   }
 
+  public class LauncherPinningShortcut : Object, ShortcutItem
+  {
+    public ApplicationModel app_model {get; construct;}
+    public string name {
+      get {
+        if (this.app_model.is_sticky)
+          {
+            return "Remove from Launcher";
+          }
+        else
+          {
+            return "Add to Launcher";
+          }
+      }
+    }
+
+    public LauncherPinningShortcut (ApplicationModel model)
+      {
+        Object (app_model: model);
+      }
+
+    construct
+      {
+
+      }
+
+    public string get_name ()
+    {
+      return this.name;
+    }
+
+    public void activated ()
+    {
+      this.app_model.is_sticky = !this.app_model.is_sticky;
+    }
+  }
+
   public class ApplicationModel : Object, LauncherModel
   {
     private Gdk.Pixbuf _icon;
@@ -216,6 +253,9 @@ namespace Unity.Quicklauncher.Models
       open_entry.name = "Open..";
       ret_list.add (open_entry);
 
+      var pin_entry = new LauncherPinningShortcut (this);
+      ret_list.add (pin_entry);
+
       return ret_list;
     }
 
@@ -288,7 +328,7 @@ namespace Unity.Quicklauncher.Models
         {
           try
             {
-              pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 42, 0);
+              pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 50, 0);
             }
           catch (Error e)
             {
@@ -317,7 +357,7 @@ namespace Unity.Quicklauncher.Models
               try
                 {
                   pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name,
-                                                             42, 42, true);
+                                                             50, 50, true);
                 }
               catch (Error e)
                 {
@@ -337,7 +377,7 @@ namespace Unity.Quicklauncher.Models
               try
                 {
                   pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name,
-                                                             42, 42, true);
+                                                             50, 50, true);
                 }
               catch (Error e)
                 {
@@ -357,7 +397,7 @@ namespace Unity.Quicklauncher.Models
           try
             {
               pixbuf = new Gdk.Pixbuf.from_file_at_scale (
-                    "/usr/share/pixmaps/" + icon_name, 42, 42, true);
+                    "/usr/share/pixmaps/" + icon_name, 50, 50, true);
             }
           catch (Error e)
             {
@@ -370,7 +410,7 @@ namespace Unity.Quicklauncher.Models
             return pixbuf;
         }
 
-      Gtk.IconInfo info = theme.lookup_icon(icon_name, 42, 0);
+      Gtk.IconInfo info = theme.lookup_icon(icon_name, 50, 0);
       if (info != null)
         {
           string filename = info.get_filename();
@@ -379,7 +419,7 @@ namespace Unity.Quicklauncher.Models
               try
                 {
                   pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
-                                                             42, 42, true);
+                                                             50, 50, true);
                 }
               catch (Error e)
                 {
@@ -395,14 +435,14 @@ namespace Unity.Quicklauncher.Models
 
       try
       {
-        pixbuf = theme.load_icon(icon_name, 42, Gtk.IconLookupFlags.FORCE_SVG);
+        pixbuf = theme.load_icon(icon_name, 50, Gtk.IconLookupFlags.FORCE_SVG);
       }
       catch (GLib.Error e)
       {
         warning ("could not load icon for %s - %s", icon_name, e.message);
         try
           {
-            pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 42, 0);
+            pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 50, 0);
           }
         catch (Error err)
           {

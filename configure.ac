@@ -1,6 +1,6 @@
 m4_define([unity_major], [0])
 m4_define([unity_minor], [1])
-m4_define([unity_micro], [8])
+m4_define([unity_micro], [10])
 
 m4_define([unity_api],
           [unity_major.unity_minor])
@@ -73,12 +73,15 @@ PKG_CHECK_MODULES(BASE,
                   gio-2.0 >= $GTK_REQUIRED
                   gee-1.0
                   gconf-2.0
+                  dbusmodel >= 0.1.0
                   clutter-1.0 >= 1.0
                   clutter-gtk-0.10 >= 0.10
                   clutk-0.3 >= 0.3
+                  indicator
                   launcher-0.3 >= 0.3
                   libwnck-1.0 >= 2.28.0
                   unique-1.0
+                  unity-misc
                   x11
                   )
 
@@ -122,11 +125,20 @@ AS_IF([test "x$enable_mutter" = "xyes"],
 )
 AM_CONDITIONAL(ENABLE_MUTTER, [test "x$enable_mutter" = "xyes"])
 
+dnl Indicator support
+INDICATORDIR=`$PKG_CONFIG --variable=indicatordir indicator`
+INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir indicator`
+
+AC_SUBST(INDICATORDIR)
+AC_SUBST(INDICATORICONSDIR)
+
 dnl Create the Makefiles
 AC_OUTPUT([
   Makefile
   data/Makefile
   libunity/Makefile
+  unity-places/Makefile
+  unity-places/unity-places.pc
   src/Makefile
   mutter-plugin/Makefile
   tests/Makefile

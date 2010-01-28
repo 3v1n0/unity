@@ -31,6 +31,7 @@ namespace Unity.Places.Bar
   public class View : Ctk.Box
   {
     public Places.Model model { get; construct; }
+    public Shell        shell { get; construct; }
 
     private Gee.ArrayList<PlaceIcon> places_icons;
     private PlaceIcon                trash_icon;
@@ -38,12 +39,12 @@ namespace Unity.Places.Bar
     private Unity.Places.CairoDrawing.PlacesVSeparator separator;
     private Unity.Places.CairoDrawing.PlacesBackground bg;
 
-    public View (Places.Model model)
+    public View (Places.Model model, Shell shell)
     {
       Ctk.EffectGlow         glow;
       Clutter.Color          white = {255, 255, 255, 255};
 
-      Object (model:model);
+      Object (model:model, shell:shell);
 
       /* We do our own allocation, but this doesn't hurt */
       this.homogeneous  = false;
@@ -53,6 +54,8 @@ namespace Unity.Places.Bar
       this.bg = new Unity.Places.CairoDrawing.PlacesBackground ();
       this.bg.set_parent (this);
       this.bg.show ();
+      /* Make sure the bg is updated when the indicators change */
+      this.shell.indicators_changed.connect (this.on_indicators_changed);
 
       /* This'll be populated in an idle by the model */
       this.places_icons = new Gee.ArrayList<PlaceIcon> ();
@@ -101,10 +104,22 @@ namespace Unity.Places.Bar
           this.bg.create_places_background ((int)stage.width,
                                             (int)stage.height,
                                             (int)(this.padding.left + QL_PAD),
-                                            (int)ICON_VIEW_WIDTH);
+                                            (int)ICON_VIEW_WIDTH,
+                                            this.shell.get_indicators_width());
 
           icon.place.active = true;
         }
+    }
+
+    private void on_indicators_changed (int width)
+    {
+      Clutter.Actor stage = this.get_stage ();
+      this.bg.create_places_background ((int)stage.width,
+                                        (int)stage.height,
+                                        (int)(this.padding.left + QL_PAD),
+                                        (int)ICON_VIEW_WIDTH,
+                                        width);
+      this.queue_relayout ();
     }
 
     public override void map ()
@@ -153,8 +168,9 @@ namespace Unity.Places.Bar
           n_places++;
         }
 
-      /* Allocate the Trash */
-      child_box.x1 = box.x2 - box.x1 - 266 - ICON_VIEW_WIDTH;
+      /* Allocate the Trash (24 = Padding) */
+      var i_width = this.shell.get_indicators_width () + 8;
+      child_box.x1 = box.x2 - box.x1 - i_width - ICON_VIEW_WIDTH;
       child_box.x2 = child_box.x1 + ICON_VIEW_WIDTH;
       this.trash_icon.allocate (child_box, flags);
 
@@ -195,7 +211,8 @@ namespace Unity.Places.Bar
               this.bg.create_places_background ((int)stage.width,
                                                 (int)stage.height,
                                                 (int)actor.x,
-                                                80);
+                                                80,
+                                                this.shell.get_indicators_width());
 
               /* Set the place as active, unset the others */
               foreach (PlaceIcon picon in this.places_icons)
