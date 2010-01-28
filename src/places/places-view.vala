@@ -27,6 +27,7 @@ namespace Unity.Places
 
     private Bar.View       bar_view;
     private Clutter.Actor? content_view;
+	  private SearchField.View search_view;
 
     public View (Model model, Shell shell)
     {
@@ -39,6 +40,10 @@ namespace Unity.Places
       this.bar_view = new Bar.View (this.model, this.shell);
       this.bar_view.padding = padding;
       this.add_actor (this.bar_view);
+
+      this.search_view = new SearchField.View ();
+      //this.add_actor (this.search_view);
+      
     }
 
     public override void allocate (Clutter.ActorBox        box,
@@ -62,6 +67,8 @@ namespace Unity.Places
         {
           this.content_view.allocate (child_box, flags);
         }
+
+      //this.search_view.allocate (child_box, flags);
     }
 
     /* Public methods */
