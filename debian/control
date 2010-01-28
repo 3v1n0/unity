@@ -4,7 +4,6 @@ Priority: optional
 Maintainer: Ubuntu Core Developers <ubuntu-devel-discuss@lists.ubuntu.com>
 Build-Depends: cdbs,
                debhelper (>= 7),
-               autotools-dev,
                pkg-config,
                valac (>= 0.7.8),
                libvala-dev (>= 0.7.8),
@@ -18,6 +17,7 @@ Build-Depends: cdbs,
                libwncksync-dev (>= 0.2.0),
                libglib2.0-dev (>= 2.22.2-0ubuntu1wncksync3),
                libgtk2.0-dev (>= 2.18.0),
+               libdbusmodel-dev (>= 0.1.0),
                libindicator-dev (>= 0.3.1),
                libunity-misc-dev (>= 0.1.0),
                libmutter-dev
