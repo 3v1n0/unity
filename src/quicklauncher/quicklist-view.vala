@@ -32,6 +32,9 @@ namespace Unity.Quicklauncher
   const float ANCHOR_HEIGHT      = 2.0f;
   const float ANCHOR_WIDTH       = 1.0f;
 
+  const int TMP_BG_WIDTH         = 100;
+  const int TMP_BG_HEIGHT        = 200;
+
   /* we call this instead of Ctk.Menu so you can alter this to look right */
   public class QuicklistMenu : Ctk.Menu
   {
@@ -101,62 +104,96 @@ namespace Unity.Quicklauncher
     }
 
     private void
-    _outline_mask (Cairo.Context cr)
+    _outline_mask (Cairo.Context cr,
+                   int           w,
+                   int           h,
+                   int           item)
     {
-    
+      // clear context
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      // setup correct line-drawing
+      cr.set_operator (Cairo.Operator.SOURCE);
+      cr.scale (1.0f, 1.0f);
+      cr.set_line_width (Ctk.em_to_pixel (LINE_WIDTH));
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+
+      // draw actual outline
+      _round_rect_anchor (cr,
+                          1.0f,
+                          Ctk.em_to_pixel (BORDER) +
+                          Ctk.em_to_pixel (ANCHOR_WIDTH),
+                          Ctk.em_to_pixel (BORDER),
+                          Ctk.em_to_pixel (BORDER),
+                          (double) w,
+                          (double) h, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
+                          Ctk.em_to_pixel (ANCHOR_WIDTH),
+                          Ctk.em_to_pixel (ANCHOR_HEIGHT),
+                          Ctk.em_to_pixel (BORDER),
+                          item * Ctk.em_to_pixel (ITEM_HEIGHT) -
+                          Ctk.em_to_pixel (ITEM_HEIGHT) / 2.0f);
+      cr.stroke ();
     }
 
-    private void
+    /*private void
     _fill_mask (Cairo.Context cr)
     {
-    }
+    }*/
 
-    private void
+    /*private void
     _negative_mask (Cairo.Context cr)
     {
-    }
+    }*/
 
-    private void
+    /*private void
     _dotted_bg (Cairo.Context cr)
     {
-    }
+    }*/
 
-    private void
+    /*private void
     _highlight_bg (Cairo.Context cr)
     {
-    }
+    }*/
 
-    //Ctk.LayerActor ql_background2;
-    Clutter.Rectangle ql_background;
+    Ctk.LayerActor ql_background;
 
     construct
     {
       Clutter.Color color = Clutter.Color () {
-        red = 0x20,
-        green = 0x30,
-        blue = 0x40,
-        alpha = 0xff
+        red   = 255,
+        green = 255,
+        blue  = 255,
+        alpha = 255
       };
-      this.ql_background = new Clutter.Rectangle.with_color (color);
 
-      Cairo.Surface surf = new Cairo.ImageSurface (Cairo.Format.A1, 1, 1);
-      Cairo.Context cr = new Cairo.Context (surf);
-      _outline_mask (cr);
-      _fill_mask (cr);
-      _negative_mask (cr);
-      _dotted_bg (cr);
-      _highlight_bg (cr);
-      _round_rect_anchor (cr, 1.0f, 0.0f, 0.0f, 0.1f, 2.0f,
-                        2.0f, 0.5f, 1.0f, 0.0f, 0.0f);
+      this.ql_background = new Ctk.LayerActor (TMP_BG_WIDTH, TMP_BG_HEIGHT);
+      Ctk.Layer outline_layer = new Ctk.Layer (TMP_BG_WIDTH,
+                                               TMP_BG_HEIGHT,
+                                               Ctk.LayerRepeatMode.NONE,
+                                               Ctk.LayerRepeatMode.NONE);
+
+      Cairo.Surface outline_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
+                                                           TMP_BG_WIDTH,
+                                                           TMP_BG_HEIGHT);
+      Cairo.Context outline_cr = new Cairo.Context (outline_surf);
+
+      _outline_mask (outline_cr,
+                     TMP_BG_WIDTH,
+                     TMP_BG_HEIGHT,
+                     2);
+      //_fill_mask (cr);
+      //_negative_mask (cr);
+      //_dotted_bg (cr);
+      //_highlight_bg (cr);
+      //outline_surf.write_to_png ("/tmp/outline_surf.png");
+
+      outline_layer.set_mask_from_surface (outline_surf);
+      outline_layer.set_color (color);
+
+      this.ql_background.add_layer (outline_layer);
 
       this.set_background (this.ql_background);
-      Ctk.Padding padding = Ctk.Padding () {
-        left = 6,
-        right = 6,
-        top = 6,
-        bottom = 6
-      };
-      this.set_padding (padding);
     }
   }
 }
