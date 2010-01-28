@@ -201,7 +201,7 @@ namespace Unity.Quicklauncher
     {
       float mid_point_y = this.container.height / 2.0f;
       float focus_halfy = this.focused_indicator.height / 2.0f;
-      float focus_halfx = container.width + this.focused_indicator.width + 2;
+      float focus_halfx = container.width + this.focused_indicator.width + 4;
 
       this.focused_indicator.set_position(focus_halfx,
                                           mid_point_y - focus_halfy);
