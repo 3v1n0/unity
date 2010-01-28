@@ -20,6 +20,17 @@
 
 namespace Unity.Quicklauncher
 {
+  const float LINE_WIDTH         = 0.083f;
+  const float TEXT_HEIGHT        = 1.0f;
+  const float MAX_TEXT_WIDTH     = 15.0f;
+  const float GAP                = 0.5f;
+  const float MARGIN             = 0.5f;
+  const float BORDER             = 0.25f;
+  const float CORNER_RADIUS      = 0.5f;
+  const float ITEM_HEIGHT        = 2.0f;
+  const float ITEM_CORNER_RADIUS = 0.16f;
+  const float ANCHOR_HEIGHT      = 2.0f;
+  const float ANCHOR_WIDTH       = 1.0f;
 
   /* we call this instead of Ctk.Menu so you can alter this to look right */
   public class QuicklistMenu : Ctk.Menu
@@ -92,6 +103,7 @@ namespace Unity.Quicklauncher
     private void
     _outline_mask (Cairo.Context cr)
     {
+    
     }
 
     private void
