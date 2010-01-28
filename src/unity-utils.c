@@ -22,6 +22,8 @@
 #include <string.h>
 #include <stdio.h>
 
+#include <dbus/dbus-glib.h>
+
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <X11/Xatom.h>
@@ -93,4 +95,12 @@ utils_set_strut (GtkWindow *gtk_window,
                    XA_CARDINAL, 32, PropModeReplace,
                    (guchar *) &struts, 12);
   gdk_error_trap_pop ();
+}
+
+void
+utils_register_object_on_dbus (DBusGConnection *conn,
+                          const gchar     *path,
+                          GObject         *object)
+{
+  dbus_g_connection_register_g_object (conn, path, object);
 }

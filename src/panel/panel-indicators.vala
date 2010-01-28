@@ -53,8 +53,6 @@ namespace Unity.Panel.Indicators
       Gtk.IconTheme.get_default ().append_search_path (INDICATORICONSDIR);
 
       /* Start loading 'em in */
-      debug ("Reading indicators from: %s\n", INDICATORDIR);
-
       var dir = File.new_for_path (INDICATORDIR);
       try
         {
@@ -94,15 +92,12 @@ namespace Unity.Panel.Indicators
 
       if (o is Indicator.Object)
         {
-          print ("Successfully loaded: %s\n", filename);
-
           var i = new IndicatorItem ();
           i.set_object (o);
           this.add_actor (i);
           i.show ();
 
           i.position = (int)this.indicator_order[leaf];
-          print ("%s: %d\n", leaf, i.position);
         }
       else
         {

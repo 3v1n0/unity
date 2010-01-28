@@ -16,14 +16,26 @@ namespace Unity.Places.Application
     public ApplicationIcon (int width, /*int height,*/ string name, string icon_name, string tooltip)
     {
       model = new Unity.Places.Bar.Model (name, icon_name, tooltip);
-      view = new Ctk.Image.from_filename (width, icon_name);
+
+      if (icon_name[0] == '/')
+        view = new Ctk.Image.from_filename (width, icon_name);
+      else if (icon_name[-4] == '.')
+        view = new Ctk.Image.from_filename (width,
+                                            "/usr/share/pixmaps/" + icon_name);
+      else
+        view = new Ctk.Image.from_stock (width, icon_name);
+
       view.set_reactive (true);
       label = new Ctk.Text (name);
+      label.set_line_wrap (true);
+      label.set_line_alignment (Pango.Alignment.CENTER);
     }
   }
 
   public class ApplicationGroup : Ctk.Box
   {
+    public  int n_items = 0;
+
     private Ctk.Text GroupName;
     private Ctk.Image Star;
     private Unity.Places.CairoDrawing.PlacesHSeparator Separator;
@@ -36,23 +48,24 @@ namespace Unity.Places.Application
     public override void allocate (Clutter.ActorBox        box,
                                    Clutter.AllocationFlags flags)
     {
-      int IconWidth = 48;
+      int width = (int)(box.x2 - box.x1);
+      int IconWidth = 120;
       int IconHeight = 48;
-      int ApplicationIconSpacing = 100;
+      int ApplicationIconSpacing = 24;
 
       int HeaderBorderPositionX = 0;
-      int HeaderBorderPositionY = 60;
-      int IconBorderPositionX = 0;
-      int IconBorderPositionY = 100;
+      int HeaderBorderPositionY = 0;
+      int IconBorderPositionX = 15;
+      int IconBorderPositionY = 30;
       int LineBorderPositionX = 0;
-      int LineBorderPositionY = 90;
+      int LineBorderPositionY = 20;
 
       Clutter.ActorBox child_box = { 0.0f, 0.0f, 0.0f, 0.0f };
 
       base.allocate (box, flags);
 
       child_box.x1 = IconBorderPositionX;
-      child_box.x2 = 0;
+      child_box.x2 = IconWidth;
       child_box.y1 = IconBorderPositionY;
       child_box.y2 = child_box.y1 + IconHeight;
 
@@ -65,19 +78,19 @@ namespace Unity.Places.Application
           Clutter.ActorBox label_box = { 0.0f, 0.0f, 0.0f, 0.0f };
           label_box.x1 = child_box.x1;
           label_box.x2 = child_box.x2;
-          label_box.y1 = IconBorderPositionY + IconHeight;
+          label_box.y1 = IconBorderPositionY + IconHeight + 12.0f;
           label_box.y2 = label_box.y1 + 64;
           this.application_icon_array[i].label.allocate(label_box, flags);
 
           child_box.x1 += IconWidth + ApplicationIconSpacing;
         }
 
-      if (this.Separator.Width != 800)
+      if (this.Separator.Width != width)
         {
-          this.Separator.CreateSeparator ( 800, 5);
+          this.Separator.CreateSeparator ( width, 5);
         }
       child_box.x1 = LineBorderPositionX;
-      child_box.x2 = child_box.x1 + 800;
+      child_box.x2 = child_box.x1 + width;
       child_box.y1 = LineBorderPositionY;
       child_box.y2 = LineBorderPositionY + 5;
       this.Separator.allocate (child_box, flags);
@@ -94,7 +107,7 @@ namespace Unity.Places.Application
       child_box.y2 = HeaderBorderPositionY + 23;
       this.GroupName.allocate (child_box, flags);
 
-      child_box.x1 += 750;
+      child_box.x1 += width - 50;
       child_box.x2 = child_box.x1 + 16;
       child_box.y1 = HeaderBorderPositionY;
       child_box.y2 = HeaderBorderPositionY + 19;
@@ -114,8 +127,8 @@ namespace Unity.Places.Application
                                                out float minimum_height,
                                                out float natural_height)
     {
-      minimum_height = 150.0f;
-      natural_height = 150.0f;
+      minimum_height = 135.0f;
+      natural_height = 135.0f;
     }
 
     public ApplicationGroup (string group_name)
@@ -130,6 +143,7 @@ namespace Unity.Places.Application
       this.minimize_button = new Ctk.Image.from_filename (16, MINIMIZE_ICON);
 
       application_icon_array = new Gee.ArrayList<ApplicationIcon> ();
+      /*
       for (int i = 0; i < 5; i++)
       {
         ApplicationIcon app = new ApplicationIcon (48, "App",
@@ -139,7 +153,7 @@ namespace Unity.Places.Application
         this.add_actor (app.view);
         this.add_actor (app.label);
       }
-
+*/
       this.add_actor (this.Star);
       this.add_actor (this.Separator);
       this.add_actor (this.GroupName);
@@ -156,6 +170,15 @@ namespace Unity.Places.Application
 
       this.maximize_button.button_release_event.connect (this.on_maximize);
       this.minimize_button.button_release_event.connect (this.on_minimize);
+    }
+
+    public void add_icon (ApplicationIcon app)
+    {
+      this.application_icon_array.add (app);
+      this.add_actor (app.view);
+      this.add_actor (app.label);
+
+      this.n_items++;
     }
 
     construct

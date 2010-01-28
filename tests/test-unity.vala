@@ -46,7 +46,7 @@ public class Main
   {
     Test.add_func ("/Unity/Window", () => {
       var window = new Unity.UnderlayWindow (false, 0, 0);
-        
+
       assert (window is Gtk.Window);
 
       window.show ();
@@ -62,13 +62,13 @@ public class Main
       var model = new Quicklauncher.Models.ApplicationModel (firefox_desktop);
       assert (model is Quicklauncher.Models.ApplicationModel);
     });
-    
+
     Test.add_func ("/Unity/Quicklauncher/LauncherView", () => {
       var model = new Quicklauncher.Models.ApplicationModel (firefox_desktop);
       var view = new Quicklauncher.LauncherView (model);
       assert (view is Quicklauncher.LauncherView);
     });
-    
+
     Test.add_func ("/Unity/Quicklauncher/Quicklist-view", () => {
       var view = new Quicklauncher.QuicklistMenu ();
       assert (view is Quicklauncher.QuicklistMenu);
@@ -91,5 +91,41 @@ public class Main
       scroller = new Widgets.Scroller (Ctk.Orientation.HORIZONTAL, 0);
       assert (scroller is Widgets.Scroller);
     });
+
+    Test.add_func ("/Unity/Places/TestPlace", () => {
+      var place = new TestPlace ();
+
+      assert (place is TestPlace);
+
+      var loop = new MainLoop (null, false);
+
+      try
+        {
+          DBus.Connection conn = DBus.Bus.get (DBus.BusType.SESSION);
+
+          Utils.register_object_on_dbus (conn,
+                                  "/com/canonical/Unity/Place",
+                                  place);
+
+          loop.run ();
+        }
+      catch (Error e)
+        {
+          warning ("TestPlace error: %s", e.message);
+        }
+    });
+  }
+
+  public class TestPlace : Unity.Place
+  {
+    public TestPlace ()
+    {
+      Object (name:"neil", icon_name:"gtk-apply", tooltip:"hello");
+    }
+
+    construct
+    {
+      this.is_active.connect ((a) => {print (@"$a\n");});
+    }
   }
 }
