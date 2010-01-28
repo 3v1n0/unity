@@ -34,7 +34,7 @@ namespace Unity.Places.SearchField
                                    Clutter.AllocationFlags flags)
     {
       Clutter.ActorBox child_box = { 0.0f, 0.0f, 0.0f, 0.0f };
-
+      float width = box.x2 - box.x1;
       base.allocate (box, flags);
 
       if (this.rect_box.Width != 200)
@@ -55,7 +55,7 @@ namespace Unity.Places.SearchField
       search_icon.allocate (child_box, flags);
 
       child_box.x1 = child_box.x2 + 3;
-      child_box.x2 = child_box.x1 + 140;
+      child_box.x2 = child_box.x1 + width -2*22 -6;
       child_box.y1 = 4;
       child_box.y2 = 22;
       text_field.allocate (child_box, flags);
@@ -88,6 +88,22 @@ namespace Unity.Places.SearchField
     construct
     {
     }
+
+    public override void map ()
+    {
+      base.map ();
+    }
+
+    public override void unmap ()
+    {
+      base.unmap ();
+    }
+
+    public override void paint ()
+    {
+     base.paint ();
+    }
+
   }
 }
 

@@ -42,7 +42,7 @@ namespace Unity.Places
       this.add_actor (this.bar_view);
 
       this.search_view = new SearchField.View ();
-      //this.add_actor (this.search_view);
+      this.add_actor (this.search_view);
       
     }
 
@@ -68,7 +68,11 @@ namespace Unity.Places
           this.content_view.allocate (child_box, flags);
         }
 
-      //this.search_view.allocate (child_box, flags);
+      child_box.x1 = child_box.x2 - this.shell.get_indicators_width() + 8;
+      child_box.x2 = child_box.x1 + this.shell.get_indicators_width() - 8;
+      child_box.y1 = 32;
+      child_box.y2 = child_box.y1 + 22;
+      this.search_view.allocate (child_box, flags);
     }
 
     /* Public methods */
