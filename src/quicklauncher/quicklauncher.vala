@@ -38,7 +38,7 @@ namespace Unity.Quicklauncher
 
     public new float get_width ()
     {
-      return 58;
+      return 60;
     }
   }
 }
