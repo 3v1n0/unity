@@ -200,10 +200,51 @@ namespace Unity.Quicklauncher
       cr.fill ();
     }
 
-    /*private void
-    _dotted_bg (Cairo.Context cr)
+    private void
+    _dotted_bg (Cairo.Context cr,
+                int           w,
+                int           h,
+                int           item)
     {
-    }*/
+      Cairo.Pattern pattern;
+
+      // clear context
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      // setup correct filled-drawing
+      cr.set_operator (Cairo.Operator.SOURCE);
+      cr.scale (1.0f, 1.0f);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+
+      // setup dotted pattern
+      pattern = new Cairo.Pattern.radial ((double) w / 2.0f,
+                                          Ctk.em_to_pixel (BORDER),
+                                          0.0f,
+                                          (double) w / 2.0f,
+                                          Ctk.em_to_pixel (BORDER),
+                                          (double) w / 20.0f);
+      pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.5f);
+      pattern.add_color_stop_rgba (1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
+      cr.set_source (pattern);
+      pattern.set_extend (Cairo.Extend.REFLECT);
+
+      // fill masked area with radial gradient "highlight"
+      _round_rect_anchor (cr,
+                          1.0f,
+                          Ctk.em_to_pixel (BORDER) +
+                          Ctk.em_to_pixel (ANCHOR_WIDTH),
+                          Ctk.em_to_pixel (BORDER),
+                          Ctk.em_to_pixel (BORDER),
+                          (double) w,
+                          (double) h, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
+                          Ctk.em_to_pixel (ANCHOR_WIDTH),
+                          Ctk.em_to_pixel (ANCHOR_HEIGHT),
+                          Ctk.em_to_pixel (BORDER),
+                          item * Ctk.em_to_pixel (ITEM_HEIGHT) -
+                          Ctk.em_to_pixel (ITEM_HEIGHT) / 2.0f);
+      cr.fill ();
+    }
 
     private void
     _highlight_bg (Cairo.Context cr,
@@ -281,6 +322,10 @@ namespace Unity.Quicklauncher
                                                  TMP_BG_HEIGHT,
                                                  Ctk.LayerRepeatMode.NONE,
                                                  Ctk.LayerRepeatMode.NONE);
+      Ctk.Layer dotted_layer = new Ctk.Layer (TMP_BG_WIDTH,
+                                              TMP_BG_HEIGHT,
+                                              Ctk.LayerRepeatMode.NONE,
+                                              Ctk.LayerRepeatMode.NONE);
 
       /*Ctk.Layer shadow_layer = new Ctk.Layer (TMP_BG_WIDTH,
                                               TMP_BG_HEIGHT,
@@ -299,11 +344,15 @@ namespace Unity.Quicklauncher
       Cairo.Surface highlight_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
                                                             TMP_BG_WIDTH,
                                                             TMP_BG_HEIGHT);
+      Cairo.Surface dotted_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
+                                                          TMP_BG_WIDTH,
+                                                          TMP_BG_HEIGHT);
 
       Cairo.Context outline_cr = new Cairo.Context (outline_surf);
       Cairo.Context fill_cr = new Cairo.Context (fill_surf);
       Cairo.Context negative_cr = new Cairo.Context (negative_surf);
       Cairo.Context highlight_cr = new Cairo.Context (highlight_surf);
+      Cairo.Context dotted_cr = new Cairo.Context (dotted_surf);
 
       _outline_mask (outline_cr,
                      TMP_BG_WIDTH,
@@ -318,7 +367,10 @@ namespace Unity.Quicklauncher
                       TMP_BG_HEIGHT,
                       2);
 
-      //_dotted_bg (cr);
+      _dotted_bg (dotted_cr,
+                  TMP_BG_WIDTH,
+                  TMP_BG_HEIGHT,
+                  2);
 
       _highlight_bg (highlight_cr,
                      TMP_BG_WIDTH,
@@ -328,13 +380,18 @@ namespace Unity.Quicklauncher
       //outline_surf.write_to_png ("/tmp/outline_surf.png");
       //fill_surf.write_to_png ("/tmp/fill_surf.png");
       //negative_surf.write_to_png ("/tmp/negative_surf.png");
-      highlight_surf.write_to_png ("/tmp/highlight_surf.png");
+      //highlight_surf.write_to_png ("/tmp/highlight_surf.png");
+      dotted_surf.write_to_png ("/tmp/dotted_surf.png");
 
       //shadow_layer.set_mask_from_surface (negative_surf);
       //shadow_layer.set_image_from_surface (shadow_surf);
 
       fill_layer.set_mask_from_surface (fill_surf);
       fill_layer.set_color (fill_color);
+
+      dotted_layer.set_mask_from_surface (fill_surf);
+      dotted_layer.set_image_from_surface (dotted_surf);
+      dotted_layer.opacity = (uint8) (255.0f * 0.15f);
 
       highlight_layer.set_mask_from_surface (fill_surf);
       highlight_layer.set_image_from_surface (highlight_surf);
@@ -347,7 +404,7 @@ namespace Unity.Quicklauncher
       //this.ql_background.add_layer (shadow_layer);
       //this.ql_background.add_layer (blurred_layer);
       this.ql_background.add_layer (fill_layer);
-      //this.ql_background.add_layer (dotted_layer);
+      this.ql_background.add_layer (dotted_layer);
       this.ql_background.add_layer (highlight_layer);
       this.ql_background.add_layer (outline_layer);
 
