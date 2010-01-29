@@ -49,6 +49,7 @@ Architecture: any
 Section: libdevel
 Depends: ${shlibs:Depends},
          ${misc:Depends},
+         libunity-places0 (= ${binary:Version}),
          libglib2.0-dev (>= 2.22.2-0ubuntu1wncksync3),
 Description: binding to get places into the launcher - development files
  libunity-places is a shared library to be able to interact with the launcher
