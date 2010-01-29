@@ -1,4 +1,4 @@
-unity (0.1.10-0ubuntu1~ppa1) UNRELEASED; urgency=low
+unity (0.1.10-0ubuntu1~ppa1) lucid; urgency=low
 
   [ Martin Pitt ]
   * debian/unity.preinst: Fix version comparison for cleaning up the obsolete
@@ -13,7 +13,7 @@ unity (0.1.10-0ubuntu1~ppa1) UNRELEASED; urgency=low
     - add libunity-places0 and libunity-places-dev packages
   * add debian/libunity-places0.install and debian/libunity-places-dev.install
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 28 Jan 2010 20:27:21 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 29 Jan 2010 12:14:44 +0100
 
 unity (0.1.8-0ubuntu1~dxppa2) lucid; urgency=low
 
