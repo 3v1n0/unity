@@ -16,6 +16,7 @@ dist_default_DATA = \
   quicklauncher_running_indicator.png \
   scroller-fade.png \
   scroller-shadow.png \
+  search_icon.png \
   software_centre.png \
   tight_check_4px.png \
   trash.png

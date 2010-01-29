@@ -333,5 +333,67 @@ namespace Unity.Places.CairoDrawing
     {
     }
   }
+  
+  public class RectangleBox : Ctk.Bin
+  {
+    public int Width = 0;
+    public int Height = 0;
+
+    public Clutter.CairoTexture cairotxt;
+    public RectangleBox ()
+    {
+    }
+
+    public void CreateRectangleBox (int W, int H)
+    {
+      Width = W;
+      Height = H;
+
+      if (this.get_child () is Clutter.Actor)
+      {
+        this.remove_actor (this.get_child ());
+      }
+
+      cairotxt = new Clutter.CairoTexture(Width, Height);
+      Cairo.Context cairoctx = cairotxt.create();
+      {
+        cairoctx.set_source_rgba (1, 1, 1, 1.0);
+        cairoctx.set_line_width (1.0);
+
+        cairoctx.move_to (1, 1);
+        cairoctx.line_to (Width-1, 1);
+        cairoctx.line_to (Width-1, Height-1);
+        cairoctx.line_to (1, Height-1);
+        cairoctx.line_to (1, 1);
+        cairoctx.stroke ();
+      }
+
+      cairotxt.set_opacity (0xFF);
+      this.add_actor (cairotxt);
+
+      /* Remove all effects set on this actor */
+      this.remove_all_effects ();
+
+      /* Create a new effect and add it to this actor */
+      /* The new effect will use the newly created drawing as a base */
+      Ctk.EffectGlow effect_glow = new Ctk.EffectGlow ();
+      Clutter.Color c = Clutter.Color ()
+      {
+        red = 255,
+        green = 255,
+        blue = 255,
+        alpha = 255
+      };
+
+      effect_glow.set_color (c);
+      effect_glow.set_factor (1.0f);
+      effect_glow.set_margin (5);
+      this.add_effect (effect_glow);
+    }
+
+    construct
+    {
+    }
+  }
 }
 

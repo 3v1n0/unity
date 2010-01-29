@@ -92,7 +92,8 @@ places_sources = \
   places/places-place-proxy.vala \
   places/places-place-view.vala \
   places/places-results-view.vala \
-  places/places-view.vala
+  places/places-view.vala \
+  places/search-field.vala
 
 quicklauncher_sources = \
   quicklauncher/application-model.vala \
