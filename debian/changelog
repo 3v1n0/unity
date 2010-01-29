@@ -9,6 +9,7 @@ unity (0.1.10-0ubuntu1~ppa1) UNRELEASED; urgency=low
   * debian/control:
     - add libindicator-dev, libunity-misc and libdbusmodel-dev build-dep
     - remove autotools-dev build-dep
+    - bump libclutk-dev and libmutter-dev build-dep
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 28 Jan 2010 20:27:21 +0100
 
