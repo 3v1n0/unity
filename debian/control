@@ -27,6 +27,7 @@ Homepage: https://launchpad.net/ayatana
 Package: unity
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, mutter
+Recommends: unity-place-applications
 Conflicts: netbook-launcher (<< 0.1.5+r61)
 Replaces: netbook-launcher (<< 0.1.5+r61)
 Provides: netbook-launcher

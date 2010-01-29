@@ -1,3 +1,10 @@
+unity (0.1.10-0ubuntu1~ppa2) UNRELEASED; urgency=low
+
+  * debian/control:
+    - add unity-place-applications as unity recommends
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 29 Jan 2010 14:36:34 +0100
+
 unity (0.1.10-0ubuntu1~ppa1) lucid; urgency=low
 
   [ Martin Pitt ]
