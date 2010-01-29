@@ -1,1 +1,3 @@
-usr
+debian/tmp/usr/bin
+debian/tmp/usr/lib/mutter
+debian/tmp/usr/share/unity

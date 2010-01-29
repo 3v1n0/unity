@@ -33,6 +33,28 @@ Provides: netbook-launcher
 Description: Launcher
  Unity launcher.
 
+Package: libunity-places0
+Architecture: any
+Section: libs
+Depends: ${shlibs:Depends}, ${misc:Depends}
+Description: binding to get places into the launcher - shared library
+ libunity-places is a shared library to be able to interact with the launcher
+ and add places in Unity environment.
+ .
+ This package contains shared libraries to be used by applications.
+
+Package: libunity-places-dev
+Architecture: any
+Section: libdevel
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         libglib2.0-dev (>= 2.22.2-0ubuntu1wncksync3),
+Description: binding to get places into the launcher - development files
+ libunity-places is a shared library to be able to interact with the launcher
+ and add places in Unity environment.
+ .
+ This package contains files that are needed to build applications.
+
 Package: netbook-launcher
 Section: oldlibs
 Architecture: all

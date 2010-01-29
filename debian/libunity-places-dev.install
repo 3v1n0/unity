@@ -1,0 +1,3 @@
+debian/tmp/usr/include/unity-places/*
+debian/tmp/usr/lib/pkgconfig/unity-places.pc
+debian/tmp/usr/lib/libunity-places.so
