@@ -139,7 +139,7 @@ namespace Unity.Quicklauncher.Models
     {
     }
 
-    private void on_app_opened (Wnck.Application app)
+    private void on_app_opened (Wnck.Window window)
     {
       this.activated ();
       this.request_attention ();
