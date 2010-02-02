@@ -206,30 +206,34 @@ namespace Unity.Quicklauncher
                 int           h,
                 int           item)
     {
-      Cairo.Pattern pattern;
+      Cairo.Surface dots = new Cairo.ImageSurface (Cairo.Format.ARGB32, 4, 4);
+      Cairo.Context cr_dots = new Cairo.Context (dots);
+
+      // create dots in surface
+      cr_dots.set_operator (Cairo.Operator.CLEAR);
+      cr_dots.paint ();
+      cr_dots.scale (1.0f, 1.0f);
+      cr_dots.set_operator (Cairo.Operator.SOURCE);
+      cr_dots.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+      cr_dots.rectangle (0.0f, 0.0f, 1.0f, 1.0f);
+      cr_dots.fill ();
+      cr_dots.rectangle (2.0f, 2.0f, 1.0f, 1.0f);
+      cr_dots.fill ();
 
       // clear context
       cr.set_operator (Cairo.Operator.CLEAR);
       cr.paint ();
 
+      // create pattern from dot-surface
+      Cairo.Pattern pattern = new Cairo.Pattern.for_surface (dots);
+
       // setup correct filled-drawing
       cr.set_operator (Cairo.Operator.SOURCE);
       cr.scale (1.0f, 1.0f);
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
-
-      // setup dotted pattern
-      pattern = new Cairo.Pattern.radial ((double) w / 2.0f,
-                                          Ctk.em_to_pixel (BORDER),
-                                          0.0f,
-                                          (double) w / 2.0f,
-                                          Ctk.em_to_pixel (BORDER),
-                                          (double) w / 20.0f);
-      pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.5f);
-      pattern.add_color_stop_rgba (1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
       cr.set_source (pattern);
-      pattern.set_extend (Cairo.Extend.REFLECT);
+      pattern.set_extend (Cairo.Extend.REPEAT);
 
-      // fill masked area with radial gradient "highlight"
+      // fill masked area with the dotted pattern
       _round_rect_anchor (cr,
                           1.0f,
                           Ctk.em_to_pixel (BORDER) +
@@ -270,7 +274,7 @@ namespace Unity.Quicklauncher
                                           (double) w / 2.0f,
                                           Ctk.em_to_pixel (BORDER),
                                           (double) w / 2.0f);
-      pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+      pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.5f);
       pattern.add_color_stop_rgba (1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
       cr.set_source (pattern);
 
@@ -381,7 +385,7 @@ namespace Unity.Quicklauncher
       //fill_surf.write_to_png ("/tmp/fill_surf.png");
       //negative_surf.write_to_png ("/tmp/negative_surf.png");
       //highlight_surf.write_to_png ("/tmp/highlight_surf.png");
-      dotted_surf.write_to_png ("/tmp/dotted_surf.png");
+      //dotted_surf.write_to_png ("/tmp/dotted_surf.png");
 
       //shadow_layer.set_mask_from_surface (negative_surf);
       //shadow_layer.set_image_from_surface (shadow_surf);
