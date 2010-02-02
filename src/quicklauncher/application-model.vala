@@ -127,10 +127,10 @@ namespace Unity.Quicklauncher.Models
     {
       this.manager = Launcher.Appman.get_default ();
       this.app = this.manager.get_application_for_desktop_file (desktop_uri);
-      this.app.opened.connect(this.on_app_opened);
 
-      this.app.notify["focused"].connect (this.notify_on_focused);
-      this.app.notify["running"].connect (this.notify_on_running);
+      this.app.opened.connect(this.on_app_opened);
+      this.app.focus_changed.connect (this.on_app_focus_changed);
+      this.app.running_changed.connect (this.on_app_running_changed);
 
       this._icon = make_icon (app.icon_name);
     }
@@ -138,24 +138,24 @@ namespace Unity.Quicklauncher.Models
     construct
     {
     }
-
-    private void on_app_opened (Wnck.Application app)
+    
+    private void on_app_running_changed ()
     {
-      this.activated ();
-      this.request_attention ();
+      notify_active ();
     }
-
-    private void notify_on_focused ()
+    
+    private void on_app_focus_changed ()
     {
       if (app.focused) {
         this.request_attention ();
       }
-      notify_focused();
+      notify_focused ();
     }
 
-    private void notify_on_running ()
+    private void on_app_opened (Wnck.Window window)
     {
-      notify_active ();
+      this.activated ();
+      this.request_attention ();
     }
 
     public bool is_active
@@ -263,8 +263,12 @@ namespace Unity.Quicklauncher.Models
     {
       if (app.running)
         {
-          // we only want to switch to the application, not launch it
-          app.show ();
+          if (app.focused)
+            app.minimize ();
+          else if (app.has_minimized ())
+            app.restore ();
+          else
+            app.show ();
         }
       else
         {
