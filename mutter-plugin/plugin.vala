@@ -81,6 +81,8 @@ namespace Unity
     private Places.View        places;
     private Panel.View         panel;
 
+    private bool     places_enabled;
+
     private DragDest drag_dest;
     private bool     places_showing;
 
@@ -141,6 +143,7 @@ namespace Unity
 
       Ctk.dnd_init ((Gtk.Widget)this.drag_dest, target_list);
 
+      this.places_enabled = !envvar_is_enabled ("UNITY_DISABLE_PLACES");
 
       this.background = new Background ();
       this.stage.add_actor (this.background);
@@ -156,17 +159,22 @@ namespace Unity
       this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 400,
                                   "opacity", 255);
 
-      this.places_controller = new Places.Controller (this);
-      this.places = this.places_controller.get_view ();
-      this.places.opacity = 0;
-      window_group.add_actor (this.places);
-      window_group.raise_child (this.places,
-                                this.quicklauncher);
-      this.places_showing = false;
+      if (this.places_enabled)
+        {
+          this.places_controller = new Places.Controller (this);
+          this.places = this.places_controller.get_view ();
+
+          this.places.opacity = 0;
+          window_group.add_actor (this.places);
+          window_group.raise_child (this.places,
+                                    this.quicklauncher);
+          this.places_showing = false;
+        }
 
       this.panel = new Panel.View (this);
       window_group.add_actor (this.panel);
-      window_group.raise_child (this.panel, this.places);
+      window_group.raise_child (this.panel,
+                                this.quicklauncher);
       this.panel.show ();
 
       this.relayout ();
@@ -207,8 +215,11 @@ namespace Unity
                        this.QUICKLAUNCHER_WIDTH, 0, (uint32)height,
                        PANEL_HEIGHT, 0, (uint32)width);
 
-      this.places.set_size (width, height);
-      this.places.set_position (0, 0);
+      if (this.places_enabled)
+        {
+          this.places.set_size (width, height);
+          this.places.set_position (0, 0);
+        }
 
       this.panel.set_size (width, 24);
       this.panel.set_position (0, 0);
@@ -246,7 +257,8 @@ namespace Unity
             {
               this.restore_input_region ();
             });
-          this.plugin.set_stage_input_area (0, 0,
+
+    this.plugin.set_stage_input_area (0, 0,
                                             (int)this.stage.width,
                                             (int)this.stage.height);
         }
@@ -272,6 +284,13 @@ namespace Unity
 
     public void show_unity ()
     {
+      if (this.places_enabled == false)
+        {
+          var screen = Wnck.Screen.get_default ();
+
+          screen.toggle_showing_desktop (!screen.get_showing_desktop ());
+          return;
+        }
       if (this.places_showing)
         {
           this.places_showing = false;
@@ -301,7 +320,14 @@ namespace Unity
                                             (int)this.stage.width,
                                             (int)this.stage.height);
         }
-      debug ("Places showing: %s", this.places_showing ? "true":"false");
+    }
+
+    private bool envvar_is_enabled (string name)
+    {
+      if (Environment.get_variable (name) != null)
+        return true;
+
+      return false;
     }
 
     /*
