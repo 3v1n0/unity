@@ -45,8 +45,9 @@ namespace Launcher {
 		public bool running { get; set; }
 		public string unique_string { get; }
 		public virtual signal void closed (Wnck.Window wnckwindow);
+		public virtual signal void focus_changed ();
 		public virtual signal void opened (Wnck.Window wnckwindow);
-		public virtual signal void state_changed ();
+		public virtual signal void running_changed ();
 	}
 	[Compact]
 	[CCode (cheader_filename = "launcher/launcher.h")]

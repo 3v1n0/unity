@@ -127,10 +127,10 @@ namespace Unity.Quicklauncher.Models
     {
       this.manager = Launcher.Appman.get_default ();
       this.app = this.manager.get_application_for_desktop_file (desktop_uri);
-      this.app.opened.connect(this.on_app_opened);
 
-      this.app.notify["focused"].connect (this.notify_on_focused);
-      this.app.notify["running"].connect (this.notify_on_running);
+      this.app.opened.connect(this.on_app_opened);
+      this.app.focus_changed.connect (this.on_app_focus_changed);
+      this.app.running_changed.connect (this.on_app_running_changed);
 
       this._icon = make_icon (app.icon_name);
     }
@@ -138,24 +138,24 @@ namespace Unity.Quicklauncher.Models
     construct
     {
     }
+    
+    private void on_app_running_changed ()
+    {
+      notify_active ();
+    }
+    
+    private void on_app_focus_changed ()
+    {
+      if (app.focused) {
+        this.request_attention ();
+      }
+      notify_focused ();
+    }
 
     private void on_app_opened (Wnck.Window window)
     {
       this.activated ();
       this.request_attention ();
-    }
-
-    private void notify_on_focused ()
-    {
-      if (app.focused) {
-        this.request_attention ();
-      }
-      notify_focused();
-    }
-
-    private void notify_on_running ()
-    {
-      notify_active ();
     }
 
     public bool is_active
