@@ -263,8 +263,12 @@ namespace Unity.Quicklauncher.Models
     {
       if (app.running)
         {
-          // we only want to switch to the application, not launch it
-          app.show ();
+          if (app.focused)
+            app.minimize ();
+          else if (app.has_minimized ())
+            app.restore ();
+          else
+            app.show ();
         }
       else
         {
