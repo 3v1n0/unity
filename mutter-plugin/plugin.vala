@@ -68,7 +68,7 @@ namespace Unity
     }
 
     private static const int PANEL_HEIGHT        = 23;
-    private static const int QUICKLAUNCHER_WIDTH = 58;
+    private static const int QUICKLAUNCHER_WIDTH = 60;
 
     private Clutter.Stage    stage;
     private Application      app;
@@ -203,7 +203,7 @@ namespace Unity
                                    this.QUICKLAUNCHER_WIDTH,
                                    height-this.PANEL_HEIGHT);
       Utils.set_strut ((Gtk.Window)this.drag_dest,
-                       58, 0, (uint32)height,
+                       this.QUICKLAUNCHER_WIDTH, 0, (uint32)height,
                        PANEL_HEIGHT, 0, (uint32)width);
 
       this.places.set_size (width, height);

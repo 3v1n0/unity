@@ -21,26 +21,20 @@
 namespace Unity.Quicklauncher
 {
 
-  public class Prism : Object
+  public class ChromiumWebApp : Object
   {
-    static const string webapp_ini_template = """[Parameters]
-id=%s@unity.app
-name=%s
-uri=%s
-status=yes
-location=no
-sidebar=no
-navigation=no""";
-
     static const string webapp_desktop_template = """[Desktop Entry]
+Version=1.0
 Name=%s
+GenericName=Web Browser
+Exec=chromium-browser -app=%s
+Terminal=false
 Type=Application
-Comment=Web Application
-Exec="prism" -webapp %s@unity.app
-Categories=GTK;Network;
-StartupWMClass=Prism
+Icon=chromium-browser
+Categories=Network;
+MimeType=text/html;
+StartupWMClass=Chromium
 StartupNotify=true
-Icon=/usr/share/pixmaps/prism.png
 """;
 
     public string url {get; construct;}
@@ -48,7 +42,7 @@ Icon=/usr/share/pixmaps/prism.png
     public string id;
     string webapp_dir;
 
-    public Prism (string address)
+    public ChromiumWebApp (string address)
     {
       Object (url:address);
     }
@@ -57,7 +51,7 @@ Icon=/usr/share/pixmaps/prism.png
     {
       //FIXME - we need to get a "name" for webapps somehow, not sure how...
       var split_url = url.split ("://", 2);
-      name = split_url[1];
+      this.name = split_url[1];
 
       try {
         var regex = new Regex ("(/)");
@@ -66,9 +60,8 @@ Icon=/usr/share/pixmaps/prism.png
         warning ("%s", e.message);
       }
 
-      id = name;
-      webapp_dir = Environment.get_home_dir () +
-                    "/.webapps/%s@unity.app".printf (id);
+      this.id = name;
+      this.webapp_dir = Environment.get_home_dir () + "/.local/share/applications/";
 
       bool exists = check_existance_of_app ();
       if (!exists)
@@ -84,8 +77,8 @@ Icon=/usr/share/pixmaps/prism.png
       {
         return true;
       }
-
-      var webapp_dir_file = File.new_for_path (webapp_dir);
+      
+      var webapp_dir_file = File.new_for_path (webapp_dir + @"chromium-webapp-$name.desktop");
       if (webapp_dir_file.query_exists (null))
       {
         return true;
@@ -95,40 +88,31 @@ Icon=/usr/share/pixmaps/prism.png
 
     private void build_webapp ()
     {
-
-      string webapp_ini = webapp_ini_template.printf (id, name, url);
       string webapp_desktop = webapp_desktop_template.printf (name, id);
+      debug ("building " + @"chromium-webapp-$name.desktop");
 
       var webapp_directory = File.new_for_path (webapp_dir);
       try
       {
-        webapp_directory.make_directory_with_parents (null);
+        debug ("attempting to build parent directorys for %s", webapp_dir);
+        if (!webapp_directory.query_exists (null))
+          {
+            webapp_directory.make_directory_with_parents (null);
+          }
       } catch (Error e)
       {
         warning ("%s", e.message);
         return;
       }
 
-      var inifile = File.new_for_path (webapp_dir + "/webapp.ini");
-      try
-      {
-        var file_stream = inifile.create (FileCreateFlags.NONE, null);
-        var data_stream = new DataOutputStream (file_stream);
-        data_stream.put_string (webapp_ini, null);
-
-      } catch (Error e)
-      {
-        warning ("%s", e.message);
-        return;
-      }
-
-      var desktop_file = File.new_for_path (webapp_dir +
-                                            "/%s.desktop".printf (name));
+      var desktop_file = File.new_for_path (webapp_dir + @"chromium-webapp-$name.desktop");
       try
       {
         var file_stream = desktop_file.create (FileCreateFlags.NONE, null);
         var data_stream = new DataOutputStream (file_stream);
         data_stream.put_string (webapp_desktop, null);
+        data_stream.close (null);
+        debug ("wrote to %s", webapp_dir + @"chromium-webapp-$name.desktop");
       } catch (Error e)
       {
         warning ("could not write to %s/%s.desktop", webapp_dir, name);
@@ -147,7 +131,7 @@ Icon=/usr/share/pixmaps/prism.png
           return;
         }
 
-      string desktop_path = webapp_dir + "/%s.desktop".printf (name);
+      string desktop_path = webapp_dir + @"chromium-webapp-$name.desktop";
       uid = "webapp-" + Path.get_basename (desktop_path);
       try {
         var regex = new Regex ("""\+""");
@@ -156,6 +140,7 @@ Icon=/usr/share/pixmaps/prism.png
       {
         warning ("regular expression error: %s", e.message);
       }
+
 
       // we are not a favorite and we need to be favorited!
       favorites.set_string (uid, "type", "application");
@@ -170,7 +155,7 @@ Icon=/usr/share/pixmaps/prism.png
     private string get_fav_uid ()
     {
       string myuid = "";
-      string my_desktop_path = webapp_dir + "/%s.desktop".printf (name);
+      string my_desktop_path = webapp_dir + @"chromium-webapp-$name.desktop";
       var favorites = Launcher.Favorites.get_default ();
       unowned SList<string> favorite_list = favorites.get_favorites();
       foreach (weak string uid in favorite_list)

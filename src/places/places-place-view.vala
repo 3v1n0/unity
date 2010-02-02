@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Canonical Ltd
+ * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,28 +17,21 @@
  *
  */
 
-namespace Unity.Quicklauncher
+namespace Unity.Places
 {
-  public class View : Ctk.Bin
+  public interface PlaceView : Clutter.Actor
   {
-    private Shell shell;
+    /**
+     * This interface should be implemented by any view that represents a
+     * place. This allows the place to request a view over dbus by the
+     * (hopefully) unique name of the view, together with a bunch of properties
+     * that it wants to set on the view (to basically initialise the view).
+     *
+     * The interface is very, very small, but it needs to be done so we can, in
+     * the future, load in views from dynamic modules installed by the places
+     **/
 
-    private Manager manager;
-
-    public View (Shell shell)
-    {
-      this.shell = shell;
-    }
-
-    construct
-    {
-      this.manager = new Manager ();
-      this.add_actor (manager);
-    }
-
-    public new float get_width ()
-    {
-      return 60;
-    }
+    public abstract void init_with_properties (HashTable<string, string> props);
   }
 }
+

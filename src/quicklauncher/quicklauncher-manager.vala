@@ -30,6 +30,21 @@ namespace Unity.Quicklauncher
     private Launcher.Appman appman;
     private Launcher.Session session;
 
+    // lazy init of gconf here :-) wait's until we need it
+    private GConf.Client? gconf_client_;
+    private GConf.Client? gconf_client {
+      get {
+        if (this.gconf_client_ is GConf.Client)
+          {
+            return this.gconf_client_;
+          }
+        else
+          {
+            return this.gconf_client_ = GConf.Client.get_default ();
+          }
+      }
+    }
+
     construct
     {
       START_FUNCTION ();
@@ -54,6 +69,36 @@ namespace Unity.Quicklauncher
       END_FUNCTION ();
     }
 
+    // returns which string is the currently set webapp device
+    private string get_webapp_device ()
+    {
+      //check to see the unity dir exists
+      try {
+        bool dir_exists = this.gconf_client.dir_exists (UNITY_CONF_PATH);
+        if (!dir_exists)
+          {
+            // make the directory
+            this.gconf_client.add_dir (UNITY_CONF_PATH,
+                                       GConf.ClientPreloadType.NONE);
+          }
+      }
+      catch (Error e) {
+        warning ("%s", e.message);
+      }
+          
+      try {
+        bool value = this.gconf_client.get_bool (UNITY_CONF_PATH + "/webapp_use_chromium");
+        if (value)
+          {
+            return "chromium";
+          }
+      }
+      catch (Error e) {
+        return "prism";
+      }
+      return "prism";
+    }
+
     private bool on_drag_motion (Ctk.Actor actor, Gdk.DragContext context,
                                  int x, int y, uint time_)
     {
@@ -66,7 +111,16 @@ namespace Unity.Quicklauncher
       debug ("on_drag_drop called");
       if (context.targets != null)
       {
-        Gdk.Atom target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_URL);
+        Gtk.TargetList tl;
+        Gdk.Atom target_type;
+        // silly tricking vala into passing an array with no elements.
+        // if anyone knows a way of doing this properly, please replace!
+        Gtk.TargetEntry[]? targets = null;
+        tl = new Gtk.TargetList (targets);
+        tl.add_uri_targets (0);
+        
+        target_type = Ctk.drag_dest_find_target (context, tl);
+
         if (target_type.name () == "")
         {
           warning ("bad DND type");
@@ -121,6 +175,25 @@ namespace Unity.Quicklauncher
       Gtk.drag_finish (context, dnd_success, delete_selection_data, time_);
     }
 
+    private bool test_url (string url)
+      {
+        // just returns if the given string is really a url
+        try {
+          Regex match_url = new Regex (
+            """((https?|s?ftp):((//)|(\\\\))+[\w\d:#@%/;$()~_?\+-=\\\.&]*)"""
+          );
+          if (match_url.match (url))
+            {
+              return true;
+            }
+
+        } catch (RegexError e) {
+          warning ("%s", e.message);
+          return false;
+        }
+        return false;
+      }
+
     private bool handle_uri (string uri)
     {
       debug ("handling uri: " + uri);
@@ -137,11 +210,26 @@ namespace Unity.Quicklauncher
       debug ("clean uri: " + clean_uri);
 
       var split_uri = clean_uri.split ("://", 2);
-      if ("http" in split_uri[0])
+      
+      if (test_url (clean_uri))
       {
-        //we have a http url, prism it
-        var webapp = new Prism (clean_uri);
-        webapp.add_to_favorites ();
+        //we have a http url, webapp it
+        string webapp_device = this.get_webapp_device ();
+        switch (webapp_device) {
+          case "prism":
+            var webapp = new Prism (clean_uri);
+            webapp.add_to_favorites ();
+            break;
+
+          case "chromium":
+            var webapp = new ChromiumWebApp (clean_uri);
+            webapp.add_to_favorites ();
+            break;
+
+          default:
+            warning ("unknown webapp device %s", webapp_device);
+            break;
+        }
       }
 
       else if (".desktop" in Path.get_basename (clean_uri))
@@ -210,38 +298,16 @@ namespace Unity.Quicklauncher
 
    private void handle_session_application (Launcher.Application app)
     {
-      bool app_is_visible = false;
-
-      unowned GLib.SList<Wnck.Application> wnckapps = app.get_wnckapps ();
-      foreach (Wnck.Application wnckapp in wnckapps)
+      var desktop_file = app.get_desktop_file ();
+      if (desktop_file != null)
+      {
+        ApplicationModel model = get_model_for_desktop_file (desktop_file);
+        LauncherView view = get_view_for_model (model);
+        if (view.get_parent () == null)
         {
-          unowned GLib.List<Wnck.Window> windows = wnckapp.get_windows ();
-          foreach (Wnck.Window window in windows)
-            {
-              var type = window.get_window_type ();
-              if (!(type == Wnck.WindowType.DESKTOP
-                    || type == Wnck.WindowType.DOCK
-                    || type == Wnck.WindowType.SPLASHSCREEN
-                    || type == Wnck.WindowType.MENU))
-              {
-                app_is_visible = true;
-              }
-            }
+          add_view (view);
         }
-
-      if (app_is_visible)
-        {
-          var desktop_file = app.get_desktop_file ();
-          if (desktop_file != null)
-          {
-            ApplicationModel model = get_model_for_desktop_file (desktop_file);
-            LauncherView view = get_view_for_model (model);
-            if (view.get_parent () == null)
-            {
-              add_view (view);
-            }
-          }
-        }
+      }
     }
 
 

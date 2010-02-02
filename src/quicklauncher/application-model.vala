@@ -127,10 +127,10 @@ namespace Unity.Quicklauncher.Models
     {
       this.manager = Launcher.Appman.get_default ();
       this.app = this.manager.get_application_for_desktop_file (desktop_uri);
-      this.app.opened.connect(this.on_app_opened);
 
-      this.app.notify["focused"].connect (this.notify_on_focused);
-      this.app.notify["running"].connect (this.notify_on_running);
+      this.app.opened.connect(this.on_app_opened);
+      this.app.focus_changed.connect (this.on_app_focus_changed);
+      this.app.running_changed.connect (this.on_app_running_changed);
 
       this._icon = make_icon (app.icon_name);
     }
@@ -138,24 +138,24 @@ namespace Unity.Quicklauncher.Models
     construct
     {
     }
-
-    private void on_app_opened (Wnck.Application app)
+    
+    private void on_app_running_changed ()
     {
-      this.activated ();
-      this.request_attention ();
+      notify_active ();
     }
-
-    private void notify_on_focused ()
+    
+    private void on_app_focus_changed ()
     {
       if (app.focused) {
         this.request_attention ();
       }
-      notify_focused();
+      notify_focused ();
     }
 
-    private void notify_on_running ()
+    private void on_app_opened (Wnck.Window window)
     {
-      notify_active ();
+      this.activated ();
+      this.request_attention ();
     }
 
     public bool is_active
@@ -263,8 +263,12 @@ namespace Unity.Quicklauncher.Models
     {
       if (app.running)
         {
-          // we only want to switch to the application, not launch it
-          app.show ();
+          if (app.focused)
+            app.minimize ();
+          else if (app.has_minimized ())
+            app.restore ();
+          else
+            app.show ();
         }
       else
         {
@@ -328,7 +332,7 @@ namespace Unity.Quicklauncher.Models
         {
           try
             {
-              pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 42, 0);
+              pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 50, 0);
             }
           catch (Error e)
             {
@@ -357,7 +361,7 @@ namespace Unity.Quicklauncher.Models
               try
                 {
                   pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name,
-                                                             42, 42, true);
+                                                             50, 50, true);
                 }
               catch (Error e)
                 {
@@ -377,7 +381,7 @@ namespace Unity.Quicklauncher.Models
               try
                 {
                   pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name,
-                                                             42, 42, true);
+                                                             50, 50, true);
                 }
               catch (Error e)
                 {
@@ -397,7 +401,7 @@ namespace Unity.Quicklauncher.Models
           try
             {
               pixbuf = new Gdk.Pixbuf.from_file_at_scale (
-                    "/usr/share/pixmaps/" + icon_name, 42, 42, true);
+                    "/usr/share/pixmaps/" + icon_name, 50, 50, true);
             }
           catch (Error e)
             {
@@ -410,7 +414,7 @@ namespace Unity.Quicklauncher.Models
             return pixbuf;
         }
 
-      Gtk.IconInfo info = theme.lookup_icon(icon_name, 42, 0);
+      Gtk.IconInfo info = theme.lookup_icon(icon_name, 50, 0);
       if (info != null)
         {
           string filename = info.get_filename();
@@ -419,7 +423,7 @@ namespace Unity.Quicklauncher.Models
               try
                 {
                   pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
-                                                             42, 42, true);
+                                                             50, 50, true);
                 }
               catch (Error e)
                 {
@@ -435,14 +439,14 @@ namespace Unity.Quicklauncher.Models
 
       try
       {
-        pixbuf = theme.load_icon(icon_name, 42, Gtk.IconLookupFlags.FORCE_SVG);
+        pixbuf = theme.load_icon(icon_name, 50, Gtk.IconLookupFlags.FORCE_SVG);
       }
       catch (GLib.Error e)
       {
         warning ("could not load icon for %s - %s", icon_name, e.message);
         try
           {
-            pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 42, 0);
+            pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 50, 0);
           }
         catch (Error err)
           {

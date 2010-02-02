@@ -140,3 +140,16 @@ src/places/file-place.c
 
 src/panel/panel-home.c
 src/panel/panel-indicators.c
+libunity-places.la
+unity-place-client.h
+unity-place-server.h
+unity-places.pc
+libunity-places/unity-place-marshal.h
+libunity-places/unity-place-marshal.c
+unity-places/unity-place-marshal.h
+unity-places/unity-place-marshal.c
+src/places/places-place-proxy.c
+src/places/places-place-view.c
+src/places/places-results-view.c
+src/quicklauncher/chrome-handler.c
+src/places/search-field.c
