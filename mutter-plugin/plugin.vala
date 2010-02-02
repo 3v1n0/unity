@@ -159,13 +159,14 @@ namespace Unity
       this.places_controller = new Places.Controller (this);
       this.places = this.places_controller.get_view ();
       this.places.opacity = 0;
-      this.stage.add_actor (this.places);
-      this.stage.raise_child (this.places, window_group);
+      window_group.add_actor (this.places);
+      window_group.raise_child (this.places,
+                                this.quicklauncher);
       this.places_showing = false;
 
       this.panel = new Panel.View (this);
-      this.stage.add_actor (this.panel);
-      this.stage.raise_child (this.panel, this.places);
+      window_group.add_actor (this.panel);
+      window_group.raise_child (this.panel, this.places);
       this.panel.show ();
 
       this.relayout ();
