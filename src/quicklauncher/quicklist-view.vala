@@ -14,7 +14,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by Gordon Allott <gord.allott@canonical.com>
+ * Authored by Gordon Allott <gord.allott@canonical.com>,
+ *             Mirco "MacSlow" Müller <mirco.mueller@canonical.com>
  *
  */
 
@@ -295,10 +296,11 @@ namespace Unity.Quicklauncher
       cr.fill ();
     }
 
-    Ctk.LayerActor ql_background;
-
-    construct
+    public override void allocate (Clutter.ActorBox        box,
+                                   Clutter.AllocationFlags flags)
     {
+      int w;
+      int h;
       Clutter.Color outline_color = Clutter.Color () {
         red   = 255,
         green = 255,
@@ -312,45 +314,49 @@ namespace Unity.Quicklauncher
         alpha = (uint8) (255.0f * 0.3f)
       };
 
-      this.ql_background = new Ctk.LayerActor (TMP_BG_WIDTH, TMP_BG_HEIGHT);
+      base.allocate (box, flags);
+      w = (int) (box.x2 - box.x1);
+      h = (int) (box.y2 - box.y1);
 
-      Ctk.Layer outline_layer = new Ctk.Layer (TMP_BG_WIDTH,
-                                               TMP_BG_HEIGHT,
+      this.ql_background = new Ctk.LayerActor (w, h);
+
+      Ctk.Layer outline_layer = new Ctk.Layer (w,
+                                               h,
                                                Ctk.LayerRepeatMode.NONE,
                                                Ctk.LayerRepeatMode.NONE);
-      Ctk.Layer fill_layer = new Ctk.Layer (TMP_BG_WIDTH,
-                                            TMP_BG_HEIGHT,
+      Ctk.Layer fill_layer = new Ctk.Layer (w,
+                                            h,
                                             Ctk.LayerRepeatMode.NONE,
                                             Ctk.LayerRepeatMode.NONE);
-      Ctk.Layer highlight_layer = new Ctk.Layer (TMP_BG_WIDTH,
-                                                 TMP_BG_HEIGHT,
+      Ctk.Layer highlight_layer = new Ctk.Layer (w,
+                                                 h,
                                                  Ctk.LayerRepeatMode.NONE,
                                                  Ctk.LayerRepeatMode.NONE);
-      Ctk.Layer dotted_layer = new Ctk.Layer (TMP_BG_WIDTH,
-                                              TMP_BG_HEIGHT,
+      Ctk.Layer dotted_layer = new Ctk.Layer (w,
+                                              h,
                                               Ctk.LayerRepeatMode.NONE,
                                               Ctk.LayerRepeatMode.NONE);
 
-      /*Ctk.Layer shadow_layer = new Ctk.Layer (TMP_BG_WIDTH,
-                                              TMP_BG_HEIGHT,
+      /*Ctk.Layer shadow_layer = new Ctk.Layer (w,
+                                              h,
                                               Ctk.LayerRepeatMode.NONE,
                                               Ctk.LayerRepeatMode.NONE);*/
 
       Cairo.Surface outline_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                           TMP_BG_WIDTH,
-                                                           TMP_BG_HEIGHT);
+                                                           w,
+                                                           h);
       Cairo.Surface fill_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                        TMP_BG_WIDTH,
-                                                        TMP_BG_HEIGHT);
+                                                        w,
+                                                        h);
       Cairo.Surface negative_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                            TMP_BG_WIDTH,
-                                                            TMP_BG_HEIGHT);
+                                                            w,
+                                                            h);
       Cairo.Surface highlight_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                            TMP_BG_WIDTH,
-                                                            TMP_BG_HEIGHT);
+                                                            w,
+                                                            h);
       Cairo.Surface dotted_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                          TMP_BG_WIDTH,
-                                                          TMP_BG_HEIGHT);
+                                                          w,
+                                                          h);
 
       Cairo.Context outline_cr = new Cairo.Context (outline_surf);
       Cairo.Context fill_cr = new Cairo.Context (fill_surf);
@@ -359,26 +365,26 @@ namespace Unity.Quicklauncher
       Cairo.Context dotted_cr = new Cairo.Context (dotted_surf);
 
       _outline_mask (outline_cr,
-                     TMP_BG_WIDTH,
-                     TMP_BG_HEIGHT,
+                     w,
+                     h,
                      2);
       _fill_mask (fill_cr,
-                  TMP_BG_WIDTH,
-                  TMP_BG_HEIGHT,
+                  w,
+                  h,
                   2);
       _negative_mask (negative_cr,
-                      TMP_BG_WIDTH,
-                      TMP_BG_HEIGHT,
+                      w,
+                      h,
                       2);
 
       _dotted_bg (dotted_cr,
-                  TMP_BG_WIDTH,
-                  TMP_BG_HEIGHT,
+                  w,
+                  h,
                   2);
 
       _highlight_bg (highlight_cr,
-                     TMP_BG_WIDTH,
-                     TMP_BG_HEIGHT,
+                     w,
+                     h,
                      2);
 
       //outline_surf.write_to_png ("/tmp/outline_surf.png");
@@ -416,6 +422,19 @@ namespace Unity.Quicklauncher
       this.ql_background.flatten ();
 
       this.set_background (this.ql_background);
+    }
+
+    Ctk.LayerActor ql_background;
+
+    construct
+    {
+      Ctk.Padding padding = Ctk.Padding () {
+        left   = 6,
+        right  = 6,
+        top    = 6,
+        bottom = 6
+      };
+      this.set_padding (padding);
     }
   }
 }
