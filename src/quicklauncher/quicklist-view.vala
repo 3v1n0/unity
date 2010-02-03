@@ -33,9 +33,6 @@ namespace Unity.Quicklauncher
   const float ANCHOR_HEIGHT      = 2.0f;
   const float ANCHOR_WIDTH       = 1.0f;
 
-  const int TMP_BG_WIDTH         = 200;
-  const int TMP_BG_HEIGHT        = 250;
-
   /* we call this instead of Ctk.Menu so you can alter this to look right */
   public class QuicklistMenu : Ctk.Menu
   {
@@ -301,6 +298,20 @@ namespace Unity.Quicklauncher
     {
       int w;
       int h;
+
+      base.allocate (box, flags);
+      w = (int) (box.x2 - box.x1);
+      h = (int) (box.y2 - box.y1);
+
+      // exit early if the allocation-width/height didn't change, this is needed
+      // because clutter triggers calling allocate even if nothing changed
+      if ((old_width == w) && (old_height == h))
+        return;
+
+      // store the new width/height
+      old_width  = w;
+      old_height = h;
+
       Clutter.Color outline_color = Clutter.Color () {
         red   = 255,
         green = 255,
@@ -313,10 +324,6 @@ namespace Unity.Quicklauncher
         blue  = 0,
         alpha = (uint8) (255.0f * 0.3f)
       };
-
-      base.allocate (box, flags);
-      w = (int) (box.x2 - box.x1);
-      h = (int) (box.y2 - box.y1);
 
       this.ql_background = new Ctk.LayerActor (w, h);
 
@@ -425,16 +432,23 @@ namespace Unity.Quicklauncher
     }
 
     Ctk.LayerActor ql_background;
-
+    int            old_width;
+    int            old_height;
+    
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {
-        left   = 6,
+        left   = (int) Ctk.em_to_pixel (ANCHOR_WIDTH) +
+                 (int) Ctk.em_to_pixel (BORDER) +
+                 (int) Ctk.em_to_pixel (MARGIN),
         right  = 6,
         top    = 6,
         bottom = 6
       };
       this.set_padding (padding);
+
+      old_width  = 0;
+      old_height = 0;
     }
   }
 }
