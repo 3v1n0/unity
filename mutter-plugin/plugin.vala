@@ -234,8 +234,9 @@ namespace Unity
 
     public void set_in_menu (bool is_in_menu)
     {
-      // we need to modify the stage input area so that the menus are responsive
-      // and they detect clicks elsewhere
+      /* we need to modify the stage input area so that the menus are
+       * responsive and they detect clicks elsewhere
+       */
       float width, height;
       this.stage.get_size (out width, out height);
 
