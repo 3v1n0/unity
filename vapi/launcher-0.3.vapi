@@ -17,6 +17,7 @@ namespace Launcher {
 		public unowned string get_exec_string ();
 		public bool get_favorite ();
 		public bool get_focused ();
+		public bool get_urgent ();
 		public unowned string get_icon_name ();
 		public unowned string get_name ();
 		public bool get_running ();
@@ -48,6 +49,7 @@ namespace Launcher {
 		public virtual signal void focus_changed ();
 		public virtual signal void opened (Wnck.Window wnckwindow);
 		public virtual signal void running_changed ();
+		public virtual signal void urgent_changed ();
 	}
 	[Compact]
 	[CCode (cheader_filename = "launcher/launcher.h")]
