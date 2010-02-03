@@ -284,6 +284,11 @@ namespace Unity.Quicklauncher.Models
             }
         }
     }
+    
+    public void expose ()
+    {
+      Unity.global_shell.expose_windows (app.get_windows ());
+    }
 
     /**
      * gets the favorite uid for this desktop file

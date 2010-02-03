@@ -48,6 +48,11 @@ namespace Unity
 
     private bool showing_places;
 
+    public void expose_windows (GLib.SList<Wnck.Window> windows)
+    {
+      ;
+    }
+
     public UnderlayWindow (bool popup, int width, int height)
     {
       Object(is_popup: popup, popup_width: width, popup_height: height);
