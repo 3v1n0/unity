@@ -21,6 +21,15 @@ using Unity.Quicklauncher;
 namespace Unity.Widgets
 {
 
+  private enum ScrollerPhase
+  {
+    PANNING,
+    SETTLING,
+    REORDERING,
+    FLUNG,
+    BOUNCE
+  }
+
   public class ScrollerChild : Object
   {
     /* just a container for our children, we use an object basically just for
@@ -61,6 +70,7 @@ namespace Unity.Widgets
 
   public class Scroller : Ctk.Actor, Clutter.Container
   {
+    private ScrollerPhase phase;
     private uint drag_sensitivity = 3;
     private float click_start_pos = 0;
     private float _drag_pos = -0.0f;
@@ -98,6 +108,7 @@ namespace Unity.Widgets
     private float last_drag_pos = 0.0f;
     private float fling_velocity = 0.0f;
     private uint fling_delta = 0;
+    private uint last_mouse_event_time = 0;
     private float previous_y = -1000000000.0f;
     private float fling_target = 0.0f;
 
@@ -163,7 +174,7 @@ namespace Unity.Widgets
       // set a timeline for our fling animation
       this.fling_timeline = new Clutter.Timeline (1000);
       this.fling_timeline.loop = true;
-      this.fling_timeline.new_frame.connect (this.on_fling_frame);
+      this.fling_timeline.new_frame.connect (this.on_scroller_frame);
       set_reactive (true);
 
       this.scroll_event.connect (this.on_scroll_event);
@@ -186,7 +197,6 @@ namespace Unity.Widgets
                  Unity.PKGDATADIR + "/honeycomb.png",
                  e.message);
       }
-      
       try {
         this.gradient = new Clutter.Texture ();
         this.gradient.set_load_async (true);
@@ -264,8 +274,74 @@ namespace Unity.Widgets
         }
       }
     }
+		
+		private float settle_position;
+		private const float BOUNCE_STRENGTH = 0.3f;
+    private void on_scroller_frame (Clutter.Timeline timeline, int msecs)
+    {
+			// animate the scroller depeding on its phase
+			uint delta = timeline.get_delta ();
+      delta += this.stored_delta;
+      if (delta <= 16)
+        {
+          this.stored_delta = delta;
+          return;
+        }
+
+      while (delta > 16)
+        {
+          delta -= 16;
+					switch (this.phase) {
+						case (ScrollerPhase.SETTLING):
+							this.do_anim_settle (timeline, msecs);
+							break;
+            case (ScrollerPhase.FLUNG):
+              this.do_anim_fling (timeline, msecs);
+              break;
+            case (ScrollerPhase.BOUNCE):
+              this.do_anim_bounce (timeline, msecs);
+              break;
+			  		default:
+							break;
+					}
+        }
+
+      this.stored_delta = delta;
+    }
+
+		private void do_anim_settle (Clutter.Timeline timeline, int msecs)
+		{
+      var distance = this.settle_position - this.drag_pos;
+			this.drag_pos += distance * 0.2f;
+			if (((int) (distance)).abs() < 1 )
+				{
+					timeline.stop ();
+				}
+      
+		}
+
+    private void do_anim_fling (Clutter.Timeline timeline, int msecs)
+    {
+      this.fling_velocity *= this.friction;
+      this.drag_pos -= this.fling_velocity;
+
+      if(this.fling_velocity < 0 && this.drag_pos > this.total_child_height - height ||
+         this.fling_velocity > 0 && this.drag_pos < 0)
+        {
+          this.phase = ScrollerPhase.BOUNCE;
+        }
+    }
+
+    private void do_anim_bounce (Clutter.Timeline timeline, int msecs)
+    {
+      this.fling_velocity *= 0.5f;
+      this.drag_pos += this.fling_velocity;
+      this.settle_position = get_aligned_settle_position ();
+      this.phase = ScrollerPhase.SETTLING;
+    }
 
     private uint stored_delta = 0;
+    /*
     private void on_fling_frame (Clutter.Timeline timeline, int msecs)
     {
 
@@ -290,7 +366,7 @@ namespace Unity.Widgets
        * do that nicely in clutter so we have to "catch-up" and "slow down"
        * depending on how close to our target framerate (60fps) we are
        */
-
+      /*
       uint delta = timeline.get_delta ();
       delta += this.stored_delta;
       if (delta <= 16)
@@ -309,7 +385,7 @@ namespace Unity.Widgets
       this.drag_pos += d;
 
       this.stored_delta = delta;
-    }
+    }*/
 
     private void calculate_anchor (out int iterations, out float position)
     {
@@ -326,6 +402,54 @@ namespace Unity.Widgets
       return;
     }
 
+    private float get_aligned_settle_position ()
+    {
+      /* attempts to integligently find hte correct settle position */
+      // always align to the top item
+      // always want a full scroller full of items
+
+      if (this.drag_pos < 0)
+        {
+          // we always position on the first child
+          ScrollerChild container = this.children[0];
+          Clutter.ActorBox box = container.box;
+          return box.y1 + this.drag_pos;
+        }
+
+      if (this.drag_pos > this.total_child_height - height)
+        {
+          ScrollerChild last_container = this.children.get (this.children.size -1);
+          foreach (ScrollerChild container in this.children)
+            {
+              Clutter.ActorBox box = container.box;
+              if (box.y1 == 0.0 && box.y2 == 0.0) continue;
+              if (box.y1 - box.get_height () > last_container.box.y1 - this.height)
+                {
+                  return box.y1 + this.drag_pos;
+                }
+            }
+        }
+
+      else
+        {
+          for (var i = this.children.size - 1; i >= 0; i--)
+            {
+              ScrollerChild container = this.children.get(i);
+              Clutter.ActorBox box = container.box;
+              if (box.y1 == 0.0 && box.y2 == 0.0) continue;
+              if (box.y1 < hot_start)
+              {
+                /* we have a container lower than the "hotarea" */
+                float scroll_px = box.y1 + this.drag_pos - hot_start;
+                return (float)scroll_px - this.padding.top;
+              }
+            }
+            return 0.0f;
+        }
+
+      return 0.0f;
+    }
+  
     private float get_next_neg_position (float target_pos)
     {
       /* returns the scroll to position of the next neg item */
@@ -379,49 +503,23 @@ namespace Unity.Widgets
           this.is_dragging = false;
           Clutter.ungrab_pointer ();
         }
-
+			var release_event = event.button;
       int iters = 0;
       float position = 0.0f;
 
       calculate_anchor (out iters, out position);
+			this.settle_position = position;
 
-      if (position < 0.0 || position > this.total_child_height - this.height)
-        {
-          /* because we are flinging outside of our target area we have to
-           * do a "real" fling, per frame calculated and then swing back
-           * to a nice position
-           */
-          // because we are out of bounds with our target position we clamp
-          // the value to the top item or the bottom item#
-          if (position < 0.0 || this.total_child_height < this.height)
-            {
-              this.fling_target = 0.0f;
-            }
-          else
-            {
-              this.fling_target = this.total_child_height - this.height + 32;
-            }
+			if ((release_event.time - this.last_mouse_event_time) > 120)
+				{
+					this.phase = ScrollerPhase.SETTLING;
+          this.settle_position = get_aligned_settle_position ();
+					this.fling_timeline.start ();
+				}
+	
+      else {
+					this.phase = ScrollerPhase.FLUNG;
           this.fling_timeline.start ();
-        }
-      else
-        {
-          /* because we are flinging inside our target area then we can do
-           * a fake fling and just use clutters animation system, should
-           * hopefully give a nicer feel
-           */
-          if (this.scroll_anim is Clutter.Animation)
-            {
-              this.scroll_anim.completed ();
-            }
-
-          if (iters > 0)
-            {
-
-              position = get_next_neg_position (position);
-              this.scroll_anim = this.animate (
-                                    Clutter.AnimationMode.EASE_OUT_QUAD,
-                                    16 * iters, "drag_pos", position);
-            }
         }
 
       return true;
@@ -479,7 +577,8 @@ namespace Unity.Widgets
         vel_y = motionevent.y - previous_y;
       }
 
-      uint delta = motionevent.time - this.fling_delta;
+      uint delta = motionevent.time - this.last_mouse_event_time;// this.fling_delta;
+			this.last_mouse_event_time = motionevent.time;
       if (delta > 200)
         {
           delta = 1000/60;
@@ -590,8 +689,6 @@ namespace Unity.Widgets
     public override void allocate (Clutter.ActorBox box,
                                    Clutter.AllocationFlags flags)
     {
-      base.allocate (box, flags);
-
       this.height = box.y2 - box.y1;
       this.total_child_height = 0.0f;
       float x = padding.left;
