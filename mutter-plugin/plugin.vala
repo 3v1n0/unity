@@ -85,7 +85,9 @@ namespace Unity
 
     private DragDest drag_dest;
     private bool     places_showing;
-
+    private bool     expose_showing;
+    private List<Mutter.Window> exposed_windows;
+    
     construct
     {
       Unity.global_shell = this;
@@ -188,7 +190,7 @@ namespace Unity
           });
         }
 
-      this.restore_input_region ();
+      this.on_restore_input_region ();
     }
 
     private void relayout ()
@@ -246,8 +248,14 @@ namespace Unity
         }
       else
         {
-          this.restore_input_region ();
+          this.on_restore_input_region ();
         }
+    }
+    
+    void on_restore_input_region ()
+    {
+      if (!expose_showing)
+        this.restore_input_region ();
     }
 
     private void on_stage_actor_added (Clutter.Actor actor)
@@ -256,7 +264,7 @@ namespace Unity
         {
           actor.destroy.connect (() =>
             {
-              this.restore_input_region ();
+              this.on_restore_input_region ();
             });
 
     this.plugin.set_stage_input_area (0, 0,
@@ -283,6 +291,138 @@ namespace Unity
       return this.panel.get_indicators_width ();
     }
 
+    public void expose_windows (GLib.SList<Wnck.Window> windows)
+    {
+      exposed_windows = new List<Mutter.Window> ();
+      
+      unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
+      foreach (Mutter.Window w in mutter_windows)
+        {
+          bool keep = false;
+          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (w.get_meta_window ());
+          foreach (Wnck.Window window in windows)
+            {
+              if (window.get_xid () == xid)
+                {
+                  keep = true;
+                  break;
+                }
+            }
+          
+          if (keep)
+            {
+              exposed_windows.append (w);
+              (w as Clutter.Actor).reactive = true;
+            }
+          else
+            {
+              (w as Clutter.Actor).reactive = false;
+              (w as Clutter.Actor).opacity = 0;
+            }
+        }
+      position_window_on_grid (exposed_windows);
+      
+      expose_showing = true;
+      this.stage.captured_event.connect (on_stage_captured_event);
+    }
+    
+    public void dexpose_windows ()
+    {
+      unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
+      foreach (Mutter.Window w in mutter_windows)
+        restore_window_position (w);
+    }
+    
+    void restore_window_position (Mutter.Window window)
+    {
+      (window as Clutter.Actor).animate (Clutter.AnimationMode.EASE_OUT_SINE, 250, "opacity", 255);
+      (window as Clutter.Actor).reactive = true;
+            
+      if (exposed_windows.find (window) == null)
+        return;
+       
+      ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
+      Wnck.Window wnck_window = Wnck.Window.get (xid);
+      
+      int x, y, w, h;
+      wnck_window.get_geometry (out x, out y, out w, out h);
+      
+      
+      (window as Clutter.Actor).set ("scale-gravity", Clutter.Gravity.CENTER);
+      (window as Clutter.Actor).animate (Clutter.AnimationMode.EASE_OUT_SINE, 250, 
+                                         "scale-x", 1f, 
+                                         "scale-y", 1f, 
+                                         "x", (float) x, 
+                                         "y", (float) y);
+      
+      this.expose_showing = false;
+      this.on_restore_input_region ();
+    }
+    
+    bool on_stage_captured_event (Clutter.Event event)
+    {
+      bool result = false;
+      if (event.type == Clutter.EventType.BUTTON_RELEASE && event.get_button () == 1)
+        {
+          float x, y;
+          event.get_coords (out x, out y);
+          Clutter.Actor actor = this.stage.get_actor_at_pos (Clutter.PickMode.REACTIVE, (int) x, (int) y);
+          
+          if (actor is Mutter.Window)
+            {
+              Mutter.MetaWindow.activate ((actor as Mutter.Window).get_meta_window (), Gtk.get_current_event_time ());
+              result = true;
+            }
+          this.stage.captured_event.disconnect (on_stage_captured_event);
+          dexpose_windows ();
+        }
+      return result;
+    }
+    
+    void position_window_on_grid (List<Mutter.Window> windows)
+    {
+      int left_buffer = 250;
+      int vertical_buffer = 40;
+      int count = (int) windows.length ();
+      
+      int rows = (int) Math.sqrt (count);
+      if (rows == 0)
+        rows = 1;
+      
+      int cols = rows;
+      
+      if (cols * rows < count)
+        rows++;
+      
+      int boxWidth = (int) ((this.stage.width - left_buffer) / cols);
+      int boxHeight = (int) ((this.stage.height - vertical_buffer * 2) / rows);
+      
+      for (int row = 0; row < rows; row++)
+        {
+          for (int col = 0; col < cols; col++)
+            {
+              int i = row * cols + col;
+              if (i > windows.length ())
+                return;
+              
+              Mutter.Window window = windows.nth_data (i);
+              
+              int windowX = (boxWidth / 2 + boxWidth * col + left_buffer) - (int) window.width / 2;
+              int windowY = (boxHeight / 2 + boxHeight * row + vertical_buffer) - (int) window.height / 2;
+              
+              float scale = float.min (float.min (1, (boxWidth - 20) / window.width), float.min (1, (boxHeight - 20) / window.height));
+              
+              (window as Clutter.Actor).set ("scale-gravity", Clutter.Gravity.CENTER);
+              
+              (window as Clutter.Actor).animate (Clutter.AnimationMode.EASE_OUT_SINE, 250, 
+                                                 "x", (float) windowX, 
+                                                 "y", (float) windowY, 
+                                                 "scale-x", scale, 
+                                                 "scale-y", scale);
+            }
+        }
+    }
+
     public void show_unity ()
     {
       if (this.places_enabled == false)
@@ -296,6 +436,7 @@ namespace Unity
         {
           this.places_showing = false;
 
+          this.places.hide ();
           this.places.opacity = 0;
           this.plugin.get_above_window_group ().opacity = 255;
           this.plugin.get_normal_window_group ().opacity = 255;
@@ -303,12 +444,13 @@ namespace Unity
 
           this.panel.set_indicator_mode (false);
 
-          this.restore_input_region ();
+          this.on_restore_input_region ();
         }
       else
         {
           this.places_showing = true;
 
+          this.places.show ();
           this.places.opacity = 255;
           this.plugin.get_above_window_group ().opacity = 0;
           this.plugin.get_normal_window_group ().opacity = 0;
