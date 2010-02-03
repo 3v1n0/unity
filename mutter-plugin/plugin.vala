@@ -322,7 +322,8 @@ namespace Unity
     void restore_window_position (Mutter.Window window)
     {
       (window as Clutter.Actor).animate (Clutter.AnimationMode.EASE_OUT_SINE, 250, "opacity", 255);
-      
+      (window as Clutter.Actor).reactive = true;
+            
       if (exposed_windows.find (window) == null)
         return;
        
@@ -346,25 +347,27 @@ namespace Unity
     
     bool on_stage_captured_event (Clutter.Event event)
     {
+      bool result = false;
       if (event.type == Clutter.EventType.BUTTON_RELEASE && event.get_button () == 1)
         {
           float x, y;
           event.get_coords (out x, out y);
           Clutter.Actor actor = this.stage.get_actor_at_pos (Clutter.PickMode.REACTIVE, (int) x, (int) y);
+          
           if (actor is Mutter.Window)
             {
               Mutter.MetaWindow.activate ((actor as Mutter.Window).get_meta_window (), Gtk.get_current_event_time ());
+              result = true;
             }
           this.stage.captured_event.disconnect (on_stage_captured_event);
           dexpose_windows ();
-          return true;
         }
-      return false;
+      return result;
     }
     
     void position_window_on_grid (List<Mutter.Window> windows)
     {
-      int left_buffer = 150;
+      int left_buffer = 250;
       int vertical_buffer = 40;
       int count = (int) windows.length ();
       
@@ -412,6 +415,7 @@ namespace Unity
         {
           this.places_showing = false;
 
+          this.places.hide ();
           this.places.opacity = 0;
           this.plugin.get_above_window_group ().opacity = 255;
           this.plugin.get_normal_window_group ().opacity = 255;
@@ -425,6 +429,7 @@ namespace Unity
         {
           this.places_showing = true;
 
+          this.places.show ();
           this.places.opacity = 255;
           this.plugin.get_above_window_group ().opacity = 0;
           this.plugin.get_normal_window_group ().opacity = 0;
