@@ -37,10 +37,15 @@ namespace Unity
     construct
     {
     }
-
-    private void window_minimized (Plugin plugin, Mutter.Window window)
+    
+    private int get_animation_speed (Mutter.Window window)
     {
-      plugin.plugin.effect_completed (window, Mutter.PLUGIN_MINIMIZE);
+      int type = window.get_window_type ();
+      if (type == Mutter.MetaCompWindowType.NORMAL
+          || type == Mutter.MetaCompWindowType.DIALOG
+          || type == Mutter.MetaCompWindowType.MODAL_DIALOG)
+        return 200;
+      return 80;
     }
 
     private void window_maximized (Plugin        plugin,
@@ -63,32 +68,85 @@ namespace Unity
       plugin.plugin.effect_completed (window, Mutter.PLUGIN_UNMAXIMIZE);
     }
 
-    private void window_mapped (Plugin plugin, Mutter.Window window)
+    private void window_minimized (Plugin plugin, Mutter.Window window)
     {
-      /* We only want some types of windows */
-      int type = window.get_window_type ();
-      if (type == Mutter.MetaCompWindowType.NORMAL)
+      Mutter.MetaRectangle rect = {0, 0, 0, 0};
+      
+      int speed = get_animation_speed (window);
+      Clutter.Animation anim = null;
+      Clutter.Actor actor = window as Clutter.Actor;
+      if (Mutter.MetaWindow.get_icon_geometry (window.get_meta_window (), rect))
         {
-          window.opacity = 0;
-          window.show ();
-
-          //Mutter.MetaWindow.maximize (window.get_meta_window (), Mutter.MetaMaximizeFlags.HORIZONTAL);
-          //Mutter.MetaWindow.maximize (window.get_meta_window (), Mutter.MetaMaximizeFlags.VERTICAL);
-
-          var anim = window.animate (Clutter.AnimationMode.EASE_IN_SINE, 300,
-                                     "opacity", 255);
-
-          anim.completed.connect (this.window_mapped_completed);
+          float scale = float.min (float.min (1, rect.width / actor.width), float.min (1, rect.height / actor.height));
+        
+          actor.set ("scale-gravity", Clutter.Gravity.CENTER);
+          anim = actor.animate (Clutter.AnimationMode.EASE_IN_SINE, speed, 
+                         "opacity", 0,
+                         "x", (float) ((rect.x + rect.width / 2) - (actor.width / 2)),
+                         "y", (float) ((rect.y + rect.height / 2) - (actor.height / 2)),
+                         "x-scale", scale,
+                         "y-scale", scale);
         }
       else
         {
-          this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAP);
+          anim = actor.animate (Clutter.AnimationMode.EASE_IN_SINE, speed, "opacity", 0);
         }
+      
+      anim.completed.connect (this.window_minimized_completed);
+    }
+    
+    private void window_minimized_completed (Clutter.Animation anim)
+    {
+      Mutter.Window window = anim.get_object () as Mutter.Window;
+      
+      if (window == null)
+        return;
+      
+      window.hide ();
+      window.opacity = 0;
+      this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAP);
+    }
+
+    private void window_mapped (Plugin plugin, Mutter.Window window)
+    {
+      Clutter.Animation anim = null;
+      Clutter.Actor actor = window as Clutter.Actor;
+      actor.opacity = 0;
+      window.show ();
+      
+      int speed = get_animation_speed (window);
+     
+      ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
+      Wnck.Window wnck_window = Wnck.Window.get (xid);
+      
+      Mutter.MetaRectangle rect = {0, 0, 0, 0};
+      if (wnck_window is Wnck.Window && 
+          Mutter.MetaWindow.get_icon_geometry (window.get_meta_window (), rect))
+        {
+          int x, y, w, h;
+          wnck_window.get_geometry (out x, out y, out w, out h);
+          actor.set ("scale-gravity", Clutter.Gravity.CENTER);
+          anim = actor.animate (Clutter.AnimationMode.EASE_IN_SINE, speed, 
+                         "opacity", 255,
+                         "x", (float) x,
+                         "y", (float) y,
+                         "x-scale", 1f,
+                         "y-scale", 1f);
+        }
+      else
+        {
+          anim = actor.animate (Clutter.AnimationMode.EASE_IN_SINE, speed, "opacity", 255);
+        }
+      
+      anim.completed.connect (this.window_mapped_completed);
     }
     
     private void window_mapped_completed (Clutter.Animation anim)
     {
-      Mutter.Window window = (Mutter.Window)anim.get_object ();
+      Mutter.Window window = anim.get_object () as Mutter.Window;
+      
+      if (window == null)
+        return;
 
       window.opacity = 255;
       this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAP);
@@ -96,18 +154,13 @@ namespace Unity
     
     private void window_destroyed (Plugin plugin, Mutter.Window window)
     {
-      /* We only want some types of windows */
-      int type = window.get_window_type ();
-      if (type != Mutter.MetaCompWindowType.NORMAL
-          && type != Mutter.MetaCompWindowType.DIALOG
-          && type != Mutter.MetaCompWindowType.MODAL_DIALOG)
-        {
-         plugin.plugin.effect_completed (window, Mutter.PLUGIN_DESTROY);
-         return;
-        }
+      Clutter.Animation anim = null;
       
-      var anim = window.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, 
-                      "opacity", 0);
+      int speed = get_animation_speed (window);
+
+      anim = window.animate (Clutter.AnimationMode.EASE_IN_SINE, speed, 
+                             "opacity", 0);
+      
       anim.completed.connect (this.window_destroyed_completed);
     }
 
