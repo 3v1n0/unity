@@ -447,7 +447,7 @@ namespace Mutter {
 		public static void set_title (Mutter.MetaPreview preview, string title);
 	}
 	[Compact]
-	[CCode (cheader_filename = "mutter-plugins.h")]
+	[CCode (cheader_filename = "mutter-plugins.h", cname = "MetaRectangle")]
 	public class MetaRectangle {
 		public int height;
 		public int width;
