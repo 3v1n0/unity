@@ -110,7 +110,6 @@ namespace Unity.Widgets
     private uint fling_delta = 0;
     private uint last_mouse_event_time = 0;
     private float previous_y = -1000000000.0f;
-    private float fling_target = 0.0f;
 
     private Clutter.Texture? bgtex;
     private Clutter.Texture? gradient;
@@ -287,7 +286,7 @@ namespace Unity.Widgets
           this.stored_delta = delta;
           return;
         }
-
+        
       while (delta > 16)
         {
           delta -= 16;
@@ -325,10 +324,15 @@ namespace Unity.Widgets
       this.fling_velocity *= this.friction;
       this.drag_pos -= this.fling_velocity;
 
-      if(this.fling_velocity < 0 && this.drag_pos > this.total_child_height - height ||
-         this.fling_velocity > 0 && this.drag_pos < 0)
+      if(this.fling_velocity <= -1.0 && this.drag_pos > this.total_child_height - height ||
+         this.fling_velocity >= 1.0 && this.drag_pos < 0)
         {
           this.phase = ScrollerPhase.BOUNCE;
+        }
+
+      if (((int)this.fling_velocity).abs () < 1.0)
+        {
+          timeline.stop ();
         }
     }
 
@@ -341,51 +345,6 @@ namespace Unity.Widgets
     }
 
     private uint stored_delta = 0;
-    /*
-    private void on_fling_frame (Clutter.Timeline timeline, int msecs)
-    {
-
-      // the gist here is that we are doing a *real* per frame fling so we need
-      // to head towards a given goal, bouncing around on the way
-
-      float difference = this.drag_pos - this.fling_target;
-      this.fling_velocity += difference * 0.005f;
-
-      if (difference < 1.0f && difference > -1.0f)
-        {
-          // we have arrived at our destination.
-          timeline.stop ();
-          this.last_drag_pos = this.fling_target;
-          this.drag_pos = this.fling_target;
-          this.stored_delta = 0;
-          this.previous_y = this.drag_pos;
-        }
-
-      /* this code is slightly alkward, physics engines really need to tick
-       * at a constant framerate, even simple ones like this, but we can't
-       * do that nicely in clutter so we have to "catch-up" and "slow down"
-       * depending on how close to our target framerate (60fps) we are
-       */
-      /*
-      uint delta = timeline.get_delta ();
-      delta += this.stored_delta;
-      if (delta <= 16)
-        {
-          this.stored_delta = delta;
-          return;
-        }
-
-      float d = 0.0f;
-      while (delta > 16)
-        {
-          delta -= 16;
-          this.fling_velocity *= this.friction;
-          d -= this.fling_velocity;
-        }
-      this.drag_pos += d;
-
-      this.stored_delta = delta;
-    }*/
 
     private void calculate_anchor (out int iterations, out float position)
     {
@@ -444,30 +403,8 @@ namespace Unity.Widgets
                 return (float)scroll_px - this.padding.top;
               }
             }
-            return 0.0f;
         }
 
-      return 0.0f;
-    }
-  
-    private float get_next_neg_position (float target_pos)
-    {
-      /* returns the scroll to position of the next neg item */
-      /* *sigh* gee has no reverse() method for its container so we can't
-       * easily reverse the itteration, have to just do it manually
-       */
-      for (var i = this.children.size - 1; i >= 0; i--)
-      {
-        ScrollerChild container = this.children.get(i);
-        Clutter.ActorBox box = container.box;
-        if (box.y1 == 0.0 && box.y2 == 0.0) continue;
-        if (box.y1 < hot_start)
-        {
-          /* we have a container lower than the "hotarea" */
-          float scroll_px = box.y1 + target_pos - hot_start;
-          return (float)scroll_px - this.padding.top;
-        }
-      }
       return 0.0f;
     }
 
@@ -509,6 +446,12 @@ namespace Unity.Widgets
 
       calculate_anchor (out iters, out position);
 			this.settle_position = position;
+
+      if (this.fling_velocity > 0.0 && this.fling_velocity < 1.0)
+        {
+          this.fling_velocity = 2.0f;
+        }
+      
 
 			if ((release_event.time - this.last_mouse_event_time) > 120)
 				{
@@ -576,6 +519,20 @@ namespace Unity.Widgets
       {
         vel_y = motionevent.y - previous_y;
       }
+
+      // account for a drag on the velocity if scrolling out of the range
+      // of the icons
+      if (this.drag_pos < 0)
+        {
+          var distance = this.drag_pos;
+          vel_y *= 1.0f - (-distance / this.height);
+        }
+
+      if (this.drag_pos > this.total_child_height - this.height)
+        {
+          var distance = this.drag_pos - (this.total_child_height - this.height);
+          vel_y *= 1.0f - (distance / this.height);
+        }
 
       uint delta = motionevent.time - this.last_mouse_event_time;// this.fling_delta;
 			this.last_mouse_event_time = motionevent.time;
