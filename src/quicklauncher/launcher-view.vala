@@ -436,6 +436,7 @@ namespace Unity.Quicklauncher
       if (bevent.button == 1)
       {
         last_pressed_time = bevent.time;
+        quicklist_controller.close_menu ();
       }
       else
       {

@@ -160,6 +160,9 @@ namespace Unity.Quicklauncher
 
     public void close_menu ()
     {
+      if (this.menu == null)
+        return;
+      
       this.menu.fadeout_and_destroy ();
       this.old_menu = this.menu;
       this.menu = null;
