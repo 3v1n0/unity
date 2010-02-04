@@ -55,6 +55,7 @@ namespace Unity
                                    int           width,
                                    int           height)
     {
+      (window as Clutter.Actor).get_animation ().send_completed ();
       plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAXIMIZE);
     }
 
@@ -70,6 +71,7 @@ namespace Unity
 
     private void window_minimized (Plugin plugin, Mutter.Window window)
     {
+      (window as Clutter.Actor).get_animation ().send_completed ();
       Mutter.MetaRectangle rect = {0, 0, 0, 0};
       
       int speed = get_animation_speed (window);
@@ -104,11 +106,12 @@ namespace Unity
       
       window.hide ();
       window.opacity = 0;
-      this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAP);
+      this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MINIMIZE);
     }
 
     private void window_mapped (Plugin plugin, Mutter.Window window)
     {
+      (window as Clutter.Actor).get_animation ().send_completed ();
       Clutter.Animation anim = null;
       Clutter.Actor actor = window as Clutter.Actor;
       actor.opacity = 0;
@@ -154,6 +157,7 @@ namespace Unity
     
     private void window_destroyed (Plugin plugin, Mutter.Window window)
     {
+      (window as Clutter.Actor).get_animation ().send_completed ();
       Clutter.Animation anim = null;
       
       int speed = get_animation_speed (window);
