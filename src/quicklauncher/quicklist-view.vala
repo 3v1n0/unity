@@ -33,9 +33,83 @@ namespace Unity.Quicklauncher
   const float ANCHOR_HEIGHT      = 2.0f;
   const float ANCHOR_WIDTH       = 1.0f;
 
-  /* we call this instead of Ctk.Menu so you can alter this to look right */
+  // we subclass Ctk.MenuItem here because we need to adapt it's appearance
+  public class QuicklistMenuItem : Ctk.MenuItem
+  {
+    Ctk.LayerActor item_background;
+    int            old_width;
+    int            old_height;
+
+    private override void
+    paint ()
+    {
+      this.item_background.paint ();
+
+      // item_background;
+      print ("QuicklistMenuItem.paint() called\n");
+    }
+
+    private override void
+    allocate (Clutter.ActorBox        box,
+              Clutter.AllocationFlags flags)
+    {
+      int w;
+      int h;
+
+      base.allocate (box, flags);
+
+      w = (int) (box.x2 - box.x1);
+      h = (int) (box.y2 - box.y1);
+      print (@"QuicklistMenuItem.allocate(): $w $h\n");
+
+      // exit early if the allocation-width/height didn't change, this is needed
+      // because clutter triggers calling allocate even if nothing changed
+      if ((old_width == w) && (old_height == h))
+        return;
+
+      // store the new width/height
+      old_width  = w;
+      old_height = h;
+
+      if (this.item_background is Ctk.LayerActor)
+         this.item_background.destroy ();
+
+      this.item_background = new Ctk.LayerActor (w, h);
+      this.item_background.set_parent (this);
+      this.item_background.map ();
+      this.item_background.show ();
+    }
+
+    private void
+    _on_label_changed ()
+    {
+      print ("label changed to: \"%s\"\n", this.get_label ());
+    }
+
+    construct
+    {
+      Ctk.Padding padding = Ctk.Padding () {
+        left   = (int) Ctk.em_to_pixel (MARGIN),
+        right  = (int) Ctk.em_to_pixel (MARGIN),
+        top    = (int) Ctk.em_to_pixel (MARGIN),
+        bottom = (int) Ctk.em_to_pixel (MARGIN)
+      };
+      this.set_padding (padding);
+
+      this.notify["label"].connect (this._on_label_changed);
+
+      old_width  = 0;
+      old_height = 0;
+    }
+  }
+
+  // we call this instead of Ctk.Menu so you can alter this to look right
   public class QuicklistMenu : Ctk.Menu
   {
+    Ctk.LayerActor ql_background;
+    int            old_width;
+    int            old_height;
+
     private void
     _round_rect_anchor (Cairo.Context cr,
                         double        aspect,        // aspect-ratio
@@ -293,8 +367,9 @@ namespace Unity.Quicklauncher
       cr.fill ();
     }
 
-    public override void allocate (Clutter.ActorBox        box,
-                                   Clutter.AllocationFlags flags)
+    private override void
+    allocate (Clutter.ActorBox        box,
+              Clutter.AllocationFlags flags)
     {
       int w;
       int h;
@@ -430,10 +505,6 @@ namespace Unity.Quicklauncher
 
       this.set_background (this.ql_background);
     }
-
-    Ctk.LayerActor ql_background;
-    int            old_width;
-    int            old_height;
     
     construct
     {
@@ -441,9 +512,9 @@ namespace Unity.Quicklauncher
         left   = (int) Ctk.em_to_pixel (ANCHOR_WIDTH) +
                  (int) Ctk.em_to_pixel (BORDER) +
                  (int) Ctk.em_to_pixel (MARGIN),
-        right  = 6,
-        top    = 6,
-        bottom = 6
+        right  = (int) Ctk.em_to_pixel (BORDER),
+        top    = (int) Ctk.em_to_pixel (BORDER),
+        bottom = (int) Ctk.em_to_pixel (BORDER)
       };
       this.set_padding (padding);
 
