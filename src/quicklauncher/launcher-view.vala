@@ -211,7 +211,7 @@ namespace Unity.Quicklauncher
     /* animation logic */
     private void throbber_start ()
     {
-
+      this.icon.remove_all_effects ();
       effect_icon_glow = new Ctk.EffectGlow ();
       Clutter.Color c = Clutter.Color () {
         red = 255,
