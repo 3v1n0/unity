@@ -397,6 +397,8 @@ namespace Unity.Quicklauncher
         if (this.quicklist_controller.is_label)
           {
             this.quicklist_controller.show_menu ();
+            if (model is ApplicationModel)
+              (model as ApplicationModel).expose ();
           }
       }
       return false;

@@ -48,6 +48,11 @@ namespace Unity
 
     private bool showing_places;
 
+    public void expose_windows (GLib.SList<Wnck.Window> windows)
+    {
+      ;
+    }
+
     public UnderlayWindow (bool popup, int width, int height)
     {
       Object(is_popup: popup, popup_width: width, popup_height: height);
@@ -156,8 +161,6 @@ namespace Unity
           this.wnck_screen.active_window_changed.connect (this.on_active_window_changed);
         }
 
-      /* inform TooltipManager about window */
-      Unity.TooltipManager.get_default().top_level = this;
       END_FUNCTION ();
     }
 
