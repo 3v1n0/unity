@@ -312,7 +312,7 @@ namespace Unity.Widgets
     {
       var distance = this.settle_position - this.drag_pos;
       this.drag_pos += distance * 0.2f;
-      if (((int) (distance)).abs() < 1 )
+      if (Math.fabs (distance) < 1 )
         {
           timeline.stop ();
         }
@@ -330,7 +330,13 @@ namespace Unity.Widgets
           this.phase = ScrollerPhase.BOUNCE;
         }
 
-      if (((int)this.fling_velocity).abs () < 1.0)
+      if (Math.fabs (this.fling_velocity) < 1.0 &&
+          (this.drag_pos < 0 || this.drag_pos > this.total_child_height - this.height))
+        {
+          this.phase = ScrollerPhase.SETTLING;
+        }
+
+      if (Math.fabs (this.fling_velocity) < 1.0)
         {
           timeline.stop ();
         }
