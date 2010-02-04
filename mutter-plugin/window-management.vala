@@ -55,8 +55,6 @@ namespace Unity
                                    int           width,
                                    int           height)
     {
-      if ((window as Clutter.Actor).get_animation () != null)
-        (window as Clutter.Actor).get_animation ().send_completed ();
       plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAXIMIZE);
     }
 
@@ -72,8 +70,20 @@ namespace Unity
 
     private void window_minimized (Plugin plugin, Mutter.Window window)
     {
-      if ((window as Clutter.Actor).get_animation () != null)
-        (window as Clutter.Actor).get_animation ().send_completed ();
+      int type = window.get_window_type ();
+      
+      if (type != Mutter.MetaWindowType.NORMAL &&
+          type != Mutter.MetaWindowType.DIALOG &&
+          type != Mutter.MetaWindowType.MODAL_DIALOG &&
+          type != Mutter.MetaWindowType.MENU &&
+          type != Mutter.MetaWindowType.TOOLTIP &&
+          type != Mutter.MetaWindowType.POPUP_MENU &&
+          type != Mutter.MetaWindowType.COMBO
+          )
+        {
+          this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MINIMIZE);
+        }
+    
       Mutter.MetaRectangle rect = {0, 0, 0, 0};
       
       int speed = get_animation_speed (window);
@@ -113,8 +123,20 @@ namespace Unity
 
     private void window_mapped (Plugin plugin, Mutter.Window window)
     {
-      if ((window as Clutter.Actor).get_animation () != null)
-        (window as Clutter.Actor).get_animation ().send_completed ();
+      int type = window.get_window_type ();
+      
+      if (type != Mutter.MetaWindowType.NORMAL &&
+          type != Mutter.MetaWindowType.DIALOG &&
+          type != Mutter.MetaWindowType.MODAL_DIALOG &&
+          type != Mutter.MetaWindowType.MENU &&
+          type != Mutter.MetaWindowType.TOOLTIP &&
+          type != Mutter.MetaWindowType.POPUP_MENU &&
+          type != Mutter.MetaWindowType.COMBO
+          )
+        {
+          this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAP);
+        }
+    
       Clutter.Animation anim = null;
       Clutter.Actor actor = window as Clutter.Actor;
       actor.opacity = 0;
@@ -160,8 +182,20 @@ namespace Unity
     
     private void window_destroyed (Plugin plugin, Mutter.Window window)
     {
-      if ((window as Clutter.Actor).get_animation () != null)
-        (window as Clutter.Actor).get_animation ().send_completed ();
+      int type = window.get_window_type ();
+      
+      if (type != Mutter.MetaWindowType.NORMAL &&
+          type != Mutter.MetaWindowType.DIALOG &&
+          type != Mutter.MetaWindowType.MODAL_DIALOG &&
+          type != Mutter.MetaWindowType.MENU &&
+          type != Mutter.MetaWindowType.TOOLTIP &&
+          type != Mutter.MetaWindowType.POPUP_MENU &&
+          type != Mutter.MetaWindowType.COMBO
+          )
+        {
+          this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_DESTROY);
+        }
+      
       Clutter.Animation anim = null;
       
       int speed = get_animation_speed (window);
