@@ -101,6 +101,7 @@ namespace Unity.Quicklauncher
               270.0f * GLib.Math.PI / 180.0f);
     }
 
+    /* Commented out as it isn't used atm
     private void
     _debug_mask (Cairo.Context cr,
                  int           w,
@@ -118,9 +119,9 @@ namespace Unity.Quicklauncher
 
       // draw actual rectangle
       cr.rectangle (0.0f, 0.0f, w, h);
-      cr.fill ();      
+      cr.fill ();
     }
-
+    */
     private void
     _outline_mask (Cairo.Context cr,
                    int           w,
@@ -334,9 +335,9 @@ namespace Unity.Quicklauncher
       Ctk.Actor actor = this.get_attached_actor ();
       actor.get_position (out ax, out ay);
       actor.get_size (out aw, out ah);
-      stdout.printf ("--- attached-actor: %f/%f ---\n", ax, ay);
+      //stdout.printf ("--- attached-actor: %f/%f ---\n", ax, ay);
       this.get_position (out x, out y);
-      stdout.printf ("--- menu-actor: %f/%f ---\n", x, y);
+      //stdout.printf ("--- menu-actor: %f/%f ---\n", x, y);
       new_y = ah / 2.0f ;
 
       // store the new width/height
@@ -364,10 +365,12 @@ namespace Unity.Quicklauncher
 
       this.ql_background = new Ctk.LayerActor (w, h);
 
+      /* Commented out as it isn't used atm
       Ctk.Layer debug_layer = new Ctk.Layer (w,
                                              h,
                                              Ctk.LayerRepeatMode.NONE,
                                              Ctk.LayerRepeatMode.NONE);
+       */
 
       Ctk.Layer outline_layer = new Ctk.Layer (w,
                                                h,
@@ -479,7 +482,7 @@ namespace Unity.Quicklauncher
     Ctk.LayerActor ql_background;
     int            old_width;
     int            old_height;
-    
+
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {
