@@ -191,6 +191,51 @@ namespace Unity
         }
 
       this.on_restore_input_region ();
+      
+      Wnck.Screen.get_default().active_window_changed.connect (on_active_window_changed);
+      
+      if (Wnck.Screen.get_default ().get_active_window () != null)
+        Wnck.Screen.get_default ().get_active_window ().state_changed.connect (on_active_window_state_changed);
+    }
+    
+    private void on_active_window_state_changed (Wnck.WindowState change_mask, Wnck.WindowState new_state)
+    {
+      check_fullscreen_obstruction ();
+    }
+    
+    private void on_active_window_changed (Wnck.Window? previous_window)
+    {
+      if (previous_window != null)
+        previous_window.state_changed.disconnect (on_active_window_state_changed);
+      
+      
+      Wnck.Window current = Wnck.Screen.get_default ().get_active_window ();
+      if (current == null)
+        return;
+      
+      current.state_changed.connect (on_active_window_state_changed);
+      
+      check_fullscreen_obstruction ();
+    }
+    
+    void check_fullscreen_obstruction ()
+    {
+      Wnck.Window current = Wnck.Screen.get_default ().get_active_window ();
+      if (current == null)
+        return;
+      
+      if (current.is_fullscreen ())
+        {
+          this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
+          this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
+          this.plugin.set_stage_input_area(0, 0, 0, 0);
+        }
+      else
+        {
+          this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
+          this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
+          this.on_restore_input_region ();
+        }
     }
 
     private void relayout ()
@@ -245,6 +290,7 @@ namespace Unity
       if (is_in_menu)
         {
           this.plugin.set_stage_input_area(0, 0, (int)(width), (int)(height));
+          new X.Display (null).flush ();
         }
       else
         {
@@ -270,6 +316,7 @@ namespace Unity
     this.plugin.set_stage_input_area (0, 0,
                                             (int)this.stage.width,
                                             (int)this.stage.height);
+          new X.Display (null).flush ();
         }
     }
 
@@ -462,6 +509,7 @@ namespace Unity
                                             0,
                                             (int)this.stage.width,
                                             (int)this.stage.height);
+          new X.Display (null).flush ();
         }
     }
 

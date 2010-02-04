@@ -25,6 +25,7 @@ namespace Unity.Quicklauncher.Models
   {
     public abstract bool is_active {get;}
     public abstract bool is_focused {get;}
+    public abstract bool is_urgent {get;}
     public abstract Gdk.Pixbuf icon {get;}
     public abstract bool is_sticky {get; set;}
 
@@ -33,6 +34,7 @@ namespace Unity.Quicklauncher.Models
     public abstract signal void notify_active ();
     public abstract signal void notify_focused ();
     public abstract signal void request_attention ();
+    public abstract signal void urgent_changed ();
     public abstract signal void activated ();
 
     public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcuts ();

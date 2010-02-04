@@ -105,7 +105,6 @@ quicklauncher_sources = \
   quicklauncher/quicklauncher.vala \
   quicklauncher/quicklist-controller.vala \
   quicklauncher/quicklist-view.vala \
-  quicklauncher/tooltipmanager.vala \
   quicklauncher/unity-scroller.vala
 
 libunity_static_la_VALASOURCES = \

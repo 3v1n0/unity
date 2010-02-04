@@ -448,7 +448,7 @@ namespace Mutter {
 	}
 	[Compact]
 	[CCode (cheader_filename = "mutter-plugins.h", cname = "MetaRectangle")]
-	public class MetaRectangle {
+	public struct MetaRectangle {
 		public int height;
 		public int width;
 		public int x;

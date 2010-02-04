@@ -161,8 +161,6 @@ namespace Unity
           this.wnck_screen.active_window_changed.connect (this.on_active_window_changed);
         }
 
-      /* inform TooltipManager about window */
-      Unity.TooltipManager.get_default().top_level = this;
       END_FUNCTION ();
     }
 
