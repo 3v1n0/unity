@@ -204,6 +204,67 @@ namespace Ctk {
 		public string stock_id { owned get; set; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
+	public class Layer : GLib.Object {
+		[CCode (has_construct_function = false)]
+		public Layer (uint width, uint height, Ctk.LayerRepeatMode image_repeat, Ctk.LayerRepeatMode mask_repeat);
+		public void get_color (Clutter.Color color);
+		public uint get_height ();
+		public uint get_image_id ();
+		public unowned Gdk.Pixbuf get_image_pixbuf ();
+		public Ctk.LayerRepeatMode get_image_repeat_mode ();
+		public uint get_mask_id ();
+		public unowned Gdk.Pixbuf get_mask_pixbuf ();
+		public Ctk.LayerRepeatMode get_mask_repeat_mode ();
+		public uchar get_opacity ();
+		public uint get_width ();
+		public bool is_valid ();
+		public void set_color (Clutter.Color color);
+		public void set_height (uint height);
+		public void set_image_from_file (string filename);
+		public void set_image_from_pixbuf (Gdk.Pixbuf pixbuf);
+		public void set_image_from_surface (Cairo.Surface surface);
+		public void set_image_pixbuf (Gdk.Pixbuf pixbuf);
+		public void set_image_repeat_mode (Ctk.LayerRepeatMode repeat);
+		public void set_mask_from_file (string filename);
+		public void set_mask_from_pixbuf (Gdk.Pixbuf pixbuf);
+		public void set_mask_from_surface (Cairo.Surface surface);
+		public void set_mask_pixbuf (Gdk.Pixbuf pixbuf);
+		public void set_mask_repeat_mode (Ctk.LayerRepeatMode repeat);
+		public void set_opacity (uchar opacity);
+		public void set_width (uint width);
+		public Clutter.Color color { get; set; }
+		public uint height { get; set; }
+		public uint image_id { get; }
+		public Gdk.Pixbuf image_pixbuf { get; set; }
+		public uint image_repeat_mode { get; set; }
+		public uint mask_id { get; }
+		public Gdk.Pixbuf mask_pixbuf { get; set; }
+		public uint mask_repeat_mode { get; set; }
+		public uint opacity { get; set; }
+		[NoAccessorMethod]
+		public bool valid { get; }
+		public uint width { get; set; }
+	}
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public class LayerActor : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable {
+		[CCode (type = "ClutterActor*", has_construct_function = false)]
+		public LayerActor (uint width, uint height);
+		public void add_layer (Ctk.Layer layer);
+		public void flatten ();
+		public uint get_height ();
+		public unowned Ctk.Layer get_layer (uint index);
+		public uint get_num_layers ();
+		public uint get_width ();
+		public bool is_flattened ();
+		public void set_height (uint height);
+		public void set_width (uint width);
+		[NoAccessorMethod]
+		public bool flattened { get; }
+		public uint height { get; set; }
+		public uint num_layers { get; }
+		public uint width { get; set; }
+	}
+	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class Menu : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
 		[CCode (has_construct_function = false)]
 		public Menu ();
@@ -357,6 +418,12 @@ namespace Ctk {
 		ICON_NAME,
 		GICON,
 		FILENAME
+	}
+	[CCode (cprefix = "CTK_LAYER_REPEAT_", cheader_filename = "clutk/clutk.h")]
+	public enum LayerRepeatMode {
+		NONE,
+		X,
+		Y
 	}
 	[CCode (cprefix = "CTK_ORIENTATION_", cheader_filename = "clutk/clutk.h")]
 	public enum Orientation {

@@ -125,16 +125,6 @@ static void
 unity_mutter_constructed (GObject *object)
 {
   UnityMutter          *self = UNITY_MUTTER (object);
-  ClutterBackend       *backend;
-  cairo_font_options_t *font_options;
-
-  clutter_set_font_flags (clutter_get_font_flags () & ~CLUTTER_FONT_MIPMAPPING);
-
-  backend = clutter_get_default_backend ();
-  font_options = cairo_font_options_create ();
-  cairo_font_options_set_antialias (font_options, CAIRO_ANTIALIAS_GRAY);
-  clutter_backend_set_font_options (backend, font_options);
-  cairo_font_options_destroy (font_options);
 
   self->plugin = unity_plugin_new ();
   g_signal_connect (self->plugin, "restore-input-region",
