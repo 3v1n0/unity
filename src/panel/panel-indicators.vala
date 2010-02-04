@@ -45,7 +45,10 @@ namespace Unity.Panel.Indicators
       this.button_release_event.connect (this.on_button_release_event);
       this.motion_event.connect (this.on_motion_event);
 
-      Idle.add (this.load_indicators);
+      if (Environment.get_variable ("UNITY_DISABLE_IDLES") != null)
+        this.load_indicators ();
+      else
+        Idle.add (this.load_indicators);
     }
 
     private bool load_indicators ()
@@ -184,7 +187,7 @@ namespace Unity.Panel.Indicators
     {
       if (e.button.time - click_time < 300)
         return true;
-      
+
       if (this.popped is Gtk.Menu
           && (this.popped.get_flags () & Gtk.WidgetFlags.VISIBLE) !=0)
         {
