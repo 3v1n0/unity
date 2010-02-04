@@ -35,6 +35,29 @@ namespace Unity
       ;
     }
   }
+  
+  public class ActorBlur : Ctk.Bin
+  {
+    private Clutter.Clone clone;
+    //private Ctk.EffectBlur blur;
+    
+    public ActorBlur (Clutter.Actor actor)
+    {
+      clone = new Clutter.Clone (actor);
+      
+      add_actor (clone);
+      clone.show ();
+      
+      //blur = new Ctk.EffectBlur ();
+      //blur.set_factor (9f);
+      //add_effect (blur);
+    }
+    
+    construct
+    {
+      
+    }
+  }
 
   public class Plugin : Object, Shell
   {
@@ -58,7 +81,7 @@ namespace Unity
                                            Mutter.Window window,
                                            ulong         events);
 
-    public signal void restore_input_region ();
+    public signal void restore_input_region (bool fullscreen);
 
     /* Properties */
     private Mutter.Plugin? _plugin;
@@ -75,11 +98,12 @@ namespace Unity
     private WindowManagement wm;
 
     /* Unity Components */
-    private Background         background;
     private Quicklauncher.View quicklauncher;
     private Places.Controller  places_controller;
     private Places.View        places;
     private Panel.View         panel;
+    private ActorBlur          actor_blur;
+    private Clutter.Rectangle  dark_box;
 
     private DragDest drag_dest;
     private bool     places_showing;
@@ -121,7 +145,6 @@ namespace Unity
       this.wm = new WindowManagement (this);
 
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
-      this.stage.actor_added.connect (this.on_stage_actor_added);
 
       this.drag_dest = new DragDest ();
       this.drag_dest.show ();
@@ -143,10 +166,6 @@ namespace Unity
 
       Ctk.dnd_init ((Gtk.Widget)this.drag_dest, target_list);
 
-
-      this.background = new Background ();
-      this.stage.add_actor (this.background);
-      this.background.lower_bottom ();
 
       Clutter.Group window_group = (Clutter.Group) this.plugin.get_window_group ();
 
@@ -181,7 +200,7 @@ namespace Unity
           });
         }
 
-      this.on_restore_input_region ();
+      this.on_restore_input_region (false);
     }
 
     private void relayout ()
@@ -194,9 +213,6 @@ namespace Unity
       this.drag_dest.resize (this.QUICKLAUNCHER_WIDTH,
                              (int)height - this.PANEL_HEIGHT);
       this.drag_dest.move (0, this.PANEL_HEIGHT);
-
-      this.background.set_size (width, height);
-      this.background.set_position (0, 0);
 
       this.quicklauncher.set_size (this.QUICKLAUNCHER_WIDTH,
                                    (height-this.PANEL_HEIGHT));
@@ -224,41 +240,14 @@ namespace Unity
 
     public void set_in_menu (bool is_in_menu)
     {
-      // we need to modify the stage input area so that the menus are responsive
-      // and they detect clicks elsewhere
-      float width, height;
-      this.stage.get_size (out width, out height);
-
-      if (is_in_menu)
-        {
-          this.plugin.set_stage_input_area(0, 0, (int)(width), (int)(height));
-          new X.Display (null).flush ();
-        }
-      else
-        {
-          this.on_restore_input_region ();
-        }
+      this.on_restore_input_region (is_in_menu);
     }
     
-    void on_restore_input_region ()
+    void on_restore_input_region (bool fullscreen)
     {
-      if (!expose_showing)
-        this.restore_input_region ();
-    }
-
-    private void on_stage_actor_added (Clutter.Actor actor)
-    {
-      if (actor is Ctk.Menu)
-        {
-          actor.destroy.connect (() =>
-            {
-              this.on_restore_input_region ();
-            });
-          this.plugin.set_stage_input_area (0, 0,
-                                            (int)this.stage.width,
-                                            (int)this.stage.height);
-          new X.Display (null).flush ();
-        }
+      if ((expose_showing || places_showing) && !fullscreen)
+        return;
+      this.restore_input_region (fullscreen);
     }
 
     /*
@@ -344,7 +333,7 @@ namespace Unity
                                          "y", (float) y);
       
       this.expose_showing = false;
-      this.on_restore_input_region ();
+      this.on_restore_input_region (false);
     }
     
     bool on_stage_captured_event (Clutter.Event event)
@@ -419,13 +408,12 @@ namespace Unity
 
           this.places.hide ();
           this.places.opacity = 0;
-          this.plugin.get_above_window_group ().opacity = 255;
-          this.plugin.get_normal_window_group ().opacity = 255;
-          this.plugin.get_below_window_group().opacity = 255;
-
+          
+          this.actor_blur.destroy ();
+          this.dark_box.destroy ();
           this.panel.set_indicator_mode (false);
 
-          this.on_restore_input_region ();
+          this.on_restore_input_region (false);
         }
       else
         {
@@ -433,17 +421,35 @@ namespace Unity
 
           this.places.show ();
           this.places.opacity = 255;
-          this.plugin.get_above_window_group ().opacity = 0;
-          this.plugin.get_normal_window_group ().opacity = 0;
-          this.plugin.get_below_window_group().opacity = 0;
+          
+          this.actor_blur = new ActorBlur (this.plugin.get_normal_window_group ());
+          
+          (this.plugin.get_window_group () as Clutter.Container).add_actor (this.actor_blur);
+          (this.actor_blur as Clutter.Actor).raise (this.plugin.get_normal_window_group ());
+          
+          this.actor_blur.set_position (0, 0);
+          this.actor_blur.set_size (this.stage.width, this.stage.height);
 
+          this.dark_box = new Clutter.Rectangle.with_color ({0, 0, 0, 255});
+          
+          (this.plugin.get_window_group () as Clutter.Container).add_actor (this.dark_box);
+          this.dark_box.raise (this.actor_blur);
+          
+          this.dark_box.set_position (0, 0);
+          this.dark_box.set_size (this.stage.width, this.stage.height);
+          
+          this.dark_box.show ();
+          this.actor_blur.show ();
           this.panel.set_indicator_mode (true);
 
-          this.plugin.set_stage_input_area (0,
-                                            0,
-                                            (int)this.stage.width,
-                                            (int)this.stage.height);
+          this.on_restore_input_region (true);
+
           new X.Display (null).flush ();
+          
+          this.dark_box.opacity = 0;
+          this.actor_blur.opacity = 255;
+          
+          this.dark_box.animate   (Clutter.AnimationMode.EASE_IN_SINE, 250, "opacity", 127);
         }
       debug ("Places showing: %s", this.places_showing ? "true":"false");
     }

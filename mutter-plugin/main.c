@@ -92,7 +92,7 @@ static void unity_mutter_kill_effect (MutterPlugin  *self,
 static gboolean unity_mutter_xevent_filter (MutterPlugin *self,
                                       XEvent      *event);
 
-static void on_restore_input_region (UnityPlugin *plugin, MutterPlugin *self);
+static void on_restore_input_region (UnityPlugin *plugin, gboolean fullscreen);
 
 static const MutterPluginInfo * unity_mutter_plugin_info (MutterPlugin *self);
 
@@ -144,8 +144,9 @@ unity_mutter_constructed (GObject *object)
 }
 
 static void
-on_restore_input_region (UnityPlugin *plugin, MutterPlugin *self)
+on_restore_input_region (UnityPlugin *plugin, gboolean fullscreen)
 {
+  MutterPlugin  *self;
   MetaScreen    *screen;
   MetaDisplay   *display;
   Display       *xdisplay;
@@ -153,7 +154,9 @@ on_restore_input_region (UnityPlugin *plugin, MutterPlugin *self)
   gint           width=0, height=0;
   XserverRegion  region;
 
-  g_return_if_fail (MUTTER_IS_PLUGIN (self));
+  g_return_if_fail (UNITY_IS_PLUGIN (plugin));
+
+  self = unity_plugin_get_plugin (plugin);
 
   screen = mutter_plugin_get_screen (self);
   display = meta_screen_get_display (screen);
@@ -161,24 +164,42 @@ on_restore_input_region (UnityPlugin *plugin, MutterPlugin *self)
 
   mutter_plugin_query_screen_size (self, &width, &height);
 
-  rects = g_new (XRectangle, 2);
+  if (fullscreen)
+    {
+      g_print ("FULLSCREEN\n");
+      rects = g_new (XRectangle, 1);
+      
+      /* Whole Screen */
+      rects[0].x = 0;
+      rects[0].y = 0;
+      rects[0].width = width;
+      rects[0].height = height;
+      
+      region = XFixesCreateRegion (xdisplay, rects, 1);
+      mutter_plugin_set_stage_input_region (self, region);
+    }
+  else
+    {
+      g_print ("UNITY\n");
+      rects = g_new (XRectangle, 2);
 
-  /* Panel first */
-  rects[0].x = 0;
-  rects[0].y = 0;
-  rects[0].width = width;
-  rects[0].height = unity_plugin_get_panel_height (plugin);
+      /* Panel first */
+      rects[0].x = 0;
+      rects[0].y = 0;
+      rects[0].width = width;
+      rects[0].height = unity_plugin_get_panel_height (plugin);
 
-  /* Launcher */
-  rects[1].x = 0;
-  rects[1].y = rects[0].height;
-  rects[1].width = unity_plugin_get_launcher_width (plugin);
-  rects[1].height = height - rects[0].height;
+      /* Launcher */
+      rects[1].x = 0;
+      rects[1].y = rects[0].height;
+      rects[1].width = unity_plugin_get_launcher_width (plugin);
+      rects[1].height = height - rects[0].height;
 
-  /* Update region */
-  region = XFixesCreateRegion (xdisplay, rects, 2);
-  mutter_plugin_set_stage_input_region (self, region);
-
+      /* Update region */
+      region = XFixesCreateRegion (xdisplay, rects, 2);
+      mutter_plugin_set_stage_input_region (self, region);
+    }
+    
   g_free (rects);
   XFixesDestroyRegion (xdisplay, region);
 }

@@ -83,6 +83,7 @@ namespace Unity.Quicklauncher
     {
       this.menu = new QuicklistMenu () as Ctk.Menu;
       Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (this.label);
+      menuitem.activated.connect (this.close_menu);
       this.menu.append (menuitem, true);
       this.menu.attach_to_actor (this.attached_widget);
       stage.add_actor (this.menu);
@@ -92,26 +93,25 @@ namespace Unity.Quicklauncher
     {
       // first of all check, if we have a menu active we don't show any labels
       if (Unity.Quicklauncher.active_menu != null)
-        {
-          return;
-        }
+        return;
 
       if (this.menu == null)
-        {
-          this.build_menu ();
-        }
+        this.build_menu ();
 
       this.menu.show();
       this.is_label = true;
     }
+    
+    public void hide_label ()
+    {
+      if (!is_label || menu == null)
+        return;
+
+      menu.hide ();
+    }
 
     public void show_menu ()
     {
-      if (this.menu == null)
-        {
-          this.show_label ();
-        }
-
       if (Unity.Quicklauncher.active_menu != null)
         {
           // we already have an active menu, so destroy that and start this one
@@ -119,6 +119,11 @@ namespace Unity.Quicklauncher
           Unity.Quicklauncher.active_menu = null;
           if (Unity.global_shell is Unity.Shell)
             Unity.global_shell.set_in_menu (false);
+        }
+
+      if (this.menu == null)
+        {
+          this.show_label ();
         }
 
       this.is_label = false;
