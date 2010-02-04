@@ -105,6 +105,9 @@ namespace Unity.Quicklauncher
       }
     }
 
+    private Clutter.Animation running_anim;
+    private Clutter.Animation focused_anim;
+
   /* constructors */
     public LauncherView (LauncherModel model)
       {
@@ -372,12 +375,15 @@ namespace Unity.Quicklauncher
       /* we need to show the running indicator when we are running */
       if (this.model.is_active)
         {
-          this.running_indicator.set_opacity (255);
+          this.running_anim = this.running_indicator.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
+                                                              "opacity", 255);
         }
       else
         {
-          this.running_indicator.set_opacity (0);
-          this.focused_indicator.set_opacity (0);
+          this.running_anim = this.running_indicator.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
+                                                              "opacity", 0);
+          this.focused_anim = this.focused_indicator.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
+                                                              "opacity", 0);
         }
 
       if (!this.model.is_active && !this.model.is_sticky)
@@ -390,11 +396,13 @@ namespace Unity.Quicklauncher
     {
       if (this.model.is_focused)
         {
-          this.focused_indicator.set_opacity (255);
+          this.focused_anim = this.focused_indicator.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
+                                                              "opacity", 255);
         }
       else
         {
-          this.focused_indicator.set_opacity (0);
+          this.focused_anim = this.focused_indicator.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
+                                                              "opacity", 0);
         }
 
       this.is_starting = false;
