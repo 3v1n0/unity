@@ -75,13 +75,11 @@ namespace Unity
       if (type != Mutter.MetaWindowType.NORMAL &&
           type != Mutter.MetaWindowType.DIALOG &&
           type != Mutter.MetaWindowType.MODAL_DIALOG &&
-          type != Mutter.MetaWindowType.MENU &&
-          type != Mutter.MetaWindowType.TOOLTIP &&
-          type != Mutter.MetaWindowType.POPUP_MENU &&
-          type != Mutter.MetaWindowType.COMBO
+          type != Mutter.MetaWindowType.MENU
           )
         {
           this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MINIMIZE);
+          return;
         }
     
       Mutter.MetaRectangle rect = {0, 0, 0, 0};
@@ -128,13 +126,11 @@ namespace Unity
       if (type != Mutter.MetaWindowType.NORMAL &&
           type != Mutter.MetaWindowType.DIALOG &&
           type != Mutter.MetaWindowType.MODAL_DIALOG &&
-          type != Mutter.MetaWindowType.MENU &&
-          type != Mutter.MetaWindowType.TOOLTIP &&
-          type != Mutter.MetaWindowType.POPUP_MENU &&
-          type != Mutter.MetaWindowType.COMBO
+          type != Mutter.MetaWindowType.MENU
           )
         {
           this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAP);
+          return;
         }
     
       Clutter.Animation anim = null;
@@ -187,13 +183,11 @@ namespace Unity
       if (type != Mutter.MetaWindowType.NORMAL &&
           type != Mutter.MetaWindowType.DIALOG &&
           type != Mutter.MetaWindowType.MODAL_DIALOG &&
-          type != Mutter.MetaWindowType.MENU &&
-          type != Mutter.MetaWindowType.TOOLTIP &&
-          type != Mutter.MetaWindowType.POPUP_MENU &&
-          type != Mutter.MetaWindowType.COMBO
+          type != Mutter.MetaWindowType.MENU
           )
         {
           this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_DESTROY);
+          return;
         }
       
       Clutter.Animation anim = null;
