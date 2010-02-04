@@ -131,6 +131,7 @@ namespace Unity.Quicklauncher.Models
       this.app.opened.connect(this.on_app_opened);
       this.app.focus_changed.connect (this.on_app_focus_changed);
       this.app.running_changed.connect (this.on_app_running_changed);
+      this.app.urgent_changed.connect (this.on_app_urgent_changed);
 
       this._icon = make_icon (app.icon_name);
     }
@@ -151,6 +152,11 @@ namespace Unity.Quicklauncher.Models
       }
       notify_focused ();
     }
+    
+    private void on_app_urgent_changed ()
+    {
+      this.urgent_changed ();
+    }
 
     private void on_app_opened (Wnck.Window window)
     {
@@ -162,14 +168,22 @@ namespace Unity.Quicklauncher.Models
     {
       get { return this.app.running; }
     }
+    
     public bool is_focused
     {
       get { return this.app.focused; }
     }
+    
+    public bool is_urgent 
+    {
+      get { return this.app.get_urgent (); }
+    }
+    
     public Gdk.Pixbuf icon
     {
       get { return _icon; }
     }
+    
     public string name
     {
       get { return this.app.name; }
