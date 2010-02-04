@@ -39,6 +39,7 @@ namespace Unity.Quicklauncher
     Ctk.LayerActor item_background;
     int            old_width;
     int            old_height;
+    string         old_label;
 
     private override void
     paint ()
@@ -71,19 +72,29 @@ namespace Unity.Quicklauncher
       old_width  = w;
       old_height = h;
 
+      // before creating a new CtkLayerActor make sure we don't leak any memory
       if (this.item_background is Ctk.LayerActor)
          this.item_background.destroy ();
-
       this.item_background = new Ctk.LayerActor (w, h);
+
       this.item_background.set_parent (this);
       this.item_background.map ();
       this.item_background.show ();
     }
 
-    private void
-    _on_label_changed ()
+    private void _on_label_changed ()
     {
+      // if the contents of the label didn't really change exit early
+      if (old_label == this.get_label ())
+        return;
+
+      old_label = this.get_label ();
       print ("label changed to: \"%s\"\n", this.get_label ());
+    }
+
+    public QuicklistMenuItem (string label)
+    {
+      Object (label:label);
     }
 
     construct
@@ -100,6 +111,7 @@ namespace Unity.Quicklauncher
 
       old_width  = 0;
       old_height = 0;
+      old_label  = "";
     }
   }
 
@@ -400,6 +412,9 @@ namespace Unity.Quicklauncher
         alpha = (uint8) (255.0f * 0.3f)
       };
 
+      // before creating a new CtkLayerActor make sure we don't leak any memory
+      if (this.ql_background is Ctk.LayerActor)
+         this.ql_background.destroy ();
       this.ql_background = new Ctk.LayerActor (w, h);
 
       Ctk.Layer outline_layer = new Ctk.Layer (w,
