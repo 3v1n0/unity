@@ -484,7 +484,10 @@ namespace Unity.Quicklauncher
         return;
       }
       this.model.activate ();
-      this.is_starting = true;
+			if (!this.model.is_active)
+				{
+     			this.is_starting = true;
+				}
     }
   }
 }
