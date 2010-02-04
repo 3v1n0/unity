@@ -449,7 +449,7 @@ namespace Unity
           this.dark_box.opacity = 0;
           this.actor_blur.opacity = 255;
           
-          this.dark_box.animate   (Clutter.AnimationMode.EASE_IN_SINE, 250, "opacity", 127);
+          this.dark_box.animate   (Clutter.AnimationMode.EASE_IN_SINE, 250, "opacity", 180);
         }
       debug ("Places showing: %s", this.places_showing ? "true":"false");
     }
