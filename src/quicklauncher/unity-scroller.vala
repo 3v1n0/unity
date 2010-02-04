@@ -273,13 +273,13 @@ namespace Unity.Widgets
         }
       }
     }
-		
-		private float settle_position;
-		private const float BOUNCE_STRENGTH = 0.3f;
+    
+    private float settle_position;
+    private const float BOUNCE_STRENGTH = 0.3f;
     private void on_scroller_frame (Clutter.Timeline timeline, int msecs)
     {
-			// animate the scroller depeding on its phase
-			uint delta = timeline.get_delta ();
+      // animate the scroller depeding on its phase
+      uint delta = timeline.get_delta ();
       delta += this.stored_delta;
       if (delta <= 16)
         {
@@ -290,34 +290,34 @@ namespace Unity.Widgets
       while (delta > 16)
         {
           delta -= 16;
-					switch (this.phase) {
-						case (ScrollerPhase.SETTLING):
-							this.do_anim_settle (timeline, msecs);
-							break;
+          switch (this.phase) {
+            case (ScrollerPhase.SETTLING):
+              this.do_anim_settle (timeline, msecs);
+              break;
             case (ScrollerPhase.FLUNG):
               this.do_anim_fling (timeline, msecs);
               break;
             case (ScrollerPhase.BOUNCE):
               this.do_anim_bounce (timeline, msecs);
               break;
-			  		default:
-							break;
-					}
+            default:
+              break;
+          }
         }
 
       this.stored_delta = delta;
     }
 
-		private void do_anim_settle (Clutter.Timeline timeline, int msecs)
-		{
+    private void do_anim_settle (Clutter.Timeline timeline, int msecs)
+    {
       var distance = this.settle_position - this.drag_pos;
-			this.drag_pos += distance * 0.2f;
-			if (((int) (distance)).abs() < 1 )
-				{
-					timeline.stop ();
-				}
+      this.drag_pos += distance * 0.2f;
+      if (((int) (distance)).abs() < 1 )
+        {
+          timeline.stop ();
+        }
       
-		}
+    }
 
     private void do_anim_fling (Clutter.Timeline timeline, int msecs)
     {
@@ -440,12 +440,12 @@ namespace Unity.Widgets
           this.is_dragging = false;
           Clutter.ungrab_pointer ();
         }
-			var release_event = event.button;
+      var release_event = event.button;
       int iters = 0;
       float position = 0.0f;
 
       calculate_anchor (out iters, out position);
-			this.settle_position = position;
+      this.settle_position = position;
 
       if (this.fling_velocity > 0.0 && this.fling_velocity < 1.0)
         {
@@ -453,15 +453,15 @@ namespace Unity.Widgets
         }
       
 
-			if ((release_event.time - this.last_mouse_event_time) > 120)
-				{
-					this.phase = ScrollerPhase.SETTLING;
+      if ((release_event.time - this.last_mouse_event_time) > 120)
+        {
+          this.phase = ScrollerPhase.SETTLING;
           this.settle_position = get_aligned_settle_position ();
-					this.fling_timeline.start ();
-				}
-	
+          this.fling_timeline.start ();
+        }
+  
       else {
-					this.phase = ScrollerPhase.FLUNG;
+          this.phase = ScrollerPhase.FLUNG;
           this.fling_timeline.start ();
         }
 
@@ -535,7 +535,7 @@ namespace Unity.Widgets
         }
 
       uint delta = motionevent.time - this.last_mouse_event_time;// this.fling_delta;
-			this.last_mouse_event_time = motionevent.time;
+      this.last_mouse_event_time = motionevent.time;
       if (delta > 200)
         {
           delta = 1000/60;
