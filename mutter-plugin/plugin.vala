@@ -293,6 +293,8 @@ namespace Unity
             }
           else
             {
+              if (w.get_window_type () == Mutter.MetaCompWindowType.DESKTOP)
+                continue;
               (w as Clutter.Actor).reactive = false;
               (w as Clutter.Actor).opacity = 0;
             }

@@ -70,13 +70,9 @@ namespace Unity.Quicklauncher
        * that ready, needs an activated () signal
        */
       if (is_secondary)
-        {
-          this.prefix_actions.add (shortcut);
-        }
+        this.prefix_actions.add (shortcut);
       else
-        {
-          this.append_actions.add (shortcut);
-        }
+        this.append_actions.add (shortcut);
     }
 
     private void build_menu ()
@@ -159,9 +155,7 @@ namespace Unity.Quicklauncher
         {
           Unity.Quicklauncher.active_menu = null;
         }
-      this.is_label = false;
-      this.old_menu = this.menu;
-      this.menu = null;
+      close_menu ();
     }
 
     public void close_menu ()

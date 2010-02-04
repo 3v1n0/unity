@@ -166,7 +166,6 @@ on_restore_input_region (UnityPlugin *plugin, gboolean fullscreen)
 
   if (fullscreen)
     {
-      g_print ("FULLSCREEN\n");
       rects = g_new (XRectangle, 1);
       
       /* Whole Screen */
@@ -180,7 +179,6 @@ on_restore_input_region (UnityPlugin *plugin, gboolean fullscreen)
     }
   else
     {
-      g_print ("UNITY\n");
       rects = g_new (XRectangle, 2);
 
       /* Panel first */

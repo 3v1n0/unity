@@ -339,6 +339,7 @@ namespace Unity.Quicklauncher
                                                                this,
                                                                this.get_stage () as Clutter.Stage
                                                                );
+          build_quicklist ();
         }
       
       this.quicklist_controller.show_label ();
@@ -370,7 +371,6 @@ namespace Unity.Quicklauncher
       {
         if (this.quicklist_controller.is_label)
           {
-            build_quicklist ();
             this.quicklist_controller.show_menu ();
             if (model is ApplicationModel)
               (model as ApplicationModel).expose ();
