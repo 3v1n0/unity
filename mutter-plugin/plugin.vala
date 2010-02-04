@@ -232,6 +232,7 @@ namespace Unity
       if (is_in_menu)
         {
           this.plugin.set_stage_input_area(0, 0, (int)(width), (int)(height));
+          new X.Display (null).flush ();
         }
       else
         {
@@ -256,6 +257,7 @@ namespace Unity
           this.plugin.set_stage_input_area (0, 0,
                                             (int)this.stage.width,
                                             (int)this.stage.height);
+          new X.Display (null).flush ();
         }
     }
 
@@ -441,6 +443,7 @@ namespace Unity
                                             0,
                                             (int)this.stage.width,
                                             (int)this.stage.height);
+          new X.Display (null).flush ();
         }
       debug ("Places showing: %s", this.places_showing ? "true":"false");
     }
