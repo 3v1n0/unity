@@ -27,6 +27,7 @@ namespace Unity.Panel.Indicators
     private HashMap<string, int> indicator_order;
 
     private Gtk.Menu? popped;
+    private uint32 click_time;
 
     public View ()
     {
@@ -173,6 +174,7 @@ namespace Unity.Panel.Indicators
                             this.position_menu,
                             e.button.button,
                             e.button.time);
+          click_time = e.button.time;
           this.popped = entry.menu;
         }
       return true;
@@ -180,6 +182,9 @@ namespace Unity.Panel.Indicators
 
     private bool on_button_release_event (Clutter.Event e)
     {
+      if (e.button.time - click_time < 300)
+        return true;
+      
       if (this.popped is Gtk.Menu
           && (this.popped.get_flags () & Gtk.WidgetFlags.VISIBLE) !=0)
         {
