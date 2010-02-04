@@ -148,7 +148,6 @@ namespace Unity
       this.wm = new WindowManagement (this);
 
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
-      this.stage.actor_added.connect (this.on_stage_actor_added);
 
       this.drag_dest = new DragDest ();
       this.drag_dest.show ();
@@ -259,7 +258,7 @@ namespace Unity
         {
           this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
-          this.on_restore_input_region ();
+          this.on_restore_input_region (false);
         }
     }
 
