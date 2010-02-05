@@ -33,9 +33,253 @@ namespace Unity.Quicklauncher
   const float ANCHOR_HEIGHT      = 2.0f;
   const float ANCHOR_WIDTH       = 1.0f;
 
-  /* we call this instead of Ctk.Menu so you can alter this to look right */
+  // we subclass Ctk.MenuItem here because we need to adapt it's appearance
+  public class QuicklistMenuItem : Ctk.MenuItem
+  {
+    Ctk.LayerActor item_background;
+    int            old_width;
+    int            old_height;
+    string         old_label;
+
+    private void
+    _round_rect (Cairo.Context cr,
+                 double        aspect,        // aspect-ratio
+                 double        x,             // top-left corner
+                 double        y,             // top-left corner
+                 double        corner_radius, // "size" of the corners
+                 double        width,         // width of the rectangle
+                 double        height)        // height of the rectangle
+    {
+      double radius = corner_radius / aspect;
+
+      // top-left, right of the corner
+      cr.move_to (x + radius, y);
+
+      // top-right, left of the corner
+      cr.line_to (x + width - radius, y);
+
+      // top-right, below the corner
+      cr.arc (x + width - radius,
+              y + radius,
+              radius,
+              -90.0f * GLib.Math.PI / 180.0f,
+              0.0f * GLib.Math.PI / 180.0f);
+
+      // bottom-right, above the corner
+      cr.line_to (x + width, y + height - radius);
+
+      // bottom-right, left of the corner
+      cr.arc (x + width - radius,
+              y + height - radius,
+              radius,
+              0.0f * GLib.Math.PI / 180.0f,
+              90.0f * GLib.Math.PI / 180.0f);
+
+      // bottom-left, right of the corner
+      cr.line_to (x + radius, y + height);
+
+      // bottom-left, above the corner
+      cr.arc (x + radius,
+              y + height - radius,
+              radius,
+              90.0f * GLib.Math.PI / 180.0f,
+              180.0f * GLib.Math.PI / 180.0f);
+
+      // top-left, right of the corner
+      cr.arc (x + radius,
+              y + radius,
+              radius,
+              180.0f * GLib.Math.PI / 180.0f,
+              270.0f * GLib.Math.PI / 180.0f);
+    }
+
+    private void _normal_mask (Cairo.Context cr,
+                               int           w,
+                               int           h,
+                               string        label)
+    {
+      // clear context
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      // setup correct filled-drawing
+      cr.set_operator (Cairo.Operator.SOURCE);
+      cr.scale (1.0f, 1.0f);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+
+      // draw text
+      cr.move_to ((float) 0.0f, (float) h);
+      cr.show_text (label);
+    }
+
+    private void _selected_mask (Cairo.Context cr,
+                                 int           w,
+                                 int           h,
+                                 string        label)
+    {
+      // clear context
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      // setup correct filled-drawing
+      cr.set_operator (Cairo.Operator.SOURCE);
+      cr.scale (1.0f, 1.0f);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+
+      // draw rounded rectangle
+      _round_rect (cr,
+                   1.0f,
+                   0.5f,
+                   0.5f,
+                   Ctk.em_to_pixel (BORDER),
+                   w - 1.0f,
+                   h - 1.0f);
+      cr.fill ();
+
+      // draw text
+      cr.move_to ((float) 0.0f, (float) h);
+      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.0f);
+      cr.show_text (label);
+    }
+
+    private override void
+    paint ()
+    {
+      this.item_background.paint ();
+    }
+
+    private override void
+    allocate (Clutter.ActorBox        box,
+              Clutter.AllocationFlags flags)
+    {
+      int w;
+      int h;
+      Clutter.Color white_color = Clutter.Color () {
+        red   = 255,
+        green = 255,
+        blue  = 255,
+        alpha = 255
+      };
+
+      base.allocate (box, flags);
+
+      w = (int) (box.x2 - box.x1);
+      h = (int) (box.y2 - box.y1);
+
+      // exit early if the allocation-width/height didn't change, this is needed
+      // because clutter triggers calling allocate even if nothing changed
+      if ((old_width == w) && (old_height == h))
+        return;
+
+      // store the new width/height
+      old_width  = w;
+      old_height = h;
+
+      // before creating a new CtkLayerActor make sure we don't leak any memory
+      if (this.item_background is Ctk.LayerActor)
+         this.item_background.unparent ();
+      this.item_background = new Ctk.LayerActor (w, h);
+
+      Ctk.Layer normal_layer = new Ctk.Layer (w,
+                                              h,
+                                              Ctk.LayerRepeatMode.NONE,
+                                              Ctk.LayerRepeatMode.NONE);
+      Ctk.Layer selected_layer = new Ctk.Layer (w,
+                                                h,
+                                                Ctk.LayerRepeatMode.NONE,
+                                                Ctk.LayerRepeatMode.NONE);
+
+      Cairo.Surface normal_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
+                                                          w,
+                                                          h);
+      Cairo.Surface selected_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
+                                                            w,
+                                                            h);
+
+      Cairo.Context normal_cr = new Cairo.Context (normal_surf);
+      Cairo.Context selected_cr = new Cairo.Context (selected_surf);
+
+      _normal_mask (normal_cr, w, h, this.get_label ());
+      _selected_mask (selected_cr, w, h, this.get_label ());
+
+      //normal_surf.write_to_png ("/tmp/normal_surf.png");
+      //selected_surf.write_to_png ("/tmp/selected_surf.png");
+
+      normal_layer.set_mask_from_surface (normal_surf);
+      normal_layer.set_color (white_color);
+
+      selected_layer.set_mask_from_surface (selected_surf);
+      selected_layer.set_color (white_color);
+
+      this.item_background.add_layer (normal_layer);
+      this.item_background.add_layer (selected_layer);
+
+      this.item_background.get_layer(0).set_enabled (true);
+      this.item_background.get_layer(1).set_enabled (false);
+      this.item_background.do_queue_redraw ();
+
+      this.item_background.set_parent (this);
+      this.item_background.map ();
+      this.item_background.show ();
+    }
+
+    private bool _on_enter (Clutter.Event event)
+    {
+      this.item_background.get_layer(0).set_enabled (false);
+      this.item_background.get_layer(1).set_enabled (true);
+      this.item_background.do_queue_redraw ();
+      return false;
+    }
+
+    private bool _on_leave (Clutter.Event event)
+    {
+      this.item_background.get_layer(0).set_enabled (true);
+      this.item_background.get_layer(1).set_enabled (false);
+      this.item_background.do_queue_redraw ();
+      return false;
+    }
+
+    private void _on_label_changed ()
+    {
+      // if the contents of the label didn't really change exit early
+      if (old_label == this.get_label ())
+        return;
+
+      old_label = this.get_label ();
+    }
+
+    public QuicklistMenuItem (string label)
+    {
+      Object (label:label);
+    }
+
+    construct
+    {
+      Ctk.Padding padding = Ctk.Padding () {
+        left   = (int) Ctk.em_to_pixel (MARGIN),
+        right  = (int) Ctk.em_to_pixel (MARGIN),
+        top    = (int) Ctk.em_to_pixel (MARGIN),
+        bottom = (int) Ctk.em_to_pixel (MARGIN)
+      };
+      this.set_padding (padding);
+
+      this.notify["label"].connect (this._on_label_changed);
+      this.enter_event.connect (this._on_enter);
+      this.leave_event.connect (this._on_leave);
+
+      old_width  = 0;
+      old_height = 0;
+      old_label  = "";
+    }
+  }
+
+  // we call this instead of Ctk.Menu so you can alter this to look right
   public class QuicklistMenu : Ctk.Menu
   {
+    Ctk.LayerActor ql_background;
+    int            old_width;
+    int            old_height;
+
     private void
     _round_rect_anchor (Cairo.Context cr,
                         double        aspect,        // aspect-ratio
@@ -310,8 +554,9 @@ namespace Unity.Quicklauncher
       cr.fill ();
     }
 
-    public override void allocate (Clutter.ActorBox        box,
-                                   Clutter.AllocationFlags flags)
+    private override void
+    allocate (Clutter.ActorBox        box,
+              Clutter.AllocationFlags flags)
     {
       int w;
       int h;
@@ -363,6 +608,9 @@ namespace Unity.Quicklauncher
         alpha = (uint8) (255.0f * 0.5f)
       };*/
 
+      // before creating a new CtkLayerActor make sure we don't leak any memory
+      if (this.ql_background is Ctk.LayerActor)
+         this.ql_background.destroy ();
       this.ql_background = new Ctk.LayerActor (w, h);
 
       /* Commented out as it isn't used atm
@@ -478,20 +726,16 @@ namespace Unity.Quicklauncher
 
       this.set_background (this.ql_background);
     }
-
-    Ctk.LayerActor ql_background;
-    int            old_width;
-    int            old_height;
-
+    
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {
         left   = (int) Ctk.em_to_pixel (ANCHOR_WIDTH) +
                  (int) Ctk.em_to_pixel (BORDER) +
                  (int) Ctk.em_to_pixel (MARGIN),
-        right  = 6,
-        top    = 6,
-        bottom = 6
+        right  = (int) Ctk.em_to_pixel (BORDER),
+        top    = (int) Ctk.em_to_pixel (BORDER),
+        bottom = (int) Ctk.em_to_pixel (BORDER)
       };
       this.set_padding (padding);
 

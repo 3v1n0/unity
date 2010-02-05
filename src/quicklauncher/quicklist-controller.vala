@@ -78,7 +78,7 @@ namespace Unity.Quicklauncher
     private void build_menu ()
     {
       this.menu = new QuicklistMenu () as Ctk.Menu;
-      Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (this.label);
+      Unity.Quicklauncher.QuicklistMenuItem menuitem = new Unity.Quicklauncher.QuicklistMenuItem (this.label);
       menuitem.activated.connect (this.close_menu);
       this.menu.append (menuitem, true);
       this.menu.attach_to_actor (this.attached_widget);
@@ -124,7 +124,8 @@ namespace Unity.Quicklauncher
       foreach (ShortcutItem shortcut in this.prefix_actions)
         {
           var label = shortcut.get_name ();
-          Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (label);
+          //Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (label);
+          Unity.Quicklauncher.QuicklistMenuItem menuitem = new Unity.Quicklauncher.QuicklistMenuItem (label);
           this.menu.prepend (menuitem, false);
           menuitem.activated.connect (shortcut.activated);
           menuitem.activated.connect (this.close_menu);
@@ -133,7 +134,8 @@ namespace Unity.Quicklauncher
       foreach (ShortcutItem shortcut in this.append_actions)
         {
           var label = shortcut.get_name ();
-          Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (label);
+          //Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (label);
+          Unity.Quicklauncher.QuicklistMenuItem menuitem = new Unity.Quicklauncher.QuicklistMenuItem (label);
           this.menu.append (menuitem, false);
           menuitem.activated.connect (shortcut.activated);
           menuitem.activated.connect (this.close_menu);
