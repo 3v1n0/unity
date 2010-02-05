@@ -31,6 +31,8 @@ namespace Unity
   }
   public interface Shell : Object
   {
+    public abstract bool          menus_grab_events {get;}
+
     public abstract ShellMode     get_mode ();
     public abstract Clutter.Stage get_stage ();
     public abstract void          show_unity ();

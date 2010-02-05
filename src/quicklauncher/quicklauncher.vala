@@ -29,7 +29,7 @@ namespace Unity.Quicklauncher
     {
       this.shell = shell;
     }
-
+    
     construct
     {
       this.manager = new Manager ();

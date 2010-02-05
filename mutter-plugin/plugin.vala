@@ -90,6 +90,8 @@ namespace Unity
       get { return _plugin; }
       set { _plugin = value; this.real_construct (); }
     }
+    
+    public bool menus_grab_events { get { return false; } }
 
     private static const int PANEL_HEIGHT        = 23;
     private static const int QUICKLAUNCHER_WIDTH = 60;
@@ -419,22 +421,36 @@ namespace Unity
     
     bool on_stage_captured_event (Clutter.Event event)
     {
-      bool result = false;
+    
+      bool actor_is_menu = false;
+      float x, y;
+      event.get_coords (out x, out y);
+          
+      if (Unity.Quicklauncher.active_menu is Unity.Quicklauncher.QuicklistController)
+        {
+          // These events come without an x and a y, and therefor must just be passed down the line
+          if (event.type == Clutter.EventType.ENTER || event.type == Clutter.EventType.LEAVE)
+            return false;
+          
+          Clutter.Actor menu = Unity.Quicklauncher.active_menu.menu as Clutter.Actor;
+          actor_is_menu = (x > menu.x && x < menu.x + menu.width &&
+                           y > menu.y && y < menu.y + menu.height);
+        }
+          
+      Clutter.Actor actor = this.stage.get_actor_at_pos (Clutter.PickMode.REACTIVE, (int) x, (int) y);
       if (event.type == Clutter.EventType.BUTTON_RELEASE && event.get_button () == 1)
         {
-          float x, y;
-          event.get_coords (out x, out y);
-          Clutter.Actor actor = this.stage.get_actor_at_pos (Clutter.PickMode.REACTIVE, (int) x, (int) y);
-          
           if (actor is Mutter.Window)
-            {
               Mutter.MetaWindow.activate ((actor as Mutter.Window).get_meta_window (), Gtk.get_current_event_time ());
-              result = true;
-            }
+          
+          if (!actor_is_menu && Unity.Quicklauncher.active_menu != null)
+            Unity.Quicklauncher.active_menu.close_menu ();
+          
           this.stage.captured_event.disconnect (on_stage_captured_event);
           dexpose_windows ();
         }
-      return result;
+      
+      return !actor_is_menu;
     }
     
     void position_window_on_grid (List<Mutter.Window> windows)
@@ -543,10 +559,7 @@ namespace Unity
 
     private bool envvar_is_enabled (string name)
     {
-      if (Environment.get_variable (name) != null)
-        return true;
-
-      return false;
+      return (Environment.get_variable (name) != null);
     }
 
     /*
