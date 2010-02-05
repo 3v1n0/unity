@@ -1,6 +1,9 @@
 unity (0.1.12) UNRELEASE; urgency=low
 
   * new upstream version:
+  * debian/control:
+    - bump libclutk build-dep
+    - dep on liblauncher-dev now
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 04 Feb 2010 17:59:06 -0800
 
