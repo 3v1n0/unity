@@ -48,6 +48,7 @@ namespace Unity
       add_actor (clone);
       clone.show ();
       
+      clone.set_position (0, 0);
       //blur = new Ctk.EffectBlur ();
       //blur.set_factor (9f);
       //add_effect (blur);
@@ -515,7 +516,6 @@ namespace Unity
           (this.actor_blur as Clutter.Actor).raise (this.plugin.get_normal_window_group ());
           
           this.actor_blur.set_position (0, 0);
-          this.actor_blur.set_size (this.stage.width, this.stage.height);
 
           this.dark_box = new Clutter.Rectangle.with_color ({0, 0, 0, 255});
           
