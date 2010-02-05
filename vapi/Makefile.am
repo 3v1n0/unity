@@ -11,4 +11,5 @@ EXTRA_DIST = \
   launcher-0.3.deps \
   mutter-2.28.vapi \
   mutter-2.28.deps \
-  unity-const.vapi
+  unity-const.vapi \
+  unity-misc.vapi
