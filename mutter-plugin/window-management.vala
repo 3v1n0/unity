@@ -96,8 +96,8 @@ namespace Unity
                          "opacity", 0,
                          "x", (float) ((rect.x + rect.width / 2) - (actor.width / 2)),
                          "y", (float) ((rect.y + rect.height / 2) - (actor.height / 2)),
-                         "x-scale", scale,
-                         "y-scale", scale);
+                         "scale-x", scale,
+                         "scale-y", scale);
         }
       else
         {
@@ -154,8 +154,8 @@ namespace Unity
                          "opacity", 255,
                          "x", (float) x,
                          "y", (float) y,
-                         "x-scale", 1f,
-                         "y-scale", 1f);
+                         "scale-x", 1f,
+                         "scale-y", 1f);
         }
       else
         {
