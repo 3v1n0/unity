@@ -148,6 +148,8 @@ namespace Unity
       this.wm = new WindowManagement (this);
 
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
+      this.stage.actor_added.connect   ((a) => { ensure_input_region (); });
+      this.stage.actor_removed.connect ((a) => { ensure_input_region (); });
 
       this.drag_dest = new DragDest ();
       this.drag_dest.show ();
@@ -214,7 +216,7 @@ namespace Unity
           });
         }
 
-      this.on_restore_input_region (false);
+      this.ensure_input_region ();
       
       Wnck.Screen.get_default().active_window_changed.connect (on_active_window_changed);
       
@@ -258,7 +260,7 @@ namespace Unity
         {
           this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
-          this.on_restore_input_region (false);
+          this.ensure_input_region ();
         }
     }
 
@@ -302,19 +304,29 @@ namespace Unity
        */
       END_FUNCTION ();
     }
-
-    public void set_in_menu (bool is_in_menu)
+    
+    private bool? last_input_state;
+    public void ensure_input_region ()
     {
-      this.on_restore_input_region (is_in_menu);
+      // This code intentionally left as a strange but easily read construct
+      if (expose_showing || places_showing || Unity.Quicklauncher.active_menu != null)
+        {
+          // Fullscreen required
+          if (last_input_state != null && last_input_state == true)
+            return;
+          last_input_state = true;
+          this.restore_input_region (true);
+        }
+      else
+        {
+          // Unity mode requred
+          if (last_input_state != null && last_input_state == false)
+            return;
+          last_input_state = false;
+          this.restore_input_region (false);
+        }
     }
     
-    void on_restore_input_region (bool fullscreen)
-    {
-      if ((expose_showing || places_showing) && !fullscreen)
-        return;
-      this.restore_input_region (fullscreen);
-    }
-
     /*
      * SHELL IMPLEMENTATION
      */
@@ -367,6 +379,7 @@ namespace Unity
       position_window_on_grid (exposed_windows);
       
       expose_showing = true;
+      this.ensure_input_region ();
       this.stage.captured_event.connect (on_stage_captured_event);
     }
     
@@ -375,6 +388,8 @@ namespace Unity
       unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
       foreach (Mutter.Window w in mutter_windows)
         restore_window_position (w);
+      this.expose_showing = false;
+      this.ensure_input_region ();
     }
     
     void restore_window_position (Mutter.Window window)
@@ -399,8 +414,6 @@ namespace Unity
                                          "x", (float) x, 
                                          "y", (float) y);
       
-      this.expose_showing = false;
-      this.on_restore_input_region (false);
     }
     
     bool on_stage_captured_event (Clutter.Event event)
@@ -487,7 +500,7 @@ namespace Unity
           this.dark_box.destroy ();
           this.panel.set_indicator_mode (false);
 
-          this.on_restore_input_region (false);
+          this.ensure_input_region ();
         }
       else
         {
@@ -516,7 +529,7 @@ namespace Unity
           this.actor_blur.show ();
           this.panel.set_indicator_mode (true);
 
-          this.on_restore_input_region (true);
+          this.ensure_input_region ();
 
           new X.Display (null).flush ();
           

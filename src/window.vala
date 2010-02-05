@@ -40,9 +40,9 @@ namespace Unity
     private Places.Controller   controller;
     private Unity.Places.View   places;
 
-    public void set_in_menu (bool is_in_menu)
+    public void ensure_input_region ()
       {
-        /* we don't care if we are in a menu */
+        /* GOOD JOB!!! */
         return;
       }
 
