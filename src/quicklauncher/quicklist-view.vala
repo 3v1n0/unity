@@ -41,13 +41,111 @@ namespace Unity.Quicklauncher
     int            old_height;
     string         old_label;
 
+    private void
+    _round_rect (Cairo.Context cr,
+                 double        aspect,        // aspect-ratio
+                 double        x,             // top-left corner
+                 double        y,             // top-left corner
+                 double        corner_radius, // "size" of the corners
+                 double        width,         // width of the rectangle
+                 double        height)        // height of the rectangle
+    {
+      double radius = corner_radius / aspect;
+
+      // top-left, right of the corner
+      cr.move_to (x + radius, y);
+
+      // top-right, left of the corner
+      cr.line_to (x + width - radius, y);
+
+      // top-right, below the corner
+      cr.arc (x + width - radius,
+              y + radius,
+              radius,
+              -90.0f * GLib.Math.PI / 180.0f,
+              0.0f * GLib.Math.PI / 180.0f);
+
+      // bottom-right, above the corner
+      cr.line_to (x + width, y + height - radius);
+
+      // bottom-right, left of the corner
+      cr.arc (x + width - radius,
+              y + height - radius,
+              radius,
+              0.0f * GLib.Math.PI / 180.0f,
+              90.0f * GLib.Math.PI / 180.0f);
+
+      // bottom-left, right of the corner
+      cr.line_to (x + radius, y + height);
+
+      // bottom-left, above the corner
+      cr.arc (x + radius,
+              y + height - radius,
+              radius,
+              90.0f * GLib.Math.PI / 180.0f,
+              180.0f * GLib.Math.PI / 180.0f);
+
+      // top-left, right of the corner
+      cr.arc (x + radius,
+              y + radius,
+              radius,
+              180.0f * GLib.Math.PI / 180.0f,
+              270.0f * GLib.Math.PI / 180.0f);
+    }
+
+    private void _normal_mask (Cairo.Context cr,
+                               int           w,
+                               int           h,
+                               string        label)
+    {
+      // clear context
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      // setup correct filled-drawing
+      cr.set_operator (Cairo.Operator.SOURCE);
+      cr.scale (1.0f, 1.0f);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+
+      // draw text
+      cr.move_to ((float) 0.0f, (float) h);
+      cr.show_text (label);
+    }
+
+    private void _selected_mask (Cairo.Context cr,
+                                 int           w,
+                                 int           h,
+                                 string        label)
+    {
+      // clear context
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      // setup correct filled-drawing
+      cr.set_operator (Cairo.Operator.SOURCE);
+      cr.scale (1.0f, 1.0f);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+
+      // draw rounded rectangle
+      _round_rect (cr,
+                   1.0f,
+                   0.5f,
+                   0.5f,
+                   Ctk.em_to_pixel (BORDER),
+                   w - 1.0f,
+                   h - 1.0f);
+      cr.fill ();
+
+      // draw text
+      cr.move_to ((float) 0.0f, (float) h);
+      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.0f);
+      cr.show_text (label);
+    }
+
     private override void
     paint ()
     {
       this.item_background.paint ();
-
-      // item_background;
-      print ("QuicklistMenuItem.paint() called\n");
     }
 
     private override void
@@ -56,12 +154,17 @@ namespace Unity.Quicklauncher
     {
       int w;
       int h;
+      Clutter.Color white_color = Clutter.Color () {
+        red   = 255,
+        green = 255,
+        blue  = 255,
+        alpha = 255
+      };
 
       base.allocate (box, flags);
 
       w = (int) (box.x2 - box.x1);
       h = (int) (box.y2 - box.y1);
-      print (@"QuicklistMenuItem.allocate(): $w $h\n");
 
       // exit early if the allocation-width/height didn't change, this is needed
       // because clutter triggers calling allocate even if nothing changed
@@ -74,12 +177,60 @@ namespace Unity.Quicklauncher
 
       // before creating a new CtkLayerActor make sure we don't leak any memory
       if (this.item_background is Ctk.LayerActor)
-         this.item_background.destroy ();
+         this.item_background.unparent ();
       this.item_background = new Ctk.LayerActor (w, h);
+
+      Ctk.Layer normal_layer = new Ctk.Layer (w,
+                                              h,
+                                              Ctk.LayerRepeatMode.NONE,
+                                              Ctk.LayerRepeatMode.NONE);
+      Ctk.Layer selected_layer = new Ctk.Layer (w,
+                                                h,
+                                                Ctk.LayerRepeatMode.NONE,
+                                                Ctk.LayerRepeatMode.NONE);
+
+      Cairo.Surface normal_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
+                                                          w,
+                                                          h);
+      Cairo.Surface selected_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
+                                                            w,
+                                                            h);
+
+      Cairo.Context normal_cr = new Cairo.Context (normal_surf);
+      Cairo.Context selected_cr = new Cairo.Context (selected_surf);
+
+      _normal_mask (normal_cr, w, h, this.get_label ());
+      _selected_mask (selected_cr, w, h, this.get_label ());
+
+      normal_surf.write_to_png ("/tmp/normal_surf.png");
+      selected_surf.write_to_png ("/tmp/selected_surf.png");
+
+      normal_layer.set_mask_from_surface (normal_surf);
+      normal_layer.set_color (white_color);
+
+      selected_layer.set_mask_from_surface (selected_surf);
+      selected_layer.set_color (white_color);
+
+      this.item_background.add_layer (normal_layer);
+      this.item_background.add_layer (selected_layer);
 
       this.item_background.set_parent (this);
       this.item_background.map ();
       this.item_background.show ();
+    }
+
+    private bool _on_enter (Clutter.Event event)
+    {
+      this.item_background.get_layer(0).set_enabled (false);
+      this.item_background.get_layer(1).set_enabled (true);
+      return false;
+    }
+
+    private bool _on_leave (Clutter.Event event)
+    {
+      this.item_background.get_layer(0).set_enabled (true);
+      this.item_background.get_layer(1).set_enabled (false);
+      return false;
     }
 
     private void _on_label_changed ()
@@ -89,7 +240,6 @@ namespace Unity.Quicklauncher
         return;
 
       old_label = this.get_label ();
-      print ("label changed to: \"%s\"\n", this.get_label ());
     }
 
     public QuicklistMenuItem (string label)
@@ -108,6 +258,8 @@ namespace Unity.Quicklauncher
       this.set_padding (padding);
 
       this.notify["label"].connect (this._on_label_changed);
+      this.enter_event.connect (this._on_enter);
+      this.leave_event.connect (this._on_leave);
 
       old_width  = 0;
       old_height = 0;
