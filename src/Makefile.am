@@ -92,7 +92,8 @@ places_sources = \
   places/places-place-proxy.vala \
   places/places-place-view.vala \
   places/places-results-view.vala \
-  places/places-view.vala
+  places/places-view.vala \
+  places/search-field.vala
 
 quicklauncher_sources = \
   quicklauncher/application-model.vala \
@@ -104,7 +105,6 @@ quicklauncher_sources = \
   quicklauncher/quicklauncher.vala \
   quicklauncher/quicklist-controller.vala \
   quicklauncher/quicklist-view.vala \
-  quicklauncher/tooltipmanager.vala \
   quicklauncher/unity-scroller.vala
 
 libunity_static_la_VALASOURCES = \

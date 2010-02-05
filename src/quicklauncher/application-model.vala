@@ -127,10 +127,11 @@ namespace Unity.Quicklauncher.Models
     {
       this.manager = Launcher.Appman.get_default ();
       this.app = this.manager.get_application_for_desktop_file (desktop_uri);
-      this.app.opened.connect(this.on_app_opened);
 
-      this.app.notify["focused"].connect (this.notify_on_focused);
-      this.app.notify["running"].connect (this.notify_on_running);
+      this.app.opened.connect(this.on_app_opened);
+      this.app.focus_changed.connect (this.on_app_focus_changed);
+      this.app.running_changed.connect (this.on_app_running_changed);
+      this.app.urgent_changed.connect (this.on_app_urgent_changed);
 
       this._icon = make_icon (app.icon_name);
     }
@@ -138,38 +139,51 @@ namespace Unity.Quicklauncher.Models
     construct
     {
     }
-
-    private void on_app_opened (Wnck.Application app)
+    
+    private void on_app_running_changed ()
     {
-      this.activated ();
-      this.request_attention ();
+      notify_active ();
     }
-
-    private void notify_on_focused ()
+    
+    private void on_app_focus_changed ()
     {
       if (app.focused) {
         this.request_attention ();
       }
-      notify_focused();
+      notify_focused ();
+    }
+    
+    private void on_app_urgent_changed ()
+    {
+      this.urgent_changed ();
     }
 
-    private void notify_on_running ()
+    private void on_app_opened (Wnck.Window window)
     {
-      notify_active ();
+      this.activated ();
+      this.request_attention ();
     }
 
     public bool is_active
     {
       get { return this.app.running; }
     }
+    
     public bool is_focused
     {
       get { return this.app.focused; }
     }
+    
+    public bool is_urgent 
+    {
+      get { return this.app.get_urgent (); }
+    }
+    
     public Gdk.Pixbuf icon
     {
       get { return _icon; }
     }
+    
     public string name
     {
       get { return this.app.name; }
@@ -263,8 +277,12 @@ namespace Unity.Quicklauncher.Models
     {
       if (app.running)
         {
-          // we only want to switch to the application, not launch it
-          app.show ();
+          if (app.focused)
+            app.minimize ();
+          else if (app.has_minimized ())
+            app.restore ();
+          else
+            app.show ();
         }
       else
         {
@@ -279,6 +297,11 @@ namespace Unity.Quicklauncher.Models
                         e.message);
             }
         }
+    }
+    
+    public void expose ()
+    {
+      Unity.global_shell.expose_windows (app.get_windows ());
     }
 
     /**

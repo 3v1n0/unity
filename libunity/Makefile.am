@@ -23,6 +23,7 @@ libunity_la_VALAFLAGS = \
   --pkg clutk-0.3 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
+  --pkg libwnck-1.0 \
   --pkg unique-1.0 \
   $(MAINTAINER_VALAFLAGS)
 

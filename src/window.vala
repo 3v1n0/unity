@@ -40,13 +40,18 @@ namespace Unity
     private Places.Controller   controller;
     private Unity.Places.View   places;
 
-    public void set_in_menu (bool is_in_menu)
+    public void ensure_input_region ()
       {
-        /* we don't care if we are in a menu */
+        /* GOOD JOB!!! */
         return;
       }
 
     private bool showing_places;
+
+    public void expose_windows (GLib.SList<Wnck.Window> windows)
+    {
+      ;
+    }
 
     public UnderlayWindow (bool popup, int width, int height)
     {
@@ -156,8 +161,6 @@ namespace Unity
           this.wnck_screen.active_window_changed.connect (this.on_active_window_changed);
         }
 
-      /* inform TooltipManager about window */
-      Unity.TooltipManager.get_default().top_level = this;
       END_FUNCTION ();
     }
 

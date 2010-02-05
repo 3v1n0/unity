@@ -1,3 +1,9 @@
+unity (0.1.12) UNRELEASE; urgency=low
+
+  * new upstream version:
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 04 Feb 2010 17:59:06 -0800
+
 unity (0.1.10-0ubuntu1~ppa3) lucid; urgency=low
 
   * debian/control:

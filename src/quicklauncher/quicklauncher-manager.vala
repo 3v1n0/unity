@@ -298,38 +298,16 @@ namespace Unity.Quicklauncher
 
    private void handle_session_application (Launcher.Application app)
     {
-      bool app_is_visible = false;
-
-      unowned GLib.SList<Wnck.Application> wnckapps = app.get_wnckapps ();
-      foreach (Wnck.Application wnckapp in wnckapps)
+      var desktop_file = app.get_desktop_file ();
+      if (desktop_file != null)
+      {
+        ApplicationModel model = get_model_for_desktop_file (desktop_file);
+        LauncherView view = get_view_for_model (model);
+        if (view.get_parent () == null)
         {
-          unowned GLib.List<Wnck.Window> windows = wnckapp.get_windows ();
-          foreach (Wnck.Window window in windows)
-            {
-              var type = window.get_window_type ();
-              if (!(type == Wnck.WindowType.DESKTOP
-                    || type == Wnck.WindowType.DOCK
-                    || type == Wnck.WindowType.SPLASHSCREEN
-                    || type == Wnck.WindowType.MENU))
-              {
-                app_is_visible = true;
-              }
-            }
+          add_view (view);
         }
-
-      if (app_is_visible)
-        {
-          var desktop_file = app.get_desktop_file ();
-          if (desktop_file != null)
-          {
-            ApplicationModel model = get_model_for_desktop_file (desktop_file);
-            LauncherView view = get_view_for_model (model);
-            if (view.get_parent () == null)
-            {
-              add_view (view);
-            }
-          }
-        }
+      }
     }
 
 

@@ -29,6 +29,11 @@ namespace Unity.Quicklauncher
     + "/honeycomb-mask.png";
   const string MENU_BG_FILE = Unity.PKGDATADIR
     + "/tight_check_4px.png";
+    
+  const float WIGGLE_SIZE = 5;
+  const uint WIGGLE_LENGTH = 2;
+  const uint WIGGLE_RESTART = 8;
+  const uint WIGGLE_FREQUENCY = 25;
 
   const uint SHORT_DELAY = 400;
   const uint MEDIUM_DELAY = 800;
@@ -72,6 +77,8 @@ namespace Unity.Quicklauncher
     }
 
     public bool is_hovering = false;
+    bool wiggling = false;
+    bool cease_wiggle;
 
     /**
      * signal is called when the application is not marked as sticky and
@@ -84,6 +91,8 @@ namespace Unity.Quicklauncher
     /* animations */
 
     private Clutter.Animation anim_throbber;
+    private bool anim_wiggle_state = false;
+    
     private Clutter.Animation _anim;
     public Clutter.Animation anim {
       get { return _anim; }
@@ -96,6 +105,9 @@ namespace Unity.Quicklauncher
       }
     }
 
+    private Clutter.Animation running_anim;
+    private Clutter.Animation focused_anim;
+
   /* constructors */
     public LauncherView (LauncherModel model)
       {
@@ -104,6 +116,7 @@ namespace Unity.Quicklauncher
         this.model.notify_active.connect (this.notify_on_is_running);
         this.model.notify_focused.connect (this.notify_on_is_focused);
         this.model.activated.connect (this.on_activated);
+        this.model.urgent_changed.connect (this.on_urgent_changed);
         this.name = "Unity.Quicklauncher.LauncherView-" + this.model.name;
 
         notify_on_is_running ();
@@ -140,19 +153,7 @@ namespace Unity.Quicklauncher
         set_reactive (true);
         this.quicklist_controller = null;
 
-        // connect to the reactive property so that we can disable menus if we
-        // are not reactive (scroll, out of bounds)
-        this.notify["reactive"].connect (this.on_reactive);
       }
-
-    private void on_reactive ()
-    {
-      if (this.quicklist_controller is QuicklistController)
-        {
-          //this.quicklist_controller.close_menu ();
-          this.quicklist_controller = null;
-        }
-    }
 
     private void load_textures ()
     {
@@ -213,7 +214,7 @@ namespace Unity.Quicklauncher
     /* animation logic */
     private void throbber_start ()
     {
-
+      this.icon.remove_all_effects ();
       effect_icon_glow = new Ctk.EffectGlow ();
       Clutter.Color c = Clutter.Color () {
         red = 255,
@@ -284,8 +285,68 @@ namespace Unity.Quicklauncher
       throbber_fadeout ();
     }
 
+    private void wiggle_start ()
+    {
+      if (wiggling)
+        return;
+      
+      wiggling = true;
+      cease_wiggle = false;
+      
+      this.icon.set ("rotation-center-z-gravity", Clutter.Gravity.CENTER);
+      Clutter.Animation anim = this.icon.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 1000 / WIGGLE_FREQUENCY,
+                                                  "rotation-angle-z", WIGGLE_SIZE);
+      
+      Signal.connect_after (anim, "completed", (Callback) wiggle_do_next_step, this);
+    }
+    
+    private static void wiggle_do_next_step (Object sender, LauncherView self)
+      requires (self is LauncherView)
+    {
+      if (self.cease_wiggle)
+        {
+          self.icon.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 1000 / WIGGLE_FREQUENCY,
+                             "rotation-angle-z", 0);
+          self.wiggling = false;
+        }
+      else
+        {
+          self.anim_wiggle_state = !self.anim_wiggle_state;
+          Clutter.Animation anim = self.icon.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 1000 / WIGGLE_FREQUENCY,
+                                                      "rotation-angle-z", self.anim_wiggle_state ? WIGGLE_SIZE : -WIGGLE_SIZE);
+                    
+          Signal.connect_after (anim, "completed", (Callback) wiggle_do_next_step, self);
+        }
+    }
+    
+    private bool wiggle_stop ()
+    {
+      cease_wiggle = true;
+      return false;
+    }
 
     /* callbacks on model */
+    private void on_urgent_changed ()
+    {
+      wiggle_loop ();
+      GLib.Timeout.add_seconds (WIGGLE_RESTART, wiggle_loop);
+    }
+    
+    private bool wiggle_loop ()
+    {
+      if (this.model.is_urgent)
+        {
+          wiggle_start ();
+          GLib.Timeout.add_seconds (WIGGLE_LENGTH, wiggle_stop);
+          return true;
+        }
+      else
+        {
+          wiggle_stop ();
+          return false;
+        }
+    }
+    
     private void on_activated ()
     {
       this.is_starting = false;
@@ -314,12 +375,15 @@ namespace Unity.Quicklauncher
       /* we need to show the running indicator when we are running */
       if (this.model.is_active)
         {
-          this.running_indicator.set_opacity (255);
+          this.running_anim = this.running_indicator.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
+                                                              "opacity", 255);
         }
       else
         {
-          this.running_indicator.set_opacity (0);
-          this.focused_indicator.set_opacity (0);
+          this.running_anim = this.running_indicator.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
+                                                              "opacity", 0);
+          this.focused_anim = this.focused_indicator.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
+                                                              "opacity", 0);
         }
 
       if (!this.model.is_active && !this.model.is_sticky)
@@ -332,11 +396,13 @@ namespace Unity.Quicklauncher
     {
       if (this.model.is_focused)
         {
-          this.focused_indicator.set_opacity (255);
+          this.focused_anim = this.focused_indicator.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
+                                                              "opacity", 255);
         }
       else
         {
-          this.focused_indicator.set_opacity (0);
+          this.focused_anim = this.focused_indicator.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, SHORT_DELAY,
+                                                              "opacity", 0);
         }
 
       this.is_starting = false;
@@ -344,21 +410,17 @@ namespace Unity.Quicklauncher
     private bool on_mouse_enter (Clutter.Event event)
     {
       this.is_hovering = true;
-      if (this.reactive)
+      
+      if (!(quicklist_controller is QuicklistController))
         {
-          if (!(this.quicklist_controller is QuicklistController))
-            {
-              this.quicklist_controller = new QuicklistController (this.model.name,
-                                                                   this,
-                                                                   this.get_stage () as Clutter.Stage
-                                                                   );
-              this.build_quicklist ();
-            }
-          if (!this.quicklist_controller.is_label)
-            {
-              this.quicklist_controller.show_label ();
-            }
+          this.quicklist_controller = new QuicklistController (this.model.name,
+                                                               this,
+                                                               this.get_stage () as Clutter.Stage
+                                                               );
+          build_quicklist ();
         }
+      
+      this.quicklist_controller.show_label ();
       return false;
     }
 
@@ -372,16 +434,7 @@ namespace Unity.Quicklauncher
     private bool on_mouse_leave(Clutter.Event src)
     {
       this.is_hovering = false;
-      if (this.reactive)
-        {
-          if (this.quicklist_controller is QuicklistController)
-            {
-              if (this.quicklist_controller.is_label)
-                {
-                  this.quicklist_controller.close_menu ();
-                }
-            }
-        }
+      this.quicklist_controller.hide_label ();
       return false;
     }
 
@@ -391,12 +444,15 @@ namespace Unity.Quicklauncher
       if (bevent.button == 1)
       {
         last_pressed_time = bevent.time;
+        quicklist_controller.close_menu ();
       }
       else
       {
         if (this.quicklist_controller.is_label)
           {
             this.quicklist_controller.show_menu ();
+            if (model is ApplicationModel)
+              (model as ApplicationModel).expose ();
           }
       }
       return false;
@@ -436,7 +492,10 @@ namespace Unity.Quicklauncher
         return;
       }
       this.model.activate ();
-      this.is_starting = true;
+			if (!this.model.is_active)
+				{
+     			this.is_starting = true;
+				}
     }
   }
 }
