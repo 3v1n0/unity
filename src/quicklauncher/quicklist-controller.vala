@@ -113,8 +113,6 @@ namespace Unity.Quicklauncher
           // we already have an active menu, so destroy that and start this one
           Unity.Quicklauncher.active_menu.fadeout_and_destroy ();
           Unity.Quicklauncher.active_menu = null;
-          if (Unity.global_shell is Unity.Shell)
-            Unity.global_shell.set_in_menu (false);
         }
 
       if (this.menu == null)
@@ -142,24 +140,25 @@ namespace Unity.Quicklauncher
         }
 
       Unity.Quicklauncher.active_menu = this.menu;
-      if (Unity.global_shell is Unity.Shell)
-        Unity.global_shell.set_in_menu (true);
       this.menu.set_detect_clicks (true);
       this.menu.closed.connect (this.on_menu_close);
       this.is_label = false;
+      
+      Unity.global_shell.ensure_input_region ();
     }
 
     private void on_menu_close ()
     {
-      if (Unity.Quicklauncher.active_menu == this.menu)
-        {
-          Unity.Quicklauncher.active_menu = null;
-        }
       close_menu ();
     }
 
     public void close_menu ()
     {
+      if (Unity.Quicklauncher.active_menu == this.menu)
+        {
+          Unity.Quicklauncher.active_menu = null;
+        }
+      
       if (this.menu == null)
         return;
       
@@ -167,6 +166,8 @@ namespace Unity.Quicklauncher
       this.old_menu = this.menu;
       this.menu = null;
       this.is_label = false;
+      
+      Unity.global_shell.ensure_input_region ();
     }
 
   }
