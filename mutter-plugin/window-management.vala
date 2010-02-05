@@ -70,6 +70,18 @@ namespace Unity
 
     private void window_minimized (Plugin plugin, Mutter.Window window)
     {
+      int type = window.get_window_type ();
+      
+      if (type != Mutter.MetaWindowType.NORMAL &&
+          type != Mutter.MetaWindowType.DIALOG &&
+          type != Mutter.MetaWindowType.MODAL_DIALOG &&
+          type != Mutter.MetaWindowType.MENU
+          )
+        {
+          this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MINIMIZE);
+          return;
+        }
+    
       Mutter.MetaRectangle rect = {0, 0, 0, 0};
       
       int speed = get_animation_speed (window);
@@ -104,11 +116,23 @@ namespace Unity
       
       window.hide ();
       window.opacity = 0;
-      this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAP);
+      this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MINIMIZE);
     }
 
     private void window_mapped (Plugin plugin, Mutter.Window window)
     {
+      int type = window.get_window_type ();
+      
+      if (type != Mutter.MetaWindowType.NORMAL &&
+          type != Mutter.MetaWindowType.DIALOG &&
+          type != Mutter.MetaWindowType.MODAL_DIALOG &&
+          type != Mutter.MetaWindowType.MENU
+          )
+        {
+          this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAP);
+          return;
+        }
+    
       Clutter.Animation anim = null;
       Clutter.Actor actor = window as Clutter.Actor;
       actor.opacity = 0;
@@ -154,6 +178,18 @@ namespace Unity
     
     private void window_destroyed (Plugin plugin, Mutter.Window window)
     {
+      int type = window.get_window_type ();
+      
+      if (type != Mutter.MetaWindowType.NORMAL &&
+          type != Mutter.MetaWindowType.DIALOG &&
+          type != Mutter.MetaWindowType.MODAL_DIALOG &&
+          type != Mutter.MetaWindowType.MENU
+          )
+        {
+          this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_DESTROY);
+          return;
+        }
+      
       Clutter.Animation anim = null;
       
       int speed = get_animation_speed (window);

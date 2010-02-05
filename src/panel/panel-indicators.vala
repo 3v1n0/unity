@@ -26,18 +26,29 @@ namespace Unity.Panel.Indicators
   {
     private HashMap<string, int> indicator_order;
 
+    private Gtk.Menu? popped;
+    private uint32 click_time;
+
     public View ()
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
               spacing:12,
-              homogeneous:false);
+              homogeneous:false,
+              reactive:true);
     }
 
     construct
     {
       this.indicator_order = new HashMap<string, int> ();
 
-      Idle.add (this.load_indicators);
+      this.button_press_event.connect (this.on_button_press_event);
+      this.button_release_event.connect (this.on_button_release_event);
+      this.motion_event.connect (this.on_motion_event);
+
+      if (Environment.get_variable ("UNITY_DISABLE_IDLES") != null)
+        this.load_indicators ();
+      else
+        Idle.add (this.load_indicators);
     }
 
     private bool load_indicators ()
@@ -104,6 +115,112 @@ namespace Unity.Panel.Indicators
           warning ("Unable to load %s\n", filename);
         }
     }
+
+    private void position_menu (Gtk.Menu menu,
+                                out int  x,
+                                out int  y,
+                                out bool push_in)
+    {
+      y = (int)this.height;
+    }
+
+    private unowned IndicatorEntry? entry_for_event (float root_x)
+    {
+      unowned IndicatorItem?  item = null;
+      unowned IndicatorEntry? entry = null;
+      float x = root_x - this.x;
+
+      /* Find which entry has the button press, pop it up */
+      unowned GLib.List list = this.get_children ();
+      for (int i = 0; i < list.length (); i++)
+        {
+          unowned IndicatorItem it = (IndicatorItem)list.nth_data (i);
+
+          if (it.x < x && x < (it.x + it.width))
+            {
+              item = it;
+              break;
+            }
+        }
+
+      x -= item.x;
+      list = item.get_children ();
+      for (int i = 0; i < list.length (); i++)
+        {
+          unowned IndicatorEntry ent = (IndicatorEntry)list.nth_data (i);
+
+          if (ent.x < x && x < (ent.x + ent.width))
+            {
+              entry = ent;
+            }
+        }
+
+      return entry;
+    }
+
+    private bool on_button_press_event (Clutter.Event e)
+    {
+      debug ("button press event");
+
+      if (this.popped is Gtk.Menu
+          && (this.popped.get_flags () & Gtk.WidgetFlags.VISIBLE) !=0)
+        {
+          this.popped.popdown ();
+          this.popped = null;
+        }
+
+      unowned IndicatorEntry? entry = this.entry_for_event (e.button.x);
+      if (entry is IndicatorEntry)
+        {
+          entry.menu.popup (null,
+                            null,
+                            this.position_menu,
+                            e.button.button,
+                            e.button.time);
+          click_time = e.button.time;
+          this.popped = entry.menu;
+        }
+      return true;
+    }
+
+    private bool on_button_release_event (Clutter.Event e)
+    {
+      if (e.button.time - click_time < 300)
+        return true;
+
+      if (this.popped is Gtk.Menu
+          && (this.popped.get_flags () & Gtk.WidgetFlags.VISIBLE) !=0)
+        {
+          this.popped.popdown ();
+          this.popped = null;
+        }
+
+      return true;
+    }
+
+    private bool on_motion_event (Clutter.Event e)
+    {
+      if (this.popped is Gtk.Menu
+          && (this.popped.get_flags () & Gtk.WidgetFlags.VISIBLE) !=0)
+        {
+          unowned IndicatorEntry? entry;
+
+          entry = entry_for_event (e.motion.x);
+
+          if (entry.menu != this.popped)
+            {
+              this.popped.popdown ();
+              this.popped = entry.menu;
+              this.popped.popup (null,
+                                 null,
+                                 this.position_menu,
+                                 e.button.button,
+                                 e.button.time);
+            }
+        }
+
+      return true;
+    }
   }
 
   public class IndicatorItem : Ctk.Box
@@ -116,7 +233,7 @@ namespace Unity.Panel.Indicators
 
     public IndicatorItem ()
     {
-      Object (orientation: Ctk.Orientation.HORIZONTAL,
+      Object (orientation:Ctk.Orientation.HORIZONTAL,
               spacing:12,
               homogeneous:false);
     }
@@ -181,12 +298,14 @@ namespace Unity.Panel.Indicators
     private Ctk.Image image;
     private Ctk.Text  text;
 
+    public Gtk.Menu menu { get { return this.entry.menu; } }
+
     public IndicatorEntry (Indicator.ObjectEntry entry)
     {
       Object (entry:entry,
               orientation:Ctk.Orientation.HORIZONTAL,
               spacing:2,
-              reactive:true);
+              reactive:false);
     }
 
     construct
@@ -221,22 +340,25 @@ namespace Unity.Panel.Indicators
 
       this.button_release_event.connect ((e) =>
         {
-          this.entry.menu.popup (null,
-                                 null,
-                                 this.position_menu,
-                                 e.button.button,
-                                 e.button.time);
+          Gtk.WidgetFlags flags = this.entry.menu.get_flags ();
+          bool visible = (flags & Gtk.WidgetFlags.VISIBLE) != 0;
+
+          if (visible)
+            {
+            this.entry.menu.popdown ();
+            }
+          else
+            {
+            /*
+              this.entry.menu.popup (null,
+                                     null,
+                                     this.position_menu,
+                                     e.button.button,
+                                     e.button.time);*/
+            }
 
           return true;
         });
-    }
-
-    private void position_menu (Gtk.Menu menu,
-                                out int  x,
-                                out int  y,
-                                out bool push_in)
-    {
-      y = (int)this.height;
     }
   }
 }

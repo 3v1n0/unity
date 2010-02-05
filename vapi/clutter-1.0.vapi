@@ -217,6 +217,8 @@ namespace Clutter {
 		public Clutter.AnimationPrivate priv;
 		public unowned Clutter.Animation bind (string property_name, GLib.Value final);
 		public unowned Clutter.Animation bind_interval (string property_name, owned Clutter.Interval interval);
+		[CCode (cname = "clutter_animation_completed")]
+		public void send_completed ();
 		public unowned Clutter.Alpha get_alpha ();
 		public uint get_duration ();
 		public unowned Clutter.Interval get_interval (string property_name);

@@ -339,11 +339,32 @@ namespace Unity.Quicklauncher
               270.0f * GLib.Math.PI / 180.0f);
     }
 
+    /* Commented out as it isn't used atm
+    private void
+    _debug_mask (Cairo.Context cr,
+                 int           w,
+                 int           h)
+    {
+      // clear context
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      // setup correct drawing
+      cr.set_operator (Cairo.Operator.SOURCE);
+      cr.scale (1.0f, 1.0f);
+      cr.set_line_width (Ctk.em_to_pixel (LINE_WIDTH));
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+
+      // draw actual rectangle
+      cr.rectangle (0.0f, 0.0f, w, h);
+      cr.fill ();
+    }
+    */
     private void
     _outline_mask (Cairo.Context cr,
                    int           w,
                    int           h,
-                   int           item)
+                   float         anchor_y)
     {
       // clear context
       cr.set_operator (Cairo.Operator.CLEAR);
@@ -358,17 +379,15 @@ namespace Unity.Quicklauncher
       // draw actual outline
       _round_rect_anchor (cr,
                           1.0f,
-                          Ctk.em_to_pixel (BORDER) +
-                          Ctk.em_to_pixel (ANCHOR_WIDTH),
+                          Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH),
+                          0.5f,
                           Ctk.em_to_pixel (BORDER),
-                          Ctk.em_to_pixel (BORDER),
-                          (double) w,
-                          (double) h, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
+                          (double) w - Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH) - 0.5f,
+                          (double) h - 1.0f, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
-                          item * Ctk.em_to_pixel (ITEM_HEIGHT) -
-                          Ctk.em_to_pixel (ITEM_HEIGHT) / 2.0f);
+                          anchor_y);
       cr.stroke ();
     }
 
@@ -376,7 +395,7 @@ namespace Unity.Quicklauncher
     _fill_mask (Cairo.Context cr,
                 int           w,
                 int           h,
-                int           item)
+                float         anchor_y)
     {
       // clear context
       cr.set_operator (Cairo.Operator.CLEAR);
@@ -390,17 +409,15 @@ namespace Unity.Quicklauncher
       // draw actual outline
       _round_rect_anchor (cr,
                           1.0f,
-                          Ctk.em_to_pixel (BORDER) +
-                          Ctk.em_to_pixel (ANCHOR_WIDTH),
+                          Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH),
+                          0.5f,
                           Ctk.em_to_pixel (BORDER),
-                          Ctk.em_to_pixel (BORDER),
-                          (double) w,
-                          (double) h, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
+                          (double) w - Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH) - 0.5f,
+                          (double) h - 1.0f, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
-                          item * Ctk.em_to_pixel (ITEM_HEIGHT) -
-                          Ctk.em_to_pixel (ITEM_HEIGHT) / 2.0f);
+                          anchor_y);
       cr.fill ();
     }
 
@@ -537,6 +554,13 @@ namespace Unity.Quicklauncher
     {
       int w;
       int h;
+      float x;
+      float y;
+      float ax;
+      float ay;
+      float aw;
+      float ah;
+      float new_y;
 
       base.allocate (box, flags);
       w = (int) (box.x2 - box.x1);
@@ -546,6 +570,14 @@ namespace Unity.Quicklauncher
       // because clutter triggers calling allocate even if nothing changed
       if ((old_width == w) && (old_height == h))
         return;
+
+      Ctk.Actor actor = this.get_attached_actor ();
+      actor.get_position (out ax, out ay);
+      actor.get_size (out aw, out ah);
+      //stdout.printf ("--- attached-actor: %f/%f ---\n", ax, ay);
+      this.get_position (out x, out y);
+      //stdout.printf ("--- menu-actor: %f/%f ---\n", x, y);
+      new_y = ah / 2.0f ;
 
       // store the new width/height
       old_width  = w;
@@ -563,11 +595,24 @@ namespace Unity.Quicklauncher
         blue  = 0,
         alpha = (uint8) (255.0f * 0.3f)
       };
+      /*Clutter.Color debug_color = Clutter.Color () {
+        red   = 64,
+        green = 64,
+        blue  = 255,
+        alpha = (uint8) (255.0f * 0.5f)
+      };*/
 
       // before creating a new CtkLayerActor make sure we don't leak any memory
       if (this.ql_background is Ctk.LayerActor)
          this.ql_background.destroy ();
       this.ql_background = new Ctk.LayerActor (w, h);
+
+      /* Commented out as it isn't used atm
+      Ctk.Layer debug_layer = new Ctk.Layer (w,
+                                             h,
+                                             Ctk.LayerRepeatMode.NONE,
+                                             Ctk.LayerRepeatMode.NONE);
+       */
 
       Ctk.Layer outline_layer = new Ctk.Layer (w,
                                                h,
@@ -591,6 +636,9 @@ namespace Unity.Quicklauncher
                                               Ctk.LayerRepeatMode.NONE,
                                               Ctk.LayerRepeatMode.NONE);*/
 
+      /*Cairo.Surface debug_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
+                                                         w,
+                                                         h);*/
       Cairo.Surface outline_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
                                                            w,
                                                            h);
@@ -607,20 +655,16 @@ namespace Unity.Quicklauncher
                                                           w,
                                                           h);
 
+      //Cairo.Context debug_cr = new Cairo.Context (debug_surf);
       Cairo.Context outline_cr = new Cairo.Context (outline_surf);
       Cairo.Context fill_cr = new Cairo.Context (fill_surf);
       Cairo.Context negative_cr = new Cairo.Context (negative_surf);
       Cairo.Context highlight_cr = new Cairo.Context (highlight_surf);
       Cairo.Context dotted_cr = new Cairo.Context (dotted_surf);
 
-      _outline_mask (outline_cr,
-                     w,
-                     h,
-                     2);
-      _fill_mask (fill_cr,
-                  w,
-                  h,
-                  2);
+      //_debug_mask (debug_cr, w, h);
+      _outline_mask (outline_cr, w, h, new_y);
+      _fill_mask (fill_cr, w, h, new_y);
       _negative_mask (negative_cr,
                       w,
                       h,
@@ -645,6 +689,9 @@ namespace Unity.Quicklauncher
       //shadow_layer.set_mask_from_surface (negative_surf);
       //shadow_layer.set_image_from_surface (shadow_surf);
 
+      //debug_layer.set_mask_from_surface (debug_surf);
+      //debug_layer.set_color (debug_color);
+
       fill_layer.set_mask_from_surface (fill_surf);
       fill_layer.set_color (fill_color);
 
@@ -662,6 +709,7 @@ namespace Unity.Quicklauncher
       // order is important here... don't mess around!
       //this.ql_background.add_layer (shadow_layer);
       //this.ql_background.add_layer (blurred_layer);
+      //this.ql_background.add_layer (debug_layer);
       this.ql_background.add_layer (fill_layer);
       this.ql_background.add_layer (dotted_layer);
       this.ql_background.add_layer (highlight_layer);
