@@ -202,8 +202,8 @@ namespace Unity.Quicklauncher
       _normal_mask (normal_cr, w, h, this.get_label ());
       _selected_mask (selected_cr, w, h, this.get_label ());
 
-      normal_surf.write_to_png ("/tmp/normal_surf.png");
-      selected_surf.write_to_png ("/tmp/selected_surf.png");
+      //normal_surf.write_to_png ("/tmp/normal_surf.png");
+      //selected_surf.write_to_png ("/tmp/selected_surf.png");
 
       normal_layer.set_mask_from_surface (normal_surf);
       normal_layer.set_color (white_color);
@@ -214,6 +214,10 @@ namespace Unity.Quicklauncher
       this.item_background.add_layer (normal_layer);
       this.item_background.add_layer (selected_layer);
 
+      this.item_background.get_layer(0).set_enabled (true);
+      this.item_background.get_layer(1).set_enabled (false);
+      this.item_background.do_queue_redraw ();
+
       this.item_background.set_parent (this);
       this.item_background.map ();
       this.item_background.show ();
@@ -223,6 +227,7 @@ namespace Unity.Quicklauncher
     {
       this.item_background.get_layer(0).set_enabled (false);
       this.item_background.get_layer(1).set_enabled (true);
+      this.item_background.do_queue_redraw ();
       return false;
     }
 
@@ -230,6 +235,7 @@ namespace Unity.Quicklauncher
     {
       this.item_background.get_layer(0).set_enabled (true);
       this.item_background.get_layer(1).set_enabled (false);
+      this.item_background.do_queue_redraw ();
       return false;
     }
 
