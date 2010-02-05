@@ -444,7 +444,12 @@ namespace Unity.Quicklauncher
       if (bevent.button == 1)
       {
         last_pressed_time = bevent.time;
-        quicklist_controller.close_menu ();
+        
+        if (!quicklist_controller.is_label)
+          {
+            quicklist_controller.close_menu ();
+            quicklist_controller.show_label ();
+          }
       }
       else
       {

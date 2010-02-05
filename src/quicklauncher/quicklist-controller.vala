@@ -21,7 +21,7 @@ using Unity.Quicklauncher.Models;
 
 namespace Unity.Quicklauncher
 {
-  public Ctk.Menu? active_menu = null;
+  public QuicklistController? active_menu = null;
 
   public class QuicklistController : Object
   {
@@ -48,7 +48,7 @@ namespace Unity.Quicklauncher
 
     ~QuicklistController ()
     {
-      if (active_menu == this.menu)
+      if (active_menu == this)
         {
           active_menu = null;
         }
@@ -78,6 +78,7 @@ namespace Unity.Quicklauncher
     private void build_menu ()
     {
       this.menu = new QuicklistMenu () as Ctk.Menu;
+      this.menu.set_detect_clicks (Unity.global_shell.menus_grab_events);
       Unity.Quicklauncher.QuicklistMenuItem menuitem = new Unity.Quicklauncher.QuicklistMenuItem (this.label);
       menuitem.activated.connect (this.close_menu);
       this.menu.append (menuitem, true);
@@ -111,7 +112,7 @@ namespace Unity.Quicklauncher
       if (Unity.Quicklauncher.active_menu != null)
         {
           // we already have an active menu, so destroy that and start this one
-          Unity.Quicklauncher.active_menu.fadeout_and_destroy ();
+          Unity.Quicklauncher.active_menu.menu.fadeout_and_destroy ();
           Unity.Quicklauncher.active_menu = null;
         }
 
@@ -141,14 +142,14 @@ namespace Unity.Quicklauncher
           menuitem.activated.connect (this.close_menu);
         }
 
-      Unity.Quicklauncher.active_menu = this.menu;
+      Unity.Quicklauncher.active_menu = this;
       this.menu.set_detect_clicks (true);
       this.menu.closed.connect (this.on_menu_close);
       this.is_label = false;
       
       Unity.global_shell.ensure_input_region ();
     }
-
+    
     private void on_menu_close ()
     {
       close_menu ();
@@ -156,7 +157,7 @@ namespace Unity.Quicklauncher
 
     public void close_menu ()
     {
-      if (Unity.Quicklauncher.active_menu == this.menu)
+      if (Unity.Quicklauncher.active_menu == this)
         {
           Unity.Quicklauncher.active_menu = null;
         }
