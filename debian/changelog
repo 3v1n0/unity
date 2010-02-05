@@ -1,4 +1,4 @@
-unity (0.1.12) UNRELEASE; urgency=low
+unity (0.1.12) lucid; urgency=low
 
   * new upstream version:
   * debian/control:
@@ -6,7 +6,7 @@ unity (0.1.12) UNRELEASE; urgency=low
     - dep on liblauncher-dev now
     - add Breaks: mutter (<< 2.28.1~git20091208-1ubuntu5)
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 04 Feb 2010 20:04:36 -0800
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 04 Feb 2010 20:47:31 -0800
 
 unity (0.1.10-0ubuntu1~ppa3) lucid; urgency=low
 
