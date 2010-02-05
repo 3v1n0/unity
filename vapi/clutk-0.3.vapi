@@ -13,9 +13,9 @@ namespace Ctk {
 		public bool get_effects_painting ();
 		public void get_padding (Ctk.Padding padding);
 		public Ctk.ActorState get_state ();
-		public void get_stored_allocation (Clutter.ActorBox box);
+		public void get_stored_allocation (out Clutter.ActorBox box);
 		public unowned string get_tooltip_text ();
-		public void recurse_get_stored_allocation_box (Clutter.ActorBox box);
+		public void recurse_get_stored_allocation_box (out Clutter.ActorBox box);
 		public void remove_all_effects ();
 		public void remove_effect (Ctk.Effect effect);
 		public void set_background (Clutter.Actor bg);
@@ -208,6 +208,7 @@ namespace Ctk {
 		[CCode (has_construct_function = false)]
 		public Layer (uint width, uint height, Ctk.LayerRepeatMode image_repeat, Ctk.LayerRepeatMode mask_repeat);
 		public void get_color (Clutter.Color color);
+		public bool get_enabled ();
 		public uint get_height ();
 		public uint get_image_id ();
 		public unowned Gdk.Pixbuf get_image_pixbuf ();
@@ -219,6 +220,7 @@ namespace Ctk {
 		public uint get_width ();
 		public bool is_valid ();
 		public void set_color (Clutter.Color color);
+		public void set_enabled (bool enabled);
 		public void set_height (uint height);
 		public void set_image_from_file (string filename);
 		public void set_image_from_pixbuf (Gdk.Pixbuf pixbuf);
@@ -233,6 +235,7 @@ namespace Ctk {
 		public void set_opacity (uchar opacity);
 		public void set_width (uint width);
 		public Clutter.Color color { get; set; }
+		public bool enabled { get; set; }
 		public uint height { get; set; }
 		public uint image_id { get; }
 		public Gdk.Pixbuf image_pixbuf { get; set; }
