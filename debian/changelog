@@ -4,8 +4,9 @@ unity (0.1.12) UNRELEASE; urgency=low
   * debian/control:
     - bump libclutk build-dep
     - dep on liblauncher-dev now
+    - add Breaks: mutter (<< 2.28.1~git20091208-1ubuntu5)
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 04 Feb 2010 17:59:06 -0800
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 04 Feb 2010 20:02:14 -0800
 
 unity (0.1.10-0ubuntu1~ppa3) lucid; urgency=low
 

@@ -31,6 +31,7 @@ Recommends: unity-place-applications
 Conflicts: netbook-launcher (<< 0.1.5+r61)
 Replaces: netbook-launcher (<< 0.1.5+r61)
 Provides: netbook-launcher
+Breaks: mutter (<< 2.28.1~git20091208-1ubuntu5)
 Description: Launcher
  Unity launcher.
 
