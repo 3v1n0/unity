@@ -397,7 +397,10 @@ namespace Unity
     
     void restore_window_position (Mutter.Window window)
     {
-      (window as Clutter.Actor).animate (Clutter.AnimationMode.EASE_OUT_SINE, 250, "opacity", 255);
+      if (Mutter.MetaWindow.is_hidden (window.get_meta_window ()))
+        (window as Clutter.Actor).animate (Clutter.AnimationMode.EASE_IN_SINE, 250, "opacity", 0);
+      else
+        (window as Clutter.Actor).animate (Clutter.AnimationMode.EASE_IN_SINE, 250, "opacity", 255);
       (window as Clutter.Actor).reactive = true;
             
       if (exposed_windows.find (window) == null)
@@ -409,9 +412,8 @@ namespace Unity
       int x, y, w, h;
       wnck_window.get_geometry (out x, out y, out w, out h);
       
-      
       (window as Clutter.Actor).set ("scale-gravity", Clutter.Gravity.CENTER);
-      (window as Clutter.Actor).animate (Clutter.AnimationMode.EASE_OUT_SINE, 250, 
+      (window as Clutter.Actor).animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
                                          "scale-x", 1f, 
                                          "scale-y", 1f, 
                                          "x", (float) x, 
@@ -459,13 +461,11 @@ namespace Unity
       int vertical_buffer = 40;
       int count = (int) windows.length ();
       
-      int rows = (int) Math.sqrt (count);
-      if (rows == 0)
-        rows = 1;
+      int cols = (int) Math.ceil (Math.sqrt (count));
       
-      int cols = rows;
+      int rows = 1;
       
-      if (cols * rows < count)
+      while (cols * rows < count)
         rows++;
       
       int boxWidth = (int) ((this.stage.width - left_buffer) / cols);
@@ -487,10 +487,11 @@ namespace Unity
               float scale = float.min (float.min (1, (boxWidth - 20) / window.width), float.min (1, (boxHeight - 20) / window.height));
               
               (window as Clutter.Actor).set ("scale-gravity", Clutter.Gravity.CENTER);
-              
-              (window as Clutter.Actor).animate (Clutter.AnimationMode.EASE_OUT_SINE, 250, 
+              (window as Clutter.Actor).show ();
+              (window as Clutter.Actor).animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250, 
                                                  "x", (float) windowX, 
                                                  "y", (float) windowY, 
+                                                 "opacity", 255,
                                                  "scale-x", scale, 
                                                  "scale-y", scale);
             }
