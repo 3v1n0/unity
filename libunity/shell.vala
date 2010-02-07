@@ -31,12 +31,11 @@ namespace Unity
   }
   public interface Shell : Object
   {
-    public abstract bool          menus_grab_events {get;}
+    public abstract bool          menus_swallow_events {get;}
 
     public abstract ShellMode     get_mode ();
     public abstract Clutter.Stage get_stage ();
     public abstract void          show_unity ();
-    public abstract void          expose_windows (GLib.SList<Wnck.Window> windows);
     public abstract int           get_indicators_width ();
     public abstract void          ensure_input_region ();
     public signal void indicators_changed (int width);

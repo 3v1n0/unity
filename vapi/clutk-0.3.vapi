@@ -282,6 +282,7 @@ namespace Ctk {
 		public void set_background (Clutter.Actor background);
 		public void set_color (Clutter.Color color);
 		public void set_detect_clicks (bool value);
+		public void set_swallow_clicks (bool value);
 		public void set_spacing (int spacing);
 		[CCode (has_construct_function = false)]
 		public Menu.with_background (Clutter.Actor background);
