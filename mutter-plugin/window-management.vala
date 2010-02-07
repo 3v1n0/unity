@@ -172,7 +172,7 @@ namespace Unity
       if (window == null)
         return;
 
-      window.opacity = 255;
+      (window as Clutter.Actor).opacity = 255;
       this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAP);
     }
     

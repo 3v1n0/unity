@@ -83,7 +83,7 @@ namespace Unity
     public signal void window_kill_effect (Plugin        plugin,
                                            Mutter.Window window,
                                            ulong         events);
-
+    
     public signal void restore_input_region (bool fullscreen);
 
     /* Properties */
@@ -708,8 +708,12 @@ namespace Unity
                                   int                 to,
                                   int                 direction)
     {
+      /* we do this so our animations continue to work after a workspace switch */
       foreach (Mutter.Window window in windows)
-        this.plugin.effect_completed (window, Mutter.PLUGIN_SWITCH_WORKSPACE);
+        {
+          this.plugin.effect_completed (window, Mutter.PLUGIN_SWITCH_WORKSPACE);
+          break;
+        }
     }
 
     public void kill_effect (Mutter.Window window, ulong events)
