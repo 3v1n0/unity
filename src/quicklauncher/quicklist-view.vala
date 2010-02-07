@@ -107,8 +107,48 @@ namespace Unity.Quicklauncher
       cr.scale (1.0f, 1.0f);
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
 
+      /*Pango.Layout layout = Pango.cairo_create_layout (cr);
+      Gtk.Settings settings = Gtk.Settings.get_default ();
+      string font_face = settings.gtk_font_name;
+      Pango.FontDescription desc = Pango.FontDescription.from_string (font_face);
+      desc.set_size (8 * Pango.SCALE);
+      desc.set_weight (Pango.Weight.NORMAL);
+      layout.set_font_description (desc);
+      layout.set_wrap (Pango.WrapMode.WORD_CHAR);
+      layout.set_ellipsize (Pango.EllipsizeMode.END);
+      layout.set_width (w - (int) Ctk.em_to_pixel (2 * MARGIN) * Pango.SCALE);
+      layout.set_height (h - (int) Ctk.em_to_pixel (2 * MARGIN) * Pango.SCALE);
+      layout.set_text (this.old_label, -1);
+      Pango.Context pango_context = layout.get_context ();
+      Gdk.Screen screen = Gdk.Screen.get_default ();
+      Pango.cairo_context_set_font_options (pango_context,
+                                            screen.get_font_options ());
+      Pango.cairo_context_set_resolution (pango_context,
+                                          (float) settings.gtk_xft_dpi/1024.0f);
+	    layout.context_changed ();*/
+
+	// draw text for drop-shadow and ...
+	/*cairo_move_to (cr,
+	               BUBBLE_CONTENT_BLUR_RADIUS,
+	               BUBBLE_CONTENT_BLUR_RADIUS);
+	cairo_set_source_rgba (cr,
+			       TEXT_SHADOW_COLOR_R,
+			       TEXT_SHADOW_COLOR_G,
+			       TEXT_SHADOW_COLOR_B,
+			       TEXT_SHADOW_COLOR_A);
+	pango_cairo_show_layout (cr, layout);
+
+	// now draw normal (non-blurred) text over drop-shadow
+	cr.set_source_rgba (TEXT_BODY_COLOR_R,
+			       TEXT_BODY_COLOR_G,
+			       TEXT_BODY_COLOR_B,
+			       TEXT_BODY_COLOR_A);
+	pango_cairo_show_layout (cr, layout);*/
+
       // draw text
-      cr.move_to ((float) 0.0f, (float) h);
+      cr.set_font_size (10.0f);
+      cr.move_to (Ctk.em_to_pixel (MARGIN),
+                  (float) h - Ctk.em_to_pixel (MARGIN));
       cr.show_text (label);
     }
 
@@ -136,8 +176,10 @@ namespace Unity.Quicklauncher
                    h - 1.0f);
       cr.fill ();
 
-      // draw text
-      cr.move_to ((float) 0.0f, (float) h);
+      // draw tex
+      cr.set_font_size (10.0f);
+      cr.move_to (Ctk.em_to_pixel (MARGIN),
+                  (float) h - Ctk.em_to_pixel (MARGIN));
       cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.0f);
       cr.show_text (label);
     }
@@ -731,8 +773,7 @@ namespace Unity.Quicklauncher
     {
       Ctk.Padding padding = Ctk.Padding () {
         left   = (int) Ctk.em_to_pixel (ANCHOR_WIDTH) +
-                 (int) Ctk.em_to_pixel (BORDER) +
-                 (int) Ctk.em_to_pixel (MARGIN),
+                 (int) Ctk.em_to_pixel (BORDER),
         right  = (int) Ctk.em_to_pixel (BORDER),
         top    = (int) Ctk.em_to_pixel (BORDER),
         bottom = (int) Ctk.em_to_pixel (BORDER)

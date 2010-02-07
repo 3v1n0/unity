@@ -493,8 +493,10 @@ namespace Unity
       });
     }
     
-    void position_window_on_grid (List<Clutter.Actor> windows)
+    void position_window_on_grid (List<Clutter.Actor> _windows)
     {
+      List<Clutter.Actor> windows = _windows.copy ();
+    
       int left_buffer = 250;
       int vertical_buffer = 40;
       int count = (int) windows.length ();
@@ -513,14 +515,39 @@ namespace Unity
         {
           for (int col = 0; col < cols; col++)
             {
-              int i = row * cols + col;
-              if (i >= windows.length ())
+              if (windows.length () == 0)
                 return;
               
-              Clutter.Actor window = windows.nth_data (i);
+              int centerX = (boxWidth / 2 + boxWidth * col + left_buffer);
+              int centerY = (boxHeight / 2 + boxHeight * row + vertical_buffer);
               
-              int windowX = (boxWidth / 2 + boxWidth * col + left_buffer) - (int) window.width / 2;
-              int windowY = (boxHeight / 2 + boxHeight * row + vertical_buffer) - (int) window.height / 2;
+              Clutter.Actor window = null;
+              // greedy layout
+              foreach (Clutter.Actor actor in windows)
+                {
+                  if (window == null)
+                    {
+                      window = actor;
+                      continue;
+                    }
+                  
+                  double window_distance = Math.sqrt (
+                    Math.fabs (centerX - (window.x + window.width / 2)) + 
+                    Math.fabs (centerY - (window.y + window.height / 2))
+                  );
+                  double actor_distance = Math.sqrt (
+                    Math.fabs (centerX - (actor.x + actor.width / 2)) + 
+                    Math.fabs (centerY - (actor.y + actor.height / 2))
+                  );
+                  
+                  if (actor_distance < window_distance)
+                    window = actor;
+                }
+              
+              windows.remove (window);
+              
+              int windowX = centerX - (int) window.width / 2;
+              int windowY = centerY - (int) window.height / 2;
               
               float scale = float.min (float.min (1, (boxWidth - 20) / window.width), float.min (1, (boxHeight - 20) / window.height));
               
