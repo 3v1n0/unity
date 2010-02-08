@@ -109,6 +109,8 @@ namespace Unity
     
     public bool menus_swallow_events { get { return false; } }
 
+    public bool expose_showing { get; private set; }
+
     private static const int PANEL_HEIGHT        = 23;
     private static const int QUICKLAUNCHER_WIDTH = 60;
 
@@ -129,7 +131,6 @@ namespace Unity
 
     private DragDest drag_dest;
     private bool     places_showing;
-    private bool     expose_showing;
     private bool     _fullscreen_obstruction;
     
     private bool fullscreen_obstruction
@@ -488,11 +489,7 @@ namespace Unity
       unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
       foreach (Mutter.Window window in mutter_windows)
         {
-          if (Mutter.MetaWindow.is_hidden (window.get_meta_window ()))
-            window.opacity = 0;
-          else
-            window.opacity = 255;
-
+          window.opacity = 255;
           window.reactive = true;
         }
         
@@ -523,7 +520,7 @@ namespace Unity
       
       anim.completed.connect (() => {
         actor.destroy ();
-        window.opacity = opacity;
+        window.opacity = 255;
       });
     }
     
@@ -625,7 +622,9 @@ namespace Unity
           Clutter.Clone clone = actor as Clutter.Clone;
           if (clone != null && clone.source is Mutter.Window)
             {
-              Mutter.MetaWindow.activate (((actor as Clutter.Clone).source as Mutter.Window).get_meta_window (), event.get_time ());
+              unowned Mutter.MetaWindow meta = ((actor as Clutter.Clone).source as Mutter.Window).get_meta_window ();
+              Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace (meta), event.get_time ());
+              Mutter.MetaWindow.activate (meta, event.get_time ());
             }
           this.stage.captured_event.disconnect (on_stage_captured_event);
           this.dexpose_windows ();

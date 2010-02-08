@@ -674,7 +674,7 @@ namespace Mutter {
 		public static bool validate (Mutter.MetaTheme theme) throws GLib.Error;
 	}
 	[Compact]
-	[CCode (cheader_filename = "mutter-plugins.h")]
+	[CCode (cheader_filename = "mutter-plugins.h", cname = "MetaWindow")]
 	public class MetaWindow {
 		[CCode (cname = "meta_window_activate")]
 		public static void activate (Mutter.MetaWindow window, uint32 current_time);

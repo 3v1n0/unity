@@ -59,6 +59,13 @@ namespace Unity
                                      int to,
                                      int direction)
     {
+      if (plugin.expose_showing)
+        {
+          Mutter.Window window = windows.nth_data (0);
+          plugin.plugin.effect_completed (window, Mutter.PLUGIN_SWITCH_WORKSPACE);
+          return;
+        }
+    
       switch_signals_to_send++;
       
       unowned Clutter.Actor stage = plugin.plugin.get_stage ();
