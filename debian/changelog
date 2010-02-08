@@ -4,6 +4,9 @@ unity (0.1.12-0ubuntu1) UNRELEASED; urgency=low
     - remove netbook-launcher transitional package as the old one will
       be shipped in lucid
     - remove C/R/P as well
+  * debian/rules:
+    - remove DEB_DH_GENCONTROL_ARGS_netbook-launcher rule for
+      transitional package
 
  -- Didier Roche <didrocks@ubuntu.com>  Mon, 08 Feb 2010 13:33:19 +0100
 

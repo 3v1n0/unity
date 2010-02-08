@@ -5,7 +5,6 @@ include /usr/share/cdbs/1/rules/simple-patchsys.mk
 include /usr/share/cdbs/1/class/autotools.mk
 
 DEB_DH_MAKESHLIBS_ARGS = -Xusr/lib/mutter/plugins/
-DEB_DH_GENCONTROL_ARGS_netbook-launcher = -- -v1:$(DEB_VERSION)
 
 # List any files which are not installed
 include /usr/share/cdbs/1/rules/utils.mk
