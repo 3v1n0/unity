@@ -255,7 +255,7 @@ namespace Unity
       
       if (current.is_fullscreen ())
         {
-          this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
+          this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -this.QUICKLAUNCHER_WIDTH);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
           this.plugin.set_stage_input_area(0, 0, 0, 0);
         }
@@ -263,6 +263,7 @@ namespace Unity
         {
           this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
+          this.last_input_state = null; //force a new input region
           this.ensure_input_region ();
         }
     }
