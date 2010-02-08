@@ -27,7 +27,9 @@ Homepage: https://launchpad.net/ayatana
 Package: unity
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, mutter
-Recommends: unity-place-applications
+Recommends: unity-place-applications,
+            maximus,
+            ubuntu-netbook-unity-default-settings
 Breaks: mutter (<< 2.28.1~git20091208-1ubuntu5)
 Description: Launcher
  Unity launcher.

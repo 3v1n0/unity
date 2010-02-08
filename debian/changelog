@@ -4,6 +4,8 @@ unity (0.1.12-0ubuntu1) UNRELEASED; urgency=low
     - remove netbook-launcher transitional package as the old one will
       be shipped in lucid
     - remove C/R/P as well
+    - recommends maximus and ubuntu-netbook-unity-default-settings as we
+      have no more meta-package for it
   * debian/rules:
     - remove DEB_DH_GENCONTROL_ARGS_netbook-launcher rule for
       transitional package
