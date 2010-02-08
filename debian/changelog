@@ -1,4 +1,4 @@
-unity (0.1.12-0ubuntu1) UNRELEASED; urgency=low
+unity (0.1.12-0ubuntu1) lucid; urgency=low
 
   * debian/control:
     - remove netbook-launcher transitional package as the old one will
@@ -9,8 +9,9 @@ unity (0.1.12-0ubuntu1) UNRELEASED; urgency=low
   * debian/rules:
     - remove DEB_DH_GENCONTROL_ARGS_netbook-launcher rule for
       transitional package
+  * remove debian/unity.preinst as we don't remove netbook-launcher now
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 08 Feb 2010 13:33:19 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 08 Feb 2010 13:40:19 +0100
 
 unity (0.1.12) lucid; urgency=low
 
