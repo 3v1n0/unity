@@ -1,3 +1,12 @@
+unity (0.1.12-0ubuntu1) UNRELEASED; urgency=low
+
+  * debian/control:
+    - remove netbook-launcher transitional package as the old one will
+      be shipped in lucid
+    - remove C/R/P as well
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 08 Feb 2010 13:33:19 +0100
+
 unity (0.1.12) lucid; urgency=low
 
   * new upstream version:

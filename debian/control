@@ -28,9 +28,6 @@ Package: unity
 Architecture: any
 Depends: ${shlibs:Depends}, ${misc:Depends}, mutter
 Recommends: unity-place-applications
-Conflicts: netbook-launcher (<< 0.1.5+r61)
-Replaces: netbook-launcher (<< 0.1.5+r61)
-Provides: netbook-launcher
 Breaks: mutter (<< 2.28.1~git20091208-1ubuntu5)
 Description: Launcher
  Unity launcher.
@@ -57,12 +54,4 @@ Description: binding to get places into the launcher - development files
  and add places in Unity environment.
  .
  This package contains files that are needed to build applications.
-
-Package: netbook-launcher
-Section: oldlibs
-Architecture: all
-Depends: unity, ${misc:Depends}
-Description: transitional package
- unity supersedes netbook-launcher. This package ensures a clean upgrade path,
- and can be safely removed after the upgrade. 
 
