@@ -38,6 +38,14 @@ namespace Unity
     }
   }
   
+  public enum InputState
+  {
+    NONE,
+    FULLSCREEN,
+    UNITY,
+    ZERO,
+  }
+  
   public class ActorBlur : Ctk.Bin
   {
     private Clutter.Clone clone;
@@ -122,6 +130,18 @@ namespace Unity
     private DragDest drag_dest;
     private bool     places_showing;
     private bool     expose_showing;
+    private bool     _fullscreen_obstruction;
+    
+    private bool fullscreen_obstruction
+      {
+        get {
+          return _fullscreen_obstruction;
+        }
+        set {
+          _fullscreen_obstruction = value;
+          ensure_input_region ();
+        }
+      }
     
     private List<Clutter.Actor> exposed_windows;
     
@@ -162,7 +182,7 @@ namespace Unity
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
       this.stage.actor_added.connect   ((a) => { ensure_input_region (); });
       this.stage.actor_removed.connect ((a) => { ensure_input_region (); });
-
+      
       this.drag_dest = new DragDest ();
       this.drag_dest.show ();
       Gtk.TargetEntry[] target_list =
@@ -307,13 +327,13 @@ namespace Unity
         {
           this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
-          this.plugin.set_stage_input_area(0, 0, 0, 0);
+          fullscreen_obstruction = true;
         }
       else
         {
           this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
-          this.ensure_input_region ();
+          fullscreen_obstruction = false;
         }
     }
 
@@ -358,24 +378,32 @@ namespace Unity
       END_FUNCTION ();
     }
     
-    private bool? last_input_state;
+    private InputState last_input_state = InputState.NONE;
     public void ensure_input_region ()
     {
-      // This code intentionally left as a strange but easily read construct
-      if (expose_showing || places_showing || Unity.Quicklauncher.active_menu != null)
+      if (fullscreen_obstruction)
+        {
+          if (last_input_state == InputState.ZERO)
+            return;
+          last_input_state = InputState.ZERO;
+          this.plugin.set_stage_input_area(0, 0, 0, 0);
+        }
+      else if (expose_showing || places_showing || Unity.Quicklauncher.active_menu != null)
         {
           // Fullscreen required
-          if (last_input_state != null && last_input_state == true)
+          if (last_input_state == InputState.FULLSCREEN)
             return;
-          last_input_state = true;
+          
+          last_input_state = InputState.FULLSCREEN;
           this.restore_input_region (true);
         }
       else
         {
           // Unity mode requred
-          if (last_input_state != null && last_input_state == false)
+          if (last_input_state == InputState.UNITY)
             return;
-          last_input_state = false;
+          
+          last_input_state = InputState.UNITY;
           this.restore_input_region (false);
         }
     }
