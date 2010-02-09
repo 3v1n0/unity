@@ -32,6 +32,8 @@ libunity_la_SOURCES = \
 
 libunity_la_VALASOURCES = \
   application.vala \
+  drag-controller.vala \
+  drag-view.vala \
   perf-logger.vala \
   shell.vala
 

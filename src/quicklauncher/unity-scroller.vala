@@ -476,6 +476,11 @@ namespace Unity.Widgets
 
     private bool on_motion_event (Clutter.Event event)
     {
+      var drag_controller = Drag.Controller.get_default ();
+      if (drag_controller.is_dragging)
+      {
+        return false;
+      }
       if (this.button_down && this.is_dragging == false)
         {
           var diff = event.motion.y - this.click_start_pos;

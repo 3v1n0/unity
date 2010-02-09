@@ -39,7 +39,7 @@ namespace Unity.Quicklauncher
   const uint MEDIUM_DELAY = 800;
   const uint LONG_DELAY = 1600;
 
-  public class LauncherView : Ctk.Bin
+  public class LauncherView : Ctk.Bin, Unity.Drag.Model
   {
 
     public LauncherModel? model;
@@ -440,6 +440,16 @@ namespace Unity.Quicklauncher
 
     private bool on_pressed(Clutter.Event src)
     {
+      var drag_controller = Unity.Drag.Controller.get_default ();
+      debug ("pos: %f x %f", src.button.x, src.button.y);
+      float x, y;
+      this.icon.get_transformed_position (out x, out y);
+      debug (@"icon pos: $x x $y");
+      drag_controller.start_drag (this,
+                                  src.button.x - x,
+                                  src.button.y - y);
+      return true;
+      
       var bevent = src.button;
       if (bevent.button == 1)
       {
@@ -490,8 +500,20 @@ namespace Unity.Quicklauncher
       return false;
     }
 
+    public Clutter.Actor get_icon ()
+    {
+      return this.icon;
+    }
+    
+    public string get_drag_data ()
+    {
+      return "foobar";
+    }
+
     private void on_clicked ()
     {
+      return;
+      
       if (is_starting)
       {
         return;
