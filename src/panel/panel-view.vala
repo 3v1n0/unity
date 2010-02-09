@@ -66,6 +66,21 @@ namespace Unity.Panel
       this.entry = new Unity.Entry ("Search");
       this.entry.set_parent (this);
       this.entry.show ();
+      this.entry.activate.connect (() =>
+        {
+          var text = Uri.escape_string (this.entry.text, "", true);
+
+          var command = "xdg-open http://www.google.com/search?ie=UTF-8&q=%s".printf (text);
+
+          try
+            {
+              Process.spawn_command_line_async (command);
+            }
+          catch (Error e)
+            {
+              warning ("Unable to search for '$text': %s", e.message);
+            }
+        });
 
       END_FUNCTION ();
     }
