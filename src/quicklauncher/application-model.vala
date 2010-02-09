@@ -123,6 +123,13 @@ namespace Unity.Quicklauncher.Models
     private Launcher.Application app;
     private Launcher.Appman manager;
 
+    public unowned SList<Wnck.Window> windows {
+      get
+        {
+          return app.get_windows ();
+        }
+    }
+
     public ApplicationModel (string desktop_uri)
     {
       this.manager = Launcher.Appman.get_default ();
@@ -299,11 +306,6 @@ namespace Unity.Quicklauncher.Models
         }
     }
     
-    public void expose ()
-    {
-      Unity.global_shell.expose_windows (app.get_windows ());
-    }
-
     /**
      * gets the favorite uid for this desktop file
      */

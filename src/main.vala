@@ -163,6 +163,8 @@ public class Main
           return false;
         });
       }
+      
+    Wnck.set_client_type (Wnck.ClientType.PAGER);
     Gtk.main ();
 
 

@@ -23,7 +23,7 @@ namespace Unity
 {
   public class UnderlayWindow : Gtk.Window, Shell
   {
-    public bool menus_grab_events { get { return true; } }
+    public bool menus_swallow_events { get { return true; } }
     public bool is_popup { get; construct; }
     public int  popup_width { get; construct; }
     public int  popup_height { get; construct; }
@@ -48,11 +48,6 @@ namespace Unity
       }
 
     private bool showing_places;
-
-    public void expose_windows (GLib.SList<Wnck.Window> windows)
-    {
-      ;
-    }
 
     public UnderlayWindow (bool popup, int width, int height)
     {

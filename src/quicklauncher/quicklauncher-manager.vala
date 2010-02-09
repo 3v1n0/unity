@@ -44,6 +44,18 @@ namespace Unity.Quicklauncher
           }
       }
     }
+    
+    private LauncherView _active_launcher;
+    public LauncherView active_launcher { 
+      get { return _active_launcher; }
+      private set {
+        LauncherView prev = _active_launcher;
+        _active_launcher = value;
+        active_launcher_changed (prev, _active_launcher);
+      }
+    }
+    
+    public signal void active_launcher_changed (LauncherView last, LauncherView current);
 
     construct
     {
@@ -295,7 +307,6 @@ namespace Unity.Quicklauncher
       END_FUNCTION ();
     }
 
-
    private void handle_session_application (Launcher.Application app)
     {
       var desktop_file = app.get_desktop_file ();
@@ -350,6 +361,8 @@ namespace Unity.Quicklauncher
       }
       container.add_actor(view);
       view.request_remove.connect(remove_view);
+      view.enter_event.connect (on_launcher_enter_event);
+      view.leave_event.connect (on_launcher_leave_event);
     }
 
     private void remove_view (LauncherView view)
@@ -358,7 +371,20 @@ namespace Unity.Quicklauncher
       // i would assume we have to pretty fading though, thats trivial to do
 
       this.container.remove_actor (view);
+      view.enter_event.connect (on_launcher_enter_event);
+      view.leave_event.connect (on_launcher_leave_event);
     }
-
+    
+    private bool on_launcher_enter_event (Clutter.Event event)
+    {
+      active_launcher = event.get_source () as LauncherView;
+      return false;
+    }
+    
+    private bool on_launcher_leave_event (Clutter.Event event)
+    {
+      active_launcher = null;
+      return false;
+    }
   }
 }
