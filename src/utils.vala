@@ -29,7 +29,10 @@ namespace Utils
                                   uint32      top_end);
 
   [CCode (lower_case_prefix = "utils_")]
-    public extern void register_object_on_dbus (DBus.Connection conn,
-                                                string path,
-                                                GLib.Object object);
+  public extern void register_object_on_dbus (DBus.Connection conn,
+                                              string path,
+                                              GLib.Object object);
+
+  [CCode (lower_case_prefix = "utils_")]
+  public extern X.Window get_stage_window (Clutter.Stage stage);
 }
