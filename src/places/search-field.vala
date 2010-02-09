@@ -63,14 +63,13 @@ namespace Unity.Places.SearchField
     public View ()
     {
       search_icon = new Ctk.Image.from_filename (22, SEARCH_ICON);
-      text_field = new Unity.Entry ();
+      text_field = new Unity.Entry ("Search");
       rect_box = new CairoDrawing.RectangleBox ();
 
       this.add_actor (rect_box);
       this.add_actor (search_icon);
       this.add_actor (text_field);
 
-      text_field.text = "Search";
       this.show_all ();
 
       this.text_field.button_press_event.connect ((e) =>

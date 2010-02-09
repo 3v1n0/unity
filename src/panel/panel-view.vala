@@ -63,9 +63,8 @@ namespace Unity.Panel
       this.home.set_parent (this);
       this.home.show ();
 
-      this.entry = new Unity.Entry ();
+      this.entry = new Unity.Entry ("Search");
       this.entry.set_parent (this);
-      this.entry.text = "Search";
       this.entry.show ();
 
       END_FUNCTION ();

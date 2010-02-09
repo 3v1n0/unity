@@ -21,9 +21,24 @@ namespace Unity
 {
   public class Entry : Ctk.Text
   {
-    public Entry ()
+    private string _static_text;
+    public  string static_text
+      {
+        get
+          {
+            return _static_text;
+          }
+
+        construct set
+          {
+            this._static_text = value;
+            this.text = this._static_text;
+          }
+      }
+
+    public Entry (string static_text)
     {
-      Object ();
+      Object (static_text:static_text);
     }
 
     construct
@@ -34,14 +49,42 @@ namespace Unity
       this.activatable = true;
       this.single_line_mode = true;
 
+      this.cursor_visible = false;
+      this.cursor_color = { 0xff, 0xff, 0xff, 0x55 };
+      this.selection_color = { 0xff, 0xff, 0xff, 0x55 };
+
+      this.key_focus_in.connect (this.on_key_focus_in);
+      this.key_focus_out.connect (this.on_key_focus_out);
+
       this.button_press_event.connect (this.on_button_press_event);
       this.activate.connect (this.on_activate);
+    }
+
+    private void on_key_focus_in ()
+    {
+      if (this.text == this._static_text)
+        {
+          this.cursor_visible = true;
+          this.set_selection (0, -1);
+          this.color = { 0xff, 0xff, 0xff, 0xff };
+        }
+    }
+
+    private void on_key_focus_out ()
+    {
+      this.cursor_visible = false;
+      this.text = this._static_text;
+      this.color = { 0xff, 0xff, 0xff, 0x55 };
+
+      Unity.global_shell.grab_keyboard (false,
+                                        Clutter.get_current_event_time ());
     }
 
     private void on_activate ()
     {
       Unity.global_shell.grab_keyboard (false,
                                         Clutter.get_current_event_time ());
+      Clutter.ungrab_keyboard ();
     }
 
     private bool on_button_press_event (Clutter.Event event)
@@ -67,6 +110,8 @@ namespace Unity
           {
             Unity.global_shell.grab_keyboard (false, event.button.time);
             stage.captured_event.disconnect (this.on_stage_captured_event);
+
+            Clutter.ungrab_keyboard ();
           }
       }
 
