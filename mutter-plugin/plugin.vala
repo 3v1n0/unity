@@ -127,7 +127,7 @@ namespace Unity
     private ActorBlur          actor_blur;
     private Clutter.Rectangle  dark_box;
 
-    private bool     places_enabled;
+    private bool     places_enabled = false;
 
     private DragDest drag_dest;
     private bool     places_showing;
@@ -206,7 +206,7 @@ namespace Unity
 
       Ctk.dnd_init ((Gtk.Widget)this.drag_dest, target_list);
 
-      this.places_enabled = !envvar_is_enabled ("UNITY_DISABLE_PLACES");
+      this.places_enabled = envvar_is_enabled ("UNITY_ENABLE_PLACES");
 
       this.background = new Background ();
       this.stage.add_actor (this.background);
