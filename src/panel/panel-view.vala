@@ -111,7 +111,7 @@ namespace Unity.Panel
       this.home.allocate (child_box, flags);
 
       /* Entry */
-      child_box.x1 = child_box.x2 + 12;
+      child_box.x1 = child_box.x2 + 56;
       child_box.x2 = child_box.x1 + 150; /* Random width */
 
       if ((this.entry_background.Width != (int)(child_box.x2 - child_box.x1)) && (this.entry_background.height != (int)(child_box.y2 - child_box.y1)))
