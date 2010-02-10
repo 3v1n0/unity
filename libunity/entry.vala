@@ -47,7 +47,7 @@ namespace Unity
       this.editable = true;
       this.selectable = true;
       this.activatable = true;
-      this.single_line_mode = true;
+      /*this.single_line_mode = true;*/ /* Disabling due to pointer bug */
 
       this.cursor_visible = false;
       this.cursor_color = { 0xff, 0xff, 0xff, 0x55 };
