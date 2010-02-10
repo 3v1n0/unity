@@ -123,10 +123,10 @@ namespace Unity.Quicklauncher.Models
     private Launcher.Application app;
     private Launcher.Appman manager;
     private string desktop_uri;
-    private float stored_priority;
+    private float _priority;
     public float priority {
-      get { return stored_priority; }
-      set { stored_priority = value;}
+      get { return _priority; }
+      set { _priority = value; this.save_priority ();}
     }
 
     public string uid {
@@ -145,11 +145,35 @@ namespace Unity.Quicklauncher.Models
       this.app.urgent_changed.connect (this.on_app_urgent_changed);
 
       this._icon = make_icon (app.icon_name);
+      this.grab_priority ();
     }
 
     construct
     {
-      this.stored_priority = (float)Random.double_range (0.0, 100.0);
+    }
+
+    public void save_priority ()
+    {
+      if (!this.is_sticky) return;
+      var favorites = Launcher.Favorites.get_default ();
+      string uid = get_fav_uid ();
+      favorites.set_float (uid, "priority", this.priority);
+    }
+    private void grab_priority ()
+    {
+      // grab the current priority from gconf
+      var favorites = Launcher.Favorites.get_default ();
+      string uid = get_fav_uid ();
+      float priority = favorites.get_float (uid, "priority");
+      // because liblauncher has no error handling, we assume that a priority
+      // of < 1.0f is unset. so generate a random new one and set
+      if (priority < 1.0f)
+        {
+          priority = (float)Random.double_range (1.0001, 100.0);
+          if (this.is_sticky)
+            favorites.set_float (uid, "priority", priority);
+        }
+      this._priority = priority;
     }
     
     private void on_app_running_changed ()

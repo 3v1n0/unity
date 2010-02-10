@@ -313,7 +313,11 @@ namespace Unity
     public void ensure_input_region ()
     {
       // This code intentionally left as a strange but easily read construct
-      if (expose_showing || places_showing || Unity.Quicklauncher.active_menu != null)
+      if (expose_showing ||
+          places_showing ||
+          Unity.Quicklauncher.active_menu != null ||
+          Unity.Drag.Controller.get_default ().is_dragging
+          )
         {
           // Fullscreen required
           if (last_input_state != null && last_input_state == true)

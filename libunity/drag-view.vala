@@ -61,9 +61,22 @@ namespace Unity.Drag
       this.hooked_actor.set_position (x, y);
       this.hooked_actor.show ();
       
-      this.stage.motion_event.connect (this.on_motion_event);
-      this.stage.button_release_event.connect (this.on_release_event);
-      Clutter.grab_pointer (this.stage);
+      this.stage.captured_event.connect (this.captured_event);
+    }
+
+    private bool captured_event (Clutter.Event event)
+    {
+      if (event.type == Clutter.EventType.MOTION)
+        {
+          this.on_motion_event (event);
+          return true;
+        }
+      if (event.type == Clutter.EventType.BUTTON_RELEASE)
+        {
+          this.on_release_event (event);
+          return true;
+        }
+      return false;
     }
 
     public void unhook_actor ()
@@ -77,7 +90,7 @@ namespace Unity.Drag
     private bool on_motion_event (Clutter.Event event)
     {
       if (!(this.hooked_actor is Clutter.Actor)) {
-        this.stage.motion_event.disconnect (this.on_motion_event);
+        this.stage.captured_event.disconnect (this.captured_event);
         return false;
       }
       this.hooked_actor.set_position (event.motion.x - this.offset_x,
@@ -88,14 +101,12 @@ namespace Unity.Drag
 
     private bool on_release_event (Clutter.Event event)
     {
-      debug ("got a release event");
       if (!(this.hooked_actor is Clutter.Actor)) {
         this.stage.button_release_event.disconnect (this.on_release_event);
         return false;
       }
       this.unhook_actor ();
       this.end (event.button.x, event.button.y);
-      Clutter.ungrab_pointer ();
       return false;
     }
   }

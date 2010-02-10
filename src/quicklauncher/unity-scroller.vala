@@ -202,7 +202,6 @@ namespace Unity.Widgets
     private void on_unity_drag_start (Drag.Model model)
     {
       string data = model.get_drag_data ();
-      debug (@"got data! $data");
       // check to see if we are "interested" in the data, we just assume we
       // are for now
 
@@ -212,7 +211,6 @@ namespace Unity.Widgets
           if (container.child.get_name () == data)
             {
               container.state = ScrollerChildState.HIDDEN;
-              debug ("STARTING we are at %f", (container.child as LauncherView).model.priority);
             }
         }
       var drag_controller = Drag.Controller.get_default ();
@@ -249,8 +247,6 @@ namespace Unity.Widgets
       ScrollerChild child_under = get_child_at_screen_positition (y);
       if (child_under != null && child_under != retcont)
         {
-          debug ("under us we have %sf", child_under.child.get_name ());
-          debug ("we are at %f", (retcont.child as LauncherView).model.priority);
           // find the child before this one
           ScrollerChild previous_child = this.children.first ();
           foreach (ScrollerChild container in this.children)
@@ -258,7 +254,6 @@ namespace Unity.Widgets
               if (container == child_under) break;
               previous_child = container;
             }
-          debug ("previous_child %s", previous_child.child.get_name ());
           if (previous_child == child_under)
             {
               // we have the first item, so just -1 to priority
@@ -271,9 +266,6 @@ namespace Unity.Widgets
               float next_priority = (child_under.child as LauncherView).model.priority;
               float priority = next_priority - ((next_priority - prev_priority) / 2.0f);
               (retcont.child as LauncherView).model.priority = priority;
-              debug (@"prev_pos: $prev_priority");
-              debug (@"next_pos: $next_priority");
-              debug (@"new pos: $priority");
             }
           this.order_changed = true;
           this.queue_relayout ();
@@ -283,7 +275,6 @@ namespace Unity.Widgets
     private void on_unity_drag_drop (Drag.Model model, float x, float y)
     {
       string data = model.get_drag_data ();
-      debug (@"got data! $data");
       // check to see if the data matches any of our children
       ScrollerChild? retcont = null;
       foreach (ScrollerChild container in this.children)
@@ -306,7 +297,32 @@ namespace Unity.Widgets
       var drag_controller = Drag.Controller.get_default ();
       drag_controller.drag_motion.disconnect (this.on_unity_drag_motion);
       drag_controller.drag_drop.disconnect (this.on_unity_drag_drop);
+
+      // we want to go through our lsit of children and normalize our
+      // priorities else they will gravitate to small values
+      // sticky always first
+      float priority = 1.0001f;
+      foreach (ScrollerChild container in this.children)
+        {
+          LauncherView child = container.child as LauncherView;
+          if (child.model.is_sticky)
+            {
+              child.model.priority = priority;
+              priority += 1.0f;
+            }
+        }
+      // now do non sticky
+      foreach (ScrollerChild container in this.children)
+        {
+          LauncherView child = container.child as LauncherView;
+          if (!child.model.is_sticky)
+            {
+              child.model.priority = priority;
+              priority += 1.0f;
+            }
+        }
       this.queue_relayout ();
+      this.order_changed = true;
     }
 
     private ScrollerChild? get_child_at_screen_positition (float pos)
