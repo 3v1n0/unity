@@ -201,6 +201,9 @@ namespace Unity.Widgets
 
     private void on_unity_drag_start (Drag.Model model)
     {
+      // we aren't dragging outselfs so make sure we don't have button down set
+      this.button_down = false;
+      
       string data = model.get_drag_data ();
       // check to see if we are "interested" in the data, we just assume we
       // are for now

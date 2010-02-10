@@ -80,6 +80,10 @@ namespace Unity.Quicklauncher
     bool wiggling = false;
     bool cease_wiggle;
 
+    private bool button_down = false;
+    private float click_start_pos = 0;
+    private static const uint drag_sensitivity = 3;
+
     /**
      * signal is called when the application is not marked as sticky and
      * it is not running
@@ -147,8 +151,10 @@ namespace Unity.Quicklauncher
         button_press_event.connect (this.on_pressed);
         button_release_event.connect (this.on_released);
 
-        enter_event.connect (this.on_mouse_enter);
-        leave_event.connect (this.on_mouse_leave);
+        this.enter_event.connect (this.on_mouse_enter);
+        this.leave_event.connect (this.on_mouse_leave);
+        this.motion_event.connect (this.on_motion_event);
+        this.notify["reactive"].connect (this.notify_on_set_reactive);
 
         this.clicked.connect (this.on_clicked);
         this.icon.do_queue_redraw ();
@@ -212,6 +218,11 @@ namespace Unity.Quicklauncher
       this.running_indicator.set_position (0, mid_point_y - focus_halfy);
 
       this.icon.set_position (6, 0);
+    }
+
+    public new void notify_on_set_reactive ()
+    {
+      this.button_down = false;
     }
 
     /* animation logic */
@@ -412,6 +423,9 @@ namespace Unity.Quicklauncher
     }
     private bool on_mouse_enter (Clutter.Event event)
     {
+      var drag_controller = Drag.Controller.get_default ();
+      if (drag_controller.is_dragging) return false;
+      
       this.is_hovering = true;
       
       if (!(quicklist_controller is QuicklistController))
@@ -441,22 +455,36 @@ namespace Unity.Quicklauncher
       return false;
     }
 
-    private bool on_pressed(Clutter.Event src)
+    private bool on_motion_event (Clutter.Event event)
     {
       var drag_controller = Unity.Drag.Controller.get_default ();
-      debug ("pos: %f x %f", src.button.x, src.button.y);
-      float x, y;
-      this.icon.get_transformed_position (out x, out y);
-      debug (@"icon pos: $x x $y");
-      drag_controller.start_drag (this,
-                                  src.button.x - x,
-                                  src.button.y - y);
-      return true;
-      
+      if (this.button_down && drag_controller.is_dragging == false)
+        {
+          var diff = event.motion.x - this.click_start_pos;
+          if (diff > this.drag_sensitivity || -diff > this.drag_sensitivity)
+            {
+              float x, y;
+              this.icon.get_transformed_position (out x, out y);
+              drag_controller.start_drag (this,
+                                          event.button.x - x,
+                                          event.button.y - y);
+              this.button_down = false;
+              this.quicklist_controller.hide_label ();
+              return true;
+            }
+        }
+        return false;
+    }
+
+    private bool on_pressed(Clutter.Event src)
+    {
+
       var bevent = src.button;
       if (bevent.button == 1)
       {
         last_pressed_time = bevent.time;
+        this.click_start_pos = bevent.x;
+        this.button_down = true;
         
         if (!quicklist_controller.is_label)
           {
@@ -495,6 +523,7 @@ namespace Unity.Quicklauncher
     private bool on_released (Clutter.Event src)
     {
       var bevent = src.button;
+      this.button_down = false;
       if (bevent.button == 1 &&
           (bevent.time - last_pressed_time) < 500)
       {
@@ -515,7 +544,6 @@ namespace Unity.Quicklauncher
 
     private void on_clicked ()
     {
-      return;
       
       if (is_starting)
       {
