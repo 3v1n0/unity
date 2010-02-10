@@ -153,3 +153,4 @@ src/places/places-place-view.c
 src/places/places-results-view.c
 src/quicklauncher/chrome-handler.c
 src/places/search-field.c
+libunity/entry.c

@@ -94,7 +94,8 @@ namespace Unity.Quicklauncher
     private void build_menu ()
     {
       this.menu = new QuicklistMenu () as Ctk.Menu;
-      this.menu.set_detect_clicks (Unity.global_shell.menus_grab_events);
+      this.menu.set_swallow_clicks (Unity.global_shell.menus_swallow_events);
+      this.menu.set_detect_clicks (false);
       Unity.Quicklauncher.QuicklistMenuItem menuitem = new Unity.Quicklauncher.QuicklistMenuItem (this.label);
       menuitem.activated.connect (this.close_menu);
       this.menu.append (menuitem, true);
@@ -113,6 +114,7 @@ namespace Unity.Quicklauncher
 
       this.menu.show();
       this.is_label = true;
+      this.menu.set_detect_clicks (false);
     }
     
     public void hide_label ()
@@ -120,7 +122,8 @@ namespace Unity.Quicklauncher
       if (!is_label || menu == null)
         return;
 
-      menu.hide ();
+      this.menu.set_detect_clicks (false);
+      this.menu.hide ();
     }
 
     public void show_menu ()
@@ -138,6 +141,7 @@ namespace Unity.Quicklauncher
         }
 
       this.is_label = false;
+      
       foreach (ShortcutItem shortcut in this.prefix_actions)
         {
           var label = shortcut.get_name ();
@@ -159,9 +163,9 @@ namespace Unity.Quicklauncher
         }
 
       Unity.Quicklauncher.active_menu = this;
-      this.menu.set_detect_clicks (true);
       this.menu.closed.connect (this.on_menu_close);
       this.is_label = false;
+      this.menu.set_detect_clicks (true);
       
       Unity.global_shell.ensure_input_region ();
     }

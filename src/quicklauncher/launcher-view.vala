@@ -91,6 +91,8 @@ namespace Unity.Quicklauncher
     public signal void request_remove ();
     public signal void request_attention ();
     public signal void clicked ();
+    public signal void menu_opened (LauncherView sender);
+    public signal void menu_closed (LauncherView sender);
 
     /* animations */
 
@@ -438,6 +440,7 @@ namespace Unity.Quicklauncher
         }
       
       this.quicklist_controller.show_label ();
+
       return false;
     }
 
@@ -481,27 +484,29 @@ namespace Unity.Quicklauncher
 
       var bevent = src.button;
       if (bevent.button == 1)
-      {
+        {
         last_pressed_time = bevent.time;
         this.click_start_pos = bevent.x;
         this.button_down = true;
         
-        if (!quicklist_controller.is_label)
-          {
-            quicklist_controller.close_menu ();
-            quicklist_controller.show_label ();
-          }
-      }
+          if (!quicklist_controller.is_label)
+            {
+              quicklist_controller.close_menu ();
+              quicklist_controller.show_label ();
+              menu_closed (this);
+            }
+        }
       else
-      {
-        if (this.quicklist_controller.is_label)
-          {
-            this.quicklist_controller.show_menu ();
-            if (model is ApplicationModel)
-              (model as ApplicationModel).expose ();
-          }
-      }
+        {
+          this.quicklist_controller.show_menu ();
+          menu_opened (this);
+        }
       return false;
+    }
+    
+    public void close_menu ()
+    {
+      this.quicklist_controller.close_menu ();
     }
 
     /* menu handling */

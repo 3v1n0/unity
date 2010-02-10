@@ -134,6 +134,13 @@ namespace Unity.Quicklauncher.Models
       get { return this.desktop_uri; }
     }
 
+    public unowned SList<Wnck.Window> windows {
+      get
+        {
+          return app.get_windows ();
+        }
+    }
+
     public ApplicationModel (string desktop_uri)
     {
       this.desktop_uri = desktop_uri;
@@ -355,11 +362,6 @@ namespace Unity.Quicklauncher.Models
       this.app.close ();
     }
     
-    public void expose ()
-    {
-      Unity.global_shell.expose_windows (app.get_windows ());
-    }
-
     /**
      * gets the favorite uid for this desktop file
      */
