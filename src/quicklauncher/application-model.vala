@@ -123,10 +123,11 @@ namespace Unity.Quicklauncher.Models
     private Launcher.Application app;
     private Launcher.Appman manager;
     private string desktop_uri;
+    private bool queued_save_priority;
     private float _priority;
     public float priority {
       get { return _priority; }
-      set { _priority = value; this.save_priority ();}
+      set { _priority = value; this.do_save_priority ();}
     }
 
     public string uid {
@@ -146,14 +147,28 @@ namespace Unity.Quicklauncher.Models
 
       this._icon = make_icon (app.icon_name);
       this.grab_priority ();
+      this.queued_save_priority = false;
     }
 
     construct
     {
     }
 
+    /* hitting gconf too much is bad, so we want to make sure we only hit
+     * when we are idle
+     */
+    public void do_save_priority ()
+    {
+      if (!this.queued_save_priority)
+        {
+          this.queued_save_priority = true;
+          Idle.add ((SourceFunc)(this.save_priority));
+        }
+    }
+
     public void save_priority ()
     {
+      this.queued_save_priority = false;
       if (!this.is_sticky) return;
       var favorites = Launcher.Favorites.get_default ();
       string uid = get_fav_uid ();
