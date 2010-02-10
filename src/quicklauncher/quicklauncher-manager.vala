@@ -356,7 +356,7 @@ namespace Unity.Quicklauncher
     {
       // for now just remove the application quickly. at some point
       // i would assume we have to pretty fading though, thats trivial to do
-
+      debug ("removing view %s", view.get_name ());
       this.container.remove_actor (view);
     }
 

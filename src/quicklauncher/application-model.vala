@@ -122,9 +122,20 @@ namespace Unity.Quicklauncher.Models
     private Gdk.Pixbuf _icon;
     private Launcher.Application app;
     private Launcher.Appman manager;
+    private string desktop_uri;
+    private float stored_priority;
+    public float priority {
+      get { return stored_priority; }
+      set { stored_priority = value;}
+    }
+
+    public string uid {
+      get { return this.desktop_uri; }
+    }
 
     public ApplicationModel (string desktop_uri)
     {
+      this.desktop_uri = desktop_uri;
       this.manager = Launcher.Appman.get_default ();
       this.app = this.manager.get_application_for_desktop_file (desktop_uri);
 
@@ -138,6 +149,7 @@ namespace Unity.Quicklauncher.Models
 
     construct
     {
+      this.stored_priority = (float)Random.double_range (0.0, 100.0);
     }
     
     private void on_app_running_changed ()

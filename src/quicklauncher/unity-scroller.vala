@@ -30,6 +30,13 @@ namespace Unity.Widgets
     BOUNCE
   }
 
+  public enum ScrollerChildState
+  {
+    NORMAL,   /* normal view */
+    HIDDEN,   /* still takes space but is not visible */
+    REMOVED   /* ignored in the scroller, no space made */
+  }
+
   public class ScrollerChild : Object
   {
     /* just a container for our children, we use an object basically just for
@@ -42,6 +49,7 @@ namespace Unity.Widgets
     public float height = 0.0f;
 
     public float position = 0.0f;
+    public ScrollerChildState state;
 
     public Clutter.Actor child;
     public Clutter.ActorBox box;
@@ -70,6 +78,9 @@ namespace Unity.Widgets
 
   public class Scroller : Ctk.Actor, Clutter.Container
   {
+    public bool order_changed;
+    private const float DRAG_SAFE_ZONE = 200.0f;
+    
     private ScrollerPhase phase;
     private uint drag_sensitivity = 3;
     private float click_start_pos = 0;
@@ -182,6 +193,139 @@ namespace Unity.Widgets
       this.motion_event.connect (this.on_motion_event);
 
       this.drag_pos = 0.0f;
+
+      this.order_changed = true;
+      var drag_controller = Drag.Controller.get_default ();
+      drag_controller.drag_start.connect (this.on_unity_drag_start);
+    }
+
+    private void on_unity_drag_start (Drag.Model model)
+    {
+      string data = model.get_drag_data ();
+      debug (@"got data! $data");
+      // check to see if we are "interested" in the data, we just assume we
+      // are for now
+
+      // check to see if the data matches any of our children
+      foreach (ScrollerChild container in this.children)
+        {
+          if (container.child.get_name () == data)
+            {
+              container.state = ScrollerChildState.HIDDEN;
+              debug ("STARTING we are at %f", (container.child as LauncherView).model.priority);
+            }
+        }
+      var drag_controller = Drag.Controller.get_default ();
+      drag_controller.drag_motion.connect (this.on_unity_drag_motion);
+      drag_controller.drag_drop.connect (this.on_unity_drag_drop);
+    }
+
+    private void on_unity_drag_motion (Drag.Model model, float x, float y)
+    {
+      //find child
+      string data = model.get_drag_data ();
+      // check to see if the data matches any of our children
+      ScrollerChild? retcont = null;
+      foreach (ScrollerChild container in this.children)
+        {
+          if (container.child.get_name () == data)
+            {
+              retcont = container;
+            }
+        }
+
+      if (retcont == null) return;
+      if (x > this.get_width () + this.DRAG_SAFE_ZONE)
+        {
+          if (retcont.state != ScrollerChildState.REMOVED) this.queue_relayout ();
+          retcont.state = ScrollerChildState.REMOVED;
+        }
+      else
+        {
+          if (retcont.state != ScrollerChildState.HIDDEN) this.queue_relayout ();
+          retcont.state = ScrollerChildState.HIDDEN;
+        }
+
+      ScrollerChild child_under = get_child_at_screen_positition (y);
+      if (child_under != null && child_under != retcont)
+        {
+          debug ("under us we have %sf", child_under.child.get_name ());
+          debug ("we are at %f", (retcont.child as LauncherView).model.priority);
+          // find the child before this one
+          ScrollerChild previous_child = this.children.first ();
+          foreach (ScrollerChild container in this.children)
+            {
+              if (container == child_under) break;
+              previous_child = container;
+            }
+          debug ("previous_child %s", previous_child.child.get_name ());
+          if (previous_child == child_under)
+            {
+              // we have the first item, so just -1 to priority
+              (retcont.child as LauncherView).model.priority = (child_under.child as LauncherView).model.priority - 1.0f;
+            }
+          else
+            {
+              // set a new priority half way between the two children
+              float prev_priority = (previous_child.child as LauncherView).model.priority;
+              float next_priority = (child_under.child as LauncherView).model.priority;
+              float priority = next_priority - ((next_priority - prev_priority) / 2.0f);
+              (retcont.child as LauncherView).model.priority = priority;
+              debug (@"prev_pos: $prev_priority");
+              debug (@"next_pos: $next_priority");
+              debug (@"new pos: $priority");
+            }
+          this.order_changed = true;
+          this.queue_relayout ();
+        }
+    }
+
+    private void on_unity_drag_drop (Drag.Model model, float x, float y)
+    {
+      string data = model.get_drag_data ();
+      debug (@"got data! $data");
+      // check to see if the data matches any of our children
+      ScrollerChild? retcont = null;
+      foreach (ScrollerChild container in this.children)
+        {
+          if (container.child.get_name () == data)
+            {
+              retcont = container;
+            }
+        }
+
+      if (x > this.get_width ())
+        {
+          (retcont.child as LauncherView).request_remove ();
+        }
+      else
+        {
+          retcont.state = ScrollerChildState.NORMAL;
+        }
+        
+      var drag_controller = Drag.Controller.get_default ();
+      drag_controller.drag_motion.disconnect (this.on_unity_drag_motion);
+      drag_controller.drag_drop.disconnect (this.on_unity_drag_drop);
+      this.queue_relayout ();
+    }
+
+    private ScrollerChild? get_child_at_screen_positition (float pos)
+    {
+      /* given a position in screenspace co-ords this attempts to return a
+       * scroller child object
+       */
+      float x; float y;
+      this.get_transformed_position (out x, out y);
+      ScrollerChild? retcont = null;
+      foreach (ScrollerChild container in this.children)
+      {
+        // the last container we find is the one we want... i think
+        if (container.box.y1 - this.drag_pos + y < pos)
+          {
+            retcont = container;
+          }
+      }
+      return retcont;
     }
 
     private void load_textures ()
@@ -576,6 +720,15 @@ namespace Unity.Widgets
       return true;
     }
 
+    private static int sort_by_priority (void *a, void *b)
+    {
+      LauncherView viewa = (a as ScrollerChild).child as LauncherView;
+      LauncherView viewb = (b as ScrollerChild).child as LauncherView;
+      if (viewa.model.priority < viewb.model.priority) return -1;
+      if (viewa.model.priority > viewb.model.priority) return +1;
+      return 0;
+    }
+
     /*
      * Clutter methods
      */
@@ -657,6 +810,12 @@ namespace Unity.Widgets
     public override void allocate (Clutter.ActorBox box,
                                    Clutter.AllocationFlags flags)
     {
+      if (this.order_changed)
+        {
+          this.children.sort ((CompareFunc)(this.sort_by_priority));
+          this.order_changed = false;
+        }
+      
       this.height = box.y2 - box.y1;
       this.total_child_height = 0.0f;
       float x = padding.left;
@@ -676,6 +835,10 @@ namespace Unity.Widgets
       foreach (ScrollerChild childcontainer in this.children)
       {
         Clutter.Actor child = childcontainer.child;
+        if (childcontainer.state == ScrollerChildState.REMOVED)
+          {
+            continue;
+          }
         float min_height, natural_height;
         child.get_allocation_box (out child_box);
         child.get_preferred_height (box.get_width (), out min_height, out natural_height);
@@ -734,6 +897,13 @@ namespace Unity.Widgets
                 child.set_reactive (true);
               }
           }
+
+/*
+          if (childcontainer.state == ScrollerChildState.HIDDEN)
+            {
+
+            }
+*/
       }
 
       /* also allocate our background graphics */
@@ -790,8 +960,11 @@ namespace Unity.Widgets
       foreach (ScrollerChild childcontainer in this.children)
       {
         Clutter.Actor child = childcontainer.child;
-        if ((child.flags & Clutter.ActorFlags.VISIBLE) != 0)
-          child.paint ();
+        if (childcontainer.state == ScrollerChildState.NORMAL)
+          {
+            if ((child.flags & Clutter.ActorFlags.VISIBLE) != 0)
+              child.paint ();
+          }
       }
       this.top_shadow.paint ();
       this.bottom_fade.paint ();
@@ -809,6 +982,7 @@ namespace Unity.Widgets
     {
       var container = new ScrollerChild ();
       container.child = actor;
+      container.state = ScrollerChildState.NORMAL;
       this.children.add (container);
       actor.set_parent (this);
 
@@ -838,6 +1012,7 @@ namespace Unity.Widgets
       ScrollerChild found_container = null;
       foreach (ScrollerChild container in this.children) {
         if (container.child == actor)
+        
         {
           found_container = container;
           break;

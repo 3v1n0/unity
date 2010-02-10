@@ -125,6 +125,7 @@ namespace Unity.Quicklauncher
         /* get the graphic from the model */
         this.notify_on_icon ();
         this.model.notify["icon"].connect (this.notify_on_icon);
+        this.set_name (model.uid);
       }
 
     construct
@@ -507,7 +508,7 @@ namespace Unity.Quicklauncher
     
     public string get_drag_data ()
     {
-      return "foobar";
+      return this.get_name ();
     }
 
     private void on_clicked ()

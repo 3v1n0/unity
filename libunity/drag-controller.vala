@@ -85,6 +85,7 @@ namespace Unity.Drag
 
     private void on_view_end (float x, float y)
     {
+      this.view.unhook_actor ();
       this.drag_drop (this.model, x, y);
       this.view.motion.disconnect (on_view_motion);
       this.view.end.disconnect (on_view_end);
