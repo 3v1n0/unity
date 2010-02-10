@@ -147,6 +147,10 @@ public class Main
         return response == Unique.Response.OK ? 0 : 1;
       }
 
+    /* Make sure we don't load the tray */
+    var cur_tray_envvar = Environment.get_variable ("UNITY_DISABLE_TRAY");
+    Environment.set_variable ("UNITY_DISABLE_TRAY", "1", true);
+
     /* Things seem to be okay, load the main window */
     window = new Unity.UnderlayWindow (popup_mode, popup_width, popup_height);
     app.shell = window;
@@ -163,12 +167,12 @@ public class Main
           return false;
         });
       }
-      
+
     Wnck.set_client_type (Wnck.ClientType.PAGER);
     Gtk.main ();
 
-
-
+    /* Restore envvar */
+    Environment.set_variable ("UNITY_DISABLE_TRAY", cur_tray_envvar, true);
 
     return 0;
   }
