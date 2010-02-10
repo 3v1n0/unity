@@ -93,6 +93,36 @@ namespace Unity.Quicklauncher
               270.0f * GLib.Math.PI / 180.0f);
     }
 
+    private void
+    _get_text_extents (out int width,
+                       out int height)
+    {
+      Cairo.Surface dummy_surf = new Cairo.ImageSurface (Cairo.Format.A1, 1, 1);
+      Cairo.Context dummy_cr = new Cairo.Context (dummy_surf);
+      Pango.Layout layout = Pango.cairo_create_layout (dummy_cr);
+      Gtk.Settings settings = Gtk.Settings.get_default ();
+      string face = settings.gtk_font_name;
+      Pango.FontDescription desc = Pango.FontDescription.from_string (face);
+
+      desc.set_weight (Pango.Weight.NORMAL);
+      layout.set_font_description (desc);
+      layout.set_wrap (Pango.WrapMode.WORD_CHAR);
+      layout.set_ellipsize (Pango.EllipsizeMode.END);
+      layout.set_text (label, -1);
+      Pango.Context pango_context = layout.get_context ();
+      Gdk.Screen screen = Gdk.Screen.get_default ();
+      Pango.cairo_context_set_font_options (pango_context,
+                                            screen.get_font_options ());
+      Pango.cairo_context_set_resolution (pango_context,
+                                          (float) settings.gtk_xft_dpi /
+                                          (float) Pango.SCALE);
+	    layout.context_changed ();
+      Pango.Rectangle log_rect;
+      layout.get_extents (null, out log_rect);
+      width  = log_rect.width / Pango.SCALE;
+      height = log_rect.height / Pango.SCALE;
+    }
+
     private void _normal_mask (Cairo.Context cr,
                                int           w,
                                int           h,
@@ -107,49 +137,31 @@ namespace Unity.Quicklauncher
       cr.scale (1.0f, 1.0f);
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
 
-      /*Pango.Layout layout = Pango.cairo_create_layout (cr);
+      Pango.Layout layout = Pango.cairo_create_layout (cr);
       Gtk.Settings settings = Gtk.Settings.get_default ();
       string font_face = settings.gtk_font_name;
       Pango.FontDescription desc = Pango.FontDescription.from_string (font_face);
-      desc.set_size (8 * Pango.SCALE);
       desc.set_weight (Pango.Weight.NORMAL);
       layout.set_font_description (desc);
       layout.set_wrap (Pango.WrapMode.WORD_CHAR);
       layout.set_ellipsize (Pango.EllipsizeMode.END);
-      layout.set_width (w - (int) Ctk.em_to_pixel (2 * MARGIN) * Pango.SCALE);
-      layout.set_height (h - (int) Ctk.em_to_pixel (2 * MARGIN) * Pango.SCALE);
-      layout.set_text (this.old_label, -1);
+      layout.set_text (label, -1);
       Pango.Context pango_context = layout.get_context ();
       Gdk.Screen screen = Gdk.Screen.get_default ();
       Pango.cairo_context_set_font_options (pango_context,
                                             screen.get_font_options ());
       Pango.cairo_context_set_resolution (pango_context,
-                                          (float) settings.gtk_xft_dpi/1024.0f);
-	    layout.context_changed ();*/
+                                          (float) settings.gtk_xft_dpi /
+                                          (float) Pango.SCALE);
+	    layout.context_changed ();
 
-	// draw text for drop-shadow and ...
-	/*cairo_move_to (cr,
-	               BUBBLE_CONTENT_BLUR_RADIUS,
-	               BUBBLE_CONTENT_BLUR_RADIUS);
-	cairo_set_source_rgba (cr,
-			       TEXT_SHADOW_COLOR_R,
-			       TEXT_SHADOW_COLOR_G,
-			       TEXT_SHADOW_COLOR_B,
-			       TEXT_SHADOW_COLOR_A);
-	pango_cairo_show_layout (cr, layout);
-
-	// now draw normal (non-blurred) text over drop-shadow
-	cr.set_source_rgba (TEXT_BODY_COLOR_R,
-			       TEXT_BODY_COLOR_G,
-			       TEXT_BODY_COLOR_B,
-			       TEXT_BODY_COLOR_A);
-	pango_cairo_show_layout (cr, layout);*/
-
-      // draw text
-      cr.set_font_size (10.0f);
+      int text_width;
+      int text_height;
+      _get_text_extents (out text_width, out text_height);
       cr.move_to (Ctk.em_to_pixel (MARGIN),
-                  (float) h - Ctk.em_to_pixel (MARGIN));
-      cr.show_text (label);
+                  (float) (h - text_height) / 2.0f);
+
+      Pango.cairo_show_layout (cr, layout);
     }
 
     private void _selected_mask (Cairo.Context cr,
@@ -176,18 +188,60 @@ namespace Unity.Quicklauncher
                    h - 1.0f);
       cr.fill ();
 
-      // draw tex
-      cr.set_font_size (10.0f);
+      // draw text
+      Pango.Layout layout = Pango.cairo_create_layout (cr);
+      Gtk.Settings settings = Gtk.Settings.get_default ();
+      string font_face = settings.gtk_font_name;
+      Pango.FontDescription desc = Pango.FontDescription.from_string (font_face);
+      desc.set_weight (Pango.Weight.NORMAL);
+      layout.set_font_description (desc);
+      layout.set_wrap (Pango.WrapMode.WORD_CHAR);
+      layout.set_ellipsize (Pango.EllipsizeMode.END);
+      layout.set_text (label, -1);
+      Pango.Context pango_context = layout.get_context ();
+      Gdk.Screen screen = Gdk.Screen.get_default ();
+      Pango.cairo_context_set_font_options (pango_context,
+                                            screen.get_font_options ());
+      Pango.cairo_context_set_resolution (pango_context,
+                                          (float) settings.gtk_xft_dpi /
+                                          (float) Pango.SCALE);
+	    layout.context_changed ();
+
+      int text_width;
+      int text_height;
+      _get_text_extents (out text_width, out text_height);
       cr.move_to (Ctk.em_to_pixel (MARGIN),
-                  (float) h - Ctk.em_to_pixel (MARGIN));
+                  (float) (h - text_height) / 2.0f);
+
       cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.0f);
-      cr.show_text (label);
+      Pango.cairo_show_layout (cr, layout);
     }
 
     private override void
     paint ()
     {
       this.item_background.paint ();
+    }
+
+    public override void
+    get_preferred_height (float     for_width,
+                          out float min_height_p,
+                          out float natural_height_p)
+    {
+      min_height_p = (float) Ctk.em_to_pixel (ITEM_HEIGHT);
+      natural_height_p = min_height_p;
+    }
+
+    public override void
+    get_preferred_width (float for_height,
+                         out float min_width_p,
+                         out float natural_width_p)
+    {
+      int width;
+      int height;
+      _get_text_extents (out width, out height);
+      min_width_p = (float) width + (float) Ctk.em_to_pixel (2 * MARGIN);
+      natural_width_p = min_width_p;
     }
 
     private override void
@@ -779,6 +833,7 @@ namespace Unity.Quicklauncher
         bottom = (int) Ctk.em_to_pixel (BORDER)
       };
       this.set_padding (padding);
+      this.spacing = (int) Ctk.em_to_pixel (GAP);
 
       old_width  = 0;
       old_height = 0;
