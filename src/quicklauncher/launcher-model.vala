@@ -43,6 +43,7 @@ namespace Unity.Quicklauncher.Models
     public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ();
 
     public abstract void activate ();
+    public abstract void close ();
   }
 
   public interface ShortcutItem : GLib.Object

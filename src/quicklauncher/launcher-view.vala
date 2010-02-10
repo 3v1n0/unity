@@ -126,6 +126,8 @@ namespace Unity.Quicklauncher
         this.notify_on_icon ();
         this.model.notify["icon"].connect (this.notify_on_icon);
         this.set_name (model.uid);
+
+        this.request_remove.connect (this.on_request_remove);
       }
 
     construct
@@ -524,6 +526,11 @@ namespace Unity.Quicklauncher
 				{
      			this.is_starting = true;
 				}
+    }
+
+    private void on_request_remove ()
+    {
+      this.model.close ();
     }
   }
 }

@@ -334,6 +334,11 @@ namespace Unity.Quicklauncher.Models
             }
         }
     }
+
+    public void close ()
+    {
+      this.app.close ();
+    }
     
     public void expose ()
     {
