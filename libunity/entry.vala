@@ -47,11 +47,12 @@ namespace Unity
       this.editable = true;
       this.selectable = true;
       this.activatable = true;
-      /*this.single_line_mode = true;*/ /* Disabling due to pointer bug */
+      this.single_line_mode = true; /* Disabling due to pointer bug */
 
       this.cursor_visible = false;
-      this.cursor_color = { 0xff, 0xff, 0xff, 0x55 };
-      this.selection_color = { 0xff, 0xff, 0xff, 0x55 };
+      this.cursor_color = { 0x22, 0x22, 0x22, 0xff };
+      this.selection_color = { 0x4d, 0x4d, 0x4d, 0xff };
+      this.color = { 0x80, 0x80, 0x80, 0xff };
 
       this.key_focus_in.connect (this.on_key_focus_in);
       this.key_focus_out.connect (this.on_key_focus_out);
@@ -64,9 +65,10 @@ namespace Unity
     {
       if (this.text == this._static_text)
         {
+          this.set_text ("");
           this.cursor_visible = true;
           this.set_selection (0, -1);
-          this.color = { 0xff, 0xff, 0xff, 0xff };
+          this.color = { 0x00, 0x00, 0x00, 0xff };
         }
     }
 
@@ -74,7 +76,7 @@ namespace Unity
     {
       this.cursor_visible = false;
       this.text = this._static_text;
-      this.color = { 0xff, 0xff, 0xff, 0x55 };
+      this.color = { 0x80, 0x80, 0x80, 0xff };
 
       Unity.global_shell.grab_keyboard (false,
                                         Clutter.get_current_event_time ());

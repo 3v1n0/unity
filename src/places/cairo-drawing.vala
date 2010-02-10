@@ -414,5 +414,67 @@ namespace Unity.Places.CairoDrawing
     {
     }
   }
+
+  public class EntryBackground : Ctk.Bin
+  {
+    public int Width = 0;
+    public int Height = 0;
+
+    public Clutter.CairoTexture cairotxt;
+    public EntryBackground ()
+    {
+    }
+
+    public void create_search_entry_background (int W, int H)
+    {
+      Width = W;
+      Height = H;
+
+      if (this.get_child () is Clutter.Actor)
+      {
+        this.remove_actor (this.get_child ());
+      }
+
+      cairotxt = new Clutter.CairoTexture(Width, Height);
+      Cairo.Context cairoctx = cairotxt.create();
+      {
+        cairoctx.set_operator (Cairo.Operator.CLEAR);
+        cairoctx.paint ();
+        cairoctx.set_operator (Cairo.Operator.OVER);
+        cairoctx.translate (0.5f, 0.5f);
+
+        cairoctx.set_source_rgba (1.0, 1.0, 1.0, 0.9);
+        cairoctx.set_line_width (1.0);
+
+        cairoctx.move_to (10, 1);
+        cairoctx.line_to (Width-10, 1);
+
+        cairoctx.curve_to ((double)(Width-5), 1.0, (double)(Width-1), 5.0, (double)(Width-1), (double)(Height/2.0));
+        cairoctx.curve_to ((double)(Width-1), (double)(Height/2.0 + 5.0), (double)(Width-5), (double)(Height-3), (double)(Width-10), (double)(Height-3));
+
+        cairoctx.line_to (10, Height-3);
+
+        cairoctx.curve_to (5.0, (double)(Height-3), 1.0, (double)(Height/2.0 + 5.0), 1.0, (double)(Height/2.0));
+        cairoctx.curve_to (1.0, 5.0, 5.0, 1.0, 10.0, 1.0);
+
+
+        cairoctx.fill ();
+      }
+
+      cairotxt.set_opacity (0xFF);
+      this.add_actor (cairotxt);
+    }
+
+    /*private override void allocate (Clutter.ActorBox        box,
+                                    Clutter.AllocationFlags flags)
+    {
+      base.allocate (box, flags);
+      create_search_entry_background ((int)(box.x2 - box.x1), (int)(box.y2 - box.y1));
+    }*/
+
+    construct
+    {
+    }
+  }
 }
 
