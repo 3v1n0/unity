@@ -833,6 +833,7 @@ namespace Unity.Quicklauncher
         bottom = (int) Ctk.em_to_pixel (BORDER)
       };
       this.set_padding (padding);
+      this.spacing = (int) Ctk.em_to_pixel (GAP);
 
       old_width  = 0;
       old_height = 0;
