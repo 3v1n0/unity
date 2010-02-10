@@ -37,7 +37,7 @@ namespace Unity
       ;
     }
   }
-  
+
   public enum InputState
   {
     NONE,
@@ -45,28 +45,28 @@ namespace Unity
     UNITY,
     ZERO,
   }
-  
+
   public class ActorBlur : Ctk.Bin
   {
     private Clutter.Clone clone;
     //private Ctk.EffectBlur blur;
-    
+
     public ActorBlur (Clutter.Actor actor)
     {
       clone = new Clutter.Clone (actor);
-      
+
       add_actor (clone);
       clone.show ();
-      
+
       clone.set_position (0, 0);
       //blur = new Ctk.EffectBlur ();
       //blur.set_factor (9f);
       //add_effect (blur);
     }
-    
+
     construct
     {
-      
+
     }
   }
 
@@ -91,13 +91,13 @@ namespace Unity
     public signal void window_kill_effect (Plugin        plugin,
                                            Mutter.Window window,
                                            ulong         events);
-    
+
     public signal void workspace_switch_event (Plugin plugin,
                                                List<Mutter.Window> windows,
                                                int from,
                                                int to,
                                                int direction);
-    
+
     public signal void restore_input_region (bool fullscreen);
 
     /* Properties */
@@ -106,7 +106,7 @@ namespace Unity
       get { return _plugin; }
       set { _plugin = value; this.real_construct (); }
     }
-    
+
     public bool menus_swallow_events { get { return false; } }
 
     public bool expose_showing { get; private set; }
@@ -127,12 +127,12 @@ namespace Unity
     private ActorBlur          actor_blur;
     private Clutter.Rectangle  dark_box;
 
-    private bool     places_enabled;
+    private bool     places_enabled = false;
 
     private DragDest drag_dest;
     private bool     places_showing;
     private bool     _fullscreen_obstruction;
-    
+
     private bool fullscreen_obstruction
       {
         get {
@@ -143,9 +143,9 @@ namespace Unity
           ensure_input_region ();
         }
       }
-    
+
     private List<Clutter.Actor> exposed_windows;
-    
+
     construct
     {
       Unity.global_shell = this;
@@ -183,7 +183,7 @@ namespace Unity
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
       this.stage.actor_added.connect   ((a) => { ensure_input_region (); });
       this.stage.actor_removed.connect ((a) => { ensure_input_region (); });
-      
+
       this.drag_dest = new DragDest ();
       this.drag_dest.show ();
       Gtk.TargetEntry[] target_list =
@@ -204,7 +204,7 @@ namespace Unity
 
       Ctk.dnd_init ((Gtk.Widget)this.drag_dest, target_list);
 
-      this.places_enabled = !envvar_is_enabled ("UNITY_DISABLE_PLACES");
+      this.places_enabled = envvar_is_enabled ("UNITY_ENABLE_PLACES");
 
       this.background = new Background ();
       this.stage.add_actor (this.background);
@@ -214,9 +214,9 @@ namespace Unity
 
       this.quicklauncher = new Quicklauncher.View (this);
       this.quicklauncher.opacity = 0;
-      
+
       this.quicklauncher.manager.active_launcher_changed.connect (on_launcher_changed_event);
-      
+
       window_group.add_actor (this.quicklauncher);
       window_group.raise_child (this.quicklauncher,
                                 this.plugin.get_normal_window_group ());
@@ -255,33 +255,33 @@ namespace Unity
         }
 
       this.ensure_input_region ();
-      
+
       Wnck.Screen.get_default().active_window_changed.connect (on_active_window_changed);
-      
+
       if (Wnck.Screen.get_default ().get_active_window () != null)
         Wnck.Screen.get_default ().get_active_window ().state_changed.connect (on_active_window_state_changed);
     }
-    
+
     private void on_active_window_state_changed (Wnck.WindowState change_mask, Wnck.WindowState new_state)
     {
       check_fullscreen_obstruction ();
     }
-    
+
     private void on_active_window_changed (Wnck.Window? previous_window)
     {
       if (previous_window != null)
         previous_window.state_changed.disconnect (on_active_window_state_changed);
-      
-      
+
+
       Wnck.Window current = Wnck.Screen.get_default ().get_active_window ();
       if (current == null)
         return;
-      
+
       current.state_changed.connect (on_active_window_state_changed);
-      
+
       check_fullscreen_obstruction ();
     }
-    
+
     private void on_launcher_changed_event (LauncherView? last, LauncherView? current)
     {
       if (last != null)
@@ -289,41 +289,41 @@ namespace Unity
           last.menu_opened.disconnect (on_launcher_menu_opened);
           last.menu_closed.disconnect (on_launcher_menu_closed);
         }
-      
+
       if (current != null)
         {
           current.menu_opened.connect (on_launcher_menu_opened);
           current.menu_closed.connect (on_launcher_menu_closed);
         }
-      
-      
+
+
     }
-    
+
     private void on_launcher_menu_opened (LauncherView sender)
     {
       if (sender != quicklauncher.manager.active_launcher || sender == null)
         return;
-      
+
       if (sender.model is ApplicationModel)
         {
           expose_windows ((sender.model as ApplicationModel).windows);
         }
     }
-    
+
     private void on_launcher_menu_closed (LauncherView sender)
     {
       if (sender != quicklauncher.manager.active_launcher)
         return;
-      
+
       dexpose_windows ();
     }
-    
+
     void check_fullscreen_obstruction ()
     {
       Wnck.Window current = Wnck.Screen.get_default ().get_active_window ();
       if (current == null)
         return;
-      
+
       if (current.is_fullscreen ())
         {
           this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
@@ -378,7 +378,7 @@ namespace Unity
        */
       END_FUNCTION ();
     }
-    
+
     private InputState last_input_state = InputState.NONE;
     public void ensure_input_region ()
     {
@@ -394,7 +394,7 @@ namespace Unity
           // Fullscreen required
           if (last_input_state == InputState.FULLSCREEN)
             return;
-          
+
           last_input_state = InputState.FULLSCREEN;
           this.restore_input_region (true);
         }
@@ -403,12 +403,12 @@ namespace Unity
           // Unity mode requred
           if (last_input_state == InputState.UNITY)
             return;
-          
+
           last_input_state = InputState.UNITY;
           this.restore_input_region (false);
         }
     }
-    
+
     /*
      * SHELL IMPLEMENTATION
      */
@@ -430,7 +430,7 @@ namespace Unity
     public void expose_windows (GLib.SList<Wnck.Window> windows)
     {
       exposed_windows = new List<Mutter.Window> ();
-      
+
       unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
       foreach (Mutter.Window w in mutter_windows)
         {
@@ -444,7 +444,7 @@ namespace Unity
                   break;
                 }
             }
-          
+
           if (keep)
             {
               Clutter.Actor clone = new Clutter.Clone (w);
@@ -453,9 +453,9 @@ namespace Unity
               clone.opacity = w.opacity;
               exposed_windows.append (clone);
               clone.reactive = true;
-              
+
               unowned Clutter.Container container = w.get_parent () as Clutter.Container;
-              
+
               container.add_actor (clone);
               clone.raise (w);
             }
@@ -473,85 +473,85 @@ namespace Unity
             (w as Clutter.Actor).reactive = false;
             (w as Clutter.Actor).animate (Clutter.AnimationMode.EASE_IN_SINE, 80, "opacity", 0);
         }
-      
+
       position_window_on_grid (exposed_windows);
-      
+
       expose_showing = true;
       this.ensure_input_region ();
       this.stage.captured_event.connect (on_stage_captured_event);
     }
-    
+
     private void dexpose_windows ()
     {
       if (quicklauncher.manager.active_launcher != null)
         quicklauncher.manager.active_launcher.close_menu ();
-        
+
       unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
       foreach (Mutter.Window window in mutter_windows)
         {
           window.opacity = 255;
           window.reactive = true;
         }
-        
-      foreach (Clutter.Actor actor in exposed_windows) 
+
+      foreach (Clutter.Actor actor in exposed_windows)
         restore_window_position (actor);
-        
+
       this.expose_showing = false;
       this.ensure_input_region ();
     }
-    
+
     private void restore_window_position (Clutter.Actor actor)
     {
       if (!(actor is Clutter.Clone))
         return;
-      
+
       Clutter.Actor window = (actor as Clutter.Clone).source;
-      
+
       uint8 opacity = window.opacity;
       actor.set ("scale-gravity", Clutter.Gravity.CENTER);
       Clutter.Animation anim = actor.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
-                                         "scale-x", 1f, 
+                                         "scale-x", 1f,
                                          "scale-y", 1f,
-                                         "opacity", opacity, 
-                                         "x", window.x, 
+                                         "opacity", opacity,
+                                         "x", window.x,
                                          "y", window.y);
-      
+
       window.opacity = 0;
-      
+
       anim.completed.connect (() => {
         actor.destroy ();
         window.opacity = 255;
       });
     }
-    
+
     void position_window_on_grid (List<Clutter.Actor> _windows)
     {
       List<Clutter.Actor> windows = _windows.copy ();
-    
+
       int left_buffer = 250;
       int vertical_buffer = 40;
       int count = (int) windows.length ();
-      
+
       int cols = (int) Math.ceil (Math.sqrt (count));
-      
+
       int rows = 1;
-      
+
       while (cols * rows < count)
         rows++;
-      
+
       int boxWidth = (int) ((this.stage.width - left_buffer) / cols);
       int boxHeight = (int) ((this.stage.height - vertical_buffer * 2) / rows);
-      
+
       for (int row = 0; row < rows; row++)
         {
           for (int col = 0; col < cols; col++)
             {
               if (windows.length () == 0)
                 return;
-              
+
               int centerX = (boxWidth / 2 + boxWidth * col + left_buffer);
               int centerY = (boxHeight / 2 + boxHeight * row + vertical_buffer);
-              
+
               Clutter.Actor window = null;
               // greedy layout
               foreach (Clutter.Actor actor in windows)
@@ -561,50 +561,50 @@ namespace Unity
                       window = actor;
                       continue;
                     }
-                  
+
                   double window_distance = Math.sqrt (
-                    Math.fabs (centerX - (window.x + window.width / 2)) + 
+                    Math.fabs (centerX - (window.x + window.width / 2)) +
                     Math.fabs (centerY - (window.y + window.height / 2))
                   );
                   double actor_distance = Math.sqrt (
-                    Math.fabs (centerX - (actor.x + actor.width / 2)) + 
+                    Math.fabs (centerX - (actor.x + actor.width / 2)) +
                     Math.fabs (centerY - (actor.y + actor.height / 2))
                   );
-                  
+
                   if (actor_distance < window_distance)
                     window = actor;
                 }
-              
+
               windows.remove (window);
-              
+
               int windowX = centerX - (int) window.width / 2;
               int windowY = centerY - (int) window.height / 2;
-              
+
               float scale = float.min (float.min (1, (boxWidth - 20) / window.width), float.min (1, (boxHeight - 20) / window.height));
-              
+
               window.set ("scale-gravity", Clutter.Gravity.CENTER);
-              window.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250, 
-                                                 "x", (float) windowX, 
-                                                 "y", (float) windowY, 
+              window.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
+                                                 "x", (float) windowX,
+                                                 "y", (float) windowY,
                                                  "opacity", 255,
-                                                 "scale-x", scale, 
+                                                 "scale-x", scale,
                                                  "scale-y", scale);
             }
         }
     }
-    
+
     bool on_stage_captured_event (Clutter.Event event)
     {
       if (event.type == Clutter.EventType.ENTER || event.type == Clutter.EventType.LEAVE)
         return false;
-    
+
       bool event_over_menu = false;
-    
+
       float x, y;
       event.get_coords (out x, out y);
 
       unowned Clutter.Actor actor = this.stage.get_actor_at_pos (Clutter.PickMode.REACTIVE, (int) x, (int) y);
-      
+
       unowned Clutter.Actor menu = null;
       if (Unity.Quicklauncher.active_menu != null)
         menu = Unity.Quicklauncher.active_menu.menu as Clutter.Actor;
@@ -629,7 +629,7 @@ namespace Unity
           this.stage.captured_event.disconnect (on_stage_captured_event);
           this.dexpose_windows ();
         }
-      
+
       return !event_over_menu;
     }
 
@@ -649,7 +649,7 @@ namespace Unity
           this.places.hide ();
           this.places.opacity = 0;
           this.places.reactive = false;
-          
+
           this.actor_blur.destroy ();
           this.dark_box.destroy ();
           this.panel.set_indicator_mode (false);
@@ -663,22 +663,22 @@ namespace Unity
           this.places.show ();
           this.places.opacity = 255;
           this.places.reactive = true;
-          
+
           this.actor_blur = new ActorBlur (this.plugin.get_normal_window_group ());
-          
+
           (this.plugin.get_window_group () as Clutter.Container).add_actor (this.actor_blur);
           (this.actor_blur as Clutter.Actor).raise (this.plugin.get_normal_window_group ());
-          
+
           this.actor_blur.set_position (0, 0);
 
           this.dark_box = new Clutter.Rectangle.with_color ({0, 0, 0, 255});
-          
+
           (this.plugin.get_window_group () as Clutter.Container).add_actor (this.dark_box);
           this.dark_box.raise (this.actor_blur);
-          
+
           this.dark_box.set_position (0, 0);
           this.dark_box.set_size (this.stage.width, this.stage.height);
-          
+
           this.dark_box.show ();
           this.actor_blur.show ();
           this.panel.set_indicator_mode (true);
@@ -686,10 +686,10 @@ namespace Unity
           this.ensure_input_region ();
 
           new X.Display (null).flush ();
-          
+
           this.dark_box.opacity = 0;
           this.actor_blur.opacity = 255;
-          
+
           this.dark_box.animate   (Clutter.AnimationMode.EASE_IN_SINE, 250, "opacity", 180);
         }
       debug ("Places showing: %s", this.places_showing ? "true":"false");
