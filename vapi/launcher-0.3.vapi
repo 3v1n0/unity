@@ -6,6 +6,7 @@ namespace Launcher {
 	public class Application : GLib.Object {
 		[CCode (has_construct_function = false)]
 		public Application ();
+		public void close ();
 		public void ensure_state ();
 		[CCode (has_construct_function = false)]
 		public Application.from_desktop_file (string desktop_file);
@@ -17,11 +18,11 @@ namespace Launcher {
 		public unowned string get_exec_string ();
 		public bool get_favorite ();
 		public bool get_focused ();
-		public bool get_urgent ();
 		public unowned string get_icon_name ();
 		public unowned string get_name ();
 		public bool get_running ();
 		public unowned string get_unique_string ();
+		public bool get_urgent ();
 		public unowned GLib.SList get_windows ();
 		public bool has_minimized ();
 		public bool launch () throws GLib.Error;

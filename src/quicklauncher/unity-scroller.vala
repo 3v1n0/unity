@@ -287,11 +287,15 @@ namespace Unity.Widgets
 
       if (x > this.get_width ())
         {
+          // we removed it so its not sticky anymore
+          (retcont.child as LauncherView).model.is_sticky = false;
           (retcont.child as LauncherView).request_remove ();
         }
       else
         {
           retcont.state = ScrollerChildState.NORMAL;
+          // we moved an item so its automatically pinned
+          (retcont.child as LauncherView).model.is_sticky = true;
         }
         
       var drag_controller = Drag.Controller.get_default ();
