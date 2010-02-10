@@ -261,6 +261,12 @@ namespace Unity
     /*
      * SHELL IMPLEMENTATION
      */
+
+    public void grab_keyboard (bool grab, uint32 timestamp)
+    {
+      /* Doesn't work with clutter-gtk */
+    }
+
     public Clutter.Stage get_stage ()
     {
       return this.stage;

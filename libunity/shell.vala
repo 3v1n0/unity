@@ -38,7 +38,10 @@ namespace Unity
     public abstract void          show_unity ();
     public abstract int           get_indicators_width ();
     public abstract void          ensure_input_region ();
-    public signal void indicators_changed (int width);
+    public abstract void          grab_keyboard (bool grab, uint32 timestamp);
+
+
+    public signal   void indicators_changed (int width);
   }
 
   public Shell? global_shell; // our global shell

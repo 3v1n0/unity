@@ -31,6 +31,8 @@ namespace Unity.Panel
     private HomeButton        home;
     private Indicators.View   indicators;
 
+    private Entry entry;
+
     private int indicators_width = 0;
 
     public View (Shell shell)
@@ -61,6 +63,25 @@ namespace Unity.Panel
       this.home.set_parent (this);
       this.home.show ();
 
+      this.entry = new Unity.Entry ("Search");
+      this.entry.set_parent (this);
+      this.entry.show ();
+      this.entry.activate.connect (() =>
+        {
+          var text = Uri.escape_string (this.entry.text, "", true);
+
+          var command = "xdg-open http://www.google.com/search?ie=UTF-8&q=%s".printf (text);
+
+          try
+            {
+              Process.spawn_command_line_async (command);
+            }
+          catch (Error e)
+            {
+              warning ("Unable to search for '$text': %s", e.message);
+            }
+        });
+
       END_FUNCTION ();
     }
 
@@ -83,6 +104,11 @@ namespace Unity.Panel
       child_box.y1 = 0;
       child_box.y2 = PANEL_HEIGHT;
       this.home.allocate (child_box, flags);
+
+      /* Entry */
+      child_box.x1 = child_box.x2 + 12;
+      child_box.x2 = child_box.x1 + 250; /* Random width */
+      this.entry.allocate (child_box, flags);
 
       /* Indicators */
       this.indicators.get_preferred_width (PANEL_HEIGHT,
@@ -118,6 +144,7 @@ namespace Unity.Panel
       this.tray.paint ();
       this.home.paint ();
       this.indicators.paint ();
+      this.entry.paint ();
     }
 
     private override void pick (Clutter.Color color)
@@ -125,6 +152,7 @@ namespace Unity.Panel
       this.tray.paint ();
       this.home.paint ();
       this.indicators.paint ();
+      this.entry.paint ();
     }
 
     private override void map ()
@@ -134,6 +162,7 @@ namespace Unity.Panel
       this.tray.map ();
       this.home.map ();
       this.indicators.map ();
+      this.entry.map ();
     }
 
     private override void unmap ()
@@ -143,6 +172,7 @@ namespace Unity.Panel
       this.tray.unmap ();
       this.home.unmap ();
       this.indicators.unmap ();
+      this.entry.unmap ();
     }
 
     public int get_indicators_width ()
