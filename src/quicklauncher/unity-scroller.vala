@@ -343,7 +343,7 @@ namespace Unity.Widgets
       foreach (ScrollerChild container in this.children)
       {
         // the last container we find is the one we want... i think
-        if (container.box.y1 - this.drag_pos + y < pos)
+        if (container.box.y1 + y < pos)
           {
             retcont = container;
           }
