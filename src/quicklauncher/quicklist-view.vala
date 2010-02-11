@@ -489,7 +489,7 @@ namespace Unity.Quicklauncher
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
-                          anchor_y);
+                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
       cr.stroke ();
     }
 
@@ -519,7 +519,8 @@ namespace Unity.Quicklauncher
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
-                          anchor_y);
+                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
+
       cr.fill ();
     }
 
@@ -550,7 +551,8 @@ namespace Unity.Quicklauncher
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
-                          anchor_y);
+                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
+
       cr.fill ();
     }
 
@@ -599,7 +601,7 @@ namespace Unity.Quicklauncher
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
-                          anchor_y);
+                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
       cr.fill ();
     }
 
@@ -643,7 +645,7 @@ namespace Unity.Quicklauncher
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
-                          anchor_y);
+                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
       cr.fill ();
     }
 
@@ -677,7 +679,10 @@ namespace Unity.Quicklauncher
       this.get_position (out x, out y);
       //stdout.printf ("--- menu-actor: %.1f/%.1f ---\n", x, y);
       //stdout.printf ("--- y-diff: %.1f ---\n\n", y - ay);
-      new_y = ah / 2.0f;
+      if (get_num_items() != 1)
+        new_y = ah / 2.0f;
+      else
+        new_y = 0.0f;
 
       // store the new width/height
       old_width  = w;
