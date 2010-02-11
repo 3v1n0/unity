@@ -44,6 +44,8 @@ namespace Unity.Quicklauncher
       this.prefix_actions = new Gee.LinkedList<ShortcutItem> ();
       this.append_actions = new Gee.LinkedList<ShortcutItem> ();
       this.attached_widget = attached_to;
+      var drag_controller = Drag.Controller.get_default ();
+      drag_controller.drag_start.connect (this.on_unity_drag_start);
     }
 
     ~QuicklistController ()
@@ -63,6 +65,20 @@ namespace Unity.Quicklauncher
     construct
     {
     }
+
+    private void on_unity_drag_start (Drag.Model model)
+    {
+      if (active_menu == this)
+        {
+          active_menu = null;
+        }
+      var menu = this.menu;
+      this.menu = null;
+      if (menu is Ctk.Menu)
+        {
+          menu.fadeout_and_destroy ();
+        }
+    } 
 
     public void add_action (ShortcutItem shortcut, bool is_secondary)
     {
