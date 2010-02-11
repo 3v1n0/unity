@@ -81,8 +81,8 @@ namespace Unity.Drag
 
     public void unhook_actor ()
     {
+      if (this.hooked_actor == null) return;
       this.stage.remove_actor (this.hooked_actor);
-      this.hooked_actor.unparent ();
       this.stage.motion_event.disconnect (this.on_motion_event); 
       this.hooked_actor = null;
     }
