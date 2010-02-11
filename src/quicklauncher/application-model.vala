@@ -33,7 +33,6 @@ namespace Unity.Quicklauncher.Models
 
     public void activated ()
     {
-      debug ("activated %s - %s", this.name, this.exec);
       Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
       try
       {
@@ -169,17 +168,18 @@ namespace Unity.Quicklauncher.Models
       if (!this.queued_save_priority)
         {
           this.queued_save_priority = true;
-          Idle.add ((SourceFunc)(this.save_priority));
+          Idle.add (this.save_priority);
         }
     }
 
-    public void save_priority ()
+    public bool save_priority ()
     {
       this.queued_save_priority = false;
-      if (!this.is_sticky) return;
+      if (!this.is_sticky) return false;
       var favorites = Launcher.Favorites.get_default ();
       string uid = get_fav_uid ();
       favorites.set_float (uid, "priority", this.priority);
+      return false;
     }
     private void grab_priority ()
     {
