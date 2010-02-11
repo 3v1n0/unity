@@ -6,3 +6,7 @@ check-report:
 	$(MAKE) -C tests/ $(@)
 
 DISTCHECK_CONFIGURE_FLAGS = --enable-localinstall --enable-mutter
+
+EXTRA_DIST = \
+  autogen.sh \
+  COPYING
