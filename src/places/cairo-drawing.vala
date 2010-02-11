@@ -44,15 +44,12 @@ namespace Unity.Places.CairoDrawing
     private int MenuH = 22;
     private int MenuW = 100;
 
-    private int Rounding = 16;
-    private int RoundingSmall = 8;
-
     private int MenuBottom; /* PlaceY + MenuH */
 
     private int TabH = 50;
 
     /* The squirl area width */
-    private int SquirlW = 70;
+    private int SquirlW = 66;
 
     public struct TabRect
     {
@@ -66,55 +63,72 @@ namespace Unity.Places.CairoDrawing
 
     void DrawAroundMenu (Cairo.Context cairoctx)
     {
+      int radius = 8;
       cairoctx.line_to (PlaceX + PlaceW + Margin, PlaceY + MenuH);
-      cairoctx.line_to (PlaceX + PlaceW - MenuW + Rounding, PlaceY + MenuH);
-      cairoctx.curve_to (
-        PlaceX + PlaceW - MenuW, PlaceY + MenuH,
-        PlaceX + PlaceW - MenuW, PlaceY + MenuH,
-        PlaceX + PlaceW - MenuW, PlaceY + MenuH + Rounding);
-      cairoctx.line_to (PlaceX + PlaceW - MenuW, PlaceY + PlaceH - Rounding);
-      cairoctx.curve_to (
-        PlaceX + PlaceW - MenuW, PlaceY + PlaceH,
-        PlaceX + PlaceW - MenuW, PlaceY + PlaceH,
-        PlaceX + PlaceW - MenuW - Rounding, PlaceY + PlaceH);
+      cairoctx.line_to (PlaceX + PlaceW - MenuW + radius, PlaceY + MenuH);
+
+      int arc_center_x = PlaceX + PlaceW - MenuW + radius;
+      int arc_center_y = PlaceY + MenuH + radius;
+
+      cairoctx.arc_negative ( (double)arc_center_x, (double)arc_center_y, radius, 3.0*Math.PI/2.0, Math.PI);
+
+      cairoctx.line_to (PlaceX + PlaceW - MenuW, PlaceY + PlaceH - radius);
+
+      arc_center_x = PlaceX + PlaceW - MenuW - radius;
+      arc_center_y = PlaceY + PlaceH - radius;
+      cairoctx.arc ( (double)arc_center_x, (double)arc_center_y, radius, 0.0, Math.PI/2.0);
     }
 
     void DrawTab(Cairo.Context cairoctx, TabRect tab)
     {
-      cairoctx.line_to (tab.right + RoundingSmall, PlaceBottom );
-      cairoctx.curve_to (
-        tab.right, PlaceBottom,
-        tab.right, PlaceBottom,
-        tab.right, PlaceBottom - RoundingSmall);
-      cairoctx.line_to (tab.right, tab.top + Rounding);
-      cairoctx.curve_to (
-        tab.right, tab.top,
-        tab.right, tab.top,
-        tab.right - Rounding, tab.top);
-      cairoctx.line_to (tab.left + Rounding, tab.top);
-      cairoctx.curve_to (
-      tab.left, tab.top,
-        tab.left, tab.top,
-        tab.left, tab.top + Rounding);
-      cairoctx.line_to (tab.left, PlaceBottom - RoundingSmall);
-      cairoctx.curve_to (
-        tab.left, PlaceBottom,
-        tab.left, PlaceBottom,
-        tab.left - RoundingSmall, PlaceBottom);
+      int radius = 5;
+      int radius_small = 5;
+      int arc_center_x;
+      int arc_center_y;
+
+      cairoctx.line_to (tab.right + radius_small, PlaceBottom );
+
+      arc_center_x = tab.right + radius_small;
+      arc_center_y = PlaceBottom - radius_small;
+      cairoctx.arc ( (double)arc_center_x, (double)arc_center_y, radius_small, Math.PI/2.0, Math.PI);
+
+      cairoctx.line_to (tab.right, tab.top + radius);
+
+      arc_center_x = tab.right - radius;
+      arc_center_y = tab.top + radius;
+      cairoctx.arc_negative ( (double)arc_center_x, (double)arc_center_y, radius, 0.0, 3.0*Math.PI/2.0);
+
+      cairoctx.line_to (tab.left + radius, tab.top);
+
+      arc_center_x = tab.left + radius;
+      arc_center_y = tab.top + radius;
+      cairoctx.arc_negative ( (double)arc_center_x, (double)arc_center_y, radius, 3.0*Math.PI/2.0, Math.PI);
+
+      cairoctx.line_to (tab.left, PlaceBottom - radius_small);
+
+      arc_center_x = tab.left - radius_small;
+      arc_center_y = PlaceBottom - radius_small;
+      cairoctx.arc ( (double)arc_center_x, (double)arc_center_y, radius_small, 0.0, Math.PI/2.0);
     }
 
     void DrawSquirl(Cairo.Context cairoctx)
     {
-      cairoctx.line_to (PlaceX + SquirlW + RoundingSmall, PlaceBottom);
-      cairoctx.curve_to (
-        PlaceX + SquirlW, PlaceBottom,
-        PlaceX + SquirlW, PlaceBottom,
-        PlaceX + SquirlW, PlaceBottom - RoundingSmall);
-      cairoctx.line_to (PlaceX + SquirlW, MenuBottom + Rounding );
-      cairoctx.curve_to (
-        PlaceX + SquirlW, MenuBottom,
-        PlaceX + SquirlW, MenuBottom,
-        PlaceX + SquirlW - Rounding, MenuBottom);
+      int radius_small = 5;
+      int arc_center_x;
+      int arc_center_y;
+
+      cairoctx.line_to (PlaceX + SquirlW + radius_small, PlaceBottom);
+
+      arc_center_x = PlaceX + SquirlW + radius_small;
+      arc_center_y = PlaceBottom - radius_small;
+      cairoctx.arc ( (double)arc_center_x, (double)arc_center_y, radius_small, Math.PI/2.0, Math.PI);
+
+      cairoctx.line_to (PlaceX + SquirlW, MenuBottom + radius_small );
+
+      arc_center_x =  PlaceX + SquirlW - radius_small;
+      arc_center_y = MenuBottom + radius_small;
+      cairoctx.arc_negative ( (double)arc_center_x, (double)arc_center_y, radius_small, 0, 3.0*Math.PI/2.0);
+
       cairoctx.line_to (PlaceX - Margin, MenuBottom);
     }
 
@@ -144,10 +158,10 @@ namespace Unity.Places.CairoDrawing
       cairotxt = new Clutter.CairoTexture(PlaceW, PlaceH + Margin);
       Cairo.Context cairoctx = cairotxt.create();
       {
-        /* Clear */
-        /*cairoctx.set_operator (Cairo.Operator.CLEAR);
+        cairoctx.set_operator (Cairo.Operator.CLEAR);
         cairoctx.paint ();
-        cairoctx.set_operator (Cairo.Operator.OVER);*/
+        cairoctx.set_operator (Cairo.Operator.OVER);
+        cairoctx.translate (0.5f, 0.5f);
 
         cairoctx.set_source_rgba (1, 1, 1, 1.0);
         cairoctx.set_line_width (1.0);
@@ -202,7 +216,7 @@ namespace Unity.Places.CairoDrawing
       effect_glow.set_color (c);
       effect_glow.set_factor (1.0f);
       effect_glow.set_margin (5);
-      //this.add_effect (effect_glow);
+      this.add_effect (effect_glow);
     }
 
     construct
@@ -357,6 +371,11 @@ namespace Unity.Places.CairoDrawing
       cairotxt = new Clutter.CairoTexture(Width, Height);
       Cairo.Context cairoctx = cairotxt.create();
       {
+        cairoctx.set_operator (Cairo.Operator.CLEAR);
+        cairoctx.paint ();
+        cairoctx.set_operator (Cairo.Operator.OVER);
+        cairoctx.translate (0.5f, 0.5f);
+
         cairoctx.set_source_rgba (1, 1, 1, 1.0);
         cairoctx.set_line_width (1.0);
 
@@ -390,6 +409,68 @@ namespace Unity.Places.CairoDrawing
       effect_glow.set_margin (5);
       this.add_effect (effect_glow);
     }
+
+    construct
+    {
+    }
+  }
+
+  public class EntryBackground : Ctk.Bin
+  {
+    public int Width = 0;
+    public int Height = 0;
+
+    public Clutter.CairoTexture cairotxt;
+    public EntryBackground ()
+    {
+    }
+
+    public void create_search_entry_background (int W, int H)
+    {
+      Width = W;
+      Height = H;
+
+      if (this.get_child () is Clutter.Actor)
+      {
+        this.remove_actor (this.get_child ());
+      }
+
+      cairotxt = new Clutter.CairoTexture(Width, Height);
+      Cairo.Context cairoctx = cairotxt.create();
+      {
+        cairoctx.set_operator (Cairo.Operator.CLEAR);
+        cairoctx.paint ();
+        cairoctx.set_operator (Cairo.Operator.OVER);
+        cairoctx.translate (0.5f, 0.5f);
+
+        cairoctx.set_source_rgba (1.0, 1.0, 1.0, 0.9);
+        cairoctx.set_line_width (1.0);
+
+        cairoctx.move_to (10, 1);
+        cairoctx.line_to (Width-10, 1);
+
+        cairoctx.curve_to ((double)(Width-5), 1.0, (double)(Width-1), 5.0, (double)(Width-1), (double)(Height/2.0));
+        cairoctx.curve_to ((double)(Width-1), (double)(Height/2.0 + 5.0), (double)(Width-5), (double)(Height-3), (double)(Width-10), (double)(Height-3));
+
+        cairoctx.line_to (10, Height-3);
+
+        cairoctx.curve_to (5.0, (double)(Height-3), 1.0, (double)(Height/2.0 + 5.0), 1.0, (double)(Height/2.0));
+        cairoctx.curve_to (1.0, 5.0, 5.0, 1.0, 10.0, 1.0);
+
+
+        cairoctx.fill ();
+      }
+
+      cairotxt.set_opacity (0xFF);
+      this.add_actor (cairotxt);
+    }
+
+    /*private override void allocate (Clutter.ActorBox        box,
+                                    Clutter.AllocationFlags flags)
+    {
+      base.allocate (box, flags);
+      create_search_entry_background ((int)(box.x2 - box.x1), (int)(box.y2 - box.y1));
+    }*/
 
     construct
     {

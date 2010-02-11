@@ -29,7 +29,7 @@ namespace Unity.Quicklauncher
     + "/honeycomb-mask.png";
   const string MENU_BG_FILE = Unity.PKGDATADIR
     + "/tight_check_4px.png";
-    
+
   const float WIGGLE_SIZE = 5;
   const uint WIGGLE_LENGTH = 2;
   const uint WIGGLE_RESTART = 8;
@@ -39,7 +39,7 @@ namespace Unity.Quicklauncher
   const uint MEDIUM_DELAY = 800;
   const uint LONG_DELAY = 1600;
 
-  public class LauncherView : Ctk.Bin
+  public class LauncherView : Ctk.Bin, Unity.Drag.Model
   {
 
     public LauncherModel? model;
@@ -80,6 +80,10 @@ namespace Unity.Quicklauncher
     bool wiggling = false;
     bool cease_wiggle;
 
+    private bool button_down = false;
+    private float click_start_pos = 0;
+    private static const uint drag_sensitivity = 3;
+
     /**
      * signal is called when the application is not marked as sticky and
      * it is not running
@@ -87,12 +91,14 @@ namespace Unity.Quicklauncher
     public signal void request_remove ();
     public signal void request_attention ();
     public signal void clicked ();
+    public signal void menu_opened (LauncherView sender);
+    public signal void menu_closed (LauncherView sender);
 
     /* animations */
 
     private Clutter.Animation anim_throbber;
     private bool anim_wiggle_state = false;
-    
+
     private Clutter.Animation _anim;
     public Clutter.Animation anim {
       get { return _anim; }
@@ -125,6 +131,9 @@ namespace Unity.Quicklauncher
         /* get the graphic from the model */
         this.notify_on_icon ();
         this.model.notify["icon"].connect (this.notify_on_icon);
+        this.set_name (model.uid);
+
+        this.request_remove.connect (this.on_request_remove);
       }
 
     construct
@@ -144,8 +153,10 @@ namespace Unity.Quicklauncher
         button_press_event.connect (this.on_pressed);
         button_release_event.connect (this.on_released);
 
-        enter_event.connect (this.on_mouse_enter);
-        leave_event.connect (this.on_mouse_leave);
+        this.enter_event.connect (this.on_mouse_enter);
+        this.leave_event.connect (this.on_mouse_leave);
+        this.motion_event.connect (this.on_motion_event);
+        this.notify["reactive"].connect (this.notify_on_set_reactive);
 
         this.clicked.connect (this.on_clicked);
         this.icon.do_queue_redraw ();
@@ -209,6 +220,11 @@ namespace Unity.Quicklauncher
       this.running_indicator.set_position (0, mid_point_y - focus_halfy);
 
       this.icon.set_position (6, 0);
+    }
+
+    public new void notify_on_set_reactive ()
+    {
+      this.button_down = false;
     }
 
     /* animation logic */
@@ -289,17 +305,17 @@ namespace Unity.Quicklauncher
     {
       if (wiggling)
         return;
-      
+
       wiggling = true;
       cease_wiggle = false;
-      
+
       this.icon.set ("rotation-center-z-gravity", Clutter.Gravity.CENTER);
       Clutter.Animation anim = this.icon.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 1000 / WIGGLE_FREQUENCY,
                                                   "rotation-angle-z", WIGGLE_SIZE);
-      
+
       Signal.connect_after (anim, "completed", (Callback) wiggle_do_next_step, this);
     }
-    
+
     private static void wiggle_do_next_step (Object sender, LauncherView self)
       requires (self is LauncherView)
     {
@@ -314,11 +330,11 @@ namespace Unity.Quicklauncher
           self.anim_wiggle_state = !self.anim_wiggle_state;
           Clutter.Animation anim = self.icon.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 1000 / WIGGLE_FREQUENCY,
                                                       "rotation-angle-z", self.anim_wiggle_state ? WIGGLE_SIZE : -WIGGLE_SIZE);
-                    
+
           Signal.connect_after (anim, "completed", (Callback) wiggle_do_next_step, self);
         }
     }
-    
+
     private bool wiggle_stop ()
     {
       cease_wiggle = true;
@@ -331,7 +347,7 @@ namespace Unity.Quicklauncher
       wiggle_loop ();
       GLib.Timeout.add_seconds (WIGGLE_RESTART, wiggle_loop);
     }
-    
+
     private bool wiggle_loop ()
     {
       if (this.model.is_urgent)
@@ -346,7 +362,7 @@ namespace Unity.Quicklauncher
           return false;
         }
     }
-    
+
     private void on_activated ()
     {
       this.is_starting = false;
@@ -371,7 +387,6 @@ namespace Unity.Quicklauncher
     private void notify_on_is_running ()
     {
       this.is_starting = false;
-
       /* we need to show the running indicator when we are running */
       if (this.model.is_active)
         {
@@ -409,8 +424,11 @@ namespace Unity.Quicklauncher
     }
     private bool on_mouse_enter (Clutter.Event event)
     {
+      var drag_controller = Drag.Controller.get_default ();
+      if (drag_controller.is_dragging) return false;
+
       this.is_hovering = true;
-      
+
       if (!(quicklist_controller is QuicklistController))
         {
           this.quicklist_controller = new QuicklistController (this.model.name,
@@ -419,8 +437,9 @@ namespace Unity.Quicklauncher
                                                                );
           build_quicklist ();
         }
-      
+
       this.quicklist_controller.show_label ();
+
       return false;
     }
 
@@ -434,28 +453,59 @@ namespace Unity.Quicklauncher
     private bool on_mouse_leave(Clutter.Event src)
     {
       this.is_hovering = false;
-      this.quicklist_controller.hide_label ();
+      if (this.quicklist_controller is QuicklistController)
+        this.quicklist_controller.hide_label ();
       return false;
+    }
+
+    private bool on_motion_event (Clutter.Event event)
+    {
+      var drag_controller = Unity.Drag.Controller.get_default ();
+      if (this.button_down && drag_controller.is_dragging == false)
+        {
+          var diff = event.motion.x - this.click_start_pos;
+          if (diff > this.drag_sensitivity || -diff > this.drag_sensitivity)
+            {
+              float x, y;
+              this.icon.get_transformed_position (out x, out y);
+              drag_controller.start_drag (this,
+                                          event.button.x - x,
+                                          event.button.y - y);
+              this.button_down = false;
+              return true;
+            }
+        }
+        return false;
     }
 
     private bool on_pressed(Clutter.Event src)
     {
+
       var bevent = src.button;
       if (bevent.button == 1)
-      {
+        {
         last_pressed_time = bevent.time;
-        quicklist_controller.close_menu ();
-      }
+        this.click_start_pos = bevent.x;
+        this.button_down = true;
+
+          if (!quicklist_controller.is_label)
+            {
+              quicklist_controller.close_menu ();
+              quicklist_controller.show_label ();
+              menu_closed (this);
+            }
+        }
       else
-      {
-        if (this.quicklist_controller.is_label)
-          {
-            this.quicklist_controller.show_menu ();
-            if (model is ApplicationModel)
-              (model as ApplicationModel).expose ();
-          }
-      }
+        {
+          this.quicklist_controller.show_menu ();
+          menu_opened (this);
+        }
       return false;
+    }
+
+    public void close_menu ()
+    {
+      this.quicklist_controller.close_menu ();
     }
 
     /* menu handling */
@@ -477,6 +527,7 @@ namespace Unity.Quicklauncher
     private bool on_released (Clutter.Event src)
     {
       var bevent = src.button;
+      this.button_down = false;
       if (bevent.button == 1 &&
           (bevent.time - last_pressed_time) < 500)
       {
@@ -485,8 +536,19 @@ namespace Unity.Quicklauncher
       return false;
     }
 
+    public Clutter.Actor get_icon ()
+    {
+      return this.icon;
+    }
+
+    public string get_drag_data ()
+    {
+      return this.get_name ();
+    }
+
     private void on_clicked ()
     {
+
       if (is_starting)
       {
         return;
@@ -496,6 +558,11 @@ namespace Unity.Quicklauncher
 				{
      			this.is_starting = true;
 				}
+    }
+
+    private void on_request_remove ()
+    {
+      this.model.close ();
     }
   }
 }

@@ -24,14 +24,14 @@ namespace Unity.Quicklauncher
   const float LINE_WIDTH         = 0.083f;
   const float TEXT_HEIGHT        = 1.0f;
   const float MAX_TEXT_WIDTH     = 15.0f;
-  const float GAP                = 0.5f;
+  const float GAP                = 0.25f;
   const float MARGIN             = 0.5f;
   const float BORDER             = 0.25f;
-  const float CORNER_RADIUS      = 0.5f;
+  const float CORNER_RADIUS      = 0.3f;
   const float ITEM_HEIGHT        = 2.0f;
-  const float ITEM_CORNER_RADIUS = 0.16f;
-  const float ANCHOR_HEIGHT      = 2.0f;
-  const float ANCHOR_WIDTH       = 1.0f;
+  const float ITEM_CORNER_RADIUS = 0.3f;
+  const float ANCHOR_HEIGHT      = 1.5f;
+  const float ANCHOR_WIDTH       = 0.75f;
 
   // we subclass Ctk.MenuItem here because we need to adapt it's appearance
   public class QuicklistMenuItem : Ctk.MenuItem
@@ -93,6 +93,36 @@ namespace Unity.Quicklauncher
               270.0f * GLib.Math.PI / 180.0f);
     }
 
+    private void
+    _get_text_extents (out int width,
+                       out int height)
+    {
+      Cairo.Surface dummy_surf = new Cairo.ImageSurface (Cairo.Format.A1, 1, 1);
+      Cairo.Context dummy_cr = new Cairo.Context (dummy_surf);
+      Pango.Layout layout = Pango.cairo_create_layout (dummy_cr);
+      Gtk.Settings settings = Gtk.Settings.get_default ();
+      string face = settings.gtk_font_name;
+      Pango.FontDescription desc = Pango.FontDescription.from_string (face);
+
+      desc.set_weight (Pango.Weight.NORMAL);
+      layout.set_font_description (desc);
+      layout.set_wrap (Pango.WrapMode.WORD_CHAR);
+      layout.set_ellipsize (Pango.EllipsizeMode.END);
+      layout.set_text (label, -1);
+      Pango.Context pango_context = layout.get_context ();
+      Gdk.Screen screen = Gdk.Screen.get_default ();
+      Pango.cairo_context_set_font_options (pango_context,
+                                            screen.get_font_options ());
+      Pango.cairo_context_set_resolution (pango_context,
+                                          (float) settings.gtk_xft_dpi /
+                                          (float) Pango.SCALE);
+	    layout.context_changed ();
+      Pango.Rectangle log_rect;
+      layout.get_extents (null, out log_rect);
+      width  = log_rect.width / Pango.SCALE;
+      height = log_rect.height / Pango.SCALE;
+    }
+
     private void _normal_mask (Cairo.Context cr,
                                int           w,
                                int           h,
@@ -107,9 +137,31 @@ namespace Unity.Quicklauncher
       cr.scale (1.0f, 1.0f);
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
 
-      // draw text
-      cr.move_to ((float) 0.0f, (float) h);
-      cr.show_text (label);
+      Pango.Layout layout = Pango.cairo_create_layout (cr);
+      Gtk.Settings settings = Gtk.Settings.get_default ();
+      string font_face = settings.gtk_font_name;
+      Pango.FontDescription desc = Pango.FontDescription.from_string (font_face);
+      desc.set_weight (Pango.Weight.NORMAL);
+      layout.set_font_description (desc);
+      layout.set_wrap (Pango.WrapMode.WORD_CHAR);
+      layout.set_ellipsize (Pango.EllipsizeMode.END);
+      layout.set_text (label, -1);
+      Pango.Context pango_context = layout.get_context ();
+      Gdk.Screen screen = Gdk.Screen.get_default ();
+      Pango.cairo_context_set_font_options (pango_context,
+                                            screen.get_font_options ());
+      Pango.cairo_context_set_resolution (pango_context,
+                                          (float) settings.gtk_xft_dpi /
+                                          (float) Pango.SCALE);
+	    layout.context_changed ();
+
+      int text_width;
+      int text_height;
+      _get_text_extents (out text_width, out text_height);
+      cr.move_to (Ctk.em_to_pixel (MARGIN),
+                  (float) (h - text_height) / 2.0f);
+
+      Pango.cairo_show_layout (cr, layout);
     }
 
     private void _selected_mask (Cairo.Context cr,
@@ -131,21 +183,65 @@ namespace Unity.Quicklauncher
                    1.0f,
                    0.5f,
                    0.5f,
-                   Ctk.em_to_pixel (BORDER),
+                   Ctk.em_to_pixel (ITEM_CORNER_RADIUS),
                    w - 1.0f,
                    h - 1.0f);
       cr.fill ();
 
       // draw text
-      cr.move_to ((float) 0.0f, (float) h);
+      Pango.Layout layout = Pango.cairo_create_layout (cr);
+      Gtk.Settings settings = Gtk.Settings.get_default ();
+      string font_face = settings.gtk_font_name;
+      Pango.FontDescription desc = Pango.FontDescription.from_string (font_face);
+      desc.set_weight (Pango.Weight.NORMAL);
+      layout.set_font_description (desc);
+      layout.set_wrap (Pango.WrapMode.WORD_CHAR);
+      layout.set_ellipsize (Pango.EllipsizeMode.END);
+      layout.set_text (label, -1);
+      Pango.Context pango_context = layout.get_context ();
+      Gdk.Screen screen = Gdk.Screen.get_default ();
+      Pango.cairo_context_set_font_options (pango_context,
+                                            screen.get_font_options ());
+      Pango.cairo_context_set_resolution (pango_context,
+                                          (float) settings.gtk_xft_dpi /
+                                          (float) Pango.SCALE);
+	    layout.context_changed ();
+
+      int text_width;
+      int text_height;
+      _get_text_extents (out text_width, out text_height);
+      cr.move_to (Ctk.em_to_pixel (MARGIN),
+                  (float) (h - text_height) / 2.0f);
+
       cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.0f);
-      cr.show_text (label);
+      Pango.cairo_show_layout (cr, layout);
     }
 
     private override void
     paint ()
     {
       this.item_background.paint ();
+    }
+
+    public override void
+    get_preferred_height (float     for_width,
+                          out float min_height_p,
+                          out float natural_height_p)
+    {
+      min_height_p = (float) Ctk.em_to_pixel (ITEM_HEIGHT);
+      natural_height_p = min_height_p;
+    }
+
+    public override void
+    get_preferred_width (float for_height,
+                         out float min_width_p,
+                         out float natural_width_p)
+    {
+      int width;
+      int height;
+      _get_text_extents (out width, out height);
+      min_width_p = (float) width + (float) Ctk.em_to_pixel (2 * MARGIN);
+      natural_width_p = min_width_p;
     }
 
     private override void
@@ -387,13 +483,13 @@ namespace Unity.Quicklauncher
                           1.0f,
                           Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH),
                           0.5f,
-                          Ctk.em_to_pixel (BORDER),
+                          Ctk.em_to_pixel (CORNER_RADIUS),
                           (double) w - Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH) - 0.5f,
-                          (double) h - 1.0f, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
+                          (double) h - 1.0f,
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
-                          anchor_y);
+                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
       cr.stroke ();
     }
 
@@ -417,13 +513,14 @@ namespace Unity.Quicklauncher
                           1.0f,
                           Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH),
                           0.5f,
-                          Ctk.em_to_pixel (BORDER),
+                          Ctk.em_to_pixel (CORNER_RADIUS),
                           (double) w - Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH) - 0.5f,
-                          (double) h - 1.0f, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
+                          (double) h - 1.0f,
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
-                          anchor_y);
+                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
+
       cr.fill ();
     }
 
@@ -431,7 +528,7 @@ namespace Unity.Quicklauncher
     _negative_mask (Cairo.Context cr,
                     int           w,
                     int           h,
-                    int           item)
+                    float         anchor_y)
     {
       // clear context
       cr.set_operator (Cairo.Operator.SOURCE);
@@ -448,14 +545,14 @@ namespace Unity.Quicklauncher
                           Ctk.em_to_pixel (BORDER) +
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (BORDER),
-                          Ctk.em_to_pixel (BORDER),
+                          Ctk.em_to_pixel (CORNER_RADIUS),
                           (double) w,
-                          (double) h, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
+                          (double) h,
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
-                          item * Ctk.em_to_pixel (ITEM_HEIGHT) -
-                          Ctk.em_to_pixel (ITEM_HEIGHT) / 2.0f);
+                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
+
       cr.fill ();
     }
 
@@ -463,7 +560,7 @@ namespace Unity.Quicklauncher
     _dotted_bg (Cairo.Context cr,
                 int           w,
                 int           h,
-                int           item)
+                float         anchor_y)
     {
       Cairo.Surface dots = new Cairo.ImageSurface (Cairo.Format.ARGB32, 4, 4);
       Cairo.Context cr_dots = new Cairo.Context (dots);
@@ -498,14 +595,13 @@ namespace Unity.Quicklauncher
                           Ctk.em_to_pixel (BORDER) +
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (BORDER),
-                          Ctk.em_to_pixel (BORDER),
+                          Ctk.em_to_pixel (CORNER_RADIUS),
                           (double) w,
-                          (double) h, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
+                          (double) h,
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
-                          item * Ctk.em_to_pixel (ITEM_HEIGHT) -
-                          Ctk.em_to_pixel (ITEM_HEIGHT) / 2.0f);
+                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
       cr.fill ();
     }
 
@@ -513,7 +609,7 @@ namespace Unity.Quicklauncher
     _highlight_bg (Cairo.Context cr,
                    int           w,
                    int           h,
-                   int           item)
+                   float         anchor_y)
     {
       Cairo.Pattern pattern;
 
@@ -543,14 +639,13 @@ namespace Unity.Quicklauncher
                           Ctk.em_to_pixel (BORDER) +
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (BORDER),
-                          Ctk.em_to_pixel (BORDER),
+                          Ctk.em_to_pixel (CORNER_RADIUS),
                           (double) w,
-                          (double) h, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
+                          (double) h,
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
-                          item * Ctk.em_to_pixel (ITEM_HEIGHT) -
-                          Ctk.em_to_pixel (ITEM_HEIGHT) / 2.0f);
+                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
       cr.fill ();
     }
 
@@ -580,10 +675,14 @@ namespace Unity.Quicklauncher
       Ctk.Actor actor = this.get_attached_actor ();
       actor.get_position (out ax, out ay);
       actor.get_size (out aw, out ah);
-      //stdout.printf ("--- attached-actor: %f/%f ---\n", ax, ay);
+      //stdout.printf ("--- attached-actor: %.1f/%.1f ---\n", ax, ay);
       this.get_position (out x, out y);
-      //stdout.printf ("--- menu-actor: %f/%f ---\n", x, y);
-      new_y = ah / 2.0f ;
+      //stdout.printf ("--- menu-actor: %.1f/%.1f ---\n", x, y);
+      //stdout.printf ("--- y-diff: %.1f ---\n\n", y - ay);
+      if (get_num_items() != 1)
+        new_y = ah / 2.0f;
+      else
+        new_y = 0.0f;
 
       // store the new width/height
       old_width  = w;
@@ -671,20 +770,9 @@ namespace Unity.Quicklauncher
       //_debug_mask (debug_cr, w, h);
       _outline_mask (outline_cr, w, h, new_y);
       _fill_mask (fill_cr, w, h, new_y);
-      _negative_mask (negative_cr,
-                      w,
-                      h,
-                      2);
-
-      _dotted_bg (dotted_cr,
-                  w,
-                  h,
-                  2);
-
-      _highlight_bg (highlight_cr,
-                     w,
-                     h,
-                     2);
+      _negative_mask (negative_cr, w, h, new_y);
+      _dotted_bg (dotted_cr, w, h, new_y);
+      _highlight_bg (highlight_cr, w, h, new_y);
 
       //outline_surf.write_to_png ("/tmp/outline_surf.png");
       //fill_surf.write_to_png ("/tmp/fill_surf.png");
@@ -730,14 +818,16 @@ namespace Unity.Quicklauncher
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {
-        left   = (int) Ctk.em_to_pixel (ANCHOR_WIDTH) +
-                 (int) Ctk.em_to_pixel (BORDER) +
-                 (int) Ctk.em_to_pixel (MARGIN),
+        left   = (int) Ctk.em_to_pixel (ANCHOR_WIDTH + 1.75f * BORDER),
         right  = (int) Ctk.em_to_pixel (BORDER),
         top    = (int) Ctk.em_to_pixel (BORDER),
-        bottom = (int) Ctk.em_to_pixel (BORDER)
+        // FIXME: there's an issue with CtkMenu probably adding the spacing even
+        // for the last child/menu-item although it should not do that, that's
+        // why bottom is currently set to 0 instead of BORDER
+        bottom = 0 // (int) Ctk.em_to_pixel (BORDER)
       };
       this.set_padding (padding);
+      this.spacing = (int) Ctk.em_to_pixel (GAP);
 
       old_width  = 0;
       old_height = 0;
