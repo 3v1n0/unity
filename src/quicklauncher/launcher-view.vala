@@ -29,7 +29,7 @@ namespace Unity.Quicklauncher
     + "/honeycomb-mask.png";
   const string MENU_BG_FILE = Unity.PKGDATADIR
     + "/tight_check_4px.png";
-    
+
   const float WIGGLE_SIZE = 5;
   const uint WIGGLE_LENGTH = 2;
   const uint WIGGLE_RESTART = 8;
@@ -98,7 +98,7 @@ namespace Unity.Quicklauncher
 
     private Clutter.Animation anim_throbber;
     private bool anim_wiggle_state = false;
-    
+
     private Clutter.Animation _anim;
     public Clutter.Animation anim {
       get { return _anim; }
@@ -305,17 +305,17 @@ namespace Unity.Quicklauncher
     {
       if (wiggling)
         return;
-      
+
       wiggling = true;
       cease_wiggle = false;
-      
+
       this.icon.set ("rotation-center-z-gravity", Clutter.Gravity.CENTER);
       Clutter.Animation anim = this.icon.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 1000 / WIGGLE_FREQUENCY,
                                                   "rotation-angle-z", WIGGLE_SIZE);
-      
+
       Signal.connect_after (anim, "completed", (Callback) wiggle_do_next_step, this);
     }
-    
+
     private static void wiggle_do_next_step (Object sender, LauncherView self)
       requires (self is LauncherView)
     {
@@ -330,11 +330,11 @@ namespace Unity.Quicklauncher
           self.anim_wiggle_state = !self.anim_wiggle_state;
           Clutter.Animation anim = self.icon.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 1000 / WIGGLE_FREQUENCY,
                                                       "rotation-angle-z", self.anim_wiggle_state ? WIGGLE_SIZE : -WIGGLE_SIZE);
-                    
+
           Signal.connect_after (anim, "completed", (Callback) wiggle_do_next_step, self);
         }
     }
-    
+
     private bool wiggle_stop ()
     {
       cease_wiggle = true;
@@ -347,7 +347,7 @@ namespace Unity.Quicklauncher
       wiggle_loop ();
       GLib.Timeout.add_seconds (WIGGLE_RESTART, wiggle_loop);
     }
-    
+
     private bool wiggle_loop ()
     {
       if (this.model.is_urgent)
@@ -362,7 +362,7 @@ namespace Unity.Quicklauncher
           return false;
         }
     }
-    
+
     private void on_activated ()
     {
       this.is_starting = false;
@@ -427,9 +427,9 @@ namespace Unity.Quicklauncher
     {
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
-      
+
       this.is_hovering = true;
-      
+
       if (!(quicklist_controller is QuicklistController))
         {
           this.quicklist_controller = new QuicklistController (this.model.name,
@@ -438,7 +438,7 @@ namespace Unity.Quicklauncher
                                                                );
           build_quicklist ();
         }
-      
+
       this.quicklist_controller.show_label ();
 
       return false;
@@ -454,7 +454,8 @@ namespace Unity.Quicklauncher
     private bool on_mouse_leave(Clutter.Event src)
     {
       this.is_hovering = false;
-      this.quicklist_controller.hide_label ();
+      if (this.quicklist_controller is QuicklistController)
+        this.quicklist_controller.hide_label ();
       return false;
     }
 
@@ -487,7 +488,7 @@ namespace Unity.Quicklauncher
         last_pressed_time = bevent.time;
         this.click_start_pos = bevent.x;
         this.button_down = true;
-        
+
           if (!quicklist_controller.is_label)
             {
               quicklist_controller.close_menu ();
@@ -502,7 +503,7 @@ namespace Unity.Quicklauncher
         }
       return false;
     }
-    
+
     public void close_menu ()
     {
       this.quicklist_controller.close_menu ();
@@ -540,7 +541,7 @@ namespace Unity.Quicklauncher
     {
       return this.icon;
     }
-    
+
     public string get_drag_data ()
     {
       return this.get_name ();
@@ -548,7 +549,7 @@ namespace Unity.Quicklauncher
 
     private void on_clicked ()
     {
-      
+
       if (is_starting)
       {
         return;
