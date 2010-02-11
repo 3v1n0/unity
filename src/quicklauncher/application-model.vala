@@ -90,7 +90,7 @@ namespace Unity.Quicklauncher.Models
           }
         else
           {
-            return "Add to Launcher";
+            return "Keep In Launcher";
           }
       }
     }
@@ -277,6 +277,7 @@ namespace Unity.Quicklauncher.Models
               favorites.add_favorite (uid);
             }
           _is_sticky = value;
+          this.notify_active ();
         }
     }
 

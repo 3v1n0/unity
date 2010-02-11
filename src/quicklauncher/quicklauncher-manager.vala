@@ -312,7 +312,6 @@ namespace Unity.Quicklauncher
       float max_priority = 0.0f;
       foreach (ApplicationModel model in this.desktop_file_map.values)
         {
-          debug (@"max: $max_priority - this: %f", model.priority);
           max_priority = Math.fmaxf (model.priority, max_priority); 
         }
       return max_priority;
@@ -327,7 +326,6 @@ namespace Unity.Quicklauncher
         if (!model.is_sticky)
           {
             var pri = get_last_priority ();
-            debug ("setting %s to %f", model.name, pri);
             model.priority = get_last_priority ();
           }
           

@@ -387,7 +387,6 @@ namespace Unity.Quicklauncher
     private void notify_on_is_running ()
     {
       this.is_starting = false;
-
       /* we need to show the running indicator when we are running */
       if (this.model.is_active)
         {
