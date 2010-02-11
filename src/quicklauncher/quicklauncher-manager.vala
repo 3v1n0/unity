@@ -307,12 +307,30 @@ namespace Unity.Quicklauncher
       END_FUNCTION ();
     }
 
-   private void handle_session_application (Launcher.Application app)
+    private float get_last_priority ()
+    {
+      float max_priority = 0.0f;
+      foreach (ApplicationModel model in this.desktop_file_map.values)
+        {
+          debug (@"max: $max_priority - this: %f", model.priority);
+          max_priority = Math.fmaxf (model.priority, max_priority); 
+        }
+      return max_priority;
+    }
+    
+    private void handle_session_application (Launcher.Application app)
     {
       var desktop_file = app.get_desktop_file ();
       if (desktop_file != null)
       {
         ApplicationModel model = get_model_for_desktop_file (desktop_file);
+        if (!model.is_sticky)
+          {
+            var pri = get_last_priority ();
+            debug ("setting %s to %f", model.name, pri);
+            model.priority = get_last_priority ();
+          }
+          
         LauncherView view = get_view_for_model (model);
         if (view.get_parent () == null)
         {

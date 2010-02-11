@@ -472,7 +472,6 @@ namespace Unity.Quicklauncher
                                           event.button.x - x,
                                           event.button.y - y);
               this.button_down = false;
-              this.quicklist_controller.hide_label ();
               return true;
             }
         }

@@ -152,8 +152,10 @@ namespace Unity.Quicklauncher.Models
       this.app.urgent_changed.connect (this.on_app_urgent_changed);
 
       this._icon = make_icon (app.icon_name);
-      this.grab_priority ();
+
       this.queued_save_priority = false;
+      this._is_sticky = (get_fav_uid () != "");
+      this.grab_priority ();
     }
 
     construct
@@ -183,6 +185,12 @@ namespace Unity.Quicklauncher.Models
     }
     private void grab_priority ()
     {
+      if (!this.is_sticky)
+        {
+          // we need something outside of this model to decide our priority
+          this._priority = -1000000.0f; 
+          return;
+        }
       // grab the current priority from gconf
       var favorites = Launcher.Favorites.get_default ();
       string uid = get_fav_uid ();
@@ -192,8 +200,7 @@ namespace Unity.Quicklauncher.Models
       if (priority < 1.0f)
         {
           priority = (float)Random.double_range (1.0001, 100.0);
-          if (this.is_sticky)
-            favorites.set_float (uid, "priority", priority);
+          favorites.set_float (uid, "priority", priority);
         }
       this._priority = priority;
     }
