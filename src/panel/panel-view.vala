@@ -32,6 +32,7 @@ namespace Unity.Panel
     private Indicators.View   indicators;
 
     private Entry entry;
+    private Unity.Places.CairoDrawing.EntryBackground entry_background;
 
     private int indicators_width = 0;
 
@@ -62,6 +63,10 @@ namespace Unity.Panel
       this.home = new HomeButton (this.shell);
       this.home.set_parent (this);
       this.home.show ();
+
+      this.entry_background = new Unity.Places.CairoDrawing.EntryBackground ();
+      this.entry_background.set_parent (this);
+      this.entry_background.show ();
 
       this.entry = new Unity.Entry ("Search");
       this.entry.set_parent (this);
@@ -106,9 +111,23 @@ namespace Unity.Panel
       this.home.allocate (child_box, flags);
 
       /* Entry */
-      child_box.x1 = child_box.x2 + 12;
-      child_box.x2 = child_box.x1 + 250; /* Random width */
+      child_box.x1 = child_box.x2 + 56;
+      child_box.x2 = child_box.x1 + 150; /* Random width */
+
+      if ((this.entry_background.Width != (int)(child_box.x2 - child_box.x1)) && (this.entry_background.height != (int)(child_box.y2 - child_box.y1)))
+      {
+        this.entry_background.create_search_entry_background ((int)(child_box.x2 - child_box.x1), (int)(child_box.y2 - child_box.y1));
+      }
+      this.entry_background.allocate (child_box, flags);
+
+      child_box.x1 += 12; /* (QL_width - logo_width)/2.0 */
+      child_box.x2 -= 12;
+      child_box.y1 += 4;
+      child_box.y2 -= 4;
       this.entry.allocate (child_box, flags);
+
+      child_box.y1 = 0;
+      child_box.y2 = PANEL_HEIGHT;
 
       /* Indicators */
       this.indicators.get_preferred_width (PANEL_HEIGHT,
@@ -144,6 +163,7 @@ namespace Unity.Panel
       this.tray.paint ();
       this.home.paint ();
       this.indicators.paint ();
+      this.entry_background.paint ();
       this.entry.paint ();
     }
 
@@ -152,6 +172,7 @@ namespace Unity.Panel
       this.tray.paint ();
       this.home.paint ();
       this.indicators.paint ();
+      this.entry_background.paint ();
       this.entry.paint ();
     }
 
@@ -162,6 +183,7 @@ namespace Unity.Panel
       this.tray.map ();
       this.home.map ();
       this.indicators.map ();
+      this.entry_background.map ();
       this.entry.map ();
     }
 
@@ -172,6 +194,7 @@ namespace Unity.Panel
       this.tray.unmap ();
       this.home.unmap ();
       this.indicators.unmap ();
+      this.entry_background.unmap ();
       this.entry.unmap ();
     }
 
