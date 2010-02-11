@@ -276,6 +276,7 @@ namespace Ctk {
 		public void fadeout_and_destroy ();
 		public unowned Ctk.Actor get_attached_actor ();
 		public unowned Clutter.Actor get_background ();
+		public int get_num_items ();
 		public int get_spacing ();
 		public void prepend (Clutter.Actor item, bool is_special);
 		public void remove_all ();
@@ -287,6 +288,7 @@ namespace Ctk {
 		[CCode (has_construct_function = false)]
 		public Menu.with_background (Clutter.Actor background);
 		public Clutter.Actor background { get; set; }
+		public int num_items { get; }
 		public int spacing { get; set; }
 		public virtual signal void closed ();
 	}

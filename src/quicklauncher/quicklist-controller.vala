@@ -101,6 +101,11 @@ namespace Unity.Quicklauncher
       this.menu.append (menuitem, true);
       this.menu.attach_to_actor (this.attached_widget);
       stage.add_actor (this.menu);
+
+      float x;
+      float y;
+      this.menu.get_position (out x, out y);
+      this.menu.set_position (x - 10, y);
     }
 
     public void show_label ()
