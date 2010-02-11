@@ -24,14 +24,14 @@ namespace Unity.Quicklauncher
   const float LINE_WIDTH         = 0.083f;
   const float TEXT_HEIGHT        = 1.0f;
   const float MAX_TEXT_WIDTH     = 15.0f;
-  const float GAP                = 0.5f;
+  const float GAP                = 0.25f;
   const float MARGIN             = 0.5f;
   const float BORDER             = 0.25f;
-  const float CORNER_RADIUS      = 0.5f;
+  const float CORNER_RADIUS      = 0.3f;
   const float ITEM_HEIGHT        = 2.0f;
-  const float ITEM_CORNER_RADIUS = 0.16f;
-  const float ANCHOR_HEIGHT      = 2.0f;
-  const float ANCHOR_WIDTH       = 1.0f;
+  const float ITEM_CORNER_RADIUS = 0.3f;
+  const float ANCHOR_HEIGHT      = 1.5f;
+  const float ANCHOR_WIDTH       = 0.75f;
 
   // we subclass Ctk.MenuItem here because we need to adapt it's appearance
   public class QuicklistMenuItem : Ctk.MenuItem
@@ -183,7 +183,7 @@ namespace Unity.Quicklauncher
                    1.0f,
                    0.5f,
                    0.5f,
-                   Ctk.em_to_pixel (BORDER),
+                   Ctk.em_to_pixel (ITEM_CORNER_RADIUS),
                    w - 1.0f,
                    h - 1.0f);
       cr.fill ();
@@ -483,9 +483,9 @@ namespace Unity.Quicklauncher
                           1.0f,
                           Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH),
                           0.5f,
-                          Ctk.em_to_pixel (BORDER),
+                          Ctk.em_to_pixel (CORNER_RADIUS),
                           (double) w - Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH) - 0.5f,
-                          (double) h - 1.0f, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
+                          (double) h - 1.0f,
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
@@ -513,9 +513,9 @@ namespace Unity.Quicklauncher
                           1.0f,
                           Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH),
                           0.5f,
-                          Ctk.em_to_pixel (BORDER),
+                          Ctk.em_to_pixel (CORNER_RADIUS),
                           (double) w - Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH) - 0.5f,
-                          (double) h - 1.0f, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
+                          (double) h - 1.0f,
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
@@ -527,7 +527,7 @@ namespace Unity.Quicklauncher
     _negative_mask (Cairo.Context cr,
                     int           w,
                     int           h,
-                    int           item)
+                    float         anchor_y)
     {
       // clear context
       cr.set_operator (Cairo.Operator.SOURCE);
@@ -544,14 +544,13 @@ namespace Unity.Quicklauncher
                           Ctk.em_to_pixel (BORDER) +
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (BORDER),
-                          Ctk.em_to_pixel (BORDER),
+                          Ctk.em_to_pixel (CORNER_RADIUS),
                           (double) w,
-                          (double) h, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
+                          (double) h,
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
-                          item * Ctk.em_to_pixel (ITEM_HEIGHT) -
-                          Ctk.em_to_pixel (ITEM_HEIGHT) / 2.0f);
+                          anchor_y);
       cr.fill ();
     }
 
@@ -559,7 +558,7 @@ namespace Unity.Quicklauncher
     _dotted_bg (Cairo.Context cr,
                 int           w,
                 int           h,
-                int           item)
+                float         anchor_y)
     {
       Cairo.Surface dots = new Cairo.ImageSurface (Cairo.Format.ARGB32, 4, 4);
       Cairo.Context cr_dots = new Cairo.Context (dots);
@@ -594,14 +593,13 @@ namespace Unity.Quicklauncher
                           Ctk.em_to_pixel (BORDER) +
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (BORDER),
-                          Ctk.em_to_pixel (BORDER),
+                          Ctk.em_to_pixel (CORNER_RADIUS),
                           (double) w,
-                          (double) h, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
+                          (double) h,
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
-                          item * Ctk.em_to_pixel (ITEM_HEIGHT) -
-                          Ctk.em_to_pixel (ITEM_HEIGHT) / 2.0f);
+                          anchor_y);
       cr.fill ();
     }
 
@@ -609,7 +607,7 @@ namespace Unity.Quicklauncher
     _highlight_bg (Cairo.Context cr,
                    int           w,
                    int           h,
-                   int           item)
+                   float         anchor_y)
     {
       Cairo.Pattern pattern;
 
@@ -639,14 +637,13 @@ namespace Unity.Quicklauncher
                           Ctk.em_to_pixel (BORDER) +
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (BORDER),
-                          Ctk.em_to_pixel (BORDER),
+                          Ctk.em_to_pixel (CORNER_RADIUS),
                           (double) w,
-                          (double) h, // items * Ctk.em_to_pixel (ITEM_HEIGHT)
+                          (double) h,
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (BORDER),
-                          item * Ctk.em_to_pixel (ITEM_HEIGHT) -
-                          Ctk.em_to_pixel (ITEM_HEIGHT) / 2.0f);
+                          anchor_y);
       cr.fill ();
     }
 
@@ -676,10 +673,11 @@ namespace Unity.Quicklauncher
       Ctk.Actor actor = this.get_attached_actor ();
       actor.get_position (out ax, out ay);
       actor.get_size (out aw, out ah);
-      //stdout.printf ("--- attached-actor: %f/%f ---\n", ax, ay);
+      //stdout.printf ("--- attached-actor: %.1f/%.1f ---\n", ax, ay);
       this.get_position (out x, out y);
-      //stdout.printf ("--- menu-actor: %f/%f ---\n", x, y);
-      new_y = ah / 2.0f ;
+      //stdout.printf ("--- menu-actor: %.1f/%.1f ---\n", x, y);
+      //stdout.printf ("--- y-diff: %.1f ---\n\n", y - ay);
+      new_y = ah / 2.0f;
 
       // store the new width/height
       old_width  = w;
@@ -767,20 +765,9 @@ namespace Unity.Quicklauncher
       //_debug_mask (debug_cr, w, h);
       _outline_mask (outline_cr, w, h, new_y);
       _fill_mask (fill_cr, w, h, new_y);
-      _negative_mask (negative_cr,
-                      w,
-                      h,
-                      2);
-
-      _dotted_bg (dotted_cr,
-                  w,
-                  h,
-                  2);
-
-      _highlight_bg (highlight_cr,
-                     w,
-                     h,
-                     2);
+      _negative_mask (negative_cr, w, h, new_y);
+      _dotted_bg (dotted_cr, w, h, new_y);
+      _highlight_bg (highlight_cr, w, h, new_y);
 
       //outline_surf.write_to_png ("/tmp/outline_surf.png");
       //fill_surf.write_to_png ("/tmp/fill_surf.png");
@@ -826,11 +813,13 @@ namespace Unity.Quicklauncher
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {
-        left   = (int) Ctk.em_to_pixel (ANCHOR_WIDTH) +
-                 (int) Ctk.em_to_pixel (BORDER),
+        left   = (int) Ctk.em_to_pixel (ANCHOR_WIDTH + 1.75f * BORDER),
         right  = (int) Ctk.em_to_pixel (BORDER),
         top    = (int) Ctk.em_to_pixel (BORDER),
-        bottom = (int) Ctk.em_to_pixel (BORDER)
+        // FIXME: there's an issue with CtkMenu probably adding the spacing even
+        // for the last child/menu-item although it should not do that, that's
+        // why bottom is currently set to 0 instead of BORDER
+        bottom = 0 // (int) Ctk.em_to_pixel (BORDER)
       };
       this.set_padding (padding);
       this.spacing = (int) Ctk.em_to_pixel (GAP);
