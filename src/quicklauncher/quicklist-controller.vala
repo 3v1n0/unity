@@ -21,7 +21,7 @@ using Unity.Quicklauncher.Models;
 
 namespace Unity.Quicklauncher
 {
-  public Ctk.Menu? active_menu = null;
+  public QuicklistController? active_menu = null;
 
   public class QuicklistController : Object
   {
@@ -44,11 +44,13 @@ namespace Unity.Quicklauncher
       this.prefix_actions = new Gee.LinkedList<ShortcutItem> ();
       this.append_actions = new Gee.LinkedList<ShortcutItem> ();
       this.attached_widget = attached_to;
+      var drag_controller = Drag.Controller.get_default ();
+      drag_controller.drag_start.connect (this.on_unity_drag_start);
     }
 
     ~QuicklistController ()
     {
-      if (active_menu == this.menu)
+      if (active_menu == this)
         {
           active_menu = null;
         }
@@ -64,6 +66,20 @@ namespace Unity.Quicklauncher
     {
     }
 
+    private void on_unity_drag_start (Drag.Model model)
+    {
+      if (active_menu == this)
+        {
+          active_menu = null;
+        }
+      var menu = this.menu;
+      this.menu = null;
+      if (menu is Ctk.Menu)
+        {
+          menu.fadeout_and_destroy ();
+        }
+    } 
+
     public void add_action (ShortcutItem shortcut, bool is_secondary)
     {
       /* replace with Unity.Quicklauncher.MenuItem or something when we have
@@ -78,11 +94,18 @@ namespace Unity.Quicklauncher
     private void build_menu ()
     {
       this.menu = new QuicklistMenu () as Ctk.Menu;
+      this.menu.set_swallow_clicks (Unity.global_shell.menus_swallow_events);
+      this.menu.set_detect_clicks (false);
       Unity.Quicklauncher.QuicklistMenuItem menuitem = new Unity.Quicklauncher.QuicklistMenuItem (this.label);
       menuitem.activated.connect (this.close_menu);
       this.menu.append (menuitem, true);
       this.menu.attach_to_actor (this.attached_widget);
       stage.add_actor (this.menu);
+
+      float x;
+      float y;
+      this.menu.get_position (out x, out y);
+      this.menu.set_position (x - 10, y);
     }
 
     public void show_label ()
@@ -96,6 +119,7 @@ namespace Unity.Quicklauncher
 
       this.menu.show();
       this.is_label = true;
+      this.menu.set_detect_clicks (false);
     }
     
     public void hide_label ()
@@ -103,7 +127,8 @@ namespace Unity.Quicklauncher
       if (!is_label || menu == null)
         return;
 
-      menu.hide ();
+      this.menu.set_detect_clicks (false);
+      this.menu.hide ();
     }
 
     public void show_menu ()
@@ -111,7 +136,7 @@ namespace Unity.Quicklauncher
       if (Unity.Quicklauncher.active_menu != null)
         {
           // we already have an active menu, so destroy that and start this one
-          Unity.Quicklauncher.active_menu.fadeout_and_destroy ();
+          Unity.Quicklauncher.active_menu.menu.fadeout_and_destroy ();
           Unity.Quicklauncher.active_menu = null;
         }
 
@@ -121,6 +146,7 @@ namespace Unity.Quicklauncher
         }
 
       this.is_label = false;
+      
       foreach (ShortcutItem shortcut in this.prefix_actions)
         {
           var label = shortcut.get_name ();
@@ -141,14 +167,14 @@ namespace Unity.Quicklauncher
           menuitem.activated.connect (this.close_menu);
         }
 
-      Unity.Quicklauncher.active_menu = this.menu;
-      this.menu.set_detect_clicks (true);
+      Unity.Quicklauncher.active_menu = this;
       this.menu.closed.connect (this.on_menu_close);
       this.is_label = false;
+      this.menu.set_detect_clicks (true);
       
       Unity.global_shell.ensure_input_region ();
     }
-
+    
     private void on_menu_close ()
     {
       close_menu ();
@@ -156,7 +182,7 @@ namespace Unity.Quicklauncher
 
     public void close_menu ()
     {
-      if (Unity.Quicklauncher.active_menu == this.menu)
+      if (Unity.Quicklauncher.active_menu == this)
         {
           Unity.Quicklauncher.active_menu = null;
         }

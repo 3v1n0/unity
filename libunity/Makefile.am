@@ -1,6 +1,6 @@
-BUILT_SOURCES = 
-CLEANFILES = 
-EXTRA_DIST = 
+BUILT_SOURCES =
+CLEANFILES =
+EXTRA_DIST =
 
 noinst_LTLIBRARIES = \
   libunity.la
@@ -32,6 +32,9 @@ libunity_la_SOURCES = \
 
 libunity_la_VALASOURCES = \
   application.vala \
+  drag-controller.vala \
+  drag-view.vala \
+  entry.vala \
   perf-logger.vala \
   shell.vala
 
@@ -47,7 +50,7 @@ EXTRA_DIST += \
 
 $(BUILT_SOURCES) $(libunity_la_APIFILES): $(libunity_la_VALASOURCES)
 	$(AM_V_GEN) $(VALAC) $(libunity_la_VALAFLAGS) $^
-	touch libunity_la_vala.stamp														
+	touch libunity_la_vala.stamp
 
 CLEANFILES += \
   *.stamp \

@@ -22,6 +22,10 @@ namespace Unity
   public class WindowManagement : Object
   {
     private Plugin plugin;
+    private List<Clutter.Actor> switch_windows;
+    private Clutter.Group workgroup1;
+    private Clutter.Group workgroup2;
+    private int switch_signals_to_send;
     
     public WindowManagement (Plugin p)
     {
@@ -32,6 +36,7 @@ namespace Unity
       this.plugin.window_mapped.connect (this.window_mapped);
       this.plugin.window_destroyed.connect (this.window_destroyed);
       this.plugin.window_kill_effect.connect (this.window_kill_effect);
+      this.plugin.workspace_switch_event.connect (this.workspace_switched);
     }
 
     construct
@@ -46,6 +51,117 @@ namespace Unity
           || type == Mutter.MetaCompWindowType.MODAL_DIALOG)
         return 200;
       return 80;
+    }
+    
+    private void workspace_switched (Plugin plugin,
+                                     List<Mutter.Window> windows,
+                                     int from,
+                                     int to,
+                                     int direction)
+    {
+      if (plugin.expose_showing)
+        {
+          Mutter.Window window = windows.nth_data (0);
+          plugin.plugin.effect_completed (window, Mutter.PLUGIN_SWITCH_WORKSPACE);
+          return;
+        }
+    
+      switch_signals_to_send++;
+      
+      unowned Clutter.Actor stage = plugin.plugin.get_stage ();
+      float x_delta = 0;
+      float y_delta = 0;
+      Clutter.Animation anim = null;
+      
+      if (direction == -4)
+        x_delta = stage.width;
+      else if (direction == -3)  
+        x_delta = -stage.width;
+      else if (direction == -2)
+        y_delta = stage.height;
+      else if (direction == -1)
+        y_delta = -stage.height;
+
+      if (switch_signals_to_send > 1)
+        {
+          workgroup2.get_animation ().completed.disconnect (on_workspace_switch_completed);
+          on_workspace_switch_completed (null);
+        }
+      
+      switch_windows = new List<Clutter.Actor> ();
+      
+      workgroup1 = new Clutter.Group ();
+      workgroup2 = new Clutter.Group ();
+      
+      (plugin.plugin.get_window_group () as Clutter.Container).add_actor (workgroup1);
+      (plugin.plugin.get_window_group () as Clutter.Container).add_actor (workgroup2);
+      
+      (workgroup1 as Clutter.Actor).raise (plugin.plugin.get_normal_window_group ());
+      (workgroup2 as Clutter.Actor).raise (plugin.plugin.get_normal_window_group ());
+          
+      
+      foreach (Mutter.Window window in windows)
+        {
+          
+          Clutter.Actor clone = new Clutter.Clone (window);
+          switch_windows.prepend (clone);
+          
+          clone.set_position (window.x, window.y);
+          clone.set_size (window.width, window.height);
+          
+          window.opacity = 0;
+          clone.opacity = 255;
+          
+          if (window.get_window_type () == Mutter.MetaCompWindowType.DESKTOP)
+          {
+            (plugin.plugin.get_window_group () as Clutter.Container).add_actor (clone);
+            clone.raise (plugin.plugin.get_normal_window_group ());
+            continue;
+          }
+          
+          
+          if (window.get_workspace () == from)
+            {
+              workgroup1.add_actor (clone);
+            }
+          else if (window.get_workspace () == to)
+            {
+              workgroup2.add_actor (clone);
+            }
+        }
+        
+      anim = workgroup1.animate (Clutter.AnimationMode.LINEAR, 150,
+                                 "x", -x_delta,
+                                 "y", -y_delta);
+      
+      float y = workgroup2.y;
+      float x = workgroup2.x;
+            
+      workgroup2.x = x_delta;
+      workgroup2.y = y_delta;
+            
+      anim = workgroup2.animate (Clutter.AnimationMode.LINEAR, 150,
+                            "x", x,
+                            "y", y);
+      anim.completed.connect (on_workspace_switch_completed);
+    }
+    
+    private void on_workspace_switch_completed (Clutter.Animation? anim)
+    {
+      Mutter.Window window = null;
+
+      foreach (Clutter.Actor actor in switch_windows)
+        {
+          window = (actor as Clutter.Clone).get_source () as Mutter.Window;
+          window.opacity = 255;
+          actor.destroy ();
+        }
+          
+      workgroup1.destroy ();
+      workgroup2.destroy ();
+      
+      plugin.plugin.effect_completed (window, Mutter.PLUGIN_SWITCH_WORKSPACE);
+      switch_signals_to_send--;   
     }
 
     private void window_maximized (Plugin        plugin,
@@ -96,8 +212,8 @@ namespace Unity
                          "opacity", 0,
                          "x", (float) ((rect.x + rect.width / 2) - (actor.width / 2)),
                          "y", (float) ((rect.y + rect.height / 2) - (actor.height / 2)),
-                         "x-scale", scale,
-                         "y-scale", scale);
+                         "scale-x", scale,
+                         "scale-y", scale);
         }
       else
         {
@@ -115,7 +231,6 @@ namespace Unity
         return;
       
       window.hide ();
-      window.opacity = 0;
       this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MINIMIZE);
     }
 
@@ -154,8 +269,8 @@ namespace Unity
                          "opacity", 255,
                          "x", (float) x,
                          "y", (float) y,
-                         "x-scale", 1f,
-                         "y-scale", 1f);
+                         "scale-x", 1f,
+                         "scale-y", 1f);
         }
       else
         {
@@ -172,7 +287,7 @@ namespace Unity
       if (window == null)
         return;
 
-      window.opacity = 255;
+      (window as Clutter.Actor).opacity = 255;
       this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAP);
     }
     

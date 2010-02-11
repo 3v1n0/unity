@@ -33,7 +33,6 @@ namespace Unity.Quicklauncher.Models
 
     public void activated ()
     {
-      debug ("activated %s - %s", this.name, this.exec);
       Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
       try
       {
@@ -91,7 +90,7 @@ namespace Unity.Quicklauncher.Models
           }
         else
           {
-            return "Add to Launcher";
+            return "Keep In Launcher";
           }
       }
     }
@@ -122,9 +121,28 @@ namespace Unity.Quicklauncher.Models
     private Gdk.Pixbuf _icon;
     private Launcher.Application app;
     private Launcher.Appman manager;
+    private string desktop_uri;
+    private bool queued_save_priority;
+    private float _priority;
+    public float priority {
+      get { return _priority; }
+      set { _priority = value; this.do_save_priority ();}
+    }
+
+    public string uid {
+      get { return this.desktop_uri; }
+    }
+
+    public unowned SList<Wnck.Window> windows {
+      get
+        {
+          return app.get_windows ();
+        }
+    }
 
     public ApplicationModel (string desktop_uri)
     {
+      this.desktop_uri = desktop_uri;
       this.manager = Launcher.Appman.get_default ();
       this.app = this.manager.get_application_for_desktop_file (desktop_uri);
 
@@ -134,10 +152,57 @@ namespace Unity.Quicklauncher.Models
       this.app.urgent_changed.connect (this.on_app_urgent_changed);
 
       this._icon = make_icon (app.icon_name);
+
+      this.queued_save_priority = false;
+      this._is_sticky = (get_fav_uid () != "");
+      this.grab_priority ();
     }
 
     construct
     {
+    }
+
+    /* hitting gconf too much is bad, so we want to make sure we only hit
+     * when we are idle
+     */
+    public void do_save_priority ()
+    {
+      if (!this.queued_save_priority)
+        {
+          this.queued_save_priority = true;
+          Idle.add (this.save_priority);
+        }
+    }
+
+    public bool save_priority ()
+    {
+      this.queued_save_priority = false;
+      if (!this.is_sticky) return false;
+      var favorites = Launcher.Favorites.get_default ();
+      string uid = get_fav_uid ();
+      favorites.set_float (uid, "priority", this.priority);
+      return false;
+    }
+    private void grab_priority ()
+    {
+      if (!this.is_sticky)
+        {
+          // we need something outside of this model to decide our priority
+          this._priority = -1000000.0f; 
+          return;
+        }
+      // grab the current priority from gconf
+      var favorites = Launcher.Favorites.get_default ();
+      string uid = get_fav_uid ();
+      float priority = favorites.get_float (uid, "priority");
+      // because liblauncher has no error handling, we assume that a priority
+      // of < 1.0f is unset. so generate a random new one and set
+      if (priority < 1.0f)
+        {
+          priority = (float)Random.double_range (1.0001, 100.0);
+          favorites.set_float (uid, "priority", priority);
+        }
+      this._priority = priority;
     }
     
     private void on_app_running_changed ()
@@ -212,6 +277,7 @@ namespace Unity.Quicklauncher.Models
               favorites.add_favorite (uid);
             }
           _is_sticky = value;
+          this.notify_active ();
         }
     }
 
@@ -298,12 +364,12 @@ namespace Unity.Quicklauncher.Models
             }
         }
     }
-    
-    public void expose ()
-    {
-      Unity.global_shell.expose_windows (app.get_windows ());
-    }
 
+    public void close ()
+    {
+      this.app.close ();
+    }
+    
     /**
      * gets the favorite uid for this desktop file
      */

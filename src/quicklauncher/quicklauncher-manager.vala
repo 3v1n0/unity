@@ -45,6 +45,18 @@ namespace Unity.Quicklauncher
       }
     }
 
+    private LauncherView _active_launcher;
+    public LauncherView active_launcher {
+      get { return _active_launcher; }
+      private set {
+        LauncherView prev = _active_launcher;
+        _active_launcher = value;
+        active_launcher_changed (prev, _active_launcher);
+      }
+    }
+
+    public signal void active_launcher_changed (LauncherView last, LauncherView current);
+
     construct
     {
       START_FUNCTION ();
@@ -85,7 +97,7 @@ namespace Unity.Quicklauncher
       catch (Error e) {
         warning ("%s", e.message);
       }
-          
+
       try {
         bool value = this.gconf_client.get_bool (UNITY_CONF_PATH + "/webapp_use_chromium");
         if (value)
@@ -118,7 +130,7 @@ namespace Unity.Quicklauncher
         Gtk.TargetEntry[]? targets = null;
         tl = new Gtk.TargetList (targets);
         tl.add_uri_targets (0);
-        
+
         target_type = Ctk.drag_dest_find_target (context, tl);
 
         if (target_type.name () == "")
@@ -206,11 +218,11 @@ namespace Unity.Quicklauncher
         warning ("%s", e.message);
       }
       clean_uri.strip();
-      
+
       debug ("clean uri: " + clean_uri);
 
       var split_uri = clean_uri.split ("://", 2);
-      
+
       if (test_url (clean_uri))
       {
         //we have a http url, webapp it
@@ -295,13 +307,27 @@ namespace Unity.Quicklauncher
       END_FUNCTION ();
     }
 
+    private float get_last_priority ()
+    {
+      float max_priority = 0.0f;
+      foreach (ApplicationModel model in this.desktop_file_map.values)
+        {
+          max_priority = Math.fmaxf (model.priority, max_priority);
+        }
+      return max_priority;
+    }
 
-   private void handle_session_application (Launcher.Application app)
+    private void handle_session_application (Launcher.Application app)
     {
       var desktop_file = app.get_desktop_file ();
       if (desktop_file != null)
       {
         ApplicationModel model = get_model_for_desktop_file (desktop_file);
+        if (!model.is_sticky)
+          {
+            model.priority = get_last_priority ();
+          }
+
         LauncherView view = get_view_for_model (model);
         if (view.get_parent () == null)
         {
@@ -350,15 +376,30 @@ namespace Unity.Quicklauncher
       }
       container.add_actor(view);
       view.request_remove.connect(remove_view);
+      view.enter_event.connect (on_launcher_enter_event);
+      view.leave_event.connect (on_launcher_leave_event);
     }
 
     private void remove_view (LauncherView view)
     {
       // for now just remove the application quickly. at some point
       // i would assume we have to pretty fading though, thats trivial to do
-
+      debug ("removing view %s", view.get_name ());
       this.container.remove_actor (view);
+      view.enter_event.connect (on_launcher_enter_event);
+      view.leave_event.connect (on_launcher_leave_event);
     }
 
+    private bool on_launcher_enter_event (Clutter.Event event)
+    {
+      active_launcher = event.get_source () as LauncherView;
+      return false;
+    }
+
+    private bool on_launcher_leave_event (Clutter.Event event)
+    {
+      active_launcher = null;
+      return false;
+    }
   }
 }

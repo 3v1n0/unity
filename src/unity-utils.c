@@ -24,6 +24,9 @@
 
 #include <dbus/dbus-glib.h>
 
+#include <clutter/clutter.h>
+#include <clutter/x11/clutter-x11.h>
+
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <X11/Xatom.h>
@@ -103,4 +106,12 @@ utils_register_object_on_dbus (DBusGConnection *conn,
                           GObject         *object)
 {
   dbus_g_connection_register_g_object (conn, path, object);
+}
+
+Window
+utils_get_stage_window (ClutterStage *stage)
+{
+  g_return_val_if_fail (CLUTTER_IS_STAGE (stage), 0);
+
+  return clutter_x11_get_stage_window (stage);
 }

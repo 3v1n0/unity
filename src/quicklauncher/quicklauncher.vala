@@ -23,13 +23,13 @@ namespace Unity.Quicklauncher
   {
     private Shell shell;
 
-    private Manager manager;
+    public Manager manager;
 
     public View (Shell shell)
     {
       this.shell = shell;
     }
-
+    
     construct
     {
       this.manager = new Manager ();

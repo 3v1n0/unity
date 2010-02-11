@@ -16,7 +16,7 @@
  * Authored by Jay Taoko <jay.taoko@canonical.com>
  *
  */
- 
+
 namespace Unity.Places.SearchField
 {
 
@@ -63,17 +63,21 @@ namespace Unity.Places.SearchField
     public View ()
     {
       search_icon = new Ctk.Image.from_filename (22, SEARCH_ICON);
-      text_field = new Ctk.Text ("Search");
+      text_field = new Unity.Entry ("Search");
       rect_box = new CairoDrawing.RectangleBox ();
 
       this.add_actor (rect_box);
       this.add_actor (search_icon);
       this.add_actor (text_field);
 
-      text_field.set_reactive (true);
-      text_field.set_editable (true);
-      text_field.set_activatable (true);
       this.show_all ();
+
+      this.text_field.button_press_event.connect ((e) =>
+        {
+          Unity.global_shell.grab_keyboard (true, e.button.time);
+
+          return false;
+        });
     }
 
     construct

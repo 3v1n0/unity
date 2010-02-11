@@ -242,7 +242,18 @@ unity_mutter_switch_workspace (MutterPlugin *self,
                                gint          to,
                                MetaMotionDirection direction)
 {
-  ;
+  /* Hacky mc Hack Hack due to vala not letting us deal with this const */
+  const GList *w = *windows;
+  
+  GList *copy = NULL;
+  const GList *l;
+  for (l = w; l; l = l->next)
+    {
+      copy = g_list_prepend (copy, l->data);
+    }
+  copy = g_list_reverse (copy);
+  unity_plugin_switch_workspace (UNITY_MUTTER(self)->plugin, copy, from, to, direction);
+  g_list_free (copy);
 }
 
 static void

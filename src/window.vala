@@ -23,6 +23,7 @@ namespace Unity
 {
   public class UnderlayWindow : Gtk.Window, Shell
   {
+    public bool menus_swallow_events { get { return true; } }
     public bool is_popup { get; construct; }
     public int  popup_width { get; construct; }
     public int  popup_height { get; construct; }
@@ -40,6 +41,8 @@ namespace Unity
     private Places.Controller   controller;
     private Unity.Places.View   places;
 
+    private bool places_enabled = false;
+
     public void ensure_input_region ()
       {
         /* GOOD JOB!!! */
@@ -47,11 +50,6 @@ namespace Unity
       }
 
     private bool showing_places;
-
-    public void expose_windows (GLib.SList<Wnck.Window> windows)
-    {
-      ;
-    }
 
     public UnderlayWindow (bool popup, int width, int height)
     {
@@ -132,19 +130,25 @@ namespace Unity
       this.stage.set_color (stage_bg);
       this.stage.button_press_event.connect (this.on_stage_button_press);
 
+      this.places_enabled = Environment.get_variable ("UNITY_ENABLE_PLACES") != null;
+
       /* Components */
       this.background = new Background ();
       this.stage.add_actor (this.background);
       this.background.show ();
 
       this.quicklauncher = new Quicklauncher.View (this);
-
-      this.controller = new Places.Controller (this);
-      this.places = this.controller.get_view ();
       this.stage.add_actor (this.quicklauncher);
-      this.stage.add_actor (this.places);
-      this.places.opacity = 0;
-      this.showing_places = false;
+      this.quicklauncher.show ();
+
+      if (this.places_enabled)
+        {
+          this.controller = new Places.Controller (this);
+          this.places = this.controller.get_view ();
+          this.stage.add_actor (this.places);
+          this.places.opacity = 0;
+          this.showing_places = false;
+        }
 
       this.panel = new Panel.View (this);
       this.stage.add_actor (this.panel);
@@ -204,9 +208,11 @@ namespace Unity
       this.quicklauncher.set_position (this.workarea_size.left,
                                        this.workarea_size.top);
 
-       this.places.set_size (width,
-                             height);
-       this.places.set_position (0, 0);
+      if (this.places_enabled)
+        {
+          this.places.set_size (width, height);
+          this.places.set_position (0, 0);
+        }
 
        this.panel.set_size (width, 23);
        this.panel.set_position (0, 0);
@@ -265,6 +271,12 @@ namespace Unity
     /*
      * SHELL IMPLEMENTATION
      */
+
+    public void grab_keyboard (bool grab, uint32 timestamp)
+    {
+      /* Doesn't work with clutter-gtk */
+    }
+
     public Clutter.Stage get_stage ()
     {
       return this.stage;
@@ -277,6 +289,14 @@ namespace Unity
 
     public void show_unity ()
     {
+      if (this.places_enabled != true)
+        {
+          var screen = Wnck.Screen.get_default ();
+
+          screen.toggle_showing_desktop (!screen.get_showing_desktop ());
+          return;
+        }
+
       if (this.showing_places)
         {
           this.showing_places = false;
