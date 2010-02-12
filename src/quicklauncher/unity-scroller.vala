@@ -500,12 +500,14 @@ namespace Unity.Widgets
       if (Math.fabs (this.fling_velocity) < 1.0 &&
           (this.drag_pos < 0 || this.drag_pos > this.total_child_height - this.height))
         {
+          this.settle_position = get_aligned_settle_position ();
           this.phase = ScrollerPhase.SETTLING;
         }
 
       if (Math.fabs (this.fling_velocity) < 1.0)
         {
-          timeline.stop ();
+          this.settle_position = get_aligned_settle_position ();
+          this.phase = ScrollerPhase.SETTLING;
         }
     }
 
@@ -624,8 +626,6 @@ namespace Unity.Widgets
         {
           this.fling_velocity = 2.0f;
         }
-
-
       if ((release_event.time - this.last_mouse_event_time) > 120)
         {
           this.phase = ScrollerPhase.SETTLING;
@@ -703,16 +703,16 @@ namespace Unity.Widgets
       if (this.drag_pos < 0)
         {
           var distance = this.drag_pos;
-          vel_y *= 1.0f - (-distance / this.height);
+          vel_y *= 1.0f - ((-distance / this.height) * 2.0f);
         }
 
       if (this.drag_pos > this.total_child_height - this.height)
         {
           var distance = this.drag_pos - (this.total_child_height - this.height);
-          vel_y *= 1.0f - (distance / this.height);
+          vel_y *= 1.0f - ((distance / this.height) * 2.0f);
         }
 
-      uint delta = motionevent.time - this.last_mouse_event_time;// this.fling_delta;
+      uint delta = motionevent.time - this.last_mouse_event_time;
       this.last_mouse_event_time = motionevent.time;
       if (delta > 200)
         {
