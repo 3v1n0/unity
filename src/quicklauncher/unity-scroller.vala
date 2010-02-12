@@ -539,6 +539,7 @@ namespace Unity.Widgets
       /* attempts to integligently find hte correct settle position */
       // always align to the top item
       // always want a full scroller full of items
+      debug (@"drag pos: $drag_pos");
 
       if (this.drag_pos < 0)
         {
