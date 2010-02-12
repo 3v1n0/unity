@@ -60,22 +60,30 @@ namespace Unity.Quicklauncher.Models
 
     public string get_name ()
     {
-      if (this.name == "")
-      {
-        return this.app.name;
-      }
-      return this.name;
+      if (this.app.running)
+        {
+          return _("Open..");
+        }
+      else
+        {
+          return _("Close..");
+        }
     }
 
     public void activated ()
     {
-      try
-      {
-        this.app.launch ();
-      } catch (Error e)
-      {
-        warning (e.message);
-      }
+      if (this.app.running)
+        {
+          try {
+            this.app.launch ();
+          } catch (Error e) {
+            warning (e.message);
+          }
+        }
+      else
+        {
+          this.app.close ();
+        }
     }
   }
 
@@ -86,11 +94,11 @@ namespace Unity.Quicklauncher.Models
       get {
         if (this.app_model.is_sticky)
           {
-            return "Remove from Launcher";
+            return _("Remove from Launcher");
           }
         else
           {
-            return "Keep In Launcher";
+            return _("Keep In Launcher");
           }
       }
     }
@@ -188,7 +196,7 @@ namespace Unity.Quicklauncher.Models
       if (!this.is_sticky)
         {
           // we need something outside of this model to decide our priority
-          this._priority = -1000000.0f; 
+          this._priority = -1000000.0f;
           return;
         }
       // grab the current priority from gconf
@@ -204,12 +212,12 @@ namespace Unity.Quicklauncher.Models
         }
       this._priority = priority;
     }
-    
+
     private void on_app_running_changed ()
     {
       notify_active ();
     }
-    
+
     private void on_app_focus_changed ()
     {
       if (app.focused) {
@@ -217,7 +225,7 @@ namespace Unity.Quicklauncher.Models
       }
       notify_focused ();
     }
-    
+
     private void on_app_urgent_changed ()
     {
       this.urgent_changed ();
@@ -233,22 +241,22 @@ namespace Unity.Quicklauncher.Models
     {
       get { return this.app.running; }
     }
-    
+
     public bool is_focused
     {
       get { return this.app.focused; }
     }
-    
-    public bool is_urgent 
+
+    public bool is_urgent
     {
       get { return this.app.get_urgent (); }
     }
-    
+
     public Gdk.Pixbuf icon
     {
       get { return _icon; }
     }
-    
+
     public string name
     {
       get { return this.app.name; }
@@ -330,7 +338,6 @@ namespace Unity.Quicklauncher.Models
 
       var open_entry = new LibLauncherShortcut ();
       open_entry.app = this.app;
-      open_entry.name = "Open..";
       ret_list.add (open_entry);
 
       var pin_entry = new LauncherPinningShortcut (this);
@@ -369,7 +376,7 @@ namespace Unity.Quicklauncher.Models
     {
       this.app.close ();
     }
-    
+
     /**
      * gets the favorite uid for this desktop file
      */

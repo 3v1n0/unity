@@ -11,15 +11,13 @@ m4_define([unity_interface_age], [0])
 m4_define([unity_binary_age],
           [m4_eval(100 * unity_minor + unity_micro)])
 
-AC_INIT([unity],
-        [unity_version],
-        [https://launchpad.net/unity])
+AC_INIT([unity],[unity_version],[https://launchpad.net/unity])
 AC_COPYRIGHT([Copyright 2009 Canonical])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
-AC_PREREQ(2.59)
+AC_PREREQ(2.65)
 
-AM_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE(unity, unity_version)
 
 dnl Get version number into Autoconf
@@ -38,17 +36,34 @@ AM_PROG_VALAC([0.7.8])
 AS_IF([test -z "$VALAC"], [AC_MSG_ERROR(["No valac compiler found."])])
 AC_PROG_CC
 AM_PROG_CC_C_O
-AC_STDC_HEADERS
+AC_HEADER_STDC
 
-AC_PROG_LIBTOOL
+LT_INIT
 AC_CONFIG_MACRO_DIR([m4])
+
+dnl Gettext
+GETTEXT_PACKAGE="$PACKAGE"
+AC_SUBST(GETTEXT_PACKAGE)
+AC_SUBST([CONFIG_STATUS_DEPENDENCIES],['$(top_srcdir)/po/LINGUAS'])
+AC_DEFINE_UNQUOTED(GETTEXT_PACKAGE, "$GETTEXT_PACKAGE", [gettext domain])
+AM_GNU_GETTEXT([external])
+AM_GNU_GETTEXT_VERSION([0.17])
+IT_PROG_INTLTOOL([0.35.0])
+
+dnl Setup a few consts
+if test "x${prefix}" = "xNONE"; then
+  PREFIX="${ac_default_prefix}"
+else
+  PREFIX="${prefix}"
+fi
+
+AC_DEFINE_UNQUOTED(LOCALE_DIR, "${PREFIX}/${DATADIRNAME}/locale",[Locale directory])
 
 dnl Use strict compiler flags only on development releases
 m4_define([maintainer_flags_default],
           [m4_if(m4_eval(unity_minor % 2), [1], [yes], [no])])
 AC_ARG_ENABLE([maintainer-flags],
-              [AC_HELP_STRING([--enable-maintainer-flags=@<:@no/yes@:>:],
-                              [Use string compiler flags @<:@default=no@:>@])],
+              [AS_HELP_STRING([--enable-maintainer-flags=@<:@no/yes@:>:],[Use string compiler flags @<:@default=no@:>@])],
               [],
               [enable_maintainer_flags=maintainer_flags_default])
 MAINTAINER_CFLAGS=""
@@ -109,8 +124,7 @@ AM_CONDITIONAL([HAVE_LOCALINSTALL], [test "x$with_localinstall" = "xyes"])
 
 dnl Mutter support
 AC_ARG_ENABLE([mutter],
-              [AC_HELP_STRING([--enable-mutter=@<:@no/yes@:>@],
-                              [Enable compiling mutter plugin.])],
+              [AS_HELP_STRING([--enable-mutter=@<:@no/yes@:>@],[Enable compiling mutter plugin.])],
               [enable_mutter=$enableval],
               [enable_mutter=yes])
 AS_IF([test "x$enable_mutter" = "xyes"],
@@ -133,7 +147,7 @@ AC_SUBST(INDICATORDIR)
 AC_SUBST(INDICATORICONSDIR)
 
 dnl Create the Makefiles
-AC_OUTPUT([
+AC_CONFIG_FILES([
   Makefile
   data/Makefile
   libunity/Makefile
@@ -144,7 +158,9 @@ AC_OUTPUT([
   tests/Makefile
   tools/Makefile
   vapi/Makefile
+  po/Makefile.in
 ])
+AC_OUTPUT
 
 dnl Output the results
 AC_MSG_NOTICE([
