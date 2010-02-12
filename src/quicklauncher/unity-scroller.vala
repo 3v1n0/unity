@@ -166,8 +166,8 @@ namespace Unity.Widgets
 
       mypadding.left = 0.0f;
       mypadding.right = 0.0f;
-      mypadding.top = 6.0f;
-      mypadding.bottom = 6.0f;
+      mypadding.top = 3.0f;
+      mypadding.bottom = 3.0f;
 
       this.padding = mypadding;
 
