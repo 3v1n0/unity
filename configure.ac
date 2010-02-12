@@ -58,7 +58,6 @@ else
 fi
 
 AC_DEFINE_UNQUOTED(LOCALE_DIR, "${PREFIX}/${DATADIRNAME}/locale",[Locale directory])
-AC_DEFINE_UNQUOTED(PKGDATADIR, "${PREFIX}/${DATADIRNAME}/${PACKAGE}", [Package data directory])
 
 dnl Use strict compiler flags only on development releases
 m4_define([maintainer_flags_default],
