@@ -15,7 +15,7 @@ AC_INIT([unity],[unity_version],[https://launchpad.net/unity])
 AC_COPYRIGHT([Copyright 2009 Canonical])
 m4_ifdef([AM_SILENT_RULES],[AM_SILENT_RULES([yes])])
 
-AC_PREREQ(2.65)
+AC_PREREQ(2.59)
 
 AC_CONFIG_HEADERS([config.h])
 AM_INIT_AUTOMAKE(unity, unity_version)
