@@ -39,7 +39,7 @@ namespace Unity.Quicklauncher
   const uint MEDIUM_DELAY = 800;
   const uint LONG_DELAY = 1600;
 
-  public class LauncherView : Ctk.Bin, Unity.Drag.Model
+  public class LauncherView : Ctk.Actor, Unity.Drag.Model
   {
 
     public LauncherModel? model;
@@ -49,7 +49,6 @@ namespace Unity.Quicklauncher
     private Clutter.Texture focused_indicator;
     private Clutter.Texture running_indicator;
     private Gdk.Pixbuf honeycomb_mask;
-    private Clutter.Group container;
 
     private Gee.ArrayList<ShortcutItem> offline_shortcuts;
     private Gee.ArrayList<ShortcutItem> shortcut_actions;
@@ -138,16 +137,6 @@ namespace Unity.Quicklauncher
 
     construct
       {
-        /* !!FIXME!! - we need to allocate ourselfs instead of using the
-         * clutter group, or have a Ctk.Group, it makes sure that the
-         * bubbling out systems in ctk work
-         */
-        this.container = new Clutter.Group ();
-        add_actor (this.container);
-
-        this.icon = new Ctk.Image (46);
-        this.container.add_actor (this.icon);
-
         load_textures ();
 
         button_press_event.connect (this.on_pressed);
@@ -159,12 +148,107 @@ namespace Unity.Quicklauncher
         this.notify["reactive"].connect (this.notify_on_set_reactive);
 
         this.clicked.connect (this.on_clicked);
-        this.icon.do_queue_redraw ();
+        this.do_queue_redraw ();
 
         set_reactive (true);
         this.quicklist_controller = null;
-
+        var padding = this.padding;
+        padding.left = 2;
+        padding.right = 2;
+        this.padding = padding;
       }
+
+      public override void get_preferred_width (float for_height,
+                                                out float minimum_width,
+                                                out float natural_width)
+      {
+        natural_width = 0;
+        minimum_width = 0;
+        this.icon.get_preferred_width (for_height, out minimum_width, out natural_width);
+        float width = this.padding.left + this.padding.right
+                      + this.running_indicator.get_width ()
+                      + this.focused_indicator.get_width ();
+        natural_width += width;
+        minimum_width += width;
+      }
+
+      public override void get_preferred_height (float for_width,
+                                                 out float minimum_height,
+                                                 out float natural_height)
+      {
+        natural_height = 0;
+        minimum_height = 0;
+        this.icon.get_preferred_height (for_width, out minimum_height, out natural_height);
+        natural_height += this.padding.top + this.padding.bottom;
+        minimum_height += this.padding.top + this.padding.bottom;
+      }
+
+      public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags)
+      {
+        float x, y;
+        x = 0;
+        y = 0;
+        base.allocate (box, flags);
+
+        Clutter.ActorBox child_box = Clutter.ActorBox ();
+
+        //allocate the running indicator first
+        float width = this.running_indicator.get_width ();
+        float height = this.running_indicator.get_height ();
+        child_box.x1 = 0;
+        child_box.y1 = (box.get_height () - height) / 2.0f;
+        child_box.x2 = child_box.x1 + width;
+        child_box.y2 = child_box.y1 + height;
+        this.running_indicator.allocate (child_box, flags);
+        x += child_box.get_width ();
+        
+        //allocate the icon
+        width = this.icon.get_width ();
+        height = this.icon.get_height ();
+        child_box.x1 = (box.get_width () - width) / 2.0f;
+        child_box.y1 = y;
+        child_box.x2 = child_box.x1 + width;
+        child_box.y2 = child_box.y1 + height;
+        this.icon.allocate (child_box, flags);
+
+        //allocate the focused indicator
+        width = this.focused_indicator.get_width ();
+        height = this.focused_indicator.get_height ();
+        child_box.x2 = box.get_width ();
+        child_box.y2 = (box.get_height () / 2.0f) - (height / 2.0f);
+        child_box.x1 = child_box.x2 - width;
+        child_box.y1 = child_box.y2 + height;
+        this.focused_indicator.allocate (child_box, flags);
+      }
+
+    public override void pick (Clutter.Color color)
+    {
+      base.pick (color);
+      this.icon.paint ();
+    }
+
+    public override void paint ()
+    {
+      this.running_indicator.paint ();
+      this.focused_indicator.paint ();
+      this.icon.paint ();
+    }
+
+    public override void map ()
+    {
+      base.map ();
+      this.running_indicator.map ();
+      this.focused_indicator.map ();
+      this.icon.map ();
+    }
+
+    public override void unmap ()
+    {
+      base.unmap ();
+      this.running_indicator.map ();
+      this.focused_indicator.map ();
+      this.icon.map ();
+    }
 
     private void load_textures ()
     {
@@ -177,7 +261,6 @@ namespace Unity.Quicklauncher
           this.focused_indicator = new Clutter.Texture ();
           warning ("loading focused indicator failed, %s", e.message);
         }
-      this.container.add_actor (this.focused_indicator);
 
       try
         {
@@ -188,7 +271,8 @@ namespace Unity.Quicklauncher
           this.running_indicator = new Clutter.Texture ();
           warning ("loading running indicator failed, %s", e.message);
         }
-      this.container.add_actor (this.running_indicator);
+      this.focused_indicator.set_parent (this);
+      this.running_indicator.set_parent (this);
       this.focused_indicator.set_opacity (0);
       this.running_indicator.set_opacity (0);
 
@@ -202,24 +286,9 @@ namespace Unity.Quicklauncher
                    HONEYCOMB_MASK_FILE,
                    e.message);
         }
-
-      relayout ();
-    }
-
-    /**
-     * re-layouts the various indicators
-     */
-    private void relayout ()
-    {
-      float mid_point_y = this.container.height / 2.0f;
-      float focus_halfy = this.focused_indicator.height / 2.0f;
-      float focus_halfx = container.width + this.focused_indicator.width + 4;
-
-      this.focused_indicator.set_position(focus_halfx,
-                                          mid_point_y - focus_halfy);
-      this.running_indicator.set_position (0, mid_point_y - focus_halfy);
-
-      this.icon.set_position (6, 0);
+        
+        this.icon = new Ctk.Image (46);
+        this.icon.set_parent (this);
     }
 
     public new void notify_on_set_reactive ()
