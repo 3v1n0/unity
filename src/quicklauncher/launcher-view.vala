@@ -155,6 +155,8 @@ namespace Unity.Quicklauncher
         var padding = this.padding;
         padding.left = 2;
         padding.right = 2;
+        padding.top = 2.5f;
+        padding.bottom = 2.5f;
         this.padding = padding;
       }
 

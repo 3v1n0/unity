@@ -166,8 +166,8 @@ namespace Unity.Widgets
 
       mypadding.left = 0.0f;
       mypadding.right = 0.0f;
-      mypadding.top = 3.0f;
-      mypadding.bottom = 3.0f;
+      mypadding.top = 5.0f;
+      mypadding.bottom = 5.0f;
 
       this.padding = mypadding;
 
@@ -502,12 +502,12 @@ namespace Unity.Widgets
         {
           this.settle_position = get_aligned_settle_position ();
           this.phase = ScrollerPhase.SETTLING;
+          return;
         }
 
       if (Math.fabs (this.fling_velocity) < 1.0)
         {
-          this.settle_position = get_aligned_settle_position ();
-          this.phase = ScrollerPhase.SETTLING;
+          timeline.stop ();
         }
     }
 
