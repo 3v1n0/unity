@@ -60,7 +60,7 @@ namespace Unity.Quicklauncher.Models
 
     public string get_name ()
     {
-      if (this.app.running)
+      if (!this.app.running)
         {
           return _("Open..");
         }
@@ -72,7 +72,7 @@ namespace Unity.Quicklauncher.Models
 
     public void activated ()
     {
-      if (this.app.running)
+      if (!this.app.running)
         {
           try {
             this.app.launch ();
@@ -233,7 +233,6 @@ namespace Unity.Quicklauncher.Models
 
     private void on_app_opened (Wnck.Window window)
     {
-      this.activated ();
       this.request_attention ();
     }
 
@@ -362,6 +361,7 @@ namespace Unity.Quicklauncher.Models
           try
             {
               app.launch ();
+              this.activated ();
             }
           catch (GLib.Error e)
             {

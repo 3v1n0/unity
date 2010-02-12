@@ -201,7 +201,7 @@ namespace Unity.Quicklauncher
         child_box.y2 = child_box.y1 + height;
         this.running_indicator.allocate (child_box, flags);
         x += child_box.get_width ();
-        
+
         //allocate the icon
         width = this.icon.get_width ();
         height = this.icon.get_height ();
@@ -286,7 +286,7 @@ namespace Unity.Quicklauncher
                    HONEYCOMB_MASK_FILE,
                    e.message);
         }
-        
+
         this.icon = new Ctk.Image (46);
         this.icon.set_parent (this);
     }
@@ -434,7 +434,11 @@ namespace Unity.Quicklauncher
 
     private void on_activated ()
     {
-      this.is_starting = false;
+      // do glow here
+			if (!this.model.is_active)
+				{
+     			this.is_starting = true;
+				}
     }
 
     private void notify_on_icon ()
@@ -623,10 +627,6 @@ namespace Unity.Quicklauncher
         return;
       }
       this.model.activate ();
-			if (!this.model.is_active)
-				{
-     			this.is_starting = true;
-				}
     }
 
     private void on_request_remove ()
