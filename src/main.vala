@@ -83,6 +83,11 @@ public class Main
     Unity.Application    app;
     Unity.UnderlayWindow window;
     Unity.TimelineLogger.get_default(); // just inits the timer for logging
+
+    GLib.Intl.textdomain (Config.GETTEXT_PACKAGE);
+    GLib.Intl.bindtextdomain (Config.GETTEXT_PACKAGE, Config.LOCALE_DIR);
+    GLib.Intl.bind_textdomain_codeset (Config.GETTEXT_PACKAGE, "UTF-8");
+
     try
       {
         var opt_context = new OptionContext ("-- Unity");
@@ -100,8 +105,7 @@ public class Main
 
     if (show_version)
       {
-        /* FIXME: Add VERSION define */
-        print ("\nUnity %s\n", "0.1.0");
+        print ("\nUnity %s\n", Config.VERSION);
         return 0;
       }
     // attempt to get a boot logging filename
