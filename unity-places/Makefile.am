@@ -86,6 +86,4 @@ BUILT_SOURCES += \
 	unity-place-marshal.c \
 	unity-place-marshal.h
 
-EXTRA_DIST += unity-place-marshal.list
-
-
+EXTRA_DIST += unity-place-marshal.list unity-places.vapi
