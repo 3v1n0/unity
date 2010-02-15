@@ -833,6 +833,7 @@ namespace Unity.Widgets
     public override void allocate (Clutter.ActorBox box,
                                    Clutter.AllocationFlags flags)
     {
+      base.allocate (box, flags);
       if (this.order_changed)
         {
           this.children.sort ((CompareFunc)(this.sort_by_priority));
