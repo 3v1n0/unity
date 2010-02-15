@@ -67,7 +67,7 @@ namespace Unity.Quicklauncher
       this.model_map = new Gee.HashMap<LauncherModel, LauncherView> ();
 
       this.container = new Unity.Widgets.Scroller (Ctk.Orientation.VERTICAL,
-                                                   6);
+                                                   0);
       add_actor (container);
 
       build_favorites ();

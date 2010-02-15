@@ -60,22 +60,30 @@ namespace Unity.Quicklauncher.Models
 
     public string get_name ()
     {
-      if (this.name == "")
-      {
-        return this.app.name;
-      }
-      return this.name;
+      if (!this.app.running)
+        {
+          return _("Open..");
+        }
+      else
+        {
+          return _("Close..");
+        }
     }
 
     public void activated ()
     {
-      try
-      {
-        this.app.launch ();
-      } catch (Error e)
-      {
-        warning (e.message);
-      }
+      if (!this.app.running)
+        {
+          try {
+            this.app.launch ();
+          } catch (Error e) {
+            warning (e.message);
+          }
+        }
+      else
+        {
+          this.app.close ();
+        }
     }
   }
 
@@ -225,7 +233,6 @@ namespace Unity.Quicklauncher.Models
 
     private void on_app_opened (Wnck.Window window)
     {
-      this.activated ();
       this.request_attention ();
     }
 
@@ -330,7 +337,6 @@ namespace Unity.Quicklauncher.Models
 
       var open_entry = new LibLauncherShortcut ();
       open_entry.app = this.app;
-      open_entry.name = _("Open..");
       ret_list.add (open_entry);
 
       var pin_entry = new LauncherPinningShortcut (this);
@@ -355,6 +361,7 @@ namespace Unity.Quicklauncher.Models
           try
             {
               app.launch ();
+              this.activated ();
             }
           catch (GLib.Error e)
             {
@@ -417,7 +424,7 @@ namespace Unity.Quicklauncher.Models
         {
           try
             {
-              pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 50, 0);
+              pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 48, 0);
             }
           catch (Error e)
             {
@@ -446,7 +453,7 @@ namespace Unity.Quicklauncher.Models
               try
                 {
                   pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name,
-                                                             50, 50, true);
+                                                             48, 48, true);
                 }
               catch (Error e)
                 {
@@ -466,7 +473,7 @@ namespace Unity.Quicklauncher.Models
               try
                 {
                   pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name,
-                                                             50, 50, true);
+                                                             48, 48, true);
                 }
               catch (Error e)
                 {
@@ -486,7 +493,7 @@ namespace Unity.Quicklauncher.Models
           try
             {
               pixbuf = new Gdk.Pixbuf.from_file_at_scale (
-                    "/usr/share/pixmaps/" + icon_name, 50, 50, true);
+                    "/usr/share/pixmaps/" + icon_name, 48, 48, true);
             }
           catch (Error e)
             {
@@ -499,7 +506,7 @@ namespace Unity.Quicklauncher.Models
             return pixbuf;
         }
 
-      Gtk.IconInfo info = theme.lookup_icon(icon_name, 50, 0);
+      Gtk.IconInfo info = theme.lookup_icon(icon_name, 48, 0);
       if (info != null)
         {
           string filename = info.get_filename();
@@ -508,7 +515,7 @@ namespace Unity.Quicklauncher.Models
               try
                 {
                   pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
-                                                             50, 50, true);
+                                                             48, 48, true);
                 }
               catch (Error e)
                 {
@@ -524,14 +531,14 @@ namespace Unity.Quicklauncher.Models
 
       try
       {
-        pixbuf = theme.load_icon(icon_name, 50, Gtk.IconLookupFlags.FORCE_SVG);
+        pixbuf = theme.load_icon(icon_name, 48, Gtk.IconLookupFlags.FORCE_SVG);
       }
       catch (GLib.Error e)
       {
         warning ("could not load icon for %s - %s", icon_name, e.message);
         try
           {
-            pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 50, 0);
+            pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 48, 0);
           }
         catch (Error err)
           {

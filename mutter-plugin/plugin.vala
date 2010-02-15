@@ -306,7 +306,7 @@ namespace Unity
       if (sender != quicklauncher.manager.active_launcher || sender == null)
         return;
 
-      if (sender.model is ApplicationModel)
+      if (sender.model is ApplicationModel && sender.model.is_active)
         {
           expose_windows ((sender.model as ApplicationModel).windows);
         }

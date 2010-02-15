@@ -80,7 +80,7 @@ namespace Unity.Widgets
   {
     public bool order_changed;
     private const float DRAG_SAFE_ZONE = 200.0f;
-    
+
     private ScrollerPhase phase;
     private uint drag_sensitivity = 3;
     private float click_start_pos = 0;
@@ -166,8 +166,8 @@ namespace Unity.Widgets
 
       mypadding.left = 0.0f;
       mypadding.right = 0.0f;
-      mypadding.top = 6.0f;
-      mypadding.bottom = 6.0f;
+      mypadding.top = 5.0f;
+      mypadding.bottom = 5.0f;
 
       this.padding = mypadding;
 
@@ -203,7 +203,7 @@ namespace Unity.Widgets
     {
       // we aren't dragging outselfs so make sure we don't have button down set
       this.button_down = false;
-      
+
       string data = model.get_drag_data ();
       // check to see if we are "interested" in the data, we just assume we
       // are for now
@@ -300,7 +300,7 @@ namespace Unity.Widgets
           // we moved an item so its automatically pinned
           (retcont.child as LauncherView).model.is_sticky = true;
         }
-        
+
       var drag_controller = Drag.Controller.get_default ();
       drag_controller.drag_motion.disconnect (this.on_unity_drag_motion);
       drag_controller.drag_drop.disconnect (this.on_unity_drag_drop);
@@ -343,7 +343,7 @@ namespace Unity.Widgets
       foreach (ScrollerChild container in this.children)
       {
         // the last container we find is the one we want... i think
-        if (container.box.y1 + y < pos)
+        if (container.box.y1 + y < pos + this.padding.top)
           {
             retcont = container;
           }
@@ -440,7 +440,7 @@ namespace Unity.Widgets
         }
       }
     }
-    
+
     private float settle_position;
     private const float BOUNCE_STRENGTH = 0.3f;
     private void on_scroller_frame (Clutter.Timeline timeline, int msecs)
@@ -453,7 +453,7 @@ namespace Unity.Widgets
           this.stored_delta = delta;
           return;
         }
-        
+
       while (delta > 16)
         {
           delta -= 16;
@@ -483,7 +483,7 @@ namespace Unity.Widgets
         {
           timeline.stop ();
         }
-      
+
     }
 
     private void do_anim_fling (Clutter.Timeline timeline, int msecs)
@@ -500,7 +500,9 @@ namespace Unity.Widgets
       if (Math.fabs (this.fling_velocity) < 1.0 &&
           (this.drag_pos < 0 || this.drag_pos > this.total_child_height - this.height))
         {
+          this.settle_position = get_aligned_settle_position ();
           this.phase = ScrollerPhase.SETTLING;
+          return;
         }
 
       if (Math.fabs (this.fling_velocity) < 1.0)
@@ -545,7 +547,7 @@ namespace Unity.Widgets
           // we always position on the first child
           ScrollerChild container = this.children[0];
           Clutter.ActorBox box = container.box;
-          return box.y1 + this.drag_pos;
+          return box.y1 + this.drag_pos - this.padding.top;
         }
 
       if (this.drag_pos > this.total_child_height - height)
@@ -557,7 +559,7 @@ namespace Unity.Widgets
               if (box.y1 == 0.0 && box.y2 == 0.0) continue;
               if (box.y1 - box.get_height () > last_container.box.y1 - this.height)
                 {
-                  return box.y1 + this.drag_pos;
+                  return box.y1 + this.drag_pos - this.padding.top;
                 }
             }
         }
@@ -578,7 +580,7 @@ namespace Unity.Widgets
             }
         }
 
-      return 0.0f;
+      return - this.padding.top;
     }
 
     private bool on_button_click_event (Clutter.Event event)
@@ -624,15 +626,13 @@ namespace Unity.Widgets
         {
           this.fling_velocity = 2.0f;
         }
-      
-
       if ((release_event.time - this.last_mouse_event_time) > 120)
         {
           this.phase = ScrollerPhase.SETTLING;
           this.settle_position = get_aligned_settle_position ();
           this.fling_timeline.start ();
         }
-  
+
       else {
           this.phase = ScrollerPhase.FLUNG;
           this.fling_timeline.start ();
@@ -703,16 +703,16 @@ namespace Unity.Widgets
       if (this.drag_pos < 0)
         {
           var distance = this.drag_pos;
-          vel_y *= 1.0f - (-distance / this.height);
+          vel_y *= 1.0f - ((-distance / this.height) * 2.0f);
         }
 
       if (this.drag_pos > this.total_child_height - this.height)
         {
           var distance = this.drag_pos - (this.total_child_height - this.height);
-          vel_y *= 1.0f - (distance / this.height);
+          vel_y *= 1.0f - ((distance / this.height) * 2.0f);
         }
 
-      uint delta = motionevent.time - this.last_mouse_event_time;// this.fling_delta;
+      uint delta = motionevent.time - this.last_mouse_event_time;
       this.last_mouse_event_time = motionevent.time;
       if (delta > 200)
         {
@@ -838,7 +838,7 @@ namespace Unity.Widgets
           this.children.sort ((CompareFunc)(this.sort_by_priority));
           this.order_changed = false;
         }
-      
+
       this.height = box.y2 - box.y1;
       this.total_child_height = 0.0f;
       float x = padding.left;
@@ -870,11 +870,11 @@ namespace Unity.Widgets
 
           child_box.x1 = x;
           child_box.x2 = x + child.width + padding.right;
-          child_box.y1 = y;
-          child_box.y2 = y + min_height;
+          child_box.y1 = y + padding.top;
+          child_box.y2 = y + min_height + padding.top;
 
-          y += child.height + spacing;
-          this.total_child_height += child.height + spacing;
+          y += child_box.get_height () + spacing;
+          this.total_child_height += child_box.get_height () + spacing;
         }
         else
         {
@@ -938,7 +938,7 @@ namespace Unity.Widgets
       this.bgtex.allocate (child_box, flags);
       this.bgtex.set_clip (box.x1, drag_pos + box.get_height () * 2,
                            box.get_width (), box.get_height ());
-                      
+
       this.gradient.width = box.get_width();
       this.gradient.allocate (box, flags);
 
@@ -954,12 +954,12 @@ namespace Unity.Widgets
 
       child_box.y1 = box.y1 - 1;
       child_box.y2 = box.y1 + 9;
-      
+
       this.top_shadow.allocate (child_box, flags);
 
       child_box.y1 = box.get_height() - 32;
       child_box.y2 = box.get_height();
-      
+
       this.bottom_fade.allocate (child_box, flags);
 
     }
@@ -1035,7 +1035,6 @@ namespace Unity.Widgets
       ScrollerChild found_container = null;
       foreach (ScrollerChild container in this.children) {
         if (container.child == actor)
-        
         {
           found_container = container;
           break;
