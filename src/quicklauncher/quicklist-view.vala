@@ -649,6 +649,16 @@ namespace Unity.Quicklauncher
       cr.fill ();
     }
 
+    public override void
+    paint ()
+    {
+      // important run-time optimization!
+      if (!this.ql_background.is_flattened ())
+        this.ql_background.flatten ();
+
+      base.paint ();
+    }
+
     private override void
     allocate (Clutter.ActorBox        box,
               Clutter.AllocationFlags flags)
@@ -808,9 +818,6 @@ namespace Unity.Quicklauncher
       this.ql_background.add_layer (dotted_layer);
       this.ql_background.add_layer (highlight_layer);
       this.ql_background.add_layer (outline_layer);
-
-      // important run-time optimization!
-      this.ql_background.flatten ();
 
       this.set_background (this.ql_background);
     }
