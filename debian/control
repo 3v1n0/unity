@@ -26,7 +26,10 @@ Homepage: https://launchpad.net/ayatana
 
 Package: unity
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, mutter
+Depends: ${shlibs:Depends},
+         ${misc:Depends},
+         mutter,
+         unity-asset-pool
 Recommends: unity-place-applications,
             maximus,
             ubuntu-netbook-unity-default-settings
