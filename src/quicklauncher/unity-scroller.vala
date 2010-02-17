@@ -268,7 +268,19 @@ namespace Unity.Widgets
               float prev_priority = (previous_child.child as LauncherView).model.priority;
               float next_priority = (child_under.child as LauncherView).model.priority;
               float priority = next_priority - ((next_priority - prev_priority) / 2.0f);
+
               (retcont.child as LauncherView).model.priority = priority;
+
+              /* We want to animate the state of the child_under, so first
+               * let's see if it has actually moved
+               */
+              this.children.sort ((CompareFunc)(this.sort_by_priority));
+              var i = 0;
+              foreach (ScrollerChild c in this.children)
+                {
+                  (c.child as LauncherView).position = i;
+                  i++;
+                }
             }
           this.order_changed = true;
           this.queue_relayout ();
@@ -868,11 +880,16 @@ namespace Unity.Widgets
         child.get_preferred_height (box.get_width (), out min_height, out natural_height);
         if (orientation == Ctk.Orientation.VERTICAL)
         {
+          var pri = (child as LauncherView).anim_priority;
+          if ((child as LauncherView).anim_priority_going_up == false)
+            pri *= -1;
 
           child_box.x1 = x;
           child_box.x2 = x + child.width + padding.right;
-          child_box.y1 = y + padding.top;
-          child_box.y2 = y + min_height + padding.top;
+          child_box.y1 = (y + padding.top) + pri;
+          child_box.y2 = child_box.y1 + min_height;
+
+          //print ("%f\n", child_box.y1);
 
           y += child_box.get_height () + spacing;
           this.total_child_height += child_box.get_height () + spacing;

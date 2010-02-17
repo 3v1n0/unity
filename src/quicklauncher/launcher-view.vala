@@ -113,6 +113,30 @@ namespace Unity.Quicklauncher
     private Clutter.Animation running_anim;
     private Clutter.Animation focused_anim;
 
+    private float _anim_priority;
+    public float anim_priority {
+        get { return _anim_priority; }
+        set { _anim_priority = value; this.queue_relayout (); }
+      }
+    public bool anim_priority_going_up = false;
+
+    private int _position = 0;
+    public int position {
+        get { return _position; }
+        set
+          {
+            if (_position != value)
+              {
+                anim_priority_going_up = _position > value;
+                _position = value;
+
+                anim_priority = this.height;
+                animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 300,
+                         "anim-priority", 0.0f);
+              }
+          }
+      }
+
   /* constructors */
     public LauncherView (LauncherModel model)
       {
