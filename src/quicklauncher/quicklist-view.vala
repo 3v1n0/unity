@@ -455,7 +455,7 @@ namespace Unity.Quicklauncher
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (SHADOW_SIZE),
-                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
+                          anchor_y != 0.0f ? anchor_y + Ctk.em_to_pixel (SHADOW_SIZE/2): (float) h / 2.0f);
     }
 
     private void
@@ -651,7 +651,7 @@ namespace Unity.Quicklauncher
         red   = 255,
         green = 255,
         blue  = 255,
-        alpha = 255
+        alpha = (uint8) (255.0f * 1.0f)
       };
       Clutter.Color fill_color = Clutter.Color () {
         red   = 0,
@@ -663,13 +663,19 @@ namespace Unity.Quicklauncher
         red   = 0,
         green = 0,
         blue  = 0,
-        alpha = (uint8) (255.0f * 0.6f)
+        alpha = (uint8) (255.0f * 0.48f)
       };
       Clutter.Color highlight_color = Clutter.Color () {
         red   = 255,
         green = 255,
         blue  = 255,
-        alpha = 255
+        alpha = (uint8) (255.0f * 1.0f)
+      };
+      Clutter.Color dotted_color = Clutter.Color () {
+        red   = 255,
+        green = 255,
+        blue  = 255,
+        alpha = (uint8) (255.0f * 0.3f)
       };
 
       // before creating a new CtkLayerActor make sure we don't leak any memory
@@ -741,7 +747,7 @@ namespace Unity.Quicklauncher
 
       dotted_layer.set_mask_from_surface (fill_surf);
       dotted_layer.set_image_from_surface (dotted_surf);
-      dotted_layer.opacity = (uint8) (255.0f * 0.2f);
+      dotted_layer.set_color (dotted_color);
 
       highlight_layer.set_mask_from_surface (fill_surf);
       highlight_layer.set_image_from_surface (highlight_surf);
@@ -759,6 +765,7 @@ namespace Unity.Quicklauncher
       this.ql_background.add_layer (outline_layer);
 
       this.set_background (this.ql_background);
+      this.ql_background.set_opacity (255);
     }
     
     construct
