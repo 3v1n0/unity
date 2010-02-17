@@ -496,4 +496,6 @@ namespace Ctk {
 	public static void init_after ([CCode (array_length_pos = 0.9)] ref unowned string[] argv);
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static double pixel_to_em (int pixel_value);
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public static void surface_blur (Cairo.Surface surface, uint radius);
 }
