@@ -60,30 +60,12 @@ namespace Unity.Quicklauncher.Models
 
     public string get_name ()
     {
-      if (!this.app.running)
-        {
-          return _("Open..");
-        }
-      else
-        {
-          return _("Close..");
-        }
+      return _("Quit");
     }
 
     public void activated ()
     {
-      if (!this.app.running)
-        {
-          try {
-            this.app.launch ();
-          } catch (Error e) {
-            warning (e.message);
-          }
-        }
-      else
-        {
-          this.app.close ();
-        }
+      this.app.close ();
     }
   }
 
@@ -334,13 +316,14 @@ namespace Unity.Quicklauncher.Models
     public Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ()
     {
       Gee.ArrayList<ShortcutItem> ret_list = new Gee.ArrayList<ShortcutItem> ();
-
-      var open_entry = new LibLauncherShortcut ();
-      open_entry.app = this.app;
-      ret_list.add (open_entry);
-
       var pin_entry = new LauncherPinningShortcut (this);
       ret_list.add (pin_entry);
+
+      if (this.app.running) {
+        var open_entry = new LibLauncherShortcut ();
+        open_entry.app = this.app;
+        ret_list.add (open_entry);
+      }
 
       return ret_list;
     }
