@@ -270,19 +270,9 @@ namespace Unity.Widgets
               float priority = next_priority - ((next_priority - prev_priority) / 2.0f);
 
               (retcont.child as LauncherView).model.priority = priority;
-
-              /* We want to animate the state of the child_under, so first
-               * let's see if it has actually moved
-               */
-              this.children.sort ((CompareFunc)(this.sort_by_priority));
-              var i = 0;
-              foreach (ScrollerChild c in this.children)
-                {
-                  (c.child as LauncherView).position = i;
-                  i++;
-                }
             }
-          this.order_changed = true;
+
+          this.sort_children ();
           this.queue_relayout ();
         }
     }
@@ -361,6 +351,17 @@ namespace Unity.Widgets
           }
       }
       return retcont;
+    }
+
+    private void sort_children ()
+    {
+      this.children.sort ((CompareFunc)(this.sort_by_priority));
+      var i = 0;
+      foreach (ScrollerChild c in this.children)
+        {
+          (c.child as LauncherView).position = i;
+          i++;
+        }
     }
 
     private void load_textures ()
@@ -848,7 +849,7 @@ namespace Unity.Widgets
       base.allocate (box, flags);
       if (this.order_changed)
         {
-          this.children.sort ((CompareFunc)(this.sort_by_priority));
+          this.sort_children ();
           this.order_changed = false;
         }
 
