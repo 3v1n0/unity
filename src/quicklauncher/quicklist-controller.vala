@@ -105,7 +105,7 @@ namespace Unity.Quicklauncher
       float x;
       float y;
       this.menu.get_position (out x, out y);
-      this.menu.set_position (x - 10, y);
+      this.menu.set_position (x - (float) Ctk.em_to_pixel (1.5f), y);
     }
 
     public void show_label ()
