@@ -80,13 +80,6 @@ public class Main
 {
   public static int main (string[] args)
   {
-
-    var webappfetcher = new Unity.Webapp.WebiconFetcher ("http://apple.com/", "/home/gord/icon.svg");
-    debug ("before");
-    webappfetcher.fetch_webapp_data ();
-    debug ("after");
-
-
     Unity.Application    app;
     Unity.UnderlayWindow window;
     Unity.TimelineLogger.get_default(); // just inits the timer for logging
