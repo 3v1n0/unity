@@ -25,6 +25,7 @@ static const string fav_string = "rel=\"(icon|SHORTCUT ICON|shortcut icon|ICON)\
 static const string uri_match_string = "href=\"(?P<icon_uri>[^\"]*)\"";
 static const string tag_start_string = "<link[^>]*";
 static const string tag_end_string = "[^>]*/?>";
+static const string hostname_string = """(s)?http://.*/""";
 
 namespace Unity.Webapp
 {
@@ -101,6 +102,7 @@ namespace Unity.Webapp
   private Regex? primary_match_suffix = null;
   private Regex? secondary_match_prefix = null;
   private Regex? secondary_match_suffix = null;
+  private Regex? hostname_match = null;
 
   public class WebiconFetcher : Object
   {
@@ -143,6 +145,7 @@ namespace Unity.Webapp
             Unity.Webapp.primary_match_suffix = new Regex (primary_match_suffix, RegexCompileFlags.UNGREEDY);
             Unity.Webapp.secondary_match_prefix = new Regex (secondary_match_prefix, RegexCompileFlags.UNGREEDY);
             Unity.Webapp.secondary_match_suffix = new Regex (secondary_match_suffix, RegexCompileFlags.UNGREEDY);
+            Unity.Webapp.hostname_match = new Regex (hostname_string, RegexCompileFlags.UNGREEDY);
           } catch (Error e) {
             warning (e.message);
           }
@@ -171,6 +174,15 @@ namespace Unity.Webapp
           string html = (string)(data.data);
           // we have our html, try and get an icon from it
           this.icon_uris = this.extract_icon_from_html (html);
+          // try and extract a hostname
+          MatchInfo matchinfo;
+          var ismatch = hostname_match.match (this.uri, 0, out matchinfo);
+          if (ismatch)
+            {
+              string hostname = matchinfo.fetch (0);
+              this.icon_uris.offer (hostname + "/favicon.ico");
+              this.icon_uris.offer (hostname + "/favicon.png");
+            }
           this.attempt_fetch_icon ();
         }
 
