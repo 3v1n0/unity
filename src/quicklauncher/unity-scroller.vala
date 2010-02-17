@@ -1042,6 +1042,15 @@ namespace Unity.Widgets
 
       this.queue_relayout ();
       this.actor_added (actor);
+
+      bool mapped;
+      this.get ("mapped", out mapped);
+      if (mapped)
+        {
+          actor.opacity = 0;
+          actor.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 75,
+                         "opacity", 255);
+        }
     }
 
     public void remove (Clutter.Actor actor)
@@ -1049,26 +1058,33 @@ namespace Unity.Widgets
       this.remove_actor (actor);
     }
 
-    public void remove_actor (Clutter.Actor actor)
+    public void remove_actor (Clutter.Actor actor_)
     {
-      ScrollerChild found_container = null;
-      foreach (ScrollerChild container in this.children) {
-        if (container.child == actor)
+      var anim = actor_.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100,
+                                "opacity", 0);
+      anim.completed.connect ((a) =>
         {
-          found_container = container;
-          break;
-        }
-      }
-      if (found_container is ScrollerChild)
-      {
-        found_container.child = null;
-        this.children.remove (found_container);
-        actor.unparent ();
+          Clutter.Actor actor = a.get_object () as Clutter.Actor;
 
-        this.queue_relayout ();
-        this.actor_removed (actor);
-        actor.remove_clip ();
-      }
+          ScrollerChild found_container = null;
+          foreach (ScrollerChild container in this.children) {
+            if (container.child == actor)
+            {
+              found_container = container;
+              break;
+            }
+          }
+          if (found_container is ScrollerChild)
+          {
+            found_container.child = null;
+            this.children.remove (found_container);
+            actor.unparent ();
+
+            this.queue_relayout ();
+            this.actor_removed (actor);
+            actor.remove_clip ();
+          }
+        });
     }
 
     public void @foreach (Clutter.Callback callback, void* userdata)
