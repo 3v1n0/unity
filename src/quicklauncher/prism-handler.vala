@@ -40,17 +40,18 @@ Exec="prism" -webapp %s@unity.app
 Categories=GTK;Network;
 StartupWMClass=Prism
 StartupNotify=true
-Icon=/usr/share/pixmaps/prism.png
+Icon=%s
 """;
 
     public string url {get; construct;}
+    public string icon {get; construct;}
     public string name;
     public string id;
     string webapp_dir;
 
-    public Prism (string address)
+    public Prism (string address, string icon)
     {
-      Object (url:address);
+      Object (url:address, icon:icon);
     }
 
     construct
@@ -97,7 +98,7 @@ Icon=/usr/share/pixmaps/prism.png
     {
 
       string webapp_ini = webapp_ini_template.printf (id, name, url);
-      string webapp_desktop = webapp_desktop_template.printf (name, id);
+      string webapp_desktop = webapp_desktop_template.printf (name, id, this.icon);
 
       var webapp_directory = File.new_for_path (webapp_dir);
       try
@@ -160,6 +161,7 @@ Icon=/usr/share/pixmaps/prism.png
       // we are not a favorite and we need to be favorited!
       favorites.set_string (uid, "type", "application");
       favorites.set_string (uid, "desktop_file", desktop_path);
+      favorites.set_bool(uid, "enable_shadow", true);
       favorites.add_favorite (uid);
     }
 

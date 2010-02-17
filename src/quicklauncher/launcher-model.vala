@@ -29,6 +29,7 @@ namespace Unity.Quicklauncher.Models
     public abstract Gdk.Pixbuf icon {get;}
     public abstract bool is_sticky {get; set;}
     public abstract float priority {get; set;}
+    public abstract bool do_shadow {get;}
 
     public abstract string name {get;}
     public abstract string uid {get;}

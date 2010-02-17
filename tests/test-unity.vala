@@ -80,7 +80,7 @@ public class Main
     });
 
     Test.add_func ("/Unity/Quicklauncher/Prism", () => {
-      var webapp = new Quicklauncher.Prism ("http://www.google.com");
+      var webapp = new Quicklauncher.Prism ("http://www.google.com", "/tmp/icon.svg");
       assert (webapp is Quicklauncher.Prism);
       });
 

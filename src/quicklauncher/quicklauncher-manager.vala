@@ -30,6 +30,8 @@ namespace Unity.Quicklauncher
     private Launcher.Appman appman;
     private Launcher.Session session;
 
+    private Unity.Webapp.WebiconFetcher webicon_fetcher;
+
     // lazy init of gconf here :-) wait's until we need it
     private GConf.Client? gconf_client_;
     private GConf.Client? gconf_client {
@@ -226,15 +228,38 @@ namespace Unity.Quicklauncher
       if (test_url (clean_uri))
       {
         //we have a http url, webapp it
+        var icon_dirstring = Environment.get_home_dir () + "/.local/share/icons/";
+        var icon_directory = File.new_for_path (icon_dirstring);
+        try {
+          if (!icon_directory.query_exists (null))
+            {
+              icon_directory.make_directory_with_parents (null);
+            }
+        } catch (Error e) {
+          // do nothing, errors are fine :)
+        }
+        var split_url = clean_uri.split ("://", 2);
+        var name = split_url[1];
+        // gotta sanitze our name
+        try {
+          var regex = new Regex ("(/)");
+          name = regex.replace (name, -1, 0, "-");
+        } catch (RegexError e) {
+          warning ("%s", e.message);
+        }
+
+        this.webicon_fetcher = new Unity.Webapp.WebiconFetcher (clean_uri, icon_dirstring + name + ".svg");
+        this.webicon_fetcher.fetch_webapp_data ();
+
         string webapp_device = this.get_webapp_device ();
         switch (webapp_device) {
           case "prism":
-            var webapp = new Prism (clean_uri);
+            var webapp = new Prism (clean_uri, icon_dirstring + name + ".svg");
             webapp.add_to_favorites ();
             break;
 
           case "chromium":
-            var webapp = new ChromiumWebApp (clean_uri);
+            var webapp = new ChromiumWebApp (clean_uri, icon_dirstring + name + ".svg");
             webapp.add_to_favorites ();
             break;
 
