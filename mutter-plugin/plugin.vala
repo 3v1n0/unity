@@ -762,7 +762,7 @@ namespace Unity
 
     public void map (Mutter.Window window)
     {
-      maximus.process_window (window);
+      this.maximus.process_window (window);
       this.window_mapped (this, window);
     }
 

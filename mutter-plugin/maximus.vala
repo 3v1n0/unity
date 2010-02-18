@@ -55,50 +55,33 @@ namespace Unity
     {
     }
     
-    bool window_is_excluded (Wnck.Window window)
+    bool window_is_excluded (Mutter.Window window)
     {
-      Wnck.WindowType type = window.get_window_type ();
+      Mutter.MetaCompWindowType type = window.get_window_type ();
       
-      if (type != Wnck.WindowType.NORMAL)
+      if (type != Mutter.MetaCompWindowType.NORMAL)
         return true;
       
-      if (window.is_fullscreen ())
+      unowned Mutter.MetaWindow meta = window.get_meta_window ();
+      
+      if (Mutter.MetaWindow.is_maximized (meta) ||
+          !Mutter.MetaWindow.allows_resize (meta))
         return true;
       
-      Wnck.WindowActions actions = window.get_actions ();
-     
-      if (!(((actions & Wnck.WindowActions.RESIZE) == Wnck.WindowActions.RESIZE) && 
-            ((actions & Wnck.WindowActions.MAXIMIZE_HORIZONTALLY) == Wnck.WindowActions.MAXIMIZE_HORIZONTALLY) && 
-            ((actions & Wnck.WindowActions.MAXIMIZE_VERTICALLY) == Wnck.WindowActions.MAXIMIZE_VERTICALLY) && 
-            ((actions & Wnck.WindowActions.MAXIMIZE) == Wnck.WindowActions.MAXIMIZE)))
-        {
+      unowned string res_class = Mutter.MetaWindow.get_wm_class (meta);
+      foreach (string s in default_exclude_classes)
+        if (res_class.contains (s))
           return true;
-        }
-      
-      unowned Wnck.ClassGroup group = window.get_class_group ();
-      
-      if (group is Wnck.ClassGroup)
-        {
-          unowned string name = group.get_name ();
-          unowned string res_class = group.get_res_class ();
-          foreach (string s in default_exclude_classes)
-            if (name.contains (s) || res_class.contains (s))
-              return true;
-        }
       
       return false;
     }
     
     public bool process_window (Mutter.Window window)
     {
-      ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
-      
-      Wnck.Window wnck_window = Wnck.Window.get (xid);
-      
-      if (!(wnck_window is Wnck.Window) || window_is_excluded (wnck_window))
+      if (window_is_excluded (window))
         return true;
       
-      wnck_window.maximize ();
+      Mutter.MetaWindow.maximize (window.get_meta_window (), Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
       
       return true;
     }
