@@ -134,10 +134,10 @@ namespace Unity.Panel
 
       width = box.x2 - box.x1;
 
-      this.set_clip (0, 0, width, box.y2 - box.y1);
+      //this.set_clip (0, 0, width, box.y2 - box.y1);
 
       /* First the background */
-      child_box.y2 += 4.0f;
+      child_box.y2 += 6.0f;
       this.rect.allocate (child_box, flags);
 
       /* Home button */
