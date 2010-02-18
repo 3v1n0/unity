@@ -71,7 +71,8 @@ namespace Unity.Panel
       this.entry_background.set_parent (this);
       this.entry_background.show ();
 
-      this.entry = new Unity.Entry ("Search");
+      this.entry = new Unity.Entry ("");
+      this.entry.static_text = (_("Search"));
       this.entry.set_parent (this);
       this.entry.show ();
       this.entry.activate.connect (this.on_entry_activated);

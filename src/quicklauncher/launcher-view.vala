@@ -211,7 +211,7 @@ namespace Unity.Quicklauncher
         //allocate the focused indicator
         width = this.focused_indicator.get_width ();
         height = this.focused_indicator.get_height ();
-        child_box.x2 = box.get_width () - this.padding.right;
+        child_box.x2 = box.get_width () + this.padding.right;
         child_box.y2 = (box.get_height () / 2.0f) - (height / 2.0f);
         child_box.x1 = child_box.x2 - width;
         child_box.y1 = child_box.y2 + height;
