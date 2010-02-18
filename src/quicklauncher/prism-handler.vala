@@ -151,7 +151,7 @@ Icon=%s
       string desktop_path = webapp_dir + "/%s.desktop".printf (name);
       uid = "webapp-" + Path.get_basename (desktop_path);
       try {
-        var regex = new Regex ("""\+""");
+        var regex = new Regex ("""(\+|\?|\=)""");
         uid = regex.replace (uid, -1, 0, "");
       } catch (Error e)
       {

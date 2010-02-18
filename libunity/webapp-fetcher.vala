@@ -117,6 +117,7 @@ namespace Unity.Webapp
     private bool html_phase = false;
     private bool icon_phase = false;
 
+
     private Gee.PriorityQueue<string> icon_uris;
 
     /* public signals */
@@ -149,9 +150,8 @@ namespace Unity.Webapp
           } catch (Error e) {
             warning (e.message);
           }
-      }
-
-
+        }
+      this.icon_uris = new Gee.PriorityQueue<string> ();
     }
 
     public void fetch_webapp_data ()
@@ -172,17 +172,32 @@ namespace Unity.Webapp
           //we just completed getting our html
           this.html_phase = false;
           string html = (string)(data.data);
-          // we have our html, try and get an icon from it
-          this.icon_uris = this.extract_icon_from_html (html);
-          // try and extract a hostname
           MatchInfo matchinfo;
+
+          // try and extract a hostname
           var ismatch = hostname_match.match (this.uri, 0, out matchinfo);
-          if (ismatch)
+          string hostname = "";
+          if (ismatch) { hostname = matchinfo.fetch (0); }
+
+          // we have our html, try and get an icon from it
+          this.icon_uris.offer (hostname + "/ubuntu-launcher.png");
+          var primary_icons = this.extract_icon_from_html (html, true);
+          foreach (string uri in primary_icons)
             {
-              string hostname = matchinfo.fetch (0);
-              this.icon_uris.offer (hostname + "/favicon.ico");
-              this.icon_uris.offer (hostname + "/favicon.png");
+              this.icon_uris.offer (uri);
             }
+          this.icon_uris.offer (hostname + "/apple-touch-icon.png");
+
+          var secondary_icons = this.extract_icon_from_html (html, false);
+          foreach (string uri in secondary_icons)
+            {
+              this.icon_uris.offer (uri);
+            }
+          this.icon_uris.offer (hostname + "/favicon.ico");
+          this.icon_uris.offer (hostname + "/favicon.png");
+
+
+
           this.attempt_fetch_icon ();
         }
 
@@ -236,12 +251,20 @@ namespace Unity.Webapp
       this.fetcher.fetch_data ();
     }
 
-    private Gee.PriorityQueue<string> extract_icon_from_html (string html)
+    private Gee.PriorityQueue<string> extract_icon_from_html (string html, bool preferred)
     {
       var return_uris = new Gee.PriorityQueue<string> ();
       MatchInfo matchinfo;
-      Regex[] regex_array = {Unity.Webapp.primary_match_prefix, Unity.Webapp.primary_match_suffix,
-                             Unity.Webapp.secondary_match_prefix, Unity.Webapp.secondary_match_suffix};
+      Regex[] regex_array;
+      if (preferred)
+        {
+          regex_array = {Unity.Webapp.primary_match_prefix, Unity.Webapp.primary_match_suffix};
+        }
+      else
+        {
+          regex_array = {Unity.Webapp.secondary_match_prefix, Unity.Webapp.secondary_match_suffix};
+        }
+
       foreach (Regex regex in regex_array)
       {
         if (regex.match (html, 0, out matchinfo))
