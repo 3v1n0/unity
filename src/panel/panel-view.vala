@@ -21,6 +21,8 @@
 namespace Unity.Panel
 {
   static const int PANEL_HEIGHT = 24;
+  static const string SEARCH_TEMPLATE = "xdg-open http://uk.search.yahoo.com/search?p=%s&fr=ubuntu&ei=UTF-8";
+
 
   public class View : Ctk.Actor
   {
@@ -71,23 +73,44 @@ namespace Unity.Panel
       this.entry = new Unity.Entry ("Search");
       this.entry.set_parent (this);
       this.entry.show ();
-      this.entry.activate.connect (() =>
-        {
-          var text = Uri.escape_string (this.entry.text, "", true);
-
-          var command = "xdg-open http://www.google.com/search?ie=UTF-8&q=%s".printf (text);
-
-          try
-            {
-              Process.spawn_command_line_async (command);
-            }
-          catch (Error e)
-            {
-              warning ("Unable to search for '$text': %s", e.message);
-            }
-        });
+      this.entry.activate.connect (this.on_entry_activated);
 
       END_FUNCTION ();
+    }
+
+    private void on_entry_activated ()
+    {
+      string template = "";
+
+      var client = GConf.Client.get_default ();
+      try
+        {
+          template = client.get_string ("/apps/unity/panel/search_template");
+
+          if (template == "" || template == null)
+            template = SEARCH_TEMPLATE;
+
+          print ("print: %s\n", template);
+        }
+      catch (Error e)
+        {
+          template = SEARCH_TEMPLATE;
+        }
+
+      print (@"$template");
+      var command=template.replace ("%s",
+                                Uri.escape_string (this.entry.text, "", true));
+
+      try
+        {
+          Process.spawn_command_line_async (command);
+        }
+      catch (Error e)
+        {
+          warning ("Unable to search for '%s': %s",
+                   this.entry.text,
+                   e.message);
+        }
     }
 
     private override void allocate (Clutter.ActorBox        box,
