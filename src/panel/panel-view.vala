@@ -89,15 +89,12 @@ namespace Unity.Panel
 
           if (template == "" || template == null)
             template = SEARCH_TEMPLATE;
-
-          print ("print: %s\n", template);
         }
       catch (Error e)
         {
           template = SEARCH_TEMPLATE;
         }
 
-      print (@"$template");
       var command=template.replace ("%s",
                                 Uri.escape_string (this.entry.text, "", true));
 
