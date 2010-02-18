@@ -56,6 +56,7 @@ namespace Unity.Quicklauncher
     private QuicklistController? quicklist_controller;
 
     private Ctk.EffectGlow effect_icon_glow;
+    private Ctk.EffectDropShadow effect_drop_shadow;
 
     /* internal view logic datatypes */
     private uint32 last_pressed_time;
@@ -164,6 +165,13 @@ namespace Unity.Quicklauncher
         this.set_name (model.uid);
 
         this.request_remove.connect (this.on_request_remove);
+        if (this.model.do_shadow)
+          {
+            this.effect_drop_shadow = new Ctk.EffectDropShadow (5.0f, 0, 2);
+            effect_drop_shadow.set_opacity (0.4f);
+            this.effect_drop_shadow.set_margin (5);
+            this.icon.add_effect (effect_drop_shadow);
+          }
       }
 
     construct

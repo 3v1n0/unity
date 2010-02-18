@@ -113,10 +113,14 @@ namespace Unity.Quicklauncher.Models
     private Launcher.Appman manager;
     private string desktop_uri;
     private bool queued_save_priority;
+    private bool _do_shadow = false;
     private float _priority;
     public float priority {
       get { return _priority; }
       set { _priority = value; this.do_save_priority ();}
+    }
+    public bool do_shadow {
+      get { return this._do_shadow; }
     }
 
     public string uid {
@@ -146,6 +150,13 @@ namespace Unity.Quicklauncher.Models
       this.queued_save_priority = false;
       this._is_sticky = (get_fav_uid () != "");
       this.grab_priority ();
+
+      var favorites = Launcher.Favorites.get_default ();
+      string uid = get_fav_uid ();
+      if (uid != "")
+        {
+          this._do_shadow = favorites.get_bool (uid, "enable_shadow");
+        }
     }
 
     construct
