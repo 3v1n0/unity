@@ -3,6 +3,8 @@ unity (0.1.16-0ubuntu1) UNRELEASED; urgency=low
   * New upstream release.
   * debian/control:
     - unity now depends on unity-asset-pool
+    - bump libclutk-dev and liblauncher-dev build-dep
+    - add intltool build-dep
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 18 Feb 2010 19:15:38 +0100
 
