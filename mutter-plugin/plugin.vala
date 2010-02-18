@@ -286,6 +286,7 @@ namespace Unity
 
     private void on_launcher_changed_event (LauncherView? last, LauncherView? current)
     {
+      debug ("%p %p\n", last, current);
       if (last != null)
         {
           last.menu_opened.disconnect (on_launcher_menu_opened);
@@ -303,11 +304,14 @@ namespace Unity
 
     private void on_launcher_menu_opened (LauncherView sender)
     {
+      debug ("1");
       if (sender != quicklauncher.manager.active_launcher || sender == null)
         return;
 
+      debug ("2");
       if (sender.model is ApplicationModel && sender.model.is_active)
         {
+          debug ("3");
           expose_windows ((sender.model as ApplicationModel).windows);
         }
     }
@@ -427,6 +431,12 @@ namespace Unity
 
     public void show_window_picker ()
     {
+      if (this.expose_showing == true)
+        {
+          this.dexpose_windows ();
+          return;
+        }
+
       GLib.SList <Wnck.Window> windows = null;
 
       foreach (Wnck.Window w in Wnck.Screen.get_default ().get_windows ())

@@ -495,7 +495,7 @@ namespace Unity.Quicklauncher
 
       this.quicklist_controller.show_label ();
 
-      return true;
+      return false;
     }
 
     private bool on_launch_timeout ()
