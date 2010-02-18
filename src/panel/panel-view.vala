@@ -48,8 +48,6 @@ namespace Unity.Panel
     {
       START_FUNCTION ();
 
-      if (true){
-
       this.rect = new ThemeImage ("panel_background");
       this.rect.set_repeat (true, false);
       this.rect.set_parent (this);
@@ -69,7 +67,6 @@ namespace Unity.Panel
       this.home.show ();
       this.home.clicked.connect (this.on_home_clicked);
 
-
       this.entry_background = new Unity.Places.CairoDrawing.EntryBackground ();
       this.entry_background.set_parent (this);
       this.entry_background.show ();
@@ -79,7 +76,6 @@ namespace Unity.Panel
       this.entry.set_parent (this);
       this.entry.show ();
       this.entry.activate.connect (this.on_entry_activated);
-
 
       END_FUNCTION ();
     }
@@ -126,7 +122,6 @@ namespace Unity.Panel
     {
       Clutter.ActorBox child_box = { 0, 0, box.x2 - box.x1, box.y2 - box.y1 };
       float            width;
-      float            child_height;
       float            child_width;
       float            i_width;
 
@@ -141,35 +136,17 @@ namespace Unity.Panel
       this.rect.allocate (child_box, flags);
 
       /* Home button */
-<<<<<<< TREE
       child_box.x1 = 0;
       child_box.x2 = 60;
       child_box.y1 = 0;
       child_box.y2 = PANEL_HEIGHT;
-=======
-      this.home.get_preferred_size (out child_width,
-                                    out child_height,
-                                    out child_width,
-                                    out child_height);
-      child_box.x1 = Math.floorf ((58/2.0f) - (child_width/2.0f));
-      child_box.x2 = child_box.x1 + child_width;
-      child_box.y1 = Math.floorf ((PANEL_HEIGHT/2.0f) - (child_height/2.0f));
-      child_box.y2 = child_box.y1 + child_height;
->>>>>>> MERGE-SOURCE
       this.home.allocate (child_box, flags);
 
       /* Entry */
-<<<<<<< TREE
       child_box.x1 = Math.floorf (child_box.x2 + 12);
       child_box.x2 = Math.floorf (child_box.x1 + 150); /* Random width */
       child_box.y1 = Math.floorf (2);
       child_box.y2 = Math.floorf (PANEL_HEIGHT);
-=======
-      child_box.x1 = child_box.x2 + 58;
-      child_box.x2 = child_box.x1 + 150; /* Random width */
-      child_box.y1 = 0;
-      child_box.y2 = PANEL_HEIGHT;
->>>>>>> MERGE-SOURCE
 
       if ((this.entry_background.Width != (int)(child_box.x2 - child_box.x1)) && (this.entry_background.height != (int)(child_box.y2 - child_box.y1-2)))
       {

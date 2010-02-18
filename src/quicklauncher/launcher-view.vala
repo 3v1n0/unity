@@ -280,13 +280,8 @@ namespace Unity.Quicklauncher
 
     private void load_textures ()
     {
-<<<<<<< TREE
       this.focused_indicator = new ThemeImage ("application-selected");
       this.running_indicator = new ThemeImage ("application-running");
-=======
-      this.focused_indicator = new ThemeImage ("selected");
-      this.running_indicator = new ThemeImage ("active");
->>>>>>> MERGE-SOURCE
 
       this.focused_indicator.set_parent (this);
       this.running_indicator.set_parent (this);
