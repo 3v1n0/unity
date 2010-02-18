@@ -5,8 +5,10 @@ unity (0.1.16-0ubuntu1) UNRELEASED; urgency=low
     - unity now depends on unity-asset-pool
     - bump libclutk-dev and liblauncher-dev build-dep
     - add intltool build-dep
+  * debian/rules:
+    - remove -Wall from CFLAGS, FTFBS due to unused reference
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 18 Feb 2010 19:15:38 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 18 Feb 2010 19:52:35 +0100
 
 unity (0.1.14-0ubuntu1) lucid; urgency=low
 

@@ -4,6 +4,8 @@ include /usr/share/cdbs/1/rules/debhelper.mk
 include /usr/share/cdbs/1/rules/simple-patchsys.mk
 include /usr/share/cdbs/1/class/autotools.mk
 
+CFLAGS=$(shell echo $$CFLAGS | sed -e 's/\-Wall//')
+
 DEB_DH_MAKESHLIBS_ARGS = -Xusr/lib/mutter/plugins/
 
 # List any files which are not installed
