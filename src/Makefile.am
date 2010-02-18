@@ -24,6 +24,7 @@ libunity_static_la_CPPFLAGS = \
   -DPKGDATADIR=\"$(PKGDATADIR)\" \
   -DINDICATORDIR=\""$(INDICATORDIR)"\" \
   -DINDICATORICONSDIR=\""$(INDICATORICONSDIR)"\" \
+  -DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\" \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS) \
   -I$(top_srcdir)/libunity/ \
@@ -41,6 +42,7 @@ libunity_static_la_VALAFLAGS = \
   --pkg clutk-0.3 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
+  --pkg config \
   --pkg dbus-glib-1 \
   --pkg cogl-1.0 \
   --pkg dbus-glib-1 \
@@ -134,6 +136,7 @@ libunity_static_la.vala.stamp $(libunity_static_la_APIFILES): $(libunity_static_
 unity_CPPFLAGS = \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS) \
+  -DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\" \
   -I$(top_srcdir)/libunity/
 
 unity_VALAFLAGS = \
@@ -146,6 +149,7 @@ unity_VALAFLAGS = \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg cogl-1.0 \
+  --pkg config \
   --pkg dbus-glib-1 \
   --pkg dbusmodel \
   --pkg gtk+-2.0 \

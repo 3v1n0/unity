@@ -20,28 +20,58 @@
 
 namespace Unity.Panel
 {
-  public class HomeButton : Ctk.Image
+  public class HomeButton : Ctk.Bin
   {
     public Shell shell { get; construct; }
+    public ThemeImage image;
+
+    public signal void clicked (uint32 time_);
 
     public HomeButton (Shell shell)
     {
-      Object (size:22,
-              filename:PKGDATADIR + "/bfb.png",
-              reactive:true,
+      Object (reactive:true,
               shell:shell);
     }
 
     construct
     {
+      this.image = new ThemeImage ("distributor-logo");
+      this.add_actor (this.image);
+      this.image.show ();
+
       this.button_release_event.connect (this.on_button_release);
+    }
+
+    private override void allocate (Clutter.ActorBox        box,
+                                    Clutter.AllocationFlags flags)
+    {
+      float cwidth, cheight;
+      Ctk.Padding pad = { 0 };
+
+      this.image.get_preferred_size (out cwidth, out cheight,
+                                     out cwidth, out cheight);
+
+      /* Just in case the loading is slow */
+      if (width < 1)
+        cwidth = 19;
+      if (height < 1)
+        cheight = 19;
+
+      pad.left = (box.x2 - box.x1 - cwidth) / 2.0f;
+      pad.right = pad.left;
+      pad.top = (box.y2 - box.y1 - cheight) / 2.0f;
+      pad.bottom = pad.top;
+
+      this.padding = pad;
+
+      base.allocate (box, flags);
     }
 
     private bool on_button_release (Clutter.Event event)
     {
-      shell.show_unity ();
+      this.clicked (event.button.time);
 
-      return false;
+      return true;
     }
   }
 }

@@ -223,11 +223,13 @@ namespace Ctk {
 		public void set_enabled (bool enabled);
 		public void set_height (uint height);
 		public void set_image_from_file (string filename);
+		public void set_image_from_id (uint id);
 		public void set_image_from_pixbuf (Gdk.Pixbuf pixbuf);
 		public void set_image_from_surface (Cairo.Surface surface);
 		public void set_image_pixbuf (Gdk.Pixbuf pixbuf);
 		public void set_image_repeat_mode (Ctk.LayerRepeatMode repeat);
 		public void set_mask_from_file (string filename);
+		public void set_mask_from_id (uint id);
 		public void set_mask_from_pixbuf (Gdk.Pixbuf pixbuf);
 		public void set_mask_from_surface (Cairo.Surface surface);
 		public void set_mask_pixbuf (Gdk.Pixbuf pixbuf);
@@ -276,15 +278,17 @@ namespace Ctk {
 		public void fadeout_and_destroy ();
 		public unowned Ctk.Actor get_attached_actor ();
 		public unowned Clutter.Actor get_background ();
+		public uint get_framebuffer_background ();
 		public int get_num_items ();
 		public int get_spacing ();
 		public void prepend (Clutter.Actor item, bool is_special);
+		public void refresh_background_texture ();
 		public void remove_all ();
 		public void set_background (Clutter.Actor background);
 		public void set_color (Clutter.Color color);
 		public void set_detect_clicks (bool value);
-		public void set_swallow_clicks (bool value);
 		public void set_spacing (int spacing);
+		public void set_swallow_clicks (bool value);
 		[CCode (has_construct_function = false)]
 		public Menu.with_background (Clutter.Actor background);
 		public Clutter.Actor background { get; set; }
@@ -496,4 +500,6 @@ namespace Ctk {
 	public static void init_after ([CCode (array_length_pos = 0.9)] ref unowned string[] argv);
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static double pixel_to_em (int pixel_value);
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public static void surface_blur (Cairo.Surface surface, uint radius);
 }

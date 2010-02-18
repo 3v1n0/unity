@@ -67,6 +67,9 @@ struct _UnityQuicklauncherModelsLauncherModelIface {
 	void (*set_is_sticky) (UnityQuicklauncherModelsLauncherModel* self, gboolean value);
 	float (*get_priority) (UnityQuicklauncherModelsLauncherModel* self);
 	void (*set_priority) (UnityQuicklauncherModelsLauncherModel* self, float value);
+	gboolean (*get_readonly) (UnityQuicklauncherModelsLauncherModel* self);
+	gboolean (*get_is_fixed) (UnityQuicklauncherModelsLauncherModel* self);
+	gboolean (*get_do_shadow) (UnityQuicklauncherModelsLauncherModel* self);
 	const char* (*get_name) (UnityQuicklauncherModelsLauncherModel* self);
 	const char* (*get_uid) (UnityQuicklauncherModelsLauncherModel* self);
 };
@@ -87,6 +90,9 @@ gboolean unity_quicklauncher_models_launcher_model_get_is_sticky (UnityQuicklaun
 void unity_quicklauncher_models_launcher_model_set_is_sticky (UnityQuicklauncherModelsLauncherModel* self, gboolean value);
 float unity_quicklauncher_models_launcher_model_get_priority (UnityQuicklauncherModelsLauncherModel* self);
 void unity_quicklauncher_models_launcher_model_set_priority (UnityQuicklauncherModelsLauncherModel* self, float value);
+gboolean unity_quicklauncher_models_launcher_model_get_readonly (UnityQuicklauncherModelsLauncherModel* self);
+gboolean unity_quicklauncher_models_launcher_model_get_is_fixed (UnityQuicklauncherModelsLauncherModel* self);
+gboolean unity_quicklauncher_models_launcher_model_get_do_shadow (UnityQuicklauncherModelsLauncherModel* self);
 const char* unity_quicklauncher_models_launcher_model_get_name (UnityQuicklauncherModelsLauncherModel* self);
 const char* unity_quicklauncher_models_launcher_model_get_uid (UnityQuicklauncherModelsLauncherModel* self);
 char* unity_quicklauncher_models_shortcut_item_get_name (UnityQuicklauncherModelsShortcutItem* self);
@@ -94,35 +100,35 @@ void unity_quicklauncher_models_shortcut_item_activated (UnityQuicklauncherModel
 
 
 
-#line 42 "launcher-model.vala"
+#line 45 "launcher-model.vala"
 GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcuts (UnityQuicklauncherModelsLauncherModel* self) {
-#line 42 "launcher-model.vala"
+#line 45 "launcher-model.vala"
 	return UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->get_menu_shortcuts (self);
-#line 102 "launcher-model.c"
+#line 108 "launcher-model.c"
 }
 
 
-#line 43 "launcher-model.vala"
+#line 46 "launcher-model.vala"
 GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcut_actions (UnityQuicklauncherModelsLauncherModel* self) {
-#line 43 "launcher-model.vala"
+#line 46 "launcher-model.vala"
 	return UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->get_menu_shortcut_actions (self);
-#line 110 "launcher-model.c"
+#line 116 "launcher-model.c"
 }
 
 
-#line 45 "launcher-model.vala"
+#line 48 "launcher-model.vala"
 void unity_quicklauncher_models_launcher_model_activate (UnityQuicklauncherModelsLauncherModel* self) {
-#line 45 "launcher-model.vala"
+#line 48 "launcher-model.vala"
 	UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->activate (self);
-#line 118 "launcher-model.c"
+#line 124 "launcher-model.c"
 }
 
 
-#line 46 "launcher-model.vala"
+#line 49 "launcher-model.vala"
 void unity_quicklauncher_models_launcher_model_close (UnityQuicklauncherModelsLauncherModel* self) {
-#line 46 "launcher-model.vala"
+#line 49 "launcher-model.vala"
 	UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->close (self);
-#line 126 "launcher-model.c"
+#line 132 "launcher-model.c"
 }
 
 
@@ -166,6 +172,21 @@ void unity_quicklauncher_models_launcher_model_set_priority (UnityQuicklauncherM
 }
 
 
+gboolean unity_quicklauncher_models_launcher_model_get_readonly (UnityQuicklauncherModelsLauncherModel* self) {
+	return UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->get_readonly (self);
+}
+
+
+gboolean unity_quicklauncher_models_launcher_model_get_is_fixed (UnityQuicklauncherModelsLauncherModel* self) {
+	return UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->get_is_fixed (self);
+}
+
+
+gboolean unity_quicklauncher_models_launcher_model_get_do_shadow (UnityQuicklauncherModelsLauncherModel* self) {
+	return UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->get_do_shadow (self);
+}
+
+
 const char* unity_quicklauncher_models_launcher_model_get_name (UnityQuicklauncherModelsLauncherModel* self) {
 	return UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->get_name (self);
 }
@@ -186,6 +207,9 @@ static void unity_quicklauncher_models_launcher_model_base_init (UnityQuicklaunc
 		g_object_interface_install_property (iface, g_param_spec_object ("icon", "icon", "icon", GDK_TYPE_PIXBUF, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 		g_object_interface_install_property (iface, g_param_spec_boolean ("is-sticky", "is-sticky", "is-sticky", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 		g_object_interface_install_property (iface, g_param_spec_float ("priority", "priority", "priority", -G_MAXFLOAT, G_MAXFLOAT, 0.0F, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_object_interface_install_property (iface, g_param_spec_boolean ("readonly", "readonly", "readonly", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
+		g_object_interface_install_property (iface, g_param_spec_boolean ("is-fixed", "is-fixed", "is-fixed", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
+		g_object_interface_install_property (iface, g_param_spec_boolean ("do-shadow", "do-shadow", "do-shadow", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 		g_object_interface_install_property (iface, g_param_spec_string ("name", "name", "name", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 		g_object_interface_install_property (iface, g_param_spec_string ("uid", "uid", "uid", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 		g_signal_new ("notify_active", UNITY_QUICKLAUNCHER_MODELS_TYPE_LAUNCHER_MODEL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
@@ -208,19 +232,19 @@ GType unity_quicklauncher_models_launcher_model_get_type (void) {
 }
 
 
-#line 51 "launcher-model.vala"
+#line 54 "launcher-model.vala"
 char* unity_quicklauncher_models_shortcut_item_get_name (UnityQuicklauncherModelsShortcutItem* self) {
-#line 51 "launcher-model.vala"
+#line 54 "launcher-model.vala"
 	return UNITY_QUICKLAUNCHER_MODELS_SHORTCUT_ITEM_GET_INTERFACE (self)->get_name (self);
-#line 216 "launcher-model.c"
+#line 240 "launcher-model.c"
 }
 
 
-#line 53 "launcher-model.vala"
+#line 56 "launcher-model.vala"
 void unity_quicklauncher_models_shortcut_item_activated (UnityQuicklauncherModelsShortcutItem* self) {
-#line 53 "launcher-model.vala"
+#line 56 "launcher-model.vala"
 	UNITY_QUICKLAUNCHER_MODELS_SHORTCUT_ITEM_GET_INTERFACE (self)->activated (self);
-#line 224 "launcher-model.c"
+#line 248 "launcher-model.c"
 }
 
 

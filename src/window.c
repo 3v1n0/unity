@@ -196,6 +196,7 @@ static void unity_underlay_window_relayout (UnityUnderlayWindow* self);
 static void unity_underlay_window_real_show (GtkWidget* base);
 void unity_underlay_window_on_active_window_changed (UnityUnderlayWindow* self, WnckWindow* previous_window);
 gboolean unity_underlay_window_on_stage_button_press (UnityUnderlayWindow* self, ClutterEvent* src);
+static void unity_underlay_window_real_show_window_picker (UnityShell* base);
 static void unity_underlay_window_real_grab_keyboard (UnityShell* base, gboolean grab, guint32 timestamp);
 static ClutterStage* unity_underlay_window_real_get_stage (UnityShell* base);
 static UnityShellMode unity_underlay_window_real_get_mode (UnityShell* base);
@@ -242,22 +243,22 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 #line 46 "window.vala"
 static void unity_underlay_window_real_ensure_input_region (UnityShell* base) {
-#line 246 "window.c"
+#line 247 "window.c"
 	UnityUnderlayWindow * self;
 	self = (UnityUnderlayWindow*) base;
 #line 49 "window.vala"
 	return;
-#line 251 "window.c"
+#line 252 "window.c"
 }
 
 
 #line 54 "window.vala"
 UnityUnderlayWindow* unity_underlay_window_construct (GType object_type, gboolean popup, gint width, gint height) {
-#line 257 "window.c"
+#line 258 "window.c"
 	UnityUnderlayWindow * self;
 #line 56 "window.vala"
 	self = (UnityUnderlayWindow*) g_object_new (object_type, "is-popup", popup, "popup-width", width, "popup-height", height, NULL);
-#line 261 "window.c"
+#line 262 "window.c"
 	return self;
 }
 
@@ -266,13 +267,13 @@ UnityUnderlayWindow* unity_underlay_window_construct (GType object_type, gboolea
 UnityUnderlayWindow* unity_underlay_window_new (gboolean popup, gint width, gint height) {
 #line 54 "window.vala"
 	return unity_underlay_window_construct (UNITY_TYPE_UNDERLAY_WINDOW, popup, width, height);
-#line 270 "window.c"
+#line 271 "window.c"
 }
 
 
 #line 171 "window.vala"
 static void unity_underlay_window_relayout (UnityUnderlayWindow* self) {
-#line 276 "window.c"
+#line 277 "window.c"
 	gint x = 0;
 	gint y = 0;
 	gint width = 0;
@@ -290,7 +291,7 @@ static void unity_underlay_window_relayout (UnityUnderlayWindow* self) {
 		width = self->priv->_popup_width;
 #line 180 "window.vala"
 		height = self->priv->_popup_height;
-#line 294 "window.c"
+#line 295 "window.c"
 	} else {
 		GdkRectangle size = {0};
 #line 186 "window.vala"
@@ -303,7 +304,7 @@ static void unity_underlay_window_relayout (UnityUnderlayWindow* self) {
 		width = size.width;
 #line 190 "window.vala"
 		height = size.height;
-#line 307 "window.c"
+#line 308 "window.c"
 	}
 #line 193 "window.vala"
 	ql_width = unity_quicklauncher_view_get_width (self->priv->quicklauncher);
@@ -315,44 +316,44 @@ static void unity_underlay_window_relayout (UnityUnderlayWindow* self) {
 	if (!self->priv->_is_popup) {
 #line 198 "window.vala"
 		utils_set_strut (GTK_WINDOW (self), (guint32) ((guint) ql_width), (guint32) 0, (guint32) height, (guint32) 24, (guint32) 0, (guint32) width);
-#line 319 "window.c"
+#line 320 "window.c"
 	}
 #line 203 "window.vala"
 	clutter_actor_set_position ((ClutterActor*) self->priv->background, (float) 0, (float) 0);
 #line 204 "window.vala"
 	clutter_actor_set_size ((ClutterActor*) self->priv->background, (float) width, (float) height);
-#line 207 "window.vala"
+#line 206 "window.vala"
 	clutter_actor_set_size ((ClutterActor*) self->priv->quicklauncher, ql_width, (float) (height - 23));
-#line 208 "window.vala"
-	clutter_actor_set_position ((ClutterActor*) self->priv->quicklauncher, (float) self->priv->workarea_size->left, (float) self->priv->workarea_size->top);
-#line 211 "window.vala"
+#line 207 "window.vala"
+	clutter_actor_set_position ((ClutterActor*) self->priv->quicklauncher, (float) 0, (float) 23);
+#line 209 "window.vala"
 	if (self->priv->places_enabled) {
-#line 213 "window.vala"
+#line 211 "window.vala"
 		clutter_actor_set_size ((ClutterActor*) self->priv->places, (float) width, (float) height);
-#line 214 "window.vala"
+#line 212 "window.vala"
 		clutter_actor_set_position ((ClutterActor*) self->priv->places, (float) 0, (float) 0);
-#line 335 "window.c"
+#line 336 "window.c"
 	}
-#line 217 "window.vala"
+#line 215 "window.vala"
 	clutter_actor_set_size ((ClutterActor*) self->priv->panel, (float) width, (float) 23);
-#line 218 "window.vala"
+#line 216 "window.vala"
 	clutter_actor_set_position ((ClutterActor*) self->priv->panel, (float) 0, (float) 0);
-#line 341 "window.c"
+#line 342 "window.c"
 }
 
 
-#line 221 "window.vala"
+#line 219 "window.vala"
 static void unity_underlay_window_real_show (GtkWidget* base) {
-#line 347 "window.c"
+#line 348 "window.c"
 	UnityUnderlayWindow * self;
 	self = (UnityUnderlayWindow*) base;
-#line 223 "window.vala"
+#line 221 "window.vala"
 	GTK_WIDGET_CLASS (unity_underlay_window_parent_class)->show ((GtkWidget*) GTK_WINDOW (self));
-#line 224 "window.vala"
+#line 222 "window.vala"
 	gtk_widget_show ((GtkWidget*) self->priv->gtk_clutter);
-#line 225 "window.vala"
+#line 223 "window.vala"
 	clutter_actor_show_all ((ClutterActor*) self->priv->stage);
-#line 356 "window.c"
+#line 357 "window.c"
 }
 
 
@@ -361,172 +362,183 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 231 "window.vala"
+#line 229 "window.vala"
 void unity_underlay_window_on_active_window_changed (UnityUnderlayWindow* self, WnckWindow* previous_window) {
-#line 367 "window.c"
+#line 368 "window.c"
 	WnckWindow* new_window;
 	gboolean _tmp0_ = FALSE;
 	gboolean _tmp1_ = FALSE;
-#line 231 "window.vala"
+#line 229 "window.vala"
 	g_return_if_fail (self != NULL);
-#line 233 "window.vala"
+#line 231 "window.vala"
 	new_window = _g_object_ref0 (wnck_screen_get_active_window (self->priv->wnck_screen));
-#line 234 "window.vala"
+#line 232 "window.vala"
 	if (new_window == NULL) {
-#line 377 "window.c"
+#line 378 "window.c"
 		_g_object_unref0 (new_window);
-#line 235 "window.vala"
+#line 233 "window.vala"
 		return;
-#line 381 "window.c"
+#line 382 "window.c"
 	}
-#line 238 "window.vala"
+#line 236 "window.vala"
 	if (WNCK_IS_WINDOW (new_window)) {
-#line 239 "window.vala"
+#line 237 "window.vala"
 		_tmp1_ = G_TYPE_FROM_INSTANCE ((GObject*) new_window) != WNCK_WINDOW_DESKTOP;
-#line 387 "window.c"
+#line 388 "window.c"
 	} else {
-#line 238 "window.vala"
+#line 236 "window.vala"
 		_tmp1_ = FALSE;
-#line 391 "window.c"
+#line 392 "window.c"
 	}
-#line 238 "window.vala"
+#line 236 "window.vala"
 	if (_tmp1_) {
-#line 240 "window.vala"
+#line 238 "window.vala"
 		_tmp0_ = _vala_strcmp0 (wnck_window_get_name (new_window), "Unity") == 0;
-#line 397 "window.c"
+#line 398 "window.c"
 	} else {
-#line 238 "window.vala"
+#line 236 "window.vala"
 		_tmp0_ = FALSE;
-#line 401 "window.c"
+#line 402 "window.c"
 	}
-#line 238 "window.vala"
+#line 236 "window.vala"
 	if (_tmp0_) {
-#line 243 "window.vala"
+#line 241 "window.vala"
 		self->priv->is_showing = TRUE;
-#line 407 "window.c"
+#line 408 "window.c"
 	} else {
-#line 251 "window.vala"
+#line 249 "window.vala"
 		self->priv->is_showing = FALSE;
-#line 411 "window.c"
+#line 412 "window.c"
 	}
 	_g_object_unref0 (new_window);
 }
 
 
-#line 255 "window.vala"
+#line 253 "window.vala"
 gboolean unity_underlay_window_on_stage_button_press (UnityUnderlayWindow* self, ClutterEvent* src) {
-#line 419 "window.c"
+#line 420 "window.c"
 	gboolean result;
-#line 255 "window.vala"
+#line 253 "window.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 257 "window.vala"
+#line 255 "window.vala"
 	if (self->priv->_is_popup) {
-#line 425 "window.c"
+#line 426 "window.c"
 		result = FALSE;
-#line 258 "window.vala"
+#line 256 "window.vala"
 		return result;
-#line 429 "window.c"
+#line 430 "window.c"
 	}
-#line 260 "window.vala"
+#line 258 "window.vala"
 	if (self->priv->is_showing) {
-#line 433 "window.c"
+#line 434 "window.c"
 		;
 	} else {
 	}
 	result = FALSE;
-#line 268 "window.vala"
+#line 266 "window.vala"
 	return result;
-#line 440 "window.c"
+#line 441 "window.c"
 }
 
 
+#line 273 "window.vala"
+static void unity_underlay_window_real_show_window_picker (UnityShell* base) {
+#line 447 "window.c"
+	UnityUnderlayWindow * self;
+	self = (UnityUnderlayWindow*) base;
 #line 275 "window.vala"
+	g_debug ("window.vala:275: Window picker not implemented in popup mode");
+#line 452 "window.c"
+}
+
+
+#line 278 "window.vala"
 static void unity_underlay_window_real_grab_keyboard (UnityShell* base, gboolean grab, guint32 timestamp) {
-#line 446 "window.c"
+#line 458 "window.c"
 	UnityUnderlayWindow * self;
 	self = (UnityUnderlayWindow*) base;
 }
 
 
-#line 280 "window.vala"
+#line 283 "window.vala"
 static ClutterStage* unity_underlay_window_real_get_stage (UnityShell* base) {
-#line 454 "window.c"
+#line 466 "window.c"
 	UnityUnderlayWindow * self;
 	ClutterStage* result;
 	self = (UnityUnderlayWindow*) base;
 	result = _g_object_ref0 (self->priv->stage);
-#line 282 "window.vala"
+#line 285 "window.vala"
 	return result;
-#line 461 "window.c"
+#line 473 "window.c"
 }
 
 
-#line 285 "window.vala"
+#line 288 "window.vala"
 static UnityShellMode unity_underlay_window_real_get_mode (UnityShell* base) {
-#line 467 "window.c"
+#line 479 "window.c"
 	UnityUnderlayWindow * self;
 	UnityShellMode result;
 	self = (UnityUnderlayWindow*) base;
 	result = UNITY_SHELL_MODE_UNDERLAY;
-#line 287 "window.vala"
+#line 290 "window.vala"
 	return result;
-#line 474 "window.c"
+#line 486 "window.c"
 }
 
 
-#line 290 "window.vala"
+#line 293 "window.vala"
 static void unity_underlay_window_real_show_unity (UnityShell* base) {
-#line 480 "window.c"
+#line 492 "window.c"
 	UnityUnderlayWindow * self;
 	self = (UnityUnderlayWindow*) base;
-#line 292 "window.vala"
+#line 295 "window.vala"
 	if (self->priv->places_enabled != TRUE) {
-#line 485 "window.c"
+#line 497 "window.c"
 		WnckScreen* screen;
-#line 294 "window.vala"
-		screen = _g_object_ref0 (wnck_screen_get_default ());
-#line 296 "window.vala"
-		wnck_screen_toggle_showing_desktop (screen, !wnck_screen_get_showing_desktop (screen));
-#line 491 "window.c"
-		_g_object_unref0 (screen);
 #line 297 "window.vala"
-		return;
-#line 495 "window.c"
-	}
+		screen = _g_object_ref0 (wnck_screen_get_default ());
+#line 299 "window.vala"
+		wnck_screen_toggle_showing_desktop (screen, !wnck_screen_get_showing_desktop (screen));
+#line 503 "window.c"
+		_g_object_unref0 (screen);
 #line 300 "window.vala"
-	if (self->priv->showing_places) {
-#line 302 "window.vala"
-		self->priv->showing_places = FALSE;
-#line 303 "window.vala"
-		unity_panel_view_set_indicator_mode (self->priv->panel, TRUE);
-#line 304 "window.vala"
-		clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 255);
-#line 505 "window.c"
-	} else {
-#line 308 "window.vala"
-		self->priv->showing_places = TRUE;
-#line 309 "window.vala"
-		unity_panel_view_set_indicator_mode (self->priv->panel, FALSE);
-#line 310 "window.vala"
-		clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 0);
-#line 513 "window.c"
+		return;
+#line 507 "window.c"
 	}
-#line 313 "window.vala"
-	clutter_actor_queue_redraw ((ClutterActor*) self->priv->places);
+#line 303 "window.vala"
+	if (self->priv->showing_places) {
+#line 305 "window.vala"
+		self->priv->showing_places = FALSE;
+#line 306 "window.vala"
+		unity_panel_view_set_indicator_mode (self->priv->panel, TRUE);
+#line 307 "window.vala"
+		clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 255);
 #line 517 "window.c"
+	} else {
+#line 311 "window.vala"
+		self->priv->showing_places = TRUE;
+#line 312 "window.vala"
+		unity_panel_view_set_indicator_mode (self->priv->panel, FALSE);
+#line 313 "window.vala"
+		clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 0);
+#line 525 "window.c"
+	}
+#line 316 "window.vala"
+	clutter_actor_queue_redraw ((ClutterActor*) self->priv->places);
+#line 529 "window.c"
 }
 
 
-#line 316 "window.vala"
+#line 319 "window.vala"
 static gint unity_underlay_window_real_get_indicators_width (UnityShell* base) {
-#line 523 "window.c"
+#line 535 "window.c"
 	UnityUnderlayWindow * self;
 	gint result;
 	self = (UnityUnderlayWindow*) base;
 	result = unity_panel_view_get_indicators_width (self->priv->panel);
-#line 318 "window.vala"
+#line 321 "window.vala"
 	return result;
-#line 530 "window.c"
+#line 542 "window.c"
 }
 
 
@@ -537,7 +549,7 @@ static gboolean unity_underlay_window_real_get_menus_swallow_events (UnityShell*
 	result = TRUE;
 #line 26 "window.vala"
 	return result;
-#line 541 "window.c"
+#line 553 "window.c"
 }
 
 
@@ -547,7 +559,7 @@ gboolean unity_underlay_window_get_is_popup (UnityUnderlayWindow* self) {
 	result = self->priv->_is_popup;
 #line 27 "window.vala"
 	return result;
-#line 551 "window.c"
+#line 563 "window.c"
 }
 
 
@@ -564,7 +576,7 @@ gint unity_underlay_window_get_popup_width (UnityUnderlayWindow* self) {
 	result = self->priv->_popup_width;
 #line 28 "window.vala"
 	return result;
-#line 568 "window.c"
+#line 580 "window.c"
 }
 
 
@@ -581,7 +593,7 @@ gint unity_underlay_window_get_popup_height (UnityUnderlayWindow* self) {
 	result = self->priv->_popup_height;
 #line 29 "window.vala"
 	return result;
-#line 585 "window.c"
+#line 597 "window.c"
 }
 
 
@@ -592,73 +604,89 @@ static void unity_underlay_window_set_popup_height (UnityUnderlayWindow* self, g
 }
 
 
+#line 72 "window.vala"
 static gboolean _lambda5_ (UnityUnderlayWindow* self) {
+#line 610 "window.c"
 	gboolean result;
 #line 74 "window.vala"
 	gtk_main_quit ();
-#line 600 "window.c"
+#line 614 "window.c"
 	result = FALSE;
 #line 75 "window.vala"
-	return result;
-#line 604 "window.c"
-}
-
-
-static gboolean __lambda5__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
-	return _lambda5_ (self);
-}
-
-
-static gboolean _lambda6_ (UnityUnderlayWindow* self) {
-	gboolean result;
-	result = TRUE;
-#line 88 "window.vala"
 	return result;
 #line 618 "window.c"
 }
 
 
+#line 72 "window.vala"
+static gboolean __lambda5__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
+#line 624 "window.c"
+	return _lambda5_ (self);
+}
+
+
+#line 88 "window.vala"
+static gboolean _lambda6_ (UnityUnderlayWindow* self) {
+#line 631 "window.c"
+	gboolean result;
+	result = TRUE;
+#line 88 "window.vala"
+	return result;
+#line 636 "window.c"
+}
+
+
+#line 88 "window.vala"
 static gboolean __lambda6__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
+#line 642 "window.c"
 	return _lambda6_ (self);
 }
 
 
+#line 89 "window.vala"
 static void _lambda7_ (GdkScreen* s, UnityUnderlayWindow* self) {
+#line 89 "window.vala"
 	g_return_if_fail (s != NULL);
 #line 90 "window.vala"
 	unity_underlay_window_relayout (self);
-#line 631 "window.c"
+#line 653 "window.c"
 }
 
 
+#line 89 "window.vala"
 static void __lambda7__gdk_screen_size_changed (GdkScreen* _sender, gpointer self) {
+#line 659 "window.c"
 	_lambda7_ (_sender, self);
 }
 
 
+#line 91 "window.vala"
 static void _lambda8_ (GdkScreen* s, UnityUnderlayWindow* self) {
+#line 91 "window.vala"
 	g_return_if_fail (s != NULL);
 #line 92 "window.vala"
 	unity_underlay_window_relayout (self);
-#line 644 "window.c"
+#line 670 "window.c"
 }
 
 
+#line 91 "window.vala"
 static void __lambda8__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self) {
+#line 676 "window.c"
 	_lambda8_ (_sender, self);
 }
 
 
-#line 255 "window.vala"
+#line 253 "window.vala"
 static gboolean _unity_underlay_window_on_stage_button_press_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 655 "window.c"
+#line 683 "window.c"
 	return unity_underlay_window_on_stage_button_press (self, event);
 }
 
 
-#line 231 "window.vala"
+#line 229 "window.vala"
 static void _unity_underlay_window_on_active_window_changed_wnck_screen_active_window_changed (WnckScreen* _sender, WnckWindow* previous_window, gpointer self) {
-#line 662 "window.c"
+#line 690 "window.c"
 	unity_underlay_window_on_active_window_changed (self, previous_window);
 }
 
@@ -712,7 +740,7 @@ static GObject * unity_underlay_window_constructor (GType type, guint n_construc
 			gtk_window_set_skip_pager_hint ((GtkWindow*) self, FALSE);
 #line 72 "window.vala"
 			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda5__gtk_widget_delete_event, self, 0);
-#line 716 "window.c"
+#line 744 "window.c"
 		} else {
 #line 81 "window.vala"
 			gtk_window_set_type_hint ((GtkWindow*) self, GDK_WINDOW_TYPE_HINT_DESKTOP);
@@ -734,7 +762,7 @@ static GObject * unity_underlay_window_constructor (GType type, guint n_construc
 			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "size-changed", (GCallback) __lambda7__gdk_screen_size_changed, self, 0);
 #line 91 "window.vala"
 			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "monitors-changed", (GCallback) __lambda8__gdk_screen_monitors_changed, self, 0);
-#line 738 "window.c"
+#line 766 "window.c"
 		}
 #line 94 "window.vala"
 		gtk_window_set_title ((GtkWindow*) self, "Unity");
@@ -758,7 +786,7 @@ static GObject * unity_underlay_window_constructor (GType type, guint n_construc
 		gtk_widget_realize ((GtkWidget*) self->priv->gtk_clutter);
 #line 107 "window.vala"
 		LOGGER_END_PROCESS ("gtk_clutter_realize");
-#line 762 "window.c"
+#line 790 "window.c"
 		target_list = (_tmp10_ = (_tmp9_ = g_new0 (GtkTargetEntry, 6), _tmp9_[0] = (memset (&_tmp3_, 0, sizeof (GtkTargetEntry)), _tmp3_.target = "STRING", _tmp3_.flags = (guint) 0, _tmp3_.info = (guint) UNITY_DND_TARGETS_TARGET_STRING, _tmp3_), _tmp9_[1] = (memset (&_tmp4_, 0, sizeof (GtkTargetEntry)), _tmp4_.target = "text/plain", _tmp4_.flags = (guint) 0, _tmp4_.info = (guint) UNITY_DND_TARGETS_TARGET_STRING, _tmp4_), _tmp9_[2] = (memset (&_tmp5_, 0, sizeof (GtkTargetEntry)), _tmp5_.target = "text/uri-list", _tmp5_.flags = (guint) 0, _tmp5_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp5_), _tmp9_[3] = (memset (&_tmp6_, 0, sizeof (GtkTargetEntry)), _tmp6_.target = "x-url/http", _tmp6_.flags = (guint) 0, _tmp6_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp6_), _tmp9_[4] = (memset (&_tmp7_, 0, sizeof (GtkTargetEntry)), _tmp7_.target = "x-url/ftp", _tmp7_.flags = (guint) 0, _tmp7_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp7_), _tmp9_[5] = (memset (&_tmp8_, 0, sizeof (GtkTargetEntry)), _tmp8_.target = "_NETSCAPE_URL", _tmp8_.flags = (guint) 0, _tmp8_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp8_), _tmp9_), target_list_length1 = 6, target_list_size = target_list_length1, _tmp10_);
 #line 118 "window.vala"
 		LOGGER_START_PROCESS ("ctk_dnd_init");
@@ -790,7 +818,7 @@ static GObject * unity_underlay_window_constructor (GType type, guint n_construc
 		clutter_actor_show ((ClutterActor*) self->priv->quicklauncher);
 #line 144 "window.vala"
 		if (self->priv->places_enabled) {
-#line 794 "window.c"
+#line 822 "window.c"
 			UnityPlacesController* _tmp15_;
 			UnityPlacesView* _tmp16_;
 #line 146 "window.vala"
@@ -803,7 +831,7 @@ static GObject * unity_underlay_window_constructor (GType type, guint n_construc
 			clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 0);
 #line 150 "window.vala"
 			self->priv->showing_places = FALSE;
-#line 807 "window.c"
+#line 835 "window.c"
 		}
 #line 153 "window.vala"
 		self->priv->panel = (_tmp17_ = g_object_ref_sink (unity_panel_view_new ((UnityShell*) self)), _g_object_unref0 (self->priv->panel), _tmp17_);
@@ -821,11 +849,11 @@ static GObject * unity_underlay_window_constructor (GType type, guint n_construc
 		if (!self->priv->_is_popup) {
 #line 165 "window.vala"
 			g_signal_connect_object (self->priv->wnck_screen, "active-window-changed", (GCallback) _unity_underlay_window_on_active_window_changed_wnck_screen_active_window_changed, self, 0);
-#line 825 "window.c"
+#line 853 "window.c"
 		}
 #line 168 "window.vala"
 		END_FUNCTION ();
-#line 829 "window.c"
+#line 857 "window.c"
 		target_list = (g_free (target_list), NULL);
 	}
 	return obj;
@@ -850,6 +878,7 @@ static void unity_underlay_window_class_init (UnityUnderlayWindowClass * klass) 
 static void unity_underlay_window_unity_shell_interface_init (UnityShellIface * iface) {
 	unity_underlay_window_unity_shell_parent_iface = g_type_interface_peek_parent (iface);
 	iface->ensure_input_region = unity_underlay_window_real_ensure_input_region;
+	iface->show_window_picker = unity_underlay_window_real_show_window_picker;
 	iface->grab_keyboard = unity_underlay_window_real_grab_keyboard;
 	iface->get_stage = unity_underlay_window_real_get_stage;
 	iface->get_mode = unity_underlay_window_real_get_mode;
@@ -936,47 +965,47 @@ static void unity_underlay_window_set_property (GObject * object, guint property
 }
 
 
-#line 331 "window.vala"
+#line 334 "window.vala"
 UnityWorkarea* unity_workarea_construct (GType object_type) {
-#line 942 "window.c"
+#line 971 "window.c"
 	UnityWorkarea* self;
 	self = (UnityWorkarea*) g_type_create_instance (object_type);
-#line 333 "window.vala"
-	self->left = 0;
-#line 334 "window.vala"
-	self->right = 0;
-#line 335 "window.vala"
-	self->top = 0;
 #line 336 "window.vala"
-	self->bottom = 0;
+	self->left = 0;
+#line 337 "window.vala"
+	self->right = 0;
 #line 338 "window.vala"
+	self->top = 0;
+#line 339 "window.vala"
+	self->bottom = 0;
+#line 341 "window.vala"
 	unity_workarea_update_net_workarea (self);
-#line 955 "window.c"
+#line 984 "window.c"
 	return self;
 }
 
 
-#line 331 "window.vala"
+#line 334 "window.vala"
 UnityWorkarea* unity_workarea_new (void) {
-#line 331 "window.vala"
+#line 334 "window.vala"
 	return unity_workarea_construct (UNITY_TYPE_WORKAREA);
-#line 964 "window.c"
+#line 993 "window.c"
 }
 
 
-#line 341 "window.vala"
+#line 344 "window.vala"
 void unity_workarea_update_net_workarea (UnityWorkarea* self) {
-#line 341 "window.vala"
+#line 344 "window.vala"
 	g_return_if_fail (self != NULL);
-#line 346 "window.vala"
-	self->left = 0;
-#line 347 "window.vala"
-	self->right = 0;
-#line 348 "window.vala"
-	self->top = 24;
 #line 349 "window.vala"
+	self->left = 0;
+#line 350 "window.vala"
+	self->right = 0;
+#line 351 "window.vala"
+	self->top = 24;
+#line 352 "window.vala"
 	self->bottom = 0;
-#line 980 "window.c"
+#line 1009 "window.c"
 }
 
 

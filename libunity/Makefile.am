@@ -5,8 +5,15 @@ EXTRA_DIST =
 noinst_LTLIBRARIES = \
   libunity.la
 
+if HAVE_LOCALINSTALL
+PKGDATADIR=$(top_srcdir)/data
+else
+PKGDATADIR=$(datadir)/unity
+endif
+
 # unity-quicklauncher static lib
 libunity_la_CPPFLAGS = \
+  -DPKGDATADIR=\"$(PKGDATADIR)\" \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS)
 
@@ -14,17 +21,19 @@ libunity_la_LIBADD = \
   $(BASE_LIBS)
 
 libunity_la_VALAFLAGS = \
-	-C \
+  -C \
   -H unity.h -d . \
   --library unity \
   --vapidir=$(top_srcdir)/vapi/ \
   --thread \
+  --pkg config \
   --pkg clutter-1.0 \
   --pkg clutk-0.3 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
   --pkg libwnck-1.0 \
   --pkg unique-1.0 \
+  --pkg unity-const \
   $(MAINTAINER_VALAFLAGS)
 
 libunity_la_SOURCES = \
@@ -36,7 +45,10 @@ libunity_la_VALASOURCES = \
   drag-view.vala \
   entry.vala \
   perf-logger.vala \
-  shell.vala
+  shell.vala \
+  theme.vala \
+  webapp-fetcher.vala \
+  webapp-iconbuilder.vala
 
 libunity_la_APIFILES = \
   unity.h \

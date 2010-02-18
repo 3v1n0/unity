@@ -306,7 +306,7 @@ namespace Unity
       if (sender != quicklauncher.manager.active_launcher || sender == null)
         return;
 
-      if (sender.model is ApplicationModel)
+      if (sender.model is ApplicationModel && sender.model.is_active)
         {
           expose_windows ((sender.model as ApplicationModel).windows);
         }
@@ -424,6 +424,35 @@ namespace Unity
     /*
      * SHELL IMPLEMENTATION
      */
+
+    public void show_window_picker ()
+    {
+      if (this.expose_showing == true)
+        {
+          this.dexpose_windows ();
+          return;
+        }
+
+      GLib.SList <Wnck.Window> windows = null;
+
+      foreach (Wnck.Window w in Wnck.Screen.get_default ().get_windows ())
+        {
+          switch (w.get_window_type ())
+            {
+            case Wnck.WindowType.NORMAL:
+            case Wnck.WindowType.DIALOG:
+            case Wnck.WindowType.UTILITY:
+              windows.append (w);
+              break;
+
+            default:
+              break;
+            }
+        }
+
+      this.expose_windows (windows, 40);
+    }
+
     public Clutter.Stage get_stage ()
     {
       return this.stage;
@@ -439,7 +468,8 @@ namespace Unity
       return this.panel.get_indicators_width ();
     }
 
-    public void expose_windows (GLib.SList<Wnck.Window> windows)
+    public void expose_windows (GLib.SList<Wnck.Window> windows,
+                                int left_buffer = 250)
     {
       exposed_windows = new List<Mutter.Window> ();
 
@@ -486,7 +516,7 @@ namespace Unity
             (w as Clutter.Actor).animate (Clutter.AnimationMode.EASE_IN_SINE, 80, "opacity", 0);
         }
 
-      position_window_on_grid (exposed_windows);
+      position_window_on_grid (exposed_windows, left_buffer);
 
       expose_showing = true;
       this.ensure_input_region ();
@@ -536,11 +566,10 @@ namespace Unity
       });
     }
 
-    void position_window_on_grid (List<Clutter.Actor> _windows)
+    void position_window_on_grid (List<Clutter.Actor> _windows,
+                                  int left_buffer = 250)
     {
       List<Clutter.Actor> windows = _windows.copy ();
-
-      int left_buffer = 250;
       int vertical_buffer = 40;
       int count = (int) windows.length ();
 

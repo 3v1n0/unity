@@ -203,10 +203,8 @@ namespace Unity
       this.background.set_position (0, 0);
       this.background.set_size (width, height);
 
-
       this.quicklauncher.set_size (ql_width, height - 23);
-      this.quicklauncher.set_position (this.workarea_size.left,
-                                       this.workarea_size.top);
+      this.quicklauncher.set_position (0, 23);
 
       if (this.places_enabled)
         {
@@ -271,6 +269,11 @@ namespace Unity
     /*
      * SHELL IMPLEMENTATION
      */
+
+    public void show_window_picker ()
+    {
+      debug ("Window picker not implemented in popup mode");
+    }
 
     public void grab_keyboard (bool grab, uint32 timestamp)
     {

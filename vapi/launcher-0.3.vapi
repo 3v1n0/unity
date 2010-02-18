@@ -95,6 +95,7 @@ namespace Launcher {
 		public float get_float (string uid, string key);
 		public int get_int (string uid, string key);
 		public unowned GLib.SList get_list (string uid, string key, Launcher.FavoritesListValue value_type);
+		public bool get_readonly (string uid, string key);
 		public unowned string get_string (string uid, string key);
 		public bool remove_favorite (string uid);
 		public void set_bool (string uid, string key, bool value);

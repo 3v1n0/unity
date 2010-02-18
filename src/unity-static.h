@@ -6,11 +6,11 @@
 
 #include <glib.h>
 #include <clutk/clutk.h>
+#include <stdlib.h>
+#include <string.h>
 #include <gtk/gtk.h>
 #include <dbus/dbus-glib-lowlevel.h>
 #include <dbus/dbus-glib.h>
-#include <stdlib.h>
-#include <string.h>
 #include <glib-object.h>
 #include <clutter/clutter.h>
 #include <X11/Xlib.h>
@@ -612,12 +612,13 @@ struct _UnityWorkareaClass {
 };
 
 struct _UnityPanelHomeButton {
-	CtkImage parent_instance;
+	CtkBin parent_instance;
 	UnityPanelHomeButtonPrivate * priv;
+	UnityThemeImage* image;
 };
 
 struct _UnityPanelHomeButtonClass {
-	CtkImageClass parent_class;
+	CtkBinClass parent_class;
 };
 
 struct _UnityPanelIndicatorsView {
@@ -983,6 +984,9 @@ struct _UnityQuicklauncherModelsLauncherModelIface {
 	void (*set_is_sticky) (UnityQuicklauncherModelsLauncherModel* self, gboolean value);
 	float (*get_priority) (UnityQuicklauncherModelsLauncherModel* self);
 	void (*set_priority) (UnityQuicklauncherModelsLauncherModel* self, float value);
+	gboolean (*get_readonly) (UnityQuicklauncherModelsLauncherModel* self);
+	gboolean (*get_is_fixed) (UnityQuicklauncherModelsLauncherModel* self);
+	gboolean (*get_do_shadow) (UnityQuicklauncherModelsLauncherModel* self);
 	const char* (*get_name) (UnityQuicklauncherModelsLauncherModel* self);
 	const char* (*get_uid) (UnityQuicklauncherModelsLauncherModel* self);
 };
@@ -1008,14 +1012,15 @@ struct _UnityQuicklauncherChromiumWebAppClass {
 };
 
 struct _UnityQuicklauncherLauncherView {
-	CtkBin parent_instance;
+	CtkActor parent_instance;
 	UnityQuicklauncherLauncherViewPrivate * priv;
 	UnityQuicklauncherModelsLauncherModel* model;
 	gboolean is_hovering;
+	gboolean anim_priority_going_up;
 };
 
 struct _UnityQuicklauncherLauncherViewClass {
-	CtkBinClass parent_class;
+	CtkActorClass parent_class;
 };
 
 struct _UnityQuicklauncherPrism {
@@ -1304,10 +1309,11 @@ void unity_quicklauncher_models_application_model_do_save_priority (UnityQuickla
 gboolean unity_quicklauncher_models_application_model_save_priority (UnityQuicklauncherModelsApplicationModel* self);
 GSList* unity_quicklauncher_models_application_model_get_windows (UnityQuicklauncherModelsApplicationModel* self);
 GType unity_quicklauncher_chromium_web_app_get_type (void);
-UnityQuicklauncherChromiumWebApp* unity_quicklauncher_chromium_web_app_new (const char* address);
-UnityQuicklauncherChromiumWebApp* unity_quicklauncher_chromium_web_app_construct (GType object_type, const char* address);
+UnityQuicklauncherChromiumWebApp* unity_quicklauncher_chromium_web_app_new (const char* address, const char* icon);
+UnityQuicklauncherChromiumWebApp* unity_quicklauncher_chromium_web_app_construct (GType object_type, const char* address, const char* icon);
 void unity_quicklauncher_chromium_web_app_add_to_favorites (UnityQuicklauncherChromiumWebApp* self);
 const char* unity_quicklauncher_chromium_web_app_get_url (UnityQuicklauncherChromiumWebApp* self);
+const char* unity_quicklauncher_chromium_web_app_get_icon (UnityQuicklauncherChromiumWebApp* self);
 GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcuts (UnityQuicklauncherModelsLauncherModel* self);
 GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcut_actions (UnityQuicklauncherModelsLauncherModel* self);
 void unity_quicklauncher_models_launcher_model_activate (UnityQuicklauncherModelsLauncherModel* self);
@@ -1320,6 +1326,9 @@ gboolean unity_quicklauncher_models_launcher_model_get_is_sticky (UnityQuicklaun
 void unity_quicklauncher_models_launcher_model_set_is_sticky (UnityQuicklauncherModelsLauncherModel* self, gboolean value);
 float unity_quicklauncher_models_launcher_model_get_priority (UnityQuicklauncherModelsLauncherModel* self);
 void unity_quicklauncher_models_launcher_model_set_priority (UnityQuicklauncherModelsLauncherModel* self, float value);
+gboolean unity_quicklauncher_models_launcher_model_get_readonly (UnityQuicklauncherModelsLauncherModel* self);
+gboolean unity_quicklauncher_models_launcher_model_get_is_fixed (UnityQuicklauncherModelsLauncherModel* self);
+gboolean unity_quicklauncher_models_launcher_model_get_do_shadow (UnityQuicklauncherModelsLauncherModel* self);
 const char* unity_quicklauncher_models_launcher_model_get_name (UnityQuicklauncherModelsLauncherModel* self);
 const char* unity_quicklauncher_models_launcher_model_get_uid (UnityQuicklauncherModelsLauncherModel* self);
 char* unity_quicklauncher_models_shortcut_item_get_name (UnityQuicklauncherModelsShortcutItem* self);
@@ -1331,11 +1340,16 @@ void unity_quicklauncher_launcher_view_notify_on_set_reactive (UnityQuicklaunche
 void unity_quicklauncher_launcher_view_close_menu (UnityQuicklauncherLauncherView* self);
 ClutterAnimation* unity_quicklauncher_launcher_view_get_anim (UnityQuicklauncherLauncherView* self);
 void unity_quicklauncher_launcher_view_set_anim (UnityQuicklauncherLauncherView* self, ClutterAnimation* value);
+float unity_quicklauncher_launcher_view_get_anim_priority (UnityQuicklauncherLauncherView* self);
+void unity_quicklauncher_launcher_view_set_anim_priority (UnityQuicklauncherLauncherView* self, float value);
+gint unity_quicklauncher_launcher_view_get_position (UnityQuicklauncherLauncherView* self);
+void unity_quicklauncher_launcher_view_set_position (UnityQuicklauncherLauncherView* self, gint value);
 GType unity_quicklauncher_prism_get_type (void);
-UnityQuicklauncherPrism* unity_quicklauncher_prism_new (const char* address);
-UnityQuicklauncherPrism* unity_quicklauncher_prism_construct (GType object_type, const char* address);
+UnityQuicklauncherPrism* unity_quicklauncher_prism_new (const char* address, const char* icon);
+UnityQuicklauncherPrism* unity_quicklauncher_prism_construct (GType object_type, const char* address, const char* icon);
 void unity_quicklauncher_prism_add_to_favorites (UnityQuicklauncherPrism* self);
 const char* unity_quicklauncher_prism_get_url (UnityQuicklauncherPrism* self);
+const char* unity_quicklauncher_prism_get_icon (UnityQuicklauncherPrism* self);
 GType unity_quicklauncher_manager_get_type (void);
 UnityQuicklauncherManager* unity_quicklauncher_manager_new (void);
 UnityQuicklauncherManager* unity_quicklauncher_manager_construct (GType object_type);
@@ -1368,8 +1382,8 @@ void unity_widgets_scroller_child_set_is_hidden (UnityWidgetsScrollerChild* self
 GType unity_widgets_scroller_get_type (void);
 UnityWidgetsScroller* unity_widgets_scroller_new (CtkOrientation orientation, gint spacing);
 UnityWidgetsScroller* unity_widgets_scroller_construct (GType object_type, CtkOrientation orientation, gint spacing);
-void unity_widgets_scroller_add_actor (UnityWidgetsScroller* self, ClutterActor* actor);
-void unity_widgets_scroller_remove_actor (UnityWidgetsScroller* self, ClutterActor* actor);
+void unity_widgets_scroller_add_actor (UnityWidgetsScroller* self, ClutterActor* actor, gboolean is_fixed);
+void unity_widgets_scroller_remove_actor (UnityWidgetsScroller* self, ClutterActor* actor_);
 float unity_widgets_scroller_get_drag_pos (UnityWidgetsScroller* self);
 void unity_widgets_scroller_set_drag_pos (UnityWidgetsScroller* self, float value);
 gint unity_widgets_scroller_get_spacing (UnityWidgetsScroller* self);

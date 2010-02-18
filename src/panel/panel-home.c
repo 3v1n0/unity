@@ -25,6 +25,8 @@
 #include <glib-object.h>
 #include <clutk/clutk.h>
 #include <unity.h>
+#include <float.h>
+#include <math.h>
 #include <clutter/clutter.h>
 
 
@@ -41,12 +43,13 @@ typedef struct _UnityPanelHomeButtonPrivate UnityPanelHomeButtonPrivate;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
 struct _UnityPanelHomeButton {
-	CtkImage parent_instance;
+	CtkBin parent_instance;
 	UnityPanelHomeButtonPrivate * priv;
+	UnityThemeImage* image;
 };
 
 struct _UnityPanelHomeButtonClass {
-	CtkImageClass parent_class;
+	CtkBinClass parent_class;
 };
 
 struct _UnityPanelHomeButtonPrivate {
@@ -64,8 +67,9 @@ enum  {
 };
 UnityPanelHomeButton* unity_panel_home_button_new (UnityShell* shell);
 UnityPanelHomeButton* unity_panel_home_button_construct (GType object_type, UnityShell* shell);
-UnityShell* unity_panel_home_button_get_shell (UnityPanelHomeButton* self);
+static void unity_panel_home_button_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
 static gboolean unity_panel_home_button_on_button_release (UnityPanelHomeButton* self, ClutterEvent* event);
+UnityShell* unity_panel_home_button_get_shell (UnityPanelHomeButton* self);
 static void unity_panel_home_button_set_shell (UnityPanelHomeButton* self, UnityShell* value);
 static gboolean _unity_panel_home_button_on_button_release_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static GObject * unity_panel_home_button_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -75,40 +79,81 @@ static void unity_panel_home_button_set_property (GObject * object, guint proper
 
 
 
-#line 27 "panel-home.vala"
+#line 30 "panel-home.vala"
 UnityPanelHomeButton* unity_panel_home_button_construct (GType object_type, UnityShell* shell) {
-#line 81 "panel-home.c"
+#line 85 "panel-home.c"
 	UnityPanelHomeButton * self;
-#line 27 "panel-home.vala"
+#line 30 "panel-home.vala"
 	g_return_val_if_fail (shell != NULL, NULL);
-#line 29 "panel-home.vala"
-	self = (UnityPanelHomeButton*) g_object_new (object_type, "size", 22, "filename", PKGDATADIR "/bfb.png", "reactive", TRUE, "shell", shell, NULL);
-#line 87 "panel-home.c"
+#line 32 "panel-home.vala"
+	self = (UnityPanelHomeButton*) g_object_new (object_type, "reactive", TRUE, "shell", shell, NULL);
+#line 91 "panel-home.c"
 	return self;
 }
 
 
-#line 27 "panel-home.vala"
+#line 30 "panel-home.vala"
 UnityPanelHomeButton* unity_panel_home_button_new (UnityShell* shell) {
-#line 27 "panel-home.vala"
+#line 30 "panel-home.vala"
 	return unity_panel_home_button_construct (UNITY_PANEL_TYPE_HOME_BUTTON, shell);
-#line 96 "panel-home.c"
+#line 100 "panel-home.c"
 }
 
 
-#line 40 "panel-home.vala"
+#line 45 "panel-home.vala"
+static void unity_panel_home_button_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
+#line 106 "panel-home.c"
+	UnityPanelHomeButton * self;
+	float cwidth = 0.0F;
+	float cheight = 0.0F;
+	CtkPadding _tmp0_ = {0};
+	CtkPadding pad;
+	self = (UnityPanelHomeButton*) base;
+#line 49 "panel-home.vala"
+	pad = (_tmp0_.top = (float) 0, _tmp0_);
+#line 51 "panel-home.vala"
+	clutter_actor_get_preferred_size ((ClutterActor*) self->image, &cwidth, &cheight, &cwidth, &cheight);
+#line 55 "panel-home.vala"
+	if (clutter_actor_get_width ((ClutterActor*) self) < 1) {
+#line 56 "panel-home.vala"
+		cwidth = (float) 19;
+#line 121 "panel-home.c"
+	}
+#line 57 "panel-home.vala"
+	if (clutter_actor_get_height ((ClutterActor*) self) < 1) {
+#line 58 "panel-home.vala"
+		cheight = (float) 19;
+#line 127 "panel-home.c"
+	}
+#line 60 "panel-home.vala"
+	pad.left = (((*box).x2 - (*box).x1) - cwidth) / 2.0f;
+#line 61 "panel-home.vala"
+	pad.right = pad.left;
+#line 62 "panel-home.vala"
+	pad.top = (((*box).y2 - (*box).y1) - cheight) / 2.0f;
+#line 63 "panel-home.vala"
+	pad.bottom = pad.top;
+#line 65 "panel-home.vala"
+	ctk_actor_set_padding ((CtkActor*) self, &pad);
+#line 67 "panel-home.vala"
+	CLUTTER_ACTOR_CLASS (unity_panel_home_button_parent_class)->allocate ((ClutterActor*) CTK_BIN (self), box, flags);
+#line 141 "panel-home.c"
+}
+
+
+#line 70 "panel-home.vala"
 static gboolean unity_panel_home_button_on_button_release (UnityPanelHomeButton* self, ClutterEvent* event) {
-#line 102 "panel-home.c"
+#line 147 "panel-home.c"
 	gboolean result;
-#line 40 "panel-home.vala"
+#line 70 "panel-home.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 42 "panel-home.vala"
-	unity_shell_show_unity (self->priv->_shell);
-#line 108 "panel-home.c"
-	result = FALSE;
-#line 44 "panel-home.vala"
+#line 72 "panel-home.vala"
+	g_signal_emit_by_name (self, "clicked", (*event).button.time);
+#line 153 "panel-home.c"
+	result = TRUE;
+#line 74 "panel-home.vala"
 	return result;
-#line 112 "panel-home.c"
+#line 157 "panel-home.c"
 }
 
 
@@ -118,7 +163,7 @@ UnityShell* unity_panel_home_button_get_shell (UnityPanelHomeButton* self) {
 	result = self->priv->_shell;
 #line 25 "panel-home.vala"
 	return result;
-#line 122 "panel-home.c"
+#line 167 "panel-home.c"
 }
 
 
@@ -135,9 +180,9 @@ static void unity_panel_home_button_set_shell (UnityPanelHomeButton* self, Unity
 }
 
 
-#line 40 "panel-home.vala"
+#line 70 "panel-home.vala"
 static gboolean _unity_panel_home_button_on_button_release_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 141 "panel-home.c"
+#line 186 "panel-home.c"
 	return unity_panel_home_button_on_button_release (self, event);
 }
 
@@ -150,9 +195,16 @@ static GObject * unity_panel_home_button_constructor (GType type, guint n_constr
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_PANEL_HOME_BUTTON (obj);
 	{
-#line 37 "panel-home.vala"
+		UnityThemeImage* _tmp0_;
+#line 38 "panel-home.vala"
+		self->image = (_tmp0_ = g_object_ref_sink (unity_theme_image_new ("distributor-logo")), _g_object_unref0 (self->image), _tmp0_);
+#line 39 "panel-home.vala"
+		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->image);
+#line 40 "panel-home.vala"
+		clutter_actor_show ((ClutterActor*) self->image);
+#line 42 "panel-home.vala"
 		g_signal_connect_object ((ClutterActor*) self, "button-release-event", (GCallback) _unity_panel_home_button_on_button_release_clutter_actor_button_release_event, self, 0);
-#line 156 "panel-home.c"
+#line 208 "panel-home.c"
 	}
 	return obj;
 }
@@ -161,11 +213,13 @@ static GObject * unity_panel_home_button_constructor (GType type, guint n_constr
 static void unity_panel_home_button_class_init (UnityPanelHomeButtonClass * klass) {
 	unity_panel_home_button_parent_class = g_type_class_peek_parent (klass);
 	g_type_class_add_private (klass, sizeof (UnityPanelHomeButtonPrivate));
+	CLUTTER_ACTOR_CLASS (klass)->allocate = unity_panel_home_button_real_allocate;
 	G_OBJECT_CLASS (klass)->get_property = unity_panel_home_button_get_property;
 	G_OBJECT_CLASS (klass)->set_property = unity_panel_home_button_set_property;
 	G_OBJECT_CLASS (klass)->constructor = unity_panel_home_button_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_panel_home_button_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PANEL_HOME_BUTTON_SHELL, g_param_spec_object ("shell", "shell", "shell", UNITY_TYPE_SHELL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_signal_new ("clicked", UNITY_PANEL_TYPE_HOME_BUTTON, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
 }
 
 
@@ -178,6 +232,7 @@ static void unity_panel_home_button_finalize (GObject* obj) {
 	UnityPanelHomeButton * self;
 	self = UNITY_PANEL_HOME_BUTTON (obj);
 	_g_object_unref0 (self->priv->_shell);
+	_g_object_unref0 (self->image);
 	G_OBJECT_CLASS (unity_panel_home_button_parent_class)->finalize (obj);
 }
 
@@ -186,7 +241,7 @@ GType unity_panel_home_button_get_type (void) {
 	static GType unity_panel_home_button_type_id = 0;
 	if (unity_panel_home_button_type_id == 0) {
 		static const GTypeInfo g_define_type_info = { sizeof (UnityPanelHomeButtonClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_panel_home_button_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityPanelHomeButton), 0, (GInstanceInitFunc) unity_panel_home_button_instance_init, NULL };
-		unity_panel_home_button_type_id = g_type_register_static (CTK_TYPE_IMAGE, "UnityPanelHomeButton", &g_define_type_info, 0);
+		unity_panel_home_button_type_id = g_type_register_static (CTK_TYPE_BIN, "UnityPanelHomeButton", &g_define_type_info, 0);
 	}
 	return unity_panel_home_button_type_id;
 }

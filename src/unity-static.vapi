@@ -34,9 +34,11 @@ namespace Unity {
 			}
 		}
 		[CCode (cheader_filename = "unity-static.h")]
-		public class HomeButton : Ctk.Image {
+		public class HomeButton : Ctk.Bin {
+			public Unity.ThemeImage image;
 			public HomeButton (Unity.Shell shell);
 			public Unity.Shell shell { get; construct; }
+			public signal void clicked (uint32 time_);
 		}
 		[CCode (cheader_filename = "unity-static.h")]
 		public class View : Ctk.Actor {
@@ -301,13 +303,16 @@ namespace Unity {
 				public abstract void close ();
 				public abstract Gee.ArrayList<Unity.Quicklauncher.Models.ShortcutItem> get_menu_shortcut_actions ();
 				public abstract Gee.ArrayList<Unity.Quicklauncher.Models.ShortcutItem> get_menu_shortcuts ();
+				public abstract bool do_shadow { get; }
 				public abstract Gdk.Pixbuf icon { get; }
 				public abstract bool is_active { get; }
+				public abstract bool is_fixed { get; }
 				public abstract bool is_focused { get; }
 				public abstract bool is_sticky { get; set; }
 				public abstract bool is_urgent { get; }
 				public abstract string name { get; }
 				public abstract float priority { get; set; }
+				public abstract bool readonly { get; }
 				public abstract string uid { get; }
 				public signal void activated ();
 				public signal void notify_active ();
@@ -325,18 +330,29 @@ namespace Unity {
 		public class ChromiumWebApp : GLib.Object {
 			public string id;
 			public string name;
-			public ChromiumWebApp (string address);
+			public ChromiumWebApp (string address, string icon);
 			public void add_to_favorites ();
+			public string icon { get; construct; }
 			public string url { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-static.h")]
-		public class LauncherView : Ctk.Bin, Unity.Drag.Model {
+		public class LauncherView : Ctk.Actor, Unity.Drag.Model {
+			public bool anim_priority_going_up;
 			public bool is_hovering;
 			public Unity.Quicklauncher.Models.LauncherModel? model;
 			public LauncherView (Unity.Quicklauncher.Models.LauncherModel model);
+			public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
 			public void close_menu ();
+			public override void get_preferred_height (float for_width, out float minimum_height, out float natural_height);
+			public override void get_preferred_width (float for_height, out float minimum_width, out float natural_width);
+			public override void map ();
 			public void notify_on_set_reactive ();
+			public override void paint ();
+			public override void pick (Clutter.Color color);
+			public override void unmap ();
 			public Clutter.Animation anim { get; set; }
+			public float anim_priority { get; set; }
+			public int position { get; set; }
 			public signal void clicked ();
 			public signal void menu_closed (Unity.Quicklauncher.LauncherView sender);
 			public signal void menu_opened (Unity.Quicklauncher.LauncherView sender);
@@ -353,8 +369,9 @@ namespace Unity {
 		public class Prism : GLib.Object {
 			public string id;
 			public string name;
-			public Prism (string address);
+			public Prism (string address, string icon);
 			public void add_to_favorites ();
+			public string icon { get; construct; }
 			public string url { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-static.h")]
@@ -372,6 +389,7 @@ namespace Unity {
 		[CCode (cheader_filename = "unity-static.h")]
 		public class QuicklistMenu : Ctk.Menu {
 			public QuicklistMenu ();
+			public override void paint ();
 		}
 		[CCode (cheader_filename = "unity-static.h")]
 		public class QuicklistMenuItem : Ctk.MenuItem {
@@ -394,13 +412,13 @@ namespace Unity {
 		public class Scroller : Ctk.Actor, Clutter.Container {
 			public bool order_changed;
 			public Scroller (Ctk.Orientation orientation, int spacing);
-			public void add_actor (Clutter.Actor actor);
+			public void add_actor (Clutter.Actor actor, bool is_fixed);
 			public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
 			public override void get_preferred_height (float for_width, out float minimum_height, out float natural_height);
 			public override void get_preferred_width (float for_height, out float minimum_width, out float natural_width);
 			public override void paint ();
 			public override void pick (Clutter.Color color);
-			public void remove_actor (Clutter.Actor actor);
+			public void remove_actor (Clutter.Actor actor_);
 			public float drag_pos { get; set; }
 			public int spacing { get; set; }
 		}

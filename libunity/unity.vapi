@@ -22,6 +22,34 @@ namespace Unity {
 		[CCode (cheader_filename = "unity.h")]
 		public static Unity.Drag.Controller? controller_singleton;
 	}
+	[CCode (cprefix = "UnityWebapp", lower_case_cprefix = "unity_webapp_")]
+	namespace Webapp {
+		[CCode (cheader_filename = "unity.h")]
+		public class FetchFile : GLib.Object {
+			public FetchFile (string uri);
+			public async void fetch_data ();
+			public string uri { get; construct; }
+			public signal void completed (GLib.ByteArray data);
+			public signal void failed ();
+		}
+		[CCode (cheader_filename = "unity.h")]
+		public class IconBuilder : GLib.Object {
+			public IconBuilder (string dest, Gdk.Pixbuf source);
+			public void build_icon ();
+			public void load_layers ();
+			public string destination { get; construct; }
+			public Gdk.Pixbuf source { get; construct; }
+		}
+		[CCode (cheader_filename = "unity.h")]
+		public class WebiconFetcher : GLib.Object {
+			public WebiconFetcher (string uri, string destination);
+			public void fetch_webapp_data ();
+			public string destination { get; construct; }
+			public string uri { get; construct; }
+			public signal void completed (string location);
+			public signal void failed ();
+		}
+	}
 	[CCode (cheader_filename = "unity.h")]
 	public class Application : Unique.App {
 		public Application ();
@@ -41,6 +69,12 @@ namespace Unity {
 		public ProcessInfo (string name);
 	}
 	[CCode (cheader_filename = "unity.h")]
+	public class ThemeImage : Clutter.Texture {
+		public Gdk.Pixbuf? icon;
+		public ThemeImage (string icon_name);
+		public string icon_name { get; set construct; }
+	}
+	[CCode (cheader_filename = "unity.h")]
 	public class TimelineLogger : GLib.Object {
 		public TimelineLogger ();
 		public void end_process (string name);
@@ -56,6 +90,7 @@ namespace Unity {
 		public abstract Clutter.Stage get_stage ();
 		public abstract void grab_keyboard (bool grab, uint32 timestamp);
 		public abstract void show_unity ();
+		public abstract void show_window_picker ();
 		public abstract bool menus_swallow_events { get; }
 		public signal void indicators_changed (int width);
 	}

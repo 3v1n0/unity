@@ -77,6 +77,7 @@ struct _UnityShellIface {
 	gint (*get_indicators_width) (UnityShell* self);
 	void (*ensure_input_region) (UnityShell* self);
 	void (*grab_keyboard) (UnityShell* self, gboolean grab, guint32 timestamp);
+	void (*show_window_picker) (UnityShell* self);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
 };
 
@@ -123,11 +124,11 @@ GType unity_application_commands_get_type (void) {
 
 #line 35 "application.vala"
 UnityApplication* unity_application_construct (GType object_type) {
-#line 127 "application.c"
+#line 128 "application.c"
 	UnityApplication * self;
 #line 37 "application.vala"
 	self = (UnityApplication*) g_object_new (object_type, "name", "com.canonical.Unity", NULL);
-#line 131 "application.c"
+#line 132 "application.c"
 	return self;
 }
 
@@ -136,13 +137,13 @@ UnityApplication* unity_application_construct (GType object_type) {
 UnityApplication* unity_application_new (void) {
 #line 35 "application.vala"
 	return unity_application_construct (UNITY_TYPE_APPLICATION);
-#line 140 "application.c"
+#line 141 "application.c"
 }
 
 
 #line 47 "application.vala"
 UniqueResponse unity_application_on_message_received (UnityApplication* self, gint command, UniqueMessageData* data, guint time_) {
-#line 146 "application.c"
+#line 147 "application.c"
 	UniqueResponse result;
 	UniqueResponse res;
 	char* _tmp0_;
@@ -154,7 +155,7 @@ UniqueResponse unity_application_on_message_received (UnityApplication* self, gi
 	res = UNIQUE_RESPONSE_OK;
 #line 53 "application.vala"
 	g_debug ("application.vala:53: Message Received: %d '%s' %d", command, _tmp0_ = unique_message_data_get_text (data), (gint) time_);
-#line 158 "application.c"
+#line 159 "application.c"
 	_g_free0 (_tmp0_);
 #line 58 "application.vala"
 	if (command == UNITY_APPLICATION_COMMANDS_SHOW) {
@@ -162,13 +163,13 @@ UniqueResponse unity_application_on_message_received (UnityApplication* self, gi
 		if (UNITY_IS_SHELL (unity_application_get_shell (self))) {
 #line 61 "application.vala"
 			unity_shell_show_unity (unity_application_get_shell (self));
-#line 166 "application.c"
+#line 167 "application.c"
 		}
 	}
 	result = res;
 #line 64 "application.vala"
 	return result;
-#line 172 "application.c"
+#line 173 "application.c"
 }
 
 
@@ -178,7 +179,7 @@ UnityShell* unity_application_get_shell (UnityApplication* self) {
 	result = self->priv->_shell;
 #line 31 "application.vala"
 	return result;
-#line 182 "application.c"
+#line 183 "application.c"
 }
 
 
@@ -192,14 +193,14 @@ void unity_application_set_shell (UnityApplication* self, UnityShell* value) {
 	g_return_if_fail (self != NULL);
 #line 32 "application.vala"
 	self->priv->_shell = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_shell), _tmp0_);
-#line 196 "application.c"
+#line 197 "application.c"
 	g_object_notify ((GObject *) self, "shell");
 }
 
 
 #line 47 "application.vala"
 static UniqueResponse _unity_application_on_message_received_unique_app_message_received (UniqueApp* _sender, gint command, UniqueMessageData* message_data, guint time_, gpointer self) {
-#line 203 "application.c"
+#line 204 "application.c"
 	return unity_application_on_message_received (self, command, message_data, time_);
 }
 
@@ -216,7 +217,7 @@ static GObject * unity_application_constructor (GType type, guint n_construct_pr
 		unique_app_add_command ((UniqueApp*) self, "show", (gint) UNITY_APPLICATION_COMMANDS_SHOW);
 #line 44 "application.vala"
 		g_signal_connect_object ((UniqueApp*) self, "message-received", (GCallback) _unity_application_on_message_received_unique_app_message_received, self, 0);
-#line 220 "application.c"
+#line 221 "application.c"
 	}
 	return obj;
 }

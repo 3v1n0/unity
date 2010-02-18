@@ -4,9 +4,9 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <clutk/clutk.h>
 #include <stdlib.h>
 #include <string.h>
+#include <clutk/clutk.h>
 #include <clutter/clutter.h>
 #include <gee.h>
 #include <float.h>

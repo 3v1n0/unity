@@ -308,15 +308,15 @@ static gboolean unity_places_controller_load_places (UnityPlacesController* self
 }
 
 
-#line 1047 "glib-2.0.vapi"
+#line 1045 "glib-2.0.vapi"
 static const char* string_to_string (const char* self) {
 #line 314 "places-controller.c"
 	const char* result;
-#line 1047 "glib-2.0.vapi"
+#line 1045 "glib-2.0.vapi"
 	g_return_val_if_fail (self != NULL, NULL);
 #line 318 "places-controller.c"
 	result = self;
-#line 1048 "glib-2.0.vapi"
+#line 1046 "glib-2.0.vapi"
 	return result;
 #line 322 "places-controller.c"
 }
@@ -344,13 +344,12 @@ void unity_places_controller_load_remote_places (UnityPlacesController* self) {
 		enumerator = g_file_enumerate_children (dir, G_FILE_ATTRIBUTE_STANDARD_NAME, 0, NULL, &_inner_error_);
 #line 346 "places-controller.c"
 		if (_inner_error_ != NULL) {
-			goto __catch9_g_error;
-			goto __finally9;
+			goto __catch11_g_error;
 		}
 		file_info = NULL;
 #line 73 "places-controller.vala"
 		while (TRUE) {
-#line 354 "places-controller.c"
+#line 353 "places-controller.c"
 			GFileInfo* _tmp0_;
 			GFileInfo* _tmp1_;
 			char* _tmp2_;
@@ -358,31 +357,30 @@ void unity_places_controller_load_remote_places (UnityPlacesController* self) {
 			char* filename;
 #line 73 "places-controller.vala"
 			_tmp0_ = g_file_enumerator_next_file (enumerator, NULL, &_inner_error_);
-#line 362 "places-controller.c"
+#line 361 "places-controller.c"
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (enumerator);
 				_g_object_unref0 (file_info);
-				goto __catch9_g_error;
-				goto __finally9;
+				goto __catch11_g_error;
 			}
 #line 73 "places-controller.vala"
 			if (!((file_info = (_tmp1_ = _tmp0_, _g_object_unref0 (file_info), _tmp1_)) != NULL)) {
 #line 73 "places-controller.vala"
 				break;
-#line 373 "places-controller.c"
+#line 371 "places-controller.c"
 			}
 #line 75 "places-controller.vala"
 			filename = (_tmp3_ = g_strconcat (_tmp2_ = g_strconcat (placesdir, "/", NULL), g_file_info_get_name (file_info), NULL), _g_free0 (_tmp2_), _tmp3_);
 #line 76 "places-controller.vala"
 			unity_places_controller_load_place (self, filename);
-#line 379 "places-controller.c"
+#line 377 "places-controller.c"
 			_g_free0 (filename);
 		}
 		_g_object_unref0 (enumerator);
 		_g_object_unref0 (file_info);
 	}
-	goto __finally9;
-	__catch9_g_error:
+	goto __finally11;
+	__catch11_g_error:
 	{
 		GError * _error_;
 		_error_ = _inner_error_;
@@ -391,12 +389,12 @@ void unity_places_controller_load_remote_places (UnityPlacesController* self) {
 			char* _tmp4_;
 #line 81 "places-controller.vala"
 			g_message (_tmp4_ = g_strconcat ("Unable to read places from ", string_to_string (placesdir), ": %s", NULL), _error_->message);
-#line 395 "places-controller.c"
+#line 393 "places-controller.c"
 			_g_free0 (_tmp4_);
 			_g_error_free0 (_error_);
 		}
 	}
-	__finally9:
+	__finally11:
 	if (_inner_error_ != NULL) {
 		_g_free0 (placesdir);
 		_g_object_unref0 (dir);
@@ -411,7 +409,7 @@ void unity_places_controller_load_remote_places (UnityPlacesController* self) {
 
 #line 85 "places-controller.vala"
 static void unity_places_controller_load_place (UnityPlacesController* self, const char* filename) {
-#line 415 "places-controller.c"
+#line 413 "places-controller.c"
 	GError * _inner_error_;
 	char* group;
 	GKeyFile* file;
@@ -419,13 +417,13 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 	g_return_if_fail (self != NULL);
 #line 85 "places-controller.vala"
 	g_return_if_fail (filename != NULL);
-#line 423 "places-controller.c"
+#line 421 "places-controller.c"
 	_inner_error_ = NULL;
 #line 87 "places-controller.vala"
 	group = g_strdup ("Place");
 #line 89 "places-controller.vala"
 	file = g_key_file_new ();
-#line 429 "places-controller.c"
+#line 427 "places-controller.c"
 	{
 		char* name;
 		char* comment;
@@ -435,55 +433,49 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 		UnityPlacesPlace* place;
 #line 93 "places-controller.vala"
 		g_key_file_load_from_file (file, filename, G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, &_inner_error_);
-#line 439 "places-controller.c"
+#line 437 "places-controller.c"
 		if (_inner_error_ != NULL) {
-			goto __catch10_g_error;
-			goto __finally10;
+			goto __catch12_g_error;
 		}
 #line 97 "places-controller.vala"
 		name = g_key_file_get_string (file, group, "Name", &_inner_error_);
-#line 446 "places-controller.c"
+#line 443 "places-controller.c"
 		if (_inner_error_ != NULL) {
-			goto __catch10_g_error;
-			goto __finally10;
+			goto __catch12_g_error;
 		}
 #line 98 "places-controller.vala"
 		comment = g_key_file_get_string (file, group, "Comment", &_inner_error_);
-#line 453 "places-controller.c"
+#line 449 "places-controller.c"
 		if (_inner_error_ != NULL) {
 			_g_free0 (name);
-			goto __catch10_g_error;
-			goto __finally10;
+			goto __catch12_g_error;
 		}
 #line 99 "places-controller.vala"
 		icon_name = g_key_file_get_string (file, group, "Icon", &_inner_error_);
-#line 461 "places-controller.c"
+#line 456 "places-controller.c"
 		if (_inner_error_ != NULL) {
 			_g_free0 (name);
 			_g_free0 (comment);
-			goto __catch10_g_error;
-			goto __finally10;
+			goto __catch12_g_error;
 		}
 #line 100 "places-controller.vala"
 		dbus_name = g_key_file_get_string (file, group, "DBusName", &_inner_error_);
-#line 470 "places-controller.c"
+#line 464 "places-controller.c"
 		if (_inner_error_ != NULL) {
 			_g_free0 (name);
 			_g_free0 (comment);
 			_g_free0 (icon_name);
-			goto __catch10_g_error;
-			goto __finally10;
+			goto __catch12_g_error;
 		}
 #line 101 "places-controller.vala"
 		dbus_path = g_key_file_get_string (file, group, "DBusPath", &_inner_error_);
-#line 480 "places-controller.c"
+#line 473 "places-controller.c"
 		if (_inner_error_ != NULL) {
 			_g_free0 (name);
 			_g_free0 (comment);
 			_g_free0 (icon_name);
 			_g_free0 (dbus_name);
-			goto __catch10_g_error;
-			goto __finally10;
+			goto __catch12_g_error;
 		}
 #line 103 "places-controller.vala"
 		place = (UnityPlacesPlace*) unity_places_place_proxy_new (name, icon_name, comment, dbus_name, dbus_path);
@@ -493,7 +485,7 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 			g_signal_connect_object (place, "activated", (GCallback) _unity_places_controller_on_place_activated_unity_places_place_activated, self, 0);
 #line 112 "places-controller.vala"
 			unity_places_model_add (self->priv->model, place);
-#line 497 "places-controller.c"
+#line 489 "places-controller.c"
 		}
 		_g_free0 (name);
 		_g_free0 (comment);
@@ -502,8 +494,8 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 		_g_free0 (dbus_path);
 		_g_object_unref0 (place);
 	}
-	goto __finally10;
-	__catch10_g_error:
+	goto __finally12;
+	__catch12_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -512,12 +504,12 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 			char* _tmp0_;
 #line 117 "places-controller.vala"
 			g_warning (_tmp0_ = g_strconcat ("Unable to load place '", string_to_string (filename), "': %s", NULL), e->message);
-#line 516 "places-controller.c"
+#line 508 "places-controller.c"
 			_g_free0 (_tmp0_);
 			_g_error_free0 (e);
 		}
 	}
-	__finally10:
+	__finally12:
 	if (_inner_error_ != NULL) {
 		_g_free0 (group);
 		_g_key_file_free0 (file);
@@ -532,7 +524,7 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 
 #line 121 "places-controller.vala"
 static void unity_places_controller_on_place_activated (UnityPlacesController* self, UnityPlacesPlace* place) {
-#line 536 "places-controller.c"
+#line 528 "places-controller.c"
 	ClutterActor* _tmp0_;
 #line 121 "places-controller.vala"
 	g_return_if_fail (self != NULL);
@@ -540,7 +532,7 @@ static void unity_places_controller_on_place_activated (UnityPlacesController* s
 	g_return_if_fail (place != NULL);
 #line 123 "places-controller.vala"
 	unity_places_view_set_content_view (self->priv->view, _tmp0_ = unity_places_place_get_view (place));
-#line 544 "places-controller.c"
+#line 536 "places-controller.c"
 	_g_object_unref0 (_tmp0_);
 }
 
@@ -552,15 +544,15 @@ static gpointer _g_object_ref0 (gpointer self) {
 
 #line 127 "places-controller.vala"
 UnityPlacesView* unity_places_controller_get_view (UnityPlacesController* self) {
-#line 556 "places-controller.c"
+#line 548 "places-controller.c"
 	UnityPlacesView* result;
 #line 127 "places-controller.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 560 "places-controller.c"
+#line 552 "places-controller.c"
 	result = _g_object_ref0 (self->priv->view);
 #line 129 "places-controller.vala"
 	return result;
-#line 564 "places-controller.c"
+#line 556 "places-controller.c"
 }
 
 
@@ -570,7 +562,7 @@ UnityShell* unity_places_controller_get_shell (UnityPlacesController* self) {
 	result = self->priv->_shell;
 #line 30 "places-controller.vala"
 	return result;
-#line 574 "places-controller.c"
+#line 566 "places-controller.c"
 }
 
 
@@ -584,7 +576,7 @@ static void unity_places_controller_set_shell (UnityPlacesController* self, Unit
 
 #line 47 "places-controller.vala"
 static gboolean _unity_places_controller_load_places_gsource_func (gpointer self) {
-#line 588 "places-controller.c"
+#line 580 "places-controller.c"
 	return unity_places_controller_load_places (self);
 }
 
@@ -605,7 +597,7 @@ static GObject * unity_places_controller_constructor (GType type, guint n_constr
 		self->priv->view = (_tmp1_ = g_object_ref_sink (unity_places_view_new (self->priv->model, self->priv->_shell)), _g_object_unref0 (self->priv->view), _tmp1_);
 #line 44 "places-controller.vala"
 		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_places_controller_load_places_gsource_func, g_object_ref (self), g_object_unref);
-#line 609 "places-controller.c"
+#line 601 "places-controller.c"
 	}
 	return obj;
 }
@@ -677,11 +669,11 @@ static void unity_places_controller_set_property (GObject * object, guint proper
 
 #line 135 "places-controller.vala"
 UnityPlacesHomePlace* unity_places_home_place_construct (GType object_type) {
-#line 681 "places-controller.c"
+#line 673 "places-controller.c"
 	UnityPlacesHomePlace * self;
 #line 137 "places-controller.vala"
 	self = (UnityPlacesHomePlace*) g_object_new (object_type, "name", "Home", "icon-name", PKGDATADIR "/home.png", "comment", "", NULL);
-#line 685 "places-controller.c"
+#line 677 "places-controller.c"
 	return self;
 }
 
@@ -690,20 +682,20 @@ UnityPlacesHomePlace* unity_places_home_place_construct (GType object_type) {
 UnityPlacesHomePlace* unity_places_home_place_new (void) {
 #line 135 "places-controller.vala"
 	return unity_places_home_place_construct (UNITY_PLACES_TYPE_HOME_PLACE);
-#line 694 "places-controller.c"
+#line 686 "places-controller.c"
 }
 
 
 #line 142 "places-controller.vala"
 static ClutterActor* unity_places_home_place_real_get_view (UnityPlacesPlace* base) {
-#line 700 "places-controller.c"
+#line 692 "places-controller.c"
 	UnityPlacesHomePlace * self;
 	ClutterActor* result;
 	self = (UnityPlacesHomePlace*) base;
 	result = (ClutterActor*) g_object_ref_sink (unity_places_default_view_new ());
 #line 144 "places-controller.vala"
 	return result;
-#line 707 "places-controller.c"
+#line 699 "places-controller.c"
 }
 
 
@@ -729,7 +721,7 @@ GType unity_places_home_place_get_type (void) {
 
 #line 150 "places-controller.vala"
 UnityPlacesFakePlace* unity_places_fake_place_construct (GType object_type, const char* name, const char* icon_name) {
-#line 733 "places-controller.c"
+#line 725 "places-controller.c"
 	UnityPlacesFakePlace * self;
 #line 150 "places-controller.vala"
 	g_return_val_if_fail (name != NULL, NULL);
@@ -737,7 +729,7 @@ UnityPlacesFakePlace* unity_places_fake_place_construct (GType object_type, cons
 	g_return_val_if_fail (icon_name != NULL, NULL);
 #line 152 "places-controller.vala"
 	self = (UnityPlacesFakePlace*) g_object_new (object_type, "name", name, "icon-name", icon_name, "comment", "", NULL);
-#line 741 "places-controller.c"
+#line 733 "places-controller.c"
 	return self;
 }
 
@@ -746,28 +738,28 @@ UnityPlacesFakePlace* unity_places_fake_place_construct (GType object_type, cons
 UnityPlacesFakePlace* unity_places_fake_place_new (const char* name, const char* icon_name) {
 #line 150 "places-controller.vala"
 	return unity_places_fake_place_construct (UNITY_PLACES_TYPE_FAKE_PLACE, name, icon_name);
-#line 750 "places-controller.c"
+#line 742 "places-controller.c"
 }
 
 
 #line 155 "places-controller.vala"
 static ClutterActor* unity_places_fake_place_real_get_view (UnityPlacesPlace* base) {
-#line 756 "places-controller.c"
+#line 748 "places-controller.c"
 	UnityPlacesFakePlace * self;
 	ClutterActor* result;
 	self = (UnityPlacesFakePlace*) base;
 #line 157 "places-controller.vala"
 	if (_vala_strcmp0 (unity_places_place_get_name ((UnityPlacesPlace*) self), "Applications") == 0) {
-#line 762 "places-controller.c"
+#line 754 "places-controller.c"
 		result = (ClutterActor*) g_object_ref_sink (unity_places_application_application_view_new ());
 #line 158 "places-controller.vala"
 		return result;
-#line 766 "places-controller.c"
+#line 758 "places-controller.c"
 	}
 	result = (ClutterActor*) g_object_ref_sink (unity_places_file_file_view_new ());
 #line 160 "places-controller.vala"
 	return result;
-#line 771 "places-controller.c"
+#line 763 "places-controller.c"
 }
 
 

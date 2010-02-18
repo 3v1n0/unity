@@ -995,7 +995,7 @@ void unity_places_cairo_drawing_entry_background_create_search_entry_background 
 #line 443 "cairo-drawing.vala"
 		cairo_set_operator (cairoctx, CAIRO_OPERATOR_OVER);
 #line 444 "cairo-drawing.vala"
-		cairo_translate (cairoctx, (double) 0.5f, (double) 0.5f);
+		cairo_translate (cairoctx, (double) (-0.5f), (double) (-0.5f));
 #line 446 "cairo-drawing.vala"
 		cairo_set_source_rgba (cairoctx, 1.0, 1.0, 1.0, 0.9);
 #line 447 "cairo-drawing.vala"
@@ -1007,11 +1007,11 @@ void unity_places_cairo_drawing_entry_background_create_search_entry_background 
 #line 452 "cairo-drawing.vala"
 		cairo_curve_to (cairoctx, (double) (self->Width - 5), 1.0, (double) (self->Width - 1), 5.0, (double) (self->Width - 1), (double) (self->Height / 2.0));
 #line 453 "cairo-drawing.vala"
-		cairo_curve_to (cairoctx, (double) (self->Width - 1), (double) ((self->Height / 2.0) + 5.0), (double) (self->Width - 5), (double) (self->Height - 3), (double) (self->Width - 10), (double) (self->Height - 3));
+		cairo_curve_to (cairoctx, (double) (self->Width - 1), (double) ((self->Height / 2.0) + 5.0), (double) (self->Width - 5), (double) (self->Height - 2), (double) (self->Width - 10), (double) (self->Height - 2));
 #line 455 "cairo-drawing.vala"
-		cairo_line_to (cairoctx, (double) 10, (double) (self->Height - 3));
+		cairo_line_to (cairoctx, (double) 10, (double) (self->Height - 2));
 #line 457 "cairo-drawing.vala"
-		cairo_curve_to (cairoctx, 5.0, (double) (self->Height - 3), 1.0, (double) ((self->Height / 2.0) + 5.0), 1.0, (double) (self->Height / 2.0));
+		cairo_curve_to (cairoctx, 5.0, (double) (self->Height - 2), 1.0, (double) ((self->Height / 2.0) + 5.0), 1.0, (double) (self->Height / 2.0));
 #line 458 "cairo-drawing.vala"
 		cairo_curve_to (cairoctx, 1.0, 5.0, 5.0, 1.0, 10.0, 1.0);
 #line 461 "cairo-drawing.vala"
