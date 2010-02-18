@@ -28,6 +28,7 @@ namespace Unity.Quicklauncher
   const float MARGIN             = 0.5f;
   const float BORDER             = 0.25f;
   const float CORNER_RADIUS      = 0.3f;
+  const float SHADOW_SIZE        = 1.25f;
   const float ITEM_HEIGHT        = 2.0f;
   const float ITEM_CORNER_RADIUS = 0.3f;
   const float ANCHOR_HEIGHT      = 1.5f;
@@ -298,9 +299,6 @@ namespace Unity.Quicklauncher
       _normal_mask (normal_cr, w, h, this.get_label ());
       _selected_mask (selected_cr, w, h, this.get_label ());
 
-      //normal_surf.write_to_png ("/tmp/normal_surf.png");
-      //selected_surf.write_to_png ("/tmp/selected_surf.png");
-
       normal_layer.set_mask_from_surface (normal_surf);
       normal_layer.set_color (white_color);
 
@@ -441,27 +439,25 @@ namespace Unity.Quicklauncher
               270.0f * GLib.Math.PI / 180.0f);
     }
 
-    /* Commented out as it isn't used atm
-    private void
-    _debug_mask (Cairo.Context cr,
-                 int           w,
-                 int           h)
+    void
+    _draw_mask (Cairo.Context cr,
+                int           w,
+                int           h,
+                float         anchor_y)
     {
-      // clear context
-      cr.set_operator (Cairo.Operator.CLEAR);
-      cr.paint ();
-
-      // setup correct drawing
-      cr.set_operator (Cairo.Operator.SOURCE);
-      cr.scale (1.0f, 1.0f);
-      cr.set_line_width (Ctk.em_to_pixel (LINE_WIDTH));
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
-
-      // draw actual rectangle
-      cr.rectangle (0.0f, 0.0f, w, h);
-      cr.fill ();
+      _round_rect_anchor (cr,
+                          1.0f,
+                          0.5f + Ctk.em_to_pixel (ANCHOR_WIDTH + SHADOW_SIZE),
+                          0.5f + Ctk.em_to_pixel (SHADOW_SIZE),
+                          Ctk.em_to_pixel (CORNER_RADIUS),
+                          (double) w - 1.0f - Ctk.em_to_pixel (ANCHOR_WIDTH + 2 * SHADOW_SIZE),
+                          (double) h - 1.0f - Ctk.em_to_pixel (2 * SHADOW_SIZE),
+                          Ctk.em_to_pixel (ANCHOR_WIDTH),
+                          Ctk.em_to_pixel (ANCHOR_HEIGHT),
+                          Ctk.em_to_pixel (SHADOW_SIZE),
+                          anchor_y != 0.0f ? anchor_y + Ctk.em_to_pixel (SHADOW_SIZE/2): (float) h / 2.0f);
     }
-    */
+
     private void
     _outline_mask (Cairo.Context cr,
                    int           w,
@@ -479,17 +475,7 @@ namespace Unity.Quicklauncher
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
 
       // draw actual outline
-      _round_rect_anchor (cr,
-                          1.0f,
-                          Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH),
-                          0.5f,
-                          Ctk.em_to_pixel (CORNER_RADIUS),
-                          (double) w - Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH) - 0.5f,
-                          (double) h - 1.0f,
-                          Ctk.em_to_pixel (ANCHOR_WIDTH),
-                          Ctk.em_to_pixel (ANCHOR_HEIGHT),
-                          Ctk.em_to_pixel (BORDER),
-                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
+      _draw_mask (cr, w, h, anchor_y);
       cr.stroke ();
     }
 
@@ -509,18 +495,7 @@ namespace Unity.Quicklauncher
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
 
       // draw actual outline
-      _round_rect_anchor (cr,
-                          1.0f,
-                          Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH),
-                          0.5f,
-                          Ctk.em_to_pixel (CORNER_RADIUS),
-                          (double) w - Ctk.em_to_pixel (BORDER + ANCHOR_WIDTH) - 0.5f,
-                          (double) h - 1.0f,
-                          Ctk.em_to_pixel (ANCHOR_WIDTH),
-                          Ctk.em_to_pixel (ANCHOR_HEIGHT),
-                          Ctk.em_to_pixel (BORDER),
-                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
-
+      _draw_mask (cr, w, h, anchor_y);
       cr.fill ();
     }
 
@@ -540,19 +515,7 @@ namespace Unity.Quicklauncher
       cr.scale (1.0f, 1.0f);
 
       // draw actual outline
-      _round_rect_anchor (cr,
-                          1.0f,
-                          Ctk.em_to_pixel (BORDER) +
-                          Ctk.em_to_pixel (ANCHOR_WIDTH),
-                          Ctk.em_to_pixel (BORDER),
-                          Ctk.em_to_pixel (CORNER_RADIUS),
-                          (double) w,
-                          (double) h,
-                          Ctk.em_to_pixel (ANCHOR_WIDTH),
-                          Ctk.em_to_pixel (ANCHOR_HEIGHT),
-                          Ctk.em_to_pixel (BORDER),
-                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
-
+      _draw_mask (cr, w, h, anchor_y);
       cr.fill ();
     }
 
@@ -590,18 +553,7 @@ namespace Unity.Quicklauncher
       pattern.set_extend (Cairo.Extend.REPEAT);
 
       // fill masked area with the dotted pattern
-      _round_rect_anchor (cr,
-                          1.0f,
-                          Ctk.em_to_pixel (BORDER) +
-                          Ctk.em_to_pixel (ANCHOR_WIDTH),
-                          Ctk.em_to_pixel (BORDER),
-                          Ctk.em_to_pixel (CORNER_RADIUS),
-                          (double) w,
-                          (double) h,
-                          Ctk.em_to_pixel (ANCHOR_WIDTH),
-                          Ctk.em_to_pixel (ANCHOR_HEIGHT),
-                          Ctk.em_to_pixel (BORDER),
-                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
+      _draw_mask (cr, w, h, anchor_y);
       cr.fill ();
     }
 
@@ -618,7 +570,7 @@ namespace Unity.Quicklauncher
       cr.paint ();
 
       // setup correct filled-drawing
-      cr.set_operator (Cairo.Operator.SOURCE);
+      cr.set_operator (Cairo.Operator.OVER);
       cr.scale (1.0f, 1.0f);
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -629,24 +581,52 @@ namespace Unity.Quicklauncher
                                           (double) w / 2.0f,
                                           Ctk.em_to_pixel (BORDER),
                                           (double) w / 2.0f);
-      pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.5f);
+      pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
       pattern.add_color_stop_rgba (1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
       cr.set_source (pattern);
 
       // fill masked area with radial gradient "highlight"
-      _round_rect_anchor (cr,
-                          1.0f,
-                          Ctk.em_to_pixel (BORDER) +
-                          Ctk.em_to_pixel (ANCHOR_WIDTH),
-                          Ctk.em_to_pixel (BORDER),
-                          Ctk.em_to_pixel (CORNER_RADIUS),
-                          (double) w,
-                          (double) h,
-                          Ctk.em_to_pixel (ANCHOR_WIDTH),
-                          Ctk.em_to_pixel (ANCHOR_HEIGHT),
-                          Ctk.em_to_pixel (BORDER),
-                          anchor_y != 0.0f ? anchor_y : (float) h / 2.0f);
+      _draw_mask (cr, w, h, anchor_y);
       cr.fill ();
+    }
+
+    private void
+    _shadow_bg (Cairo.Context cr,
+                int           w,
+                int           h,
+                float         anchor_y)
+    {
+      // clear context
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      // setup correct filled-drawing
+      cr.set_operator (Cairo.Operator.SOURCE);
+      cr.scale (1.0f, 1.0f);
+      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 1.0f);
+
+      // draw normal mask and blur it
+      _draw_mask (cr, w, h, anchor_y);
+      cr.fill ();
+      Ctk.surface_blur (cr.get_target (), (int) Ctk.em_to_pixel (SHADOW_SIZE/2));
+    }
+
+    public override void
+    paint ()
+    {
+      // FIXME00: this is the brute force-approach pulling the blurred-bg
+      // texture constantly... harder on the system (especially since we atm
+      // still have to do glReadPixels()) but more robust in terms of intented
+      // look as we'll have a cleanly updating blurred bg in case there's a
+      // video being displayed in a video-player, or a GL-app renders some
+      // animation or mutter does some animation stuff with the windows
+      //base.refresh_background_texture ();
+
+      // important run-time optimization!
+      if (!this.ql_background.is_flattened ())
+        this.ql_background.flatten ();
+
+      base.paint ();
     }
 
     private override void
@@ -662,6 +642,7 @@ namespace Unity.Quicklauncher
       float aw;
       float ah;
       float new_y;
+      uint  blurred_id = 0;
 
       base.allocate (box, flags);
       w = (int) (box.x2 - box.x1);
@@ -672,17 +653,26 @@ namespace Unity.Quicklauncher
       if ((old_width == w) && (old_height == h))
         return;
 
+      // FIXME01: this is the conservative approach only updating the blurred-bg
+      // texture when the allocation changed... this way we'll miss any updates
+      // of say a video-player displaying a movie behind the tooltip/quicklist
+      // or a GL-app displaying an animation or any other client app rendering
+      // a dynamic UI with screen-changes (also applies to any mutter-based
+      // animations, e.g. its expose)
+      base.refresh_background_texture ();
+
       Ctk.Actor actor = this.get_attached_actor ();
       actor.get_position (out ax, out ay);
       actor.get_size (out aw, out ah);
-      //stdout.printf ("--- attached-actor: %.1f/%.1f ---\n", ax, ay);
       this.get_position (out x, out y);
-      //stdout.printf ("--- menu-actor: %.1f/%.1f ---\n", x, y);
-      //stdout.printf ("--- y-diff: %.1f ---\n\n", y - ay);
       if (get_num_items() != 1)
         new_y = ah / 2.0f;
       else
         new_y = 0.0f;
+
+      // do the texture-update/glReadPixels() thing here ... call it whatever
+      // you feel fits best here ctk_menu_get_framebuffer_background()
+      blurred_id = base.get_framebuffer_background ();
 
       // store the new width/height
       old_width  = w;
@@ -692,7 +682,7 @@ namespace Unity.Quicklauncher
         red   = 255,
         green = 255,
         blue  = 255,
-        alpha = 255
+        alpha = (uint8) (255.0f * 1.0f)
       };
       Clutter.Color fill_color = Clutter.Color () {
         red   = 0,
@@ -700,24 +690,36 @@ namespace Unity.Quicklauncher
         blue  = 0,
         alpha = (uint8) (255.0f * 0.3f)
       };
-      /*Clutter.Color debug_color = Clutter.Color () {
-        red   = 64,
-        green = 64,
+      Clutter.Color shadow_color = Clutter.Color () {
+        red   = 0,
+        green = 0,
+        blue  = 0,
+        alpha = (uint8) (255.0f * 0.48f)
+      };
+      Clutter.Color highlight_color = Clutter.Color () {
+        red   = 255,
+        green = 255,
         blue  = 255,
         alpha = (uint8) (255.0f * 0.5f)
-      };*/
+      };
+      Clutter.Color dotted_color = Clutter.Color () {
+        red   = 255,
+        green = 255,
+        blue  = 255,
+        alpha = (uint8) (255.0f * 0.3f)
+      };
+
+      Clutter.Color blurred_color = Clutter.Color () {
+        red   = 255,
+        green = 255,
+        blue  = 255,
+        alpha = (uint8) (255.0f * 1.0f)
+      };
 
       // before creating a new CtkLayerActor make sure we don't leak any memory
       if (this.ql_background is Ctk.LayerActor)
          this.ql_background.destroy ();
       this.ql_background = new Ctk.LayerActor (w, h);
-
-      /* Commented out as it isn't used atm
-      Ctk.Layer debug_layer = new Ctk.Layer (w,
-                                             h,
-                                             Ctk.LayerRepeatMode.NONE,
-                                             Ctk.LayerRepeatMode.NONE);
-       */
 
       Ctk.Layer outline_layer = new Ctk.Layer (w,
                                                h,
@@ -736,14 +738,16 @@ namespace Unity.Quicklauncher
                                               Ctk.LayerRepeatMode.NONE,
                                               Ctk.LayerRepeatMode.NONE);
 
-      /*Ctk.Layer shadow_layer = new Ctk.Layer (w,
+      Ctk.Layer shadow_layer = new Ctk.Layer (w,
                                               h,
                                               Ctk.LayerRepeatMode.NONE,
-                                              Ctk.LayerRepeatMode.NONE);*/
+                                              Ctk.LayerRepeatMode.NONE);
 
-      /*Cairo.Surface debug_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                         w,
-                                                         h);*/
+      Ctk.Layer blurred_layer = new Ctk.Layer (w,
+                                              h,
+                                              Ctk.LayerRepeatMode.NONE,
+                                              Ctk.LayerRepeatMode.NONE);
+
       Cairo.Surface outline_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
                                                            w,
                                                            h);
@@ -759,75 +763,70 @@ namespace Unity.Quicklauncher
       Cairo.Surface dotted_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
                                                           w,
                                                           h);
+      Cairo.Surface shadow_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
+                                                          w,
+                                                          h);
 
-      //Cairo.Context debug_cr = new Cairo.Context (debug_surf);
       Cairo.Context outline_cr = new Cairo.Context (outline_surf);
       Cairo.Context fill_cr = new Cairo.Context (fill_surf);
       Cairo.Context negative_cr = new Cairo.Context (negative_surf);
       Cairo.Context highlight_cr = new Cairo.Context (highlight_surf);
       Cairo.Context dotted_cr = new Cairo.Context (dotted_surf);
+      Cairo.Context shadow_cr = new Cairo.Context (shadow_surf);
 
-      //_debug_mask (debug_cr, w, h);
       _outline_mask (outline_cr, w, h, new_y);
       _fill_mask (fill_cr, w, h, new_y);
       _negative_mask (negative_cr, w, h, new_y);
       _dotted_bg (dotted_cr, w, h, new_y);
       _highlight_bg (highlight_cr, w, h, new_y);
+      _shadow_bg (shadow_cr, w, h, new_y);
 
-      //outline_surf.write_to_png ("/tmp/outline_surf.png");
-      //fill_surf.write_to_png ("/tmp/fill_surf.png");
-      //negative_surf.write_to_png ("/tmp/negative_surf.png");
-      //highlight_surf.write_to_png ("/tmp/highlight_surf.png");
-      //dotted_surf.write_to_png ("/tmp/dotted_surf.png");
+      shadow_layer.set_mask_from_surface (negative_surf);
+      shadow_layer.set_image_from_surface (shadow_surf);
+      shadow_layer.set_color (shadow_color);
 
-      //shadow_layer.set_mask_from_surface (negative_surf);
-      //shadow_layer.set_image_from_surface (shadow_surf);
-
-      //debug_layer.set_mask_from_surface (debug_surf);
-      //debug_layer.set_color (debug_color);
+      blurred_layer.set_mask_from_surface (fill_surf);
+      // this CtkLayer.set_image_from_id() still needs to be written
+      // I can do that tomorrow... or you can do it if you want
+      blurred_layer.set_image_from_id (blurred_id);
+      blurred_layer.set_color (blurred_color);
 
       fill_layer.set_mask_from_surface (fill_surf);
       fill_layer.set_color (fill_color);
 
       dotted_layer.set_mask_from_surface (fill_surf);
       dotted_layer.set_image_from_surface (dotted_surf);
-      dotted_layer.opacity = (uint8) (255.0f * 0.15f);
+      dotted_layer.set_color (dotted_color);
 
       highlight_layer.set_mask_from_surface (fill_surf);
       highlight_layer.set_image_from_surface (highlight_surf);
-      highlight_layer.opacity = 128;
+      highlight_layer.set_color (highlight_color);
 
       outline_layer.set_mask_from_surface (outline_surf);
       outline_layer.set_color (outline_color);
 
       // order is important here... don't mess around!
-      //this.ql_background.add_layer (shadow_layer);
-      //this.ql_background.add_layer (blurred_layer);
-      //this.ql_background.add_layer (debug_layer);
+      this.ql_background.add_layer (shadow_layer);
+      this.ql_background.add_layer (blurred_layer);
       this.ql_background.add_layer (fill_layer);
       this.ql_background.add_layer (dotted_layer);
       this.ql_background.add_layer (highlight_layer);
       this.ql_background.add_layer (outline_layer);
 
-      // important run-time optimization!
-      this.ql_background.flatten ();
-
       this.set_background (this.ql_background);
+      this.ql_background.set_opacity (255);
     }
     
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {
-        left   = (int) Ctk.em_to_pixel (ANCHOR_WIDTH + 1.75f * BORDER),
-        right  = (int) Ctk.em_to_pixel (BORDER),
-        top    = (int) Ctk.em_to_pixel (BORDER),
-        // FIXME: there's an issue with CtkMenu probably adding the spacing even
-        // for the last child/menu-item although it should not do that, that's
-        // why bottom is currently set to 0 instead of BORDER
-        bottom = 0 // (int) Ctk.em_to_pixel (BORDER)
+        left   = (int) Ctk.em_to_pixel (ANCHOR_WIDTH + BORDER + SHADOW_SIZE),
+        right  = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE),
+        top    = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE),
+        bottom = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE)
       };
       this.set_padding (padding);
-      this.spacing = (int) Ctk.em_to_pixel (GAP);
+      //this.spacing = (int) Ctk.em_to_pixel (GAP);
 
       old_width  = 0;
       old_height = 0;

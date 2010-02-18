@@ -285,7 +285,7 @@ static void unity_quicklauncher_quicklist_controller_build_menu (UnityQuicklaunc
 #line 107 "quicklist-controller.vala"
 	clutter_actor_get_position ((ClutterActor*) self->menu, &x, &y);
 #line 108 "quicklist-controller.vala"
-	clutter_actor_set_position ((ClutterActor*) self->menu, x - 10, y);
+	clutter_actor_set_position ((ClutterActor*) self->menu, x - ((float) ctk_em_to_pixel ((double) 1.5f)), y);
 #line 290 "quicklist-controller.c"
 	_g_object_unref0 (menuitem);
 }
@@ -347,7 +347,7 @@ void unity_quicklauncher_quicklist_controller_hide_label (UnityQuicklauncherQuic
 }
 
 
-#line 53 "launcher-model.vala"
+#line 56 "launcher-model.vala"
 static void _unity_quicklauncher_models_shortcut_item_activated_ctk_menu_item_activated (CtkMenuItem* _sender, gpointer self) {
 #line 353 "quicklist-controller.c"
 	unity_quicklauncher_models_shortcut_item_activated (self);

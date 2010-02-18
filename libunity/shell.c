@@ -57,6 +57,7 @@ struct _UnityShellIface {
 	gint (*get_indicators_width) (UnityShell* self);
 	void (*ensure_input_region) (UnityShell* self);
 	void (*grab_keyboard) (UnityShell* self, gboolean grab, guint32 timestamp);
+	void (*show_window_picker) (UnityShell* self);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
 };
 
@@ -73,6 +74,7 @@ void unity_shell_show_unity (UnityShell* self);
 gint unity_shell_get_indicators_width (UnityShell* self);
 void unity_shell_ensure_input_region (UnityShell* self);
 void unity_shell_grab_keyboard (UnityShell* self, gboolean grab, guint32 timestamp);
+void unity_shell_show_window_picker (UnityShell* self);
 gboolean unity_shell_get_menus_swallow_events (UnityShell* self);
 
 
@@ -103,7 +105,7 @@ GType unity_dnd_targets_get_type (void) {
 UnityShellMode unity_shell_get_mode (UnityShell* self) {
 #line 36 "shell.vala"
 	return UNITY_SHELL_GET_INTERFACE (self)->get_mode (self);
-#line 107 "shell.c"
+#line 109 "shell.c"
 }
 
 
@@ -111,7 +113,7 @@ UnityShellMode unity_shell_get_mode (UnityShell* self) {
 ClutterStage* unity_shell_get_stage (UnityShell* self) {
 #line 37 "shell.vala"
 	return UNITY_SHELL_GET_INTERFACE (self)->get_stage (self);
-#line 115 "shell.c"
+#line 117 "shell.c"
 }
 
 
@@ -119,7 +121,7 @@ ClutterStage* unity_shell_get_stage (UnityShell* self) {
 void unity_shell_show_unity (UnityShell* self) {
 #line 38 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->show_unity (self);
-#line 123 "shell.c"
+#line 125 "shell.c"
 }
 
 
@@ -127,7 +129,7 @@ void unity_shell_show_unity (UnityShell* self) {
 gint unity_shell_get_indicators_width (UnityShell* self) {
 #line 39 "shell.vala"
 	return UNITY_SHELL_GET_INTERFACE (self)->get_indicators_width (self);
-#line 131 "shell.c"
+#line 133 "shell.c"
 }
 
 
@@ -135,7 +137,7 @@ gint unity_shell_get_indicators_width (UnityShell* self) {
 void unity_shell_ensure_input_region (UnityShell* self) {
 #line 40 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->ensure_input_region (self);
-#line 139 "shell.c"
+#line 141 "shell.c"
 }
 
 
@@ -143,7 +145,15 @@ void unity_shell_ensure_input_region (UnityShell* self) {
 void unity_shell_grab_keyboard (UnityShell* self, gboolean grab, guint32 timestamp) {
 #line 41 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->grab_keyboard (self, grab, timestamp);
-#line 147 "shell.c"
+#line 149 "shell.c"
+}
+
+
+#line 42 "shell.vala"
+void unity_shell_show_window_picker (UnityShell* self) {
+#line 42 "shell.vala"
+	UNITY_SHELL_GET_INTERFACE (self)->show_window_picker (self);
+#line 157 "shell.c"
 }
 
 

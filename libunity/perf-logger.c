@@ -402,28 +402,26 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 #line 403 "perf-logger.c"
 			if (_inner_error_ != NULL) {
 				goto __catch0_g_error;
-				goto __finally0;
 			}
 #line 96 "perf-logger.vala"
 			file_stream = (_tmp1_ = _tmp0_, _g_object_unref0 (file_stream), _tmp1_);
-#line 410 "perf-logger.c"
+#line 409 "perf-logger.c"
 		} else {
 			GFileOutputStream* _tmp2_;
 			GFileOutputStream* _tmp3_;
 #line 100 "perf-logger.vala"
 			_tmp2_ = g_file_replace (log_file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, &_inner_error_);
-#line 416 "perf-logger.c"
+#line 415 "perf-logger.c"
 			if (_inner_error_ != NULL) {
 				goto __catch0_g_error;
-				goto __finally0;
 			}
 #line 100 "perf-logger.vala"
 			file_stream = (_tmp3_ = _tmp2_, _g_object_unref0 (file_stream), _tmp3_);
-#line 423 "perf-logger.c"
+#line 421 "perf-logger.c"
 		}
 #line 103 "perf-logger.vala"
 		output_stream = g_data_output_stream_new ((GOutputStream*) file_stream);
-#line 427 "perf-logger.c"
+#line 425 "perf-logger.c"
 		{
 			GeeCollection* _tmp4_;
 			GeeIterator* _tmp5_;
@@ -431,14 +429,14 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 			_info_it = (_tmp5_ = gee_iterable_iterator ((GeeIterable*) (_tmp4_ = gee_map_get_values ((GeeMap*) self->priv->process_map))), _g_object_unref0 (_tmp4_), _tmp5_);
 #line 105 "perf-logger.vala"
 			while (TRUE) {
-#line 435 "perf-logger.c"
+#line 433 "perf-logger.c"
 				UnityProcessInfo* info;
 				char* outline;
 #line 105 "perf-logger.vala"
 				if (!gee_iterator_next (_info_it)) {
 #line 105 "perf-logger.vala"
 					break;
-#line 442 "perf-logger.c"
+#line 440 "perf-logger.c"
 				}
 #line 105 "perf-logger.vala"
 				info = (UnityProcessInfo*) gee_iterator_get (_info_it);
@@ -446,14 +444,13 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 				outline = g_strdup_printf ("%s, %f, %f\n", info->name, info->start, info->end);
 #line 108 "perf-logger.vala"
 				g_data_output_stream_put_string (output_stream, outline, NULL, &_inner_error_);
-#line 450 "perf-logger.c"
+#line 448 "perf-logger.c"
 				if (_inner_error_ != NULL) {
 					_unity_process_info_unref0 (info);
 					_g_free0 (outline);
 					_g_object_unref0 (_info_it);
 					_g_object_unref0 (output_stream);
 					goto __catch0_g_error;
-					goto __finally0;
 				}
 				_unity_process_info_unref0 (info);
 				_g_free0 (outline);
@@ -462,11 +459,10 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 		}
 #line 111 "perf-logger.vala"
 		g_output_stream_close ((GOutputStream*) file_stream, NULL, &_inner_error_);
-#line 466 "perf-logger.c"
+#line 463 "perf-logger.c"
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (output_stream);
 			goto __catch0_g_error;
-			goto __finally0;
 		}
 		_g_object_unref0 (output_stream);
 	}
@@ -479,7 +475,7 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 		{
 #line 114 "perf-logger.vala"
 			g_warning ("perf-logger.vala:114: %s", e->message);
-#line 483 "perf-logger.c"
+#line 479 "perf-logger.c"
 			_g_error_free0 (e);
 		}
 	}
@@ -493,7 +489,7 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 	}
 #line 116 "perf-logger.vala"
 	g_debug ("perf-logger.vala:116: Done writing performance log file: %s", filename);
-#line 497 "perf-logger.c"
+#line 493 "perf-logger.c"
 	_g_object_unref0 (log_file);
 	_g_object_unref0 (file_stream);
 }
@@ -501,7 +497,7 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 
 #line 39 "perf-logger.vala"
 UnityTimelineLogger* unity_timeline_logger_construct (GType object_type) {
-#line 505 "perf-logger.c"
+#line 501 "perf-logger.c"
 	UnityTimelineLogger * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
@@ -512,7 +508,7 @@ UnityTimelineLogger* unity_timeline_logger_construct (GType object_type) {
 UnityTimelineLogger* unity_timeline_logger_new (void) {
 #line 39 "perf-logger.vala"
 	return unity_timeline_logger_construct (UNITY_TYPE_TIMELINE_LOGGER);
-#line 516 "perf-logger.c"
+#line 512 "perf-logger.c"
 }
 
 
@@ -532,7 +528,7 @@ static GObject * unity_timeline_logger_constructor (GType type, guint n_construc
 		self->priv->global_timer = (_tmp1_ = g_timer_new (), _g_timer_destroy0 (self->priv->global_timer), _tmp1_);
 #line 58 "perf-logger.vala"
 		g_timer_start (self->priv->global_timer);
-#line 536 "perf-logger.c"
+#line 532 "perf-logger.c"
 	}
 	return obj;
 }

@@ -210,8 +210,7 @@ static void unity_places_place_proxy_setup_service (UnityPlacesPlaceProxy* self)
 		_tmp0_ = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
 #line 212 "places-place-proxy.c"
 		if (_inner_error_ != NULL) {
-			goto __catch11_g_error;
-			goto __finally11;
+			goto __catch13_g_error;
 		}
 #line 59 "places-place-proxy.vala"
 		self->priv->conn = (_tmp1_ = _tmp0_, _dbus_g_connection_unref0 (self->priv->conn), _tmp1_);
@@ -221,14 +220,13 @@ static void unity_places_place_proxy_setup_service (UnityPlacesPlaceProxy* self)
 		_dynamic_ViewChanged1_connect (self->priv->service, "ViewChanged", (GCallback) _unity_places_place_proxy_on_view_changed_dynamic_ViewChanged0_, self);
 #line 66 "places-place-proxy.vala"
 		_dynamic_set_active0 (self->priv->service, FALSE, &_inner_error_);
-#line 225 "places-place-proxy.c"
+#line 224 "places-place-proxy.c"
 		if (_inner_error_ != NULL) {
-			goto __catch11_g_error;
-			goto __finally11;
+			goto __catch13_g_error;
 		}
 	}
-	goto __finally11;
-	__catch11_g_error:
+	goto __finally13;
+	__catch13_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -236,11 +234,11 @@ static void unity_places_place_proxy_setup_service (UnityPlacesPlaceProxy* self)
 		{
 #line 70 "places-place-proxy.vala"
 			g_warning ("places-place-proxy.vala:70: Unable to start service %s: %s", self->priv->_dbus_name, e->message);
-#line 240 "places-place-proxy.c"
+#line 238 "places-place-proxy.c"
 			_g_error_free0 (e);
 		}
 	}
-	__finally11:
+	__finally13:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -249,17 +247,17 @@ static void unity_places_place_proxy_setup_service (UnityPlacesPlaceProxy* self)
 }
 
 
-#line 1047 "glib-2.0.vapi"
+#line 1045 "glib-2.0.vapi"
 static const char* string_to_string (const char* self) {
-#line 255 "places-place-proxy.c"
+#line 253 "places-place-proxy.c"
 	const char* result;
-#line 1047 "glib-2.0.vapi"
+#line 1045 "glib-2.0.vapi"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 259 "places-place-proxy.c"
+#line 257 "places-place-proxy.c"
 	result = self;
-#line 1048 "glib-2.0.vapi"
+#line 1046 "glib-2.0.vapi"
 	return result;
-#line 263 "places-place-proxy.c"
+#line 261 "places-place-proxy.c"
 }
 
 
@@ -275,7 +273,7 @@ static void unity_places_place_proxy_on_view_changed (UnityPlacesPlaceProxy* sel
 	g_return_if_fail (view_properties != NULL);
 #line 86 "places-place-proxy.vala"
 	if (_vala_strcmp0 (view_name, "ResultsView") == 0) {
-#line 279 "places-place-proxy.c"
+#line 277 "places-place-proxy.c"
 		UnityPlacesViewsResultsView* new_view;
 #line 88 "places-place-proxy.vala"
 		new_view = g_object_ref_sink (unity_places_views_results_view_new ());
@@ -283,13 +281,13 @@ static void unity_places_place_proxy_on_view_changed (UnityPlacesPlaceProxy* sel
 		unity_places_place_view_init_with_properties ((UnityPlacesPlaceView*) new_view, view_properties);
 #line 91 "places-place-proxy.vala"
 		clutter_container_add_actor ((ClutterContainer*) self->priv->view, (ClutterActor*) new_view);
-#line 287 "places-place-proxy.c"
+#line 285 "places-place-proxy.c"
 		_g_object_unref0 (new_view);
 	} else {
 		char* _tmp0_;
 #line 95 "places-place-proxy.vala"
 		g_warning ("places-place-proxy.vala:95: %s", _tmp0_ = g_strconcat ("Unknown view: ", string_to_string (view_name), NULL));
-#line 293 "places-place-proxy.c"
+#line 291 "places-place-proxy.c"
 		_g_free0 (_tmp0_);
 	}
 }
@@ -302,7 +300,7 @@ static gpointer _g_object_ref0 (gpointer self) {
 
 #line 99 "places-place-proxy.vala"
 static ClutterActor* unity_places_place_proxy_real_get_view (UnityPlacesPlace* base) {
-#line 306 "places-place-proxy.c"
+#line 304 "places-place-proxy.c"
 	UnityPlacesPlaceProxy * self;
 	ClutterActor* result;
 	self = (UnityPlacesPlaceProxy*) base;
@@ -310,20 +308,20 @@ static ClutterActor* unity_places_place_proxy_real_get_view (UnityPlacesPlace* b
 	if (!DBUS_IS_G_PROXY (self->priv->service)) {
 #line 104 "places-place-proxy.vala"
 		unity_places_place_proxy_setup_service (self);
-#line 314 "places-place-proxy.c"
+#line 312 "places-place-proxy.c"
 	}
 #line 107 "places-place-proxy.vala"
 	if (!CTK_IS_BOX (self->priv->view)) {
-#line 318 "places-place-proxy.c"
+#line 316 "places-place-proxy.c"
 		CtkBox* _tmp0_;
 #line 109 "places-place-proxy.vala"
 		self->priv->view = (_tmp0_ = (CtkBox*) g_object_ref_sink ((CtkVBox*) ctk_vbox_new ((guint) 0)), _g_object_unref0 (self->priv->view), _tmp0_);
-#line 322 "places-place-proxy.c"
+#line 320 "places-place-proxy.c"
 	}
 	result = _g_object_ref0 ((ClutterActor*) self->priv->view);
 #line 112 "places-place-proxy.vala"
 	return result;
-#line 327 "places-place-proxy.c"
+#line 325 "places-place-proxy.c"
 }
 
 
@@ -333,7 +331,7 @@ const char* unity_places_place_proxy_get_dbus_name (UnityPlacesPlaceProxy* self)
 	result = self->priv->_dbus_name;
 #line 29 "places-place-proxy.vala"
 	return result;
-#line 337 "places-place-proxy.c"
+#line 335 "places-place-proxy.c"
 }
 
 
@@ -351,7 +349,7 @@ const char* unity_places_place_proxy_get_dbus_path (UnityPlacesPlaceProxy* self)
 	result = self->priv->_dbus_path;
 #line 30 "places-place-proxy.vala"
 	return result;
-#line 355 "places-place-proxy.c"
+#line 353 "places-place-proxy.c"
 }
 
 

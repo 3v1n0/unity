@@ -114,7 +114,7 @@ GType unity_actor_blur_get_type (void);
 UnityActorBlur* unity_actor_blur_new (ClutterActor* actor);
 UnityActorBlur* unity_actor_blur_construct (GType object_type, ClutterActor* actor);
 GType unity_plugin_get_type (void);
-void unity_plugin_expose_windows (UnityPlugin* self, GSList* windows);
+void unity_plugin_expose_windows (UnityPlugin* self, GSList* windows, gint left_buffer);
 void unity_plugin_minimize (UnityPlugin* self, MutterWindow* window);
 void unity_plugin_maximize (UnityPlugin* self, MutterWindow* window, gint x, gint y, gint width, gint height);
 void unity_plugin_unmaximize (UnityPlugin* self, MutterWindow* window, gint x, gint y, gint width, gint height);

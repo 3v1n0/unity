@@ -21,12 +21,14 @@
 namespace Unity.Panel
 {
   static const int PANEL_HEIGHT = 24;
+  static const string SEARCH_TEMPLATE = "xdg-open http://uk.search.yahoo.com/search?p=%s&fr=ubuntu&ei=UTF-8";
+
 
   public class View : Ctk.Actor
   {
     public Shell shell { get; construct;}
 
-    private Clutter.Rectangle rect;
+    private ThemeImage        rect;
     private Tray.View         tray;
     private HomeButton        home;
     private Indicators.View   indicators;
@@ -38,7 +40,7 @@ namespace Unity.Panel
 
     public View (Shell shell)
     {
-      Object (shell:shell);
+      Object (shell:shell, reactive:false);
       this.tray.manage_stage (this.shell.get_stage ());
     }
 
@@ -46,9 +48,8 @@ namespace Unity.Panel
     {
       START_FUNCTION ();
 
-      Clutter.Color color = { 25, 25, 25, 255 };
-
-      this.rect = new Clutter.Rectangle.with_color (color);
+      this.rect = new ThemeImage ("panel_background");
+      this.rect.set_repeat (true, false);
       this.rect.set_parent (this);
       this.rect.show ();
 
@@ -60,34 +61,60 @@ namespace Unity.Panel
       this.tray.set_parent (this);
       this.tray.show ();
 
+
       this.home = new HomeButton (this.shell);
       this.home.set_parent (this);
       this.home.show ();
+      this.home.clicked.connect (this.on_home_clicked);
 
       this.entry_background = new Unity.Places.CairoDrawing.EntryBackground ();
       this.entry_background.set_parent (this);
       this.entry_background.show ();
 
-      this.entry = new Unity.Entry ("Search");
+      this.entry = new Unity.Entry ("");
+      this.entry.static_text = (_("Search"));
       this.entry.set_parent (this);
       this.entry.show ();
-      this.entry.activate.connect (() =>
-        {
-          var text = Uri.escape_string (this.entry.text, "", true);
-
-          var command = "xdg-open http://www.google.com/search?ie=UTF-8&q=%s".printf (text);
-
-          try
-            {
-              Process.spawn_command_line_async (command);
-            }
-          catch (Error e)
-            {
-              warning ("Unable to search for '$text': %s", e.message);
-            }
-        });
+      this.entry.activate.connect (this.on_entry_activated);
 
       END_FUNCTION ();
+    }
+
+    private void on_home_clicked ()
+    {
+      Unity.global_shell.show_window_picker ();
+    }
+
+    private void on_entry_activated ()
+    {
+      string template = "";
+
+      var client = GConf.Client.get_default ();
+      try
+        {
+          template = client.get_string ("/apps/unity/panel/search_template");
+
+          if (template == "" || template == null)
+            template = SEARCH_TEMPLATE;
+        }
+      catch (Error e)
+        {
+          template = SEARCH_TEMPLATE;
+        }
+
+      var command=template.replace ("%s",
+                                Uri.escape_string (this.entry.text, "", true));
+
+      try
+        {
+          Process.spawn_command_line_async (command);
+        }
+      catch (Error e)
+        {
+          warning ("Unable to search for '%s': %s",
+                   this.entry.text,
+                   e.message);
+        }
     }
 
     private override void allocate (Clutter.ActorBox        box,
@@ -98,31 +125,38 @@ namespace Unity.Panel
       float            child_width;
       float            i_width;
 
+      base.allocate (box, flags);
+
       width = box.x2 - box.x1;
 
+      //this.rect.set_clip (0, 0, width, box.y2 - box.y1);
+
       /* First the background */
+      child_box.y2 += 4.0f;
       this.rect.allocate (child_box, flags);
 
       /* Home button */
-      child_box.x1 = 17; /* (QL_width - logo_width)/2.0 */
-      child_box.x2 = child_box.x1 + PANEL_HEIGHT;
+      child_box.x1 = 0;
+      child_box.x2 = 60;
       child_box.y1 = 0;
       child_box.y2 = PANEL_HEIGHT;
       this.home.allocate (child_box, flags);
 
       /* Entry */
-      child_box.x1 = child_box.x2 + 56;
-      child_box.x2 = child_box.x1 + 150; /* Random width */
+      child_box.x1 = Math.floorf (child_box.x2 + 12);
+      child_box.x2 = Math.floorf (child_box.x1 + 150); /* Random width */
+      child_box.y1 = Math.floorf (2);
+      child_box.y2 = Math.floorf (PANEL_HEIGHT);
 
-      if ((this.entry_background.Width != (int)(child_box.x2 - child_box.x1)) && (this.entry_background.height != (int)(child_box.y2 - child_box.y1)))
+      if ((this.entry_background.Width != (int)(child_box.x2 - child_box.x1)) && (this.entry_background.height != (int)(child_box.y2 - child_box.y1-2)))
       {
-        this.entry_background.create_search_entry_background ((int)(child_box.x2 - child_box.x1), (int)(child_box.y2 - child_box.y1));
+        this.entry_background.create_search_entry_background ((int)(child_box.x2 - child_box.x1), (int)(child_box.y2 - child_box.y1-2));
       }
       this.entry_background.allocate (child_box, flags);
 
       child_box.x1 += 12; /* (QL_width - logo_width)/2.0 */
       child_box.x2 -= 12;
-      child_box.y1 += 4;
+      child_box.y1 += 5;
       child_box.y2 -= 4;
       this.entry.allocate (child_box, flags);
 
@@ -169,6 +203,7 @@ namespace Unity.Panel
 
     private override void pick (Clutter.Color color)
     {
+      base.pick (color);
       this.tray.paint ();
       this.home.paint ();
       this.indicators.paint ();

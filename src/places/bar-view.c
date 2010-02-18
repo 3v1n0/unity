@@ -25,12 +25,12 @@
 #include <glib-object.h>
 #include <float.h>
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
 #include <clutk/clutk.h>
 #include <unity.h>
 #include <gee.h>
 #include <clutter/clutter.h>
-#include <stdlib.h>
-#include <string.h>
 
 
 #define UNITY_PLACES_BAR_TYPE_VIEW (unity_places_bar_view_get_type ())
@@ -513,13 +513,17 @@ gboolean unity_places_bar_view_on_button_release (UnityPlacesBarView* self, Clut
 #line 514 "bar-view.c"
 				if (_inner_error_ != NULL) {
 					if (_inner_error_->domain == G_SPAWN_ERROR) {
-						goto __catch8_g_spawn_error;
+						goto __catch10_g_spawn_error;
 					}
-					goto __finally8;
+					_g_object_unref0 (icon);
+					_g_object_unref0 (actor);
+					g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+					g_clear_error (&_inner_error_);
+					return FALSE;
 				}
 			}
-			goto __finally8;
-			__catch8_g_spawn_error:
+			goto __finally10;
+			__catch10_g_spawn_error:
 			{
 				GError * e;
 				e = _inner_error_;
@@ -527,11 +531,11 @@ gboolean unity_places_bar_view_on_button_release (UnityPlacesBarView* self, Clut
 				{
 #line 203 "bar-view.vala"
 					g_warning ("bar-view.vala:203: Unable to show Trash: %s", e->message);
-#line 531 "bar-view.c"
+#line 535 "bar-view.c"
 					_g_error_free0 (e);
 				}
 			}
-			__finally8:
+			__finally10:
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (icon);
 				_g_object_unref0 (actor);
@@ -542,45 +546,45 @@ gboolean unity_places_bar_view_on_button_release (UnityPlacesBarView* self, Clut
 		} else {
 #line 206 "bar-view.vala"
 			if (UNITY_PLACES_IS_PLACE (unity_places_bar_place_icon_get_place (icon))) {
-#line 546 "bar-view.c"
+#line 550 "bar-view.c"
 				ClutterActor* stage;
 #line 208 "bar-view.vala"
 				stage = _g_object_ref0 (clutter_actor_get_stage (actor));
 #line 211 "bar-view.vala"
 				unity_places_cairo_drawing_places_background_create_places_background (self->priv->bg, (gint) clutter_actor_get_width (stage), (gint) clutter_actor_get_height (stage), (gint) clutter_actor_get_x (actor), 80, unity_shell_get_indicators_width (self->priv->_shell));
-#line 552 "bar-view.c"
+#line 556 "bar-view.c"
 				{
 					GeeIterator* _picon_it;
 					_picon_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) self->priv->places_icons);
 #line 218 "bar-view.vala"
 					while (TRUE) {
-#line 558 "bar-view.c"
+#line 562 "bar-view.c"
 						UnityPlacesBarPlaceIcon* picon;
 #line 218 "bar-view.vala"
 						if (!gee_iterator_next (_picon_it)) {
 #line 218 "bar-view.vala"
 							break;
-#line 564 "bar-view.c"
+#line 568 "bar-view.c"
 						}
 #line 218 "bar-view.vala"
 						picon = (UnityPlacesBarPlaceIcon*) gee_iterator_get (_picon_it);
 #line 220 "bar-view.vala"
 						if (UNITY_PLACES_IS_PLACE (unity_places_bar_place_icon_get_place (picon))) {
-#line 570 "bar-view.c"
+#line 574 "bar-view.c"
 							gboolean _tmp2_ = FALSE;
 #line 221 "bar-view.vala"
 							if (picon == icon) {
 #line 221 "bar-view.vala"
 								_tmp2_ = TRUE;
-#line 576 "bar-view.c"
+#line 580 "bar-view.c"
 							} else {
 #line 221 "bar-view.vala"
 								_tmp2_ = FALSE;
-#line 580 "bar-view.c"
+#line 584 "bar-view.c"
 							}
 #line 221 "bar-view.vala"
 							unity_places_place_set_active (unity_places_bar_place_icon_get_place (picon), _tmp2_);
-#line 584 "bar-view.c"
+#line 588 "bar-view.c"
 						}
 						_g_object_unref0 (picon);
 					}
@@ -594,13 +598,13 @@ gboolean unity_places_bar_view_on_button_release (UnityPlacesBarView* self, Clut
 		_g_object_unref0 (actor);
 #line 225 "bar-view.vala"
 		return result;
-#line 598 "bar-view.c"
+#line 602 "bar-view.c"
 	}
 	result = FALSE;
 	_g_object_unref0 (actor);
 #line 228 "bar-view.vala"
 	return result;
-#line 604 "bar-view.c"
+#line 608 "bar-view.c"
 }
 
 
@@ -610,7 +614,7 @@ UnityPlacesModel* unity_places_bar_view_get_model (UnityPlacesBarView* self) {
 	result = self->priv->_model;
 #line 33 "bar-view.vala"
 	return result;
-#line 614 "bar-view.c"
+#line 618 "bar-view.c"
 }
 
 
@@ -628,7 +632,7 @@ UnityShell* unity_places_bar_view_get_shell (UnityPlacesBarView* self) {
 	result = self->priv->_shell;
 #line 34 "bar-view.vala"
 	return result;
-#line 632 "bar-view.c"
+#line 636 "bar-view.c"
 }
 
 
@@ -719,7 +723,7 @@ static void unity_places_bar_view_set_property (GObject * object, guint property
 
 #line 236 "bar-view.vala"
 UnityPlacesBarPlaceIcon* unity_places_bar_place_icon_construct (GType object_type, gint width, const char* name, const char* icon_name, const char* tooltip) {
-#line 723 "bar-view.c"
+#line 727 "bar-view.c"
 	UnityPlacesBarPlaceIcon * self;
 #line 236 "bar-view.vala"
 	g_return_val_if_fail (name != NULL, NULL);
@@ -733,7 +737,7 @@ UnityPlacesBarPlaceIcon* unity_places_bar_place_icon_construct (GType object_typ
 	ctk_image_set_from_filename ((CtkImage*) self, icon_name);
 #line 244 "bar-view.vala"
 	clutter_actor_set_reactive ((ClutterActor*) self, TRUE);
-#line 737 "bar-view.c"
+#line 741 "bar-view.c"
 	return self;
 }
 
@@ -742,13 +746,13 @@ UnityPlacesBarPlaceIcon* unity_places_bar_place_icon_construct (GType object_typ
 UnityPlacesBarPlaceIcon* unity_places_bar_place_icon_new (gint width, const char* name, const char* icon_name, const char* tooltip) {
 #line 236 "bar-view.vala"
 	return unity_places_bar_place_icon_construct (UNITY_PLACES_BAR_TYPE_PLACE_ICON, width, name, icon_name, tooltip);
-#line 746 "bar-view.c"
+#line 750 "bar-view.c"
 }
 
 
 #line 247 "bar-view.vala"
 UnityPlacesBarPlaceIcon* unity_places_bar_place_icon_construct_from_place (GType object_type, gint size, UnityPlacesPlace* place) {
-#line 752 "bar-view.c"
+#line 756 "bar-view.c"
 	UnityPlacesBarPlaceIcon * self;
 #line 247 "bar-view.vala"
 	g_return_val_if_fail (place != NULL, NULL);
@@ -756,7 +760,7 @@ UnityPlacesBarPlaceIcon* unity_places_bar_place_icon_construct_from_place (GType
 	self = (UnityPlacesBarPlaceIcon*) unity_places_bar_place_icon_construct (object_type, size, unity_places_place_get_name (place), unity_places_place_get_icon_name (place), "");
 #line 250 "bar-view.vala"
 	unity_places_bar_place_icon_set_place (self, place);
-#line 760 "bar-view.c"
+#line 764 "bar-view.c"
 	return self;
 }
 
@@ -765,7 +769,7 @@ UnityPlacesBarPlaceIcon* unity_places_bar_place_icon_construct_from_place (GType
 UnityPlacesBarPlaceIcon* unity_places_bar_place_icon_new_from_place (gint size, UnityPlacesPlace* place) {
 #line 247 "bar-view.vala"
 	return unity_places_bar_place_icon_construct_from_place (UNITY_PLACES_BAR_TYPE_PLACE_ICON, size, place);
-#line 769 "bar-view.c"
+#line 773 "bar-view.c"
 }
 
 
@@ -775,7 +779,7 @@ UnityPlacesPlace* unity_places_bar_place_icon_get_place (UnityPlacesBarPlaceIcon
 	result = self->priv->_place;
 #line 234 "bar-view.vala"
 	return result;
-#line 779 "bar-view.c"
+#line 783 "bar-view.c"
 }
 
 

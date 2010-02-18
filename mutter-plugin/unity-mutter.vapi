@@ -14,7 +14,7 @@ namespace Unity {
 	public class Plugin : GLib.Object, Unity.Shell {
 		public Plugin ();
 		public void destroy (Mutter.Window window);
-		public void expose_windows (GLib.SList<Wnck.Window> windows);
+		public void expose_windows (GLib.SList<Wnck.Window> windows, int left_buffer = 250);
 		public int get_launcher_width ();
 		public int get_panel_height ();
 		public void kill_effect (Mutter.Window window, ulong events);

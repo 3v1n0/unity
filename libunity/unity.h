@@ -13,6 +13,8 @@
 #include <float.h>
 #include <math.h>
 #include <clutk/clutk.h>
+#include <gdk-pixbuf/gdk-pixdata.h>
+#include <gio/gio.h>
 
 G_BEGIN_DECLS
 
@@ -94,6 +96,50 @@ typedef struct _UnityTimelineLoggerPrivate UnityTimelineLoggerPrivate;
 
 #define UNITY_TYPE_DND_TARGETS (unity_dnd_targets_get_type ())
 
+#define UNITY_TYPE_THEME_IMAGE (unity_theme_image_get_type ())
+#define UNITY_THEME_IMAGE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_THEME_IMAGE, UnityThemeImage))
+#define UNITY_THEME_IMAGE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_THEME_IMAGE, UnityThemeImageClass))
+#define UNITY_IS_THEME_IMAGE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_THEME_IMAGE))
+#define UNITY_IS_THEME_IMAGE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_THEME_IMAGE))
+#define UNITY_THEME_IMAGE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_THEME_IMAGE, UnityThemeImageClass))
+
+typedef struct _UnityThemeImage UnityThemeImage;
+typedef struct _UnityThemeImageClass UnityThemeImageClass;
+typedef struct _UnityThemeImagePrivate UnityThemeImagePrivate;
+
+#define UNITY_WEBAPP_TYPE_FETCH_FILE (unity_webapp_fetch_file_get_type ())
+#define UNITY_WEBAPP_FETCH_FILE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_WEBAPP_TYPE_FETCH_FILE, UnityWebappFetchFile))
+#define UNITY_WEBAPP_FETCH_FILE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_WEBAPP_TYPE_FETCH_FILE, UnityWebappFetchFileClass))
+#define UNITY_WEBAPP_IS_FETCH_FILE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_WEBAPP_TYPE_FETCH_FILE))
+#define UNITY_WEBAPP_IS_FETCH_FILE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_WEBAPP_TYPE_FETCH_FILE))
+#define UNITY_WEBAPP_FETCH_FILE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_WEBAPP_TYPE_FETCH_FILE, UnityWebappFetchFileClass))
+
+typedef struct _UnityWebappFetchFile UnityWebappFetchFile;
+typedef struct _UnityWebappFetchFileClass UnityWebappFetchFileClass;
+typedef struct _UnityWebappFetchFilePrivate UnityWebappFetchFilePrivate;
+
+#define UNITY_WEBAPP_TYPE_WEBICON_FETCHER (unity_webapp_webicon_fetcher_get_type ())
+#define UNITY_WEBAPP_WEBICON_FETCHER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_WEBAPP_TYPE_WEBICON_FETCHER, UnityWebappWebiconFetcher))
+#define UNITY_WEBAPP_WEBICON_FETCHER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_WEBAPP_TYPE_WEBICON_FETCHER, UnityWebappWebiconFetcherClass))
+#define UNITY_WEBAPP_IS_WEBICON_FETCHER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_WEBAPP_TYPE_WEBICON_FETCHER))
+#define UNITY_WEBAPP_IS_WEBICON_FETCHER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_WEBAPP_TYPE_WEBICON_FETCHER))
+#define UNITY_WEBAPP_WEBICON_FETCHER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_WEBAPP_TYPE_WEBICON_FETCHER, UnityWebappWebiconFetcherClass))
+
+typedef struct _UnityWebappWebiconFetcher UnityWebappWebiconFetcher;
+typedef struct _UnityWebappWebiconFetcherClass UnityWebappWebiconFetcherClass;
+typedef struct _UnityWebappWebiconFetcherPrivate UnityWebappWebiconFetcherPrivate;
+
+#define UNITY_WEBAPP_TYPE_ICON_BUILDER (unity_webapp_icon_builder_get_type ())
+#define UNITY_WEBAPP_ICON_BUILDER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_WEBAPP_TYPE_ICON_BUILDER, UnityWebappIconBuilder))
+#define UNITY_WEBAPP_ICON_BUILDER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_WEBAPP_TYPE_ICON_BUILDER, UnityWebappIconBuilderClass))
+#define UNITY_WEBAPP_IS_ICON_BUILDER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_WEBAPP_TYPE_ICON_BUILDER))
+#define UNITY_WEBAPP_IS_ICON_BUILDER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_WEBAPP_TYPE_ICON_BUILDER))
+#define UNITY_WEBAPP_ICON_BUILDER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_WEBAPP_TYPE_ICON_BUILDER, UnityWebappIconBuilderClass))
+
+typedef struct _UnityWebappIconBuilder UnityWebappIconBuilder;
+typedef struct _UnityWebappIconBuilderClass UnityWebappIconBuilderClass;
+typedef struct _UnityWebappIconBuilderPrivate UnityWebappIconBuilderPrivate;
+
 typedef enum  {
 	UNITY_APPLICATION_COMMANDS_SHOW = 1
 } UnityApplicationCommands;
@@ -120,6 +166,7 @@ struct _UnityShellIface {
 	gint (*get_indicators_width) (UnityShell* self);
 	void (*ensure_input_region) (UnityShell* self);
 	void (*grab_keyboard) (UnityShell* self, gboolean grab, guint32 timestamp);
+	void (*show_window_picker) (UnityShell* self);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
 };
 
@@ -177,6 +224,43 @@ typedef enum  {
 	UNITY_DND_TARGETS_TARGET_OTHER
 } Unitydnd_targets;
 
+struct _UnityThemeImage {
+	ClutterTexture parent_instance;
+	UnityThemeImagePrivate * priv;
+	GdkPixbuf* icon;
+};
+
+struct _UnityThemeImageClass {
+	ClutterTextureClass parent_class;
+};
+
+struct _UnityWebappFetchFile {
+	GObject parent_instance;
+	UnityWebappFetchFilePrivate * priv;
+};
+
+struct _UnityWebappFetchFileClass {
+	GObjectClass parent_class;
+};
+
+struct _UnityWebappWebiconFetcher {
+	GObject parent_instance;
+	UnityWebappWebiconFetcherPrivate * priv;
+};
+
+struct _UnityWebappWebiconFetcherClass {
+	GObjectClass parent_class;
+};
+
+struct _UnityWebappIconBuilder {
+	GObject parent_instance;
+	UnityWebappIconBuilderPrivate * priv;
+};
+
+struct _UnityWebappIconBuilderClass {
+	GObjectClass parent_class;
+};
+
 
 GType unity_application_commands_get_type (void);
 GType unity_application_get_type (void);
@@ -226,8 +310,33 @@ void unity_shell_show_unity (UnityShell* self);
 gint unity_shell_get_indicators_width (UnityShell* self);
 void unity_shell_ensure_input_region (UnityShell* self);
 void unity_shell_grab_keyboard (UnityShell* self, gboolean grab, guint32 timestamp);
+void unity_shell_show_window_picker (UnityShell* self);
 gboolean unity_shell_get_menus_swallow_events (UnityShell* self);
 extern UnityShell* unity_global_shell;
+GType unity_theme_image_get_type (void);
+UnityThemeImage* unity_theme_image_new (const char* icon_name);
+UnityThemeImage* unity_theme_image_construct (GType object_type, const char* icon_name);
+const char* unity_theme_image_get_icon_name (UnityThemeImage* self);
+void unity_theme_image_set_icon_name (UnityThemeImage* self, const char* value);
+GType unity_webapp_fetch_file_get_type (void);
+UnityWebappFetchFile* unity_webapp_fetch_file_new (const char* uri);
+UnityWebappFetchFile* unity_webapp_fetch_file_construct (GType object_type, const char* uri);
+void unity_webapp_fetch_file_fetch_data (UnityWebappFetchFile* self, GAsyncReadyCallback _callback_, gpointer _user_data_);
+void unity_webapp_fetch_file_fetch_data_finish (UnityWebappFetchFile* self, GAsyncResult* _res_);
+const char* unity_webapp_fetch_file_get_uri (UnityWebappFetchFile* self);
+GType unity_webapp_webicon_fetcher_get_type (void);
+UnityWebappWebiconFetcher* unity_webapp_webicon_fetcher_new (const char* uri, const char* destination);
+UnityWebappWebiconFetcher* unity_webapp_webicon_fetcher_construct (GType object_type, const char* uri, const char* destination);
+void unity_webapp_webicon_fetcher_fetch_webapp_data (UnityWebappWebiconFetcher* self);
+const char* unity_webapp_webicon_fetcher_get_uri (UnityWebappWebiconFetcher* self);
+const char* unity_webapp_webicon_fetcher_get_destination (UnityWebappWebiconFetcher* self);
+GType unity_webapp_icon_builder_get_type (void);
+UnityWebappIconBuilder* unity_webapp_icon_builder_new (const char* dest, GdkPixbuf* source);
+UnityWebappIconBuilder* unity_webapp_icon_builder_construct (GType object_type, const char* dest, GdkPixbuf* source);
+void unity_webapp_icon_builder_load_layers (UnityWebappIconBuilder* self);
+void unity_webapp_icon_builder_build_icon (UnityWebappIconBuilder* self);
+const char* unity_webapp_icon_builder_get_destination (UnityWebappIconBuilder* self);
+GdkPixbuf* unity_webapp_icon_builder_get_source (UnityWebappIconBuilder* self);
 
 
 G_END_DECLS

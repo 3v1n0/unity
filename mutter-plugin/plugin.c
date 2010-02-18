@@ -87,6 +87,7 @@ typedef struct _UnityPluginPrivate UnityPluginPrivate;
 typedef struct _UnityWindowManagement UnityWindowManagement;
 typedef struct _UnityWindowManagementClass UnityWindowManagementClass;
 #define __g_list_free_g_object_unref0(var) ((var == NULL) ? NULL : (var = (_g_list_free_g_object_unref (var), NULL)))
+#define __g_slist_free_g_object_unref0(var) ((var == NULL) ? NULL : (var = (_g_slist_free_g_object_unref (var), NULL)))
 typedef struct _Block1Data Block1Data;
 #define _g_free0(var) (var = (g_free (var), NULL))
 
@@ -217,16 +218,18 @@ static void unity_plugin_on_launcher_menu_opened (UnityPlugin* self, UnityQuickl
 static void _unity_plugin_on_launcher_menu_opened_unity_quicklauncher_launcher_view_menu_opened (UnityQuicklauncherLauncherView* _sender, UnityQuicklauncherLauncherView* sender, gpointer self);
 static void unity_plugin_on_launcher_menu_closed (UnityPlugin* self, UnityQuicklauncherLauncherView* sender);
 static void _unity_plugin_on_launcher_menu_closed_unity_quicklauncher_launcher_view_menu_closed (UnityQuicklauncherLauncherView* _sender, UnityQuicklauncherLauncherView* sender, gpointer self);
-void unity_plugin_expose_windows (UnityPlugin* self, GSList* windows);
+void unity_plugin_expose_windows (UnityPlugin* self, GSList* windows, gint left_buffer);
 static void unity_plugin_dexpose_windows (UnityPlugin* self);
 static void unity_plugin_set_fullscreen_obstruction (UnityPlugin* self, gboolean value);
 static gboolean unity_plugin_get_fullscreen_obstruction (UnityPlugin* self);
 gboolean unity_plugin_get_expose_showing (UnityPlugin* self);
 static void unity_plugin_real_ensure_input_region (UnityShell* base);
+static void _g_slist_free_g_object_unref (GSList* self);
+static void unity_plugin_real_show_window_picker (UnityShell* base);
 static ClutterStage* unity_plugin_real_get_stage (UnityShell* base);
 static UnityShellMode unity_plugin_real_get_mode (UnityShell* base);
 static gint unity_plugin_real_get_indicators_width (UnityShell* base);
-static void unity_plugin_position_window_on_grid (UnityPlugin* self, GList* _windows);
+static void unity_plugin_position_window_on_grid (UnityPlugin* self, GList* _windows, gint left_buffer);
 static void unity_plugin_set_expose_showing (UnityPlugin* self, gboolean value);
 static gboolean unity_plugin_on_stage_captured_event (UnityPlugin* self, ClutterEvent* event);
 static gboolean _unity_plugin_on_stage_captured_event_clutter_actor_captured_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
@@ -264,11 +267,11 @@ static void g_cclosure_user_marshal_VOID__OBJECT_POINTER_INT_INT_INT (GClosure *
 
 #line 28 "plugin.vala"
 UnityDragDest* unity_drag_dest_construct (GType object_type) {
-#line 268 "plugin.c"
+#line 271 "plugin.c"
 	UnityDragDest * self;
 #line 30 "plugin.vala"
 	self = (UnityDragDest*) g_object_new (object_type, "type", GTK_WINDOW_TOPLEVEL, "type-hint", GDK_WINDOW_TYPE_HINT_DOCK, "opacity", 0.0, NULL);
-#line 272 "plugin.c"
+#line 275 "plugin.c"
 	return self;
 }
 
@@ -277,7 +280,7 @@ UnityDragDest* unity_drag_dest_construct (GType object_type) {
 UnityDragDest* unity_drag_dest_new (void) {
 #line 28 "plugin.vala"
 	return unity_drag_dest_construct (UNITY_TYPE_DRAG_DEST);
-#line 281 "plugin.c"
+#line 284 "plugin.c"
 }
 
 
@@ -328,12 +331,12 @@ GType unity_input_state_get_type (void) {
 
 #line 54 "plugin.vala"
 UnityActorBlur* unity_actor_blur_construct (GType object_type, ClutterActor* actor) {
-#line 332 "plugin.c"
+#line 335 "plugin.c"
 	UnityActorBlur * self;
 	ClutterClone* _tmp0_;
 #line 54 "plugin.vala"
 	g_return_val_if_fail (actor != NULL, NULL);
-#line 337 "plugin.c"
+#line 340 "plugin.c"
 	self = g_object_newv (object_type, 0, NULL);
 #line 56 "plugin.vala"
 	self->priv->clone = (_tmp0_ = g_object_ref_sink ((ClutterClone*) clutter_clone_new (actor)), _g_object_unref0 (self->priv->clone), _tmp0_);
@@ -343,7 +346,7 @@ UnityActorBlur* unity_actor_blur_construct (GType object_type, ClutterActor* act
 	clutter_actor_show ((ClutterActor*) self->priv->clone);
 #line 61 "plugin.vala"
 	clutter_actor_set_position ((ClutterActor*) self->priv->clone, (float) 0, (float) 0);
-#line 347 "plugin.c"
+#line 350 "plugin.c"
 	return self;
 }
 
@@ -352,7 +355,7 @@ UnityActorBlur* unity_actor_blur_construct (GType object_type, ClutterActor* act
 UnityActorBlur* unity_actor_blur_new (ClutterActor* actor) {
 #line 54 "plugin.vala"
 	return unity_actor_blur_construct (UNITY_TYPE_ACTOR_BLUR, actor);
-#line 356 "plugin.c"
+#line 359 "plugin.c"
 }
 
 
@@ -411,73 +414,85 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
+#line 186 "plugin.vala"
 static void _lambda0_ (ClutterActor* a, UnityPlugin* self) {
+#line 186 "plugin.vala"
 	g_return_if_fail (a != NULL);
 #line 186 "plugin.vala"
 	unity_shell_ensure_input_region ((UnityShell*) self);
-#line 419 "plugin.c"
+#line 424 "plugin.c"
 }
 
 
+#line 186 "plugin.vala"
 static void __lambda0__clutter_container_actor_added (ClutterContainer* _sender, ClutterActor* actor, gpointer self) {
+#line 430 "plugin.c"
 	_lambda0_ (actor, self);
 }
 
 
+#line 187 "plugin.vala"
 static void _lambda1_ (ClutterActor* a, UnityPlugin* self) {
+#line 187 "plugin.vala"
 	g_return_if_fail (a != NULL);
 #line 187 "plugin.vala"
 	unity_shell_ensure_input_region ((UnityShell*) self);
-#line 432 "plugin.c"
+#line 441 "plugin.c"
 }
 
 
+#line 187 "plugin.vala"
 static void __lambda1__clutter_container_actor_removed (ClutterContainer* _sender, ClutterActor* actor, gpointer self) {
+#line 447 "plugin.c"
 	_lambda1_ (actor, self);
 }
 
 
 #line 287 "plugin.vala"
 static void _unity_plugin_on_launcher_changed_event_unity_quicklauncher_manager_active_launcher_changed (UnityQuicklauncherManager* _sender, UnityQuicklauncherLauncherView* last, UnityQuicklauncherLauncherView* current, gpointer self) {
-#line 443 "plugin.c"
+#line 454 "plugin.c"
 	unity_plugin_on_launcher_changed_event (self, last, current);
 }
 
 
+#line 253 "plugin.vala"
 static gboolean _lambda3_ (UnityPlugin* self) {
+#line 461 "plugin.c"
 	gboolean result;
 #line 254 "plugin.vala"
 	unity_timeline_logger_write_log (unity_timeline_logger_get_default (), boot_logging_filename);
-#line 452 "plugin.c"
+#line 465 "plugin.c"
 	result = FALSE;
 #line 255 "plugin.vala"
 	return result;
-#line 456 "plugin.c"
+#line 469 "plugin.c"
 }
 
 
+#line 253 "plugin.vala"
 static gboolean __lambda3__gsource_func (gpointer self) {
+#line 475 "plugin.c"
 	return _lambda3_ (self);
 }
 
 
 #line 272 "plugin.vala"
 static void _unity_plugin_on_active_window_changed_wnck_screen_active_window_changed (WnckScreen* _sender, WnckWindow* previous_window, gpointer self) {
-#line 467 "plugin.c"
+#line 482 "plugin.c"
 	unity_plugin_on_active_window_changed (self, previous_window);
 }
 
 
 #line 267 "plugin.vala"
 static void _unity_plugin_on_active_window_state_changed_wnck_window_state_changed (WnckWindow* _sender, WnckWindowState changed_mask, WnckWindowState new_state, gpointer self) {
-#line 474 "plugin.c"
+#line 489 "plugin.c"
 	unity_plugin_on_active_window_state_changed (self, changed_mask, new_state);
 }
 
 
 #line 180 "plugin.vala"
 static void unity_plugin_real_construct (UnityPlugin* self) {
-#line 481 "plugin.c"
+#line 496 "plugin.c"
 	UnityWindowManagement* _tmp0_;
 	ClutterStage* _tmp1_;
 	UnityDragDest* _tmp2_;
@@ -512,7 +527,7 @@ static void unity_plugin_real_construct (UnityPlugin* self) {
 	self->priv->drag_dest = (_tmp2_ = g_object_ref_sink (unity_drag_dest_new ()), _g_object_unref0 (self->priv->drag_dest), _tmp2_);
 #line 190 "plugin.vala"
 	gtk_widget_show ((GtkWidget*) self->priv->drag_dest);
-#line 516 "plugin.c"
+#line 531 "plugin.c"
 	target_list = (_tmp10_ = (_tmp9_ = g_new0 (GtkTargetEntry, 6), _tmp9_[0] = (memset (&_tmp3_, 0, sizeof (GtkTargetEntry)), _tmp3_.target = "STRING", _tmp3_.flags = (guint) 0, _tmp3_.info = (guint) UNITY_DND_TARGETS_TARGET_STRING, _tmp3_), _tmp9_[1] = (memset (&_tmp4_, 0, sizeof (GtkTargetEntry)), _tmp4_.target = "text/plain", _tmp4_.flags = (guint) 0, _tmp4_.info = (guint) UNITY_DND_TARGETS_TARGET_STRING, _tmp4_), _tmp9_[2] = (memset (&_tmp5_, 0, sizeof (GtkTargetEntry)), _tmp5_.target = "text/uri-list", _tmp5_.flags = (guint) 0, _tmp5_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp5_), _tmp9_[3] = (memset (&_tmp6_, 0, sizeof (GtkTargetEntry)), _tmp6_.target = "x-url/http", _tmp6_.flags = (guint) 0, _tmp6_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp6_), _tmp9_[4] = (memset (&_tmp7_, 0, sizeof (GtkTargetEntry)), _tmp7_.target = "x-url/ftp", _tmp7_.flags = (guint) 0, _tmp7_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp7_), _tmp9_[5] = (memset (&_tmp8_, 0, sizeof (GtkTargetEntry)), _tmp8_.target = "_NETSCAPE_URL", _tmp8_.flags = (guint) 0, _tmp8_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp8_), _tmp9_), target_list_length1 = 6, target_list_size = target_list_length1, _tmp10_);
 #line 207 "plugin.vala"
 	ctk_dnd_init (GTK_WIDGET (self->priv->drag_dest), target_list, target_list_length1);
@@ -540,7 +555,7 @@ static void unity_plugin_real_construct (UnityPlugin* self) {
 	clutter_actor_animate ((ClutterActor*) self->priv->quicklauncher, (gulong) CLUTTER_EASE_IN_SINE, (guint) 400, "opacity", 255, NULL);
 #line 228 "plugin.vala"
 	if (self->priv->places_enabled) {
-#line 544 "plugin.c"
+#line 559 "plugin.c"
 		UnityPlacesController* _tmp13_;
 		UnityPlacesView* _tmp14_;
 #line 230 "plugin.vala"
@@ -559,7 +574,7 @@ static void unity_plugin_real_construct (UnityPlugin* self) {
 		clutter_actor_hide ((ClutterActor*) self->priv->places);
 #line 239 "plugin.vala"
 		self->priv->places_showing = FALSE;
-#line 563 "plugin.c"
+#line 578 "plugin.c"
 	}
 #line 242 "plugin.vala"
 	self->priv->panel = (_tmp15_ = g_object_ref_sink (unity_panel_view_new ((UnityShell*) self)), _g_object_unref0 (self->priv->panel), _tmp15_);
@@ -577,7 +592,7 @@ static void unity_plugin_real_construct (UnityPlugin* self) {
 	if (boot_logging_filename != NULL) {
 #line 253 "plugin.vala"
 		g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 5, __lambda3__gsource_func, g_object_ref (self), g_object_unref);
-#line 581 "plugin.c"
+#line 596 "plugin.c"
 	}
 #line 259 "plugin.vala"
 	unity_shell_ensure_input_region ((UnityShell*) self);
@@ -587,7 +602,7 @@ static void unity_plugin_real_construct (UnityPlugin* self) {
 	if (wnck_screen_get_active_window (wnck_screen_get_default ()) != NULL) {
 #line 264 "plugin.vala"
 		g_signal_connect_object (wnck_screen_get_active_window (wnck_screen_get_default ()), "state-changed", (GCallback) _unity_plugin_on_active_window_state_changed_wnck_window_state_changed, self, 0);
-#line 591 "plugin.c"
+#line 606 "plugin.c"
 	}
 	target_list = (g_free (target_list), NULL);
 	_g_object_unref0 (window_group);
@@ -600,53 +615,53 @@ static void unity_plugin_on_active_window_state_changed (UnityPlugin* self, Wnck
 	g_return_if_fail (self != NULL);
 #line 269 "plugin.vala"
 	unity_plugin_check_fullscreen_obstruction (self);
-#line 604 "plugin.c"
+#line 619 "plugin.c"
 }
 
 
 #line 272 "plugin.vala"
 static void unity_plugin_on_active_window_changed (UnityPlugin* self, WnckWindow* previous_window) {
-#line 610 "plugin.c"
+#line 625 "plugin.c"
 	WnckWindow* current;
 #line 272 "plugin.vala"
 	g_return_if_fail (self != NULL);
 #line 274 "plugin.vala"
 	if (previous_window != NULL) {
-#line 616 "plugin.c"
+#line 631 "plugin.c"
 		guint _tmp0_;
 #line 275 "plugin.vala"
 		g_signal_handlers_disconnect_matched (previous_window, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("state-changed", WNCK_TYPE_WINDOW, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _unity_plugin_on_active_window_state_changed_wnck_window_state_changed, self);
-#line 620 "plugin.c"
+#line 635 "plugin.c"
 	}
 #line 278 "plugin.vala"
 	current = _g_object_ref0 (wnck_screen_get_active_window (wnck_screen_get_default ()));
 #line 279 "plugin.vala"
 	if (current == NULL) {
-#line 626 "plugin.c"
+#line 641 "plugin.c"
 		_g_object_unref0 (current);
 #line 280 "plugin.vala"
 		return;
-#line 630 "plugin.c"
+#line 645 "plugin.c"
 	}
 #line 282 "plugin.vala"
 	g_signal_connect_object (current, "state-changed", (GCallback) _unity_plugin_on_active_window_state_changed_wnck_window_state_changed, self, 0);
 #line 284 "plugin.vala"
 	unity_plugin_check_fullscreen_obstruction (self);
-#line 636 "plugin.c"
+#line 651 "plugin.c"
 	_g_object_unref0 (current);
 }
 
 
 #line 304 "plugin.vala"
 static void _unity_plugin_on_launcher_menu_opened_unity_quicklauncher_launcher_view_menu_opened (UnityQuicklauncherLauncherView* _sender, UnityQuicklauncherLauncherView* sender, gpointer self) {
-#line 643 "plugin.c"
+#line 658 "plugin.c"
 	unity_plugin_on_launcher_menu_opened (self, sender);
 }
 
 
 #line 315 "plugin.vala"
 static void _unity_plugin_on_launcher_menu_closed_unity_quicklauncher_launcher_view_menu_closed (UnityQuicklauncherLauncherView* _sender, UnityQuicklauncherLauncherView* sender, gpointer self) {
-#line 650 "plugin.c"
+#line 665 "plugin.c"
 	unity_plugin_on_launcher_menu_closed (self, sender);
 }
 
@@ -657,14 +672,14 @@ static void unity_plugin_on_launcher_changed_event (UnityPlugin* self, UnityQuic
 	g_return_if_fail (self != NULL);
 #line 289 "plugin.vala"
 	if (last != NULL) {
-#line 661 "plugin.c"
+#line 676 "plugin.c"
 		guint _tmp0_;
 		guint _tmp1_;
 #line 291 "plugin.vala"
 		g_signal_handlers_disconnect_matched (last, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("menu-opened", UNITY_QUICKLAUNCHER_TYPE_LAUNCHER_VIEW, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _unity_plugin_on_launcher_menu_opened_unity_quicklauncher_launcher_view_menu_opened, self);
 #line 292 "plugin.vala"
 		g_signal_handlers_disconnect_matched (last, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("menu-closed", UNITY_QUICKLAUNCHER_TYPE_LAUNCHER_VIEW, &_tmp1_, NULL, FALSE), _tmp1_), 0, NULL, (GCallback) _unity_plugin_on_launcher_menu_closed_unity_quicklauncher_launcher_view_menu_closed, self);
-#line 668 "plugin.c"
+#line 683 "plugin.c"
 	}
 #line 295 "plugin.vala"
 	if (current != NULL) {
@@ -672,15 +687,16 @@ static void unity_plugin_on_launcher_changed_event (UnityPlugin* self, UnityQuic
 		g_signal_connect_object (current, "menu-opened", (GCallback) _unity_plugin_on_launcher_menu_opened_unity_quicklauncher_launcher_view_menu_opened, self, 0);
 #line 298 "plugin.vala"
 		g_signal_connect_object (current, "menu-closed", (GCallback) _unity_plugin_on_launcher_menu_closed_unity_quicklauncher_launcher_view_menu_closed, self, 0);
-#line 676 "plugin.c"
+#line 691 "plugin.c"
 	}
 }
 
 
 #line 304 "plugin.vala"
 static void unity_plugin_on_launcher_menu_opened (UnityPlugin* self, UnityQuicklauncherLauncherView* sender) {
-#line 683 "plugin.c"
+#line 698 "plugin.c"
 	gboolean _tmp0_ = FALSE;
+	gboolean _tmp1_ = FALSE;
 #line 304 "plugin.vala"
 	g_return_if_fail (self != NULL);
 #line 304 "plugin.vala"
@@ -689,25 +705,35 @@ static void unity_plugin_on_launcher_menu_opened (UnityPlugin* self, UnityQuickl
 	if (sender != unity_quicklauncher_manager_get_active_launcher (self->priv->quicklauncher->manager)) {
 #line 306 "plugin.vala"
 		_tmp0_ = TRUE;
-#line 693 "plugin.c"
+#line 709 "plugin.c"
 	} else {
 #line 306 "plugin.vala"
 		_tmp0_ = sender == NULL;
-#line 697 "plugin.c"
+#line 713 "plugin.c"
 	}
 #line 306 "plugin.vala"
 	if (_tmp0_) {
 #line 307 "plugin.vala"
 		return;
-#line 703 "plugin.c"
+#line 719 "plugin.c"
 	}
 #line 309 "plugin.vala"
 	if (UNITY_QUICKLAUNCHER_MODELS_IS_APPLICATION_MODEL (sender->model)) {
-#line 707 "plugin.c"
-		UnityQuicklauncherModelsLauncherModel* _tmp1_;
+#line 309 "plugin.vala"
+		_tmp1_ = unity_quicklauncher_models_launcher_model_get_is_active (sender->model);
+#line 725 "plugin.c"
+	} else {
+#line 309 "plugin.vala"
+		_tmp1_ = FALSE;
+#line 729 "plugin.c"
+	}
+#line 309 "plugin.vala"
+	if (_tmp1_) {
+#line 733 "plugin.c"
+		UnityQuicklauncherModelsLauncherModel* _tmp2_;
 #line 311 "plugin.vala"
-		unity_plugin_expose_windows (self, unity_quicklauncher_models_application_model_get_windows ((_tmp1_ = sender->model, UNITY_QUICKLAUNCHER_MODELS_IS_APPLICATION_MODEL (_tmp1_) ? ((UnityQuicklauncherModelsApplicationModel*) _tmp1_) : NULL)));
-#line 711 "plugin.c"
+		unity_plugin_expose_windows (self, unity_quicklauncher_models_application_model_get_windows ((_tmp2_ = sender->model, UNITY_QUICKLAUNCHER_MODELS_IS_APPLICATION_MODEL (_tmp2_) ? ((UnityQuicklauncherModelsApplicationModel*) _tmp2_) : NULL)), 250);
+#line 737 "plugin.c"
 	}
 }
 
@@ -722,17 +748,17 @@ static void unity_plugin_on_launcher_menu_closed (UnityPlugin* self, UnityQuickl
 	if (sender != unity_quicklauncher_manager_get_active_launcher (self->priv->quicklauncher->manager)) {
 #line 318 "plugin.vala"
 		return;
-#line 726 "plugin.c"
+#line 752 "plugin.c"
 	}
 #line 320 "plugin.vala"
 	unity_plugin_dexpose_windows (self);
-#line 730 "plugin.c"
+#line 756 "plugin.c"
 }
 
 
 #line 323 "plugin.vala"
 static void unity_plugin_check_fullscreen_obstruction (UnityPlugin* self) {
-#line 736 "plugin.c"
+#line 762 "plugin.c"
 	WnckWindow* current;
 #line 323 "plugin.vala"
 	g_return_if_fail (self != NULL);
@@ -740,11 +766,11 @@ static void unity_plugin_check_fullscreen_obstruction (UnityPlugin* self) {
 	current = _g_object_ref0 (wnck_screen_get_active_window (wnck_screen_get_default ()));
 #line 326 "plugin.vala"
 	if (current == NULL) {
-#line 744 "plugin.c"
+#line 770 "plugin.c"
 		_g_object_unref0 (current);
 #line 327 "plugin.vala"
 		return;
-#line 748 "plugin.c"
+#line 774 "plugin.c"
 	}
 #line 329 "plugin.vala"
 	if (wnck_window_is_fullscreen (current)) {
@@ -754,7 +780,7 @@ static void unity_plugin_check_fullscreen_obstruction (UnityPlugin* self) {
 		clutter_actor_animate ((ClutterActor*) self->priv->panel, (gulong) CLUTTER_EASE_IN_SINE, (guint) 200, "opacity", 0, NULL);
 #line 333 "plugin.vala"
 		unity_plugin_set_fullscreen_obstruction (self, TRUE);
-#line 758 "plugin.c"
+#line 784 "plugin.c"
 	} else {
 #line 337 "plugin.vala"
 		clutter_actor_animate ((ClutterActor*) self->priv->quicklauncher, (gulong) CLUTTER_EASE_IN_SINE, (guint) 200, "x", 0.f, NULL);
@@ -762,7 +788,7 @@ static void unity_plugin_check_fullscreen_obstruction (UnityPlugin* self) {
 		clutter_actor_animate ((ClutterActor*) self->priv->panel, (gulong) CLUTTER_EASE_IN_SINE, (guint) 200, "opacity", 255, NULL);
 #line 339 "plugin.vala"
 		unity_plugin_set_fullscreen_obstruction (self, FALSE);
-#line 766 "plugin.c"
+#line 792 "plugin.c"
 	}
 	_g_object_unref0 (current);
 }
@@ -770,7 +796,7 @@ static void unity_plugin_check_fullscreen_obstruction (UnityPlugin* self) {
 
 #line 343 "plugin.vala"
 static void unity_plugin_relayout (UnityPlugin* self) {
-#line 774 "plugin.c"
+#line 800 "plugin.c"
 	float width = 0.0F;
 	float height = 0.0F;
 #line 343 "plugin.vala"
@@ -801,7 +827,7 @@ static void unity_plugin_relayout (UnityPlugin* self) {
 		clutter_actor_set_size ((ClutterActor*) self->priv->places, width, height);
 #line 370 "plugin.vala"
 		clutter_actor_set_position ((ClutterActor*) self->priv->places, (float) 0, (float) 0);
-#line 805 "plugin.c"
+#line 831 "plugin.c"
 	}
 #line 373 "plugin.vala"
 	clutter_actor_set_size ((ClutterActor*) self->priv->panel, width, (float) 24);
@@ -809,13 +835,13 @@ static void unity_plugin_relayout (UnityPlugin* self) {
 	clutter_actor_set_position ((ClutterActor*) self->priv->panel, (float) 0, (float) 0);
 #line 381 "plugin.vala"
 	END_FUNCTION ();
-#line 813 "plugin.c"
+#line 839 "plugin.c"
 }
 
 
 #line 385 "plugin.vala"
 static void unity_plugin_real_ensure_input_region (UnityShell* base) {
-#line 819 "plugin.c"
+#line 845 "plugin.c"
 	UnityPlugin * self;
 	self = (UnityPlugin*) base;
 #line 387 "plugin.vala"
@@ -824,7 +850,7 @@ static void unity_plugin_real_ensure_input_region (UnityShell* base) {
 		if (self->priv->last_input_state == UNITY_INPUT_STATE_ZERO) {
 #line 390 "plugin.vala"
 			return;
-#line 828 "plugin.c"
+#line 854 "plugin.c"
 		}
 #line 391 "plugin.vala"
 		self->priv->last_input_state = UNITY_INPUT_STATE_ZERO;
@@ -832,7 +858,7 @@ static void unity_plugin_real_ensure_input_region (UnityShell* base) {
 		mutter_plugin_set_stage_input_area (unity_plugin_get_plugin (self), 0, 0, 0, 0);
 #line 394 "plugin.vala"
 		unity_shell_grab_keyboard ((UnityShell*) self, FALSE, clutter_get_current_event_time ());
-#line 836 "plugin.c"
+#line 862 "plugin.c"
 	} else {
 		gboolean _tmp0_ = FALSE;
 		gboolean _tmp1_ = FALSE;
@@ -841,31 +867,31 @@ static void unity_plugin_real_ensure_input_region (UnityShell* base) {
 		if (self->priv->_expose_showing) {
 #line 396 "plugin.vala"
 			_tmp2_ = TRUE;
-#line 845 "plugin.c"
+#line 871 "plugin.c"
 		} else {
 #line 397 "plugin.vala"
 			_tmp2_ = self->priv->places_showing;
-#line 849 "plugin.c"
+#line 875 "plugin.c"
 		}
 #line 396 "plugin.vala"
 		if (_tmp2_) {
 #line 396 "plugin.vala"
 			_tmp1_ = TRUE;
-#line 855 "plugin.c"
+#line 881 "plugin.c"
 		} else {
 #line 398 "plugin.vala"
 			_tmp1_ = unity_quicklauncher_active_menu != NULL;
-#line 859 "plugin.c"
+#line 885 "plugin.c"
 		}
 #line 396 "plugin.vala"
 		if (_tmp1_) {
 #line 396 "plugin.vala"
 			_tmp0_ = TRUE;
-#line 865 "plugin.c"
+#line 891 "plugin.c"
 		} else {
 #line 399 "plugin.vala"
 			_tmp0_ = unity_drag_controller_get_is_dragging (unity_drag_controller_get_default ());
-#line 869 "plugin.c"
+#line 895 "plugin.c"
 		}
 #line 396 "plugin.vala"
 		if (_tmp0_) {
@@ -873,7 +899,7 @@ static void unity_plugin_real_ensure_input_region (UnityShell* base) {
 			if (self->priv->last_input_state == UNITY_INPUT_STATE_FULLSCREEN) {
 #line 404 "plugin.vala"
 				return;
-#line 877 "plugin.c"
+#line 903 "plugin.c"
 			}
 #line 406 "plugin.vala"
 			self->priv->last_input_state = UNITY_INPUT_STATE_FULLSCREEN;
@@ -881,13 +907,13 @@ static void unity_plugin_real_ensure_input_region (UnityShell* base) {
 			g_signal_emit_by_name (self, "restore-input-region", TRUE);
 #line 409 "plugin.vala"
 			unity_shell_grab_keyboard ((UnityShell*) self, TRUE, clutter_get_current_event_time ());
-#line 885 "plugin.c"
+#line 911 "plugin.c"
 		} else {
 #line 414 "plugin.vala"
 			if (self->priv->last_input_state == UNITY_INPUT_STATE_UNITY) {
 #line 415 "plugin.vala"
 				return;
-#line 891 "plugin.c"
+#line 917 "plugin.c"
 			}
 #line 417 "plugin.vala"
 			self->priv->last_input_state = UNITY_INPUT_STATE_UNITY;
@@ -895,229 +921,295 @@ static void unity_plugin_real_ensure_input_region (UnityShell* base) {
 			g_signal_emit_by_name (self, "restore-input-region", FALSE);
 #line 420 "plugin.vala"
 			unity_shell_grab_keyboard ((UnityShell*) self, FALSE, clutter_get_current_event_time ());
-#line 899 "plugin.c"
+#line 925 "plugin.c"
 		}
 	}
 }
 
 
-#line 427 "plugin.vala"
+static void _g_slist_free_g_object_unref (GSList* self) {
+	g_slist_foreach (self, (GFunc) g_object_unref, NULL);
+	g_slist_free (self);
+}
+
+
+#line 428 "plugin.vala"
+static void unity_plugin_real_show_window_picker (UnityShell* base) {
+#line 939 "plugin.c"
+	UnityPlugin * self;
+	GSList* windows;
+	self = (UnityPlugin*) base;
+#line 430 "plugin.vala"
+	if (self->priv->_expose_showing == TRUE) {
+#line 432 "plugin.vala"
+		unity_plugin_dexpose_windows (self);
+#line 433 "plugin.vala"
+		return;
+#line 949 "plugin.c"
+	}
+#line 436 "plugin.vala"
+	windows = NULL;
+#line 953 "plugin.c"
+	{
+		GList* w_collection;
+		GList* w_it;
+#line 438 "plugin.vala"
+		w_collection = wnck_screen_get_windows (wnck_screen_get_default ());
+#line 959 "plugin.c"
+		for (w_it = w_collection; w_it != NULL; w_it = w_it->next) {
+			WnckWindow* w;
+#line 438 "plugin.vala"
+			w = _g_object_ref0 ((WnckWindow*) w_it->data);
+#line 964 "plugin.c"
+			{
+#line 440 "plugin.vala"
+				switch (wnck_window_get_window_type (w)) {
+#line 968 "plugin.c"
+					case WNCK_WINDOW_NORMAL:
+					case WNCK_WINDOW_DIALOG:
+					case WNCK_WINDOW_UTILITY:
+					{
+#line 445 "plugin.vala"
+						windows = g_slist_append (windows, _g_object_ref0 (w));
+#line 446 "plugin.vala"
+						break;
+#line 977 "plugin.c"
+					}
+					default:
+					{
+#line 449 "plugin.vala"
+						break;
+#line 983 "plugin.c"
+					}
+				}
+				_g_object_unref0 (w);
+			}
+		}
+	}
+#line 453 "plugin.vala"
+	unity_plugin_expose_windows (self, windows, 40);
+#line 992 "plugin.c"
+	__g_slist_free_g_object_unref0 (windows);
+}
+
+
+#line 456 "plugin.vala"
 static ClutterStage* unity_plugin_real_get_stage (UnityShell* base) {
-#line 907 "plugin.c"
+#line 999 "plugin.c"
 	UnityPlugin * self;
 	ClutterStage* result;
 	self = (UnityPlugin*) base;
 	result = _g_object_ref0 (self->priv->stage);
-#line 429 "plugin.vala"
+#line 458 "plugin.vala"
 	return result;
-#line 914 "plugin.c"
+#line 1006 "plugin.c"
 }
 
 
-#line 432 "plugin.vala"
+#line 461 "plugin.vala"
 static UnityShellMode unity_plugin_real_get_mode (UnityShell* base) {
-#line 920 "plugin.c"
+#line 1012 "plugin.c"
 	UnityPlugin * self;
 	UnityShellMode result;
 	self = (UnityPlugin*) base;
 	result = UNITY_SHELL_MODE_UNDERLAY;
-#line 434 "plugin.vala"
+#line 463 "plugin.vala"
 	return result;
-#line 927 "plugin.c"
+#line 1019 "plugin.c"
 }
 
 
-#line 437 "plugin.vala"
+#line 466 "plugin.vala"
 static gint unity_plugin_real_get_indicators_width (UnityShell* base) {
-#line 933 "plugin.c"
+#line 1025 "plugin.c"
 	UnityPlugin * self;
 	gint result;
 	self = (UnityPlugin*) base;
 	result = unity_panel_view_get_indicators_width (self->priv->panel);
-#line 439 "plugin.vala"
+#line 468 "plugin.vala"
 	return result;
-#line 940 "plugin.c"
+#line 1032 "plugin.c"
 }
 
 
-#line 608 "plugin.vala"
+#line 637 "plugin.vala"
 static gboolean _unity_plugin_on_stage_captured_event_clutter_actor_captured_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 946 "plugin.c"
+#line 1038 "plugin.c"
 	return unity_plugin_on_stage_captured_event (self, event);
 }
 
 
-#line 442 "plugin.vala"
-void unity_plugin_expose_windows (UnityPlugin* self, GSList* windows) {
-#line 953 "plugin.c"
+#line 471 "plugin.vala"
+void unity_plugin_expose_windows (UnityPlugin* self, GSList* windows, gint left_buffer) {
+#line 1045 "plugin.c"
 	GList* _tmp0_;
 	GList* mutter_windows;
-#line 442 "plugin.vala"
+#line 471 "plugin.vala"
 	g_return_if_fail (self != NULL);
-#line 444 "plugin.vala"
+#line 474 "plugin.vala"
 	self->priv->exposed_windows = (_tmp0_ = NULL, __g_list_free_g_object_unref0 (self->priv->exposed_windows), _tmp0_);
-#line 446 "plugin.vala"
+#line 476 "plugin.vala"
 	mutter_windows = mutter_plugin_get_windows (unity_plugin_get_plugin (self));
-#line 962 "plugin.c"
+#line 1054 "plugin.c"
 	{
 		GList* w_collection;
 		GList* w_it;
-#line 447 "plugin.vala"
+#line 477 "plugin.vala"
 		w_collection = mutter_windows;
-#line 968 "plugin.c"
+#line 1060 "plugin.c"
 		for (w_it = w_collection; w_it != NULL; w_it = w_it->next) {
 			MutterWindow* w;
-#line 447 "plugin.vala"
+#line 477 "plugin.vala"
 			w = _g_object_ref0 ((MutterWindow*) w_it->data);
-#line 973 "plugin.c"
+#line 1065 "plugin.c"
 			{
 				gboolean keep;
 				gulong xid;
 				MutterWindow* _tmp2_;
 				MutterWindow* _tmp3_;
-#line 449 "plugin.vala"
+#line 479 "plugin.vala"
 				keep = FALSE;
-#line 450 "plugin.vala"
+#line 480 "plugin.vala"
 				xid = (gulong) meta_window_get_xwindow (mutter_window_get_meta_window (w));
-#line 983 "plugin.c"
+#line 1075 "plugin.c"
 				{
 					GSList* window_collection;
 					GSList* window_it;
-#line 451 "plugin.vala"
+#line 481 "plugin.vala"
 					window_collection = windows;
-#line 989 "plugin.c"
+#line 1081 "plugin.c"
 					for (window_it = window_collection; window_it != NULL; window_it = window_it->next) {
 						WnckWindow* window;
-#line 451 "plugin.vala"
+#line 481 "plugin.vala"
 						window = _g_object_ref0 ((WnckWindow*) window_it->data);
-#line 994 "plugin.c"
+#line 1086 "plugin.c"
 						{
-#line 453 "plugin.vala"
+#line 483 "plugin.vala"
 							if (wnck_window_get_xid (window) == xid) {
-#line 455 "plugin.vala"
+#line 485 "plugin.vala"
 								keep = TRUE;
-#line 1000 "plugin.c"
+#line 1092 "plugin.c"
 								_g_object_unref0 (window);
-#line 456 "plugin.vala"
+#line 486 "plugin.vala"
 								break;
-#line 1004 "plugin.c"
+#line 1096 "plugin.c"
 							}
 							_g_object_unref0 (window);
 						}
 					}
 				}
-#line 460 "plugin.vala"
+#line 490 "plugin.vala"
 				if (keep) {
-#line 1012 "plugin.c"
+#line 1104 "plugin.c"
 					ClutterActor* clone;
 					ClutterActor* _tmp1_;
 					ClutterContainer* container;
-#line 462 "plugin.vala"
+#line 492 "plugin.vala"
 					clone = (ClutterActor*) g_object_ref_sink ((ClutterClone*) clutter_clone_new ((ClutterActor*) w));
-#line 463 "plugin.vala"
+#line 493 "plugin.vala"
 					clutter_actor_set_position (clone, clutter_actor_get_x ((ClutterActor*) w), clutter_actor_get_y ((ClutterActor*) w));
-#line 464 "plugin.vala"
+#line 494 "plugin.vala"
 					clutter_actor_set_size (clone, clutter_actor_get_width ((ClutterActor*) w), clutter_actor_get_height ((ClutterActor*) w));
-#line 465 "plugin.vala"
+#line 495 "plugin.vala"
 					clutter_actor_set_opacity (clone, clutter_actor_get_opacity ((ClutterActor*) w));
-#line 466 "plugin.vala"
+#line 496 "plugin.vala"
 					self->priv->exposed_windows = g_list_append (self->priv->exposed_windows, _g_object_ref0 (clone));
-#line 467 "plugin.vala"
+#line 497 "plugin.vala"
 					clutter_actor_set_reactive (clone, TRUE);
-#line 469 "plugin.vala"
+#line 499 "plugin.vala"
 					container = (_tmp1_ = clutter_actor_get_parent ((ClutterActor*) w), CLUTTER_IS_CONTAINER (_tmp1_) ? ((ClutterContainer*) _tmp1_) : NULL);
-#line 471 "plugin.vala"
+#line 501 "plugin.vala"
 					clutter_container_add_actor (container, clone);
-#line 472 "plugin.vala"
+#line 502 "plugin.vala"
 					clutter_actor_raise (clone, (ClutterActor*) w);
-#line 1034 "plugin.c"
+#line 1126 "plugin.c"
 					_g_object_unref0 (clone);
 				}
-#line 475 "plugin.vala"
+#line 505 "plugin.vala"
 				if (mutter_window_get_window_type (w) == META_COMP_WINDOW_DESKTOP) {
-#line 477 "plugin.vala"
+#line 507 "plugin.vala"
 					self->priv->exposed_windows = g_list_reverse (self->priv->exposed_windows);
-#line 1041 "plugin.c"
+#line 1133 "plugin.c"
 					{
 						GList* actor_collection;
 						GList* actor_it;
-#line 478 "plugin.vala"
+#line 508 "plugin.vala"
 						actor_collection = self->priv->exposed_windows;
-#line 1047 "plugin.c"
+#line 1139 "plugin.c"
 						for (actor_it = actor_collection; actor_it != NULL; actor_it = actor_it->next) {
 							ClutterActor* actor;
-#line 478 "plugin.vala"
+#line 508 "plugin.vala"
 							actor = _g_object_ref0 ((ClutterActor*) actor_it->data);
-#line 1052 "plugin.c"
+#line 1144 "plugin.c"
 							{
-#line 480 "plugin.vala"
+#line 510 "plugin.vala"
 								clutter_actor_raise (actor, (ClutterActor*) w);
-#line 1056 "plugin.c"
+#line 1148 "plugin.c"
 								_g_object_unref0 (actor);
 							}
 						}
 					}
-#line 482 "plugin.vala"
+#line 512 "plugin.vala"
 					self->priv->exposed_windows = g_list_reverse (self->priv->exposed_windows);
-#line 1063 "plugin.c"
+#line 1155 "plugin.c"
 					_g_object_unref0 (w);
-#line 483 "plugin.vala"
+#line 513 "plugin.vala"
 					continue;
-#line 1067 "plugin.c"
+#line 1159 "plugin.c"
 				}
-#line 485 "plugin.vala"
+#line 515 "plugin.vala"
 				clutter_actor_set_reactive ((_tmp2_ = w, CLUTTER_IS_ACTOR (_tmp2_) ? ((ClutterActor*) _tmp2_) : NULL), FALSE);
-#line 486 "plugin.vala"
+#line 516 "plugin.vala"
 				clutter_actor_animate ((_tmp3_ = w, CLUTTER_IS_ACTOR (_tmp3_) ? ((ClutterActor*) _tmp3_) : NULL), (gulong) CLUTTER_EASE_IN_SINE, (guint) 80, "opacity", 0, NULL);
-#line 1073 "plugin.c"
+#line 1165 "plugin.c"
 				_g_object_unref0 (w);
 			}
 		}
 	}
-#line 489 "plugin.vala"
-	unity_plugin_position_window_on_grid (self, self->priv->exposed_windows);
-#line 491 "plugin.vala"
+#line 519 "plugin.vala"
+	unity_plugin_position_window_on_grid (self, self->priv->exposed_windows, left_buffer);
+#line 521 "plugin.vala"
 	unity_plugin_set_expose_showing (self, TRUE);
-#line 492 "plugin.vala"
+#line 522 "plugin.vala"
 	unity_shell_ensure_input_region ((UnityShell*) self);
-#line 493 "plugin.vala"
+#line 523 "plugin.vala"
 	g_signal_connect_object ((ClutterActor*) self->priv->stage, "captured-event", (GCallback) _unity_plugin_on_stage_captured_event_clutter_actor_captured_event, self, 0);
-#line 1086 "plugin.c"
+#line 1178 "plugin.c"
 }
 
 
-#line 496 "plugin.vala"
+#line 526 "plugin.vala"
 static void unity_plugin_dexpose_windows (UnityPlugin* self) {
-#line 1092 "plugin.c"
+#line 1184 "plugin.c"
 	GList* mutter_windows;
-#line 496 "plugin.vala"
+#line 526 "plugin.vala"
 	g_return_if_fail (self != NULL);
-#line 498 "plugin.vala"
+#line 528 "plugin.vala"
 	if (unity_quicklauncher_manager_get_active_launcher (self->priv->quicklauncher->manager) != NULL) {
-#line 499 "plugin.vala"
+#line 529 "plugin.vala"
 		unity_quicklauncher_launcher_view_close_menu (unity_quicklauncher_manager_get_active_launcher (self->priv->quicklauncher->manager));
-#line 1100 "plugin.c"
+#line 1192 "plugin.c"
 	}
-#line 501 "plugin.vala"
+#line 531 "plugin.vala"
 	mutter_windows = mutter_plugin_get_windows (unity_plugin_get_plugin (self));
-#line 1104 "plugin.c"
+#line 1196 "plugin.c"
 	{
 		GList* window_collection;
 		GList* window_it;
-#line 502 "plugin.vala"
+#line 532 "plugin.vala"
 		window_collection = mutter_windows;
-#line 1110 "plugin.c"
+#line 1202 "plugin.c"
 		for (window_it = window_collection; window_it != NULL; window_it = window_it->next) {
 			MutterWindow* window;
-#line 502 "plugin.vala"
+#line 532 "plugin.vala"
 			window = _g_object_ref0 ((MutterWindow*) window_it->data);
-#line 1115 "plugin.c"
+#line 1207 "plugin.c"
 			{
-#line 504 "plugin.vala"
+#line 534 "plugin.vala"
 				clutter_actor_set_opacity ((ClutterActor*) window, (guint8) 255);
-#line 505 "plugin.vala"
+#line 535 "plugin.vala"
 				clutter_actor_set_reactive ((ClutterActor*) window, TRUE);
-#line 1121 "plugin.c"
+#line 1213 "plugin.c"
 				_g_object_unref0 (window);
 			}
 		}
@@ -1125,42 +1217,46 @@ static void unity_plugin_dexpose_windows (UnityPlugin* self) {
 	{
 		GList* actor_collection;
 		GList* actor_it;
-#line 508 "plugin.vala"
+#line 538 "plugin.vala"
 		actor_collection = self->priv->exposed_windows;
-#line 1131 "plugin.c"
+#line 1223 "plugin.c"
 		for (actor_it = actor_collection; actor_it != NULL; actor_it = actor_it->next) {
 			ClutterActor* actor;
-#line 508 "plugin.vala"
+#line 538 "plugin.vala"
 			actor = _g_object_ref0 ((ClutterActor*) actor_it->data);
-#line 1136 "plugin.c"
+#line 1228 "plugin.c"
 			{
-#line 509 "plugin.vala"
+#line 539 "plugin.vala"
 				unity_plugin_restore_window_position (self, actor);
-#line 1140 "plugin.c"
+#line 1232 "plugin.c"
 				_g_object_unref0 (actor);
 			}
 		}
 	}
-#line 511 "plugin.vala"
+#line 541 "plugin.vala"
 	unity_plugin_set_expose_showing (self, FALSE);
-#line 512 "plugin.vala"
+#line 542 "plugin.vala"
 	unity_shell_ensure_input_region ((UnityShell*) self);
-#line 1149 "plugin.c"
+#line 1241 "plugin.c"
 }
 
 
+#line 563 "plugin.vala"
 static void _lambda2_ (Block1Data* _data1_) {
+#line 1247 "plugin.c"
 	UnityPlugin * self;
 	self = _data1_->self;
-#line 534 "plugin.vala"
+#line 564 "plugin.vala"
 	clutter_actor_destroy (_data1_->actor);
-#line 535 "plugin.vala"
+#line 565 "plugin.vala"
 	clutter_actor_set_opacity (_data1_->window, (guint8) 255);
-#line 1160 "plugin.c"
+#line 1254 "plugin.c"
 }
 
 
+#line 563 "plugin.vala"
 static void __lambda2__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+#line 1260 "plugin.c"
 	_lambda2_ (self);
 }
 
@@ -1181,216 +1277,213 @@ static void block1_data_unref (Block1Data* _data1_) {
 }
 
 
-#line 515 "plugin.vala"
+#line 545 "plugin.vala"
 static void unity_plugin_restore_window_position (UnityPlugin* self, ClutterActor* actor) {
-#line 1187 "plugin.c"
+#line 1283 "plugin.c"
 	Block1Data* _data1_;
 	ClutterActor* _tmp0_;
 	guint8 opacity;
 	ClutterAnimation* anim;
-#line 515 "plugin.vala"
+#line 545 "plugin.vala"
 	g_return_if_fail (self != NULL);
-#line 515 "plugin.vala"
+#line 545 "plugin.vala"
 	g_return_if_fail (actor != NULL);
-#line 1196 "plugin.c"
+#line 1292 "plugin.c"
 	_data1_ = g_slice_new0 (Block1Data);
 	_data1_->_ref_count_ = 1;
 	_data1_->self = g_object_ref (self);
 	_data1_->actor = _g_object_ref0 (actor);
-#line 517 "plugin.vala"
+#line 547 "plugin.vala"
 	if (!CLUTTER_IS_CLONE (_data1_->actor)) {
-#line 1203 "plugin.c"
+#line 1299 "plugin.c"
 		block1_data_unref (_data1_);
-#line 518 "plugin.vala"
+#line 548 "plugin.vala"
 		return;
-#line 1207 "plugin.c"
+#line 1303 "plugin.c"
 	}
 	_data1_->window = _g_object_ref0 (clutter_clone_get_source ((_tmp0_ = _data1_->actor, CLUTTER_IS_CLONE (_tmp0_) ? ((ClutterClone*) _tmp0_) : NULL)));
-#line 522 "plugin.vala"
+#line 552 "plugin.vala"
 	opacity = clutter_actor_get_opacity (_data1_->window);
-#line 523 "plugin.vala"
+#line 553 "plugin.vala"
 	g_object_set ((GObject*) _data1_->actor, "scale-gravity", CLUTTER_GRAVITY_CENTER, NULL);
-#line 524 "plugin.vala"
+#line 554 "plugin.vala"
 	anim = _g_object_ref0 (clutter_actor_animate (_data1_->actor, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "scale-x", 1.f, "scale-y", 1.f, "opacity", opacity, "x", clutter_actor_get_x (_data1_->window), "y", clutter_actor_get_y (_data1_->window), NULL));
-#line 531 "plugin.vala"
+#line 561 "plugin.vala"
 	clutter_actor_set_opacity (_data1_->window, (guint8) 0);
-#line 533 "plugin.vala"
+#line 563 "plugin.vala"
 	g_signal_connect_data (anim, "completed", (GCallback) __lambda2__clutter_animation_completed, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
-#line 1220 "plugin.c"
+#line 1316 "plugin.c"
 	_g_object_unref0 (anim);
 	block1_data_unref (_data1_);
 }
 
 
-#line 539 "plugin.vala"
-static void unity_plugin_position_window_on_grid (UnityPlugin* self, GList* _windows) {
-#line 1228 "plugin.c"
+#line 569 "plugin.vala"
+static void unity_plugin_position_window_on_grid (UnityPlugin* self, GList* _windows, gint left_buffer) {
+#line 1324 "plugin.c"
 	GList* windows;
-	gint left_buffer;
 	gint vertical_buffer;
 	gint count;
 	gint cols;
 	gint rows;
 	gint boxWidth;
 	gint boxHeight;
-#line 539 "plugin.vala"
+#line 569 "plugin.vala"
 	g_return_if_fail (self != NULL);
-#line 541 "plugin.vala"
+#line 572 "plugin.vala"
 	windows = g_list_copy (_windows);
-#line 543 "plugin.vala"
-	left_buffer = 250;
-#line 544 "plugin.vala"
+#line 573 "plugin.vala"
 	vertical_buffer = 40;
-#line 545 "plugin.vala"
+#line 574 "plugin.vala"
 	count = (gint) g_list_length (windows);
-#line 547 "plugin.vala"
+#line 576 "plugin.vala"
 	cols = (gint) ceil (sqrt ((double) count));
-#line 549 "plugin.vala"
+#line 578 "plugin.vala"
 	rows = 1;
-#line 551 "plugin.vala"
+#line 580 "plugin.vala"
 	while (TRUE) {
-#line 551 "plugin.vala"
+#line 580 "plugin.vala"
 		if (!((cols * rows) < count)) {
-#line 551 "plugin.vala"
+#line 580 "plugin.vala"
 			break;
-#line 1257 "plugin.c"
+#line 1350 "plugin.c"
 		}
-#line 552 "plugin.vala"
+#line 581 "plugin.vala"
 		rows++;
-#line 1261 "plugin.c"
+#line 1354 "plugin.c"
 	}
-#line 554 "plugin.vala"
+#line 583 "plugin.vala"
 	boxWidth = (gint) ((clutter_actor_get_width ((ClutterActor*) self->priv->stage) - left_buffer) / cols);
-#line 555 "plugin.vala"
+#line 584 "plugin.vala"
 	boxHeight = (gint) ((clutter_actor_get_height ((ClutterActor*) self->priv->stage) - (vertical_buffer * 2)) / rows);
-#line 1267 "plugin.c"
+#line 1360 "plugin.c"
 	{
 		gint row;
-#line 557 "plugin.vala"
+#line 586 "plugin.vala"
 		row = 0;
-#line 1272 "plugin.c"
+#line 1365 "plugin.c"
 		{
 			gboolean _tmp0_;
-#line 557 "plugin.vala"
+#line 586 "plugin.vala"
 			_tmp0_ = TRUE;
-#line 557 "plugin.vala"
+#line 586 "plugin.vala"
 			while (TRUE) {
-#line 557 "plugin.vala"
+#line 586 "plugin.vala"
 				if (!_tmp0_) {
-#line 557 "plugin.vala"
+#line 586 "plugin.vala"
 					row++;
-#line 1283 "plugin.c"
+#line 1376 "plugin.c"
 				}
-#line 557 "plugin.vala"
+#line 586 "plugin.vala"
 				_tmp0_ = FALSE;
-#line 557 "plugin.vala"
+#line 586 "plugin.vala"
 				if (!(row < rows)) {
-#line 557 "plugin.vala"
+#line 586 "plugin.vala"
 					break;
-#line 1291 "plugin.c"
+#line 1384 "plugin.c"
 				}
 				{
 					gint col;
-#line 559 "plugin.vala"
+#line 588 "plugin.vala"
 					col = 0;
-#line 1297 "plugin.c"
+#line 1390 "plugin.c"
 					{
 						gboolean _tmp1_;
-#line 559 "plugin.vala"
+#line 588 "plugin.vala"
 						_tmp1_ = TRUE;
-#line 559 "plugin.vala"
+#line 588 "plugin.vala"
 						while (TRUE) {
-#line 1304 "plugin.c"
+#line 1397 "plugin.c"
 							gint centerX;
 							gint centerY;
 							ClutterActor* window;
 							gint windowX;
 							gint windowY;
 							float scale;
-#line 559 "plugin.vala"
+#line 588 "plugin.vala"
 							if (!_tmp1_) {
-#line 559 "plugin.vala"
+#line 588 "plugin.vala"
 								col++;
-#line 1315 "plugin.c"
+#line 1408 "plugin.c"
 							}
-#line 559 "plugin.vala"
+#line 588 "plugin.vala"
 							_tmp1_ = FALSE;
-#line 559 "plugin.vala"
+#line 588 "plugin.vala"
 							if (!(col < cols)) {
-#line 559 "plugin.vala"
+#line 588 "plugin.vala"
 								break;
-#line 1323 "plugin.c"
+#line 1416 "plugin.c"
 							}
-#line 561 "plugin.vala"
+#line 590 "plugin.vala"
 							if (g_list_length (windows) == 0) {
-#line 1327 "plugin.c"
+#line 1420 "plugin.c"
 								__g_list_free_g_object_unref0 (windows);
-#line 562 "plugin.vala"
+#line 591 "plugin.vala"
 								return;
-#line 1331 "plugin.c"
+#line 1424 "plugin.c"
 							}
-#line 564 "plugin.vala"
+#line 593 "plugin.vala"
 							centerX = ((boxWidth / 2) + (boxWidth * col)) + left_buffer;
-#line 565 "plugin.vala"
+#line 594 "plugin.vala"
 							centerY = ((boxHeight / 2) + (boxHeight * row)) + vertical_buffer;
-#line 567 "plugin.vala"
+#line 596 "plugin.vala"
 							window = NULL;
-#line 1339 "plugin.c"
+#line 1432 "plugin.c"
 							{
 								GList* actor_collection;
 								GList* actor_it;
-#line 569 "plugin.vala"
+#line 598 "plugin.vala"
 								actor_collection = windows;
-#line 1345 "plugin.c"
+#line 1438 "plugin.c"
 								for (actor_it = actor_collection; actor_it != NULL; actor_it = actor_it->next) {
 									ClutterActor* actor;
-#line 569 "plugin.vala"
+#line 598 "plugin.vala"
 									actor = _g_object_ref0 ((ClutterActor*) actor_it->data);
-#line 1350 "plugin.c"
+#line 1443 "plugin.c"
 									{
 										double window_distance;
 										double actor_distance;
-#line 571 "plugin.vala"
+#line 600 "plugin.vala"
 										if (window == NULL) {
-#line 1356 "plugin.c"
+#line 1449 "plugin.c"
 											ClutterActor* _tmp2_;
-#line 573 "plugin.vala"
+#line 602 "plugin.vala"
 											window = (_tmp2_ = _g_object_ref0 (actor), _g_object_unref0 (window), _tmp2_);
-#line 1360 "plugin.c"
+#line 1453 "plugin.c"
 											_g_object_unref0 (actor);
-#line 574 "plugin.vala"
+#line 603 "plugin.vala"
 											continue;
-#line 1364 "plugin.c"
+#line 1457 "plugin.c"
 										}
-#line 577 "plugin.vala"
+#line 606 "plugin.vala"
 										window_distance = sqrt (fabs ((double) (centerX - (clutter_actor_get_x (window) + (clutter_actor_get_width (window) / 2)))) + fabs ((double) (centerY - (clutter_actor_get_y (window) + (clutter_actor_get_height (window) / 2)))));
-#line 581 "plugin.vala"
+#line 610 "plugin.vala"
 										actor_distance = sqrt (fabs ((double) (centerX - (clutter_actor_get_x (actor) + (clutter_actor_get_width (actor) / 2)))) + fabs ((double) (centerY - (clutter_actor_get_y (actor) + (clutter_actor_get_height (actor) / 2)))));
-#line 586 "plugin.vala"
+#line 615 "plugin.vala"
 										if (actor_distance < window_distance) {
-#line 1372 "plugin.c"
+#line 1465 "plugin.c"
 											ClutterActor* _tmp3_;
-#line 587 "plugin.vala"
+#line 616 "plugin.vala"
 											window = (_tmp3_ = _g_object_ref0 (actor), _g_object_unref0 (window), _tmp3_);
-#line 1376 "plugin.c"
+#line 1469 "plugin.c"
 										}
 										_g_object_unref0 (actor);
 									}
 								}
 							}
-#line 590 "plugin.vala"
+#line 619 "plugin.vala"
 							windows = g_list_remove (windows, window);
-#line 592 "plugin.vala"
+#line 621 "plugin.vala"
 							windowX = centerX - (((gint) clutter_actor_get_width (window)) / 2);
-#line 593 "plugin.vala"
+#line 622 "plugin.vala"
 							windowY = centerY - (((gint) clutter_actor_get_height (window)) / 2);
-#line 595 "plugin.vala"
+#line 624 "plugin.vala"
 							scale = MIN (MIN ((float) 1, (boxWidth - 20) / clutter_actor_get_width (window)), MIN ((float) 1, (boxHeight - 20) / clutter_actor_get_height (window)));
-#line 597 "plugin.vala"
+#line 626 "plugin.vala"
 							g_object_set ((GObject*) window, "scale-gravity", CLUTTER_GRAVITY_CENTER, NULL);
-#line 598 "plugin.vala"
+#line 627 "plugin.vala"
 							clutter_actor_animate (window, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "x", (float) windowX, "y", (float) windowY, "opacity", 255, "scale-x", scale, "scale-y", scale, NULL);
-#line 1394 "plugin.c"
+#line 1487 "plugin.c"
 							_g_object_unref0 (window);
 						}
 					}
@@ -1402,9 +1495,9 @@ static void unity_plugin_position_window_on_grid (UnityPlugin* self, GList* _win
 }
 
 
-#line 608 "plugin.vala"
+#line 637 "plugin.vala"
 static gboolean unity_plugin_on_stage_captured_event (UnityPlugin* self, ClutterEvent* event) {
-#line 1408 "plugin.c"
+#line 1501 "plugin.c"
 	gboolean result;
 	gboolean _tmp0_ = FALSE;
 	gboolean event_over_menu;
@@ -1413,204 +1506,204 @@ static gboolean unity_plugin_on_stage_captured_event (UnityPlugin* self, Clutter
 	ClutterActor* actor;
 	ClutterActor* menu;
 	gboolean _tmp5_ = FALSE;
-#line 608 "plugin.vala"
+#line 637 "plugin.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 610 "plugin.vala"
+#line 639 "plugin.vala"
 	if ((*event).type == CLUTTER_ENTER) {
-#line 610 "plugin.vala"
+#line 639 "plugin.vala"
 		_tmp0_ = TRUE;
-#line 1423 "plugin.c"
+#line 1516 "plugin.c"
 	} else {
-#line 610 "plugin.vala"
+#line 639 "plugin.vala"
 		_tmp0_ = (*event).type == CLUTTER_LEAVE;
-#line 1427 "plugin.c"
+#line 1520 "plugin.c"
 	}
-#line 610 "plugin.vala"
+#line 639 "plugin.vala"
 	if (_tmp0_) {
-#line 1431 "plugin.c"
+#line 1524 "plugin.c"
 		result = FALSE;
-#line 611 "plugin.vala"
+#line 640 "plugin.vala"
 		return result;
-#line 1435 "plugin.c"
+#line 1528 "plugin.c"
 	}
-#line 613 "plugin.vala"
+#line 642 "plugin.vala"
 	event_over_menu = FALSE;
-#line 616 "plugin.vala"
+#line 645 "plugin.vala"
 	clutter_event_get_coords (event, &x, &y);
-#line 618 "plugin.vala"
+#line 647 "plugin.vala"
 	actor = clutter_stage_get_actor_at_pos (self->priv->stage, CLUTTER_PICK_REACTIVE, (gint) x, (gint) y);
-#line 620 "plugin.vala"
+#line 649 "plugin.vala"
 	menu = NULL;
-#line 621 "plugin.vala"
+#line 650 "plugin.vala"
 	if (unity_quicklauncher_active_menu != NULL) {
-#line 1447 "plugin.c"
+#line 1540 "plugin.c"
 		CtkMenu* _tmp1_;
-#line 622 "plugin.vala"
+#line 651 "plugin.vala"
 		menu = (_tmp1_ = unity_quicklauncher_active_menu->menu, CLUTTER_IS_ACTOR (_tmp1_) ? ((ClutterActor*) _tmp1_) : NULL);
-#line 1451 "plugin.c"
+#line 1544 "plugin.c"
 	}
-#line 623 "plugin.vala"
+#line 652 "plugin.vala"
 	if (menu != NULL) {
-#line 1455 "plugin.c"
+#line 1548 "plugin.c"
 		gboolean _tmp2_ = FALSE;
 		gboolean _tmp3_ = FALSE;
 		gboolean _tmp4_ = FALSE;
-#line 625 "plugin.vala"
+#line 654 "plugin.vala"
 		if (x > clutter_actor_get_x (menu)) {
-#line 625 "plugin.vala"
+#line 654 "plugin.vala"
 			_tmp4_ = x < (clutter_actor_get_x (menu) + clutter_actor_get_width (menu));
-#line 1463 "plugin.c"
+#line 1556 "plugin.c"
 		} else {
-#line 625 "plugin.vala"
+#line 654 "plugin.vala"
 			_tmp4_ = FALSE;
-#line 1467 "plugin.c"
+#line 1560 "plugin.c"
 		}
-#line 625 "plugin.vala"
+#line 654 "plugin.vala"
 		if (_tmp4_) {
-#line 625 "plugin.vala"
+#line 654 "plugin.vala"
 			_tmp3_ = y > clutter_actor_get_y (menu);
-#line 1473 "plugin.c"
+#line 1566 "plugin.c"
 		} else {
-#line 625 "plugin.vala"
+#line 654 "plugin.vala"
 			_tmp3_ = FALSE;
-#line 1477 "plugin.c"
+#line 1570 "plugin.c"
 		}
-#line 625 "plugin.vala"
+#line 654 "plugin.vala"
 		if (_tmp3_) {
-#line 625 "plugin.vala"
+#line 654 "plugin.vala"
 			_tmp2_ = y < (clutter_actor_get_y (menu) + clutter_actor_get_height (menu));
-#line 1483 "plugin.c"
+#line 1576 "plugin.c"
 		} else {
-#line 625 "plugin.vala"
+#line 654 "plugin.vala"
 			_tmp2_ = FALSE;
-#line 1487 "plugin.c"
+#line 1580 "plugin.c"
 		}
-#line 625 "plugin.vala"
+#line 654 "plugin.vala"
 		if (_tmp2_) {
-#line 626 "plugin.vala"
+#line 655 "plugin.vala"
 			event_over_menu = TRUE;
-#line 1493 "plugin.c"
+#line 1586 "plugin.c"
 		}
 	}
-#line 629 "plugin.vala"
+#line 658 "plugin.vala"
 	if ((*event).type == CLUTTER_BUTTON_RELEASE) {
-#line 629 "plugin.vala"
+#line 658 "plugin.vala"
 		_tmp5_ = clutter_event_get_button (event) == 1;
-#line 1500 "plugin.c"
+#line 1593 "plugin.c"
 	} else {
-#line 629 "plugin.vala"
+#line 658 "plugin.vala"
 		_tmp5_ = FALSE;
-#line 1504 "plugin.c"
+#line 1597 "plugin.c"
 	}
-#line 629 "plugin.vala"
+#line 658 "plugin.vala"
 	if (_tmp5_) {
-#line 1508 "plugin.c"
+#line 1601 "plugin.c"
 		ClutterActor* _tmp7_;
 		ClutterClone* clone;
 		gboolean _tmp8_ = FALSE;
 		guint _tmp11_;
-#line 631 "plugin.vala"
+#line 660 "plugin.vala"
 		while (TRUE) {
-#line 1515 "plugin.c"
+#line 1608 "plugin.c"
 			gboolean _tmp6_ = FALSE;
-#line 631 "plugin.vala"
+#line 660 "plugin.vala"
 			if (clutter_actor_get_parent (actor) != NULL) {
-#line 631 "plugin.vala"
+#line 660 "plugin.vala"
 				_tmp6_ = !CLUTTER_IS_CLONE (actor);
-#line 1521 "plugin.c"
+#line 1614 "plugin.c"
 			} else {
-#line 631 "plugin.vala"
+#line 660 "plugin.vala"
 				_tmp6_ = FALSE;
-#line 1525 "plugin.c"
+#line 1618 "plugin.c"
 			}
-#line 631 "plugin.vala"
+#line 660 "plugin.vala"
 			if (!_tmp6_) {
-#line 631 "plugin.vala"
+#line 660 "plugin.vala"
 				break;
-#line 1531 "plugin.c"
+#line 1624 "plugin.c"
 			}
-#line 632 "plugin.vala"
+#line 661 "plugin.vala"
 			actor = clutter_actor_get_parent (actor);
-#line 1535 "plugin.c"
+#line 1628 "plugin.c"
 		}
-#line 634 "plugin.vala"
+#line 663 "plugin.vala"
 		clone = _g_object_ref0 ((_tmp7_ = actor, CLUTTER_IS_CLONE (_tmp7_) ? ((ClutterClone*) _tmp7_) : NULL));
-#line 635 "plugin.vala"
+#line 664 "plugin.vala"
 		if (clone != NULL) {
-#line 635 "plugin.vala"
+#line 664 "plugin.vala"
 			_tmp8_ = MUTTER_IS_WINDOW (clutter_clone_get_source (clone));
-#line 1543 "plugin.c"
+#line 1636 "plugin.c"
 		} else {
-#line 635 "plugin.vala"
+#line 664 "plugin.vala"
 			_tmp8_ = FALSE;
-#line 1547 "plugin.c"
+#line 1640 "plugin.c"
 		}
-#line 635 "plugin.vala"
+#line 664 "plugin.vala"
 		if (_tmp8_) {
-#line 1551 "plugin.c"
+#line 1644 "plugin.c"
 			ClutterActor* _tmp9_;
 			ClutterActor* _tmp10_;
 			MetaWindow* meta;
-#line 637 "plugin.vala"
+#line 666 "plugin.vala"
 			meta = mutter_window_get_meta_window ((_tmp10_ = clutter_clone_get_source ((_tmp9_ = actor, CLUTTER_IS_CLONE (_tmp9_) ? ((ClutterClone*) _tmp9_) : NULL)), MUTTER_IS_WINDOW (_tmp10_) ? ((MutterWindow*) _tmp10_) : NULL));
-#line 638 "plugin.vala"
+#line 667 "plugin.vala"
 			meta_workspace_activate (meta_window_get_workspace (meta), clutter_event_get_time (event));
-#line 639 "plugin.vala"
+#line 668 "plugin.vala"
 			meta_window_activate (meta, clutter_event_get_time (event));
-#line 1561 "plugin.c"
+#line 1654 "plugin.c"
 		}
-#line 641 "plugin.vala"
+#line 670 "plugin.vala"
 		g_signal_handlers_disconnect_matched ((ClutterActor*) self->priv->stage, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("captured-event", CLUTTER_TYPE_ACTOR, &_tmp11_, NULL, FALSE), _tmp11_), 0, NULL, (GCallback) _unity_plugin_on_stage_captured_event_clutter_actor_captured_event, self);
-#line 642 "plugin.vala"
+#line 671 "plugin.vala"
 		unity_plugin_dexpose_windows (self);
-#line 1567 "plugin.c"
+#line 1660 "plugin.c"
 		_g_object_unref0 (clone);
 	}
 	result = !event_over_menu;
-#line 645 "plugin.vala"
+#line 674 "plugin.vala"
 	return result;
-#line 1573 "plugin.c"
+#line 1666 "plugin.c"
 }
 
 
-#line 648 "plugin.vala"
+#line 677 "plugin.vala"
 static void unity_plugin_real_show_unity (UnityShell* base) {
-#line 1579 "plugin.c"
+#line 1672 "plugin.c"
 	UnityPlugin * self;
 	self = (UnityPlugin*) base;
-#line 650 "plugin.vala"
+#line 679 "plugin.vala"
 	if (self->priv->places_enabled == FALSE) {
-#line 1584 "plugin.c"
+#line 1677 "plugin.c"
 		WnckScreen* screen;
-#line 652 "plugin.vala"
+#line 681 "plugin.vala"
 		screen = _g_object_ref0 (wnck_screen_get_default ());
-#line 654 "plugin.vala"
+#line 683 "plugin.vala"
 		wnck_screen_toggle_showing_desktop (screen, !wnck_screen_get_showing_desktop (screen));
-#line 1590 "plugin.c"
+#line 1683 "plugin.c"
 		_g_object_unref0 (screen);
-#line 655 "plugin.vala"
+#line 684 "plugin.vala"
 		return;
-#line 1594 "plugin.c"
+#line 1687 "plugin.c"
 	}
-#line 657 "plugin.vala"
+#line 686 "plugin.vala"
 	if (self->priv->places_showing) {
-#line 659 "plugin.vala"
+#line 688 "plugin.vala"
 		self->priv->places_showing = FALSE;
-#line 661 "plugin.vala"
+#line 690 "plugin.vala"
 		clutter_actor_hide ((ClutterActor*) self->priv->places);
-#line 662 "plugin.vala"
+#line 691 "plugin.vala"
 		clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 0);
-#line 663 "plugin.vala"
+#line 692 "plugin.vala"
 		clutter_actor_set_reactive ((ClutterActor*) self->priv->places, FALSE);
-#line 665 "plugin.vala"
+#line 694 "plugin.vala"
 		clutter_actor_destroy ((ClutterActor*) self->priv->actor_blur);
-#line 666 "plugin.vala"
+#line 695 "plugin.vala"
 		clutter_actor_destroy ((ClutterActor*) self->priv->dark_box);
-#line 667 "plugin.vala"
+#line 696 "plugin.vala"
 		unity_panel_view_set_indicator_mode (self->priv->panel, FALSE);
-#line 669 "plugin.vala"
+#line 698 "plugin.vala"
 		unity_shell_ensure_input_region ((UnityShell*) self);
-#line 1614 "plugin.c"
+#line 1707 "plugin.c"
 	} else {
 		UnityActorBlur* _tmp0_;
 		ClutterActor* _tmp1_;
@@ -1619,209 +1712,209 @@ static void unity_plugin_real_show_unity (UnityShell* base) {
 		ClutterColor _tmp4_;
 		ClutterColor _tmp3_ = {0};
 		ClutterActor* _tmp6_;
-#line 673 "plugin.vala"
-		self->priv->places_showing = TRUE;
-#line 675 "plugin.vala"
-		clutter_actor_show ((ClutterActor*) self->priv->places);
-#line 676 "plugin.vala"
-		clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 255);
-#line 677 "plugin.vala"
-		clutter_actor_set_reactive ((ClutterActor*) self->priv->places, TRUE);
-#line 679 "plugin.vala"
-		self->priv->actor_blur = (_tmp0_ = g_object_ref_sink (unity_actor_blur_new (mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self)))), _g_object_unref0 (self->priv->actor_blur), _tmp0_);
-#line 681 "plugin.vala"
-		clutter_container_add_actor ((_tmp1_ = mutter_plugin_get_window_group (unity_plugin_get_plugin (self)), CLUTTER_IS_CONTAINER (_tmp1_) ? ((ClutterContainer*) _tmp1_) : NULL), (ClutterActor*) self->priv->actor_blur);
-#line 682 "plugin.vala"
-		clutter_actor_raise ((_tmp2_ = self->priv->actor_blur, CLUTTER_IS_ACTOR (_tmp2_) ? ((ClutterActor*) _tmp2_) : NULL), mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self)));
-#line 684 "plugin.vala"
-		clutter_actor_set_position ((ClutterActor*) self->priv->actor_blur, (float) 0, (float) 0);
-#line 686 "plugin.vala"
-		self->priv->dark_box = (_tmp5_ = g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color ((_tmp4_ = (_tmp3_.red = (guint8) 0, _tmp3_.green = (guint8) 0, _tmp3_.blue = (guint8) 0, _tmp3_.alpha = (guint8) 255, _tmp3_), &_tmp4_))), _g_object_unref0 (self->priv->dark_box), _tmp5_);
-#line 688 "plugin.vala"
-		clutter_container_add_actor ((_tmp6_ = mutter_plugin_get_window_group (unity_plugin_get_plugin (self)), CLUTTER_IS_CONTAINER (_tmp6_) ? ((ClutterContainer*) _tmp6_) : NULL), (ClutterActor*) self->priv->dark_box);
-#line 689 "plugin.vala"
-		clutter_actor_raise ((ClutterActor*) self->priv->dark_box, (ClutterActor*) self->priv->actor_blur);
-#line 691 "plugin.vala"
-		clutter_actor_set_position ((ClutterActor*) self->priv->dark_box, (float) 0, (float) 0);
-#line 692 "plugin.vala"
-		clutter_actor_set_size ((ClutterActor*) self->priv->dark_box, clutter_actor_get_width ((ClutterActor*) self->priv->stage), clutter_actor_get_height ((ClutterActor*) self->priv->stage));
-#line 694 "plugin.vala"
-		clutter_actor_show ((ClutterActor*) self->priv->dark_box);
-#line 695 "plugin.vala"
-		clutter_actor_show ((ClutterActor*) self->priv->actor_blur);
-#line 696 "plugin.vala"
-		unity_panel_view_set_indicator_mode (self->priv->panel, TRUE);
-#line 698 "plugin.vala"
-		unity_shell_ensure_input_region ((UnityShell*) self);
-#line 700 "plugin.vala"
-		XFlush (XOpenDisplay (NULL));
 #line 702 "plugin.vala"
-		clutter_actor_set_opacity ((ClutterActor*) self->priv->dark_box, (guint8) 0);
-#line 703 "plugin.vala"
-		clutter_actor_set_opacity ((ClutterActor*) self->priv->actor_blur, (guint8) 255);
+		self->priv->places_showing = TRUE;
+#line 704 "plugin.vala"
+		clutter_actor_show ((ClutterActor*) self->priv->places);
 #line 705 "plugin.vala"
+		clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 255);
+#line 706 "plugin.vala"
+		clutter_actor_set_reactive ((ClutterActor*) self->priv->places, TRUE);
+#line 708 "plugin.vala"
+		self->priv->actor_blur = (_tmp0_ = g_object_ref_sink (unity_actor_blur_new (mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self)))), _g_object_unref0 (self->priv->actor_blur), _tmp0_);
+#line 710 "plugin.vala"
+		clutter_container_add_actor ((_tmp1_ = mutter_plugin_get_window_group (unity_plugin_get_plugin (self)), CLUTTER_IS_CONTAINER (_tmp1_) ? ((ClutterContainer*) _tmp1_) : NULL), (ClutterActor*) self->priv->actor_blur);
+#line 711 "plugin.vala"
+		clutter_actor_raise ((_tmp2_ = self->priv->actor_blur, CLUTTER_IS_ACTOR (_tmp2_) ? ((ClutterActor*) _tmp2_) : NULL), mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self)));
+#line 713 "plugin.vala"
+		clutter_actor_set_position ((ClutterActor*) self->priv->actor_blur, (float) 0, (float) 0);
+#line 715 "plugin.vala"
+		self->priv->dark_box = (_tmp5_ = g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color ((_tmp4_ = (_tmp3_.red = (guint8) 0, _tmp3_.green = (guint8) 0, _tmp3_.blue = (guint8) 0, _tmp3_.alpha = (guint8) 255, _tmp3_), &_tmp4_))), _g_object_unref0 (self->priv->dark_box), _tmp5_);
+#line 717 "plugin.vala"
+		clutter_container_add_actor ((_tmp6_ = mutter_plugin_get_window_group (unity_plugin_get_plugin (self)), CLUTTER_IS_CONTAINER (_tmp6_) ? ((ClutterContainer*) _tmp6_) : NULL), (ClutterActor*) self->priv->dark_box);
+#line 718 "plugin.vala"
+		clutter_actor_raise ((ClutterActor*) self->priv->dark_box, (ClutterActor*) self->priv->actor_blur);
+#line 720 "plugin.vala"
+		clutter_actor_set_position ((ClutterActor*) self->priv->dark_box, (float) 0, (float) 0);
+#line 721 "plugin.vala"
+		clutter_actor_set_size ((ClutterActor*) self->priv->dark_box, clutter_actor_get_width ((ClutterActor*) self->priv->stage), clutter_actor_get_height ((ClutterActor*) self->priv->stage));
+#line 723 "plugin.vala"
+		clutter_actor_show ((ClutterActor*) self->priv->dark_box);
+#line 724 "plugin.vala"
+		clutter_actor_show ((ClutterActor*) self->priv->actor_blur);
+#line 725 "plugin.vala"
+		unity_panel_view_set_indicator_mode (self->priv->panel, TRUE);
+#line 727 "plugin.vala"
+		unity_shell_ensure_input_region ((UnityShell*) self);
+#line 729 "plugin.vala"
+		XFlush (XOpenDisplay (NULL));
+#line 731 "plugin.vala"
+		clutter_actor_set_opacity ((ClutterActor*) self->priv->dark_box, (guint8) 0);
+#line 732 "plugin.vala"
+		clutter_actor_set_opacity ((ClutterActor*) self->priv->actor_blur, (guint8) 255);
+#line 734 "plugin.vala"
 		clutter_actor_animate ((ClutterActor*) self->priv->dark_box, (gulong) CLUTTER_EASE_IN_SINE, (guint) 250, "opacity", 180, NULL);
-#line 1665 "plugin.c"
+#line 1758 "plugin.c"
 	}
 }
 
 
-#line 709 "plugin.vala"
+#line 738 "plugin.vala"
 static void unity_plugin_real_grab_keyboard (UnityShell* base, gboolean grab, guint32 timestamp) {
-#line 1672 "plugin.c"
+#line 1765 "plugin.c"
 	UnityPlugin * self;
 	self = (UnityPlugin*) base;
-#line 711 "plugin.vala"
-	if (self->priv->grab_enabled == grab) {
-#line 712 "plugin.vala"
-		return;
-#line 1679 "plugin.c"
-	}
-#line 714 "plugin.vala"
-	if (grab) {
-#line 716 "plugin.vala"
-		mutter_plugin_begin_modal (unity_plugin_get_plugin (self), utils_get_stage_window (self->priv->stage), (guint) 0, 0, timestamp);
-#line 1685 "plugin.c"
-	} else {
-#line 724 "plugin.vala"
-		mutter_plugin_end_modal (unity_plugin_get_plugin (self), timestamp);
-#line 1689 "plugin.c"
-	}
-#line 727 "plugin.vala"
-	self->priv->grab_enabled = grab;
-#line 1693 "plugin.c"
-}
-
-
-#line 730 "plugin.vala"
-static gboolean unity_plugin_envvar_is_enabled (UnityPlugin* self, const char* name) {
-#line 1699 "plugin.c"
-	gboolean result;
-#line 730 "plugin.vala"
-	g_return_val_if_fail (self != NULL, FALSE);
-#line 730 "plugin.vala"
-	g_return_val_if_fail (name != NULL, FALSE);
-#line 1705 "plugin.c"
-	result = g_getenv (name) != NULL;
-#line 732 "plugin.vala"
-	return result;
-#line 1709 "plugin.c"
-}
-
-
-#line 738 "plugin.vala"
-void unity_plugin_minimize (UnityPlugin* self, MutterWindow* window) {
-#line 738 "plugin.vala"
-	g_return_if_fail (self != NULL);
-#line 738 "plugin.vala"
-	g_return_if_fail (window != NULL);
 #line 740 "plugin.vala"
+	if (self->priv->grab_enabled == grab) {
+#line 741 "plugin.vala"
+		return;
+#line 1772 "plugin.c"
+	}
+#line 743 "plugin.vala"
+	if (grab) {
+#line 745 "plugin.vala"
+		mutter_plugin_begin_modal (unity_plugin_get_plugin (self), utils_get_stage_window (self->priv->stage), (guint) 0, 0, timestamp);
+#line 1778 "plugin.c"
+	} else {
+#line 753 "plugin.vala"
+		mutter_plugin_end_modal (unity_plugin_get_plugin (self), timestamp);
+#line 1782 "plugin.c"
+	}
+#line 756 "plugin.vala"
+	self->priv->grab_enabled = grab;
+#line 1786 "plugin.c"
+}
+
+
+#line 759 "plugin.vala"
+static gboolean unity_plugin_envvar_is_enabled (UnityPlugin* self, const char* name) {
+#line 1792 "plugin.c"
+	gboolean result;
+#line 759 "plugin.vala"
+	g_return_val_if_fail (self != NULL, FALSE);
+#line 759 "plugin.vala"
+	g_return_val_if_fail (name != NULL, FALSE);
+#line 1798 "plugin.c"
+	result = g_getenv (name) != NULL;
+#line 761 "plugin.vala"
+	return result;
+#line 1802 "plugin.c"
+}
+
+
+#line 767 "plugin.vala"
+void unity_plugin_minimize (UnityPlugin* self, MutterWindow* window) {
+#line 767 "plugin.vala"
+	g_return_if_fail (self != NULL);
+#line 767 "plugin.vala"
+	g_return_if_fail (window != NULL);
+#line 769 "plugin.vala"
 	g_signal_emit_by_name (self, "window-minimized", self, window);
-#line 1721 "plugin.c"
+#line 1814 "plugin.c"
 }
 
 
-#line 743 "plugin.vala"
+#line 772 "plugin.vala"
 void unity_plugin_maximize (UnityPlugin* self, MutterWindow* window, gint x, gint y, gint width, gint height) {
-#line 743 "plugin.vala"
+#line 772 "plugin.vala"
 	g_return_if_fail (self != NULL);
-#line 743 "plugin.vala"
+#line 772 "plugin.vala"
 	g_return_if_fail (window != NULL);
-#line 749 "plugin.vala"
+#line 778 "plugin.vala"
 	g_signal_emit_by_name (self, "window-maximized", self, window, x, y, width, height);
-#line 1733 "plugin.c"
+#line 1826 "plugin.c"
 }
 
 
-#line 752 "plugin.vala"
-void unity_plugin_unmaximize (UnityPlugin* self, MutterWindow* window, gint x, gint y, gint width, gint height) {
-#line 752 "plugin.vala"
-	g_return_if_fail (self != NULL);
-#line 752 "plugin.vala"
-	g_return_if_fail (window != NULL);
-#line 758 "plugin.vala"
-	g_signal_emit_by_name (self, "window-unmaximized", self, window, x, y, width, height);
-#line 1745 "plugin.c"
-}
-
-
-#line 761 "plugin.vala"
-void unity_plugin_map (UnityPlugin* self, MutterWindow* window) {
-#line 761 "plugin.vala"
-	g_return_if_fail (self != NULL);
-#line 761 "plugin.vala"
-	g_return_if_fail (window != NULL);
-#line 763 "plugin.vala"
-	g_signal_emit_by_name (self, "window-mapped", self, window);
-#line 1757 "plugin.c"
-}
-
-
-#line 766 "plugin.vala"
-void unity_plugin_destroy (UnityPlugin* self, MutterWindow* window) {
-#line 766 "plugin.vala"
-	g_return_if_fail (self != NULL);
-#line 766 "plugin.vala"
-	g_return_if_fail (window != NULL);
-#line 768 "plugin.vala"
-	g_signal_emit_by_name (self, "window-destroyed", self, window);
-#line 1769 "plugin.c"
-}
-
-
-#line 771 "plugin.vala"
-void unity_plugin_switch_workspace (UnityPlugin* self, GList* windows, gint from, gint to, gint direction) {
-#line 771 "plugin.vala"
-	g_return_if_fail (self != NULL);
-#line 776 "plugin.vala"
-	g_signal_emit_by_name (self, "workspace-switch-event", self, windows, from, to, direction);
-#line 1779 "plugin.c"
-}
-
-
-#line 779 "plugin.vala"
-void unity_plugin_kill_effect (UnityPlugin* self, MutterWindow* window, gulong events) {
-#line 779 "plugin.vala"
-	g_return_if_fail (self != NULL);
-#line 779 "plugin.vala"
-	g_return_if_fail (window != NULL);
 #line 781 "plugin.vala"
+void unity_plugin_unmaximize (UnityPlugin* self, MutterWindow* window, gint x, gint y, gint width, gint height) {
+#line 781 "plugin.vala"
+	g_return_if_fail (self != NULL);
+#line 781 "plugin.vala"
+	g_return_if_fail (window != NULL);
+#line 787 "plugin.vala"
+	g_signal_emit_by_name (self, "window-unmaximized", self, window, x, y, width, height);
+#line 1838 "plugin.c"
+}
+
+
+#line 790 "plugin.vala"
+void unity_plugin_map (UnityPlugin* self, MutterWindow* window) {
+#line 790 "plugin.vala"
+	g_return_if_fail (self != NULL);
+#line 790 "plugin.vala"
+	g_return_if_fail (window != NULL);
+#line 792 "plugin.vala"
+	g_signal_emit_by_name (self, "window-mapped", self, window);
+#line 1850 "plugin.c"
+}
+
+
+#line 795 "plugin.vala"
+void unity_plugin_destroy (UnityPlugin* self, MutterWindow* window) {
+#line 795 "plugin.vala"
+	g_return_if_fail (self != NULL);
+#line 795 "plugin.vala"
+	g_return_if_fail (window != NULL);
+#line 797 "plugin.vala"
+	g_signal_emit_by_name (self, "window-destroyed", self, window);
+#line 1862 "plugin.c"
+}
+
+
+#line 800 "plugin.vala"
+void unity_plugin_switch_workspace (UnityPlugin* self, GList* windows, gint from, gint to, gint direction) {
+#line 800 "plugin.vala"
+	g_return_if_fail (self != NULL);
+#line 805 "plugin.vala"
+	g_signal_emit_by_name (self, "workspace-switch-event", self, windows, from, to, direction);
+#line 1872 "plugin.c"
+}
+
+
+#line 808 "plugin.vala"
+void unity_plugin_kill_effect (UnityPlugin* self, MutterWindow* window, gulong events) {
+#line 808 "plugin.vala"
+	g_return_if_fail (self != NULL);
+#line 808 "plugin.vala"
+	g_return_if_fail (window != NULL);
+#line 810 "plugin.vala"
 	g_signal_emit_by_name (self, "window-kill-effect", self, window, events);
-#line 1791 "plugin.c"
+#line 1884 "plugin.c"
 }
 
 
-#line 784 "plugin.vala"
+#line 813 "plugin.vala"
 gint unity_plugin_get_panel_height (UnityPlugin* self) {
-#line 1797 "plugin.c"
+#line 1890 "plugin.c"
 	gint result;
-#line 784 "plugin.vala"
+#line 813 "plugin.vala"
 	g_return_val_if_fail (self != NULL, 0);
-#line 1801 "plugin.c"
+#line 1894 "plugin.c"
 	result = UNITY_PLUGIN_PANEL_HEIGHT;
-#line 786 "plugin.vala"
+#line 815 "plugin.vala"
 	return result;
-#line 1805 "plugin.c"
+#line 1898 "plugin.c"
 }
 
 
-#line 789 "plugin.vala"
+#line 818 "plugin.vala"
 gint unity_plugin_get_launcher_width (UnityPlugin* self) {
-#line 1811 "plugin.c"
+#line 1904 "plugin.c"
 	gint result;
-#line 789 "plugin.vala"
+#line 818 "plugin.vala"
 	g_return_val_if_fail (self != NULL, 0);
-#line 1815 "plugin.c"
+#line 1908 "plugin.c"
 	result = UNITY_PLUGIN_QUICKLAUNCHER_WIDTH;
-#line 791 "plugin.vala"
+#line 820 "plugin.vala"
 	return result;
-#line 1819 "plugin.c"
+#line 1912 "plugin.c"
 }
 
 
 #line 73 "plugin.vala"
 UnityPlugin* unity_plugin_construct (GType object_type) {
-#line 1825 "plugin.c"
+#line 1918 "plugin.c"
 	UnityPlugin * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
@@ -1832,7 +1925,7 @@ UnityPlugin* unity_plugin_construct (GType object_type) {
 UnityPlugin* unity_plugin_new (void) {
 #line 73 "plugin.vala"
 	return unity_plugin_construct (UNITY_TYPE_PLUGIN);
-#line 1836 "plugin.c"
+#line 1929 "plugin.c"
 }
 
 
@@ -1842,7 +1935,7 @@ MutterPlugin* unity_plugin_get_plugin (UnityPlugin* self) {
 	result = self->priv->_plugin;
 #line 106 "plugin.vala"
 	return result;
-#line 1846 "plugin.c"
+#line 1939 "plugin.c"
 }
 
 
@@ -1853,7 +1946,7 @@ void unity_plugin_set_plugin (UnityPlugin* self, MutterPlugin* value) {
 	self->priv->_plugin = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_plugin), _tmp0_);
 #line 107 "plugin.vala"
 	unity_plugin_real_construct (self);
-#line 1857 "plugin.c"
+#line 1950 "plugin.c"
 	g_object_notify ((GObject *) self, "plugin");
 }
 
@@ -1865,7 +1958,7 @@ static gboolean unity_plugin_real_get_menus_swallow_events (UnityShell* base) {
 	result = FALSE;
 #line 110 "plugin.vala"
 	return result;
-#line 1869 "plugin.c"
+#line 1962 "plugin.c"
 }
 
 
@@ -1875,7 +1968,7 @@ gboolean unity_plugin_get_expose_showing (UnityPlugin* self) {
 	result = self->priv->_expose_showing;
 #line 112 "plugin.vala"
 	return result;
-#line 1879 "plugin.c"
+#line 1972 "plugin.c"
 }
 
 
@@ -1892,7 +1985,7 @@ static gboolean unity_plugin_get_fullscreen_obstruction (UnityPlugin* self) {
 	result = self->priv->_fullscreen_obstruction;
 #line 139 "plugin.vala"
 	return result;
-#line 1896 "plugin.c"
+#line 1989 "plugin.c"
 }
 
 
@@ -1902,7 +1995,7 @@ static void unity_plugin_set_fullscreen_obstruction (UnityPlugin* self, gboolean
 	self->priv->_fullscreen_obstruction = value;
 #line 143 "plugin.vala"
 	unity_shell_ensure_input_region ((UnityShell*) self);
-#line 1906 "plugin.c"
+#line 1999 "plugin.c"
 }
 
 
@@ -1932,15 +2025,15 @@ static GObject * unity_plugin_constructor (GType type, guint n_construct_propert
 		if (boot_logging_filename != NULL) {
 #line 159 "plugin.vala"
 			unity_is_logging = TRUE;
-#line 1936 "plugin.c"
+#line 2029 "plugin.c"
 		} else {
 #line 163 "plugin.vala"
 			unity_is_logging = FALSE;
-#line 1940 "plugin.c"
+#line 2033 "plugin.c"
 		}
 #line 165 "plugin.vala"
 		START_FUNCTION ();
-#line 1944 "plugin.c"
+#line 2037 "plugin.c"
 		args = (_tmp3_ = (_tmp2_ = g_new0 (char*, 1 + 1), _tmp2_[0] = g_strdup ("mutter"), _tmp2_), args_length1 = 1, args_size = args_length1, _tmp3_);
 #line 168 "plugin.vala"
 		LOGGER_START_PROCESS ("ctk_init");
@@ -1958,7 +2051,7 @@ static GObject * unity_plugin_constructor (GType type, guint n_construct_propert
 		LOGGER_END_PROCESS ("unity_application_constructor");
 #line 177 "plugin.vala"
 		END_FUNCTION ();
-#line 1962 "plugin.c"
+#line 2055 "plugin.c"
 		args = (_vala_array_free (args, args_length1, (GDestroyNotify) g_free), NULL);
 	}
 	return obj;
@@ -1989,6 +2082,7 @@ static void unity_plugin_class_init (UnityPluginClass * klass) {
 static void unity_plugin_unity_shell_interface_init (UnityShellIface * iface) {
 	unity_plugin_unity_shell_parent_iface = g_type_interface_peek_parent (iface);
 	iface->ensure_input_region = unity_plugin_real_ensure_input_region;
+	iface->show_window_picker = unity_plugin_real_show_window_picker;
 	iface->get_stage = unity_plugin_real_get_stage;
 	iface->get_mode = unity_plugin_real_get_mode;
 	iface->get_indicators_width = unity_plugin_real_get_indicators_width;

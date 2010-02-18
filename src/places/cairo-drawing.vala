@@ -347,7 +347,7 @@ namespace Unity.Places.CairoDrawing
     {
     }
   }
-  
+
   public class RectangleBox : Ctk.Bin
   {
     public int Width = 0;
@@ -441,7 +441,7 @@ namespace Unity.Places.CairoDrawing
         cairoctx.set_operator (Cairo.Operator.CLEAR);
         cairoctx.paint ();
         cairoctx.set_operator (Cairo.Operator.OVER);
-        cairoctx.translate (0.5f, 0.5f);
+        cairoctx.translate (-0.5f, -0.5f);
 
         cairoctx.set_source_rgba (1.0, 1.0, 1.0, 0.9);
         cairoctx.set_line_width (1.0);
@@ -450,11 +450,11 @@ namespace Unity.Places.CairoDrawing
         cairoctx.line_to (Width-10, 1);
 
         cairoctx.curve_to ((double)(Width-5), 1.0, (double)(Width-1), 5.0, (double)(Width-1), (double)(Height/2.0));
-        cairoctx.curve_to ((double)(Width-1), (double)(Height/2.0 + 5.0), (double)(Width-5), (double)(Height-3), (double)(Width-10), (double)(Height-3));
+        cairoctx.curve_to ((double)(Width-1), (double)(Height/2.0 + 5.0), (double)(Width-5), (double)(Height-2), (double)(Width-10), (double)(Height-2));
 
-        cairoctx.line_to (10, Height-3);
+        cairoctx.line_to (10, Height-2);
 
-        cairoctx.curve_to (5.0, (double)(Height-3), 1.0, (double)(Height/2.0 + 5.0), 1.0, (double)(Height/2.0));
+        cairoctx.curve_to (5.0, (double)(Height-2), 1.0, (double)(Height/2.0 + 5.0), 1.0, (double)(Height/2.0));
         cairoctx.curve_to (1.0, 5.0, 5.0, 1.0, 10.0, 1.0);
 
 

@@ -21,6 +21,9 @@ namespace Unity
 {
   public class Entry : Ctk.Text
   {
+    const Clutter.Color nofocus_color = { 0x88, 0x88, 0x88, 0xff };
+    const Clutter.Color focus_color   = { 0x00, 0x00, 0x00, 0xff };
+
     private string _static_text;
     public  string static_text
       {
@@ -32,6 +35,7 @@ namespace Unity
         construct set
           {
             this._static_text = value;
+            this.color = nofocus_color;
             this.text = this._static_text;
           }
       }
@@ -52,13 +56,15 @@ namespace Unity
       this.cursor_visible = false;
       this.cursor_color = { 0x22, 0x22, 0x22, 0xff };
       this.selection_color = { 0x4d, 0x4d, 0x4d, 0xff };
-      this.color = { 0x80, 0x80, 0x80, 0xff };
+      this.color = nofocus_color;
 
       this.key_focus_in.connect (this.on_key_focus_in);
       this.key_focus_out.connect (this.on_key_focus_out);
 
       this.button_press_event.connect (this.on_button_press_event);
       this.activate.connect (this.on_activate);
+
+      this.do_queue_redraw ();
     }
 
     private void on_key_focus_in ()
@@ -68,7 +74,7 @@ namespace Unity
           this.set_text ("");
           this.cursor_visible = true;
           this.set_selection (0, -1);
-          this.color = { 0x00, 0x00, 0x00, 0xff };
+          this.color = focus_color;
         }
     }
 
@@ -76,8 +82,8 @@ namespace Unity
     {
       this.cursor_visible = false;
       this.text = this._static_text;
-      this.color = { 0x80, 0x80, 0x80, 0xff };
-
+      this.color = nofocus_color;
+;
       Unity.global_shell.grab_keyboard (false,
                                         Clutter.get_current_event_time ());
     }

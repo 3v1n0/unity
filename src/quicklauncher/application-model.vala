@@ -60,22 +60,12 @@ namespace Unity.Quicklauncher.Models
 
     public string get_name ()
     {
-      if (this.name == "")
-      {
-        return this.app.name;
-      }
-      return this.name;
+      return _("Quit");
     }
 
     public void activated ()
     {
-      try
-      {
-        this.app.launch ();
-      } catch (Error e)
-      {
-        warning (e.message);
-      }
+      this.app.close ();
     }
   }
 
@@ -86,11 +76,11 @@ namespace Unity.Quicklauncher.Models
       get {
         if (this.app_model.is_sticky)
           {
-            return "Remove from Launcher";
+            return _("Remove from Launcher");
           }
         else
           {
-            return "Keep In Launcher";
+            return _("Keep In Launcher");
           }
       }
     }
@@ -123,10 +113,14 @@ namespace Unity.Quicklauncher.Models
     private Launcher.Appman manager;
     private string desktop_uri;
     private bool queued_save_priority;
+    private bool _do_shadow = false;
     private float _priority;
     public float priority {
       get { return _priority; }
       set { _priority = value; this.do_save_priority ();}
+    }
+    public bool do_shadow {
+      get { return this._do_shadow; }
     }
 
     public string uid {
@@ -156,6 +150,13 @@ namespace Unity.Quicklauncher.Models
       this.queued_save_priority = false;
       this._is_sticky = (get_fav_uid () != "");
       this.grab_priority ();
+
+      var favorites = Launcher.Favorites.get_default ();
+      string uid = get_fav_uid ();
+      if (uid != "")
+        {
+          this._do_shadow = favorites.get_bool (uid, "enable_shadow");
+        }
     }
 
     construct
@@ -188,7 +189,7 @@ namespace Unity.Quicklauncher.Models
       if (!this.is_sticky)
         {
           // we need something outside of this model to decide our priority
-          this._priority = -1000000.0f; 
+          this._priority = -1000000.0f;
           return;
         }
       // grab the current priority from gconf
@@ -204,12 +205,12 @@ namespace Unity.Quicklauncher.Models
         }
       this._priority = priority;
     }
-    
+
     private void on_app_running_changed ()
     {
       notify_active ();
     }
-    
+
     private void on_app_focus_changed ()
     {
       if (app.focused) {
@@ -217,7 +218,7 @@ namespace Unity.Quicklauncher.Models
       }
       notify_focused ();
     }
-    
+
     private void on_app_urgent_changed ()
     {
       this.urgent_changed ();
@@ -225,7 +226,6 @@ namespace Unity.Quicklauncher.Models
 
     private void on_app_opened (Wnck.Window window)
     {
-      this.activated ();
       this.request_attention ();
     }
 
@@ -233,25 +233,43 @@ namespace Unity.Quicklauncher.Models
     {
       get { return this.app.running; }
     }
-    
+
     public bool is_focused
     {
       get { return this.app.focused; }
     }
-    
-    public bool is_urgent 
+
+    public bool is_urgent
     {
       get { return this.app.get_urgent (); }
     }
-    
+
     public Gdk.Pixbuf icon
     {
       get { return _icon; }
     }
-    
+
     public string name
     {
       get { return this.app.name; }
+    }
+
+    public bool is_fixed {
+      get {
+        var favorites = Launcher.Favorites.get_default ();
+        string uid = get_fav_uid ();
+        if (uid == "") { return false; }
+        return favorites.get_bool (uid, "fixed");
+      }
+    }
+
+    public bool readonly {
+      get {
+        var favorites = Launcher.Favorites.get_default ();
+        string uid = get_fav_uid ();
+        if (uid == "") { return false; }
+        return favorites.get_readonly (uid, "desktop_file");
+      }
     }
 
     private bool _is_sticky;
@@ -265,7 +283,10 @@ namespace Unity.Quicklauncher.Models
           if (uid != "" && !value)
             {
               // we are a favorite and we need to be unfavorited
-              favorites.remove_favorite (uid);
+              if (!favorites.get_readonly (uid, "desktop_file"))
+              {
+                favorites.remove_favorite (uid);
+              }
             }
           else if (uid == "" && value)
             {
@@ -327,14 +348,17 @@ namespace Unity.Quicklauncher.Models
     public Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ()
     {
       Gee.ArrayList<ShortcutItem> ret_list = new Gee.ArrayList<ShortcutItem> ();
+      if (!this.readonly && !this.is_fixed)
+        {
+          var pin_entry = new LauncherPinningShortcut (this);
+          ret_list.add (pin_entry);
+        }
 
-      var open_entry = new LibLauncherShortcut ();
-      open_entry.app = this.app;
-      open_entry.name = "Open..";
-      ret_list.add (open_entry);
-
-      var pin_entry = new LauncherPinningShortcut (this);
-      ret_list.add (pin_entry);
+      if (this.app.running) {
+        var open_entry = new LibLauncherShortcut ();
+        open_entry.app = this.app;
+        ret_list.add (open_entry);
+      }
 
       return ret_list;
     }
@@ -355,6 +379,7 @@ namespace Unity.Quicklauncher.Models
           try
             {
               app.launch ();
+              this.activated ();
             }
           catch (GLib.Error e)
             {
@@ -369,7 +394,7 @@ namespace Unity.Quicklauncher.Models
     {
       this.app.close ();
     }
-    
+
     /**
      * gets the favorite uid for this desktop file
      */
@@ -417,7 +442,7 @@ namespace Unity.Quicklauncher.Models
         {
           try
             {
-              pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 50, 0);
+              pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 48, 0);
             }
           catch (Error e)
             {
@@ -446,7 +471,7 @@ namespace Unity.Quicklauncher.Models
               try
                 {
                   pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name,
-                                                             50, 50, true);
+                                                             48, 48, true);
                 }
               catch (Error e)
                 {
@@ -466,7 +491,7 @@ namespace Unity.Quicklauncher.Models
               try
                 {
                   pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name,
-                                                             50, 50, true);
+                                                             48, 48, true);
                 }
               catch (Error e)
                 {
@@ -486,7 +511,7 @@ namespace Unity.Quicklauncher.Models
           try
             {
               pixbuf = new Gdk.Pixbuf.from_file_at_scale (
-                    "/usr/share/pixmaps/" + icon_name, 50, 50, true);
+                    "/usr/share/pixmaps/" + icon_name, 48, 48, true);
             }
           catch (Error e)
             {
@@ -499,7 +524,7 @@ namespace Unity.Quicklauncher.Models
             return pixbuf;
         }
 
-      Gtk.IconInfo info = theme.lookup_icon(icon_name, 50, 0);
+      Gtk.IconInfo info = theme.lookup_icon(icon_name, 48, 0);
       if (info != null)
         {
           string filename = info.get_filename();
@@ -508,7 +533,7 @@ namespace Unity.Quicklauncher.Models
               try
                 {
                   pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
-                                                             50, 50, true);
+                                                             48, 48, true);
                 }
               catch (Error e)
                 {
@@ -524,14 +549,14 @@ namespace Unity.Quicklauncher.Models
 
       try
       {
-        pixbuf = theme.load_icon(icon_name, 50, Gtk.IconLookupFlags.FORCE_SVG);
+        pixbuf = theme.load_icon(icon_name, 48, Gtk.IconLookupFlags.FORCE_SVG);
       }
       catch (GLib.Error e)
       {
         warning ("could not load icon for %s - %s", icon_name, e.message);
         try
           {
-            pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 50, 0);
+            pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 48, 0);
           }
         catch (Error err)
           {

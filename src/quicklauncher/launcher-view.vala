@@ -39,17 +39,16 @@ namespace Unity.Quicklauncher
   const uint MEDIUM_DELAY = 800;
   const uint LONG_DELAY = 1600;
 
-  public class LauncherView : Ctk.Bin, Unity.Drag.Model
+  public class LauncherView : Ctk.Actor, Unity.Drag.Model
   {
 
     public LauncherModel? model;
 
     /* the prettys */
     private Ctk.Image icon;
-    private Clutter.Texture focused_indicator;
-    private Clutter.Texture running_indicator;
+    private ThemeImage focused_indicator;
+    private ThemeImage running_indicator;
     private Gdk.Pixbuf honeycomb_mask;
-    private Clutter.Group container;
 
     private Gee.ArrayList<ShortcutItem> offline_shortcuts;
     private Gee.ArrayList<ShortcutItem> shortcut_actions;
@@ -57,6 +56,7 @@ namespace Unity.Quicklauncher
     private QuicklistController? quicklist_controller;
 
     private Ctk.EffectGlow effect_icon_glow;
+    private Ctk.EffectDropShadow effect_drop_shadow;
 
     /* internal view logic datatypes */
     private uint32 last_pressed_time;
@@ -114,6 +114,37 @@ namespace Unity.Quicklauncher
     private Clutter.Animation running_anim;
     private Clutter.Animation focused_anim;
 
+    private float _anim_priority;
+    public float anim_priority {
+        get { return _anim_priority; }
+        set { _anim_priority = value; this.queue_relayout (); }
+      }
+    public bool anim_priority_going_up = false;
+
+    private int _position = -1;
+    public int position {
+        get { return _position; }
+        set
+          {
+            if (_position == -1)
+              {
+                _position = value;
+                _anim_priority = 0.0f;
+                anim_priority_going_up = false;
+                return;
+              }
+            if (_position != value)
+              {
+                anim_priority_going_up = _position > value;
+                _position = value;
+
+                anim_priority = this.height;
+                animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD, 170,
+                         "anim-priority", 0.0f);
+              }
+          }
+      }
+
   /* constructors */
     public LauncherView (LauncherModel model)
       {
@@ -134,20 +165,17 @@ namespace Unity.Quicklauncher
         this.set_name (model.uid);
 
         this.request_remove.connect (this.on_request_remove);
+        if (this.model.do_shadow)
+          {
+            this.effect_drop_shadow = new Ctk.EffectDropShadow (5.0f, 0, 2);
+            effect_drop_shadow.set_opacity (0.4f);
+            this.effect_drop_shadow.set_margin (5);
+            this.icon.add_effect (effect_drop_shadow);
+          }
       }
 
     construct
       {
-        /* !!FIXME!! - we need to allocate ourselfs instead of using the
-         * clutter group, or have a Ctk.Group, it makes sure that the
-         * bubbling out systems in ctk work
-         */
-        this.container = new Clutter.Group ();
-        add_actor (this.container);
-
-        this.icon = new Ctk.Image (46);
-        this.container.add_actor (this.icon);
-
         load_textures ();
 
         button_press_event.connect (this.on_pressed);
@@ -159,36 +187,112 @@ namespace Unity.Quicklauncher
         this.notify["reactive"].connect (this.notify_on_set_reactive);
 
         this.clicked.connect (this.on_clicked);
-        this.icon.do_queue_redraw ();
+        this.do_queue_redraw ();
 
         set_reactive (true);
         this.quicklist_controller = null;
-
+        var padding = this.padding;
+        padding.left = 2;
+        padding.right = 2;
+        padding.top = 2.5f;
+        padding.bottom = 2.5f;
+        this.padding = padding;
       }
+
+      public override void get_preferred_width (float for_height,
+                                                out float minimum_width,
+                                                out float natural_width)
+      {
+        natural_width = 56;
+        minimum_width = 56;
+        return;
+      }
+
+      public override void get_preferred_height (float for_width,
+                                                 out float minimum_height,
+                                                 out float natural_height)
+      {
+        natural_height = 0;
+        minimum_height = 0;
+        this.icon.get_preferred_height (for_width, out minimum_height, out natural_height);
+        natural_height += this.padding.top + this.padding.bottom;
+        minimum_height += this.padding.top + this.padding.bottom;
+      }
+
+      public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags)
+      {
+        float x, y;
+        x = 0;
+        y = 0;
+        base.allocate (box, flags);
+
+        Clutter.ActorBox child_box = Clutter.ActorBox ();
+
+        //allocate the running indicator first
+        float width = this.running_indicator.get_width ();
+        float height = this.running_indicator.get_height ();
+        child_box.x1 = 0;
+        child_box.y1 = (box.get_height () - height) / 2.0f;
+        child_box.x2 = child_box.x1 + width;
+        child_box.y2 = child_box.y1 + height;
+        this.running_indicator.allocate (child_box, flags);
+        x += child_box.get_width ();
+
+        //allocate the icon
+        width = this.icon.get_width ();
+        height = this.icon.get_height ();
+        child_box.x1 = (box.get_width () - width) / 2.0f;
+        child_box.y1 = y;
+        child_box.x2 = child_box.x1 + width;
+        child_box.y2 = child_box.y1 + height;
+        this.icon.allocate (child_box, flags);
+
+        //allocate the focused indicator
+        width = this.focused_indicator.get_width ();
+        height = this.focused_indicator.get_height ();
+        child_box.x2 = box.get_width ()+this.padding.right+2;//for the shadow
+        child_box.y2 = (box.get_height () / 2.0f) - (height / 2.0f);
+        child_box.x1 = child_box.x2 - width;
+        child_box.y1 = child_box.y2 + height;
+        this.focused_indicator.allocate (child_box, flags);
+      }
+
+    public override void pick (Clutter.Color color)
+    {
+      base.pick (color);
+      this.icon.paint ();
+    }
+
+    public override void paint ()
+    {
+      this.running_indicator.paint ();
+      this.focused_indicator.paint ();
+      this.icon.paint ();
+    }
+
+    public override void map ()
+    {
+      base.map ();
+      this.running_indicator.map ();
+      this.focused_indicator.map ();
+      this.icon.map ();
+    }
+
+    public override void unmap ()
+    {
+      base.unmap ();
+      this.running_indicator.map ();
+      this.focused_indicator.map ();
+      this.icon.map ();
+    }
 
     private void load_textures ()
     {
-      try
-        {
-          this.focused_indicator = new Clutter.Texture ();
-          this.focused_indicator.set_from_file (FOCUSED_FILE);
-        } catch (Error e)
-        {
-          this.focused_indicator = new Clutter.Texture ();
-          warning ("loading focused indicator failed, %s", e.message);
-        }
-      this.container.add_actor (this.focused_indicator);
+      this.focused_indicator = new ThemeImage ("application-selected");
+      this.running_indicator = new ThemeImage ("application-running");
 
-      try
-        {
-          this.running_indicator = new Clutter.Texture ();
-          this.running_indicator.set_from_file (RUNNING_FILE);
-        } catch (Error e)
-        {
-          this.running_indicator = new Clutter.Texture ();
-          warning ("loading running indicator failed, %s", e.message);
-        }
-      this.container.add_actor (this.running_indicator);
+      this.focused_indicator.set_parent (this);
+      this.running_indicator.set_parent (this);
       this.focused_indicator.set_opacity (0);
       this.running_indicator.set_opacity (0);
 
@@ -203,23 +307,8 @@ namespace Unity.Quicklauncher
                    e.message);
         }
 
-      relayout ();
-    }
-
-    /**
-     * re-layouts the various indicators
-     */
-    private void relayout ()
-    {
-      float mid_point_y = this.container.height / 2.0f;
-      float focus_halfy = this.focused_indicator.height / 2.0f;
-      float focus_halfx = container.width + this.focused_indicator.width + 4;
-
-      this.focused_indicator.set_position(focus_halfx,
-                                          mid_point_y - focus_halfy);
-      this.running_indicator.set_position (0, mid_point_y - focus_halfy);
-
-      this.icon.set_position (6, 0);
+        this.icon = new Ctk.Image (46);
+        this.icon.set_parent (this);
     }
 
     public new void notify_on_set_reactive ()
@@ -365,7 +454,11 @@ namespace Unity.Quicklauncher
 
     private void on_activated ()
     {
-      this.is_starting = false;
+      // do glow here
+			if (!this.model.is_active)
+				{
+     			this.is_starting = true;
+				}
     }
 
     private void notify_on_icon ()
@@ -427,6 +520,7 @@ namespace Unity.Quicklauncher
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
 
+
       this.is_hovering = true;
 
       if (!(quicklist_controller is QuicklistController))
@@ -461,7 +555,8 @@ namespace Unity.Quicklauncher
     private bool on_motion_event (Clutter.Event event)
     {
       var drag_controller = Unity.Drag.Controller.get_default ();
-      if (this.button_down && drag_controller.is_dragging == false)
+      if (this.button_down && drag_controller.is_dragging == false
+          && !this.model.readonly && !this.model.is_fixed)
         {
           var diff = event.motion.x - this.click_start_pos;
           if (diff > this.drag_sensitivity || -diff > this.drag_sensitivity)
@@ -554,10 +649,6 @@ namespace Unity.Quicklauncher
         return;
       }
       this.model.activate ();
-			if (!this.model.is_active)
-				{
-     			this.is_starting = true;
-				}
     }
 
     private void on_request_remove ()
