@@ -125,6 +125,7 @@ namespace Unity.Widgets
     private ThemeImage bgtex;
     private ThemeImage top_shadow;
     private ThemeImage bottom_fade;
+    private Clutter.Rectangle bg_color;
 
     private int _spacing;
     public int spacing {
@@ -134,6 +135,7 @@ namespace Unity.Widgets
     private Ctk.Orientation orientation = Ctk.Orientation.VERTICAL;
 
     private Gee.ArrayList<ScrollerChild> children;
+    private Gee.ArrayList<ScrollerChild> fixed_children;
     private float total_child_height;
 
     private Gee.HashMap<Clutter.Actor, Clutter.Animation> fadeout_stack;
@@ -152,6 +154,7 @@ namespace Unity.Widgets
       this.orientation = orientation;
       this.spacing = spacing;
       children = new Gee.ArrayList<ScrollerChild> ();
+      fixed_children = new Gee.ArrayList<ScrollerChild> ();
       fadeout_stack = new Gee.HashMap<Clutter.Actor, Clutter.Animation> ();
       fadein_stack = new Gee.HashMap<Clutter.Actor, Clutter.Animation> ();
       anim_stack = new Gee.HashMap<Clutter.Actor, Clutter.Animation> ();
@@ -165,7 +168,7 @@ namespace Unity.Widgets
       mypadding.left = 0.0f;
       mypadding.right = 0.0f;
       mypadding.top = 5.0f;
-      mypadding.bottom = 5.0f;
+      mypadding.bottom = 0.0f;
 
       this.padding = mypadding;
 
@@ -357,6 +360,14 @@ namespace Unity.Widgets
       this.bgtex = new ThemeImage ("launcher_background_middle");
       this.top_shadow = new ThemeImage ("overflow_top");
       this.bottom_fade = new ThemeImage ("overflow_bottom");
+      var color = Clutter.Color () {
+        red = 0x2c,
+        green = 0x2b,
+        blue = 0x2a,
+        alpha = 0xff
+      };
+
+      this.bg_color = new Clutter.Rectangle.with_color (color);
 
       this.bgtex.set_repeat (false, true);
       this.top_shadow.set_repeat (true, false);
@@ -365,6 +376,7 @@ namespace Unity.Widgets
       this.bgtex.set_parent (this);
       this.top_shadow.set_parent (this);
       this.bottom_fade.set_parent (this);
+      this.bg_color.set_parent (this);
 
     }
 
@@ -504,7 +516,7 @@ namespace Unity.Widgets
           return box.y1 + this.drag_pos - this.padding.top;
         }
 
-      if (this.drag_pos > this.total_child_height - height)
+      if (this.drag_pos > this.total_child_height - this.hot_height)
         {
           ScrollerChild last_container = this.children.get (this.children.size -1);
           foreach (ScrollerChild container in this.children)
@@ -513,7 +525,7 @@ namespace Unity.Widgets
               if (box.y1 == 0.0 && box.y2 == 0.0) continue;
               if (box.y1 - box.get_height () > last_container.box.y1 - this.height)
                 {
-                  return box.y1 + this.drag_pos - this.padding.top;
+                  return box.y1 + this.drag_pos - this.padding.top + (this.height - this.hot_height);
                 }
             }
         }
@@ -762,6 +774,7 @@ namespace Unity.Widgets
       float cnat_height = 0.0f;
       float cmin_height = 0.0f;
       float all_child_height = 0.0f;
+      float fixed_child_height = 0.0f;
 
       if (orientation == Ctk.Orientation.VERTICAL)
       {
@@ -774,10 +787,22 @@ namespace Unity.Widgets
                                       out cmin_height,
                                       out cnat_height);
 
-          all_child_height += cnat_height;
+          all_child_height += cnat_height + this.spacing;
         }
 
-        minimum_height = all_child_height + padding.top + padding.bottom;
+        foreach (ScrollerChild childcontainer in this.fixed_children)
+        {
+          Clutter.Actor child = childcontainer.child;
+          cnat_height = 0.0f;
+          cmin_height = 0.0f;
+          child.get_preferred_height (for_width,
+                                      out cmin_height,
+                                      out cnat_height);
+          all_child_height += cnat_height + this.spacing;
+          fixed_child_height += cnat_height + this.spacing;
+        }
+
+        minimum_height = fixed_child_height + padding.top + padding.bottom;
         natural_height = all_child_height + padding.top + padding.bottom;
         return;
       }
@@ -788,6 +813,8 @@ namespace Unity.Widgets
                                    Clutter.AllocationFlags flags)
     {
       base.allocate (box, flags);
+      Clutter.ActorBox child_box = Clutter.ActorBox ();
+
       if (this.order_changed)
         {
           this.sort_children ();
@@ -798,10 +825,29 @@ namespace Unity.Widgets
       this.total_child_height = 0.0f;
       float x = padding.left;
       float y = padding.top;
+
+
+      // we need to go through our fixed items and add them to the bottom
+      y = box.y2 - padding.bottom;
+      float fixed_size = padding.bottom;
+      foreach (ScrollerChild childcontainer in this.fixed_children)
+      {
+        Clutter.Actor child = childcontainer.child;
+        float min_height, natural_height;
+        child.get_preferred_height (box.get_width (), out min_height, out natural_height);
+        child_box.x1 = x;
+        child_box.x2 = x + child.width + padding.right;
+        child_box.y1 = y - min_height;
+        child_box.y2 = y;
+        y = child_box.y1 - this.spacing;
+        fixed_size += child_box.get_height () + this.spacing;
+
+        child.allocate (child_box, flags);
+      }
+
       float hot_negative = 0;
-      float hot_positive = box.get_height ();
+      float hot_positive = box.get_height () - fixed_size;
       this.hot_start = hot_negative;
-      Clutter.ActorBox child_box;
 
       y = hot_start - (float)this.drag_pos;
       hot_height = hot_positive - hot_negative;
@@ -871,17 +917,20 @@ namespace Unity.Widgets
       child_box.x2 = box.x2;
       this.bgtex.allocate (child_box, flags);
       this.bgtex.set_clip (box.x1, drag_pos + box.get_height () * 2 - 1,
-                           box.get_width (), box.get_height ());
-
+                           box.get_width (), box.get_height () - fixed_size);
       child_box.y1 = box.y1;
       child_box.y2 = box.y1 + 7.0f;
 
       this.top_shadow.allocate (child_box, flags);
 
-      child_box.y1 = box.get_height() - 32;
-      child_box.y2 = box.get_height();
+      child_box.y1 = box.get_height() - 32 - fixed_size;
+      child_box.y2 = box.get_height() - fixed_size;
 
       this.bottom_fade.allocate (child_box, flags);
+
+      child_box.y1 = box.get_height () - fixed_size;
+      child_box.y2 = box.get_height ();
+      this.bg_color.allocate (child_box, flags);
 
     }
 
@@ -893,11 +942,17 @@ namespace Unity.Widgets
         Clutter.Actor child = childcontainer.child;
         child.paint ();
       }
+      foreach (ScrollerChild childcontainer in this.fixed_children)
+      {
+        Clutter.Actor child = childcontainer.child;
+        child.paint ();
+      }
     }
 
 
     public override void paint ()
     {
+
       bgtex.paint ();
 
       foreach (ScrollerChild childcontainer in this.children)
@@ -909,6 +964,14 @@ namespace Unity.Widgets
               child.paint ();
           }
       }
+
+      this.bg_color.paint ();
+      this.bottom_fade.paint ();
+      foreach (ScrollerChild childcontainer in this.fixed_children)
+      {
+        Clutter.Actor child = childcontainer.child;
+        child.paint ();
+      }
       this.top_shadow.paint ();
       this.bottom_fade.paint ();
     }
@@ -916,16 +979,29 @@ namespace Unity.Widgets
 
     public void add (Clutter.Actor actor)
     {
-      this.add_actor (actor);
+      this.add_actor (actor, false);
     }
 
-    public void add_actor (Clutter.Actor actor)
+    public void add_actor (Clutter.Actor actor, bool is_fixed)
       requires (this.get_parent () != null)
     {
       var container = new ScrollerChild ();
       container.child = actor;
       container.state = ScrollerChildState.NORMAL;
-      this.children.add (container);
+      if (!is_fixed)
+        {
+          this.children.add (container);
+        }
+      else
+        {
+          if (this.padding.bottom < 1.0f)
+            {
+              var padding = this.padding;
+              padding.bottom = 5.0f;
+              this.padding = padding;
+            }
+          this.fixed_children.add (container);
+        }
       actor.set_parent (this);
 
       /* if we have an LauncherView we need to tie it to our attention
@@ -991,6 +1067,11 @@ namespace Unity.Widgets
         Clutter.Actor child = childcontainer.child;
         callback (child, null);
       }
+      foreach (ScrollerChild childcontainer in this.fixed_children)
+      {
+        Clutter.Actor child = childcontainer.child;
+        callback (child, null);
+      }
     }
 
     public void foreach_with_internals (Clutter.Callback callback,
@@ -999,7 +1080,13 @@ namespace Unity.Widgets
       callback (this.bgtex, null);
       callback (this.top_shadow, null);
       callback (this.bottom_fade, null);
+      callback (this.bg_color, null);
       foreach (ScrollerChild childcontainer in this.children)
+      {
+        Clutter.Actor child = childcontainer.child;
+        callback (child, null);
+      }
+      foreach (ScrollerChild childcontainer in this.fixed_children)
       {
         Clutter.Actor child = childcontainer.child;
         callback (child, null);

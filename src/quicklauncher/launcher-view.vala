@@ -547,7 +547,8 @@ namespace Unity.Quicklauncher
     private bool on_motion_event (Clutter.Event event)
     {
       var drag_controller = Unity.Drag.Controller.get_default ();
-      if (this.button_down && drag_controller.is_dragging == false)
+      if (this.button_down && drag_controller.is_dragging == false
+          && !this.model.readonly && !this.model.is_fixed)
         {
           var diff = event.motion.x - this.click_start_pos;
           if (diff > this.drag_sensitivity || -diff > this.drag_sensitivity)

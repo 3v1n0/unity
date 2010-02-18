@@ -374,7 +374,15 @@ namespace Unity.Quicklauncher
       {
         return;
       }
-      container.add_actor(view);
+      if (view.model.is_fixed)
+        {
+          container.add_actor (view, true);
+          debug ("added actor as fixed");
+        }
+      else
+        {
+          container.add_actor (view, false);
+        }
       view.request_remove.connect(remove_view);
       view.enter_event.connect (on_launcher_enter_event);
       view.leave_event.connect (on_launcher_leave_event);
