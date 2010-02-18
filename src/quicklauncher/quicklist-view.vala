@@ -581,7 +581,7 @@ namespace Unity.Quicklauncher
                                           (double) w / 2.0f,
                                           Ctk.em_to_pixel (BORDER),
                                           (double) w / 2.0f);
-      pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.5f);
+      pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
       pattern.add_color_stop_rgba (1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
       cr.set_source (pattern);
 
@@ -688,7 +688,7 @@ namespace Unity.Quicklauncher
         red   = 0,
         green = 0,
         blue  = 0,
-        alpha = (uint8) (255.0f * 0.2f)
+        alpha = (uint8) (255.0f * 0.3f)
       };
       Clutter.Color shadow_color = Clutter.Color () {
         red   = 0,
@@ -700,7 +700,7 @@ namespace Unity.Quicklauncher
         red   = 255,
         green = 255,
         blue  = 255,
-        alpha = (uint8) (255.0f * 1.0f)
+        alpha = (uint8) (255.0f * 0.5f)
       };
       Clutter.Color dotted_color = Clutter.Color () {
         red   = 255,
