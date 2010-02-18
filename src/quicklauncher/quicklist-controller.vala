@@ -78,7 +78,7 @@ namespace Unity.Quicklauncher
         {
           menu.fadeout_and_destroy ();
         }
-    } 
+    }
 
     public void add_action (ShortcutItem shortcut, bool is_secondary)
     {
@@ -121,7 +121,7 @@ namespace Unity.Quicklauncher
       this.is_label = true;
       this.menu.set_detect_clicks (false);
     }
-    
+
     public void hide_label ()
     {
       if (!is_label || menu == null)
@@ -146,7 +146,7 @@ namespace Unity.Quicklauncher
         }
 
       this.is_label = false;
-      
+
       foreach (ShortcutItem shortcut in this.prefix_actions)
         {
           var label = shortcut.get_name ();
@@ -171,10 +171,10 @@ namespace Unity.Quicklauncher
       this.menu.closed.connect (this.on_menu_close);
       this.is_label = false;
       this.menu.set_detect_clicks (true);
-      
+
       Unity.global_shell.ensure_input_region ();
     }
-    
+
     private void on_menu_close ()
     {
       close_menu ();
@@ -186,15 +186,15 @@ namespace Unity.Quicklauncher
         {
           Unity.Quicklauncher.active_menu = null;
         }
-      
+
       if (this.menu == null)
         return;
-      
+
       this.menu.fadeout_and_destroy ();
       this.old_menu = this.menu;
       this.menu = null;
       this.is_label = false;
-      
+
       Unity.global_shell.ensure_input_region ();
     }
 

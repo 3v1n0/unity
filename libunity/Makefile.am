@@ -46,7 +46,9 @@ libunity_la_VALASOURCES = \
   entry.vala \
   perf-logger.vala \
   shell.vala \
-  theme.vala
+  theme.vala \
+  webapp-fetcher.vala \
+  webapp-iconbuilder.vala
 
 libunity_la_APIFILES = \
   unity.h \

@@ -56,6 +56,7 @@ namespace Unity.Quicklauncher
     private QuicklistController? quicklist_controller;
 
     private Ctk.EffectGlow effect_icon_glow;
+    private Ctk.EffectDropShadow effect_drop_shadow;
 
     /* internal view logic datatypes */
     private uint32 last_pressed_time;
@@ -113,6 +114,37 @@ namespace Unity.Quicklauncher
     private Clutter.Animation running_anim;
     private Clutter.Animation focused_anim;
 
+    private float _anim_priority;
+    public float anim_priority {
+        get { return _anim_priority; }
+        set { _anim_priority = value; this.queue_relayout (); }
+      }
+    public bool anim_priority_going_up = false;
+
+    private int _position = -1;
+    public int position {
+        get { return _position; }
+        set
+          {
+            if (_position == -1)
+              {
+                _position = value;
+                _anim_priority = 0.0f;
+                anim_priority_going_up = false;
+                return;
+              }
+            if (_position != value)
+              {
+                anim_priority_going_up = _position > value;
+                _position = value;
+
+                anim_priority = this.height;
+                animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD, 170,
+                         "anim-priority", 0.0f);
+              }
+          }
+      }
+
   /* constructors */
     public LauncherView (LauncherModel model)
       {
@@ -133,6 +165,13 @@ namespace Unity.Quicklauncher
         this.set_name (model.uid);
 
         this.request_remove.connect (this.on_request_remove);
+        if (this.model.do_shadow)
+          {
+            this.effect_drop_shadow = new Ctk.EffectDropShadow (5.0f, 0, 2);
+            effect_drop_shadow.set_opacity (0.4f);
+            this.effect_drop_shadow.set_margin (5);
+            this.icon.add_effect (effect_drop_shadow);
+          }
       }
 
     construct
@@ -211,7 +250,7 @@ namespace Unity.Quicklauncher
         //allocate the focused indicator
         width = this.focused_indicator.get_width ();
         height = this.focused_indicator.get_height ();
-        child_box.x2 = box.get_width () - this.padding.right;
+        child_box.x2 = box.get_width ()+this.padding.right+2;//for the shadow
         child_box.y2 = (box.get_height () / 2.0f) - (height / 2.0f);
         child_box.x1 = child_box.x2 - width;
         child_box.y1 = child_box.y2 + height;
@@ -249,8 +288,8 @@ namespace Unity.Quicklauncher
 
     private void load_textures ()
     {
-      this.focused_indicator = new ThemeImage ("selected");
-      this.running_indicator = new ThemeImage ("active");
+      this.focused_indicator = new ThemeImage ("application-selected");
+      this.running_indicator = new ThemeImage ("application-running");
 
       this.focused_indicator.set_parent (this);
       this.running_indicator.set_parent (this);
@@ -481,6 +520,7 @@ namespace Unity.Quicklauncher
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
 
+
       this.is_hovering = true;
 
       if (!(quicklist_controller is QuicklistController))
@@ -515,7 +555,8 @@ namespace Unity.Quicklauncher
     private bool on_motion_event (Clutter.Event event)
     {
       var drag_controller = Unity.Drag.Controller.get_default ();
-      if (this.button_down && drag_controller.is_dragging == false)
+      if (this.button_down && drag_controller.is_dragging == false
+          && !this.model.readonly && !this.model.is_fixed)
         {
           var diff = event.motion.x - this.click_start_pos;
           if (diff > this.drag_sensitivity || -diff > this.drag_sensitivity)

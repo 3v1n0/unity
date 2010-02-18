@@ -581,7 +581,7 @@ namespace Unity.Quicklauncher
                                           (double) w / 2.0f,
                                           Ctk.em_to_pixel (BORDER),
                                           (double) w / 2.0f);
-      pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.5f);
+      pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
       pattern.add_color_stop_rgba (1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
       cr.set_source (pattern);
 
@@ -614,6 +614,14 @@ namespace Unity.Quicklauncher
     public override void
     paint ()
     {
+      // FIXME00: this is the brute force-approach pulling the blurred-bg
+      // texture constantly... harder on the system (especially since we atm
+      // still have to do glReadPixels()) but more robust in terms of intented
+      // look as we'll have a cleanly updating blurred bg in case there's a
+      // video being displayed in a video-player, or a GL-app renders some
+      // animation or mutter does some animation stuff with the windows
+      //base.refresh_background_texture ();
+
       // important run-time optimization!
       if (!this.ql_background.is_flattened ())
         this.ql_background.flatten ();
@@ -634,6 +642,7 @@ namespace Unity.Quicklauncher
       float aw;
       float ah;
       float new_y;
+      uint  blurred_id = 0;
 
       base.allocate (box, flags);
       w = (int) (box.x2 - box.x1);
@@ -644,6 +653,14 @@ namespace Unity.Quicklauncher
       if ((old_width == w) && (old_height == h))
         return;
 
+      // FIXME01: this is the conservative approach only updating the blurred-bg
+      // texture when the allocation changed... this way we'll miss any updates
+      // of say a video-player displaying a movie behind the tooltip/quicklist
+      // or a GL-app displaying an animation or any other client app rendering
+      // a dynamic UI with screen-changes (also applies to any mutter-based
+      // animations, e.g. its expose)
+      base.refresh_background_texture ();
+
       Ctk.Actor actor = this.get_attached_actor ();
       actor.get_position (out ax, out ay);
       actor.get_size (out aw, out ah);
@@ -652,6 +669,10 @@ namespace Unity.Quicklauncher
         new_y = ah / 2.0f;
       else
         new_y = 0.0f;
+
+      // do the texture-update/glReadPixels() thing here ... call it whatever
+      // you feel fits best here ctk_menu_get_framebuffer_background()
+      blurred_id = base.get_framebuffer_background ();
 
       // store the new width/height
       old_width  = w;
@@ -667,7 +688,7 @@ namespace Unity.Quicklauncher
         red   = 0,
         green = 0,
         blue  = 0,
-        alpha = (uint8) (255.0f * 0.2f)
+        alpha = (uint8) (255.0f * 0.3f)
       };
       Clutter.Color shadow_color = Clutter.Color () {
         red   = 0,
@@ -679,13 +700,20 @@ namespace Unity.Quicklauncher
         red   = 255,
         green = 255,
         blue  = 255,
-        alpha = (uint8) (255.0f * 1.0f)
+        alpha = (uint8) (255.0f * 0.5f)
       };
       Clutter.Color dotted_color = Clutter.Color () {
         red   = 255,
         green = 255,
         blue  = 255,
         alpha = (uint8) (255.0f * 0.3f)
+      };
+
+      Clutter.Color blurred_color = Clutter.Color () {
+        red   = 255,
+        green = 255,
+        blue  = 255,
+        alpha = (uint8) (255.0f * 1.0f)
       };
 
       // before creating a new CtkLayerActor make sure we don't leak any memory
@@ -711,6 +739,11 @@ namespace Unity.Quicklauncher
                                               Ctk.LayerRepeatMode.NONE);
 
       Ctk.Layer shadow_layer = new Ctk.Layer (w,
+                                              h,
+                                              Ctk.LayerRepeatMode.NONE,
+                                              Ctk.LayerRepeatMode.NONE);
+
+      Ctk.Layer blurred_layer = new Ctk.Layer (w,
                                               h,
                                               Ctk.LayerRepeatMode.NONE,
                                               Ctk.LayerRepeatMode.NONE);
@@ -752,6 +785,12 @@ namespace Unity.Quicklauncher
       shadow_layer.set_image_from_surface (shadow_surf);
       shadow_layer.set_color (shadow_color);
 
+      blurred_layer.set_mask_from_surface (fill_surf);
+      // this CtkLayer.set_image_from_id() still needs to be written
+      // I can do that tomorrow... or you can do it if you want
+      blurred_layer.set_image_from_id (blurred_id);
+      blurred_layer.set_color (blurred_color);
+
       fill_layer.set_mask_from_surface (fill_surf);
       fill_layer.set_color (fill_color);
 
@@ -768,7 +807,7 @@ namespace Unity.Quicklauncher
 
       // order is important here... don't mess around!
       this.ql_background.add_layer (shadow_layer);
-      //this.ql_background.add_layer (blurred_layer);
+      this.ql_background.add_layer (blurred_layer);
       this.ql_background.add_layer (fill_layer);
       this.ql_background.add_layer (dotted_layer);
       this.ql_background.add_layer (highlight_layer);

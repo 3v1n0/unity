@@ -28,9 +28,10 @@ Version=1.0
 Name=%s
 GenericName=Web Browser
 Exec=chromium-browser -app=%s
+Comment=A Chromium webapp
 Terminal=false
 Type=Application
-Icon=chromium-browser
+Icon=%s
 Categories=Network;
 MimeType=text/html;
 StartupWMClass=Chromium
@@ -38,13 +39,14 @@ StartupNotify=true
 """;
 
     public string url {get; construct;}
+    public string icon {get; construct;}
     public string name;
     public string id;
     string webapp_dir;
 
-    public ChromiumWebApp (string address)
+    public ChromiumWebApp (string address, string icon)
     {
-      Object (url:address);
+      Object (url:address, icon:icon);
     }
 
     construct
@@ -77,7 +79,7 @@ StartupNotify=true
       {
         return true;
       }
-      
+
       var webapp_dir_file = File.new_for_path (webapp_dir + @"chromium-webapp-$name.desktop");
       if (webapp_dir_file.query_exists (null))
       {
@@ -88,7 +90,7 @@ StartupNotify=true
 
     private void build_webapp ()
     {
-      string webapp_desktop = webapp_desktop_template.printf (name, id);
+      string webapp_desktop = webapp_desktop_template.printf (name, id, this.icon);
       debug ("building " + @"chromium-webapp-$name.desktop");
 
       var webapp_directory = File.new_for_path (webapp_dir);
@@ -134,7 +136,7 @@ StartupNotify=true
       string desktop_path = webapp_dir + @"chromium-webapp-$name.desktop";
       uid = "webapp-" + Path.get_basename (desktop_path);
       try {
-        var regex = new Regex ("""\+""");
+        var regex = new Regex ("""(\+|\?|\=|\#|\&|\(|\)|\%)""");
         uid = regex.replace (uid, -1, 0, "");
       } catch (Error e)
       {
@@ -145,6 +147,7 @@ StartupNotify=true
       // we are not a favorite and we need to be favorited!
       favorites.set_string (uid, "type", "application");
       favorites.set_string (uid, "desktop_file", desktop_path);
+      favorites.set_bool(uid, "enable_shadow", true);
       favorites.add_favorite (uid);
     }
 

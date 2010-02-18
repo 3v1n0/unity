@@ -113,10 +113,14 @@ namespace Unity.Quicklauncher.Models
     private Launcher.Appman manager;
     private string desktop_uri;
     private bool queued_save_priority;
+    private bool _do_shadow = false;
     private float _priority;
     public float priority {
       get { return _priority; }
       set { _priority = value; this.do_save_priority ();}
+    }
+    public bool do_shadow {
+      get { return this._do_shadow; }
     }
 
     public string uid {
@@ -146,6 +150,13 @@ namespace Unity.Quicklauncher.Models
       this.queued_save_priority = false;
       this._is_sticky = (get_fav_uid () != "");
       this.grab_priority ();
+
+      var favorites = Launcher.Favorites.get_default ();
+      string uid = get_fav_uid ();
+      if (uid != "")
+        {
+          this._do_shadow = favorites.get_bool (uid, "enable_shadow");
+        }
     }
 
     construct
@@ -243,6 +254,24 @@ namespace Unity.Quicklauncher.Models
       get { return this.app.name; }
     }
 
+    public bool is_fixed {
+      get {
+        var favorites = Launcher.Favorites.get_default ();
+        string uid = get_fav_uid ();
+        if (uid == "") { return false; }
+        return favorites.get_bool (uid, "fixed");
+      }
+    }
+
+    public bool readonly {
+      get {
+        var favorites = Launcher.Favorites.get_default ();
+        string uid = get_fav_uid ();
+        if (uid == "") { return false; }
+        return favorites.get_readonly (uid, "desktop_file");
+      }
+    }
+
     private bool _is_sticky;
     public bool is_sticky
     {
@@ -254,7 +283,10 @@ namespace Unity.Quicklauncher.Models
           if (uid != "" && !value)
             {
               // we are a favorite and we need to be unfavorited
-              favorites.remove_favorite (uid);
+              if (!favorites.get_readonly (uid, "desktop_file"))
+              {
+                favorites.remove_favorite (uid);
+              }
             }
           else if (uid == "" && value)
             {
@@ -316,8 +348,11 @@ namespace Unity.Quicklauncher.Models
     public Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ()
     {
       Gee.ArrayList<ShortcutItem> ret_list = new Gee.ArrayList<ShortcutItem> ();
-      var pin_entry = new LauncherPinningShortcut (this);
-      ret_list.add (pin_entry);
+      if (!this.readonly && !this.is_fixed)
+        {
+          var pin_entry = new LauncherPinningShortcut (this);
+          ret_list.add (pin_entry);
+        }
 
       if (this.app.running) {
         var open_entry = new LibLauncherShortcut ();
