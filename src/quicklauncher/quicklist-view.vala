@@ -656,7 +656,7 @@ namespace Unity.Quicklauncher
 
       // do the texture-update/glReadPixels() thing here ... call it whatever
       // you feel fits best here ctk_menu_get_framebuffer_background()
-      blurred_id = base.get_frambuffer_background ();
+      blurred_id = base.get_framebuffer_background ();
 
       // store the new width/height
       old_width  = w;

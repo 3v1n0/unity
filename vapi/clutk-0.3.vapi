@@ -278,7 +278,7 @@ namespace Ctk {
 		public void fadeout_and_destroy ();
 		public unowned Ctk.Actor get_attached_actor ();
 		public unowned Clutter.Actor get_background ();
-		public uint get_frambuffer_background ();
+		public uint get_framebuffer_background ();
 		public int get_num_items ();
 		public int get_spacing ();
 		public void prepend (Clutter.Actor item, bool is_special);
