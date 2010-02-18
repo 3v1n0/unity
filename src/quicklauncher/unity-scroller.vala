@@ -919,9 +919,6 @@ namespace Unity.Widgets
         view.request_attention.connect (on_request_attention);
       }
 
-      /* set a clip on the actor */
-      actor.set_clip (0, -200, 58, 400);
-
       this.queue_relayout ();
       this.actor_added (actor);
     }

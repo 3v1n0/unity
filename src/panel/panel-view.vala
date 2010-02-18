@@ -28,7 +28,7 @@ namespace Unity.Panel
   {
     public Shell shell { get; construct;}
 
-    private Clutter.Rectangle rect;
+    private ThemeImage        rect;
     private Tray.View         tray;
     private HomeButton        home;
     private Indicators.View   indicators;
@@ -48,9 +48,8 @@ namespace Unity.Panel
     {
       START_FUNCTION ();
 
-      Clutter.Color color = { 25, 25, 25, 255 };
-
-      this.rect = new Clutter.Rectangle.with_color (color);
+      this.rect = new ThemeImage ("panel_background");
+      this.rect.set_repeat (true, false);
       this.rect.set_parent (this);
       this.rect.show ();
 
@@ -139,7 +138,10 @@ namespace Unity.Panel
 
       width = box.x2 - box.x1;
 
+      this.set_clip (0, 0, width, box.y2 - box.y1);
+
       /* First the background */
+      child_box.y2 += 4.0f;
       this.rect.allocate (child_box, flags);
 
       /* Home button */
@@ -150,20 +152,20 @@ namespace Unity.Panel
       this.home.allocate (child_box, flags);
 
       /* Entry */
-      child_box.x1 = child_box.x2 + 12;
-      child_box.x2 = child_box.x1 + 150; /* Random width */
-      child_box.y1 = 0;
-      child_box.y2 = PANEL_HEIGHT;
+      child_box.x1 = Math.floorf (child_box.x2 + 12);
+      child_box.x2 = Math.floorf (child_box.x1 + 150); /* Random width */
+      child_box.y1 = Math.floorf (1);
+      child_box.y2 = Math.floorf (PANEL_HEIGHT-2);
 
-      if ((this.entry_background.Width != (int)(child_box.x2 - child_box.x1)) && (this.entry_background.height != (int)(child_box.y2 - child_box.y1)))
+      if ((this.entry_background.Width != (int)(child_box.x2 - child_box.x1)) && (this.entry_background.height != (int)(child_box.y2 - child_box.y1-2)))
       {
-        this.entry_background.create_search_entry_background ((int)(child_box.x2 - child_box.x1), (int)(child_box.y2 - child_box.y1));
+        this.entry_background.create_search_entry_background ((int)(child_box.x2 - child_box.x1), (int)(child_box.y2 - child_box.y1-2));
       }
       this.entry_background.allocate (child_box, flags);
 
       child_box.x1 += 12; /* (QL_width - logo_width)/2.0 */
       child_box.x2 -= 12;
-      child_box.y1 += 4;
+      child_box.y1 += 5;
       child_box.y2 -= 4;
       this.entry.allocate (child_box, flags);
 
