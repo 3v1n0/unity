@@ -286,7 +286,6 @@ namespace Unity
 
     private void on_launcher_changed_event (LauncherView? last, LauncherView? current)
     {
-      debug ("%p %p\n", last, current);
       if (last != null)
         {
           last.menu_opened.disconnect (on_launcher_menu_opened);
@@ -304,14 +303,11 @@ namespace Unity
 
     private void on_launcher_menu_opened (LauncherView sender)
     {
-      debug ("1");
       if (sender != quicklauncher.manager.active_launcher || sender == null)
         return;
 
-      debug ("2");
       if (sender.model is ApplicationModel && sender.model.is_active)
         {
-          debug ("3");
           expose_windows ((sender.model as ApplicationModel).windows);
         }
     }
