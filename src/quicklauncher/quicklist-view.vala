@@ -608,7 +608,7 @@ namespace Unity.Quicklauncher
       // draw normal mask and blur it
       _draw_mask (cr, w, h, anchor_y);
       cr.fill ();
-      Ctk.surface_blur (cr.get_target (), (int) Ctk.em_to_pixel (SHADOW_SIZE/2));
+      //Ctk.surface_blur (cr.get_target (), (int) Ctk.em_to_pixel (SHADOW_SIZE/2));
     }
 
     public override void
@@ -634,6 +634,7 @@ namespace Unity.Quicklauncher
       float aw;
       float ah;
       float new_y;
+      uint  blurred_id = 0;
 
       base.allocate (box, flags);
       w = (int) (box.x2 - box.x1);
@@ -652,6 +653,10 @@ namespace Unity.Quicklauncher
         new_y = ah / 2.0f;
       else
         new_y = 0.0f;
+
+      // do the texture-update/glReadPixels() thing here ... call it whatever
+      // you feel fits best here ctk_menu_get_framebuffer_background()
+      blurred_id = base.get_frambuffer_background ();
 
       // store the new width/height
       old_width  = w;
@@ -688,6 +693,13 @@ namespace Unity.Quicklauncher
         alpha = (uint8) (255.0f * 0.3f)
       };
 
+      Clutter.Color blurred_color = Clutter.Color () {
+        red   = 255,
+        green = 255,
+        blue  = 255,
+        alpha = (uint8) (255.0f * 1.0f)
+      };
+
       // before creating a new CtkLayerActor make sure we don't leak any memory
       if (this.ql_background is Ctk.LayerActor)
          this.ql_background.destroy ();
@@ -711,6 +723,11 @@ namespace Unity.Quicklauncher
                                               Ctk.LayerRepeatMode.NONE);
 
       Ctk.Layer shadow_layer = new Ctk.Layer (w,
+                                              h,
+                                              Ctk.LayerRepeatMode.NONE,
+                                              Ctk.LayerRepeatMode.NONE);
+
+      Ctk.Layer blurred_layer = new Ctk.Layer (w,
                                               h,
                                               Ctk.LayerRepeatMode.NONE,
                                               Ctk.LayerRepeatMode.NONE);
@@ -752,6 +769,12 @@ namespace Unity.Quicklauncher
       shadow_layer.set_image_from_surface (shadow_surf);
       shadow_layer.set_color (shadow_color);
 
+      blurred_layer.set_mask_from_surface (fill_surf);
+      // this CtkLayer.set_image_from_id() still needs to be written
+      // I can do that tomorrow... or you can do it if you want
+      blurred_layer.set_image_from_id (blurred_id);
+      blurred_layer.set_color (blurred_color);
+
       fill_layer.set_mask_from_surface (fill_surf);
       fill_layer.set_color (fill_color);
 
@@ -768,7 +791,7 @@ namespace Unity.Quicklauncher
 
       // order is important here... don't mess around!
       this.ql_background.add_layer (shadow_layer);
-      //this.ql_background.add_layer (blurred_layer);
+      this.ql_background.add_layer (blurred_layer);
       this.ql_background.add_layer (fill_layer);
       this.ql_background.add_layer (dotted_layer);
       this.ql_background.add_layer (highlight_layer);
