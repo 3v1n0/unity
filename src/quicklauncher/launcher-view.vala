@@ -164,14 +164,9 @@ namespace Unity.Quicklauncher
                                                 out float minimum_width,
                                                 out float natural_width)
       {
-        natural_width = 0;
-        minimum_width = 0;
-        this.icon.get_preferred_width (for_height, out minimum_width, out natural_width);
-        float width = this.padding.left + this.padding.right
-                      + this.running_indicator.get_width ()
-                      + this.focused_indicator.get_width ();
-        natural_width += width;
-        minimum_width += width;
+        natural_width = 56;
+        minimum_width = 56;
+        return;
       }
 
       public override void get_preferred_height (float for_width,
