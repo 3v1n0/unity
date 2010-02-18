@@ -890,25 +890,6 @@ namespace Unity.Widgets
         childcontainer.box = child_box;
         child.allocate (child_box, flags);
 
-        // we need to set a clip on each actor
-        if (child_box.y1 < hot_negative)
-          {
-            var yclip = hot_negative - child_box.y1;
-            child.set_clip (0, yclip,
-                            child_box.get_width (),
-                            child_box.get_height () - yclip);
-          }
-        else if (child_box.y2 > hot_positive)
-          {
-            var yclip = child_box.y2 - hot_positive;
-            child.set_clip (0, 0,
-                            child_box.get_width (),
-                            child_box.get_height () - yclip);
-          }
-        else
-          {
-            child.set_clip (0, 0, child_box.get_width (), child_box.get_height ());
-          }
         // if the child is outside our hot area, we hide it and set unreactive
         if ((child_box.y2 < hot_negative) || (child_box.y1 > hot_positive))
           {
@@ -1031,9 +1012,6 @@ namespace Unity.Widgets
         LauncherView view = actor as LauncherView;
         view.request_attention.connect (on_request_attention);
       }
-
-      /* set a clip on the actor */
-      actor.set_clip (0, -200, 58, 400);
 
       this.queue_relayout ();
       this.actor_added (actor);

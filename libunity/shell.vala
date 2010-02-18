@@ -39,6 +39,7 @@ namespace Unity
     public abstract int           get_indicators_width ();
     public abstract void          ensure_input_region ();
     public abstract void          grab_keyboard (bool grab, uint32 timestamp);
+    public abstract void          show_window_picker ();
 
 
     public signal   void indicators_changed (int width);

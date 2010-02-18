@@ -250,7 +250,7 @@ namespace Unity.Quicklauncher
         //allocate the focused indicator
         width = this.focused_indicator.get_width ();
         height = this.focused_indicator.get_height ();
-        child_box.x2 = box.get_width () - this.padding.right;
+        child_box.x2 = box.get_width ()+this.padding.right+2;//for the shadow
         child_box.y2 = (box.get_height () / 2.0f) - (height / 2.0f);
         child_box.x1 = child_box.x2 - width;
         child_box.y1 = child_box.y2 + height;
@@ -288,8 +288,8 @@ namespace Unity.Quicklauncher
 
     private void load_textures ()
     {
-      this.focused_indicator = new ThemeImage ("selected");
-      this.running_indicator = new ThemeImage ("active");
+      this.focused_indicator = new ThemeImage ("application-selected");
+      this.running_indicator = new ThemeImage ("application-running");
 
       this.focused_indicator.set_parent (this);
       this.running_indicator.set_parent (this);
@@ -519,6 +519,7 @@ namespace Unity.Quicklauncher
     {
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
+
 
       this.is_hovering = true;
 

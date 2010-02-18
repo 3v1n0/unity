@@ -203,9 +203,6 @@ namespace Unity
       this.background.set_position (0, 0);
       this.background.set_size (width, height);
 
-
-
-      print (@"$ql_width\n");
       this.quicklauncher.set_size (ql_width, height - 23);
       this.quicklauncher.set_position (0, 23);
 
@@ -272,6 +269,11 @@ namespace Unity
     /*
      * SHELL IMPLEMENTATION
      */
+
+    public void show_window_picker ()
+    {
+      debug ("Window picker not implemented in popup mode");
+    }
 
     public void grab_keyboard (bool grab, uint32 timestamp)
     {
