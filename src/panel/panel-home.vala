@@ -20,14 +20,13 @@
 
 namespace Unity.Panel
 {
-  public class HomeButton : Ctk.Image
+  public class HomeButton : Unity.ThemeImage
   {
     public Shell shell { get; construct; }
 
     public HomeButton (Shell shell)
     {
-      Object (size:22,
-              filename:PKGDATADIR + "/bfb.png",
+      Object (icon_name:"distributor-logo",
               reactive:true,
               shell:shell);
     }

@@ -46,8 +46,8 @@ namespace Unity.Quicklauncher
 
     /* the prettys */
     private Ctk.Image icon;
-    private Clutter.Texture focused_indicator;
-    private Clutter.Texture running_indicator;
+    private ThemeImage focused_indicator;
+    private ThemeImage running_indicator;
     private Gdk.Pixbuf honeycomb_mask;
 
     private Gee.ArrayList<ShortcutItem> offline_shortcuts;
@@ -164,14 +164,9 @@ namespace Unity.Quicklauncher
                                                 out float minimum_width,
                                                 out float natural_width)
       {
-        natural_width = 0;
-        minimum_width = 0;
-        this.icon.get_preferred_width (for_height, out minimum_width, out natural_width);
-        float width = this.padding.left + this.padding.right
-                      + this.running_indicator.get_width ()
-                      + this.focused_indicator.get_width ();
-        natural_width += width;
-        minimum_width += width;
+        natural_width = 56;
+        minimum_width = 56;
+        return;
       }
 
       public override void get_preferred_height (float for_width,
@@ -216,7 +211,7 @@ namespace Unity.Quicklauncher
         //allocate the focused indicator
         width = this.focused_indicator.get_width ();
         height = this.focused_indicator.get_height ();
-        child_box.x2 = box.get_width ();
+        child_box.x2 = box.get_width () - this.padding.right;
         child_box.y2 = (box.get_height () / 2.0f) - (height / 2.0f);
         child_box.x1 = child_box.x2 - width;
         child_box.y1 = child_box.y2 + height;
@@ -254,25 +249,9 @@ namespace Unity.Quicklauncher
 
     private void load_textures ()
     {
-      try
-        {
-          this.focused_indicator = new Clutter.Texture ();
-          this.focused_indicator.set_from_file (FOCUSED_FILE);
-        } catch (Error e)
-        {
-          this.focused_indicator = new Clutter.Texture ();
-          warning ("loading focused indicator failed, %s", e.message);
-        }
+      this.focused_indicator = new ThemeImage ("selected");
+      this.running_indicator = new ThemeImage ("active");
 
-      try
-        {
-          this.running_indicator = new Clutter.Texture ();
-          this.running_indicator.set_from_file (RUNNING_FILE);
-        } catch (Error e)
-        {
-          this.running_indicator = new Clutter.Texture ();
-          warning ("loading running indicator failed, %s", e.message);
-        }
       this.focused_indicator.set_parent (this);
       this.running_indicator.set_parent (this);
       this.focused_indicator.set_opacity (0);

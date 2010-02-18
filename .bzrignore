@@ -171,3 +171,4 @@ po/insert-header.sin
 po/quot.sed
 po/remove-potcdate.sin
 po/stamp-it
+libunity/theme.c

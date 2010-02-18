@@ -204,9 +204,10 @@ namespace Unity
       this.background.set_size (width, height);
 
 
+
+      print (@"$ql_width\n");
       this.quicklauncher.set_size (ql_width, height - 23);
-      this.quicklauncher.set_position (this.workarea_size.left,
-                                       this.workarea_size.top);
+      this.quicklauncher.set_position (0, 23);
 
       if (this.places_enabled)
         {
