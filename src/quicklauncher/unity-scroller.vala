@@ -256,9 +256,11 @@ namespace Unity.Widgets
               float prev_priority = (previous_child.child as LauncherView).model.priority;
               float next_priority = (child_under.child as LauncherView).model.priority;
               float priority = next_priority - ((next_priority - prev_priority) / 2.0f);
+
               (retcont.child as LauncherView).model.priority = priority;
             }
-          this.order_changed = true;
+
+          this.sort_children ();
           this.queue_relayout ();
         }
     }
@@ -337,6 +339,17 @@ namespace Unity.Widgets
           }
       }
       return retcont;
+    }
+
+    private void sort_children ()
+    {
+      this.children.sort ((CompareFunc)(this.sort_by_priority));
+      var i = 0;
+      foreach (ScrollerChild c in this.children)
+        {
+          (c.child as LauncherView).position = i;
+          i++;
+        }
     }
 
     private void load_textures ()
@@ -777,7 +790,7 @@ namespace Unity.Widgets
       base.allocate (box, flags);
       if (this.order_changed)
         {
-          this.children.sort ((CompareFunc)(this.sort_by_priority));
+          this.sort_children ();
           this.order_changed = false;
         }
 
@@ -809,11 +822,16 @@ namespace Unity.Widgets
         child.get_preferred_height (box.get_width (), out min_height, out natural_height);
         if (orientation == Ctk.Orientation.VERTICAL)
         {
+          var pri = (child as LauncherView).anim_priority;
+          if ((child as LauncherView).anim_priority_going_up == false)
+            pri *= -1;
 
           child_box.x1 = x;
           child_box.x2 = x + child.width + padding.right;
-          child_box.y1 = y + padding.top;
-          child_box.y2 = y + min_height + padding.top;
+          child_box.y1 = (y + padding.top) + pri;
+          child_box.y2 = child_box.y1 + min_height;
+
+          //print ("%f\n", child_box.y1);
 
           y += child_box.get_height () + spacing;
           this.total_child_height += child_box.get_height () + spacing;
@@ -921,6 +939,15 @@ namespace Unity.Widgets
 
       this.queue_relayout ();
       this.actor_added (actor);
+
+      bool mapped;
+      this.get ("mapped", out mapped);
+      if (mapped)
+        {
+          actor.opacity = 0;
+          actor.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 75,
+                         "opacity", 255);
+        }
     }
 
     public void remove (Clutter.Actor actor)
@@ -928,26 +955,33 @@ namespace Unity.Widgets
       this.remove_actor (actor);
     }
 
-    public void remove_actor (Clutter.Actor actor)
+    public void remove_actor (Clutter.Actor actor_)
     {
-      ScrollerChild found_container = null;
-      foreach (ScrollerChild container in this.children) {
-        if (container.child == actor)
+      var anim = actor_.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100,
+                                "opacity", 0);
+      anim.completed.connect ((a) =>
         {
-          found_container = container;
-          break;
-        }
-      }
-      if (found_container is ScrollerChild)
-      {
-        found_container.child = null;
-        this.children.remove (found_container);
-        actor.unparent ();
+          Clutter.Actor actor = a.get_object () as Clutter.Actor;
 
-        this.queue_relayout ();
-        this.actor_removed (actor);
-        actor.remove_clip ();
-      }
+          ScrollerChild found_container = null;
+          foreach (ScrollerChild container in this.children) {
+            if (container.child == actor)
+            {
+              found_container = container;
+              break;
+            }
+          }
+          if (found_container is ScrollerChild)
+          {
+            found_container.child = null;
+            this.children.remove (found_container);
+            actor.unparent ();
+
+            this.queue_relayout ();
+            this.actor_removed (actor);
+            actor.remove_clip ();
+          }
+        });
     }
 
     public void @foreach (Clutter.Callback callback, void* userdata)
