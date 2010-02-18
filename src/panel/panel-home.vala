@@ -24,6 +24,8 @@ namespace Unity.Panel
   {
     public Shell shell { get; construct; }
 
+    public signal void clicked (uint32 time_);
+
     public HomeButton (Shell shell)
     {
       Object (icon_name:"distributor-logo",
@@ -38,9 +40,9 @@ namespace Unity.Panel
 
     private bool on_button_release (Clutter.Event event)
     {
-      shell.show_unity ();
+      this.clicked (event.button.time);
 
-      return false;
+      return true;
     }
   }
 }

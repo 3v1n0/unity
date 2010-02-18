@@ -40,7 +40,7 @@ namespace Unity.Panel
 
     public View (Shell shell)
     {
-      Object (shell:shell);
+      Object (shell:shell, reactive:true);
       this.tray.manage_stage (this.shell.get_stage ());
     }
 
@@ -65,6 +65,7 @@ namespace Unity.Panel
       this.home = new HomeButton (this.shell);
       this.home.set_parent (this);
       this.home.show ();
+      this.home.clicked.connect (this.on_home_clicked);
 
       this.entry_background = new Unity.Places.CairoDrawing.EntryBackground ();
       this.entry_background.set_parent (this);
@@ -75,7 +76,24 @@ namespace Unity.Panel
       this.entry.show ();
       this.entry.activate.connect (this.on_entry_activated);
 
+      this.button_release_event.connect ((e) =>
+        {
+          if (e.button.x < 60) /* Panel width */
+            {
+              this.on_home_clicked ();
+              return true;
+            }
+
+          return false;
+
+        });
+
       END_FUNCTION ();
+    }
+
+    private void on_home_clicked ()
+    {
+      this.entry.grab_key_focus ();
     }
 
     private void on_entry_activated ()
@@ -89,15 +107,12 @@ namespace Unity.Panel
 
           if (template == "" || template == null)
             template = SEARCH_TEMPLATE;
-
-          print ("print: %s\n", template);
         }
       catch (Error e)
         {
           template = SEARCH_TEMPLATE;
         }
 
-      print (@"$template");
       var command=template.replace ("%s",
                                 Uri.escape_string (this.entry.text, "", true));
 
@@ -199,6 +214,7 @@ namespace Unity.Panel
 
     private override void pick (Clutter.Color color)
     {
+      base.pick (color);
       this.tray.paint ();
       this.home.paint ();
       this.indicators.paint ();
