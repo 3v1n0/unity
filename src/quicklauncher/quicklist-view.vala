@@ -614,6 +614,14 @@ namespace Unity.Quicklauncher
     public override void
     paint ()
     {
+      // FIXME00: this is the brute force-approach pulling the blurred-bg
+      // texture constantly... harder on the system (especially since we atm
+      // still have to do glReadPixels()) but more robust in terms of intented
+      // look as we'll have a cleanly updating blurred bg in case there's a
+      // video being displayed in a video-player, or a GL-app renders some
+      // animation or mutter does some animation stuff with the windows
+      base.refresh_background_texture ();
+
       // important run-time optimization!
       if (!this.ql_background.is_flattened ())
         this.ql_background.flatten ();
@@ -644,6 +652,14 @@ namespace Unity.Quicklauncher
       // because clutter triggers calling allocate even if nothing changed
       if ((old_width == w) && (old_height == h))
         return;
+
+      // FIXME01: this is the conservative approach only updating the blurred-bg
+      // texture when the allocation changed... this way we'll miss any updates
+      // of say a video-player displaying a movie behind the tooltip/quicklist
+      // or a GL-app displaying an animation or any other client app rendering
+      // a dynamic UI with screen-changes (also applies to any mutter-based
+      // animations, e.g. its expose)
+      //base.refresh_background_texture ();
 
       Ctk.Actor actor = this.get_attached_actor ();
       actor.get_position (out ax, out ay);
