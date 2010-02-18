@@ -1,6 +1,6 @@
 m4_define([unity_major], [0])
 m4_define([unity_minor], [1])
-m4_define([unity_micro], [14])
+m4_define([unity_micro], [16])
 
 m4_define([unity_api],
           [unity_major.unity_minor])
@@ -93,9 +93,9 @@ PKG_CHECK_MODULES(BASE,
                   dbusmodel >= 0.1.0
                   clutter-1.0 >= 1.0
                   clutter-gtk-0.10 >= 0.10
-                  clutk-0.3 >= 0.3
+                  clutk-0.3 >= 0.3.16
                   indicator
-                  launcher-0.3 >= 0.3
+                  launcher-0.3 >= 0.3.12
                   libwnck-1.0 >= 2.28.0
                   unique-1.0
                   unity-misc
