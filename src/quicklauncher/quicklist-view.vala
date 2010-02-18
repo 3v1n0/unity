@@ -608,7 +608,7 @@ namespace Unity.Quicklauncher
       // draw normal mask and blur it
       _draw_mask (cr, w, h, anchor_y);
       cr.fill ();
-      //Ctk.surface_blur (cr.get_target (), (int) Ctk.em_to_pixel (SHADOW_SIZE/2));
+      Ctk.surface_blur (cr.get_target (), (int) Ctk.em_to_pixel (SHADOW_SIZE/2));
     }
 
     public override void
