@@ -481,6 +481,7 @@ namespace Unity.Quicklauncher
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
 
+
       this.is_hovering = true;
 
       if (!(quicklist_controller is QuicklistController))
@@ -494,7 +495,7 @@ namespace Unity.Quicklauncher
 
       this.quicklist_controller.show_label ();
 
-      return false;
+      return true;
     }
 
     private bool on_launch_timeout ()

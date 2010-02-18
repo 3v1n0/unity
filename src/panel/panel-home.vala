@@ -29,7 +29,7 @@ namespace Unity.Panel
 
     public HomeButton (Shell shell)
     {
-      Object (reactive:true,
+      Object (reactive:false,
               shell:shell);
     }
 

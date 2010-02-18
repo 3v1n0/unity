@@ -40,13 +40,15 @@ namespace Unity.Panel
 
     public View (Shell shell)
     {
-      Object (shell:shell, reactive:true);
+      Object (shell:shell, reactive:false);
       this.tray.manage_stage (this.shell.get_stage ());
     }
 
     construct
     {
       START_FUNCTION ();
+
+      if (true){
 
       this.rect = new ThemeImage ("panel_background");
       this.rect.set_repeat (true, false);
@@ -61,10 +63,12 @@ namespace Unity.Panel
       this.tray.set_parent (this);
       this.tray.show ();
 
+
       this.home = new HomeButton (this.shell);
       this.home.set_parent (this);
       this.home.show ();
       this.home.clicked.connect (this.on_home_clicked);
+
 
       this.entry_background = new Unity.Places.CairoDrawing.EntryBackground ();
       this.entry_background.set_parent (this);
@@ -76,24 +80,14 @@ namespace Unity.Panel
       this.entry.show ();
       this.entry.activate.connect (this.on_entry_activated);
 
-      this.button_release_event.connect ((e) =>
-        {
-          if (e.button.x < 60) /* Panel width */
-            {
-              this.on_home_clicked ();
-              return true;
-            }
-
-          return false;
-
-        });
+      }
 
       END_FUNCTION ();
     }
 
     private void on_home_clicked ()
     {
-      this.entry.grab_key_focus ();
+      Unity.global_shell.show_window_picker ();
     }
 
     private void on_entry_activated ()
@@ -136,6 +130,8 @@ namespace Unity.Panel
       float            child_width;
       float            i_width;
 
+      base.allocate (box, flags);
+
       width = box.x2 - box.x1;
 
       this.set_clip (0, 0, width, box.y2 - box.y1);
@@ -154,8 +150,8 @@ namespace Unity.Panel
       /* Entry */
       child_box.x1 = Math.floorf (child_box.x2 + 12);
       child_box.x2 = Math.floorf (child_box.x1 + 150); /* Random width */
-      child_box.y1 = Math.floorf (1);
-      child_box.y2 = Math.floorf (PANEL_HEIGHT-2);
+      child_box.y1 = Math.floorf (2);
+      child_box.y2 = Math.floorf (PANEL_HEIGHT);
 
       if ((this.entry_background.Width != (int)(child_box.x2 - child_box.x1)) && (this.entry_background.height != (int)(child_box.y2 - child_box.y1-2)))
       {

@@ -441,7 +441,7 @@ namespace Unity.Places.CairoDrawing
         cairoctx.set_operator (Cairo.Operator.CLEAR);
         cairoctx.paint ();
         cairoctx.set_operator (Cairo.Operator.OVER);
-        cairoctx.translate (0.5f, 0.5f);
+        cairoctx.translate (-0.5f, -0.5f);
 
         cairoctx.set_source_rgba (1.0, 1.0, 1.0, 0.9);
         cairoctx.set_line_width (1.0);
