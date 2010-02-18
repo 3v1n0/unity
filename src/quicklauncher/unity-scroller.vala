@@ -937,7 +937,6 @@ namespace Unity.Widgets
       this.bgtex.allocate (child_box, flags);
       this.bgtex.set_clip (box.x1, drag_pos + box.get_height () * 2 - 1,
                            box.get_width (), box.get_height () - fixed_size);
-
       child_box.y1 = box.y1;
       child_box.y2 = box.y1 + 7.0f;
 
@@ -993,7 +992,7 @@ namespace Unity.Widgets
         child.paint ();
       }
       this.top_shadow.paint ();
-
+      this.bottom_fade.paint ();
     }
 
 
