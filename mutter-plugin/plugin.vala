@@ -112,7 +112,7 @@ namespace Unity
     public bool expose_showing { get; private set; }
 
     private static const int PANEL_HEIGHT        = 23;
-    private static const int QUICKLAUNCHER_WIDTH = 60;
+    private static const int QUICKLAUNCHER_WIDTH = 58;
 
     private Clutter.Stage    stage;
     private Application      app;
