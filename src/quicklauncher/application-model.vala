@@ -367,11 +367,7 @@ namespace Unity.Quicklauncher.Models
     {
       if (app.running)
         {
-          if (app.focused)
-            app.minimize ();
-          else if (app.has_minimized ())
-            app.restore ();
-          else
+          if (!this.app.focused)
             app.show ();
         }
       else
