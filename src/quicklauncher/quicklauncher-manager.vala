@@ -24,7 +24,7 @@ namespace Unity.Quicklauncher
   public class Manager : Ctk.Bin
   {
     private Unity.Widgets.Scroller container;
-    private Gee.HashMap<string,ApplicationModel> desktop_file_map;
+    private Gee.ArrayList<Launcher.Application> launcher_apps;
     private Gee.HashMap<LauncherModel, LauncherView> model_map;
 
     private Launcher.Appman appman;
@@ -65,7 +65,7 @@ namespace Unity.Quicklauncher
       this.appman = Launcher.Appman.get_default ();
       this.session = Launcher.Session.get_default ();
 
-      this.desktop_file_map = new Gee.HashMap<string, ApplicationModel> ();
+      launcher_apps = new Gee.ArrayList<Launcher.Application> ();
       this.model_map = new Gee.HashMap<LauncherModel, LauncherView> ();
 
       this.container = new Unity.Widgets.Scroller (Ctk.Orientation.VERTICAL,
@@ -317,14 +317,17 @@ namespace Unity.Quicklauncher
           string? desktop_file = favorites.get_string(uid, "desktop_file");
           assert (desktop_file != "");
 
-          if (desktop_file != null && !(desktop_file in desktop_file_map.keys))
-            {
-              ApplicationModel model = get_model_for_desktop_file (desktop_file);
-              model.is_sticky = true;
-              LauncherView view = get_view_for_model (model);
+          Launcher.Application application = appman.get_application_for_desktop_file (desktop_file);
+          
+          if (launcher_apps.contains (application))
+            continue;
+          launcher_apps.add (application);
+          
+          ApplicationModel model = new ApplicationModel (application);
+          model.is_sticky = true;
+          LauncherView view = get_view_for_model (model);
 
-              add_view (view);
-            }
+          add_view (view);
 
           LOGGER_END_PROCESS (process_name);
         }
@@ -335,46 +338,33 @@ namespace Unity.Quicklauncher
     private float get_last_priority ()
     {
       float max_priority = 0.0f;
-      foreach (ApplicationModel model in this.desktop_file_map.values)
+      foreach (LauncherModel model in this.model_map.keys)
         {
-          max_priority = Math.fmaxf (model.priority, max_priority);
+          if (!(model is ApplicationModel))
+            continue;
+          max_priority = Math.fmaxf ((model as ApplicationModel).priority, max_priority);
         }
       return max_priority;
     }
 
     private void handle_session_application (Launcher.Application app)
     {
-      var desktop_file = app.get_desktop_file ();
-      if (desktop_file != null)
-      {
-        ApplicationModel model = get_model_for_desktop_file (desktop_file);
-        if (!model.is_sticky)
-          {
-            model.priority = get_last_priority ();
-          }
+      if (launcher_apps.contains (app))
+        return;
+      launcher_apps.add (app);
+      ApplicationModel model = new ApplicationModel (app);
+      
+      string desktop_file = app.get_desktop_file ();
+      if (desktop_file != null && !model.is_sticky)
+        {
+          model.priority = get_last_priority ();
+        }
 
-        LauncherView view = get_view_for_model (model);
-        if (view.get_parent () == null)
+      LauncherView view = get_view_for_model (model);
+      if (view.get_parent () == null)
         {
           add_view (view);
         }
-      }
-    }
-
-
-    private ApplicationModel get_model_for_desktop_file (string uri)
-    {
-      /* we check to see if we already have this desktop file loaded,
-       * if so, we just use that one instead of creating a new model
-       */
-      if (uri in desktop_file_map.keys)
-        {
-          return desktop_file_map[uri];
-        }
-
-      ApplicationModel model = new ApplicationModel (uri);
-      desktop_file_map[uri] = model;
-      return model;
     }
 
     private LauncherView get_view_for_model (LauncherModel model)
