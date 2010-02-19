@@ -363,12 +363,23 @@ namespace Unity.Quicklauncher.Models
       return ret_list;
     }
 
+    public bool ensure_state ()
+    {
+      this.on_app_focus_changed ();
+      return false;
+    }
+
     public void activate ()
     {
       if (app.running)
         {
           if (!this.app.focused)
-            app.show ();
+            {
+              // sigh, so hacky. i think clutters mainloop is blocking a signal
+              // so lets just force a check of our focused status here
+              Idle.add (this.ensure_state);
+              app.show ();
+            }
         }
       else
         {
