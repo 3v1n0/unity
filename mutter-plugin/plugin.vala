@@ -117,6 +117,7 @@ namespace Unity
     private Clutter.Stage    stage;
     private Application      app;
     private WindowManagement wm;
+    private Maximus          maximus;
 
     /* Unity Components */
     private Background         background;
@@ -181,6 +182,7 @@ namespace Unity
     {
       START_FUNCTION ();
       this.wm = new WindowManagement (this);
+      this.maximus = new Maximus ();
 
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
       this.stage.actor_added.connect   ((a) => { ensure_input_region (); });
@@ -789,6 +791,7 @@ namespace Unity
 
     public void map (Mutter.Window window)
     {
+      this.maximus.process_window (window);
       this.window_mapped (this, window);
     }
 

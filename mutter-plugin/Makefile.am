@@ -61,6 +61,7 @@ libunity_mutter_la_SOURCES = \
 
 libunity_mutter_la_VALASOURCES = \
   plugin.vala \
+  maximus.vala \
   window-management.vala
 
 libunity_mutter_la_APIFILES = \
