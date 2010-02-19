@@ -65,7 +65,7 @@ namespace Unity.Quicklauncher.Models
 
     public void activated ()
     {
-      this.app.close ();
+      this.app.close (Clutter.get_current_event_time ());
     }
   }
 
@@ -370,9 +370,9 @@ namespace Unity.Quicklauncher.Models
           if (app.focused)
             app.minimize ();
           else if (app.has_minimized ())
-            app.restore ();
+            app.restore (Clutter.get_current_event_time ());
           else
-            app.show ();
+            app.show (Clutter.get_current_event_time ());
         }
       else
         {
@@ -392,7 +392,7 @@ namespace Unity.Quicklauncher.Models
 
     public void close ()
     {
-      this.app.close ();
+      this.app.close (Clutter.get_current_event_time ());
     }
 
     /**
