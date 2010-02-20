@@ -59,12 +59,12 @@ public class Main
       assert (bg is Clutter.Actor);
     });
     Test.add_func ("/Unity/Quicklauncher/ApplicationModel", () => {
-      var model = new Quicklauncher.Models.ApplicationModel (firefox_desktop);
+      var model = new Quicklauncher.Models.ApplicationModel (Launcher.Appman.get_default ().get_application_for_desktop_file (firefox_desktop));
       assert (model is Quicklauncher.Models.ApplicationModel);
     });
 
     Test.add_func ("/Unity/Quicklauncher/LauncherView", () => {
-      var model = new Quicklauncher.Models.ApplicationModel (firefox_desktop);
+      var model = new Quicklauncher.Models.ApplicationModel (Launcher.Appman.get_default ().get_application_for_desktop_file (firefox_desktop));
       var view = new Quicklauncher.LauncherView (model);
       assert (view is Quicklauncher.LauncherView);
     });
