@@ -551,7 +551,11 @@ namespace Unity
 
       Clutter.Actor window = (actor as Clutter.Clone).source;
 
-      uint8 opacity = window.opacity;
+      uint8 opacity = 0;
+      if ((window as Mutter.Window).showing_on_its_workspace () && 
+          (window as Mutter.Window).get_workspace () == Mutter.MetaScreen.get_active_workspace_index (plugin.get_screen ()))
+        opacity = 255;
+        
       actor.set ("scale-gravity", Clutter.Gravity.CENTER);
       Clutter.Animation anim = actor.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
                                          "scale-x", 1f,
@@ -587,6 +591,12 @@ namespace Unity
 
       for (int row = 0; row < rows; row++)
         {
+          if (row == rows - 1)
+            {
+              /* Last row, time to perform centering as needed */
+              boxWidth = (int) ((this.stage.width - left_buffer) / windows.length ());
+            }
+            
           for (int col = 0; col < cols; col++)
             {
               if (windows.length () == 0)
