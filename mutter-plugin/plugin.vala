@@ -665,6 +665,7 @@ namespace Unity
           Clutter.Clone clone = actor as Clutter.Clone;
           if (clone != null && clone.source is Mutter.Window)
             {
+              clone.raise_top ();
               unowned Mutter.MetaWindow meta = ((actor as Clutter.Clone).source as Mutter.Window).get_meta_window ();
               Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace (meta), event.get_time ());
               Mutter.MetaWindow.activate (meta, event.get_time ());
