@@ -411,6 +411,11 @@ namespace Unity.Quicklauncher
       this.container.remove_actor (view);
       view.enter_event.connect (on_launcher_enter_event);
       view.leave_event.connect (on_launcher_leave_event);
+      
+      if (view.model is ApplicationModel)
+        {
+          launcher_apps.remove ((view.model as ApplicationModel).app);
+        }
     }
 
     private bool on_launcher_enter_event (Clutter.Event event)

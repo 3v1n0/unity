@@ -133,9 +133,9 @@ namespace Unity.Quicklauncher.Models
     }
     
     private Launcher.Application _app;
-    private Launcher.Application app {
+    public Launcher.Application app {
       get { return _app; }
-      set {
+      private set {
         if (_app != null)
           {
             _app.opened.disconnect(this.on_app_opened);
