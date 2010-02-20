@@ -109,10 +109,8 @@ namespace Unity.Quicklauncher.Models
   public class ApplicationModel : Object, LauncherModel
   {
     private Gdk.Pixbuf _icon;
-    private Launcher.Application app;
-    private Launcher.Appman manager;
     private string desktop_uri;
-    private bool queued_save_priority;
+    private bool queued_save_priority = false;
     private bool _do_shadow = false;
     private float _priority;
     public float priority {
@@ -133,21 +131,34 @@ namespace Unity.Quicklauncher.Models
           return app.get_windows ();
         }
     }
+    
+    private Launcher.Application _app;
+    public Launcher.Application app {
+      get { return _app; }
+      private set {
+        if (_app != null)
+          {
+            _app.opened.disconnect(this.on_app_opened);
+            _app.focus_changed.disconnect (this.on_app_focus_changed);
+            _app.running_changed.disconnect (this.on_app_running_changed);
+            _app.urgent_changed.disconnect (this.on_app_urgent_changed);
+          }
+        
+        _app = value;
+        _app.opened.connect(this.on_app_opened);
+        _app.focus_changed.connect (this.on_app_focus_changed);
+        _app.running_changed.connect (this.on_app_running_changed);
+        _app.urgent_changed.connect (this.on_app_urgent_changed);
+        
+        _icon = make_icon (app.icon_name);
+      }
+    }
 
-    public ApplicationModel (string desktop_uri)
+    public ApplicationModel (Launcher.Application application)
     {
-      this.desktop_uri = desktop_uri;
-      this.manager = Launcher.Appman.get_default ();
-      this.app = this.manager.get_application_for_desktop_file (desktop_uri);
-
-      this.app.opened.connect(this.on_app_opened);
-      this.app.focus_changed.connect (this.on_app_focus_changed);
-      this.app.running_changed.connect (this.on_app_running_changed);
-      this.app.urgent_changed.connect (this.on_app_urgent_changed);
-
-      this._icon = make_icon (app.icon_name);
-
-      this.queued_save_priority = false;
+      this.desktop_uri = app.get_desktop_file ();
+      this.app = application;
+      
       this._is_sticky = (get_fav_uid () != "");
       this.grab_priority ();
 
