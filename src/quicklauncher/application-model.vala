@@ -388,11 +388,9 @@ namespace Unity.Quicklauncher.Models
     {
       if (app.running)
         {
-          if (app.focused)
-            ; /* do jack, as per specification */
-          else if (app.has_minimized ())
+          if (app.has_minimized ())
             app.restore (Clutter.get_current_event_time ());
-          else
+          else if (!app.focused)
             app.show (Clutter.get_current_event_time ());
         }
       else
