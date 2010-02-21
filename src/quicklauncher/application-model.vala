@@ -242,13 +242,11 @@ namespace Unity.Quicklauncher.Models
 
     private void on_app_opened (Wnck.Window window)
     {
-      warning ("WINDOWS CHANGED");
       windows_changed ();
     }
 
     private void on_app_closed (Wnck.Window window)
     {
-      warning ("WINDOWS CHANGED");
       windows_changed ();
     }
 
