@@ -49,6 +49,7 @@ namespace Unity.Quicklauncher
     private ThemeImage focused_indicator;
     private ThemeImage running_indicator;
     private Gdk.Pixbuf honeycomb_mask;
+    private Gdk.Rectangle last_strut;
 
     private Gee.ArrayList<ShortcutItem> offline_shortcuts;
     private Gee.ArrayList<ShortcutItem> shortcut_actions;
@@ -289,13 +290,15 @@ namespace Unity.Quicklauncher
     
     public void update_window_struts ()
     {
-      if (model is ApplicationModel)
+      Gdk.Rectangle strut = {(int) x, (int) y, (int) width, (int) height};
+      if (model is ApplicationModel && strut != last_strut)
         {
           ApplicationModel app_model = model as ApplicationModel;
           foreach (Wnck.Window window in app_model.windows)
             {
-              window.set_icon_geometry ((int) x, (int) y, (int) width, (int) height);
+              window.set_icon_geometry (strut.x, strut.y, strut.width, strut.height);
             }
+          last_strut = strut;
         }
     }
 
