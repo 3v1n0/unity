@@ -108,11 +108,14 @@ namespace Unity.Quicklauncher.Models
 
   public class ApplicationModel : Object, LauncherModel
   {
+    public signal void windows_changed ();
+    
     private Gdk.Pixbuf _icon;
     private string desktop_uri;
     private bool queued_save_priority = false;
     private bool _do_shadow = false;
     private float _priority;
+    
     public float priority {
       get { return _priority; }
       set { _priority = value; this.do_save_priority ();}
@@ -139,6 +142,7 @@ namespace Unity.Quicklauncher.Models
         if (_app != null)
           {
             _app.opened.disconnect(this.on_app_opened);
+            _app.closed.disconnect(this.on_app_closed);
             _app.focus_changed.disconnect (this.on_app_focus_changed);
             _app.running_changed.disconnect (this.on_app_running_changed);
             _app.urgent_changed.disconnect (this.on_app_urgent_changed);
@@ -146,6 +150,7 @@ namespace Unity.Quicklauncher.Models
         
         _app = value;
         _app.opened.connect(this.on_app_opened);
+        _app.closed.connect(this.on_app_closed);
         _app.focus_changed.connect (this.on_app_focus_changed);
         _app.running_changed.connect (this.on_app_running_changed);
         _app.urgent_changed.connect (this.on_app_urgent_changed);
@@ -237,7 +242,14 @@ namespace Unity.Quicklauncher.Models
 
     private void on_app_opened (Wnck.Window window)
     {
-      this.request_attention ();
+      warning ("WINDOWS CHANGED");
+      windows_changed ();
+    }
+
+    private void on_app_closed (Wnck.Window window)
+    {
+      warning ("WINDOWS CHANGED");
+      windows_changed ();
     }
 
     public bool is_active

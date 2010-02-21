@@ -156,6 +156,11 @@ namespace Unity.Quicklauncher
         this.model.activated.connect (this.on_activated);
         this.model.urgent_changed.connect (this.on_urgent_changed);
         this.name = "Unity.Quicklauncher.LauncherView-" + this.model.name;
+        
+        if (model is ApplicationModel)
+          {
+            (model as ApplicationModel).windows_changed.connect (() => update_window_struts (true));
+          }
 
         notify_on_is_running ();
         notify_on_is_focused ();
@@ -185,7 +190,7 @@ namespace Unity.Quicklauncher
         this.enter_event.connect (this.on_mouse_enter);
         this.leave_event.connect (this.on_mouse_leave);
         this.motion_event.connect (this.on_motion_event);
-        this.allocation_changed.connect (() => update_window_struts ());
+        this.allocation_changed.connect (() => update_window_struts (false));
         this.notify["reactive"].connect (this.notify_on_set_reactive);
 
         this.clicked.connect (this.on_clicked);
@@ -288,10 +293,10 @@ namespace Unity.Quicklauncher
       this.icon.map ();
     }
     
-    public void update_window_struts ()
+    public void update_window_struts (bool ignore_buffer)
     {
       Gdk.Rectangle strut = {(int) x, (int) y, (int) width, (int) height};
-      if (model is ApplicationModel && strut != last_strut)
+      if (model is ApplicationModel && (strut != last_strut || ignore_buffer))
         {
           ApplicationModel app_model = model as ApplicationModel;
           foreach (Wnck.Window window in app_model.windows)
