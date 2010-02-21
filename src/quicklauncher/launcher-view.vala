@@ -184,6 +184,7 @@ namespace Unity.Quicklauncher
         this.enter_event.connect (this.on_mouse_enter);
         this.leave_event.connect (this.on_mouse_leave);
         this.motion_event.connect (this.on_motion_event);
+        this.allocation_changed.connect (() => update_window_struts ());
         this.notify["reactive"].connect (this.notify_on_set_reactive);
 
         this.clicked.connect (this.on_clicked);
@@ -284,6 +285,18 @@ namespace Unity.Quicklauncher
       this.running_indicator.map ();
       this.focused_indicator.map ();
       this.icon.map ();
+    }
+    
+    public void update_window_struts ()
+    {
+      if (model is ApplicationModel)
+        {
+          ApplicationModel app_model = model as ApplicationModel;
+          foreach (Wnck.Window window in app_model.windows)
+            {
+              window.set_icon_geometry ((int) x, (int) y, (int) width, (int) height);
+            }
+        }
     }
 
     private void load_textures ()
@@ -515,6 +528,7 @@ namespace Unity.Quicklauncher
 
       this.is_starting = false;
     }
+    
     private bool on_mouse_enter (Clutter.Event event)
     {
       var drag_controller = Drag.Controller.get_default ();
@@ -522,7 +536,7 @@ namespace Unity.Quicklauncher
 
 
       this.is_hovering = true;
-
+      
       if (!(quicklist_controller is QuicklistController))
         {
           this.quicklist_controller = new QuicklistController (this.model.name,
