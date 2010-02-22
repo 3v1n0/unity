@@ -172,6 +172,7 @@ namespace Unity
 
       expose_showing = false;
       owner.remove_fullscreen_request (this);
+      stage.captured_event.disconnect (on_stage_captured_event);
     }
     
     void position_windows_coverflow (List<Clutter.Actor> windows, Clutter.Actor active)
