@@ -70,44 +70,6 @@ namespace Unity
     }
   }
 
-  public class ExposeClone : Clutter.Group
-  {
-    private Clutter.Clone clone;
-    
-    public Mutter.Window source { get; private set; }
-
-    public uint8 hovered_opacity { get; set; }
-    public uint8 unhovered_opacity { get; set; }
-    
-    public ExposeClone (Mutter.Window source)
-    {
-      this.source = source;
-      clone = new Clutter.Clone (source);
-      
-      add_actor (clone);
-      clone.show ();
-      clone.set_position (0, 0);
-    }
-    
-    construct
-    {
-      this.enter_event.connect (this.on_mouse_enter);
-      this.leave_event.connect (this.on_mouse_leave);
-    }
-    
-    private bool on_mouse_enter (Clutter.Event evnt)
-    {
-      opacity = hovered_opacity;
-      return false;
-    }
-    
-    private bool on_mouse_leave (Clutter.Event evnt)
-    {
-      opacity = unhovered_opacity;
-      return false;
-    }
-  }
-
   public class Plugin : Object, Shell
   {
     /* Signals */
@@ -147,7 +109,7 @@ namespace Unity
 
     public bool menus_swallow_events { get { return false; } }
 
-    public bool expose_showing { get; private set; }
+    public bool expose_showing { get { return expose_manager.expose_showing; } }
 
     private static const int PANEL_HEIGHT        = 23;
     private static const int QUICKLAUNCHER_WIDTH = 60;
@@ -159,6 +121,7 @@ namespace Unity
 
     /* Unity Components */
     private Background         background;
+    private ExposeManager      expose_manager;
     private Quicklauncher.View quicklauncher;
     private Places.Controller  places_controller;
     private Places.View        places;
@@ -182,8 +145,6 @@ namespace Unity
           ensure_input_region ();
         }
       }
-
-    private List<ExposeClone> exposed_windows;
 
     private bool grab_enabled = false;
 
@@ -256,6 +217,8 @@ namespace Unity
 
       this.quicklauncher = new Quicklauncher.View (this);
       this.quicklauncher.opacity = 0;
+      
+      this.expose_manager = new ExposeManager (this, quicklauncher);
 
       this.quicklauncher.manager.active_launcher_changed.connect (on_launcher_changed_event);
 
@@ -490,7 +453,7 @@ namespace Unity
             }
         }
 
-      this.expose_windows (windows, 40);
+      this.expose_windows (windows, 80);
     }
 
     public Clutter.Stage get_stage ()
@@ -511,221 +474,13 @@ namespace Unity
     public void expose_windows (GLib.SList<Wnck.Window> windows,
                                 int left_buffer = 250)
     {
-      exposed_windows = new List<ExposeClone> ();
-
-      unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
-      foreach (Mutter.Window w in mutter_windows)
-        {
-          bool keep = false;
-          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (w.get_meta_window ());
-          foreach (Wnck.Window window in windows)
-            {
-              if (window.get_xid () == xid)
-                {
-                  keep = true;
-                  break;
-                }
-            }
-
-          if (keep)
-            {
-              ExposeClone clone = new ExposeClone (w);
-              clone.set_position (w.x, w.y);
-              clone.set_size (w.width, w.height);
-              clone.opacity = w.opacity;
-              exposed_windows.append (clone);
-              clone.reactive = true;
-
-              unowned Clutter.Container container = w.get_parent () as Clutter.Container;
-
-              container.add_actor (clone);
-              (clone as Clutter.Actor).raise (w);
-              
-              clone.hovered_opacity = 255;
-              clone.unhovered_opacity = 200;
-              clone.opacity = 200;
-            }
-
-            if (w.get_window_type () == Mutter.MetaCompWindowType.DESKTOP)
-              {
-                exposed_windows.reverse ();
-                foreach (Clutter.Actor actor in exposed_windows)
-                  {
-                    actor.raise (w);
-                  }
-                exposed_windows.reverse ();
-                continue;
-              }
-            (w as Clutter.Actor).reactive = false;
-            (w as Clutter.Actor).animate (Clutter.AnimationMode.EASE_IN_SINE, 80, "opacity", 0);
-        }
-
-      position_window_on_grid (exposed_windows, left_buffer);
-
-      expose_showing = true;
-      this.ensure_input_region ();
-      this.stage.captured_event.connect (on_stage_captured_event);
+      expose_manager.left_buffer = left_buffer;
+      expose_manager.start_expose (windows);
     }
-
-    private void dexpose_windows ()
+    
+    public void dexpose_windows ()
     {
-      if (quicklauncher.manager.active_launcher != null)
-        quicklauncher.manager.active_launcher.close_menu ();
-
-      unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
-      foreach (Mutter.Window window in mutter_windows)
-        {
-          window.opacity = 255;
-          window.reactive = true;
-        }
-
-      foreach (Clutter.Actor actor in exposed_windows)
-        restore_window_position (actor);
-
-      this.expose_showing = false;
-      this.ensure_input_region ();
-    }
-
-    private void restore_window_position (Clutter.Actor actor)
-    {
-      if (!(actor is ExposeClone))
-        return;
-
-      Clutter.Actor window = (actor as ExposeClone).source;
-
-      uint8 opacity = 0;
-      if ((window as Mutter.Window).showing_on_its_workspace () && 
-          (window as Mutter.Window).get_workspace () == Mutter.MetaScreen.get_active_workspace_index (plugin.get_screen ()))
-        opacity = 255;
-        
-      actor.set ("scale-gravity", Clutter.Gravity.CENTER);
-      Clutter.Animation anim = actor.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
-                                         "scale-x", 1f,
-                                         "scale-y", 1f,
-                                         "opacity", opacity,
-                                         "x", window.x,
-                                         "y", window.y);
-
-      window.opacity = 0;
-
-      anim.completed.connect (() => {
-        actor.destroy ();
-        window.opacity = 255;
-      });
-    }
-
-    void position_window_on_grid (List<Clutter.Actor> _windows,
-                                  int left_buffer = 250)
-    {
-      List<Clutter.Actor> windows = _windows.copy ();
-      int vertical_buffer = 40;
-      int count = (int) windows.length ();
-
-      int cols = (int) Math.ceil (Math.sqrt (count));
-
-      int rows = 1;
-
-      while (cols * rows < count)
-        rows++;
-
-      int boxWidth = (int) ((this.stage.width - left_buffer) / cols);
-      int boxHeight = (int) ((this.stage.height - vertical_buffer * 2) / rows);
-
-      for (int row = 0; row < rows; row++)
-        {
-          if (row == rows - 1)
-            {
-              /* Last row, time to perform centering as needed */
-              boxWidth = (int) ((this.stage.width - left_buffer) / windows.length ());
-            }
-            
-          for (int col = 0; col < cols; col++)
-            {
-              if (windows.length () == 0)
-                return;
-
-              int centerX = (boxWidth / 2 + boxWidth * col + left_buffer);
-              int centerY = (boxHeight / 2 + boxHeight * row + vertical_buffer);
-
-              Clutter.Actor window = null;
-              // greedy layout
-              foreach (Clutter.Actor actor in windows)
-                {
-                  if (window == null)
-                    {
-                      window = actor;
-                      continue;
-                    }
-
-                  double window_distance = Math.sqrt (
-                    Math.fabs (centerX - (window.x + window.width / 2)) +
-                    Math.fabs (centerY - (window.y + window.height / 2))
-                  );
-                  double actor_distance = Math.sqrt (
-                    Math.fabs (centerX - (actor.x + actor.width / 2)) +
-                    Math.fabs (centerY - (actor.y + actor.height / 2))
-                  );
-
-                  if (actor_distance < window_distance)
-                    window = actor;
-                }
-
-              windows.remove (window);
-
-              int windowX = centerX - (int) window.width / 2;
-              int windowY = centerY - (int) window.height / 2;
-
-              float scale = float.min (float.min (1, (boxWidth - 20) / window.width), float.min (1, (boxHeight - 20) / window.height));
-
-              window.set ("scale-gravity", Clutter.Gravity.CENTER);
-              window.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
-                                                 "x", (float) windowX,
-                                                 "y", (float) windowY,
-                                                 "scale-x", scale,
-                                                 "scale-y", scale);
-            }
-        }
-    }
-
-    bool on_stage_captured_event (Clutter.Event event)
-    {
-      if (event.type == Clutter.EventType.ENTER || event.type == Clutter.EventType.LEAVE)
-        return false;
-
-      bool event_over_menu = false;
-
-      float x, y;
-      event.get_coords (out x, out y);
-
-      unowned Clutter.Actor actor = this.stage.get_actor_at_pos (Clutter.PickMode.REACTIVE, (int) x, (int) y);
-
-      unowned Clutter.Actor menu = null;
-      if (Unity.Quicklauncher.active_menu != null)
-        menu = Unity.Quicklauncher.active_menu.menu as Clutter.Actor;
-      if (menu != null)
-        {
-          if (x > menu.x && x < menu.x + menu.width && y > menu.y && y < menu.y + menu.height)
-            event_over_menu = true;
-        }
-
-      if (event.type == Clutter.EventType.BUTTON_RELEASE && event.get_button () == 1)
-        {
-          while (actor.get_parent () != null && !(actor is ExposeClone))
-            actor = actor.get_parent ();
-
-          ExposeClone clone = actor as ExposeClone;
-          if (clone != null && clone.source is Mutter.Window)
-            {
-              clone.raise_top ();
-              unowned Mutter.MetaWindow meta = (clone.source as Mutter.Window).get_meta_window ();
-              Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace (meta), event.get_time ());
-              Mutter.MetaWindow.activate (meta, event.get_time ());
-            }
-          this.stage.captured_event.disconnect (on_stage_captured_event);
-          this.dexpose_windows ();
-        }
-
-      return !event_over_menu;
+      expose_manager.end_expose ();
     }
 
     public void show_unity ()
