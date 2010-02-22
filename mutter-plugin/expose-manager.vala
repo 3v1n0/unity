@@ -70,12 +70,18 @@ namespace Unity
     public bool expose_showing { get; private set; }
     public int left_buffer { get; set; }
     
+    public uint8 hovered_opacity { get; set; }
+    public uint8 unhovered_opacity { get; set; }
+    
     public ExposeManager (Plugin plugin, Quicklauncher.View quicklauncher)
     {
       this.quicklauncher = quicklauncher;
       this.owner = plugin;
       this.exposed_windows = new List<ExposeClone> ();
       this.stage = (Clutter.Stage)plugin.get_stage ();
+      
+      hovered_opacity = 255;
+      unhovered_opacity = 255;
     }
     
     construct
@@ -114,9 +120,9 @@ namespace Unity
               container.add_actor (clone);
               (clone as Clutter.Actor).raise (w);
               
-              clone.hovered_opacity = 255;
-              clone.unhovered_opacity = 200;
-              clone.opacity = 200;
+              clone.hovered_opacity = hovered_opacity;
+              clone.unhovered_opacity = unhovered_opacity;
+              clone.opacity = unhovered_opacity;
             }
 
             if (w.get_window_type () == Mutter.MetaCompWindowType.DESKTOP)
@@ -137,7 +143,7 @@ namespace Unity
 
       expose_showing = true;
       
-      owner.ensure_input_region ();
+      owner.add_fullscreen_request (this);
       stage.captured_event.connect (on_stage_captured_event);
     }
     
@@ -157,7 +163,7 @@ namespace Unity
         restore_window_position (actor);
 
       expose_showing = false;
-      owner.ensure_input_region ();
+      owner.remove_fullscreen_request (this);
     }
     
     void position_window_on_grid (List<Clutter.Actor> _windows,

@@ -134,6 +134,9 @@ namespace Unity
     private DragDest drag_dest;
     private bool     places_showing;
     private bool     _fullscreen_obstruction;
+    private InputState last_input_state = InputState.NONE;
+    
+    private Gee.ArrayList<Object> fullscreen_requests;
 
     private bool fullscreen_obstruction
       {
@@ -182,6 +185,8 @@ namespace Unity
       START_FUNCTION ();
       this.wm = new WindowManagement (this);
       this.maximus = new Maximus ();
+      
+      fullscreen_requests = new Gee.ArrayList<Object> ();
 
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
       this.stage.actor_added.connect   ((a) => { ensure_input_region (); });
@@ -219,6 +224,8 @@ namespace Unity
       this.quicklauncher.opacity = 0;
       
       this.expose_manager = new ExposeManager (this, quicklauncher);
+      this.expose_manager.hovered_opacity = 255;
+      this.expose_manager.unhovered_opacity = 200;
 
       this.quicklauncher.manager.active_launcher_changed.connect (on_launcher_changed_event);
 
@@ -383,8 +390,20 @@ namespace Unity
        */
       END_FUNCTION ();
     }
+    
+    public void add_fullscreen_request (Object o)
+    {
+      fullscreen_requests.add (o);
+      ensure_input_region ();
+    }
+    
+    public bool remove_fullscreen_request (Object o)
+    {
+      bool result = fullscreen_requests.remove (o);
+      ensure_input_region ();
+      return result;
+    }
 
-    private InputState last_input_state = InputState.NONE;
     public void ensure_input_region ()
     {
       if (fullscreen_obstruction)
@@ -396,7 +415,7 @@ namespace Unity
 
           this.grab_keyboard (false, Clutter.get_current_event_time ());
         }
-      else if (expose_showing ||
+      else if (fullscreen_requests.size > 0 ||
                places_showing ||
                Unity.Quicklauncher.active_menu != null ||
                Unity.Drag.Controller.get_default ().is_dragging
@@ -430,7 +449,7 @@ namespace Unity
 
     public void show_window_picker ()
     {
-      if (this.expose_showing == true)
+      if (expose_manager.expose_showing == true)
         {
           this.dexpose_windows ();
           return;
