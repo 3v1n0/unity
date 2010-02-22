@@ -225,9 +225,11 @@ namespace Unity
       
       this.expose_manager = new ExposeManager (this, quicklauncher);
       this.expose_manager.hovered_opacity = 255;
-      this.expose_manager.unhovered_opacity = 200;
+      this.expose_manager.unhovered_opacity = 230;
       this.expose_manager.right_buffer = 10;
       this.expose_manager.top_buffer = this.expose_manager.bottom_buffer = 20;
+      
+      this.expose_manager.coverflow = false;
 
       this.quicklauncher.manager.active_launcher_changed.connect (on_launcher_changed_event);
 

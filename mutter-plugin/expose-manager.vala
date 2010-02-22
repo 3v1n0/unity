@@ -68,6 +68,7 @@ namespace Unity
     private Quicklauncher.View quicklauncher;
     
     public bool expose_showing { get; private set; }
+    public bool coverflow { get; set; }
     
     public int left_buffer { get; set; }
     public int right_buffer { get; set; }
@@ -143,7 +144,10 @@ namespace Unity
             (w as Clutter.Actor).animate (Clutter.AnimationMode.EASE_IN_SINE, 80, "opacity", 0);
         }
 
-      position_windows_on_grid (exposed_windows);
+      if (coverflow)
+        position_windows_coverflow (exposed_windows, exposed_windows.nth_data (0));
+      else
+        position_windows_on_grid (exposed_windows);
 
       expose_showing = true;
       
@@ -168,6 +172,65 @@ namespace Unity
 
       expose_showing = false;
       owner.remove_fullscreen_request (this);
+    }
+    
+    void position_windows_coverflow (List<Clutter.Actor> windows, Clutter.Actor active)
+    {
+      int middle_size = (int) stage.width / 3;
+      int width = (int) stage.width - left_buffer - right_buffer - middle_size * 2 - 50;
+      int slice_width = width / (int) windows.length ();
+      
+      int current_x = left_buffer + slice_width / 2 + 50;
+      int current_y = (int) stage.height / 2; /* fixme */
+      
+      bool active_seen = false;
+      float y_angle;
+      
+      Clutter.Actor last = null;
+      foreach (Clutter.Actor actor in windows)
+        {
+          actor.set_anchor_point_from_gravity (Clutter.Gravity.CENTER);
+          if (actor == active)
+            {
+              current_x += middle_size;
+              /* Our main window */
+              y_angle = 0f;
+              active_seen = true;
+              
+              if (last == null)
+                actor.raise_top ();
+              else
+                actor.raise (last);
+            }
+          else if (active_seen)
+            {
+              /* right side */
+              y_angle = -50f;
+              actor.lower (last);
+            }
+          else
+            {
+              /* left side */
+              y_angle = 50f;
+              if (last == null)
+                actor.raise_top ();
+              else
+                actor.raise (last);
+            }
+          
+          last = actor;
+          actor.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
+                                                 "x", (float) current_x,
+                                                 "y", (float) current_y,
+                                                 "scale-x", 0.5f,
+                                                 "scale-y", 0.5f,
+                                                 "rotation-angle-y", y_angle);
+          
+          current_x += slice_width;
+          
+          if (actor == active)
+            current_x += middle_size;
+        }
     }
     
     void position_windows_on_grid (List<Clutter.Actor> _windows)
@@ -246,6 +309,7 @@ namespace Unity
       if (!(actor is ExposeClone))
         return;
 
+      actor.set_anchor_point_from_gravity (Clutter.Gravity.NORTH_WEST);
       Clutter.Actor window = (actor as ExposeClone).source;
 
       uint8 opacity = 0;
