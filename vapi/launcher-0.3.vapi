@@ -48,6 +48,8 @@ namespace Launcher {
 		public string unique_string { get; }
 		public virtual signal void closed (Wnck.Window wnckwindow);
 		public virtual signal void focus_changed ();
+		public virtual signal void icon_changed ();
+		public virtual signal void info_changed ();
 		public virtual signal void opened (Wnck.Window wnckwindow);
 		public virtual signal void running_changed ();
 		public virtual signal void urgent_changed ();
@@ -58,10 +60,13 @@ namespace Launcher {
 	}
 	[CCode (cheader_filename = "launcher/launcher.h")]
 	public class Appman : GLib.Object {
+		public int add_file_watch (string path);
 		public unowned Launcher.Application get_application_for_desktop_file (string desktop);
 		public unowned Launcher.Application get_application_for_wnck_window (Wnck.Window wnck_window);
 		public unowned GLib.Sequence get_applications ();
 		public static unowned Launcher.Appman get_default ();
+		public void rm_file_watch (int wd);
+		public virtual signal void watch_file_modified (int p0);
 	}
 	[Compact]
 	[CCode (cheader_filename = "launcher/launcher.h")]
@@ -134,7 +139,7 @@ namespace Launcher {
 		public virtual signal void application_launching (Launcher.Application application);
 		public virtual signal void application_opened (Launcher.Application application);
 	}
-	[CCode (cprefix = "LAUNCHER_FAVORITES_", has_type_id = "0", cheader_filename = "launcher/launcher.h")]
+	[CCode (cprefix = "LAUNCHER_FAVORITES_", has_type_id = false, cheader_filename = "launcher/launcher.h")]
 	public enum FavoritesListValue {
 		STRING,
 		INT,
