@@ -70,6 +70,44 @@ namespace Unity
     }
   }
 
+  public class ExposeClone : Clutter.Group
+  {
+    private Clutter.Clone clone;
+    
+    public Mutter.Window source { get; private set; }
+
+    public uint8 hovered_opacity { get; set; }
+    public uint8 unhovered_opacity { get; set; }
+    
+    public ExposeClone (Mutter.Window source)
+    {
+      this.source = source;
+      clone = new Clutter.Clone (source);
+      
+      add_actor (clone);
+      clone.show ();
+      clone.set_position (0, 0);
+    }
+    
+    construct
+    {
+      this.enter_event.connect (this.on_mouse_enter);
+      this.leave_event.connect (this.on_mouse_leave);
+    }
+    
+    private bool on_mouse_enter (Clutter.Event evnt)
+    {
+      opacity = hovered_opacity;
+      return false;
+    }
+    
+    private bool on_mouse_leave (Clutter.Event evnt)
+    {
+      opacity = unhovered_opacity;
+      return false;
+    }
+  }
+
   public class Plugin : Object, Shell
   {
     /* Signals */
@@ -145,7 +183,7 @@ namespace Unity
         }
       }
 
-    private List<Clutter.Actor> exposed_windows;
+    private List<ExposeClone> exposed_windows;
 
     private bool grab_enabled = false;
 
@@ -473,7 +511,7 @@ namespace Unity
     public void expose_windows (GLib.SList<Wnck.Window> windows,
                                 int left_buffer = 250)
     {
-      exposed_windows = new List<Mutter.Window> ();
+      exposed_windows = new List<ExposeClone> ();
 
       unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
       foreach (Mutter.Window w in mutter_windows)
@@ -491,7 +529,7 @@ namespace Unity
 
           if (keep)
             {
-              Clutter.Actor clone = new Clutter.Clone (w);
+              ExposeClone clone = new ExposeClone (w);
               clone.set_position (w.x, w.y);
               clone.set_size (w.width, w.height);
               clone.opacity = w.opacity;
@@ -501,7 +539,11 @@ namespace Unity
               unowned Clutter.Container container = w.get_parent () as Clutter.Container;
 
               container.add_actor (clone);
-              clone.raise (w);
+              (clone as Clutter.Actor).raise (w);
+              
+              clone.hovered_opacity = 255;
+              clone.unhovered_opacity = 200;
+              clone.opacity = 200;
             }
 
             if (w.get_window_type () == Mutter.MetaCompWindowType.DESKTOP)
@@ -546,10 +588,10 @@ namespace Unity
 
     private void restore_window_position (Clutter.Actor actor)
     {
-      if (!(actor is Clutter.Clone))
+      if (!(actor is ExposeClone))
         return;
 
-      Clutter.Actor window = (actor as Clutter.Clone).source;
+      Clutter.Actor window = (actor as ExposeClone).source;
 
       uint8 opacity = 0;
       if ((window as Mutter.Window).showing_on_its_workspace () && 
@@ -639,7 +681,6 @@ namespace Unity
               window.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
                                                  "x", (float) windowX,
                                                  "y", (float) windowY,
-                                                 "opacity", 255,
                                                  "scale-x", scale,
                                                  "scale-y", scale);
             }
@@ -669,14 +710,14 @@ namespace Unity
 
       if (event.type == Clutter.EventType.BUTTON_RELEASE && event.get_button () == 1)
         {
-          while (actor.get_parent () != null && !(actor is Clutter.Clone))
+          while (actor.get_parent () != null && !(actor is ExposeClone))
             actor = actor.get_parent ();
 
-          Clutter.Clone clone = actor as Clutter.Clone;
+          ExposeClone clone = actor as ExposeClone;
           if (clone != null && clone.source is Mutter.Window)
             {
               clone.raise_top ();
-              unowned Mutter.MetaWindow meta = ((actor as Clutter.Clone).source as Mutter.Window).get_meta_window ();
+              unowned Mutter.MetaWindow meta = (clone.source as Mutter.Window).get_meta_window ();
               Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace (meta), event.get_time ());
               Mutter.MetaWindow.activate (meta, event.get_time ());
             }
