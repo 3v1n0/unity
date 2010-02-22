@@ -131,7 +131,7 @@ namespace Unity.Quicklauncher.Models
           return app.get_windows ();
         }
     }
-    
+
     private Launcher.Application _app;
     public Launcher.Application app {
       get { return _app; }
@@ -142,23 +142,25 @@ namespace Unity.Quicklauncher.Models
             _app.focus_changed.disconnect (this.on_app_focus_changed);
             _app.running_changed.disconnect (this.on_app_running_changed);
             _app.urgent_changed.disconnect (this.on_app_urgent_changed);
+            _app.icon_changed.disconnect (this.on_app_icon_changed);
           }
-        
+
         _app = value;
         _app.opened.connect(this.on_app_opened);
         _app.focus_changed.connect (this.on_app_focus_changed);
         _app.running_changed.connect (this.on_app_running_changed);
         _app.urgent_changed.connect (this.on_app_urgent_changed);
-        
+        _app.icon_changed.connect (this.on_app_icon_changed);
         _icon = make_icon (app.icon_name);
+        this.notify_icon ();
       }
     }
 
     public ApplicationModel (Launcher.Application application)
     {
-      this.desktop_uri = app.get_desktop_file ();
       this.app = application;
-      
+      this.desktop_uri = app.get_desktop_file ();
+
       this._is_sticky = (get_fav_uid () != "");
       this.grab_priority ();
 
@@ -215,6 +217,13 @@ namespace Unity.Quicklauncher.Models
           favorites.set_float (uid, "priority", priority);
         }
       this._priority = priority;
+    }
+
+    private void on_app_icon_changed ()
+    {
+      debug ("building new icon from liblauncher signal!");
+      this._icon = make_icon (app.icon_name);
+      this.notify_icon ();
     }
 
     private void on_app_running_changed ()

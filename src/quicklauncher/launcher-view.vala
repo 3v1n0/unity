@@ -160,8 +160,7 @@ namespace Unity.Quicklauncher
         notify_on_is_focused ();
 
         /* get the graphic from the model */
-        this.notify_on_icon ();
-        this.model.notify["icon"].connect (this.notify_on_icon);
+        this.model.notify_icon.connect (this.notify_on_icon);
         this.set_name (model.uid);
 
         this.request_remove.connect (this.on_request_remove);
