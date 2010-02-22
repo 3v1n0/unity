@@ -160,7 +160,6 @@ namespace Unity.Quicklauncher.Models
     {
       this.app = application;
       this.desktop_uri = app.get_desktop_file ();
-
       this._is_sticky = (get_fav_uid () != "");
       this.grab_priority ();
 
