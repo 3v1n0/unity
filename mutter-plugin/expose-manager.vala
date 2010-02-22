@@ -68,7 +68,11 @@ namespace Unity
     private Quicklauncher.View quicklauncher;
     
     public bool expose_showing { get; private set; }
+    
     public int left_buffer { get; set; }
+    public int right_buffer { get; set; }
+    public int top_buffer { get; set; }
+    public int bottom_buffer { get; set; }
     
     public uint8 hovered_opacity { get; set; }
     public uint8 unhovered_opacity { get; set; }
@@ -139,7 +143,7 @@ namespace Unity
             (w as Clutter.Actor).animate (Clutter.AnimationMode.EASE_IN_SINE, 80, "opacity", 0);
         }
 
-      position_window_on_grid (exposed_windows, left_buffer);
+      position_windows_on_grid (exposed_windows);
 
       expose_showing = true;
       
@@ -166,11 +170,9 @@ namespace Unity
       owner.remove_fullscreen_request (this);
     }
     
-    void position_window_on_grid (List<Clutter.Actor> _windows,
-                                  int left_buffer = 250)
+    void position_windows_on_grid (List<Clutter.Actor> _windows)
     {
       List<Clutter.Actor> windows = _windows.copy ();
-      int vertical_buffer = 40;
       int count = (int) windows.length ();
 
       int cols = (int) Math.ceil (Math.sqrt (count));
@@ -180,15 +182,15 @@ namespace Unity
       while (cols * rows < count)
         rows++;
 
-      int boxWidth = (int) ((stage.width - left_buffer) / cols);
-      int boxHeight = (int) ((stage.height - vertical_buffer * 2) / rows);
+      int boxWidth = (int) ((stage.width - left_buffer - right_buffer) / cols);
+      int boxHeight = (int) ((stage.height - top_buffer - bottom_buffer) / rows);
 
       for (int row = 0; row < rows; row++)
         {
           if (row == rows - 1)
             {
               /* Last row, time to perform centering as needed */
-              boxWidth = (int) ((stage.width - left_buffer) / windows.length ());
+              boxWidth = (int) ((stage.width - left_buffer - right_buffer) / windows.length ());
             }
             
           for (int col = 0; col < cols; col++)
@@ -197,7 +199,7 @@ namespace Unity
                 return;
 
               int centerX = (boxWidth / 2 + boxWidth * col + left_buffer);
-              int centerY = (boxHeight / 2 + boxHeight * row + vertical_buffer);
+              int centerY = (boxHeight / 2 + boxHeight * row + top_buffer);
 
               Clutter.Actor window = null;
               // greedy layout
