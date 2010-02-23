@@ -81,7 +81,7 @@ namespace Unity.Quicklauncher
     public bool is_hovering {
       get { return this._is_hovering; }
       set {
-        if (value && !this.hovering)
+        if (value && !this.is_hovering)
           {
             Source.remove (this.hover_timeout);
             this.hover_timeout = Timeout.add (LONG_DELAY, this.on_long_hover);

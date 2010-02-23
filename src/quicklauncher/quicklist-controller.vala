@@ -35,6 +35,9 @@ namespace Unity.Quicklauncher
     private Gee.LinkedList<ShortcutItem> prefix_actions;
     private Gee.LinkedList<ShortcutItem> append_actions;
 
+		private bool pointer_is_in_menu = false;
+		private bool pointer_is_in_actor = false;
+
     public QuicklistController (string label, Ctk.Actor attached_to,
                                Clutter.Stage stage)
     {
