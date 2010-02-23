@@ -146,6 +146,7 @@ namespace Unity.Quicklauncher.Models
             _app.focus_changed.disconnect (this.on_app_focus_changed);
             _app.running_changed.disconnect (this.on_app_running_changed);
             _app.urgent_changed.disconnect (this.on_app_urgent_changed);
+            _app.icon_changed.disconnect (this.on_app_icon_changed);
           }
 
         _app = value;
@@ -154,8 +155,10 @@ namespace Unity.Quicklauncher.Models
         _app.focus_changed.connect (this.on_app_focus_changed);
         _app.running_changed.connect (this.on_app_running_changed);
         _app.urgent_changed.connect (this.on_app_urgent_changed);
+        _app.icon_changed.connect (this.on_app_icon_changed);
 
         _icon = make_icon (app.icon_name);
+        this.notify_icon ();
       }
     }
 
@@ -220,6 +223,12 @@ namespace Unity.Quicklauncher.Models
           favorites.set_float (uid, "priority", priority);
         }
       this._priority = priority;
+    }
+
+    private void on_app_icon_changed ()
+    {
+      this._icon = make_icon (app.icon_name);
+      this.notify_icon ();
     }
 
     private void on_app_running_changed ()
