@@ -6,7 +6,7 @@ namespace Launcher {
 	public class Application : GLib.Object {
 		[CCode (has_construct_function = false)]
 		public Application ();
-		public void close ();
+		public void close (uint32 timestamp);
 		public void ensure_state ();
 		[CCode (has_construct_function = false)]
 		public Application.from_desktop_file (string desktop_file);
@@ -28,9 +28,9 @@ namespace Launcher {
 		public bool launch () throws GLib.Error;
 		public void minimize ();
 		public bool owns_window (Wnck.Window window);
-		public void restore ();
+		public void restore (uint32 timestamp);
 		public void set_desktop_file (string desktop_file);
-		public void show ();
+		public void show (uint32 timestamp);
 		public void update_windows ();
 		public GLib.SList categories { get; }
 		public string comment { get; }
