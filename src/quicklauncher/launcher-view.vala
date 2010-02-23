@@ -49,6 +49,7 @@ namespace Unity.Quicklauncher
     private ThemeImage focused_indicator;
     private ThemeImage running_indicator;
     private Gdk.Pixbuf honeycomb_mask;
+    private Gdk.Rectangle last_strut;
 
     private Gee.ArrayList<ShortcutItem> offline_shortcuts;
     private Gee.ArrayList<ShortcutItem> shortcut_actions;
@@ -155,6 +156,11 @@ namespace Unity.Quicklauncher
         this.model.activated.connect (this.on_activated);
         this.model.urgent_changed.connect (this.on_urgent_changed);
         this.name = "Unity.Quicklauncher.LauncherView-" + this.model.name;
+        
+        if (model is ApplicationModel)
+          {
+            (model as ApplicationModel).windows_changed.connect (() => update_window_struts (true));
+          }
 
         notify_on_is_running ();
         notify_on_is_focused ();
@@ -184,6 +190,7 @@ namespace Unity.Quicklauncher
         this.enter_event.connect (this.on_mouse_enter);
         this.leave_event.connect (this.on_mouse_leave);
         this.motion_event.connect (this.on_motion_event);
+        this.allocation_changed.connect (() => update_window_struts (false));
         this.notify["reactive"].connect (this.notify_on_set_reactive);
 
         this.clicked.connect (this.on_clicked);
@@ -284,6 +291,20 @@ namespace Unity.Quicklauncher
       this.running_indicator.map ();
       this.focused_indicator.map ();
       this.icon.map ();
+    }
+    
+    public void update_window_struts (bool ignore_buffer)
+    {
+      Gdk.Rectangle strut = {(int) x, (int) y, (int) width, (int) height};
+      if (model is ApplicationModel && (strut != last_strut || ignore_buffer))
+        {
+          ApplicationModel app_model = model as ApplicationModel;
+          foreach (Wnck.Window window in app_model.windows)
+            {
+              window.set_icon_geometry (strut.x, strut.y, strut.width, strut.height);
+            }
+          last_strut = strut;
+        }
     }
 
     private void load_textures ()
@@ -515,6 +536,7 @@ namespace Unity.Quicklauncher
 
       this.is_starting = false;
     }
+    
     private bool on_mouse_enter (Clutter.Event event)
     {
       var drag_controller = Drag.Controller.get_default ();
@@ -522,7 +544,7 @@ namespace Unity.Quicklauncher
 
 
       this.is_hovering = true;
-
+      
       if (!(quicklist_controller is QuicklistController))
         {
           this.quicklist_controller = new QuicklistController (this.model.name,
