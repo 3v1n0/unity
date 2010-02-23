@@ -172,3 +172,6 @@ po/quot.sed
 po/remove-potcdate.sin
 po/stamp-it
 libunity/theme.c
+libunity/webapp-*.c
+mutter-plugin/expose-manager.c
+mutter-plugin/maximus.c

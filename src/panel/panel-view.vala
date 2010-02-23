@@ -92,7 +92,7 @@ namespace Unity.Panel
       var client = GConf.Client.get_default ();
       try
         {
-          template = client.get_string ("/apps/unity/panel/search_template");
+          template = client.get_string ("/desktop/unity/panel/search_template");
 
           if (template == "" || template == null)
             template = SEARCH_TEMPLATE;

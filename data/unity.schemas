@@ -1,0 +1,34 @@
+<gconfschemafile>
+  <schemalist>
+
+<!-- PANEL KEYS -->
+
+    <schema>
+      <key>/schemas/desktop/unity/panel/search_template</key>
+      <applyto>/desktop/unity/panel/search_template</applyto>
+      <owner>unity</owner>
+      <type>string</type>
+      <default>"xdg-open http://uk.search.yahoo.com/search?p=%s&amp;fr=ubuntu&amp;ei=UTF-8"</default>
+      <locale name="C">
+        <short>The search template used for panel search</short>
+        <long>The search template used for panel search. '%s' is substituted with the search string.</long>
+      </locale>
+    </schema>
+
+<!-- LAUNCHER KEYS -->
+
+    <schema>
+      <key>/schemas/desktop/unity/launcher/webapp_use_chromium</key>
+      <applyto>/desktop/unity/launcher/webapp_use_chromium</applyto>
+      <owner>unity</owner>
+      <type>bool</type>
+      <default>1</default>
+      <locale name="C">
+        <short>Whether the launcher should create Chromium-based webapps</short>
+        <long>Whether the launcher should create Chromium-based webapps. If this is False, Prism-based webapps will be created.</long>
+      </locale>
+    </schema>
+
+  </schemalist>
+</gconfschemafile>
+

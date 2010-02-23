@@ -57,6 +57,10 @@ else
   PREFIX="${prefix}"
 fi
 
+dnl GConf schema installation
+AC_PATH_PROG(GCONFTOOL, gconftool-2)
+AM_GCONF_SOURCE_2
+
 AC_DEFINE_UNQUOTED(LOCALE_DIR, "${PREFIX}/${DATADIRNAME}/locale",[Locale directory])
 AC_DEFINE_UNQUOTED(DATADIR, "${PREFIX}/${DATADIRNAME}",[Data directory])
 AC_DEFINE_UNQUOTED(PREFIXDIR, "${PREFIX}",[Prefix directory])
