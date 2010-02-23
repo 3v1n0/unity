@@ -620,7 +620,7 @@ namespace Unity.Quicklauncher
       // look as we'll have a cleanly updating blurred bg in case there's a
       // video being displayed in a video-player, or a GL-app renders some
       // animation or mutter does some animation stuff with the windows
-      //base.refresh_background_texture ();
+      base.refresh_background_texture ();
 
       // important run-time optimization!
       if (!this.ql_background.is_flattened ())
@@ -659,7 +659,7 @@ namespace Unity.Quicklauncher
       // or a GL-app displaying an animation or any other client app rendering
       // a dynamic UI with screen-changes (also applies to any mutter-based
       // animations, e.g. its expose)
-      base.refresh_background_texture ();
+      //base.refresh_background_texture ();
 
       Ctk.Actor actor = this.get_attached_actor ();
       actor.get_position (out ax, out ay);
