@@ -150,7 +150,6 @@ namespace Unity.Quicklauncher
       foreach (ShortcutItem shortcut in this.prefix_actions)
         {
           var label = shortcut.get_name ();
-          //Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (label);
           Unity.Quicklauncher.QuicklistMenuItem menuitem = new Unity.Quicklauncher.QuicklistMenuItem (label);
           this.menu.prepend (menuitem, false);
           menuitem.activated.connect (shortcut.activated);
@@ -160,7 +159,6 @@ namespace Unity.Quicklauncher
       foreach (ShortcutItem shortcut in this.append_actions)
         {
           var label = shortcut.get_name ();
-          //Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (label);
           Unity.Quicklauncher.QuicklistMenuItem menuitem = new Unity.Quicklauncher.QuicklistMenuItem (label);
           this.menu.append (menuitem, false);
           menuitem.activated.connect (shortcut.activated);

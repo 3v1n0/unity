@@ -77,7 +77,24 @@ namespace Unity.Quicklauncher
       }
     }
 
-    public bool is_hovering = false;
+    private bool _is_hovering = false;
+    public bool is_hovering {
+      get { return this._is_hovering; }
+      set {
+        if (value && !this.hovering)
+          {
+            Source.remove (this.hover_timeout);
+            this.hover_timeout = Timeout.add (LONG_DELAY, this.on_long_hover);
+          }
+        else if (!value && this.hover_timeout != 0)
+          {
+            Source.remove (this.hover_timeout);
+            this.hover_timeout = 0;
+          }
+      }
+    }
+
+
     bool wiggling = false;
     bool cease_wiggle;
 
@@ -94,6 +111,8 @@ namespace Unity.Quicklauncher
     public signal void clicked ();
     public signal void menu_opened (LauncherView sender);
     public signal void menu_closed (LauncherView sender);
+
+    private uint hover_timeout;
 
     /* animations */
 
@@ -156,7 +175,7 @@ namespace Unity.Quicklauncher
         this.model.activated.connect (this.on_activated);
         this.model.urgent_changed.connect (this.on_urgent_changed);
         this.name = "Unity.Quicklauncher.LauncherView-" + this.model.name;
-        
+
         if (model is ApplicationModel)
           {
             (model as ApplicationModel).windows_changed.connect (() => update_window_struts (true));
@@ -183,6 +202,8 @@ namespace Unity.Quicklauncher
     construct
       {
         load_textures ();
+
+        this.hover_timeout = 0;
 
         button_press_event.connect (this.on_pressed);
         button_release_event.connect (this.on_released);
@@ -292,7 +313,7 @@ namespace Unity.Quicklauncher
       this.focused_indicator.map ();
       this.icon.map ();
     }
-    
+
     public void update_window_struts (bool ignore_buffer)
     {
       Gdk.Rectangle strut = {(int) x, (int) y, (int) width, (int) height};
@@ -536,7 +557,7 @@ namespace Unity.Quicklauncher
 
       this.is_starting = false;
     }
-    
+
     private bool on_mouse_enter (Clutter.Event event)
     {
       var drag_controller = Drag.Controller.get_default ();
@@ -544,7 +565,6 @@ namespace Unity.Quicklauncher
 
 
       this.is_hovering = true;
-      
       if (!(quicklist_controller is QuicklistController))
         {
           this.quicklist_controller = new QuicklistController (this.model.name,
@@ -593,6 +613,14 @@ namespace Unity.Quicklauncher
             }
         }
         return false;
+    }
+
+    private bool on_long_hover ()
+    {
+      this.quicklist_controller.show_menu ();
+      this.menu_opened (this);
+      this.hover_timeout = 0;
+      return false;
     }
 
     private bool on_pressed(Clutter.Event src)
