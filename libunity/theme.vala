@@ -21,14 +21,14 @@ namespace Unity
 {
   public class ThemeImage : Clutter.Texture
   {
+    private static Gtk.IconTheme? theme = null;
+
     /*
      * ThemeImage will load a icon name from one of the Unity theme directories
      * at the size of the file, returning a "missing" icon if an icon could not
      * be loaded.
      */
     public string icon_name { get; construct set; }
-
-    private Gtk.IconTheme theme;
 
     public Gdk.Pixbuf? icon;
 
@@ -39,11 +39,14 @@ namespace Unity
 
     construct
     {
-      this.theme = new Gtk.IconTheme ();
-      this.theme.set_custom_theme ("unity-icon-theme");
+      if (this.theme == null)
+        {
+          this.theme = new Gtk.IconTheme ();
+          this.theme.set_custom_theme ("unity-icon-theme");
+        }
 
-      if (!this.try_load_icon_from_theme ())
-        if (!this.try_load_icon_from_datadir ())
+      if (!this.try_load_icon_from_datadir ())
+        if (!this.try_load_icon_from_theme ())
           this.load_missing_icon ();
     }
 
