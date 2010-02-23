@@ -666,7 +666,7 @@ namespace Unity.Quicklauncher
       _full_mask (full_cr, w, h, new_y);
       _fill_mask (fill_cr, w, h, new_y);
       _main_bg (main_cr, w, h, new_y);
-      main_surf.write_to_png ("/tmp/main-surf.png");
+      //main_surf.write_to_png ("/tmp/main-surf.png");
 
       main_layer.set_mask_from_surface (full_surf);
       main_layer.set_image_from_surface (main_surf);
