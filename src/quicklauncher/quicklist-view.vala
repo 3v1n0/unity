@@ -459,24 +459,17 @@ namespace Unity.Quicklauncher
     }
 
     private void
-    _outline_mask (Cairo.Context cr,
-                   int           w,
-                   int           h,
-                   float         anchor_y)
+    _full_mask (Cairo.Context cr,
+                int           w,
+                int           h,
+                float         anchor_y)
     {
-      // clear context
+      // fill context
       cr.set_operator (Cairo.Operator.CLEAR);
       cr.paint ();
-
-      // setup correct line-drawing
       cr.set_operator (Cairo.Operator.SOURCE);
-      cr.scale (1.0f, 1.0f);
-      cr.set_line_width (Ctk.em_to_pixel (LINE_WIDTH));
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
-
-      // draw actual outline
-      _draw_mask (cr, w, h, anchor_y);
-      cr.stroke ();
+      cr.paint ();
     }
 
     private void
@@ -500,70 +493,15 @@ namespace Unity.Quicklauncher
     }
 
     private void
-    _negative_mask (Cairo.Context cr,
-                    int           w,
-                    int           h,
-                    float         anchor_y)
-    {
-      // clear context
-      cr.set_operator (Cairo.Operator.SOURCE);
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
-      cr.paint ();
-
-      // setup correct mask-drawing
-      cr.set_operator (Cairo.Operator.CLEAR);
-      cr.scale (1.0f, 1.0f);
-
-      // draw actual outline
-      _draw_mask (cr, w, h, anchor_y);
-      cr.fill ();
-    }
-
-    private void
-    _dotted_bg (Cairo.Context cr,
-                int           w,
-                int           h,
-                float         anchor_y)
+    _main_bg (Cairo.Context cr,
+              int           w,
+              int           h,
+              float         anchor_y)
     {
       Cairo.Surface dots = new Cairo.ImageSurface (Cairo.Format.ARGB32, 4, 4);
       Cairo.Context cr_dots = new Cairo.Context (dots);
-
-      // create dots in surface
-      cr_dots.set_operator (Cairo.Operator.CLEAR);
-      cr_dots.paint ();
-      cr_dots.scale (1.0f, 1.0f);
-      cr_dots.set_operator (Cairo.Operator.SOURCE);
-      cr_dots.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
-      cr_dots.rectangle (0.0f, 0.0f, 1.0f, 1.0f);
-      cr_dots.fill ();
-      cr_dots.rectangle (2.0f, 2.0f, 1.0f, 1.0f);
-      cr_dots.fill ();
-
-      // clear context
-      cr.set_operator (Cairo.Operator.CLEAR);
-      cr.paint ();
-
-      // create pattern from dot-surface
-      Cairo.Pattern pattern = new Cairo.Pattern.for_surface (dots);
-
-      // setup correct filled-drawing
-      cr.set_operator (Cairo.Operator.SOURCE);
-      cr.scale (1.0f, 1.0f);
-      cr.set_source (pattern);
-      pattern.set_extend (Cairo.Extend.REPEAT);
-
-      // fill masked area with the dotted pattern
-      _draw_mask (cr, w, h, anchor_y);
-      cr.fill ();
-    }
-
-    private void
-    _highlight_bg (Cairo.Context cr,
-                   int           w,
-                   int           h,
-                   float         anchor_y)
-    {
-      Cairo.Pattern pattern;
+      Cairo.Pattern dot_pattern;
+      Cairo.Pattern hl_pattern;
 
       // clear context
       cr.set_operator (Cairo.Operator.CLEAR);
@@ -572,43 +510,62 @@ namespace Unity.Quicklauncher
       // setup correct filled-drawing
       cr.set_operator (Cairo.Operator.OVER);
       cr.scale (1.0f, 1.0f);
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.48f);
 
-      // setup radial gradient, acting as the hightlight, width defines diameter
-      pattern = new Cairo.Pattern.radial ((double) w / 2.0f,
-                                          Ctk.em_to_pixel (BORDER),
-                                          0.0f,
-                                          (double) w / 2.0f,
-                                          Ctk.em_to_pixel (BORDER),
-                                          (double) w / 2.0f);
-      pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
-      pattern.add_color_stop_rgba (1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
-      cr.set_source (pattern);
-
-      // fill masked area with radial gradient "highlight"
-      _draw_mask (cr, w, h, anchor_y);
-      cr.fill ();
-    }
-
-    private void
-    _shadow_bg (Cairo.Context cr,
-                int           w,
-                int           h,
-                float         anchor_y)
-    {
-      // clear context
-      cr.set_operator (Cairo.Operator.CLEAR);
-      cr.paint ();
-
-      // setup correct filled-drawing
-      cr.set_operator (Cairo.Operator.SOURCE);
-      cr.scale (1.0f, 1.0f);
-      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 1.0f);
-
-      // draw normal mask and blur it
+      // draw drop-shadow
       _draw_mask (cr, w, h, anchor_y);
       cr.fill ();
       Ctk.surface_blur (cr.get_target (), (int) Ctk.em_to_pixel (SHADOW_SIZE/2));
+
+      // clear inner part
+      cr.set_operator (Cairo.Operator.CLEAR);
+      _draw_mask (cr, w, h, anchor_y);
+      cr.fill ();
+
+      // draw fill
+      cr.set_operator (Cairo.Operator.OVER);
+      cr.scale (1.0f, 1.0f);
+      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.3f);
+      _draw_mask (cr, w, h, anchor_y);
+      cr.fill ();
+
+      // draw dotted pattern
+      cr_dots.set_operator (Cairo.Operator.CLEAR);
+      cr_dots.paint ();
+      cr_dots.scale (1.0f, 1.0f);
+      cr_dots.set_operator (Cairo.Operator.OVER);
+      cr_dots.set_source_rgba (1.0f, 1.0f, 1.0f, 0.15f);
+      cr_dots.rectangle (0.0f, 0.0f, 1.0f, 1.0f);
+      cr_dots.fill ();
+      cr_dots.rectangle (2.0f, 2.0f, 1.0f, 1.0f);
+      cr_dots.fill ();
+      dot_pattern = new Cairo.Pattern.for_surface (dots);
+      cr.set_operator (Cairo.Operator.OVER);
+      cr.set_source (dot_pattern);
+      dot_pattern.set_extend (Cairo.Extend.REPEAT);
+      _draw_mask (cr, w, h, anchor_y);
+      cr.fill ();
+
+      // draw highlight
+      cr.set_operator (Cairo.Operator.OVER);
+      hl_pattern = new Cairo.Pattern.radial ((double) w / 2.0f,
+                                             Ctk.em_to_pixel (BORDER),
+                                             0.0f,
+                                             (double) w / 2.0f,
+                                             Ctk.em_to_pixel (BORDER),
+                                             (double) w / 2.0f);
+      hl_pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+      hl_pattern.add_color_stop_rgba (1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
+      cr.set_source (hl_pattern);
+      _draw_mask (cr, w, h, anchor_y);
+      cr.fill ();
+
+      // draw outline
+      cr.set_operator (Cairo.Operator.OVER);
+      cr.set_line_width (Ctk.em_to_pixel (LINE_WIDTH));
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+      _draw_mask (cr, w, h, anchor_y);
+      cr.stroke ();
     }
 
     public override void
@@ -678,140 +635,50 @@ namespace Unity.Quicklauncher
       old_width  = w;
       old_height = h;
 
-      Clutter.Color outline_color = Clutter.Color () {
-        red   = 255,
-        green = 255,
-        blue  = 255,
-        alpha = (uint8) (255.0f * 1.0f)
-      };
-      Clutter.Color fill_color = Clutter.Color () {
-        red   = 0,
-        green = 0,
-        blue  = 0,
-        alpha = (uint8) (255.0f * 0.3f)
-      };
-      Clutter.Color shadow_color = Clutter.Color () {
-        red   = 0,
-        green = 0,
-        blue  = 0,
-        alpha = (uint8) (255.0f * 0.48f)
-      };
-      Clutter.Color highlight_color = Clutter.Color () {
-        red   = 255,
-        green = 255,
-        blue  = 255,
-        alpha = (uint8) (255.0f * 0.5f)
-      };
-      Clutter.Color dotted_color = Clutter.Color () {
-        red   = 255,
-        green = 255,
-        blue  = 255,
-        alpha = (uint8) (255.0f * 0.3f)
-      };
-
-      Clutter.Color blurred_color = Clutter.Color () {
-        red   = 255,
-        green = 255,
-        blue  = 255,
-        alpha = (uint8) (255.0f * 1.0f)
-      };
-
       // before creating a new CtkLayerActor make sure we don't leak any memory
       if (this.ql_background is Ctk.LayerActor)
          this.ql_background.destroy ();
       this.ql_background = new Ctk.LayerActor (w, h);
 
-      Ctk.Layer outline_layer = new Ctk.Layer (w,
-                                               h,
-                                               Ctk.LayerRepeatMode.NONE,
-                                               Ctk.LayerRepeatMode.NONE);
-      Ctk.Layer fill_layer = new Ctk.Layer (w,
+      Ctk.Layer main_layer = new Ctk.Layer (w,
                                             h,
                                             Ctk.LayerRepeatMode.NONE,
                                             Ctk.LayerRepeatMode.NONE);
-      Ctk.Layer highlight_layer = new Ctk.Layer (w,
-                                                 h,
-                                                 Ctk.LayerRepeatMode.NONE,
-                                                 Ctk.LayerRepeatMode.NONE);
-      Ctk.Layer dotted_layer = new Ctk.Layer (w,
-                                              h,
-                                              Ctk.LayerRepeatMode.NONE,
-                                              Ctk.LayerRepeatMode.NONE);
-
-      Ctk.Layer shadow_layer = new Ctk.Layer (w,
-                                              h,
-                                              Ctk.LayerRepeatMode.NONE,
-                                              Ctk.LayerRepeatMode.NONE);
-
       Ctk.Layer blurred_layer = new Ctk.Layer (w,
                                               h,
                                               Ctk.LayerRepeatMode.NONE,
                                               Ctk.LayerRepeatMode.NONE);
 
-      Cairo.Surface outline_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                           w,
-                                                           h);
+      Cairo.Surface full_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
+                                                        w,
+                                                        h);
       Cairo.Surface fill_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
                                                         w,
                                                         h);
-      Cairo.Surface negative_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                            w,
-                                                            h);
-      Cairo.Surface highlight_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                            w,
-                                                            h);
-      Cairo.Surface dotted_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                          w,
-                                                          h);
-      Cairo.Surface shadow_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                          w,
-                                                          h);
+      Cairo.Surface main_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
+                                                        w,
+                                                        h);
 
-      Cairo.Context outline_cr = new Cairo.Context (outline_surf);
+      Cairo.Context full_cr = new Cairo.Context (full_surf);
       Cairo.Context fill_cr = new Cairo.Context (fill_surf);
-      Cairo.Context negative_cr = new Cairo.Context (negative_surf);
-      Cairo.Context highlight_cr = new Cairo.Context (highlight_surf);
-      Cairo.Context dotted_cr = new Cairo.Context (dotted_surf);
-      Cairo.Context shadow_cr = new Cairo.Context (shadow_surf);
+      Cairo.Context main_cr = new Cairo.Context (main_surf);
 
-      _outline_mask (outline_cr, w, h, new_y);
+      _full_mask (full_cr, w, h, new_y);
       _fill_mask (fill_cr, w, h, new_y);
-      _negative_mask (negative_cr, w, h, new_y);
-      _dotted_bg (dotted_cr, w, h, new_y);
-      _highlight_bg (highlight_cr, w, h, new_y);
-      _shadow_bg (shadow_cr, w, h, new_y);
+      _main_bg (main_cr, w, h, new_y);
+      main_surf.write_to_png ("/tmp/main-surf.png");
 
-      shadow_layer.set_mask_from_surface (negative_surf);
-      shadow_layer.set_image_from_surface (shadow_surf);
-      shadow_layer.set_color (shadow_color);
+      main_layer.set_mask_from_surface (full_surf);
+      main_layer.set_image_from_surface (main_surf);
+      main_layer.set_opacity (255);      
 
       blurred_layer.set_mask_from_surface (fill_surf);
-      // this CtkLayer.set_image_from_id() still needs to be written
-      // I can do that tomorrow... or you can do it if you want
       blurred_layer.set_image_from_id (blurred_id);
-      blurred_layer.set_color (blurred_color);
-
-      fill_layer.set_mask_from_surface (fill_surf);
-      fill_layer.set_color (fill_color);
-
-      dotted_layer.set_mask_from_surface (fill_surf);
-      dotted_layer.set_image_from_surface (dotted_surf);
-      dotted_layer.set_color (dotted_color);
-
-      highlight_layer.set_mask_from_surface (fill_surf);
-      highlight_layer.set_image_from_surface (highlight_surf);
-      highlight_layer.set_color (highlight_color);
-
-      outline_layer.set_mask_from_surface (outline_surf);
-      outline_layer.set_color (outline_color);
+      blurred_layer.set_opacity (255);      
 
       // order is important here... don't mess around!
-      this.ql_background.add_layer (shadow_layer);
       this.ql_background.add_layer (blurred_layer);
-      this.ql_background.add_layer (fill_layer);
-      this.ql_background.add_layer (dotted_layer);
-      this.ql_background.add_layer (highlight_layer);
-      this.ql_background.add_layer (outline_layer);
+      this.ql_background.add_layer (main_layer);
 
       this.set_background (this.ql_background);
       this.ql_background.set_opacity (255);
