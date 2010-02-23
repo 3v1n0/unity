@@ -161,6 +161,7 @@ namespace Unity.Quicklauncher
 
         /* get the graphic from the model */
         this.model.notify_icon.connect (this.notify_on_icon);
+        this.notify_on_icon ();
         this.set_name (model.uid);
 
         this.request_remove.connect (this.on_request_remove);

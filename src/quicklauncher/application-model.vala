@@ -220,7 +220,6 @@ namespace Unity.Quicklauncher.Models
 
     private void on_app_icon_changed ()
     {
-      debug ("building new icon from liblauncher signal!");
       this._icon = make_icon (app.icon_name);
       this.notify_icon ();
     }
