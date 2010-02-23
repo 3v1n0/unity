@@ -275,7 +275,6 @@ namespace Ctk {
 		public Menu ();
 		public void append (Clutter.Actor item, bool is_special);
 		public void attach_to_actor (Ctk.Actor actor);
-		public void fadeout_and_destroy ();
 		public unowned Ctk.Actor get_attached_actor ();
 		public unowned Clutter.Actor get_background ();
 		public uint get_framebuffer_background ();
