@@ -141,15 +141,8 @@ namespace Unity
             }
 
             if (w.get_window_type () == Mutter.MetaCompWindowType.DESKTOP)
-              {
-                exposed_windows.reverse ();
-                foreach (Clutter.Actor actor in exposed_windows)
-                  {
-                    actor.raise (w);
-                  }
-                exposed_windows.reverse ();
-                continue;
-              }
+              continue;
+
             (w as Clutter.Actor).reactive = false;
             (w as Clutter.Actor).animate (Clutter.AnimationMode.EASE_IN_SINE, 80, "opacity", 0);
         }
