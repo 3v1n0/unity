@@ -83,7 +83,8 @@ namespace Unity.Quicklauncher
       set {
         if (value && !this.is_hovering)
           {
-            Source.remove (this.hover_timeout);
+            if (this.hover_timeout != 0)
+              Source.remove (this.hover_timeout);
             this.hover_timeout = Timeout.add (LONG_DELAY, this.on_long_hover);
           }
         else if (!value && this.hover_timeout != 0)
@@ -91,6 +92,7 @@ namespace Unity.Quicklauncher
             Source.remove (this.hover_timeout);
             this.hover_timeout = 0;
           }
+        this._is_hovering = value;
       }
     }
 
@@ -113,6 +115,7 @@ namespace Unity.Quicklauncher
     public signal void menu_closed (LauncherView sender);
 
     private uint hover_timeout;
+    private bool menu_is_label = true;
 
     /* animations */
 
@@ -558,14 +561,19 @@ namespace Unity.Quicklauncher
       this.is_starting = false;
     }
 
-    private bool on_mouse_enter (Clutter.Event event)
+    private void ensure_menu_state ()
     {
-      var drag_controller = Drag.Controller.get_default ();
-      if (drag_controller.is_dragging) return false;
-
-
-      this.is_hovering = true;
-      if (!(quicklist_controller is QuicklistController))
+      //makes sure the menu is open or whatever
+      if (Unity.Quicklauncher.active_menu != null)
+        {
+          if (Unity.Quicklauncher.active_menu != this.quicklist_controller)
+            {
+              // we have a menu already open, put a watch on its close method
+              Unity.Quicklauncher.active_menu.menu.destroy.connect (this.ensure_menu_state);
+              return;
+            }
+        }
+      if (!(this.quicklist_controller is QuicklistController))
         {
           this.quicklist_controller = new QuicklistController (this.model.name,
                                                                this,
@@ -574,7 +582,38 @@ namespace Unity.Quicklauncher
           build_quicklist ();
         }
 
-      this.quicklist_controller.show_label ();
+      if (this.is_hovering)
+        {
+          if (this.menu_is_label)
+            {
+              if (!quicklist_controller.is_label)
+                {
+                  quicklist_controller.close_menu ();
+                  menu_closed (this);
+                }
+              this.quicklist_controller.show_label ();
+            }
+          else
+            {
+              this.quicklist_controller.show_menu ();
+              this.menu_opened (this);
+            }
+        }
+      else
+        {
+          this.quicklist_controller.hide_label ();
+        }
+
+    }
+
+    private bool on_mouse_enter (Clutter.Event event)
+    {
+      var drag_controller = Drag.Controller.get_default ();
+      if (drag_controller.is_dragging) return false;
+
+      this.is_hovering = true;
+      this.menu_is_label = true;
+      this.ensure_menu_state ();
 
       return false;
     }
@@ -582,15 +621,13 @@ namespace Unity.Quicklauncher
     private bool on_launch_timeout ()
     {
       this.is_starting = false;
-
       return false;
     }
 
     private bool on_mouse_leave(Clutter.Event src)
     {
       this.is_hovering = false;
-      if (this.quicklist_controller is QuicklistController)
-        this.quicklist_controller.hide_label ();
+      this.ensure_menu_state ();
       return false;
     }
 
@@ -617,9 +654,13 @@ namespace Unity.Quicklauncher
 
     private bool on_long_hover ()
     {
-      this.quicklist_controller.show_menu ();
-      this.menu_opened (this);
-      this.hover_timeout = 0;
+      if (this.quicklist_controller.is_label)
+        {
+          this.quicklist_controller.hide_on_leave = true;
+          this.hover_timeout = 0;
+          this.menu_is_label = false;
+          this.ensure_menu_state ();
+        }
       return false;
     }
 
@@ -632,18 +673,14 @@ namespace Unity.Quicklauncher
         last_pressed_time = bevent.time;
         this.click_start_pos = bevent.x;
         this.button_down = true;
-
-          if (!quicklist_controller.is_label)
-            {
-              quicklist_controller.close_menu ();
-              quicklist_controller.show_label ();
-              menu_closed (this);
-            }
+        this.menu_is_label = true;
+        this.ensure_menu_state ();
         }
       else
         {
-          this.quicklist_controller.show_menu ();
-          menu_opened (this);
+          this.menu_is_label = false;
+          this.quicklist_controller.hide_on_leave = false;
+          this.ensure_menu_state ();
         }
       return false;
     }

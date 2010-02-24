@@ -27,7 +27,6 @@ namespace Unity.Quicklauncher
   {
     public string label;
     public Ctk.Menu? menu;
-    private Ctk.Menu? old_menu;
     private Clutter.Stage stage;
     private Ctk.Actor attached_widget;
 
@@ -35,8 +34,17 @@ namespace Unity.Quicklauncher
     private Gee.LinkedList<ShortcutItem> prefix_actions;
     private Gee.LinkedList<ShortcutItem> append_actions;
 
-		private bool pointer_is_in_menu = false;
-		private bool pointer_is_in_actor = false;
+    private bool _hide_on_leave = false;
+    public bool hide_on_leave {
+      get { return _hide_on_leave; }
+      set {
+        _hide_on_leave = value;
+        if (this.menu is Ctk.Menu)
+          {
+            this.menu.close_on_leave = value;
+          }
+      }
+    }
 
     public QuicklistController (string label, Ctk.Actor attached_to,
                                Clutter.Stage stage)
@@ -191,8 +199,6 @@ namespace Unity.Quicklauncher
       if (this.menu == null)
         return;
 
-      this.menu.destroy ();
-      this.old_menu = this.menu;
       this.menu = null;
       this.is_label = false;
 
