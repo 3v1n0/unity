@@ -340,6 +340,9 @@ namespace Unity.Quicklauncher
           LOGGER_END_PROCESS (process_name);
         }
 
+      // done building favorites, turn on window checking
+      Launcher.Appman.get_default ().enable_window_checking = true;
+
       END_FUNCTION ();
     }
 
