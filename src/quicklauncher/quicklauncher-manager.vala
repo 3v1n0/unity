@@ -18,6 +18,8 @@
  *
  */
 using Unity.Quicklauncher.Models;
+using Unity.Webapp;
+
 namespace Unity.Quicklauncher
 {
 
