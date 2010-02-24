@@ -58,7 +58,7 @@ namespace Unity.Quicklauncher
       this.menu = null;
       if (menu is Ctk.Menu)
         {
-          menu.fadeout_and_destroy ();
+          menu.destroy ();
         }
     }
 
@@ -76,7 +76,7 @@ namespace Unity.Quicklauncher
       this.menu = null;
       if (menu is Ctk.Menu)
         {
-          menu.fadeout_and_destroy ();
+          menu.destroy ();
         }
     }
 
@@ -136,7 +136,7 @@ namespace Unity.Quicklauncher
       if (Unity.Quicklauncher.active_menu != null)
         {
           // we already have an active menu, so destroy that and start this one
-          Unity.Quicklauncher.active_menu.menu.fadeout_and_destroy ();
+          Unity.Quicklauncher.active_menu.menu.destroy ();
           Unity.Quicklauncher.active_menu = null;
         }
 
@@ -190,7 +190,7 @@ namespace Unity.Quicklauncher
       if (this.menu == null)
         return;
 
-      this.menu.fadeout_and_destroy ();
+      this.menu.destroy ();
       this.old_menu = this.menu;
       this.menu = null;
       this.is_label = false;

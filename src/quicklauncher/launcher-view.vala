@@ -166,8 +166,8 @@ namespace Unity.Quicklauncher
         notify_on_is_focused ();
 
         /* get the graphic from the model */
+        this.model.notify_icon.connect (this.notify_on_icon);
         this.notify_on_icon ();
-        this.model.notify["icon"].connect (this.notify_on_icon);
         this.set_name (model.uid);
 
         this.request_remove.connect (this.on_request_remove);
@@ -210,8 +210,8 @@ namespace Unity.Quicklauncher
                                                 out float minimum_width,
                                                 out float natural_width)
       {
-        natural_width = 56;
-        minimum_width = 56;
+        natural_width = 58;
+        minimum_width = 58;
         return;
       }
 

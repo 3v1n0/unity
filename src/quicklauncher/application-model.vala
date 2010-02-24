@@ -109,13 +109,13 @@ namespace Unity.Quicklauncher.Models
   public class ApplicationModel : Object, LauncherModel
   {
     public signal void windows_changed ();
-    
+
     private Gdk.Pixbuf _icon;
     private string desktop_uri;
     private bool queued_save_priority = false;
     private bool _do_shadow = false;
     private float _priority;
-    
+
     public float priority {
       get { return _priority; }
       set { _priority = value; this.do_save_priority ();}
@@ -134,7 +134,7 @@ namespace Unity.Quicklauncher.Models
           return app.get_windows ();
         }
     }
-    
+
     private Launcher.Application _app;
     public Launcher.Application app {
       get { return _app; }
@@ -146,16 +146,19 @@ namespace Unity.Quicklauncher.Models
             _app.focus_changed.disconnect (this.on_app_focus_changed);
             _app.running_changed.disconnect (this.on_app_running_changed);
             _app.urgent_changed.disconnect (this.on_app_urgent_changed);
+            _app.icon_changed.disconnect (this.on_app_icon_changed);
           }
-        
+
         _app = value;
         _app.opened.connect(this.on_app_opened);
         _app.closed.connect(this.on_app_closed);
         _app.focus_changed.connect (this.on_app_focus_changed);
         _app.running_changed.connect (this.on_app_running_changed);
         _app.urgent_changed.connect (this.on_app_urgent_changed);
-        
+        _app.icon_changed.connect (this.on_app_icon_changed);
+
         _icon = make_icon (app.icon_name);
+        this.notify_icon ();
       }
     }
 
@@ -163,7 +166,7 @@ namespace Unity.Quicklauncher.Models
     {
       this.app = application;
       this.desktop_uri = app.get_desktop_file ();
-      
+
       this._is_sticky = (get_fav_uid () != "");
       this.grab_priority ();
 
@@ -220,6 +223,12 @@ namespace Unity.Quicklauncher.Models
           favorites.set_float (uid, "priority", priority);
         }
       this._priority = priority;
+    }
+
+    private void on_app_icon_changed ()
+    {
+      this._icon = make_icon (app.icon_name);
+      this.notify_icon ();
     }
 
     private void on_app_running_changed ()
@@ -384,14 +393,23 @@ namespace Unity.Quicklauncher.Models
       return ret_list;
     }
 
+    public bool ensure_state ()
+    {
+      this.on_app_focus_changed ();
+      return false;
+    }
+
     public void activate ()
     {
       if (app.running)
         {
-          if (app.has_minimized ())
-            app.restore (Clutter.get_current_event_time ());
-          else if (!app.focused)
-            app.show (Clutter.get_current_event_time ());
+          if (!this.app.focused)
+            {
+              // sigh, so hacky. i think clutters mainloop is blocking a signal
+              // so lets just force a check of our focused status here
+              Idle.add (this.ensure_state);
+              app.show (Clutter.get_current_event_time ());
+            }
         }
       else
         {

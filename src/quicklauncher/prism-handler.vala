@@ -150,13 +150,7 @@ Icon=%s
 
       string desktop_path = webapp_dir + "/%s.desktop".printf (name);
       uid = "webapp-" + Path.get_basename (desktop_path);
-      try {
-        var regex = new Regex ("""(\+|\?|\=|\#|\&|\(|\)|\%)""");
-        uid = regex.replace (uid, -1, 0, "");
-      } catch (Error e)
-      {
-        warning ("regular expression error: %s", e.message);
-      }
+      uid = Unity.Webapp.urlify (uid);
 
       // we are not a favorite and we need to be favorited!
       favorites.set_string (uid, "type", "application");

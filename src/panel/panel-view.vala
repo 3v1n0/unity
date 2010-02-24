@@ -156,8 +156,8 @@ namespace Unity.Panel
 
       child_box.x1 += 12; /* (QL_width - logo_width)/2.0 */
       child_box.x2 -= 12;
-      child_box.y1 += 5;
-      child_box.y2 -= 4;
+      child_box.y1 = 9;
+      child_box.y2 = 15;
       this.entry.allocate (child_box, flags);
 
       child_box.y1 = 0;

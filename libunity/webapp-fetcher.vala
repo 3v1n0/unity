@@ -29,6 +29,39 @@ static const string hostname_string = """(s)?http://.*/""";
 
 namespace Unity.Webapp
 {
+  public static string urlify (string uri)
+  {
+    string return_string = Uri.unescape_string (uri);
+    /* ooooh this is going to be fun run of try/catch statements. yay error
+     * checking
+     */
+    try {
+			var regex = new GLib.Regex ("""^[ \\]+|[ \\]+$"""); //removes trailing whitespace
+			return_string = regex.replace (return_string, -1, 0, "_");
+		} catch (GLib.RegexError e) {
+			warning (e.message);
+		}
+    try {
+			var regex = new GLib.Regex ("""^.*?://"""); //removes http:// stuff
+			return_string = regex.replace (return_string, -1, 0, "");
+		} catch (GLib.RegexError e) {
+			warning (e.message);
+		}
+    try {
+			var regex = new GLib.Regex ("""(\s|/)"""); //converts spaces and /to underscore
+			return_string = regex.replace (return_string, -1, 0, "_");
+		} catch (GLib.RegexError e) {
+			warning (e.message);
+		}
+    try {
+			var regex = new GLib.Regex ("""[^([:alnum:]|\.|_)]+"""); //removes unneeded chars
+			return_string = regex.replace (return_string, -1, 0, "");
+		} catch (GLib.RegexError e) {
+			warning (e.message);
+		}
+
+    return return_string;
+  }
 
   public class FetchFile : Object
   {
@@ -152,6 +185,13 @@ namespace Unity.Webapp
           }
         }
       this.icon_uris = new Gee.PriorityQueue<string> ();
+      // touch our destination now so that inofity can pick up changes
+      try {
+        var make_file = File.new_for_path (this.destination);
+        make_file.create (FileCreateFlags.NONE, null);
+      } catch (Error e) {
+        warning (e.message);
+      }
     }
 
     public void fetch_webapp_data ()
