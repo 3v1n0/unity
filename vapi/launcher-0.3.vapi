@@ -9,7 +9,7 @@ namespace Launcher {
 		public void close (uint32 timestamp);
 		public void ensure_state ();
 		[CCode (has_construct_function = false)]
-		public Application.from_desktop_file (string desktop_file);
+		public Application.from_desktop_file (string desktop_file, bool dont_check_windows);
 		[CCode (has_construct_function = false)]
 		public Application.from_wnck_window (Wnck.Window window);
 		public unowned GLib.SList get_categories ();
@@ -29,7 +29,7 @@ namespace Launcher {
 		public void minimize ();
 		public bool owns_window (Wnck.Window window);
 		public void restore (uint32 timestamp);
-		public void set_desktop_file (string desktop_file);
+		public void set_desktop_file (string desktop_file, bool dont_check_windows);
 		public void show (uint32 timestamp);
 		public void update_windows ();
 		public GLib.SList categories { get; }
@@ -65,7 +65,10 @@ namespace Launcher {
 		public unowned Launcher.Application get_application_for_wnck_window (Wnck.Window wnck_window);
 		public unowned GLib.Sequence get_applications ();
 		public static unowned Launcher.Appman get_default ();
+		public bool get_enable_window_checking ();
 		public void rm_file_watch (int wd);
+		public void set_enable_window_checking (bool enable_window_matching);
+		public bool enable_window_checking { get; set; }
 		public virtual signal void watch_file_modified (int p0);
 	}
 	[Compact]
