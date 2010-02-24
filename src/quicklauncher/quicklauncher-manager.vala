@@ -101,7 +101,7 @@ namespace Unity.Quicklauncher
       }
 
       try {
-        bool value = this.gconf_client.get_bool (UNITY_CONF_PATH + "/launcher/webapp_use_chromium");
+        bool value = this.gconf_client.get_bool (UNITY_CONF_PATH + "/webapp_use_chromium");
         if (value)
           {
             return "chromium";
@@ -318,11 +318,11 @@ namespace Unity.Quicklauncher
           assert (desktop_file != "");
 
           Launcher.Application application = appman.get_application_for_desktop_file (desktop_file);
-
+          
           if (launcher_apps.contains (application))
             continue;
           launcher_apps.add (application);
-
+          
           ApplicationModel model = new ApplicationModel (application);
           model.is_sticky = true;
           LauncherView view = get_view_for_model (model);
@@ -353,7 +353,7 @@ namespace Unity.Quicklauncher
         return;
       launcher_apps.add (app);
       ApplicationModel model = new ApplicationModel (app);
-
+      
       string desktop_file = app.get_desktop_file ();
       if (desktop_file != null && !model.is_sticky)
         {
@@ -411,7 +411,7 @@ namespace Unity.Quicklauncher
       this.container.remove_actor (view);
       view.enter_event.connect (on_launcher_enter_event);
       view.leave_event.connect (on_launcher_leave_event);
-
+      
       if (view.model is ApplicationModel)
         {
           launcher_apps.remove ((view.model as ApplicationModel).app);
