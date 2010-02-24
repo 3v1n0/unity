@@ -185,6 +185,13 @@ namespace Unity.Webapp
           }
         }
       this.icon_uris = new Gee.PriorityQueue<string> ();
+      // touch our destination now so that inofity can pick up changes
+      try {
+        var make_file = File.new_for_path (this.destination);
+        make_file.create (FileCreateFlags.NONE, null);
+      } catch (Error e) {
+        warning (e.message);
+      }
     }
 
     public void fetch_webapp_data ()
