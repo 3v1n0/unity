@@ -21,8 +21,7 @@
 namespace Unity.Panel
 {
   static const int PANEL_HEIGHT = 24;
-  static const string SEARCH_TEMPLATE = "xdg-open http://uk.search.yahoo.com/search?p=%s&fr=ubuntu&ei=UTF-8";
-
+  static const string SEARCH_TEMPLATE = "xdg-open http://search.yahoo.com/search?p=%s&fr=ubuntu&ei=UTF-8";
 
   public class View : Ctk.Actor
   {
