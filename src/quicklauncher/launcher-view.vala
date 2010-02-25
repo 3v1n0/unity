@@ -591,7 +591,9 @@ namespace Unity.Quicklauncher
                   quicklist_controller.close_menu ();
                   menu_closed (this);
                 }
-              this.quicklist_controller.show_label ();
+                
+              if(Unity.Panel.search_entry_has_focus == false)
+                this.quicklist_controller.show_label ();
             }
           else
             {
