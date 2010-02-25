@@ -112,7 +112,7 @@ namespace Unity
     public bool expose_showing { get { return expose_manager.expose_showing; } }
 
     private static const int PANEL_HEIGHT        = 23;
-    private static const int QUICKLAUNCHER_WIDTH = 58;
+    private static const int QUICKLAUNCHER_WIDTH = 60;
 
     private Clutter.Stage    stage;
     private Application      app;
@@ -135,7 +135,7 @@ namespace Unity
     private bool     places_showing;
     private bool     _fullscreen_obstruction;
     private InputState last_input_state = InputState.NONE;
-    
+
     private Gee.ArrayList<Object> fullscreen_requests;
 
     private bool fullscreen_obstruction
@@ -185,7 +185,7 @@ namespace Unity
       START_FUNCTION ();
       this.wm = new WindowManagement (this);
       this.maximus = new Maximus ();
-      
+
       fullscreen_requests = new Gee.ArrayList<Object> ();
 
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
@@ -222,13 +222,13 @@ namespace Unity
 
       this.quicklauncher = new Quicklauncher.View (this);
       this.quicklauncher.opacity = 0;
-      
+
       this.expose_manager = new ExposeManager (this, quicklauncher);
       this.expose_manager.hovered_opacity = 255;
       this.expose_manager.unhovered_opacity = 230;
       this.expose_manager.right_buffer = 10;
       this.expose_manager.top_buffer = this.expose_manager.bottom_buffer = 20;
-      
+
       this.expose_manager.coverflow = false;
 
       this.quicklauncher.manager.active_launcher_changed.connect (on_launcher_changed_event);
@@ -394,13 +394,13 @@ namespace Unity
        */
       END_FUNCTION ();
     }
-    
+
     public void add_fullscreen_request (Object o)
     {
       fullscreen_requests.add (o);
       ensure_input_region ();
     }
-    
+
     public bool remove_fullscreen_request (Object o)
     {
       bool result = fullscreen_requests.remove (o);
@@ -500,7 +500,7 @@ namespace Unity
       expose_manager.left_buffer = left_buffer;
       expose_manager.start_expose (windows);
     }
-    
+
     public void dexpose_windows ()
     {
       expose_manager.end_expose ();
