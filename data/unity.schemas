@@ -15,6 +15,18 @@
       </locale>
     </schema>
 
+    <schema>
+      <key>/schemas/desktop/unity/panel/search_hint</key>
+      <applyto>/desktop/unity/panel/search_hint</applyto>
+      <owner>unity</owner>
+      <type>string</type>
+      <default>"Yahoo!"</default>
+      <locale name="C">
+        <short>The search hint used for panel search</short>
+        <long>The search hint used for panel search.</long>
+      </locale>
+    </schema>
+
 <!-- LAUNCHER KEYS -->
 
     <schema>
