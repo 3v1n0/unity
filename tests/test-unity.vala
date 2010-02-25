@@ -18,7 +18,7 @@
  *
  */
 using Unity;
-
+using Unity.Webapp;
 public class Main
 {
   public const string firefox_desktop = Unity.Tests.TESTDIR+"/firefox.desktop";
@@ -80,8 +80,8 @@ public class Main
     });
 
     Test.add_func ("/Unity/Quicklauncher/Prism", () => {
-      var webapp = new Quicklauncher.Prism ("http://www.google.com", "/tmp/icon.svg");
-      assert (webapp is Quicklauncher.Prism);
+      var webapp = new Prism ("http://www.google.com", "/tmp/icon.svg");
+      assert (webapp is Prism);
       });
 
     Test.add_func ("/Unity/Widgets/Scroller", () => {

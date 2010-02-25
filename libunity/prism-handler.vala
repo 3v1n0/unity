@@ -18,7 +18,7 @@
  *
  */
 
-namespace Unity.Quicklauncher
+namespace Unity.Webapp
 {
 
   public class Prism : Object

@@ -31,6 +31,7 @@ libunity_la_VALAFLAGS = \
   --pkg clutk-0.3 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
+  --pkg launcher-0.3 \
   --pkg libwnck-1.0 \
   --pkg unique-1.0 \
   --pkg unity-const \
@@ -41,10 +42,12 @@ libunity_la_SOURCES = \
 
 libunity_la_VALASOURCES = \
   application.vala \
+  chrome-handler.vala \
   drag-controller.vala \
   drag-view.vala \
   entry.vala \
   perf-logger.vala \
+  prism-handler.vala \
   shell.vala \
   theme.vala \
   webapp-fetcher.vala \
