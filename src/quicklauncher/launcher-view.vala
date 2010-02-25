@@ -601,7 +601,10 @@ namespace Unity.Quicklauncher
         }
       else
         {
-          this.quicklist_controller.hide_label ();
+          if (this.menu_is_label)
+            {
+              this.quicklist_controller.hide_label ();
+            }
         }
 
     }
