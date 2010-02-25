@@ -32,7 +32,8 @@ namespace Unity.Panel
     private HomeButton        home;
     private Indicators.View   indicators;
 
-    private Entry entry;
+    private ThemeImage entry_icon;
+    private Entry      entry;
     private Unity.Places.CairoDrawing.EntryBackground entry_background;
 
     private int indicators_width = 0;
@@ -60,7 +61,6 @@ namespace Unity.Panel
       this.tray.set_parent (this);
       this.tray.show ();
 
-
       this.home = new HomeButton (this.shell);
       this.home.set_parent (this);
       this.home.show ();
@@ -69,6 +69,10 @@ namespace Unity.Panel
       this.entry_background = new Unity.Places.CairoDrawing.EntryBackground ();
       this.entry_background.set_parent (this);
       this.entry_background.show ();
+
+      this.entry_icon = new ThemeImage ("search_field");
+      this.entry_icon.set_parent (this);
+      this.entry_icon.show ();
 
       this.entry = new Unity.Entry ("");
       this.entry.static_text = this.get_search_hint ();
@@ -173,6 +177,12 @@ namespace Unity.Panel
       }
       this.entry_background.allocate (child_box, flags);
 
+      child_box.x1 += 6;
+      child_box.x2 = child_box.x1 + 16;
+      child_box.y1 = Math.floorf ((PANEL_HEIGHT-16)/2.0f);
+      child_box.y2 = child_box.y1 + 16;
+      this.entry_icon.allocate (child_box, flags);
+
       child_box.x1 += 12; /* (QL_width - logo_width)/2.0 */
       child_box.x2 -= 12;
       child_box.y1 = 9;
@@ -217,6 +227,7 @@ namespace Unity.Panel
       this.home.paint ();
       this.indicators.paint ();
       this.entry_background.paint ();
+      this.entry_icon.paint ();
       this.entry.paint ();
     }
 
@@ -227,6 +238,7 @@ namespace Unity.Panel
       this.home.paint ();
       this.indicators.paint ();
       this.entry_background.paint ();
+      this.entry_icon.paint ();
       this.entry.paint ();
     }
 
@@ -238,6 +250,7 @@ namespace Unity.Panel
       this.home.map ();
       this.indicators.map ();
       this.entry_background.map ();
+      this.entry_icon.map ();
       this.entry.map ();
     }
 
@@ -249,6 +262,7 @@ namespace Unity.Panel
       this.home.unmap ();
       this.indicators.unmap ();
       this.entry_background.unmap ();
+      this.entry_icon.unmap ();
       this.entry.unmap ();
     }
 
