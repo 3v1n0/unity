@@ -17,11 +17,11 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
-
 namespace Unity.Panel
 {
   static const int PANEL_HEIGHT = 24;
   static const string SEARCH_TEMPLATE = "xdg-open http://search.yahoo.com/search?p=%s&fr=ubuntu&ei=UTF-8";
+  static const string SEARCH_HINT = "Yahoo!";
 
   public class View : Ctk.Actor
   {
@@ -71,7 +71,7 @@ namespace Unity.Panel
       this.entry_background.show ();
 
       this.entry = new Unity.Entry ("");
-      this.entry.static_text = (_("Search"));
+      this.entry.static_text = this.get_search_hint ();
       this.entry.set_parent (this);
       this.entry.show ();
       this.entry.activate.connect (this.on_entry_activated);
@@ -82,6 +82,26 @@ namespace Unity.Panel
     private void on_home_clicked ()
     {
       Unity.global_shell.show_window_picker ();
+    }
+
+    private string get_search_hint ()
+    {
+      string hint = "";
+      var client = GConf.Client.get_default ();
+
+      try
+        {
+          hint = client.get_string ("/desktop/unity/panel/search_hint");
+
+          if (hint == "" || hint == null)
+            hint = SEARCH_HINT;
+        }
+      catch (Error e)
+        {
+          hint = SEARCH_HINT;
+        }
+
+      return hint;
     }
 
     private void on_entry_activated ()
