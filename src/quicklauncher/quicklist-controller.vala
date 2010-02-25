@@ -125,8 +125,7 @@ namespace Unity.Quicklauncher
       if (Unity.Quicklauncher.active_menu != null)
         return;
 
-      if (this.menu == null)
-        this.build_menu ();
+      this.build_menu ();
 
       this.menu.show();
       this.is_label = true;
@@ -197,9 +196,10 @@ namespace Unity.Quicklauncher
         }
 
       if (this.menu == null)
-        return;
-
-      this.menu = null;
+        {
+          return;
+        }
+      this.menu.destroy ();
       this.is_label = false;
 
       Unity.global_shell.ensure_input_region ();
