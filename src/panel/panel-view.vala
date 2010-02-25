@@ -183,8 +183,8 @@ namespace Unity.Panel
       child_box.y2 = child_box.y1 + 16;
       this.entry_icon.allocate (child_box, flags);
 
-      child_box.x1 += 12; /* (QL_width - logo_width)/2.0 */
-      child_box.x2 -= 12;
+      child_box.x1 = child_box.x2 + 4; /* (QL_width - logo_width)/2.0 */
+      child_box.x2 = child_box.x1 + 150 - 16;
       child_box.y1 = 9;
       child_box.y2 = 15;
       this.entry.allocate (child_box, flags);
