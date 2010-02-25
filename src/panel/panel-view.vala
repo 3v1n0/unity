@@ -23,6 +23,8 @@ namespace Unity.Panel
   static const int PANEL_HEIGHT = 24;
   static const string SEARCH_TEMPLATE = "xdg-open http://search.yahoo.com/search?p=%s&fr=ubuntu&ei=UTF-8";
 
+  public bool? search_entry_has_focus = null;
+    
   public class View : Ctk.Actor
   {
     public Shell shell { get; construct;}
@@ -76,6 +78,10 @@ namespace Unity.Panel
       this.entry.show ();
       this.entry.activate.connect (this.on_entry_activated);
 
+      this.entry.key_focus_in.connect (this.on_entry_focus_in);
+      this.entry.key_focus_out.connect (this.on_entry_focus_out);
+      Unity.Panel.search_entry_has_focus = false;
+      
       END_FUNCTION ();
     }
 
@@ -83,6 +89,16 @@ namespace Unity.Panel
     {
       Unity.global_shell.show_window_picker ();
     }
+    
+    private void on_entry_focus_in ()
+    {
+      Unity.Panel.search_entry_has_focus = true;
+    }
+    
+    private void on_entry_focus_out ()
+    {
+      Unity.Panel.search_entry_has_focus = false;
+    }    
 
     private void on_entry_activated ()
     {
