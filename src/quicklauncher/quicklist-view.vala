@@ -385,7 +385,8 @@ namespace Unity.Quicklauncher
                         double        anchor_width,  // width of anchor
                         double        anchor_height, // height of anchor
                         double        anchor_x,      // x of anchor
-                        double        anchor_y)      // y of anchor
+                        double        anchor_y,      // y of anchor
+                        bool          is_label)      // flag for anchor-arrow
     {
       double radius = corner_radius / aspect;
 
@@ -422,14 +423,19 @@ namespace Unity.Quicklauncher
               90.0f * GLib.Math.PI / 180.0f,
               180.0f * GLib.Math.PI / 180.0f);
 
-      // bottom vertex of anchor
-      cr.line_to (anchor_x + anchor_width, anchor_y + anchor_height / 2.0f);
-
-      // middle vertex of anchor
-      cr.line_to (anchor_x, anchor_y);
-
-      // top vertex of anchor
-      cr.line_to (anchor_x + anchor_width, anchor_y - anchor_height / 2.0f);
+      // draw anchor-arrow
+      if (is_label)
+      {
+        cr.line_to (anchor_x + anchor_width, anchor_y + anchor_height / 2.0f);
+        cr.line_to (anchor_x, anchor_y);
+        cr.line_to (anchor_x + anchor_width, anchor_y - anchor_height / 2.0f);
+      }
+      else
+      {
+        cr.line_to (anchor_x + anchor_width, y + radius + anchor_height);
+        cr.line_to (anchor_x, y + radius + anchor_height / 2.0f);
+        cr.line_to (anchor_x + anchor_width, y + radius);
+      }
 
       // top-left, right of the corner
       cr.arc (x + radius,
@@ -455,7 +461,8 @@ namespace Unity.Quicklauncher
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (SHADOW_SIZE),
-                          anchor_y != 0.0f ? anchor_y + Ctk.em_to_pixel (SHADOW_SIZE/2): (float) h / 2.0f);
+                          anchor_y != 0.0f ? anchor_y + Ctk.em_to_pixel (SHADOW_SIZE/2) : (float) h / 2.0f,
+                          anchor_y != 0.0f ? false : true);
     }
 
     private void
