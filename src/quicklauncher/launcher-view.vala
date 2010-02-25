@@ -234,8 +234,8 @@ namespace Unity.Quicklauncher
                                                 out float minimum_width,
                                                 out float natural_width)
       {
-        natural_width = 58;
-        minimum_width = 58;
+        natural_width = 60;
+        minimum_width = 60;
         return;
       }
 
@@ -281,7 +281,7 @@ namespace Unity.Quicklauncher
         //allocate the focused indicator
         width = this.focused_indicator.get_width ();
         height = this.focused_indicator.get_height ();
-        child_box.x2 = box.get_width ()+this.padding.right+2;//for the shadow
+        child_box.x2 = box.get_width ();
         child_box.y2 = (box.get_height () / 2.0f) - (height / 2.0f);
         child_box.x1 = child_box.x2 - width;
         child_box.y1 = child_box.y2 + height;
