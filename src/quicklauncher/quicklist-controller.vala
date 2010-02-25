@@ -175,6 +175,12 @@ namespace Unity.Quicklauncher
           menuitem.activated.connect (this.close_menu);
         }
 
+      if (Unity.Quicklauncher.active_menu is QuicklistController)
+        {
+          if (Unity.Quicklauncher.active_menu.menu != this.menu &&
+              Unity.Quicklauncher.active_menu.menu is Ctk.Menu)
+            Unity.Quicklauncher.active_menu.menu.destroy ();
+        }
       Unity.Quicklauncher.active_menu = this;
       this.menu.closed.connect (this.on_menu_close);
       this.is_label = false;

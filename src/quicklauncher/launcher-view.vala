@@ -605,7 +605,7 @@ namespace Unity.Quicklauncher
         {
           if (this.menu_is_label)
             {
-              this.quicklist_controller.hide_label ();
+              this.close_menu ();
             }
         }
 
@@ -673,21 +673,25 @@ namespace Unity.Quicklauncher
     {
 
       var bevent = src.button;
-      if (bevent.button == 1)
+      switch (bevent.button)
         {
-        last_pressed_time = bevent.time;
-        this.click_start_pos = bevent.x;
-        this.button_down = true;
-        this.menu_is_label = true;
-        this.ensure_menu_state ();
-        }
-      else
-        {
-          this.menu_is_label = false;
-          this.quicklist_controller.hide_on_leave = false;
-          this.ensure_menu_state ();
+          case 1:
+            {
+              last_pressed_time = bevent.time;
+              this.click_start_pos = bevent.x;
+              this.button_down = true;
+              this.is_hovering = false;
+            } break;
+          case 3:
+            {
+              this.menu_is_label = false;
+              this.quicklist_controller.hide_on_leave = false;
+              this.ensure_menu_state ();
+            } break;
+          default: break;
         }
       return false;
+
     }
 
     public void close_menu ()
