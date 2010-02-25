@@ -34,7 +34,6 @@ Depends: ${shlibs:Depends},
 Recommends: unity-place-applications,
             indicator-datetime,
             chromium-browser,
-            maximus,
             ubuntu-netbook-unity-default-settings
 Breaks: mutter (<< 2.28.1~git20091208-1ubuntu5)
 Description: Launcher
