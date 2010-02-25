@@ -373,6 +373,7 @@ namespace Unity.Quicklauncher
     Ctk.LayerActor ql_background;
     int            old_width;
     int            old_height;
+    float          cached_x; // needed to fix LP: #525905
 
     private void
     _round_rect_anchor (Cairo.Context cr,
@@ -579,6 +580,15 @@ namespace Unity.Quicklauncher
       // animation or mutter does some animation stuff with the windows
       base.refresh_background_texture ();
 
+      // needed to fix LP: #525905
+      float x;
+      float y;
+      this.get_position (out x, out y);
+      if (this.cached_x == 0.0f)
+        this.cached_x = x;
+      if (this.cached_x != x)
+        this.set_position (this.cached_x, y);
+
       // important run-time optimization!
       if (!this.ql_background.is_flattened ())
         this.ql_background.flatten ();
@@ -697,6 +707,7 @@ namespace Unity.Quicklauncher
 
       old_width  = 0;
       old_height = 0;
+      cached_x   = 0.0f; // needed to fix LP: #525905
     }
   }
 }
