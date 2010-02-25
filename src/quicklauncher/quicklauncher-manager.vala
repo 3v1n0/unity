@@ -101,7 +101,7 @@ namespace Unity.Quicklauncher
       }
 
       try {
-        bool value = this.gconf_client.get_bool (UNITY_CONF_PATH + "/webapp_use_chromium");
+        bool value = this.gconf_client.get_bool (UNITY_CONF_PATH + "/launcher/webapp_use_chromium");
         if (value)
           {
             return "chromium";

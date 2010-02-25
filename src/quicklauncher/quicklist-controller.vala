@@ -27,13 +27,24 @@ namespace Unity.Quicklauncher
   {
     public string label;
     public Ctk.Menu? menu;
-    private Ctk.Menu? old_menu;
     private Clutter.Stage stage;
     private Ctk.Actor attached_widget;
 
     public bool is_label = false; // in label mode, don't add items
     private Gee.LinkedList<ShortcutItem> prefix_actions;
     private Gee.LinkedList<ShortcutItem> append_actions;
+
+    private bool _hide_on_leave = false;
+    public bool hide_on_leave {
+      get { return _hide_on_leave; }
+      set {
+        _hide_on_leave = value;
+        if (this.menu is Ctk.Menu)
+          {
+            this.menu.close_on_leave = value;
+          }
+      }
+    }
 
     public QuicklistController (string label, Ctk.Actor attached_to,
                                Clutter.Stage stage)
@@ -150,7 +161,6 @@ namespace Unity.Quicklauncher
       foreach (ShortcutItem shortcut in this.prefix_actions)
         {
           var label = shortcut.get_name ();
-          //Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (label);
           Unity.Quicklauncher.QuicklistMenuItem menuitem = new Unity.Quicklauncher.QuicklistMenuItem (label);
           this.menu.prepend (menuitem, false);
           menuitem.activated.connect (shortcut.activated);
@@ -160,7 +170,6 @@ namespace Unity.Quicklauncher
       foreach (ShortcutItem shortcut in this.append_actions)
         {
           var label = shortcut.get_name ();
-          //Ctk.MenuItem menuitem = new Ctk.MenuItem.with_label (label);
           Unity.Quicklauncher.QuicklistMenuItem menuitem = new Unity.Quicklauncher.QuicklistMenuItem (label);
           this.menu.append (menuitem, false);
           menuitem.activated.connect (shortcut.activated);
@@ -190,8 +199,6 @@ namespace Unity.Quicklauncher
       if (this.menu == null)
         return;
 
-      this.menu.destroy ();
-      this.old_menu = this.menu;
       this.menu = null;
       this.is_label = false;
 

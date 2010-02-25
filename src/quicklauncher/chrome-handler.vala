@@ -23,13 +23,13 @@ namespace Unity.Quicklauncher
 
   public class ChromiumWebApp : Object
   {
-    static const string webapp_desktop_template = """[Desktop Entry]
+    static const string webapp_desktop_template = """
+[Desktop Entry]
 Version=1.0
 Name=%s
-GenericName=Web Browser
-Exec=chromium-browser -app=%s
-Comment=A Chromium webapp
+Exec=chromium-browser --app="http://%s"
 Terminal=false
+X-MultipleArgs=false
 Type=Application
 Icon=%s
 Categories=Network;
@@ -37,7 +37,6 @@ MimeType=text/html;
 StartupWMClass=Chromium
 StartupNotify=true
 """;
-
     public string url {get; construct;}
     public string icon {get; construct;}
     public string name;
