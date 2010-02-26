@@ -1,8 +1,10 @@
 unity (0.1.18-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream release.
   * debian/control:
     - remove maximus as a recommend
-  * New upstream release.
+    - bump libclutk-dev and liblauncher-dev build-dep
+
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 26 Feb 2010 12:52:03 +0100
 
