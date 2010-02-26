@@ -41,6 +41,7 @@ namespace Unity.Quicklauncher.Models
     public abstract signal void request_attention ();
     public abstract signal void urgent_changed ();
     public abstract signal void activated ();
+    public abstract signal void notify_icon ();
 
     public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcuts ();
     public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ();

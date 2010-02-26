@@ -28,7 +28,7 @@
 
 
 
-#define UNITY_UNITY_CONF_PATH "/apps/unity"
+#define UNITY_UNITY_CONF_PATH "/desktop/unity"
 
 
 

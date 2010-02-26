@@ -32,7 +32,6 @@
 #include <float.h>
 #include <math.h>
 #include <unity-utils.h>
-#include <glib/gi18n-lib.h>
 
 
 #define UNITY_PANEL_TYPE_VIEW (unity_panel_view_get_type ())
@@ -86,7 +85,7 @@ typedef struct _UnityPanelIndicatorsViewClass UnityPanelIndicatorsViewClass;
 typedef struct _UnityPlacesCairoDrawingEntryBackground UnityPlacesCairoDrawingEntryBackground;
 typedef struct _UnityPlacesCairoDrawingEntryBackgroundClass UnityPlacesCairoDrawingEntryBackgroundClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
-#define _g_free0(var) (var = (g_free (var), NULL))
+#define _g_free0(var) ((var == NULL) ? NULL : (var = (g_free (var), NULL)))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 #define _g_regex_unref0(var) ((var == NULL) ? NULL : (var = (g_regex_unref (var), NULL)))
 typedef struct _UnityPlacesCairoDrawingEntryBackgroundPrivate UnityPlacesCairoDrawingEntryBackgroundPrivate;
@@ -106,6 +105,7 @@ struct _UnityPanelViewPrivate {
 	UnityPanelTrayView* tray;
 	UnityPanelHomeButton* home;
 	UnityPanelIndicatorsView* indicators;
+	UnityThemeImage* entry_icon;
 	UnityEntry* entry;
 	UnityPlacesCairoDrawingEntryBackground* entry_background;
 	gint indicators_width;
@@ -124,10 +124,13 @@ struct _UnityPlacesCairoDrawingEntryBackgroundClass {
 };
 
 
+extern gboolean* unity_panel_search_entry_has_focus;
+gboolean* unity_panel_search_entry_has_focus = NULL;
 static gpointer unity_panel_view_parent_class = NULL;
 
 #define UNITY_PANEL_PANEL_HEIGHT 24
-#define UNITY_PANEL_SEARCH_TEMPLATE "xdg-open http://uk.search.yahoo.com/search?p=%s&fr=ubuntu&ei=UTF-8"
+#define UNITY_PANEL_SEARCH_TEMPLATE "xdg-open http://search.yahoo.com/search?p=%s&fr=ubuntu&ei=UTF-8"
+#define UNITY_PANEL_SEARCH_HINT "Yahoo!"
 GType unity_panel_view_get_type (void);
 GType unity_panel_tray_view_get_type (void);
 GType unity_panel_home_button_get_type (void);
@@ -143,6 +146,10 @@ UnityShell* unity_panel_view_get_shell (UnityPanelView* self);
 UnityPanelView* unity_panel_view_new (UnityShell* shell);
 UnityPanelView* unity_panel_view_construct (GType object_type, UnityShell* shell);
 static void unity_panel_view_on_home_clicked (UnityPanelView* self);
+static gboolean* _bool_dup (gboolean* self);
+static void unity_panel_view_on_entry_focus_in (UnityPanelView* self);
+static void unity_panel_view_on_entry_focus_out (UnityPanelView* self);
+static char* unity_panel_view_get_search_hint (UnityPanelView* self);
 static void unity_panel_view_on_entry_activated (UnityPanelView* self);
 void unity_places_cairo_drawing_entry_background_create_search_entry_background (UnityPlacesCairoDrawingEntryBackground* self, gint W, gint H);
 static void unity_panel_view_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
@@ -163,6 +170,8 @@ static void _unity_panel_view_on_home_clicked_unity_panel_home_button_clicked (U
 UnityPlacesCairoDrawingEntryBackground* unity_places_cairo_drawing_entry_background_new (void);
 UnityPlacesCairoDrawingEntryBackground* unity_places_cairo_drawing_entry_background_construct (GType object_type);
 static void _unity_panel_view_on_entry_activated_clutter_text_activate (ClutterText* _sender, gpointer self);
+static void _unity_panel_view_on_entry_focus_in_clutter_actor_key_focus_in (ClutterActor* _sender, gpointer self);
+static void _unity_panel_view_on_entry_focus_out_clutter_actor_key_focus_out (ClutterActor* _sender, gpointer self);
 static GObject * unity_panel_view_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_panel_view_finalize (GObject* obj);
 static void unity_panel_view_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -171,38 +180,77 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
-#line 41 "panel-view.vala"
+#line 43 "panel-view.vala"
 UnityPanelView* unity_panel_view_construct (GType object_type, UnityShell* shell) {
-#line 177 "panel-view.c"
+#line 186 "panel-view.c"
 	UnityPanelView * self;
 	ClutterStage* _tmp0_;
-#line 41 "panel-view.vala"
-	g_return_val_if_fail (shell != NULL, NULL);
 #line 43 "panel-view.vala"
+	g_return_val_if_fail (shell != NULL, NULL);
+#line 45 "panel-view.vala"
 	self = (UnityPanelView*) g_object_new (object_type, "shell", shell, "reactive", FALSE, NULL);
-#line 44 "panel-view.vala"
+#line 46 "panel-view.vala"
 	unity_panel_tray_view_manage_stage (self->priv->tray, _tmp0_ = unity_shell_get_stage (self->priv->_shell));
-#line 186 "panel-view.c"
+#line 195 "panel-view.c"
 	_g_object_unref0 (_tmp0_);
 	return self;
 }
 
 
-#line 41 "panel-view.vala"
+#line 43 "panel-view.vala"
 UnityPanelView* unity_panel_view_new (UnityShell* shell) {
-#line 41 "panel-view.vala"
+#line 43 "panel-view.vala"
 	return unity_panel_view_construct (UNITY_PANEL_TYPE_VIEW, shell);
-#line 196 "panel-view.c"
+#line 205 "panel-view.c"
 }
 
 
-#line 83 "panel-view.vala"
+#line 92 "panel-view.vala"
 static void unity_panel_view_on_home_clicked (UnityPanelView* self) {
-#line 83 "panel-view.vala"
+#line 92 "panel-view.vala"
 	g_return_if_fail (self != NULL);
-#line 85 "panel-view.vala"
+#line 94 "panel-view.vala"
 	unity_shell_show_window_picker (unity_global_shell);
-#line 206 "panel-view.c"
+#line 215 "panel-view.c"
+}
+
+
+static gboolean* _bool_dup (gboolean* self) {
+	gboolean* dup;
+	dup = g_new0 (gboolean, 1);
+	memcpy (dup, self, sizeof (gboolean));
+	return dup;
+}
+
+
+static gpointer __bool_dup0 (gpointer self) {
+	return self ? _bool_dup (self) : NULL;
+}
+
+
+#line 97 "panel-view.vala"
+static void unity_panel_view_on_entry_focus_in (UnityPanelView* self) {
+#line 234 "panel-view.c"
+	gboolean* _tmp1_;
+	gboolean _tmp0_;
+#line 97 "panel-view.vala"
+	g_return_if_fail (self != NULL);
+#line 99 "panel-view.vala"
+	unity_panel_search_entry_has_focus = (_tmp1_ = __bool_dup0 ((_tmp0_ = TRUE, &_tmp0_)), _g_free0 (unity_panel_search_entry_has_focus), _tmp1_);
+#line 241 "panel-view.c"
+}
+
+
+#line 102 "panel-view.vala"
+static void unity_panel_view_on_entry_focus_out (UnityPanelView* self) {
+#line 247 "panel-view.c"
+	gboolean* _tmp1_;
+	gboolean _tmp0_;
+#line 102 "panel-view.vala"
+	g_return_if_fail (self != NULL);
+#line 104 "panel-view.vala"
+	unity_panel_search_entry_has_focus = (_tmp1_ = __bool_dup0 ((_tmp0_ = FALSE, &_tmp0_)), _g_free0 (unity_panel_search_entry_has_focus), _tmp1_);
+#line 254 "panel-view.c"
 }
 
 
@@ -211,123 +259,51 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 1025 "glib-2.0.vapi"
-static char* string_replace (const char* self, const char* old, const char* replacement) {
-#line 217 "panel-view.c"
+#line 107 "panel-view.vala"
+static char* unity_panel_view_get_search_hint (UnityPanelView* self) {
+#line 265 "panel-view.c"
 	char* result;
 	GError * _inner_error_;
-#line 1025 "glib-2.0.vapi"
-	g_return_val_if_fail (self != NULL, NULL);
-#line 1025 "glib-2.0.vapi"
-	g_return_val_if_fail (old != NULL, NULL);
-#line 1025 "glib-2.0.vapi"
-	g_return_val_if_fail (replacement != NULL, NULL);
-#line 226 "panel-view.c"
-	_inner_error_ = NULL;
-	{
-		char* _tmp0_;
-		GRegex* _tmp1_;
-		GRegex* regex;
-		char* _tmp2_;
-#line 1027 "glib-2.0.vapi"
-		regex = (_tmp1_ = g_regex_new (_tmp0_ = g_regex_escape_string (old, -1), 0, 0, &_inner_error_), _g_free0 (_tmp0_), _tmp1_);
-#line 235 "panel-view.c"
-		if (_inner_error_ != NULL) {
-			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch8_g_regex_error;
-			}
-			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-			g_clear_error (&_inner_error_);
-			return NULL;
-		}
-#line 1028 "glib-2.0.vapi"
-		_tmp2_ = g_regex_replace_literal (regex, self, (gssize) (-1), 0, replacement, 0, &_inner_error_);
-#line 246 "panel-view.c"
-		if (_inner_error_ != NULL) {
-			_g_regex_unref0 (regex);
-			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch8_g_regex_error;
-			}
-			_g_regex_unref0 (regex);
-			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-			g_clear_error (&_inner_error_);
-			return NULL;
-		}
-		result = _tmp2_;
-		_g_regex_unref0 (regex);
-#line 1028 "glib-2.0.vapi"
-		return result;
-#line 261 "panel-view.c"
-	}
-	goto __finally8;
-	__catch8_g_regex_error:
-	{
-		GError * e;
-		e = _inner_error_;
-		_inner_error_ = NULL;
-		{
-#line 1030 "glib-2.0.vapi"
-			g_assert_not_reached ();
-#line 272 "panel-view.c"
-			_g_error_free0 (e);
-		}
-	}
-	__finally8:
-	if (_inner_error_ != NULL) {
-		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-		g_clear_error (&_inner_error_);
-		return NULL;
-	}
-}
-
-
-#line 88 "panel-view.vala"
-static void unity_panel_view_on_entry_activated (UnityPanelView* self) {
-#line 287 "panel-view.c"
-	GError * _inner_error_;
-	char* template;
+	char* hint;
 	GConfClient* client;
-	char* _tmp5_;
-	char* _tmp6_;
-	char* command;
-#line 88 "panel-view.vala"
-	g_return_if_fail (self != NULL);
-#line 296 "panel-view.c"
+#line 107 "panel-view.vala"
+	g_return_val_if_fail (self != NULL, NULL);
+#line 272 "panel-view.c"
 	_inner_error_ = NULL;
-#line 90 "panel-view.vala"
-	template = g_strdup ("");
-#line 92 "panel-view.vala"
+#line 109 "panel-view.vala"
+	hint = g_strdup ("");
+#line 110 "panel-view.vala"
 	client = _g_object_ref0 (gconf_client_get_default ());
-#line 302 "panel-view.c"
+#line 278 "panel-view.c"
 	{
 		char* _tmp0_;
 		char* _tmp1_;
 		gboolean _tmp2_ = FALSE;
-#line 95 "panel-view.vala"
-		_tmp0_ = gconf_client_get_string (client, "/apps/unity/panel/search_template", &_inner_error_);
-#line 309 "panel-view.c"
+#line 114 "panel-view.vala"
+		_tmp0_ = gconf_client_get_string (client, "/desktop/unity/panel/search_hint", &_inner_error_);
+#line 285 "panel-view.c"
 		if (_inner_error_ != NULL) {
 			goto __catch7_g_error;
 		}
-#line 95 "panel-view.vala"
-		template = (_tmp1_ = _tmp0_, _g_free0 (template), _tmp1_);
-#line 97 "panel-view.vala"
-		if (_vala_strcmp0 (template, "") == 0) {
-#line 97 "panel-view.vala"
+#line 114 "panel-view.vala"
+		hint = (_tmp1_ = _tmp0_, _g_free0 (hint), _tmp1_);
+#line 116 "panel-view.vala"
+		if (_vala_strcmp0 (hint, "") == 0) {
+#line 116 "panel-view.vala"
 			_tmp2_ = TRUE;
-#line 319 "panel-view.c"
+#line 295 "panel-view.c"
 		} else {
-#line 97 "panel-view.vala"
-			_tmp2_ = template == NULL;
-#line 323 "panel-view.c"
+#line 116 "panel-view.vala"
+			_tmp2_ = hint == NULL;
+#line 299 "panel-view.c"
 		}
-#line 97 "panel-view.vala"
+#line 116 "panel-view.vala"
 		if (_tmp2_) {
-#line 327 "panel-view.c"
+#line 303 "panel-view.c"
 			char* _tmp3_;
-#line 98 "panel-view.vala"
-			template = (_tmp3_ = g_strdup (UNITY_PANEL_SEARCH_TEMPLATE), _g_free0 (template), _tmp3_);
-#line 331 "panel-view.c"
+#line 117 "panel-view.vala"
+			hint = (_tmp3_ = g_strdup (UNITY_PANEL_SEARCH_HINT), _g_free0 (hint), _tmp3_);
+#line 307 "panel-view.c"
 		}
 	}
 	goto __finally7;
@@ -338,13 +314,162 @@ static void unity_panel_view_on_entry_activated (UnityPanelView* self) {
 		_inner_error_ = NULL;
 		{
 			char* _tmp4_;
-#line 102 "panel-view.vala"
-			template = (_tmp4_ = g_strdup (UNITY_PANEL_SEARCH_TEMPLATE), _g_free0 (template), _tmp4_);
-#line 344 "panel-view.c"
+#line 121 "panel-view.vala"
+			hint = (_tmp4_ = g_strdup (UNITY_PANEL_SEARCH_HINT), _g_free0 (hint), _tmp4_);
+#line 320 "panel-view.c"
 			_g_error_free0 (e);
 		}
 	}
 	__finally7:
+	if (_inner_error_ != NULL) {
+		_g_free0 (hint);
+		_g_object_unref0 (client);
+		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+		g_clear_error (&_inner_error_);
+		return NULL;
+	}
+	result = hint;
+	_g_object_unref0 (client);
+#line 124 "panel-view.vala"
+	return result;
+#line 336 "panel-view.c"
+}
+
+
+#line 1025 "glib-2.0.vapi"
+static char* string_replace (const char* self, const char* old, const char* replacement) {
+#line 342 "panel-view.c"
+	char* result;
+	GError * _inner_error_;
+#line 1025 "glib-2.0.vapi"
+	g_return_val_if_fail (self != NULL, NULL);
+#line 1025 "glib-2.0.vapi"
+	g_return_val_if_fail (old != NULL, NULL);
+#line 1025 "glib-2.0.vapi"
+	g_return_val_if_fail (replacement != NULL, NULL);
+#line 351 "panel-view.c"
+	_inner_error_ = NULL;
+	{
+		char* _tmp0_;
+		GRegex* _tmp1_;
+		GRegex* regex;
+		char* _tmp2_;
+#line 1027 "glib-2.0.vapi"
+		regex = (_tmp1_ = g_regex_new (_tmp0_ = g_regex_escape_string (old, -1), 0, 0, &_inner_error_), _g_free0 (_tmp0_), _tmp1_);
+#line 360 "panel-view.c"
+		if (_inner_error_ != NULL) {
+			if (_inner_error_->domain == G_REGEX_ERROR) {
+				goto __catch9_g_regex_error;
+			}
+			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+			g_clear_error (&_inner_error_);
+			return NULL;
+		}
+#line 1028 "glib-2.0.vapi"
+		_tmp2_ = g_regex_replace_literal (regex, self, (gssize) (-1), 0, replacement, 0, &_inner_error_);
+#line 371 "panel-view.c"
+		if (_inner_error_ != NULL) {
+			_g_regex_unref0 (regex);
+			if (_inner_error_->domain == G_REGEX_ERROR) {
+				goto __catch9_g_regex_error;
+			}
+			_g_regex_unref0 (regex);
+			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+			g_clear_error (&_inner_error_);
+			return NULL;
+		}
+		result = _tmp2_;
+		_g_regex_unref0 (regex);
+#line 1028 "glib-2.0.vapi"
+		return result;
+#line 386 "panel-view.c"
+	}
+	goto __finally9;
+	__catch9_g_regex_error:
+	{
+		GError * e;
+		e = _inner_error_;
+		_inner_error_ = NULL;
+		{
+#line 1030 "glib-2.0.vapi"
+			g_assert_not_reached ();
+#line 397 "panel-view.c"
+			_g_error_free0 (e);
+		}
+	}
+	__finally9:
+	if (_inner_error_ != NULL) {
+		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+		g_clear_error (&_inner_error_);
+		return NULL;
+	}
+}
+
+
+#line 127 "panel-view.vala"
+static void unity_panel_view_on_entry_activated (UnityPanelView* self) {
+#line 412 "panel-view.c"
+	GError * _inner_error_;
+	char* template;
+	GConfClient* client;
+	char* _tmp5_;
+	char* _tmp6_;
+	char* command;
+#line 127 "panel-view.vala"
+	g_return_if_fail (self != NULL);
+#line 421 "panel-view.c"
+	_inner_error_ = NULL;
+#line 129 "panel-view.vala"
+	template = g_strdup ("");
+#line 131 "panel-view.vala"
+	client = _g_object_ref0 (gconf_client_get_default ());
+#line 427 "panel-view.c"
+	{
+		char* _tmp0_;
+		char* _tmp1_;
+		gboolean _tmp2_ = FALSE;
+#line 134 "panel-view.vala"
+		_tmp0_ = gconf_client_get_string (client, "/desktop/unity/panel/search_template", &_inner_error_);
+#line 434 "panel-view.c"
+		if (_inner_error_ != NULL) {
+			goto __catch8_g_error;
+		}
+#line 134 "panel-view.vala"
+		template = (_tmp1_ = _tmp0_, _g_free0 (template), _tmp1_);
+#line 136 "panel-view.vala"
+		if (_vala_strcmp0 (template, "") == 0) {
+#line 136 "panel-view.vala"
+			_tmp2_ = TRUE;
+#line 444 "panel-view.c"
+		} else {
+#line 136 "panel-view.vala"
+			_tmp2_ = template == NULL;
+#line 448 "panel-view.c"
+		}
+#line 136 "panel-view.vala"
+		if (_tmp2_) {
+#line 452 "panel-view.c"
+			char* _tmp3_;
+#line 137 "panel-view.vala"
+			template = (_tmp3_ = g_strdup (UNITY_PANEL_SEARCH_TEMPLATE), _g_free0 (template), _tmp3_);
+#line 456 "panel-view.c"
+		}
+	}
+	goto __finally8;
+	__catch8_g_error:
+	{
+		GError * e;
+		e = _inner_error_;
+		_inner_error_ = NULL;
+		{
+			char* _tmp4_;
+#line 141 "panel-view.vala"
+			template = (_tmp4_ = g_strdup (UNITY_PANEL_SEARCH_TEMPLATE), _g_free0 (template), _tmp4_);
+#line 469 "panel-view.c"
+			_g_error_free0 (e);
+		}
+	}
+	__finally8:
 	if (_inner_error_ != NULL) {
 		_g_free0 (template);
 		_g_object_unref0 (client);
@@ -352,31 +477,31 @@ static void unity_panel_view_on_entry_activated (UnityPanelView* self) {
 		g_clear_error (&_inner_error_);
 		return;
 	}
-#line 105 "panel-view.vala"
+#line 144 "panel-view.vala"
 	command = (_tmp6_ = string_replace (template, "%s", _tmp5_ = g_uri_escape_string (clutter_text_get_text ((ClutterText*) self->priv->entry), "", TRUE)), _g_free0 (_tmp5_), _tmp6_);
-#line 358 "panel-view.c"
+#line 483 "panel-view.c"
 	{
-#line 110 "panel-view.vala"
+#line 149 "panel-view.vala"
 		g_spawn_command_line_async (command, &_inner_error_);
-#line 362 "panel-view.c"
+#line 487 "panel-view.c"
 		if (_inner_error_ != NULL) {
-			goto __catch9_g_error;
+			goto __catch10_g_error;
 		}
 	}
-	goto __finally9;
-	__catch9_g_error:
+	goto __finally10;
+	__catch10_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 114 "panel-view.vala"
-			g_warning ("panel-view.vala:114: Unable to search for '%s': %s", clutter_text_get_text ((ClutterText*) self->priv->entry), e->message);
-#line 376 "panel-view.c"
+#line 153 "panel-view.vala"
+			g_warning ("panel-view.vala:153: Unable to search for '%s': %s", clutter_text_get_text ((ClutterText*) self->priv->entry), e->message);
+#line 501 "panel-view.c"
 			_g_error_free0 (e);
 		}
 	}
-	__finally9:
+	__finally10:
 	if (_inner_error_ != NULL) {
 		_g_free0 (template);
 		_g_object_unref0 (client);
@@ -391,9 +516,9 @@ static void unity_panel_view_on_entry_activated (UnityPanelView* self) {
 }
 
 
-#line 120 "panel-view.vala"
+#line 159 "panel-view.vala"
 static void unity_panel_view_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-#line 397 "panel-view.c"
+#line 522 "panel-view.c"
 	UnityPanelView * self;
 	ClutterActorBox _tmp0_ = {0};
 	ClutterActorBox child_box;
@@ -402,247 +527,265 @@ static void unity_panel_view_real_allocate (ClutterActor* base, const ClutterAct
 	float i_width = 0.0F;
 	gboolean _tmp1_ = FALSE;
 	self = (UnityPanelView*) base;
-#line 123 "panel-view.vala"
+#line 162 "panel-view.vala"
 	child_box = (_tmp0_.x1 = (float) 0, _tmp0_.y1 = (float) 0, _tmp0_.x2 = (*box).x2 - (*box).x1, _tmp0_.y2 = (*box).y2 - (*box).y1, _tmp0_);
-#line 128 "panel-view.vala"
-	CLUTTER_ACTOR_CLASS (unity_panel_view_parent_class)->allocate ((ClutterActor*) CTK_ACTOR (self), box, flags);
-#line 130 "panel-view.vala"
-	width = (*box).x2 - (*box).x1;
-#line 135 "panel-view.vala"
-	child_box.y2 = child_box.y2 + 4.0f;
-#line 136 "panel-view.vala"
-	clutter_actor_allocate ((ClutterActor*) self->priv->rect, &child_box, flags);
-#line 139 "panel-view.vala"
-	child_box.x1 = (float) 0;
-#line 140 "panel-view.vala"
-	child_box.x2 = (float) 60;
-#line 141 "panel-view.vala"
-	child_box.y1 = (float) 0;
-#line 142 "panel-view.vala"
-	child_box.y2 = (float) UNITY_PANEL_PANEL_HEIGHT;
-#line 143 "panel-view.vala"
-	clutter_actor_allocate ((ClutterActor*) self->priv->home, &child_box, flags);
-#line 146 "panel-view.vala"
-	child_box.x1 = floorf (child_box.x2 + 12);
-#line 147 "panel-view.vala"
-	child_box.x2 = floorf (child_box.x1 + 150);
-#line 148 "panel-view.vala"
-	child_box.y1 = floorf ((float) 2);
-#line 149 "panel-view.vala"
-	child_box.y2 = floorf ((float) UNITY_PANEL_PANEL_HEIGHT);
-#line 151 "panel-view.vala"
-	if (self->priv->entry_background->Width != ((gint) (child_box.x2 - child_box.x1))) {
-#line 151 "panel-view.vala"
-		_tmp1_ = clutter_actor_get_height ((ClutterActor*) self->priv->entry_background) != ((gint) ((child_box.y2 - child_box.y1) - 2));
-#line 438 "panel-view.c"
-	} else {
-#line 151 "panel-view.vala"
-		_tmp1_ = FALSE;
-#line 442 "panel-view.c"
-	}
-#line 151 "panel-view.vala"
-	if (_tmp1_) {
-#line 153 "panel-view.vala"
-		unity_places_cairo_drawing_entry_background_create_search_entry_background (self->priv->entry_background, (gint) (child_box.x2 - child_box.x1), (gint) ((child_box.y2 - child_box.y1) - 2));
-#line 448 "panel-view.c"
-	}
-#line 155 "panel-view.vala"
-	clutter_actor_allocate ((ClutterActor*) self->priv->entry_background, &child_box, flags);
-#line 157 "panel-view.vala"
-	child_box.x1 = child_box.x1 + ((float) 12);
-#line 158 "panel-view.vala"
-	child_box.x2 = child_box.x2 - ((float) 12);
-#line 159 "panel-view.vala"
-	child_box.y1 = child_box.y1 + ((float) 5);
-#line 160 "panel-view.vala"
-	child_box.y2 = child_box.y2 - ((float) 4);
-#line 161 "panel-view.vala"
-	clutter_actor_allocate ((ClutterActor*) self->priv->entry, &child_box, flags);
-#line 163 "panel-view.vala"
-	child_box.y1 = (float) 0;
-#line 164 "panel-view.vala"
-	child_box.y2 = (float) UNITY_PANEL_PANEL_HEIGHT;
 #line 167 "panel-view.vala"
-	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->indicators, (float) UNITY_PANEL_PANEL_HEIGHT, &child_width, &child_width);
-#line 170 "panel-view.vala"
-	child_box.x1 = width - child_width;
-#line 171 "panel-view.vala"
-	child_box.x2 = width;
-#line 172 "panel-view.vala"
-	clutter_actor_allocate ((ClutterActor*) self->priv->indicators, &child_box, flags);
+	CLUTTER_ACTOR_CLASS (unity_panel_view_parent_class)->allocate ((ClutterActor*) CTK_ACTOR (self), box, flags);
+#line 169 "panel-view.vala"
+	width = (*box).x2 - (*box).x1;
 #line 174 "panel-view.vala"
-	width = width - (child_width + 12);
-#line 177 "panel-view.vala"
-	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->tray, (float) UNITY_PANEL_PANEL_HEIGHT, &child_width, &child_width);
+	child_box.y2 = child_box.y2 + 4.0f;
+#line 175 "panel-view.vala"
+	clutter_actor_allocate ((ClutterActor*) self->priv->rect, &child_box, flags);
+#line 178 "panel-view.vala"
+	child_box.x1 = (float) 0;
+#line 179 "panel-view.vala"
+	child_box.x2 = (float) 60;
 #line 180 "panel-view.vala"
-	child_box.x1 = width - child_width;
+	child_box.y1 = (float) 0;
 #line 181 "panel-view.vala"
-	child_box.x2 = width;
+	child_box.y2 = (float) UNITY_PANEL_PANEL_HEIGHT;
 #line 182 "panel-view.vala"
-	clutter_actor_allocate ((ClutterActor*) self->priv->tray, &child_box, flags);
-#line 184 "panel-view.vala"
-	width = width - (child_box.x2 - child_box.x1);
+	clutter_actor_allocate ((ClutterActor*) self->priv->home, &child_box, flags);
 #line 185 "panel-view.vala"
-	i_width = ((*box).x2 - (*box).x1) - width;
+	child_box.x1 = floorf (child_box.x2 + 12);
 #line 186 "panel-view.vala"
-	if (self->priv->indicators_width != ((gint) i_width)) {
+	child_box.x2 = floorf (child_box.x1 + 170);
+#line 187 "panel-view.vala"
+	child_box.y1 = floorf ((float) 2);
 #line 188 "panel-view.vala"
+	child_box.y2 = floorf ((float) UNITY_PANEL_PANEL_HEIGHT);
+#line 190 "panel-view.vala"
+	if (self->priv->entry_background->Width != ((gint) (child_box.x2 - child_box.x1))) {
+#line 190 "panel-view.vala"
+		_tmp1_ = clutter_actor_get_height ((ClutterActor*) self->priv->entry_background) != ((gint) ((child_box.y2 - child_box.y1) - 2));
+#line 563 "panel-view.c"
+	} else {
+#line 190 "panel-view.vala"
+		_tmp1_ = FALSE;
+#line 567 "panel-view.c"
+	}
+#line 190 "panel-view.vala"
+	if (_tmp1_) {
+#line 192 "panel-view.vala"
+		unity_places_cairo_drawing_entry_background_create_search_entry_background (self->priv->entry_background, (gint) (child_box.x2 - child_box.x1), (gint) ((child_box.y2 - child_box.y1) - 2));
+#line 573 "panel-view.c"
+	}
+#line 194 "panel-view.vala"
+	clutter_actor_allocate ((ClutterActor*) self->priv->entry_background, &child_box, flags);
+#line 196 "panel-view.vala"
+	child_box.x1 = child_box.x1 + ((float) 6);
+#line 197 "panel-view.vala"
+	child_box.x2 = child_box.x1 + 16;
+#line 198 "panel-view.vala"
+	child_box.y1 = floorf ((UNITY_PANEL_PANEL_HEIGHT - 16) / 2.0f);
+#line 199 "panel-view.vala"
+	child_box.y2 = child_box.y1 + 16;
+#line 200 "panel-view.vala"
+	clutter_actor_allocate ((ClutterActor*) self->priv->entry_icon, &child_box, flags);
+#line 202 "panel-view.vala"
+	child_box.x1 = child_box.x2 + 4;
+#line 203 "panel-view.vala"
+	child_box.x2 = (child_box.x1 + 150) - 16;
+#line 204 "panel-view.vala"
+	child_box.y1 = (float) 9;
+#line 205 "panel-view.vala"
+	child_box.y2 = (float) 15;
+#line 206 "panel-view.vala"
+	clutter_actor_allocate ((ClutterActor*) self->priv->entry, &child_box, flags);
+#line 208 "panel-view.vala"
+	child_box.y1 = (float) 0;
+#line 209 "panel-view.vala"
+	child_box.y2 = (float) UNITY_PANEL_PANEL_HEIGHT;
+#line 212 "panel-view.vala"
+	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->indicators, (float) UNITY_PANEL_PANEL_HEIGHT, &child_width, &child_width);
+#line 215 "panel-view.vala"
+	child_box.x1 = width - child_width;
+#line 216 "panel-view.vala"
+	child_box.x2 = width;
+#line 217 "panel-view.vala"
+	clutter_actor_allocate ((ClutterActor*) self->priv->indicators, &child_box, flags);
+#line 219 "panel-view.vala"
+	width = width - (child_width + 12);
+#line 222 "panel-view.vala"
+	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->tray, (float) UNITY_PANEL_PANEL_HEIGHT, &child_width, &child_width);
+#line 225 "panel-view.vala"
+	child_box.x1 = width - child_width;
+#line 226 "panel-view.vala"
+	child_box.x2 = width;
+#line 227 "panel-view.vala"
+	clutter_actor_allocate ((ClutterActor*) self->priv->tray, &child_box, flags);
+#line 229 "panel-view.vala"
+	width = width - (child_box.x2 - child_box.x1);
+#line 230 "panel-view.vala"
+	i_width = ((*box).x2 - (*box).x1) - width;
+#line 231 "panel-view.vala"
+	if (self->priv->indicators_width != ((gint) i_width)) {
+#line 233 "panel-view.vala"
 		self->priv->indicators_width = (gint) i_width;
-#line 189 "panel-view.vala"
+#line 234 "panel-view.vala"
 		g_signal_emit_by_name (self->priv->_shell, "indicators-changed", self->priv->indicators_width);
-#line 494 "panel-view.c"
+#line 629 "panel-view.c"
 	}
 }
 
 
-#line 193 "panel-view.vala"
-static void unity_panel_view_real_paint (ClutterActor* base) {
-#line 501 "panel-view.c"
-	UnityPanelView * self;
-	self = (UnityPanelView*) base;
-#line 195 "panel-view.vala"
-	CLUTTER_ACTOR_CLASS (unity_panel_view_parent_class)->paint ((ClutterActor*) CTK_ACTOR (self));
-#line 196 "panel-view.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->rect);
-#line 197 "panel-view.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->tray);
-#line 198 "panel-view.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->home);
-#line 199 "panel-view.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->indicators);
-#line 200 "panel-view.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->entry_background);
-#line 201 "panel-view.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->entry);
-#line 518 "panel-view.c"
-}
-
-
-#line 204 "panel-view.vala"
-static void unity_panel_view_real_pick (ClutterActor* base, const ClutterColor* color) {
-#line 524 "panel-view.c"
-	UnityPanelView * self;
-	self = (UnityPanelView*) base;
-#line 206 "panel-view.vala"
-	CLUTTER_ACTOR_CLASS (unity_panel_view_parent_class)->pick ((ClutterActor*) CTK_ACTOR (self), color);
-#line 207 "panel-view.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->tray);
-#line 208 "panel-view.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->home);
-#line 209 "panel-view.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->indicators);
-#line 210 "panel-view.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->entry_background);
-#line 211 "panel-view.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->entry);
-#line 539 "panel-view.c"
-}
-
-
-#line 214 "panel-view.vala"
-static void unity_panel_view_real_map (ClutterActor* base) {
-#line 545 "panel-view.c"
-	UnityPanelView * self;
-	self = (UnityPanelView*) base;
-#line 216 "panel-view.vala"
-	CLUTTER_ACTOR_CLASS (unity_panel_view_parent_class)->map ((ClutterActor*) CTK_ACTOR (self));
-#line 217 "panel-view.vala"
-	clutter_actor_map ((ClutterActor*) self->priv->rect);
-#line 218 "panel-view.vala"
-	clutter_actor_map ((ClutterActor*) self->priv->tray);
-#line 219 "panel-view.vala"
-	clutter_actor_map ((ClutterActor*) self->priv->home);
-#line 220 "panel-view.vala"
-	clutter_actor_map ((ClutterActor*) self->priv->indicators);
-#line 221 "panel-view.vala"
-	clutter_actor_map ((ClutterActor*) self->priv->entry_background);
-#line 222 "panel-view.vala"
-	clutter_actor_map ((ClutterActor*) self->priv->entry);
-#line 562 "panel-view.c"
-}
-
-
-#line 225 "panel-view.vala"
-static void unity_panel_view_real_unmap (ClutterActor* base) {
-#line 568 "panel-view.c"
-	UnityPanelView * self;
-	self = (UnityPanelView*) base;
-#line 227 "panel-view.vala"
-	CLUTTER_ACTOR_CLASS (unity_panel_view_parent_class)->unmap ((ClutterActor*) CTK_ACTOR (self));
-#line 228 "panel-view.vala"
-	clutter_actor_unmap ((ClutterActor*) self->priv->rect);
-#line 229 "panel-view.vala"
-	clutter_actor_unmap ((ClutterActor*) self->priv->tray);
-#line 230 "panel-view.vala"
-	clutter_actor_unmap ((ClutterActor*) self->priv->home);
-#line 231 "panel-view.vala"
-	clutter_actor_unmap ((ClutterActor*) self->priv->indicators);
-#line 232 "panel-view.vala"
-	clutter_actor_unmap ((ClutterActor*) self->priv->entry_background);
-#line 233 "panel-view.vala"
-	clutter_actor_unmap ((ClutterActor*) self->priv->entry);
-#line 585 "panel-view.c"
-}
-
-
-#line 236 "panel-view.vala"
-gint unity_panel_view_get_indicators_width (UnityPanelView* self) {
-#line 591 "panel-view.c"
-	gint result;
-#line 236 "panel-view.vala"
-	g_return_val_if_fail (self != NULL, 0);
-#line 595 "panel-view.c"
-	result = (gint) self->priv->indicators_width;
 #line 238 "panel-view.vala"
-	return result;
-#line 599 "panel-view.c"
+static void unity_panel_view_real_paint (ClutterActor* base) {
+#line 636 "panel-view.c"
+	UnityPanelView * self;
+	self = (UnityPanelView*) base;
+#line 240 "panel-view.vala"
+	CLUTTER_ACTOR_CLASS (unity_panel_view_parent_class)->paint ((ClutterActor*) CTK_ACTOR (self));
+#line 241 "panel-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->rect);
+#line 242 "panel-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->tray);
+#line 243 "panel-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->home);
+#line 244 "panel-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->indicators);
+#line 245 "panel-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->entry_background);
+#line 246 "panel-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->entry_icon);
+#line 247 "panel-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->entry);
+#line 655 "panel-view.c"
 }
 
 
-#line 241 "panel-view.vala"
+#line 250 "panel-view.vala"
+static void unity_panel_view_real_pick (ClutterActor* base, const ClutterColor* color) {
+#line 661 "panel-view.c"
+	UnityPanelView * self;
+	self = (UnityPanelView*) base;
+#line 252 "panel-view.vala"
+	CLUTTER_ACTOR_CLASS (unity_panel_view_parent_class)->pick ((ClutterActor*) CTK_ACTOR (self), color);
+#line 253 "panel-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->tray);
+#line 254 "panel-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->home);
+#line 255 "panel-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->indicators);
+#line 256 "panel-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->entry_background);
+#line 257 "panel-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->entry_icon);
+#line 258 "panel-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->entry);
+#line 678 "panel-view.c"
+}
+
+
+#line 261 "panel-view.vala"
+static void unity_panel_view_real_map (ClutterActor* base) {
+#line 684 "panel-view.c"
+	UnityPanelView * self;
+	self = (UnityPanelView*) base;
+#line 263 "panel-view.vala"
+	CLUTTER_ACTOR_CLASS (unity_panel_view_parent_class)->map ((ClutterActor*) CTK_ACTOR (self));
+#line 264 "panel-view.vala"
+	clutter_actor_map ((ClutterActor*) self->priv->rect);
+#line 265 "panel-view.vala"
+	clutter_actor_map ((ClutterActor*) self->priv->tray);
+#line 266 "panel-view.vala"
+	clutter_actor_map ((ClutterActor*) self->priv->home);
+#line 267 "panel-view.vala"
+	clutter_actor_map ((ClutterActor*) self->priv->indicators);
+#line 268 "panel-view.vala"
+	clutter_actor_map ((ClutterActor*) self->priv->entry_background);
+#line 269 "panel-view.vala"
+	clutter_actor_map ((ClutterActor*) self->priv->entry_icon);
+#line 270 "panel-view.vala"
+	clutter_actor_map ((ClutterActor*) self->priv->entry);
+#line 703 "panel-view.c"
+}
+
+
+#line 273 "panel-view.vala"
+static void unity_panel_view_real_unmap (ClutterActor* base) {
+#line 709 "panel-view.c"
+	UnityPanelView * self;
+	self = (UnityPanelView*) base;
+#line 275 "panel-view.vala"
+	CLUTTER_ACTOR_CLASS (unity_panel_view_parent_class)->unmap ((ClutterActor*) CTK_ACTOR (self));
+#line 276 "panel-view.vala"
+	clutter_actor_unmap ((ClutterActor*) self->priv->rect);
+#line 277 "panel-view.vala"
+	clutter_actor_unmap ((ClutterActor*) self->priv->tray);
+#line 278 "panel-view.vala"
+	clutter_actor_unmap ((ClutterActor*) self->priv->home);
+#line 279 "panel-view.vala"
+	clutter_actor_unmap ((ClutterActor*) self->priv->indicators);
+#line 280 "panel-view.vala"
+	clutter_actor_unmap ((ClutterActor*) self->priv->entry_background);
+#line 281 "panel-view.vala"
+	clutter_actor_unmap ((ClutterActor*) self->priv->entry_icon);
+#line 282 "panel-view.vala"
+	clutter_actor_unmap ((ClutterActor*) self->priv->entry);
+#line 728 "panel-view.c"
+}
+
+
+#line 285 "panel-view.vala"
+gint unity_panel_view_get_indicators_width (UnityPanelView* self) {
+#line 734 "panel-view.c"
+	gint result;
+#line 285 "panel-view.vala"
+	g_return_val_if_fail (self != NULL, 0);
+#line 738 "panel-view.c"
+	result = (gint) self->priv->indicators_width;
+#line 287 "panel-view.vala"
+	return result;
+#line 742 "panel-view.c"
+}
+
+
+#line 290 "panel-view.vala"
 void unity_panel_view_set_indicator_mode (UnityPanelView* self, gboolean mode) {
-#line 605 "panel-view.c"
+#line 748 "panel-view.c"
 	float x = 0.0F;
 	float _tmp0_ = 0.0F;
 	float _tmp1_ = 0.0F;
 	gint _tmp2_ = 0;
-#line 241 "panel-view.vala"
+#line 290 "panel-view.vala"
 	g_return_if_fail (self != NULL);
-#line 245 "panel-view.vala"
+#line 294 "panel-view.vala"
 	if (mode) {
-#line 245 "panel-view.vala"
+#line 294 "panel-view.vala"
 		_tmp0_ = clutter_actor_get_width ((ClutterActor*) self) - unity_panel_view_get_indicators_width (self);
-#line 616 "panel-view.c"
+#line 759 "panel-view.c"
 	} else {
-#line 245 "panel-view.vala"
+#line 294 "panel-view.vala"
 		_tmp0_ = (float) 0;
-#line 620 "panel-view.c"
+#line 763 "panel-view.c"
 	}
-#line 245 "panel-view.vala"
+#line 294 "panel-view.vala"
 	x = _tmp0_;
-#line 249 "panel-view.vala"
+#line 298 "panel-view.vala"
 	if (mode) {
-#line 249 "panel-view.vala"
+#line 298 "panel-view.vala"
 		_tmp1_ = (float) unity_panel_view_get_indicators_width (self);
-#line 628 "panel-view.c"
+#line 771 "panel-view.c"
 	} else {
-#line 249 "panel-view.vala"
+#line 298 "panel-view.vala"
 		_tmp1_ = clutter_actor_get_width ((ClutterActor*) self);
-#line 632 "panel-view.c"
+#line 775 "panel-view.c"
 	}
-#line 250 "panel-view.vala"
+#line 299 "panel-view.vala"
 	if (mode) {
-#line 250 "panel-view.vala"
+#line 299 "panel-view.vala"
 		_tmp2_ = UNITY_PANEL_PANEL_HEIGHT - 1;
-#line 638 "panel-view.c"
+#line 781 "panel-view.c"
 	} else {
-#line 250 "panel-view.vala"
+#line 299 "panel-view.vala"
 		_tmp2_ = UNITY_PANEL_PANEL_HEIGHT;
-#line 642 "panel-view.c"
+#line 785 "panel-view.c"
 	}
-#line 247 "panel-view.vala"
+#line 296 "panel-view.vala"
 	clutter_actor_set_clip ((ClutterActor*) self->priv->rect, x, (float) 0, _tmp1_, (float) _tmp2_);
-#line 646 "panel-view.c"
+#line 789 "panel-view.c"
 }
 
 
@@ -650,9 +793,9 @@ UnityShell* unity_panel_view_get_shell (UnityPanelView* self) {
 	UnityShell* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_shell;
-#line 29 "panel-view.vala"
+#line 30 "panel-view.vala"
 	return result;
-#line 656 "panel-view.c"
+#line 799 "panel-view.c"
 }
 
 
@@ -664,17 +807,31 @@ static void unity_panel_view_set_shell (UnityPanelView* self, UnityShell* value)
 }
 
 
-#line 83 "panel-view.vala"
+#line 92 "panel-view.vala"
 static void _unity_panel_view_on_home_clicked_unity_panel_home_button_clicked (UnityPanelHomeButton* _sender, guint32 time_, gpointer self) {
-#line 670 "panel-view.c"
+#line 813 "panel-view.c"
 	unity_panel_view_on_home_clicked (self);
 }
 
 
-#line 88 "panel-view.vala"
+#line 127 "panel-view.vala"
 static void _unity_panel_view_on_entry_activated_clutter_text_activate (ClutterText* _sender, gpointer self) {
-#line 677 "panel-view.c"
+#line 820 "panel-view.c"
 	unity_panel_view_on_entry_activated (self);
+}
+
+
+#line 97 "panel-view.vala"
+static void _unity_panel_view_on_entry_focus_in_clutter_actor_key_focus_in (ClutterActor* _sender, gpointer self) {
+#line 827 "panel-view.c"
+	unity_panel_view_on_entry_focus_in (self);
+}
+
+
+#line 102 "panel-view.vala"
+static void _unity_panel_view_on_entry_focus_out_clutter_actor_key_focus_out (ClutterActor* _sender, gpointer self) {
+#line 834 "panel-view.c"
+	unity_panel_view_on_entry_focus_out (self);
 }
 
 
@@ -691,56 +848,74 @@ static GObject * unity_panel_view_constructor (GType type, guint n_construct_pro
 		UnityPanelTrayView* _tmp2_;
 		UnityPanelHomeButton* _tmp3_;
 		UnityPlacesCairoDrawingEntryBackground* _tmp4_;
-		UnityEntry* _tmp5_;
-#line 49 "panel-view.vala"
-		START_FUNCTION ();
+		UnityThemeImage* _tmp5_;
+		UnityEntry* _tmp6_;
+		char* _tmp7_;
+		gboolean* _tmp9_;
+		gboolean _tmp8_;
 #line 51 "panel-view.vala"
-		self->priv->rect = (_tmp0_ = g_object_ref_sink (unity_theme_image_new ("panel_background")), _g_object_unref0 (self->priv->rect), _tmp0_);
-#line 52 "panel-view.vala"
-		clutter_texture_set_repeat ((ClutterTexture*) self->priv->rect, TRUE, FALSE);
+		START_FUNCTION ();
 #line 53 "panel-view.vala"
-		clutter_actor_set_parent ((ClutterActor*) self->priv->rect, (ClutterActor*) self);
+		self->priv->rect = (_tmp0_ = g_object_ref_sink (unity_theme_image_new ("panel_background")), _g_object_unref0 (self->priv->rect), _tmp0_);
 #line 54 "panel-view.vala"
-		clutter_actor_show ((ClutterActor*) self->priv->rect);
+		clutter_texture_set_repeat ((ClutterTexture*) self->priv->rect, TRUE, FALSE);
+#line 55 "panel-view.vala"
+		clutter_actor_set_parent ((ClutterActor*) self->priv->rect, (ClutterActor*) self);
 #line 56 "panel-view.vala"
-		self->priv->indicators = (_tmp1_ = g_object_ref_sink (unity_panel_indicators_view_new ()), _g_object_unref0 (self->priv->indicators), _tmp1_);
-#line 57 "panel-view.vala"
-		clutter_actor_set_parent ((ClutterActor*) self->priv->indicators, (ClutterActor*) self);
+		clutter_actor_show ((ClutterActor*) self->priv->rect);
 #line 58 "panel-view.vala"
-		clutter_actor_show ((ClutterActor*) self->priv->indicators);
+		self->priv->indicators = (_tmp1_ = g_object_ref_sink (unity_panel_indicators_view_new ()), _g_object_unref0 (self->priv->indicators), _tmp1_);
+#line 59 "panel-view.vala"
+		clutter_actor_set_parent ((ClutterActor*) self->priv->indicators, (ClutterActor*) self);
 #line 60 "panel-view.vala"
-		self->priv->tray = (_tmp2_ = g_object_ref_sink (unity_panel_tray_view_new ()), _g_object_unref0 (self->priv->tray), _tmp2_);
-#line 61 "panel-view.vala"
-		clutter_actor_set_parent ((ClutterActor*) self->priv->tray, (ClutterActor*) self);
+		clutter_actor_show ((ClutterActor*) self->priv->indicators);
 #line 62 "panel-view.vala"
+		self->priv->tray = (_tmp2_ = g_object_ref_sink (unity_panel_tray_view_new ()), _g_object_unref0 (self->priv->tray), _tmp2_);
+#line 63 "panel-view.vala"
+		clutter_actor_set_parent ((ClutterActor*) self->priv->tray, (ClutterActor*) self);
+#line 64 "panel-view.vala"
 		clutter_actor_show ((ClutterActor*) self->priv->tray);
-#line 65 "panel-view.vala"
-		self->priv->home = (_tmp3_ = g_object_ref_sink (unity_panel_home_button_new (self->priv->_shell)), _g_object_unref0 (self->priv->home), _tmp3_);
 #line 66 "panel-view.vala"
-		clutter_actor_set_parent ((ClutterActor*) self->priv->home, (ClutterActor*) self);
+		self->priv->home = (_tmp3_ = g_object_ref_sink (unity_panel_home_button_new (self->priv->_shell)), _g_object_unref0 (self->priv->home), _tmp3_);
 #line 67 "panel-view.vala"
-		clutter_actor_show ((ClutterActor*) self->priv->home);
+		clutter_actor_set_parent ((ClutterActor*) self->priv->home, (ClutterActor*) self);
 #line 68 "panel-view.vala"
+		clutter_actor_show ((ClutterActor*) self->priv->home);
+#line 69 "panel-view.vala"
 		g_signal_connect_object (self->priv->home, "clicked", (GCallback) _unity_panel_view_on_home_clicked_unity_panel_home_button_clicked, self, 0);
-#line 70 "panel-view.vala"
-		self->priv->entry_background = (_tmp4_ = g_object_ref_sink (unity_places_cairo_drawing_entry_background_new ()), _g_object_unref0 (self->priv->entry_background), _tmp4_);
 #line 71 "panel-view.vala"
-		clutter_actor_set_parent ((ClutterActor*) self->priv->entry_background, (ClutterActor*) self);
+		self->priv->entry_background = (_tmp4_ = g_object_ref_sink (unity_places_cairo_drawing_entry_background_new ()), _g_object_unref0 (self->priv->entry_background), _tmp4_);
 #line 72 "panel-view.vala"
+		clutter_actor_set_parent ((ClutterActor*) self->priv->entry_background, (ClutterActor*) self);
+#line 73 "panel-view.vala"
 		clutter_actor_show ((ClutterActor*) self->priv->entry_background);
-#line 74 "panel-view.vala"
-		self->priv->entry = (_tmp5_ = g_object_ref_sink (unity_entry_new ("")), _g_object_unref0 (self->priv->entry), _tmp5_);
 #line 75 "panel-view.vala"
-		unity_entry_set_static_text (self->priv->entry, _ ("Search"));
+		self->priv->entry_icon = (_tmp5_ = g_object_ref_sink (unity_theme_image_new ("search_field")), _g_object_unref0 (self->priv->entry_icon), _tmp5_);
 #line 76 "panel-view.vala"
-		clutter_actor_set_parent ((ClutterActor*) self->priv->entry, (ClutterActor*) self);
+		clutter_actor_set_parent ((ClutterActor*) self->priv->entry_icon, (ClutterActor*) self);
 #line 77 "panel-view.vala"
-		clutter_actor_show ((ClutterActor*) self->priv->entry);
-#line 78 "panel-view.vala"
-		g_signal_connect_object ((ClutterText*) self->priv->entry, "activate", (GCallback) _unity_panel_view_on_entry_activated_clutter_text_activate, self, 0);
+		clutter_actor_show ((ClutterActor*) self->priv->entry_icon);
+#line 79 "panel-view.vala"
+		self->priv->entry = (_tmp6_ = g_object_ref_sink (unity_entry_new ("")), _g_object_unref0 (self->priv->entry), _tmp6_);
 #line 80 "panel-view.vala"
+		unity_entry_set_static_text (self->priv->entry, _tmp7_ = unity_panel_view_get_search_hint (self));
+#line 903 "panel-view.c"
+		_g_free0 (_tmp7_);
+#line 81 "panel-view.vala"
+		clutter_actor_set_parent ((ClutterActor*) self->priv->entry, (ClutterActor*) self);
+#line 82 "panel-view.vala"
+		clutter_actor_show ((ClutterActor*) self->priv->entry);
+#line 83 "panel-view.vala"
+		g_signal_connect_object ((ClutterText*) self->priv->entry, "activate", (GCallback) _unity_panel_view_on_entry_activated_clutter_text_activate, self, 0);
+#line 85 "panel-view.vala"
+		g_signal_connect_object ((ClutterActor*) self->priv->entry, "key-focus-in", (GCallback) _unity_panel_view_on_entry_focus_in_clutter_actor_key_focus_in, self, 0);
+#line 86 "panel-view.vala"
+		g_signal_connect_object ((ClutterActor*) self->priv->entry, "key-focus-out", (GCallback) _unity_panel_view_on_entry_focus_out_clutter_actor_key_focus_out, self, 0);
+#line 87 "panel-view.vala"
+		unity_panel_search_entry_has_focus = (_tmp9_ = __bool_dup0 ((_tmp8_ = FALSE, &_tmp8_)), _g_free0 (unity_panel_search_entry_has_focus), _tmp9_);
+#line 89 "panel-view.vala"
 		END_FUNCTION ();
-#line 744 "panel-view.c"
+#line 919 "panel-view.c"
 	}
 	return obj;
 }
@@ -776,6 +951,7 @@ static void unity_panel_view_finalize (GObject* obj) {
 	_g_object_unref0 (self->priv->tray);
 	_g_object_unref0 (self->priv->home);
 	_g_object_unref0 (self->priv->indicators);
+	_g_object_unref0 (self->priv->entry_icon);
 	_g_object_unref0 (self->priv->entry);
 	_g_object_unref0 (self->priv->entry_background);
 	G_OBJECT_CLASS (unity_panel_view_parent_class)->finalize (obj);

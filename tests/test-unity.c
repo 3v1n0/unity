@@ -29,6 +29,8 @@
 #include <clutk/clutk.h>
 #include <unity-static.h>
 #include <clutter/clutter.h>
+#include <launcher/launcher.h>
+#include <unity.h>
 #include <unity-places/unity-places.h>
 #include <dbus/dbus-glib-lowlevel.h>
 #include <dbus/dbus-glib.h>
@@ -140,30 +142,30 @@ static void main_finalize (Main* obj);
 
 #line 33 "test-unity.vala"
 static gboolean _lambda10_ (void) {
-#line 144 "test-unity.c"
+#line 146 "test-unity.c"
 	gboolean result;
 #line 34 "test-unity.vala"
 	g_test_run ();
 #line 35 "test-unity.vala"
 	gtk_main_quit ();
-#line 150 "test-unity.c"
+#line 152 "test-unity.c"
 	result = FALSE;
 #line 36 "test-unity.vala"
 	return result;
-#line 154 "test-unity.c"
+#line 156 "test-unity.c"
 }
 
 
 #line 33 "test-unity.vala"
 static gboolean __lambda10__gsource_func (gpointer self) {
-#line 160 "test-unity.c"
+#line 162 "test-unity.c"
 	return _lambda10_ ();
 }
 
 
 #line 25 "test-unity.vala"
 gint main_main (char** args, int args_length1) {
-#line 167 "test-unity.c"
+#line 169 "test-unity.c"
 	gint result;
 #line 27 "test-unity.vala"
 	gtk_init (&args_length1, &args);
@@ -177,11 +179,11 @@ gint main_main (char** args, int args_length1) {
 	g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda10__gsource_func, NULL, NULL);
 #line 40 "test-unity.vala"
 	gtk_main ();
-#line 181 "test-unity.c"
+#line 183 "test-unity.c"
 	result = 0;
 #line 42 "test-unity.vala"
 	return result;
-#line 185 "test-unity.c"
+#line 187 "test-unity.c"
 }
 
 
@@ -191,13 +193,13 @@ int main (int argc, char ** argv) {
 	g_type_init ();
 #line 25 "test-unity.vala"
 	return main_main (argv, argc);
-#line 195 "test-unity.c"
+#line 197 "test-unity.c"
 }
 
 
 #line 47 "test-unity.vala"
 static void _lambda0_ (void) {
-#line 201 "test-unity.c"
+#line 203 "test-unity.c"
 	UnityUnderlayWindow* window;
 #line 48 "test-unity.vala"
 	window = g_object_ref_sink (unity_underlay_window_new (FALSE, 0, 0));
@@ -207,70 +209,70 @@ static void _lambda0_ (void) {
 	gtk_widget_show ((GtkWidget*) window);
 #line 53 "test-unity.vala"
 	g_assert (gtk_widget_get_visible ((GtkWidget*) window));
-#line 211 "test-unity.c"
+#line 213 "test-unity.c"
 	_g_object_unref0 (window);
 }
 
 
 #line 47 "test-unity.vala"
 static void __lambda0__gcallback (void) {
-#line 218 "test-unity.c"
+#line 220 "test-unity.c"
 	_lambda0_ ();
 }
 
 
 #line 57 "test-unity.vala"
 static void _lambda1_ (void) {
-#line 225 "test-unity.c"
+#line 227 "test-unity.c"
 	UnityBackground* bg;
 #line 58 "test-unity.vala"
 	bg = g_object_ref_sink (unity_background_new ());
 #line 59 "test-unity.vala"
 	g_assert (CLUTTER_IS_ACTOR (bg));
-#line 231 "test-unity.c"
+#line 233 "test-unity.c"
 	_g_object_unref0 (bg);
 }
 
 
 #line 57 "test-unity.vala"
 static void __lambda1__gcallback (void) {
-#line 238 "test-unity.c"
+#line 240 "test-unity.c"
 	_lambda1_ ();
 }
 
 
 #line 61 "test-unity.vala"
 static void _lambda2_ (void) {
-#line 245 "test-unity.c"
+#line 247 "test-unity.c"
 	UnityQuicklauncherModelsApplicationModel* model;
 #line 62 "test-unity.vala"
-	model = unity_quicklauncher_models_application_model_new (MAIN_firefox_desktop);
+	model = unity_quicklauncher_models_application_model_new (launcher_appman_get_application_for_desktop_file (launcher_appman_get_default (), MAIN_firefox_desktop));
 #line 63 "test-unity.vala"
 	g_assert (UNITY_QUICKLAUNCHER_MODELS_IS_APPLICATION_MODEL (model));
-#line 251 "test-unity.c"
+#line 253 "test-unity.c"
 	_g_object_unref0 (model);
 }
 
 
 #line 61 "test-unity.vala"
 static void __lambda2__gcallback (void) {
-#line 258 "test-unity.c"
+#line 260 "test-unity.c"
 	_lambda2_ ();
 }
 
 
 #line 66 "test-unity.vala"
 static void _lambda3_ (void) {
-#line 265 "test-unity.c"
+#line 267 "test-unity.c"
 	UnityQuicklauncherModelsApplicationModel* model;
 	UnityQuicklauncherLauncherView* view;
 #line 67 "test-unity.vala"
-	model = unity_quicklauncher_models_application_model_new (MAIN_firefox_desktop);
+	model = unity_quicklauncher_models_application_model_new (launcher_appman_get_application_for_desktop_file (launcher_appman_get_default (), MAIN_firefox_desktop));
 #line 68 "test-unity.vala"
 	view = g_object_ref_sink (unity_quicklauncher_launcher_view_new ((UnityQuicklauncherModelsLauncherModel*) model));
 #line 69 "test-unity.vala"
 	g_assert (UNITY_QUICKLAUNCHER_IS_LAUNCHER_VIEW (view));
-#line 274 "test-unity.c"
+#line 276 "test-unity.c"
 	_g_object_unref0 (model);
 	_g_object_unref0 (view);
 }
@@ -278,74 +280,74 @@ static void _lambda3_ (void) {
 
 #line 66 "test-unity.vala"
 static void __lambda3__gcallback (void) {
-#line 282 "test-unity.c"
+#line 284 "test-unity.c"
 	_lambda3_ ();
 }
 
 
 #line 72 "test-unity.vala"
 static void _lambda4_ (void) {
-#line 289 "test-unity.c"
+#line 291 "test-unity.c"
 	UnityQuicklauncherQuicklistMenu* view;
 #line 73 "test-unity.vala"
 	view = g_object_ref_sink (unity_quicklauncher_quicklist_menu_new ());
 #line 74 "test-unity.vala"
 	g_assert (UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU (view));
-#line 295 "test-unity.c"
+#line 297 "test-unity.c"
 	_g_object_unref0 (view);
 }
 
 
 #line 72 "test-unity.vala"
 static void __lambda4__gcallback (void) {
-#line 302 "test-unity.c"
+#line 304 "test-unity.c"
 	_lambda4_ ();
 }
 
 
 #line 77 "test-unity.vala"
 static void _lambda5_ (void) {
-#line 309 "test-unity.c"
+#line 311 "test-unity.c"
 	UnityQuicklauncherManager* manager;
 #line 78 "test-unity.vala"
 	manager = g_object_ref_sink (unity_quicklauncher_manager_new ());
 #line 79 "test-unity.vala"
 	g_assert (UNITY_QUICKLAUNCHER_IS_MANAGER (manager));
-#line 315 "test-unity.c"
+#line 317 "test-unity.c"
 	_g_object_unref0 (manager);
 }
 
 
 #line 77 "test-unity.vala"
 static void __lambda5__gcallback (void) {
-#line 322 "test-unity.c"
+#line 324 "test-unity.c"
 	_lambda5_ ();
 }
 
 
 #line 82 "test-unity.vala"
 static void _lambda6_ (void) {
-#line 329 "test-unity.c"
-	UnityQuicklauncherPrism* webapp;
+#line 331 "test-unity.c"
+	UnityWebappPrism* webapp;
 #line 83 "test-unity.vala"
-	webapp = unity_quicklauncher_prism_new ("http://www.google.com", "/tmp/icon.svg");
+	webapp = unity_webapp_prism_new ("http://www.google.com", "/tmp/icon.svg");
 #line 84 "test-unity.vala"
-	g_assert (UNITY_QUICKLAUNCHER_IS_PRISM (webapp));
-#line 335 "test-unity.c"
+	g_assert (UNITY_WEBAPP_IS_PRISM (webapp));
+#line 337 "test-unity.c"
 	_g_object_unref0 (webapp);
 }
 
 
 #line 82 "test-unity.vala"
 static void __lambda6__gcallback (void) {
-#line 342 "test-unity.c"
+#line 344 "test-unity.c"
 	_lambda6_ ();
 }
 
 
 #line 87 "test-unity.vala"
 static void _lambda7_ (void) {
-#line 349 "test-unity.c"
+#line 351 "test-unity.c"
 	UnityWidgetsScroller* scroller;
 	UnityWidgetsScroller* _tmp0_;
 #line 88 "test-unity.vala"
@@ -356,21 +358,21 @@ static void _lambda7_ (void) {
 	scroller = (_tmp0_ = g_object_ref_sink (unity_widgets_scroller_new (CTK_ORIENTATION_HORIZONTAL, 0)), _g_object_unref0 (scroller), _tmp0_);
 #line 92 "test-unity.vala"
 	g_assert (UNITY_WIDGETS_IS_SCROLLER (scroller));
-#line 360 "test-unity.c"
+#line 362 "test-unity.c"
 	_g_object_unref0 (scroller);
 }
 
 
 #line 87 "test-unity.vala"
 static void __lambda7__gcallback (void) {
-#line 367 "test-unity.c"
+#line 369 "test-unity.c"
 	_lambda7_ ();
 }
 
 
 #line 95 "test-unity.vala"
 static void _lambda8_ (void) {
-#line 374 "test-unity.c"
+#line 376 "test-unity.c"
 	GError * _inner_error_;
 	MainTestPlace* place;
 	GMainLoop* loop;
@@ -381,12 +383,12 @@ static void _lambda8_ (void) {
 	g_assert (MAIN_IS_TEST_PLACE (place));
 #line 100 "test-unity.vala"
 	loop = g_main_loop_new (NULL, FALSE);
-#line 385 "test-unity.c"
+#line 387 "test-unity.c"
 	{
 		DBusGConnection* conn;
 #line 104 "test-unity.vala"
 		conn = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
-#line 390 "test-unity.c"
+#line 392 "test-unity.c"
 		if (_inner_error_ != NULL) {
 			goto __catch0_g_error;
 		}
@@ -394,7 +396,7 @@ static void _lambda8_ (void) {
 		utils_register_object_on_dbus (conn, "/com/canonical/Unity/Place", (GObject*) place);
 #line 110 "test-unity.vala"
 		g_main_loop_run (loop);
-#line 398 "test-unity.c"
+#line 400 "test-unity.c"
 		_dbus_g_connection_unref0 (conn);
 	}
 	goto __finally0;
@@ -406,7 +408,7 @@ static void _lambda8_ (void) {
 		{
 #line 114 "test-unity.vala"
 			g_warning ("test-unity.vala:114: TestPlace error: %s", e->message);
-#line 410 "test-unity.c"
+#line 412 "test-unity.c"
 			_g_error_free0 (e);
 		}
 	}
@@ -425,7 +427,7 @@ static void _lambda8_ (void) {
 
 #line 95 "test-unity.vala"
 static void __lambda8__gcallback (void) {
-#line 429 "test-unity.c"
+#line 431 "test-unity.c"
 	_lambda8_ ();
 }
 
@@ -450,13 +452,13 @@ static void main_add_launcher_tests (void) {
 	g_test_add_func ("/Unity/Widgets/Scroller", __lambda7__gcallback);
 #line 95 "test-unity.vala"
 	g_test_add_func ("/Unity/Places/TestPlace", __lambda8__gcallback);
-#line 454 "test-unity.c"
+#line 456 "test-unity.c"
 }
 
 
 #line 22 "test-unity.vala"
 Main* main_construct (GType object_type) {
-#line 460 "test-unity.c"
+#line 462 "test-unity.c"
 	Main* self;
 	self = (Main*) g_type_create_instance (object_type);
 	return self;
@@ -467,17 +469,17 @@ Main* main_construct (GType object_type) {
 Main* main_new (void) {
 #line 22 "test-unity.vala"
 	return main_construct (TYPE_MAIN);
-#line 471 "test-unity.c"
+#line 473 "test-unity.c"
 }
 
 
 #line 121 "test-unity.vala"
 MainTestPlace* main_test_place_construct (GType object_type) {
-#line 477 "test-unity.c"
+#line 479 "test-unity.c"
 	MainTestPlace * self;
 #line 123 "test-unity.vala"
 	self = (MainTestPlace*) g_object_new (object_type, "name", "neil", "icon-name", "gtk-apply", "tooltip", "hello", NULL);
-#line 481 "test-unity.c"
+#line 483 "test-unity.c"
 	return self;
 }
 
@@ -486,38 +488,38 @@ MainTestPlace* main_test_place_construct (GType object_type) {
 MainTestPlace* main_test_place_new (void) {
 #line 121 "test-unity.vala"
 	return main_test_place_construct (MAIN_TYPE_TEST_PLACE);
-#line 490 "test-unity.c"
+#line 492 "test-unity.c"
 }
 
 
 #line 35 "glib-2.0.vapi"
 static char* bool_to_string (gboolean self) {
-#line 496 "test-unity.c"
+#line 498 "test-unity.c"
 	char* result;
 #line 36 "glib-2.0.vapi"
 	if (self) {
-#line 500 "test-unity.c"
+#line 502 "test-unity.c"
 		result = g_strdup ("true");
 #line 37 "glib-2.0.vapi"
 		return result;
-#line 504 "test-unity.c"
+#line 506 "test-unity.c"
 	} else {
 		result = g_strdup ("false");
 #line 39 "glib-2.0.vapi"
 		return result;
-#line 509 "test-unity.c"
+#line 511 "test-unity.c"
 	}
 }
 
 
 #line 128 "test-unity.vala"
 static void _lambda9_ (gboolean a, MainTestPlace* self) {
-#line 516 "test-unity.c"
+#line 518 "test-unity.c"
 	char* _tmp1_;
 	char* _tmp0_;
 #line 128 "test-unity.vala"
 	g_print ("%s", _tmp1_ = g_strconcat (_tmp0_ = bool_to_string (a), "\n", NULL));
-#line 521 "test-unity.c"
+#line 523 "test-unity.c"
 	_g_free0 (_tmp1_);
 	_g_free0 (_tmp0_);
 }
@@ -525,7 +527,7 @@ static void _lambda9_ (gboolean a, MainTestPlace* self) {
 
 #line 128 "test-unity.vala"
 static void __lambda9__unity_place_is_active (UnityPlace* _sender, gboolean is_active, gpointer self) {
-#line 529 "test-unity.c"
+#line 531 "test-unity.c"
 	_lambda9_ (is_active, self);
 }
 
@@ -540,7 +542,7 @@ static GObject * main_test_place_constructor (GType type, guint n_construct_prop
 	{
 #line 128 "test-unity.vala"
 		g_signal_connect_object ((UnityPlace*) self, "is-active", (GCallback) __lambda9__unity_place_is_active, self, 0);
-#line 544 "test-unity.c"
+#line 546 "test-unity.c"
 	}
 	return obj;
 }

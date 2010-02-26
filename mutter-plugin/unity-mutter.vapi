@@ -11,9 +11,37 @@ namespace Unity {
 		public DragDest ();
 	}
 	[CCode (cheader_filename = "unity-mutter.h")]
+	public class ExposeClone : Clutter.Group {
+		public ExposeClone (Mutter.Window source);
+		public uint8 hovered_opacity { get; set; }
+		public Mutter.Window source { get; set; }
+		public uint8 unhovered_opacity { get; set; }
+	}
+	[CCode (cheader_filename = "unity-mutter.h")]
+	public class ExposeManager : GLib.Object {
+		public ExposeManager (Unity.Plugin plugin, Unity.Quicklauncher.View quicklauncher);
+		public void end_expose ();
+		public void start_expose (GLib.SList<Wnck.Window> windows);
+		public int bottom_buffer { get; set; }
+		public bool coverflow { get; set; }
+		public bool expose_showing { get; set; }
+		public uint8 hovered_opacity { get; set; }
+		public int left_buffer { get; set; }
+		public int right_buffer { get; set; }
+		public int top_buffer { get; set; }
+		public uint8 unhovered_opacity { get; set; }
+	}
+	[CCode (cheader_filename = "unity-mutter.h")]
+	public class Maximus : GLib.Object {
+		public Maximus ();
+		public bool process_window (Mutter.Window window);
+	}
+	[CCode (cheader_filename = "unity-mutter.h")]
 	public class Plugin : GLib.Object, Unity.Shell {
 		public Plugin ();
+		public void add_fullscreen_request (GLib.Object o);
 		public void destroy (Mutter.Window window);
+		public void dexpose_windows ();
 		public void expose_windows (GLib.SList<Wnck.Window> windows, int left_buffer = 250);
 		public int get_launcher_width ();
 		public int get_panel_height ();
@@ -21,9 +49,10 @@ namespace Unity {
 		public void map (Mutter.Window window);
 		public void maximize (Mutter.Window window, int x, int y, int width, int height);
 		public void minimize (Mutter.Window window);
+		public bool remove_fullscreen_request (GLib.Object o);
 		public void switch_workspace (GLib.List<Mutter.Window> windows, int from, int to, int direction);
 		public void unmaximize (Mutter.Window window, int x, int y, int width, int height);
-		public bool expose_showing { get; set; }
+		public bool expose_showing { get; }
 		public Mutter.Plugin? plugin { get; set; }
 		public signal void restore_input_region (bool fullscreen);
 		public signal void window_destroyed (Unity.Plugin plugin, Mutter.Window window);

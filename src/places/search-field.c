@@ -95,8 +95,8 @@ void unity_places_cairo_drawing_rectangle_box_CreateRectangleBox (UnityPlacesCai
 static void unity_places_search_field_view_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
 UnityPlacesCairoDrawingRectangleBox* unity_places_cairo_drawing_rectangle_box_new (void);
 UnityPlacesCairoDrawingRectangleBox* unity_places_cairo_drawing_rectangle_box_construct (GType object_type);
-static gboolean _lambda4_ (ClutterEvent* e, UnityPlacesSearchFieldView* self);
-static gboolean __lambda4__clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _lambda6_ (ClutterEvent* e, UnityPlacesSearchFieldView* self);
+static gboolean __lambda6__clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 UnityPlacesSearchFieldView* unity_places_search_field_view_new (void);
 UnityPlacesSearchFieldView* unity_places_search_field_view_construct (GType object_type);
 static void unity_places_search_field_view_real_map (ClutterActor* base);
@@ -162,7 +162,7 @@ static void unity_places_search_field_view_real_allocate (ClutterActor* base, co
 
 
 #line 75 "search-field.vala"
-static gboolean _lambda4_ (ClutterEvent* e, UnityPlacesSearchFieldView* self) {
+static gboolean _lambda6_ (ClutterEvent* e, UnityPlacesSearchFieldView* self) {
 #line 167 "search-field.c"
 	gboolean result;
 #line 77 "search-field.vala"
@@ -176,9 +176,9 @@ static gboolean _lambda4_ (ClutterEvent* e, UnityPlacesSearchFieldView* self) {
 
 
 #line 75 "search-field.vala"
-static gboolean __lambda4__clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean __lambda6__clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 #line 181 "search-field.c"
-	return _lambda4_ (event, self);
+	return _lambda6_ (event, self);
 }
 
 
@@ -205,7 +205,7 @@ UnityPlacesSearchFieldView* unity_places_search_field_view_construct (GType obje
 #line 73 "search-field.vala"
 	clutter_actor_show_all ((ClutterActor*) self);
 #line 75 "search-field.vala"
-	g_signal_connect_object ((ClutterActor*) self->priv->text_field, "button-press-event", (GCallback) __lambda4__clutter_actor_button_press_event, self, 0);
+	g_signal_connect_object ((ClutterActor*) self->priv->text_field, "button-press-event", (GCallback) __lambda6__clutter_actor_button_press_event, self, 0);
 #line 210 "search-field.c"
 	return self;
 }

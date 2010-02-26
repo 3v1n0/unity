@@ -56,10 +56,11 @@ struct _UnityThemeImageClass {
 
 struct _UnityThemeImagePrivate {
 	char* _icon_name;
-	GtkIconTheme* theme;
 };
 
 
+static GtkIconTheme* unity_theme_image_theme;
+static GtkIconTheme* unity_theme_image_theme = NULL;
 static gpointer unity_theme_image_parent_class = NULL;
 
 GType unity_theme_image_get_type (void);
@@ -85,13 +86,13 @@ static void unity_theme_image_set_property (GObject * object, guint property_id,
 
 #line 35 "theme.vala"
 UnityThemeImage* unity_theme_image_construct (GType object_type, const char* icon_name) {
-#line 89 "theme.c"
+#line 90 "theme.c"
 	UnityThemeImage * self;
 #line 35 "theme.vala"
 	g_return_val_if_fail (icon_name != NULL, NULL);
 #line 37 "theme.vala"
 	self = (UnityThemeImage*) g_object_new (object_type, "icon-name", icon_name, NULL);
-#line 95 "theme.c"
+#line 96 "theme.c"
 	return self;
 }
 
@@ -100,47 +101,47 @@ UnityThemeImage* unity_theme_image_construct (GType object_type, const char* ico
 UnityThemeImage* unity_theme_image_new (const char* icon_name) {
 #line 35 "theme.vala"
 	return unity_theme_image_construct (UNITY_TYPE_THEME_IMAGE, icon_name);
-#line 104 "theme.c"
+#line 105 "theme.c"
 }
 
 
-#line 50 "theme.vala"
+#line 53 "theme.vala"
 static gboolean unity_theme_image_try_load_icon_from_theme (UnityThemeImage* self) {
-#line 110 "theme.c"
+#line 111 "theme.c"
 	gboolean result;
 	GError * _inner_error_;
 	GtkIconInfo* info;
-#line 50 "theme.vala"
-	g_return_val_if_fail (self != NULL, FALSE);
-#line 116 "theme.c"
-	_inner_error_ = NULL;
 #line 53 "theme.vala"
-	info = gtk_icon_theme_lookup_icon (self->priv->theme, self->priv->_icon_name, 24, 0);
+	g_return_val_if_fail (self != NULL, FALSE);
+#line 117 "theme.c"
+	_inner_error_ = NULL;
 #line 56 "theme.vala"
+	info = gtk_icon_theme_lookup_icon (unity_theme_image_theme, self->priv->_icon_name, 24, 0);
+#line 59 "theme.vala"
 	if (info != NULL) {
-#line 122 "theme.c"
+#line 123 "theme.c"
 		char* filename;
-#line 58 "theme.vala"
+#line 61 "theme.vala"
 		filename = g_strdup (gtk_icon_info_get_filename (info));
-#line 60 "theme.vala"
+#line 63 "theme.vala"
 		if (strstr (filename, "unity-icon-theme") != NULL) {
-#line 128 "theme.c"
+#line 129 "theme.c"
 			{
-#line 64 "theme.vala"
+#line 67 "theme.vala"
 				clutter_texture_set_from_file ((ClutterTexture*) self, filename, &_inner_error_);
-#line 132 "theme.c"
+#line 133 "theme.c"
 				if (_inner_error_ != NULL) {
-					goto __catch1_g_error;
+					goto __catch10_g_error;
 				}
 				result = TRUE;
 				_g_free0 (filename);
 				_gtk_icon_info_free0 (info);
-#line 70 "theme.vala"
+#line 73 "theme.vala"
 				return result;
-#line 141 "theme.c"
+#line 142 "theme.c"
 			}
-			goto __finally1;
-			__catch1_g_error:
+			goto __finally10;
+			__catch10_g_error:
 			{
 				GError * e;
 				e = _inner_error_;
@@ -150,12 +151,12 @@ static gboolean unity_theme_image_try_load_icon_from_theme (UnityThemeImage* sel
 					_g_error_free0 (e);
 					_g_free0 (filename);
 					_gtk_icon_info_free0 (info);
-#line 74 "theme.vala"
+#line 77 "theme.vala"
 					return result;
-#line 156 "theme.c"
+#line 157 "theme.c"
 				}
 			}
-			__finally1:
+			__finally10:
 			if (_inner_error_ != NULL) {
 				_g_free0 (filename);
 				_gtk_icon_info_free0 (info);
@@ -167,52 +168,52 @@ static gboolean unity_theme_image_try_load_icon_from_theme (UnityThemeImage* sel
 		result = FALSE;
 		_g_free0 (filename);
 		_gtk_icon_info_free0 (info);
-#line 77 "theme.vala"
+#line 80 "theme.vala"
 		return result;
-#line 173 "theme.c"
+#line 174 "theme.c"
 	}
 	result = FALSE;
 	_gtk_icon_info_free0 (info);
-#line 79 "theme.vala"
+#line 82 "theme.vala"
 	return result;
-#line 179 "theme.c"
+#line 180 "theme.c"
 }
 
 
-#line 82 "theme.vala"
+#line 85 "theme.vala"
 static gboolean unity_theme_image_try_load_icon_from_dir (UnityThemeImage* self, const char* dir) {
-#line 185 "theme.c"
+#line 186 "theme.c"
 	gboolean result;
 	GError * _inner_error_;
 	char* filename;
 	char* _tmp1_;
 	char* _tmp0_;
-#line 82 "theme.vala"
+#line 85 "theme.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 82 "theme.vala"
+#line 85 "theme.vala"
 	g_return_val_if_fail (dir != NULL, FALSE);
-#line 195 "theme.c"
+#line 196 "theme.c"
 	_inner_error_ = NULL;
 	filename = NULL;
-#line 86 "theme.vala"
+#line 89 "theme.vala"
 	filename = (_tmp1_ = g_build_filename (dir, _tmp0_ = g_strconcat (self->priv->_icon_name, ".png", NULL), NULL), _g_free0 (filename), _tmp1_);
-#line 200 "theme.c"
+#line 201 "theme.c"
 	_g_free0 (_tmp0_);
 	{
-#line 90 "theme.vala"
+#line 93 "theme.vala"
 		clutter_texture_set_from_file ((ClutterTexture*) self, filename, &_inner_error_);
-#line 205 "theme.c"
+#line 206 "theme.c"
 		if (_inner_error_ != NULL) {
-			goto __catch2_g_error;
+			goto __catch11_g_error;
 		}
 		result = TRUE;
 		_g_free0 (filename);
-#line 96 "theme.vala"
+#line 99 "theme.vala"
 		return result;
-#line 213 "theme.c"
+#line 214 "theme.c"
 	}
-	goto __finally2;
-	__catch2_g_error:
+	goto __finally11;
+	__catch11_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -221,12 +222,12 @@ static gboolean unity_theme_image_try_load_icon_from_dir (UnityThemeImage* self,
 			result = FALSE;
 			_g_error_free0 (e);
 			_g_free0 (filename);
-#line 100 "theme.vala"
+#line 103 "theme.vala"
 			return result;
-#line 227 "theme.c"
+#line 228 "theme.c"
 		}
 	}
-	__finally2:
+	__finally11:
 	if (_inner_error_ != NULL) {
 		_g_free0 (filename);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -237,42 +238,42 @@ static gboolean unity_theme_image_try_load_icon_from_dir (UnityThemeImage* self,
 }
 
 
-#line 104 "theme.vala"
-static gboolean unity_theme_image_try_load_icon_from_datadir (UnityThemeImage* self) {
-#line 243 "theme.c"
-	gboolean result;
-#line 104 "theme.vala"
-	g_return_val_if_fail (self != NULL, FALSE);
-#line 106 "theme.vala"
-	if (!unity_theme_image_try_load_icon_from_dir (self, PKGDATADIR)) {
 #line 107 "theme.vala"
-		if (!unity_theme_image_try_load_icon_from_dir (self, "/usr/share/unity/themes")) {
-#line 108 "theme.vala"
-			if (!unity_theme_image_try_load_icon_from_dir (self, "/usr/share/unity/themes/launcher")) {
-#line 253 "theme.c"
-				result = FALSE;
+static gboolean unity_theme_image_try_load_icon_from_datadir (UnityThemeImage* self) {
+#line 244 "theme.c"
+	gboolean result;
+#line 107 "theme.vala"
+	g_return_val_if_fail (self != NULL, FALSE);
 #line 109 "theme.vala"
+	if (!unity_theme_image_try_load_icon_from_dir (self, PKGDATADIR)) {
+#line 110 "theme.vala"
+		if (!unity_theme_image_try_load_icon_from_dir (self, "/usr/share/unity/themes")) {
+#line 111 "theme.vala"
+			if (!unity_theme_image_try_load_icon_from_dir (self, "/usr/share/unity/themes/launcher")) {
+#line 254 "theme.c"
+				result = FALSE;
+#line 112 "theme.vala"
 				return result;
-#line 257 "theme.c"
+#line 258 "theme.c"
 			}
 		}
 	}
 	result = TRUE;
-#line 111 "theme.vala"
+#line 114 "theme.vala"
 	return result;
-#line 264 "theme.c"
+#line 265 "theme.c"
 }
 
 
-#line 114 "theme.vala"
+#line 117 "theme.vala"
 static void unity_theme_image_load_missing_icon (UnityThemeImage* self) {
-#line 114 "theme.vala"
+#line 117 "theme.vala"
 	g_return_if_fail (self != NULL);
-#line 272 "theme.c"
+#line 273 "theme.c"
 	;
-#line 126 "theme.vala"
-	g_warning ("theme.vala:126: Unable to load '%s' from Unity icon theme or Unity theme", self->priv->_icon_name);
-#line 276 "theme.c"
+#line 129 "theme.vala"
+	g_warning ("theme.vala:129: Unable to load '%s' from Unity icon theme or Unity theme", self->priv->_icon_name);
+#line 277 "theme.c"
 }
 
 
@@ -280,9 +281,9 @@ const char* unity_theme_image_get_icon_name (UnityThemeImage* self) {
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_icon_name;
-#line 29 "theme.vala"
+#line 31 "theme.vala"
 	return result;
-#line 286 "theme.c"
+#line 287 "theme.c"
 }
 
 
@@ -302,18 +303,23 @@ static GObject * unity_theme_image_constructor (GType type, guint n_construct_pr
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_THEME_IMAGE (obj);
 	{
-		GtkIconTheme* _tmp0_;
 #line 42 "theme.vala"
-		self->priv->theme = (_tmp0_ = gtk_icon_theme_new (), _g_object_unref0 (self->priv->theme), _tmp0_);
-#line 43 "theme.vala"
-		gtk_icon_theme_set_custom_theme (self->priv->theme, "unity-icon-theme");
+		if (unity_theme_image_theme == NULL) {
+#line 309 "theme.c"
+			GtkIconTheme* _tmp0_;
+#line 44 "theme.vala"
+			unity_theme_image_theme = (_tmp0_ = gtk_icon_theme_new (), _g_object_unref0 (unity_theme_image_theme), _tmp0_);
 #line 45 "theme.vala"
-		if (!unity_theme_image_try_load_icon_from_theme (self)) {
-#line 46 "theme.vala"
-			if (!unity_theme_image_try_load_icon_from_datadir (self)) {
-#line 47 "theme.vala"
+			gtk_icon_theme_set_custom_theme (unity_theme_image_theme, "unity-icon-theme");
+#line 315 "theme.c"
+		}
+#line 48 "theme.vala"
+		if (!unity_theme_image_try_load_icon_from_datadir (self)) {
+#line 49 "theme.vala"
+			if (!unity_theme_image_try_load_icon_from_theme (self)) {
+#line 50 "theme.vala"
 				unity_theme_image_load_missing_icon (self);
-#line 317 "theme.c"
+#line 323 "theme.c"
 			}
 		}
 	}
@@ -341,7 +347,6 @@ static void unity_theme_image_finalize (GObject* obj) {
 	UnityThemeImage * self;
 	self = UNITY_THEME_IMAGE (obj);
 	_g_free0 (self->priv->_icon_name);
-	_g_object_unref0 (self->priv->theme);
 	_g_object_unref0 (self->icon);
 	G_OBJECT_CLASS (unity_theme_image_parent_class)->finalize (obj);
 }

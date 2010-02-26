@@ -42,6 +42,17 @@ typedef struct _UnityShellIface UnityShellIface;
 
 #define UNITY_TYPE_SHELL_MODE (unity_shell_mode_get_type ())
 
+#define UNITY_WEBAPP_TYPE_CHROMIUM_WEB_APP (unity_webapp_chromium_web_app_get_type ())
+#define UNITY_WEBAPP_CHROMIUM_WEB_APP(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_WEBAPP_TYPE_CHROMIUM_WEB_APP, UnityWebappChromiumWebApp))
+#define UNITY_WEBAPP_CHROMIUM_WEB_APP_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_WEBAPP_TYPE_CHROMIUM_WEB_APP, UnityWebappChromiumWebAppClass))
+#define UNITY_WEBAPP_IS_CHROMIUM_WEB_APP(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_WEBAPP_TYPE_CHROMIUM_WEB_APP))
+#define UNITY_WEBAPP_IS_CHROMIUM_WEB_APP_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_WEBAPP_TYPE_CHROMIUM_WEB_APP))
+#define UNITY_WEBAPP_CHROMIUM_WEB_APP_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_WEBAPP_TYPE_CHROMIUM_WEB_APP, UnityWebappChromiumWebAppClass))
+
+typedef struct _UnityWebappChromiumWebApp UnityWebappChromiumWebApp;
+typedef struct _UnityWebappChromiumWebAppClass UnityWebappChromiumWebAppClass;
+typedef struct _UnityWebappChromiumWebAppPrivate UnityWebappChromiumWebAppPrivate;
+
 #define UNITY_DRAG_TYPE_MODEL (unity_drag_model_get_type ())
 #define UNITY_DRAG_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_DRAG_TYPE_MODEL, UnityDragModel))
 #define UNITY_DRAG_IS_MODEL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_DRAG_TYPE_MODEL))
@@ -94,6 +105,17 @@ typedef struct _UnityTimelineLogger UnityTimelineLogger;
 typedef struct _UnityTimelineLoggerClass UnityTimelineLoggerClass;
 typedef struct _UnityTimelineLoggerPrivate UnityTimelineLoggerPrivate;
 
+#define UNITY_WEBAPP_TYPE_PRISM (unity_webapp_prism_get_type ())
+#define UNITY_WEBAPP_PRISM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_WEBAPP_TYPE_PRISM, UnityWebappPrism))
+#define UNITY_WEBAPP_PRISM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_WEBAPP_TYPE_PRISM, UnityWebappPrismClass))
+#define UNITY_WEBAPP_IS_PRISM(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_WEBAPP_TYPE_PRISM))
+#define UNITY_WEBAPP_IS_PRISM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_WEBAPP_TYPE_PRISM))
+#define UNITY_WEBAPP_PRISM_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_WEBAPP_TYPE_PRISM, UnityWebappPrismClass))
+
+typedef struct _UnityWebappPrism UnityWebappPrism;
+typedef struct _UnityWebappPrismClass UnityWebappPrismClass;
+typedef struct _UnityWebappPrismPrivate UnityWebappPrismPrivate;
+
 #define UNITY_TYPE_DND_TARGETS (unity_dnd_targets_get_type ())
 
 #define UNITY_TYPE_THEME_IMAGE (unity_theme_image_get_type ())
@@ -141,7 +163,8 @@ typedef struct _UnityWebappIconBuilderClass UnityWebappIconBuilderClass;
 typedef struct _UnityWebappIconBuilderPrivate UnityWebappIconBuilderPrivate;
 
 typedef enum  {
-	UNITY_APPLICATION_COMMANDS_SHOW = 1
+	UNITY_APPLICATION_COMMANDS_SHOW = 1,
+	UNITY_APPLICATION_COMMANDS_MAKE_WEBAPP
 } UnityApplicationCommands;
 
 struct _UnityApplication {
@@ -168,6 +191,17 @@ struct _UnityShellIface {
 	void (*grab_keyboard) (UnityShell* self, gboolean grab, guint32 timestamp);
 	void (*show_window_picker) (UnityShell* self);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
+};
+
+struct _UnityWebappChromiumWebApp {
+	GObject parent_instance;
+	UnityWebappChromiumWebAppPrivate * priv;
+	char* name;
+	char* id;
+};
+
+struct _UnityWebappChromiumWebAppClass {
+	GObjectClass parent_class;
 };
 
 struct _UnityDragModelIface {
@@ -214,6 +248,17 @@ struct _UnityTimelineLogger {
 };
 
 struct _UnityTimelineLoggerClass {
+	GObjectClass parent_class;
+};
+
+struct _UnityWebappPrism {
+	GObject parent_instance;
+	UnityWebappPrismPrivate * priv;
+	char* name;
+	char* id;
+};
+
+struct _UnityWebappPrismClass {
 	GObjectClass parent_class;
 };
 
@@ -271,6 +316,12 @@ GType unity_shell_mode_get_type (void);
 GType unity_shell_get_type (void);
 UnityShell* unity_application_get_shell (UnityApplication* self);
 void unity_application_set_shell (UnityApplication* self, UnityShell* value);
+GType unity_webapp_chromium_web_app_get_type (void);
+UnityWebappChromiumWebApp* unity_webapp_chromium_web_app_new (const char* address, const char* icon);
+UnityWebappChromiumWebApp* unity_webapp_chromium_web_app_construct (GType object_type, const char* address, const char* icon);
+void unity_webapp_chromium_web_app_add_to_favorites (UnityWebappChromiumWebApp* self);
+const char* unity_webapp_chromium_web_app_get_url (UnityWebappChromiumWebApp* self);
+const char* unity_webapp_chromium_web_app_get_icon (UnityWebappChromiumWebApp* self);
 GType unity_drag_model_get_type (void);
 ClutterActor* unity_drag_model_get_icon (UnityDragModel* self);
 char* unity_drag_model_get_drag_data (UnityDragModel* self);
@@ -303,6 +354,12 @@ void unity_timeline_logger_end_process (UnityTimelineLogger* self, const char* n
 void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* filename);
 UnityTimelineLogger* unity_timeline_logger_new (void);
 UnityTimelineLogger* unity_timeline_logger_construct (GType object_type);
+GType unity_webapp_prism_get_type (void);
+UnityWebappPrism* unity_webapp_prism_new (const char* address, const char* icon);
+UnityWebappPrism* unity_webapp_prism_construct (GType object_type, const char* address, const char* icon);
+void unity_webapp_prism_add_to_favorites (UnityWebappPrism* self);
+const char* unity_webapp_prism_get_url (UnityWebappPrism* self);
+const char* unity_webapp_prism_get_icon (UnityWebappPrism* self);
 GType unity_dnd_targets_get_type (void);
 UnityShellMode unity_shell_get_mode (UnityShell* self);
 ClutterStage* unity_shell_get_stage (UnityShell* self);
@@ -318,6 +375,7 @@ UnityThemeImage* unity_theme_image_new (const char* icon_name);
 UnityThemeImage* unity_theme_image_construct (GType object_type, const char* icon_name);
 const char* unity_theme_image_get_icon_name (UnityThemeImage* self);
 void unity_theme_image_set_icon_name (UnityThemeImage* self, const char* value);
+char* unity_webapp_urlify (const char* uri);
 GType unity_webapp_fetch_file_get_type (void);
 UnityWebappFetchFile* unity_webapp_fetch_file_new (const char* uri);
 UnityWebappFetchFile* unity_webapp_fetch_file_construct (GType object_type, const char* uri);

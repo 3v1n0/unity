@@ -401,7 +401,7 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 			_tmp0_ = g_file_create (log_file, G_FILE_CREATE_NONE, NULL, &_inner_error_);
 #line 403 "perf-logger.c"
 			if (_inner_error_ != NULL) {
-				goto __catch0_g_error;
+				goto __catch5_g_error;
 			}
 #line 96 "perf-logger.vala"
 			file_stream = (_tmp1_ = _tmp0_, _g_object_unref0 (file_stream), _tmp1_);
@@ -413,7 +413,7 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 			_tmp2_ = g_file_replace (log_file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, &_inner_error_);
 #line 415 "perf-logger.c"
 			if (_inner_error_ != NULL) {
-				goto __catch0_g_error;
+				goto __catch5_g_error;
 			}
 #line 100 "perf-logger.vala"
 			file_stream = (_tmp3_ = _tmp2_, _g_object_unref0 (file_stream), _tmp3_);
@@ -450,7 +450,7 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 					_g_free0 (outline);
 					_g_object_unref0 (_info_it);
 					_g_object_unref0 (output_stream);
-					goto __catch0_g_error;
+					goto __catch5_g_error;
 				}
 				_unity_process_info_unref0 (info);
 				_g_free0 (outline);
@@ -462,12 +462,12 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 #line 463 "perf-logger.c"
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (output_stream);
-			goto __catch0_g_error;
+			goto __catch5_g_error;
 		}
 		_g_object_unref0 (output_stream);
 	}
-	goto __finally0;
-	__catch0_g_error:
+	goto __finally5;
+	__catch5_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -479,7 +479,7 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 			_g_error_free0 (e);
 		}
 	}
-	__finally0:
+	__finally5:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (log_file);
 		_g_object_unref0 (file_stream);

@@ -210,14 +210,14 @@ static void unity_underlay_window_set_popup_height (UnityUnderlayWindow* self, g
 UnityWorkarea* unity_workarea_new (void);
 UnityWorkarea* unity_workarea_construct (GType object_type);
 void unity_workarea_update_net_workarea (UnityWorkarea* self);
-static gboolean _lambda5_ (UnityUnderlayWindow* self);
-static gboolean __lambda5__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
-static gboolean _lambda6_ (UnityUnderlayWindow* self);
-static gboolean __lambda6__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
-static void _lambda7_ (GdkScreen* s, UnityUnderlayWindow* self);
-static void __lambda7__gdk_screen_size_changed (GdkScreen* _sender, gpointer self);
-static void _lambda8_ (GdkScreen* s, UnityUnderlayWindow* self);
-static void __lambda8__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self);
+static gboolean _lambda7_ (UnityUnderlayWindow* self);
+static gboolean __lambda7__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
+static gboolean _lambda8_ (UnityUnderlayWindow* self);
+static gboolean __lambda8__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
+static void _lambda9_ (GdkScreen* s, UnityUnderlayWindow* self);
+static void __lambda9__gdk_screen_size_changed (GdkScreen* _sender, gpointer self);
+static void _lambda10_ (GdkScreen* s, UnityUnderlayWindow* self);
+static void __lambda10__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self);
 static gboolean _unity_underlay_window_on_stage_button_press_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 UnityBackground* unity_background_new (void);
 UnityBackground* unity_background_construct (GType object_type);
@@ -605,7 +605,7 @@ static void unity_underlay_window_set_popup_height (UnityUnderlayWindow* self, g
 
 
 #line 72 "window.vala"
-static gboolean _lambda5_ (UnityUnderlayWindow* self) {
+static gboolean _lambda7_ (UnityUnderlayWindow* self) {
 #line 610 "window.c"
 	gboolean result;
 #line 74 "window.vala"
@@ -619,14 +619,14 @@ static gboolean _lambda5_ (UnityUnderlayWindow* self) {
 
 
 #line 72 "window.vala"
-static gboolean __lambda5__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
+static gboolean __lambda7__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
 #line 624 "window.c"
-	return _lambda5_ (self);
+	return _lambda7_ (self);
 }
 
 
 #line 88 "window.vala"
-static gboolean _lambda6_ (UnityUnderlayWindow* self) {
+static gboolean _lambda8_ (UnityUnderlayWindow* self) {
 #line 631 "window.c"
 	gboolean result;
 	result = TRUE;
@@ -637,14 +637,14 @@ static gboolean _lambda6_ (UnityUnderlayWindow* self) {
 
 
 #line 88 "window.vala"
-static gboolean __lambda6__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
+static gboolean __lambda8__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
 #line 642 "window.c"
-	return _lambda6_ (self);
+	return _lambda8_ (self);
 }
 
 
 #line 89 "window.vala"
-static void _lambda7_ (GdkScreen* s, UnityUnderlayWindow* self) {
+static void _lambda9_ (GdkScreen* s, UnityUnderlayWindow* self) {
 #line 89 "window.vala"
 	g_return_if_fail (s != NULL);
 #line 90 "window.vala"
@@ -654,14 +654,14 @@ static void _lambda7_ (GdkScreen* s, UnityUnderlayWindow* self) {
 
 
 #line 89 "window.vala"
-static void __lambda7__gdk_screen_size_changed (GdkScreen* _sender, gpointer self) {
+static void __lambda9__gdk_screen_size_changed (GdkScreen* _sender, gpointer self) {
 #line 659 "window.c"
-	_lambda7_ (_sender, self);
+	_lambda9_ (_sender, self);
 }
 
 
 #line 91 "window.vala"
-static void _lambda8_ (GdkScreen* s, UnityUnderlayWindow* self) {
+static void _lambda10_ (GdkScreen* s, UnityUnderlayWindow* self) {
 #line 91 "window.vala"
 	g_return_if_fail (s != NULL);
 #line 92 "window.vala"
@@ -671,9 +671,9 @@ static void _lambda8_ (GdkScreen* s, UnityUnderlayWindow* self) {
 
 
 #line 91 "window.vala"
-static void __lambda8__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self) {
+static void __lambda10__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self) {
 #line 676 "window.c"
-	_lambda8_ (_sender, self);
+	_lambda10_ (_sender, self);
 }
 
 
@@ -739,7 +739,7 @@ static GObject * unity_underlay_window_constructor (GType type, guint n_construc
 #line 71 "window.vala"
 			gtk_window_set_skip_pager_hint ((GtkWindow*) self, FALSE);
 #line 72 "window.vala"
-			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda5__gtk_widget_delete_event, self, 0);
+			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda7__gtk_widget_delete_event, self, 0);
 #line 744 "window.c"
 		} else {
 #line 81 "window.vala"
@@ -757,11 +757,11 @@ static GObject * unity_underlay_window_constructor (GType type, guint n_construc
 #line 87 "window.vala"
 			g_object_set ((GtkWidget*) self, "can-focus", FALSE, NULL);
 #line 88 "window.vala"
-			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda6__gtk_widget_delete_event, self, 0);
+			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda8__gtk_widget_delete_event, self, 0);
 #line 89 "window.vala"
-			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "size-changed", (GCallback) __lambda7__gdk_screen_size_changed, self, 0);
+			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "size-changed", (GCallback) __lambda9__gdk_screen_size_changed, self, 0);
 #line 91 "window.vala"
-			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "monitors-changed", (GCallback) __lambda8__gdk_screen_monitors_changed, self, 0);
+			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "monitors-changed", (GCallback) __lambda10__gdk_screen_monitors_changed, self, 0);
 #line 766 "window.c"
 		}
 #line 94 "window.vala"

@@ -275,9 +275,9 @@ namespace Ctk {
 		public Menu ();
 		public void append (Clutter.Actor item, bool is_special);
 		public void attach_to_actor (Ctk.Actor actor);
-		public void fadeout_and_destroy ();
 		public unowned Ctk.Actor get_attached_actor ();
 		public unowned Clutter.Actor get_background ();
+		public bool get_close_on_leave ();
 		public uint get_framebuffer_background ();
 		public int get_num_items ();
 		public int get_spacing ();
@@ -285,6 +285,7 @@ namespace Ctk {
 		public void refresh_background_texture ();
 		public void remove_all ();
 		public void set_background (Clutter.Actor background);
+		public void set_close_on_leave (bool value);
 		public void set_color (Clutter.Color color);
 		public void set_detect_clicks (bool value);
 		public void set_spacing (int spacing);
@@ -292,6 +293,7 @@ namespace Ctk {
 		[CCode (has_construct_function = false)]
 		public Menu.with_background (Clutter.Actor background);
 		public Clutter.Actor background { get; set; }
+		public bool close_on_leave { get; set; }
 		public int num_items { get; }
 		public int spacing { get; set; }
 		public virtual signal void closed ();

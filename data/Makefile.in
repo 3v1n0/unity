@@ -15,6 +15,8 @@
 
 @SET_MAKE@
 
+# Please keep alphabetical :-)
+
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -35,8 +37,8 @@ POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
 subdir = data
-DIST_COMMON = $(dist_default_DATA) $(srcdir)/Makefile.am \
-	$(srcdir)/Makefile.in
+DIST_COMMON = $(dist_default_DATA) $(dist_schema_DATA) \
+	$(srcdir)/Makefile.am $(srcdir)/Makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/gettext.m4 \
 	$(top_srcdir)/m4/iconv.m4 $(top_srcdir)/m4/intlmacosx.m4 \
@@ -82,8 +84,8 @@ am__nobase_list = $(am__nobase_strip_setup); \
 am__base_list = \
   sed '$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;$$!N;s/\n/ /g' | \
   sed '$$!N;$$!N;$$!N;$$!N;s/\n/ /g'
-am__installdirs = "$(DESTDIR)$(defaultdir)"
-DATA = $(dist_default_DATA)
+am__installdirs = "$(DESTDIR)$(defaultdir)" "$(DESTDIR)$(schemadir)"
+DATA = $(dist_default_DATA) $(dist_schema_DATA)
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 ACLOCAL = @ACLOCAL@
 ALL_LINGUAS = @ALL_LINGUAS@
@@ -118,6 +120,9 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+GCONFTOOL = @GCONFTOOL@
+GCONF_SCHEMA_CONFIG_SOURCE = @GCONF_SCHEMA_CONFIG_SOURCE@
+GCONF_SCHEMA_FILE_DIR = @GCONF_SCHEMA_FILE_DIR@
 GETTEXT_MACRO_VERSION = @GETTEXT_MACRO_VERSION@
 GETTEXT_PACKAGE = @GETTEXT_PACKAGE@
 GMSGFMT = @GMSGFMT@
@@ -260,6 +265,10 @@ dist_default_DATA = \
   trash.png
 
 defaultdir = $(pkgdatadir)
+
+# Schemas
+schemadir = $(sysconfdir)/gconf/schemas
+dist_schema_DATA = unity.schemas
 all: all-am
 
 .SUFFIXES:
@@ -319,6 +328,26 @@ uninstall-dist_defaultDATA:
 	test -n "$$files" || exit 0; \
 	echo " ( cd '$(DESTDIR)$(defaultdir)' && rm -f" $$files ")"; \
 	cd "$(DESTDIR)$(defaultdir)" && rm -f $$files
+install-dist_schemaDATA: $(dist_schema_DATA)
+	@$(NORMAL_INSTALL)
+	test -z "$(schemadir)" || $(MKDIR_P) "$(DESTDIR)$(schemadir)"
+	@list='$(dist_schema_DATA)'; test -n "$(schemadir)" || list=; \
+	for p in $$list; do \
+	  if test -f "$$p"; then d=; else d="$(srcdir)/"; fi; \
+	  echo "$$d$$p"; \
+	done | $(am__base_list) | \
+	while read files; do \
+	  echo " $(INSTALL_DATA) $$files '$(DESTDIR)$(schemadir)'"; \
+	  $(INSTALL_DATA) $$files "$(DESTDIR)$(schemadir)" || exit $$?; \
+	done
+
+uninstall-dist_schemaDATA:
+	@$(NORMAL_UNINSTALL)
+	@list='$(dist_schema_DATA)'; test -n "$(schemadir)" || list=; \
+	files=`for p in $$list; do echo $$p; done | sed -e 's|^.*/||'`; \
+	test -n "$$files" || exit 0; \
+	echo " ( cd '$(DESTDIR)$(schemadir)' && rm -f" $$files ")"; \
+	cd "$(DESTDIR)$(schemadir)" && rm -f $$files
 tags: TAGS
 TAGS:
 
@@ -360,7 +389,7 @@ check-am: all-am
 check: check-am
 all-am: Makefile $(DATA)
 installdirs:
-	for dir in "$(DESTDIR)$(defaultdir)"; do \
+	for dir in "$(DESTDIR)$(defaultdir)" "$(DESTDIR)$(schemadir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
 install: install-am
@@ -388,6 +417,8 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+@GCONF_SCHEMAS_INSTALL_FALSE@uninstall-local:
+@GCONF_SCHEMAS_INSTALL_FALSE@install-data-local:
 clean: clean-am
 
 clean-am: clean-generic clean-libtool mostlyclean-am
@@ -408,7 +439,8 @@ info: info-am
 
 info-am:
 
-install-data-am: install-dist_defaultDATA
+install-data-am: install-data-local install-dist_defaultDATA \
+	install-dist_schemaDATA
 
 install-dvi: install-dvi-am
 
@@ -452,23 +484,33 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-dist_defaultDATA
+uninstall-am: uninstall-dist_defaultDATA uninstall-dist_schemaDATA \
+	uninstall-local
 
 .MAKE: install-am install-strip
 
 .PHONY: all all-am check check-am clean clean-generic clean-libtool \
 	distclean distclean-generic distclean-libtool distdir dvi \
 	dvi-am html html-am info info-am install install-am \
-	install-data install-data-am install-dist_defaultDATA \
-	install-dvi install-dvi-am install-exec install-exec-am \
-	install-html install-html-am install-info install-info-am \
-	install-man install-pdf install-pdf-am install-ps \
-	install-ps-am install-strip installcheck installcheck-am \
-	installdirs maintainer-clean maintainer-clean-generic \
-	mostlyclean mostlyclean-generic mostlyclean-libtool pdf pdf-am \
-	ps ps-am uninstall uninstall-am uninstall-dist_defaultDATA
+	install-data install-data-am install-data-local \
+	install-dist_defaultDATA install-dist_schemaDATA install-dvi \
+	install-dvi-am install-exec install-exec-am install-html \
+	install-html-am install-info install-info-am install-man \
+	install-pdf install-pdf-am install-ps install-ps-am \
+	install-strip installcheck installcheck-am installdirs \
+	maintainer-clean maintainer-clean-generic mostlyclean \
+	mostlyclean-generic mostlyclean-libtool pdf pdf-am ps ps-am \
+	uninstall uninstall-am uninstall-dist_defaultDATA \
+	uninstall-dist_schemaDATA uninstall-local
 
-//Please keep alphabetical :-)
+
+@GCONF_SCHEMAS_INSTALL_TRUE@install-data-local:
+@GCONF_SCHEMAS_INSTALL_TRUE@	-GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) \
+@GCONF_SCHEMAS_INSTALL_TRUE@	$(GCONFTOOL) --makefile-install-rule $(dist_schema_DATA)
+
+@GCONF_SCHEMAS_INSTALL_TRUE@uninstall-local:
+@GCONF_SCHEMAS_INSTALL_TRUE@	-GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) \
+@GCONF_SCHEMAS_INSTALL_TRUE@	$(GCONFTOOL) --makefile-uninstall-rule $(dist_schema_DATA)
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

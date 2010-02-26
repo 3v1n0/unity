@@ -1,6 +1,6 @@
 m4_define([unity_major], [0])
 m4_define([unity_minor], [1])
-m4_define([unity_micro], [16])
+m4_define([unity_micro], [18])
 
 m4_define([unity_api],
           [unity_major.unity_minor])
@@ -57,6 +57,10 @@ else
   PREFIX="${prefix}"
 fi
 
+dnl GConf schema installation
+AC_PATH_PROG(GCONFTOOL, gconftool-2)
+AM_GCONF_SOURCE_2
+
 AC_DEFINE_UNQUOTED(LOCALE_DIR, "${PREFIX}/${DATADIRNAME}/locale",[Locale directory])
 AC_DEFINE_UNQUOTED(DATADIR, "${PREFIX}/${DATADIRNAME}",[Data directory])
 AC_DEFINE_UNQUOTED(PREFIXDIR, "${PREFIX}",[Prefix directory])
@@ -93,9 +97,9 @@ PKG_CHECK_MODULES(BASE,
                   dbusmodel >= 0.1.0
                   clutter-1.0 >= 1.0
                   clutter-gtk-0.10 >= 0.10
-                  clutk-0.3 >= 0.3.16
+                  clutk-0.3 >= 0.3.18
                   indicator
-                  launcher-0.3 >= 0.3.12
+                  launcher-0.3 >= 0.3.16
                   libwnck-1.0 >= 2.28.0
                   unique-1.0
                   unity-misc

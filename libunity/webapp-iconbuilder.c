@@ -136,7 +136,7 @@ void unity_webapp_icon_builder_load_layers (UnityWebappIconBuilder* self) {
 		_tmp0_ = gdk_pixbuf_new_from_file_at_scale ("/usr/share/unity/themes/prism_icon_background.png", 48, 48, TRUE, &_inner_error_);
 #line 138 "webapp-iconbuilder.c"
 		if (_inner_error_ != NULL) {
-			goto __catch7_g_error;
+			goto __catch21_g_error;
 		}
 #line 56 "webapp-iconbuilder.vala"
 		self->priv->background = (_tmp1_ = _tmp0_, _g_object_unref0 (self->priv->background), _tmp1_);
@@ -144,14 +144,14 @@ void unity_webapp_icon_builder_load_layers (UnityWebappIconBuilder* self) {
 		_tmp2_ = gdk_pixbuf_new_from_file_at_scale ("/usr/share/unity/themes/prism_icon_foreground.png", 48, 48, TRUE, &_inner_error_);
 #line 146 "webapp-iconbuilder.c"
 		if (_inner_error_ != NULL) {
-			goto __catch7_g_error;
+			goto __catch21_g_error;
 		}
 #line 57 "webapp-iconbuilder.vala"
 		self->priv->foreground = (_tmp3_ = _tmp2_, _g_object_unref0 (self->priv->foreground), _tmp3_);
 #line 152 "webapp-iconbuilder.c"
 	}
-	goto __finally7;
-	__catch7_g_error:
+	goto __finally21;
+	__catch21_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -163,7 +163,7 @@ void unity_webapp_icon_builder_load_layers (UnityWebappIconBuilder* self) {
 			_g_error_free0 (e);
 		}
 	}
-	__finally7:
+	__finally21:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);

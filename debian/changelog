@@ -1,9 +1,10 @@
-unity (0.1.16-0ubuntu2) UNRELEASED; urgency=low
+unity (0.1.18-0ubuntu1) UNRELEASED; urgency=low
 
   * debian/control:
     - remove maximus as a recommend
+  * New upstream release.
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 25 Feb 2010 17:33:53 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 26 Feb 2010 12:52:03 +0100
 
 unity (0.1.16-0ubuntu1) lucid; urgency=low
 

@@ -56,8 +56,9 @@ LTLIBRARIES = $(noinst_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libunity_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__objects_1 = libunity_la-application.lo \
-	libunity_la-drag-controller.lo libunity_la-drag-view.lo \
-	libunity_la-entry.lo libunity_la-perf-logger.lo \
+	libunity_la-chrome-handler.lo libunity_la-drag-controller.lo \
+	libunity_la-drag-view.lo libunity_la-entry.lo \
+	libunity_la-perf-logger.lo libunity_la-prism-handler.lo \
 	libunity_la-shell.lo libunity_la-theme.lo \
 	libunity_la-webapp-fetcher.lo \
 	libunity_la-webapp-iconbuilder.lo
@@ -130,6 +131,9 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+GCONFTOOL = @GCONFTOOL@
+GCONF_SCHEMA_CONFIG_SOURCE = @GCONF_SCHEMA_CONFIG_SOURCE@
+GCONF_SCHEMA_FILE_DIR = @GCONF_SCHEMA_FILE_DIR@
 GETTEXT_MACRO_VERSION = @GETTEXT_MACRO_VERSION@
 GETTEXT_PACKAGE = @GETTEXT_PACKAGE@
 GMSGFMT = @GMSGFMT@
@@ -280,6 +284,7 @@ libunity_la_VALAFLAGS = \
   --pkg clutk-0.3 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
+  --pkg launcher-0.3 \
   --pkg libwnck-1.0 \
   --pkg unique-1.0 \
   --pkg unity-const \
@@ -290,10 +295,12 @@ libunity_la_SOURCES = \
 
 libunity_la_VALASOURCES = \
   application.vala \
+  chrome-handler.vala \
   drag-controller.vala \
   drag-view.vala \
   entry.vala \
   perf-logger.vala \
+  prism-handler.vala \
   shell.vala \
   theme.vala \
   webapp-fetcher.vala \
@@ -357,10 +364,12 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-application.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-chrome-handler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-drag-controller.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-drag-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-entry.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-perf-logger.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-prism-handler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-shell.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-theme.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-webapp-fetcher.Plo@am__quote@
@@ -398,6 +407,14 @@ libunity_la-application.lo: application.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-application.lo `test -f 'application.c' || echo '$(srcdir)/'`application.c
 
+libunity_la-chrome-handler.lo: chrome-handler.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-chrome-handler.lo -MD -MP -MF $(DEPDIR)/libunity_la-chrome-handler.Tpo -c -o libunity_la-chrome-handler.lo `test -f 'chrome-handler.c' || echo '$(srcdir)/'`chrome-handler.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_la-chrome-handler.Tpo $(DEPDIR)/libunity_la-chrome-handler.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='chrome-handler.c' object='libunity_la-chrome-handler.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-chrome-handler.lo `test -f 'chrome-handler.c' || echo '$(srcdir)/'`chrome-handler.c
+
 libunity_la-drag-controller.lo: drag-controller.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-drag-controller.lo -MD -MP -MF $(DEPDIR)/libunity_la-drag-controller.Tpo -c -o libunity_la-drag-controller.lo `test -f 'drag-controller.c' || echo '$(srcdir)/'`drag-controller.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_la-drag-controller.Tpo $(DEPDIR)/libunity_la-drag-controller.Plo
@@ -429,6 +446,14 @@ libunity_la-perf-logger.lo: perf-logger.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='perf-logger.c' object='libunity_la-perf-logger.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-perf-logger.lo `test -f 'perf-logger.c' || echo '$(srcdir)/'`perf-logger.c
+
+libunity_la-prism-handler.lo: prism-handler.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-prism-handler.lo -MD -MP -MF $(DEPDIR)/libunity_la-prism-handler.Tpo -c -o libunity_la-prism-handler.lo `test -f 'prism-handler.c' || echo '$(srcdir)/'`prism-handler.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_la-prism-handler.Tpo $(DEPDIR)/libunity_la-prism-handler.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='prism-handler.c' object='libunity_la-prism-handler.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-prism-handler.lo `test -f 'prism-handler.c' || echo '$(srcdir)/'`prism-handler.c
 
 libunity_la-shell.lo: shell.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-shell.lo -MD -MP -MF $(DEPDIR)/libunity_la-shell.Tpo -c -o libunity_la-shell.lo `test -f 'shell.c' || echo '$(srcdir)/'`shell.c

@@ -748,6 +748,16 @@ namespace Mutter {
 		public static bool is_hidden (Mutter.MetaWindow window);
 		[CCode (cname = "meta_window_is_mapped")]
 		public static bool is_mapped (Mutter.MetaWindow window);
+		[CCode (cname = "meta_window_is_maximized")]
+		public static bool is_maximized (Mutter.MetaWindow window);
+		[CCode (cname = "meta_window_is_maximized_horizontally")]
+		public static bool is_maximized_horizontally (Mutter.MetaWindow window);
+		[CCode (cname = "meta_window_is_maximized_vertically")]
+		public static bool is_maximized_vertically (Mutter.MetaWindow window);
+		[CCode (cname = "meta_window_is_minimized")]
+		public static bool is_minimized (Mutter.MetaWindow window);
+		[CCode (cname = "meta_window_allows_resize")]
+		public static bool allows_resize (Mutter.MetaWindow window);
 		[CCode (cname = "meta_window_is_modal")]
 		public static bool is_modal (Mutter.MetaWindow window);
 		[CCode (cname = "meta_window_is_on_all_workspaces")]
@@ -1071,7 +1081,7 @@ namespace Mutter {
 		MINIMIZE,
 		NONE
 	}
-	[CCode (cprefix = "META_COMP_WINDOW_", has_type_id = "0", cheader_filename = "mutter-plugins.h")]
+	[CCode (cprefix = "META_COMP_WINDOW_", has_type_id = "0", cheader_filename = "mutter-plugins.h", cname="MetaCompWindowType")]
 	public enum MetaCompWindowType {
 		NORMAL,
 		DESKTOP,

@@ -24,6 +24,9 @@
 #include <glib-object.h>
 #include <unique/unique.h>
 #include <clutter/clutter.h>
+#include <stdlib.h>
+#include <string.h>
+#include <gio/gio.h>
 
 
 #define UNITY_TYPE_APPLICATION_COMMANDS (unity_application_commands_get_type ())
@@ -48,11 +51,34 @@ typedef struct _UnityShell UnityShell;
 typedef struct _UnityShellIface UnityShellIface;
 
 #define UNITY_TYPE_SHELL_MODE (unity_shell_mode_get_type ())
+
+#define UNITY_WEBAPP_TYPE_WEBICON_FETCHER (unity_webapp_webicon_fetcher_get_type ())
+#define UNITY_WEBAPP_WEBICON_FETCHER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_WEBAPP_TYPE_WEBICON_FETCHER, UnityWebappWebiconFetcher))
+#define UNITY_WEBAPP_WEBICON_FETCHER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_WEBAPP_TYPE_WEBICON_FETCHER, UnityWebappWebiconFetcherClass))
+#define UNITY_WEBAPP_IS_WEBICON_FETCHER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_WEBAPP_TYPE_WEBICON_FETCHER))
+#define UNITY_WEBAPP_IS_WEBICON_FETCHER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_WEBAPP_TYPE_WEBICON_FETCHER))
+#define UNITY_WEBAPP_WEBICON_FETCHER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_WEBAPP_TYPE_WEBICON_FETCHER, UnityWebappWebiconFetcherClass))
+
+typedef struct _UnityWebappWebiconFetcher UnityWebappWebiconFetcher;
+typedef struct _UnityWebappWebiconFetcherClass UnityWebappWebiconFetcherClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
+#define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
+#define _g_regex_unref0(var) ((var == NULL) ? NULL : (var = (g_regex_unref (var), NULL)))
+
+#define UNITY_WEBAPP_TYPE_CHROMIUM_WEB_APP (unity_webapp_chromium_web_app_get_type ())
+#define UNITY_WEBAPP_CHROMIUM_WEB_APP(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_WEBAPP_TYPE_CHROMIUM_WEB_APP, UnityWebappChromiumWebApp))
+#define UNITY_WEBAPP_CHROMIUM_WEB_APP_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_WEBAPP_TYPE_CHROMIUM_WEB_APP, UnityWebappChromiumWebAppClass))
+#define UNITY_WEBAPP_IS_CHROMIUM_WEB_APP(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_WEBAPP_TYPE_CHROMIUM_WEB_APP))
+#define UNITY_WEBAPP_IS_CHROMIUM_WEB_APP_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_WEBAPP_TYPE_CHROMIUM_WEB_APP))
+#define UNITY_WEBAPP_CHROMIUM_WEB_APP_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_WEBAPP_TYPE_CHROMIUM_WEB_APP, UnityWebappChromiumWebAppClass))
+
+typedef struct _UnityWebappChromiumWebApp UnityWebappChromiumWebApp;
+typedef struct _UnityWebappChromiumWebAppClass UnityWebappChromiumWebAppClass;
 
 typedef enum  {
-	UNITY_APPLICATION_COMMANDS_SHOW = 1
+	UNITY_APPLICATION_COMMANDS_SHOW = 1,
+	UNITY_APPLICATION_COMMANDS_MAKE_WEBAPP
 } UnityApplicationCommands;
 
 struct _UnityApplication {
@@ -83,6 +109,7 @@ struct _UnityShellIface {
 
 struct _UnityApplicationPrivate {
 	UnityShell* _shell;
+	UnityWebappWebiconFetcher* webicon_fetcher;
 };
 
 
@@ -92,6 +119,7 @@ GType unity_application_commands_get_type (void);
 GType unity_application_get_type (void);
 GType unity_shell_mode_get_type (void);
 GType unity_shell_get_type (void);
+GType unity_webapp_webicon_fetcher_get_type (void);
 #define UNITY_APPLICATION_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_APPLICATION, UnityApplicationPrivate))
 enum  {
 	UNITY_APPLICATION_DUMMY_PROPERTY,
@@ -101,6 +129,13 @@ UnityApplication* unity_application_new (void);
 UnityApplication* unity_application_construct (GType object_type);
 UnityShell* unity_application_get_shell (UnityApplication* self);
 void unity_shell_show_unity (UnityShell* self);
+UnityWebappWebiconFetcher* unity_webapp_webicon_fetcher_new (const char* uri, const char* destination);
+UnityWebappWebiconFetcher* unity_webapp_webicon_fetcher_construct (GType object_type, const char* uri, const char* destination);
+void unity_webapp_webicon_fetcher_fetch_webapp_data (UnityWebappWebiconFetcher* self);
+UnityWebappChromiumWebApp* unity_webapp_chromium_web_app_new (const char* address, const char* icon);
+UnityWebappChromiumWebApp* unity_webapp_chromium_web_app_construct (GType object_type, const char* address, const char* icon);
+GType unity_webapp_chromium_web_app_get_type (void);
+void unity_webapp_chromium_web_app_add_to_favorites (UnityWebappChromiumWebApp* self);
 UniqueResponse unity_application_on_message_received (UnityApplication* self, gint command, UniqueMessageData* data, guint time_);
 void unity_application_set_shell (UnityApplication* self, UnityShell* value);
 static UniqueResponse _unity_application_on_message_received_unique_app_message_received (UniqueApp* _sender, gint command, UniqueMessageData* message_data, guint time_, gpointer self);
@@ -108,6 +143,9 @@ static GObject * unity_application_constructor (GType type, guint n_construct_pr
 static void unity_application_finalize (GObject* obj);
 static void unity_application_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_application_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
+static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
+static gint _vala_array_length (gpointer array);
 
 
 
@@ -115,61 +153,229 @@ static void unity_application_set_property (GObject * object, guint property_id,
 GType unity_application_commands_get_type (void) {
 	static GType unity_application_commands_type_id = 0;
 	if (G_UNLIKELY (unity_application_commands_type_id == 0)) {
-		static const GEnumValue values[] = {{UNITY_APPLICATION_COMMANDS_SHOW, "UNITY_APPLICATION_COMMANDS_SHOW", "show"}, {0, NULL, NULL}};
+		static const GEnumValue values[] = {{UNITY_APPLICATION_COMMANDS_SHOW, "UNITY_APPLICATION_COMMANDS_SHOW", "show"}, {UNITY_APPLICATION_COMMANDS_MAKE_WEBAPP, "UNITY_APPLICATION_COMMANDS_MAKE_WEBAPP", "make-webapp"}, {0, NULL, NULL}};
 		unity_application_commands_type_id = g_enum_register_static ("UnityApplicationCommands", values);
 	}
 	return unity_application_commands_type_id;
 }
 
 
-#line 35 "application.vala"
+#line 38 "application.vala"
 UnityApplication* unity_application_construct (GType object_type) {
-#line 128 "application.c"
+#line 166 "application.c"
 	UnityApplication * self;
-#line 37 "application.vala"
+#line 40 "application.vala"
 	self = (UnityApplication*) g_object_new (object_type, "name", "com.canonical.Unity", NULL);
-#line 132 "application.c"
+#line 170 "application.c"
 	return self;
 }
 
 
-#line 35 "application.vala"
+#line 38 "application.vala"
 UnityApplication* unity_application_new (void) {
-#line 35 "application.vala"
+#line 38 "application.vala"
 	return unity_application_construct (UNITY_TYPE_APPLICATION);
-#line 141 "application.c"
+#line 179 "application.c"
 }
 
 
-#line 47 "application.vala"
+#line 51 "application.vala"
 UniqueResponse unity_application_on_message_received (UnityApplication* self, gint command, UniqueMessageData* data, guint time_) {
-#line 147 "application.c"
+#line 185 "application.c"
 	UniqueResponse result;
+	GError * _inner_error_;
 	UniqueResponse res;
 	char* _tmp0_;
-#line 47 "application.vala"
-	g_return_val_if_fail (self != NULL, 0);
-#line 47 "application.vala"
-	g_return_val_if_fail (data != NULL, 0);
 #line 51 "application.vala"
+	g_return_val_if_fail (self != NULL, 0);
+#line 51 "application.vala"
+	g_return_val_if_fail (data != NULL, 0);
+#line 194 "application.c"
+	_inner_error_ = NULL;
+#line 55 "application.vala"
 	res = UNIQUE_RESPONSE_OK;
-#line 53 "application.vala"
-	g_debug ("application.vala:53: Message Received: %d '%s' %d", command, _tmp0_ = unique_message_data_get_text (data), (gint) time_);
-#line 159 "application.c"
+#line 57 "application.vala"
+	g_debug ("application.vala:57: Message Received: %d '%s' %d", command, _tmp0_ = unique_message_data_get_text (data), (gint) time_);
+#line 200 "application.c"
 	_g_free0 (_tmp0_);
-#line 58 "application.vala"
-	if (command == UNITY_APPLICATION_COMMANDS_SHOW) {
-#line 60 "application.vala"
-		if (UNITY_IS_SHELL (unity_application_get_shell (self))) {
-#line 61 "application.vala"
-			unity_shell_show_unity (unity_application_get_shell (self));
-#line 167 "application.c"
+#line 62 "application.vala"
+	switch (command) {
+#line 204 "application.c"
+		case UNITY_APPLICATION_COMMANDS_SHOW:
+		{
+			{
+#line 66 "application.vala"
+				if (UNITY_IS_SHELL (unity_application_get_shell (self))) {
+#line 67 "application.vala"
+					unity_shell_show_unity (unity_application_get_shell (self));
+#line 212 "application.c"
+				}
+			}
+#line 69 "application.vala"
+			break;
+#line 217 "application.c"
+		}
+		case UNITY_APPLICATION_COMMANDS_MAKE_WEBAPP:
+		{
+			{
+				char* uri;
+				char* icon_dirstring;
+				GFile* icon_directory;
+				char** _tmp2_;
+				gint split_url_size;
+				gint split_url_length1;
+				char** _tmp1_;
+				char** split_url;
+				char* name;
+				UnityWebappWebiconFetcher* _tmp7_;
+				char* _tmp6_;
+				char* _tmp5_;
+				char* _tmp9_;
+				char* _tmp8_;
+				UnityWebappChromiumWebApp* _tmp10_;
+				UnityWebappChromiumWebApp* webapp;
+#line 73 "application.vala"
+				uri = unique_message_data_get_text (data);
+#line 74 "application.vala"
+				icon_dirstring = g_strconcat (g_get_home_dir (), "/.local/share/icons/", NULL);
+#line 75 "application.vala"
+				icon_directory = g_file_new_for_path (icon_dirstring);
+#line 244 "application.c"
+				{
+#line 77 "application.vala"
+					if (!g_file_query_exists (icon_directory, NULL)) {
+#line 79 "application.vala"
+						g_file_make_directory_with_parents (icon_directory, NULL, &_inner_error_);
+#line 250 "application.c"
+						if (_inner_error_ != NULL) {
+							goto __catch0_g_error;
+						}
+					}
+				}
+				goto __finally0;
+				__catch0_g_error:
+				{
+					GError * e;
+					e = _inner_error_;
+					_inner_error_ = NULL;
+					{
+						_g_error_free0 (e);
+					}
+				}
+				__finally0:
+				if (_inner_error_ != NULL) {
+					_g_free0 (uri);
+					_g_free0 (icon_dirstring);
+					_g_object_unref0 (icon_directory);
+					g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+					g_clear_error (&_inner_error_);
+					return 0;
+				}
+				split_url = (_tmp2_ = _tmp1_ = g_strsplit (uri, "://", 2), split_url_length1 = _vala_array_length (_tmp1_), split_url_size = split_url_length1, _tmp2_);
+#line 85 "application.vala"
+				name = g_strdup (split_url[1]);
+#line 278 "application.c"
+				{
+					GRegex* regex;
+					char* _tmp3_;
+					char* _tmp4_;
+#line 88 "application.vala"
+					regex = g_regex_new ("(/)", 0, 0, &_inner_error_);
+#line 285 "application.c"
+					if (_inner_error_ != NULL) {
+						if (_inner_error_->domain == G_REGEX_ERROR) {
+							goto __catch1_g_regex_error;
+						}
+						_g_free0 (uri);
+						_g_free0 (icon_dirstring);
+						_g_object_unref0 (icon_directory);
+						split_url = (_vala_array_free (split_url, split_url_length1, (GDestroyNotify) g_free), NULL);
+						_g_free0 (name);
+						g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+						g_clear_error (&_inner_error_);
+						return 0;
+					}
+#line 89 "application.vala"
+					_tmp3_ = g_regex_replace (regex, name, (gssize) (-1), 0, "", 0, &_inner_error_);
+#line 301 "application.c"
+					if (_inner_error_ != NULL) {
+						_g_regex_unref0 (regex);
+						if (_inner_error_->domain == G_REGEX_ERROR) {
+							goto __catch1_g_regex_error;
+						}
+						_g_regex_unref0 (regex);
+						_g_free0 (uri);
+						_g_free0 (icon_dirstring);
+						_g_object_unref0 (icon_directory);
+						split_url = (_vala_array_free (split_url, split_url_length1, (GDestroyNotify) g_free), NULL);
+						_g_free0 (name);
+						g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+						g_clear_error (&_inner_error_);
+						return 0;
+					}
+#line 89 "application.vala"
+					name = (_tmp4_ = _tmp3_, _g_free0 (name), _tmp4_);
+#line 319 "application.c"
+					_g_regex_unref0 (regex);
+				}
+				goto __finally1;
+				__catch1_g_regex_error:
+				{
+					GError * e;
+					e = _inner_error_;
+					_inner_error_ = NULL;
+					{
+#line 91 "application.vala"
+						g_warning ("application.vala:91: %s", e->message);
+#line 331 "application.c"
+						_g_error_free0 (e);
+					}
+				}
+				__finally1:
+				if (_inner_error_ != NULL) {
+					_g_free0 (uri);
+					_g_free0 (icon_dirstring);
+					_g_object_unref0 (icon_directory);
+					split_url = (_vala_array_free (split_url, split_url_length1, (GDestroyNotify) g_free), NULL);
+					_g_free0 (name);
+					g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+					g_clear_error (&_inner_error_);
+					return 0;
+				}
+#line 94 "application.vala"
+				self->priv->webicon_fetcher = (_tmp7_ = unity_webapp_webicon_fetcher_new (uri, _tmp6_ = g_strconcat (_tmp5_ = g_strconcat (icon_dirstring, name, NULL), ".svg", NULL)), _g_object_unref0 (self->priv->webicon_fetcher), _tmp7_);
+#line 348 "application.c"
+				_g_free0 (_tmp6_);
+				_g_free0 (_tmp5_);
+#line 95 "application.vala"
+				unity_webapp_webicon_fetcher_fetch_webapp_data (self->priv->webicon_fetcher);
+#line 97 "application.vala"
+				webapp = (_tmp10_ = unity_webapp_chromium_web_app_new (uri, _tmp9_ = g_strconcat (_tmp8_ = g_strconcat (icon_dirstring, name, NULL), ".svg", NULL)), _g_free0 (_tmp9_), _g_free0 (_tmp8_), _tmp10_);
+#line 98 "application.vala"
+				unity_webapp_chromium_web_app_add_to_favorites (webapp);
+#line 357 "application.c"
+				_g_free0 (uri);
+				_g_free0 (icon_dirstring);
+				_g_object_unref0 (icon_directory);
+				split_url = (_vala_array_free (split_url, split_url_length1, (GDestroyNotify) g_free), NULL);
+				_g_free0 (name);
+				_g_object_unref0 (webapp);
+			}
+#line 101 "application.vala"
+			break;
+#line 367 "application.c"
+		}
+		default:
+		{
+#line 103 "application.vala"
+			break;
+#line 373 "application.c"
 		}
 	}
 	result = res;
-#line 64 "application.vala"
+#line 106 "application.vala"
 	return result;
-#line 173 "application.c"
+#line 379 "application.c"
 }
 
 
@@ -177,9 +383,9 @@ UnityShell* unity_application_get_shell (UnityApplication* self) {
 	UnityShell* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_shell;
-#line 31 "application.vala"
+#line 33 "application.vala"
 	return result;
-#line 183 "application.c"
+#line 389 "application.c"
 }
 
 
@@ -191,16 +397,16 @@ static gpointer _g_object_ref0 (gpointer self) {
 void unity_application_set_shell (UnityApplication* self, UnityShell* value) {
 	UnityShell* _tmp0_;
 	g_return_if_fail (self != NULL);
-#line 32 "application.vala"
+#line 34 "application.vala"
 	self->priv->_shell = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_shell), _tmp0_);
-#line 197 "application.c"
+#line 403 "application.c"
 	g_object_notify ((GObject *) self, "shell");
 }
 
 
-#line 47 "application.vala"
+#line 51 "application.vala"
 static UniqueResponse _unity_application_on_message_received_unique_app_message_received (UniqueApp* _sender, gint command, UniqueMessageData* message_data, guint time_, gpointer self) {
-#line 204 "application.c"
+#line 410 "application.c"
 	return unity_application_on_message_received (self, command, message_data, time_);
 }
 
@@ -213,11 +419,13 @@ static GObject * unity_application_constructor (GType type, guint n_construct_pr
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_APPLICATION (obj);
 	{
-#line 42 "application.vala"
+#line 45 "application.vala"
 		unique_app_add_command ((UniqueApp*) self, "show", (gint) UNITY_APPLICATION_COMMANDS_SHOW);
-#line 44 "application.vala"
+#line 46 "application.vala"
+		unique_app_add_command ((UniqueApp*) self, "make webapp", (gint) UNITY_APPLICATION_COMMANDS_MAKE_WEBAPP);
+#line 48 "application.vala"
 		g_signal_connect_object ((UniqueApp*) self, "message-received", (GCallback) _unity_application_on_message_received_unique_app_message_received, self, 0);
-#line 221 "application.c"
+#line 429 "application.c"
 	}
 	return obj;
 }
@@ -243,6 +451,7 @@ static void unity_application_finalize (GObject* obj) {
 	UnityApplication * self;
 	self = UNITY_APPLICATION (obj);
 	_g_object_unref0 (self->priv->_shell);
+	_g_object_unref0 (self->priv->webicon_fetcher);
 	G_OBJECT_CLASS (unity_application_parent_class)->finalize (obj);
 }
 
@@ -282,6 +491,36 @@ static void unity_application_set_property (GObject * object, guint property_id,
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
 	}
+}
+
+
+static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func) {
+	if ((array != NULL) && (destroy_func != NULL)) {
+		int i;
+		for (i = 0; i < array_length; i = i + 1) {
+			if (((gpointer*) array)[i] != NULL) {
+				destroy_func (((gpointer*) array)[i]);
+			}
+		}
+	}
+}
+
+
+static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func) {
+	_vala_array_destroy (array, array_length, destroy_func);
+	g_free (array);
+}
+
+
+static gint _vala_array_length (gpointer array) {
+	int length;
+	length = 0;
+	if (array) {
+		while (((gpointer*) array)[length]) {
+			length++;
+		}
+	}
+	return length;
 }
 
 

@@ -100,33 +100,33 @@ void unity_quicklauncher_models_shortcut_item_activated (UnityQuicklauncherModel
 
 
 
-#line 45 "launcher-model.vala"
+#line 46 "launcher-model.vala"
 GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcuts (UnityQuicklauncherModelsLauncherModel* self) {
-#line 45 "launcher-model.vala"
+#line 46 "launcher-model.vala"
 	return UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->get_menu_shortcuts (self);
 #line 108 "launcher-model.c"
 }
 
 
-#line 46 "launcher-model.vala"
+#line 47 "launcher-model.vala"
 GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcut_actions (UnityQuicklauncherModelsLauncherModel* self) {
-#line 46 "launcher-model.vala"
+#line 47 "launcher-model.vala"
 	return UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->get_menu_shortcut_actions (self);
 #line 116 "launcher-model.c"
 }
 
 
-#line 48 "launcher-model.vala"
+#line 49 "launcher-model.vala"
 void unity_quicklauncher_models_launcher_model_activate (UnityQuicklauncherModelsLauncherModel* self) {
-#line 48 "launcher-model.vala"
+#line 49 "launcher-model.vala"
 	UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->activate (self);
 #line 124 "launcher-model.c"
 }
 
 
-#line 49 "launcher-model.vala"
+#line 50 "launcher-model.vala"
 void unity_quicklauncher_models_launcher_model_close (UnityQuicklauncherModelsLauncherModel* self) {
-#line 49 "launcher-model.vala"
+#line 50 "launcher-model.vala"
 	UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->close (self);
 #line 132 "launcher-model.c"
 }
@@ -217,6 +217,7 @@ static void unity_quicklauncher_models_launcher_model_base_init (UnityQuicklaunc
 		g_signal_new ("request_attention", UNITY_QUICKLAUNCHER_MODELS_TYPE_LAUNCHER_MODEL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 		g_signal_new ("urgent_changed", UNITY_QUICKLAUNCHER_MODELS_TYPE_LAUNCHER_MODEL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 		g_signal_new ("activated", UNITY_QUICKLAUNCHER_MODELS_TYPE_LAUNCHER_MODEL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+		g_signal_new ("notify_icon", UNITY_QUICKLAUNCHER_MODELS_TYPE_LAUNCHER_MODEL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 	}
 }
 
@@ -232,19 +233,19 @@ GType unity_quicklauncher_models_launcher_model_get_type (void) {
 }
 
 
-#line 54 "launcher-model.vala"
+#line 55 "launcher-model.vala"
 char* unity_quicklauncher_models_shortcut_item_get_name (UnityQuicklauncherModelsShortcutItem* self) {
-#line 54 "launcher-model.vala"
+#line 55 "launcher-model.vala"
 	return UNITY_QUICKLAUNCHER_MODELS_SHORTCUT_ITEM_GET_INTERFACE (self)->get_name (self);
-#line 240 "launcher-model.c"
+#line 241 "launcher-model.c"
 }
 
 
-#line 56 "launcher-model.vala"
+#line 57 "launcher-model.vala"
 void unity_quicklauncher_models_shortcut_item_activated (UnityQuicklauncherModelsShortcutItem* self) {
-#line 56 "launcher-model.vala"
+#line 57 "launcher-model.vala"
 	UNITY_QUICKLAUNCHER_MODELS_SHORTCUT_ITEM_GET_INTERFACE (self)->activated (self);
-#line 248 "launcher-model.c"
+#line 249 "launcher-model.c"
 }
 
 

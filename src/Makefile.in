@@ -81,10 +81,8 @@ am__objects_3 = libunity_static_la-application-place.lo \
 	libunity_static_la-places-view.lo \
 	libunity_static_la-search-field.lo
 am__objects_4 = libunity_static_la-application-model.lo \
-	libunity_static_la-chrome-handler.lo \
 	libunity_static_la-launcher-model.lo \
 	libunity_static_la-launcher-view.lo \
-	libunity_static_la-prism-handler.lo \
 	libunity_static_la-quicklauncher-manager.lo \
 	libunity_static_la-quicklauncher.lo \
 	libunity_static_la-quicklist-controller.lo \
@@ -169,6 +167,9 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
+GCONFTOOL = @GCONFTOOL@
+GCONF_SCHEMA_CONFIG_SOURCE = @GCONF_SCHEMA_CONFIG_SOURCE@
+GCONF_SCHEMA_FILE_DIR = @GCONF_SCHEMA_FILE_DIR@
 GETTEXT_MACRO_VERSION = @GETTEXT_MACRO_VERSION@
 GETTEXT_PACKAGE = @GETTEXT_PACKAGE@
 GMSGFMT = @GMSGFMT@
@@ -386,10 +387,8 @@ places_sources = \
 
 quicklauncher_sources = \
   quicklauncher/application-model.vala \
-  quicklauncher/chrome-handler.vala \
   quicklauncher/launcher-model.vala \
   quicklauncher/launcher-view.vala \
-  quicklauncher/prism-handler.vala \
   quicklauncher/quicklauncher-manager.vala \
   quicklauncher/quicklauncher.vala \
   quicklauncher/quicklist-controller.vala \
@@ -560,7 +559,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_static_la-bar-model.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_static_la-bar-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_static_la-cairo-drawing.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_static_la-chrome-handler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_static_la-default-model.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_static_la-default-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_static_la-file-place.Plo@am__quote@
@@ -577,7 +575,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_static_la-places-place.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_static_la-places-results-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_static_la-places-view.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_static_la-prism-handler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_static_la-quicklauncher-manager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_static_la-quicklauncher.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_static_la-quicklist-controller.Plo@am__quote@
@@ -814,14 +811,6 @@ libunity_static_la-application-model.lo: quicklauncher/application-model.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_static_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_static_la-application-model.lo `test -f 'quicklauncher/application-model.c' || echo '$(srcdir)/'`quicklauncher/application-model.c
 
-libunity_static_la-chrome-handler.lo: quicklauncher/chrome-handler.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_static_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_static_la-chrome-handler.lo -MD -MP -MF $(DEPDIR)/libunity_static_la-chrome-handler.Tpo -c -o libunity_static_la-chrome-handler.lo `test -f 'quicklauncher/chrome-handler.c' || echo '$(srcdir)/'`quicklauncher/chrome-handler.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_static_la-chrome-handler.Tpo $(DEPDIR)/libunity_static_la-chrome-handler.Plo
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='quicklauncher/chrome-handler.c' object='libunity_static_la-chrome-handler.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_static_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_static_la-chrome-handler.lo `test -f 'quicklauncher/chrome-handler.c' || echo '$(srcdir)/'`quicklauncher/chrome-handler.c
-
 libunity_static_la-launcher-model.lo: quicklauncher/launcher-model.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_static_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_static_la-launcher-model.lo -MD -MP -MF $(DEPDIR)/libunity_static_la-launcher-model.Tpo -c -o libunity_static_la-launcher-model.lo `test -f 'quicklauncher/launcher-model.c' || echo '$(srcdir)/'`quicklauncher/launcher-model.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_static_la-launcher-model.Tpo $(DEPDIR)/libunity_static_la-launcher-model.Plo
@@ -837,14 +826,6 @@ libunity_static_la-launcher-view.lo: quicklauncher/launcher-view.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='quicklauncher/launcher-view.c' object='libunity_static_la-launcher-view.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_static_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_static_la-launcher-view.lo `test -f 'quicklauncher/launcher-view.c' || echo '$(srcdir)/'`quicklauncher/launcher-view.c
-
-libunity_static_la-prism-handler.lo: quicklauncher/prism-handler.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_static_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_static_la-prism-handler.lo -MD -MP -MF $(DEPDIR)/libunity_static_la-prism-handler.Tpo -c -o libunity_static_la-prism-handler.lo `test -f 'quicklauncher/prism-handler.c' || echo '$(srcdir)/'`quicklauncher/prism-handler.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_static_la-prism-handler.Tpo $(DEPDIR)/libunity_static_la-prism-handler.Plo
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='quicklauncher/prism-handler.c' object='libunity_static_la-prism-handler.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_static_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_static_la-prism-handler.lo `test -f 'quicklauncher/prism-handler.c' || echo '$(srcdir)/'`quicklauncher/prism-handler.c
 
 libunity_static_la-quicklauncher-manager.lo: quicklauncher/quicklauncher-manager.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_static_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_static_la-quicklauncher-manager.lo -MD -MP -MF $(DEPDIR)/libunity_static_la-quicklauncher-manager.Tpo -c -o libunity_static_la-quicklauncher-manager.lo `test -f 'quicklauncher/quicklauncher-manager.c' || echo '$(srcdir)/'`quicklauncher/quicklauncher-manager.c

@@ -466,17 +466,6 @@ typedef struct _UnityQuicklauncherModelsLauncherModel UnityQuicklauncherModelsLa
 typedef struct _UnityQuicklauncherModelsLauncherModelIface UnityQuicklauncherModelsLauncherModelIface;
 typedef struct _UnityQuicklauncherModelsApplicationModelPrivate UnityQuicklauncherModelsApplicationModelPrivate;
 
-#define UNITY_QUICKLAUNCHER_TYPE_CHROMIUM_WEB_APP (unity_quicklauncher_chromium_web_app_get_type ())
-#define UNITY_QUICKLAUNCHER_CHROMIUM_WEB_APP(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_CHROMIUM_WEB_APP, UnityQuicklauncherChromiumWebApp))
-#define UNITY_QUICKLAUNCHER_CHROMIUM_WEB_APP_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLAUNCHER_TYPE_CHROMIUM_WEB_APP, UnityQuicklauncherChromiumWebAppClass))
-#define UNITY_QUICKLAUNCHER_IS_CHROMIUM_WEB_APP(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLAUNCHER_TYPE_CHROMIUM_WEB_APP))
-#define UNITY_QUICKLAUNCHER_IS_CHROMIUM_WEB_APP_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLAUNCHER_TYPE_CHROMIUM_WEB_APP))
-#define UNITY_QUICKLAUNCHER_CHROMIUM_WEB_APP_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLAUNCHER_TYPE_CHROMIUM_WEB_APP, UnityQuicklauncherChromiumWebAppClass))
-
-typedef struct _UnityQuicklauncherChromiumWebApp UnityQuicklauncherChromiumWebApp;
-typedef struct _UnityQuicklauncherChromiumWebAppClass UnityQuicklauncherChromiumWebAppClass;
-typedef struct _UnityQuicklauncherChromiumWebAppPrivate UnityQuicklauncherChromiumWebAppPrivate;
-
 #define UNITY_QUICKLAUNCHER_TYPE_LAUNCHER_VIEW (unity_quicklauncher_launcher_view_get_type ())
 #define UNITY_QUICKLAUNCHER_LAUNCHER_VIEW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_LAUNCHER_VIEW, UnityQuicklauncherLauncherView))
 #define UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLAUNCHER_TYPE_LAUNCHER_VIEW, UnityQuicklauncherLauncherViewClass))
@@ -487,17 +476,6 @@ typedef struct _UnityQuicklauncherChromiumWebAppPrivate UnityQuicklauncherChromi
 typedef struct _UnityQuicklauncherLauncherView UnityQuicklauncherLauncherView;
 typedef struct _UnityQuicklauncherLauncherViewClass UnityQuicklauncherLauncherViewClass;
 typedef struct _UnityQuicklauncherLauncherViewPrivate UnityQuicklauncherLauncherViewPrivate;
-
-#define UNITY_QUICKLAUNCHER_TYPE_PRISM (unity_quicklauncher_prism_get_type ())
-#define UNITY_QUICKLAUNCHER_PRISM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_PRISM, UnityQuicklauncherPrism))
-#define UNITY_QUICKLAUNCHER_PRISM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLAUNCHER_TYPE_PRISM, UnityQuicklauncherPrismClass))
-#define UNITY_QUICKLAUNCHER_IS_PRISM(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLAUNCHER_TYPE_PRISM))
-#define UNITY_QUICKLAUNCHER_IS_PRISM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLAUNCHER_TYPE_PRISM))
-#define UNITY_QUICKLAUNCHER_PRISM_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLAUNCHER_TYPE_PRISM, UnityQuicklauncherPrismClass))
-
-typedef struct _UnityQuicklauncherPrism UnityQuicklauncherPrism;
-typedef struct _UnityQuicklauncherPrismClass UnityQuicklauncherPrismClass;
-typedef struct _UnityQuicklauncherPrismPrivate UnityQuicklauncherPrismPrivate;
 
 #define UNITY_QUICKLAUNCHER_TYPE_MANAGER (unity_quicklauncher_manager_get_type ())
 #define UNITY_QUICKLAUNCHER_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_MANAGER, UnityQuicklauncherManager))
@@ -1000,38 +978,15 @@ struct _UnityQuicklauncherModelsApplicationModelClass {
 	GObjectClass parent_class;
 };
 
-struct _UnityQuicklauncherChromiumWebApp {
-	GObject parent_instance;
-	UnityQuicklauncherChromiumWebAppPrivate * priv;
-	char* name;
-	char* id;
-};
-
-struct _UnityQuicklauncherChromiumWebAppClass {
-	GObjectClass parent_class;
-};
-
 struct _UnityQuicklauncherLauncherView {
 	CtkActor parent_instance;
 	UnityQuicklauncherLauncherViewPrivate * priv;
 	UnityQuicklauncherModelsLauncherModel* model;
-	gboolean is_hovering;
 	gboolean anim_priority_going_up;
 };
 
 struct _UnityQuicklauncherLauncherViewClass {
 	CtkActorClass parent_class;
-};
-
-struct _UnityQuicklauncherPrism {
-	GObject parent_instance;
-	UnityQuicklauncherPrismPrivate * priv;
-	char* name;
-	char* id;
-};
-
-struct _UnityQuicklauncherPrismClass {
-	GObjectClass parent_class;
 };
 
 struct _UnityQuicklauncherManager {
@@ -1118,7 +1073,7 @@ struct _UnityWidgetsScrollerClass {
 GType unity_background_get_type (void);
 UnityBackground* unity_background_new (void);
 UnityBackground* unity_background_construct (GType object_type);
-#define UNITY_UNITY_CONF_PATH "/apps/unity"
+#define UNITY_UNITY_CONF_PATH "/desktop/unity"
 void utils_set_strut (GtkWindow* window, guint32 strut_size, guint32 strut_start, guint32 strut_end, guint32 top_size, guint32 top_start, guint32 top_end);
 void utils_register_object_on_dbus (DBusGConnection* conn, const char* path, GObject* object);
 Window utils_get_stage_window (ClutterStage* stage);
@@ -1161,6 +1116,7 @@ GType unity_panel_tray_view_get_type (void);
 UnityPanelTrayView* unity_panel_tray_view_new (void);
 UnityPanelTrayView* unity_panel_tray_view_construct (GType object_type);
 void unity_panel_tray_view_manage_stage (UnityPanelTrayView* self, ClutterStage* stage);
+extern gboolean* unity_panel_search_entry_has_focus;
 GType unity_panel_view_get_type (void);
 UnityPanelView* unity_panel_view_new (UnityShell* shell);
 UnityPanelView* unity_panel_view_construct (GType object_type, UnityShell* shell);
@@ -1303,17 +1259,13 @@ UnityQuicklauncherModelsLauncherPinningShortcut* unity_quicklauncher_models_laun
 UnityQuicklauncherModelsApplicationModel* unity_quicklauncher_models_launcher_pinning_shortcut_get_app_model (UnityQuicklauncherModelsLauncherPinningShortcut* self);
 const char* unity_quicklauncher_models_launcher_pinning_shortcut_get_name (UnityQuicklauncherModelsLauncherPinningShortcut* self);
 GType unity_quicklauncher_models_launcher_model_get_type (void);
-UnityQuicklauncherModelsApplicationModel* unity_quicklauncher_models_application_model_new (const char* desktop_uri);
-UnityQuicklauncherModelsApplicationModel* unity_quicklauncher_models_application_model_construct (GType object_type, const char* desktop_uri);
+UnityQuicklauncherModelsApplicationModel* unity_quicklauncher_models_application_model_new (LauncherApplication* application);
+UnityQuicklauncherModelsApplicationModel* unity_quicklauncher_models_application_model_construct (GType object_type, LauncherApplication* application);
 void unity_quicklauncher_models_application_model_do_save_priority (UnityQuicklauncherModelsApplicationModel* self);
 gboolean unity_quicklauncher_models_application_model_save_priority (UnityQuicklauncherModelsApplicationModel* self);
+gboolean unity_quicklauncher_models_application_model_ensure_state (UnityQuicklauncherModelsApplicationModel* self);
 GSList* unity_quicklauncher_models_application_model_get_windows (UnityQuicklauncherModelsApplicationModel* self);
-GType unity_quicklauncher_chromium_web_app_get_type (void);
-UnityQuicklauncherChromiumWebApp* unity_quicklauncher_chromium_web_app_new (const char* address, const char* icon);
-UnityQuicklauncherChromiumWebApp* unity_quicklauncher_chromium_web_app_construct (GType object_type, const char* address, const char* icon);
-void unity_quicklauncher_chromium_web_app_add_to_favorites (UnityQuicklauncherChromiumWebApp* self);
-const char* unity_quicklauncher_chromium_web_app_get_url (UnityQuicklauncherChromiumWebApp* self);
-const char* unity_quicklauncher_chromium_web_app_get_icon (UnityQuicklauncherChromiumWebApp* self);
+LauncherApplication* unity_quicklauncher_models_application_model_get_app (UnityQuicklauncherModelsApplicationModel* self);
 GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcuts (UnityQuicklauncherModelsLauncherModel* self);
 GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcut_actions (UnityQuicklauncherModelsLauncherModel* self);
 void unity_quicklauncher_models_launcher_model_activate (UnityQuicklauncherModelsLauncherModel* self);
@@ -1336,20 +1288,17 @@ void unity_quicklauncher_models_shortcut_item_activated (UnityQuicklauncherModel
 GType unity_quicklauncher_launcher_view_get_type (void);
 UnityQuicklauncherLauncherView* unity_quicklauncher_launcher_view_new (UnityQuicklauncherModelsLauncherModel* model);
 UnityQuicklauncherLauncherView* unity_quicklauncher_launcher_view_construct (GType object_type, UnityQuicklauncherModelsLauncherModel* model);
+void unity_quicklauncher_launcher_view_update_window_struts (UnityQuicklauncherLauncherView* self, gboolean ignore_buffer);
 void unity_quicklauncher_launcher_view_notify_on_set_reactive (UnityQuicklauncherLauncherView* self);
 void unity_quicklauncher_launcher_view_close_menu (UnityQuicklauncherLauncherView* self);
+gboolean unity_quicklauncher_launcher_view_get_is_hovering (UnityQuicklauncherLauncherView* self);
+void unity_quicklauncher_launcher_view_set_is_hovering (UnityQuicklauncherLauncherView* self, gboolean value);
 ClutterAnimation* unity_quicklauncher_launcher_view_get_anim (UnityQuicklauncherLauncherView* self);
 void unity_quicklauncher_launcher_view_set_anim (UnityQuicklauncherLauncherView* self, ClutterAnimation* value);
 float unity_quicklauncher_launcher_view_get_anim_priority (UnityQuicklauncherLauncherView* self);
 void unity_quicklauncher_launcher_view_set_anim_priority (UnityQuicklauncherLauncherView* self, float value);
 gint unity_quicklauncher_launcher_view_get_position (UnityQuicklauncherLauncherView* self);
 void unity_quicklauncher_launcher_view_set_position (UnityQuicklauncherLauncherView* self, gint value);
-GType unity_quicklauncher_prism_get_type (void);
-UnityQuicklauncherPrism* unity_quicklauncher_prism_new (const char* address, const char* icon);
-UnityQuicklauncherPrism* unity_quicklauncher_prism_construct (GType object_type, const char* address, const char* icon);
-void unity_quicklauncher_prism_add_to_favorites (UnityQuicklauncherPrism* self);
-const char* unity_quicklauncher_prism_get_url (UnityQuicklauncherPrism* self);
-const char* unity_quicklauncher_prism_get_icon (UnityQuicklauncherPrism* self);
 GType unity_quicklauncher_manager_get_type (void);
 UnityQuicklauncherManager* unity_quicklauncher_manager_new (void);
 UnityQuicklauncherManager* unity_quicklauncher_manager_construct (GType object_type);
@@ -1367,6 +1316,8 @@ void unity_quicklauncher_quicklist_controller_show_label (UnityQuicklauncherQuic
 void unity_quicklauncher_quicklist_controller_hide_label (UnityQuicklauncherQuicklistController* self);
 void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuicklistController* self);
 void unity_quicklauncher_quicklist_controller_close_menu (UnityQuicklauncherQuicklistController* self);
+gboolean unity_quicklauncher_quicklist_controller_get_hide_on_leave (UnityQuicklauncherQuicklistController* self);
+void unity_quicklauncher_quicklist_controller_set_hide_on_leave (UnityQuicklauncherQuicklistController* self, gboolean value);
 GType unity_quicklauncher_quicklist_menu_item_get_type (void);
 UnityQuicklauncherQuicklistMenuItem* unity_quicklauncher_quicklist_menu_item_new (const char* label);
 UnityQuicklauncherQuicklistMenuItem* unity_quicklauncher_quicklist_menu_item_construct (GType object_type, const char* label);

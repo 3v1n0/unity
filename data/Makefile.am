@@ -1,4 +1,4 @@
-//Please keep alphabetical :-)
+# Please keep alphabetical :-)
 
 dist_default_DATA = \
   applications.png \
@@ -22,3 +22,19 @@ dist_default_DATA = \
   trash.png
 
 defaultdir = $(pkgdatadir)
+
+# Schemas
+schemadir = $(sysconfdir)/gconf/schemas
+dist_schema_DATA = unity.schemas
+
+if GCONF_SCHEMAS_INSTALL
+install-data-local:
+	-GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) \
+	$(GCONFTOOL) --makefile-install-rule $(dist_schema_DATA)
+endif
+
+if GCONF_SCHEMAS_INSTALL
+uninstall-local:
+	-GCONF_CONFIG_SOURCE=$(GCONF_SCHEMA_CONFIG_SOURCE) \
+	$(GCONFTOOL) --makefile-uninstall-rule $(dist_schema_DATA)
+endif

@@ -17,13 +17,14 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
-
 namespace Unity.Panel
 {
   static const int PANEL_HEIGHT = 24;
-  static const string SEARCH_TEMPLATE = "xdg-open http://uk.search.yahoo.com/search?p=%s&fr=ubuntu&ei=UTF-8";
+  static const string SEARCH_TEMPLATE = "xdg-open http://search.yahoo.com/search?p=%s&fr=ubuntu&ei=UTF-8";
+  static const string SEARCH_HINT = "Yahoo!";
 
-
+  public bool? search_entry_has_focus = null;
+    
   public class View : Ctk.Actor
   {
     public Shell shell { get; construct;}
@@ -33,7 +34,8 @@ namespace Unity.Panel
     private HomeButton        home;
     private Indicators.View   indicators;
 
-    private Entry entry;
+    private ThemeImage entry_icon;
+    private Entry      entry;
     private Unity.Places.CairoDrawing.EntryBackground entry_background;
 
     private int indicators_width = 0;
@@ -61,7 +63,6 @@ namespace Unity.Panel
       this.tray.set_parent (this);
       this.tray.show ();
 
-
       this.home = new HomeButton (this.shell);
       this.home.set_parent (this);
       this.home.show ();
@@ -71,18 +72,56 @@ namespace Unity.Panel
       this.entry_background.set_parent (this);
       this.entry_background.show ();
 
+      this.entry_icon = new ThemeImage ("search_field");
+      this.entry_icon.set_parent (this);
+      this.entry_icon.show ();
+
       this.entry = new Unity.Entry ("");
-      this.entry.static_text = (_("Search"));
+      this.entry.static_text = this.get_search_hint ();
       this.entry.set_parent (this);
       this.entry.show ();
       this.entry.activate.connect (this.on_entry_activated);
 
+      this.entry.key_focus_in.connect (this.on_entry_focus_in);
+      this.entry.key_focus_out.connect (this.on_entry_focus_out);
+      Unity.Panel.search_entry_has_focus = false;
+      
       END_FUNCTION ();
     }
 
     private void on_home_clicked ()
     {
       Unity.global_shell.show_window_picker ();
+    }
+    
+    private void on_entry_focus_in ()
+    {
+      Unity.Panel.search_entry_has_focus = true;
+    }
+    
+    private void on_entry_focus_out ()
+    {
+      Unity.Panel.search_entry_has_focus = false;
+    }    
+
+    private string get_search_hint ()
+    {
+      string hint = "";
+      var client = GConf.Client.get_default ();
+
+      try
+        {
+          hint = client.get_string ("/desktop/unity/panel/search_hint");
+
+          if (hint == "" || hint == null)
+            hint = SEARCH_HINT;
+        }
+      catch (Error e)
+        {
+          hint = SEARCH_HINT;
+        }
+
+      return hint;
     }
 
     private void on_entry_activated ()
@@ -92,7 +131,7 @@ namespace Unity.Panel
       var client = GConf.Client.get_default ();
       try
         {
-          template = client.get_string ("/apps/unity/panel/search_template");
+          template = client.get_string ("/desktop/unity/panel/search_template");
 
           if (template == "" || template == null)
             template = SEARCH_TEMPLATE;
@@ -144,7 +183,7 @@ namespace Unity.Panel
 
       /* Entry */
       child_box.x1 = Math.floorf (child_box.x2 + 12);
-      child_box.x2 = Math.floorf (child_box.x1 + 150); /* Random width */
+      child_box.x2 = Math.floorf (child_box.x1 + 170); /* Random width */
       child_box.y1 = Math.floorf (2);
       child_box.y2 = Math.floorf (PANEL_HEIGHT);
 
@@ -154,10 +193,16 @@ namespace Unity.Panel
       }
       this.entry_background.allocate (child_box, flags);
 
-      child_box.x1 += 12; /* (QL_width - logo_width)/2.0 */
-      child_box.x2 -= 12;
-      child_box.y1 += 5;
-      child_box.y2 -= 4;
+      child_box.x1 += 6;
+      child_box.x2 = child_box.x1 + 16;
+      child_box.y1 = Math.floorf ((PANEL_HEIGHT-16)/2.0f);
+      child_box.y2 = child_box.y1 + 16;
+      this.entry_icon.allocate (child_box, flags);
+
+      child_box.x1 = child_box.x2 + 4; /* (QL_width - logo_width)/2.0 */
+      child_box.x2 = child_box.x1 + 150 - 16;
+      child_box.y1 = 9;
+      child_box.y2 = 15;
       this.entry.allocate (child_box, flags);
 
       child_box.y1 = 0;
@@ -198,6 +243,7 @@ namespace Unity.Panel
       this.home.paint ();
       this.indicators.paint ();
       this.entry_background.paint ();
+      this.entry_icon.paint ();
       this.entry.paint ();
     }
 
@@ -208,6 +254,7 @@ namespace Unity.Panel
       this.home.paint ();
       this.indicators.paint ();
       this.entry_background.paint ();
+      this.entry_icon.paint ();
       this.entry.paint ();
     }
 
@@ -219,6 +266,7 @@ namespace Unity.Panel
       this.home.map ();
       this.indicators.map ();
       this.entry_background.map ();
+      this.entry_icon.map ();
       this.entry.map ();
     }
 
@@ -230,6 +278,7 @@ namespace Unity.Panel
       this.home.unmap ();
       this.indicators.unmap ();
       this.entry_background.unmap ();
+      this.entry_icon.unmap ();
       this.entry.unmap ();
     }
 
