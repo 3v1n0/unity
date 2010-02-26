@@ -579,7 +579,11 @@ namespace Unity.Quicklauncher
 
           if (this.menu_state == LauncherViewMenuState.NO_MENU)
             {
-              controller.close_menu ();
+              if (controller.is_in_label || controller.menu_is_open ())
+                {
+                  controller.close_menu ();
+                  menu_closed (this);
+                }
             }
 
           if (this.menu_state == LauncherViewMenuState.LABEL)
@@ -597,6 +601,7 @@ namespace Unity.Quicklauncher
                   controller.show_menu (this.model.get_menu_shortcuts (),
                                         this.model.get_menu_shortcut_actions (),
                                         false);
+                   menu_opened (this);
                 }
             }
 
@@ -607,6 +612,7 @@ namespace Unity.Quicklauncher
                   controller.show_menu (this.model.get_menu_shortcuts (),
                                         this.model.get_menu_shortcut_actions (),
                                         true);
+                  menu_opened (this);
                 }
             }
         }
