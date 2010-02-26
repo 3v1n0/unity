@@ -421,7 +421,7 @@ namespace Unity
         }
       else if (fullscreen_requests.size > 0 ||
                places_showing ||
-               Unity.Quicklauncher.active_menu != null ||
+               Unity.Quicklauncher.QuicklistController.get_default ().menu_is_open () ||
                Unity.Drag.Controller.get_default ().is_dragging
               )
         {

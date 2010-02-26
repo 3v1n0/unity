@@ -39,6 +39,14 @@ namespace Unity.Quicklauncher
   const uint MEDIUM_DELAY = 800;
   const uint LONG_DELAY = 1600;
 
+  private enum LauncherViewMenuState
+  {
+    NO_MENU,
+    LABEL,
+    MENU,
+    MENU_CLOSE_WHEN_LEAVE
+  }
+
   public class LauncherView : Ctk.Actor, Unity.Drag.Model
   {
 
@@ -50,11 +58,6 @@ namespace Unity.Quicklauncher
     private ThemeImage running_indicator;
     private Gdk.Pixbuf honeycomb_mask;
     private Gdk.Rectangle last_strut;
-
-    private Gee.ArrayList<ShortcutItem> offline_shortcuts;
-    private Gee.ArrayList<ShortcutItem> shortcut_actions;
-
-    private QuicklistController? quicklist_controller;
 
     private Ctk.EffectGlow effect_icon_glow;
     private Ctk.EffectDropShadow effect_drop_shadow;
@@ -96,6 +99,7 @@ namespace Unity.Quicklauncher
       }
     }
 
+    private LauncherViewMenuState menu_state;
 
     bool wiggling = false;
     bool cease_wiggle;
@@ -115,7 +119,6 @@ namespace Unity.Quicklauncher
     public signal void menu_closed (LauncherView sender);
 
     private uint hover_timeout;
-    private bool menu_is_label = true;
 
     /* animations */
 
@@ -221,13 +224,13 @@ namespace Unity.Quicklauncher
         this.do_queue_redraw ();
 
         set_reactive (true);
-        this.quicklist_controller = null;
         var padding = this.padding;
         padding.left = 2;
         padding.right = 2;
         padding.top = 2.5f;
         padding.bottom = 2.5f;
         this.padding = padding;
+        this.menu_state = LauncherViewMenuState.NO_MENU;
       }
 
       public override void get_preferred_width (float for_height,
@@ -563,52 +566,55 @@ namespace Unity.Quicklauncher
 
     private void ensure_menu_state ()
     {
-      //makes sure the menu is open or whatever
-      if (Unity.Quicklauncher.active_menu != null)
-        {
-          if (Unity.Quicklauncher.active_menu != this.quicklist_controller)
-            {
-              // we have a menu already open, put a watch on its close method
-              Unity.Quicklauncher.active_menu.menu.destroy.connect (this.ensure_menu_state);
-              return;
-            }
-        }
-      if (!(this.quicklist_controller is QuicklistController))
-        {
-          this.quicklist_controller = new QuicklistController (this.model.name,
-                                                               this,
-                                                               this.get_stage () as Clutter.Stage
-                                                               );
-          build_quicklist ();
-        }
-
+      var controller = QuicklistController.get_default ();
       if (this.is_hovering)
         {
-          if (this.menu_is_label)
+          if (controller.menu_is_open () && controller.get_attached_actor () != this)
             {
-              if (!quicklist_controller.is_label)
-                {
-                  quicklist_controller.close_menu ();
-                  menu_closed (this);
-                }
-                
-              if(Unity.Panel.search_entry_has_focus == false)
-                this.quicklist_controller.show_label ();
+              // there is a menu open already, attach to the destroy so we can
+              // re-ensure later
+              controller.menu.destroy.connect (this.ensure_menu_state);
+              return;
             }
-          else
+
+          if (this.menu_state == LauncherViewMenuState.NO_MENU)
             {
-              this.quicklist_controller.show_menu ();
-              this.menu_opened (this);
+              controller.close_menu ();
+            }
+
+          if (this.menu_state == LauncherViewMenuState.LABEL)
+            {
+              if (!controller.menu_is_open ())
+                {
+                  controller.show_label (this.model.name, this);
+                }
+            }
+
+          if (this.menu_state == LauncherViewMenuState.MENU)
+            {
+              if (controller.is_in_label)
+                {
+                  controller.show_menu (this.model.get_menu_shortcuts (),
+                                        this.model.get_menu_shortcut_actions (),
+                                        false);
+                }
+            }
+
+          if (this.menu_state == LauncherViewMenuState.MENU_CLOSE_WHEN_LEAVE)
+            {
+              if (controller.is_in_label)
+                {
+                  controller.show_menu (this.model.get_menu_shortcuts (),
+                                        this.model.get_menu_shortcut_actions (),
+                                        true);
+                }
             }
         }
       else
         {
-          if (this.menu_is_label)
-            {
-              this.close_menu ();
-            }
+          if (controller.is_in_label)
+            controller.close_menu ();
         }
-
     }
 
     private bool on_mouse_enter (Clutter.Event event)
@@ -617,7 +623,7 @@ namespace Unity.Quicklauncher
       if (drag_controller.is_dragging) return false;
 
       this.is_hovering = true;
-      this.menu_is_label = true;
+      this.menu_state = LauncherViewMenuState.LABEL;
       this.ensure_menu_state ();
 
       return false;
@@ -632,6 +638,7 @@ namespace Unity.Quicklauncher
     private bool on_mouse_leave(Clutter.Event src)
     {
       this.is_hovering = false;
+      this.menu_state = LauncherViewMenuState.NO_MENU;
       this.ensure_menu_state ();
       return false;
     }
@@ -659,11 +666,10 @@ namespace Unity.Quicklauncher
 
     private bool on_long_hover ()
     {
-      if (this.quicklist_controller.is_label)
+      if (QuicklistController.get_default().is_in_label)
         {
-          this.quicklist_controller.hide_on_leave = true;
           this.hover_timeout = 0;
-          this.menu_is_label = false;
+          this.menu_state = LauncherViewMenuState.MENU_CLOSE_WHEN_LEAVE;
           this.ensure_menu_state ();
         }
       return false;
@@ -684,35 +690,13 @@ namespace Unity.Quicklauncher
             } break;
           case 3:
             {
-              this.menu_is_label = false;
-              this.quicklist_controller.hide_on_leave = false;
+              this.menu_state = LauncherViewMenuState.MENU;
               this.ensure_menu_state ();
             } break;
           default: break;
         }
       return false;
 
-    }
-
-    public void close_menu ()
-    {
-      this.quicklist_controller.close_menu ();
-    }
-
-    /* menu handling */
-    private void build_quicklist ()
-    {
-      this.offline_shortcuts = this.model.get_menu_shortcuts ();
-      this.shortcut_actions = this.model.get_menu_shortcut_actions ();
-      foreach (ShortcutItem shortcut in this.offline_shortcuts)
-      {
-        this.quicklist_controller.add_action (shortcut, true);
-      }
-
-      foreach (ShortcutItem shortcut in this.shortcut_actions)
-      {
-        this.quicklist_controller.add_action (shortcut, false);
-      }
     }
 
     private bool on_released (Clutter.Event src)

@@ -21,195 +21,114 @@ using Unity.Quicklauncher.Models;
 
 namespace Unity.Quicklauncher
 {
-  public QuicklistController? active_menu = null;
+  public QuicklistController? ql_controler_singleton;
 
   public class QuicklistController : Object
   {
-    public string label;
-    public Ctk.Menu? menu;
-    private Clutter.Stage stage;
-    private Ctk.Actor attached_widget;
 
-    public bool is_label = false; // in label mode, don't add items
-    private Gee.LinkedList<ShortcutItem> prefix_actions;
-    private Gee.LinkedList<ShortcutItem> append_actions;
-
-    private bool _hide_on_leave = false;
-    public bool hide_on_leave {
-      get { return _hide_on_leave; }
-      set {
-        _hide_on_leave = value;
-        if (this.menu is Ctk.Menu)
-          {
-            this.menu.close_on_leave = value;
-          }
+    public static unowned QuicklistController get_default ()
+    {
+      if (Unity.Quicklauncher.ql_controler_singleton == null) {
+        Unity.Quicklauncher.ql_controler_singleton= new QuicklistController ();
       }
+      return Unity.Quicklauncher.ql_controler_singleton;
     }
 
-    public QuicklistController (string label, Ctk.Actor attached_to,
-                               Clutter.Stage stage)
-    {
-      this.label = label;
-      this.stage = stage;
-      this.menu = null;
-      this.prefix_actions = new Gee.LinkedList<ShortcutItem> ();
-      this.append_actions = new Gee.LinkedList<ShortcutItem> ();
-      this.attached_widget = attached_to;
-      var drag_controller = Drag.Controller.get_default ();
-      drag_controller.drag_start.connect (this.on_unity_drag_start);
-    }
+    public Ctk.Menu? menu;
+    public bool is_in_label = false;
+    public bool is_in_menu = false;
 
-    ~QuicklistController ()
+    public QuicklistController ()
     {
-      if (active_menu == this)
-        {
-          active_menu = null;
-        }
-      var menu = this.menu;
-      this.menu = null;
-      if (menu is Ctk.Menu)
-        {
-          menu.destroy ();
-        }
     }
 
     construct
     {
+      var drag_controller = Drag.Controller.get_default ();
+      drag_controller.drag_start.connect (this.on_unity_drag_start);
     }
 
     private void on_unity_drag_start (Drag.Model model)
     {
-      if (active_menu == this)
-        {
-          active_menu = null;
-        }
-      var menu = this.menu;
-      this.menu = null;
-      if (menu is Ctk.Menu)
-        {
-          menu.destroy ();
-        }
+      if (this.menu_is_open ())
+        this.menu.destroy ();
     }
 
-    public void add_action (ShortcutItem shortcut, bool is_secondary)
+    public void show_label (string label, Ctk.Actor attached_widget)
     {
-      /* replace with Unity.Quicklauncher.MenuItem or something when we have
-       * that ready, needs an activated () signal
-       */
-      if (is_secondary)
-        this.prefix_actions.add (shortcut);
-      else
-        this.append_actions.add (shortcut);
-    }
+      if (this.menu_is_open ())
+        this.menu.destroy ();
 
-    private void build_menu ()
-    {
       this.menu = new QuicklistMenu () as Ctk.Menu;
+      this.menu.destroy.connect (() => {
+        this.menu = null;
+      });
       this.menu.set_swallow_clicks (Unity.global_shell.menus_swallow_events);
       this.menu.set_detect_clicks (false);
-      Unity.Quicklauncher.QuicklistMenuItem menuitem = new Unity.Quicklauncher.QuicklistMenuItem (this.label);
+
+      //make label
+      QuicklistMenuItem menuitem = new QuicklistMenuItem (label);
       menuitem.activated.connect (this.close_menu);
       this.menu.append (menuitem, true);
-      this.menu.attach_to_actor (this.attached_widget);
-      stage.add_actor (this.menu);
+      this.menu.attach_to_actor (attached_widget);
+      (attached_widget.get_stage () as Clutter.Stage).add_actor (this.menu);
 
       float x;
       float y;
       this.menu.get_position (out x, out y);
       this.menu.set_position (x - (float) Ctk.em_to_pixel (1.5f), y);
+      this.is_in_label = true;
     }
 
-    public void show_label ()
+    public void show_menu (Gee.ArrayList<ShortcutItem> prefix_shortcuts,
+                           Gee.ArrayList<ShortcutItem> affix_shortcuts,
+                           bool hide_on_leave)
     {
-      // first of all check, if we have a menu active we don't show any labels
-      if (Unity.Quicklauncher.active_menu != null)
-        return;
 
-      this.build_menu ();
-
-      this.menu.show();
-      this.is_label = true;
-      this.menu.set_detect_clicks (false);
-    }
-
-    public void hide_label ()
-    {
-      if (!is_label || menu == null)
-        return;
-
-      this.menu.set_detect_clicks (false);
-      this.menu.hide ();
-    }
-
-    public void show_menu ()
-    {
-      if (Unity.Quicklauncher.active_menu != null)
-        {
-          // we already have an active menu, so destroy that and start this one
-          Unity.Quicklauncher.active_menu.menu.destroy ();
-          Unity.Quicklauncher.active_menu = null;
-        }
-
-      if (this.menu == null)
-        {
-          this.show_label ();
-        }
-
-      this.is_label = false;
-
-      foreach (ShortcutItem shortcut in this.prefix_actions)
+      this.is_in_label = false;
+      this.menu.close_on_leave = hide_on_leave;
+      foreach (ShortcutItem shortcut in prefix_shortcuts)
         {
           var label = shortcut.get_name ();
-          Unity.Quicklauncher.QuicklistMenuItem menuitem = new Unity.Quicklauncher.QuicklistMenuItem (label);
+          QuicklistMenuItem menuitem = new QuicklistMenuItem (label);
           this.menu.prepend (menuitem, false);
           menuitem.activated.connect (shortcut.activated);
           menuitem.activated.connect (this.close_menu);
         }
 
-      foreach (ShortcutItem shortcut in this.append_actions)
+      foreach (ShortcutItem shortcut in affix_shortcuts)
         {
           var label = shortcut.get_name ();
-          Unity.Quicklauncher.QuicklistMenuItem menuitem = new Unity.Quicklauncher.QuicklistMenuItem (label);
+          QuicklistMenuItem menuitem = new QuicklistMenuItem (label);
           this.menu.append (menuitem, false);
           menuitem.activated.connect (shortcut.activated);
           menuitem.activated.connect (this.close_menu);
         }
-
-      if (Unity.Quicklauncher.active_menu is QuicklistController)
-        {
-          if (Unity.Quicklauncher.active_menu.menu != this.menu &&
-              Unity.Quicklauncher.active_menu.menu is Ctk.Menu)
-            Unity.Quicklauncher.active_menu.menu.destroy ();
-        }
-      Unity.Quicklauncher.active_menu = this;
-      this.menu.closed.connect (this.on_menu_close);
-      this.is_label = false;
       this.menu.set_detect_clicks (true);
-
       Unity.global_shell.ensure_input_region ();
     }
 
-    private void on_menu_close ()
+    public void clear_menu ()
     {
-      close_menu ();
+      this.is_in_label = false;
+      this.is_in_menu = false;
     }
 
     public void close_menu ()
     {
-      if (Unity.Quicklauncher.active_menu == this)
-        {
-          Unity.Quicklauncher.active_menu = null;
-        }
-
-      if (this.menu == null)
-        {
-          return;
-        }
+      this.is_in_label = false;
+      this.is_in_menu = false;
       this.menu.destroy ();
-      this.is_label = false;
-
-      Unity.global_shell.ensure_input_region ();
     }
 
+    public bool menu_is_open ()
+    {
+      return this.menu is Ctk.Menu;
+    }
+
+    public Ctk.Actor get_attached_actor ()
+    {
+      return this.menu.get_attached_actor ();
+    }
   }
 }
