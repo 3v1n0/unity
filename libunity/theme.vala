@@ -19,6 +19,13 @@
 
 namespace Unity
 {
+  public static bool icon_name_exists_in_theme (string icon_name, string theme)
+  {
+    var icontheme = new Gtk.IconTheme ();
+    icontheme.set_custom_theme (theme);
+    return icontheme.has_icon (icon_name);
+  }
+
   public class ThemeImage : Clutter.Texture
   {
     private static Gtk.IconTheme? theme = null;

@@ -232,9 +232,7 @@ namespace Unity.Quicklauncher
 
     private bool handle_uri (string uri)
     {
-      debug ("handling uri: " + uri);
       string clean_uri = uri.split("\n", 2)[0].split("\r", 2)[0];
-
       try {
         var regex = new Regex ("\\s");
         clean_uri = regex.replace (clean_uri, -1, 0, "");
@@ -242,11 +240,7 @@ namespace Unity.Quicklauncher
         warning ("%s", e.message);
       }
       clean_uri.strip();
-
-      debug ("clean uri: " + clean_uri);
-
       var split_uri = clean_uri.split ("://", 2);
-
       if (test_url (clean_uri))
       {
         //we have a http url, webapp it
@@ -262,6 +256,7 @@ namespace Unity.Quicklauncher
         }
         var split_url = clean_uri.split ("://", 2);
         var name = split_url[1];
+        var hostname = Unity.Webapp.get_hostname (clean_uri);
         // gotta sanitze our name
         try {
           var regex = new Regex ("(/)");
@@ -276,12 +271,12 @@ namespace Unity.Quicklauncher
         string webapp_device = this.get_webapp_device ();
         switch (webapp_device) {
           case "prism":
-            var webapp = new Prism (clean_uri, icon_dirstring + name + ".svg");
+            var webapp = new Prism (clean_uri, icon_dirstring + hostname + ".svg");
             webapp.add_to_favorites ();
             break;
 
           case "chromium":
-            var webapp = new ChromiumWebApp (clean_uri, icon_dirstring + name + ".svg");
+            var webapp = new ChromiumWebApp (clean_uri, icon_dirstring + hostname + ".svg");
             webapp.add_to_favorites ();
             break;
 
@@ -440,7 +435,6 @@ namespace Unity.Quicklauncher
     {
       // for now just remove the application quickly. at some point
       // i would assume we have to pretty fading though, thats trivial to do
-      debug ("removing view %s", view.get_name ());
       this.container.remove_actor (view);
       view.enter_event.connect (on_launcher_enter_event);
       view.leave_event.connect (on_launcher_leave_event);
