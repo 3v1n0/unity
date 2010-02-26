@@ -232,9 +232,7 @@ namespace Unity.Webapp
           //we just completed getting our html
           this.html_phase = false;
           string html = (string)(data.data);
-          debug (@"our uri is: $uri");
           string hostname = get_hostname (this.uri);
-          debug (@"our hostname is: $hostname");
           // we have our html, try and get an icon from it
           this.icon_uris.offer ("http://" + hostname + "/ubuntu-launcher.png");
           var primary_icons = this.extract_icon_from_html (html, true);

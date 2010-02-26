@@ -84,13 +84,12 @@ namespace Unity.Quicklauncher
       this.container.drag_drop.connect (on_drag_drop);
       this.container.drag_data_received.connect (on_drag_data_received);
 
+      //watch the global shell for new icon cache changes
+      Unity.global_shell.need_new_icon_cache.connect (this.on_webicon_built);
+
       // put a watch on our gconf key so we get notified of new favorites
       this.gclient = GConf.Engine.get_default ();
-      debug ("setting notify");
       try {
-/*
-        this.gclient.add_dir ("/desktop/unity/favorites", GConf.ClientPreloadType.NONE);
-*/
         this.gclient.notify_add ("/desktop/unity/launcher/favorites/favorites_list", this.on_favorite_change);
         debug ("notify set");
       } catch (Error e) {
