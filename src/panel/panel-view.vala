@@ -183,7 +183,7 @@ namespace Unity.Panel
 
       /* Entry */
       child_box.x1 = Math.floorf (child_box.x2 + 12);
-      child_box.x2 = Math.floorf (child_box.x1 + 150); /* Random width */
+      child_box.x2 = Math.floorf (child_box.x1 + 170); /* Random width */
       child_box.y1 = Math.floorf (2);
       child_box.y2 = Math.floorf (PANEL_HEIGHT);
 
