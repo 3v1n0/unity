@@ -18,24 +18,29 @@
  *
  */
 
-namespace Unity.Quicklauncher
+namespace Unity.Webapp
 {
 
-  public class ChromiumWebApp : Object
+  public class Prism : Object
   {
+    static const string webapp_ini_template = """[Parameters]
+id=%s@unity.app
+name=%s
+uri=%s
+status=yes
+location=no
+sidebar=no
+navigation=no""";
+
     static const string webapp_desktop_template = """[Desktop Entry]
-Version=1.0
 Name=%s
-GenericName=Web Browser
-Exec=chromium-browser -app=%s
-Comment=A Chromium webapp
-Terminal=false
 Type=Application
-Icon=%s
-Categories=Network;
-MimeType=text/html;
-StartupWMClass=Chromium
+Comment=Web Application
+Exec="prism" -webapp %s@unity.app
+Categories=GTK;Network;
+StartupWMClass=Prism
 StartupNotify=true
+Icon=%s
 """;
 
     public string url {get; construct;}
@@ -44,7 +49,7 @@ StartupNotify=true
     public string id;
     string webapp_dir;
 
-    public ChromiumWebApp (string address, string icon)
+    public Prism (string address, string icon)
     {
       Object (url:address, icon:icon);
     }
@@ -53,7 +58,7 @@ StartupNotify=true
     {
       //FIXME - we need to get a "name" for webapps somehow, not sure how...
       var split_url = url.split ("://", 2);
-      this.name = split_url[1];
+      name = split_url[1];
 
       try {
         var regex = new Regex ("(/)");
@@ -62,8 +67,9 @@ StartupNotify=true
         warning ("%s", e.message);
       }
 
-      this.id = name;
-      this.webapp_dir = Environment.get_home_dir () + "/.local/share/applications/";
+      id = name;
+      webapp_dir = Environment.get_home_dir () +
+                    "/.webapps/%s@unity.app".printf (id);
 
       bool exists = check_existance_of_app ();
       if (!exists)
@@ -80,7 +86,7 @@ StartupNotify=true
         return true;
       }
 
-      var webapp_dir_file = File.new_for_path (webapp_dir + @"chromium-webapp-$name.desktop");
+      var webapp_dir_file = File.new_for_path (webapp_dir);
       if (webapp_dir_file.query_exists (null))
       {
         return true;
@@ -90,31 +96,40 @@ StartupNotify=true
 
     private void build_webapp ()
     {
+
+      string webapp_ini = webapp_ini_template.printf (id, name, url);
       string webapp_desktop = webapp_desktop_template.printf (name, id, this.icon);
-      debug ("building " + @"chromium-webapp-$name.desktop");
 
       var webapp_directory = File.new_for_path (webapp_dir);
       try
       {
-        debug ("attempting to build parent directorys for %s", webapp_dir);
-        if (!webapp_directory.query_exists (null))
-          {
-            webapp_directory.make_directory_with_parents (null);
-          }
+        webapp_directory.make_directory_with_parents (null);
       } catch (Error e)
       {
         warning ("%s", e.message);
         return;
       }
 
-      var desktop_file = File.new_for_path (webapp_dir + @"chromium-webapp-$name.desktop");
+      var inifile = File.new_for_path (webapp_dir + "/webapp.ini");
+      try
+      {
+        var file_stream = inifile.create (FileCreateFlags.NONE, null);
+        var data_stream = new DataOutputStream (file_stream);
+        data_stream.put_string (webapp_ini, null);
+
+      } catch (Error e)
+      {
+        warning ("%s", e.message);
+        return;
+      }
+
+      var desktop_file = File.new_for_path (webapp_dir +
+                                            "/%s.desktop".printf (name));
       try
       {
         var file_stream = desktop_file.create (FileCreateFlags.NONE, null);
         var data_stream = new DataOutputStream (file_stream);
         data_stream.put_string (webapp_desktop, null);
-        data_stream.close (null);
-        debug ("wrote to %s", webapp_dir + @"chromium-webapp-$name.desktop");
       } catch (Error e)
       {
         warning ("could not write to %s/%s.desktop", webapp_dir, name);
@@ -133,16 +148,9 @@ StartupNotify=true
           return;
         }
 
-      string desktop_path = webapp_dir + @"chromium-webapp-$name.desktop";
+      string desktop_path = webapp_dir + "/%s.desktop".printf (name);
       uid = "webapp-" + Path.get_basename (desktop_path);
-      try {
-        var regex = new Regex ("""(\+|\?|\=|\#|\&|\(|\)|\%)""");
-        uid = regex.replace (uid, -1, 0, "");
-      } catch (Error e)
-      {
-        warning ("regular expression error: %s", e.message);
-      }
-
+      uid = Unity.Webapp.urlify (uid);
 
       // we are not a favorite and we need to be favorited!
       favorites.set_string (uid, "type", "application");
@@ -158,7 +166,7 @@ StartupNotify=true
     private string get_fav_uid ()
     {
       string myuid = "";
-      string my_desktop_path = webapp_dir + @"chromium-webapp-$name.desktop";
+      string my_desktop_path = webapp_dir + "/%s.desktop".printf (name);
       var favorites = Launcher.Favorites.get_default ();
       unowned SList<string> favorite_list = favorites.get_favorites();
       foreach (weak string uid in favorite_list)

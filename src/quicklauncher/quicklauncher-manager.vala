@@ -18,19 +18,23 @@
  *
  */
 using Unity.Quicklauncher.Models;
+using Unity.Webapp;
+
 namespace Unity.Quicklauncher
 {
 
   public class Manager : Ctk.Bin
   {
     private Unity.Widgets.Scroller container;
-    private Gee.HashMap<string,ApplicationModel> desktop_file_map;
+    private Gee.ArrayList<Launcher.Application> launcher_apps;
     private Gee.HashMap<LauncherModel, LauncherView> model_map;
 
     private Launcher.Appman appman;
     private Launcher.Session session;
 
     private Unity.Webapp.WebiconFetcher webicon_fetcher;
+
+    private GConf.Engine gclient;
 
     // lazy init of gconf here :-) wait's until we need it
     private GConf.Client? gconf_client_;
@@ -65,7 +69,7 @@ namespace Unity.Quicklauncher
       this.appman = Launcher.Appman.get_default ();
       this.session = Launcher.Session.get_default ();
 
-      this.desktop_file_map = new Gee.HashMap<string, ApplicationModel> ();
+      launcher_apps = new Gee.ArrayList<Launcher.Application> ();
       this.model_map = new Gee.HashMap<LauncherModel, LauncherView> ();
 
       this.container = new Unity.Widgets.Scroller (Ctk.Orientation.VERTICAL,
@@ -80,7 +84,25 @@ namespace Unity.Quicklauncher
       this.container.drag_drop.connect (on_drag_drop);
       this.container.drag_data_received.connect (on_drag_data_received);
 
+      // put a watch on our gconf key so we get notified of new favorites
+      this.gclient = GConf.Engine.get_default ();
+      debug ("setting notify");
+      try {
+/*
+        this.gclient.add_dir ("/desktop/unity/favorites", GConf.ClientPreloadType.NONE);
+*/
+        this.gclient.notify_add ("/desktop/unity/launcher/favorites/favorites_list", this.on_favorite_change);
+        debug ("notify set");
+      } catch (Error e) {
+        warning (e.message);
+      }
       END_FUNCTION ();
+    }
+
+    private void on_favorite_change (GConf.Engine client, uint cnxn_id, GConf.Entry entry)
+    {
+      debug ("got favorite change");
+      this.build_favorites ();
     }
 
     // returns which string is the currently set webapp device
@@ -101,7 +123,7 @@ namespace Unity.Quicklauncher
       }
 
       try {
-        bool value = this.gconf_client.get_bool (UNITY_CONF_PATH + "/webapp_use_chromium");
+        bool value = this.gconf_client.get_bool (UNITY_CONF_PATH + "/launcher/webapp_use_chromium");
         if (value)
           {
             return "chromium";
@@ -295,7 +317,7 @@ namespace Unity.Quicklauncher
         return false;
       }
 
-      build_favorites ();
+      //build_favorites ();
       return true;
     }
 
@@ -316,10 +338,21 @@ namespace Unity.Quicklauncher
 
           string? desktop_file = favorites.get_string(uid, "desktop_file");
           assert (desktop_file != "");
-
-          if (desktop_file != null && !(desktop_file in desktop_file_map.keys))
+          if (!FileUtils.test (desktop_file, FileTest.EXISTS))
             {
-              ApplicationModel model = get_model_for_desktop_file (desktop_file);
+              // we don't have a desktop file that exists, remove it from the
+              // favourites
+              favorites.remove_favorite (uid);
+            }
+          else
+            {
+              Launcher.Application application = appman.get_application_for_desktop_file (desktop_file);
+
+              if (launcher_apps.contains (application))
+                continue;
+              launcher_apps.add (application);
+
+              ApplicationModel model = new ApplicationModel (application);
               model.is_sticky = true;
               LauncherView view = get_view_for_model (model);
 
@@ -329,52 +362,42 @@ namespace Unity.Quicklauncher
           LOGGER_END_PROCESS (process_name);
         }
 
+      // done building favorites, turn on window checking
+      Launcher.Appman.get_default ().enable_window_checking = true;
+
       END_FUNCTION ();
     }
 
     private float get_last_priority ()
     {
       float max_priority = 0.0f;
-      foreach (ApplicationModel model in this.desktop_file_map.values)
+      foreach (LauncherModel model in this.model_map.keys)
         {
-          max_priority = Math.fmaxf (model.priority, max_priority);
+          if (!(model is ApplicationModel))
+            continue;
+          max_priority = Math.fmaxf ((model as ApplicationModel).priority, max_priority);
         }
       return max_priority;
     }
 
     private void handle_session_application (Launcher.Application app)
     {
-      var desktop_file = app.get_desktop_file ();
-      if (desktop_file != null)
-      {
-        ApplicationModel model = get_model_for_desktop_file (desktop_file);
-        if (!model.is_sticky)
-          {
-            model.priority = get_last_priority ();
-          }
+      if (launcher_apps.contains (app))
+        return;
+      launcher_apps.add (app);
+      ApplicationModel model = new ApplicationModel (app);
 
-        LauncherView view = get_view_for_model (model);
-        if (view.get_parent () == null)
+      string desktop_file = app.get_desktop_file ();
+      if (desktop_file != null && !model.is_sticky)
+        {
+          model.priority = get_last_priority ();
+        }
+
+      LauncherView view = get_view_for_model (model);
+      if (view.get_parent () == null)
         {
           add_view (view);
         }
-      }
-    }
-
-
-    private ApplicationModel get_model_for_desktop_file (string uri)
-    {
-      /* we check to see if we already have this desktop file loaded,
-       * if so, we just use that one instead of creating a new model
-       */
-      if (uri in desktop_file_map.keys)
-        {
-          return desktop_file_map[uri];
-        }
-
-      ApplicationModel model = new ApplicationModel (uri);
-      desktop_file_map[uri] = model;
-      return model;
     }
 
     private LauncherView get_view_for_model (LauncherModel model)
@@ -421,6 +444,11 @@ namespace Unity.Quicklauncher
       this.container.remove_actor (view);
       view.enter_event.connect (on_launcher_enter_event);
       view.leave_event.connect (on_launcher_leave_event);
+
+      if (view.model is ApplicationModel)
+        {
+          launcher_apps.remove ((view.model as ApplicationModel).app);
+        }
     }
 
     private bool on_launcher_enter_event (Clutter.Event event)

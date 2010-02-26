@@ -31,7 +31,9 @@
 #include <unity.h>
 #include <gee.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
+#include <gdk/gdk.h>
 #include <clutter/clutter.h>
+#include <libwnck/libwnck.h>
 #include <gtk/gtk.h>
 
 
@@ -73,6 +75,16 @@ typedef struct _UnityQuicklauncherQuicklistController UnityQuicklauncherQuicklis
 typedef struct _UnityQuicklauncherQuicklistControllerClass UnityQuicklauncherQuicklistControllerClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
+
+#define UNITY_QUICKLAUNCHER_MODELS_TYPE_APPLICATION_MODEL (unity_quicklauncher_models_application_model_get_type ())
+#define UNITY_QUICKLAUNCHER_MODELS_APPLICATION_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_MODELS_TYPE_APPLICATION_MODEL, UnityQuicklauncherModelsApplicationModel))
+#define UNITY_QUICKLAUNCHER_MODELS_APPLICATION_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLAUNCHER_MODELS_TYPE_APPLICATION_MODEL, UnityQuicklauncherModelsApplicationModelClass))
+#define UNITY_QUICKLAUNCHER_MODELS_IS_APPLICATION_MODEL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLAUNCHER_MODELS_TYPE_APPLICATION_MODEL))
+#define UNITY_QUICKLAUNCHER_MODELS_IS_APPLICATION_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLAUNCHER_MODELS_TYPE_APPLICATION_MODEL))
+#define UNITY_QUICKLAUNCHER_MODELS_APPLICATION_MODEL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLAUNCHER_MODELS_TYPE_APPLICATION_MODEL, UnityQuicklauncherModelsApplicationModelClass))
+
+typedef struct _UnityQuicklauncherModelsApplicationModel UnityQuicklauncherModelsApplicationModel;
+typedef struct _UnityQuicklauncherModelsApplicationModelClass UnityQuicklauncherModelsApplicationModelClass;
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 typedef struct _UnityQuicklauncherQuicklistControllerPrivate UnityQuicklauncherQuicklistControllerPrivate;
 
@@ -107,7 +119,6 @@ struct _UnityQuicklauncherLauncherView {
 	CtkActor parent_instance;
 	UnityQuicklauncherLauncherViewPrivate * priv;
 	UnityQuicklauncherModelsLauncherModel* model;
-	gboolean is_hovering;
 	gboolean anim_priority_going_up;
 };
 
@@ -120,6 +131,7 @@ struct _UnityQuicklauncherLauncherViewPrivate {
 	UnityThemeImage* focused_indicator;
 	UnityThemeImage* running_indicator;
 	GdkPixbuf* honeycomb_mask;
+	GdkRectangle last_strut;
 	GeeArrayList* offline_shortcuts;
 	GeeArrayList* shortcut_actions;
 	UnityQuicklauncherQuicklistController* quicklist_controller;
@@ -127,10 +139,13 @@ struct _UnityQuicklauncherLauncherViewPrivate {
 	CtkEffectDropShadow* effect_drop_shadow;
 	guint32 last_pressed_time;
 	gboolean _busy;
+	gboolean _is_hovering;
 	gboolean wiggling;
 	gboolean cease_wiggle;
 	gboolean button_down;
 	float click_start_pos;
+	guint hover_timeout;
+	gboolean menu_is_label;
 	ClutterAnimation* anim_throbber;
 	gboolean anim_wiggle_state;
 	ClutterAnimation* _anim;
@@ -153,6 +168,8 @@ struct _UnityQuicklauncherQuicklistControllerClass {
 };
 
 
+extern UnityQuicklauncherQuicklistController* unity_quicklauncher_active_menu;
+extern gboolean* unity_panel_search_entry_has_focus;
 static gpointer unity_quicklauncher_launcher_view_parent_class = NULL;
 static UnityDragModelIface* unity_quicklauncher_launcher_view_unity_drag_model_parent_iface = NULL;
 
@@ -174,6 +191,7 @@ GType unity_quicklauncher_quicklist_controller_get_type (void);
 #define UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_QUICKLAUNCHER_TYPE_LAUNCHER_VIEW, UnityQuicklauncherLauncherViewPrivate))
 enum  {
 	UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_DUMMY_PROPERTY,
+	UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_IS_HOVERING,
 	UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_ANIM,
 	UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_ANIM_PRIORITY,
 	UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_POSITION
@@ -188,8 +206,12 @@ static void _unity_quicklauncher_launcher_view_on_activated_unity_quicklauncher_
 static void unity_quicklauncher_launcher_view_on_urgent_changed (UnityQuicklauncherLauncherView* self);
 static void _unity_quicklauncher_launcher_view_on_urgent_changed_unity_quicklauncher_models_launcher_model_urgent_changed (UnityQuicklauncherModelsLauncherModel* _sender, gpointer self);
 const char* unity_quicklauncher_models_launcher_model_get_name (UnityQuicklauncherModelsLauncherModel* self);
+GType unity_quicklauncher_models_application_model_get_type (void);
+void unity_quicklauncher_launcher_view_update_window_struts (UnityQuicklauncherLauncherView* self, gboolean ignore_buffer);
+static void _lambda0_ (UnityQuicklauncherLauncherView* self);
+static void __lambda0__unity_quicklauncher_models_application_model_windows_changed (UnityQuicklauncherModelsApplicationModel* _sender, gpointer self);
 static void unity_quicklauncher_launcher_view_notify_on_icon (UnityQuicklauncherLauncherView* self);
-static void _unity_quicklauncher_launcher_view_notify_on_icon_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _unity_quicklauncher_launcher_view_notify_on_icon_unity_quicklauncher_models_launcher_model_notify_icon (UnityQuicklauncherModelsLauncherModel* _sender, gpointer self);
 const char* unity_quicklauncher_models_launcher_model_get_uid (UnityQuicklauncherModelsLauncherModel* self);
 static void unity_quicklauncher_launcher_view_on_request_remove (UnityQuicklauncherLauncherView* self);
 static void _unity_quicklauncher_launcher_view_on_request_remove_unity_quicklauncher_launcher_view_request_remove (UnityQuicklauncherLauncherView* _sender, gpointer self);
@@ -203,6 +225,8 @@ static void unity_quicklauncher_launcher_view_real_pick (ClutterActor* base, con
 static void unity_quicklauncher_launcher_view_real_paint (ClutterActor* base);
 static void unity_quicklauncher_launcher_view_real_map (ClutterActor* base);
 static void unity_quicklauncher_launcher_view_real_unmap (ClutterActor* base);
+static gboolean _gdk_rectangle_equal (const GdkRectangle* s1, const GdkRectangle* s2);
+GSList* unity_quicklauncher_models_application_model_get_windows (UnityQuicklauncherModelsApplicationModel* self);
 static void unity_quicklauncher_launcher_view_load_textures (UnityQuicklauncherLauncherView* self);
 void unity_quicklauncher_launcher_view_notify_on_set_reactive (UnityQuicklauncherLauncherView* self);
 static void unity_quicklauncher_launcher_view_do_anim_throbber_loop (GObject* sender, UnityQuicklauncherLauncherView* _self_);
@@ -224,20 +248,26 @@ static void unity_quicklauncher_launcher_view_set_is_starting (UnityQuicklaunche
 GdkPixbuf* unity_quicklauncher_models_launcher_model_get_icon (UnityQuicklauncherModelsLauncherModel* self);
 gboolean unity_quicklauncher_models_launcher_model_get_is_sticky (UnityQuicklauncherModelsLauncherModel* self);
 gboolean unity_quicklauncher_models_launcher_model_get_is_focused (UnityQuicklauncherModelsLauncherModel* self);
+static void unity_quicklauncher_launcher_view_ensure_menu_state (UnityQuicklauncherLauncherView* self);
+static void _unity_quicklauncher_launcher_view_ensure_menu_state_clutter_actor_destroy (ClutterActor* _sender, gpointer self);
 UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_new (const char* label, CtkActor* attached_to, ClutterStage* stage);
 UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_construct (GType object_type, const char* label, CtkActor* attached_to, ClutterStage* stage);
 static void unity_quicklauncher_launcher_view_build_quicklist (UnityQuicklauncherLauncherView* self);
+gboolean unity_quicklauncher_launcher_view_get_is_hovering (UnityQuicklauncherLauncherView* self);
+void unity_quicklauncher_quicklist_controller_close_menu (UnityQuicklauncherQuicklistController* self);
+static gboolean _bool_equal (const gboolean* s1, const gboolean* s2);
 void unity_quicklauncher_quicklist_controller_show_label (UnityQuicklauncherQuicklistController* self);
+void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuicklistController* self);
+void unity_quicklauncher_launcher_view_close_menu (UnityQuicklauncherLauncherView* self);
+void unity_quicklauncher_launcher_view_set_is_hovering (UnityQuicklauncherLauncherView* self, gboolean value);
 static gboolean unity_quicklauncher_launcher_view_on_mouse_enter (UnityQuicklauncherLauncherView* self, ClutterEvent* event);
-void unity_quicklauncher_quicklist_controller_hide_label (UnityQuicklauncherQuicklistController* self);
 static gboolean unity_quicklauncher_launcher_view_on_mouse_leave (UnityQuicklauncherLauncherView* self, ClutterEvent* src);
 gboolean unity_quicklauncher_models_launcher_model_get_readonly (UnityQuicklauncherModelsLauncherModel* self);
 gboolean unity_quicklauncher_models_launcher_model_get_is_fixed (UnityQuicklauncherModelsLauncherModel* self);
 static gboolean unity_quicklauncher_launcher_view_on_motion_event (UnityQuicklauncherLauncherView* self, ClutterEvent* event);
-void unity_quicklauncher_quicklist_controller_close_menu (UnityQuicklauncherQuicklistController* self);
-void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuicklistController* self);
+void unity_quicklauncher_quicklist_controller_set_hide_on_leave (UnityQuicklauncherQuicklistController* self, gboolean value);
+static gboolean unity_quicklauncher_launcher_view_on_long_hover (UnityQuicklauncherLauncherView* self);
 static gboolean unity_quicklauncher_launcher_view_on_pressed (UnityQuicklauncherLauncherView* self, ClutterEvent* src);
-void unity_quicklauncher_launcher_view_close_menu (UnityQuicklauncherLauncherView* self);
 GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcuts (UnityQuicklauncherModelsLauncherModel* self);
 GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcut_actions (UnityQuicklauncherModelsLauncherModel* self);
 void unity_quicklauncher_quicklist_controller_add_action (UnityQuicklauncherQuicklistController* self, UnityQuicklauncherModelsShortcutItem* shortcut, gboolean is_secondary);
@@ -247,6 +277,7 @@ static char* unity_quicklauncher_launcher_view_real_get_drag_data (UnityDragMode
 void unity_quicklauncher_models_launcher_model_activate (UnityQuicklauncherModelsLauncherModel* self);
 static void unity_quicklauncher_launcher_view_on_clicked (UnityQuicklauncherLauncherView* self);
 void unity_quicklauncher_models_launcher_model_close (UnityQuicklauncherModelsLauncherModel* self);
+static gboolean _unity_quicklauncher_launcher_view_on_long_hover_gsource_func (gpointer self);
 ClutterAnimation* unity_quicklauncher_launcher_view_get_anim (UnityQuicklauncherLauncherView* self);
 void unity_quicklauncher_launcher_view_set_anim (UnityQuicklauncherLauncherView* self, ClutterAnimation* value);
 float unity_quicklauncher_launcher_view_get_anim_priority (UnityQuicklauncherLauncherView* self);
@@ -258,6 +289,8 @@ static gboolean _unity_quicklauncher_launcher_view_on_released_clutter_actor_but
 static gboolean _unity_quicklauncher_launcher_view_on_mouse_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static gboolean _unity_quicklauncher_launcher_view_on_mouse_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static gboolean _unity_quicklauncher_launcher_view_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static void _lambda1_ (UnityQuicklauncherLauncherView* self);
+static void __lambda1__clutter_actor_allocation_changed (ClutterActor* _sender, const ClutterActorBox* box, ClutterAllocationFlags flags, gpointer self);
 static void _unity_quicklauncher_launcher_view_notify_on_set_reactive_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static void _unity_quicklauncher_launcher_view_on_clicked_unity_quicklauncher_launcher_view_clicked (UnityQuicklauncherLauncherView* _sender, gpointer self);
 static GObject * unity_quicklauncher_launcher_view_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -272,151 +305,174 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 480 "launcher-view.vala"
+#line 525 "launcher-view.vala"
 static void _unity_quicklauncher_launcher_view_notify_on_is_running_unity_quicklauncher_models_launcher_model_notify_active (UnityQuicklauncherModelsLauncherModel* _sender, gpointer self) {
-#line 278 "launcher-view.c"
+#line 311 "launcher-view.c"
 	unity_quicklauncher_launcher_view_notify_on_is_running (self);
 }
 
 
-#line 503 "launcher-view.vala"
+#line 548 "launcher-view.vala"
 static void _unity_quicklauncher_launcher_view_notify_on_is_focused_unity_quicklauncher_models_launcher_model_notify_focused (UnityQuicklauncherModelsLauncherModel* _sender, gpointer self) {
-#line 285 "launcher-view.c"
+#line 318 "launcher-view.c"
 	unity_quicklauncher_launcher_view_notify_on_is_focused (self);
 }
 
 
-#line 455 "launcher-view.vala"
+#line 500 "launcher-view.vala"
 static void _unity_quicklauncher_launcher_view_on_activated_unity_quicklauncher_models_launcher_model_activated (UnityQuicklauncherModelsLauncherModel* _sender, gpointer self) {
-#line 292 "launcher-view.c"
+#line 325 "launcher-view.c"
 	unity_quicklauncher_launcher_view_on_activated (self);
 }
 
 
-#line 434 "launcher-view.vala"
+#line 479 "launcher-view.vala"
 static void _unity_quicklauncher_launcher_view_on_urgent_changed_unity_quicklauncher_models_launcher_model_urgent_changed (UnityQuicklauncherModelsLauncherModel* _sender, gpointer self) {
-#line 299 "launcher-view.c"
+#line 332 "launcher-view.c"
 	unity_quicklauncher_launcher_view_on_urgent_changed (self);
 }
 
 
-#line 464 "launcher-view.vala"
-static void _unity_quicklauncher_launcher_view_notify_on_icon_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-#line 306 "launcher-view.c"
+#line 184 "launcher-view.vala"
+static void _lambda0_ (UnityQuicklauncherLauncherView* self) {
+#line 184 "launcher-view.vala"
+	unity_quicklauncher_launcher_view_update_window_struts (self, TRUE);
+#line 341 "launcher-view.c"
+}
+
+
+#line 184 "launcher-view.vala"
+static void __lambda0__unity_quicklauncher_models_application_model_windows_changed (UnityQuicklauncherModelsApplicationModel* _sender, gpointer self) {
+#line 347 "launcher-view.c"
+	_lambda0_ (self);
+}
+
+
+#line 509 "launcher-view.vala"
+static void _unity_quicklauncher_launcher_view_notify_on_icon_unity_quicklauncher_models_launcher_model_notify_icon (UnityQuicklauncherModelsLauncherModel* _sender, gpointer self) {
+#line 354 "launcher-view.c"
 	unity_quicklauncher_launcher_view_notify_on_icon (self);
 }
 
 
-#line 654 "launcher-view.vala"
+#line 750 "launcher-view.vala"
 static void _unity_quicklauncher_launcher_view_on_request_remove_unity_quicklauncher_launcher_view_request_remove (UnityQuicklauncherLauncherView* _sender, gpointer self) {
-#line 313 "launcher-view.c"
+#line 361 "launcher-view.c"
 	unity_quicklauncher_launcher_view_on_request_remove (self);
 }
 
 
-#line 149 "launcher-view.vala"
+#line 172 "launcher-view.vala"
 UnityQuicklauncherLauncherView* unity_quicklauncher_launcher_view_construct (GType object_type, UnityQuicklauncherModelsLauncherModel* model) {
-#line 320 "launcher-view.c"
+#line 368 "launcher-view.c"
 	UnityQuicklauncherLauncherView * self;
 	UnityQuicklauncherModelsLauncherModel* _tmp0_;
 	char* _tmp1_;
-#line 149 "launcher-view.vala"
-	g_return_val_if_fail (model != NULL, NULL);
-#line 326 "launcher-view.c"
-	self = g_object_newv (object_type, 0, NULL);
-#line 152 "launcher-view.vala"
-	self->model = (_tmp0_ = _g_object_ref0 (model), _g_object_unref0 (self->model), _tmp0_);
-#line 153 "launcher-view.vala"
-	g_signal_connect_object (self->model, "notify-active", (GCallback) _unity_quicklauncher_launcher_view_notify_on_is_running_unity_quicklauncher_models_launcher_model_notify_active, self, 0);
-#line 154 "launcher-view.vala"
-	g_signal_connect_object (self->model, "notify-focused", (GCallback) _unity_quicklauncher_launcher_view_notify_on_is_focused_unity_quicklauncher_models_launcher_model_notify_focused, self, 0);
-#line 155 "launcher-view.vala"
-	g_signal_connect_object (self->model, "activated", (GCallback) _unity_quicklauncher_launcher_view_on_activated_unity_quicklauncher_models_launcher_model_activated, self, 0);
-#line 156 "launcher-view.vala"
-	g_signal_connect_object (self->model, "urgent-changed", (GCallback) _unity_quicklauncher_launcher_view_on_urgent_changed_unity_quicklauncher_models_launcher_model_urgent_changed, self, 0);
-#line 157 "launcher-view.vala"
-	clutter_actor_set_name ((ClutterActor*) self, _tmp1_ = g_strconcat ("Unity.Quicklauncher.LauncherView-", unity_quicklauncher_models_launcher_model_get_name (self->model), NULL));
-#line 340 "launcher-view.c"
-	_g_free0 (_tmp1_);
-#line 159 "launcher-view.vala"
-	unity_quicklauncher_launcher_view_notify_on_is_running (self);
-#line 160 "launcher-view.vala"
-	unity_quicklauncher_launcher_view_notify_on_is_focused (self);
-#line 163 "launcher-view.vala"
-	unity_quicklauncher_launcher_view_notify_on_icon (self);
-#line 164 "launcher-view.vala"
-	g_signal_connect_object ((GObject*) self->model, "notify::icon", (GCallback) _unity_quicklauncher_launcher_view_notify_on_icon_g_object_notify, self, 0);
-#line 165 "launcher-view.vala"
-	clutter_actor_set_name ((ClutterActor*) self, unity_quicklauncher_models_launcher_model_get_uid (model));
-#line 167 "launcher-view.vala"
-	g_signal_connect_object (self, "request-remove", (GCallback) _unity_quicklauncher_launcher_view_on_request_remove_unity_quicklauncher_launcher_view_request_remove, self, 0);
-#line 168 "launcher-view.vala"
-	if (unity_quicklauncher_models_launcher_model_get_do_shadow (self->model)) {
-#line 356 "launcher-view.c"
-		CtkEffectDropShadow* _tmp2_;
-#line 170 "launcher-view.vala"
-		self->priv->effect_drop_shadow = (_tmp2_ = g_object_ref_sink (ctk_effect_drop_shadow_new (5.0f, 0, 2)), _g_object_unref0 (self->priv->effect_drop_shadow), _tmp2_);
-#line 171 "launcher-view.vala"
-		ctk_effect_set_opacity ((CtkEffect*) self->priv->effect_drop_shadow, 0.4f);
 #line 172 "launcher-view.vala"
+	g_return_val_if_fail (model != NULL, NULL);
+#line 374 "launcher-view.c"
+	self = g_object_newv (object_type, 0, NULL);
+#line 175 "launcher-view.vala"
+	self->model = (_tmp0_ = _g_object_ref0 (model), _g_object_unref0 (self->model), _tmp0_);
+#line 176 "launcher-view.vala"
+	g_signal_connect_object (self->model, "notify-active", (GCallback) _unity_quicklauncher_launcher_view_notify_on_is_running_unity_quicklauncher_models_launcher_model_notify_active, self, 0);
+#line 177 "launcher-view.vala"
+	g_signal_connect_object (self->model, "notify-focused", (GCallback) _unity_quicklauncher_launcher_view_notify_on_is_focused_unity_quicklauncher_models_launcher_model_notify_focused, self, 0);
+#line 178 "launcher-view.vala"
+	g_signal_connect_object (self->model, "activated", (GCallback) _unity_quicklauncher_launcher_view_on_activated_unity_quicklauncher_models_launcher_model_activated, self, 0);
+#line 179 "launcher-view.vala"
+	g_signal_connect_object (self->model, "urgent-changed", (GCallback) _unity_quicklauncher_launcher_view_on_urgent_changed_unity_quicklauncher_models_launcher_model_urgent_changed, self, 0);
+#line 180 "launcher-view.vala"
+	clutter_actor_set_name ((ClutterActor*) self, _tmp1_ = g_strconcat ("Unity.Quicklauncher.LauncherView-", unity_quicklauncher_models_launcher_model_get_name (self->model), NULL));
+#line 388 "launcher-view.c"
+	_g_free0 (_tmp1_);
+#line 182 "launcher-view.vala"
+	if (UNITY_QUICKLAUNCHER_MODELS_IS_APPLICATION_MODEL (model)) {
+#line 392 "launcher-view.c"
+		UnityQuicklauncherModelsLauncherModel* _tmp2_;
+#line 184 "launcher-view.vala"
+		g_signal_connect_object ((_tmp2_ = model, UNITY_QUICKLAUNCHER_MODELS_IS_APPLICATION_MODEL (_tmp2_) ? ((UnityQuicklauncherModelsApplicationModel*) _tmp2_) : NULL), "windows-changed", (GCallback) __lambda0__unity_quicklauncher_models_application_model_windows_changed, self, 0);
+#line 396 "launcher-view.c"
+	}
+#line 187 "launcher-view.vala"
+	unity_quicklauncher_launcher_view_notify_on_is_running (self);
+#line 188 "launcher-view.vala"
+	unity_quicklauncher_launcher_view_notify_on_is_focused (self);
+#line 191 "launcher-view.vala"
+	g_signal_connect_object (self->model, "notify-icon", (GCallback) _unity_quicklauncher_launcher_view_notify_on_icon_unity_quicklauncher_models_launcher_model_notify_icon, self, 0);
+#line 192 "launcher-view.vala"
+	unity_quicklauncher_launcher_view_notify_on_icon (self);
+#line 193 "launcher-view.vala"
+	clutter_actor_set_name ((ClutterActor*) self, unity_quicklauncher_models_launcher_model_get_uid (model));
+#line 195 "launcher-view.vala"
+	g_signal_connect_object (self, "request-remove", (GCallback) _unity_quicklauncher_launcher_view_on_request_remove_unity_quicklauncher_launcher_view_request_remove, self, 0);
+#line 196 "launcher-view.vala"
+	if (unity_quicklauncher_models_launcher_model_get_do_shadow (self->model)) {
+#line 412 "launcher-view.c"
+		CtkEffectDropShadow* _tmp3_;
+#line 198 "launcher-view.vala"
+		self->priv->effect_drop_shadow = (_tmp3_ = g_object_ref_sink (ctk_effect_drop_shadow_new (5.0f, 0, 2)), _g_object_unref0 (self->priv->effect_drop_shadow), _tmp3_);
+#line 199 "launcher-view.vala"
+		ctk_effect_set_opacity ((CtkEffect*) self->priv->effect_drop_shadow, 0.4f);
+#line 200 "launcher-view.vala"
 		ctk_effect_set_margin ((CtkEffect*) self->priv->effect_drop_shadow, 5);
-#line 173 "launcher-view.vala"
+#line 201 "launcher-view.vala"
 		ctk_actor_add_effect ((CtkActor*) self->priv->icon, (CtkEffect*) self->priv->effect_drop_shadow);
-#line 366 "launcher-view.c"
+#line 422 "launcher-view.c"
 	}
 	return self;
 }
 
 
-#line 149 "launcher-view.vala"
+#line 172 "launcher-view.vala"
 UnityQuicklauncherLauncherView* unity_quicklauncher_launcher_view_new (UnityQuicklauncherModelsLauncherModel* model) {
-#line 149 "launcher-view.vala"
+#line 172 "launcher-view.vala"
 	return unity_quicklauncher_launcher_view_construct (UNITY_QUICKLAUNCHER_TYPE_LAUNCHER_VIEW, model);
-#line 376 "launcher-view.c"
+#line 432 "launcher-view.c"
 }
 
 
-#line 202 "launcher-view.vala"
+#line 233 "launcher-view.vala"
 static void unity_quicklauncher_launcher_view_real_get_preferred_width (ClutterActor* base, float for_height, float* minimum_width, float* natural_width) {
-#line 382 "launcher-view.c"
+#line 438 "launcher-view.c"
 	UnityQuicklauncherLauncherView * self;
 	self = (UnityQuicklauncherLauncherView*) base;
-#line 206 "launcher-view.vala"
-	*natural_width = (float) 56;
-#line 207 "launcher-view.vala"
-	*minimum_width = (float) 56;
-#line 208 "launcher-view.vala"
+#line 237 "launcher-view.vala"
+	*natural_width = (float) 60;
+#line 238 "launcher-view.vala"
+	*minimum_width = (float) 60;
+#line 239 "launcher-view.vala"
 	return;
-#line 391 "launcher-view.c"
+#line 447 "launcher-view.c"
 }
 
 
-#line 211 "launcher-view.vala"
+#line 242 "launcher-view.vala"
 static void unity_quicklauncher_launcher_view_real_get_preferred_height (ClutterActor* base, float for_width, float* minimum_height, float* natural_height) {
-#line 397 "launcher-view.c"
+#line 453 "launcher-view.c"
 	UnityQuicklauncherLauncherView * self;
 	CtkPadding _tmp0_ = {0};
 	CtkPadding _tmp1_ = {0};
 	CtkPadding _tmp2_ = {0};
 	CtkPadding _tmp3_ = {0};
 	self = (UnityQuicklauncherLauncherView*) base;
-#line 215 "launcher-view.vala"
+#line 246 "launcher-view.vala"
 	*natural_height = (float) 0;
-#line 216 "launcher-view.vala"
+#line 247 "launcher-view.vala"
 	*minimum_height = (float) 0;
-#line 217 "launcher-view.vala"
+#line 248 "launcher-view.vala"
 	clutter_actor_get_preferred_height ((ClutterActor*) self->priv->icon, for_width, minimum_height, natural_height);
-#line 218 "launcher-view.vala"
+#line 249 "launcher-view.vala"
 	*natural_height = (*natural_height) + ((ctk_actor_get_padding ((CtkActor*) self, &_tmp0_), _tmp0_).top + (ctk_actor_get_padding ((CtkActor*) self, &_tmp1_), _tmp1_).bottom);
-#line 219 "launcher-view.vala"
+#line 250 "launcher-view.vala"
 	*minimum_height = (*minimum_height) + ((ctk_actor_get_padding ((CtkActor*) self, &_tmp2_), _tmp2_).top + (ctk_actor_get_padding ((CtkActor*) self, &_tmp3_), _tmp3_).bottom);
-#line 414 "launcher-view.c"
+#line 470 "launcher-view.c"
 }
 
 
-#line 222 "launcher-view.vala"
+#line 253 "launcher-view.vala"
 static void unity_quicklauncher_launcher_view_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-#line 420 "launcher-view.c"
+#line 476 "launcher-view.c"
 	UnityQuicklauncherLauncherView * self;
 	float x = 0.0F;
 	float y = 0.0F;
@@ -424,787 +480,994 @@ static void unity_quicklauncher_launcher_view_real_allocate (ClutterActor* base,
 	ClutterActorBox child_box;
 	float width;
 	float height;
-	CtkPadding _tmp1_ = {0};
 	self = (UnityQuicklauncherLauncherView*) base;
-#line 225 "launcher-view.vala"
-	x = (float) 0;
-#line 226 "launcher-view.vala"
-	y = (float) 0;
-#line 227 "launcher-view.vala"
-	CLUTTER_ACTOR_CLASS (unity_quicklauncher_launcher_view_parent_class)->allocate ((ClutterActor*) CTK_ACTOR (self), box, flags);
-#line 229 "launcher-view.vala"
-	child_box = (memset (&_tmp0_, 0, sizeof (ClutterActorBox)), _tmp0_);
-#line 232 "launcher-view.vala"
-	width = clutter_actor_get_width ((ClutterActor*) self->priv->running_indicator);
-#line 233 "launcher-view.vala"
-	height = clutter_actor_get_height ((ClutterActor*) self->priv->running_indicator);
-#line 234 "launcher-view.vala"
-	child_box.x1 = (float) 0;
-#line 235 "launcher-view.vala"
-	child_box.y1 = (clutter_actor_box_get_height (box) - height) / 2.0f;
-#line 236 "launcher-view.vala"
-	child_box.x2 = child_box.x1 + width;
-#line 237 "launcher-view.vala"
-	child_box.y2 = child_box.y1 + height;
-#line 238 "launcher-view.vala"
-	clutter_actor_allocate ((ClutterActor*) self->priv->running_indicator, &child_box, flags);
-#line 239 "launcher-view.vala"
-	x = x + clutter_actor_box_get_width (&child_box);
-#line 242 "launcher-view.vala"
-	width = clutter_actor_get_width ((ClutterActor*) self->priv->icon);
-#line 243 "launcher-view.vala"
-	height = clutter_actor_get_height ((ClutterActor*) self->priv->icon);
-#line 244 "launcher-view.vala"
-	child_box.x1 = (clutter_actor_box_get_width (box) - width) / 2.0f;
-#line 245 "launcher-view.vala"
-	child_box.y1 = y;
-#line 246 "launcher-view.vala"
-	child_box.x2 = child_box.x1 + width;
-#line 247 "launcher-view.vala"
-	child_box.y2 = child_box.y1 + height;
-#line 248 "launcher-view.vala"
-	clutter_actor_allocate ((ClutterActor*) self->priv->icon, &child_box, flags);
-#line 251 "launcher-view.vala"
-	width = clutter_actor_get_width ((ClutterActor*) self->priv->focused_indicator);
-#line 252 "launcher-view.vala"
-	height = clutter_actor_get_height ((ClutterActor*) self->priv->focused_indicator);
-#line 253 "launcher-view.vala"
-	child_box.x2 = (clutter_actor_box_get_width (box) + (ctk_actor_get_padding ((CtkActor*) self, &_tmp1_), _tmp1_).right) + 2;
-#line 254 "launcher-view.vala"
-	child_box.y2 = (clutter_actor_box_get_height (box) / 2.0f) - (height / 2.0f);
-#line 255 "launcher-view.vala"
-	child_box.x1 = child_box.x2 - width;
 #line 256 "launcher-view.vala"
-	child_box.y1 = child_box.y2 + height;
+	x = (float) 0;
 #line 257 "launcher-view.vala"
-	clutter_actor_allocate ((ClutterActor*) self->priv->focused_indicator, &child_box, flags);
-#line 482 "launcher-view.c"
-}
-
-
+	y = (float) 0;
+#line 258 "launcher-view.vala"
+	CLUTTER_ACTOR_CLASS (unity_quicklauncher_launcher_view_parent_class)->allocate ((ClutterActor*) CTK_ACTOR (self), box, flags);
 #line 260 "launcher-view.vala"
-static void unity_quicklauncher_launcher_view_real_pick (ClutterActor* base, const ClutterColor* color) {
-#line 488 "launcher-view.c"
-	UnityQuicklauncherLauncherView * self;
-	self = (UnityQuicklauncherLauncherView*) base;
-#line 262 "launcher-view.vala"
-	CLUTTER_ACTOR_CLASS (unity_quicklauncher_launcher_view_parent_class)->pick ((ClutterActor*) CTK_ACTOR (self), color);
+	child_box = (memset (&_tmp0_, 0, sizeof (ClutterActorBox)), _tmp0_);
 #line 263 "launcher-view.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->icon);
-#line 495 "launcher-view.c"
-}
-
-
+	width = clutter_actor_get_width ((ClutterActor*) self->priv->running_indicator);
+#line 264 "launcher-view.vala"
+	height = clutter_actor_get_height ((ClutterActor*) self->priv->running_indicator);
+#line 265 "launcher-view.vala"
+	child_box.x1 = (float) 0;
 #line 266 "launcher-view.vala"
-static void unity_quicklauncher_launcher_view_real_paint (ClutterActor* base) {
-#line 501 "launcher-view.c"
-	UnityQuicklauncherLauncherView * self;
-	self = (UnityQuicklauncherLauncherView*) base;
+	child_box.y1 = (clutter_actor_box_get_height (box) - height) / 2.0f;
+#line 267 "launcher-view.vala"
+	child_box.x2 = child_box.x1 + width;
 #line 268 "launcher-view.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->running_indicator);
+	child_box.y2 = child_box.y1 + height;
 #line 269 "launcher-view.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->focused_indicator);
+	clutter_actor_allocate ((ClutterActor*) self->priv->running_indicator, &child_box, flags);
 #line 270 "launcher-view.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->icon);
-#line 510 "launcher-view.c"
-}
-
-
+	x = x + clutter_actor_box_get_width (&child_box);
 #line 273 "launcher-view.vala"
-static void unity_quicklauncher_launcher_view_real_map (ClutterActor* base) {
-#line 516 "launcher-view.c"
-	UnityQuicklauncherLauncherView * self;
-	self = (UnityQuicklauncherLauncherView*) base;
+	width = clutter_actor_get_width ((ClutterActor*) self->priv->icon);
+#line 274 "launcher-view.vala"
+	height = clutter_actor_get_height ((ClutterActor*) self->priv->icon);
 #line 275 "launcher-view.vala"
-	CLUTTER_ACTOR_CLASS (unity_quicklauncher_launcher_view_parent_class)->map ((ClutterActor*) CTK_ACTOR (self));
+	child_box.x1 = (clutter_actor_box_get_width (box) - width) / 2.0f;
 #line 276 "launcher-view.vala"
-	clutter_actor_map ((ClutterActor*) self->priv->running_indicator);
+	child_box.y1 = y;
 #line 277 "launcher-view.vala"
-	clutter_actor_map ((ClutterActor*) self->priv->focused_indicator);
+	child_box.x2 = child_box.x1 + width;
 #line 278 "launcher-view.vala"
-	clutter_actor_map ((ClutterActor*) self->priv->icon);
-#line 527 "launcher-view.c"
+	child_box.y2 = child_box.y1 + height;
+#line 279 "launcher-view.vala"
+	clutter_actor_allocate ((ClutterActor*) self->priv->icon, &child_box, flags);
+#line 282 "launcher-view.vala"
+	width = clutter_actor_get_width ((ClutterActor*) self->priv->focused_indicator);
+#line 283 "launcher-view.vala"
+	height = clutter_actor_get_height ((ClutterActor*) self->priv->focused_indicator);
+#line 284 "launcher-view.vala"
+	child_box.x2 = clutter_actor_box_get_width (box);
+#line 285 "launcher-view.vala"
+	child_box.y2 = (clutter_actor_box_get_height (box) / 2.0f) - (height / 2.0f);
+#line 286 "launcher-view.vala"
+	child_box.x1 = child_box.x2 - width;
+#line 287 "launcher-view.vala"
+	child_box.y1 = child_box.y2 + height;
+#line 288 "launcher-view.vala"
+	clutter_actor_allocate ((ClutterActor*) self->priv->focused_indicator, &child_box, flags);
+#line 537 "launcher-view.c"
 }
 
 
-#line 281 "launcher-view.vala"
-static void unity_quicklauncher_launcher_view_real_unmap (ClutterActor* base) {
-#line 533 "launcher-view.c"
+#line 291 "launcher-view.vala"
+static void unity_quicklauncher_launcher_view_real_pick (ClutterActor* base, const ClutterColor* color) {
+#line 543 "launcher-view.c"
 	UnityQuicklauncherLauncherView * self;
 	self = (UnityQuicklauncherLauncherView*) base;
-#line 283 "launcher-view.vala"
-	CLUTTER_ACTOR_CLASS (unity_quicklauncher_launcher_view_parent_class)->unmap ((ClutterActor*) CTK_ACTOR (self));
-#line 284 "launcher-view.vala"
-	clutter_actor_map ((ClutterActor*) self->priv->running_indicator);
-#line 285 "launcher-view.vala"
-	clutter_actor_map ((ClutterActor*) self->priv->focused_indicator);
-#line 286 "launcher-view.vala"
-	clutter_actor_map ((ClutterActor*) self->priv->icon);
-#line 544 "launcher-view.c"
+#line 293 "launcher-view.vala"
+	CLUTTER_ACTOR_CLASS (unity_quicklauncher_launcher_view_parent_class)->pick ((ClutterActor*) CTK_ACTOR (self), color);
+#line 294 "launcher-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->icon);
+#line 550 "launcher-view.c"
 }
 
 
-#line 289 "launcher-view.vala"
+#line 297 "launcher-view.vala"
+static void unity_quicklauncher_launcher_view_real_paint (ClutterActor* base) {
+#line 556 "launcher-view.c"
+	UnityQuicklauncherLauncherView * self;
+	self = (UnityQuicklauncherLauncherView*) base;
+#line 299 "launcher-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->running_indicator);
+#line 300 "launcher-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->focused_indicator);
+#line 301 "launcher-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->icon);
+#line 565 "launcher-view.c"
+}
+
+
+#line 304 "launcher-view.vala"
+static void unity_quicklauncher_launcher_view_real_map (ClutterActor* base) {
+#line 571 "launcher-view.c"
+	UnityQuicklauncherLauncherView * self;
+	self = (UnityQuicklauncherLauncherView*) base;
+#line 306 "launcher-view.vala"
+	CLUTTER_ACTOR_CLASS (unity_quicklauncher_launcher_view_parent_class)->map ((ClutterActor*) CTK_ACTOR (self));
+#line 307 "launcher-view.vala"
+	clutter_actor_map ((ClutterActor*) self->priv->running_indicator);
+#line 308 "launcher-view.vala"
+	clutter_actor_map ((ClutterActor*) self->priv->focused_indicator);
+#line 309 "launcher-view.vala"
+	clutter_actor_map ((ClutterActor*) self->priv->icon);
+#line 582 "launcher-view.c"
+}
+
+
+#line 312 "launcher-view.vala"
+static void unity_quicklauncher_launcher_view_real_unmap (ClutterActor* base) {
+#line 588 "launcher-view.c"
+	UnityQuicklauncherLauncherView * self;
+	self = (UnityQuicklauncherLauncherView*) base;
+#line 314 "launcher-view.vala"
+	CLUTTER_ACTOR_CLASS (unity_quicklauncher_launcher_view_parent_class)->unmap ((ClutterActor*) CTK_ACTOR (self));
+#line 315 "launcher-view.vala"
+	clutter_actor_map ((ClutterActor*) self->priv->running_indicator);
+#line 316 "launcher-view.vala"
+	clutter_actor_map ((ClutterActor*) self->priv->focused_indicator);
+#line 317 "launcher-view.vala"
+	clutter_actor_map ((ClutterActor*) self->priv->icon);
+#line 599 "launcher-view.c"
+}
+
+
+static gboolean _gdk_rectangle_equal (const GdkRectangle* s1, const GdkRectangle* s2) {
+	if (s1 == s2) {
+		return TRUE;
+	}
+	if (s1 == NULL) {
+		return FALSE;
+	}
+	if (s2 == NULL) {
+		return FALSE;
+	}
+	if (s1->x != s2->x) {
+		return FALSE;
+	}
+	if (s1->y != s2->y) {
+		return FALSE;
+	}
+	if (s1->width != s2->width) {
+		return FALSE;
+	}
+	if (s1->height != s2->height) {
+		return FALSE;
+	}
+	return TRUE;
+}
+
+
+#line 320 "launcher-view.vala"
+void unity_quicklauncher_launcher_view_update_window_struts (UnityQuicklauncherLauncherView* self, gboolean ignore_buffer) {
+#line 631 "launcher-view.c"
+	GdkRectangle _tmp0_ = {0};
+	GdkRectangle strut;
+	gboolean _tmp1_ = FALSE;
+#line 320 "launcher-view.vala"
+	g_return_if_fail (self != NULL);
+#line 322 "launcher-view.vala"
+	strut = (_tmp0_.x = (gint) clutter_actor_get_x ((ClutterActor*) self), _tmp0_.y = (gint) clutter_actor_get_y ((ClutterActor*) self), _tmp0_.width = (gint) clutter_actor_get_width ((ClutterActor*) self), _tmp0_.height = (gint) clutter_actor_get_height ((ClutterActor*) self), _tmp0_);
+#line 323 "launcher-view.vala"
+	if (UNITY_QUICKLAUNCHER_MODELS_IS_APPLICATION_MODEL (self->model)) {
+#line 641 "launcher-view.c"
+		gboolean _tmp2_ = FALSE;
+#line 323 "launcher-view.vala"
+		if (_gdk_rectangle_equal (&strut, &self->priv->last_strut) != TRUE) {
+#line 323 "launcher-view.vala"
+			_tmp2_ = TRUE;
+#line 647 "launcher-view.c"
+		} else {
+#line 323 "launcher-view.vala"
+			_tmp2_ = ignore_buffer;
+#line 651 "launcher-view.c"
+		}
+#line 323 "launcher-view.vala"
+		_tmp1_ = _tmp2_;
+#line 655 "launcher-view.c"
+	} else {
+#line 323 "launcher-view.vala"
+		_tmp1_ = FALSE;
+#line 659 "launcher-view.c"
+	}
+#line 323 "launcher-view.vala"
+	if (_tmp1_) {
+#line 663 "launcher-view.c"
+		UnityQuicklauncherModelsLauncherModel* _tmp3_;
+		UnityQuicklauncherModelsApplicationModel* app_model;
+#line 325 "launcher-view.vala"
+		app_model = _g_object_ref0 ((_tmp3_ = self->model, UNITY_QUICKLAUNCHER_MODELS_IS_APPLICATION_MODEL (_tmp3_) ? ((UnityQuicklauncherModelsApplicationModel*) _tmp3_) : NULL));
+#line 668 "launcher-view.c"
+		{
+			GSList* window_collection;
+			GSList* window_it;
+#line 326 "launcher-view.vala"
+			window_collection = unity_quicklauncher_models_application_model_get_windows (app_model);
+#line 674 "launcher-view.c"
+			for (window_it = window_collection; window_it != NULL; window_it = window_it->next) {
+				WnckWindow* window;
+#line 326 "launcher-view.vala"
+				window = _g_object_ref0 ((WnckWindow*) window_it->data);
+#line 679 "launcher-view.c"
+				{
+#line 328 "launcher-view.vala"
+					wnck_window_set_icon_geometry (window, strut.x, strut.y, strut.width, strut.height);
+#line 683 "launcher-view.c"
+					_g_object_unref0 (window);
+				}
+			}
+		}
+#line 330 "launcher-view.vala"
+		self->priv->last_strut = strut;
+#line 690 "launcher-view.c"
+		_g_object_unref0 (app_model);
+	}
+}
+
+
+#line 334 "launcher-view.vala"
 static void unity_quicklauncher_launcher_view_load_textures (UnityQuicklauncherLauncherView* self) {
-#line 550 "launcher-view.c"
+#line 698 "launcher-view.c"
 	GError * _inner_error_;
 	UnityThemeImage* _tmp0_;
 	UnityThemeImage* _tmp1_;
 	CtkImage* _tmp4_;
-#line 289 "launcher-view.vala"
+#line 334 "launcher-view.vala"
 	g_return_if_fail (self != NULL);
-#line 557 "launcher-view.c"
+#line 705 "launcher-view.c"
 	_inner_error_ = NULL;
-#line 291 "launcher-view.vala"
+#line 336 "launcher-view.vala"
 	self->priv->focused_indicator = (_tmp0_ = g_object_ref_sink (unity_theme_image_new ("application-selected")), _g_object_unref0 (self->priv->focused_indicator), _tmp0_);
-#line 292 "launcher-view.vala"
+#line 337 "launcher-view.vala"
 	self->priv->running_indicator = (_tmp1_ = g_object_ref_sink (unity_theme_image_new ("application-running")), _g_object_unref0 (self->priv->running_indicator), _tmp1_);
-#line 294 "launcher-view.vala"
+#line 339 "launcher-view.vala"
 	clutter_actor_set_parent ((ClutterActor*) self->priv->focused_indicator, (ClutterActor*) self);
-#line 295 "launcher-view.vala"
+#line 340 "launcher-view.vala"
 	clutter_actor_set_parent ((ClutterActor*) self->priv->running_indicator, (ClutterActor*) self);
-#line 296 "launcher-view.vala"
+#line 341 "launcher-view.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self->priv->focused_indicator, (guint8) 0);
-#line 297 "launcher-view.vala"
+#line 342 "launcher-view.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self->priv->running_indicator, (guint8) 0);
-#line 571 "launcher-view.c"
+#line 719 "launcher-view.c"
 	{
 		GdkPixbuf* _tmp2_;
 		GdkPixbuf* _tmp3_;
-#line 301 "launcher-view.vala"
+#line 346 "launcher-view.vala"
 		_tmp2_ = gdk_pixbuf_new_from_file (UNITY_QUICKLAUNCHER_HONEYCOMB_MASK_FILE, &_inner_error_);
-#line 577 "launcher-view.c"
+#line 725 "launcher-view.c"
 		if (_inner_error_ != NULL) {
-			goto __catch30_g_error;
+			goto __catch27_g_error;
 		}
-#line 301 "launcher-view.vala"
+#line 346 "launcher-view.vala"
 		self->priv->honeycomb_mask = (_tmp3_ = _tmp2_, _g_object_unref0 (self->priv->honeycomb_mask), _tmp3_);
-#line 583 "launcher-view.c"
+#line 731 "launcher-view.c"
 	}
-	goto __finally30;
-	__catch30_g_error:
+	goto __finally27;
+	__catch27_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 305 "launcher-view.vala"
-			g_warning ("launcher-view.vala:305: Unable to load asset %s: %s", UNITY_QUICKLAUNCHER_HONEYCOMB_MASK_FILE, e->message);
-#line 594 "launcher-view.c"
+#line 350 "launcher-view.vala"
+			g_warning ("launcher-view.vala:350: Unable to load asset %s: %s", UNITY_QUICKLAUNCHER_HONEYCOMB_MASK_FILE, e->message);
+#line 742 "launcher-view.c"
 			_g_error_free0 (e);
 		}
 	}
-	__finally30:
+	__finally27:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return;
 	}
-#line 310 "launcher-view.vala"
+#line 355 "launcher-view.vala"
 	self->priv->icon = (_tmp4_ = g_object_ref_sink ((CtkImage*) ctk_image_new ((guint) 46)), _g_object_unref0 (self->priv->icon), _tmp4_);
-#line 311 "launcher-view.vala"
+#line 356 "launcher-view.vala"
 	clutter_actor_set_parent ((ClutterActor*) self->priv->icon, (ClutterActor*) self);
-#line 608 "launcher-view.c"
+#line 756 "launcher-view.c"
 }
 
 
-#line 314 "launcher-view.vala"
+#line 359 "launcher-view.vala"
 void unity_quicklauncher_launcher_view_notify_on_set_reactive (UnityQuicklauncherLauncherView* self) {
-#line 314 "launcher-view.vala"
+#line 359 "launcher-view.vala"
 	g_return_if_fail (self != NULL);
-#line 316 "launcher-view.vala"
+#line 361 "launcher-view.vala"
 	self->priv->button_down = FALSE;
-#line 618 "launcher-view.c"
+#line 766 "launcher-view.c"
 }
 
 
-#line 540 "launcher-view.vala"
+#line 626 "launcher-view.vala"
 static gboolean _unity_quicklauncher_launcher_view_on_launch_timeout_gsource_func (gpointer self) {
-#line 624 "launcher-view.c"
+#line 772 "launcher-view.c"
 	return unity_quicklauncher_launcher_view_on_launch_timeout (self);
 }
 
 
-#line 320 "launcher-view.vala"
+#line 365 "launcher-view.vala"
 static void unity_quicklauncher_launcher_view_throbber_start (UnityQuicklauncherLauncherView* self) {
-#line 631 "launcher-view.c"
+#line 779 "launcher-view.c"
 	CtkEffectGlow* _tmp0_;
 	ClutterColor _tmp1_ = {0};
 	ClutterColor c;
 	ClutterAnimation* _tmp2_;
-#line 320 "launcher-view.vala"
+#line 365 "launcher-view.vala"
 	g_return_if_fail (self != NULL);
-#line 322 "launcher-view.vala"
+#line 367 "launcher-view.vala"
 	ctk_actor_remove_all_effects ((CtkActor*) self->priv->icon);
-#line 323 "launcher-view.vala"
+#line 368 "launcher-view.vala"
 	self->priv->effect_icon_glow = (_tmp0_ = g_object_ref_sink ((CtkEffectGlow*) ctk_effect_glow_new ()), _g_object_unref0 (self->priv->effect_icon_glow), _tmp0_);
-#line 324 "launcher-view.vala"
+#line 369 "launcher-view.vala"
 	c = (memset (&_tmp1_, 0, sizeof (ClutterColor)), _tmp1_.red = (guint8) 255, _tmp1_.green = (guint8) 255, _tmp1_.blue = (guint8) 255, _tmp1_.alpha = (guint8) 255, _tmp1_);
-#line 330 "launcher-view.vala"
+#line 375 "launcher-view.vala"
 	ctk_effect_glow_set_background_texture (self->priv->effect_icon_glow, self->priv->honeycomb_mask);
-#line 331 "launcher-view.vala"
+#line 376 "launcher-view.vala"
 	ctk_effect_glow_set_color (self->priv->effect_icon_glow, &c);
-#line 332 "launcher-view.vala"
+#line 377 "launcher-view.vala"
 	ctk_effect_set_opacity ((CtkEffect*) self->priv->effect_icon_glow, 0.0f);
-#line 333 "launcher-view.vala"
+#line 378 "launcher-view.vala"
 	ctk_actor_add_effect ((CtkActor*) self->priv->icon, (CtkEffect*) self->priv->effect_icon_glow);
-#line 334 "launcher-view.vala"
+#line 379 "launcher-view.vala"
 	clutter_actor_queue_redraw ((ClutterActor*) self->priv->icon);
-#line 336 "launcher-view.vala"
+#line 381 "launcher-view.vala"
 	self->priv->anim_throbber = (_tmp2_ = _g_object_ref0 (ctk_effect_animate ((CtkEffect*) self->priv->effect_icon_glow, (gulong) CLUTTER_EASE_IN_OUT_SINE, UNITY_QUICKLAUNCHER_SHORT_DELAY, "opacity", 1.0f, NULL)), _g_object_unref0 (self->priv->anim_throbber), _tmp2_);
-#line 339 "launcher-view.vala"
+#line 384 "launcher-view.vala"
 	ctk_effect_set_margin ((CtkEffect*) self->priv->effect_icon_glow, 6);
-#line 341 "launcher-view.vala"
+#line 386 "launcher-view.vala"
 	g_signal_connect_after (self->priv->anim_throbber, "completed", (GCallback) unity_quicklauncher_launcher_view_do_anim_throbber_loop, self);
-#line 344 "launcher-view.vala"
+#line 389 "launcher-view.vala"
 	g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 8, _unity_quicklauncher_launcher_view_on_launch_timeout_gsource_func, g_object_ref (self), g_object_unref);
-#line 662 "launcher-view.c"
+#line 810 "launcher-view.c"
 }
 
 
-#line 347 "launcher-view.vala"
+#line 392 "launcher-view.vala"
 static void unity_quicklauncher_launcher_view_do_anim_throbber_loop (GObject* sender, UnityQuicklauncherLauncherView* _self_) {
-#line 347 "launcher-view.vala"
+#line 392 "launcher-view.vala"
 	g_return_if_fail (sender != NULL);
-#line 347 "launcher-view.vala"
+#line 392 "launcher-view.vala"
 	g_return_if_fail (_self_ != NULL);
-#line 672 "launcher-view.c"
+#line 820 "launcher-view.c"
 	g_return_if_fail (UNITY_QUICKLAUNCHER_IS_LAUNCHER_VIEW (_self_));
-#line 350 "launcher-view.vala"
+#line 395 "launcher-view.vala"
 	if (unity_quicklauncher_launcher_view_get_is_starting (_self_)) {
-#line 676 "launcher-view.c"
+#line 824 "launcher-view.c"
 		float factor;
 		ClutterAnimation* _tmp0_;
-#line 353 "launcher-view.vala"
-		factor = 0.0f;
-#line 354 "launcher-view.vala"
-		if (ctk_effect_get_opacity ((CtkEffect*) _self_->priv->effect_icon_glow) < 0.5) {
-#line 356 "launcher-view.vala"
-			factor = 1.0f;
-#line 685 "launcher-view.c"
-		}
-#line 359 "launcher-view.vala"
-		_self_->priv->anim_throbber = (_tmp0_ = _g_object_ref0 (ctk_effect_animate ((CtkEffect*) _self_->priv->effect_icon_glow, (gulong) CLUTTER_EASE_IN_OUT_SINE, UNITY_QUICKLAUNCHER_SHORT_DELAY, "opacity", factor, NULL)), _g_object_unref0 (_self_->priv->anim_throbber), _tmp0_);
-#line 363 "launcher-view.vala"
-		g_signal_connect_after (_self_->priv->anim_throbber, "completed", (GCallback) unity_quicklauncher_launcher_view_do_anim_throbber_loop, _self_);
-#line 691 "launcher-view.c"
-	} else {
-#line 369 "launcher-view.vala"
-		if (ctk_effect_get_opacity ((CtkEffect*) _self_->priv->effect_icon_glow) >= 0.1) {
-#line 695 "launcher-view.c"
-			ClutterAnimation* _tmp1_;
-#line 371 "launcher-view.vala"
-			_self_->priv->anim_throbber = (_tmp1_ = _g_object_ref0 (ctk_effect_animate ((CtkEffect*) _self_->priv->effect_icon_glow, (gulong) CLUTTER_EASE_IN_OUT_SINE, UNITY_QUICKLAUNCHER_SHORT_DELAY, "opacity", 0.0, NULL)), _g_object_unref0 (_self_->priv->anim_throbber), _tmp1_);
-#line 699 "launcher-view.c"
-		} else {
-#line 378 "launcher-view.vala"
-			ctk_actor_remove_effect ((CtkActor*) _self_->priv->icon, (CtkEffect*) _self_->priv->effect_icon_glow);
-#line 703 "launcher-view.c"
-		}
-	}
-}
-
-
-#line 383 "launcher-view.vala"
-static void unity_quicklauncher_launcher_view_throbber_fadeout (UnityQuicklauncherLauncherView* self) {
-#line 383 "launcher-view.vala"
-	g_return_if_fail (self != NULL);
-#line 385 "launcher-view.vala"
-	return;
-#line 715 "launcher-view.c"
-}
-
-
-#line 388 "launcher-view.vala"
-static void unity_quicklauncher_launcher_view_throbber_hide (UnityQuicklauncherLauncherView* self) {
-#line 388 "launcher-view.vala"
-	g_return_if_fail (self != NULL);
-#line 390 "launcher-view.vala"
-	unity_quicklauncher_launcher_view_throbber_fadeout (self);
-#line 725 "launcher-view.c"
-}
-
-
-#line 393 "launcher-view.vala"
-static void unity_quicklauncher_launcher_view_wiggle_start (UnityQuicklauncherLauncherView* self) {
-#line 731 "launcher-view.c"
-	ClutterAnimation* anim;
-#line 393 "launcher-view.vala"
-	g_return_if_fail (self != NULL);
-#line 395 "launcher-view.vala"
-	if (self->priv->wiggling) {
-#line 396 "launcher-view.vala"
-		return;
-#line 739 "launcher-view.c"
-	}
 #line 398 "launcher-view.vala"
-	self->priv->wiggling = TRUE;
+		factor = 0.0f;
 #line 399 "launcher-view.vala"
-	self->priv->cease_wiggle = FALSE;
+		if (ctk_effect_get_opacity ((CtkEffect*) _self_->priv->effect_icon_glow) < 0.5) {
 #line 401 "launcher-view.vala"
+			factor = 1.0f;
+#line 833 "launcher-view.c"
+		}
+#line 404 "launcher-view.vala"
+		_self_->priv->anim_throbber = (_tmp0_ = _g_object_ref0 (ctk_effect_animate ((CtkEffect*) _self_->priv->effect_icon_glow, (gulong) CLUTTER_EASE_IN_OUT_SINE, UNITY_QUICKLAUNCHER_SHORT_DELAY, "opacity", factor, NULL)), _g_object_unref0 (_self_->priv->anim_throbber), _tmp0_);
+#line 408 "launcher-view.vala"
+		g_signal_connect_after (_self_->priv->anim_throbber, "completed", (GCallback) unity_quicklauncher_launcher_view_do_anim_throbber_loop, _self_);
+#line 839 "launcher-view.c"
+	} else {
+#line 414 "launcher-view.vala"
+		if (ctk_effect_get_opacity ((CtkEffect*) _self_->priv->effect_icon_glow) >= 0.1) {
+#line 843 "launcher-view.c"
+			ClutterAnimation* _tmp1_;
+#line 416 "launcher-view.vala"
+			_self_->priv->anim_throbber = (_tmp1_ = _g_object_ref0 (ctk_effect_animate ((CtkEffect*) _self_->priv->effect_icon_glow, (gulong) CLUTTER_EASE_IN_OUT_SINE, UNITY_QUICKLAUNCHER_SHORT_DELAY, "opacity", 0.0, NULL)), _g_object_unref0 (_self_->priv->anim_throbber), _tmp1_);
+#line 847 "launcher-view.c"
+		} else {
+#line 423 "launcher-view.vala"
+			ctk_actor_remove_effect ((CtkActor*) _self_->priv->icon, (CtkEffect*) _self_->priv->effect_icon_glow);
+#line 851 "launcher-view.c"
+		}
+	}
+}
+
+
+#line 428 "launcher-view.vala"
+static void unity_quicklauncher_launcher_view_throbber_fadeout (UnityQuicklauncherLauncherView* self) {
+#line 428 "launcher-view.vala"
+	g_return_if_fail (self != NULL);
+#line 430 "launcher-view.vala"
+	return;
+#line 863 "launcher-view.c"
+}
+
+
+#line 433 "launcher-view.vala"
+static void unity_quicklauncher_launcher_view_throbber_hide (UnityQuicklauncherLauncherView* self) {
+#line 433 "launcher-view.vala"
+	g_return_if_fail (self != NULL);
+#line 435 "launcher-view.vala"
+	unity_quicklauncher_launcher_view_throbber_fadeout (self);
+#line 873 "launcher-view.c"
+}
+
+
+#line 438 "launcher-view.vala"
+static void unity_quicklauncher_launcher_view_wiggle_start (UnityQuicklauncherLauncherView* self) {
+#line 879 "launcher-view.c"
+	ClutterAnimation* anim;
+#line 438 "launcher-view.vala"
+	g_return_if_fail (self != NULL);
+#line 440 "launcher-view.vala"
+	if (self->priv->wiggling) {
+#line 441 "launcher-view.vala"
+		return;
+#line 887 "launcher-view.c"
+	}
+#line 443 "launcher-view.vala"
+	self->priv->wiggling = TRUE;
+#line 444 "launcher-view.vala"
+	self->priv->cease_wiggle = FALSE;
+#line 446 "launcher-view.vala"
 	g_object_set ((GObject*) self->priv->icon, "rotation-center-z-gravity", CLUTTER_GRAVITY_CENTER, NULL);
-#line 402 "launcher-view.vala"
+#line 447 "launcher-view.vala"
 	anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->icon, (gulong) CLUTTER_EASE_IN_OUT_SINE, 1000 / UNITY_QUICKLAUNCHER_WIGGLE_FREQUENCY, "rotation-angle-z", UNITY_QUICKLAUNCHER_WIGGLE_SIZE, NULL));
-#line 405 "launcher-view.vala"
+#line 450 "launcher-view.vala"
 	g_signal_connect_after (anim, "completed", (GCallback) unity_quicklauncher_launcher_view_wiggle_do_next_step, self);
-#line 751 "launcher-view.c"
+#line 899 "launcher-view.c"
 	_g_object_unref0 (anim);
 }
 
 
-#line 408 "launcher-view.vala"
+#line 453 "launcher-view.vala"
 static void unity_quicklauncher_launcher_view_wiggle_do_next_step (GObject* sender, UnityQuicklauncherLauncherView* _self_) {
-#line 408 "launcher-view.vala"
+#line 453 "launcher-view.vala"
 	g_return_if_fail (sender != NULL);
-#line 408 "launcher-view.vala"
+#line 453 "launcher-view.vala"
 	g_return_if_fail (_self_ != NULL);
-#line 762 "launcher-view.c"
+#line 910 "launcher-view.c"
 	g_return_if_fail (UNITY_QUICKLAUNCHER_IS_LAUNCHER_VIEW (_self_));
-#line 411 "launcher-view.vala"
+#line 456 "launcher-view.vala"
 	if (_self_->priv->cease_wiggle) {
-#line 413 "launcher-view.vala"
+#line 458 "launcher-view.vala"
 		clutter_actor_animate ((ClutterActor*) _self_->priv->icon, (gulong) CLUTTER_EASE_IN_OUT_SINE, 1000 / UNITY_QUICKLAUNCHER_WIGGLE_FREQUENCY, "rotation-angle-z", 0, NULL);
-#line 415 "launcher-view.vala"
+#line 460 "launcher-view.vala"
 		_self_->priv->wiggling = FALSE;
-#line 770 "launcher-view.c"
+#line 918 "launcher-view.c"
 	} else {
 		float _tmp0_ = 0.0F;
 		ClutterAnimation* anim;
-#line 419 "launcher-view.vala"
+#line 464 "launcher-view.vala"
 		_self_->priv->anim_wiggle_state = !_self_->priv->anim_wiggle_state;
-#line 421 "launcher-view.vala"
+#line 466 "launcher-view.vala"
 		if (_self_->priv->anim_wiggle_state) {
-#line 421 "launcher-view.vala"
+#line 466 "launcher-view.vala"
 			_tmp0_ = UNITY_QUICKLAUNCHER_WIGGLE_SIZE;
-#line 780 "launcher-view.c"
+#line 928 "launcher-view.c"
 		} else {
-#line 421 "launcher-view.vala"
+#line 466 "launcher-view.vala"
 			_tmp0_ = -UNITY_QUICKLAUNCHER_WIGGLE_SIZE;
-#line 784 "launcher-view.c"
+#line 932 "launcher-view.c"
 		}
-#line 420 "launcher-view.vala"
+#line 465 "launcher-view.vala"
 		anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) _self_->priv->icon, (gulong) CLUTTER_EASE_IN_OUT_SINE, 1000 / UNITY_QUICKLAUNCHER_WIGGLE_FREQUENCY, "rotation-angle-z", _tmp0_, NULL));
-#line 423 "launcher-view.vala"
+#line 468 "launcher-view.vala"
 		g_signal_connect_after (anim, "completed", (GCallback) unity_quicklauncher_launcher_view_wiggle_do_next_step, _self_);
-#line 790 "launcher-view.c"
+#line 938 "launcher-view.c"
 		_g_object_unref0 (anim);
 	}
 }
 
 
-#line 427 "launcher-view.vala"
+#line 472 "launcher-view.vala"
 static gboolean unity_quicklauncher_launcher_view_wiggle_stop (UnityQuicklauncherLauncherView* self) {
-#line 798 "launcher-view.c"
+#line 946 "launcher-view.c"
 	gboolean result;
-#line 427 "launcher-view.vala"
+#line 472 "launcher-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 429 "launcher-view.vala"
+#line 474 "launcher-view.vala"
 	self->priv->cease_wiggle = TRUE;
-#line 804 "launcher-view.c"
+#line 952 "launcher-view.c"
 	result = FALSE;
-#line 430 "launcher-view.vala"
+#line 475 "launcher-view.vala"
 	return result;
-#line 808 "launcher-view.c"
+#line 956 "launcher-view.c"
 }
 
 
-#line 440 "launcher-view.vala"
+#line 485 "launcher-view.vala"
 static gboolean _unity_quicklauncher_launcher_view_wiggle_loop_gsource_func (gpointer self) {
-#line 814 "launcher-view.c"
+#line 962 "launcher-view.c"
 	return unity_quicklauncher_launcher_view_wiggle_loop (self);
 }
 
 
-#line 434 "launcher-view.vala"
+#line 479 "launcher-view.vala"
 static void unity_quicklauncher_launcher_view_on_urgent_changed (UnityQuicklauncherLauncherView* self) {
-#line 434 "launcher-view.vala"
+#line 479 "launcher-view.vala"
 	g_return_if_fail (self != NULL);
-#line 436 "launcher-view.vala"
+#line 481 "launcher-view.vala"
 	unity_quicklauncher_launcher_view_wiggle_loop (self);
-#line 437 "launcher-view.vala"
+#line 482 "launcher-view.vala"
 	g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, UNITY_QUICKLAUNCHER_WIGGLE_RESTART, _unity_quicklauncher_launcher_view_wiggle_loop_gsource_func, g_object_ref (self), g_object_unref);
-#line 827 "launcher-view.c"
+#line 975 "launcher-view.c"
 }
 
 
-#line 427 "launcher-view.vala"
+#line 472 "launcher-view.vala"
 static gboolean _unity_quicklauncher_launcher_view_wiggle_stop_gsource_func (gpointer self) {
-#line 833 "launcher-view.c"
+#line 981 "launcher-view.c"
 	return unity_quicklauncher_launcher_view_wiggle_stop (self);
 }
 
 
-#line 440 "launcher-view.vala"
+#line 485 "launcher-view.vala"
 static gboolean unity_quicklauncher_launcher_view_wiggle_loop (UnityQuicklauncherLauncherView* self) {
-#line 840 "launcher-view.c"
+#line 988 "launcher-view.c"
 	gboolean result;
-#line 440 "launcher-view.vala"
+#line 485 "launcher-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 442 "launcher-view.vala"
+#line 487 "launcher-view.vala"
 	if (unity_quicklauncher_models_launcher_model_get_is_urgent (self->model)) {
-#line 444 "launcher-view.vala"
+#line 489 "launcher-view.vala"
 		unity_quicklauncher_launcher_view_wiggle_start (self);
-#line 445 "launcher-view.vala"
+#line 490 "launcher-view.vala"
 		g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, UNITY_QUICKLAUNCHER_WIGGLE_LENGTH, _unity_quicklauncher_launcher_view_wiggle_stop_gsource_func, g_object_ref (self), g_object_unref);
-#line 850 "launcher-view.c"
+#line 998 "launcher-view.c"
 		result = TRUE;
-#line 446 "launcher-view.vala"
+#line 491 "launcher-view.vala"
 		return result;
-#line 854 "launcher-view.c"
+#line 1002 "launcher-view.c"
 	} else {
-#line 450 "launcher-view.vala"
+#line 495 "launcher-view.vala"
 		unity_quicklauncher_launcher_view_wiggle_stop (self);
-#line 858 "launcher-view.c"
+#line 1006 "launcher-view.c"
 		result = FALSE;
-#line 451 "launcher-view.vala"
+#line 496 "launcher-view.vala"
 		return result;
-#line 862 "launcher-view.c"
+#line 1010 "launcher-view.c"
 	}
 }
 
 
-#line 455 "launcher-view.vala"
+#line 500 "launcher-view.vala"
 static void unity_quicklauncher_launcher_view_on_activated (UnityQuicklauncherLauncherView* self) {
-#line 455 "launcher-view.vala"
+#line 500 "launcher-view.vala"
 	g_return_if_fail (self != NULL);
-#line 458 "launcher-view.vala"
+#line 503 "launcher-view.vala"
 	if (!unity_quicklauncher_models_launcher_model_get_is_active (self->model)) {
-#line 460 "launcher-view.vala"
+#line 505 "launcher-view.vala"
 		unity_quicklauncher_launcher_view_set_is_starting (self, TRUE);
-#line 875 "launcher-view.c"
+#line 1023 "launcher-view.c"
 	}
 }
 
 
-#line 464 "launcher-view.vala"
+#line 509 "launcher-view.vala"
 static void unity_quicklauncher_launcher_view_notify_on_icon (UnityQuicklauncherLauncherView* self) {
-#line 464 "launcher-view.vala"
+#line 509 "launcher-view.vala"
 	g_return_if_fail (self != NULL);
-#line 466 "launcher-view.vala"
+#line 511 "launcher-view.vala"
 	if (GDK_IS_PIXBUF (unity_quicklauncher_models_launcher_model_get_icon (self->model))) {
-#line 468 "launcher-view.vala"
+#line 513 "launcher-view.vala"
 		ctk_image_set_from_pixbuf (self->priv->icon, unity_quicklauncher_models_launcher_model_get_icon (self->model));
-#line 888 "launcher-view.c"
+#line 1036 "launcher-view.c"
 	} else {
-#line 472 "launcher-view.vala"
+#line 517 "launcher-view.vala"
 		ctk_image_set_from_stock (self->priv->icon, GTK_STOCK_MISSING_IMAGE);
-#line 892 "launcher-view.c"
+#line 1040 "launcher-view.c"
 	}
 }
 
 
-#line 480 "launcher-view.vala"
+#line 525 "launcher-view.vala"
 static void unity_quicklauncher_launcher_view_notify_on_is_running (UnityQuicklauncherLauncherView* self) {
-#line 899 "launcher-view.c"
+#line 1047 "launcher-view.c"
 	gboolean _tmp3_ = FALSE;
-#line 480 "launcher-view.vala"
+#line 525 "launcher-view.vala"
 	g_return_if_fail (self != NULL);
-#line 482 "launcher-view.vala"
+#line 527 "launcher-view.vala"
 	unity_quicklauncher_launcher_view_set_is_starting (self, FALSE);
-#line 484 "launcher-view.vala"
+#line 529 "launcher-view.vala"
 	if (unity_quicklauncher_models_launcher_model_get_is_active (self->model)) {
-#line 907 "launcher-view.c"
+#line 1055 "launcher-view.c"
 		ClutterAnimation* _tmp0_;
-#line 486 "launcher-view.vala"
+#line 531 "launcher-view.vala"
 		self->priv->running_anim = (_tmp0_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->running_indicator, (gulong) CLUTTER_EASE_IN_OUT_SINE, UNITY_QUICKLAUNCHER_SHORT_DELAY, "opacity", 255, NULL)), _g_object_unref0 (self->priv->running_anim), _tmp0_);
-#line 911 "launcher-view.c"
+#line 1059 "launcher-view.c"
 	} else {
 		ClutterAnimation* _tmp1_;
 		ClutterAnimation* _tmp2_;
-#line 491 "launcher-view.vala"
+#line 536 "launcher-view.vala"
 		self->priv->running_anim = (_tmp1_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->running_indicator, (gulong) CLUTTER_EASE_IN_OUT_SINE, UNITY_QUICKLAUNCHER_SHORT_DELAY, "opacity", 0, NULL)), _g_object_unref0 (self->priv->running_anim), _tmp1_);
-#line 493 "launcher-view.vala"
+#line 538 "launcher-view.vala"
 		self->priv->focused_anim = (_tmp2_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->focused_indicator, (gulong) CLUTTER_EASE_IN_OUT_SINE, UNITY_QUICKLAUNCHER_SHORT_DELAY, "opacity", 0, NULL)), _g_object_unref0 (self->priv->focused_anim), _tmp2_);
-#line 919 "launcher-view.c"
+#line 1067 "launcher-view.c"
 	}
-#line 497 "launcher-view.vala"
+#line 542 "launcher-view.vala"
 	if (!unity_quicklauncher_models_launcher_model_get_is_active (self->model)) {
-#line 497 "launcher-view.vala"
+#line 542 "launcher-view.vala"
 		_tmp3_ = !unity_quicklauncher_models_launcher_model_get_is_sticky (self->model);
-#line 925 "launcher-view.c"
+#line 1073 "launcher-view.c"
 	} else {
-#line 497 "launcher-view.vala"
+#line 542 "launcher-view.vala"
 		_tmp3_ = FALSE;
-#line 929 "launcher-view.c"
+#line 1077 "launcher-view.c"
 	}
-#line 497 "launcher-view.vala"
+#line 542 "launcher-view.vala"
 	if (_tmp3_) {
-#line 499 "launcher-view.vala"
+#line 544 "launcher-view.vala"
 		g_signal_emit_by_name (self, "request-remove");
-#line 935 "launcher-view.c"
+#line 1083 "launcher-view.c"
 	}
 }
 
 
-#line 503 "launcher-view.vala"
+#line 548 "launcher-view.vala"
 static void unity_quicklauncher_launcher_view_notify_on_is_focused (UnityQuicklauncherLauncherView* self) {
-#line 503 "launcher-view.vala"
+#line 548 "launcher-view.vala"
 	g_return_if_fail (self != NULL);
-#line 505 "launcher-view.vala"
+#line 550 "launcher-view.vala"
 	if (unity_quicklauncher_models_launcher_model_get_is_focused (self->model)) {
-#line 946 "launcher-view.c"
+#line 1094 "launcher-view.c"
 		ClutterAnimation* _tmp0_;
-#line 507 "launcher-view.vala"
+#line 552 "launcher-view.vala"
 		self->priv->focused_anim = (_tmp0_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->focused_indicator, (gulong) CLUTTER_EASE_IN_OUT_SINE, UNITY_QUICKLAUNCHER_SHORT_DELAY, "opacity", 255, NULL)), _g_object_unref0 (self->priv->focused_anim), _tmp0_);
-#line 950 "launcher-view.c"
+#line 1098 "launcher-view.c"
 	} else {
 		ClutterAnimation* _tmp1_;
-#line 512 "launcher-view.vala"
+#line 557 "launcher-view.vala"
 		self->priv->focused_anim = (_tmp1_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->focused_indicator, (gulong) CLUTTER_EASE_IN_OUT_SINE, UNITY_QUICKLAUNCHER_SHORT_DELAY, "opacity", 0, NULL)), _g_object_unref0 (self->priv->focused_anim), _tmp1_);
-#line 955 "launcher-view.c"
+#line 1103 "launcher-view.c"
 	}
-#line 516 "launcher-view.vala"
+#line 561 "launcher-view.vala"
 	unity_quicklauncher_launcher_view_set_is_starting (self, FALSE);
-#line 959 "launcher-view.c"
+#line 1107 "launcher-view.c"
 }
 
 
-#line 518 "launcher-view.vala"
-static gboolean unity_quicklauncher_launcher_view_on_mouse_enter (UnityQuicklauncherLauncherView* self, ClutterEvent* event) {
-#line 965 "launcher-view.c"
-	gboolean result;
-	UnityDragController* drag_controller;
-#line 518 "launcher-view.vala"
-	g_return_val_if_fail (self != NULL, FALSE);
-#line 520 "launcher-view.vala"
-	drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
-#line 521 "launcher-view.vala"
-	if (unity_drag_controller_get_is_dragging (drag_controller)) {
-#line 974 "launcher-view.c"
-		result = FALSE;
-		_g_object_unref0 (drag_controller);
-#line 521 "launcher-view.vala"
-		return result;
-#line 979 "launcher-view.c"
+#line 564 "launcher-view.vala"
+static void _unity_quicklauncher_launcher_view_ensure_menu_state_clutter_actor_destroy (ClutterActor* _sender, gpointer self) {
+#line 1113 "launcher-view.c"
+	unity_quicklauncher_launcher_view_ensure_menu_state (self);
+}
+
+
+static gboolean _bool_equal (const gboolean* s1, const gboolean* s2) {
+	if (s1 == s2) {
+		return TRUE;
 	}
-#line 524 "launcher-view.vala"
-	self->is_hovering = TRUE;
-#line 526 "launcher-view.vala"
+	if (s1 == NULL) {
+		return FALSE;
+	}
+	if (s2 == NULL) {
+		return FALSE;
+	}
+	return (*s1) == (*s2);
+}
+
+
+#line 564 "launcher-view.vala"
+static void unity_quicklauncher_launcher_view_ensure_menu_state (UnityQuicklauncherLauncherView* self) {
+#line 564 "launcher-view.vala"
+	g_return_if_fail (self != NULL);
+#line 567 "launcher-view.vala"
+	if (unity_quicklauncher_active_menu != NULL) {
+#line 569 "launcher-view.vala"
+		if (unity_quicklauncher_active_menu != self->priv->quicklist_controller) {
+#line 572 "launcher-view.vala"
+			g_signal_connect_object ((ClutterActor*) unity_quicklauncher_active_menu->menu, "destroy", (GCallback) _unity_quicklauncher_launcher_view_ensure_menu_state_clutter_actor_destroy, self, 0);
+#line 573 "launcher-view.vala"
+			return;
+#line 1144 "launcher-view.c"
+		}
+	}
+#line 576 "launcher-view.vala"
 	if (!UNITY_QUICKLAUNCHER_IS_QUICKLIST_CONTROLLER (self->priv->quicklist_controller)) {
-#line 985 "launcher-view.c"
+#line 1149 "launcher-view.c"
 		UnityQuicklauncherQuicklistController* _tmp1_;
 		ClutterActor* _tmp0_;
-#line 528 "launcher-view.vala"
+#line 578 "launcher-view.vala"
 		self->priv->quicklist_controller = (_tmp1_ = unity_quicklauncher_quicklist_controller_new (unity_quicklauncher_models_launcher_model_get_name (self->model), (CtkActor*) self, (_tmp0_ = clutter_actor_get_stage ((ClutterActor*) self), CLUTTER_IS_STAGE (_tmp0_) ? ((ClutterStage*) _tmp0_) : NULL)), _g_object_unref0 (self->priv->quicklist_controller), _tmp1_);
-#line 532 "launcher-view.vala"
+#line 582 "launcher-view.vala"
 		unity_quicklauncher_launcher_view_build_quicklist (self);
-#line 992 "launcher-view.c"
+#line 1156 "launcher-view.c"
 	}
-#line 535 "launcher-view.vala"
-	unity_quicklauncher_quicklist_controller_show_label (self->priv->quicklist_controller);
-#line 996 "launcher-view.c"
+#line 585 "launcher-view.vala"
+	if (unity_quicklauncher_launcher_view_get_is_hovering (self)) {
+#line 587 "launcher-view.vala"
+		if (self->priv->menu_is_label) {
+#line 1162 "launcher-view.c"
+			gboolean _tmp2_;
+#line 589 "launcher-view.vala"
+			if (!self->priv->quicklist_controller->is_label) {
+#line 591 "launcher-view.vala"
+				unity_quicklauncher_quicklist_controller_close_menu (self->priv->quicklist_controller);
+#line 592 "launcher-view.vala"
+				g_signal_emit_by_name (self, "menu-closed", self);
+#line 1170 "launcher-view.c"
+			}
+#line 595 "launcher-view.vala"
+			if (_bool_equal (unity_panel_search_entry_has_focus, (_tmp2_ = FALSE, &_tmp2_)) == TRUE) {
+#line 596 "launcher-view.vala"
+				unity_quicklauncher_quicklist_controller_show_label (self->priv->quicklist_controller);
+#line 1176 "launcher-view.c"
+			}
+		} else {
+#line 600 "launcher-view.vala"
+			unity_quicklauncher_quicklist_controller_show_menu (self->priv->quicklist_controller);
+#line 601 "launcher-view.vala"
+			g_signal_emit_by_name (self, "menu-opened", self);
+#line 1183 "launcher-view.c"
+		}
+	} else {
+#line 606 "launcher-view.vala"
+		if (self->priv->menu_is_label) {
+#line 608 "launcher-view.vala"
+			unity_quicklauncher_launcher_view_close_menu (self);
+#line 1190 "launcher-view.c"
+		}
+	}
+}
+
+
+#line 614 "launcher-view.vala"
+static gboolean unity_quicklauncher_launcher_view_on_mouse_enter (UnityQuicklauncherLauncherView* self, ClutterEvent* event) {
+#line 1198 "launcher-view.c"
+	gboolean result;
+	UnityDragController* drag_controller;
+#line 614 "launcher-view.vala"
+	g_return_val_if_fail (self != NULL, FALSE);
+#line 616 "launcher-view.vala"
+	drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
+#line 617 "launcher-view.vala"
+	if (unity_drag_controller_get_is_dragging (drag_controller)) {
+#line 1207 "launcher-view.c"
+		result = FALSE;
+		_g_object_unref0 (drag_controller);
+#line 617 "launcher-view.vala"
+		return result;
+#line 1212 "launcher-view.c"
+	}
+#line 619 "launcher-view.vala"
+	unity_quicklauncher_launcher_view_set_is_hovering (self, TRUE);
+#line 620 "launcher-view.vala"
+	self->priv->menu_is_label = TRUE;
+#line 621 "launcher-view.vala"
+	unity_quicklauncher_launcher_view_ensure_menu_state (self);
+#line 1220 "launcher-view.c"
 	result = FALSE;
 	_g_object_unref0 (drag_controller);
-#line 537 "launcher-view.vala"
+#line 623 "launcher-view.vala"
 	return result;
-#line 1001 "launcher-view.c"
+#line 1225 "launcher-view.c"
 }
 
 
-#line 540 "launcher-view.vala"
+#line 626 "launcher-view.vala"
 static gboolean unity_quicklauncher_launcher_view_on_launch_timeout (UnityQuicklauncherLauncherView* self) {
-#line 1007 "launcher-view.c"
+#line 1231 "launcher-view.c"
 	gboolean result;
-#line 540 "launcher-view.vala"
+#line 626 "launcher-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 542 "launcher-view.vala"
+#line 628 "launcher-view.vala"
 	unity_quicklauncher_launcher_view_set_is_starting (self, FALSE);
-#line 1013 "launcher-view.c"
+#line 1237 "launcher-view.c"
 	result = FALSE;
-#line 544 "launcher-view.vala"
+#line 629 "launcher-view.vala"
 	return result;
-#line 1017 "launcher-view.c"
+#line 1241 "launcher-view.c"
 }
 
 
-#line 547 "launcher-view.vala"
+#line 632 "launcher-view.vala"
 static gboolean unity_quicklauncher_launcher_view_on_mouse_leave (UnityQuicklauncherLauncherView* self, ClutterEvent* src) {
-#line 1023 "launcher-view.c"
+#line 1247 "launcher-view.c"
 	gboolean result;
-#line 547 "launcher-view.vala"
+#line 632 "launcher-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 549 "launcher-view.vala"
-	self->is_hovering = FALSE;
-#line 550 "launcher-view.vala"
-	if (UNITY_QUICKLAUNCHER_IS_QUICKLIST_CONTROLLER (self->priv->quicklist_controller)) {
-#line 551 "launcher-view.vala"
-		unity_quicklauncher_quicklist_controller_hide_label (self->priv->quicklist_controller);
-#line 1033 "launcher-view.c"
-	}
+#line 634 "launcher-view.vala"
+	unity_quicklauncher_launcher_view_set_is_hovering (self, FALSE);
+#line 635 "launcher-view.vala"
+	unity_quicklauncher_launcher_view_ensure_menu_state (self);
+#line 1255 "launcher-view.c"
 	result = FALSE;
-#line 552 "launcher-view.vala"
+#line 636 "launcher-view.vala"
 	return result;
-#line 1038 "launcher-view.c"
+#line 1259 "launcher-view.c"
 }
 
 
-#line 555 "launcher-view.vala"
+#line 639 "launcher-view.vala"
 static gboolean unity_quicklauncher_launcher_view_on_motion_event (UnityQuicklauncherLauncherView* self, ClutterEvent* event) {
-#line 1044 "launcher-view.c"
+#line 1265 "launcher-view.c"
 	gboolean result;
 	UnityDragController* drag_controller;
 	gboolean _tmp0_ = FALSE;
 	gboolean _tmp1_ = FALSE;
 	gboolean _tmp2_ = FALSE;
-#line 555 "launcher-view.vala"
+#line 639 "launcher-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 557 "launcher-view.vala"
+#line 641 "launcher-view.vala"
 	drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
-#line 558 "launcher-view.vala"
+#line 642 "launcher-view.vala"
 	if (self->priv->button_down) {
-#line 558 "launcher-view.vala"
+#line 642 "launcher-view.vala"
 		_tmp2_ = unity_drag_controller_get_is_dragging (drag_controller) == FALSE;
-#line 1058 "launcher-view.c"
+#line 1279 "launcher-view.c"
 	} else {
-#line 558 "launcher-view.vala"
+#line 642 "launcher-view.vala"
 		_tmp2_ = FALSE;
-#line 1062 "launcher-view.c"
+#line 1283 "launcher-view.c"
 	}
-#line 558 "launcher-view.vala"
+#line 642 "launcher-view.vala"
 	if (_tmp2_) {
-#line 559 "launcher-view.vala"
+#line 643 "launcher-view.vala"
 		_tmp1_ = !unity_quicklauncher_models_launcher_model_get_readonly (self->model);
-#line 1068 "launcher-view.c"
+#line 1289 "launcher-view.c"
 	} else {
-#line 558 "launcher-view.vala"
+#line 642 "launcher-view.vala"
 		_tmp1_ = FALSE;
-#line 1072 "launcher-view.c"
+#line 1293 "launcher-view.c"
 	}
-#line 558 "launcher-view.vala"
+#line 642 "launcher-view.vala"
 	if (_tmp1_) {
-#line 559 "launcher-view.vala"
+#line 643 "launcher-view.vala"
 		_tmp0_ = !unity_quicklauncher_models_launcher_model_get_is_fixed (self->model);
-#line 1078 "launcher-view.c"
+#line 1299 "launcher-view.c"
 	} else {
-#line 558 "launcher-view.vala"
+#line 642 "launcher-view.vala"
 		_tmp0_ = FALSE;
-#line 1082 "launcher-view.c"
+#line 1303 "launcher-view.c"
 	}
-#line 558 "launcher-view.vala"
+#line 642 "launcher-view.vala"
 	if (_tmp0_) {
-#line 1086 "launcher-view.c"
+#line 1307 "launcher-view.c"
 		float diff;
 		gboolean _tmp3_ = FALSE;
-#line 561 "launcher-view.vala"
+#line 645 "launcher-view.vala"
 		diff = (*event).motion.x - self->priv->click_start_pos;
-#line 562 "launcher-view.vala"
+#line 646 "launcher-view.vala"
 		if (diff > UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_drag_sensitivity) {
-#line 562 "launcher-view.vala"
+#line 646 "launcher-view.vala"
 			_tmp3_ = TRUE;
-#line 1095 "launcher-view.c"
+#line 1316 "launcher-view.c"
 		} else {
-#line 562 "launcher-view.vala"
+#line 646 "launcher-view.vala"
 			_tmp3_ = (-diff) > UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_drag_sensitivity;
-#line 1099 "launcher-view.c"
+#line 1320 "launcher-view.c"
 		}
-#line 562 "launcher-view.vala"
+#line 646 "launcher-view.vala"
 		if (_tmp3_) {
-#line 1103 "launcher-view.c"
+#line 1324 "launcher-view.c"
 			float x = 0.0F;
 			float y = 0.0F;
-#line 565 "launcher-view.vala"
+#line 649 "launcher-view.vala"
 			clutter_actor_get_transformed_position ((ClutterActor*) self->priv->icon, &x, &y);
-#line 566 "launcher-view.vala"
+#line 650 "launcher-view.vala"
 			unity_drag_controller_start_drag (drag_controller, (UnityDragModel*) self, (*event).button.x - x, (*event).button.y - y);
-#line 569 "launcher-view.vala"
+#line 653 "launcher-view.vala"
 			self->priv->button_down = FALSE;
-#line 1112 "launcher-view.c"
+#line 1333 "launcher-view.c"
 			result = TRUE;
 			_g_object_unref0 (drag_controller);
-#line 570 "launcher-view.vala"
+#line 654 "launcher-view.vala"
 			return result;
-#line 1117 "launcher-view.c"
+#line 1338 "launcher-view.c"
 		}
 	}
 	result = FALSE;
 	_g_object_unref0 (drag_controller);
-#line 573 "launcher-view.vala"
+#line 657 "launcher-view.vala"
 	return result;
-#line 1124 "launcher-view.c"
+#line 1345 "launcher-view.c"
 }
 
 
-#line 576 "launcher-view.vala"
-static gboolean unity_quicklauncher_launcher_view_on_pressed (UnityQuicklauncherLauncherView* self, ClutterEvent* src) {
-#line 1130 "launcher-view.c"
+#line 660 "launcher-view.vala"
+static gboolean unity_quicklauncher_launcher_view_on_long_hover (UnityQuicklauncherLauncherView* self) {
+#line 1351 "launcher-view.c"
 	gboolean result;
-	ClutterButtonEvent bevent;
-#line 576 "launcher-view.vala"
+#line 660 "launcher-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 579 "launcher-view.vala"
-	bevent = (*src).button;
-#line 580 "launcher-view.vala"
-	if (bevent.button == 1) {
-#line 582 "launcher-view.vala"
-		self->priv->last_pressed_time = bevent.time;
-#line 583 "launcher-view.vala"
-		self->priv->click_start_pos = bevent.x;
-#line 584 "launcher-view.vala"
-		self->priv->button_down = TRUE;
-#line 586 "launcher-view.vala"
-		if (!self->priv->quicklist_controller->is_label) {
-#line 588 "launcher-view.vala"
-			unity_quicklauncher_quicklist_controller_close_menu (self->priv->quicklist_controller);
-#line 589 "launcher-view.vala"
-			unity_quicklauncher_quicklist_controller_show_label (self->priv->quicklist_controller);
-#line 590 "launcher-view.vala"
-			g_signal_emit_by_name (self, "menu-closed", self);
-#line 1153 "launcher-view.c"
-		}
-	} else {
-#line 595 "launcher-view.vala"
-		unity_quicklauncher_quicklist_controller_show_menu (self->priv->quicklist_controller);
-#line 596 "launcher-view.vala"
-		g_signal_emit_by_name (self, "menu-opened", self);
-#line 1160 "launcher-view.c"
+#line 662 "launcher-view.vala"
+	if (self->priv->quicklist_controller->is_label) {
+#line 664 "launcher-view.vala"
+		unity_quicklauncher_quicklist_controller_set_hide_on_leave (self->priv->quicklist_controller, TRUE);
+#line 665 "launcher-view.vala"
+		self->priv->hover_timeout = (guint) 0;
+#line 666 "launcher-view.vala"
+		self->priv->menu_is_label = FALSE;
+#line 667 "launcher-view.vala"
+		unity_quicklauncher_launcher_view_ensure_menu_state (self);
+#line 1365 "launcher-view.c"
 	}
 	result = FALSE;
-#line 598 "launcher-view.vala"
+#line 669 "launcher-view.vala"
 	return result;
-#line 1165 "launcher-view.c"
+#line 1370 "launcher-view.c"
 }
 
 
-#line 601 "launcher-view.vala"
+#line 672 "launcher-view.vala"
+static gboolean unity_quicklauncher_launcher_view_on_pressed (UnityQuicklauncherLauncherView* self, ClutterEvent* src) {
+#line 1376 "launcher-view.c"
+	gboolean result;
+	ClutterButtonEvent bevent;
+#line 672 "launcher-view.vala"
+	g_return_val_if_fail (self != NULL, FALSE);
+#line 675 "launcher-view.vala"
+	bevent = (*src).button;
+#line 676 "launcher-view.vala"
+	switch (bevent.button) {
+#line 1385 "launcher-view.c"
+		case 1:
+		{
+			{
+#line 680 "launcher-view.vala"
+				self->priv->last_pressed_time = bevent.time;
+#line 681 "launcher-view.vala"
+				self->priv->click_start_pos = bevent.x;
+#line 682 "launcher-view.vala"
+				self->priv->button_down = TRUE;
+#line 683 "launcher-view.vala"
+				unity_quicklauncher_launcher_view_set_is_hovering (self, FALSE);
+#line 1397 "launcher-view.c"
+			}
+#line 684 "launcher-view.vala"
+			break;
+#line 1401 "launcher-view.c"
+		}
+		case 3:
+		{
+			{
+#line 687 "launcher-view.vala"
+				self->priv->menu_is_label = FALSE;
+#line 688 "launcher-view.vala"
+				unity_quicklauncher_quicklist_controller_set_hide_on_leave (self->priv->quicklist_controller, FALSE);
+#line 689 "launcher-view.vala"
+				unity_quicklauncher_launcher_view_ensure_menu_state (self);
+#line 1412 "launcher-view.c"
+			}
+#line 690 "launcher-view.vala"
+			break;
+#line 1416 "launcher-view.c"
+		}
+		default:
+		{
+#line 691 "launcher-view.vala"
+			break;
+#line 1422 "launcher-view.c"
+		}
+	}
+	result = FALSE;
+#line 693 "launcher-view.vala"
+	return result;
+#line 1428 "launcher-view.c"
+}
+
+
+#line 697 "launcher-view.vala"
 void unity_quicklauncher_launcher_view_close_menu (UnityQuicklauncherLauncherView* self) {
-#line 601 "launcher-view.vala"
+#line 697 "launcher-view.vala"
 	g_return_if_fail (self != NULL);
-#line 603 "launcher-view.vala"
+#line 699 "launcher-view.vala"
 	unity_quicklauncher_quicklist_controller_close_menu (self->priv->quicklist_controller);
-#line 1175 "launcher-view.c"
+#line 1438 "launcher-view.c"
 }
 
 
-#line 607 "launcher-view.vala"
+#line 703 "launcher-view.vala"
 static void unity_quicklauncher_launcher_view_build_quicklist (UnityQuicklauncherLauncherView* self) {
-#line 1181 "launcher-view.c"
+#line 1444 "launcher-view.c"
 	GeeArrayList* _tmp0_;
 	GeeArrayList* _tmp1_;
-#line 607 "launcher-view.vala"
+#line 703 "launcher-view.vala"
 	g_return_if_fail (self != NULL);
-#line 609 "launcher-view.vala"
+#line 705 "launcher-view.vala"
 	self->priv->offline_shortcuts = (_tmp0_ = unity_quicklauncher_models_launcher_model_get_menu_shortcuts (self->model), _g_object_unref0 (self->priv->offline_shortcuts), _tmp0_);
-#line 610 "launcher-view.vala"
+#line 706 "launcher-view.vala"
 	self->priv->shortcut_actions = (_tmp1_ = unity_quicklauncher_models_launcher_model_get_menu_shortcut_actions (self->model), _g_object_unref0 (self->priv->shortcut_actions), _tmp1_);
-#line 1190 "launcher-view.c"
+#line 1453 "launcher-view.c"
 	{
 		GeeIterator* _shortcut_it;
 		_shortcut_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) self->priv->offline_shortcuts);
-#line 611 "launcher-view.vala"
+#line 707 "launcher-view.vala"
 		while (TRUE) {
-#line 1196 "launcher-view.c"
+#line 1459 "launcher-view.c"
 			UnityQuicklauncherModelsShortcutItem* shortcut;
-#line 611 "launcher-view.vala"
+#line 707 "launcher-view.vala"
 			if (!gee_iterator_next (_shortcut_it)) {
-#line 611 "launcher-view.vala"
+#line 707 "launcher-view.vala"
 				break;
-#line 1202 "launcher-view.c"
+#line 1465 "launcher-view.c"
 			}
-#line 611 "launcher-view.vala"
+#line 707 "launcher-view.vala"
 			shortcut = (UnityQuicklauncherModelsShortcutItem*) gee_iterator_get (_shortcut_it);
-#line 613 "launcher-view.vala"
+#line 709 "launcher-view.vala"
 			unity_quicklauncher_quicklist_controller_add_action (self->priv->quicklist_controller, shortcut, TRUE);
-#line 1208 "launcher-view.c"
+#line 1471 "launcher-view.c"
 			_g_object_unref0 (shortcut);
 		}
 		_g_object_unref0 (_shortcut_it);
@@ -1212,21 +1475,21 @@ static void unity_quicklauncher_launcher_view_build_quicklist (UnityQuicklaunche
 	{
 		GeeIterator* _shortcut_it;
 		_shortcut_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) self->priv->shortcut_actions);
-#line 616 "launcher-view.vala"
+#line 712 "launcher-view.vala"
 		while (TRUE) {
-#line 1218 "launcher-view.c"
+#line 1481 "launcher-view.c"
 			UnityQuicklauncherModelsShortcutItem* shortcut;
-#line 616 "launcher-view.vala"
+#line 712 "launcher-view.vala"
 			if (!gee_iterator_next (_shortcut_it)) {
-#line 616 "launcher-view.vala"
+#line 712 "launcher-view.vala"
 				break;
-#line 1224 "launcher-view.c"
+#line 1487 "launcher-view.c"
 			}
-#line 616 "launcher-view.vala"
+#line 712 "launcher-view.vala"
 			shortcut = (UnityQuicklauncherModelsShortcutItem*) gee_iterator_get (_shortcut_it);
-#line 618 "launcher-view.vala"
+#line 714 "launcher-view.vala"
 			unity_quicklauncher_quicklist_controller_add_action (self->priv->quicklist_controller, shortcut, FALSE);
-#line 1230 "launcher-view.c"
+#line 1493 "launcher-view.c"
 			_g_object_unref0 (shortcut);
 		}
 		_g_object_unref0 (_shortcut_it);
@@ -1234,90 +1497,90 @@ static void unity_quicklauncher_launcher_view_build_quicklist (UnityQuicklaunche
 }
 
 
-#line 622 "launcher-view.vala"
+#line 718 "launcher-view.vala"
 static gboolean unity_quicklauncher_launcher_view_on_released (UnityQuicklauncherLauncherView* self, ClutterEvent* src) {
-#line 1240 "launcher-view.c"
+#line 1503 "launcher-view.c"
 	gboolean result;
 	ClutterButtonEvent bevent;
 	gboolean _tmp0_ = FALSE;
-#line 622 "launcher-view.vala"
+#line 718 "launcher-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 624 "launcher-view.vala"
+#line 720 "launcher-view.vala"
 	bevent = (*src).button;
-#line 625 "launcher-view.vala"
+#line 721 "launcher-view.vala"
 	self->priv->button_down = FALSE;
-#line 626 "launcher-view.vala"
+#line 722 "launcher-view.vala"
 	if (bevent.button == 1) {
-#line 627 "launcher-view.vala"
+#line 723 "launcher-view.vala"
 		_tmp0_ = (bevent.time - self->priv->last_pressed_time) < 500;
-#line 1254 "launcher-view.c"
+#line 1517 "launcher-view.c"
 	} else {
-#line 626 "launcher-view.vala"
+#line 722 "launcher-view.vala"
 		_tmp0_ = FALSE;
-#line 1258 "launcher-view.c"
+#line 1521 "launcher-view.c"
 	}
-#line 626 "launcher-view.vala"
+#line 722 "launcher-view.vala"
 	if (_tmp0_) {
-#line 629 "launcher-view.vala"
+#line 725 "launcher-view.vala"
 		g_signal_emit_by_name (self, "clicked");
-#line 1264 "launcher-view.c"
+#line 1527 "launcher-view.c"
 	}
 	result = FALSE;
-#line 631 "launcher-view.vala"
+#line 727 "launcher-view.vala"
 	return result;
-#line 1269 "launcher-view.c"
+#line 1532 "launcher-view.c"
 }
 
 
-#line 634 "launcher-view.vala"
+#line 730 "launcher-view.vala"
 static ClutterActor* unity_quicklauncher_launcher_view_real_get_icon (UnityDragModel* base) {
-#line 1275 "launcher-view.c"
+#line 1538 "launcher-view.c"
 	UnityQuicklauncherLauncherView * self;
 	ClutterActor* result;
 	self = (UnityQuicklauncherLauncherView*) base;
 	result = _g_object_ref0 ((ClutterActor*) self->priv->icon);
-#line 636 "launcher-view.vala"
+#line 732 "launcher-view.vala"
 	return result;
-#line 1282 "launcher-view.c"
+#line 1545 "launcher-view.c"
 }
 
 
-#line 639 "launcher-view.vala"
+#line 735 "launcher-view.vala"
 static char* unity_quicklauncher_launcher_view_real_get_drag_data (UnityDragModel* base) {
-#line 1288 "launcher-view.c"
+#line 1551 "launcher-view.c"
 	UnityQuicklauncherLauncherView * self;
 	char* result;
 	self = (UnityQuicklauncherLauncherView*) base;
 	result = g_strdup (clutter_actor_get_name ((ClutterActor*) self));
-#line 641 "launcher-view.vala"
+#line 737 "launcher-view.vala"
 	return result;
-#line 1295 "launcher-view.c"
+#line 1558 "launcher-view.c"
 }
 
 
-#line 644 "launcher-view.vala"
+#line 740 "launcher-view.vala"
 static void unity_quicklauncher_launcher_view_on_clicked (UnityQuicklauncherLauncherView* self) {
-#line 644 "launcher-view.vala"
+#line 740 "launcher-view.vala"
 	g_return_if_fail (self != NULL);
-#line 647 "launcher-view.vala"
+#line 743 "launcher-view.vala"
 	if (unity_quicklauncher_launcher_view_get_is_starting (self)) {
-#line 649 "launcher-view.vala"
+#line 745 "launcher-view.vala"
 		return;
-#line 1307 "launcher-view.c"
+#line 1570 "launcher-view.c"
 	}
-#line 651 "launcher-view.vala"
+#line 747 "launcher-view.vala"
 	unity_quicklauncher_models_launcher_model_activate (self->model);
-#line 1311 "launcher-view.c"
+#line 1574 "launcher-view.c"
 }
 
 
-#line 654 "launcher-view.vala"
+#line 750 "launcher-view.vala"
 static void unity_quicklauncher_launcher_view_on_request_remove (UnityQuicklauncherLauncherView* self) {
-#line 654 "launcher-view.vala"
+#line 750 "launcher-view.vala"
 	g_return_if_fail (self != NULL);
-#line 656 "launcher-view.vala"
+#line 752 "launcher-view.vala"
 	unity_quicklauncher_models_launcher_model_close (self->model);
-#line 1321 "launcher-view.c"
+#line 1584 "launcher-view.c"
 }
 
 
@@ -1325,30 +1588,99 @@ static gboolean unity_quicklauncher_launcher_view_get_is_starting (UnityQuicklau
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_busy;
-#line 66 "launcher-view.vala"
+#line 67 "launcher-view.vala"
 	return result;
-#line 1331 "launcher-view.c"
+#line 1594 "launcher-view.c"
 }
 
 
 static void unity_quicklauncher_launcher_view_set_is_starting (UnityQuicklauncherLauncherView* self, gboolean value) {
 	g_return_if_fail (self != NULL);
-#line 68 "launcher-view.vala"
+#line 69 "launcher-view.vala"
 	if (value) {
-#line 70 "launcher-view.vala"
-		if (!self->priv->_busy) {
 #line 71 "launcher-view.vala"
+		if (!self->priv->_busy) {
+#line 72 "launcher-view.vala"
 			unity_quicklauncher_launcher_view_throbber_start (self);
-#line 1343 "launcher-view.c"
+#line 1606 "launcher-view.c"
 		}
 	} else {
-#line 73 "launcher-view.vala"
+#line 74 "launcher-view.vala"
 		unity_quicklauncher_launcher_view_throbber_hide (self);
-#line 1348 "launcher-view.c"
+#line 1611 "launcher-view.c"
 	}
-#line 75 "launcher-view.vala"
+#line 76 "launcher-view.vala"
 	self->priv->_busy = value;
-#line 1352 "launcher-view.c"
+#line 1615 "launcher-view.c"
+}
+
+
+gboolean unity_quicklauncher_launcher_view_get_is_hovering (UnityQuicklauncherLauncherView* self) {
+	gboolean result;
+	g_return_val_if_fail (self != NULL, FALSE);
+	result = self->priv->_is_hovering;
+#line 82 "launcher-view.vala"
+	return result;
+#line 1625 "launcher-view.c"
+}
+
+
+#line 660 "launcher-view.vala"
+static gboolean _unity_quicklauncher_launcher_view_on_long_hover_gsource_func (gpointer self) {
+#line 1631 "launcher-view.c"
+	return unity_quicklauncher_launcher_view_on_long_hover (self);
+}
+
+
+void unity_quicklauncher_launcher_view_set_is_hovering (UnityQuicklauncherLauncherView* self, gboolean value) {
+	gboolean _tmp0_ = FALSE;
+	g_return_if_fail (self != NULL);
+#line 84 "launcher-view.vala"
+	if (value) {
+#line 84 "launcher-view.vala"
+		_tmp0_ = !unity_quicklauncher_launcher_view_get_is_hovering (self);
+#line 1643 "launcher-view.c"
+	} else {
+#line 84 "launcher-view.vala"
+		_tmp0_ = FALSE;
+#line 1647 "launcher-view.c"
+	}
+#line 84 "launcher-view.vala"
+	if (_tmp0_) {
+#line 86 "launcher-view.vala"
+		if (self->priv->hover_timeout != 0) {
+#line 87 "launcher-view.vala"
+			g_source_remove (self->priv->hover_timeout);
+#line 1655 "launcher-view.c"
+		}
+#line 88 "launcher-view.vala"
+		self->priv->hover_timeout = g_timeout_add_full (G_PRIORITY_DEFAULT, UNITY_QUICKLAUNCHER_LONG_DELAY, _unity_quicklauncher_launcher_view_on_long_hover_gsource_func, g_object_ref (self), g_object_unref);
+#line 1659 "launcher-view.c"
+	} else {
+		gboolean _tmp1_ = FALSE;
+#line 90 "launcher-view.vala"
+		if (!value) {
+#line 90 "launcher-view.vala"
+			_tmp1_ = self->priv->hover_timeout != 0;
+#line 1666 "launcher-view.c"
+		} else {
+#line 90 "launcher-view.vala"
+			_tmp1_ = FALSE;
+#line 1670 "launcher-view.c"
+		}
+#line 90 "launcher-view.vala"
+		if (_tmp1_) {
+#line 92 "launcher-view.vala"
+			g_source_remove (self->priv->hover_timeout);
+#line 93 "launcher-view.vala"
+			self->priv->hover_timeout = (guint) 0;
+#line 1678 "launcher-view.c"
+		}
+	}
+#line 95 "launcher-view.vala"
+	self->priv->_is_hovering = value;
+#line 1683 "launcher-view.c"
+	g_object_notify ((GObject *) self, "is-hovering");
 }
 
 
@@ -1356,26 +1688,26 @@ ClutterAnimation* unity_quicklauncher_launcher_view_get_anim (UnityQuicklauncher
 	ClutterAnimation* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_anim;
-#line 104 "launcher-view.vala"
+#line 127 "launcher-view.vala"
 	return result;
-#line 1362 "launcher-view.c"
+#line 1694 "launcher-view.c"
 }
 
 
 void unity_quicklauncher_launcher_view_set_anim (UnityQuicklauncherLauncherView* self, ClutterAnimation* value) {
 	ClutterAnimation* _tmp0_;
 	g_return_if_fail (self != NULL);
-#line 106 "launcher-view.vala"
+#line 129 "launcher-view.vala"
 	if (self->priv->_anim != NULL) {
-#line 107 "launcher-view.vala"
+#line 130 "launcher-view.vala"
 		g_assert (CLUTTER_IS_ANIMATION (self->priv->_anim));
-#line 108 "launcher-view.vala"
+#line 131 "launcher-view.vala"
 		clutter_animation_completed (self->priv->_anim);
-#line 1375 "launcher-view.c"
+#line 1707 "launcher-view.c"
 	}
-#line 110 "launcher-view.vala"
+#line 133 "launcher-view.vala"
 	self->priv->_anim = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_anim), _tmp0_);
-#line 1379 "launcher-view.c"
+#line 1711 "launcher-view.c"
 	g_object_notify ((GObject *) self, "anim");
 }
 
@@ -1384,19 +1716,19 @@ float unity_quicklauncher_launcher_view_get_anim_priority (UnityQuicklauncherLau
 	float result;
 	g_return_val_if_fail (self != NULL, 0.0F);
 	result = self->priv->_anim_priority;
-#line 119 "launcher-view.vala"
+#line 142 "launcher-view.vala"
 	return result;
-#line 1390 "launcher-view.c"
+#line 1722 "launcher-view.c"
 }
 
 
 void unity_quicklauncher_launcher_view_set_anim_priority (UnityQuicklauncherLauncherView* self, float value) {
 	g_return_if_fail (self != NULL);
-#line 120 "launcher-view.vala"
+#line 143 "launcher-view.vala"
 	self->priv->_anim_priority = value;
-#line 120 "launcher-view.vala"
+#line 143 "launcher-view.vala"
 	clutter_actor_queue_relayout ((ClutterActor*) self);
-#line 1400 "launcher-view.c"
+#line 1732 "launcher-view.c"
 	g_object_notify ((GObject *) self, "anim-priority");
 }
 
@@ -1405,87 +1737,102 @@ gint unity_quicklauncher_launcher_view_get_position (UnityQuicklauncherLauncherV
 	gint result;
 	g_return_val_if_fail (self != NULL, 0);
 	result = self->priv->_position;
-#line 126 "launcher-view.vala"
+#line 149 "launcher-view.vala"
 	return result;
-#line 1411 "launcher-view.c"
+#line 1743 "launcher-view.c"
 }
 
 
 void unity_quicklauncher_launcher_view_set_position (UnityQuicklauncherLauncherView* self, gint value) {
 	g_return_if_fail (self != NULL);
-#line 129 "launcher-view.vala"
+#line 152 "launcher-view.vala"
 	if (self->priv->_position == (-1)) {
-#line 131 "launcher-view.vala"
+#line 154 "launcher-view.vala"
 		self->priv->_position = value;
-#line 132 "launcher-view.vala"
+#line 155 "launcher-view.vala"
 		self->priv->_anim_priority = 0.0f;
-#line 133 "launcher-view.vala"
+#line 156 "launcher-view.vala"
 		self->anim_priority_going_up = FALSE;
-#line 134 "launcher-view.vala"
+#line 157 "launcher-view.vala"
 		return;
-#line 1427 "launcher-view.c"
+#line 1759 "launcher-view.c"
 	}
-#line 136 "launcher-view.vala"
+#line 159 "launcher-view.vala"
 	if (self->priv->_position != value) {
-#line 138 "launcher-view.vala"
+#line 161 "launcher-view.vala"
 		self->anim_priority_going_up = self->priv->_position > value;
-#line 139 "launcher-view.vala"
+#line 162 "launcher-view.vala"
 		self->priv->_position = value;
-#line 141 "launcher-view.vala"
+#line 164 "launcher-view.vala"
 		unity_quicklauncher_launcher_view_set_anim_priority (self, clutter_actor_get_height ((ClutterActor*) self));
-#line 142 "launcher-view.vala"
+#line 165 "launcher-view.vala"
 		clutter_actor_animate ((ClutterActor*) self, (gulong) CLUTTER_EASE_IN_OUT_QUAD, (guint) 170, "anim-priority", 0.0f, NULL);
-#line 1439 "launcher-view.c"
+#line 1771 "launcher-view.c"
 	}
 	g_object_notify ((GObject *) self, "position");
 }
 
 
-#line 576 "launcher-view.vala"
+#line 672 "launcher-view.vala"
 static gboolean _unity_quicklauncher_launcher_view_on_pressed_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 1447 "launcher-view.c"
+#line 1779 "launcher-view.c"
 	return unity_quicklauncher_launcher_view_on_pressed (self, event);
 }
 
 
-#line 622 "launcher-view.vala"
+#line 718 "launcher-view.vala"
 static gboolean _unity_quicklauncher_launcher_view_on_released_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 1454 "launcher-view.c"
+#line 1786 "launcher-view.c"
 	return unity_quicklauncher_launcher_view_on_released (self, event);
 }
 
 
-#line 518 "launcher-view.vala"
+#line 614 "launcher-view.vala"
 static gboolean _unity_quicklauncher_launcher_view_on_mouse_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 1461 "launcher-view.c"
+#line 1793 "launcher-view.c"
 	return unity_quicklauncher_launcher_view_on_mouse_enter (self, event);
 }
 
 
-#line 547 "launcher-view.vala"
+#line 632 "launcher-view.vala"
 static gboolean _unity_quicklauncher_launcher_view_on_mouse_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 1468 "launcher-view.c"
+#line 1800 "launcher-view.c"
 	return unity_quicklauncher_launcher_view_on_mouse_leave (self, event);
 }
 
 
-#line 555 "launcher-view.vala"
+#line 639 "launcher-view.vala"
 static gboolean _unity_quicklauncher_launcher_view_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 1475 "launcher-view.c"
+#line 1807 "launcher-view.c"
 	return unity_quicklauncher_launcher_view_on_motion_event (self, event);
 }
 
 
-#line 314 "launcher-view.vala"
+#line 217 "launcher-view.vala"
+static void _lambda1_ (UnityQuicklauncherLauncherView* self) {
+#line 217 "launcher-view.vala"
+	unity_quicklauncher_launcher_view_update_window_struts (self, FALSE);
+#line 1816 "launcher-view.c"
+}
+
+
+#line 217 "launcher-view.vala"
+static void __lambda1__clutter_actor_allocation_changed (ClutterActor* _sender, const ClutterActorBox* box, ClutterAllocationFlags flags, gpointer self) {
+#line 1822 "launcher-view.c"
+	_lambda1_ (self);
+}
+
+
+#line 359 "launcher-view.vala"
 static void _unity_quicklauncher_launcher_view_notify_on_set_reactive_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-#line 1482 "launcher-view.c"
+#line 1829 "launcher-view.c"
 	unity_quicklauncher_launcher_view_notify_on_set_reactive (self);
 }
 
 
-#line 644 "launcher-view.vala"
+#line 740 "launcher-view.vala"
 static void _unity_quicklauncher_launcher_view_on_clicked_unity_quicklauncher_launcher_view_clicked (UnityQuicklauncherLauncherView* _sender, gpointer self) {
-#line 1489 "launcher-view.c"
+#line 1836 "launcher-view.c"
 	unity_quicklauncher_launcher_view_on_clicked (self);
 }
 
@@ -1501,41 +1848,45 @@ static GObject * unity_quicklauncher_launcher_view_constructor (GType type, guin
 		UnityQuicklauncherQuicklistController* _tmp0_;
 		CtkPadding _tmp1_ = {0};
 		CtkPadding padding;
-#line 179 "launcher-view.vala"
+#line 207 "launcher-view.vala"
 		unity_quicklauncher_launcher_view_load_textures (self);
-#line 181 "launcher-view.vala"
+#line 209 "launcher-view.vala"
+		self->priv->hover_timeout = (guint) 0;
+#line 211 "launcher-view.vala"
 		g_signal_connect_object ((ClutterActor*) self, "button-press-event", (GCallback) _unity_quicklauncher_launcher_view_on_pressed_clutter_actor_button_press_event, self, 0);
-#line 182 "launcher-view.vala"
+#line 212 "launcher-view.vala"
 		g_signal_connect_object ((ClutterActor*) self, "button-release-event", (GCallback) _unity_quicklauncher_launcher_view_on_released_clutter_actor_button_release_event, self, 0);
-#line 184 "launcher-view.vala"
+#line 214 "launcher-view.vala"
 		g_signal_connect_object ((ClutterActor*) self, "enter-event", (GCallback) _unity_quicklauncher_launcher_view_on_mouse_enter_clutter_actor_enter_event, self, 0);
-#line 185 "launcher-view.vala"
+#line 215 "launcher-view.vala"
 		g_signal_connect_object ((ClutterActor*) self, "leave-event", (GCallback) _unity_quicklauncher_launcher_view_on_mouse_leave_clutter_actor_leave_event, self, 0);
-#line 186 "launcher-view.vala"
+#line 216 "launcher-view.vala"
 		g_signal_connect_object ((ClutterActor*) self, "motion-event", (GCallback) _unity_quicklauncher_launcher_view_on_motion_event_clutter_actor_motion_event, self, 0);
-#line 187 "launcher-view.vala"
+#line 217 "launcher-view.vala"
+		g_signal_connect_object ((ClutterActor*) self, "allocation-changed", (GCallback) __lambda1__clutter_actor_allocation_changed, self, 0);
+#line 218 "launcher-view.vala"
 		g_signal_connect_object ((GObject*) self, "notify::reactive", (GCallback) _unity_quicklauncher_launcher_view_notify_on_set_reactive_g_object_notify, self, 0);
-#line 189 "launcher-view.vala"
+#line 220 "launcher-view.vala"
 		g_signal_connect_object (self, "clicked", (GCallback) _unity_quicklauncher_launcher_view_on_clicked_unity_quicklauncher_launcher_view_clicked, self, 0);
-#line 190 "launcher-view.vala"
+#line 221 "launcher-view.vala"
 		clutter_actor_queue_redraw ((ClutterActor*) self);
-#line 192 "launcher-view.vala"
+#line 223 "launcher-view.vala"
 		clutter_actor_set_reactive ((ClutterActor*) self, TRUE);
-#line 193 "launcher-view.vala"
+#line 224 "launcher-view.vala"
 		self->priv->quicklist_controller = (_tmp0_ = NULL, _g_object_unref0 (self->priv->quicklist_controller), _tmp0_);
-#line 194 "launcher-view.vala"
+#line 225 "launcher-view.vala"
 		padding = (ctk_actor_get_padding ((CtkActor*) self, &_tmp1_), _tmp1_);
-#line 195 "launcher-view.vala"
+#line 226 "launcher-view.vala"
 		padding.left = (float) 2;
-#line 196 "launcher-view.vala"
+#line 227 "launcher-view.vala"
 		padding.right = (float) 2;
-#line 197 "launcher-view.vala"
+#line 228 "launcher-view.vala"
 		padding.top = 2.5f;
-#line 198 "launcher-view.vala"
+#line 229 "launcher-view.vala"
 		padding.bottom = 2.5f;
-#line 199 "launcher-view.vala"
+#line 230 "launcher-view.vala"
 		ctk_actor_set_padding ((CtkActor*) self, &padding);
-#line 1539 "launcher-view.c"
+#line 1890 "launcher-view.c"
 	}
 	return obj;
 }
@@ -1555,6 +1906,7 @@ static void unity_quicklauncher_launcher_view_class_init (UnityQuicklauncherLaun
 	G_OBJECT_CLASS (klass)->set_property = unity_quicklauncher_launcher_view_set_property;
 	G_OBJECT_CLASS (klass)->constructor = unity_quicklauncher_launcher_view_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_quicklauncher_launcher_view_finalize;
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_IS_HOVERING, g_param_spec_boolean ("is-hovering", "is-hovering", "is-hovering", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_ANIM, g_param_spec_object ("anim", "anim", "anim", CLUTTER_TYPE_ANIMATION, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_ANIM_PRIORITY, g_param_spec_float ("anim-priority", "anim-priority", "anim-priority", -G_MAXFLOAT, G_MAXFLOAT, 0.0F, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_POSITION, g_param_spec_int ("position", "position", "position", G_MININT, G_MAXINT, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
@@ -1575,10 +1927,11 @@ static void unity_quicklauncher_launcher_view_unity_drag_model_interface_init (U
 
 static void unity_quicklauncher_launcher_view_instance_init (UnityQuicklauncherLauncherView * self) {
 	self->priv = UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_GET_PRIVATE (self);
-	self->is_hovering = FALSE;
+	self->priv->_is_hovering = FALSE;
 	self->priv->wiggling = FALSE;
 	self->priv->button_down = FALSE;
 	self->priv->click_start_pos = (float) 0;
+	self->priv->menu_is_label = TRUE;
 	self->priv->anim_wiggle_state = FALSE;
 	self->anim_priority_going_up = FALSE;
 	self->priv->_position = -1;
@@ -1622,6 +1975,9 @@ static void unity_quicklauncher_launcher_view_get_property (GObject * object, gu
 	UnityQuicklauncherLauncherView * self;
 	self = UNITY_QUICKLAUNCHER_LAUNCHER_VIEW (object);
 	switch (property_id) {
+		case UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_IS_HOVERING:
+		g_value_set_boolean (value, unity_quicklauncher_launcher_view_get_is_hovering (self));
+		break;
 		case UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_ANIM:
 		g_value_set_object (value, unity_quicklauncher_launcher_view_get_anim (self));
 		break;
@@ -1642,6 +1998,9 @@ static void unity_quicklauncher_launcher_view_set_property (GObject * object, gu
 	UnityQuicklauncherLauncherView * self;
 	self = UNITY_QUICKLAUNCHER_LAUNCHER_VIEW (object);
 	switch (property_id) {
+		case UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_IS_HOVERING:
+		unity_quicklauncher_launcher_view_set_is_hovering (self, g_value_get_boolean (value));
+		break;
 		case UNITY_QUICKLAUNCHER_LAUNCHER_VIEW_ANIM:
 		unity_quicklauncher_launcher_view_set_anim (self, g_value_get_object (value));
 		break;

@@ -25,6 +25,15 @@ namespace Unity {
 	[CCode (cprefix = "UnityWebapp", lower_case_cprefix = "unity_webapp_")]
 	namespace Webapp {
 		[CCode (cheader_filename = "unity.h")]
+		public class ChromiumWebApp : GLib.Object {
+			public string id;
+			public string name;
+			public ChromiumWebApp (string address, string icon);
+			public void add_to_favorites ();
+			public string icon { get; construct; }
+			public string url { get; construct; }
+		}
+		[CCode (cheader_filename = "unity.h")]
 		public class FetchFile : GLib.Object {
 			public FetchFile (string uri);
 			public async void fetch_data ();
@@ -41,6 +50,15 @@ namespace Unity {
 			public Gdk.Pixbuf source { get; construct; }
 		}
 		[CCode (cheader_filename = "unity.h")]
+		public class Prism : GLib.Object {
+			public string id;
+			public string name;
+			public Prism (string address, string icon);
+			public void add_to_favorites ();
+			public string icon { get; construct; }
+			public string url { get; construct; }
+		}
+		[CCode (cheader_filename = "unity.h")]
 		public class WebiconFetcher : GLib.Object {
 			public WebiconFetcher (string uri, string destination);
 			public void fetch_webapp_data ();
@@ -49,6 +67,8 @@ namespace Unity {
 			public signal void completed (string location);
 			public signal void failed ();
 		}
+		[CCode (cheader_filename = "unity.h")]
+		public static string urlify (string uri);
 	}
 	[CCode (cheader_filename = "unity.h")]
 	public class Application : Unique.App {
@@ -96,7 +116,8 @@ namespace Unity {
 	}
 	[CCode (cprefix = "UNITY_APPLICATION_COMMANDS_", cheader_filename = "unity.h")]
 	public enum ApplicationCommands {
-		SHOW
+		SHOW,
+		MAKE_WEBAPP
 	}
 	[CCode (cprefix = "UNITY_SHELL_MODE_", cheader_filename = "unity.h")]
 	public enum ShellMode {

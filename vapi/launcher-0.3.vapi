@@ -6,10 +6,10 @@ namespace Launcher {
 	public class Application : GLib.Object {
 		[CCode (has_construct_function = false)]
 		public Application ();
-		public void close ();
+		public void close (uint32 timestamp);
 		public void ensure_state ();
 		[CCode (has_construct_function = false)]
-		public Application.from_desktop_file (string desktop_file);
+		public Application.from_desktop_file (string desktop_file, bool dont_check_windows);
 		[CCode (has_construct_function = false)]
 		public Application.from_wnck_window (Wnck.Window window);
 		public unowned GLib.SList get_categories ();
@@ -28,9 +28,9 @@ namespace Launcher {
 		public bool launch () throws GLib.Error;
 		public void minimize ();
 		public bool owns_window (Wnck.Window window);
-		public void restore ();
-		public void set_desktop_file (string desktop_file);
-		public void show ();
+		public void restore (uint32 timestamp);
+		public void set_desktop_file (string desktop_file, bool dont_check_windows);
+		public void show (uint32 timestamp);
 		public void update_windows ();
 		public GLib.SList categories { get; }
 		public string comment { get; }
@@ -48,6 +48,8 @@ namespace Launcher {
 		public string unique_string { get; }
 		public virtual signal void closed (Wnck.Window wnckwindow);
 		public virtual signal void focus_changed ();
+		public virtual signal void icon_changed ();
+		public virtual signal void info_changed ();
 		public virtual signal void opened (Wnck.Window wnckwindow);
 		public virtual signal void running_changed ();
 		public virtual signal void urgent_changed ();
@@ -58,10 +60,16 @@ namespace Launcher {
 	}
 	[CCode (cheader_filename = "launcher/launcher.h")]
 	public class Appman : GLib.Object {
+		public int add_file_watch (string path);
 		public unowned Launcher.Application get_application_for_desktop_file (string desktop);
 		public unowned Launcher.Application get_application_for_wnck_window (Wnck.Window wnck_window);
 		public unowned GLib.Sequence get_applications ();
 		public static unowned Launcher.Appman get_default ();
+		public bool get_enable_window_checking ();
+		public void rm_file_watch (int wd);
+		public void set_enable_window_checking (bool enable_window_matching);
+		public bool enable_window_checking { get; set; }
+		public virtual signal void watch_file_modified (int p0);
 	}
 	[Compact]
 	[CCode (cheader_filename = "launcher/launcher.h")]
@@ -134,7 +142,7 @@ namespace Launcher {
 		public virtual signal void application_launching (Launcher.Application application);
 		public virtual signal void application_opened (Launcher.Application application);
 	}
-	[CCode (cprefix = "LAUNCHER_FAVORITES_", has_type_id = "0", cheader_filename = "launcher/launcher.h")]
+	[CCode (cprefix = "LAUNCHER_FAVORITES_", has_type_id = false, cheader_filename = "launcher/launcher.h")]
 	public enum FavoritesListValue {
 		STRING,
 		INT,

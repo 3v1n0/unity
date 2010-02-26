@@ -23,6 +23,7 @@ static bool popup_mode   = false;
 static int  popup_width  = 1024;
 static int  popup_height = 600;
 static bool show_version = false;
+static string? webapp_uri = null;
 static string? boot_logging_filename = null;
 
 const OptionEntry[] options = {
@@ -69,6 +70,15 @@ const OptionEntry[] options = {
     OptionArg.NONE,
     ref show_version,
     "Show the version and exit",
+    null
+  },
+  {
+    "webapp",
+    'b',
+    0,
+    OptionArg.STRING,
+    ref webapp_uri,
+    "Supply a webapp url to have unity load the webapp into your favorites",
     null
   },
   {
@@ -142,6 +152,13 @@ public class Main
           {
             print ("Showing Unity window\n");
             response = app.send_message (Unity.ApplicationCommands.SHOW, null);
+          }
+        else if (webapp_uri != null)
+          {
+            print ("building webapp\n");
+            var message = new Unique.MessageData ();
+            message.set_text (webapp_uri, (ssize_t)webapp_uri.len);
+            response = app.send_message (Unity.ApplicationCommands.MAKE_WEBAPP, message);
           }
         else
           {

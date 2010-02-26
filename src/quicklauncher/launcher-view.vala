@@ -49,6 +49,7 @@ namespace Unity.Quicklauncher
     private ThemeImage focused_indicator;
     private ThemeImage running_indicator;
     private Gdk.Pixbuf honeycomb_mask;
+    private Gdk.Rectangle last_strut;
 
     private Gee.ArrayList<ShortcutItem> offline_shortcuts;
     private Gee.ArrayList<ShortcutItem> shortcut_actions;
@@ -76,7 +77,26 @@ namespace Unity.Quicklauncher
       }
     }
 
-    public bool is_hovering = false;
+    private bool _is_hovering = false;
+    public bool is_hovering {
+      get { return this._is_hovering; }
+      set {
+        if (value && !this.is_hovering)
+          {
+            if (this.hover_timeout != 0)
+              Source.remove (this.hover_timeout);
+            this.hover_timeout = Timeout.add (LONG_DELAY, this.on_long_hover);
+          }
+        else if (!value && this.hover_timeout != 0)
+          {
+            Source.remove (this.hover_timeout);
+            this.hover_timeout = 0;
+          }
+        this._is_hovering = value;
+      }
+    }
+
+
     bool wiggling = false;
     bool cease_wiggle;
 
@@ -93,6 +113,9 @@ namespace Unity.Quicklauncher
     public signal void clicked ();
     public signal void menu_opened (LauncherView sender);
     public signal void menu_closed (LauncherView sender);
+
+    private uint hover_timeout;
+    private bool menu_is_label = true;
 
     /* animations */
 
@@ -156,12 +179,17 @@ namespace Unity.Quicklauncher
         this.model.urgent_changed.connect (this.on_urgent_changed);
         this.name = "Unity.Quicklauncher.LauncherView-" + this.model.name;
 
+        if (model is ApplicationModel)
+          {
+            (model as ApplicationModel).windows_changed.connect (() => update_window_struts (true));
+          }
+
         notify_on_is_running ();
         notify_on_is_focused ();
 
         /* get the graphic from the model */
+        this.model.notify_icon.connect (this.notify_on_icon);
         this.notify_on_icon ();
-        this.model.notify["icon"].connect (this.notify_on_icon);
         this.set_name (model.uid);
 
         this.request_remove.connect (this.on_request_remove);
@@ -178,12 +206,15 @@ namespace Unity.Quicklauncher
       {
         load_textures ();
 
+        this.hover_timeout = 0;
+
         button_press_event.connect (this.on_pressed);
         button_release_event.connect (this.on_released);
 
         this.enter_event.connect (this.on_mouse_enter);
         this.leave_event.connect (this.on_mouse_leave);
         this.motion_event.connect (this.on_motion_event);
+        this.allocation_changed.connect (() => update_window_struts (false));
         this.notify["reactive"].connect (this.notify_on_set_reactive);
 
         this.clicked.connect (this.on_clicked);
@@ -203,8 +234,8 @@ namespace Unity.Quicklauncher
                                                 out float minimum_width,
                                                 out float natural_width)
       {
-        natural_width = 56;
-        minimum_width = 56;
+        natural_width = 60;
+        minimum_width = 60;
         return;
       }
 
@@ -250,7 +281,7 @@ namespace Unity.Quicklauncher
         //allocate the focused indicator
         width = this.focused_indicator.get_width ();
         height = this.focused_indicator.get_height ();
-        child_box.x2 = box.get_width ()+this.padding.right+2;//for the shadow
+        child_box.x2 = box.get_width ();
         child_box.y2 = (box.get_height () / 2.0f) - (height / 2.0f);
         child_box.x1 = child_box.x2 - width;
         child_box.y1 = child_box.y2 + height;
@@ -284,6 +315,20 @@ namespace Unity.Quicklauncher
       this.running_indicator.map ();
       this.focused_indicator.map ();
       this.icon.map ();
+    }
+
+    public void update_window_struts (bool ignore_buffer)
+    {
+      Gdk.Rectangle strut = {(int) x, (int) y, (int) width, (int) height};
+      if (model is ApplicationModel && (strut != last_strut || ignore_buffer))
+        {
+          ApplicationModel app_model = model as ApplicationModel;
+          foreach (Wnck.Window window in app_model.windows)
+            {
+              window.set_icon_geometry (strut.x, strut.y, strut.width, strut.height);
+            }
+          last_strut = strut;
+        }
     }
 
     private void load_textures ()
@@ -515,15 +560,20 @@ namespace Unity.Quicklauncher
 
       this.is_starting = false;
     }
-    private bool on_mouse_enter (Clutter.Event event)
+
+    private void ensure_menu_state ()
     {
-      var drag_controller = Drag.Controller.get_default ();
-      if (drag_controller.is_dragging) return false;
-
-
-      this.is_hovering = true;
-
-      if (!(quicklist_controller is QuicklistController))
+      //makes sure the menu is open or whatever
+      if (Unity.Quicklauncher.active_menu != null)
+        {
+          if (Unity.Quicklauncher.active_menu != this.quicklist_controller)
+            {
+              // we have a menu already open, put a watch on its close method
+              Unity.Quicklauncher.active_menu.menu.destroy.connect (this.ensure_menu_state);
+              return;
+            }
+        }
+      if (!(this.quicklist_controller is QuicklistController))
         {
           this.quicklist_controller = new QuicklistController (this.model.name,
                                                                this,
@@ -532,7 +582,43 @@ namespace Unity.Quicklauncher
           build_quicklist ();
         }
 
-      this.quicklist_controller.show_label ();
+      if (this.is_hovering)
+        {
+          if (this.menu_is_label)
+            {
+              if (!quicklist_controller.is_label)
+                {
+                  quicklist_controller.close_menu ();
+                  menu_closed (this);
+                }
+                
+              if(Unity.Panel.search_entry_has_focus == false)
+                this.quicklist_controller.show_label ();
+            }
+          else
+            {
+              this.quicklist_controller.show_menu ();
+              this.menu_opened (this);
+            }
+        }
+      else
+        {
+          if (this.menu_is_label)
+            {
+              this.close_menu ();
+            }
+        }
+
+    }
+
+    private bool on_mouse_enter (Clutter.Event event)
+    {
+      var drag_controller = Drag.Controller.get_default ();
+      if (drag_controller.is_dragging) return false;
+
+      this.is_hovering = true;
+      this.menu_is_label = true;
+      this.ensure_menu_state ();
 
       return false;
     }
@@ -540,15 +626,13 @@ namespace Unity.Quicklauncher
     private bool on_launch_timeout ()
     {
       this.is_starting = false;
-
       return false;
     }
 
     private bool on_mouse_leave(Clutter.Event src)
     {
       this.is_hovering = false;
-      if (this.quicklist_controller is QuicklistController)
-        this.quicklist_controller.hide_label ();
+      this.ensure_menu_state ();
       return false;
     }
 
@@ -573,29 +657,41 @@ namespace Unity.Quicklauncher
         return false;
     }
 
+    private bool on_long_hover ()
+    {
+      if (this.quicklist_controller.is_label)
+        {
+          this.quicklist_controller.hide_on_leave = true;
+          this.hover_timeout = 0;
+          this.menu_is_label = false;
+          this.ensure_menu_state ();
+        }
+      return false;
+    }
+
     private bool on_pressed(Clutter.Event src)
     {
 
       var bevent = src.button;
-      if (bevent.button == 1)
+      switch (bevent.button)
         {
-        last_pressed_time = bevent.time;
-        this.click_start_pos = bevent.x;
-        this.button_down = true;
-
-          if (!quicklist_controller.is_label)
+          case 1:
             {
-              quicklist_controller.close_menu ();
-              quicklist_controller.show_label ();
-              menu_closed (this);
-            }
-        }
-      else
-        {
-          this.quicklist_controller.show_menu ();
-          menu_opened (this);
+              last_pressed_time = bevent.time;
+              this.click_start_pos = bevent.x;
+              this.button_down = true;
+              this.is_hovering = false;
+            } break;
+          case 3:
+            {
+              this.menu_is_label = false;
+              this.quicklist_controller.hide_on_leave = false;
+              this.ensure_menu_state ();
+            } break;
+          default: break;
         }
       return false;
+
     }
 
     public void close_menu ()

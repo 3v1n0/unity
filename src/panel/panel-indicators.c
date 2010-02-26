@@ -172,12 +172,12 @@ enum  {
 	UNITY_PANEL_INDICATORS_INDICATOR_ENTRY_MENU
 };
 static void unity_panel_indicators_indicator_entry_set_entry (UnityPanelIndicatorsIndicatorEntry* self, IndicatorObjectEntry* value);
-static void _lambda1_ (UnityPanelIndicatorsIndicatorEntry* self);
-static void __lambda1__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
-static void _lambda2_ (UnityPanelIndicatorsIndicatorEntry* self);
-static void __lambda2__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
-static gboolean _lambda3_ (ClutterEvent* e, UnityPanelIndicatorsIndicatorEntry* self);
-static gboolean __lambda3__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static void _lambda3_ (UnityPanelIndicatorsIndicatorEntry* self);
+static void __lambda3__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _lambda4_ (UnityPanelIndicatorsIndicatorEntry* self);
+static void __lambda4__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static gboolean _lambda5_ (ClutterEvent* e, UnityPanelIndicatorsIndicatorEntry* self);
+static gboolean __lambda5__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static GObject * unity_panel_indicators_indicator_entry_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_panel_indicators_indicator_entry_finalize (GObject* obj);
 static void unity_panel_indicators_indicator_entry_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -1080,7 +1080,7 @@ GtkMenu* unity_panel_indicators_indicator_entry_get_menu (UnityPanelIndicatorsIn
 
 
 #line 321 "panel-indicators.vala"
-static void _lambda1_ (UnityPanelIndicatorsIndicatorEntry* self) {
+static void _lambda3_ (UnityPanelIndicatorsIndicatorEntry* self) {
 #line 1085 "panel-indicators.c"
 	char* _tmp1_;
 	char* _tmp0_ = NULL;
@@ -1092,14 +1092,14 @@ static void _lambda1_ (UnityPanelIndicatorsIndicatorEntry* self) {
 
 
 #line 321 "panel-indicators.vala"
-static void __lambda1__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+static void __lambda3__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
 #line 1097 "panel-indicators.c"
-	_lambda1_ (self);
+	_lambda3_ (self);
 }
 
 
 #line 335 "panel-indicators.vala"
-static void _lambda2_ (UnityPanelIndicatorsIndicatorEntry* self) {
+static void _lambda4_ (UnityPanelIndicatorsIndicatorEntry* self) {
 #line 337 "panel-indicators.vala"
 	clutter_text_set_text ((ClutterText*) self->priv->text, gtk_label_get_label (self->priv->_entry->label));
 #line 1106 "panel-indicators.c"
@@ -1107,14 +1107,14 @@ static void _lambda2_ (UnityPanelIndicatorsIndicatorEntry* self) {
 
 
 #line 335 "panel-indicators.vala"
-static void __lambda2__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+static void __lambda4__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
 #line 1112 "panel-indicators.c"
-	_lambda2_ (self);
+	_lambda4_ (self);
 }
 
 
 #line 341 "panel-indicators.vala"
-static gboolean _lambda3_ (ClutterEvent* e, UnityPanelIndicatorsIndicatorEntry* self) {
+static gboolean _lambda5_ (ClutterEvent* e, UnityPanelIndicatorsIndicatorEntry* self) {
 #line 1119 "panel-indicators.c"
 	gboolean result;
 	GtkWidgetFlags flags;
@@ -1138,9 +1138,9 @@ static gboolean _lambda3_ (ClutterEvent* e, UnityPanelIndicatorsIndicatorEntry* 
 
 
 #line 341 "panel-indicators.vala"
-static gboolean __lambda3__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean __lambda5__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 #line 1143 "panel-indicators.c"
-	return _lambda3_ (event, self);
+	return _lambda5_ (event, self);
 }
 
 
@@ -1169,7 +1169,7 @@ static GObject * unity_panel_indicators_indicator_entry_constructor (GType type,
 #line 1170 "panel-indicators.c"
 			_g_free0 (_tmp3_);
 #line 321 "panel-indicators.vala"
-			g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::icon-name", (GCallback) __lambda1__g_object_notify, self, 0);
+			g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::icon-name", (GCallback) __lambda3__g_object_notify, self, 0);
 #line 1174 "panel-indicators.c"
 		}
 #line 327 "panel-indicators.vala"
@@ -1185,11 +1185,11 @@ static GObject * unity_panel_indicators_indicator_entry_constructor (GType type,
 #line 333 "panel-indicators.vala"
 			clutter_text_set_text ((ClutterText*) self->priv->text, gtk_label_get_label (self->priv->_entry->label));
 #line 335 "panel-indicators.vala"
-			g_signal_connect_object ((GObject*) self->priv->_entry->label, "notify::label", (GCallback) __lambda2__g_object_notify, self, 0);
+			g_signal_connect_object ((GObject*) self->priv->_entry->label, "notify::label", (GCallback) __lambda4__g_object_notify, self, 0);
 #line 1190 "panel-indicators.c"
 		}
 #line 341 "panel-indicators.vala"
-		g_signal_connect_object ((ClutterActor*) self, "button-release-event", (GCallback) __lambda3__clutter_actor_button_release_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self, "button-release-event", (GCallback) __lambda5__clutter_actor_button_release_event, self, 0);
 #line 1194 "panel-indicators.c"
 	}
 	return obj;

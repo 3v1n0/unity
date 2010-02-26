@@ -99,10 +99,8 @@ places_sources = \
 
 quicklauncher_sources = \
   quicklauncher/application-model.vala \
-  quicklauncher/chrome-handler.vala \
   quicklauncher/launcher-model.vala \
   quicklauncher/launcher-view.vala \
-  quicklauncher/prism-handler.vala \
   quicklauncher/quicklauncher-manager.vala \
   quicklauncher/quicklauncher.vala \
   quicklauncher/quicklist-controller.vala \

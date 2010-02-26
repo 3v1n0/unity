@@ -47,6 +47,8 @@ namespace Unity {
 			public void set_indicator_mode (bool mode);
 			public Unity.Shell shell { get; construct; }
 		}
+		[CCode (cheader_filename = "unity-static.h")]
+		public static bool? search_entry_has_focus;
 	}
 	[CCode (cprefix = "UnityPlaces", lower_case_cprefix = "unity_places_")]
 	namespace Places {
@@ -273,10 +275,13 @@ namespace Unity {
 		namespace Models {
 			[CCode (cheader_filename = "unity-static.h")]
 			public class ApplicationModel : GLib.Object, Unity.Quicklauncher.Models.LauncherModel {
-				public ApplicationModel (string desktop_uri);
+				public ApplicationModel (Launcher.Application application);
 				public void do_save_priority ();
+				public bool ensure_state ();
 				public bool save_priority ();
+				public Launcher.Application app { get; set; }
 				public GLib.SList<Wnck.Window> windows { get; }
+				public signal void windows_changed ();
 			}
 			[CCode (cheader_filename = "unity-static.h")]
 			public class ApplicationShortcut : GLib.Object, Unity.Quicklauncher.Models.ShortcutItem {
@@ -317,6 +322,7 @@ namespace Unity {
 				public signal void activated ();
 				public signal void notify_active ();
 				public signal void notify_focused ();
+				public signal void notify_icon ();
 				public signal void request_attention ();
 				public signal void urgent_changed ();
 			}
@@ -327,18 +333,8 @@ namespace Unity {
 			}
 		}
 		[CCode (cheader_filename = "unity-static.h")]
-		public class ChromiumWebApp : GLib.Object {
-			public string id;
-			public string name;
-			public ChromiumWebApp (string address, string icon);
-			public void add_to_favorites ();
-			public string icon { get; construct; }
-			public string url { get; construct; }
-		}
-		[CCode (cheader_filename = "unity-static.h")]
 		public class LauncherView : Ctk.Actor, Unity.Drag.Model {
 			public bool anim_priority_going_up;
-			public bool is_hovering;
 			public Unity.Quicklauncher.Models.LauncherModel? model;
 			public LauncherView (Unity.Quicklauncher.Models.LauncherModel model);
 			public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
@@ -350,8 +346,10 @@ namespace Unity {
 			public override void paint ();
 			public override void pick (Clutter.Color color);
 			public override void unmap ();
+			public void update_window_struts (bool ignore_buffer);
 			public Clutter.Animation anim { get; set; }
 			public float anim_priority { get; set; }
+			public bool is_hovering { get; set; }
 			public int position { get; set; }
 			public signal void clicked ();
 			public signal void menu_closed (Unity.Quicklauncher.LauncherView sender);
@@ -366,15 +364,6 @@ namespace Unity {
 			public signal void active_launcher_changed (Unity.Quicklauncher.LauncherView last, Unity.Quicklauncher.LauncherView current);
 		}
 		[CCode (cheader_filename = "unity-static.h")]
-		public class Prism : GLib.Object {
-			public string id;
-			public string name;
-			public Prism (string address, string icon);
-			public void add_to_favorites ();
-			public string icon { get; construct; }
-			public string url { get; construct; }
-		}
-		[CCode (cheader_filename = "unity-static.h")]
 		public class QuicklistController : GLib.Object {
 			public bool is_label;
 			public string label;
@@ -385,6 +374,7 @@ namespace Unity {
 			public void hide_label ();
 			public void show_label ();
 			public void show_menu ();
+			public bool hide_on_leave { get; set; }
 		}
 		[CCode (cheader_filename = "unity-static.h")]
 		public class QuicklistMenu : Ctk.Menu {
