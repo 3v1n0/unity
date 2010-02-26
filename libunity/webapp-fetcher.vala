@@ -25,7 +25,7 @@ static const string fav_string = "rel=\"(icon|SHORTCUT ICON|shortcut icon|ICON)\
 static const string uri_match_string = "href=\"(?P<icon_uri>[^\"]*)\"";
 static const string tag_start_string = "<link[^>]*";
 static const string tag_end_string = "[^>]*/?>";
-static const string hostname_string = """(s)?http://.*/""";
+static const string hostname_string = """(s)?http://(?P<hostname>.*)/""";
 
 namespace Unity.Webapp
 {
@@ -137,6 +137,25 @@ namespace Unity.Webapp
   private Regex? secondary_match_suffix = null;
   private Regex? hostname_match = null;
 
+  public static string get_hostname (string uri)
+  {
+    if (Unity.Webapp.hostname_match == null)
+      {
+        try {
+          Unity.Webapp.hostname_match = new Regex (hostname_string, RegexCompileFlags.UNGREEDY);
+        } catch (Error e) {
+          warning (e.message);
+        }
+      }
+
+    MatchInfo matchinfo;
+    // try and extract a hostname
+    var ismatch = hostname_match.match (uri, 0, out matchinfo);
+    string hostname = "";
+    if (ismatch) { hostname = matchinfo.fetch_named ("hostname"); }
+    return hostname;
+  }
+
   public class WebiconFetcher : Object
   {
     /* constant variables */
@@ -156,6 +175,7 @@ namespace Unity.Webapp
     /* public signals */
     public signal void failed ();
     public signal void completed (string location);
+    public signal void icon_built ();
 
 
     public WebiconFetcher (string uri, string destination)
@@ -212,31 +232,23 @@ namespace Unity.Webapp
           //we just completed getting our html
           this.html_phase = false;
           string html = (string)(data.data);
-          MatchInfo matchinfo;
-
-          // try and extract a hostname
-          var ismatch = hostname_match.match (this.uri, 0, out matchinfo);
-          string hostname = "";
-          if (ismatch) { hostname = matchinfo.fetch (0); }
-
+          string hostname = get_hostname (this.uri);
           // we have our html, try and get an icon from it
-          this.icon_uris.offer (hostname + "/ubuntu-launcher.png");
+          this.icon_uris.offer ("http://" + hostname + "/ubuntu-launcher.png");
           var primary_icons = this.extract_icon_from_html (html, true);
           foreach (string uri in primary_icons)
             {
               this.icon_uris.offer (uri);
             }
-          this.icon_uris.offer (hostname + "/apple-touch-icon.png");
+          this.icon_uris.offer ("http://" + hostname + "/apple-touch-icon.png");
 
           var secondary_icons = this.extract_icon_from_html (html, false);
           foreach (string uri in secondary_icons)
             {
               this.icon_uris.offer (uri);
             }
-          this.icon_uris.offer (hostname + "/favicon.ico");
-          this.icon_uris.offer (hostname + "/favicon.png");
-
-
+          this.icon_uris.offer ("http://" + hostname + "/favicon.ico");
+          this.icon_uris.offer ("http://" + hostname + "/favicon.png");
 
           this.attempt_fetch_icon ();
         }
@@ -256,7 +268,10 @@ namespace Unity.Webapp
             // we failed getting a new icon, so we need to try and get the
             // next icon on our uri list
             this.attempt_fetch_icon ();
+            return;
           }
+          // if we ge there, we built an icon witout failing
+          this.icon_built ();
         }
 
     }
