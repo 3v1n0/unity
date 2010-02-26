@@ -78,6 +78,11 @@ Icon=%s
       }
     }
 
+    public string desktop_file_path ()
+    {
+      return Environment.get_home_dir () + "/.webapps/%s@unity.app".printf (id);
+    }
+
     /* checks for the webapp given based on the url stored */
     private bool check_existance_of_app ()
     {

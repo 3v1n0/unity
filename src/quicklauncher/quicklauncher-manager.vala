@@ -91,7 +91,6 @@ namespace Unity.Quicklauncher
       this.gclient = GConf.Engine.get_default ();
       try {
         this.gclient.notify_add ("/desktop/unity/launcher/favorites/favorites_list", this.on_favorite_change);
-        debug ("notify set");
       } catch (Error e) {
         warning (e.message);
       }
@@ -100,7 +99,6 @@ namespace Unity.Quicklauncher
 
     private void on_favorite_change (GConf.Engine client, uint cnxn_id, GConf.Entry entry)
     {
-      debug ("got favorite change");
       this.build_favorites ();
     }
 
@@ -264,19 +262,25 @@ namespace Unity.Quicklauncher
           warning ("%s", e.message);
         }
 
-        this.webicon_fetcher = new Unity.Webapp.WebiconFetcher (clean_uri, icon_dirstring + name + ".svg");
-        this.webicon_fetcher.fetch_webapp_data ();
-        this.webicon_fetcher.icon_built.connect (this.on_webicon_built);
-
         string webapp_device = this.get_webapp_device ();
         switch (webapp_device) {
           case "prism":
             var webapp = new Prism (clean_uri, hostname + ".svg");
+            this.webicon_fetcher = new Unity.Webapp.WebiconFetcher (clean_uri,
+                                                                    icon_dirstring + name + ".svg",
+                                                                    webapp.desktop_file_path ());
+            this.webicon_fetcher.fetch_webapp_data ();
+
             webapp.add_to_favorites ();
             break;
 
           case "chromium":
             var webapp = new ChromiumWebApp (clean_uri, hostname + ".svg");
+            this.webicon_fetcher = new Unity.Webapp.WebiconFetcher (clean_uri,
+                                                                    icon_dirstring + name + ".svg",
+                                                                    webapp.desktop_file_path ());
+            this.webicon_fetcher.fetch_webapp_data ();
+
             webapp.add_to_favorites ();
             break;
 
@@ -302,7 +306,6 @@ namespace Unity.Quicklauncher
 
         var favorites = Launcher.Favorites.get_default ();
         string uid = "app-" + Path.get_basename (clean_uri);
-        debug ("adding to favourites: " + uid);
         favorites.set_string (uid, "type", "application");
         favorites.set_string (uid, "desktop_file", split_uri[1]);
         favorites.add_favorite (uid);
@@ -318,7 +321,6 @@ namespace Unity.Quicklauncher
 
     private void on_webicon_built ()
     {
-      debug ("regenerating icons");
       foreach (LauncherModel model in this.model_map.keys)
       {
         model.regenerate_icon ();
@@ -429,7 +431,6 @@ namespace Unity.Quicklauncher
       if (view.model.is_fixed)
         {
           container.add_actor (view, true);
-          debug ("added actor as fixed");
         }
       else
         {
