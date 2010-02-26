@@ -96,7 +96,7 @@ namespace Unity
               this.webicon_fetcher = new WebiconFetcher (uri, icon_dirstring + hostname + ".svg");
               this.webicon_fetcher.fetch_webapp_data ();
 
-              var webapp = new ChromiumWebApp (uri, icon_dirstring + name + ".svg");
+              var webapp = new ChromiumWebApp (uri, name + ".svg");
               webapp.add_to_favorites ();
 
             }

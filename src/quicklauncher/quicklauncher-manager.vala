@@ -267,16 +267,17 @@ namespace Unity.Quicklauncher
 
         this.webicon_fetcher = new Unity.Webapp.WebiconFetcher (clean_uri, icon_dirstring + name + ".svg");
         this.webicon_fetcher.fetch_webapp_data ();
+        this.webicon_fetcher.icon_built.connect (this.on_webicon_built);
 
         string webapp_device = this.get_webapp_device ();
         switch (webapp_device) {
           case "prism":
-            var webapp = new Prism (clean_uri, icon_dirstring + hostname + ".svg");
+            var webapp = new Prism (clean_uri, hostname + ".svg");
             webapp.add_to_favorites ();
             break;
 
           case "chromium":
-            var webapp = new ChromiumWebApp (clean_uri, icon_dirstring + hostname + ".svg");
+            var webapp = new ChromiumWebApp (clean_uri, hostname + ".svg");
             webapp.add_to_favorites ();
             break;
 
@@ -314,6 +315,15 @@ namespace Unity.Quicklauncher
 
       //build_favorites ();
       return true;
+    }
+
+    private void on_webicon_built ()
+    {
+      debug ("regenerating icons");
+      foreach (LauncherModel model in this.model_map.keys)
+      {
+        model.regenerate_icon ();
+      }
     }
 
     private void build_favorites ()

@@ -175,6 +175,7 @@ namespace Unity.Webapp
     /* public signals */
     public signal void failed ();
     public signal void completed (string location);
+    public signal void icon_built ();
 
 
     public WebiconFetcher (string uri, string destination)
@@ -231,7 +232,9 @@ namespace Unity.Webapp
           //we just completed getting our html
           this.html_phase = false;
           string html = (string)(data.data);
+          debug (@"our uri is: $uri");
           string hostname = get_hostname (this.uri);
+          debug (@"our hostname is: $hostname");
           // we have our html, try and get an icon from it
           this.icon_uris.offer ("http://" + hostname + "/ubuntu-launcher.png");
           var primary_icons = this.extract_icon_from_html (html, true);
@@ -267,7 +270,10 @@ namespace Unity.Webapp
             // we failed getting a new icon, so we need to try and get the
             // next icon on our uri list
             this.attempt_fetch_icon ();
+            return;
           }
+          // if we ge there, we built an icon witout failing
+          this.icon_built ();
         }
 
     }

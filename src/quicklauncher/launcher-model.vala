@@ -48,6 +48,7 @@ namespace Unity.Quicklauncher.Models
 
     public abstract void activate ();
     public abstract void close ();
+    public abstract void regenerate_icon ();
   }
 
   public interface ShortcutItem : GLib.Object
