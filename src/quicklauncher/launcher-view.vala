@@ -590,7 +590,8 @@ namespace Unity.Quicklauncher
             {
               if (!controller.menu_is_open ())
                 {
-                  controller.show_label (this.model.name, this);
+                  if(Unity.Panel.search_entry_has_focus == false)
+                    controller.show_label (this.model.name, this);
                 }
             }
 
