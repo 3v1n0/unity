@@ -442,8 +442,8 @@ namespace Unity.Quicklauncher
       // i would assume we have to pretty fading though, thats trivial to do
       debug ("removing view %s", view.get_name ());
       this.container.remove_actor (view);
-      view.enter_event.connect (on_launcher_enter_event);
-      view.leave_event.connect (on_launcher_leave_event);
+      view.enter_event.disconnect (on_launcher_enter_event);
+      view.leave_event.disconnect (on_launcher_leave_event);
 
       if (view.model is ApplicationModel)
         {
@@ -459,7 +459,8 @@ namespace Unity.Quicklauncher
 
     private bool on_launcher_leave_event (Clutter.Event event)
     {
-      active_launcher = null;
+      if (active_launcher == event.get_source () as LauncherView)
+        active_launcher = null;
       return false;
     }
   }

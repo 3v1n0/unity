@@ -42,12 +42,22 @@ namespace Unity
     private Unity.Places.View   places;
 
     private bool places_enabled = false;
-
+    
+    public void add_fullscreen_request (Object o) 
+    {
+      return;
+    }
+    
+    public bool remove_fullscreen_request (Object o)
+    {
+      return false;
+    }
+    
     public void ensure_input_region ()
-      {
-        /* GOOD JOB!!! */
-        return;
-      }
+    {
+      /* GOOD JOB!!! */
+      return;
+    }
 
     private bool showing_places;
 

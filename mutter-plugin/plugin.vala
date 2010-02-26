@@ -419,11 +419,7 @@ namespace Unity
 
           this.grab_keyboard (false, Clutter.get_current_event_time ());
         }
-      else if (fullscreen_requests.size > 0 ||
-               places_showing ||
-               Unity.Quicklauncher.active_menu != null ||
-               Unity.Drag.Controller.get_default ().is_dragging
-              )
+      else if (fullscreen_requests.size > 0 || places_showing)
         {
           // Fullscreen required
           if (last_input_state == InputState.FULLSCREEN)
