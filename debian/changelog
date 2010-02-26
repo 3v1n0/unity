@@ -1,4 +1,4 @@
-unity (0.1.18-0ubuntu1) UNRELEASED; urgency=low
+unity (0.1.18-0ubuntu1) lucid; urgency=low
 
   * New upstream release.
   * debian/control:
@@ -6,7 +6,7 @@ unity (0.1.18-0ubuntu1) UNRELEASED; urgency=low
     - bump libclutk-dev and liblauncher-dev build-dep
 
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 26 Feb 2010 12:52:03 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 26 Feb 2010 13:44:42 +0100
 
 unity (0.1.16-0ubuntu1) lucid; urgency=low
 
