@@ -163,6 +163,7 @@ namespace Unity.Webapp
     /* public variables */
     public string uri {get; construct;}
     public string destination {get; construct;}
+    public string desktop_location {get; construct;}
 
     /* private variables */
     private FetchFile fetcher;
@@ -175,13 +176,12 @@ namespace Unity.Webapp
     /* public signals */
     public signal void failed ();
     public signal void completed (string location);
-    public signal void icon_built ();
 
-
-    public WebiconFetcher (string uri, string destination)
+    public WebiconFetcher (string uri, string destination, string desktop_file)
     {
       Object (uri: uri,
-              destination: destination);
+              destination: destination,
+              desktop_location: desktop_file);
     }
 
     construct
@@ -209,6 +209,30 @@ namespace Unity.Webapp
       try {
         var make_file = File.new_for_path (this.destination);
         make_file.create (FileCreateFlags.NONE, null);
+      } catch (Error e) {
+        warning (e.message);
+      }
+
+      // set the icon name in the desktop file to the default webapp icon
+      this.set_desktop_file_icon ("webapp-default-icon");
+    }
+
+    private void set_desktop_file_icon (string iconname)
+    {
+      try {
+        var file = File.new_for_path (this.desktop_location);
+        // open the desktop file
+        var file_stream = file.replace (null, false, FileCreateFlags.NONE, null);
+
+        var desktop_file = new KeyFile ();
+        desktop_file.load_from_file (this.desktop_location, 0);
+        desktop_file.set_string ("Desktop Entry", "Icon", iconname);
+        var desktop_data = desktop_file.to_data (null);
+
+        // Write text data to file
+        var data_stream = new DataOutputStream (file_stream);
+        data_stream.put_string (desktop_data, null);
+        data_stream.close (null);
       } catch (Error e) {
         warning (e.message);
       }
@@ -270,8 +294,10 @@ namespace Unity.Webapp
             this.attempt_fetch_icon ();
             return;
           }
+
           // if we ge there, we built an icon witout failing
-          this.icon_built ();
+          this.set_desktop_file_icon (get_hostname (this.uri));
+          Unity.global_shell.need_new_icon_cache ();
         }
 
     }
