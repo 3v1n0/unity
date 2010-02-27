@@ -220,6 +220,10 @@ namespace Unity
 
       Clutter.Group window_group = (Clutter.Group) this.plugin.get_window_group ();
 
+      /* Allows us to activate windows, essential as we are the WM */
+      Launcher.Application.set_window_activate_func (this.on_window_activated,
+                                                     this.plugin);
+
       this.quicklauncher = new Quicklauncher.View (this);
       this.quicklauncher.opacity = 0;
 
@@ -276,6 +280,28 @@ namespace Unity
 
       if (Wnck.Screen.get_default ().get_active_window () != null)
         Wnck.Screen.get_default ().get_active_window ().state_changed.connect (on_active_window_state_changed);
+    }
+
+    private static void on_window_activated (Wnck.Window  window,
+                                             uint32       timestamp,
+                                             void        *data)
+    {
+      Mutter.Plugin plugin = data as Mutter.Plugin;
+
+      unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
+      foreach (Mutter.Window w in mutter_windows)
+        {
+          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (w.get_meta_window ());
+          if (window.get_xid () == xid)
+            {
+              unowned Mutter.MetaWindow win  = w.get_meta_window ();
+
+              Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace(win),
+                                             timestamp);
+              Mutter.MetaWindow.activate (win, timestamp);
+              break;
+            }
+        }
     }
 
     private void on_active_window_state_changed (Wnck.WindowState change_mask, Wnck.WindowState new_state)
