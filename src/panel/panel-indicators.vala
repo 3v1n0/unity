@@ -28,6 +28,7 @@ namespace Unity.Panel.Indicators
 
     private Gtk.Menu? popped;
     private uint32 click_time;
+    private float last_found_entry_x = 0.0f;
 
     public View ()
     {
@@ -122,6 +123,7 @@ namespace Unity.Panel.Indicators
                                 out bool push_in)
     {
       y = (int)this.height;
+      x = (int)this.last_found_entry_x;
     }
 
     private unowned IndicatorEntry? entry_for_event (float root_x)
@@ -143,6 +145,9 @@ namespace Unity.Panel.Indicators
             }
         }
 
+      if (item == null)
+        return null;
+
       x -= item.x;
       list = item.get_children ();
       for (int i = 0; i < list.length (); i++)
@@ -151,6 +156,7 @@ namespace Unity.Panel.Indicators
 
           if (ent.x < x && x < (ent.x + ent.width))
             {
+              this.last_found_entry_x = ent.x + item.x + this.x;
               entry = ent;
             }
         }
@@ -160,8 +166,6 @@ namespace Unity.Panel.Indicators
 
     private bool on_button_press_event (Clutter.Event e)
     {
-      debug ("button press event");
-
       if (this.popped is Gtk.Menu
           && (this.popped.get_flags () & Gtk.WidgetFlags.VISIBLE) !=0)
         {
@@ -206,6 +210,9 @@ namespace Unity.Panel.Indicators
           unowned IndicatorEntry? entry;
 
           entry = entry_for_event (e.motion.x);
+
+          if (entry == null)
+            return true;
 
           if (entry.menu != this.popped)
             {
