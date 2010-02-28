@@ -33,7 +33,7 @@ namespace Unity.Panel.Indicators
     public View ()
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
-              spacing:12,
+              spacing:0,
               homogeneous:false,
               reactive:true);
     }
@@ -183,6 +183,7 @@ namespace Unity.Panel.Indicators
                             e.button.time);
           click_time = e.button.time;
           this.popped = entry.menu;
+          entry.menu_shown ();
         }
       return true;
     }
@@ -223,6 +224,7 @@ namespace Unity.Panel.Indicators
                                  this.position_menu,
                                  e.button.button,
                                  e.button.time);
+              entry.menu_shown ();
             }
         }
 
@@ -241,7 +243,7 @@ namespace Unity.Panel.Indicators
     public IndicatorItem ()
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
-              spacing:12,
+              spacing:0,
               homogeneous:false);
     }
 
@@ -302,8 +304,10 @@ namespace Unity.Panel.Indicators
   {
     public unowned Indicator.ObjectEntry entry { get; construct; }
 
-    private Ctk.Image image;
-    private Ctk.Text  text;
+    private Clutter.CairoTexture bg;
+
+    private Ctk.Image     image;
+    private Ctk.Text      text;
 
     public Gtk.Menu menu { get { return this.entry.menu; } }
 
@@ -317,6 +321,13 @@ namespace Unity.Panel.Indicators
 
     construct
     {
+      this.padding = { 0, 6.0f, 0, 6.0f };
+
+      this.bg = new Clutter.CairoTexture (10, 10);
+      this.bg.set_parent (this);
+      this.bg.opacity = 0;
+      this.bg.show ();
+
       if (this.entry.image is Gtk.Image)
         {
           this.image = new Ctk.Image (22);
@@ -350,6 +361,119 @@ namespace Unity.Panel.Indicators
               this.text.text = this.entry.label.label;
             });
         }
+    }
+
+    public void menu_shown ()
+    {
+      if (this.entry.menu is Gtk.Menu)
+        {
+          this.entry.menu.notify["visible"].connect (this.menu_vis_changed);
+          this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
+                           "opacity", 255);
+        }
+    }
+
+    public void menu_vis_changed ()
+    {
+      bool vis = (this.entry.menu.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0;
+
+      if (vis == false)
+        {
+          this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
+                           "opacity", 0);
+
+          this.entry.menu.notify["visible"].disconnect (this.menu_vis_changed);
+        }
+    }
+
+    private void update_bg (int width, int height)
+    {
+      Cairo.Context cr;
+
+      this.bg.set_surface_size (width, height);
+
+      cr = this.bg.create ();
+
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      cr.set_operator (Cairo.Operator.OVER);
+
+      cr.set_line_width (1.0);
+
+      cr.set_source_rgba (1.0, 1.0, 1.0, 0.2);
+
+      cr.move_to (1, height);
+
+      cr.line_to (1, 7);
+
+      cr.curve_to (1, 2,
+                   1, 2,
+                   10, 2);
+
+      cr.line_to (width-10, 2);
+
+      cr.curve_to (width, 2,
+                   width, 2,
+                   width, 7);
+
+      cr.line_to (width, height);
+
+      cr.line_to (1, height);
+
+      var pat = new Cairo.Pattern.linear (1, 0, 1, height);
+      pat.add_color_stop_rgba (0.0, 1.0f, 1.0f, 1.0f, 0.6f);
+      pat.add_color_stop_rgba (1.0, 1.0f, 1.0f, 1.0f, 0.2f);
+
+      cr.set_source (pat);
+      cr.fill ();
+    }
+
+    /*
+     * CLUTTER OVERRIDES
+     */
+    private override void allocate (Clutter.ActorBox        box,
+                                    Clutter.AllocationFlags flags)
+    {
+      float width;
+      float height;
+
+      base.allocate (box, flags);
+
+      width = Math.floorf (box.x2 - box.x1);
+      height = Math.floorf (box.y2 - box.y1) - 1;
+
+      Clutter.ActorBox child_box = { 0 };
+      child_box.x1 = 0;
+      child_box.x2 = width;
+      child_box.y1 = 0;
+      child_box.y2 = height;
+
+      if (width != this.bg.width ||
+          height != this.bg.height)
+        {
+          this.update_bg ((int)width, (int)height);
+        }
+
+      this.bg.allocate (child_box, flags);
+    }
+
+    private override void paint ()
+    {
+      this.bg.paint ();
+      base.paint ();
+    }
+
+    private override void map ()
+    {
+      base.map ();
+      this.bg.map ();
+    }
+
+    private override void unmap ()
+    {
+      base.unmap ();
+      this.bg.unmap ();
     }
   }
 }
