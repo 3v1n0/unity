@@ -329,6 +329,12 @@ namespace Unity.Panel.Indicators
             {
               this.image.stock_id = this.entry.image.icon_name;
             });
+
+          unowned Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
+          theme.changed.connect (() =>
+            {
+              this.image.stock_id = this.entry.image.icon_name;
+            });
         }
 
       if (this.entry.label is Gtk.Label)
@@ -344,28 +350,6 @@ namespace Unity.Panel.Indicators
               this.text.text = this.entry.label.label;
             });
         }
-
-      this.button_release_event.connect ((e) =>
-        {
-          Gtk.WidgetFlags flags = this.entry.menu.get_flags ();
-          bool visible = (flags & Gtk.WidgetFlags.VISIBLE) != 0;
-
-          if (visible)
-            {
-            this.entry.menu.popdown ();
-            }
-          else
-            {
-            /*
-              this.entry.menu.popup (null,
-                                     null,
-                                     this.position_menu,
-                                     e.button.button,
-                                     e.button.time);*/
-            }
-
-          return true;
-        });
     }
   }
 }
