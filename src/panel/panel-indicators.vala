@@ -109,6 +109,8 @@ namespace Unity.Panel.Indicators
           this.add_actor (i);
           i.show ();
 
+          i.menu_moved.connect (this.on_menu_moved);
+
           i.position = (int)this.indicator_order[leaf];
         }
       else
@@ -162,6 +164,27 @@ namespace Unity.Panel.Indicators
         }
 
       return entry;
+    }
+
+    public void show_entry (IndicatorEntry entry)
+    {
+      if (this.popped is Gtk.Menu
+          && (this.popped.get_flags () & Gtk.WidgetFlags.VISIBLE) !=0)
+        {
+          this.popped.popdown ();
+          this.popped = null;
+        }
+
+      this.last_found_entry_x = entry.x + entry.get_parent ().x + this.x;
+
+      entry.menu.popup (null,
+                        null,
+                        this.position_menu,
+                        1,
+                        Clutter.get_current_event_time ());
+      click_time = Clutter.get_current_event_time ();
+      this.popped = entry.menu;
+      entry.menu_shown ();
     }
 
     private bool on_button_press_event (Clutter.Event e)
@@ -230,6 +253,39 @@ namespace Unity.Panel.Indicators
 
       return true;
     }
+
+    private void on_menu_moved (IndicatorItem         item,
+                                Gtk.MenuDirectionType type)
+    {
+      unowned GLib.List list = this.get_children ();
+
+      int pos = list.index (item);
+
+      if (pos == -1)
+          return;
+
+      /* For us, PARENT = previous menu, CHILD = next menu */
+      if (type == Gtk.MenuDirectionType.PARENT)
+        {
+          if (pos == 0)
+              return;
+          pos -= 1;
+        }
+      else if (type == Gtk.MenuDirectionType.CHILD)
+        {
+          if (pos == list.length ()-1)
+              return;
+          pos +=1;
+        }
+
+      IndicatorItem new_item = list.nth_data (pos) as IndicatorItem;
+
+      unowned GLib.List l = new_item.get_children ();
+      IndicatorEntry? new_entry = l.nth_data (0) as IndicatorEntry;
+
+      if (new_entry is IndicatorEntry)
+        this.show_entry (new_entry);
+    }
   }
 
   public class IndicatorItem : Ctk.Box
@@ -239,6 +295,8 @@ namespace Unity.Panel.Indicators
      **/
     private Indicator.Object object;
     public  int              position;
+
+    public signal void menu_moved (Gtk.MenuDirectionType type);
 
     public IndicatorItem ()
     {
@@ -273,6 +331,47 @@ namespace Unity.Panel.Indicators
       IndicatorEntry e = new IndicatorEntry (entry);
       this.add_actor (e);
       this.show ();
+
+      e.menu_moved.connect (this.on_menu_moved);
+    }
+
+    private void on_menu_moved (IndicatorEntry        entry,
+                                Gtk.MenuDirectionType type)
+    {
+      unowned GLib.List list = this.get_children ();
+
+      int pos = list.index (entry);
+
+      if (pos == -1)
+        {
+          this.menu_moved (type);
+          return;
+        }
+
+      /* For us, PARENT = previous menu, CHILD = next menu */
+      if (type == Gtk.MenuDirectionType.PARENT)
+        {
+          if (pos == 0)
+            {
+              this.menu_moved (type);
+              return;
+            }
+          pos -= 1;
+        }
+      else if (type == Gtk.MenuDirectionType.CHILD)
+        {
+          if (pos == list.length ()-1)
+            {
+              this.menu_moved (type);
+              return;
+            }
+          pos +=1;
+        }
+
+      IndicatorEntry new_entry = list.nth_data (pos) as IndicatorEntry;
+
+      Indicators.View parent = this.get_parent () as Indicators.View;
+      parent.show_entry (new_entry);
     }
 
     public void set_object (Indicator.Object object)
@@ -310,6 +409,8 @@ namespace Unity.Panel.Indicators
     private Ctk.Text      text;
 
     public Gtk.Menu menu { get { return this.entry.menu; } }
+
+    public signal void menu_moved (Gtk.MenuDirectionType type);
 
     public IndicatorEntry (Indicator.ObjectEntry entry)
     {
@@ -367,6 +468,7 @@ namespace Unity.Panel.Indicators
     {
       if (this.entry.menu is Gtk.Menu)
         {
+          this.entry.menu.move_current.connect (this.menu_key_moved);
           this.entry.menu.notify["visible"].connect (this.menu_vis_changed);
           this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
                            "opacity", 255);
@@ -382,8 +484,18 @@ namespace Unity.Panel.Indicators
           this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
                            "opacity", 0);
 
+          this.entry.menu.move_current.disconnect (this.menu_key_moved);
           this.entry.menu.notify["visible"].disconnect (this.menu_vis_changed);
         }
+    }
+
+    public void menu_key_moved (Gtk.MenuDirectionType type)
+    {
+      if (type != Gtk.MenuDirectionType.PARENT &&
+          type != Gtk.MenuDirectionType.CHILD)
+        return;
+
+      this.menu_moved (type);
     }
 
     private void update_bg (int width, int height)
