@@ -241,8 +241,10 @@ namespace Unity
       if (this.last_mapped is Mutter.Window)
         {
           unowned Mutter.MetaWindow w = this.last_mapped.get_meta_window ();
+          unowned Mutter.MetaDisplay d = Mutter.MetaWindow.get_display (w);
+
           Mutter.MetaWindow.activate (this.last_mapped.get_meta_window (),
-                                      Mutter.MetaWindow.get_user_time (w));
+                                      Mutter.MetaDisplay.get_current_time (d));
         }
 
       return false;
@@ -265,6 +267,9 @@ namespace Unity
       if (type == Mutter.MetaWindowType.NORMAL ||
           type == Mutter.MetaWindowType.DIALOG)
         {
+          Mutter.MetaWindow.activate (window.get_meta_window (),
+                                      Mutter.MetaWindow.get_user_time (
+                                            window.get_meta_window ()));
           this.last_mapped = window;
           Idle.add (this.force_activate);
         }
