@@ -41,3 +41,9 @@ Bootperformance Logging:
 Webapp switching:
   Unity can use two webapp systems, prism and chromium, you can toggle between
   the two by setting the gconf key "/apps/unity/webapp_use_chromium" on or off
+
+Setting unmovable apps:
+  To make a launcher unmovable set the desktop_file gconf key of the app to manditory
+
+setting bottom fixed apps:
+  To make a launcher appear at the bottom of the launchers and fixed in place, set the key "fixed" (bool) to true in the launchers gconf directory
