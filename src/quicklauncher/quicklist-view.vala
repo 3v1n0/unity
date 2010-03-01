@@ -35,7 +35,7 @@ namespace Unity.Quicklauncher
   const float ANCHOR_WIDTH       = 0.75f;
 
   // we subclass Ctk.MenuItem here because we need to adapt it's appearance
-  public class QuicklistMenuItem : Ctk.MenuItem
+  public class QuicklistMenuItem : Ctk.Actor
   {
     Ctk.LayerActor item_background;
     int            old_width;
@@ -296,8 +296,8 @@ namespace Unity.Quicklauncher
       Cairo.Context normal_cr = new Cairo.Context (normal_surf);
       Cairo.Context selected_cr = new Cairo.Context (selected_surf);
 
-      _normal_mask (normal_cr, w, h, this.get_label ());
-      _selected_mask (selected_cr, w, h, this.get_label ());
+      _normal_mask (normal_cr, w, h, this.label);
+      _selected_mask (selected_cr, w, h, this.label);
 
       normal_layer.set_mask_from_surface (normal_surf);
       normal_layer.set_color (white_color);
@@ -318,6 +318,7 @@ namespace Unity.Quicklauncher
     }
 
     private bool _on_enter (Clutter.Event event)
+      requires (this is QuicklistMenuItem)
     {
       this.item_background.get_layer(0).set_enabled (false);
       this.item_background.get_layer(1).set_enabled (true);
@@ -326,6 +327,7 @@ namespace Unity.Quicklauncher
     }
 
     private bool _on_leave (Clutter.Event event)
+      requires (this is QuicklistMenuItem)
     {
       this.item_background.get_layer(0).set_enabled (true);
       this.item_background.get_layer(1).set_enabled (false);
@@ -336,15 +338,36 @@ namespace Unity.Quicklauncher
     private void _on_label_changed ()
     {
       // if the contents of the label didn't really change exit early
-      if (old_label == this.get_label ())
+      if (old_label == this.label)
         return;
 
-      old_label = this.get_label ();
+      old_label = this.label;
+    }
+
+    public signal void activated ();
+    public string label {get; construct;}
+
+    private bool _on_mouse_down (Clutter.Event event)
+    {
+      this.notify["label"].disconnect (this._on_label_changed);
+      this.enter_event.disconnect (this._on_enter);
+      this.leave_event.disconnect (this._on_leave);
+      this.button_press_event.disconnect (this._on_mouse_down);
+      this.activated ();
+      return true;
     }
 
     public QuicklistMenuItem (string label)
     {
       Object (label:label);
+    }
+
+    ~QuicklistMenuItem ()
+    {
+      this.notify["label"].disconnect (this._on_label_changed);
+      this.enter_event.disconnect (this._on_enter);
+      this.leave_event.disconnect (this._on_leave);
+      this.button_press_event.disconnect (this._on_mouse_down);
     }
 
     construct
@@ -360,6 +383,9 @@ namespace Unity.Quicklauncher
       this.notify["label"].connect (this._on_label_changed);
       this.enter_event.connect (this._on_enter);
       this.leave_event.connect (this._on_leave);
+      this.button_press_event.connect (this._on_mouse_down);
+
+      this.set_reactive (true);
 
       old_width  = 0;
       old_height = 0;
@@ -687,11 +713,11 @@ namespace Unity.Quicklauncher
 
       main_layer.set_mask_from_surface (full_surf);
       main_layer.set_image_from_surface (main_surf);
-      main_layer.set_opacity (255);      
+      main_layer.set_opacity (255);
 
       blurred_layer.set_mask_from_surface (fill_surf);
       blurred_layer.set_image_from_id (blurred_id);
-      blurred_layer.set_opacity (255);      
+      blurred_layer.set_opacity (255);
 
       // order is important here... don't mess around!
       this.ql_background.add_layer (blurred_layer);
@@ -700,7 +726,7 @@ namespace Unity.Quicklauncher
       this.set_background (this.ql_background);
       this.ql_background.set_opacity (255);
     }
-    
+
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {

@@ -37,7 +37,7 @@ namespace Unity.Quicklauncher
     public Ctk.Menu? menu;
     public bool is_in_label = false;
     public bool is_in_menu = false;
-    
+
     public QuicklistController ()
     {
     }
@@ -81,10 +81,15 @@ namespace Unity.Quicklauncher
       this.is_in_label = true;
     }
 
+    private Gee.ArrayList<ShortcutItem> prefix_cache;
+    private Gee.ArrayList<ShortcutItem> affix_cache;
+
     public void show_menu (Gee.ArrayList<ShortcutItem> prefix_shortcuts,
                            Gee.ArrayList<ShortcutItem> affix_shortcuts,
                            bool hide_on_leave)
     {
+      this.prefix_cache = prefix_shortcuts;
+      this.affix_cache = affix_shortcuts;
 
       this.is_in_label = false;
       Unity.global_shell.add_fullscreen_request (this);
@@ -111,6 +116,7 @@ namespace Unity.Quicklauncher
 
     public void close_menu ()
     {
+      debug ("close menu called");
       this.is_in_label = false;
       this.is_in_menu = false;
       this.menu.destroy ();
