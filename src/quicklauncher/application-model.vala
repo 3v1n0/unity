@@ -599,15 +599,15 @@ namespace Unity.Quicklauncher.Models
 
       try
       {
-        pixbuf = webtheme.load_icon(icon_name, 48, Gtk.IconLookupFlags.FORCE_SVG);
+        pixbuf = webtheme.load_icon(icon_name, 48, 0);
+        if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
       }
       catch (GLib.Error e)
       {
       }
-      if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
+
 
       //load from default theme
-
       info = theme.lookup_icon(icon_name, 48, 0);
       if (info != null)
         {
@@ -633,15 +633,15 @@ namespace Unity.Quicklauncher.Models
 
       try
       {
-        pixbuf = theme.load_icon(icon_name, 48, Gtk.IconLookupFlags.FORCE_SVG);
+        pixbuf = theme.load_icon(icon_name, 48, 0);
+        if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
       }
       catch (GLib.Error e)
       {
       }
-      if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
 
       //load from unity theme
-      info = theme.lookup_icon(icon_name, 48, 0);
+      info = unitytheme.lookup_icon(icon_name, 48, 0);
       if (info != null)
         {
           string filename = info.get_filename();
@@ -666,12 +666,12 @@ namespace Unity.Quicklauncher.Models
 
       try
       {
-        pixbuf = theme.load_icon(icon_name, 48, Gtk.IconLookupFlags.FORCE_SVG);
+        pixbuf = unitytheme.load_icon(icon_name, 48, 0);
+        if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
       }
       catch (GLib.Error e)
       {
       }
-      if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
 
       warning (@"Could not load icon for $icon_name");
 
