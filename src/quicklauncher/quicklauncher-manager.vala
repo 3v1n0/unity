@@ -92,7 +92,6 @@ namespace Unity.Quicklauncher
       try {
         this.gclient.notify_add ("/desktop/unity/launcher/favorites/favorites_list", this.on_favorite_change);
       } catch (Error e) {
-        warning (e.message);
       }
       END_FUNCTION ();
     }
@@ -141,7 +140,6 @@ namespace Unity.Quicklauncher
     private bool on_drag_drop (Ctk.Actor actor, Gdk.DragContext context,
                                int x, int y, uint time_)
     {
-      debug ("on_drag_drop called");
       if (context.targets != null)
       {
         Gtk.TargetList tl;
@@ -156,21 +154,17 @@ namespace Unity.Quicklauncher
 
         if (target_type.name () == "")
         {
-          warning ("bad DND type");
           return false;
         }
         Ctk.drag_get_data (actor, context, target_type, time_);
         target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_STRING);
         if (target_type.name () == "")
         {
-          warning ("bad DND type");
           return false;
         }
         Ctk.drag_get_data (actor, context, target_type, time_);
-        debug ("asking for data");
       } else
       {
-        warning ("got a strange dnd");
         return false;
       }
       return true;
@@ -181,20 +175,17 @@ namespace Unity.Quicklauncher
                                         Gtk.SelectionData data, uint target_type,
                                         uint time_)
     {
-      debug ("on_drag_data_recieved called");
       bool dnd_success = false;
       bool delete_selection_data = false;
       // Deal with what we are given from source
       if ((data != null) && (data.length >= 0)) {
         if (context.action == Gdk.DragAction.MOVE) {
           delete_selection_data = true;
-          debug ("delete_selection_data = true");
         }
 
         switch (target_type) {
         case Unity.dnd_targets.TARGET_URL:
           // we got a uri, forward it to the uri handler
-          debug ("got a TARGET_URL");
           dnd_success = handle_uri ((string) data.data);
           break;
         default:
@@ -203,7 +194,6 @@ namespace Unity.Quicklauncher
       }
 
       if (dnd_success == false) {
-        warning ("dnd transfer failed");
       }
       Gtk.drag_finish (context, dnd_success, delete_selection_data, time_);
     }

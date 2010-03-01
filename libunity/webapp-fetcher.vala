@@ -95,7 +95,6 @@ namespace Unity.Webapp
         this.stream = new DataInputStream(this.file.read(null));
         this.stream.set_byte_order (DataStreamByteOrder.LITTLE_ENDIAN);
       } catch (GLib.Error e) {
-        warning (e.message);
         this.failed ();
       }
       this.read_something_async ();
@@ -123,7 +122,6 @@ namespace Unity.Webapp
               this.data.append (buffer);
             }
         } catch (Error e) {
-          warning (e.message);
           this.failed ();
         }
       } while (bufsize > 0);
@@ -210,7 +208,6 @@ namespace Unity.Webapp
         var make_file = File.new_for_path (this.destination);
         make_file.create (FileCreateFlags.NONE, null);
       } catch (Error e) {
-        warning (e.message);
       }
 
       // set the icon name in the desktop file to the default webapp icon
@@ -288,7 +285,6 @@ namespace Unity.Webapp
             var builder = new IconBuilder (this.destination, icon);
             builder.build_icon ();
           } catch (Error e) {
-            warning (e.message);
             // we failed getting a new icon, so we need to try and get the
             // next icon on our uri list
             this.attempt_fetch_icon ();

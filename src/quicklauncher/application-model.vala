@@ -603,7 +603,6 @@ namespace Unity.Quicklauncher.Models
       }
       catch (GLib.Error e)
       {
-        warning ("could not load icon for %s - %s", icon_name, e.message);
       }
       if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
 
@@ -638,7 +637,6 @@ namespace Unity.Quicklauncher.Models
       }
       catch (GLib.Error e)
       {
-        warning ("could not load icon for %s - %s", icon_name, e.message);
       }
       if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
 
@@ -672,9 +670,10 @@ namespace Unity.Quicklauncher.Models
       }
       catch (GLib.Error e)
       {
-        warning ("could not load icon for %s - %s", icon_name, e.message);
       }
       if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
+
+      warning (@"Could not load icon for $icon_name");
 
       return pixbuf;
 

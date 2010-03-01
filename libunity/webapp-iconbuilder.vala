@@ -64,7 +64,6 @@ namespace Unity.Webapp
 
     public void build_icon ()
     {
-      debug (@"building icon $destination");
       Context cr = new Cairo.Context (this.surf);
       Gdk.cairo_set_source_pixbuf (cr, this.background, 0, 0);
       cr.paint ();
