@@ -30,6 +30,7 @@ namespace Launcher {
 		public bool owns_window (Wnck.Window window);
 		public void restore (uint32 timestamp);
 		public void set_desktop_file (string desktop_file, bool dont_check_windows);
+		public static void set_window_activate_func (Launcher.ApplicationWindowActivateFunc func, void* callback_d);
 		public void show (uint32 timestamp);
 		public void update_windows ();
 		public GLib.SList categories { get; }
@@ -149,6 +150,8 @@ namespace Launcher {
 		FLOAT,
 		BOOL
 	}
+	[CCode (cheader_filename = "launcher/launcher.h", has_target = false)]
+	public delegate void ApplicationWindowActivateFunc (Wnck.Window window, uint32 timestamp, void* callback_d);
 	[CCode (cheader_filename = "launcher/launcher.h")]
 	public static unowned string icon_utils_icon_name_for_volume_uri (string uri);
 }
