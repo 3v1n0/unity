@@ -219,7 +219,7 @@ namespace Unity.Quicklauncher.Models
       // of < 1.0f is unset. so generate a random new one and set
       if (priority < 1.0f)
         {
-          priority = (float)Random.double_range (1.0001, 100.0);
+          priority = (float)Random.double_range (100000.0, 100002.0);
           favorites.set_float (uid, "priority", priority);
         }
       this._priority = priority;
