@@ -348,7 +348,9 @@ namespace Unity
 
       if (sender.model is ApplicationModel && sender.model.is_active)
         {
-          expose_windows ((sender.model as ApplicationModel).windows);
+          if (QuicklistController.get_default ().menu != null &&
+              !QuicklistController.get_default ().menu.close_on_leave)
+            expose_windows ((sender.model as ApplicationModel).windows);
         }
     }
 
@@ -445,11 +447,7 @@ namespace Unity
 
           this.grab_keyboard (false, Clutter.get_current_event_time ());
         }
-      else if (fullscreen_requests.size > 0 ||
-               places_showing ||
-               Unity.Quicklauncher.active_menu != null ||
-               Unity.Drag.Controller.get_default ().is_dragging
-              )
+      else if (fullscreen_requests.size > 0 || places_showing)
         {
           // Fullscreen required
           if (last_input_state == InputState.FULLSCREEN)
