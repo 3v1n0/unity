@@ -457,6 +457,14 @@ namespace Unity.Quicklauncher.Models
       return myuid;
     }
 
+    public void regenerate_icon ()
+    {
+      string dfile = this.app.get_desktop_file ();
+      this.app.set_desktop_file (dfile, true);
+      this._icon = make_icon (app.icon_name);
+      this.notify_icon ();
+    }
+
     /**
      * taken from the prototype code and shamelessly stolen from
      * netbook launcher. needs to be improved at some point to deal
@@ -474,6 +482,10 @@ namespace Unity.Quicklauncher.Models
        */
       Gdk.Pixbuf pixbuf = null;
       Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
+      Gtk.IconTheme webtheme = new Gtk.IconTheme ();
+      Gtk.IconTheme unitytheme = new Gtk.IconTheme ();
+      webtheme.set_custom_theme ("Web");
+      unitytheme.set_custom_theme ("unity-icon-theme");
 
       if (icon_name == null)
         {
@@ -561,7 +573,42 @@ namespace Unity.Quicklauncher.Models
             return pixbuf;
         }
 
-      Gtk.IconInfo info = theme.lookup_icon(icon_name, 48, 0);
+      //load web theme first
+      Gtk.IconInfo info = webtheme.lookup_icon(icon_name, 48, 0);
+      if (info != null)
+        {
+          string filename = info.get_filename();
+          if (FileUtils.test(filename, FileTest.EXISTS))
+            {
+              try
+                {
+                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
+                                                             48, 48, true);
+                }
+              catch (Error e)
+                {
+                  warning ("Unable to load image from file '%s': %s",
+                           filename,
+                           e.message);
+                }
+
+              if (pixbuf is Gdk.Pixbuf)
+                return pixbuf;
+            }
+        }
+
+      try
+      {
+        pixbuf = webtheme.load_icon(icon_name, 48, Gtk.IconLookupFlags.FORCE_SVG);
+      }
+      catch (GLib.Error e)
+      {
+      }
+      if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
+
+      //load from default theme
+
+      info = theme.lookup_icon(icon_name, 48, 0);
       if (info != null)
         {
           string filename = info.get_filename();
@@ -590,17 +637,44 @@ namespace Unity.Quicklauncher.Models
       }
       catch (GLib.Error e)
       {
-        warning ("could not load icon for %s - %s", icon_name, e.message);
-        try
-          {
-            pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 48, 0);
-          }
-        catch (Error err)
-          {
-            warning ("Unable to load icon for %s: %s", icon_name, err.message);
-          }
-        return pixbuf;
       }
+      if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
+
+      //load from unity theme
+      info = theme.lookup_icon(icon_name, 48, 0);
+      if (info != null)
+        {
+          string filename = info.get_filename();
+          if (FileUtils.test(filename, FileTest.EXISTS))
+            {
+              try
+                {
+                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
+                                                             48, 48, true);
+                }
+              catch (Error e)
+                {
+                  warning ("Unable to load image from file '%s': %s",
+                           filename,
+                           e.message);
+                }
+
+              if (pixbuf is Gdk.Pixbuf)
+                return pixbuf;
+            }
+        }
+
+      try
+      {
+        pixbuf = theme.load_icon(icon_name, 48, Gtk.IconLookupFlags.FORCE_SVG);
+      }
+      catch (GLib.Error e)
+      {
+      }
+      if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
+
+      warning (@"Could not load icon for $icon_name");
+
       return pixbuf;
 
     }

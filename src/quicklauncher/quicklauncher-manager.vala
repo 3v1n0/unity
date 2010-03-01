@@ -31,6 +31,7 @@ namespace Unity.Quicklauncher
 
     private Launcher.Appman appman;
     private Launcher.Session session;
+    private string webapp_device;
 
     private Unity.Webapp.WebiconFetcher webicon_fetcher;
 
@@ -84,24 +85,21 @@ namespace Unity.Quicklauncher
       this.container.drag_drop.connect (on_drag_drop);
       this.container.drag_data_received.connect (on_drag_data_received);
 
+      //watch the global shell for new icon cache changes
+      Unity.global_shell.need_new_icon_cache.connect (this.on_webicon_built);
+
       // put a watch on our gconf key so we get notified of new favorites
       this.gclient = GConf.Engine.get_default ();
-      debug ("setting notify");
       try {
-/*
-        this.gclient.add_dir ("/desktop/unity/favorites", GConf.ClientPreloadType.NONE);
-*/
         this.gclient.notify_add ("/desktop/unity/launcher/favorites/favorites_list", this.on_favorite_change);
-        debug ("notify set");
       } catch (Error e) {
-        warning (e.message);
       }
+      this.webapp_device = get_webapp_device ();
       END_FUNCTION ();
     }
 
     private void on_favorite_change (GConf.Engine client, uint cnxn_id, GConf.Entry entry)
     {
-      debug ("got favorite change");
       this.build_favorites ();
     }
 
@@ -144,7 +142,6 @@ namespace Unity.Quicklauncher
     private bool on_drag_drop (Ctk.Actor actor, Gdk.DragContext context,
                                int x, int y, uint time_)
     {
-      debug ("on_drag_drop called");
       if (context.targets != null)
       {
         Gtk.TargetList tl;
@@ -159,21 +156,17 @@ namespace Unity.Quicklauncher
 
         if (target_type.name () == "")
         {
-          warning ("bad DND type");
           return false;
         }
         Ctk.drag_get_data (actor, context, target_type, time_);
         target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_STRING);
         if (target_type.name () == "")
         {
-          warning ("bad DND type");
           return false;
         }
         Ctk.drag_get_data (actor, context, target_type, time_);
-        debug ("asking for data");
       } else
       {
-        warning ("got a strange dnd");
         return false;
       }
       return true;
@@ -184,20 +177,17 @@ namespace Unity.Quicklauncher
                                         Gtk.SelectionData data, uint target_type,
                                         uint time_)
     {
-      debug ("on_drag_data_recieved called");
       bool dnd_success = false;
       bool delete_selection_data = false;
       // Deal with what we are given from source
       if ((data != null) && (data.length >= 0)) {
         if (context.action == Gdk.DragAction.MOVE) {
           delete_selection_data = true;
-          debug ("delete_selection_data = true");
         }
 
         switch (target_type) {
         case Unity.dnd_targets.TARGET_URL:
           // we got a uri, forward it to the uri handler
-          debug ("got a TARGET_URL");
           dnd_success = handle_uri ((string) data.data);
           break;
         default:
@@ -206,7 +196,6 @@ namespace Unity.Quicklauncher
       }
 
       if (dnd_success == false) {
-        warning ("dnd transfer failed");
       }
       Gtk.drag_finish (context, dnd_success, delete_selection_data, time_);
     }
@@ -232,9 +221,7 @@ namespace Unity.Quicklauncher
 
     private bool handle_uri (string uri)
     {
-      debug ("handling uri: " + uri);
       string clean_uri = uri.split("\n", 2)[0].split("\r", 2)[0];
-
       try {
         var regex = new Regex ("\\s");
         clean_uri = regex.replace (clean_uri, -1, 0, "");
@@ -242,11 +229,7 @@ namespace Unity.Quicklauncher
         warning ("%s", e.message);
       }
       clean_uri.strip();
-
-      debug ("clean uri: " + clean_uri);
-
       var split_uri = clean_uri.split ("://", 2);
-
       if (test_url (clean_uri))
       {
         //we have a http url, webapp it
@@ -262,6 +245,7 @@ namespace Unity.Quicklauncher
         }
         var split_url = clean_uri.split ("://", 2);
         var name = split_url[1];
+        var hostname = Unity.Webapp.get_hostname (clean_uri);
         // gotta sanitze our name
         try {
           var regex = new Regex ("(/)");
@@ -270,25 +254,12 @@ namespace Unity.Quicklauncher
           warning ("%s", e.message);
         }
 
-        this.webicon_fetcher = new Unity.Webapp.WebiconFetcher (clean_uri, icon_dirstring + name + ".svg");
-        this.webicon_fetcher.fetch_webapp_data ();
-
-        string webapp_device = this.get_webapp_device ();
-        switch (webapp_device) {
-          case "prism":
-            var webapp = new Prism (clean_uri, icon_dirstring + name + ".svg");
-            webapp.add_to_favorites ();
-            break;
-
-          case "chromium":
-            var webapp = new ChromiumWebApp (clean_uri, icon_dirstring + name + ".svg");
-            webapp.add_to_favorites ();
-            break;
-
-          default:
-            warning ("unknown webapp device %s", webapp_device);
-            break;
-        }
+          var webapp = new ChromiumWebApp (clean_uri, hostname + ".svg");
+          this.webicon_fetcher = new Unity.Webapp.WebiconFetcher (clean_uri,
+                                                                  icon_dirstring + hostname + ".svg",
+                                                                  webapp.desktop_file_path ());
+          this.webicon_fetcher.fetch_webapp_data ();
+          webapp.add_to_favorites ();
       }
 
       else if (".desktop" in Path.get_basename (clean_uri))
@@ -307,7 +278,6 @@ namespace Unity.Quicklauncher
 
         var favorites = Launcher.Favorites.get_default ();
         string uid = "app-" + Path.get_basename (clean_uri);
-        debug ("adding to favourites: " + uid);
         favorites.set_string (uid, "type", "application");
         favorites.set_string (uid, "desktop_file", split_uri[1]);
         favorites.add_favorite (uid);
@@ -319,6 +289,14 @@ namespace Unity.Quicklauncher
 
       //build_favorites ();
       return true;
+    }
+
+    private void on_webicon_built ()
+    {
+      foreach (LauncherModel model in this.model_map.keys)
+      {
+        model.regenerate_icon ();
+      }
     }
 
     private void build_favorites ()
@@ -425,7 +403,6 @@ namespace Unity.Quicklauncher
       if (view.model.is_fixed)
         {
           container.add_actor (view, true);
-          debug ("added actor as fixed");
         }
       else
         {
@@ -440,7 +417,6 @@ namespace Unity.Quicklauncher
     {
       // for now just remove the application quickly. at some point
       // i would assume we have to pretty fading though, thats trivial to do
-      debug ("removing view %s", view.get_name ());
       this.container.remove_actor (view);
       view.enter_event.disconnect (on_launcher_enter_event);
       view.leave_event.disconnect (on_launcher_leave_event);

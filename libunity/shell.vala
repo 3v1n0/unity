@@ -43,7 +43,7 @@ namespace Unity
     public abstract void          grab_keyboard (bool grab, uint32 timestamp);
     public abstract void          show_window_picker ();
 
-
+    public signal   void need_new_icon_cache ();
     public signal   void indicators_changed (int width);
   }
 
