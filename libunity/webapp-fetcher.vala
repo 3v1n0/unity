@@ -168,7 +168,6 @@ namespace Unity.Webapp
     private bool html_phase = false;
     private bool icon_phase = false;
 
-
     private Gee.PriorityQueue<string> icon_uris;
 
     /* public signals */

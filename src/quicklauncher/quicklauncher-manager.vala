@@ -31,6 +31,7 @@ namespace Unity.Quicklauncher
 
     private Launcher.Appman appman;
     private Launcher.Session session;
+    private string webapp_device;
 
     private Unity.Webapp.WebiconFetcher webicon_fetcher;
 
@@ -93,6 +94,7 @@ namespace Unity.Quicklauncher
         this.gclient.notify_add ("/desktop/unity/launcher/favorites/favorites_list", this.on_favorite_change);
       } catch (Error e) {
       }
+      this.webapp_device = get_webapp_device ();
       END_FUNCTION ();
     }
 
@@ -252,32 +254,12 @@ namespace Unity.Quicklauncher
           warning ("%s", e.message);
         }
 
-        string webapp_device = this.get_webapp_device ();
-        switch (webapp_device) {
-          case "prism":
-            var webapp = new Prism (clean_uri, hostname + ".svg");
-            this.webicon_fetcher = new Unity.Webapp.WebiconFetcher (clean_uri,
-                                                                    icon_dirstring + name + ".svg",
-                                                                    webapp.desktop_file_path ());
-            this.webicon_fetcher.fetch_webapp_data ();
-
-            webapp.add_to_favorites ();
-            break;
-
-          case "chromium":
-            var webapp = new ChromiumWebApp (clean_uri, hostname + ".svg");
-            this.webicon_fetcher = new Unity.Webapp.WebiconFetcher (clean_uri,
-                                                                    icon_dirstring + name + ".svg",
-                                                                    webapp.desktop_file_path ());
-            this.webicon_fetcher.fetch_webapp_data ();
-
-            webapp.add_to_favorites ();
-            break;
-
-          default:
-            warning ("unknown webapp device %s", webapp_device);
-            break;
-        }
+          var webapp = new ChromiumWebApp (clean_uri, hostname + ".svg");
+          this.webicon_fetcher = new Unity.Webapp.WebiconFetcher (clean_uri,
+                                                                  icon_dirstring + hostname + ".svg",
+                                                                  webapp.desktop_file_path ());
+          this.webicon_fetcher.fetch_webapp_data ();
+          webapp.add_to_favorites ();
       }
 
       else if (".desktop" in Path.get_basename (clean_uri))
