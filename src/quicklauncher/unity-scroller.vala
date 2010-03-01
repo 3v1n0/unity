@@ -623,6 +623,11 @@ namespace Unity.Widgets
             }
         }
 
+      if (this.total_child_height < this.height)
+        {
+          this.is_dragging = false;
+        }
+
       if (this.button_down && this.is_dragging)
         {
           Clutter.grab_pointer (this);
