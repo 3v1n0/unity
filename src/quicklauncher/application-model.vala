@@ -33,6 +33,7 @@ namespace Unity.Quicklauncher.Models
 
     public void activated ()
     {
+      debug ("application shortcut activated called");
       Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
       try
       {
@@ -65,6 +66,7 @@ namespace Unity.Quicklauncher.Models
 
     public void activated ()
     {
+      debug ("liblauncher shortcut activated called");
       this.app.close (Clutter.get_current_event_time ());
     }
   }
@@ -102,6 +104,7 @@ namespace Unity.Quicklauncher.Models
 
     public void activated ()
     {
+      debug ("launcher pinning shortcut called");
       this.app_model.is_sticky = !this.app_model.is_sticky;
     }
   }
