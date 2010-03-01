@@ -25,7 +25,7 @@ static const string fav_string = "rel=\"(icon|SHORTCUT ICON|shortcut icon|ICON)\
 static const string uri_match_string = "href=\"(?P<icon_uri>[^\"]*)\"";
 static const string tag_start_string = "<link[^>]*";
 static const string tag_end_string = "[^>]*/?>";
-static const string hostname_string = """(s)?http://(?P<hostname>.*)/""";
+static const string hostname_string = """(s)?http://(?P<hostname>.*)(/|$)""";
 
 namespace Unity.Webapp
 {
