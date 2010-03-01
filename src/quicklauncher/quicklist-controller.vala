@@ -116,7 +116,6 @@ namespace Unity.Quicklauncher
 
     public void close_menu ()
     {
-      debug ("close menu called");
       this.is_in_label = false;
       this.is_in_menu = false;
       this.menu.destroy ();
