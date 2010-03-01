@@ -24,7 +24,7 @@ namespace Unity.Panel
   static const string SEARCH_HINT = "Yahoo!";
 
   public bool? search_entry_has_focus = null;
-    
+
   public class View : Ctk.Actor
   {
     public Shell shell { get; construct;}
@@ -85,7 +85,7 @@ namespace Unity.Panel
       this.entry.key_focus_in.connect (this.on_entry_focus_in);
       this.entry.key_focus_out.connect (this.on_entry_focus_out);
       Unity.Panel.search_entry_has_focus = false;
-      
+
       END_FUNCTION ();
     }
 
@@ -93,16 +93,16 @@ namespace Unity.Panel
     {
       Unity.global_shell.show_window_picker ();
     }
-    
+
     private void on_entry_focus_in ()
     {
       Unity.Panel.search_entry_has_focus = true;
     }
-    
+
     private void on_entry_focus_out ()
     {
       Unity.Panel.search_entry_has_focus = false;
-    }    
+    }
 
     private string get_search_hint ()
     {
@@ -168,10 +168,10 @@ namespace Unity.Panel
 
       width = box.x2 - box.x1;
 
-      //this.rect.set_clip (0, 0, width, box.y2 - box.y1);
+      this.rect.set_clip (0, 0, width, box.y2 - box.y1);
 
       /* First the background */
-      child_box.y2 += 4.0f;
+      child_box.y2 += 3.0f;
       this.rect.allocate (child_box, flags);
 
       /* Home button */
