@@ -98,6 +98,12 @@ namespace Unity
 
     public void start_expose (SList<Wnck.Window> windows)
     {
+      var controller = Quicklauncher.QuicklistController.get_default ();
+      if (controller.menu_is_open ())
+        controller.menu.destroy.connect (() => {
+          this.end_expose ();
+        });
+
       exposed_windows = new List<ExposeClone> ();
 
       if (expose_group != null)
@@ -161,8 +167,9 @@ namespace Unity
 
     public void end_expose ()
     {
-      if (quicklauncher.manager.active_launcher != null)
-        Unity.Quicklauncher.QuicklistController.get_default ().close_menu ();
+      var controller = Quicklauncher.QuicklistController.get_default ();
+      if (controller.menu_is_open ())
+        controller.close_menu ();
 
       unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
       foreach (Mutter.Window window in mutter_windows)
@@ -412,7 +419,7 @@ namespace Unity
 
       unowned Clutter.Actor actor = this.stage.get_actor_at_pos (Clutter.PickMode.REACTIVE, (int) x, (int) y);
 
-      unowned Clutter.Actor menu = null;
+      unowned Clutter.Actor? menu = null;
       if (Unity.Quicklauncher.QuicklistController.get_default ().menu_is_open ())
         menu = Unity.Quicklauncher.QuicklistController.get_default ().menu;
       if (menu != null)
