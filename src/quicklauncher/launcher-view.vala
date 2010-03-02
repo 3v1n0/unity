@@ -714,7 +714,15 @@ namespace Unity.Quicklauncher
           (bevent.time - last_pressed_time) < 500)
       {
         this.clicked ();
+
+        return true;
       }
+
+      if (bevent.button ==1)
+        debug ("Event not handled: %d %d",
+               (int)bevent.time,
+               (int)last_pressed_time);
+
       return false;
     }
 

@@ -419,7 +419,7 @@ namespace Unity.Panel.Indicators
     {
       Object (entry:entry,
               orientation:Ctk.Orientation.HORIZONTAL,
-              spacing:2,
+              spacing:4,
               reactive:false);
     }
 
