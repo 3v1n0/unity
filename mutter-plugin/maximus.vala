@@ -77,7 +77,6 @@ namespace Unity
             (window.width/window.height) < 0.6 ||
             (window.width/window.height) > 2.0)
           {
-            print ("\n\nignoreing: %s\n\n", Mutter.MetaWindow.get_title (meta));
             return true;
           }
 
