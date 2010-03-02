@@ -145,6 +145,7 @@ StartupNotify=true
       // we are not a favorite and we need to be favorited!
       favorites.set_string (uid, "type", "application");
       favorites.set_string (uid, "desktop_file", desktop_path);
+      favorites.set_float (uid, "priority", -100000.0f);
       favorites.set_bool(uid, "enable_shadow", true);
       favorites.add_favorite (uid);
     }
