@@ -34,7 +34,7 @@ namespace Unity.Quicklauncher
       return Unity.Quicklauncher.ql_controler_singleton;
     }
 
-    public Ctk.Menu? menu;
+    public weak Ctk.Menu menu;
     public bool is_in_label = false;
     public bool is_in_menu = false;
 
@@ -59,16 +59,16 @@ namespace Unity.Quicklauncher
       if (this.menu_is_open ())
         this.menu.destroy ();
 
-      this.menu = new QuicklistMenu () as Ctk.Menu;
+      var menu = new QuicklistMenu () as Ctk.Menu;
+      this.menu = menu;
       this.menu.destroy.connect (() => {
-        this.menu = null;
         Unity.global_shell.remove_fullscreen_request (this);
       });
       this.menu.set_swallow_clicks (Unity.global_shell.menus_swallow_events);
       this.menu.set_detect_clicks (false);
 
       //make label
-      QuicklistMenuItem menuitem = new QuicklistMenuItem (label);
+      var menuitem = new QuicklistMenuItem (label);
       menuitem.activated.connect (this.close_menu);
       this.menu.append (menuitem, true);
       this.menu.attach_to_actor (attached_widget);
@@ -97,7 +97,7 @@ namespace Unity.Quicklauncher
       foreach (ShortcutItem shortcut in prefix_shortcuts)
         {
           var label = shortcut.get_name ();
-          QuicklistMenuItem menuitem = new QuicklistMenuItem (label);
+          var menuitem = new QuicklistMenuItem (label);
           this.menu.prepend (menuitem, false);
           menuitem.activated.connect (shortcut.activated);
           menuitem.activated.connect (this.close_menu);
@@ -106,7 +106,7 @@ namespace Unity.Quicklauncher
       foreach (ShortcutItem shortcut in affix_shortcuts)
         {
           var label = shortcut.get_name ();
-          QuicklistMenuItem menuitem = new QuicklistMenuItem (label);
+          var menuitem = new QuicklistMenuItem (label);
           this.menu.append (menuitem, false);
           menuitem.activated.connect (shortcut.activated);
           menuitem.activated.connect (this.close_menu);
@@ -116,10 +116,12 @@ namespace Unity.Quicklauncher
 
     public void close_menu ()
     {
-      debug ("close menu called");
       this.is_in_label = false;
       this.is_in_menu = false;
-      this.menu.destroy ();
+      if (this.menu is Ctk.Menu)
+        {
+          this.menu.destroy ();
+        }
     }
 
     public bool menu_is_open ()
