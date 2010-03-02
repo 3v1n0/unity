@@ -100,9 +100,7 @@ namespace Unity
     {
       var controller = Quicklauncher.QuicklistController.get_default ();
       if (controller.menu_is_open ())
-        controller.menu.destroy.connect (this.end_expose ());//() => {
-
-//        });
+        controller.menu.destroy.connect (this.end_expose);
 
       exposed_windows = new List<ExposeClone> ();
 
@@ -170,7 +168,7 @@ namespace Unity
       var controller = Quicklauncher.QuicklistController.get_default ();
       if (controller.menu_is_open ())
         {
-          controller.menu.destroy.disconnect (this.end_expose ())
+          controller.menu.destroy.disconnect (this.end_expose);
           controller.close_menu ();
         }
 
