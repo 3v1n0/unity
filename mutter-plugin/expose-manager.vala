@@ -100,9 +100,9 @@ namespace Unity
     {
       var controller = Quicklauncher.QuicklistController.get_default ();
       if (controller.menu_is_open ())
-        controller.menu.destroy.connect (() => {
-          this.end_expose ();
-        });
+        controller.menu.destroy.connect (this.end_expose ());//() => {
+
+//        });
 
       exposed_windows = new List<ExposeClone> ();
 
@@ -169,7 +169,10 @@ namespace Unity
     {
       var controller = Quicklauncher.QuicklistController.get_default ();
       if (controller.menu_is_open ())
-        controller.close_menu ();
+        {
+          controller.menu.destroy.disconnect (this.end_expose ())
+          controller.close_menu ();
+        }
 
       unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
       foreach (Mutter.Window window in mutter_windows)
