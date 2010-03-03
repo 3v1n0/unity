@@ -112,7 +112,7 @@ namespace Unity
     public bool expose_showing { get { return expose_manager.expose_showing; } }
 
     private static const int PANEL_HEIGHT        = 23;
-    private static const int QUICKLAUNCHER_WIDTH = 60;
+    private static const int QUICKLAUNCHER_WIDTH = 58;
 
     private Clutter.Stage    stage;
     private Application      app;
@@ -403,7 +403,7 @@ namespace Unity
                                    this.QUICKLAUNCHER_WIDTH,
                                    height-this.PANEL_HEIGHT);
       Utils.set_strut ((Gtk.Window)this.drag_dest,
-                       this.QUICKLAUNCHER_WIDTH, 0, (uint32)height,
+                       this.QUICKLAUNCHER_WIDTH - 1, 0, (uint32)height,
                        PANEL_HEIGHT, 0, (uint32)width);
 
       if (this.places_enabled)
