@@ -456,6 +456,7 @@ namespace Unity
           last_input_state = InputState.FULLSCREEN;
           this.restore_input_region (true);
 
+          this.stage.set_key_focus (null as Clutter.Actor);
           this.grab_keyboard (true, Clutter.get_current_event_time ());
         }
       else
