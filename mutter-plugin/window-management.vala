@@ -173,6 +173,12 @@ namespace Unity
                                    int           width,
                                    int           height)
     {
+      /*
+       * If the user purposly maximised a window, we want to unset any hint
+       * that we put on it asking maximus to avoid the window
+       */
+      window.set_data (Maximus.user_unmaximize_hint, null);
+
       plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAXIMIZE);
     }
 
@@ -183,6 +189,14 @@ namespace Unity
                                      int           width,
                                      int           height)
     {
+      /* If the user has purposly unmaxmised a window, we want to let the
+       * maximus plugin know of this, so it doesn't try and maximize it when
+       * the user wants to unminimise the window
+       */
+
+      int i = 1;
+      window.set_data (Maximus.user_unmaximize_hint, i.to_pointer ());
+
       plugin.plugin.effect_completed (window, Mutter.PLUGIN_UNMAXIMIZE);
     }
 
