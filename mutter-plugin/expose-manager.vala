@@ -81,6 +81,8 @@ namespace Unity
 
     private uint coverflow_index;
 
+    private ExposeClone? last_selected_clone = null;
+
     public ExposeManager (Plugin plugin, Quicklauncher.View quicklauncher)
     {
       this.quicklauncher = quicklauncher;
@@ -175,12 +177,29 @@ namespace Unity
       unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
       foreach (Mutter.Window window in mutter_windows)
         {
-          window.opacity = 255;
+          window.animate (Clutter.AnimationMode.EASE_IN_SINE,
+                          300, "opacity", 255);
           window.reactive = true;
         }
 
       foreach (Clutter.Actor actor in exposed_windows)
         restore_window_position (actor);
+
+      if (this.last_selected_clone is ExposeClone &&
+          this.last_selected_clone.source is Mutter.Window)
+        {
+          ExposeClone clone = this.last_selected_clone;
+          uint32 time_;
+
+          clone.raise_top ();
+          unowned Mutter.MetaWindow meta = (clone.source as Mutter.Window).get_meta_window ();
+
+          time_ = Mutter.MetaDisplay.get_current_time (Mutter.MetaWindow.get_display (meta));
+          Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace (meta), time_);
+          Mutter.MetaWindow.activate (meta, time_);
+
+          this.last_selected_clone = null;
+        }
 
       expose_showing = false;
       owner.remove_fullscreen_request (this);
@@ -408,6 +427,22 @@ namespace Unity
         }
     }
 
+    void pick_window (Clutter.Event event, Clutter.Actor actor)
+    {
+      while (actor.get_parent () != null && !(actor is ExposeClone))
+        actor = actor.get_parent ();
+
+      ExposeClone clone = actor as ExposeClone;
+      if (clone != null && clone.source is Mutter.Window)
+        {
+          this.last_selected_clone= clone;
+        }
+      else
+        {
+          this.last_selected_clone = null;
+        }
+    }
+
     bool on_stage_captured_event (Clutter.Event event)
     {
       if (event.type == Clutter.EventType.ENTER || event.type == Clutter.EventType.LEAVE)
@@ -428,6 +463,11 @@ namespace Unity
           if (x > menu.x && x < menu.x + menu.width && y > menu.y && y < menu.y + menu.height)
             event_over_menu = true;
         }
+
+      if (event.type == Clutter.EventType.BUTTON_PRESS && !event_over_menu)
+        pick_window (event, actor);
+      else
+        this.last_selected_clone = null;
 
       if (coverflow)
         handle_event_coverflow (event);
