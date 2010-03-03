@@ -21,6 +21,8 @@ namespace Unity
 {
   public class Maximus : Object
   {
+    public static string user_unmaximize_hint = "maximus-user-unmaximize";
+
     static string[] default_exclude_classes =
     {
       "Apport-gtk",
@@ -68,6 +70,10 @@ namespace Unity
       foreach (string s in default_exclude_classes)
         if (res_class.contains (s))
           return true;
+
+      void *hint = window.get_data (user_unmaximize_hint);
+      if (hint != null)
+        return true;
 
       {
         Clutter.Actor stage = Clutter.Stage.get_default ();
