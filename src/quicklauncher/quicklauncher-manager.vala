@@ -78,7 +78,7 @@ namespace Unity.Quicklauncher
       add_actor (container);
 
       build_favorites ();
-      this.session.application_opened.connect (handle_session_application);
+
 
       Ctk.drag_dest_start (this.container);
       this.container.drag_motion.connect (on_drag_motion);
@@ -95,7 +95,21 @@ namespace Unity.Quicklauncher
       } catch (Error e) {
       }
       this.webapp_device = get_webapp_device ();
+      Idle.add (this.ensure_model_windows);
       END_FUNCTION ();
+    }
+
+    /* goes through and makes sure all the current models have accurate window
+     * lists
+     */
+    private bool ensure_model_windows ()
+    {
+      foreach (Launcher.Application app in this.launcher_apps)
+        {
+          app.update_windows ();
+        }
+      this.session.application_opened.connect (handle_session_application);
+      return false;
     }
 
     private void on_favorite_change (GConf.Engine client, uint cnxn_id, GConf.Entry entry)
