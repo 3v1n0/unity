@@ -42,17 +42,17 @@ namespace Unity
     private Unity.Places.View   places;
 
     private bool places_enabled = false;
-    
-    public void add_fullscreen_request (Object o) 
+
+    public void add_fullscreen_request (Object o)
     {
       return;
     }
-    
+
     public bool remove_fullscreen_request (Object o)
     {
       return false;
     }
-    
+
     public void ensure_input_region ()
     {
       /* GOOD JOB!!! */
@@ -200,7 +200,7 @@ namespace Unity
           height = size.height;
         }
 
-      ql_width = this.quicklauncher.get_width ();
+      ql_width = 58;
       this.resize (width, height);
       this.stage.set_size (width, height);
 

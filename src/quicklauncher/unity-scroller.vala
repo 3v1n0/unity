@@ -920,7 +920,7 @@ namespace Unity.Widgets
        * place to create the illusion of a large infinate background
        */
       int bg_height, bg_width;
-      this.bgtex.get_base_size (out bg_height, out bg_width);
+      this.bgtex.get_base_size (out bg_width, out bg_height);
       float bg_offset = Math.fmodf (drag_pos + 1000000, bg_height);
       this.bgtex.get_allocation_box (out child_box);
       child_box.y1 = box.y1 - bg_offset - 1;
@@ -929,8 +929,10 @@ namespace Unity.Widgets
       child_box.x2 = box.x2;
       this.bgtex.allocate (child_box, flags);
 
-      child_box.y1 = box.y1;
-      child_box.y2 = box.y1 + 7.0f;
+      //get the top shadow size
+      this.top_shadow.get_base_size (out bg_width, out bg_height);
+      child_box.y1 = box.y1 - 1;
+      child_box.y2 = box.y1 + bg_height;
 
       this.top_shadow.allocate (child_box, flags);
 

@@ -237,8 +237,8 @@ namespace Unity.Quicklauncher
                                                 out float minimum_width,
                                                 out float natural_width)
       {
-        natural_width = 60;
-        minimum_width = 60;
+        natural_width = 58;
+        minimum_width = 58;
         return;
       }
 
