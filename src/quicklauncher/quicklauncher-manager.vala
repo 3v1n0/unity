@@ -76,9 +76,8 @@ namespace Unity.Quicklauncher
       this.container = new Unity.Widgets.Scroller (Ctk.Orientation.VERTICAL,
                                                    0);
       add_actor (container);
-
       build_favorites ();
-      this.session.application_opened.connect (handle_session_application);
+
 
       Ctk.drag_dest_start (this.container);
       this.container.drag_motion.connect (on_drag_motion);
@@ -95,7 +94,39 @@ namespace Unity.Quicklauncher
       } catch (Error e) {
       }
       this.webapp_device = get_webapp_device ();
+
+      Idle.add (this.ensure_model_windows);
+
       END_FUNCTION ();
+    }
+
+    /* goes through and makes sure all the current models have accurate window
+     * lists
+     */
+    private bool ensure_model_windows ()
+    {
+      foreach (Launcher.Application app in this.launcher_apps)
+        {
+          app.update_windows ();
+        }
+
+      /* go through all the running applications in the appmananager
+       * make sure that any that aren't already in the launcher get added
+       */
+      var appman = Launcher.Appman.get_default ();
+      unowned Sequence<Launcher.Application> applications = appman.get_applications ();
+      for (SequenceIter<Launcher.Application> iter = applications.get_begin_iter (); !iter.is_end (); iter = iter.next ())
+        {
+          Launcher.Application app = iter.get ();
+          if (!this.launcher_apps.contains (app))
+            {
+              // not in the launcher. add it
+              this.handle_session_application (app);
+            }
+        }
+
+      this.session.application_opened.connect (handle_session_application);
+      return false;
     }
 
     private void on_favorite_change (GConf.Engine client, uint cnxn_id, GConf.Entry entry)
