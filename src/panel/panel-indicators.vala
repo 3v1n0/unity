@@ -278,10 +278,13 @@ namespace Unity.Panel.Indicators
           pos +=1;
         }
 
+      /* Get the prev/next item */
       IndicatorItem new_item = list.nth_data (pos) as IndicatorItem;
 
+      /* Find the right entry to activate */
       unowned GLib.List l = new_item.get_children ();
-      IndicatorEntry? new_entry = l.nth_data (0) as IndicatorEntry;
+      int p = type == Gtk.MenuDirectionType.PARENT ? (int)l.length ()-1 : 0;
+      IndicatorEntry? new_entry = l.nth_data (p) as IndicatorEntry;
 
       if (new_entry is IndicatorEntry)
         this.show_entry (new_entry);
@@ -416,7 +419,7 @@ namespace Unity.Panel.Indicators
     {
       Object (entry:entry,
               orientation:Ctk.Orientation.HORIZONTAL,
-              spacing:2,
+              spacing:4,
               reactive:false);
     }
 
