@@ -212,6 +212,18 @@ namespace Unity
       unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
       foreach (Mutter.Window window in mutter_windows)
         {
+          bool exposed = false;
+          foreach (ExposeClone clone in exposed_windows)
+            {
+              if (clone.source == window)
+                {
+                  exposed = true;
+                  break;
+                }
+            }
+          
+          if (!exposed)
+            window.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250, "opacity", 255);
           window.reactive = true;
         }
 
