@@ -276,14 +276,23 @@ namespace Unity
           last = actor;
         }
     }
+    
+    int direct_comparison (void* a, void* b)
+    {
+      if (a > b)
+        return 1;
+      else if (a < b)
+        return  -1;
+      return 0;
+    }
 
     void position_windows_on_grid (List<Clutter.Actor> _windows)
     {
       List<Clutter.Actor> windows = _windows.copy ();
+      windows.sort ((CompareFunc) direct_comparison);
+      
       int count = (int) windows.length ();
-
       int cols = (int) Math.ceil (Math.sqrt (count));
-
       int rows = 1;
 
       while (cols * rows < count)
