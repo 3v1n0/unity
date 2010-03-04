@@ -150,7 +150,7 @@ namespace Unity
               continue;
 
             (w as Clutter.Actor).reactive = false;
-            (w as Clutter.Actor).animate (Clutter.AnimationMode.EASE_IN_SINE, 80, "opacity", 0);
+            (w as Clutter.Actor).opacity = 0;
         }
       coverflow_index = 0;
 
@@ -177,8 +177,6 @@ namespace Unity
       unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
       foreach (Mutter.Window window in mutter_windows)
         {
-          window.animate (Clutter.AnimationMode.EASE_IN_SINE,
-                          300, "opacity", 255);
           window.reactive = true;
         }
 
