@@ -25,20 +25,47 @@ namespace Unity
   public class ExposeClone : Clutter.Group
   {
     private Clutter.Clone clone;
+    private Clutter.Actor darken_box;
+    private bool hovered;
 
     public Mutter.Window source { get; private set; }
 
     public uint8 hovered_opacity { get; set; }
     public uint8 unhovered_opacity { get; set; }
+    
+    uint8 _darken;
+    public uint8 darken { 
+      get { return _darken; }
+      set {
+        _darken = value;
+        if (!hovered)
+          darken_box.opacity = darken;
+      }
+    }
+    
+    
 
     public ExposeClone (Mutter.Window source)
     {
+      darken = 0;
+      hovered_opacity = 255;
+      unhovered_opacity = 255;
+    
       this.source = source;
       clone = new Clutter.Clone (source);
 
       add_actor (clone);
       clone.show ();
       clone.set_position (0, 0);
+      
+      darken_box = new Clutter.Rectangle.with_color ({0, 0, 0, 255});
+      add_actor (darken_box);
+      darken_box.raise_top ();
+      
+      darken_box.set_position (0, 0);
+      darken_box.set_size (source.width, source.height);
+      
+      darken_box.opacity = darken;
     }
 
     construct
@@ -49,14 +76,18 @@ namespace Unity
 
     private bool on_mouse_enter (Clutter.Event evnt)
     {
+      hovered = true;
       opacity = hovered_opacity;
-      return false;
+      darken_box.opacity = 0;
+      return true;
     }
 
     private bool on_mouse_leave (Clutter.Event evnt)
     {
+      hovered = false;
       opacity = unhovered_opacity;
-      return false;
+      darken_box.opacity = darken;
+      return true;
     }
   }
 
@@ -78,6 +109,8 @@ namespace Unity
 
     public uint8 hovered_opacity { get; set; }
     public uint8 unhovered_opacity { get; set; }
+    
+    public uint8 darken { get; set; }
 
     private uint coverflow_index;
 
@@ -92,6 +125,7 @@ namespace Unity
 
       hovered_opacity = 255;
       unhovered_opacity = 255;
+      darken = 0;
     }
 
     construct
@@ -144,6 +178,7 @@ namespace Unity
               clone.hovered_opacity = hovered_opacity;
               clone.unhovered_opacity = unhovered_opacity;
               clone.opacity = unhovered_opacity;
+              clone.darken = darken;
             }
 
             if (w.get_window_type () == Mutter.MetaCompWindowType.DESKTOP)
