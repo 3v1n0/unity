@@ -623,6 +623,11 @@ namespace Unity.Widgets
             }
         }
 
+      if (this.total_child_height < this.height)
+        {
+          this.is_dragging = false;
+        }
+
       if (this.button_down && this.is_dragging)
         {
           Clutter.grab_pointer (this);
@@ -910,16 +915,24 @@ namespace Unity.Widgets
       }
 
       /* also allocate our background graphics */
+
+      /* we grab an offset so that we can just judder one background image in
+       * place to create the illusion of a large infinate background
+       */
+      int bg_height, bg_width;
+      this.bgtex.get_base_size (out bg_width, out bg_height);
+      float bg_offset = Math.fmodf (drag_pos + 1000000, bg_height);
       this.bgtex.get_allocation_box (out child_box);
-      child_box.y1 = box.y1 - (float)drag_pos - box.get_height () * 2;
-      child_box.y2 = box.y2 - (float)drag_pos + box.get_height () * 2;
+      child_box.y1 = box.y1 - bg_offset - 1;
+      child_box.y2 = box.y2 + bg_offset + (bg_height - 1);
       child_box.x1 = box.x1;
       child_box.x2 = box.x2;
       this.bgtex.allocate (child_box, flags);
-      this.bgtex.set_clip (box.x1, drag_pos + box.get_height () * 2 - 1,
-                           box.get_width (), box.get_height () - fixed_size);
-      child_box.y1 = box.y1;
-      child_box.y2 = box.y1 + 7.0f;
+
+      //get the top shadow size
+      this.top_shadow.get_base_size (out bg_width, out bg_height);
+      child_box.y1 = box.y1 - 1;
+      child_box.y2 = box.y1 + bg_height;
 
       this.top_shadow.allocate (child_box, flags);
 

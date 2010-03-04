@@ -9,8 +9,12 @@ namespace Unity {
 			[CCode (cheader_filename = "unity-static.h")]
 			public class IndicatorEntry : Ctk.Box {
 				public IndicatorEntry (Indicator.ObjectEntry entry);
+				public void menu_key_moved (Gtk.MenuDirectionType type);
+				public void menu_shown ();
+				public void menu_vis_changed ();
 				public Indicator.ObjectEntry entry { get; construct; }
 				public Gtk.Menu menu { get; }
+				public signal void menu_moved (Gtk.MenuDirectionType type);
 			}
 			[CCode (cheader_filename = "unity-static.h")]
 			public class IndicatorItem : Ctk.Box {
@@ -18,11 +22,13 @@ namespace Unity {
 				public IndicatorItem ();
 				public Indicator.Object get_object ();
 				public void set_object (Indicator.Object object);
+				public signal void menu_moved (Gtk.MenuDirectionType type);
 			}
 			[CCode (cheader_filename = "unity-static.h")]
 			public class View : Ctk.Box {
 				public View ();
 				public static int reorder_icons (Unity.Panel.Indicators.IndicatorItem a, Unity.Panel.Indicators.IndicatorItem b);
+				public void show_entry (Unity.Panel.Indicators.IndicatorEntry entry);
 			}
 		}
 		[CCode (cprefix = "UnityPanelTray", lower_case_cprefix = "unity_panel_tray_")]
@@ -308,6 +314,7 @@ namespace Unity {
 				public abstract void close ();
 				public abstract Gee.ArrayList<Unity.Quicklauncher.Models.ShortcutItem> get_menu_shortcut_actions ();
 				public abstract Gee.ArrayList<Unity.Quicklauncher.Models.ShortcutItem> get_menu_shortcuts ();
+				public abstract void regenerate_icon ();
 				public abstract bool do_shadow { get; }
 				public abstract Gdk.Pixbuf icon { get; }
 				public abstract bool is_active { get; }
@@ -338,7 +345,6 @@ namespace Unity {
 			public Unity.Quicklauncher.Models.LauncherModel? model;
 			public LauncherView (Unity.Quicklauncher.Models.LauncherModel model);
 			public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
-			public void close_menu ();
 			public override void get_preferred_height (float for_width, out float minimum_height, out float natural_height);
 			public override void get_preferred_width (float for_height, out float minimum_width, out float natural_width);
 			public override void map ();
@@ -365,16 +371,16 @@ namespace Unity {
 		}
 		[CCode (cheader_filename = "unity-static.h")]
 		public class QuicklistController : GLib.Object {
-			public bool is_label;
-			public string label;
-			public Ctk.Menu? menu;
-			public QuicklistController (string label, Ctk.Actor attached_to, Clutter.Stage stage);
-			public void add_action (Unity.Quicklauncher.Models.ShortcutItem shortcut, bool is_secondary);
+			public bool is_in_label;
+			public bool is_in_menu;
+			public weak Ctk.Menu menu;
+			public QuicklistController ();
 			public void close_menu ();
-			public void hide_label ();
-			public void show_label ();
-			public void show_menu ();
-			public bool hide_on_leave { get; set; }
+			public Ctk.Actor get_attached_actor ();
+			public static unowned Unity.Quicklauncher.QuicklistController get_default ();
+			public bool menu_is_open ();
+			public void show_label (string label, Ctk.Actor attached_widget);
+			public void show_menu (Gee.ArrayList<Unity.Quicklauncher.Models.ShortcutItem> prefix_shortcuts, Gee.ArrayList<Unity.Quicklauncher.Models.ShortcutItem> affix_shortcuts, bool hide_on_leave);
 		}
 		[CCode (cheader_filename = "unity-static.h")]
 		public class QuicklistMenu : Ctk.Menu {
@@ -382,10 +388,12 @@ namespace Unity {
 			public override void paint ();
 		}
 		[CCode (cheader_filename = "unity-static.h")]
-		public class QuicklistMenuItem : Ctk.MenuItem {
+		public class QuicklistMenuItem : Ctk.Actor {
 			public QuicklistMenuItem (string label);
 			public override void get_preferred_height (float for_width, out float min_height_p, out float natural_height_p);
 			public override void get_preferred_width (float for_height, out float min_width_p, out float natural_width_p);
+			public string label { get; construct; }
+			public signal void activated ();
 		}
 		[CCode (cheader_filename = "unity-static.h")]
 		public class View : Ctk.Bin {
@@ -394,7 +402,7 @@ namespace Unity {
 			public float get_width ();
 		}
 		[CCode (cheader_filename = "unity-static.h")]
-		public static Unity.Quicklauncher.QuicklistController? active_menu;
+		public static Unity.Quicklauncher.QuicklistController? ql_controler_singleton;
 	}
 	[CCode (cprefix = "UnityWidgets", lower_case_cprefix = "unity_widgets_")]
 	namespace Widgets {

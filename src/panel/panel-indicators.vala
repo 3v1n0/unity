@@ -28,11 +28,12 @@ namespace Unity.Panel.Indicators
 
     private Gtk.Menu? popped;
     private uint32 click_time;
+    private float last_found_entry_x = 0.0f;
 
     public View ()
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
-              spacing:12,
+              spacing:0,
               homogeneous:false,
               reactive:true);
     }
@@ -108,6 +109,8 @@ namespace Unity.Panel.Indicators
           this.add_actor (i);
           i.show ();
 
+          i.menu_moved.connect (this.on_menu_moved);
+
           i.position = (int)this.indicator_order[leaf];
         }
       else
@@ -122,6 +125,7 @@ namespace Unity.Panel.Indicators
                                 out bool push_in)
     {
       y = (int)this.height;
+      x = (int)this.last_found_entry_x;
     }
 
     private unowned IndicatorEntry? entry_for_event (float root_x)
@@ -143,6 +147,9 @@ namespace Unity.Panel.Indicators
             }
         }
 
+      if (item == null)
+        return null;
+
       x -= item.x;
       list = item.get_children ();
       for (int i = 0; i < list.length (); i++)
@@ -151,6 +158,7 @@ namespace Unity.Panel.Indicators
 
           if (ent.x < x && x < (ent.x + ent.width))
             {
+              this.last_found_entry_x = ent.x + item.x + this.x;
               entry = ent;
             }
         }
@@ -158,10 +166,29 @@ namespace Unity.Panel.Indicators
       return entry;
     }
 
+    public void show_entry (IndicatorEntry entry)
+    {
+      if (this.popped is Gtk.Menu
+          && (this.popped.get_flags () & Gtk.WidgetFlags.VISIBLE) !=0)
+        {
+          this.popped.popdown ();
+          this.popped = null;
+        }
+
+      this.last_found_entry_x = entry.x + entry.get_parent ().x + this.x;
+
+      entry.menu.popup (null,
+                        null,
+                        this.position_menu,
+                        1,
+                        Clutter.get_current_event_time ());
+      click_time = Clutter.get_current_event_time ();
+      this.popped = entry.menu;
+      entry.menu_shown ();
+    }
+
     private bool on_button_press_event (Clutter.Event e)
     {
-      debug ("button press event");
-
       if (this.popped is Gtk.Menu
           && (this.popped.get_flags () & Gtk.WidgetFlags.VISIBLE) !=0)
         {
@@ -179,6 +206,7 @@ namespace Unity.Panel.Indicators
                             e.button.time);
           click_time = e.button.time;
           this.popped = entry.menu;
+          entry.menu_shown ();
         }
       return true;
     }
@@ -207,6 +235,9 @@ namespace Unity.Panel.Indicators
 
           entry = entry_for_event (e.motion.x);
 
+          if (entry == null)
+            return true;
+
           if (entry.menu != this.popped)
             {
               this.popped.popdown ();
@@ -216,10 +247,47 @@ namespace Unity.Panel.Indicators
                                  this.position_menu,
                                  e.button.button,
                                  e.button.time);
+              entry.menu_shown ();
             }
         }
 
       return true;
+    }
+
+    private void on_menu_moved (IndicatorItem         item,
+                                Gtk.MenuDirectionType type)
+    {
+      unowned GLib.List list = this.get_children ();
+
+      int pos = list.index (item);
+
+      if (pos == -1)
+          return;
+
+      /* For us, PARENT = previous menu, CHILD = next menu */
+      if (type == Gtk.MenuDirectionType.PARENT)
+        {
+          if (pos == 0)
+              return;
+          pos -= 1;
+        }
+      else if (type == Gtk.MenuDirectionType.CHILD)
+        {
+          if (pos == list.length ()-1)
+              return;
+          pos +=1;
+        }
+
+      /* Get the prev/next item */
+      IndicatorItem new_item = list.nth_data (pos) as IndicatorItem;
+
+      /* Find the right entry to activate */
+      unowned GLib.List l = new_item.get_children ();
+      int p = type == Gtk.MenuDirectionType.PARENT ? (int)l.length ()-1 : 0;
+      IndicatorEntry? new_entry = l.nth_data (p) as IndicatorEntry;
+
+      if (new_entry is IndicatorEntry)
+        this.show_entry (new_entry);
     }
   }
 
@@ -231,10 +299,12 @@ namespace Unity.Panel.Indicators
     private Indicator.Object object;
     public  int              position;
 
+    public signal void menu_moved (Gtk.MenuDirectionType type);
+
     public IndicatorItem ()
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
-              spacing:12,
+              spacing:0,
               homogeneous:false);
     }
 
@@ -264,6 +334,47 @@ namespace Unity.Panel.Indicators
       IndicatorEntry e = new IndicatorEntry (entry);
       this.add_actor (e);
       this.show ();
+
+      e.menu_moved.connect (this.on_menu_moved);
+    }
+
+    private void on_menu_moved (IndicatorEntry        entry,
+                                Gtk.MenuDirectionType type)
+    {
+      unowned GLib.List list = this.get_children ();
+
+      int pos = list.index (entry);
+
+      if (pos == -1)
+        {
+          this.menu_moved (type);
+          return;
+        }
+
+      /* For us, PARENT = previous menu, CHILD = next menu */
+      if (type == Gtk.MenuDirectionType.PARENT)
+        {
+          if (pos == 0)
+            {
+              this.menu_moved (type);
+              return;
+            }
+          pos -= 1;
+        }
+      else if (type == Gtk.MenuDirectionType.CHILD)
+        {
+          if (pos == list.length ()-1)
+            {
+              this.menu_moved (type);
+              return;
+            }
+          pos +=1;
+        }
+
+      IndicatorEntry new_entry = list.nth_data (pos) as IndicatorEntry;
+
+      Indicators.View parent = this.get_parent () as Indicators.View;
+      parent.show_entry (new_entry);
     }
 
     public void set_object (Indicator.Object object)
@@ -295,21 +406,32 @@ namespace Unity.Panel.Indicators
   {
     public unowned Indicator.ObjectEntry entry { get; construct; }
 
-    private Ctk.Image image;
-    private Ctk.Text  text;
+    private Clutter.CairoTexture bg;
+
+    private Ctk.Image     image;
+    private Ctk.Text      text;
 
     public Gtk.Menu menu { get { return this.entry.menu; } }
+
+    public signal void menu_moved (Gtk.MenuDirectionType type);
 
     public IndicatorEntry (Indicator.ObjectEntry entry)
     {
       Object (entry:entry,
               orientation:Ctk.Orientation.HORIZONTAL,
-              spacing:2,
+              spacing:4,
               reactive:false);
     }
 
     construct
     {
+      this.padding = { 0, 6.0f, 0, 6.0f };
+
+      this.bg = new Clutter.CairoTexture (10, 10);
+      this.bg.set_parent (this);
+      this.bg.opacity = 0;
+      this.bg.show ();
+
       if (this.entry.image is Gtk.Image)
         {
           this.image = new Ctk.Image (22);
@@ -319,6 +441,12 @@ namespace Unity.Panel.Indicators
           this.image.stock_id = this.entry.image.icon_name;
 
           this.entry.image.notify["icon-name"].connect (() =>
+            {
+              this.image.stock_id = this.entry.image.icon_name;
+            });
+
+          unowned Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
+          theme.changed.connect (() =>
             {
               this.image.stock_id = this.entry.image.icon_name;
             });
@@ -337,28 +465,130 @@ namespace Unity.Panel.Indicators
               this.text.text = this.entry.label.label;
             });
         }
+    }
 
-      this.button_release_event.connect ((e) =>
+    public void menu_shown ()
+    {
+      if (this.entry.menu is Gtk.Menu)
         {
-          Gtk.WidgetFlags flags = this.entry.menu.get_flags ();
-          bool visible = (flags & Gtk.WidgetFlags.VISIBLE) != 0;
+          this.entry.menu.move_current.connect (this.menu_key_moved);
+          this.entry.menu.notify["visible"].connect (this.menu_vis_changed);
+          this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
+                           "opacity", 255);
+        }
+    }
 
-          if (visible)
-            {
-            this.entry.menu.popdown ();
-            }
-          else
-            {
-            /*
-              this.entry.menu.popup (null,
-                                     null,
-                                     this.position_menu,
-                                     e.button.button,
-                                     e.button.time);*/
-            }
+    public void menu_vis_changed ()
+    {
+      bool vis = (this.entry.menu.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0;
 
-          return true;
-        });
+      if (vis == false)
+        {
+          this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
+                           "opacity", 0);
+
+          this.entry.menu.move_current.disconnect (this.menu_key_moved);
+          this.entry.menu.notify["visible"].disconnect (this.menu_vis_changed);
+        }
+    }
+
+    public void menu_key_moved (Gtk.MenuDirectionType type)
+    {
+      if (type != Gtk.MenuDirectionType.PARENT &&
+          type != Gtk.MenuDirectionType.CHILD)
+        return;
+
+      this.menu_moved (type);
+    }
+
+    private void update_bg (int width, int height)
+    {
+      Cairo.Context cr;
+
+      this.bg.set_surface_size (width, height);
+
+      cr = this.bg.create ();
+
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      cr.set_operator (Cairo.Operator.OVER);
+
+      cr.set_line_width (1.0);
+
+      cr.set_source_rgba (1.0, 1.0, 1.0, 0.2);
+
+      cr.move_to (1, height);
+
+      cr.line_to (1, 7);
+
+      cr.curve_to (1, 2,
+                   1, 2,
+                   10, 2);
+
+      cr.line_to (width-10, 2);
+
+      cr.curve_to (width, 2,
+                   width, 2,
+                   width, 7);
+
+      cr.line_to (width, height);
+
+      cr.line_to (1, height);
+
+      var pat = new Cairo.Pattern.linear (1, 0, 1, height);
+      pat.add_color_stop_rgba (0.0, 1.0f, 1.0f, 1.0f, 0.6f);
+      pat.add_color_stop_rgba (1.0, 1.0f, 1.0f, 1.0f, 0.2f);
+
+      cr.set_source (pat);
+      cr.fill ();
+    }
+
+    /*
+     * CLUTTER OVERRIDES
+     */
+    private override void allocate (Clutter.ActorBox        box,
+                                    Clutter.AllocationFlags flags)
+    {
+      float width;
+      float height;
+
+      base.allocate (box, flags);
+
+      width = Math.floorf (box.x2 - box.x1);
+      height = Math.floorf (box.y2 - box.y1) - 1;
+
+      Clutter.ActorBox child_box = { 0 };
+      child_box.x1 = 0;
+      child_box.x2 = width;
+      child_box.y1 = 0;
+      child_box.y2 = height;
+
+      if (width != this.bg.width ||
+          height != this.bg.height)
+        {
+          this.update_bg ((int)width, (int)height);
+        }
+
+      this.bg.allocate (child_box, flags);
+    }
+
+    private override void paint ()
+    {
+      this.bg.paint ();
+      base.paint ();
+    }
+
+    private override void map ()
+    {
+      base.map ();
+      this.bg.map ();
+    }
+
+    private override void unmap ()
+    {
+      base.unmap ();
+      this.bg.unmap ();
     }
   }
 }

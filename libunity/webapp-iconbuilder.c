@@ -83,9 +83,9 @@ enum  {
 UnityWebappIconBuilder* unity_webapp_icon_builder_new (const char* dest, GdkPixbuf* source);
 UnityWebappIconBuilder* unity_webapp_icon_builder_construct (GType object_type, const char* dest, GdkPixbuf* source);
 void unity_webapp_icon_builder_load_layers (UnityWebappIconBuilder* self);
-const char* unity_webapp_icon_builder_get_destination (UnityWebappIconBuilder* self);
 GdkPixbuf* unity_webapp_icon_builder_get_source (UnityWebappIconBuilder* self);
 void unity_webapp_icon_builder_build_icon (UnityWebappIconBuilder* self);
+const char* unity_webapp_icon_builder_get_destination (UnityWebappIconBuilder* self);
 static void unity_webapp_icon_builder_set_destination (UnityWebappIconBuilder* self, const char* value);
 static void unity_webapp_icon_builder_set_source (UnityWebappIconBuilder* self, GdkPixbuf* value);
 static GObject * unity_webapp_icon_builder_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -136,7 +136,7 @@ void unity_webapp_icon_builder_load_layers (UnityWebappIconBuilder* self) {
 		_tmp0_ = gdk_pixbuf_new_from_file_at_scale ("/usr/share/unity/themes/prism_icon_background.png", 48, 48, TRUE, &_inner_error_);
 #line 138 "webapp-iconbuilder.c"
 		if (_inner_error_ != NULL) {
-			goto __catch21_g_error;
+			goto __catch23_g_error;
 		}
 #line 56 "webapp-iconbuilder.vala"
 		self->priv->background = (_tmp1_ = _tmp0_, _g_object_unref0 (self->priv->background), _tmp1_);
@@ -144,14 +144,14 @@ void unity_webapp_icon_builder_load_layers (UnityWebappIconBuilder* self) {
 		_tmp2_ = gdk_pixbuf_new_from_file_at_scale ("/usr/share/unity/themes/prism_icon_foreground.png", 48, 48, TRUE, &_inner_error_);
 #line 146 "webapp-iconbuilder.c"
 		if (_inner_error_ != NULL) {
-			goto __catch21_g_error;
+			goto __catch23_g_error;
 		}
 #line 57 "webapp-iconbuilder.vala"
 		self->priv->foreground = (_tmp3_ = _tmp2_, _g_object_unref0 (self->priv->foreground), _tmp3_);
 #line 152 "webapp-iconbuilder.c"
 	}
-	goto __finally21;
-	__catch21_g_error:
+	goto __finally23;
+	__catch23_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -163,7 +163,7 @@ void unity_webapp_icon_builder_load_layers (UnityWebappIconBuilder* self) {
 			_g_error_free0 (e);
 		}
 	}
-	__finally21:
+	__finally23:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -175,68 +175,49 @@ void unity_webapp_icon_builder_load_layers (UnityWebappIconBuilder* self) {
 }
 
 
-#line 1045 "glib-2.0.vapi"
-static const char* string_to_string (const char* self) {
-#line 181 "webapp-iconbuilder.c"
-	const char* result;
-#line 1045 "glib-2.0.vapi"
-	g_return_val_if_fail (self != NULL, NULL);
-#line 185 "webapp-iconbuilder.c"
-	result = self;
-#line 1046 "glib-2.0.vapi"
-	return result;
-#line 189 "webapp-iconbuilder.c"
-}
-
-
 #line 65 "webapp-iconbuilder.vala"
 void unity_webapp_icon_builder_build_icon (UnityWebappIconBuilder* self) {
-#line 195 "webapp-iconbuilder.c"
-	char* _tmp0_;
+#line 181 "webapp-iconbuilder.c"
 	cairo_t* cr;
 	float pad_left;
 	float pad_top;
 #line 65 "webapp-iconbuilder.vala"
 	g_return_if_fail (self != NULL);
 #line 67 "webapp-iconbuilder.vala"
-	g_debug ("webapp-iconbuilder.vala:67: %s", _tmp0_ = g_strconcat ("building icon ", string_to_string (self->priv->_destination), NULL));
-#line 204 "webapp-iconbuilder.c"
-	_g_free0 (_tmp0_);
-#line 68 "webapp-iconbuilder.vala"
 	cr = cairo_create (self->priv->surf);
-#line 69 "webapp-iconbuilder.vala"
+#line 68 "webapp-iconbuilder.vala"
 	gdk_cairo_set_source_pixbuf (cr, self->priv->background, (double) 0, (double) 0);
+#line 69 "webapp-iconbuilder.vala"
+	cairo_paint (cr);
 #line 70 "webapp-iconbuilder.vala"
-	cairo_paint (cr);
-#line 71 "webapp-iconbuilder.vala"
 	cairo_stroke (cr);
-#line 73 "webapp-iconbuilder.vala"
+#line 72 "webapp-iconbuilder.vala"
 	pad_left = (float) 0;
-#line 74 "webapp-iconbuilder.vala"
+#line 73 "webapp-iconbuilder.vala"
 	pad_top = (float) 0;
-#line 75 "webapp-iconbuilder.vala"
+#line 74 "webapp-iconbuilder.vala"
 	if (gdk_pixbuf_get_width (self->priv->_source) < 48) {
-#line 77 "webapp-iconbuilder.vala"
+#line 76 "webapp-iconbuilder.vala"
 		pad_left = (48 - gdk_pixbuf_get_width (self->priv->_source)) / 2.0f;
-#line 222 "webapp-iconbuilder.c"
+#line 203 "webapp-iconbuilder.c"
 	}
-#line 79 "webapp-iconbuilder.vala"
+#line 78 "webapp-iconbuilder.vala"
 	if (gdk_pixbuf_get_height (self->priv->_source) < 48) {
-#line 81 "webapp-iconbuilder.vala"
+#line 80 "webapp-iconbuilder.vala"
 		pad_top = (48 - gdk_pixbuf_get_height (self->priv->_source)) / 2.0f;
-#line 228 "webapp-iconbuilder.c"
+#line 209 "webapp-iconbuilder.c"
 	}
-#line 83 "webapp-iconbuilder.vala"
+#line 82 "webapp-iconbuilder.vala"
 	gdk_cairo_set_source_pixbuf (cr, self->priv->_source, (double) pad_left, (double) pad_top);
-#line 84 "webapp-iconbuilder.vala"
+#line 83 "webapp-iconbuilder.vala"
 	cairo_mask_surface (cr, self->priv->mask, (double) 0, (double) 0);
-#line 86 "webapp-iconbuilder.vala"
+#line 85 "webapp-iconbuilder.vala"
 	gdk_cairo_set_source_pixbuf (cr, self->priv->foreground, (double) 0, (double) 0);
-#line 87 "webapp-iconbuilder.vala"
+#line 86 "webapp-iconbuilder.vala"
 	cairo_paint (cr);
-#line 88 "webapp-iconbuilder.vala"
+#line 87 "webapp-iconbuilder.vala"
 	cairo_stroke (cr);
-#line 240 "webapp-iconbuilder.c"
+#line 221 "webapp-iconbuilder.c"
 	_cairo_destroy0 (cr);
 }
 
@@ -247,7 +228,7 @@ const char* unity_webapp_icon_builder_get_destination (UnityWebappIconBuilder* s
 	result = self->priv->_destination;
 #line 34 "webapp-iconbuilder.vala"
 	return result;
-#line 251 "webapp-iconbuilder.c"
+#line 232 "webapp-iconbuilder.c"
 }
 
 
@@ -265,7 +246,7 @@ GdkPixbuf* unity_webapp_icon_builder_get_source (UnityWebappIconBuilder* self) {
 	result = self->priv->_source;
 #line 35 "webapp-iconbuilder.vala"
 	return result;
-#line 269 "webapp-iconbuilder.c"
+#line 250 "webapp-iconbuilder.c"
 }
 
 
@@ -300,19 +281,19 @@ static GObject * unity_webapp_icon_builder_constructor (GType type, guint n_cons
 		if (gdk_pixbuf_get_width (self->priv->_source) > 48) {
 #line 47 "webapp-iconbuilder.vala"
 			_tmp1_ = TRUE;
-#line 304 "webapp-iconbuilder.c"
+#line 285 "webapp-iconbuilder.c"
 		} else {
 #line 47 "webapp-iconbuilder.vala"
 			_tmp1_ = gdk_pixbuf_get_height (self->priv->_source) > 48;
-#line 308 "webapp-iconbuilder.c"
+#line 289 "webapp-iconbuilder.c"
 		}
 #line 47 "webapp-iconbuilder.vala"
 		if (_tmp1_) {
-#line 312 "webapp-iconbuilder.c"
+#line 293 "webapp-iconbuilder.c"
 			GdkPixbuf* _tmp2_;
 #line 49 "webapp-iconbuilder.vala"
 			unity_webapp_icon_builder_set_source (self, _tmp2_ = gdk_pixbuf_scale_simple (self->priv->_source, 48, 48, GDK_INTERP_HYPER));
-#line 316 "webapp-iconbuilder.c"
+#line 297 "webapp-iconbuilder.c"
 			_g_object_unref0 (_tmp2_);
 		}
 	}

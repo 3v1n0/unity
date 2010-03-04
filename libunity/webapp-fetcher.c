@@ -31,6 +31,7 @@
 #include <gio/gio.h>
 #include <gee.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
+#include <clutter/clutter.h>
 
 #define _g_free0(var) (var = (g_free (var), NULL))
 #define _g_regex_unref0(var) ((var == NULL) ? NULL : (var = (g_regex_unref (var), NULL)))
@@ -50,6 +51,7 @@ typedef struct _UnityWebappFetchFilePrivate UnityWebappFetchFilePrivate;
 #define _g_byte_array_free0(var) ((var == NULL) ? NULL : (var = (g_byte_array_free (var, TRUE), NULL)))
 typedef struct _UnityWebappFetchFileFetchDataData UnityWebappFetchFileFetchDataData;
 typedef struct _UnityWebappFetchFileReadSomethingAsyncData UnityWebappFetchFileReadSomethingAsyncData;
+#define _g_match_info_free0(var) ((var == NULL) ? NULL : (var = (g_match_info_free (var), NULL)))
 
 #define UNITY_WEBAPP_TYPE_WEBICON_FETCHER (unity_webapp_webicon_fetcher_get_type ())
 #define UNITY_WEBAPP_WEBICON_FETCHER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_WEBAPP_TYPE_WEBICON_FETCHER, UnityWebappWebiconFetcher))
@@ -61,7 +63,7 @@ typedef struct _UnityWebappFetchFileReadSomethingAsyncData UnityWebappFetchFileR
 typedef struct _UnityWebappWebiconFetcher UnityWebappWebiconFetcher;
 typedef struct _UnityWebappWebiconFetcherClass UnityWebappWebiconFetcherClass;
 typedef struct _UnityWebappWebiconFetcherPrivate UnityWebappWebiconFetcherPrivate;
-#define _g_match_info_free0(var) ((var == NULL) ? NULL : (var = (g_match_info_free (var), NULL)))
+#define _g_key_file_free0(var) ((var == NULL) ? NULL : (var = (g_key_file_free (var), NULL)))
 
 #define UNITY_WEBAPP_TYPE_ICON_BUILDER (unity_webapp_icon_builder_get_type ())
 #define UNITY_WEBAPP_ICON_BUILDER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_WEBAPP_TYPE_ICON_BUILDER, UnityWebappIconBuilder))
@@ -72,6 +74,16 @@ typedef struct _UnityWebappWebiconFetcherPrivate UnityWebappWebiconFetcherPrivat
 
 typedef struct _UnityWebappIconBuilder UnityWebappIconBuilder;
 typedef struct _UnityWebappIconBuilderClass UnityWebappIconBuilderClass;
+
+#define UNITY_TYPE_SHELL (unity_shell_get_type ())
+#define UNITY_SHELL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_SHELL, UnityShell))
+#define UNITY_IS_SHELL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_SHELL))
+#define UNITY_SHELL_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), UNITY_TYPE_SHELL, UnityShellIface))
+
+typedef struct _UnityShell UnityShell;
+typedef struct _UnityShellIface UnityShellIface;
+
+#define UNITY_TYPE_SHELL_MODE (unity_shell_mode_get_type ())
 
 struct _UnityWebappFetchFile {
 	GObject parent_instance;
@@ -134,10 +146,30 @@ struct _UnityWebappWebiconFetcherClass {
 struct _UnityWebappWebiconFetcherPrivate {
 	char* _uri;
 	char* _destination;
+	char* _desktop_location;
 	UnityWebappFetchFile* fetcher;
 	gboolean html_phase;
 	gboolean icon_phase;
 	GeePriorityQueue* icon_uris;
+};
+
+typedef enum  {
+	UNITY_SHELL_MODE_UNDERLAY,
+	UNITY_SHELL_MODE_OVERLAY
+} UnityShellMode;
+
+struct _UnityShellIface {
+	GTypeInterface parent_iface;
+	UnityShellMode (*get_mode) (UnityShell* self);
+	ClutterStage* (*get_stage) (UnityShell* self);
+	void (*show_unity) (UnityShell* self);
+	gint (*get_indicators_width) (UnityShell* self);
+	void (*ensure_input_region) (UnityShell* self);
+	void (*add_fullscreen_request) (UnityShell* self, GObject* o);
+	gboolean (*remove_fullscreen_request) (UnityShell* self, GObject* o);
+	void (*grab_keyboard) (UnityShell* self, gboolean grab, guint32 timestamp);
+	void (*show_window_picker) (UnityShell* self);
+	gboolean (*get_menus_swallow_events) (UnityShell* self);
 };
 
 
@@ -152,6 +184,7 @@ extern GRegex* unity_webapp_secondary_match_suffix;
 GRegex* unity_webapp_secondary_match_suffix = NULL;
 extern GRegex* unity_webapp_hostname_match;
 GRegex* unity_webapp_hostname_match = NULL;
+extern UnityShell* unity_global_shell;
 static gpointer unity_webapp_webicon_fetcher_parent_class = NULL;
 
 #define apple_string "rel=\"apple-touch-icon\""
@@ -159,7 +192,7 @@ static gpointer unity_webapp_webicon_fetcher_parent_class = NULL;
 #define uri_match_string "href=\"(?P<icon_uri>[^\"]*)\""
 #define tag_start_string "<link[^>]*"
 #define tag_end_string "[^>]*/?>"
-#define hostname_string "(s)?http://.*/"
+#define hostname_string "(s)?http://(?P<hostname>.*)(/|$)"
 char* unity_webapp_urlify (const char* uri);
 GType unity_webapp_fetch_file_get_type (void);
 #define UNITY_WEBAPP_FETCH_FILE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_WEBAPP_TYPE_FETCH_FILE, UnityWebappFetchFilePrivate))
@@ -185,15 +218,19 @@ static GObject * unity_webapp_fetch_file_constructor (GType type, guint n_constr
 static void unity_webapp_fetch_file_finalize (GObject* obj);
 static void unity_webapp_fetch_file_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_webapp_fetch_file_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+char* unity_webapp_get_hostname (const char* uri);
 GType unity_webapp_webicon_fetcher_get_type (void);
 #define UNITY_WEBAPP_WEBICON_FETCHER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_WEBAPP_TYPE_WEBICON_FETCHER, UnityWebappWebiconFetcherPrivate))
 enum  {
 	UNITY_WEBAPP_WEBICON_FETCHER_DUMMY_PROPERTY,
 	UNITY_WEBAPP_WEBICON_FETCHER_URI,
-	UNITY_WEBAPP_WEBICON_FETCHER_DESTINATION
+	UNITY_WEBAPP_WEBICON_FETCHER_DESTINATION,
+	UNITY_WEBAPP_WEBICON_FETCHER_DESKTOP_LOCATION
 };
-UnityWebappWebiconFetcher* unity_webapp_webicon_fetcher_new (const char* uri, const char* destination);
-UnityWebappWebiconFetcher* unity_webapp_webicon_fetcher_construct (GType object_type, const char* uri, const char* destination);
+UnityWebappWebiconFetcher* unity_webapp_webicon_fetcher_new (const char* uri, const char* destination, const char* desktop_file);
+UnityWebappWebiconFetcher* unity_webapp_webicon_fetcher_construct (GType object_type, const char* uri, const char* destination, const char* desktop_file);
+const char* unity_webapp_webicon_fetcher_get_desktop_location (UnityWebappWebiconFetcher* self);
+static void unity_webapp_webicon_fetcher_set_desktop_file_icon (UnityWebappWebiconFetcher* self, const char* iconname);
 const char* unity_webapp_webicon_fetcher_get_uri (UnityWebappWebiconFetcher* self);
 static void _lambda0_ (UnityWebappWebiconFetcher* self);
 static void __lambda0__unity_webapp_fetch_file_failed (UnityWebappFetchFile* _sender, gpointer self);
@@ -207,11 +244,14 @@ UnityWebappIconBuilder* unity_webapp_icon_builder_new (const char* dest, GdkPixb
 UnityWebappIconBuilder* unity_webapp_icon_builder_construct (GType object_type, const char* dest, GdkPixbuf* source);
 GType unity_webapp_icon_builder_get_type (void);
 void unity_webapp_icon_builder_build_icon (UnityWebappIconBuilder* self);
+GType unity_shell_mode_get_type (void);
+GType unity_shell_get_type (void);
 static void unity_webapp_webicon_fetcher_on_fetcher_failed (UnityWebappWebiconFetcher* self);
 static void _lambda1_ (UnityWebappWebiconFetcher* self);
 static void __lambda1__unity_webapp_fetch_file_failed (UnityWebappFetchFile* _sender, gpointer self);
 static void unity_webapp_webicon_fetcher_set_uri (UnityWebappWebiconFetcher* self, const char* value);
 static void unity_webapp_webicon_fetcher_set_destination (UnityWebappWebiconFetcher* self, const char* value);
+static void unity_webapp_webicon_fetcher_set_desktop_location (UnityWebappWebiconFetcher* self, const char* value);
 static GObject * unity_webapp_webicon_fetcher_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_webapp_webicon_fetcher_finalize (GObject* obj);
 static void unity_webapp_webicon_fetcher_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -224,24 +264,24 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 #line 32 "webapp-fetcher.vala"
 char* unity_webapp_urlify (const char* uri) {
-#line 228 "webapp-fetcher.c"
+#line 268 "webapp-fetcher.c"
 	char* result;
 	GError * _inner_error_;
 	char* return_string;
 #line 32 "webapp-fetcher.vala"
 	g_return_val_if_fail (uri != NULL, NULL);
-#line 234 "webapp-fetcher.c"
+#line 274 "webapp-fetcher.c"
 	_inner_error_ = NULL;
 #line 34 "webapp-fetcher.vala"
 	return_string = g_uri_unescape_string (uri, NULL);
-#line 238 "webapp-fetcher.c"
+#line 278 "webapp-fetcher.c"
 	{
 		GRegex* regex;
 		char* _tmp0_;
 		char* _tmp1_;
 #line 39 "webapp-fetcher.vala"
 		regex = g_regex_new ("^[ \\\\]+|[ \\\\]+$", 0, 0, &_inner_error_);
-#line 245 "webapp-fetcher.c"
+#line 285 "webapp-fetcher.c"
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == G_REGEX_ERROR) {
 				goto __catch12_g_regex_error;
@@ -253,7 +293,7 @@ char* unity_webapp_urlify (const char* uri) {
 		}
 #line 40 "webapp-fetcher.vala"
 		_tmp0_ = g_regex_replace (regex, return_string, (gssize) (-1), 0, "_", 0, &_inner_error_);
-#line 257 "webapp-fetcher.c"
+#line 297 "webapp-fetcher.c"
 		if (_inner_error_ != NULL) {
 			_g_regex_unref0 (regex);
 			if (_inner_error_->domain == G_REGEX_ERROR) {
@@ -267,7 +307,7 @@ char* unity_webapp_urlify (const char* uri) {
 		}
 #line 40 "webapp-fetcher.vala"
 		return_string = (_tmp1_ = _tmp0_, _g_free0 (return_string), _tmp1_);
-#line 271 "webapp-fetcher.c"
+#line 311 "webapp-fetcher.c"
 		_g_regex_unref0 (regex);
 	}
 	goto __finally12;
@@ -279,7 +319,7 @@ char* unity_webapp_urlify (const char* uri) {
 		{
 #line 42 "webapp-fetcher.vala"
 			g_warning ("webapp-fetcher.vala:42: %s", e->message);
-#line 283 "webapp-fetcher.c"
+#line 323 "webapp-fetcher.c"
 			_g_error_free0 (e);
 		}
 	}
@@ -296,7 +336,7 @@ char* unity_webapp_urlify (const char* uri) {
 		char* _tmp3_;
 #line 45 "webapp-fetcher.vala"
 		regex = g_regex_new ("^.*?://", 0, 0, &_inner_error_);
-#line 300 "webapp-fetcher.c"
+#line 340 "webapp-fetcher.c"
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == G_REGEX_ERROR) {
 				goto __catch13_g_regex_error;
@@ -308,7 +348,7 @@ char* unity_webapp_urlify (const char* uri) {
 		}
 #line 46 "webapp-fetcher.vala"
 		_tmp2_ = g_regex_replace (regex, return_string, (gssize) (-1), 0, "", 0, &_inner_error_);
-#line 312 "webapp-fetcher.c"
+#line 352 "webapp-fetcher.c"
 		if (_inner_error_ != NULL) {
 			_g_regex_unref0 (regex);
 			if (_inner_error_->domain == G_REGEX_ERROR) {
@@ -322,7 +362,7 @@ char* unity_webapp_urlify (const char* uri) {
 		}
 #line 46 "webapp-fetcher.vala"
 		return_string = (_tmp3_ = _tmp2_, _g_free0 (return_string), _tmp3_);
-#line 326 "webapp-fetcher.c"
+#line 366 "webapp-fetcher.c"
 		_g_regex_unref0 (regex);
 	}
 	goto __finally13;
@@ -334,7 +374,7 @@ char* unity_webapp_urlify (const char* uri) {
 		{
 #line 48 "webapp-fetcher.vala"
 			g_warning ("webapp-fetcher.vala:48: %s", e->message);
-#line 338 "webapp-fetcher.c"
+#line 378 "webapp-fetcher.c"
 			_g_error_free0 (e);
 		}
 	}
@@ -351,7 +391,7 @@ char* unity_webapp_urlify (const char* uri) {
 		char* _tmp5_;
 #line 51 "webapp-fetcher.vala"
 		regex = g_regex_new ("(\\s|/)", 0, 0, &_inner_error_);
-#line 355 "webapp-fetcher.c"
+#line 395 "webapp-fetcher.c"
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == G_REGEX_ERROR) {
 				goto __catch14_g_regex_error;
@@ -363,7 +403,7 @@ char* unity_webapp_urlify (const char* uri) {
 		}
 #line 52 "webapp-fetcher.vala"
 		_tmp4_ = g_regex_replace (regex, return_string, (gssize) (-1), 0, "_", 0, &_inner_error_);
-#line 367 "webapp-fetcher.c"
+#line 407 "webapp-fetcher.c"
 		if (_inner_error_ != NULL) {
 			_g_regex_unref0 (regex);
 			if (_inner_error_->domain == G_REGEX_ERROR) {
@@ -377,7 +417,7 @@ char* unity_webapp_urlify (const char* uri) {
 		}
 #line 52 "webapp-fetcher.vala"
 		return_string = (_tmp5_ = _tmp4_, _g_free0 (return_string), _tmp5_);
-#line 381 "webapp-fetcher.c"
+#line 421 "webapp-fetcher.c"
 		_g_regex_unref0 (regex);
 	}
 	goto __finally14;
@@ -389,7 +429,7 @@ char* unity_webapp_urlify (const char* uri) {
 		{
 #line 54 "webapp-fetcher.vala"
 			g_warning ("webapp-fetcher.vala:54: %s", e->message);
-#line 393 "webapp-fetcher.c"
+#line 433 "webapp-fetcher.c"
 			_g_error_free0 (e);
 		}
 	}
@@ -406,7 +446,7 @@ char* unity_webapp_urlify (const char* uri) {
 		char* _tmp7_;
 #line 57 "webapp-fetcher.vala"
 		regex = g_regex_new ("[^([:alnum:]|\\.|_)]+", 0, 0, &_inner_error_);
-#line 410 "webapp-fetcher.c"
+#line 450 "webapp-fetcher.c"
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == G_REGEX_ERROR) {
 				goto __catch15_g_regex_error;
@@ -418,7 +458,7 @@ char* unity_webapp_urlify (const char* uri) {
 		}
 #line 58 "webapp-fetcher.vala"
 		_tmp6_ = g_regex_replace (regex, return_string, (gssize) (-1), 0, "", 0, &_inner_error_);
-#line 422 "webapp-fetcher.c"
+#line 462 "webapp-fetcher.c"
 		if (_inner_error_ != NULL) {
 			_g_regex_unref0 (regex);
 			if (_inner_error_->domain == G_REGEX_ERROR) {
@@ -432,7 +472,7 @@ char* unity_webapp_urlify (const char* uri) {
 		}
 #line 58 "webapp-fetcher.vala"
 		return_string = (_tmp7_ = _tmp6_, _g_free0 (return_string), _tmp7_);
-#line 436 "webapp-fetcher.c"
+#line 476 "webapp-fetcher.c"
 		_g_regex_unref0 (regex);
 	}
 	goto __finally15;
@@ -444,7 +484,7 @@ char* unity_webapp_urlify (const char* uri) {
 		{
 #line 60 "webapp-fetcher.vala"
 			g_warning ("webapp-fetcher.vala:60: %s", e->message);
-#line 448 "webapp-fetcher.c"
+#line 488 "webapp-fetcher.c"
 			_g_error_free0 (e);
 		}
 	}
@@ -458,19 +498,19 @@ char* unity_webapp_urlify (const char* uri) {
 	result = return_string;
 #line 63 "webapp-fetcher.vala"
 	return result;
-#line 462 "webapp-fetcher.c"
+#line 502 "webapp-fetcher.c"
 }
 
 
 #line 80 "webapp-fetcher.vala"
 UnityWebappFetchFile* unity_webapp_fetch_file_construct (GType object_type, const char* uri) {
-#line 468 "webapp-fetcher.c"
+#line 508 "webapp-fetcher.c"
 	UnityWebappFetchFile * self;
 #line 80 "webapp-fetcher.vala"
 	g_return_val_if_fail (uri != NULL, NULL);
 #line 82 "webapp-fetcher.vala"
 	self = (UnityWebappFetchFile*) g_object_new (object_type, "uri", uri, NULL);
-#line 474 "webapp-fetcher.c"
+#line 514 "webapp-fetcher.c"
 	return self;
 }
 
@@ -479,7 +519,7 @@ UnityWebappFetchFile* unity_webapp_fetch_file_construct (GType object_type, cons
 UnityWebappFetchFile* unity_webapp_fetch_file_new (const char* uri) {
 #line 80 "webapp-fetcher.vala"
 	return unity_webapp_fetch_file_construct (UNITY_WEBAPP_TYPE_FETCH_FILE, uri);
-#line 483 "webapp-fetcher.c"
+#line 523 "webapp-fetcher.c"
 }
 
 
@@ -527,11 +567,11 @@ static gboolean unity_webapp_fetch_file_fetch_data_co (UnityWebappFetchFileFetch
 				}
 #line 95 "webapp-fetcher.vala"
 				data->self->priv->stream = (data->_tmp2_ = g_data_input_stream_new ((GInputStream*) (data->_tmp1_ = data->_tmp0_)), _g_object_unref0 (data->self->priv->stream), data->_tmp2_);
-#line 531 "webapp-fetcher.c"
+#line 571 "webapp-fetcher.c"
 				_g_object_unref0 (data->_tmp1_);
 #line 96 "webapp-fetcher.vala"
 				g_data_input_stream_set_byte_order (data->self->priv->stream, G_DATA_STREAM_BYTE_ORDER_LITTLE_ENDIAN);
-#line 535 "webapp-fetcher.c"
+#line 575 "webapp-fetcher.c"
 			}
 			goto __finally16;
 			__catch16_g_error:
@@ -540,10 +580,8 @@ static gboolean unity_webapp_fetch_file_fetch_data_co (UnityWebappFetchFileFetch
 				data->_inner_error_ = NULL;
 				{
 #line 98 "webapp-fetcher.vala"
-					g_warning ("webapp-fetcher.vala:98: %s", data->e->message);
-#line 99 "webapp-fetcher.vala"
 					g_signal_emit_by_name (data->self, "failed");
-#line 547 "webapp-fetcher.c"
+#line 585 "webapp-fetcher.c"
 					_g_error_free0 (data->e);
 				}
 			}
@@ -553,9 +591,9 @@ static gboolean unity_webapp_fetch_file_fetch_data_co (UnityWebappFetchFileFetch
 				g_clear_error (&data->_inner_error_);
 				return FALSE;
 			}
-#line 101 "webapp-fetcher.vala"
+#line 100 "webapp-fetcher.vala"
 			unity_webapp_fetch_file_read_something_async (data->self, NULL, NULL);
-#line 559 "webapp-fetcher.c"
+#line 597 "webapp-fetcher.c"
 		}
 		{
 			if (data->_state_ == 0) {
@@ -612,20 +650,20 @@ static gboolean unity_webapp_fetch_file_read_something_async_co (UnityWebappFetc
 			data->bufsize = (gssize) 1;
 			{
 				data->_tmp1_ = TRUE;
-#line 110 "webapp-fetcher.vala"
+#line 109 "webapp-fetcher.vala"
 				while (TRUE) {
-#line 110 "webapp-fetcher.vala"
+#line 109 "webapp-fetcher.vala"
 					if (!data->_tmp1_) {
-#line 129 "webapp-fetcher.vala"
+#line 127 "webapp-fetcher.vala"
 						if (!(data->bufsize > 0)) {
-#line 129 "webapp-fetcher.vala"
+#line 127 "webapp-fetcher.vala"
 							break;
-#line 624 "webapp-fetcher.c"
+#line 662 "webapp-fetcher.c"
 						}
 					}
-#line 110 "webapp-fetcher.vala"
+#line 109 "webapp-fetcher.vala"
 					data->_tmp1_ = FALSE;
-#line 629 "webapp-fetcher.c"
+#line 667 "webapp-fetcher.c"
 					{
 						data->_state_ = 1;
 						g_input_stream_read_async ((GInputStream*) data->self->priv->stream, data->buffer, (gsize) data->size, G_PRIORITY_DEFAULT, NULL, unity_webapp_fetch_file_read_something_async_ready, data);
@@ -635,28 +673,28 @@ static gboolean unity_webapp_fetch_file_read_something_async_co (UnityWebappFetc
 						if (data->_inner_error_ != NULL) {
 							goto __catch17_g_error;
 						}
-#line 112 "webapp-fetcher.vala"
+#line 111 "webapp-fetcher.vala"
 						data->bufsize = data->_tmp2_;
-#line 113 "webapp-fetcher.vala"
+#line 112 "webapp-fetcher.vala"
 						if (data->bufsize < 1) {
-#line 113 "webapp-fetcher.vala"
+#line 112 "webapp-fetcher.vala"
 							break;
-#line 645 "webapp-fetcher.c"
+#line 683 "webapp-fetcher.c"
 						}
-#line 115 "webapp-fetcher.vala"
+#line 114 "webapp-fetcher.vala"
 						if (data->bufsize != data->size) {
-#line 649 "webapp-fetcher.c"
+#line 687 "webapp-fetcher.c"
 							data->cpybuf = (data->_tmp3_ = g_new0 (guint8, data->bufsize), data->cpybuf_length1 = data->bufsize, data->cpybuf_size = data->cpybuf_length1, data->_tmp3_);
-#line 118 "webapp-fetcher.vala"
+#line 117 "webapp-fetcher.vala"
 							memcpy (data->cpybuf, data->buffer, (gsize) data->bufsize);
-#line 119 "webapp-fetcher.vala"
+#line 118 "webapp-fetcher.vala"
 							g_byte_array_append (data->self->priv->data, data->cpybuf, data->cpybuf_length1);
-#line 655 "webapp-fetcher.c"
+#line 693 "webapp-fetcher.c"
 							data->cpybuf = (g_free (data->cpybuf), NULL);
 						} else {
-#line 123 "webapp-fetcher.vala"
+#line 122 "webapp-fetcher.vala"
 							g_byte_array_append (data->self->priv->data, data->buffer, data->buffer_length1);
-#line 660 "webapp-fetcher.c"
+#line 698 "webapp-fetcher.c"
 						}
 					}
 					goto __finally17;
@@ -665,11 +703,9 @@ static gboolean unity_webapp_fetch_file_read_something_async_co (UnityWebappFetc
 						data->e = data->_inner_error_;
 						data->_inner_error_ = NULL;
 						{
-#line 126 "webapp-fetcher.vala"
-							g_warning ("webapp-fetcher.vala:126: %s", data->e->message);
-#line 127 "webapp-fetcher.vala"
+#line 125 "webapp-fetcher.vala"
 							g_signal_emit_by_name (data->self, "failed");
-#line 673 "webapp-fetcher.c"
+#line 709 "webapp-fetcher.c"
 							_g_error_free0 (data->e);
 						}
 					}
@@ -682,9 +718,9 @@ static gboolean unity_webapp_fetch_file_read_something_async_co (UnityWebappFetc
 					}
 				}
 			}
-#line 130 "webapp-fetcher.vala"
+#line 128 "webapp-fetcher.vala"
 			g_signal_emit_by_name (data->self, "completed", data->self->priv->data);
-#line 688 "webapp-fetcher.c"
+#line 724 "webapp-fetcher.c"
 			data->buffer = (g_free (data->buffer), NULL);
 		}
 		{
@@ -706,7 +742,7 @@ const char* unity_webapp_fetch_file_get_uri (UnityWebappFetchFile* self) {
 	result = self->priv->_uri;
 #line 69 "webapp-fetcher.vala"
 	return result;
-#line 710 "webapp-fetcher.c"
+#line 746 "webapp-fetcher.c"
 }
 
 
@@ -732,7 +768,7 @@ static GObject * unity_webapp_fetch_file_constructor (GType type, guint n_constr
 		self->priv->file = (_tmp0_ = g_file_new_for_uri (self->priv->_uri), _g_object_unref0 (self->priv->file), _tmp0_);
 #line 88 "webapp-fetcher.vala"
 		self->priv->data = (_tmp1_ = g_byte_array_new (), _g_byte_array_free0 (self->priv->data), _tmp1_);
-#line 736 "webapp-fetcher.c"
+#line 772 "webapp-fetcher.c"
 	}
 	return obj;
 }
@@ -805,68 +841,234 @@ static void unity_webapp_fetch_file_set_property (GObject * object, guint proper
 }
 
 
-#line 161 "webapp-fetcher.vala"
-UnityWebappWebiconFetcher* unity_webapp_webicon_fetcher_construct (GType object_type, const char* uri, const char* destination) {
-#line 811 "webapp-fetcher.c"
-	UnityWebappWebiconFetcher * self;
-#line 161 "webapp-fetcher.vala"
+#line 138 "webapp-fetcher.vala"
+char* unity_webapp_get_hostname (const char* uri) {
+#line 847 "webapp-fetcher.c"
+	char* result;
+	GError * _inner_error_;
+	GMatchInfo* matchinfo;
+	GMatchInfo* _tmp4_;
+	gboolean _tmp3_;
+	GMatchInfo* _tmp2_ = NULL;
+	gboolean ismatch;
+	char* hostname;
+#line 138 "webapp-fetcher.vala"
 	g_return_val_if_fail (uri != NULL, NULL);
-#line 161 "webapp-fetcher.vala"
+#line 858 "webapp-fetcher.c"
+	_inner_error_ = NULL;
+#line 140 "webapp-fetcher.vala"
+	if (unity_webapp_hostname_match == NULL) {
+#line 862 "webapp-fetcher.c"
+		{
+			GRegex* _tmp0_;
+			GRegex* _tmp1_;
+#line 143 "webapp-fetcher.vala"
+			_tmp0_ = g_regex_new (hostname_string, G_REGEX_UNGREEDY, 0, &_inner_error_);
+#line 868 "webapp-fetcher.c"
+			if (_inner_error_ != NULL) {
+				goto __catch18_g_error;
+			}
+#line 143 "webapp-fetcher.vala"
+			unity_webapp_hostname_match = (_tmp1_ = _tmp0_, _g_regex_unref0 (unity_webapp_hostname_match), _tmp1_);
+#line 874 "webapp-fetcher.c"
+		}
+		goto __finally18;
+		__catch18_g_error:
+		{
+			GError * e;
+			e = _inner_error_;
+			_inner_error_ = NULL;
+			{
+#line 145 "webapp-fetcher.vala"
+				g_warning ("webapp-fetcher.vala:145: %s", e->message);
+#line 885 "webapp-fetcher.c"
+				_g_error_free0 (e);
+			}
+		}
+		__finally18:
+		if (_inner_error_ != NULL) {
+			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+			g_clear_error (&_inner_error_);
+			return NULL;
+		}
+	}
+	matchinfo = NULL;
+#line 151 "webapp-fetcher.vala"
+	ismatch = (_tmp3_ = g_regex_match (unity_webapp_hostname_match, uri, 0, &_tmp2_), matchinfo = (_tmp4_ = _tmp2_, _g_match_info_free0 (matchinfo), _tmp4_), _tmp3_);
+#line 152 "webapp-fetcher.vala"
+	hostname = g_strdup ("");
+#line 153 "webapp-fetcher.vala"
+	if (ismatch) {
+#line 903 "webapp-fetcher.c"
+		char* _tmp5_;
+#line 153 "webapp-fetcher.vala"
+		hostname = (_tmp5_ = g_match_info_fetch_named (matchinfo, "hostname"), _g_free0 (hostname), _tmp5_);
+#line 907 "webapp-fetcher.c"
+	}
+	result = hostname;
+	_g_match_info_free0 (matchinfo);
+#line 154 "webapp-fetcher.vala"
+	return result;
+#line 913 "webapp-fetcher.c"
+}
+
+
+#line 177 "webapp-fetcher.vala"
+UnityWebappWebiconFetcher* unity_webapp_webicon_fetcher_construct (GType object_type, const char* uri, const char* destination, const char* desktop_file) {
+#line 919 "webapp-fetcher.c"
+	UnityWebappWebiconFetcher * self;
+#line 177 "webapp-fetcher.vala"
+	g_return_val_if_fail (uri != NULL, NULL);
+#line 177 "webapp-fetcher.vala"
 	g_return_val_if_fail (destination != NULL, NULL);
-#line 163 "webapp-fetcher.vala"
-	self = (UnityWebappWebiconFetcher*) g_object_new (object_type, "uri", uri, "destination", destination, NULL);
-#line 819 "webapp-fetcher.c"
+#line 177 "webapp-fetcher.vala"
+	g_return_val_if_fail (desktop_file != NULL, NULL);
+#line 179 "webapp-fetcher.vala"
+	self = (UnityWebappWebiconFetcher*) g_object_new (object_type, "uri", uri, "destination", destination, "desktop-location", desktop_file, NULL);
+#line 929 "webapp-fetcher.c"
 	return self;
 }
 
 
-#line 161 "webapp-fetcher.vala"
-UnityWebappWebiconFetcher* unity_webapp_webicon_fetcher_new (const char* uri, const char* destination) {
-#line 161 "webapp-fetcher.vala"
-	return unity_webapp_webicon_fetcher_construct (UNITY_WEBAPP_TYPE_WEBICON_FETCHER, uri, destination);
-#line 828 "webapp-fetcher.c"
+#line 177 "webapp-fetcher.vala"
+UnityWebappWebiconFetcher* unity_webapp_webicon_fetcher_new (const char* uri, const char* destination, const char* desktop_file) {
+#line 177 "webapp-fetcher.vala"
+	return unity_webapp_webicon_fetcher_construct (UNITY_WEBAPP_TYPE_WEBICON_FETCHER, uri, destination, desktop_file);
+#line 938 "webapp-fetcher.c"
 }
 
 
-#line 201 "webapp-fetcher.vala"
+#line 216 "webapp-fetcher.vala"
+static void unity_webapp_webicon_fetcher_set_desktop_file_icon (UnityWebappWebiconFetcher* self, const char* iconname) {
+#line 944 "webapp-fetcher.c"
+	GError * _inner_error_;
+#line 216 "webapp-fetcher.vala"
+	g_return_if_fail (self != NULL);
+#line 216 "webapp-fetcher.vala"
+	g_return_if_fail (iconname != NULL);
+#line 950 "webapp-fetcher.c"
+	_inner_error_ = NULL;
+	{
+		GFile* file;
+		GFileOutputStream* file_stream;
+		GKeyFile* desktop_file;
+		char* desktop_data;
+		GDataOutputStream* data_stream;
+#line 219 "webapp-fetcher.vala"
+		file = g_file_new_for_path (self->priv->_desktop_location);
+#line 221 "webapp-fetcher.vala"
+		file_stream = g_file_replace (file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, &_inner_error_);
+#line 962 "webapp-fetcher.c"
+		if (_inner_error_ != NULL) {
+			_g_object_unref0 (file);
+			goto __catch19_g_error;
+		}
+#line 223 "webapp-fetcher.vala"
+		desktop_file = g_key_file_new ();
+#line 224 "webapp-fetcher.vala"
+		g_key_file_load_from_file (desktop_file, self->priv->_desktop_location, 0, &_inner_error_);
+#line 971 "webapp-fetcher.c"
+		if (_inner_error_ != NULL) {
+			_g_object_unref0 (file);
+			_g_object_unref0 (file_stream);
+			_g_key_file_free0 (desktop_file);
+			goto __catch19_g_error;
+		}
+#line 225 "webapp-fetcher.vala"
+		g_key_file_set_string (desktop_file, "Desktop Entry", "Icon", iconname);
+#line 226 "webapp-fetcher.vala"
+		desktop_data = g_key_file_to_data (desktop_file, NULL, NULL);
+#line 229 "webapp-fetcher.vala"
+		data_stream = g_data_output_stream_new ((GOutputStream*) file_stream);
+#line 230 "webapp-fetcher.vala"
+		g_data_output_stream_put_string (data_stream, desktop_data, NULL, &_inner_error_);
+#line 986 "webapp-fetcher.c"
+		if (_inner_error_ != NULL) {
+			_g_object_unref0 (file);
+			_g_object_unref0 (file_stream);
+			_g_key_file_free0 (desktop_file);
+			_g_free0 (desktop_data);
+			_g_object_unref0 (data_stream);
+			goto __catch19_g_error;
+		}
+#line 231 "webapp-fetcher.vala"
+		g_output_stream_close ((GOutputStream*) data_stream, NULL, &_inner_error_);
+#line 997 "webapp-fetcher.c"
+		if (_inner_error_ != NULL) {
+			_g_object_unref0 (file);
+			_g_object_unref0 (file_stream);
+			_g_key_file_free0 (desktop_file);
+			_g_free0 (desktop_data);
+			_g_object_unref0 (data_stream);
+			goto __catch19_g_error;
+		}
+		_g_object_unref0 (file);
+		_g_object_unref0 (file_stream);
+		_g_key_file_free0 (desktop_file);
+		_g_free0 (desktop_data);
+		_g_object_unref0 (data_stream);
+	}
+	goto __finally19;
+	__catch19_g_error:
+	{
+		GError * e;
+		e = _inner_error_;
+		_inner_error_ = NULL;
+		{
+#line 233 "webapp-fetcher.vala"
+			g_warning ("webapp-fetcher.vala:233: %s", e->message);
+#line 1021 "webapp-fetcher.c"
+			_g_error_free0 (e);
+		}
+	}
+	__finally19:
+	if (_inner_error_ != NULL) {
+		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+		g_clear_error (&_inner_error_);
+		return;
+	}
+}
+
+
+#line 241 "webapp-fetcher.vala"
 static void _lambda0_ (UnityWebappWebiconFetcher* self) {
-#line 201 "webapp-fetcher.vala"
+#line 241 "webapp-fetcher.vala"
 	g_signal_emit_by_name (self, "failed");
-#line 836 "webapp-fetcher.c"
+#line 1038 "webapp-fetcher.c"
 }
 
 
-#line 201 "webapp-fetcher.vala"
+#line 241 "webapp-fetcher.vala"
 static void __lambda0__unity_webapp_fetch_file_failed (UnityWebappFetchFile* _sender, gpointer self) {
-#line 842 "webapp-fetcher.c"
+#line 1044 "webapp-fetcher.c"
 	_lambda0_ (self);
 }
 
 
-#line 207 "webapp-fetcher.vala"
+#line 247 "webapp-fetcher.vala"
 static void _unity_webapp_webicon_fetcher_on_fetcher_completed_unity_webapp_fetch_file_completed (UnityWebappFetchFile* _sender, GByteArray* data, gpointer self) {
-#line 849 "webapp-fetcher.c"
+#line 1051 "webapp-fetcher.c"
 	unity_webapp_webicon_fetcher_on_fetcher_completed (self, data);
 }
 
 
-#line 197 "webapp-fetcher.vala"
+#line 237 "webapp-fetcher.vala"
 void unity_webapp_webicon_fetcher_fetch_webapp_data (UnityWebappWebiconFetcher* self) {
-#line 856 "webapp-fetcher.c"
+#line 1058 "webapp-fetcher.c"
 	UnityWebappFetchFile* _tmp0_;
-#line 197 "webapp-fetcher.vala"
+#line 237 "webapp-fetcher.vala"
 	g_return_if_fail (self != NULL);
-#line 200 "webapp-fetcher.vala"
+#line 240 "webapp-fetcher.vala"
 	self->priv->fetcher = (_tmp0_ = unity_webapp_fetch_file_new (self->priv->_uri), _g_object_unref0 (self->priv->fetcher), _tmp0_);
-#line 201 "webapp-fetcher.vala"
+#line 241 "webapp-fetcher.vala"
 	g_signal_connect_object (self->priv->fetcher, "failed", (GCallback) __lambda0__unity_webapp_fetch_file_failed, self, 0);
-#line 202 "webapp-fetcher.vala"
+#line 242 "webapp-fetcher.vala"
 	g_signal_connect_object (self->priv->fetcher, "completed", (GCallback) _unity_webapp_webicon_fetcher_on_fetcher_completed_unity_webapp_fetch_file_completed, self, 0);
-#line 203 "webapp-fetcher.vala"
+#line 243 "webapp-fetcher.vala"
 	self->priv->html_phase = TRUE;
-#line 204 "webapp-fetcher.vala"
+#line 244 "webapp-fetcher.vala"
 	unity_webapp_fetch_file_fetch_data (self->priv->fetcher, NULL, NULL);
-#line 870 "webapp-fetcher.c"
+#line 1072 "webapp-fetcher.c"
 }
 
 
@@ -875,273 +1077,272 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 207 "webapp-fetcher.vala"
+#line 247 "webapp-fetcher.vala"
 static void unity_webapp_webicon_fetcher_on_fetcher_completed (UnityWebappWebiconFetcher* self, GByteArray* data) {
-#line 881 "webapp-fetcher.c"
+#line 1083 "webapp-fetcher.c"
 	GError * _inner_error_;
-#line 207 "webapp-fetcher.vala"
+#line 247 "webapp-fetcher.vala"
 	g_return_if_fail (self != NULL);
-#line 207 "webapp-fetcher.vala"
+#line 247 "webapp-fetcher.vala"
 	g_return_if_fail (data != NULL);
-#line 887 "webapp-fetcher.c"
+#line 1089 "webapp-fetcher.c"
 	_inner_error_ = NULL;
-#line 210 "webapp-fetcher.vala"
+#line 250 "webapp-fetcher.vala"
 	if (self->priv->html_phase) {
-#line 891 "webapp-fetcher.c"
+#line 1093 "webapp-fetcher.c"
 		char* html;
-		GMatchInfo* matchinfo;
-		GMatchInfo* _tmp2_;
-		gboolean _tmp1_;
-		GMatchInfo* _tmp0_ = NULL;
-		gboolean ismatch;
 		char* hostname;
-		char* _tmp4_;
+		char* _tmp1_;
+		char* _tmp0_;
 		GeePriorityQueue* primary_icons;
-		char* _tmp5_;
+		char* _tmp3_;
+		char* _tmp2_;
 		GeePriorityQueue* secondary_icons;
-		char* _tmp6_;
+		char* _tmp5_;
+		char* _tmp4_;
 		char* _tmp7_;
-#line 213 "webapp-fetcher.vala"
+		char* _tmp6_;
+#line 253 "webapp-fetcher.vala"
 		self->priv->html_phase = FALSE;
-#line 214 "webapp-fetcher.vala"
+#line 254 "webapp-fetcher.vala"
 		html = g_strdup ((const char*) data->data);
-#line 909 "webapp-fetcher.c"
-		matchinfo = NULL;
-#line 218 "webapp-fetcher.vala"
-		ismatch = (_tmp1_ = g_regex_match (unity_webapp_hostname_match, self->priv->_uri, 0, &_tmp0_), matchinfo = (_tmp2_ = _tmp0_, _g_match_info_free0 (matchinfo), _tmp2_), _tmp1_);
-#line 219 "webapp-fetcher.vala"
-		hostname = g_strdup ("");
-#line 220 "webapp-fetcher.vala"
-		if (ismatch) {
-#line 917 "webapp-fetcher.c"
-			char* _tmp3_;
-#line 220 "webapp-fetcher.vala"
-			hostname = (_tmp3_ = g_match_info_fetch (matchinfo, 0), _g_free0 (hostname), _tmp3_);
-#line 921 "webapp-fetcher.c"
-		}
-#line 223 "webapp-fetcher.vala"
-		gee_abstract_queue_offer ((GeeAbstractQueue*) self->priv->icon_uris, _tmp4_ = g_strconcat (hostname, "/ubuntu-launcher.png", NULL));
-#line 925 "webapp-fetcher.c"
-		_g_free0 (_tmp4_);
-#line 224 "webapp-fetcher.vala"
+#line 255 "webapp-fetcher.vala"
+		hostname = unity_webapp_get_hostname (self->priv->_uri);
+#line 257 "webapp-fetcher.vala"
+		gee_abstract_queue_offer ((GeeAbstractQueue*) self->priv->icon_uris, _tmp1_ = g_strconcat (_tmp0_ = g_strconcat ("http://", hostname, NULL), "/ubuntu-launcher.png", NULL));
+#line 1114 "webapp-fetcher.c"
+		_g_free0 (_tmp1_);
+		_g_free0 (_tmp0_);
+#line 258 "webapp-fetcher.vala"
 		primary_icons = unity_webapp_webicon_fetcher_extract_icon_from_html (self, html, TRUE);
-#line 929 "webapp-fetcher.c"
+#line 1119 "webapp-fetcher.c"
 		{
 			GeeIterator* _uri_it;
 			_uri_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) primary_icons);
-#line 225 "webapp-fetcher.vala"
+#line 259 "webapp-fetcher.vala"
 			while (TRUE) {
-#line 935 "webapp-fetcher.c"
+#line 1125 "webapp-fetcher.c"
 				char* uri;
-#line 225 "webapp-fetcher.vala"
+#line 259 "webapp-fetcher.vala"
 				if (!gee_iterator_next (_uri_it)) {
-#line 225 "webapp-fetcher.vala"
+#line 259 "webapp-fetcher.vala"
 					break;
-#line 941 "webapp-fetcher.c"
+#line 1131 "webapp-fetcher.c"
 				}
-#line 225 "webapp-fetcher.vala"
+#line 259 "webapp-fetcher.vala"
 				uri = (char*) gee_iterator_get (_uri_it);
-#line 227 "webapp-fetcher.vala"
+#line 261 "webapp-fetcher.vala"
 				gee_abstract_queue_offer ((GeeAbstractQueue*) self->priv->icon_uris, uri);
-#line 947 "webapp-fetcher.c"
+#line 1137 "webapp-fetcher.c"
 				_g_free0 (uri);
 			}
 			_g_object_unref0 (_uri_it);
 		}
-#line 229 "webapp-fetcher.vala"
-		gee_abstract_queue_offer ((GeeAbstractQueue*) self->priv->icon_uris, _tmp5_ = g_strconcat (hostname, "/apple-touch-icon.png", NULL));
-#line 954 "webapp-fetcher.c"
-		_g_free0 (_tmp5_);
-#line 231 "webapp-fetcher.vala"
+#line 263 "webapp-fetcher.vala"
+		gee_abstract_queue_offer ((GeeAbstractQueue*) self->priv->icon_uris, _tmp3_ = g_strconcat (_tmp2_ = g_strconcat ("http://", hostname, NULL), "/apple-touch-icon.png", NULL));
+#line 1144 "webapp-fetcher.c"
+		_g_free0 (_tmp3_);
+		_g_free0 (_tmp2_);
+#line 265 "webapp-fetcher.vala"
 		secondary_icons = unity_webapp_webicon_fetcher_extract_icon_from_html (self, html, FALSE);
-#line 958 "webapp-fetcher.c"
+#line 1149 "webapp-fetcher.c"
 		{
 			GeeIterator* _uri_it;
 			_uri_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) secondary_icons);
-#line 232 "webapp-fetcher.vala"
+#line 266 "webapp-fetcher.vala"
 			while (TRUE) {
-#line 964 "webapp-fetcher.c"
+#line 1155 "webapp-fetcher.c"
 				char* uri;
-#line 232 "webapp-fetcher.vala"
+#line 266 "webapp-fetcher.vala"
 				if (!gee_iterator_next (_uri_it)) {
-#line 232 "webapp-fetcher.vala"
+#line 266 "webapp-fetcher.vala"
 					break;
-#line 970 "webapp-fetcher.c"
+#line 1161 "webapp-fetcher.c"
 				}
-#line 232 "webapp-fetcher.vala"
+#line 266 "webapp-fetcher.vala"
 				uri = (char*) gee_iterator_get (_uri_it);
-#line 234 "webapp-fetcher.vala"
+#line 268 "webapp-fetcher.vala"
 				gee_abstract_queue_offer ((GeeAbstractQueue*) self->priv->icon_uris, uri);
-#line 976 "webapp-fetcher.c"
+#line 1167 "webapp-fetcher.c"
 				_g_free0 (uri);
 			}
 			_g_object_unref0 (_uri_it);
 		}
-#line 236 "webapp-fetcher.vala"
-		gee_abstract_queue_offer ((GeeAbstractQueue*) self->priv->icon_uris, _tmp6_ = g_strconcat (hostname, "/favicon.ico", NULL));
-#line 983 "webapp-fetcher.c"
-		_g_free0 (_tmp6_);
-#line 237 "webapp-fetcher.vala"
-		gee_abstract_queue_offer ((GeeAbstractQueue*) self->priv->icon_uris, _tmp7_ = g_strconcat (hostname, "/favicon.png", NULL));
-#line 987 "webapp-fetcher.c"
+#line 270 "webapp-fetcher.vala"
+		gee_abstract_queue_offer ((GeeAbstractQueue*) self->priv->icon_uris, _tmp5_ = g_strconcat (_tmp4_ = g_strconcat ("http://", hostname, NULL), "/favicon.ico", NULL));
+#line 1174 "webapp-fetcher.c"
+		_g_free0 (_tmp5_);
+		_g_free0 (_tmp4_);
+#line 271 "webapp-fetcher.vala"
+		gee_abstract_queue_offer ((GeeAbstractQueue*) self->priv->icon_uris, _tmp7_ = g_strconcat (_tmp6_ = g_strconcat ("http://", hostname, NULL), "/favicon.png", NULL));
+#line 1179 "webapp-fetcher.c"
 		_g_free0 (_tmp7_);
-#line 241 "webapp-fetcher.vala"
+		_g_free0 (_tmp6_);
+#line 273 "webapp-fetcher.vala"
 		unity_webapp_webicon_fetcher_attempt_fetch_icon (self);
-#line 991 "webapp-fetcher.c"
+#line 1184 "webapp-fetcher.c"
 		_g_free0 (html);
-		_g_match_info_free0 (matchinfo);
 		_g_free0 (hostname);
 		_g_object_unref0 (primary_icons);
 		_g_object_unref0 (secondary_icons);
 	} else {
-#line 244 "webapp-fetcher.vala"
+#line 276 "webapp-fetcher.vala"
 		if (self->priv->icon_phase) {
-#line 1000 "webapp-fetcher.c"
+#line 1192 "webapp-fetcher.c"
+			char* _tmp8_;
 			{
 				GdkPixbufLoader* loader;
 				GdkPixbuf* icon;
 				UnityWebappIconBuilder* builder;
-#line 248 "webapp-fetcher.vala"
+#line 280 "webapp-fetcher.vala"
 				loader = gdk_pixbuf_loader_new ();
-#line 249 "webapp-fetcher.vala"
+#line 281 "webapp-fetcher.vala"
 				gdk_pixbuf_loader_write (loader, data->data, (gsize) data->len, &_inner_error_);
-#line 1009 "webapp-fetcher.c"
+#line 1202 "webapp-fetcher.c"
 				if (_inner_error_ != NULL) {
 					_g_object_unref0 (loader);
-					goto __catch18_g_error;
+					goto __catch20_g_error;
 				}
-#line 250 "webapp-fetcher.vala"
+#line 282 "webapp-fetcher.vala"
 				gdk_pixbuf_loader_close (loader, &_inner_error_);
-#line 1016 "webapp-fetcher.c"
+#line 1209 "webapp-fetcher.c"
 				if (_inner_error_ != NULL) {
 					_g_object_unref0 (loader);
-					goto __catch18_g_error;
+					goto __catch20_g_error;
 				}
-#line 251 "webapp-fetcher.vala"
+#line 283 "webapp-fetcher.vala"
 				icon = _g_object_ref0 (gdk_pixbuf_loader_get_pixbuf (loader));
-#line 252 "webapp-fetcher.vala"
+#line 284 "webapp-fetcher.vala"
 				builder = unity_webapp_icon_builder_new (self->priv->_destination, icon);
-#line 253 "webapp-fetcher.vala"
+#line 285 "webapp-fetcher.vala"
 				unity_webapp_icon_builder_build_icon (builder);
-#line 1027 "webapp-fetcher.c"
+#line 1220 "webapp-fetcher.c"
 				_g_object_unref0 (loader);
 				_g_object_unref0 (icon);
 				_g_object_unref0 (builder);
 			}
-			goto __finally18;
-			__catch18_g_error:
+			goto __finally20;
+			__catch20_g_error:
 			{
 				GError * e;
 				e = _inner_error_;
 				_inner_error_ = NULL;
 				{
-#line 255 "webapp-fetcher.vala"
-					g_warning ("webapp-fetcher.vala:255: %s", e->message);
-#line 258 "webapp-fetcher.vala"
+#line 289 "webapp-fetcher.vala"
 					unity_webapp_webicon_fetcher_attempt_fetch_icon (self);
-#line 1043 "webapp-fetcher.c"
+#line 1234 "webapp-fetcher.c"
 					_g_error_free0 (e);
+#line 290 "webapp-fetcher.vala"
+					return;
+#line 1238 "webapp-fetcher.c"
 				}
 			}
-			__finally18:
+			__finally20:
 			if (_inner_error_ != NULL) {
 				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 				g_clear_error (&_inner_error_);
 				return;
 			}
+#line 294 "webapp-fetcher.vala"
+			unity_webapp_webicon_fetcher_set_desktop_file_icon (self, _tmp8_ = unity_webapp_get_hostname (self->priv->_uri));
+#line 1249 "webapp-fetcher.c"
+			_g_free0 (_tmp8_);
+#line 295 "webapp-fetcher.vala"
+			g_signal_emit_by_name (unity_global_shell, "need-new-icon-cache");
+#line 1253 "webapp-fetcher.c"
 		}
 	}
 }
 
 
-#line 264 "webapp-fetcher.vala"
+#line 300 "webapp-fetcher.vala"
 static void unity_webapp_webicon_fetcher_on_fetcher_failed (UnityWebappWebiconFetcher* self) {
-#line 264 "webapp-fetcher.vala"
+#line 300 "webapp-fetcher.vala"
 	g_return_if_fail (self != NULL);
-#line 267 "webapp-fetcher.vala"
+#line 303 "webapp-fetcher.vala"
 	if (self->priv->html_phase) {
-#line 267 "webapp-fetcher.vala"
+#line 303 "webapp-fetcher.vala"
 		g_signal_emit_by_name (self, "failed");
-#line 267 "webapp-fetcher.vala"
+#line 303 "webapp-fetcher.vala"
 		return;
-#line 1068 "webapp-fetcher.c"
+#line 1269 "webapp-fetcher.c"
 	}
-#line 268 "webapp-fetcher.vala"
+#line 304 "webapp-fetcher.vala"
 	if (self->priv->icon_phase) {
-#line 271 "webapp-fetcher.vala"
+#line 307 "webapp-fetcher.vala"
 		unity_webapp_webicon_fetcher_attempt_fetch_icon (self);
-#line 1074 "webapp-fetcher.c"
+#line 1275 "webapp-fetcher.c"
 	}
 }
 
 
 #line 1021 "glib-2.0.vapi"
 static gboolean string_contains (const char* self, const char* needle) {
-#line 1081 "webapp-fetcher.c"
+#line 1282 "webapp-fetcher.c"
 	gboolean result;
 #line 1021 "glib-2.0.vapi"
 	g_return_val_if_fail (self != NULL, FALSE);
 #line 1021 "glib-2.0.vapi"
 	g_return_val_if_fail (needle != NULL, FALSE);
-#line 1087 "webapp-fetcher.c"
+#line 1288 "webapp-fetcher.c"
 	result = strstr (self, needle) != NULL;
 #line 1022 "glib-2.0.vapi"
 	return result;
-#line 1091 "webapp-fetcher.c"
+#line 1292 "webapp-fetcher.c"
 }
 
 
-#line 289 "webapp-fetcher.vala"
+#line 325 "webapp-fetcher.vala"
 static void _lambda1_ (UnityWebappWebiconFetcher* self) {
-#line 289 "webapp-fetcher.vala"
+#line 325 "webapp-fetcher.vala"
 	unity_webapp_webicon_fetcher_on_fetcher_failed (self);
-#line 1099 "webapp-fetcher.c"
+#line 1300 "webapp-fetcher.c"
 }
 
 
-#line 289 "webapp-fetcher.vala"
+#line 325 "webapp-fetcher.vala"
 static void __lambda1__unity_webapp_fetch_file_failed (UnityWebappFetchFile* _sender, gpointer self) {
-#line 1105 "webapp-fetcher.c"
+#line 1306 "webapp-fetcher.c"
 	_lambda1_ (self);
 }
 
 
-#line 277 "webapp-fetcher.vala"
+#line 313 "webapp-fetcher.vala"
 static void unity_webapp_webicon_fetcher_attempt_fetch_icon (UnityWebappWebiconFetcher* self) {
-#line 1112 "webapp-fetcher.c"
+#line 1313 "webapp-fetcher.c"
 	char* uri;
 	UnityWebappFetchFile* _tmp1_;
-#line 277 "webapp-fetcher.vala"
+#line 313 "webapp-fetcher.vala"
 	g_return_if_fail (self != NULL);
-#line 279 "webapp-fetcher.vala"
+#line 315 "webapp-fetcher.vala"
 	if (gee_collection_get_size ((GeeCollection*) self->priv->icon_uris) < 1) {
-#line 279 "webapp-fetcher.vala"
+#line 315 "webapp-fetcher.vala"
 		g_signal_emit_by_name (self, "failed");
-#line 279 "webapp-fetcher.vala"
+#line 315 "webapp-fetcher.vala"
 		return;
-#line 1123 "webapp-fetcher.c"
+#line 1324 "webapp-fetcher.c"
 	}
-#line 281 "webapp-fetcher.vala"
+#line 317 "webapp-fetcher.vala"
 	self->priv->icon_phase = TRUE;
-#line 282 "webapp-fetcher.vala"
+#line 318 "webapp-fetcher.vala"
 	uri = (char*) gee_abstract_queue_poll ((GeeAbstractQueue*) self->priv->icon_uris);
-#line 283 "webapp-fetcher.vala"
+#line 319 "webapp-fetcher.vala"
 	if (!string_contains (uri, "http://")) {
-#line 1131 "webapp-fetcher.c"
+#line 1332 "webapp-fetcher.c"
 		char* _tmp0_;
-#line 286 "webapp-fetcher.vala"
+#line 322 "webapp-fetcher.vala"
 		uri = (_tmp0_ = g_strconcat (self->priv->_uri, uri, NULL), _g_free0 (uri), _tmp0_);
-#line 1135 "webapp-fetcher.c"
+#line 1336 "webapp-fetcher.c"
 	}
-#line 288 "webapp-fetcher.vala"
+#line 324 "webapp-fetcher.vala"
 	self->priv->fetcher = (_tmp1_ = unity_webapp_fetch_file_new (uri), _g_object_unref0 (self->priv->fetcher), _tmp1_);
-#line 289 "webapp-fetcher.vala"
+#line 325 "webapp-fetcher.vala"
 	g_signal_connect_object (self->priv->fetcher, "failed", (GCallback) __lambda1__unity_webapp_fetch_file_failed, self, 0);
-#line 290 "webapp-fetcher.vala"
+#line 326 "webapp-fetcher.vala"
 	g_signal_connect_object (self->priv->fetcher, "completed", (GCallback) _unity_webapp_webicon_fetcher_on_fetcher_completed_unity_webapp_fetch_file_completed, self, 0);
-#line 291 "webapp-fetcher.vala"
+#line 327 "webapp-fetcher.vala"
 	unity_webapp_fetch_file_fetch_data (self->priv->fetcher, NULL, NULL);
-#line 1145 "webapp-fetcher.c"
+#line 1346 "webapp-fetcher.c"
 	_g_free0 (uri);
 }
 
@@ -1151,46 +1352,46 @@ static gpointer _g_regex_ref0 (gpointer self) {
 }
 
 
-#line 294 "webapp-fetcher.vala"
+#line 330 "webapp-fetcher.vala"
 static GeePriorityQueue* unity_webapp_webicon_fetcher_extract_icon_from_html (UnityWebappWebiconFetcher* self, const char* html, gboolean preferred) {
-#line 1157 "webapp-fetcher.c"
+#line 1358 "webapp-fetcher.c"
 	GeePriorityQueue* result;
 	GeePriorityQueue* return_uris;
 	GMatchInfo* matchinfo;
 	gint regex_array_size;
 	gint regex_array_length1;
 	GRegex** regex_array;
-#line 294 "webapp-fetcher.vala"
+#line 330 "webapp-fetcher.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 294 "webapp-fetcher.vala"
+#line 330 "webapp-fetcher.vala"
 	g_return_val_if_fail (html != NULL, NULL);
-#line 296 "webapp-fetcher.vala"
+#line 332 "webapp-fetcher.vala"
 	return_uris = gee_priority_queue_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, NULL);
-#line 1170 "webapp-fetcher.c"
+#line 1371 "webapp-fetcher.c"
 	matchinfo = NULL;
 	regex_array = (regex_array_length1 = 0, NULL);
-#line 299 "webapp-fetcher.vala"
+#line 335 "webapp-fetcher.vala"
 	if (preferred) {
-#line 1175 "webapp-fetcher.c"
+#line 1376 "webapp-fetcher.c"
 		GRegex** _tmp1_;
 		GRegex** _tmp0_ = NULL;
-#line 301 "webapp-fetcher.vala"
+#line 337 "webapp-fetcher.vala"
 		regex_array = (_tmp1_ = (_tmp0_ = g_new0 (GRegex*, 2 + 1), _tmp0_[0] = _g_regex_ref0 (unity_webapp_primary_match_prefix), _tmp0_[1] = _g_regex_ref0 (unity_webapp_primary_match_suffix), _tmp0_), regex_array = (_vala_array_free (regex_array, regex_array_length1, (GDestroyNotify) g_regex_unref), NULL), regex_array_length1 = 2, regex_array_size = regex_array_length1, _tmp1_);
-#line 1180 "webapp-fetcher.c"
+#line 1381 "webapp-fetcher.c"
 	} else {
 		GRegex** _tmp3_;
 		GRegex** _tmp2_ = NULL;
-#line 305 "webapp-fetcher.vala"
+#line 341 "webapp-fetcher.vala"
 		regex_array = (_tmp3_ = (_tmp2_ = g_new0 (GRegex*, 2 + 1), _tmp2_[0] = _g_regex_ref0 (unity_webapp_secondary_match_prefix), _tmp2_[1] = _g_regex_ref0 (unity_webapp_secondary_match_suffix), _tmp2_), regex_array = (_vala_array_free (regex_array, regex_array_length1, (GDestroyNotify) g_regex_unref), NULL), regex_array_length1 = 2, regex_array_size = regex_array_length1, _tmp3_);
-#line 1186 "webapp-fetcher.c"
+#line 1387 "webapp-fetcher.c"
 	}
 	{
 		GRegex** regex_collection;
 		int regex_collection_length1;
 		int regex_it;
-#line 308 "webapp-fetcher.vala"
+#line 344 "webapp-fetcher.vala"
 		regex_collection = regex_array;
-#line 1194 "webapp-fetcher.c"
+#line 1395 "webapp-fetcher.c"
 		regex_collection_length1 = regex_array_length1;
 		for (regex_it = 0; regex_it < regex_array_length1; regex_it = regex_it + 1) {
 			GRegex* regex;
@@ -1199,28 +1400,28 @@ static GeePriorityQueue* unity_webapp_webicon_fetcher_extract_icon_from_html (Un
 				GMatchInfo* _tmp6_;
 				gboolean _tmp5_;
 				GMatchInfo* _tmp4_ = NULL;
-#line 310 "webapp-fetcher.vala"
+#line 346 "webapp-fetcher.vala"
 				if ((_tmp5_ = g_regex_match (regex, html, 0, &_tmp4_), matchinfo = (_tmp6_ = _tmp4_, _g_match_info_free0 (matchinfo), _tmp6_), _tmp5_)) {
-#line 1205 "webapp-fetcher.c"
+#line 1406 "webapp-fetcher.c"
 					char* match;
 					gboolean _tmp7_ = FALSE;
-#line 312 "webapp-fetcher.vala"
+#line 348 "webapp-fetcher.vala"
 					match = g_match_info_fetch_named (matchinfo, "icon_uri");
-#line 313 "webapp-fetcher.vala"
+#line 349 "webapp-fetcher.vala"
 					if (_vala_strcmp0 (match, "") != 0) {
-#line 313 "webapp-fetcher.vala"
+#line 349 "webapp-fetcher.vala"
 						_tmp7_ = match != NULL;
-#line 1214 "webapp-fetcher.c"
+#line 1415 "webapp-fetcher.c"
 					} else {
-#line 313 "webapp-fetcher.vala"
+#line 349 "webapp-fetcher.vala"
 						_tmp7_ = FALSE;
-#line 1218 "webapp-fetcher.c"
+#line 1419 "webapp-fetcher.c"
 					}
-#line 313 "webapp-fetcher.vala"
+#line 349 "webapp-fetcher.vala"
 					if (_tmp7_) {
-#line 315 "webapp-fetcher.vala"
+#line 351 "webapp-fetcher.vala"
 						gee_abstract_queue_offer ((GeeAbstractQueue*) return_uris, match);
-#line 1224 "webapp-fetcher.c"
+#line 1425 "webapp-fetcher.c"
 					}
 					;
 					_g_free0 (match);
@@ -1232,9 +1433,9 @@ static GeePriorityQueue* unity_webapp_webicon_fetcher_extract_icon_from_html (Un
 	result = return_uris;
 	_g_match_info_free0 (matchinfo);
 	regex_array = (_vala_array_free (regex_array, regex_array_length1, (GDestroyNotify) g_regex_unref), NULL);
-#line 319 "webapp-fetcher.vala"
+#line 355 "webapp-fetcher.vala"
 	return result;
-#line 1238 "webapp-fetcher.c"
+#line 1439 "webapp-fetcher.c"
 }
 
 
@@ -1242,9 +1443,9 @@ const char* unity_webapp_webicon_fetcher_get_uri (UnityWebappWebiconFetcher* sel
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_uri;
-#line 145 "webapp-fetcher.vala"
+#line 162 "webapp-fetcher.vala"
 	return result;
-#line 1248 "webapp-fetcher.c"
+#line 1449 "webapp-fetcher.c"
 }
 
 
@@ -1260,9 +1461,9 @@ const char* unity_webapp_webicon_fetcher_get_destination (UnityWebappWebiconFetc
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_destination;
-#line 146 "webapp-fetcher.vala"
+#line 163 "webapp-fetcher.vala"
 	return result;
-#line 1266 "webapp-fetcher.c"
+#line 1467 "webapp-fetcher.c"
 }
 
 
@@ -1271,6 +1472,24 @@ static void unity_webapp_webicon_fetcher_set_destination (UnityWebappWebiconFetc
 	g_return_if_fail (self != NULL);
 	self->priv->_destination = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_destination), _tmp0_);
 	g_object_notify ((GObject *) self, "destination");
+}
+
+
+const char* unity_webapp_webicon_fetcher_get_desktop_location (UnityWebappWebiconFetcher* self) {
+	const char* result;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = self->priv->_desktop_location;
+#line 164 "webapp-fetcher.vala"
+	return result;
+#line 1485 "webapp-fetcher.c"
+}
+
+
+static void unity_webapp_webicon_fetcher_set_desktop_location (UnityWebappWebiconFetcher* self, const char* value) {
+	char* _tmp0_;
+	g_return_if_fail (self != NULL);
+	self->priv->_desktop_location = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_desktop_location), _tmp0_);
+	g_object_notify ((GObject *) self, "desktop-location");
 }
 
 
@@ -1285,22 +1504,22 @@ static GObject * unity_webapp_webicon_fetcher_constructor (GType type, guint n_c
 	_inner_error_ = NULL;
 	{
 		GeePriorityQueue* _tmp12_;
-#line 170 "webapp-fetcher.vala"
+#line 187 "webapp-fetcher.vala"
 		if (unity_webapp_primary_match_prefix == NULL) {
-#line 1291 "webapp-fetcher.c"
+#line 1510 "webapp-fetcher.c"
 			char* primary_match_prefix;
 			char* primary_match_suffix;
 			char* secondary_match_prefix;
 			char* secondary_match_suffix;
-#line 172 "webapp-fetcher.vala"
+#line 189 "webapp-fetcher.vala"
 			primary_match_prefix = g_strdup (tag_start_string apple_string "[^>]*" uri_match_string tag_end_string);
-#line 173 "webapp-fetcher.vala"
+#line 190 "webapp-fetcher.vala"
 			primary_match_suffix = g_strdup (tag_start_string uri_match_string "[^>]*" apple_string tag_end_string);
-#line 174 "webapp-fetcher.vala"
+#line 191 "webapp-fetcher.vala"
 			secondary_match_prefix = g_strdup (tag_start_string fav_string "[^>]*" uri_match_string tag_end_string);
-#line 175 "webapp-fetcher.vala"
+#line 192 "webapp-fetcher.vala"
 			secondary_match_suffix = g_strdup (tag_start_string uri_match_string "[^>]*" fav_string tag_end_string);
-#line 1304 "webapp-fetcher.c"
+#line 1523 "webapp-fetcher.c"
 			{
 				GRegex* _tmp2_;
 				GRegex* _tmp3_;
@@ -1312,62 +1531,62 @@ static GObject * unity_webapp_webicon_fetcher_constructor (GType type, guint n_c
 				GRegex* _tmp9_;
 				GRegex* _tmp10_;
 				GRegex* _tmp11_;
-#line 178 "webapp-fetcher.vala"
+#line 195 "webapp-fetcher.vala"
 				_tmp2_ = g_regex_new (primary_match_prefix, G_REGEX_UNGREEDY, 0, &_inner_error_);
-#line 1318 "webapp-fetcher.c"
+#line 1537 "webapp-fetcher.c"
 				if (_inner_error_ != NULL) {
-					goto __catch19_g_error;
+					goto __catch21_g_error;
 				}
-#line 178 "webapp-fetcher.vala"
+#line 195 "webapp-fetcher.vala"
 				unity_webapp_primary_match_prefix = (_tmp3_ = _tmp2_, _g_regex_unref0 (unity_webapp_primary_match_prefix), _tmp3_);
-#line 179 "webapp-fetcher.vala"
+#line 196 "webapp-fetcher.vala"
 				_tmp4_ = g_regex_new (primary_match_suffix, G_REGEX_UNGREEDY, 0, &_inner_error_);
-#line 1326 "webapp-fetcher.c"
+#line 1545 "webapp-fetcher.c"
 				if (_inner_error_ != NULL) {
-					goto __catch19_g_error;
+					goto __catch21_g_error;
 				}
-#line 179 "webapp-fetcher.vala"
+#line 196 "webapp-fetcher.vala"
 				unity_webapp_primary_match_suffix = (_tmp5_ = _tmp4_, _g_regex_unref0 (unity_webapp_primary_match_suffix), _tmp5_);
-#line 180 "webapp-fetcher.vala"
+#line 197 "webapp-fetcher.vala"
 				_tmp6_ = g_regex_new (secondary_match_prefix, G_REGEX_UNGREEDY, 0, &_inner_error_);
-#line 1334 "webapp-fetcher.c"
+#line 1553 "webapp-fetcher.c"
 				if (_inner_error_ != NULL) {
-					goto __catch19_g_error;
+					goto __catch21_g_error;
 				}
-#line 180 "webapp-fetcher.vala"
+#line 197 "webapp-fetcher.vala"
 				unity_webapp_secondary_match_prefix = (_tmp7_ = _tmp6_, _g_regex_unref0 (unity_webapp_secondary_match_prefix), _tmp7_);
-#line 181 "webapp-fetcher.vala"
+#line 198 "webapp-fetcher.vala"
 				_tmp8_ = g_regex_new (secondary_match_suffix, G_REGEX_UNGREEDY, 0, &_inner_error_);
-#line 1342 "webapp-fetcher.c"
+#line 1561 "webapp-fetcher.c"
 				if (_inner_error_ != NULL) {
-					goto __catch19_g_error;
+					goto __catch21_g_error;
 				}
-#line 181 "webapp-fetcher.vala"
+#line 198 "webapp-fetcher.vala"
 				unity_webapp_secondary_match_suffix = (_tmp9_ = _tmp8_, _g_regex_unref0 (unity_webapp_secondary_match_suffix), _tmp9_);
-#line 182 "webapp-fetcher.vala"
+#line 199 "webapp-fetcher.vala"
 				_tmp10_ = g_regex_new (hostname_string, G_REGEX_UNGREEDY, 0, &_inner_error_);
-#line 1350 "webapp-fetcher.c"
+#line 1569 "webapp-fetcher.c"
 				if (_inner_error_ != NULL) {
-					goto __catch19_g_error;
+					goto __catch21_g_error;
 				}
-#line 182 "webapp-fetcher.vala"
+#line 199 "webapp-fetcher.vala"
 				unity_webapp_hostname_match = (_tmp11_ = _tmp10_, _g_regex_unref0 (unity_webapp_hostname_match), _tmp11_);
-#line 1356 "webapp-fetcher.c"
+#line 1575 "webapp-fetcher.c"
 			}
-			goto __finally19;
-			__catch19_g_error:
+			goto __finally21;
+			__catch21_g_error:
 			{
 				GError * e;
 				e = _inner_error_;
 				_inner_error_ = NULL;
 				{
-#line 184 "webapp-fetcher.vala"
-					g_warning ("webapp-fetcher.vala:184: %s", e->message);
-#line 1367 "webapp-fetcher.c"
+#line 201 "webapp-fetcher.vala"
+					g_warning ("webapp-fetcher.vala:201: %s", e->message);
+#line 1586 "webapp-fetcher.c"
 					_g_error_free0 (e);
 				}
 			}
-			__finally19:
+			__finally21:
 			if (_inner_error_ != NULL) {
 				_g_free0 (primary_match_prefix);
 				_g_free0 (primary_match_suffix);
@@ -1381,42 +1600,42 @@ static GObject * unity_webapp_webicon_fetcher_constructor (GType type, guint n_c
 			_g_free0 (secondary_match_prefix);
 			_g_free0 (secondary_match_suffix);
 		}
-#line 187 "webapp-fetcher.vala"
+#line 204 "webapp-fetcher.vala"
 		self->priv->icon_uris = (_tmp12_ = gee_priority_queue_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, NULL), _g_object_unref0 (self->priv->icon_uris), _tmp12_);
-#line 1387 "webapp-fetcher.c"
+#line 1606 "webapp-fetcher.c"
 		{
 			GFile* make_file;
 			GFileOutputStream* _tmp13_;
-#line 190 "webapp-fetcher.vala"
+#line 207 "webapp-fetcher.vala"
 			make_file = g_file_new_for_path (self->priv->_destination);
-#line 191 "webapp-fetcher.vala"
+#line 208 "webapp-fetcher.vala"
 			_tmp13_ = g_file_create (make_file, G_FILE_CREATE_NONE, NULL, &_inner_error_);
-#line 1395 "webapp-fetcher.c"
+#line 1614 "webapp-fetcher.c"
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (make_file);
-				goto __catch20_g_error;
+				goto __catch22_g_error;
 			}
 			_g_object_unref0 (_tmp13_);
 			_g_object_unref0 (make_file);
 		}
-		goto __finally20;
-		__catch20_g_error:
+		goto __finally22;
+		__catch22_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-#line 193 "webapp-fetcher.vala"
-				g_warning ("webapp-fetcher.vala:193: %s", e->message);
-#line 1412 "webapp-fetcher.c"
 				_g_error_free0 (e);
 			}
 		}
-		__finally20:
+		__finally22:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
 		}
+#line 213 "webapp-fetcher.vala"
+		unity_webapp_webicon_fetcher_set_desktop_file_icon (self, "webapp-default-icon");
+#line 1639 "webapp-fetcher.c"
 	}
 	return obj;
 }
@@ -1431,6 +1650,7 @@ static void unity_webapp_webicon_fetcher_class_init (UnityWebappWebiconFetcherCl
 	G_OBJECT_CLASS (klass)->finalize = unity_webapp_webicon_fetcher_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_WEBAPP_WEBICON_FETCHER_URI, g_param_spec_string ("uri", "uri", "uri", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_WEBAPP_WEBICON_FETCHER_DESTINATION, g_param_spec_string ("destination", "destination", "destination", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_WEBAPP_WEBICON_FETCHER_DESKTOP_LOCATION, g_param_spec_string ("desktop-location", "desktop-location", "desktop-location", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 	g_signal_new ("failed", UNITY_WEBAPP_TYPE_WEBICON_FETCHER, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 	g_signal_new ("completed", UNITY_WEBAPP_TYPE_WEBICON_FETCHER, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);
 }
@@ -1448,6 +1668,7 @@ static void unity_webapp_webicon_fetcher_finalize (GObject* obj) {
 	self = UNITY_WEBAPP_WEBICON_FETCHER (obj);
 	_g_free0 (self->priv->_uri);
 	_g_free0 (self->priv->_destination);
+	_g_free0 (self->priv->_desktop_location);
 	_g_object_unref0 (self->priv->fetcher);
 	_g_object_unref0 (self->priv->icon_uris);
 	G_OBJECT_CLASS (unity_webapp_webicon_fetcher_parent_class)->finalize (obj);
@@ -1474,6 +1695,9 @@ static void unity_webapp_webicon_fetcher_get_property (GObject * object, guint p
 		case UNITY_WEBAPP_WEBICON_FETCHER_DESTINATION:
 		g_value_set_string (value, unity_webapp_webicon_fetcher_get_destination (self));
 		break;
+		case UNITY_WEBAPP_WEBICON_FETCHER_DESKTOP_LOCATION:
+		g_value_set_string (value, unity_webapp_webicon_fetcher_get_desktop_location (self));
+		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
@@ -1490,6 +1714,9 @@ static void unity_webapp_webicon_fetcher_set_property (GObject * object, guint p
 		break;
 		case UNITY_WEBAPP_WEBICON_FETCHER_DESTINATION:
 		unity_webapp_webicon_fetcher_set_destination (self, g_value_get_string (value));
+		break;
+		case UNITY_WEBAPP_WEBICON_FETCHER_DESKTOP_LOCATION:
+		unity_webapp_webicon_fetcher_set_desktop_location (self, g_value_get_string (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

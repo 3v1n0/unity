@@ -33,6 +33,7 @@ namespace Unity.Quicklauncher.Models
 
     public void activated ()
     {
+      debug ("application shortcut activated called");
       Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
       try
       {
@@ -65,6 +66,7 @@ namespace Unity.Quicklauncher.Models
 
     public void activated ()
     {
+      debug ("liblauncher shortcut activated called");
       this.app.close (Clutter.get_current_event_time ());
     }
   }
@@ -102,6 +104,7 @@ namespace Unity.Quicklauncher.Models
 
     public void activated ()
     {
+      debug ("launcher pinning shortcut called");
       this.app_model.is_sticky = !this.app_model.is_sticky;
     }
   }
@@ -219,7 +222,7 @@ namespace Unity.Quicklauncher.Models
       // of < 1.0f is unset. so generate a random new one and set
       if (priority < 1.0f)
         {
-          priority = (float)Random.double_range (1.0001, 100.0);
+          priority = (float)Random.double_range (100000.0, 100002.0);
           favorites.set_float (uid, "priority", priority);
         }
       this._priority = priority;
@@ -457,6 +460,14 @@ namespace Unity.Quicklauncher.Models
       return myuid;
     }
 
+    public void regenerate_icon ()
+    {
+      string dfile = this.app.get_desktop_file ();
+      this.app.set_desktop_file (dfile, true);
+      this._icon = make_icon (app.icon_name);
+      this.notify_icon ();
+    }
+
     /**
      * taken from the prototype code and shamelessly stolen from
      * netbook launcher. needs to be improved at some point to deal
@@ -474,6 +485,10 @@ namespace Unity.Quicklauncher.Models
        */
       Gdk.Pixbuf pixbuf = null;
       Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
+      Gtk.IconTheme webtheme = new Gtk.IconTheme ();
+      Gtk.IconTheme unitytheme = new Gtk.IconTheme ();
+      webtheme.set_custom_theme ("Web");
+      unitytheme.set_custom_theme ("unity-icon-theme");
 
       if (icon_name == null)
         {
@@ -561,7 +576,8 @@ namespace Unity.Quicklauncher.Models
             return pixbuf;
         }
 
-      Gtk.IconInfo info = theme.lookup_icon(icon_name, 48, 0);
+      //load web theme first
+      Gtk.IconInfo info = webtheme.lookup_icon(icon_name, 48, 0);
       if (info != null)
         {
           string filename = info.get_filename();
@@ -586,21 +602,82 @@ namespace Unity.Quicklauncher.Models
 
       try
       {
-        pixbuf = theme.load_icon(icon_name, 48, Gtk.IconLookupFlags.FORCE_SVG);
+        pixbuf = webtheme.load_icon(icon_name, 48, 0);
+        if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
       }
       catch (GLib.Error e)
       {
-        warning ("could not load icon for %s - %s", icon_name, e.message);
-        try
-          {
-            pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 48, 0);
-          }
-        catch (Error err)
-          {
-            warning ("Unable to load icon for %s: %s", icon_name, err.message);
-          }
-        return pixbuf;
       }
+
+
+      //load from default theme
+      info = theme.lookup_icon(icon_name, 48, 0);
+      if (info != null)
+        {
+          string filename = info.get_filename();
+          if (FileUtils.test(filename, FileTest.EXISTS))
+            {
+              try
+                {
+                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
+                                                             48, 48, true);
+                }
+              catch (Error e)
+                {
+                  warning ("Unable to load image from file '%s': %s",
+                           filename,
+                           e.message);
+                }
+
+              if (pixbuf is Gdk.Pixbuf)
+                return pixbuf;
+            }
+        }
+
+      try
+      {
+        pixbuf = theme.load_icon(icon_name, 48, 0);
+        if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
+      }
+      catch (GLib.Error e)
+      {
+      }
+
+      //load from unity theme
+      info = unitytheme.lookup_icon(icon_name, 48, 0);
+      if (info != null)
+        {
+          string filename = info.get_filename();
+          if (FileUtils.test(filename, FileTest.EXISTS))
+            {
+              try
+                {
+                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
+                                                             48, 48, true);
+                }
+              catch (Error e)
+                {
+                  warning ("Unable to load image from file '%s': %s",
+                           filename,
+                           e.message);
+                }
+
+              if (pixbuf is Gdk.Pixbuf)
+                return pixbuf;
+            }
+        }
+
+      try
+      {
+        pixbuf = unitytheme.load_icon(icon_name, 48, 0);
+        if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
+      }
+      catch (GLib.Error e)
+      {
+      }
+
+      warning (@"Could not load icon for $icon_name");
+
       return pixbuf;
 
     }

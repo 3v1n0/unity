@@ -1,3 +1,9 @@
+unity (0.1.20-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release.
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 04 Mar 2010 20:15:31 +0100
+
 unity (0.1.18-0ubuntu1) lucid; urgency=low
 
   * New upstream release.

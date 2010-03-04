@@ -13,6 +13,8 @@
 #include <gtk/gtk.h>
 #include <clutk/clutk.h>
 #include <unity.h>
+#include <stdlib.h>
+#include <string.h>
 
 G_BEGIN_DECLS
 
@@ -175,6 +177,8 @@ guint8 unity_expose_clone_get_hovered_opacity (UnityExposeClone* self);
 void unity_expose_clone_set_hovered_opacity (UnityExposeClone* self, guint8 value);
 guint8 unity_expose_clone_get_unhovered_opacity (UnityExposeClone* self);
 void unity_expose_clone_set_unhovered_opacity (UnityExposeClone* self, guint8 value);
+guint8 unity_expose_clone_get_darken (UnityExposeClone* self);
+void unity_expose_clone_set_darken (UnityExposeClone* self, guint8 value);
 GType unity_expose_manager_get_type (void);
 GType unity_plugin_get_type (void);
 UnityExposeManager* unity_expose_manager_new (UnityPlugin* plugin, UnityQuicklauncherView* quicklauncher);
@@ -196,6 +200,8 @@ guint8 unity_expose_manager_get_hovered_opacity (UnityExposeManager* self);
 void unity_expose_manager_set_hovered_opacity (UnityExposeManager* self, guint8 value);
 guint8 unity_expose_manager_get_unhovered_opacity (UnityExposeManager* self);
 void unity_expose_manager_set_unhovered_opacity (UnityExposeManager* self, guint8 value);
+guint8 unity_expose_manager_get_darken (UnityExposeManager* self);
+void unity_expose_manager_set_darken (UnityExposeManager* self, guint8 value);
 GType unity_drag_dest_get_type (void);
 UnityDragDest* unity_drag_dest_new (void);
 UnityDragDest* unity_drag_dest_construct (GType object_type);
@@ -203,8 +209,6 @@ GType unity_input_state_get_type (void);
 GType unity_actor_blur_get_type (void);
 UnityActorBlur* unity_actor_blur_new (ClutterActor* actor);
 UnityActorBlur* unity_actor_blur_construct (GType object_type, ClutterActor* actor);
-void unity_plugin_add_fullscreen_request (UnityPlugin* self, GObject* o);
-gboolean unity_plugin_remove_fullscreen_request (UnityPlugin* self, GObject* o);
 void unity_plugin_expose_windows (UnityPlugin* self, GSList* windows, gint left_buffer);
 void unity_plugin_dexpose_windows (UnityPlugin* self);
 void unity_plugin_minimize (UnityPlugin* self, MutterWindow* window);
@@ -222,6 +226,7 @@ MutterPlugin* unity_plugin_get_plugin (UnityPlugin* self);
 void unity_plugin_set_plugin (UnityPlugin* self, MutterPlugin* value);
 gboolean unity_plugin_get_expose_showing (UnityPlugin* self);
 GType unity_maximus_get_type (void);
+extern char* unity_maximus_user_unmaximize_hint;
 UnityMaximus* unity_maximus_new (void);
 UnityMaximus* unity_maximus_construct (GType object_type);
 gboolean unity_maximus_process_window (UnityMaximus* self, MutterWindow* window);

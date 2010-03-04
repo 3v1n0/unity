@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <mutter-plugins.h>
+#include <clutter/clutter.h>
 
 
 #define UNITY_TYPE_MAXIMUS (unity_maximus_get_type ())
@@ -38,6 +39,7 @@ typedef struct _UnityMaximus UnityMaximus;
 typedef struct _UnityMaximusClass UnityMaximusClass;
 typedef struct _UnityMaximusPrivate UnityMaximusPrivate;
 #define _g_free0(var) (var = (g_free (var), NULL))
+#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
 struct _UnityMaximus {
 	GObject parent_instance;
@@ -49,6 +51,8 @@ struct _UnityMaximusClass {
 };
 
 
+extern char* unity_maximus_user_unmaximize_hint;
+char* unity_maximus_user_unmaximize_hint = NULL;
 static char** unity_maximus_default_exclude_classes;
 static gint unity_maximus_default_exclude_classes_length1;
 static char** unity_maximus_default_exclude_classes = NULL;
@@ -69,139 +73,203 @@ static void unity_maximus_finalize (GObject* obj);
 
 
 
-#line 50 "maximus.vala"
+#line 48 "maximus.vala"
 UnityMaximus* unity_maximus_construct (GType object_type) {
-#line 75 "maximus.c"
+#line 79 "maximus.c"
 	UnityMaximus * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
-#line 50 "maximus.vala"
+#line 48 "maximus.vala"
 UnityMaximus* unity_maximus_new (void) {
-#line 50 "maximus.vala"
+#line 48 "maximus.vala"
 	return unity_maximus_construct (UNITY_TYPE_MAXIMUS);
-#line 86 "maximus.c"
+#line 90 "maximus.c"
 }
 
 
 #line 1021 "glib-2.0.vapi"
 static gboolean string_contains (const char* self, const char* needle) {
-#line 92 "maximus.c"
+#line 96 "maximus.c"
 	gboolean result;
 #line 1021 "glib-2.0.vapi"
 	g_return_val_if_fail (self != NULL, FALSE);
 #line 1021 "glib-2.0.vapi"
 	g_return_val_if_fail (needle != NULL, FALSE);
-#line 98 "maximus.c"
+#line 102 "maximus.c"
 	result = strstr (self, needle) != NULL;
 #line 1022 "glib-2.0.vapi"
 	return result;
-#line 102 "maximus.c"
+#line 106 "maximus.c"
 }
 
 
-#line 58 "maximus.vala"
+static gpointer _g_object_ref0 (gpointer self) {
+	return self ? g_object_ref (self) : NULL;
+}
+
+
+#line 56 "maximus.vala"
 static gboolean unity_maximus_window_is_excluded (UnityMaximus* self, MutterWindow* window) {
-#line 108 "maximus.c"
+#line 117 "maximus.c"
 	gboolean result;
 	MetaCompWindowType type;
 	MetaWindow* meta;
 	gboolean _tmp0_ = FALSE;
 	const char* res_class;
-#line 58 "maximus.vala"
+	void* hint;
+#line 56 "maximus.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 58 "maximus.vala"
+#line 56 "maximus.vala"
 	g_return_val_if_fail (window != NULL, FALSE);
-#line 60 "maximus.vala"
+#line 58 "maximus.vala"
 	type = mutter_window_get_window_type (window);
-#line 62 "maximus.vala"
+#line 60 "maximus.vala"
 	if (type != META_COMP_WINDOW_NORMAL) {
-#line 122 "maximus.c"
+#line 132 "maximus.c"
 		result = TRUE;
-#line 63 "maximus.vala"
+#line 61 "maximus.vala"
 		return result;
-#line 126 "maximus.c"
+#line 136 "maximus.c"
+	}
+#line 63 "maximus.vala"
+	meta = mutter_window_get_meta_window (window);
+#line 65 "maximus.vala"
+	if (meta_window_is_maximized (meta)) {
+#line 65 "maximus.vala"
+		_tmp0_ = TRUE;
+#line 144 "maximus.c"
+	} else {
+#line 66 "maximus.vala"
+		_tmp0_ = !meta_window_allows_resize (meta);
+#line 148 "maximus.c"
 	}
 #line 65 "maximus.vala"
-	meta = mutter_window_get_meta_window (window);
-#line 67 "maximus.vala"
-	if (meta_window_is_maximized (meta)) {
-#line 67 "maximus.vala"
-		_tmp0_ = TRUE;
-#line 134 "maximus.c"
-	} else {
-#line 68 "maximus.vala"
-		_tmp0_ = !meta_window_allows_resize (meta);
-#line 138 "maximus.c"
-	}
-#line 67 "maximus.vala"
 	if (_tmp0_) {
-#line 142 "maximus.c"
+#line 152 "maximus.c"
 		result = TRUE;
-#line 69 "maximus.vala"
+#line 67 "maximus.vala"
 		return result;
-#line 146 "maximus.c"
+#line 156 "maximus.c"
 	}
-#line 71 "maximus.vala"
+#line 69 "maximus.vala"
 	res_class = meta_window_get_wm_class (meta);
-#line 150 "maximus.c"
+#line 160 "maximus.c"
 	{
 		char** s_collection;
 		int s_collection_length1;
 		int s_it;
-#line 72 "maximus.vala"
+#line 70 "maximus.vala"
 		s_collection = unity_maximus_default_exclude_classes;
-#line 157 "maximus.c"
+#line 167 "maximus.c"
 		s_collection_length1 = unity_maximus_default_exclude_classes_length1;
 		for (s_it = 0; s_it < unity_maximus_default_exclude_classes_length1; s_it = s_it + 1) {
 			char* s;
 			s = g_strdup (s_collection[s_it]);
 			{
-#line 73 "maximus.vala"
+#line 71 "maximus.vala"
 				if (string_contains (res_class, s)) {
-#line 165 "maximus.c"
+#line 175 "maximus.c"
 					result = TRUE;
 					_g_free0 (s);
-#line 74 "maximus.vala"
+#line 72 "maximus.vala"
 					return result;
-#line 170 "maximus.c"
+#line 180 "maximus.c"
 				}
 				_g_free0 (s);
 			}
 		}
 	}
-	result = FALSE;
+#line 74 "maximus.vala"
+	hint = g_object_get_data ((GObject*) window, unity_maximus_user_unmaximize_hint);
+#line 75 "maximus.vala"
+	if (hint != NULL) {
+#line 190 "maximus.c"
+		result = TRUE;
 #line 76 "maximus.vala"
+		return result;
+#line 194 "maximus.c"
+	}
+	{
+		ClutterActor* stage;
+		gboolean _tmp1_ = FALSE;
+		gboolean _tmp2_ = FALSE;
+		gboolean _tmp3_ = FALSE;
+#line 79 "maximus.vala"
+		stage = _g_object_ref0 (clutter_stage_get_default ());
+#line 81 "maximus.vala"
+		if (clutter_actor_get_width ((ClutterActor*) window) < (clutter_actor_get_width (stage) * 0.6)) {
+#line 81 "maximus.vala"
+			_tmp3_ = TRUE;
+#line 207 "maximus.c"
+		} else {
+#line 82 "maximus.vala"
+			_tmp3_ = clutter_actor_get_height ((ClutterActor*) window) < (clutter_actor_get_height (stage) * 0.6);
+#line 211 "maximus.c"
+		}
+#line 81 "maximus.vala"
+		if (_tmp3_) {
+#line 81 "maximus.vala"
+			_tmp2_ = TRUE;
+#line 217 "maximus.c"
+		} else {
+#line 83 "maximus.vala"
+			_tmp2_ = (clutter_actor_get_width ((ClutterActor*) window) / clutter_actor_get_height ((ClutterActor*) window)) < 0.6;
+#line 221 "maximus.c"
+		}
+#line 81 "maximus.vala"
+		if (_tmp2_) {
+#line 81 "maximus.vala"
+			_tmp1_ = TRUE;
+#line 227 "maximus.c"
+		} else {
+#line 84 "maximus.vala"
+			_tmp1_ = (clutter_actor_get_width ((ClutterActor*) window) / clutter_actor_get_height ((ClutterActor*) window)) > 2.0;
+#line 231 "maximus.c"
+		}
+#line 81 "maximus.vala"
+		if (_tmp1_) {
+#line 235 "maximus.c"
+			result = TRUE;
+			_g_object_unref0 (stage);
+#line 86 "maximus.vala"
+			return result;
+#line 240 "maximus.c"
+		}
+		_g_object_unref0 (stage);
+	}
+	result = FALSE;
+#line 91 "maximus.vala"
 	return result;
-#line 179 "maximus.c"
+#line 247 "maximus.c"
 }
 
 
-#line 79 "maximus.vala"
+#line 94 "maximus.vala"
 gboolean unity_maximus_process_window (UnityMaximus* self, MutterWindow* window) {
-#line 185 "maximus.c"
+#line 253 "maximus.c"
 	gboolean result;
-#line 79 "maximus.vala"
+#line 94 "maximus.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 79 "maximus.vala"
+#line 94 "maximus.vala"
 	g_return_val_if_fail (window != NULL, FALSE);
-#line 81 "maximus.vala"
+#line 96 "maximus.vala"
 	if (unity_maximus_window_is_excluded (self, window)) {
-#line 193 "maximus.c"
+#line 261 "maximus.c"
 		result = TRUE;
-#line 82 "maximus.vala"
+#line 97 "maximus.vala"
 		return result;
-#line 197 "maximus.c"
+#line 265 "maximus.c"
 	}
-#line 84 "maximus.vala"
+#line 99 "maximus.vala"
 	meta_window_maximize (mutter_window_get_meta_window (window), META_MAXIMIZE_HORIZONTAL | META_MAXIMIZE_VERTICAL);
-#line 201 "maximus.c"
+#line 269 "maximus.c"
 	result = TRUE;
-#line 86 "maximus.vala"
+#line 101 "maximus.vala"
 	return result;
-#line 205 "maximus.c"
+#line 273 "maximus.c"
 }
 
 
@@ -223,8 +291,9 @@ static void unity_maximus_class_init (UnityMaximusClass * klass) {
 	unity_maximus_parent_class = g_type_class_peek_parent (klass);
 	G_OBJECT_CLASS (klass)->constructor = unity_maximus_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_maximus_finalize;
-	unity_maximus_default_exclude_classes = (_tmp0_ = g_new0 (char*, 22 + 1), _tmp0_[0] = g_strdup ("Apport-gtk"), _tmp0_[1] = g_strdup ("Bluetooth-properties"), _tmp0_[2] = g_strdup ("Bluetooth-wizard"), _tmp0_[3] = g_strdup ("Download"), _tmp0_[4] = g_strdup ("Ekiga"), _tmp0_[5] = g_strdup ("Extension"), _tmp0_[6] = g_strdup ("Gcalctool"), _tmp0_[7] = g_strdup ("Gimp"), _tmp0_[8] = g_strdup ("Global"), _tmp0_[9] = g_strdup ("Gnome-dictionary"), _tmp0_[10] = g_strdup ("Gnome-launguage-selector"), _tmp0_[11] = g_strdup ("Gnome-nettool"), _tmp0_[12] = g_strdup ("Gnome-volume-control"), _tmp0_[13] = g_strdup ("Kiten"), _tmp0_[14] = g_strdup ("Kmplot"), _tmp0_[15] = g_strdup ("Nm-editor"), _tmp0_[16] = g_strdup ("Pidgin"), _tmp0_[17] = g_strdup ("Polkit-gnome-authorization"), _tmp0_[18] = g_strdup ("Update-manager"), _tmp0_[19] = g_strdup ("Skype"), _tmp0_[20] = g_strdup ("Toplevel"), _tmp0_[21] = g_strdup ("Transmission"), _tmp0_);
-	unity_maximus_default_exclude_classes_length1 = 22;
+	unity_maximus_user_unmaximize_hint = g_strdup ("maximus-user-unmaximize");
+	unity_maximus_default_exclude_classes = (_tmp0_ = g_new0 (char*, 18 + 1), _tmp0_[0] = g_strdup ("Apport-gtk"), _tmp0_[1] = g_strdup ("Bluetooth-properties"), _tmp0_[2] = g_strdup ("Bluetooth-wizard"), _tmp0_[3] = g_strdup ("Download"), _tmp0_[4] = g_strdup ("Ekiga"), _tmp0_[5] = g_strdup ("Extension"), _tmp0_[6] = g_strdup ("Gimp"), _tmp0_[7] = g_strdup ("Global"), _tmp0_[8] = g_strdup ("Gnome-nettool"), _tmp0_[9] = g_strdup ("Kiten"), _tmp0_[10] = g_strdup ("Kmplot"), _tmp0_[11] = g_strdup ("Nm-editor"), _tmp0_[12] = g_strdup ("Pidgin"), _tmp0_[13] = g_strdup ("Polkit-gnome-authorization"), _tmp0_[14] = g_strdup ("Update-manager"), _tmp0_[15] = g_strdup ("Skype"), _tmp0_[16] = g_strdup ("Toplevel"), _tmp0_[17] = g_strdup ("Transmission"), _tmp0_);
+	unity_maximus_default_exclude_classes_length1 = 18;
 }
 
 

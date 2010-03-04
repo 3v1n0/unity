@@ -75,6 +75,7 @@ enum  {
 #define UNITY_WEBAPP_PRISM_webapp_desktop_template "[Desktop Entry]\nName=%s\nType=Application\nComment=Web Application\nExec=\"prism\" -webapp %s@unity.app\nCategories=GTK;Network;\nStartupWMClass=Prism\nStartupNotify=true\nIcon=%s\n"
 UnityWebappPrism* unity_webapp_prism_new (const char* address, const char* icon);
 UnityWebappPrism* unity_webapp_prism_construct (GType object_type, const char* address, const char* icon);
+char* unity_webapp_prism_desktop_file_path (UnityWebappPrism* self);
 const char* unity_webapp_prism_get_url (UnityWebappPrism* self);
 static gboolean unity_webapp_prism_check_existance_of_app (UnityWebappPrism* self);
 const char* unity_webapp_prism_get_icon (UnityWebappPrism* self);
@@ -97,7 +98,7 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 #line 52 "prism-handler.vala"
 UnityWebappPrism* unity_webapp_prism_construct (GType object_type, const char* address, const char* icon) {
-#line 101 "prism-handler.c"
+#line 102 "prism-handler.c"
 	UnityWebappPrism * self;
 #line 52 "prism-handler.vala"
 	g_return_val_if_fail (address != NULL, NULL);
@@ -105,7 +106,7 @@ UnityWebappPrism* unity_webapp_prism_construct (GType object_type, const char* a
 	g_return_val_if_fail (icon != NULL, NULL);
 #line 54 "prism-handler.vala"
 	self = (UnityWebappPrism*) g_object_new (object_type, "url", address, "icon", icon, NULL);
-#line 109 "prism-handler.c"
+#line 110 "prism-handler.c"
 	return self;
 }
 
@@ -114,47 +115,63 @@ UnityWebappPrism* unity_webapp_prism_construct (GType object_type, const char* a
 UnityWebappPrism* unity_webapp_prism_new (const char* address, const char* icon) {
 #line 52 "prism-handler.vala"
 	return unity_webapp_prism_construct (UNITY_WEBAPP_TYPE_PRISM, address, icon);
-#line 118 "prism-handler.c"
+#line 119 "prism-handler.c"
 }
 
 
-#line 82 "prism-handler.vala"
+#line 81 "prism-handler.vala"
+char* unity_webapp_prism_desktop_file_path (UnityWebappPrism* self) {
+#line 125 "prism-handler.c"
+	char* result;
+	char* _tmp0_;
+	char* _tmp1_;
+#line 81 "prism-handler.vala"
+	g_return_val_if_fail (self != NULL, NULL);
+#line 131 "prism-handler.c"
+	result = (_tmp1_ = g_strconcat (g_get_home_dir (), _tmp0_ = g_strdup_printf ("/.webapps/%s@unity.app", self->id), NULL), _g_free0 (_tmp0_), _tmp1_);
+#line 83 "prism-handler.vala"
+	return result;
+#line 135 "prism-handler.c"
+}
+
+
+#line 87 "prism-handler.vala"
 static gboolean unity_webapp_prism_check_existance_of_app (UnityWebappPrism* self) {
-#line 124 "prism-handler.c"
+#line 141 "prism-handler.c"
 	gboolean result;
 	GFile* webapp_dir_file;
-#line 82 "prism-handler.vala"
+#line 87 "prism-handler.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 84 "prism-handler.vala"
-	if (_vala_strcmp0 (self->priv->_url, "") == 0) {
-#line 131 "prism-handler.c"
-		result = TRUE;
-#line 86 "prism-handler.vala"
-		return result;
-#line 135 "prism-handler.c"
-	}
 #line 89 "prism-handler.vala"
+	if (_vala_strcmp0 (self->priv->_url, "") == 0) {
+#line 148 "prism-handler.c"
+		result = TRUE;
+#line 91 "prism-handler.vala"
+		return result;
+#line 152 "prism-handler.c"
+	}
+#line 94 "prism-handler.vala"
 	webapp_dir_file = g_file_new_for_path (self->priv->webapp_dir);
-#line 90 "prism-handler.vala"
+#line 95 "prism-handler.vala"
 	if (g_file_query_exists (webapp_dir_file, NULL)) {
-#line 141 "prism-handler.c"
+#line 158 "prism-handler.c"
 		result = TRUE;
 		_g_object_unref0 (webapp_dir_file);
-#line 92 "prism-handler.vala"
+#line 97 "prism-handler.vala"
 		return result;
-#line 146 "prism-handler.c"
+#line 163 "prism-handler.c"
 	}
 	result = FALSE;
 	_g_object_unref0 (webapp_dir_file);
-#line 94 "prism-handler.vala"
+#line 99 "prism-handler.vala"
 	return result;
-#line 152 "prism-handler.c"
+#line 169 "prism-handler.c"
 }
 
 
-#line 97 "prism-handler.vala"
+#line 102 "prism-handler.vala"
 static void unity_webapp_prism_build_webapp (UnityWebappPrism* self) {
-#line 158 "prism-handler.c"
+#line 175 "prism-handler.c"
 	GError * _inner_error_;
 	char* webapp_ini;
 	char* webapp_desktop;
@@ -166,21 +183,21 @@ static void unity_webapp_prism_build_webapp (UnityWebappPrism* self) {
 	char* _tmp2_;
 	GFile* _tmp4_;
 	GFile* desktop_file;
-#line 97 "prism-handler.vala"
+#line 102 "prism-handler.vala"
 	g_return_if_fail (self != NULL);
-#line 172 "prism-handler.c"
+#line 189 "prism-handler.c"
 	_inner_error_ = NULL;
-#line 100 "prism-handler.vala"
+#line 105 "prism-handler.vala"
 	webapp_ini = g_strdup_printf (UNITY_WEBAPP_PRISM_webapp_ini_template, self->id, self->name, self->priv->_url);
-#line 101 "prism-handler.vala"
-	webapp_desktop = g_strdup_printf (UNITY_WEBAPP_PRISM_webapp_desktop_template, self->name, self->id, self->priv->_icon);
-#line 103 "prism-handler.vala"
-	webapp_directory = g_file_new_for_path (self->priv->webapp_dir);
-#line 180 "prism-handler.c"
-	{
 #line 106 "prism-handler.vala"
+	webapp_desktop = g_strdup_printf (UNITY_WEBAPP_PRISM_webapp_desktop_template, self->name, self->id, self->priv->_icon);
+#line 108 "prism-handler.vala"
+	webapp_directory = g_file_new_for_path (self->priv->webapp_dir);
+#line 197 "prism-handler.c"
+	{
+#line 111 "prism-handler.vala"
 		g_file_make_directory_with_parents (webapp_directory, NULL, &_inner_error_);
-#line 184 "prism-handler.c"
+#line 201 "prism-handler.c"
 		if (_inner_error_ != NULL) {
 			goto __catch6_g_error;
 		}
@@ -192,16 +209,16 @@ static void unity_webapp_prism_build_webapp (UnityWebappPrism* self) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 109 "prism-handler.vala"
-			g_warning ("prism-handler.vala:109: %s", e->message);
-#line 198 "prism-handler.c"
+#line 114 "prism-handler.vala"
+			g_warning ("prism-handler.vala:114: %s", e->message);
+#line 215 "prism-handler.c"
 			_g_error_free0 (e);
 			_g_free0 (webapp_ini);
 			_g_free0 (webapp_desktop);
 			_g_object_unref0 (webapp_directory);
-#line 110 "prism-handler.vala"
+#line 115 "prism-handler.vala"
 			return;
-#line 205 "prism-handler.c"
+#line 222 "prism-handler.c"
 		}
 	}
 	__finally6:
@@ -213,23 +230,23 @@ static void unity_webapp_prism_build_webapp (UnityWebappPrism* self) {
 		g_clear_error (&_inner_error_);
 		return;
 	}
-#line 113 "prism-handler.vala"
+#line 118 "prism-handler.vala"
 	inifile = (_tmp1_ = g_file_new_for_path (_tmp0_ = g_strconcat (self->priv->webapp_dir, "/webapp.ini", NULL)), _g_free0 (_tmp0_), _tmp1_);
-#line 219 "prism-handler.c"
+#line 236 "prism-handler.c"
 	{
 		GFileOutputStream* file_stream;
 		GDataOutputStream* data_stream;
-#line 116 "prism-handler.vala"
+#line 121 "prism-handler.vala"
 		file_stream = g_file_create (inifile, G_FILE_CREATE_NONE, NULL, &_inner_error_);
-#line 225 "prism-handler.c"
+#line 242 "prism-handler.c"
 		if (_inner_error_ != NULL) {
 			goto __catch7_g_error;
 		}
-#line 117 "prism-handler.vala"
+#line 122 "prism-handler.vala"
 		data_stream = g_data_output_stream_new ((GOutputStream*) file_stream);
-#line 118 "prism-handler.vala"
+#line 123 "prism-handler.vala"
 		g_data_output_stream_put_string (data_stream, webapp_ini, NULL, &_inner_error_);
-#line 233 "prism-handler.c"
+#line 250 "prism-handler.c"
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (file_stream);
 			_g_object_unref0 (data_stream);
@@ -245,17 +262,17 @@ static void unity_webapp_prism_build_webapp (UnityWebappPrism* self) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 122 "prism-handler.vala"
-			g_warning ("prism-handler.vala:122: %s", e->message);
-#line 251 "prism-handler.c"
+#line 127 "prism-handler.vala"
+			g_warning ("prism-handler.vala:127: %s", e->message);
+#line 268 "prism-handler.c"
 			_g_error_free0 (e);
 			_g_free0 (webapp_ini);
 			_g_free0 (webapp_desktop);
 			_g_object_unref0 (webapp_directory);
 			_g_object_unref0 (inifile);
-#line 123 "prism-handler.vala"
+#line 128 "prism-handler.vala"
 			return;
-#line 259 "prism-handler.c"
+#line 276 "prism-handler.c"
 		}
 	}
 	__finally7:
@@ -268,23 +285,23 @@ static void unity_webapp_prism_build_webapp (UnityWebappPrism* self) {
 		g_clear_error (&_inner_error_);
 		return;
 	}
-#line 126 "prism-handler.vala"
+#line 131 "prism-handler.vala"
 	desktop_file = (_tmp4_ = g_file_new_for_path (_tmp3_ = g_strconcat (self->priv->webapp_dir, _tmp2_ = g_strdup_printf ("/%s.desktop", self->name), NULL)), _g_free0 (_tmp3_), _g_free0 (_tmp2_), _tmp4_);
-#line 274 "prism-handler.c"
+#line 291 "prism-handler.c"
 	{
 		GFileOutputStream* file_stream;
 		GDataOutputStream* data_stream;
-#line 130 "prism-handler.vala"
+#line 135 "prism-handler.vala"
 		file_stream = g_file_create (desktop_file, G_FILE_CREATE_NONE, NULL, &_inner_error_);
-#line 280 "prism-handler.c"
+#line 297 "prism-handler.c"
 		if (_inner_error_ != NULL) {
 			goto __catch8_g_error;
 		}
-#line 131 "prism-handler.vala"
+#line 136 "prism-handler.vala"
 		data_stream = g_data_output_stream_new ((GOutputStream*) file_stream);
-#line 132 "prism-handler.vala"
+#line 137 "prism-handler.vala"
 		g_data_output_stream_put_string (data_stream, webapp_desktop, NULL, &_inner_error_);
-#line 288 "prism-handler.c"
+#line 305 "prism-handler.c"
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (file_stream);
 			_g_object_unref0 (data_stream);
@@ -300,18 +317,18 @@ static void unity_webapp_prism_build_webapp (UnityWebappPrism* self) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 135 "prism-handler.vala"
-			g_warning ("prism-handler.vala:135: could not write to %s/%s.desktop", self->priv->webapp_dir, self->name);
-#line 306 "prism-handler.c"
+#line 140 "prism-handler.vala"
+			g_warning ("prism-handler.vala:140: could not write to %s/%s.desktop", self->priv->webapp_dir, self->name);
+#line 323 "prism-handler.c"
 			_g_error_free0 (e);
 			_g_free0 (webapp_ini);
 			_g_free0 (webapp_desktop);
 			_g_object_unref0 (webapp_directory);
 			_g_object_unref0 (inifile);
 			_g_object_unref0 (desktop_file);
-#line 136 "prism-handler.vala"
+#line 141 "prism-handler.vala"
 			return;
-#line 315 "prism-handler.c"
+#line 332 "prism-handler.c"
 		}
 	}
 	__finally8:
@@ -338,9 +355,9 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 140 "prism-handler.vala"
+#line 145 "prism-handler.vala"
 void unity_webapp_prism_add_to_favorites (UnityWebappPrism* self) {
-#line 344 "prism-handler.c"
+#line 361 "prism-handler.c"
 	LauncherFavorites* favorites;
 	char* uid;
 	char* _tmp0_;
@@ -349,49 +366,49 @@ void unity_webapp_prism_add_to_favorites (UnityWebappPrism* self) {
 	char* _tmp3_;
 	char* _tmp2_;
 	char* _tmp4_;
-#line 140 "prism-handler.vala"
+#line 145 "prism-handler.vala"
 	g_return_if_fail (self != NULL);
-#line 142 "prism-handler.vala"
-	favorites = _g_object_ref0 (launcher_favorites_get_default ());
-#line 143 "prism-handler.vala"
-	uid = unity_webapp_prism_get_fav_uid (self);
-#line 144 "prism-handler.vala"
-	if (_vala_strcmp0 (uid, "") != 0) {
 #line 147 "prism-handler.vala"
-		g_warning ("prism-handler.vala:147: %s is already a favorite", self->name);
-#line 363 "prism-handler.c"
+	favorites = _g_object_ref0 (launcher_favorites_get_default ());
+#line 148 "prism-handler.vala"
+	uid = unity_webapp_prism_get_fav_uid (self);
+#line 149 "prism-handler.vala"
+	if (_vala_strcmp0 (uid, "") != 0) {
+#line 152 "prism-handler.vala"
+		g_warning ("prism-handler.vala:152: %s is already a favorite", self->name);
+#line 380 "prism-handler.c"
 		_g_object_unref0 (favorites);
 		_g_free0 (uid);
-#line 148 "prism-handler.vala"
-		return;
-#line 368 "prism-handler.c"
-	}
-#line 151 "prism-handler.vala"
-	desktop_path = (_tmp1_ = g_strconcat (self->priv->webapp_dir, _tmp0_ = g_strdup_printf ("/%s.desktop", self->name), NULL), _g_free0 (_tmp0_), _tmp1_);
-#line 152 "prism-handler.vala"
-	uid = (_tmp3_ = g_strconcat ("webapp-", _tmp2_ = g_path_get_basename (desktop_path), NULL), _g_free0 (uid), _tmp3_);
-#line 374 "prism-handler.c"
-	_g_free0 (_tmp2_);
 #line 153 "prism-handler.vala"
-	uid = (_tmp4_ = unity_webapp_urlify (uid), _g_free0 (uid), _tmp4_);
+		return;
+#line 385 "prism-handler.c"
+	}
 #line 156 "prism-handler.vala"
-	launcher_favorites_set_string (favorites, uid, "type", "application");
+	desktop_path = (_tmp1_ = g_strconcat (self->priv->webapp_dir, _tmp0_ = g_strdup_printf ("/%s.desktop", self->name), NULL), _g_free0 (_tmp0_), _tmp1_);
 #line 157 "prism-handler.vala"
-	launcher_favorites_set_string (favorites, uid, "desktop_file", desktop_path);
+	uid = (_tmp3_ = g_strconcat ("webapp-", _tmp2_ = g_path_get_basename (desktop_path), NULL), _g_free0 (uid), _tmp3_);
+#line 391 "prism-handler.c"
+	_g_free0 (_tmp2_);
 #line 158 "prism-handler.vala"
+	uid = (_tmp4_ = unity_webapp_urlify (uid), _g_free0 (uid), _tmp4_);
+#line 161 "prism-handler.vala"
+	launcher_favorites_set_string (favorites, uid, "type", "application");
+#line 162 "prism-handler.vala"
+	launcher_favorites_set_string (favorites, uid, "desktop_file", desktop_path);
+#line 163 "prism-handler.vala"
 	launcher_favorites_set_bool (favorites, uid, "enable_shadow", TRUE);
-#line 159 "prism-handler.vala"
+#line 164 "prism-handler.vala"
 	launcher_favorites_add_favorite (favorites, uid);
-#line 386 "prism-handler.c"
+#line 403 "prism-handler.c"
 	_g_object_unref0 (favorites);
 	_g_free0 (uid);
 	_g_free0 (desktop_path);
 }
 
 
-#line 166 "prism-handler.vala"
+#line 171 "prism-handler.vala"
 static char* unity_webapp_prism_get_fav_uid (UnityWebappPrism* self) {
-#line 395 "prism-handler.c"
+#line 412 "prism-handler.c"
 	char* result;
 	char* myuid;
 	char* _tmp0_;
@@ -399,50 +416,50 @@ static char* unity_webapp_prism_get_fav_uid (UnityWebappPrism* self) {
 	char* my_desktop_path;
 	LauncherFavorites* favorites;
 	GSList* favorite_list;
-#line 166 "prism-handler.vala"
-	g_return_val_if_fail (self != NULL, NULL);
-#line 168 "prism-handler.vala"
-	myuid = g_strdup ("");
-#line 169 "prism-handler.vala"
-	my_desktop_path = (_tmp1_ = g_strconcat (self->priv->webapp_dir, _tmp0_ = g_strdup_printf ("/%s.desktop", self->name), NULL), _g_free0 (_tmp0_), _tmp1_);
-#line 170 "prism-handler.vala"
-	favorites = _g_object_ref0 (launcher_favorites_get_default ());
 #line 171 "prism-handler.vala"
+	g_return_val_if_fail (self != NULL, NULL);
+#line 173 "prism-handler.vala"
+	myuid = g_strdup ("");
+#line 174 "prism-handler.vala"
+	my_desktop_path = (_tmp1_ = g_strconcat (self->priv->webapp_dir, _tmp0_ = g_strdup_printf ("/%s.desktop", self->name), NULL), _g_free0 (_tmp0_), _tmp1_);
+#line 175 "prism-handler.vala"
+	favorites = _g_object_ref0 (launcher_favorites_get_default ());
+#line 176 "prism-handler.vala"
 	favorite_list = launcher_favorites_get_favorites (favorites);
-#line 413 "prism-handler.c"
+#line 430 "prism-handler.c"
 	{
 		GSList* uid_collection;
 		GSList* uid_it;
-#line 172 "prism-handler.vala"
+#line 177 "prism-handler.vala"
 		uid_collection = favorite_list;
-#line 419 "prism-handler.c"
+#line 436 "prism-handler.c"
 		for (uid_it = uid_collection; uid_it != NULL; uid_it = uid_it->next) {
 			const char* uid;
-#line 172 "prism-handler.vala"
+#line 177 "prism-handler.vala"
 			uid = (const char*) uid_it->data;
-#line 424 "prism-handler.c"
+#line 441 "prism-handler.c"
 			{
 				char* type;
 				char* desktop_file;
-#line 175 "prism-handler.vala"
-				type = g_strdup (launcher_favorites_get_string (favorites, uid, "type"));
-#line 176 "prism-handler.vala"
-				if (_vala_strcmp0 (type, "application") != 0) {
-#line 432 "prism-handler.c"
-					_g_free0 (type);
-#line 177 "prism-handler.vala"
-					continue;
-#line 436 "prism-handler.c"
-				}
-#line 179 "prism-handler.vala"
-				desktop_file = g_strdup (launcher_favorites_get_string (favorites, uid, "desktop_file"));
 #line 180 "prism-handler.vala"
-				if (_vala_strcmp0 (desktop_file, my_desktop_path) == 0) {
-#line 442 "prism-handler.c"
-					char* _tmp2_;
+				type = g_strdup (launcher_favorites_get_string (favorites, uid, "type"));
+#line 181 "prism-handler.vala"
+				if (_vala_strcmp0 (type, "application") != 0) {
+#line 449 "prism-handler.c"
+					_g_free0 (type);
 #line 182 "prism-handler.vala"
+					continue;
+#line 453 "prism-handler.c"
+				}
+#line 184 "prism-handler.vala"
+				desktop_file = g_strdup (launcher_favorites_get_string (favorites, uid, "desktop_file"));
+#line 185 "prism-handler.vala"
+				if (_vala_strcmp0 (desktop_file, my_desktop_path) == 0) {
+#line 459 "prism-handler.c"
+					char* _tmp2_;
+#line 187 "prism-handler.vala"
 					myuid = (_tmp2_ = g_strdup (uid), _g_free0 (myuid), _tmp2_);
-#line 446 "prism-handler.c"
+#line 463 "prism-handler.c"
 				}
 				_g_free0 (type);
 				_g_free0 (desktop_file);
@@ -452,9 +469,9 @@ static char* unity_webapp_prism_get_fav_uid (UnityWebappPrism* self) {
 	result = myuid;
 	_g_free0 (my_desktop_path);
 	_g_object_unref0 (favorites);
-#line 185 "prism-handler.vala"
+#line 190 "prism-handler.vala"
 	return result;
-#line 458 "prism-handler.c"
+#line 475 "prism-handler.c"
 }
 
 
@@ -464,7 +481,7 @@ const char* unity_webapp_prism_get_url (UnityWebappPrism* self) {
 	result = self->priv->_url;
 #line 46 "prism-handler.vala"
 	return result;
-#line 468 "prism-handler.c"
+#line 485 "prism-handler.c"
 }
 
 
@@ -482,7 +499,7 @@ const char* unity_webapp_prism_get_icon (UnityWebappPrism* self) {
 	result = self->priv->_icon;
 #line 47 "prism-handler.vala"
 	return result;
-#line 486 "prism-handler.c"
+#line 503 "prism-handler.c"
 }
 
 
@@ -517,14 +534,14 @@ static GObject * unity_webapp_prism_constructor (GType type, guint n_construct_p
 		split_url = (_tmp1_ = _tmp0_ = g_strsplit (self->priv->_url, "://", 2), split_url_length1 = _vala_array_length (_tmp0_), split_url_size = split_url_length1, _tmp1_);
 #line 61 "prism-handler.vala"
 		self->name = (_tmp2_ = g_strdup (split_url[1]), _g_free0 (self->name), _tmp2_);
-#line 521 "prism-handler.c"
+#line 538 "prism-handler.c"
 		{
 			GRegex* regex;
 			char* _tmp3_;
 			char* _tmp4_;
 #line 64 "prism-handler.vala"
 			regex = g_regex_new ("(/)", 0, 0, &_inner_error_);
-#line 528 "prism-handler.c"
+#line 545 "prism-handler.c"
 			if (_inner_error_ != NULL) {
 				if (_inner_error_->domain == G_REGEX_ERROR) {
 					goto __catch9_g_regex_error;
@@ -535,7 +552,7 @@ static GObject * unity_webapp_prism_constructor (GType type, guint n_construct_p
 			}
 #line 65 "prism-handler.vala"
 			_tmp3_ = g_regex_replace (regex, self->name, (gssize) (-1), 0, "-", 0, &_inner_error_);
-#line 539 "prism-handler.c"
+#line 556 "prism-handler.c"
 			if (_inner_error_ != NULL) {
 				_g_regex_unref0 (regex);
 				if (_inner_error_->domain == G_REGEX_ERROR) {
@@ -548,7 +565,7 @@ static GObject * unity_webapp_prism_constructor (GType type, guint n_construct_p
 			}
 #line 65 "prism-handler.vala"
 			self->name = (_tmp4_ = _tmp3_, _g_free0 (self->name), _tmp4_);
-#line 552 "prism-handler.c"
+#line 569 "prism-handler.c"
 			_g_regex_unref0 (regex);
 		}
 		goto __finally9;
@@ -560,7 +577,7 @@ static GObject * unity_webapp_prism_constructor (GType type, guint n_construct_p
 			{
 #line 67 "prism-handler.vala"
 				g_warning ("prism-handler.vala:67: %s", e->message);
-#line 564 "prism-handler.c"
+#line 581 "prism-handler.c"
 				_g_error_free0 (e);
 			}
 		}
@@ -574,7 +591,7 @@ static GObject * unity_webapp_prism_constructor (GType type, guint n_construct_p
 		self->id = (_tmp5_ = g_strdup (self->name), _g_free0 (self->id), _tmp5_);
 #line 71 "prism-handler.vala"
 		self->priv->webapp_dir = (_tmp7_ = g_strconcat (g_get_home_dir (), _tmp6_ = g_strdup_printf ("/.webapps/%s@unity.app", self->id), NULL), _g_free0 (self->priv->webapp_dir), _tmp7_);
-#line 578 "prism-handler.c"
+#line 595 "prism-handler.c"
 		_g_free0 (_tmp6_);
 #line 74 "prism-handler.vala"
 		exists = unity_webapp_prism_check_existance_of_app (self);
@@ -582,7 +599,7 @@ static GObject * unity_webapp_prism_constructor (GType type, guint n_construct_p
 		if (!exists) {
 #line 77 "prism-handler.vala"
 			unity_webapp_prism_build_webapp (self);
-#line 586 "prism-handler.c"
+#line 603 "prism-handler.c"
 		}
 		split_url = (_vala_array_free (split_url, split_url_length1, (GDestroyNotify) g_free), NULL);
 	}

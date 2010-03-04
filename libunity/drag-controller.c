@@ -106,6 +106,8 @@ struct _UnityShellIface {
 	void (*show_unity) (UnityShell* self);
 	gint (*get_indicators_width) (UnityShell* self);
 	void (*ensure_input_region) (UnityShell* self);
+	void (*add_fullscreen_request) (UnityShell* self, GObject* o);
+	gboolean (*remove_fullscreen_request) (UnityShell* self, GObject* o);
 	void (*grab_keyboard) (UnityShell* self, gboolean grab, guint32 timestamp);
 	void (*show_window_picker) (UnityShell* self);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
@@ -139,9 +141,10 @@ static void unity_drag_controller_on_view_end (UnityDragController* self, float 
 static void _unity_drag_controller_on_view_end_unity_drag_view_end (UnityDragView* _sender, float x, float y, gpointer self);
 GType unity_shell_mode_get_type (void);
 GType unity_shell_get_type (void);
-void unity_shell_ensure_input_region (UnityShell* self);
+void unity_shell_add_fullscreen_request (UnityShell* self, GObject* o);
 void unity_drag_controller_start_drag (UnityDragController* self, UnityDragModel* model, float offset_x, float offset_y);
 void unity_drag_view_unhook_actor (UnityDragView* self);
+gboolean unity_shell_remove_fullscreen_request (UnityShell* self, GObject* o);
 gboolean unity_drag_controller_get_is_dragging (UnityDragController* self);
 static GObject * unity_drag_controller_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_drag_controller_finalize (GObject* obj);
@@ -154,7 +157,7 @@ static void g_cclosure_user_marshal_VOID__OBJECT_FLOAT_FLOAT (GClosure * closure
 ClutterActor* unity_drag_model_get_icon (UnityDragModel* self) {
 #line 29 "drag-controller.vala"
 	return UNITY_DRAG_MODEL_GET_INTERFACE (self)->get_icon (self);
-#line 158 "drag-controller.c"
+#line 161 "drag-controller.c"
 }
 
 
@@ -162,7 +165,7 @@ ClutterActor* unity_drag_model_get_icon (UnityDragModel* self) {
 char* unity_drag_model_get_drag_data (UnityDragModel* self) {
 #line 30 "drag-controller.vala"
 	return UNITY_DRAG_MODEL_GET_INTERFACE (self)->get_drag_data (self);
-#line 166 "drag-controller.c"
+#line 169 "drag-controller.c"
 }
 
 
@@ -187,20 +190,20 @@ GType unity_drag_model_get_type (void) {
 
 #line 38 "drag-controller.vala"
 UnityDragController* unity_drag_controller_get_default (void) {
-#line 191 "drag-controller.c"
+#line 194 "drag-controller.c"
 	UnityDragController* result;
 #line 40 "drag-controller.vala"
 	if (unity_drag_controller_singleton == NULL) {
-#line 195 "drag-controller.c"
+#line 198 "drag-controller.c"
 		UnityDragController* _tmp0_;
 #line 41 "drag-controller.vala"
 		unity_drag_controller_singleton = (_tmp0_ = unity_drag_controller_new (), _g_object_unref0 (unity_drag_controller_singleton), _tmp0_);
-#line 199 "drag-controller.c"
+#line 202 "drag-controller.c"
 	}
 	result = unity_drag_controller_singleton;
 #line 43 "drag-controller.vala"
 	return result;
-#line 204 "drag-controller.c"
+#line 207 "drag-controller.c"
 }
 
 
@@ -211,21 +214,21 @@ static gpointer _g_object_ref0 (gpointer self) {
 
 #line 82 "drag-controller.vala"
 static void _unity_drag_controller_on_view_motion_unity_drag_view_motion (UnityDragView* _sender, float x, float y, gpointer self) {
-#line 215 "drag-controller.c"
+#line 218 "drag-controller.c"
 	unity_drag_controller_on_view_motion (self, x, y);
 }
 
 
 #line 87 "drag-controller.vala"
 static void _unity_drag_controller_on_view_end_unity_drag_view_end (UnityDragView* _sender, float x, float y, gpointer self) {
-#line 222 "drag-controller.c"
+#line 225 "drag-controller.c"
 	unity_drag_controller_on_view_end (self, x, y);
 }
 
 
 #line 68 "drag-controller.vala"
 void unity_drag_controller_start_drag (UnityDragController* self, UnityDragModel* model, float offset_x, float offset_y) {
-#line 229 "drag-controller.c"
+#line 232 "drag-controller.c"
 	ClutterActor* _tmp3_;
 	UnityDragModel* _tmp4_;
 #line 68 "drag-controller.vala"
@@ -234,18 +237,18 @@ void unity_drag_controller_start_drag (UnityDragController* self, UnityDragModel
 	g_return_if_fail (model != NULL);
 #line 70 "drag-controller.vala"
 	if (!UNITY_DRAG_IS_VIEW (self->priv->view)) {
-#line 238 "drag-controller.c"
+#line 241 "drag-controller.c"
 		UnityDragView* _tmp2_;
 		ClutterActor* _tmp0_;
 		ClutterActor* _tmp1_;
 #line 71 "drag-controller.vala"
 		self->priv->view = (_tmp2_ = unity_drag_view_new ((_tmp1_ = clutter_actor_get_stage (_tmp0_ = unity_drag_model_get_icon (model)), CLUTTER_IS_STAGE (_tmp1_) ? ((ClutterStage*) _tmp1_) : NULL)), _g_object_unref0 (self->priv->view), _tmp2_);
-#line 244 "drag-controller.c"
+#line 247 "drag-controller.c"
 		_g_object_unref0 (_tmp0_);
 	}
 #line 73 "drag-controller.vala"
 	unity_drag_view_hook_actor_to_cursor (self->priv->view, _tmp3_ = unity_drag_model_get_icon (model), offset_x, offset_y);
-#line 249 "drag-controller.c"
+#line 252 "drag-controller.c"
 	_g_object_unref0 (_tmp3_);
 #line 74 "drag-controller.vala"
 	self->priv->model = (_tmp4_ = _g_object_ref0 (model), _g_object_unref0 (self->priv->model), _tmp4_);
@@ -258,8 +261,8 @@ void unity_drag_controller_start_drag (UnityDragController* self, UnityDragModel
 #line 78 "drag-controller.vala"
 	self->priv->_is_dragging = TRUE;
 #line 79 "drag-controller.vala"
-	unity_shell_ensure_input_region (unity_global_shell);
-#line 263 "drag-controller.c"
+	unity_shell_add_fullscreen_request (unity_global_shell, (GObject*) self);
+#line 266 "drag-controller.c"
 }
 
 
@@ -269,13 +272,13 @@ static void unity_drag_controller_on_view_motion (UnityDragController* self, flo
 	g_return_if_fail (self != NULL);
 #line 84 "drag-controller.vala"
 	g_signal_emit_by_name (self, "drag-motion", self->priv->model, x, y);
-#line 273 "drag-controller.c"
+#line 276 "drag-controller.c"
 }
 
 
 #line 87 "drag-controller.vala"
 static void unity_drag_controller_on_view_end (UnityDragController* self, float x, float y) {
-#line 279 "drag-controller.c"
+#line 282 "drag-controller.c"
 	guint _tmp0_;
 	guint _tmp1_;
 	UnityDragModel* _tmp2_;
@@ -294,14 +297,14 @@ static void unity_drag_controller_on_view_end (UnityDragController* self, float 
 #line 94 "drag-controller.vala"
 	self->priv->_is_dragging = FALSE;
 #line 95 "drag-controller.vala"
-	unity_shell_ensure_input_region (unity_global_shell);
-#line 299 "drag-controller.c"
+	unity_shell_remove_fullscreen_request (unity_global_shell, (GObject*) self);
+#line 302 "drag-controller.c"
 }
 
 
 #line 35 "drag-controller.vala"
 UnityDragController* unity_drag_controller_construct (GType object_type) {
-#line 305 "drag-controller.c"
+#line 308 "drag-controller.c"
 	UnityDragController * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
@@ -312,7 +315,7 @@ UnityDragController* unity_drag_controller_construct (GType object_type) {
 UnityDragController* unity_drag_controller_new (void) {
 #line 35 "drag-controller.vala"
 	return unity_drag_controller_construct (UNITY_DRAG_TYPE_CONTROLLER);
-#line 316 "drag-controller.c"
+#line 319 "drag-controller.c"
 }
 
 
@@ -322,7 +325,7 @@ gboolean unity_drag_controller_get_is_dragging (UnityDragController* self) {
 	result = self->priv->_is_dragging;
 #line 59 "drag-controller.vala"
 	return result;
-#line 326 "drag-controller.c"
+#line 329 "drag-controller.c"
 }
 
 
@@ -336,7 +339,7 @@ static GObject * unity_drag_controller_constructor (GType type, guint n_construc
 	{
 #line 65 "drag-controller.vala"
 		self->priv->_is_dragging = FALSE;
-#line 340 "drag-controller.c"
+#line 343 "drag-controller.c"
 	}
 	return obj;
 }

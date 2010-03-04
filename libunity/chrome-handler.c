@@ -71,9 +71,10 @@ enum  {
 	UNITY_WEBAPP_CHROMIUM_WEB_APP_URL,
 	UNITY_WEBAPP_CHROMIUM_WEB_APP_ICON
 };
-#define UNITY_WEBAPP_CHROMIUM_WEB_APP_webapp_desktop_template "\n[Desktop Entry]\nVersion=1.0\nName=%s\nExec=chromium-browser --app=\"http://%s\"\nTerminal=false\nX-MultipleArgs=false\nType=Application\nIcon=%s\nCategories=Network;\nMimeType=text/html;\nStartupWMClass=Chromium\nStartupNotify=true\n"
+#define UNITY_WEBAPP_CHROMIUM_WEB_APP_webapp_desktop_template "\n[Desktop Entry]\nVersion=1.0\nName=%s\nExec=chromium-browser --app=\"%s\"\nComment=A Chromium Webapp\nTerminal=false\nX-MultipleArgs=false\nType=Application\nIcon=%s\nCategories=Network;\nMimeType=text/html;\nStartupWMClass=Chromium\nStartupNotify=true\n"
 UnityWebappChromiumWebApp* unity_webapp_chromium_web_app_new (const char* address, const char* icon);
 UnityWebappChromiumWebApp* unity_webapp_chromium_web_app_construct (GType object_type, const char* address, const char* icon);
+char* unity_webapp_chromium_web_app_desktop_file_path (UnityWebappChromiumWebApp* self);
 const char* unity_webapp_chromium_web_app_get_url (UnityWebappChromiumWebApp* self);
 static gboolean unity_webapp_chromium_web_app_check_existance_of_app (UnityWebappChromiumWebApp* self);
 const char* unity_webapp_chromium_web_app_get_icon (UnityWebappChromiumWebApp* self);
@@ -94,83 +95,99 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
-#line 46 "chrome-handler.vala"
+#line 47 "chrome-handler.vala"
 UnityWebappChromiumWebApp* unity_webapp_chromium_web_app_construct (GType object_type, const char* address, const char* icon) {
-#line 100 "chrome-handler.c"
+#line 101 "chrome-handler.c"
 	UnityWebappChromiumWebApp * self;
-#line 46 "chrome-handler.vala"
+#line 47 "chrome-handler.vala"
 	g_return_val_if_fail (address != NULL, NULL);
-#line 46 "chrome-handler.vala"
+#line 47 "chrome-handler.vala"
 	g_return_val_if_fail (icon != NULL, NULL);
-#line 48 "chrome-handler.vala"
+#line 49 "chrome-handler.vala"
 	self = (UnityWebappChromiumWebApp*) g_object_new (object_type, "url", address, "icon", icon, NULL);
-#line 108 "chrome-handler.c"
+#line 109 "chrome-handler.c"
 	return self;
 }
 
 
-#line 46 "chrome-handler.vala"
+#line 47 "chrome-handler.vala"
 UnityWebappChromiumWebApp* unity_webapp_chromium_web_app_new (const char* address, const char* icon) {
-#line 46 "chrome-handler.vala"
+#line 47 "chrome-handler.vala"
 	return unity_webapp_chromium_web_app_construct (UNITY_WEBAPP_TYPE_CHROMIUM_WEB_APP, address, icon);
-#line 117 "chrome-handler.c"
+#line 118 "chrome-handler.c"
 }
 
 
 #line 1045 "glib-2.0.vapi"
 static const char* string_to_string (const char* self) {
-#line 123 "chrome-handler.c"
+#line 124 "chrome-handler.c"
 	const char* result;
 #line 1045 "glib-2.0.vapi"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 127 "chrome-handler.c"
+#line 128 "chrome-handler.c"
 	result = self;
 #line 1046 "glib-2.0.vapi"
 	return result;
-#line 131 "chrome-handler.c"
+#line 132 "chrome-handler.c"
 }
 
 
 #line 75 "chrome-handler.vala"
+char* unity_webapp_chromium_web_app_desktop_file_path (UnityWebappChromiumWebApp* self) {
+#line 138 "chrome-handler.c"
+	char* result;
+	char* _tmp0_;
+	char* _tmp1_;
+#line 75 "chrome-handler.vala"
+	g_return_val_if_fail (self != NULL, NULL);
+#line 144 "chrome-handler.c"
+	result = (_tmp1_ = g_strconcat (self->priv->webapp_dir, _tmp0_ = g_strconcat ("chromium-webapp-", string_to_string (self->name), ".desktop", NULL), NULL), _g_free0 (_tmp0_), _tmp1_);
+#line 77 "chrome-handler.vala"
+	return result;
+#line 148 "chrome-handler.c"
+}
+
+
+#line 81 "chrome-handler.vala"
 static gboolean unity_webapp_chromium_web_app_check_existance_of_app (UnityWebappChromiumWebApp* self) {
-#line 137 "chrome-handler.c"
+#line 154 "chrome-handler.c"
 	gboolean result;
 	char* _tmp1_;
 	char* _tmp0_;
 	GFile* _tmp2_;
 	GFile* webapp_dir_file;
-#line 75 "chrome-handler.vala"
+#line 81 "chrome-handler.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 77 "chrome-handler.vala"
-	if (_vala_strcmp0 (self->priv->_url, "") == 0) {
-#line 147 "chrome-handler.c"
-		result = TRUE;
-#line 79 "chrome-handler.vala"
-		return result;
-#line 151 "chrome-handler.c"
-	}
-#line 82 "chrome-handler.vala"
-	webapp_dir_file = (_tmp2_ = g_file_new_for_path (_tmp1_ = g_strconcat (self->priv->webapp_dir, _tmp0_ = g_strconcat ("chromium-webapp-", string_to_string (self->name), ".desktop", NULL), NULL)), _g_free0 (_tmp1_), _g_free0 (_tmp0_), _tmp2_);
 #line 83 "chrome-handler.vala"
-	if (g_file_query_exists (webapp_dir_file, NULL)) {
-#line 157 "chrome-handler.c"
+	if (_vala_strcmp0 (self->priv->_url, "") == 0) {
+#line 164 "chrome-handler.c"
 		result = TRUE;
-		_g_object_unref0 (webapp_dir_file);
 #line 85 "chrome-handler.vala"
 		return result;
-#line 162 "chrome-handler.c"
+#line 168 "chrome-handler.c"
+	}
+#line 88 "chrome-handler.vala"
+	webapp_dir_file = (_tmp2_ = g_file_new_for_path (_tmp1_ = g_strconcat (self->priv->webapp_dir, _tmp0_ = g_strconcat ("chromium-webapp-", string_to_string (self->name), ".desktop", NULL), NULL)), _g_free0 (_tmp1_), _g_free0 (_tmp0_), _tmp2_);
+#line 89 "chrome-handler.vala"
+	if (g_file_query_exists (webapp_dir_file, NULL)) {
+#line 174 "chrome-handler.c"
+		result = TRUE;
+		_g_object_unref0 (webapp_dir_file);
+#line 91 "chrome-handler.vala"
+		return result;
+#line 179 "chrome-handler.c"
 	}
 	result = FALSE;
 	_g_object_unref0 (webapp_dir_file);
-#line 87 "chrome-handler.vala"
+#line 93 "chrome-handler.vala"
 	return result;
-#line 168 "chrome-handler.c"
+#line 185 "chrome-handler.c"
 }
 
 
-#line 90 "chrome-handler.vala"
+#line 96 "chrome-handler.vala"
 static void unity_webapp_chromium_web_app_build_webapp (UnityWebappChromiumWebApp* self) {
-#line 174 "chrome-handler.c"
+#line 191 "chrome-handler.c"
 	GError * _inner_error_;
 	char* webapp_desktop;
 	char* _tmp1_;
@@ -180,28 +197,28 @@ static void unity_webapp_chromium_web_app_build_webapp (UnityWebappChromiumWebAp
 	char* _tmp2_;
 	GFile* _tmp4_;
 	GFile* desktop_file;
-#line 90 "chrome-handler.vala"
+#line 96 "chrome-handler.vala"
 	g_return_if_fail (self != NULL);
-#line 186 "chrome-handler.c"
+#line 203 "chrome-handler.c"
 	_inner_error_ = NULL;
-#line 92 "chrome-handler.vala"
-	webapp_desktop = g_strdup_printf (UNITY_WEBAPP_CHROMIUM_WEB_APP_webapp_desktop_template, self->name, self->id, self->priv->_icon);
-#line 93 "chrome-handler.vala"
-	g_debug ("chrome-handler.vala:93: %s", _tmp1_ = g_strconcat ("building ", _tmp0_ = g_strconcat ("chromium-webapp-", string_to_string (self->name), ".desktop", NULL), NULL));
-#line 192 "chrome-handler.c"
+#line 98 "chrome-handler.vala"
+	webapp_desktop = g_strdup_printf (UNITY_WEBAPP_CHROMIUM_WEB_APP_webapp_desktop_template, self->name, self->priv->_url, self->priv->_icon);
+#line 99 "chrome-handler.vala"
+	g_debug ("chrome-handler.vala:99: %s", _tmp1_ = g_strconcat ("building ", _tmp0_ = g_strconcat ("chromium-webapp-", string_to_string (self->name), ".desktop", NULL), NULL));
+#line 209 "chrome-handler.c"
 	_g_free0 (_tmp1_);
 	_g_free0 (_tmp0_);
-#line 95 "chrome-handler.vala"
-	webapp_directory = g_file_new_for_path (self->priv->webapp_dir);
-#line 197 "chrome-handler.c"
-	{
-#line 98 "chrome-handler.vala"
-		g_debug ("chrome-handler.vala:98: attempting to build parent directorys for %s", self->priv->webapp_dir);
-#line 99 "chrome-handler.vala"
-		if (!g_file_query_exists (webapp_directory, NULL)) {
 #line 101 "chrome-handler.vala"
+	webapp_directory = g_file_new_for_path (self->priv->webapp_dir);
+#line 214 "chrome-handler.c"
+	{
+#line 104 "chrome-handler.vala"
+		g_debug ("chrome-handler.vala:104: attempting to build parent directorys for %s", self->priv->webapp_dir);
+#line 105 "chrome-handler.vala"
+		if (!g_file_query_exists (webapp_directory, NULL)) {
+#line 107 "chrome-handler.vala"
 			g_file_make_directory_with_parents (webapp_directory, NULL, &_inner_error_);
-#line 205 "chrome-handler.c"
+#line 222 "chrome-handler.c"
 			if (_inner_error_ != NULL) {
 				goto __catch2_g_error;
 			}
@@ -214,15 +231,15 @@ static void unity_webapp_chromium_web_app_build_webapp (UnityWebappChromiumWebAp
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 105 "chrome-handler.vala"
-			g_warning ("chrome-handler.vala:105: %s", e->message);
-#line 220 "chrome-handler.c"
+#line 111 "chrome-handler.vala"
+			g_warning ("chrome-handler.vala:111: %s", e->message);
+#line 237 "chrome-handler.c"
 			_g_error_free0 (e);
 			_g_free0 (webapp_desktop);
 			_g_object_unref0 (webapp_directory);
-#line 106 "chrome-handler.vala"
+#line 112 "chrome-handler.vala"
 			return;
-#line 226 "chrome-handler.c"
+#line 243 "chrome-handler.c"
 		}
 	}
 	__finally2:
@@ -233,41 +250,41 @@ static void unity_webapp_chromium_web_app_build_webapp (UnityWebappChromiumWebAp
 		g_clear_error (&_inner_error_);
 		return;
 	}
-#line 109 "chrome-handler.vala"
+#line 115 "chrome-handler.vala"
 	desktop_file = (_tmp4_ = g_file_new_for_path (_tmp3_ = g_strconcat (self->priv->webapp_dir, _tmp2_ = g_strconcat ("chromium-webapp-", string_to_string (self->name), ".desktop", NULL), NULL)), _g_free0 (_tmp3_), _g_free0 (_tmp2_), _tmp4_);
-#line 239 "chrome-handler.c"
+#line 256 "chrome-handler.c"
 	{
 		GFileOutputStream* file_stream;
 		GDataOutputStream* data_stream;
 		char* _tmp6_;
 		char* _tmp5_;
-#line 112 "chrome-handler.vala"
+#line 118 "chrome-handler.vala"
 		file_stream = g_file_create (desktop_file, G_FILE_CREATE_NONE, NULL, &_inner_error_);
-#line 247 "chrome-handler.c"
+#line 264 "chrome-handler.c"
 		if (_inner_error_ != NULL) {
 			goto __catch3_g_error;
 		}
-#line 113 "chrome-handler.vala"
+#line 119 "chrome-handler.vala"
 		data_stream = g_data_output_stream_new ((GOutputStream*) file_stream);
-#line 114 "chrome-handler.vala"
+#line 120 "chrome-handler.vala"
 		g_data_output_stream_put_string (data_stream, webapp_desktop, NULL, &_inner_error_);
-#line 255 "chrome-handler.c"
+#line 272 "chrome-handler.c"
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (file_stream);
 			_g_object_unref0 (data_stream);
 			goto __catch3_g_error;
 		}
-#line 115 "chrome-handler.vala"
+#line 121 "chrome-handler.vala"
 		g_output_stream_close ((GOutputStream*) data_stream, NULL, &_inner_error_);
-#line 263 "chrome-handler.c"
+#line 280 "chrome-handler.c"
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (file_stream);
 			_g_object_unref0 (data_stream);
 			goto __catch3_g_error;
 		}
-#line 116 "chrome-handler.vala"
-		g_debug ("chrome-handler.vala:116: wrote to %s", _tmp6_ = g_strconcat (self->priv->webapp_dir, _tmp5_ = g_strconcat ("chromium-webapp-", string_to_string (self->name), ".desktop", NULL), NULL));
-#line 271 "chrome-handler.c"
+#line 122 "chrome-handler.vala"
+		g_debug ("chrome-handler.vala:122: wrote to %s", _tmp6_ = g_strconcat (self->priv->webapp_dir, _tmp5_ = g_strconcat ("chromium-webapp-", string_to_string (self->name), ".desktop", NULL), NULL));
+#line 288 "chrome-handler.c"
 		_g_free0 (_tmp6_);
 		_g_free0 (_tmp5_);
 		_g_object_unref0 (file_stream);
@@ -280,16 +297,16 @@ static void unity_webapp_chromium_web_app_build_webapp (UnityWebappChromiumWebAp
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 119 "chrome-handler.vala"
-			g_warning ("chrome-handler.vala:119: could not write to %s/%s.desktop", self->priv->webapp_dir, self->name);
-#line 286 "chrome-handler.c"
+#line 125 "chrome-handler.vala"
+			g_warning ("chrome-handler.vala:125: could not write to %s/%s.desktop", self->priv->webapp_dir, self->name);
+#line 303 "chrome-handler.c"
 			_g_error_free0 (e);
 			_g_free0 (webapp_desktop);
 			_g_object_unref0 (webapp_directory);
 			_g_object_unref0 (desktop_file);
-#line 120 "chrome-handler.vala"
+#line 126 "chrome-handler.vala"
 			return;
-#line 293 "chrome-handler.c"
+#line 310 "chrome-handler.c"
 		}
 	}
 	__finally3:
@@ -312,9 +329,9 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 124 "chrome-handler.vala"
+#line 130 "chrome-handler.vala"
 void unity_webapp_chromium_web_app_add_to_favorites (UnityWebappChromiumWebApp* self) {
-#line 318 "chrome-handler.c"
+#line 335 "chrome-handler.c"
 	LauncherFavorites* favorites;
 	char* uid;
 	char* _tmp0_;
@@ -323,49 +340,51 @@ void unity_webapp_chromium_web_app_add_to_favorites (UnityWebappChromiumWebApp* 
 	char* _tmp3_;
 	char* _tmp2_;
 	char* _tmp4_;
-#line 124 "chrome-handler.vala"
+#line 130 "chrome-handler.vala"
 	g_return_if_fail (self != NULL);
-#line 126 "chrome-handler.vala"
+#line 132 "chrome-handler.vala"
 	favorites = _g_object_ref0 (launcher_favorites_get_default ());
-#line 127 "chrome-handler.vala"
+#line 133 "chrome-handler.vala"
 	uid = unity_webapp_chromium_web_app_get_fav_uid (self);
-#line 128 "chrome-handler.vala"
+#line 134 "chrome-handler.vala"
 	if (_vala_strcmp0 (uid, "") != 0) {
-#line 131 "chrome-handler.vala"
-		g_warning ("chrome-handler.vala:131: %s is already a favorite", self->name);
-#line 337 "chrome-handler.c"
+#line 137 "chrome-handler.vala"
+		g_warning ("chrome-handler.vala:137: %s is already a favorite", self->name);
+#line 354 "chrome-handler.c"
 		_g_object_unref0 (favorites);
 		_g_free0 (uid);
-#line 132 "chrome-handler.vala"
+#line 138 "chrome-handler.vala"
 		return;
-#line 342 "chrome-handler.c"
+#line 359 "chrome-handler.c"
 	}
-#line 135 "chrome-handler.vala"
-	desktop_path = (_tmp1_ = g_strconcat (self->priv->webapp_dir, _tmp0_ = g_strconcat ("chromium-webapp-", string_to_string (self->name), ".desktop", NULL), NULL), _g_free0 (_tmp0_), _tmp1_);
-#line 136 "chrome-handler.vala"
-	uid = (_tmp3_ = g_strconcat ("webapp-", _tmp2_ = g_path_get_basename (desktop_path), NULL), _g_free0 (uid), _tmp3_);
-#line 348 "chrome-handler.c"
-	_g_free0 (_tmp2_);
-#line 137 "chrome-handler.vala"
-	uid = (_tmp4_ = unity_webapp_urlify (uid), _g_free0 (uid), _tmp4_);
-#line 140 "chrome-handler.vala"
-	launcher_favorites_set_string (favorites, uid, "type", "application");
 #line 141 "chrome-handler.vala"
-	launcher_favorites_set_string (favorites, uid, "desktop_file", desktop_path);
+	desktop_path = (_tmp1_ = g_strconcat (self->priv->webapp_dir, _tmp0_ = g_strconcat ("chromium-webapp-", string_to_string (self->name), ".desktop", NULL), NULL), _g_free0 (_tmp0_), _tmp1_);
 #line 142 "chrome-handler.vala"
-	launcher_favorites_set_bool (favorites, uid, "enable_shadow", TRUE);
+	uid = (_tmp3_ = g_strconcat ("webapp-", _tmp2_ = g_path_get_basename (desktop_path), NULL), _g_free0 (uid), _tmp3_);
+#line 365 "chrome-handler.c"
+	_g_free0 (_tmp2_);
 #line 143 "chrome-handler.vala"
+	uid = (_tmp4_ = unity_webapp_urlify (uid), _g_free0 (uid), _tmp4_);
+#line 146 "chrome-handler.vala"
+	launcher_favorites_set_string (favorites, uid, "type", "application");
+#line 147 "chrome-handler.vala"
+	launcher_favorites_set_string (favorites, uid, "desktop_file", desktop_path);
+#line 148 "chrome-handler.vala"
+	launcher_favorites_set_float (favorites, uid, "priority", -100000.0f);
+#line 149 "chrome-handler.vala"
+	launcher_favorites_set_bool (favorites, uid, "enable_shadow", TRUE);
+#line 150 "chrome-handler.vala"
 	launcher_favorites_add_favorite (favorites, uid);
-#line 360 "chrome-handler.c"
+#line 379 "chrome-handler.c"
 	_g_object_unref0 (favorites);
 	_g_free0 (uid);
 	_g_free0 (desktop_path);
 }
 
 
-#line 150 "chrome-handler.vala"
+#line 157 "chrome-handler.vala"
 static char* unity_webapp_chromium_web_app_get_fav_uid (UnityWebappChromiumWebApp* self) {
-#line 369 "chrome-handler.c"
+#line 388 "chrome-handler.c"
 	char* result;
 	char* myuid;
 	char* _tmp0_;
@@ -373,50 +392,50 @@ static char* unity_webapp_chromium_web_app_get_fav_uid (UnityWebappChromiumWebAp
 	char* my_desktop_path;
 	LauncherFavorites* favorites;
 	GSList* favorite_list;
-#line 150 "chrome-handler.vala"
+#line 157 "chrome-handler.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 152 "chrome-handler.vala"
+#line 159 "chrome-handler.vala"
 	myuid = g_strdup ("");
-#line 153 "chrome-handler.vala"
+#line 160 "chrome-handler.vala"
 	my_desktop_path = (_tmp1_ = g_strconcat (self->priv->webapp_dir, _tmp0_ = g_strconcat ("chromium-webapp-", string_to_string (self->name), ".desktop", NULL), NULL), _g_free0 (_tmp0_), _tmp1_);
-#line 154 "chrome-handler.vala"
+#line 161 "chrome-handler.vala"
 	favorites = _g_object_ref0 (launcher_favorites_get_default ());
-#line 155 "chrome-handler.vala"
+#line 162 "chrome-handler.vala"
 	favorite_list = launcher_favorites_get_favorites (favorites);
-#line 387 "chrome-handler.c"
+#line 406 "chrome-handler.c"
 	{
 		GSList* uid_collection;
 		GSList* uid_it;
-#line 156 "chrome-handler.vala"
+#line 163 "chrome-handler.vala"
 		uid_collection = favorite_list;
-#line 393 "chrome-handler.c"
+#line 412 "chrome-handler.c"
 		for (uid_it = uid_collection; uid_it != NULL; uid_it = uid_it->next) {
 			const char* uid;
-#line 156 "chrome-handler.vala"
+#line 163 "chrome-handler.vala"
 			uid = (const char*) uid_it->data;
-#line 398 "chrome-handler.c"
+#line 417 "chrome-handler.c"
 			{
 				char* type;
 				char* desktop_file;
-#line 159 "chrome-handler.vala"
-				type = g_strdup (launcher_favorites_get_string (favorites, uid, "type"));
-#line 160 "chrome-handler.vala"
-				if (_vala_strcmp0 (type, "application") != 0) {
-#line 406 "chrome-handler.c"
-					_g_free0 (type);
-#line 161 "chrome-handler.vala"
-					continue;
-#line 410 "chrome-handler.c"
-				}
-#line 163 "chrome-handler.vala"
-				desktop_file = g_strdup (launcher_favorites_get_string (favorites, uid, "desktop_file"));
-#line 164 "chrome-handler.vala"
-				if (_vala_strcmp0 (desktop_file, my_desktop_path) == 0) {
-#line 416 "chrome-handler.c"
-					char* _tmp2_;
 #line 166 "chrome-handler.vala"
+				type = g_strdup (launcher_favorites_get_string (favorites, uid, "type"));
+#line 167 "chrome-handler.vala"
+				if (_vala_strcmp0 (type, "application") != 0) {
+#line 425 "chrome-handler.c"
+					_g_free0 (type);
+#line 168 "chrome-handler.vala"
+					continue;
+#line 429 "chrome-handler.c"
+				}
+#line 170 "chrome-handler.vala"
+				desktop_file = g_strdup (launcher_favorites_get_string (favorites, uid, "desktop_file"));
+#line 171 "chrome-handler.vala"
+				if (_vala_strcmp0 (desktop_file, my_desktop_path) == 0) {
+#line 435 "chrome-handler.c"
+					char* _tmp2_;
+#line 173 "chrome-handler.vala"
 					myuid = (_tmp2_ = g_strdup (uid), _g_free0 (myuid), _tmp2_);
-#line 420 "chrome-handler.c"
+#line 439 "chrome-handler.c"
 				}
 				_g_free0 (type);
 				_g_free0 (desktop_file);
@@ -426,9 +445,9 @@ static char* unity_webapp_chromium_web_app_get_fav_uid (UnityWebappChromiumWebAp
 	result = myuid;
 	_g_free0 (my_desktop_path);
 	_g_object_unref0 (favorites);
-#line 169 "chrome-handler.vala"
+#line 176 "chrome-handler.vala"
 	return result;
-#line 432 "chrome-handler.c"
+#line 451 "chrome-handler.c"
 }
 
 
@@ -436,9 +455,9 @@ const char* unity_webapp_chromium_web_app_get_url (UnityWebappChromiumWebApp* se
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_url;
-#line 40 "chrome-handler.vala"
+#line 41 "chrome-handler.vala"
 	return result;
-#line 442 "chrome-handler.c"
+#line 461 "chrome-handler.c"
 }
 
 
@@ -454,9 +473,9 @@ const char* unity_webapp_chromium_web_app_get_icon (UnityWebappChromiumWebApp* s
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_icon;
-#line 41 "chrome-handler.vala"
+#line 42 "chrome-handler.vala"
 	return result;
-#line 460 "chrome-handler.c"
+#line 479 "chrome-handler.c"
 }
 
 
@@ -488,16 +507,16 @@ static GObject * unity_webapp_chromium_web_app_constructor (GType type, guint n_
 		char* _tmp6_;
 		gboolean exists;
 		split_url = (_tmp1_ = _tmp0_ = g_strsplit (self->priv->_url, "://", 2), split_url_length1 = _vala_array_length (_tmp0_), split_url_size = split_url_length1, _tmp1_);
-#line 55 "chrome-handler.vala"
+#line 56 "chrome-handler.vala"
 		self->name = (_tmp2_ = g_strdup (split_url[1]), _g_free0 (self->name), _tmp2_);
-#line 494 "chrome-handler.c"
+#line 513 "chrome-handler.c"
 		{
 			GRegex* regex;
 			char* _tmp3_;
 			char* _tmp4_;
-#line 58 "chrome-handler.vala"
+#line 59 "chrome-handler.vala"
 			regex = g_regex_new ("(/)", 0, 0, &_inner_error_);
-#line 501 "chrome-handler.c"
+#line 520 "chrome-handler.c"
 			if (_inner_error_ != NULL) {
 				if (_inner_error_->domain == G_REGEX_ERROR) {
 					goto __catch4_g_regex_error;
@@ -506,9 +525,9 @@ static GObject * unity_webapp_chromium_web_app_constructor (GType type, guint n_
 				g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 				g_clear_error (&_inner_error_);
 			}
-#line 59 "chrome-handler.vala"
+#line 60 "chrome-handler.vala"
 			_tmp3_ = g_regex_replace (regex, self->name, (gssize) (-1), 0, "-", 0, &_inner_error_);
-#line 512 "chrome-handler.c"
+#line 531 "chrome-handler.c"
 			if (_inner_error_ != NULL) {
 				_g_regex_unref0 (regex);
 				if (_inner_error_->domain == G_REGEX_ERROR) {
@@ -519,9 +538,9 @@ static GObject * unity_webapp_chromium_web_app_constructor (GType type, guint n_
 				g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 				g_clear_error (&_inner_error_);
 			}
-#line 59 "chrome-handler.vala"
+#line 60 "chrome-handler.vala"
 			self->name = (_tmp4_ = _tmp3_, _g_free0 (self->name), _tmp4_);
-#line 525 "chrome-handler.c"
+#line 544 "chrome-handler.c"
 			_g_regex_unref0 (regex);
 		}
 		goto __finally4;
@@ -531,9 +550,9 @@ static GObject * unity_webapp_chromium_web_app_constructor (GType type, guint n_
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-#line 61 "chrome-handler.vala"
-				g_warning ("chrome-handler.vala:61: %s", e->message);
-#line 537 "chrome-handler.c"
+#line 62 "chrome-handler.vala"
+				g_warning ("chrome-handler.vala:62: %s", e->message);
+#line 556 "chrome-handler.c"
 				_g_error_free0 (e);
 			}
 		}
@@ -543,17 +562,17 @@ static GObject * unity_webapp_chromium_web_app_constructor (GType type, guint n_
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
 		}
-#line 64 "chrome-handler.vala"
-		self->id = (_tmp5_ = g_strdup (self->name), _g_free0 (self->id), _tmp5_);
 #line 65 "chrome-handler.vala"
+		self->id = (_tmp5_ = g_strdup (self->name), _g_free0 (self->id), _tmp5_);
+#line 66 "chrome-handler.vala"
 		self->priv->webapp_dir = (_tmp6_ = g_strconcat (g_get_home_dir (), "/.local/share/applications/", NULL), _g_free0 (self->priv->webapp_dir), _tmp6_);
-#line 67 "chrome-handler.vala"
-		exists = unity_webapp_chromium_web_app_check_existance_of_app (self);
 #line 68 "chrome-handler.vala"
+		exists = unity_webapp_chromium_web_app_check_existance_of_app (self);
+#line 69 "chrome-handler.vala"
 		if (!exists) {
-#line 70 "chrome-handler.vala"
+#line 71 "chrome-handler.vala"
 			unity_webapp_chromium_web_app_build_webapp (self);
-#line 557 "chrome-handler.c"
+#line 576 "chrome-handler.c"
 		}
 		split_url = (_vala_array_free (split_url, split_url_length1, (GDestroyNotify) g_free), NULL);
 	}

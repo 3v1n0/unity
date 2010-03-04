@@ -21,7 +21,9 @@ namespace Unity
 {
   public class Maximus : Object
   {
-    static string[] default_exclude_classes = 
+    public static string user_unmaximize_hint = "maximus-user-unmaximize";
+
+    static string[] default_exclude_classes =
     {
       "Apport-gtk",
       "Bluetooth-properties",
@@ -29,13 +31,9 @@ namespace Unity
       "Download", /* Firefox Download Window */
       "Ekiga",
       "Extension", /* Firefox Add-Ons/Extension Window */
-      "Gcalctool",
       "Gimp",
       "Global", /* Firefox Error Console Window */
-      "Gnome-dictionary",
-      "Gnome-launguage-selector",
       "Gnome-nettool",
-      "Gnome-volume-control",
       "Kiten",
       "Kmplot",
       "Nm-editor",
@@ -46,43 +44,60 @@ namespace Unity
       "Toplevel", /* Firefox "Clear Private Data" Window */
       "Transmission"
     };
-    
+
     public Maximus ()
     {
     }
-    
+
     construct
     {
     }
-    
+
     bool window_is_excluded (Mutter.Window window)
     {
       Mutter.MetaCompWindowType type = window.get_window_type ();
-      
+
       if (type != Mutter.MetaCompWindowType.NORMAL)
         return true;
-      
+
       unowned Mutter.MetaWindow meta = window.get_meta_window ();
-      
+
       if (Mutter.MetaWindow.is_maximized (meta) ||
           !Mutter.MetaWindow.allows_resize (meta))
         return true;
-      
+
       unowned string res_class = Mutter.MetaWindow.get_wm_class (meta);
       foreach (string s in default_exclude_classes)
         if (res_class.contains (s))
           return true;
-      
+
+      void *hint = window.get_data (user_unmaximize_hint);
+      if (hint != null)
+        return true;
+
+      {
+        Clutter.Actor stage = Clutter.Stage.get_default ();
+
+        if (window.width < stage.width * 0.6 ||
+            window.height < stage.height * 0.6 ||
+            (window.width/window.height) < 0.6 ||
+            (window.width/window.height) > 2.0)
+          {
+            return true;
+          }
+
+      }
+
       return false;
     }
-    
+
     public bool process_window (Mutter.Window window)
     {
       if (window_is_excluded (window))
         return true;
-      
+
       Mutter.MetaWindow.maximize (window.get_meta_window (), Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
-      
+
       return true;
     }
   }

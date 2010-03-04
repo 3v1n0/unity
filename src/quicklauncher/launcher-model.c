@@ -59,6 +59,7 @@ struct _UnityQuicklauncherModelsLauncherModelIface {
 	GeeArrayList* (*get_menu_shortcut_actions) (UnityQuicklauncherModelsLauncherModel* self);
 	void (*activate) (UnityQuicklauncherModelsLauncherModel* self);
 	void (*close) (UnityQuicklauncherModelsLauncherModel* self);
+	void (*regenerate_icon) (UnityQuicklauncherModelsLauncherModel* self);
 	gboolean (*get_is_active) (UnityQuicklauncherModelsLauncherModel* self);
 	gboolean (*get_is_focused) (UnityQuicklauncherModelsLauncherModel* self);
 	gboolean (*get_is_urgent) (UnityQuicklauncherModelsLauncherModel* self);
@@ -82,6 +83,7 @@ GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcuts (Unit
 GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcut_actions (UnityQuicklauncherModelsLauncherModel* self);
 void unity_quicklauncher_models_launcher_model_activate (UnityQuicklauncherModelsLauncherModel* self);
 void unity_quicklauncher_models_launcher_model_close (UnityQuicklauncherModelsLauncherModel* self);
+void unity_quicklauncher_models_launcher_model_regenerate_icon (UnityQuicklauncherModelsLauncherModel* self);
 gboolean unity_quicklauncher_models_launcher_model_get_is_active (UnityQuicklauncherModelsLauncherModel* self);
 gboolean unity_quicklauncher_models_launcher_model_get_is_focused (UnityQuicklauncherModelsLauncherModel* self);
 gboolean unity_quicklauncher_models_launcher_model_get_is_urgent (UnityQuicklauncherModelsLauncherModel* self);
@@ -104,7 +106,7 @@ void unity_quicklauncher_models_shortcut_item_activated (UnityQuicklauncherModel
 GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcuts (UnityQuicklauncherModelsLauncherModel* self) {
 #line 46 "launcher-model.vala"
 	return UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->get_menu_shortcuts (self);
-#line 108 "launcher-model.c"
+#line 110 "launcher-model.c"
 }
 
 
@@ -112,7 +114,7 @@ GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcuts (Unit
 GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcut_actions (UnityQuicklauncherModelsLauncherModel* self) {
 #line 47 "launcher-model.vala"
 	return UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->get_menu_shortcut_actions (self);
-#line 116 "launcher-model.c"
+#line 118 "launcher-model.c"
 }
 
 
@@ -120,7 +122,7 @@ GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcut_action
 void unity_quicklauncher_models_launcher_model_activate (UnityQuicklauncherModelsLauncherModel* self) {
 #line 49 "launcher-model.vala"
 	UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->activate (self);
-#line 124 "launcher-model.c"
+#line 126 "launcher-model.c"
 }
 
 
@@ -128,7 +130,15 @@ void unity_quicklauncher_models_launcher_model_activate (UnityQuicklauncherModel
 void unity_quicklauncher_models_launcher_model_close (UnityQuicklauncherModelsLauncherModel* self) {
 #line 50 "launcher-model.vala"
 	UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->close (self);
-#line 132 "launcher-model.c"
+#line 134 "launcher-model.c"
+}
+
+
+#line 51 "launcher-model.vala"
+void unity_quicklauncher_models_launcher_model_regenerate_icon (UnityQuicklauncherModelsLauncherModel* self) {
+#line 51 "launcher-model.vala"
+	UNITY_QUICKLAUNCHER_MODELS_LAUNCHER_MODEL_GET_INTERFACE (self)->regenerate_icon (self);
+#line 142 "launcher-model.c"
 }
 
 
@@ -233,19 +243,19 @@ GType unity_quicklauncher_models_launcher_model_get_type (void) {
 }
 
 
-#line 55 "launcher-model.vala"
+#line 56 "launcher-model.vala"
 char* unity_quicklauncher_models_shortcut_item_get_name (UnityQuicklauncherModelsShortcutItem* self) {
-#line 55 "launcher-model.vala"
+#line 56 "launcher-model.vala"
 	return UNITY_QUICKLAUNCHER_MODELS_SHORTCUT_ITEM_GET_INTERFACE (self)->get_name (self);
-#line 241 "launcher-model.c"
+#line 251 "launcher-model.c"
 }
 
 
-#line 57 "launcher-model.vala"
+#line 58 "launcher-model.vala"
 void unity_quicklauncher_models_shortcut_item_activated (UnityQuicklauncherModelsShortcutItem* self) {
-#line 57 "launcher-model.vala"
+#line 58 "launcher-model.vala"
 	UNITY_QUICKLAUNCHER_MODELS_SHORTCUT_ITEM_GET_INTERFACE (self)->activated (self);
-#line 249 "launcher-model.c"
+#line 259 "launcher-model.c"
 }
 
 

@@ -76,7 +76,7 @@ namespace Unity.Drag
       this.view.motion.connect (on_view_motion);
       this.view.end.connect (on_view_end);
       this._is_dragging = true;
-      Unity.global_shell.ensure_input_region ();
+      Unity.global_shell.add_fullscreen_request (this);
     }
 
     private void on_view_motion (float x, float y)
@@ -92,7 +92,7 @@ namespace Unity.Drag
       this.view.end.disconnect (on_view_end);
       this.model = null;
       this._is_dragging = false;
-      Unity.global_shell.ensure_input_region ();
+      Unity.global_shell.remove_fullscreen_request (this);
     }
     
 

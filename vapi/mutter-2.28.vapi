@@ -84,7 +84,7 @@ namespace Mutter {
 		public static void window_unmapped (Mutter.MetaCompositor compositor, Mutter.MetaWindow window);
 	}
 	[Compact]
-	[CCode (cheader_filename = "mutter-plugins.h")]
+	[CCode (cheader_filename = "mutter-plugins.h", cname = "MetaDisplay")]
 	public class MetaDisplay {
 		[CCode (cname = "meta_display_begin_grab_op")]
 		public static bool begin_grab_op (Mutter.MetaDisplay display, Mutter.MetaScreen screen, Mutter.MetaWindow window, Mutter.MetaGrabOp op, bool pointer_already_grabbed, bool frame_action, int button, ulong modmask, uint32 timestamp, int root_x, int root_y);
