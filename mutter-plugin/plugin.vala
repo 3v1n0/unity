@@ -112,7 +112,7 @@ namespace Unity
     public bool expose_showing { get { return expose_manager.expose_showing; } }
 
     private static const int PANEL_HEIGHT        = 23;
-    private static const int QUICKLAUNCHER_WIDTH = 60;
+    private static const int QUICKLAUNCHER_WIDTH = 58;
 
     private Clutter.Stage    stage;
     private Application      app;
@@ -220,12 +220,17 @@ namespace Unity
 
       Clutter.Group window_group = (Clutter.Group) this.plugin.get_window_group ();
 
+      /* Allows us to activate windows, essential as we are the WM */
+      Launcher.Application.set_window_activate_func (this.on_window_activated,
+                                                     this.plugin);
+
       this.quicklauncher = new Quicklauncher.View (this);
       this.quicklauncher.opacity = 0;
 
       this.expose_manager = new ExposeManager (this, quicklauncher);
       this.expose_manager.hovered_opacity = 255;
-      this.expose_manager.unhovered_opacity = 230;
+      this.expose_manager.unhovered_opacity = 255;
+      this.expose_manager.darken = 25;
       this.expose_manager.right_buffer = 10;
       this.expose_manager.top_buffer = this.expose_manager.bottom_buffer = 20;
 
@@ -278,6 +283,28 @@ namespace Unity
         Wnck.Screen.get_default ().get_active_window ().state_changed.connect (on_active_window_state_changed);
     }
 
+    private static void on_window_activated (Wnck.Window  window,
+                                             uint32       timestamp,
+                                             void        *data)
+    {
+      Mutter.Plugin plugin = data as Mutter.Plugin;
+
+      unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
+      foreach (Mutter.Window w in mutter_windows)
+        {
+          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (w.get_meta_window ());
+          if (window.get_xid () == xid)
+            {
+              unowned Mutter.MetaWindow win  = w.get_meta_window ();
+
+              Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace(win),
+                                             timestamp);
+              Mutter.MetaWindow.activate (win, timestamp);
+              break;
+            }
+        }
+    }
+
     private void on_active_window_state_changed (Wnck.WindowState change_mask, Wnck.WindowState new_state)
     {
       check_fullscreen_obstruction ();
@@ -322,7 +349,9 @@ namespace Unity
 
       if (sender.model is ApplicationModel && sender.model.is_active)
         {
-          expose_windows ((sender.model as ApplicationModel).windows);
+          if (QuicklistController.get_default ().menu_is_open () &&
+              !QuicklistController.get_default ().menu.close_on_leave)
+            expose_windows ((sender.model as ApplicationModel).windows);
         }
     }
 
@@ -375,7 +404,7 @@ namespace Unity
                                    this.QUICKLAUNCHER_WIDTH,
                                    height-this.PANEL_HEIGHT);
       Utils.set_strut ((Gtk.Window)this.drag_dest,
-                       this.QUICKLAUNCHER_WIDTH, 0, (uint32)height,
+                       this.QUICKLAUNCHER_WIDTH - 1, 0, (uint32)height,
                        PANEL_HEIGHT, 0, (uint32)width);
 
       if (this.places_enabled)
@@ -419,11 +448,7 @@ namespace Unity
 
           this.grab_keyboard (false, Clutter.get_current_event_time ());
         }
-      else if (fullscreen_requests.size > 0 ||
-               places_showing ||
-               Unity.Quicklauncher.active_menu != null ||
-               Unity.Drag.Controller.get_default ().is_dragging
-              )
+      else if (fullscreen_requests.size > 0 || places_showing)
         {
           // Fullscreen required
           if (last_input_state == InputState.FULLSCREEN)
@@ -432,6 +457,7 @@ namespace Unity
           last_input_state = InputState.FULLSCREEN;
           this.restore_input_region (true);
 
+          this.stage.set_key_focus (null as Clutter.Actor);
           this.grab_keyboard (true, Clutter.get_current_event_time ());
         }
       else

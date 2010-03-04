@@ -30,6 +30,7 @@ namespace Unity {
 			public string name;
 			public ChromiumWebApp (string address, string icon);
 			public void add_to_favorites ();
+			public string desktop_file_path ();
 			public string icon { get; construct; }
 			public string url { get; construct; }
 		}
@@ -55,18 +56,22 @@ namespace Unity {
 			public string name;
 			public Prism (string address, string icon);
 			public void add_to_favorites ();
+			public string desktop_file_path ();
 			public string icon { get; construct; }
 			public string url { get; construct; }
 		}
 		[CCode (cheader_filename = "unity.h")]
 		public class WebiconFetcher : GLib.Object {
-			public WebiconFetcher (string uri, string destination);
+			public WebiconFetcher (string uri, string destination, string desktop_file);
 			public void fetch_webapp_data ();
+			public string desktop_location { get; construct; }
 			public string destination { get; construct; }
 			public string uri { get; construct; }
 			public signal void completed (string location);
 			public signal void failed ();
 		}
+		[CCode (cheader_filename = "unity.h")]
+		public static string get_hostname (string uri);
 		[CCode (cheader_filename = "unity.h")]
 		public static string urlify (string uri);
 	}
@@ -104,15 +109,18 @@ namespace Unity {
 	}
 	[CCode (cheader_filename = "unity.h")]
 	public interface Shell : GLib.Object {
+		public abstract void add_fullscreen_request (GLib.Object o);
 		public abstract void ensure_input_region ();
 		public abstract int get_indicators_width ();
 		public abstract Unity.ShellMode get_mode ();
 		public abstract Clutter.Stage get_stage ();
 		public abstract void grab_keyboard (bool grab, uint32 timestamp);
+		public abstract bool remove_fullscreen_request (GLib.Object o);
 		public abstract void show_unity ();
 		public abstract void show_window_picker ();
 		public abstract bool menus_swallow_events { get; }
 		public signal void indicators_changed (int width);
+		public signal void need_new_icon_cache ();
 	}
 	[CCode (cprefix = "UNITY_APPLICATION_COMMANDS_", cheader_filename = "unity.h")]
 	public enum ApplicationCommands {
@@ -137,4 +145,6 @@ namespace Unity {
 	public static bool is_logging;
 	[CCode (cheader_filename = "unity.h")]
 	public static Unity.TimelineLogger? timeline_singleton;
+	[CCode (cheader_filename = "unity.h")]
+	public static bool icon_name_exists_in_theme (string icon_name, string theme);
 }

@@ -76,6 +76,8 @@ struct _UnityShellIface {
 	void (*show_unity) (UnityShell* self);
 	gint (*get_indicators_width) (UnityShell* self);
 	void (*ensure_input_region) (UnityShell* self);
+	void (*add_fullscreen_request) (UnityShell* self, GObject* o);
+	gboolean (*remove_fullscreen_request) (UnityShell* self, GObject* o);
 	void (*grab_keyboard) (UnityShell* self, gboolean grab, guint32 timestamp);
 	void (*show_window_picker) (UnityShell* self);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
@@ -120,13 +122,13 @@ static const ClutterColor UNITY_ENTRY_focus_color = {(guint8) 0x00, (guint8) 0x0
 
 #line 43 "entry.vala"
 UnityEntry* unity_entry_construct (GType object_type, const char* static_text) {
-#line 124 "entry.c"
+#line 126 "entry.c"
 	UnityEntry * self;
 #line 43 "entry.vala"
 	g_return_val_if_fail (static_text != NULL, NULL);
 #line 45 "entry.vala"
 	self = (UnityEntry*) g_object_new (object_type, "static-text", static_text, NULL);
-#line 130 "entry.c"
+#line 132 "entry.c"
 	return self;
 }
 
@@ -135,7 +137,7 @@ UnityEntry* unity_entry_construct (GType object_type, const char* static_text) {
 UnityEntry* unity_entry_new (const char* static_text) {
 #line 43 "entry.vala"
 	return unity_entry_construct (UNITY_TYPE_ENTRY, static_text);
-#line 139 "entry.c"
+#line 141 "entry.c"
 }
 
 
@@ -145,7 +147,7 @@ static void unity_entry_on_key_focus_in (UnityEntry* self) {
 	g_return_if_fail (self != NULL);
 #line 72 "entry.vala"
 	if (_vala_strcmp0 (clutter_text_get_text ((ClutterText*) self), self->priv->_static_text) == 0) {
-#line 149 "entry.c"
+#line 151 "entry.c"
 		ClutterColor _tmp0_;
 #line 74 "entry.vala"
 		clutter_text_set_text ((ClutterText*) self, "");
@@ -155,14 +157,14 @@ static void unity_entry_on_key_focus_in (UnityEntry* self) {
 		clutter_text_set_selection ((ClutterText*) self, (gssize) 0, (gssize) (-1));
 #line 77 "entry.vala"
 		clutter_text_set_color ((ClutterText*) self, (_tmp0_ = UNITY_ENTRY_focus_color, &_tmp0_));
-#line 159 "entry.c"
+#line 161 "entry.c"
 	}
 }
 
 
 #line 81 "entry.vala"
 static void unity_entry_on_key_focus_out (UnityEntry* self) {
-#line 166 "entry.c"
+#line 168 "entry.c"
 	ClutterColor _tmp0_;
 #line 81 "entry.vala"
 	g_return_if_fail (self != NULL);
@@ -172,11 +174,11 @@ static void unity_entry_on_key_focus_out (UnityEntry* self) {
 	clutter_text_set_text ((ClutterText*) self, self->priv->_static_text);
 #line 85 "entry.vala"
 	clutter_text_set_color ((ClutterText*) self, (_tmp0_ = UNITY_ENTRY_nofocus_color, &_tmp0_));
-#line 176 "entry.c"
+#line 178 "entry.c"
 	;
 #line 87 "entry.vala"
 	unity_shell_grab_keyboard (unity_global_shell, FALSE, clutter_get_current_event_time ());
-#line 180 "entry.c"
+#line 182 "entry.c"
 }
 
 
@@ -188,20 +190,20 @@ static void unity_entry_on_activate (UnityEntry* self) {
 	unity_shell_grab_keyboard (unity_global_shell, FALSE, clutter_get_current_event_time ());
 #line 95 "entry.vala"
 	clutter_ungrab_keyboard ();
-#line 192 "entry.c"
+#line 194 "entry.c"
 }
 
 
 #line 107 "entry.vala"
 static gboolean _unity_entry_on_stage_captured_event_clutter_actor_captured_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 198 "entry.c"
+#line 200 "entry.c"
 	return unity_entry_on_stage_captured_event (self, event);
 }
 
 
 #line 98 "entry.vala"
 static gboolean unity_entry_on_button_press_event (UnityEntry* self, ClutterEvent* event) {
-#line 205 "entry.c"
+#line 207 "entry.c"
 	gboolean result;
 #line 98 "entry.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
@@ -209,11 +211,11 @@ static gboolean unity_entry_on_button_press_event (UnityEntry* self, ClutterEven
 	unity_shell_grab_keyboard (unity_global_shell, TRUE, (*event).button.time);
 #line 102 "entry.vala"
 	g_signal_connect_object (clutter_actor_get_stage ((ClutterActor*) self), "captured-event", (GCallback) _unity_entry_on_stage_captured_event_clutter_actor_captured_event, self, 0);
-#line 213 "entry.c"
+#line 215 "entry.c"
 	result = FALSE;
 #line 104 "entry.vala"
 	return result;
-#line 217 "entry.c"
+#line 219 "entry.c"
 }
 
 
@@ -224,13 +226,13 @@ static gpointer _g_object_ref0 (gpointer self) {
 
 #line 107 "entry.vala"
 static gboolean unity_entry_on_stage_captured_event (UnityEntry* self, ClutterEvent* event) {
-#line 228 "entry.c"
+#line 230 "entry.c"
 	gboolean result;
 #line 107 "entry.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
 #line 109 "entry.vala"
 	if ((*event).type == CLUTTER_BUTTON_PRESS) {
-#line 234 "entry.c"
+#line 236 "entry.c"
 		ClutterActor* _tmp0_;
 		ClutterStage* stage;
 		ClutterActor* actor;
@@ -240,7 +242,7 @@ static gboolean unity_entry_on_stage_captured_event (UnityEntry* self, ClutterEv
 		actor = _g_object_ref0 (clutter_stage_get_actor_at_pos (stage, CLUTTER_PICK_REACTIVE, (gint) (*event).button.x, (gint) (*event).button.y));
 #line 117 "entry.vala"
 		if (actor != CLUTTER_ACTOR (self)) {
-#line 244 "entry.c"
+#line 246 "entry.c"
 			guint _tmp1_;
 #line 119 "entry.vala"
 			unity_shell_grab_keyboard (unity_global_shell, FALSE, (*event).button.time);
@@ -248,7 +250,7 @@ static gboolean unity_entry_on_stage_captured_event (UnityEntry* self, ClutterEv
 			g_signal_handlers_disconnect_matched ((ClutterActor*) stage, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("captured-event", CLUTTER_TYPE_ACTOR, &_tmp1_, NULL, FALSE), _tmp1_), 0, NULL, (GCallback) _unity_entry_on_stage_captured_event_clutter_actor_captured_event, self);
 #line 122 "entry.vala"
 			clutter_ungrab_keyboard ();
-#line 252 "entry.c"
+#line 254 "entry.c"
 		}
 		_g_object_unref0 (stage);
 		_g_object_unref0 (actor);
@@ -256,7 +258,7 @@ static gboolean unity_entry_on_stage_captured_event (UnityEntry* self, ClutterEv
 	result = FALSE;
 #line 126 "entry.vala"
 	return result;
-#line 260 "entry.c"
+#line 262 "entry.c"
 }
 
 
@@ -266,7 +268,7 @@ const char* unity_entry_get_static_text (UnityEntry* self) {
 	result = self->priv->_static_text;
 #line 32 "entry.vala"
 	return result;
-#line 270 "entry.c"
+#line 272 "entry.c"
 }
 
 
@@ -280,35 +282,35 @@ void unity_entry_set_static_text (UnityEntry* self, const char* value) {
 	clutter_text_set_color ((ClutterText*) self, (_tmp1_ = UNITY_ENTRY_nofocus_color, &_tmp1_));
 #line 39 "entry.vala"
 	clutter_text_set_text ((ClutterText*) self, self->priv->_static_text);
-#line 284 "entry.c"
+#line 286 "entry.c"
 	g_object_notify ((GObject *) self, "static-text");
 }
 
 
 #line 70 "entry.vala"
 static void _unity_entry_on_key_focus_in_clutter_actor_key_focus_in (ClutterActor* _sender, gpointer self) {
-#line 291 "entry.c"
+#line 293 "entry.c"
 	unity_entry_on_key_focus_in (self);
 }
 
 
 #line 81 "entry.vala"
 static void _unity_entry_on_key_focus_out_clutter_actor_key_focus_out (ClutterActor* _sender, gpointer self) {
-#line 298 "entry.c"
+#line 300 "entry.c"
 	unity_entry_on_key_focus_out (self);
 }
 
 
 #line 98 "entry.vala"
 static gboolean _unity_entry_on_button_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 305 "entry.c"
+#line 307 "entry.c"
 	return unity_entry_on_button_press_event (self, event);
 }
 
 
 #line 91 "entry.vala"
 static void _unity_entry_on_activate_clutter_text_activate (ClutterText* _sender, gpointer self) {
-#line 312 "entry.c"
+#line 314 "entry.c"
 	unity_entry_on_activate (self);
 }
 
@@ -334,6 +336,8 @@ static GObject * unity_entry_constructor (GType type, guint n_construct_properti
 		clutter_text_set_selectable ((ClutterText*) self, TRUE);
 #line 53 "entry.vala"
 		clutter_text_set_activatable ((ClutterText*) self, TRUE);
+#line 54 "entry.vala"
+		clutter_text_set_single_line_mode ((ClutterText*) self, TRUE);
 #line 56 "entry.vala"
 		clutter_text_set_cursor_visible ((ClutterText*) self, FALSE);
 #line 57 "entry.vala"
@@ -352,7 +356,7 @@ static GObject * unity_entry_constructor (GType type, guint n_construct_properti
 		g_signal_connect_object ((ClutterText*) self, "activate", (GCallback) _unity_entry_on_activate_clutter_text_activate, self, 0);
 #line 67 "entry.vala"
 		clutter_actor_queue_redraw ((ClutterActor*) self);
-#line 356 "entry.c"
+#line 360 "entry.c"
 	}
 	return obj;
 }

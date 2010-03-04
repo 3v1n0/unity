@@ -91,10 +91,14 @@ namespace Unity
                 warning ("%s", e.message);
               }
 
-              this.webicon_fetcher = new WebiconFetcher (uri, icon_dirstring + name + ".svg");
+              var hostname = Unity.Webapp.get_hostname (uri);
+              var webapp = new ChromiumWebApp (uri, name + ".svg");
+
+              this.webicon_fetcher = new WebiconFetcher (uri,
+                                                         icon_dirstring + hostname + ".svg",
+                                                         webapp.desktop_file_path ());
               this.webicon_fetcher.fetch_webapp_data ();
 
-              var webapp = new ChromiumWebApp (uri, icon_dirstring + name + ".svg");
               webapp.add_to_favorites ();
 
             }

@@ -96,7 +96,6 @@ typedef struct _UnityPanelIndicatorsViewPrivate UnityPanelIndicatorsViewPrivate;
 
 typedef struct _UnityPanelIndicatorsIndicatorItem UnityPanelIndicatorsIndicatorItem;
 typedef struct _UnityPanelIndicatorsIndicatorItemClass UnityPanelIndicatorsIndicatorItemClass;
-typedef struct _UnityPanelIndicatorsIndicatorItemPrivate UnityPanelIndicatorsIndicatorItemPrivate;
 
 #define UNITY_PANEL_INDICATORS_TYPE_INDICATOR_ENTRY (unity_panel_indicators_indicator_entry_get_type ())
 #define UNITY_PANEL_INDICATORS_INDICATOR_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_ENTRY, UnityPanelIndicatorsIndicatorEntry))
@@ -107,6 +106,7 @@ typedef struct _UnityPanelIndicatorsIndicatorItemPrivate UnityPanelIndicatorsInd
 
 typedef struct _UnityPanelIndicatorsIndicatorEntry UnityPanelIndicatorsIndicatorEntry;
 typedef struct _UnityPanelIndicatorsIndicatorEntryClass UnityPanelIndicatorsIndicatorEntryClass;
+typedef struct _UnityPanelIndicatorsIndicatorItemPrivate UnityPanelIndicatorsIndicatorItemPrivate;
 typedef struct _UnityPanelIndicatorsIndicatorEntryPrivate UnityPanelIndicatorsIndicatorEntryPrivate;
 
 #define UNITY_PANEL_TRAY_TYPE_VIEW (unity_panel_tray_view_get_type ())
@@ -954,6 +954,7 @@ struct _UnityQuicklauncherModelsLauncherModelIface {
 	GeeArrayList* (*get_menu_shortcut_actions) (UnityQuicklauncherModelsLauncherModel* self);
 	void (*activate) (UnityQuicklauncherModelsLauncherModel* self);
 	void (*close) (UnityQuicklauncherModelsLauncherModel* self);
+	void (*regenerate_icon) (UnityQuicklauncherModelsLauncherModel* self);
 	gboolean (*get_is_active) (UnityQuicklauncherModelsLauncherModel* self);
 	gboolean (*get_is_focused) (UnityQuicklauncherModelsLauncherModel* self);
 	gboolean (*get_is_urgent) (UnityQuicklauncherModelsLauncherModel* self);
@@ -1011,9 +1012,9 @@ struct _UnityQuicklauncherViewClass {
 struct _UnityQuicklauncherQuicklistController {
 	GObject parent_instance;
 	UnityQuicklauncherQuicklistControllerPrivate * priv;
-	char* label;
 	CtkMenu* menu;
-	gboolean is_label;
+	gboolean is_in_label;
+	gboolean is_in_menu;
 };
 
 struct _UnityQuicklauncherQuicklistControllerClass {
@@ -1021,12 +1022,12 @@ struct _UnityQuicklauncherQuicklistControllerClass {
 };
 
 struct _UnityQuicklauncherQuicklistMenuItem {
-	CtkMenuItem parent_instance;
+	CtkActor parent_instance;
 	UnityQuicklauncherQuicklistMenuItemPrivate * priv;
 };
 
 struct _UnityQuicklauncherQuicklistMenuItemClass {
-	CtkMenuItemClass parent_class;
+	CtkActorClass parent_class;
 };
 
 struct _UnityQuicklauncherQuicklistMenu {
@@ -1103,13 +1104,17 @@ UnityPanelIndicatorsView* unity_panel_indicators_view_new (void);
 UnityPanelIndicatorsView* unity_panel_indicators_view_construct (GType object_type);
 GType unity_panel_indicators_indicator_item_get_type (void);
 gint unity_panel_indicators_view_reorder_icons (UnityPanelIndicatorsIndicatorItem* a, UnityPanelIndicatorsIndicatorItem* b);
+GType unity_panel_indicators_indicator_entry_get_type (void);
+void unity_panel_indicators_view_show_entry (UnityPanelIndicatorsView* self, UnityPanelIndicatorsIndicatorEntry* entry);
 UnityPanelIndicatorsIndicatorItem* unity_panel_indicators_indicator_item_new (void);
 UnityPanelIndicatorsIndicatorItem* unity_panel_indicators_indicator_item_construct (GType object_type);
 void unity_panel_indicators_indicator_item_set_object (UnityPanelIndicatorsIndicatorItem* self, IndicatorObject* object);
 IndicatorObject* unity_panel_indicators_indicator_item_get_object (UnityPanelIndicatorsIndicatorItem* self);
-GType unity_panel_indicators_indicator_entry_get_type (void);
 UnityPanelIndicatorsIndicatorEntry* unity_panel_indicators_indicator_entry_new (IndicatorObjectEntry* entry);
 UnityPanelIndicatorsIndicatorEntry* unity_panel_indicators_indicator_entry_construct (GType object_type, IndicatorObjectEntry* entry);
+void unity_panel_indicators_indicator_entry_menu_shown (UnityPanelIndicatorsIndicatorEntry* self);
+void unity_panel_indicators_indicator_entry_menu_vis_changed (UnityPanelIndicatorsIndicatorEntry* self);
+void unity_panel_indicators_indicator_entry_menu_key_moved (UnityPanelIndicatorsIndicatorEntry* self, GtkMenuDirectionType type);
 IndicatorObjectEntry* unity_panel_indicators_indicator_entry_get_entry (UnityPanelIndicatorsIndicatorEntry* self);
 GtkMenu* unity_panel_indicators_indicator_entry_get_menu (UnityPanelIndicatorsIndicatorEntry* self);
 GType unity_panel_tray_view_get_type (void);
@@ -1270,6 +1275,7 @@ GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcuts (Unit
 GeeArrayList* unity_quicklauncher_models_launcher_model_get_menu_shortcut_actions (UnityQuicklauncherModelsLauncherModel* self);
 void unity_quicklauncher_models_launcher_model_activate (UnityQuicklauncherModelsLauncherModel* self);
 void unity_quicklauncher_models_launcher_model_close (UnityQuicklauncherModelsLauncherModel* self);
+void unity_quicklauncher_models_launcher_model_regenerate_icon (UnityQuicklauncherModelsLauncherModel* self);
 gboolean unity_quicklauncher_models_launcher_model_get_is_active (UnityQuicklauncherModelsLauncherModel* self);
 gboolean unity_quicklauncher_models_launcher_model_get_is_focused (UnityQuicklauncherModelsLauncherModel* self);
 gboolean unity_quicklauncher_models_launcher_model_get_is_urgent (UnityQuicklauncherModelsLauncherModel* self);
@@ -1290,7 +1296,6 @@ UnityQuicklauncherLauncherView* unity_quicklauncher_launcher_view_new (UnityQuic
 UnityQuicklauncherLauncherView* unity_quicklauncher_launcher_view_construct (GType object_type, UnityQuicklauncherModelsLauncherModel* model);
 void unity_quicklauncher_launcher_view_update_window_struts (UnityQuicklauncherLauncherView* self, gboolean ignore_buffer);
 void unity_quicklauncher_launcher_view_notify_on_set_reactive (UnityQuicklauncherLauncherView* self);
-void unity_quicklauncher_launcher_view_close_menu (UnityQuicklauncherLauncherView* self);
 gboolean unity_quicklauncher_launcher_view_get_is_hovering (UnityQuicklauncherLauncherView* self);
 void unity_quicklauncher_launcher_view_set_is_hovering (UnityQuicklauncherLauncherView* self, gboolean value);
 ClutterAnimation* unity_quicklauncher_launcher_view_get_anim (UnityQuicklauncherLauncherView* self);
@@ -1308,19 +1313,19 @@ UnityQuicklauncherView* unity_quicklauncher_view_new (UnityShell* shell);
 UnityQuicklauncherView* unity_quicklauncher_view_construct (GType object_type, UnityShell* shell);
 float unity_quicklauncher_view_get_width (UnityQuicklauncherView* self);
 GType unity_quicklauncher_quicklist_controller_get_type (void);
-extern UnityQuicklauncherQuicklistController* unity_quicklauncher_active_menu;
-UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_new (const char* label, CtkActor* attached_to, ClutterStage* stage);
-UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_construct (GType object_type, const char* label, CtkActor* attached_to, ClutterStage* stage);
-void unity_quicklauncher_quicklist_controller_add_action (UnityQuicklauncherQuicklistController* self, UnityQuicklauncherModelsShortcutItem* shortcut, gboolean is_secondary);
-void unity_quicklauncher_quicklist_controller_show_label (UnityQuicklauncherQuicklistController* self);
-void unity_quicklauncher_quicklist_controller_hide_label (UnityQuicklauncherQuicklistController* self);
-void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuicklistController* self);
+extern UnityQuicklauncherQuicklistController* unity_quicklauncher_ql_controler_singleton;
+UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_get_default (void);
+UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_new (void);
+UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_construct (GType object_type);
+void unity_quicklauncher_quicklist_controller_show_label (UnityQuicklauncherQuicklistController* self, const char* label, CtkActor* attached_widget);
+void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuicklistController* self, GeeArrayList* prefix_shortcuts, GeeArrayList* affix_shortcuts, gboolean hide_on_leave);
 void unity_quicklauncher_quicklist_controller_close_menu (UnityQuicklauncherQuicklistController* self);
-gboolean unity_quicklauncher_quicklist_controller_get_hide_on_leave (UnityQuicklauncherQuicklistController* self);
-void unity_quicklauncher_quicklist_controller_set_hide_on_leave (UnityQuicklauncherQuicklistController* self, gboolean value);
+gboolean unity_quicklauncher_quicklist_controller_menu_is_open (UnityQuicklauncherQuicklistController* self);
+CtkActor* unity_quicklauncher_quicklist_controller_get_attached_actor (UnityQuicklauncherQuicklistController* self);
 GType unity_quicklauncher_quicklist_menu_item_get_type (void);
 UnityQuicklauncherQuicklistMenuItem* unity_quicklauncher_quicklist_menu_item_new (const char* label);
 UnityQuicklauncherQuicklistMenuItem* unity_quicklauncher_quicklist_menu_item_construct (GType object_type, const char* label);
+const char* unity_quicklauncher_quicklist_menu_item_get_label (UnityQuicklauncherQuicklistMenuItem* self);
 GType unity_quicklauncher_quicklist_menu_get_type (void);
 UnityQuicklauncherQuicklistMenu* unity_quicklauncher_quicklist_menu_new (void);
 UnityQuicklauncherQuicklistMenu* unity_quicklauncher_quicklist_menu_construct (GType object_type);

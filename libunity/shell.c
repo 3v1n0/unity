@@ -56,6 +56,8 @@ struct _UnityShellIface {
 	void (*show_unity) (UnityShell* self);
 	gint (*get_indicators_width) (UnityShell* self);
 	void (*ensure_input_region) (UnityShell* self);
+	void (*add_fullscreen_request) (UnityShell* self, GObject* o);
+	gboolean (*remove_fullscreen_request) (UnityShell* self, GObject* o);
 	void (*grab_keyboard) (UnityShell* self, gboolean grab, guint32 timestamp);
 	void (*show_window_picker) (UnityShell* self);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
@@ -73,6 +75,8 @@ ClutterStage* unity_shell_get_stage (UnityShell* self);
 void unity_shell_show_unity (UnityShell* self);
 gint unity_shell_get_indicators_width (UnityShell* self);
 void unity_shell_ensure_input_region (UnityShell* self);
+void unity_shell_add_fullscreen_request (UnityShell* self, GObject* o);
+gboolean unity_shell_remove_fullscreen_request (UnityShell* self, GObject* o);
 void unity_shell_grab_keyboard (UnityShell* self, gboolean grab, guint32 timestamp);
 void unity_shell_show_window_picker (UnityShell* self);
 gboolean unity_shell_get_menus_swallow_events (UnityShell* self);
@@ -105,7 +109,7 @@ GType unity_dnd_targets_get_type (void) {
 UnityShellMode unity_shell_get_mode (UnityShell* self) {
 #line 36 "shell.vala"
 	return UNITY_SHELL_GET_INTERFACE (self)->get_mode (self);
-#line 109 "shell.c"
+#line 113 "shell.c"
 }
 
 
@@ -113,7 +117,7 @@ UnityShellMode unity_shell_get_mode (UnityShell* self) {
 ClutterStage* unity_shell_get_stage (UnityShell* self) {
 #line 37 "shell.vala"
 	return UNITY_SHELL_GET_INTERFACE (self)->get_stage (self);
-#line 117 "shell.c"
+#line 121 "shell.c"
 }
 
 
@@ -121,7 +125,7 @@ ClutterStage* unity_shell_get_stage (UnityShell* self) {
 void unity_shell_show_unity (UnityShell* self) {
 #line 38 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->show_unity (self);
-#line 125 "shell.c"
+#line 129 "shell.c"
 }
 
 
@@ -129,7 +133,7 @@ void unity_shell_show_unity (UnityShell* self) {
 gint unity_shell_get_indicators_width (UnityShell* self) {
 #line 39 "shell.vala"
 	return UNITY_SHELL_GET_INTERFACE (self)->get_indicators_width (self);
-#line 133 "shell.c"
+#line 137 "shell.c"
 }
 
 
@@ -137,23 +141,39 @@ gint unity_shell_get_indicators_width (UnityShell* self) {
 void unity_shell_ensure_input_region (UnityShell* self) {
 #line 40 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->ensure_input_region (self);
-#line 141 "shell.c"
+#line 145 "shell.c"
 }
 
 
 #line 41 "shell.vala"
+void unity_shell_add_fullscreen_request (UnityShell* self, GObject* o) {
+#line 41 "shell.vala"
+	UNITY_SHELL_GET_INTERFACE (self)->add_fullscreen_request (self, o);
+#line 153 "shell.c"
+}
+
+
+#line 42 "shell.vala"
+gboolean unity_shell_remove_fullscreen_request (UnityShell* self, GObject* o) {
+#line 42 "shell.vala"
+	return UNITY_SHELL_GET_INTERFACE (self)->remove_fullscreen_request (self, o);
+#line 161 "shell.c"
+}
+
+
+#line 43 "shell.vala"
 void unity_shell_grab_keyboard (UnityShell* self, gboolean grab, guint32 timestamp) {
-#line 41 "shell.vala"
+#line 43 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->grab_keyboard (self, grab, timestamp);
-#line 149 "shell.c"
+#line 169 "shell.c"
 }
 
 
-#line 42 "shell.vala"
+#line 44 "shell.vala"
 void unity_shell_show_window_picker (UnityShell* self) {
-#line 42 "shell.vala"
+#line 44 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->show_window_picker (self);
-#line 157 "shell.c"
+#line 177 "shell.c"
 }
 
 
@@ -167,6 +187,7 @@ static void unity_shell_base_init (UnityShellIface * iface) {
 	if (!initialized) {
 		initialized = TRUE;
 		g_object_interface_install_property (iface, g_param_spec_boolean ("menus-swallow-events", "menus-swallow-events", "menus-swallow-events", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
+		g_signal_new ("need_new_icon_cache", UNITY_TYPE_SHELL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 		g_signal_new ("indicators_changed", UNITY_TYPE_SHELL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 	}
 }

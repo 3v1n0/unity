@@ -26,6 +26,8 @@
 #include <mutter-plugins.h>
 #include <float.h>
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
 #include <libwnck/libwnck.h>
 
 
@@ -67,9 +69,11 @@ struct _UnityWindowManagementPrivate {
 	ClutterGroup* workgroup1;
 	ClutterGroup* workgroup2;
 	gint switch_signals_to_send;
+	MutterWindow* last_mapped;
 };
 
 
+extern char* unity_maximus_user_unmaximize_hint;
 static gpointer unity_window_management_parent_class = NULL;
 
 GType unity_window_management_get_type (void);
@@ -102,6 +106,8 @@ static void unity_window_management_on_workspace_switch_completed (UnityWindowMa
 static void _unity_window_management_on_workspace_switch_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static void unity_window_management_window_minimized_completed (UnityWindowManagement* self, ClutterAnimation* anim);
 static void _unity_window_management_window_minimized_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
+static gboolean unity_window_management_force_activate (UnityWindowManagement* self);
+static gboolean _unity_window_management_force_activate_gsource_func (gpointer self);
 static void unity_window_management_window_mapped_completed (UnityWindowManagement* self, ClutterAnimation* anim);
 static void _unity_window_management_window_mapped_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static void unity_window_management_window_destroyed_completed (UnityWindowManagement* self, ClutterAnimation* anim);
@@ -122,151 +128,151 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 187 "window-management.vala"
+#line 203 "window-management.vala"
 static void _unity_window_management_window_minimized_unity_plugin_window_minimized (UnityPlugin* _sender, UnityPlugin* plugin, MutterWindow* window, gpointer self) {
-#line 128 "window-management.c"
+#line 134 "window-management.c"
 	unity_window_management_window_minimized (self, plugin, window);
 }
 
 
-#line 167 "window-management.vala"
+#line 169 "window-management.vala"
 static void _unity_window_management_window_maximized_unity_plugin_window_maximized (UnityPlugin* _sender, UnityPlugin* plugin, MutterWindow* window, gint x, gint y, gint width, gint height, gpointer self) {
-#line 135 "window-management.c"
+#line 141 "window-management.c"
 	unity_window_management_window_maximized (self, plugin, window, x, y, width, height);
 }
 
 
-#line 177 "window-management.vala"
+#line 185 "window-management.vala"
 static void _unity_window_management_window_unmaximized_unity_plugin_window_unmaximized (UnityPlugin* _sender, UnityPlugin* plugin, MutterWindow* window, gint x, gint y, gint width, gint height, gpointer self) {
-#line 142 "window-management.c"
+#line 148 "window-management.c"
 	unity_window_management_window_unmaximized (self, plugin, window, x, y, width, height);
 }
 
 
-#line 237 "window-management.vala"
+#line 267 "window-management.vala"
 static void _unity_window_management_window_mapped_unity_plugin_window_mapped (UnityPlugin* _sender, UnityPlugin* plugin, MutterWindow* window, gpointer self) {
-#line 149 "window-management.c"
+#line 155 "window-management.c"
 	unity_window_management_window_mapped (self, plugin, window);
 }
 
 
-#line 294 "window-management.vala"
+#line 334 "window-management.vala"
 static void _unity_window_management_window_destroyed_unity_plugin_window_destroyed (UnityPlugin* _sender, UnityPlugin* plugin, MutterWindow* window, gpointer self) {
-#line 156 "window-management.c"
+#line 162 "window-management.c"
 	unity_window_management_window_destroyed (self, plugin, window);
 }
 
 
-#line 325 "window-management.vala"
+#line 365 "window-management.vala"
 static void _unity_window_management_window_kill_effect_unity_plugin_window_kill_effect (UnityPlugin* _sender, UnityPlugin* plugin, MutterWindow* window, gulong events, gpointer self) {
-#line 163 "window-management.c"
+#line 169 "window-management.c"
 	unity_window_management_window_kill_effect (self, plugin, window, events);
 }
 
 
-#line 56 "window-management.vala"
+#line 58 "window-management.vala"
 static void _unity_window_management_workspace_switched_unity_plugin_workspace_switch_event (UnityPlugin* _sender, UnityPlugin* plugin, GList* windows, gint from, gint to, gint direction, gpointer self) {
-#line 170 "window-management.c"
+#line 176 "window-management.c"
 	unity_window_management_workspace_switched (self, plugin, windows, from, to, direction);
 }
 
 
-#line 30 "window-management.vala"
+#line 32 "window-management.vala"
 UnityWindowManagement* unity_window_management_construct (GType object_type, UnityPlugin* p) {
-#line 177 "window-management.c"
+#line 183 "window-management.c"
 	UnityWindowManagement * self;
 	UnityPlugin* _tmp0_;
-#line 30 "window-management.vala"
-	g_return_val_if_fail (p != NULL, NULL);
-#line 182 "window-management.c"
-	self = g_object_newv (object_type, 0, NULL);
 #line 32 "window-management.vala"
-	self->priv->plugin = (_tmp0_ = _g_object_ref0 (p), _g_object_unref0 (self->priv->plugin), _tmp0_);
-#line 33 "window-management.vala"
-	g_signal_connect_object (self->priv->plugin, "window-minimized", (GCallback) _unity_window_management_window_minimized_unity_plugin_window_minimized, self, 0);
+	g_return_val_if_fail (p != NULL, NULL);
+#line 188 "window-management.c"
+	self = g_object_newv (object_type, 0, NULL);
 #line 34 "window-management.vala"
-	g_signal_connect_object (self->priv->plugin, "window-maximized", (GCallback) _unity_window_management_window_maximized_unity_plugin_window_maximized, self, 0);
+	self->priv->plugin = (_tmp0_ = _g_object_ref0 (p), _g_object_unref0 (self->priv->plugin), _tmp0_);
 #line 35 "window-management.vala"
-	g_signal_connect_object (self->priv->plugin, "window-unmaximized", (GCallback) _unity_window_management_window_unmaximized_unity_plugin_window_unmaximized, self, 0);
+	g_signal_connect_object (self->priv->plugin, "window-minimized", (GCallback) _unity_window_management_window_minimized_unity_plugin_window_minimized, self, 0);
 #line 36 "window-management.vala"
-	g_signal_connect_object (self->priv->plugin, "window-mapped", (GCallback) _unity_window_management_window_mapped_unity_plugin_window_mapped, self, 0);
+	g_signal_connect_object (self->priv->plugin, "window-maximized", (GCallback) _unity_window_management_window_maximized_unity_plugin_window_maximized, self, 0);
 #line 37 "window-management.vala"
-	g_signal_connect_object (self->priv->plugin, "window-destroyed", (GCallback) _unity_window_management_window_destroyed_unity_plugin_window_destroyed, self, 0);
+	g_signal_connect_object (self->priv->plugin, "window-unmaximized", (GCallback) _unity_window_management_window_unmaximized_unity_plugin_window_unmaximized, self, 0);
 #line 38 "window-management.vala"
-	g_signal_connect_object (self->priv->plugin, "window-kill-effect", (GCallback) _unity_window_management_window_kill_effect_unity_plugin_window_kill_effect, self, 0);
+	g_signal_connect_object (self->priv->plugin, "window-mapped", (GCallback) _unity_window_management_window_mapped_unity_plugin_window_mapped, self, 0);
 #line 39 "window-management.vala"
+	g_signal_connect_object (self->priv->plugin, "window-destroyed", (GCallback) _unity_window_management_window_destroyed_unity_plugin_window_destroyed, self, 0);
+#line 40 "window-management.vala"
+	g_signal_connect_object (self->priv->plugin, "window-kill-effect", (GCallback) _unity_window_management_window_kill_effect_unity_plugin_window_kill_effect, self, 0);
+#line 41 "window-management.vala"
 	g_signal_connect_object (self->priv->plugin, "workspace-switch-event", (GCallback) _unity_window_management_workspace_switched_unity_plugin_workspace_switch_event, self, 0);
-#line 200 "window-management.c"
+#line 206 "window-management.c"
 	return self;
 }
 
 
-#line 30 "window-management.vala"
+#line 32 "window-management.vala"
 UnityWindowManagement* unity_window_management_new (UnityPlugin* p) {
-#line 30 "window-management.vala"
+#line 32 "window-management.vala"
 	return unity_window_management_construct (UNITY_TYPE_WINDOW_MANAGEMENT, p);
-#line 209 "window-management.c"
+#line 215 "window-management.c"
 }
 
 
-#line 46 "window-management.vala"
+#line 48 "window-management.vala"
 static gint unity_window_management_get_animation_speed (UnityWindowManagement* self, MutterWindow* window) {
-#line 215 "window-management.c"
+#line 221 "window-management.c"
 	gint result;
 	gint type;
 	gboolean _tmp0_ = FALSE;
 	gboolean _tmp1_ = FALSE;
-#line 46 "window-management.vala"
-	g_return_val_if_fail (self != NULL, 0);
-#line 46 "window-management.vala"
-	g_return_val_if_fail (window != NULL, 0);
 #line 48 "window-management.vala"
-	type = (gint) mutter_window_get_window_type (window);
-#line 49 "window-management.vala"
-	if (type == META_COMP_WINDOW_NORMAL) {
-#line 49 "window-management.vala"
-		_tmp1_ = TRUE;
-#line 230 "window-management.c"
-	} else {
+	g_return_val_if_fail (self != NULL, 0);
+#line 48 "window-management.vala"
+	g_return_val_if_fail (window != NULL, 0);
 #line 50 "window-management.vala"
-		_tmp1_ = type == META_COMP_WINDOW_DIALOG;
-#line 234 "window-management.c"
-	}
-#line 49 "window-management.vala"
-	if (_tmp1_) {
-#line 49 "window-management.vala"
-		_tmp0_ = TRUE;
-#line 240 "window-management.c"
-	} else {
+	type = (gint) mutter_window_get_window_type (window);
 #line 51 "window-management.vala"
-		_tmp0_ = type == META_COMP_WINDOW_MODAL_DIALOG;
-#line 244 "window-management.c"
-	}
-#line 49 "window-management.vala"
-	if (_tmp0_) {
-#line 248 "window-management.c"
-		result = 200;
+	if (type == META_COMP_WINDOW_NORMAL) {
+#line 51 "window-management.vala"
+		_tmp1_ = TRUE;
+#line 236 "window-management.c"
+	} else {
 #line 52 "window-management.vala"
+		_tmp1_ = type == META_COMP_WINDOW_DIALOG;
+#line 240 "window-management.c"
+	}
+#line 51 "window-management.vala"
+	if (_tmp1_) {
+#line 51 "window-management.vala"
+		_tmp0_ = TRUE;
+#line 246 "window-management.c"
+	} else {
+#line 53 "window-management.vala"
+		_tmp0_ = type == META_COMP_WINDOW_MODAL_DIALOG;
+#line 250 "window-management.c"
+	}
+#line 51 "window-management.vala"
+	if (_tmp0_) {
+#line 254 "window-management.c"
+		result = 200;
+#line 54 "window-management.vala"
 		return result;
-#line 252 "window-management.c"
+#line 258 "window-management.c"
 	}
 	result = 80;
-#line 53 "window-management.vala"
+#line 55 "window-management.vala"
 	return result;
-#line 257 "window-management.c"
+#line 263 "window-management.c"
 }
 
 
-#line 149 "window-management.vala"
+#line 151 "window-management.vala"
 static void _unity_window_management_on_workspace_switch_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-#line 263 "window-management.c"
+#line 269 "window-management.c"
 	unity_window_management_on_workspace_switch_completed (self, _sender);
 }
 
 
-#line 56 "window-management.vala"
+#line 58 "window-management.vala"
 static void unity_window_management_workspace_switched (UnityWindowManagement* self, UnityPlugin* plugin, GList* windows, gint from, gint to, gint direction) {
-#line 270 "window-management.c"
+#line 276 "window-management.c"
 	ClutterActor* stage;
 	float x_delta;
 	float y_delta;
@@ -282,137 +288,137 @@ static void unity_window_management_workspace_switched (UnityWindowManagement* s
 	float y;
 	float x;
 	ClutterAnimation* _tmp10_;
-#line 56 "window-management.vala"
+#line 58 "window-management.vala"
 	g_return_if_fail (self != NULL);
-#line 56 "window-management.vala"
+#line 58 "window-management.vala"
 	g_return_if_fail (plugin != NULL);
-#line 62 "window-management.vala"
-	if (unity_plugin_get_expose_showing (plugin)) {
-#line 292 "window-management.c"
-		MutterWindow* window;
 #line 64 "window-management.vala"
-		window = _g_object_ref0 ((MutterWindow*) g_list_nth_data (windows, (guint) 0));
-#line 65 "window-management.vala"
-		mutter_plugin_effect_completed (unity_plugin_get_plugin (plugin), window, (guint) MUTTER_PLUGIN_SWITCH_WORKSPACE);
+	if (unity_plugin_get_expose_showing (plugin)) {
 #line 298 "window-management.c"
-		_g_object_unref0 (window);
+		MutterWindow* window;
 #line 66 "window-management.vala"
+		window = _g_object_ref0 ((MutterWindow*) g_list_nth_data (windows, (guint) 0));
+#line 67 "window-management.vala"
+		mutter_plugin_effect_completed (unity_plugin_get_plugin (plugin), window, (guint) MUTTER_PLUGIN_SWITCH_WORKSPACE);
+#line 304 "window-management.c"
+		_g_object_unref0 (window);
+#line 68 "window-management.vala"
 		return;
-#line 302 "window-management.c"
+#line 308 "window-management.c"
 	}
-#line 69 "window-management.vala"
-	self->priv->switch_signals_to_send++;
 #line 71 "window-management.vala"
-	stage = mutter_plugin_get_stage (unity_plugin_get_plugin (plugin));
-#line 72 "window-management.vala"
-	x_delta = (float) 0;
+	self->priv->switch_signals_to_send++;
 #line 73 "window-management.vala"
-	y_delta = (float) 0;
+	stage = mutter_plugin_get_stage (unity_plugin_get_plugin (plugin));
 #line 74 "window-management.vala"
-	anim = NULL;
+	x_delta = (float) 0;
+#line 75 "window-management.vala"
+	y_delta = (float) 0;
 #line 76 "window-management.vala"
-	if (direction == (-4)) {
-#line 77 "window-management.vala"
-		x_delta = clutter_actor_get_width (stage);
-#line 318 "window-management.c"
-	} else {
+	anim = NULL;
 #line 78 "window-management.vala"
-		if (direction == (-3)) {
+	if (direction == (-4)) {
 #line 79 "window-management.vala"
-			x_delta = -clutter_actor_get_width (stage);
+		x_delta = clutter_actor_get_width (stage);
 #line 324 "window-management.c"
-		} else {
+	} else {
 #line 80 "window-management.vala"
-			if (direction == (-2)) {
+		if (direction == (-3)) {
 #line 81 "window-management.vala"
-				y_delta = clutter_actor_get_height (stage);
+			x_delta = -clutter_actor_get_width (stage);
 #line 330 "window-management.c"
-			} else {
+		} else {
 #line 82 "window-management.vala"
-				if (direction == (-1)) {
+			if (direction == (-2)) {
 #line 83 "window-management.vala"
-					y_delta = -clutter_actor_get_height (stage);
+				y_delta = clutter_actor_get_height (stage);
 #line 336 "window-management.c"
+			} else {
+#line 84 "window-management.vala"
+				if (direction == (-1)) {
+#line 85 "window-management.vala"
+					y_delta = -clutter_actor_get_height (stage);
+#line 342 "window-management.c"
 				}
 			}
 		}
 	}
-#line 85 "window-management.vala"
-	if (self->priv->switch_signals_to_send > 1) {
-#line 343 "window-management.c"
-		guint _tmp0_;
 #line 87 "window-management.vala"
-		g_signal_handlers_disconnect_matched (clutter_actor_get_animation ((ClutterActor*) self->priv->workgroup2), G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("completed", CLUTTER_TYPE_ANIMATION, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _unity_window_management_on_workspace_switch_completed_clutter_animation_completed, self);
-#line 88 "window-management.vala"
-		unity_window_management_on_workspace_switch_completed (self, NULL);
+	if (self->priv->switch_signals_to_send > 1) {
 #line 349 "window-management.c"
+		guint _tmp0_;
+#line 89 "window-management.vala"
+		g_signal_handlers_disconnect_matched (clutter_actor_get_animation ((ClutterActor*) self->priv->workgroup2), G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("completed", CLUTTER_TYPE_ANIMATION, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _unity_window_management_on_workspace_switch_completed_clutter_animation_completed, self);
+#line 90 "window-management.vala"
+		unity_window_management_on_workspace_switch_completed (self, NULL);
+#line 355 "window-management.c"
 	}
-#line 91 "window-management.vala"
-	self->priv->switch_windows = (_tmp1_ = NULL, __g_list_free_g_object_unref0 (self->priv->switch_windows), _tmp1_);
 #line 93 "window-management.vala"
+	self->priv->switch_windows = (_tmp1_ = NULL, __g_list_free_g_object_unref0 (self->priv->switch_windows), _tmp1_);
+#line 95 "window-management.vala"
 	self->priv->workgroup1 = (_tmp2_ = g_object_ref_sink ((ClutterGroup*) clutter_group_new ()), _g_object_unref0 (self->priv->workgroup1), _tmp2_);
-#line 94 "window-management.vala"
-	self->priv->workgroup2 = (_tmp3_ = g_object_ref_sink ((ClutterGroup*) clutter_group_new ()), _g_object_unref0 (self->priv->workgroup2), _tmp3_);
 #line 96 "window-management.vala"
+	self->priv->workgroup2 = (_tmp3_ = g_object_ref_sink ((ClutterGroup*) clutter_group_new ()), _g_object_unref0 (self->priv->workgroup2), _tmp3_);
+#line 98 "window-management.vala"
 	clutter_container_add_actor ((_tmp4_ = mutter_plugin_get_window_group (unity_plugin_get_plugin (plugin)), CLUTTER_IS_CONTAINER (_tmp4_) ? ((ClutterContainer*) _tmp4_) : NULL), (ClutterActor*) self->priv->workgroup1);
-#line 97 "window-management.vala"
-	clutter_container_add_actor ((_tmp5_ = mutter_plugin_get_window_group (unity_plugin_get_plugin (plugin)), CLUTTER_IS_CONTAINER (_tmp5_) ? ((ClutterContainer*) _tmp5_) : NULL), (ClutterActor*) self->priv->workgroup2);
 #line 99 "window-management.vala"
+	clutter_container_add_actor ((_tmp5_ = mutter_plugin_get_window_group (unity_plugin_get_plugin (plugin)), CLUTTER_IS_CONTAINER (_tmp5_) ? ((ClutterContainer*) _tmp5_) : NULL), (ClutterActor*) self->priv->workgroup2);
+#line 101 "window-management.vala"
 	clutter_actor_raise ((_tmp6_ = self->priv->workgroup1, CLUTTER_IS_ACTOR (_tmp6_) ? ((ClutterActor*) _tmp6_) : NULL), mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (plugin)));
-#line 100 "window-management.vala"
+#line 102 "window-management.vala"
 	clutter_actor_raise ((_tmp7_ = self->priv->workgroup2, CLUTTER_IS_ACTOR (_tmp7_) ? ((ClutterActor*) _tmp7_) : NULL), mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (plugin)));
-#line 365 "window-management.c"
+#line 371 "window-management.c"
 	{
 		GList* window_collection;
 		GList* window_it;
-#line 103 "window-management.vala"
+#line 105 "window-management.vala"
 		window_collection = windows;
-#line 371 "window-management.c"
+#line 377 "window-management.c"
 		for (window_it = window_collection; window_it != NULL; window_it = window_it->next) {
 			MutterWindow* window;
-#line 103 "window-management.vala"
+#line 105 "window-management.vala"
 			window = _g_object_ref0 ((MutterWindow*) window_it->data);
-#line 376 "window-management.c"
+#line 382 "window-management.c"
 			{
 				ClutterActor* clone;
-#line 106 "window-management.vala"
+#line 108 "window-management.vala"
 				clone = (ClutterActor*) g_object_ref_sink ((ClutterClone*) clutter_clone_new ((ClutterActor*) window));
-#line 107 "window-management.vala"
-				self->priv->switch_windows = g_list_prepend (self->priv->switch_windows, _g_object_ref0 (clone));
 #line 109 "window-management.vala"
+				self->priv->switch_windows = g_list_prepend (self->priv->switch_windows, _g_object_ref0 (clone));
+#line 111 "window-management.vala"
 				clutter_actor_set_position (clone, clutter_actor_get_x ((ClutterActor*) window), clutter_actor_get_y ((ClutterActor*) window));
-#line 110 "window-management.vala"
-				clutter_actor_set_size (clone, clutter_actor_get_width ((ClutterActor*) window), clutter_actor_get_height ((ClutterActor*) window));
 #line 112 "window-management.vala"
+				clutter_actor_set_size (clone, clutter_actor_get_width ((ClutterActor*) window), clutter_actor_get_height ((ClutterActor*) window));
+#line 114 "window-management.vala"
 				clutter_actor_set_opacity ((ClutterActor*) window, (guint8) 0);
-#line 113 "window-management.vala"
-				clutter_actor_set_opacity (clone, (guint8) 255);
 #line 115 "window-management.vala"
-				if (mutter_window_get_window_type (window) == META_COMP_WINDOW_DESKTOP) {
-#line 393 "window-management.c"
-					ClutterActor* _tmp8_;
+				clutter_actor_set_opacity (clone, (guint8) 255);
 #line 117 "window-management.vala"
-					clutter_container_add_actor ((_tmp8_ = mutter_plugin_get_window_group (unity_plugin_get_plugin (plugin)), CLUTTER_IS_CONTAINER (_tmp8_) ? ((ClutterContainer*) _tmp8_) : NULL), clone);
-#line 118 "window-management.vala"
-					clutter_actor_raise (clone, mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (plugin)));
+				if (mutter_window_get_window_type (window) == META_COMP_WINDOW_DESKTOP) {
 #line 399 "window-management.c"
+					ClutterActor* _tmp8_;
+#line 119 "window-management.vala"
+					clutter_container_add_actor ((_tmp8_ = mutter_plugin_get_window_group (unity_plugin_get_plugin (plugin)), CLUTTER_IS_CONTAINER (_tmp8_) ? ((ClutterContainer*) _tmp8_) : NULL), clone);
+#line 120 "window-management.vala"
+					clutter_actor_raise (clone, mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (plugin)));
+#line 405 "window-management.c"
 					_g_object_unref0 (window);
 					_g_object_unref0 (clone);
-#line 119 "window-management.vala"
+#line 121 "window-management.vala"
 					continue;
-#line 404 "window-management.c"
-				}
-#line 123 "window-management.vala"
-				if (mutter_window_get_workspace (window) == from) {
-#line 125 "window-management.vala"
-					clutter_container_add_actor ((ClutterContainer*) self->priv->workgroup1, clone);
 #line 410 "window-management.c"
-				} else {
+				}
+#line 125 "window-management.vala"
+				if (mutter_window_get_workspace (window) == from) {
 #line 127 "window-management.vala"
-					if (mutter_window_get_workspace (window) == to) {
-#line 129 "window-management.vala"
-						clutter_container_add_actor ((ClutterContainer*) self->priv->workgroup2, clone);
+					clutter_container_add_actor ((ClutterContainer*) self->priv->workgroup1, clone);
 #line 416 "window-management.c"
+				} else {
+#line 129 "window-management.vala"
+					if (mutter_window_get_workspace (window) == to) {
+#line 131 "window-management.vala"
+						clutter_container_add_actor ((ClutterContainer*) self->priv->workgroup2, clone);
+#line 422 "window-management.c"
 					}
 				}
 				_g_object_unref0 (window);
@@ -420,111 +426,119 @@ static void unity_window_management_workspace_switched (UnityWindowManagement* s
 			}
 		}
 	}
-#line 133 "window-management.vala"
+#line 135 "window-management.vala"
 	anim = (_tmp9_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->workgroup1, (gulong) CLUTTER_LINEAR, (guint) 150, "x", -x_delta, "y", -y_delta, NULL)), _g_object_unref0 (anim), _tmp9_);
-#line 137 "window-management.vala"
+#line 139 "window-management.vala"
 	y = clutter_actor_get_y ((ClutterActor*) self->priv->workgroup2);
-#line 138 "window-management.vala"
-	x = clutter_actor_get_x ((ClutterActor*) self->priv->workgroup2);
 #line 140 "window-management.vala"
+	x = clutter_actor_get_x ((ClutterActor*) self->priv->workgroup2);
+#line 142 "window-management.vala"
 	clutter_actor_set_x ((ClutterActor*) self->priv->workgroup2, x_delta);
-#line 141 "window-management.vala"
-	clutter_actor_set_y ((ClutterActor*) self->priv->workgroup2, y_delta);
 #line 143 "window-management.vala"
+	clutter_actor_set_y ((ClutterActor*) self->priv->workgroup2, y_delta);
+#line 145 "window-management.vala"
 	anim = (_tmp10_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->workgroup2, (gulong) CLUTTER_LINEAR, (guint) 150, "x", x, "y", y, NULL)), _g_object_unref0 (anim), _tmp10_);
-#line 146 "window-management.vala"
+#line 148 "window-management.vala"
 	g_signal_connect_object (anim, "completed", (GCallback) _unity_window_management_on_workspace_switch_completed_clutter_animation_completed, self, 0);
-#line 438 "window-management.c"
+#line 444 "window-management.c"
 	_g_object_unref0 (anim);
 }
 
 
-#line 149 "window-management.vala"
-static void unity_window_management_on_workspace_switch_completed (UnityWindowManagement* self, ClutterAnimation* anim) {
-#line 445 "window-management.c"
-	MutterWindow* window;
-#line 149 "window-management.vala"
-	g_return_if_fail (self != NULL);
 #line 151 "window-management.vala"
-	window = NULL;
+static void unity_window_management_on_workspace_switch_completed (UnityWindowManagement* self, ClutterAnimation* anim) {
 #line 451 "window-management.c"
+	MutterWindow* window;
+#line 151 "window-management.vala"
+	g_return_if_fail (self != NULL);
+#line 153 "window-management.vala"
+	window = NULL;
+#line 457 "window-management.c"
 	{
 		GList* actor_collection;
 		GList* actor_it;
-#line 153 "window-management.vala"
+#line 155 "window-management.vala"
 		actor_collection = self->priv->switch_windows;
-#line 457 "window-management.c"
+#line 463 "window-management.c"
 		for (actor_it = actor_collection; actor_it != NULL; actor_it = actor_it->next) {
 			ClutterActor* actor;
-#line 153 "window-management.vala"
+#line 155 "window-management.vala"
 			actor = _g_object_ref0 ((ClutterActor*) actor_it->data);
-#line 462 "window-management.c"
+#line 468 "window-management.c"
 			{
 				MutterWindow* _tmp2_;
 				ClutterActor* _tmp0_;
 				ClutterActor* _tmp1_;
-#line 155 "window-management.vala"
-				window = (_tmp2_ = _g_object_ref0 ((_tmp1_ = clutter_clone_get_source ((_tmp0_ = actor, CLUTTER_IS_CLONE (_tmp0_) ? ((ClutterClone*) _tmp0_) : NULL)), MUTTER_IS_WINDOW (_tmp1_) ? ((MutterWindow*) _tmp1_) : NULL)), _g_object_unref0 (window), _tmp2_);
-#line 156 "window-management.vala"
-				clutter_actor_set_opacity ((ClutterActor*) window, (guint8) 255);
 #line 157 "window-management.vala"
+				window = (_tmp2_ = _g_object_ref0 ((_tmp1_ = clutter_clone_get_source ((_tmp0_ = actor, CLUTTER_IS_CLONE (_tmp0_) ? ((ClutterClone*) _tmp0_) : NULL)), MUTTER_IS_WINDOW (_tmp1_) ? ((MutterWindow*) _tmp1_) : NULL)), _g_object_unref0 (window), _tmp2_);
+#line 158 "window-management.vala"
+				clutter_actor_set_opacity ((ClutterActor*) window, (guint8) 255);
+#line 159 "window-management.vala"
 				clutter_actor_destroy (actor);
-#line 473 "window-management.c"
+#line 479 "window-management.c"
 				_g_object_unref0 (actor);
 			}
 		}
 	}
-#line 160 "window-management.vala"
+#line 162 "window-management.vala"
 	clutter_actor_destroy ((ClutterActor*) self->priv->workgroup1);
-#line 161 "window-management.vala"
-	clutter_actor_destroy ((ClutterActor*) self->priv->workgroup2);
 #line 163 "window-management.vala"
+	clutter_actor_destroy ((ClutterActor*) self->priv->workgroup2);
+#line 165 "window-management.vala"
 	mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_SWITCH_WORKSPACE);
-#line 164 "window-management.vala"
+#line 166 "window-management.vala"
 	self->priv->switch_signals_to_send--;
-#line 486 "window-management.c"
+#line 492 "window-management.c"
 	_g_object_unref0 (window);
 }
 
 
-#line 167 "window-management.vala"
+#line 169 "window-management.vala"
 static void unity_window_management_window_maximized (UnityWindowManagement* self, UnityPlugin* plugin, MutterWindow* window, gint x, gint y, gint width, gint height) {
-#line 167 "window-management.vala"
+#line 169 "window-management.vala"
 	g_return_if_fail (self != NULL);
-#line 167 "window-management.vala"
+#line 169 "window-management.vala"
 	g_return_if_fail (plugin != NULL);
-#line 167 "window-management.vala"
+#line 169 "window-management.vala"
 	g_return_if_fail (window != NULL);
-#line 174 "window-management.vala"
+#line 180 "window-management.vala"
+	g_object_set_data ((GObject*) window, unity_maximus_user_unmaximize_hint, NULL);
+#line 182 "window-management.vala"
 	mutter_plugin_effect_completed (unity_plugin_get_plugin (plugin), window, (guint) MUTTER_PLUGIN_MAXIMIZE);
-#line 501 "window-management.c"
+#line 509 "window-management.c"
 }
 
 
-#line 177 "window-management.vala"
+#line 185 "window-management.vala"
 static void unity_window_management_window_unmaximized (UnityWindowManagement* self, UnityPlugin* plugin, MutterWindow* window, gint x, gint y, gint width, gint height) {
-#line 177 "window-management.vala"
-	g_return_if_fail (self != NULL);
-#line 177 "window-management.vala"
-	g_return_if_fail (plugin != NULL);
-#line 177 "window-management.vala"
-	g_return_if_fail (window != NULL);
-#line 184 "window-management.vala"
-	mutter_plugin_effect_completed (unity_plugin_get_plugin (plugin), window, (guint) MUTTER_PLUGIN_UNMAXIMIZE);
 #line 515 "window-management.c"
+	gint i;
+#line 185 "window-management.vala"
+	g_return_if_fail (self != NULL);
+#line 185 "window-management.vala"
+	g_return_if_fail (plugin != NULL);
+#line 185 "window-management.vala"
+	g_return_if_fail (window != NULL);
+#line 197 "window-management.vala"
+	i = 1;
+#line 198 "window-management.vala"
+	g_object_set_data ((GObject*) window, unity_maximus_user_unmaximize_hint, GINT_TO_POINTER (i));
+#line 200 "window-management.vala"
+	mutter_plugin_effect_completed (unity_plugin_get_plugin (plugin), window, (guint) MUTTER_PLUGIN_UNMAXIMIZE);
+#line 529 "window-management.c"
 }
 
 
-#line 226 "window-management.vala"
+#line 242 "window-management.vala"
 static void _unity_window_management_window_minimized_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-#line 521 "window-management.c"
+#line 535 "window-management.c"
 	unity_window_management_window_minimized_completed (self, _sender);
 }
 
 
-#line 187 "window-management.vala"
+#line 203 "window-management.vala"
 static void unity_window_management_window_minimized (UnityWindowManagement* self, UnityPlugin* plugin, MutterWindow* window) {
-#line 528 "window-management.c"
+#line 542 "window-management.c"
 	gint type;
 	gboolean _tmp0_ = FALSE;
 	gboolean _tmp1_ = FALSE;
@@ -535,278 +549,332 @@ static void unity_window_management_window_minimized (UnityWindowManagement* sel
 	ClutterAnimation* anim;
 	MutterWindow* _tmp4_;
 	ClutterActor* actor;
-#line 187 "window-management.vala"
-	g_return_if_fail (self != NULL);
-#line 187 "window-management.vala"
-	g_return_if_fail (plugin != NULL);
-#line 187 "window-management.vala"
-	g_return_if_fail (window != NULL);
-#line 189 "window-management.vala"
-	type = (gint) mutter_window_get_window_type (window);
-#line 191 "window-management.vala"
-	if (type != META_WINDOW_NORMAL) {
-#line 192 "window-management.vala"
-		_tmp2_ = type != META_WINDOW_DIALOG;
-#line 551 "window-management.c"
-	} else {
-#line 191 "window-management.vala"
-		_tmp2_ = FALSE;
-#line 555 "window-management.c"
-	}
-#line 191 "window-management.vala"
-	if (_tmp2_) {
-#line 193 "window-management.vala"
-		_tmp1_ = type != META_WINDOW_MODAL_DIALOG;
-#line 561 "window-management.c"
-	} else {
-#line 191 "window-management.vala"
-		_tmp1_ = FALSE;
-#line 565 "window-management.c"
-	}
-#line 191 "window-management.vala"
-	if (_tmp1_) {
-#line 194 "window-management.vala"
-		_tmp0_ = type != META_WINDOW_MENU;
-#line 571 "window-management.c"
-	} else {
-#line 191 "window-management.vala"
-		_tmp0_ = FALSE;
-#line 575 "window-management.c"
-	}
-#line 191 "window-management.vala"
-	if (_tmp0_) {
-#line 197 "window-management.vala"
-		mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_MINIMIZE);
-#line 198 "window-management.vala"
-		return;
-#line 583 "window-management.c"
-	}
-#line 201 "window-management.vala"
-	rect = (_tmp3_.height = 0, _tmp3_.width = 0, _tmp3_.x = 0, _tmp3_.y = 0, _tmp3_);
 #line 203 "window-management.vala"
-	speed = unity_window_management_get_animation_speed (self, window);
-#line 204 "window-management.vala"
-	anim = NULL;
+	g_return_if_fail (self != NULL);
+#line 203 "window-management.vala"
+	g_return_if_fail (plugin != NULL);
+#line 203 "window-management.vala"
+	g_return_if_fail (window != NULL);
 #line 205 "window-management.vala"
+	type = (gint) mutter_window_get_window_type (window);
+#line 207 "window-management.vala"
+	if (type != META_WINDOW_NORMAL) {
+#line 208 "window-management.vala"
+		_tmp2_ = type != META_WINDOW_DIALOG;
+#line 565 "window-management.c"
+	} else {
+#line 207 "window-management.vala"
+		_tmp2_ = FALSE;
+#line 569 "window-management.c"
+	}
+#line 207 "window-management.vala"
+	if (_tmp2_) {
+#line 209 "window-management.vala"
+		_tmp1_ = type != META_WINDOW_MODAL_DIALOG;
+#line 575 "window-management.c"
+	} else {
+#line 207 "window-management.vala"
+		_tmp1_ = FALSE;
+#line 579 "window-management.c"
+	}
+#line 207 "window-management.vala"
+	if (_tmp1_) {
+#line 210 "window-management.vala"
+		_tmp0_ = type != META_WINDOW_MENU;
+#line 585 "window-management.c"
+	} else {
+#line 207 "window-management.vala"
+		_tmp0_ = FALSE;
+#line 589 "window-management.c"
+	}
+#line 207 "window-management.vala"
+	if (_tmp0_) {
+#line 213 "window-management.vala"
+		mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_MINIMIZE);
+#line 214 "window-management.vala"
+		return;
+#line 597 "window-management.c"
+	}
+#line 217 "window-management.vala"
+	rect = (_tmp3_.height = 0, _tmp3_.width = 0, _tmp3_.x = 0, _tmp3_.y = 0, _tmp3_);
+#line 219 "window-management.vala"
+	speed = unity_window_management_get_animation_speed (self, window);
+#line 220 "window-management.vala"
+	anim = NULL;
+#line 221 "window-management.vala"
 	actor = _g_object_ref0 ((_tmp4_ = window, CLUTTER_IS_ACTOR (_tmp4_) ? ((ClutterActor*) _tmp4_) : NULL));
-#line 206 "window-management.vala"
+#line 222 "window-management.vala"
 	if (meta_window_get_icon_geometry (mutter_window_get_meta_window (window), &rect)) {
-#line 595 "window-management.c"
+#line 609 "window-management.c"
 		float scale;
 		ClutterAnimation* _tmp5_;
-#line 208 "window-management.vala"
+#line 224 "window-management.vala"
 		scale = MIN (MIN ((float) 1, rect.width / clutter_actor_get_width (actor)), MIN ((float) 1, rect.height / clutter_actor_get_height (actor)));
-#line 210 "window-management.vala"
+#line 226 "window-management.vala"
 		g_object_set ((GObject*) actor, "scale-gravity", CLUTTER_GRAVITY_CENTER, NULL);
-#line 211 "window-management.vala"
+#line 227 "window-management.vala"
 		anim = (_tmp5_ = _g_object_ref0 (clutter_actor_animate (actor, (gulong) CLUTTER_EASE_IN_SINE, (guint) speed, "opacity", 0, "x", (float) ((rect.x + (rect.width / 2)) - (clutter_actor_get_width (actor) / 2)), "y", (float) ((rect.y + (rect.height / 2)) - (clutter_actor_get_height (actor) / 2)), "scale-x", scale, "scale-y", scale, NULL)), _g_object_unref0 (anim), _tmp5_);
-#line 604 "window-management.c"
+#line 618 "window-management.c"
 	} else {
 		ClutterAnimation* _tmp6_;
-#line 220 "window-management.vala"
+#line 236 "window-management.vala"
 		anim = (_tmp6_ = _g_object_ref0 (clutter_actor_animate (actor, (gulong) CLUTTER_EASE_IN_SINE, (guint) speed, "opacity", 0, NULL)), _g_object_unref0 (anim), _tmp6_);
-#line 609 "window-management.c"
+#line 623 "window-management.c"
 	}
-#line 223 "window-management.vala"
+#line 239 "window-management.vala"
 	g_signal_connect_object (anim, "completed", (GCallback) _unity_window_management_window_minimized_completed_clutter_animation_completed, self, 0);
-#line 613 "window-management.c"
+#line 627 "window-management.c"
 	_g_object_unref0 (anim);
 	_g_object_unref0 (actor);
 }
 
 
-#line 226 "window-management.vala"
+#line 242 "window-management.vala"
 static void unity_window_management_window_minimized_completed (UnityWindowManagement* self, ClutterAnimation* anim) {
-#line 621 "window-management.c"
+#line 635 "window-management.c"
 	GObject* _tmp0_;
 	MutterWindow* window;
-#line 226 "window-management.vala"
+#line 242 "window-management.vala"
 	g_return_if_fail (self != NULL);
-#line 226 "window-management.vala"
+#line 242 "window-management.vala"
 	g_return_if_fail (anim != NULL);
-#line 228 "window-management.vala"
+#line 244 "window-management.vala"
 	window = _g_object_ref0 ((_tmp0_ = clutter_animation_get_object (anim), MUTTER_IS_WINDOW (_tmp0_) ? ((MutterWindow*) _tmp0_) : NULL));
-#line 230 "window-management.vala"
+#line 246 "window-management.vala"
 	if (window == NULL) {
-#line 632 "window-management.c"
+#line 646 "window-management.c"
 		_g_object_unref0 (window);
-#line 231 "window-management.vala"
+#line 247 "window-management.vala"
 		return;
-#line 636 "window-management.c"
+#line 650 "window-management.c"
 	}
-#line 233 "window-management.vala"
+#line 249 "window-management.vala"
 	clutter_actor_hide ((ClutterActor*) window);
-#line 234 "window-management.vala"
+#line 250 "window-management.vala"
 	mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_MINIMIZE);
-#line 642 "window-management.c"
+#line 656 "window-management.c"
 	_g_object_unref0 (window);
 }
 
 
-#line 283 "window-management.vala"
+#line 253 "window-management.vala"
+static gboolean unity_window_management_force_activate (UnityWindowManagement* self) {
+#line 663 "window-management.c"
+	gboolean result;
+#line 253 "window-management.vala"
+	g_return_val_if_fail (self != NULL, FALSE);
+#line 255 "window-management.vala"
+	if (MUTTER_IS_WINDOW (self->priv->last_mapped)) {
+#line 669 "window-management.c"
+		MetaWindow* w;
+		MetaDisplay* d;
+#line 257 "window-management.vala"
+		w = mutter_window_get_meta_window (self->priv->last_mapped);
+#line 258 "window-management.vala"
+		d = meta_window_get_display (w);
+#line 260 "window-management.vala"
+		meta_window_activate (mutter_window_get_meta_window (self->priv->last_mapped), meta_display_get_current_time (d));
+#line 678 "window-management.c"
+	}
+	result = FALSE;
+#line 264 "window-management.vala"
+	return result;
+#line 683 "window-management.c"
+}
+
+
+#line 253 "window-management.vala"
+static gboolean _unity_window_management_force_activate_gsource_func (gpointer self) {
+#line 689 "window-management.c"
+	return unity_window_management_force_activate (self);
+}
+
+
+#line 323 "window-management.vala"
 static void _unity_window_management_window_mapped_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-#line 649 "window-management.c"
+#line 696 "window-management.c"
 	unity_window_management_window_mapped_completed (self, _sender);
 }
 
 
-#line 237 "window-management.vala"
+#line 267 "window-management.vala"
 static void unity_window_management_window_mapped (UnityWindowManagement* self, UnityPlugin* plugin, MutterWindow* window) {
-#line 656 "window-management.c"
+#line 703 "window-management.c"
 	gint type;
 	gboolean _tmp0_ = FALSE;
 	gboolean _tmp1_ = FALSE;
 	gboolean _tmp2_ = FALSE;
+	gboolean _tmp3_ = FALSE;
 	ClutterAnimation* anim;
-	MutterWindow* _tmp3_;
+	MutterWindow* _tmp4_;
 	ClutterActor* actor;
 	gint speed;
 	gulong xid;
 	WnckWindow* wnck_window;
-	MetaRectangle _tmp4_ = {0};
+	MetaRectangle _tmp5_ = {0};
 	MetaRectangle rect;
-	gboolean _tmp5_ = FALSE;
-#line 237 "window-management.vala"
+	gboolean _tmp6_ = FALSE;
+#line 267 "window-management.vala"
 	g_return_if_fail (self != NULL);
-#line 237 "window-management.vala"
+#line 267 "window-management.vala"
 	g_return_if_fail (plugin != NULL);
-#line 237 "window-management.vala"
+#line 267 "window-management.vala"
 	g_return_if_fail (window != NULL);
-#line 239 "window-management.vala"
+#line 269 "window-management.vala"
 	type = (gint) mutter_window_get_window_type (window);
-#line 241 "window-management.vala"
+#line 271 "window-management.vala"
 	if (type != META_WINDOW_NORMAL) {
-#line 242 "window-management.vala"
+#line 272 "window-management.vala"
 		_tmp2_ = type != META_WINDOW_DIALOG;
-#line 682 "window-management.c"
+#line 730 "window-management.c"
 	} else {
-#line 241 "window-management.vala"
+#line 271 "window-management.vala"
 		_tmp2_ = FALSE;
-#line 686 "window-management.c"
+#line 734 "window-management.c"
 	}
-#line 241 "window-management.vala"
+#line 271 "window-management.vala"
 	if (_tmp2_) {
-#line 243 "window-management.vala"
+#line 273 "window-management.vala"
 		_tmp1_ = type != META_WINDOW_MODAL_DIALOG;
-#line 692 "window-management.c"
-	} else {
-#line 241 "window-management.vala"
-		_tmp1_ = FALSE;
-#line 696 "window-management.c"
-	}
-#line 241 "window-management.vala"
-	if (_tmp1_) {
-#line 244 "window-management.vala"
-		_tmp0_ = type != META_WINDOW_MENU;
-#line 702 "window-management.c"
-	} else {
-#line 241 "window-management.vala"
-		_tmp0_ = FALSE;
-#line 706 "window-management.c"
-	}
-#line 241 "window-management.vala"
-	if (_tmp0_) {
-#line 247 "window-management.vala"
-		mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_MAP);
-#line 248 "window-management.vala"
-		return;
-#line 714 "window-management.c"
-	}
-#line 251 "window-management.vala"
-	anim = NULL;
-#line 252 "window-management.vala"
-	actor = _g_object_ref0 ((_tmp3_ = window, CLUTTER_IS_ACTOR (_tmp3_) ? ((ClutterActor*) _tmp3_) : NULL));
-#line 253 "window-management.vala"
-	clutter_actor_set_opacity (actor, (guint8) 0);
-#line 254 "window-management.vala"
-	clutter_actor_show ((ClutterActor*) window);
-#line 256 "window-management.vala"
-	speed = unity_window_management_get_animation_speed (self, window);
-#line 258 "window-management.vala"
-	xid = (gulong) meta_window_get_xwindow (mutter_window_get_meta_window (window));
-#line 259 "window-management.vala"
-	wnck_window = _g_object_ref0 (wnck_window_get (xid));
-#line 261 "window-management.vala"
-	rect = (_tmp4_.height = 0, _tmp4_.width = 0, _tmp4_.x = 0, _tmp4_.y = 0, _tmp4_);
-#line 262 "window-management.vala"
-	if (WNCK_IS_WINDOW (wnck_window)) {
-#line 263 "window-management.vala"
-		_tmp5_ = meta_window_get_icon_geometry (mutter_window_get_meta_window (window), &rect);
-#line 736 "window-management.c"
-	} else {
-#line 262 "window-management.vala"
-		_tmp5_ = FALSE;
 #line 740 "window-management.c"
-	}
-#line 262 "window-management.vala"
-	if (_tmp5_) {
+	} else {
+#line 271 "window-management.vala"
+		_tmp1_ = FALSE;
 #line 744 "window-management.c"
+	}
+#line 271 "window-management.vala"
+	if (_tmp1_) {
+#line 274 "window-management.vala"
+		_tmp0_ = type != META_WINDOW_MENU;
+#line 750 "window-management.c"
+	} else {
+#line 271 "window-management.vala"
+		_tmp0_ = FALSE;
+#line 754 "window-management.c"
+	}
+#line 271 "window-management.vala"
+	if (_tmp0_) {
+#line 277 "window-management.vala"
+		mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_MAP);
+#line 278 "window-management.vala"
+		return;
+#line 762 "window-management.c"
+	}
+#line 281 "window-management.vala"
+	if (type == META_WINDOW_NORMAL) {
+#line 281 "window-management.vala"
+		_tmp3_ = TRUE;
+#line 768 "window-management.c"
+	} else {
+#line 282 "window-management.vala"
+		_tmp3_ = type == META_WINDOW_DIALOG;
+#line 772 "window-management.c"
+	}
+#line 281 "window-management.vala"
+	if (_tmp3_) {
+#line 284 "window-management.vala"
+		meta_window_activate (mutter_window_get_meta_window (window), meta_window_get_user_time (mutter_window_get_meta_window (window)));
+#line 287 "window-management.vala"
+		self->priv->last_mapped = window;
+#line 288 "window-management.vala"
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_window_management_force_activate_gsource_func, g_object_ref (self), g_object_unref);
+#line 782 "window-management.c"
+	}
+#line 291 "window-management.vala"
+	anim = NULL;
+#line 292 "window-management.vala"
+	actor = _g_object_ref0 ((_tmp4_ = window, CLUTTER_IS_ACTOR (_tmp4_) ? ((ClutterActor*) _tmp4_) : NULL));
+#line 293 "window-management.vala"
+	clutter_actor_set_opacity (actor, (guint8) 0);
+#line 294 "window-management.vala"
+	clutter_actor_show ((ClutterActor*) window);
+#line 296 "window-management.vala"
+	speed = unity_window_management_get_animation_speed (self, window);
+#line 298 "window-management.vala"
+	xid = (gulong) meta_window_get_xwindow (mutter_window_get_meta_window (window));
+#line 299 "window-management.vala"
+	wnck_window = _g_object_ref0 (wnck_window_get (xid));
+#line 301 "window-management.vala"
+	rect = (_tmp5_.height = 0, _tmp5_.width = 0, _tmp5_.x = 0, _tmp5_.y = 0, _tmp5_);
+#line 302 "window-management.vala"
+	if (WNCK_IS_WINDOW (wnck_window)) {
+#line 303 "window-management.vala"
+		_tmp6_ = meta_window_get_icon_geometry (mutter_window_get_meta_window (window), &rect);
+#line 804 "window-management.c"
+	} else {
+#line 302 "window-management.vala"
+		_tmp6_ = FALSE;
+#line 808 "window-management.c"
+	}
+#line 302 "window-management.vala"
+	if (_tmp6_) {
+#line 812 "window-management.c"
 		gint x = 0;
 		gint y = 0;
 		gint w = 0;
 		gint h = 0;
-		ClutterAnimation* _tmp6_;
-#line 266 "window-management.vala"
-		wnck_window_get_geometry (wnck_window, &x, &y, &w, &h);
-#line 267 "window-management.vala"
-		g_object_set ((GObject*) actor, "scale-gravity", CLUTTER_GRAVITY_CENTER, NULL);
-#line 268 "window-management.vala"
-		anim = (_tmp6_ = _g_object_ref0 (clutter_actor_animate (actor, (gulong) CLUTTER_EASE_IN_SINE, (guint) speed, "opacity", 255, "x", (float) x, "y", (float) y, "scale-x", 1.f, "scale-y", 1.f, NULL)), _g_object_unref0 (anim), _tmp6_);
-#line 756 "window-management.c"
-	} else {
 		ClutterAnimation* _tmp7_;
-#line 277 "window-management.vala"
-		anim = (_tmp7_ = _g_object_ref0 (clutter_actor_animate (actor, (gulong) CLUTTER_EASE_IN_SINE, (guint) speed, "opacity", 255, NULL)), _g_object_unref0 (anim), _tmp7_);
-#line 761 "window-management.c"
+#line 306 "window-management.vala"
+		wnck_window_get_geometry (wnck_window, &x, &y, &w, &h);
+#line 307 "window-management.vala"
+		g_object_set ((GObject*) actor, "scale-gravity", CLUTTER_GRAVITY_CENTER, NULL);
+#line 308 "window-management.vala"
+		anim = (_tmp7_ = _g_object_ref0 (clutter_actor_animate (actor, (gulong) CLUTTER_EASE_IN_SINE, (guint) speed, "opacity", 255, "x", (float) x, "y", (float) y, "scale-x", 1.f, "scale-y", 1.f, NULL)), _g_object_unref0 (anim), _tmp7_);
+#line 824 "window-management.c"
+	} else {
+		ClutterAnimation* _tmp8_;
+#line 317 "window-management.vala"
+		anim = (_tmp8_ = _g_object_ref0 (clutter_actor_animate (actor, (gulong) CLUTTER_EASE_IN_SINE, (guint) speed, "opacity", 255, NULL)), _g_object_unref0 (anim), _tmp8_);
+#line 829 "window-management.c"
 	}
-#line 280 "window-management.vala"
+#line 320 "window-management.vala"
 	g_signal_connect_object (anim, "completed", (GCallback) _unity_window_management_window_mapped_completed_clutter_animation_completed, self, 0);
-#line 765 "window-management.c"
+#line 833 "window-management.c"
 	_g_object_unref0 (anim);
 	_g_object_unref0 (actor);
 	_g_object_unref0 (wnck_window);
 }
 
 
-#line 283 "window-management.vala"
+#line 323 "window-management.vala"
 static void unity_window_management_window_mapped_completed (UnityWindowManagement* self, ClutterAnimation* anim) {
-#line 774 "window-management.c"
+#line 842 "window-management.c"
 	GObject* _tmp0_;
 	MutterWindow* window;
 	MutterWindow* _tmp1_;
-#line 283 "window-management.vala"
+#line 323 "window-management.vala"
 	g_return_if_fail (self != NULL);
-#line 283 "window-management.vala"
+#line 323 "window-management.vala"
 	g_return_if_fail (anim != NULL);
-#line 285 "window-management.vala"
+#line 325 "window-management.vala"
 	window = _g_object_ref0 ((_tmp0_ = clutter_animation_get_object (anim), MUTTER_IS_WINDOW (_tmp0_) ? ((MutterWindow*) _tmp0_) : NULL));
-#line 287 "window-management.vala"
+#line 327 "window-management.vala"
 	if (window == NULL) {
-#line 786 "window-management.c"
+#line 854 "window-management.c"
 		_g_object_unref0 (window);
-#line 288 "window-management.vala"
+#line 328 "window-management.vala"
 		return;
-#line 790 "window-management.c"
+#line 858 "window-management.c"
 	}
-#line 290 "window-management.vala"
+#line 330 "window-management.vala"
 	clutter_actor_set_opacity ((_tmp1_ = window, CLUTTER_IS_ACTOR (_tmp1_) ? ((ClutterActor*) _tmp1_) : NULL), (guint8) 255);
-#line 291 "window-management.vala"
+#line 331 "window-management.vala"
 	mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_MAP);
-#line 796 "window-management.c"
+#line 864 "window-management.c"
 	_g_object_unref0 (window);
 }
 
 
-#line 318 "window-management.vala"
+#line 358 "window-management.vala"
 static void _unity_window_management_window_destroyed_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-#line 803 "window-management.c"
+#line 871 "window-management.c"
 	unity_window_management_window_destroyed_completed (self, _sender);
 }
 
 
-#line 294 "window-management.vala"
+#line 334 "window-management.vala"
 static void unity_window_management_window_destroyed (UnityWindowManagement* self, UnityPlugin* plugin, MutterWindow* window) {
-#line 810 "window-management.c"
+#line 878 "window-management.c"
 	gint type;
 	gboolean _tmp0_ = FALSE;
 	gboolean _tmp1_ = FALSE;
@@ -814,91 +882,91 @@ static void unity_window_management_window_destroyed (UnityWindowManagement* sel
 	ClutterAnimation* anim;
 	gint speed;
 	ClutterAnimation* _tmp3_;
-#line 294 "window-management.vala"
+#line 334 "window-management.vala"
 	g_return_if_fail (self != NULL);
-#line 294 "window-management.vala"
+#line 334 "window-management.vala"
 	g_return_if_fail (plugin != NULL);
-#line 294 "window-management.vala"
+#line 334 "window-management.vala"
 	g_return_if_fail (window != NULL);
-#line 296 "window-management.vala"
+#line 336 "window-management.vala"
 	type = (gint) mutter_window_get_window_type (window);
-#line 298 "window-management.vala"
+#line 338 "window-management.vala"
 	if (type != META_WINDOW_NORMAL) {
-#line 299 "window-management.vala"
+#line 339 "window-management.vala"
 		_tmp2_ = type != META_WINDOW_DIALOG;
-#line 830 "window-management.c"
+#line 898 "window-management.c"
 	} else {
-#line 298 "window-management.vala"
+#line 338 "window-management.vala"
 		_tmp2_ = FALSE;
-#line 834 "window-management.c"
+#line 902 "window-management.c"
 	}
-#line 298 "window-management.vala"
+#line 338 "window-management.vala"
 	if (_tmp2_) {
-#line 300 "window-management.vala"
+#line 340 "window-management.vala"
 		_tmp1_ = type != META_WINDOW_MODAL_DIALOG;
-#line 840 "window-management.c"
+#line 908 "window-management.c"
 	} else {
-#line 298 "window-management.vala"
+#line 338 "window-management.vala"
 		_tmp1_ = FALSE;
-#line 844 "window-management.c"
+#line 912 "window-management.c"
 	}
-#line 298 "window-management.vala"
+#line 338 "window-management.vala"
 	if (_tmp1_) {
-#line 301 "window-management.vala"
+#line 341 "window-management.vala"
 		_tmp0_ = type != META_WINDOW_MENU;
-#line 850 "window-management.c"
+#line 918 "window-management.c"
 	} else {
-#line 298 "window-management.vala"
+#line 338 "window-management.vala"
 		_tmp0_ = FALSE;
-#line 854 "window-management.c"
+#line 922 "window-management.c"
 	}
-#line 298 "window-management.vala"
+#line 338 "window-management.vala"
 	if (_tmp0_) {
-#line 304 "window-management.vala"
+#line 344 "window-management.vala"
 		mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_DESTROY);
-#line 305 "window-management.vala"
+#line 345 "window-management.vala"
 		return;
-#line 862 "window-management.c"
+#line 930 "window-management.c"
 	}
-#line 308 "window-management.vala"
+#line 348 "window-management.vala"
 	anim = NULL;
-#line 310 "window-management.vala"
+#line 350 "window-management.vala"
 	speed = unity_window_management_get_animation_speed (self, window);
-#line 312 "window-management.vala"
+#line 352 "window-management.vala"
 	anim = (_tmp3_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) window, (gulong) CLUTTER_EASE_IN_SINE, (guint) speed, "opacity", 0, NULL)), _g_object_unref0 (anim), _tmp3_);
-#line 315 "window-management.vala"
+#line 355 "window-management.vala"
 	g_signal_connect_object (anim, "completed", (GCallback) _unity_window_management_window_destroyed_completed_clutter_animation_completed, self, 0);
-#line 872 "window-management.c"
+#line 940 "window-management.c"
 	_g_object_unref0 (anim);
 }
 
 
-#line 318 "window-management.vala"
+#line 358 "window-management.vala"
 static void unity_window_management_window_destroyed_completed (UnityWindowManagement* self, ClutterAnimation* anim) {
-#line 879 "window-management.c"
+#line 947 "window-management.c"
 	MutterWindow* window;
-#line 318 "window-management.vala"
+#line 358 "window-management.vala"
 	g_return_if_fail (self != NULL);
-#line 318 "window-management.vala"
+#line 358 "window-management.vala"
 	g_return_if_fail (anim != NULL);
-#line 320 "window-management.vala"
+#line 360 "window-management.vala"
 	window = _g_object_ref0 (MUTTER_WINDOW (clutter_animation_get_object (anim)));
-#line 322 "window-management.vala"
+#line 362 "window-management.vala"
 	mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_DESTROY);
-#line 889 "window-management.c"
+#line 957 "window-management.c"
 	_g_object_unref0 (window);
 }
 
 
-#line 325 "window-management.vala"
+#line 365 "window-management.vala"
 static void unity_window_management_window_kill_effect (UnityWindowManagement* self, UnityPlugin* plugin, MutterWindow* window, gulong events) {
-#line 325 "window-management.vala"
+#line 365 "window-management.vala"
 	g_return_if_fail (self != NULL);
-#line 325 "window-management.vala"
+#line 365 "window-management.vala"
 	g_return_if_fail (plugin != NULL);
-#line 325 "window-management.vala"
+#line 365 "window-management.vala"
 	g_return_if_fail (window != NULL);
-#line 902 "window-management.c"
+#line 970 "window-management.c"
 }
 
 

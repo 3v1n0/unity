@@ -27,7 +27,8 @@ namespace Unity.Webapp
 [Desktop Entry]
 Version=1.0
 Name=%s
-Exec=chromium-browser --app="http://%s"
+Exec=chromium-browser --app="%s"
+Comment=A Chromium Webapp
 Terminal=false
 X-MultipleArgs=false
 Type=Application
@@ -71,6 +72,11 @@ StartupNotify=true
       }
     }
 
+    public string desktop_file_path ()
+    {
+      return webapp_dir + @"chromium-webapp-$name.desktop";
+    }
+
     /* checks for the webapp given based on the url stored */
     private bool check_existance_of_app ()
     {
@@ -89,7 +95,7 @@ StartupNotify=true
 
     private void build_webapp ()
     {
-      string webapp_desktop = webapp_desktop_template.printf (name, id, this.icon);
+      string webapp_desktop = webapp_desktop_template.printf (name, this.url, this.icon);
       debug ("building " + @"chromium-webapp-$name.desktop");
 
       var webapp_directory = File.new_for_path (webapp_dir);
@@ -139,6 +145,7 @@ StartupNotify=true
       // we are not a favorite and we need to be favorited!
       favorites.set_string (uid, "type", "application");
       favorites.set_string (uid, "desktop_file", desktop_path);
+      favorites.set_float (uid, "priority", -100000.0f);
       favorites.set_bool(uid, "enable_shadow", true);
       favorites.add_favorite (uid);
     }
