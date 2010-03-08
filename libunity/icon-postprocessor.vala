@@ -70,6 +70,7 @@ namespace Unity
           Cogl.Texture color = (Cogl.Texture)(this.bg_color.get_cogl_texture ());
           Cogl.Texture mask_tex = (Cogl.Texture)(this.mask.get_cogl_texture ());
           this.bgcol_material.set_layer (0, color);
+          this.bgcol_material.set_layer_filters (1, Cogl.MaterialFilter.NEAREST, Cogl.MaterialFilter.NEAREST);
           this.bgcol_material.set_layer (1, mask_tex);
         }
     }

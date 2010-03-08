@@ -196,15 +196,6 @@ namespace Unity.Quicklauncher
         this.set_name (model.uid);
 
         this.request_remove.connect (this.on_request_remove);
-
-        // we shadow everything now
-        if (false)
-          {
-            this.effect_drop_shadow = new Ctk.EffectDropShadow (5.0f, 0, 2);
-            effect_drop_shadow.set_opacity (0.4f);
-            this.effect_drop_shadow.set_margin (5);
-            this.icon.add_effect (effect_drop_shadow);
-          }
       }
 
     construct
@@ -511,24 +502,6 @@ namespace Unity.Quicklauncher
      			this.is_starting = true;
 				}
     }
-/* int width, height, rowstride, n_channels;
-  guchar *pixels, *p;
-  n_channels = gdk_pixbuf_get_n_channels (pixbuf);
-  g_assert (gdk_pixbuf_get_colorspace (pixbuf) == GDK_COLORSPACE_RGB);
-  g_assert (gdk_pixbuf_get_bits_per_sample (pixbuf) == 8);
-  g_assert (gdk_pixbuf_get_has_alpha (pixbuf));
-  g_assert (n_channels == 4);
-  width = gdk_pixbuf_get_width (pixbuf);
-  height = gdk_pixbuf_get_height (pixbuf);
-  g_assert (x >= 0 && x < width);
-  g_assert (y >= 0 && y < height);
-  rowstride = gdk_pixbuf_get_rowstride (pixbuf);
-  pixels = gdk_pixbuf_get_pixels (pixbuf);
-  p = pixels + y * rowstride + x * n_channels;
-  p[0] = red;
-  p[1] = green;
-  p[2] = blue;
-  p[3] = alpha;*/
 
     /* converts from rgb to hsv colour space */
     private static void rgb_to_hsv (float r, float g, float b,
@@ -661,6 +634,9 @@ namespace Unity.Quicklauncher
           b = pixels[pix_index + 2] / 256.0f;
           a = pixels[pix_index + 3] / 256.0f;
 
+          if (a < 1.0 / 256.0)
+            continue;
+
           LauncherView.rgb_to_hsv (r, g, b, out hue, out sat, out val);
           // we now have the saturation and value! wewt.
           r_total += (r * sat) * a;
@@ -676,7 +652,7 @@ namespace Unity.Quicklauncher
 
       // get a new super saturated value based on our totals
       LauncherView.rgb_to_hsv ((float)r_total, (float)g_total, (float)b_total, out hue, out sat, out val);
-      LauncherView.hsv_to_rgb (hue, 0.5f, 0.8f, out r, out g, out b);
+      LauncherView.hsv_to_rgb (hue, Math.fminf (sat + 0.6f, 1.0f), 0.5f, out r, out g, out b);
 
       red = (uint)(r * 255);
       green = (uint)(g * 255);
@@ -696,15 +672,17 @@ namespace Unity.Quicklauncher
             pixels[0] = (uchar)red;
             pixels[1] = (uchar)green;
             pixels[2] = (uchar)blue;
-            pixels[3] = 255;
+            pixels[3] = 192;
 
             var tex = GtkClutter.texture_new_from_pixbuf (scaled_buf);
             var color = GtkClutter.texture_new_from_pixbuf (color_buf);
 
-
-
             this.icon = new UnityIcon (tex as Clutter.Texture, color as Clutter.Texture);
             this.icon.set_parent (this);
+            this.effect_drop_shadow = new Ctk.EffectDropShadow (5.0f, 0, 2);
+            effect_drop_shadow.set_opacity (1.0f);//0.4f);
+            this.effect_drop_shadow.set_margin (5);
+            this.icon.add_effect (effect_drop_shadow);
             this.do_queue_redraw ();
           }
       }
