@@ -53,7 +53,7 @@ namespace Unity.Quicklauncher
     public LauncherModel? model;
 
     /* the prettys */
-    private Ctk.Image icon;
+    private UnityIcon icon;
     private ThemeImage focused_indicator;
     private ThemeImage running_indicator;
     private Gdk.Pixbuf honeycomb_mask;
@@ -196,7 +196,9 @@ namespace Unity.Quicklauncher
         this.set_name (model.uid);
 
         this.request_remove.connect (this.on_request_remove);
-        if (this.model.do_shadow)
+
+        // we shadow everything now
+        if (false)
           {
             this.effect_drop_shadow = new Ctk.EffectDropShadow (5.0f, 0, 2);
             effect_drop_shadow.set_opacity (0.4f);
@@ -263,8 +265,9 @@ namespace Unity.Quicklauncher
         Clutter.ActorBox child_box = Clutter.ActorBox ();
 
         //allocate the running indicator first
-        float width = this.running_indicator.get_width ();
-        float height = this.running_indicator.get_height ();
+        float width, height, n_width, n_height;
+        this.running_indicator.get_preferred_width (48, out n_width, out width);
+        this.running_indicator.get_preferred_height (48, out n_height, out height);
         child_box.x1 = 0;
         child_box.y1 = (box.get_height () - height) / 2.0f;
         child_box.x2 = child_box.x1 + width;
@@ -273,17 +276,17 @@ namespace Unity.Quicklauncher
         x += child_box.get_width ();
 
         //allocate the icon
-        width = this.icon.get_width ();
-        height = this.icon.get_height ();
-        child_box.x1 = (box.get_width () - width) / 2.0f;
+        this.icon.get_preferred_width (48, out width, out n_width);
+        this.icon.get_preferred_height (48, out height, out n_height);
+        child_box.x1 = 2;//(box.get_width () - width) / 2.0f;
         child_box.y1 = y;
-        child_box.x2 = child_box.x1 + width;
+        child_box.x2 = child_box.x1 + 48;
         child_box.y2 = child_box.y1 + height;
         this.icon.allocate (child_box, flags);
 
         //allocate the focused indicator
-        width = this.focused_indicator.get_width ();
-        height = this.focused_indicator.get_height ();
+        this.focused_indicator.get_preferred_width (48, out width, out n_width);
+        this.focused_indicator.get_preferred_height (48, out height, out n_height);
         child_box.x2 = box.get_width ();
         child_box.y2 = (box.get_height () / 2.0f) - (height / 2.0f);
         child_box.x1 = child_box.x2 - width;
@@ -354,8 +357,8 @@ namespace Unity.Quicklauncher
                    HONEYCOMB_MASK_FILE,
                    e.message);
         }
-
-        this.icon = new Ctk.Image (46);
+        this.icon = new UnityIcon (null, null);
+        this.icon.set_size (48, 48);
         this.icon.set_parent (this);
     }
 
@@ -508,16 +511,201 @@ namespace Unity.Quicklauncher
      			this.is_starting = true;
 				}
     }
+/* int width, height, rowstride, n_channels;
+  guchar *pixels, *p;
+  n_channels = gdk_pixbuf_get_n_channels (pixbuf);
+  g_assert (gdk_pixbuf_get_colorspace (pixbuf) == GDK_COLORSPACE_RGB);
+  g_assert (gdk_pixbuf_get_bits_per_sample (pixbuf) == 8);
+  g_assert (gdk_pixbuf_get_has_alpha (pixbuf));
+  g_assert (n_channels == 4);
+  width = gdk_pixbuf_get_width (pixbuf);
+  height = gdk_pixbuf_get_height (pixbuf);
+  g_assert (x >= 0 && x < width);
+  g_assert (y >= 0 && y < height);
+  rowstride = gdk_pixbuf_get_rowstride (pixbuf);
+  pixels = gdk_pixbuf_get_pixels (pixbuf);
+  p = pixels + y * rowstride + x * n_channels;
+  p[0] = red;
+  p[1] = green;
+  p[2] = blue;
+  p[3] = alpha;*/
+
+    /* converts from rgb to hsv colour space */
+    private static void rgb_to_hsv (float r, float g, float b,
+                                    out float hue, out float sat, out float val)
+    {
+      float min, max;
+      if (r > g)
+        max = (r > b) ? r : b;
+      else
+        max = (g > b) ? g : b;
+      if (r < g)
+        min = (r < b) ? r : b;
+      else
+        min = (g < b) ? g : b;
+
+      val = max;
+
+      float delta = max - min;
+      if (delta > 0.000001)
+        {
+          sat = delta / max;
+          hue = 0.0f;
+          if (r == max)
+            {
+              hue = (g - b) / delta;
+              if (hue < 0.0f)
+                hue += 6.0f;
+            }
+          else if (g == max)
+            {
+              hue = 2.0f + (b - r) / delta;
+            }
+          else if (b == max)
+            {
+              hue = 4.0f + (r - g) / delta;
+            }
+          hue /= 6.0f;
+        }
+      else
+        {
+          sat = 0.0f;
+          hue = 0.0f;
+        }
+    }
+
+    private static void hsv_to_rgb (float hue, float sat, float val,
+                                    out float r, out float g, out float b)
+    {
+      int    i;
+      float f, w, q, t;
+
+      if (sat == 0.0)
+        {
+         r = g = b = val;
+        }
+      else
+       {
+         if (hue == 1.0)
+            hue = 0.0f;
+
+         hue *= 6.0f;
+
+         i = (int) hue;
+         f = hue - i;
+         w = val * (1.0f - sat);
+         q = val * (1.0f - (sat * f));
+         t = val * (1.0f - (sat * (1.0f - f)));
+
+         switch (i)
+         {
+           case 0:
+             r = val;
+             g = t;
+             b = w;
+             break;
+           case 1:
+             r = q;
+             g = val;
+             b = w;
+             break;
+           case 2:
+             r = w;
+             g = val;
+             b = t;
+             break;
+           case 3:
+             r = w;
+             g = q;
+             b = val;
+             break;
+           case 4:
+             r = t;
+             g = w;
+             b = val;
+             break;
+           case 5:
+             r = val;
+             g = w;
+             b = q;
+             break;
+         }
+       }
+    }
+
+    private static void get_average_color (Gdk.Pixbuf source, out uint red, out uint green, out uint blue)
+    {
+      int num_channels = source.get_n_channels ();
+      int width = source.get_width ();
+      int height = source.get_height ();
+      int rowstride = source.get_rowstride ();
+      float r, g, b, a, hue, sat, val;
+      unowned uchar[] pixels = source.get_pixels ();
+
+      assert (source.get_colorspace () == Gdk.Colorspace.RGB);
+      assert (source.get_bits_per_sample () == 8);
+      assert (source.get_has_alpha ());
+      assert (num_channels == 4);
+
+      double r_total, g_total, b_total;
+      r_total = g_total = b_total = 0.0;
+
+      int i = 0;
+      for (int y = 0; y < height; y++)
+      {
+        for (int x = 0; x < width; x++)
+        {
+          int pix_index = i + (x*4);
+          r = pixels[pix_index + 0] / 256.0f;
+          g = pixels[pix_index + 1] / 256.0f;
+          b = pixels[pix_index + 2] / 256.0f;
+          a = pixels[pix_index + 3] / 256.0f;
+
+          LauncherView.rgb_to_hsv (r, g, b, out hue, out sat, out val);
+          // we now have the saturation and value! wewt.
+          r_total += (r * sat) * a;
+          g_total += (g * sat) * a;
+          b_total += (b * sat) * a;
+        }
+        i = y * (width * 4) + rowstride;
+      }
+      // okay we should now have a large value in our totals
+      r_total = r_total / (width * height);
+      g_total = g_total / (width * height);
+      b_total = b_total / (width * height);
+
+      // get a new super saturated value based on our totals
+      LauncherView.rgb_to_hsv ((float)r_total, (float)g_total, (float)b_total, out hue, out sat, out val);
+      LauncherView.hsv_to_rgb (hue, 0.5f, 0.8f, out r, out g, out b);
+
+      red = (uint)(r * 255);
+      green = (uint)(g * 255);
+      blue = (uint)(b * 255);
+    }
 
     private void notify_on_icon ()
       {
         if (this.model.icon is Gdk.Pixbuf)
           {
-            this.icon.set_from_pixbuf (this.model.icon);
-          }
-        else
-          {
-            this.icon.set_from_stock (Gtk.STOCK_MISSING_IMAGE);
+            this.icon.destroy ();
+            var scaled_buf = this.model.icon.scale_simple (48, 48, Gdk.InterpType.HYPER);
+            Gdk.Pixbuf color_buf = new Gdk.Pixbuf (Gdk.Colorspace.RGB, true, 8, 1, 1);
+            uint red, green, blue;
+            this.get_average_color (scaled_buf, out red, out green, out blue);
+            unowned uchar[] pixels = color_buf.get_pixels ();
+            pixels[0] = (uchar)red;
+            pixels[1] = (uchar)green;
+            pixels[2] = (uchar)blue;
+            pixels[3] = 255;
+
+            var tex = GtkClutter.texture_new_from_pixbuf (scaled_buf);
+            var color = GtkClutter.texture_new_from_pixbuf (color_buf);
+
+
+
+            this.icon = new UnityIcon (tex as Clutter.Texture, color as Clutter.Texture);
+            this.icon.set_parent (this);
+            this.do_queue_redraw ();
           }
       }
 

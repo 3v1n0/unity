@@ -46,6 +46,7 @@ libunity_la_VALASOURCES = \
   drag-controller.vala \
   drag-view.vala \
   entry.vala \
+  icon-postprocessor.vala \
   perf-logger.vala \
   prism-handler.vala \
   shell.vala \
