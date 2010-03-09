@@ -180,13 +180,16 @@ namespace Unity
       this.app.shell = this;
       LOGGER_END_PROCESS ("unity_application_constructor");
 
-      try {
-        this.screensaver_conn = DBus.Bus.get (DBus.BusType.SESSION);
-        this.screensaver = this.screensaver_conn.get_object ("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
-        this.screensaver.ActiveChanged += got_screensaver_changed;
-      } catch (Error e) {
-        warning (e.message);
-      }
+      try
+        {
+          this.screensaver_conn = DBus.Bus.get (DBus.BusType.SESSION);
+          this.screensaver = this.screensaver_conn.get_object ("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
+          this.screensaver.ActiveChanged += got_screensaver_changed;
+        }
+      catch (Error e)
+        {
+          warning (e.message);
+        }
       END_FUNCTION ();
     }
 
