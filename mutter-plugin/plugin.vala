@@ -377,14 +377,17 @@ namespace Unity
     {
       if (changed)
         {
-          this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
-          this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
+          this.quicklauncher.hide ();
+          this.panel.hide ();
+          var menu = Unity.Quicklauncher.QuicklistController.get_default ();
+          if (menu.menu_is_open ())
+            menu.close_menu ();
           fullscreen_obstruction = true;
         }
       else
         {
-          this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
-          this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
+          this.quicklauncher.show ();
+          this.panel.show ();
           fullscreen_obstruction = false;
         }
     }
