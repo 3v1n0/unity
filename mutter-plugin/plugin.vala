@@ -150,6 +150,8 @@ namespace Unity
       }
 
     private bool grab_enabled = false;
+    private DBus.Connection screensaver_conn;
+    private dynamic DBus.Object screensaver;
 
     construct
     {
@@ -177,6 +179,14 @@ namespace Unity
       this.app = new Unity.Application ();
       this.app.shell = this;
       LOGGER_END_PROCESS ("unity_application_constructor");
+
+      try {
+        this.screensaver_conn = DBus.Bus.get (DBus.BusType.SESSION);
+        this.screensaver = this.screensaver_conn.get_object ("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
+        this.screensaver.ActiveChanged += got_screensaver_changed;
+      } catch (Error e) {
+        warning (e.message);
+      }
       END_FUNCTION ();
     }
 
@@ -277,7 +287,7 @@ namespace Unity
 
       this.ensure_input_region ();
 
-      Wnck.Screen.get_default().active_window_changed.connect (on_active_window_changed);
+      Wnck.Screen.get_default ().active_window_changed.connect (on_active_window_changed);
 
       if (Wnck.Screen.get_default ().get_active_window () != null)
         Wnck.Screen.get_default ().get_active_window ().state_changed.connect (on_active_window_state_changed);
@@ -362,6 +372,23 @@ namespace Unity
 
       dexpose_windows ();
     }
+
+    private void got_screensaver_changed (dynamic DBus.Object screensaver, bool changed)
+    {
+      if (changed)
+        {
+          this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
+          this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
+          fullscreen_obstruction = true;
+        }
+      else
+        {
+          this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
+          this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
+          fullscreen_obstruction = false;
+        }
+    }
+
 
     void check_fullscreen_obstruction ()
     {
