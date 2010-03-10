@@ -664,8 +664,12 @@ namespace Unity.Quicklauncher
       {
         if (this.model.icon is Gdk.Pixbuf)
           {
-            var scaled_buf = this.model.icon.scale_simple (48, 48, Gdk.InterpType.HYPER);
             this.icon.destroy ();
+            Gdk.Pixbuf scaled_buf;
+            if ( this.model.icon.get_width () > 48 || this.model.icon.get_height () > 48)
+              scaled_buf = this.model.icon.scale_simple (48, 48, Gdk.InterpType.HYPER);
+            else
+              scaled_buf = this.model.icon;
             if (this.model.do_shadow)
               {
                 this.icon = new Ctk.Image.from_pixbuf (48, scaled_buf);
