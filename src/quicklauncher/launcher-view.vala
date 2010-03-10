@@ -269,7 +269,7 @@ namespace Unity.Quicklauncher
         //allocate the icon
         this.icon.get_preferred_width (48, out width, out n_width);
         this.icon.get_preferred_height (48, out height, out n_height);
-        child_box.x1 = 2;//(box.get_width () - width) / 2.0f;
+        child_box.x1 = (box.get_width () - width) / 2.0f;
         child_box.y1 = y;
         child_box.x2 = child_box.x1 + 48;
         child_box.y2 = child_box.y1 + height;
@@ -670,6 +670,7 @@ namespace Unity.Quicklauncher
               scaled_buf = this.model.icon.scale_simple (48, 48, Gdk.InterpType.HYPER);
             else
               scaled_buf = this.model.icon;
+
             if (this.model.do_shadow)
               {
                 this.icon = new Ctk.Image.from_pixbuf (48, scaled_buf);

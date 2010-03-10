@@ -35,6 +35,8 @@ namespace Unity
     private Clutter.Texture fg_layer;
     private Clutter.Texture mask;
 
+    private Cogl.Material bg_mat;
+    private Cogl.Material fg_mat;
     private Cogl.Material icon_material;
     private Cogl.Material bgcol_material;
 
@@ -73,6 +75,16 @@ namespace Unity
           this.bgcol_material.set_layer_filters (1, Cogl.MaterialFilter.NEAREST, Cogl.MaterialFilter.NEAREST);
           this.bgcol_material.set_layer (1, mask_tex);
         }
+
+        var mat = new Cogl.Material ();
+        Cogl.Texture tex = (Cogl.Texture)(this.bg_layer.get_cogl_texture ());
+        mat.set_layer (0, tex);
+        this.bg_mat = mat;
+
+        mat = new Cogl.Material ();
+        tex = (Cogl.Texture)(this.fg_layer.get_cogl_texture ());
+        mat.set_layer (0, tex);
+        this.fg_mat = mat;
     }
 
     public override void get_preferred_width (float for_height,
@@ -115,21 +127,29 @@ namespace Unity
     public static void paint_real (Clutter.Actor actor)
     {
       UnityIcon self = actor as UnityIcon;
-      self.bg_layer.paint ();
 
       Clutter.ActorBox box = Clutter.ActorBox ();
       self.get_stored_allocation (out box);
+
+      /* we draw everything with cogl because Clutter.Texture seems to be made
+       * of dumb. also it likes to double allocate everything
+       */
+      Cogl.set_source (self.bg_mat);
+      Cogl.rectangle (box.x1, box.y1, box.x2, box.y2);
+
       if (self.bg_color is Clutter.Texture)
         {
           Cogl.set_source (self.bgcol_material);
-          Cogl.rectangle (box.x1 + 2, box.y1, box.x2 + 2, box.y2);
+          Cogl.rectangle (box.x1, box.y1, box.x2, box.y2);
         }
       if (self.icon is Clutter.Texture)
         {
           Cogl.set_source (self.icon_material);
-          Cogl.rectangle (box.x1 +2, box.y1, box.x2 +2, box.y2);
+          Cogl.rectangle (box.x1, box.y1, box.x2, box.y2);
         }
-      self.fg_layer.paint ();
+
+      Cogl.set_source (self.fg_mat);
+      Cogl.rectangle (box.x1, box.y1, box.x2, box.y2);
     }
 
     public override void paint ()
