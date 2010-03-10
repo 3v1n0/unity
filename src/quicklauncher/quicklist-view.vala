@@ -400,6 +400,7 @@ namespace Unity.Quicklauncher
     int            old_width;
     int            old_height;
     float          cached_x; // needed to fix LP: #525905
+    float          cached_y; // needed to fix LP: #526335
 
     private void
     _round_rect_anchor (Cairo.Context cr,
@@ -412,8 +413,7 @@ namespace Unity.Quicklauncher
                         double        anchor_width,  // width of anchor
                         double        anchor_height, // height of anchor
                         double        anchor_x,      // x of anchor
-                        double        anchor_y,      // y of anchor
-                        bool          is_label)      // flag for anchor-arrow
+                        double        anchor_y)      // y of anchor
     {
       double radius = corner_radius / aspect;
 
@@ -451,18 +451,9 @@ namespace Unity.Quicklauncher
               180.0f * GLib.Math.PI / 180.0f);
 
       // draw anchor-arrow
-      if (is_label)
-      {
-        cr.line_to (anchor_x + anchor_width, anchor_y + anchor_height / 2.0f);
-        cr.line_to (anchor_x, anchor_y);
-        cr.line_to (anchor_x + anchor_width, anchor_y - anchor_height / 2.0f);
-      }
-      else
-      {
-        cr.line_to (anchor_x + anchor_width, y + radius + anchor_height);
-        cr.line_to (anchor_x, y + radius + anchor_height / 2.0f);
-        cr.line_to (anchor_x + anchor_width, y + radius);
-      }
+      cr.line_to (anchor_x + anchor_width, anchor_y + anchor_height / 2.0f);
+      cr.line_to (anchor_x, anchor_y);
+      cr.line_to (anchor_x + anchor_width, anchor_y - anchor_height / 2.0f);
 
       // top-left, right of the corner
       cr.arc (x + radius,
@@ -488,8 +479,7 @@ namespace Unity.Quicklauncher
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (SHADOW_SIZE),
-                          anchor_y != 0.0f ? anchor_y + Ctk.em_to_pixel (SHADOW_SIZE/2) : (float) h / 2.0f,
-                          anchor_y != 0.0f ? false : true);
+                          anchor_y);
     }
 
     private void
@@ -633,16 +623,9 @@ namespace Unity.Quicklauncher
     allocate (Clutter.ActorBox        box,
               Clutter.AllocationFlags flags)
     {
-      int w;
-      int h;
-      float x;
-      float y;
-      float ax;
-      float ay;
-      float aw;
-      float ah;
-      float new_y;
-      uint  blurred_id = 0;
+      int  w;
+      int  h;
+      uint blurred_id = 0;
 
       base.allocate (box, flags);
       w = (int) (box.x2 - box.x1);
@@ -661,14 +644,8 @@ namespace Unity.Quicklauncher
       // animations, e.g. its expose)
       //base.refresh_background_texture ();
 
-      Ctk.Actor actor = this.get_attached_actor ();
-      actor.get_position (out ax, out ay);
-      actor.get_size (out aw, out ah);
-      this.get_position (out x, out y);
-      if (get_num_items() != 1)
-        new_y = ah / 2.0f;
-      else
-        new_y = 0.0f;
+      if (get_num_items () == 1)
+        cached_y = (float) h / 2.0f;
 
       // do the texture-update/glReadPixels() thing here ... call it whatever
       // you feel fits best here ctk_menu_get_framebuffer_background()
@@ -706,9 +683,9 @@ namespace Unity.Quicklauncher
       Cairo.Context fill_cr = new Cairo.Context (fill_surf);
       Cairo.Context main_cr = new Cairo.Context (main_surf);
 
-      _full_mask (full_cr, w, h, new_y);
-      _fill_mask (fill_cr, w, h, new_y);
-      _main_bg (main_cr, w, h, new_y);
+      _full_mask (full_cr, w, h, cached_y);
+      _fill_mask (fill_cr, w, h, cached_y);
+      _main_bg (main_cr, w, h, cached_y);
       //main_surf.write_to_png ("/tmp/main-surf.png");
 
       main_layer.set_mask_from_surface (full_surf);
@@ -741,6 +718,7 @@ namespace Unity.Quicklauncher
       old_width  = 0;
       old_height = 0;
       cached_x   = 0.0f; // needed to fix LP: #525905
+      cached_y   = 0.0f; // needed to fix LP: #526335
     }
   }
 }

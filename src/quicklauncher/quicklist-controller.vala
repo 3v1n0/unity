@@ -77,7 +77,7 @@ namespace Unity.Quicklauncher
       float x;
       float y;
       this.menu.get_position (out x, out y);
-      this.menu.set_position (x - (float) Ctk.em_to_pixel (1.5f), y);
+      this.menu.set_position (x - (float) Ctk.em_to_pixel (1.5f), y - 3);
       this.is_in_label = true;
     }
 
