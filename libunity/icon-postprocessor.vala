@@ -103,8 +103,10 @@ namespace Unity
 
     public override void pick (Clutter.Color color)
     {
+      this.set_effects_painting (true);
       base.pick (color);
       this.bg_layer.paint ();
+      this.set_effects_painting (false);
     }
 
     /* The closest most horrible thing you will ever see in vala. its basically
