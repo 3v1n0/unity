@@ -53,7 +53,7 @@ namespace Unity.Quicklauncher
     public LauncherModel? model;
 
     /* the prettys */
-    private UnityIcon icon;
+    private Ctk.Actor icon;
     private ThemeImage focused_indicator;
     private ThemeImage running_indicator;
     private Gdk.Pixbuf honeycomb_mask;
@@ -348,7 +348,8 @@ namespace Unity.Quicklauncher
                    HONEYCOMB_MASK_FILE,
                    e.message);
         }
-        this.icon = new UnityIcon (null, null);
+
+        this.icon = new Ctk.Image (48);
         this.icon.set_size (48, 48);
         this.icon.set_parent (this);
     }
@@ -663,24 +664,32 @@ namespace Unity.Quicklauncher
       {
         if (this.model.icon is Gdk.Pixbuf)
           {
-            this.icon.destroy ();
             var scaled_buf = this.model.icon.scale_simple (48, 48, Gdk.InterpType.HYPER);
-            Gdk.Pixbuf color_buf = new Gdk.Pixbuf (Gdk.Colorspace.RGB, true, 8, 1, 1);
-            uint red, green, blue;
-            this.get_average_color (scaled_buf, out red, out green, out blue);
-            unowned uchar[] pixels = color_buf.get_pixels ();
-            pixels[0] = (uchar)red;
-            pixels[1] = (uchar)green;
-            pixels[2] = (uchar)blue;
-            pixels[3] = 128;
+            this.icon.destroy ();
+            if (this.model.do_shadow)
+              {
+                this.icon = new Ctk.Image.from_pixbuf (48, scaled_buf);
+              }
+            else
+              {
+                Gdk.Pixbuf color_buf = new Gdk.Pixbuf (Gdk.Colorspace.RGB, true, 8, 1, 1);
+                uint red, green, blue;
+                this.get_average_color (scaled_buf, out red, out green, out blue);
+                unowned uchar[] pixels = color_buf.get_pixels ();
+                pixels[0] = (uchar)red;
+                pixels[1] = (uchar)green;
+                pixels[2] = (uchar)blue;
+                pixels[3] = 128;
 
-            var tex = GtkClutter.texture_new_from_pixbuf (scaled_buf);
-            var color = GtkClutter.texture_new_from_pixbuf (color_buf);
+                var tex = GtkClutter.texture_new_from_pixbuf (scaled_buf);
+                var color = GtkClutter.texture_new_from_pixbuf (color_buf);
 
-            this.icon = new UnityIcon (tex as Clutter.Texture, color as Clutter.Texture);
+                this.icon = new UnityIcon (tex as Clutter.Texture, color as Clutter.Texture);
+
+              }
             this.icon.set_parent (this);
             this.effect_drop_shadow = new Ctk.EffectDropShadow (5.0f, 0, 2);
-            effect_drop_shadow.set_opacity (1.0f);//0.4f);
+            effect_drop_shadow.set_opacity (0.4f);
             this.effect_drop_shadow.set_margin (5);
             this.icon.add_effect (effect_drop_shadow);
             this.do_queue_redraw ();
