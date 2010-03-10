@@ -672,7 +672,7 @@ namespace Unity.Quicklauncher
             pixels[0] = (uchar)red;
             pixels[1] = (uchar)green;
             pixels[2] = (uchar)blue;
-            pixels[3] = 192;
+            pixels[3] = 128;
 
             var tex = GtkClutter.texture_new_from_pixbuf (scaled_buf);
             var color = GtkClutter.texture_new_from_pixbuf (color_buf);

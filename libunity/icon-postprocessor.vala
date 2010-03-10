@@ -107,24 +107,52 @@ namespace Unity
       this.bg_layer.paint ();
     }
 
-    public override void paint ()
+    /* The closest most horrible thing you will ever see in vala. its basically
+     * C code... - oh well it works
+     */
+    public static void paint_real (Clutter.Actor actor)
     {
-      base.paint ();
-      this.bg_layer.paint ();
+      UnityIcon self = actor as UnityIcon;
+      self.bg_layer.paint ();
 
       Clutter.ActorBox box = Clutter.ActorBox ();
-      this.get_stored_allocation (out box);
-      if (this.bg_color is Clutter.Texture)
+      self.get_stored_allocation (out box);
+      if (self.bg_color is Clutter.Texture)
         {
-          Cogl.set_source (this.bgcol_material);
+          Cogl.set_source (self.bgcol_material);
           Cogl.rectangle (box.x1 + 2, box.y1, box.x2 + 2, box.y2);
         }
-      if (this.icon is Clutter.Texture)
+      if (self.icon is Clutter.Texture)
         {
-          Cogl.set_source (this.icon_material);
+          Cogl.set_source (self.icon_material);
           Cogl.rectangle (box.x1 +2, box.y1, box.x2 +2, box.y2);
         }
-      this.fg_layer.paint ();
+      self.fg_layer.paint ();
+    }
+
+    public override void paint ()
+    {
+      /* we need a beter way of doing this effects stuff in vala, its horrible
+       * to do, must have a think...
+       */
+      unowned SList<Ctk.Effect> effects = this.get_effects ();
+      if (!this.get_effects_painting () && effects != null)
+        {
+          unowned SList<Ctk.Effect> e;
+          this.set_effects_painting (true);
+          for (e = effects; e != null; e = e.next)
+            {
+              Ctk.Effect effect = e.data;
+              bool last_effect = (e.next != null) ? false : true;
+              effect.paint (this.paint_real, last_effect);
+            }
+
+          this.set_effects_painting (false);
+        }
+      else
+        {
+          this.paint_real (this);
+        }
     }
 
     public override void map ()
