@@ -801,7 +801,7 @@ namespace Unity.Quicklauncher
         }
       else
         {
-          if (controller.is_in_label)
+          if (controller.menu_is_open ())
             controller.close_menu ();
         }
     }
