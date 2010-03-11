@@ -210,7 +210,7 @@ static void unity_places_place_proxy_setup_service (UnityPlacesPlaceProxy* self)
 		_tmp0_ = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
 #line 212 "places-place-proxy.c"
 		if (_inner_error_ != NULL) {
-			goto __catch14_g_error;
+			goto __catch16_g_error;
 		}
 #line 59 "places-place-proxy.vala"
 		self->priv->conn = (_tmp1_ = _tmp0_, _dbus_g_connection_unref0 (self->priv->conn), _tmp1_);
@@ -222,11 +222,11 @@ static void unity_places_place_proxy_setup_service (UnityPlacesPlaceProxy* self)
 		_dynamic_set_active0 (self->priv->service, FALSE, &_inner_error_);
 #line 224 "places-place-proxy.c"
 		if (_inner_error_ != NULL) {
-			goto __catch14_g_error;
+			goto __catch16_g_error;
 		}
 	}
-	goto __finally14;
-	__catch14_g_error:
+	goto __finally16;
+	__catch16_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -238,7 +238,7 @@ static void unity_places_place_proxy_setup_service (UnityPlacesPlaceProxy* self)
 			_g_error_free0 (e);
 		}
 	}
-	__finally14:
+	__finally16:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);

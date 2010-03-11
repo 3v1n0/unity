@@ -513,7 +513,7 @@ gboolean unity_places_bar_view_on_button_release (UnityPlacesBarView* self, Clut
 #line 514 "bar-view.c"
 				if (_inner_error_ != NULL) {
 					if (_inner_error_->domain == G_SPAWN_ERROR) {
-						goto __catch11_g_spawn_error;
+						goto __catch13_g_spawn_error;
 					}
 					_g_object_unref0 (icon);
 					_g_object_unref0 (actor);
@@ -522,8 +522,8 @@ gboolean unity_places_bar_view_on_button_release (UnityPlacesBarView* self, Clut
 					return FALSE;
 				}
 			}
-			goto __finally11;
-			__catch11_g_spawn_error:
+			goto __finally13;
+			__catch13_g_spawn_error:
 			{
 				GError * e;
 				e = _inner_error_;
@@ -535,7 +535,7 @@ gboolean unity_places_bar_view_on_button_release (UnityPlacesBarView* self, Clut
 					_g_error_free0 (e);
 				}
 			}
-			__finally11:
+			__finally13:
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (icon);
 				_g_object_unref0 (actor);

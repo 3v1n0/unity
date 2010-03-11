@@ -1,0 +1,30 @@
+# Slovenian translations for l package.
+# Copyright (C) 2010 THE l'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the l package.
+# Canonical OEM, 2010.
+# 
+msgid ""
+msgstr ""
+"Project-Id-Version: l 10n\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2010-03-10 15:07-0500\n"
+"PO-Revision-Date: 2010-03-02 12:36-0500\n"
+"Last-Translator: Canonical OEM\n"
+"Language-Team: Slovenian\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=4; plural=(n%100==1 ? 0 : n%100==2 ? 1 : n%100==3 || n"
+"%100==4 ? 2 : 3);\n"
+
+#: ../src/quicklauncher/application-model.vala:64
+msgid "Quit"
+msgstr "Končaj"
+
+#: ../src/quicklauncher/application-model.vala:81
+msgid "Remove from Launcher"
+msgstr "Odstrani iz zaganjalnika"
+
+#: ../src/quicklauncher/application-model.vala:85
+msgid "Keep In Launcher"
+msgstr "Obdrži v zaganjalniku"

@@ -58,9 +58,9 @@ libunity_la_DEPENDENCIES = $(am__DEPENDENCIES_1)
 am__objects_1 = libunity_la-application.lo \
 	libunity_la-chrome-handler.lo libunity_la-drag-controller.lo \
 	libunity_la-drag-view.lo libunity_la-entry.lo \
-	libunity_la-perf-logger.lo libunity_la-prism-handler.lo \
-	libunity_la-shell.lo libunity_la-theme.lo \
-	libunity_la-webapp-fetcher.lo \
+	libunity_la-icon-postprocessor.lo libunity_la-perf-logger.lo \
+	libunity_la-prism-handler.lo libunity_la-shell.lo \
+	libunity_la-theme.lo libunity_la-webapp-fetcher.lo \
 	libunity_la-webapp-iconbuilder.lo
 am_libunity_la_OBJECTS = $(am__objects_1)
 libunity_la_OBJECTS = $(am_libunity_la_OBJECTS)
@@ -299,6 +299,7 @@ libunity_la_VALASOURCES = \
   drag-controller.vala \
   drag-view.vala \
   entry.vala \
+  icon-postprocessor.vala \
   perf-logger.vala \
   prism-handler.vala \
   shell.vala \
@@ -368,6 +369,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-drag-controller.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-drag-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-entry.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-icon-postprocessor.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-perf-logger.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-prism-handler.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-shell.Plo@am__quote@
@@ -438,6 +440,14 @@ libunity_la-entry.lo: entry.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='entry.c' object='libunity_la-entry.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-entry.lo `test -f 'entry.c' || echo '$(srcdir)/'`entry.c
+
+libunity_la-icon-postprocessor.lo: icon-postprocessor.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-icon-postprocessor.lo -MD -MP -MF $(DEPDIR)/libunity_la-icon-postprocessor.Tpo -c -o libunity_la-icon-postprocessor.lo `test -f 'icon-postprocessor.c' || echo '$(srcdir)/'`icon-postprocessor.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_la-icon-postprocessor.Tpo $(DEPDIR)/libunity_la-icon-postprocessor.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='icon-postprocessor.c' object='libunity_la-icon-postprocessor.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-icon-postprocessor.lo `test -f 'icon-postprocessor.c' || echo '$(srcdir)/'`icon-postprocessor.c
 
 libunity_la-perf-logger.lo: perf-logger.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-perf-logger.lo -MD -MP -MF $(DEPDIR)/libunity_la-perf-logger.Tpo -c -o libunity_la-perf-logger.lo `test -f 'perf-logger.c' || echo '$(srcdir)/'`perf-logger.c

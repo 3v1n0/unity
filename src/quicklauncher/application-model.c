@@ -343,7 +343,7 @@ static void unity_quicklauncher_models_application_shortcut_real_activated (Unit
 #line 344 "application-model.c"
 		if (_inner_error_ != NULL) {
 			_g_key_file_free0 (desktop_file);
-			goto __catch15_g_error;
+			goto __catch17_g_error;
 		}
 #line 42 "application-model.vala"
 		g_key_file_set_string (desktop_file, "Desktop Entry", "Exec", self->exec);
@@ -355,7 +355,7 @@ static void unity_quicklauncher_models_application_shortcut_real_activated (Unit
 		if (_inner_error_ != NULL) {
 			_g_key_file_free0 (desktop_file);
 			_g_object_unref0 (appinfo);
-			goto __catch15_g_error;
+			goto __catch17_g_error;
 		}
 #line 45 "application-model.vala"
 		gdk_app_launch_context_set_screen (context, gdk_display_get_default_screen (gdk_display_get_default ()));
@@ -367,13 +367,13 @@ static void unity_quicklauncher_models_application_shortcut_real_activated (Unit
 		if (_inner_error_ != NULL) {
 			_g_key_file_free0 (desktop_file);
 			_g_object_unref0 (appinfo);
-			goto __catch15_g_error;
+			goto __catch17_g_error;
 		}
 		_g_key_file_free0 (desktop_file);
 		_g_object_unref0 (appinfo);
 	}
-	goto __finally15;
-	__catch15_g_error:
+	goto __finally17;
+	__catch17_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -385,7 +385,7 @@ static void unity_quicklauncher_models_application_shortcut_real_activated (Unit
 			_g_error_free0 (e);
 		}
 	}
-	__finally15:
+	__finally17:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (context);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -827,7 +827,7 @@ static void unity_quicklauncher_models_application_model_grab_priority (UnityQui
 #line 211 "application-model.vala"
 	if (!unity_quicklauncher_models_launcher_model_get_is_sticky ((UnityQuicklauncherModelsLauncherModel*) self)) {
 #line 214 "application-model.vala"
-		self->priv->_priority = -1000000.0f;
+		self->priv->_priority = 1000000.0f;
 #line 215 "application-model.vala"
 		return;
 #line 834 "application-model.c"
@@ -971,11 +971,11 @@ static GeeArrayList* unity_quicklauncher_models_application_model_real_get_menu_
 		g_key_file_load_from_file (desktop_file, launcher_application_get_desktop_file (unity_quicklauncher_models_application_model_get_app (self)), 0, &_inner_error_);
 #line 973 "application-model.c"
 		if (_inner_error_ != NULL) {
-			goto __catch16_g_error;
+			goto __catch18_g_error;
 		}
 	}
-	goto __finally16;
-	__catch16_g_error:
+	goto __finally18;
+	__catch18_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -992,7 +992,7 @@ static GeeArrayList* unity_quicklauncher_models_application_model_real_get_menu_
 #line 993 "application-model.c"
 		}
 	}
-	__finally16:
+	__finally18:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (ret_list);
 		_g_key_file_free0 (desktop_file);
@@ -1049,7 +1049,7 @@ static GeeArrayList* unity_quicklauncher_models_application_model_real_get_menu_
 						_tmp3_ = g_key_file_get_value (desktop_file, groups[a], "Exec", &_inner_error_);
 #line 1051 "application-model.c"
 						if (_inner_error_ != NULL) {
-							goto __catch17_g_error;
+							goto __catch19_g_error;
 						}
 #line 364 "application-model.vala"
 						exec = (_tmp4_ = _tmp3_, _g_free0 (exec), _tmp4_);
@@ -1057,14 +1057,14 @@ static GeeArrayList* unity_quicklauncher_models_application_model_real_get_menu_
 						_tmp5_ = g_key_file_get_locale_string (desktop_file, groups[a], "Name", "", &_inner_error_);
 #line 1059 "application-model.c"
 						if (_inner_error_ != NULL) {
-							goto __catch17_g_error;
+							goto __catch19_g_error;
 						}
 #line 365 "application-model.vala"
 						name = (_tmp6_ = _tmp5_, _g_free0 (name), _tmp6_);
 #line 1065 "application-model.c"
 					}
-					goto __finally17;
-					__catch17_g_error:
+					goto __finally19;
+					__catch19_g_error:
 					{
 						GError * e;
 						e = _inner_error_;
@@ -1081,7 +1081,7 @@ static GeeArrayList* unity_quicklauncher_models_application_model_real_get_menu_
 #line 1082 "application-model.c"
 						}
 					}
-					__finally17:
+					__finally19:
 					if (_inner_error_ != NULL) {
 						_g_free0 (exec);
 						_g_free0 (name);
@@ -1221,14 +1221,14 @@ static void unity_quicklauncher_models_application_model_real_activate (UnityQui
 			launcher_application_launch (unity_quicklauncher_models_application_model_get_app (self), &_inner_error_);
 #line 1223 "application-model.c"
 			if (_inner_error_ != NULL) {
-				goto __catch18_g_error;
+				goto __catch20_g_error;
 			}
 #line 422 "application-model.vala"
 			g_signal_emit_by_name ((UnityQuicklauncherModelsLauncherModel*) self, "activated");
 #line 1229 "application-model.c"
 		}
-		goto __finally18;
-		__catch18_g_error:
+		goto __finally20;
+		__catch20_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -1240,7 +1240,7 @@ static void unity_quicklauncher_models_application_model_real_activate (UnityQui
 				_g_error_free0 (e);
 			}
 		}
-		__finally18:
+		__finally20:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -1400,14 +1400,14 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 			_tmp0_ = gtk_icon_theme_load_icon (theme, GTK_STOCK_MISSING_IMAGE, 48, 0, &_inner_error_);
 #line 1402 "application-model.c"
 			if (_inner_error_ != NULL) {
-				goto __catch19_g_error;
+				goto __catch21_g_error;
 			}
 #line 497 "application-model.vala"
 			pixbuf = (_tmp1_ = _g_object_ref0 (_tmp0_), _g_object_unref0 (pixbuf), _tmp1_);
 #line 1408 "application-model.c"
 		}
-		goto __finally19;
-		__catch19_g_error:
+		goto __finally21;
+		__catch21_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -1422,7 +1422,7 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 				_g_error_free0 (e);
 			}
 		}
-		__finally19:
+		__finally21:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (pixbuf);
 			_g_object_unref0 (theme);
@@ -1455,7 +1455,7 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 #line 1456 "application-model.c"
 			if (_inner_error_ != NULL) {
 				if (_inner_error_->domain == G_CONVERT_ERROR) {
-					goto __catch20_g_convert_error;
+					goto __catch22_g_convert_error;
 				}
 				_g_free0 (filename);
 				_g_object_unref0 (pixbuf);
@@ -1470,8 +1470,8 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 			filename = (_tmp4_ = _tmp3_, _g_free0 (filename), _tmp4_);
 #line 1472 "application-model.c"
 		}
-		goto __finally20;
-		__catch20_g_convert_error:
+		goto __finally22;
+		__catch22_g_convert_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -1480,7 +1480,7 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 				_g_error_free0 (e);
 			}
 		}
-		__finally20:
+		__finally22:
 		if (_inner_error_ != NULL) {
 			_g_free0 (filename);
 			_g_object_unref0 (pixbuf);
@@ -1501,14 +1501,14 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 				_tmp5_ = gdk_pixbuf_new_from_file_at_scale (icon_name, 48, 48, TRUE, &_inner_error_);
 #line 1503 "application-model.c"
 				if (_inner_error_ != NULL) {
-					goto __catch21_g_error;
+					goto __catch23_g_error;
 				}
 #line 525 "application-model.vala"
 				pixbuf = (_tmp6_ = _tmp5_, _g_object_unref0 (pixbuf), _tmp6_);
 #line 1509 "application-model.c"
 			}
-			goto __finally21;
-			__catch21_g_error:
+			goto __finally23;
+			__catch23_g_error:
 			{
 				GError * e;
 				e = _inner_error_;
@@ -1520,7 +1520,7 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 					_g_error_free0 (e);
 				}
 			}
-			__finally21:
+			__finally23:
 			if (_inner_error_ != NULL) {
 				_g_free0 (filename);
 				_g_object_unref0 (pixbuf);
@@ -1558,14 +1558,14 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 				_tmp7_ = gdk_pixbuf_new_from_file_at_scale (icon_name, 48, 48, TRUE, &_inner_error_);
 #line 1560 "application-model.c"
 				if (_inner_error_ != NULL) {
-					goto __catch22_g_error;
+					goto __catch24_g_error;
 				}
 #line 545 "application-model.vala"
 				pixbuf = (_tmp8_ = _tmp7_, _g_object_unref0 (pixbuf), _tmp8_);
 #line 1566 "application-model.c"
 			}
-			goto __finally22;
-			__catch22_g_error:
+			goto __finally24;
+			__catch24_g_error:
 			{
 				GError * e;
 				e = _inner_error_;
@@ -1577,7 +1577,7 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 					_g_error_free0 (e);
 				}
 			}
-			__finally22:
+			__finally24:
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (pixbuf);
 				_g_object_unref0 (theme);
@@ -1612,14 +1612,14 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 			_tmp13_ = (_tmp12_ = gdk_pixbuf_new_from_file_at_scale (_tmp11_ = g_strconcat ("/usr/share/pixmaps/", icon_name, NULL), 48, 48, TRUE, &_inner_error_), _g_free0 (_tmp11_), _tmp12_);
 #line 1614 "application-model.c"
 			if (_inner_error_ != NULL) {
-				goto __catch23_g_error;
+				goto __catch25_g_error;
 			}
 #line 565 "application-model.vala"
 			pixbuf = (_tmp14_ = _tmp13_, _g_object_unref0 (pixbuf), _tmp14_);
 #line 1620 "application-model.c"
 		}
-		goto __finally23;
-		__catch23_g_error:
+		goto __finally25;
+		__catch25_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -1633,7 +1633,7 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 				_g_error_free0 (e);
 			}
 		}
-		__finally23:
+		__finally25:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (pixbuf);
 			_g_object_unref0 (theme);
@@ -1673,14 +1673,14 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 				_tmp16_ = gdk_pixbuf_new_from_file_at_scale (filename, 48, 48, TRUE, &_inner_error_);
 #line 1675 "application-model.c"
 				if (_inner_error_ != NULL) {
-					goto __catch24_g_error;
+					goto __catch26_g_error;
 				}
 #line 588 "application-model.vala"
 				pixbuf = (_tmp17_ = _tmp16_, _g_object_unref0 (pixbuf), _tmp17_);
 #line 1681 "application-model.c"
 			}
-			goto __finally24;
-			__catch24_g_error:
+			goto __finally26;
+			__catch26_g_error:
 			{
 				GError * e;
 				e = _inner_error_;
@@ -1692,7 +1692,7 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 					_g_error_free0 (e);
 				}
 			}
-			__finally24:
+			__finally26:
 			if (_inner_error_ != NULL) {
 				_g_free0 (filename);
 				_g_object_unref0 (pixbuf);
@@ -1727,7 +1727,7 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 		_tmp18_ = gtk_icon_theme_load_icon (webtheme, icon_name, 48, 0, &_inner_error_);
 #line 1729 "application-model.c"
 		if (_inner_error_ != NULL) {
-			goto __catch25_g_error;
+			goto __catch27_g_error;
 		}
 #line 605 "application-model.vala"
 		pixbuf = (_tmp19_ = _g_object_ref0 (_tmp18_), _g_object_unref0 (pixbuf), _tmp19_);
@@ -1744,8 +1744,8 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 #line 1745 "application-model.c"
 		}
 	}
-	goto __finally25;
-	__catch25_g_error:
+	goto __finally27;
+	__catch27_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -1754,7 +1754,7 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 			_g_error_free0 (e);
 		}
 	}
-	__finally25:
+	__finally27:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (pixbuf);
 		_g_object_unref0 (theme);
@@ -1783,14 +1783,14 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 				_tmp21_ = gdk_pixbuf_new_from_file_at_scale (filename, 48, 48, TRUE, &_inner_error_);
 #line 1785 "application-model.c"
 				if (_inner_error_ != NULL) {
-					goto __catch26_g_error;
+					goto __catch28_g_error;
 				}
 #line 622 "application-model.vala"
 				pixbuf = (_tmp22_ = _tmp21_, _g_object_unref0 (pixbuf), _tmp22_);
 #line 1791 "application-model.c"
 			}
-			goto __finally26;
-			__catch26_g_error:
+			goto __finally28;
+			__catch28_g_error:
 			{
 				GError * e;
 				e = _inner_error_;
@@ -1802,7 +1802,7 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 					_g_error_free0 (e);
 				}
 			}
-			__finally26:
+			__finally28:
 			if (_inner_error_ != NULL) {
 				_g_free0 (filename);
 				_g_object_unref0 (pixbuf);
@@ -1837,7 +1837,7 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 		_tmp23_ = gtk_icon_theme_load_icon (theme, icon_name, 48, 0, &_inner_error_);
 #line 1839 "application-model.c"
 		if (_inner_error_ != NULL) {
-			goto __catch27_g_error;
+			goto __catch29_g_error;
 		}
 #line 639 "application-model.vala"
 		pixbuf = (_tmp24_ = _g_object_ref0 (_tmp23_), _g_object_unref0 (pixbuf), _tmp24_);
@@ -1854,8 +1854,8 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 #line 1855 "application-model.c"
 		}
 	}
-	goto __finally27;
-	__catch27_g_error:
+	goto __finally29;
+	__catch29_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -1864,7 +1864,7 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 			_g_error_free0 (e);
 		}
 	}
-	__finally27:
+	__finally29:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (pixbuf);
 		_g_object_unref0 (theme);
@@ -1893,14 +1893,14 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 				_tmp26_ = gdk_pixbuf_new_from_file_at_scale (filename, 48, 48, TRUE, &_inner_error_);
 #line 1895 "application-model.c"
 				if (_inner_error_ != NULL) {
-					goto __catch28_g_error;
+					goto __catch30_g_error;
 				}
 #line 655 "application-model.vala"
 				pixbuf = (_tmp27_ = _tmp26_, _g_object_unref0 (pixbuf), _tmp27_);
 #line 1901 "application-model.c"
 			}
-			goto __finally28;
-			__catch28_g_error:
+			goto __finally30;
+			__catch30_g_error:
 			{
 				GError * e;
 				e = _inner_error_;
@@ -1912,7 +1912,7 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 					_g_error_free0 (e);
 				}
 			}
-			__finally28:
+			__finally30:
 			if (_inner_error_ != NULL) {
 				_g_free0 (filename);
 				_g_object_unref0 (pixbuf);
@@ -1947,7 +1947,7 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 		_tmp28_ = gtk_icon_theme_load_icon (unitytheme, icon_name, 48, 0, &_inner_error_);
 #line 1949 "application-model.c"
 		if (_inner_error_ != NULL) {
-			goto __catch29_g_error;
+			goto __catch31_g_error;
 		}
 #line 672 "application-model.vala"
 		pixbuf = (_tmp29_ = _g_object_ref0 (_tmp28_), _g_object_unref0 (pixbuf), _tmp29_);
@@ -1964,8 +1964,8 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 #line 1965 "application-model.c"
 		}
 	}
-	goto __finally29;
-	__catch29_g_error:
+	goto __finally31;
+	__catch31_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -1974,7 +1974,7 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 			_g_error_free0 (e);
 		}
 	}
-	__finally29:
+	__finally31:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (pixbuf);
 		_g_object_unref0 (theme);

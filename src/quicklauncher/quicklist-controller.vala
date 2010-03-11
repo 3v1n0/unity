@@ -77,7 +77,7 @@ namespace Unity.Quicklauncher
       float x;
       float y;
       this.menu.get_position (out x, out y);
-      this.menu.set_position (x - (float) Ctk.em_to_pixel (1.5f), y);
+      this.menu.set_position (x - (float) Ctk.em_to_pixel (1.5f), y - 3);
       this.is_in_label = true;
     }
 
@@ -102,6 +102,9 @@ namespace Unity.Quicklauncher
           menuitem.activated.connect (shortcut.activated);
           menuitem.activated.connect (this.close_menu);
         }
+
+      Unity.Quicklauncher.QuicklistMenuSeperator separator = new Unity.Quicklauncher.QuicklistMenuSeperator ();
+      this.menu.append (separator, false);
 
       foreach (ShortcutItem shortcut in affix_shortcuts)
         {
