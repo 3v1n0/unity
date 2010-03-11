@@ -834,8 +834,11 @@ namespace Unity.Quicklauncher
     private bool on_mouse_leave(Clutter.Event src)
     {
       this.is_hovering = false;
-      if (this.menu_state != LauncherViewMenuState.MENU_CLOSE_WHEN_LEAVE)
-        this.menu_state = LauncherViewMenuState.NO_MENU;
+      if (this.menu_state != LauncherViewMenuState.MENU_CLOSE_WHEN_LEAVE &&
+          this.menu_state != LauncherViewMenuState.MENU)
+        {
+          this.menu_state = LauncherViewMenuState.NO_MENU;
+        }
       this.ensure_menu_state ();
       return false;
     }
