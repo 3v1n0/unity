@@ -40,6 +40,8 @@ namespace Unity.Panel
 
     private int indicators_width = 0;
 
+    private GConf.Client client;
+
     public View (Shell shell)
     {
       Object (shell:shell, reactive:false);
@@ -107,11 +109,24 @@ namespace Unity.Panel
     private string get_search_hint ()
     {
       string hint = "";
-      var client = GConf.Client.get_default ();
+      this.client = GConf.Client.get_default ();
 
       try
         {
           hint = client.get_string ("/desktop/unity/panel/search_hint");
+
+          try
+            {
+              client.add_dir ("/desktop/unity/panel",
+                              GConf.ClientPreloadType.NONE);
+              client.notify_add ("/desktop/unity/panel/search_hint",
+                                 this.on_search_hint_changed);
+            }
+          catch (Error e)
+            {
+              warning ("Unable to monitor gconf for search hint changes: %s",
+                       e.message);
+            }
 
           if (hint == "" || hint == null)
             hint = SEARCH_HINT;
@@ -122,6 +137,20 @@ namespace Unity.Panel
         }
 
       return hint;
+    }
+
+    private void on_search_hint_changed ()
+    {
+      try
+        {
+          var hint = client.get_string ("/desktop/unity/panel/search_hint");
+
+          this.entry.static_text = hint;
+        }
+      catch (Error e)
+        {
+          warning ("Unable to get search hint: %s", e.message);
+        }
     }
 
     private void on_entry_activated ()
