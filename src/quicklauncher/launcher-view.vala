@@ -661,7 +661,7 @@ namespace Unity.Quicklauncher
 
     private void notify_on_icon ()
       {
-        string process_name = "IconBuild-favorite" + uid;
+        string process_name = "IconBuild-favorite" + this.get_name ();
         if (this.model.icon is Gdk.Pixbuf)
           {
             this.icon.destroy ();
