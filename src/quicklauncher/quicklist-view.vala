@@ -69,11 +69,17 @@ namespace Unity.Quicklauncher
       // draw separator-line
       cr.scale (1.0f, 1.0f);
       cr.set_operator (Cairo.Operator.OVER);
-      cr.set_line_width (Ctk.em_to_pixel (LINE_WIDTH));
+
+      // force the separator line to be 1-pixel thick
+      cr.set_line_width (1.0f);
+
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
       cr.set_line_cap (Cairo.LineCap.ROUND);
-      cr.move_to (0.0f, (float) h / 2.0f);
-      cr.line_to ((float) w, (float) h / 2.0f);
+
+      // align to the pixel-grid
+      cr.move_to (0.0f, (float) h / 2.0f + 0.5f);
+      cr.line_to ((float) w, (float) h / 2.0f + 0.5f);
+
       cr.stroke ();
     }
 
