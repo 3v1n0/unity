@@ -211,7 +211,7 @@ namespace Unity.Quicklauncher.Models
       if (!this.is_sticky)
         {
           // we need something outside of this model to decide our priority
-          this._priority = -1000000.0f;
+          this._priority = 1000000.0f;
           return;
         }
       // grab the current priority from gconf
