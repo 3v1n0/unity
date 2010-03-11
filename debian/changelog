@@ -1,6 +1,8 @@
 unity (0.1.22-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+  * debian/control:
+    - bump libclutk-dev and liblauncher-dev build-dep
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 11 Mar 2010 19:20:17 +0100
 
