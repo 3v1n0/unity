@@ -874,7 +874,6 @@ namespace Unity.Quicklauncher
 
     private bool on_pressed(Clutter.Event src)
     {
-
       var bevent = src.button;
       switch (bevent.button)
         {
@@ -905,14 +904,13 @@ namespace Unity.Quicklauncher
       {
         this.clicked ();
 
-        return true;
+        return false;
       }
 
       if (bevent.button ==1)
         debug ("Event not handled: %d %d",
                (int)bevent.time,
                (int)last_pressed_time);
-
       return false;
     }
 
