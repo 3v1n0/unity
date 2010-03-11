@@ -326,13 +326,15 @@ namespace Unity.Quicklauncher
             }
           else
             {
-              LOGGER_START_PROCESS ("Model-" + process_name);
+              LOGGER_START_PROCESS ("Launcher-" + process_name);
               Launcher.Application application = appman.get_application_for_desktop_file (desktop_file);
 
               if (launcher_apps.contains (application))
                 continue;
               launcher_apps.add (application);
+              LOGGER_END_PROCESS ("Launcher-" + process_name);
 
+              LOGGER_START_PROCESS ("Model-" + process_name);
               ApplicationModel model = new ApplicationModel (application);
               model.is_sticky = true;
               LOGGER_END_PROCESS ("Model-" + process_name);
