@@ -1,4 +1,4 @@
-unity (0.1.22-0ubuntu1) UNRELEASED; urgency=low
+unity (0.1.22-0ubuntu1) lucid; urgency=low
 
   * New upstream release.
   * debian/control:
@@ -8,7 +8,7 @@ unity (0.1.22-0ubuntu1) UNRELEASED; urgency=low
   * debian/unity.install:
     - install locales and gconf schema
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 11 Mar 2010 19:20:17 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 11 Mar 2010 20:36:49 +0100
 
 unity (0.1.20-0ubuntu1) lucid; urgency=low
 
