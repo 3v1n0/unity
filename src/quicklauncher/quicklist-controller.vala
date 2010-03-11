@@ -103,6 +103,10 @@ namespace Unity.Quicklauncher
           menuitem.activated.connect (this.close_menu);
         }
 
+      Unity.Quicklauncher.QuicklistMenuSeperator separator = new Unity.Quicklauncher.QuicklistMenuSeperator ();
+      //Ctk.MenuSeperator separator = new Ctk.MenuSeperator ();
+      this.menu.append (separator, false);
+
       foreach (ShortcutItem shortcut in affix_shortcuts)
         {
           var label = shortcut.get_name ();
