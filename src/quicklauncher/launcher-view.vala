@@ -21,10 +21,6 @@ using Unity.Quicklauncher.Models;
 
 namespace Unity.Quicklauncher
 {
-  const string FOCUSED_FILE  = Unity.PKGDATADIR
-    + "/quicklauncher_focused_indicator.png";
-  const string RUNNING_FILE  = Unity.PKGDATADIR
-    + "/quicklauncher_running_indicator.png";
   const string HONEYCOMB_MASK_FILE = Unity.PKGDATADIR
     + "/honeycomb-mask.png";
   const string MENU_BG_FILE = Unity.PKGDATADIR
@@ -276,13 +272,15 @@ namespace Unity.Quicklauncher
         this.icon.allocate (child_box, flags);
 
         //allocate the focused indicator
-        this.focused_indicator.get_preferred_width (48, out width, out n_width);
-        this.focused_indicator.get_preferred_height (48, out height, out n_height);
-        child_box.x2 = box.get_width ();
-        child_box.y2 = (box.get_height () / 2.0f) - (height / 2.0f);
-        child_box.x1 = child_box.x2 - width;
-        child_box.y1 = child_box.y2 + height;
+        this.focused_indicator.get_preferred_width (48, out n_width, out width);
+        this.focused_indicator.get_preferred_height (48, out n_height, out height);
+        child_box.x1 = box.get_width () - width;
+        child_box.y1 = (box.get_height () - height) / 2.0f;
+        child_box.x2 = child_box.x1 + width;
+        child_box.y2 = child_box.y1 + height;
+
         this.focused_indicator.allocate (child_box, flags);
+
       }
 
     public override void pick (Clutter.Color color)
@@ -293,8 +291,9 @@ namespace Unity.Quicklauncher
 
     public override void paint ()
     {
-      this.running_indicator.paint ();
       this.focused_indicator.paint ();
+      this.running_indicator.paint ();
+
       this.icon.paint ();
     }
 
