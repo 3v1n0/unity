@@ -661,10 +661,12 @@ namespace Unity.Quicklauncher
 
     private void notify_on_icon ()
       {
+        string process_name = "IconBuild-favorite" + uid;
         if (this.model.icon is Gdk.Pixbuf)
           {
             this.icon.destroy ();
             Gdk.Pixbuf scaled_buf;
+            LOGGER_START_PROCESS (process_name);
             if ( this.model.icon.get_width () > 48 || this.model.icon.get_height () > 48)
               scaled_buf = this.model.icon.scale_simple (48, 48, Gdk.InterpType.HYPER);
             else
@@ -692,6 +694,7 @@ namespace Unity.Quicklauncher
 
               }
             this.icon.set_parent (this);
+            LOGGER_END_PROCESS (process_name);
             this.effect_drop_shadow = new Ctk.EffectDropShadow (5.0f, 0, 2);
             effect_drop_shadow.set_opacity (0.4f);
             this.effect_drop_shadow.set_margin (5);
