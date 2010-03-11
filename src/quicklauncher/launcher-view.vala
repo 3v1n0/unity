@@ -661,10 +661,12 @@ namespace Unity.Quicklauncher
 
     private void notify_on_icon ()
       {
+        string process_name = "IconBuild-favorite" + this.get_name ();
         if (this.model.icon is Gdk.Pixbuf)
           {
             this.icon.destroy ();
             Gdk.Pixbuf scaled_buf;
+            LOGGER_START_PROCESS (process_name);
             if ( this.model.icon.get_width () > 48 || this.model.icon.get_height () > 48)
               scaled_buf = this.model.icon.scale_simple (48, 48, Gdk.InterpType.HYPER);
             else
@@ -692,6 +694,7 @@ namespace Unity.Quicklauncher
 
               }
             this.icon.set_parent (this);
+            LOGGER_END_PROCESS (process_name);
             this.effect_drop_shadow = new Ctk.EffectDropShadow (5.0f, 0, 2);
             effect_drop_shadow.set_opacity (0.4f);
             this.effect_drop_shadow.set_margin (5);
@@ -798,8 +801,15 @@ namespace Unity.Quicklauncher
         }
       else
         {
-          if (controller.is_in_label)
-            controller.close_menu ();
+          if (this.menu_state == LauncherViewMenuState.NO_MENU &&
+              controller.menu_is_open ())
+            {
+              controller.close_menu ();
+            }
+          else if (controller.is_in_label)
+            {
+              controller.close_menu ();
+            }
         }
     }
 
@@ -824,7 +834,8 @@ namespace Unity.Quicklauncher
     private bool on_mouse_leave(Clutter.Event src)
     {
       this.is_hovering = false;
-      this.menu_state = LauncherViewMenuState.NO_MENU;
+      if (this.menu_state != LauncherViewMenuState.MENU_CLOSE_WHEN_LEAVE)
+        this.menu_state = LauncherViewMenuState.NO_MENU;
       this.ensure_menu_state ();
       return false;
     }
@@ -863,7 +874,6 @@ namespace Unity.Quicklauncher
 
     private bool on_pressed(Clutter.Event src)
     {
-
       var bevent = src.button;
       switch (bevent.button)
         {
@@ -894,14 +904,13 @@ namespace Unity.Quicklauncher
       {
         this.clicked ();
 
-        return true;
+        return false;
       }
 
       if (bevent.button ==1)
         debug ("Event not handled: %d %d",
                (int)bevent.time,
                (int)last_pressed_time);
-
       return false;
     }
 
