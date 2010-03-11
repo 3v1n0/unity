@@ -80,7 +80,7 @@ namespace Unity.Quicklauncher
     private override void
     paint ()
     {
-      //base.paint ();
+      this.seperator_background.paint ();
     }
 
     public override void
@@ -138,24 +138,21 @@ namespace Unity.Quicklauncher
  
       _fill_mask (fill_cr, w, h);
       _image_bg (image_cr, w, h);
-      //fill_surf.write_to_png ("/tmp/fill-surf.png");
-      //image_surf.write_to_png ("/tmp/image-surf.png");
  
       layer.set_mask_from_surface (fill_surf);
       layer.set_image_from_surface (image_surf);
       layer.set_opacity (255);      
  
-      // order is important here... don't mess around!
       this.seperator_background.add_layer (layer);
  
-      this.set_background (this.seperator_background);
+      //this.set_background (this.seperator_background);
       this.seperator_background.set_opacity (255);
+
+      this.seperator_background.set_parent (this);
+      this.seperator_background.map ();
+      this.seperator_background.show ();
     }
- 
-    /*public QuicklistMenuSeperator ()
-    {
-    }*/
- 
+  
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {

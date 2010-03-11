@@ -104,7 +104,6 @@ namespace Unity.Quicklauncher
         }
 
       Unity.Quicklauncher.QuicklistMenuSeperator separator = new Unity.Quicklauncher.QuicklistMenuSeperator ();
-      //Ctk.MenuSeperator separator = new Ctk.MenuSeperator ();
       this.menu.append (separator, false);
 
       foreach (ShortcutItem shortcut in affix_shortcuts)
