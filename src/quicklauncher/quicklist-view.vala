@@ -77,8 +77,12 @@ namespace Unity.Quicklauncher
       cr.set_line_cap (Cairo.LineCap.ROUND);
 
       // align to the pixel-grid
-      cr.move_to (0.0f, (float) h / 2.0f + 0.5f);
-      cr.line_to ((float) w, (float) h / 2.0f + 0.5f);
+      float half_height = (float) h / 2.0f;
+      float fract = half_height - (int) half_height;
+      if (fract == 0.0f)
+        half_height += 0.5f;
+      cr.move_to (0.0f, half_height);
+      cr.line_to ((float) w, half_height);
 
       cr.stroke ();
     }
