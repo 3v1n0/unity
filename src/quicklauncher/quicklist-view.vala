@@ -34,6 +34,150 @@ namespace Unity.Quicklauncher
   const float ANCHOR_HEIGHT      = 1.5f;
   const float ANCHOR_WIDTH       = 0.75f;
 
+  // we subclass Ctk.MenuSeperator here because we need to adapt it's appearance
+  public class QuicklistMenuSeperator : Ctk.MenuSeperator
+  {
+    Ctk.LayerActor seperator_background;
+    int            old_width;
+    int            old_height;
+
+    private void
+    _fill_mask (Cairo.Context cr,
+                int           w,
+                int           h)
+    {
+      // clear context
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+ 
+      // fill whole context with opaque white
+      cr.set_operator (Cairo.Operator.SOURCE);
+      cr.scale (1.0f, 1.0f);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+      cr.paint ();
+    }
+ 
+    private void
+    _image_bg (Cairo.Context cr,
+               int           w,
+               int           h)
+    {
+      // clear context
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      // draw separator-line
+      cr.scale (1.0f, 1.0f);
+      cr.set_operator (Cairo.Operator.OVER);
+
+      // force the separator line to be 1-pixel thick
+      cr.set_line_width (1.0f);
+
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+      cr.set_line_cap (Cairo.LineCap.ROUND);
+
+      // align to the pixel-grid
+      float half_height = (float) h / 2.0f;
+      float fract = half_height - (int) half_height;
+      if (fract == 0.0f)
+        half_height += 0.5f;
+      cr.move_to (0.0f, half_height);
+      cr.line_to ((float) w, half_height);
+
+      cr.stroke ();
+    }
+
+    private override void
+    paint ()
+    {
+      this.seperator_background.paint ();
+    }
+
+    public override void
+    get_preferred_height (float     for_width,
+                          out float min_height_p,
+                          out float natural_height_p)
+    {
+      min_height_p = (float) Ctk.em_to_pixel (GAP);
+      natural_height_p = min_height_p;
+    }
+ 
+    public override void
+    get_preferred_width (float for_height,
+                         out float min_width_p,
+                         out float natural_width_p)
+    {
+      min_width_p = (float) Ctk.em_to_pixel (2 * MARGIN);
+      natural_width_p = min_width_p;
+    }
+ 
+    private override void
+    allocate (Clutter.ActorBox        box,
+              Clutter.AllocationFlags flags)
+    {
+      int w;
+      int h;
+ 
+      base.allocate (box, flags);
+      w = (int) (box.x2 - box.x1);
+      h = (int) (box.y2 - box.y1);
+ 
+      // exit early if the allocation-width/height didn't change, this is needed
+      // because clutter triggers calling allocate even if nothing changed
+      if ((old_width == w) && (old_height == h))
+        return;
+ 
+      // before creating a new CtkLayerActor make sure we don't leak any memory
+      if (this.seperator_background is Ctk.LayerActor)
+        this.seperator_background.destroy ();
+
+      this.seperator_background = new Ctk.LayerActor (w, h);
+ 
+      Ctk.Layer layer = new Ctk.Layer (w,
+                                       h,
+                                       Ctk.LayerRepeatMode.NONE,
+                                       Ctk.LayerRepeatMode.NONE);
+      Cairo.Surface fill_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
+                                                        w,
+                                                        h);
+      Cairo.Surface image_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
+                                                         w,
+                                                         h);
+      Cairo.Context fill_cr = new Cairo.Context (fill_surf);
+      Cairo.Context image_cr = new Cairo.Context (image_surf);
+ 
+      _fill_mask (fill_cr, w, h);
+      _image_bg (image_cr, w, h);
+ 
+      layer.set_mask_from_surface (fill_surf);
+      layer.set_image_from_surface (image_surf);
+      layer.set_opacity (255);      
+ 
+      this.seperator_background.add_layer (layer);
+ 
+      //this.set_background (this.seperator_background);
+      this.seperator_background.set_opacity (255);
+
+      this.seperator_background.set_parent (this);
+      this.seperator_background.map ();
+      this.seperator_background.show ();
+    }
+  
+    construct
+    {
+      Ctk.Padding padding = Ctk.Padding () {
+        left   = (int) Ctk.em_to_pixel (MARGIN),
+        right  = (int) Ctk.em_to_pixel (MARGIN),
+        top    = (int) Ctk.em_to_pixel (MARGIN),
+        bottom = (int) Ctk.em_to_pixel (MARGIN)
+      };
+      this.set_padding (padding);
+ 
+      old_width  = 0;
+      old_height = 0;
+    }
+  }
+
   // we subclass Ctk.MenuItem here because we need to adapt it's appearance
   public class QuicklistMenuItem : Ctk.Actor
   {
@@ -400,6 +544,7 @@ namespace Unity.Quicklauncher
     int            old_width;
     int            old_height;
     float          cached_x; // needed to fix LP: #525905
+    float          cached_y; // needed to fix LP: #526335
 
     private void
     _round_rect_anchor (Cairo.Context cr,
@@ -412,8 +557,7 @@ namespace Unity.Quicklauncher
                         double        anchor_width,  // width of anchor
                         double        anchor_height, // height of anchor
                         double        anchor_x,      // x of anchor
-                        double        anchor_y,      // y of anchor
-                        bool          is_label)      // flag for anchor-arrow
+                        double        anchor_y)      // y of anchor
     {
       double radius = corner_radius / aspect;
 
@@ -451,18 +595,9 @@ namespace Unity.Quicklauncher
               180.0f * GLib.Math.PI / 180.0f);
 
       // draw anchor-arrow
-      if (is_label)
-      {
-        cr.line_to (anchor_x + anchor_width, anchor_y + anchor_height / 2.0f);
-        cr.line_to (anchor_x, anchor_y);
-        cr.line_to (anchor_x + anchor_width, anchor_y - anchor_height / 2.0f);
-      }
-      else
-      {
-        cr.line_to (anchor_x + anchor_width, y + radius + anchor_height);
-        cr.line_to (anchor_x, y + radius + anchor_height / 2.0f);
-        cr.line_to (anchor_x + anchor_width, y + radius);
-      }
+      cr.line_to (anchor_x + anchor_width, anchor_y + anchor_height / 2.0f);
+      cr.line_to (anchor_x, anchor_y);
+      cr.line_to (anchor_x + anchor_width, anchor_y - anchor_height / 2.0f);
 
       // top-left, right of the corner
       cr.arc (x + radius,
@@ -488,8 +623,7 @@ namespace Unity.Quicklauncher
                           Ctk.em_to_pixel (ANCHOR_WIDTH),
                           Ctk.em_to_pixel (ANCHOR_HEIGHT),
                           Ctk.em_to_pixel (SHADOW_SIZE),
-                          anchor_y != 0.0f ? anchor_y + Ctk.em_to_pixel (SHADOW_SIZE/2) : (float) h / 2.0f,
-                          anchor_y != 0.0f ? false : true);
+                          anchor_y);
     }
 
     private void
@@ -633,16 +767,9 @@ namespace Unity.Quicklauncher
     allocate (Clutter.ActorBox        box,
               Clutter.AllocationFlags flags)
     {
-      int w;
-      int h;
-      float x;
-      float y;
-      float ax;
-      float ay;
-      float aw;
-      float ah;
-      float new_y;
-      uint  blurred_id = 0;
+      int  w;
+      int  h;
+      uint blurred_id = 0;
 
       base.allocate (box, flags);
       w = (int) (box.x2 - box.x1);
@@ -661,14 +788,8 @@ namespace Unity.Quicklauncher
       // animations, e.g. its expose)
       //base.refresh_background_texture ();
 
-      Ctk.Actor actor = this.get_attached_actor ();
-      actor.get_position (out ax, out ay);
-      actor.get_size (out aw, out ah);
-      this.get_position (out x, out y);
-      if (get_num_items() != 1)
-        new_y = ah / 2.0f;
-      else
-        new_y = 0.0f;
+      if (get_num_items () == 1)
+        cached_y = (float) h / 2.0f;
 
       // do the texture-update/glReadPixels() thing here ... call it whatever
       // you feel fits best here ctk_menu_get_framebuffer_background()
@@ -706,9 +827,9 @@ namespace Unity.Quicklauncher
       Cairo.Context fill_cr = new Cairo.Context (fill_surf);
       Cairo.Context main_cr = new Cairo.Context (main_surf);
 
-      _full_mask (full_cr, w, h, new_y);
-      _fill_mask (fill_cr, w, h, new_y);
-      _main_bg (main_cr, w, h, new_y);
+      _full_mask (full_cr, w, h, cached_y);
+      _fill_mask (fill_cr, w, h, cached_y);
+      _main_bg (main_cr, w, h, cached_y);
       //main_surf.write_to_png ("/tmp/main-surf.png");
 
       main_layer.set_mask_from_surface (full_surf);
@@ -741,6 +862,7 @@ namespace Unity.Quicklauncher
       old_width  = 0;
       old_height = 0;
       cached_x   = 0.0f; // needed to fix LP: #525905
+      cached_y   = 0.0f; // needed to fix LP: #526335
     }
   }
 }

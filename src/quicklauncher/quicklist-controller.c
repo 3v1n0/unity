@@ -74,6 +74,16 @@ typedef struct _UnityQuicklauncherQuicklistMenuItem UnityQuicklauncherQuicklistM
 typedef struct _UnityQuicklauncherQuicklistMenuItemClass UnityQuicklauncherQuicklistMenuItemClass;
 #define _g_free0(var) (var = (g_free (var), NULL))
 
+#define UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR (unity_quicklauncher_quicklist_menu_seperator_get_type ())
+#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperator))
+#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperatorClass))
+#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR))
+#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR))
+#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperatorClass))
+
+typedef struct _UnityQuicklauncherQuicklistMenuSeperator UnityQuicklauncherQuicklistMenuSeperator;
+typedef struct _UnityQuicklauncherQuicklistMenuSeperatorClass UnityQuicklauncherQuicklistMenuSeperatorClass;
+
 struct _UnityQuicklauncherQuicklistController {
 	GObject parent_instance;
 	UnityQuicklauncherQuicklistControllerPrivate * priv;
@@ -127,6 +137,9 @@ void unity_quicklauncher_quicklist_controller_show_label (UnityQuicklauncherQuic
 char* unity_quicklauncher_models_shortcut_item_get_name (UnityQuicklauncherModelsShortcutItem* self);
 void unity_quicklauncher_models_shortcut_item_activated (UnityQuicklauncherModelsShortcutItem* self);
 static void _unity_quicklauncher_models_shortcut_item_activated_unity_quicklauncher_quicklist_menu_item_activated (UnityQuicklauncherQuicklistMenuItem* _sender, gpointer self);
+UnityQuicklauncherQuicklistMenuSeperator* unity_quicklauncher_quicklist_menu_seperator_new (void);
+UnityQuicklauncherQuicklistMenuSeperator* unity_quicklauncher_quicklist_menu_seperator_construct (GType object_type);
+GType unity_quicklauncher_quicklist_menu_seperator_get_type (void);
 void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuicklistController* self, GeeArrayList* prefix_shortcuts, GeeArrayList* affix_shortcuts, gboolean hide_on_leave);
 CtkActor* unity_quicklauncher_quicklist_controller_get_attached_actor (UnityQuicklauncherQuicklistController* self);
 static void _unity_quicklauncher_quicklist_controller_on_unity_drag_start_unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self);
@@ -137,26 +150,26 @@ static void unity_quicklauncher_quicklist_controller_finalize (GObject* obj);
 
 #line 29 "quicklist-controller.vala"
 UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_get_default (void) {
-#line 141 "quicklist-controller.c"
+#line 154 "quicklist-controller.c"
 	UnityQuicklauncherQuicklistController* result;
 #line 31 "quicklist-controller.vala"
 	if (unity_quicklauncher_ql_controler_singleton == NULL) {
-#line 145 "quicklist-controller.c"
+#line 158 "quicklist-controller.c"
 		UnityQuicklauncherQuicklistController* _tmp0_;
 #line 32 "quicklist-controller.vala"
 		unity_quicklauncher_ql_controler_singleton = (_tmp0_ = unity_quicklauncher_quicklist_controller_new (), _g_object_unref0 (unity_quicklauncher_ql_controler_singleton), _tmp0_);
-#line 149 "quicklist-controller.c"
+#line 162 "quicklist-controller.c"
 	}
 	result = unity_quicklauncher_ql_controler_singleton;
 #line 34 "quicklist-controller.vala"
 	return result;
-#line 154 "quicklist-controller.c"
+#line 167 "quicklist-controller.c"
 }
 
 
 #line 41 "quicklist-controller.vala"
 UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_construct (GType object_type) {
-#line 160 "quicklist-controller.c"
+#line 173 "quicklist-controller.c"
 	UnityQuicklauncherQuicklistController * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
@@ -167,7 +180,7 @@ UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_
 UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_new (void) {
 #line 41 "quicklist-controller.vala"
 	return unity_quicklauncher_quicklist_controller_construct (UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_CONTROLLER);
-#line 171 "quicklist-controller.c"
+#line 184 "quicklist-controller.c"
 }
 
 
@@ -181,7 +194,7 @@ static void unity_quicklauncher_quicklist_controller_on_unity_drag_start (UnityQ
 	if (unity_quicklauncher_quicklist_controller_menu_is_open (self)) {
 #line 54 "quicklist-controller.vala"
 		clutter_actor_destroy ((ClutterActor*) self->menu);
-#line 185 "quicklist-controller.c"
+#line 198 "quicklist-controller.c"
 	}
 }
 
@@ -190,27 +203,27 @@ static void unity_quicklauncher_quicklist_controller_on_unity_drag_start (UnityQ
 static void _lambda1_ (UnityQuicklauncherQuicklistController* self) {
 #line 65 "quicklist-controller.vala"
 	unity_shell_remove_fullscreen_request (unity_global_shell, (GObject*) self);
-#line 194 "quicklist-controller.c"
+#line 207 "quicklist-controller.c"
 }
 
 
 #line 64 "quicklist-controller.vala"
 static void __lambda1__clutter_actor_destroy (ClutterActor* _sender, gpointer self) {
-#line 200 "quicklist-controller.c"
+#line 213 "quicklist-controller.c"
 	_lambda1_ (self);
 }
 
 
-#line 117 "quicklist-controller.vala"
+#line 120 "quicklist-controller.vala"
 static void _unity_quicklauncher_quicklist_controller_close_menu_unity_quicklauncher_quicklist_menu_item_activated (UnityQuicklauncherQuicklistMenuItem* _sender, gpointer self) {
-#line 207 "quicklist-controller.c"
+#line 220 "quicklist-controller.c"
 	unity_quicklauncher_quicklist_controller_close_menu (self);
 }
 
 
 #line 57 "quicklist-controller.vala"
 void unity_quicklauncher_quicklist_controller_show_label (UnityQuicklauncherQuicklistController* self, const char* label, CtkActor* attached_widget) {
-#line 214 "quicklist-controller.c"
+#line 227 "quicklist-controller.c"
 	UnityQuicklauncherQuicklistMenu* _tmp0_;
 	CtkMenu* menu;
 	UnityQuicklauncherQuicklistMenuItem* menuitem;
@@ -227,7 +240,7 @@ void unity_quicklauncher_quicklist_controller_show_label (UnityQuicklauncherQuic
 	if (unity_quicklauncher_quicklist_controller_menu_is_open (self)) {
 #line 60 "quicklist-controller.vala"
 		clutter_actor_destroy ((ClutterActor*) self->menu);
-#line 231 "quicklist-controller.c"
+#line 244 "quicklist-controller.c"
 	}
 #line 62 "quicklist-controller.vala"
 	menu = (_tmp0_ = g_object_ref_sink (unity_quicklauncher_quicklist_menu_new ()), CTK_IS_MENU (_tmp0_) ? ((CtkMenu*) _tmp0_) : NULL);
@@ -252,10 +265,10 @@ void unity_quicklauncher_quicklist_controller_show_label (UnityQuicklauncherQuic
 #line 79 "quicklist-controller.vala"
 	clutter_actor_get_position ((ClutterActor*) self->menu, &x, &y);
 #line 80 "quicklist-controller.vala"
-	clutter_actor_set_position ((ClutterActor*) self->menu, x - ((float) ctk_em_to_pixel ((double) 1.5f)), y);
+	clutter_actor_set_position ((ClutterActor*) self->menu, x - ((float) ctk_em_to_pixel ((double) 1.5f)), y - 3);
 #line 81 "quicklist-controller.vala"
 	self->is_in_label = TRUE;
-#line 259 "quicklist-controller.c"
+#line 272 "quicklist-controller.c"
 	_g_object_unref0 (menu);
 	_g_object_unref0 (menuitem);
 }
@@ -268,16 +281,17 @@ static gpointer _g_object_ref0 (gpointer self) {
 
 #line 58 "launcher-model.vala"
 static void _unity_quicklauncher_models_shortcut_item_activated_unity_quicklauncher_quicklist_menu_item_activated (UnityQuicklauncherQuicklistMenuItem* _sender, gpointer self) {
-#line 272 "quicklist-controller.c"
+#line 285 "quicklist-controller.c"
 	unity_quicklauncher_models_shortcut_item_activated (self);
 }
 
 
 #line 87 "quicklist-controller.vala"
 void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuicklistController* self, GeeArrayList* prefix_shortcuts, GeeArrayList* affix_shortcuts, gboolean hide_on_leave) {
-#line 279 "quicklist-controller.c"
+#line 292 "quicklist-controller.c"
 	GeeArrayList* _tmp0_;
 	GeeArrayList* _tmp1_;
+	UnityQuicklauncherQuicklistMenuSeperator* separator;
 #line 87 "quicklist-controller.vala"
 	g_return_if_fail (self != NULL);
 #line 87 "quicklist-controller.vala"
@@ -294,13 +308,13 @@ void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuick
 	unity_shell_add_fullscreen_request (unity_global_shell, (GObject*) self);
 #line 96 "quicklist-controller.vala"
 	ctk_menu_set_close_on_leave (self->menu, hide_on_leave);
-#line 298 "quicklist-controller.c"
+#line 312 "quicklist-controller.c"
 	{
 		GeeIterator* _shortcut_it;
 		_shortcut_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) prefix_shortcuts);
 #line 97 "quicklist-controller.vala"
 		while (TRUE) {
-#line 304 "quicklist-controller.c"
+#line 318 "quicklist-controller.c"
 			UnityQuicklauncherModelsShortcutItem* shortcut;
 			char* label;
 			UnityQuicklauncherQuicklistMenuItem* menuitem;
@@ -308,7 +322,7 @@ void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuick
 			if (!gee_iterator_next (_shortcut_it)) {
 #line 97 "quicklist-controller.vala"
 				break;
-#line 312 "quicklist-controller.c"
+#line 326 "quicklist-controller.c"
 			}
 #line 97 "quicklist-controller.vala"
 			shortcut = (UnityQuicklauncherModelsShortcutItem*) gee_iterator_get (_shortcut_it);
@@ -322,101 +336,107 @@ void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuick
 			g_signal_connect_object (menuitem, "activated", (GCallback) _unity_quicklauncher_models_shortcut_item_activated_unity_quicklauncher_quicklist_menu_item_activated, shortcut, 0);
 #line 103 "quicklist-controller.vala"
 			g_signal_connect_object (menuitem, "activated", (GCallback) _unity_quicklauncher_quicklist_controller_close_menu_unity_quicklauncher_quicklist_menu_item_activated, self, 0);
-#line 326 "quicklist-controller.c"
+#line 340 "quicklist-controller.c"
 			_g_object_unref0 (shortcut);
 			_g_free0 (label);
 			_g_object_unref0 (menuitem);
 		}
 		_g_object_unref0 (_shortcut_it);
 	}
+#line 106 "quicklist-controller.vala"
+	separator = g_object_ref_sink (unity_quicklauncher_quicklist_menu_seperator_new ());
+#line 107 "quicklist-controller.vala"
+	ctk_menu_append (self->menu, (ClutterActor*) separator, FALSE);
+#line 351 "quicklist-controller.c"
 	{
 		GeeIterator* _shortcut_it;
 		_shortcut_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) affix_shortcuts);
-#line 106 "quicklist-controller.vala"
+#line 109 "quicklist-controller.vala"
 		while (TRUE) {
-#line 338 "quicklist-controller.c"
+#line 357 "quicklist-controller.c"
 			UnityQuicklauncherModelsShortcutItem* shortcut;
 			char* label;
 			UnityQuicklauncherQuicklistMenuItem* menuitem;
-#line 106 "quicklist-controller.vala"
-			if (!gee_iterator_next (_shortcut_it)) {
-#line 106 "quicklist-controller.vala"
-				break;
-#line 346 "quicklist-controller.c"
-			}
-#line 106 "quicklist-controller.vala"
-			shortcut = (UnityQuicklauncherModelsShortcutItem*) gee_iterator_get (_shortcut_it);
-#line 108 "quicklist-controller.vala"
-			label = unity_quicklauncher_models_shortcut_item_get_name (shortcut);
 #line 109 "quicklist-controller.vala"
-			menuitem = g_object_ref_sink (unity_quicklauncher_quicklist_menu_item_new (label));
-#line 110 "quicklist-controller.vala"
-			ctk_menu_append (self->menu, (ClutterActor*) menuitem, FALSE);
+			if (!gee_iterator_next (_shortcut_it)) {
+#line 109 "quicklist-controller.vala"
+				break;
+#line 365 "quicklist-controller.c"
+			}
+#line 109 "quicklist-controller.vala"
+			shortcut = (UnityQuicklauncherModelsShortcutItem*) gee_iterator_get (_shortcut_it);
 #line 111 "quicklist-controller.vala"
-			g_signal_connect_object (menuitem, "activated", (GCallback) _unity_quicklauncher_models_shortcut_item_activated_unity_quicklauncher_quicklist_menu_item_activated, shortcut, 0);
+			label = unity_quicklauncher_models_shortcut_item_get_name (shortcut);
 #line 112 "quicklist-controller.vala"
+			menuitem = g_object_ref_sink (unity_quicklauncher_quicklist_menu_item_new (label));
+#line 113 "quicklist-controller.vala"
+			ctk_menu_append (self->menu, (ClutterActor*) menuitem, FALSE);
+#line 114 "quicklist-controller.vala"
+			g_signal_connect_object (menuitem, "activated", (GCallback) _unity_quicklauncher_models_shortcut_item_activated_unity_quicklauncher_quicklist_menu_item_activated, shortcut, 0);
+#line 115 "quicklist-controller.vala"
 			g_signal_connect_object (menuitem, "activated", (GCallback) _unity_quicklauncher_quicklist_controller_close_menu_unity_quicklauncher_quicklist_menu_item_activated, self, 0);
-#line 360 "quicklist-controller.c"
+#line 379 "quicklist-controller.c"
 			_g_object_unref0 (shortcut);
 			_g_free0 (label);
 			_g_object_unref0 (menuitem);
 		}
 		_g_object_unref0 (_shortcut_it);
 	}
-#line 114 "quicklist-controller.vala"
+#line 117 "quicklist-controller.vala"
 	ctk_menu_set_detect_clicks (self->menu, TRUE);
-#line 369 "quicklist-controller.c"
+#line 388 "quicklist-controller.c"
+	_g_object_unref0 (separator);
 }
 
 
-#line 117 "quicklist-controller.vala"
-void unity_quicklauncher_quicklist_controller_close_menu (UnityQuicklauncherQuicklistController* self) {
-#line 117 "quicklist-controller.vala"
-	g_return_if_fail (self != NULL);
-#line 119 "quicklist-controller.vala"
-	self->is_in_label = FALSE;
 #line 120 "quicklist-controller.vala"
-	self->is_in_menu = FALSE;
-#line 121 "quicklist-controller.vala"
-	if (CTK_IS_MENU (self->menu)) {
+void unity_quicklauncher_quicklist_controller_close_menu (UnityQuicklauncherQuicklistController* self) {
+#line 120 "quicklist-controller.vala"
+	g_return_if_fail (self != NULL);
+#line 122 "quicklist-controller.vala"
+	self->is_in_label = FALSE;
 #line 123 "quicklist-controller.vala"
+	self->is_in_menu = FALSE;
+#line 124 "quicklist-controller.vala"
+	if (CTK_IS_MENU (self->menu)) {
+#line 126 "quicklist-controller.vala"
 		clutter_actor_destroy ((ClutterActor*) self->menu);
-#line 385 "quicklist-controller.c"
+#line 405 "quicklist-controller.c"
 	}
 }
 
 
-#line 127 "quicklist-controller.vala"
+#line 130 "quicklist-controller.vala"
 gboolean unity_quicklauncher_quicklist_controller_menu_is_open (UnityQuicklauncherQuicklistController* self) {
-#line 392 "quicklist-controller.c"
+#line 412 "quicklist-controller.c"
 	gboolean result;
-#line 127 "quicklist-controller.vala"
+#line 130 "quicklist-controller.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 396 "quicklist-controller.c"
+#line 416 "quicklist-controller.c"
 	result = CTK_IS_MENU (self->menu);
-#line 129 "quicklist-controller.vala"
+#line 132 "quicklist-controller.vala"
 	return result;
-#line 400 "quicklist-controller.c"
+#line 420 "quicklist-controller.c"
 }
 
 
-#line 132 "quicklist-controller.vala"
+#line 135 "quicklist-controller.vala"
 CtkActor* unity_quicklauncher_quicklist_controller_get_attached_actor (UnityQuicklauncherQuicklistController* self) {
-#line 406 "quicklist-controller.c"
+#line 426 "quicklist-controller.c"
 	CtkActor* result;
-#line 132 "quicklist-controller.vala"
+#line 135 "quicklist-controller.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 410 "quicklist-controller.c"
+#line 430 "quicklist-controller.c"
 	result = _g_object_ref0 (ctk_menu_get_attached_actor (self->menu));
-#line 134 "quicklist-controller.vala"
+#line 137 "quicklist-controller.vala"
 	return result;
-#line 414 "quicklist-controller.c"
+#line 434 "quicklist-controller.c"
 }
 
 
 #line 51 "quicklist-controller.vala"
 static void _unity_quicklauncher_quicklist_controller_on_unity_drag_start_unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self) {
-#line 420 "quicklist-controller.c"
+#line 440 "quicklist-controller.c"
 	unity_quicklauncher_quicklist_controller_on_unity_drag_start (self, model);
 }
 
@@ -434,7 +454,7 @@ static GObject * unity_quicklauncher_quicklist_controller_constructor (GType typ
 		drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
 #line 48 "quicklist-controller.vala"
 		g_signal_connect_object (drag_controller, "drag-start", (GCallback) _unity_quicklauncher_quicklist_controller_on_unity_drag_start_unity_drag_controller_drag_start, self, 0);
-#line 438 "quicklist-controller.c"
+#line 458 "quicklist-controller.c"
 		_g_object_unref0 (drag_controller);
 	}
 	return obj;

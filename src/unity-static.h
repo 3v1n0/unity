@@ -510,6 +510,17 @@ typedef struct _UnityQuicklauncherQuicklistController UnityQuicklauncherQuicklis
 typedef struct _UnityQuicklauncherQuicklistControllerClass UnityQuicklauncherQuicklistControllerClass;
 typedef struct _UnityQuicklauncherQuicklistControllerPrivate UnityQuicklauncherQuicklistControllerPrivate;
 
+#define UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR (unity_quicklauncher_quicklist_menu_seperator_get_type ())
+#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperator))
+#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperatorClass))
+#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR))
+#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR))
+#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperatorClass))
+
+typedef struct _UnityQuicklauncherQuicklistMenuSeperator UnityQuicklauncherQuicklistMenuSeperator;
+typedef struct _UnityQuicklauncherQuicklistMenuSeperatorClass UnityQuicklauncherQuicklistMenuSeperatorClass;
+typedef struct _UnityQuicklauncherQuicklistMenuSeperatorPrivate UnityQuicklauncherQuicklistMenuSeperatorPrivate;
+
 #define UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM (unity_quicklauncher_quicklist_menu_item_get_type ())
 #define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityQuicklauncherQuicklistMenuItem))
 #define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityQuicklauncherQuicklistMenuItemClass))
@@ -1021,6 +1032,15 @@ struct _UnityQuicklauncherQuicklistControllerClass {
 	GObjectClass parent_class;
 };
 
+struct _UnityQuicklauncherQuicklistMenuSeperator {
+	CtkMenuSeperator parent_instance;
+	UnityQuicklauncherQuicklistMenuSeperatorPrivate * priv;
+};
+
+struct _UnityQuicklauncherQuicklistMenuSeperatorClass {
+	CtkMenuSeperatorClass parent_class;
+};
+
 struct _UnityQuicklauncherQuicklistMenuItem {
 	CtkActor parent_instance;
 	UnityQuicklauncherQuicklistMenuItemPrivate * priv;
@@ -1322,6 +1342,9 @@ void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuick
 void unity_quicklauncher_quicklist_controller_close_menu (UnityQuicklauncherQuicklistController* self);
 gboolean unity_quicklauncher_quicklist_controller_menu_is_open (UnityQuicklauncherQuicklistController* self);
 CtkActor* unity_quicklauncher_quicklist_controller_get_attached_actor (UnityQuicklauncherQuicklistController* self);
+GType unity_quicklauncher_quicklist_menu_seperator_get_type (void);
+UnityQuicklauncherQuicklistMenuSeperator* unity_quicklauncher_quicklist_menu_seperator_new (void);
+UnityQuicklauncherQuicklistMenuSeperator* unity_quicklauncher_quicklist_menu_seperator_construct (GType object_type);
 GType unity_quicklauncher_quicklist_menu_item_get_type (void);
 UnityQuicklauncherQuicklistMenuItem* unity_quicklauncher_quicklist_menu_item_new (const char* label);
 UnityQuicklauncherQuicklistMenuItem* unity_quicklauncher_quicklist_menu_item_construct (GType object_type, const char* label);

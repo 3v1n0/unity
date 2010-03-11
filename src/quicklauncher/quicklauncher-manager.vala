@@ -68,6 +68,7 @@ namespace Unity.Quicklauncher
     {
       START_FUNCTION ();
       this.appman = Launcher.Appman.get_default ();
+      this.appman.get_default ().enable_window_checking = true;
       this.session = Launcher.Session.get_default ();
 
       launcher_apps = new Gee.ArrayList<Launcher.Application> ();
@@ -77,6 +78,7 @@ namespace Unity.Quicklauncher
                                                    0);
       add_actor (container);
       build_favorites ();
+      this.session.application_opened.connect (handle_session_application);
 
 
       Ctk.drag_dest_start (this.container);
@@ -95,38 +97,7 @@ namespace Unity.Quicklauncher
       }
       this.webapp_device = get_webapp_device ();
 
-      Idle.add (this.ensure_model_windows);
-
       END_FUNCTION ();
-    }
-
-    /* goes through and makes sure all the current models have accurate window
-     * lists
-     */
-    private bool ensure_model_windows ()
-    {
-      foreach (Launcher.Application app in this.launcher_apps)
-        {
-          app.update_windows ();
-        }
-
-      /* go through all the running applications in the appmananager
-       * make sure that any that aren't already in the launcher get added
-       */
-      var appman = Launcher.Appman.get_default ();
-      unowned Sequence<Launcher.Application> applications = appman.get_applications ();
-      for (SequenceIter<Launcher.Application> iter = applications.get_begin_iter (); !iter.is_end (); iter = iter.next ())
-        {
-          Launcher.Application app = iter.get ();
-          if (!this.launcher_apps.contains (app))
-            {
-              // not in the launcher. add it
-              this.handle_session_application (app);
-            }
-        }
-
-      this.session.application_opened.connect (handle_session_application);
-      return false;
     }
 
     private void on_favorite_change (GConf.Engine client, uint cnxn_id, GConf.Entry entry)
@@ -355,24 +326,27 @@ namespace Unity.Quicklauncher
             }
           else
             {
+              LOGGER_START_PROCESS ("Launcher-" + process_name);
               Launcher.Application application = appman.get_application_for_desktop_file (desktop_file);
 
               if (launcher_apps.contains (application))
                 continue;
               launcher_apps.add (application);
+              LOGGER_END_PROCESS ("Launcher-" + process_name);
 
+              LOGGER_START_PROCESS ("Model-" + process_name);
               ApplicationModel model = new ApplicationModel (application);
               model.is_sticky = true;
+              LOGGER_END_PROCESS ("Model-" + process_name);
+              LOGGER_START_PROCESS ("View-" + process_name);
               LauncherView view = get_view_for_model (model);
+              LOGGER_END_PROCESS ("View-" + process_name);
 
               add_view (view);
             }
 
           LOGGER_END_PROCESS (process_name);
         }
-
-      // done building favorites, turn on window checking
-      Launcher.Appman.get_default ().enable_window_checking = true;
 
       END_FUNCTION ();
     }

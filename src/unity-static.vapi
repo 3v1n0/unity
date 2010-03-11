@@ -396,6 +396,12 @@ namespace Unity {
 			public signal void activated ();
 		}
 		[CCode (cheader_filename = "unity-static.h")]
+		public class QuicklistMenuSeperator : Ctk.MenuSeperator {
+			public QuicklistMenuSeperator ();
+			public override void get_preferred_height (float for_width, out float min_height_p, out float natural_height_p);
+			public override void get_preferred_width (float for_height, out float min_width_p, out float natural_width_p);
+		}
+		[CCode (cheader_filename = "unity-static.h")]
 		public class View : Ctk.Bin {
 			public Unity.Quicklauncher.Manager manager;
 			public View (Unity.Shell shell);

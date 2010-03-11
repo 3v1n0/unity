@@ -83,6 +83,17 @@ typedef struct _UnityEntry UnityEntry;
 typedef struct _UnityEntryClass UnityEntryClass;
 typedef struct _UnityEntryPrivate UnityEntryPrivate;
 
+#define UNITY_TYPE_UNITY_ICON (unity_unity_icon_get_type ())
+#define UNITY_UNITY_ICON(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_UNITY_ICON, UnityUnityIcon))
+#define UNITY_UNITY_ICON_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_UNITY_ICON, UnityUnityIconClass))
+#define UNITY_IS_UNITY_ICON(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_UNITY_ICON))
+#define UNITY_IS_UNITY_ICON_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_UNITY_ICON))
+#define UNITY_UNITY_ICON_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_UNITY_ICON, UnityUnityIconClass))
+
+typedef struct _UnityUnityIcon UnityUnityIcon;
+typedef struct _UnityUnityIconClass UnityUnityIconClass;
+typedef struct _UnityUnityIconPrivate UnityUnityIconPrivate;
+
 #define UNITY_TYPE_PROCESS_INFO (unity_process_info_get_type ())
 #define UNITY_PROCESS_INFO(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_PROCESS_INFO, UnityProcessInfo))
 #define UNITY_PROCESS_INFO_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_PROCESS_INFO, UnityProcessInfoClass))
@@ -230,6 +241,15 @@ struct _UnityEntryClass {
 	CtkTextClass parent_class;
 };
 
+struct _UnityUnityIcon {
+	CtkActor parent_instance;
+	UnityUnityIconPrivate * priv;
+};
+
+struct _UnityUnityIconClass {
+	CtkActorClass parent_class;
+};
+
 struct _UnityProcessInfo {
 	GTypeInstance parent_instance;
 	volatile int ref_count;
@@ -340,6 +360,12 @@ UnityEntry* unity_entry_new (const char* static_text);
 UnityEntry* unity_entry_construct (GType object_type, const char* static_text);
 const char* unity_entry_get_static_text (UnityEntry* self);
 void unity_entry_set_static_text (UnityEntry* self, const char* value);
+GType unity_unity_icon_get_type (void);
+UnityUnityIcon* unity_unity_icon_new (ClutterTexture* icon, ClutterTexture* bg_tex);
+UnityUnityIcon* unity_unity_icon_construct (GType object_type, ClutterTexture* icon, ClutterTexture* bg_tex);
+void unity_unity_icon_paint_real (ClutterActor* actor);
+ClutterTexture* unity_unity_icon_get_icon (UnityUnityIcon* self);
+ClutterTexture* unity_unity_icon_get_bg_color (UnityUnityIcon* self);
 gpointer unity_process_info_ref (gpointer instance);
 void unity_process_info_unref (gpointer instance);
 GParamSpec* unity_param_spec_process_info (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);

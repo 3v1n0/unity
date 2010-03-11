@@ -108,6 +108,20 @@ namespace Unity {
 		public void write_log (string filename);
 	}
 	[CCode (cheader_filename = "unity.h")]
+	public class UnityIcon : Ctk.Actor {
+		public UnityIcon (Clutter.Texture? icon, Clutter.Texture? bg_tex);
+		public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
+		public override void get_preferred_height (float for_width, out float minimum_height, out float natural_height);
+		public override void get_preferred_width (float for_height, out float minimum_width, out float natural_width);
+		public override void map ();
+		public override void paint ();
+		public static void paint_real (Clutter.Actor actor);
+		public override void pick (Clutter.Color color);
+		public override void unmap ();
+		public Clutter.Texture? bg_color { get; construct; }
+		public Clutter.Texture? icon { get; construct; }
+	}
+	[CCode (cheader_filename = "unity.h")]
 	public interface Shell : GLib.Object {
 		public abstract void add_fullscreen_request (GLib.Object o);
 		public abstract void ensure_input_region ();

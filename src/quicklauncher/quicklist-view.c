@@ -27,15 +27,29 @@
 #include <float.h>
 #include <math.h>
 #include <clutk/clutk.h>
-#include <stdlib.h>
-#include <string.h>
 #include <cairo.h>
+#include <clutter/clutter.h>
+#include <string.h>
+#include <stdlib.h>
 #include <pango/pangocairo.h>
 #include <pango/pango.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
-#include <clutter/clutter.h>
 
+
+#define UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR (unity_quicklauncher_quicklist_menu_seperator_get_type ())
+#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperator))
+#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperatorClass))
+#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR))
+#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR))
+#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperatorClass))
+
+typedef struct _UnityQuicklauncherQuicklistMenuSeperator UnityQuicklauncherQuicklistMenuSeperator;
+typedef struct _UnityQuicklauncherQuicklistMenuSeperatorClass UnityQuicklauncherQuicklistMenuSeperatorClass;
+typedef struct _UnityQuicklauncherQuicklistMenuSeperatorPrivate UnityQuicklauncherQuicklistMenuSeperatorPrivate;
+#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+#define _cairo_surface_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_surface_destroy (var), NULL)))
+#define _cairo_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_destroy (var), NULL)))
 
 #define UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM (unity_quicklauncher_quicklist_menu_item_get_type ())
 #define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityQuicklauncherQuicklistMenuItem))
@@ -47,10 +61,7 @@
 typedef struct _UnityQuicklauncherQuicklistMenuItem UnityQuicklauncherQuicklistMenuItem;
 typedef struct _UnityQuicklauncherQuicklistMenuItemClass UnityQuicklauncherQuicklistMenuItemClass;
 typedef struct _UnityQuicklauncherQuicklistMenuItemPrivate UnityQuicklauncherQuicklistMenuItemPrivate;
-#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
-#define _cairo_surface_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_surface_destroy (var), NULL)))
-#define _cairo_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_destroy (var), NULL)))
 #define _pango_font_description_free0(var) ((var == NULL) ? NULL : (var = (pango_font_description_free (var), NULL)))
 
 #define UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU (unity_quicklauncher_quicklist_menu_get_type ())
@@ -64,6 +75,21 @@ typedef struct _UnityQuicklauncherQuicklistMenu UnityQuicklauncherQuicklistMenu;
 typedef struct _UnityQuicklauncherQuicklistMenuClass UnityQuicklauncherQuicklistMenuClass;
 typedef struct _UnityQuicklauncherQuicklistMenuPrivate UnityQuicklauncherQuicklistMenuPrivate;
 #define _cairo_pattern_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_pattern_destroy (var), NULL)))
+
+struct _UnityQuicklauncherQuicklistMenuSeperator {
+	CtkMenuSeperator parent_instance;
+	UnityQuicklauncherQuicklistMenuSeperatorPrivate * priv;
+};
+
+struct _UnityQuicklauncherQuicklistMenuSeperatorClass {
+	CtkMenuSeperatorClass parent_class;
+};
+
+struct _UnityQuicklauncherQuicklistMenuSeperatorPrivate {
+	CtkLayerActor* seperator_background;
+	gint old_width;
+	gint old_height;
+};
 
 struct _UnityQuicklauncherQuicklistMenuItem {
 	CtkActor parent_instance;
@@ -96,9 +122,11 @@ struct _UnityQuicklauncherQuicklistMenuPrivate {
 	gint old_width;
 	gint old_height;
 	float cached_x;
+	float cached_y;
 };
 
 
+static gpointer unity_quicklauncher_quicklist_menu_seperator_parent_class = NULL;
 static gpointer unity_quicklauncher_quicklist_menu_item_parent_class = NULL;
 static gpointer unity_quicklauncher_quicklist_menu_parent_class = NULL;
 
@@ -114,6 +142,21 @@ static gpointer unity_quicklauncher_quicklist_menu_parent_class = NULL;
 #define UNITY_QUICKLAUNCHER_ITEM_CORNER_RADIUS 0.3f
 #define UNITY_QUICKLAUNCHER_ANCHOR_HEIGHT 1.5f
 #define UNITY_QUICKLAUNCHER_ANCHOR_WIDTH 0.75f
+GType unity_quicklauncher_quicklist_menu_seperator_get_type (void);
+#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperatorPrivate))
+enum  {
+	UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_DUMMY_PROPERTY
+};
+static void _unity_quicklauncher_quicklist_menu_seperator_fill_mask (UnityQuicklauncherQuicklistMenuSeperator* self, cairo_t* cr, gint w, gint h);
+static void _unity_quicklauncher_quicklist_menu_seperator_image_bg (UnityQuicklauncherQuicklistMenuSeperator* self, cairo_t* cr, gint w, gint h);
+static void unity_quicklauncher_quicklist_menu_seperator_real_paint (ClutterActor* base);
+static void unity_quicklauncher_quicklist_menu_seperator_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height_p, float* natural_height_p);
+static void unity_quicklauncher_quicklist_menu_seperator_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width_p, float* natural_width_p);
+static void unity_quicklauncher_quicklist_menu_seperator_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
+UnityQuicklauncherQuicklistMenuSeperator* unity_quicklauncher_quicklist_menu_seperator_new (void);
+UnityQuicklauncherQuicklistMenuSeperator* unity_quicklauncher_quicklist_menu_seperator_construct (GType object_type);
+static GObject * unity_quicklauncher_quicklist_menu_seperator_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void unity_quicklauncher_quicklist_menu_seperator_finalize (GObject* obj);
 GType unity_quicklauncher_quicklist_menu_item_get_type (void);
 #define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityQuicklauncherQuicklistMenuItemPrivate))
 enum  {
@@ -149,7 +192,7 @@ GType unity_quicklauncher_quicklist_menu_get_type (void);
 enum  {
 	UNITY_QUICKLAUNCHER_QUICKLIST_MENU_DUMMY_PROPERTY
 };
-static void _unity_quicklauncher_quicklist_menu_round_rect_anchor (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, double aspect, double x, double y, double corner_radius, double width, double height, double anchor_width, double anchor_height, double anchor_x, double anchor_y, gboolean is_label);
+static void _unity_quicklauncher_quicklist_menu_round_rect_anchor (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, double aspect, double x, double y, double corner_radius, double width, double height, double anchor_width, double anchor_height, double anchor_x, double anchor_y);
 static void _unity_quicklauncher_quicklist_menu_draw_mask (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, gint w, gint h, float anchor_y);
 static void _unity_quicklauncher_quicklist_menu_full_mask (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, gint w, gint h, float anchor_y);
 static void _unity_quicklauncher_quicklist_menu_fill_mask (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, gint w, gint h, float anchor_y);
@@ -164,33 +207,294 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
-#line 45 "quicklist-view.vala"
-static void _unity_quicklauncher_quicklist_menu_item_round_rect (UnityQuicklauncherQuicklistMenuItem* self, cairo_t* cr, double aspect, double x, double y, double corner_radius, double width, double height) {
-#line 170 "quicklist-view.c"
-	double radius;
-#line 45 "quicklist-view.vala"
+#line 44 "quicklist-view.vala"
+static void _unity_quicklauncher_quicklist_menu_seperator_fill_mask (UnityQuicklauncherQuicklistMenuSeperator* self, cairo_t* cr, gint w, gint h) {
+#line 44 "quicklist-view.vala"
 	g_return_if_fail (self != NULL);
-#line 45 "quicklist-view.vala"
+#line 44 "quicklist-view.vala"
 	g_return_if_fail (cr != NULL);
+#line 50 "quicklist-view.vala"
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+#line 51 "quicklist-view.vala"
+	cairo_paint (cr);
 #line 54 "quicklist-view.vala"
-	radius = corner_radius / aspect;
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+#line 55 "quicklist-view.vala"
+	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
+#line 56 "quicklist-view.vala"
+	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
 #line 57 "quicklist-view.vala"
-	cairo_move_to (cr, x + radius, y);
+	cairo_paint (cr);
+#line 229 "quicklist-view.c"
+}
+
+
 #line 60 "quicklist-view.vala"
-	cairo_line_to (cr, (x + width) - radius, y);
-#line 63 "quicklist-view.vala"
-	cairo_arc (cr, (x + width) - radius, y + radius, radius, ((-90.0f) * G_PI) / 180.0f, (0.0f * G_PI) / 180.0f);
+static void _unity_quicklauncher_quicklist_menu_seperator_image_bg (UnityQuicklauncherQuicklistMenuSeperator* self, cairo_t* cr, gint w, gint h) {
+#line 235 "quicklist-view.c"
+	float half_height;
+	float fract;
+#line 60 "quicklist-view.vala"
+	g_return_if_fail (self != NULL);
+#line 60 "quicklist-view.vala"
+	g_return_if_fail (cr != NULL);
+#line 66 "quicklist-view.vala"
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+#line 67 "quicklist-view.vala"
+	cairo_paint (cr);
 #line 70 "quicklist-view.vala"
-	cairo_line_to (cr, x + width, (y + height) - radius);
-#line 73 "quicklist-view.vala"
-	cairo_arc (cr, (x + width) - radius, (y + height) - radius, radius, (0.0f * G_PI) / 180.0f, (90.0f * G_PI) / 180.0f);
+	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
+#line 71 "quicklist-view.vala"
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+#line 74 "quicklist-view.vala"
+	cairo_set_line_width (cr, (double) 1.0f);
+#line 76 "quicklist-view.vala"
+	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
+#line 77 "quicklist-view.vala"
+	cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
 #line 80 "quicklist-view.vala"
-	cairo_line_to (cr, x + radius, y + height);
+	half_height = ((float) h) / 2.0f;
+#line 81 "quicklist-view.vala"
+	fract = half_height - ((gint) half_height);
+#line 82 "quicklist-view.vala"
+	if (fract == 0.0f) {
 #line 83 "quicklist-view.vala"
-	cairo_arc (cr, x + radius, (y + height) - radius, radius, (90.0f * G_PI) / 180.0f, (180.0f * G_PI) / 180.0f);
+		half_height = half_height + 0.5f;
+#line 264 "quicklist-view.c"
+	}
+#line 84 "quicklist-view.vala"
+	cairo_move_to (cr, (double) 0.0f, (double) half_height);
+#line 85 "quicklist-view.vala"
+	cairo_line_to (cr, (double) ((float) w), (double) half_height);
+#line 87 "quicklist-view.vala"
+	cairo_stroke (cr);
+#line 272 "quicklist-view.c"
+}
+
+
 #line 90 "quicklist-view.vala"
+static void unity_quicklauncher_quicklist_menu_seperator_real_paint (ClutterActor* base) {
+#line 278 "quicklist-view.c"
+	UnityQuicklauncherQuicklistMenuSeperator * self;
+	self = (UnityQuicklauncherQuicklistMenuSeperator*) base;
+#line 93 "quicklist-view.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->seperator_background);
+#line 283 "quicklist-view.c"
+}
+
+
+#line 96 "quicklist-view.vala"
+static void unity_quicklauncher_quicklist_menu_seperator_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height_p, float* natural_height_p) {
+#line 289 "quicklist-view.c"
+	UnityQuicklauncherQuicklistMenuSeperator * self;
+	self = (UnityQuicklauncherQuicklistMenuSeperator*) base;
+#line 101 "quicklist-view.vala"
+	*min_height_p = (float) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_GAP);
+#line 102 "quicklist-view.vala"
+	*natural_height_p = *min_height_p;
+#line 296 "quicklist-view.c"
+}
+
+
+#line 105 "quicklist-view.vala"
+static void unity_quicklauncher_quicklist_menu_seperator_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width_p, float* natural_width_p) {
+#line 302 "quicklist-view.c"
+	UnityQuicklauncherQuicklistMenuSeperator * self;
+	self = (UnityQuicklauncherQuicklistMenuSeperator*) base;
+#line 110 "quicklist-view.vala"
+	*min_width_p = (float) ctk_em_to_pixel ((double) (2 * UNITY_QUICKLAUNCHER_MARGIN));
+#line 111 "quicklist-view.vala"
+	*natural_width_p = *min_width_p;
+#line 309 "quicklist-view.c"
+}
+
+
+#line 114 "quicklist-view.vala"
+static void unity_quicklauncher_quicklist_menu_seperator_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
+#line 315 "quicklist-view.c"
+	UnityQuicklauncherQuicklistMenuSeperator * self;
+	gint w = 0;
+	gint h = 0;
+	gboolean _tmp0_ = FALSE;
+	CtkLayerActor* _tmp1_;
+	CtkLayer* layer;
+	cairo_surface_t* fill_surf;
+	cairo_surface_t* image_surf;
+	cairo_t* fill_cr;
+	cairo_t* image_cr;
+	self = (UnityQuicklauncherQuicklistMenuSeperator*) base;
+#line 121 "quicklist-view.vala"
+	CLUTTER_ACTOR_CLASS (unity_quicklauncher_quicklist_menu_seperator_parent_class)->allocate ((ClutterActor*) CTK_MENU_SEPERATOR (self), box, flags);
+#line 122 "quicklist-view.vala"
+	w = (gint) ((*box).x2 - (*box).x1);
+#line 123 "quicklist-view.vala"
+	h = (gint) ((*box).y2 - (*box).y1);
+#line 127 "quicklist-view.vala"
+	if (self->priv->old_width == w) {
+#line 127 "quicklist-view.vala"
+		_tmp0_ = self->priv->old_height == h;
+#line 337 "quicklist-view.c"
+	} else {
+#line 127 "quicklist-view.vala"
+		_tmp0_ = FALSE;
+#line 341 "quicklist-view.c"
+	}
+#line 127 "quicklist-view.vala"
+	if (_tmp0_) {
+#line 128 "quicklist-view.vala"
+		return;
+#line 347 "quicklist-view.c"
+	}
+#line 131 "quicklist-view.vala"
+	if (CTK_IS_LAYER_ACTOR (self->priv->seperator_background)) {
+#line 132 "quicklist-view.vala"
+		clutter_actor_destroy ((ClutterActor*) self->priv->seperator_background);
+#line 353 "quicklist-view.c"
+	}
+#line 134 "quicklist-view.vala"
+	self->priv->seperator_background = (_tmp1_ = g_object_ref_sink ((CtkLayerActor*) ctk_layer_actor_new ((guint) w, (guint) h)), _g_object_unref0 (self->priv->seperator_background), _tmp1_);
+#line 136 "quicklist-view.vala"
+	layer = ctk_layer_new ((guint) w, (guint) h, CTK_LAYER_REPEAT_NONE, CTK_LAYER_REPEAT_NONE);
+#line 140 "quicklist-view.vala"
+	fill_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
+#line 143 "quicklist-view.vala"
+	image_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
+#line 146 "quicklist-view.vala"
+	fill_cr = cairo_create (fill_surf);
+#line 147 "quicklist-view.vala"
+	image_cr = cairo_create (image_surf);
+#line 149 "quicklist-view.vala"
+	_unity_quicklauncher_quicklist_menu_seperator_fill_mask (self, fill_cr, w, h);
+#line 150 "quicklist-view.vala"
+	_unity_quicklauncher_quicklist_menu_seperator_image_bg (self, image_cr, w, h);
+#line 152 "quicklist-view.vala"
+	ctk_layer_set_mask_from_surface (layer, fill_surf);
+#line 153 "quicklist-view.vala"
+	ctk_layer_set_image_from_surface (layer, image_surf);
+#line 154 "quicklist-view.vala"
+	ctk_layer_set_opacity (layer, (guchar) 255);
+#line 156 "quicklist-view.vala"
+	ctk_layer_actor_add_layer (self->priv->seperator_background, layer);
+#line 159 "quicklist-view.vala"
+	clutter_actor_set_opacity ((ClutterActor*) self->priv->seperator_background, (guint8) 255);
+#line 161 "quicklist-view.vala"
+	clutter_actor_set_parent ((ClutterActor*) self->priv->seperator_background, (ClutterActor*) self);
+#line 162 "quicklist-view.vala"
+	clutter_actor_map ((ClutterActor*) self->priv->seperator_background);
+#line 163 "quicklist-view.vala"
+	clutter_actor_show ((ClutterActor*) self->priv->seperator_background);
+#line 387 "quicklist-view.c"
+	_g_object_unref0 (layer);
+	_cairo_surface_destroy0 (fill_surf);
+	_cairo_surface_destroy0 (image_surf);
+	_cairo_destroy0 (fill_cr);
+	_cairo_destroy0 (image_cr);
+}
+
+
+#line 38 "quicklist-view.vala"
+UnityQuicklauncherQuicklistMenuSeperator* unity_quicklauncher_quicklist_menu_seperator_construct (GType object_type) {
+#line 398 "quicklist-view.c"
+	UnityQuicklauncherQuicklistMenuSeperator * self;
+	self = g_object_newv (object_type, 0, NULL);
+	return self;
+}
+
+
+#line 38 "quicklist-view.vala"
+UnityQuicklauncherQuicklistMenuSeperator* unity_quicklauncher_quicklist_menu_seperator_new (void) {
+#line 38 "quicklist-view.vala"
+	return unity_quicklauncher_quicklist_menu_seperator_construct (UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR);
+#line 409 "quicklist-view.c"
+}
+
+
+static GObject * unity_quicklauncher_quicklist_menu_seperator_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+	GObject * obj;
+	GObjectClass * parent_class;
+	UnityQuicklauncherQuicklistMenuSeperator * self;
+	parent_class = G_OBJECT_CLASS (unity_quicklauncher_quicklist_menu_seperator_parent_class);
+	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
+	self = UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR (obj);
+	{
+		CtkPadding _tmp0_ = {0};
+		CtkPadding padding;
+#line 168 "quicklist-view.vala"
+		padding = (memset (&_tmp0_, 0, sizeof (CtkPadding)), _tmp0_.left = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp0_.right = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp0_.top = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp0_.bottom = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp0_);
+#line 174 "quicklist-view.vala"
+		ctk_actor_set_padding ((CtkActor*) self, &padding);
+#line 176 "quicklist-view.vala"
+		self->priv->old_width = 0;
+#line 177 "quicklist-view.vala"
+		self->priv->old_height = 0;
+#line 431 "quicklist-view.c"
+	}
+	return obj;
+}
+
+
+static void unity_quicklauncher_quicklist_menu_seperator_class_init (UnityQuicklauncherQuicklistMenuSeperatorClass * klass) {
+	unity_quicklauncher_quicklist_menu_seperator_parent_class = g_type_class_peek_parent (klass);
+	g_type_class_add_private (klass, sizeof (UnityQuicklauncherQuicklistMenuSeperatorPrivate));
+	CLUTTER_ACTOR_CLASS (klass)->paint = unity_quicklauncher_quicklist_menu_seperator_real_paint;
+	CLUTTER_ACTOR_CLASS (klass)->get_preferred_height = unity_quicklauncher_quicklist_menu_seperator_real_get_preferred_height;
+	CLUTTER_ACTOR_CLASS (klass)->get_preferred_width = unity_quicklauncher_quicklist_menu_seperator_real_get_preferred_width;
+	CLUTTER_ACTOR_CLASS (klass)->allocate = unity_quicklauncher_quicklist_menu_seperator_real_allocate;
+	G_OBJECT_CLASS (klass)->constructor = unity_quicklauncher_quicklist_menu_seperator_constructor;
+	G_OBJECT_CLASS (klass)->finalize = unity_quicklauncher_quicklist_menu_seperator_finalize;
+}
+
+
+static void unity_quicklauncher_quicklist_menu_seperator_instance_init (UnityQuicklauncherQuicklistMenuSeperator * self) {
+	self->priv = UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_GET_PRIVATE (self);
+}
+
+
+static void unity_quicklauncher_quicklist_menu_seperator_finalize (GObject* obj) {
+	UnityQuicklauncherQuicklistMenuSeperator * self;
+	self = UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR (obj);
+	_g_object_unref0 (self->priv->seperator_background);
+	G_OBJECT_CLASS (unity_quicklauncher_quicklist_menu_seperator_parent_class)->finalize (obj);
+}
+
+
+GType unity_quicklauncher_quicklist_menu_seperator_get_type (void) {
+	static GType unity_quicklauncher_quicklist_menu_seperator_type_id = 0;
+	if (unity_quicklauncher_quicklist_menu_seperator_type_id == 0) {
+		static const GTypeInfo g_define_type_info = { sizeof (UnityQuicklauncherQuicklistMenuSeperatorClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_quicklauncher_quicklist_menu_seperator_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityQuicklauncherQuicklistMenuSeperator), 0, (GInstanceInitFunc) unity_quicklauncher_quicklist_menu_seperator_instance_init, NULL };
+		unity_quicklauncher_quicklist_menu_seperator_type_id = g_type_register_static (CTK_TYPE_MENU_SEPERATOR, "UnityQuicklauncherQuicklistMenuSeperator", &g_define_type_info, 0);
+	}
+	return unity_quicklauncher_quicklist_menu_seperator_type_id;
+}
+
+
+#line 189 "quicklist-view.vala"
+static void _unity_quicklauncher_quicklist_menu_item_round_rect (UnityQuicklauncherQuicklistMenuItem* self, cairo_t* cr, double aspect, double x, double y, double corner_radius, double width, double height) {
+#line 474 "quicklist-view.c"
+	double radius;
+#line 189 "quicklist-view.vala"
+	g_return_if_fail (self != NULL);
+#line 189 "quicklist-view.vala"
+	g_return_if_fail (cr != NULL);
+#line 198 "quicklist-view.vala"
+	radius = corner_radius / aspect;
+#line 201 "quicklist-view.vala"
+	cairo_move_to (cr, x + radius, y);
+#line 204 "quicklist-view.vala"
+	cairo_line_to (cr, (x + width) - radius, y);
+#line 207 "quicklist-view.vala"
+	cairo_arc (cr, (x + width) - radius, y + radius, radius, ((-90.0f) * G_PI) / 180.0f, (0.0f * G_PI) / 180.0f);
+#line 214 "quicklist-view.vala"
+	cairo_line_to (cr, x + width, (y + height) - radius);
+#line 217 "quicklist-view.vala"
+	cairo_arc (cr, (x + width) - radius, (y + height) - radius, radius, (0.0f * G_PI) / 180.0f, (90.0f * G_PI) / 180.0f);
+#line 224 "quicklist-view.vala"
+	cairo_line_to (cr, x + radius, y + height);
+#line 227 "quicklist-view.vala"
+	cairo_arc (cr, x + radius, (y + height) - radius, radius, (90.0f * G_PI) / 180.0f, (180.0f * G_PI) / 180.0f);
+#line 234 "quicklist-view.vala"
 	cairo_arc (cr, x + radius, y + radius, radius, (180.0f * G_PI) / 180.0f, (270.0f * G_PI) / 180.0f);
-#line 194 "quicklist-view.c"
+#line 498 "quicklist-view.c"
 }
 
 
@@ -199,9 +503,9 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 97 "quicklist-view.vala"
+#line 241 "quicklist-view.vala"
 static void _unity_quicklauncher_quicklist_menu_item_get_text_extents (UnityQuicklauncherQuicklistMenuItem* self, gint* width, gint* height) {
-#line 205 "quicklist-view.c"
+#line 509 "quicklist-view.c"
 	cairo_surface_t* dummy_surf;
 	cairo_t* dummy_cr;
 	PangoLayout* layout;
@@ -213,47 +517,47 @@ static void _unity_quicklauncher_quicklist_menu_item_get_text_extents (UnityQuic
 	GdkScreen* screen;
 	gint _tmp1_;
 	PangoRectangle log_rect = {0};
-#line 97 "quicklist-view.vala"
+#line 241 "quicklist-view.vala"
 	g_return_if_fail (self != NULL);
-#line 101 "quicklist-view.vala"
+#line 245 "quicklist-view.vala"
 	dummy_surf = cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
-#line 102 "quicklist-view.vala"
+#line 246 "quicklist-view.vala"
 	dummy_cr = cairo_create (dummy_surf);
-#line 103 "quicklist-view.vala"
+#line 247 "quicklist-view.vala"
 	layout = pango_cairo_create_layout (dummy_cr);
-#line 104 "quicklist-view.vala"
+#line 248 "quicklist-view.vala"
 	settings = _g_object_ref0 (gtk_settings_get_default ());
-#line 105 "quicklist-view.vala"
+#line 249 "quicklist-view.vala"
 	face = (g_object_get (settings, "gtk-font-name", &_tmp0_, NULL), _tmp0_);
-#line 106 "quicklist-view.vala"
+#line 250 "quicklist-view.vala"
 	desc = pango_font_description_from_string (face);
-#line 108 "quicklist-view.vala"
+#line 252 "quicklist-view.vala"
 	pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
-#line 109 "quicklist-view.vala"
+#line 253 "quicklist-view.vala"
 	pango_layout_set_font_description (layout, desc);
-#line 110 "quicklist-view.vala"
+#line 254 "quicklist-view.vala"
 	pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
-#line 111 "quicklist-view.vala"
+#line 255 "quicklist-view.vala"
 	pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
-#line 112 "quicklist-view.vala"
+#line 256 "quicklist-view.vala"
 	pango_layout_set_text (layout, self->priv->_label, -1);
-#line 113 "quicklist-view.vala"
+#line 257 "quicklist-view.vala"
 	pango_context = _g_object_ref0 (pango_layout_get_context (layout));
-#line 114 "quicklist-view.vala"
+#line 258 "quicklist-view.vala"
 	screen = _g_object_ref0 (gdk_screen_get_default ());
-#line 115 "quicklist-view.vala"
+#line 259 "quicklist-view.vala"
 	pango_cairo_context_set_font_options (pango_context, gdk_screen_get_font_options (screen));
-#line 117 "quicklist-view.vala"
+#line 261 "quicklist-view.vala"
 	pango_cairo_context_set_resolution (pango_context, (double) (((float) (g_object_get (settings, "gtk-xft-dpi", &_tmp1_, NULL), _tmp1_)) / ((float) PANGO_SCALE)));
-#line 120 "quicklist-view.vala"
+#line 264 "quicklist-view.vala"
 	pango_layout_context_changed (layout);
-#line 122 "quicklist-view.vala"
+#line 266 "quicklist-view.vala"
 	pango_layout_get_extents (layout, NULL, &log_rect);
-#line 123 "quicklist-view.vala"
+#line 267 "quicklist-view.vala"
 	*width = log_rect.width / PANGO_SCALE;
-#line 124 "quicklist-view.vala"
+#line 268 "quicklist-view.vala"
 	*height = log_rect.height / PANGO_SCALE;
-#line 257 "quicklist-view.c"
+#line 561 "quicklist-view.c"
 	_cairo_surface_destroy0 (dummy_surf);
 	_cairo_destroy0 (dummy_cr);
 	_g_object_unref0 (layout);
@@ -265,9 +569,9 @@ static void _unity_quicklauncher_quicklist_menu_item_get_text_extents (UnityQuic
 }
 
 
-#line 127 "quicklist-view.vala"
+#line 271 "quicklist-view.vala"
 static void _unity_quicklauncher_quicklist_menu_item_normal_mask (UnityQuicklauncherQuicklistMenuItem* self, cairo_t* cr, gint w, gint h, const char* label) {
-#line 271 "quicklist-view.c"
+#line 575 "quicklist-view.c"
 	PangoLayout* layout;
 	GtkSettings* settings;
 	char* _tmp0_ = NULL;
@@ -278,57 +582,57 @@ static void _unity_quicklauncher_quicklist_menu_item_normal_mask (UnityQuicklaun
 	gint _tmp1_;
 	gint text_width = 0;
 	gint text_height = 0;
-#line 127 "quicklist-view.vala"
+#line 271 "quicklist-view.vala"
 	g_return_if_fail (self != NULL);
-#line 127 "quicklist-view.vala"
+#line 271 "quicklist-view.vala"
 	g_return_if_fail (cr != NULL);
-#line 127 "quicklist-view.vala"
+#line 271 "quicklist-view.vala"
 	g_return_if_fail (label != NULL);
-#line 133 "quicklist-view.vala"
+#line 277 "quicklist-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-#line 134 "quicklist-view.vala"
+#line 278 "quicklist-view.vala"
 	cairo_paint (cr);
-#line 137 "quicklist-view.vala"
+#line 281 "quicklist-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-#line 138 "quicklist-view.vala"
+#line 282 "quicklist-view.vala"
 	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
-#line 139 "quicklist-view.vala"
+#line 283 "quicklist-view.vala"
 	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
-#line 141 "quicklist-view.vala"
+#line 285 "quicklist-view.vala"
 	layout = pango_cairo_create_layout (cr);
-#line 142 "quicklist-view.vala"
+#line 286 "quicklist-view.vala"
 	settings = _g_object_ref0 (gtk_settings_get_default ());
-#line 143 "quicklist-view.vala"
+#line 287 "quicklist-view.vala"
 	font_face = (g_object_get (settings, "gtk-font-name", &_tmp0_, NULL), _tmp0_);
-#line 144 "quicklist-view.vala"
+#line 288 "quicklist-view.vala"
 	desc = pango_font_description_from_string (font_face);
-#line 145 "quicklist-view.vala"
+#line 289 "quicklist-view.vala"
 	pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
-#line 146 "quicklist-view.vala"
+#line 290 "quicklist-view.vala"
 	pango_layout_set_font_description (layout, desc);
-#line 147 "quicklist-view.vala"
+#line 291 "quicklist-view.vala"
 	pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
-#line 148 "quicklist-view.vala"
+#line 292 "quicklist-view.vala"
 	pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
-#line 149 "quicklist-view.vala"
+#line 293 "quicklist-view.vala"
 	pango_layout_set_text (layout, label, -1);
-#line 150 "quicklist-view.vala"
+#line 294 "quicklist-view.vala"
 	pango_context = _g_object_ref0 (pango_layout_get_context (layout));
-#line 151 "quicklist-view.vala"
+#line 295 "quicklist-view.vala"
 	screen = _g_object_ref0 (gdk_screen_get_default ());
-#line 152 "quicklist-view.vala"
+#line 296 "quicklist-view.vala"
 	pango_cairo_context_set_font_options (pango_context, gdk_screen_get_font_options (screen));
-#line 154 "quicklist-view.vala"
+#line 298 "quicklist-view.vala"
 	pango_cairo_context_set_resolution (pango_context, (double) (((float) (g_object_get (settings, "gtk-xft-dpi", &_tmp1_, NULL), _tmp1_)) / ((float) PANGO_SCALE)));
-#line 157 "quicklist-view.vala"
+#line 301 "quicklist-view.vala"
 	pango_layout_context_changed (layout);
-#line 161 "quicklist-view.vala"
+#line 305 "quicklist-view.vala"
 	_unity_quicklauncher_quicklist_menu_item_get_text_extents (self, &text_width, &text_height);
-#line 162 "quicklist-view.vala"
+#line 306 "quicklist-view.vala"
 	cairo_move_to (cr, ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN), (double) (((float) (h - text_height)) / 2.0f));
-#line 165 "quicklist-view.vala"
+#line 309 "quicklist-view.vala"
 	pango_cairo_show_layout (cr, layout);
-#line 332 "quicklist-view.c"
+#line 636 "quicklist-view.c"
 	_g_object_unref0 (layout);
 	_g_object_unref0 (settings);
 	_g_free0 (font_face);
@@ -338,9 +642,9 @@ static void _unity_quicklauncher_quicklist_menu_item_normal_mask (UnityQuicklaun
 }
 
 
-#line 168 "quicklist-view.vala"
+#line 312 "quicklist-view.vala"
 static void _unity_quicklauncher_quicklist_menu_item_selected_mask (UnityQuicklauncherQuicklistMenuItem* self, cairo_t* cr, gint w, gint h, const char* label) {
-#line 344 "quicklist-view.c"
+#line 648 "quicklist-view.c"
 	PangoLayout* layout;
 	GtkSettings* settings;
 	char* _tmp0_ = NULL;
@@ -351,63 +655,63 @@ static void _unity_quicklauncher_quicklist_menu_item_selected_mask (UnityQuickla
 	gint _tmp1_;
 	gint text_width = 0;
 	gint text_height = 0;
-#line 168 "quicklist-view.vala"
+#line 312 "quicklist-view.vala"
 	g_return_if_fail (self != NULL);
-#line 168 "quicklist-view.vala"
+#line 312 "quicklist-view.vala"
 	g_return_if_fail (cr != NULL);
-#line 168 "quicklist-view.vala"
+#line 312 "quicklist-view.vala"
 	g_return_if_fail (label != NULL);
-#line 174 "quicklist-view.vala"
+#line 318 "quicklist-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-#line 175 "quicklist-view.vala"
+#line 319 "quicklist-view.vala"
 	cairo_paint (cr);
-#line 178 "quicklist-view.vala"
+#line 322 "quicklist-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-#line 179 "quicklist-view.vala"
+#line 323 "quicklist-view.vala"
 	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
-#line 180 "quicklist-view.vala"
+#line 324 "quicklist-view.vala"
 	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
-#line 183 "quicklist-view.vala"
+#line 327 "quicklist-view.vala"
 	_unity_quicklauncher_quicklist_menu_item_round_rect (self, cr, (double) 1.0f, (double) 0.5f, (double) 0.5f, ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_ITEM_CORNER_RADIUS), (double) (w - 1.0f), (double) (h - 1.0f));
-#line 190 "quicklist-view.vala"
+#line 334 "quicklist-view.vala"
 	cairo_fill (cr);
-#line 193 "quicklist-view.vala"
+#line 337 "quicklist-view.vala"
 	layout = pango_cairo_create_layout (cr);
-#line 194 "quicklist-view.vala"
+#line 338 "quicklist-view.vala"
 	settings = _g_object_ref0 (gtk_settings_get_default ());
-#line 195 "quicklist-view.vala"
+#line 339 "quicklist-view.vala"
 	font_face = (g_object_get (settings, "gtk-font-name", &_tmp0_, NULL), _tmp0_);
-#line 196 "quicklist-view.vala"
+#line 340 "quicklist-view.vala"
 	desc = pango_font_description_from_string (font_face);
-#line 197 "quicklist-view.vala"
+#line 341 "quicklist-view.vala"
 	pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
-#line 198 "quicklist-view.vala"
+#line 342 "quicklist-view.vala"
 	pango_layout_set_font_description (layout, desc);
-#line 199 "quicklist-view.vala"
+#line 343 "quicklist-view.vala"
 	pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
-#line 200 "quicklist-view.vala"
+#line 344 "quicklist-view.vala"
 	pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
-#line 201 "quicklist-view.vala"
+#line 345 "quicklist-view.vala"
 	pango_layout_set_text (layout, label, -1);
-#line 202 "quicklist-view.vala"
+#line 346 "quicklist-view.vala"
 	pango_context = _g_object_ref0 (pango_layout_get_context (layout));
-#line 203 "quicklist-view.vala"
+#line 347 "quicklist-view.vala"
 	screen = _g_object_ref0 (gdk_screen_get_default ());
-#line 204 "quicklist-view.vala"
+#line 348 "quicklist-view.vala"
 	pango_cairo_context_set_font_options (pango_context, gdk_screen_get_font_options (screen));
-#line 206 "quicklist-view.vala"
+#line 350 "quicklist-view.vala"
 	pango_cairo_context_set_resolution (pango_context, (double) (((float) (g_object_get (settings, "gtk-xft-dpi", &_tmp1_, NULL), _tmp1_)) / ((float) PANGO_SCALE)));
-#line 209 "quicklist-view.vala"
+#line 353 "quicklist-view.vala"
 	pango_layout_context_changed (layout);
-#line 213 "quicklist-view.vala"
+#line 357 "quicklist-view.vala"
 	_unity_quicklauncher_quicklist_menu_item_get_text_extents (self, &text_width, &text_height);
-#line 214 "quicklist-view.vala"
+#line 358 "quicklist-view.vala"
 	cairo_move_to (cr, ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN), (double) (((float) (h - text_height)) / 2.0f));
-#line 217 "quicklist-view.vala"
+#line 361 "quicklist-view.vala"
 	cairo_set_source_rgba (cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.0f);
-#line 218 "quicklist-view.vala"
+#line 362 "quicklist-view.vala"
 	pango_cairo_show_layout (cr, layout);
-#line 411 "quicklist-view.c"
+#line 715 "quicklist-view.c"
 	_g_object_unref0 (layout);
 	_g_object_unref0 (settings);
 	_g_free0 (font_face);
@@ -417,50 +721,50 @@ static void _unity_quicklauncher_quicklist_menu_item_selected_mask (UnityQuickla
 }
 
 
-#line 221 "quicklist-view.vala"
+#line 365 "quicklist-view.vala"
 static void unity_quicklauncher_quicklist_menu_item_real_paint (ClutterActor* base) {
-#line 423 "quicklist-view.c"
+#line 727 "quicklist-view.c"
 	UnityQuicklauncherQuicklistMenuItem * self;
 	self = (UnityQuicklauncherQuicklistMenuItem*) base;
-#line 224 "quicklist-view.vala"
+#line 368 "quicklist-view.vala"
 	clutter_actor_paint ((ClutterActor*) self->priv->item_background);
-#line 428 "quicklist-view.c"
+#line 732 "quicklist-view.c"
 }
 
 
-#line 227 "quicklist-view.vala"
+#line 371 "quicklist-view.vala"
 static void unity_quicklauncher_quicklist_menu_item_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height_p, float* natural_height_p) {
-#line 434 "quicklist-view.c"
+#line 738 "quicklist-view.c"
 	UnityQuicklauncherQuicklistMenuItem * self;
 	self = (UnityQuicklauncherQuicklistMenuItem*) base;
-#line 232 "quicklist-view.vala"
+#line 376 "quicklist-view.vala"
 	*min_height_p = (float) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_ITEM_HEIGHT);
-#line 233 "quicklist-view.vala"
+#line 377 "quicklist-view.vala"
 	*natural_height_p = *min_height_p;
-#line 441 "quicklist-view.c"
+#line 745 "quicklist-view.c"
 }
 
 
-#line 236 "quicklist-view.vala"
+#line 380 "quicklist-view.vala"
 static void unity_quicklauncher_quicklist_menu_item_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width_p, float* natural_width_p) {
-#line 447 "quicklist-view.c"
+#line 751 "quicklist-view.c"
 	UnityQuicklauncherQuicklistMenuItem * self;
 	gint width = 0;
 	gint height = 0;
 	self = (UnityQuicklauncherQuicklistMenuItem*) base;
-#line 243 "quicklist-view.vala"
+#line 387 "quicklist-view.vala"
 	_unity_quicklauncher_quicklist_menu_item_get_text_extents (self, &width, &height);
-#line 244 "quicklist-view.vala"
+#line 388 "quicklist-view.vala"
 	*min_width_p = ((float) width) + ((float) ctk_em_to_pixel ((double) (2 * UNITY_QUICKLAUNCHER_MARGIN)));
-#line 245 "quicklist-view.vala"
+#line 389 "quicklist-view.vala"
 	*natural_width_p = *min_width_p;
-#line 458 "quicklist-view.c"
+#line 762 "quicklist-view.c"
 }
 
 
-#line 248 "quicklist-view.vala"
+#line 392 "quicklist-view.vala"
 static void unity_quicklauncher_quicklist_menu_item_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-#line 464 "quicklist-view.c"
+#line 768 "quicklist-view.c"
 	UnityQuicklauncherQuicklistMenuItem * self;
 	gint w = 0;
 	gint h = 0;
@@ -475,83 +779,83 @@ static void unity_quicklauncher_quicklist_menu_item_real_allocate (ClutterActor*
 	cairo_t* normal_cr;
 	cairo_t* selected_cr;
 	self = (UnityQuicklauncherQuicklistMenuItem*) base;
-#line 254 "quicklist-view.vala"
+#line 398 "quicklist-view.vala"
 	white_color = (memset (&_tmp0_, 0, sizeof (ClutterColor)), _tmp0_.red = (guint8) 255, _tmp0_.green = (guint8) 255, _tmp0_.blue = (guint8) 255, _tmp0_.alpha = (guint8) 255, _tmp0_);
-#line 261 "quicklist-view.vala"
+#line 405 "quicklist-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_quicklauncher_quicklist_menu_item_parent_class)->allocate ((ClutterActor*) CTK_ACTOR (self), box, flags);
-#line 263 "quicklist-view.vala"
+#line 407 "quicklist-view.vala"
 	w = (gint) ((*box).x2 - (*box).x1);
-#line 264 "quicklist-view.vala"
+#line 408 "quicklist-view.vala"
 	h = (gint) ((*box).y2 - (*box).y1);
-#line 268 "quicklist-view.vala"
+#line 412 "quicklist-view.vala"
 	if (self->priv->old_width == w) {
-#line 268 "quicklist-view.vala"
+#line 412 "quicklist-view.vala"
 		_tmp1_ = self->priv->old_height == h;
-#line 491 "quicklist-view.c"
+#line 795 "quicklist-view.c"
 	} else {
-#line 268 "quicklist-view.vala"
+#line 412 "quicklist-view.vala"
 		_tmp1_ = FALSE;
-#line 495 "quicklist-view.c"
+#line 799 "quicklist-view.c"
 	}
-#line 268 "quicklist-view.vala"
+#line 412 "quicklist-view.vala"
 	if (_tmp1_) {
-#line 269 "quicklist-view.vala"
+#line 413 "quicklist-view.vala"
 		return;
-#line 501 "quicklist-view.c"
+#line 805 "quicklist-view.c"
 	}
-#line 272 "quicklist-view.vala"
+#line 416 "quicklist-view.vala"
 	self->priv->old_width = w;
-#line 273 "quicklist-view.vala"
+#line 417 "quicklist-view.vala"
 	self->priv->old_height = h;
-#line 276 "quicklist-view.vala"
+#line 420 "quicklist-view.vala"
 	if (CTK_IS_LAYER_ACTOR (self->priv->item_background)) {
-#line 277 "quicklist-view.vala"
+#line 421 "quicklist-view.vala"
 		clutter_actor_unparent ((ClutterActor*) self->priv->item_background);
-#line 511 "quicklist-view.c"
+#line 815 "quicklist-view.c"
 	}
-#line 278 "quicklist-view.vala"
+#line 422 "quicklist-view.vala"
 	self->priv->item_background = (_tmp2_ = g_object_ref_sink ((CtkLayerActor*) ctk_layer_actor_new ((guint) w, (guint) h)), _g_object_unref0 (self->priv->item_background), _tmp2_);
-#line 280 "quicklist-view.vala"
+#line 424 "quicklist-view.vala"
 	normal_layer = ctk_layer_new ((guint) w, (guint) h, CTK_LAYER_REPEAT_NONE, CTK_LAYER_REPEAT_NONE);
-#line 284 "quicklist-view.vala"
+#line 428 "quicklist-view.vala"
 	selected_layer = ctk_layer_new ((guint) w, (guint) h, CTK_LAYER_REPEAT_NONE, CTK_LAYER_REPEAT_NONE);
-#line 289 "quicklist-view.vala"
+#line 433 "quicklist-view.vala"
 	normal_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
-#line 292 "quicklist-view.vala"
+#line 436 "quicklist-view.vala"
 	selected_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
-#line 296 "quicklist-view.vala"
+#line 440 "quicklist-view.vala"
 	normal_cr = cairo_create (normal_surf);
-#line 297 "quicklist-view.vala"
+#line 441 "quicklist-view.vala"
 	selected_cr = cairo_create (selected_surf);
-#line 299 "quicklist-view.vala"
+#line 443 "quicklist-view.vala"
 	_unity_quicklauncher_quicklist_menu_item_normal_mask (self, normal_cr, w, h, self->priv->_label);
-#line 300 "quicklist-view.vala"
+#line 444 "quicklist-view.vala"
 	_unity_quicklauncher_quicklist_menu_item_selected_mask (self, selected_cr, w, h, self->priv->_label);
-#line 302 "quicklist-view.vala"
+#line 446 "quicklist-view.vala"
 	ctk_layer_set_mask_from_surface (normal_layer, normal_surf);
-#line 303 "quicklist-view.vala"
+#line 447 "quicklist-view.vala"
 	ctk_layer_set_color (normal_layer, &white_color);
-#line 305 "quicklist-view.vala"
+#line 449 "quicklist-view.vala"
 	ctk_layer_set_mask_from_surface (selected_layer, selected_surf);
-#line 306 "quicklist-view.vala"
+#line 450 "quicklist-view.vala"
 	ctk_layer_set_color (selected_layer, &white_color);
-#line 308 "quicklist-view.vala"
+#line 452 "quicklist-view.vala"
 	ctk_layer_actor_add_layer (self->priv->item_background, normal_layer);
-#line 309 "quicklist-view.vala"
+#line 453 "quicklist-view.vala"
 	ctk_layer_actor_add_layer (self->priv->item_background, selected_layer);
-#line 311 "quicklist-view.vala"
+#line 455 "quicklist-view.vala"
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 0), TRUE);
-#line 312 "quicklist-view.vala"
+#line 456 "quicklist-view.vala"
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 1), FALSE);
-#line 313 "quicklist-view.vala"
+#line 457 "quicklist-view.vala"
 	clutter_actor_queue_redraw ((ClutterActor*) self->priv->item_background);
-#line 315 "quicklist-view.vala"
+#line 459 "quicklist-view.vala"
 	clutter_actor_set_parent ((ClutterActor*) self->priv->item_background, (ClutterActor*) self);
-#line 316 "quicklist-view.vala"
+#line 460 "quicklist-view.vala"
 	clutter_actor_map ((ClutterActor*) self->priv->item_background);
-#line 317 "quicklist-view.vala"
+#line 461 "quicklist-view.vala"
 	clutter_actor_show ((ClutterActor*) self->priv->item_background);
-#line 555 "quicklist-view.c"
+#line 859 "quicklist-view.c"
 	_g_object_unref0 (normal_layer);
 	_g_object_unref0 (selected_layer);
 	_cairo_surface_destroy0 (normal_surf);
@@ -561,143 +865,143 @@ static void unity_quicklauncher_quicklist_menu_item_real_allocate (ClutterActor*
 }
 
 
-#line 320 "quicklist-view.vala"
+#line 464 "quicklist-view.vala"
 static gboolean _unity_quicklauncher_quicklist_menu_item_on_enter (UnityQuicklauncherQuicklistMenuItem* self, ClutterEvent* event) {
-#line 567 "quicklist-view.c"
+#line 871 "quicklist-view.c"
 	gboolean result;
-#line 320 "quicklist-view.vala"
+#line 464 "quicklist-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 571 "quicklist-view.c"
+#line 875 "quicklist-view.c"
 	g_return_val_if_fail (UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_ITEM (self), FALSE);
-#line 323 "quicklist-view.vala"
+#line 467 "quicklist-view.vala"
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 0), FALSE);
-#line 324 "quicklist-view.vala"
+#line 468 "quicklist-view.vala"
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 1), TRUE);
-#line 325 "quicklist-view.vala"
+#line 469 "quicklist-view.vala"
 	clutter_actor_queue_redraw ((ClutterActor*) self->priv->item_background);
-#line 579 "quicklist-view.c"
+#line 883 "quicklist-view.c"
 	result = FALSE;
-#line 326 "quicklist-view.vala"
+#line 470 "quicklist-view.vala"
 	return result;
-#line 583 "quicklist-view.c"
+#line 887 "quicklist-view.c"
 }
 
 
-#line 329 "quicklist-view.vala"
+#line 473 "quicklist-view.vala"
 static gboolean _unity_quicklauncher_quicklist_menu_item_on_leave (UnityQuicklauncherQuicklistMenuItem* self, ClutterEvent* event) {
-#line 589 "quicklist-view.c"
+#line 893 "quicklist-view.c"
 	gboolean result;
-#line 329 "quicklist-view.vala"
+#line 473 "quicklist-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 593 "quicklist-view.c"
+#line 897 "quicklist-view.c"
 	g_return_val_if_fail (UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_ITEM (self), FALSE);
-#line 332 "quicklist-view.vala"
+#line 476 "quicklist-view.vala"
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 0), TRUE);
-#line 333 "quicklist-view.vala"
+#line 477 "quicklist-view.vala"
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 1), FALSE);
-#line 334 "quicklist-view.vala"
+#line 478 "quicklist-view.vala"
 	clutter_actor_queue_redraw ((ClutterActor*) self->priv->item_background);
-#line 601 "quicklist-view.c"
+#line 905 "quicklist-view.c"
 	result = FALSE;
-#line 335 "quicklist-view.vala"
+#line 479 "quicklist-view.vala"
 	return result;
-#line 605 "quicklist-view.c"
+#line 909 "quicklist-view.c"
 }
 
 
-#line 338 "quicklist-view.vala"
+#line 482 "quicklist-view.vala"
 static void _unity_quicklauncher_quicklist_menu_item_on_label_changed (UnityQuicklauncherQuicklistMenuItem* self) {
-#line 611 "quicklist-view.c"
+#line 915 "quicklist-view.c"
 	char* _tmp0_;
-#line 338 "quicklist-view.vala"
+#line 482 "quicklist-view.vala"
 	g_return_if_fail (self != NULL);
-#line 341 "quicklist-view.vala"
+#line 485 "quicklist-view.vala"
 	if (_vala_strcmp0 (self->priv->old_label, self->priv->_label) == 0) {
-#line 342 "quicklist-view.vala"
+#line 486 "quicklist-view.vala"
 		return;
-#line 619 "quicklist-view.c"
+#line 923 "quicklist-view.c"
 	}
-#line 344 "quicklist-view.vala"
+#line 488 "quicklist-view.vala"
 	self->priv->old_label = (_tmp0_ = g_strdup (self->priv->_label), _g_free0 (self->priv->old_label), _tmp0_);
-#line 623 "quicklist-view.c"
+#line 927 "quicklist-view.c"
 }
 
 
-#line 338 "quicklist-view.vala"
+#line 482 "quicklist-view.vala"
 static void __unity_quicklauncher_quicklist_menu_item_on_label_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-#line 629 "quicklist-view.c"
+#line 933 "quicklist-view.c"
 	_unity_quicklauncher_quicklist_menu_item_on_label_changed (self);
 }
 
 
-#line 320 "quicklist-view.vala"
+#line 464 "quicklist-view.vala"
 static gboolean __unity_quicklauncher_quicklist_menu_item_on_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 636 "quicklist-view.c"
+#line 940 "quicklist-view.c"
 	return _unity_quicklauncher_quicklist_menu_item_on_enter (self, event);
 }
 
 
-#line 329 "quicklist-view.vala"
+#line 473 "quicklist-view.vala"
 static gboolean __unity_quicklauncher_quicklist_menu_item_on_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 643 "quicklist-view.c"
+#line 947 "quicklist-view.c"
 	return _unity_quicklauncher_quicklist_menu_item_on_leave (self, event);
 }
 
 
-#line 350 "quicklist-view.vala"
+#line 494 "quicklist-view.vala"
 static gboolean __unity_quicklauncher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 650 "quicklist-view.c"
+#line 954 "quicklist-view.c"
 	return _unity_quicklauncher_quicklist_menu_item_on_mouse_down (self, event);
 }
 
 
-#line 350 "quicklist-view.vala"
+#line 494 "quicklist-view.vala"
 static gboolean _unity_quicklauncher_quicklist_menu_item_on_mouse_down (UnityQuicklauncherQuicklistMenuItem* self, ClutterEvent* event) {
-#line 657 "quicklist-view.c"
+#line 961 "quicklist-view.c"
 	gboolean result;
 	GQuark _tmp1_;
 	guint _tmp0_;
 	guint _tmp2_;
 	guint _tmp3_;
 	guint _tmp4_;
-#line 350 "quicklist-view.vala"
+#line 494 "quicklist-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 352 "quicklist-view.vala"
+#line 496 "quicklist-view.vala"
 	g_signal_handlers_disconnect_matched ((GObject*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_DETAIL | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("notify::label", G_TYPE_OBJECT, &_tmp0_, &_tmp1_, FALSE), _tmp0_), 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_label_changed_g_object_notify, self);
-#line 353 "quicklist-view.vala"
+#line 497 "quicklist-view.vala"
 	g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("enter-event", CLUTTER_TYPE_ACTOR, &_tmp2_, NULL, FALSE), _tmp2_), 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_enter_clutter_actor_enter_event, self);
-#line 354 "quicklist-view.vala"
+#line 498 "quicklist-view.vala"
 	g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("leave-event", CLUTTER_TYPE_ACTOR, &_tmp3_, NULL, FALSE), _tmp3_), 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_leave_clutter_actor_leave_event, self);
-#line 355 "quicklist-view.vala"
+#line 499 "quicklist-view.vala"
 	g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("button-press-event", CLUTTER_TYPE_ACTOR, &_tmp4_, NULL, FALSE), _tmp4_), 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event, self);
-#line 356 "quicklist-view.vala"
+#line 500 "quicklist-view.vala"
 	g_signal_emit_by_name (self, "activated");
-#line 676 "quicklist-view.c"
+#line 980 "quicklist-view.c"
 	result = TRUE;
-#line 357 "quicklist-view.vala"
+#line 501 "quicklist-view.vala"
 	return result;
-#line 680 "quicklist-view.c"
+#line 984 "quicklist-view.c"
 }
 
 
-#line 360 "quicklist-view.vala"
+#line 504 "quicklist-view.vala"
 UnityQuicklauncherQuicklistMenuItem* unity_quicklauncher_quicklist_menu_item_construct (GType object_type, const char* label) {
-#line 686 "quicklist-view.c"
+#line 990 "quicklist-view.c"
 	UnityQuicklauncherQuicklistMenuItem * self;
-#line 360 "quicklist-view.vala"
+#line 504 "quicklist-view.vala"
 	g_return_val_if_fail (label != NULL, NULL);
-#line 362 "quicklist-view.vala"
+#line 506 "quicklist-view.vala"
 	self = (UnityQuicklauncherQuicklistMenuItem*) g_object_new (object_type, "label", label, NULL);
-#line 692 "quicklist-view.c"
+#line 996 "quicklist-view.c"
 	return self;
 }
 
 
-#line 360 "quicklist-view.vala"
+#line 504 "quicklist-view.vala"
 UnityQuicklauncherQuicklistMenuItem* unity_quicklauncher_quicklist_menu_item_new (const char* label) {
-#line 360 "quicklist-view.vala"
+#line 504 "quicklist-view.vala"
 	return unity_quicklauncher_quicklist_menu_item_construct (UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM, label);
-#line 701 "quicklist-view.c"
+#line 1005 "quicklist-view.c"
 }
 
 
@@ -705,9 +1009,9 @@ const char* unity_quicklauncher_quicklist_menu_item_get_label (UnityQuicklaunche
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_label;
-#line 348 "quicklist-view.vala"
+#line 492 "quicklist-view.vala"
 	return result;
-#line 711 "quicklist-view.c"
+#line 1015 "quicklist-view.c"
 }
 
 
@@ -727,30 +1031,30 @@ static GObject * unity_quicklauncher_quicklist_menu_item_constructor (GType type
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM (obj);
 	{
-		CtkPadding _tmp0_ = {0};
+		CtkPadding _tmp1_ = {0};
 		CtkPadding padding;
-		char* _tmp1_;
-#line 375 "quicklist-view.vala"
-		padding = (memset (&_tmp0_, 0, sizeof (CtkPadding)), _tmp0_.left = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp0_.right = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp0_.top = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp0_.bottom = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp0_);
-#line 381 "quicklist-view.vala"
+		char* _tmp2_;
+#line 519 "quicklist-view.vala"
+		padding = (memset (&_tmp1_, 0, sizeof (CtkPadding)), _tmp1_.left = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp1_.right = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp1_.top = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp1_.bottom = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp1_);
+#line 525 "quicklist-view.vala"
 		ctk_actor_set_padding ((CtkActor*) self, &padding);
-#line 383 "quicklist-view.vala"
+#line 527 "quicklist-view.vala"
 		g_signal_connect_object ((GObject*) self, "notify::label", (GCallback) __unity_quicklauncher_quicklist_menu_item_on_label_changed_g_object_notify, self, 0);
-#line 384 "quicklist-view.vala"
+#line 528 "quicklist-view.vala"
 		g_signal_connect_object ((ClutterActor*) self, "enter-event", (GCallback) __unity_quicklauncher_quicklist_menu_item_on_enter_clutter_actor_enter_event, self, 0);
-#line 385 "quicklist-view.vala"
+#line 529 "quicklist-view.vala"
 		g_signal_connect_object ((ClutterActor*) self, "leave-event", (GCallback) __unity_quicklauncher_quicklist_menu_item_on_leave_clutter_actor_leave_event, self, 0);
-#line 386 "quicklist-view.vala"
+#line 530 "quicklist-view.vala"
 		g_signal_connect_object ((ClutterActor*) self, "button-press-event", (GCallback) __unity_quicklauncher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event, self, 0);
-#line 388 "quicklist-view.vala"
+#line 532 "quicklist-view.vala"
 		clutter_actor_set_reactive ((ClutterActor*) self, TRUE);
-#line 390 "quicklist-view.vala"
+#line 534 "quicklist-view.vala"
 		self->priv->old_width = 0;
-#line 391 "quicklist-view.vala"
+#line 535 "quicklist-view.vala"
 		self->priv->old_height = 0;
-#line 392 "quicklist-view.vala"
-		self->priv->old_label = (_tmp1_ = g_strdup (""), _g_free0 (self->priv->old_label), _tmp1_);
-#line 754 "quicklist-view.c"
+#line 536 "quicklist-view.vala"
+		self->priv->old_label = (_tmp2_ = g_strdup (""), _g_free0 (self->priv->old_label), _tmp2_);
+#line 1058 "quicklist-view.c"
 	}
 	return obj;
 }
@@ -781,20 +1085,20 @@ static void unity_quicklauncher_quicklist_menu_item_finalize (GObject* obj) {
 	UnityQuicklauncherQuicklistMenuItem * self;
 	self = UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM (obj);
 	{
-		GQuark _tmp3_;
-		guint _tmp2_;
-		guint _tmp4_;
+		GQuark _tmp4_;
+		guint _tmp3_;
 		guint _tmp5_;
 		guint _tmp6_;
-#line 367 "quicklist-view.vala"
-		g_signal_handlers_disconnect_matched ((GObject*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_DETAIL | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("notify::label", G_TYPE_OBJECT, &_tmp2_, &_tmp3_, FALSE), _tmp2_), 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_label_changed_g_object_notify, self);
-#line 368 "quicklist-view.vala"
-		g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("enter-event", CLUTTER_TYPE_ACTOR, &_tmp4_, NULL, FALSE), _tmp4_), 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_enter_clutter_actor_enter_event, self);
-#line 369 "quicklist-view.vala"
-		g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("leave-event", CLUTTER_TYPE_ACTOR, &_tmp5_, NULL, FALSE), _tmp5_), 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_leave_clutter_actor_leave_event, self);
-#line 370 "quicklist-view.vala"
-		g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("button-press-event", CLUTTER_TYPE_ACTOR, &_tmp6_, NULL, FALSE), _tmp6_), 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event, self);
-#line 798 "quicklist-view.c"
+		guint _tmp7_;
+#line 511 "quicklist-view.vala"
+		g_signal_handlers_disconnect_matched ((GObject*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_DETAIL | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("notify::label", G_TYPE_OBJECT, &_tmp3_, &_tmp4_, FALSE), _tmp3_), 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_label_changed_g_object_notify, self);
+#line 512 "quicklist-view.vala"
+		g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("enter-event", CLUTTER_TYPE_ACTOR, &_tmp5_, NULL, FALSE), _tmp5_), 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_enter_clutter_actor_enter_event, self);
+#line 513 "quicklist-view.vala"
+		g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("leave-event", CLUTTER_TYPE_ACTOR, &_tmp6_, NULL, FALSE), _tmp6_), 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_leave_clutter_actor_leave_event, self);
+#line 514 "quicklist-view.vala"
+		g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("button-press-event", CLUTTER_TYPE_ACTOR, &_tmp7_, NULL, FALSE), _tmp7_), 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event, self);
+#line 1102 "quicklist-view.c"
 	}
 	_g_object_unref0 (self->priv->item_background);
 	_g_free0 (self->priv->old_label);
@@ -841,240 +1145,205 @@ static void unity_quicklauncher_quicklist_menu_item_set_property (GObject * obje
 }
 
 
-#line 404 "quicklist-view.vala"
-static void _unity_quicklauncher_quicklist_menu_round_rect_anchor (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, double aspect, double x, double y, double corner_radius, double width, double height, double anchor_width, double anchor_height, double anchor_x, double anchor_y, gboolean is_label) {
-#line 847 "quicklist-view.c"
+#line 549 "quicklist-view.vala"
+static void _unity_quicklauncher_quicklist_menu_round_rect_anchor (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, double aspect, double x, double y, double corner_radius, double width, double height, double anchor_width, double anchor_height, double anchor_x, double anchor_y) {
+#line 1151 "quicklist-view.c"
 	double radius;
-#line 404 "quicklist-view.vala"
+#line 549 "quicklist-view.vala"
 	g_return_if_fail (self != NULL);
-#line 404 "quicklist-view.vala"
+#line 549 "quicklist-view.vala"
 	g_return_if_fail (cr != NULL);
-#line 418 "quicklist-view.vala"
+#line 562 "quicklist-view.vala"
 	radius = corner_radius / aspect;
-#line 421 "quicklist-view.vala"
+#line 565 "quicklist-view.vala"
 	cairo_move_to (cr, x + radius, y);
-#line 424 "quicklist-view.vala"
+#line 568 "quicklist-view.vala"
 	cairo_line_to (cr, (x + width) - radius, y);
-#line 427 "quicklist-view.vala"
+#line 571 "quicklist-view.vala"
 	cairo_arc (cr, (x + width) - radius, y + radius, radius, ((-90.0f) * G_PI) / 180.0f, (0.0f * G_PI) / 180.0f);
-#line 434 "quicklist-view.vala"
+#line 578 "quicklist-view.vala"
 	cairo_line_to (cr, x + width, (y + height) - radius);
-#line 437 "quicklist-view.vala"
+#line 581 "quicklist-view.vala"
 	cairo_arc (cr, (x + width) - radius, (y + height) - radius, radius, (0.0f * G_PI) / 180.0f, (90.0f * G_PI) / 180.0f);
-#line 444 "quicklist-view.vala"
+#line 588 "quicklist-view.vala"
 	cairo_line_to (cr, x + radius, y + height);
-#line 447 "quicklist-view.vala"
+#line 591 "quicklist-view.vala"
 	cairo_arc (cr, x + radius, (y + height) - radius, radius, (90.0f * G_PI) / 180.0f, (180.0f * G_PI) / 180.0f);
-#line 454 "quicklist-view.vala"
-	if (is_label) {
-#line 456 "quicklist-view.vala"
-		cairo_line_to (cr, anchor_x + anchor_width, anchor_y + (anchor_height / 2.0f));
-#line 457 "quicklist-view.vala"
-		cairo_line_to (cr, anchor_x, anchor_y);
-#line 458 "quicklist-view.vala"
-		cairo_line_to (cr, anchor_x + anchor_width, anchor_y - (anchor_height / 2.0f));
-#line 877 "quicklist-view.c"
-	} else {
-#line 462 "quicklist-view.vala"
-		cairo_line_to (cr, anchor_x + anchor_width, (y + radius) + anchor_height);
-#line 463 "quicklist-view.vala"
-		cairo_line_to (cr, anchor_x, (y + radius) + (anchor_height / 2.0f));
-#line 464 "quicklist-view.vala"
-		cairo_line_to (cr, anchor_x + anchor_width, y + radius);
-#line 885 "quicklist-view.c"
-	}
-#line 468 "quicklist-view.vala"
+#line 598 "quicklist-view.vala"
+	cairo_line_to (cr, anchor_x + anchor_width, anchor_y + (anchor_height / 2.0f));
+#line 599 "quicklist-view.vala"
+	cairo_line_to (cr, anchor_x, anchor_y);
+#line 600 "quicklist-view.vala"
+	cairo_line_to (cr, anchor_x + anchor_width, anchor_y - (anchor_height / 2.0f));
+#line 603 "quicklist-view.vala"
 	cairo_arc (cr, x + radius, y + radius, radius, (180.0f * G_PI) / 180.0f, (270.0f * G_PI) / 180.0f);
-#line 889 "quicklist-view.c"
+#line 1181 "quicklist-view.c"
 }
 
 
-#line 475 "quicklist-view.vala"
+#line 610 "quicklist-view.vala"
 static void _unity_quicklauncher_quicklist_menu_draw_mask (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, gint w, gint h, float anchor_y) {
-#line 895 "quicklist-view.c"
-	double _tmp0_ = 0.0;
-	gboolean _tmp1_ = FALSE;
-#line 475 "quicklist-view.vala"
+#line 610 "quicklist-view.vala"
 	g_return_if_fail (self != NULL);
-#line 475 "quicklist-view.vala"
+#line 610 "quicklist-view.vala"
 	g_return_if_fail (cr != NULL);
-#line 491 "quicklist-view.vala"
-	if (anchor_y != 0.0f) {
-#line 491 "quicklist-view.vala"
-		_tmp0_ = anchor_y + ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_SHADOW_SIZE / 2));
-#line 906 "quicklist-view.c"
-	} else {
-#line 491 "quicklist-view.vala"
-		_tmp0_ = (double) (((float) h) / 2.0f);
-#line 910 "quicklist-view.c"
-	}
-#line 492 "quicklist-view.vala"
-	if (anchor_y != 0.0f) {
-#line 492 "quicklist-view.vala"
-		_tmp1_ = FALSE;
-#line 916 "quicklist-view.c"
-	} else {
-#line 492 "quicklist-view.vala"
-		_tmp1_ = TRUE;
-#line 920 "quicklist-view.c"
-	}
-#line 481 "quicklist-view.vala"
-	_unity_quicklauncher_quicklist_menu_round_rect_anchor (self, cr, (double) 1.0f, 0.5f + ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_ANCHOR_WIDTH + UNITY_QUICKLAUNCHER_SHADOW_SIZE)), 0.5f + ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_SHADOW_SIZE), ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_CORNER_RADIUS), (((double) w) - 1.0f) - ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_ANCHOR_WIDTH + (2 * UNITY_QUICKLAUNCHER_SHADOW_SIZE))), (((double) h) - 1.0f) - ctk_em_to_pixel ((double) (2 * UNITY_QUICKLAUNCHER_SHADOW_SIZE)), ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_ANCHOR_WIDTH), ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_ANCHOR_HEIGHT), ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_SHADOW_SIZE), _tmp0_, _tmp1_);
-#line 924 "quicklist-view.c"
+#line 616 "quicklist-view.vala"
+	_unity_quicklauncher_quicklist_menu_round_rect_anchor (self, cr, (double) 1.0f, 0.5f + ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_ANCHOR_WIDTH + UNITY_QUICKLAUNCHER_SHADOW_SIZE)), 0.5f + ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_SHADOW_SIZE), ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_CORNER_RADIUS), (((double) w) - 1.0f) - ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_ANCHOR_WIDTH + (2 * UNITY_QUICKLAUNCHER_SHADOW_SIZE))), (((double) h) - 1.0f) - ctk_em_to_pixel ((double) (2 * UNITY_QUICKLAUNCHER_SHADOW_SIZE)), ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_ANCHOR_WIDTH), ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_ANCHOR_HEIGHT), ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_SHADOW_SIZE), (double) anchor_y);
+#line 1193 "quicklist-view.c"
 }
 
 
-#line 495 "quicklist-view.vala"
+#line 629 "quicklist-view.vala"
 static void _unity_quicklauncher_quicklist_menu_full_mask (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, gint w, gint h, float anchor_y) {
-#line 495 "quicklist-view.vala"
+#line 629 "quicklist-view.vala"
 	g_return_if_fail (self != NULL);
-#line 495 "quicklist-view.vala"
+#line 629 "quicklist-view.vala"
 	g_return_if_fail (cr != NULL);
-#line 502 "quicklist-view.vala"
+#line 636 "quicklist-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-#line 503 "quicklist-view.vala"
+#line 637 "quicklist-view.vala"
 	cairo_paint (cr);
-#line 504 "quicklist-view.vala"
+#line 638 "quicklist-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-#line 505 "quicklist-view.vala"
+#line 639 "quicklist-view.vala"
 	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
-#line 506 "quicklist-view.vala"
+#line 640 "quicklist-view.vala"
 	cairo_paint (cr);
-#line 944 "quicklist-view.c"
+#line 1213 "quicklist-view.c"
 }
 
 
-#line 509 "quicklist-view.vala"
+#line 643 "quicklist-view.vala"
 static void _unity_quicklauncher_quicklist_menu_fill_mask (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, gint w, gint h, float anchor_y) {
-#line 509 "quicklist-view.vala"
+#line 643 "quicklist-view.vala"
 	g_return_if_fail (self != NULL);
-#line 509 "quicklist-view.vala"
+#line 643 "quicklist-view.vala"
 	g_return_if_fail (cr != NULL);
-#line 516 "quicklist-view.vala"
+#line 650 "quicklist-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-#line 517 "quicklist-view.vala"
+#line 651 "quicklist-view.vala"
 	cairo_paint (cr);
-#line 520 "quicklist-view.vala"
+#line 654 "quicklist-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-#line 521 "quicklist-view.vala"
+#line 655 "quicklist-view.vala"
 	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
-#line 522 "quicklist-view.vala"
+#line 656 "quicklist-view.vala"
 	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
-#line 525 "quicklist-view.vala"
+#line 659 "quicklist-view.vala"
 	_unity_quicklauncher_quicklist_menu_draw_mask (self, cr, w, h, anchor_y);
-#line 526 "quicklist-view.vala"
+#line 660 "quicklist-view.vala"
 	cairo_fill (cr);
-#line 968 "quicklist-view.c"
+#line 1237 "quicklist-view.c"
 }
 
 
-#line 529 "quicklist-view.vala"
+#line 663 "quicklist-view.vala"
 static void _unity_quicklauncher_quicklist_menu_main_bg (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, gint w, gint h, float anchor_y) {
-#line 974 "quicklist-view.c"
+#line 1243 "quicklist-view.c"
 	cairo_surface_t* dots;
 	cairo_t* cr_dots;
 	cairo_pattern_t* dot_pattern;
 	cairo_pattern_t* hl_pattern;
 	cairo_pattern_t* _tmp0_;
 	cairo_pattern_t* _tmp1_;
-#line 529 "quicklist-view.vala"
+#line 663 "quicklist-view.vala"
 	g_return_if_fail (self != NULL);
-#line 529 "quicklist-view.vala"
+#line 663 "quicklist-view.vala"
 	g_return_if_fail (cr != NULL);
-#line 535 "quicklist-view.vala"
+#line 669 "quicklist-view.vala"
 	dots = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 4, 4);
-#line 536 "quicklist-view.vala"
+#line 670 "quicklist-view.vala"
 	cr_dots = cairo_create (dots);
-#line 989 "quicklist-view.c"
+#line 1258 "quicklist-view.c"
 	dot_pattern = NULL;
 	hl_pattern = NULL;
-#line 541 "quicklist-view.vala"
+#line 675 "quicklist-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-#line 542 "quicklist-view.vala"
+#line 676 "quicklist-view.vala"
 	cairo_paint (cr);
-#line 545 "quicklist-view.vala"
+#line 679 "quicklist-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-#line 546 "quicklist-view.vala"
+#line 680 "quicklist-view.vala"
 	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
-#line 547 "quicklist-view.vala"
+#line 681 "quicklist-view.vala"
 	cairo_set_source_rgba (cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.48f);
-#line 550 "quicklist-view.vala"
+#line 684 "quicklist-view.vala"
 	_unity_quicklauncher_quicklist_menu_draw_mask (self, cr, w, h, anchor_y);
-#line 551 "quicklist-view.vala"
+#line 685 "quicklist-view.vala"
 	cairo_fill (cr);
-#line 552 "quicklist-view.vala"
+#line 686 "quicklist-view.vala"
 	ctk_surface_blur (cairo_get_target (cr), (guint) ((gint) ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_SHADOW_SIZE / 2))));
-#line 555 "quicklist-view.vala"
+#line 689 "quicklist-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-#line 556 "quicklist-view.vala"
+#line 690 "quicklist-view.vala"
 	_unity_quicklauncher_quicklist_menu_draw_mask (self, cr, w, h, anchor_y);
-#line 557 "quicklist-view.vala"
+#line 691 "quicklist-view.vala"
 	cairo_fill (cr);
-#line 560 "quicklist-view.vala"
+#line 694 "quicklist-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-#line 561 "quicklist-view.vala"
+#line 695 "quicklist-view.vala"
 	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
-#line 562 "quicklist-view.vala"
+#line 696 "quicklist-view.vala"
 	cairo_set_source_rgba (cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.3f);
-#line 563 "quicklist-view.vala"
+#line 697 "quicklist-view.vala"
 	_unity_quicklauncher_quicklist_menu_draw_mask (self, cr, w, h, anchor_y);
-#line 564 "quicklist-view.vala"
+#line 698 "quicklist-view.vala"
 	cairo_fill (cr);
-#line 567 "quicklist-view.vala"
+#line 701 "quicklist-view.vala"
 	cairo_set_operator (cr_dots, CAIRO_OPERATOR_CLEAR);
-#line 568 "quicklist-view.vala"
+#line 702 "quicklist-view.vala"
 	cairo_paint (cr_dots);
-#line 569 "quicklist-view.vala"
+#line 703 "quicklist-view.vala"
 	cairo_scale (cr_dots, (double) 1.0f, (double) 1.0f);
-#line 570 "quicklist-view.vala"
+#line 704 "quicklist-view.vala"
 	cairo_set_operator (cr_dots, CAIRO_OPERATOR_OVER);
-#line 571 "quicklist-view.vala"
+#line 705 "quicklist-view.vala"
 	cairo_set_source_rgba (cr_dots, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.15f);
-#line 572 "quicklist-view.vala"
+#line 706 "quicklist-view.vala"
 	cairo_rectangle (cr_dots, (double) 0.0f, (double) 0.0f, (double) 1.0f, (double) 1.0f);
-#line 573 "quicklist-view.vala"
+#line 707 "quicklist-view.vala"
 	cairo_fill (cr_dots);
-#line 574 "quicklist-view.vala"
+#line 708 "quicklist-view.vala"
 	cairo_rectangle (cr_dots, (double) 2.0f, (double) 2.0f, (double) 1.0f, (double) 1.0f);
-#line 575 "quicklist-view.vala"
+#line 709 "quicklist-view.vala"
 	cairo_fill (cr_dots);
-#line 576 "quicklist-view.vala"
+#line 710 "quicklist-view.vala"
 	dot_pattern = (_tmp0_ = cairo_pattern_create_for_surface (dots), _cairo_pattern_destroy0 (dot_pattern), _tmp0_);
-#line 577 "quicklist-view.vala"
+#line 711 "quicklist-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-#line 578 "quicklist-view.vala"
+#line 712 "quicklist-view.vala"
 	cairo_set_source (cr, dot_pattern);
-#line 579 "quicklist-view.vala"
+#line 713 "quicklist-view.vala"
 	cairo_pattern_set_extend (dot_pattern, CAIRO_EXTEND_REPEAT);
-#line 580 "quicklist-view.vala"
+#line 714 "quicklist-view.vala"
 	_unity_quicklauncher_quicklist_menu_draw_mask (self, cr, w, h, anchor_y);
-#line 581 "quicklist-view.vala"
+#line 715 "quicklist-view.vala"
 	cairo_fill (cr);
-#line 584 "quicklist-view.vala"
+#line 718 "quicklist-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-#line 585 "quicklist-view.vala"
+#line 719 "quicklist-view.vala"
 	hl_pattern = (_tmp1_ = cairo_pattern_create_radial (((double) w) / 2.0f, ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_BORDER), (double) 0.0f, ((double) w) / 2.0f, ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_BORDER), ((double) w) / 2.0f), _cairo_pattern_destroy0 (hl_pattern), _tmp1_);
-#line 591 "quicklist-view.vala"
+#line 725 "quicklist-view.vala"
 	cairo_pattern_add_color_stop_rgba (hl_pattern, (double) 0.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
-#line 592 "quicklist-view.vala"
+#line 726 "quicklist-view.vala"
 	cairo_pattern_add_color_stop_rgba (hl_pattern, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.0f);
-#line 593 "quicklist-view.vala"
+#line 727 "quicklist-view.vala"
 	cairo_set_source (cr, hl_pattern);
-#line 594 "quicklist-view.vala"
+#line 728 "quicklist-view.vala"
 	_unity_quicklauncher_quicklist_menu_draw_mask (self, cr, w, h, anchor_y);
-#line 595 "quicklist-view.vala"
+#line 729 "quicklist-view.vala"
 	cairo_fill (cr);
-#line 598 "quicklist-view.vala"
+#line 732 "quicklist-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-#line 599 "quicklist-view.vala"
+#line 733 "quicklist-view.vala"
 	cairo_set_line_width (cr, ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_LINE_WIDTH));
-#line 600 "quicklist-view.vala"
+#line 734 "quicklist-view.vala"
 	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
-#line 601 "quicklist-view.vala"
+#line 735 "quicklist-view.vala"
 	_unity_quicklauncher_quicklist_menu_draw_mask (self, cr, w, h, anchor_y);
-#line 602 "quicklist-view.vala"
+#line 736 "quicklist-view.vala"
 	cairo_stroke (cr);
-#line 1078 "quicklist-view.c"
+#line 1347 "quicklist-view.c"
 	_cairo_surface_destroy0 (dots);
 	_cairo_destroy0 (cr_dots);
 	_cairo_pattern_destroy0 (dot_pattern);
@@ -1082,57 +1351,49 @@ static void _unity_quicklauncher_quicklist_menu_main_bg (UnityQuicklauncherQuick
 }
 
 
-#line 605 "quicklist-view.vala"
+#line 739 "quicklist-view.vala"
 static void unity_quicklauncher_quicklist_menu_real_paint (ClutterActor* base) {
-#line 1088 "quicklist-view.c"
+#line 1357 "quicklist-view.c"
 	UnityQuicklauncherQuicklistMenu * self;
 	float x = 0.0F;
 	float y = 0.0F;
 	self = (UnityQuicklauncherQuicklistMenu*) base;
-#line 614 "quicklist-view.vala"
+#line 748 "quicklist-view.vala"
 	ctk_menu_refresh_background_texture (CTK_MENU (self));
-#line 619 "quicklist-view.vala"
+#line 753 "quicklist-view.vala"
 	clutter_actor_get_position ((ClutterActor*) self, &x, &y);
-#line 620 "quicklist-view.vala"
+#line 754 "quicklist-view.vala"
 	if (self->priv->cached_x == 0.0f) {
-#line 621 "quicklist-view.vala"
+#line 755 "quicklist-view.vala"
 		self->priv->cached_x = x;
-#line 1101 "quicklist-view.c"
+#line 1370 "quicklist-view.c"
 	}
-#line 622 "quicklist-view.vala"
+#line 756 "quicklist-view.vala"
 	if (self->priv->cached_x != x) {
-#line 623 "quicklist-view.vala"
+#line 757 "quicklist-view.vala"
 		clutter_actor_set_position ((ClutterActor*) self, self->priv->cached_x, y);
-#line 1107 "quicklist-view.c"
+#line 1376 "quicklist-view.c"
 	}
-#line 626 "quicklist-view.vala"
+#line 760 "quicklist-view.vala"
 	if (!ctk_layer_actor_is_flattened (self->priv->ql_background)) {
-#line 627 "quicklist-view.vala"
+#line 761 "quicklist-view.vala"
 		ctk_layer_actor_flatten (self->priv->ql_background);
-#line 1113 "quicklist-view.c"
+#line 1382 "quicklist-view.c"
 	}
-#line 629 "quicklist-view.vala"
+#line 763 "quicklist-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_quicklauncher_quicklist_menu_parent_class)->paint ((ClutterActor*) CTK_MENU (self));
-#line 1117 "quicklist-view.c"
+#line 1386 "quicklist-view.c"
 }
 
 
-#line 632 "quicklist-view.vala"
+#line 766 "quicklist-view.vala"
 static void unity_quicklauncher_quicklist_menu_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-#line 1123 "quicklist-view.c"
+#line 1392 "quicklist-view.c"
 	UnityQuicklauncherQuicklistMenu * self;
 	gint w = 0;
 	gint h = 0;
-	float x = 0.0F;
-	float y = 0.0F;
-	float ax = 0.0F;
-	float ay = 0.0F;
-	float aw = 0.0F;
-	float ah = 0.0F;
-	float new_y = 0.0F;
 	guint blurred_id;
 	gboolean _tmp0_ = FALSE;
-	CtkActor* actor;
 	CtkLayerActor* _tmp1_;
 	CtkLayer* main_layer;
 	CtkLayer* blurred_layer;
@@ -1143,106 +1404,93 @@ static void unity_quicklauncher_quicklist_menu_real_allocate (ClutterActor* base
 	cairo_t* fill_cr;
 	cairo_t* main_cr;
 	self = (UnityQuicklauncherQuicklistMenu*) base;
-#line 645 "quicklist-view.vala"
+#line 772 "quicklist-view.vala"
 	blurred_id = (guint) 0;
-#line 647 "quicklist-view.vala"
+#line 774 "quicklist-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_quicklauncher_quicklist_menu_parent_class)->allocate ((ClutterActor*) CTK_MENU (self), box, flags);
-#line 648 "quicklist-view.vala"
+#line 775 "quicklist-view.vala"
 	w = (gint) ((*box).x2 - (*box).x1);
-#line 649 "quicklist-view.vala"
+#line 776 "quicklist-view.vala"
 	h = (gint) ((*box).y2 - (*box).y1);
-#line 653 "quicklist-view.vala"
+#line 780 "quicklist-view.vala"
 	if (self->priv->old_width == w) {
-#line 653 "quicklist-view.vala"
+#line 780 "quicklist-view.vala"
 		_tmp0_ = self->priv->old_height == h;
-#line 1159 "quicklist-view.c"
+#line 1420 "quicklist-view.c"
 	} else {
-#line 653 "quicklist-view.vala"
+#line 780 "quicklist-view.vala"
 		_tmp0_ = FALSE;
-#line 1163 "quicklist-view.c"
+#line 1424 "quicklist-view.c"
 	}
-#line 653 "quicklist-view.vala"
+#line 780 "quicklist-view.vala"
 	if (_tmp0_) {
-#line 654 "quicklist-view.vala"
+#line 781 "quicklist-view.vala"
 		return;
-#line 1169 "quicklist-view.c"
+#line 1430 "quicklist-view.c"
 	}
-#line 664 "quicklist-view.vala"
-	actor = _g_object_ref0 (ctk_menu_get_attached_actor ((CtkMenu*) self));
-#line 665 "quicklist-view.vala"
-	clutter_actor_get_position ((ClutterActor*) actor, &ax, &ay);
-#line 666 "quicklist-view.vala"
-	clutter_actor_get_size ((ClutterActor*) actor, &aw, &ah);
-#line 667 "quicklist-view.vala"
-	clutter_actor_get_position ((ClutterActor*) self, &x, &y);
-#line 668 "quicklist-view.vala"
-	if (ctk_menu_get_num_items ((CtkMenu*) self) != 1) {
-#line 669 "quicklist-view.vala"
-		new_y = ah / 2.0f;
-#line 1183 "quicklist-view.c"
-	} else {
-#line 671 "quicklist-view.vala"
-		new_y = 0.0f;
-#line 1187 "quicklist-view.c"
+#line 791 "quicklist-view.vala"
+	if (ctk_menu_get_num_items ((CtkMenu*) self) == 1) {
+#line 792 "quicklist-view.vala"
+		self->priv->cached_y = ((float) h) / 2.0f;
+#line 1436 "quicklist-view.c"
 	}
-#line 675 "quicklist-view.vala"
+#line 796 "quicklist-view.vala"
 	blurred_id = ctk_menu_get_framebuffer_background (CTK_MENU (self));
-#line 678 "quicklist-view.vala"
+#line 799 "quicklist-view.vala"
 	self->priv->old_width = w;
-#line 679 "quicklist-view.vala"
+#line 800 "quicklist-view.vala"
 	self->priv->old_height = h;
-#line 682 "quicklist-view.vala"
+#line 803 "quicklist-view.vala"
 	if (CTK_IS_LAYER_ACTOR (self->priv->ql_background)) {
-#line 683 "quicklist-view.vala"
+#line 804 "quicklist-view.vala"
 		clutter_actor_destroy ((ClutterActor*) self->priv->ql_background);
-#line 1199 "quicklist-view.c"
+#line 1448 "quicklist-view.c"
 	}
-#line 684 "quicklist-view.vala"
+#line 805 "quicklist-view.vala"
 	self->priv->ql_background = (_tmp1_ = g_object_ref_sink ((CtkLayerActor*) ctk_layer_actor_new ((guint) w, (guint) h)), _g_object_unref0 (self->priv->ql_background), _tmp1_);
-#line 686 "quicklist-view.vala"
+#line 807 "quicklist-view.vala"
 	main_layer = ctk_layer_new ((guint) w, (guint) h, CTK_LAYER_REPEAT_NONE, CTK_LAYER_REPEAT_NONE);
-#line 690 "quicklist-view.vala"
+#line 811 "quicklist-view.vala"
 	blurred_layer = ctk_layer_new ((guint) w, (guint) h, CTK_LAYER_REPEAT_NONE, CTK_LAYER_REPEAT_NONE);
-#line 695 "quicklist-view.vala"
+#line 816 "quicklist-view.vala"
 	full_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
-#line 698 "quicklist-view.vala"
+#line 819 "quicklist-view.vala"
 	fill_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
-#line 701 "quicklist-view.vala"
+#line 822 "quicklist-view.vala"
 	main_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
-#line 705 "quicklist-view.vala"
+#line 826 "quicklist-view.vala"
 	full_cr = cairo_create (full_surf);
-#line 706 "quicklist-view.vala"
+#line 827 "quicklist-view.vala"
 	fill_cr = cairo_create (fill_surf);
-#line 707 "quicklist-view.vala"
+#line 828 "quicklist-view.vala"
 	main_cr = cairo_create (main_surf);
-#line 709 "quicklist-view.vala"
-	_unity_quicklauncher_quicklist_menu_full_mask (self, full_cr, w, h, new_y);
-#line 710 "quicklist-view.vala"
-	_unity_quicklauncher_quicklist_menu_fill_mask (self, fill_cr, w, h, new_y);
-#line 711 "quicklist-view.vala"
-	_unity_quicklauncher_quicklist_menu_main_bg (self, main_cr, w, h, new_y);
-#line 714 "quicklist-view.vala"
+#line 830 "quicklist-view.vala"
+	_unity_quicklauncher_quicklist_menu_full_mask (self, full_cr, w, h, self->priv->cached_y);
+#line 831 "quicklist-view.vala"
+	_unity_quicklauncher_quicklist_menu_fill_mask (self, fill_cr, w, h, self->priv->cached_y);
+#line 832 "quicklist-view.vala"
+	_unity_quicklauncher_quicklist_menu_main_bg (self, main_cr, w, h, self->priv->cached_y);
+#line 835 "quicklist-view.vala"
 	ctk_layer_set_mask_from_surface (main_layer, full_surf);
-#line 715 "quicklist-view.vala"
+#line 836 "quicklist-view.vala"
 	ctk_layer_set_image_from_surface (main_layer, main_surf);
-#line 716 "quicklist-view.vala"
+#line 837 "quicklist-view.vala"
 	ctk_layer_set_opacity (main_layer, (guchar) 255);
-#line 718 "quicklist-view.vala"
+#line 839 "quicklist-view.vala"
 	ctk_layer_set_mask_from_surface (blurred_layer, fill_surf);
-#line 719 "quicklist-view.vala"
+#line 840 "quicklist-view.vala"
 	ctk_layer_set_image_from_id (blurred_layer, blurred_id);
-#line 720 "quicklist-view.vala"
+#line 841 "quicklist-view.vala"
 	ctk_layer_set_opacity (blurred_layer, (guchar) 255);
-#line 723 "quicklist-view.vala"
+#line 844 "quicklist-view.vala"
 	ctk_layer_actor_add_layer (self->priv->ql_background, blurred_layer);
-#line 724 "quicklist-view.vala"
+#line 845 "quicklist-view.vala"
 	ctk_layer_actor_add_layer (self->priv->ql_background, main_layer);
-#line 726 "quicklist-view.vala"
+#line 847 "quicklist-view.vala"
 	ctk_menu_set_background ((CtkMenu*) self, (ClutterActor*) self->priv->ql_background);
-#line 727 "quicklist-view.vala"
+#line 848 "quicklist-view.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self->priv->ql_background, (guint8) 255);
-#line 1245 "quicklist-view.c"
-	_g_object_unref0 (actor);
+#line 1494 "quicklist-view.c"
 	_g_object_unref0 (main_layer);
 	_g_object_unref0 (blurred_layer);
 	_cairo_surface_destroy0 (full_surf);
@@ -1254,20 +1502,20 @@ static void unity_quicklauncher_quicklist_menu_real_allocate (ClutterActor* base
 }
 
 
-#line 397 "quicklist-view.vala"
+#line 541 "quicklist-view.vala"
 UnityQuicklauncherQuicklistMenu* unity_quicklauncher_quicklist_menu_construct (GType object_type) {
-#line 1260 "quicklist-view.c"
+#line 1508 "quicklist-view.c"
 	UnityQuicklauncherQuicklistMenu * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
-#line 397 "quicklist-view.vala"
+#line 541 "quicklist-view.vala"
 UnityQuicklauncherQuicklistMenu* unity_quicklauncher_quicklist_menu_new (void) {
-#line 397 "quicklist-view.vala"
+#line 541 "quicklist-view.vala"
 	return unity_quicklauncher_quicklist_menu_construct (UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU);
-#line 1271 "quicklist-view.c"
+#line 1519 "quicklist-view.c"
 }
 
 
@@ -1279,19 +1527,21 @@ static GObject * unity_quicklauncher_quicklist_menu_constructor (GType type, gui
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_QUICKLAUNCHER_QUICKLIST_MENU (obj);
 	{
-		CtkPadding _tmp7_ = {0};
+		CtkPadding _tmp8_ = {0};
 		CtkPadding padding;
-#line 732 "quicklist-view.vala"
-		padding = (memset (&_tmp7_, 0, sizeof (CtkPadding)), _tmp7_.left = (float) ((gint) ctk_em_to_pixel ((double) ((UNITY_QUICKLAUNCHER_ANCHOR_WIDTH + UNITY_QUICKLAUNCHER_BORDER) + UNITY_QUICKLAUNCHER_SHADOW_SIZE))), _tmp7_.right = (float) ((gint) ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_BORDER + UNITY_QUICKLAUNCHER_SHADOW_SIZE))), _tmp7_.top = (float) ((gint) ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_BORDER + UNITY_QUICKLAUNCHER_SHADOW_SIZE))), _tmp7_.bottom = (float) ((gint) ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_BORDER + UNITY_QUICKLAUNCHER_SHADOW_SIZE))), _tmp7_);
-#line 738 "quicklist-view.vala"
+#line 853 "quicklist-view.vala"
+		padding = (memset (&_tmp8_, 0, sizeof (CtkPadding)), _tmp8_.left = (float) ((gint) ctk_em_to_pixel ((double) ((UNITY_QUICKLAUNCHER_ANCHOR_WIDTH + UNITY_QUICKLAUNCHER_BORDER) + UNITY_QUICKLAUNCHER_SHADOW_SIZE))), _tmp8_.right = (float) ((gint) ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_BORDER + UNITY_QUICKLAUNCHER_SHADOW_SIZE))), _tmp8_.top = (float) ((gint) ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_BORDER + UNITY_QUICKLAUNCHER_SHADOW_SIZE))), _tmp8_.bottom = (float) ((gint) ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_BORDER + UNITY_QUICKLAUNCHER_SHADOW_SIZE))), _tmp8_);
+#line 859 "quicklist-view.vala"
 		ctk_actor_set_padding ((CtkActor*) self, &padding);
-#line 741 "quicklist-view.vala"
+#line 862 "quicklist-view.vala"
 		self->priv->old_width = 0;
-#line 742 "quicklist-view.vala"
+#line 863 "quicklist-view.vala"
 		self->priv->old_height = 0;
-#line 743 "quicklist-view.vala"
+#line 864 "quicklist-view.vala"
 		self->priv->cached_x = 0.0f;
-#line 1295 "quicklist-view.c"
+#line 865 "quicklist-view.vala"
+		self->priv->cached_y = 0.0f;
+#line 1545 "quicklist-view.c"
 	}
 	return obj;
 }

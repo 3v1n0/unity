@@ -344,7 +344,7 @@ void unity_places_controller_load_remote_places (UnityPlacesController* self) {
 		enumerator = g_file_enumerate_children (dir, G_FILE_ATTRIBUTE_STANDARD_NAME, 0, NULL, &_inner_error_);
 #line 346 "places-controller.c"
 		if (_inner_error_ != NULL) {
-			goto __catch12_g_error;
+			goto __catch14_g_error;
 		}
 		file_info = NULL;
 #line 73 "places-controller.vala"
@@ -361,7 +361,7 @@ void unity_places_controller_load_remote_places (UnityPlacesController* self) {
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (enumerator);
 				_g_object_unref0 (file_info);
-				goto __catch12_g_error;
+				goto __catch14_g_error;
 			}
 #line 73 "places-controller.vala"
 			if (!((file_info = (_tmp1_ = _tmp0_, _g_object_unref0 (file_info), _tmp1_)) != NULL)) {
@@ -379,8 +379,8 @@ void unity_places_controller_load_remote_places (UnityPlacesController* self) {
 		_g_object_unref0 (enumerator);
 		_g_object_unref0 (file_info);
 	}
-	goto __finally12;
-	__catch12_g_error:
+	goto __finally14;
+	__catch14_g_error:
 	{
 		GError * _error_;
 		_error_ = _inner_error_;
@@ -394,7 +394,7 @@ void unity_places_controller_load_remote_places (UnityPlacesController* self) {
 			_g_error_free0 (_error_);
 		}
 	}
-	__finally12:
+	__finally14:
 	if (_inner_error_ != NULL) {
 		_g_free0 (placesdir);
 		_g_object_unref0 (dir);
@@ -435,20 +435,20 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 		g_key_file_load_from_file (file, filename, G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, &_inner_error_);
 #line 437 "places-controller.c"
 		if (_inner_error_ != NULL) {
-			goto __catch13_g_error;
+			goto __catch15_g_error;
 		}
 #line 97 "places-controller.vala"
 		name = g_key_file_get_string (file, group, "Name", &_inner_error_);
 #line 443 "places-controller.c"
 		if (_inner_error_ != NULL) {
-			goto __catch13_g_error;
+			goto __catch15_g_error;
 		}
 #line 98 "places-controller.vala"
 		comment = g_key_file_get_string (file, group, "Comment", &_inner_error_);
 #line 449 "places-controller.c"
 		if (_inner_error_ != NULL) {
 			_g_free0 (name);
-			goto __catch13_g_error;
+			goto __catch15_g_error;
 		}
 #line 99 "places-controller.vala"
 		icon_name = g_key_file_get_string (file, group, "Icon", &_inner_error_);
@@ -456,7 +456,7 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 		if (_inner_error_ != NULL) {
 			_g_free0 (name);
 			_g_free0 (comment);
-			goto __catch13_g_error;
+			goto __catch15_g_error;
 		}
 #line 100 "places-controller.vala"
 		dbus_name = g_key_file_get_string (file, group, "DBusName", &_inner_error_);
@@ -465,7 +465,7 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 			_g_free0 (name);
 			_g_free0 (comment);
 			_g_free0 (icon_name);
-			goto __catch13_g_error;
+			goto __catch15_g_error;
 		}
 #line 101 "places-controller.vala"
 		dbus_path = g_key_file_get_string (file, group, "DBusPath", &_inner_error_);
@@ -475,7 +475,7 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 			_g_free0 (comment);
 			_g_free0 (icon_name);
 			_g_free0 (dbus_name);
-			goto __catch13_g_error;
+			goto __catch15_g_error;
 		}
 #line 103 "places-controller.vala"
 		place = (UnityPlacesPlace*) unity_places_place_proxy_new (name, icon_name, comment, dbus_name, dbus_path);
@@ -494,8 +494,8 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 		_g_free0 (dbus_path);
 		_g_object_unref0 (place);
 	}
-	goto __finally13;
-	__catch13_g_error:
+	goto __finally15;
+	__catch15_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -509,7 +509,7 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 			_g_error_free0 (e);
 		}
 	}
-	__finally13:
+	__finally15:
 	if (_inner_error_ != NULL) {
 		_g_free0 (group);
 		_g_key_file_free0 (file);

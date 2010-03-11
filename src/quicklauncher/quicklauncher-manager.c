@@ -181,9 +181,6 @@ enum  {
 	UNITY_QUICKLAUNCHER_MANAGER_DUMMY_PROPERTY,
 	UNITY_QUICKLAUNCHER_MANAGER_ACTIVE_LAUNCHER
 };
-static void unity_quicklauncher_manager_handle_session_application (UnityQuicklauncherManager* self, LauncherApplication* app);
-static void _unity_quicklauncher_manager_handle_session_application_launcher_session_application_opened (LauncherSession* _sender, LauncherApplication* application, gpointer self);
-static gboolean unity_quicklauncher_manager_ensure_model_windows (UnityQuicklauncherManager* self);
 static void unity_quicklauncher_manager_build_favorites (UnityQuicklauncherManager* self);
 static void unity_quicklauncher_manager_on_favorite_change (UnityQuicklauncherManager* self, GConfEngine* client, guint cnxn_id, GConfEntry* entry);
 static GConfClient* unity_quicklauncher_manager_get_gconf_client (UnityQuicklauncherManager* self);
@@ -206,6 +203,7 @@ float unity_quicklauncher_models_launcher_model_get_priority (UnityQuicklauncher
 static float unity_quicklauncher_manager_get_last_priority (UnityQuicklauncherManager* self);
 gboolean unity_quicklauncher_models_launcher_model_get_is_sticky (UnityQuicklauncherModelsLauncherModel* self);
 void unity_quicklauncher_models_launcher_model_set_priority (UnityQuicklauncherModelsLauncherModel* self, float value);
+static void unity_quicklauncher_manager_handle_session_application (UnityQuicklauncherManager* self, LauncherApplication* app);
 UnityQuicklauncherLauncherView* unity_quicklauncher_launcher_view_new (UnityQuicklauncherModelsLauncherModel* model);
 UnityQuicklauncherLauncherView* unity_quicklauncher_launcher_view_construct (GType object_type, UnityQuicklauncherModelsLauncherModel* model);
 gboolean unity_quicklauncher_models_launcher_model_get_is_fixed (UnityQuicklauncherModelsLauncherModel* self);
@@ -224,12 +222,12 @@ UnityQuicklauncherManager* unity_quicklauncher_manager_new (void);
 UnityQuicklauncherManager* unity_quicklauncher_manager_construct (GType object_type);
 UnityWidgetsScroller* unity_widgets_scroller_new (CtkOrientation orientation, gint spacing);
 UnityWidgetsScroller* unity_widgets_scroller_construct (GType object_type, CtkOrientation orientation, gint spacing);
+static void _unity_quicklauncher_manager_handle_session_application_launcher_session_application_opened (LauncherSession* _sender, LauncherApplication* application, gpointer self);
 static gboolean _unity_quicklauncher_manager_on_drag_motion_ctk_actor_drag_motion (CtkActor* _sender, GdkDragContext* context, gint x, gint y, guint time_, gpointer self);
 static gboolean _unity_quicklauncher_manager_on_drag_drop_ctk_actor_drag_drop (CtkActor* _sender, GdkDragContext* context, gint x, gint y, guint time_, gpointer self);
 static void _unity_quicklauncher_manager_on_drag_data_received_ctk_actor_drag_data_received (CtkActor* _sender, GdkDragContext* context, gint x, gint y, GtkSelectionData* data, guint info, guint time_, gpointer self);
 static void _unity_quicklauncher_manager_on_webicon_built_unity_shell_need_new_icon_cache (UnityShell* _sender, gpointer self);
 static void _unity_quicklauncher_manager_on_favorite_change_gconf_notify_func (GConfEngine* conf, guint cnxn_id, GConfEntry* entry, gpointer self);
-static gboolean _unity_quicklauncher_manager_ensure_model_windows_gsource_func (gpointer self);
 static GObject * unity_quicklauncher_manager_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_quicklauncher_manager_finalize (GObject* obj);
 static void unity_quicklauncher_manager_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -242,159 +240,61 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 static void g_cclosure_user_marshal_VOID__OBJECT_OBJECT (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 
-static gpointer _g_object_ref0 (gpointer self) {
-	return self ? g_object_ref (self) : NULL;
-}
-
-
-#line 392 "quicklauncher-manager.vala"
-static void _unity_quicklauncher_manager_handle_session_application_launcher_session_application_opened (LauncherSession* _sender, LauncherApplication* application, gpointer self) {
-#line 253 "quicklauncher-manager.c"
-	unity_quicklauncher_manager_handle_session_application (self, application);
-}
-
-
-#line 106 "quicklauncher-manager.vala"
-static gboolean unity_quicklauncher_manager_ensure_model_windows (UnityQuicklauncherManager* self) {
-#line 260 "quicklauncher-manager.c"
-	gboolean result;
-	LauncherAppman* appman;
-	GSequence* applications;
-#line 106 "quicklauncher-manager.vala"
-	g_return_val_if_fail (self != NULL, FALSE);
-#line 266 "quicklauncher-manager.c"
-	{
-		GeeIterator* _app_it;
-		_app_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) self->priv->launcher_apps);
-#line 108 "quicklauncher-manager.vala"
-		while (TRUE) {
-#line 272 "quicklauncher-manager.c"
-			LauncherApplication* app;
-#line 108 "quicklauncher-manager.vala"
-			if (!gee_iterator_next (_app_it)) {
-#line 108 "quicklauncher-manager.vala"
-				break;
-#line 278 "quicklauncher-manager.c"
-			}
-#line 108 "quicklauncher-manager.vala"
-			app = (LauncherApplication*) gee_iterator_get (_app_it);
-#line 110 "quicklauncher-manager.vala"
-			launcher_application_update_windows (app);
-#line 284 "quicklauncher-manager.c"
-			_g_object_unref0 (app);
-		}
-		_g_object_unref0 (_app_it);
-	}
-#line 116 "quicklauncher-manager.vala"
-	appman = _g_object_ref0 (launcher_appman_get_default ());
-#line 117 "quicklauncher-manager.vala"
-	applications = launcher_appman_get_applications (appman);
-#line 293 "quicklauncher-manager.c"
-	{
-		GSequenceIter* iter;
-#line 118 "quicklauncher-manager.vala"
-		iter = g_sequence_get_begin_iter (applications);
-#line 298 "quicklauncher-manager.c"
-		{
-			gboolean _tmp0_;
-#line 118 "quicklauncher-manager.vala"
-			_tmp0_ = TRUE;
-#line 118 "quicklauncher-manager.vala"
-			while (TRUE) {
-#line 305 "quicklauncher-manager.c"
-				LauncherApplication* app;
-#line 118 "quicklauncher-manager.vala"
-				if (!_tmp0_) {
-#line 118 "quicklauncher-manager.vala"
-					iter = g_sequence_iter_next (iter);
-#line 311 "quicklauncher-manager.c"
-				}
-#line 118 "quicklauncher-manager.vala"
-				_tmp0_ = FALSE;
-#line 118 "quicklauncher-manager.vala"
-				if (!(!g_sequence_iter_is_end (iter))) {
-#line 118 "quicklauncher-manager.vala"
-					break;
-#line 319 "quicklauncher-manager.c"
-				}
-#line 120 "quicklauncher-manager.vala"
-				app = _g_object_ref0 ((LauncherApplication*) g_sequence_get (iter));
-#line 121 "quicklauncher-manager.vala"
-				if (!gee_abstract_collection_contains ((GeeAbstractCollection*) self->priv->launcher_apps, app)) {
-#line 124 "quicklauncher-manager.vala"
-					unity_quicklauncher_manager_handle_session_application (self, app);
-#line 327 "quicklauncher-manager.c"
-				}
-				_g_object_unref0 (app);
-			}
-		}
-	}
-#line 128 "quicklauncher-manager.vala"
-	g_signal_connect_object (self->priv->session, "application-opened", (GCallback) _unity_quicklauncher_manager_handle_session_application_launcher_session_application_opened, self, 0);
-#line 335 "quicklauncher-manager.c"
-	result = FALSE;
-	_g_object_unref0 (appman);
-#line 129 "quicklauncher-manager.vala"
-	return result;
-#line 340 "quicklauncher-manager.c"
-}
-
-
-#line 132 "quicklauncher-manager.vala"
+#line 103 "quicklauncher-manager.vala"
 static void unity_quicklauncher_manager_on_favorite_change (UnityQuicklauncherManager* self, GConfEngine* client, guint cnxn_id, GConfEntry* entry) {
-#line 132 "quicklauncher-manager.vala"
+#line 103 "quicklauncher-manager.vala"
 	g_return_if_fail (self != NULL);
-#line 132 "quicklauncher-manager.vala"
+#line 103 "quicklauncher-manager.vala"
 	g_return_if_fail (client != NULL);
-#line 132 "quicklauncher-manager.vala"
+#line 103 "quicklauncher-manager.vala"
 	g_return_if_fail (entry != NULL);
-#line 134 "quicklauncher-manager.vala"
+#line 105 "quicklauncher-manager.vala"
 	unity_quicklauncher_manager_build_favorites (self);
-#line 354 "quicklauncher-manager.c"
+#line 254 "quicklauncher-manager.c"
 }
 
 
-#line 138 "quicklauncher-manager.vala"
+#line 109 "quicklauncher-manager.vala"
 static char* unity_quicklauncher_manager_get_webapp_device (UnityQuicklauncherManager* self) {
-#line 360 "quicklauncher-manager.c"
+#line 260 "quicklauncher-manager.c"
 	char* result;
 	GError * _inner_error_;
-#line 138 "quicklauncher-manager.vala"
+#line 109 "quicklauncher-manager.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 365 "quicklauncher-manager.c"
+#line 265 "quicklauncher-manager.c"
 	_inner_error_ = NULL;
 	{
 		gboolean dir_exists;
-#line 142 "quicklauncher-manager.vala"
+#line 113 "quicklauncher-manager.vala"
 		dir_exists = gconf_client_dir_exists (unity_quicklauncher_manager_get_gconf_client (self), UNITY_UNITY_CONF_PATH, &_inner_error_);
-#line 371 "quicklauncher-manager.c"
+#line 271 "quicklauncher-manager.c"
 		if (_inner_error_ != NULL) {
-			goto __catch31_g_error;
+			goto __catch33_g_error;
 		}
-#line 143 "quicklauncher-manager.vala"
+#line 114 "quicklauncher-manager.vala"
 		if (!dir_exists) {
-#line 146 "quicklauncher-manager.vala"
+#line 117 "quicklauncher-manager.vala"
 			gconf_client_add_dir (unity_quicklauncher_manager_get_gconf_client (self), UNITY_UNITY_CONF_PATH, GCONF_CLIENT_PRELOAD_NONE, &_inner_error_);
-#line 379 "quicklauncher-manager.c"
+#line 279 "quicklauncher-manager.c"
 			if (_inner_error_ != NULL) {
-				goto __catch31_g_error;
+				goto __catch33_g_error;
 			}
 		}
 	}
-	goto __finally31;
-	__catch31_g_error:
+	goto __finally33;
+	__catch33_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 151 "quicklauncher-manager.vala"
-			g_warning ("quicklauncher-manager.vala:151: %s", e->message);
-#line 394 "quicklauncher-manager.c"
+#line 122 "quicklauncher-manager.vala"
+			g_warning ("quicklauncher-manager.vala:122: %s", e->message);
+#line 294 "quicklauncher-manager.c"
 			_g_error_free0 (e);
 		}
 	}
-	__finally31:
+	__finally33:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -402,23 +302,23 @@ static char* unity_quicklauncher_manager_get_webapp_device (UnityQuicklauncherMa
 	}
 	{
 		gboolean value;
-#line 155 "quicklauncher-manager.vala"
+#line 126 "quicklauncher-manager.vala"
 		value = gconf_client_get_bool (unity_quicklauncher_manager_get_gconf_client (self), UNITY_UNITY_CONF_PATH "/launcher/webapp_use_chromium", &_inner_error_);
-#line 408 "quicklauncher-manager.c"
+#line 308 "quicklauncher-manager.c"
 		if (_inner_error_ != NULL) {
-			goto __catch32_g_error;
+			goto __catch34_g_error;
 		}
-#line 156 "quicklauncher-manager.vala"
+#line 127 "quicklauncher-manager.vala"
 		if (value) {
-#line 414 "quicklauncher-manager.c"
+#line 314 "quicklauncher-manager.c"
 			result = g_strdup ("chromium");
-#line 158 "quicklauncher-manager.vala"
+#line 129 "quicklauncher-manager.vala"
 			return result;
-#line 418 "quicklauncher-manager.c"
+#line 318 "quicklauncher-manager.c"
 		}
 	}
-	goto __finally32;
-	__catch32_g_error:
+	goto __finally34;
+	__catch34_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -426,55 +326,55 @@ static char* unity_quicklauncher_manager_get_webapp_device (UnityQuicklauncherMa
 		{
 			result = g_strdup ("prism");
 			_g_error_free0 (e);
-#line 162 "quicklauncher-manager.vala"
+#line 133 "quicklauncher-manager.vala"
 			return result;
-#line 432 "quicklauncher-manager.c"
+#line 332 "quicklauncher-manager.c"
 		}
 	}
-	__finally32:
+	__finally34:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return NULL;
 	}
 	result = g_strdup ("prism");
-#line 164 "quicklauncher-manager.vala"
+#line 135 "quicklauncher-manager.vala"
 	return result;
-#line 444 "quicklauncher-manager.c"
+#line 344 "quicklauncher-manager.c"
 }
 
 
-#line 167 "quicklauncher-manager.vala"
+#line 138 "quicklauncher-manager.vala"
 static gboolean unity_quicklauncher_manager_on_drag_motion (UnityQuicklauncherManager* self, CtkActor* actor, GdkDragContext* context, gint x, gint y, guint time_) {
-#line 450 "quicklauncher-manager.c"
+#line 350 "quicklauncher-manager.c"
 	gboolean result;
-#line 167 "quicklauncher-manager.vala"
+#line 138 "quicklauncher-manager.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 167 "quicklauncher-manager.vala"
+#line 138 "quicklauncher-manager.vala"
 	g_return_val_if_fail (actor != NULL, FALSE);
-#line 167 "quicklauncher-manager.vala"
+#line 138 "quicklauncher-manager.vala"
 	g_return_val_if_fail (context != NULL, FALSE);
-#line 458 "quicklauncher-manager.c"
+#line 358 "quicklauncher-manager.c"
 	result = TRUE;
-#line 170 "quicklauncher-manager.vala"
+#line 141 "quicklauncher-manager.vala"
 	return result;
-#line 462 "quicklauncher-manager.c"
+#line 362 "quicklauncher-manager.c"
 }
 
 
-#line 173 "quicklauncher-manager.vala"
+#line 144 "quicklauncher-manager.vala"
 static gboolean unity_quicklauncher_manager_on_drag_drop (UnityQuicklauncherManager* self, CtkActor* actor, GdkDragContext* context, gint x, gint y, guint time_) {
-#line 468 "quicklauncher-manager.c"
+#line 368 "quicklauncher-manager.c"
 	gboolean result;
-#line 173 "quicklauncher-manager.vala"
+#line 144 "quicklauncher-manager.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 173 "quicklauncher-manager.vala"
+#line 144 "quicklauncher-manager.vala"
 	g_return_val_if_fail (actor != NULL, FALSE);
-#line 173 "quicklauncher-manager.vala"
+#line 144 "quicklauncher-manager.vala"
 	g_return_val_if_fail (context != NULL, FALSE);
-#line 176 "quicklauncher-manager.vala"
+#line 147 "quicklauncher-manager.vala"
 	if (context->targets != NULL) {
-#line 478 "quicklauncher-manager.c"
+#line 378 "quicklauncher-manager.c"
 		GtkTargetList* tl;
 		GdkAtom target_type;
 		GtkTargetEntry* _tmp0_;
@@ -484,187 +384,187 @@ static gboolean unity_quicklauncher_manager_on_drag_drop (UnityQuicklauncherMana
 		GtkTargetList* _tmp1_;
 		tl = NULL;
 		targets = (_tmp0_ = NULL, targets_length1 = 0, targets_size = targets_length1, _tmp0_);
-#line 183 "quicklauncher-manager.vala"
+#line 154 "quicklauncher-manager.vala"
 		tl = (_tmp1_ = gtk_target_list_new (targets, targets_length1), _gtk_target_list_unref0 (tl), _tmp1_);
-#line 184 "quicklauncher-manager.vala"
+#line 155 "quicklauncher-manager.vala"
 		gtk_target_list_add_uri_targets (tl, (guint) 0);
-#line 186 "quicklauncher-manager.vala"
+#line 157 "quicklauncher-manager.vala"
 		target_type = ctk_drag_dest_find_target (context, tl);
-#line 188 "quicklauncher-manager.vala"
+#line 159 "quicklauncher-manager.vala"
 		if (_vala_strcmp0 (gdk_atom_name (target_type), "") == 0) {
-#line 496 "quicklauncher-manager.c"
+#line 396 "quicklauncher-manager.c"
 			result = FALSE;
 			_gtk_target_list_unref0 (tl);
 			targets = (g_free (targets), NULL);
-#line 190 "quicklauncher-manager.vala"
+#line 161 "quicklauncher-manager.vala"
 			return result;
-#line 502 "quicklauncher-manager.c"
+#line 402 "quicklauncher-manager.c"
 		}
-#line 192 "quicklauncher-manager.vala"
+#line 163 "quicklauncher-manager.vala"
 		ctk_drag_get_data (actor, context, target_type, (guint32) time_);
-#line 193 "quicklauncher-manager.vala"
+#line 164 "quicklauncher-manager.vala"
 		target_type = (GdkAtom) g_list_nth_data (context->targets, (guint) UNITY_DND_TARGETS_TARGET_STRING);
-#line 194 "quicklauncher-manager.vala"
+#line 165 "quicklauncher-manager.vala"
 		if (_vala_strcmp0 (gdk_atom_name (target_type), "") == 0) {
-#line 510 "quicklauncher-manager.c"
+#line 410 "quicklauncher-manager.c"
 			result = FALSE;
 			_gtk_target_list_unref0 (tl);
 			targets = (g_free (targets), NULL);
-#line 196 "quicklauncher-manager.vala"
+#line 167 "quicklauncher-manager.vala"
 			return result;
-#line 516 "quicklauncher-manager.c"
+#line 416 "quicklauncher-manager.c"
 		}
-#line 198 "quicklauncher-manager.vala"
+#line 169 "quicklauncher-manager.vala"
 		ctk_drag_get_data (actor, context, target_type, (guint32) time_);
-#line 520 "quicklauncher-manager.c"
+#line 420 "quicklauncher-manager.c"
 		_gtk_target_list_unref0 (tl);
 		targets = (g_free (targets), NULL);
 	} else {
 		result = FALSE;
-#line 201 "quicklauncher-manager.vala"
+#line 172 "quicklauncher-manager.vala"
 		return result;
-#line 527 "quicklauncher-manager.c"
+#line 427 "quicklauncher-manager.c"
 	}
 	result = TRUE;
-#line 203 "quicklauncher-manager.vala"
+#line 174 "quicklauncher-manager.vala"
 	return result;
-#line 532 "quicklauncher-manager.c"
+#line 432 "quicklauncher-manager.c"
 }
 
 
-#line 206 "quicklauncher-manager.vala"
+#line 177 "quicklauncher-manager.vala"
 static void unity_quicklauncher_manager_on_drag_data_received (UnityQuicklauncherManager* self, CtkActor* actor, GdkDragContext* context, gint x, gint y, GtkSelectionData* data, guint target_type, guint time_) {
-#line 538 "quicklauncher-manager.c"
+#line 438 "quicklauncher-manager.c"
 	gboolean dnd_success;
 	gboolean delete_selection_data;
 	gboolean _tmp0_ = FALSE;
-#line 206 "quicklauncher-manager.vala"
+#line 177 "quicklauncher-manager.vala"
 	g_return_if_fail (self != NULL);
-#line 206 "quicklauncher-manager.vala"
+#line 177 "quicklauncher-manager.vala"
 	g_return_if_fail (actor != NULL);
-#line 206 "quicklauncher-manager.vala"
+#line 177 "quicklauncher-manager.vala"
 	g_return_if_fail (context != NULL);
-#line 206 "quicklauncher-manager.vala"
+#line 177 "quicklauncher-manager.vala"
 	g_return_if_fail (data != NULL);
-#line 211 "quicklauncher-manager.vala"
+#line 182 "quicklauncher-manager.vala"
 	dnd_success = FALSE;
-#line 212 "quicklauncher-manager.vala"
+#line 183 "quicklauncher-manager.vala"
 	delete_selection_data = FALSE;
-#line 214 "quicklauncher-manager.vala"
+#line 185 "quicklauncher-manager.vala"
 	if (data != NULL) {
-#line 214 "quicklauncher-manager.vala"
+#line 185 "quicklauncher-manager.vala"
 		_tmp0_ = data->length >= 0;
-#line 558 "quicklauncher-manager.c"
+#line 458 "quicklauncher-manager.c"
 	} else {
-#line 214 "quicklauncher-manager.vala"
+#line 185 "quicklauncher-manager.vala"
 		_tmp0_ = FALSE;
-#line 562 "quicklauncher-manager.c"
+#line 462 "quicklauncher-manager.c"
 	}
-#line 214 "quicklauncher-manager.vala"
+#line 185 "quicklauncher-manager.vala"
 	if (_tmp0_) {
-#line 215 "quicklauncher-manager.vala"
+#line 186 "quicklauncher-manager.vala"
 		if (context->action == GDK_ACTION_MOVE) {
-#line 216 "quicklauncher-manager.vala"
+#line 187 "quicklauncher-manager.vala"
 			delete_selection_data = TRUE;
-#line 570 "quicklauncher-manager.c"
+#line 470 "quicklauncher-manager.c"
 		}
-#line 219 "quicklauncher-manager.vala"
+#line 190 "quicklauncher-manager.vala"
 		switch (target_type) {
-#line 574 "quicklauncher-manager.c"
+#line 474 "quicklauncher-manager.c"
 			case UNITY_DND_TARGETS_TARGET_URL:
 			{
-#line 222 "quicklauncher-manager.vala"
+#line 193 "quicklauncher-manager.vala"
 				dnd_success = unity_quicklauncher_manager_handle_uri (self, (const char*) data->data);
-#line 223 "quicklauncher-manager.vala"
+#line 194 "quicklauncher-manager.vala"
 				break;
-#line 581 "quicklauncher-manager.c"
+#line 481 "quicklauncher-manager.c"
 			}
 			default:
 			{
-#line 225 "quicklauncher-manager.vala"
+#line 196 "quicklauncher-manager.vala"
 				break;
-#line 587 "quicklauncher-manager.c"
+#line 487 "quicklauncher-manager.c"
 			}
 		}
 	}
-#line 229 "quicklauncher-manager.vala"
+#line 200 "quicklauncher-manager.vala"
 	if (dnd_success == FALSE) {
-#line 593 "quicklauncher-manager.c"
+#line 493 "quicklauncher-manager.c"
 	}
-#line 231 "quicklauncher-manager.vala"
+#line 202 "quicklauncher-manager.vala"
 	gtk_drag_finish (context, dnd_success, delete_selection_data, (guint32) time_);
-#line 597 "quicklauncher-manager.c"
+#line 497 "quicklauncher-manager.c"
 }
 
 
-#line 234 "quicklauncher-manager.vala"
+#line 205 "quicklauncher-manager.vala"
 static gboolean unity_quicklauncher_manager_test_url (UnityQuicklauncherManager* self, const char* url) {
-#line 603 "quicklauncher-manager.c"
+#line 503 "quicklauncher-manager.c"
 	gboolean result;
 	GError * _inner_error_;
-#line 234 "quicklauncher-manager.vala"
+#line 205 "quicklauncher-manager.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 234 "quicklauncher-manager.vala"
+#line 205 "quicklauncher-manager.vala"
 	g_return_val_if_fail (url != NULL, FALSE);
-#line 610 "quicklauncher-manager.c"
+#line 510 "quicklauncher-manager.c"
 	_inner_error_ = NULL;
 	{
 		GRegex* match_url;
-#line 238 "quicklauncher-manager.vala"
+#line 209 "quicklauncher-manager.vala"
 		match_url = g_regex_new ("((https?|s?ftp):((//)|(\\\\\\\\))+[\\w\\d:#@%/;$()~_?\\+-=\\\\\\.&]*)", 0, 0, &_inner_error_);
-#line 616 "quicklauncher-manager.c"
+#line 516 "quicklauncher-manager.c"
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch33_g_regex_error;
+				goto __catch35_g_regex_error;
 			}
 			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
 			return FALSE;
 		}
-#line 241 "quicklauncher-manager.vala"
+#line 212 "quicklauncher-manager.vala"
 		if (g_regex_match (match_url, url, 0, NULL)) {
-#line 627 "quicklauncher-manager.c"
+#line 527 "quicklauncher-manager.c"
 			result = TRUE;
 			_g_regex_unref0 (match_url);
-#line 243 "quicklauncher-manager.vala"
+#line 214 "quicklauncher-manager.vala"
 			return result;
-#line 632 "quicklauncher-manager.c"
+#line 532 "quicklauncher-manager.c"
 		}
 		_g_regex_unref0 (match_url);
 	}
-	goto __finally33;
-	__catch33_g_regex_error:
+	goto __finally35;
+	__catch35_g_regex_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 247 "quicklauncher-manager.vala"
-			g_warning ("quicklauncher-manager.vala:247: %s", e->message);
-#line 645 "quicklauncher-manager.c"
+#line 218 "quicklauncher-manager.vala"
+			g_warning ("quicklauncher-manager.vala:218: %s", e->message);
+#line 545 "quicklauncher-manager.c"
 			result = FALSE;
 			_g_error_free0 (e);
-#line 248 "quicklauncher-manager.vala"
+#line 219 "quicklauncher-manager.vala"
 			return result;
-#line 650 "quicklauncher-manager.c"
+#line 550 "quicklauncher-manager.c"
 		}
 	}
-	__finally33:
+	__finally35:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return FALSE;
 	}
 	result = FALSE;
-#line 250 "quicklauncher-manager.vala"
+#line 221 "quicklauncher-manager.vala"
 	return result;
-#line 662 "quicklauncher-manager.c"
+#line 562 "quicklauncher-manager.c"
 }
 
 
 #line 895 "glib-2.0.vapi"
 static char* string_strip (const char* self) {
-#line 668 "quicklauncher-manager.c"
+#line 568 "quicklauncher-manager.c"
 	char* result;
 	char* _result_;
 #line 895 "glib-2.0.vapi"
@@ -673,33 +573,38 @@ static char* string_strip (const char* self) {
 	_result_ = g_strdup (self);
 #line 897 "glib-2.0.vapi"
 	g_strstrip (_result_);
-#line 677 "quicklauncher-manager.c"
+#line 577 "quicklauncher-manager.c"
 	result = _result_;
 #line 898 "glib-2.0.vapi"
 	return result;
-#line 681 "quicklauncher-manager.c"
+#line 581 "quicklauncher-manager.c"
 }
 
 
 #line 1021 "glib-2.0.vapi"
 static gboolean string_contains (const char* self, const char* needle) {
-#line 687 "quicklauncher-manager.c"
+#line 587 "quicklauncher-manager.c"
 	gboolean result;
 #line 1021 "glib-2.0.vapi"
 	g_return_val_if_fail (self != NULL, FALSE);
 #line 1021 "glib-2.0.vapi"
 	g_return_val_if_fail (needle != NULL, FALSE);
-#line 693 "quicklauncher-manager.c"
+#line 593 "quicklauncher-manager.c"
 	result = strstr (self, needle) != NULL;
 #line 1022 "glib-2.0.vapi"
 	return result;
-#line 697 "quicklauncher-manager.c"
+#line 597 "quicklauncher-manager.c"
 }
 
 
-#line 253 "quicklauncher-manager.vala"
+static gpointer _g_object_ref0 (gpointer self) {
+	return self ? g_object_ref (self) : NULL;
+}
+
+
+#line 224 "quicklauncher-manager.vala"
 static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManager* self, const char* uri) {
-#line 703 "quicklauncher-manager.c"
+#line 608 "quicklauncher-manager.c"
 	gboolean result;
 	GError * _inner_error_;
 	gint _tmp3__length1;
@@ -716,38 +621,38 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 	gint split_uri_length1;
 	char** _tmp8_;
 	char** split_uri;
-#line 253 "quicklauncher-manager.vala"
+#line 224 "quicklauncher-manager.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 253 "quicklauncher-manager.vala"
+#line 224 "quicklauncher-manager.vala"
 	g_return_val_if_fail (uri != NULL, FALSE);
-#line 724 "quicklauncher-manager.c"
+#line 629 "quicklauncher-manager.c"
 	_inner_error_ = NULL;
-#line 255 "quicklauncher-manager.vala"
+#line 226 "quicklauncher-manager.vala"
 	clean_uri = (_tmp4_ = g_strdup ((_tmp3_ = _tmp2_ = g_strsplit ((_tmp1_ = _tmp0_ = g_strsplit (uri, "\n", 2), _tmp1__length1 = _vala_array_length (_tmp0_), _tmp1_)[0], "\r", 2), _tmp3__length1 = _vala_array_length (_tmp2_), _tmp3_)[0]), _tmp3_ = (_vala_array_free (_tmp3_, _tmp3__length1, (GDestroyNotify) g_free), NULL), _tmp1_ = (_vala_array_free (_tmp1_, _tmp1__length1, (GDestroyNotify) g_free), NULL), _tmp4_);
-#line 728 "quicklauncher-manager.c"
+#line 633 "quicklauncher-manager.c"
 	{
 		GRegex* regex;
 		char* _tmp5_;
 		char* _tmp6_;
-#line 257 "quicklauncher-manager.vala"
+#line 228 "quicklauncher-manager.vala"
 		regex = g_regex_new ("\\s", 0, 0, &_inner_error_);
-#line 735 "quicklauncher-manager.c"
+#line 640 "quicklauncher-manager.c"
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch34_g_regex_error;
+				goto __catch36_g_regex_error;
 			}
 			_g_free0 (clean_uri);
 			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
 			return FALSE;
 		}
-#line 258 "quicklauncher-manager.vala"
+#line 229 "quicklauncher-manager.vala"
 		_tmp5_ = g_regex_replace (regex, clean_uri, (gssize) (-1), 0, "", 0, &_inner_error_);
-#line 747 "quicklauncher-manager.c"
+#line 652 "quicklauncher-manager.c"
 		if (_inner_error_ != NULL) {
 			_g_regex_unref0 (regex);
 			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch34_g_regex_error;
+				goto __catch36_g_regex_error;
 			}
 			_g_regex_unref0 (regex);
 			_g_free0 (clean_uri);
@@ -755,39 +660,39 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 			g_clear_error (&_inner_error_);
 			return FALSE;
 		}
-#line 258 "quicklauncher-manager.vala"
+#line 229 "quicklauncher-manager.vala"
 		clean_uri = (_tmp6_ = _tmp5_, _g_free0 (clean_uri), _tmp6_);
-#line 761 "quicklauncher-manager.c"
+#line 666 "quicklauncher-manager.c"
 		_g_regex_unref0 (regex);
 	}
-	goto __finally34;
-	__catch34_g_regex_error:
+	goto __finally36;
+	__catch36_g_regex_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 260 "quicklauncher-manager.vala"
-			g_warning ("quicklauncher-manager.vala:260: %s", e->message);
-#line 773 "quicklauncher-manager.c"
+#line 231 "quicklauncher-manager.vala"
+			g_warning ("quicklauncher-manager.vala:231: %s", e->message);
+#line 678 "quicklauncher-manager.c"
 			_g_error_free0 (e);
 		}
 	}
-	__finally34:
+	__finally36:
 	if (_inner_error_ != NULL) {
 		_g_free0 (clean_uri);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return FALSE;
 	}
-#line 262 "quicklauncher-manager.vala"
+#line 233 "quicklauncher-manager.vala"
 	_tmp7_ = string_strip (clean_uri);
-#line 786 "quicklauncher-manager.c"
+#line 691 "quicklauncher-manager.c"
 	_g_free0 (_tmp7_);
 	split_uri = (_tmp9_ = _tmp8_ = g_strsplit (clean_uri, "://", 2), split_uri_length1 = _vala_array_length (_tmp8_), split_uri_size = split_uri_length1, _tmp9_);
-#line 264 "quicklauncher-manager.vala"
+#line 235 "quicklauncher-manager.vala"
 	if (unity_quicklauncher_manager_test_url (self, clean_uri)) {
-#line 791 "quicklauncher-manager.c"
+#line 696 "quicklauncher-manager.c"
 		char* icon_dirstring;
 		GFile* icon_directory;
 		char** _tmp11_;
@@ -804,24 +709,24 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 		char* _tmp18_;
 		char* _tmp17_;
 		char* _tmp16_;
-#line 267 "quicklauncher-manager.vala"
+#line 238 "quicklauncher-manager.vala"
 		icon_dirstring = g_strconcat (g_get_home_dir (), "/.local/share/icons/", NULL);
-#line 268 "quicklauncher-manager.vala"
+#line 239 "quicklauncher-manager.vala"
 		icon_directory = g_file_new_for_path (icon_dirstring);
-#line 812 "quicklauncher-manager.c"
+#line 717 "quicklauncher-manager.c"
 		{
-#line 270 "quicklauncher-manager.vala"
+#line 241 "quicklauncher-manager.vala"
 			if (!g_file_query_exists (icon_directory, NULL)) {
-#line 272 "quicklauncher-manager.vala"
+#line 243 "quicklauncher-manager.vala"
 				g_file_make_directory_with_parents (icon_directory, NULL, &_inner_error_);
-#line 818 "quicklauncher-manager.c"
+#line 723 "quicklauncher-manager.c"
 				if (_inner_error_ != NULL) {
-					goto __catch35_g_error;
+					goto __catch37_g_error;
 				}
 			}
 		}
-		goto __finally35;
-		__catch35_g_error:
+		goto __finally37;
+		__catch37_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -830,7 +735,7 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 				_g_error_free0 (e);
 			}
 		}
-		__finally35:
+		__finally37:
 		if (_inner_error_ != NULL) {
 			_g_free0 (icon_dirstring);
 			_g_object_unref0 (icon_directory);
@@ -841,21 +746,21 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 			return FALSE;
 		}
 		split_url = (_tmp11_ = _tmp10_ = g_strsplit (clean_uri, "://", 2), split_url_length1 = _vala_array_length (_tmp10_), split_url_size = split_url_length1, _tmp11_);
-#line 278 "quicklauncher-manager.vala"
+#line 249 "quicklauncher-manager.vala"
 		name = g_strdup (split_url[1]);
-#line 279 "quicklauncher-manager.vala"
+#line 250 "quicklauncher-manager.vala"
 		hostname = unity_webapp_get_hostname (clean_uri);
-#line 849 "quicklauncher-manager.c"
+#line 754 "quicklauncher-manager.c"
 		{
 			GRegex* regex;
 			char* _tmp12_;
 			char* _tmp13_;
-#line 282 "quicklauncher-manager.vala"
+#line 253 "quicklauncher-manager.vala"
 			regex = g_regex_new ("(/)", 0, 0, &_inner_error_);
-#line 856 "quicklauncher-manager.c"
+#line 761 "quicklauncher-manager.c"
 			if (_inner_error_ != NULL) {
 				if (_inner_error_->domain == G_REGEX_ERROR) {
-					goto __catch36_g_regex_error;
+					goto __catch38_g_regex_error;
 				}
 				_g_free0 (icon_dirstring);
 				_g_object_unref0 (icon_directory);
@@ -868,13 +773,13 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 				g_clear_error (&_inner_error_);
 				return FALSE;
 			}
-#line 283 "quicklauncher-manager.vala"
+#line 254 "quicklauncher-manager.vala"
 			_tmp12_ = g_regex_replace (regex, name, (gssize) (-1), 0, "-", 0, &_inner_error_);
-#line 874 "quicklauncher-manager.c"
+#line 779 "quicklauncher-manager.c"
 			if (_inner_error_ != NULL) {
 				_g_regex_unref0 (regex);
 				if (_inner_error_->domain == G_REGEX_ERROR) {
-					goto __catch36_g_regex_error;
+					goto __catch38_g_regex_error;
 				}
 				_g_regex_unref0 (regex);
 				_g_free0 (icon_dirstring);
@@ -888,25 +793,25 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 				g_clear_error (&_inner_error_);
 				return FALSE;
 			}
-#line 283 "quicklauncher-manager.vala"
+#line 254 "quicklauncher-manager.vala"
 			name = (_tmp13_ = _tmp12_, _g_free0 (name), _tmp13_);
-#line 894 "quicklauncher-manager.c"
+#line 799 "quicklauncher-manager.c"
 			_g_regex_unref0 (regex);
 		}
-		goto __finally36;
-		__catch36_g_regex_error:
+		goto __finally38;
+		__catch38_g_regex_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-#line 285 "quicklauncher-manager.vala"
-				g_warning ("quicklauncher-manager.vala:285: %s", e->message);
-#line 906 "quicklauncher-manager.c"
+#line 256 "quicklauncher-manager.vala"
+				g_warning ("quicklauncher-manager.vala:256: %s", e->message);
+#line 811 "quicklauncher-manager.c"
 				_g_error_free0 (e);
 			}
 		}
-		__finally36:
+		__finally38:
 		if (_inner_error_ != NULL) {
 			_g_free0 (icon_dirstring);
 			_g_object_unref0 (icon_directory);
@@ -919,19 +824,19 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 			g_clear_error (&_inner_error_);
 			return FALSE;
 		}
-#line 288 "quicklauncher-manager.vala"
+#line 259 "quicklauncher-manager.vala"
 		webapp = (_tmp15_ = unity_webapp_chromium_web_app_new (clean_uri, _tmp14_ = g_strconcat (hostname, ".svg", NULL)), _g_free0 (_tmp14_), _tmp15_);
-#line 289 "quicklauncher-manager.vala"
+#line 260 "quicklauncher-manager.vala"
 		self->priv->webicon_fetcher = (_tmp19_ = unity_webapp_webicon_fetcher_new (clean_uri, _tmp17_ = g_strconcat (_tmp16_ = g_strconcat (icon_dirstring, hostname, NULL), ".svg", NULL), _tmp18_ = unity_webapp_chromium_web_app_desktop_file_path (webapp)), _g_object_unref0 (self->priv->webicon_fetcher), _tmp19_);
-#line 927 "quicklauncher-manager.c"
+#line 832 "quicklauncher-manager.c"
 		_g_free0 (_tmp18_);
 		_g_free0 (_tmp17_);
 		_g_free0 (_tmp16_);
-#line 292 "quicklauncher-manager.vala"
+#line 263 "quicklauncher-manager.vala"
 		unity_webapp_webicon_fetcher_fetch_webapp_data (self->priv->webicon_fetcher);
-#line 293 "quicklauncher-manager.vala"
+#line 264 "quicklauncher-manager.vala"
 		unity_webapp_chromium_web_app_add_to_favorites (webapp);
-#line 935 "quicklauncher-manager.c"
+#line 840 "quicklauncher-manager.c"
 		_g_free0 (icon_dirstring);
 		_g_object_unref0 (icon_directory);
 		split_url = (_vala_array_free (split_url, split_url_length1, (GDestroyNotify) g_free), NULL);
@@ -941,46 +846,46 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 	} else {
 		char* _tmp20_;
 		gboolean _tmp21_;
-#line 296 "quicklauncher-manager.vala"
+#line 267 "quicklauncher-manager.vala"
 		if ((_tmp21_ = string_contains (_tmp20_ = g_path_get_basename (clean_uri), ".desktop"), _g_free0 (_tmp20_), _tmp21_)) {
-#line 947 "quicklauncher-manager.c"
+#line 852 "quicklauncher-manager.c"
 			LauncherFavorites* favorites;
 			char* _tmp22_;
 			char* _tmp23_;
 			char* uid;
 			{
 				GKeyFile* desktop_file;
-#line 301 "quicklauncher-manager.vala"
+#line 272 "quicklauncher-manager.vala"
 				desktop_file = g_key_file_new ();
-#line 302 "quicklauncher-manager.vala"
+#line 273 "quicklauncher-manager.vala"
 				g_key_file_load_from_file (desktop_file, split_uri[1], 0, &_inner_error_);
-#line 958 "quicklauncher-manager.c"
+#line 863 "quicklauncher-manager.c"
 				if (_inner_error_ != NULL) {
 					_g_key_file_free0 (desktop_file);
-					goto __catch37_g_error;
+					goto __catch39_g_error;
 				}
 				_g_key_file_free0 (desktop_file);
 			}
-			goto __finally37;
-			__catch37_g_error:
+			goto __finally39;
+			__catch39_g_error:
 			{
 				GError * e;
 				e = _inner_error_;
 				_inner_error_ = NULL;
 				{
-#line 306 "quicklauncher-manager.vala"
-					g_error ("quicklauncher-manager.vala:306: %s", e->message);
-#line 974 "quicklauncher-manager.c"
+#line 277 "quicklauncher-manager.vala"
+					g_error ("quicklauncher-manager.vala:277: %s", e->message);
+#line 879 "quicklauncher-manager.c"
 					result = FALSE;
 					_g_error_free0 (e);
 					_g_free0 (clean_uri);
 					split_uri = (_vala_array_free (split_uri, split_uri_length1, (GDestroyNotify) g_free), NULL);
-#line 307 "quicklauncher-manager.vala"
+#line 278 "quicklauncher-manager.vala"
 					return result;
-#line 981 "quicklauncher-manager.c"
+#line 886 "quicklauncher-manager.c"
 				}
 			}
-			__finally37:
+			__finally39:
 			if (_inner_error_ != NULL) {
 				_g_free0 (clean_uri);
 				split_uri = (_vala_array_free (split_uri, split_uri_length1, (GDestroyNotify) g_free), NULL);
@@ -988,62 +893,62 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 				g_clear_error (&_inner_error_);
 				return FALSE;
 			}
-#line 310 "quicklauncher-manager.vala"
+#line 281 "quicklauncher-manager.vala"
 			favorites = _g_object_ref0 (launcher_favorites_get_default ());
-#line 311 "quicklauncher-manager.vala"
+#line 282 "quicklauncher-manager.vala"
 			uid = (_tmp23_ = g_strconcat ("app-", _tmp22_ = g_path_get_basename (clean_uri), NULL), _g_free0 (_tmp22_), _tmp23_);
-#line 312 "quicklauncher-manager.vala"
+#line 283 "quicklauncher-manager.vala"
 			launcher_favorites_set_string (favorites, uid, "type", "application");
-#line 313 "quicklauncher-manager.vala"
+#line 284 "quicklauncher-manager.vala"
 			launcher_favorites_set_string (favorites, uid, "desktop_file", split_uri[1]);
-#line 314 "quicklauncher-manager.vala"
+#line 285 "quicklauncher-manager.vala"
 			launcher_favorites_add_favorite (favorites, uid);
-#line 1002 "quicklauncher-manager.c"
+#line 907 "quicklauncher-manager.c"
 			_g_object_unref0 (favorites);
 			_g_free0 (uid);
 		} else {
 			result = FALSE;
 			_g_free0 (clean_uri);
 			split_uri = (_vala_array_free (split_uri, split_uri_length1, (GDestroyNotify) g_free), NULL);
-#line 318 "quicklauncher-manager.vala"
+#line 289 "quicklauncher-manager.vala"
 			return result;
-#line 1011 "quicklauncher-manager.c"
+#line 916 "quicklauncher-manager.c"
 		}
 	}
 	result = TRUE;
 	_g_free0 (clean_uri);
 	split_uri = (_vala_array_free (split_uri, split_uri_length1, (GDestroyNotify) g_free), NULL);
-#line 322 "quicklauncher-manager.vala"
+#line 293 "quicklauncher-manager.vala"
 	return result;
-#line 1019 "quicklauncher-manager.c"
+#line 924 "quicklauncher-manager.c"
 }
 
 
-#line 325 "quicklauncher-manager.vala"
+#line 296 "quicklauncher-manager.vala"
 static void unity_quicklauncher_manager_on_webicon_built (UnityQuicklauncherManager* self) {
-#line 325 "quicklauncher-manager.vala"
+#line 296 "quicklauncher-manager.vala"
 	g_return_if_fail (self != NULL);
-#line 1027 "quicklauncher-manager.c"
+#line 932 "quicklauncher-manager.c"
 	{
 		GeeSet* _tmp0_;
 		GeeIterator* _tmp1_;
 		GeeIterator* _model_it;
 		_model_it = (_tmp1_ = gee_iterable_iterator ((GeeIterable*) (_tmp0_ = gee_map_get_keys ((GeeMap*) self->priv->model_map))), _g_object_unref0 (_tmp0_), _tmp1_);
-#line 327 "quicklauncher-manager.vala"
+#line 298 "quicklauncher-manager.vala"
 		while (TRUE) {
-#line 1035 "quicklauncher-manager.c"
+#line 940 "quicklauncher-manager.c"
 			UnityQuicklauncherModelsLauncherModel* model;
-#line 327 "quicklauncher-manager.vala"
+#line 298 "quicklauncher-manager.vala"
 			if (!gee_iterator_next (_model_it)) {
-#line 327 "quicklauncher-manager.vala"
+#line 298 "quicklauncher-manager.vala"
 				break;
-#line 1041 "quicklauncher-manager.c"
+#line 946 "quicklauncher-manager.c"
 			}
-#line 327 "quicklauncher-manager.vala"
+#line 298 "quicklauncher-manager.vala"
 			model = (UnityQuicklauncherModelsLauncherModel*) gee_iterator_get (_model_it);
-#line 329 "quicklauncher-manager.vala"
+#line 300 "quicklauncher-manager.vala"
 			unity_quicklauncher_models_launcher_model_regenerate_icon (model);
-#line 1047 "quicklauncher-manager.c"
+#line 952 "quicklauncher-manager.c"
 			_g_object_unref0 (model);
 		}
 		_g_object_unref0 (_model_it);
@@ -1051,205 +956,233 @@ static void unity_quicklauncher_manager_on_webicon_built (UnityQuicklauncherMana
 }
 
 
-#line 333 "quicklauncher-manager.vala"
+#line 304 "quicklauncher-manager.vala"
 static void unity_quicklauncher_manager_build_favorites (UnityQuicklauncherManager* self) {
-#line 1057 "quicklauncher-manager.c"
+#line 962 "quicklauncher-manager.c"
 	LauncherFavorites* favorites;
 	GSList* favorite_list;
-#line 333 "quicklauncher-manager.vala"
+#line 304 "quicklauncher-manager.vala"
 	g_return_if_fail (self != NULL);
-#line 335 "quicklauncher-manager.vala"
+#line 306 "quicklauncher-manager.vala"
 	START_FUNCTION ();
-#line 336 "quicklauncher-manager.vala"
+#line 307 "quicklauncher-manager.vala"
 	favorites = _g_object_ref0 (launcher_favorites_get_default ());
-#line 338 "quicklauncher-manager.vala"
+#line 309 "quicklauncher-manager.vala"
 	favorite_list = launcher_favorites_get_favorites (favorites);
-#line 1068 "quicklauncher-manager.c"
+#line 973 "quicklauncher-manager.c"
 	{
 		GSList* uid_collection;
 		GSList* uid_it;
-#line 339 "quicklauncher-manager.vala"
+#line 310 "quicklauncher-manager.vala"
 		uid_collection = favorite_list;
-#line 1074 "quicklauncher-manager.c"
+#line 979 "quicklauncher-manager.c"
 		for (uid_it = uid_collection; uid_it != NULL; uid_it = uid_it->next) {
 			const char* uid;
-#line 339 "quicklauncher-manager.vala"
+#line 310 "quicklauncher-manager.vala"
 			uid = (const char*) uid_it->data;
-#line 1079 "quicklauncher-manager.c"
+#line 984 "quicklauncher-manager.c"
 			{
 				char* process_name;
 				char* type;
 				char* desktop_file;
-#line 341 "quicklauncher-manager.vala"
+#line 312 "quicklauncher-manager.vala"
 				process_name = g_strconcat ("favorite", uid, NULL);
-#line 342 "quicklauncher-manager.vala"
+#line 313 "quicklauncher-manager.vala"
 				LOGGER_START_PROCESS (process_name);
-#line 344 "quicklauncher-manager.vala"
+#line 315 "quicklauncher-manager.vala"
 				type = g_strdup (launcher_favorites_get_string (favorites, uid, "type"));
-#line 345 "quicklauncher-manager.vala"
+#line 316 "quicklauncher-manager.vala"
 				if (_vala_strcmp0 (type, "application") != 0) {
-#line 1092 "quicklauncher-manager.c"
+#line 997 "quicklauncher-manager.c"
 					_g_free0 (process_name);
 					_g_free0 (type);
-#line 346 "quicklauncher-manager.vala"
+#line 317 "quicklauncher-manager.vala"
 					continue;
-#line 1097 "quicklauncher-manager.c"
+#line 1002 "quicklauncher-manager.c"
 				}
-#line 348 "quicklauncher-manager.vala"
+#line 319 "quicklauncher-manager.vala"
 				desktop_file = g_strdup (launcher_favorites_get_string (favorites, uid, "desktop_file"));
-#line 349 "quicklauncher-manager.vala"
+#line 320 "quicklauncher-manager.vala"
 				g_assert (_vala_strcmp0 (desktop_file, "") != 0);
-#line 350 "quicklauncher-manager.vala"
+#line 321 "quicklauncher-manager.vala"
 				if (!g_file_test (desktop_file, G_FILE_TEST_EXISTS)) {
-#line 354 "quicklauncher-manager.vala"
+#line 325 "quicklauncher-manager.vala"
 					launcher_favorites_remove_favorite (favorites, uid);
-#line 1107 "quicklauncher-manager.c"
+#line 1012 "quicklauncher-manager.c"
 				} else {
+					char* _tmp0_;
 					LauncherApplication* application;
+					char* _tmp1_;
+					char* _tmp2_;
 					UnityQuicklauncherModelsApplicationModel* model;
+					char* _tmp3_;
+					char* _tmp4_;
 					UnityQuicklauncherLauncherView* view;
-#line 358 "quicklauncher-manager.vala"
+					char* _tmp5_;
+#line 329 "quicklauncher-manager.vala"
+					LOGGER_START_PROCESS (_tmp0_ = g_strconcat ("Launcher-", process_name, NULL));
+#line 1025 "quicklauncher-manager.c"
+					_g_free0 (_tmp0_);
+#line 330 "quicklauncher-manager.vala"
 					application = _g_object_ref0 (launcher_appman_get_application_for_desktop_file (self->priv->appman, desktop_file));
-#line 360 "quicklauncher-manager.vala"
+#line 332 "quicklauncher-manager.vala"
 					if (gee_abstract_collection_contains ((GeeAbstractCollection*) self->priv->launcher_apps, application)) {
-#line 1116 "quicklauncher-manager.c"
+#line 1031 "quicklauncher-manager.c"
 						_g_object_unref0 (application);
 						_g_free0 (process_name);
 						_g_free0 (type);
 						_g_free0 (desktop_file);
-#line 361 "quicklauncher-manager.vala"
+#line 333 "quicklauncher-manager.vala"
 						continue;
-#line 1123 "quicklauncher-manager.c"
+#line 1038 "quicklauncher-manager.c"
 					}
-#line 362 "quicklauncher-manager.vala"
+#line 334 "quicklauncher-manager.vala"
 					gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->launcher_apps, application);
-#line 364 "quicklauncher-manager.vala"
+#line 335 "quicklauncher-manager.vala"
+					LOGGER_END_PROCESS (_tmp1_ = g_strconcat ("Launcher-", process_name, NULL));
+#line 1044 "quicklauncher-manager.c"
+					_g_free0 (_tmp1_);
+#line 337 "quicklauncher-manager.vala"
+					LOGGER_START_PROCESS (_tmp2_ = g_strconcat ("Model-", process_name, NULL));
+#line 1048 "quicklauncher-manager.c"
+					_g_free0 (_tmp2_);
+#line 338 "quicklauncher-manager.vala"
 					model = unity_quicklauncher_models_application_model_new (application);
-#line 365 "quicklauncher-manager.vala"
+#line 339 "quicklauncher-manager.vala"
 					unity_quicklauncher_models_launcher_model_set_is_sticky ((UnityQuicklauncherModelsLauncherModel*) model, TRUE);
-#line 366 "quicklauncher-manager.vala"
+#line 340 "quicklauncher-manager.vala"
+					LOGGER_END_PROCESS (_tmp3_ = g_strconcat ("Model-", process_name, NULL));
+#line 1056 "quicklauncher-manager.c"
+					_g_free0 (_tmp3_);
+#line 341 "quicklauncher-manager.vala"
+					LOGGER_START_PROCESS (_tmp4_ = g_strconcat ("View-", process_name, NULL));
+#line 1060 "quicklauncher-manager.c"
+					_g_free0 (_tmp4_);
+#line 342 "quicklauncher-manager.vala"
 					view = unity_quicklauncher_manager_get_view_for_model (self, (UnityQuicklauncherModelsLauncherModel*) model);
-#line 368 "quicklauncher-manager.vala"
+#line 343 "quicklauncher-manager.vala"
+					LOGGER_END_PROCESS (_tmp5_ = g_strconcat ("View-", process_name, NULL));
+#line 1066 "quicklauncher-manager.c"
+					_g_free0 (_tmp5_);
+#line 345 "quicklauncher-manager.vala"
 					unity_quicklauncher_manager_add_view (self, view);
-#line 1135 "quicklauncher-manager.c"
+#line 1070 "quicklauncher-manager.c"
 					_g_object_unref0 (application);
 					_g_object_unref0 (model);
 					_g_object_unref0 (view);
 				}
-#line 371 "quicklauncher-manager.vala"
+#line 348 "quicklauncher-manager.vala"
 				LOGGER_END_PROCESS (process_name);
-#line 1142 "quicklauncher-manager.c"
+#line 1077 "quicklauncher-manager.c"
 				_g_free0 (process_name);
 				_g_free0 (type);
 				_g_free0 (desktop_file);
 			}
 		}
 	}
-#line 375 "quicklauncher-manager.vala"
-	launcher_appman_set_enable_window_checking (launcher_appman_get_default (), TRUE);
-#line 377 "quicklauncher-manager.vala"
+#line 351 "quicklauncher-manager.vala"
 	END_FUNCTION ();
-#line 1153 "quicklauncher-manager.c"
+#line 1086 "quicklauncher-manager.c"
 	_g_object_unref0 (favorites);
 }
 
 
-#line 380 "quicklauncher-manager.vala"
+#line 354 "quicklauncher-manager.vala"
 static float unity_quicklauncher_manager_get_last_priority (UnityQuicklauncherManager* self) {
-#line 1160 "quicklauncher-manager.c"
+#line 1093 "quicklauncher-manager.c"
 	float result;
 	float max_priority;
-#line 380 "quicklauncher-manager.vala"
+#line 354 "quicklauncher-manager.vala"
 	g_return_val_if_fail (self != NULL, 0.0F);
-#line 382 "quicklauncher-manager.vala"
+#line 356 "quicklauncher-manager.vala"
 	max_priority = 0.0f;
-#line 1167 "quicklauncher-manager.c"
+#line 1100 "quicklauncher-manager.c"
 	{
 		GeeSet* _tmp0_;
 		GeeIterator* _tmp1_;
 		GeeIterator* _model_it;
 		_model_it = (_tmp1_ = gee_iterable_iterator ((GeeIterable*) (_tmp0_ = gee_map_get_keys ((GeeMap*) self->priv->model_map))), _g_object_unref0 (_tmp0_), _tmp1_);
-#line 383 "quicklauncher-manager.vala"
+#line 357 "quicklauncher-manager.vala"
 		while (TRUE) {
-#line 1175 "quicklauncher-manager.c"
+#line 1108 "quicklauncher-manager.c"
 			UnityQuicklauncherModelsLauncherModel* model;
 			UnityQuicklauncherModelsLauncherModel* _tmp2_;
-#line 383 "quicklauncher-manager.vala"
+#line 357 "quicklauncher-manager.vala"
 			if (!gee_iterator_next (_model_it)) {
-#line 383 "quicklauncher-manager.vala"
+#line 357 "quicklauncher-manager.vala"
 				break;
-#line 1182 "quicklauncher-manager.c"
+#line 1115 "quicklauncher-manager.c"
 			}
-#line 383 "quicklauncher-manager.vala"
+#line 357 "quicklauncher-manager.vala"
 			model = (UnityQuicklauncherModelsLauncherModel*) gee_iterator_get (_model_it);
-#line 385 "quicklauncher-manager.vala"
+#line 359 "quicklauncher-manager.vala"
 			if (!UNITY_QUICKLAUNCHER_MODELS_IS_APPLICATION_MODEL (model)) {
-#line 1188 "quicklauncher-manager.c"
+#line 1121 "quicklauncher-manager.c"
 				_g_object_unref0 (model);
-#line 386 "quicklauncher-manager.vala"
+#line 360 "quicklauncher-manager.vala"
 				continue;
-#line 1192 "quicklauncher-manager.c"
+#line 1125 "quicklauncher-manager.c"
 			}
-#line 387 "quicklauncher-manager.vala"
+#line 361 "quicklauncher-manager.vala"
 			max_priority = fmaxf (unity_quicklauncher_models_launcher_model_get_priority ((UnityQuicklauncherModelsLauncherModel*) (_tmp2_ = model, UNITY_QUICKLAUNCHER_MODELS_IS_APPLICATION_MODEL (_tmp2_) ? ((UnityQuicklauncherModelsApplicationModel*) _tmp2_) : NULL)), max_priority);
-#line 1196 "quicklauncher-manager.c"
+#line 1129 "quicklauncher-manager.c"
 			_g_object_unref0 (model);
 		}
 		_g_object_unref0 (_model_it);
 	}
 	result = max_priority;
-#line 389 "quicklauncher-manager.vala"
+#line 363 "quicklauncher-manager.vala"
 	return result;
-#line 1204 "quicklauncher-manager.c"
+#line 1137 "quicklauncher-manager.c"
 }
 
 
-#line 392 "quicklauncher-manager.vala"
+#line 366 "quicklauncher-manager.vala"
 static void unity_quicklauncher_manager_handle_session_application (UnityQuicklauncherManager* self, LauncherApplication* app) {
-#line 1210 "quicklauncher-manager.c"
+#line 1143 "quicklauncher-manager.c"
 	UnityQuicklauncherModelsApplicationModel* model;
 	char* desktop_file;
 	gboolean _tmp0_ = FALSE;
 	UnityQuicklauncherLauncherView* view;
-#line 392 "quicklauncher-manager.vala"
+#line 366 "quicklauncher-manager.vala"
 	g_return_if_fail (self != NULL);
-#line 392 "quicklauncher-manager.vala"
+#line 366 "quicklauncher-manager.vala"
 	g_return_if_fail (app != NULL);
-#line 394 "quicklauncher-manager.vala"
+#line 368 "quicklauncher-manager.vala"
 	if (gee_abstract_collection_contains ((GeeAbstractCollection*) self->priv->launcher_apps, app)) {
-#line 395 "quicklauncher-manager.vala"
+#line 369 "quicklauncher-manager.vala"
 		return;
-#line 1223 "quicklauncher-manager.c"
+#line 1156 "quicklauncher-manager.c"
 	}
-#line 396 "quicklauncher-manager.vala"
+#line 370 "quicklauncher-manager.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->launcher_apps, app);
-#line 397 "quicklauncher-manager.vala"
+#line 371 "quicklauncher-manager.vala"
 	model = unity_quicklauncher_models_application_model_new (app);
-#line 399 "quicklauncher-manager.vala"
+#line 373 "quicklauncher-manager.vala"
 	desktop_file = g_strdup (launcher_application_get_desktop_file (app));
-#line 400 "quicklauncher-manager.vala"
+#line 374 "quicklauncher-manager.vala"
 	if (desktop_file != NULL) {
-#line 400 "quicklauncher-manager.vala"
+#line 374 "quicklauncher-manager.vala"
 		_tmp0_ = !unity_quicklauncher_models_launcher_model_get_is_sticky ((UnityQuicklauncherModelsLauncherModel*) model);
-#line 1235 "quicklauncher-manager.c"
+#line 1168 "quicklauncher-manager.c"
 	} else {
-#line 400 "quicklauncher-manager.vala"
+#line 374 "quicklauncher-manager.vala"
 		_tmp0_ = FALSE;
-#line 1239 "quicklauncher-manager.c"
+#line 1172 "quicklauncher-manager.c"
 	}
-#line 400 "quicklauncher-manager.vala"
+#line 374 "quicklauncher-manager.vala"
 	if (_tmp0_) {
-#line 402 "quicklauncher-manager.vala"
+#line 376 "quicklauncher-manager.vala"
 		unity_quicklauncher_models_launcher_model_set_priority ((UnityQuicklauncherModelsLauncherModel*) model, unity_quicklauncher_manager_get_last_priority (self));
-#line 1245 "quicklauncher-manager.c"
+#line 1178 "quicklauncher-manager.c"
 	}
-#line 405 "quicklauncher-manager.vala"
+#line 379 "quicklauncher-manager.vala"
 	view = unity_quicklauncher_manager_get_view_for_model (self, (UnityQuicklauncherModelsLauncherModel*) model);
-#line 406 "quicklauncher-manager.vala"
+#line 380 "quicklauncher-manager.vala"
 	if (clutter_actor_get_parent ((ClutterActor*) view) == NULL) {
-#line 408 "quicklauncher-manager.vala"
+#line 382 "quicklauncher-manager.vala"
 		unity_quicklauncher_manager_add_view (self, view);
-#line 1253 "quicklauncher-manager.c"
+#line 1186 "quicklauncher-manager.c"
 	}
 	_g_object_unref0 (model);
 	_g_free0 (desktop_file);
@@ -1257,156 +1190,156 @@ static void unity_quicklauncher_manager_handle_session_application (UnityQuickla
 }
 
 
-#line 412 "quicklauncher-manager.vala"
+#line 386 "quicklauncher-manager.vala"
 static UnityQuicklauncherLauncherView* unity_quicklauncher_manager_get_view_for_model (UnityQuicklauncherManager* self, UnityQuicklauncherModelsLauncherModel* model) {
-#line 1263 "quicklauncher-manager.c"
+#line 1196 "quicklauncher-manager.c"
 	UnityQuicklauncherLauncherView* result;
 	GeeSet* _tmp0_;
 	gboolean _tmp1_;
 	UnityQuicklauncherLauncherView* view;
-#line 412 "quicklauncher-manager.vala"
+#line 386 "quicklauncher-manager.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 412 "quicklauncher-manager.vala"
+#line 386 "quicklauncher-manager.vala"
 	g_return_val_if_fail (model != NULL, NULL);
-#line 414 "quicklauncher-manager.vala"
+#line 388 "quicklauncher-manager.vala"
 	if ((_tmp1_ = gee_collection_contains ((GeeCollection*) (_tmp0_ = gee_map_get_keys ((GeeMap*) self->priv->model_map)), model), _g_object_unref0 (_tmp0_), _tmp1_)) {
-#line 1274 "quicklauncher-manager.c"
+#line 1207 "quicklauncher-manager.c"
 		result = (UnityQuicklauncherLauncherView*) gee_abstract_map_get ((GeeAbstractMap*) self->priv->model_map, model);
-#line 416 "quicklauncher-manager.vala"
+#line 390 "quicklauncher-manager.vala"
 		return result;
-#line 1278 "quicklauncher-manager.c"
+#line 1211 "quicklauncher-manager.c"
 	}
-#line 419 "quicklauncher-manager.vala"
+#line 393 "quicklauncher-manager.vala"
 	view = g_object_ref_sink (unity_quicklauncher_launcher_view_new (model));
-#line 420 "quicklauncher-manager.vala"
+#line 394 "quicklauncher-manager.vala"
 	gee_abstract_map_set ((GeeAbstractMap*) self->priv->model_map, model, view);
-#line 1284 "quicklauncher-manager.c"
+#line 1217 "quicklauncher-manager.c"
 	result = view;
-#line 421 "quicklauncher-manager.vala"
+#line 395 "quicklauncher-manager.vala"
 	return result;
-#line 1288 "quicklauncher-manager.c"
+#line 1221 "quicklauncher-manager.c"
 }
 
 
-#line 447 "quicklauncher-manager.vala"
+#line 421 "quicklauncher-manager.vala"
 static void _unity_quicklauncher_manager_remove_view_unity_quicklauncher_launcher_view_request_remove (UnityQuicklauncherLauncherView* _sender, gpointer self) {
-#line 1294 "quicklauncher-manager.c"
+#line 1227 "quicklauncher-manager.c"
 	unity_quicklauncher_manager_remove_view (self, _sender);
 }
 
 
-#line 461 "quicklauncher-manager.vala"
+#line 435 "quicklauncher-manager.vala"
 static gboolean _unity_quicklauncher_manager_on_launcher_enter_event_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 1301 "quicklauncher-manager.c"
+#line 1234 "quicklauncher-manager.c"
 	return unity_quicklauncher_manager_on_launcher_enter_event (self, event);
 }
 
 
-#line 467 "quicklauncher-manager.vala"
+#line 441 "quicklauncher-manager.vala"
 static gboolean _unity_quicklauncher_manager_on_launcher_leave_event_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 1308 "quicklauncher-manager.c"
+#line 1241 "quicklauncher-manager.c"
 	return unity_quicklauncher_manager_on_launcher_leave_event (self, event);
 }
 
 
-#line 428 "quicklauncher-manager.vala"
+#line 402 "quicklauncher-manager.vala"
 static void unity_quicklauncher_manager_add_view (UnityQuicklauncherManager* self, UnityQuicklauncherLauncherView* view) {
-#line 428 "quicklauncher-manager.vala"
+#line 402 "quicklauncher-manager.vala"
 	g_return_if_fail (self != NULL);
-#line 428 "quicklauncher-manager.vala"
+#line 402 "quicklauncher-manager.vala"
 	g_return_if_fail (view != NULL);
-#line 430 "quicklauncher-manager.vala"
+#line 404 "quicklauncher-manager.vala"
 	if (view == NULL) {
-#line 432 "quicklauncher-manager.vala"
+#line 406 "quicklauncher-manager.vala"
 		return;
-#line 1323 "quicklauncher-manager.c"
+#line 1256 "quicklauncher-manager.c"
 	}
-#line 434 "quicklauncher-manager.vala"
+#line 408 "quicklauncher-manager.vala"
 	if (unity_quicklauncher_models_launcher_model_get_is_fixed (view->model)) {
-#line 436 "quicklauncher-manager.vala"
+#line 410 "quicklauncher-manager.vala"
 		unity_widgets_scroller_add_actor (self->priv->container, (ClutterActor*) view, TRUE);
-#line 1329 "quicklauncher-manager.c"
+#line 1262 "quicklauncher-manager.c"
 	} else {
-#line 440 "quicklauncher-manager.vala"
+#line 414 "quicklauncher-manager.vala"
 		unity_widgets_scroller_add_actor (self->priv->container, (ClutterActor*) view, FALSE);
-#line 1333 "quicklauncher-manager.c"
+#line 1266 "quicklauncher-manager.c"
 	}
-#line 442 "quicklauncher-manager.vala"
+#line 416 "quicklauncher-manager.vala"
 	g_signal_connect_object (view, "request-remove", (GCallback) _unity_quicklauncher_manager_remove_view_unity_quicklauncher_launcher_view_request_remove, self, 0);
-#line 443 "quicklauncher-manager.vala"
+#line 417 "quicklauncher-manager.vala"
 	g_signal_connect_object ((ClutterActor*) view, "enter-event", (GCallback) _unity_quicklauncher_manager_on_launcher_enter_event_clutter_actor_enter_event, self, 0);
-#line 444 "quicklauncher-manager.vala"
+#line 418 "quicklauncher-manager.vala"
 	g_signal_connect_object ((ClutterActor*) view, "leave-event", (GCallback) _unity_quicklauncher_manager_on_launcher_leave_event_clutter_actor_leave_event, self, 0);
-#line 1341 "quicklauncher-manager.c"
+#line 1274 "quicklauncher-manager.c"
 }
 
 
-#line 447 "quicklauncher-manager.vala"
+#line 421 "quicklauncher-manager.vala"
 static void unity_quicklauncher_manager_remove_view (UnityQuicklauncherManager* self, UnityQuicklauncherLauncherView* view) {
-#line 1347 "quicklauncher-manager.c"
+#line 1280 "quicklauncher-manager.c"
 	guint _tmp0_;
 	guint _tmp1_;
-#line 447 "quicklauncher-manager.vala"
+#line 421 "quicklauncher-manager.vala"
 	g_return_if_fail (self != NULL);
-#line 447 "quicklauncher-manager.vala"
+#line 421 "quicklauncher-manager.vala"
 	g_return_if_fail (view != NULL);
-#line 451 "quicklauncher-manager.vala"
+#line 425 "quicklauncher-manager.vala"
 	unity_widgets_scroller_remove_actor (self->priv->container, (ClutterActor*) view);
-#line 452 "quicklauncher-manager.vala"
+#line 426 "quicklauncher-manager.vala"
 	g_signal_handlers_disconnect_matched ((ClutterActor*) view, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("enter-event", CLUTTER_TYPE_ACTOR, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _unity_quicklauncher_manager_on_launcher_enter_event_clutter_actor_enter_event, self);
-#line 453 "quicklauncher-manager.vala"
+#line 427 "quicklauncher-manager.vala"
 	g_signal_handlers_disconnect_matched ((ClutterActor*) view, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("leave-event", CLUTTER_TYPE_ACTOR, &_tmp1_, NULL, FALSE), _tmp1_), 0, NULL, (GCallback) _unity_quicklauncher_manager_on_launcher_leave_event_clutter_actor_leave_event, self);
-#line 455 "quicklauncher-manager.vala"
+#line 429 "quicklauncher-manager.vala"
 	if (UNITY_QUICKLAUNCHER_MODELS_IS_APPLICATION_MODEL (view->model)) {
-#line 1362 "quicklauncher-manager.c"
+#line 1295 "quicklauncher-manager.c"
 		UnityQuicklauncherModelsLauncherModel* _tmp2_;
-#line 457 "quicklauncher-manager.vala"
+#line 431 "quicklauncher-manager.vala"
 		gee_abstract_collection_remove ((GeeAbstractCollection*) self->priv->launcher_apps, unity_quicklauncher_models_application_model_get_app ((_tmp2_ = view->model, UNITY_QUICKLAUNCHER_MODELS_IS_APPLICATION_MODEL (_tmp2_) ? ((UnityQuicklauncherModelsApplicationModel*) _tmp2_) : NULL)));
-#line 1366 "quicklauncher-manager.c"
+#line 1299 "quicklauncher-manager.c"
 	}
 }
 
 
-#line 461 "quicklauncher-manager.vala"
+#line 435 "quicklauncher-manager.vala"
 static gboolean unity_quicklauncher_manager_on_launcher_enter_event (UnityQuicklauncherManager* self, ClutterEvent* event) {
-#line 1373 "quicklauncher-manager.c"
+#line 1306 "quicklauncher-manager.c"
 	gboolean result;
 	ClutterActor* _tmp0_;
-#line 461 "quicklauncher-manager.vala"
+#line 435 "quicklauncher-manager.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 463 "quicklauncher-manager.vala"
+#line 437 "quicklauncher-manager.vala"
 	unity_quicklauncher_manager_set_active_launcher (self, (_tmp0_ = clutter_event_get_source (event), UNITY_QUICKLAUNCHER_IS_LAUNCHER_VIEW (_tmp0_) ? ((UnityQuicklauncherLauncherView*) _tmp0_) : NULL));
-#line 1380 "quicklauncher-manager.c"
+#line 1313 "quicklauncher-manager.c"
 	result = FALSE;
-#line 464 "quicklauncher-manager.vala"
+#line 438 "quicklauncher-manager.vala"
 	return result;
-#line 1384 "quicklauncher-manager.c"
+#line 1317 "quicklauncher-manager.c"
 }
 
 
-#line 467 "quicklauncher-manager.vala"
+#line 441 "quicklauncher-manager.vala"
 static gboolean unity_quicklauncher_manager_on_launcher_leave_event (UnityQuicklauncherManager* self, ClutterEvent* event) {
-#line 1390 "quicklauncher-manager.c"
+#line 1323 "quicklauncher-manager.c"
 	gboolean result;
 	ClutterActor* _tmp0_;
-#line 467 "quicklauncher-manager.vala"
+#line 441 "quicklauncher-manager.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 469 "quicklauncher-manager.vala"
+#line 443 "quicklauncher-manager.vala"
 	if (unity_quicklauncher_manager_get_active_launcher (self) == (_tmp0_ = clutter_event_get_source (event), UNITY_QUICKLAUNCHER_IS_LAUNCHER_VIEW (_tmp0_) ? ((UnityQuicklauncherLauncherView*) _tmp0_) : NULL)) {
-#line 470 "quicklauncher-manager.vala"
+#line 444 "quicklauncher-manager.vala"
 		unity_quicklauncher_manager_set_active_launcher (self, NULL);
-#line 1399 "quicklauncher-manager.c"
+#line 1332 "quicklauncher-manager.c"
 	}
 	result = FALSE;
-#line 471 "quicklauncher-manager.vala"
+#line 445 "quicklauncher-manager.vala"
 	return result;
-#line 1404 "quicklauncher-manager.c"
+#line 1337 "quicklauncher-manager.c"
 }
 
 
 #line 26 "quicklauncher-manager.vala"
 UnityQuicklauncherManager* unity_quicklauncher_manager_construct (GType object_type) {
-#line 1410 "quicklauncher-manager.c"
+#line 1343 "quicklauncher-manager.c"
 	UnityQuicklauncherManager * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
@@ -1417,7 +1350,7 @@ UnityQuicklauncherManager* unity_quicklauncher_manager_construct (GType object_t
 UnityQuicklauncherManager* unity_quicklauncher_manager_new (void) {
 #line 26 "quicklauncher-manager.vala"
 	return unity_quicklauncher_manager_construct (UNITY_QUICKLAUNCHER_TYPE_MANAGER);
-#line 1421 "quicklauncher-manager.c"
+#line 1354 "quicklauncher-manager.c"
 }
 
 
@@ -1426,17 +1359,17 @@ static GConfClient* unity_quicklauncher_manager_get_gconf_client (UnityQuicklaun
 	g_return_val_if_fail (self != NULL, NULL);
 #line 44 "quicklauncher-manager.vala"
 	if (GCONF_IS_CLIENT (self->priv->gconf_client_)) {
-#line 1430 "quicklauncher-manager.c"
+#line 1363 "quicklauncher-manager.c"
 		result = self->priv->gconf_client_;
 #line 46 "quicklauncher-manager.vala"
 		return result;
-#line 1434 "quicklauncher-manager.c"
+#line 1367 "quicklauncher-manager.c"
 	} else {
 		GConfClient* _tmp0_;
 		result = self->priv->gconf_client_ = (_tmp0_ = _g_object_ref0 (gconf_client_get_default ()), _g_object_unref0 (self->priv->gconf_client_), _tmp0_);
 #line 50 "quicklauncher-manager.vala"
 		return result;
-#line 1440 "quicklauncher-manager.c"
+#line 1373 "quicklauncher-manager.c"
 	}
 }
 
@@ -1447,7 +1380,7 @@ UnityQuicklauncherLauncherView* unity_quicklauncher_manager_get_active_launcher 
 	result = self->priv->_active_launcher;
 #line 57 "quicklauncher-manager.vala"
 	return result;
-#line 1451 "quicklauncher-manager.c"
+#line 1384 "quicklauncher-manager.c"
 }
 
 
@@ -1461,51 +1394,51 @@ static void unity_quicklauncher_manager_set_active_launcher (UnityQuicklauncherM
 	self->priv->_active_launcher = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_active_launcher), _tmp0_);
 #line 61 "quicklauncher-manager.vala"
 	g_signal_emit_by_name (self, "active-launcher-changed", prev, self->priv->_active_launcher);
-#line 1465 "quicklauncher-manager.c"
+#line 1398 "quicklauncher-manager.c"
 	_g_object_unref0 (prev);
 	g_object_notify ((GObject *) self, "active-launcher");
 }
 
 
-#line 167 "quicklauncher-manager.vala"
+#line 366 "quicklauncher-manager.vala"
+static void _unity_quicklauncher_manager_handle_session_application_launcher_session_application_opened (LauncherSession* _sender, LauncherApplication* application, gpointer self) {
+#line 1406 "quicklauncher-manager.c"
+	unity_quicklauncher_manager_handle_session_application (self, application);
+}
+
+
+#line 138 "quicklauncher-manager.vala"
 static gboolean _unity_quicklauncher_manager_on_drag_motion_ctk_actor_drag_motion (CtkActor* _sender, GdkDragContext* context, gint x, gint y, guint time_, gpointer self) {
-#line 1473 "quicklauncher-manager.c"
+#line 1413 "quicklauncher-manager.c"
 	return unity_quicklauncher_manager_on_drag_motion (self, _sender, context, x, y, time_);
 }
 
 
-#line 173 "quicklauncher-manager.vala"
+#line 144 "quicklauncher-manager.vala"
 static gboolean _unity_quicklauncher_manager_on_drag_drop_ctk_actor_drag_drop (CtkActor* _sender, GdkDragContext* context, gint x, gint y, guint time_, gpointer self) {
-#line 1480 "quicklauncher-manager.c"
+#line 1420 "quicklauncher-manager.c"
 	return unity_quicklauncher_manager_on_drag_drop (self, _sender, context, x, y, time_);
 }
 
 
-#line 206 "quicklauncher-manager.vala"
+#line 177 "quicklauncher-manager.vala"
 static void _unity_quicklauncher_manager_on_drag_data_received_ctk_actor_drag_data_received (CtkActor* _sender, GdkDragContext* context, gint x, gint y, GtkSelectionData* data, guint info, guint time_, gpointer self) {
-#line 1487 "quicklauncher-manager.c"
+#line 1427 "quicklauncher-manager.c"
 	unity_quicklauncher_manager_on_drag_data_received (self, _sender, context, x, y, data, info, time_);
 }
 
 
-#line 325 "quicklauncher-manager.vala"
+#line 296 "quicklauncher-manager.vala"
 static void _unity_quicklauncher_manager_on_webicon_built_unity_shell_need_new_icon_cache (UnityShell* _sender, gpointer self) {
-#line 1494 "quicklauncher-manager.c"
+#line 1434 "quicklauncher-manager.c"
 	unity_quicklauncher_manager_on_webicon_built (self);
 }
 
 
-#line 132 "quicklauncher-manager.vala"
+#line 103 "quicklauncher-manager.vala"
 static void _unity_quicklauncher_manager_on_favorite_change_gconf_notify_func (GConfEngine* conf, guint cnxn_id, GConfEntry* entry, gpointer self) {
-#line 1501 "quicklauncher-manager.c"
+#line 1441 "quicklauncher-manager.c"
 	unity_quicklauncher_manager_on_favorite_change (self, conf, cnxn_id, entry);
-}
-
-
-#line 106 "quicklauncher-manager.vala"
-static gboolean _unity_quicklauncher_manager_ensure_model_windows_gsource_func (gpointer self) {
-#line 1508 "quicklauncher-manager.c"
-	return unity_quicklauncher_manager_ensure_model_windows (self);
 }
 
 
@@ -1532,40 +1465,44 @@ static GObject * unity_quicklauncher_manager_constructor (GType type, guint n_co
 #line 70 "quicklauncher-manager.vala"
 		self->priv->appman = (_tmp0_ = _g_object_ref0 (launcher_appman_get_default ()), _g_object_unref0 (self->priv->appman), _tmp0_);
 #line 71 "quicklauncher-manager.vala"
+		launcher_appman_set_enable_window_checking (launcher_appman_get_default (), TRUE);
+#line 72 "quicklauncher-manager.vala"
 		self->priv->session = (_tmp1_ = _g_object_ref0 (launcher_session_get_default ()), _g_object_unref0 (self->priv->session), _tmp1_);
-#line 73 "quicklauncher-manager.vala"
-		self->priv->launcher_apps = (_tmp2_ = gee_array_list_new (LAUNCHER_TYPE_APPLICATION, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->priv->launcher_apps), _tmp2_);
 #line 74 "quicklauncher-manager.vala"
+		self->priv->launcher_apps = (_tmp2_ = gee_array_list_new (LAUNCHER_TYPE_APPLICATION, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->priv->launcher_apps), _tmp2_);
+#line 75 "quicklauncher-manager.vala"
 		self->priv->model_map = (_tmp3_ = gee_hash_map_new (UNITY_QUICKLAUNCHER_MODELS_TYPE_LAUNCHER_MODEL, (GBoxedCopyFunc) g_object_ref, g_object_unref, UNITY_QUICKLAUNCHER_TYPE_LAUNCHER_VIEW, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL, NULL, NULL), _g_object_unref0 (self->priv->model_map), _tmp3_);
-#line 76 "quicklauncher-manager.vala"
+#line 77 "quicklauncher-manager.vala"
 		self->priv->container = (_tmp4_ = g_object_ref_sink (unity_widgets_scroller_new (CTK_ORIENTATION_VERTICAL, 0)), _g_object_unref0 (self->priv->container), _tmp4_);
-#line 78 "quicklauncher-manager.vala"
-		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->container);
 #line 79 "quicklauncher-manager.vala"
+		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->container);
+#line 80 "quicklauncher-manager.vala"
 		unity_quicklauncher_manager_build_favorites (self);
-#line 82 "quicklauncher-manager.vala"
-		ctk_drag_dest_start ((CtkActor*) self->priv->container);
-#line 83 "quicklauncher-manager.vala"
-		g_signal_connect_object ((CtkActor*) self->priv->container, "drag-motion", (GCallback) _unity_quicklauncher_manager_on_drag_motion_ctk_actor_drag_motion, self, 0);
+#line 81 "quicklauncher-manager.vala"
+		g_signal_connect_object (self->priv->session, "application-opened", (GCallback) _unity_quicklauncher_manager_handle_session_application_launcher_session_application_opened, self, 0);
 #line 84 "quicklauncher-manager.vala"
-		g_signal_connect_object ((CtkActor*) self->priv->container, "drag-drop", (GCallback) _unity_quicklauncher_manager_on_drag_drop_ctk_actor_drag_drop, self, 0);
+		ctk_drag_dest_start ((CtkActor*) self->priv->container);
 #line 85 "quicklauncher-manager.vala"
+		g_signal_connect_object ((CtkActor*) self->priv->container, "drag-motion", (GCallback) _unity_quicklauncher_manager_on_drag_motion_ctk_actor_drag_motion, self, 0);
+#line 86 "quicklauncher-manager.vala"
+		g_signal_connect_object ((CtkActor*) self->priv->container, "drag-drop", (GCallback) _unity_quicklauncher_manager_on_drag_drop_ctk_actor_drag_drop, self, 0);
+#line 87 "quicklauncher-manager.vala"
 		g_signal_connect_object ((CtkActor*) self->priv->container, "drag-data-received", (GCallback) _unity_quicklauncher_manager_on_drag_data_received_ctk_actor_drag_data_received, self, 0);
-#line 88 "quicklauncher-manager.vala"
+#line 90 "quicklauncher-manager.vala"
 		g_signal_connect_object (unity_global_shell, "need-new-icon-cache", (GCallback) _unity_quicklauncher_manager_on_webicon_built_unity_shell_need_new_icon_cache, self, 0);
-#line 91 "quicklauncher-manager.vala"
-		self->priv->gclient = (_tmp6_ = (_tmp5_ = gconf_engine_get_default (), (_tmp5_ == NULL) ? NULL : gconf_engine_ref (_tmp5_), _tmp5_), _gconf_engine_unref0 (self->priv->gclient), _tmp6_);
-#line 1559 "quicklauncher-manager.c"
-		{
 #line 93 "quicklauncher-manager.vala"
+		self->priv->gclient = (_tmp6_ = (_tmp5_ = gconf_engine_get_default (), (_tmp5_ == NULL) ? NULL : gconf_engine_ref (_tmp5_), _tmp5_), _gconf_engine_unref0 (self->priv->gclient), _tmp6_);
+#line 1496 "quicklauncher-manager.c"
+		{
+#line 95 "quicklauncher-manager.vala"
 			gconf_engine_notify_add (self->priv->gclient, "/desktop/unity/launcher/favorites/favorites_list", _unity_quicklauncher_manager_on_favorite_change_gconf_notify_func, self, &_inner_error_);
-#line 1563 "quicklauncher-manager.c"
+#line 1500 "quicklauncher-manager.c"
 			if (_inner_error_ != NULL) {
-				goto __catch38_g_error;
+				goto __catch40_g_error;
 			}
 		}
-		goto __finally38;
-		__catch38_g_error:
+		goto __finally40;
+		__catch40_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -1574,18 +1511,16 @@ static GObject * unity_quicklauncher_manager_constructor (GType type, guint n_co
 				_g_error_free0 (e);
 			}
 		}
-		__finally38:
+		__finally40:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
 		}
-#line 96 "quicklauncher-manager.vala"
-		self->priv->webapp_device = (_tmp7_ = unity_quicklauncher_manager_get_webapp_device (self), _g_free0 (self->priv->webapp_device), _tmp7_);
 #line 98 "quicklauncher-manager.vala"
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_quicklauncher_manager_ensure_model_windows_gsource_func, g_object_ref (self), g_object_unref);
+		self->priv->webapp_device = (_tmp7_ = unity_quicklauncher_manager_get_webapp_device (self), _g_free0 (self->priv->webapp_device), _tmp7_);
 #line 100 "quicklauncher-manager.vala"
 		END_FUNCTION ();
-#line 1589 "quicklauncher-manager.c"
+#line 1524 "quicklauncher-manager.c"
 	}
 	return obj;
 }
