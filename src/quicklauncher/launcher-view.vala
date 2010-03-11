@@ -801,8 +801,15 @@ namespace Unity.Quicklauncher
         }
       else
         {
-          if (controller.menu_is_open ())
-            controller.close_menu ();
+          if (this.menu_state == LauncherViewMenuState.NO_MENU &&
+              controller.menu_is_open ())
+            {
+              controller.close_menu ();
+            }
+          else if (controller.is_in_label)
+            {
+              controller.close_menu ();
+            }
         }
     }
 
@@ -827,7 +834,8 @@ namespace Unity.Quicklauncher
     private bool on_mouse_leave(Clutter.Event src)
     {
       this.is_hovering = false;
-      this.menu_state = LauncherViewMenuState.NO_MENU;
+      if (this.menu_state != LauncherViewMenuState.MENU_CLOSE_WHEN_LEAVE)
+        this.menu_state = LauncherViewMenuState.NO_MENU;
       this.ensure_menu_state ();
       return false;
     }
