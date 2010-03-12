@@ -496,15 +496,20 @@ namespace Unity.Quicklauncher.Models
        * of the month sprint
        */
 
+      string process_name = "make-icon-" + Random.int_range (0, 2^32).to_string ();
       Gdk.Pixbuf pixbuf = null;
+
+      LOGGER_START_PROCESS ("init-themes-" + process_name);
       Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
       Gtk.IconTheme webtheme = new Gtk.IconTheme ();
       Gtk.IconTheme unitytheme = new Gtk.IconTheme ();
       webtheme.set_custom_theme ("Web");
       unitytheme.set_custom_theme ("unity-icon-theme");
+      LOGGER_END_PROCESS ("init-themes-" + process_name);
 
       if (icon_name == null)
         {
+          LOGGER_START_PROCESS ("no-icon-" + process_name);
           try
             {
               pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 48, 0);
@@ -514,16 +519,14 @@ namespace Unity.Quicklauncher.Models
               warning ("Unable to load stock image: %s", e.message);
               pixbuf = null;
             }
-
+          LOGGER_END_PROCESS ("no-icon" + process_name);
           return pixbuf;
         }
+/*
 
       if (icon_name.has_prefix("file://"))
         {
           string filename = "";
-          /* this try/catch sort of isn't needed... but it makes valac stop
-           * printing warning messages
-           */
           try
           {
             filename = Filename.from_uri(icon_name);
@@ -548,10 +551,12 @@ namespace Unity.Quicklauncher.Models
                   return pixbuf;
             }
         }
+*/
 
       if (Path.is_absolute(icon_name))
         {
-          if (FileUtils.test(icon_name, FileTest.EXISTS))
+          LOGGER_START_PROCESS ("filepath-" + process_name);
+          if (FileUtils.test(icon_name, FileTest.IS_REGULAR))
             {
               try
                 {
@@ -566,8 +571,12 @@ namespace Unity.Quicklauncher.Models
                 }
 
               if (pixbuf is Gdk.Pixbuf)
-                return pixbuf;
+                {
+                  LOGGER_END_PROCESS ("filepath-" + process_name);
+                  return pixbuf;
+                }
             }
+          LOGGER_END_PROCESS ("filepath-" + process_name);
         }
 
       if (FileUtils.test ("/usr/share/pixmaps/" + icon_name,
@@ -590,11 +599,12 @@ namespace Unity.Quicklauncher.Models
         }
 
       //load web theme first
+      LOGGER_START_PROCESS ("webtheme-" + process_name);
       Gtk.IconInfo info = webtheme.lookup_icon(icon_name, 48, 0);
       if (info != null)
         {
           string filename = info.get_filename();
-          if (FileUtils.test(filename, FileTest.EXISTS))
+          if (filename != null)
             {
               try
                 {
@@ -612,19 +622,11 @@ namespace Unity.Quicklauncher.Models
                 return pixbuf;
             }
         }
-
-      try
-      {
-        pixbuf = webtheme.load_icon(icon_name, 48, 0);
-        if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
-      }
-      catch (GLib.Error e)
-      {
-      }
-
+      LOGGER_END_PROCESS ("webtheme-" + process_name);
 
       //load from default theme
       info = theme.lookup_icon(icon_name, 48, 0);
+      LOGGER_START_PROCESS ("defaulttheme-" + process_name);
       if (info != null)
         {
           string filename = info.get_filename();
@@ -647,16 +649,10 @@ namespace Unity.Quicklauncher.Models
             }
         }
 
-      try
-      {
-        pixbuf = theme.load_icon(icon_name, 48, 0);
-        if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
-      }
-      catch (GLib.Error e)
-      {
-      }
+      LOGGER_END_PROCESS ("defaulttheme-" + process_name);
 
       //load from unity theme
+      LOGGER_START_PROCESS ("unitytheme-" + process_name);
       info = unitytheme.lookup_icon(icon_name, 48, 0);
       if (info != null)
         {
@@ -680,14 +676,7 @@ namespace Unity.Quicklauncher.Models
             }
         }
 
-      try
-      {
-        pixbuf = unitytheme.load_icon(icon_name, 48, 0);
-        if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
-      }
-      catch (GLib.Error e)
-      {
-      }
+      LOGGER_END_PROCESS ("unitytheme-" + process_name);
 
       warning (@"Could not load icon for $icon_name");
 
