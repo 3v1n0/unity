@@ -619,7 +619,10 @@ namespace Unity.Quicklauncher.Models
                 }
 
               if (pixbuf is Gdk.Pixbuf)
-                return pixbuf;
+                {
+                  LOGGER_END_PROCESS ("webtheme-" + process_name);
+                  return pixbuf;
+                }
             }
         }
       LOGGER_END_PROCESS ("webtheme-" + process_name);
@@ -645,10 +648,13 @@ namespace Unity.Quicklauncher.Models
                 }
 
               if (pixbuf is Gdk.Pixbuf)
-                return pixbuf;
+                {
+                  LOGGER_END_PROCESS ("defaulttheme-" + process_name);
+                  return pixbuf;
+                }
+
             }
         }
-
       LOGGER_END_PROCESS ("defaulttheme-" + process_name);
 
       //load from unity theme
@@ -672,7 +678,10 @@ namespace Unity.Quicklauncher.Models
                 }
 
               if (pixbuf is Gdk.Pixbuf)
-                return pixbuf;
+                {
+                  LOGGER_END_PROCESS ("unitytheme-" + process_name);
+                  return pixbuf;
+                }
             }
         }
 
