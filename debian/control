@@ -63,7 +63,7 @@ Package: libunity-places0-dbg
 Section: debug
 Architecture: any
 Priority: extra
-Depends: ${shlibs:Depends}, ${misc:Depends}, unity (= ${binary:Version})
+Depends: ${shlibs:Depends}, ${misc:Depends}, libunity-places0 (= ${binary:Version})
 Description: binding to get places into the launcher - debugging symbols
  libunity-places0-dbg is a shared library to be able to interact with the launcher
  and add places in Unity environment.
