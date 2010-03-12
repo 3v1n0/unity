@@ -598,38 +598,10 @@ namespace Unity.Quicklauncher.Models
             return pixbuf;
         }
 
-      //load web theme first
-      LOGGER_START_PROCESS ("webtheme-" + process_name);
-      Gtk.IconInfo info = webtheme.lookup_icon(icon_name, 48, 0);
-      if (info != null)
-        {
-          string filename = info.get_filename();
-          if (filename != null)
-            {
-              try
-                {
-                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
-                                                             48, 48, true);
-                }
-              catch (Error e)
-                {
-                  warning ("Unable to load image from file '%s': %s",
-                           filename,
-                           e.message);
-                }
-
-              if (pixbuf is Gdk.Pixbuf)
-                {
-                  LOGGER_END_PROCESS ("webtheme-" + process_name);
-                  return pixbuf;
-                }
-            }
-        }
-      LOGGER_END_PROCESS ("webtheme-" + process_name);
-
       //load from default theme
-      info = theme.lookup_icon(icon_name, 48, 0);
       LOGGER_START_PROCESS ("defaulttheme-" + process_name);
+      Gtk.IconInfo info = theme.lookup_icon(icon_name, 48, 0);
+
       if (info != null)
         {
           string filename = info.get_filename();
@@ -684,8 +656,37 @@ namespace Unity.Quicklauncher.Models
                 }
             }
         }
-
       LOGGER_END_PROCESS ("unitytheme-" + process_name);
+
+      //load web theme first
+      LOGGER_START_PROCESS ("webtheme-" + process_name);
+      info = webtheme.lookup_icon(icon_name, 48, 0);
+      if (info != null)
+        {
+          string filename = info.get_filename();
+          if (filename != null)
+            {
+              try
+                {
+                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
+                                                             48, 48, true);
+                }
+              catch (Error e)
+                {
+                  warning ("Unable to load image from file '%s': %s",
+                           filename,
+                           e.message);
+                }
+
+              if (pixbuf is Gdk.Pixbuf)
+                {
+                  LOGGER_END_PROCESS ("webtheme-" + process_name);
+                  return pixbuf;
+                }
+            }
+        }
+      LOGGER_END_PROCESS ("webtheme-" + process_name);
+
 
       warning (@"Could not load icon for $icon_name");
 
