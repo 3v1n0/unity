@@ -39,6 +39,16 @@ Breaks: mutter (<< 2.28.1~git20091208-1ubuntu5)
 Description: Launcher
  Unity launcher.
 
+Package: unity-dbg
+Section: debug
+Architecture: any
+Priority: extra
+Depends: ${shlibs:Depends}, ${misc:Depends}, unity (= ${binary:Version})
+Description: Launcher - debugging symbols
+ Unity launcher.
+ .
+ This package contains debugging symbols.
+
 Package: libunity-places0
 Architecture: any
 Section: libs
@@ -48,6 +58,17 @@ Description: binding to get places into the launcher - shared library
  and add places in Unity environment.
  .
  This package contains shared libraries to be used by applications.
+
+Package: libunity-places0-dbg
+Section: debug
+Architecture: any
+Priority: extra
+Depends: ${shlibs:Depends}, ${misc:Depends}, unity (= ${binary:Version})
+Description: binding to get places into the launcher - debugging symbols
+ libunity-places0-dbg is a shared library to be able to interact with the launcher
+ and add places in Unity environment.
+ .
+ This package contains debugging symbols. 
 
 Package: libunity-places-dev
 Architecture: any

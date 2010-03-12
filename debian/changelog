@@ -1,3 +1,10 @@
+unity (0.1.22-0ubuntu2) UNRELEASED; urgency=low
+
+  * debian/control:
+    - add debug package to both unity and libunity-places0
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 12 Mar 2010 11:13:09 +0100
+
 unity (0.1.22-0ubuntu1) lucid; urgency=low
 
   * New upstream release.
