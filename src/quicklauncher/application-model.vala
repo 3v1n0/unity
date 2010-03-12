@@ -160,7 +160,10 @@ namespace Unity.Quicklauncher.Models
         _app.urgent_changed.connect (this.on_app_urgent_changed);
         _app.icon_changed.connect (this.on_app_icon_changed);
 
+        string process_name = "make-icon-Model-" + _app.name;
+        LOGGER_START_PROCESS (process_name);
         _icon = make_icon (app.icon_name);
+        LOGGER_END_PROCESS (process_name);
         this.notify_icon ();
       }
     }
