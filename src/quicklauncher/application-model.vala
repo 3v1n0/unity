@@ -167,18 +167,22 @@ namespace Unity.Quicklauncher.Models
 
     public ApplicationModel (Launcher.Application application)
     {
+      string process_name = "Model-" + application.name;
       this.app = application;
       this.desktop_uri = app.get_desktop_file ();
 
-      this._is_sticky = (get_fav_uid () != "");
-      this.grab_priority ();
-
-      var favorites = Launcher.Favorites.get_default ();
+      LOGGER_START_PROCESS ("gconf-grabbing-" + process_name);
       string uid = get_fav_uid ();
+      this._is_sticky = (uid != "");
+      this.grab_priority ();
+      LOGGER_END_PROCESS ("gconf-grabbing-" + process_name);
+      LOGGER_START_PROCESS ("favorite-grabbing-" + process_name);
+      var favorites = Launcher.Favorites.get_default ();
       if (uid != "")
         {
           this._do_shadow = favorites.get_bool (uid, "enable_shadow");
         }
+      LOGGER_END_PROCESS ("favorite-grabbing-" + process_name);
     }
 
     construct
@@ -438,8 +442,12 @@ namespace Unity.Quicklauncher.Models
     /**
      * gets the favorite uid for this desktop file
      */
+    private string fav_uid_cache = "";
     private string get_fav_uid ()
     {
+      if (this.fav_uid_cache != "")
+        return this.fav_uid_cache;
+
       string myuid = "";
       string my_desktop_path = app.get_desktop_file ();
       var favorites = Launcher.Favorites.get_default ();
@@ -457,6 +465,7 @@ namespace Unity.Quicklauncher.Models
               myuid = uid;
             }
         }
+      this.fav_uid_cache = myuid;
       return myuid;
     }
 
@@ -483,6 +492,7 @@ namespace Unity.Quicklauncher.Models
        * please give it a go. otherwise i will revisit this code the last week
        * of the month sprint
        */
+
       Gdk.Pixbuf pixbuf = null;
       Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
       Gtk.IconTheme webtheme = new Gtk.IconTheme ();
