@@ -115,6 +115,13 @@ namespace Unity.Widgets
             this._is_dragging = value;
           }
     }
+    
+    private float _gap_animation = 0.0f;
+    public float gap_animation {
+        get { return _gap_animation; }
+        set { _gap_animation = value; this.queue_relayout (); }
+    }
+      
     private const float friction = 0.9f;
     private float last_drag_pos = 0.0f;
     private float fling_velocity = 0.0f;
@@ -192,6 +199,7 @@ namespace Unity.Widgets
 
     private void on_unity_drag_start (Drag.Model model)
     {
+      _gap_animation = 1.0f;
       // we aren't dragging outselfs so make sure we don't have button down set
       this.button_down = false;
 
@@ -229,11 +237,21 @@ namespace Unity.Widgets
       if (retcont == null) return;
       if (x > this.get_width () + this.DRAG_SAFE_ZONE)
         {
-          if (retcont.state != ScrollerChildState.REMOVED) this.queue_relayout ();
+          if (retcont.state != ScrollerChildState.REMOVED)
+          {
+            animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD, 170, "gap_animation", 0.0f);
+            this.queue_relayout ();
+          }
           retcont.state = ScrollerChildState.REMOVED;
         }
       else
         {
+          // If the actor was previously out of the safe zone and comes back in, then revert the animation.
+          if((retcont.state == ScrollerChildState.REMOVED))
+          {
+            animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD, 170, "gap_animation", 1.0f);
+          }
+            
           if (retcont.state != ScrollerChildState.HIDDEN) this.queue_relayout ();
           retcont.state = ScrollerChildState.HIDDEN;
         }
@@ -270,6 +288,7 @@ namespace Unity.Widgets
 
     private void on_unity_drag_drop (Drag.Model model, float x, float y)
     {
+      _gap_animation = 0.0f;
       string data = model.get_drag_data ();
       // check to see if the data matches any of our children
       ScrollerChild? retcont = null;
@@ -861,6 +880,7 @@ namespace Unity.Widgets
         Clutter.Actor child = childcontainer.child;
         if (childcontainer.state == ScrollerChildState.REMOVED)
           {
+            y += _gap_animation*(child_box.get_height () + spacing);
             continue;
           }
         float min_height, natural_height;
@@ -879,7 +899,14 @@ namespace Unity.Widgets
 
           //print ("%f\n", child_box.y1);
 
-          y += child_box.get_height () + spacing;
+          if ((childcontainer.state == ScrollerChildState.HIDDEN) && (_gap_animation < 1.0))
+          {
+            y += _gap_animation*(child_box.get_height () + spacing);
+          }
+          else
+          {
+            y += child_box.get_height () + spacing;
+          }
           this.total_child_height += child_box.get_height () + spacing;
         }
         else
