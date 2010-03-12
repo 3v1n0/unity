@@ -208,3 +208,5 @@ libunity/icon-postprocessor.c
 libunity/prism-handler.c
 libunity/webapp-fetcher.c
 libunity/webapp-iconbuilder.c
+mutter-plugin/expose-manager.c
+mutter-plugin/maximus.c
