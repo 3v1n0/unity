@@ -28,7 +28,7 @@ namespace Unity
     private Clutter.Actor darken_box;
     private bool hovered;
 
-    public Mutter.Window source { get; private set; }
+    public unowned Mutter.Window source { get; private set; }
 
     public uint8 hovered_opacity { get; set; }
     public uint8 unhovered_opacity { get; set; }
@@ -38,13 +38,11 @@ namespace Unity
       get { return _darken; }
       set {
         _darken = value;
-        if (!hovered)
+        if (!hovered && darken_box is Clutter.Actor)
           darken_box.opacity = darken;
       }
     }
     
-    
-
     public ExposeClone (Mutter.Window source)
     {
       darken = 0;
@@ -73,7 +71,7 @@ namespace Unity
       this.enter_event.connect (this.on_mouse_enter);
       this.leave_event.connect (this.on_mouse_leave);
     }
-
+    
     private bool on_mouse_enter (Clutter.Event evnt)
     {
       hovered = true;
@@ -169,7 +167,6 @@ namespace Unity
               ExposeClone clone = new ExposeClone (w);
               clone.set_position (w.x, w.y);
               clone.set_size (w.width, w.height);
-              clone.opacity = w.opacity;
               exposed_windows.append (clone);
               clone.reactive = true;
 
