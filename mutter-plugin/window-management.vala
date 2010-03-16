@@ -63,7 +63,7 @@ namespace Unity
     {
       if (plugin.expose_showing)
         {
-          Mutter.Window window = windows.nth_data (0);
+          unowned Mutter.Window window = windows.nth_data (0);
           plugin.plugin.effect_completed (window, Mutter.PLUGIN_SWITCH_WORKSPACE);
           return;
         }
@@ -102,7 +102,7 @@ namespace Unity
       (workgroup2 as Clutter.Actor).raise (plugin.plugin.get_normal_window_group ());
 
 
-      foreach (Mutter.Window window in windows)
+      foreach (unowned Mutter.Window window in windows)
         {
 
           Clutter.Actor clone = new Clutter.Clone (window);
