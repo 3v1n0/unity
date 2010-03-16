@@ -241,7 +241,7 @@ namespace Unity
 
     private void window_minimized_completed (Clutter.Animation anim)
     {
-      Mutter.Window window = anim.get_object () as Mutter.Window;
+      unowned Mutter.Window window = anim.get_object () as Mutter.Window;
 
       if (window == null)
         return;
@@ -322,7 +322,7 @@ namespace Unity
 
     private void window_mapped_completed (Clutter.Animation anim)
     {
-      Mutter.Window window = anim.get_object () as Mutter.Window;
+      unowned Mutter.Window window = anim.get_object () as Mutter.Window;
 
       if (window == null)
         return;
@@ -357,7 +357,7 @@ namespace Unity
 
     private void window_destroyed_completed (Clutter.Animation anim)
     {
-      Mutter.Window window = (Mutter.Window)anim.get_object ();
+      unowned Mutter.Window window = (Mutter.Window)anim.get_object ();
 
       this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_DESTROY);
     }
