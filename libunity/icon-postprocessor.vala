@@ -27,13 +27,14 @@ namespace Unity
   /* just a layered actor that layers the different components of our
    * icon on top of each other
    */
+  private static Clutter.Texture? unity_icon_bg_layer; //background
+  private static Clutter.Texture? unity_icon_fg_layer; //foreground
+  private static Clutter.Texture? unity_icon_mk_layer; //mask
+
   public class UnityIcon : Ctk.Actor
   {
     public Clutter.Texture? icon {get; construct;}
     public Clutter.Texture? bg_color {get; construct;}
-    private Clutter.Texture bg_layer;
-    private Clutter.Texture fg_layer;
-    private Clutter.Texture mask;
 
     private Cogl.Material bg_mat;
     private Cogl.Material fg_mat;
@@ -47,20 +48,21 @@ namespace Unity
 
     construct
     {
-      this.bg_layer = new ThemeImage ("prism_icon_background");
-      this.fg_layer = new ThemeImage ("prism_icon_foreground");
-      this.mask = new ThemeImage ("prism_icon_mask");
+      if (!(unity_icon_bg_layer is Clutter.Texture))
+        {
+          unity_icon_bg_layer = new ThemeImage ("prism_icon_background");
+          unity_icon_fg_layer = new ThemeImage ("prism_icon_foreground");
+          unity_icon_mk_layer = new ThemeImage ("prism_icon_mask");
 
-      this.bg_layer.set_parent (this);
-      this.fg_layer.set_parent (this);
-      this.mask.set_parent (this);
+
+        }
 
       if (this.icon is Clutter.Texture)
         {
           this.icon.set_parent (this);
           var icon_mat = new Cogl.Material ();
           Cogl.Texture icon_tex = (Cogl.Texture)(this.icon.get_cogl_texture ());
-          Cogl.Texture mask_tex = (Cogl.Texture)(this.mask.get_cogl_texture ());
+          Cogl.Texture mask_tex = (Cogl.Texture)(unity_icon_mk_layer.get_cogl_texture ());
           icon_mat.set_layer (0, icon_tex);
           icon_mat.set_layer (1, mask_tex);
           this.icon_material = icon_mat;
@@ -70,19 +72,19 @@ namespace Unity
           this.bg_color.set_parent (this);
           this.bgcol_material = new Cogl.Material ();
           Cogl.Texture color = (Cogl.Texture)(this.bg_color.get_cogl_texture ());
-          Cogl.Texture mask_tex = (Cogl.Texture)(this.mask.get_cogl_texture ());
+          Cogl.Texture mask_tex = (Cogl.Texture)(unity_icon_mk_layer.get_cogl_texture ());
           this.bgcol_material.set_layer (0, color);
           this.bgcol_material.set_layer_filters (1, Cogl.MaterialFilter.NEAREST, Cogl.MaterialFilter.NEAREST);
           this.bgcol_material.set_layer (1, mask_tex);
         }
 
         var mat = new Cogl.Material ();
-        Cogl.Texture tex = (Cogl.Texture)(this.bg_layer.get_cogl_texture ());
+        Cogl.Texture tex = (Cogl.Texture)(unity_icon_bg_layer.get_cogl_texture ());
         mat.set_layer (0, tex);
         this.bg_mat = mat;
 
         mat = new Cogl.Material ();
-        tex = (Cogl.Texture)(this.fg_layer.get_cogl_texture ());
+        tex = (Cogl.Texture)(unity_icon_fg_layer.get_cogl_texture ());
         mat.set_layer (0, tex);
         this.fg_mat = mat;
     }
@@ -104,9 +106,6 @@ namespace Unity
     public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags)
     {
       base.allocate (box, flags);
-      this.bg_layer.allocate (box, flags);
-      this.fg_layer.allocate (box, flags);
-      this.mask.allocate (box, flags);
       if (this.icon is Clutter.Texture)
         this.icon.allocate (box, flags);
       if (this.bg_color is Clutter.Texture)
@@ -116,8 +115,10 @@ namespace Unity
     public override void pick (Clutter.Color color)
     {
       this.set_effects_painting (true);
+      var mat = new Cogl.Material ();
+      mat.set_color4ub (color.red, color.green, color.blue, color.alpha);
+      Cogl.rectangle (0, 0, 48, 48);
       base.pick (color);
-      this.bg_layer.paint ();
       this.set_effects_painting (false);
     }
 
@@ -180,17 +181,13 @@ namespace Unity
     public override void map ()
     {
       base.map ();
-      this.bg_layer.map ();
       this.icon.map ();
-      this.fg_layer.map ();
     }
 
     public override void unmap ()
     {
       base.map ();
-      this.bg_layer.unmap ();
       this.icon.unmap ();
-      this.fg_layer.unmap ();
     }
   }
 }
