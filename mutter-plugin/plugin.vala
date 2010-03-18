@@ -277,6 +277,9 @@ namespace Unity
                                 this.quicklauncher);
       this.panel.show ();
 
+      this.stage.notify["width"].connect (this.relayout);
+      this.stage.notify["height"].connect (this.relayout);
+
       this.relayout ();
       END_FUNCTION ();
 
