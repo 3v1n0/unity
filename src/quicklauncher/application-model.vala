@@ -562,7 +562,7 @@ namespace Unity.Quicklauncher.Models
         
       if (Path.is_absolute(icon_name))
         {
-          string filepath_process
+          string filepath_process = "filepath-icon-" + process_name;
           LOGGER_START_PROCESS (filepath_process);
           if (FileUtils.test(icon_name, FileTest.IS_REGULAR))
             {
@@ -607,7 +607,7 @@ namespace Unity.Quicklauncher.Models
         }
 
       //load from default theme
-      string theme_process = "defaulttheme-" + process_name
+      string theme_process = "defaulttheme-" + process_name;
       LOGGER_START_PROCESS (theme_process);
       pixbuf = get_icon_from_theme (icon_name, theme);
       LOGGER_END_PROCESS (theme_process);
@@ -615,15 +615,15 @@ namespace Unity.Quicklauncher.Models
         return pixbuf;
 
       //load from unity theme
-      theme_process = "unitytheme-" + process_name
+      theme_process = "unitytheme-" + process_name;
       LOGGER_START_PROCESS (theme_process);
-      pixbuf = get_icon_from_theme (icon_name, unitytheme)
+      pixbuf = get_icon_from_theme (icon_name, unitytheme);
       LOGGER_END_PROCESS (theme_process);
       if (pixbuf is Gdk.Pixbuf)
         return pixbuf;
         
       //load from web theme
-      theme_process = "webtheme-" + process_name
+      theme_process = "webtheme-" + process_name;
       LOGGER_START_PROCESS (theme_process);
       get_icon_from_theme (icon_name, webtheme);
       LOGGER_END_PROCESS (theme_process);
