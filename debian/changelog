@@ -1,9 +1,11 @@
-unity (0.1.23-0ubuntu1) UNRELEASED; urgency=low
+unity (0.1.24-0ubuntu1) UNRELEASED; urgency=low
 
   * debian/control:
     - add debug package to both unity and libunity-places0
+    - bump clutk, liblauncher and wncksync build-dep
+  * New upstream release.
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 12 Mar 2010 11:13:09 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 19 Mar 2010 11:19:19 +0100
 
 unity (0.1.22-0ubuntu1) lucid; urgency=low
 

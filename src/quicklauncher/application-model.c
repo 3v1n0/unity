@@ -35,6 +35,7 @@
 #include <gdk-pixbuf/gdk-pixdata.h>
 #include <float.h>
 #include <math.h>
+#include <unity-utils.h>
 #include <libwnck/libwnck.h>
 #include <gtk/gtk.h>
 #include <glib/gstdio.h>
@@ -186,6 +187,7 @@ struct _UnityQuicklauncherModelsApplicationModelPrivate {
 	float _priority;
 	LauncherApplication* _app;
 	gboolean _is_sticky;
+	char* fav_uid_cache;
 };
 
 
@@ -309,20 +311,20 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 #line 29 "application-model.vala"
 static char* unity_quicklauncher_models_application_shortcut_real_get_name (UnityQuicklauncherModelsShortcutItem* base) {
-#line 313 "application-model.c"
+#line 315 "application-model.c"
 	UnityQuicklauncherModelsApplicationShortcut * self;
 	char* result;
 	self = (UnityQuicklauncherModelsApplicationShortcut*) base;
 	result = g_strdup (self->name);
 #line 31 "application-model.vala"
 	return result;
-#line 320 "application-model.c"
+#line 322 "application-model.c"
 }
 
 
 #line 34 "application-model.vala"
 static void unity_quicklauncher_models_application_shortcut_real_activated (UnityQuicklauncherModelsShortcutItem* base) {
-#line 326 "application-model.c"
+#line 328 "application-model.c"
 	UnityQuicklauncherModelsApplicationShortcut * self;
 	GError * _inner_error_;
 	GdkAppLaunchContext* context;
@@ -332,7 +334,7 @@ static void unity_quicklauncher_models_application_shortcut_real_activated (Unit
 	g_debug ("application-model.vala:36: application shortcut activated called");
 #line 37 "application-model.vala"
 	context = gdk_app_launch_context_new ();
-#line 336 "application-model.c"
+#line 338 "application-model.c"
 	{
 		GKeyFile* desktop_file;
 		GAppInfo* appinfo;
@@ -340,7 +342,7 @@ static void unity_quicklauncher_models_application_shortcut_real_activated (Unit
 		desktop_file = g_key_file_new ();
 #line 41 "application-model.vala"
 		g_key_file_load_from_file (desktop_file, self->desktop_location, 0, &_inner_error_);
-#line 344 "application-model.c"
+#line 346 "application-model.c"
 		if (_inner_error_ != NULL) {
 			_g_key_file_free0 (desktop_file);
 			goto __catch17_g_error;
@@ -351,7 +353,7 @@ static void unity_quicklauncher_models_application_shortcut_real_activated (Unit
 		appinfo = (GAppInfo*) g_desktop_app_info_new_from_keyfile (desktop_file);
 #line 44 "application-model.vala"
 		g_app_info_create_from_commandline (self->exec, self->name, 0, &_inner_error_);
-#line 355 "application-model.c"
+#line 357 "application-model.c"
 		if (_inner_error_ != NULL) {
 			_g_key_file_free0 (desktop_file);
 			_g_object_unref0 (appinfo);
@@ -363,7 +365,7 @@ static void unity_quicklauncher_models_application_shortcut_real_activated (Unit
 		gdk_app_launch_context_set_timestamp (context, (guint32) GDK_CURRENT_TIME);
 #line 48 "application-model.vala"
 		g_app_info_launch (appinfo, NULL, (GAppLaunchContext*) context, &_inner_error_);
-#line 367 "application-model.c"
+#line 369 "application-model.c"
 		if (_inner_error_ != NULL) {
 			_g_key_file_free0 (desktop_file);
 			_g_object_unref0 (appinfo);
@@ -381,7 +383,7 @@ static void unity_quicklauncher_models_application_shortcut_real_activated (Unit
 		{
 #line 51 "application-model.vala"
 			g_warning ("application-model.vala:51: %s", e->message);
-#line 385 "application-model.c"
+#line 387 "application-model.c"
 			_g_error_free0 (e);
 		}
 	}
@@ -398,11 +400,11 @@ static void unity_quicklauncher_models_application_shortcut_real_activated (Unit
 
 #line 23 "application-model.vala"
 UnityQuicklauncherModelsApplicationShortcut* unity_quicklauncher_models_application_shortcut_construct (GType object_type) {
-#line 402 "application-model.c"
+#line 404 "application-model.c"
 	UnityQuicklauncherModelsApplicationShortcut * self;
 #line 23 "application-model.vala"
 	self = (UnityQuicklauncherModelsApplicationShortcut*) g_object_new (object_type, NULL);
-#line 406 "application-model.c"
+#line 408 "application-model.c"
 	return self;
 }
 
@@ -411,7 +413,7 @@ UnityQuicklauncherModelsApplicationShortcut* unity_quicklauncher_models_applicat
 UnityQuicklauncherModelsApplicationShortcut* unity_quicklauncher_models_application_shortcut_new (void) {
 #line 23 "application-model.vala"
 	return unity_quicklauncher_models_application_shortcut_construct (UNITY_QUICKLAUNCHER_MODELS_TYPE_APPLICATION_SHORTCUT);
-#line 415 "application-model.c"
+#line 417 "application-model.c"
 }
 
 
@@ -456,37 +458,37 @@ GType unity_quicklauncher_models_application_shortcut_get_type (void) {
 
 #line 62 "application-model.vala"
 static char* unity_quicklauncher_models_lib_launcher_shortcut_real_get_name (UnityQuicklauncherModelsShortcutItem* base) {
-#line 460 "application-model.c"
+#line 462 "application-model.c"
 	UnityQuicklauncherModelsLibLauncherShortcut * self;
 	char* result;
 	self = (UnityQuicklauncherModelsLibLauncherShortcut*) base;
 	result = g_strdup (_ ("Quit"));
 #line 64 "application-model.vala"
 	return result;
-#line 467 "application-model.c"
+#line 469 "application-model.c"
 }
 
 
 #line 67 "application-model.vala"
 static void unity_quicklauncher_models_lib_launcher_shortcut_real_activated (UnityQuicklauncherModelsShortcutItem* base) {
-#line 473 "application-model.c"
+#line 475 "application-model.c"
 	UnityQuicklauncherModelsLibLauncherShortcut * self;
 	self = (UnityQuicklauncherModelsLibLauncherShortcut*) base;
 #line 69 "application-model.vala"
 	g_debug ("application-model.vala:69: liblauncher shortcut activated called");
 #line 70 "application-model.vala"
 	launcher_application_close (self->app, clutter_get_current_event_time ());
-#line 480 "application-model.c"
+#line 482 "application-model.c"
 }
 
 
 #line 57 "application-model.vala"
 UnityQuicklauncherModelsLibLauncherShortcut* unity_quicklauncher_models_lib_launcher_shortcut_construct (GType object_type) {
-#line 486 "application-model.c"
+#line 488 "application-model.c"
 	UnityQuicklauncherModelsLibLauncherShortcut * self;
 #line 57 "application-model.vala"
 	self = (UnityQuicklauncherModelsLibLauncherShortcut*) g_object_new (object_type, NULL);
-#line 490 "application-model.c"
+#line 492 "application-model.c"
 	return self;
 }
 
@@ -495,7 +497,7 @@ UnityQuicklauncherModelsLibLauncherShortcut* unity_quicklauncher_models_lib_laun
 UnityQuicklauncherModelsLibLauncherShortcut* unity_quicklauncher_models_lib_launcher_shortcut_new (void) {
 #line 57 "application-model.vala"
 	return unity_quicklauncher_models_lib_launcher_shortcut_construct (UNITY_QUICKLAUNCHER_MODELS_TYPE_LIB_LAUNCHER_SHORTCUT);
-#line 499 "application-model.c"
+#line 501 "application-model.c"
 }
 
 
@@ -539,13 +541,13 @@ GType unity_quicklauncher_models_lib_launcher_shortcut_get_type (void) {
 
 #line 90 "application-model.vala"
 UnityQuicklauncherModelsLauncherPinningShortcut* unity_quicklauncher_models_launcher_pinning_shortcut_construct (GType object_type, UnityQuicklauncherModelsApplicationModel* model) {
-#line 543 "application-model.c"
+#line 545 "application-model.c"
 	UnityQuicklauncherModelsLauncherPinningShortcut * self;
 #line 90 "application-model.vala"
 	g_return_val_if_fail (model != NULL, NULL);
 #line 92 "application-model.vala"
 	self = (UnityQuicklauncherModelsLauncherPinningShortcut*) g_object_new (object_type, "app-model", model, NULL);
-#line 549 "application-model.c"
+#line 551 "application-model.c"
 	return self;
 }
 
@@ -554,33 +556,33 @@ UnityQuicklauncherModelsLauncherPinningShortcut* unity_quicklauncher_models_laun
 UnityQuicklauncherModelsLauncherPinningShortcut* unity_quicklauncher_models_launcher_pinning_shortcut_new (UnityQuicklauncherModelsApplicationModel* model) {
 #line 90 "application-model.vala"
 	return unity_quicklauncher_models_launcher_pinning_shortcut_construct (UNITY_QUICKLAUNCHER_MODELS_TYPE_LAUNCHER_PINNING_SHORTCUT, model);
-#line 558 "application-model.c"
+#line 560 "application-model.c"
 }
 
 
 #line 100 "application-model.vala"
 static char* unity_quicklauncher_models_launcher_pinning_shortcut_real_get_name (UnityQuicklauncherModelsShortcutItem* base) {
-#line 564 "application-model.c"
+#line 566 "application-model.c"
 	UnityQuicklauncherModelsLauncherPinningShortcut * self;
 	char* result;
 	self = (UnityQuicklauncherModelsLauncherPinningShortcut*) base;
 	result = g_strdup (unity_quicklauncher_models_launcher_pinning_shortcut_get_name (self));
 #line 102 "application-model.vala"
 	return result;
-#line 571 "application-model.c"
+#line 573 "application-model.c"
 }
 
 
 #line 105 "application-model.vala"
 static void unity_quicklauncher_models_launcher_pinning_shortcut_real_activated (UnityQuicklauncherModelsShortcutItem* base) {
-#line 577 "application-model.c"
+#line 579 "application-model.c"
 	UnityQuicklauncherModelsLauncherPinningShortcut * self;
 	self = (UnityQuicklauncherModelsLauncherPinningShortcut*) base;
 #line 107 "application-model.vala"
 	g_debug ("application-model.vala:107: launcher pinning shortcut called");
 #line 108 "application-model.vala"
 	unity_quicklauncher_models_launcher_model_set_is_sticky ((UnityQuicklauncherModelsLauncherModel*) self->priv->_app_model, !unity_quicklauncher_models_launcher_model_get_is_sticky ((UnityQuicklauncherModelsLauncherModel*) self->priv->_app_model));
-#line 584 "application-model.c"
+#line 586 "application-model.c"
 }
 
 
@@ -590,7 +592,7 @@ UnityQuicklauncherModelsApplicationModel* unity_quicklauncher_models_launcher_pi
 	result = self->priv->_app_model;
 #line 76 "application-model.vala"
 	return result;
-#line 594 "application-model.c"
+#line 596 "application-model.c"
 }
 
 
@@ -612,16 +614,16 @@ const char* unity_quicklauncher_models_launcher_pinning_shortcut_get_name (Unity
 	g_return_val_if_fail (self != NULL, NULL);
 #line 79 "application-model.vala"
 	if (unity_quicklauncher_models_launcher_model_get_is_sticky ((UnityQuicklauncherModelsLauncherModel*) self->priv->_app_model)) {
-#line 616 "application-model.c"
+#line 618 "application-model.c"
 		result = _ ("Remove from Launcher");
 #line 81 "application-model.vala"
 		return result;
-#line 620 "application-model.c"
+#line 622 "application-model.c"
 	} else {
 		result = _ ("Keep In Launcher");
 #line 85 "application-model.vala"
 		return result;
-#line 625 "application-model.c"
+#line 627 "application-model.c"
 	}
 }
 
@@ -714,241 +716,262 @@ static void unity_quicklauncher_models_launcher_pinning_shortcut_set_property (G
 }
 
 
-#line 168 "application-model.vala"
+#line 171 "application-model.vala"
 UnityQuicklauncherModelsApplicationModel* unity_quicklauncher_models_application_model_construct (GType object_type, LauncherApplication* application) {
-#line 720 "application-model.c"
+#line 722 "application-model.c"
 	UnityQuicklauncherModelsApplicationModel * self;
+	char* process_name;
 	char* _tmp0_;
 	char* _tmp1_;
-	LauncherFavorites* favorites;
 	char* uid;
-#line 168 "application-model.vala"
-	g_return_val_if_fail (application != NULL, NULL);
-#line 728 "application-model.c"
-	self = g_object_newv (object_type, 0, NULL);
-#line 170 "application-model.vala"
-	unity_quicklauncher_models_application_model_set_app (self, application);
+	char* _tmp2_;
+	char* _tmp3_;
+	LauncherFavorites* favorites;
+	char* _tmp4_;
 #line 171 "application-model.vala"
-	self->priv->desktop_uri = (_tmp0_ = g_strdup (launcher_application_get_desktop_file (unity_quicklauncher_models_application_model_get_app (self))), _g_free0 (self->priv->desktop_uri), _tmp0_);
+	g_return_val_if_fail (application != NULL, NULL);
+#line 734 "application-model.c"
+	self = g_object_newv (object_type, 0, NULL);
 #line 173 "application-model.vala"
-	self->priv->_is_sticky = _vala_strcmp0 (_tmp1_ = unity_quicklauncher_models_application_model_get_fav_uid (self), "") != 0;
-#line 736 "application-model.c"
-	_g_free0 (_tmp1_);
+	process_name = g_strconcat ("Model-", launcher_application_get_name (application), NULL);
 #line 174 "application-model.vala"
-	unity_quicklauncher_models_application_model_grab_priority (self);
-#line 176 "application-model.vala"
-	favorites = _g_object_ref0 (launcher_favorites_get_default ());
+	unity_quicklauncher_models_application_model_set_app (self, application);
+#line 175 "application-model.vala"
+	self->priv->desktop_uri = (_tmp0_ = g_strdup (launcher_application_get_desktop_file (unity_quicklauncher_models_application_model_get_app (self))), _g_free0 (self->priv->desktop_uri), _tmp0_);
 #line 177 "application-model.vala"
-	uid = unity_quicklauncher_models_application_model_get_fav_uid (self);
+	LOGGER_START_PROCESS (_tmp1_ = g_strconcat ("gconf-grabbing-", process_name, NULL));
+#line 744 "application-model.c"
+	_g_free0 (_tmp1_);
 #line 178 "application-model.vala"
-	if (_vala_strcmp0 (uid, "") != 0) {
+	uid = unity_quicklauncher_models_application_model_get_fav_uid (self);
+#line 179 "application-model.vala"
+	self->priv->_is_sticky = _vala_strcmp0 (uid, "") != 0;
 #line 180 "application-model.vala"
+	unity_quicklauncher_models_application_model_grab_priority (self);
+#line 181 "application-model.vala"
+	LOGGER_END_PROCESS (_tmp2_ = g_strconcat ("gconf-grabbing-", process_name, NULL));
+#line 754 "application-model.c"
+	_g_free0 (_tmp2_);
+#line 182 "application-model.vala"
+	LOGGER_START_PROCESS (_tmp3_ = g_strconcat ("favorite-grabbing-", process_name, NULL));
+#line 758 "application-model.c"
+	_g_free0 (_tmp3_);
+#line 183 "application-model.vala"
+	favorites = _g_object_ref0 (launcher_favorites_get_default ());
+#line 184 "application-model.vala"
+	if (_vala_strcmp0 (uid, "") != 0) {
+#line 186 "application-model.vala"
 		self->priv->_do_shadow = launcher_favorites_get_bool (favorites, uid, "enable_shadow");
-#line 748 "application-model.c"
+#line 766 "application-model.c"
 	}
-	_g_object_unref0 (favorites);
+#line 188 "application-model.vala"
+	LOGGER_END_PROCESS (_tmp4_ = g_strconcat ("favorite-grabbing-", process_name, NULL));
+#line 770 "application-model.c"
+	_g_free0 (_tmp4_);
+	_g_free0 (process_name);
 	_g_free0 (uid);
+	_g_object_unref0 (favorites);
 	return self;
 }
 
 
-#line 168 "application-model.vala"
+#line 171 "application-model.vala"
 UnityQuicklauncherModelsApplicationModel* unity_quicklauncher_models_application_model_new (LauncherApplication* application) {
-#line 168 "application-model.vala"
+#line 171 "application-model.vala"
 	return unity_quicklauncher_models_application_model_construct (UNITY_QUICKLAUNCHER_MODELS_TYPE_APPLICATION_MODEL, application);
-#line 760 "application-model.c"
+#line 783 "application-model.c"
 }
 
 
-#line 200 "application-model.vala"
+#line 207 "application-model.vala"
 static gboolean _unity_quicklauncher_models_application_model_save_priority_gsource_func (gpointer self) {
-#line 766 "application-model.c"
+#line 789 "application-model.c"
 	return unity_quicklauncher_models_application_model_save_priority (self);
 }
 
 
-#line 191 "application-model.vala"
+#line 198 "application-model.vala"
 void unity_quicklauncher_models_application_model_do_save_priority (UnityQuicklauncherModelsApplicationModel* self) {
-#line 191 "application-model.vala"
+#line 198 "application-model.vala"
 	g_return_if_fail (self != NULL);
-#line 193 "application-model.vala"
+#line 200 "application-model.vala"
 	if (!self->priv->queued_save_priority) {
-#line 195 "application-model.vala"
+#line 202 "application-model.vala"
 		self->priv->queued_save_priority = TRUE;
-#line 196 "application-model.vala"
+#line 203 "application-model.vala"
 		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_quicklauncher_models_application_model_save_priority_gsource_func, g_object_ref (self), g_object_unref);
-#line 781 "application-model.c"
+#line 804 "application-model.c"
 	}
 }
 
 
-#line 200 "application-model.vala"
+#line 207 "application-model.vala"
 gboolean unity_quicklauncher_models_application_model_save_priority (UnityQuicklauncherModelsApplicationModel* self) {
-#line 788 "application-model.c"
+#line 811 "application-model.c"
 	gboolean result;
 	LauncherFavorites* favorites;
 	char* uid;
-#line 200 "application-model.vala"
+#line 207 "application-model.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 202 "application-model.vala"
+#line 209 "application-model.vala"
 	self->priv->queued_save_priority = FALSE;
-#line 203 "application-model.vala"
+#line 210 "application-model.vala"
 	if (!unity_quicklauncher_models_launcher_model_get_is_sticky ((UnityQuicklauncherModelsLauncherModel*) self)) {
-#line 798 "application-model.c"
+#line 821 "application-model.c"
 		result = FALSE;
-#line 203 "application-model.vala"
+#line 210 "application-model.vala"
 		return result;
-#line 802 "application-model.c"
+#line 825 "application-model.c"
 	}
-#line 204 "application-model.vala"
+#line 211 "application-model.vala"
 	favorites = _g_object_ref0 (launcher_favorites_get_default ());
-#line 205 "application-model.vala"
+#line 212 "application-model.vala"
 	uid = unity_quicklauncher_models_application_model_get_fav_uid (self);
-#line 206 "application-model.vala"
+#line 213 "application-model.vala"
 	launcher_favorites_set_float (favorites, uid, "priority", unity_quicklauncher_models_launcher_model_get_priority ((UnityQuicklauncherModelsLauncherModel*) self));
-#line 810 "application-model.c"
+#line 833 "application-model.c"
 	result = FALSE;
 	_g_object_unref0 (favorites);
 	_g_free0 (uid);
-#line 207 "application-model.vala"
+#line 214 "application-model.vala"
 	return result;
-#line 816 "application-model.c"
+#line 839 "application-model.c"
 }
 
 
-#line 209 "application-model.vala"
+#line 216 "application-model.vala"
 static void unity_quicklauncher_models_application_model_grab_priority (UnityQuicklauncherModelsApplicationModel* self) {
-#line 822 "application-model.c"
+#line 845 "application-model.c"
 	LauncherFavorites* favorites;
 	char* uid;
 	float priority;
-#line 209 "application-model.vala"
+#line 216 "application-model.vala"
 	g_return_if_fail (self != NULL);
-#line 211 "application-model.vala"
-	if (!unity_quicklauncher_models_launcher_model_get_is_sticky ((UnityQuicklauncherModelsLauncherModel*) self)) {
-#line 214 "application-model.vala"
-		self->priv->_priority = 1000000.0f;
-#line 215 "application-model.vala"
-		return;
-#line 834 "application-model.c"
-	}
 #line 218 "application-model.vala"
-	favorites = _g_object_ref0 (launcher_favorites_get_default ());
-#line 219 "application-model.vala"
-	uid = unity_quicklauncher_models_application_model_get_fav_uid (self);
-#line 220 "application-model.vala"
-	priority = launcher_favorites_get_float (favorites, uid, "priority");
-#line 223 "application-model.vala"
-	if (priority < 1.0f) {
-#line 225 "application-model.vala"
-		priority = (float) g_random_double_range (100000.0, 100002.0);
-#line 226 "application-model.vala"
-		launcher_favorites_set_float (favorites, uid, "priority", priority);
-#line 848 "application-model.c"
+	if (!unity_quicklauncher_models_launcher_model_get_is_sticky ((UnityQuicklauncherModelsLauncherModel*) self)) {
+#line 221 "application-model.vala"
+		self->priv->_priority = 1000000.0f;
+#line 222 "application-model.vala"
+		return;
+#line 857 "application-model.c"
 	}
-#line 228 "application-model.vala"
+#line 225 "application-model.vala"
+	favorites = _g_object_ref0 (launcher_favorites_get_default ());
+#line 226 "application-model.vala"
+	uid = unity_quicklauncher_models_application_model_get_fav_uid (self);
+#line 227 "application-model.vala"
+	priority = launcher_favorites_get_float (favorites, uid, "priority");
+#line 230 "application-model.vala"
+	if (priority < 1.0f) {
+#line 232 "application-model.vala"
+		priority = (float) g_random_double_range (100000.0, 100002.0);
+#line 233 "application-model.vala"
+		launcher_favorites_set_float (favorites, uid, "priority", priority);
+#line 871 "application-model.c"
+	}
+#line 235 "application-model.vala"
 	self->priv->_priority = priority;
-#line 852 "application-model.c"
+#line 875 "application-model.c"
 	_g_object_unref0 (favorites);
 	_g_free0 (uid);
 }
 
 
-#line 231 "application-model.vala"
+#line 238 "application-model.vala"
 static void unity_quicklauncher_models_application_model_on_app_icon_changed (UnityQuicklauncherModelsApplicationModel* self) {
-#line 860 "application-model.c"
+#line 883 "application-model.c"
 	GdkPixbuf* _tmp0_;
-#line 231 "application-model.vala"
+#line 238 "application-model.vala"
 	g_return_if_fail (self != NULL);
-#line 233 "application-model.vala"
+#line 240 "application-model.vala"
 	self->priv->_icon = (_tmp0_ = unity_quicklauncher_models_application_model_make_icon (launcher_application_get_icon_name (unity_quicklauncher_models_application_model_get_app (self))), _g_object_unref0 (self->priv->_icon), _tmp0_);
-#line 234 "application-model.vala"
+#line 241 "application-model.vala"
 	g_signal_emit_by_name ((UnityQuicklauncherModelsLauncherModel*) self, "notify-icon");
-#line 868 "application-model.c"
+#line 891 "application-model.c"
 }
 
 
-#line 237 "application-model.vala"
-static void unity_quicklauncher_models_application_model_on_app_running_changed (UnityQuicklauncherModelsApplicationModel* self) {
-#line 237 "application-model.vala"
-	g_return_if_fail (self != NULL);
-#line 239 "application-model.vala"
-	g_signal_emit_by_name ((UnityQuicklauncherModelsLauncherModel*) self, "notify-active");
-#line 878 "application-model.c"
-}
-
-
-#line 242 "application-model.vala"
-static void unity_quicklauncher_models_application_model_on_app_focus_changed (UnityQuicklauncherModelsApplicationModel* self) {
-#line 884 "application-model.c"
-	gboolean _tmp0_;
-#line 242 "application-model.vala"
-	g_return_if_fail (self != NULL);
 #line 244 "application-model.vala"
+static void unity_quicklauncher_models_application_model_on_app_running_changed (UnityQuicklauncherModelsApplicationModel* self) {
+#line 244 "application-model.vala"
+	g_return_if_fail (self != NULL);
+#line 246 "application-model.vala"
+	g_signal_emit_by_name ((UnityQuicklauncherModelsLauncherModel*) self, "notify-active");
+#line 901 "application-model.c"
+}
+
+
+#line 249 "application-model.vala"
+static void unity_quicklauncher_models_application_model_on_app_focus_changed (UnityQuicklauncherModelsApplicationModel* self) {
+#line 907 "application-model.c"
+	gboolean _tmp0_;
+#line 249 "application-model.vala"
+	g_return_if_fail (self != NULL);
+#line 251 "application-model.vala"
 	if ((g_object_get (unity_quicklauncher_models_application_model_get_app (self), "focused", &_tmp0_, NULL), _tmp0_)) {
-#line 245 "application-model.vala"
-		g_signal_emit_by_name ((UnityQuicklauncherModelsLauncherModel*) self, "request-attention");
-#line 892 "application-model.c"
-	}
-#line 247 "application-model.vala"
-	g_signal_emit_by_name ((UnityQuicklauncherModelsLauncherModel*) self, "notify-focused");
-#line 896 "application-model.c"
-}
-
-
-#line 250 "application-model.vala"
-static void unity_quicklauncher_models_application_model_on_app_urgent_changed (UnityQuicklauncherModelsApplicationModel* self) {
-#line 250 "application-model.vala"
-	g_return_if_fail (self != NULL);
 #line 252 "application-model.vala"
-	g_signal_emit_by_name ((UnityQuicklauncherModelsLauncherModel*) self, "urgent-changed");
-#line 906 "application-model.c"
+		g_signal_emit_by_name ((UnityQuicklauncherModelsLauncherModel*) self, "request-attention");
+#line 915 "application-model.c"
+	}
+#line 254 "application-model.vala"
+	g_signal_emit_by_name ((UnityQuicklauncherModelsLauncherModel*) self, "notify-focused");
+#line 919 "application-model.c"
 }
 
 
-#line 255 "application-model.vala"
-static void unity_quicklauncher_models_application_model_on_app_opened (UnityQuicklauncherModelsApplicationModel* self, WnckWindow* window) {
-#line 255 "application-model.vala"
-	g_return_if_fail (self != NULL);
-#line 255 "application-model.vala"
-	g_return_if_fail (window != NULL);
 #line 257 "application-model.vala"
-	g_signal_emit_by_name (self, "windows-changed");
-#line 918 "application-model.c"
+static void unity_quicklauncher_models_application_model_on_app_urgent_changed (UnityQuicklauncherModelsApplicationModel* self) {
+#line 257 "application-model.vala"
+	g_return_if_fail (self != NULL);
+#line 259 "application-model.vala"
+	g_signal_emit_by_name ((UnityQuicklauncherModelsLauncherModel*) self, "urgent-changed");
+#line 929 "application-model.c"
 }
 
 
-#line 260 "application-model.vala"
-static void unity_quicklauncher_models_application_model_on_app_closed (UnityQuicklauncherModelsApplicationModel* self, WnckWindow* window) {
-#line 260 "application-model.vala"
-	g_return_if_fail (self != NULL);
-#line 260 "application-model.vala"
-	g_return_if_fail (window != NULL);
 #line 262 "application-model.vala"
+static void unity_quicklauncher_models_application_model_on_app_opened (UnityQuicklauncherModelsApplicationModel* self, WnckWindow* window) {
+#line 262 "application-model.vala"
+	g_return_if_fail (self != NULL);
+#line 262 "application-model.vala"
+	g_return_if_fail (window != NULL);
+#line 264 "application-model.vala"
 	g_signal_emit_by_name (self, "windows-changed");
-#line 930 "application-model.c"
+#line 941 "application-model.c"
+}
+
+
+#line 267 "application-model.vala"
+static void unity_quicklauncher_models_application_model_on_app_closed (UnityQuicklauncherModelsApplicationModel* self, WnckWindow* window) {
+#line 267 "application-model.vala"
+	g_return_if_fail (self != NULL);
+#line 267 "application-model.vala"
+	g_return_if_fail (window != NULL);
+#line 269 "application-model.vala"
+	g_signal_emit_by_name (self, "windows-changed");
+#line 953 "application-model.c"
 }
 
 
 #line 1021 "glib-2.0.vapi"
 static gboolean string_contains (const char* self, const char* needle) {
-#line 936 "application-model.c"
+#line 959 "application-model.c"
 	gboolean result;
 #line 1021 "glib-2.0.vapi"
 	g_return_val_if_fail (self != NULL, FALSE);
 #line 1021 "glib-2.0.vapi"
 	g_return_val_if_fail (needle != NULL, FALSE);
-#line 942 "application-model.c"
+#line 965 "application-model.c"
 	result = strstr (self, needle) != NULL;
 #line 1022 "glib-2.0.vapi"
 	return result;
-#line 946 "application-model.c"
+#line 969 "application-model.c"
 }
 
 
-#line 338 "application-model.vala"
+#line 345 "application-model.vala"
 static GeeArrayList* unity_quicklauncher_models_application_model_real_get_menu_shortcuts (UnityQuicklauncherModelsLauncherModel* base) {
-#line 952 "application-model.c"
+#line 975 "application-model.c"
 	UnityQuicklauncherModelsApplicationModel * self;
 	GeeArrayList* result;
 	GError * _inner_error_;
@@ -961,15 +984,15 @@ static GeeArrayList* unity_quicklauncher_models_application_model_real_get_menu_
 	char** groups;
 	self = (UnityQuicklauncherModelsApplicationModel*) base;
 	_inner_error_ = NULL;
-#line 341 "application-model.vala"
+#line 348 "application-model.vala"
 	ret_list = gee_array_list_new (UNITY_QUICKLAUNCHER_MODELS_TYPE_SHORTCUT_ITEM, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL);
-#line 342 "application-model.vala"
+#line 349 "application-model.vala"
 	desktop_file = g_key_file_new ();
-#line 969 "application-model.c"
+#line 992 "application-model.c"
 	{
-#line 345 "application-model.vala"
+#line 352 "application-model.vala"
 		g_key_file_load_from_file (desktop_file, launcher_application_get_desktop_file (unity_quicklauncher_models_application_model_get_app (self)), 0, &_inner_error_);
-#line 973 "application-model.c"
+#line 996 "application-model.c"
 		if (_inner_error_ != NULL) {
 			goto __catch18_g_error;
 		}
@@ -981,15 +1004,15 @@ static GeeArrayList* unity_quicklauncher_models_application_model_real_get_menu_
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 349 "application-model.vala"
-			g_warning ("application-model.vala:349: Unable to load desktop file '%s': %s", launcher_application_get_desktop_file (unity_quicklauncher_models_application_model_get_app (self)), e->message);
-#line 987 "application-model.c"
+#line 356 "application-model.vala"
+			g_warning ("application-model.vala:356: Unable to load desktop file '%s': %s", launcher_application_get_desktop_file (unity_quicklauncher_models_application_model_get_app (self)), e->message);
+#line 1010 "application-model.c"
 			result = ret_list;
 			_g_error_free0 (e);
 			_g_key_file_free0 (desktop_file);
-#line 352 "application-model.vala"
+#line 359 "application-model.vala"
 			return result;
-#line 993 "application-model.c"
+#line 1016 "application-model.c"
 		}
 	}
 	__finally18:
@@ -1003,65 +1026,65 @@ static GeeArrayList* unity_quicklauncher_models_application_model_real_get_menu_
 	groups = (_tmp1_ = g_key_file_get_groups (desktop_file, &_tmp0_), groups_length1 = _tmp0_, groups_size = groups_length1, _tmp1_);
 	{
 		gint a;
-#line 356 "application-model.vala"
+#line 363 "application-model.vala"
 		a = 0;
-#line 1009 "application-model.c"
+#line 1032 "application-model.c"
 		{
 			gboolean _tmp2_;
-#line 356 "application-model.vala"
+#line 363 "application-model.vala"
 			_tmp2_ = TRUE;
-#line 356 "application-model.vala"
+#line 363 "application-model.vala"
 			while (TRUE) {
-#line 356 "application-model.vala"
+#line 363 "application-model.vala"
 				if (!_tmp2_) {
-#line 356 "application-model.vala"
+#line 363 "application-model.vala"
 					a++;
-#line 1020 "application-model.c"
+#line 1043 "application-model.c"
 				}
-#line 356 "application-model.vala"
+#line 363 "application-model.vala"
 				_tmp2_ = FALSE;
-#line 356 "application-model.vala"
+#line 363 "application-model.vala"
 				if (!(a < groups_length1)) {
-#line 356 "application-model.vala"
+#line 363 "application-model.vala"
 					break;
-#line 1028 "application-model.c"
+#line 1051 "application-model.c"
 				}
-#line 358 "application-model.vala"
+#line 365 "application-model.vala"
 				if (string_contains (groups[a], "QuickList Entry")) {
-#line 1032 "application-model.c"
+#line 1055 "application-model.c"
 					char* exec;
 					char* name;
 					UnityQuicklauncherModelsApplicationShortcut* shortcut;
 					char* _tmp7_;
 					char* _tmp8_;
 					char* _tmp9_;
-#line 360 "application-model.vala"
+#line 367 "application-model.vala"
 					exec = g_strdup ("");
-#line 361 "application-model.vala"
+#line 368 "application-model.vala"
 					name = g_strdup ("");
-#line 1043 "application-model.c"
+#line 1066 "application-model.c"
 					{
 						char* _tmp3_;
 						char* _tmp4_;
 						char* _tmp5_;
 						char* _tmp6_;
-#line 364 "application-model.vala"
+#line 371 "application-model.vala"
 						_tmp3_ = g_key_file_get_value (desktop_file, groups[a], "Exec", &_inner_error_);
-#line 1051 "application-model.c"
+#line 1074 "application-model.c"
 						if (_inner_error_ != NULL) {
 							goto __catch19_g_error;
 						}
-#line 364 "application-model.vala"
+#line 371 "application-model.vala"
 						exec = (_tmp4_ = _tmp3_, _g_free0 (exec), _tmp4_);
-#line 365 "application-model.vala"
+#line 372 "application-model.vala"
 						_tmp5_ = g_key_file_get_locale_string (desktop_file, groups[a], "Name", "", &_inner_error_);
-#line 1059 "application-model.c"
+#line 1082 "application-model.c"
 						if (_inner_error_ != NULL) {
 							goto __catch19_g_error;
 						}
-#line 365 "application-model.vala"
+#line 372 "application-model.vala"
 						name = (_tmp6_ = _tmp5_, _g_free0 (name), _tmp6_);
-#line 1065 "application-model.c"
+#line 1088 "application-model.c"
 					}
 					goto __finally19;
 					__catch19_g_error:
@@ -1070,15 +1093,15 @@ static GeeArrayList* unity_quicklauncher_models_application_model_real_get_menu_
 						e = _inner_error_;
 						_inner_error_ = NULL;
 						{
-#line 368 "application-model.vala"
-							g_warning ("application-model.vala:368: %s", e->message);
-#line 1076 "application-model.c"
+#line 375 "application-model.vala"
+							g_warning ("application-model.vala:375: %s", e->message);
+#line 1099 "application-model.c"
 							_g_error_free0 (e);
 							_g_free0 (exec);
 							_g_free0 (name);
-#line 369 "application-model.vala"
+#line 376 "application-model.vala"
 							continue;
-#line 1082 "application-model.c"
+#line 1105 "application-model.c"
 						}
 					}
 					__finally19:
@@ -1092,17 +1115,17 @@ static GeeArrayList* unity_quicklauncher_models_application_model_real_get_menu_
 						g_clear_error (&_inner_error_);
 						return NULL;
 					}
-#line 371 "application-model.vala"
+#line 378 "application-model.vala"
 					shortcut = unity_quicklauncher_models_application_shortcut_new ();
-#line 372 "application-model.vala"
+#line 379 "application-model.vala"
 					shortcut->exec = (_tmp7_ = g_strdup (exec), _g_free0 (shortcut->exec), _tmp7_);
-#line 373 "application-model.vala"
+#line 380 "application-model.vala"
 					shortcut->name = (_tmp8_ = g_strdup (name), _g_free0 (shortcut->name), _tmp8_);
-#line 374 "application-model.vala"
+#line 381 "application-model.vala"
 					shortcut->desktop_location = (_tmp9_ = g_strdup (launcher_application_get_desktop_file (unity_quicklauncher_models_application_model_get_app (self))), _g_free0 (shortcut->desktop_location), _tmp9_);
-#line 375 "application-model.vala"
+#line 382 "application-model.vala"
 					gee_abstract_collection_add ((GeeAbstractCollection*) ret_list, (UnityQuicklauncherModelsShortcutItem*) shortcut);
-#line 1106 "application-model.c"
+#line 1129 "application-model.c"
 					_g_free0 (exec);
 					_g_free0 (name);
 					_g_object_unref0 (shortcut);
@@ -1113,119 +1136,119 @@ static GeeArrayList* unity_quicklauncher_models_application_model_real_get_menu_
 	result = ret_list;
 	_g_key_file_free0 (desktop_file);
 	groups = (_vala_array_free (groups, groups_length1, (GDestroyNotify) g_free), NULL);
-#line 378 "application-model.vala"
+#line 385 "application-model.vala"
 	return result;
-#line 1119 "application-model.c"
+#line 1142 "application-model.c"
 }
 
 
-#line 381 "application-model.vala"
+#line 388 "application-model.vala"
 static GeeArrayList* unity_quicklauncher_models_application_model_real_get_menu_shortcut_actions (UnityQuicklauncherModelsLauncherModel* base) {
-#line 1125 "application-model.c"
+#line 1148 "application-model.c"
 	UnityQuicklauncherModelsApplicationModel * self;
 	GeeArrayList* result;
 	GeeArrayList* ret_list;
 	gboolean _tmp0_ = FALSE;
 	gboolean _tmp1_;
 	self = (UnityQuicklauncherModelsApplicationModel*) base;
-#line 383 "application-model.vala"
+#line 390 "application-model.vala"
 	ret_list = gee_array_list_new (UNITY_QUICKLAUNCHER_MODELS_TYPE_SHORTCUT_ITEM, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL);
-#line 384 "application-model.vala"
+#line 391 "application-model.vala"
 	if (!unity_quicklauncher_models_launcher_model_get_readonly ((UnityQuicklauncherModelsLauncherModel*) self)) {
-#line 384 "application-model.vala"
+#line 391 "application-model.vala"
 		_tmp0_ = !unity_quicklauncher_models_launcher_model_get_is_fixed ((UnityQuicklauncherModelsLauncherModel*) self);
-#line 1138 "application-model.c"
+#line 1161 "application-model.c"
 	} else {
-#line 384 "application-model.vala"
+#line 391 "application-model.vala"
 		_tmp0_ = FALSE;
-#line 1142 "application-model.c"
+#line 1165 "application-model.c"
 	}
-#line 384 "application-model.vala"
+#line 391 "application-model.vala"
 	if (_tmp0_) {
-#line 1146 "application-model.c"
+#line 1169 "application-model.c"
 		UnityQuicklauncherModelsLauncherPinningShortcut* pin_entry;
-#line 386 "application-model.vala"
+#line 393 "application-model.vala"
 		pin_entry = unity_quicklauncher_models_launcher_pinning_shortcut_new (self);
-#line 387 "application-model.vala"
+#line 394 "application-model.vala"
 		gee_abstract_collection_add ((GeeAbstractCollection*) ret_list, (UnityQuicklauncherModelsShortcutItem*) pin_entry);
-#line 1152 "application-model.c"
+#line 1175 "application-model.c"
 		_g_object_unref0 (pin_entry);
 	}
-#line 390 "application-model.vala"
+#line 397 "application-model.vala"
 	if ((g_object_get (unity_quicklauncher_models_application_model_get_app (self), "running", &_tmp1_, NULL), _tmp1_)) {
-#line 1157 "application-model.c"
+#line 1180 "application-model.c"
 		UnityQuicklauncherModelsLibLauncherShortcut* open_entry;
 		LauncherApplication* _tmp2_;
-#line 391 "application-model.vala"
+#line 398 "application-model.vala"
 		open_entry = unity_quicklauncher_models_lib_launcher_shortcut_new ();
-#line 392 "application-model.vala"
+#line 399 "application-model.vala"
 		open_entry->app = (_tmp2_ = _g_object_ref0 (unity_quicklauncher_models_application_model_get_app (self)), _g_object_unref0 (open_entry->app), _tmp2_);
-#line 393 "application-model.vala"
+#line 400 "application-model.vala"
 		gee_abstract_collection_add ((GeeAbstractCollection*) ret_list, (UnityQuicklauncherModelsShortcutItem*) open_entry);
-#line 1166 "application-model.c"
+#line 1189 "application-model.c"
 		_g_object_unref0 (open_entry);
 	}
 	result = ret_list;
-#line 396 "application-model.vala"
+#line 403 "application-model.vala"
 	return result;
-#line 1172 "application-model.c"
+#line 1195 "application-model.c"
 }
 
 
-#line 399 "application-model.vala"
+#line 406 "application-model.vala"
 gboolean unity_quicklauncher_models_application_model_ensure_state (UnityQuicklauncherModelsApplicationModel* self) {
-#line 1178 "application-model.c"
+#line 1201 "application-model.c"
 	gboolean result;
-#line 399 "application-model.vala"
+#line 406 "application-model.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 401 "application-model.vala"
+#line 408 "application-model.vala"
 	unity_quicklauncher_models_application_model_on_app_focus_changed (self);
-#line 1184 "application-model.c"
+#line 1207 "application-model.c"
 	result = FALSE;
-#line 402 "application-model.vala"
+#line 409 "application-model.vala"
 	return result;
-#line 1188 "application-model.c"
+#line 1211 "application-model.c"
 }
 
 
-#line 399 "application-model.vala"
+#line 406 "application-model.vala"
 static gboolean _unity_quicklauncher_models_application_model_ensure_state_gsource_func (gpointer self) {
-#line 1194 "application-model.c"
+#line 1217 "application-model.c"
 	return unity_quicklauncher_models_application_model_ensure_state (self);
 }
 
 
-#line 405 "application-model.vala"
+#line 412 "application-model.vala"
 static void unity_quicklauncher_models_application_model_real_activate (UnityQuicklauncherModelsLauncherModel* base) {
-#line 1201 "application-model.c"
+#line 1224 "application-model.c"
 	UnityQuicklauncherModelsApplicationModel * self;
 	GError * _inner_error_;
 	gboolean _tmp0_;
 	self = (UnityQuicklauncherModelsApplicationModel*) base;
 	_inner_error_ = NULL;
-#line 407 "application-model.vala"
-	if ((g_object_get (unity_quicklauncher_models_application_model_get_app (self), "running", &_tmp0_, NULL), _tmp0_)) {
-#line 1209 "application-model.c"
-		gboolean _tmp1_;
-#line 409 "application-model.vala"
-		if (!(g_object_get (unity_quicklauncher_models_application_model_get_app (self), "focused", &_tmp1_, NULL), _tmp1_)) {
-#line 413 "application-model.vala"
-			g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_quicklauncher_models_application_model_ensure_state_gsource_func, g_object_ref (self), g_object_unref);
 #line 414 "application-model.vala"
+	if ((g_object_get (unity_quicklauncher_models_application_model_get_app (self), "running", &_tmp0_, NULL), _tmp0_)) {
+#line 1232 "application-model.c"
+		gboolean _tmp1_;
+#line 416 "application-model.vala"
+		if (!(g_object_get (unity_quicklauncher_models_application_model_get_app (self), "focused", &_tmp1_, NULL), _tmp1_)) {
+#line 420 "application-model.vala"
+			g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_quicklauncher_models_application_model_ensure_state_gsource_func, g_object_ref (self), g_object_unref);
+#line 421 "application-model.vala"
 			launcher_application_show (unity_quicklauncher_models_application_model_get_app (self), clutter_get_current_event_time ());
-#line 1217 "application-model.c"
+#line 1240 "application-model.c"
 		}
 	} else {
 		{
-#line 421 "application-model.vala"
+#line 428 "application-model.vala"
 			launcher_application_launch (unity_quicklauncher_models_application_model_get_app (self), &_inner_error_);
-#line 1223 "application-model.c"
+#line 1246 "application-model.c"
 			if (_inner_error_ != NULL) {
 				goto __catch20_g_error;
 			}
-#line 422 "application-model.vala"
+#line 429 "application-model.vala"
 			g_signal_emit_by_name ((UnityQuicklauncherModelsLauncherModel*) self, "activated");
-#line 1229 "application-model.c"
+#line 1252 "application-model.c"
 		}
 		goto __finally20;
 		__catch20_g_error:
@@ -1234,9 +1257,9 @@ static void unity_quicklauncher_models_application_model_real_activate (UnityQui
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-#line 426 "application-model.vala"
-				g_critical ("application-model.vala:426: could not launch application %s: %s", launcher_application_get_name (unity_quicklauncher_models_application_model_get_app (self)), e->message);
-#line 1240 "application-model.c"
+#line 433 "application-model.vala"
+				g_critical ("application-model.vala:433: could not launch application %s: %s", launcher_application_get_name (unity_quicklauncher_models_application_model_get_app (self)), e->message);
+#line 1263 "application-model.c"
 				_g_error_free0 (e);
 			}
 		}
@@ -1250,161 +1273,200 @@ static void unity_quicklauncher_models_application_model_real_activate (UnityQui
 }
 
 
-#line 433 "application-model.vala"
+#line 440 "application-model.vala"
 static void unity_quicklauncher_models_application_model_real_close (UnityQuicklauncherModelsLauncherModel* base) {
-#line 1256 "application-model.c"
+#line 1279 "application-model.c"
 	UnityQuicklauncherModelsApplicationModel * self;
 	self = (UnityQuicklauncherModelsApplicationModel*) base;
-#line 435 "application-model.vala"
+#line 442 "application-model.vala"
 	launcher_application_close (unity_quicklauncher_models_application_model_get_app (self), clutter_get_current_event_time ());
-#line 1261 "application-model.c"
+#line 1284 "application-model.c"
 }
 
 
-#line 441 "application-model.vala"
+#line 449 "application-model.vala"
 static char* unity_quicklauncher_models_application_model_get_fav_uid (UnityQuicklauncherModelsApplicationModel* self) {
-#line 1267 "application-model.c"
+#line 1290 "application-model.c"
 	char* result;
 	char* myuid;
 	char* my_desktop_path;
 	LauncherFavorites* favorites;
 	GSList* favorite_list;
-#line 441 "application-model.vala"
+	char* _tmp1_;
+#line 449 "application-model.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 443 "application-model.vala"
+#line 451 "application-model.vala"
+	if (_vala_strcmp0 (self->priv->fav_uid_cache, "") != 0) {
+#line 1301 "application-model.c"
+		result = g_strdup (self->priv->fav_uid_cache);
+#line 452 "application-model.vala"
+		return result;
+#line 1305 "application-model.c"
+	}
+#line 454 "application-model.vala"
 	myuid = g_strdup ("");
-#line 444 "application-model.vala"
+#line 455 "application-model.vala"
 	my_desktop_path = g_strdup (launcher_application_get_desktop_file (unity_quicklauncher_models_application_model_get_app (self)));
-#line 445 "application-model.vala"
+#line 456 "application-model.vala"
 	favorites = _g_object_ref0 (launcher_favorites_get_default ());
-#line 446 "application-model.vala"
+#line 457 "application-model.vala"
 	favorite_list = launcher_favorites_get_favorites (favorites);
-#line 1283 "application-model.c"
+#line 1315 "application-model.c"
 	{
 		GSList* uid_collection;
 		GSList* uid_it;
-#line 447 "application-model.vala"
+#line 458 "application-model.vala"
 		uid_collection = favorite_list;
-#line 1289 "application-model.c"
+#line 1321 "application-model.c"
 		for (uid_it = uid_collection; uid_it != NULL; uid_it = uid_it->next) {
 			const char* uid;
-#line 447 "application-model.vala"
+#line 458 "application-model.vala"
 			uid = (const char*) uid_it->data;
-#line 1294 "application-model.c"
+#line 1326 "application-model.c"
 			{
 				char* type;
 				char* desktop_file;
-#line 450 "application-model.vala"
+#line 461 "application-model.vala"
 				type = g_strdup (launcher_favorites_get_string (favorites, uid, "type"));
-#line 451 "application-model.vala"
+#line 462 "application-model.vala"
 				if (_vala_strcmp0 (type, "application") != 0) {
-#line 1302 "application-model.c"
+#line 1334 "application-model.c"
 					_g_free0 (type);
-#line 452 "application-model.vala"
+#line 463 "application-model.vala"
 					continue;
-#line 1306 "application-model.c"
+#line 1338 "application-model.c"
 				}
-#line 454 "application-model.vala"
+#line 465 "application-model.vala"
 				desktop_file = g_strdup (launcher_favorites_get_string (favorites, uid, "desktop_file"));
-#line 455 "application-model.vala"
+#line 466 "application-model.vala"
 				if (_vala_strcmp0 (desktop_file, my_desktop_path) == 0) {
-#line 1312 "application-model.c"
+#line 1344 "application-model.c"
 					char* _tmp0_;
-#line 457 "application-model.vala"
+#line 468 "application-model.vala"
 					myuid = (_tmp0_ = g_strdup (uid), _g_free0 (myuid), _tmp0_);
-#line 1316 "application-model.c"
+#line 1348 "application-model.c"
 				}
 				_g_free0 (type);
 				_g_free0 (desktop_file);
 			}
 		}
 	}
+#line 471 "application-model.vala"
+	self->priv->fav_uid_cache = (_tmp1_ = g_strdup (myuid), _g_free0 (self->priv->fav_uid_cache), _tmp1_);
+#line 1357 "application-model.c"
 	result = myuid;
 	_g_free0 (my_desktop_path);
 	_g_object_unref0 (favorites);
-#line 460 "application-model.vala"
+#line 472 "application-model.vala"
 	return result;
-#line 1328 "application-model.c"
+#line 1363 "application-model.c"
 }
 
 
-#line 463 "application-model.vala"
+#line 475 "application-model.vala"
 static void unity_quicklauncher_models_application_model_real_regenerate_icon (UnityQuicklauncherModelsLauncherModel* base) {
-#line 1334 "application-model.c"
+#line 1369 "application-model.c"
 	UnityQuicklauncherModelsApplicationModel * self;
 	char* dfile;
 	GdkPixbuf* _tmp0_;
 	self = (UnityQuicklauncherModelsApplicationModel*) base;
-#line 465 "application-model.vala"
+#line 477 "application-model.vala"
 	dfile = g_strdup (launcher_application_get_desktop_file (unity_quicklauncher_models_application_model_get_app (self)));
-#line 466 "application-model.vala"
+#line 478 "application-model.vala"
 	launcher_application_set_desktop_file (unity_quicklauncher_models_application_model_get_app (self), dfile, TRUE);
-#line 467 "application-model.vala"
+#line 479 "application-model.vala"
 	self->priv->_icon = (_tmp0_ = unity_quicklauncher_models_application_model_make_icon (launcher_application_get_icon_name (unity_quicklauncher_models_application_model_get_app (self))), _g_object_unref0 (self->priv->_icon), _tmp0_);
-#line 468 "application-model.vala"
+#line 480 "application-model.vala"
 	g_signal_emit_by_name ((UnityQuicklauncherModelsLauncherModel*) self, "notify-icon");
-#line 1347 "application-model.c"
+#line 1382 "application-model.c"
 	_g_free0 (dfile);
 }
 
 
 #line 1045 "glib-2.0.vapi"
 static const char* string_to_string (const char* self) {
-#line 1354 "application-model.c"
+#line 1389 "application-model.c"
 	const char* result;
 #line 1045 "glib-2.0.vapi"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 1358 "application-model.c"
+#line 1393 "application-model.c"
 	result = self;
 #line 1046 "glib-2.0.vapi"
 	return result;
-#line 1362 "application-model.c"
+#line 1397 "application-model.c"
 }
 
 
-#line 476 "application-model.vala"
+#line 488 "application-model.vala"
 static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const char* icon_name) {
-#line 1368 "application-model.c"
+#line 1403 "application-model.c"
 	GdkPixbuf* result;
 	GError * _inner_error_;
+	char* _tmp0_;
+	char* _tmp1_;
+	char* process_name;
 	GdkPixbuf* pixbuf;
+	char* _tmp2_;
 	GtkIconTheme* theme;
 	GtkIconTheme* webtheme;
 	GtkIconTheme* unitytheme;
-	char* _tmp9_;
-	gboolean _tmp10_;
+	char* _tmp3_;
+	char* _tmp14_;
+	gboolean _tmp15_;
+	char* _tmp21_;
 	GtkIconInfo* info;
-	GtkIconInfo* _tmp20_;
-	GtkIconInfo* _tmp25_;
-	char* _tmp30_;
+	char* _tmp25_;
+	char* _tmp26_;
+	GtkIconInfo* _tmp27_;
+	char* _tmp31_;
+	char* _tmp32_;
+	GtkIconInfo* _tmp33_;
+	char* _tmp37_;
+	char* _tmp38_;
 	_inner_error_ = NULL;
-#line 486 "application-model.vala"
+#line 499 "application-model.vala"
+	process_name = (_tmp1_ = g_strconcat ("make-icon-", _tmp0_ = g_strdup_printf ("%i", g_random_int_range ((gint32) 0, (gint32) (2 ^ 32))), NULL), _g_free0 (_tmp0_), _tmp1_);
+#line 500 "application-model.vala"
 	pixbuf = NULL;
-#line 487 "application-model.vala"
+#line 502 "application-model.vala"
+	LOGGER_START_PROCESS (_tmp2_ = g_strconcat ("init-themes-", process_name, NULL));
+#line 1434 "application-model.c"
+	_g_free0 (_tmp2_);
+#line 503 "application-model.vala"
 	theme = _g_object_ref0 (gtk_icon_theme_get_default ());
-#line 488 "application-model.vala"
+#line 504 "application-model.vala"
 	webtheme = gtk_icon_theme_new ();
-#line 489 "application-model.vala"
+#line 505 "application-model.vala"
 	unitytheme = gtk_icon_theme_new ();
-#line 490 "application-model.vala"
+#line 506 "application-model.vala"
 	gtk_icon_theme_set_custom_theme (webtheme, "Web");
-#line 491 "application-model.vala"
+#line 507 "application-model.vala"
 	gtk_icon_theme_set_custom_theme (unitytheme, "unity-icon-theme");
-#line 493 "application-model.vala"
+#line 508 "application-model.vala"
+	LOGGER_END_PROCESS (_tmp3_ = g_strconcat ("init-themes-", process_name, NULL));
+#line 1448 "application-model.c"
+	_g_free0 (_tmp3_);
+#line 510 "application-model.vala"
 	if (icon_name == NULL) {
-#line 1396 "application-model.c"
+#line 1452 "application-model.c"
+		char* _tmp4_;
+		char* _tmp8_;
+#line 512 "application-model.vala"
+		LOGGER_START_PROCESS (_tmp4_ = g_strconcat ("no-icon-", process_name, NULL));
+#line 1457 "application-model.c"
+		_g_free0 (_tmp4_);
 		{
-			GdkPixbuf* _tmp0_;
-			GdkPixbuf* _tmp1_;
-#line 497 "application-model.vala"
-			_tmp0_ = gtk_icon_theme_load_icon (theme, GTK_STOCK_MISSING_IMAGE, 48, 0, &_inner_error_);
-#line 1402 "application-model.c"
+			GdkPixbuf* _tmp5_;
+			GdkPixbuf* _tmp6_;
+#line 515 "application-model.vala"
+			_tmp5_ = gtk_icon_theme_load_icon (theme, GTK_STOCK_MISSING_IMAGE, 48, 0, &_inner_error_);
+#line 1464 "application-model.c"
 			if (_inner_error_ != NULL) {
 				goto __catch21_g_error;
 			}
-#line 497 "application-model.vala"
-			pixbuf = (_tmp1_ = _g_object_ref0 (_tmp0_), _g_object_unref0 (pixbuf), _tmp1_);
-#line 1408 "application-model.c"
+#line 515 "application-model.vala"
+			pixbuf = (_tmp6_ = _g_object_ref0 (_tmp5_), _g_object_unref0 (pixbuf), _tmp6_);
+#line 1470 "application-model.c"
 		}
 		goto __finally21;
 		__catch21_g_error:
@@ -1413,17 +1475,18 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				GdkPixbuf* _tmp2_;
-#line 501 "application-model.vala"
-				g_warning ("application-model.vala:501: Unable to load stock image: %s", e->message);
-#line 502 "application-model.vala"
-				pixbuf = (_tmp2_ = NULL, _g_object_unref0 (pixbuf), _tmp2_);
-#line 1422 "application-model.c"
+				GdkPixbuf* _tmp7_;
+#line 519 "application-model.vala"
+				g_warning ("application-model.vala:519: Unable to load stock image: %s", e->message);
+#line 520 "application-model.vala"
+				pixbuf = (_tmp7_ = NULL, _g_object_unref0 (pixbuf), _tmp7_);
+#line 1484 "application-model.c"
 				_g_error_free0 (e);
 			}
 		}
 		__finally21:
 		if (_inner_error_ != NULL) {
+			_g_free0 (process_name);
 			_g_object_unref0 (pixbuf);
 			_g_object_unref0 (theme);
 			_g_object_unref0 (webtheme);
@@ -1432,97 +1495,60 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 			g_clear_error (&_inner_error_);
 			return NULL;
 		}
+#line 522 "application-model.vala"
+		LOGGER_END_PROCESS (_tmp8_ = g_strconcat ("no-icon", process_name, NULL));
+#line 1501 "application-model.c"
+		_g_free0 (_tmp8_);
 		result = pixbuf;
+		_g_free0 (process_name);
 		_g_object_unref0 (theme);
 		_g_object_unref0 (webtheme);
 		_g_object_unref0 (unitytheme);
-#line 505 "application-model.vala"
+#line 523 "application-model.vala"
 		return result;
-#line 1442 "application-model.c"
+#line 1510 "application-model.c"
 	}
-#line 508 "application-model.vala"
-	if (g_str_has_prefix (icon_name, "file://")) {
-#line 1446 "application-model.c"
-		char* filename;
-#line 510 "application-model.vala"
-		filename = g_strdup ("");
-#line 1450 "application-model.c"
-		{
-			char* _tmp3_;
-			char* _tmp4_;
-#line 516 "application-model.vala"
-			_tmp3_ = g_filename_from_uri (icon_name, NULL, &_inner_error_);
-#line 1456 "application-model.c"
-			if (_inner_error_ != NULL) {
-				if (_inner_error_->domain == G_CONVERT_ERROR) {
-					goto __catch22_g_convert_error;
-				}
-				_g_free0 (filename);
-				_g_object_unref0 (pixbuf);
-				_g_object_unref0 (theme);
-				_g_object_unref0 (webtheme);
-				_g_object_unref0 (unitytheme);
-				g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-				g_clear_error (&_inner_error_);
-				return NULL;
-			}
-#line 516 "application-model.vala"
-			filename = (_tmp4_ = _tmp3_, _g_free0 (filename), _tmp4_);
-#line 1472 "application-model.c"
-		}
-		goto __finally22;
-		__catch22_g_convert_error:
-		{
-			GError * e;
-			e = _inner_error_;
-			_inner_error_ = NULL;
+#line 556 "application-model.vala"
+	if (g_path_is_absolute (icon_name)) {
+#line 1514 "application-model.c"
+		char* _tmp9_;
+		char* _tmp13_;
+#line 558 "application-model.vala"
+		LOGGER_START_PROCESS (_tmp9_ = g_strconcat ("filepath-", process_name, NULL));
+#line 1519 "application-model.c"
+		_g_free0 (_tmp9_);
+#line 559 "application-model.vala"
+		if (g_file_test (icon_name, G_FILE_TEST_IS_REGULAR)) {
+#line 1523 "application-model.c"
 			{
-				_g_error_free0 (e);
-			}
-		}
-		__finally22:
-		if (_inner_error_ != NULL) {
-			_g_free0 (filename);
-			_g_object_unref0 (pixbuf);
-			_g_object_unref0 (theme);
-			_g_object_unref0 (webtheme);
-			_g_object_unref0 (unitytheme);
-			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-			g_clear_error (&_inner_error_);
-			return NULL;
-		}
-#line 521 "application-model.vala"
-		if (_vala_strcmp0 (filename, "") != 0) {
-#line 1497 "application-model.c"
-			{
-				GdkPixbuf* _tmp5_;
-				GdkPixbuf* _tmp6_;
-#line 525 "application-model.vala"
-				_tmp5_ = gdk_pixbuf_new_from_file_at_scale (icon_name, 48, 48, TRUE, &_inner_error_);
-#line 1503 "application-model.c"
+				GdkPixbuf* _tmp10_;
+				GdkPixbuf* _tmp11_;
+#line 563 "application-model.vala"
+				_tmp10_ = gdk_pixbuf_new_from_file_at_scale (icon_name, 48, 48, TRUE, &_inner_error_);
+#line 1529 "application-model.c"
 				if (_inner_error_ != NULL) {
-					goto __catch23_g_error;
+					goto __catch22_g_error;
 				}
-#line 525 "application-model.vala"
-				pixbuf = (_tmp6_ = _tmp5_, _g_object_unref0 (pixbuf), _tmp6_);
-#line 1509 "application-model.c"
+#line 563 "application-model.vala"
+				pixbuf = (_tmp11_ = _tmp10_, _g_object_unref0 (pixbuf), _tmp11_);
+#line 1535 "application-model.c"
 			}
-			goto __finally23;
-			__catch23_g_error:
+			goto __finally22;
+			__catch22_g_error:
 			{
 				GError * e;
 				e = _inner_error_;
 				_inner_error_ = NULL;
 				{
-#line 530 "application-model.vala"
-					g_warning ("application-model.vala:530: Unable to load pixbuf from file '%s': %s", icon_name, e->message);
-#line 1520 "application-model.c"
+#line 568 "application-model.vala"
+					g_warning ("application-model.vala:568: Unable to load image from file '%s': %s", icon_name, e->message);
+#line 1546 "application-model.c"
 					_g_error_free0 (e);
 				}
 			}
-			__finally23:
+			__finally22:
 			if (_inner_error_ != NULL) {
-				_g_free0 (filename);
+				_g_free0 (process_name);
 				_g_object_unref0 (pixbuf);
 				_g_object_unref0 (theme);
 				_g_object_unref0 (webtheme);
@@ -1531,38 +1557,113 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 				g_clear_error (&_inner_error_);
 				return NULL;
 			}
-#line 534 "application-model.vala"
+#line 573 "application-model.vala"
 			if (GDK_IS_PIXBUF (pixbuf)) {
-#line 1537 "application-model.c"
+#line 1563 "application-model.c"
+				char* _tmp12_;
+#line 575 "application-model.vala"
+				LOGGER_END_PROCESS (_tmp12_ = g_strconcat ("filepath-", process_name, NULL));
+#line 1567 "application-model.c"
+				_g_free0 (_tmp12_);
 				result = pixbuf;
-				_g_free0 (filename);
+				_g_free0 (process_name);
 				_g_object_unref0 (theme);
 				_g_object_unref0 (webtheme);
 				_g_object_unref0 (unitytheme);
-#line 535 "application-model.vala"
+#line 576 "application-model.vala"
 				return result;
-#line 1545 "application-model.c"
+#line 1576 "application-model.c"
 			}
 		}
-		_g_free0 (filename);
+#line 579 "application-model.vala"
+		LOGGER_END_PROCESS (_tmp13_ = g_strconcat ("filepath-", process_name, NULL));
+#line 1581 "application-model.c"
+		_g_free0 (_tmp13_);
 	}
-#line 539 "application-model.vala"
-	if (g_path_is_absolute (icon_name)) {
-#line 541 "application-model.vala"
-		if (g_file_test (icon_name, G_FILE_TEST_EXISTS)) {
-#line 1554 "application-model.c"
+#line 582 "application-model.vala"
+	if ((_tmp15_ = g_file_test (_tmp14_ = g_strconcat ("/usr/share/pixmaps/", icon_name, NULL), G_FILE_TEST_IS_REGULAR), _g_free0 (_tmp14_), _tmp15_)) {
+#line 1586 "application-model.c"
+		{
+			char* _tmp16_;
+			GdkPixbuf* _tmp17_;
+			GdkPixbuf* _tmp18_;
+			GdkPixbuf* _tmp19_;
+#line 587 "application-model.vala"
+			_tmp18_ = (_tmp17_ = gdk_pixbuf_new_from_file_at_scale (_tmp16_ = g_strconcat ("/usr/share/pixmaps/", icon_name, NULL), 48, 48, TRUE, &_inner_error_), _g_free0 (_tmp16_), _tmp17_);
+#line 1594 "application-model.c"
+			if (_inner_error_ != NULL) {
+				goto __catch23_g_error;
+			}
+#line 587 "application-model.vala"
+			pixbuf = (_tmp19_ = _tmp18_, _g_object_unref0 (pixbuf), _tmp19_);
+#line 1600 "application-model.c"
+		}
+		goto __finally23;
+		__catch23_g_error:
+		{
+			GError * e;
+			e = _inner_error_;
+			_inner_error_ = NULL;
 			{
-				GdkPixbuf* _tmp7_;
-				GdkPixbuf* _tmp8_;
-#line 545 "application-model.vala"
-				_tmp7_ = gdk_pixbuf_new_from_file_at_scale (icon_name, 48, 48, TRUE, &_inner_error_);
-#line 1560 "application-model.c"
+				char* _tmp20_;
+#line 592 "application-model.vala"
+				g_warning ("application-model.vala:592: Unable to load image from file '%s': %s", _tmp20_ = g_strconcat ("/usr/share/pixmaps/", icon_name, NULL), e->message);
+#line 1612 "application-model.c"
+				_g_free0 (_tmp20_);
+				_g_error_free0 (e);
+			}
+		}
+		__finally23:
+		if (_inner_error_ != NULL) {
+			_g_free0 (process_name);
+			_g_object_unref0 (pixbuf);
+			_g_object_unref0 (theme);
+			_g_object_unref0 (webtheme);
+			_g_object_unref0 (unitytheme);
+			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+			g_clear_error (&_inner_error_);
+			return NULL;
+		}
+#line 597 "application-model.vala"
+		if (GDK_IS_PIXBUF (pixbuf)) {
+#line 1630 "application-model.c"
+			result = pixbuf;
+			_g_free0 (process_name);
+			_g_object_unref0 (theme);
+			_g_object_unref0 (webtheme);
+			_g_object_unref0 (unitytheme);
+#line 598 "application-model.vala"
+			return result;
+#line 1638 "application-model.c"
+		}
+	}
+#line 602 "application-model.vala"
+	LOGGER_START_PROCESS (_tmp21_ = g_strconcat ("defaulttheme-", process_name, NULL));
+#line 1643 "application-model.c"
+	_g_free0 (_tmp21_);
+#line 603 "application-model.vala"
+	info = gtk_icon_theme_lookup_icon (theme, icon_name, 48, 0);
+#line 605 "application-model.vala"
+	if (info != NULL) {
+#line 1649 "application-model.c"
+		char* filename;
+#line 607 "application-model.vala"
+		filename = g_strdup (gtk_icon_info_get_filename (info));
+#line 608 "application-model.vala"
+		if (g_file_test (filename, G_FILE_TEST_EXISTS)) {
+#line 1655 "application-model.c"
+			{
+				GdkPixbuf* _tmp22_;
+				GdkPixbuf* _tmp23_;
+#line 612 "application-model.vala"
+				_tmp22_ = gdk_pixbuf_new_from_file_at_scale (filename, 48, 48, TRUE, &_inner_error_);
+#line 1661 "application-model.c"
 				if (_inner_error_ != NULL) {
 					goto __catch24_g_error;
 				}
-#line 545 "application-model.vala"
-				pixbuf = (_tmp8_ = _tmp7_, _g_object_unref0 (pixbuf), _tmp8_);
-#line 1566 "application-model.c"
+#line 612 "application-model.vala"
+				pixbuf = (_tmp23_ = _tmp22_, _g_object_unref0 (pixbuf), _tmp23_);
+#line 1667 "application-model.c"
 			}
 			goto __finally24;
 			__catch24_g_error:
@@ -1571,113 +1672,158 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 				e = _inner_error_;
 				_inner_error_ = NULL;
 				{
-#line 550 "application-model.vala"
-					g_warning ("application-model.vala:550: Unable to load image from file '%s': %s", icon_name, e->message);
-#line 1577 "application-model.c"
+#line 617 "application-model.vala"
+					g_warning ("application-model.vala:617: Unable to load image from file '%s': %s", filename, e->message);
+#line 1678 "application-model.c"
 					_g_error_free0 (e);
 				}
 			}
 			__finally24:
 			if (_inner_error_ != NULL) {
+				_g_free0 (filename);
+				_g_free0 (process_name);
 				_g_object_unref0 (pixbuf);
 				_g_object_unref0 (theme);
 				_g_object_unref0 (webtheme);
 				_g_object_unref0 (unitytheme);
+				_gtk_icon_info_free0 (info);
 				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 				g_clear_error (&_inner_error_);
 				return NULL;
 			}
-#line 555 "application-model.vala"
+#line 622 "application-model.vala"
 			if (GDK_IS_PIXBUF (pixbuf)) {
-#line 1593 "application-model.c"
+#line 1697 "application-model.c"
+				char* _tmp24_;
+#line 624 "application-model.vala"
+				LOGGER_END_PROCESS (_tmp24_ = g_strconcat ("defaulttheme-", process_name, NULL));
+#line 1701 "application-model.c"
+				_g_free0 (_tmp24_);
 				result = pixbuf;
+				_g_free0 (filename);
+				_g_free0 (process_name);
 				_g_object_unref0 (theme);
 				_g_object_unref0 (webtheme);
 				_g_object_unref0 (unitytheme);
-#line 556 "application-model.vala"
+				_gtk_icon_info_free0 (info);
+#line 625 "application-model.vala"
 				return result;
-#line 1600 "application-model.c"
+#line 1712 "application-model.c"
 			}
 		}
+		_g_free0 (filename);
 	}
-#line 560 "application-model.vala"
-	if ((_tmp10_ = g_file_test (_tmp9_ = g_strconcat ("/usr/share/pixmaps/", icon_name, NULL), G_FILE_TEST_IS_REGULAR), _g_free0 (_tmp9_), _tmp10_)) {
-#line 1606 "application-model.c"
-		{
-			char* _tmp11_;
-			GdkPixbuf* _tmp12_;
-			GdkPixbuf* _tmp13_;
-			GdkPixbuf* _tmp14_;
-#line 565 "application-model.vala"
-			_tmp13_ = (_tmp12_ = gdk_pixbuf_new_from_file_at_scale (_tmp11_ = g_strconcat ("/usr/share/pixmaps/", icon_name, NULL), 48, 48, TRUE, &_inner_error_), _g_free0 (_tmp11_), _tmp12_);
-#line 1614 "application-model.c"
-			if (_inner_error_ != NULL) {
-				goto __catch25_g_error;
-			}
-#line 565 "application-model.vala"
-			pixbuf = (_tmp14_ = _tmp13_, _g_object_unref0 (pixbuf), _tmp14_);
-#line 1620 "application-model.c"
-		}
-		goto __finally25;
-		__catch25_g_error:
-		{
-			GError * e;
-			e = _inner_error_;
-			_inner_error_ = NULL;
-			{
-				char* _tmp15_;
-#line 570 "application-model.vala"
-				g_warning ("application-model.vala:570: Unable to load image from file '%s': %s", _tmp15_ = g_strconcat ("/usr/share/pixmaps/", icon_name, NULL), e->message);
-#line 1632 "application-model.c"
-				_g_free0 (_tmp15_);
-				_g_error_free0 (e);
-			}
-		}
-		__finally25:
-		if (_inner_error_ != NULL) {
-			_g_object_unref0 (pixbuf);
-			_g_object_unref0 (theme);
-			_g_object_unref0 (webtheme);
-			_g_object_unref0 (unitytheme);
-			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-			g_clear_error (&_inner_error_);
-			return NULL;
-		}
-#line 575 "application-model.vala"
-		if (GDK_IS_PIXBUF (pixbuf)) {
-#line 1649 "application-model.c"
-			result = pixbuf;
-			_g_object_unref0 (theme);
-			_g_object_unref0 (webtheme);
-			_g_object_unref0 (unitytheme);
-#line 576 "application-model.vala"
-			return result;
-#line 1656 "application-model.c"
-		}
-	}
-#line 580 "application-model.vala"
-	info = gtk_icon_theme_lookup_icon (webtheme, icon_name, 48, 0);
-#line 581 "application-model.vala"
+#line 630 "application-model.vala"
+	LOGGER_END_PROCESS (_tmp25_ = g_strconcat ("defaulttheme-", process_name, NULL));
+#line 1719 "application-model.c"
+	_g_free0 (_tmp25_);
+#line 633 "application-model.vala"
+	LOGGER_START_PROCESS (_tmp26_ = g_strconcat ("unitytheme-", process_name, NULL));
+#line 1723 "application-model.c"
+	_g_free0 (_tmp26_);
+#line 634 "application-model.vala"
+	info = (_tmp27_ = gtk_icon_theme_lookup_icon (unitytheme, icon_name, 48, 0), _gtk_icon_info_free0 (info), _tmp27_);
+#line 635 "application-model.vala"
 	if (info != NULL) {
-#line 1663 "application-model.c"
+#line 1729 "application-model.c"
 		char* filename;
-#line 583 "application-model.vala"
+#line 637 "application-model.vala"
 		filename = g_strdup (gtk_icon_info_get_filename (info));
-#line 584 "application-model.vala"
+#line 638 "application-model.vala"
 		if (g_file_test (filename, G_FILE_TEST_EXISTS)) {
-#line 1669 "application-model.c"
+#line 1735 "application-model.c"
 			{
-				GdkPixbuf* _tmp16_;
-				GdkPixbuf* _tmp17_;
-#line 588 "application-model.vala"
-				_tmp16_ = gdk_pixbuf_new_from_file_at_scale (filename, 48, 48, TRUE, &_inner_error_);
-#line 1675 "application-model.c"
+				GdkPixbuf* _tmp28_;
+				GdkPixbuf* _tmp29_;
+#line 642 "application-model.vala"
+				_tmp28_ = gdk_pixbuf_new_from_file_at_scale (filename, 48, 48, TRUE, &_inner_error_);
+#line 1741 "application-model.c"
+				if (_inner_error_ != NULL) {
+					goto __catch25_g_error;
+				}
+#line 642 "application-model.vala"
+				pixbuf = (_tmp29_ = _tmp28_, _g_object_unref0 (pixbuf), _tmp29_);
+#line 1747 "application-model.c"
+			}
+			goto __finally25;
+			__catch25_g_error:
+			{
+				GError * e;
+				e = _inner_error_;
+				_inner_error_ = NULL;
+				{
+#line 647 "application-model.vala"
+					g_warning ("application-model.vala:647: Unable to load image from file '%s': %s", filename, e->message);
+#line 1758 "application-model.c"
+					_g_error_free0 (e);
+				}
+			}
+			__finally25:
+			if (_inner_error_ != NULL) {
+				_g_free0 (filename);
+				_g_free0 (process_name);
+				_g_object_unref0 (pixbuf);
+				_g_object_unref0 (theme);
+				_g_object_unref0 (webtheme);
+				_g_object_unref0 (unitytheme);
+				_gtk_icon_info_free0 (info);
+				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+				g_clear_error (&_inner_error_);
+				return NULL;
+			}
+#line 652 "application-model.vala"
+			if (GDK_IS_PIXBUF (pixbuf)) {
+#line 1777 "application-model.c"
+				char* _tmp30_;
+#line 654 "application-model.vala"
+				LOGGER_END_PROCESS (_tmp30_ = g_strconcat ("unitytheme-", process_name, NULL));
+#line 1781 "application-model.c"
+				_g_free0 (_tmp30_);
+				result = pixbuf;
+				_g_free0 (filename);
+				_g_free0 (process_name);
+				_g_object_unref0 (theme);
+				_g_object_unref0 (webtheme);
+				_g_object_unref0 (unitytheme);
+				_gtk_icon_info_free0 (info);
+#line 655 "application-model.vala"
+				return result;
+#line 1792 "application-model.c"
+			}
+		}
+		_g_free0 (filename);
+	}
+#line 659 "application-model.vala"
+	LOGGER_END_PROCESS (_tmp31_ = g_strconcat ("unitytheme-", process_name, NULL));
+#line 1799 "application-model.c"
+	_g_free0 (_tmp31_);
+#line 662 "application-model.vala"
+	LOGGER_START_PROCESS (_tmp32_ = g_strconcat ("webtheme-", process_name, NULL));
+#line 1803 "application-model.c"
+	_g_free0 (_tmp32_);
+#line 663 "application-model.vala"
+	info = (_tmp33_ = gtk_icon_theme_lookup_icon (webtheme, icon_name, 48, 0), _gtk_icon_info_free0 (info), _tmp33_);
+#line 664 "application-model.vala"
+	if (info != NULL) {
+#line 1809 "application-model.c"
+		char* filename;
+#line 666 "application-model.vala"
+		filename = g_strdup (gtk_icon_info_get_filename (info));
+#line 667 "application-model.vala"
+		if (filename != NULL) {
+#line 1815 "application-model.c"
+			{
+				GdkPixbuf* _tmp34_;
+				GdkPixbuf* _tmp35_;
+#line 671 "application-model.vala"
+				_tmp34_ = gdk_pixbuf_new_from_file_at_scale (filename, 48, 48, TRUE, &_inner_error_);
+#line 1821 "application-model.c"
 				if (_inner_error_ != NULL) {
 					goto __catch26_g_error;
 				}
-#line 588 "application-model.vala"
-				pixbuf = (_tmp17_ = _tmp16_, _g_object_unref0 (pixbuf), _tmp17_);
-#line 1681 "application-model.c"
+#line 671 "application-model.vala"
+				pixbuf = (_tmp35_ = _tmp34_, _g_object_unref0 (pixbuf), _tmp35_);
+#line 1827 "application-model.c"
 			}
 			goto __finally26;
 			__catch26_g_error:
@@ -1686,15 +1832,16 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 				e = _inner_error_;
 				_inner_error_ = NULL;
 				{
-#line 593 "application-model.vala"
-					g_warning ("application-model.vala:593: Unable to load image from file '%s': %s", filename, e->message);
-#line 1692 "application-model.c"
+#line 676 "application-model.vala"
+					g_warning ("application-model.vala:676: Unable to load image from file '%s': %s", filename, e->message);
+#line 1838 "application-model.c"
 					_g_error_free0 (e);
 				}
 			}
 			__finally26:
 			if (_inner_error_ != NULL) {
 				_g_free0 (filename);
+				_g_free0 (process_name);
 				_g_object_unref0 (pixbuf);
 				_g_object_unref0 (theme);
 				_g_object_unref0 (webtheme);
@@ -1704,299 +1851,45 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_make_icon (const 
 				g_clear_error (&_inner_error_);
 				return NULL;
 			}
-#line 598 "application-model.vala"
+#line 681 "application-model.vala"
 			if (GDK_IS_PIXBUF (pixbuf)) {
-#line 1710 "application-model.c"
+#line 1857 "application-model.c"
+				char* _tmp36_;
+#line 683 "application-model.vala"
+				LOGGER_END_PROCESS (_tmp36_ = g_strconcat ("webtheme-", process_name, NULL));
+#line 1861 "application-model.c"
+				_g_free0 (_tmp36_);
 				result = pixbuf;
 				_g_free0 (filename);
+				_g_free0 (process_name);
 				_g_object_unref0 (theme);
 				_g_object_unref0 (webtheme);
 				_g_object_unref0 (unitytheme);
 				_gtk_icon_info_free0 (info);
-#line 599 "application-model.vala"
+#line 684 "application-model.vala"
 				return result;
-#line 1719 "application-model.c"
+#line 1872 "application-model.c"
 			}
 		}
 		_g_free0 (filename);
 	}
-	{
-		GdkPixbuf* _tmp18_;
-		GdkPixbuf* _tmp19_;
-#line 605 "application-model.vala"
-		_tmp18_ = gtk_icon_theme_load_icon (webtheme, icon_name, 48, 0, &_inner_error_);
-#line 1729 "application-model.c"
-		if (_inner_error_ != NULL) {
-			goto __catch27_g_error;
-		}
-#line 605 "application-model.vala"
-		pixbuf = (_tmp19_ = _g_object_ref0 (_tmp18_), _g_object_unref0 (pixbuf), _tmp19_);
-#line 606 "application-model.vala"
-		if (GDK_IS_PIXBUF (pixbuf)) {
-#line 1737 "application-model.c"
-			result = pixbuf;
-			_g_object_unref0 (theme);
-			_g_object_unref0 (webtheme);
-			_g_object_unref0 (unitytheme);
-			_gtk_icon_info_free0 (info);
-#line 606 "application-model.vala"
-			return result;
-#line 1745 "application-model.c"
-		}
-	}
-	goto __finally27;
-	__catch27_g_error:
-	{
-		GError * e;
-		e = _inner_error_;
-		_inner_error_ = NULL;
-		{
-			_g_error_free0 (e);
-		}
-	}
-	__finally27:
-	if (_inner_error_ != NULL) {
-		_g_object_unref0 (pixbuf);
-		_g_object_unref0 (theme);
-		_g_object_unref0 (webtheme);
-		_g_object_unref0 (unitytheme);
-		_gtk_icon_info_free0 (info);
-		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-		g_clear_error (&_inner_error_);
-		return NULL;
-	}
-#line 614 "application-model.vala"
-	info = (_tmp20_ = gtk_icon_theme_lookup_icon (theme, icon_name, 48, 0), _gtk_icon_info_free0 (info), _tmp20_);
-#line 615 "application-model.vala"
-	if (info != NULL) {
-#line 1773 "application-model.c"
-		char* filename;
-#line 617 "application-model.vala"
-		filename = g_strdup (gtk_icon_info_get_filename (info));
-#line 618 "application-model.vala"
-		if (g_file_test (filename, G_FILE_TEST_EXISTS)) {
-#line 1779 "application-model.c"
-			{
-				GdkPixbuf* _tmp21_;
-				GdkPixbuf* _tmp22_;
-#line 622 "application-model.vala"
-				_tmp21_ = gdk_pixbuf_new_from_file_at_scale (filename, 48, 48, TRUE, &_inner_error_);
-#line 1785 "application-model.c"
-				if (_inner_error_ != NULL) {
-					goto __catch28_g_error;
-				}
-#line 622 "application-model.vala"
-				pixbuf = (_tmp22_ = _tmp21_, _g_object_unref0 (pixbuf), _tmp22_);
-#line 1791 "application-model.c"
-			}
-			goto __finally28;
-			__catch28_g_error:
-			{
-				GError * e;
-				e = _inner_error_;
-				_inner_error_ = NULL;
-				{
-#line 627 "application-model.vala"
-					g_warning ("application-model.vala:627: Unable to load image from file '%s': %s", filename, e->message);
-#line 1802 "application-model.c"
-					_g_error_free0 (e);
-				}
-			}
-			__finally28:
-			if (_inner_error_ != NULL) {
-				_g_free0 (filename);
-				_g_object_unref0 (pixbuf);
-				_g_object_unref0 (theme);
-				_g_object_unref0 (webtheme);
-				_g_object_unref0 (unitytheme);
-				_gtk_icon_info_free0 (info);
-				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-				g_clear_error (&_inner_error_);
-				return NULL;
-			}
-#line 632 "application-model.vala"
-			if (GDK_IS_PIXBUF (pixbuf)) {
-#line 1820 "application-model.c"
-				result = pixbuf;
-				_g_free0 (filename);
-				_g_object_unref0 (theme);
-				_g_object_unref0 (webtheme);
-				_g_object_unref0 (unitytheme);
-				_gtk_icon_info_free0 (info);
-#line 633 "application-model.vala"
-				return result;
-#line 1829 "application-model.c"
-			}
-		}
-		_g_free0 (filename);
-	}
-	{
-		GdkPixbuf* _tmp23_;
-		GdkPixbuf* _tmp24_;
-#line 639 "application-model.vala"
-		_tmp23_ = gtk_icon_theme_load_icon (theme, icon_name, 48, 0, &_inner_error_);
-#line 1839 "application-model.c"
-		if (_inner_error_ != NULL) {
-			goto __catch29_g_error;
-		}
-#line 639 "application-model.vala"
-		pixbuf = (_tmp24_ = _g_object_ref0 (_tmp23_), _g_object_unref0 (pixbuf), _tmp24_);
-#line 640 "application-model.vala"
-		if (GDK_IS_PIXBUF (pixbuf)) {
-#line 1847 "application-model.c"
-			result = pixbuf;
-			_g_object_unref0 (theme);
-			_g_object_unref0 (webtheme);
-			_g_object_unref0 (unitytheme);
-			_gtk_icon_info_free0 (info);
-#line 640 "application-model.vala"
-			return result;
-#line 1855 "application-model.c"
-		}
-	}
-	goto __finally29;
-	__catch29_g_error:
-	{
-		GError * e;
-		e = _inner_error_;
-		_inner_error_ = NULL;
-		{
-			_g_error_free0 (e);
-		}
-	}
-	__finally29:
-	if (_inner_error_ != NULL) {
-		_g_object_unref0 (pixbuf);
-		_g_object_unref0 (theme);
-		_g_object_unref0 (webtheme);
-		_g_object_unref0 (unitytheme);
-		_gtk_icon_info_free0 (info);
-		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-		g_clear_error (&_inner_error_);
-		return NULL;
-	}
-#line 647 "application-model.vala"
-	info = (_tmp25_ = gtk_icon_theme_lookup_icon (unitytheme, icon_name, 48, 0), _gtk_icon_info_free0 (info), _tmp25_);
-#line 648 "application-model.vala"
-	if (info != NULL) {
+#line 688 "application-model.vala"
+	LOGGER_END_PROCESS (_tmp37_ = g_strconcat ("webtheme-", process_name, NULL));
+#line 1879 "application-model.c"
+	_g_free0 (_tmp37_);
+#line 691 "application-model.vala"
+	g_warning ("application-model.vala:691: %s", _tmp38_ = g_strconcat ("Could not load icon for ", string_to_string (icon_name), NULL));
 #line 1883 "application-model.c"
-		char* filename;
-#line 650 "application-model.vala"
-		filename = g_strdup (gtk_icon_info_get_filename (info));
-#line 651 "application-model.vala"
-		if (g_file_test (filename, G_FILE_TEST_EXISTS)) {
-#line 1889 "application-model.c"
-			{
-				GdkPixbuf* _tmp26_;
-				GdkPixbuf* _tmp27_;
-#line 655 "application-model.vala"
-				_tmp26_ = gdk_pixbuf_new_from_file_at_scale (filename, 48, 48, TRUE, &_inner_error_);
-#line 1895 "application-model.c"
-				if (_inner_error_ != NULL) {
-					goto __catch30_g_error;
-				}
-#line 655 "application-model.vala"
-				pixbuf = (_tmp27_ = _tmp26_, _g_object_unref0 (pixbuf), _tmp27_);
-#line 1901 "application-model.c"
-			}
-			goto __finally30;
-			__catch30_g_error:
-			{
-				GError * e;
-				e = _inner_error_;
-				_inner_error_ = NULL;
-				{
-#line 660 "application-model.vala"
-					g_warning ("application-model.vala:660: Unable to load image from file '%s': %s", filename, e->message);
-#line 1912 "application-model.c"
-					_g_error_free0 (e);
-				}
-			}
-			__finally30:
-			if (_inner_error_ != NULL) {
-				_g_free0 (filename);
-				_g_object_unref0 (pixbuf);
-				_g_object_unref0 (theme);
-				_g_object_unref0 (webtheme);
-				_g_object_unref0 (unitytheme);
-				_gtk_icon_info_free0 (info);
-				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-				g_clear_error (&_inner_error_);
-				return NULL;
-			}
-#line 665 "application-model.vala"
-			if (GDK_IS_PIXBUF (pixbuf)) {
-#line 1930 "application-model.c"
-				result = pixbuf;
-				_g_free0 (filename);
-				_g_object_unref0 (theme);
-				_g_object_unref0 (webtheme);
-				_g_object_unref0 (unitytheme);
-				_gtk_icon_info_free0 (info);
-#line 666 "application-model.vala"
-				return result;
-#line 1939 "application-model.c"
-			}
-		}
-		_g_free0 (filename);
-	}
-	{
-		GdkPixbuf* _tmp28_;
-		GdkPixbuf* _tmp29_;
-#line 672 "application-model.vala"
-		_tmp28_ = gtk_icon_theme_load_icon (unitytheme, icon_name, 48, 0, &_inner_error_);
-#line 1949 "application-model.c"
-		if (_inner_error_ != NULL) {
-			goto __catch31_g_error;
-		}
-#line 672 "application-model.vala"
-		pixbuf = (_tmp29_ = _g_object_ref0 (_tmp28_), _g_object_unref0 (pixbuf), _tmp29_);
-#line 673 "application-model.vala"
-		if (GDK_IS_PIXBUF (pixbuf)) {
-#line 1957 "application-model.c"
-			result = pixbuf;
-			_g_object_unref0 (theme);
-			_g_object_unref0 (webtheme);
-			_g_object_unref0 (unitytheme);
-			_gtk_icon_info_free0 (info);
-#line 673 "application-model.vala"
-			return result;
-#line 1965 "application-model.c"
-		}
-	}
-	goto __finally31;
-	__catch31_g_error:
-	{
-		GError * e;
-		e = _inner_error_;
-		_inner_error_ = NULL;
-		{
-			_g_error_free0 (e);
-		}
-	}
-	__finally31:
-	if (_inner_error_ != NULL) {
-		_g_object_unref0 (pixbuf);
-		_g_object_unref0 (theme);
-		_g_object_unref0 (webtheme);
-		_g_object_unref0 (unitytheme);
-		_gtk_icon_info_free0 (info);
-		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-		g_clear_error (&_inner_error_);
-		return NULL;
-	}
-#line 679 "application-model.vala"
-	g_warning ("application-model.vala:679: %s", _tmp30_ = g_strconcat ("Could not load icon for ", string_to_string (icon_name), NULL));
-#line 1991 "application-model.c"
-	_g_free0 (_tmp30_);
+	_g_free0 (_tmp38_);
 	result = pixbuf;
+	_g_free0 (process_name);
 	_g_object_unref0 (theme);
 	_g_object_unref0 (webtheme);
 	_g_object_unref0 (unitytheme);
 	_gtk_icon_info_free0 (info);
-#line 681 "application-model.vala"
+#line 693 "application-model.vala"
 	return result;
-#line 2000 "application-model.c"
+#line 1893 "application-model.c"
 }
 
 
@@ -2007,7 +1900,7 @@ static float unity_quicklauncher_models_application_model_real_get_priority (Uni
 	result = self->priv->_priority;
 #line 123 "application-model.vala"
 	return result;
-#line 2011 "application-model.c"
+#line 1904 "application-model.c"
 }
 
 
@@ -2018,7 +1911,7 @@ static void unity_quicklauncher_models_application_model_real_set_priority (Unit
 	self->priv->_priority = value;
 #line 124 "application-model.vala"
 	unity_quicklauncher_models_application_model_do_save_priority (self);
-#line 2022 "application-model.c"
+#line 1915 "application-model.c"
 	g_object_notify ((GObject *) self, "priority");
 }
 
@@ -2030,7 +1923,7 @@ static gboolean unity_quicklauncher_models_application_model_real_get_do_shadow 
 	result = self->priv->_do_shadow;
 #line 127 "application-model.vala"
 	return result;
-#line 2034 "application-model.c"
+#line 1927 "application-model.c"
 }
 
 
@@ -2041,7 +1934,7 @@ static const char* unity_quicklauncher_models_application_model_real_get_uid (Un
 	result = self->priv->desktop_uri;
 #line 131 "application-model.vala"
 	return result;
-#line 2045 "application-model.c"
+#line 1938 "application-model.c"
 }
 
 
@@ -2051,7 +1944,7 @@ GSList* unity_quicklauncher_models_application_model_get_windows (UnityQuicklaun
 	result = launcher_application_get_windows (unity_quicklauncher_models_application_model_get_app (self));
 #line 137 "application-model.vala"
 	return result;
-#line 2055 "application-model.c"
+#line 1948 "application-model.c"
 }
 
 
@@ -2061,59 +1954,60 @@ LauncherApplication* unity_quicklauncher_models_application_model_get_app (Unity
 	result = self->priv->_app;
 #line 143 "application-model.vala"
 	return result;
-#line 2065 "application-model.c"
+#line 1958 "application-model.c"
 }
 
 
-#line 255 "application-model.vala"
+#line 262 "application-model.vala"
 static void _unity_quicklauncher_models_application_model_on_app_opened_launcher_application_opened (LauncherApplication* _sender, WnckWindow* wnckwindow, gpointer self) {
-#line 2071 "application-model.c"
+#line 1964 "application-model.c"
 	unity_quicklauncher_models_application_model_on_app_opened (self, wnckwindow);
 }
 
 
-#line 260 "application-model.vala"
+#line 267 "application-model.vala"
 static void _unity_quicklauncher_models_application_model_on_app_closed_launcher_application_closed (LauncherApplication* _sender, WnckWindow* wnckwindow, gpointer self) {
-#line 2078 "application-model.c"
+#line 1971 "application-model.c"
 	unity_quicklauncher_models_application_model_on_app_closed (self, wnckwindow);
 }
 
 
-#line 242 "application-model.vala"
+#line 249 "application-model.vala"
 static void _unity_quicklauncher_models_application_model_on_app_focus_changed_launcher_application_focus_changed (LauncherApplication* _sender, gpointer self) {
-#line 2085 "application-model.c"
+#line 1978 "application-model.c"
 	unity_quicklauncher_models_application_model_on_app_focus_changed (self);
 }
 
 
-#line 237 "application-model.vala"
+#line 244 "application-model.vala"
 static void _unity_quicklauncher_models_application_model_on_app_running_changed_launcher_application_running_changed (LauncherApplication* _sender, gpointer self) {
-#line 2092 "application-model.c"
+#line 1985 "application-model.c"
 	unity_quicklauncher_models_application_model_on_app_running_changed (self);
 }
 
 
-#line 250 "application-model.vala"
+#line 257 "application-model.vala"
 static void _unity_quicklauncher_models_application_model_on_app_urgent_changed_launcher_application_urgent_changed (LauncherApplication* _sender, gpointer self) {
-#line 2099 "application-model.c"
+#line 1992 "application-model.c"
 	unity_quicklauncher_models_application_model_on_app_urgent_changed (self);
 }
 
 
-#line 231 "application-model.vala"
+#line 238 "application-model.vala"
 static void _unity_quicklauncher_models_application_model_on_app_icon_changed_launcher_application_icon_changed (LauncherApplication* _sender, gpointer self) {
-#line 2106 "application-model.c"
+#line 1999 "application-model.c"
 	unity_quicklauncher_models_application_model_on_app_icon_changed (self);
 }
 
 
 static void unity_quicklauncher_models_application_model_set_app (UnityQuicklauncherModelsApplicationModel* self, LauncherApplication* value) {
 	LauncherApplication* _tmp6_;
+	char* process_name;
 	GdkPixbuf* _tmp7_;
 	g_return_if_fail (self != NULL);
 #line 145 "application-model.vala"
 	if (self->priv->_app != NULL) {
-#line 2117 "application-model.c"
+#line 2011 "application-model.c"
 		guint _tmp0_;
 		guint _tmp1_;
 		guint _tmp2_;
@@ -2132,7 +2026,7 @@ static void unity_quicklauncher_models_application_model_set_app (UnityQuicklaun
 		g_signal_handlers_disconnect_matched (self->priv->_app, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("urgent-changed", LAUNCHER_TYPE_APPLICATION, &_tmp4_, NULL, FALSE), _tmp4_), 0, NULL, (GCallback) _unity_quicklauncher_models_application_model_on_app_urgent_changed_launcher_application_urgent_changed, self);
 #line 152 "application-model.vala"
 		g_signal_handlers_disconnect_matched (self->priv->_app, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("icon-changed", LAUNCHER_TYPE_APPLICATION, &_tmp5_, NULL, FALSE), _tmp5_), 0, NULL, (GCallback) _unity_quicklauncher_models_application_model_on_app_icon_changed_launcher_application_icon_changed, self);
-#line 2136 "application-model.c"
+#line 2030 "application-model.c"
 	}
 #line 155 "application-model.vala"
 	self->priv->_app = (_tmp6_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_app), _tmp6_);
@@ -2149,10 +2043,17 @@ static void unity_quicklauncher_models_application_model_set_app (UnityQuicklaun
 #line 161 "application-model.vala"
 	g_signal_connect_object (self->priv->_app, "icon-changed", (GCallback) _unity_quicklauncher_models_application_model_on_app_icon_changed_launcher_application_icon_changed, self, 0);
 #line 163 "application-model.vala"
-	self->priv->_icon = (_tmp7_ = unity_quicklauncher_models_application_model_make_icon (launcher_application_get_icon_name (unity_quicklauncher_models_application_model_get_app (self))), _g_object_unref0 (self->priv->_icon), _tmp7_);
+	process_name = g_strconcat ("make-icon-Model-", launcher_application_get_name (self->priv->_app), NULL);
 #line 164 "application-model.vala"
+	LOGGER_START_PROCESS (process_name);
+#line 165 "application-model.vala"
+	self->priv->_icon = (_tmp7_ = unity_quicklauncher_models_application_model_make_icon (launcher_application_get_icon_name (unity_quicklauncher_models_application_model_get_app (self))), _g_object_unref0 (self->priv->_icon), _tmp7_);
+#line 166 "application-model.vala"
+	LOGGER_END_PROCESS (process_name);
+#line 167 "application-model.vala"
 	g_signal_emit_by_name ((UnityQuicklauncherModelsLauncherModel*) self, "notify-icon");
-#line 2156 "application-model.c"
+#line 2056 "application-model.c"
+	_g_free0 (process_name);
 	g_object_notify ((GObject *) self, "app");
 }
 
@@ -2163,9 +2064,9 @@ static gboolean unity_quicklauncher_models_application_model_real_get_is_active 
 	gboolean _tmp0_;
 	self = (UnityQuicklauncherModelsApplicationModel*) base;
 	result = (g_object_get (unity_quicklauncher_models_application_model_get_app (self), "running", &_tmp0_, NULL), _tmp0_);
-#line 267 "application-model.vala"
+#line 274 "application-model.vala"
 	return result;
-#line 2169 "application-model.c"
+#line 2070 "application-model.c"
 }
 
 
@@ -2175,9 +2076,9 @@ static gboolean unity_quicklauncher_models_application_model_real_get_is_focused
 	gboolean _tmp0_;
 	self = (UnityQuicklauncherModelsApplicationModel*) base;
 	result = (g_object_get (unity_quicklauncher_models_application_model_get_app (self), "focused", &_tmp0_, NULL), _tmp0_);
-#line 272 "application-model.vala"
+#line 279 "application-model.vala"
 	return result;
-#line 2181 "application-model.c"
+#line 2082 "application-model.c"
 }
 
 
@@ -2186,9 +2087,9 @@ static gboolean unity_quicklauncher_models_application_model_real_get_is_urgent 
 	UnityQuicklauncherModelsApplicationModel* self;
 	self = (UnityQuicklauncherModelsApplicationModel*) base;
 	result = launcher_application_get_urgent (unity_quicklauncher_models_application_model_get_app (self));
-#line 277 "application-model.vala"
+#line 284 "application-model.vala"
 	return result;
-#line 2192 "application-model.c"
+#line 2093 "application-model.c"
 }
 
 
@@ -2197,9 +2098,9 @@ static GdkPixbuf* unity_quicklauncher_models_application_model_real_get_icon (Un
 	UnityQuicklauncherModelsApplicationModel* self;
 	self = (UnityQuicklauncherModelsApplicationModel*) base;
 	result = self->priv->_icon;
-#line 282 "application-model.vala"
+#line 289 "application-model.vala"
 	return result;
-#line 2203 "application-model.c"
+#line 2104 "application-model.c"
 }
 
 
@@ -2208,9 +2109,9 @@ static const char* unity_quicklauncher_models_application_model_real_get_name (U
 	UnityQuicklauncherModelsApplicationModel* self;
 	self = (UnityQuicklauncherModelsApplicationModel*) base;
 	result = launcher_application_get_name (unity_quicklauncher_models_application_model_get_app (self));
-#line 287 "application-model.vala"
+#line 294 "application-model.vala"
 	return result;
-#line 2214 "application-model.c"
+#line 2115 "application-model.c"
 }
 
 
@@ -2220,26 +2121,26 @@ static gboolean unity_quicklauncher_models_application_model_real_get_is_fixed (
 	LauncherFavorites* favorites;
 	char* uid;
 	self = (UnityQuicklauncherModelsApplicationModel*) base;
-#line 292 "application-model.vala"
+#line 299 "application-model.vala"
 	favorites = _g_object_ref0 (launcher_favorites_get_default ());
-#line 293 "application-model.vala"
+#line 300 "application-model.vala"
 	uid = unity_quicklauncher_models_application_model_get_fav_uid (self);
-#line 294 "application-model.vala"
+#line 301 "application-model.vala"
 	if (_vala_strcmp0 (uid, "") == 0) {
-#line 2230 "application-model.c"
+#line 2131 "application-model.c"
 		result = FALSE;
 		_g_object_unref0 (favorites);
 		_g_free0 (uid);
-#line 294 "application-model.vala"
+#line 301 "application-model.vala"
 		return result;
-#line 2236 "application-model.c"
+#line 2137 "application-model.c"
 	}
 	result = launcher_favorites_get_bool (favorites, uid, "fixed");
 	_g_object_unref0 (favorites);
 	_g_free0 (uid);
-#line 295 "application-model.vala"
+#line 302 "application-model.vala"
 	return result;
-#line 2243 "application-model.c"
+#line 2144 "application-model.c"
 }
 
 
@@ -2249,26 +2150,26 @@ static gboolean unity_quicklauncher_models_application_model_real_get_readonly (
 	LauncherFavorites* favorites;
 	char* uid;
 	self = (UnityQuicklauncherModelsApplicationModel*) base;
-#line 301 "application-model.vala"
+#line 308 "application-model.vala"
 	favorites = _g_object_ref0 (launcher_favorites_get_default ());
-#line 302 "application-model.vala"
+#line 309 "application-model.vala"
 	uid = unity_quicklauncher_models_application_model_get_fav_uid (self);
-#line 303 "application-model.vala"
+#line 310 "application-model.vala"
 	if (_vala_strcmp0 (uid, "") == 0) {
-#line 2259 "application-model.c"
+#line 2160 "application-model.c"
 		result = FALSE;
 		_g_object_unref0 (favorites);
 		_g_free0 (uid);
-#line 303 "application-model.vala"
+#line 310 "application-model.vala"
 		return result;
-#line 2265 "application-model.c"
+#line 2166 "application-model.c"
 	}
 	result = launcher_favorites_get_readonly (favorites, uid, "desktop_file");
 	_g_object_unref0 (favorites);
 	_g_free0 (uid);
-#line 304 "application-model.vala"
+#line 311 "application-model.vala"
 	return result;
-#line 2272 "application-model.c"
+#line 2173 "application-model.c"
 }
 
 
@@ -2277,9 +2178,9 @@ static gboolean unity_quicklauncher_models_application_model_real_get_is_sticky 
 	UnityQuicklauncherModelsApplicationModel* self;
 	self = (UnityQuicklauncherModelsApplicationModel*) base;
 	result = self->priv->_is_sticky;
-#line 311 "application-model.vala"
+#line 318 "application-model.vala"
 	return result;
-#line 2283 "application-model.c"
+#line 2184 "application-model.c"
 }
 
 
@@ -2289,67 +2190,67 @@ static void unity_quicklauncher_models_application_model_real_set_is_sticky (Uni
 	char* uid;
 	gboolean _tmp0_ = FALSE;
 	self = (UnityQuicklauncherModelsApplicationModel*) base;
-#line 314 "application-model.vala"
-	favorites = _g_object_ref0 (launcher_favorites_get_default ());
-#line 315 "application-model.vala"
-	uid = unity_quicklauncher_models_application_model_get_fav_uid (self);
-#line 316 "application-model.vala"
-	if (_vala_strcmp0 (uid, "") != 0) {
-#line 316 "application-model.vala"
-		_tmp0_ = !value;
-#line 2301 "application-model.c"
-	} else {
-#line 316 "application-model.vala"
-		_tmp0_ = FALSE;
-#line 2305 "application-model.c"
-	}
-#line 316 "application-model.vala"
-	if (_tmp0_) {
-#line 319 "application-model.vala"
-		if (!launcher_favorites_get_readonly (favorites, uid, "desktop_file")) {
 #line 321 "application-model.vala"
+	favorites = _g_object_ref0 (launcher_favorites_get_default ());
+#line 322 "application-model.vala"
+	uid = unity_quicklauncher_models_application_model_get_fav_uid (self);
+#line 323 "application-model.vala"
+	if (_vala_strcmp0 (uid, "") != 0) {
+#line 323 "application-model.vala"
+		_tmp0_ = !value;
+#line 2202 "application-model.c"
+	} else {
+#line 323 "application-model.vala"
+		_tmp0_ = FALSE;
+#line 2206 "application-model.c"
+	}
+#line 323 "application-model.vala"
+	if (_tmp0_) {
+#line 326 "application-model.vala"
+		if (!launcher_favorites_get_readonly (favorites, uid, "desktop_file")) {
+#line 328 "application-model.vala"
 			launcher_favorites_remove_favorite (favorites, uid);
-#line 2313 "application-model.c"
+#line 2214 "application-model.c"
 		}
 	} else {
 		gboolean _tmp1_ = FALSE;
-#line 324 "application-model.vala"
+#line 331 "application-model.vala"
 		if (_vala_strcmp0 (uid, "") == 0) {
-#line 324 "application-model.vala"
+#line 331 "application-model.vala"
 			_tmp1_ = value;
-#line 2321 "application-model.c"
+#line 2222 "application-model.c"
 		} else {
-#line 324 "application-model.vala"
+#line 331 "application-model.vala"
 			_tmp1_ = FALSE;
-#line 2325 "application-model.c"
+#line 2226 "application-model.c"
 		}
-#line 324 "application-model.vala"
+#line 331 "application-model.vala"
 		if (_tmp1_) {
-#line 2329 "application-model.c"
+#line 2230 "application-model.c"
 			char* desktop_path;
 			char* _tmp3_;
 			char* _tmp2_;
-#line 326 "application-model.vala"
+#line 333 "application-model.vala"
 			desktop_path = g_strdup (launcher_application_get_desktop_file (unity_quicklauncher_models_application_model_get_app (self)));
-#line 327 "application-model.vala"
+#line 334 "application-model.vala"
 			uid = (_tmp3_ = g_strconcat ("app-", _tmp2_ = g_path_get_basename (desktop_path), NULL), _g_free0 (uid), _tmp3_);
-#line 2337 "application-model.c"
+#line 2238 "application-model.c"
 			_g_free0 (_tmp2_);
-#line 329 "application-model.vala"
+#line 336 "application-model.vala"
 			launcher_favorites_set_string (favorites, uid, "type", "application");
-#line 330 "application-model.vala"
+#line 337 "application-model.vala"
 			launcher_favorites_set_string (favorites, uid, "desktop_file", desktop_path);
-#line 331 "application-model.vala"
+#line 338 "application-model.vala"
 			launcher_favorites_add_favorite (favorites, uid);
-#line 2345 "application-model.c"
+#line 2246 "application-model.c"
 			_g_free0 (desktop_path);
 		}
 	}
-#line 333 "application-model.vala"
+#line 340 "application-model.vala"
 	self->priv->_is_sticky = value;
-#line 334 "application-model.vala"
+#line 341 "application-model.vala"
 	g_signal_emit_by_name ((UnityQuicklauncherModelsLauncherModel*) self, "notify-active");
-#line 2353 "application-model.c"
+#line 2254 "application-model.c"
 	_g_object_unref0 (favorites);
 	_g_free0 (uid);
 	g_object_notify ((GObject *) self, "is-sticky");
@@ -2420,6 +2321,7 @@ static void unity_quicklauncher_models_application_model_instance_init (UnityQui
 	self->priv = UNITY_QUICKLAUNCHER_MODELS_APPLICATION_MODEL_GET_PRIVATE (self);
 	self->priv->queued_save_priority = FALSE;
 	self->priv->_do_shadow = FALSE;
+	self->priv->fav_uid_cache = g_strdup ("");
 }
 
 
@@ -2429,6 +2331,7 @@ static void unity_quicklauncher_models_application_model_finalize (GObject* obj)
 	_g_object_unref0 (self->priv->_icon);
 	_g_free0 (self->priv->desktop_uri);
 	_g_object_unref0 (self->priv->_app);
+	_g_free0 (self->priv->fav_uid_cache);
 	G_OBJECT_CLASS (unity_quicklauncher_models_application_model_parent_class)->finalize (obj);
 }
 

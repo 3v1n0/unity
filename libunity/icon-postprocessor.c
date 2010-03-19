@@ -26,8 +26,8 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <clutk/clutk.h>
 #include <clutter/clutter.h>
+#include <clutk/clutk.h>
 #include <cogl/cogl.h>
 #include <float.h>
 #include <math.h>
@@ -70,9 +70,6 @@ struct _UnityUnityIconClass {
 struct _UnityUnityIconPrivate {
 	ClutterTexture* _icon;
 	ClutterTexture* _bg_color;
-	ClutterTexture* bg_layer;
-	ClutterTexture* fg_layer;
-	ClutterTexture* mask;
 	CoglHandle* bg_mat;
 	CoglHandle* fg_mat;
 	CoglHandle* icon_material;
@@ -80,6 +77,12 @@ struct _UnityUnityIconPrivate {
 };
 
 
+extern ClutterTexture* unity_unity_icon_bg_layer;
+ClutterTexture* unity_unity_icon_bg_layer = NULL;
+extern ClutterTexture* unity_unity_icon_fg_layer;
+ClutterTexture* unity_unity_icon_fg_layer = NULL;
+extern ClutterTexture* unity_unity_icon_mk_layer;
+ClutterTexture* unity_unity_icon_mk_layer = NULL;
 static gpointer unity_unity_icon_parent_class = NULL;
 
 GType unity_unity_icon_get_type (void);
@@ -114,89 +117,89 @@ static void unity_unity_icon_set_property (GObject * object, guint property_id, 
 
 
 
-#line 43 "icon-postprocessor.vala"
+#line 44 "icon-postprocessor.vala"
 UnityUnityIcon* unity_unity_icon_construct (GType object_type, ClutterTexture* icon, ClutterTexture* bg_tex) {
-#line 120 "icon-postprocessor.c"
+#line 123 "icon-postprocessor.c"
 	UnityUnityIcon * self;
-#line 45 "icon-postprocessor.vala"
+#line 46 "icon-postprocessor.vala"
 	self = (UnityUnityIcon*) g_object_new (object_type, "icon", icon, "bg-color", bg_tex, NULL);
-#line 124 "icon-postprocessor.c"
+#line 127 "icon-postprocessor.c"
 	return self;
 }
 
 
-#line 43 "icon-postprocessor.vala"
+#line 44 "icon-postprocessor.vala"
 UnityUnityIcon* unity_unity_icon_new (ClutterTexture* icon, ClutterTexture* bg_tex) {
-#line 43 "icon-postprocessor.vala"
+#line 44 "icon-postprocessor.vala"
 	return unity_unity_icon_construct (UNITY_TYPE_UNITY_ICON, icon, bg_tex);
-#line 133 "icon-postprocessor.c"
+#line 136 "icon-postprocessor.c"
 }
 
 
-#line 90 "icon-postprocessor.vala"
+#line 92 "icon-postprocessor.vala"
 static void unity_unity_icon_real_get_preferred_width (ClutterActor* base, float for_height, float* minimum_width, float* natural_width) {
-#line 139 "icon-postprocessor.c"
+#line 142 "icon-postprocessor.c"
 	UnityUnityIcon * self;
 	self = (UnityUnityIcon*) base;
-#line 94 "icon-postprocessor.vala"
+#line 96 "icon-postprocessor.vala"
 	*natural_width = *minimum_width = (float) 48;
-#line 144 "icon-postprocessor.c"
+#line 147 "icon-postprocessor.c"
 }
 
 
-#line 97 "icon-postprocessor.vala"
+#line 99 "icon-postprocessor.vala"
 static void unity_unity_icon_real_get_preferred_height (ClutterActor* base, float for_width, float* minimum_height, float* natural_height) {
-#line 150 "icon-postprocessor.c"
+#line 153 "icon-postprocessor.c"
 	UnityUnityIcon * self;
 	self = (UnityUnityIcon*) base;
-#line 101 "icon-postprocessor.vala"
+#line 103 "icon-postprocessor.vala"
 	*natural_height = *minimum_height = (float) 48;
-#line 155 "icon-postprocessor.c"
+#line 158 "icon-postprocessor.c"
 }
 
 
-#line 104 "icon-postprocessor.vala"
-static void unity_unity_icon_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-#line 161 "icon-postprocessor.c"
-	UnityUnityIcon * self;
-	self = (UnityUnityIcon*) base;
 #line 106 "icon-postprocessor.vala"
-	CLUTTER_ACTOR_CLASS (unity_unity_icon_parent_class)->allocate ((ClutterActor*) CTK_ACTOR (self), box, flags);
-#line 107 "icon-postprocessor.vala"
-	clutter_actor_allocate ((ClutterActor*) self->priv->bg_layer, box, flags);
+static void unity_unity_icon_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
+#line 164 "icon-postprocessor.c"
+	UnityUnityIcon * self;
+	self = (UnityUnityIcon*) base;
 #line 108 "icon-postprocessor.vala"
-	clutter_actor_allocate ((ClutterActor*) self->priv->fg_layer, box, flags);
+	CLUTTER_ACTOR_CLASS (unity_unity_icon_parent_class)->allocate ((ClutterActor*) CTK_ACTOR (self), box, flags);
 #line 109 "icon-postprocessor.vala"
-	clutter_actor_allocate ((ClutterActor*) self->priv->mask, box, flags);
-#line 110 "icon-postprocessor.vala"
 	if (CLUTTER_IS_TEXTURE (self->priv->_icon)) {
-#line 111 "icon-postprocessor.vala"
+#line 110 "icon-postprocessor.vala"
 		clutter_actor_allocate ((ClutterActor*) self->priv->_icon, box, flags);
-#line 176 "icon-postprocessor.c"
+#line 173 "icon-postprocessor.c"
 	}
-#line 112 "icon-postprocessor.vala"
+#line 111 "icon-postprocessor.vala"
 	if (CLUTTER_IS_TEXTURE (self->priv->_bg_color)) {
-#line 113 "icon-postprocessor.vala"
+#line 112 "icon-postprocessor.vala"
 		clutter_actor_allocate ((ClutterActor*) self->priv->_bg_color, box, flags);
-#line 182 "icon-postprocessor.c"
+#line 179 "icon-postprocessor.c"
 	}
 }
 
 
-#line 116 "icon-postprocessor.vala"
+#line 115 "icon-postprocessor.vala"
 static void unity_unity_icon_real_pick (ClutterActor* base, const ClutterColor* color) {
-#line 189 "icon-postprocessor.c"
+#line 186 "icon-postprocessor.c"
 	UnityUnityIcon * self;
+	CoglHandle* mat;
 	self = (UnityUnityIcon*) base;
-#line 118 "icon-postprocessor.vala"
+#line 117 "icon-postprocessor.vala"
 	ctk_actor_set_effects_painting ((CtkActor*) self, TRUE);
+#line 118 "icon-postprocessor.vala"
+	mat = cogl_material_new ();
 #line 119 "icon-postprocessor.vala"
-	CLUTTER_ACTOR_CLASS (unity_unity_icon_parent_class)->pick ((ClutterActor*) CTK_ACTOR (self), color);
+	cogl_material_set_color4ub (mat, (guchar) (*color).red, (guchar) (*color).green, (guchar) (*color).blue, (guchar) (*color).alpha);
 #line 120 "icon-postprocessor.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->bg_layer);
+	cogl_rectangle ((float) 0, (float) 0, (float) 48, (float) 48);
 #line 121 "icon-postprocessor.vala"
+	CLUTTER_ACTOR_CLASS (unity_unity_icon_parent_class)->pick ((ClutterActor*) CTK_ACTOR (self), color);
+#line 122 "icon-postprocessor.vala"
 	ctk_actor_set_effects_painting ((CtkActor*) self, FALSE);
-#line 200 "icon-postprocessor.c"
+#line 202 "icon-postprocessor.c"
+	_cogl_handle_unref0 (mat);
 }
 
 
@@ -205,172 +208,164 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 127 "icon-postprocessor.vala"
+#line 128 "icon-postprocessor.vala"
 void unity_unity_icon_paint_real (ClutterActor* actor) {
-#line 211 "icon-postprocessor.c"
+#line 214 "icon-postprocessor.c"
 	ClutterActor* _tmp0_;
 	UnityUnityIcon* _self_;
 	ClutterActorBox _tmp1_ = {0};
 	ClutterActorBox box;
-#line 127 "icon-postprocessor.vala"
+#line 128 "icon-postprocessor.vala"
 	g_return_if_fail (actor != NULL);
-#line 129 "icon-postprocessor.vala"
+#line 130 "icon-postprocessor.vala"
 	_self_ = _g_object_ref0 ((_tmp0_ = actor, UNITY_IS_UNITY_ICON (_tmp0_) ? ((UnityUnityIcon*) _tmp0_) : NULL));
-#line 131 "icon-postprocessor.vala"
-	box = (memset (&_tmp1_, 0, sizeof (ClutterActorBox)), _tmp1_);
 #line 132 "icon-postprocessor.vala"
+	box = (memset (&_tmp1_, 0, sizeof (ClutterActorBox)), _tmp1_);
+#line 133 "icon-postprocessor.vala"
 	ctk_actor_get_stored_allocation ((CtkActor*) _self_, &box);
-#line 137 "icon-postprocessor.vala"
-	cogl_set_source (_self_->priv->bg_mat);
 #line 138 "icon-postprocessor.vala"
+	cogl_set_source (_self_->priv->bg_mat);
+#line 139 "icon-postprocessor.vala"
 	cogl_rectangle (box.x1, box.y1, box.x2, box.y2);
-#line 140 "icon-postprocessor.vala"
+#line 141 "icon-postprocessor.vala"
 	if (CLUTTER_IS_TEXTURE (_self_->priv->_bg_color)) {
-#line 142 "icon-postprocessor.vala"
-		cogl_set_source (_self_->priv->bgcol_material);
 #line 143 "icon-postprocessor.vala"
+		cogl_set_source (_self_->priv->bgcol_material);
+#line 144 "icon-postprocessor.vala"
 		cogl_rectangle (box.x1, box.y1, box.x2, box.y2);
-#line 234 "icon-postprocessor.c"
+#line 237 "icon-postprocessor.c"
 	}
-#line 145 "icon-postprocessor.vala"
+#line 146 "icon-postprocessor.vala"
 	if (CLUTTER_IS_TEXTURE (_self_->priv->_icon)) {
-#line 147 "icon-postprocessor.vala"
-		cogl_set_source (_self_->priv->icon_material);
 #line 148 "icon-postprocessor.vala"
+		cogl_set_source (_self_->priv->icon_material);
+#line 149 "icon-postprocessor.vala"
 		cogl_rectangle (box.x1, box.y1, box.x2, box.y2);
-#line 242 "icon-postprocessor.c"
+#line 245 "icon-postprocessor.c"
 	}
-#line 151 "icon-postprocessor.vala"
-	cogl_set_source (_self_->priv->fg_mat);
 #line 152 "icon-postprocessor.vala"
+	cogl_set_source (_self_->priv->fg_mat);
+#line 153 "icon-postprocessor.vala"
 	cogl_rectangle (box.x1, box.y1, box.x2, box.y2);
-#line 248 "icon-postprocessor.c"
+#line 251 "icon-postprocessor.c"
 	_g_object_unref0 (_self_);
 }
 
 
-#line 127 "icon-postprocessor.vala"
+#line 128 "icon-postprocessor.vala"
 static void _unity_unity_icon_paint_real_ctk_effect_paint_func (ClutterActor* actor) {
-#line 255 "icon-postprocessor.c"
+#line 258 "icon-postprocessor.c"
 	unity_unity_icon_paint_real (actor);
 }
 
 
-#line 155 "icon-postprocessor.vala"
+#line 156 "icon-postprocessor.vala"
 static void unity_unity_icon_real_paint (ClutterActor* base) {
-#line 262 "icon-postprocessor.c"
+#line 265 "icon-postprocessor.c"
 	UnityUnityIcon * self;
 	GSList* effects;
 	gboolean _tmp0_ = FALSE;
 	self = (UnityUnityIcon*) base;
-#line 160 "icon-postprocessor.vala"
+#line 161 "icon-postprocessor.vala"
 	effects = ctk_actor_get_effects ((CtkActor*) self);
-#line 161 "icon-postprocessor.vala"
+#line 162 "icon-postprocessor.vala"
 	if (!ctk_actor_get_effects_painting ((CtkActor*) self)) {
-#line 161 "icon-postprocessor.vala"
+#line 162 "icon-postprocessor.vala"
 		_tmp0_ = effects != NULL;
-#line 273 "icon-postprocessor.c"
+#line 276 "icon-postprocessor.c"
 	} else {
-#line 161 "icon-postprocessor.vala"
+#line 162 "icon-postprocessor.vala"
 		_tmp0_ = FALSE;
-#line 277 "icon-postprocessor.c"
+#line 280 "icon-postprocessor.c"
 	}
-#line 161 "icon-postprocessor.vala"
+#line 162 "icon-postprocessor.vala"
 	if (_tmp0_) {
-#line 281 "icon-postprocessor.c"
+#line 284 "icon-postprocessor.c"
 		GSList* e;
 		e = NULL;
-#line 164 "icon-postprocessor.vala"
+#line 165 "icon-postprocessor.vala"
 		ctk_actor_set_effects_painting ((CtkActor*) self, TRUE);
-#line 286 "icon-postprocessor.c"
+#line 289 "icon-postprocessor.c"
 		{
 			gboolean _tmp1_;
-#line 165 "icon-postprocessor.vala"
+#line 166 "icon-postprocessor.vala"
 			e = effects;
-#line 165 "icon-postprocessor.vala"
+#line 166 "icon-postprocessor.vala"
 			_tmp1_ = TRUE;
-#line 165 "icon-postprocessor.vala"
+#line 166 "icon-postprocessor.vala"
 			while (TRUE) {
-#line 295 "icon-postprocessor.c"
+#line 298 "icon-postprocessor.c"
 				CtkEffect* effect;
 				gboolean _tmp2_ = FALSE;
 				gboolean last_effect;
-#line 165 "icon-postprocessor.vala"
+#line 166 "icon-postprocessor.vala"
 				if (!_tmp1_) {
-#line 165 "icon-postprocessor.vala"
+#line 166 "icon-postprocessor.vala"
 					e = e->next;
-#line 303 "icon-postprocessor.c"
+#line 306 "icon-postprocessor.c"
 				}
-#line 165 "icon-postprocessor.vala"
+#line 166 "icon-postprocessor.vala"
 				_tmp1_ = FALSE;
-#line 165 "icon-postprocessor.vala"
+#line 166 "icon-postprocessor.vala"
 				if (!(e != NULL)) {
-#line 165 "icon-postprocessor.vala"
+#line 166 "icon-postprocessor.vala"
 					break;
-#line 311 "icon-postprocessor.c"
+#line 314 "icon-postprocessor.c"
 				}
-#line 167 "icon-postprocessor.vala"
+#line 168 "icon-postprocessor.vala"
 				effect = _g_object_ref0 ((CtkEffect*) e->data);
-#line 168 "icon-postprocessor.vala"
-				if (e->next != NULL) {
-#line 168 "icon-postprocessor.vala"
-					_tmp2_ = FALSE;
-#line 319 "icon-postprocessor.c"
-				} else {
-#line 168 "icon-postprocessor.vala"
-					_tmp2_ = TRUE;
-#line 323 "icon-postprocessor.c"
-				}
-#line 168 "icon-postprocessor.vala"
-				last_effect = _tmp2_;
 #line 169 "icon-postprocessor.vala"
+				if (e->next != NULL) {
+#line 169 "icon-postprocessor.vala"
+					_tmp2_ = FALSE;
+#line 322 "icon-postprocessor.c"
+				} else {
+#line 169 "icon-postprocessor.vala"
+					_tmp2_ = TRUE;
+#line 326 "icon-postprocessor.c"
+				}
+#line 169 "icon-postprocessor.vala"
+				last_effect = _tmp2_;
+#line 170 "icon-postprocessor.vala"
 				ctk_effect_paint (effect, _unity_unity_icon_paint_real_ctk_effect_paint_func, last_effect);
-#line 329 "icon-postprocessor.c"
+#line 332 "icon-postprocessor.c"
 				_g_object_unref0 (effect);
 			}
 		}
-#line 172 "icon-postprocessor.vala"
+#line 173 "icon-postprocessor.vala"
 		ctk_actor_set_effects_painting ((CtkActor*) self, FALSE);
-#line 335 "icon-postprocessor.c"
+#line 338 "icon-postprocessor.c"
 	} else {
-#line 176 "icon-postprocessor.vala"
+#line 177 "icon-postprocessor.vala"
 		unity_unity_icon_paint_real ((ClutterActor*) self);
-#line 339 "icon-postprocessor.c"
+#line 342 "icon-postprocessor.c"
 	}
 }
 
 
-#line 180 "icon-postprocessor.vala"
+#line 181 "icon-postprocessor.vala"
 static void unity_unity_icon_real_map (ClutterActor* base) {
-#line 346 "icon-postprocessor.c"
+#line 349 "icon-postprocessor.c"
 	UnityUnityIcon * self;
 	self = (UnityUnityIcon*) base;
-#line 182 "icon-postprocessor.vala"
-	CLUTTER_ACTOR_CLASS (unity_unity_icon_parent_class)->map ((ClutterActor*) CTK_ACTOR (self));
 #line 183 "icon-postprocessor.vala"
-	clutter_actor_map ((ClutterActor*) self->priv->bg_layer);
+	CLUTTER_ACTOR_CLASS (unity_unity_icon_parent_class)->map ((ClutterActor*) CTK_ACTOR (self));
 #line 184 "icon-postprocessor.vala"
 	clutter_actor_map ((ClutterActor*) self->priv->_icon);
-#line 185 "icon-postprocessor.vala"
-	clutter_actor_map ((ClutterActor*) self->priv->fg_layer);
-#line 357 "icon-postprocessor.c"
+#line 356 "icon-postprocessor.c"
 }
 
 
-#line 188 "icon-postprocessor.vala"
+#line 187 "icon-postprocessor.vala"
 static void unity_unity_icon_real_unmap (ClutterActor* base) {
-#line 363 "icon-postprocessor.c"
+#line 362 "icon-postprocessor.c"
 	UnityUnityIcon * self;
 	self = (UnityUnityIcon*) base;
-#line 190 "icon-postprocessor.vala"
+#line 189 "icon-postprocessor.vala"
 	CLUTTER_ACTOR_CLASS (unity_unity_icon_parent_class)->map ((ClutterActor*) CTK_ACTOR (self));
-#line 191 "icon-postprocessor.vala"
-	clutter_actor_unmap ((ClutterActor*) self->priv->bg_layer);
-#line 192 "icon-postprocessor.vala"
+#line 190 "icon-postprocessor.vala"
 	clutter_actor_unmap ((ClutterActor*) self->priv->_icon);
-#line 193 "icon-postprocessor.vala"
-	clutter_actor_unmap ((ClutterActor*) self->priv->fg_layer);
-#line 374 "icon-postprocessor.c"
+#line 369 "icon-postprocessor.c"
 }
 
 
@@ -378,9 +373,9 @@ ClutterTexture* unity_unity_icon_get_icon (UnityUnityIcon* self) {
 	ClutterTexture* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_icon;
-#line 32 "icon-postprocessor.vala"
+#line 36 "icon-postprocessor.vala"
 	return result;
-#line 384 "icon-postprocessor.c"
+#line 379 "icon-postprocessor.c"
 }
 
 
@@ -396,9 +391,9 @@ ClutterTexture* unity_unity_icon_get_bg_color (UnityUnityIcon* self) {
 	ClutterTexture* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_bg_color;
-#line 33 "icon-postprocessor.vala"
+#line 37 "icon-postprocessor.vala"
 	return result;
-#line 402 "icon-postprocessor.c"
+#line 397 "icon-postprocessor.c"
 }
 
 
@@ -423,94 +418,93 @@ static GObject * unity_unity_icon_constructor (GType type, guint n_construct_pro
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_UNITY_ICON (obj);
 	{
-		ClutterTexture* _tmp0_;
-		ClutterTexture* _tmp1_;
-		ClutterTexture* _tmp2_;
 		CoglHandle* mat;
 		CoglHandle* tex;
 		CoglHandle* _tmp5_;
 		CoglHandle* _tmp6_;
 		CoglHandle* _tmp7_;
 		CoglHandle* _tmp8_;
-#line 50 "icon-postprocessor.vala"
-		self->priv->bg_layer = (_tmp0_ = (ClutterTexture*) g_object_ref_sink (unity_theme_image_new ("prism_icon_background")), _g_object_unref0 (self->priv->bg_layer), _tmp0_);
 #line 51 "icon-postprocessor.vala"
-		self->priv->fg_layer = (_tmp1_ = (ClutterTexture*) g_object_ref_sink (unity_theme_image_new ("prism_icon_foreground")), _g_object_unref0 (self->priv->fg_layer), _tmp1_);
-#line 52 "icon-postprocessor.vala"
-		self->priv->mask = (_tmp2_ = (ClutterTexture*) g_object_ref_sink (unity_theme_image_new ("prism_icon_mask")), _g_object_unref0 (self->priv->mask), _tmp2_);
+		if (!CLUTTER_IS_TEXTURE (unity_unity_icon_bg_layer)) {
+#line 430 "icon-postprocessor.c"
+			ClutterTexture* _tmp0_;
+			ClutterTexture* _tmp1_;
+			ClutterTexture* _tmp2_;
+#line 53 "icon-postprocessor.vala"
+			unity_unity_icon_bg_layer = (_tmp0_ = (ClutterTexture*) g_object_ref_sink (unity_theme_image_new ("prism_icon_background")), _g_object_unref0 (unity_unity_icon_bg_layer), _tmp0_);
 #line 54 "icon-postprocessor.vala"
-		clutter_actor_set_parent ((ClutterActor*) self->priv->bg_layer, (ClutterActor*) self);
+			unity_unity_icon_fg_layer = (_tmp1_ = (ClutterTexture*) g_object_ref_sink (unity_theme_image_new ("prism_icon_foreground")), _g_object_unref0 (unity_unity_icon_fg_layer), _tmp1_);
 #line 55 "icon-postprocessor.vala"
-		clutter_actor_set_parent ((ClutterActor*) self->priv->fg_layer, (ClutterActor*) self);
-#line 56 "icon-postprocessor.vala"
-		clutter_actor_set_parent ((ClutterActor*) self->priv->mask, (ClutterActor*) self);
-#line 58 "icon-postprocessor.vala"
+			unity_unity_icon_mk_layer = (_tmp2_ = (ClutterTexture*) g_object_ref_sink (unity_theme_image_new ("prism_icon_mask")), _g_object_unref0 (unity_unity_icon_mk_layer), _tmp2_);
+#line 440 "icon-postprocessor.c"
+		}
+#line 60 "icon-postprocessor.vala"
 		if (CLUTTER_IS_TEXTURE (self->priv->_icon)) {
-#line 450 "icon-postprocessor.c"
+#line 444 "icon-postprocessor.c"
 			CoglHandle* icon_mat;
 			CoglHandle* icon_tex;
 			CoglHandle* mask_tex;
 			CoglHandle* _tmp3_;
-#line 60 "icon-postprocessor.vala"
-			clutter_actor_set_parent ((ClutterActor*) self->priv->_icon, (ClutterActor*) self);
-#line 61 "icon-postprocessor.vala"
-			icon_mat = cogl_material_new ();
 #line 62 "icon-postprocessor.vala"
-			icon_tex = (CoglHandle*) clutter_texture_get_cogl_texture (self->priv->_icon);
+			clutter_actor_set_parent ((ClutterActor*) self->priv->_icon, (ClutterActor*) self);
 #line 63 "icon-postprocessor.vala"
-			mask_tex = (CoglHandle*) clutter_texture_get_cogl_texture (self->priv->mask);
+			icon_mat = cogl_material_new ();
 #line 64 "icon-postprocessor.vala"
-			cogl_material_set_layer (icon_mat, 0, icon_tex);
+			icon_tex = (CoglHandle*) clutter_texture_get_cogl_texture (self->priv->_icon);
 #line 65 "icon-postprocessor.vala"
-			cogl_material_set_layer (icon_mat, 1, mask_tex);
+			mask_tex = (CoglHandle*) clutter_texture_get_cogl_texture (unity_unity_icon_mk_layer);
 #line 66 "icon-postprocessor.vala"
+			cogl_material_set_layer (icon_mat, 0, icon_tex);
+#line 67 "icon-postprocessor.vala"
+			cogl_material_set_layer (icon_mat, 1, mask_tex);
+#line 68 "icon-postprocessor.vala"
 			self->priv->icon_material = (_tmp3_ = _cogl_handle_ref0 (icon_mat), _cogl_handle_unref0 (self->priv->icon_material), _tmp3_);
-#line 469 "icon-postprocessor.c"
+#line 463 "icon-postprocessor.c"
 			_cogl_handle_unref0 (icon_mat);
 			_cogl_handle_unref0 (icon_tex);
 			_cogl_handle_unref0 (mask_tex);
 		}
-#line 68 "icon-postprocessor.vala"
+#line 70 "icon-postprocessor.vala"
 		if (CLUTTER_IS_TEXTURE (self->priv->_bg_color)) {
-#line 476 "icon-postprocessor.c"
+#line 470 "icon-postprocessor.c"
 			CoglHandle* _tmp4_;
 			CoglHandle* color;
 			CoglHandle* mask_tex;
-#line 70 "icon-postprocessor.vala"
-			clutter_actor_set_parent ((ClutterActor*) self->priv->_bg_color, (ClutterActor*) self);
-#line 71 "icon-postprocessor.vala"
-			self->priv->bgcol_material = (_tmp4_ = cogl_material_new (), _cogl_handle_unref0 (self->priv->bgcol_material), _tmp4_);
 #line 72 "icon-postprocessor.vala"
-			color = (CoglHandle*) clutter_texture_get_cogl_texture (self->priv->_bg_color);
+			clutter_actor_set_parent ((ClutterActor*) self->priv->_bg_color, (ClutterActor*) self);
 #line 73 "icon-postprocessor.vala"
-			mask_tex = (CoglHandle*) clutter_texture_get_cogl_texture (self->priv->mask);
+			self->priv->bgcol_material = (_tmp4_ = cogl_material_new (), _cogl_handle_unref0 (self->priv->bgcol_material), _tmp4_);
 #line 74 "icon-postprocessor.vala"
-			cogl_material_set_layer (self->priv->bgcol_material, 0, color);
+			color = (CoglHandle*) clutter_texture_get_cogl_texture (self->priv->_bg_color);
 #line 75 "icon-postprocessor.vala"
-			cogl_material_set_layer_filters (self->priv->bgcol_material, 1, COGL_MATERIAL_FILTER_NEAREST, COGL_MATERIAL_FILTER_NEAREST);
+			mask_tex = (CoglHandle*) clutter_texture_get_cogl_texture (unity_unity_icon_mk_layer);
 #line 76 "icon-postprocessor.vala"
+			cogl_material_set_layer (self->priv->bgcol_material, 0, color);
+#line 77 "icon-postprocessor.vala"
+			cogl_material_set_layer_filters (self->priv->bgcol_material, 1, COGL_MATERIAL_FILTER_NEAREST, COGL_MATERIAL_FILTER_NEAREST);
+#line 78 "icon-postprocessor.vala"
 			cogl_material_set_layer (self->priv->bgcol_material, 1, mask_tex);
-#line 494 "icon-postprocessor.c"
+#line 488 "icon-postprocessor.c"
 			_cogl_handle_unref0 (color);
 			_cogl_handle_unref0 (mask_tex);
 		}
-#line 79 "icon-postprocessor.vala"
-		mat = cogl_material_new ();
-#line 80 "icon-postprocessor.vala"
-		tex = (CoglHandle*) clutter_texture_get_cogl_texture (self->priv->bg_layer);
 #line 81 "icon-postprocessor.vala"
-		cogl_material_set_layer (mat, 0, tex);
+		mat = cogl_material_new ();
 #line 82 "icon-postprocessor.vala"
-		self->priv->bg_mat = (_tmp5_ = _cogl_handle_ref0 (mat), _cogl_handle_unref0 (self->priv->bg_mat), _tmp5_);
-#line 84 "icon-postprocessor.vala"
-		mat = (_tmp6_ = cogl_material_new (), _cogl_handle_unref0 (mat), _tmp6_);
-#line 85 "icon-postprocessor.vala"
-		tex = (_tmp7_ = (CoglHandle*) clutter_texture_get_cogl_texture (self->priv->fg_layer), _cogl_handle_unref0 (tex), _tmp7_);
-#line 86 "icon-postprocessor.vala"
+		tex = (CoglHandle*) clutter_texture_get_cogl_texture (unity_unity_icon_bg_layer);
+#line 83 "icon-postprocessor.vala"
 		cogl_material_set_layer (mat, 0, tex);
+#line 84 "icon-postprocessor.vala"
+		self->priv->bg_mat = (_tmp5_ = _cogl_handle_ref0 (mat), _cogl_handle_unref0 (self->priv->bg_mat), _tmp5_);
+#line 86 "icon-postprocessor.vala"
+		mat = (_tmp6_ = cogl_material_new (), _cogl_handle_unref0 (mat), _tmp6_);
 #line 87 "icon-postprocessor.vala"
+		tex = (_tmp7_ = (CoglHandle*) clutter_texture_get_cogl_texture (unity_unity_icon_fg_layer), _cogl_handle_unref0 (tex), _tmp7_);
+#line 88 "icon-postprocessor.vala"
+		cogl_material_set_layer (mat, 0, tex);
+#line 89 "icon-postprocessor.vala"
 		self->priv->fg_mat = (_tmp8_ = _cogl_handle_ref0 (mat), _cogl_handle_unref0 (self->priv->fg_mat), _tmp8_);
-#line 514 "icon-postprocessor.c"
+#line 508 "icon-postprocessor.c"
 		_cogl_handle_unref0 (mat);
 		_cogl_handle_unref0 (tex);
 	}
@@ -547,9 +541,6 @@ static void unity_unity_icon_finalize (GObject* obj) {
 	self = UNITY_UNITY_ICON (obj);
 	_g_object_unref0 (self->priv->_icon);
 	_g_object_unref0 (self->priv->_bg_color);
-	_g_object_unref0 (self->priv->bg_layer);
-	_g_object_unref0 (self->priv->fg_layer);
-	_g_object_unref0 (self->priv->mask);
 	_cogl_handle_unref0 (self->priv->bg_mat);
 	_cogl_handle_unref0 (self->priv->fg_mat);
 	_cogl_handle_unref0 (self->priv->icon_material);
