@@ -88,8 +88,7 @@ namespace Unity
 
   public class ThemeImage : Clutter.Texture
   {
-    private static Gtk.IconTheme? theme = null;
-
+    private ThemeFilePath? theme = null;
     /*
      * ThemeImage will load a icon name from one of the Unity theme directories
      * at the size of the file, returning a "missing" icon if an icon could not
@@ -106,10 +105,15 @@ namespace Unity
 
     construct
     {
+/*
+      this.set_load_async (true);
+*/
       if (this.theme == null)
         {
-          this.theme = new Gtk.IconTheme ();
-          this.theme.set_custom_theme ("unity-icon-theme");
+          this.theme = new ThemeFilePath ();
+          var gtktheme = new Gtk.IconTheme ();
+          gtktheme.set_custom_theme ("unity-icon-theme");
+          this.theme.add_icon_theme (gtktheme);
         }
 
       if (!this.try_load_icon_from_datadir ())
@@ -119,34 +123,19 @@ namespace Unity
 
     private bool try_load_icon_from_theme ()
     {
-      /* Load the icon */
-      var info = this.theme.lookup_icon (this.icon_name,
-                                         24, /* This is not actually used */
-                                         0);
-      if (info != null)
-        {
-          var filename = info.get_filename ();
+      this.theme.found_icon_path.connect ((theme, filepath) => {
+        try
+          {
+            this.set_from_file (filepath);
+          }
+        catch (Error e)
+          {
+            warning (@"could not load theme image $filepath");
+          }
+      });
+      this.theme.get_icon_filepath (this.icon_name);
 
-          if ((filename.str ("unity-icon-theme") != null))
-            {
-              try
-                {
-                  this.set_from_file (filename);
-                  /*
-                  this.icon = new Gdk.Pixbuf.from_file (filename);
-                  this.size = icon.width;
-                  this.pixbuf = icon;*/
-
-                  return true;
-                }
-              catch (Error e)
-                {
-                  return false;
-                }
-            }
-          return false;
-        }
-      return false;
+      return true;
     }
 
     private bool try_load_icon_from_dir (string dir)
