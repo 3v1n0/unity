@@ -424,6 +424,7 @@ namespace Unity {
 			public override void pick (Clutter.Color color);
 			public void remove_actor (Clutter.Actor actor_);
 			public float drag_pos { get; set; }
+			public float gap_animation { get; set; }
 			public int spacing { get; set; }
 		}
 		[CCode (cheader_filename = "unity-static.h")]

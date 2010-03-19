@@ -198,6 +198,8 @@ static void _lambda5_ (UnityPanelIndicatorsIndicatorEntry* self);
 static void __lambda5__gtk_icon_theme_changed (GtkIconTheme* _sender, gpointer self);
 static void _lambda6_ (UnityPanelIndicatorsIndicatorEntry* self);
 static void __lambda6__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _lambda7_ (UnityPanelIndicatorsIndicatorEntry* self);
+static void __lambda7__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static GObject * unity_panel_indicators_indicator_entry_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_panel_indicators_indicator_entry_finalize (GObject* obj);
 static void unity_panel_indicators_indicator_entry_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -208,11 +210,11 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 #line 33 "panel-indicators.vala"
 UnityPanelIndicatorsView* unity_panel_indicators_view_construct (GType object_type) {
-#line 212 "panel-indicators.c"
+#line 214 "panel-indicators.c"
 	UnityPanelIndicatorsView * self;
 #line 35 "panel-indicators.vala"
 	self = (UnityPanelIndicatorsView*) g_object_new (object_type, "orientation", CTK_ORIENTATION_HORIZONTAL, "spacing", 0, "homogeneous", FALSE, "reactive", TRUE, NULL);
-#line 216 "panel-indicators.c"
+#line 218 "panel-indicators.c"
 	return self;
 }
 
@@ -221,13 +223,13 @@ UnityPanelIndicatorsView* unity_panel_indicators_view_construct (GType object_ty
 UnityPanelIndicatorsView* unity_panel_indicators_view_new (void) {
 #line 33 "panel-indicators.vala"
 	return unity_panel_indicators_view_construct (UNITY_PANEL_INDICATORS_TYPE_VIEW);
-#line 225 "panel-indicators.c"
+#line 227 "panel-indicators.c"
 }
 
 
 #line 970 "glib-2.0.vapi"
 static char* string_slice (const char* self, glong start, glong end) {
-#line 231 "panel-indicators.c"
+#line 233 "panel-indicators.c"
 	char* result;
 	glong string_length;
 	gboolean _tmp0_ = FALSE;
@@ -241,23 +243,23 @@ static char* string_slice (const char* self, glong start, glong end) {
 	if (start < 0) {
 #line 973 "glib-2.0.vapi"
 		start = string_length + start;
-#line 245 "panel-indicators.c"
+#line 247 "panel-indicators.c"
 	}
 #line 975 "glib-2.0.vapi"
 	if (end < 0) {
 #line 976 "glib-2.0.vapi"
 		end = string_length + end;
-#line 251 "panel-indicators.c"
+#line 253 "panel-indicators.c"
 	}
 #line 978 "glib-2.0.vapi"
 	if (start >= 0) {
 #line 978 "glib-2.0.vapi"
 		_tmp0_ = start <= string_length;
-#line 257 "panel-indicators.c"
+#line 259 "panel-indicators.c"
 	} else {
 #line 978 "glib-2.0.vapi"
 		_tmp0_ = FALSE;
-#line 261 "panel-indicators.c"
+#line 263 "panel-indicators.c"
 	}
 #line 978 "glib-2.0.vapi"
 	g_return_val_if_fail (_tmp0_, NULL);
@@ -265,11 +267,11 @@ static char* string_slice (const char* self, glong start, glong end) {
 	if (end >= 0) {
 #line 979 "glib-2.0.vapi"
 		_tmp1_ = end <= string_length;
-#line 269 "panel-indicators.c"
+#line 271 "panel-indicators.c"
 	} else {
 #line 979 "glib-2.0.vapi"
 		_tmp1_ = FALSE;
-#line 273 "panel-indicators.c"
+#line 275 "panel-indicators.c"
 	}
 #line 979 "glib-2.0.vapi"
 	g_return_val_if_fail (_tmp1_, NULL);
@@ -277,23 +279,23 @@ static char* string_slice (const char* self, glong start, glong end) {
 	g_return_val_if_fail (start <= end, NULL);
 #line 981 "glib-2.0.vapi"
 	start_string = g_utf8_offset_to_pointer (self, start);
-#line 281 "panel-indicators.c"
+#line 283 "panel-indicators.c"
 	result = g_strndup (start_string, ((gchar*) g_utf8_offset_to_pointer (start_string, end - start)) - ((gchar*) start_string));
 #line 982 "glib-2.0.vapi"
 	return result;
-#line 285 "panel-indicators.c"
+#line 287 "panel-indicators.c"
 }
 
 
 #line 55 "panel-indicators.vala"
 static gboolean unity_panel_indicators_view_load_indicators (UnityPanelIndicatorsView* self) {
-#line 291 "panel-indicators.c"
+#line 293 "panel-indicators.c"
 	gboolean result;
 	GError * _inner_error_;
 	GFile* dir;
 #line 55 "panel-indicators.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 297 "panel-indicators.c"
+#line 299 "panel-indicators.c"
 	_inner_error_ = NULL;
 #line 58 "panel-indicators.vala"
 	gee_abstract_map_set ((GeeAbstractMap*) self->priv->indicator_order, "libapplication.so", GINT_TO_POINTER (1));
@@ -309,20 +311,20 @@ static gboolean unity_panel_indicators_view_load_indicators (UnityPanelIndicator
 	gtk_icon_theme_append_search_path (gtk_icon_theme_get_default (), INDICATORICONSDIR);
 #line 68 "panel-indicators.vala"
 	dir = g_file_new_for_path (INDICATORDIR);
-#line 313 "panel-indicators.c"
+#line 315 "panel-indicators.c"
 	{
 		GFileEnumerator* e;
 		GFileInfo* file_info;
 #line 71 "panel-indicators.vala"
 		e = g_file_enumerate_children (dir, G_FILE_ATTRIBUTE_STANDARD_NAME, 0, NULL, &_inner_error_);
-#line 319 "panel-indicators.c"
+#line 321 "panel-indicators.c"
 		if (_inner_error_ != NULL) {
 			goto __catch6_g_error;
 		}
 		file_info = NULL;
 #line 76 "panel-indicators.vala"
 		while (TRUE) {
-#line 326 "panel-indicators.c"
+#line 328 "panel-indicators.c"
 			GFileInfo* _tmp0_;
 			GFileInfo* _tmp1_;
 			char* leaf;
@@ -330,7 +332,7 @@ static gboolean unity_panel_indicators_view_load_indicators (UnityPanelIndicator
 			gboolean _tmp3_;
 #line 76 "panel-indicators.vala"
 			_tmp0_ = g_file_enumerator_next_file (e, NULL, &_inner_error_);
-#line 334 "panel-indicators.c"
+#line 336 "panel-indicators.c"
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (e);
 				_g_object_unref0 (file_info);
@@ -340,17 +342,17 @@ static gboolean unity_panel_indicators_view_load_indicators (UnityPanelIndicator
 			if (!((file_info = (_tmp1_ = _tmp0_, _g_object_unref0 (file_info), _tmp1_)) != NULL)) {
 #line 76 "panel-indicators.vala"
 				break;
-#line 344 "panel-indicators.c"
+#line 346 "panel-indicators.c"
 			}
 #line 78 "panel-indicators.vala"
 			leaf = g_strdup (g_file_info_get_name (file_info));
 #line 80 "panel-indicators.vala"
 			if ((_tmp3_ = _vala_strcmp0 (_tmp2_ = string_slice (leaf, g_utf8_strlen (leaf, -1) - 2, g_utf8_strlen (leaf, -1)), "so") == 0, _g_free0 (_tmp2_), _tmp3_)) {
-#line 350 "panel-indicators.c"
+#line 352 "panel-indicators.c"
 				char* _tmp4_;
 #line 81 "panel-indicators.vala"
 				unity_panel_indicators_view_load_indicator (self, _tmp4_ = g_strconcat (INDICATORDIR, g_file_info_get_name (file_info), NULL), g_file_info_get_name (file_info));
-#line 354 "panel-indicators.c"
+#line 356 "panel-indicators.c"
 				_g_free0 (_tmp4_);
 			}
 			_g_free0 (leaf);
@@ -367,7 +369,7 @@ static gboolean unity_panel_indicators_view_load_indicators (UnityPanelIndicator
 		{
 #line 87 "panel-indicators.vala"
 			g_print ("Unable to read indicators: %s\n", _error_->message);
-#line 371 "panel-indicators.c"
+#line 373 "panel-indicators.c"
 			_g_error_free0 (_error_);
 		}
 	}
@@ -380,41 +382,41 @@ static gboolean unity_panel_indicators_view_load_indicators (UnityPanelIndicator
 	}
 #line 89 "panel-indicators.vala"
 	ctk_box_sort_children ((CtkBox*) self, (GCompareFunc) unity_panel_indicators_view_reorder_icons);
-#line 384 "panel-indicators.c"
+#line 386 "panel-indicators.c"
 	result = FALSE;
 	_g_object_unref0 (dir);
 #line 91 "panel-indicators.vala"
 	return result;
-#line 389 "panel-indicators.c"
+#line 391 "panel-indicators.c"
 }
 
 
 #line 94 "panel-indicators.vala"
 gint unity_panel_indicators_view_reorder_icons (UnityPanelIndicatorsIndicatorItem* a, UnityPanelIndicatorsIndicatorItem* b) {
-#line 395 "panel-indicators.c"
+#line 397 "panel-indicators.c"
 	gint result;
 #line 94 "panel-indicators.vala"
 	g_return_val_if_fail (a != NULL, 0);
 #line 94 "panel-indicators.vala"
 	g_return_val_if_fail (b != NULL, 0);
-#line 401 "panel-indicators.c"
+#line 403 "panel-indicators.c"
 	result = a->position - b->position;
 #line 96 "panel-indicators.vala"
 	return result;
-#line 405 "panel-indicators.c"
+#line 407 "panel-indicators.c"
 }
 
 
 #line 257 "panel-indicators.vala"
 static void _unity_panel_indicators_view_on_menu_moved_unity_panel_indicators_indicator_item_menu_moved (UnityPanelIndicatorsIndicatorItem* _sender, GtkMenuDirectionType type, gpointer self) {
-#line 411 "panel-indicators.c"
+#line 413 "panel-indicators.c"
 	unity_panel_indicators_view_on_menu_moved (self, _sender, type);
 }
 
 
 #line 99 "panel-indicators.vala"
 static void unity_panel_indicators_view_load_indicator (UnityPanelIndicatorsView* self, const char* filename, const char* leaf) {
-#line 418 "panel-indicators.c"
+#line 420 "panel-indicators.c"
 	IndicatorObject* o;
 	IndicatorObject* _tmp0_;
 #line 99 "panel-indicators.vala"
@@ -423,13 +425,13 @@ static void unity_panel_indicators_view_load_indicator (UnityPanelIndicatorsView
 	g_return_if_fail (filename != NULL);
 #line 99 "panel-indicators.vala"
 	g_return_if_fail (leaf != NULL);
-#line 427 "panel-indicators.c"
+#line 429 "panel-indicators.c"
 	o = NULL;
 #line 103 "panel-indicators.vala"
 	o = (_tmp0_ = indicator_object_new_from_file (filename), _g_object_unref0 (o), _tmp0_);
 #line 105 "panel-indicators.vala"
 	if (INDICATOR_IS_OBJECT (o)) {
-#line 433 "panel-indicators.c"
+#line 435 "panel-indicators.c"
 		UnityPanelIndicatorsIndicatorItem* i;
 #line 107 "panel-indicators.vala"
 		i = g_object_ref_sink (unity_panel_indicators_indicator_item_new ());
@@ -443,12 +445,12 @@ static void unity_panel_indicators_view_load_indicator (UnityPanelIndicatorsView
 		g_signal_connect_object (i, "menu-moved", (GCallback) _unity_panel_indicators_view_on_menu_moved_unity_panel_indicators_indicator_item_menu_moved, self, 0);
 #line 114 "panel-indicators.vala"
 		i->position = (gint) GPOINTER_TO_INT (gee_abstract_map_get ((GeeAbstractMap*) self->priv->indicator_order, leaf));
-#line 447 "panel-indicators.c"
+#line 449 "panel-indicators.c"
 		_g_object_unref0 (i);
 	} else {
 #line 118 "panel-indicators.vala"
 		g_warning ("panel-indicators.vala:118: Unable to load %s\n", filename);
-#line 452 "panel-indicators.c"
+#line 454 "panel-indicators.c"
 	}
 	_g_object_unref0 (o);
 }
@@ -464,13 +466,13 @@ static void unity_panel_indicators_view_position_menu (UnityPanelIndicatorsView*
 	*y = (gint) clutter_actor_get_height ((ClutterActor*) self);
 #line 128 "panel-indicators.vala"
 	*x = (gint) self->priv->last_found_entry_x;
-#line 468 "panel-indicators.c"
+#line 470 "panel-indicators.c"
 }
 
 
 #line 131 "panel-indicators.vala"
 static UnityPanelIndicatorsIndicatorEntry* unity_panel_indicators_view_entry_for_event (UnityPanelIndicatorsView* self, float root_x) {
-#line 474 "panel-indicators.c"
+#line 476 "panel-indicators.c"
 	UnityPanelIndicatorsIndicatorEntry* result;
 	UnityPanelIndicatorsIndicatorItem* item;
 	UnityPanelIndicatorsIndicatorEntry* entry;
@@ -486,26 +488,26 @@ static UnityPanelIndicatorsIndicatorEntry* unity_panel_indicators_view_entry_for
 	x = root_x - clutter_actor_get_x ((ClutterActor*) self);
 #line 138 "panel-indicators.vala"
 	list = clutter_container_get_children ((ClutterContainer*) self);
-#line 490 "panel-indicators.c"
+#line 492 "panel-indicators.c"
 	{
 		gint i;
 #line 139 "panel-indicators.vala"
 		i = 0;
-#line 495 "panel-indicators.c"
+#line 497 "panel-indicators.c"
 		{
 			gboolean _tmp0_;
 #line 139 "panel-indicators.vala"
 			_tmp0_ = TRUE;
 #line 139 "panel-indicators.vala"
 			while (TRUE) {
-#line 502 "panel-indicators.c"
+#line 504 "panel-indicators.c"
 				UnityPanelIndicatorsIndicatorItem* it;
 				gboolean _tmp1_ = FALSE;
 #line 139 "panel-indicators.vala"
 				if (!_tmp0_) {
 #line 139 "panel-indicators.vala"
 					i++;
-#line 509 "panel-indicators.c"
+#line 511 "panel-indicators.c"
 				}
 #line 139 "panel-indicators.vala"
 				_tmp0_ = FALSE;
@@ -513,7 +515,7 @@ static UnityPanelIndicatorsIndicatorEntry* unity_panel_indicators_view_entry_for
 				if (!(i < g_list_length (list))) {
 #line 139 "panel-indicators.vala"
 					break;
-#line 517 "panel-indicators.c"
+#line 519 "panel-indicators.c"
 				}
 #line 141 "panel-indicators.vala"
 				it = UNITY_PANEL_INDICATORS_INDICATOR_ITEM (g_list_nth_data (list, (guint) i));
@@ -521,11 +523,11 @@ static UnityPanelIndicatorsIndicatorEntry* unity_panel_indicators_view_entry_for
 				if (clutter_actor_get_x ((ClutterActor*) it) < x) {
 #line 143 "panel-indicators.vala"
 					_tmp1_ = x < (clutter_actor_get_x ((ClutterActor*) it) + clutter_actor_get_width ((ClutterActor*) it));
-#line 525 "panel-indicators.c"
+#line 527 "panel-indicators.c"
 				} else {
 #line 143 "panel-indicators.vala"
 					_tmp1_ = FALSE;
-#line 529 "panel-indicators.c"
+#line 531 "panel-indicators.c"
 				}
 #line 143 "panel-indicators.vala"
 				if (_tmp1_) {
@@ -533,43 +535,43 @@ static UnityPanelIndicatorsIndicatorEntry* unity_panel_indicators_view_entry_for
 					item = it;
 #line 146 "panel-indicators.vala"
 					break;
-#line 537 "panel-indicators.c"
+#line 539 "panel-indicators.c"
 				}
 			}
 		}
 	}
 #line 150 "panel-indicators.vala"
 	if (item == NULL) {
-#line 544 "panel-indicators.c"
+#line 546 "panel-indicators.c"
 		result = NULL;
 #line 151 "panel-indicators.vala"
 		return result;
-#line 548 "panel-indicators.c"
+#line 550 "panel-indicators.c"
 	}
 #line 153 "panel-indicators.vala"
 	x = x - clutter_actor_get_x ((ClutterActor*) item);
 #line 154 "panel-indicators.vala"
 	list = clutter_container_get_children ((ClutterContainer*) item);
-#line 554 "panel-indicators.c"
+#line 556 "panel-indicators.c"
 	{
 		gint i;
 #line 155 "panel-indicators.vala"
 		i = 0;
-#line 559 "panel-indicators.c"
+#line 561 "panel-indicators.c"
 		{
 			gboolean _tmp2_;
 #line 155 "panel-indicators.vala"
 			_tmp2_ = TRUE;
 #line 155 "panel-indicators.vala"
 			while (TRUE) {
-#line 566 "panel-indicators.c"
+#line 568 "panel-indicators.c"
 				UnityPanelIndicatorsIndicatorEntry* ent;
 				gboolean _tmp3_ = FALSE;
 #line 155 "panel-indicators.vala"
 				if (!_tmp2_) {
 #line 155 "panel-indicators.vala"
 					i++;
-#line 573 "panel-indicators.c"
+#line 575 "panel-indicators.c"
 				}
 #line 155 "panel-indicators.vala"
 				_tmp2_ = FALSE;
@@ -577,7 +579,7 @@ static UnityPanelIndicatorsIndicatorEntry* unity_panel_indicators_view_entry_for
 				if (!(i < g_list_length (list))) {
 #line 155 "panel-indicators.vala"
 					break;
-#line 581 "panel-indicators.c"
+#line 583 "panel-indicators.c"
 				}
 #line 157 "panel-indicators.vala"
 				ent = UNITY_PANEL_INDICATORS_INDICATOR_ENTRY (g_list_nth_data (list, (guint) i));
@@ -585,11 +587,11 @@ static UnityPanelIndicatorsIndicatorEntry* unity_panel_indicators_view_entry_for
 				if (clutter_actor_get_x ((ClutterActor*) ent) < x) {
 #line 159 "panel-indicators.vala"
 					_tmp3_ = x < (clutter_actor_get_x ((ClutterActor*) ent) + clutter_actor_get_width ((ClutterActor*) ent));
-#line 589 "panel-indicators.c"
+#line 591 "panel-indicators.c"
 				} else {
 #line 159 "panel-indicators.vala"
 					_tmp3_ = FALSE;
-#line 593 "panel-indicators.c"
+#line 595 "panel-indicators.c"
 				}
 #line 159 "panel-indicators.vala"
 				if (_tmp3_) {
@@ -597,7 +599,7 @@ static UnityPanelIndicatorsIndicatorEntry* unity_panel_indicators_view_entry_for
 					self->priv->last_found_entry_x = (clutter_actor_get_x ((ClutterActor*) ent) + clutter_actor_get_x ((ClutterActor*) item)) + clutter_actor_get_x ((ClutterActor*) self);
 #line 162 "panel-indicators.vala"
 					entry = ent;
-#line 601 "panel-indicators.c"
+#line 603 "panel-indicators.c"
 				}
 			}
 		}
@@ -605,13 +607,13 @@ static UnityPanelIndicatorsIndicatorEntry* unity_panel_indicators_view_entry_for
 	result = entry;
 #line 166 "panel-indicators.vala"
 	return result;
-#line 609 "panel-indicators.c"
+#line 611 "panel-indicators.c"
 }
 
 
 #line 122 "panel-indicators.vala"
 static void _unity_panel_indicators_view_position_menu_gtk_menu_position_func (GtkMenu* menu, gint* x, gint* y, gboolean* push_in, gpointer self) {
-#line 615 "panel-indicators.c"
+#line 617 "panel-indicators.c"
 	unity_panel_indicators_view_position_menu (self, menu, x, y, push_in);
 }
 
@@ -623,7 +625,7 @@ static gpointer _g_object_ref0 (gpointer self) {
 
 #line 169 "panel-indicators.vala"
 void unity_panel_indicators_view_show_entry (UnityPanelIndicatorsView* self, UnityPanelIndicatorsIndicatorEntry* entry) {
-#line 627 "panel-indicators.c"
+#line 629 "panel-indicators.c"
 	gboolean _tmp0_ = FALSE;
 	GtkMenu* _tmp2_;
 #line 169 "panel-indicators.vala"
@@ -634,21 +636,21 @@ void unity_panel_indicators_view_show_entry (UnityPanelIndicatorsView* self, Uni
 	if (GTK_IS_MENU (self->priv->popped)) {
 #line 172 "panel-indicators.vala"
 		_tmp0_ = (GTK_WIDGET_FLAGS ((GtkWidget*) self->priv->popped) & GTK_VISIBLE) != 0;
-#line 638 "panel-indicators.c"
+#line 640 "panel-indicators.c"
 	} else {
 #line 171 "panel-indicators.vala"
 		_tmp0_ = FALSE;
-#line 642 "panel-indicators.c"
+#line 644 "panel-indicators.c"
 	}
 #line 171 "panel-indicators.vala"
 	if (_tmp0_) {
-#line 646 "panel-indicators.c"
+#line 648 "panel-indicators.c"
 		GtkMenu* _tmp1_;
 #line 174 "panel-indicators.vala"
 		gtk_menu_popdown (self->priv->popped);
 #line 175 "panel-indicators.vala"
 		self->priv->popped = (_tmp1_ = NULL, _g_object_unref0 (self->priv->popped), _tmp1_);
-#line 652 "panel-indicators.c"
+#line 654 "panel-indicators.c"
 	}
 #line 178 "panel-indicators.vala"
 	self->priv->last_found_entry_x = (clutter_actor_get_x ((ClutterActor*) entry) + clutter_actor_get_x (clutter_actor_get_parent ((ClutterActor*) entry))) + clutter_actor_get_x ((ClutterActor*) self);
@@ -660,13 +662,13 @@ void unity_panel_indicators_view_show_entry (UnityPanelIndicatorsView* self, Uni
 	self->priv->popped = (_tmp2_ = _g_object_ref0 (unity_panel_indicators_indicator_entry_get_menu (entry)), _g_object_unref0 (self->priv->popped), _tmp2_);
 #line 187 "panel-indicators.vala"
 	unity_panel_indicators_indicator_entry_menu_shown (entry);
-#line 664 "panel-indicators.c"
+#line 666 "panel-indicators.c"
 }
 
 
 #line 190 "panel-indicators.vala"
 static gboolean unity_panel_indicators_view_on_button_press_event (UnityPanelIndicatorsView* self, ClutterEvent* e) {
-#line 670 "panel-indicators.c"
+#line 672 "panel-indicators.c"
 	gboolean result;
 	gboolean _tmp0_ = FALSE;
 	UnityPanelIndicatorsIndicatorEntry* entry;
@@ -676,27 +678,27 @@ static gboolean unity_panel_indicators_view_on_button_press_event (UnityPanelInd
 	if (GTK_IS_MENU (self->priv->popped)) {
 #line 193 "panel-indicators.vala"
 		_tmp0_ = (GTK_WIDGET_FLAGS ((GtkWidget*) self->priv->popped) & GTK_VISIBLE) != 0;
-#line 680 "panel-indicators.c"
+#line 682 "panel-indicators.c"
 	} else {
 #line 192 "panel-indicators.vala"
 		_tmp0_ = FALSE;
-#line 684 "panel-indicators.c"
+#line 686 "panel-indicators.c"
 	}
 #line 192 "panel-indicators.vala"
 	if (_tmp0_) {
-#line 688 "panel-indicators.c"
+#line 690 "panel-indicators.c"
 		GtkMenu* _tmp1_;
 #line 195 "panel-indicators.vala"
 		gtk_menu_popdown (self->priv->popped);
 #line 196 "panel-indicators.vala"
 		self->priv->popped = (_tmp1_ = NULL, _g_object_unref0 (self->priv->popped), _tmp1_);
-#line 694 "panel-indicators.c"
+#line 696 "panel-indicators.c"
 	}
 #line 199 "panel-indicators.vala"
 	entry = unity_panel_indicators_view_entry_for_event (self, (*e).button.x);
 #line 200 "panel-indicators.vala"
 	if (UNITY_PANEL_INDICATORS_IS_INDICATOR_ENTRY (entry)) {
-#line 700 "panel-indicators.c"
+#line 702 "panel-indicators.c"
 		GtkMenu* _tmp2_;
 #line 202 "panel-indicators.vala"
 		gtk_menu_popup (unity_panel_indicators_indicator_entry_get_menu (entry), NULL, NULL, _unity_panel_indicators_view_position_menu_gtk_menu_position_func, self, (guint) (*e).button.button, (*e).button.time);
@@ -706,60 +708,60 @@ static gboolean unity_panel_indicators_view_on_button_press_event (UnityPanelInd
 		self->priv->popped = (_tmp2_ = _g_object_ref0 (unity_panel_indicators_indicator_entry_get_menu (entry)), _g_object_unref0 (self->priv->popped), _tmp2_);
 #line 209 "panel-indicators.vala"
 		unity_panel_indicators_indicator_entry_menu_shown (entry);
-#line 710 "panel-indicators.c"
+#line 712 "panel-indicators.c"
 	}
 	result = TRUE;
 #line 211 "panel-indicators.vala"
 	return result;
-#line 715 "panel-indicators.c"
+#line 717 "panel-indicators.c"
 }
 
 
 #line 214 "panel-indicators.vala"
 static gboolean unity_panel_indicators_view_on_button_release_event (UnityPanelIndicatorsView* self, ClutterEvent* e) {
-#line 721 "panel-indicators.c"
+#line 723 "panel-indicators.c"
 	gboolean result;
 	gboolean _tmp0_ = FALSE;
 #line 214 "panel-indicators.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
 #line 216 "panel-indicators.vala"
 	if (((*e).button.time - self->priv->click_time) < 300) {
-#line 728 "panel-indicators.c"
+#line 730 "panel-indicators.c"
 		result = TRUE;
 #line 217 "panel-indicators.vala"
 		return result;
-#line 732 "panel-indicators.c"
+#line 734 "panel-indicators.c"
 	}
 #line 219 "panel-indicators.vala"
 	if (GTK_IS_MENU (self->priv->popped)) {
 #line 220 "panel-indicators.vala"
 		_tmp0_ = (GTK_WIDGET_FLAGS ((GtkWidget*) self->priv->popped) & GTK_VISIBLE) != 0;
-#line 738 "panel-indicators.c"
+#line 740 "panel-indicators.c"
 	} else {
 #line 219 "panel-indicators.vala"
 		_tmp0_ = FALSE;
-#line 742 "panel-indicators.c"
+#line 744 "panel-indicators.c"
 	}
 #line 219 "panel-indicators.vala"
 	if (_tmp0_) {
-#line 746 "panel-indicators.c"
+#line 748 "panel-indicators.c"
 		GtkMenu* _tmp1_;
 #line 222 "panel-indicators.vala"
 		gtk_menu_popdown (self->priv->popped);
 #line 223 "panel-indicators.vala"
 		self->priv->popped = (_tmp1_ = NULL, _g_object_unref0 (self->priv->popped), _tmp1_);
-#line 752 "panel-indicators.c"
+#line 754 "panel-indicators.c"
 	}
 	result = TRUE;
 #line 226 "panel-indicators.vala"
 	return result;
-#line 757 "panel-indicators.c"
+#line 759 "panel-indicators.c"
 }
 
 
 #line 229 "panel-indicators.vala"
 static gboolean unity_panel_indicators_view_on_motion_event (UnityPanelIndicatorsView* self, ClutterEvent* e) {
-#line 763 "panel-indicators.c"
+#line 765 "panel-indicators.c"
 	gboolean result;
 	gboolean _tmp0_ = FALSE;
 #line 229 "panel-indicators.vala"
@@ -768,30 +770,30 @@ static gboolean unity_panel_indicators_view_on_motion_event (UnityPanelIndicator
 	if (GTK_IS_MENU (self->priv->popped)) {
 #line 232 "panel-indicators.vala"
 		_tmp0_ = (GTK_WIDGET_FLAGS ((GtkWidget*) self->priv->popped) & GTK_VISIBLE) != 0;
-#line 772 "panel-indicators.c"
+#line 774 "panel-indicators.c"
 	} else {
 #line 231 "panel-indicators.vala"
 		_tmp0_ = FALSE;
-#line 776 "panel-indicators.c"
+#line 778 "panel-indicators.c"
 	}
 #line 231 "panel-indicators.vala"
 	if (_tmp0_) {
-#line 780 "panel-indicators.c"
+#line 782 "panel-indicators.c"
 		UnityPanelIndicatorsIndicatorEntry* entry;
 		entry = NULL;
 #line 236 "panel-indicators.vala"
 		entry = unity_panel_indicators_view_entry_for_event (self, (*e).motion.x);
 #line 238 "panel-indicators.vala"
 		if (entry == NULL) {
-#line 787 "panel-indicators.c"
+#line 789 "panel-indicators.c"
 			result = TRUE;
 #line 239 "panel-indicators.vala"
 			return result;
-#line 791 "panel-indicators.c"
+#line 793 "panel-indicators.c"
 		}
 #line 241 "panel-indicators.vala"
 		if (unity_panel_indicators_indicator_entry_get_menu (entry) != self->priv->popped) {
-#line 795 "panel-indicators.c"
+#line 797 "panel-indicators.c"
 			GtkMenu* _tmp1_;
 #line 243 "panel-indicators.vala"
 			gtk_menu_popdown (self->priv->popped);
@@ -801,19 +803,19 @@ static gboolean unity_panel_indicators_view_on_motion_event (UnityPanelIndicator
 			gtk_menu_popup (self->priv->popped, NULL, NULL, _unity_panel_indicators_view_position_menu_gtk_menu_position_func, self, (guint) (*e).button.button, (*e).button.time);
 #line 250 "panel-indicators.vala"
 			unity_panel_indicators_indicator_entry_menu_shown (entry);
-#line 805 "panel-indicators.c"
+#line 807 "panel-indicators.c"
 		}
 	}
 	result = TRUE;
 #line 254 "panel-indicators.vala"
 	return result;
-#line 811 "panel-indicators.c"
+#line 813 "panel-indicators.c"
 }
 
 
 #line 257 "panel-indicators.vala"
 static void unity_panel_indicators_view_on_menu_moved (UnityPanelIndicatorsView* self, UnityPanelIndicatorsIndicatorItem* item, GtkMenuDirectionType type) {
-#line 817 "panel-indicators.c"
+#line 819 "panel-indicators.c"
 	GList* list;
 	gint pos;
 	gpointer _tmp0_;
@@ -835,7 +837,7 @@ static void unity_panel_indicators_view_on_menu_moved (UnityPanelIndicatorsView*
 	if (pos == (-1)) {
 #line 265 "panel-indicators.vala"
 		return;
-#line 839 "panel-indicators.c"
+#line 841 "panel-indicators.c"
 	}
 #line 268 "panel-indicators.vala"
 	if (type == GTK_MENU_DIR_PARENT) {
@@ -843,11 +845,11 @@ static void unity_panel_indicators_view_on_menu_moved (UnityPanelIndicatorsView*
 		if (pos == 0) {
 #line 271 "panel-indicators.vala"
 			return;
-#line 847 "panel-indicators.c"
+#line 849 "panel-indicators.c"
 		}
 #line 272 "panel-indicators.vala"
 		pos = pos - 1;
-#line 851 "panel-indicators.c"
+#line 853 "panel-indicators.c"
 	} else {
 #line 274 "panel-indicators.vala"
 		if (type == GTK_MENU_DIR_CHILD) {
@@ -855,11 +857,11 @@ static void unity_panel_indicators_view_on_menu_moved (UnityPanelIndicatorsView*
 			if (pos == (g_list_length (list) - 1)) {
 #line 277 "panel-indicators.vala"
 				return;
-#line 859 "panel-indicators.c"
+#line 861 "panel-indicators.c"
 			}
 #line 278 "panel-indicators.vala"
 			pos = pos + 1;
-#line 863 "panel-indicators.c"
+#line 865 "panel-indicators.c"
 		}
 	}
 #line 282 "panel-indicators.vala"
@@ -870,11 +872,11 @@ static void unity_panel_indicators_view_on_menu_moved (UnityPanelIndicatorsView*
 	if (type == GTK_MENU_DIR_PARENT) {
 #line 286 "panel-indicators.vala"
 		_tmp1_ = ((gint) g_list_length (l)) - 1;
-#line 874 "panel-indicators.c"
+#line 876 "panel-indicators.c"
 	} else {
 #line 286 "panel-indicators.vala"
 		_tmp1_ = 0;
-#line 878 "panel-indicators.c"
+#line 880 "panel-indicators.c"
 	}
 #line 286 "panel-indicators.vala"
 	p = _tmp1_;
@@ -884,7 +886,7 @@ static void unity_panel_indicators_view_on_menu_moved (UnityPanelIndicatorsView*
 	if (UNITY_PANEL_INDICATORS_IS_INDICATOR_ENTRY (new_entry)) {
 #line 290 "panel-indicators.vala"
 		unity_panel_indicators_view_show_entry (self, new_entry);
-#line 888 "panel-indicators.c"
+#line 890 "panel-indicators.c"
 	}
 	_g_object_unref0 (new_item);
 	_g_object_unref0 (new_entry);
@@ -893,28 +895,28 @@ static void unity_panel_indicators_view_on_menu_moved (UnityPanelIndicatorsView*
 
 #line 190 "panel-indicators.vala"
 static gboolean _unity_panel_indicators_view_on_button_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 897 "panel-indicators.c"
+#line 899 "panel-indicators.c"
 	return unity_panel_indicators_view_on_button_press_event (self, event);
 }
 
 
 #line 214 "panel-indicators.vala"
 static gboolean _unity_panel_indicators_view_on_button_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 904 "panel-indicators.c"
+#line 906 "panel-indicators.c"
 	return unity_panel_indicators_view_on_button_release_event (self, event);
 }
 
 
 #line 229 "panel-indicators.vala"
 static gboolean _unity_panel_indicators_view_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 911 "panel-indicators.c"
+#line 913 "panel-indicators.c"
 	return unity_panel_indicators_view_on_motion_event (self, event);
 }
 
 
 #line 55 "panel-indicators.vala"
 static gboolean _unity_panel_indicators_view_load_indicators_gsource_func (gpointer self) {
-#line 918 "panel-indicators.c"
+#line 920 "panel-indicators.c"
 	return unity_panel_indicators_view_load_indicators (self);
 }
 
@@ -940,11 +942,11 @@ static GObject * unity_panel_indicators_view_constructor (GType type, guint n_co
 		if (g_getenv ("UNITY_DISABLE_IDLES") != NULL) {
 #line 50 "panel-indicators.vala"
 			unity_panel_indicators_view_load_indicators (self);
-#line 944 "panel-indicators.c"
+#line 946 "panel-indicators.c"
 		} else {
 #line 52 "panel-indicators.vala"
 			g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_panel_indicators_view_load_indicators_gsource_func, g_object_ref (self), g_object_unref);
-#line 948 "panel-indicators.c"
+#line 950 "panel-indicators.c"
 		}
 	}
 	return obj;
@@ -986,11 +988,11 @@ GType unity_panel_indicators_view_get_type (void) {
 
 #line 304 "panel-indicators.vala"
 UnityPanelIndicatorsIndicatorItem* unity_panel_indicators_indicator_item_construct (GType object_type) {
-#line 990 "panel-indicators.c"
+#line 992 "panel-indicators.c"
 	UnityPanelIndicatorsIndicatorItem * self;
 #line 306 "panel-indicators.vala"
 	self = (UnityPanelIndicatorsIndicatorItem*) g_object_new (object_type, "orientation", CTK_ORIENTATION_HORIZONTAL, "spacing", 0, "homogeneous", FALSE, NULL);
-#line 994 "panel-indicators.c"
+#line 996 "panel-indicators.c"
 	return self;
 }
 
@@ -999,13 +1001,13 @@ UnityPanelIndicatorsIndicatorItem* unity_panel_indicators_indicator_item_constru
 UnityPanelIndicatorsIndicatorItem* unity_panel_indicators_indicator_item_new (void) {
 #line 304 "panel-indicators.vala"
 	return unity_panel_indicators_indicator_item_construct (UNITY_PANEL_INDICATORS_TYPE_INDICATOR_ITEM);
-#line 1003 "panel-indicators.c"
+#line 1005 "panel-indicators.c"
 }
 
 
 #line 315 "panel-indicators.vala"
 static void unity_panel_indicators_indicator_item_remove_entry (UnityPanelIndicatorsIndicatorItem* self, IndicatorObjectEntry* entry) {
-#line 1009 "panel-indicators.c"
+#line 1011 "panel-indicators.c"
 	GList* list;
 #line 315 "panel-indicators.vala"
 	g_return_if_fail (self != NULL);
@@ -1013,26 +1015,26 @@ static void unity_panel_indicators_indicator_item_remove_entry (UnityPanelIndica
 	g_return_if_fail (entry != NULL);
 #line 317 "panel-indicators.vala"
 	list = clutter_container_get_children ((ClutterContainer*) self);
-#line 1017 "panel-indicators.c"
+#line 1019 "panel-indicators.c"
 	{
 		gint i;
 #line 319 "panel-indicators.vala"
 		i = 0;
-#line 1022 "panel-indicators.c"
+#line 1024 "panel-indicators.c"
 		{
 			gboolean _tmp0_;
 #line 319 "panel-indicators.vala"
 			_tmp0_ = TRUE;
 #line 319 "panel-indicators.vala"
 			while (TRUE) {
-#line 1029 "panel-indicators.c"
+#line 1031 "panel-indicators.c"
 				UnityPanelIndicatorsIndicatorEntry* e;
 				UnityPanelIndicatorsIndicatorEntry* _tmp1_;
 #line 319 "panel-indicators.vala"
 				if (!_tmp0_) {
 #line 319 "panel-indicators.vala"
 					i++;
-#line 1036 "panel-indicators.c"
+#line 1038 "panel-indicators.c"
 				}
 #line 319 "panel-indicators.vala"
 				_tmp0_ = FALSE;
@@ -1040,7 +1042,7 @@ static void unity_panel_indicators_indicator_item_remove_entry (UnityPanelIndica
 				if (!(i < g_list_length (list))) {
 #line 319 "panel-indicators.vala"
 					break;
-#line 1044 "panel-indicators.c"
+#line 1046 "panel-indicators.c"
 				}
 				e = NULL;
 #line 323 "panel-indicators.vala"
@@ -1049,7 +1051,7 @@ static void unity_panel_indicators_indicator_item_remove_entry (UnityPanelIndica
 				if (unity_panel_indicators_indicator_entry_get_entry (e) == entry) {
 #line 327 "panel-indicators.vala"
 					clutter_container_remove_actor ((ClutterContainer*) self, (ClutterActor*) e);
-#line 1053 "panel-indicators.c"
+#line 1055 "panel-indicators.c"
 				}
 				_g_object_unref0 (e);
 			}
@@ -1060,14 +1062,14 @@ static void unity_panel_indicators_indicator_item_remove_entry (UnityPanelIndica
 
 #line 341 "panel-indicators.vala"
 static void _unity_panel_indicators_indicator_item_on_menu_moved_unity_panel_indicators_indicator_entry_menu_moved (UnityPanelIndicatorsIndicatorEntry* _sender, GtkMenuDirectionType type, gpointer self) {
-#line 1064 "panel-indicators.c"
+#line 1066 "panel-indicators.c"
 	unity_panel_indicators_indicator_item_on_menu_moved (self, _sender, type);
 }
 
 
 #line 332 "panel-indicators.vala"
 static void unity_panel_indicators_indicator_item_create_entry (UnityPanelIndicatorsIndicatorItem* self, IndicatorObjectEntry* entry) {
-#line 1071 "panel-indicators.c"
+#line 1073 "panel-indicators.c"
 	UnityPanelIndicatorsIndicatorEntry* e;
 #line 332 "panel-indicators.vala"
 	g_return_if_fail (self != NULL);
@@ -1081,14 +1083,14 @@ static void unity_panel_indicators_indicator_item_create_entry (UnityPanelIndica
 	clutter_actor_show ((ClutterActor*) self);
 #line 338 "panel-indicators.vala"
 	g_signal_connect_object (e, "menu-moved", (GCallback) _unity_panel_indicators_indicator_item_on_menu_moved_unity_panel_indicators_indicator_entry_menu_moved, self, 0);
-#line 1085 "panel-indicators.c"
+#line 1087 "panel-indicators.c"
 	_g_object_unref0 (e);
 }
 
 
 #line 341 "panel-indicators.vala"
 static void unity_panel_indicators_indicator_item_on_menu_moved (UnityPanelIndicatorsIndicatorItem* self, UnityPanelIndicatorsIndicatorEntry* entry, GtkMenuDirectionType type) {
-#line 1092 "panel-indicators.c"
+#line 1094 "panel-indicators.c"
 	GList* list;
 	gint pos;
 	gpointer _tmp0_;
@@ -1109,7 +1111,7 @@ static void unity_panel_indicators_indicator_item_on_menu_moved (UnityPanelIndic
 		g_signal_emit_by_name (self, "menu-moved", type);
 #line 351 "panel-indicators.vala"
 		return;
-#line 1113 "panel-indicators.c"
+#line 1115 "panel-indicators.c"
 	}
 #line 355 "panel-indicators.vala"
 	if (type == GTK_MENU_DIR_PARENT) {
@@ -1119,11 +1121,11 @@ static void unity_panel_indicators_indicator_item_on_menu_moved (UnityPanelIndic
 			g_signal_emit_by_name (self, "menu-moved", type);
 #line 360 "panel-indicators.vala"
 			return;
-#line 1123 "panel-indicators.c"
+#line 1125 "panel-indicators.c"
 		}
 #line 362 "panel-indicators.vala"
 		pos = pos - 1;
-#line 1127 "panel-indicators.c"
+#line 1129 "panel-indicators.c"
 	} else {
 #line 364 "panel-indicators.vala"
 		if (type == GTK_MENU_DIR_CHILD) {
@@ -1133,11 +1135,11 @@ static void unity_panel_indicators_indicator_item_on_menu_moved (UnityPanelIndic
 				g_signal_emit_by_name (self, "menu-moved", type);
 #line 369 "panel-indicators.vala"
 				return;
-#line 1137 "panel-indicators.c"
+#line 1139 "panel-indicators.c"
 			}
 #line 371 "panel-indicators.vala"
 			pos = pos + 1;
-#line 1141 "panel-indicators.c"
+#line 1143 "panel-indicators.c"
 		}
 	}
 #line 374 "panel-indicators.vala"
@@ -1146,7 +1148,7 @@ static void unity_panel_indicators_indicator_item_on_menu_moved (UnityPanelIndic
 	parent = _g_object_ref0 ((_tmp1_ = clutter_actor_get_parent ((ClutterActor*) self), UNITY_PANEL_INDICATORS_IS_VIEW (_tmp1_) ? ((UnityPanelIndicatorsView*) _tmp1_) : NULL));
 #line 377 "panel-indicators.vala"
 	unity_panel_indicators_view_show_entry (parent, new_entry);
-#line 1150 "panel-indicators.c"
+#line 1152 "panel-indicators.c"
 	_g_object_unref0 (new_entry);
 	_g_object_unref0 (parent);
 }
@@ -1154,21 +1156,21 @@ static void unity_panel_indicators_indicator_item_on_menu_moved (UnityPanelIndic
 
 #line 332 "panel-indicators.vala"
 static void _unity_panel_indicators_indicator_item_create_entry_indicator_object_entry_added (IndicatorObject* _sender, IndicatorObjectEntry* entry, gpointer self) {
-#line 1158 "panel-indicators.c"
+#line 1160 "panel-indicators.c"
 	unity_panel_indicators_indicator_item_create_entry (self, entry);
 }
 
 
 #line 315 "panel-indicators.vala"
 static void _unity_panel_indicators_indicator_item_remove_entry_indicator_object_entry_removed (IndicatorObject* _sender, IndicatorObjectEntry* entry, gpointer self) {
-#line 1165 "panel-indicators.c"
+#line 1167 "panel-indicators.c"
 	unity_panel_indicators_indicator_item_remove_entry (self, entry);
 }
 
 
 #line 380 "panel-indicators.vala"
 void unity_panel_indicators_indicator_item_set_object (UnityPanelIndicatorsIndicatorItem* self, IndicatorObject* object) {
-#line 1172 "panel-indicators.c"
+#line 1174 "panel-indicators.c"
 	IndicatorObject* _tmp0_;
 	GList* list;
 #line 380 "panel-indicators.vala"
@@ -1183,25 +1185,25 @@ void unity_panel_indicators_indicator_item_set_object (UnityPanelIndicatorsIndic
 	g_signal_connect_object (object, "entry-removed", (GCallback) _unity_panel_indicators_indicator_item_remove_entry_indicator_object_entry_removed, self, 0);
 #line 387 "panel-indicators.vala"
 	list = indicator_object_get_entries (object);
-#line 1187 "panel-indicators.c"
+#line 1189 "panel-indicators.c"
 	{
 		gint i;
 #line 389 "panel-indicators.vala"
 		i = 0;
-#line 1192 "panel-indicators.c"
+#line 1194 "panel-indicators.c"
 		{
 			gboolean _tmp1_;
 #line 389 "panel-indicators.vala"
 			_tmp1_ = TRUE;
 #line 389 "panel-indicators.vala"
 			while (TRUE) {
-#line 1199 "panel-indicators.c"
+#line 1201 "panel-indicators.c"
 				IndicatorObjectEntry* entry;
 #line 389 "panel-indicators.vala"
 				if (!_tmp1_) {
 #line 389 "panel-indicators.vala"
 					i++;
-#line 1205 "panel-indicators.c"
+#line 1207 "panel-indicators.c"
 				}
 #line 389 "panel-indicators.vala"
 				_tmp1_ = FALSE;
@@ -1209,14 +1211,14 @@ void unity_panel_indicators_indicator_item_set_object (UnityPanelIndicatorsIndic
 				if (!(i < g_list_length (list))) {
 #line 389 "panel-indicators.vala"
 					break;
-#line 1213 "panel-indicators.c"
+#line 1215 "panel-indicators.c"
 				}
 				entry = NULL;
 #line 393 "panel-indicators.vala"
 				entry = (IndicatorObjectEntry*) g_list_nth_data (list, (guint) i);
 #line 395 "panel-indicators.vala"
 				unity_panel_indicators_indicator_item_create_entry (self, entry);
-#line 1220 "panel-indicators.c"
+#line 1222 "panel-indicators.c"
 			}
 		}
 	}
@@ -1225,15 +1227,15 @@ void unity_panel_indicators_indicator_item_set_object (UnityPanelIndicatorsIndic
 
 #line 399 "panel-indicators.vala"
 IndicatorObject* unity_panel_indicators_indicator_item_get_object (UnityPanelIndicatorsIndicatorItem* self) {
-#line 1229 "panel-indicators.c"
+#line 1231 "panel-indicators.c"
 	IndicatorObject* result;
 #line 399 "panel-indicators.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 1233 "panel-indicators.c"
+#line 1235 "panel-indicators.c"
 	result = _g_object_ref0 (self->priv->object);
 #line 401 "panel-indicators.vala"
 	return result;
-#line 1237 "panel-indicators.c"
+#line 1239 "panel-indicators.c"
 }
 
 
@@ -1284,13 +1286,13 @@ GType unity_panel_indicators_indicator_item_get_type (void) {
 
 #line 418 "panel-indicators.vala"
 UnityPanelIndicatorsIndicatorEntry* unity_panel_indicators_indicator_entry_construct (GType object_type, IndicatorObjectEntry* entry) {
-#line 1288 "panel-indicators.c"
+#line 1290 "panel-indicators.c"
 	UnityPanelIndicatorsIndicatorEntry * self;
 #line 418 "panel-indicators.vala"
 	g_return_val_if_fail (entry != NULL, NULL);
 #line 420 "panel-indicators.vala"
 	self = (UnityPanelIndicatorsIndicatorEntry*) g_object_new (object_type, "entry", entry, "orientation", CTK_ORIENTATION_HORIZONTAL, "spacing", 4, "reactive", FALSE, NULL);
-#line 1294 "panel-indicators.c"
+#line 1296 "panel-indicators.c"
 	return self;
 }
 
@@ -1299,151 +1301,151 @@ UnityPanelIndicatorsIndicatorEntry* unity_panel_indicators_indicator_entry_const
 UnityPanelIndicatorsIndicatorEntry* unity_panel_indicators_indicator_entry_new (IndicatorObjectEntry* entry) {
 #line 418 "panel-indicators.vala"
 	return unity_panel_indicators_indicator_entry_construct (UNITY_PANEL_INDICATORS_TYPE_INDICATOR_ENTRY, entry);
-#line 1303 "panel-indicators.c"
+#line 1305 "panel-indicators.c"
 }
 
 
-#line 495 "panel-indicators.vala"
+#line 509 "panel-indicators.vala"
 static void _unity_panel_indicators_indicator_entry_menu_key_moved_gtk_menu_shell_move_current (GtkMenuShell* _sender, GtkMenuDirectionType direction, gpointer self) {
-#line 1309 "panel-indicators.c"
+#line 1311 "panel-indicators.c"
 	unity_panel_indicators_indicator_entry_menu_key_moved (self, direction);
 }
 
 
-#line 481 "panel-indicators.vala"
+#line 495 "panel-indicators.vala"
 static void _unity_panel_indicators_indicator_entry_menu_vis_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-#line 1316 "panel-indicators.c"
+#line 1318 "panel-indicators.c"
 	unity_panel_indicators_indicator_entry_menu_vis_changed (self);
 }
 
 
-#line 470 "panel-indicators.vala"
+#line 484 "panel-indicators.vala"
 void unity_panel_indicators_indicator_entry_menu_shown (UnityPanelIndicatorsIndicatorEntry* self) {
-#line 470 "panel-indicators.vala"
+#line 484 "panel-indicators.vala"
 	g_return_if_fail (self != NULL);
-#line 472 "panel-indicators.vala"
+#line 486 "panel-indicators.vala"
 	if (GTK_IS_MENU (self->priv->_entry->menu)) {
-#line 474 "panel-indicators.vala"
+#line 488 "panel-indicators.vala"
 		g_signal_connect_object ((GtkMenuShell*) self->priv->_entry->menu, "move-current", (GCallback) _unity_panel_indicators_indicator_entry_menu_key_moved_gtk_menu_shell_move_current, self, 0);
-#line 475 "panel-indicators.vala"
+#line 489 "panel-indicators.vala"
 		g_signal_connect_object ((GObject*) self->priv->_entry->menu, "notify::visible", (GCallback) _unity_panel_indicators_indicator_entry_menu_vis_changed_g_object_notify, self, 0);
-#line 476 "panel-indicators.vala"
+#line 490 "panel-indicators.vala"
 		clutter_actor_animate ((ClutterActor*) self->priv->bg, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 200, "opacity", 255, NULL);
-#line 1333 "panel-indicators.c"
+#line 1335 "panel-indicators.c"
 	}
 }
 
 
-#line 481 "panel-indicators.vala"
+#line 495 "panel-indicators.vala"
 void unity_panel_indicators_indicator_entry_menu_vis_changed (UnityPanelIndicatorsIndicatorEntry* self) {
-#line 1340 "panel-indicators.c"
+#line 1342 "panel-indicators.c"
 	gboolean vis;
-#line 481 "panel-indicators.vala"
+#line 495 "panel-indicators.vala"
 	g_return_if_fail (self != NULL);
-#line 483 "panel-indicators.vala"
+#line 497 "panel-indicators.vala"
 	vis = (GTK_WIDGET_FLAGS ((GtkWidget*) self->priv->_entry->menu) & GTK_VISIBLE) != 0;
-#line 485 "panel-indicators.vala"
+#line 499 "panel-indicators.vala"
 	if (vis == FALSE) {
-#line 1348 "panel-indicators.c"
+#line 1350 "panel-indicators.c"
 		guint _tmp0_;
 		GQuark _tmp2_;
 		guint _tmp1_;
-#line 487 "panel-indicators.vala"
-		clutter_actor_animate ((ClutterActor*) self->priv->bg, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 200, "opacity", 0, NULL);
-#line 490 "panel-indicators.vala"
-		g_signal_handlers_disconnect_matched ((GtkMenuShell*) self->priv->_entry->menu, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("move-current", GTK_TYPE_MENU_SHELL, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _unity_panel_indicators_indicator_entry_menu_key_moved_gtk_menu_shell_move_current, self);
-#line 491 "panel-indicators.vala"
-		g_signal_handlers_disconnect_matched ((GObject*) self->priv->_entry->menu, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_DETAIL | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("notify::visible", G_TYPE_OBJECT, &_tmp1_, &_tmp2_, FALSE), _tmp1_), 0, NULL, (GCallback) _unity_panel_indicators_indicator_entry_menu_vis_changed_g_object_notify, self);
-#line 1358 "panel-indicators.c"
-	}
-}
-
-
-#line 495 "panel-indicators.vala"
-void unity_panel_indicators_indicator_entry_menu_key_moved (UnityPanelIndicatorsIndicatorEntry* self, GtkMenuDirectionType type) {
-#line 1365 "panel-indicators.c"
-	gboolean _tmp0_ = FALSE;
-#line 495 "panel-indicators.vala"
-	g_return_if_fail (self != NULL);
-#line 497 "panel-indicators.vala"
-	if (type != GTK_MENU_DIR_PARENT) {
-#line 498 "panel-indicators.vala"
-		_tmp0_ = type != GTK_MENU_DIR_CHILD;
-#line 1373 "panel-indicators.c"
-	} else {
-#line 497 "panel-indicators.vala"
-		_tmp0_ = FALSE;
-#line 1377 "panel-indicators.c"
-	}
-#line 497 "panel-indicators.vala"
-	if (_tmp0_) {
-#line 499 "panel-indicators.vala"
-		return;
-#line 1383 "panel-indicators.c"
-	}
 #line 501 "panel-indicators.vala"
-	g_signal_emit_by_name (self, "menu-moved", type);
-#line 1387 "panel-indicators.c"
+		clutter_actor_animate ((ClutterActor*) self->priv->bg, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 200, "opacity", 0, NULL);
+#line 504 "panel-indicators.vala"
+		g_signal_handlers_disconnect_matched ((GtkMenuShell*) self->priv->_entry->menu, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("move-current", GTK_TYPE_MENU_SHELL, &_tmp0_, NULL, FALSE), _tmp0_), 0, NULL, (GCallback) _unity_panel_indicators_indicator_entry_menu_key_moved_gtk_menu_shell_move_current, self);
+#line 505 "panel-indicators.vala"
+		g_signal_handlers_disconnect_matched ((GObject*) self->priv->_entry->menu, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_DETAIL | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, (g_signal_parse_name ("notify::visible", G_TYPE_OBJECT, &_tmp1_, &_tmp2_, FALSE), _tmp1_), 0, NULL, (GCallback) _unity_panel_indicators_indicator_entry_menu_vis_changed_g_object_notify, self);
+#line 1360 "panel-indicators.c"
+	}
 }
 
 
-#line 504 "panel-indicators.vala"
+#line 509 "panel-indicators.vala"
+void unity_panel_indicators_indicator_entry_menu_key_moved (UnityPanelIndicatorsIndicatorEntry* self, GtkMenuDirectionType type) {
+#line 1367 "panel-indicators.c"
+	gboolean _tmp0_ = FALSE;
+#line 509 "panel-indicators.vala"
+	g_return_if_fail (self != NULL);
+#line 511 "panel-indicators.vala"
+	if (type != GTK_MENU_DIR_PARENT) {
+#line 512 "panel-indicators.vala"
+		_tmp0_ = type != GTK_MENU_DIR_CHILD;
+#line 1375 "panel-indicators.c"
+	} else {
+#line 511 "panel-indicators.vala"
+		_tmp0_ = FALSE;
+#line 1379 "panel-indicators.c"
+	}
+#line 511 "panel-indicators.vala"
+	if (_tmp0_) {
+#line 513 "panel-indicators.vala"
+		return;
+#line 1385 "panel-indicators.c"
+	}
+#line 515 "panel-indicators.vala"
+	g_signal_emit_by_name (self, "menu-moved", type);
+#line 1389 "panel-indicators.c"
+}
+
+
+#line 518 "panel-indicators.vala"
 static void unity_panel_indicators_indicator_entry_update_bg (UnityPanelIndicatorsIndicatorEntry* self, gint width, gint height) {
-#line 1393 "panel-indicators.c"
+#line 1395 "panel-indicators.c"
 	cairo_t* cr;
 	cairo_t* _tmp0_;
 	cairo_pattern_t* pat;
-#line 504 "panel-indicators.vala"
+#line 518 "panel-indicators.vala"
 	g_return_if_fail (self != NULL);
-#line 1399 "panel-indicators.c"
+#line 1401 "panel-indicators.c"
 	cr = NULL;
-#line 508 "panel-indicators.vala"
+#line 522 "panel-indicators.vala"
 	clutter_cairo_texture_set_surface_size (self->priv->bg, (guint) width, (guint) height);
-#line 510 "panel-indicators.vala"
+#line 524 "panel-indicators.vala"
 	cr = (_tmp0_ = clutter_cairo_texture_create (self->priv->bg), _cairo_destroy0 (cr), _tmp0_);
-#line 512 "panel-indicators.vala"
+#line 526 "panel-indicators.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-#line 513 "panel-indicators.vala"
+#line 527 "panel-indicators.vala"
 	cairo_paint (cr);
-#line 515 "panel-indicators.vala"
-	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-#line 517 "panel-indicators.vala"
-	cairo_set_line_width (cr, 1.0);
-#line 519 "panel-indicators.vala"
-	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.2);
-#line 521 "panel-indicators.vala"
-	cairo_move_to (cr, (double) 1, (double) height);
-#line 523 "panel-indicators.vala"
-	cairo_line_to (cr, (double) 1, (double) 7);
-#line 525 "panel-indicators.vala"
-	cairo_curve_to (cr, (double) 1, (double) 2, (double) 1, (double) 2, (double) 10, (double) 2);
 #line 529 "panel-indicators.vala"
-	cairo_line_to (cr, (double) (width - 10), (double) 2);
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 #line 531 "panel-indicators.vala"
-	cairo_curve_to (cr, (double) width, (double) 2, (double) width, (double) 2, (double) width, (double) 7);
+	cairo_set_line_width (cr, 1.0);
+#line 533 "panel-indicators.vala"
+	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.2);
 #line 535 "panel-indicators.vala"
-	cairo_line_to (cr, (double) width, (double) height);
+	cairo_move_to (cr, (double) 1, (double) height);
 #line 537 "panel-indicators.vala"
-	cairo_line_to (cr, (double) 1, (double) height);
+	cairo_line_to (cr, (double) 1, (double) 7);
 #line 539 "panel-indicators.vala"
-	pat = cairo_pattern_create_linear ((double) 1, (double) 0, (double) 1, (double) height);
-#line 540 "panel-indicators.vala"
-	cairo_pattern_add_color_stop_rgba (pat, 0.0, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.6f);
-#line 541 "panel-indicators.vala"
-	cairo_pattern_add_color_stop_rgba (pat, 1.0, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.2f);
+	cairo_curve_to (cr, (double) 1, (double) 2, (double) 1, (double) 2, (double) 10, (double) 2);
 #line 543 "panel-indicators.vala"
+	cairo_line_to (cr, (double) (width - 10), (double) 2);
+#line 545 "panel-indicators.vala"
+	cairo_curve_to (cr, (double) width, (double) 2, (double) width, (double) 2, (double) width, (double) 7);
+#line 549 "panel-indicators.vala"
+	cairo_line_to (cr, (double) width, (double) height);
+#line 551 "panel-indicators.vala"
+	cairo_line_to (cr, (double) 1, (double) height);
+#line 553 "panel-indicators.vala"
+	pat = cairo_pattern_create_linear ((double) 1, (double) 0, (double) 1, (double) height);
+#line 554 "panel-indicators.vala"
+	cairo_pattern_add_color_stop_rgba (pat, 0.0, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.6f);
+#line 555 "panel-indicators.vala"
+	cairo_pattern_add_color_stop_rgba (pat, 1.0, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.2f);
+#line 557 "panel-indicators.vala"
 	cairo_set_source (cr, pat);
-#line 544 "panel-indicators.vala"
+#line 558 "panel-indicators.vala"
 	cairo_fill (cr);
-#line 1439 "panel-indicators.c"
+#line 1441 "panel-indicators.c"
 	_cairo_destroy0 (cr);
 	_cairo_pattern_destroy0 (pat);
 }
 
 
-#line 550 "panel-indicators.vala"
+#line 564 "panel-indicators.vala"
 static void unity_panel_indicators_indicator_entry_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-#line 1447 "panel-indicators.c"
+#line 1449 "panel-indicators.c"
 	UnityPanelIndicatorsIndicatorEntry * self;
 	float width = 0.0F;
 	float height = 0.0F;
@@ -1451,80 +1453,80 @@ static void unity_panel_indicators_indicator_entry_real_allocate (ClutterActor* 
 	ClutterActorBox child_box;
 	gboolean _tmp1_ = FALSE;
 	self = (UnityPanelIndicatorsIndicatorEntry*) base;
-#line 556 "panel-indicators.vala"
-	CLUTTER_ACTOR_CLASS (unity_panel_indicators_indicator_entry_parent_class)->allocate ((ClutterActor*) CTK_BOX (self), box, flags);
-#line 558 "panel-indicators.vala"
-	width = floorf ((*box).x2 - (*box).x1);
-#line 559 "panel-indicators.vala"
-	height = floorf ((*box).y2 - (*box).y1) - 1;
-#line 561 "panel-indicators.vala"
-	child_box = (_tmp0_.x1 = (float) 0, _tmp0_);
-#line 562 "panel-indicators.vala"
-	child_box.x1 = (float) 0;
-#line 563 "panel-indicators.vala"
-	child_box.x2 = width;
-#line 564 "panel-indicators.vala"
-	child_box.y1 = (float) 0;
-#line 565 "panel-indicators.vala"
-	child_box.y2 = height;
-#line 567 "panel-indicators.vala"
-	if (width != clutter_actor_get_width ((ClutterActor*) self->priv->bg)) {
-#line 567 "panel-indicators.vala"
-		_tmp1_ = TRUE;
-#line 1475 "panel-indicators.c"
-	} else {
-#line 568 "panel-indicators.vala"
-		_tmp1_ = height != clutter_actor_get_height ((ClutterActor*) self->priv->bg);
-#line 1479 "panel-indicators.c"
-	}
-#line 567 "panel-indicators.vala"
-	if (_tmp1_) {
 #line 570 "panel-indicators.vala"
-		unity_panel_indicators_indicator_entry_update_bg (self, (gint) width, (gint) height);
-#line 1485 "panel-indicators.c"
-	}
+	CLUTTER_ACTOR_CLASS (unity_panel_indicators_indicator_entry_parent_class)->allocate ((ClutterActor*) CTK_BOX (self), box, flags);
+#line 572 "panel-indicators.vala"
+	width = floorf ((*box).x2 - (*box).x1);
 #line 573 "panel-indicators.vala"
-	clutter_actor_allocate ((ClutterActor*) self->priv->bg, &child_box, flags);
-#line 1489 "panel-indicators.c"
-}
-
-
+	height = floorf ((*box).y2 - (*box).y1) - 1;
+#line 575 "panel-indicators.vala"
+	child_box = (_tmp0_.x1 = (float) 0, _tmp0_);
 #line 576 "panel-indicators.vala"
-static void unity_panel_indicators_indicator_entry_real_paint (ClutterActor* base) {
-#line 1495 "panel-indicators.c"
-	UnityPanelIndicatorsIndicatorEntry * self;
-	self = (UnityPanelIndicatorsIndicatorEntry*) base;
+	child_box.x1 = (float) 0;
+#line 577 "panel-indicators.vala"
+	child_box.x2 = width;
 #line 578 "panel-indicators.vala"
-	clutter_actor_paint ((ClutterActor*) self->priv->bg);
+	child_box.y1 = (float) 0;
 #line 579 "panel-indicators.vala"
-	CLUTTER_ACTOR_CLASS (unity_panel_indicators_indicator_entry_parent_class)->paint ((ClutterActor*) CTK_BOX (self));
-#line 1502 "panel-indicators.c"
-}
-
-
+	child_box.y2 = height;
+#line 581 "panel-indicators.vala"
+	if (width != clutter_actor_get_width ((ClutterActor*) self->priv->bg)) {
+#line 581 "panel-indicators.vala"
+		_tmp1_ = TRUE;
+#line 1477 "panel-indicators.c"
+	} else {
 #line 582 "panel-indicators.vala"
-static void unity_panel_indicators_indicator_entry_real_map (ClutterActor* base) {
-#line 1508 "panel-indicators.c"
-	UnityPanelIndicatorsIndicatorEntry * self;
-	self = (UnityPanelIndicatorsIndicatorEntry*) base;
+		_tmp1_ = height != clutter_actor_get_height ((ClutterActor*) self->priv->bg);
+#line 1481 "panel-indicators.c"
+	}
+#line 581 "panel-indicators.vala"
+	if (_tmp1_) {
 #line 584 "panel-indicators.vala"
-	CLUTTER_ACTOR_CLASS (unity_panel_indicators_indicator_entry_parent_class)->map ((ClutterActor*) CTK_BOX (self));
-#line 585 "panel-indicators.vala"
-	clutter_actor_map ((ClutterActor*) self->priv->bg);
-#line 1515 "panel-indicators.c"
+		unity_panel_indicators_indicator_entry_update_bg (self, (gint) width, (gint) height);
+#line 1487 "panel-indicators.c"
+	}
+#line 587 "panel-indicators.vala"
+	clutter_actor_allocate ((ClutterActor*) self->priv->bg, &child_box, flags);
+#line 1491 "panel-indicators.c"
 }
 
 
-#line 588 "panel-indicators.vala"
-static void unity_panel_indicators_indicator_entry_real_unmap (ClutterActor* base) {
-#line 1521 "panel-indicators.c"
+#line 590 "panel-indicators.vala"
+static void unity_panel_indicators_indicator_entry_real_paint (ClutterActor* base) {
+#line 1497 "panel-indicators.c"
 	UnityPanelIndicatorsIndicatorEntry * self;
 	self = (UnityPanelIndicatorsIndicatorEntry*) base;
-#line 590 "panel-indicators.vala"
+#line 592 "panel-indicators.vala"
+	clutter_actor_paint ((ClutterActor*) self->priv->bg);
+#line 593 "panel-indicators.vala"
+	CLUTTER_ACTOR_CLASS (unity_panel_indicators_indicator_entry_parent_class)->paint ((ClutterActor*) CTK_BOX (self));
+#line 1504 "panel-indicators.c"
+}
+
+
+#line 596 "panel-indicators.vala"
+static void unity_panel_indicators_indicator_entry_real_map (ClutterActor* base) {
+#line 1510 "panel-indicators.c"
+	UnityPanelIndicatorsIndicatorEntry * self;
+	self = (UnityPanelIndicatorsIndicatorEntry*) base;
+#line 598 "panel-indicators.vala"
+	CLUTTER_ACTOR_CLASS (unity_panel_indicators_indicator_entry_parent_class)->map ((ClutterActor*) CTK_BOX (self));
+#line 599 "panel-indicators.vala"
+	clutter_actor_map ((ClutterActor*) self->priv->bg);
+#line 1517 "panel-indicators.c"
+}
+
+
+#line 602 "panel-indicators.vala"
+static void unity_panel_indicators_indicator_entry_real_unmap (ClutterActor* base) {
+#line 1523 "panel-indicators.c"
+	UnityPanelIndicatorsIndicatorEntry * self;
+	self = (UnityPanelIndicatorsIndicatorEntry*) base;
+#line 604 "panel-indicators.vala"
 	CLUTTER_ACTOR_CLASS (unity_panel_indicators_indicator_entry_parent_class)->unmap ((ClutterActor*) CTK_BOX (self));
-#line 591 "panel-indicators.vala"
+#line 605 "panel-indicators.vala"
 	clutter_actor_unmap ((ClutterActor*) self->priv->bg);
-#line 1528 "panel-indicators.c"
+#line 1530 "panel-indicators.c"
 }
 
 
@@ -1534,7 +1536,7 @@ IndicatorObjectEntry* unity_panel_indicators_indicator_entry_get_entry (UnityPan
 	result = self->priv->_entry;
 #line 407 "panel-indicators.vala"
 	return result;
-#line 1538 "panel-indicators.c"
+#line 1540 "panel-indicators.c"
 }
 
 
@@ -1551,60 +1553,79 @@ GtkMenu* unity_panel_indicators_indicator_entry_get_menu (UnityPanelIndicatorsIn
 	result = self->priv->_entry->menu;
 #line 414 "panel-indicators.vala"
 	return result;
-#line 1555 "panel-indicators.c"
+#line 1557 "panel-indicators.c"
 }
 
 
-#line 443 "panel-indicators.vala"
+#line 446 "panel-indicators.vala"
 static void _lambda4_ (UnityPanelIndicatorsIndicatorEntry* self) {
-#line 1561 "panel-indicators.c"
+#line 1563 "panel-indicators.c"
 	char* _tmp1_;
 	char* _tmp0_ = NULL;
-#line 445 "panel-indicators.vala"
+#line 448 "panel-indicators.vala"
 	g_object_set (self->priv->image, "stock-id", _tmp1_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp0_, NULL), _tmp0_), NULL);
-#line 1566 "panel-indicators.c"
+#line 1568 "panel-indicators.c"
 	_g_free0 (_tmp1_);
 }
 
 
-#line 443 "panel-indicators.vala"
+#line 446 "panel-indicators.vala"
 static void __lambda4__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-#line 1573 "panel-indicators.c"
+#line 1575 "panel-indicators.c"
 	_lambda4_ (self);
 }
 
 
-#line 449 "panel-indicators.vala"
+#line 452 "panel-indicators.vala"
 static void _lambda5_ (UnityPanelIndicatorsIndicatorEntry* self) {
-#line 1580 "panel-indicators.c"
+#line 1582 "panel-indicators.c"
 	char* _tmp1_;
 	char* _tmp0_ = NULL;
-#line 451 "panel-indicators.vala"
+#line 454 "panel-indicators.vala"
 	g_object_set (self->priv->image, "stock-id", _tmp1_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp0_, NULL), _tmp0_), NULL);
-#line 1585 "panel-indicators.c"
+#line 1587 "panel-indicators.c"
 	_g_free0 (_tmp1_);
 }
 
 
-#line 449 "panel-indicators.vala"
+#line 452 "panel-indicators.vala"
 static void __lambda5__gtk_icon_theme_changed (GtkIconTheme* _sender, gpointer self) {
-#line 1592 "panel-indicators.c"
+#line 1594 "panel-indicators.c"
 	_lambda5_ (self);
 }
 
 
-#line 463 "panel-indicators.vala"
+#line 462 "panel-indicators.vala"
 static void _lambda6_ (UnityPanelIndicatorsIndicatorEntry* self) {
-#line 465 "panel-indicators.vala"
-	clutter_text_set_text ((ClutterText*) self->priv->text, gtk_label_get_label (self->priv->_entry->label));
 #line 1601 "panel-indicators.c"
+	GdkPixbuf* _tmp1_;
+	GdkPixbuf* _tmp0_ = NULL;
+#line 464 "panel-indicators.vala"
+	g_object_set (self->priv->image, "pixbuf", _tmp1_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp0_, NULL), _tmp0_), NULL);
+#line 1606 "panel-indicators.c"
+	_g_object_unref0 (_tmp1_);
 }
 
 
-#line 463 "panel-indicators.vala"
+#line 462 "panel-indicators.vala"
 static void __lambda6__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-#line 1607 "panel-indicators.c"
+#line 1613 "panel-indicators.c"
 	_lambda6_ (self);
+}
+
+
+#line 477 "panel-indicators.vala"
+static void _lambda7_ (UnityPanelIndicatorsIndicatorEntry* self) {
+#line 479 "panel-indicators.vala"
+	clutter_text_set_text ((ClutterText*) self->priv->text, gtk_label_get_label (self->priv->_entry->label));
+#line 1622 "panel-indicators.c"
+}
+
+
+#line 477 "panel-indicators.vala"
+static void __lambda7__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+#line 1628 "panel-indicators.c"
+	_lambda7_ (self);
 }
 
 
@@ -1631,11 +1652,14 @@ static GObject * unity_panel_indicators_indicator_entry_constructor (GType type,
 		clutter_actor_show ((ClutterActor*) self->priv->bg);
 #line 435 "panel-indicators.vala"
 		if (GTK_IS_IMAGE (self->priv->_entry->image)) {
-#line 1635 "panel-indicators.c"
+#line 1656 "panel-indicators.c"
 			CtkImage* _tmp4_;
 			char* _tmp6_;
 			char* _tmp5_ = NULL;
-			GtkIconTheme* theme;
+			gboolean _tmp7_;
+			GdkPixbuf* _tmp11_;
+			GdkPixbuf* _tmp10_ = NULL;
+			gboolean _tmp12_;
 #line 437 "panel-indicators.vala"
 			self->priv->image = (_tmp4_ = g_object_ref_sink ((CtkImage*) ctk_image_new ((guint) 22)), _g_object_unref0 (self->priv->image), _tmp4_);
 #line 438 "panel-indicators.vala"
@@ -1643,32 +1667,52 @@ static GObject * unity_panel_indicators_indicator_entry_constructor (GType type,
 #line 439 "panel-indicators.vala"
 			clutter_actor_show ((ClutterActor*) self->priv->image);
 #line 441 "panel-indicators.vala"
-			g_object_set (self->priv->image, "stock-id", _tmp6_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp5_, NULL), _tmp5_), NULL);
-#line 1648 "panel-indicators.c"
-			_g_free0 (_tmp6_);
-#line 443 "panel-indicators.vala"
-			g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::icon-name", (GCallback) __lambda4__g_object_notify, self, 0);
-#line 448 "panel-indicators.vala"
-			theme = gtk_icon_theme_get_default ();
-#line 449 "panel-indicators.vala"
-			g_signal_connect_object (theme, "changed", (GCallback) __lambda5__gtk_icon_theme_changed, self, 0);
-#line 1656 "panel-indicators.c"
-		}
-#line 455 "panel-indicators.vala"
-		if (GTK_IS_LABEL (self->priv->_entry->label)) {
-#line 1660 "panel-indicators.c"
-			CtkText* _tmp7_;
-#line 457 "panel-indicators.vala"
-			self->priv->text = (_tmp7_ = g_object_ref_sink ((CtkText*) ctk_text_new ("")), _g_object_unref0 (self->priv->text), _tmp7_);
-#line 458 "panel-indicators.vala"
-			clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->text);
-#line 459 "panel-indicators.vala"
-			clutter_actor_show ((ClutterActor*) self->priv->text);
-#line 461 "panel-indicators.vala"
-			clutter_text_set_text ((ClutterText*) self->priv->text, gtk_label_get_label (self->priv->_entry->label));
-#line 463 "panel-indicators.vala"
-			g_signal_connect_object ((GObject*) self->priv->_entry->label, "notify::label", (GCallback) __lambda6__g_object_notify, self, 0);
+			if ((_tmp7_ = (_tmp6_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp5_, NULL), _tmp5_)) != NULL, _g_free0 (_tmp6_), _tmp7_)) {
 #line 1672 "panel-indicators.c"
+				char* _tmp9_;
+				char* _tmp8_ = NULL;
+				GtkIconTheme* theme;
+#line 444 "panel-indicators.vala"
+				g_object_set (self->priv->image, "stock-id", _tmp9_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp8_, NULL), _tmp8_), NULL);
+#line 1678 "panel-indicators.c"
+				_g_free0 (_tmp9_);
+#line 446 "panel-indicators.vala"
+				g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::icon-name", (GCallback) __lambda4__g_object_notify, self, 0);
+#line 451 "panel-indicators.vala"
+				theme = gtk_icon_theme_get_default ();
+#line 452 "panel-indicators.vala"
+				g_signal_connect_object (theme, "changed", (GCallback) __lambda5__gtk_icon_theme_changed, self, 0);
+#line 1686 "panel-indicators.c"
+			}
+#line 458 "panel-indicators.vala"
+			if ((_tmp12_ = (_tmp11_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp10_, NULL), _tmp10_)) != NULL, _g_object_unref0 (_tmp11_), _tmp12_)) {
+#line 1690 "panel-indicators.c"
+				GdkPixbuf* _tmp14_;
+				GdkPixbuf* _tmp13_ = NULL;
+#line 460 "panel-indicators.vala"
+				g_object_set (self->priv->image, "pixbuf", _tmp14_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp13_, NULL), _tmp13_), NULL);
+#line 1695 "panel-indicators.c"
+				_g_object_unref0 (_tmp14_);
+#line 462 "panel-indicators.vala"
+				g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::pixbuf", (GCallback) __lambda6__g_object_notify, self, 0);
+#line 1699 "panel-indicators.c"
+			}
+		}
+#line 469 "panel-indicators.vala"
+		if (GTK_IS_LABEL (self->priv->_entry->label)) {
+#line 1704 "panel-indicators.c"
+			CtkText* _tmp15_;
+#line 471 "panel-indicators.vala"
+			self->priv->text = (_tmp15_ = g_object_ref_sink ((CtkText*) ctk_text_new ("")), _g_object_unref0 (self->priv->text), _tmp15_);
+#line 472 "panel-indicators.vala"
+			clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->text);
+#line 473 "panel-indicators.vala"
+			clutter_actor_show ((ClutterActor*) self->priv->text);
+#line 475 "panel-indicators.vala"
+			clutter_text_set_text ((ClutterText*) self->priv->text, gtk_label_get_label (self->priv->_entry->label));
+#line 477 "panel-indicators.vala"
+			g_signal_connect_object ((GObject*) self->priv->_entry->label, "notify::label", (GCallback) __lambda7__g_object_notify, self, 0);
+#line 1716 "panel-indicators.c"
 		}
 	}
 	return obj;

@@ -160,25 +160,32 @@ namespace Unity.Quicklauncher.Models
         _app.urgent_changed.connect (this.on_app_urgent_changed);
         _app.icon_changed.connect (this.on_app_icon_changed);
 
+        string process_name = "make-icon-Model-" + _app.name;
+        LOGGER_START_PROCESS (process_name);
         _icon = make_icon (app.icon_name);
+        LOGGER_END_PROCESS (process_name);
         this.notify_icon ();
       }
     }
 
     public ApplicationModel (Launcher.Application application)
     {
+      string process_name = "Model-" + application.name;
       this.app = application;
       this.desktop_uri = app.get_desktop_file ();
 
-      this._is_sticky = (get_fav_uid () != "");
-      this.grab_priority ();
-
-      var favorites = Launcher.Favorites.get_default ();
+      LOGGER_START_PROCESS ("gconf-grabbing-" + process_name);
       string uid = get_fav_uid ();
+      this._is_sticky = (uid != "");
+      this.grab_priority ();
+      LOGGER_END_PROCESS ("gconf-grabbing-" + process_name);
+      LOGGER_START_PROCESS ("favorite-grabbing-" + process_name);
+      var favorites = Launcher.Favorites.get_default ();
       if (uid != "")
         {
           this._do_shadow = favorites.get_bool (uid, "enable_shadow");
         }
+      LOGGER_END_PROCESS ("favorite-grabbing-" + process_name);
     }
 
     construct
@@ -438,8 +445,12 @@ namespace Unity.Quicklauncher.Models
     /**
      * gets the favorite uid for this desktop file
      */
+    private string fav_uid_cache = "";
     private string get_fav_uid ()
     {
+      if (this.fav_uid_cache != "")
+        return this.fav_uid_cache;
+
       string myuid = "";
       string my_desktop_path = app.get_desktop_file ();
       var favorites = Launcher.Favorites.get_default ();
@@ -457,6 +468,7 @@ namespace Unity.Quicklauncher.Models
               myuid = uid;
             }
         }
+      this.fav_uid_cache = myuid;
       return myuid;
     }
 
@@ -483,15 +495,21 @@ namespace Unity.Quicklauncher.Models
        * please give it a go. otherwise i will revisit this code the last week
        * of the month sprint
        */
+
+      string process_name = "make-icon-" + Random.int_range (0, 2^32).to_string ();
       Gdk.Pixbuf pixbuf = null;
+
+      LOGGER_START_PROCESS ("init-themes-" + process_name);
       Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
       Gtk.IconTheme webtheme = new Gtk.IconTheme ();
       Gtk.IconTheme unitytheme = new Gtk.IconTheme ();
       webtheme.set_custom_theme ("Web");
       unitytheme.set_custom_theme ("unity-icon-theme");
+      LOGGER_END_PROCESS ("init-themes-" + process_name);
 
       if (icon_name == null)
         {
+          LOGGER_START_PROCESS ("no-icon-" + process_name);
           try
             {
               pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 48, 0);
@@ -501,16 +519,14 @@ namespace Unity.Quicklauncher.Models
               warning ("Unable to load stock image: %s", e.message);
               pixbuf = null;
             }
-
+          LOGGER_END_PROCESS ("no-icon" + process_name);
           return pixbuf;
         }
+/*
 
       if (icon_name.has_prefix("file://"))
         {
           string filename = "";
-          /* this try/catch sort of isn't needed... but it makes valac stop
-           * printing warning messages
-           */
           try
           {
             filename = Filename.from_uri(icon_name);
@@ -535,10 +551,12 @@ namespace Unity.Quicklauncher.Models
                   return pixbuf;
             }
         }
+*/
 
       if (Path.is_absolute(icon_name))
         {
-          if (FileUtils.test(icon_name, FileTest.EXISTS))
+          LOGGER_START_PROCESS ("filepath-" + process_name);
+          if (FileUtils.test(icon_name, FileTest.IS_REGULAR))
             {
               try
                 {
@@ -553,8 +571,12 @@ namespace Unity.Quicklauncher.Models
                 }
 
               if (pixbuf is Gdk.Pixbuf)
-                return pixbuf;
+                {
+                  LOGGER_END_PROCESS ("filepath-" + process_name);
+                  return pixbuf;
+                }
             }
+          LOGGER_END_PROCESS ("filepath-" + process_name);
         }
 
       if (FileUtils.test ("/usr/share/pixmaps/" + icon_name,
@@ -576,42 +598,10 @@ namespace Unity.Quicklauncher.Models
             return pixbuf;
         }
 
-      //load web theme first
-      Gtk.IconInfo info = webtheme.lookup_icon(icon_name, 48, 0);
-      if (info != null)
-        {
-          string filename = info.get_filename();
-          if (FileUtils.test(filename, FileTest.EXISTS))
-            {
-              try
-                {
-                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
-                                                             48, 48, true);
-                }
-              catch (Error e)
-                {
-                  warning ("Unable to load image from file '%s': %s",
-                           filename,
-                           e.message);
-                }
-
-              if (pixbuf is Gdk.Pixbuf)
-                return pixbuf;
-            }
-        }
-
-      try
-      {
-        pixbuf = webtheme.load_icon(icon_name, 48, 0);
-        if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
-      }
-      catch (GLib.Error e)
-      {
-      }
-
-
       //load from default theme
-      info = theme.lookup_icon(icon_name, 48, 0);
+      LOGGER_START_PROCESS ("defaulttheme-" + process_name);
+      Gtk.IconInfo info = theme.lookup_icon(icon_name, 48, 0);
+
       if (info != null)
         {
           string filename = info.get_filename();
@@ -630,20 +620,17 @@ namespace Unity.Quicklauncher.Models
                 }
 
               if (pixbuf is Gdk.Pixbuf)
-                return pixbuf;
+                {
+                  LOGGER_END_PROCESS ("defaulttheme-" + process_name);
+                  return pixbuf;
+                }
+
             }
         }
-
-      try
-      {
-        pixbuf = theme.load_icon(icon_name, 48, 0);
-        if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
-      }
-      catch (GLib.Error e)
-      {
-      }
+      LOGGER_END_PROCESS ("defaulttheme-" + process_name);
 
       //load from unity theme
+      LOGGER_START_PROCESS ("unitytheme-" + process_name);
       info = unitytheme.lookup_icon(icon_name, 48, 0);
       if (info != null)
         {
@@ -663,18 +650,43 @@ namespace Unity.Quicklauncher.Models
                 }
 
               if (pixbuf is Gdk.Pixbuf)
-                return pixbuf;
+                {
+                  LOGGER_END_PROCESS ("unitytheme-" + process_name);
+                  return pixbuf;
+                }
             }
         }
+      LOGGER_END_PROCESS ("unitytheme-" + process_name);
 
-      try
-      {
-        pixbuf = unitytheme.load_icon(icon_name, 48, 0);
-        if (pixbuf is Gdk.Pixbuf) { return pixbuf; }
-      }
-      catch (GLib.Error e)
-      {
-      }
+      //load web theme first
+      LOGGER_START_PROCESS ("webtheme-" + process_name);
+      info = webtheme.lookup_icon(icon_name, 48, 0);
+      if (info != null)
+        {
+          string filename = info.get_filename();
+          if (filename != null)
+            {
+              try
+                {
+                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
+                                                             48, 48, true);
+                }
+              catch (Error e)
+                {
+                  warning ("Unable to load image from file '%s': %s",
+                           filename,
+                           e.message);
+                }
+
+              if (pixbuf is Gdk.Pixbuf)
+                {
+                  LOGGER_END_PROCESS ("webtheme-" + process_name);
+                  return pixbuf;
+                }
+            }
+        }
+      LOGGER_END_PROCESS ("webtheme-" + process_name);
+
 
       warning (@"Could not load icon for $icon_name");
 

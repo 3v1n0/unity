@@ -269,7 +269,7 @@ static char* unity_quicklauncher_manager_get_webapp_device (UnityQuicklauncherMa
 		dir_exists = gconf_client_dir_exists (unity_quicklauncher_manager_get_gconf_client (self), UNITY_UNITY_CONF_PATH, &_inner_error_);
 #line 271 "quicklauncher-manager.c"
 		if (_inner_error_ != NULL) {
-			goto __catch33_g_error;
+			goto __catch28_g_error;
 		}
 #line 114 "quicklauncher-manager.vala"
 		if (!dir_exists) {
@@ -277,12 +277,12 @@ static char* unity_quicklauncher_manager_get_webapp_device (UnityQuicklauncherMa
 			gconf_client_add_dir (unity_quicklauncher_manager_get_gconf_client (self), UNITY_UNITY_CONF_PATH, GCONF_CLIENT_PRELOAD_NONE, &_inner_error_);
 #line 279 "quicklauncher-manager.c"
 			if (_inner_error_ != NULL) {
-				goto __catch33_g_error;
+				goto __catch28_g_error;
 			}
 		}
 	}
-	goto __finally33;
-	__catch33_g_error:
+	goto __finally28;
+	__catch28_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -294,7 +294,7 @@ static char* unity_quicklauncher_manager_get_webapp_device (UnityQuicklauncherMa
 			_g_error_free0 (e);
 		}
 	}
-	__finally33:
+	__finally28:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -306,7 +306,7 @@ static char* unity_quicklauncher_manager_get_webapp_device (UnityQuicklauncherMa
 		value = gconf_client_get_bool (unity_quicklauncher_manager_get_gconf_client (self), UNITY_UNITY_CONF_PATH "/launcher/webapp_use_chromium", &_inner_error_);
 #line 308 "quicklauncher-manager.c"
 		if (_inner_error_ != NULL) {
-			goto __catch34_g_error;
+			goto __catch29_g_error;
 		}
 #line 127 "quicklauncher-manager.vala"
 		if (value) {
@@ -317,8 +317,8 @@ static char* unity_quicklauncher_manager_get_webapp_device (UnityQuicklauncherMa
 #line 318 "quicklauncher-manager.c"
 		}
 	}
-	goto __finally34;
-	__catch34_g_error:
+	goto __finally29;
+	__catch29_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -331,7 +331,7 @@ static char* unity_quicklauncher_manager_get_webapp_device (UnityQuicklauncherMa
 #line 332 "quicklauncher-manager.c"
 		}
 	}
-	__finally34:
+	__finally29:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -515,7 +515,7 @@ static gboolean unity_quicklauncher_manager_test_url (UnityQuicklauncherManager*
 #line 516 "quicklauncher-manager.c"
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch35_g_regex_error;
+				goto __catch30_g_regex_error;
 			}
 			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -532,8 +532,8 @@ static gboolean unity_quicklauncher_manager_test_url (UnityQuicklauncherManager*
 		}
 		_g_regex_unref0 (match_url);
 	}
-	goto __finally35;
-	__catch35_g_regex_error:
+	goto __finally30;
+	__catch30_g_regex_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -549,7 +549,7 @@ static gboolean unity_quicklauncher_manager_test_url (UnityQuicklauncherManager*
 #line 550 "quicklauncher-manager.c"
 		}
 	}
-	__finally35:
+	__finally30:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -639,7 +639,7 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 #line 640 "quicklauncher-manager.c"
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch36_g_regex_error;
+				goto __catch31_g_regex_error;
 			}
 			_g_free0 (clean_uri);
 			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -652,7 +652,7 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 		if (_inner_error_ != NULL) {
 			_g_regex_unref0 (regex);
 			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch36_g_regex_error;
+				goto __catch31_g_regex_error;
 			}
 			_g_regex_unref0 (regex);
 			_g_free0 (clean_uri);
@@ -665,8 +665,8 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 #line 666 "quicklauncher-manager.c"
 		_g_regex_unref0 (regex);
 	}
-	goto __finally36;
-	__catch36_g_regex_error:
+	goto __finally31;
+	__catch31_g_regex_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -678,7 +678,7 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 			_g_error_free0 (e);
 		}
 	}
-	__finally36:
+	__finally31:
 	if (_inner_error_ != NULL) {
 		_g_free0 (clean_uri);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -721,12 +721,12 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 				g_file_make_directory_with_parents (icon_directory, NULL, &_inner_error_);
 #line 723 "quicklauncher-manager.c"
 				if (_inner_error_ != NULL) {
-					goto __catch37_g_error;
+					goto __catch32_g_error;
 				}
 			}
 		}
-		goto __finally37;
-		__catch37_g_error:
+		goto __finally32;
+		__catch32_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -735,7 +735,7 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 				_g_error_free0 (e);
 			}
 		}
-		__finally37:
+		__finally32:
 		if (_inner_error_ != NULL) {
 			_g_free0 (icon_dirstring);
 			_g_object_unref0 (icon_directory);
@@ -760,7 +760,7 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 #line 761 "quicklauncher-manager.c"
 			if (_inner_error_ != NULL) {
 				if (_inner_error_->domain == G_REGEX_ERROR) {
-					goto __catch38_g_regex_error;
+					goto __catch33_g_regex_error;
 				}
 				_g_free0 (icon_dirstring);
 				_g_object_unref0 (icon_directory);
@@ -779,7 +779,7 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 			if (_inner_error_ != NULL) {
 				_g_regex_unref0 (regex);
 				if (_inner_error_->domain == G_REGEX_ERROR) {
-					goto __catch38_g_regex_error;
+					goto __catch33_g_regex_error;
 				}
 				_g_regex_unref0 (regex);
 				_g_free0 (icon_dirstring);
@@ -798,8 +798,8 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 #line 799 "quicklauncher-manager.c"
 			_g_regex_unref0 (regex);
 		}
-		goto __finally38;
-		__catch38_g_regex_error:
+		goto __finally33;
+		__catch33_g_regex_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -811,7 +811,7 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 				_g_error_free0 (e);
 			}
 		}
-		__finally38:
+		__finally33:
 		if (_inner_error_ != NULL) {
 			_g_free0 (icon_dirstring);
 			_g_object_unref0 (icon_directory);
@@ -862,12 +862,12 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 #line 863 "quicklauncher-manager.c"
 				if (_inner_error_ != NULL) {
 					_g_key_file_free0 (desktop_file);
-					goto __catch39_g_error;
+					goto __catch34_g_error;
 				}
 				_g_key_file_free0 (desktop_file);
 			}
-			goto __finally39;
-			__catch39_g_error:
+			goto __finally34;
+			__catch34_g_error:
 			{
 				GError * e;
 				e = _inner_error_;
@@ -885,7 +885,7 @@ static gboolean unity_quicklauncher_manager_handle_uri (UnityQuicklauncherManage
 #line 886 "quicklauncher-manager.c"
 				}
 			}
-			__finally39:
+			__finally34:
 			if (_inner_error_ != NULL) {
 				_g_free0 (clean_uri);
 				split_uri = (_vala_array_free (split_uri, split_uri_length1, (GDestroyNotify) g_free), NULL);
@@ -1498,11 +1498,11 @@ static GObject * unity_quicklauncher_manager_constructor (GType type, guint n_co
 			gconf_engine_notify_add (self->priv->gclient, "/desktop/unity/launcher/favorites/favorites_list", _unity_quicklauncher_manager_on_favorite_change_gconf_notify_func, self, &_inner_error_);
 #line 1500 "quicklauncher-manager.c"
 			if (_inner_error_ != NULL) {
-				goto __catch40_g_error;
+				goto __catch35_g_error;
 			}
 		}
-		goto __finally40;
-		__catch40_g_error:
+		goto __finally35;
+		__catch35_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -1511,7 +1511,7 @@ static GObject * unity_quicklauncher_manager_constructor (GType type, guint n_co
 				_g_error_free0 (e);
 			}
 		}
-		__finally40:
+		__finally35:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);

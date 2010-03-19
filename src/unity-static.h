@@ -1365,6 +1365,8 @@ void unity_widgets_scroller_add_actor (UnityWidgetsScroller* self, ClutterActor*
 void unity_widgets_scroller_remove_actor (UnityWidgetsScroller* self, ClutterActor* actor_);
 float unity_widgets_scroller_get_drag_pos (UnityWidgetsScroller* self);
 void unity_widgets_scroller_set_drag_pos (UnityWidgetsScroller* self, float value);
+float unity_widgets_scroller_get_gap_animation (UnityWidgetsScroller* self);
+void unity_widgets_scroller_set_gap_animation (UnityWidgetsScroller* self, float value);
 gint unity_widgets_scroller_get_spacing (UnityWidgetsScroller* self);
 void unity_widgets_scroller_set_spacing (UnityWidgetsScroller* self, gint value);
 

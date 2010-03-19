@@ -729,14 +729,14 @@ static void unity_quicklauncher_launcher_view_load_textures (UnityQuicklauncherL
 		_tmp2_ = gdk_pixbuf_new_from_file (UNITY_QUICKLAUNCHER_HONEYCOMB_MASK_FILE, &_inner_error_);
 #line 731 "launcher-view.c"
 		if (_inner_error_ != NULL) {
-			goto __catch32_g_error;
+			goto __catch27_g_error;
 		}
 #line 342 "launcher-view.vala"
 		self->priv->honeycomb_mask = (_tmp3_ = _tmp2_, _g_object_unref0 (self->priv->honeycomb_mask), _tmp3_);
 #line 737 "launcher-view.c"
 	}
-	goto __finally32;
-	__catch32_g_error:
+	goto __finally27;
+	__catch27_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -748,7 +748,7 @@ static void unity_quicklauncher_launcher_view_load_textures (UnityQuicklauncherL
 			_g_error_free0 (e);
 		}
 	}
-	__finally32:
+	__finally27:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
