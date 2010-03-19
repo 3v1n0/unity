@@ -16,9 +16,85 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
+using Gee;
 
 namespace Unity
 {
+  /* An async object, designed to be used to grab filepath from the theme
+   * use add_icon_theme to add a theme to the lookup, will always default to
+   * the default theme if it can't find one in the the themes you provide
+   */
+  public class ThemeFilePath : Object
+  {
+    PriorityQueue<string> theme_names;
+
+    /* adds a theme name to lookup icons from */
+    public void add_icon_theme (string theme_name)
+    {
+      this.theme_names.add (theme_name);
+    }
+
+    public async string get_icon_filepath (string icon_name)
+    {
+      string filepath = "";
+      foreach (string theme_name in this.theme_names)
+        {
+          filepath = yield this.path_from_theme (icon_name, theme_name);
+          if (filepath != "")
+            {
+              return filepath;
+            }
+        }
+
+      // we didn't get a result from the theme names provided so try from the
+      // default theme
+      filepath = yield this.path_from_theme (icon_name, "");
+      return filepath;
+
+    }
+
+    private async string path_from_theme (string icon_name, string theme_name)
+    {
+      Gtk.IconTheme theme;
+      if (theme_name != "")
+        {
+          theme = new Gtk.IconTheme ();
+          theme.set_custom_theme (theme_name);
+        }
+      else
+        {
+          theme = Gtk.IconTheme.get_default ();
+        }
+
+      Idle.add (path_from_theme.callback);
+      yield;
+
+      if (theme.has_icon (icon_name))
+        {
+          var info = theme.lookup_icon (icon_name,
+                                             48,
+                                             0);
+          if (info != null)
+            {
+              var filename = info.get_filename ();
+              if ((filename.str (theme_name) != null))
+                {
+                  try
+                    {
+                      return filename;
+                    }
+                  catch (Error e)
+                    {
+                    }
+                }
+            }
+        }
+      return "";
+    }
+
+  }
+
+
   public static bool icon_name_exists_in_theme (string icon_name, string theme)
   {
     var icontheme = new Gtk.IconTheme ();
