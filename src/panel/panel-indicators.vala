@@ -438,18 +438,32 @@ namespace Unity.Panel.Indicators
           this.add_actor (this.image);
           this.image.show ();
 
-          this.image.stock_id = this.entry.image.icon_name;
-
-          this.entry.image.notify["icon-name"].connect (() =>
+          if (this.entry.image.icon_name != null)
             {
-              this.image.stock_id = this.entry.image.icon_name;
-            });
 
-          unowned Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
-          theme.changed.connect (() =>
-            {
               this.image.stock_id = this.entry.image.icon_name;
-            });
+
+              this.entry.image.notify["icon-name"].connect (() =>
+                {
+                  this.image.stock_id = this.entry.image.icon_name;
+                });
+
+              unowned Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
+              theme.changed.connect (() =>
+                {
+                  this.image.stock_id = this.entry.image.icon_name;
+                });
+            }
+
+          if (this.entry.image.pixbuf != null)
+            {
+              this.image.pixbuf = this.entry.image.pixbuf;
+
+              this.entry.image.notify["pixbuf"].connect (() =>
+                {
+                  this.image.pixbuf = this.entry.image.pixbuf;
+                });
+            }
         }
 
       if (this.entry.label is Gtk.Label)
