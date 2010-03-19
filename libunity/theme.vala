@@ -26,46 +26,36 @@ namespace Unity
    */
   public class ThemeFilePath : Object
   {
-    PriorityQueue<string> theme_names;
+    PriorityQueue<Gtk.IconTheme> themes;
+    public signal void found_icon_path (string filepath);
 
-    /* adds a theme name to lookup icons from */
-    public void add_icon_theme (string theme_name)
+    construct
     {
-      this.theme_names.add (theme_name);
+      this.themes = new PriorityQueue<Gtk.IconTheme> ();
+    }
+    /* adds a theme name to lookup icons from */
+    public void add_icon_theme (Gtk.IconTheme theme)
+    {
+      this.themes.add (theme);
     }
 
-    public async string get_icon_filepath (string icon_name)
+    public async void get_icon_filepath (string icon_name)
     {
       string filepath = "";
-      foreach (string theme_name in this.theme_names)
+      foreach (Gtk.IconTheme theme in this.themes)
         {
-          filepath = yield this.path_from_theme (icon_name, theme_name);
+          filepath = yield this.path_from_theme (icon_name, theme);
           if (filepath != "")
             {
-              return filepath;
+              break;
             }
         }
 
-      // we didn't get a result from the theme names provided so try from the
-      // default theme
-      filepath = yield this.path_from_theme (icon_name, "");
-      return filepath;
-
+      this.found_icon_path (filepath);
     }
 
-    private async string path_from_theme (string icon_name, string theme_name)
+    private async string path_from_theme (string icon_name, Gtk.IconTheme theme)
     {
-      Gtk.IconTheme theme;
-      if (theme_name != "")
-        {
-          theme = new Gtk.IconTheme ();
-          theme.set_custom_theme (theme_name);
-        }
-      else
-        {
-          theme = Gtk.IconTheme.get_default ();
-        }
-
       Idle.add (path_from_theme.callback);
       yield;
 
@@ -77,15 +67,9 @@ namespace Unity
           if (info != null)
             {
               var filename = info.get_filename ();
-              if ((filename.str (theme_name) != null))
+              if (FileUtils.test(filename, FileTest.IS_REGULAR))
                 {
-                  try
-                    {
-                      return filename;
-                    }
-                  catch (Error e)
-                    {
-                    }
+                  return filename;
                 }
             }
         }

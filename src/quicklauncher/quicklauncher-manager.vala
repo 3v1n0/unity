@@ -326,21 +326,24 @@ namespace Unity.Quicklauncher
             }
           else
             {
-              LOGGER_START_PROCESS ("Launcher-" + process_name);
+              string launcher_process_name = "Launcher-" + process_name;
+              LOGGER_START_PROCESS (launcher_process_name);
               Launcher.Application application = appman.get_application_for_desktop_file (desktop_file);
 
               if (launcher_apps.contains (application))
                 continue;
               launcher_apps.add (application);
-              LOGGER_END_PROCESS ("Launcher-" + process_name);
+              LOGGER_END_PROCESS (launcher_process_name);
 
-              LOGGER_START_PROCESS ("Model-" + process_name);
+              string model_process_name = "Model-" + process_name;
+              LOGGER_START_PROCESS (model_process_name);
               ApplicationModel model = new ApplicationModel (application);
               model.is_sticky = true;
-              LOGGER_END_PROCESS ("Model-" + process_name);
-              LOGGER_START_PROCESS ("View-" + process_name);
+              LOGGER_END_PROCESS (model_process_name);
+              string view_process_name = "View-" + process_name;
+              LOGGER_START_PROCESS (view_process_name);
               LauncherView view = get_view_for_model (model);
-              LOGGER_END_PROCESS ("View-" + process_name);
+              LOGGER_END_PROCESS (view_process_name);
 
               add_view (view);
             }
