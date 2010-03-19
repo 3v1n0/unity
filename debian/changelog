@@ -5,7 +5,7 @@ unity (0.1.24-0ubuntu1) lucid; urgency=low
     - bump clutk, liblauncher and wncksync build-dep
   * New upstream release.
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 19 Mar 2010 15:09:55 +0100
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 19 Mar 2010 15:40:10 +0100
 
 unity (0.1.22-0ubuntu1) lucid; urgency=low
 
