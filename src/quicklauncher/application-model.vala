@@ -174,18 +174,21 @@ namespace Unity.Quicklauncher.Models
       this.app = application;
       this.desktop_uri = app.get_desktop_file ();
 
-      LOGGER_START_PROCESS ("gconf-grabbing-" + process_name);
+      string gconf_process_name = "gconf-grabbing-" + process_name;
+      LOGGER_START_PROCESS (gconf_process_name);
       string uid = get_fav_uid ();
       this._is_sticky = (uid != "");
       this.grab_priority ();
-      LOGGER_END_PROCESS ("gconf-grabbing-" + process_name);
-      LOGGER_START_PROCESS ("favorite-grabbing-" + process_name);
+      LOGGER_END_PROCESS (gconf_process_name);
+
+      string fav_process_name = "favorite-grabbing-" + process_name;
+      LOGGER_START_PROCESS (fav_process_name);
       var favorites = Launcher.Favorites.get_default ();
       if (uid != "")
         {
           this._do_shadow = favorites.get_bool (uid, "enable_shadow");
         }
-      LOGGER_END_PROCESS ("favorite-grabbing-" + process_name);
+      LOGGER_END_PROCESS (fav_process_name);
     }
 
     construct
@@ -480,6 +483,38 @@ namespace Unity.Quicklauncher.Models
       this.notify_icon ();
     }
 
+    static Gdk.Pixbuf? get_icon_from_theme (string icon_name, Gtk.IconTheme theme)
+    {
+      Gtk.IconInfo info = theme.lookup_icon(icon_name, 48, 0);
+      Gdk.Pixbuf? pixbuf = null;
+      if (info != null)
+        {
+          string filename = info.get_filename();
+          if (FileUtils.test(filename, FileTest.EXISTS))
+            {
+              try
+                {
+                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
+                                                             48, 48, true);
+                }
+              catch (Error e)
+                {
+                  warning ("Unable to load image from file '%s': %s",
+                           filename,
+                           e.message);
+                }
+            }
+        }
+      if (pixbuf is Gdk.Pixbuf)
+        {
+          return pixbuf;
+        }
+      else
+        {
+          return null;
+        }
+    }
+
     /**
      * taken from the prototype code and shamelessly stolen from
      * netbook launcher. needs to be improved at some point to deal
@@ -499,17 +534,19 @@ namespace Unity.Quicklauncher.Models
       string process_name = "make-icon-" + Random.int_range (0, 2^32).to_string ();
       Gdk.Pixbuf pixbuf = null;
 
-      LOGGER_START_PROCESS ("init-themes-" + process_name);
+      string init_process = "Init-themes-" + process_name;
+      LOGGER_START_PROCESS (init_process);
       Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
       Gtk.IconTheme webtheme = new Gtk.IconTheme ();
       Gtk.IconTheme unitytheme = new Gtk.IconTheme ();
       webtheme.set_custom_theme ("Web");
       unitytheme.set_custom_theme ("unity-icon-theme");
-      LOGGER_END_PROCESS ("init-themes-" + process_name);
+      LOGGER_END_PROCESS (init_process);
 
       if (icon_name == null)
         {
-          LOGGER_START_PROCESS ("no-icon-" + process_name);
+          string noicon_process = "no-icon-" + process_name;
+          LOGGER_START_PROCESS (noicon_process);
           try
             {
               pixbuf = theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 48, 0);
@@ -519,43 +556,14 @@ namespace Unity.Quicklauncher.Models
               warning ("Unable to load stock image: %s", e.message);
               pixbuf = null;
             }
-          LOGGER_END_PROCESS ("no-icon" + process_name);
+          LOGGER_END_PROCESS (noicon_process);
           return pixbuf;
         }
-/*
-
-      if (icon_name.has_prefix("file://"))
-        {
-          string filename = "";
-          try
-          {
-            filename = Filename.from_uri(icon_name);
-          }
-          catch (GLib.ConvertError e)
-          {
-          }
-          if (filename != "")
-            {
-              try
-                {
-                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(icon_name,
-                                                             48, 48, true);
-                }
-              catch (Error e)
-                {
-                  warning ("Unable to load pixbuf from file '%s': %s",
-                           icon_name,
-                           e.message);
-                }
-              if (pixbuf is Gdk.Pixbuf)
-                  return pixbuf;
-            }
-        }
-*/
-
+        
       if (Path.is_absolute(icon_name))
         {
-          LOGGER_START_PROCESS ("filepath-" + process_name);
+          string filepath_process = "filepath-icon-" + process_name;
+          LOGGER_START_PROCESS (filepath_process);
           if (FileUtils.test(icon_name, FileTest.IS_REGULAR))
             {
               try
@@ -572,11 +580,11 @@ namespace Unity.Quicklauncher.Models
 
               if (pixbuf is Gdk.Pixbuf)
                 {
-                  LOGGER_END_PROCESS ("filepath-" + process_name);
+                  LOGGER_END_PROCESS (filepath_process);
                   return pixbuf;
                 }
             }
-          LOGGER_END_PROCESS ("filepath-" + process_name);
+          LOGGER_END_PROCESS (filepath_process);
         }
 
       if (FileUtils.test ("/usr/share/pixmaps/" + icon_name,
@@ -599,97 +607,30 @@ namespace Unity.Quicklauncher.Models
         }
 
       //load from default theme
-      LOGGER_START_PROCESS ("defaulttheme-" + process_name);
-      Gtk.IconInfo info = theme.lookup_icon(icon_name, 48, 0);
-
-      if (info != null)
-        {
-          string filename = info.get_filename();
-          if (FileUtils.test(filename, FileTest.EXISTS))
-            {
-              try
-                {
-                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
-                                                             48, 48, true);
-                }
-              catch (Error e)
-                {
-                  warning ("Unable to load image from file '%s': %s",
-                           filename,
-                           e.message);
-                }
-
-              if (pixbuf is Gdk.Pixbuf)
-                {
-                  LOGGER_END_PROCESS ("defaulttheme-" + process_name);
-                  return pixbuf;
-                }
-
-            }
-        }
-      LOGGER_END_PROCESS ("defaulttheme-" + process_name);
+      string theme_process = "defaulttheme-" + process_name;
+      LOGGER_START_PROCESS (theme_process);
+      pixbuf = get_icon_from_theme (icon_name, theme);
+      LOGGER_END_PROCESS (theme_process);
+      if (pixbuf is Gdk.Pixbuf)
+        return pixbuf;
 
       //load from unity theme
-      LOGGER_START_PROCESS ("unitytheme-" + process_name);
-      info = unitytheme.lookup_icon(icon_name, 48, 0);
-      if (info != null)
-        {
-          string filename = info.get_filename();
-          if (FileUtils.test(filename, FileTest.EXISTS))
-            {
-              try
-                {
-                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
-                                                             48, 48, true);
-                }
-              catch (Error e)
-                {
-                  warning ("Unable to load image from file '%s': %s",
-                           filename,
-                           e.message);
-                }
-
-              if (pixbuf is Gdk.Pixbuf)
-                {
-                  LOGGER_END_PROCESS ("unitytheme-" + process_name);
-                  return pixbuf;
-                }
-            }
-        }
-      LOGGER_END_PROCESS ("unitytheme-" + process_name);
-
-      //load web theme first
-      LOGGER_START_PROCESS ("webtheme-" + process_name);
-      info = webtheme.lookup_icon(icon_name, 48, 0);
-      if (info != null)
-        {
-          string filename = info.get_filename();
-          if (filename != null)
-            {
-              try
-                {
-                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
-                                                             48, 48, true);
-                }
-              catch (Error e)
-                {
-                  warning ("Unable to load image from file '%s': %s",
-                           filename,
-                           e.message);
-                }
-
-              if (pixbuf is Gdk.Pixbuf)
-                {
-                  LOGGER_END_PROCESS ("webtheme-" + process_name);
-                  return pixbuf;
-                }
-            }
-        }
-      LOGGER_END_PROCESS ("webtheme-" + process_name);
-
-
+      theme_process = "unitytheme-" + process_name;
+      LOGGER_START_PROCESS (theme_process);
+      pixbuf = get_icon_from_theme (icon_name, unitytheme);
+      LOGGER_END_PROCESS (theme_process);
+      if (pixbuf is Gdk.Pixbuf)
+        return pixbuf;
+        
+      //load from web theme
+      theme_process = "webtheme-" + process_name;
+      LOGGER_START_PROCESS (theme_process);
+      get_icon_from_theme (icon_name, webtheme);
+      LOGGER_END_PROCESS (theme_process);
+      if (pixbuf is Gdk.Pixbuf)
+        return pixbuf;
+        
       warning (@"Could not load icon for $icon_name");
-
       return pixbuf;
 
     }
