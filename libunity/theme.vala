@@ -28,6 +28,7 @@ namespace Unity
   {
     PriorityQueue<Gtk.IconTheme> themes;
     public signal void found_icon_path (string filepath);
+    public signal void failed ();
 
     construct
     {
@@ -50,8 +51,10 @@ namespace Unity
               break;
             }
         }
-
-      this.found_icon_path (filepath);
+      if (filepath != "")
+        this.found_icon_path (filepath);
+      else
+        this.failed ();
     }
 
     private async string path_from_theme (string icon_name, Gtk.IconTheme theme)
@@ -105,9 +108,6 @@ namespace Unity
 
     construct
     {
-/*
-      this.set_load_async (true);
-*/
       if (this.theme == null)
         {
           this.theme = new ThemeFilePath ();

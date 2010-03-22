@@ -482,42 +482,24 @@ namespace Unity.Quicklauncher.Models
       make_icon ();
     }
 
-    static Gdk.Pixbuf? get_icon_from_theme (string icon_name, Gtk.IconTheme theme)
-    {
-      Gtk.IconInfo info = theme.lookup_icon(icon_name, 48, 0);
-      Gdk.Pixbuf? pixbuf = null;
-      if (info != null)
-        {
-          string filename = info.get_filename();
-          if (FileUtils.test(filename, FileTest.EXISTS))
-            {
-              try
-                {
-                  pixbuf = new Gdk.Pixbuf.from_file_at_scale(filename,
-                                                             48, 48, true);
-                }
-              catch (Error e)
-                {
-                  warning ("Unable to load image from file '%s': %s",
-                           filename,
-                           e.message);
-                }
-            }
-        }
-      if (pixbuf is Gdk.Pixbuf)
-        {
-          return pixbuf;
-        }
-      else
-        {
-          return null;
-        }
-    }
-
     private void make_icon ()
     {
-      debug ("MAKING AN ICON!!");
       string icon_name = this.app.icon_name;
+
+      // first try to load from a path;
+      if (this.try_load_from_file (icon_name))
+        {
+          this.notify_icon ();
+          return;
+        }
+
+      //try to load from a path that we augment
+      if (this.try_load_from_file ("/usr/share/pixmaps/" + icon_name))
+        {
+          this.notify_icon ();
+          return;
+        }
+
       this.theme_file_path = new Unity.ThemeFilePath ();
 
       // add our searchable themes
@@ -543,9 +525,47 @@ namespace Unity.Quicklauncher.Models
             this.notify_icon ();
           }
       });
+      this.theme_file_path.failed.connect (() => {
+        // we didn't get an icon, so just load the failcon
+        try
+          {
+            var default_theme = Gtk.IconTheme.get_default ();
+            this._icon = default_theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 48, 0);
+          }
+        catch (Error e)
+          {
+            warning (@"Could not load any icon for %s", this.app.name);
+          }
+          this.notify_icon ();
+      });
 
       this.theme_file_path.get_icon_filepath (icon_name);
+    }
 
+    private bool try_load_from_file (string filepath)
+    {
+      Gdk.Pixbuf pixbuf = null;
+      if (FileUtils.test(filepath, FileTest.IS_REGULAR))
+        {
+          try
+            {
+              pixbuf = new Gdk.Pixbuf.from_file_at_scale(filepath,
+                                                         48, 48, true);
+            }
+          catch (Error e)
+            {
+              warning ("Unable to load image from file '%s': %s",
+                       filepath,
+                       e.message);
+            }
+
+          if (pixbuf is Gdk.Pixbuf)
+            {
+              this._icon = pixbuf;
+              return true;
+            }
+        }
+      return false;
     }
 /*
 
