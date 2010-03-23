@@ -16,9 +16,72 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
+using Gee;
 
 namespace Unity
 {
+  /* An async object, designed to be used to grab filepath from the theme
+   * use add_icon_theme to add a theme to the lookup, will always default to
+   * the default theme if it can't find one in the the themes you provide
+   */
+  public class ThemeFilePath : Object
+  {
+    PriorityQueue<Gtk.IconTheme> themes;
+    public signal void found_icon_path (string filepath);
+    public signal void failed ();
+
+    construct
+    {
+      this.themes = new PriorityQueue<Gtk.IconTheme> ();
+    }
+    /* adds a theme name to lookup icons from */
+    public void add_icon_theme (Gtk.IconTheme theme)
+    {
+      this.themes.add (theme);
+    }
+
+    public async void get_icon_filepath (string icon_name)
+    {
+      string filepath = "";
+      foreach (Gtk.IconTheme theme in this.themes)
+        {
+          filepath = yield this.path_from_theme (icon_name, theme);
+          if (filepath != "")
+            {
+              break;
+            }
+        }
+      if (filepath != "")
+        this.found_icon_path (filepath);
+      else
+        this.failed ();
+    }
+
+    private async string path_from_theme (string icon_name, Gtk.IconTheme theme)
+    {
+      Idle.add (path_from_theme.callback);
+      yield;
+
+      if (theme.has_icon (icon_name))
+        {
+          var info = theme.lookup_icon (icon_name,
+                                             48,
+                                             0);
+          if (info != null)
+            {
+              var filename = info.get_filename ();
+              if (FileUtils.test(filename, FileTest.IS_REGULAR))
+                {
+                  return filename;
+                }
+            }
+        }
+      return "";
+    }
+
+  }
+
+
   public static bool icon_name_exists_in_theme (string icon_name, string theme)
   {
     var icontheme = new Gtk.IconTheme ();
@@ -28,8 +91,7 @@ namespace Unity
 
   public class ThemeImage : Clutter.Texture
   {
-    private static Gtk.IconTheme? theme = null;
-
+    private ThemeFilePath? theme = null;
     /*
      * ThemeImage will load a icon name from one of the Unity theme directories
      * at the size of the file, returning a "missing" icon if an icon could not
@@ -48,8 +110,10 @@ namespace Unity
     {
       if (this.theme == null)
         {
-          this.theme = new Gtk.IconTheme ();
-          this.theme.set_custom_theme ("unity-icon-theme");
+          this.theme = new ThemeFilePath ();
+          var gtktheme = new Gtk.IconTheme ();
+          gtktheme.set_custom_theme ("unity-icon-theme");
+          this.theme.add_icon_theme (gtktheme);
         }
 
       if (!this.try_load_icon_from_datadir ())
@@ -59,34 +123,19 @@ namespace Unity
 
     private bool try_load_icon_from_theme ()
     {
-      /* Load the icon */
-      var info = this.theme.lookup_icon (this.icon_name,
-                                         24, /* This is not actually used */
-                                         0);
-      if (info != null)
-        {
-          var filename = info.get_filename ();
+      this.theme.found_icon_path.connect ((theme, filepath) => {
+        try
+          {
+            this.set_from_file (filepath);
+          }
+        catch (Error e)
+          {
+            warning (@"could not load theme image $filepath");
+          }
+      });
+      this.theme.get_icon_filepath (this.icon_name);
 
-          if ((filename.str ("unity-icon-theme") != null))
-            {
-              try
-                {
-                  this.set_from_file (filename);
-                  /*
-                  this.icon = new Gdk.Pixbuf.from_file (filename);
-                  this.size = icon.width;
-                  this.pixbuf = icon;*/
-
-                  return true;
-                }
-              catch (Error e)
-                {
-                  return false;
-                }
-            }
-          return false;
-        }
-      return false;
+      return true;
     }
 
     private bool try_load_icon_from_dir (string dir)
