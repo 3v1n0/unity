@@ -487,7 +487,7 @@ namespace Unity.Quicklauncher.Models
       unowned SList<Wnck.Window> windows = this.app.get_windows ();
       foreach (weak Wnck.Window window in windows)
         {
-          Gdk.Pixbuf pixbuf = window.get_icon ();
+          Gdk.Pixbuf pixbuf = window.get_mini_icon ();
           if (pixbuf is Gdk.Pixbuf)
             {
               this._icon = pixbuf;
