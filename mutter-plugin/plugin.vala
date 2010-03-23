@@ -174,6 +174,8 @@ namespace Unity
       Ctk.init_after (ref args);
       LOGGER_END_PROCESS ("ctk_init");
 
+      Gtk.Settings.get_default ().gtk_icon_theme_name = "ubuntu-mono-dark";
+
       /* Unique instancing */
       LOGGER_START_PROCESS ("unity_application_constructor");
       this.app = new Unity.Application ();
