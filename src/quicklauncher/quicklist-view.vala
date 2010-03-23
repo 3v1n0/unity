@@ -22,12 +22,13 @@
 namespace Unity.Quicklauncher
 {
   const float LINE_WIDTH         = 0.083f;
+  const float LINE_WIDTH_ABS     = 1.0f;
   const float TEXT_HEIGHT        = 1.0f;
   const float MAX_TEXT_WIDTH     = 15.0f;
   const float GAP                = 0.25f;
   const float MARGIN             = 0.5f;
   const float BORDER             = 0.25f;
-  const float CORNER_RADIUS      = 0.3f;
+  const float CORNER_RADIUS      = 0.45f;
   const float SHADOW_SIZE        = 1.25f;
   const float ITEM_HEIGHT        = 2.0f;
   const float ITEM_CORNER_RADIUS = 0.3f;
@@ -68,12 +69,12 @@ namespace Unity.Quicklauncher
 
       // draw separator-line
       cr.scale (1.0f, 1.0f);
-      cr.set_operator (Cairo.Operator.OVER);
+      cr.set_operator (Cairo.Operator.SOURCE);
 
       // force the separator line to be 1-pixel thick
-      cr.set_line_width (1.0f);
+      cr.set_line_width (LINE_WIDTH_ABS);
 
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.75f);
       cr.set_line_cap (Cairo.LineCap.ROUND);
 
       // align to the pixel-grid
@@ -546,6 +547,17 @@ namespace Unity.Quicklauncher
     float          cached_x; // needed to fix LP: #525905
     float          cached_y; // needed to fix LP: #526335
 
+    private double
+    _align (double val)
+    {
+      double fract = val - (int) val;
+
+      if (fract != 0.5f)
+        return (double) ((int) val + 0.5f);
+      else
+        return val;
+    }
+
     private void
     _round_rect_anchor (Cairo.Context cr,
                         double        aspect,        // aspect-ratio
@@ -561,50 +573,81 @@ namespace Unity.Quicklauncher
     {
       double radius = corner_radius / aspect;
 
+      double a = _align (x);
+      double b = _align (x + radius);
+      double c = _align (x + width);
+      double d = _align (x + width - radius);
+      double e = _align (y);
+      double f = _align (y + radius);
+      double g = _align (y + height);
+      double h = _align (y + height - radius);
+
+      double[] p0  = {b, e};
+      double[] p1  = {d, e};
+      double[] p2  = {c, f};
+      double[] p3  = {c, h};
+      double[] p4  = {d, g};
+      double[] p5  = {b, g};
+      double[] p6  = {a, h};
+      double[] p7  = {_align (anchor_x + anchor_width), _align (anchor_y + anchor_height / 2.0f)};
+      double[] p8  = {_align (anchor_x), _align (anchor_y)};
+      double[] p9  = {_align (anchor_x + anchor_width), _align (anchor_y - anchor_height / 2.0f)};
+      double[] p10 = {a, f};
+
+      double[] q0 = {a, e};
+      double[] q1 = {c, e};
+      double[] q2 = {c, g};
+      double[] q3 = {a, g};
+
       // top-left, right of the corner
-      cr.move_to (x + radius, y);
+      cr.move_to (p0[0], p0[1]);
 
       // top-right, left of the corner
-      cr.line_to (x + width - radius, y);
+      cr.line_to (p1[0], p1[1]);
 
       // top-right, below the corner
-      cr.arc (x + width - radius,
-              y + radius,
-              radius,
-              -90.0f * GLib.Math.PI / 180.0f,
-              0.0f * GLib.Math.PI / 180.0f);
+      cr.curve_to (q1[0] - radius * 0.45f,
+                   q1[1],
+                   q1[0],
+                   q1[1] + radius * 0.45f,
+                   p2[0],
+                   p2[1]);
 
       // bottom-right, above the corner
-      cr.line_to (x + width, y + height - radius);
+      cr.line_to (p3[0], p3[1]);
 
       // bottom-right, left of the corner
-      cr.arc (x + width - radius,
-              y + height - radius,
-              radius,
-              0.0f * GLib.Math.PI / 180.0f,
-              90.0f * GLib.Math.PI / 180.0f);
+      cr.curve_to (q2[0],
+                   q2[1] - radius * 0.45f,
+                   q2[0] - radius * 0.45f,
+                   q2[1],
+                   p4[0],
+                   p4[1]);
 
       // bottom-left, right of the corner
-      cr.line_to (x + radius, y + height);
+      cr.line_to (p5[0], p5[1]);
 
       // bottom-left, above the corner
-      cr.arc (x + radius,
-              y + height - radius,
-              radius,
-              90.0f * GLib.Math.PI / 180.0f,
-              180.0f * GLib.Math.PI / 180.0f);
+      cr.curve_to (q3[0] + radius * 0.45f,
+                   q3[1],
+                   q3[0],
+                   q3[1] - radius * 0.45f,
+                   p6[0],
+                   p6[1]);
 
       // draw anchor-arrow
-      cr.line_to (anchor_x + anchor_width, anchor_y + anchor_height / 2.0f);
-      cr.line_to (anchor_x, anchor_y);
-      cr.line_to (anchor_x + anchor_width, anchor_y - anchor_height / 2.0f);
+      cr.line_to (p7[0], p7[1]);
+      cr.line_to (p8[0], p8[1]);
+      cr.line_to (p9[0], p9[1]);
 
       // top-left, right of the corner
-      cr.arc (x + radius,
-              y + radius,
-              radius,
-              180.0f * GLib.Math.PI / 180.0f,
-              270.0f * GLib.Math.PI / 180.0f);
+      cr.line_to (p10[0], p10[1]);
+      cr.curve_to (q0[0],
+                   q0[1] + radius * 0.45f,
+                   q0[0] + radius * 0.45f,
+                   q0[1],
+                   p0[0],
+                   p0[1]);
     }
 
     void
@@ -729,9 +772,9 @@ namespace Unity.Quicklauncher
       cr.fill ();
 
       // draw outline
-      cr.set_operator (Cairo.Operator.OVER);
-      cr.set_line_width (Ctk.em_to_pixel (LINE_WIDTH));
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+      cr.set_operator (Cairo.Operator.SOURCE);
+      cr.set_line_width (LINE_WIDTH_ABS);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.75f);
       _draw_mask (cr, w, h, anchor_y);
       cr.stroke ();
     }
