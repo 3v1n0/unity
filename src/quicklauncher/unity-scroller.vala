@@ -277,6 +277,17 @@ namespace Unity.Widgets
               float next_priority = (child_under.child as LauncherView).model.priority;
               float priority = next_priority - ((next_priority - prev_priority) / 2.0f);
 
+              // The last launcher does not move to make room for retcon, because the priority 
+              // of retcont is stuck a little bit below next_priority.
+              // We detect that we have reach the last launcher and we change the the priority 
+              // of retcon to be a little bit above next_priority. This triggers a move of the 
+              // last launcher.
+              ScrollerChild last_container = this.children.get (this.children.size -1);
+              if((last_container == child_under) && (next_priority - priority < 0.001 ))
+              {
+                priority += 0.01f;
+              }
+              
               (retcont.child as LauncherView).model.priority = priority;
             }
 
