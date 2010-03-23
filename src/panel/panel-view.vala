@@ -75,6 +75,13 @@ namespace Unity.Panel
       this.entry_background.show ();
 
       this.entry_icon = new ThemeImage ("search_field");
+      this.entry_icon.reactive = true;
+      this.entry_icon.button_press_event.connect ((e) =>
+        {
+           this.entry.do_event (e, false);
+           this.entry.grab_key_focus ();
+           Unity.global_shell.grab_keyboard (true, e.button.time);
+        });
       this.entry_icon.set_parent (this);
       this.entry_icon.show ();
 
