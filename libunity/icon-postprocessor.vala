@@ -41,6 +41,7 @@ namespace Unity
     private Cogl.Material icon_material;
     private Cogl.Material bgcol_material;
 
+
     public UnityIcon (Clutter.Texture? icon, Clutter.Texture? bg_tex)
     {
       Object (icon: icon, bg_color: bg_tex);
@@ -145,8 +146,15 @@ namespace Unity
         }
       if (self.icon is Clutter.Texture)
         {
+          int width, height;
+          float xpad, ypad;
+          self.icon.get_base_size (out width, out height);
+
+          xpad = (box.get_width () - width) / 2.0f;
+          ypad = (box.get_height () - height) / 2.0f;
+
           Cogl.set_source (self.icon_material);
-          Cogl.rectangle (box.x1, box.y1, box.x2, box.y2);
+          Cogl.rectangle (xpad, ypad, box.x2 - xpad, box.y2 - ypad);
         }
 
       Cogl.set_source (self.fg_mat);
