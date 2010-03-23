@@ -765,7 +765,7 @@ namespace Unity.Quicklauncher
                                              (double) w / 2.0f,
                                              Ctk.em_to_pixel (BORDER),
                                              (double) w / 2.0f);
-      hl_pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 1.0f);
+      hl_pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.5f);
       hl_pattern.add_color_stop_rgba (1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
       cr.set_source (hl_pattern);
       _draw_mask (cr, w, h, anchor_y);
