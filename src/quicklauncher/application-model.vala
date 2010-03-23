@@ -536,7 +536,8 @@ namespace Unity.Quicklauncher.Models
 
       string init_process = "Init-themes-" + process_name;
       LOGGER_START_PROCESS (init_process);
-      Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
+      Gtk.IconTheme theme = new Gtk.IconTheme ();
+      theme.set_custom_theme ("ubuntu-mono-dark");
       Gtk.IconTheme webtheme = new Gtk.IconTheme ();
       Gtk.IconTheme unitytheme = new Gtk.IconTheme ();
       webtheme.set_custom_theme ("Web");
@@ -559,7 +560,7 @@ namespace Unity.Quicklauncher.Models
           LOGGER_END_PROCESS (noicon_process);
           return pixbuf;
         }
-        
+
       if (Path.is_absolute(icon_name))
         {
           string filepath_process = "filepath-icon-" + process_name;
@@ -621,7 +622,7 @@ namespace Unity.Quicklauncher.Models
       LOGGER_END_PROCESS (theme_process);
       if (pixbuf is Gdk.Pixbuf)
         return pixbuf;
-        
+
       //load from web theme
       theme_process = "webtheme-" + process_name;
       LOGGER_START_PROCESS (theme_process);
@@ -629,7 +630,7 @@ namespace Unity.Quicklauncher.Models
       LOGGER_END_PROCESS (theme_process);
       if (pixbuf is Gdk.Pixbuf)
         return pixbuf;
-        
+
       warning (@"Could not load icon for $icon_name");
       return pixbuf;
 
