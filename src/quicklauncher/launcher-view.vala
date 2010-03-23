@@ -102,7 +102,7 @@ namespace Unity.Quicklauncher
 
     private bool button_down = false;
     private float click_start_pos = 0;
-    private static const uint drag_sensitivity = 3;
+    private static const uint drag_sensitivity = 7;
 
     /**
      * signal is called when the application is not marked as sticky and
@@ -906,7 +906,6 @@ namespace Unity.Quicklauncher
           (bevent.time - last_pressed_time) < 500)
       {
         this.clicked ();
-
         return false;
       }
 

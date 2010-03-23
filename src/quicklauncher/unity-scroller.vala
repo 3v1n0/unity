@@ -115,13 +115,13 @@ namespace Unity.Widgets
             this._is_dragging = value;
           }
     }
-    
+
     private float _gap_animation = 0.0f;
     public float gap_animation {
         get { return _gap_animation; }
         set { _gap_animation = value; this.queue_relayout (); }
     }
-      
+
     private const float friction = 0.9f;
     private float last_drag_pos = 0.0f;
     private float fling_velocity = 0.0f;
@@ -187,7 +187,6 @@ namespace Unity.Widgets
 
       this.scroll_event.connect (this.on_scroll_event);
       this.button_press_event.connect (this.on_button_click_event);
-      this.button_release_event.connect (this.on_button_release_event);
       this.motion_event.connect (this.on_motion_event);
 
       this.drag_pos = 0.0f;
@@ -251,7 +250,7 @@ namespace Unity.Widgets
           {
             animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD, 170, "gap_animation", 1.0f);
           }
-            
+
           if (retcont.state != ScrollerChildState.HIDDEN) this.queue_relayout ();
           retcont.state = ScrollerChildState.HIDDEN;
         }
@@ -388,7 +387,7 @@ namespace Unity.Widgets
 
       this.bg_color = new Clutter.Rectangle.with_color (color);
 
-      this.bgtex.set_repeat (false, true);
+      this.bgtex.set_repeat (true, true);
       this.top_shadow.set_repeat (true, false);
       this.bottom_fade.set_repeat (true, false);
 
@@ -593,6 +592,7 @@ namespace Unity.Widgets
         {
            return false;
         }
+      this.get_stage ().button_release_event.disconnect (this.on_button_release_event);
       this.button_down = false;
 
       if (this.is_dragging)
@@ -639,12 +639,12 @@ namespace Unity.Widgets
           if (diff > this.drag_sensitivity || -diff > this.drag_sensitivity)
             {
               this.is_dragging = true;
+              this.get_stage ().button_release_event.connect (this.on_button_release_event);
             }
         }
 
       if (this.button_down && this.is_dragging)
         {
-          Clutter.grab_pointer (this);
 
           /* Disable any animations on the children */
           Clutter.Event e = { 0 };
