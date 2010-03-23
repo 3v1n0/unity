@@ -482,9 +482,30 @@ namespace Unity.Quicklauncher.Models
       make_icon ();
     }
 
+    private void make_icon_from_wnck ()
+    {
+      unowned SList<Wnck.Window> windows = this.app.get_windows ();
+      foreach (weak Wnck.Window window in windows)
+        {
+          Gdk.Pixbuf pixbuf = window.get_icon ();
+          if (pixbuf is Gdk.Pixbuf)
+            {
+              this._icon = pixbuf;
+              break;
+            }
+        }
+    }
+
     private void make_icon ()
     {
       string icon_name = this.app.icon_name;
+
+      if (icon_name == null)
+        {
+          this.make_icon_from_wnck ();
+          this.notify_icon ();
+          return;
+        }
 
       // first try to load from a path;
       if (this.try_load_from_file (icon_name))
