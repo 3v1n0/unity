@@ -21,19 +21,23 @@
 
 namespace Unity.Quicklauncher
 {
-  const float LINE_WIDTH         = 0.083f;
-  const float LINE_WIDTH_ABS     = 1.0f;
-  const float TEXT_HEIGHT        = 1.0f;
-  const float MAX_TEXT_WIDTH     = 15.0f;
-  const float GAP                = 0.25f;
-  const float MARGIN             = 0.5f;
-  const float BORDER             = 0.25f;
-  const float CORNER_RADIUS      = 0.45f;
-  const float SHADOW_SIZE        = 1.25f;
-  const float ITEM_HEIGHT        = 2.0f;
-  const float ITEM_CORNER_RADIUS = 0.3f;
-  const float ANCHOR_HEIGHT      = 1.5f;
-  const float ANCHOR_WIDTH       = 0.75f;
+  const float LINE_WIDTH             = 0.083f;
+  const float LINE_WIDTH_ABS         = 1.0f;
+  const float TEXT_HEIGHT            = 1.0f;
+  const float MAX_TEXT_WIDTH         = 15.0f;
+  const float GAP                    = 0.25f;
+  const float MARGIN                 = 0.5f;
+  const float BORDER                 = 0.25f;
+  const float CORNER_RADIUS          = 0.3f;
+  const float CORNER_RADIUS_ABS      = 8.0f;
+  const float SHADOW_SIZE            = 1.25f;
+  const float ITEM_HEIGHT            = 2.0f;
+  const float ITEM_CORNER_RADIUS     = 0.3f;
+  const float ITEM_CORNER_RADIUS_ABS = 6.0f;
+  const float ANCHOR_HEIGHT          = 1.5f;
+  const float ANCHOR_HEIGHT_ABS      = 14.0f;
+  const float ANCHOR_WIDTH           = 0.75f;
+  const float ANCHOR_WIDTH_ABS       = 8.0f;
 
   // we subclass Ctk.MenuSeperator here because we need to adapt it's appearance
   public class QuicklistMenuSeperator : Ctk.MenuSeperator
@@ -329,7 +333,7 @@ namespace Unity.Quicklauncher
                    1.0f,
                    0.5f,
                    0.5f,
-                   Ctk.em_to_pixel (ITEM_CORNER_RADIUS),
+                   ITEM_CORNER_RADIUS_ABS,
                    w - 1.0f,
                    h - 1.0f);
       cr.fill ();
@@ -658,13 +662,13 @@ namespace Unity.Quicklauncher
     {
       _round_rect_anchor (cr,
                           1.0f,
-                          0.5f + Ctk.em_to_pixel (ANCHOR_WIDTH + SHADOW_SIZE),
-                          0.5f + Ctk.em_to_pixel (SHADOW_SIZE),
-                          Ctk.em_to_pixel (CORNER_RADIUS),
-                          (double) w - 1.0f - Ctk.em_to_pixel (ANCHOR_WIDTH + 2 * SHADOW_SIZE),
-                          (double) h - 1.0f - Ctk.em_to_pixel (2 * SHADOW_SIZE),
-                          Ctk.em_to_pixel (ANCHOR_WIDTH),
-                          Ctk.em_to_pixel (ANCHOR_HEIGHT),
+                          ANCHOR_WIDTH_ABS + Ctk.em_to_pixel (SHADOW_SIZE),
+                          Ctk.em_to_pixel (SHADOW_SIZE),
+                          CORNER_RADIUS_ABS,
+                          (double) w - (ANCHOR_WIDTH_ABS + Ctk.em_to_pixel (2 * SHADOW_SIZE)),
+                          (double) h - Ctk.em_to_pixel (2 * SHADOW_SIZE),
+                          ANCHOR_WIDTH_ABS,
+                          ANCHOR_HEIGHT_ABS,
                           Ctk.em_to_pixel (SHADOW_SIZE),
                           anchor_y);
     }
@@ -894,7 +898,7 @@ namespace Unity.Quicklauncher
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {
-        left   = (int) Ctk.em_to_pixel (ANCHOR_WIDTH + BORDER + SHADOW_SIZE),
+        left   = (int) (Ctk.em_to_pixel (BORDER + SHADOW_SIZE) + ANCHOR_WIDTH_ABS),
         right  = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE),
         top    = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE),
         bottom = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE)
