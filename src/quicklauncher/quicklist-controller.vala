@@ -103,8 +103,12 @@ namespace Unity.Quicklauncher
           menuitem.activated.connect (this.close_menu);
         }
 
-      Unity.Quicklauncher.QuicklistMenuSeperator separator = new Unity.Quicklauncher.QuicklistMenuSeperator ();
-      this.menu.append (separator, false);
+      /* Only add the separator if there are shortcuts beneath  */
+      if (affix_shortcuts.size > 0)
+        {
+          Unity.Quicklauncher.QuicklistMenuSeperator separator = new Unity.Quicklauncher.QuicklistMenuSeperator ();
+          this.menu.append (separator, false);
+        }
 
       foreach (ShortcutItem shortcut in affix_shortcuts)
         {
