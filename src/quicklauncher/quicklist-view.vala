@@ -27,9 +27,7 @@ namespace Unity.Quicklauncher
   const float MAX_TEXT_WIDTH         = 15.0f;
   const float GAP                    = 0.25f;
   const float MARGIN                 = 0.5f;
-  const float MARGIN_ABS             = 14.0f;
   const float BORDER                 = 0.25f;
-  const float BORDER_ABS             = 5.0f;
   const float CORNER_RADIUS          = 0.3f;
   const float CORNER_RADIUS_ABS      = 8.0f;
   const float SHADOW_SIZE            = 1.25f;
@@ -56,14 +54,14 @@ namespace Unity.Quicklauncher
       // clear context
       cr.set_operator (Cairo.Operator.CLEAR);
       cr.paint ();
- 
+
       // fill whole context with opaque white
       cr.set_operator (Cairo.Operator.SOURCE);
       cr.scale (1.0f, 1.0f);
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
       cr.paint ();
     }
- 
+
     private void
     _image_bg (Cairo.Context cr,
                int           w,
@@ -108,38 +106,38 @@ namespace Unity.Quicklauncher
       min_height_p = (float) Ctk.em_to_pixel (GAP);
       natural_height_p = min_height_p;
     }
- 
+
     public override void
     get_preferred_width (float for_height,
                          out float min_width_p,
                          out float natural_width_p)
     {
-      min_width_p = 2.0f * MARGIN_ABS;
+      min_width_p = (float) Ctk.em_to_pixel (2 * MARGIN);
       natural_width_p = min_width_p;
     }
- 
+
     private override void
     allocate (Clutter.ActorBox        box,
               Clutter.AllocationFlags flags)
     {
       int w;
       int h;
- 
+
       base.allocate (box, flags);
       w = (int) (box.x2 - box.x1);
       h = (int) (box.y2 - box.y1);
- 
+
       // exit early if the allocation-width/height didn't change, this is needed
       // because clutter triggers calling allocate even if nothing changed
       if ((old_width == w) && (old_height == h))
         return;
- 
+
       // before creating a new CtkLayerActor make sure we don't leak any memory
       if (this.seperator_background is Ctk.LayerActor)
         this.seperator_background.destroy ();
 
       this.seperator_background = new Ctk.LayerActor (w, h);
- 
+
       Ctk.Layer layer = new Ctk.Layer (w,
                                        h,
                                        Ctk.LayerRepeatMode.NONE,
@@ -152,16 +150,16 @@ namespace Unity.Quicklauncher
                                                          h);
       Cairo.Context fill_cr = new Cairo.Context (fill_surf);
       Cairo.Context image_cr = new Cairo.Context (image_surf);
- 
+
       _fill_mask (fill_cr, w, h);
       _image_bg (image_cr, w, h);
- 
+
       layer.set_mask_from_surface (fill_surf);
       layer.set_image_from_surface (image_surf);
-      layer.set_opacity (255);      
- 
+      layer.set_opacity (255);
+
       this.seperator_background.add_layer (layer);
- 
+
       //this.set_background (this.seperator_background);
       this.seperator_background.set_opacity (255);
 
@@ -169,17 +167,17 @@ namespace Unity.Quicklauncher
       this.seperator_background.map ();
       this.seperator_background.show ();
     }
-  
+
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {
-        left   = (int) MARGIN_ABS,
-        right  = (int) MARGIN_ABS,
-        top    = (int) MARGIN_ABS,
-        bottom = (int) MARGIN_ABS
+        left   = (int) Ctk.em_to_pixel (MARGIN),
+        right  = (int) Ctk.em_to_pixel (MARGIN),
+        top    = (int) Ctk.em_to_pixel (MARGIN),
+        bottom = (int) Ctk.em_to_pixel (MARGIN)
       };
       this.set_padding (padding);
- 
+
       old_width  = 0;
       old_height = 0;
     }
@@ -310,7 +308,8 @@ namespace Unity.Quicklauncher
       int text_width;
       int text_height;
       _get_text_extents (out text_width, out text_height);
-      cr.move_to (MARGIN_ABS, (float) (h - text_height) / 2.0f);
+      cr.move_to (Ctk.em_to_pixel (MARGIN),
+                  (float) (h - text_height) / 2.0f);
 
       Pango.cairo_show_layout (cr, layout);
     }
@@ -361,7 +360,8 @@ namespace Unity.Quicklauncher
       int text_width;
       int text_height;
       _get_text_extents (out text_width, out text_height);
-      cr.move_to (MARGIN_ABS, (float) (h - text_height) / 2.0f);
+      cr.move_to (Ctk.em_to_pixel (MARGIN),
+                  (float) (h - text_height) / 2.0f);
 
       cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.0f);
       Pango.cairo_show_layout (cr, layout);
@@ -390,7 +390,7 @@ namespace Unity.Quicklauncher
       int width;
       int height;
       _get_text_extents (out width, out height);
-      min_width_p = (float) width + 2.0f * MARGIN_ABS;
+      min_width_p = (float) width + (float) Ctk.em_to_pixel (2 * MARGIN);
       natural_width_p = min_width_p;
     }
 
@@ -522,10 +522,10 @@ namespace Unity.Quicklauncher
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {
-        left   = (int) MARGIN_ABS,
-        right  = (int) MARGIN_ABS,
-        top    = (int) MARGIN_ABS,
-        bottom = (int) MARGIN_ABS
+        left   = (int) Ctk.em_to_pixel (MARGIN),
+        right  = (int) Ctk.em_to_pixel (MARGIN),
+        top    = (int) Ctk.em_to_pixel (MARGIN),
+        bottom = (int) Ctk.em_to_pixel (MARGIN)
       };
       this.set_padding (padding);
 
@@ -764,10 +764,10 @@ namespace Unity.Quicklauncher
       // draw highlight
       cr.set_operator (Cairo.Operator.OVER);
       hl_pattern = new Cairo.Pattern.radial ((double) w / 2.0f,
-                                             BORDER_ABS,
+                                             Ctk.em_to_pixel (BORDER),
                                              0.0f,
                                              (double) w / 2.0f,
-                                             BORDER_ABS,
+                                             Ctk.em_to_pixel (BORDER),
                                              (double) w / 2.0f);
       hl_pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.5f);
       hl_pattern.add_color_stop_rgba (1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
@@ -818,7 +818,6 @@ namespace Unity.Quicklauncher
       int  h;
       uint blurred_id = 0;
 
-      base.allocate (box, flags);
       w = (int) (box.x2 - box.x1);
       h = (int) (box.y2 - box.y1);
 
@@ -826,6 +825,8 @@ namespace Unity.Quicklauncher
       // because clutter triggers calling allocate even if nothing changed
       if ((old_width == w) && (old_height == h))
         return;
+
+      base.allocate (box, flags);
 
       // FIXME01: this is the conservative approach only updating the blurred-bg
       // texture when the allocation changed... this way we'll miss any updates
@@ -898,10 +899,10 @@ namespace Unity.Quicklauncher
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {
-        left   = (int) (BORDER_ABS + Ctk.em_to_pixel (SHADOW_SIZE) + ANCHOR_WIDTH_ABS),
-        right  = (int) (BORDER_ABS + Ctk.em_to_pixel (SHADOW_SIZE)),
-        top    = (int) (BORDER_ABS + Ctk.em_to_pixel (SHADOW_SIZE)),
-        bottom = (int) (BORDER_ABS + Ctk.em_to_pixel (SHADOW_SIZE))
+        left   = (int) (Ctk.em_to_pixel (BORDER + SHADOW_SIZE) + ANCHOR_WIDTH_ABS),
+        right  = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE),
+        top    = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE),
+        bottom = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE)
       };
       this.set_padding (padding);
       //this.spacing = (int) Ctk.em_to_pixel (GAP);
