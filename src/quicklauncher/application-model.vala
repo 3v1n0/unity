@@ -401,7 +401,7 @@ namespace Unity.Quicklauncher.Models
       if (!this.readonly && !this.is_fixed)
         {
           var pin_entry = new LauncherPinningShortcut (this);
-          if (this.app != null && this.app.get_desktop_file() != "")
+          if (this.app != null && this.app.get_desktop_file () != null)
             ret_list.add (pin_entry);
         }
 
