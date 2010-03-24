@@ -357,7 +357,7 @@ namespace Unity
           current.menu_closed.connect (on_launcher_menu_closed);
         }
 
-
+      check_fullscreen_obstruction ();
     }
 
     private void on_launcher_menu_opened (LauncherView sender)
