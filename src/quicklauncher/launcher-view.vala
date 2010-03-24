@@ -928,8 +928,6 @@ namespace Unity.Quicklauncher
 
     private void on_clicked ()
     {
-      print ("\n\n------\non_clicked() called\n------\n\n");
-
       var controller = QuicklistController.get_default ();
       if (controller.is_in_label || controller.menu_is_open ())
       {
