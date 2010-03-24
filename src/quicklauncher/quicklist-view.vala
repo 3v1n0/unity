@@ -27,7 +27,9 @@ namespace Unity.Quicklauncher
   const float MAX_TEXT_WIDTH         = 15.0f;
   const float GAP                    = 0.25f;
   const float MARGIN                 = 0.5f;
+  const float MARGIN_ABS             = 14.0f;
   const float BORDER                 = 0.25f;
+  const float BORDER_ABS             = 5.0f;
   const float CORNER_RADIUS          = 0.3f;
   const float CORNER_RADIUS_ABS      = 8.0f;
   const float SHADOW_SIZE            = 1.25f;
@@ -112,7 +114,7 @@ namespace Unity.Quicklauncher
                          out float min_width_p,
                          out float natural_width_p)
     {
-      min_width_p = (float) Ctk.em_to_pixel (2 * MARGIN);
+      min_width_p = 2.0f * MARGIN_ABS;
       natural_width_p = min_width_p;
     }
  
@@ -171,10 +173,10 @@ namespace Unity.Quicklauncher
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {
-        left   = (int) Ctk.em_to_pixel (MARGIN),
-        right  = (int) Ctk.em_to_pixel (MARGIN),
-        top    = (int) Ctk.em_to_pixel (MARGIN),
-        bottom = (int) Ctk.em_to_pixel (MARGIN)
+        left   = (int) MARGIN_ABS,
+        right  = (int) MARGIN_ABS,
+        top    = (int) MARGIN_ABS,
+        bottom = (int) MARGIN_ABS
       };
       this.set_padding (padding);
  
@@ -308,8 +310,7 @@ namespace Unity.Quicklauncher
       int text_width;
       int text_height;
       _get_text_extents (out text_width, out text_height);
-      cr.move_to (Ctk.em_to_pixel (MARGIN),
-                  (float) (h - text_height) / 2.0f);
+      cr.move_to (MARGIN_ABS, (float) (h - text_height) / 2.0f);
 
       Pango.cairo_show_layout (cr, layout);
     }
@@ -360,8 +361,7 @@ namespace Unity.Quicklauncher
       int text_width;
       int text_height;
       _get_text_extents (out text_width, out text_height);
-      cr.move_to (Ctk.em_to_pixel (MARGIN),
-                  (float) (h - text_height) / 2.0f);
+      cr.move_to (MARGIN_ABS, (float) (h - text_height) / 2.0f);
 
       cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.0f);
       Pango.cairo_show_layout (cr, layout);
@@ -390,7 +390,7 @@ namespace Unity.Quicklauncher
       int width;
       int height;
       _get_text_extents (out width, out height);
-      min_width_p = (float) width + (float) Ctk.em_to_pixel (2 * MARGIN);
+      min_width_p = (float) width + 2.0f * MARGIN_ABS;
       natural_width_p = min_width_p;
     }
 
@@ -522,10 +522,10 @@ namespace Unity.Quicklauncher
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {
-        left   = (int) Ctk.em_to_pixel (MARGIN),
-        right  = (int) Ctk.em_to_pixel (MARGIN),
-        top    = (int) Ctk.em_to_pixel (MARGIN),
-        bottom = (int) Ctk.em_to_pixel (MARGIN)
+        left   = (int) MARGIN_ABS,
+        right  = (int) MARGIN_ABS,
+        top    = (int) MARGIN_ABS,
+        bottom = (int) MARGIN_ABS
       };
       this.set_padding (padding);
 
@@ -764,10 +764,10 @@ namespace Unity.Quicklauncher
       // draw highlight
       cr.set_operator (Cairo.Operator.OVER);
       hl_pattern = new Cairo.Pattern.radial ((double) w / 2.0f,
-                                             Ctk.em_to_pixel (BORDER),
+                                             BORDER_ABS,
                                              0.0f,
                                              (double) w / 2.0f,
-                                             Ctk.em_to_pixel (BORDER),
+                                             BORDER_ABS,
                                              (double) w / 2.0f);
       hl_pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.5f);
       hl_pattern.add_color_stop_rgba (1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
@@ -898,10 +898,10 @@ namespace Unity.Quicklauncher
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {
-        left   = (int) (Ctk.em_to_pixel (BORDER + SHADOW_SIZE) + ANCHOR_WIDTH_ABS),
-        right  = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE),
-        top    = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE),
-        bottom = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE)
+        left   = (int) (BORDER_ABS + Ctk.em_to_pixel (SHADOW_SIZE) + ANCHOR_WIDTH_ABS),
+        right  = (int) (BORDER_ABS + Ctk.em_to_pixel (SHADOW_SIZE)),
+        top    = (int) (BORDER_ABS + Ctk.em_to_pixel (SHADOW_SIZE)),
+        bottom = (int) (BORDER_ABS + Ctk.em_to_pixel (SHADOW_SIZE))
       };
       this.set_padding (padding);
       //this.spacing = (int) Ctk.em_to_pixel (GAP);
