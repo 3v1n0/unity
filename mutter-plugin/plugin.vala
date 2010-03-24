@@ -414,8 +414,8 @@ namespace Unity
 
       debug (@"$w $h");
 
-      if (w >= (int)this.stage.width - QUICKLAUNCHER_WIDTH
-          && h >= (int)this.stage.height - PANEL_HEIGHT)
+      if (w >= (int)this.stage.width - QUICKLAUNCHER_WIDTH-2.0
+          && h >= (int)this.stage.height - 2.0)
         {
           debug ("wider than stage");
           return true;
