@@ -614,11 +614,14 @@ namespace Unity.Quicklauncher
       int rowstride = source.get_rowstride ();
       float r, g, b, a, hue, sat, val;
       unowned uchar[] pixels = source.get_pixels ();
-
-      assert (source.get_colorspace () == Gdk.Colorspace.RGB);
-      assert (source.get_bits_per_sample () == 8);
-      assert (source.get_has_alpha ());
-      assert (num_channels == 4);
+      if (source.get_colorspace () != Gdk.Colorspace.RGB ||
+          source.get_bits_per_sample () != 8 ||
+          source.get_has_alpha () ||
+          num_channels != 4)
+        {
+          // we can't deal with this pixbuf =\
+          return;
+        }
 
       double r_total, g_total, b_total;
       r_total = g_total = b_total = 0.0;
@@ -672,27 +675,20 @@ namespace Unity.Quicklauncher
             else
               scaled_buf = this.model.icon;
 
-            if (this.model.do_shadow)
-              {
-                this.icon = new Ctk.Image.from_pixbuf (48, scaled_buf);
-              }
-            else
-              {
-                Gdk.Pixbuf color_buf = new Gdk.Pixbuf (Gdk.Colorspace.RGB, true, 8, 1, 1);
-                uint red, green, blue;
-                this.get_average_color (scaled_buf, out red, out green, out blue);
-                unowned uchar[] pixels = color_buf.get_pixels ();
-                pixels[0] = (uchar)red;
-                pixels[1] = (uchar)green;
-                pixels[2] = (uchar)blue;
-                pixels[3] = 128;
+            Gdk.Pixbuf color_buf = new Gdk.Pixbuf (Gdk.Colorspace.RGB, true, 8, 1, 1);
+            uint red, green, blue;
+            this.get_average_color (scaled_buf, out red, out green, out blue);
+            unowned uchar[] pixels = color_buf.get_pixels ();
+            pixels[0] = (uchar)red;
+            pixels[1] = (uchar)green;
+            pixels[2] = (uchar)blue;
+            pixels[3] = 128;
 
-                var tex = GtkClutter.texture_new_from_pixbuf (scaled_buf);
-                var color = GtkClutter.texture_new_from_pixbuf (color_buf);
+            var tex = GtkClutter.texture_new_from_pixbuf (scaled_buf);
+            var color = GtkClutter.texture_new_from_pixbuf (color_buf);
 
-                this.icon = new UnityIcon (tex as Clutter.Texture, color as Clutter.Texture);
+            this.icon = new UnityIcon (tex as Clutter.Texture, color as Clutter.Texture);
 
-              }
             this.icon.set_parent (this);
             LOGGER_END_PROCESS (process_name);
             this.effect_drop_shadow = new Ctk.EffectDropShadow (5.0f, 0, 2);
