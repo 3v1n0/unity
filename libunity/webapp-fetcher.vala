@@ -295,7 +295,6 @@ namespace Unity.Webapp
           this.set_desktop_file_icon (get_hostname (this.uri));
           Unity.global_shell.need_new_icon_cache ();
         }
-
     }
 
     private void on_fetcher_failed ()

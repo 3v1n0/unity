@@ -616,10 +616,13 @@ namespace Unity.Quicklauncher
       unowned uchar[] pixels = source.get_pixels ();
       if (source.get_colorspace () != Gdk.Colorspace.RGB ||
           source.get_bits_per_sample () != 8 ||
-          source.get_has_alpha () ||
+          !source.get_has_alpha () ||
           num_channels != 4)
         {
           // we can't deal with this pixbuf =\
+          red = 255;
+          green = 255;
+          blue = 255;
           return;
         }
 
@@ -667,7 +670,7 @@ namespace Unity.Quicklauncher
         string process_name = "IconBuild-favorite" + this.get_name ();
         if (this.model.icon is Gdk.Pixbuf)
           {
-            this.icon.destroy ();
+            //this.icon.destroy ();
             Gdk.Pixbuf scaled_buf;
             LOGGER_START_PROCESS (process_name);
             if ( this.model.icon.get_width () > 48 || this.model.icon.get_height () > 48)
