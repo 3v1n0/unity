@@ -357,7 +357,7 @@ namespace Unity
           current.menu_closed.connect (on_launcher_menu_closed);
         }
 
-
+      check_fullscreen_obstruction ();
     }
 
     private void on_launcher_menu_opened (LauncherView sender)
@@ -400,6 +400,28 @@ namespace Unity
         }
     }
 
+    bool window_is_obstructing (Wnck.Window window)
+    {
+      if (window.is_fullscreen ())
+          return true;
+
+      /* Sometimes we're not getting the fullscreen hint updating fast enough
+       * but the geometry seems to mostly be in sync. Seeing if the window is
+       * size-wise fullscreen seems to give us a good fallback when the props
+       * aren't in-sync.
+       * The -2.0 is because we have some variation when converting float to int
+       * from the stage.
+       */
+      int x, y, w, h;
+      window.get_geometry (out x, out y, out w, out h);
+
+      if (w >= (int)this.stage.width - 2.0
+          && h >= (int)this.stage.height - 2.0)
+          return true;
+
+      return false;
+    }
+
 
     void check_fullscreen_obstruction ()
     {
@@ -407,7 +429,7 @@ namespace Unity
       if (current == null)
         return;
 
-      if (current.is_fullscreen ())
+      if (window_is_obstructing (current))
         {
           this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
