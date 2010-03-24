@@ -610,7 +610,7 @@ namespace Unity.Widgets
       if (this.is_dragging)
         {
           this.is_dragging = false;
-          Clutter.ungrab_pointer ();
+          Unity.global_shell.remove_fullscreen_request (this);
         }
       var release_event = event.button;
       int iters = 0;
@@ -651,6 +651,7 @@ namespace Unity.Widgets
           if (diff > this.drag_sensitivity || -diff > this.drag_sensitivity)
             {
               this.is_dragging = true;
+              Unity.global_shell.add_fullscreen_request (this);
               this.get_stage ().button_release_event.connect (this.on_button_release_event);
             }
         }
