@@ -400,6 +400,21 @@ namespace Unity
         }
     }
 
+    bool window_is_obstructing (Wnck.Window window)
+    {
+      if (window.is_fullscreen ())
+        return true;
+
+      int x, y, w, h;
+
+      window.get_geometry (out x, out y, out w, out h);
+
+      if (w >= (int)this.stage.width && h >= (int)this.stage.height)
+        return true;
+
+      return false;
+    }
+
 
     void check_fullscreen_obstruction ()
     {
@@ -407,7 +422,7 @@ namespace Unity
       if (current == null)
         return;
 
-      if (current.is_fullscreen ())
+      if (window_is_obstructing (current))
         {
           this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
