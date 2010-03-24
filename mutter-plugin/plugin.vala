@@ -403,14 +403,23 @@ namespace Unity
     bool window_is_obstructing (Wnck.Window window)
     {
       if (window.is_fullscreen ())
-        return true;
+        {
+          debug ("fullscreen");
+          return true;
+        }
 
       int x, y, w, h;
 
       window.get_geometry (out x, out y, out w, out h);
 
-      if (w >= (int)this.stage.width && h >= (int)this.stage.height)
-        return true;
+      debug (@"$w $h");
+
+      if (w >= (int)this.stage.width - QUICKLAUNCHER_WIDTH
+          && h >= (int)this.stage.height - PANEL_HEIGHT)
+        {
+          debug ("wider than stage");
+          return true;
+        }
 
       return false;
     }
@@ -427,12 +436,16 @@ namespace Unity
           this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
           fullscreen_obstruction = true;
+
+          debug ("FULLSCREEN");
         }
       else
         {
           this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
           fullscreen_obstruction = false;
+
+          debug ("UNFULLSCREEN");
         }
     }
 
