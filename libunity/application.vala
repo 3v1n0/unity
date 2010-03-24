@@ -99,7 +99,7 @@ namespace Unity
                                                          webapp.desktop_file_path ());
               this.webicon_fetcher.fetch_webapp_data ();
 
-              webapp.add_to_favorites ();
+              ///webapp.add_to_favorites ();
 
             }
             break;

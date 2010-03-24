@@ -309,8 +309,6 @@ namespace Unity.Webapp
         }
     }
 
-
-
     private void attempt_fetch_icon ()
     {
       if (this.icon_uris.size < 1) { this.failed (); return; }
