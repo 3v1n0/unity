@@ -196,6 +196,13 @@ namespace Unity.Quicklauncher.Models
     {
     }
 
+    public void refresh ()
+    {
+      this.on_app_focus_changed ();
+      this.on_app_running_changed ();
+      this.on_app_urgent_changed ();
+    }
+
     /* hitting gconf too much is bad, so we want to make sure we only hit
      * when we are idle
      */

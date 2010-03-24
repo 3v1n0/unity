@@ -687,11 +687,13 @@ namespace Unity
     {
       this.maximus.process_window (window);
       this.window_mapped (this, window);
+      Idle.add (this.quicklauncher.manager.refresh_models);
     }
 
     public void destroy (Mutter.Window window)
     {
       this.window_destroyed (this, window);
+      Idle.add (this.quicklauncher.manager.refresh_models);
     }
 
     public void switch_workspace (List<Mutter.Window> windows,

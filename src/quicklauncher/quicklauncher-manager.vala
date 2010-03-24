@@ -100,6 +100,15 @@ namespace Unity.Quicklauncher
       END_FUNCTION ();
     }
 
+    public bool refresh_models ()
+    {
+      foreach (LauncherModel model in this.model_map.keys)
+        {
+          model.refresh ();
+        }
+        return false;
+    }
+
     private void on_favorite_change (GConf.Engine client, uint cnxn_id, GConf.Entry entry)
     {
       this.build_favorites ();
