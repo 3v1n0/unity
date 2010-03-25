@@ -82,7 +82,7 @@ namespace Unity.Widgets
     private const float DRAG_SAFE_ZONE = 200.0f;
 
     private ScrollerPhase phase;
-    private uint drag_sensitivity = 3;
+    private uint drag_sensitivity = 7;
     private float click_start_pos = 0;
     private float _drag_pos = -0.0f;
     public float drag_pos {
@@ -908,11 +908,10 @@ namespace Unity.Widgets
         child.allocate (child_box, flags);
 
         // if the child is outside our hot area, we hide it and set unreactive
-        if ((child_box.y2 < hot_negative) || (child_box.y1 > hot_positive))
+        if ((child_box.y1 < hot_negative) || (child_box.y2 > hot_positive - 4))
           {
             if (!childcontainer.is_hidden)
               {
-                childcontainer.is_hidden = true;
                 child.set_reactive (false);
               }
           }
@@ -920,7 +919,6 @@ namespace Unity.Widgets
           {
             if (childcontainer.is_hidden)
               {
-                childcontainer.is_hidden = false;
                 child.set_reactive (true);
               }
           }
