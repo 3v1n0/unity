@@ -54,8 +54,6 @@ namespace Unity
           unity_icon_bg_layer = new ThemeImage ("prism_icon_background");
           unity_icon_fg_layer = new ThemeImage ("prism_icon_foreground");
           unity_icon_mk_layer = new ThemeImage ("prism_icon_mask");
-
-
         }
 
       if (this.icon is Clutter.Texture)
@@ -136,6 +134,13 @@ namespace Unity
       /* we draw everything with cogl because Clutter.Texture seems to be made
        * of dumb. also it likes to double allocate everything
        */
+      uchar opacity = self.get_paint_opacity ();
+
+      self.bg_mat.set_color4ub (opacity, opacity, opacity, opacity);
+      self.bgcol_material.set_color4ub (opacity, opacity, opacity, opacity);
+      self.icon_material.set_color4ub (opacity, opacity, opacity, opacity);
+      self.fg_mat.set_color4ub (opacity, opacity, opacity, opacity);
+
       Cogl.set_source (self.bg_mat);
       Cogl.rectangle (box.x1, box.y1, box.x2, box.y2);
 

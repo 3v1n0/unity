@@ -135,6 +135,7 @@ namespace Unity.Quicklauncher
 
     private Clutter.Animation running_anim;
     private Clutter.Animation focused_anim;
+    private Clutter.Animation icon_fade_anim;
 
     private float _anim_priority;
     public float anim_priority {
@@ -699,6 +700,12 @@ namespace Unity.Quicklauncher
             this.effect_drop_shadow.set_margin (5);
             this.icon.add_effect (effect_drop_shadow);
             this.do_queue_redraw ();
+
+            // do a fadein of the animation
+            this.icon.set_opacity (0);
+            this.icon_fade_anim = this.icon.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE,
+                                                     SHORT_DELAY,
+                                                     "opacity", 255);
           }
       }
 
