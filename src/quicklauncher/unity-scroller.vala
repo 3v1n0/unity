@@ -535,48 +535,25 @@ namespace Unity.Widgets
     private float get_aligned_settle_position ()
     {
       /* attempts to integligently find hte correct settle position */
-      // always align to the top item
-      // always want a full scroller full of items
-
-      if (this.drag_pos < 0)
+      float final_position = this.drag_pos;
+      if (this.total_child_height < this.hot_height)
+        {
+          // just move up to the top because we don't have enough items
+          final_position = -this.padding.top;
+        }
+      else if (this.drag_pos < 0)
         {
           // we always position on the first child
-          ScrollerChild container = this.children[0];
-          Clutter.ActorBox box = container.box;
-          return box.y1 + this.drag_pos - this.padding.top;
+          final_position = -this.padding.top;
         }
-
-      if (this.drag_pos > this.total_child_height - this.hot_height)
+      else if (this.drag_pos > this.total_child_height - this.hot_height)
         {
-          ScrollerChild last_container = this.children.get (this.children.size -1);
-          foreach (ScrollerChild container in this.children)
-            {
-              Clutter.ActorBox box = container.box;
-              if (box.y1 == 0.0 && box.y2 == 0.0) continue;
-              if (box.y1 - box.get_height () > last_container.box.y1 - this.height)
-                {
-                  return box.y1 + this.drag_pos - this.padding.top + (this.height - this.hot_height);
-                }
-            }
+          // position on the final child
+          final_position = (this.total_child_height - this.hot_height) + (this.padding.top*2) ;
         }
 
-      else
-        {
-          for (var i = this.children.size - 1; i >= 0; i--)
-            {
-              ScrollerChild container = this.children.get(i);
-              Clutter.ActorBox box = container.box;
-              if (box.y1 == 0.0 && box.y2 == 0.0) continue;
-              if (box.y1 < hot_start)
-              {
-                /* we have a container lower than the "hotarea" */
-                float scroll_px = box.y1 + this.drag_pos - hot_start;
-                return (float)scroll_px - this.padding.top;
-              }
-            }
-        }
+      return final_position;
 
-      return - this.padding.top;
     }
 
     private bool on_button_click_event (Clutter.Event event)
