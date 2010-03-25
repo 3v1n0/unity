@@ -706,6 +706,9 @@ namespace Unity.Quicklauncher
             this.icon_fade_anim = this.icon.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE,
                                                      SHORT_DELAY,
                                                      "opacity", 255);
+            this.icon_fade_anim.completed.connect (() => {
+              this.effect_drop_shadow.set_invalidate_effect_cache (true);
+            });
           }
       }
 

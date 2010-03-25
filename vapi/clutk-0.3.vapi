@@ -92,8 +92,10 @@ namespace Ctk {
 		public int get_margin ();
 		public float get_opacity ();
 		public int get_strength ();
+		public bool is_effect_cache_dirty ();
 		public virtual void paint (Ctk.EffectPaintFunc func, bool is_last_effect);
 		public void set_actor (Clutter.Actor actor);
+		public void set_invalidate_effect_cache (bool dirty);
 		public void set_margin (int m);
 		public void set_opacity (float m);
 		public void set_strength (int strength);

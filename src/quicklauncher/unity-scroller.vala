@@ -931,11 +931,10 @@ namespace Unity.Widgets
         child.allocate (child_box, flags);
 
         // if the child is outside our hot area, we hide it and set unreactive
-        if ((child_box.y2 < hot_negative) || (child_box.y1 > hot_positive))
+        if ((child_box.y1 < hot_negative) || (child_box.y2 > hot_positive - 4))
           {
             if (!childcontainer.is_hidden)
               {
-                childcontainer.is_hidden = true;
                 child.set_reactive (false);
               }
           }
@@ -943,7 +942,6 @@ namespace Unity.Widgets
           {
             if (childcontainer.is_hidden)
               {
-                childcontainer.is_hidden = false;
                 child.set_reactive (true);
               }
           }
