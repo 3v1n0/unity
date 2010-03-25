@@ -92,7 +92,7 @@ namespace Unity
               }
 
               var hostname = Unity.Webapp.get_hostname (uri);
-              var webapp = new ChromiumWebApp (uri, name + ".svg");
+              var webapp = new ChromiumWebApp (uri, name + ".png");
 
               this.webicon_fetcher = new WebiconFetcher (uri,
                                                          icon_dirstring + hostname + ".svg",

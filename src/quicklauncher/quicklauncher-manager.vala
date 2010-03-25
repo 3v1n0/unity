@@ -265,7 +265,7 @@ namespace Unity.Quicklauncher
           warning ("%s", e.message);
         }
 
-          var webapp = new ChromiumWebApp (clean_uri, hostname + ".svg");
+          var webapp = new ChromiumWebApp (clean_uri, hostname + ".png");
           this.webicon_fetcher = new Unity.Webapp.WebiconFetcher (clean_uri,
                                                                   icon_dirstring + hostname + ".svg",
                                                                   webapp.desktop_file_path ());

@@ -168,7 +168,7 @@ namespace Unity.Webapp
     private bool html_phase = false;
     private bool icon_phase = false;
 
-    private Gee.PriorityQueue<string> icon_uris;
+    private Gee.List<string> icon_uris;
 
     /* public signals */
     public signal void failed ();
@@ -201,7 +201,7 @@ namespace Unity.Webapp
             warning (e.message);
           }
         }
-      this.icon_uris = new Gee.PriorityQueue<string> ();
+      this.icon_uris = new Gee.ArrayList<string> ();
       // touch our destination now so that inofity can pick up changes
       try {
         var make_file = File.new_for_path (this.destination);
@@ -249,40 +249,41 @@ namespace Unity.Webapp
 
       if (this.html_phase)
         {
+          debug ("we got the html");
           //we just completed getting our html
           this.html_phase = false;
           string html = (string)(data.data);
           string hostname = get_hostname (this.uri);
           // we have our html, try and get an icon from it
-          this.icon_uris.offer ("http://" + hostname + "/ubuntu-launcher.png");
+          this.icon_uris.add ("http://" + hostname + "/ubuntu-launcher.png");
           var primary_icons = this.extract_icon_from_html (html, true);
           foreach (string uri in primary_icons)
             {
-              this.icon_uris.offer (uri);
+              this.icon_uris.add (uri);
             }
-          this.icon_uris.offer ("http://" + hostname + "/apple-touch-icon.png");
+          this.icon_uris.add ("http://" + hostname + "/apple-touch-icon.png");
 
           var secondary_icons = this.extract_icon_from_html (html, false);
           foreach (string uri in secondary_icons)
             {
-              this.icon_uris.offer (uri);
+              this.icon_uris.add (uri);
             }
-          this.icon_uris.offer ("http://" + hostname + "/favicon.ico");
-          this.icon_uris.offer ("http://" + hostname + "/favicon.png");
+          this.icon_uris.add ("http://" + hostname + "/favicon.ico");
+          this.icon_uris.add ("http://" + hostname + "/favicon.png");
 
           this.attempt_fetch_icon ();
         }
 
         else if (this.icon_phase)
         {
+          debug ("we got the icon");
           // we actually got an icon :o - need to save it to a temp file
           try {
             Gdk.PixbufLoader loader = new Gdk.PixbufLoader ();
             loader.write (data.data, data.len);
             loader.close ();
             Gdk.Pixbuf icon = loader.get_pixbuf ();
-            var builder = new IconBuilder (this.destination, icon);
-            builder.build_icon ();
+            icon.save (this.destination, "png");
           } catch (Error e) {
             // we failed getting a new icon, so we need to try and get the
             // next icon on our uri list
@@ -294,7 +295,6 @@ namespace Unity.Webapp
           this.set_desktop_file_icon (get_hostname (this.uri));
           Unity.global_shell.need_new_icon_cache ();
         }
-
     }
 
     private void on_fetcher_failed ()
@@ -308,14 +308,12 @@ namespace Unity.Webapp
         }
     }
 
-
-
     private void attempt_fetch_icon ()
     {
       if (this.icon_uris.size < 1) { this.failed (); return; }
-
       this.icon_phase = true;
-      string uri = this.icon_uris.poll ();
+      string uri = this.icon_uris.get (0);
+      this.icon_uris.remove_at (0);
       if (!("http://" in uri))
         {
           // we have a relative uri
