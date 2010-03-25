@@ -22,7 +22,7 @@
 namespace Unity.Quicklauncher
 {
   const float LINE_WIDTH             = 0.083f;
-  const float LINE_WIDTH_ABS         = 1.0f;
+  const float LINE_WIDTH_ABS         = 1.5f;
   const float TEXT_HEIGHT            = 1.0f;
   const float MAX_TEXT_WIDTH         = 15.0f;
   const float GAP                    = 0.25f;
