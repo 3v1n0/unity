@@ -82,7 +82,7 @@ namespace Unity.Widgets
     private const float DRAG_SAFE_ZONE = 200.0f;
 
     private ScrollerPhase phase;
-    private uint drag_sensitivity = 3;
+    private uint drag_sensitivity = 7;
     private float click_start_pos = 0;
     private float _drag_pos = -0.0f;
     public float drag_pos {
