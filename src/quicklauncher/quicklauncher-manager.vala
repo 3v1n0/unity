@@ -106,7 +106,7 @@ namespace Unity.Quicklauncher
         {
           model.refresh ();
         }
-        return false;
+      return false;
     }
 
     private void on_favorite_change (GConf.Engine client, uint cnxn_id, GConf.Entry entry)
