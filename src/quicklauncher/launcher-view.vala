@@ -927,6 +927,12 @@ namespace Unity.Quicklauncher
 
     private void on_clicked ()
     {
+      var controller = QuicklistController.get_default ();
+      if (controller.is_in_label || controller.menu_is_open ())
+      {
+        controller.close_menu ();
+        menu_closed (this);
+      }
 
       if (is_starting)
       {
