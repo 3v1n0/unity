@@ -751,6 +751,12 @@ namespace Unity
       this.window_kill_effect (this, window, events);
     }
 
+    public void topmost_changed (Mutter.Window old_window,
+                                 Mutter.Window new_window)
+    {
+      this.quicklauncher.manager.refresh_models ();
+    }
+
     public int get_panel_height ()
     {
       return PANEL_HEIGHT;
