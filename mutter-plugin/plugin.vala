@@ -718,7 +718,10 @@ namespace Unity
           type != Mutter.MetaWindowType.MENU
           )
         {
-          this.quicklauncher.manager.refresh_models ();
+          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
+          Wnck.Window wnck_window = Wnck.Window.get (xid);
+          if (wnck_window is Wnck.Window)
+            Launcher.Session.get_default ().update_windows (wnck_window);
         }
     }
 
@@ -734,7 +737,10 @@ namespace Unity
           type != Mutter.MetaWindowType.MENU
           )
         {
-          this.quicklauncher.manager.refresh_models ();
+          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
+          Wnck.Window wnck_window = Wnck.Window.get (xid);
+          if (wnck_window is Wnck.Window)
+            Launcher.Session.get_default ().update_windows (wnck_window);
         }
     }
 
