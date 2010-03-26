@@ -12,7 +12,6 @@ namespace Launcher {
 		public Application.from_desktop_file (string desktop_file, bool dont_check_windows);
 		[CCode (has_construct_function = false)]
 		public Application.from_wnck_window (Wnck.Window window);
-		public unowned GLib.SList get_categories ();
 		public unowned string get_comment ();
 		public unowned string get_desktop_file ();
 		public unowned string get_exec_string ();
@@ -24,6 +23,7 @@ namespace Launcher {
 		public unowned string get_unique_string ();
 		public bool get_urgent ();
 		public unowned GLib.SList get_windows ();
+		public bool has_gathered_windows ();
 		public bool has_minimized ();
 		public bool launch () throws GLib.Error;
 		public void minimize ();
@@ -33,7 +33,7 @@ namespace Launcher {
 		public static void set_window_activate_func (Launcher.ApplicationWindowActivateFunc func, void* callback_d);
 		public void show (uint32 timestamp);
 		public void update_windows ();
-		public GLib.SList categories { get; }
+		public void update_windows_with_callback (Launcher.ApplicationNotifyFinished notify);
 		public string comment { get; }
 		[NoAccessorMethod]
 		public string desktop_file_path { owned get; set; }
@@ -72,29 +72,6 @@ namespace Launcher {
 		public bool enable_window_checking { get; set; }
 		public virtual signal void watch_file_modified (int p0);
 	}
-	[Compact]
-	[CCode (cheader_filename = "launcher/launcher.h")]
-	public class Category {
-		public weak GLib.Object parent_instance;
-		[CCode (has_construct_function = false)]
-		public Category (string name, string comment, string icon_name);
-		public void add_application (Launcher.Application application);
-		public void empty_applications ();
-		public unowned GLib.SList get_applications ();
-		public unowned string get_comment ();
-		public unowned string get_icon_name ();
-		public unowned string get_name ();
-		public void remove_application (Launcher.Application application);
-		public void sort_applications (GLib.CompareFunc sort_func);
-	}
-	[Compact]
-	[CCode (cheader_filename = "launcher/launcher.h")]
-	public class CategoryClass {
-		public weak GLib.Callback application_added;
-		public weak GLib.Callback application_removed;
-		public weak GLib.ObjectClass parent_class;
-		public weak GLib.Callback removed;
-	}
 	[CCode (cheader_filename = "launcher/launcher.h")]
 	public class Favorites : GLib.Object {
 		public bool add_favorite (string uid);
@@ -131,15 +108,9 @@ namespace Launcher {
 		public virtual signal void bookmarks_changed ();
 	}
 	[CCode (cheader_filename = "launcher/launcher.h")]
-	public class Menu : GLib.Object {
-		public unowned GLib.SList get_applications ();
-		public unowned GLib.SList get_categories ();
-		public static unowned Launcher.Menu get_default ();
-		public virtual signal void menu_changed ();
-	}
-	[CCode (cheader_filename = "launcher/launcher.h")]
 	public class Session : GLib.Object {
 		public static unowned Launcher.Session get_default ();
+		public void update_windows (Wnck.Window window);
 		public virtual signal void application_launching (Launcher.Application application);
 		public virtual signal void application_opened (Launcher.Application application);
 	}
@@ -150,6 +121,8 @@ namespace Launcher {
 		FLOAT,
 		BOOL
 	}
+	[CCode (cheader_filename = "launcher/launcher.h")]
+	public delegate void ApplicationNotifyFinished (Launcher.Application application);
 	[CCode (cheader_filename = "launcher/launcher.h", has_target = false)]
 	public delegate void ApplicationWindowActivateFunc (Wnck.Window window, uint32 timestamp, void* callback_d);
 	[CCode (cheader_filename = "launcher/launcher.h")]
