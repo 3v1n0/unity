@@ -276,7 +276,8 @@ namespace Unity.Quicklauncher
     private void _normal_mask (Cairo.Context cr,
                                int           w,
                                int           h,
-                               string        label)
+                               string        label,
+                               bool          reactive)
     {
       // clear context
       cr.set_operator (Cairo.Operator.CLEAR);
@@ -285,13 +286,18 @@ namespace Unity.Quicklauncher
       // setup correct filled-drawing
       cr.set_operator (Cairo.Operator.SOURCE);
       cr.scale (1.0f, 1.0f);
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+      if (reactive)
+        cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+      else
+        cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.5f);
 
       Pango.Layout layout = Pango.cairo_create_layout (cr);
       Gtk.Settings settings = Gtk.Settings.get_default ();
       string font_face = settings.gtk_font_name;
       Pango.FontDescription desc = Pango.FontDescription.from_string (font_face);
       desc.set_weight (Pango.Weight.NORMAL);
+      if (!reactive)
+        desc.set_style (Pango.Style.ITALIC);
       layout.set_font_description (desc);
       layout.set_wrap (Pango.WrapMode.WORD_CHAR);
       layout.set_ellipsize (Pango.EllipsizeMode.END);
@@ -445,7 +451,7 @@ namespace Unity.Quicklauncher
       Cairo.Context normal_cr = new Cairo.Context (normal_surf);
       Cairo.Context selected_cr = new Cairo.Context (selected_surf);
 
-      _normal_mask (normal_cr, w, h, this.label);
+      _normal_mask (normal_cr, w, h, this.label, this.get_reactive ());
       _selected_mask (selected_cr, w, h, this.label);
 
       normal_layer.set_mask_from_surface (normal_surf);
@@ -534,7 +540,7 @@ namespace Unity.Quicklauncher
       this.leave_event.connect (this._on_leave);
       this.button_press_event.connect (this._on_mouse_down);
 
-      this.set_reactive (true);
+      this.reactive = true;
 
       old_width  = 0;
       old_height = 0;
