@@ -422,7 +422,6 @@ namespace Unity
       return false;
     }
 
-
     void check_fullscreen_obstruction ()
     {
       Wnck.Window current = Wnck.Screen.get_default ().get_active_window ();
@@ -757,9 +756,27 @@ namespace Unity
       this.window_kill_effect (this, window, events);
     }
 
+    public void topmost_size_changed (Clutter.Actor           actor,
+                                      Clutter.ActorBox        box,
+                                      Clutter.AllocationFlags flags)
+    {
+      if (actor is Mutter.Window)
+        check_fullscreen_obstruction ();
+    }
+
     public void topmost_changed (Mutter.Window old_window,
                                  Mutter.Window new_window)
     {
+      if (old_window is Mutter.Window)
+          old_window.allocation_changed.disconnect (topmost_size_changed);
+
+      if (new_window is Mutter.Window)
+        {
+          new_window.allocation_changed.connect (topmost_size_changed);
+
+          check_fullscreen_obstruction ();
+        }
+
       this.quicklauncher.manager.refresh_models ();
     }
 
