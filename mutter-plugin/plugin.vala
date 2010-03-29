@@ -153,6 +153,8 @@ namespace Unity
     private DBus.Connection screensaver_conn;
     private dynamic DBus.Object screensaver;
 
+    private unowned Mutter.Window? active_window = null;
+
     construct
     {
       Unity.global_shell = this;
@@ -767,12 +769,14 @@ namespace Unity
     public void topmost_changed (Mutter.Window old_window,
                                  Mutter.Window new_window)
     {
-      if (old_window is Mutter.Window)
-          old_window.allocation_changed.disconnect (topmost_size_changed);
+      if (active_window is Mutter.Window)
+        active_window.allocation_changed.disconnect (topmost_size_changed);
 
-      if (new_window is Mutter.Window)
+      active_window = new_window;
+
+      if (active_window is Mutter.Window)
         {
-          new_window.allocation_changed.connect (topmost_size_changed);
+          active_window.allocation_changed.connect (topmost_size_changed);
 
           check_fullscreen_obstruction ();
         }
