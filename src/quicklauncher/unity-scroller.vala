@@ -675,17 +675,23 @@ namespace Unity.Widgets
 
       // account for a drag on the velocity if scrolling out of the range
       // of the icons
-      if (this.drag_pos < 0)
-        {
-          var distance = this.drag_pos;
-          vel_y *= 1.0f - ((-distance / this.height) * 2.0f);
-        }
+      float resistance = 0.0f;
+      float drag_threshold = (this.total_child_height - this.hot_height);
 
-      if (this.drag_pos > this.total_child_height - this.height)
+      if (this.drag_pos > 0)
         {
-          var distance = this.drag_pos - (this.total_child_height - this.height);
-          vel_y *= 1.0f - ((distance / this.height) * 2.0f);
+          //dragging up
+          var distance = this.drag_pos;
+          resistance = (distance / this.hot_height) * 2.0f;
         }
+      else if (this.drag_pos < drag_threshold)
+        {
+          //dragging down
+          var distance = this.drag_pos - drag_threshold;
+          distance = Math.fabsf (distance);
+          resistance = (distance / this.hot_height) * 2.0f;
+        }
+      vel_y *= 1.0f - resistance;
 
       uint delta = motionevent.time - this.last_mouse_event_time;
       this.last_mouse_event_time = motionevent.time;
