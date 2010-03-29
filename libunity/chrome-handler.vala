@@ -27,7 +27,7 @@ namespace Unity.Webapp
 [Desktop Entry]
 Version=1.0
 Name=%s
-Exec=chromium-browser --app="%s"
+Exec=chromium-browser %s
 Comment=A Chromium Webapp
 Terminal=false
 X-MultipleArgs=false
