@@ -70,7 +70,7 @@ namespace Unity.Quicklauncher
       //make label
       var menuitem = new QuicklistMenuItem (label);
       menuitem.activated.connect (this.close_menu);
-      menuitem.reactive = false;
+      menuitem.reactive = true;
       this.menu.append (menuitem, true);
       this.menu.attach_to_actor (attached_widget);
       (attached_widget.get_stage () as Clutter.Stage).add_actor (this.menu);
