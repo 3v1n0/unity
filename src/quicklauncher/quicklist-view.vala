@@ -746,7 +746,7 @@ namespace Unity.Quicklauncher
       // draw fill
       cr.set_operator (Cairo.Operator.OVER);
       cr.scale (1.0f, 1.0f);
-      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.3f);
+      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.5f);
       _draw_mask (cr, w, h, anchor_y);
       cr.fill ();
 
