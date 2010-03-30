@@ -27,7 +27,7 @@ namespace Unity.Webapp
 [Desktop Entry]
 Version=1.0
 Name=%s
-Exec=chromium-browser %s
+Exec=chromium-browser --class="chromium-browser" --load-extension=/usr/lib/chromium-webfav-extension %s
 Comment=A Chromium Webapp
 Terminal=false
 X-MultipleArgs=false
