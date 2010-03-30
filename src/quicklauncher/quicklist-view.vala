@@ -746,7 +746,7 @@ namespace Unity.Quicklauncher
       // draw fill
       cr.set_operator (Cairo.Operator.OVER);
       cr.scale (1.0f, 1.0f);
-      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.3f);
+      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.7f);
       _draw_mask (cr, w, h, anchor_y);
       cr.fill ();
 
@@ -770,12 +770,12 @@ namespace Unity.Quicklauncher
       // draw highlight
       cr.set_operator (Cairo.Operator.OVER);
       hl_pattern = new Cairo.Pattern.radial ((double) w / 2.0f,
-                                             Ctk.em_to_pixel (BORDER),
+                                             Ctk.em_to_pixel (BORDER) - 15.0f,
                                              0.0f,
                                              (double) w / 2.0f,
-                                             Ctk.em_to_pixel (BORDER),
-                                             (double) w / 2.0f);
-      hl_pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.5f);
+                                             Ctk.em_to_pixel (BORDER) - 15.0f,
+                                             (double) w / 2.0f + 20.0f);
+      hl_pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.65f);
       hl_pattern.add_color_stop_rgba (1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
       cr.set_source (hl_pattern);
       _draw_mask (cr, w, h, anchor_y);
