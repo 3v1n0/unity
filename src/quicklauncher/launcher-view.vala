@@ -875,9 +875,12 @@ namespace Unity.Quicklauncher
 
     private bool on_long_hover ()
     {
-      if (QuicklistController.get_default().is_in_label)
+      if (QuicklistController.get_default().is_in_label &&
+          (this.model.get_menu_shortcuts ().size > 0 ||
+          this.model.get_menu_shortcut_actions ().size > 0))
         {
           this.hover_timeout = 0;
+
           this.menu_state = LauncherViewMenuState.MENU_CLOSE_WHEN_LEAVE;
           this.ensure_menu_state ();
         }

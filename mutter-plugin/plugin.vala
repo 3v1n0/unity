@@ -369,8 +369,7 @@ namespace Unity
 
       if (sender.model is ApplicationModel && sender.model.is_active)
         {
-          if (QuicklistController.get_default ().menu_is_open () &&
-              !QuicklistController.get_default ().menu.close_on_leave)
+          if (QuicklistController.get_default ().menu_is_open ())
             expose_windows ((sender.model as ApplicationModel).windows);
         }
     }
