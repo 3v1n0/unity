@@ -893,8 +893,6 @@ namespace Unity.Widgets
           child_box.y1 = (y + padding.top) + pri;
           child_box.y2 = child_box.y1 + min_height;
 
-          //print ("%f\n", child_box.y1);
-
           if ((childcontainer.state == ScrollerChildState.HIDDEN) && (_gap_animation < 1.0))
           {
             y += _gap_animation*(child_box.get_height () + spacing);
@@ -909,27 +907,9 @@ namespace Unity.Widgets
         {
           error ("Does not support Horizontal yet");
         }
-
         childcontainer.box = child_box;
         child.allocate (child_box, flags);
-
-        // if the child is outside our hot area, we hide it and set unreactive
-        if ((child_box.y1 < hot_negative) || (child_box.y2 > hot_positive - 4))
-          {
-            if (!childcontainer.is_hidden)
-              {
-                child.set_reactive (false);
-              }
-          }
-        else
-          {
-            if (childcontainer.is_hidden)
-              {
-                child.set_reactive (true);
-              }
-          }
       }
-
       /* also allocate our background graphics */
 
       /* we grab an offset so that we can just judder one background image in

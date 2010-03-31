@@ -32,9 +32,9 @@ namespace Unity
 
     public uint8 hovered_opacity { get; set; }
     public uint8 unhovered_opacity { get; set; }
-    
+
     uint8 _darken;
-    public uint8 darken { 
+    public uint8 darken {
       get { return _darken; }
       set {
         _darken = value;
@@ -42,27 +42,27 @@ namespace Unity
           darken_box.opacity = darken;
       }
     }
-    
+
     public ExposeClone (Mutter.Window source)
     {
       darken = 0;
       hovered_opacity = 255;
       unhovered_opacity = 255;
-    
+
       this.source = source;
       clone = new Clutter.Clone (source);
 
       add_actor (clone);
       clone.show ();
       clone.set_position (0, 0);
-      
+
       darken_box = new Clutter.Rectangle.with_color ({0, 0, 0, 255});
       add_actor (darken_box);
       darken_box.raise_top ();
-      
+
       darken_box.set_position (0, 0);
       darken_box.set_size (source.width, source.height);
-      
+
       darken_box.opacity = darken;
     }
 
@@ -71,13 +71,13 @@ namespace Unity
       this.enter_event.connect (this.on_mouse_enter);
       this.leave_event.connect (this.on_mouse_leave);
     }
-    
+
     private bool on_mouse_enter (Clutter.Event evnt)
     {
       hovered = true;
       opacity = hovered_opacity;
       darken_box.opacity = 0;
-      return true;
+      return false;
     }
 
     private bool on_mouse_leave (Clutter.Event evnt)
@@ -85,7 +85,7 @@ namespace Unity
       hovered = false;
       opacity = unhovered_opacity;
       darken_box.opacity = darken;
-      return true;
+      return false;
     }
   }
 
@@ -107,12 +107,14 @@ namespace Unity
 
     public uint8 hovered_opacity { get; set; }
     public uint8 unhovered_opacity { get; set; }
-    
+
     public uint8 darken { get; set; }
 
     private uint coverflow_index;
 
     private ExposeClone? last_selected_clone = null;
+
+    private bool menu_in_hover_close_state = false;
 
     public ExposeManager (Plugin plugin, Quicklauncher.View quicklauncher)
     {
@@ -134,8 +136,10 @@ namespace Unity
     {
       var controller = Quicklauncher.QuicklistController.get_default ();
       if (controller.menu_is_open ())
-        controller.menu.destroy.connect (this.end_expose);
-
+        {
+          controller.menu.destroy.connect (this.end_expose);
+          this.menu_in_hover_close_state = controller.menu.get_close_on_leave ();
+        }
       exposed_windows = new List<ExposeClone> ();
 
       if (expose_group != null)
@@ -176,6 +180,24 @@ namespace Unity
               clone.unhovered_opacity = unhovered_opacity;
               clone.opacity = unhovered_opacity;
               clone.darken = darken;
+
+              clone.enter_event.connect (() => {
+                var ql_controller = Quicklauncher.QuicklistController.get_default ();
+                if (ql_controller.menu_is_open () && this.menu_in_hover_close_state)
+                  {
+                    ql_controller.menu.set_close_on_leave (false);
+                  }
+                return false;
+              });
+
+              clone.leave_event.connect (() => {
+                var ql_controller = Quicklauncher.QuicklistController.get_default ();
+                if (ql_controller.menu_is_open () && this.menu_in_hover_close_state)
+                  {
+                    ql_controller.menu.set_close_on_leave (true);
+                  }
+                return false;
+              });
             }
 
             if (w.get_window_type () == Mutter.MetaCompWindowType.DESKTOP)
@@ -218,7 +240,7 @@ namespace Unity
                   break;
                 }
             }
-          
+
           if (!exposed)
             window.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250, "opacity", 255);
           window.reactive = true;
@@ -320,7 +342,7 @@ namespace Unity
           last = actor;
         }
     }
-    
+
     int direct_comparison (void* a, void* b)
     {
       if (a > b)
@@ -334,7 +356,7 @@ namespace Unity
     {
       List<Clutter.Actor> windows = _windows.copy ();
       windows.sort ((CompareFunc) direct_comparison);
-      
+
       int count = (int) windows.length ();
       int cols = (int) Math.ceil (Math.sqrt (count));
       int rows = 1;
