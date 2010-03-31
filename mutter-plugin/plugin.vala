@@ -546,20 +546,23 @@ namespace Unity
           return;
         }
 
+      unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
+
       GLib.SList <Wnck.Window> windows = null;
 
-      foreach (Wnck.Window w in Wnck.Screen.get_default ().get_windows ())
+      foreach (Mutter.Window window in mutter_windows)
         {
-          switch (w.get_window_type ())
-            {
-            case Wnck.WindowType.NORMAL:
-            case Wnck.WindowType.DIALOG:
-            case Wnck.WindowType.UTILITY:
-              windows.append (w);
-              break;
+          int type = window.get_window_type ();
 
-            default:
-              break;
+          if (type == Mutter.MetaWindowType.NORMAL ||
+              type == Mutter.MetaWindowType.DIALOG ||
+              type == Mutter.MetaWindowType.MODAL_DIALOG
+              )
+            {
+              ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
+              Wnck.Window wnck_window = Wnck.Window.get (xid);
+              if (wnck_window is Wnck.Window)
+               windows.append (wnck_window);
             }
         }
 
@@ -713,10 +716,9 @@ namespace Unity
 
       int type = window.get_window_type ();
 
-      if (type != Mutter.MetaWindowType.NORMAL &&
-          type != Mutter.MetaWindowType.DIALOG &&
-          type != Mutter.MetaWindowType.MODAL_DIALOG &&
-          type != Mutter.MetaWindowType.MENU
+      if (type == Mutter.MetaWindowType.NORMAL ||
+          type == Mutter.MetaWindowType.DIALOG ||
+          type == Mutter.MetaWindowType.MODAL_DIALOG
           )
         {
           ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
@@ -732,10 +734,9 @@ namespace Unity
 
       int type = window.get_window_type ();
 
-      if (type != Mutter.MetaWindowType.NORMAL &&
-          type != Mutter.MetaWindowType.DIALOG &&
-          type != Mutter.MetaWindowType.MODAL_DIALOG &&
-          type != Mutter.MetaWindowType.MENU
+      if (type == Mutter.MetaWindowType.NORMAL ||
+          type == Mutter.MetaWindowType.DIALOG ||
+          type == Mutter.MetaWindowType.MODAL_DIALOG
           )
         {
           ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
