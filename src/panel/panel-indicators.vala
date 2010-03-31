@@ -469,6 +469,7 @@ namespace Unity.Panel.Indicators
       if (this.entry.label is Gtk.Label)
         {
           this.text = new Ctk.Text ("");
+          this.text.color = { 233, 216, 200, 255 };
           this.add_actor (this.text);
           this.text.show ();
 
