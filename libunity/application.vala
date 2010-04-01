@@ -95,7 +95,7 @@ namespace Unity
               var webapp = new ChromiumWebApp (uri, name + ".png");
 
               this.webicon_fetcher = new WebiconFetcher (uri,
-                                                         icon_dirstring + hostname + ".svg",
+                                                         icon_dirstring + hostname + ".png",
                                                          webapp.desktop_file_path ());
               this.webicon_fetcher.fetch_webapp_data ();
 

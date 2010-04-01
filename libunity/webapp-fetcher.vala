@@ -293,7 +293,10 @@ namespace Unity.Webapp
 
           // if we ge there, we built an icon witout failing
           this.set_desktop_file_icon (get_hostname (this.uri));
-          Unity.global_shell.need_new_icon_cache ();
+          Idle.add (() => {
+            Unity.global_shell.need_new_icon_cache ();
+            return false;
+          });
         }
     }
 
