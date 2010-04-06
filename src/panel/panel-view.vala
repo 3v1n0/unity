@@ -46,6 +46,8 @@ namespace Unity.Panel
     {
       Object (shell:shell, reactive:false);
       this.tray.manage_stage (this.shell.get_stage ());
+
+      Unity.Testing.ObjectRegistry.get_default ().register ("PanelView", this);
     }
 
     construct

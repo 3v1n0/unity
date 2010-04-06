@@ -31,6 +31,9 @@ namespace Unity.Panel
     {
       Object (reactive:true,
               shell:shell);
+
+      Unity.Testing.ObjectRegistry.get_default ().register ("PanelHomeButton",
+                                                            this);
     }
 
     construct

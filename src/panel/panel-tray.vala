@@ -33,6 +33,9 @@ namespace Unity.Panel.Tray
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
               spacing:12);
+
+      Unity.Testing.ObjectRegistry.get_default ().register ("PanelTray",
+                                                            this);
     }
 
     construct

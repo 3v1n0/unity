@@ -36,6 +36,9 @@ namespace Unity.Panel.Indicators
               spacing:0,
               homogeneous:false,
               reactive:true);
+
+      Unity.Testing.ObjectRegistry.get_default ().register ("PanelIndicators",
+                                                            this);
     }
 
     construct

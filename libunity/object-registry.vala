@@ -23,7 +23,7 @@ namespace Unity.Testing
 {
   public class ObjectRegistry
   {
-    private static ObjectRegistry _registry = new ObjectRegistry ();
+    private static ObjectRegistry _registry = null;
 
     private HashMap<string,Object> object_map;
 
@@ -34,6 +34,9 @@ namespace Unity.Testing
 
     public static ObjectRegistry get_default ()
     {
+      if (_registry == null)
+        _registry = new ObjectRegistry ();
+
       return _registry;
     }
 
