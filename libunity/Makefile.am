@@ -47,11 +47,12 @@ libunity_la_VALASOURCES = \
   drag-view.vala \
   entry.vala \
   icon-postprocessor.vala \
+  object-registry.vala \
   perf-logger.vala \
   prism-handler.vala \
   shell.vala \
   theme.vala \
-  webapp-fetcher.vala 
+  webapp-fetcher.vala
 
 libunity_la_APIFILES = \
   unity.h \

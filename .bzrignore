@@ -210,3 +210,4 @@ libunity/webapp-fetcher.c
 libunity/webapp-iconbuilder.c
 mutter-plugin/expose-manager.c
 mutter-plugin/maximus.c
+libunity/object-registry.c
