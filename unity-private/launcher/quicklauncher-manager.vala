@@ -35,8 +35,6 @@ namespace Unity.Quicklauncher
 
     private Unity.Webapp.WebiconFetcher webicon_fetcher;
 
-    private GConf.Engine gclient;
-
     // lazy init of gconf here :-) wait's until we need it
     private GConf.Client? gconf_client_;
     private GConf.Client? gconf_client {
@@ -90,9 +88,10 @@ namespace Unity.Quicklauncher
       Unity.global_shell.need_new_icon_cache.connect (this.on_webicon_built);
 
       // put a watch on our gconf key so we get notified of new favorites
-      this.gclient = GConf.Engine.get_default ();
       try {
-        this.gclient.notify_add ("/desktop/unity/launcher/favorites/favorites_list", this.on_favorite_change);
+          gconf_client.add_dir ("/desktop/unity/launcher/favorites",
+                                GConf.ClientPreloadType.NONE);
+          gconf_client.notify_add ("/desktop/unity/launcher/favorites/favorites_list", this.on_favorite_change);
       } catch (Error e) {
       }
       this.webapp_device = get_webapp_device ();
@@ -109,7 +108,7 @@ namespace Unity.Quicklauncher
       return false;
     }
 
-    private void on_favorite_change (GConf.Engine client, uint cnxn_id, GConf.Entry entry)
+    private void on_favorite_change ()
     {
       this.build_favorites ();
     }
