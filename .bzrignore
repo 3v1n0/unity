@@ -224,3 +224,7 @@ unity-private/launcher/quicklauncher-manager.c
 unity-private/launcher/quicklist-controller.c
 unity-private/launcher/quicklist-view.c
 unity-private/launcher/unity-scroller.c
+unity-private/testing/background.c
+unity-private/testing/object-registry.c
+unity-private/testing/perf-logger.c
+unity-private/testing/test-window.c

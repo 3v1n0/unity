@@ -19,9 +19,11 @@
  *
  */
 
-namespace Unity
+using Unity.Testing;
+
+namespace Unity.Testing
 {
-  public class UnderlayWindow : Gtk.Window, Shell
+  public class Window : Gtk.Window, Shell
   {
     public bool menus_swallow_events { get { return true; } }
     public bool is_popup { get; construct; }
@@ -61,7 +63,7 @@ namespace Unity
 
     private bool showing_places;
 
-    public UnderlayWindow (bool popup, int width, int height)
+    public Window (bool popup, int width, int height)
     {
       Object(is_popup: popup, popup_width: width, popup_height: height);
     }

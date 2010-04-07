@@ -91,7 +91,7 @@ public class Main
   public static int main (string[] args)
   {
     Unity.Application    app;
-    Unity.UnderlayWindow window;
+    Unity.Testing.Window window;
     Unity.TimelineLogger.get_default(); // just inits the timer for logging
 
     GLib.Intl.textdomain (Config.GETTEXT_PACKAGE);
@@ -175,7 +175,7 @@ public class Main
     Environment.set_variable ("UNITY_DISABLE_TRAY", "1", true);
 
     /* Things seem to be okay, load the main window */
-    window = new Unity.UnderlayWindow (popup_mode, popup_width, popup_height);
+    window = new Unity.Testing.Window (popup_mode, popup_width, popup_height);
     app.shell = window;
     LOGGER_START_PROCESS ("unity_underlay_window_show");
     window.show ();

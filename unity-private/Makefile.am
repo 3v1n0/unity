@@ -67,10 +67,8 @@ libunity_private_la_LIBADD = \
 # Vala Sources
 private_sources = \
   application.vala \
-  background.vala \
   unity.vala \
-  utils.vala \
-  window.vala
+  utils.vala
 
 panel_sources = \
   panel/panel-home.vala \
@@ -106,8 +104,10 @@ launcher_sources = \
   launcher/unity-scroller.vala
 
 testing_sources = \
+  testing/background.vala \
   testing/object-registry.vala \
-  testing/perf-logger.vala
+  testing/perf-logger.vala \
+  testing/test-window.vala
 
 libunity_private_la_VALASOURCES = \
   $(private_sources) \

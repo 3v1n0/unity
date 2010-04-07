@@ -17,7 +17,7 @@
  *
  */
 
-namespace Unity
+namespace Unity.Testing
 {
   public class Background : Ctk.Bin
   {
@@ -25,12 +25,12 @@ namespace Unity
     private string BG_DIR    = "/desktop/gnome/background";
     private string BG_FILE   = "/desktop/gnome/background/picture_filename";
     private string BG_OPTION = "/desktop/gnome/background/picture_options";
-    
+
     private string filename;
     private string option;
 
     private Clutter.Texture bg;
-    
+
     construct
     {
       START_FUNCTION ();
@@ -98,10 +98,10 @@ namespace Unity
                                       GConf.Entry  entry)
     {
       var new_filename = entry.get_value ().get_string ();
-      
+
       if (new_filename == this.filename)
         return;
-      
+
       this.filename = new_filename;
       this.ensure_layout ();
     }
@@ -115,7 +115,7 @@ namespace Unity
       if (new_option == this.option)
         return;
 
-      this.option = new_option;    
+      this.option = new_option;
       this.ensure_layout ();
     }
 
