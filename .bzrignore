@@ -228,3 +228,7 @@ unity-private/testing/background.c
 unity-private/testing/object-registry.c
 unity-private/testing/perf-logger.c
 unity-private/testing/test-window.c
+test-unit
+test-unit-results.xml
+test-unit-results.html
+test-unit.c
