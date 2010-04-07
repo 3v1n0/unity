@@ -156,11 +156,11 @@ dnl Create the Makefiles
 AC_CONFIG_FILES([
   Makefile
   data/Makefile
-  libunity/Makefile
-  unity-places/Makefile
-  unity-places/unity-places.pc
-  src/Makefile
-  mutter-plugin/Makefile
+  unity/Makefile
+  unity-private/Makefile
+  targets/Makefile
+  targets/mutter/Makefile
+  targets/unity/Makefile
   tests/Makefile
   tools/Makefile
   vapi/Makefile

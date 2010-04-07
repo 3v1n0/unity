@@ -19,7 +19,8 @@ mutterlib_LTLIBRARIES = \
 
 # unity-quicklauncher static lib
 libunity_mutter_la_CPPFLAGS = \
-  -I$(top_srcdir)/libunity \
+  -I$(top_srcdir)/unity \
+  -I$(top_srcdir)/unity-private \
   -I$(top_srcdir)/src \
   $(BASE_CFLAGS) \
   $(MUTTER_CFLAGS) \
@@ -31,7 +32,8 @@ libunity_mutter_la_VALAFLAGS = \
   --library unity-mutter \
   --vapidir=$(top_srcdir)/vapi/ \
   --vapidir=$(top_srcdir)/src/ \
-  --vapidir=$(top_srcdir)/libunity \
+  --vapidir=$(top_srcdir)/unity \
+  --vapidir=$(top_srcdir)/unity-private \
   --pkg clutter-1.0 \
   --pkg clutk-0.3 \
   --pkg dbus-glib-1 \
@@ -44,12 +46,13 @@ libunity_mutter_la_VALAFLAGS = \
   --pkg unique-1.0 \
   --pkg x11 \
   --pkg unity-const \
-  --pkg unity-static \
   --pkg unity \
+  --pkg unity-private \
   $(MAINTAINER_VALAFLAGS)
 
 libunity_mutter_la_LIBADD = \
-  $(top_builddir)/src/libunity-static.la \
+  $(top_builddir)/unity/libunity.la \
+  $(top_builddir)/unity-private/libunity-private.la \
   $(BASE_LIBS) \
   $(MUTTER_LIBS)
 
@@ -82,8 +85,7 @@ $(BUILT_SOURCES) $(libunity_mutter_la_APIFILES): $(libunity_mutter_la_VALASOURCE
 CLEANFILES += \
   *.stamp \
   unity-mutter.vapi \
-  plugin.c \
-  window-management.c \
+  $(libunity_mutter_la_VALASOURCES:.vala=.c) \
   $(libunity_mutter_la_APIFILES)
 
 else

@@ -1,24 +1,24 @@
-bin_PROGRAMS = test-unity
+noinst_PROGRAMS = test-unity
 
 TESTDIR = $(top_srcdir)/tests
 
 test_unity_CPPFLAGS = \
   -I$(top_srcdir) \
-  -I$(top_srcdir)/libunity \
-  -I$(top_srcdir)/unity-places \
+  -I$(top_srcdir)/unity \
+  -I$(top_srcdir)/unity-private \
   -I$(top_srcdir)/src \
   -DTESTDIR=\"$(TESTDIR)\" \
   $(BASE_CFLAGS)
 
 test_unity_LDADD = \
-  $(top_builddir)/unity-places/libunity-places.la \
-  $(top_builddir)/src/libunity-static.la \
+  $(top_builddir)/unity/libunity.la \
+  $(top_builddir)/unity-private/libunity-private.la \
   $(BASE_LIBS) \
   $(MAINTAINER_LIBS)
 
 test_unity_VALAFLAGS = \
-  --vapidir=$(top_srcdir)/libunity \
-  --vapidir=$(top_srcdir)/unity-places \
+  --vapidir=$(top_srcdir)/unity \
+  --vapidir=$(top_srcdir)/unity-private \
   --vapidir=$(top_srcdir)/src \
   --vapidir=$(top_srcdir)/vapi/ \
   --vapidir=$(top_srcdir)/tests \
@@ -40,7 +40,7 @@ test_unity_VALAFLAGS = \
   --pkg unity \
   --pkg unity-const \
   --pkg unity-places \
-  --pkg unity-static \
+  --pkg unity-private \
   $(MAINTAINER_VALAFLAGS)
 
 test_unity_SOURCES = \
