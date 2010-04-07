@@ -162,6 +162,7 @@ AC_CONFIG_FILES([
   targets/mutter/Makefile
   targets/unity/Makefile
   tests/Makefile
+  tests/ui/Makefile
   tests/unit/Makefile
   tools/Makefile
   vapi/Makefile

@@ -232,3 +232,6 @@ test-unit
 test-unit-results.xml
 test-unit-results.html
 test-unit.c
+test-ui
+test-ui-results.xml
+test-ui.c

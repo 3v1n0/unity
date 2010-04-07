@@ -1,10 +1,8 @@
-SUBDIRS = unit ui
+noinst_PROGRAMS = test-ui
 
-noinst_PROGRAMS = test-unity
+TESTDIR = $(top_srcdir)/tests/unit
 
-TESTDIR = $(top_srcdir)/tests
-
-test_unity_CPPFLAGS = \
+test_ui_CPPFLAGS = \
   -I$(top_srcdir) \
   -I$(top_srcdir)/unity \
   -I$(top_srcdir)/unity-private \
@@ -12,13 +10,13 @@ test_unity_CPPFLAGS = \
   -DTESTDIR=\"$(TESTDIR)\" \
   $(BASE_CFLAGS)
 
-test_unity_LDADD = \
+test_ui_LDADD = \
   $(top_builddir)/unity/libunity.la \
   $(top_builddir)/unity-private/libunity-private.la \
   $(BASE_LIBS) \
   $(MAINTAINER_LIBS)
 
-test_unity_VALAFLAGS = \
+test_ui_VALAFLAGS = \
   --vapidir=$(top_srcdir)/unity \
   --vapidir=$(top_srcdir)/unity-private \
   --vapidir=$(top_srcdir)/src \
@@ -45,24 +43,24 @@ test_unity_VALAFLAGS = \
   --pkg unity-private \
   $(MAINTAINER_VALAFLAGS)
 
-test_unity_SOURCES = \
-  test-unity.vala
+test_ui_SOURCES = \
+  test-ui.vala
 
 # GTester stuff
-XML_REPORT = unity-check-results.xml
-HTML_REPORT = unity-check-results.html
+XML_REPORT = test-ui-results.xml
+HTML_REPORT = test-ui-results.html
 
-unity-tester: test-unity
-	@gtester -o=$(XML_REPORT) ./test-unity
+unit-tester: test-ui
+	@gtester -o=$(XML_REPORT) ./test-ui
 
 check-report:
-	@gtester -o=$(XML_REPORT) -k ./test-unity \
+	@gtester -o=$(XML_REPORT) -k ./test-ui \
 	&& (gtester-report $(XML_REPORT) \
 			| sed 's/GTester Unit Test Report</>GTester Unit Test Report (normal)</' \
 			> $(HTML_REPORT)) \
-	&& gnome-open $(HTML_REPORT)
+	&& xdg-open $(HTML_REPORT)
 
-check-local: unity-tester
+check-local: unit-tester
 
-EXTRA_DIST = test-const.vapi firefox.desktop
+EXTRA_DIST = test-const.vapi
 CLEANFILES = *.stamp $(XML_REPORT) $(HTML_REPORT) *.c
