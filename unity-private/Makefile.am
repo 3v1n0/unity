@@ -26,7 +26,7 @@ libunity_private_la_CPPFLAGS = \
   -I$(top_srcdir)/unity/ \
   -I$(top_srcdir)/src/ \
   -I$(top_srcdir)/places/ \
-  -I$(top_srcdir)/quicklauncher/ \
+  -I$(top_srcdir)/launcher/ \
   -I$(top_srcdir)/testing/
 
 libunity_private_la_VALAFLAGS = \
@@ -95,15 +95,15 @@ places_sources = \
   places/places-view.vala \
   places/search-field.vala
 
-quicklauncher_sources = \
-  quicklauncher/application-model.vala \
-  quicklauncher/launcher-model.vala \
-  quicklauncher/launcher-view.vala \
-  quicklauncher/quicklauncher-manager.vala \
-  quicklauncher/quicklauncher.vala \
-  quicklauncher/quicklist-controller.vala \
-  quicklauncher/quicklist-view.vala \
-  quicklauncher/unity-scroller.vala
+launcher_sources = \
+  launcher/application-model.vala \
+  launcher/launcher-model.vala \
+  launcher/launcher-view.vala \
+  launcher/quicklauncher-manager.vala \
+  launcher/quicklauncher.vala \
+  launcher/quicklist-controller.vala \
+  launcher/quicklist-view.vala \
+  launcher/unity-scroller.vala
 
 testing_sources = \
   testing/object-registry.vala \
@@ -113,7 +113,7 @@ libunity_private_la_VALASOURCES = \
   $(private_sources) \
   $(panel_sources) \
   $(places_sources) \
-  $(quicklauncher_sources) \
+  $(launcher_sources) \
   $(testing_sources)
 
 libunity_private_la_SOURCES = \
