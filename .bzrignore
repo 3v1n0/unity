@@ -215,3 +215,4 @@ targets/unity/main.c
 targets/unity/unity
 unity/unity-place-client.h
 unity/unity-place-server.h
+unity-private/testing/perf-logger.c

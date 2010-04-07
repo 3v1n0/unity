@@ -66,6 +66,7 @@ libunity_private_la_LIBADD = \
 
 # Vala Sources
 private_sources = \
+  application.vala \
   background.vala \
   unity.vala \
   utils.vala \
@@ -105,7 +106,8 @@ quicklauncher_sources = \
   quicklauncher/unity-scroller.vala
 
 testing_sources = \
-  testing/object-registry.vala
+  testing/object-registry.vala \
+  testing/perf-logger.vala
 
 libunity_private_la_VALASOURCES = \
   $(private_sources) \

@@ -108,13 +108,11 @@ libunity_la_SOURCES = \
   $(libunity_la_VALASOURCES:.vala=.c)
 
 libunity_la_VALASOURCES = \
-  application.vala \
   chrome-handler.vala \
   drag-controller.vala \
   drag-view.vala \
   entry.vala \
   icon-postprocessor.vala \
-  perf-logger.vala \
   prism-handler.vala \
   shell.vala \
   theme.vala \
