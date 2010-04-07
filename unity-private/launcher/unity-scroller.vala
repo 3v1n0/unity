@@ -836,7 +836,7 @@ namespace Unity.Widgets
           this.order_changed = false;
         }
 
-      this.height = box.y2 - box.y1;
+      //this.height = box.y2 - box.y1;
       this.total_child_height = 0.0f;
       float x = padding.left;
       float y = padding.top;

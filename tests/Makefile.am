@@ -60,7 +60,7 @@ check-report:
 	&& (gtester-report $(XML_REPORT) \
 			| sed 's/GTester Unit Test Report</>GTester Unit Test Report (normal)</' \
 			> $(HTML_REPORT)) \
-	&& gnome-open $(HTML_REPORT)
+	&& xdg-open $(HTML_REPORT)
 
 check-local: unity-tester
 

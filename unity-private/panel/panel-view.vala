@@ -225,11 +225,11 @@ namespace Unity.Panel
       child_box.y1 = Math.floorf (2);
       child_box.y2 = Math.floorf (PANEL_HEIGHT);
 
+      this.entry_background.allocate (child_box, flags);
       if ((this.entry_background.Width != (int)(child_box.x2 - child_box.x1)) && (this.entry_background.height != (int)(child_box.y2 - child_box.y1-2)))
       {
         this.entry_background.create_search_entry_background ((int)(child_box.x2 - child_box.x1), (int)(child_box.y2 - child_box.y1-2));
       }
-      this.entry_background.allocate (child_box, flags);
 
       child_box.x1 += 6;
       child_box.x2 = child_box.x1 + 16;

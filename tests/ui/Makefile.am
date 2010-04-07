@@ -56,7 +56,7 @@ unit-tester: test-ui
 check-report:
 	@gtester -o=$(XML_REPORT) -k ./test-ui \
 	&& (gtester-report $(XML_REPORT) \
-			| sed 's/GTester Unit Test Report</>GTester Unit Test Report (normal)</' \
+			| sed 's/GTester UI Test Report</>GTester UI Test Report (normal)</' \
 			> $(HTML_REPORT)) \
 	&& xdg-open $(HTML_REPORT)
 

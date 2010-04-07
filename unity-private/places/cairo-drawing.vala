@@ -423,6 +423,8 @@ namespace Unity.Places.CairoDrawing
     public Clutter.CairoTexture cairotxt;
     public EntryBackground ()
     {
+      cairotxt = new Clutter.CairoTexture (120, 24);
+      add_actor (cairotxt);
     }
 
     public void create_search_entry_background (int W, int H)
@@ -430,12 +432,6 @@ namespace Unity.Places.CairoDrawing
       Width = W;
       Height = H;
 
-      if (this.get_child () is Clutter.Actor)
-      {
-        this.remove_actor (this.get_child ());
-      }
-
-      cairotxt = new Clutter.CairoTexture(Width, Height);
       Cairo.Context cairoctx = cairotxt.create();
       {
         cairoctx.set_operator (Cairo.Operator.CLEAR);
@@ -460,9 +456,7 @@ namespace Unity.Places.CairoDrawing
 
         cairoctx.fill ();
       }
-
       cairotxt.set_opacity (0xFF);
-      this.add_actor (cairotxt);
     }
 
     /*private override void allocate (Clutter.ActorBox        box,
