@@ -55,7 +55,7 @@ public class Main
 
 
     Test.add_func ("/Unity/Background", () => {
-      var bg = new Unity.Background ();
+      var bg = new Unity.Testing.Background ();
       assert (bg is Clutter.Actor);
     });
     Test.add_func ("/Unity/Quicklauncher/ApplicationModel", () => {

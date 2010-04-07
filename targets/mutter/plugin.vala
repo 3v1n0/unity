@@ -120,7 +120,6 @@ namespace Unity
     private Maximus          maximus;
 
     /* Unity Components */
-    private Background         background;
     private ExposeManager      expose_manager;
     private Quicklauncher.View quicklauncher;
     private Places.Controller  places_controller;
@@ -230,10 +229,6 @@ namespace Unity
       Ctk.dnd_init ((Gtk.Widget)this.drag_dest, target_list);
 
       this.places_enabled = envvar_is_enabled ("UNITY_ENABLE_PLACES");
-
-      this.background = new Background ();
-      this.stage.add_actor (this.background);
-      this.background.lower_bottom ();
 
       Clutter.Group window_group = (Clutter.Group) this.plugin.get_window_group ();
 
@@ -453,9 +448,6 @@ namespace Unity
       this.drag_dest.resize (this.QUICKLAUNCHER_WIDTH,
                              (int)height - this.PANEL_HEIGHT);
       this.drag_dest.move (0, this.PANEL_HEIGHT);
-
-      this.background.set_size (width, height);
-      this.background.set_position (0, 0);
 
       this.quicklauncher.set_size (this.QUICKLAUNCHER_WIDTH,
                                    (height-this.PANEL_HEIGHT));
