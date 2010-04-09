@@ -45,7 +45,7 @@ public class Main
   private static void add_launcher_tests ()
   {
     Test.add_func ("/Unity/Window", () => {
-      var window = new Unity.UnderlayWindow (false, 0, 0);
+      var window = new Unity.Testing.Window (false, 0, 0);
 
       assert (window is Gtk.Window);
 
@@ -55,7 +55,7 @@ public class Main
 
 
     Test.add_func ("/Unity/Background", () => {
-      var bg = new Unity.Background ();
+      var bg = new Unity.Testing.Background ();
       assert (bg is Clutter.Actor);
     });
     Test.add_func ("/Unity/Quicklauncher/ApplicationModel", () => {
