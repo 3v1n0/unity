@@ -19,14 +19,36 @@
  */
 using Unity;
 using Unity.Webapp;
+using Unity.Testing;
+
 public class Main
 {
   public const string firefox_desktop = Unity.Tests.TESTDIR+"/firefox.desktop";
+
+   public static bool fatal_handler (string?       log_domain,
+                                     LogLevelFlags flags,
+                                     string?       message)
+  {
+    if ("ndicator" in log_domain)
+      return false;
+
+    if ("widget class `GtkImage' has no property named `x-ayatana-indicator-dynamic'" in message)
+      return false;
+
+    if ("is currently inside an allocation cycle" in message)
+      return false;
+
+    return true;
+  }
+
   public static int main (string[] args)
   {
     Gtk.init (ref args);
     Ctk.init (ref args);
     Test.init (ref args);
+
+    Environment.set_variable ("UNITY_DISABLE_TRAY", "1", true);
+    Environment.set_variable ("UNITY_DISABLE_IDLES", "1", true);
 
     add_launcher_tests ();
 
@@ -45,6 +67,8 @@ public class Main
   private static void add_launcher_tests ()
   {
     Test.add_func ("/Unity/Window", () => {
+      Logging.init_fatal_handler ();
+
       var window = new Unity.Testing.Window (false, 0, 0);
 
       assert (window is Gtk.Window);
@@ -93,6 +117,9 @@ public class Main
     });
 
     Test.add_func ("/Unity/Places/TestPlace", () => {
+
+      Logging.init_fatal_handler ();
+
       var place = new TestPlace ();
 
       assert (place is TestPlace);
@@ -106,8 +133,7 @@ public class Main
           Utils.register_object_on_dbus (conn,
                                   "/com/canonical/Unity/Place",
                                   place);
-
-          loop.run ();
+          loop.get_context ().iteration (true);
         }
       catch (Error e)
         {

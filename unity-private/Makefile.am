@@ -107,6 +107,7 @@ testing_sources = \
   testing/background.vala \
   testing/object-registry.vala \
   testing/perf-logger.vala \
+  testing/test-utils.vala \
   testing/test-window.vala
 
 libunity_private_la_VALASOURCES = \

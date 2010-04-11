@@ -235,3 +235,4 @@ test-unit.c
 test-ui
 test-ui-results.xml
 test-ui.c
+unity-private/testing/test-utils.c
