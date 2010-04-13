@@ -44,6 +44,7 @@ test_ui_VALAFLAGS = \
   $(MAINTAINER_VALAFLAGS)
 
 test_ui_SOURCES = \
+  test-quicklist.vala \
   test-ui.vala
 
 # GTester stuff

@@ -25,22 +25,6 @@ public class Main
 {
   public const string firefox_desktop = Unity.Tests.TESTDIR+"/firefox.desktop";
 
-   public static bool fatal_handler (string?       log_domain,
-                                     LogLevelFlags flags,
-                                     string?       message)
-  {
-    if ("ndicator" in log_domain)
-      return false;
-
-    if ("widget class `GtkImage' has no property named `x-ayatana-indicator-dynamic'" in message)
-      return false;
-
-    if ("is currently inside an allocation cycle" in message)
-      return false;
-
-    return true;
-  }
-
   public static int main (string[] args)
   {
     Gtk.init (ref args);

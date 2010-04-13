@@ -20,23 +20,28 @@
 using Unity;
 using Unity.Testing;
 
-using Unity.Tests.UI;
-
-public class Main
+namespace Unity.Tests.UI
 {
-  public static int main (string[] args)
+  public class QuicklistSuite : Object
   {
-    Environment.set_variable ("UNITY_DISABLE_TRAY", "1", true);
-    Environment.set_variable ("UNITY_DISABLE_IDLES", "1", true);
+    private const string DOMAIN = "/UI/Quicklist";
 
-    Gtk.init (ref args);
-    Ctk.init (ref args);
-    Test.init (ref args);
+    Gtk.Window    window;
+    Clutter.Actor stage;
+    string        n;
 
-    var q = new QuicklistSuite ();
+    public QuicklistSuite ()
+    {
+      window = new Gtk.Window (Gtk.WindowType.TOPLEVEL);
+      stage = Clutter.Stage.get_default ();
+      n = "hello";
 
-    Test.run ();
+      Test.add_data_func (DOMAIN + "/Allocation", test_allocation);
+    }
 
-    return 0;
+    private void test_allocation ()
+    {
+      debug ("test_allocation: %p %p %p %s", this, window, stage, n);
+    }
   }
 }
