@@ -64,8 +64,8 @@ namespace Unity.Panel.Tray
 
     private static int order_icons (Clutter.Actor a, Clutter.Actor b)
     {
-      weak string stra = (string)a.get_data ("n_icon");
-      weak string strb = (string)b.get_data ("n_icon");
+      weak string stra = (string)a.get_data<string> ("n_icon");
+      weak string strb = (string)b.get_data<string> ("n_icon");
 
       return strcmp ((stra != null) ? stra : "",
                      (strb != null) ? strb : "");
