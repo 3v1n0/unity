@@ -138,7 +138,7 @@ namespace Unity.Panel.Indicators
       float x = root_x - this.x;
 
       /* Find which entry has the button press, pop it up */
-      unowned GLib.List list = this.get_children ();
+      unowned GLib.List<IndicatorItem> list = this.get_children ();
       for (int i = 0; i < list.length (); i++)
         {
           unowned IndicatorItem it = (IndicatorItem)list.nth_data (i);
@@ -260,7 +260,7 @@ namespace Unity.Panel.Indicators
     private void on_menu_moved (IndicatorItem         item,
                                 Gtk.MenuDirectionType type)
     {
-      unowned GLib.List list = this.get_children ();
+      unowned GLib.List<IndicatorItem> list = this.get_children ();
 
       int pos = list.index (item);
 
@@ -285,7 +285,7 @@ namespace Unity.Panel.Indicators
       IndicatorItem new_item = list.nth_data (pos) as IndicatorItem;
 
       /* Find the right entry to activate */
-      unowned GLib.List l = new_item.get_children ();
+      unowned GLib.List<IndicatorEntry> l = new_item.get_children ();
       int p = type == Gtk.MenuDirectionType.PARENT ? (int)l.length ()-1 : 0;
       IndicatorEntry? new_entry = l.nth_data (p) as IndicatorEntry;
 
@@ -317,7 +317,7 @@ namespace Unity.Panel.Indicators
 
     private void remove_entry (Indicator.ObjectEntry entry)
     {
-      unowned GLib.List list = this.get_children ();
+      unowned GLib.List<IndicatorEntry> list = this.get_children ();
 
       for (int i = 0; i < list.length (); i++)
         {
@@ -344,7 +344,7 @@ namespace Unity.Panel.Indicators
     private void on_menu_moved (IndicatorEntry        entry,
                                 Gtk.MenuDirectionType type)
     {
-      unowned GLib.List list = this.get_children ();
+      unowned GLib.List<IndicatorEntry> list = this.get_children ();
 
       int pos = list.index (entry);
 
@@ -387,7 +387,7 @@ namespace Unity.Panel.Indicators
       object.entry_added.connect (this.create_entry);
       object.entry_removed.connect (this.remove_entry);
 
-      unowned GLib.List list = object.get_entries ();
+      unowned GLib.List<Indicator.ObjectEntry> list = object.get_entries ();
 
       for (int i = 0; i < list.length (); i++)
         {

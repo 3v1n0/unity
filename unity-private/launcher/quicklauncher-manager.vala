@@ -169,7 +169,9 @@ namespace Unity.Quicklauncher
           return false;
         }
         Ctk.drag_get_data (actor, context, target_type, time_);
-        target_type = (Gdk.Atom) context.targets.nth_data (Unity.dnd_targets.TARGET_STRING);
+        unowned GLib.List<Gdk.Atom?> list = context.targets;
+
+        target_type = (Gdk.Atom) list.nth_data (Unity.dnd_targets.TARGET_STRING);
         if (target_type.name () == "")
         {
           return false;
