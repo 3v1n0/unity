@@ -75,5 +75,76 @@ namespace Unity.Testing
           do_event (actor, (Clutter.Event)event, false);
         }
     }
+
+    public void button_release (Clutter.Actor actor,
+                                uint32        button,
+                                float         relative_x,
+                                float         relative_y)
+    {
+      float actor_x, actor_y;
+      Clutter.ButtonEvent event = Clutter.ButtonEvent ();
+
+      actor.get_transformed_position (out actor_x, out actor_y);
+
+      event.type = Clutter.EventType.BUTTON_RELEASE;
+      event.time = Clutter.get_current_event_time ();
+      event.flags &= Clutter.EventFlags.FLAG_SYNTHETIC;
+      event.stage = actor.get_stage () as Clutter.Stage;
+      event.source = actor;
+      event.x = actor_x + relative_x;
+      event.y = actor_y + relative_y;
+      event.button = button;
+
+      do_event (actor, (Clutter.Event)event, false);
+    }
+
+    public void enter_event (Clutter.Actor actor,
+                             float         relative_x,
+                             float         relative_y)
+    {
+      float actor_x, actor_y;
+      Clutter.CrossingEvent event = Clutter.CrossingEvent ();
+
+      actor.get_transformed_position (out actor_x, out actor_y);
+
+      event.type = Clutter.EventType.ENTER;
+      event.time = Clutter.get_current_event_time ();
+      event.flags &= Clutter.EventFlags.FLAG_SYNTHETIC;
+      event.stage = actor.get_stage () as Clutter.Stage;
+      event.source = event.stage;
+      event.x = actor_x + relative_x;
+      event.y = actor_y + relative_y;
+
+      do_event (actor, (Clutter.Event)event, false);
+    }
+
+    public void leave_event (Clutter.Actor actor,
+                             float         relative_x,
+                             float         relative_y)
+    {
+      float actor_x, actor_y;
+      Clutter.CrossingEvent event = Clutter.CrossingEvent ();
+
+      actor.get_transformed_position (out actor_x, out actor_y);
+
+      event.type = Clutter.EventType.LEAVE;
+      event.time = Clutter.get_current_event_time ();
+      event.flags &= Clutter.EventFlags.FLAG_SYNTHETIC;
+      event.stage = actor.get_stage () as Clutter.Stage;
+      event.source = event.stage;
+      event.x = actor_x + relative_x;
+      event.y = actor_y + relative_y;
+
+      do_event (actor, (Clutter.Event)event, false);
+    }
+
+    public void motion_event (Clutter.Actor actor,
+                              float relative_startx,
+                              float relative_starty,
+                              float relative_endx,
+                              float relative_endy)
+    {
+      /* FIXME: Need to fake a series of events to act a mouse has moved */
+    }
   }
 }

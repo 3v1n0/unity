@@ -23,7 +23,7 @@ test_ui_VALAFLAGS = \
   --vapidir=$(top_srcdir)/unity-private \
   --vapidir=$(top_srcdir)/src \
   --vapidir=$(top_srcdir)/vapi/ \
-  --vapidir=$(top_srcdir)/tests \
+  --vapidir=$(top_srcdir)/tests/ui \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg dbus-glib-1 \

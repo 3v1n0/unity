@@ -165,6 +165,7 @@ AC_CONFIG_FILES([
   tests/ui/Makefile
   tests/ui/data/Makefile
   tests/unit/Makefile
+  tests/unit/data/Makefile
   tools/Makefile
   vapi/Makefile
   po/Makefile.in
