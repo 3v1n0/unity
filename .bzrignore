@@ -235,3 +235,7 @@ test-unit.c
 test-ui
 test-ui-results.xml
 test-ui.c
+unity-private/testing/test-utils.c
+tests/ui/test-quicklist.c
+unity-private/testing/test-director.c
+test-places.c

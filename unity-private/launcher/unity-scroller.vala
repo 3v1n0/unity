@@ -165,6 +165,9 @@ namespace Unity.Widgets
       fadeout_stack = new Gee.HashMap<Clutter.Actor, Clutter.Animation> ();
       fadein_stack = new Gee.HashMap<Clutter.Actor, Clutter.Animation> ();
       anim_stack = new Gee.HashMap<Clutter.Actor, Clutter.Animation> ();
+
+      Unity.Testing.ObjectRegistry.get_default ().register ("UnityWidgetsScroller",
+                                                            this);
     }
 
     construct {
@@ -1129,6 +1132,12 @@ namespace Unity.Widgets
 
     public void sort_depth_order ()
     {
+    }
+
+    /* Testing interface */
+    public ScrollerChild nth (int i)
+    {
+      return children.get (i);
     }
   }
 }

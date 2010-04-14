@@ -35,6 +35,7 @@ libunity_mutter_la_VALAFLAGS = \
   --vapidir=$(top_srcdir)/unity \
   --vapidir=$(top_srcdir)/unity-private \
   --pkg clutter-1.0 \
+  --pkg clutter-gtk-0.10 \
   --pkg clutk-0.3 \
   --pkg dbus-glib-1 \
   --pkg gtk+-2.0 \

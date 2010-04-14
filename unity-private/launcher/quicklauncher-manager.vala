@@ -65,6 +65,10 @@ namespace Unity.Quicklauncher
     construct
     {
       START_FUNCTION ();
+
+      Unity.Testing.ObjectRegistry.get_default ().register ("QuicklauncherManager",
+                                                            this);
+
       this.appman = Launcher.Appman.get_default ();
       this.appman.get_default ().enable_window_checking = true;
       this.session = Launcher.Session.get_default ();

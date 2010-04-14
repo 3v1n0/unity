@@ -57,12 +57,20 @@ namespace Unity.Panel.Indicators
 
     private bool load_indicators ()
     {
+      string skip_list;
+
       /* Create the order */
       this.indicator_order.set ("libapplication.so", 1);
-      this.indicator_order.set ("libmessaging.so", 2);
-      this.indicator_order.set ("libdatetime.so", 3);
-      this.indicator_order.set ("libme.so", 4);
-      this.indicator_order.set ("libsession.so", 5);
+      this.indicator_order.set ("libsoundmenu.so", 2);
+      this.indicator_order.set ("libmessaging.so", 3);
+      this.indicator_order.set ("libdatetime.so", 4);
+      this.indicator_order.set ("libme.so", 5);
+      this.indicator_order.set ("libsession.so", 6);
+
+      /* The ones we don't want to load */
+      skip_list = Environment.get_variable ("UNITY_PANEL_INDICATORS_SKIP");
+      if (skip_list == null)
+        skip_list = "";
 
       /* We need to look for icons in an specific location */
       Gtk.IconTheme.get_default ().append_search_path (INDICATORICONSDIR);
@@ -79,6 +87,9 @@ namespace Unity.Panel.Indicators
           while ((file_info = e.next_file (null)) != null)
             {
               string leaf = file_info.get_name ();
+
+              if (leaf in skip_list)
+                continue;
 
               if (leaf[leaf.len()-2:leaf.len()] == "so")
                 this.load_indicator (INDICATORDIR + file_info.get_name (),

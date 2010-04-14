@@ -19,14 +19,19 @@
 
 using Unity;
 using Unity.Testing;
+using Unity.Tests.Unit;
 
 public class Main
 {
   public static int main (string[] args)
   {
+    PlacesSuite places;
+
     Gtk.init (ref args);
     Ctk.init (ref args);
     Test.init (ref args);
+
+    places = new PlacesSuite ();
 
     Test.run ();
 
