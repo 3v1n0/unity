@@ -50,6 +50,12 @@ AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION([0.17])
 IT_PROG_INTLTOOL([0.35.0])
 
+dnl Check for perceptualdiff
+AC_CHECK_PROG(HAVE_IMAGEDIFF, perceptualdiff, true, false)
+if test "x${HAVE_IMAGEDIFF}" = "xfalse"; then
+  AC_MSG_ERROR([*** `perceptualdiff` not found, required for UI tests])
+fi
+
 dnl Setup a few consts
 if test "x${prefix}" = "xNONE"; then
   PREFIX="${ac_default_prefix}"
