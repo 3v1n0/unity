@@ -42,9 +42,9 @@ public class Main
 
     quicklist_suite = new QuicklistSuite ();
 
-    Timeout.add_seconds (5, ()=> {
+    Timeout.add_seconds (3, ()=> {
       Test.run ();
-      //Gtk.main_quit ();
+      Gtk.main_quit ();
       return false;
     });
 
