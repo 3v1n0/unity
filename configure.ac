@@ -163,6 +163,7 @@ AC_CONFIG_FILES([
   targets/unity/Makefile
   tests/Makefile
   tests/ui/Makefile
+  tests/ui/data/Makefile
   tests/unit/Makefile
   tools/Makefile
   vapi/Makefile

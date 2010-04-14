@@ -36,6 +36,11 @@ namespace Unity.Testing
 {
   public class Logging
   {
+    public Logging ()
+    {
+      Log.set_default_handler (log_handler);
+    }
+
     public static bool fatal_handler (string?       log_domain,
                                       LogLevelFlags flags,
                                       string?       message)
@@ -59,6 +64,45 @@ namespace Unity.Testing
     public static void init_fatal_handler ()
     {
       G.Test.Log.set_fatal_handler (fatal_handler);
+    }
+
+    private void log_handler (string? log_domain,
+                              LogLevelFlags flags,
+                              string        message)
+    {
+      string level;
+
+      if (log_domain == "Clutter" && (flags & LogLevelFlags.LEVEL_WARNING)!=0)
+        {
+          if ("is currently inside an allocation cycle" in message)
+            return;
+        }
+
+      if (log_domain == "Gtk" && (flags & LogLevelFlags.LEVEL_WARNING) != 0)
+        {
+          if ("has no property named `x-ayatana-indicator-dynamic'" in message)
+            return;
+        }
+
+      if ((flags & LogLevelFlags.LEVEL_ERROR) != 0)
+        level = "FATAL";
+      else if ((flags & LogLevelFlags.LEVEL_CRITICAL) != 0)
+        level = "CRITICAL";
+      else if ((flags & LogLevelFlags.LEVEL_WARNING) != 0)
+        level = "WARNING";
+      else if ((flags & LogLevelFlags.LEVEL_MESSAGE) != 0)
+        level = "MESSAGE";
+      else if ((flags & LogLevelFlags.LEVEL_INFO) != 0)
+        level = "INFO";
+      else if ((flags & LogLevelFlags.LEVEL_DEBUG) != 0)
+        level = "DEBUG";
+      else
+        level = @"$flags";
+
+      print ("%s-%s: %s\n\n",
+             log_domain == null ? "Unity" : log_domain,
+             level,
+             message);
     }
   }
 }

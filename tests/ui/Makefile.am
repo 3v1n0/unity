@@ -1,6 +1,8 @@
+SUBDIRS = data
+
 noinst_PROGRAMS = test-ui
 
-TESTDIR = $(top_srcdir)/tests/unit
+TESTDIR = $(top_srcdir)/tests/ui
 
 test_ui_CPPFLAGS = \
   -I$(top_srcdir) \

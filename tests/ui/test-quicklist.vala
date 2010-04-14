@@ -19,6 +19,8 @@
 
 using Unity;
 using Unity.Testing;
+using Unity.Quicklauncher;
+using Unity.Widgets;
 
 namespace Unity.Tests.UI
 {
@@ -26,22 +28,39 @@ namespace Unity.Tests.UI
   {
     private const string DOMAIN = "/UI/Quicklist";
 
-    Gtk.Window    window;
-    Clutter.Actor stage;
-    string        n;
+    Unity.Testing.Window    window;
+    Clutter.Stage           stage;
 
     public QuicklistSuite ()
     {
-      window = new Gtk.Window (Gtk.WindowType.TOPLEVEL);
-      stage = Clutter.Stage.get_default ();
-      n = "hello";
+      Logging.init_fatal_handler ();
 
-      Test.add_data_func (DOMAIN + "/Allocation", test_allocation);
+      /* Testup the test window */
+      window = new Unity.Testing.Window (true, 1024, 600);
+      window.init_test_mode ();
+      stage = window.stage;
+      window.title = "Quicklist Tests";
+      window.show_all ();
+
+      Test.add_data_func (DOMAIN + "/HoverShown",
+                          test_controller_show_label);
     }
 
-    private void test_allocation ()
+    private void test_controller_show_label ()
     {
-      debug ("test_allocation: %p %p %p %s", this, window, stage, n);
+      string img = TESTDIR + "/data/quicklist_controller_show_label.png";
+      ObjectRegistry registry = ObjectRegistry.get_default ();
+
+      Logging.init_fatal_handler ();
+
+      Scroller scroller = registry.lookup ("UnityWidgetsScroller") as Scroller;
+      ScrollerChild first = scroller.nth (0) as ScrollerChild;
+
+      QuicklistController qlcontroller = QuicklistController.get_default ();
+      qlcontroller.show_label ("Ubuntu Software Centre",
+                               first.child as Ctk.Actor);
+
+      assert (Utils.compare_snapshot (stage, img, 54, 30, 200, 50));
     }
   }
 }

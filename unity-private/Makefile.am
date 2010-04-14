@@ -21,6 +21,7 @@ libunity_private_la_CPPFLAGS = \
   -DINDICATORDIR=\""$(INDICATORDIR)"\" \
   -DINDICATORICONSDIR=\""$(INDICATORICONSDIR)"\" \
   -DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\" \
+  -DG_LOG_DOMAIN=\"libunity-private\" \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS) \
   -I$(top_srcdir)/unity/ \
@@ -107,6 +108,7 @@ testing_sources = \
   testing/background.vala \
   testing/object-registry.vala \
   testing/perf-logger.vala \
+  testing/test-director.vala \
   testing/test-utils.vala \
   testing/test-window.vala
 
