@@ -1,3 +1,5 @@
+SUBDIRS = data
+
 noinst_PROGRAMS = test-unit
 
 TESTDIR = $(top_srcdir)/tests/unit

@@ -1,6 +1,6 @@
 m4_define([unity_major], [0])
 m4_define([unity_minor], [2])
-m4_define([unity_micro], [1])
+m4_define([unity_micro], [2])
 
 m4_define([unity_api],
           [unity_major.unity_minor])
@@ -73,7 +73,7 @@ AC_DEFINE_UNQUOTED(PREFIXDIR, "${PREFIX}",[Prefix directory])
 
 dnl Use strict compiler flags only on development releases
 m4_define([maintainer_flags_default],
-          [m4_if(m4_eval(unity_minor % 2), [1], [yes], [no])])
+          [m4_if(m4_eval(unity_micro % 2), [1], [yes], [no])])
 AC_ARG_ENABLE([maintainer-flags],
               [AS_HELP_STRING([--enable-maintainer-flags=@<:@no/yes@:>:],[Use string compiler flags @<:@default=no@:>@])],
               [],
@@ -100,12 +100,12 @@ PKG_CHECK_MODULES(BASE,
                   gio-2.0 >= $GTK_REQUIRED
                   gee-1.0
                   gconf-2.0
-                  dbusmodel >= 0.1.0
+                  dbusmodel >= 0.2.0
                   clutter-1.0 >= 1.0
                   clutter-gtk-0.10 >= 0.10
                   clutk-0.3 >= 0.3.26
                   indicator
-                  launcher-0.3 >= 0.3.24
+                  launcher-0.3 >= 0.3.26
                   libwnck-1.0 >= 2.28.0
                   unique-1.0
                   unity-misc
