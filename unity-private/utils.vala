@@ -20,7 +20,7 @@
 namespace Utils
 {
   [CCode (lower_case_prefix = "utils_")]
-    public extern void set_strut (Gtk.Window *window,
+  public extern void set_strut (Gtk.Window *window,
                                   uint32      strut_size,
                                   uint32      strut_start,
                                   uint32      strut_end,

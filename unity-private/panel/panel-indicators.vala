@@ -19,6 +19,7 @@
  */
 
 using Gee;
+using Utils;
 
 namespace Unity.Panel.Indicators
 {
@@ -48,6 +49,7 @@ namespace Unity.Panel.Indicators
       this.button_press_event.connect (this.on_button_press_event);
       this.button_release_event.connect (this.on_button_release_event);
       this.motion_event.connect (this.on_motion_event);
+      this.scroll_event.connect (on_scroll_event);
 
       if (Environment.get_variable ("UNITY_DISABLE_IDLES") != null)
         this.load_indicators ();
@@ -268,6 +270,20 @@ namespace Unity.Panel.Indicators
       return true;
     }
 
+    private bool on_scroll_event (Clutter.Event e)
+    {
+      Clutter.ScrollEvent event = e.scroll;
+
+      unowned IndicatorEntry? entry = this.entry_for_event (e.scroll.x);
+      if (entry is IndicatorEntry)
+        {
+          unowned Indicator.Object object = entry.get_data<Indicator.Object> ("Indicator.Object");
+
+          Signal.emit_by_name (object, "scroll", 1, event.direction);
+        }
+      return true;
+    }
+
     private void on_menu_moved (IndicatorItem         item,
                                 Gtk.MenuDirectionType type)
     {
@@ -343,9 +359,11 @@ namespace Unity.Panel.Indicators
         }
     }
 
-    private void create_entry (Indicator.ObjectEntry entry)
+    private void create_entry (Indicator.ObjectEntry entry,
+                               Indicator.Object      object)
     {
       IndicatorEntry e = new IndicatorEntry (entry);
+      e.set_data ("Indicator.Object", object);
       this.add_actor (e);
       this.show ();
 
@@ -391,11 +409,17 @@ namespace Unity.Panel.Indicators
       parent.show_entry (new_entry);
     }
 
+    private void on_entry_added (Indicator.Object      object,
+                                 Indicator.ObjectEntry entry)
+    {
+      create_entry (entry, object);
+    }
+
     public void set_object (Indicator.Object object)
     {
       this.object = object;
 
-      object.entry_added.connect (this.create_entry);
+      object.entry_added.connect (this.on_entry_added);
       object.entry_removed.connect (this.remove_entry);
 
       unowned GLib.List<Indicator.ObjectEntry> list = object.get_entries ();
@@ -406,7 +430,7 @@ namespace Unity.Panel.Indicators
 
           entry = (Indicator.ObjectEntry) list.nth_data (i);
 
-          this.create_entry (entry);
+          this.create_entry (entry, object);
         }
     }
 
