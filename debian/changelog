@@ -4,6 +4,7 @@ unity (0.2.2-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - bump libclutk-dev, libdbusmodel-dev and libclutk-dev and libmutter-dev
       build-dep
+    - add perceptualdiff build-dep
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 16 Apr 2010 13:01:12 +0200
 
