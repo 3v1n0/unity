@@ -5,6 +5,9 @@ unity (0.2.2-0ubuntu1) UNRELEASED; urgency=low
     - bump libclutk-dev, libdbusmodel-dev and libclutk-dev and libmutter-dev
       build-dep
     - add perceptualdiff build-dep
+    - libunity-places0 removed in favor of libunity0 containing the new library
+    for unity and the -private one.
+  * renamed *.install file accordingly
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 16 Apr 2010 13:01:12 +0200
 

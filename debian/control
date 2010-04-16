@@ -50,7 +50,7 @@ Description: Launcher - debugging symbols
  .
  This package contains debugging symbols.
 
-Package: libunity-places0
+Package: libunity0
 Architecture: any
 Section: libs
 Depends: ${shlibs:Depends}, ${misc:Depends}
@@ -60,7 +60,7 @@ Description: binding to get places into the launcher - shared library
  .
  This package contains shared libraries to be used by applications.
 
-Package: libunity-places0-dbg
+Package: libunity-dbg
 Section: debug
 Architecture: any
 Priority: extra
@@ -71,7 +71,7 @@ Description: binding to get places into the launcher - debugging symbols
  .
  This package contains debugging symbols. 
 
-Package: libunity-places-dev
+Package: libunity-dev
 Architecture: any
 Section: libdevel
 Depends: ${shlibs:Depends},

@@ -1,0 +1,3 @@
+debian/tmp/usr/include/unity/*
+#missing: debian/tmp/usr/lib/pkgconfig/unity.pc
+debian/tmp/usr/lib/libunity*.so
