@@ -12,16 +12,16 @@ Build-Depends: cdbs,
                libunique-dev,
                libclutter-1.0-dev,
                libclutter-gtk-0.10-dev (>= 0.10.2-1ubuntu1),
-               libclutk-dev (>= 0.3.24),
-               liblauncher-dev (>= 0.3.22),
+               libclutk-dev (>= 0.3.26),
+               liblauncher-dev (>= 0.3.26),
                libwnck-dev (>= 2.28.0),
                libwncksync-dev (>= 0.2.18),
                libglib2.0-dev (>= 2.22.2-0ubuntu1wncksync3),
                libgtk2.0-dev (>= 2.18.0),
-               libdbusmodel-dev (>= 0.1.0),
+               libdbusmodel-dev (>= 0.2.0),
                libindicator-dev (>= 0.3.1),
                libunity-misc-dev (>= 0.1.0),
-               libmutter-dev (>= 2.28.1~git20091208-1ubuntu4-dx1)
+               libmutter-dev (>= 2.29.0-1ubuntu1dx3+r3434)
 Standards-Version: 3.8.3
 Homepage: https://launchpad.net/ayatana
 

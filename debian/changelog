@@ -1,3 +1,12 @@
+unity (0.2.2-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release.
+  * debian/control:
+    - bump libclutk-dev, libdbusmodel-dev and libclutk-dev and libmutter-dev
+      build-dep
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 16 Apr 2010 13:01:12 +0200
+
 unity (0.1.24-0ubuntu1) lucid; urgency=low
 
   * debian/control:
