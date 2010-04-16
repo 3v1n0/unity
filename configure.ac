@@ -1,6 +1,6 @@
 m4_define([unity_major], [0])
-m4_define([unity_minor], [1])
-m4_define([unity_micro], [24])
+m4_define([unity_minor], [2])
+m4_define([unity_micro], [2])
 
 m4_define([unity_api],
           [unity_major.unity_minor])
@@ -50,6 +50,12 @@ AM_GNU_GETTEXT([external])
 AM_GNU_GETTEXT_VERSION([0.17])
 IT_PROG_INTLTOOL([0.35.0])
 
+dnl Check for perceptualdiff
+AC_CHECK_PROG(HAVE_IMAGEDIFF, perceptualdiff, true, false)
+if test "x${HAVE_IMAGEDIFF}" = "xfalse"; then
+  AC_MSG_ERROR([*** `perceptualdiff` not found, required for UI tests])
+fi
+
 dnl Setup a few consts
 if test "x${prefix}" = "xNONE"; then
   PREFIX="${ac_default_prefix}"
@@ -67,7 +73,7 @@ AC_DEFINE_UNQUOTED(PREFIXDIR, "${PREFIX}",[Prefix directory])
 
 dnl Use strict compiler flags only on development releases
 m4_define([maintainer_flags_default],
-          [m4_if(m4_eval(unity_minor % 2), [1], [yes], [no])])
+          [m4_if(m4_eval(unity_micro % 2), [1], [yes], [no])])
 AC_ARG_ENABLE([maintainer-flags],
               [AS_HELP_STRING([--enable-maintainer-flags=@<:@no/yes@:>:],[Use string compiler flags @<:@default=no@:>@])],
               [],
@@ -94,12 +100,12 @@ PKG_CHECK_MODULES(BASE,
                   gio-2.0 >= $GTK_REQUIRED
                   gee-1.0
                   gconf-2.0
-                  dbusmodel >= 0.1.0
+                  dbusmodel >= 0.2.0
                   clutter-1.0 >= 1.0
                   clutter-gtk-0.10 >= 0.10
-                  clutk-0.3 >= 0.3.22
+                  clutk-0.3 >= 0.3.26
                   indicator
-                  launcher-0.3 >= 0.3.20
+                  launcher-0.3 >= 0.3.26
                   libwnck-1.0 >= 2.28.0
                   unique-1.0
                   unity-misc
@@ -156,12 +162,16 @@ dnl Create the Makefiles
 AC_CONFIG_FILES([
   Makefile
   data/Makefile
-  libunity/Makefile
-  unity-places/Makefile
-  unity-places/unity-places.pc
-  src/Makefile
-  mutter-plugin/Makefile
+  unity/Makefile
+  unity-private/Makefile
+  targets/Makefile
+  targets/mutter/Makefile
+  targets/unity/Makefile
   tests/Makefile
+  tests/ui/Makefile
+  tests/ui/data/Makefile
+  tests/unit/Makefile
+  tests/unit/data/Makefile
   tools/Makefile
   vapi/Makefile
   po/Makefile.in

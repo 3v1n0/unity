@@ -2,7 +2,6 @@ EXTRA_DIST = \
   clutk-0.3.vapi \
   clutter-1.0.vapi \
   clutter-1.0.deps \
-  clutter-gtk-0.10.vapi \
   cogl-1.0.vapi \
   config.vapi \
   dbusmodel.deps \
@@ -14,4 +13,5 @@ EXTRA_DIST = \
   mutter-2.28.vapi \
   mutter-2.28.deps \
   unity-const.vapi \
-  unity-misc.vapi
+  unity-misc.vapi \
+  unity-places.vapi
