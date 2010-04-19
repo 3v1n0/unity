@@ -426,13 +426,13 @@ namespace Unity
       /* Finally try figuring out if the window is fullscreen in Mutter
        * itself */
       unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
-      foreach (Mutter.Window w in mutter_windows)
+      foreach (Mutter.Window win in mutter_windows)
         {
-          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (w.get_meta_window ());
+          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (win.get_meta_window ());
           if (xid == window.get_xid ())
             {
-              if (w.width >= ((int)this.stage.width - 2.0) &&
-                  w.height >= ((int)this.stage.height - 2.0))
+              if (win.width >= ((int)this.stage.width - 2.0) &&
+                  win.height >= ((int)this.stage.height - 2.0))
                 {
                   return true;
                 }
