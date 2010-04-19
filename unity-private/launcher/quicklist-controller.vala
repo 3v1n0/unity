@@ -19,7 +19,7 @@
  */
 namespace Unity.Launcher
 {
-  public QuicklistController? ql_controler_singleton;
+  public static QuicklistController? ql_controler_singleton;
 
   public class QuicklistController : Object
   {
@@ -38,6 +38,8 @@ namespace Unity.Launcher
 
     public QuicklistController ()
     {
+      Unity.Testing.ObjectRegistry.get_default ().register ("QuicklistController",
+                                                            this);
     }
 
     construct

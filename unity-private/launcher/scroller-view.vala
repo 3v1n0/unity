@@ -127,8 +127,6 @@ namespace Unity.Launcher
           child.paint ();
         }
     }
-
-
   }
 
 }

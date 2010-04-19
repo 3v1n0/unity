@@ -26,15 +26,15 @@ namespace Unity.Testing
   public class Window : Gtk.Window, Shell
   {
     public bool menus_swallow_events { get { return true; } }
-    public bool is_popup { get; construct; }
-    public int  popup_width { get; construct; }
+    public bool is_popup     { get; construct; }
+    public int  popup_width  { get; construct; }
     public int  popup_height { get; construct; }
 
     private Wnck.Screen wnck_screen;
     private Workarea    workarea_size;
 
-    private GtkClutter.Embed gtk_clutter;
-    private Clutter.Stage    stage;
+    public  GtkClutter.Embed gtk_clutter;
+    public  Clutter.Stage    stage;
     private bool             is_showing;
 
     private Background          background;
@@ -44,22 +44,6 @@ namespace Unity.Testing
     private Unity.Places.View   places;
 
     private bool places_enabled = false;
-
-    public void add_fullscreen_request (Object o)
-    {
-      return;
-    }
-
-    public bool remove_fullscreen_request (Object o)
-    {
-      return false;
-    }
-
-    public void ensure_input_region ()
-    {
-      /* GOOD JOB!!! */
-      return;
-    }
 
     private bool showing_places;
 
@@ -178,6 +162,20 @@ namespace Unity.Testing
         }
 
       END_FUNCTION ();
+    }
+
+    public void init_test_mode ()
+    {
+      /* Make a plain background */
+      stage.color = { 148, 86, 99, 255 };
+      background.opacity = 0;
+
+      /* Font stuff */
+      unowned Gtk.Settings settings = Gtk.Settings.get_default ();
+      settings.gtk_xft_dpi = 96 * 1024;
+      settings.gtk_font_name = "Sans 10";
+      settings.gtk_icon_theme_name = "ubuntu-mono-dark";
+      settings.gtk_theme_name = "Ambiance";
     }
 
     private void relayout ()
@@ -333,6 +331,21 @@ namespace Unity.Testing
       return this.panel.get_indicators_width ();
     }
 
+    public void add_fullscreen_request (Object o)
+    {
+      return;
+    }
+
+    public bool remove_fullscreen_request (Object o)
+    {
+      return false;
+    }
+
+    public void ensure_input_region ()
+    {
+      /* GOOD JOB!!! */
+      return;
+    }
   }
 
   public class Workarea

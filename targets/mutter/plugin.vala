@@ -19,6 +19,8 @@
 using Unity;
 using Unity.Quicklauncher;
 using Unity.Quicklauncher.Models;
+using Unity.Testing;
+
 static string? boot_logging_filename = null;
 
 namespace Unity
@@ -120,6 +122,7 @@ namespace Unity
     private Maximus          maximus;
 
     /* Unity Components */
+    private Background         background;
     private ExposeManager      expose_manager;
     private Quicklauncher.View quicklauncher;
     private Places.Controller  places_controller;
@@ -231,6 +234,11 @@ namespace Unity
       this.places_enabled = envvar_is_enabled ("UNITY_ENABLE_PLACES");
 
       Clutter.Group window_group = (Clutter.Group) this.plugin.get_window_group ();
+
+      this.background = new Background ();
+      this.stage.add_actor (background);
+      this.background.lower_bottom ();
+      this.background.show ();
 
       /* Allows us to activate windows, essential as we are the WM */
       Launcher.Application.set_window_activate_func (this.on_window_activated,
@@ -415,6 +423,22 @@ namespace Unity
           && h >= (int)this.stage.height - 2.0)
           return true;
 
+      /* Finally try figuring out if the window is fullscreen in Mutter
+       * itself */
+      unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
+      foreach (Mutter.Window w in mutter_windows)
+        {
+          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (w.get_meta_window ());
+          if (xid == window.get_xid ())
+            {
+              if (w.width >= ((int)this.stage.width - 2.0) &&
+                  w.height >= ((int)this.stage.height - 2.0))
+                {
+                  return true;
+                }
+            }
+        }
+
       return false;
     }
 
@@ -448,6 +472,9 @@ namespace Unity
       this.drag_dest.resize (this.QUICKLAUNCHER_WIDTH,
                              (int)height - this.PANEL_HEIGHT);
       this.drag_dest.move (0, this.PANEL_HEIGHT);
+
+      this.background.set_size (width, height);
+      this.background.set_position (0, 0);
 
       this.quicklauncher.set_size (this.QUICKLAUNCHER_WIDTH,
                                    (height-this.PANEL_HEIGHT));

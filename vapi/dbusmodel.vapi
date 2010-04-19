@@ -3,13 +3,12 @@
 [CCode (cprefix = "Dbus", lower_case_cprefix = "dbus_")]
 namespace Dbus {
 	[CCode (cheader_filename = "dbusmodel/dbusmodel.h")]
-	public class Model : Dbus.Peer {
+	public class Model : GLib.Object {
 		[CCode (has_construct_function = false)]
-		public Model (string path, uint n_columns, ...);
-		public void add ();
+		public Model (string name, uint n_columns, ...);
+		public void append (...);
 		public void clear ();
-		[CCode (has_construct_function = false)]
-		public Model.from_path (string path);
+		public void connect ();
 		public void @get (Dbus.ModelIter iter, ...);
 		public bool get_bool (Dbus.ModelIter iter, uint column);
 		public GLib.Type get_column_type (uint column);
@@ -21,6 +20,7 @@ namespace Dbus {
 		public unowned Dbus.ModelIter get_last_iter ();
 		public uint get_n_columns ();
 		public uint get_n_rows ();
+		public int get_position (Dbus.ModelIter iter);
 		public unowned string get_string (Dbus.ModelIter iter, uint column);
 		public uchar get_uchar (Dbus.ModelIter iter, uint column);
 		public uint64 get_uid (Dbus.ModelIter iter);
@@ -28,15 +28,21 @@ namespace Dbus {
 		public uint64 get_uint64 (Dbus.ModelIter iter, uint column);
 		public void get_valist (Dbus.ModelIter iter, void* args);
 		public void get_value (Dbus.ModelIter iter, uint column, GLib.Value value);
+		public void insert (int pos, ...);
+		public void insert_before (Dbus.ModelIter iter);
+		public void insert_before_valist (Dbus.ModelIter iter, void* args);
+		public void insert_valist (int pos, void* args);
 		public bool is_first (Dbus.ModelIter iter);
 		public bool is_last (Dbus.ModelIter iter);
 		public unowned Dbus.ModelIter next (Dbus.ModelIter iter);
+		public void prepend (...);
 		public unowned Dbus.ModelIter prev (Dbus.ModelIter iter);
 		public void remove (Dbus.ModelIter iter);
 		public void @set (Dbus.ModelIter iter, ...);
-		public void set_n_columns (uint n_columns);
 		public void set_valist (Dbus.ModelIter iter, void* args);
 		public void set_value (Dbus.ModelIter iter, uint column, GLib.Value value);
+		[CCode (has_construct_function = false)]
+		public Model.with_name (string name);
 		public virtual signal void ready ();
 		public virtual signal void row_added (Dbus.ModelIter iter);
 		public virtual signal void row_changed (Dbus.ModelIter iter);
@@ -49,21 +55,22 @@ namespace Dbus {
 	[CCode (cheader_filename = "dbusmodel/dbusmodel.h")]
 	public class Peer : GLib.Object {
 		public void connect ();
-		public unowned DBus.Connection get_connection ();
-		public unowned string get_peer_name ();
+		public unowned string get_swarm_leader ();
 		public unowned string get_swarm_name ();
-		public void set_swarm_name (string swarm_name);
-		public string swarm_name { get; set construct; }
+		public bool is_swarm_leader ();
+		public string swarm_leader { get; }
+		[NoAccessorMethod]
+		public string swarm_name { owned get; set construct; }
 		public virtual signal void connected (string peer_name);
 		public virtual signal void peer_found (string name);
 		public virtual signal void peer_lost (string name);
 	}
-	[CCode (cheader_filename = "dbusmodel/dbusmodel.h", has_target = false)]
-	public delegate bool GMarshalFunc_BOOLEAN__POINTER_POINTER (void* data1, void* arg_1, void* arg_2, void* data2);
-	[CCode (cheader_filename = "dbusmodel/dbusmodel.h", has_target = false)]
-	public delegate void com_canonical_DbusModel_get_row_types_reply (DBus.Object proxy, out unowned string OUT_types, GLib.Error error, void* userdata);
-	[CCode (cheader_filename = "dbusmodel/dbusmodel.h", has_target = false)]
-	public delegate void com_canonical_DbusModel_get_rows_reply (DBus.Object proxy, GLib.PtrArray OUT_rows, GLib.Error error, void* userdata);
+	[CCode (cprefix = "DBUS_MODEL_ERROR_LEADER_", has_type_id = false, cheader_filename = "dbusmodel/dbusmodel.h")]
+	public enum ModelError {
+		INVALIDATED
+	}
 	[CCode (cheader_filename = "dbusmodel/dbusmodel.h")]
-	public static void glib_marshal__dbus_model_server_BOOLEAN__POINTER_POINTER (GLib.Closure closure, GLib.Value return_value, uint n_param_values, GLib.Value param_values, void* invocation_hint, void* marshal_data);
+	public const string MODEL_IFACE;
+	[CCode (cheader_filename = "dbusmodel/dbusmodel.h")]
+	public const string SWARM_IFACE;
 }

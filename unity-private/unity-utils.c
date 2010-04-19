@@ -27,11 +27,15 @@
 #include <clutter/clutter.h>
 #include <clutter/x11/clutter-x11.h>
 
+#include <gio/gio.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 #include <X11/Xatom.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
+
+gboolean utils_compare_images (const gchar *img1_path,
+                               const gchar *img2_path);
 
 /* Taken from AWN (lp:awn) */
 
@@ -114,4 +118,162 @@ utils_get_stage_window (ClutterStage *stage)
   g_return_val_if_fail (CLUTTER_IS_STAGE (stage), 0);
 
   return clutter_x11_get_stage_window (stage);
+}
+
+gboolean
+utils_save_snapshot (ClutterStage *stage,
+                     const gchar  *filepath,
+                     gint          x,
+                     gint          y,
+                     gint          width,
+                     gint          height)
+{
+  guchar    *data;
+  GdkPixbuf *pixbuf;
+  GError    *error = NULL;
+
+  g_return_val_if_fail (CLUTTER_IS_STAGE (stage), FALSE);
+  g_return_val_if_fail (filepath != NULL, FALSE);
+
+  /* Flush current events otherwise we get in trouble sometimes */
+  while (gtk_events_pending ())
+    gtk_main_iteration ();
+
+  data = clutter_stage_read_pixels (stage, x, y, width, height);
+
+  if (!data)
+    {
+      g_warning ("Unable to read stage pixels");
+      return FALSE;
+    }
+
+  pixbuf = gdk_pixbuf_new_from_data (data,
+                                     GDK_COLORSPACE_RGB,
+                                     TRUE,
+                                     8,
+                                     width,
+                                     height,
+                                     width * 4,
+                                     (GdkPixbufDestroyNotify)g_free,
+                                     NULL);
+
+  if (!gdk_pixbuf_save (pixbuf, filepath, "png", &error, NULL))
+    {
+      g_warning ("Unable to save snapshot: %s", error->message);
+      g_error_free (error);
+      g_object_unref (pixbuf);
+
+      return FALSE;
+    }
+
+  g_object_unref (pixbuf);
+  return TRUE;
+}
+
+gboolean
+utils_compare_snapshot (ClutterStage  *stage,
+                        const gchar   *filepath,
+                        gint           x,
+                        gint           y,
+                        gint           width,
+                        gint           height,
+                        gboolean       expected)
+{
+  guchar    *data;
+  GdkPixbuf *pixbuf;
+  GError    *error = NULL;
+  gchar     *tmppath;
+  gboolean   similar;
+
+  g_return_val_if_fail (CLUTTER_IS_STAGE (stage), FALSE);
+  g_return_val_if_fail (filepath != NULL, FALSE);
+
+  /* Flush current events otherwise we get in trouble sometimes */
+  while (gtk_events_pending ())
+    gtk_main_iteration ();
+
+  /* Grab the snapshot of the region passed in */
+  data = clutter_stage_read_pixels (stage, x, y, width, height);
+
+  if (!data)
+    {
+      g_warning ("Unable to read stage pixels");
+      return !expected;
+    }
+
+  /* Convert to pixbuf then save so we can ask for a comparison */
+  pixbuf = gdk_pixbuf_new_from_data (data,
+                                     GDK_COLORSPACE_RGB,
+                                     TRUE,
+                                     8,
+                                     width,
+                                     height,
+                                     width * 4,
+                                     (GdkPixbufDestroyNotify)g_free,
+                                     NULL);
+
+  tmppath = g_strdup_printf ("%s.failed.png", filepath);
+
+  if (!gdk_pixbuf_save (pixbuf, tmppath, "png", &error, NULL))
+    {
+      g_warning ("Unable to save snapshot: %s", error->message);
+      g_error_free (error);
+      g_object_unref (pixbuf);
+      g_free (tmppath);
+
+      return !expected;
+    }
+
+  /* Now compare the images */
+  similar = utils_compare_images (filepath, tmppath);
+  if (similar == expected)
+    {
+      /* As the comparison was expected, clean up comparison file */
+      GFile *f = g_file_new_for_path (tmppath);
+      g_file_delete (f, NULL, NULL);
+      g_object_unref (f);
+    }
+
+  g_object_unref (pixbuf);
+  g_free (tmppath);
+
+  return expected == similar;
+}
+
+/**
+ * utils_compare_images:
+ * @img1_path: full path to first image
+ * @img2_path: full path to compare @img1_path too
+ *
+ * Returns: %TRUE if images are similar or %FALSE if not
+ **/
+gboolean
+utils_compare_images (const gchar *img1_path,
+                      const gchar *img2_path)
+{
+  gint    exit_status = 0;
+  gchar  *command;
+  GError *error = NULL;
+
+  g_return_val_if_fail (img1_path != NULL, FALSE);
+  g_return_val_if_fail (img2_path != NULL, FALSE);
+
+  command = g_strdup_printf ("perceptualdiff %s %s", img1_path, img2_path);
+
+  if (!g_spawn_command_line_sync (command, NULL, NULL, &exit_status, &error))
+    {
+      g_warning ("Unable to run image comparison for '%s' and '%s': %s",
+                 img1_path,
+                 img2_path,
+                 error ? error->message : "unknown");
+      if (error)
+        g_error_free (error);
+
+      exit_status = 0;
+    }
+
+  g_free (command);
+
+  /* perceptualdiff exits '0' on failed comparison and '1' on successful */
+  return exit_status != 0;
 }

@@ -20,7 +20,7 @@
 namespace Utils
 {
   [CCode (lower_case_prefix = "utils_")]
-    public extern void set_strut (Gtk.Window *window,
+  public extern void set_strut (Gtk.Window *window,
                                   uint32      strut_size,
                                   uint32      strut_start,
                                   uint32      strut_end,
@@ -35,4 +35,25 @@ namespace Utils
 
   [CCode (lower_case_prefix = "utils_")]
   public extern X.Window get_stage_window (Clutter.Stage stage);
+
+  [CCode (lower_case_prefix = "utils_")]
+  public extern bool save_snapshot (Clutter.Stage stage,
+                                    string        filename,
+                                    int           x,
+                                    int           y,
+                                    int           width,
+                                    int           height);
+
+  [CCode (lower_case_prefix = "utils_")]
+  public extern bool compare_snapshot (Clutter.Stage stage,
+                                       string        filename,
+                                       int           x,
+                                       int           y,
+                                       int           width,
+                                       int           height,
+                                       bool          expected=true);
+
+  [CCode (lower_case_prefix = "utils_")]
+  public extern bool utils_compare_images (string img1_path,
+                                           string img2_path);
 }
