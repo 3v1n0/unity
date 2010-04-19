@@ -18,7 +18,7 @@
  *
  */
 
-namespace Unity.Quicklauncher.Models
+namespace Unity.Launcher.Models
 {
 
   public interface LauncherModel : GLib.Object

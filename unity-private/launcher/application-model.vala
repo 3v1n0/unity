@@ -20,39 +20,7 @@
 
 namespace Unity.Quicklauncher.Models
 {
-  public class ApplicationShortcut : Object, ShortcutItem
-  {
-    public string exec;
-    public string name;
-    public string desktop_location;
 
-    public string get_name ()
-    {
-      return this.name;
-    }
-
-    public void activated ()
-    {
-      debug ("application shortcut activated called");
-      Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
-      try
-      {
-        var desktop_file = new KeyFile ();
-        desktop_file.load_from_file (this.desktop_location, 0);
-        desktop_file.set_string ("Desktop Entry", "Exec", exec);
-        AppInfo appinfo = new DesktopAppInfo.from_keyfile (desktop_file);
-        appinfo.create_from_commandline (this.exec, this.name, 0);
-        context.set_screen (Gdk.Display.get_default ().get_default_screen ());
-        context.set_timestamp (Gdk.CURRENT_TIME);
-
-        appinfo.launch (null, context);
-      } catch (Error e)
-      {
-        warning (e.message);
-      }
-
-    }
-  }
 
   public class LibLauncherShortcut : Object, ShortcutItem
   {

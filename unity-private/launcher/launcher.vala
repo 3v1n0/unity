@@ -17,28 +17,43 @@
  *
  */
 
-namespace Unity.Quicklauncher
+namespace Unity.Launcher
 {
-  public class View : Ctk.Bin
+
+  public interface ShortcutItem : GLib.Object
   {
-    private Shell shell;
+    public abstract string get_name ();
 
-    public Manager manager;
+    public abstract void activated ();
+  }
 
-    public View (Shell shell)
+  public class Launcher : Object
+  {
+    public Shell shell {get; construct;}
+    private ScrollerController controller;
+    private ScrollerView view;
+    private ScrollerModel model;
+
+    public Launcher (Shell shell)
     {
-      this.shell = shell;
+      Object (shell: shell);
     }
-    
+
     construct
     {
-      this.manager = new Manager ();
-      this.add_actor (manager);
+      model = new ScrollerModel ();
+      controller = new ScrollerController (model);
+      view = new ScrollerView (model);
     }
 
     public new float get_width ()
     {
       return 60;
+    }
+
+    public Clutter.Actor get_view ()
+    {
+      return view as Clutter.Actor;
     }
   }
 }

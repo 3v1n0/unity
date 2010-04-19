@@ -1,1 +1,1 @@
-SUBDIRS = mutter unity
+SUBDIRS = unity

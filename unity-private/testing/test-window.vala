@@ -38,7 +38,7 @@ namespace Unity.Testing
     private bool             is_showing;
 
     private Background          background;
-    private Quicklauncher.View  quicklauncher;
+    private Launcher.Launcher   launcher;
     private Panel.View          panel;
     private Places.Controller   controller;
     private Unity.Places.View   places;
@@ -149,9 +149,9 @@ namespace Unity.Testing
       this.stage.add_actor (this.background);
       this.background.show ();
 
-      this.quicklauncher = new Quicklauncher.View (this);
-      this.stage.add_actor (this.quicklauncher);
-      this.quicklauncher.show ();
+      this.launcher = new Launcher.Launcher (this);
+      this.stage.add_actor (this.launcher.get_view ());
+      this.launcher.get_view ().show ();
 
       if (this.places_enabled)
         {
@@ -215,8 +215,8 @@ namespace Unity.Testing
       this.background.set_position (0, 0);
       this.background.set_size (width, height);
 
-      this.quicklauncher.set_size (ql_width, height - 23);
-      this.quicklauncher.set_position (0, 23);
+      this.launcher.get_view ().set_size (ql_width, height - 23);
+      this.launcher.get_view ().set_position (0, 23);
 
       if (this.places_enabled)
         {
