@@ -24,7 +24,6 @@ using Gee;
 
 namespace Unity.Launcher
 {
-
   /* the idea here is that this model should find the best order of the
    * ScrollerChild's but at the same time, can be re-ordered by other objects.
    *
@@ -35,10 +34,24 @@ namespace Unity.Launcher
   class ScrollerModel : Object
   {
     private ArrayList<ScrollerChild> children;
+    public int size { get { return children.size; } }
+
+    public signal void child_added (ScrollerChild child);
+    public signal void child_removed (ScrollerChild child);
+    public signal void order_changed (); // called when the order of items changes
+
+    public ScrollerModel ()
+    {
+    }
 
     construct
     {
       children = new ArrayList<ScrollerChild> ();
+    }
+
+    public string to_string ()
+    {
+      return "a ScrollerModel model with %i entries".printf (children.size);
     }
 
     /* we proxy through nice gee list handling methods because
@@ -48,37 +61,54 @@ namespace Unity.Launcher
      */
     public Iterator iterator ()
     {
-      return new Iterator (children);//children.iterator ();
+      return new Iterator (children);
     }
 
     public class Iterator {
-        private int index;
+        private int iter_index = 0;
         private ArrayList<ScrollerChild> array;
 
-        public Iterator(ArrayList arraylist) {
+        public Iterator(ArrayList arraylist)
+          {
             array = arraylist;
-            index = 0;
-        }
+          }
 
-        public bool next() {
+        public bool next()
+          {
+            if (iter_index >= array.size)
+              return false;
             return true;
-        }
+          }
 
-        public ScrollerChild get() {
-            index++;
-            return array[index];
-        }
+        public ScrollerChild get()
+          {
+            iter_index++;
+            return array[iter_index - 1];
+          }
     }
 
+    public bool contains(ScrollerChild child) {
+        return child in children;
+    }
 
     public void add (ScrollerChild child)
     {
       children.add (child);
+      child_added (child);
+      order_changed ();
     }
 
     public void remove (ScrollerChild child)
     {
       children.remove (child);
+      child_removed (child);
+      order_changed ();
+    }
+
+    public void insert (ScrollerChild child, int i)
+    {
+      children.insert (i, child);
+      child_added (child);
     }
 
     public void sort (CompareFunc compare)
@@ -86,14 +116,14 @@ namespace Unity.Launcher
       children.sort (compare);
     }
 
-    public new ScrollerChild get (int index)
+    public new ScrollerChild get (int i)
     {
-      return children[index];
+      return children[i];
     }
 
-    public new void set (int index, ScrollerChild item)
+    public new void set (int i, ScrollerChild item)
     {
-      children[index] = item;
+      children[i] = item;
     }
 
   }

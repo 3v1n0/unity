@@ -19,6 +19,9 @@
 
 namespace Unity.Launcher
 {
+  const uint SHORT_DELAY = 400;
+  const uint MEDIUM_DELAY = 800;
+  const uint LONG_DELAY = 1600;
 
   public interface ShortcutItem : GLib.Object
   {
@@ -42,8 +45,8 @@ namespace Unity.Launcher
     construct
     {
       model = new ScrollerModel ();
-      controller = new ScrollerController (model);
       view = new ScrollerView (model);
+      controller = new ScrollerController (model, view);
     }
 
     public new float get_width ()

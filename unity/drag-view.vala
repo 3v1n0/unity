@@ -1,23 +1,23 @@
 /*
  *      drag-view.vala
  *      Copyright (C) 2010 Canonical Ltd
- *      
+ *
  *      This program is free software; you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
  *      the Free Software Foundation; either version 2 of the License, or
  *      (at your option) any later version.
- *      
+ *
  *      This program is distributed in the hope that it will be useful,
  *      but WITHOUT ANY WARRANTY; without even the implied warranty of
  *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *      GNU General Public License for more details.
- *      
+ *
  *      You should have received a copy of the GNU General Public License
  *      along with this program; if not, write to the Free Software
  *      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  *      MA 02110-1301, USA.
- *      
- *      
+ *
+ *
  *      Authored by Gordon Allott <gord.allott@canonical.com>
  */
 
@@ -33,7 +33,7 @@ namespace Unity.Drag
 
     public signal void motion (float x, float y);
     public signal void end (float x, float y);
-    
+
     public View (Clutter.Stage stage)
     {
       Object (stage:stage);
@@ -41,7 +41,7 @@ namespace Unity.Drag
 
     construct
     {
-      
+
     }
     public void hook_actor_to_cursor (Clutter.Actor actor, float offset_x, float offset_y)
     {
@@ -52,15 +52,17 @@ namespace Unity.Drag
       float x, y;
       this.offset_x = offset_x;
       this.offset_y = offset_y;
-      
+
       this.hooked_actor = new Clutter.Clone (actor);
       this.hooked_actor.unparent ();
       this.stage.add_actor (this.hooked_actor);
-      
+
       actor.get_transformed_position (out x, out y);
       this.hooked_actor.set_position (x, y);
+      this.hooked_actor.set_width (actor.get_width ());
+      this.hooked_actor.set_height (actor.get_height ());
       this.hooked_actor.show ();
-      
+
       this.stage.captured_event.connect (this.captured_event);
     }
 
@@ -83,7 +85,7 @@ namespace Unity.Drag
     {
       if (this.hooked_actor == null) return;
       this.stage.remove_actor (this.hooked_actor);
-      this.stage.motion_event.disconnect (this.on_motion_event); 
+      this.stage.motion_event.disconnect (this.on_motion_event);
       this.hooked_actor = null;
     }
 

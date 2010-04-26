@@ -21,7 +21,6 @@
 namespace Unity.Quicklauncher.Models
 {
 
-
   public class LibLauncherShortcut : Object, ShortcutItem
   {
     public Launcher.Application app;
