@@ -159,11 +159,8 @@ namespace Unity.Launcher
       if (drag_controller.get_drag_model () is ScrollerChildController)
       {
         ScrollerChild child = (drag_controller.get_drag_model () as ScrollerChildController).child;
-        debug (@"our model is $child");
         child.opacity = 0;
-        //child.hide ();
         view.do_queue_redraw ();
-        debug (@"our model is $child");
       }
     }
 
@@ -195,11 +192,6 @@ namespace Unity.Launcher
           // find the index at this position
           int model_index = view.get_model_index_at_y_pos (y);
           model.insert (retcont, model_index);
-/*
-          retcont.set_opacity (255);
-          retcont.show ();
-*/
-
           view.do_queue_redraw ();
         }
     }
@@ -226,7 +218,7 @@ namespace Unity.Launcher
             childcontrollers.remove (model_controller);
         }
       // if it was dropped inside of the launcher, its allready been added
-
+      retcont.opacity = 255;
       // disconnect our drag controller signals
       drag_controller.drag_motion.disconnect (this.on_unity_drag_motion);
       drag_controller.drag_drop.disconnect (this.on_unity_drag_drop);

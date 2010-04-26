@@ -241,7 +241,7 @@ namespace Unity.Launcher
       if (is_scrolling)
         {
           is_scrolling = false;
-
+          get_stage ().motion_event.disconnect (on_motion_event);
           if ((event.button.time - last_motion_event_time) > 120)
             {
               current_phase = ScrollerPhase.SETTLING;
@@ -283,6 +283,7 @@ namespace Unity.Launcher
             {
               is_scrolling = true;
               Unity.global_shell.add_fullscreen_request (this);
+              get_stage ().motion_event.connect (on_motion_event);
             }
         }
 
