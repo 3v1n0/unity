@@ -76,13 +76,11 @@ namespace Unity.Launcher
 
     private void build_favorites ()
     {
-      debug ("building favorites");
       var favorites = LibLauncher.Favorites.get_default ();
 
       unowned SList<string> favorite_list = favorites.get_favorites();
       foreach (weak string uid in favorite_list)
         {
-          debug (@"adding favorite $uid");
           // we only want favorite *applications* for the moment
           var type = favorites.get_string(uid, "type");
           if (type != "application")
@@ -98,13 +96,11 @@ namespace Unity.Launcher
             }
           else
             {
-              debug (@"favorite desktop file: $desktop_file");
               LauncherChild child = new LauncherChild ();
               ApplicationController controller = new ApplicationController (desktop_file, child);
               model.add (child);
               childcontrollers.add (controller);
             }
-          debug ("number of items in model: %i", model.size);
         }
     }
 
