@@ -160,7 +160,7 @@ namespace Unity.Launcher
       {
         ScrollerChild child = (drag_controller.get_drag_model () as ScrollerChildController).child;
         debug (@"our model is $child");
-        //child.opacity = 0;
+        child.opacity = 0;
         //child.hide ();
         view.do_queue_redraw ();
         debug (@"our model is $child");
