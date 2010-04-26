@@ -116,7 +116,8 @@ libunity_la_VALASOURCES = \
   prism-handler.vala \
   shell.vala \
   theme.vala \
-  webapp-fetcher.vala
+  webapp-fetcher.vala \
+  quicklist-rendering.vala
 
 libunity_la_APIFILES = \
   unity.h \
