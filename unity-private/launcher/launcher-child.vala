@@ -151,6 +151,12 @@ namespace Unity.Launcher
       processed_icon.get_preferred_width (for_height, out min, out nat);
       natural_width = nat;
       minimum_width = min;
+
+      running_indicator.get_preferred_width (for_height, out min, out nat);
+      natural_width += nat;
+
+      active_indicator.get_preferred_width (for_height, out min, out nat);
+      natural_width += nat;
     }
 
     public override void get_preferred_height (float for_width,
@@ -210,8 +216,6 @@ namespace Unity.Launcher
 
     public override void paint ()
     {
-      if (opacity < 255)
-        debug (@"current opacity is $opacity");
       active_indicator.paint ();
       running_indicator.paint ();
 
