@@ -558,6 +558,12 @@ namespace Unity
 
     public void show_window_picker ()
     {
+      if (this.places_enabled == true)
+        {
+          this.show_unity ();
+          return;
+        }
+
       if (expose_manager.expose_showing == true)
         {
           this.dexpose_windows ();
