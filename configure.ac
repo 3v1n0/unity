@@ -109,8 +109,21 @@ PKG_CHECK_MODULES(BASE,
                   libwnck-1.0 >= 2.28.0
                   unique-1.0
                   unity-misc
-                  x11
-                  )
+                  x11)
+
+AC_SUBST(BASE_CFLAGS)
+AC_SUBST(BASE_LIBS)
+
+PKG_CHECK_MODULES(PLACE_DAEMON,
+                  glib-2.0 >= $GLIB_REQUIRED
+                  gobject-2.0 >= $GLIB_REQUIRED
+                  gio-2.0 >= $GTK_REQUIRED
+                  gee-1.0
+                  dbusmodel >= 0.2.0
+                  zeitgeist-1.0)
+
+AC_SUBST(PLACE_DAEMON_CFLAGS)
+AC_SUBST(PLACE_DAEMON_LIBS)
 
 dnl testing for logging boot metrics and instrumenting
 with_testing="no"
@@ -120,9 +133,6 @@ AC_ARG_ENABLE(testing,
               with_testing=$enableval,
               with_testing=no)
 AM_CONDITIONAL([HAVE_TESTING], [test "x$with_testing" = "xyes"])
-
-AC_SUBST(BASE_CFLAGS)
-AC_SUBST(BASE_LIBS)
 
 dnl local install for distcheck and stand-alone running
 with_localinstall="no"
@@ -162,8 +172,7 @@ dnl Create the Makefiles
 AC_CONFIG_FILES([
   Makefile
   data/Makefile
-  unity/Makefile
-  unity-private/Makefile
+  place-daemons/Makefile
   targets/Makefile
   targets/mutter/Makefile
   targets/unity/Makefile
@@ -173,6 +182,8 @@ AC_CONFIG_FILES([
   tests/unit/Makefile
   tests/unit/data/Makefile
   tools/Makefile
+  unity/Makefile
+  unity-private/Makefile
   vapi/Makefile
   po/Makefile.in
 ])

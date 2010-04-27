@@ -55,7 +55,7 @@ namespace Unity.Places
       var place = new FakePlace ("Files & Folders", PKGDATADIR + "/files.png");
       place.activated.connect (this.on_place_activated);
       this.model.add (place);
-
+      
       return false;
     }
 
