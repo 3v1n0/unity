@@ -62,40 +62,36 @@ namespace Unity.Tests.UI
 
     private void test_controller_show_label ()
     {
-      return;/*
       string img = TESTDIR + "/data/quicklist_controller_show_label.png";
       ObjectRegistry registry = ObjectRegistry.get_default ();
 
       Logging.init_fatal_handler ();
 
       ScrollerModel scroller = registry.lookup ("UnityScrollerModel") as ScrollerModel;
-      ScrollerChild first = scroller.nth (0) as ScrollerChild;
+      ScrollerChild first = scroller[0] as ScrollerChild;
 
       QuicklistController qlcontroller = QuicklistController.get_default ();
-      qlcontroller.show_label ("Ubuntu Software Centre",
-                               first.child as Ctk.Actor);
+      qlcontroller.show_label ("Ubuntu Software Centre", first);
 
       assert (Utils.compare_snapshot (stage, img, 54, 30, 200, 50));
 
-      /* Clean up
+      /* Clean up */
       qlcontroller.close_menu ();
-      */
     }
 
     private void test_shown_on_hover ()
     {
-      return; /*
       string img = TESTDIR + "/data/quicklist_shown_on_hover.png";
       ObjectRegistry registry = ObjectRegistry.get_default ();
       Director director = new Director (stage);
 
       Logging.init_fatal_handler ();
 
-      /* Used when setting up the test
+      /* Used when setting up the test */
       //Utils.save_snapshot (stage, img, 54, 30, 200, 50);
 
-      Scroller scroller = registry.lookup ("UnityWidgetsScroller") as Scroller;
-      Clutter.Actor first = scroller.nth (0).child;
+      ScrollerModel scroller = registry.lookup ("UnityScrollerModel") as ScrollerModel;
+      ScrollerChild first = scroller[0] as ScrollerChild;
 
       /* So, in this test we're not sure what the label is of the first scroller
        * -child so our control img is just a blank space. Instead of testing
@@ -105,13 +101,14 @@ namespace Unity.Tests.UI
        * The added 'false' to compare_snapshot tells that function that the
        * expected result is that the test will fail (so it adjusts return
        * values to avoid extra code our end)
+       */
 
       director.enter_event (first, 5, 5);
       assert (Utils.compare_snapshot (stage, img, 54, 30, 200, 50, false));
 
-      /* Clean up
+      /* Clean up */
       director.leave_event (first, 5, 5);
-      */
+
     }
   }
 }

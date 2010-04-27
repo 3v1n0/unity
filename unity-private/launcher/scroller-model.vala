@@ -31,7 +31,7 @@ namespace Unity.Launcher
    * there is no good order code to use right now. in the future we will expand
    * on this to support saving the position, grouping and such.
    */
-  class ScrollerModel : Object
+  public class ScrollerModel : Object
   {
     private ArrayList<ScrollerChild> children;
     public int size { get { return children.size; } }
@@ -46,6 +46,7 @@ namespace Unity.Launcher
 
     construct
     {
+      Unity.Testing.ObjectRegistry.get_default ().register ("UnityScrollerModel", this);
       children = new ArrayList<ScrollerChild> ();
     }
 

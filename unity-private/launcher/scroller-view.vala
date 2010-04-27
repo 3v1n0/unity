@@ -79,7 +79,7 @@ namespace Unity.Launcher
 
     construct
     {
-
+      Unity.Testing.ObjectRegistry.get_default ().register ("LauncherScrollerView", this);
       var mypadding = this.padding;
 
       mypadding.left = 0.0f;

@@ -31,7 +31,7 @@ namespace Unity.Launcher
     NEVER
   }
 
-  abstract class ScrollerChild : Ctk.Actor
+  public abstract class ScrollerChild : Ctk.Actor
   {
     construct
     {
