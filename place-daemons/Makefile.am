@@ -53,10 +53,17 @@ unity_files_daemon_SOURCES = \
   $(unity_files_daemon_VALASOURCES:.vala=.c) \
   $(NULL)
 
+#
+# Install the files.place file
+#
+files_placedir = $(datadir)/unity/places
+files_place_DATA = files.place
+
 BUILT_SOURCES += unity_files_daemon.vala.stamp
 EXTRA_DIST += \
   unity_files_daemon.vala.stamp \
   $(unity_files_daemon_VALASOURCES) \
+  files.place.in \
   $(NULL)
 
 unity_files_daemon.vala.stamp: $(unity_files_daemon_VALASOURCES)

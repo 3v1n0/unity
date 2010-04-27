@@ -172,6 +172,7 @@ dnl Create the Makefiles
 AC_CONFIG_FILES([
   Makefile
   data/Makefile
+  place-daemons/files.place
   place-daemons/Makefile
   targets/Makefile
   targets/mutter/Makefile
