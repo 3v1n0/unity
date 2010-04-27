@@ -25,11 +25,10 @@ namespace Unity.Places.Views
 {
   enum GroupColumns
   {
-    NAME = 0,
-    ACTIVE
+    NAME = 0
   }
 
-  enum ResultsColumns
+  enum ResultColumns
   {
     NAME = 0,
     COMMENT,
@@ -159,7 +158,7 @@ namespace Unity.Places.Views
 
     private void on_result_added (Dbus.Model model, ModelIter iter)
     {
-      var group_name = model.get_string (iter, ResultsColumns.GROUP);
+      var group_name = model.get_string (iter, ResultColumns.GROUP);
 
       ApplicationGroup? group = this.groups[group_name];
 
@@ -168,9 +167,9 @@ namespace Unity.Places.Views
           if (group.n_items < 6)
             {
               ApplicationIcon app;
-              string name = model.get_string (iter, ResultsColumns.NAME);
-              string icon_name = model.get_string (iter, ResultsColumns.ICON_NAME);
-              string comment = model.get_string (iter, ResultsColumns.COMMENT);
+              string name = model.get_string (iter, ResultColumns.NAME);
+              string icon_name = model.get_string (iter, ResultColumns.ICON_NAME);
+              string comment = model.get_string (iter, ResultColumns.COMMENT);
 
               app = new ApplicationIcon (48,
                                          name,
