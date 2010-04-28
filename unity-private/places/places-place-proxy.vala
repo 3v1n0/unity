@@ -56,6 +56,7 @@ namespace Unity.Places
     {
       try
         {
+          // FIXME: Sync dbus calls all over the place!
           this.conn = DBus.Bus.get (DBus.BusType.SESSION);
           this.service = conn.get_object (this.dbus_name,
                                           this.dbus_path,
@@ -74,7 +75,6 @@ namespace Unity.Places
     }
 
     private void on_view_changed (dynamic DBus.Object       s,
-                                  string                    view_name,
                                   HashTable<string, string> view_properties)
     {
       /**
@@ -83,6 +83,9 @@ namespace Unity.Places
        * (from models), and doing the string => GType conversion. Views just
        * need to implement PlaceView interface
        **/
+      var view_name = view_properties.lookup ("view-name");
+
+      debug (@"View changed: $view_name");
       if (view_name == "ResultsView")
         {
           var new_view = new Views.ResultsView ();
