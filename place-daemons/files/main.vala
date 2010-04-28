@@ -130,7 +130,10 @@ namespace Unity.Foo {
 
     /* Async method to query GIO for a good icon for a Zeitgeist.Subject */
     private async string get_icon_for_subject (Zeitgeist.Subject su)
-    {          
+    {
+
+      // FIXME: It's a bit broken by design that we guess a file icon in the controller/model
+      
       try {
       
         File f = File.new_for_uri (su.get_uri());
