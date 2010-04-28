@@ -39,6 +39,10 @@ namespace Unity.Foo {
     private Dbus.Model model;
     private Zeitgeist.Log log;
 
+    const string file_attribs = FILE_ATTRIBUTE_PREVIEW_ICON + "," +
+                                  FILE_ATTRIBUTE_STANDARD_ICON + "," +
+                                  FILE_ATTRIBUTE_THUMBNAIL_PATH;
+
     /* Names for the DbusModels we export */
     private const string results_model_name = "com.canonical.Unity.FilesPlace.Results";
     private const string groups_model_name  = "com.canonical.Unity.FilesPlace.Groups";
@@ -126,17 +130,21 @@ namespace Unity.Foo {
 
     /* Async method to query GIO for a good icon for a Zeitgeist.Subject */
     private async string get_icon_for_subject (Zeitgeist.Subject su)
-    {
+    {          
       try {
       
         File f = File.new_for_uri (su.get_uri());
-        FileInfo info = yield f.query_info_async (FILE_ATTRIBUTE_STANDARD_ICON,
+        FileInfo info = yield f.query_info_async (file_attribs,
                                                   FileQueryInfoFlags.NONE,
                                                   Priority.LOW,
                                                   null);
-        
         Icon icon = info.get_icon();
-      return icon.to_string();
+        string thumbnail_path = info.get_attribute_byte_string (FILE_ATTRIBUTE_THUMBNAIL_PATH);
+
+        if (thumbnail_path == null)
+          return icon.to_string();
+        else
+          return thumbnail_path;
       } catch (GLib.Error e) {
         return "stock-unknown";
       }
