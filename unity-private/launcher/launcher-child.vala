@@ -233,9 +233,9 @@ namespace Unity.Launcher
     public override void unmap ()
     {
       base.unmap ();
-      running_indicator.map ();
-      active_indicator.map ();
-      processed_icon.map ();
+      running_indicator.unmap ();
+      active_indicator.unmap ();
+      processed_icon.unmap ();
     }
   }
 }
