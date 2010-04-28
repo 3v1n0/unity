@@ -44,8 +44,6 @@ namespace Unity.Tests.UI
       Test.add_data_func (DOMAIN + "/ControllerShowLabel",
                           test_controller_show_label);
 
-      Test.add_data_func (DOMAIN + "/ShownOnHover",
-                          test_shown_on_hover);
 
       /* Keep this one last, it's a dummy to clean up the state as Vala cant
        * deal with the standard TestSuite stuff properly
@@ -55,8 +53,7 @@ namespace Unity.Tests.UI
 
     private void test_teardown ()
     {
-      window.destroy ();
-      window = null;
+      //window.destroy ();
       stage = null;
     }
 
@@ -77,38 +74,6 @@ namespace Unity.Tests.UI
 
       /* Clean up */
       qlcontroller.close_menu ();
-    }
-
-    private void test_shown_on_hover ()
-    {
-      string img = TESTDIR + "/data/quicklist_shown_on_hover.png";
-      ObjectRegistry registry = ObjectRegistry.get_default ();
-      Director director = new Director (stage);
-
-      Logging.init_fatal_handler ();
-
-      /* Used when setting up the test */
-      //Utils.save_snapshot (stage, img, 54, 30, 200, 50);
-
-      ScrollerModel scroller = registry.lookup ("UnityScrollerModel") as ScrollerModel;
-      ScrollerChild first = scroller[0] as ScrollerChild;
-
-      /* So, in this test we're not sure what the label is of the first scroller
-       * -child so our control img is just a blank space. Instead of testing
-       * that two images are similar, we're testing that the two images are
-       * different, so we can be confident something happened on hover
-       *
-       * The added 'false' to compare_snapshot tells that function that the
-       * expected result is that the test will fail (so it adjusts return
-       * values to avoid extra code our end)
-       */
-
-      director.enter_event (first, 5, 5);
-      assert (Utils.compare_snapshot (stage, img, 54, 30, 200, 50, false));
-
-      /* Clean up */
-      director.leave_event (first, 5, 5);
-
     }
   }
 }
