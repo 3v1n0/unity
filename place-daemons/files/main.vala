@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Canonical Ltd
+ * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -13,32 +13,68 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
+ * Authored by Mikkel Kamstrup Erlandsen <mikkel.kamstrup@canonical.com>
  *
  */
 using Dbus;
+using DBus;
 using Zeitgeist;
 
-namespace Unity.Foo {
+namespace Unity.Foo {  
 
-  public class FilesPlaceDaemon
+  /* Where to export the Unity controller */
+  private const string dbus_place_name = "com.canonical.Unity.FilesPlace";
+  private const string dbus_place_path = "/com/canonical/unity/places/files";
+
+  [DBus (name = "com.canonical.Unity.Place")]
+  public interface DBusPlace
+  {
+    public abstract void set_active (bool is_active) throws DBus.Error;
+
+    public signal void view_changed (HashTable<string,string> properties);
+  }
+  
+  public class FilesPlaceDaemon : GLib.Object, DBusPlace
   {
     private Dbus.Model model;
     private Zeitgeist.Log log;
 
+    /* Names for the DbusModels we export */
+    private const string results_model_name = "com.canonical.Unity.FilesPlace.Results";
+    private const string groups_model_name  = "com.canonical.Unity.FilesPlace.Groups";
+
     public FilesPlaceDaemon()
     {
-      model = new Dbus.Model ("com.canonical.Unity.FilesPlace", 5,
+      model = new Dbus.Model (results_model_name, 5,
                               typeof(string), typeof(string), typeof(string),
-                              typeof(string), typeof(string));
-      model.connect ();
+                              typeof(string), typeof(string));      
 
-      /* Create connection to Zeitgeist, and asynchromously fetch the
-       * recently use files */
       log = new Zeitgeist.Log();
+
+      /* We should not do anything with the model
+       * until we receieve the 'ready' signal */
+      model.ready.connect (this.on_results_model_ready);
+      model.connect ();      
+    }    
+
+    private void on_results_model_ready (Dbus.Model model)
+    {
+      emit_view_changed_signal();
       get_recent_files.begin();
     }
 
+    private bool emit_view_changed_signal ()
+    {
+      var props = new HashTable<string, string> (str_hash, str_equal);
+
+      props.insert ("view-name", "ResultsView");
+      props.insert ("groups-model", groups_model_name);
+      props.insert ("results-model", results_model_name);
+
+      this.view_changed (props);
+      return false;
+    }
+    
     private async void get_recent_files ()
     {
       try {
@@ -55,15 +91,15 @@ namespace Unity.Foo {
                                         null);
         print ("Got %u events", events.len);
 
-        append_events_sorted (events);
-      } catch (Error e) {
+        yield append_events_sorted ((owned)events);
+      } catch (GLib.Error e) {
         warning ("Error fetching recetnly used files: %s", e.message);
       }
     }
 
     /* Appends a set of Zeitgeist.Events to our Dbus.Model assuming that
      * these events are already sorted with descending timestamps */
-    private void append_events_sorted (PtrArray events)
+    private async void append_events_sorted (owned PtrArray events)
     {
       int i;
 
@@ -75,9 +111,12 @@ namespace Unity.Foo {
               // FIXME: We only use the first subject...
               Zeitgeist.Subject su = ev.get_subject(0);
               message ("GOT %s", su.get_uri());
+
+              string icon = yield get_icon_for_subject (su);
+              
               model.append (ResultColumns.NAME, su.get_text(),
                             ResultColumns.COMMENT, su.get_uri(),
-                            ResultColumns.ICON_NAME, get_icon_for_subject (su),
+                            ResultColumns.ICON_NAME, icon,
                             ResultColumns.GROUP, "Recently used files",
                             ResultColumns.URI, su.get_uri(),
                             -1);
@@ -85,19 +124,57 @@ namespace Unity.Foo {
         }
     }
 
-    private string get_icon_for_subject (Zeitgeist.Subject su)
+    /* Async method to query GIO for a good icon for a Zeitgeist.Subject */
+    private async string get_icon_for_subject (Zeitgeist.Subject su)
     {
-      File f = File.new_for_uri (su.get_uri());
-      FileIcon icon = new FileIcon(f);
-
+      try {
+      
+        File f = File.new_for_uri (su.get_uri());
+        FileInfo info = yield f.query_info_async (FILE_ATTRIBUTE_STANDARD_ICON,
+                                                  FileQueryInfoFlags.NONE,
+                                                  Priority.LOW,
+                                                  null);
+        
+        Icon icon = info.get_icon();
       return icon.to_string();
+      } catch (GLib.Error e) {
+        return "stock-unknown";
+      }
+    }
+
+    /* Override: DBusPlace.set_active */
+    public void set_active (bool is_active) throws DBus.Error
+    {
+      debug (@"Set active: $is_active");
+      emit_view_changed_signal ();
     }
     
     public static int main (string[] args)
     {
-      new FilesPlaceDaemon();
+      /* Export the Unity controller on the session bus */
+      try {
+        var conn = DBus.Bus.get (DBus.BusType.SESSION);
+        dynamic DBus.Object bus = conn.get_object ("org.freedesktop.DBus",
+                                                   "/org/freedesktop/DBus",
+                                                   "org.freedesktop.DBus");
 
-      new MainLoop(null, false).run();
+        uint request_name_result = bus.request_name (dbus_place_name, (uint) 0);
+        if (request_name_result == DBus.RequestNameReply.PRIMARY_OWNER)
+          {
+            var daemon = new FilesPlaceDaemon();
+            conn.register_object (dbus_place_path, daemon);
+            new MainLoop (null, false).run();
+          }
+        else
+          {        
+            print ("Another Unity Files Daemon appears to be running\nBailing out");
+            return 1;
+          }
+      } catch (DBus.Error error) {
+        GLib.error ("Error connecting to session bus: %s\nBailing out", error.message);
+      }
+
+      
       
       return 0;
     }
