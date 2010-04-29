@@ -48,6 +48,8 @@ namespace Unity.Places.Application
             view = new Ctk.Image.from_filename (width, info.get_filename());
           else
             view = new Ctk.Image.from_stock (width, icon_name);
+          if (view == null)
+            warning (@"Failed to load icon for $icon_name");
         }
       else
         view = new Ctk.Image.from_stock (width, icon_name);
