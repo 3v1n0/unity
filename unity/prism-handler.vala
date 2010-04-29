@@ -144,7 +144,7 @@ Icon=%s
 
     public void add_to_favorites ()
     {
-      var favorites = Launcher.Favorites.get_default ();
+      var favorites = LibLauncher.Favorites.get_default ();
       string uid = get_fav_uid ();
       if (uid != "")
         {
@@ -172,7 +172,7 @@ Icon=%s
     {
       string myuid = "";
       string my_desktop_path = webapp_dir + "/%s.desktop".printf (name);
-      var favorites = Launcher.Favorites.get_default ();
+      var favorites = LibLauncher.Favorites.get_default ();
       unowned SList<string> favorite_list = favorites.get_favorites();
       foreach (weak string uid in favorite_list)
         {
