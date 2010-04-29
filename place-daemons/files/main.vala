@@ -29,6 +29,7 @@ namespace Unity.Place {
                                 FILE_ATTRIBUTE_THUMBNAIL_PATH;
 
     private Zeitgeist.Log log;
+    private Zeitgeist.Monitor monitor;
 
     public FilesPlaceDaemon()
     {
@@ -37,17 +38,21 @@ namespace Unity.Place {
             "com.canonical.Unity.FilesPlace.Results",
             "com.canonical.Unity.FilesPlace.Groups");
            
+      // FIXME: We monitor on all events, restrict templates to file events
+      var templates = new PtrArray();
+      templates.add (new Zeitgeist.Event ());
+      monitor = new Zeitgeist.Monitor (new Zeitgeist.TimeRange.from_now (),
+                                       (owned) templates);
 
-      // FIXME: We need to install some Zeitgeist.Monitors to track updates
-      //        but that depends on https://code.launchpad.net/~mhr3/libzeitgeist/various-fixes/+merge/24338
-      log = new Zeitgeist.Log();      
+      log = new Zeitgeist.Log();
+      monitor.events_inserted.connect (on_events_inserted);           
     }    
 
     public override void on_results_model_ready (Dbus.Model model)
     {
-      debug ("111111111");
       emit_view_changed_signal();
-      get_recent_files.begin();
+      get_recent_files.begin();      
+      log.install_monitor.begin (monitor, null);
     }
 
     private async void get_recent_files ()
@@ -100,6 +105,34 @@ namespace Unity.Place {
         }
     }
 
+    /* Prepends a set of Zeitgeist.Events to our Dbus.Model assuming that
+     * these events are already sorted with descending timestamps */
+    private async void prepend_events_sorted (owned PtrArray events)
+    {
+      int i;
+
+      for (i = 0; i < events.len; i++)
+        {
+          Zeitgeist.Event ev = (Zeitgeist.Event)events.index(i);
+          if (ev.num_subjects() > 0)
+            {              
+              // FIXME: We only use the first subject...
+              Zeitgeist.Subject su = ev.get_subject(0);              
+
+              string icon = yield get_icon_for_subject (su);
+
+              debug ("Notify %s, %s, %s", su.get_uri(), su.get_mimetype(), icon);
+
+              results_model.prepend (ResultColumns.NAME, su.get_text(),
+                                    ResultColumns.COMMENT, su.get_uri(),
+                                    ResultColumns.ICON_NAME, icon,
+                                    ResultColumns.GROUP, "Recently used files",
+                                    ResultColumns.URI, su.get_uri(),
+                                    -1);
+            }
+        }
+    }
+
     /* Async method to query GIO for a good icon for a Zeitgeist.Subject */
     private async string get_icon_for_subject (Zeitgeist.Subject su)
     {
@@ -127,6 +160,22 @@ namespace Unity.Place {
       }
     }
 
+    private void on_events_inserted (Zeitgeist.Monitor mon,
+                                     Zeitgeist.TimeRange time_range,
+                                     PtrArray events)
+    {
+      // FIXME: Since we don't reallyhave the timestamps for the evens in
+      //        our model, we can't insert the events in the correct place
+      //        although it's likely fine to just prepend them
+
+      /* Deep copy the events since prepend_events_sorted is async */
+      PtrArray _events = new PtrArray();
+      for (int i = 0; i < events.len; i++)
+        {
+          _events.add ((Zeitgeist.Event) events.index (i));
+        }
+      prepend_events_sorted.begin ((owned)_events);
+    }
     
     public static int main (string[] args)
     {

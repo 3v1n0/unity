@@ -60,12 +60,10 @@ namespace Unity.Place {
       _results_model.connect ();
       
       // FIXME: _groups_model wait for 'ready'
-      debug ("33333333");
     }    
 
     public virtual void on_results_model_ready (Dbus.Model model)
     {
-      debug ("22222");
       emit_view_changed_signal();
     }
 
