@@ -113,10 +113,11 @@ namespace Unity.Foo {
           if (ev.num_subjects() > 0)
             {              
               // FIXME: We only use the first subject...
-              Zeitgeist.Subject su = ev.get_subject(0);
-              message ("GOT %s", su.get_uri());
+              Zeitgeist.Subject su = ev.get_subject(0);              
 
               string icon = yield get_icon_for_subject (su);
+
+              message ("GOT %s, %s, %s", su.get_uri(), su.get_mimetype(), icon);
               
               model.append (ResultColumns.NAME, su.get_text(),
                             ResultColumns.COMMENT, su.get_uri(),
@@ -149,7 +150,9 @@ namespace Unity.Foo {
         else
           return thumbnail_path;
       } catch (GLib.Error e) {
-        return "stock-unknown";
+        /* We failed to probe the icon. Try looking up by mimetype instead */
+        Icon icon2 = g_content_type_get_icon (su.get_mimetype ());
+        return icon2.to_string ();
       }
     }
 
