@@ -1,6 +1,0 @@
-[Place]
-Name=Files & Folders
-Comment=Find documents, downloads, and other files
-Icon=@prefix@/share/unity/files.png
-DBusName=com.canonical.Unity.FilesPlace
-DBusObjectPath=/com/canonical/unity/places/files

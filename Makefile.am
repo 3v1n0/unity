@@ -1,4 +1,4 @@
-SUBDIRS = data unity unity-private targets place-daemons tests tools vapi po
+SUBDIRS = data unity unity-private targets tests tools vapi po
 
 # Test reports
 .PHONY: check-report

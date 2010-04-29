@@ -114,17 +114,6 @@ PKG_CHECK_MODULES(BASE,
 AC_SUBST(BASE_CFLAGS)
 AC_SUBST(BASE_LIBS)
 
-PKG_CHECK_MODULES(PLACE_DAEMON,
-                  glib-2.0 >= $GLIB_REQUIRED
-                  gobject-2.0 >= $GLIB_REQUIRED
-                  gio-2.0 >= $GTK_REQUIRED
-                  gee-1.0
-                  dbusmodel >= 0.2.0
-                  zeitgeist-1.0)
-
-AC_SUBST(PLACE_DAEMON_CFLAGS)
-AC_SUBST(PLACE_DAEMON_LIBS)
-
 dnl testing for logging boot metrics and instrumenting
 with_testing="no"
 AC_ARG_ENABLE(testing,
@@ -172,8 +161,6 @@ dnl Create the Makefiles
 AC_CONFIG_FILES([
   Makefile
   data/Makefile
-  place-daemons/files.place
-  place-daemons/Makefile
   targets/Makefile
   targets/mutter/Makefile
   targets/unity/Makefile
