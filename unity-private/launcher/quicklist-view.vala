@@ -19,7 +19,7 @@
  *
  */
 
-namespace Unity.Quicklauncher
+namespace Unity.Launcher
 {
   const float LINE_WIDTH             = 0.083f;
   const float LINE_WIDTH_ABS         = 1.5f;

@@ -1,23 +1,23 @@
 /*
  *      unity-drag.vala
  *      Copyright (C) 2010 Canonical Ltd
- *      
+ *
  *      This program is free software; you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
  *      the Free Software Foundation; either version 2 of the License, or
  *      (at your option) any later version.
- *      
+ *
  *      This program is distributed in the hope that it will be useful,
  *      but WITHOUT ANY WARRANTY; without even the implied warranty of
  *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *      GNU General Public License for more details.
- *      
+ *
  *      You should have received a copy of the GNU General Public License
  *      along with this program; if not, write to the Free Software
  *      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  *      MA 02110-1301, USA.
- *      
- *      
+ *
+ *
  *      Authored by Gordon Allott <gord.allott@canonical.com>
  */
 
@@ -31,7 +31,7 @@ namespace Unity.Drag
   }
 
   public Controller? controller_singleton;
-  
+
   public class Controller : Object
   {
     // returns the controller singleton. we only want one
@@ -46,7 +46,7 @@ namespace Unity.Drag
     // normal class starts here
     Unity.Drag.Model? model;
     Unity.Drag.View? view;
-    
+
     /* on drag_start clients should inspect model.get_data () - if the data is
      * data the model is interested in, it should connect to the drag_motion and
      * drag_drop signals
@@ -64,7 +64,7 @@ namespace Unity.Drag
     {
       this._is_dragging = false;
     }
-    
+
     public void start_drag (Unity.Drag.Model model, float offset_x, float offset_y)
     {
       if (!(this.view is View)) {
@@ -77,6 +77,11 @@ namespace Unity.Drag
       this.view.end.connect (on_view_end);
       this._is_dragging = true;
       Unity.global_shell.add_fullscreen_request (this);
+    }
+
+    public Unity.Drag.Model get_drag_model ()
+    {
+      return model;
     }
 
     private void on_view_motion (float x, float y)
@@ -94,7 +99,7 @@ namespace Unity.Drag
       this._is_dragging = false;
       Unity.global_shell.remove_fullscreen_request (this);
     }
-    
+
 
   }
 
