@@ -42,6 +42,7 @@ unity_files_daemon_LDADD = \
 
 # Vala Sources
 common_sources = \
+  common/daemon.vala \
   common/model-schemas.vala \
   $(NULL)
 

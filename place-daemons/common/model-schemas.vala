@@ -17,7 +17,7 @@
  *
  */
 
-namespace Unity.Foo {
+namespace Unity.Place {
   
   enum GroupColumns
   {
