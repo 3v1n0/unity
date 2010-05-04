@@ -282,7 +282,7 @@ namespace Unity.Testing
 
     public void show_window_picker ()
     {
-      debug ("Window picker not implemented in popup mode");
+      this.show_unity ();
     }
 
     public void grab_keyboard (bool grab, uint32 timestamp)

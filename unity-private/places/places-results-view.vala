@@ -25,11 +25,10 @@ namespace Unity.Places.Views
 {
   enum GroupColumns
   {
-    NAME = 0,
-    ACTIVE
+    NAME = 0
   }
 
-  enum ResultsColumns
+  enum ResultColumns
   {
     NAME = 0,
     COMMENT,
@@ -124,11 +123,11 @@ namespace Unity.Places.Views
 
     public void init_with_properties (HashTable<string, string> props)
     {
-      string group_model_path = props.lookup("groups-model");
-      string results_model_path = props.lookup("results-model");
+      string group_model_name = props.lookup("groups-model");
+      string results_model_name = props.lookup("results-model");
 
-      this.groups_model = new Dbus.Model.with_name (group_model_path);
-      this.results_model = new Dbus.Model.with_name (results_model_path);
+      this.groups_model = new Dbus.Model.with_name (group_model_name);
+      this.results_model = new Dbus.Model.with_name (results_model_name);
 
       this.groups_model.row_added.connect (this.on_group_added);
       this.groups_model.row_changed.connect (this.on_group_changed);
@@ -159,34 +158,32 @@ namespace Unity.Places.Views
 
     private void on_result_added (Dbus.Model model, ModelIter iter)
     {
-      var group_name = model.get_string (iter, ResultsColumns.GROUP);
+      var group_name = model.get_string (iter, ResultColumns.GROUP);
 
       ApplicationGroup? group = this.groups[group_name];
 
-      if (group is ApplicationGroup)
-        {
-          if (group.n_items < 6)
-            {
-              ApplicationIcon app;
-              string name = model.get_string (iter, ResultsColumns.NAME);
-              string icon_name = model.get_string (iter, ResultsColumns.ICON_NAME);
-              string comment = model.get_string (iter, ResultsColumns.COMMENT);
-
-              app = new ApplicationIcon (48,
-                                         name,
-                                         icon_name,
-                                         comment);
-
-              group.add_icon (app);
-            }
-        }
-      else
+      if (!(group is ApplicationGroup))
         {
           group = new ApplicationGroup (group_name);
           this.results_view.add_actor (group);
           group.show ();
 
           this.groups[group_name] = group;
+        }
+
+      if (group.n_items < 6)
+        {
+          ApplicationIcon app;
+          string name = model.get_string (iter, ResultColumns.NAME);
+          string icon_name = model.get_string (iter, ResultColumns.ICON_NAME);
+          string comment = model.get_string (iter, ResultColumns.COMMENT);
+
+          app = new ApplicationIcon (48,
+                                     name,
+                                     icon_name,
+                                     comment);
+
+          group.add_icon (app);
         }
     }
 

@@ -42,6 +42,8 @@ namespace Unity.Panel
 
     private GConf.Client client;
 
+    private bool places_enabled = false;
+
     public View (Shell shell)
     {
       Object (shell:shell, reactive:false);
@@ -53,6 +55,8 @@ namespace Unity.Panel
     construct
     {
       START_FUNCTION ();
+
+      this.places_enabled = Environment.get_variable ("UNITY_ENABLE_PLACES") != null;
 
       this.rect = new ThemeImage ("panel_background");
       this.rect.set_repeat (true, false);
@@ -72,30 +76,33 @@ namespace Unity.Panel
       this.home.show ();
       this.home.clicked.connect (this.on_home_clicked);
 
-      this.entry_background = new Unity.Places.CairoDrawing.EntryBackground ();
-      this.entry_background.set_parent (this);
-      this.entry_background.show ();
-
-      this.entry_icon = new ThemeImage ("search_field");
-      this.entry_icon.reactive = true;
-      this.entry_icon.button_press_event.connect ((e) =>
+      if (this.places_enabled == false)
         {
-           this.entry.do_event (e, false);
-           this.entry.grab_key_focus ();
-           Unity.global_shell.grab_keyboard (true, e.button.time);
-        });
-      this.entry_icon.set_parent (this);
-      this.entry_icon.show ();
+          this.entry_background = new Unity.Places.CairoDrawing.EntryBackground ();
+          this.entry_background.set_parent (this);
+          this.entry_background.show ();
 
-      this.entry = new Unity.Entry ("");
-      this.entry.static_text = this.get_search_hint ();
-      this.entry.set_parent (this);
-      this.entry.show ();
-      this.entry.activate.connect (this.on_entry_activated);
+          this.entry_icon = new ThemeImage ("search_field");
+          this.entry_icon.reactive = true;
+          this.entry_icon.button_press_event.connect ((e) =>
+            {
+               this.entry.do_event (e, false);
+               this.entry.grab_key_focus ();
+               Unity.global_shell.grab_keyboard (true, e.button.time);
+            });
+          this.entry_icon.set_parent (this);
+          this.entry_icon.show ();
 
-      this.entry.key_focus_in.connect (this.on_entry_focus_in);
-      this.entry.key_focus_out.connect (this.on_entry_focus_out);
-      Unity.Panel.search_entry_has_focus = false;
+          this.entry = new Unity.Entry ("");
+          this.entry.static_text = this.get_search_hint ();
+          this.entry.set_parent (this);
+          this.entry.show ();
+          this.entry.activate.connect (this.on_entry_activated);
+
+          this.entry.key_focus_in.connect (this.on_entry_focus_in);
+          this.entry.key_focus_out.connect (this.on_entry_focus_out);
+          Unity.Panel.search_entry_has_focus = false;
+        }
 
       END_FUNCTION ();
     }
@@ -219,32 +226,35 @@ namespace Unity.Panel
       child_box.y2 = PANEL_HEIGHT;
       this.home.allocate (child_box, flags);
 
-      /* Entry */
-      child_box.x1 = Math.floorf (child_box.x2 + 12);
-      child_box.x2 = Math.floorf (child_box.x1 + 170); /* Random width */
-      child_box.y1 = Math.floorf (2);
-      child_box.y2 = Math.floorf (PANEL_HEIGHT);
+      if (this.places_enabled == false)
+        {
+          /* Entry */
+          child_box.x1 = Math.floorf (child_box.x2 + 12);
+          child_box.x2 = Math.floorf (child_box.x1 + 170); /* Random width */
+          child_box.y1 = Math.floorf (2);
+          child_box.y2 = Math.floorf (PANEL_HEIGHT);
 
-      this.entry_background.allocate (child_box, flags);
-      if ((this.entry_background.Width != (int)(child_box.x2 - child_box.x1)) && (this.entry_background.height != (int)(child_box.y2 - child_box.y1-2)))
-      {
-        this.entry_background.create_search_entry_background ((int)(child_box.x2 - child_box.x1), (int)(child_box.y2 - child_box.y1-2));
-      }
+          this.entry_background.allocate (child_box, flags);
+          if ((this.entry_background.Width != (int)(child_box.x2 - child_box.x1)) && (this.entry_background.height != (int)(child_box.y2 - child_box.y1-2)))
+          {
+            this.entry_background.create_search_entry_background ((int)(child_box.x2 - child_box.x1), (int)(child_box.y2 - child_box.y1-2));
+          }
 
-      child_box.x1 += 6;
-      child_box.x2 = child_box.x1 + 16;
-      child_box.y1 = Math.floorf ((PANEL_HEIGHT-16)/2.0f);
-      child_box.y2 = child_box.y1 + 16;
-      this.entry_icon.allocate (child_box, flags);
+          child_box.x1 += 6;
+          child_box.x2 = child_box.x1 + 16;
+          child_box.y1 = Math.floorf ((PANEL_HEIGHT-16)/2.0f);
+          child_box.y2 = child_box.y1 + 16;
+          this.entry_icon.allocate (child_box, flags);
 
-      child_box.x1 = child_box.x2 + 4; /* (QL_width - logo_width)/2.0 */
-      child_box.x2 = child_box.x1 + 150 - 16;
-      child_box.y1 = 9;
-      child_box.y2 = 15;
-      this.entry.allocate (child_box, flags);
+          child_box.x1 = child_box.x2 + 4; /* (QL_width - logo_width)/2.0 */
+          child_box.x2 = child_box.x1 + 150 - 16;
+          child_box.y1 = 9;
+          child_box.y2 = 15;
+          this.entry.allocate (child_box, flags);
 
-      child_box.y1 = 0;
-      child_box.y2 = PANEL_HEIGHT;
+          child_box.y1 = 0;
+          child_box.y2 = PANEL_HEIGHT;
+        }
 
       /* Indicators */
       this.indicators.get_preferred_width (PANEL_HEIGHT,
@@ -280,6 +290,10 @@ namespace Unity.Panel
       this.tray.paint ();
       this.home.paint ();
       this.indicators.paint ();
+
+      if (this.places_enabled == true)
+        return;
+
       this.entry_background.paint ();
       this.entry_icon.paint ();
       this.entry.paint ();
@@ -291,6 +305,10 @@ namespace Unity.Panel
       this.tray.paint ();
       this.home.paint ();
       this.indicators.paint ();
+
+      if (this.places_enabled == true)
+        return;
+
       this.entry_background.paint ();
       this.entry_icon.paint ();
       this.entry.paint ();
@@ -303,6 +321,10 @@ namespace Unity.Panel
       this.tray.map ();
       this.home.map ();
       this.indicators.map ();
+
+      if (this.places_enabled == true)
+        return;
+
       this.entry_background.map ();
       this.entry_icon.map ();
       this.entry.map ();
@@ -315,6 +337,10 @@ namespace Unity.Panel
       this.tray.unmap ();
       this.home.unmap ();
       this.indicators.unmap ();
+
+      if (this.places_enabled == true)
+        return;
+
       this.entry_background.unmap ();
       this.entry_icon.unmap ();
       this.entry.unmap ();

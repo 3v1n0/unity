@@ -55,7 +55,7 @@ namespace Unity.Places
       var place = new FakePlace ("Files & Folders", PKGDATADIR + "/files.png");
       place.activated.connect (this.on_place_activated);
       this.model.add (place);
-
+      
       return false;
     }
 
@@ -98,7 +98,7 @@ namespace Unity.Places
           var comment = file.get_string (group, "Comment");
           var icon_name = file.get_string (group, "Icon");
           var dbus_name = file.get_string (group, "DBusName");
-          var dbus_path = file.get_string (group, "DBusPath");
+          var dbus_path = file.get_string (group, "DBusObjectPath");
 
           Place place = new PlaceProxy (name,
                                         icon_name,
