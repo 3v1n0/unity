@@ -24,6 +24,7 @@ using Unity;
 using Unity.Launcher;
 using Unity.Testing;
 
+/* TODO - add more tests once we have bamf and can test the controllers */
 namespace Unity.Tests.Unit
 {
   public class LauncherSuite
