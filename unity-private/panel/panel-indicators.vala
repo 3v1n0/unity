@@ -90,7 +90,7 @@ namespace Unity.Panel.Indicators
             {
               string leaf = file_info.get_name ();
 
-              if (leaf in skip_list)
+              if (leaf in skip_list || skip_list == "all")
                 continue;
 
               if (leaf[leaf.len()-2:leaf.len()] == "so")

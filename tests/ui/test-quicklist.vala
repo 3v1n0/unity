@@ -64,7 +64,7 @@ namespace Unity.Tests.UI
 
       Logging.init_fatal_handler ();
 
-      ScrollerModel scroller = registry.lookup ("UnityScrollerModel") as ScrollerModel;
+      ScrollerModel scroller = (registry.lookup ("UnityScrollerModel")[0]) as ScrollerModel;
       ScrollerChild first = scroller[0] as ScrollerChild;
 
       QuicklistController qlcontroller = QuicklistController.get_default ();
