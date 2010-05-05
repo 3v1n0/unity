@@ -201,7 +201,6 @@ namespace Unity.Launcher
       if (desktop_filename == desktop_file)
         {
           is_favorite = true;
-          debug ("we are a favorite!!!");
         }
     }
 
@@ -212,7 +211,6 @@ namespace Unity.Launcher
       if (desktop_filename == desktop_file)
         {
           is_favorite = false;
-          debug ("we are not a favorite :(");
         }
     }
 
