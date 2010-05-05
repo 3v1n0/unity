@@ -25,11 +25,11 @@ namespace Unity.Testing
   {
     private static ObjectRegistry _registry = null;
 
-    private HashMap<string,Object> object_map;
+    private HashMap<string, ArrayList<Object>> object_map;
 
     public ObjectRegistry ()
     {
-      object_map = new HashMap<string, Object> (str_hash, str_equal, direct_equal);
+      object_map = new HashMap<string, ArrayList> (str_hash, str_equal, direct_equal);
     }
 
     public static ObjectRegistry get_default ()
@@ -42,10 +42,13 @@ namespace Unity.Testing
 
     public void register (string name, Object object)
     {
-      object_map[name] = object;
+      if (!(name in object_map))
+        object_map[name] = new ArrayList<Object> ();
+
+      object_map[name].add (object);
     }
 
-    public Object? lookup (string name)
+    public ArrayList<Object> lookup (string name)
     {
       return object_map[name];
     }

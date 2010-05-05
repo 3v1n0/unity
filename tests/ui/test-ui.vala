@@ -31,6 +31,7 @@ public class Main
 
     Environment.set_variable ("UNITY_DISABLE_TRAY", "1", true);
     Environment.set_variable ("UNITY_DISABLE_IDLES", "1", true);
+    Environment.set_variable ("UNITY_PANEL_INDICATORS_SKIP", "all", true);
 
     Gtk.init (ref args);
     Gtk.Settings.get_default ().gtk_xft_dpi = 96 * 1024;

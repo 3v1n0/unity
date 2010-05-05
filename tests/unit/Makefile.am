@@ -47,6 +47,7 @@ test_unit_VALAFLAGS = \
   $(MAINTAINER_VALAFLAGS)
 
 test_unit_SOURCES = \
+  test-launcher.vala \
   test-places.vala \
   test-unit.vala
 
