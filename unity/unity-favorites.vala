@@ -42,6 +42,7 @@ namespace Unity
     public abstract ArrayList<string> get_favorites ();
 
     public abstract void add_favorite (string uid);
+    public abstract void remove_favorite (string uid);
     public abstract bool is_favorite (string uid);
 
     public abstract string? get_string (string uid, string name);
@@ -65,6 +66,8 @@ namespace Unity
     {
       client = GConf.Client.get_default ();
       notify_map = new HashMap<string, uint> ();
+      favorite_added.connect (on_favorite_added);
+      favorite_removed.connect (on_favorite_removed);
       try
         {
           fav_ids = client.get_list (path + "favorites_list", GConf.ValueType.STRING);
@@ -107,6 +110,22 @@ namespace Unity
       if (!is_favorite (uid))
         {
           fav_ids.append (uid);
+          try
+            {
+              client.set_list (path + "favorites_list", GConf.ValueType.STRING, fav_ids);
+            }
+          catch (Error e)
+            {
+              warning ("Could not set the favorites list: %s", e.message);
+            }
+        }
+    }
+
+    public override void remove_favorite (string uid)
+    {
+      if (is_favorite (uid))
+        {
+          fav_ids.remove (uid);
           try
             {
               client.set_list (path + "favorites_list", GConf.ValueType.STRING, fav_ids);

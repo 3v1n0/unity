@@ -47,6 +47,10 @@ namespace Unity.Launcher
       appman = LibLauncher.Appman.get_default ();
       session = LibLauncher.Session.get_default ();
       favorites = Unity.Favorites.get_default ();
+      favorites.favorite_added.connect (on_favorite_added);
+/*
+      favorites.favorite_removed.connect (on_favorite_removed);
+*/
 
       session.application_opened.connect (handle_session_application);
       build_favorites ();
@@ -94,12 +98,38 @@ namespace Unity.Launcher
             continue;
           }
 
-        LauncherChild child = new LauncherChild ();
-        ApplicationController controller = new ApplicationController (desktop_file, child);
-        model.add (child);
-        childcontrollers.add (controller);
-
+        ApplicationController controller = find_controller_by_desktop_file (desktop_file);
+        if (!(controller is ScrollerChildController))
+          {
+            LauncherChild child = new LauncherChild ();
+            controller = new ApplicationController (desktop_file, child);
+            model.add (child);
+            childcontrollers.add (controller);
+          }
       }
+    }
+
+    private void on_favorite_added (string uid)
+    {
+        var desktop_file = favorites.get_string (uid, "desktop_file");
+        if (!FileUtils.test (desktop_file, FileTest.EXISTS))
+          {
+            // no desktop file for this favorite or it does not exist
+            return;
+          }
+
+        ApplicationController controller = find_controller_by_desktop_file (desktop_file);
+        if (!(controller is ScrollerChildController))
+          {
+            LauncherChild child = new LauncherChild ();
+            controller = new ApplicationController (desktop_file, child);
+            model.add (child);
+            childcontrollers.add (controller);
+          }
+    }
+
+    private void on_favorite_removed (string uid)
+    {
     }
 
     private bool desktop_file_is_favorite (string desktop_file)

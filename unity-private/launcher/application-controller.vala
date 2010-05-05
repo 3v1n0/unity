@@ -83,8 +83,7 @@ namespace Unity.Launcher
    */
   public class LauncherPinningShortcut : Object, ShortcutItem
   {
-    public string uid {get; construct;}
-
+    public string desktop_file {get; construct;}
     public string name {
       get {
         if (is_sticky ())
@@ -98,27 +97,25 @@ namespace Unity.Launcher
       }
     }
 
+    private string? cached_uid = null;
+
     private bool is_sticky ()
     {
-      var favorites = LibLauncher.Favorites.get_default ();
-      unowned SList<string> favorite_list = favorites.get_favorites();
-      foreach (weak string favuid in favorite_list)
+      var favorites = Unity.Favorites.get_default ();
+      foreach (string uid in favorites.get_favorites ())
         {
-          // we only want favorite *applications* for the moment
-          var type = favorites.get_string(favuid, "type");
-          if (type != "application")
-              continue;
-
-          if (uid == favuid)
-            return true;
+          if (favorites.get_string (uid, "desktop_file") == desktop_file)
+            {
+              cached_uid = uid;
+              return true;
+            }
         }
       return false;
     }
 
-
-    public LauncherPinningShortcut (string _uid)
+    public LauncherPinningShortcut (string _desktop_file)
     {
-      Object (uid: _uid);
+      Object (desktop_file: _desktop_file);
     }
 
     construct
@@ -132,7 +129,22 @@ namespace Unity.Launcher
 
     public void activated ()
     {
-      debug ("launcher pinning shortcut called");
+      var favorites = Unity.Favorites.get_default ();
+      if (!is_sticky ())
+        {
+          if (cached_uid == null)
+            {
+              //generate a new uid
+              cached_uid = "app-" + Path.get_basename (desktop_file);
+            }
+          favorites.set_string (cached_uid, "type", "application");
+          favorites.set_string (cached_uid, "desktop_file", desktop_file);
+          favorites.add_favorite (cached_uid);
+        }
+      else
+        {
+          favorites.remove_favorite (cached_uid);
+        }
     }
   }
 
@@ -155,6 +167,8 @@ namespace Unity.Launcher
     private Unity.ThemeFilePath theme_file_path;
     private LibLauncher.Application app;
 
+    private bool is_favorite = false;
+
     public ApplicationController (string desktop_file_, ScrollerChild child_)
     {
       Object (desktop_file: desktop_file_,
@@ -164,6 +178,42 @@ namespace Unity.Launcher
     construct
     {
       theme_file_path = new Unity.ThemeFilePath ();
+      var favorites = Unity.Favorites.get_default ();
+      favorites.favorite_added.connect (on_favorite_added);
+      favorites.favorite_removed.connect (on_favorite_removed);
+
+      // we need to figure out if we are a favorite
+      foreach (string uid in favorites.get_favorites ())
+        {
+          if (favorites.get_string (uid, "desktop_file") == desktop_file)
+            {
+              is_favorite = true;
+              break;
+            }
+        }
+    }
+
+    private void on_favorite_added (string uid)
+    {
+      //check to see if we are the favorite
+      var favorites = Unity.Favorites.get_default ();
+      var desktop_filename = favorites.get_string (uid, "desktop_file");
+      if (desktop_filename == desktop_file)
+        {
+          is_favorite = true;
+          debug ("we are a favorite!!!");
+        }
+    }
+
+    private void on_favorite_removed (string uid)
+    {
+      var favorites = Unity.Favorites.get_default ();
+      var desktop_filename = favorites.get_string (uid, "desktop_file");
+      if (desktop_filename == desktop_file)
+        {
+          is_favorite = false;
+          debug ("we are not a favorite :(");
+        }
     }
 
     public override Gee.ArrayList<ShortcutItem> get_menu_shortcuts ()
@@ -212,14 +262,8 @@ namespace Unity.Launcher
     public override Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ()
     {
       Gee.ArrayList<ShortcutItem> ret_list = new Gee.ArrayList<ShortcutItem> ();
-/*
-      if (!this.readonly && !this.is_fixed)
-        {
-          var pin_entry = new LauncherPinningShortcut (this);
-          if (this.app != null && this.app.get_desktop_file () != null)
-            ret_list.add (pin_entry);
-        }
-*/
+      var pin_entry = new LauncherPinningShortcut (desktop_file);
+      ret_list.add (pin_entry);
 
       if (app is LibLauncher.Application)
         {
