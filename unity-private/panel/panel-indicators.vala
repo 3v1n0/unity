@@ -19,6 +19,7 @@
  */
 
 using Gee;
+using Utils;
 
 namespace Unity.Panel.Indicators
 {
@@ -48,6 +49,7 @@ namespace Unity.Panel.Indicators
       this.button_press_event.connect (this.on_button_press_event);
       this.button_release_event.connect (this.on_button_release_event);
       this.motion_event.connect (this.on_motion_event);
+      this.scroll_event.connect (on_scroll_event);
 
       if (Environment.get_variable ("UNITY_DISABLE_IDLES") != null)
         this.load_indicators ();
@@ -57,12 +59,20 @@ namespace Unity.Panel.Indicators
 
     private bool load_indicators ()
     {
+      string skip_list;
+
       /* Create the order */
       this.indicator_order.set ("libapplication.so", 1);
-      this.indicator_order.set ("libmessaging.so", 2);
-      this.indicator_order.set ("libdatetime.so", 3);
-      this.indicator_order.set ("libme.so", 4);
-      this.indicator_order.set ("libsession.so", 5);
+      this.indicator_order.set ("libsoundmenu.so", 2);
+      this.indicator_order.set ("libmessaging.so", 3);
+      this.indicator_order.set ("libdatetime.so", 4);
+      this.indicator_order.set ("libme.so", 5);
+      this.indicator_order.set ("libsession.so", 6);
+
+      /* The ones we don't want to load */
+      skip_list = Environment.get_variable ("UNITY_PANEL_INDICATORS_SKIP");
+      if (skip_list == null)
+        skip_list = "";
 
       /* We need to look for icons in an specific location */
       Gtk.IconTheme.get_default ().append_search_path (INDICATORICONSDIR);
@@ -79,6 +89,9 @@ namespace Unity.Panel.Indicators
           while ((file_info = e.next_file (null)) != null)
             {
               string leaf = file_info.get_name ();
+
+              if (leaf in skip_list)
+                continue;
 
               if (leaf[leaf.len()-2:leaf.len()] == "so")
                 this.load_indicator (INDICATORDIR + file_info.get_name (),
@@ -138,7 +151,7 @@ namespace Unity.Panel.Indicators
       float x = root_x - this.x;
 
       /* Find which entry has the button press, pop it up */
-      unowned GLib.List list = this.get_children ();
+      unowned GLib.List<IndicatorItem> list = this.get_children ();
       for (int i = 0; i < list.length (); i++)
         {
           unowned IndicatorItem it = (IndicatorItem)list.nth_data (i);
@@ -257,10 +270,24 @@ namespace Unity.Panel.Indicators
       return true;
     }
 
+    private bool on_scroll_event (Clutter.Event e)
+    {
+      Clutter.ScrollEvent event = e.scroll;
+
+      unowned IndicatorEntry? entry = this.entry_for_event (e.scroll.x);
+      if (entry is IndicatorEntry)
+        {
+          unowned Indicator.Object object = entry.get_data<Indicator.Object> ("Indicator.Object");
+
+          Signal.emit_by_name (object, "scroll", 1, event.direction);
+        }
+      return true;
+    }
+
     private void on_menu_moved (IndicatorItem         item,
                                 Gtk.MenuDirectionType type)
     {
-      unowned GLib.List list = this.get_children ();
+      unowned GLib.List<IndicatorItem> list = this.get_children ();
 
       int pos = list.index (item);
 
@@ -285,7 +312,7 @@ namespace Unity.Panel.Indicators
       IndicatorItem new_item = list.nth_data (pos) as IndicatorItem;
 
       /* Find the right entry to activate */
-      unowned GLib.List l = new_item.get_children ();
+      unowned GLib.List<IndicatorEntry> l = new_item.get_children ();
       int p = type == Gtk.MenuDirectionType.PARENT ? (int)l.length ()-1 : 0;
       IndicatorEntry? new_entry = l.nth_data (p) as IndicatorEntry;
 
@@ -317,7 +344,7 @@ namespace Unity.Panel.Indicators
 
     private void remove_entry (Indicator.ObjectEntry entry)
     {
-      unowned GLib.List list = this.get_children ();
+      unowned GLib.List<IndicatorEntry> list = this.get_children ();
 
       for (int i = 0; i < list.length (); i++)
         {
@@ -332,9 +359,11 @@ namespace Unity.Panel.Indicators
         }
     }
 
-    private void create_entry (Indicator.ObjectEntry entry)
+    private void create_entry (Indicator.ObjectEntry entry,
+                               Indicator.Object      object)
     {
       IndicatorEntry e = new IndicatorEntry (entry);
+      e.set_data ("Indicator.Object", object);
       this.add_actor (e);
       this.show ();
 
@@ -344,7 +373,7 @@ namespace Unity.Panel.Indicators
     private void on_menu_moved (IndicatorEntry        entry,
                                 Gtk.MenuDirectionType type)
     {
-      unowned GLib.List list = this.get_children ();
+      unowned GLib.List<IndicatorEntry> list = this.get_children ();
 
       int pos = list.index (entry);
 
@@ -380,14 +409,20 @@ namespace Unity.Panel.Indicators
       parent.show_entry (new_entry);
     }
 
+    private void on_entry_added (Indicator.Object      object,
+                                 Indicator.ObjectEntry entry)
+    {
+      create_entry (entry, object);
+    }
+
     public void set_object (Indicator.Object object)
     {
       this.object = object;
 
-      object.entry_added.connect (this.create_entry);
+      object.entry_added.connect (this.on_entry_added);
       object.entry_removed.connect (this.remove_entry);
 
-      unowned GLib.List list = object.get_entries ();
+      unowned GLib.List<Indicator.ObjectEntry> list = object.get_entries ();
 
       for (int i = 0; i < list.length (); i++)
         {
@@ -395,7 +430,7 @@ namespace Unity.Panel.Indicators
 
           entry = (Indicator.ObjectEntry) list.nth_data (i);
 
-          this.create_entry (entry);
+          this.create_entry (entry, object);
         }
     }
 

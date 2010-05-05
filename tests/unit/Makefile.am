@@ -1,3 +1,5 @@
+SUBDIRS = data
+
 noinst_PROGRAMS = test-unit
 
 TESTDIR = $(top_srcdir)/tests/unit
@@ -22,6 +24,7 @@ test_unit_VALAFLAGS = \
   --vapidir=$(top_srcdir)/src \
   --vapidir=$(top_srcdir)/vapi/ \
   --vapidir=$(top_srcdir)/tests \
+  --vapidir=$(top_srcdir)/tests/unit \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg dbus-glib-1 \
@@ -44,6 +47,7 @@ test_unit_VALAFLAGS = \
   $(MAINTAINER_VALAFLAGS)
 
 test_unit_SOURCES = \
+  test-places.vala \
   test-unit.vala
 
 # GTester stuff

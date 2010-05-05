@@ -127,8 +127,8 @@ namespace Unity.Places.Views
       string group_model_path = props.lookup("groups-model");
       string results_model_path = props.lookup("results-model");
 
-      this.groups_model = new Dbus.Model.from_path (group_model_path);
-      this.results_model = new Dbus.Model.from_path (results_model_path);
+      this.groups_model = new Dbus.Model.with_name (group_model_path);
+      this.results_model = new Dbus.Model.with_name (results_model_path);
 
       this.groups_model.row_added.connect (this.on_group_added);
       this.groups_model.row_changed.connect (this.on_group_changed);

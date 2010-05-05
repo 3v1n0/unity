@@ -1,2 +1,2 @@
 [encoding: UTF-8]
-src/quicklauncher/application-model.vala
+unity-private/launcher/application-controller.vala

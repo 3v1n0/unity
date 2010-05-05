@@ -21,6 +21,7 @@ libunity_private_la_CPPFLAGS = \
   -DINDICATORDIR=\""$(INDICATORDIR)"\" \
   -DINDICATORICONSDIR=\""$(INDICATORICONSDIR)"\" \
   -DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\" \
+  -DG_LOG_DOMAIN=\"libunity-private\" \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS) \
   -I$(top_srcdir)/unity/ \
@@ -94,19 +95,23 @@ places_sources = \
   places/search-field.vala
 
 launcher_sources = \
-  launcher/application-model.vala \
-  launcher/launcher-model.vala \
-  launcher/launcher-view.vala \
-  launcher/quicklauncher-manager.vala \
-  launcher/quicklauncher.vala \
+  launcher/application-controller.vala \
+  launcher/launcher.vala \
+  launcher/launcher-child.vala \
   launcher/quicklist-controller.vala \
   launcher/quicklist-view.vala \
-  launcher/unity-scroller.vala
+  launcher/scrollerchild-controller.vala \
+  launcher/scrollerchild.vala \
+  launcher/scroller-controller.vala \
+  launcher/scroller-model.vala \
+  launcher/scroller-view.vala
 
 testing_sources = \
   testing/background.vala \
   testing/object-registry.vala \
   testing/perf-logger.vala \
+  testing/test-director.vala \
+  testing/test-utils.vala \
   testing/test-window.vala
 
 libunity_private_la_VALASOURCES = \

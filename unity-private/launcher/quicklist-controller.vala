@@ -17,21 +17,19 @@
  * Authored by Gordon Allott <gord.allott@canonical.com>
  *
  */
-using Unity.Quicklauncher.Models;
-
-namespace Unity.Quicklauncher
+namespace Unity.Launcher
 {
-  public QuicklistController? ql_controler_singleton;
+  public static QuicklistController? ql_controler_singleton;
 
   public class QuicklistController : Object
   {
 
     public static unowned QuicklistController get_default ()
     {
-      if (Unity.Quicklauncher.ql_controler_singleton == null) {
-        Unity.Quicklauncher.ql_controler_singleton= new QuicklistController ();
+      if (Unity.Launcher.ql_controler_singleton == null) {
+        Unity.Launcher.ql_controler_singleton= new QuicklistController ();
       }
-      return Unity.Quicklauncher.ql_controler_singleton;
+      return Unity.Launcher.ql_controler_singleton;
     }
 
     public weak Ctk.Menu menu;
@@ -40,6 +38,8 @@ namespace Unity.Quicklauncher
 
     public QuicklistController ()
     {
+      Unity.Testing.ObjectRegistry.get_default ().register ("QuicklistController",
+                                                            this);
     }
 
     construct
@@ -107,7 +107,7 @@ namespace Unity.Quicklauncher
       /* Only add the separator if there are shortcuts beneath  */
       if (affix_shortcuts.size > 0)
         {
-          Unity.Quicklauncher.QuicklistMenuSeperator separator = new Unity.Quicklauncher.QuicklistMenuSeperator ();
+          Unity.Launcher.QuicklistMenuSeperator separator = new Unity.Launcher.QuicklistMenuSeperator ();
           this.menu.append (separator, false);
         }
 

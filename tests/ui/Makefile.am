@@ -1,6 +1,8 @@
+SUBDIRS = data
+
 noinst_PROGRAMS = test-ui
 
-TESTDIR = $(top_srcdir)/tests/unit
+TESTDIR = $(top_srcdir)/tests/ui
 
 test_ui_CPPFLAGS = \
   -I$(top_srcdir) \
@@ -21,7 +23,7 @@ test_ui_VALAFLAGS = \
   --vapidir=$(top_srcdir)/unity-private \
   --vapidir=$(top_srcdir)/src \
   --vapidir=$(top_srcdir)/vapi/ \
-  --vapidir=$(top_srcdir)/tests \
+  --vapidir=$(top_srcdir)/tests/ui \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg dbus-glib-1 \
@@ -44,6 +46,7 @@ test_ui_VALAFLAGS = \
   $(MAINTAINER_VALAFLAGS)
 
 test_ui_SOURCES = \
+  test-quicklist.vala \
   test-ui.vala
 
 # GTester stuff
