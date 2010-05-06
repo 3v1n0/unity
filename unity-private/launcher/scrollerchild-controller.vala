@@ -111,6 +111,7 @@ namespace Unity.Launcher
 
           activate ();
         }
+      button_down = false;
       return false;
     }
 
