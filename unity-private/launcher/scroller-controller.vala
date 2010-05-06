@@ -73,21 +73,33 @@ namespace Unity.Launcher
       if (object is Bamf.Application)
         {
           Bamf.Application app = object as Bamf.Application;
-          string desktop_file = app.get_desktop_file ();
-          if (desktop_file != null)
+          if (!app.user_visible ())
             {
-              var controller = find_controller_by_desktop_file (desktop_file);
-              if (controller is ApplicationController)
+              app.user_visible_changed.connect ((a, changed) => {
+                if (changed)
+                  {
+                    handle_bamf_view_opened (a as Object);
+                  }
+              });
+            }
+          else
+            {
+              string desktop_file = app.get_desktop_file ();
+              if (desktop_file != null)
                 {
-                  controller.attach_application (app);
-                }
-              else
-                {
-                  LauncherChild child = new LauncherChild ();
-                  controller = new ApplicationController (desktop_file, child);
-                  controller.attach_application (app);
-                  model.add (child);
-                  childcontrollers.add (controller);
+                  var controller = find_controller_by_desktop_file (desktop_file);
+                  if (controller is ApplicationController)
+                    {
+                      controller.attach_application (app);
+                    }
+                  else
+                    {
+                      LauncherChild child = new LauncherChild ();
+                      controller = new ApplicationController (desktop_file, child);
+                      controller.attach_application (app);
+                      model.add (child);
+                      childcontrollers.add (controller);
+                    }
                 }
             }
         }
