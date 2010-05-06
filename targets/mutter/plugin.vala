@@ -602,6 +602,24 @@ namespace Unity
       return this.stage;
     }
 
+    public void close_xids (Array<uint32> xids)
+    {
+      for (int i = 0; i < xids.length; i++)
+        {
+          uint32 xid = xids.index (i);
+          Wnck.Window window = Wnck.Window.get (xid);
+          if (window is Wnck.Window)
+            window.close (Clutter.get_current_event_time ());
+        }
+    }
+
+    public void show_window (uint32 xid)
+    {
+      Wnck.Window window = Wnck.Window.get (xid);
+      if (window is Wnck.Window)
+        window.activate (Clutter.get_current_event_time ());
+    }
+
     public ShellMode get_mode ()
     {
       return ShellMode.UNDERLAY;

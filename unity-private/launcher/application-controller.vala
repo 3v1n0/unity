@@ -39,20 +39,21 @@ namespace Unity.Launcher
     {
       Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
       try
-      {
-        var desktop_file = new KeyFile ();
-        desktop_file.load_from_file (this.desktop_location, 0);
-        desktop_file.set_string ("Desktop Entry", "Exec", exec);
-        AppInfo appinfo = new DesktopAppInfo.from_keyfile (desktop_file);
-        appinfo.create_from_commandline (this.exec, this.name, 0);
-        context.set_screen (Gdk.Display.get_default ().get_default_screen ());
-        context.set_timestamp (Gdk.CURRENT_TIME);
+        {
+          var desktop_file = new KeyFile ();
+          desktop_file.load_from_file (this.desktop_location, 0);
+          desktop_file.set_string ("Desktop Entry", "Exec", exec);
+          AppInfo appinfo = new DesktopAppInfo.from_keyfile (desktop_file);
+          appinfo.create_from_commandline (this.exec, this.name, 0);
+          context.set_screen (Gdk.Display.get_default ().get_default_screen ());
+          context.set_timestamp (Gdk.CURRENT_TIME);
 
-        appinfo.launch (null, context);
-      } catch (Error e)
-      {
-        warning (e.message);
-      }
+          appinfo.launch (null, context);
+        }
+      catch (Error e)
+        {
+          warning (e.message);
+        }
 
     }
   }
@@ -73,7 +74,8 @@ namespace Unity.Launcher
 
     public void activated ()
     {
-      debug ("Quitting applications not supported yet");
+      Array<uint32> xids = app.get_xids ();
+      Unity.global_shell.close_xids (xids);
     }
   }
 
@@ -281,27 +283,31 @@ namespace Unity.Launcher
         {
           if (app.is_running ())
             {
-              warning ("We do not support activating applications");
+              Array<uint32> xids = app.get_xids ();
+              for (int i = 0; i < xids.length; i++)
+                {
+                  uint32 xid = xids.index (i);
+                  Unity.global_shell.show_window (xid);
+                }
             }
         }
+      else
+        {
+          Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
+          try
+          {
+            var desktop_keyfile = new KeyFile ();
+            desktop_keyfile.load_from_file (desktop_file, 0);
+            AppInfo appinfo = new DesktopAppInfo.from_keyfile (desktop_keyfile);
+            context.set_screen (Gdk.Display.get_default ().get_default_screen ());
+            context.set_timestamp (Gdk.CURRENT_TIME);
 
-
-      Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
-      try
-      {
-        var desktop_keyfile = new KeyFile ();
-        desktop_keyfile.load_from_file (desktop_file, 0);
-        AppInfo appinfo = new DesktopAppInfo.from_keyfile (desktop_keyfile);
-        context.set_screen (Gdk.Display.get_default ().get_default_screen ());
-        context.set_timestamp (Gdk.CURRENT_TIME);
-
-        appinfo.launch (null, context);
-      } catch (Error e)
-      {
-        warning (e.message);
-      }
-
-
+            appinfo.launch (null, context);
+          } catch (Error e)
+          {
+            warning (e.message);
+          }
+        }
     }
 
     public void attach_application (Bamf.Application application)
