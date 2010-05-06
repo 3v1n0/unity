@@ -52,7 +52,7 @@ libunity_private_la_VALAFLAGS = \
   --pkg gio-unix-2.0 \
   --pkg gtk+-2.0 \
   --pkg indicator \
-  --pkg launcher-0.3 \
+  --pkg LibBamf-0.2 \
   --pkg libwnck-1.0 \
   --pkg unity \
   --pkg unity-const \

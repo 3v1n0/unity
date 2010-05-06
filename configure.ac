@@ -105,7 +105,7 @@ PKG_CHECK_MODULES(BASE,
                   clutter-gtk-0.10 >= 0.10
                   clutk-0.3 >= 0.3.26
                   indicator
-                  launcher-0.3 >= 0.3.26
+                  libbamf >= 0.2
                   libwnck-1.0 >= 2.28.0
                   unique-1.0
                   unity-misc

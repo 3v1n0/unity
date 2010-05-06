@@ -42,7 +42,7 @@ libunity_mutter_la_VALAFLAGS = \
   --pkg gee-1.0 \
   --pkg indicator \
   --pkg mutter-2.28 \
-  --pkg launcher-0.3 \
+  --pkg LibBamf-0.2 \
   --pkg libwnck-1.0 \
   --pkg unique-1.0 \
   --pkg x11 \
