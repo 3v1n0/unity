@@ -144,7 +144,7 @@ Icon=%s
 
     public void add_to_favorites ()
     {
-      var favorites = LibLauncher.Favorites.get_default ();
+      var favorites = Unity.Favorites.get_default ();
       string uid = get_fav_uid ();
       if (uid != "")
         {
@@ -160,7 +160,6 @@ Icon=%s
       // we are not a favorite and we need to be favorited!
       favorites.set_string (uid, "type", "application");
       favorites.set_string (uid, "desktop_file", desktop_path);
-      favorites.set_bool(uid, "enable_shadow", true);
       favorites.add_favorite (uid);
     }
 
@@ -172,9 +171,9 @@ Icon=%s
     {
       string myuid = "";
       string my_desktop_path = webapp_dir + "/%s.desktop".printf (name);
-      var favorites = LibLauncher.Favorites.get_default ();
-      unowned SList<string> favorite_list = favorites.get_favorites();
-      foreach (weak string uid in favorite_list)
+      var favorites = Unity.Favorites.get_default ();
+      Gee.ArrayList<string> favorite_list = favorites.get_favorites();
+      foreach (string uid in favorite_list)
         {
           // we only want favorite *applications* for the moment
           var type = favorites.get_string(uid, "type");

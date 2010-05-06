@@ -51,6 +51,9 @@ namespace Unity
     public abstract int? get_int (string uid, string name);
     public abstract void set_int (string uid, string name, int value);
 
+    public abstract float? get_float (string uid, string name);
+    public abstract void set_float (string uid, string name, float value);
+
     public abstract bool? get_bool (string uid, string name);
     public abstract void set_bool (string uid, string name, bool value);
   }
@@ -198,6 +201,32 @@ namespace Unity
       catch (Error e)
         {
           warning ("GConf int setting failed: %s", e.message);
+        }
+    }
+
+    public override float? get_float (string uid, string name)
+    {
+      float? return_val = null;
+      try
+        {
+          return_val = (float)(client.get_float (path + uid + "/" + name));
+        }
+      catch (Error e)
+        {
+          warning ("GConf float lookup failed: %s", e.message);
+        }
+      return return_val;
+    }
+
+    public override void set_float (string uid, string name, float value)
+    {
+      try
+        {
+          client.set_float (path + uid + "/" + name, value);
+        }
+      catch (Error e)
+        {
+          warning ("GConf float set failed: %s", e.message);
         }
     }
 
