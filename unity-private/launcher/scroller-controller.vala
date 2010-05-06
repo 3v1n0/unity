@@ -49,7 +49,7 @@ namespace Unity.Launcher
       matcher.view_opened.connect (handle_bamf_view_opened);
 
       build_favorites ();
-      //List<Bamf.View> views = matcher.get_running_applications
+
       foreach (Object object in (List<Bamf.View>)(matcher.get_running_applications ()))
         {
           if (object is Bamf.View)
@@ -73,16 +73,20 @@ namespace Unity.Launcher
       if (object is Bamf.Application)
         {
           Bamf.Application app = object as Bamf.Application;
-          if (!app.user_visible ())
-            {
-              app.user_visible_changed.connect ((a, changed) => {
-                if (changed)
-                  {
-                    handle_bamf_view_opened (a as Object);
-                  }
-              });
-            }
-          else
+          //need to hook up to its visible changed signals
+
+          app.user_visible_changed.connect ((a, changed) => {
+            if (changed)
+              {
+                handle_bamf_view_opened (a as Object);
+              }
+            else
+              {
+                handle_bamf_view_closed (a as Object);
+              }
+          });
+
+          if (app.user_visible ())
             {
               string desktop_file = app.get_desktop_file ();
               if (desktop_file != null)
@@ -100,6 +104,24 @@ namespace Unity.Launcher
                       model.add (child);
                       childcontrollers.add (controller);
                     }
+                }
+            }
+        }
+    }
+
+    private void handle_bamf_view_closed (Object object)
+      requires (object is Bamf.View)
+    {
+      if (object is Bamf.Application)
+        {
+          Bamf.Application app = object as Bamf.Application;
+          string desktop_file = app.get_desktop_file ();
+          if (desktop_file != null)
+            {
+              var controller = find_controller_by_desktop_file (desktop_file);
+              if (controller is ApplicationController)
+                {
+                  childcontrollers.remove (controller);
                 }
             }
         }
