@@ -33,6 +33,9 @@ namespace Unity.Launcher
     private LibLauncher.Appman appman;
     private LibLauncher.Session session;
 
+    /* favourites */
+    private Unity.Favorites favorites;
+
     public ScrollerController (ScrollerModel _model, ScrollerView _view)
     {
       Object (model:_model, view: _view);
@@ -43,6 +46,11 @@ namespace Unity.Launcher
       childcontrollers = new Gee.ArrayList<ScrollerChildController> ();
       appman = LibLauncher.Appman.get_default ();
       session = LibLauncher.Session.get_default ();
+      favorites = Unity.Favorites.get_default ();
+      favorites.favorite_added.connect (on_favorite_added);
+/*
+      favorites.favorite_removed.connect (on_favorite_removed);
+*/
 
       session.application_opened.connect (handle_session_application);
       build_favorites ();
@@ -76,32 +84,52 @@ namespace Unity.Launcher
 
     private void build_favorites ()
     {
-      var favorites = LibLauncher.Favorites.get_default ();
 
-      unowned SList<string> favorite_list = favorites.get_favorites();
-      foreach (weak string uid in favorite_list)
-        {
-          // we only want favorite *applications* for the moment
-          var type = favorites.get_string(uid, "type");
-          if (type != "application")
-              continue;
+      foreach (string uid in favorites.get_favorites ())
+      {
+        var type = favorites.get_string (uid, "type");
+        if (type != "application")
+          continue;
 
-          string? desktop_file = favorites.get_string(uid, "desktop_file");
-          assert (desktop_file != "");
-          if (!FileUtils.test (desktop_file, FileTest.EXISTS))
-            {
-              // we don't have a desktop file that exists, remove it from the
-              // favourites
-              favorites.remove_favorite (uid);
-            }
-          else
-            {
-              LauncherChild child = new LauncherChild ();
-              ApplicationController controller = new ApplicationController (desktop_file, child);
-              model.add (child);
-              childcontrollers.add (controller);
-            }
-        }
+        var desktop_file = favorites.get_string (uid, "desktop_file");
+        if (!FileUtils.test (desktop_file, FileTest.EXISTS))
+          {
+            // no desktop file for this favorite or it does not exist
+            continue;
+          }
+
+        ApplicationController controller = find_controller_by_desktop_file (desktop_file);
+        if (!(controller is ScrollerChildController))
+          {
+            LauncherChild child = new LauncherChild ();
+            controller = new ApplicationController (desktop_file, child);
+            model.add (child);
+            childcontrollers.add (controller);
+          }
+      }
+    }
+
+    private void on_favorite_added (string uid)
+    {
+        var desktop_file = favorites.get_string (uid, "desktop_file");
+        if (!FileUtils.test (desktop_file, FileTest.EXISTS))
+          {
+            // no desktop file for this favorite or it does not exist
+            return;
+          }
+
+        ApplicationController controller = find_controller_by_desktop_file (desktop_file);
+        if (!(controller is ScrollerChildController))
+          {
+            LauncherChild child = new LauncherChild ();
+            controller = new ApplicationController (desktop_file, child);
+            model.add (child);
+            childcontrollers.add (controller);
+          }
+    }
+
+    private void on_favorite_removed (string uid)
+    {
     }
 
     private bool desktop_file_is_favorite (string desktop_file)
