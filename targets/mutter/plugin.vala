@@ -239,8 +239,10 @@ namespace Unity
       this.background.show ();
 
       /* Allows us to activate windows, essential as we are the WM */
+/*
       LibLauncher.Application.set_window_activate_func (this.on_window_activated,
                                                      this.plugin);
+*/
 
       this.launcher = new Launcher.Launcher (this);
       this.launcher.get_view ().opacity = 0;

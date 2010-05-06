@@ -95,7 +95,7 @@ libunity_la_VALAFLAGS = \
   --pkg gconf-2.0 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
-  --pkg LibBamf-0.2 \
+  --pkg Bamf-0.2 \
   --pkg libwnck-1.0 \
   --pkg unique-1.0 \
   --pkg unity-const \

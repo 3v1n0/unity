@@ -34,6 +34,7 @@ libunity_mutter_la_VALAFLAGS = \
   --vapidir=$(top_srcdir)/src/ \
   --vapidir=$(top_srcdir)/unity \
   --vapidir=$(top_srcdir)/unity-private \
+  --pkg Bamf-0.2 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg clutk-0.3 \
@@ -42,7 +43,6 @@ libunity_mutter_la_VALAFLAGS = \
   --pkg gee-1.0 \
   --pkg indicator \
   --pkg mutter-2.28 \
-  --pkg LibBamf-0.2 \
   --pkg libwnck-1.0 \
   --pkg unique-1.0 \
   --pkg x11 \

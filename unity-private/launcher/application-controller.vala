@@ -63,7 +63,7 @@ namespace Unity.Launcher
    */
   public class LibLauncherShortcut : Object, ShortcutItem
   {
-    public LibLauncher.Application app;
+    public Bamf.Application app;
     public string name;
 
     public string get_name ()
@@ -73,7 +73,7 @@ namespace Unity.Launcher
 
     public void activated ()
     {
-      this.app.close (Clutter.get_current_event_time ());
+      debug ("Quitting applications not supported yet");
     }
   }
 
@@ -165,7 +165,7 @@ namespace Unity.Launcher
     private KeyFile desktop_keyfile;
     private string icon_name;
     private Unity.ThemeFilePath theme_file_path;
-    private LibLauncher.Application app;
+    private Bamf.Application app;
 
     private bool is_favorite = false;
 
@@ -263,9 +263,9 @@ namespace Unity.Launcher
       var pin_entry = new LauncherPinningShortcut (desktop_file);
       ret_list.add (pin_entry);
 
-      if (app is LibLauncher.Application)
+      if (app is Bamf.Application)
         {
-          if (app.running) {
+          if (app.is_running ()) {
             var open_entry = new LibLauncherShortcut ();
             open_entry.app = app;
             ret_list.add (open_entry);
@@ -277,17 +277,15 @@ namespace Unity.Launcher
 
     public override void activate ()
     {
-      if (app is LibLauncher.Application)
+      if (app is Bamf.Application)
         {
-          if (app.running)
+          if (app.is_running ())
             {
-              if (!app.focused)
-                {
-                  app.show (Clutter.get_current_event_time ());
-                  return;
-                }
+              warning ("We do not support activating applications");
             }
         }
+
+
       Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
       try
       {
@@ -306,17 +304,17 @@ namespace Unity.Launcher
 
     }
 
-    public void attach_application (LibLauncher.Application application)
+    public void attach_application (Bamf.Application application)
     {
       app = application;
-      child.running = app.running;
-      child.active = app.focused;
+      child.running = app.is_running ();
+      child.active = app.is_active ();
       app.running_changed.connect (() => {
-        child.running = app.running;
+        child.running = app.is_running ();
       });
 
-      app.focus_changed.connect (() => {
-        child.active = child.focused;
+      app.active_changed.connect (() => {
+        child.active = app.is_active ();
       });
     }
 
@@ -399,7 +397,7 @@ namespace Unity.Launcher
           }
         catch (Error e)
           {
-            warning (@"Could not load any icon for %s", app.name);
+            warning (@"Could not load any icon for %s", app.get_name ());
           }
       });
 

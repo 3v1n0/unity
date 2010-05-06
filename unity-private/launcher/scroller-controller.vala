@@ -29,9 +29,7 @@ namespace Unity.Launcher
     /* constants */
     private const uint DRAG_SAFE_ZONE = 300;
 
-    /* liblauncher support */
-    private LibLauncher.Appman appman;
-    private LibLauncher.Session session;
+    private Bamf.Matcher matcher;
 
     /* favourites */
     private Unity.Favorites favorites;
@@ -44,40 +42,53 @@ namespace Unity.Launcher
     construct
     {
       childcontrollers = new Gee.ArrayList<ScrollerChildController> ();
-      appman = LibLauncher.Appman.get_default ();
-      session = LibLauncher.Session.get_default ();
+
+      matcher = Bamf.Matcher.get_default ();
       favorites = Unity.Favorites.get_default ();
       favorites.favorite_added.connect (on_favorite_added);
-/*
-      favorites.favorite_removed.connect (on_favorite_removed);
-*/
+      matcher.view_opened.connect (handle_bamf_view_opened);
 
-      session.application_opened.connect (handle_session_application);
       build_favorites ();
+      //List<Bamf.View> views = matcher.get_running_applications
+      foreach (Object object in (List<Bamf.View>)(matcher.get_running_applications ()))
+        {
+          if (object is Bamf.View)
+            {
+              handle_bamf_view_opened (object);
+            }
+          else
+            {
+              error ("Bamf returned a strange object");
+            }
+        }
 
       // hook up to the drag controller
       var drag_controller = Drag.Controller.get_default ();
       drag_controller.drag_start.connect (on_unity_drag_start);
     }
 
-    private void handle_session_application (LibLauncher.Application app)
+    private void handle_bamf_view_opened (Object object)
+      requires (object is Bamf.View)
     {
-      string desktop_file = app.get_desktop_file ();
-      if (desktop_file != null)
+      if (object is Bamf.Application)
         {
-          var controller = find_controller_by_desktop_file (desktop_file);
-          if (controller is ApplicationController)
+          Bamf.Application app = object as Bamf.Application;
+          string desktop_file = app.get_desktop_file ();
+          if (desktop_file != null)
             {
-              // already in our model, just attach the app
-              controller.attach_application (app);
-            }
-          else
-            {
-              LauncherChild child = new LauncherChild ();
-              controller = new ApplicationController (desktop_file, child);
-              controller.attach_application (app);
-              model.add (child);
-              childcontrollers.add (controller);
+              var controller = find_controller_by_desktop_file (desktop_file);
+              if (controller is ApplicationController)
+                {
+                  controller.attach_application (app);
+                }
+              else
+                {
+                  LauncherChild child = new LauncherChild ();
+                  controller = new ApplicationController (desktop_file, child);
+                  controller.attach_application (app);
+                  model.add (child);
+                  childcontrollers.add (controller);
+                }
             }
         }
     }
@@ -134,10 +145,10 @@ namespace Unity.Launcher
 
     private bool desktop_file_is_favorite (string desktop_file)
     {
-      var favorites = LibLauncher.Favorites.get_default ();
+      var favorites = Unity.Favorites.get_default ();
 
-      unowned SList<string> favorite_list = favorites.get_favorites();
-      foreach (weak string uid in favorite_list)
+      Gee.ArrayList<string> favorite_list = favorites.get_favorites();
+      foreach (string uid in favorite_list)
         {
           var type = favorites.get_string(uid, "type");
           if (type != "application")
