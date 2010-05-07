@@ -73,6 +73,9 @@ namespace Unity.Panel.Indicators
       skip_list = Environment.get_variable ("UNITY_PANEL_INDICATORS_SKIP");
       if (skip_list == null)
         skip_list = "";
+      
+      if (skip_list == "all")
+        return false;
 
       /* We need to look for icons in an specific location */
       Gtk.IconTheme.get_default ().append_search_path (INDICATORICONSDIR);
