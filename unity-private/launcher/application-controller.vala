@@ -338,18 +338,18 @@ namespace Unity.Launcher
       child.active = false;
     }
 
-    private void on_app_running_changed ()
+    private void on_app_running_changed (bool running)
     {
-      child.running = app.is_running ();
-      if (!app.is_running ())
+      child.running = running;
+      if (running)
         {
           detach_application ();
         }
     }
 
-    private void on_app_active_changed ()
+    private void on_app_active_changed (bool active)
     {
-      child.active = app.is_active ();
+      child.active = active;
     }
 
     private void load_desktop_file_info ()
