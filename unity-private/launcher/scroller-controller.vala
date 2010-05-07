@@ -1,6 +1,6 @@
 /* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
- * Copyright (C) 2009 Canonical Ltd
+ * Copyright (C) 2009-2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -54,6 +54,7 @@ namespace Unity.Launcher
         {
           if (object is Bamf.View)
             {
+              debug ("handling a bamf view");
               handle_bamf_view_opened (object);
             }
           else
