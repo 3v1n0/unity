@@ -74,6 +74,11 @@ namespace Unity.Launcher
         {
           Bamf.Application app = object as Bamf.Application;
           //need to hook up to its visible changed signals
+          if (app.get_desktop_file () == "")
+          {
+            debug ("no desktop file for this app");
+            return;
+          }
 
           app.user_visible_changed.connect ((a, changed) => {
             if (changed)
@@ -121,7 +126,11 @@ namespace Unity.Launcher
               var controller = find_controller_by_desktop_file (desktop_file);
               if (controller is ApplicationController)
                 {
-                  childcontrollers.remove (controller);
+                  if (controller.child.pin_type == PinType.UNPINNED)
+                    {
+                      model.remove (controller.child);
+                      childcontrollers.remove (controller);
+                    }
                 }
             }
         }
@@ -219,7 +228,6 @@ namespace Unity.Launcher
     private void on_unity_drag_start (Drag.Model drag_model)
     {
       var drag_controller = Drag.Controller.get_default ();
-      string data = drag_model.get_drag_data ();
 
       drag_controller.drag_motion.connect (on_unity_drag_motion);
       drag_controller.drag_drop.connect (on_unity_drag_drop);
@@ -236,8 +244,6 @@ namespace Unity.Launcher
     private void on_unity_drag_motion (Drag.Model drag_model, float x, float y)
     {
       var drag_controller = Drag.Controller.get_default ();
-      //find child
-      string data = drag_model.get_drag_data ();
       // check to see if the data matches any of our children
       if (!(drag_controller.get_drag_model () is ScrollerChildController))
       {
@@ -268,7 +274,6 @@ namespace Unity.Launcher
     private void on_unity_drag_drop (Drag.Model drag_model, float x, float y)
     {
       var drag_controller = Drag.Controller.get_default ();
-      string data = drag_model.get_drag_data ();
       // check to see if the data matches any of our children
       if (!(drag_controller.get_drag_model () is ScrollerChildController))
       {

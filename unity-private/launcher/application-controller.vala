@@ -158,7 +158,7 @@ namespace Unity.Launcher
         {
           return _desktop_file;
         }
-      set
+      construct
         {
           _desktop_file = value;
           load_desktop_file_info ();
@@ -167,7 +167,7 @@ namespace Unity.Launcher
     private KeyFile desktop_keyfile;
     private string icon_name;
     private Unity.ThemeFilePath theme_file_path;
-    private Bamf.Application app;
+    private Bamf.Application? app = null;
 
     private bool is_favorite = false;
 
@@ -175,6 +175,10 @@ namespace Unity.Launcher
     {
       Object (desktop_file: desktop_file_,
               child: child_);
+    }
+
+    ~ApplicationController ()
+    {
     }
 
     construct
@@ -185,11 +189,14 @@ namespace Unity.Launcher
       favorites.favorite_removed.connect (on_favorite_removed);
 
       // we need to figure out if we are a favorite
+      is_favorite = true;
+      child.pin_type = PinType.UNPINNED;
       foreach (string uid in favorites.get_favorites ())
         {
           if (favorites.get_string (uid, "desktop_file") == desktop_file)
             {
               is_favorite = true;
+              child.pin_type = PinType.PINNED;
               break;
             }
         }
@@ -203,6 +210,7 @@ namespace Unity.Launcher
       if (desktop_filename == desktop_file)
         {
           is_favorite = true;
+          child.pin_type = PinType.PINNED;
         }
     }
 
@@ -213,6 +221,7 @@ namespace Unity.Launcher
       if (desktop_filename == desktop_file)
         {
           is_favorite = false;
+          child.pin_type = PinType.PINNED;
         }
     }
 
@@ -295,18 +304,19 @@ namespace Unity.Launcher
         {
           Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
           try
-          {
-            var desktop_keyfile = new KeyFile ();
-            desktop_keyfile.load_from_file (desktop_file, 0);
-            AppInfo appinfo = new DesktopAppInfo.from_keyfile (desktop_keyfile);
-            context.set_screen (Gdk.Display.get_default ().get_default_screen ());
-            context.set_timestamp (Gdk.CURRENT_TIME);
+            {
+              var desktop_keyfile = new KeyFile ();
+              desktop_keyfile.load_from_file (desktop_file, 0);
+              AppInfo appinfo = new DesktopAppInfo.from_keyfile (desktop_keyfile);
+              context.set_screen (Gdk.Display.get_default ().get_default_screen ());
+              context.set_timestamp (Gdk.CURRENT_TIME);
 
-            appinfo.launch (null, context);
-          } catch (Error e)
-          {
-            warning (e.message);
-          }
+              appinfo.launch (null, context);
+            }
+          catch (Error e)
+            {
+              warning (e.message);
+            }
         }
     }
 
@@ -315,13 +325,31 @@ namespace Unity.Launcher
       app = application;
       child.running = app.is_running ();
       child.active = app.is_active ();
-      app.running_changed.connect (() => {
-        child.running = app.is_running ();
-      });
+      app.running_changed.connect (on_app_running_changed);
+      app.active_changed.connect (on_app_active_changed);
+    }
 
-      app.active_changed.connect (() => {
-        child.active = app.is_active ();
-      });
+    public void detach_application ()
+    {
+      app.running_changed.disconnect (on_app_running_changed);
+      app.active_changed.disconnect (on_app_active_changed);
+      app = null;
+      child.running = false;
+      child.active = false;
+    }
+
+    private void on_app_running_changed ()
+    {
+      child.running = app.is_running ();
+      if (!app.is_running ())
+        {
+          detach_application ();
+        }
+    }
+
+    private void on_app_active_changed ()
+    {
+      child.active = app.is_active ();
     }
 
     private void load_desktop_file_info ()
