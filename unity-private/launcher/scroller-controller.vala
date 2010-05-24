@@ -54,7 +54,6 @@ namespace Unity.Launcher
         {
           if (object is Bamf.View)
             {
-              debug ("handling a bamf view");
               handle_bamf_view_opened (object);
             }
           else
@@ -86,10 +85,6 @@ namespace Unity.Launcher
               {
                 handle_bamf_view_opened (a as Object);
               }
-            else
-              {
-                handle_bamf_view_closed (a as Object);
-              }
           });
 
           if (app.user_visible ())
@@ -109,33 +104,24 @@ namespace Unity.Launcher
                       controller.attach_application (app);
                       model.add (child);
                       childcontrollers.add (controller);
+											controller.closed.connect (on_scroller_controller_closed);
                     }
                 }
             }
         }
     }
 
-    private void handle_bamf_view_closed (Object object)
-      requires (object is Bamf.View)
-    {
-      if (object is Bamf.Application)
-        {
-          Bamf.Application app = object as Bamf.Application;
-          string desktop_file = app.get_desktop_file ();
-          if (desktop_file != null)
-            {
-              var controller = find_controller_by_desktop_file (desktop_file);
-              if (controller is ApplicationController)
-                {
-                  if (controller.child.pin_type == PinType.UNPINNED)
-                    {
-                      model.remove (controller.child);
-                      childcontrollers.remove (controller);
-                    }
-                }
-            }
-        }
-    }
+		private void on_scroller_controller_closed (ScrollerChildController controller)
+		{
+			if (controller is ApplicationController)
+				{
+					if (controller.child.pin_type == PinType.UNPINNED)
+						{
+							model.remove (controller.child);
+							childcontrollers.remove (controller);
+						}
+				}
+		}
 
     private void build_favorites ()
     {
@@ -160,27 +146,29 @@ namespace Unity.Launcher
             controller = new ApplicationController (desktop_file, child);
             model.add (child);
             childcontrollers.add (controller);
+						controller.closed.connect (on_scroller_controller_closed);
           }
       }
     }
 
     private void on_favorite_added (string uid)
     {
-        var desktop_file = favorites.get_string (uid, "desktop_file");
-        if (!FileUtils.test (desktop_file, FileTest.EXISTS))
-          {
-            // no desktop file for this favorite or it does not exist
-            return;
-          }
+			var desktop_file = favorites.get_string (uid, "desktop_file");
+			if (!FileUtils.test (desktop_file, FileTest.EXISTS))
+				{
+					// no desktop file for this favorite or it does not exist
+					return;
+				}
 
-        ApplicationController controller = find_controller_by_desktop_file (desktop_file);
-        if (!(controller is ScrollerChildController))
-          {
-            LauncherChild child = new LauncherChild ();
-            controller = new ApplicationController (desktop_file, child);
-            model.add (child);
-            childcontrollers.add (controller);
-          }
+			ApplicationController controller = find_controller_by_desktop_file (desktop_file);
+			if (!(controller is ScrollerChildController))
+				{
+					LauncherChild child = new LauncherChild ();
+					controller = new ApplicationController (desktop_file, child);
+					model.add (child);
+					childcontrollers.add (controller);
+					controller.closed.connect (on_scroller_controller_closed);
+				}
     }
 
     private void on_favorite_removed (string uid)

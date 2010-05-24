@@ -121,6 +121,8 @@ namespace Unity
             {
               warning ("Could not set the favorites list: %s", e.message);
             }
+
+					favorite_added (uid);
         }
     }
 
@@ -128,7 +130,16 @@ namespace Unity
     {
       if (is_favorite (uid))
         {
-          fav_ids.remove (uid);
+					unowned SList<string> l = null;
+					for (l = fav_ids; l != null; l = l.next)
+						{
+							string id = l.data;
+							if (id == uid)
+								{
+									fav_ids.remove (l.data);
+									break;
+								}
+						}
           try
             {
               client.set_list (path + "favorites_list", GConf.ValueType.STRING, fav_ids);
@@ -137,20 +148,22 @@ namespace Unity
             {
               warning ("Could not set the favorites list: %s", e.message);
             }
+
+					favorite_removed (uid);
         }
     }
 
     public override bool is_favorite (string uid)
     {
-      if (fav_ids.find (uid) != null)
-        {
-          return true;
-        }
-      else
-        {
-          return false;
-        }
-    }
+			foreach (string id in fav_ids)
+				{
+					if (id == uid)
+						{
+							return true;
+						}
+				}
+			return false;
+		}
 
     public override string? get_string (string uid, string name)
     {
@@ -265,7 +278,15 @@ namespace Unity
 
       foreach (string id in new_list)
         {
-          unowned SList item = old_list.find (id);
+					string? item = null;
+					foreach (string old_item in old_list)
+						{
+							if (id == old_item)
+								{
+									item = old_item;
+								}
+						}
+
           if (item != null)
             {
               unchanged.append (id);
@@ -278,8 +299,16 @@ namespace Unity
 
       foreach (string id in old_list)
         {
-          unowned SList item = unchanged.find (id);
-          if (item != null)
+					string? item = null;
+					foreach (string unchanged_item in unchanged)
+						{
+							if (unchanged_item == id)
+								{
+									item = unchanged_item;
+								}
+						}
+
+          if (item == null)
             {
               removed.append (id);
             }

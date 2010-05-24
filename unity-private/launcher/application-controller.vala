@@ -145,12 +145,13 @@ namespace Unity.Launcher
         }
       else
         {
+					debug (@"i guess we are removing $cached_uid");
           favorites.remove_favorite (cached_uid);
         }
     }
   }
 
-  class ApplicationController : ScrollerChildController
+  public class ApplicationController : ScrollerChildController
   {
     private string _desktop_file;
     public string desktop_file {
@@ -221,7 +222,8 @@ namespace Unity.Launcher
       if (desktop_filename == desktop_file)
         {
           is_favorite = false;
-          child.pin_type = PinType.PINNED;
+          child.pin_type = PinType.UNPINNED;
+					closed ();
         }
     }
 
@@ -327,15 +329,18 @@ namespace Unity.Launcher
       child.active = app.is_active ();
       app.running_changed.connect (on_app_running_changed);
       app.active_changed.connect (on_app_active_changed);
+			app.closed.connect (detach_application);
     }
 
     public void detach_application ()
     {
       app.running_changed.disconnect (on_app_running_changed);
       app.active_changed.disconnect (on_app_active_changed);
+			app.closed.disconnect (detach_application);
       app = null;
       child.running = false;
       child.active = false;
+			closed ();
     }
 
     private void on_app_running_changed (bool running)

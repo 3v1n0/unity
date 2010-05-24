@@ -101,8 +101,9 @@ namespace Unity.Launcher
 
     public void remove (ScrollerChild child)
     {
+			var tempchild = child;
       children.remove (child);
-      child_removed (child);
+      child_removed (tempchild);
       order_changed ();
     }
 
