@@ -126,6 +126,8 @@ namespace Unity.Launcher
       set_reactive (true);
 
       child_refs = new Gee.ArrayList <ScrollerChild> ();
+      order_children ();
+      queue_relayout ();
     }
 
     public int get_model_index_at_y_pos (float y)
@@ -197,11 +199,17 @@ namespace Unity.Launcher
      */
     private void model_child_added (ScrollerChild child)
     {
+			child.unparent ();
       child.set_parent (this);
       child.opacity = 0;
       var anim = child.animate (Clutter.AnimationMode.EASE_IN_QUAD,
                                 SHORT_DELAY,
                                 "opacity", 0xff);
+      order_children ();
+      queue_relayout ();
+      child.notify["position"].connect (() => {
+        queue_relayout ();
+      });
     }
 
     private void model_child_removed (ScrollerChild child)
@@ -214,10 +222,14 @@ namespace Unity.Launcher
         child.unparent ();
         child_refs.remove (child);
       });
+
+      order_children ();
+      queue_relayout ();
     }
 
     private void model_order_changed ()
     {
+      order_children ();
       queue_relayout ();
     }
 
@@ -511,12 +523,29 @@ namespace Unity.Launcher
       return;
     }
 
+    private void order_children ()
+    {
+      // figures out the position of each child based on its order in the model
+      float h = 0.0f;
+      float min_height, nat_height;
+      foreach (ScrollerChild child in model)
+      {
+        child.get_preferred_height (get_width (), out min_height, out nat_height);
+        if (h != child.position)
+        {
+          (child as ScrollerChild).animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD,
+                                            170,
+                                            "position", h);
+        }
+        h += nat_height + spacing;
+      }
+    }
+
     public override void allocate (Clutter.ActorBox box,
                                    Clutter.AllocationFlags flags)
     {
       base.allocate (box, flags);
       Clutter.ActorBox child_box = Clutter.ActorBox ();
-      float current_height = padding.top + scroll_position;
       float current_width = padding.left;
       float available_height = box.get_height () - padding.bottom;
       float available_width = box.get_width () - padding.right;
@@ -535,13 +564,11 @@ namespace Unity.Launcher
 
           child_box.x1 = current_width;
           child_box.x2 = box.get_width () - padding.right;
-          child_box.y1 = current_height;
-          child_box.y2 = current_height + child_height;
+          child_box.y1 = child.position + padding.top + scroll_position;
+          child_box.y2 = child_box.y1 + child_height;
 
           child.allocate (child_box, flags);
-          child.position = current_height;
 
-          current_height += child_height + spacing;
           total_child_height += child_height + spacing;
         }
 
@@ -585,7 +612,7 @@ namespace Unity.Launcher
       bgtex.paint ();
       foreach (ScrollerChild child in model)
         {
-          if (child is LauncherChild)
+          if (child is LauncherChild && child.opacity > 0)
             {
               (child as LauncherChild).paint ();
             }

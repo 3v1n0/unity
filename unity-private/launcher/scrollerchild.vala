@@ -39,7 +39,7 @@ namespace Unity.Launcher
 
     public Gdk.Pixbuf icon {get; set;}
     public PinType pin_type;
-    public float position = 0.0f;
+    public float position {get; set;}
     public bool running {get; set;}
     public bool active {get; set;}
     public bool needs_attention {get; set;}

@@ -113,6 +113,16 @@ namespace Unity.Launcher
       child_added (child);
     }
 
+		public void move (ScrollerChild child, int i)
+			{
+				if (!(child in children))
+					return;
+
+				children.remove (child);
+				children.insert (i, child);
+				order_changed ();
+			}
+
     public void sort (CompareFunc compare)
     {
       children.sort (compare);

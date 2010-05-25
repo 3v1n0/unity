@@ -27,7 +27,6 @@ namespace Unity.Launcher
 
   class LauncherChild : ScrollerChild
   {
-
     private Ctk.Actor processed_icon;
     private ThemeImage active_indicator;
     private ThemeImage running_indicator;
@@ -43,6 +42,7 @@ namespace Unity.Launcher
     construct
     {
       load_textures ();
+      position = 0.0f;
     }
 
 		~LauncherChild ()
