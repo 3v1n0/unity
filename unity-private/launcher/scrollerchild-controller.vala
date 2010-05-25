@@ -25,7 +25,7 @@
 namespace Unity.Launcher
 {
   //long name for a reason, don't use this outside of the launcher :P
-  private enum ScrollerChildControllerMenuState
+  public enum ScrollerChildControllerMenuState
   {
     NO_MENU,
     LABEL,
@@ -33,11 +33,13 @@ namespace Unity.Launcher
     MENU_CLOSE_WHEN_LEAVE
   }
 
-  abstract class ScrollerChildController : Object, Unity.Drag.Model
+  public abstract class ScrollerChildController : Object, Unity.Drag.Model
   {
     public ScrollerChild child {get; construct;}
     public signal void request_removal (); //call when not needed anymore so we can unref
     public string name = "If you can read this, file a bug!!";
+
+		public signal void closed ();
 
     protected ScrollerChildControllerMenuState menu_state;
     protected uint32 last_press_time = 0;
@@ -111,6 +113,7 @@ namespace Unity.Launcher
 
           activate ();
         }
+      button_down = false;
       return false;
     }
 

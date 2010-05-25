@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Test Application
+Comment=This is a test application desktop file
+Exec=xclock
+Terminal=false
+Type=Application
+StartupNotify=false
+Icon=test_desktop_icon.png

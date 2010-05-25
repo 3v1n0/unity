@@ -39,20 +39,21 @@ namespace Unity.Launcher
     {
       Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
       try
-      {
-        var desktop_file = new KeyFile ();
-        desktop_file.load_from_file (this.desktop_location, 0);
-        desktop_file.set_string ("Desktop Entry", "Exec", exec);
-        AppInfo appinfo = new DesktopAppInfo.from_keyfile (desktop_file);
-        appinfo.create_from_commandline (this.exec, this.name, 0);
-        context.set_screen (Gdk.Display.get_default ().get_default_screen ());
-        context.set_timestamp (Gdk.CURRENT_TIME);
+        {
+          var desktop_file = new KeyFile ();
+          desktop_file.load_from_file (this.desktop_location, 0);
+          desktop_file.set_string ("Desktop Entry", "Exec", exec);
+          AppInfo appinfo = new DesktopAppInfo.from_keyfile (desktop_file);
+          appinfo.create_from_commandline (this.exec, this.name, 0);
+          context.set_screen (Gdk.Display.get_default ().get_default_screen ());
+          context.set_timestamp (Gdk.CURRENT_TIME);
 
-        appinfo.launch (null, context);
-      } catch (Error e)
-      {
-        warning (e.message);
-      }
+          appinfo.launch (null, context);
+        }
+      catch (Error e)
+        {
+          warning (e.message);
+        }
 
     }
   }
@@ -63,7 +64,7 @@ namespace Unity.Launcher
    */
   public class LibLauncherShortcut : Object, ShortcutItem
   {
-    public LibLauncher.Application app;
+    public Bamf.Application app;
     public string name;
 
     public string get_name ()
@@ -73,7 +74,8 @@ namespace Unity.Launcher
 
     public void activated ()
     {
-      this.app.close (Clutter.get_current_event_time ());
+      Array<uint32> xids = app.get_xids ();
+      Unity.global_shell.close_xids (xids);
     }
   }
 
@@ -148,7 +150,7 @@ namespace Unity.Launcher
     }
   }
 
-  class ApplicationController : ScrollerChildController
+  public class ApplicationController : ScrollerChildController
   {
     private string _desktop_file;
     public string desktop_file {
@@ -156,7 +158,7 @@ namespace Unity.Launcher
         {
           return _desktop_file;
         }
-      set
+      construct
         {
           _desktop_file = value;
           load_desktop_file_info ();
@@ -165,7 +167,7 @@ namespace Unity.Launcher
     private KeyFile desktop_keyfile;
     private string icon_name;
     private Unity.ThemeFilePath theme_file_path;
-    private LibLauncher.Application app;
+    private Bamf.Application? app = null;
 
     private bool is_favorite = false;
 
@@ -173,6 +175,10 @@ namespace Unity.Launcher
     {
       Object (desktop_file: desktop_file_,
               child: child_);
+    }
+
+    ~ApplicationController ()
+    {
     }
 
     construct
@@ -183,11 +189,14 @@ namespace Unity.Launcher
       favorites.favorite_removed.connect (on_favorite_removed);
 
       // we need to figure out if we are a favorite
+      is_favorite = true;
+      child.pin_type = PinType.UNPINNED;
       foreach (string uid in favorites.get_favorites ())
         {
           if (favorites.get_string (uid, "desktop_file") == desktop_file)
             {
               is_favorite = true;
+              child.pin_type = PinType.PINNED;
               break;
             }
         }
@@ -201,6 +210,7 @@ namespace Unity.Launcher
       if (desktop_filename == desktop_file)
         {
           is_favorite = true;
+          child.pin_type = PinType.PINNED;
         }
     }
 
@@ -211,6 +221,8 @@ namespace Unity.Launcher
       if (desktop_filename == desktop_file)
         {
           is_favorite = false;
+          child.pin_type = PinType.UNPINNED;
+					closed ();
         }
     }
 
@@ -263,9 +275,9 @@ namespace Unity.Launcher
       var pin_entry = new LauncherPinningShortcut (desktop_file);
       ret_list.add (pin_entry);
 
-      if (app is LibLauncher.Application)
+      if (app is Bamf.Application)
         {
-          if (app.running) {
+          if (app.is_running ()) {
             var open_entry = new LibLauncherShortcut ();
             open_entry.app = app;
             ret_list.add (open_entry);
@@ -277,47 +289,76 @@ namespace Unity.Launcher
 
     public override void activate ()
     {
-      if (app is LibLauncher.Application)
+      if (app is Bamf.Application)
         {
-          if (app.running)
+          if (app.is_running ())
             {
-              if (!app.focused)
+              Array<uint32> xids = app.get_xids ();
+              for (int i = 0; i < xids.length; i++)
                 {
-                  app.show (Clutter.get_current_event_time ());
-                  return;
+                  uint32 xid = xids.index (i);
+                  Unity.global_shell.show_window (xid);
                 }
             }
         }
-      Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
-      try
-      {
-        var desktop_keyfile = new KeyFile ();
-        desktop_keyfile.load_from_file (desktop_file, 0);
-        AppInfo appinfo = new DesktopAppInfo.from_keyfile (desktop_keyfile);
-        context.set_screen (Gdk.Display.get_default ().get_default_screen ());
-        context.set_timestamp (Gdk.CURRENT_TIME);
+      else
+        {
+          Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
+          try
+            {
+              var desktop_keyfile = new KeyFile ();
+              desktop_keyfile.load_from_file (desktop_file, 0);
+              AppInfo appinfo = new DesktopAppInfo.from_keyfile (desktop_keyfile);
+              context.set_screen (Gdk.Display.get_default ().get_default_screen ());
+              context.set_timestamp (Gdk.CURRENT_TIME);
 
-        appinfo.launch (null, context);
-      } catch (Error e)
-      {
-        warning (e.message);
-      }
-
-
+              appinfo.launch (null, context);
+            }
+          catch (Error e)
+            {
+              warning (e.message);
+            }
+        }
     }
 
-    public void attach_application (LibLauncher.Application application)
+    public void attach_application (Bamf.Application application)
     {
       app = application;
-      child.running = app.running;
-      child.active = app.focused;
-      app.running_changed.connect (() => {
-        child.running = app.running;
-      });
+      child.running = app.is_running ();
+      child.active = app.is_active ();
+      app.running_changed.connect (on_app_running_changed);
+      app.active_changed.connect (on_app_active_changed);
+			app.closed.connect (detach_application);
+    }
 
-      app.focus_changed.connect (() => {
-        child.active = child.focused;
-      });
+    public void detach_application ()
+    {
+      app.running_changed.disconnect (on_app_running_changed);
+      app.active_changed.disconnect (on_app_active_changed);
+			app.closed.disconnect (detach_application);
+      app = null;
+      child.running = false;
+      child.active = false;
+			closed ();
+    }
+
+		public bool debug_is_application_attached ()
+		{
+			return app != null;
+		}
+
+    private void on_app_running_changed (bool running)
+    {
+      child.running = running;
+      if (!running)
+        {
+          detach_application ();
+        }
+    }
+
+    private void on_app_active_changed (bool active)
+    {
+      child.active = active;
     }
 
     private void load_desktop_file_info ()
@@ -399,7 +440,7 @@ namespace Unity.Launcher
           }
         catch (Error e)
           {
-            warning (@"Could not load any icon for %s", app.name);
+            warning (@"Could not load any icon for %s", app.get_name ());
           }
       });
 

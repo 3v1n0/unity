@@ -1,6 +1,6 @@
 /* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
- * Copyright (C) 2009 Canonical Ltd
+ * Copyright (C) 2009-2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -29,9 +29,7 @@ namespace Unity.Launcher
     /* constants */
     private const uint DRAG_SAFE_ZONE = 300;
 
-    /* liblauncher support */
-    private LibLauncher.Appman appman;
-    private LibLauncher.Session session;
+    private Bamf.Matcher matcher;
 
     /* favourites */
     private Unity.Favorites favorites;
@@ -44,43 +42,86 @@ namespace Unity.Launcher
     construct
     {
       childcontrollers = new Gee.ArrayList<ScrollerChildController> ();
-      appman = LibLauncher.Appman.get_default ();
-      session = LibLauncher.Session.get_default ();
+
+      matcher = Bamf.Matcher.get_default ();
       favorites = Unity.Favorites.get_default ();
       favorites.favorite_added.connect (on_favorite_added);
-/*
-      favorites.favorite_removed.connect (on_favorite_removed);
-*/
+      matcher.view_opened.connect (handle_bamf_view_opened);
 
-      session.application_opened.connect (handle_session_application);
       build_favorites ();
+
+      foreach (Object object in (List<Bamf.View>)(matcher.get_running_applications ()))
+        {
+          if (object is Bamf.View)
+            {
+              handle_bamf_view_opened (object);
+            }
+          else
+            {
+              error ("Bamf returned a strange object");
+            }
+        }
 
       // hook up to the drag controller
       var drag_controller = Drag.Controller.get_default ();
       drag_controller.drag_start.connect (on_unity_drag_start);
     }
 
-    private void handle_session_application (LibLauncher.Application app)
+    private void handle_bamf_view_opened (Object object)
+      requires (object is Bamf.View)
     {
-      string desktop_file = app.get_desktop_file ();
-      if (desktop_file != null)
+      if (object is Bamf.Application)
         {
-          var controller = find_controller_by_desktop_file (desktop_file);
-          if (controller is ApplicationController)
+          Bamf.Application app = object as Bamf.Application;
+          //need to hook up to its visible changed signals
+          if (app.get_desktop_file () == "")
+          {
+            debug ("no desktop file for this app");
+            return;
+          }
+
+          app.user_visible_changed.connect ((a, changed) => {
+            if (changed)
+              {
+                handle_bamf_view_opened (a as Object);
+              }
+          });
+
+          if (app.user_visible ())
             {
-              // already in our model, just attach the app
-              controller.attach_application (app);
-            }
-          else
-            {
-              LauncherChild child = new LauncherChild ();
-              controller = new ApplicationController (desktop_file, child);
-              controller.attach_application (app);
-              model.add (child);
-              childcontrollers.add (controller);
+              string desktop_file = app.get_desktop_file ();
+              if (desktop_file != null)
+                {
+                  var controller = find_controller_by_desktop_file (desktop_file);
+                  if (controller is ApplicationController)
+                    {
+                      controller.attach_application (app);
+                    }
+                  else
+                    {
+                      LauncherChild child = new LauncherChild ();
+                      controller = new ApplicationController (desktop_file, child);
+                      controller.attach_application (app);
+                      model.add (child);
+                      childcontrollers.add (controller);
+											controller.closed.connect (on_scroller_controller_closed);
+                    }
+                }
             }
         }
     }
+
+		private void on_scroller_controller_closed (ScrollerChildController controller)
+		{
+			if (controller is ApplicationController)
+				{
+					if (controller.child.pin_type == PinType.UNPINNED)
+						{
+							model.remove (controller.child);
+							childcontrollers.remove (controller);
+						}
+				}
+		}
 
     private void build_favorites ()
     {
@@ -105,27 +146,29 @@ namespace Unity.Launcher
             controller = new ApplicationController (desktop_file, child);
             model.add (child);
             childcontrollers.add (controller);
+						controller.closed.connect (on_scroller_controller_closed);
           }
       }
     }
 
     private void on_favorite_added (string uid)
     {
-        var desktop_file = favorites.get_string (uid, "desktop_file");
-        if (!FileUtils.test (desktop_file, FileTest.EXISTS))
-          {
-            // no desktop file for this favorite or it does not exist
-            return;
-          }
+			var desktop_file = favorites.get_string (uid, "desktop_file");
+			if (!FileUtils.test (desktop_file, FileTest.EXISTS))
+				{
+					// no desktop file for this favorite or it does not exist
+					return;
+				}
 
-        ApplicationController controller = find_controller_by_desktop_file (desktop_file);
-        if (!(controller is ScrollerChildController))
-          {
-            LauncherChild child = new LauncherChild ();
-            controller = new ApplicationController (desktop_file, child);
-            model.add (child);
-            childcontrollers.add (controller);
-          }
+			ApplicationController controller = find_controller_by_desktop_file (desktop_file);
+			if (!(controller is ScrollerChildController))
+				{
+					LauncherChild child = new LauncherChild ();
+					controller = new ApplicationController (desktop_file, child);
+					model.add (child);
+					childcontrollers.add (controller);
+					controller.closed.connect (on_scroller_controller_closed);
+				}
     }
 
     private void on_favorite_removed (string uid)
@@ -134,10 +177,10 @@ namespace Unity.Launcher
 
     private bool desktop_file_is_favorite (string desktop_file)
     {
-      var favorites = LibLauncher.Favorites.get_default ();
+      var favorites = Unity.Favorites.get_default ();
 
-      unowned SList<string> favorite_list = favorites.get_favorites();
-      foreach (weak string uid in favorite_list)
+      Gee.ArrayList<string> favorite_list = favorites.get_favorites();
+      foreach (string uid in favorite_list)
         {
           var type = favorites.get_string(uid, "type");
           if (type != "application")
@@ -174,7 +217,6 @@ namespace Unity.Launcher
     private void on_unity_drag_start (Drag.Model drag_model)
     {
       var drag_controller = Drag.Controller.get_default ();
-      string data = drag_model.get_drag_data ();
 
       drag_controller.drag_motion.connect (on_unity_drag_motion);
       drag_controller.drag_drop.connect (on_unity_drag_drop);
@@ -191,8 +233,6 @@ namespace Unity.Launcher
     private void on_unity_drag_motion (Drag.Model drag_model, float x, float y)
     {
       var drag_controller = Drag.Controller.get_default ();
-      //find child
-      string data = drag_model.get_drag_data ();
       // check to see if the data matches any of our children
       if (!(drag_controller.get_drag_model () is ScrollerChildController))
       {
@@ -223,7 +263,6 @@ namespace Unity.Launcher
     private void on_unity_drag_drop (Drag.Model drag_model, float x, float y)
     {
       var drag_controller = Drag.Controller.get_default ();
-      string data = drag_model.get_drag_data ();
       // check to see if the data matches any of our children
       if (!(drag_controller.get_drag_model () is ScrollerChildController))
       {

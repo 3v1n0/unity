@@ -59,6 +59,9 @@ namespace Unity.Testing
       if ("liblauncher" in log_domain)
         return false;
 
+      if ("bamfdaemon" in log_domain)
+        return false;
+
       if ("Gtk" in log_domain)
         return false;
 

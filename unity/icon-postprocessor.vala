@@ -365,7 +365,7 @@ namespace Unity
 
     public override void unmap ()
     {
-      base.map ();
+      base.unmap ();
       this.icon.unmap ();
     }
   }

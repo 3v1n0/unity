@@ -45,6 +45,12 @@ namespace Unity.Launcher
       load_textures ();
     }
 
+		~LauncherChild ()
+		{
+			running_indicator.unparent ();
+			active_indicator.unparent ();
+		}
+
     /* private methods */
     private void load_textures ()
     {

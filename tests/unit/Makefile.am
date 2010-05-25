@@ -25,6 +25,7 @@ test_unit_VALAFLAGS = \
   --vapidir=$(top_srcdir)/vapi/ \
   --vapidir=$(top_srcdir)/tests \
   --vapidir=$(top_srcdir)/tests/unit \
+  --pkg Bamf-0.2 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg dbus-glib-1 \

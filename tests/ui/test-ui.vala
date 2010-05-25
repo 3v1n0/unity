@@ -63,6 +63,15 @@ public class TestFavorites : Unity.Favorites
     {
     }
 
+
+    public override float? get_float (string uid, string name)
+    {
+      return null;
+    }
+    public override void set_float (string uid, string name, float value)
+    {
+    }
+
     public override bool? get_bool (string uid, string name)
     {
       return null;
