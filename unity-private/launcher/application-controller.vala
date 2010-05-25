@@ -145,7 +145,6 @@ namespace Unity.Launcher
         }
       else
         {
-					debug (@"i guess we are removing $cached_uid");
           favorites.remove_favorite (cached_uid);
         }
     }
@@ -344,10 +343,15 @@ namespace Unity.Launcher
 			closed ();
     }
 
+		public bool debug_is_application_attached ()
+		{
+			return app != null;
+		}
+
     private void on_app_running_changed (bool running)
     {
       child.running = running;
-      if (running)
+      if (!running)
         {
           detach_application ();
         }

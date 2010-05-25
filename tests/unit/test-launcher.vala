@@ -181,6 +181,7 @@ namespace Unity.Tests.Unit
 			test_app.test_is_running = false;
 			test_app.running_changed (test_app.test_is_running);
 			assert (child.running == false);
+			assert (controller.debug_is_application_attached ());
 		}
   }
 }
