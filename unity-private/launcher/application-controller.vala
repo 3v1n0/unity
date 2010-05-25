@@ -330,6 +330,7 @@ namespace Unity.Launcher
       app.running_changed.connect (on_app_running_changed);
       app.active_changed.connect (on_app_active_changed);
 			app.closed.connect (detach_application);
+			name = application.get_name ();
     }
 
     public void detach_application ()
