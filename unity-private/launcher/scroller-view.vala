@@ -72,6 +72,11 @@ namespace Unity.Launcher
     private uint stored_delta = 0;
     private float scroll_speed = 0.0f; // the current speed (pixels/per second) that we are scrolling
 
+    /*
+     * Refrence holders
+     */
+    private Gee.ArrayList<ScrollerChild> child_refs; // we sometimes need to hold a reference to a child
+
     public ScrollerView (ScrollerModel _model)
     {
       Object (model:_model);
@@ -119,6 +124,8 @@ namespace Unity.Launcher
       });
 
       set_reactive (true);
+
+      child_refs = new Gee.ArrayList <ScrollerChild> ();
     }
 
     public int get_model_index_at_y_pos (float y)
@@ -191,13 +198,22 @@ namespace Unity.Launcher
     private void model_child_added (ScrollerChild child)
     {
       child.set_parent (this);
-      do_queue_redraw ();
+      child.opacity = 0;
+      var anim = child.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                                SHORT_DELAY,
+                                "opacity", 0xff);
     }
 
     private void model_child_removed (ScrollerChild child)
     {
-      child.unparent ();
-      do_queue_redraw ();
+      child_refs.add (child); // we need to keep a reference on it for now
+      var anim = child.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                SHORT_DELAY,
+                                "opacity", 0);
+      anim.completed.connect (() => {
+        child.unparent ();
+        child_refs.remove (child);
+      });
     }
 
     private void model_order_changed ()
@@ -573,6 +589,11 @@ namespace Unity.Launcher
             {
               (child as LauncherChild).paint ();
             }
+        }
+
+      foreach (ScrollerChild child in child_refs)
+        {
+          child.paint ();
         }
 
       top_shadow.paint ();
