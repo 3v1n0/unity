@@ -16,11 +16,63 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
-
+using Gee;
 using Unity;
 using Unity.Testing;
-
 using Unity.Tests.UI;
+
+namespace Unity.Tests.UI
+{
+public class TestFavorites : Unity.Favorites
+  {
+    public override ArrayList<string> get_favorites ()
+    {
+      var retlist = new ArrayList<string> ();
+      retlist.add ("app-firefox");
+      return retlist;
+    }
+
+    public override void add_favorite (string uid)
+    {
+    }
+    public override void remove_favorite (string uid)
+    {
+    }
+    public override bool is_favorite (string uid)
+    {
+      return true;
+    }
+
+    public override string? get_string (string uid, string name)
+    {
+      if (name == "type")
+        return "application";
+
+      return "/usr/share/applications/firefox.desktop";
+    }
+
+    public override void set_string (string uid, string name, string value)
+    {
+    }
+
+    public override int? get_int (string uid, string name)
+    {
+      return null;
+    }
+    public override void set_int (string uid, string name, int value)
+    {
+    }
+
+    public override bool? get_bool (string uid, string name)
+    {
+      return null;
+    }
+
+    public override void set_bool (string uid, string name, bool value)
+    {
+    }
+  }
+}
 
 public class Main
 {
