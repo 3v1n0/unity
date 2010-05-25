@@ -35,6 +35,7 @@ namespace Unity.Tests.UI
       Logging.init_fatal_handler ();
 
       /* Testup the test window */
+      Unity.favorites_singleton = new TestFavorites ();
       window = new Unity.Testing.Window (true, 1024, 600);
       window.init_test_mode ();
       stage = window.stage;

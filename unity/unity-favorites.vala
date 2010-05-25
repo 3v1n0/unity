@@ -24,7 +24,7 @@ using Gee;
 
 namespace Unity
 {
-  private static Unity.Favorites favorites_singleton;
+  public static Unity.Favorites favorites_singleton;
 
   public abstract class Favorites : Object
   {
@@ -121,7 +121,6 @@ namespace Unity
             {
               warning ("Could not set the favorites list: %s", e.message);
             }
-
 					favorite_added (uid);
         }
     }
@@ -140,6 +139,8 @@ namespace Unity
 									break;
 								}
 						}
+          fav_ids.remove (uid);
+
           try
             {
               client.set_list (path + "favorites_list", GConf.ValueType.STRING, fav_ids);
