@@ -133,17 +133,22 @@ namespace Unity.Launcher
     public int get_model_index_at_y_pos (float y)
     {
       // returns the model index at the screenspace position given
-      int i = 0;
-      float height = get_y ();
+			// this is slow but we can't use child.position because of animations.
+      float h = 0.0f;
+      float min_height, nat_height;
+			int i = 0;
       foreach (ScrollerChild child in model)
-        {
-          float transformed_pos = child.position;;// + scroll_position;
-          if (transformed_pos + height > y)
-            return i;
+				{
+					float transformed_pos = h + scroll_position + padding.top;
+					if (transformed_pos > y)
+						return i;
 
-          i++;
-        }
-      return i-1;
+					child.get_preferred_height (get_width (), out min_height, out nat_height);
+					h += nat_height + spacing;
+					i++;
+				}
+
+			return int.max (i-1, 0);
     }
 
     /*
@@ -533,10 +538,18 @@ namespace Unity.Launcher
         child.get_preferred_height (get_width (), out min_height, out nat_height);
         if (h != child.position)
         {
-          (child as ScrollerChild).animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD,
-                                            170,
-                                            "position", h);
+					if (child.get_animation () is Clutter.Animation)
+						{
+							float current_pos = child.position;
+							child.get_animation ().completed ();
+							child.position = current_pos;
+						}
+
+          child.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD,
+                         170,
+                         "position", h);
         }
+
         h += nat_height + spacing;
       }
     }

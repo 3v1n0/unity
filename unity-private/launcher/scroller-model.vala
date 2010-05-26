@@ -114,14 +114,26 @@ namespace Unity.Launcher
     }
 
 		public void move (ScrollerChild child, int i)
-			{
-				if (!(child in children))
-					return;
+		{
+			if (!(child in children))
+				return;
 
-				children.remove (child);
-				children.insert (i, child);
-				order_changed ();
-			}
+			if (children.index_of (child) == i)
+				return;
+
+			children.remove (child);
+			children.insert (i, child);
+			order_changed ();
+		}
+
+		public int index_of (ScrollerChild child)
+		{
+			if (child in children)
+				{
+					return children.index_of (child);
+				}
+			return 0;
+		}
 
     public void sort (CompareFunc compare)
     {
