@@ -530,6 +530,10 @@ namespace Unity.Panel.Indicators
           this.entry.menu.notify["visible"].connect (this.menu_vis_changed);
           this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
                            "opacity", 255);
+
+          Clutter.Color col = { 255, 249, 233, 255 };
+          this.text.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
+                             "color", ref col);
         }
     }
 
@@ -542,6 +546,9 @@ namespace Unity.Panel.Indicators
           this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
                            "opacity", 0);
 
+          Clutter.Color col = { 233, 216, 200, 255 };
+          this.text.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
+                             "color", ref col);
           this.entry.menu.move_current.disconnect (this.menu_key_moved);
           this.entry.menu.notify["visible"].disconnect (this.menu_vis_changed);
         }
@@ -592,8 +599,8 @@ namespace Unity.Panel.Indicators
       cr.line_to (1, height);
 
       var pat = new Cairo.Pattern.linear (1, 0, 1, height);
-      pat.add_color_stop_rgba (0.0, 1.0f, 1.0f, 1.0f, 0.6f);
-      pat.add_color_stop_rgba (1.0, 1.0f, 1.0f, 1.0f, 0.2f);
+      pat.add_color_stop_rgba (0.0, 0.8509f, 0.8196f, 0.7294f, 1.0f);
+      pat.add_color_stop_rgba (1.0, 0.7019f, 0.6509f, 0.5137f, 1.0f);
 
       cr.set_source (pat);
       cr.fill ();
