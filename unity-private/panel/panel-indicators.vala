@@ -220,7 +220,7 @@ namespace Unity.Panel.Indicators
                             this.position_menu,
                             e.button.button,
                             e.button.time);
-          click_time = e.button.time;
+         click_time = e.button.time;
           this.popped = entry.menu;
           entry.menu_shown ();
         }
@@ -463,7 +463,7 @@ namespace Unity.Panel.Indicators
 
     construct
     {
-      this.padding = { 0, 6.0f, 0, 6.0f };
+      this.padding = { 0, 3.0f, 0, 3.0f };
 
       this.bg = new Clutter.CairoTexture (10, 10);
       this.bg.set_parent (this);
@@ -496,10 +496,12 @@ namespace Unity.Panel.Indicators
           if (this.entry.image.pixbuf != null)
             {
               this.image.pixbuf = this.entry.image.pixbuf;
+              this.image.size = this.entry.image.pixbuf.width;
 
               this.entry.image.notify["pixbuf"].connect (() =>
                 {
                   this.image.pixbuf = this.entry.image.pixbuf;
+                  this.image.size = this.entry.image.pixbuf.width;
                 });
             }
         }
