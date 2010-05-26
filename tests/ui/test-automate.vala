@@ -21,10 +21,19 @@ using Unity;
 using Unity.Testing;
 using Unity.Launcher;
 
+GLib.Timer gTimer;
+static void
+on_animation_started (Clutter.Animation? anim)
+{
+    //stdout.printf("Animation Started\n");
+    gTimer.start ();
+}
+
 static void
 on_animation_completed (Clutter.Animation? anim)
 {
-    stdout.printf("Animation Completed\n");
+    //stdout.printf("Animation Completed\n");
+    gTimer.stop ();
 }
 
 namespace Unity.Tests.UI
@@ -72,8 +81,10 @@ namespace Unity.Tests.UI
       QuicklistController qlcontroller = QuicklistController.get_default ();
       ScrollerModel scroller = registry.lookup ("UnityScrollerModel") as ScrollerModel;
       
-      //ScrollerChild launcher;
-      //int i = 0; 
+      gTimer = new GLib.Timer();
+      int DT = 2500;
+      stdout.printf("\n");
+
       foreach (ScrollerChild launcher in scroller)
         {
           //launcher = scroller[i] as ScrollerChild;
@@ -83,11 +94,31 @@ namespace Unity.Tests.UI
 
           Clutter.Animation? anim;
           launcher.opacity = 255;
-          anim = launcher.animate (Clutter.AnimationMode.EASE_IN_SINE, 500, "opacity", 0);
-          //anim.completed.connect (on_animation_completed);
+
+          
+          gTimer.start ();
+          anim = launcher.animate (Clutter.AnimationMode.EASE_IN_SINE, 2500, "opacity", 0);
+          //anim.started.connect (on_animation_started);
+          anim.completed.connect (on_animation_completed);
           dir.do_wait_for_animation (launcher);
-          anim = launcher.animate (Clutter.AnimationMode.EASE_IN_SINE, 500, "opacity", 255);
+          
+          float dt = (float)gTimer.elapsed ();
+          float dt0 =  (float)DT/1000.0f;
+          stdout.printf("Expected Duration: %2.3f, Observed Duration: %2.3f, Error: %2.3f%\n", dt0, dt,
+                        (dt - dt0)*100.0f/dt0);
+          
+          gTimer.start ();
+          anim = launcher.animate (Clutter.AnimationMode.EASE_IN_SINE, 2500, "opacity", 255);
+          //anim.started.connect (on_animation_started);
+          anim.completed.connect (on_animation_completed);
           dir.do_wait_for_animation (launcher);
+          
+          dt = (float)gTimer.elapsed ();
+          dt0 =  (float)DT/1000.0f;
+          stdout.printf("Expected Duration: %2.3f, Observed Duration: %2.3f, Error: %2.3f%\n", dt0, dt,
+                        (dt - dt0)*100.0f/dt0);
+
+          
           //dir.do_wait_for_timeout (5000);
         }
       
