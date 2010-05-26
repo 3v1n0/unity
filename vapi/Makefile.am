@@ -1,4 +1,5 @@
 EXTRA_DIST = \
+  Bamf-0.2.vapi \
   clutk-0.3.vapi \
   clutter-1.0.vapi \
   clutter-1.0.deps \
