@@ -1,6 +1,6 @@
 m4_define([unity_major], [0])
 m4_define([unity_minor], [2])
-m4_define([unity_micro], [3])
+m4_define([unity_micro], [5])
 
 m4_define([unity_api],
           [unity_major.unity_minor])
