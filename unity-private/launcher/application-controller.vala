@@ -222,7 +222,7 @@ namespace Unity.Launcher
         {
           is_favorite = false;
           child.pin_type = PinType.UNPINNED;
-					closed ();
+          closed ();
         }
     }
 
@@ -313,9 +313,9 @@ namespace Unity.Launcher
               context.set_timestamp (Gdk.CURRENT_TIME);
 
               appinfo.launch (null, context);
-							child.activating = true;
-							// timeout after eight seconds
-							GLib.Timeout.add_seconds (8, on_launch_timeout);
+              child.activating = true;
+              // timeout after eight seconds
+              GLib.Timeout.add_seconds (8, on_launch_timeout);
             }
           catch (Error e)
             {
@@ -324,41 +324,41 @@ namespace Unity.Launcher
         }
     }
 
-		private bool on_launch_timeout ()
-		{
-			child.activating = false;
-			return false;
-		}
+    private bool on_launch_timeout ()
+    {
+      child.activating = false;
+      return false;
+    }
     public void attach_application (Bamf.Application application)
     {
       app = application;
       child.running = app.is_running ();
       child.active = app.is_active ();
-			child.activating = false;
+      child.activating = false;
 
       app.running_changed.connect (on_app_running_changed);
       app.active_changed.connect (on_app_active_changed);
-			app.urgent_changed.connect (on_app_urgant_changed);
-			app.closed.connect (detach_application);
+      app.urgent_changed.connect (on_app_urgant_changed);
+      app.closed.connect (detach_application);
     }
 
     public void detach_application ()
     {
       app.running_changed.disconnect (on_app_running_changed);
       app.active_changed.disconnect (on_app_active_changed);
-			app.urgent_changed.disconnect (on_app_urgant_changed);
-			app.closed.disconnect (detach_application);
+      app.urgent_changed.disconnect (on_app_urgant_changed);
+      app.closed.disconnect (detach_application);
       app = null;
       child.running = false;
       child.active = false;
-			child.needs_attention = false;
-			closed ();
+      child.needs_attention = false;
+      closed ();
     }
 
-		public bool debug_is_application_attached ()
-		{
-			return app != null;
-		}
+    public bool debug_is_application_attached ()
+    {
+      return app != null;
+    }
 
     private void on_app_running_changed (bool running)
     {
@@ -374,10 +374,10 @@ namespace Unity.Launcher
       child.active = active;
     }
 
-		private void on_app_urgant_changed (bool urgancy)
-		{
-			child.needs_attention = urgancy;
-		}
+    private void on_app_urgant_changed (bool urgancy)
+    {
+      child.needs_attention = urgancy;
+    }
 
     private void load_desktop_file_info ()
     {

@@ -39,7 +39,7 @@ namespace Unity.Launcher
     public signal void request_removal (); //call when not needed anymore so we can unref
     public string name = "If you can read this, file a bug!!";
 
-		public signal void closed ();
+    public signal void closed ();
 
     protected ScrollerChildControllerMenuState menu_state;
     protected uint32 last_press_time = 0;
@@ -61,7 +61,7 @@ namespace Unity.Launcher
       child.motion_event.connect (on_motion_event);
 
       child.set_reactive (true);
-			child.opacity = 0;
+      child.opacity = 0;
       var anim = child.animate (Clutter.AnimationMode.EASE_IN_QUAD,
                                 SHORT_DELAY,
                                 "opacity", 0xff);
@@ -130,8 +130,8 @@ namespace Unity.Launcher
 
     private void ensure_menu_state ()
     {
-			//no tooltips on drag
-			if (Unity.Drag.Controller.get_default ().is_dragging) return;
+      //no tooltips on drag
+      if (Unity.Drag.Controller.get_default ().is_dragging) return;
 
       var controller = QuicklistController.get_default ();
       if (controller.menu_is_open () && controller.get_attached_actor () != child)
