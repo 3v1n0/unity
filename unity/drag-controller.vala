@@ -71,6 +71,7 @@ namespace Unity.Drag
         this.view = new View (model.get_icon ().get_stage () as Clutter.Stage);
       }
       this.view.hook_actor_to_cursor (model.get_icon (), offset_x, offset_y);
+			model.get_icon ().parent_set.connect (rehouse_orphaned_child);
       this.model = model;
       this.drag_start (model);
       this.view.motion.connect (on_view_motion);
@@ -78,6 +79,16 @@ namespace Unity.Drag
       this._is_dragging = true;
       Unity.global_shell.add_fullscreen_request (this);
     }
+
+		private void rehouse_orphaned_child (Clutter.Actor old_parent)
+		{
+			// called when the actor we are tracking gets unparented. we need to keep
+			// the actor on the stage at all times. although, hidden.
+			Clutter.Actor actor = model.get_icon ();
+			Clutter.Stage stage = actor.get_stage () as Clutter.Stage;
+			actor.set_parent (stage);
+			actor.set_position (-10000, -10000);
+		}
 
     public Unity.Drag.Model get_drag_model ()
     {
@@ -91,6 +102,7 @@ namespace Unity.Drag
 
     private void on_view_end (float x, float y)
     {
+			model.get_icon ().parent_set.disconnect (rehouse_orphaned_child);
       this.view.unhook_actor ();
       this.drag_drop (this.model, x, y);
       this.view.motion.disconnect (on_view_motion);
