@@ -74,12 +74,6 @@ namespace Unity.Launcher
         {
           Bamf.Application app = object as Bamf.Application;
           //need to hook up to its visible changed signals
-          if (app.get_desktop_file () == "")
-          {
-            debug ("no desktop file for this app");
-            return;
-          }
-
           app.user_visible_changed.connect ((a, changed) => {
             if (changed)
               {
@@ -90,22 +84,24 @@ namespace Unity.Launcher
           if (app.user_visible ())
             {
               string desktop_file = app.get_desktop_file ();
-              if (desktop_file != null)
+              ApplicationController? controller = null;
+              if (desktop_file != null && desktop_file != "")
                 {
-                  var controller = find_controller_by_desktop_file (desktop_file);
-                  if (controller is ApplicationController)
-                    {
-                      controller.attach_application (app);
-                    }
-                  else
-                    {
-                      LauncherChild child = new LauncherChild ();
-                      controller = new ApplicationController (desktop_file, child);
-                      controller.attach_application (app);
-                      model.add (child);
-                      childcontrollers.add (controller);
-											controller.closed.connect (on_scroller_controller_closed);
-                    }
+                  controller = find_controller_by_desktop_file (desktop_file);
+                }
+ 
+              if (controller is ApplicationController)
+                {
+                  controller.attach_application (app);
+                }
+              else
+                {
+                  LauncherChild child = new LauncherChild ();
+                  controller = new ApplicationController (desktop_file, child);
+                  controller.attach_application (app);
+                  model.add (child);
+                  childcontrollers.add (controller);
+					    		controller.closed.connect (on_scroller_controller_closed);
                 }
             }
         }

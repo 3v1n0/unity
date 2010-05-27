@@ -161,7 +161,8 @@ namespace Unity.Launcher
       construct
         {
           _desktop_file = value;
-          load_desktop_file_info ();
+          if (_desktop_file != "")
+            load_desktop_file_info ();
         }
     }
     private KeyFile desktop_keyfile;
@@ -171,7 +172,7 @@ namespace Unity.Launcher
 
     private bool is_favorite = false;
 
-    public ApplicationController (string desktop_file_, ScrollerChild child_)
+    public ApplicationController (string? desktop_file_, ScrollerChild child_)
     {
       Object (desktop_file: desktop_file_,
               child: child_);
@@ -191,13 +192,16 @@ namespace Unity.Launcher
       // we need to figure out if we are a favorite
       is_favorite = true;
       child.pin_type = PinType.UNPINNED;
-      foreach (string uid in favorites.get_favorites ())
+      if (desktop_file != null)
         {
-          if (favorites.get_string (uid, "desktop_file") == desktop_file)
+          foreach (string uid in favorites.get_favorites ())
             {
-              is_favorite = true;
-              child.pin_type = PinType.PINNED;
-              break;
+              if (favorites.get_string (uid, "desktop_file") == desktop_file)
+                {
+                  is_favorite = true;
+                  child.pin_type = PinType.PINNED;
+                  break;
+                }
             }
         }
     }
@@ -230,6 +234,9 @@ namespace Unity.Launcher
     {
       // get the desktop file
       Gee.ArrayList<ShortcutItem> ret_list = new Gee.ArrayList<ShortcutItem> ();
+      if (desktop_file == null)
+        return ret_list;
+        
       var desktop_keyfile = new KeyFile ();
       try
         {
@@ -272,9 +279,12 @@ namespace Unity.Launcher
     public override Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ()
     {
       Gee.ArrayList<ShortcutItem> ret_list = new Gee.ArrayList<ShortcutItem> ();
-      var pin_entry = new LauncherPinningShortcut (desktop_file);
-      ret_list.add (pin_entry);
-
+      if (desktop_file != null)
+        {
+          var pin_entry = new LauncherPinningShortcut (desktop_file);
+          ret_list.add (pin_entry);
+        }
+        
       if (app is Bamf.Application)
         {
           if (app.is_running ()) {
@@ -301,7 +311,7 @@ namespace Unity.Launcher
                 }
             }
         }
-      else
+      else if (desktop_file != null)
         {
           Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
           try
@@ -322,13 +332,24 @@ namespace Unity.Launcher
     }
 
     public void attach_application (Bamf.Application application)
-    {
+    { 
       app = application;
       child.running = app.is_running ();
       child.active = app.is_active ();
       app.running_changed.connect (on_app_running_changed);
       app.active_changed.connect (on_app_active_changed);
 			app.closed.connect (detach_application);
+			name = app.get_name ();
+			if (name == "")
+			  warning (@"Bamf returned null for app.get_name (): $desktop_file");
+			
+			string potential_icon_name = app.get_icon ();
+			if (potential_icon_name == "")
+			  warning (@"Bamf returned null for app.get_icon (): $desktop_file");
+			else
+			  icon_name == potential_icon_name;
+			  
+			load_icon_from_icon_name ();
     }
 
     public void detach_application ()
