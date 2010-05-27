@@ -204,6 +204,26 @@ namespace Unity.Launcher
                 }
             }
         }
+
+      //connect to our quicklist signals so that we can expose and de-expose
+      // windows at the correct time
+      var controller = QuicklistController.get_default ();
+      controller.menu_state_changed.connect ((open) => {
+        if (controller.get_attached_actor () == child && app != null)
+          {
+            // this is a menu relating to us
+            if (open)
+              {
+                debug ("starting expose");
+                Unity.global_shell.expose_xids (app.get_xids ());
+              }
+            else
+              {
+                debug ("ending expose");
+                Unity.global_shell.stop_expose ();
+              }
+          }
+      });
     }
 
     private void on_favorite_added (string uid)
@@ -236,7 +256,7 @@ namespace Unity.Launcher
       Gee.ArrayList<ShortcutItem> ret_list = new Gee.ArrayList<ShortcutItem> ();
       if (desktop_file == null)
         return ret_list;
-        
+
       var desktop_keyfile = new KeyFile ();
       try
         {
@@ -284,7 +304,7 @@ namespace Unity.Launcher
           var pin_entry = new LauncherPinningShortcut (desktop_file);
           ret_list.add (pin_entry);
         }
-        
+
       if (app is Bamf.Application)
         {
           if (app.is_running ()) {
@@ -332,7 +352,7 @@ namespace Unity.Launcher
     }
 
     public void attach_application (Bamf.Application application)
-    { 
+    {
       app = application;
       child.running = app.is_running ();
       child.active = app.is_active ();
@@ -342,13 +362,13 @@ namespace Unity.Launcher
 			name = app.get_name ();
 			if (name == "")
 			  warning (@"Bamf returned null for app.get_name (): $desktop_file");
-			
+
 			string potential_icon_name = app.get_icon ();
 			if (potential_icon_name == "")
 			  warning (@"Bamf returned null for app.get_icon (): $desktop_file");
 			else
 			  icon_name == potential_icon_name;
-			  
+
 			load_icon_from_icon_name ();
     }
 

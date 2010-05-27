@@ -613,6 +613,24 @@ namespace Unity
         }
     }
 
+		public void	expose_xids (Array<uint32> xids)
+		{
+			SList<Wnck.Window> windows = new SList<Wnck.Window> ();
+			for (int i = 0; i < xids.length; i++)
+        {
+          uint32 xid = xids.index (i);
+          Wnck.Window window = Wnck.Window.get (xid);
+          if (window is Wnck.Window)
+            windows.append (window);
+        }
+			expose_windows (windows);
+		}
+
+		public void stop_expose ()
+		{
+			dexpose_windows ();
+		}
+
     public void show_window (uint32 xid)
     {
       Wnck.Window window = Wnck.Window.get (xid);
