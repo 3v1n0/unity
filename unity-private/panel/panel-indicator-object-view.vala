@@ -26,18 +26,20 @@ namespace Unity.Panel.Indicators
   public class IndicatorObjectView : Ctk.Box
   {
     public Indicator.Object indicator_object { get; construct; }
-    
+
     public signal void menu_moved ();
-    
+
     private Gee.ArrayList<IndicatorObjectEntryView> indicator_entry_array;
 
     public IndicatorObjectView (Indicator.Object _object)
     {
       Object (indicator_object: _object);
     }
-    
+
     construct
     {
+      START_FUNCTION ();
+
       // Read through the entries in the object, creating an IndicatorObjectEntryView for
       // each one and appending it to self.
       // Connect to IndicatorObjectEntryView's menu_moved signal so we can show the previous
@@ -48,7 +50,7 @@ namespace Unity.Panel.Indicators
 
       indicator_object.entry_added.connect (this.on_entry_added);
       indicator_object.entry_removed.connect (this.remove_entry);
-      
+
       unowned GLib.List<Indicator.ObjectEntry> list = indicator_object.get_entries ();
 
       for (int i = 0; i < list.length (); i++)
@@ -62,18 +64,20 @@ namespace Unity.Panel.Indicators
           this.indicator_entry_array.add (object_entry_view);
           this.add_actor (object_entry_view);
         }
+
+      END_FUNCTION ();
     }
 
     public void show_entry_menu (int entry)
     {
-      // Sometimes parent will want to force showing of an entry's menu, for instance when the user is moving between menus using the arrow keys. 
+      // Sometimes parent will want to force showing of an entry's menu, for instance when the user is moving between menus using the arrow keys.
     }
 
     private void on_menu_moved (IndicatorObjectEntryView object_entry_view, Gtk.MenuDirectionType type)
     {
-      
+
     }
-    
+
     private void on_entry_added (Indicator.Object object, Indicator.ObjectEntry indicator_object_entry)
     {
       /* First, make sure that this entry is not already in */
@@ -85,9 +89,9 @@ namespace Unity.Panel.Indicators
               return;
             }
         }
-        
+
       IndicatorObjectEntryView object_entry_view = new IndicatorObjectEntryView (indicator_object_entry);
-      
+
       object_entry_view.menu_moved.connect (this.on_menu_moved);
 
       this.indicator_entry_array.add (object_entry_view);
