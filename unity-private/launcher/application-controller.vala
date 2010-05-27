@@ -364,19 +364,19 @@ namespace Unity.Launcher
 
       app.running_changed.connect (on_app_running_changed);
       app.active_changed.connect (on_app_active_changed);
-			app.closed.connect (detach_application);
+      app.closed.connect (detach_application);
       app.urgent_changed.connect (on_app_urgant_changed);
-			name = app.get_name ();
-			if (name == "")
-			  warning (@"Bamf returned null for app.get_name (): $desktop_file");
+      name = app.get_name ();
+      if (name == "")
+        warning (@"Bamf returned null for app.get_name (): $desktop_file");
 
-			string potential_icon_name = app.get_icon ();
-			if (potential_icon_name == "")
-			  warning (@"Bamf returned null for app.get_icon (): $desktop_file");
-			else
-			  icon_name == potential_icon_name;
+      string potential_icon_name = app.get_icon ();
+      if (potential_icon_name == "")
+        warning (@"Bamf returned null for app.get_icon (): $desktop_file");
+      else
+        icon_name == potential_icon_name;
 
-			load_icon_from_icon_name ();
+      load_icon_from_icon_name ();
     }
 
     public void detach_application ()
