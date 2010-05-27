@@ -100,7 +100,7 @@ PKG_CHECK_MODULES(BASE,
                   gio-2.0 >= $GTK_REQUIRED
                   gee-1.0
                   gconf-2.0
-                  dbusmodel >= 0.2.0
+                  dee-1.0 >= 0.2.0
                   clutter-1.0 >= 1.0
                   clutter-gtk-0.10 >= 0.10
                   clutk-0.3 >= 0.3.26

@@ -130,6 +130,9 @@ namespace Dee {
 		public abstract void set_value (Dee.ModelIter iter, uint column, GLib.Value value);
 		public abstract void set_value_silently (Dee.ModelIter iter, uint column, GLib.Value value);
 		public abstract void thaw_signals ();
+		public virtual signal void row_added (Dee.ModelIter iter);
+		public virtual signal void row_changed (Dee.ModelIter iter);
+		public virtual signal void row_removed (Dee.ModelIter iter);
 	}
 	[CCode (cprefix = "DEE_SEQNUM_STATE_", has_type_id = false, cheader_filename = "dee.h")]
 	public enum SeqnumState {

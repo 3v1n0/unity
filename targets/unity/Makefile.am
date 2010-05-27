@@ -36,7 +36,6 @@ unity_VALAFLAGS = \
   --pkg cogl-1.0 \
   --pkg config \
   --pkg dbus-glib-1 \
-  --pkg dbusmodel \
   --pkg gtk+-2.0 \
   --pkg gdk-2.0 \
   --pkg gee-1.0 \
