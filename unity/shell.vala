@@ -47,11 +47,11 @@ namespace Unity
     public abstract void          close_xids (Array<uint32> xids);
     public abstract void          show_window (uint32 xid);
 
+		public abstract void					expose_xids (Array<uint32> xids);
+		public abstract void					stop_expose ();
+
     public signal   void need_new_icon_cache ();
     public signal   void indicators_changed (int width);
-
-
-
   }
 
   public Shell? global_shell; // our global shell

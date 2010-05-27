@@ -358,6 +358,16 @@ namespace Unity.Testing
         }
     }
 
+    public void	expose_xids (Array<uint32> xids)
+		{
+      //null op in popup
+		}
+
+		public void stop_expose ()
+		{
+			//null op in popup
+		}
+
     public void show_window (uint32 xid)
     {
       Wnck.Window window = Wnck.Window.get (xid);
