@@ -92,9 +92,10 @@ libunity_la_VALAFLAGS = \
   --pkg config \
   --pkg clutter-1.0 \
   --pkg clutk-0.3 \
+  --pkg gconf-2.0 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
-  --pkg launcher-0.3 \
+  --pkg Bamf-0.2 \
   --pkg libwnck-1.0 \
   --pkg unique-1.0 \
   --pkg unity-const \
@@ -114,9 +115,12 @@ libunity_la_VALASOURCES = \
   entry.vala \
   icon-postprocessor.vala \
   prism-handler.vala \
+  quicklist-rendering.vala \
   shell.vala \
   theme.vala \
+  unity-favorites.vala \
   webapp-fetcher.vala
+
 
 libunity_la_APIFILES = \
   unity.h \

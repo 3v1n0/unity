@@ -33,24 +33,24 @@
 #include <math.h>
 
 
-#define UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_CONTROLLER (unity_quicklauncher_quicklist_controller_get_type ())
-#define UNITY_QUICKLAUNCHER_QUICKLIST_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityQuicklauncherQuicklistController))
-#define UNITY_QUICKLAUNCHER_QUICKLIST_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityQuicklauncherQuicklistControllerClass))
-#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_CONTROLLER))
-#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_CONTROLLER))
-#define UNITY_QUICKLAUNCHER_QUICKLIST_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityQuicklauncherQuicklistControllerClass))
+#define UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER (unity_launcher_quicklist_controller_get_type ())
+#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistController))
+#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistControllerClass))
+#define UNITY_LAUNCHER_IS_QUICKLIST_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER))
+#define UNITY_LAUNCHER_IS_QUICKLIST_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER))
+#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistControllerClass))
 
-typedef struct _UnityQuicklauncherQuicklistController UnityQuicklauncherQuicklistController;
-typedef struct _UnityQuicklauncherQuicklistControllerClass UnityQuicklauncherQuicklistControllerClass;
-typedef struct _UnityQuicklauncherQuicklistControllerPrivate UnityQuicklauncherQuicklistControllerPrivate;
+typedef struct _UnityLauncherQuicklistController UnityLauncherQuicklistController;
+typedef struct _UnityLauncherQuicklistControllerClass UnityLauncherQuicklistControllerClass;
+typedef struct _UnityLauncherQuicklistControllerPrivate UnityLauncherQuicklistControllerPrivate;
 
-#define UNITY_QUICKLAUNCHER_MODELS_TYPE_SHORTCUT_ITEM (unity_quicklauncher_models_shortcut_item_get_type ())
-#define UNITY_QUICKLAUNCHER_MODELS_SHORTCUT_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_MODELS_TYPE_SHORTCUT_ITEM, UnityQuicklauncherModelsShortcutItem))
-#define UNITY_QUICKLAUNCHER_MODELS_IS_SHORTCUT_ITEM(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLAUNCHER_MODELS_TYPE_SHORTCUT_ITEM))
-#define UNITY_QUICKLAUNCHER_MODELS_SHORTCUT_ITEM_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), UNITY_QUICKLAUNCHER_MODELS_TYPE_SHORTCUT_ITEM, UnityQuicklauncherModelsShortcutItemIface))
+#define UNITY_LAUNCHER_TYPE_SHORTCUT_ITEM (unity_launcher_shortcut_item_get_type ())
+#define UNITY_LAUNCHER_SHORTCUT_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_SHORTCUT_ITEM, UnityLauncherShortcutItem))
+#define UNITY_LAUNCHER_IS_SHORTCUT_ITEM(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_SHORTCUT_ITEM))
+#define UNITY_LAUNCHER_SHORTCUT_ITEM_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), UNITY_LAUNCHER_TYPE_SHORTCUT_ITEM, UnityLauncherShortcutItemIface))
 
-typedef struct _UnityQuicklauncherModelsShortcutItem UnityQuicklauncherModelsShortcutItem;
-typedef struct _UnityQuicklauncherModelsShortcutItemIface UnityQuicklauncherModelsShortcutItemIface;
+typedef struct _UnityLauncherShortcutItem UnityLauncherShortcutItem;
+typedef struct _UnityLauncherShortcutItemIface UnityLauncherShortcutItemIface;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
 #define UNITY_TESTING_TYPE_OBJECT_REGISTRY (unity_testing_object_registry_get_type ())
@@ -64,74 +64,74 @@ typedef struct _UnityTestingObjectRegistry UnityTestingObjectRegistry;
 typedef struct _UnityTestingObjectRegistryClass UnityTestingObjectRegistryClass;
 #define _unity_testing_object_registry_unref0(var) ((var == NULL) ? NULL : (var = (unity_testing_object_registry_unref (var), NULL)))
 
-#define UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU (unity_quicklauncher_quicklist_menu_get_type ())
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU, UnityQuicklauncherQuicklistMenu))
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU, UnityQuicklauncherQuicklistMenuClass))
-#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU))
-#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU))
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU, UnityQuicklauncherQuicklistMenuClass))
+#define UNITY_LAUNCHER_TYPE_QUICKLIST_MENU (unity_launcher_quicklist_menu_get_type ())
+#define UNITY_LAUNCHER_QUICKLIST_MENU(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU, UnityLauncherQuicklistMenu))
+#define UNITY_LAUNCHER_QUICKLIST_MENU_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU, UnityLauncherQuicklistMenuClass))
+#define UNITY_LAUNCHER_IS_QUICKLIST_MENU(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU))
+#define UNITY_LAUNCHER_IS_QUICKLIST_MENU_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU))
+#define UNITY_LAUNCHER_QUICKLIST_MENU_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU, UnityLauncherQuicklistMenuClass))
 
-typedef struct _UnityQuicklauncherQuicklistMenu UnityQuicklauncherQuicklistMenu;
-typedef struct _UnityQuicklauncherQuicklistMenuClass UnityQuicklauncherQuicklistMenuClass;
+typedef struct _UnityLauncherQuicklistMenu UnityLauncherQuicklistMenu;
+typedef struct _UnityLauncherQuicklistMenuClass UnityLauncherQuicklistMenuClass;
 
-#define UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM (unity_quicklauncher_quicklist_menu_item_get_type ())
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityQuicklauncherQuicklistMenuItem))
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityQuicklauncherQuicklistMenuItemClass))
-#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_ITEM(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM))
-#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM))
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityQuicklauncherQuicklistMenuItemClass))
+#define UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM (unity_launcher_quicklist_menu_item_get_type ())
+#define UNITY_LAUNCHER_QUICKLIST_MENU_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityLauncherQuicklistMenuItem))
+#define UNITY_LAUNCHER_QUICKLIST_MENU_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityLauncherQuicklistMenuItemClass))
+#define UNITY_LAUNCHER_IS_QUICKLIST_MENU_ITEM(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM))
+#define UNITY_LAUNCHER_IS_QUICKLIST_MENU_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM))
+#define UNITY_LAUNCHER_QUICKLIST_MENU_ITEM_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityLauncherQuicklistMenuItemClass))
 
-typedef struct _UnityQuicklauncherQuicklistMenuItem UnityQuicklauncherQuicklistMenuItem;
-typedef struct _UnityQuicklauncherQuicklistMenuItemClass UnityQuicklauncherQuicklistMenuItemClass;
+typedef struct _UnityLauncherQuicklistMenuItem UnityLauncherQuicklistMenuItem;
+typedef struct _UnityLauncherQuicklistMenuItemClass UnityLauncherQuicklistMenuItemClass;
 #define _g_free0(var) (var = (g_free (var), NULL))
 
-#define UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR (unity_quicklauncher_quicklist_menu_seperator_get_type ())
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperator))
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperatorClass))
-#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR))
-#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR))
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperatorClass))
+#define UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR (unity_launcher_quicklist_menu_seperator_get_type ())
+#define UNITY_LAUNCHER_QUICKLIST_MENU_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityLauncherQuicklistMenuSeperator))
+#define UNITY_LAUNCHER_QUICKLIST_MENU_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityLauncherQuicklistMenuSeperatorClass))
+#define UNITY_LAUNCHER_IS_QUICKLIST_MENU_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR))
+#define UNITY_LAUNCHER_IS_QUICKLIST_MENU_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR))
+#define UNITY_LAUNCHER_QUICKLIST_MENU_SEPERATOR_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityLauncherQuicklistMenuSeperatorClass))
 
-typedef struct _UnityQuicklauncherQuicklistMenuSeperator UnityQuicklauncherQuicklistMenuSeperator;
-typedef struct _UnityQuicklauncherQuicklistMenuSeperatorClass UnityQuicklauncherQuicklistMenuSeperatorClass;
+typedef struct _UnityLauncherQuicklistMenuSeperator UnityLauncherQuicklistMenuSeperator;
+typedef struct _UnityLauncherQuicklistMenuSeperatorClass UnityLauncherQuicklistMenuSeperatorClass;
 
-struct _UnityQuicklauncherQuicklistController {
+struct _UnityLauncherQuicklistController {
 	GObject parent_instance;
-	UnityQuicklauncherQuicklistControllerPrivate * priv;
+	UnityLauncherQuicklistControllerPrivate * priv;
 	CtkMenu* menu;
 	gboolean is_in_label;
 	gboolean is_in_menu;
 };
 
-struct _UnityQuicklauncherQuicklistControllerClass {
+struct _UnityLauncherQuicklistControllerClass {
 	GObjectClass parent_class;
 };
 
-struct _UnityQuicklauncherModelsShortcutItemIface {
+struct _UnityLauncherShortcutItemIface {
 	GTypeInterface parent_iface;
-	char* (*get_name) (UnityQuicklauncherModelsShortcutItem* self);
-	void (*activated) (UnityQuicklauncherModelsShortcutItem* self);
+	char* (*get_name) (UnityLauncherShortcutItem* self);
+	void (*activated) (UnityLauncherShortcutItem* self);
 };
 
-struct _UnityQuicklauncherQuicklistControllerPrivate {
+struct _UnityLauncherQuicklistControllerPrivate {
 	GeeArrayList* prefix_cache;
 	GeeArrayList* affix_cache;
 };
 
 
-extern UnityQuicklauncherQuicklistController* unity_quicklauncher_ql_controler_singleton;
-UnityQuicklauncherQuicklistController* unity_quicklauncher_ql_controler_singleton = NULL;
-static gpointer unity_quicklauncher_quicklist_controller_parent_class = NULL;
+extern UnityLauncherQuicklistController* unity_launcher_ql_controler_singleton;
+UnityLauncherQuicklistController* unity_launcher_ql_controler_singleton = NULL;
+static gpointer unity_launcher_quicklist_controller_parent_class = NULL;
 
-GType unity_quicklauncher_quicklist_controller_get_type (void);
-GType unity_quicklauncher_models_shortcut_item_get_type (void);
-#define UNITY_QUICKLAUNCHER_QUICKLIST_CONTROLLER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityQuicklauncherQuicklistControllerPrivate))
+GType unity_launcher_quicklist_controller_get_type (void);
+GType unity_launcher_shortcut_item_get_type (void);
+#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistControllerPrivate))
 enum  {
-	UNITY_QUICKLAUNCHER_QUICKLIST_CONTROLLER_DUMMY_PROPERTY
+	UNITY_LAUNCHER_QUICKLIST_CONTROLLER_DUMMY_PROPERTY
 };
-UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_new (void);
-UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_construct (GType object_type);
-UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_get_default (void);
+UnityLauncherQuicklistController* unity_launcher_quicklist_controller_new (void);
+UnityLauncherQuicklistController* unity_launcher_quicklist_controller_construct (GType object_type);
+UnityLauncherQuicklistController* unity_launcher_quicklist_controller_get_default (void);
 gpointer unity_testing_object_registry_ref (gpointer instance);
 void unity_testing_object_registry_unref (gpointer instance);
 GParamSpec* unity_testing_param_spec_object_registry (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
@@ -141,46 +141,48 @@ gpointer unity_testing_value_get_object_registry (const GValue* value);
 GType unity_testing_object_registry_get_type (void);
 UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void);
 void unity_testing_object_registry_register (UnityTestingObjectRegistry* self, const char* name, GObject* object);
-gboolean unity_quicklauncher_quicklist_controller_menu_is_open (UnityQuicklauncherQuicklistController* self);
-static void unity_quicklauncher_quicklist_controller_on_unity_drag_start (UnityQuicklauncherQuicklistController* self, UnityDragModel* model);
-UnityQuicklauncherQuicklistMenu* unity_quicklauncher_quicklist_menu_new (void);
-UnityQuicklauncherQuicklistMenu* unity_quicklauncher_quicklist_menu_construct (GType object_type);
-GType unity_quicklauncher_quicklist_menu_get_type (void);
-static void _lambda10_ (UnityQuicklauncherQuicklistController* self);
-static void __lambda10__clutter_actor_destroy (ClutterActor* _sender, gpointer self);
-UnityQuicklauncherQuicklistMenuItem* unity_quicklauncher_quicklist_menu_item_new (const char* label);
-UnityQuicklauncherQuicklistMenuItem* unity_quicklauncher_quicklist_menu_item_construct (GType object_type, const char* label);
-GType unity_quicklauncher_quicklist_menu_item_get_type (void);
-void unity_quicklauncher_quicklist_controller_close_menu (UnityQuicklauncherQuicklistController* self);
-static void _unity_quicklauncher_quicklist_controller_close_menu_unity_quicklauncher_quicklist_menu_item_activated (UnityQuicklauncherQuicklistMenuItem* _sender, gpointer self);
-void unity_quicklauncher_quicklist_controller_show_label (UnityQuicklauncherQuicklistController* self, const char* label, CtkActor* attached_widget);
-char* unity_quicklauncher_models_shortcut_item_get_name (UnityQuicklauncherModelsShortcutItem* self);
-void unity_quicklauncher_models_shortcut_item_activated (UnityQuicklauncherModelsShortcutItem* self);
-static void _unity_quicklauncher_models_shortcut_item_activated_unity_quicklauncher_quicklist_menu_item_activated (UnityQuicklauncherQuicklistMenuItem* _sender, gpointer self);
-UnityQuicklauncherQuicklistMenuSeperator* unity_quicklauncher_quicklist_menu_seperator_new (void);
-UnityQuicklauncherQuicklistMenuSeperator* unity_quicklauncher_quicklist_menu_seperator_construct (GType object_type);
-GType unity_quicklauncher_quicklist_menu_seperator_get_type (void);
-void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuicklistController* self, GeeArrayList* prefix_shortcuts, GeeArrayList* affix_shortcuts, gboolean hide_on_leave);
-CtkActor* unity_quicklauncher_quicklist_controller_get_attached_actor (UnityQuicklauncherQuicklistController* self);
-static void _unity_quicklauncher_quicklist_controller_on_unity_drag_start_unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self);
-static GObject * unity_quicklauncher_quicklist_controller_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
-static void unity_quicklauncher_quicklist_controller_finalize (GObject* obj);
+gboolean unity_launcher_quicklist_controller_menu_is_open (UnityLauncherQuicklistController* self);
+static void unity_launcher_quicklist_controller_on_unity_drag_start (UnityLauncherQuicklistController* self, UnityDragModel* model);
+UnityLauncherQuicklistMenu* unity_launcher_quicklist_menu_new (void);
+UnityLauncherQuicklistMenu* unity_launcher_quicklist_menu_construct (GType object_type);
+GType unity_launcher_quicklist_menu_get_type (void);
+static void _lambda6_ (UnityLauncherQuicklistController* self);
+static void __lambda6__clutter_actor_destroy (ClutterActor* _sender, gpointer self);
+static void _lambda7_ (UnityLauncherQuicklistController* self);
+static void __lambda7__clutter_actor_destroy (ClutterActor* _sender, gpointer self);
+UnityLauncherQuicklistMenuItem* unity_launcher_quicklist_menu_item_new (const char* label);
+UnityLauncherQuicklistMenuItem* unity_launcher_quicklist_menu_item_construct (GType object_type, const char* label);
+GType unity_launcher_quicklist_menu_item_get_type (void);
+void unity_launcher_quicklist_controller_close_menu (UnityLauncherQuicklistController* self);
+static void _unity_launcher_quicklist_controller_close_menu_unity_launcher_quicklist_menu_item_activated (UnityLauncherQuicklistMenuItem* _sender, gpointer self);
+void unity_launcher_quicklist_controller_show_label (UnityLauncherQuicklistController* self, const char* label, CtkActor* attached_widget);
+char* unity_launcher_shortcut_item_get_name (UnityLauncherShortcutItem* self);
+void unity_launcher_shortcut_item_activated (UnityLauncherShortcutItem* self);
+static void _unity_launcher_shortcut_item_activated_unity_launcher_quicklist_menu_item_activated (UnityLauncherQuicklistMenuItem* _sender, gpointer self);
+UnityLauncherQuicklistMenuSeperator* unity_launcher_quicklist_menu_seperator_new (void);
+UnityLauncherQuicklistMenuSeperator* unity_launcher_quicklist_menu_seperator_construct (GType object_type);
+GType unity_launcher_quicklist_menu_seperator_get_type (void);
+void unity_launcher_quicklist_controller_show_menu (UnityLauncherQuicklistController* self, GeeArrayList* prefix_shortcuts, GeeArrayList* affix_shortcuts, gboolean hide_on_leave);
+CtkActor* unity_launcher_quicklist_controller_get_attached_actor (UnityLauncherQuicklistController* self);
+static void _unity_launcher_quicklist_controller_on_unity_drag_start_unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self);
+static GObject * unity_launcher_quicklist_controller_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void unity_launcher_quicklist_controller_finalize (GObject* obj);
 
 
 
-UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_get_default (void) {
-	UnityQuicklauncherQuicklistController* result = NULL;
-	if (unity_quicklauncher_ql_controler_singleton == NULL) {
-		UnityQuicklauncherQuicklistController* _tmp0_;
-		unity_quicklauncher_ql_controler_singleton = (_tmp0_ = unity_quicklauncher_quicklist_controller_new (), _g_object_unref0 (unity_quicklauncher_ql_controler_singleton), _tmp0_);
+UnityLauncherQuicklistController* unity_launcher_quicklist_controller_get_default (void) {
+	UnityLauncherQuicklistController* result = NULL;
+	if (unity_launcher_ql_controler_singleton == NULL) {
+		UnityLauncherQuicklistController* _tmp0_;
+		unity_launcher_ql_controler_singleton = (_tmp0_ = unity_launcher_quicklist_controller_new (), _g_object_unref0 (unity_launcher_ql_controler_singleton), _tmp0_);
 	}
-	result = unity_quicklauncher_ql_controler_singleton;
+	result = unity_launcher_ql_controler_singleton;
 	return result;
 }
 
 
-UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_construct (GType object_type) {
-	UnityQuicklauncherQuicklistController * self;
+UnityLauncherQuicklistController* unity_launcher_quicklist_controller_construct (GType object_type) {
+	UnityLauncherQuicklistController * self;
 	UnityTestingObjectRegistry* _tmp0_;
 	self = g_object_newv (object_type, 0, NULL);
 	unity_testing_object_registry_register (_tmp0_ = unity_testing_object_registry_get_default (), "QuicklistController", (GObject*) self);
@@ -189,55 +191,66 @@ UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_
 }
 
 
-UnityQuicklauncherQuicklistController* unity_quicklauncher_quicklist_controller_new (void) {
-	return unity_quicklauncher_quicklist_controller_construct (UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_CONTROLLER);
+UnityLauncherQuicklistController* unity_launcher_quicklist_controller_new (void) {
+	return unity_launcher_quicklist_controller_construct (UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER);
 }
 
 
-static void unity_quicklauncher_quicklist_controller_on_unity_drag_start (UnityQuicklauncherQuicklistController* self, UnityDragModel* model) {
+static void unity_launcher_quicklist_controller_on_unity_drag_start (UnityLauncherQuicklistController* self, UnityDragModel* model) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (model != NULL);
-	if (unity_quicklauncher_quicklist_controller_menu_is_open (self)) {
+	if (unity_launcher_quicklist_controller_menu_is_open (self)) {
 		clutter_actor_destroy ((ClutterActor*) self->menu);
 	}
 }
 
 
-static void _lambda10_ (UnityQuicklauncherQuicklistController* self) {
+static void _lambda6_ (UnityLauncherQuicklistController* self) {
+	g_signal_emit_by_name (self, "menu-state-changed", FALSE);
+}
+
+
+static void __lambda6__clutter_actor_destroy (ClutterActor* _sender, gpointer self) {
+	_lambda6_ (self);
+}
+
+
+static void _lambda7_ (UnityLauncherQuicklistController* self) {
 	unity_shell_remove_fullscreen_request (unity_global_shell, (GObject*) self);
 }
 
 
-static void __lambda10__clutter_actor_destroy (ClutterActor* _sender, gpointer self) {
-	_lambda10_ (self);
+static void __lambda7__clutter_actor_destroy (ClutterActor* _sender, gpointer self) {
+	_lambda7_ (self);
 }
 
 
-static void _unity_quicklauncher_quicklist_controller_close_menu_unity_quicklauncher_quicklist_menu_item_activated (UnityQuicklauncherQuicklistMenuItem* _sender, gpointer self) {
-	unity_quicklauncher_quicklist_controller_close_menu (self);
+static void _unity_launcher_quicklist_controller_close_menu_unity_launcher_quicklist_menu_item_activated (UnityLauncherQuicklistMenuItem* _sender, gpointer self) {
+	unity_launcher_quicklist_controller_close_menu (self);
 }
 
 
-void unity_quicklauncher_quicklist_controller_show_label (UnityQuicklauncherQuicklistController* self, const char* label, CtkActor* attached_widget) {
-	UnityQuicklauncherQuicklistMenu* _tmp0_;
+void unity_launcher_quicklist_controller_show_label (UnityLauncherQuicklistController* self, const char* label, CtkActor* attached_widget) {
+	UnityLauncherQuicklistMenu* _tmp0_;
 	CtkMenu* menu;
-	UnityQuicklauncherQuicklistMenuItem* menuitem;
+	UnityLauncherQuicklistMenuItem* menuitem;
 	ClutterActor* _tmp1_;
 	float x = 0.0F;
 	float y = 0.0F;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (label != NULL);
 	g_return_if_fail (attached_widget != NULL);
-	if (unity_quicklauncher_quicklist_controller_menu_is_open (self)) {
+	if (unity_launcher_quicklist_controller_menu_is_open (self)) {
 		clutter_actor_destroy ((ClutterActor*) self->menu);
 	}
-	menu = (_tmp0_ = g_object_ref_sink (unity_quicklauncher_quicklist_menu_new ()), CTK_IS_MENU (_tmp0_) ? ((CtkMenu*) _tmp0_) : NULL);
+	menu = (_tmp0_ = g_object_ref_sink (unity_launcher_quicklist_menu_new ()), CTK_IS_MENU (_tmp0_) ? ((CtkMenu*) _tmp0_) : NULL);
+	g_signal_connect_object ((ClutterActor*) menu, "destroy", (GCallback) __lambda6__clutter_actor_destroy, self, 0);
 	self->menu = menu;
-	g_signal_connect_object ((ClutterActor*) self->menu, "destroy", (GCallback) __lambda10__clutter_actor_destroy, self, 0);
+	g_signal_connect_object ((ClutterActor*) self->menu, "destroy", (GCallback) __lambda7__clutter_actor_destroy, self, 0);
 	ctk_menu_set_swallow_clicks (self->menu, unity_shell_get_menus_swallow_events (unity_global_shell));
 	ctk_menu_set_detect_clicks (self->menu, FALSE);
-	menuitem = g_object_ref_sink (unity_quicklauncher_quicklist_menu_item_new (label));
-	g_signal_connect_object (menuitem, "activated", (GCallback) _unity_quicklauncher_quicklist_controller_close_menu_unity_quicklauncher_quicklist_menu_item_activated, self, 0);
+	menuitem = g_object_ref_sink (unity_launcher_quicklist_menu_item_new (label));
+	g_signal_connect_object (menuitem, "activated", (GCallback) _unity_launcher_quicklist_controller_close_menu_unity_launcher_quicklist_menu_item_activated, self, 0);
 	clutter_actor_set_reactive ((ClutterActor*) menuitem, TRUE);
 	ctk_menu_append (self->menu, (ClutterActor*) menuitem, TRUE);
 	ctk_menu_attach_to_actor (self->menu, attached_widget);
@@ -255,12 +268,12 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static void _unity_quicklauncher_models_shortcut_item_activated_unity_quicklauncher_quicklist_menu_item_activated (UnityQuicklauncherQuicklistMenuItem* _sender, gpointer self) {
-	unity_quicklauncher_models_shortcut_item_activated (self);
+static void _unity_launcher_shortcut_item_activated_unity_launcher_quicklist_menu_item_activated (UnityLauncherQuicklistMenuItem* _sender, gpointer self) {
+	unity_launcher_shortcut_item_activated (self);
 }
 
 
-void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuicklistController* self, GeeArrayList* prefix_shortcuts, GeeArrayList* affix_shortcuts, gboolean hide_on_leave) {
+void unity_launcher_quicklist_controller_show_menu (UnityLauncherQuicklistController* self, GeeArrayList* prefix_shortcuts, GeeArrayList* affix_shortcuts, gboolean hide_on_leave) {
 	GeeArrayList* _tmp0_;
 	GeeArrayList* _tmp1_;
 	g_return_if_fail (self != NULL);
@@ -275,18 +288,18 @@ void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuick
 		GeeIterator* _shortcut_it;
 		_shortcut_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) prefix_shortcuts);
 		while (TRUE) {
-			UnityQuicklauncherModelsShortcutItem* shortcut;
+			UnityLauncherShortcutItem* shortcut;
 			char* label;
-			UnityQuicklauncherQuicklistMenuItem* menuitem;
+			UnityLauncherQuicklistMenuItem* menuitem;
 			if (!gee_iterator_next (_shortcut_it)) {
 				break;
 			}
-			shortcut = (UnityQuicklauncherModelsShortcutItem*) gee_iterator_get (_shortcut_it);
-			label = unity_quicklauncher_models_shortcut_item_get_name (shortcut);
-			menuitem = g_object_ref_sink (unity_quicklauncher_quicklist_menu_item_new (label));
+			shortcut = (UnityLauncherShortcutItem*) gee_iterator_get (_shortcut_it);
+			label = unity_launcher_shortcut_item_get_name (shortcut);
+			menuitem = g_object_ref_sink (unity_launcher_quicklist_menu_item_new (label));
 			ctk_menu_prepend (self->menu, (ClutterActor*) menuitem, FALSE);
-			g_signal_connect_object (menuitem, "activated", (GCallback) _unity_quicklauncher_models_shortcut_item_activated_unity_quicklauncher_quicklist_menu_item_activated, shortcut, 0);
-			g_signal_connect_object (menuitem, "activated", (GCallback) _unity_quicklauncher_quicklist_controller_close_menu_unity_quicklauncher_quicklist_menu_item_activated, self, 0);
+			g_signal_connect_object (menuitem, "activated", (GCallback) _unity_launcher_shortcut_item_activated_unity_launcher_quicklist_menu_item_activated, shortcut, 0);
+			g_signal_connect_object (menuitem, "activated", (GCallback) _unity_launcher_quicklist_controller_close_menu_unity_launcher_quicklist_menu_item_activated, self, 0);
 			_g_object_unref0 (shortcut);
 			_g_free0 (label);
 			_g_object_unref0 (menuitem);
@@ -294,8 +307,8 @@ void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuick
 		_g_object_unref0 (_shortcut_it);
 	}
 	if (gee_collection_get_size ((GeeCollection*) affix_shortcuts) > 0) {
-		UnityQuicklauncherQuicklistMenuSeperator* separator;
-		separator = g_object_ref_sink (unity_quicklauncher_quicklist_menu_seperator_new ());
+		UnityLauncherQuicklistMenuSeperator* separator;
+		separator = g_object_ref_sink (unity_launcher_quicklist_menu_seperator_new ());
 		ctk_menu_append (self->menu, (ClutterActor*) separator, FALSE);
 		_g_object_unref0 (separator);
 	}
@@ -303,18 +316,18 @@ void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuick
 		GeeIterator* _shortcut_it;
 		_shortcut_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) affix_shortcuts);
 		while (TRUE) {
-			UnityQuicklauncherModelsShortcutItem* shortcut;
+			UnityLauncherShortcutItem* shortcut;
 			char* label;
-			UnityQuicklauncherQuicklistMenuItem* menuitem;
+			UnityLauncherQuicklistMenuItem* menuitem;
 			if (!gee_iterator_next (_shortcut_it)) {
 				break;
 			}
-			shortcut = (UnityQuicklauncherModelsShortcutItem*) gee_iterator_get (_shortcut_it);
-			label = unity_quicklauncher_models_shortcut_item_get_name (shortcut);
-			menuitem = g_object_ref_sink (unity_quicklauncher_quicklist_menu_item_new (label));
+			shortcut = (UnityLauncherShortcutItem*) gee_iterator_get (_shortcut_it);
+			label = unity_launcher_shortcut_item_get_name (shortcut);
+			menuitem = g_object_ref_sink (unity_launcher_quicklist_menu_item_new (label));
 			ctk_menu_append (self->menu, (ClutterActor*) menuitem, FALSE);
-			g_signal_connect_object (menuitem, "activated", (GCallback) _unity_quicklauncher_models_shortcut_item_activated_unity_quicklauncher_quicklist_menu_item_activated, shortcut, 0);
-			g_signal_connect_object (menuitem, "activated", (GCallback) _unity_quicklauncher_quicklist_controller_close_menu_unity_quicklauncher_quicklist_menu_item_activated, self, 0);
+			g_signal_connect_object (menuitem, "activated", (GCallback) _unity_launcher_shortcut_item_activated_unity_launcher_quicklist_menu_item_activated, shortcut, 0);
+			g_signal_connect_object (menuitem, "activated", (GCallback) _unity_launcher_quicklist_controller_close_menu_unity_launcher_quicklist_menu_item_activated, self, 0);
 			_g_object_unref0 (shortcut);
 			_g_free0 (label);
 			_g_object_unref0 (menuitem);
@@ -322,10 +335,11 @@ void unity_quicklauncher_quicklist_controller_show_menu (UnityQuicklauncherQuick
 		_g_object_unref0 (_shortcut_it);
 	}
 	ctk_menu_set_detect_clicks (self->menu, TRUE);
+	g_signal_emit_by_name (self, "menu-state-changed", TRUE);
 }
 
 
-void unity_quicklauncher_quicklist_controller_close_menu (UnityQuicklauncherQuicklistController* self) {
+void unity_launcher_quicklist_controller_close_menu (UnityLauncherQuicklistController* self) {
 	g_return_if_fail (self != NULL);
 	self->is_in_label = FALSE;
 	self->is_in_menu = FALSE;
@@ -335,7 +349,7 @@ void unity_quicklauncher_quicklist_controller_close_menu (UnityQuicklauncherQuic
 }
 
 
-gboolean unity_quicklauncher_quicklist_controller_menu_is_open (UnityQuicklauncherQuicklistController* self) {
+gboolean unity_launcher_quicklist_controller_menu_is_open (UnityLauncherQuicklistController* self) {
 	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = CTK_IS_MENU (self->menu);
@@ -343,7 +357,7 @@ gboolean unity_quicklauncher_quicklist_controller_menu_is_open (UnityQuicklaunch
 }
 
 
-CtkActor* unity_quicklauncher_quicklist_controller_get_attached_actor (UnityQuicklauncherQuicklistController* self) {
+CtkActor* unity_launcher_quicklist_controller_get_attached_actor (UnityLauncherQuicklistController* self) {
 	CtkActor* result = NULL;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = _g_object_ref0 (ctk_menu_get_attached_actor (self->menu));
@@ -351,61 +365,62 @@ CtkActor* unity_quicklauncher_quicklist_controller_get_attached_actor (UnityQuic
 }
 
 
-static void _unity_quicklauncher_quicklist_controller_on_unity_drag_start_unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self) {
-	unity_quicklauncher_quicklist_controller_on_unity_drag_start (self, model);
+static void _unity_launcher_quicklist_controller_on_unity_drag_start_unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self) {
+	unity_launcher_quicklist_controller_on_unity_drag_start (self, model);
 }
 
 
-static GObject * unity_quicklauncher_quicklist_controller_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+static GObject * unity_launcher_quicklist_controller_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
-	UnityQuicklauncherQuicklistController * self;
-	parent_class = G_OBJECT_CLASS (unity_quicklauncher_quicklist_controller_parent_class);
+	UnityLauncherQuicklistController * self;
+	parent_class = G_OBJECT_CLASS (unity_launcher_quicklist_controller_parent_class);
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
-	self = UNITY_QUICKLAUNCHER_QUICKLIST_CONTROLLER (obj);
+	self = UNITY_LAUNCHER_QUICKLIST_CONTROLLER (obj);
 	{
 		UnityDragController* drag_controller;
 		drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
-		g_signal_connect_object (drag_controller, "drag-start", (GCallback) _unity_quicklauncher_quicklist_controller_on_unity_drag_start_unity_drag_controller_drag_start, self, 0);
+		g_signal_connect_object (drag_controller, "drag-start", (GCallback) _unity_launcher_quicklist_controller_on_unity_drag_start_unity_drag_controller_drag_start, self, 0);
 		_g_object_unref0 (drag_controller);
 	}
 	return obj;
 }
 
 
-static void unity_quicklauncher_quicklist_controller_class_init (UnityQuicklauncherQuicklistControllerClass * klass) {
-	unity_quicklauncher_quicklist_controller_parent_class = g_type_class_peek_parent (klass);
-	g_type_class_add_private (klass, sizeof (UnityQuicklauncherQuicklistControllerPrivate));
-	G_OBJECT_CLASS (klass)->constructor = unity_quicklauncher_quicklist_controller_constructor;
-	G_OBJECT_CLASS (klass)->finalize = unity_quicklauncher_quicklist_controller_finalize;
+static void unity_launcher_quicklist_controller_class_init (UnityLauncherQuicklistControllerClass * klass) {
+	unity_launcher_quicklist_controller_parent_class = g_type_class_peek_parent (klass);
+	g_type_class_add_private (klass, sizeof (UnityLauncherQuicklistControllerPrivate));
+	G_OBJECT_CLASS (klass)->constructor = unity_launcher_quicklist_controller_constructor;
+	G_OBJECT_CLASS (klass)->finalize = unity_launcher_quicklist_controller_finalize;
+	g_signal_new ("menu_state_changed", UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__BOOLEAN, G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
 }
 
 
-static void unity_quicklauncher_quicklist_controller_instance_init (UnityQuicklauncherQuicklistController * self) {
-	self->priv = UNITY_QUICKLAUNCHER_QUICKLIST_CONTROLLER_GET_PRIVATE (self);
+static void unity_launcher_quicklist_controller_instance_init (UnityLauncherQuicklistController * self) {
+	self->priv = UNITY_LAUNCHER_QUICKLIST_CONTROLLER_GET_PRIVATE (self);
 	self->is_in_label = FALSE;
 	self->is_in_menu = FALSE;
 }
 
 
-static void unity_quicklauncher_quicklist_controller_finalize (GObject* obj) {
-	UnityQuicklauncherQuicklistController * self;
-	self = UNITY_QUICKLAUNCHER_QUICKLIST_CONTROLLER (obj);
+static void unity_launcher_quicklist_controller_finalize (GObject* obj) {
+	UnityLauncherQuicklistController * self;
+	self = UNITY_LAUNCHER_QUICKLIST_CONTROLLER (obj);
 	_g_object_unref0 (self->priv->prefix_cache);
 	_g_object_unref0 (self->priv->affix_cache);
-	G_OBJECT_CLASS (unity_quicklauncher_quicklist_controller_parent_class)->finalize (obj);
+	G_OBJECT_CLASS (unity_launcher_quicklist_controller_parent_class)->finalize (obj);
 }
 
 
-GType unity_quicklauncher_quicklist_controller_get_type (void) {
-	static volatile gsize unity_quicklauncher_quicklist_controller_type_id__volatile = 0;
-	if (g_once_init_enter (&unity_quicklauncher_quicklist_controller_type_id__volatile)) {
-		static const GTypeInfo g_define_type_info = { sizeof (UnityQuicklauncherQuicklistControllerClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_quicklauncher_quicklist_controller_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityQuicklauncherQuicklistController), 0, (GInstanceInitFunc) unity_quicklauncher_quicklist_controller_instance_init, NULL };
-		GType unity_quicklauncher_quicklist_controller_type_id;
-		unity_quicklauncher_quicklist_controller_type_id = g_type_register_static (G_TYPE_OBJECT, "UnityQuicklauncherQuicklistController", &g_define_type_info, 0);
-		g_once_init_leave (&unity_quicklauncher_quicklist_controller_type_id__volatile, unity_quicklauncher_quicklist_controller_type_id);
+GType unity_launcher_quicklist_controller_get_type (void) {
+	static volatile gsize unity_launcher_quicklist_controller_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_launcher_quicklist_controller_type_id__volatile)) {
+		static const GTypeInfo g_define_type_info = { sizeof (UnityLauncherQuicklistControllerClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_launcher_quicklist_controller_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityLauncherQuicklistController), 0, (GInstanceInitFunc) unity_launcher_quicklist_controller_instance_init, NULL };
+		GType unity_launcher_quicklist_controller_type_id;
+		unity_launcher_quicklist_controller_type_id = g_type_register_static (G_TYPE_OBJECT, "UnityLauncherQuicklistController", &g_define_type_info, 0);
+		g_once_init_leave (&unity_launcher_quicklist_controller_type_id__volatile, unity_launcher_quicklist_controller_type_id);
 	}
-	return unity_quicklauncher_quicklist_controller_type_id__volatile;
+	return unity_launcher_quicklist_controller_type_id__volatile;
 }
 
 

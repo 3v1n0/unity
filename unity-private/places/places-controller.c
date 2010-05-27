@@ -399,7 +399,7 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 			_g_free0 (icon_name);
 			goto __catch11_g_error;
 		}
-		dbus_path = g_key_file_get_string (file, group, "DBusPath", &_inner_error_);
+		dbus_path = g_key_file_get_string (file, group, "DBusObjectPath", &_inner_error_);
 		if (_inner_error_ != NULL) {
 			_g_free0 (name);
 			_g_free0 (comment);

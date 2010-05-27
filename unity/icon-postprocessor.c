@@ -26,11 +26,12 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <float.h>
+#include <math.h>
+#include <gdk-pixbuf/gdk-pixdata.h>
 #include <clutter/clutter.h>
 #include <clutk/clutk.h>
 #include <cogl/cogl.h>
-#include <float.h>
-#include <math.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -85,6 +86,9 @@ extern ClutterTexture* unity_unity_icon_mk_layer;
 ClutterTexture* unity_unity_icon_mk_layer = NULL;
 static gpointer unity_unity_icon_parent_class = NULL;
 
+void unity_rgb_to_hsv (float r, float g, float b, float* hue, float* sat, float* val);
+void unity_hsv_to_rgb (float hue, float sat, float val, float* r, float* g, float* b);
+void unity_get_average_color (GdkPixbuf* source, guint* red, guint* green, guint* blue);
 GType unity_unity_icon_get_type (void);
 #define UNITY_UNITY_ICON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_UNITY_ICON, UnityUnityIconPrivate))
 enum  {
@@ -115,6 +119,248 @@ static void unity_unity_icon_finalize (GObject* obj);
 static void unity_unity_icon_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_unity_icon_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 
+
+
+void unity_rgb_to_hsv (float r, float g, float b, float* hue, float* sat, float* val) {
+	float min = 0.0F;
+	float max = 0.0F;
+	float delta;
+	if (r > g) {
+		float _tmp0_ = 0.0F;
+		if (r > b) {
+			_tmp0_ = r;
+		} else {
+			_tmp0_ = b;
+		}
+		max = _tmp0_;
+	} else {
+		float _tmp1_ = 0.0F;
+		if (g > b) {
+			_tmp1_ = g;
+		} else {
+			_tmp1_ = b;
+		}
+		max = _tmp1_;
+	}
+	if (r < g) {
+		float _tmp2_ = 0.0F;
+		if (r < b) {
+			_tmp2_ = r;
+		} else {
+			_tmp2_ = b;
+		}
+		min = _tmp2_;
+	} else {
+		float _tmp3_ = 0.0F;
+		if (g < b) {
+			_tmp3_ = g;
+		} else {
+			_tmp3_ = b;
+		}
+		min = _tmp3_;
+	}
+	*val = max;
+	delta = max - min;
+	if (delta > 0.000001) {
+		*sat = delta / max;
+		*hue = 0.0f;
+		if (r == max) {
+			*hue = (g - b) / delta;
+			if ((*hue) < 0.0f) {
+				*hue = (*hue) + 6.0f;
+			}
+		} else {
+			if (g == max) {
+				*hue = 2.0f + ((b - r) / delta);
+			} else {
+				if (b == max) {
+					*hue = 4.0f + ((r - g) / delta);
+				}
+			}
+		}
+		*hue = (*hue) / 6.0f;
+	} else {
+		*sat = 0.0f;
+		*hue = 0.0f;
+	}
+}
+
+
+void unity_hsv_to_rgb (float hue, float sat, float val, float* r, float* g, float* b) {
+	gint i = 0;
+	float f = 0.0F;
+	float w = 0.0F;
+	float q = 0.0F;
+	float t = 0.0F;
+	if (sat == 0.0) {
+		*r = *g = *b = val;
+	} else {
+		if (hue == 1.0) {
+			hue = 0.0f;
+		}
+		hue = hue * 6.0f;
+		i = (gint) hue;
+		f = hue - i;
+		w = val * (1.0f - sat);
+		q = val * (1.0f - (sat * f));
+		t = val * (1.0f - (sat * (1.0f - f)));
+		switch (i) {
+			case 0:
+			{
+				*r = val;
+				*g = t;
+				*b = w;
+				break;
+			}
+			case 1:
+			{
+				*r = q;
+				*g = val;
+				*b = w;
+				break;
+			}
+			case 2:
+			{
+				*r = w;
+				*g = val;
+				*b = t;
+				break;
+			}
+			case 3:
+			{
+				*r = w;
+				*g = q;
+				*b = val;
+				break;
+			}
+			case 4:
+			{
+				*r = t;
+				*g = w;
+				*b = val;
+				break;
+			}
+			case 5:
+			{
+				*r = val;
+				*g = w;
+				*b = q;
+				break;
+			}
+		}
+	}
+}
+
+
+void unity_get_average_color (GdkPixbuf* source, guint* red, guint* green, guint* blue) {
+	gint num_channels;
+	gint width;
+	gint height;
+	gint rowstride;
+	float r = 0.0F;
+	float g = 0.0F;
+	float b = 0.0F;
+	float a = 0.0F;
+	float hue = 0.0F;
+	float sat = 0.0F;
+	float val = 0.0F;
+	guchar* _tmp0_;
+	gint _pixels_size_;
+	gint pixels_length1;
+	guchar* pixels;
+	gboolean _tmp1_ = FALSE;
+	gboolean _tmp2_ = FALSE;
+	gboolean _tmp3_ = FALSE;
+	double r_total = 0.0;
+	double g_total = 0.0;
+	double b_total = 0.0;
+	gint i;
+	g_return_if_fail (source != NULL);
+	num_channels = gdk_pixbuf_get_n_channels (source);
+	width = gdk_pixbuf_get_width (source);
+	height = gdk_pixbuf_get_height (source);
+	rowstride = gdk_pixbuf_get_rowstride (source);
+	pixels = (_tmp0_ = gdk_pixbuf_get_pixels (source), pixels_length1 = -1, _pixels_size_ = pixels_length1, _tmp0_);
+	if (gdk_pixbuf_get_colorspace (source) != GDK_COLORSPACE_RGB) {
+		_tmp3_ = TRUE;
+	} else {
+		_tmp3_ = gdk_pixbuf_get_bits_per_sample (source) != 8;
+	}
+	if (_tmp3_) {
+		_tmp2_ = TRUE;
+	} else {
+		_tmp2_ = !gdk_pixbuf_get_has_alpha (source);
+	}
+	if (_tmp2_) {
+		_tmp1_ = TRUE;
+	} else {
+		_tmp1_ = num_channels != 4;
+	}
+	if (_tmp1_) {
+		*red = (guint) 255;
+		*green = (guint) 255;
+		*blue = (guint) 255;
+		return;
+	}
+	r_total = g_total = b_total = 0.0;
+	i = 0;
+	{
+		gint y;
+		y = 0;
+		{
+			gboolean _tmp4_;
+			_tmp4_ = TRUE;
+			while (TRUE) {
+				if (!_tmp4_) {
+					y++;
+				}
+				_tmp4_ = FALSE;
+				if (!(y < height)) {
+					break;
+				}
+				{
+					gint x;
+					x = 0;
+					{
+						gboolean _tmp5_;
+						_tmp5_ = TRUE;
+						while (TRUE) {
+							gint pix_index;
+							if (!_tmp5_) {
+								x++;
+							}
+							_tmp5_ = FALSE;
+							if (!(x < width)) {
+								break;
+							}
+							pix_index = i + (x * 4);
+							r = pixels[pix_index + 0] / 256.0f;
+							g = pixels[pix_index + 1] / 256.0f;
+							b = pixels[pix_index + 2] / 256.0f;
+							a = pixels[pix_index + 3] / 256.0f;
+							if (a < (1.0 / 256.0)) {
+								continue;
+							}
+							unity_rgb_to_hsv (r, g, b, &hue, &sat, &val);
+							r_total = r_total + ((double) ((r * sat) * a));
+							g_total = g_total + ((double) ((g * sat) * a));
+							b_total = b_total + ((double) ((b * sat) * a));
+						}
+					}
+				}
+				i = (y * (width * 4)) + rowstride;
+			}
+		}
+	}
+	r_total = r_total / (width * height);
+	g_total = g_total / (width * height);
+	b_total = b_total / (width * height);
+	unity_rgb_to_hsv ((float) r_total, (float) g_total, (float) b_total, &hue, &sat, &val);
+	unity_hsv_to_rgb (hue, fminf (sat + 0.6f, 1.0f), 0.5f, &r, &g, &b);
+	*red = (guint) (r * 255);
+	*green = (guint) (g * 255);
+	*blue = (guint) (b * 255);
+}
 
 
 UnityUnityIcon* unity_unity_icon_construct (GType object_type, ClutterTexture* icon, ClutterTexture* bg_tex) {
@@ -276,7 +522,7 @@ static void unity_unity_icon_real_map (ClutterActor* base) {
 static void unity_unity_icon_real_unmap (ClutterActor* base) {
 	UnityUnityIcon * self;
 	self = (UnityUnityIcon*) base;
-	CLUTTER_ACTOR_CLASS (unity_unity_icon_parent_class)->map ((ClutterActor*) CTK_ACTOR (self));
+	CLUTTER_ACTOR_CLASS (unity_unity_icon_parent_class)->unmap ((ClutterActor*) CTK_ACTOR (self));
 	clutter_actor_unmap ((ClutterActor*) self->priv->_icon);
 }
 

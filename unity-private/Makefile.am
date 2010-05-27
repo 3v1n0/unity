@@ -44,7 +44,7 @@ libunity_private_la_VALAFLAGS = \
   --pkg dbus-glib-1 \
   --pkg cogl-1.0 \
   --pkg dbus-glib-1 \
-  --pkg dbusmodel \
+  --pkg dee-1.0 \
   --pkg gconf-2.0 \
   --pkg gdk-2.0 \
   --pkg gdk-x11-2.0 \
@@ -52,7 +52,7 @@ libunity_private_la_VALAFLAGS = \
   --pkg gio-unix-2.0 \
   --pkg gtk+-2.0 \
   --pkg indicator \
-  --pkg launcher-0.3 \
+  --pkg Bamf-0.2 \
   --pkg libwnck-1.0 \
   --pkg unity \
   --pkg unity-const \
@@ -95,14 +95,16 @@ places_sources = \
   places/search-field.vala
 
 launcher_sources = \
-  launcher/application-model.vala \
-  launcher/launcher-model.vala \
-  launcher/launcher-view.vala \
-  launcher/quicklauncher-manager.vala \
-  launcher/quicklauncher.vala \
+  launcher/application-controller.vala \
+  launcher/launcher.vala \
+  launcher/launcher-child.vala \
   launcher/quicklist-controller.vala \
   launcher/quicklist-view.vala \
-  launcher/unity-scroller.vala
+  launcher/scrollerchild-controller.vala \
+  launcher/scrollerchild.vala \
+  launcher/scroller-controller.vala \
+  launcher/scroller-model.vala \
+  launcher/scroller-view.vala
 
 testing_sources = \
   testing/background.vala \

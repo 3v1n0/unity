@@ -100,14 +100,16 @@ am__objects_3 = libunity_private_la-application-place.lo \
 	libunity_private_la-places-results-view.lo \
 	libunity_private_la-places-view.lo \
 	libunity_private_la-search-field.lo
-am__objects_4 = libunity_private_la-application-model.lo \
-	libunity_private_la-launcher-model.lo \
-	libunity_private_la-launcher-view.lo \
-	libunity_private_la-quicklauncher-manager.lo \
-	libunity_private_la-quicklauncher.lo \
+am__objects_4 = libunity_private_la-application-controller.lo \
+	libunity_private_la-launcher.lo \
+	libunity_private_la-launcher-child.lo \
 	libunity_private_la-quicklist-controller.lo \
 	libunity_private_la-quicklist-view.lo \
-	libunity_private_la-unity-scroller.lo
+	libunity_private_la-scrollerchild-controller.lo \
+	libunity_private_la-scrollerchild.lo \
+	libunity_private_la-scroller-controller.lo \
+	libunity_private_la-scroller-model.lo \
+	libunity_private_la-scroller-view.lo
 am__objects_5 = libunity_private_la-background.lo \
 	libunity_private_la-object-registry.lo \
 	libunity_private_la-perf-logger.lo \
@@ -351,7 +353,7 @@ libunity_private_la_VALAFLAGS = \
   --pkg dbus-glib-1 \
   --pkg cogl-1.0 \
   --pkg dbus-glib-1 \
-  --pkg dbusmodel \
+  --pkg dee-1.0 \
   --pkg gconf-2.0 \
   --pkg gdk-2.0 \
   --pkg gdk-x11-2.0 \
@@ -359,7 +361,7 @@ libunity_private_la_VALAFLAGS = \
   --pkg gio-unix-2.0 \
   --pkg gtk+-2.0 \
   --pkg indicator \
-  --pkg launcher-0.3 \
+  --pkg Bamf-0.2 \
   --pkg libwnck-1.0 \
   --pkg unity \
   --pkg unity-const \
@@ -403,14 +405,16 @@ places_sources = \
   places/search-field.vala
 
 launcher_sources = \
-  launcher/application-model.vala \
-  launcher/launcher-model.vala \
-  launcher/launcher-view.vala \
-  launcher/quicklauncher-manager.vala \
-  launcher/quicklauncher.vala \
+  launcher/application-controller.vala \
+  launcher/launcher.vala \
+  launcher/launcher-child.vala \
   launcher/quicklist-controller.vala \
   launcher/quicklist-view.vala \
-  launcher/unity-scroller.vala
+  launcher/scrollerchild-controller.vala \
+  launcher/scrollerchild.vala \
+  launcher/scroller-controller.vala \
+  launcher/scroller-model.vala \
+  launcher/scroller-view.vala
 
 testing_sources = \
   testing/background.vala \
@@ -508,7 +512,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-application-model.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-application-controller.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-application-place.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-application.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-background.Plo@am__quote@
@@ -518,8 +522,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-default-model.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-default-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-file-place.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-launcher-model.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-launcher-view.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-launcher-child.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-launcher.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-object-registry.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-home.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-indicators.Plo@am__quote@
@@ -533,15 +537,17 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-results-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-view.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-quicklauncher-manager.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-quicklauncher.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-quicklist-controller.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-quicklist-view.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-scroller-controller.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-scroller-model.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-scroller-view.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-scrollerchild-controller.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-scrollerchild.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-search-field.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-test-director.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-test-utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-test-window.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-unity-scroller.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-unity-utils.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-unity.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-utils.Plo@am__quote@
@@ -754,45 +760,29 @@ libunity_private_la-search-field.lo: places/search-field.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-search-field.lo `test -f 'places/search-field.c' || echo '$(srcdir)/'`places/search-field.c
 
-libunity_private_la-application-model.lo: launcher/application-model.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-application-model.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-application-model.Tpo -c -o libunity_private_la-application-model.lo `test -f 'launcher/application-model.c' || echo '$(srcdir)/'`launcher/application-model.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-application-model.Tpo $(DEPDIR)/libunity_private_la-application-model.Plo
+libunity_private_la-application-controller.lo: launcher/application-controller.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-application-controller.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-application-controller.Tpo -c -o libunity_private_la-application-controller.lo `test -f 'launcher/application-controller.c' || echo '$(srcdir)/'`launcher/application-controller.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-application-controller.Tpo $(DEPDIR)/libunity_private_la-application-controller.Plo
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/application-model.c' object='libunity_private_la-application-model.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/application-controller.c' object='libunity_private_la-application-controller.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-application-model.lo `test -f 'launcher/application-model.c' || echo '$(srcdir)/'`launcher/application-model.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-application-controller.lo `test -f 'launcher/application-controller.c' || echo '$(srcdir)/'`launcher/application-controller.c
 
-libunity_private_la-launcher-model.lo: launcher/launcher-model.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-launcher-model.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-launcher-model.Tpo -c -o libunity_private_la-launcher-model.lo `test -f 'launcher/launcher-model.c' || echo '$(srcdir)/'`launcher/launcher-model.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-launcher-model.Tpo $(DEPDIR)/libunity_private_la-launcher-model.Plo
+libunity_private_la-launcher.lo: launcher/launcher.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-launcher.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-launcher.Tpo -c -o libunity_private_la-launcher.lo `test -f 'launcher/launcher.c' || echo '$(srcdir)/'`launcher/launcher.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-launcher.Tpo $(DEPDIR)/libunity_private_la-launcher.Plo
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/launcher-model.c' object='libunity_private_la-launcher-model.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/launcher.c' object='libunity_private_la-launcher.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-launcher-model.lo `test -f 'launcher/launcher-model.c' || echo '$(srcdir)/'`launcher/launcher-model.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-launcher.lo `test -f 'launcher/launcher.c' || echo '$(srcdir)/'`launcher/launcher.c
 
-libunity_private_la-launcher-view.lo: launcher/launcher-view.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-launcher-view.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-launcher-view.Tpo -c -o libunity_private_la-launcher-view.lo `test -f 'launcher/launcher-view.c' || echo '$(srcdir)/'`launcher/launcher-view.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-launcher-view.Tpo $(DEPDIR)/libunity_private_la-launcher-view.Plo
+libunity_private_la-launcher-child.lo: launcher/launcher-child.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-launcher-child.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-launcher-child.Tpo -c -o libunity_private_la-launcher-child.lo `test -f 'launcher/launcher-child.c' || echo '$(srcdir)/'`launcher/launcher-child.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-launcher-child.Tpo $(DEPDIR)/libunity_private_la-launcher-child.Plo
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/launcher-view.c' object='libunity_private_la-launcher-view.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/launcher-child.c' object='libunity_private_la-launcher-child.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-launcher-view.lo `test -f 'launcher/launcher-view.c' || echo '$(srcdir)/'`launcher/launcher-view.c
-
-libunity_private_la-quicklauncher-manager.lo: launcher/quicklauncher-manager.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-quicklauncher-manager.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-quicklauncher-manager.Tpo -c -o libunity_private_la-quicklauncher-manager.lo `test -f 'launcher/quicklauncher-manager.c' || echo '$(srcdir)/'`launcher/quicklauncher-manager.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-quicklauncher-manager.Tpo $(DEPDIR)/libunity_private_la-quicklauncher-manager.Plo
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/quicklauncher-manager.c' object='libunity_private_la-quicklauncher-manager.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-quicklauncher-manager.lo `test -f 'launcher/quicklauncher-manager.c' || echo '$(srcdir)/'`launcher/quicklauncher-manager.c
-
-libunity_private_la-quicklauncher.lo: launcher/quicklauncher.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-quicklauncher.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-quicklauncher.Tpo -c -o libunity_private_la-quicklauncher.lo `test -f 'launcher/quicklauncher.c' || echo '$(srcdir)/'`launcher/quicklauncher.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-quicklauncher.Tpo $(DEPDIR)/libunity_private_la-quicklauncher.Plo
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/quicklauncher.c' object='libunity_private_la-quicklauncher.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-quicklauncher.lo `test -f 'launcher/quicklauncher.c' || echo '$(srcdir)/'`launcher/quicklauncher.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-launcher-child.lo `test -f 'launcher/launcher-child.c' || echo '$(srcdir)/'`launcher/launcher-child.c
 
 libunity_private_la-quicklist-controller.lo: launcher/quicklist-controller.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-quicklist-controller.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-quicklist-controller.Tpo -c -o libunity_private_la-quicklist-controller.lo `test -f 'launcher/quicklist-controller.c' || echo '$(srcdir)/'`launcher/quicklist-controller.c
@@ -810,13 +800,45 @@ libunity_private_la-quicklist-view.lo: launcher/quicklist-view.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-quicklist-view.lo `test -f 'launcher/quicklist-view.c' || echo '$(srcdir)/'`launcher/quicklist-view.c
 
-libunity_private_la-unity-scroller.lo: launcher/unity-scroller.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-unity-scroller.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-unity-scroller.Tpo -c -o libunity_private_la-unity-scroller.lo `test -f 'launcher/unity-scroller.c' || echo '$(srcdir)/'`launcher/unity-scroller.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-unity-scroller.Tpo $(DEPDIR)/libunity_private_la-unity-scroller.Plo
+libunity_private_la-scrollerchild-controller.lo: launcher/scrollerchild-controller.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-scrollerchild-controller.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-scrollerchild-controller.Tpo -c -o libunity_private_la-scrollerchild-controller.lo `test -f 'launcher/scrollerchild-controller.c' || echo '$(srcdir)/'`launcher/scrollerchild-controller.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-scrollerchild-controller.Tpo $(DEPDIR)/libunity_private_la-scrollerchild-controller.Plo
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/unity-scroller.c' object='libunity_private_la-unity-scroller.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/scrollerchild-controller.c' object='libunity_private_la-scrollerchild-controller.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-unity-scroller.lo `test -f 'launcher/unity-scroller.c' || echo '$(srcdir)/'`launcher/unity-scroller.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-scrollerchild-controller.lo `test -f 'launcher/scrollerchild-controller.c' || echo '$(srcdir)/'`launcher/scrollerchild-controller.c
+
+libunity_private_la-scrollerchild.lo: launcher/scrollerchild.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-scrollerchild.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-scrollerchild.Tpo -c -o libunity_private_la-scrollerchild.lo `test -f 'launcher/scrollerchild.c' || echo '$(srcdir)/'`launcher/scrollerchild.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-scrollerchild.Tpo $(DEPDIR)/libunity_private_la-scrollerchild.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/scrollerchild.c' object='libunity_private_la-scrollerchild.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-scrollerchild.lo `test -f 'launcher/scrollerchild.c' || echo '$(srcdir)/'`launcher/scrollerchild.c
+
+libunity_private_la-scroller-controller.lo: launcher/scroller-controller.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-scroller-controller.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-scroller-controller.Tpo -c -o libunity_private_la-scroller-controller.lo `test -f 'launcher/scroller-controller.c' || echo '$(srcdir)/'`launcher/scroller-controller.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-scroller-controller.Tpo $(DEPDIR)/libunity_private_la-scroller-controller.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/scroller-controller.c' object='libunity_private_la-scroller-controller.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-scroller-controller.lo `test -f 'launcher/scroller-controller.c' || echo '$(srcdir)/'`launcher/scroller-controller.c
+
+libunity_private_la-scroller-model.lo: launcher/scroller-model.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-scroller-model.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-scroller-model.Tpo -c -o libunity_private_la-scroller-model.lo `test -f 'launcher/scroller-model.c' || echo '$(srcdir)/'`launcher/scroller-model.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-scroller-model.Tpo $(DEPDIR)/libunity_private_la-scroller-model.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/scroller-model.c' object='libunity_private_la-scroller-model.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-scroller-model.lo `test -f 'launcher/scroller-model.c' || echo '$(srcdir)/'`launcher/scroller-model.c
+
+libunity_private_la-scroller-view.lo: launcher/scroller-view.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-scroller-view.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-scroller-view.Tpo -c -o libunity_private_la-scroller-view.lo `test -f 'launcher/scroller-view.c' || echo '$(srcdir)/'`launcher/scroller-view.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-scroller-view.Tpo $(DEPDIR)/libunity_private_la-scroller-view.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/scroller-view.c' object='libunity_private_la-scroller-view.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-scroller-view.lo `test -f 'launcher/scroller-view.c' || echo '$(srcdir)/'`launcher/scroller-view.c
 
 libunity_private_la-background.lo: testing/background.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-background.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-background.Tpo -c -o libunity_private_la-background.lo `test -f 'testing/background.c' || echo '$(srcdir)/'`testing/background.c

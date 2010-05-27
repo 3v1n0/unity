@@ -26,7 +26,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gio/gio.h>
-#include <launcher/launcher.h>
+#include <float.h>
+#include <math.h>
+#include <gee.h>
 
 
 #define UNITY_WEBAPP_TYPE_CHROMIUM_WEB_APP (unity_webapp_chromium_web_app_get_type ())
@@ -42,6 +44,16 @@ typedef struct _UnityWebappChromiumWebAppPrivate UnityWebappChromiumWebAppPrivat
 #define _g_free0(var) (var = (g_free (var), NULL))
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
+
+#define UNITY_TYPE_FAVORITES (unity_favorites_get_type ())
+#define UNITY_FAVORITES(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_FAVORITES, UnityFavorites))
+#define UNITY_FAVORITES_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_FAVORITES, UnityFavoritesClass))
+#define UNITY_IS_FAVORITES(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_FAVORITES))
+#define UNITY_IS_FAVORITES_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_FAVORITES))
+#define UNITY_FAVORITES_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_FAVORITES, UnityFavoritesClass))
+
+typedef struct _UnityFavorites UnityFavorites;
+typedef struct _UnityFavoritesClass UnityFavoritesClass;
 #define _g_regex_unref0(var) ((var == NULL) ? NULL : (var = (g_regex_unref (var), NULL)))
 
 struct _UnityWebappChromiumWebApp {
@@ -93,9 +105,16 @@ const char* unity_webapp_chromium_web_app_get_url (UnityWebappChromiumWebApp* se
 static gboolean unity_webapp_chromium_web_app_check_existance_of_app (UnityWebappChromiumWebApp* self);
 const char* unity_webapp_chromium_web_app_get_icon (UnityWebappChromiumWebApp* self);
 static void unity_webapp_chromium_web_app_build_webapp (UnityWebappChromiumWebApp* self);
+GType unity_favorites_get_type (void);
+UnityFavorites* unity_favorites_get_default (void);
 static char* unity_webapp_chromium_web_app_get_fav_uid (UnityWebappChromiumWebApp* self);
 char* unity_webapp_urlify (const char* uri);
+void unity_favorites_set_string (UnityFavorites* self, const char* uid, const char* name, const char* value);
+void unity_favorites_set_float (UnityFavorites* self, const char* uid, const char* name, float value);
+void unity_favorites_add_favorite (UnityFavorites* self, const char* uid);
 void unity_webapp_chromium_web_app_add_to_favorites (UnityWebappChromiumWebApp* self);
+GeeArrayList* unity_favorites_get_favorites (UnityFavorites* self);
+char* unity_favorites_get_string (UnityFavorites* self, const char* uid, const char* name);
 static void unity_webapp_chromium_web_app_set_url (UnityWebappChromiumWebApp* self, const char* value);
 static void unity_webapp_chromium_web_app_set_icon (UnityWebappChromiumWebApp* self, const char* value);
 static GObject * unity_webapp_chromium_web_app_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -271,13 +290,8 @@ static void unity_webapp_chromium_web_app_build_webapp (UnityWebappChromiumWebAp
 }
 
 
-static gpointer _g_object_ref0 (gpointer self) {
-	return self ? g_object_ref (self) : NULL;
-}
-
-
 void unity_webapp_chromium_web_app_add_to_favorites (UnityWebappChromiumWebApp* self) {
-	LauncherFavorites* favorites;
+	UnityFavorites* favorites;
 	char* uid;
 	char* _tmp0_;
 	char* _tmp1_;
@@ -286,7 +300,7 @@ void unity_webapp_chromium_web_app_add_to_favorites (UnityWebappChromiumWebApp* 
 	char* _tmp2_;
 	char* _tmp4_;
 	g_return_if_fail (self != NULL);
-	favorites = _g_object_ref0 (launcher_favorites_get_default ());
+	favorites = unity_favorites_get_default ();
 	uid = unity_webapp_chromium_web_app_get_fav_uid (self);
 	if (_vala_strcmp0 (uid, "") != 0) {
 		g_warning ("chrome-handler.vala:137: %s is already a favorite", self->name);
@@ -298,11 +312,10 @@ void unity_webapp_chromium_web_app_add_to_favorites (UnityWebappChromiumWebApp* 
 	uid = (_tmp3_ = g_strconcat ("webapp-", _tmp2_ = g_path_get_basename (desktop_path), NULL), _g_free0 (uid), _tmp3_);
 	_g_free0 (_tmp2_);
 	uid = (_tmp4_ = unity_webapp_urlify (uid), _g_free0 (uid), _tmp4_);
-	launcher_favorites_set_string (favorites, uid, "type", "application");
-	launcher_favorites_set_string (favorites, uid, "desktop_file", desktop_path);
-	launcher_favorites_set_float (favorites, uid, "priority", -100000.0f);
-	launcher_favorites_set_bool (favorites, uid, "enable_shadow", TRUE);
-	launcher_favorites_add_favorite (favorites, uid);
+	unity_favorites_set_string (favorites, uid, "type", "application");
+	unity_favorites_set_string (favorites, uid, "desktop_file", desktop_path);
+	unity_favorites_set_float (favorites, uid, "priority", -100000.0f);
+	unity_favorites_add_favorite (favorites, uid);
 	_g_object_unref0 (favorites);
 	_g_free0 (uid);
 	_g_free0 (desktop_path);
@@ -315,41 +328,45 @@ static char* unity_webapp_chromium_web_app_get_fav_uid (UnityWebappChromiumWebAp
 	char* _tmp0_;
 	char* _tmp1_;
 	char* my_desktop_path;
-	LauncherFavorites* favorites;
-	GSList* favorite_list;
+	UnityFavorites* favorites;
+	GeeArrayList* favorite_list;
 	g_return_val_if_fail (self != NULL, NULL);
 	myuid = g_strdup ("");
 	my_desktop_path = (_tmp1_ = g_strconcat (self->priv->webapp_dir, _tmp0_ = g_strconcat ("chromium-webapp-", string_to_string (self->name), ".desktop", NULL), NULL), _g_free0 (_tmp0_), _tmp1_);
-	favorites = _g_object_ref0 (launcher_favorites_get_default ());
-	favorite_list = launcher_favorites_get_favorites (favorites);
+	favorites = unity_favorites_get_default ();
+	favorite_list = unity_favorites_get_favorites (favorites);
 	{
-		GSList* uid_collection;
-		GSList* uid_it;
-		uid_collection = favorite_list;
-		for (uid_it = uid_collection; uid_it != NULL; uid_it = uid_it->next) {
-			const char* uid;
-			uid = (const char*) uid_it->data;
-			{
-				char* type;
-				char* desktop_file;
-				type = g_strdup (launcher_favorites_get_string (favorites, uid, "type"));
-				if (_vala_strcmp0 (type, "application") != 0) {
-					_g_free0 (type);
-					continue;
-				}
-				desktop_file = g_strdup (launcher_favorites_get_string (favorites, uid, "desktop_file"));
-				if (_vala_strcmp0 (desktop_file, my_desktop_path) == 0) {
-					char* _tmp2_;
-					myuid = (_tmp2_ = g_strdup (uid), _g_free0 (myuid), _tmp2_);
-				}
-				_g_free0 (type);
-				_g_free0 (desktop_file);
+		GeeIterator* _uid_it;
+		_uid_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) favorite_list);
+		while (TRUE) {
+			char* uid;
+			char* type;
+			char* desktop_file;
+			if (!gee_iterator_next (_uid_it)) {
+				break;
 			}
+			uid = (char*) gee_iterator_get (_uid_it);
+			type = unity_favorites_get_string (favorites, uid, "type");
+			if (_vala_strcmp0 (type, "application") != 0) {
+				_g_free0 (uid);
+				_g_free0 (type);
+				continue;
+			}
+			desktop_file = unity_favorites_get_string (favorites, uid, "desktop_file");
+			if (_vala_strcmp0 (desktop_file, my_desktop_path) == 0) {
+				char* _tmp2_;
+				myuid = (_tmp2_ = g_strdup (uid), _g_free0 (myuid), _tmp2_);
+			}
+			_g_free0 (uid);
+			_g_free0 (type);
+			_g_free0 (desktop_file);
 		}
+		_g_object_unref0 (_uid_it);
 	}
 	result = myuid;
 	_g_free0 (my_desktop_path);
 	_g_object_unref0 (favorites);
+	_g_object_unref0 (favorite_list);
 	return result;
 }
 

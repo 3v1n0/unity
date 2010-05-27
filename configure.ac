@@ -1,6 +1,6 @@
 m4_define([unity_major], [0])
 m4_define([unity_minor], [2])
-m4_define([unity_micro], [2])
+m4_define([unity_micro], [4])
 
 m4_define([unity_api],
           [unity_major.unity_minor])
@@ -100,17 +100,19 @@ PKG_CHECK_MODULES(BASE,
                   gio-2.0 >= $GTK_REQUIRED
                   gee-1.0
                   gconf-2.0
-                  dbusmodel >= 0.2.0
+                  dee-1.0 >= 0.2.0
                   clutter-1.0 >= 1.0
                   clutter-gtk-0.10 >= 0.10
                   clutk-0.3 >= 0.3.26
                   indicator
-                  launcher-0.3 >= 0.3.26
+                  libbamf >= 0.2
                   libwnck-1.0 >= 2.28.0
                   unique-1.0
                   unity-misc
-                  x11
-                  )
+                  x11)
+
+AC_SUBST(BASE_CFLAGS)
+AC_SUBST(BASE_LIBS)
 
 dnl testing for logging boot metrics and instrumenting
 with_testing="no"
@@ -120,9 +122,6 @@ AC_ARG_ENABLE(testing,
               with_testing=$enableval,
               with_testing=no)
 AM_CONDITIONAL([HAVE_TESTING], [test "x$with_testing" = "xyes"])
-
-AC_SUBST(BASE_CFLAGS)
-AC_SUBST(BASE_LIBS)
 
 dnl local install for distcheck and stand-alone running
 with_localinstall="no"
@@ -162,8 +161,6 @@ dnl Create the Makefiles
 AC_CONFIG_FILES([
   Makefile
   data/Makefile
-  unity/Makefile
-  unity-private/Makefile
   targets/Makefile
   targets/mutter/Makefile
   targets/unity/Makefile
@@ -173,6 +170,8 @@ AC_CONFIG_FILES([
   tests/unit/Makefile
   tests/unit/data/Makefile
   tools/Makefile
+  unity/Makefile
+  unity-private/Makefile
   vapi/Makefile
   po/Makefile.in
 ])

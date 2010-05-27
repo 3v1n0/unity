@@ -17,8 +17,6 @@
  *
  */
 using Unity;
-using Unity.Quicklauncher;
-using Unity.Quicklauncher.Models;
 
 namespace Unity
 {
@@ -95,7 +93,7 @@ namespace Unity
     private Clutter.Group expose_group;
     private Plugin owner;
     private Clutter.Stage stage;
-    private Quicklauncher.View quicklauncher;
+    private Launcher.Launcher launcher;
 
     public bool expose_showing { get; private set; }
     public bool coverflow { get; set; }
@@ -116,9 +114,9 @@ namespace Unity
 
     private bool menu_in_hover_close_state = false;
 
-    public ExposeManager (Plugin plugin, Quicklauncher.View quicklauncher)
+    public ExposeManager (Plugin plugin, Launcher.Launcher launcher)
     {
-      this.quicklauncher = quicklauncher;
+      this.launcher = launcher;
       this.owner = plugin;
       this.exposed_windows = new List<ExposeClone> ();
       this.stage = (Clutter.Stage)plugin.get_stage ();
@@ -134,7 +132,7 @@ namespace Unity
 
     public void start_expose (SList<Wnck.Window> windows)
     {
-      var controller = Quicklauncher.QuicklistController.get_default ();
+      var controller = Launcher.QuicklistController.get_default ();
       if (controller.menu_is_open ())
         {
           controller.menu.destroy.connect (this.end_expose);
@@ -182,7 +180,7 @@ namespace Unity
               clone.darken = darken;
 
               clone.enter_event.connect (() => {
-                var ql_controller = Quicklauncher.QuicklistController.get_default ();
+                var ql_controller = Launcher.QuicklistController.get_default ();
                 if (ql_controller.menu_is_open () && this.menu_in_hover_close_state)
                   {
                     ql_controller.menu.set_close_on_leave (false);
@@ -191,7 +189,7 @@ namespace Unity
               });
 
               clone.leave_event.connect (() => {
-                var ql_controller = Quicklauncher.QuicklistController.get_default ();
+                var ql_controller = Launcher.QuicklistController.get_default ();
                 if (ql_controller.menu_is_open () && this.menu_in_hover_close_state)
                   {
                     ql_controller.menu.set_close_on_leave (true);
@@ -221,7 +219,7 @@ namespace Unity
 
     public void end_expose ()
     {
-      var controller = Quicklauncher.QuicklistController.get_default ();
+      var controller = Launcher.QuicklistController.get_default ();
       if (controller.menu_is_open ())
         {
           controller.menu.destroy.disconnect (this.end_expose);
@@ -529,8 +527,8 @@ namespace Unity
       unowned Clutter.Actor actor = this.stage.get_actor_at_pos (Clutter.PickMode.REACTIVE, (int) x, (int) y);
 
       unowned Clutter.Actor? menu = null;
-      if (Unity.Quicklauncher.QuicklistController.get_default ().menu_is_open ())
-        menu = Unity.Quicklauncher.QuicklistController.get_default ().menu;
+      if (Unity.Launcher.QuicklistController.get_default ().menu_is_open ())
+        menu = Unity.Launcher.QuicklistController.get_default ().menu;
       if (menu != null)
         {
           if (x > menu.x && x < menu.x + menu.width && y > menu.y && y < menu.y + menu.height)

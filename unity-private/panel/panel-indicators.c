@@ -37,6 +37,7 @@
 #include <libindicator/indicator-service.h>
 #include <libindicator/indicator-service-manager.h>
 #include <cairo.h>
+#include <gdk-pixbuf/gdk-pixdata.h>
 
 
 #define UNITY_PANEL_INDICATORS_TYPE_VIEW (unity_panel_indicators_view_get_type ())
@@ -322,8 +323,9 @@ static gboolean unity_panel_indicators_view_load_indicators (UnityPanelIndicator
 			GFileInfo* _tmp2_;
 			GFileInfo* _tmp3_;
 			char* leaf;
-			char* _tmp4_;
-			gboolean _tmp5_;
+			gboolean _tmp4_ = FALSE;
+			char* _tmp5_;
+			gboolean _tmp6_;
 			_tmp2_ = g_file_enumerator_next_file (e, NULL, &_inner_error_);
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (e);
@@ -335,13 +337,18 @@ static gboolean unity_panel_indicators_view_load_indicators (UnityPanelIndicator
 			}
 			leaf = g_strdup (g_file_info_get_name (file_info));
 			if (string_contains (skip_list, leaf)) {
+				_tmp4_ = TRUE;
+			} else {
+				_tmp4_ = _vala_strcmp0 (skip_list, "all") == 0;
+			}
+			if (_tmp4_) {
 				_g_free0 (leaf);
 				continue;
 			}
-			if ((_tmp5_ = _vala_strcmp0 (_tmp4_ = string_slice (leaf, g_utf8_strlen (leaf, -1) - 2, g_utf8_strlen (leaf, -1)), "so") == 0, _g_free0 (_tmp4_), _tmp5_)) {
-				char* _tmp6_;
-				unity_panel_indicators_view_load_indicator (self, _tmp6_ = g_strconcat (INDICATORDIR, g_file_info_get_name (file_info), NULL), g_file_info_get_name (file_info));
-				_g_free0 (_tmp6_);
+			if ((_tmp6_ = _vala_strcmp0 (_tmp5_ = string_slice (leaf, g_utf8_strlen (leaf, -1) - 2, g_utf8_strlen (leaf, -1)), "so") == 0, _g_free0 (_tmp5_), _tmp6_)) {
+				char* _tmp7_;
+				unity_panel_indicators_view_load_indicator (self, _tmp7_ = g_strconcat (INDICATORDIR, g_file_info_get_name (file_info), NULL), g_file_info_get_name (file_info));
+				_g_free0 (_tmp7_);
 			}
 			_g_free0 (leaf);
 		}
@@ -997,9 +1004,13 @@ static void _unity_panel_indicators_indicator_entry_menu_vis_changed_g_object_no
 void unity_panel_indicators_indicator_entry_menu_shown (UnityPanelIndicatorsIndicatorEntry* self) {
 	g_return_if_fail (self != NULL);
 	if (GTK_IS_MENU (self->priv->_entry->menu)) {
+		ClutterColor _tmp0_ = {0};
+		ClutterColor col;
 		g_signal_connect_object ((GtkMenuShell*) self->priv->_entry->menu, "move-current", (GCallback) _unity_panel_indicators_indicator_entry_menu_key_moved_gtk_menu_shell_move_current, self, 0);
 		g_signal_connect_object ((GObject*) self->priv->_entry->menu, "notify::visible", (GCallback) _unity_panel_indicators_indicator_entry_menu_vis_changed_g_object_notify, self, 0);
 		clutter_actor_animate ((ClutterActor*) self->priv->bg, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 200, "opacity", 255, NULL);
+		col = (_tmp0_.red = (guint8) 255, _tmp0_.green = (guint8) 249, _tmp0_.blue = (guint8) 233, _tmp0_.alpha = (guint8) 255, _tmp0_);
+		clutter_actor_animate ((ClutterActor*) self->priv->text, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 200, "color", &col, NULL);
 	}
 }
 
@@ -1009,14 +1020,18 @@ void unity_panel_indicators_indicator_entry_menu_vis_changed (UnityPanelIndicato
 	g_return_if_fail (self != NULL);
 	vis = (GTK_WIDGET_FLAGS ((GtkWidget*) self->priv->_entry->menu) & GTK_VISIBLE) != 0;
 	if (vis == FALSE) {
-		guint _tmp0_;
-		GQuark _tmp2_;
+		ClutterColor _tmp0_ = {0};
+		ClutterColor col;
 		guint _tmp1_;
+		GQuark _tmp3_;
+		guint _tmp2_;
 		clutter_actor_animate ((ClutterActor*) self->priv->bg, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 200, "opacity", 0, NULL);
-		g_signal_parse_name ("move-current", GTK_TYPE_MENU_SHELL, &_tmp0_, NULL, FALSE);
-		g_signal_handlers_disconnect_matched ((GtkMenuShell*) self->priv->_entry->menu, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_panel_indicators_indicator_entry_menu_key_moved_gtk_menu_shell_move_current, self);
-		g_signal_parse_name ("notify::visible", G_TYPE_OBJECT, &_tmp1_, &_tmp2_, TRUE);
-		g_signal_handlers_disconnect_matched ((GObject*) self->priv->_entry->menu, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_DETAIL | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp1_, _tmp2_, NULL, (GCallback) _unity_panel_indicators_indicator_entry_menu_vis_changed_g_object_notify, self);
+		col = (_tmp0_.red = (guint8) 233, _tmp0_.green = (guint8) 216, _tmp0_.blue = (guint8) 200, _tmp0_.alpha = (guint8) 255, _tmp0_);
+		clutter_actor_animate ((ClutterActor*) self->priv->text, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 200, "color", &col, NULL);
+		g_signal_parse_name ("move-current", GTK_TYPE_MENU_SHELL, &_tmp1_, NULL, FALSE);
+		g_signal_handlers_disconnect_matched ((GtkMenuShell*) self->priv->_entry->menu, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp1_, 0, NULL, (GCallback) _unity_panel_indicators_indicator_entry_menu_key_moved_gtk_menu_shell_move_current, self);
+		g_signal_parse_name ("notify::visible", G_TYPE_OBJECT, &_tmp2_, &_tmp3_, TRUE);
+		g_signal_handlers_disconnect_matched ((GObject*) self->priv->_entry->menu, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_DETAIL | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp2_, _tmp3_, NULL, (GCallback) _unity_panel_indicators_indicator_entry_menu_vis_changed_g_object_notify, self);
 	}
 }
 
@@ -1057,8 +1072,8 @@ static void unity_panel_indicators_indicator_entry_update_bg (UnityPanelIndicato
 	cairo_line_to (cr, (double) width, (double) height);
 	cairo_line_to (cr, (double) 1, (double) height);
 	pat = cairo_pattern_create_linear ((double) 1, (double) 0, (double) 1, (double) height);
-	cairo_pattern_add_color_stop_rgba (pat, 0.0, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.6f);
-	cairo_pattern_add_color_stop_rgba (pat, 1.0, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.2f);
+	cairo_pattern_add_color_stop_rgba (pat, 0.0, (double) 0.8509f, (double) 0.8196f, (double) 0.7294f, (double) 1.0f);
+	cairo_pattern_add_color_stop_rgba (pat, 1.0, (double) 0.7019f, (double) 0.6509f, (double) 0.5137f, (double) 1.0f);
 	cairo_set_source (cr, pat);
 	cairo_fill (cr);
 	_cairo_destroy0 (cr);
@@ -1170,8 +1185,12 @@ static void __lambda1__gtk_icon_theme_changed (GtkIconTheme* _sender, gpointer s
 static void _lambda2_ (UnityPanelIndicatorsIndicatorEntry* self) {
 	GdkPixbuf* _tmp1_;
 	GdkPixbuf* _tmp0_ = NULL;
+	GdkPixbuf* _tmp3_;
+	GdkPixbuf* _tmp2_ = NULL;
 	g_object_set (self->priv->image, "pixbuf", _tmp1_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp0_, NULL), _tmp0_), NULL);
 	_g_object_unref0 (_tmp1_);
+	ctk_image_set_size (self->priv->image, gdk_pixbuf_get_width (_tmp3_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp2_, NULL), _tmp2_)));
+	_g_object_unref0 (_tmp3_);
 }
 
 
@@ -1201,7 +1220,7 @@ static GObject * unity_panel_indicators_indicator_entry_constructor (GType type,
 		CtkPadding _tmp1_ = {0};
 		CtkPadding _tmp2_;
 		ClutterCairoTexture* _tmp3_;
-		ctk_actor_set_padding ((CtkActor*) self, (_tmp2_ = (_tmp1_.top = (float) 0, _tmp1_.right = 6.0f, _tmp1_.bottom = (float) 0, _tmp1_.left = 6.0f, _tmp1_), &_tmp2_));
+		ctk_actor_set_padding ((CtkActor*) self, (_tmp2_ = (_tmp1_.top = (float) 0, _tmp1_.right = 3.0f, _tmp1_.bottom = (float) 0, _tmp1_.left = 3.0f, _tmp1_), &_tmp2_));
 		self->priv->bg = (_tmp3_ = g_object_ref_sink ((ClutterCairoTexture*) clutter_cairo_texture_new ((guint) 10, (guint) 10)), _g_object_unref0 (self->priv->bg), _tmp3_);
 		clutter_actor_set_parent ((ClutterActor*) self->priv->bg, (ClutterActor*) self);
 		clutter_actor_set_opacity ((ClutterActor*) self->priv->bg, (guint8) 0);
@@ -1230,17 +1249,21 @@ static GObject * unity_panel_indicators_indicator_entry_constructor (GType type,
 			if ((_tmp12_ = (_tmp11_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp10_, NULL), _tmp10_)) != NULL, _g_object_unref0 (_tmp11_), _tmp12_)) {
 				GdkPixbuf* _tmp14_;
 				GdkPixbuf* _tmp13_ = NULL;
+				GdkPixbuf* _tmp16_;
+				GdkPixbuf* _tmp15_ = NULL;
 				g_object_set (self->priv->image, "pixbuf", _tmp14_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp13_, NULL), _tmp13_), NULL);
 				_g_object_unref0 (_tmp14_);
+				ctk_image_set_size (self->priv->image, gdk_pixbuf_get_width (_tmp16_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp15_, NULL), _tmp15_)));
+				_g_object_unref0 (_tmp16_);
 				g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::pixbuf", (GCallback) __lambda2__g_object_notify, self, 0);
 			}
 		}
 		if (GTK_IS_LABEL (self->priv->_entry->label)) {
-			CtkText* _tmp15_;
-			ClutterColor _tmp16_ = {0};
-			ClutterColor _tmp17_;
-			self->priv->text = (_tmp15_ = g_object_ref_sink ((CtkText*) ctk_text_new ("")), _g_object_unref0 (self->priv->text), _tmp15_);
-			clutter_text_set_color ((ClutterText*) self->priv->text, (_tmp17_ = (_tmp16_.red = (guint8) 233, _tmp16_.green = (guint8) 216, _tmp16_.blue = (guint8) 200, _tmp16_.alpha = (guint8) 255, _tmp16_), &_tmp17_));
+			CtkText* _tmp17_;
+			ClutterColor _tmp18_ = {0};
+			ClutterColor _tmp19_;
+			self->priv->text = (_tmp17_ = g_object_ref_sink ((CtkText*) ctk_text_new ("")), _g_object_unref0 (self->priv->text), _tmp17_);
+			clutter_text_set_color ((ClutterText*) self->priv->text, (_tmp19_ = (_tmp18_.red = (guint8) 233, _tmp18_.green = (guint8) 216, _tmp18_.blue = (guint8) 200, _tmp18_.alpha = (guint8) 255, _tmp18_), &_tmp19_));
 			clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->text);
 			clutter_actor_show ((ClutterActor*) self->priv->text);
 			clutter_text_set_text ((ClutterText*) self->priv->text, gtk_label_get_label (self->priv->_entry->label));

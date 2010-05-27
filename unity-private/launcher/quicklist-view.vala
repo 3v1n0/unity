@@ -19,7 +19,7 @@
  *
  */
 
-namespace Unity.Quicklauncher
+namespace Unity.Launcher
 {
   const float LINE_WIDTH             = 0.083f;
   const float LINE_WIDTH_ABS         = 1.5f;
@@ -45,52 +45,6 @@ namespace Unity.Quicklauncher
     Ctk.LayerActor seperator_background;
     int            old_width;
     int            old_height;
-
-    private void
-    _fill_mask (Cairo.Context cr,
-                int           w,
-                int           h)
-    {
-      // clear context
-      cr.set_operator (Cairo.Operator.CLEAR);
-      cr.paint ();
-
-      // fill whole context with opaque white
-      cr.set_operator (Cairo.Operator.SOURCE);
-      cr.scale (1.0f, 1.0f);
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
-      cr.paint ();
-    }
-
-    private void
-    _image_bg (Cairo.Context cr,
-               int           w,
-               int           h)
-    {
-      // clear context
-      cr.set_operator (Cairo.Operator.CLEAR);
-      cr.paint ();
-
-      // draw separator-line
-      cr.scale (1.0f, 1.0f);
-      cr.set_operator (Cairo.Operator.SOURCE);
-
-      // force the separator line to be 1-pixel thick
-      cr.set_line_width (LINE_WIDTH_ABS);
-
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.75f);
-      cr.set_line_cap (Cairo.LineCap.ROUND);
-
-      // align to the pixel-grid
-      float half_height = (float) h / 2.0f;
-      float fract = half_height - (int) half_height;
-      if (fract == 0.0f)
-        half_height += 0.5f;
-      cr.move_to (0.0f, half_height);
-      cr.line_to ((float) w, half_height);
-
-      cr.stroke ();
-    }
 
     private override void
     paint ()
@@ -151,8 +105,8 @@ namespace Unity.Quicklauncher
       Cairo.Context fill_cr = new Cairo.Context (fill_surf);
       Cairo.Context image_cr = new Cairo.Context (image_surf);
 
-      _fill_mask (fill_cr, w, h);
-      _image_bg (image_cr, w, h);
+      Unity.QuicklistRendering.Seperator.fill_mask (fill_cr);
+      Unity.QuicklistRendering.Seperator.image_background (image_cr, w, h);
 
       layer.set_mask_from_surface (fill_surf);
       layer.set_image_from_surface (image_surf);
@@ -191,188 +145,6 @@ namespace Unity.Quicklauncher
     int            old_height;
     string         old_label;
 
-    private void
-    _round_rect (Cairo.Context cr,
-                 double        aspect,        // aspect-ratio
-                 double        x,             // top-left corner
-                 double        y,             // top-left corner
-                 double        corner_radius, // "size" of the corners
-                 double        width,         // width of the rectangle
-                 double        height)        // height of the rectangle
-    {
-      double radius = corner_radius / aspect;
-
-      // top-left, right of the corner
-      cr.move_to (x + radius, y);
-
-      // top-right, left of the corner
-      cr.line_to (x + width - radius, y);
-
-      // top-right, below the corner
-      cr.arc (x + width - radius,
-              y + radius,
-              radius,
-              -90.0f * GLib.Math.PI / 180.0f,
-              0.0f * GLib.Math.PI / 180.0f);
-
-      // bottom-right, above the corner
-      cr.line_to (x + width, y + height - radius);
-
-      // bottom-right, left of the corner
-      cr.arc (x + width - radius,
-              y + height - radius,
-              radius,
-              0.0f * GLib.Math.PI / 180.0f,
-              90.0f * GLib.Math.PI / 180.0f);
-
-      // bottom-left, right of the corner
-      cr.line_to (x + radius, y + height);
-
-      // bottom-left, above the corner
-      cr.arc (x + radius,
-              y + height - radius,
-              radius,
-              90.0f * GLib.Math.PI / 180.0f,
-              180.0f * GLib.Math.PI / 180.0f);
-
-      // top-left, right of the corner
-      cr.arc (x + radius,
-              y + radius,
-              radius,
-              180.0f * GLib.Math.PI / 180.0f,
-              270.0f * GLib.Math.PI / 180.0f);
-    }
-
-    private void
-    _get_text_extents (out int width,
-                       out int height)
-    {
-      Cairo.Surface dummy_surf = new Cairo.ImageSurface (Cairo.Format.A1, 1, 1);
-      Cairo.Context dummy_cr = new Cairo.Context (dummy_surf);
-      Pango.Layout layout = Pango.cairo_create_layout (dummy_cr);
-      Gtk.Settings settings = Gtk.Settings.get_default ();
-      string face = settings.gtk_font_name;
-      Pango.FontDescription desc = Pango.FontDescription.from_string (face);
-
-      desc.set_weight (Pango.Weight.NORMAL);
-      layout.set_font_description (desc);
-      layout.set_wrap (Pango.WrapMode.WORD_CHAR);
-      layout.set_ellipsize (Pango.EllipsizeMode.END);
-      layout.set_text (label, -1);
-      Pango.Context pango_context = layout.get_context ();
-      Gdk.Screen screen = Gdk.Screen.get_default ();
-      Pango.cairo_context_set_font_options (pango_context,
-                                            screen.get_font_options ());
-      Pango.cairo_context_set_resolution (pango_context,
-                                          (float) settings.gtk_xft_dpi /
-                                          (float) Pango.SCALE);
-	    layout.context_changed ();
-      Pango.Rectangle log_rect;
-      layout.get_extents (null, out log_rect);
-      width  = log_rect.width / Pango.SCALE;
-      height = log_rect.height / Pango.SCALE;
-    }
-
-    private void _normal_mask (Cairo.Context cr,
-                               int           w,
-                               int           h,
-                               string        label,
-                               bool          reactive)
-    {
-      // clear context
-      cr.set_operator (Cairo.Operator.CLEAR);
-      cr.paint ();
-
-      // setup correct filled-drawing
-      cr.set_operator (Cairo.Operator.SOURCE);
-      cr.scale (1.0f, 1.0f);
-      if (reactive)
-        cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
-      else
-        cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.5f);
-
-      Pango.Layout layout = Pango.cairo_create_layout (cr);
-      Gtk.Settings settings = Gtk.Settings.get_default ();
-      string font_face = settings.gtk_font_name;
-      Pango.FontDescription desc = Pango.FontDescription.from_string (font_face);
-      desc.set_weight (Pango.Weight.NORMAL);
-      if (!reactive)
-        desc.set_style (Pango.Style.ITALIC);
-      layout.set_font_description (desc);
-      layout.set_wrap (Pango.WrapMode.WORD_CHAR);
-      layout.set_ellipsize (Pango.EllipsizeMode.END);
-      layout.set_text (label, -1);
-      Pango.Context pango_context = layout.get_context ();
-      Gdk.Screen screen = Gdk.Screen.get_default ();
-      Pango.cairo_context_set_font_options (pango_context,
-                                            screen.get_font_options ());
-      Pango.cairo_context_set_resolution (pango_context,
-                                          (float) settings.gtk_xft_dpi /
-                                          (float) Pango.SCALE);
-	    layout.context_changed ();
-
-      int text_width;
-      int text_height;
-      _get_text_extents (out text_width, out text_height);
-      cr.move_to (Ctk.em_to_pixel (MARGIN),
-                  (float) (h - text_height) / 2.0f);
-
-      Pango.cairo_show_layout (cr, layout);
-    }
-
-    private void _selected_mask (Cairo.Context cr,
-                                 int           w,
-                                 int           h,
-                                 string        label)
-    {
-      // clear context
-      cr.set_operator (Cairo.Operator.CLEAR);
-      cr.paint ();
-
-      // setup correct filled-drawing
-      cr.set_operator (Cairo.Operator.SOURCE);
-      cr.scale (1.0f, 1.0f);
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
-
-      // draw rounded rectangle
-      _round_rect (cr,
-                   1.0f,
-                   0.5f,
-                   0.5f,
-                   ITEM_CORNER_RADIUS_ABS,
-                   w - 1.0f,
-                   h - 1.0f);
-      cr.fill ();
-
-      // draw text
-      Pango.Layout layout = Pango.cairo_create_layout (cr);
-      Gtk.Settings settings = Gtk.Settings.get_default ();
-      string font_face = settings.gtk_font_name;
-      Pango.FontDescription desc = Pango.FontDescription.from_string (font_face);
-      desc.set_weight (Pango.Weight.NORMAL);
-      layout.set_font_description (desc);
-      layout.set_wrap (Pango.WrapMode.WORD_CHAR);
-      layout.set_ellipsize (Pango.EllipsizeMode.END);
-      layout.set_text (label, -1);
-      Pango.Context pango_context = layout.get_context ();
-      Gdk.Screen screen = Gdk.Screen.get_default ();
-      Pango.cairo_context_set_font_options (pango_context,
-                                            screen.get_font_options ());
-      Pango.cairo_context_set_resolution (pango_context,
-                                          (float) settings.gtk_xft_dpi /
-                                          (float) Pango.SCALE);
-	    layout.context_changed ();
-
-      int text_width;
-      int text_height;
-      _get_text_extents (out text_width, out text_height);
-      cr.move_to (Ctk.em_to_pixel (MARGIN),
-                  (float) (h - text_height) / 2.0f);
-
-      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.0f);
-      Pango.cairo_show_layout (cr, layout);
-    }
-
     private override void
     paint ()
     {
@@ -395,7 +167,11 @@ namespace Unity.Quicklauncher
     {
       int width;
       int height;
-      _get_text_extents (out width, out height);
+      Gtk.Settings settings = Gtk.Settings.get_default ();
+      Unity.QuicklistRendering.Item.get_text_extents (settings.gtk_font_name,
+                                                      this.label,
+                                                      out width,
+                                                      out height);
       min_width_p = (float) width + (float) Ctk.em_to_pixel (2 * MARGIN);
       natural_width_p = min_width_p;
     }
@@ -450,9 +226,18 @@ namespace Unity.Quicklauncher
 
       Cairo.Context normal_cr = new Cairo.Context (normal_surf);
       Cairo.Context selected_cr = new Cairo.Context (selected_surf);
+      Gtk.Settings settings = Gtk.Settings.get_default ();
 
-      _normal_mask (normal_cr, w, h, this.label, this.get_reactive ());
-      _selected_mask (selected_cr, w, h, this.label);
+      Unity.QuicklistRendering.Item.normal_mask (normal_cr,
+                                                 w,
+                                                 h,
+                                                 settings.gtk_font_name,
+                                                 this.label);
+      Unity.QuicklistRendering.Item.selected_mask (selected_cr,
+                                                   w,
+                                                   h,
+                                                   settings.gtk_font_name,
+                                                   this.label);
 
       normal_layer.set_mask_from_surface (normal_surf);
       normal_layer.set_color (white_color);
@@ -557,238 +342,6 @@ namespace Unity.Quicklauncher
     float          cached_x; // needed to fix LP: #525905
     float          cached_y; // needed to fix LP: #526335
 
-    private double
-    _align (double val)
-    {
-      double fract = val - (int) val;
-
-      if (fract != 0.5f)
-        return (double) ((int) val + 0.5f);
-      else
-        return val;
-    }
-
-    private void
-    _round_rect_anchor (Cairo.Context cr,
-                        double        aspect,        // aspect-ratio
-                        double        x,             // top-left corner
-                        double        y,             // top-left corner
-                        double        corner_radius, // "size" of the corners
-                        double        width,         // width of the rectangle
-                        double        height,        // height of the rectangle
-                        double        anchor_width,  // width of anchor
-                        double        anchor_height, // height of anchor
-                        double        anchor_x,      // x of anchor
-                        double        anchor_y)      // y of anchor
-    {
-      double radius = corner_radius / aspect;
-
-      double a = _align (x);
-      double b = _align (x + radius);
-      double c = _align (x + width);
-      double d = _align (x + width - radius);
-      double e = _align (y);
-      double f = _align (y + radius);
-      double g = _align (y + height);
-      double h = _align (y + height - radius);
-
-      double[] p0  = {b, e};
-      double[] p1  = {d, e};
-      double[] p2  = {c, f};
-      double[] p3  = {c, h};
-      double[] p4  = {d, g};
-      double[] p5  = {b, g};
-      double[] p6  = {a, h};
-      double[] p7  = {_align (anchor_x + anchor_width), _align (anchor_y + anchor_height / 2.0f)};
-      double[] p8  = {_align (anchor_x), _align (anchor_y)};
-      double[] p9  = {_align (anchor_x + anchor_width), _align (anchor_y - anchor_height / 2.0f)};
-      double[] p10 = {a, f};
-
-      double[] q0 = {a, e};
-      double[] q1 = {c, e};
-      double[] q2 = {c, g};
-      double[] q3 = {a, g};
-
-      // top-left, right of the corner
-      cr.move_to (p0[0], p0[1]);
-
-      // top-right, left of the corner
-      cr.line_to (p1[0], p1[1]);
-
-      // top-right, below the corner
-      cr.curve_to (q1[0] - radius * 0.45f,
-                   q1[1],
-                   q1[0],
-                   q1[1] + radius * 0.45f,
-                   p2[0],
-                   p2[1]);
-
-      // bottom-right, above the corner
-      cr.line_to (p3[0], p3[1]);
-
-      // bottom-right, left of the corner
-      cr.curve_to (q2[0],
-                   q2[1] - radius * 0.45f,
-                   q2[0] - radius * 0.45f,
-                   q2[1],
-                   p4[0],
-                   p4[1]);
-
-      // bottom-left, right of the corner
-      cr.line_to (p5[0], p5[1]);
-
-      // bottom-left, above the corner
-      cr.curve_to (q3[0] + radius * 0.45f,
-                   q3[1],
-                   q3[0],
-                   q3[1] - radius * 0.45f,
-                   p6[0],
-                   p6[1]);
-
-      // draw anchor-arrow
-      cr.line_to (p7[0], p7[1]);
-      cr.line_to (p8[0], p8[1]);
-      cr.line_to (p9[0], p9[1]);
-
-      // top-left, right of the corner
-      cr.line_to (p10[0], p10[1]);
-      cr.curve_to (q0[0],
-                   q0[1] + radius * 0.45f,
-                   q0[0] + radius * 0.45f,
-                   q0[1],
-                   p0[0],
-                   p0[1]);
-    }
-
-    void
-    _draw_mask (Cairo.Context cr,
-                int           w,
-                int           h,
-                float         anchor_y)
-    {
-      _round_rect_anchor (cr,
-                          1.0f,
-                          ANCHOR_WIDTH_ABS + Ctk.em_to_pixel (SHADOW_SIZE),
-                          Ctk.em_to_pixel (SHADOW_SIZE),
-                          CORNER_RADIUS_ABS,
-                          (double) w - (ANCHOR_WIDTH_ABS + Ctk.em_to_pixel (2 * SHADOW_SIZE)),
-                          (double) h - Ctk.em_to_pixel (2 * SHADOW_SIZE),
-                          ANCHOR_WIDTH_ABS,
-                          ANCHOR_HEIGHT_ABS,
-                          Ctk.em_to_pixel (SHADOW_SIZE),
-                          anchor_y);
-    }
-
-    private void
-    _full_mask (Cairo.Context cr,
-                int           w,
-                int           h,
-                float         anchor_y)
-    {
-      // fill context
-      cr.set_operator (Cairo.Operator.CLEAR);
-      cr.paint ();
-      cr.set_operator (Cairo.Operator.SOURCE);
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
-      cr.paint ();
-    }
-
-    private void
-    _fill_mask (Cairo.Context cr,
-                int           w,
-                int           h,
-                float         anchor_y)
-    {
-      // clear context
-      cr.set_operator (Cairo.Operator.CLEAR);
-      cr.paint ();
-
-      // setup correct filled-drawing
-      cr.set_operator (Cairo.Operator.SOURCE);
-      cr.scale (1.0f, 1.0f);
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
-
-      // draw actual outline
-      _draw_mask (cr, w, h, anchor_y);
-      cr.fill ();
-    }
-
-    private void
-    _main_bg (Cairo.Context cr,
-              int           w,
-              int           h,
-              float         anchor_y)
-    {
-      Cairo.Surface dots = new Cairo.ImageSurface (Cairo.Format.ARGB32, 4, 4);
-      Cairo.Context cr_dots = new Cairo.Context (dots);
-      Cairo.Pattern dot_pattern;
-      Cairo.Pattern hl_pattern;
-
-      // clear context
-      cr.set_operator (Cairo.Operator.CLEAR);
-      cr.paint ();
-
-      // setup correct filled-drawing
-      cr.set_operator (Cairo.Operator.OVER);
-      cr.scale (1.0f, 1.0f);
-      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.48f);
-
-      // draw drop-shadow
-      _draw_mask (cr, w, h, anchor_y);
-      cr.fill ();
-      Ctk.surface_blur (cr.get_target (), (int) Ctk.em_to_pixel (SHADOW_SIZE/2));
-
-      // clear inner part
-      cr.set_operator (Cairo.Operator.CLEAR);
-      _draw_mask (cr, w, h, anchor_y);
-      cr.fill ();
-
-      // draw fill
-      cr.set_operator (Cairo.Operator.OVER);
-      cr.scale (1.0f, 1.0f);
-      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.7f);
-      _draw_mask (cr, w, h, anchor_y);
-      cr.fill ();
-
-      // draw dotted pattern
-      cr_dots.set_operator (Cairo.Operator.CLEAR);
-      cr_dots.paint ();
-      cr_dots.scale (1.0f, 1.0f);
-      cr_dots.set_operator (Cairo.Operator.OVER);
-      cr_dots.set_source_rgba (1.0f, 1.0f, 1.0f, 0.15f);
-      cr_dots.rectangle (0.0f, 0.0f, 1.0f, 1.0f);
-      cr_dots.fill ();
-      cr_dots.rectangle (2.0f, 2.0f, 1.0f, 1.0f);
-      cr_dots.fill ();
-      dot_pattern = new Cairo.Pattern.for_surface (dots);
-      cr.set_operator (Cairo.Operator.OVER);
-      cr.set_source (dot_pattern);
-      dot_pattern.set_extend (Cairo.Extend.REPEAT);
-      _draw_mask (cr, w, h, anchor_y);
-      cr.fill ();
-
-      // draw highlight
-      cr.set_operator (Cairo.Operator.OVER);
-      hl_pattern = new Cairo.Pattern.radial ((double) w / 2.0f,
-                                             Ctk.em_to_pixel (BORDER) - 15.0f,
-                                             0.0f,
-                                             (double) w / 2.0f,
-                                             Ctk.em_to_pixel (BORDER) - 15.0f,
-                                             (double) w / 2.0f + 20.0f);
-      hl_pattern.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.65f);
-      hl_pattern.add_color_stop_rgba (1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
-      cr.set_source (hl_pattern);
-      _draw_mask (cr, w, h, anchor_y);
-      cr.fill ();
-
-      // draw outline
-      cr.set_operator (Cairo.Operator.SOURCE);
-      cr.set_line_width (LINE_WIDTH_ABS);
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.75f);
-      _draw_mask (cr, w, h, anchor_y);
-      cr.stroke ();
-    }
-
     public override void
     paint ()
     {
@@ -881,9 +434,9 @@ namespace Unity.Quicklauncher
       Cairo.Context fill_cr = new Cairo.Context (fill_surf);
       Cairo.Context main_cr = new Cairo.Context (main_surf);
 
-      _full_mask (full_cr, w, h, cached_y);
-      _fill_mask (fill_cr, w, h, cached_y);
-      _main_bg (main_cr, w, h, cached_y);
+      Unity.QuicklistRendering.Menu.full_mask (full_cr, w, h, cached_y);
+      Unity.QuicklistRendering.Menu.fill_mask (fill_cr, w, h, cached_y);
+      Unity.QuicklistRendering.Menu.background (main_cr, w, h, cached_y);
       //main_surf.write_to_png ("/tmp/main-surf.png");
 
       main_layer.set_mask_from_surface (full_surf);

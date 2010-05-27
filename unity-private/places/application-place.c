@@ -25,6 +25,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <clutk/clutk.h>
+#include <gio/gio.h>
+#include <gtk/gtk.h>
 #include <clutter/clutter.h>
 #include <pango/pango.h>
 #include <gee.h>
@@ -55,6 +57,7 @@ typedef struct _UnityPlacesBarModel UnityPlacesBarModel;
 typedef struct _UnityPlacesBarModelClass UnityPlacesBarModelClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
+#define _gtk_icon_info_free0(var) ((var == NULL) ? NULL : (var = (gtk_icon_info_free (var), NULL)))
 typedef struct _UnityPlacesApplicationParamSpecApplicationIcon UnityPlacesApplicationParamSpecApplicationIcon;
 
 #define UNITY_PLACES_APPLICATION_TYPE_APPLICATION_GROUP (unity_places_application_application_group_get_type ())
@@ -215,13 +218,28 @@ static void unity_places_application_application_view_finalize (GObject* obj);
 
 
 
+static gpointer _g_object_ref0 (gpointer self) {
+	return self ? g_object_ref (self) : NULL;
+}
+
+
+static const char* string_to_string (const char* self) {
+	const char* result = NULL;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = self;
+	return result;
+}
+
+
 UnityPlacesApplicationApplicationIcon* unity_places_application_application_icon_construct (GType object_type, gint width, const char* name, const char* icon_name, const char* tooltip) {
+	GError * _inner_error_;
 	UnityPlacesApplicationApplicationIcon* self;
 	UnityPlacesBarModel* _tmp0_;
-	CtkText* _tmp5_;
+	CtkText* _tmp8_;
 	g_return_val_if_fail (name != NULL, NULL);
 	g_return_val_if_fail (icon_name != NULL, NULL);
 	g_return_val_if_fail (tooltip != NULL, NULL);
+	_inner_error_ = NULL;
 	self = (UnityPlacesApplicationApplicationIcon*) g_type_create_instance (object_type);
 	self->priv->model = (_tmp0_ = unity_places_bar_model_new (name, icon_name, tooltip), _g_object_unref0 (self->priv->model), _tmp0_);
 	if (g_utf8_get_char (g_utf8_offset_to_pointer (icon_name, 0)) == '/') {
@@ -234,12 +252,38 @@ UnityPlacesApplicationApplicationIcon* unity_places_application_application_icon
 			self->view = (_tmp3_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) width, _tmp2_ = g_strconcat ("/usr/share/pixmaps/", icon_name, NULL))), _g_object_unref0 (self->view), _tmp3_);
 			_g_free0 (_tmp2_);
 		} else {
-			CtkImage* _tmp4_;
-			self->view = (_tmp4_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_stock ((guint) width, icon_name)), _g_object_unref0 (self->view), _tmp4_);
+			if (g_utf8_get_char (g_utf8_offset_to_pointer (icon_name, 0)) == '.') {
+				GIcon* icon;
+				GtkIconInfo* info;
+				icon = _g_object_ref0 (g_icon_new_for_string (icon_name, &_inner_error_));
+				if (_inner_error_ != NULL) {
+					g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+					g_clear_error (&_inner_error_);
+					return NULL;
+				}
+				info = gtk_icon_theme_lookup_by_gicon (gtk_icon_theme_get_default (), icon, 48, 0);
+				if (info != NULL) {
+					CtkImage* _tmp4_;
+					self->view = (_tmp4_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) width, gtk_icon_info_get_filename (info))), _g_object_unref0 (self->view), _tmp4_);
+				} else {
+					CtkImage* _tmp5_;
+					self->view = (_tmp5_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_stock ((guint) width, icon_name)), _g_object_unref0 (self->view), _tmp5_);
+				}
+				if (self->view == NULL) {
+					char* _tmp6_;
+					g_warning ("application-place.vala:52: %s", _tmp6_ = g_strconcat ("Failed to load icon for ", string_to_string (icon_name), NULL));
+					_g_free0 (_tmp6_);
+				}
+				_g_object_unref0 (icon);
+				_gtk_icon_info_free0 (info);
+			} else {
+				CtkImage* _tmp7_;
+				self->view = (_tmp7_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_stock ((guint) width, icon_name)), _g_object_unref0 (self->view), _tmp7_);
+			}
 		}
 	}
 	clutter_actor_set_reactive ((ClutterActor*) self->view, TRUE);
-	self->label = (_tmp5_ = g_object_ref_sink ((CtkText*) ctk_text_new (name)), _g_object_unref0 (self->label), _tmp5_);
+	self->label = (_tmp8_ = g_object_ref_sink ((CtkText*) ctk_text_new (name)), _g_object_unref0 (self->label), _tmp8_);
 	clutter_text_set_line_wrap ((ClutterText*) self->label, TRUE);
 	clutter_text_set_line_alignment ((ClutterText*) self->label, PANGO_ALIGN_CENTER);
 	return self;

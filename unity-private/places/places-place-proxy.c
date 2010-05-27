@@ -121,8 +121,8 @@ UnityPlacesPlaceProxy* unity_places_place_proxy_new (const char* name, const cha
 UnityPlacesPlaceProxy* unity_places_place_proxy_construct (GType object_type, const char* name, const char* icon_name, const char* comment, const char* dbus_name, const char* dbus_path);
 const char* unity_places_place_proxy_get_dbus_name (UnityPlacesPlaceProxy* self);
 const char* unity_places_place_proxy_get_dbus_path (UnityPlacesPlaceProxy* self);
-static void unity_places_place_proxy_on_view_changed (UnityPlacesPlaceProxy* self, DBusGProxy* s, const char* view_name, GHashTable* view_properties);
-static void _unity_places_place_proxy_on_view_changed_dynamic_ViewChanged0_ (DBusGProxy* _sender, const char* view_name, GHashTable* view_properties, gpointer self);
+static void unity_places_place_proxy_on_view_changed (UnityPlacesPlaceProxy* self, DBusGProxy* s, GHashTable* view_properties);
+static void _unity_places_place_proxy_on_view_changed_dynamic_ViewChanged0_ (DBusGProxy* _sender, GHashTable* view_properties, gpointer self);
 void _dynamic_ViewChanged1_connect (gpointer obj, const char * signal_name, GCallback handler, gpointer data);
 static void _dynamic_set_active0 (DBusGProxy* self, gboolean param1, GError** error);
 static void unity_places_place_proxy_setup_service (UnityPlacesPlaceProxy* self);
@@ -141,7 +141,7 @@ static void unity_places_place_proxy_set_property (GObject * object, guint prope
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
-static void g_cclosure_user_marshal_VOID__STRING_BOXED (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
+static void g_cclosure_user_marshal_VOID__BOXED (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 
 UnityPlacesPlaceProxy* unity_places_place_proxy_construct (GType object_type, const char* name, const char* icon_name, const char* comment, const char* dbus_name, const char* dbus_path) {
 	UnityPlacesPlaceProxy * self;
@@ -160,14 +160,14 @@ UnityPlacesPlaceProxy* unity_places_place_proxy_new (const char* name, const cha
 }
 
 
-static void _unity_places_place_proxy_on_view_changed_dynamic_ViewChanged0_ (DBusGProxy* _sender, const char* view_name, GHashTable* view_properties, gpointer self) {
-	unity_places_place_proxy_on_view_changed (self, _sender, view_name, view_properties);
+static void _unity_places_place_proxy_on_view_changed_dynamic_ViewChanged0_ (DBusGProxy* _sender, GHashTable* view_properties, gpointer self) {
+	unity_places_place_proxy_on_view_changed (self, _sender, view_properties);
 }
 
 
 void _dynamic_ViewChanged1_connect (gpointer obj, const char * signal_name, GCallback handler, gpointer data) {
-	dbus_g_object_register_marshaller (g_cclosure_user_marshal_VOID__STRING_BOXED, G_TYPE_NONE, G_TYPE_STRING, dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_STRING), G_TYPE_INVALID);
-	dbus_g_proxy_add_signal (obj, "ViewChanged", G_TYPE_STRING, dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_STRING), G_TYPE_INVALID);
+	dbus_g_object_register_marshaller (g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_STRING), G_TYPE_INVALID);
+	dbus_g_proxy_add_signal (obj, "ViewChanged", dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_STRING), G_TYPE_INVALID);
 	dbus_g_proxy_connect_signal (obj, signal_name, handler, data, NULL);
 }
 
@@ -207,7 +207,7 @@ static void unity_places_place_proxy_setup_service (UnityPlacesPlaceProxy* self)
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("places-place-proxy.vala:70: Unable to start service %s: %s", self->priv->_dbus_name, e->message);
+			g_warning ("places-place-proxy.vala:71: Unable to start service %s: %s", self->priv->_dbus_name, e->message);
 			_g_error_free0 (e);
 		}
 	}
@@ -228,11 +228,15 @@ static const char* string_to_string (const char* self) {
 }
 
 
-static void unity_places_place_proxy_on_view_changed (UnityPlacesPlaceProxy* self, DBusGProxy* s, const char* view_name, GHashTable* view_properties) {
+static void unity_places_place_proxy_on_view_changed (UnityPlacesPlaceProxy* self, DBusGProxy* s, GHashTable* view_properties) {
+	char* view_name;
+	char* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (s != NULL);
-	g_return_if_fail (view_name != NULL);
 	g_return_if_fail (view_properties != NULL);
+	view_name = g_strdup ((const char*) g_hash_table_lookup (view_properties, "view-name"));
+	g_debug ("places-place-proxy.vala:88: %s", _tmp0_ = g_strconcat ("View changed: ", string_to_string (view_name), NULL));
+	_g_free0 (_tmp0_);
 	if (_vala_strcmp0 (view_name, "ResultsView") == 0) {
 		UnityPlacesViewsResultsView* new_view;
 		new_view = g_object_ref_sink (unity_places_views_results_view_new ());
@@ -240,10 +244,11 @@ static void unity_places_place_proxy_on_view_changed (UnityPlacesPlaceProxy* sel
 		clutter_container_add_actor ((ClutterContainer*) self->priv->view, (ClutterActor*) new_view);
 		_g_object_unref0 (new_view);
 	} else {
-		char* _tmp0_;
-		g_warning ("places-place-proxy.vala:95: %s", _tmp0_ = g_strconcat ("Unknown view: ", string_to_string (view_name), NULL));
-		_g_free0 (_tmp0_);
+		char* _tmp1_;
+		g_warning ("places-place-proxy.vala:98: %s", _tmp1_ = g_strconcat ("Unknown view: ", string_to_string (view_name), NULL));
+		_g_free0 (_tmp1_);
 	}
+	_g_free0 (view_name);
 }
 
 
@@ -401,13 +406,13 @@ static int _vala_strcmp0 (const char * str1, const char * str2) {
 
 
 
-static void g_cclosure_user_marshal_VOID__STRING_BOXED (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
-	typedef void (*GMarshalFunc_VOID__STRING_BOXED) (gpointer data1, const char* arg_1, gpointer arg_2, gpointer data2);
-	register GMarshalFunc_VOID__STRING_BOXED callback;
+static void g_cclosure_user_marshal_VOID__BOXED (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
+	typedef void (*GMarshalFunc_VOID__BOXED) (gpointer data1, gpointer arg_1, gpointer data2);
+	register GMarshalFunc_VOID__BOXED callback;
 	register GCClosure * cc;
 	register gpointer data1, data2;
 	cc = (GCClosure *) closure;
-	g_return_if_fail (n_param_values == 3);
+	g_return_if_fail (n_param_values == 2);
 	if (G_CCLOSURE_SWAP_DATA (closure)) {
 		data1 = closure->data;
 		data2 = param_values->data[0].v_pointer;
@@ -415,8 +420,8 @@ static void g_cclosure_user_marshal_VOID__STRING_BOXED (GClosure * closure, GVal
 		data1 = param_values->data[0].v_pointer;
 		data2 = closure->data;
 	}
-	callback = (GMarshalFunc_VOID__STRING_BOXED) (marshal_data ? marshal_data : cc->callback);
-	callback (data1, g_value_get_string (param_values + 1), g_value_get_boxed (param_values + 2), data2);
+	callback = (GMarshalFunc_VOID__BOXED) (marshal_data ? marshal_data : cc->callback);
+	callback (data1, g_value_get_boxed (param_values + 1), data2);
 }
 
 

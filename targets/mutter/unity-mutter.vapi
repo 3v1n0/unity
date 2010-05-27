@@ -20,7 +20,7 @@ namespace Unity {
 	}
 	[CCode (cheader_filename = "unity-mutter.h")]
 	public class ExposeManager : GLib.Object {
-		public ExposeManager (Unity.Plugin plugin, Unity.Quicklauncher.View quicklauncher);
+		public ExposeManager (Unity.Plugin plugin, Unity.Launcher.Launcher launcher);
 		public void end_expose ();
 		public void start_expose (GLib.SList<Wnck.Window> windows);
 		public int bottom_buffer { get; set; }

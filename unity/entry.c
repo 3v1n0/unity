@@ -80,6 +80,10 @@ struct _UnityShellIface {
 	gboolean (*remove_fullscreen_request) (UnityShell* self, GObject* o);
 	void (*grab_keyboard) (UnityShell* self, gboolean grab, guint32 timestamp);
 	void (*show_window_picker) (UnityShell* self);
+	void (*close_xids) (UnityShell* self, GArray* xids);
+	void (*show_window) (UnityShell* self, guint32 xid);
+	void (*expose_xids) (UnityShell* self, GArray* xids);
+	void (*stop_expose) (UnityShell* self);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
 };
 

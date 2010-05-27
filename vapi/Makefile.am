@@ -1,11 +1,12 @@
 EXTRA_DIST = \
+  Bamf-0.2.vapi \
   clutk-0.3.vapi \
   clutter-1.0.vapi \
   clutter-1.0.deps \
   cogl-1.0.vapi \
   config.vapi \
-  dbusmodel.deps \
-  dbusmodel.vapi \
+  dee-1.0.deps \
+  dee-1.0.vapi \
   indicator.deps \
   indicator.vapi \
   launcher-0.3.vapi \

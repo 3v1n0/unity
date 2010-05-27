@@ -17,8 +17,6 @@
  *
  */
 using Unity;
-using Unity.Quicklauncher;
-using Unity.Quicklauncher.Models;
 using Unity.Testing;
 
 static string? boot_logging_filename = null;
@@ -124,7 +122,7 @@ namespace Unity
     /* Unity Components */
     private Background         background;
     private ExposeManager      expose_manager;
-    private Quicklauncher.View quicklauncher;
+    private Launcher.Launcher  launcher;
     private Places.Controller  places_controller;
     private Places.View        places;
     private Panel.View         panel;
@@ -241,13 +239,15 @@ namespace Unity
       this.background.show ();
 
       /* Allows us to activate windows, essential as we are the WM */
-      Launcher.Application.set_window_activate_func (this.on_window_activated,
+/*
+      LibLauncher.Application.set_window_activate_func (this.on_window_activated,
                                                      this.plugin);
+*/
 
-      this.quicklauncher = new Quicklauncher.View (this);
-      this.quicklauncher.opacity = 0;
+      this.launcher = new Launcher.Launcher (this);
+      this.launcher.get_view ().opacity = 0;
 
-      this.expose_manager = new ExposeManager (this, quicklauncher);
+      this.expose_manager = new ExposeManager (this, launcher);
       this.expose_manager.hovered_opacity = 255;
       this.expose_manager.unhovered_opacity = 255;
       this.expose_manager.darken = 25;
@@ -256,12 +256,10 @@ namespace Unity
 
       this.expose_manager.coverflow = false;
 
-      this.quicklauncher.manager.active_launcher_changed.connect (on_launcher_changed_event);
-
-      window_group.add_actor (this.quicklauncher);
-      window_group.raise_child (this.quicklauncher,
+      window_group.add_actor (this.launcher.get_view ());
+      window_group.raise_child (this.launcher.get_view (),
                                 this.plugin.get_normal_window_group ());
-      this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 400,
+      this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 400,
                                   "opacity", 255);
 
       if (this.places_enabled)
@@ -271,7 +269,7 @@ namespace Unity
 
           window_group.add_actor (this.places);
           window_group.raise_child (this.places,
-                                    this.quicklauncher);
+                                    this.launcher.get_view ());
           this.places.opacity = 0;
           this.places.reactive = false;
           this.places.hide ();
@@ -281,7 +279,7 @@ namespace Unity
       this.panel = new Panel.View (this);
       window_group.add_actor (this.panel);
       window_group.raise_child (this.panel,
-                                this.quicklauncher);
+                                this.launcher.get_view ());
       this.panel.show ();
 
       this.stage.notify["width"].connect (this.relayout);
@@ -348,6 +346,7 @@ namespace Unity
       check_fullscreen_obstruction ();
     }
 
+/*
     private void on_launcher_changed_event (LauncherView? last, LauncherView? current)
     {
       if (last != null)
@@ -364,6 +363,8 @@ namespace Unity
 
       check_fullscreen_obstruction ();
     }
+*/
+/*
 
     private void on_launcher_menu_opened (LauncherView sender)
     {
@@ -376,6 +377,8 @@ namespace Unity
             expose_windows ((sender.model as ApplicationModel).windows);
         }
     }
+*/
+/*
 
     private void on_launcher_menu_closed (LauncherView sender)
     {
@@ -384,21 +387,22 @@ namespace Unity
 
       dexpose_windows ();
     }
+*/
 
     private void got_screensaver_changed (dynamic DBus.Object screensaver, bool changed)
     {
       if (changed)
         {
-          this.quicklauncher.hide ();
+          this.launcher.get_view ().hide ();
           this.panel.hide ();
-          var menu = Unity.Quicklauncher.QuicklistController.get_default ();
+          var menu = Unity.Launcher.QuicklistController.get_default ();
           if (menu.menu_is_open ())
             menu.close_menu ();
           fullscreen_obstruction = true;
         }
       else
         {
-          this.quicklauncher.show ();
+          this.launcher.get_view ().show ();
           this.panel.show ();
           fullscreen_obstruction = false;
         }
@@ -426,13 +430,13 @@ namespace Unity
       /* Finally try figuring out if the window is fullscreen in Mutter
        * itself */
       unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
-      foreach (Mutter.Window w in mutter_windows)
+      foreach (Mutter.Window win in mutter_windows)
         {
-          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (w.get_meta_window ());
+          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (win.get_meta_window ());
           if (xid == window.get_xid ())
             {
-              if (w.width >= ((int)this.stage.width - 2.0) &&
-                  w.height >= ((int)this.stage.height - 2.0))
+              if (win.width >= ((int)this.stage.width - 2.0) &&
+                  win.height >= ((int)this.stage.height - 2.0))
                 {
                   return true;
                 }
@@ -450,13 +454,13 @@ namespace Unity
 
       if (window_is_obstructing (current))
         {
-          this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
+          this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
           fullscreen_obstruction = true;
         }
       else
         {
-          this.quicklauncher.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
+          this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
           fullscreen_obstruction = false;
         }
@@ -476,10 +480,10 @@ namespace Unity
       this.background.set_size (width, height);
       this.background.set_position (0, 0);
 
-      this.quicklauncher.set_size (this.QUICKLAUNCHER_WIDTH,
+      this.launcher.get_view ().set_size (this.QUICKLAUNCHER_WIDTH,
                                    (height-this.PANEL_HEIGHT));
-      this.quicklauncher.set_position (0, this.PANEL_HEIGHT);
-      this.quicklauncher.set_clip (0, 0,
+      this.launcher.get_view ().set_position (0, this.PANEL_HEIGHT);
+      this.launcher.get_view ().set_clip (0, 0,
                                    this.QUICKLAUNCHER_WIDTH,
                                    height-this.PANEL_HEIGHT);
       Utils.set_strut ((Gtk.Window)this.drag_dest,
@@ -558,6 +562,12 @@ namespace Unity
 
     public void show_window_picker ()
     {
+      if (this.places_enabled == true)
+        {
+          this.show_unity ();
+          return;
+        }
+
       if (expose_manager.expose_showing == true)
         {
           this.dexpose_windows ();
@@ -590,6 +600,66 @@ namespace Unity
     public Clutter.Stage get_stage ()
     {
       return this.stage;
+    }
+
+    public void close_xids (Array<uint32> xids)
+    {
+      for (int i = 0; i < xids.length; i++)
+        {
+          uint32 xid = xids.index (i);
+          Wnck.Window window = Wnck.Window.get (xid);
+          if (window is Wnck.Window)
+            window.close (Clutter.get_current_event_time ());
+        }
+    }
+
+		public void	expose_xids (Array<uint32> xids)
+		{
+			SList<Wnck.Window> windows = new SList<Wnck.Window> ();
+			for (int i = 0; i < xids.length; i++)
+        {
+          uint32 xid = xids.index (i);
+          Wnck.Window window = Wnck.Window.get (xid);
+          if (window is Wnck.Window)
+            windows.append (window);
+        }
+			expose_windows (windows);
+		}
+
+		public void stop_expose ()
+		{
+			dexpose_windows ();
+		}
+
+    public void show_window (uint32 xid)
+    {
+      Wnck.Window window = Wnck.Window.get (xid);
+      if (window is Wnck.Window)
+        {
+          unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
+
+          foreach (Mutter.Window mutter_window in mutter_windows)
+            {
+              int type = mutter_window.get_window_type ();
+
+              if (type == Mutter.MetaWindowType.NORMAL ||
+                  type == Mutter.MetaWindowType.DIALOG ||
+                  type == Mutter.MetaWindowType.MODAL_DIALOG
+                  )
+                {
+                  ulong window_xid = (ulong) Mutter.MetaWindow.get_xwindow (mutter_window.get_meta_window ());
+                  if (window_xid == xid)
+                    {
+                      uint32 time_;
+                      unowned Mutter.MetaWindow meta = mutter_window.get_meta_window ();
+
+                      time_ = Mutter.MetaDisplay.get_current_time (Mutter.MetaWindow.get_display (meta));
+                      Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace (meta), time_);
+                      Mutter.MetaWindow.activate (meta, time_);
+                    }
+                }
+            }
+        }
     }
 
     public ShellMode get_mode ()
@@ -732,6 +802,7 @@ namespace Unity
       this.maximus.process_window (window);
       this.window_mapped (this, window);
 
+/*
       int type = window.get_window_type ();
 
       if (type == Mutter.MetaWindowType.NORMAL ||
@@ -744,24 +815,12 @@ namespace Unity
           if (wnck_window is Wnck.Window)
             Launcher.Session.get_default ().update_windows (wnck_window);
         }
+*/
     }
 
     public void destroy (Mutter.Window window)
     {
       this.window_destroyed (this, window);
-
-      int type = window.get_window_type ();
-
-      if (type == Mutter.MetaWindowType.NORMAL ||
-          type == Mutter.MetaWindowType.DIALOG ||
-          type == Mutter.MetaWindowType.MODAL_DIALOG
-          )
-        {
-          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
-          Wnck.Window wnck_window = Wnck.Window.get (xid);
-          if (wnck_window is Wnck.Window)
-            Launcher.Session.get_default ().update_windows (wnck_window);
-        }
     }
 
     public void switch_workspace (List<Mutter.Window> windows,
@@ -799,8 +858,6 @@ namespace Unity
 
           check_fullscreen_obstruction ();
         }
-
-      this.quicklauncher.manager.refresh_models ();
     }
 
     public int get_panel_height ()

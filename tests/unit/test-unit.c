@@ -49,6 +49,17 @@ typedef struct _MainPrivate MainPrivate;
 
 typedef struct _UnityTestsUnitPlacesSuite UnityTestsUnitPlacesSuite;
 typedef struct _UnityTestsUnitPlacesSuiteClass UnityTestsUnitPlacesSuiteClass;
+
+#define UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE (unity_tests_unit_launcher_suite_get_type ())
+#define UNITY_TESTS_UNIT_LAUNCHER_SUITE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE, UnityTestsUnitLauncherSuite))
+#define UNITY_TESTS_UNIT_LAUNCHER_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE, UnityTestsUnitLauncherSuiteClass))
+#define UNITY_TESTS_UNIT_IS_LAUNCHER_SUITE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE))
+#define UNITY_TESTS_UNIT_IS_LAUNCHER_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE))
+#define UNITY_TESTS_UNIT_LAUNCHER_SUITE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE, UnityTestsUnitLauncherSuiteClass))
+
+typedef struct _UnityTestsUnitLauncherSuite UnityTestsUnitLauncherSuite;
+typedef struct _UnityTestsUnitLauncherSuiteClass UnityTestsUnitLauncherSuiteClass;
+#define _unity_tests_unit_launcher_suite_unref0(var) ((var == NULL) ? NULL : (var = (unity_tests_unit_launcher_suite_unref (var), NULL)))
 #define _unity_tests_unit_places_suite_unref0(var) ((var == NULL) ? NULL : (var = (unity_tests_unit_places_suite_unref (var), NULL)))
 typedef struct _ParamSpecMain ParamSpecMain;
 
@@ -87,6 +98,15 @@ void unity_tests_unit_value_set_places_suite (GValue* value, gpointer v_object);
 void unity_tests_unit_value_take_places_suite (GValue* value, gpointer v_object);
 gpointer unity_tests_unit_value_get_places_suite (const GValue* value);
 GType unity_tests_unit_places_suite_get_type (void);
+gpointer unity_tests_unit_launcher_suite_ref (gpointer instance);
+void unity_tests_unit_launcher_suite_unref (gpointer instance);
+GParamSpec* unity_tests_unit_param_spec_launcher_suite (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
+void unity_tests_unit_value_set_launcher_suite (GValue* value, gpointer v_object);
+void unity_tests_unit_value_take_launcher_suite (GValue* value, gpointer v_object);
+gpointer unity_tests_unit_value_get_launcher_suite (const GValue* value);
+GType unity_tests_unit_launcher_suite_get_type (void);
+UnityTestsUnitLauncherSuite* unity_tests_unit_launcher_suite_new (void);
+UnityTestsUnitLauncherSuite* unity_tests_unit_launcher_suite_construct (GType object_type);
 UnityTestsUnitPlacesSuite* unity_tests_unit_places_suite_new (void);
 UnityTestsUnitPlacesSuite* unity_tests_unit_places_suite_construct (GType object_type);
 gint main_main (char** args, int args_length1);
@@ -99,15 +119,20 @@ static void main_finalize (Main* obj);
 gint main_main (char** args, int args_length1) {
 	gint result = 0;
 	UnityTestsUnitPlacesSuite* places;
-	UnityTestsUnitPlacesSuite* _tmp0_;
+	UnityTestsUnitLauncherSuite* Launcher;
+	UnityTestsUnitLauncherSuite* _tmp0_;
+	UnityTestsUnitPlacesSuite* _tmp1_;
 	places = NULL;
+	Launcher = NULL;
 	gtk_init (&args_length1, &args);
 	ctk_init (&args_length1, &args);
 	g_test_init (&args_length1, &args, NULL);
-	places = (_tmp0_ = unity_tests_unit_places_suite_new (), _unity_tests_unit_places_suite_unref0 (places), _tmp0_);
+	Launcher = (_tmp0_ = unity_tests_unit_launcher_suite_new (), _unity_tests_unit_launcher_suite_unref0 (Launcher), _tmp0_);
+	places = (_tmp1_ = unity_tests_unit_places_suite_new (), _unity_tests_unit_places_suite_unref0 (places), _tmp1_);
 	g_test_run ();
 	result = 0;
 	_unity_tests_unit_places_suite_unref0 (places);
+	_unity_tests_unit_launcher_suite_unref0 (Launcher);
 	return result;
 }
 

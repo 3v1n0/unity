@@ -26,7 +26,7 @@
 #include <clutter/clutter.h>
 #include <stdlib.h>
 #include <string.h>
-#include <dbusmodel/dbusmodel.h>
+#include <dee.h>
 #include <gee.h>
 #include <float.h>
 #include <math.h>
@@ -34,7 +34,7 @@
 
 #define UNITY_PLACES_VIEWS_TYPE_GROUP_COLUMNS (unity_places_views_group_columns_get_type ())
 
-#define UNITY_PLACES_VIEWS_TYPE_RESULTS_COLUMNS (unity_places_views_results_columns_get_type ())
+#define UNITY_PLACES_VIEWS_TYPE_RESULT_COLUMNS (unity_places_views_result_columns_get_type ())
 
 #define UNITY_PLACES_TYPE_PLACE_VIEW (unity_places_place_view_get_type ())
 #define UNITY_PLACES_PLACE_VIEW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_VIEW, UnityPlacesPlaceView))
@@ -102,17 +102,16 @@ typedef struct _UnityPlacesViewsGroupLabelClass UnityPlacesViewsGroupLabelClass;
 typedef struct _UnityPlacesViewsGroupLabelPrivate UnityPlacesViewsGroupLabelPrivate;
 
 typedef enum  {
-	UNITY_PLACES_VIEWS_GROUP_COLUMNS_NAME = 0,
-	UNITY_PLACES_VIEWS_GROUP_COLUMNS_ACTIVE
+	UNITY_PLACES_VIEWS_GROUP_COLUMNS_NAME = 0
 } UnityPlacesViewsGroupColumns;
 
 typedef enum  {
-	UNITY_PLACES_VIEWS_RESULTS_COLUMNS_NAME = 0,
-	UNITY_PLACES_VIEWS_RESULTS_COLUMNS_COMMENT,
-	UNITY_PLACES_VIEWS_RESULTS_COLUMNS_ICON_NAME,
-	UNITY_PLACES_VIEWS_RESULTS_COLUMNS_GROUP,
-	UNITY_PLACES_VIEWS_RESULTS_COLUMNS_URI
-} UnityPlacesViewsResultsColumns;
+	UNITY_PLACES_VIEWS_RESULT_COLUMNS_NAME = 0,
+	UNITY_PLACES_VIEWS_RESULT_COLUMNS_COMMENT,
+	UNITY_PLACES_VIEWS_RESULT_COLUMNS_ICON_NAME,
+	UNITY_PLACES_VIEWS_RESULT_COLUMNS_GROUP,
+	UNITY_PLACES_VIEWS_RESULT_COLUMNS_URI
+} UnityPlacesViewsResultColumns;
 
 struct _UnityPlacesPlaceViewIface {
 	GTypeInterface parent_iface;
@@ -129,8 +128,8 @@ struct _UnityPlacesViewsResultsViewClass {
 };
 
 struct _UnityPlacesViewsResultsViewPrivate {
-	DbusModel* groups_model;
-	DbusModel* results_model;
+	DeeSharedModel* groups_model;
+	DeeSharedModel* results_model;
 	UnityPlacesViewsGroupView* group_view;
 	CtkVBox* results_view;
 	GeeHashMap* groups;
@@ -165,8 +164,8 @@ struct _UnityPlacesViewsGroupLabelClass {
 };
 
 struct _UnityPlacesViewsGroupLabelPrivate {
-	DbusModel* _model;
-	DbusModelIter* _iter;
+	DeeModel* _model;
+	DeeModelIter* _iter;
 	ClutterActor* bg;
 };
 
@@ -177,7 +176,7 @@ static gpointer unity_places_views_group_view_parent_class = NULL;
 static gpointer unity_places_views_group_label_parent_class = NULL;
 
 GType unity_places_views_group_columns_get_type (void);
-GType unity_places_views_results_columns_get_type (void);
+GType unity_places_views_result_columns_get_type (void);
 GType unity_places_place_view_get_type (void);
 GType unity_places_views_results_view_get_type (void);
 GType unity_places_views_group_view_get_type (void);
@@ -189,20 +188,22 @@ enum  {
 UnityPlacesViewsResultsView* unity_places_views_results_view_new (void);
 UnityPlacesViewsResultsView* unity_places_views_results_view_construct (GType object_type);
 static void unity_places_views_results_view_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
-static void unity_places_views_results_view_on_group_added (UnityPlacesViewsResultsView* self, DbusModel* model, DbusModelIter* iter);
-static void _unity_places_views_results_view_on_group_added_dbus_model_row_added (DbusModel* _sender, DbusModelIter* iter, gpointer self);
-static void unity_places_views_results_view_on_group_changed (UnityPlacesViewsResultsView* self, DbusModel* model, DbusModelIter* iter);
-static void _unity_places_views_results_view_on_group_changed_dbus_model_row_changed (DbusModel* _sender, DbusModelIter* iter, gpointer self);
-static void unity_places_views_results_view_on_group_removed (UnityPlacesViewsResultsView* self, DbusModel* model, DbusModelIter* iter);
-static void _unity_places_views_results_view_on_group_removed_dbus_model_row_removed (DbusModel* _sender, DbusModelIter* iter, gpointer self);
-static void unity_places_views_results_view_on_result_added (UnityPlacesViewsResultsView* self, DbusModel* model, DbusModelIter* iter);
-static void _unity_places_views_results_view_on_result_added_dbus_model_row_added (DbusModel* _sender, DbusModelIter* iter, gpointer self);
-static void unity_places_views_results_view_on_result_changed (UnityPlacesViewsResultsView* self, DbusModel* model, DbusModelIter* iter);
-static void _unity_places_views_results_view_on_result_changed_dbus_model_row_changed (DbusModel* _sender, DbusModelIter* iter, gpointer self);
-static void unity_places_views_results_view_on_result_removed (UnityPlacesViewsResultsView* self, DbusModel* model, DbusModelIter* iter);
-static void _unity_places_views_results_view_on_result_removed_dbus_model_row_removed (DbusModel* _sender, DbusModelIter* iter, gpointer self);
+static void unity_places_views_results_view_on_group_added (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter);
+static void _unity_places_views_results_view_on_group_added_dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self);
+static void unity_places_views_results_view_on_group_changed (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter);
+static void _unity_places_views_results_view_on_group_changed_dee_model_row_changed (DeeModel* _sender, DeeModelIter* iter, gpointer self);
+static void unity_places_views_results_view_on_group_removed (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter);
+static void _unity_places_views_results_view_on_group_removed_dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self);
+static void unity_places_views_results_view_on_result_added (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter);
+static void _unity_places_views_results_view_on_result_added_dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self);
+static void unity_places_views_results_view_on_result_changed (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter);
+static void _unity_places_views_results_view_on_result_changed_dee_model_row_changed (DeeModel* _sender, DeeModelIter* iter, gpointer self);
+static void unity_places_views_results_view_on_result_removed (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter);
+static void _unity_places_views_results_view_on_result_removed_dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self);
 static void unity_places_views_results_view_real_init_with_properties (UnityPlacesPlaceView* base, GHashTable* props);
-void unity_places_views_group_view_add (UnityPlacesViewsGroupView* self, DbusModel* model, DbusModelIter* iter);
+void unity_places_views_group_view_add (UnityPlacesViewsGroupView* self, DeeModel* model, DeeModelIter* iter);
+UnityPlacesApplicationApplicationGroup* unity_places_application_application_group_new (const char* group_name);
+UnityPlacesApplicationApplicationGroup* unity_places_application_application_group_construct (GType object_type, const char* group_name);
 gpointer unity_places_application_application_icon_ref (gpointer instance);
 void unity_places_application_application_icon_unref (gpointer instance);
 GParamSpec* unity_places_application_param_spec_application_icon (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
@@ -213,8 +214,6 @@ GType unity_places_application_application_icon_get_type (void);
 UnityPlacesApplicationApplicationIcon* unity_places_application_application_icon_new (gint width, const char* name, const char* icon_name, const char* tooltip);
 UnityPlacesApplicationApplicationIcon* unity_places_application_application_icon_construct (GType object_type, gint width, const char* name, const char* icon_name, const char* tooltip);
 void unity_places_application_application_group_add_icon (UnityPlacesApplicationApplicationGroup* self, UnityPlacesApplicationApplicationIcon* app);
-UnityPlacesApplicationApplicationGroup* unity_places_application_application_group_new (const char* group_name);
-UnityPlacesApplicationApplicationGroup* unity_places_application_application_group_construct (GType object_type, const char* group_name);
 UnityPlacesViewsGroupView* unity_places_views_group_view_new (void);
 UnityPlacesViewsGroupView* unity_places_views_group_view_construct (GType object_type);
 static GObject * unity_places_views_results_view_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -222,8 +221,8 @@ static void unity_places_views_results_view_finalize (GObject* obj);
 enum  {
 	UNITY_PLACES_VIEWS_GROUP_VIEW_DUMMY_PROPERTY
 };
-UnityPlacesViewsGroupLabel* unity_places_views_group_label_new (DbusModel* model, DbusModelIter* iter);
-UnityPlacesViewsGroupLabel* unity_places_views_group_label_construct (GType object_type, DbusModel* model, DbusModelIter* iter);
+UnityPlacesViewsGroupLabel* unity_places_views_group_label_new (DeeModel* model, DeeModelIter* iter);
+UnityPlacesViewsGroupLabel* unity_places_views_group_label_construct (GType object_type, DeeModel* model, DeeModelIter* iter);
 GType unity_places_views_group_label_get_type (void);
 static GObject * unity_places_views_group_view_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 #define UNITY_PLACES_VIEWS_GROUP_LABEL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_VIEWS_TYPE_GROUP_LABEL, UnityPlacesViewsGroupLabelPrivate))
@@ -238,10 +237,10 @@ static void unity_places_views_group_label_real_unmap (ClutterActor* base);
 static void unity_places_views_group_label_real_show (ClutterActor* base);
 static void unity_places_views_group_label_real_hide (ClutterActor* base);
 static void unity_places_views_group_label_real_paint (ClutterActor* base);
-DbusModel* unity_places_views_group_label_get_model (UnityPlacesViewsGroupLabel* self);
-static void unity_places_views_group_label_set_model (UnityPlacesViewsGroupLabel* self, DbusModel* value);
-DbusModelIter* unity_places_views_group_label_get_iter (UnityPlacesViewsGroupLabel* self);
-static void unity_places_views_group_label_set_iter (UnityPlacesViewsGroupLabel* self, DbusModelIter* value);
+DeeModel* unity_places_views_group_label_get_model (UnityPlacesViewsGroupLabel* self);
+static void unity_places_views_group_label_set_model (UnityPlacesViewsGroupLabel* self, DeeModel* value);
+DeeModelIter* unity_places_views_group_label_get_iter (UnityPlacesViewsGroupLabel* self);
+static void unity_places_views_group_label_set_iter (UnityPlacesViewsGroupLabel* self, DeeModelIter* value);
 static GObject * unity_places_views_group_label_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_views_group_label_finalize (GObject* obj);
 static void unity_places_views_group_label_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -252,7 +251,7 @@ static void unity_places_views_group_label_set_property (GObject * object, guint
 GType unity_places_views_group_columns_get_type (void) {
 	static volatile gsize unity_places_views_group_columns_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_places_views_group_columns_type_id__volatile)) {
-		static const GEnumValue values[] = {{UNITY_PLACES_VIEWS_GROUP_COLUMNS_NAME, "UNITY_PLACES_VIEWS_GROUP_COLUMNS_NAME", "name"}, {UNITY_PLACES_VIEWS_GROUP_COLUMNS_ACTIVE, "UNITY_PLACES_VIEWS_GROUP_COLUMNS_ACTIVE", "active"}, {0, NULL, NULL}};
+		static const GEnumValue values[] = {{UNITY_PLACES_VIEWS_GROUP_COLUMNS_NAME, "UNITY_PLACES_VIEWS_GROUP_COLUMNS_NAME", "name"}, {0, NULL, NULL}};
 		GType unity_places_views_group_columns_type_id;
 		unity_places_views_group_columns_type_id = g_enum_register_static ("UnityPlacesViewsGroupColumns", values);
 		g_once_init_leave (&unity_places_views_group_columns_type_id__volatile, unity_places_views_group_columns_type_id);
@@ -261,15 +260,15 @@ GType unity_places_views_group_columns_get_type (void) {
 }
 
 
-GType unity_places_views_results_columns_get_type (void) {
-	static volatile gsize unity_places_views_results_columns_type_id__volatile = 0;
-	if (g_once_init_enter (&unity_places_views_results_columns_type_id__volatile)) {
-		static const GEnumValue values[] = {{UNITY_PLACES_VIEWS_RESULTS_COLUMNS_NAME, "UNITY_PLACES_VIEWS_RESULTS_COLUMNS_NAME", "name"}, {UNITY_PLACES_VIEWS_RESULTS_COLUMNS_COMMENT, "UNITY_PLACES_VIEWS_RESULTS_COLUMNS_COMMENT", "comment"}, {UNITY_PLACES_VIEWS_RESULTS_COLUMNS_ICON_NAME, "UNITY_PLACES_VIEWS_RESULTS_COLUMNS_ICON_NAME", "icon-name"}, {UNITY_PLACES_VIEWS_RESULTS_COLUMNS_GROUP, "UNITY_PLACES_VIEWS_RESULTS_COLUMNS_GROUP", "group"}, {UNITY_PLACES_VIEWS_RESULTS_COLUMNS_URI, "UNITY_PLACES_VIEWS_RESULTS_COLUMNS_URI", "uri"}, {0, NULL, NULL}};
-		GType unity_places_views_results_columns_type_id;
-		unity_places_views_results_columns_type_id = g_enum_register_static ("UnityPlacesViewsResultsColumns", values);
-		g_once_init_leave (&unity_places_views_results_columns_type_id__volatile, unity_places_views_results_columns_type_id);
+GType unity_places_views_result_columns_get_type (void) {
+	static volatile gsize unity_places_views_result_columns_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_places_views_result_columns_type_id__volatile)) {
+		static const GEnumValue values[] = {{UNITY_PLACES_VIEWS_RESULT_COLUMNS_NAME, "UNITY_PLACES_VIEWS_RESULT_COLUMNS_NAME", "name"}, {UNITY_PLACES_VIEWS_RESULT_COLUMNS_COMMENT, "UNITY_PLACES_VIEWS_RESULT_COLUMNS_COMMENT", "comment"}, {UNITY_PLACES_VIEWS_RESULT_COLUMNS_ICON_NAME, "UNITY_PLACES_VIEWS_RESULT_COLUMNS_ICON_NAME", "icon-name"}, {UNITY_PLACES_VIEWS_RESULT_COLUMNS_GROUP, "UNITY_PLACES_VIEWS_RESULT_COLUMNS_GROUP", "group"}, {UNITY_PLACES_VIEWS_RESULT_COLUMNS_URI, "UNITY_PLACES_VIEWS_RESULT_COLUMNS_URI", "uri"}, {0, NULL, NULL}};
+		GType unity_places_views_result_columns_type_id;
+		unity_places_views_result_columns_type_id = g_enum_register_static ("UnityPlacesViewsResultColumns", values);
+		g_once_init_leave (&unity_places_views_result_columns_type_id__volatile, unity_places_views_result_columns_type_id);
 	}
-	return unity_places_views_results_columns_type_id__volatile;
+	return unity_places_views_result_columns_type_id__volatile;
 }
 
 
@@ -311,62 +310,62 @@ static void unity_places_views_results_view_real_allocate (ClutterActor* base, c
 }
 
 
-static void _unity_places_views_results_view_on_group_added_dbus_model_row_added (DbusModel* _sender, DbusModelIter* iter, gpointer self) {
+static void _unity_places_views_results_view_on_group_added_dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
 	unity_places_views_results_view_on_group_added (self, _sender, iter);
 }
 
 
-static void _unity_places_views_results_view_on_group_changed_dbus_model_row_changed (DbusModel* _sender, DbusModelIter* iter, gpointer self) {
+static void _unity_places_views_results_view_on_group_changed_dee_model_row_changed (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
 	unity_places_views_results_view_on_group_changed (self, _sender, iter);
 }
 
 
-static void _unity_places_views_results_view_on_group_removed_dbus_model_row_removed (DbusModel* _sender, DbusModelIter* iter, gpointer self) {
+static void _unity_places_views_results_view_on_group_removed_dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
 	unity_places_views_results_view_on_group_removed (self, _sender, iter);
 }
 
 
-static void _unity_places_views_results_view_on_result_added_dbus_model_row_added (DbusModel* _sender, DbusModelIter* iter, gpointer self) {
+static void _unity_places_views_results_view_on_result_added_dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
 	unity_places_views_results_view_on_result_added (self, _sender, iter);
 }
 
 
-static void _unity_places_views_results_view_on_result_changed_dbus_model_row_changed (DbusModel* _sender, DbusModelIter* iter, gpointer self) {
+static void _unity_places_views_results_view_on_result_changed_dee_model_row_changed (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
 	unity_places_views_results_view_on_result_changed (self, _sender, iter);
 }
 
 
-static void _unity_places_views_results_view_on_result_removed_dbus_model_row_removed (DbusModel* _sender, DbusModelIter* iter, gpointer self) {
+static void _unity_places_views_results_view_on_result_removed_dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
 	unity_places_views_results_view_on_result_removed (self, _sender, iter);
 }
 
 
 static void unity_places_views_results_view_real_init_with_properties (UnityPlacesPlaceView* base, GHashTable* props) {
 	UnityPlacesViewsResultsView * self;
-	char* group_model_path;
-	char* results_model_path;
-	DbusModel* _tmp0_;
-	DbusModel* _tmp1_;
+	char* group_model_name;
+	char* results_model_name;
+	DeeSharedModel* _tmp0_;
+	DeeSharedModel* _tmp1_;
 	self = (UnityPlacesViewsResultsView*) base;
 	g_return_if_fail (props != NULL);
-	group_model_path = g_strdup ((const char*) g_hash_table_lookup (props, "groups-model"));
-	results_model_path = g_strdup ((const char*) g_hash_table_lookup (props, "results-model"));
-	self->priv->groups_model = (_tmp0_ = dbus_model_new_with_name (group_model_path), _g_object_unref0 (self->priv->groups_model), _tmp0_);
-	self->priv->results_model = (_tmp1_ = dbus_model_new_with_name (results_model_path), _g_object_unref0 (self->priv->results_model), _tmp1_);
-	g_signal_connect_object (self->priv->groups_model, "row-added", (GCallback) _unity_places_views_results_view_on_group_added_dbus_model_row_added, self, 0);
-	g_signal_connect_object (self->priv->groups_model, "row-changed", (GCallback) _unity_places_views_results_view_on_group_changed_dbus_model_row_changed, self, 0);
-	g_signal_connect_object (self->priv->groups_model, "row-removed", (GCallback) _unity_places_views_results_view_on_group_removed_dbus_model_row_removed, self, 0);
-	g_signal_connect_object (self->priv->results_model, "row-added", (GCallback) _unity_places_views_results_view_on_result_added_dbus_model_row_added, self, 0);
-	g_signal_connect_object (self->priv->results_model, "row-changed", (GCallback) _unity_places_views_results_view_on_result_changed_dbus_model_row_changed, self, 0);
-	g_signal_connect_object (self->priv->results_model, "row-removed", (GCallback) _unity_places_views_results_view_on_result_removed_dbus_model_row_removed, self, 0);
-	dbus_model_connect (self->priv->groups_model);
-	dbus_model_connect (self->priv->results_model);
-	_g_free0 (group_model_path);
-	_g_free0 (results_model_path);
+	group_model_name = g_strdup ((const char*) g_hash_table_lookup (props, "groups-model"));
+	results_model_name = g_strdup ((const char*) g_hash_table_lookup (props, "results-model"));
+	self->priv->groups_model = (_tmp0_ = (DeeSharedModel*) dee_shared_model_new_with_name (group_model_name), _g_object_unref0 (self->priv->groups_model), _tmp0_);
+	self->priv->results_model = (_tmp1_ = (DeeSharedModel*) dee_shared_model_new_with_name (results_model_name), _g_object_unref0 (self->priv->results_model), _tmp1_);
+	g_signal_connect_object ((DeeModel*) self->priv->groups_model, "row-added", (GCallback) _unity_places_views_results_view_on_group_added_dee_model_row_added, self, 0);
+	g_signal_connect_object ((DeeModel*) self->priv->groups_model, "row-changed", (GCallback) _unity_places_views_results_view_on_group_changed_dee_model_row_changed, self, 0);
+	g_signal_connect_object ((DeeModel*) self->priv->groups_model, "row-removed", (GCallback) _unity_places_views_results_view_on_group_removed_dee_model_row_removed, self, 0);
+	g_signal_connect_object ((DeeModel*) self->priv->results_model, "row-added", (GCallback) _unity_places_views_results_view_on_result_added_dee_model_row_added, self, 0);
+	g_signal_connect_object ((DeeModel*) self->priv->results_model, "row-changed", (GCallback) _unity_places_views_results_view_on_result_changed_dee_model_row_changed, self, 0);
+	g_signal_connect_object ((DeeModel*) self->priv->results_model, "row-removed", (GCallback) _unity_places_views_results_view_on_result_removed_dee_model_row_removed, self, 0);
+	dee_shared_model_connect (self->priv->groups_model);
+	dee_shared_model_connect (self->priv->results_model);
+	_g_free0 (group_model_name);
+	_g_free0 (results_model_name);
 }
 
 
-static void unity_places_views_results_view_on_group_added (UnityPlacesViewsResultsView* self, DbusModel* model, DbusModelIter* iter) {
+static void unity_places_views_results_view_on_group_added (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (model != NULL);
 	g_return_if_fail (iter != NULL);
@@ -374,66 +373,65 @@ static void unity_places_views_results_view_on_group_added (UnityPlacesViewsResu
 }
 
 
-static void unity_places_views_results_view_on_group_changed (UnityPlacesViewsResultsView* self, DbusModel* model, DbusModelIter* iter) {
+static void unity_places_views_results_view_on_group_changed (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (model != NULL);
 	g_return_if_fail (iter != NULL);
 }
 
 
-static void unity_places_views_results_view_on_group_removed (UnityPlacesViewsResultsView* self, DbusModel* model, DbusModelIter* iter) {
+static void unity_places_views_results_view_on_group_removed (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (model != NULL);
 	g_return_if_fail (iter != NULL);
 }
 
 
-static void unity_places_views_results_view_on_result_added (UnityPlacesViewsResultsView* self, DbusModel* model, DbusModelIter* iter) {
+static void unity_places_views_results_view_on_result_added (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter) {
 	char* group_name;
 	UnityPlacesApplicationApplicationGroup* group;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (model != NULL);
 	g_return_if_fail (iter != NULL);
-	group_name = g_strdup (dbus_model_get_string (model, iter, (guint) UNITY_PLACES_VIEWS_RESULTS_COLUMNS_GROUP));
+	group_name = g_strdup (dee_model_get_string (model, iter, (guint) UNITY_PLACES_VIEWS_RESULT_COLUMNS_GROUP));
 	group = (UnityPlacesApplicationApplicationGroup*) gee_abstract_map_get ((GeeAbstractMap*) self->priv->groups, group_name);
-	if (UNITY_PLACES_APPLICATION_IS_APPLICATION_GROUP (group)) {
-		if (group->n_items < 6) {
-			UnityPlacesApplicationApplicationIcon* app;
-			char* name;
-			char* icon_name;
-			char* comment;
-			UnityPlacesApplicationApplicationIcon* _tmp0_;
-			app = NULL;
-			name = g_strdup (dbus_model_get_string (model, iter, (guint) UNITY_PLACES_VIEWS_RESULTS_COLUMNS_NAME));
-			icon_name = g_strdup (dbus_model_get_string (model, iter, (guint) UNITY_PLACES_VIEWS_RESULTS_COLUMNS_ICON_NAME));
-			comment = g_strdup (dbus_model_get_string (model, iter, (guint) UNITY_PLACES_VIEWS_RESULTS_COLUMNS_COMMENT));
-			app = (_tmp0_ = unity_places_application_application_icon_new (48, name, icon_name, comment), _unity_places_application_application_icon_unref0 (app), _tmp0_);
-			unity_places_application_application_group_add_icon (group, app);
-			_unity_places_application_application_icon_unref0 (app);
-			_g_free0 (name);
-			_g_free0 (icon_name);
-			_g_free0 (comment);
-		}
-	} else {
-		UnityPlacesApplicationApplicationGroup* _tmp1_;
-		group = (_tmp1_ = g_object_ref_sink (unity_places_application_application_group_new (group_name)), _g_object_unref0 (group), _tmp1_);
+	if (!UNITY_PLACES_APPLICATION_IS_APPLICATION_GROUP (group)) {
+		UnityPlacesApplicationApplicationGroup* _tmp0_;
+		group = (_tmp0_ = g_object_ref_sink (unity_places_application_application_group_new (group_name)), _g_object_unref0 (group), _tmp0_);
 		clutter_container_add_actor ((ClutterContainer*) self->priv->results_view, (ClutterActor*) group);
 		clutter_actor_show ((ClutterActor*) group);
 		gee_abstract_map_set ((GeeAbstractMap*) self->priv->groups, group_name, group);
+	}
+	if (group->n_items < 6) {
+		UnityPlacesApplicationApplicationIcon* app;
+		char* name;
+		char* icon_name;
+		char* comment;
+		UnityPlacesApplicationApplicationIcon* _tmp1_;
+		app = NULL;
+		name = g_strdup (dee_model_get_string (model, iter, (guint) UNITY_PLACES_VIEWS_RESULT_COLUMNS_NAME));
+		icon_name = g_strdup (dee_model_get_string (model, iter, (guint) UNITY_PLACES_VIEWS_RESULT_COLUMNS_ICON_NAME));
+		comment = g_strdup (dee_model_get_string (model, iter, (guint) UNITY_PLACES_VIEWS_RESULT_COLUMNS_COMMENT));
+		app = (_tmp1_ = unity_places_application_application_icon_new (48, name, icon_name, comment), _unity_places_application_application_icon_unref0 (app), _tmp1_);
+		unity_places_application_application_group_add_icon (group, app);
+		_unity_places_application_application_icon_unref0 (app);
+		_g_free0 (name);
+		_g_free0 (icon_name);
+		_g_free0 (comment);
 	}
 	_g_free0 (group_name);
 	_g_object_unref0 (group);
 }
 
 
-static void unity_places_views_results_view_on_result_changed (UnityPlacesViewsResultsView* self, DbusModel* model, DbusModelIter* iter) {
+static void unity_places_views_results_view_on_result_changed (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (model != NULL);
 	g_return_if_fail (iter != NULL);
 }
 
 
-static void unity_places_views_results_view_on_result_removed (UnityPlacesViewsResultsView* self, DbusModel* model, DbusModelIter* iter) {
+static void unity_places_views_results_view_on_result_removed (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (model != NULL);
 	g_return_if_fail (iter != NULL);
@@ -522,7 +520,7 @@ UnityPlacesViewsGroupView* unity_places_views_group_view_new (void) {
 }
 
 
-void unity_places_views_group_view_add (UnityPlacesViewsGroupView* self, DbusModel* model, DbusModelIter* iter) {
+void unity_places_views_group_view_add (UnityPlacesViewsGroupView* self, DeeModel* model, DeeModelIter* iter) {
 	UnityPlacesViewsGroupLabel* text;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (model != NULL);
@@ -569,16 +567,16 @@ GType unity_places_views_group_view_get_type (void) {
 }
 
 
-UnityPlacesViewsGroupLabel* unity_places_views_group_label_construct (GType object_type, DbusModel* model, DbusModelIter* iter) {
+UnityPlacesViewsGroupLabel* unity_places_views_group_label_construct (GType object_type, DeeModel* model, DeeModelIter* iter) {
 	UnityPlacesViewsGroupLabel * self;
 	g_return_val_if_fail (model != NULL, NULL);
 	g_return_val_if_fail (iter != NULL, NULL);
-	self = (UnityPlacesViewsGroupLabel*) g_object_new (object_type, "model", model, "iter", iter, "text", dbus_model_get_string (model, iter, (guint) UNITY_PLACES_VIEWS_GROUP_COLUMNS_NAME), NULL);
+	self = (UnityPlacesViewsGroupLabel*) g_object_new (object_type, "model", model, "iter", iter, "text", dee_model_get_string (model, iter, (guint) UNITY_PLACES_VIEWS_GROUP_COLUMNS_NAME), NULL);
 	return self;
 }
 
 
-UnityPlacesViewsGroupLabel* unity_places_views_group_label_new (DbusModel* model, DbusModelIter* iter) {
+UnityPlacesViewsGroupLabel* unity_places_views_group_label_new (DeeModel* model, DeeModelIter* iter) {
 	return unity_places_views_group_label_construct (UNITY_PLACES_VIEWS_TYPE_GROUP_LABEL, model, iter);
 }
 
@@ -636,30 +634,30 @@ static void unity_places_views_group_label_real_paint (ClutterActor* base) {
 }
 
 
-DbusModel* unity_places_views_group_label_get_model (UnityPlacesViewsGroupLabel* self) {
-	DbusModel* result;
+DeeModel* unity_places_views_group_label_get_model (UnityPlacesViewsGroupLabel* self) {
+	DeeModel* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_model;
 	return result;
 }
 
 
-static void unity_places_views_group_label_set_model (UnityPlacesViewsGroupLabel* self, DbusModel* value) {
+static void unity_places_views_group_label_set_model (UnityPlacesViewsGroupLabel* self, DeeModel* value) {
 	g_return_if_fail (self != NULL);
 	self->priv->_model = value;
 	g_object_notify ((GObject *) self, "model");
 }
 
 
-DbusModelIter* unity_places_views_group_label_get_iter (UnityPlacesViewsGroupLabel* self) {
-	DbusModelIter* result;
+DeeModelIter* unity_places_views_group_label_get_iter (UnityPlacesViewsGroupLabel* self) {
+	DeeModelIter* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_iter;
 	return result;
 }
 
 
-static void unity_places_views_group_label_set_iter (UnityPlacesViewsGroupLabel* self, DbusModelIter* value) {
+static void unity_places_views_group_label_set_iter (UnityPlacesViewsGroupLabel* self, DeeModelIter* value) {
 	g_return_if_fail (self != NULL);
 	self->priv->_iter = value;
 	g_object_notify ((GObject *) self, "iter");
@@ -707,7 +705,7 @@ static void unity_places_views_group_label_class_init (UnityPlacesViewsGroupLabe
 	G_OBJECT_CLASS (klass)->set_property = unity_places_views_group_label_set_property;
 	G_OBJECT_CLASS (klass)->constructor = unity_places_views_group_label_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_places_views_group_label_finalize;
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_VIEWS_GROUP_LABEL_MODEL, g_param_spec_object ("model", "model", "model", DBUS_TYPE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_VIEWS_GROUP_LABEL_MODEL, g_param_spec_object ("model", "model", "model", DEE_TYPE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_VIEWS_GROUP_LABEL_ITER, g_param_spec_pointer ("iter", "iter", "iter", G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 

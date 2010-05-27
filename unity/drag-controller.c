@@ -4,23 +4,23 @@
 /*
  *      unity-drag.vala
  *      Copyright (C) 2010 Canonical Ltd
- *      
+ *
  *      This program is free software; you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
  *      the Free Software Foundation; either version 2 of the License, or
  *      (at your option) any later version.
- *      
+ *
  *      This program is distributed in the hope that it will be useful,
  *      but WITHOUT ANY WARRANTY; without even the implied warranty of
  *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *      GNU General Public License for more details.
- *      
+ *
  *      You should have received a copy of the GNU General Public License
  *      along with this program; if not, write to the Free Software
  *      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  *      MA 02110-1301, USA.
- *      
- *      
+ *
+ *
  *      Authored by Gordon Allott <gord.allott@canonical.com>
  */
 
@@ -110,6 +110,10 @@ struct _UnityShellIface {
 	gboolean (*remove_fullscreen_request) (UnityShell* self, GObject* o);
 	void (*grab_keyboard) (UnityShell* self, gboolean grab, guint32 timestamp);
 	void (*show_window_picker) (UnityShell* self);
+	void (*close_xids) (UnityShell* self, GArray* xids);
+	void (*show_window) (UnityShell* self, guint32 xid);
+	void (*expose_xids) (UnityShell* self, GArray* xids);
+	void (*stop_expose) (UnityShell* self);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
 };
 
@@ -135,6 +139,8 @@ UnityDragController* unity_drag_controller_get_default (void);
 UnityDragView* unity_drag_view_new (ClutterStage* stage);
 UnityDragView* unity_drag_view_construct (GType object_type, ClutterStage* stage);
 void unity_drag_view_hook_actor_to_cursor (UnityDragView* self, ClutterActor* actor, float offset_x, float offset_y);
+static void unity_drag_controller_rehouse_orphaned_child (UnityDragController* self, ClutterActor* old_parent);
+static void _unity_drag_controller_rehouse_orphaned_child_clutter_actor_parent_set (ClutterActor* _sender, ClutterActor* old_parent, gpointer self);
 static void unity_drag_controller_on_view_motion (UnityDragController* self, float x, float y);
 static void _unity_drag_controller_on_view_motion_unity_drag_view_motion (UnityDragView* _sender, float x, float y, gpointer self);
 static void unity_drag_controller_on_view_end (UnityDragController* self, float x, float y);
@@ -143,6 +149,7 @@ GType unity_shell_mode_get_type (void);
 GType unity_shell_get_type (void);
 void unity_shell_add_fullscreen_request (UnityShell* self, GObject* o);
 void unity_drag_controller_start_drag (UnityDragController* self, UnityDragModel* model, float offset_x, float offset_y);
+UnityDragModel* unity_drag_controller_get_drag_model (UnityDragController* self);
 void unity_drag_view_unhook_actor (UnityDragView* self);
 gboolean unity_shell_remove_fullscreen_request (UnityShell* self, GObject* o);
 gboolean unity_drag_controller_get_is_dragging (UnityDragController* self);
@@ -195,6 +202,11 @@ UnityDragController* unity_drag_controller_get_default (void) {
 }
 
 
+static void _unity_drag_controller_rehouse_orphaned_child_clutter_actor_parent_set (ClutterActor* _sender, ClutterActor* old_parent, gpointer self) {
+	unity_drag_controller_rehouse_orphaned_child (self, old_parent);
+}
+
+
 static gpointer _g_object_ref0 (gpointer self) {
 	return self ? g_object_ref (self) : NULL;
 }
@@ -212,7 +224,8 @@ static void _unity_drag_controller_on_view_end_unity_drag_view_end (UnityDragVie
 
 void unity_drag_controller_start_drag (UnityDragController* self, UnityDragModel* model, float offset_x, float offset_y) {
 	ClutterActor* _tmp3_;
-	UnityDragModel* _tmp4_;
+	ClutterActor* _tmp4_;
+	UnityDragModel* _tmp5_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (model != NULL);
 	if (!UNITY_DRAG_IS_VIEW (self->priv->view)) {
@@ -224,12 +237,41 @@ void unity_drag_controller_start_drag (UnityDragController* self, UnityDragModel
 	}
 	unity_drag_view_hook_actor_to_cursor (self->priv->view, _tmp3_ = unity_drag_model_get_icon (model), offset_x, offset_y);
 	_g_object_unref0 (_tmp3_);
-	self->priv->model = (_tmp4_ = _g_object_ref0 (model), _g_object_unref0 (self->priv->model), _tmp4_);
+	g_signal_connect_object (_tmp4_ = unity_drag_model_get_icon (model), "parent-set", (GCallback) _unity_drag_controller_rehouse_orphaned_child_clutter_actor_parent_set, self, 0);
+	_g_object_unref0 (_tmp4_);
+	self->priv->model = (_tmp5_ = _g_object_ref0 (model), _g_object_unref0 (self->priv->model), _tmp5_);
 	g_signal_emit_by_name (self, "drag-start", model);
 	g_signal_connect_object (self->priv->view, "motion", (GCallback) _unity_drag_controller_on_view_motion_unity_drag_view_motion, self, 0);
 	g_signal_connect_object (self->priv->view, "end", (GCallback) _unity_drag_controller_on_view_end_unity_drag_view_end, self, 0);
 	self->priv->_is_dragging = TRUE;
 	unity_shell_add_fullscreen_request (unity_global_shell, (GObject*) self);
+}
+
+
+static void unity_drag_controller_rehouse_orphaned_child (UnityDragController* self, ClutterActor* old_parent) {
+	ClutterActor* actor;
+	g_return_if_fail (self != NULL);
+	if (old_parent == NULL) {
+		return;
+	}
+	actor = unity_drag_model_get_icon (self->priv->model);
+	if (!CLUTTER_IS_ACTOR (clutter_actor_get_parent (actor))) {
+		ClutterActor* _tmp0_;
+		ClutterStage* stage;
+		stage = _g_object_ref0 ((_tmp0_ = clutter_actor_get_stage (old_parent), CLUTTER_IS_STAGE (_tmp0_) ? ((ClutterStage*) _tmp0_) : NULL));
+		clutter_actor_set_parent (actor, (ClutterActor*) stage);
+		clutter_actor_set_position (actor, (float) (-10000), (float) (-10000));
+		_g_object_unref0 (stage);
+	}
+	_g_object_unref0 (actor);
+}
+
+
+UnityDragModel* unity_drag_controller_get_drag_model (UnityDragController* self) {
+	UnityDragModel* result = NULL;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = _g_object_ref0 (self->priv->model);
+	return result;
 }
 
 
@@ -240,17 +282,22 @@ static void unity_drag_controller_on_view_motion (UnityDragController* self, flo
 
 
 static void unity_drag_controller_on_view_end (UnityDragController* self, float x, float y) {
-	guint _tmp0_;
 	guint _tmp1_;
-	UnityDragModel* _tmp2_;
+	ClutterActor* _tmp0_;
+	guint _tmp2_;
+	guint _tmp3_;
+	UnityDragModel* _tmp4_;
 	g_return_if_fail (self != NULL);
+	g_signal_parse_name ("parent-set", CLUTTER_TYPE_ACTOR, &_tmp1_, NULL, FALSE);
+	g_signal_handlers_disconnect_matched (_tmp0_ = unity_drag_model_get_icon (self->priv->model), G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp1_, 0, NULL, (GCallback) _unity_drag_controller_rehouse_orphaned_child_clutter_actor_parent_set, self);
+	_g_object_unref0 (_tmp0_);
 	unity_drag_view_unhook_actor (self->priv->view);
 	g_signal_emit_by_name (self, "drag-drop", self->priv->model, x, y);
-	g_signal_parse_name ("motion", UNITY_DRAG_TYPE_VIEW, &_tmp0_, NULL, FALSE);
-	g_signal_handlers_disconnect_matched (self->priv->view, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_drag_controller_on_view_motion_unity_drag_view_motion, self);
-	g_signal_parse_name ("end", UNITY_DRAG_TYPE_VIEW, &_tmp1_, NULL, FALSE);
-	g_signal_handlers_disconnect_matched (self->priv->view, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp1_, 0, NULL, (GCallback) _unity_drag_controller_on_view_end_unity_drag_view_end, self);
-	self->priv->model = (_tmp2_ = NULL, _g_object_unref0 (self->priv->model), _tmp2_);
+	g_signal_parse_name ("motion", UNITY_DRAG_TYPE_VIEW, &_tmp2_, NULL, FALSE);
+	g_signal_handlers_disconnect_matched (self->priv->view, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp2_, 0, NULL, (GCallback) _unity_drag_controller_on_view_motion_unity_drag_view_motion, self);
+	g_signal_parse_name ("end", UNITY_DRAG_TYPE_VIEW, &_tmp3_, NULL, FALSE);
+	g_signal_handlers_disconnect_matched (self->priv->view, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp3_, 0, NULL, (GCallback) _unity_drag_controller_on_view_end_unity_drag_view_end, self);
+	self->priv->model = (_tmp4_ = NULL, _g_object_unref0 (self->priv->model), _tmp4_);
 	self->priv->_is_dragging = FALSE;
 	unity_shell_remove_fullscreen_request (unity_global_shell, (GObject*) self);
 }
