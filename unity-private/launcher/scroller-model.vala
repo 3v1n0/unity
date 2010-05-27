@@ -101,7 +101,7 @@ namespace Unity.Launcher
 
     public void remove (ScrollerChild child)
     {
-			var tempchild = child;
+      var tempchild = child;
       children.remove (child);
       child_removed (tempchild);
       order_changed ();
@@ -113,15 +113,27 @@ namespace Unity.Launcher
       child_added (child);
     }
 
-		public void move (ScrollerChild child, int i)
-			{
-				if (!(child in children))
-					return;
+    public void move (ScrollerChild child, int i)
+    {
+      if (!(child in children))
+        return;
 
-				children.remove (child);
-				children.insert (i, child);
-				order_changed ();
-			}
+      if (children.index_of (child) == i)
+        return;
+
+      children.remove (child);
+      children.insert (i, child);
+      order_changed ();
+    }
+
+    public int index_of (ScrollerChild child)
+    {
+      if (child in children)
+        {
+          return children.index_of (child);
+        }
+      return 0;
+    }
 
     public void sort (CompareFunc compare)
     {

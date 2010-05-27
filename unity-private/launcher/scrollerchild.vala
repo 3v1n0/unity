@@ -43,6 +43,7 @@ namespace Unity.Launcher
     public bool running {get; set;}
     public bool active {get; set;}
     public bool needs_attention {get; set;}
+    public bool activating {get; set;}
 
     public string to_string ()
     {

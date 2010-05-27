@@ -126,24 +126,29 @@ namespace Unity.Launcher
       set_reactive (true);
 
       child_refs = new Gee.ArrayList <ScrollerChild> ();
-      order_children ();
+      order_children (true);
       queue_relayout ();
     }
 
     public int get_model_index_at_y_pos (float y)
     {
       // returns the model index at the screenspace position given
+      // this is slow but we can't use child.position because of animations.
+      float h = 0.0f;
+      float min_height, nat_height;
       int i = 0;
-      float height = get_y ();
       foreach (ScrollerChild child in model)
         {
-          float transformed_pos = child.position;;// + scroll_position;
-          if (transformed_pos + height > y)
+          float transformed_pos = h + scroll_position + padding.top;
+          if (transformed_pos > y)
             return i;
 
+          child.get_preferred_height (get_width (), out min_height, out nat_height);
+          h += nat_height + spacing;
           i++;
         }
-      return i-1;
+
+      return int.max (i, 0);
     }
 
     /*
@@ -199,13 +204,14 @@ namespace Unity.Launcher
      */
     private void model_child_added (ScrollerChild child)
     {
-			child.unparent ();
+      child.unparent ();
       child.set_parent (this);
-      child.opacity = 0;
-      var anim = child.animate (Clutter.AnimationMode.EASE_IN_QUAD,
-                                SHORT_DELAY,
-                                "opacity", 0xff);
-      order_children ();
+
+      // we only animate if the added child is not at the end
+      if (model.index_of (child) == model.size -1)
+        order_children (true);
+      else
+        order_children (false);
       queue_relayout ();
       child.notify["position"].connect (() => {
         queue_relayout ();
@@ -223,13 +229,13 @@ namespace Unity.Launcher
         child_refs.remove (child);
       });
 
-      order_children ();
+      order_children (false);
       queue_relayout ();
     }
 
     private void model_order_changed ()
     {
-      order_children ();
+      order_children (false);
       queue_relayout ();
     }
 
@@ -244,6 +250,7 @@ namespace Unity.Launcher
           return false;
         }
 
+      //Clutter.grab_pointer (this);
       button_down = true;
       previous_y_position = event.button.y;
       previous_y_time = event.button.time;
@@ -262,6 +269,7 @@ namespace Unity.Launcher
           return false;
         }
 
+      //Clutter.ungrab_pointer ();
       button_down = false;
       this.get_stage ().button_release_event.disconnect (this.on_button_release_event);
       Unity.global_shell.remove_fullscreen_request (this);
@@ -523,7 +531,7 @@ namespace Unity.Launcher
       return;
     }
 
-    private void order_children ()
+    private void order_children (bool immediate)
     {
       // figures out the position of each child based on its order in the model
       float h = 0.0f;
@@ -533,10 +541,25 @@ namespace Unity.Launcher
         child.get_preferred_height (get_width (), out min_height, out nat_height);
         if (h != child.position)
         {
-          (child as ScrollerChild).animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD,
-                                            170,
-                                            "position", h);
+          if (!immediate)
+            {
+              if (child.get_animation () is Clutter.Animation)
+                {
+                  float current_pos = child.position;
+                  child.get_animation ().completed ();
+                  child.position = current_pos;
+                }
+
+              child.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD,
+                             170,
+                             "position", h);
+            }
+          else
+            {
+              child.position = h;
+            }
         }
+
         h += nat_height + spacing;
       }
     }

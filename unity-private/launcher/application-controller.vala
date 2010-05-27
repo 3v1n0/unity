@@ -161,8 +161,7 @@ namespace Unity.Launcher
       construct
         {
           _desktop_file = value;
-          if (_desktop_file != "")
-            load_desktop_file_info ();
+          load_desktop_file_info ();
         }
     }
     private KeyFile desktop_keyfile;
@@ -172,7 +171,7 @@ namespace Unity.Launcher
 
     private bool is_favorite = false;
 
-    public ApplicationController (string? desktop_file_, ScrollerChild child_)
+    public ApplicationController (string desktop_file_, ScrollerChild child_)
     {
       Object (desktop_file: desktop_file_,
               child: child_);
@@ -192,16 +191,13 @@ namespace Unity.Launcher
       // we need to figure out if we are a favorite
       is_favorite = true;
       child.pin_type = PinType.UNPINNED;
-      if (desktop_file != null)
+      foreach (string uid in favorites.get_favorites ())
         {
-          foreach (string uid in favorites.get_favorites ())
+          if (favorites.get_string (uid, "desktop_file") == desktop_file)
             {
-              if (favorites.get_string (uid, "desktop_file") == desktop_file)
-                {
-                  is_favorite = true;
-                  child.pin_type = PinType.PINNED;
-                  break;
-                }
+              is_favorite = true;
+              child.pin_type = PinType.PINNED;
+              break;
             }
         }
 
@@ -246,7 +242,7 @@ namespace Unity.Launcher
         {
           is_favorite = false;
           child.pin_type = PinType.UNPINNED;
-					closed ();
+          closed ();
         }
     }
 
@@ -331,7 +327,7 @@ namespace Unity.Launcher
                 }
             }
         }
-      else if (desktop_file != null)
+      else
         {
           Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
           try
@@ -343,6 +339,9 @@ namespace Unity.Launcher
               context.set_timestamp (Gdk.CURRENT_TIME);
 
               appinfo.launch (null, context);
+              child.activating = true;
+              // timeout after eight seconds
+              GLib.Timeout.add_seconds (8, on_launch_timeout);
             }
           catch (Error e)
             {
@@ -351,14 +350,22 @@ namespace Unity.Launcher
         }
     }
 
+    private bool on_launch_timeout ()
+    {
+      child.activating = false;
+      return false;
+    }
     public void attach_application (Bamf.Application application)
     {
       app = application;
       child.running = app.is_running ();
       child.active = app.is_active ();
+      child.activating = false;
+
       app.running_changed.connect (on_app_running_changed);
       app.active_changed.connect (on_app_active_changed);
 			app.closed.connect (detach_application);
+      app.urgent_changed.connect (on_app_urgant_changed);
 			name = app.get_name ();
 			if (name == "")
 			  warning (@"Bamf returned null for app.get_name (): $desktop_file");
@@ -376,17 +383,19 @@ namespace Unity.Launcher
     {
       app.running_changed.disconnect (on_app_running_changed);
       app.active_changed.disconnect (on_app_active_changed);
-			app.closed.disconnect (detach_application);
+      app.urgent_changed.disconnect (on_app_urgant_changed);
+      app.closed.disconnect (detach_application);
       app = null;
       child.running = false;
       child.active = false;
-			closed ();
+      child.needs_attention = false;
+      closed ();
     }
 
-		public bool debug_is_application_attached ()
-		{
-			return app != null;
-		}
+    public bool debug_is_application_attached ()
+    {
+      return app != null;
+    }
 
     private void on_app_running_changed (bool running)
     {
@@ -400,6 +409,11 @@ namespace Unity.Launcher
     private void on_app_active_changed (bool active)
     {
       child.active = active;
+    }
+
+    private void on_app_urgant_changed (bool urgancy)
+    {
+      child.needs_attention = urgancy;
     }
 
     private void load_desktop_file_info ()
