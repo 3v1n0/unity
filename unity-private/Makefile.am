@@ -73,6 +73,9 @@ private_sources = \
 
 panel_sources = \
   panel/panel-home.vala \
+  panel/panel-indicator-model.vala \
+  panel/panel-indicator-object-entry-view.vala \
+  panel/panel-indicator-object-view.vala \
   panel/panel-indicators.vala \
   panel/panel-tray.vala \
   panel/panel-view.vala
