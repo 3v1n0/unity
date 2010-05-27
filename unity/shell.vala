@@ -29,6 +29,7 @@ namespace Unity
     TARGET_URL,
     TARGET_OTHER
   }
+
   public interface Shell : Object
   {
     public abstract bool          menus_swallow_events {get;}
@@ -42,6 +43,12 @@ namespace Unity
     public abstract bool          remove_fullscreen_request (Object o);
     public abstract void          grab_keyboard (bool grab, uint32 timestamp);
     public abstract void          show_window_picker ();
+
+    public abstract void          close_xids (Array<uint32> xids);
+    public abstract void          show_window (uint32 xid);
+
+		public abstract void					expose_xids (Array<uint32> xids);
+		public abstract void					stop_expose ();
 
     public signal   void need_new_icon_cache ();
     public signal   void indicators_changed (int width);

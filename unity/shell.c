@@ -60,6 +60,10 @@ struct _UnityShellIface {
 	gboolean (*remove_fullscreen_request) (UnityShell* self, GObject* o);
 	void (*grab_keyboard) (UnityShell* self, gboolean grab, guint32 timestamp);
 	void (*show_window_picker) (UnityShell* self);
+	void (*close_xids) (UnityShell* self, GArray* xids);
+	void (*show_window) (UnityShell* self, guint32 xid);
+	void (*expose_xids) (UnityShell* self, GArray* xids);
+	void (*stop_expose) (UnityShell* self);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
 };
 
@@ -79,6 +83,10 @@ void unity_shell_add_fullscreen_request (UnityShell* self, GObject* o);
 gboolean unity_shell_remove_fullscreen_request (UnityShell* self, GObject* o);
 void unity_shell_grab_keyboard (UnityShell* self, gboolean grab, guint32 timestamp);
 void unity_shell_show_window_picker (UnityShell* self);
+void unity_shell_close_xids (UnityShell* self, GArray* xids);
+void unity_shell_show_window (UnityShell* self, guint32 xid);
+void unity_shell_expose_xids (UnityShell* self, GArray* xids);
+void unity_shell_stop_expose (UnityShell* self);
 gboolean unity_shell_get_menus_swallow_events (UnityShell* self);
 
 
@@ -149,6 +157,26 @@ void unity_shell_grab_keyboard (UnityShell* self, gboolean grab, guint32 timesta
 
 void unity_shell_show_window_picker (UnityShell* self) {
 	UNITY_SHELL_GET_INTERFACE (self)->show_window_picker (self);
+}
+
+
+void unity_shell_close_xids (UnityShell* self, GArray* xids) {
+	UNITY_SHELL_GET_INTERFACE (self)->close_xids (self, xids);
+}
+
+
+void unity_shell_show_window (UnityShell* self, guint32 xid) {
+	UNITY_SHELL_GET_INTERFACE (self)->show_window (self, xid);
+}
+
+
+void unity_shell_expose_xids (UnityShell* self, GArray* xids) {
+	UNITY_SHELL_GET_INTERFACE (self)->expose_xids (self, xids);
+}
+
+
+void unity_shell_stop_expose (UnityShell* self) {
+	UNITY_SHELL_GET_INTERFACE (self)->stop_expose (self);
 }
 
 

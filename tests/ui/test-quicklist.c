@@ -26,10 +26,10 @@
 #include <clutter/clutter.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unity.h>
 #include <gtk/gtk.h>
+#include <gee.h>
 #include <clutk/clutk.h>
-#include <float.h>
-#include <math.h>
 
 
 #define UNITY_TESTS_UI_TYPE_QUICKLIST_SUITE (unity_tests_ui_quicklist_suite_get_type ())
@@ -43,6 +43,16 @@ typedef struct _UnityTestsUIQuicklistSuite UnityTestsUIQuicklistSuite;
 typedef struct _UnityTestsUIQuicklistSuiteClass UnityTestsUIQuicklistSuiteClass;
 typedef struct _UnityTestsUIQuicklistSuitePrivate UnityTestsUIQuicklistSuitePrivate;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+
+#define UNITY_TESTS_UI_TYPE_TEST_FAVORITES (unity_tests_ui_test_favorites_get_type ())
+#define UNITY_TESTS_UI_TEST_FAVORITES(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UI_TYPE_TEST_FAVORITES, UnityTestsUITestFavorites))
+#define UNITY_TESTS_UI_TEST_FAVORITES_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UI_TYPE_TEST_FAVORITES, UnityTestsUITestFavoritesClass))
+#define UNITY_TESTS_UI_IS_TEST_FAVORITES(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTS_UI_TYPE_TEST_FAVORITES))
+#define UNITY_TESTS_UI_IS_TEST_FAVORITES_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTS_UI_TYPE_TEST_FAVORITES))
+#define UNITY_TESTS_UI_TEST_FAVORITES_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTS_UI_TYPE_TEST_FAVORITES, UnityTestsUITestFavoritesClass))
+
+typedef struct _UnityTestsUITestFavorites UnityTestsUITestFavorites;
+typedef struct _UnityTestsUITestFavoritesClass UnityTestsUITestFavoritesClass;
 #define _g_free0(var) (var = (g_free (var), NULL))
 #define _unity_testing_object_registry_unref0(var) ((var == NULL) ? NULL : (var = (unity_testing_object_registry_unref (var), NULL)))
 
@@ -69,10 +79,11 @@ enum  {
 	UNITY_TESTS_UI_QUICKLIST_SUITE_DUMMY_PROPERTY
 };
 #define UNITY_TESTS_UI_QUICKLIST_SUITE_DOMAIN "/UI/Quicklist"
+UnityTestsUITestFavorites* unity_tests_ui_test_favorites_new (void);
+UnityTestsUITestFavorites* unity_tests_ui_test_favorites_construct (GType object_type);
+GType unity_tests_ui_test_favorites_get_type (void);
 static void unity_tests_ui_quicklist_suite_test_controller_show_label (UnityTestsUIQuicklistSuite* self);
 static void _unity_tests_ui_quicklist_suite_test_controller_show_label_gdata_test_func (gpointer self);
-static void unity_tests_ui_quicklist_suite_test_shown_on_hover (UnityTestsUIQuicklistSuite* self);
-static void _unity_tests_ui_quicklist_suite_test_shown_on_hover_gdata_test_func (gpointer self);
 static void unity_tests_ui_quicklist_suite_test_teardown (UnityTestsUIQuicklistSuite* self);
 static void _unity_tests_ui_quicklist_suite_test_teardown_gdata_test_func (gpointer self);
 UnityTestsUIQuicklistSuite* unity_tests_ui_quicklist_suite_new (void);
@@ -91,11 +102,6 @@ static void _unity_tests_ui_quicklist_suite_test_controller_show_label_gdata_tes
 }
 
 
-static void _unity_tests_ui_quicklist_suite_test_shown_on_hover_gdata_test_func (gpointer self) {
-	unity_tests_ui_quicklist_suite_test_shown_on_hover (self);
-}
-
-
 static void _unity_tests_ui_quicklist_suite_test_teardown_gdata_test_func (gpointer self) {
 	unity_tests_ui_quicklist_suite_test_teardown (self);
 }
@@ -103,17 +109,18 @@ static void _unity_tests_ui_quicklist_suite_test_teardown_gdata_test_func (gpoin
 
 UnityTestsUIQuicklistSuite* unity_tests_ui_quicklist_suite_construct (GType object_type) {
 	UnityTestsUIQuicklistSuite * self;
-	UnityTestingWindow* _tmp0_;
-	ClutterStage* _tmp1_;
+	UnityFavorites* _tmp0_;
+	UnityTestingWindow* _tmp1_;
+	ClutterStage* _tmp2_;
 	self = (UnityTestsUIQuicklistSuite*) g_object_new (object_type, NULL);
 	unity_testing_logging_init_fatal_handler ();
-	self->priv->window = (_tmp0_ = g_object_ref_sink (unity_testing_window_new (TRUE, 1024, 600)), _g_object_unref0 (self->priv->window), _tmp0_);
+	unity_favorites_singleton = (_tmp0_ = (UnityFavorites*) unity_tests_ui_test_favorites_new (), _g_object_unref0 (unity_favorites_singleton), _tmp0_);
+	self->priv->window = (_tmp1_ = g_object_ref_sink (unity_testing_window_new (TRUE, 1024, 600)), _g_object_unref0 (self->priv->window), _tmp1_);
 	unity_testing_window_init_test_mode (self->priv->window);
-	self->priv->stage = (_tmp1_ = _g_object_ref0 (self->priv->window->stage), _g_object_unref0 (self->priv->stage), _tmp1_);
+	self->priv->stage = (_tmp2_ = _g_object_ref0 (self->priv->window->stage), _g_object_unref0 (self->priv->stage), _tmp2_);
 	gtk_window_set_title ((GtkWindow*) self->priv->window, "Quicklist Tests");
 	gtk_widget_show_all ((GtkWidget*) self->priv->window);
 	g_test_add_data_func (UNITY_TESTS_UI_QUICKLIST_SUITE_DOMAIN "/ControllerShowLabel", self, _unity_tests_ui_quicklist_suite_test_controller_show_label_gdata_test_func);
-	g_test_add_data_func (UNITY_TESTS_UI_QUICKLIST_SUITE_DOMAIN "/ShownOnHover", self, _unity_tests_ui_quicklist_suite_test_shown_on_hover_gdata_test_func);
 	g_test_add_data_func (UNITY_TESTS_UI_QUICKLIST_SUITE_DOMAIN "/Teardown", self, _unity_tests_ui_quicklist_suite_test_teardown_gdata_test_func);
 	return self;
 }
@@ -125,66 +132,37 @@ UnityTestsUIQuicklistSuite* unity_tests_ui_quicklist_suite_new (void) {
 
 
 static void unity_tests_ui_quicklist_suite_test_teardown (UnityTestsUIQuicklistSuite* self) {
-	UnityTestingWindow* _tmp0_;
-	ClutterStage* _tmp1_;
+	ClutterStage* _tmp0_;
 	g_return_if_fail (self != NULL);
-	gtk_object_destroy ((GtkObject*) self->priv->window);
-	self->priv->window = (_tmp0_ = NULL, _g_object_unref0 (self->priv->window), _tmp0_);
-	self->priv->stage = (_tmp1_ = NULL, _g_object_unref0 (self->priv->stage), _tmp1_);
+	self->priv->stage = (_tmp0_ = NULL, _g_object_unref0 (self->priv->stage), _tmp0_);
 }
 
 
 static void unity_tests_ui_quicklist_suite_test_controller_show_label (UnityTestsUIQuicklistSuite* self) {
 	char* img;
 	UnityTestingObjectRegistry* registry;
-	GObject* _tmp0_;
-	UnityWidgetsScroller* scroller;
-	UnityWidgetsScrollerChild* _tmp1_;
-	UnityWidgetsScrollerChild* first;
-	UnityQuicklauncherQuicklistController* qlcontroller;
-	ClutterActor* _tmp2_;
+	GeeArrayList* _tmp0_;
+	GObject* _tmp1_;
+	UnityLauncherScrollerModel* _tmp2_;
+	UnityLauncherScrollerModel* scroller;
+	UnityLauncherScrollerChild* _tmp3_;
+	UnityLauncherScrollerChild* first;
+	UnityLauncherQuicklistController* qlcontroller;
 	g_return_if_fail (self != NULL);
 	img = g_strdup (TESTDIR "/data/quicklist_controller_show_label.png");
 	registry = unity_testing_object_registry_get_default ();
 	unity_testing_logging_init_fatal_handler ();
-	scroller = (_tmp0_ = unity_testing_object_registry_lookup (registry, "UnityWidgetsScroller"), UNITY_WIDGETS_IS_SCROLLER (_tmp0_) ? ((UnityWidgetsScroller*) _tmp0_) : NULL);
-	first = (_tmp1_ = unity_widgets_scroller_nth (scroller, 0), UNITY_WIDGETS_IS_SCROLLER_CHILD (_tmp1_) ? ((UnityWidgetsScrollerChild*) _tmp1_) : NULL);
-	qlcontroller = _g_object_ref0 (unity_quicklauncher_quicklist_controller_get_default ());
-	unity_quicklauncher_quicklist_controller_show_label (qlcontroller, "Ubuntu Software Centre", (_tmp2_ = first->child, CTK_IS_ACTOR (_tmp2_) ? ((CtkActor*) _tmp2_) : NULL));
-	g_assert (utils_compare_snapshot (self->priv->stage, img, 54, 30, 200, 50, TRUE));
-	unity_quicklauncher_quicklist_controller_close_menu (qlcontroller);
+	scroller = (_tmp2_ = (_tmp1_ = (GObject*) gee_abstract_list_get ((GeeAbstractList*) (_tmp0_ = unity_testing_object_registry_lookup (registry, "UnityScrollerModel")), 0), UNITY_LAUNCHER_IS_SCROLLER_MODEL (_tmp1_) ? ((UnityLauncherScrollerModel*) _tmp1_) : NULL), _g_object_unref0 (_tmp0_), _tmp2_);
+	first = (_tmp3_ = unity_launcher_scroller_model_get (scroller, 0), UNITY_LAUNCHER_IS_SCROLLER_CHILD (_tmp3_) ? ((UnityLauncherScrollerChild*) _tmp3_) : NULL);
+	qlcontroller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
+	unity_launcher_quicklist_controller_show_label (qlcontroller, "Ubuntu Software Centre", (CtkActor*) first);
+	g_assert (utils_compare_snapshot (self->priv->stage, img, 54, 25, 200, 50, TRUE));
+	unity_launcher_quicklist_controller_close_menu (qlcontroller);
 	_g_free0 (img);
 	_unity_testing_object_registry_unref0 (registry);
 	_g_object_unref0 (scroller);
 	_g_object_unref0 (first);
 	_g_object_unref0 (qlcontroller);
-}
-
-
-static void unity_tests_ui_quicklist_suite_test_shown_on_hover (UnityTestsUIQuicklistSuite* self) {
-	char* img;
-	UnityTestingObjectRegistry* registry;
-	UnityTestingDirector* director;
-	GObject* _tmp0_;
-	UnityWidgetsScroller* scroller;
-	UnityWidgetsScrollerChild* _tmp1_;
-	ClutterActor* _tmp2_;
-	ClutterActor* first;
-	g_return_if_fail (self != NULL);
-	img = g_strdup (TESTDIR "/data/quicklist_shown_on_hover.png");
-	registry = unity_testing_object_registry_get_default ();
-	director = unity_testing_director_new (self->priv->stage);
-	unity_testing_logging_init_fatal_handler ();
-	scroller = (_tmp0_ = unity_testing_object_registry_lookup (registry, "UnityWidgetsScroller"), UNITY_WIDGETS_IS_SCROLLER (_tmp0_) ? ((UnityWidgetsScroller*) _tmp0_) : NULL);
-	first = (_tmp2_ = _g_object_ref0 ((_tmp1_ = unity_widgets_scroller_nth (scroller, 0))->child), _g_object_unref0 (_tmp1_), _tmp2_);
-	unity_testing_director_enter_event (director, first, (float) 5, (float) 5);
-	g_assert (utils_compare_snapshot (self->priv->stage, img, 54, 30, 200, 50, FALSE));
-	unity_testing_director_leave_event (director, first, (float) 5, (float) 5);
-	_g_free0 (img);
-	_unity_testing_object_registry_unref0 (registry);
-	_g_object_unref0 (director);
-	_g_object_unref0 (scroller);
-	_g_object_unref0 (first);
 }
 
 

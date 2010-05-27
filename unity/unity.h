@@ -12,9 +12,11 @@
 #include <float.h>
 #include <math.h>
 #include <clutk/clutk.h>
+#include <gdk-pixbuf/gdk-pixdata.h>
+#include <cairo.h>
 #include <gtk/gtk.h>
 #include <gio/gio.h>
-#include <gdk-pixbuf/gdk-pixdata.h>
+#include <gee.h>
 
 G_BEGIN_DECLS
 
@@ -82,6 +84,39 @@ typedef struct _UnityWebappPrism UnityWebappPrism;
 typedef struct _UnityWebappPrismClass UnityWebappPrismClass;
 typedef struct _UnityWebappPrismPrivate UnityWebappPrismPrivate;
 
+#define UNITY_QUICKLIST_RENDERING_TYPE_SEPERATOR (unity_quicklist_rendering_seperator_get_type ())
+#define UNITY_QUICKLIST_RENDERING_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLIST_RENDERING_TYPE_SEPERATOR, UnityQuicklistRenderingSeperator))
+#define UNITY_QUICKLIST_RENDERING_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLIST_RENDERING_TYPE_SEPERATOR, UnityQuicklistRenderingSeperatorClass))
+#define UNITY_QUICKLIST_RENDERING_IS_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLIST_RENDERING_TYPE_SEPERATOR))
+#define UNITY_QUICKLIST_RENDERING_IS_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLIST_RENDERING_TYPE_SEPERATOR))
+#define UNITY_QUICKLIST_RENDERING_SEPERATOR_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLIST_RENDERING_TYPE_SEPERATOR, UnityQuicklistRenderingSeperatorClass))
+
+typedef struct _UnityQuicklistRenderingSeperator UnityQuicklistRenderingSeperator;
+typedef struct _UnityQuicklistRenderingSeperatorClass UnityQuicklistRenderingSeperatorClass;
+typedef struct _UnityQuicklistRenderingSeperatorPrivate UnityQuicklistRenderingSeperatorPrivate;
+
+#define UNITY_QUICKLIST_RENDERING_TYPE_ITEM (unity_quicklist_rendering_item_get_type ())
+#define UNITY_QUICKLIST_RENDERING_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLIST_RENDERING_TYPE_ITEM, UnityQuicklistRenderingItem))
+#define UNITY_QUICKLIST_RENDERING_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLIST_RENDERING_TYPE_ITEM, UnityQuicklistRenderingItemClass))
+#define UNITY_QUICKLIST_RENDERING_IS_ITEM(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLIST_RENDERING_TYPE_ITEM))
+#define UNITY_QUICKLIST_RENDERING_IS_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLIST_RENDERING_TYPE_ITEM))
+#define UNITY_QUICKLIST_RENDERING_ITEM_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLIST_RENDERING_TYPE_ITEM, UnityQuicklistRenderingItemClass))
+
+typedef struct _UnityQuicklistRenderingItem UnityQuicklistRenderingItem;
+typedef struct _UnityQuicklistRenderingItemClass UnityQuicklistRenderingItemClass;
+typedef struct _UnityQuicklistRenderingItemPrivate UnityQuicklistRenderingItemPrivate;
+
+#define UNITY_QUICKLIST_RENDERING_TYPE_MENU (unity_quicklist_rendering_menu_get_type ())
+#define UNITY_QUICKLIST_RENDERING_MENU(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLIST_RENDERING_TYPE_MENU, UnityQuicklistRenderingMenu))
+#define UNITY_QUICKLIST_RENDERING_MENU_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLIST_RENDERING_TYPE_MENU, UnityQuicklistRenderingMenuClass))
+#define UNITY_QUICKLIST_RENDERING_IS_MENU(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLIST_RENDERING_TYPE_MENU))
+#define UNITY_QUICKLIST_RENDERING_IS_MENU_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLIST_RENDERING_TYPE_MENU))
+#define UNITY_QUICKLIST_RENDERING_MENU_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLIST_RENDERING_TYPE_MENU, UnityQuicklistRenderingMenuClass))
+
+typedef struct _UnityQuicklistRenderingMenu UnityQuicklistRenderingMenu;
+typedef struct _UnityQuicklistRenderingMenuClass UnityQuicklistRenderingMenuClass;
+typedef struct _UnityQuicklistRenderingMenuPrivate UnityQuicklistRenderingMenuPrivate;
+
 #define UNITY_TYPE_SHELL_MODE (unity_shell_mode_get_type ())
 
 #define UNITY_TYPE_DND_TARGETS (unity_dnd_targets_get_type ())
@@ -115,6 +150,28 @@ typedef struct _UnityThemeFilePathPrivate UnityThemeFilePathPrivate;
 typedef struct _UnityThemeImage UnityThemeImage;
 typedef struct _UnityThemeImageClass UnityThemeImageClass;
 typedef struct _UnityThemeImagePrivate UnityThemeImagePrivate;
+
+#define UNITY_TYPE_FAVORITES (unity_favorites_get_type ())
+#define UNITY_FAVORITES(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_FAVORITES, UnityFavorites))
+#define UNITY_FAVORITES_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_FAVORITES, UnityFavoritesClass))
+#define UNITY_IS_FAVORITES(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_FAVORITES))
+#define UNITY_IS_FAVORITES_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_FAVORITES))
+#define UNITY_FAVORITES_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_FAVORITES, UnityFavoritesClass))
+
+typedef struct _UnityFavorites UnityFavorites;
+typedef struct _UnityFavoritesClass UnityFavoritesClass;
+typedef struct _UnityFavoritesPrivate UnityFavoritesPrivate;
+
+#define UNITY_TYPE_GCONF_FAVORITES (unity_gconf_favorites_get_type ())
+#define UNITY_GCONF_FAVORITES(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_GCONF_FAVORITES, UnityGConfFavorites))
+#define UNITY_GCONF_FAVORITES_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_GCONF_FAVORITES, UnityGConfFavoritesClass))
+#define UNITY_IS_GCONF_FAVORITES(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_GCONF_FAVORITES))
+#define UNITY_IS_GCONF_FAVORITES_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_GCONF_FAVORITES))
+#define UNITY_GCONF_FAVORITES_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_GCONF_FAVORITES, UnityGConfFavoritesClass))
+
+typedef struct _UnityGConfFavorites UnityGConfFavorites;
+typedef struct _UnityGConfFavoritesClass UnityGConfFavoritesClass;
+typedef struct _UnityGConfFavoritesPrivate UnityGConfFavoritesPrivate;
 
 #define UNITY_WEBAPP_TYPE_FETCH_FILE (unity_webapp_fetch_file_get_type ())
 #define UNITY_WEBAPP_FETCH_FILE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_WEBAPP_TYPE_FETCH_FILE, UnityWebappFetchFile))
@@ -193,6 +250,33 @@ struct _UnityWebappPrismClass {
 	GObjectClass parent_class;
 };
 
+struct _UnityQuicklistRenderingSeperator {
+	GObject parent_instance;
+	UnityQuicklistRenderingSeperatorPrivate * priv;
+};
+
+struct _UnityQuicklistRenderingSeperatorClass {
+	GObjectClass parent_class;
+};
+
+struct _UnityQuicklistRenderingItem {
+	GObject parent_instance;
+	UnityQuicklistRenderingItemPrivate * priv;
+};
+
+struct _UnityQuicklistRenderingItemClass {
+	GObjectClass parent_class;
+};
+
+struct _UnityQuicklistRenderingMenu {
+	GObject parent_instance;
+	UnityQuicklistRenderingMenuPrivate * priv;
+};
+
+struct _UnityQuicklistRenderingMenuClass {
+	GObjectClass parent_class;
+};
+
 typedef enum  {
 	UNITY_SHELL_MODE_UNDERLAY,
 	UNITY_SHELL_MODE_OVERLAY
@@ -216,6 +300,10 @@ struct _UnityShellIface {
 	gboolean (*remove_fullscreen_request) (UnityShell* self, GObject* o);
 	void (*grab_keyboard) (UnityShell* self, gboolean grab, guint32 timestamp);
 	void (*show_window_picker) (UnityShell* self);
+	void (*close_xids) (UnityShell* self, GArray* xids);
+	void (*show_window) (UnityShell* self, guint32 xid);
+	void (*expose_xids) (UnityShell* self, GArray* xids);
+	void (*stop_expose) (UnityShell* self);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
 };
 
@@ -236,6 +324,36 @@ struct _UnityThemeImage {
 
 struct _UnityThemeImageClass {
 	ClutterTextureClass parent_class;
+};
+
+struct _UnityFavorites {
+	GObject parent_instance;
+	UnityFavoritesPrivate * priv;
+};
+
+struct _UnityFavoritesClass {
+	GObjectClass parent_class;
+	GeeArrayList* (*get_favorites) (UnityFavorites* self);
+	void (*add_favorite) (UnityFavorites* self, const char* uid);
+	void (*remove_favorite) (UnityFavorites* self, const char* uid);
+	gboolean (*is_favorite) (UnityFavorites* self, const char* uid);
+	char* (*get_string) (UnityFavorites* self, const char* uid, const char* name);
+	void (*set_string) (UnityFavorites* self, const char* uid, const char* name, const char* value);
+	gint* (*get_int) (UnityFavorites* self, const char* uid, const char* name);
+	void (*set_int) (UnityFavorites* self, const char* uid, const char* name, gint value);
+	float* (*get_float) (UnityFavorites* self, const char* uid, const char* name);
+	void (*set_float) (UnityFavorites* self, const char* uid, const char* name, float value);
+	gboolean* (*get_bool) (UnityFavorites* self, const char* uid, const char* name);
+	void (*set_bool) (UnityFavorites* self, const char* uid, const char* name, gboolean value);
+};
+
+struct _UnityGConfFavorites {
+	UnityFavorites parent_instance;
+	UnityGConfFavoritesPrivate * priv;
+};
+
+struct _UnityGConfFavoritesClass {
+	UnityFavoritesClass parent_class;
 };
 
 struct _UnityWebappFetchFile {
@@ -271,6 +389,7 @@ GType unity_drag_controller_get_type (void);
 extern UnityDragController* unity_drag_controller_singleton;
 UnityDragController* unity_drag_controller_get_default (void);
 void unity_drag_controller_start_drag (UnityDragController* self, UnityDragModel* model, float offset_x, float offset_y);
+UnityDragModel* unity_drag_controller_get_drag_model (UnityDragController* self);
 UnityDragController* unity_drag_controller_new (void);
 UnityDragController* unity_drag_controller_construct (GType object_type);
 gboolean unity_drag_controller_get_is_dragging (UnityDragController* self);
@@ -279,6 +398,9 @@ UnityEntry* unity_entry_new (const char* static_text);
 UnityEntry* unity_entry_construct (GType object_type, const char* static_text);
 const char* unity_entry_get_static_text (UnityEntry* self);
 void unity_entry_set_static_text (UnityEntry* self, const char* value);
+void unity_rgb_to_hsv (float r, float g, float b, float* hue, float* sat, float* val);
+void unity_hsv_to_rgb (float hue, float sat, float val, float* r, float* g, float* b);
+void unity_get_average_color (GdkPixbuf* source, guint* red, guint* green, guint* blue);
 GType unity_unity_icon_get_type (void);
 UnityUnityIcon* unity_unity_icon_new (ClutterTexture* icon, ClutterTexture* bg_tex);
 UnityUnityIcon* unity_unity_icon_construct (GType object_type, ClutterTexture* icon, ClutterTexture* bg_tex);
@@ -292,6 +414,23 @@ char* unity_webapp_prism_desktop_file_path (UnityWebappPrism* self);
 void unity_webapp_prism_add_to_favorites (UnityWebappPrism* self);
 const char* unity_webapp_prism_get_url (UnityWebappPrism* self);
 const char* unity_webapp_prism_get_icon (UnityWebappPrism* self);
+GType unity_quicklist_rendering_seperator_get_type (void);
+void unity_quicklist_rendering_seperator_fill_mask (cairo_t* cr);
+void unity_quicklist_rendering_seperator_image_background (cairo_t* cr, gint w, gint h);
+UnityQuicklistRenderingSeperator* unity_quicklist_rendering_seperator_new (void);
+UnityQuicklistRenderingSeperator* unity_quicklist_rendering_seperator_construct (GType object_type);
+GType unity_quicklist_rendering_item_get_type (void);
+void unity_quicklist_rendering_item_get_text_extents (const char* font, const char* text, gint* width, gint* height);
+void unity_quicklist_rendering_item_normal_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text);
+void unity_quicklist_rendering_item_selected_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text);
+UnityQuicklistRenderingItem* unity_quicklist_rendering_item_new (void);
+UnityQuicklistRenderingItem* unity_quicklist_rendering_item_construct (GType object_type);
+GType unity_quicklist_rendering_menu_get_type (void);
+void unity_quicklist_rendering_menu_full_mask (cairo_t* cr, gint w, gint h, float anchor_y);
+void unity_quicklist_rendering_menu_fill_mask (cairo_t* cr, gint w, gint h, float anchor_y);
+void unity_quicklist_rendering_menu_background (cairo_t* cr, gint w, gint h, float anchor_y);
+UnityQuicklistRenderingMenu* unity_quicklist_rendering_menu_new (void);
+UnityQuicklistRenderingMenu* unity_quicklist_rendering_menu_construct (GType object_type);
 GType unity_shell_mode_get_type (void);
 GType unity_dnd_targets_get_type (void);
 GType unity_shell_get_type (void);
@@ -304,6 +443,10 @@ void unity_shell_add_fullscreen_request (UnityShell* self, GObject* o);
 gboolean unity_shell_remove_fullscreen_request (UnityShell* self, GObject* o);
 void unity_shell_grab_keyboard (UnityShell* self, gboolean grab, guint32 timestamp);
 void unity_shell_show_window_picker (UnityShell* self);
+void unity_shell_close_xids (UnityShell* self, GArray* xids);
+void unity_shell_show_window (UnityShell* self, guint32 xid);
+void unity_shell_expose_xids (UnityShell* self, GArray* xids);
+void unity_shell_stop_expose (UnityShell* self);
 gboolean unity_shell_get_menus_swallow_events (UnityShell* self);
 extern UnityShell* unity_global_shell;
 GType unity_theme_file_path_get_type (void);
@@ -318,6 +461,25 @@ UnityThemeImage* unity_theme_image_new (const char* icon_name);
 UnityThemeImage* unity_theme_image_construct (GType object_type, const char* icon_name);
 const char* unity_theme_image_get_icon_name (UnityThemeImage* self);
 void unity_theme_image_set_icon_name (UnityThemeImage* self, const char* value);
+GType unity_favorites_get_type (void);
+extern UnityFavorites* unity_favorites_singleton;
+UnityFavorites* unity_favorites_get_default (void);
+GeeArrayList* unity_favorites_get_favorites (UnityFavorites* self);
+void unity_favorites_add_favorite (UnityFavorites* self, const char* uid);
+void unity_favorites_remove_favorite (UnityFavorites* self, const char* uid);
+gboolean unity_favorites_is_favorite (UnityFavorites* self, const char* uid);
+char* unity_favorites_get_string (UnityFavorites* self, const char* uid, const char* name);
+void unity_favorites_set_string (UnityFavorites* self, const char* uid, const char* name, const char* value);
+gint* unity_favorites_get_int (UnityFavorites* self, const char* uid, const char* name);
+void unity_favorites_set_int (UnityFavorites* self, const char* uid, const char* name, gint value);
+float* unity_favorites_get_float (UnityFavorites* self, const char* uid, const char* name);
+void unity_favorites_set_float (UnityFavorites* self, const char* uid, const char* name, float value);
+gboolean* unity_favorites_get_bool (UnityFavorites* self, const char* uid, const char* name);
+void unity_favorites_set_bool (UnityFavorites* self, const char* uid, const char* name, gboolean value);
+UnityFavorites* unity_favorites_construct (GType object_type);
+GType unity_gconf_favorites_get_type (void);
+UnityGConfFavorites* unity_gconf_favorites_new (void);
+UnityGConfFavorites* unity_gconf_favorites_construct (GType object_type);
 char* unity_webapp_urlify (const char* uri);
 GType unity_webapp_fetch_file_get_type (void);
 UnityWebappFetchFile* unity_webapp_fetch_file_new (const char* uri);

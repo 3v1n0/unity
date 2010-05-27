@@ -1,23 +1,23 @@
 /*
  *      unity-drag.vala
  *      Copyright (C) 2010 Canonical Ltd
- *      
+ *
  *      This program is free software; you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
  *      the Free Software Foundation; either version 2 of the License, or
  *      (at your option) any later version.
- *      
+ *
  *      This program is distributed in the hope that it will be useful,
  *      but WITHOUT ANY WARRANTY; without even the implied warranty of
  *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *      GNU General Public License for more details.
- *      
+ *
  *      You should have received a copy of the GNU General Public License
  *      along with this program; if not, write to the Free Software
  *      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  *      MA 02110-1301, USA.
- *      
- *      
+ *
+ *
  *      Authored by Gordon Allott <gord.allott@canonical.com>
  */
 
@@ -31,7 +31,7 @@ namespace Unity.Drag
   }
 
   public Controller? controller_singleton;
-  
+
   public class Controller : Object
   {
     // returns the controller singleton. we only want one
@@ -46,7 +46,7 @@ namespace Unity.Drag
     // normal class starts here
     Unity.Drag.Model? model;
     Unity.Drag.View? view;
-    
+
     /* on drag_start clients should inspect model.get_data () - if the data is
      * data the model is interested in, it should connect to the drag_motion and
      * drag_drop signals
@@ -64,19 +64,41 @@ namespace Unity.Drag
     {
       this._is_dragging = false;
     }
-    
+
     public void start_drag (Unity.Drag.Model model, float offset_x, float offset_y)
     {
       if (!(this.view is View)) {
         this.view = new View (model.get_icon ().get_stage () as Clutter.Stage);
       }
       this.view.hook_actor_to_cursor (model.get_icon (), offset_x, offset_y);
+      model.get_icon ().parent_set.connect (rehouse_orphaned_child);
       this.model = model;
       this.drag_start (model);
       this.view.motion.connect (on_view_motion);
       this.view.end.connect (on_view_end);
       this._is_dragging = true;
       Unity.global_shell.add_fullscreen_request (this);
+    }
+
+    private void rehouse_orphaned_child (Clutter.Actor? old_parent)
+    {
+      // called when the actor we are tracking gets unparented. we need to keep
+      // the actor on the stage at all times. although, hidden.
+      if (old_parent == null) return;
+      Clutter.Actor actor = model.get_icon ();
+
+      if (!(actor.get_parent () is Clutter.Actor))
+        {
+          // no parent. so set stage
+          Clutter.Stage stage = old_parent.get_stage () as Clutter.Stage;
+          actor.set_parent (stage);
+          actor.set_position (-10000, -10000);
+        }
+    }
+
+    public Unity.Drag.Model get_drag_model ()
+    {
+      return model;
     }
 
     private void on_view_motion (float x, float y)
@@ -86,6 +108,7 @@ namespace Unity.Drag
 
     private void on_view_end (float x, float y)
     {
+      model.get_icon ().parent_set.disconnect (rehouse_orphaned_child);
       this.view.unhook_actor ();
       this.drag_drop (this.model, x, y);
       this.view.motion.disconnect (on_view_motion);
@@ -94,7 +117,7 @@ namespace Unity.Drag
       this._is_dragging = false;
       Unity.global_shell.remove_fullscreen_request (this);
     }
-    
+
 
   }
 

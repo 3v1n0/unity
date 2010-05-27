@@ -27,80 +27,76 @@
 #include <float.h>
 #include <math.h>
 #include <clutk/clutk.h>
-#include <cairo.h>
 #include <clutter/clutter.h>
+#include <cairo.h>
+#include <unity.h>
 #include <string.h>
 #include <stdlib.h>
-#include <pango/pangocairo.h>
-#include <pango/pango.h>
 #include <gtk/gtk.h>
-#include <gdk/gdk.h>
 
 
-#define UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR (unity_quicklauncher_quicklist_menu_seperator_get_type ())
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperator))
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperatorClass))
-#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR))
-#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR))
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperatorClass))
+#define UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR (unity_launcher_quicklist_menu_seperator_get_type ())
+#define UNITY_LAUNCHER_QUICKLIST_MENU_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityLauncherQuicklistMenuSeperator))
+#define UNITY_LAUNCHER_QUICKLIST_MENU_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityLauncherQuicklistMenuSeperatorClass))
+#define UNITY_LAUNCHER_IS_QUICKLIST_MENU_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR))
+#define UNITY_LAUNCHER_IS_QUICKLIST_MENU_SEPERATOR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR))
+#define UNITY_LAUNCHER_QUICKLIST_MENU_SEPERATOR_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityLauncherQuicklistMenuSeperatorClass))
 
-typedef struct _UnityQuicklauncherQuicklistMenuSeperator UnityQuicklauncherQuicklistMenuSeperator;
-typedef struct _UnityQuicklauncherQuicklistMenuSeperatorClass UnityQuicklauncherQuicklistMenuSeperatorClass;
-typedef struct _UnityQuicklauncherQuicklistMenuSeperatorPrivate UnityQuicklauncherQuicklistMenuSeperatorPrivate;
+typedef struct _UnityLauncherQuicklistMenuSeperator UnityLauncherQuicklistMenuSeperator;
+typedef struct _UnityLauncherQuicklistMenuSeperatorClass UnityLauncherQuicklistMenuSeperatorClass;
+typedef struct _UnityLauncherQuicklistMenuSeperatorPrivate UnityLauncherQuicklistMenuSeperatorPrivate;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _cairo_surface_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_surface_destroy (var), NULL)))
 #define _cairo_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_destroy (var), NULL)))
 
-#define UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM (unity_quicklauncher_quicklist_menu_item_get_type ())
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityQuicklauncherQuicklistMenuItem))
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityQuicklauncherQuicklistMenuItemClass))
-#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_ITEM(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM))
-#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM))
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityQuicklauncherQuicklistMenuItemClass))
+#define UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM (unity_launcher_quicklist_menu_item_get_type ())
+#define UNITY_LAUNCHER_QUICKLIST_MENU_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityLauncherQuicklistMenuItem))
+#define UNITY_LAUNCHER_QUICKLIST_MENU_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityLauncherQuicklistMenuItemClass))
+#define UNITY_LAUNCHER_IS_QUICKLIST_MENU_ITEM(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM))
+#define UNITY_LAUNCHER_IS_QUICKLIST_MENU_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM))
+#define UNITY_LAUNCHER_QUICKLIST_MENU_ITEM_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityLauncherQuicklistMenuItemClass))
 
-typedef struct _UnityQuicklauncherQuicklistMenuItem UnityQuicklauncherQuicklistMenuItem;
-typedef struct _UnityQuicklauncherQuicklistMenuItemClass UnityQuicklauncherQuicklistMenuItemClass;
-typedef struct _UnityQuicklauncherQuicklistMenuItemPrivate UnityQuicklauncherQuicklistMenuItemPrivate;
+typedef struct _UnityLauncherQuicklistMenuItem UnityLauncherQuicklistMenuItem;
+typedef struct _UnityLauncherQuicklistMenuItemClass UnityLauncherQuicklistMenuItemClass;
+typedef struct _UnityLauncherQuicklistMenuItemPrivate UnityLauncherQuicklistMenuItemPrivate;
 #define _g_free0(var) (var = (g_free (var), NULL))
-#define _pango_font_description_free0(var) ((var == NULL) ? NULL : (var = (pango_font_description_free (var), NULL)))
 
-#define UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU (unity_quicklauncher_quicklist_menu_get_type ())
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU, UnityQuicklauncherQuicklistMenu))
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU, UnityQuicklauncherQuicklistMenuClass))
-#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU))
-#define UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU))
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU, UnityQuicklauncherQuicklistMenuClass))
+#define UNITY_LAUNCHER_TYPE_QUICKLIST_MENU (unity_launcher_quicklist_menu_get_type ())
+#define UNITY_LAUNCHER_QUICKLIST_MENU(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU, UnityLauncherQuicklistMenu))
+#define UNITY_LAUNCHER_QUICKLIST_MENU_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU, UnityLauncherQuicklistMenuClass))
+#define UNITY_LAUNCHER_IS_QUICKLIST_MENU(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU))
+#define UNITY_LAUNCHER_IS_QUICKLIST_MENU_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU))
+#define UNITY_LAUNCHER_QUICKLIST_MENU_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU, UnityLauncherQuicklistMenuClass))
 
-typedef struct _UnityQuicklauncherQuicklistMenu UnityQuicklauncherQuicklistMenu;
-typedef struct _UnityQuicklauncherQuicklistMenuClass UnityQuicklauncherQuicklistMenuClass;
-typedef struct _UnityQuicklauncherQuicklistMenuPrivate UnityQuicklauncherQuicklistMenuPrivate;
-#define _cairo_pattern_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_pattern_destroy (var), NULL)))
+typedef struct _UnityLauncherQuicklistMenu UnityLauncherQuicklistMenu;
+typedef struct _UnityLauncherQuicklistMenuClass UnityLauncherQuicklistMenuClass;
+typedef struct _UnityLauncherQuicklistMenuPrivate UnityLauncherQuicklistMenuPrivate;
 
-struct _UnityQuicklauncherQuicklistMenuSeperator {
+struct _UnityLauncherQuicklistMenuSeperator {
 	CtkMenuSeperator parent_instance;
-	UnityQuicklauncherQuicklistMenuSeperatorPrivate * priv;
+	UnityLauncherQuicklistMenuSeperatorPrivate * priv;
 };
 
-struct _UnityQuicklauncherQuicklistMenuSeperatorClass {
+struct _UnityLauncherQuicklistMenuSeperatorClass {
 	CtkMenuSeperatorClass parent_class;
 };
 
-struct _UnityQuicklauncherQuicklistMenuSeperatorPrivate {
+struct _UnityLauncherQuicklistMenuSeperatorPrivate {
 	CtkLayerActor* seperator_background;
 	gint old_width;
 	gint old_height;
 };
 
-struct _UnityQuicklauncherQuicklistMenuItem {
+struct _UnityLauncherQuicklistMenuItem {
 	CtkActor parent_instance;
-	UnityQuicklauncherQuicklistMenuItemPrivate * priv;
+	UnityLauncherQuicklistMenuItemPrivate * priv;
 };
 
-struct _UnityQuicklauncherQuicklistMenuItemClass {
+struct _UnityLauncherQuicklistMenuItemClass {
 	CtkActorClass parent_class;
 };
 
-struct _UnityQuicklauncherQuicklistMenuItemPrivate {
+struct _UnityLauncherQuicklistMenuItemPrivate {
 	CtkLayerActor* item_background;
 	gint old_width;
 	gint old_height;
@@ -108,16 +104,16 @@ struct _UnityQuicklauncherQuicklistMenuItemPrivate {
 	char* _label;
 };
 
-struct _UnityQuicklauncherQuicklistMenu {
+struct _UnityLauncherQuicklistMenu {
 	CtkMenu parent_instance;
-	UnityQuicklauncherQuicklistMenuPrivate * priv;
+	UnityLauncherQuicklistMenuPrivate * priv;
 };
 
-struct _UnityQuicklauncherQuicklistMenuClass {
+struct _UnityLauncherQuicklistMenuClass {
 	CtkMenuClass parent_class;
 };
 
-struct _UnityQuicklauncherQuicklistMenuPrivate {
+struct _UnityLauncherQuicklistMenuPrivate {
 	CtkLayerActor* ql_background;
 	gint old_width;
 	gint old_height;
@@ -126,153 +122,106 @@ struct _UnityQuicklauncherQuicklistMenuPrivate {
 };
 
 
-static gpointer unity_quicklauncher_quicklist_menu_seperator_parent_class = NULL;
-static gpointer unity_quicklauncher_quicklist_menu_item_parent_class = NULL;
-static gpointer unity_quicklauncher_quicklist_menu_parent_class = NULL;
+static gpointer unity_launcher_quicklist_menu_seperator_parent_class = NULL;
+static gpointer unity_launcher_quicklist_menu_item_parent_class = NULL;
+static gpointer unity_launcher_quicklist_menu_parent_class = NULL;
 
-#define UNITY_QUICKLAUNCHER_LINE_WIDTH 0.083f
-#define UNITY_QUICKLAUNCHER_LINE_WIDTH_ABS 1.5f
-#define UNITY_QUICKLAUNCHER_TEXT_HEIGHT 1.0f
-#define UNITY_QUICKLAUNCHER_MAX_TEXT_WIDTH 15.0f
-#define UNITY_QUICKLAUNCHER_GAP 0.25f
-#define UNITY_QUICKLAUNCHER_MARGIN 0.5f
-#define UNITY_QUICKLAUNCHER_BORDER 0.25f
-#define UNITY_QUICKLAUNCHER_CORNER_RADIUS 0.3f
-#define UNITY_QUICKLAUNCHER_CORNER_RADIUS_ABS 8.0f
-#define UNITY_QUICKLAUNCHER_SHADOW_SIZE 1.25f
-#define UNITY_QUICKLAUNCHER_ITEM_HEIGHT 2.0f
-#define UNITY_QUICKLAUNCHER_ITEM_CORNER_RADIUS 0.3f
-#define UNITY_QUICKLAUNCHER_ITEM_CORNER_RADIUS_ABS 6.0f
-#define UNITY_QUICKLAUNCHER_ANCHOR_HEIGHT 1.5f
-#define UNITY_QUICKLAUNCHER_ANCHOR_HEIGHT_ABS 14.0f
-#define UNITY_QUICKLAUNCHER_ANCHOR_WIDTH 0.75f
-#define UNITY_QUICKLAUNCHER_ANCHOR_WIDTH_ABS 8.0f
-GType unity_quicklauncher_quicklist_menu_seperator_get_type (void);
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityQuicklauncherQuicklistMenuSeperatorPrivate))
+#define UNITY_LAUNCHER_LINE_WIDTH 0.083f
+#define UNITY_LAUNCHER_LINE_WIDTH_ABS 1.5f
+#define UNITY_LAUNCHER_TEXT_HEIGHT 1.0f
+#define UNITY_LAUNCHER_MAX_TEXT_WIDTH 15.0f
+#define UNITY_LAUNCHER_GAP 0.25f
+#define UNITY_LAUNCHER_MARGIN 0.5f
+#define UNITY_LAUNCHER_BORDER 0.25f
+#define UNITY_LAUNCHER_CORNER_RADIUS 0.3f
+#define UNITY_LAUNCHER_CORNER_RADIUS_ABS 8.0f
+#define UNITY_LAUNCHER_SHADOW_SIZE 1.25f
+#define UNITY_LAUNCHER_ITEM_HEIGHT 2.0f
+#define UNITY_LAUNCHER_ITEM_CORNER_RADIUS 0.3f
+#define UNITY_LAUNCHER_ITEM_CORNER_RADIUS_ABS 6.0f
+#define UNITY_LAUNCHER_ANCHOR_HEIGHT 1.5f
+#define UNITY_LAUNCHER_ANCHOR_HEIGHT_ABS 14.0f
+#define UNITY_LAUNCHER_ANCHOR_WIDTH 0.75f
+#define UNITY_LAUNCHER_ANCHOR_WIDTH_ABS 8.0f
+GType unity_launcher_quicklist_menu_seperator_get_type (void);
+#define UNITY_LAUNCHER_QUICKLIST_MENU_SEPERATOR_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityLauncherQuicklistMenuSeperatorPrivate))
 enum  {
-	UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_DUMMY_PROPERTY
+	UNITY_LAUNCHER_QUICKLIST_MENU_SEPERATOR_DUMMY_PROPERTY
 };
-static void _unity_quicklauncher_quicklist_menu_seperator_fill_mask (UnityQuicklauncherQuicklistMenuSeperator* self, cairo_t* cr, gint w, gint h);
-static void _unity_quicklauncher_quicklist_menu_seperator_image_bg (UnityQuicklauncherQuicklistMenuSeperator* self, cairo_t* cr, gint w, gint h);
-static void unity_quicklauncher_quicklist_menu_seperator_real_paint (ClutterActor* base);
-static void unity_quicklauncher_quicklist_menu_seperator_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height_p, float* natural_height_p);
-static void unity_quicklauncher_quicklist_menu_seperator_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width_p, float* natural_width_p);
-static void unity_quicklauncher_quicklist_menu_seperator_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
-UnityQuicklauncherQuicklistMenuSeperator* unity_quicklauncher_quicklist_menu_seperator_new (void);
-UnityQuicklauncherQuicklistMenuSeperator* unity_quicklauncher_quicklist_menu_seperator_construct (GType object_type);
-static GObject * unity_quicklauncher_quicklist_menu_seperator_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
-static void unity_quicklauncher_quicklist_menu_seperator_finalize (GObject* obj);
-GType unity_quicklauncher_quicklist_menu_item_get_type (void);
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityQuicklauncherQuicklistMenuItemPrivate))
+static void unity_launcher_quicklist_menu_seperator_real_paint (ClutterActor* base);
+static void unity_launcher_quicklist_menu_seperator_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height_p, float* natural_height_p);
+static void unity_launcher_quicklist_menu_seperator_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width_p, float* natural_width_p);
+static void unity_launcher_quicklist_menu_seperator_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
+UnityLauncherQuicklistMenuSeperator* unity_launcher_quicklist_menu_seperator_new (void);
+UnityLauncherQuicklistMenuSeperator* unity_launcher_quicklist_menu_seperator_construct (GType object_type);
+static GObject * unity_launcher_quicklist_menu_seperator_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void unity_launcher_quicklist_menu_seperator_finalize (GObject* obj);
+GType unity_launcher_quicklist_menu_item_get_type (void);
+#define UNITY_LAUNCHER_QUICKLIST_MENU_ITEM_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityLauncherQuicklistMenuItemPrivate))
 enum  {
-	UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM_DUMMY_PROPERTY,
-	UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM_LABEL
+	UNITY_LAUNCHER_QUICKLIST_MENU_ITEM_DUMMY_PROPERTY,
+	UNITY_LAUNCHER_QUICKLIST_MENU_ITEM_LABEL
 };
-static void _unity_quicklauncher_quicklist_menu_item_round_rect (UnityQuicklauncherQuicklistMenuItem* self, cairo_t* cr, double aspect, double x, double y, double corner_radius, double width, double height);
-const char* unity_quicklauncher_quicklist_menu_item_get_label (UnityQuicklauncherQuicklistMenuItem* self);
-static void _unity_quicklauncher_quicklist_menu_item_get_text_extents (UnityQuicklauncherQuicklistMenuItem* self, gint* width, gint* height);
-static void _unity_quicklauncher_quicklist_menu_item_normal_mask (UnityQuicklauncherQuicklistMenuItem* self, cairo_t* cr, gint w, gint h, const char* label, gboolean reactive);
-static void _unity_quicklauncher_quicklist_menu_item_selected_mask (UnityQuicklauncherQuicklistMenuItem* self, cairo_t* cr, gint w, gint h, const char* label);
-static void unity_quicklauncher_quicklist_menu_item_real_paint (ClutterActor* base);
-static void unity_quicklauncher_quicklist_menu_item_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height_p, float* natural_height_p);
-static void unity_quicklauncher_quicklist_menu_item_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width_p, float* natural_width_p);
-static void unity_quicklauncher_quicklist_menu_item_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
-static gboolean _unity_quicklauncher_quicklist_menu_item_on_enter (UnityQuicklauncherQuicklistMenuItem* self, ClutterEvent* event);
-static gboolean _unity_quicklauncher_quicklist_menu_item_on_leave (UnityQuicklauncherQuicklistMenuItem* self, ClutterEvent* event);
-static void _unity_quicklauncher_quicklist_menu_item_on_label_changed (UnityQuicklauncherQuicklistMenuItem* self);
-static void __unity_quicklauncher_quicklist_menu_item_on_label_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
-static gboolean __unity_quicklauncher_quicklist_menu_item_on_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
-static gboolean __unity_quicklauncher_quicklist_menu_item_on_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
-static gboolean _unity_quicklauncher_quicklist_menu_item_on_mouse_down (UnityQuicklauncherQuicklistMenuItem* self, ClutterEvent* event);
-static gboolean __unity_quicklauncher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
-UnityQuicklauncherQuicklistMenuItem* unity_quicklauncher_quicklist_menu_item_new (const char* label);
-UnityQuicklauncherQuicklistMenuItem* unity_quicklauncher_quicklist_menu_item_construct (GType object_type, const char* label);
-static void unity_quicklauncher_quicklist_menu_item_set_label (UnityQuicklauncherQuicklistMenuItem* self, const char* value);
-static GObject * unity_quicklauncher_quicklist_menu_item_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
-static void unity_quicklauncher_quicklist_menu_item_finalize (GObject* obj);
-static void unity_quicklauncher_quicklist_menu_item_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
-static void unity_quicklauncher_quicklist_menu_item_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
-GType unity_quicklauncher_quicklist_menu_get_type (void);
-#define UNITY_QUICKLAUNCHER_QUICKLIST_MENU_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU, UnityQuicklauncherQuicklistMenuPrivate))
+static void unity_launcher_quicklist_menu_item_real_paint (ClutterActor* base);
+static void unity_launcher_quicklist_menu_item_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height_p, float* natural_height_p);
+const char* unity_launcher_quicklist_menu_item_get_label (UnityLauncherQuicklistMenuItem* self);
+static void unity_launcher_quicklist_menu_item_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width_p, float* natural_width_p);
+static void unity_launcher_quicklist_menu_item_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
+static gboolean _unity_launcher_quicklist_menu_item_on_enter (UnityLauncherQuicklistMenuItem* self, ClutterEvent* event);
+static gboolean _unity_launcher_quicklist_menu_item_on_leave (UnityLauncherQuicklistMenuItem* self, ClutterEvent* event);
+static void _unity_launcher_quicklist_menu_item_on_label_changed (UnityLauncherQuicklistMenuItem* self);
+static void __unity_launcher_quicklist_menu_item_on_label_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static gboolean __unity_launcher_quicklist_menu_item_on_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean __unity_launcher_quicklist_menu_item_on_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _unity_launcher_quicklist_menu_item_on_mouse_down (UnityLauncherQuicklistMenuItem* self, ClutterEvent* event);
+static gboolean __unity_launcher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+UnityLauncherQuicklistMenuItem* unity_launcher_quicklist_menu_item_new (const char* label);
+UnityLauncherQuicklistMenuItem* unity_launcher_quicklist_menu_item_construct (GType object_type, const char* label);
+static void unity_launcher_quicklist_menu_item_set_label (UnityLauncherQuicklistMenuItem* self, const char* value);
+static GObject * unity_launcher_quicklist_menu_item_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void unity_launcher_quicklist_menu_item_finalize (GObject* obj);
+static void unity_launcher_quicklist_menu_item_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
+static void unity_launcher_quicklist_menu_item_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+GType unity_launcher_quicklist_menu_get_type (void);
+#define UNITY_LAUNCHER_QUICKLIST_MENU_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU, UnityLauncherQuicklistMenuPrivate))
 enum  {
-	UNITY_QUICKLAUNCHER_QUICKLIST_MENU_DUMMY_PROPERTY
+	UNITY_LAUNCHER_QUICKLIST_MENU_DUMMY_PROPERTY
 };
-static double _unity_quicklauncher_quicklist_menu_align (UnityQuicklauncherQuicklistMenu* self, double val);
-static void _unity_quicklauncher_quicklist_menu_round_rect_anchor (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, double aspect, double x, double y, double corner_radius, double width, double height, double anchor_width, double anchor_height, double anchor_x, double anchor_y);
-static void _unity_quicklauncher_quicklist_menu_draw_mask (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, gint w, gint h, float anchor_y);
-static void _unity_quicklauncher_quicklist_menu_full_mask (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, gint w, gint h, float anchor_y);
-static void _unity_quicklauncher_quicklist_menu_fill_mask (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, gint w, gint h, float anchor_y);
-static void _unity_quicklauncher_quicklist_menu_main_bg (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, gint w, gint h, float anchor_y);
-static void unity_quicklauncher_quicklist_menu_real_paint (ClutterActor* base);
-static void unity_quicklauncher_quicklist_menu_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
-UnityQuicklauncherQuicklistMenu* unity_quicklauncher_quicklist_menu_new (void);
-UnityQuicklauncherQuicklistMenu* unity_quicklauncher_quicklist_menu_construct (GType object_type);
-static GObject * unity_quicklauncher_quicklist_menu_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
-static void unity_quicklauncher_quicklist_menu_finalize (GObject* obj);
+static void unity_launcher_quicklist_menu_real_paint (ClutterActor* base);
+static void unity_launcher_quicklist_menu_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
+UnityLauncherQuicklistMenu* unity_launcher_quicklist_menu_new (void);
+UnityLauncherQuicklistMenu* unity_launcher_quicklist_menu_construct (GType object_type);
+static GObject * unity_launcher_quicklist_menu_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void unity_launcher_quicklist_menu_finalize (GObject* obj);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
-static void _unity_quicklauncher_quicklist_menu_seperator_fill_mask (UnityQuicklauncherQuicklistMenuSeperator* self, cairo_t* cr, gint w, gint h) {
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (cr != NULL);
-	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-	cairo_paint (cr);
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
-	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
-	cairo_paint (cr);
-}
-
-
-static void _unity_quicklauncher_quicklist_menu_seperator_image_bg (UnityQuicklauncherQuicklistMenuSeperator* self, cairo_t* cr, gint w, gint h) {
-	float half_height;
-	float fract;
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (cr != NULL);
-	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-	cairo_paint (cr);
-	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_set_line_width (cr, (double) UNITY_QUICKLAUNCHER_LINE_WIDTH_ABS);
-	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.75f);
-	cairo_set_line_cap (cr, CAIRO_LINE_CAP_ROUND);
-	half_height = ((float) h) / 2.0f;
-	fract = half_height - ((gint) half_height);
-	if (fract == 0.0f) {
-		half_height = half_height + 0.5f;
-	}
-	cairo_move_to (cr, (double) 0.0f, (double) half_height);
-	cairo_line_to (cr, (double) ((float) w), (double) half_height);
-	cairo_stroke (cr);
-}
-
-
-static void unity_quicklauncher_quicklist_menu_seperator_real_paint (ClutterActor* base) {
-	UnityQuicklauncherQuicklistMenuSeperator * self;
-	self = (UnityQuicklauncherQuicklistMenuSeperator*) base;
+static void unity_launcher_quicklist_menu_seperator_real_paint (ClutterActor* base) {
+	UnityLauncherQuicklistMenuSeperator * self;
+	self = (UnityLauncherQuicklistMenuSeperator*) base;
 	clutter_actor_paint ((ClutterActor*) self->priv->seperator_background);
 }
 
 
-static void unity_quicklauncher_quicklist_menu_seperator_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height_p, float* natural_height_p) {
-	UnityQuicklauncherQuicklistMenuSeperator * self;
-	self = (UnityQuicklauncherQuicklistMenuSeperator*) base;
-	*min_height_p = (float) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_GAP);
+static void unity_launcher_quicklist_menu_seperator_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height_p, float* natural_height_p) {
+	UnityLauncherQuicklistMenuSeperator * self;
+	self = (UnityLauncherQuicklistMenuSeperator*) base;
+	*min_height_p = (float) ctk_em_to_pixel ((double) UNITY_LAUNCHER_GAP);
 	*natural_height_p = *min_height_p;
 }
 
 
-static void unity_quicklauncher_quicklist_menu_seperator_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width_p, float* natural_width_p) {
-	UnityQuicklauncherQuicklistMenuSeperator * self;
-	self = (UnityQuicklauncherQuicklistMenuSeperator*) base;
-	*min_width_p = (float) ctk_em_to_pixel ((double) (2 * UNITY_QUICKLAUNCHER_MARGIN));
+static void unity_launcher_quicklist_menu_seperator_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width_p, float* natural_width_p) {
+	UnityLauncherQuicklistMenuSeperator * self;
+	self = (UnityLauncherQuicklistMenuSeperator*) base;
+	*min_width_p = (float) ctk_em_to_pixel ((double) (2 * UNITY_LAUNCHER_MARGIN));
 	*natural_width_p = *min_width_p;
 }
 
 
-static void unity_quicklauncher_quicklist_menu_seperator_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-	UnityQuicklauncherQuicklistMenuSeperator * self;
+static void unity_launcher_quicklist_menu_seperator_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
+	UnityLauncherQuicklistMenuSeperator * self;
 	gint w = 0;
 	gint h = 0;
 	gboolean _tmp0_ = FALSE;
@@ -282,8 +231,8 @@ static void unity_quicklauncher_quicklist_menu_seperator_real_allocate (ClutterA
 	cairo_surface_t* image_surf;
 	cairo_t* fill_cr;
 	cairo_t* image_cr;
-	self = (UnityQuicklauncherQuicklistMenuSeperator*) base;
-	CLUTTER_ACTOR_CLASS (unity_quicklauncher_quicklist_menu_seperator_parent_class)->allocate ((ClutterActor*) CTK_MENU_SEPERATOR (self), box, flags);
+	self = (UnityLauncherQuicklistMenuSeperator*) base;
+	CLUTTER_ACTOR_CLASS (unity_launcher_quicklist_menu_seperator_parent_class)->allocate ((ClutterActor*) CTK_MENU_SEPERATOR (self), box, flags);
 	w = (gint) ((*box).x2 - (*box).x1);
 	h = (gint) ((*box).y2 - (*box).y1);
 	if (self->priv->old_width == w) {
@@ -303,8 +252,8 @@ static void unity_quicklauncher_quicklist_menu_seperator_real_allocate (ClutterA
 	image_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
 	fill_cr = cairo_create (fill_surf);
 	image_cr = cairo_create (image_surf);
-	_unity_quicklauncher_quicklist_menu_seperator_fill_mask (self, fill_cr, w, h);
-	_unity_quicklauncher_quicklist_menu_seperator_image_bg (self, image_cr, w, h);
+	unity_quicklist_rendering_seperator_fill_mask (fill_cr);
+	unity_quicklist_rendering_seperator_image_background (image_cr, w, h);
 	ctk_layer_set_mask_from_surface (layer, fill_surf);
 	ctk_layer_set_image_from_surface (layer, image_surf);
 	ctk_layer_set_opacity (layer, (guchar) 255);
@@ -321,29 +270,29 @@ static void unity_quicklauncher_quicklist_menu_seperator_real_allocate (ClutterA
 }
 
 
-UnityQuicklauncherQuicklistMenuSeperator* unity_quicklauncher_quicklist_menu_seperator_construct (GType object_type) {
-	UnityQuicklauncherQuicklistMenuSeperator * self;
+UnityLauncherQuicklistMenuSeperator* unity_launcher_quicklist_menu_seperator_construct (GType object_type) {
+	UnityLauncherQuicklistMenuSeperator * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
-UnityQuicklauncherQuicklistMenuSeperator* unity_quicklauncher_quicklist_menu_seperator_new (void) {
-	return unity_quicklauncher_quicklist_menu_seperator_construct (UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR);
+UnityLauncherQuicklistMenuSeperator* unity_launcher_quicklist_menu_seperator_new (void) {
+	return unity_launcher_quicklist_menu_seperator_construct (UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR);
 }
 
 
-static GObject * unity_quicklauncher_quicklist_menu_seperator_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+static GObject * unity_launcher_quicklist_menu_seperator_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
-	UnityQuicklauncherQuicklistMenuSeperator * self;
-	parent_class = G_OBJECT_CLASS (unity_quicklauncher_quicklist_menu_seperator_parent_class);
+	UnityLauncherQuicklistMenuSeperator * self;
+	parent_class = G_OBJECT_CLASS (unity_launcher_quicklist_menu_seperator_parent_class);
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
-	self = UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR (obj);
+	self = UNITY_LAUNCHER_QUICKLIST_MENU_SEPERATOR (obj);
 	{
 		CtkPadding _tmp0_ = {0};
 		CtkPadding padding;
-		padding = (memset (&_tmp0_, 0, sizeof (CtkPadding)), _tmp0_.left = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp0_.right = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp0_.top = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp0_.bottom = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp0_);
+		padding = (memset (&_tmp0_, 0, sizeof (CtkPadding)), _tmp0_.left = (float) ((gint) ctk_em_to_pixel ((double) UNITY_LAUNCHER_MARGIN)), _tmp0_.right = (float) ((gint) ctk_em_to_pixel ((double) UNITY_LAUNCHER_MARGIN)), _tmp0_.top = (float) ((gint) ctk_em_to_pixel ((double) UNITY_LAUNCHER_MARGIN)), _tmp0_.bottom = (float) ((gint) ctk_em_to_pixel ((double) UNITY_LAUNCHER_MARGIN)), _tmp0_);
 		ctk_actor_set_padding ((CtkActor*) self, &padding);
 		self->priv->old_width = 0;
 		self->priv->old_height = 0;
@@ -352,56 +301,55 @@ static GObject * unity_quicklauncher_quicklist_menu_seperator_constructor (GType
 }
 
 
-static void unity_quicklauncher_quicklist_menu_seperator_class_init (UnityQuicklauncherQuicklistMenuSeperatorClass * klass) {
-	unity_quicklauncher_quicklist_menu_seperator_parent_class = g_type_class_peek_parent (klass);
-	g_type_class_add_private (klass, sizeof (UnityQuicklauncherQuicklistMenuSeperatorPrivate));
-	CLUTTER_ACTOR_CLASS (klass)->paint = unity_quicklauncher_quicklist_menu_seperator_real_paint;
-	CLUTTER_ACTOR_CLASS (klass)->get_preferred_height = unity_quicklauncher_quicklist_menu_seperator_real_get_preferred_height;
-	CLUTTER_ACTOR_CLASS (klass)->get_preferred_width = unity_quicklauncher_quicklist_menu_seperator_real_get_preferred_width;
-	CLUTTER_ACTOR_CLASS (klass)->allocate = unity_quicklauncher_quicklist_menu_seperator_real_allocate;
-	G_OBJECT_CLASS (klass)->constructor = unity_quicklauncher_quicklist_menu_seperator_constructor;
-	G_OBJECT_CLASS (klass)->finalize = unity_quicklauncher_quicklist_menu_seperator_finalize;
+static void unity_launcher_quicklist_menu_seperator_class_init (UnityLauncherQuicklistMenuSeperatorClass * klass) {
+	unity_launcher_quicklist_menu_seperator_parent_class = g_type_class_peek_parent (klass);
+	g_type_class_add_private (klass, sizeof (UnityLauncherQuicklistMenuSeperatorPrivate));
+	CLUTTER_ACTOR_CLASS (klass)->paint = unity_launcher_quicklist_menu_seperator_real_paint;
+	CLUTTER_ACTOR_CLASS (klass)->get_preferred_height = unity_launcher_quicklist_menu_seperator_real_get_preferred_height;
+	CLUTTER_ACTOR_CLASS (klass)->get_preferred_width = unity_launcher_quicklist_menu_seperator_real_get_preferred_width;
+	CLUTTER_ACTOR_CLASS (klass)->allocate = unity_launcher_quicklist_menu_seperator_real_allocate;
+	G_OBJECT_CLASS (klass)->constructor = unity_launcher_quicklist_menu_seperator_constructor;
+	G_OBJECT_CLASS (klass)->finalize = unity_launcher_quicklist_menu_seperator_finalize;
 }
 
 
-static void unity_quicklauncher_quicklist_menu_seperator_instance_init (UnityQuicklauncherQuicklistMenuSeperator * self) {
-	self->priv = UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR_GET_PRIVATE (self);
+static void unity_launcher_quicklist_menu_seperator_instance_init (UnityLauncherQuicklistMenuSeperator * self) {
+	self->priv = UNITY_LAUNCHER_QUICKLIST_MENU_SEPERATOR_GET_PRIVATE (self);
 }
 
 
-static void unity_quicklauncher_quicklist_menu_seperator_finalize (GObject* obj) {
-	UnityQuicklauncherQuicklistMenuSeperator * self;
-	self = UNITY_QUICKLAUNCHER_QUICKLIST_MENU_SEPERATOR (obj);
+static void unity_launcher_quicklist_menu_seperator_finalize (GObject* obj) {
+	UnityLauncherQuicklistMenuSeperator * self;
+	self = UNITY_LAUNCHER_QUICKLIST_MENU_SEPERATOR (obj);
 	_g_object_unref0 (self->priv->seperator_background);
-	G_OBJECT_CLASS (unity_quicklauncher_quicklist_menu_seperator_parent_class)->finalize (obj);
+	G_OBJECT_CLASS (unity_launcher_quicklist_menu_seperator_parent_class)->finalize (obj);
 }
 
 
-GType unity_quicklauncher_quicklist_menu_seperator_get_type (void) {
-	static volatile gsize unity_quicklauncher_quicklist_menu_seperator_type_id__volatile = 0;
-	if (g_once_init_enter (&unity_quicklauncher_quicklist_menu_seperator_type_id__volatile)) {
-		static const GTypeInfo g_define_type_info = { sizeof (UnityQuicklauncherQuicklistMenuSeperatorClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_quicklauncher_quicklist_menu_seperator_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityQuicklauncherQuicklistMenuSeperator), 0, (GInstanceInitFunc) unity_quicklauncher_quicklist_menu_seperator_instance_init, NULL };
-		GType unity_quicklauncher_quicklist_menu_seperator_type_id;
-		unity_quicklauncher_quicklist_menu_seperator_type_id = g_type_register_static (CTK_TYPE_MENU_SEPERATOR, "UnityQuicklauncherQuicklistMenuSeperator", &g_define_type_info, 0);
-		g_once_init_leave (&unity_quicklauncher_quicklist_menu_seperator_type_id__volatile, unity_quicklauncher_quicklist_menu_seperator_type_id);
+GType unity_launcher_quicklist_menu_seperator_get_type (void) {
+	static volatile gsize unity_launcher_quicklist_menu_seperator_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_launcher_quicklist_menu_seperator_type_id__volatile)) {
+		static const GTypeInfo g_define_type_info = { sizeof (UnityLauncherQuicklistMenuSeperatorClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_launcher_quicklist_menu_seperator_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityLauncherQuicklistMenuSeperator), 0, (GInstanceInitFunc) unity_launcher_quicklist_menu_seperator_instance_init, NULL };
+		GType unity_launcher_quicklist_menu_seperator_type_id;
+		unity_launcher_quicklist_menu_seperator_type_id = g_type_register_static (CTK_TYPE_MENU_SEPERATOR, "UnityLauncherQuicklistMenuSeperator", &g_define_type_info, 0);
+		g_once_init_leave (&unity_launcher_quicklist_menu_seperator_type_id__volatile, unity_launcher_quicklist_menu_seperator_type_id);
 	}
-	return unity_quicklauncher_quicklist_menu_seperator_type_id__volatile;
+	return unity_launcher_quicklist_menu_seperator_type_id__volatile;
 }
 
 
-static void _unity_quicklauncher_quicklist_menu_item_round_rect (UnityQuicklauncherQuicklistMenuItem* self, cairo_t* cr, double aspect, double x, double y, double corner_radius, double width, double height) {
-	double radius;
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (cr != NULL);
-	radius = corner_radius / aspect;
-	cairo_move_to (cr, x + radius, y);
-	cairo_line_to (cr, (x + width) - radius, y);
-	cairo_arc (cr, (x + width) - radius, y + radius, radius, ((-90.0f) * G_PI) / 180.0f, (0.0f * G_PI) / 180.0f);
-	cairo_line_to (cr, x + width, (y + height) - radius);
-	cairo_arc (cr, (x + width) - radius, (y + height) - radius, radius, (0.0f * G_PI) / 180.0f, (90.0f * G_PI) / 180.0f);
-	cairo_line_to (cr, x + radius, y + height);
-	cairo_arc (cr, x + radius, (y + height) - radius, radius, (90.0f * G_PI) / 180.0f, (180.0f * G_PI) / 180.0f);
-	cairo_arc (cr, x + radius, y + radius, radius, (180.0f * G_PI) / 180.0f, (270.0f * G_PI) / 180.0f);
+static void unity_launcher_quicklist_menu_item_real_paint (ClutterActor* base) {
+	UnityLauncherQuicklistMenuItem * self;
+	self = (UnityLauncherQuicklistMenuItem*) base;
+	clutter_actor_paint ((ClutterActor*) self->priv->item_background);
+}
+
+
+static void unity_launcher_quicklist_menu_item_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height_p, float* natural_height_p) {
+	UnityLauncherQuicklistMenuItem * self;
+	self = (UnityLauncherQuicklistMenuItem*) base;
+	*min_height_p = (float) ctk_em_to_pixel ((double) UNITY_LAUNCHER_ITEM_HEIGHT);
+	*natural_height_p = *min_height_p;
 }
 
 
@@ -410,177 +358,25 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static void _unity_quicklauncher_quicklist_menu_item_get_text_extents (UnityQuicklauncherQuicklistMenuItem* self, gint* width, gint* height) {
-	cairo_surface_t* dummy_surf;
-	cairo_t* dummy_cr;
-	PangoLayout* layout;
-	GtkSettings* settings;
-	char* _tmp0_ = NULL;
-	char* face;
-	PangoFontDescription* desc;
-	PangoContext* pango_context;
-	GdkScreen* screen;
-	gint _tmp1_;
-	PangoRectangle log_rect = {0};
-	g_return_if_fail (self != NULL);
-	dummy_surf = cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
-	dummy_cr = cairo_create (dummy_surf);
-	layout = pango_cairo_create_layout (dummy_cr);
-	settings = _g_object_ref0 (gtk_settings_get_default ());
-	face = (g_object_get (settings, "gtk-font-name", &_tmp0_, NULL), _tmp0_);
-	desc = pango_font_description_from_string (face);
-	pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
-	pango_layout_set_font_description (layout, desc);
-	pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
-	pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
-	pango_layout_set_text (layout, self->priv->_label, -1);
-	pango_context = _g_object_ref0 (pango_layout_get_context (layout));
-	screen = _g_object_ref0 (gdk_screen_get_default ());
-	pango_cairo_context_set_font_options (pango_context, gdk_screen_get_font_options (screen));
-	pango_cairo_context_set_resolution (pango_context, (double) (((float) (g_object_get (settings, "gtk-xft-dpi", &_tmp1_, NULL), _tmp1_)) / ((float) PANGO_SCALE)));
-	pango_layout_context_changed (layout);
-	pango_layout_get_extents (layout, NULL, &log_rect);
-	*width = log_rect.width / PANGO_SCALE;
-	*height = log_rect.height / PANGO_SCALE;
-	_cairo_surface_destroy0 (dummy_surf);
-	_cairo_destroy0 (dummy_cr);
-	_g_object_unref0 (layout);
-	_g_object_unref0 (settings);
-	_g_free0 (face);
-	_pango_font_description_free0 (desc);
-	_g_object_unref0 (pango_context);
-	_g_object_unref0 (screen);
-}
-
-
-static void _unity_quicklauncher_quicklist_menu_item_normal_mask (UnityQuicklauncherQuicklistMenuItem* self, cairo_t* cr, gint w, gint h, const char* label, gboolean reactive) {
-	PangoLayout* layout;
-	GtkSettings* settings;
-	char* _tmp0_ = NULL;
-	char* font_face;
-	PangoFontDescription* desc;
-	PangoContext* pango_context;
-	GdkScreen* screen;
-	gint _tmp1_;
-	gint text_width = 0;
-	gint text_height = 0;
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (cr != NULL);
-	g_return_if_fail (label != NULL);
-	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-	cairo_paint (cr);
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
-	if (reactive) {
-		cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
-	} else {
-		cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.5f);
-	}
-	layout = pango_cairo_create_layout (cr);
-	settings = _g_object_ref0 (gtk_settings_get_default ());
-	font_face = (g_object_get (settings, "gtk-font-name", &_tmp0_, NULL), _tmp0_);
-	desc = pango_font_description_from_string (font_face);
-	pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
-	if (!reactive) {
-		pango_font_description_set_style (desc, PANGO_STYLE_ITALIC);
-	}
-	pango_layout_set_font_description (layout, desc);
-	pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
-	pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
-	pango_layout_set_text (layout, label, -1);
-	pango_context = _g_object_ref0 (pango_layout_get_context (layout));
-	screen = _g_object_ref0 (gdk_screen_get_default ());
-	pango_cairo_context_set_font_options (pango_context, gdk_screen_get_font_options (screen));
-	pango_cairo_context_set_resolution (pango_context, (double) (((float) (g_object_get (settings, "gtk-xft-dpi", &_tmp1_, NULL), _tmp1_)) / ((float) PANGO_SCALE)));
-	pango_layout_context_changed (layout);
-	_unity_quicklauncher_quicklist_menu_item_get_text_extents (self, &text_width, &text_height);
-	cairo_move_to (cr, ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN), (double) (((float) (h - text_height)) / 2.0f));
-	pango_cairo_show_layout (cr, layout);
-	_g_object_unref0 (layout);
-	_g_object_unref0 (settings);
-	_g_free0 (font_face);
-	_pango_font_description_free0 (desc);
-	_g_object_unref0 (pango_context);
-	_g_object_unref0 (screen);
-}
-
-
-static void _unity_quicklauncher_quicklist_menu_item_selected_mask (UnityQuicklauncherQuicklistMenuItem* self, cairo_t* cr, gint w, gint h, const char* label) {
-	PangoLayout* layout;
-	GtkSettings* settings;
-	char* _tmp0_ = NULL;
-	char* font_face;
-	PangoFontDescription* desc;
-	PangoContext* pango_context;
-	GdkScreen* screen;
-	gint _tmp1_;
-	gint text_width = 0;
-	gint text_height = 0;
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (cr != NULL);
-	g_return_if_fail (label != NULL);
-	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-	cairo_paint (cr);
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
-	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
-	_unity_quicklauncher_quicklist_menu_item_round_rect (self, cr, (double) 1.0f, (double) 0.5f, (double) 0.5f, (double) UNITY_QUICKLAUNCHER_ITEM_CORNER_RADIUS_ABS, (double) (w - 1.0f), (double) (h - 1.0f));
-	cairo_fill (cr);
-	layout = pango_cairo_create_layout (cr);
-	settings = _g_object_ref0 (gtk_settings_get_default ());
-	font_face = (g_object_get (settings, "gtk-font-name", &_tmp0_, NULL), _tmp0_);
-	desc = pango_font_description_from_string (font_face);
-	pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
-	pango_layout_set_font_description (layout, desc);
-	pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
-	pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
-	pango_layout_set_text (layout, label, -1);
-	pango_context = _g_object_ref0 (pango_layout_get_context (layout));
-	screen = _g_object_ref0 (gdk_screen_get_default ());
-	pango_cairo_context_set_font_options (pango_context, gdk_screen_get_font_options (screen));
-	pango_cairo_context_set_resolution (pango_context, (double) (((float) (g_object_get (settings, "gtk-xft-dpi", &_tmp1_, NULL), _tmp1_)) / ((float) PANGO_SCALE)));
-	pango_layout_context_changed (layout);
-	_unity_quicklauncher_quicklist_menu_item_get_text_extents (self, &text_width, &text_height);
-	cairo_move_to (cr, ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN), (double) (((float) (h - text_height)) / 2.0f));
-	cairo_set_source_rgba (cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.0f);
-	pango_cairo_show_layout (cr, layout);
-	_g_object_unref0 (layout);
-	_g_object_unref0 (settings);
-	_g_free0 (font_face);
-	_pango_font_description_free0 (desc);
-	_g_object_unref0 (pango_context);
-	_g_object_unref0 (screen);
-}
-
-
-static void unity_quicklauncher_quicklist_menu_item_real_paint (ClutterActor* base) {
-	UnityQuicklauncherQuicklistMenuItem * self;
-	self = (UnityQuicklauncherQuicklistMenuItem*) base;
-	clutter_actor_paint ((ClutterActor*) self->priv->item_background);
-}
-
-
-static void unity_quicklauncher_quicklist_menu_item_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height_p, float* natural_height_p) {
-	UnityQuicklauncherQuicklistMenuItem * self;
-	self = (UnityQuicklauncherQuicklistMenuItem*) base;
-	*min_height_p = (float) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_ITEM_HEIGHT);
-	*natural_height_p = *min_height_p;
-}
-
-
-static void unity_quicklauncher_quicklist_menu_item_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width_p, float* natural_width_p) {
-	UnityQuicklauncherQuicklistMenuItem * self;
+static void unity_launcher_quicklist_menu_item_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width_p, float* natural_width_p) {
+	UnityLauncherQuicklistMenuItem * self;
 	gint width = 0;
 	gint height = 0;
-	self = (UnityQuicklauncherQuicklistMenuItem*) base;
-	_unity_quicklauncher_quicklist_menu_item_get_text_extents (self, &width, &height);
-	*min_width_p = ((float) width) + ((float) ctk_em_to_pixel ((double) (2 * UNITY_QUICKLAUNCHER_MARGIN)));
+	GtkSettings* settings;
+	char* _tmp1_;
+	char* _tmp0_ = NULL;
+	self = (UnityLauncherQuicklistMenuItem*) base;
+	settings = _g_object_ref0 (gtk_settings_get_default ());
+	unity_quicklist_rendering_item_get_text_extents (_tmp1_ = (g_object_get (settings, "gtk-font-name", &_tmp0_, NULL), _tmp0_), self->priv->_label, &width, &height);
+	_g_free0 (_tmp1_);
+	*min_width_p = ((float) width) + ((float) ctk_em_to_pixel ((double) (2 * UNITY_LAUNCHER_MARGIN)));
 	*natural_width_p = *min_width_p;
+	_g_object_unref0 (settings);
 }
 
 
-static void unity_quicklauncher_quicklist_menu_item_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-	UnityQuicklauncherQuicklistMenuItem * self;
+static void unity_launcher_quicklist_menu_item_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
+	UnityLauncherQuicklistMenuItem * self;
 	gint w = 0;
 	gint h = 0;
 	ClutterColor _tmp0_ = {0};
@@ -593,9 +389,14 @@ static void unity_quicklauncher_quicklist_menu_item_real_allocate (ClutterActor*
 	cairo_surface_t* selected_surf;
 	cairo_t* normal_cr;
 	cairo_t* selected_cr;
-	self = (UnityQuicklauncherQuicklistMenuItem*) base;
+	GtkSettings* settings;
+	char* _tmp4_;
+	char* _tmp3_ = NULL;
+	char* _tmp6_;
+	char* _tmp5_ = NULL;
+	self = (UnityLauncherQuicklistMenuItem*) base;
 	white_color = (memset (&_tmp0_, 0, sizeof (ClutterColor)), _tmp0_.red = (guint8) 255, _tmp0_.green = (guint8) 255, _tmp0_.blue = (guint8) 255, _tmp0_.alpha = (guint8) 255, _tmp0_);
-	CLUTTER_ACTOR_CLASS (unity_quicklauncher_quicklist_menu_item_parent_class)->allocate ((ClutterActor*) CTK_ACTOR (self), box, flags);
+	CLUTTER_ACTOR_CLASS (unity_launcher_quicklist_menu_item_parent_class)->allocate ((ClutterActor*) CTK_ACTOR (self), box, flags);
 	w = (gint) ((*box).x2 - (*box).x1);
 	h = (gint) ((*box).y2 - (*box).y1);
 	if (self->priv->old_width == w) {
@@ -618,8 +419,11 @@ static void unity_quicklauncher_quicklist_menu_item_real_allocate (ClutterActor*
 	selected_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
 	normal_cr = cairo_create (normal_surf);
 	selected_cr = cairo_create (selected_surf);
-	_unity_quicklauncher_quicklist_menu_item_normal_mask (self, normal_cr, w, h, self->priv->_label, clutter_actor_get_reactive ((ClutterActor*) self));
-	_unity_quicklauncher_quicklist_menu_item_selected_mask (self, selected_cr, w, h, self->priv->_label);
+	settings = _g_object_ref0 (gtk_settings_get_default ());
+	unity_quicklist_rendering_item_normal_mask (normal_cr, w, h, _tmp4_ = (g_object_get (settings, "gtk-font-name", &_tmp3_, NULL), _tmp3_), self->priv->_label);
+	_g_free0 (_tmp4_);
+	unity_quicklist_rendering_item_selected_mask (selected_cr, w, h, _tmp6_ = (g_object_get (settings, "gtk-font-name", &_tmp5_, NULL), _tmp5_), self->priv->_label);
+	_g_free0 (_tmp6_);
 	ctk_layer_set_mask_from_surface (normal_layer, normal_surf);
 	ctk_layer_set_color (normal_layer, &white_color);
 	ctk_layer_set_mask_from_surface (selected_layer, selected_surf);
@@ -638,13 +442,14 @@ static void unity_quicklauncher_quicklist_menu_item_real_allocate (ClutterActor*
 	_cairo_surface_destroy0 (selected_surf);
 	_cairo_destroy0 (normal_cr);
 	_cairo_destroy0 (selected_cr);
+	_g_object_unref0 (settings);
 }
 
 
-static gboolean _unity_quicklauncher_quicklist_menu_item_on_enter (UnityQuicklauncherQuicklistMenuItem* self, ClutterEvent* event) {
+static gboolean _unity_launcher_quicklist_menu_item_on_enter (UnityLauncherQuicklistMenuItem* self, ClutterEvent* event) {
 	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
-	g_return_val_if_fail (UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_ITEM (self), FALSE);
+	g_return_val_if_fail (UNITY_LAUNCHER_IS_QUICKLIST_MENU_ITEM (self), FALSE);
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 0), FALSE);
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 1), TRUE);
 	clutter_actor_queue_redraw ((ClutterActor*) self->priv->item_background);
@@ -653,10 +458,10 @@ static gboolean _unity_quicklauncher_quicklist_menu_item_on_enter (UnityQuicklau
 }
 
 
-static gboolean _unity_quicklauncher_quicklist_menu_item_on_leave (UnityQuicklauncherQuicklistMenuItem* self, ClutterEvent* event) {
+static gboolean _unity_launcher_quicklist_menu_item_on_leave (UnityLauncherQuicklistMenuItem* self, ClutterEvent* event) {
 	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
-	g_return_val_if_fail (UNITY_QUICKLAUNCHER_IS_QUICKLIST_MENU_ITEM (self), FALSE);
+	g_return_val_if_fail (UNITY_LAUNCHER_IS_QUICKLIST_MENU_ITEM (self), FALSE);
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 0), TRUE);
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 1), FALSE);
 	clutter_actor_queue_redraw ((ClutterActor*) self->priv->item_background);
@@ -665,7 +470,7 @@ static gboolean _unity_quicklauncher_quicklist_menu_item_on_leave (UnityQuicklau
 }
 
 
-static void _unity_quicklauncher_quicklist_menu_item_on_label_changed (UnityQuicklauncherQuicklistMenuItem* self) {
+static void _unity_launcher_quicklist_menu_item_on_label_changed (UnityLauncherQuicklistMenuItem* self) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
 	if (_vala_strcmp0 (self->priv->old_label, self->priv->_label) == 0) {
@@ -675,27 +480,27 @@ static void _unity_quicklauncher_quicklist_menu_item_on_label_changed (UnityQuic
 }
 
 
-static void __unity_quicklauncher_quicklist_menu_item_on_label_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_unity_quicklauncher_quicklist_menu_item_on_label_changed (self);
+static void __unity_launcher_quicklist_menu_item_on_label_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_unity_launcher_quicklist_menu_item_on_label_changed (self);
 }
 
 
-static gboolean __unity_quicklauncher_quicklist_menu_item_on_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return _unity_quicklauncher_quicklist_menu_item_on_enter (self, event);
+static gboolean __unity_launcher_quicklist_menu_item_on_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	return _unity_launcher_quicklist_menu_item_on_enter (self, event);
 }
 
 
-static gboolean __unity_quicklauncher_quicklist_menu_item_on_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return _unity_quicklauncher_quicklist_menu_item_on_leave (self, event);
+static gboolean __unity_launcher_quicklist_menu_item_on_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	return _unity_launcher_quicklist_menu_item_on_leave (self, event);
 }
 
 
-static gboolean __unity_quicklauncher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return _unity_quicklauncher_quicklist_menu_item_on_mouse_down (self, event);
+static gboolean __unity_launcher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	return _unity_launcher_quicklist_menu_item_on_mouse_down (self, event);
 }
 
 
-static gboolean _unity_quicklauncher_quicklist_menu_item_on_mouse_down (UnityQuicklauncherQuicklistMenuItem* self, ClutterEvent* event) {
+static gboolean _unity_launcher_quicklist_menu_item_on_mouse_down (UnityLauncherQuicklistMenuItem* self, ClutterEvent* event) {
 	gboolean result = FALSE;
 	GQuark _tmp1_;
 	guint _tmp0_;
@@ -704,33 +509,33 @@ static gboolean _unity_quicklauncher_quicklist_menu_item_on_mouse_down (UnityQui
 	guint _tmp4_;
 	g_return_val_if_fail (self != NULL, FALSE);
 	g_signal_parse_name ("notify::label", G_TYPE_OBJECT, &_tmp0_, &_tmp1_, TRUE);
-	g_signal_handlers_disconnect_matched ((GObject*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_DETAIL | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, _tmp1_, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_label_changed_g_object_notify, self);
+	g_signal_handlers_disconnect_matched ((GObject*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_DETAIL | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, _tmp1_, NULL, (GCallback) __unity_launcher_quicklist_menu_item_on_label_changed_g_object_notify, self);
 	g_signal_parse_name ("enter-event", CLUTTER_TYPE_ACTOR, &_tmp2_, NULL, FALSE);
-	g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp2_, 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_enter_clutter_actor_enter_event, self);
+	g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp2_, 0, NULL, (GCallback) __unity_launcher_quicklist_menu_item_on_enter_clutter_actor_enter_event, self);
 	g_signal_parse_name ("leave-event", CLUTTER_TYPE_ACTOR, &_tmp3_, NULL, FALSE);
-	g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp3_, 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_leave_clutter_actor_leave_event, self);
+	g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp3_, 0, NULL, (GCallback) __unity_launcher_quicklist_menu_item_on_leave_clutter_actor_leave_event, self);
 	g_signal_parse_name ("button-press-event", CLUTTER_TYPE_ACTOR, &_tmp4_, NULL, FALSE);
-	g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp4_, 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event, self);
+	g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp4_, 0, NULL, (GCallback) __unity_launcher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event, self);
 	g_signal_emit_by_name (self, "activated");
 	result = TRUE;
 	return result;
 }
 
 
-UnityQuicklauncherQuicklistMenuItem* unity_quicklauncher_quicklist_menu_item_construct (GType object_type, const char* label) {
-	UnityQuicklauncherQuicklistMenuItem * self;
+UnityLauncherQuicklistMenuItem* unity_launcher_quicklist_menu_item_construct (GType object_type, const char* label) {
+	UnityLauncherQuicklistMenuItem * self;
 	g_return_val_if_fail (label != NULL, NULL);
-	self = (UnityQuicklauncherQuicklistMenuItem*) g_object_new (object_type, "label", label, NULL);
+	self = (UnityLauncherQuicklistMenuItem*) g_object_new (object_type, "label", label, NULL);
 	return self;
 }
 
 
-UnityQuicklauncherQuicklistMenuItem* unity_quicklauncher_quicklist_menu_item_new (const char* label) {
-	return unity_quicklauncher_quicklist_menu_item_construct (UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM, label);
+UnityLauncherQuicklistMenuItem* unity_launcher_quicklist_menu_item_new (const char* label) {
+	return unity_launcher_quicklist_menu_item_construct (UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM, label);
 }
 
 
-const char* unity_quicklauncher_quicklist_menu_item_get_label (UnityQuicklauncherQuicklistMenuItem* self) {
+const char* unity_launcher_quicklist_menu_item_get_label (UnityLauncherQuicklistMenuItem* self) {
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_label;
@@ -738,7 +543,7 @@ const char* unity_quicklauncher_quicklist_menu_item_get_label (UnityQuicklaunche
 }
 
 
-static void unity_quicklauncher_quicklist_menu_item_set_label (UnityQuicklauncherQuicklistMenuItem* self, const char* value) {
+static void unity_launcher_quicklist_menu_item_set_label (UnityLauncherQuicklistMenuItem* self, const char* value) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
 	self->priv->_label = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_label), _tmp0_);
@@ -746,23 +551,23 @@ static void unity_quicklauncher_quicklist_menu_item_set_label (UnityQuicklaunche
 }
 
 
-static GObject * unity_quicklauncher_quicklist_menu_item_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+static GObject * unity_launcher_quicklist_menu_item_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
-	UnityQuicklauncherQuicklistMenuItem * self;
-	parent_class = G_OBJECT_CLASS (unity_quicklauncher_quicklist_menu_item_parent_class);
+	UnityLauncherQuicklistMenuItem * self;
+	parent_class = G_OBJECT_CLASS (unity_launcher_quicklist_menu_item_parent_class);
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
-	self = UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM (obj);
+	self = UNITY_LAUNCHER_QUICKLIST_MENU_ITEM (obj);
 	{
 		CtkPadding _tmp1_ = {0};
 		CtkPadding padding;
 		char* _tmp2_;
-		padding = (memset (&_tmp1_, 0, sizeof (CtkPadding)), _tmp1_.left = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp1_.right = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp1_.top = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp1_.bottom = (float) ((gint) ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_MARGIN)), _tmp1_);
+		padding = (memset (&_tmp1_, 0, sizeof (CtkPadding)), _tmp1_.left = (float) ((gint) ctk_em_to_pixel ((double) UNITY_LAUNCHER_MARGIN)), _tmp1_.right = (float) ((gint) ctk_em_to_pixel ((double) UNITY_LAUNCHER_MARGIN)), _tmp1_.top = (float) ((gint) ctk_em_to_pixel ((double) UNITY_LAUNCHER_MARGIN)), _tmp1_.bottom = (float) ((gint) ctk_em_to_pixel ((double) UNITY_LAUNCHER_MARGIN)), _tmp1_);
 		ctk_actor_set_padding ((CtkActor*) self, &padding);
-		g_signal_connect_object ((GObject*) self, "notify::label", (GCallback) __unity_quicklauncher_quicklist_menu_item_on_label_changed_g_object_notify, self, 0);
-		g_signal_connect_object ((ClutterActor*) self, "enter-event", (GCallback) __unity_quicklauncher_quicklist_menu_item_on_enter_clutter_actor_enter_event, self, 0);
-		g_signal_connect_object ((ClutterActor*) self, "leave-event", (GCallback) __unity_quicklauncher_quicklist_menu_item_on_leave_clutter_actor_leave_event, self, 0);
-		g_signal_connect_object ((ClutterActor*) self, "button-press-event", (GCallback) __unity_quicklauncher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event, self, 0);
+		g_signal_connect_object ((GObject*) self, "notify::label", (GCallback) __unity_launcher_quicklist_menu_item_on_label_changed_g_object_notify, self, 0);
+		g_signal_connect_object ((ClutterActor*) self, "enter-event", (GCallback) __unity_launcher_quicklist_menu_item_on_enter_clutter_actor_enter_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self, "leave-event", (GCallback) __unity_launcher_quicklist_menu_item_on_leave_clutter_actor_leave_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self, "button-press-event", (GCallback) __unity_launcher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event, self, 0);
 		clutter_actor_set_reactive ((ClutterActor*) self, TRUE);
 		self->priv->old_width = 0;
 		self->priv->old_height = 0;
@@ -772,30 +577,30 @@ static GObject * unity_quicklauncher_quicklist_menu_item_constructor (GType type
 }
 
 
-static void unity_quicklauncher_quicklist_menu_item_class_init (UnityQuicklauncherQuicklistMenuItemClass * klass) {
-	unity_quicklauncher_quicklist_menu_item_parent_class = g_type_class_peek_parent (klass);
-	g_type_class_add_private (klass, sizeof (UnityQuicklauncherQuicklistMenuItemPrivate));
-	CLUTTER_ACTOR_CLASS (klass)->paint = unity_quicklauncher_quicklist_menu_item_real_paint;
-	CLUTTER_ACTOR_CLASS (klass)->get_preferred_height = unity_quicklauncher_quicklist_menu_item_real_get_preferred_height;
-	CLUTTER_ACTOR_CLASS (klass)->get_preferred_width = unity_quicklauncher_quicklist_menu_item_real_get_preferred_width;
-	CLUTTER_ACTOR_CLASS (klass)->allocate = unity_quicklauncher_quicklist_menu_item_real_allocate;
-	G_OBJECT_CLASS (klass)->get_property = unity_quicklauncher_quicklist_menu_item_get_property;
-	G_OBJECT_CLASS (klass)->set_property = unity_quicklauncher_quicklist_menu_item_set_property;
-	G_OBJECT_CLASS (klass)->constructor = unity_quicklauncher_quicklist_menu_item_constructor;
-	G_OBJECT_CLASS (klass)->finalize = unity_quicklauncher_quicklist_menu_item_finalize;
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM_LABEL, g_param_spec_string ("label", "label", "label", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-	g_signal_new ("activated", UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU_ITEM, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+static void unity_launcher_quicklist_menu_item_class_init (UnityLauncherQuicklistMenuItemClass * klass) {
+	unity_launcher_quicklist_menu_item_parent_class = g_type_class_peek_parent (klass);
+	g_type_class_add_private (klass, sizeof (UnityLauncherQuicklistMenuItemPrivate));
+	CLUTTER_ACTOR_CLASS (klass)->paint = unity_launcher_quicklist_menu_item_real_paint;
+	CLUTTER_ACTOR_CLASS (klass)->get_preferred_height = unity_launcher_quicklist_menu_item_real_get_preferred_height;
+	CLUTTER_ACTOR_CLASS (klass)->get_preferred_width = unity_launcher_quicklist_menu_item_real_get_preferred_width;
+	CLUTTER_ACTOR_CLASS (klass)->allocate = unity_launcher_quicklist_menu_item_real_allocate;
+	G_OBJECT_CLASS (klass)->get_property = unity_launcher_quicklist_menu_item_get_property;
+	G_OBJECT_CLASS (klass)->set_property = unity_launcher_quicklist_menu_item_set_property;
+	G_OBJECT_CLASS (klass)->constructor = unity_launcher_quicklist_menu_item_constructor;
+	G_OBJECT_CLASS (klass)->finalize = unity_launcher_quicklist_menu_item_finalize;
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_QUICKLIST_MENU_ITEM_LABEL, g_param_spec_string ("label", "label", "label", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_signal_new ("activated", UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
 
 
-static void unity_quicklauncher_quicklist_menu_item_instance_init (UnityQuicklauncherQuicklistMenuItem * self) {
-	self->priv = UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM_GET_PRIVATE (self);
+static void unity_launcher_quicklist_menu_item_instance_init (UnityLauncherQuicklistMenuItem * self) {
+	self->priv = UNITY_LAUNCHER_QUICKLIST_MENU_ITEM_GET_PRIVATE (self);
 }
 
 
-static void unity_quicklauncher_quicklist_menu_item_finalize (GObject* obj) {
-	UnityQuicklauncherQuicklistMenuItem * self;
-	self = UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM (obj);
+static void unity_launcher_quicklist_menu_item_finalize (GObject* obj) {
+	UnityLauncherQuicklistMenuItem * self;
+	self = UNITY_LAUNCHER_QUICKLIST_MENU_ITEM (obj);
 	{
 		GQuark _tmp4_;
 		guint _tmp3_;
@@ -803,39 +608,39 @@ static void unity_quicklauncher_quicklist_menu_item_finalize (GObject* obj) {
 		guint _tmp6_;
 		guint _tmp7_;
 		g_signal_parse_name ("notify::label", G_TYPE_OBJECT, &_tmp3_, &_tmp4_, TRUE);
-		g_signal_handlers_disconnect_matched ((GObject*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_DETAIL | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp3_, _tmp4_, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_label_changed_g_object_notify, self);
+		g_signal_handlers_disconnect_matched ((GObject*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_DETAIL | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp3_, _tmp4_, NULL, (GCallback) __unity_launcher_quicklist_menu_item_on_label_changed_g_object_notify, self);
 		g_signal_parse_name ("enter-event", CLUTTER_TYPE_ACTOR, &_tmp5_, NULL, FALSE);
-		g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp5_, 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_enter_clutter_actor_enter_event, self);
+		g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp5_, 0, NULL, (GCallback) __unity_launcher_quicklist_menu_item_on_enter_clutter_actor_enter_event, self);
 		g_signal_parse_name ("leave-event", CLUTTER_TYPE_ACTOR, &_tmp6_, NULL, FALSE);
-		g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp6_, 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_leave_clutter_actor_leave_event, self);
+		g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp6_, 0, NULL, (GCallback) __unity_launcher_quicklist_menu_item_on_leave_clutter_actor_leave_event, self);
 		g_signal_parse_name ("button-press-event", CLUTTER_TYPE_ACTOR, &_tmp7_, NULL, FALSE);
-		g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp7_, 0, NULL, (GCallback) __unity_quicklauncher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event, self);
+		g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp7_, 0, NULL, (GCallback) __unity_launcher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event, self);
 	}
 	_g_object_unref0 (self->priv->item_background);
 	_g_free0 (self->priv->old_label);
 	_g_free0 (self->priv->_label);
-	G_OBJECT_CLASS (unity_quicklauncher_quicklist_menu_item_parent_class)->finalize (obj);
+	G_OBJECT_CLASS (unity_launcher_quicklist_menu_item_parent_class)->finalize (obj);
 }
 
 
-GType unity_quicklauncher_quicklist_menu_item_get_type (void) {
-	static volatile gsize unity_quicklauncher_quicklist_menu_item_type_id__volatile = 0;
-	if (g_once_init_enter (&unity_quicklauncher_quicklist_menu_item_type_id__volatile)) {
-		static const GTypeInfo g_define_type_info = { sizeof (UnityQuicklauncherQuicklistMenuItemClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_quicklauncher_quicklist_menu_item_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityQuicklauncherQuicklistMenuItem), 0, (GInstanceInitFunc) unity_quicklauncher_quicklist_menu_item_instance_init, NULL };
-		GType unity_quicklauncher_quicklist_menu_item_type_id;
-		unity_quicklauncher_quicklist_menu_item_type_id = g_type_register_static (CTK_TYPE_ACTOR, "UnityQuicklauncherQuicklistMenuItem", &g_define_type_info, 0);
-		g_once_init_leave (&unity_quicklauncher_quicklist_menu_item_type_id__volatile, unity_quicklauncher_quicklist_menu_item_type_id);
+GType unity_launcher_quicklist_menu_item_get_type (void) {
+	static volatile gsize unity_launcher_quicklist_menu_item_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_launcher_quicklist_menu_item_type_id__volatile)) {
+		static const GTypeInfo g_define_type_info = { sizeof (UnityLauncherQuicklistMenuItemClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_launcher_quicklist_menu_item_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityLauncherQuicklistMenuItem), 0, (GInstanceInitFunc) unity_launcher_quicklist_menu_item_instance_init, NULL };
+		GType unity_launcher_quicklist_menu_item_type_id;
+		unity_launcher_quicklist_menu_item_type_id = g_type_register_static (CTK_TYPE_ACTOR, "UnityLauncherQuicklistMenuItem", &g_define_type_info, 0);
+		g_once_init_leave (&unity_launcher_quicklist_menu_item_type_id__volatile, unity_launcher_quicklist_menu_item_type_id);
 	}
-	return unity_quicklauncher_quicklist_menu_item_type_id__volatile;
+	return unity_launcher_quicklist_menu_item_type_id__volatile;
 }
 
 
-static void unity_quicklauncher_quicklist_menu_item_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
-	UnityQuicklauncherQuicklistMenuItem * self;
-	self = UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM (object);
+static void unity_launcher_quicklist_menu_item_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
+	UnityLauncherQuicklistMenuItem * self;
+	self = UNITY_LAUNCHER_QUICKLIST_MENU_ITEM (object);
 	switch (property_id) {
-		case UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM_LABEL:
-		g_value_set_string (value, unity_quicklauncher_quicklist_menu_item_get_label (self));
+		case UNITY_LAUNCHER_QUICKLIST_MENU_ITEM_LABEL:
+		g_value_set_string (value, unity_launcher_quicklist_menu_item_get_label (self));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -844,12 +649,12 @@ static void unity_quicklauncher_quicklist_menu_item_get_property (GObject * obje
 }
 
 
-static void unity_quicklauncher_quicklist_menu_item_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
-	UnityQuicklauncherQuicklistMenuItem * self;
-	self = UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM (object);
+static void unity_launcher_quicklist_menu_item_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
+	UnityLauncherQuicklistMenuItem * self;
+	self = UNITY_LAUNCHER_QUICKLIST_MENU_ITEM (object);
 	switch (property_id) {
-		case UNITY_QUICKLAUNCHER_QUICKLIST_MENU_ITEM_LABEL:
-		unity_quicklauncher_quicklist_menu_item_set_label (self, g_value_get_string (value));
+		case UNITY_LAUNCHER_QUICKLIST_MENU_ITEM_LABEL:
+		unity_launcher_quicklist_menu_item_set_label (self, g_value_get_string (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -858,261 +663,11 @@ static void unity_quicklauncher_quicklist_menu_item_set_property (GObject * obje
 }
 
 
-static double _unity_quicklauncher_quicklist_menu_align (UnityQuicklauncherQuicklistMenu* self, double val) {
-	double result = 0.0;
-	double fract;
-	g_return_val_if_fail (self != NULL, 0.0);
-	fract = val - ((gint) val);
-	if (fract != 0.5f) {
-		result = (double) (((gint) val) + 0.5f);
-		return result;
-	} else {
-		result = val;
-		return result;
-	}
-}
-
-
-static void _unity_quicklauncher_quicklist_menu_round_rect_anchor (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, double aspect, double x, double y, double corner_radius, double width, double height, double anchor_width, double anchor_height, double anchor_x, double anchor_y) {
-	double radius;
-	double a;
-	double b;
-	double c;
-	double d;
-	double e;
-	double f;
-	double g;
-	double h;
-	double* _tmp1_;
-	gint _p0_size_;
-	gint p0_length1;
-	double* _tmp0_ = NULL;
-	double* p0;
-	double* _tmp3_;
-	gint _p1_size_;
-	gint p1_length1;
-	double* _tmp2_ = NULL;
-	double* p1;
-	double* _tmp5_;
-	gint _p2_size_;
-	gint p2_length1;
-	double* _tmp4_ = NULL;
-	double* p2;
-	double* _tmp7_;
-	gint _p3_size_;
-	gint p3_length1;
-	double* _tmp6_ = NULL;
-	double* p3;
-	double* _tmp9_;
-	gint _p4_size_;
-	gint p4_length1;
-	double* _tmp8_ = NULL;
-	double* p4;
-	double* _tmp11_;
-	gint _p5_size_;
-	gint p5_length1;
-	double* _tmp10_ = NULL;
-	double* p5;
-	double* _tmp13_;
-	gint _p6_size_;
-	gint p6_length1;
-	double* _tmp12_ = NULL;
-	double* p6;
-	double* _tmp15_;
-	gint _p7_size_;
-	gint p7_length1;
-	double* _tmp14_ = NULL;
-	double* p7;
-	double* _tmp17_;
-	gint _p8_size_;
-	gint p8_length1;
-	double* _tmp16_ = NULL;
-	double* p8;
-	double* _tmp19_;
-	gint _p9_size_;
-	gint p9_length1;
-	double* _tmp18_ = NULL;
-	double* p9;
-	double* _tmp21_;
-	gint _p10_size_;
-	gint p10_length1;
-	double* _tmp20_ = NULL;
-	double* p10;
-	double* _tmp23_;
-	gint _q0_size_;
-	gint q0_length1;
-	double* _tmp22_ = NULL;
-	double* q0;
-	double* _tmp25_;
-	gint _q1_size_;
-	gint q1_length1;
-	double* _tmp24_ = NULL;
-	double* q1;
-	double* _tmp27_;
-	gint _q2_size_;
-	gint q2_length1;
-	double* _tmp26_ = NULL;
-	double* q2;
-	double* _tmp29_;
-	gint _q3_size_;
-	gint q3_length1;
-	double* _tmp28_ = NULL;
-	double* q3;
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (cr != NULL);
-	radius = corner_radius / aspect;
-	a = _unity_quicklauncher_quicklist_menu_align (self, x);
-	b = _unity_quicklauncher_quicklist_menu_align (self, x + radius);
-	c = _unity_quicklauncher_quicklist_menu_align (self, x + width);
-	d = _unity_quicklauncher_quicklist_menu_align (self, (x + width) - radius);
-	e = _unity_quicklauncher_quicklist_menu_align (self, y);
-	f = _unity_quicklauncher_quicklist_menu_align (self, y + radius);
-	g = _unity_quicklauncher_quicklist_menu_align (self, y + height);
-	h = _unity_quicklauncher_quicklist_menu_align (self, (y + height) - radius);
-	p0 = (_tmp1_ = (_tmp0_ = g_new0 (double, 2), _tmp0_[0] = b, _tmp0_[1] = e, _tmp0_), p0_length1 = 2, _p0_size_ = p0_length1, _tmp1_);
-	p1 = (_tmp3_ = (_tmp2_ = g_new0 (double, 2), _tmp2_[0] = d, _tmp2_[1] = e, _tmp2_), p1_length1 = 2, _p1_size_ = p1_length1, _tmp3_);
-	p2 = (_tmp5_ = (_tmp4_ = g_new0 (double, 2), _tmp4_[0] = c, _tmp4_[1] = f, _tmp4_), p2_length1 = 2, _p2_size_ = p2_length1, _tmp5_);
-	p3 = (_tmp7_ = (_tmp6_ = g_new0 (double, 2), _tmp6_[0] = c, _tmp6_[1] = h, _tmp6_), p3_length1 = 2, _p3_size_ = p3_length1, _tmp7_);
-	p4 = (_tmp9_ = (_tmp8_ = g_new0 (double, 2), _tmp8_[0] = d, _tmp8_[1] = g, _tmp8_), p4_length1 = 2, _p4_size_ = p4_length1, _tmp9_);
-	p5 = (_tmp11_ = (_tmp10_ = g_new0 (double, 2), _tmp10_[0] = b, _tmp10_[1] = g, _tmp10_), p5_length1 = 2, _p5_size_ = p5_length1, _tmp11_);
-	p6 = (_tmp13_ = (_tmp12_ = g_new0 (double, 2), _tmp12_[0] = a, _tmp12_[1] = h, _tmp12_), p6_length1 = 2, _p6_size_ = p6_length1, _tmp13_);
-	p7 = (_tmp15_ = (_tmp14_ = g_new0 (double, 2), _tmp14_[0] = _unity_quicklauncher_quicklist_menu_align (self, anchor_x + anchor_width), _tmp14_[1] = _unity_quicklauncher_quicklist_menu_align (self, anchor_y + (anchor_height / 2.0f)), _tmp14_), p7_length1 = 2, _p7_size_ = p7_length1, _tmp15_);
-	p8 = (_tmp17_ = (_tmp16_ = g_new0 (double, 2), _tmp16_[0] = _unity_quicklauncher_quicklist_menu_align (self, anchor_x), _tmp16_[1] = _unity_quicklauncher_quicklist_menu_align (self, anchor_y), _tmp16_), p8_length1 = 2, _p8_size_ = p8_length1, _tmp17_);
-	p9 = (_tmp19_ = (_tmp18_ = g_new0 (double, 2), _tmp18_[0] = _unity_quicklauncher_quicklist_menu_align (self, anchor_x + anchor_width), _tmp18_[1] = _unity_quicklauncher_quicklist_menu_align (self, anchor_y - (anchor_height / 2.0f)), _tmp18_), p9_length1 = 2, _p9_size_ = p9_length1, _tmp19_);
-	p10 = (_tmp21_ = (_tmp20_ = g_new0 (double, 2), _tmp20_[0] = a, _tmp20_[1] = f, _tmp20_), p10_length1 = 2, _p10_size_ = p10_length1, _tmp21_);
-	q0 = (_tmp23_ = (_tmp22_ = g_new0 (double, 2), _tmp22_[0] = a, _tmp22_[1] = e, _tmp22_), q0_length1 = 2, _q0_size_ = q0_length1, _tmp23_);
-	q1 = (_tmp25_ = (_tmp24_ = g_new0 (double, 2), _tmp24_[0] = c, _tmp24_[1] = e, _tmp24_), q1_length1 = 2, _q1_size_ = q1_length1, _tmp25_);
-	q2 = (_tmp27_ = (_tmp26_ = g_new0 (double, 2), _tmp26_[0] = c, _tmp26_[1] = g, _tmp26_), q2_length1 = 2, _q2_size_ = q2_length1, _tmp27_);
-	q3 = (_tmp29_ = (_tmp28_ = g_new0 (double, 2), _tmp28_[0] = a, _tmp28_[1] = g, _tmp28_), q3_length1 = 2, _q3_size_ = q3_length1, _tmp29_);
-	cairo_move_to (cr, p0[0], p0[1]);
-	cairo_line_to (cr, p1[0], p1[1]);
-	cairo_curve_to (cr, q1[0] - (radius * 0.45f), q1[1], q1[0], q1[1] + (radius * 0.45f), p2[0], p2[1]);
-	cairo_line_to (cr, p3[0], p3[1]);
-	cairo_curve_to (cr, q2[0], q2[1] - (radius * 0.45f), q2[0] - (radius * 0.45f), q2[1], p4[0], p4[1]);
-	cairo_line_to (cr, p5[0], p5[1]);
-	cairo_curve_to (cr, q3[0] + (radius * 0.45f), q3[1], q3[0], q3[1] - (radius * 0.45f), p6[0], p6[1]);
-	cairo_line_to (cr, p7[0], p7[1]);
-	cairo_line_to (cr, p8[0], p8[1]);
-	cairo_line_to (cr, p9[0], p9[1]);
-	cairo_line_to (cr, p10[0], p10[1]);
-	cairo_curve_to (cr, q0[0], q0[1] + (radius * 0.45f), q0[0] + (radius * 0.45f), q0[1], p0[0], p0[1]);
-	p0 = (g_free (p0), NULL);
-	p1 = (g_free (p1), NULL);
-	p2 = (g_free (p2), NULL);
-	p3 = (g_free (p3), NULL);
-	p4 = (g_free (p4), NULL);
-	p5 = (g_free (p5), NULL);
-	p6 = (g_free (p6), NULL);
-	p7 = (g_free (p7), NULL);
-	p8 = (g_free (p8), NULL);
-	p9 = (g_free (p9), NULL);
-	p10 = (g_free (p10), NULL);
-	q0 = (g_free (q0), NULL);
-	q1 = (g_free (q1), NULL);
-	q2 = (g_free (q2), NULL);
-	q3 = (g_free (q3), NULL);
-}
-
-
-static void _unity_quicklauncher_quicklist_menu_draw_mask (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, gint w, gint h, float anchor_y) {
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (cr != NULL);
-	_unity_quicklauncher_quicklist_menu_round_rect_anchor (self, cr, (double) 1.0f, UNITY_QUICKLAUNCHER_ANCHOR_WIDTH_ABS + ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_SHADOW_SIZE), ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_SHADOW_SIZE), (double) UNITY_QUICKLAUNCHER_CORNER_RADIUS_ABS, ((double) w) - (UNITY_QUICKLAUNCHER_ANCHOR_WIDTH_ABS + ctk_em_to_pixel ((double) (2 * UNITY_QUICKLAUNCHER_SHADOW_SIZE))), ((double) h) - ctk_em_to_pixel ((double) (2 * UNITY_QUICKLAUNCHER_SHADOW_SIZE)), (double) UNITY_QUICKLAUNCHER_ANCHOR_WIDTH_ABS, (double) UNITY_QUICKLAUNCHER_ANCHOR_HEIGHT_ABS, ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_SHADOW_SIZE), (double) anchor_y);
-}
-
-
-static void _unity_quicklauncher_quicklist_menu_full_mask (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, gint w, gint h, float anchor_y) {
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (cr != NULL);
-	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-	cairo_paint (cr);
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
-	cairo_paint (cr);
-}
-
-
-static void _unity_quicklauncher_quicklist_menu_fill_mask (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, gint w, gint h, float anchor_y) {
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (cr != NULL);
-	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-	cairo_paint (cr);
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
-	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
-	_unity_quicklauncher_quicklist_menu_draw_mask (self, cr, w, h, anchor_y);
-	cairo_fill (cr);
-}
-
-
-static void _unity_quicklauncher_quicklist_menu_main_bg (UnityQuicklauncherQuicklistMenu* self, cairo_t* cr, gint w, gint h, float anchor_y) {
-	cairo_surface_t* dots;
-	cairo_t* cr_dots;
-	cairo_pattern_t* dot_pattern;
-	cairo_pattern_t* hl_pattern;
-	cairo_pattern_t* _tmp0_;
-	cairo_pattern_t* _tmp1_;
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (cr != NULL);
-	dots = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 4, 4);
-	cr_dots = cairo_create (dots);
-	dot_pattern = NULL;
-	hl_pattern = NULL;
-	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-	cairo_paint (cr);
-	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
-	cairo_set_source_rgba (cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.48f);
-	_unity_quicklauncher_quicklist_menu_draw_mask (self, cr, w, h, anchor_y);
-	cairo_fill (cr);
-	ctk_surface_blur (cairo_get_target (cr), (guint) ((gint) ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_SHADOW_SIZE / 2))));
-	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-	_unity_quicklauncher_quicklist_menu_draw_mask (self, cr, w, h, anchor_y);
-	cairo_fill (cr);
-	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
-	cairo_set_source_rgba (cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.7f);
-	_unity_quicklauncher_quicklist_menu_draw_mask (self, cr, w, h, anchor_y);
-	cairo_fill (cr);
-	cairo_set_operator (cr_dots, CAIRO_OPERATOR_CLEAR);
-	cairo_paint (cr_dots);
-	cairo_scale (cr_dots, (double) 1.0f, (double) 1.0f);
-	cairo_set_operator (cr_dots, CAIRO_OPERATOR_OVER);
-	cairo_set_source_rgba (cr_dots, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.15f);
-	cairo_rectangle (cr_dots, (double) 0.0f, (double) 0.0f, (double) 1.0f, (double) 1.0f);
-	cairo_fill (cr_dots);
-	cairo_rectangle (cr_dots, (double) 2.0f, (double) 2.0f, (double) 1.0f, (double) 1.0f);
-	cairo_fill (cr_dots);
-	dot_pattern = (_tmp0_ = cairo_pattern_create_for_surface (dots), _cairo_pattern_destroy0 (dot_pattern), _tmp0_);
-	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_set_source (cr, dot_pattern);
-	cairo_pattern_set_extend (dot_pattern, CAIRO_EXTEND_REPEAT);
-	_unity_quicklauncher_quicklist_menu_draw_mask (self, cr, w, h, anchor_y);
-	cairo_fill (cr);
-	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	hl_pattern = (_tmp1_ = cairo_pattern_create_radial (((double) w) / 2.0f, ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_BORDER) - 15.0f, (double) 0.0f, ((double) w) / 2.0f, ctk_em_to_pixel ((double) UNITY_QUICKLAUNCHER_BORDER) - 15.0f, (((double) w) / 2.0f) + 20.0f), _cairo_pattern_destroy0 (hl_pattern), _tmp1_);
-	cairo_pattern_add_color_stop_rgba (hl_pattern, (double) 0.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.65f);
-	cairo_pattern_add_color_stop_rgba (hl_pattern, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.0f);
-	cairo_set_source (cr, hl_pattern);
-	_unity_quicklauncher_quicklist_menu_draw_mask (self, cr, w, h, anchor_y);
-	cairo_fill (cr);
-	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
-	cairo_set_line_width (cr, (double) UNITY_QUICKLAUNCHER_LINE_WIDTH_ABS);
-	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.75f);
-	_unity_quicklauncher_quicklist_menu_draw_mask (self, cr, w, h, anchor_y);
-	cairo_stroke (cr);
-	_cairo_surface_destroy0 (dots);
-	_cairo_destroy0 (cr_dots);
-	_cairo_pattern_destroy0 (dot_pattern);
-	_cairo_pattern_destroy0 (hl_pattern);
-}
-
-
-static void unity_quicklauncher_quicklist_menu_real_paint (ClutterActor* base) {
-	UnityQuicklauncherQuicklistMenu * self;
+static void unity_launcher_quicklist_menu_real_paint (ClutterActor* base) {
+	UnityLauncherQuicklistMenu * self;
 	float x = 0.0F;
 	float y = 0.0F;
-	self = (UnityQuicklauncherQuicklistMenu*) base;
+	self = (UnityLauncherQuicklistMenu*) base;
 	ctk_menu_refresh_background_texture (CTK_MENU (self));
 	clutter_actor_get_position ((ClutterActor*) self, &x, &y);
 	if (self->priv->cached_x == 0.0f) {
@@ -1124,12 +679,12 @@ static void unity_quicklauncher_quicklist_menu_real_paint (ClutterActor* base) {
 	if (!ctk_layer_actor_is_flattened (self->priv->ql_background)) {
 		ctk_layer_actor_flatten (self->priv->ql_background);
 	}
-	CLUTTER_ACTOR_CLASS (unity_quicklauncher_quicklist_menu_parent_class)->paint ((ClutterActor*) CTK_MENU (self));
+	CLUTTER_ACTOR_CLASS (unity_launcher_quicklist_menu_parent_class)->paint ((ClutterActor*) CTK_MENU (self));
 }
 
 
-static void unity_quicklauncher_quicklist_menu_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-	UnityQuicklauncherQuicklistMenu * self;
+static void unity_launcher_quicklist_menu_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
+	UnityLauncherQuicklistMenu * self;
 	gint w = 0;
 	gint h = 0;
 	guint blurred_id;
@@ -1143,7 +698,7 @@ static void unity_quicklauncher_quicklist_menu_real_allocate (ClutterActor* base
 	cairo_t* full_cr;
 	cairo_t* fill_cr;
 	cairo_t* main_cr;
-	self = (UnityQuicklauncherQuicklistMenu*) base;
+	self = (UnityLauncherQuicklistMenu*) base;
 	blurred_id = (guint) 0;
 	w = (gint) ((*box).x2 - (*box).x1);
 	h = (gint) ((*box).y2 - (*box).y1);
@@ -1155,7 +710,7 @@ static void unity_quicklauncher_quicklist_menu_real_allocate (ClutterActor* base
 	if (_tmp0_) {
 		return;
 	}
-	CLUTTER_ACTOR_CLASS (unity_quicklauncher_quicklist_menu_parent_class)->allocate ((ClutterActor*) CTK_MENU (self), box, flags);
+	CLUTTER_ACTOR_CLASS (unity_launcher_quicklist_menu_parent_class)->allocate ((ClutterActor*) CTK_MENU (self), box, flags);
 	if (ctk_menu_get_num_items ((CtkMenu*) self) == 1) {
 		self->priv->cached_y = ((float) h) / 2.0f;
 	}
@@ -1174,9 +729,9 @@ static void unity_quicklauncher_quicklist_menu_real_allocate (ClutterActor* base
 	full_cr = cairo_create (full_surf);
 	fill_cr = cairo_create (fill_surf);
 	main_cr = cairo_create (main_surf);
-	_unity_quicklauncher_quicklist_menu_full_mask (self, full_cr, w, h, self->priv->cached_y);
-	_unity_quicklauncher_quicklist_menu_fill_mask (self, fill_cr, w, h, self->priv->cached_y);
-	_unity_quicklauncher_quicklist_menu_main_bg (self, main_cr, w, h, self->priv->cached_y);
+	unity_quicklist_rendering_menu_full_mask (full_cr, w, h, self->priv->cached_y);
+	unity_quicklist_rendering_menu_fill_mask (fill_cr, w, h, self->priv->cached_y);
+	unity_quicklist_rendering_menu_background (main_cr, w, h, self->priv->cached_y);
 	ctk_layer_set_mask_from_surface (main_layer, full_surf);
 	ctk_layer_set_image_from_surface (main_layer, main_surf);
 	ctk_layer_set_opacity (main_layer, (guchar) 255);
@@ -1198,29 +753,29 @@ static void unity_quicklauncher_quicklist_menu_real_allocate (ClutterActor* base
 }
 
 
-UnityQuicklauncherQuicklistMenu* unity_quicklauncher_quicklist_menu_construct (GType object_type) {
-	UnityQuicklauncherQuicklistMenu * self;
+UnityLauncherQuicklistMenu* unity_launcher_quicklist_menu_construct (GType object_type) {
+	UnityLauncherQuicklistMenu * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
-UnityQuicklauncherQuicklistMenu* unity_quicklauncher_quicklist_menu_new (void) {
-	return unity_quicklauncher_quicklist_menu_construct (UNITY_QUICKLAUNCHER_TYPE_QUICKLIST_MENU);
+UnityLauncherQuicklistMenu* unity_launcher_quicklist_menu_new (void) {
+	return unity_launcher_quicklist_menu_construct (UNITY_LAUNCHER_TYPE_QUICKLIST_MENU);
 }
 
 
-static GObject * unity_quicklauncher_quicklist_menu_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+static GObject * unity_launcher_quicklist_menu_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
-	UnityQuicklauncherQuicklistMenu * self;
-	parent_class = G_OBJECT_CLASS (unity_quicklauncher_quicklist_menu_parent_class);
+	UnityLauncherQuicklistMenu * self;
+	parent_class = G_OBJECT_CLASS (unity_launcher_quicklist_menu_parent_class);
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
-	self = UNITY_QUICKLAUNCHER_QUICKLIST_MENU (obj);
+	self = UNITY_LAUNCHER_QUICKLIST_MENU (obj);
 	{
 		CtkPadding _tmp8_ = {0};
 		CtkPadding padding;
-		padding = (memset (&_tmp8_, 0, sizeof (CtkPadding)), _tmp8_.left = (float) ((gint) (ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_BORDER + UNITY_QUICKLAUNCHER_SHADOW_SIZE)) + UNITY_QUICKLAUNCHER_ANCHOR_WIDTH_ABS)), _tmp8_.right = (float) ((gint) ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_BORDER + UNITY_QUICKLAUNCHER_SHADOW_SIZE))), _tmp8_.top = (float) ((gint) ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_BORDER + UNITY_QUICKLAUNCHER_SHADOW_SIZE))), _tmp8_.bottom = (float) ((gint) ctk_em_to_pixel ((double) (UNITY_QUICKLAUNCHER_BORDER + UNITY_QUICKLAUNCHER_SHADOW_SIZE))), _tmp8_);
+		padding = (memset (&_tmp8_, 0, sizeof (CtkPadding)), _tmp8_.left = (float) ((gint) (ctk_em_to_pixel ((double) (UNITY_LAUNCHER_BORDER + UNITY_LAUNCHER_SHADOW_SIZE)) + UNITY_LAUNCHER_ANCHOR_WIDTH_ABS)), _tmp8_.right = (float) ((gint) ctk_em_to_pixel ((double) (UNITY_LAUNCHER_BORDER + UNITY_LAUNCHER_SHADOW_SIZE))), _tmp8_.top = (float) ((gint) ctk_em_to_pixel ((double) (UNITY_LAUNCHER_BORDER + UNITY_LAUNCHER_SHADOW_SIZE))), _tmp8_.bottom = (float) ((gint) ctk_em_to_pixel ((double) (UNITY_LAUNCHER_BORDER + UNITY_LAUNCHER_SHADOW_SIZE))), _tmp8_);
 		ctk_actor_set_padding ((CtkActor*) self, &padding);
 		self->priv->old_width = 0;
 		self->priv->old_height = 0;
@@ -1231,38 +786,38 @@ static GObject * unity_quicklauncher_quicklist_menu_constructor (GType type, gui
 }
 
 
-static void unity_quicklauncher_quicklist_menu_class_init (UnityQuicklauncherQuicklistMenuClass * klass) {
-	unity_quicklauncher_quicklist_menu_parent_class = g_type_class_peek_parent (klass);
-	g_type_class_add_private (klass, sizeof (UnityQuicklauncherQuicklistMenuPrivate));
-	CLUTTER_ACTOR_CLASS (klass)->paint = unity_quicklauncher_quicklist_menu_real_paint;
-	CLUTTER_ACTOR_CLASS (klass)->allocate = unity_quicklauncher_quicklist_menu_real_allocate;
-	G_OBJECT_CLASS (klass)->constructor = unity_quicklauncher_quicklist_menu_constructor;
-	G_OBJECT_CLASS (klass)->finalize = unity_quicklauncher_quicklist_menu_finalize;
+static void unity_launcher_quicklist_menu_class_init (UnityLauncherQuicklistMenuClass * klass) {
+	unity_launcher_quicklist_menu_parent_class = g_type_class_peek_parent (klass);
+	g_type_class_add_private (klass, sizeof (UnityLauncherQuicklistMenuPrivate));
+	CLUTTER_ACTOR_CLASS (klass)->paint = unity_launcher_quicklist_menu_real_paint;
+	CLUTTER_ACTOR_CLASS (klass)->allocate = unity_launcher_quicklist_menu_real_allocate;
+	G_OBJECT_CLASS (klass)->constructor = unity_launcher_quicklist_menu_constructor;
+	G_OBJECT_CLASS (klass)->finalize = unity_launcher_quicklist_menu_finalize;
 }
 
 
-static void unity_quicklauncher_quicklist_menu_instance_init (UnityQuicklauncherQuicklistMenu * self) {
-	self->priv = UNITY_QUICKLAUNCHER_QUICKLIST_MENU_GET_PRIVATE (self);
+static void unity_launcher_quicklist_menu_instance_init (UnityLauncherQuicklistMenu * self) {
+	self->priv = UNITY_LAUNCHER_QUICKLIST_MENU_GET_PRIVATE (self);
 }
 
 
-static void unity_quicklauncher_quicklist_menu_finalize (GObject* obj) {
-	UnityQuicklauncherQuicklistMenu * self;
-	self = UNITY_QUICKLAUNCHER_QUICKLIST_MENU (obj);
+static void unity_launcher_quicklist_menu_finalize (GObject* obj) {
+	UnityLauncherQuicklistMenu * self;
+	self = UNITY_LAUNCHER_QUICKLIST_MENU (obj);
 	_g_object_unref0 (self->priv->ql_background);
-	G_OBJECT_CLASS (unity_quicklauncher_quicklist_menu_parent_class)->finalize (obj);
+	G_OBJECT_CLASS (unity_launcher_quicklist_menu_parent_class)->finalize (obj);
 }
 
 
-GType unity_quicklauncher_quicklist_menu_get_type (void) {
-	static volatile gsize unity_quicklauncher_quicklist_menu_type_id__volatile = 0;
-	if (g_once_init_enter (&unity_quicklauncher_quicklist_menu_type_id__volatile)) {
-		static const GTypeInfo g_define_type_info = { sizeof (UnityQuicklauncherQuicklistMenuClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_quicklauncher_quicklist_menu_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityQuicklauncherQuicklistMenu), 0, (GInstanceInitFunc) unity_quicklauncher_quicklist_menu_instance_init, NULL };
-		GType unity_quicklauncher_quicklist_menu_type_id;
-		unity_quicklauncher_quicklist_menu_type_id = g_type_register_static (CTK_TYPE_MENU, "UnityQuicklauncherQuicklistMenu", &g_define_type_info, 0);
-		g_once_init_leave (&unity_quicklauncher_quicklist_menu_type_id__volatile, unity_quicklauncher_quicklist_menu_type_id);
+GType unity_launcher_quicklist_menu_get_type (void) {
+	static volatile gsize unity_launcher_quicklist_menu_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_launcher_quicklist_menu_type_id__volatile)) {
+		static const GTypeInfo g_define_type_info = { sizeof (UnityLauncherQuicklistMenuClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_launcher_quicklist_menu_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityLauncherQuicklistMenu), 0, (GInstanceInitFunc) unity_launcher_quicklist_menu_instance_init, NULL };
+		GType unity_launcher_quicklist_menu_type_id;
+		unity_launcher_quicklist_menu_type_id = g_type_register_static (CTK_TYPE_MENU, "UnityLauncherQuicklistMenu", &g_define_type_info, 0);
+		g_once_init_leave (&unity_launcher_quicklist_menu_type_id__volatile, unity_launcher_quicklist_menu_type_id);
 	}
-	return unity_quicklauncher_quicklist_menu_type_id__volatile;
+	return unity_launcher_quicklist_menu_type_id__volatile;
 }
 
 

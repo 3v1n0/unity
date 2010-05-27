@@ -38,7 +38,7 @@ namespace Unity.Testing
     private bool             is_showing;
 
     private Background          background;
-    private Quicklauncher.View  quicklauncher;
+    private Launcher.Launcher   launcher;
     private Panel.View          panel;
     private Places.Controller   controller;
     private Unity.Places.View   places;
@@ -133,9 +133,9 @@ namespace Unity.Testing
       this.stage.add_actor (this.background);
       this.background.show ();
 
-      this.quicklauncher = new Quicklauncher.View (this);
-      this.stage.add_actor (this.quicklauncher);
-      this.quicklauncher.show ();
+      this.launcher = new Launcher.Launcher (this);
+      this.stage.add_actor (this.launcher.get_view ());
+      this.launcher.get_view ().show ();
 
       if (this.places_enabled)
         {
@@ -213,8 +213,8 @@ namespace Unity.Testing
       this.background.set_position (0, 0);
       this.background.set_size (width, height);
 
-      this.quicklauncher.set_size (ql_width, height - 23);
-      this.quicklauncher.set_position (0, 23);
+      this.launcher.get_view ().set_size (ql_width, height - 23);
+      this.launcher.get_view ().set_position (0, 23);
 
       if (this.places_enabled)
         {
@@ -282,7 +282,7 @@ namespace Unity.Testing
 
     public void show_window_picker ()
     {
-      debug ("Window picker not implemented in popup mode");
+      this.show_unity ();
     }
 
     public void grab_keyboard (bool grab, uint32 timestamp)
@@ -345,6 +345,34 @@ namespace Unity.Testing
     {
       /* GOOD JOB!!! */
       return;
+    }
+
+    public void close_xids (Array<uint32> xids)
+    {
+      for (int i = 0; i < xids.length; i++)
+        {
+          uint32 xid = xids.index (i);
+          Wnck.Window window = Wnck.Window.get (xid);
+          if (window is Wnck.Window)
+            window.close (Clutter.get_current_event_time ());
+        }
+    }
+
+    public void	expose_xids (Array<uint32> xids)
+		{
+      //null op in popup
+		}
+
+		public void stop_expose ()
+		{
+			//null op in popup
+		}
+
+    public void show_window (uint32 xid)
+    {
+      Wnck.Window window = Wnck.Window.get (xid);
+      if (window is Wnck.Window)
+        window.activate (Clutter.get_current_event_time ());
     }
   }
 

@@ -17,9 +17,7 @@
  * Authored by Gordon Allott <gord.allott@canonical.com>
  *
  */
-using Unity.Quicklauncher.Models;
-
-namespace Unity.Quicklauncher
+namespace Unity.Launcher
 {
   public static QuicklistController? ql_controler_singleton;
 
@@ -28,15 +26,17 @@ namespace Unity.Quicklauncher
 
     public static unowned QuicklistController get_default ()
     {
-      if (Unity.Quicklauncher.ql_controler_singleton == null) {
-        Unity.Quicklauncher.ql_controler_singleton= new QuicklistController ();
+      if (Unity.Launcher.ql_controler_singleton == null) {
+        Unity.Launcher.ql_controler_singleton= new QuicklistController ();
       }
-      return Unity.Quicklauncher.ql_controler_singleton;
+      return Unity.Launcher.ql_controler_singleton;
     }
 
     public weak Ctk.Menu menu;
     public bool is_in_label = false;
     public bool is_in_menu = false;
+
+    public signal void menu_state_changed (bool open);
 
     public QuicklistController ()
     {
@@ -62,6 +62,7 @@ namespace Unity.Quicklauncher
         this.menu.destroy ();
 
       var menu = new QuicklistMenu () as Ctk.Menu;
+      menu.destroy.connect (() => { menu_state_changed (false); });
       this.menu = menu;
       this.menu.destroy.connect (() => {
         Unity.global_shell.remove_fullscreen_request (this);
@@ -109,7 +110,7 @@ namespace Unity.Quicklauncher
       /* Only add the separator if there are shortcuts beneath  */
       if (affix_shortcuts.size > 0)
         {
-          Unity.Quicklauncher.QuicklistMenuSeperator separator = new Unity.Quicklauncher.QuicklistMenuSeperator ();
+          Unity.Launcher.QuicklistMenuSeperator separator = new Unity.Launcher.QuicklistMenuSeperator ();
           this.menu.append (separator, false);
         }
 
@@ -122,6 +123,7 @@ namespace Unity.Quicklauncher
           menuitem.activated.connect (this.close_menu);
         }
       this.menu.set_detect_clicks (true);
+      menu_state_changed (true);
     }
 
     public void close_menu ()

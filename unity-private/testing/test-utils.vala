@@ -54,6 +54,17 @@ namespace Unity.Testing
       if ("is currently inside an allocation cycle" in message)
         return false;
 
+
+      // ignore liblauncher - we don't want to test liblauncher its going away
+      if ("liblauncher" in log_domain)
+        return false;
+
+      if ("bamfdaemon" in log_domain)
+        return false;
+
+      if ("Gtk" in log_domain)
+        return false;
+
       return true;
     }
 

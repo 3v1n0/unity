@@ -37,7 +37,7 @@ host_triplet = @host@
 noinst_PROGRAMS = test-unit$(EXEEXT)
 subdir = tests/unit
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	test-places.c test-unit.c test_unit_vala.stamp
+	test-launcher.c test-places.c test-unit.c test_unit_vala.stamp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/gettext.m4 \
 	$(top_srcdir)/m4/iconv.m4 $(top_srcdir)/m4/intlmacosx.m4 \
@@ -55,8 +55,8 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
-am_test_unit_OBJECTS = test_unit-test-places.$(OBJEXT) \
-	test_unit-test-unit.$(OBJEXT)
+am_test_unit_OBJECTS = test_unit-test-launcher.$(OBJEXT) \
+	test_unit-test-places.$(OBJEXT) test_unit-test-unit.$(OBJEXT)
 test_unit_OBJECTS = $(am_test_unit_OBJECTS)
 am__DEPENDENCIES_1 =
 test_unit_DEPENDENCIES = $(top_builddir)/unity/libunity.la \
@@ -321,6 +321,7 @@ test_unit_VALAFLAGS = \
   --vapidir=$(top_srcdir)/vapi/ \
   --vapidir=$(top_srcdir)/tests \
   --vapidir=$(top_srcdir)/tests/unit \
+  --pkg Bamf-0.2 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg dbus-glib-1 \
@@ -343,6 +344,7 @@ test_unit_VALAFLAGS = \
   $(MAINTAINER_VALAFLAGS)
 
 test_unit_SOURCES = \
+  test-launcher.vala \
   test-places.vala \
   test-unit.vala
 
@@ -405,6 +407,7 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-launcher.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-places.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-unit.Po@am__quote@
 
@@ -431,6 +434,22 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+test_unit-test-launcher.o: test-launcher.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-launcher.o -MD -MP -MF $(DEPDIR)/test_unit-test-launcher.Tpo -c -o test_unit-test-launcher.o `test -f 'test-launcher.c' || echo '$(srcdir)/'`test-launcher.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-launcher.Tpo $(DEPDIR)/test_unit-test-launcher.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-launcher.c' object='test_unit-test-launcher.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-launcher.o `test -f 'test-launcher.c' || echo '$(srcdir)/'`test-launcher.c
+
+test_unit-test-launcher.obj: test-launcher.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-launcher.obj -MD -MP -MF $(DEPDIR)/test_unit-test-launcher.Tpo -c -o test_unit-test-launcher.obj `if test -f 'test-launcher.c'; then $(CYGPATH_W) 'test-launcher.c'; else $(CYGPATH_W) '$(srcdir)/test-launcher.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-launcher.Tpo $(DEPDIR)/test_unit-test-launcher.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-launcher.c' object='test_unit-test-launcher.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-launcher.obj `if test -f 'test-launcher.c'; then $(CYGPATH_W) 'test-launcher.c'; else $(CYGPATH_W) '$(srcdir)/test-launcher.c'; fi`
 
 test_unit-test-places.o: test-places.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-places.o -MD -MP -MF $(DEPDIR)/test_unit-test-places.Tpo -c -o test_unit-test-places.o `test -f 'test-places.c' || echo '$(srcdir)/'`test-places.c
@@ -463,6 +482,11 @@ test_unit-test-unit.obj: test-unit.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-unit.c' object='test_unit-test-unit.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-unit.obj `if test -f 'test-unit.c'; then $(CYGPATH_W) 'test-unit.c'; else $(CYGPATH_W) '$(srcdir)/test-unit.c'; fi`
+$(srcdir)/test-launcher.c: $(srcdir)/test_unit_vala.stamp
+	@if test -f $@; then :; else \
+	  rm -f $(srcdir)/test_unit_vala.stamp; \
+	  $(am__cd) $(srcdir) && $(MAKE) $(AM_MAKEFLAGS) test_unit_vala.stamp; \
+	fi
 $(srcdir)/test-places.c: $(srcdir)/test_unit_vala.stamp
 	@if test -f $@; then :; else \
 	  rm -f $(srcdir)/test_unit_vala.stamp; \
@@ -708,6 +732,7 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-rm -f test-launcher.c
 	-rm -f test-places.c
 	-rm -f test-unit.c
 	-rm -f test_unit_vala.stamp

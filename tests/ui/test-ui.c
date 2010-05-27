@@ -22,13 +22,29 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <unity.h>
+#include <gee.h>
+#include <stdlib.h>
+#include <string.h>
+#include <float.h>
+#include <math.h>
 #include <unity-private.h>
 #include <gtk/gtk.h>
 #include <clutk/clutk.h>
-#include <stdlib.h>
-#include <string.h>
 #include <gobject/gvaluecollector.h>
 
+
+#define UNITY_TESTS_UI_TYPE_TEST_FAVORITES (unity_tests_ui_test_favorites_get_type ())
+#define UNITY_TESTS_UI_TEST_FAVORITES(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UI_TYPE_TEST_FAVORITES, UnityTestsUITestFavorites))
+#define UNITY_TESTS_UI_TEST_FAVORITES_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UI_TYPE_TEST_FAVORITES, UnityTestsUITestFavoritesClass))
+#define UNITY_TESTS_UI_IS_TEST_FAVORITES(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTS_UI_TYPE_TEST_FAVORITES))
+#define UNITY_TESTS_UI_IS_TEST_FAVORITES_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTS_UI_TYPE_TEST_FAVORITES))
+#define UNITY_TESTS_UI_TEST_FAVORITES_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTS_UI_TYPE_TEST_FAVORITES, UnityTestsUITestFavoritesClass))
+
+typedef struct _UnityTestsUITestFavorites UnityTestsUITestFavorites;
+typedef struct _UnityTestsUITestFavoritesClass UnityTestsUITestFavoritesClass;
+typedef struct _UnityTestsUITestFavoritesPrivate UnityTestsUITestFavoritesPrivate;
+#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
 #define TYPE_MAIN (main_get_type ())
 #define MAIN(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MAIN, Main))
@@ -51,8 +67,16 @@ typedef struct _MainPrivate MainPrivate;
 typedef struct _UnityTestsUIQuicklistSuite UnityTestsUIQuicklistSuite;
 typedef struct _UnityTestsUIQuicklistSuiteClass UnityTestsUIQuicklistSuiteClass;
 #define _unity_testing_logging_unref0(var) ((var == NULL) ? NULL : (var = (unity_testing_logging_unref (var), NULL)))
-#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 typedef struct _ParamSpecMain ParamSpecMain;
+
+struct _UnityTestsUITestFavorites {
+	UnityFavorites parent_instance;
+	UnityTestsUITestFavoritesPrivate * priv;
+};
+
+struct _UnityTestsUITestFavoritesClass {
+	UnityFavoritesClass parent_class;
+};
 
 struct _Main {
 	GTypeInstance parent_instance;
@@ -70,8 +94,27 @@ struct _ParamSpecMain {
 };
 
 
+static gpointer unity_tests_ui_test_favorites_parent_class = NULL;
 static gpointer main_parent_class = NULL;
 
+GType unity_tests_ui_test_favorites_get_type (void);
+enum  {
+	UNITY_TESTS_UI_TEST_FAVORITES_DUMMY_PROPERTY
+};
+static GeeArrayList* unity_tests_ui_test_favorites_real_get_favorites (UnityFavorites* base);
+static void unity_tests_ui_test_favorites_real_add_favorite (UnityFavorites* base, const char* uid);
+static void unity_tests_ui_test_favorites_real_remove_favorite (UnityFavorites* base, const char* uid);
+static gboolean unity_tests_ui_test_favorites_real_is_favorite (UnityFavorites* base, const char* uid);
+static char* unity_tests_ui_test_favorites_real_get_string (UnityFavorites* base, const char* uid, const char* name);
+static void unity_tests_ui_test_favorites_real_set_string (UnityFavorites* base, const char* uid, const char* name, const char* value);
+static gint* unity_tests_ui_test_favorites_real_get_int (UnityFavorites* base, const char* uid, const char* name);
+static void unity_tests_ui_test_favorites_real_set_int (UnityFavorites* base, const char* uid, const char* name, gint value);
+static float* unity_tests_ui_test_favorites_real_get_float (UnityFavorites* base, const char* uid, const char* name);
+static void unity_tests_ui_test_favorites_real_set_float (UnityFavorites* base, const char* uid, const char* name, float value);
+static gboolean* unity_tests_ui_test_favorites_real_get_bool (UnityFavorites* base, const char* uid, const char* name);
+static void unity_tests_ui_test_favorites_real_set_bool (UnityFavorites* base, const char* uid, const char* name, gboolean value);
+UnityTestsUITestFavorites* unity_tests_ui_test_favorites_new (void);
+UnityTestsUITestFavorites* unity_tests_ui_test_favorites_construct (GType object_type);
 gpointer main_ref (gpointer instance);
 void main_unref (gpointer instance);
 GParamSpec* param_spec_main (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
@@ -91,7 +134,170 @@ gint main_main (char** args, int args_length1);
 Main* main_new (void);
 Main* main_construct (GType object_type);
 static void main_finalize (Main* obj);
+static int _vala_strcmp0 (const char * str1, const char * str2);
 
+
+
+static GeeArrayList* unity_tests_ui_test_favorites_real_get_favorites (UnityFavorites* base) {
+	UnityTestsUITestFavorites * self;
+	GeeArrayList* result = NULL;
+	GeeArrayList* retlist;
+	self = (UnityTestsUITestFavorites*) base;
+	retlist = gee_array_list_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, NULL);
+	gee_abstract_collection_add ((GeeAbstractCollection*) retlist, "app-firefox");
+	result = retlist;
+	return result;
+}
+
+
+static void unity_tests_ui_test_favorites_real_add_favorite (UnityFavorites* base, const char* uid) {
+	UnityTestsUITestFavorites * self;
+	self = (UnityTestsUITestFavorites*) base;
+	g_return_if_fail (uid != NULL);
+}
+
+
+static void unity_tests_ui_test_favorites_real_remove_favorite (UnityFavorites* base, const char* uid) {
+	UnityTestsUITestFavorites * self;
+	self = (UnityTestsUITestFavorites*) base;
+	g_return_if_fail (uid != NULL);
+}
+
+
+static gboolean unity_tests_ui_test_favorites_real_is_favorite (UnityFavorites* base, const char* uid) {
+	UnityTestsUITestFavorites * self;
+	gboolean result = FALSE;
+	self = (UnityTestsUITestFavorites*) base;
+	g_return_val_if_fail (uid != NULL, FALSE);
+	result = TRUE;
+	return result;
+}
+
+
+static char* unity_tests_ui_test_favorites_real_get_string (UnityFavorites* base, const char* uid, const char* name) {
+	UnityTestsUITestFavorites * self;
+	char* result = NULL;
+	self = (UnityTestsUITestFavorites*) base;
+	g_return_val_if_fail (uid != NULL, NULL);
+	g_return_val_if_fail (name != NULL, NULL);
+	if (_vala_strcmp0 (name, "type") == 0) {
+		result = g_strdup ("application");
+		return result;
+	}
+	result = g_strdup ("/usr/share/applications/firefox.desktop");
+	return result;
+}
+
+
+static void unity_tests_ui_test_favorites_real_set_string (UnityFavorites* base, const char* uid, const char* name, const char* value) {
+	UnityTestsUITestFavorites * self;
+	self = (UnityTestsUITestFavorites*) base;
+	g_return_if_fail (uid != NULL);
+	g_return_if_fail (name != NULL);
+	g_return_if_fail (value != NULL);
+}
+
+
+static gint* unity_tests_ui_test_favorites_real_get_int (UnityFavorites* base, const char* uid, const char* name) {
+	UnityTestsUITestFavorites * self;
+	gint* result = NULL;
+	self = (UnityTestsUITestFavorites*) base;
+	g_return_val_if_fail (uid != NULL, NULL);
+	g_return_val_if_fail (name != NULL, NULL);
+	result = NULL;
+	return result;
+}
+
+
+static void unity_tests_ui_test_favorites_real_set_int (UnityFavorites* base, const char* uid, const char* name, gint value) {
+	UnityTestsUITestFavorites * self;
+	self = (UnityTestsUITestFavorites*) base;
+	g_return_if_fail (uid != NULL);
+	g_return_if_fail (name != NULL);
+}
+
+
+static float* unity_tests_ui_test_favorites_real_get_float (UnityFavorites* base, const char* uid, const char* name) {
+	UnityTestsUITestFavorites * self;
+	float* result = NULL;
+	self = (UnityTestsUITestFavorites*) base;
+	g_return_val_if_fail (uid != NULL, NULL);
+	g_return_val_if_fail (name != NULL, NULL);
+	result = NULL;
+	return result;
+}
+
+
+static void unity_tests_ui_test_favorites_real_set_float (UnityFavorites* base, const char* uid, const char* name, float value) {
+	UnityTestsUITestFavorites * self;
+	self = (UnityTestsUITestFavorites*) base;
+	g_return_if_fail (uid != NULL);
+	g_return_if_fail (name != NULL);
+}
+
+
+static gboolean* unity_tests_ui_test_favorites_real_get_bool (UnityFavorites* base, const char* uid, const char* name) {
+	UnityTestsUITestFavorites * self;
+	gboolean* result = NULL;
+	self = (UnityTestsUITestFavorites*) base;
+	g_return_val_if_fail (uid != NULL, NULL);
+	g_return_val_if_fail (name != NULL, NULL);
+	result = NULL;
+	return result;
+}
+
+
+static void unity_tests_ui_test_favorites_real_set_bool (UnityFavorites* base, const char* uid, const char* name, gboolean value) {
+	UnityTestsUITestFavorites * self;
+	self = (UnityTestsUITestFavorites*) base;
+	g_return_if_fail (uid != NULL);
+	g_return_if_fail (name != NULL);
+}
+
+
+UnityTestsUITestFavorites* unity_tests_ui_test_favorites_construct (GType object_type) {
+	UnityTestsUITestFavorites * self;
+	self = (UnityTestsUITestFavorites*) unity_favorites_construct (object_type);
+	return self;
+}
+
+
+UnityTestsUITestFavorites* unity_tests_ui_test_favorites_new (void) {
+	return unity_tests_ui_test_favorites_construct (UNITY_TESTS_UI_TYPE_TEST_FAVORITES);
+}
+
+
+static void unity_tests_ui_test_favorites_class_init (UnityTestsUITestFavoritesClass * klass) {
+	unity_tests_ui_test_favorites_parent_class = g_type_class_peek_parent (klass);
+	UNITY_FAVORITES_CLASS (klass)->get_favorites = unity_tests_ui_test_favorites_real_get_favorites;
+	UNITY_FAVORITES_CLASS (klass)->add_favorite = unity_tests_ui_test_favorites_real_add_favorite;
+	UNITY_FAVORITES_CLASS (klass)->remove_favorite = unity_tests_ui_test_favorites_real_remove_favorite;
+	UNITY_FAVORITES_CLASS (klass)->is_favorite = unity_tests_ui_test_favorites_real_is_favorite;
+	UNITY_FAVORITES_CLASS (klass)->get_string = unity_tests_ui_test_favorites_real_get_string;
+	UNITY_FAVORITES_CLASS (klass)->set_string = unity_tests_ui_test_favorites_real_set_string;
+	UNITY_FAVORITES_CLASS (klass)->get_int = unity_tests_ui_test_favorites_real_get_int;
+	UNITY_FAVORITES_CLASS (klass)->set_int = unity_tests_ui_test_favorites_real_set_int;
+	UNITY_FAVORITES_CLASS (klass)->get_float = unity_tests_ui_test_favorites_real_get_float;
+	UNITY_FAVORITES_CLASS (klass)->set_float = unity_tests_ui_test_favorites_real_set_float;
+	UNITY_FAVORITES_CLASS (klass)->get_bool = unity_tests_ui_test_favorites_real_get_bool;
+	UNITY_FAVORITES_CLASS (klass)->set_bool = unity_tests_ui_test_favorites_real_set_bool;
+}
+
+
+static void unity_tests_ui_test_favorites_instance_init (UnityTestsUITestFavorites * self) {
+}
+
+
+GType unity_tests_ui_test_favorites_get_type (void) {
+	static volatile gsize unity_tests_ui_test_favorites_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_tests_ui_test_favorites_type_id__volatile)) {
+		static const GTypeInfo g_define_type_info = { sizeof (UnityTestsUITestFavoritesClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_tests_ui_test_favorites_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityTestsUITestFavorites), 0, (GInstanceInitFunc) unity_tests_ui_test_favorites_instance_init, NULL };
+		GType unity_tests_ui_test_favorites_type_id;
+		unity_tests_ui_test_favorites_type_id = g_type_register_static (UNITY_TYPE_FAVORITES, "UnityTestsUITestFavorites", &g_define_type_info, 0);
+		g_once_init_leave (&unity_tests_ui_test_favorites_type_id__volatile, unity_tests_ui_test_favorites_type_id);
+	}
+	return unity_tests_ui_test_favorites_type_id__volatile;
+}
 
 
 static gboolean _lambda0_ (void) {
@@ -118,6 +324,7 @@ gint main_main (char** args, int args_length1) {
 	quicklist_suite = NULL;
 	g_setenv ("UNITY_DISABLE_TRAY", "1", TRUE);
 	g_setenv ("UNITY_DISABLE_IDLES", "1", TRUE);
+	g_setenv ("UNITY_PANEL_INDICATORS_SKIP", "all", TRUE);
 	gtk_init (&args_length1, &args);
 	g_object_set (gtk_settings_get_default (), "gtk-xft-dpi", 96 * 1024, NULL);
 	ctk_init (&args_length1, &args);
@@ -307,6 +514,17 @@ void main_unref (gpointer instance) {
 		MAIN_GET_CLASS (self)->finalize (self);
 		g_type_free_instance ((GTypeInstance *) self);
 	}
+}
+
+
+static int _vala_strcmp0 (const char * str1, const char * str2) {
+	if (str1 == NULL) {
+		return -(str1 != str2);
+	}
+	if (str2 == NULL) {
+		return str1 != str2;
+	}
+	return strcmp (str1, str2);
 }
 
 

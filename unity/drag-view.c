@@ -4,23 +4,23 @@
 /*
  *      drag-view.vala
  *      Copyright (C) 2010 Canonical Ltd
- *      
+ *
  *      This program is free software; you can redistribute it and/or modify
  *      it under the terms of the GNU General Public License as published by
  *      the Free Software Foundation; either version 2 of the License, or
  *      (at your option) any later version.
- *      
+ *
  *      This program is distributed in the hope that it will be useful,
  *      but WITHOUT ANY WARRANTY; without even the implied warranty of
  *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *      GNU General Public License for more details.
- *      
+ *
  *      You should have received a copy of the GNU General Public License
  *      along with this program; if not, write to the Free Software
  *      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
  *      MA 02110-1301, USA.
- *      
- *      
+ *
+ *
  *      Authored by Gordon Allott <gord.allott@canonical.com>
  */
 
@@ -124,6 +124,8 @@ void unity_drag_view_hook_actor_to_cursor (UnityDragView* self, ClutterActor* ac
 	clutter_container_add_actor ((ClutterContainer*) self->priv->_stage, self->priv->hooked_actor);
 	clutter_actor_get_transformed_position (actor, &x, &y);
 	clutter_actor_set_position (self->priv->hooked_actor, x, y);
+	clutter_actor_set_width (self->priv->hooked_actor, clutter_actor_get_width (actor));
+	clutter_actor_set_height (self->priv->hooked_actor, clutter_actor_get_height (actor));
 	clutter_actor_show (self->priv->hooked_actor);
 	g_signal_connect_object ((ClutterActor*) self->priv->_stage, "captured-event", (GCallback) _unity_drag_view_captured_event_clutter_actor_captured_event, self, 0);
 }

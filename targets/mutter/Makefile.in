@@ -325,6 +325,7 @@ EXTRA_DIST = $(am__append_3)
 @ENABLE_MUTTER_TRUE@  --vapidir=$(top_srcdir)/src/ \
 @ENABLE_MUTTER_TRUE@  --vapidir=$(top_srcdir)/unity \
 @ENABLE_MUTTER_TRUE@  --vapidir=$(top_srcdir)/unity-private \
+@ENABLE_MUTTER_TRUE@  --pkg Bamf-0.2 \
 @ENABLE_MUTTER_TRUE@  --pkg clutter-1.0 \
 @ENABLE_MUTTER_TRUE@  --pkg clutter-gtk-0.10 \
 @ENABLE_MUTTER_TRUE@  --pkg clutk-0.3 \
@@ -333,7 +334,6 @@ EXTRA_DIST = $(am__append_3)
 @ENABLE_MUTTER_TRUE@  --pkg gee-1.0 \
 @ENABLE_MUTTER_TRUE@  --pkg indicator \
 @ENABLE_MUTTER_TRUE@  --pkg mutter-2.28 \
-@ENABLE_MUTTER_TRUE@  --pkg launcher-0.3 \
 @ENABLE_MUTTER_TRUE@  --pkg libwnck-1.0 \
 @ENABLE_MUTTER_TRUE@  --pkg unique-1.0 \
 @ENABLE_MUTTER_TRUE@  --pkg x11 \

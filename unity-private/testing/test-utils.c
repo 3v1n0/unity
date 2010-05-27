@@ -336,6 +336,18 @@ gboolean unity_testing_logging_fatal_handler (const char* log_domain, GLogLevelF
 		result = FALSE;
 		return result;
 	}
+	if (string_contains (log_domain, "liblauncher")) {
+		result = FALSE;
+		return result;
+	}
+	if (string_contains (log_domain, "bamfdaemon")) {
+		result = FALSE;
+		return result;
+	}
+	if (string_contains (log_domain, "Gtk")) {
+		result = FALSE;
+		return result;
+	}
 	result = TRUE;
 	return result;
 }

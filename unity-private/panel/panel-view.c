@@ -122,6 +122,7 @@ struct _UnityPanelViewPrivate {
 	UnityPlacesCairoDrawingEntryBackground* entry_background;
 	gint indicators_width;
 	GConfClient* client;
+	gboolean places_enabled;
 };
 
 struct _UnityPlacesCairoDrawingEntryBackground {
@@ -305,7 +306,7 @@ static char* unity_panel_view_get_search_hint (UnityPanelView* self) {
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("panel-view.vala:136: Unable to monitor gconf for search hint changes: " \
+				g_warning ("panel-view.vala:143: Unable to monitor gconf for search hint changes: " \
 "%s", e->message);
 				_g_error_free0 (e);
 			}
@@ -368,7 +369,7 @@ static void unity_panel_view_on_search_hint_changed (UnityPanelView* self) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("panel-view.vala:161: Unable to get search hint: %s", e->message);
+			g_warning ("panel-view.vala:168: Unable to get search hint: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
@@ -501,7 +502,7 @@ static void unity_panel_view_on_entry_activated (UnityPanelView* self) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("panel-view.vala:191: Unable to search for '%s': %s", clutter_text_get_text ((ClutterText*) self->priv->entry), e->message);
+			g_warning ("panel-view.vala:198: Unable to search for '%s': %s", clutter_text_get_text ((ClutterText*) self->priv->entry), e->message);
 			_g_error_free0 (e);
 		}
 	}
@@ -527,7 +528,6 @@ static void unity_panel_view_real_allocate (ClutterActor* base, const ClutterAct
 	float width = 0.0F;
 	float child_width = 0.0F;
 	float i_width = 0.0F;
-	gboolean _tmp1_ = FALSE;
 	self = (UnityPanelView*) base;
 	child_box = (_tmp0_.x1 = (float) 0, _tmp0_.y1 = (float) 0, _tmp0_.x2 = (*box).x2 - (*box).x1, _tmp0_.y2 = (*box).y2 - (*box).y1, _tmp0_);
 	CLUTTER_ACTOR_CLASS (unity_panel_view_parent_class)->allocate ((ClutterActor*) CTK_ACTOR (self), box, flags);
@@ -540,31 +540,34 @@ static void unity_panel_view_real_allocate (ClutterActor* base, const ClutterAct
 	child_box.y1 = (float) 0;
 	child_box.y2 = (float) UNITY_PANEL_PANEL_HEIGHT;
 	clutter_actor_allocate ((ClutterActor*) self->priv->home, &child_box, flags);
-	child_box.x1 = floorf (child_box.x2 + 12);
-	child_box.x2 = floorf (child_box.x1 + 170);
-	child_box.y1 = floorf ((float) 2);
-	child_box.y2 = floorf ((float) UNITY_PANEL_PANEL_HEIGHT);
-	clutter_actor_allocate ((ClutterActor*) self->priv->entry_background, &child_box, flags);
-	if (self->priv->entry_background->Width != ((gint) (child_box.x2 - child_box.x1))) {
-		_tmp1_ = clutter_actor_get_height ((ClutterActor*) self->priv->entry_background) != ((gint) ((child_box.y2 - child_box.y1) - 2));
-	} else {
-		_tmp1_ = FALSE;
+	if (self->priv->places_enabled == FALSE) {
+		gboolean _tmp1_ = FALSE;
+		child_box.x1 = floorf (child_box.x2 + 12);
+		child_box.x2 = floorf (child_box.x1 + 170);
+		child_box.y1 = floorf ((float) 2);
+		child_box.y2 = floorf ((float) UNITY_PANEL_PANEL_HEIGHT);
+		clutter_actor_allocate ((ClutterActor*) self->priv->entry_background, &child_box, flags);
+		if (self->priv->entry_background->Width != ((gint) (child_box.x2 - child_box.x1))) {
+			_tmp1_ = clutter_actor_get_height ((ClutterActor*) self->priv->entry_background) != ((gint) ((child_box.y2 - child_box.y1) - 2));
+		} else {
+			_tmp1_ = FALSE;
+		}
+		if (_tmp1_) {
+			unity_places_cairo_drawing_entry_background_create_search_entry_background (self->priv->entry_background, (gint) (child_box.x2 - child_box.x1), (gint) ((child_box.y2 - child_box.y1) - 2));
+		}
+		child_box.x1 = child_box.x1 + ((float) 6);
+		child_box.x2 = child_box.x1 + 16;
+		child_box.y1 = floorf ((UNITY_PANEL_PANEL_HEIGHT - 16) / 2.0f);
+		child_box.y2 = child_box.y1 + 16;
+		clutter_actor_allocate ((ClutterActor*) self->priv->entry_icon, &child_box, flags);
+		child_box.x1 = child_box.x2 + 4;
+		child_box.x2 = (child_box.x1 + 150) - 16;
+		child_box.y1 = (float) 9;
+		child_box.y2 = (float) 15;
+		clutter_actor_allocate ((ClutterActor*) self->priv->entry, &child_box, flags);
+		child_box.y1 = (float) 0;
+		child_box.y2 = (float) UNITY_PANEL_PANEL_HEIGHT;
 	}
-	if (_tmp1_) {
-		unity_places_cairo_drawing_entry_background_create_search_entry_background (self->priv->entry_background, (gint) (child_box.x2 - child_box.x1), (gint) ((child_box.y2 - child_box.y1) - 2));
-	}
-	child_box.x1 = child_box.x1 + ((float) 6);
-	child_box.x2 = child_box.x1 + 16;
-	child_box.y1 = floorf ((UNITY_PANEL_PANEL_HEIGHT - 16) / 2.0f);
-	child_box.y2 = child_box.y1 + 16;
-	clutter_actor_allocate ((ClutterActor*) self->priv->entry_icon, &child_box, flags);
-	child_box.x1 = child_box.x2 + 4;
-	child_box.x2 = (child_box.x1 + 150) - 16;
-	child_box.y1 = (float) 9;
-	child_box.y2 = (float) 15;
-	clutter_actor_allocate ((ClutterActor*) self->priv->entry, &child_box, flags);
-	child_box.y1 = (float) 0;
-	child_box.y2 = (float) UNITY_PANEL_PANEL_HEIGHT;
 	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->indicators, (float) UNITY_PANEL_PANEL_HEIGHT, &child_width, &child_width);
 	child_box.x1 = width - child_width;
 	child_box.x2 = width;
@@ -591,6 +594,9 @@ static void unity_panel_view_real_paint (ClutterActor* base) {
 	clutter_actor_paint ((ClutterActor*) self->priv->tray);
 	clutter_actor_paint ((ClutterActor*) self->priv->home);
 	clutter_actor_paint ((ClutterActor*) self->priv->indicators);
+	if (self->priv->places_enabled == TRUE) {
+		return;
+	}
 	clutter_actor_paint ((ClutterActor*) self->priv->entry_background);
 	clutter_actor_paint ((ClutterActor*) self->priv->entry_icon);
 	clutter_actor_paint ((ClutterActor*) self->priv->entry);
@@ -604,6 +610,9 @@ static void unity_panel_view_real_pick (ClutterActor* base, const ClutterColor* 
 	clutter_actor_paint ((ClutterActor*) self->priv->tray);
 	clutter_actor_paint ((ClutterActor*) self->priv->home);
 	clutter_actor_paint ((ClutterActor*) self->priv->indicators);
+	if (self->priv->places_enabled == TRUE) {
+		return;
+	}
 	clutter_actor_paint ((ClutterActor*) self->priv->entry_background);
 	clutter_actor_paint ((ClutterActor*) self->priv->entry_icon);
 	clutter_actor_paint ((ClutterActor*) self->priv->entry);
@@ -618,6 +627,9 @@ static void unity_panel_view_real_map (ClutterActor* base) {
 	clutter_actor_map ((ClutterActor*) self->priv->tray);
 	clutter_actor_map ((ClutterActor*) self->priv->home);
 	clutter_actor_map ((ClutterActor*) self->priv->indicators);
+	if (self->priv->places_enabled == TRUE) {
+		return;
+	}
 	clutter_actor_map ((ClutterActor*) self->priv->entry_background);
 	clutter_actor_map ((ClutterActor*) self->priv->entry_icon);
 	clutter_actor_map ((ClutterActor*) self->priv->entry);
@@ -632,6 +644,9 @@ static void unity_panel_view_real_unmap (ClutterActor* base) {
 	clutter_actor_unmap ((ClutterActor*) self->priv->tray);
 	clutter_actor_unmap ((ClutterActor*) self->priv->home);
 	clutter_actor_unmap ((ClutterActor*) self->priv->indicators);
+	if (self->priv->places_enabled == TRUE) {
+		return;
+	}
 	clutter_actor_unmap ((ClutterActor*) self->priv->entry_background);
 	clutter_actor_unmap ((ClutterActor*) self->priv->entry_icon);
 	clutter_actor_unmap ((ClutterActor*) self->priv->entry);
@@ -733,13 +748,8 @@ static GObject * unity_panel_view_constructor (GType type, guint n_construct_pro
 		UnityPanelIndicatorsView* _tmp1_;
 		UnityPanelTrayView* _tmp2_;
 		UnityPanelHomeButton* _tmp3_;
-		UnityPlacesCairoDrawingEntryBackground* _tmp4_;
-		UnityThemeImage* _tmp5_;
-		UnityEntry* _tmp6_;
-		char* _tmp7_;
-		gboolean* _tmp9_;
-		gboolean _tmp8_;
 		START_FUNCTION ();
+		self->priv->places_enabled = g_getenv ("UNITY_ENABLE_PLACES") != NULL;
 		self->priv->rect = (_tmp0_ = g_object_ref_sink (unity_theme_image_new ("panel_background")), _g_object_unref0 (self->priv->rect), _tmp0_);
 		clutter_texture_set_repeat ((ClutterTexture*) self->priv->rect, TRUE, FALSE);
 		clutter_actor_set_parent ((ClutterActor*) self->priv->rect, (ClutterActor*) self);
@@ -754,23 +764,31 @@ static GObject * unity_panel_view_constructor (GType type, guint n_construct_pro
 		clutter_actor_set_parent ((ClutterActor*) self->priv->home, (ClutterActor*) self);
 		clutter_actor_show ((ClutterActor*) self->priv->home);
 		g_signal_connect_object (self->priv->home, "clicked", (GCallback) _unity_panel_view_on_home_clicked_unity_panel_home_button_clicked, self, 0);
-		self->priv->entry_background = (_tmp4_ = g_object_ref_sink (unity_places_cairo_drawing_entry_background_new ()), _g_object_unref0 (self->priv->entry_background), _tmp4_);
-		clutter_actor_set_parent ((ClutterActor*) self->priv->entry_background, (ClutterActor*) self);
-		clutter_actor_show ((ClutterActor*) self->priv->entry_background);
-		self->priv->entry_icon = (_tmp5_ = g_object_ref_sink (unity_theme_image_new ("search_field")), _g_object_unref0 (self->priv->entry_icon), _tmp5_);
-		clutter_actor_set_reactive ((ClutterActor*) self->priv->entry_icon, TRUE);
-		g_signal_connect_object ((ClutterActor*) self->priv->entry_icon, "button-press-event", (GCallback) __lambda4__clutter_actor_button_press_event, self, 0);
-		clutter_actor_set_parent ((ClutterActor*) self->priv->entry_icon, (ClutterActor*) self);
-		clutter_actor_show ((ClutterActor*) self->priv->entry_icon);
-		self->priv->entry = (_tmp6_ = g_object_ref_sink (unity_entry_new ("")), _g_object_unref0 (self->priv->entry), _tmp6_);
-		unity_entry_set_static_text (self->priv->entry, _tmp7_ = unity_panel_view_get_search_hint (self));
-		_g_free0 (_tmp7_);
-		clutter_actor_set_parent ((ClutterActor*) self->priv->entry, (ClutterActor*) self);
-		clutter_actor_show ((ClutterActor*) self->priv->entry);
-		g_signal_connect_object ((ClutterText*) self->priv->entry, "activate", (GCallback) _unity_panel_view_on_entry_activated_clutter_text_activate, self, 0);
-		g_signal_connect_object ((ClutterActor*) self->priv->entry, "key-focus-in", (GCallback) _unity_panel_view_on_entry_focus_in_clutter_actor_key_focus_in, self, 0);
-		g_signal_connect_object ((ClutterActor*) self->priv->entry, "key-focus-out", (GCallback) _unity_panel_view_on_entry_focus_out_clutter_actor_key_focus_out, self, 0);
-		unity_panel_search_entry_has_focus = (_tmp9_ = __bool_dup0 ((_tmp8_ = FALSE, &_tmp8_)), _g_free0 (unity_panel_search_entry_has_focus), _tmp9_);
+		if (self->priv->places_enabled == FALSE) {
+			UnityPlacesCairoDrawingEntryBackground* _tmp4_;
+			UnityThemeImage* _tmp5_;
+			UnityEntry* _tmp6_;
+			char* _tmp7_;
+			gboolean* _tmp9_;
+			gboolean _tmp8_;
+			self->priv->entry_background = (_tmp4_ = g_object_ref_sink (unity_places_cairo_drawing_entry_background_new ()), _g_object_unref0 (self->priv->entry_background), _tmp4_);
+			clutter_actor_set_parent ((ClutterActor*) self->priv->entry_background, (ClutterActor*) self);
+			clutter_actor_show ((ClutterActor*) self->priv->entry_background);
+			self->priv->entry_icon = (_tmp5_ = g_object_ref_sink (unity_theme_image_new ("search_field")), _g_object_unref0 (self->priv->entry_icon), _tmp5_);
+			clutter_actor_set_reactive ((ClutterActor*) self->priv->entry_icon, TRUE);
+			g_signal_connect_object ((ClutterActor*) self->priv->entry_icon, "button-press-event", (GCallback) __lambda4__clutter_actor_button_press_event, self, 0);
+			clutter_actor_set_parent ((ClutterActor*) self->priv->entry_icon, (ClutterActor*) self);
+			clutter_actor_show ((ClutterActor*) self->priv->entry_icon);
+			self->priv->entry = (_tmp6_ = g_object_ref_sink (unity_entry_new ("")), _g_object_unref0 (self->priv->entry), _tmp6_);
+			unity_entry_set_static_text (self->priv->entry, _tmp7_ = unity_panel_view_get_search_hint (self));
+			_g_free0 (_tmp7_);
+			clutter_actor_set_parent ((ClutterActor*) self->priv->entry, (ClutterActor*) self);
+			clutter_actor_show ((ClutterActor*) self->priv->entry);
+			g_signal_connect_object ((ClutterText*) self->priv->entry, "activate", (GCallback) _unity_panel_view_on_entry_activated_clutter_text_activate, self, 0);
+			g_signal_connect_object ((ClutterActor*) self->priv->entry, "key-focus-in", (GCallback) _unity_panel_view_on_entry_focus_in_clutter_actor_key_focus_in, self, 0);
+			g_signal_connect_object ((ClutterActor*) self->priv->entry, "key-focus-out", (GCallback) _unity_panel_view_on_entry_focus_out_clutter_actor_key_focus_out, self, 0);
+			unity_panel_search_entry_has_focus = (_tmp9_ = __bool_dup0 ((_tmp8_ = FALSE, &_tmp8_)), _g_free0 (unity_panel_search_entry_has_focus), _tmp9_);
+		}
 		END_FUNCTION ();
 	}
 	return obj;
@@ -796,6 +814,7 @@ static void unity_panel_view_class_init (UnityPanelViewClass * klass) {
 static void unity_panel_view_instance_init (UnityPanelView * self) {
 	self->priv = UNITY_PANEL_VIEW_GET_PRIVATE (self);
 	self->priv->indicators_width = 0;
+	self->priv->places_enabled = FALSE;
 }
 
 

@@ -81,7 +81,7 @@ UnityTestingObjectRegistry* unity_testing_object_registry_new (void);
 UnityTestingObjectRegistry* unity_testing_object_registry_construct (GType object_type);
 UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void);
 void unity_testing_object_registry_register (UnityTestingObjectRegistry* self, const char* name, GObject* object);
-GObject* unity_testing_object_registry_lookup (UnityTestingObjectRegistry* self, const char* name);
+GeeArrayList* unity_testing_object_registry_lookup (UnityTestingObjectRegistry* self, const char* name);
 static void unity_testing_object_registry_finalize (UnityTestingObjectRegistry* obj);
 
 
@@ -90,7 +90,7 @@ UnityTestingObjectRegistry* unity_testing_object_registry_construct (GType objec
 	UnityTestingObjectRegistry* self;
 	GeeHashMap* _tmp0_;
 	self = (UnityTestingObjectRegistry*) g_type_create_instance (object_type);
-	self->priv->object_map = (_tmp0_ = gee_hash_map_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, G_TYPE_OBJECT, (GBoxedCopyFunc) g_object_ref, g_object_unref, g_str_hash, g_str_equal, g_direct_equal), _g_object_unref0 (self->priv->object_map), _tmp0_);
+	self->priv->object_map = (_tmp0_ = gee_hash_map_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, GEE_TYPE_ARRAY_LIST, (GBoxedCopyFunc) g_object_ref, g_object_unref, g_str_hash, g_str_equal, g_direct_equal), _g_object_unref0 (self->priv->object_map), _tmp0_);
 	return self;
 }
 
@@ -117,18 +117,25 @@ UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void) {
 
 
 void unity_testing_object_registry_register (UnityTestingObjectRegistry* self, const char* name, GObject* object) {
+	GeeArrayList* _tmp1_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (name != NULL);
 	g_return_if_fail (object != NULL);
-	gee_abstract_map_set ((GeeAbstractMap*) self->priv->object_map, name, object);
+	if (!gee_map_contains ((GeeMap*) self->priv->object_map, name)) {
+		GeeArrayList* _tmp0_;
+		gee_abstract_map_set ((GeeAbstractMap*) self->priv->object_map, name, _tmp0_ = gee_array_list_new (G_TYPE_OBJECT, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL));
+		_g_object_unref0 (_tmp0_);
+	}
+	gee_abstract_collection_add ((GeeAbstractCollection*) (_tmp1_ = (GeeArrayList*) gee_abstract_map_get ((GeeAbstractMap*) self->priv->object_map, name)), object);
+	_g_object_unref0 (_tmp1_);
 }
 
 
-GObject* unity_testing_object_registry_lookup (UnityTestingObjectRegistry* self, const char* name) {
-	GObject* result = NULL;
+GeeArrayList* unity_testing_object_registry_lookup (UnityTestingObjectRegistry* self, const char* name) {
+	GeeArrayList* result = NULL;
 	g_return_val_if_fail (self != NULL, NULL);
 	g_return_val_if_fail (name != NULL, NULL);
-	result = (GObject*) gee_abstract_map_get ((GeeAbstractMap*) self->priv->object_map, name);
+	result = (GeeArrayList*) gee_abstract_map_get ((GeeAbstractMap*) self->priv->object_map, name);
 	return result;
 }
 

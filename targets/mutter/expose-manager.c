@@ -100,7 +100,7 @@ struct _UnityExposeManagerPrivate {
 	ClutterGroup* expose_group;
 	UnityPlugin* owner;
 	ClutterStage* stage;
-	UnityQuicklauncherView* quicklauncher;
+	UnityLauncherLauncher* launcher;
 	gboolean _expose_showing;
 	gboolean _coverflow;
 	gint _left_buffer;
@@ -172,18 +172,18 @@ static void _g_list_free_g_object_unref (GList* self);
 void unity_expose_manager_set_hovered_opacity (UnityExposeManager* self, guint8 value);
 void unity_expose_manager_set_unhovered_opacity (UnityExposeManager* self, guint8 value);
 void unity_expose_manager_set_darken (UnityExposeManager* self, guint8 value);
-UnityExposeManager* unity_expose_manager_new (UnityPlugin* plugin, UnityQuicklauncherView* quicklauncher);
-UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlugin* plugin, UnityQuicklauncherView* quicklauncher);
+UnityExposeManager* unity_expose_manager_new (UnityPlugin* plugin, UnityLauncherLauncher* launcher);
+UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlugin* plugin, UnityLauncherLauncher* launcher);
 void unity_expose_manager_end_expose (UnityExposeManager* self);
 static void _unity_expose_manager_end_expose_clutter_actor_destroy (ClutterActor* _sender, gpointer self);
 MutterPlugin* unity_plugin_get_plugin (UnityPlugin* self);
 guint8 unity_expose_manager_get_hovered_opacity (UnityExposeManager* self);
 guint8 unity_expose_manager_get_unhovered_opacity (UnityExposeManager* self);
 guint8 unity_expose_manager_get_darken (UnityExposeManager* self);
-static gboolean _lambda3_ (UnityExposeManager* self);
-static gboolean __lambda3__clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static gboolean _lambda4_ (UnityExposeManager* self);
-static gboolean __lambda4__clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean __lambda4__clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _lambda5_ (UnityExposeManager* self);
+static gboolean __lambda5__clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 gboolean unity_expose_manager_get_coverflow (UnityExposeManager* self);
 static void unity_expose_manager_position_windows_coverflow (UnityExposeManager* self, GList* windows, ClutterActor* active);
 static void unity_expose_manager_position_windows_on_grid (UnityExposeManager* self, GList* _windows);
@@ -197,8 +197,8 @@ gint unity_expose_manager_get_right_buffer (UnityExposeManager* self);
 static gint unity_expose_manager_direct_comparison (UnityExposeManager* self, void* a, void* b);
 gint unity_expose_manager_get_top_buffer (UnityExposeManager* self);
 gint unity_expose_manager_get_bottom_buffer (UnityExposeManager* self);
-static void _lambda2_ (Block1Data* _data1_);
-static void __lambda2__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
+static void _lambda3_ (Block1Data* _data1_);
+static void __lambda3__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static Block1Data* block1_data_ref (Block1Data* _data1_);
 static void block1_data_unref (Block1Data* _data1_);
 static void unity_expose_manager_handle_event_coverflow (UnityExposeManager* self, ClutterEvent* event);
@@ -461,16 +461,16 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlugin* plugin, UnityQuicklauncherView* quicklauncher) {
+UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlugin* plugin, UnityLauncherLauncher* launcher) {
 	UnityExposeManager * self;
-	UnityQuicklauncherView* _tmp0_;
+	UnityLauncherLauncher* _tmp0_;
 	UnityPlugin* _tmp1_;
 	GList* _tmp2_;
 	ClutterStage* _tmp3_;
 	g_return_val_if_fail (plugin != NULL, NULL);
-	g_return_val_if_fail (quicklauncher != NULL, NULL);
+	g_return_val_if_fail (launcher != NULL, NULL);
 	self = g_object_newv (object_type, 0, NULL);
-	self->priv->quicklauncher = (_tmp0_ = _g_object_ref0 (quicklauncher), _g_object_unref0 (self->priv->quicklauncher), _tmp0_);
+	self->priv->launcher = (_tmp0_ = _g_object_ref0 (launcher), _g_object_unref0 (self->priv->launcher), _tmp0_);
 	self->priv->owner = (_tmp1_ = _g_object_ref0 (plugin), _g_object_unref0 (self->priv->owner), _tmp1_);
 	self->priv->exposed_windows = (_tmp2_ = NULL, __g_list_free_g_object_unref0 (self->priv->exposed_windows), _tmp2_);
 	self->priv->stage = (_tmp3_ = CLUTTER_STAGE (unity_shell_get_stage ((UnityShell*) plugin)), _g_object_unref0 (self->priv->stage), _tmp3_);
@@ -481,8 +481,8 @@ UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlug
 }
 
 
-UnityExposeManager* unity_expose_manager_new (UnityPlugin* plugin, UnityQuicklauncherView* quicklauncher) {
-	return unity_expose_manager_construct (UNITY_TYPE_EXPOSE_MANAGER, plugin, quicklauncher);
+UnityExposeManager* unity_expose_manager_new (UnityPlugin* plugin, UnityLauncherLauncher* launcher) {
+	return unity_expose_manager_construct (UNITY_TYPE_EXPOSE_MANAGER, plugin, launcher);
 }
 
 
@@ -491,12 +491,12 @@ static void _unity_expose_manager_end_expose_clutter_actor_destroy (ClutterActor
 }
 
 
-static gboolean _lambda3_ (UnityExposeManager* self) {
+static gboolean _lambda4_ (UnityExposeManager* self) {
 	gboolean result = FALSE;
-	UnityQuicklauncherQuicklistController* ql_controller;
+	UnityLauncherQuicklistController* ql_controller;
 	gboolean _tmp0_ = FALSE;
-	ql_controller = _g_object_ref0 (unity_quicklauncher_quicklist_controller_get_default ());
-	if (unity_quicklauncher_quicklist_controller_menu_is_open (ql_controller)) {
+	ql_controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
+	if (unity_launcher_quicklist_controller_menu_is_open (ql_controller)) {
 		_tmp0_ = self->priv->menu_in_hover_close_state;
 	} else {
 		_tmp0_ = FALSE;
@@ -510,17 +510,17 @@ static gboolean _lambda3_ (UnityExposeManager* self) {
 }
 
 
-static gboolean __lambda3__clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return _lambda3_ (self);
+static gboolean __lambda4__clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	return _lambda4_ (self);
 }
 
 
-static gboolean _lambda4_ (UnityExposeManager* self) {
+static gboolean _lambda5_ (UnityExposeManager* self) {
 	gboolean result = FALSE;
-	UnityQuicklauncherQuicklistController* ql_controller;
+	UnityLauncherQuicklistController* ql_controller;
 	gboolean _tmp0_ = FALSE;
-	ql_controller = _g_object_ref0 (unity_quicklauncher_quicklist_controller_get_default ());
-	if (unity_quicklauncher_quicklist_controller_menu_is_open (ql_controller)) {
+	ql_controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
+	if (unity_launcher_quicklist_controller_menu_is_open (ql_controller)) {
 		_tmp0_ = self->priv->menu_in_hover_close_state;
 	} else {
 		_tmp0_ = FALSE;
@@ -534,8 +534,8 @@ static gboolean _lambda4_ (UnityExposeManager* self) {
 }
 
 
-static gboolean __lambda4__clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return _lambda4_ (self);
+static gboolean __lambda5__clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	return _lambda5_ (self);
 }
 
 
@@ -545,15 +545,15 @@ static gboolean _unity_expose_manager_on_stage_captured_event_clutter_actor_capt
 
 
 void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* windows) {
-	UnityQuicklauncherQuicklistController* controller;
+	UnityLauncherQuicklistController* controller;
 	GList* _tmp0_;
 	ClutterGroup* _tmp1_;
 	ClutterActor* window_group;
 	ClutterActor* _tmp2_;
 	GList* mutter_windows;
 	g_return_if_fail (self != NULL);
-	controller = _g_object_ref0 (unity_quicklauncher_quicklist_controller_get_default ());
-	if (unity_quicklauncher_quicklist_controller_menu_is_open (controller)) {
+	controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
+	if (unity_launcher_quicklist_controller_menu_is_open (controller)) {
 		g_signal_connect_object ((ClutterActor*) controller->menu, "destroy", (GCallback) _unity_expose_manager_end_expose_clutter_actor_destroy, self, 0);
 		self->priv->menu_in_hover_close_state = ctk_menu_get_close_on_leave (controller->menu);
 	}
@@ -610,8 +610,8 @@ void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* window
 					unity_expose_clone_set_unhovered_opacity (clone, self->priv->_unhovered_opacity);
 					clutter_actor_set_opacity ((ClutterActor*) clone, self->priv->_unhovered_opacity);
 					unity_expose_clone_set_darken (clone, self->priv->_darken);
-					g_signal_connect_object ((ClutterActor*) clone, "enter-event", (GCallback) __lambda3__clutter_actor_enter_event, self, 0);
-					g_signal_connect_object ((ClutterActor*) clone, "leave-event", (GCallback) __lambda4__clutter_actor_leave_event, self, 0);
+					g_signal_connect_object ((ClutterActor*) clone, "enter-event", (GCallback) __lambda4__clutter_actor_enter_event, self, 0);
+					g_signal_connect_object ((ClutterActor*) clone, "leave-event", (GCallback) __lambda5__clutter_actor_leave_event, self, 0);
 					_g_object_unref0 (clone);
 				}
 				if (mutter_window_get_window_type (w) == META_COMP_WINDOW_DESKTOP) {
@@ -639,17 +639,17 @@ void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* window
 
 
 void unity_expose_manager_end_expose (UnityExposeManager* self) {
-	UnityQuicklauncherQuicklistController* controller;
+	UnityLauncherQuicklistController* controller;
 	GList* mutter_windows;
 	gboolean _tmp1_ = FALSE;
 	guint _tmp4_;
 	g_return_if_fail (self != NULL);
-	controller = _g_object_ref0 (unity_quicklauncher_quicklist_controller_get_default ());
-	if (unity_quicklauncher_quicklist_controller_menu_is_open (controller)) {
+	controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
+	if (unity_launcher_quicklist_controller_menu_is_open (controller)) {
 		guint _tmp0_;
 		g_signal_parse_name ("destroy", CLUTTER_TYPE_ACTOR, &_tmp0_, NULL, FALSE);
 		g_signal_handlers_disconnect_matched ((ClutterActor*) controller->menu, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_expose_manager_end_expose_clutter_actor_destroy, self);
-		unity_quicklauncher_quicklist_controller_close_menu (controller);
+		unity_launcher_quicklist_controller_close_menu (controller);
 	}
 	mutter_windows = mutter_plugin_get_windows (unity_plugin_get_plugin (self->priv->owner));
 	{
@@ -943,7 +943,7 @@ static void unity_expose_manager_position_windows_on_grid (UnityExposeManager* s
 }
 
 
-static void _lambda2_ (Block1Data* _data1_) {
+static void _lambda3_ (Block1Data* _data1_) {
 	UnityExposeManager * self;
 	self = _data1_->self;
 	clutter_actor_destroy (_data1_->actor);
@@ -951,8 +951,8 @@ static void _lambda2_ (Block1Data* _data1_) {
 }
 
 
-static void __lambda2__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	_lambda2_ (self);
+static void __lambda3__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+	_lambda3_ (self);
 }
 
 
@@ -1004,7 +1004,7 @@ static void unity_expose_manager_restore_window_position (UnityExposeManager* se
 	g_object_set ((GObject*) _data1_->actor, "scale-gravity", CLUTTER_GRAVITY_CENTER, NULL);
 	anim = _g_object_ref0 (clutter_actor_animate (_data1_->actor, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "scale-x", 1.f, "scale-y", 1.f, "opacity", opacity, "x", clutter_actor_get_x (_data1_->window), "y", clutter_actor_get_y (_data1_->window), NULL));
 	clutter_actor_set_opacity (_data1_->window, (guint8) 0);
-	g_signal_connect_data (anim, "completed", (GCallback) __lambda2__clutter_animation_completed, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
+	g_signal_connect_data (anim, "completed", (GCallback) __lambda3__clutter_animation_completed, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
 	_g_object_unref0 (anim);
 	block1_data_unref (_data1_);
 }
@@ -1158,8 +1158,8 @@ static gboolean unity_expose_manager_on_stage_captured_event (UnityExposeManager
 	clutter_event_get_coords (event, &x, &y);
 	actor = clutter_stage_get_actor_at_pos (self->priv->stage, CLUTTER_PICK_REACTIVE, (gint) x, (gint) y);
 	menu = NULL;
-	if (unity_quicklauncher_quicklist_controller_menu_is_open (unity_quicklauncher_quicklist_controller_get_default ())) {
-		menu = (ClutterActor*) unity_quicklauncher_quicklist_controller_get_default ()->menu;
+	if (unity_launcher_quicklist_controller_menu_is_open (unity_launcher_quicklist_controller_get_default ())) {
+		menu = (ClutterActor*) unity_launcher_quicklist_controller_get_default ()->menu;
 	}
 	if (menu != NULL) {
 		gboolean _tmp1_ = FALSE;
@@ -1386,7 +1386,7 @@ static void unity_expose_manager_finalize (GObject* obj) {
 	_g_object_unref0 (self->priv->expose_group);
 	_g_object_unref0 (self->priv->owner);
 	_g_object_unref0 (self->priv->stage);
-	_g_object_unref0 (self->priv->quicklauncher);
+	_g_object_unref0 (self->priv->launcher);
 	_g_object_unref0 (self->priv->last_selected_clone);
 	G_OBJECT_CLASS (unity_expose_manager_parent_class)->finalize (obj);
 }
