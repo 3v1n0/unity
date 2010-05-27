@@ -85,7 +85,7 @@ namespace Unity.Launcher
             {
               string desktop_file = app.get_desktop_file ();
               ApplicationController? controller = null;
-              if (desktop_file != null)
+              if (desktop_file != null && desktop_file != "")
                 {
                   controller = find_controller_by_desktop_file (desktop_file);
                 }

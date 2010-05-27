@@ -332,7 +332,7 @@ namespace Unity.Launcher
     }
 
     public void attach_application (Bamf.Application application)
-    {
+    { 
       app = application;
       child.running = app.is_running ();
       child.active = app.is_active ();
