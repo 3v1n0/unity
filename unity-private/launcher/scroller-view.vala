@@ -126,7 +126,7 @@ namespace Unity.Launcher
       set_reactive (true);
 
       child_refs = new Gee.ArrayList <ScrollerChild> ();
-      order_children ();
+      order_children (true);
       queue_relayout ();
     }
 
@@ -148,7 +148,7 @@ namespace Unity.Launcher
 					i++;
 				}
 
-			return int.max (i-1, 0);
+			return int.max (i, 0);
     }
 
     /*
@@ -210,7 +210,7 @@ namespace Unity.Launcher
       var anim = child.animate (Clutter.AnimationMode.EASE_IN_QUAD,
                                 SHORT_DELAY,
                                 "opacity", 0xff);
-      order_children ();
+      order_children (true);
       queue_relayout ();
       child.notify["position"].connect (() => {
         queue_relayout ();
@@ -228,13 +228,13 @@ namespace Unity.Launcher
         child_refs.remove (child);
       });
 
-      order_children ();
+      order_children (false);
       queue_relayout ();
     }
 
     private void model_order_changed ()
     {
-      order_children ();
+      order_children (false);
       queue_relayout ();
     }
 
@@ -249,6 +249,7 @@ namespace Unity.Launcher
           return false;
         }
 
+			//Clutter.grab_pointer (this);
       button_down = true;
       previous_y_position = event.button.y;
       previous_y_time = event.button.time;
@@ -267,6 +268,7 @@ namespace Unity.Launcher
           return false;
         }
 
+			//Clutter.ungrab_pointer ();
       button_down = false;
       this.get_stage ().button_release_event.disconnect (this.on_button_release_event);
       Unity.global_shell.remove_fullscreen_request (this);
@@ -528,7 +530,7 @@ namespace Unity.Launcher
       return;
     }
 
-    private void order_children ()
+    private void order_children (bool immediate)
     {
       // figures out the position of each child based on its order in the model
       float h = 0.0f;
@@ -538,16 +540,23 @@ namespace Unity.Launcher
         child.get_preferred_height (get_width (), out min_height, out nat_height);
         if (h != child.position)
         {
-					if (child.get_animation () is Clutter.Animation)
+					if (!immediate)
 						{
-							float current_pos = child.position;
-							child.get_animation ().completed ();
-							child.position = current_pos;
-						}
+							if (child.get_animation () is Clutter.Animation)
+								{
+									float current_pos = child.position;
+									child.get_animation ().completed ();
+									child.position = current_pos;
+								}
 
-          child.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD,
-                         170,
-                         "position", h);
+							child.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD,
+														 170,
+														 "position", h);
+						}
+					else
+						{
+							child.position = h;
+						}
         }
 
         h += nat_height + spacing;

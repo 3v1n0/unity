@@ -25,6 +25,19 @@ namespace Unity.Launcher
   const string MENU_BG_FILE = Unity.PKGDATADIR
     + "/tight_check_4px.png";
 
+	const float WIGGLE_SIZE = 5; // how many degree's to wiggle on either side.
+  const int WIGGLE_FREQUENCY = 5; // x times a second
+	const int WIGGLE_RUN_LENGTH = 5000; // 5 seconds of wiggle
+	const int WIGGLE_PAUSE_LENGTH = 20; // followed by 20 seconds of no wiggle
+
+	private enum AnimState {
+		RISING,
+		LOOPING,
+		FALLING,
+		STOPPED
+	}
+
+
   class LauncherChild : ScrollerChild
   {
     private Ctk.Actor processed_icon;
@@ -34,15 +47,27 @@ namespace Unity.Launcher
 
     // effects
     private Ctk.EffectDropShadow effect_drop_shadow;
+    private Ctk.EffectGlow effect_icon_glow;
 
     // animations
     private Clutter.Animation active_indicator_anim;
     private Clutter.Animation running_indicator_anim;
+		private Clutter.Timeline  wiggle_timeline;
+		private Clutter.Timeline  glow_timeline;
+		private AnimState glow_state;
+		private AnimState wiggle_state;
 
     construct
     {
       load_textures ();
       position = 0.0f;
+
+			//icon glow
+			glow_timeline = new Clutter.Timeline (1);
+			wiggle_timeline = new Clutter.Timeline (1);
+
+			glow_timeline.new_frame.connect (on_glow_timeline_new_frame);
+			wiggle_timeline.new_frame.connect (on_wiggle_timeline_new_frame);
     }
 
 		~LauncherChild ()
@@ -80,11 +105,184 @@ namespace Unity.Launcher
         notify["icon"].connect (on_icon_changed);
         notify["running"].connect (on_running_changed);
         notify["active"].connect (on_active_changed);
+				notify["activating"].connect (on_activating_changed);
+				notify["needs-attention"].connect (on_needs_attention_changed);
 
         // just trigger some notifications now to set inital state
         on_running_changed ();
         on_active_changed ();
     }
+
+		/* alpha helpers */
+		private static float get_ease_out_sine (float alpha)
+		{
+			return (float)(Math.sin ((Math.PI_2 * alpha)));
+		}
+
+		private static float get_circular_alpha (float alpha)
+		{
+			//float sine = (float)(Math.sin (-Math.PI + (alpha * (Math.PI * 2))));
+			var sine = Math.sin ((alpha * (Math.PI * 2)) - Math.PI);
+			return Math.fmaxf(((float)sine / 2.0f) + 0.5f, 0.0f);;
+		}
+		/* animation callbacks */
+
+		private void on_glow_timeline_new_frame ()
+		{
+			float progress = (float)glow_timeline.get_progress ();
+			switch (glow_state)
+				{
+					case AnimState.RISING:
+						glow_anim_rising (progress);
+						break;
+
+					case AnimState.LOOPING:
+						glow_anim_looping (progress);
+						break;
+
+					case AnimState.FALLING:
+						glow_anim_falling (progress);
+						break;
+
+					default:
+						glow_state = AnimState.STOPPED;
+						glow_timeline.stop ();
+						break;
+				}
+
+			processed_icon.do_queue_redraw ();
+		}
+
+		private float previous_glow_alpha = 0.0f;
+		private void glow_anim_rising (float progress)
+		{
+			progress = get_ease_out_sine (progress);
+			effect_icon_glow.set_opacity (progress);
+			previous_glow_alpha = progress;
+			if (progress >= 1.0)
+				{
+					glow_state = AnimState.LOOPING;
+					glow_timeline.stop ();
+					glow_timeline.set_duration (LONG_DELAY);
+					glow_timeline.set_loop (true);
+					glow_timeline.start ();
+					return;
+				}
+		}
+
+		private void glow_anim_looping (float progress)
+		{
+			progress = 1.0f - get_circular_alpha (progress);
+			effect_icon_glow.set_opacity (progress);
+			previous_glow_alpha = progress;
+			processed_icon.do_queue_redraw ();
+		}
+
+		private void glow_anim_falling (float progress)
+		{
+			float alpha_length = previous_glow_alpha;
+			effect_icon_glow.set_opacity (alpha_length - (progress * alpha_length));
+
+			if (progress >= 1.0)
+				{
+					glow_state = AnimState.STOPPED;
+					glow_timeline.stop ();
+					glow_timeline.set_loop (false);
+				}
+		}
+
+		private void on_wiggle_timeline_new_frame ()
+		{
+			float progress = (float)wiggle_timeline.get_progress ();
+
+			switch (wiggle_state)
+				{
+					case AnimState.RISING:
+						wiggle_anim_rising (progress);
+						break;
+
+					case AnimState.LOOPING:
+						wiggle_anim_looping (progress);
+						break;
+
+					case AnimState.FALLING:
+						wiggle_anim_falling (progress);
+						break;
+
+					default:
+						wiggle_state = AnimState.STOPPED;
+						wiggle_timeline.stop ();
+						break;
+				}
+
+			processed_icon.do_queue_redraw ();
+		}
+
+		private float previous_wiggle_alpha = 0.0f;
+		private void wiggle_anim_rising (float progress)
+		{
+			progress = get_ease_out_sine (progress);
+			processed_icon.set_rotation (Clutter.RotateAxis.Z_AXIS, progress * WIGGLE_SIZE,
+																	 24.0f, 24.0f, 0.0f);
+			previous_wiggle_alpha = progress;
+			if (progress >= 1.0)
+				{
+					wiggle_state = AnimState.LOOPING;
+					wiggle_timeline.stop ();
+					wiggle_timeline.set_duration (WIGGLE_RUN_LENGTH);
+					wiggle_timeline.set_loop (true);
+					wiggle_timeline.start ();
+					return;
+				}
+		}
+
+		private void wiggle_anim_looping (float progress)
+		{
+			if (progress >= 1.0)
+				{
+					wiggle_state = AnimState.FALLING;
+					wiggle_timeline.stop ();
+					wiggle_timeline.set_loop (false);
+					wiggle_timeline.start ();
+				}
+
+			int frequency = WIGGLE_FREQUENCY * (WIGGLE_RUN_LENGTH / 1000);
+			progress = get_circular_alpha (Math.fmodf (progress * frequency, 1.0f));
+			progress = (1.0f - progress) * 2.0f - 1.0f;
+			processed_icon.set_rotation (Clutter.RotateAxis.Z_AXIS, progress * WIGGLE_SIZE,
+																	 24.0f, 24.0f, 0.0f);
+			processed_icon.do_queue_redraw ();
+			previous_wiggle_alpha = progress;
+
+
+		}
+
+		private bool check_continue_wiggle ()
+		{
+			if (needs_attention)
+				{
+					wiggle_timeline.set_duration (500 / WIGGLE_FREQUENCY);
+					wiggle_state = AnimState.RISING;
+					wiggle_timeline.start ();
+				}
+			return false;
+		}
+
+		private void wiggle_anim_falling (float progress)
+		{
+			float alpha_length = previous_wiggle_alpha;
+			float angle = alpha_length - (progress * alpha_length);
+			processed_icon.set_rotation (Clutter.RotateAxis.Z_AXIS, angle,
+																	 24.0f, 24.0f, 0.0f);
+
+			if (progress >= 1.0)
+				{
+					wiggle_state = AnimState.STOPPED;
+					wiggle_timeline.stop ();
+					wiggle_timeline.set_loop (false);
+					GLib.Timeout.add_seconds (WIGGLE_PAUSE_LENGTH, check_continue_wiggle);
+				}
+		}
 
     /* notifications */
     private void on_icon_changed ()
@@ -147,6 +345,55 @@ namespace Unity.Launcher
                                                         SHORT_DELAY,
                                                         "opacity", target_opacity);
     }
+
+		private void on_activating_changed ()
+		{
+			if (glow_timeline.is_playing () && activating == false)
+				{
+					glow_timeline.stop ();
+					glow_timeline.set_duration (SHORT_DELAY);
+					glow_state = AnimState.FALLING;
+					glow_timeline.start ();
+				}
+			else if (glow_timeline.is_playing () == false && activating)
+				{
+					effect_icon_glow = new Ctk.EffectGlow ();
+					Clutter.Color c = Clutter.Color () {
+						red = 255,
+						green = 255,
+						blue = 255,
+						alpha = 255
+					};
+					effect_icon_glow.set_background_texture (honeycomb_mask);
+					effect_icon_glow.set_color (c);
+					effect_icon_glow.set_opacity (1.0f);
+					processed_icon.add_effect (effect_icon_glow);
+					effect_icon_glow.set_margin (6);
+
+					glow_timeline.set_duration (SHORT_DELAY);
+					glow_state = AnimState.RISING;
+					glow_timeline.start ();
+				}
+		}
+
+		private void on_needs_attention_changed ()
+		{
+			if (needs_attention && wiggle_timeline.is_playing () == false)
+				{
+					//start wiggling
+					wiggle_timeline.set_duration (500 / WIGGLE_FREQUENCY);
+					wiggle_state = AnimState.RISING;
+					wiggle_timeline.start ();
+				}
+			else if (needs_attention == false && wiggle_timeline.is_playing ())
+				{
+					//stop wiggling
+					wiggle_timeline.stop ();
+					wiggle_timeline.set_duration (500 / WIGGLE_FREQUENCY);
+					wiggle_state = AnimState.FALLING;
+					wiggle_timeline.start ();
+				}
+		}
 
     /* clutter overrides */
     public override void get_preferred_width (float for_height,

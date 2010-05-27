@@ -251,16 +251,6 @@ namespace Unity.Launcher
           // find the index at this position
           int model_index = view.get_model_index_at_y_pos (y);
 					model.move (retcont, model_index - 1);
-/*
-					if (model.index_of (retcont) > model_index)
-						{
-							model.move (retcont, int.max (model_index - 1, 0));
-						}
-					else
-						{
-							model.move (retcont, model_index);
-						}
-*/
 					view.do_queue_redraw ();
         }
     }
