@@ -61,6 +61,10 @@ namespace Unity.Launcher
       child.motion_event.connect (on_motion_event);
 
       child.set_reactive (true);
+			child.opacity = 0;
+      var anim = child.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                                SHORT_DELAY,
+                                "opacity", 0xff);
     }
 
     public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcuts ();

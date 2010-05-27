@@ -80,14 +80,20 @@ namespace Unity.Drag
       Unity.global_shell.add_fullscreen_request (this);
     }
 
-		private void rehouse_orphaned_child (Clutter.Actor old_parent)
+		private void rehouse_orphaned_child (Clutter.Actor? old_parent)
 		{
 			// called when the actor we are tracking gets unparented. we need to keep
 			// the actor on the stage at all times. although, hidden.
+			if (old_parent == null) return;
 			Clutter.Actor actor = model.get_icon ();
-			Clutter.Stage stage = actor.get_stage () as Clutter.Stage;
-			actor.set_parent (stage);
-			actor.set_position (-10000, -10000);
+
+			if (!(actor.get_parent () is Clutter.Actor))
+				{
+					// no parent. so set stage
+					Clutter.Stage stage = old_parent.get_stage () as Clutter.Stage;
+					actor.set_parent (stage);
+					actor.set_position (-10000, -10000);
+				}
 		}
 
     public Unity.Drag.Model get_drag_model ()

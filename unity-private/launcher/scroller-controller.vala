@@ -250,7 +250,11 @@ namespace Unity.Launcher
           // if the actor is not in the model, add it. because its now in there!
           // find the index at this position
           int model_index = view.get_model_index_at_y_pos (y);
-					model.move (retcont, model_index - 1);
+					if (retcont in model)
+						model.move (retcont, model_index - 1);
+					else
+						model.insert (retcont, model_index - 1);
+
 					view.do_queue_redraw ();
         }
     }

@@ -206,11 +206,12 @@ namespace Unity.Launcher
     {
 			child.unparent ();
       child.set_parent (this);
-      child.opacity = 0;
-      var anim = child.animate (Clutter.AnimationMode.EASE_IN_QUAD,
-                                SHORT_DELAY,
-                                "opacity", 0xff);
-      order_children (true);
+
+			// we only animate if the added child is not at the end
+			if (model.index_of (child) == model.size -1)
+				order_children (true);
+			else
+				order_children (false);
       queue_relayout ();
       child.notify["position"].connect (() => {
         queue_relayout ();
