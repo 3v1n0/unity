@@ -130,6 +130,9 @@ namespace Unity.Launcher
 
     private void ensure_menu_state ()
     {
+			//no tooltips on drag
+			if (Unity.Drag.Controller.get_default ().is_dragging) return;
+
       var controller = QuicklistController.get_default ();
       if (controller.menu_is_open () && controller.get_attached_actor () != child)
         {
