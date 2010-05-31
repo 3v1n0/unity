@@ -77,6 +77,7 @@ panel_sources = \
   panel/panel-indicator-object-entry-view.vala \
   panel/panel-indicator-object-view.vala \
   panel/panel-indicators.vala \
+  panel/panel-menu-manager.vala \
   panel/panel-tray.vala \
   panel/panel-view.vala
 
