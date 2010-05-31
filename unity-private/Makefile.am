@@ -72,7 +72,7 @@ private_sources = \
   utils.vala
 
 panel_sources = \
-  panel/panel-home.vala \
+  panel/panel-home-button.vala \
   panel/panel-indicators.vala \
   panel/panel-tray.vala \
   panel/panel-view.vala

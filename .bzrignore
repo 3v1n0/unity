@@ -240,3 +240,4 @@ tests/ui/test-quicklist.c
 unity-private/testing/test-director.c
 test-places.c
 unity/quicklist-rendering.c
+*.c

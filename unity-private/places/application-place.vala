@@ -42,14 +42,23 @@ namespace Unity.Places.Application
                                             "/usr/share/pixmaps/" + icon_name);
       else if (icon_name[0] == '.')
         {
-          GLib.Icon icon = GLib.Icon.new_for_string(icon_name);
-          Gtk.IconInfo info = Gtk.IconTheme.get_default().lookup_by_gicon(icon,  48, 0);
-          if (info != null)
-            view = new Ctk.Image.from_filename (width, info.get_filename());
-          else
-            view = new Ctk.Image.from_stock (width, icon_name);
-          if (view == null)
-            warning (@"Failed to load icon for $icon_name");
+          GLib.Icon icon;
+
+	  try
+	    {
+              icon = GLib.Icon.new_for_string(icon_name);
+              Gtk.IconInfo info = Gtk.IconTheme.get_default().lookup_by_gicon (icon, 48, 0);
+              if (info != null)
+                view = new Ctk.Image.from_filename (width, info.get_filename());
+              else
+                view = new Ctk.Image.from_stock (width, icon_name);
+              if (view == null)
+                warning (@"Failed to load icon for $icon_name");
+	    }
+	  catch (GLib.Error error)
+	    {
+	      warning (@"Failed to load icon: %s", error.message);
+	    }
         }
       else
         view = new Ctk.Image.from_stock (width, icon_name);
