@@ -72,7 +72,7 @@ private_sources = \
   utils.vala
 
 panel_sources = \
-  panel/panel-home.vala \
+  panel/panel-home-button.vala \
   panel/panel-indicator-model.vala \
   panel/panel-indicator-object-entry-view.vala \
   panel/panel-indicator-object-view.vala \

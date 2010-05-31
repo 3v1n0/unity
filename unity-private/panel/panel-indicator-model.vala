@@ -53,10 +53,7 @@ namespace Unity.Panel.Indicators
     
     public void IndicatorsFileModel ()
     {
-      // Read all the .so's from INDICATORDIR
-      // Init the modules and get the IndicatorObject's from them
-      // Load them into a Gee.Map
-      // Order the Gee.Map depending on $name.so from left to right
+      string skip_list;
       
       /* Static order of indicators. We always want the session indicators to be on the far right end of the
         panel. That is why it the session indicator is the last one set in indicator_order. */
@@ -66,6 +63,11 @@ namespace Unity.Panel.Indicators
       this.indicator_order.set ("libdatetime.so", 4);
       this.indicator_order.set ("libme.so", 5);
       this.indicator_order.set ("libsession.so", 6);
+      
+      /* Indicators we don't want to load */
+      skip_list = Environment.get_variable ("UNITY_PANEL_INDICATORS_SKIP");
+      if (skip_list == null)
+        skip_list = "";
       
       /* We need to look for icons in an specific location */
       Gtk.IconTheme.get_default ().append_search_path (INDICATORICONSDIR);
@@ -83,8 +85,8 @@ namespace Unity.Panel.Indicators
               string leaf = file_info.get_name ();
 
               /* do we need this check here? */
-              /*if (leaf in skip_list || skip_list == "all")
-                continue;*/
+              if (leaf in skip_list || skip_list == "all")
+                continue;
 
               /* Shouldn't we test for ".so" instead of just "so"? */
               if (leaf[leaf.len()-2:leaf.len()] == "so")

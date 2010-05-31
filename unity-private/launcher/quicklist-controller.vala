@@ -36,6 +36,8 @@ namespace Unity.Launcher
     public bool is_in_label = false;
     public bool is_in_menu = false;
 
+    public signal void menu_state_changed (bool open);
+
     public QuicklistController ()
     {
       Unity.Testing.ObjectRegistry.get_default ().register ("QuicklistController",
@@ -60,6 +62,7 @@ namespace Unity.Launcher
         this.menu.destroy ();
 
       var menu = new QuicklistMenu () as Ctk.Menu;
+      menu.destroy.connect (() => { menu_state_changed (false); });
       this.menu = menu;
       this.menu.destroy.connect (() => {
         Unity.global_shell.remove_fullscreen_request (this);
@@ -120,6 +123,7 @@ namespace Unity.Launcher
           menuitem.activated.connect (this.close_menu);
         }
       this.menu.set_detect_clicks (true);
+      menu_state_changed (true);
     }
 
     public void close_menu ()

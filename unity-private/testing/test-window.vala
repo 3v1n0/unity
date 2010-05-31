@@ -331,6 +331,11 @@ namespace Unity.Testing
       return this.panel.get_indicators_width ();
     }
 
+    public int get_launcher_width ()
+    {
+      return (int) this.launcher.get_width ();
+    }
+
     public void add_fullscreen_request (Object o)
     {
       return;
@@ -357,6 +362,16 @@ namespace Unity.Testing
             window.close (Clutter.get_current_event_time ());
         }
     }
+
+    public void	expose_xids (Array<uint32> xids)
+		{
+      //null op in popup
+		}
+
+		public void stop_expose ()
+		{
+			//null op in popup
+		}
 
     public void show_window (uint32 xid)
     {

@@ -38,6 +38,7 @@ namespace Unity
     public abstract Clutter.Stage get_stage ();
     public abstract void          show_unity ();
     public abstract int           get_indicators_width ();
+    public abstract int           get_launcher_width ();
     public abstract void          ensure_input_region ();
     public abstract void          add_fullscreen_request (Object o);
     public abstract bool          remove_fullscreen_request (Object o);
@@ -47,11 +48,11 @@ namespace Unity
     public abstract void          close_xids (Array<uint32> xids);
     public abstract void          show_window (uint32 xid);
 
+		public abstract void					expose_xids (Array<uint32> xids);
+		public abstract void					stop_expose ();
+
     public signal   void need_new_icon_cache ();
     public signal   void indicators_changed (int width);
-
-
-
   }
 
   public Shell? global_shell; // our global shell

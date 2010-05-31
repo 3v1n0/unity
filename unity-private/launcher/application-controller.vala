@@ -200,6 +200,26 @@ namespace Unity.Launcher
               break;
             }
         }
+
+      //connect to our quicklist signals so that we can expose and de-expose
+      // windows at the correct time
+      var controller = QuicklistController.get_default ();
+      controller.menu_state_changed.connect ((open) => {
+        if (controller.get_attached_actor () == child && app != null)
+          {
+            // this is a menu relating to us
+            if (open)
+              {
+                debug ("starting expose");
+                Unity.global_shell.expose_xids (app.get_xids ());
+              }
+            else
+              {
+                debug ("ending expose");
+                Unity.global_shell.stop_expose ();
+              }
+          }
+      });
     }
 
     private void on_favorite_added (string uid)
@@ -222,7 +242,7 @@ namespace Unity.Launcher
         {
           is_favorite = false;
           child.pin_type = PinType.UNPINNED;
-					closed ();
+          closed ();
         }
     }
 
@@ -230,6 +250,9 @@ namespace Unity.Launcher
     {
       // get the desktop file
       Gee.ArrayList<ShortcutItem> ret_list = new Gee.ArrayList<ShortcutItem> ();
+      if (desktop_file == null)
+        return ret_list;
+
       var desktop_keyfile = new KeyFile ();
       try
         {
@@ -272,8 +295,11 @@ namespace Unity.Launcher
     public override Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ()
     {
       Gee.ArrayList<ShortcutItem> ret_list = new Gee.ArrayList<ShortcutItem> ();
-      var pin_entry = new LauncherPinningShortcut (desktop_file);
-      ret_list.add (pin_entry);
+      if (desktop_file != null)
+        {
+          var pin_entry = new LauncherPinningShortcut (desktop_file);
+          ret_list.add (pin_entry);
+        }
 
       if (app is Bamf.Application)
         {
@@ -313,6 +339,9 @@ namespace Unity.Launcher
               context.set_timestamp (Gdk.CURRENT_TIME);
 
               appinfo.launch (null, context);
+              child.activating = true;
+              // timeout after eight seconds
+              GLib.Timeout.add_seconds (8, on_launch_timeout);
             }
           catch (Error e)
             {
@@ -321,31 +350,52 @@ namespace Unity.Launcher
         }
     }
 
+    private bool on_launch_timeout ()
+    {
+      child.activating = false;
+      return false;
+    }
     public void attach_application (Bamf.Application application)
     {
       app = application;
       child.running = app.is_running ();
       child.active = app.is_active ();
+      child.activating = false;
+
       app.running_changed.connect (on_app_running_changed);
       app.active_changed.connect (on_app_active_changed);
-			app.closed.connect (detach_application);
+      app.closed.connect (detach_application);
+      app.urgent_changed.connect (on_app_urgant_changed);
+      name = app.get_name ();
+      if (name == "")
+        warning (@"Bamf returned null for app.get_name (): $desktop_file");
+
+      string potential_icon_name = app.get_icon ();
+      if (potential_icon_name == "")
+        warning (@"Bamf returned null for app.get_icon (): $desktop_file");
+      else
+        icon_name == potential_icon_name;
+
+      load_icon_from_icon_name ();
     }
 
     public void detach_application ()
     {
       app.running_changed.disconnect (on_app_running_changed);
       app.active_changed.disconnect (on_app_active_changed);
-			app.closed.disconnect (detach_application);
+      app.urgent_changed.disconnect (on_app_urgant_changed);
+      app.closed.disconnect (detach_application);
       app = null;
       child.running = false;
       child.active = false;
-			closed ();
+      child.needs_attention = false;
+      closed ();
     }
 
-		public bool debug_is_application_attached ()
-		{
-			return app != null;
-		}
+    public bool debug_is_application_attached ()
+    {
+      return app != null;
+    }
 
     private void on_app_running_changed (bool running)
     {
@@ -359,6 +409,11 @@ namespace Unity.Launcher
     private void on_app_active_changed (bool active)
     {
       child.active = active;
+    }
+
+    private void on_app_urgant_changed (bool urgancy)
+    {
+      child.needs_attention = urgancy;
     }
 
     private void load_desktop_file_info ()
