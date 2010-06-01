@@ -23,7 +23,7 @@ using Utils;
 
 namespace Unity.Panel.Indicators
 {
-  public class IndicatorObjectView : Ctk.Box
+  public class IndicatorObjectView : Ctk.HBox
   {
     public Indicator.Object indicator_object { get; construct; }
 

@@ -103,57 +103,57 @@ namespace Unity.Panel
       this.indicator_bar.allocate (child_box, flags);
     }
     
-    private override void paint ()
-    {
-      base.paint ();
-      this.indicator_bar.paint ();
-
-//       if (this.places_enabled == true)
-//         return;
+//     private override void paint ()
+//     {
+//       base.paint ();
+//       this.indicator_bar.paint ();
 // 
-//       this.entry_background.paint ();
-//       this.entry_icon.paint ();
-//       this.entry.paint ();
-    }
-
-    private override void pick (Clutter.Color color)
-    {
-      //base.pick (color);
-      //this.indicator_bar.paint ();
-
-//       if (this.places_enabled == true)
-//         return;
+// //       if (this.places_enabled == true)
+// //         return;
+// // 
+// //       this.entry_background.paint ();
+// //       this.entry_icon.paint ();
+// //       this.entry.paint ();
+//     }
 // 
-//       this.entry_background.paint ();
-//       this.entry_icon.paint ();
-//       this.entry.paint ();
-    }
-
-    private override void map ()
-    {
-      base.map ();
-      this.indicator_bar.map ();
-
-//       if (this.places_enabled == true)
-//         return;
+//     private override void pick (Clutter.Color color)
+//     {
+//       //base.pick (color);
+//       //this.indicator_bar.paint ();
 // 
-//       this.entry_background.map ();
-//       this.entry_icon.map ();
-//       this.entry.map ();
-    }
-
-    private override void unmap ()
-    {
-      base.unmap ();
-      this.indicator_bar.unmap ();
-
-//       if (this.places_enabled == true)
-//         return;
+// //       if (this.places_enabled == true)
+// //         return;
+// // 
+// //       this.entry_background.paint ();
+// //       this.entry_icon.paint ();
+// //       this.entry.paint ();
+//     }
 // 
-//       this.entry_background.unmap ();
-//       this.entry_icon.unmap ();
-//       this.entry.unmap ();
-    }
+//     private override void map ()
+//     {
+//       base.map ();
+//       this.indicator_bar.map ();
+// 
+// //       if (this.places_enabled == true)
+// //         return;
+// // 
+// //       this.entry_background.map ();
+// //       this.entry_icon.map ();
+// //       this.entry.map ();
+//     }
+// 
+//     private override void unmap ()
+//     {
+//       base.unmap ();
+//       this.indicator_bar.unmap ();
+// 
+// //       if (this.places_enabled == true)
+// //         return;
+// // 
+// //       this.entry_background.unmap ();
+// //       this.entry_icon.unmap ();
+// //       this.entry.unmap ();
+//     }
 
     public void set_indicator_mode (bool mode)
     {

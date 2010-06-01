@@ -27,7 +27,7 @@ namespace Unity.Panel
     public IndicatorBar ()
     {
       Object (orientation: Ctk.Orientation.HORIZONTAL,
-              spacing: 4); 
+              spacing: 4);
     }
     
     construct
@@ -64,50 +64,5 @@ namespace Unity.Panel
     {
       // Todo: Open left or right indicator, or circule back to the first or last indicator
     }
-    
-    private override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags)
-    {
-      float width;
-      float height;
-
-      base.allocate (box, flags);
-
-      width = Math.floorf (box.x2 - box.x1);
-      height = Math.floorf (box.y2 - box.y1) - 1;
-
-      Clutter.ActorBox child_box = { 0 };
-      child_box.x1 = 0;
-      child_box.x2 = 0;
-      child_box.y1 = 0;
-      child_box.y2 = height;
-                
-      stdout.printf ("--- IndicatorBar: Allocate %f - %f\n", width, height);
-      foreach (Indicators.IndicatorObjectView indicator_object_view in indicator_array)
-        {
-          //child_box.y2 = child_box.y1 + 24; //indicator_object_view.get_height ();
-          child_box.x2 = child_box.x1 + 24; // indicator_object_view.get_width ();
-          //indicator_object_view.allocate (box, flags);
-          child_box.x1 = child_box.x2;
-        }
-    }
-    
-    private override void paint ()
-    {
-      base.paint ();
-      //this.paint ();
-    }
-
-    private override void map ()
-    {
-      base.map ();
-      this.map ();
-    }
-
-    private override void unmap ()
-    {
-      base.unmap ();
-      this.unmap ();
-    }
-    
   }
 }
