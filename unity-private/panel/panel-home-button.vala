@@ -73,7 +73,6 @@ namespace Unity.Panel
 
     private bool on_button_press (Clutter.Event event)
     {
-      //Unity.global_shell ();
       shell.show_unity ();
       return true;
     }
@@ -90,8 +89,4 @@ namespace Unity.Panel
 you probably need to add a new function to unity.shell to do that, and then
 implement in Unity.Plugin and testing/test-window.vala (for the two targets)
 */
-
-/*Tests:
-Fake Unity.Shell, make sure HomeButton responds to a 'button-press/release'
-events and calls the right function.*/
 
