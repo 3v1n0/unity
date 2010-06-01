@@ -23,7 +23,7 @@ using Utils;
 
 namespace Unity.Panel.Indicators
 {
-  public class IndicatorObjectView : Ctk.HBox
+  public class IndicatorObjectView : Ctk.Box
   {
     public Indicator.Object indicator_object { get; construct; }
 
@@ -33,7 +33,8 @@ namespace Unity.Panel.Indicators
 
     public IndicatorObjectView (Indicator.Object _object)
     {
-      Object (indicator_object: _object);
+      Object (indicator_object: _object,
+              orientation:Ctk.Orientation.HORIZONTAL);
     }
 
     construct
@@ -49,7 +50,7 @@ namespace Unity.Panel.Indicators
       // Connect to the entry_added/removed/moved signals and do the right thing for them
 
       indicator_entry_array = new Gee.ArrayList<IndicatorObjectEntryView> ();
-      
+
       indicator_object.entry_added.connect (this.on_entry_added);
       indicator_object.entry_removed.connect (this.remove_entry);
 
