@@ -26,7 +26,7 @@ namespace Unity.Panel.Indicators
   public abstract class IndicatorsModel : Object
   {
     private static IndicatorsModel _global_model = null;
-    
+
     public static IndicatorsModel get_default ()
     {
       stdout.printf ("--- IndicatorsModel: Calling singleton\n");
@@ -45,7 +45,7 @@ namespace Unity.Panel.Indicators
     {
       _global_model = model;
     }
-  
+
     /* The only method we really need */
     public abstract Gee.Map<string, Indicator.Object> get_indicators ();
   }
@@ -54,12 +54,12 @@ namespace Unity.Panel.Indicators
   {
     private HashMap<string, int> indicator_order;
     public Gee.Map <string, Indicator.Object> indicator_map;
-    
-    public void IndicatorsFileModel ()
+
+    public IndicatorsFileModel ()
     {
       stdout.printf ("--- IndicatorsFileModel: Constructor\n");
       string skip_list;
-      
+
       /* Static order of indicators. We always want the session indicators to be on the far right end of the
         panel. That is why it the session indicator is the last one set in indicator_order. */
       this.indicator_order.set ("libapplication.so", 1);
@@ -68,12 +68,12 @@ namespace Unity.Panel.Indicators
       this.indicator_order.set ("libdatetime.so", 4);
       this.indicator_order.set ("libme.so", 5);
       this.indicator_order.set ("libsession.so", 6);
-      
+
       /* Indicators we don't want to load */
       skip_list = Environment.get_variable ("UNITY_PANEL_INDICATORS_SKIP");
       if (skip_list == null)
         skip_list = "";
-      
+
       /* We need to look for icons in an specific location */
       Gtk.IconTheme.get_default ().append_search_path (INDICATORICONSDIR);
 
@@ -89,7 +89,7 @@ namespace Unity.Panel.Indicators
           while ((file_info = e.next_file (null)) != null)
             {
               string leaf = file_info.get_name ();
-              
+
               stdout.printf ("--- Loading %s\n", leaf);
 
               /* do we need this check here? */
@@ -108,7 +108,7 @@ namespace Unity.Panel.Indicators
         {
           print ("Unable to read indicators: %s\n", error.message);
         }
-      
+
       stdout.printf ("--- IndicatorsFileModel: End Constructor\n");
     }
 
@@ -116,7 +116,7 @@ namespace Unity.Panel.Indicators
     {
       return indicator_map;
     }
-    
+
     private void load_indicator (string filename, string leaf)
     {
       Indicator.Object o;
@@ -139,6 +139,6 @@ namespace Unity.Panel.Indicators
           warning ("Unable to load %s\n", filename);
         }
     }
-  } 
+  }
 }
 
