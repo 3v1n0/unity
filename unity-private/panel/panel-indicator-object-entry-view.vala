@@ -157,8 +157,9 @@ namespace Unity.Panel.Indicators
       child_box.y1 = 0;
       child_box.y2 = height;
 
-      if (width != this.bg.width ||
-          height != this.bg.height)
+      stdout.printf ("--- IndicatorObjectEntryView: Allocate %f - %f\n", width, height);
+      
+      if (width != this.bg.width || height != this.bg.height)
         {
           this.update_bg ((int)width, (int)height);
         }

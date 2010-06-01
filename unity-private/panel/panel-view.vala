@@ -29,23 +29,31 @@ namespace Unity.Panel
   public class View : Ctk.HBox
   {
     public bool expanded = true;
+    public Shell shell { get; construct;}
     
     IndicatorBar indicator_bar;
     
     public View (Shell shell)
     {
+      Object (shell:shell, reactive:false);
+      
+    }
+    
+    construct
+    {
+      START_FUNCTION ();
       // Initialize the models
       stdout.printf ("--- PanelView: Constructor\n");
       Indicators.IndicatorsModel.get_default();
 
       indicator_bar = new IndicatorBar ();
       this.add_actor (indicator_bar);
-      this.indicator_bar.set_parent (this);
       this.indicator_bar.show ();
       // Create the background and become it's parent
       // Create the views and add them to the box
       // Slide down into place (there is a spec about this)
       stdout.printf ("--- PanelView: End Constructor\n");
+      END_FUNCTION ();
     }
 
     public int get_indicators_width ()
@@ -110,8 +118,8 @@ namespace Unity.Panel
 
     private override void pick (Clutter.Color color)
     {
-      base.pick (color);
-      this.indicator_bar.paint ();
+      //base.pick (color);
+      //this.indicator_bar.paint ();
 
 //       if (this.places_enabled == true)
 //         return;
@@ -418,33 +426,33 @@ namespace Unity.Panel
 // 
 //     private override void paint ()
 //     {
-//       base.paint ();
-//       this.rect.paint ();
-//       this.tray.paint ();
-//       this.home.paint ();
-//       this.indicators.paint ();
-// 
-//       if (this.places_enabled == true)
-//         return;
-// 
-//       this.entry_background.paint ();
-//       this.entry_icon.paint ();
-//       this.entry.paint ();
+// //       base.paint ();
+// //       this.rect.paint ();
+// //       this.tray.paint ();
+// //       this.home.paint ();
+// //       this.indicators.paint ();
+// // 
+// //       if (this.places_enabled == true)
+// //         return;
+// // 
+// //       this.entry_background.paint ();
+// //       this.entry_icon.paint ();
+// //       this.entry.paint ();
 //     }
 // 
 //     private override void pick (Clutter.Color color)
 //     {
-//       base.pick (color);
-//       this.tray.paint ();
-//       this.home.paint ();
-//       this.indicators.paint ();
-// 
-//       if (this.places_enabled == true)
-//         return;
-// 
-//       this.entry_background.paint ();
-//       this.entry_icon.paint ();
-//       this.entry.paint ();
+// //       base.pick (color);
+// //       this.tray.paint ();
+// //       this.home.paint ();
+// //       this.indicators.paint ();
+// // 
+// //       if (this.places_enabled == true)
+// //         return;
+// // 
+// //       this.entry_background.paint ();
+// //       this.entry_icon.paint ();
+// //       this.entry.paint ();
 //     }
 // 
 //     private override void map ()

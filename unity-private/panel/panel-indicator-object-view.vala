@@ -48,6 +48,8 @@ namespace Unity.Panel.Indicators
       // the same signal, so our parent can pass it on to the IndicatorObjectView to the left of right of us.
       // Connect to the entry_added/removed/moved signals and do the right thing for them
 
+      indicator_entry_array = new Gee.ArrayList<IndicatorObjectEntryView> ();
+      
       indicator_object.entry_added.connect (this.on_entry_added);
       indicator_object.entry_removed.connect (this.remove_entry);
 

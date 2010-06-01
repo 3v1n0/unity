@@ -57,6 +57,8 @@ namespace Unity.Panel.Indicators
     
     public IndicatorsFileModel ()
     {
+      START_FUNCTION ();
+      
       stdout.printf ("--- IndicatorsFileModel: Constructor\n");
       string skip_list;
       
@@ -116,6 +118,8 @@ namespace Unity.Panel.Indicators
         }
 
       stdout.printf ("--- IndicatorsFileModel: End Constructor\n");
+
+      END_FUNCTION ();
     }
 
     public override HashMap<string, Indicator.Object> get_indicators ()
