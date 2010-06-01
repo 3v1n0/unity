@@ -27,7 +27,7 @@ namespace Unity.Panel.Indicators
   {
     public Indicator.Object indicator_object { get; construct; }
 
-    public signal void menu_moved ();
+    public signal void menu_moved (Gtk.MenuDirectionType type);
 
     private Gee.ArrayList<IndicatorObjectEntryView> indicator_entry_array;
 
@@ -71,11 +71,13 @@ namespace Unity.Panel.Indicators
     public void show_entry_menu (int entry)
     {
       // Sometimes parent will want to force showing of an entry's menu, for instance when the user is moving between menus using the arrow keys.
+      // Todo!
     }
 
     private void on_menu_moved (IndicatorObjectEntryView object_entry_view, Gtk.MenuDirectionType type)
     {
-
+      // Signal to be picked up by IndicatorBar
+      this.menu_moved (type);
     }
 
     private void on_entry_added (Indicator.Object object, Indicator.ObjectEntry indicator_object_entry)

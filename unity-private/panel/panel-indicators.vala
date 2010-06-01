@@ -637,8 +637,8 @@ namespace Unity.Panel.Indicators
 
     private override void paint ()
     {
-      this.bg.paint ();
-      base.paint ();
+      //this.bg.paint ();
+      //base.paint ();
     }
 
     private override void map ()

@@ -23,16 +23,20 @@ using Utils;
 
 namespace Unity.Panel.Indicators
 {
-  
   public abstract class IndicatorsModel : Object
   {
     private static IndicatorsModel _global_model = null;
     
     public static IndicatorsModel get_default ()
     {
+      stdout.printf ("--- IndicatorsModel: Calling singleton\n");
       if (_global_model == null)
+      {
+        stdout.printf ("--- IndicatorsModel: Create unique object\n");
         _global_model = new IndicatorsFileModel ();
+      }
 
+      stdout.printf ("--- IndicatorsModel: Return singleton\n");
       return _global_model;
     }
 
@@ -53,6 +57,7 @@ namespace Unity.Panel.Indicators
     
     public void IndicatorsFileModel ()
     {
+      stdout.printf ("--- IndicatorsFileModel: Constructor\n");
       string skip_list;
       
       /* Static order of indicators. We always want the session indicators to be on the far right end of the
@@ -75,6 +80,7 @@ namespace Unity.Panel.Indicators
       /* Start loading 'em in. .so are located in  INDICATORDIR*/
       /* Create a directory that reference the location of the indicators .so files */
       var dir = File.new_for_path (INDICATORDIR);
+      stdout.printf ("--- IndicatorsFileModel: try section\n");
       try
         {
           var e = dir.enumerate_children (FILE_ATTRIBUTE_STANDARD_NAME, 0, null);
@@ -83,6 +89,8 @@ namespace Unity.Panel.Indicators
           while ((file_info = e.next_file (null)) != null)
             {
               string leaf = file_info.get_name ();
+              
+              stdout.printf ("--- Loading %s\n", leaf);
 
               /* do we need this check here? */
               if (leaf in skip_list || skip_list == "all")
@@ -100,6 +108,8 @@ namespace Unity.Panel.Indicators
         {
           print ("Unable to read indicators: %s\n", error.message);
         }
+      
+      stdout.printf ("--- IndicatorsFileModel: End Constructor\n");
     }
 
     public override Gee.Map<string, Indicator.Object> get_indicators ()
