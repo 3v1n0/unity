@@ -28,9 +28,10 @@ namespace Unity.Panel
     public bool expanded = true;
     public Shell shell { get; construct;}
 
-    ThemeImage   rect;
+    Background   bground;
     HomeButton   home_button;
     MenuBar      menu_bar;
+    SystemTray   system_tray;
     IndicatorBar indicator_bar;
 
     public View (Shell shell)
@@ -40,7 +41,7 @@ namespace Unity.Panel
               orientation:Ctk.Orientation.HORIZONTAL,
               homogeneous:false,
               spacing:0);
-
+      system_tray.manage_stage (shell.get_stage ());
     }
 
     construct
@@ -51,11 +52,11 @@ namespace Unity.Panel
       Indicators.IndicatorsModel.get_default();
 
       /* Create the background and become it's parent */
-      this.rect = new ThemeImage ("panel_background");
-      this.rect.set_repeat (true, false);
-      this.rect.set_parent (this);
-      this.rect.show ();
-      
+      //rect = new ThemeImage ("panel_background");
+      bground = new Background ();
+      set_background (bground);
+      bground.show ();
+
       /* Create the views and add them to the box */
       home_button = new HomeButton (shell);
       pack (home_button, false, true);
@@ -64,6 +65,10 @@ namespace Unity.Panel
       menu_bar = new MenuBar ();
       pack (menu_bar, true, true);
       menu_bar.show ();
+
+      system_tray = new SystemTray ();
+      pack (system_tray, false, true);
+      system_tray.show ();
 
       indicator_bar = new IndicatorBar ();
       pack (indicator_bar, false, true);
@@ -91,13 +96,13 @@ namespace Unity.Panel
 //       Clutter.ActorBox child_box = { 0, 0, box.x2 - box.x1, box.y2 - box.y1 };
 //       float            width;
 //       float            child_width;
-// 
+//
 //       base.allocate (box, flags);
-// 
+//
 //       width = box.x2 - box.x1;
-// 
+//
 //       this.rect.set_clip (0, 0, width, box.y2 - box.y1);
-// 
+//
 //       First the background
 //       child_box.y2 += 3.0f;
 //       this.rect.allocate (child_box, flags);
@@ -108,7 +113,7 @@ namespace Unity.Panel
 // //       child_box.y1 = 0;
 // //       child_box.y2 = PANEL_HEIGHT;
 // //       this.home.allocate (child_box, flags);
-// 
+//
 //       this.indicator_bar.get_preferred_width (PANEL_HEIGHT,
 //                                            out child_width,
 //                                            out child_width);

@@ -30,15 +30,15 @@ public class MenuManager : Object
 
     return _menu_manager_global;
   }
-  
+
   public void register_visible_menu (Gtk.Menu menu)
   {
-    if (current_menu.visible == true)
-      {
-        current_menu.popdown ();
-      }
-    current_menu = menu;    
+    if (current_menu is Gtk.Menu && current_menu.visible == true)
+      current_menu.popdown ();
+
+    current_menu = menu;
   }
+
   
   public bool menu_is_open ()
   {
@@ -49,3 +49,4 @@ public class MenuManager : Object
     return false;
   }
 }
+
