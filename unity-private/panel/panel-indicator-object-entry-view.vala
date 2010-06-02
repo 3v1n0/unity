@@ -32,7 +32,8 @@ namespace Unity.Panel.Indicators
     {
       Object (entry:_entry,
               orientation: Ctk.Orientation.HORIZONTAL,
-              spacing:4);
+              spacing:3,
+              homogeneous:false);
     }
 
     construct
@@ -41,7 +42,7 @@ namespace Unity.Panel.Indicators
        * representations.
        * Hook up the appropriate signals
        */
-      this.padding = { 0, 3.0f, 0, 3.0f };
+      this.padding = { 0, 4.0f, 0, 4.0f };
 
       this.bg = new Clutter.CairoTexture (10, 10);
       this.bg.set_parent (this);
@@ -56,7 +57,6 @@ namespace Unity.Panel.Indicators
 
           if (this.entry.image.icon_name != null)
             {
-
               this.image.stock_id = this.entry.image.icon_name;
 
               this.entry.image.notify["icon-name"].connect (() =>
@@ -74,10 +74,12 @@ namespace Unity.Panel.Indicators
           if (this.entry.image.pixbuf != null)
             {
               this.image.pixbuf = this.entry.image.pixbuf;
+              this.image.size = this.entry.image.pixbuf.width;
 
               this.entry.image.notify["pixbuf"].connect (() =>
                 {
                   this.image.pixbuf = this.entry.image.pixbuf;
+                  this.image.size = this.entry.image.pixbuf.width;
                 });
             }
         }
@@ -226,9 +228,8 @@ namespace Unity.Panel.Indicators
       cr.line_to (1, height);
 
       var pat = new Cairo.Pattern.linear (1, 0, 1, height);
-      pat.add_color_stop_rgba (0.0, 1.0f, 1.0f, 1.0f, 0.6f);
-      pat.add_color_stop_rgba (1.0, 1.0f, 1.0f, 1.0f, 0.2f);
-
+      pat.add_color_stop_rgba (0.0, 0.8509f, 0.8196f, 0.7294f, 1.0f);
+      pat.add_color_stop_rgba (1.0, 0.7019f, 0.6509f, 0.5137f, 1.0f);
       cr.set_source (pat);
       cr.fill ();
     }

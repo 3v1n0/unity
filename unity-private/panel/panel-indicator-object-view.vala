@@ -34,7 +34,8 @@ namespace Unity.Panel.Indicators
     {
       Object (indicator_object: _object,
               orientation:Ctk.Orientation.HORIZONTAL,
-              spacing:0);
+              spacing:0,
+              homogeneous:false);
     }
 
     construct

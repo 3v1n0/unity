@@ -27,7 +27,8 @@ namespace Unity.Panel
     public IndicatorBar ()
     {
       Object (orientation: Ctk.Orientation.HORIZONTAL,
-              spacing: 0);
+              spacing: 0,
+              homogeneous:false);
     }
 
     construct
