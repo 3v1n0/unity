@@ -20,10 +20,13 @@
 
 namespace Unity.Panel.Indicators
 {
-  public class MenuBar : Ctk.Bin
+  public class MenuBar : Ctk.Box
   {
     public MenuBar ()
     {
+      Object (spacing:0,
+              homogeneous:false,
+              orientation:Ctk.Orientation.HORIZONTAL);
     }
 
     construct
@@ -35,16 +38,22 @@ namespace Unity.Panel.Indicators
         {
           var name = model.get_indicator_name (o);
 
-          if (name ==  "appmenu.so")
+          if (name ==  "libappmenu.so")
             {
               IndicatorObjectView indicator_object_view = new IndicatorObjectView (o);
               indicator_object_view.menu_moved.connect (this.on_menu_moved);
 
-
-              this.add_actor (indicator_object_view);
+              pack (indicator_object_view, false, true);
               indicator_object_view.show ();
+
+              break;
             }
         }
+
+      /* Now let's add a rect as a hill-billy expander */
+      var rect = new Clutter.Rectangle.with_color ({255, 0, 0, 255});
+      pack (rect, true, true);
+      rect.show ();
      }
 
     private void on_menu_moved (IndicatorObjectView   object_view,

@@ -111,7 +111,7 @@ namespace Unity
 
     public bool expose_showing { get { return expose_manager.expose_showing; } }
 
-    private static const int PANEL_HEIGHT        =  Unity.Panel.PANEL_HEIGHT;
+    private static const int PANEL_HEIGHT        =  24;
     private static const int QUICKLAUNCHER_WIDTH = 58;
 
     private Clutter.Stage    stage;
