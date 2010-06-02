@@ -51,7 +51,7 @@ namespace Unity.Panel.Indicators
         }
 
       /* Now let's add a rect as a hill-billy expander */
-      var rect = new Clutter.Rectangle.with_color ({255, 0, 0, 255});
+      var rect = new Clutter.Rectangle.with_color ({255, 0, 0, 0});
       pack (rect, true, true);
       rect.show ();
      }
