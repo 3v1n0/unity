@@ -27,13 +27,15 @@ namespace Unity.Panel.Indicators
     private Clutter.CairoTexture bg;
     private Ctk.Image     image;
     private Ctk.Text      text;
+    private bool          menu_is_open = false;
 
     public IndicatorObjectEntryView (Indicator.ObjectEntry _entry)
     {
       Object (entry:_entry,
               orientation: Ctk.Orientation.HORIZONTAL,
               spacing:3,
-              homogeneous:false);
+              homogeneous:false,
+              reactive:true);
     }
 
     construct
@@ -44,6 +46,8 @@ namespace Unity.Panel.Indicators
        */
       this.padding = { 0, 4.0f, 0, 4.0f };
 
+      this.button_press_event.connect (this.show_menu);
+      
       this.bg = new Clutter.CairoTexture (10, 10);
       this.bg.set_parent (this);
       this.bg.opacity = 0;
@@ -99,8 +103,17 @@ namespace Unity.Panel.Indicators
             });
         }
     }
+    
+    private void position_menu (Gtk.Menu menu,
+                                out int  x,
+                                out int  y,
+                                out bool push_in)
+    {
+      y = (int)this.height;
+      x = 0; //(int)this.last_found_entry_x;
+    }
 
-    public void show_menu ()
+    public bool show_menu (Clutter.Event e)
     {
       /*
        * Register the menu with PanelMenuManager
@@ -109,18 +122,41 @@ namespace Unity.Panel.Indicators
        * we want to chain it up to our parent so it shows the next menu
        * or either left or right).
        */
-       if (this.entry.menu is Gtk.Menu)
+      
+      if (this.entry.menu is Gtk.Menu)
         {
+          if(menu_is_open)
+            {
+              stdout.printf ("Close Menu\n");
+              this.entry.menu.popdown();
+              menu_is_open = false;
+              //menu_vis_changed ();
+              return true;
+            }
+          else
+            {
+              stdout.printf ("Open Menu\n");
+              MenuManager.get_default ().register_visible_menu (this.entry.menu);
+              this.entry.menu.popup (null,
+                                    null,
+                                    this.position_menu,
+                                    e.button.button,
+                                    e.button.time);
+              menu_is_open = true;
+            }
+                          
+
           /* Show the menu and connect various signal to update the menu if
            * necessary.
            */
           this.entry.menu.move_current.connect (this.menu_key_moved);
           this.entry.menu.notify["visible"].connect (this.menu_vis_changed);
-          this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
-                           "opacity", 255);
+          this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, "opacity", 255);
 
           MenuManager.get_default ().register_visible_menu (this.entry.menu);
+          
         }
+      return true;
     }
 
     public void menu_vis_changed ()

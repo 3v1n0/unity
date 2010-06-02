@@ -28,6 +28,7 @@ namespace Unity.Panel
     public bool expanded = true;
     public Shell shell { get; construct;}
 
+    ThemeImage   rect;
     HomeButton   home_button;
     MenuBar      menu_bar;
     IndicatorBar indicator_bar;
@@ -50,7 +51,11 @@ namespace Unity.Panel
       Indicators.IndicatorsModel.get_default();
 
       /* Create the background and become it's parent */
-
+      this.rect = new ThemeImage ("panel_background");
+      this.rect.set_repeat (true, false);
+      this.rect.set_parent (this);
+      this.rect.show ();
+      
       /* Create the views and add them to the box */
       home_button = new HomeButton (shell);
       pack (home_button, false, true);
@@ -79,39 +84,39 @@ namespace Unity.Panel
       // Put background into expanded mode
       this.expanded = _expanded;
     }
-/*
-    private override void allocate (Clutter.ActorBox        box,
-                                    Clutter.AllocationFlags flags)
-    {
-      Clutter.ActorBox child_box = { 0, 0, box.x2 - box.x1, box.y2 - box.y1 };
-      float            width;
-      float            child_width;
 
-      base.allocate (box, flags);
-
-      width = box.x2 - box.x1;
-
+//     private override void allocate (Clutter.ActorBox        box,
+//                                     Clutter.AllocationFlags flags)
+//     {
+//       Clutter.ActorBox child_box = { 0, 0, box.x2 - box.x1, box.y2 - box.y1 };
+//       float            width;
+//       float            child_width;
+// 
+//       base.allocate (box, flags);
+// 
+//       width = box.x2 - box.x1;
+// 
 //       this.rect.set_clip (0, 0, width, box.y2 - box.y1);
-//
+// 
 //       First the background
 //       child_box.y2 += 3.0f;
 //       this.rect.allocate (child_box, flags);
-//
-//       Home button
-//       child_box.x1 = 0;
-//       child_box.x2 = 60;
-//       child_box.y1 = 0;
-//       child_box.y2 = PANEL_HEIGHT;
-//       this.home.allocate (child_box, flags);
+// //
+// //       Home button
+// //       child_box.x1 = 0;
+// //       child_box.x2 = 60;
+// //       child_box.y1 = 0;
+// //       child_box.y2 = PANEL_HEIGHT;
+// //       this.home.allocate (child_box, flags);
+// 
+//       this.indicator_bar.get_preferred_width (PANEL_HEIGHT,
+//                                            out child_width,
+//                                            out child_width);
+//       child_box.x1 = width - child_width;
+//       child_box.x2 = width;
+//       this.indicator_bar.allocate (child_box, flags);
+//     }
 
-      this.indicator_bar.get_preferred_width (PANEL_HEIGHT,
-                                           out child_width,
-                                           out child_width);
-      child_box.x1 = width - child_width;
-      child_box.x2 = width;
-      this.indicator_bar.allocate (child_box, flags);
-    }
-*/
 
     public void set_indicator_mode (bool mode)
     {
