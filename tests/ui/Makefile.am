@@ -42,7 +42,6 @@ test_ui_VALAFLAGS = \
   --pkg unique-1.0 \
   --pkg unity \
   --pkg unity-const \
-  --pkg unity-places \
   --pkg unity-private \
   $(MAINTAINER_VALAFLAGS)
 

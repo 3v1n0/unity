@@ -14,5 +14,4 @@ EXTRA_DIST = \
   mutter-2.28.vapi \
   mutter-2.28.deps \
   unity-const.vapi \
-  unity-misc.vapi \
-  unity-places.vapi
+  unity-misc.vapi
