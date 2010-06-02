@@ -29,102 +29,108 @@ namespace Unity.Panel.Indicators
 
     public static IndicatorsModel get_default ()
     {
-      stdout.printf ("--- IndicatorsModel: Calling singleton\n");
       if (_global_model == null)
       {
-        stdout.printf ("--- IndicatorsModel: Create unique object\n");
         _global_model = new IndicatorsFileModel ();
       }
 
-      stdout.printf ("--- IndicatorsModel: Return singleton\n");
       return _global_model;
     }
 
-    /* This is only for testing mode, so we can inject a test model before the program runs */
+    /* This is only for testing mode, so we can inject a test model before the
+     * program runs
+     */
     public static void set_default (IndicatorsModel model)
     {
       _global_model = model;
     }
 
     /* The only method we really need */
-    public abstract Gee.HashMap<string, Indicator.Object> get_indicators ();
+    public abstract Gee.ArrayList<Indicator.Object> get_indicators ();
+    public abstract string get_indicator_name (Indicator.Object o);
   }
 
   public class IndicatorsFileModel : IndicatorsModel
   {
-    private HashMap<string, int> indicator_order;
-    public HashMap<string, Indicator.Object> indicator_map;
-    
+    public static HashMap<string, int> indicator_order = null;
+    public HashMap<Indicator.Object, string> indicator_map;
+    public ArrayList<Indicator.Object> indicator_list;
+
     public IndicatorsFileModel ()
     {
       START_FUNCTION ();
-      
-      stdout.printf ("--- IndicatorsFileModel: Constructor\n");
-      string skip_list;
-      
-      this.indicator_map = new Gee.HashMap<string, Indicator.Object> ();
-      this.indicator_order = new Gee.HashMap<string, int> ();
 
-      /* Static order of indicators. We always want the session indicators to be on the far right end of the
-        panel. That is why it the session indicator is the last one set in indicator_order. */
-      this.indicator_order.set ("libapplication.so", 1);
-      this.indicator_order.set ("libsoundmenu.so", 2);
-      this.indicator_order.set ("libmessaging.so", 3);
-      this.indicator_order.set ("libdatetime.so", 4);
-      this.indicator_order.set ("libme.so", 5);
-      this.indicator_order.set ("libsession.so", 6);
-      
-      stdout.printf ("--- IndicatorsFileModel: Skip list\n");      
+      string skip_list;
+
+      indicator_map = new Gee.HashMap<Indicator.Object, string> ();
+      indicator_order = new Gee.HashMap<string, int> ();
+      indicator_list = new Gee.ArrayList<Indicator.Object> ();
+
+      /* Static order of indicators. We always want the session indicators
+       * to be on the far right end of the panel. That is why it the session
+       * indicator is the last one set in indicator_order.
+       */
+      indicator_order.set ("libappmenu.so", 1);
+      indicator_order.set ("libapplication.so", 2);
+      indicator_order.set ("libsoundmenu.so", 3);
+      indicator_order.set ("libmessaging.so", 4);
+      indicator_order.set ("libdatetime.so", 5);
+      indicator_order.set ("libme.so", 6);
+      indicator_order.set ("libsession.so", 7);
 
       /* Indicators we don't want to load */
       skip_list = Environment.get_variable ("UNITY_PANEL_INDICATORS_SKIP");
       if (skip_list == null)
         skip_list = "";
-      
-      stdout.printf ("--- IndicatorsFileModel: Append searh path\n");      
+
+      if (skip_list == "all")
+        {
+          message ("Skipping all indicator loading");
+          return;
+        }
 
       /* We need to look for icons in an specific location */
       Gtk.IconTheme.get_default ().append_search_path (INDICATORICONSDIR);
 
       /* Start loading 'em in. .so are located in  INDICATORDIR*/
-      /* Create a directory that reference the location of the indicators .so files */
       var dir = File.new_for_path (INDICATORDIR);
-      stdout.printf ("--- IndicatorsFileModel: try section\n");
       try
         {
-          var e = dir.enumerate_children (FILE_ATTRIBUTE_STANDARD_NAME, 0, null);
+          var e = dir.enumerate_children (FILE_ATTRIBUTE_STANDARD_NAME, 0,null);
+
+          ArrayList<string> sos = new ArrayList<string> ();
 
           FileInfo file_info;
           while ((file_info = e.next_file (null)) != null)
             {
               string leaf = file_info.get_name ();
 
-              /* do we need this check here? */
-              if (leaf in skip_list || skip_list == "all")
+              if (leaf in skip_list)
                 continue;
 
-              /* Shouldn't we test for ".so" instead of just "so"? */
-              if (leaf[leaf.len()-2:leaf.len()] == "so")
+              if (leaf[leaf.len()-3:leaf.len()] == ".so")
                 {
-                  stdout.printf ("--- Loading %s\n", leaf);
-                  /* Build the file name path to the .so file */
-                  this.load_indicator (INDICATORDIR + file_info.get_name (), file_info.get_name ());
+                  sos.add (leaf);
                 }
             }
+
+          /* Order the so's before we load them */
+          sos.sort ((CompareFunc)indicator_sort_func);
+
+          foreach (string leaf in sos)
+            this.load_indicator (INDICATORDIR + leaf, leaf);
         }
       catch (Error error)
         {
           print ("Unable to read indicators: %s\n", error.message);
         }
 
-      stdout.printf ("--- IndicatorsFileModel: End Constructor\n");
-
       END_FUNCTION ();
     }
 
-    public override HashMap<string, Indicator.Object> get_indicators ()
+    public static int indicator_sort_func (string a, string b)
     {
-      return indicator_map;
+      return indicator_order[a] - indicator_order[b];
     }
 
     private void load_indicator (string filename, string leaf)
@@ -135,19 +141,23 @@ namespace Unity.Panel.Indicators
 
       if (o is Indicator.Object)
         {
-//           /* Create an indicator Item */
-//           IndicatorItem i = new IndicatorItem ();
-//           /* Set the indicator object into the indicator Item */
-//           i.set_object (o);
-//           /* Get the indicator position from indicator_order */
-//           i.position = (int)this.indicator_order[leaf];
-//           /* Add the indicator into the Map structure */
-          this.indicator_map[leaf] = o;
+          this.indicator_map[o] = leaf;
+          indicator_list.add (o);
         }
       else
         {
           warning ("Unable to load %s\n", filename);
         }
+    }
+
+    public override ArrayList<Indicator.Object> get_indicators ()
+    {
+      return indicator_list;
+    }
+
+    public override string get_indicator_name (Indicator.Object o)
+    {
+      return indicator_map[o];
     }
   }
 }

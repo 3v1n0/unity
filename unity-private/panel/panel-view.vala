@@ -16,6 +16,8 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
+using Unity.Panel.Indicators;
+
 namespace Unity.Panel
 {
   static const int PANEL_HEIGHT = 24;
