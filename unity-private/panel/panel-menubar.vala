@@ -18,22 +18,39 @@
  *
  */
 
-namespace Unity.Panel
+namespace Unity.Panel.Indicators
 {
   public class MenuBar : Ctk.Bin
   {
     public MenuBar ()
     {
-      // Make the IndicatorObjectView for the appmenu.so IndicatorObject
-      // Add it to self
-      // Profit!
     }
 
     construct
     {
-      var rect = new Clutter.Rectangle.with_color ({255, 0, 0, 255});
-      add_actor (rect);
-      rect.show ();
+      var model = IndicatorsModel.get_default ();
+      var indicators_list = model.get_indicators ();
+
+      foreach (Indicator.Object o in indicators_list)
+        {
+          var name = model.get_indicator_name (o);
+
+          if (name ==  "appmenu.so")
+            {
+              IndicatorObjectView indicator_object_view = new IndicatorObjectView (o);
+              indicator_object_view.menu_moved.connect (this.on_menu_moved);
+
+
+              this.add_actor (indicator_object_view);
+              indicator_object_view.show ();
+            }
+        }
+     }
+
+    private void on_menu_moved (IndicatorObjectView   object_view,
+                                Gtk.MenuDirectionType type)
+    {
+      // Todo: Open left or right indicator, or circule back to the first or last indicator
     }
   }
 }
