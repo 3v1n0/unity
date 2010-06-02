@@ -351,6 +351,11 @@ namespace Unity.Panel
       return (int)this.indicators_width;
     }
 
+    public int get_panel_height ()
+    {
+      return Unity.Panel.PANEL_HEIGHT;
+    }
+
     public void set_indicator_mode (bool mode)
     {
       float x;

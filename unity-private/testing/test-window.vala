@@ -336,6 +336,11 @@ namespace Unity.Testing
       return (int) this.launcher.get_width ();
     }
 
+    public int get_panel_height ()
+    {
+      return (int) this.panel.get_panel_height ();
+    }
+
     public void add_fullscreen_request (Object o)
     {
       return;

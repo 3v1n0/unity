@@ -39,6 +39,7 @@ namespace Unity
     public abstract void          show_unity ();
     public abstract int           get_indicators_width ();
     public abstract int           get_launcher_width ();
+    public abstract int           get_panel_height ();
     public abstract void          ensure_input_region ();
     public abstract void          add_fullscreen_request (Object o);
     public abstract bool          remove_fullscreen_request (Object o);

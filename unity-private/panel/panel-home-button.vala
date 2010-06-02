@@ -36,25 +36,44 @@ namespace Unity.Panel
     private override void allocate (Clutter.ActorBox        box,
                                     Clutter.AllocationFlags flags)
     {
-      float cwidth, cheight;
+      float       cwidth;
+      float       cheight;
+      float       lwidth;
+      float       pheight;
       Ctk.Padding pad = { 0 };
 
+      lwidth  = (float) this.shell.get_launcher_width ();
+      pheight = (float) this.shell.get_panel_height ();
       this.theme_image.get_preferred_size (out cwidth, out cheight,
                                            out cwidth, out cheight);
 
-      /* Just in case the loading is slow */
-      if (width < 1)
-        cwidth = 19;
-      if (height < 1)
-        cheight = 19;
+      /* adapt icon-width to launcher-width with padding */
+      if (lwidth - cwidth <= 0.0f)
+        {
+          /* icon is wider or as wide as launcher */
+          pad.left   = 0.0f;
+          pad.right  = pad.left;
+        }
+      else
+        {
+          /* icon is narrower than launcher */
+          pad.left   = (box.x2 - box.x1 - cwidth) / 2.0f;
+          pad.right  = pad.left;
+        }
 
-      int lw;
-      lw = this.shell.get_launcher_width ();
-
-      pad.left = (box.x2 - box.x1 - cwidth) / 2.0f;
-      pad.right = pad.left;
-      pad.top = (box.y2 - box.y1 - cheight) / 2.0f;
-      pad.bottom = pad.top;
+      /* adapt icon-height to panel-height with padding */
+      if (pheight - cheight <= 0.0f)
+        {
+          /* icon higher or as high as launcher */
+          pad.top    = 0.0f;
+          pad.bottom = pad.top;
+        }
+      else
+        {
+          /* icon is smaller than launcher */
+          pad.top    = (box.y2 - box.y1 - cheight) / 2.0f;
+          pad.bottom = pad.top;
+        }
 
       this.padding = pad;
 

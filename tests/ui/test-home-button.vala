@@ -100,6 +100,13 @@ namespace Unity.Tests.UI
       return 0;
     }
 
+    public int
+    get_panel_height ()
+    {
+      // stub
+      return 0;
+    }
+
     public void
     ensure_input_region ()
     {
