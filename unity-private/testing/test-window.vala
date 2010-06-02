@@ -331,12 +331,12 @@ namespace Unity.Testing
       return this.panel.get_indicators_width ();
     }
 
-    public int get_launcher_width ()
+    public int get_launcher_width_foobar ()
     {
       return (int) this.launcher.get_width ();
     }
 
-    public int get_panel_height ()
+    public int get_panel_height_foobar ()
     {
       return (int) this.panel.get_panel_height ();
     }

@@ -94,14 +94,14 @@ namespace Unity.Tests.UI
     }
 
     public int
-    get_launcher_width ()
+    get_launcher_width_foobar ()
     {
       // stub
       return 0;
     }
 
     public int
-    get_panel_height ()
+    get_panel_height_foobar ()
     {
       // stub
       return 0;

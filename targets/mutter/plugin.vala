@@ -862,12 +862,25 @@ namespace Unity
 
     public int get_panel_height ()
     {
-      return PANEL_HEIGHT;
+      return this.PANEL_HEIGHT;
     }
 
     public int get_launcher_width ()
     {
-      return QUICKLAUNCHER_WIDTH;
+      return this.QUICKLAUNCHER_WIDTH;
     }
+
+    /* this is needed to avoid a symbol clash in unity/targets/mutter/main.c */
+    public int get_panel_height_foobar ()
+    {
+      return this.get_panel_height ();
+    }
+
+    /* this is needed to avoid a symbol clash in unity/targets/mutter/main.c */
+    public int get_launcher_width_foobar ()
+    {
+      return this.get_launcher_width ();
+    }
+
   }
 }

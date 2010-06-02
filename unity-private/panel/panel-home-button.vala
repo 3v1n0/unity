@@ -42,8 +42,8 @@ namespace Unity.Panel
       float       pheight;
       Ctk.Padding pad = { 0 };
 
-      lwidth  = (float) this.shell.get_launcher_width ();
-      pheight = (float) this.shell.get_panel_height ();
+      lwidth  = (float) this.shell.get_launcher_width_foobar ();
+      pheight = (float) this.shell.get_panel_height_foobar ();
       this.theme_image.get_preferred_size (out cwidth, out cheight,
                                            out cwidth, out cheight);
 
