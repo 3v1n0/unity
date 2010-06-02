@@ -29,6 +29,9 @@ namespace Unity.Panel.Indicators
     private Ctk.Text      text;
     private bool          menu_is_open = false;
 
+    private uint32 click_time;
+    private float last_found_entry_x = 0.0f;
+    
     public IndicatorObjectEntryView (Indicator.ObjectEntry _entry)
     {
       Object (entry:_entry,
@@ -46,7 +49,10 @@ namespace Unity.Panel.Indicators
        */
       this.padding = { 0, 4.0f, 0, 4.0f };
 
-      this.button_press_event.connect (this.show_menu);
+      this.button_press_event.connect (this.on_button_press_event);
+      //this.button_release_event.connect (this.on_button_release_event);
+      this.motion_event.connect (this.on_motion_event);
+      //this.scroll_event.connect (on_scroll_event);
       
       this.bg = new Clutter.CairoTexture (10, 10);
       this.bg.set_parent (this);
@@ -113,7 +119,60 @@ namespace Unity.Panel.Indicators
       x = 0; //(int)this.last_found_entry_x;
     }
 
-    public bool show_menu (Clutter.Event e)
+    private unowned IndicatorEntry? entry_for_event (float root_x)
+    {
+      unowned IndicatorItem?  item = null;
+      unowned IndicatorEntry? entry = null;
+      float x = root_x - this.x;
+
+      /* Find which entry has the button press, pop it up */
+      unowned GLib.List<IndicatorItem> list = this.get_children ();
+      for (int i = 0; i < list.length (); i++)
+        {
+          unowned IndicatorItem it = (IndicatorItem)list.nth_data (i);
+
+          if (it.x < x && x < (it.x + it.width))
+            {
+              item = it;
+              break;
+            }
+        }
+
+      if (item == null)
+        return null;
+
+      x -= item.x;
+      list = item.get_children ();
+      for (int i = 0; i < list.length (); i++)
+        {
+          unowned IndicatorEntry ent = (IndicatorEntry)list.nth_data (i);
+
+          if (ent.x < x && x < (ent.x + ent.width))
+            {
+              this.last_found_entry_x = ent.x + item.x + this.x;
+              entry = ent;
+            }
+        }
+
+      return entry;
+    }
+    
+    public void show_menu ()
+    {
+      if (this.entry.menu is Gtk.Menu)
+        {
+          MenuManager.get_default ().register_visible_menu (this.entry.menu);
+          entry.menu.popup (null,
+                            null,
+                            this.position_menu,
+                            1,
+                            Clutter.get_current_event_time ());
+          click_time = Clutter.get_current_event_time ();
+          this.menu_shown ();
+        }
+    }
+    
+    public bool on_button_press_event (Clutter.Event e)
     {
       /*
        * Register the menu with PanelMenuManager
@@ -127,49 +186,80 @@ namespace Unity.Panel.Indicators
         {
           if(menu_is_open)
             {
-              stdout.printf ("Close Menu\n");
               this.entry.menu.popdown();
               menu_is_open = false;
-              //menu_vis_changed ();
               return true;
             }
           else
             {
-              stdout.printf ("Open Menu\n");
               MenuManager.get_default ().register_visible_menu (this.entry.menu);
               this.entry.menu.popup (null,
                                     null,
                                     this.position_menu,
                                     e.button.button,
                                     e.button.time);
+              click_time = Clutter.get_current_event_time ();
               menu_is_open = true;
+              this.menu_shown ();
             }
-                          
+        }
+     return true;   
+    }
+    
+    public bool on_motion_event (Clutter.Event e)
+    {
+      unowned IndicatorEntry? entry = this.entry_for_event (e.scroll.x);
 
+      if ((this.entry.menu is Gtk.Menu) && MenuManager.get_default ().menu_is_open ())
+        {
+          //stdout.printf ("Motion event\n");
+          this.show_menu ();
+          return true;
+        }
+
+      return false;
+    }
+    
+    public void menu_shown()
+    {
+      if (this.entry.menu is Gtk.Menu)
+        {
           /* Show the menu and connect various signal to update the menu if
            * necessary.
            */
           this.entry.menu.move_current.connect (this.menu_key_moved);
           this.entry.menu.notify["visible"].connect (this.menu_vis_changed);
           this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, "opacity", 255);
-
-          MenuManager.get_default ().register_visible_menu (this.entry.menu);
-          
         }
-      return true;
     }
 
+//     private bool on_button_release_event (Clutter.Event e)
+//     {
+//       stdout.printf ("on_button_release_event\n");
+//       if (e.button.time - click_time < 300)
+//         return true;
+//       
+//       stdout.printf ("on_button_release_event:300\n");
+// 
+//       if ((this.entry.menu is Gtk.Menu) && (this.entry.menu.get_flags () & Gtk.WidgetFlags.VISIBLE) !=0)
+//         {
+//           this.entry.menu.popdown ();
+//         }
+//       menu_is_open = false;
+//       return true;
+//     }
+    
     public void menu_vis_changed ()
     {
       bool vis = (this.entry.menu.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0;
-
+  
       if (vis == false)
         {
           /* The menu isn't visible anymore. Disconnect some signals. */
-          this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
-                           "opacity", 0);
+          this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, "opacity", 0);
           this.entry.menu.move_current.disconnect (this.menu_key_moved);
           this.entry.menu.notify["visible"].disconnect (this.menu_vis_changed);
+          menu_is_open = false;
         }
     }
 

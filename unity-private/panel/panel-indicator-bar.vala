@@ -60,7 +60,40 @@ namespace Unity.Panel.Indicators
     private void on_menu_moved (IndicatorObjectView   object_view,
                                 Gtk.MenuDirectionType type)
     {
-      // Todo: Open left or right indicator, or circule back to the first or last indicator
+      int pos = this.indicator_array.index_of (object_view);
+      if (pos == -1)
+        return;
+  
+      if (type == Gtk.MenuDirectionType.PARENT)
+        {
+          if (pos == 0)
+            {
+              pos = this.indicator_array.size - 1;
+            }
+          else
+            pos -= 1;
+        }
+      else if (type == Gtk.MenuDirectionType.CHILD)
+        {
+          if (pos == this.indicator_array.size - 1)
+            {
+              pos = 0;
+            }
+          else
+            pos +=1;
+        }
+
+      IndicatorObjectView next_object_view = this.indicator_array.get (pos);
+      
+      if (type == Gtk.MenuDirectionType.PARENT)
+        {
+          next_object_view.open_last_menu_entry ();
+        }
+        
+      if (type == Gtk.MenuDirectionType.CHILD)
+        {
+          next_object_view.open_first_menu_entry ();
+        }       
     }
   }
 }

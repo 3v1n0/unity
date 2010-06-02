@@ -86,8 +86,33 @@ namespace Unity.Panel.Indicators
 
     private void on_menu_moved (IndicatorObjectEntryView object_entry_view, Gtk.MenuDirectionType type)
     {
+      int pos = this.indicator_entry_array.index_of (object_entry_view);
+      if (pos == -1)
+        return;
+  
+      if (type == Gtk.MenuDirectionType.PARENT)
+        {
+          if (pos == 0)
+            {
+              this.menu_moved (type);
+              return;
+            }
+          pos -= 1;
+        }
+      else if (type == Gtk.MenuDirectionType.CHILD)
+        {
+          if (pos == this.indicator_entry_array.size - 1)
+          {
+            this.menu_moved (type);
+            return;
+          }
+          pos +=1;
+        }
+
+      IndicatorObjectEntryView next_object_entry_view = this.indicator_entry_array.get (pos);
+      next_object_entry_view.show_menu ();
       /* Signal to be picked up by IndicatorBar */
-      this.menu_moved (type);
+      //this.menu_moved (type);
     }
 
     private void on_entry_added (Indicator.Object object, Indicator.ObjectEntry indicator_object_entry)
@@ -122,6 +147,24 @@ namespace Unity.Panel.Indicators
               this.indicator_entry_array.remove (object_entry_view);
             }
         }
+    }
+
+    public void open_first_menu_entry ()
+    {
+      if (indicator_entry_array.size > 0)
+        {
+          IndicatorObjectEntryView object_entry_view = this.indicator_entry_array.get (0);
+          object_entry_view.show_menu ();
+        }
+    }
+    
+    public void open_last_menu_entry ()
+    {
+      if (indicator_entry_array.size > 0)
+        {
+          IndicatorObjectEntryView object_entry_view = this.indicator_entry_array.get (indicator_entry_array.size-1);
+          object_entry_view.show_menu ();
+        }      
     }
   }
 }
