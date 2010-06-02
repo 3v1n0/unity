@@ -26,5 +26,10 @@ namespace Unity.Panel
     {
 
     }
+
+    construct
+    {
+
+    }
   }
 }

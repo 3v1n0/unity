@@ -1,4 +1,3 @@
-/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -14,8 +13,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by canonical.com
- *
+ * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Jay Taoko <jay.taoko@canonical.com>
  */
 
 using Gee;
@@ -34,21 +33,25 @@ namespace Unity.Panel.Indicators
     public IndicatorObjectView (Indicator.Object _object)
     {
       Object (indicator_object: _object,
-              orientation:Ctk.Orientation.HORIZONTAL);
+              orientation:Ctk.Orientation.HORIZONTAL,
+              spacing:0);
     }
 
     construct
     {
       START_FUNCTION ();
 
-      // Read through the entries in the object, creating an IndicatorObjectEntryView for
-      // each one and appending it to self.
-      // Connect to IndicatorObjectEntryView's menu_moved signal so we can show the previous
-      // or next menu when the user presses the left or right arrows on their keyboard.
-      // If we're at the first or last entry, and the user want previous or next, when we emit
-      // the same signal, so our parent can pass it on to the IndicatorObjectView to the left of right of us.
-      // Connect to the entry_added/removed/moved signals and do the right thing for them
-
+      /* Read through the entries in the object, creating an
+       * IndicatorObjectEntryView for each one and appending it to self.
+       * Connect to IndicatorObjectEntryView's menu_moved signal so we can show
+       *  the previous or next menu when the user presses the left or right
+       *  arrows on their keyboard.
+       * If we're at the first or last entry, and the user want previous or
+       *  next, when we emit the same signal, so our parent can pass it on to
+       *  the IndicatorObjectView to the left of right of us.
+       * Connect to the entry_added/removed/moved signals and do the right
+       *  thing for them
+       */
       indicator_entry_array = new Gee.ArrayList<IndicatorObjectEntryView> ();
 
       indicator_object.entry_added.connect (this.on_entry_added);
@@ -73,13 +76,16 @@ namespace Unity.Panel.Indicators
 
     public void show_entry_menu (int entry)
     {
-      // Sometimes parent will want to force showing of an entry's menu, for instance when the user is moving between menus using the arrow keys.
-      // Todo!
+      /* Sometimes parent will want to force showing of an entry's menu,
+       * for instance when the user is moving between menus using the arrow
+       * keys.
+       * TODO
+       */
     }
 
     private void on_menu_moved (IndicatorObjectEntryView object_entry_view, Gtk.MenuDirectionType type)
     {
-      // Signal to be picked up by IndicatorBar
+      /* Signal to be picked up by IndicatorBar */
       this.menu_moved (type);
     }
 

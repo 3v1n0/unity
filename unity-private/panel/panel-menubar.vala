@@ -28,5 +28,12 @@ namespace Unity.Panel
       // Add it to self
       // Profit!
     }
+
+    construct
+    {
+      var rect = new Clutter.Rectangle.with_color ({255, 0, 0, 255});
+      add_actor (rect);
+      rect.show ();
+    }
   }
 }

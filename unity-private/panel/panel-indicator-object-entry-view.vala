@@ -1,4 +1,3 @@
-/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -14,8 +13,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by canonical.com
- *
+ * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Jay Taoko <jay.taoko@canonical.com>
  */
 
 namespace Unity.Panel.Indicators
@@ -28,19 +27,21 @@ namespace Unity.Panel.Indicators
     private Clutter.CairoTexture bg;
     private Ctk.Image     image;
     private Ctk.Text      text;
-    
+
     public IndicatorObjectEntryView (Indicator.ObjectEntry _entry)
     {
       Object (entry:_entry,
-              orientation: Ctk.Orientation.HORIZONTAL);
+              orientation: Ctk.Orientation.HORIZONTAL,
+              spacing:4);
     }
 
     construct
     {
-      // Figure out if you need a label, text or both, create the ctk representations
-      // Hook up the appropriate signals
-  
-      this.padding = { 0, 6.0f, 0, 6.0f };
+      /* Figure out if you need a label, text or both, create the ctk
+       * representations.
+       * Hook up the appropriate signals
+       */
+      this.padding = { 0, 3.0f, 0, 3.0f };
 
       this.bg = new Clutter.CairoTexture (10, 10);
       this.bg.set_parent (this);
@@ -99,18 +100,23 @@ namespace Unity.Panel.Indicators
 
     public void show_menu ()
     {
-      // Register the menu with PanelMenuManager
-      // Make sure all the right signals are connected
-      
-      // Emit menu_moved if the user presses left or right arrow in our menu, we want
-      // to chain it up to our parent so it shows the next menu (or either left or right).
-      if (this.entry.menu is Gtk.Menu)
+      /*
+       * Register the menu with PanelMenuManager
+       * Make sure all the right signals are connected
+       * Emit menu_moved if the user presses left or right arrow in our menu,
+       * we want to chain it up to our parent so it shows the next menu
+       * or either left or right).
+       */
+       if (this.entry.menu is Gtk.Menu)
         {
-          /* Show the menu and connect various signal to update the menu if necessary. */
+          /* Show the menu and connect various signal to update the menu if
+           * necessary.
+           */
           this.entry.menu.move_current.connect (this.menu_key_moved);
           this.entry.menu.notify["visible"].connect (this.menu_vis_changed);
-          this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, "opacity", 255);
-          
+          this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
+                           "opacity", 255);
+
           MenuManager.get_default ().register_visible_menu (this.entry.menu);
         }
     }
@@ -122,12 +128,13 @@ namespace Unity.Panel.Indicators
       if (vis == false)
         {
           /* The menu isn't visible anymore. Disconnect some signals. */
-          this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, "opacity", 0);
+          this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
+                           "opacity", 0);
           this.entry.menu.move_current.disconnect (this.menu_key_moved);
           this.entry.menu.notify["visible"].disconnect (this.menu_vis_changed);
         }
     }
-    
+
     public void menu_key_moved (Gtk.MenuDirectionType type)
     {
       if (type != Gtk.MenuDirectionType.PARENT &&
@@ -157,8 +164,6 @@ namespace Unity.Panel.Indicators
       child_box.y1 = 0;
       child_box.y2 = height;
 
-      stdout.printf ("--- IndicatorObjectEntryView: Allocate %f - %f\n", width, height);
-      
       if (width != this.bg.width || height != this.bg.height)
         {
           this.update_bg ((int)width, (int)height);
@@ -184,12 +189,12 @@ namespace Unity.Panel.Indicators
       base.unmap ();
       this.bg.unmap ();
     }
-    
+
     private void update_bg (int width, int height)
     {
       Cairo.Context cr;
 
-      this.bg.set_surface_size (width, height);
+      //this.bg.set_surface_size (width, height);
 
       cr = this.bg.create ();
 

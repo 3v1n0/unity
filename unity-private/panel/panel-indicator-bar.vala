@@ -1,4 +1,3 @@
-/* -*- Mode: vala; indent-tabs-mode: nil; c-basic-offset: 2; tab-width: 2 -*- */
 /*
  * Copyright (C) 2010 Canonical Ltd
  *
@@ -14,7 +13,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * Authored by canonical.com
+ * Authored by: Neil Jagdish Patel <neil.patel@canonical.com>
+ *              Jay Taoko <jay.taoko@canonical.com>
  *
  */
 
@@ -27,7 +27,7 @@ namespace Unity.Panel
     public IndicatorBar ()
     {
       Object (orientation: Ctk.Orientation.HORIZONTAL,
-              spacing: 4);
+              spacing: 0);
     }
 
     construct

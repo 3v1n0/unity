@@ -71,16 +71,23 @@ namespace Unity.Panel
       this.button_release_event.connect (this.on_button_release);
     }
 
+    /* We always want to be the width of the launcher */
+    private override void get_preferred_width (float     for_height,
+                                               out float min_width,
+                                               out float nat_width)
+    {
+      min_width = this.shell.get_launcher_width ();
+      nat_width = this.shell.get_launcher_width ();
+    }
+
     private bool on_button_press (Clutter.Event event)
     {
-      //Unity.global_shell ();
       shell.show_unity ();
       return true;
     }
 
     private bool on_button_release (Clutter.Event event)
     {
-      
       return true;
     }
   }
