@@ -21,35 +21,260 @@ using DBus;
 
 namespace Unity.Place {  
   
-  public struct RendererInfo {
+  /**
+   * UnityPlace_RendererInfo:
+   *
+   * Private helper struct used for marshalling a RendererInfo object over DBus
+   */
+  private struct _RendererInfo {
   	public string default_renderer;
   	public string groups_model;
   	public string results_model;
   	public HashTable<string,string> hints;
   }
   
-  public struct EntryInfo {
+  /**
+   * SECTION:unity-place-renderer-info 
+   * @short_description: Encapsulates all place entry metadata the Unity shell needs in order to render this model
+   * @include: unity.h
+   *
+   * 
+   */
+  public class RendererInfo : GLib.Object {
+    
+    private _RendererInfo info;
+    private Dee.Model _groups_model;
+    private Dee.Model _results_model;
+    
+    /*
+     * Properties
+     */
+    public string default_renderer {
+      get { return info.default_renderer; }
+      set { info.default_renderer = value; }
+    }
+    
+    public Dee.Model groups_model {
+      get { return _groups_model; }
+      set {
+        _groups_model = value;
+        if (value is Dee.SharedModel)
+        {
+          Dee.SharedModel model = value as Dee.SharedModel;
+          info.groups_model = model.get_swarm_name();
+        }
+        else
+          info.groups_model = "__local__";
+      }
+    }
+    
+    public Dee.Model results_model {
+      get { return _results_model; }
+      set {
+        _results_model = value;
+        if (value is Dee.SharedModel)
+        {
+          Dee.SharedModel model = value as Dee.SharedModel;
+          info.results_model = model.get_swarm_name();
+        }
+        else
+          info.results_model = "__local__";
+      }
+    }
+    
+    /*
+     * Constructors
+     */
+    
+    internal RendererInfo (_RendererInfo info)
+    {
+      this.info = info;
+      info.hints = new HashTable<string,string>(str_hash, str_equal);
+    }
+    
+    /*
+     * API
+     */
+    
+    public void set_hint (string hint, string val)
+    {
+      info.hints.insert (hint, val);
+    }
+    
+    public string? get_hint (string hint)
+    {
+      return info.hints.lookup (hint);
+    }
+    
+    public void clear_hint (string hint)
+    {
+      info.hints.remove (hint);
+    }
+    
+    public void clear_hints ()
+    {
+      info.hints.remove_all ();
+    }
+  }
+  
+  /**
+   * UnityPlace_EntryInfo:
+   *
+   * Private helper struct used for marshalling an EntryInfo object over DBus
+   */
+  private struct _EntryInfo {
   	public string   dbus_path;
-    public string   name;
+    public string   display_name;
     public string   icon;
     public uint     position;
     public string[] mimetypes;
     public bool     sensitive;
     public string   sections_model;
     public HashTable<string,string> hints;
-    public RendererInfo entry_renderer_info;
-    public RendererInfo global_renderer_info;
+    public _RendererInfo entry_renderer_info;
+    public _RendererInfo global_renderer_info;
   }
   
+  public class EntryInfo : GLib.Object {
+  
+    /* The _EntryInfo needs to be set before we set properties, so it's
+     * paramount we do it here */
+    private _EntryInfo info = _EntryInfo();
+    private RendererInfo _entry_renderer_info;
+    private RendererInfo _global_renderer_info;
+    private Dee.Model _sections_model;
+    
+    /*
+     * Properties
+     */
+    public RendererInfo entry_renderer_info {
+      get { return _entry_renderer_info; }
+    }
+    
+    public RendererInfo global_renderer_info {
+      get { return _global_renderer_info; }
+    }
+    
+    public string dbus_path {
+      get { return info.dbus_path; }
+      construct set { info.dbus_path = value; }
+    }
+    
+    public string display_name {
+      get { return info.display_name; }
+      construct set { info.display_name = value; }
+    }
+    
+    public string icon {
+      get { return info.icon; }
+      construct set { info.icon = value; }
+    }
+    
+    public uint position {
+      get { return info.position; }
+      construct set { info.position = value; }
+    }
+    
+    public string[] mimetypes {
+      get { return info.mimetypes; }
+      construct set { info.mimetypes = value; }
+    }
+    
+    public bool sensitive {
+      get { return info.sensitive; }
+      construct set { info.sensitive = value; }
+    }
+    
+    public Dee.Model sections_model {
+      get { return _sections_model; }
+      construct set {
+        _sections_model = value;
+        if (value is Dee.SharedModel)
+        {
+          Dee.SharedModel model = value as Dee.SharedModel;
+          info.sections_model = model.get_swarm_name();
+        }
+        else
+          info.sections_model = "__local__";
+      }
+    }
+    
+    /*
+     * Constructors
+     */
+     
+    construct {
+      _entry_renderer_info = new RendererInfo (info.entry_renderer_info);
+      _global_renderer_info = new RendererInfo (info.global_renderer_info);
+      info.hints = new HashTable<string,string>(str_hash, str_equal);
+    }
+    
+    public EntryInfo () {
+      /* Construct does all we need */
+    }
+    
+    /*
+     * API
+     */
+    
+    public void set_hint (string hint, string val)
+    {
+      info.hints.insert (hint, val);
+    }
+    
+    public string? get_hint (string hint)
+    {
+      return info.hints.lookup (hint);
+    }
+    
+    public void clear_hint (string hint)
+    {
+      info.hints.remove (hint);
+    }
+    
+    public void clear_hints ()
+    {
+      info.hints.remove_all ();
+    }
+  }
+  
+  /**
+   * UnityPlaceService:
+   *
+   * DBus interface exported by a place daemon
+   */
   [DBus (name = "com.canonical.Unity.Place")]
-  public interface PlaceService : GLib.Object
+  private interface PlaceService : GLib.Object
   {
-    public abstract EntryInfo[] get_entries () throws DBus.Error;
+    public abstract _EntryInfo[] get_entries () throws DBus.Error;
 
-    //public signal void view_changed (HashTable<string,string> properties);
+    public signal void entry_added (_EntryInfo entry);
+    
+    public signal void entry_removed (string entry_dbus_path);
   }
   
-  public class TestPlaceDaemon : GLib.Object, PlaceService
+  /**
+   * UnityPlaceEntryService:
+   *
+   * DBus interface for a given place entry exported by a place daemon
+   */
+  [DBus (name = "com.canonical.Unity.PlaceEntry")]
+  private interface PlaceEntryService : GLib.Object
+  {
+    public abstract uint set_global_search (string search,
+                                            HashTable<string,string> hints) throws DBus.Error;
+    
+    public abstract uint set_search (string search,
+                                     HashTable<string,string> hints) throws DBus.Error;
+    
+    public abstract void set_active (bool is_active) throws DBus.Error;
+
+    public abstract void set_active_section (uint section_id) throws DBus.Error;
+    
+    public signal void renderer_info_changed (_RendererInfo renderer_info);
+  }
+  
+  /*public class TestPlaceDaemon : GLib.Object, PlaceService
   {
    	private static string[] supported_mimetypes = {"text/plain", "text/html"};	
    	
@@ -75,9 +300,9 @@ namespace Unity.Place {
       }
    	}
    	
-   	public EntryInfo[] get_entries () throws DBus.Error
+   	public _EntryInfo[] get_entries () throws DBus.Error
    	{
-   	  var entry = EntryInfo();
+   	  var entry = _EntryInfo();
       entry.dbus_path = "/org/foo/bar";
       entry.name = "My Entry Name";
       entry.icon = "__icon__";
@@ -95,7 +320,7 @@ namespace Unity.Place {
       entry.global_renderer_info.results_model = "org.ayatana.MyGlobalResultsModel";
       entry.global_renderer_info.hints = new HashTable<string, string> (str_hash, str_equal);
       
-      EntryInfo[] entries = new EntryInfo[1];
+      _EntryInfo[] entries = new _EntryInfo[1];
       entries[0] = entry;
       return entries;
    	}
@@ -108,5 +333,5 @@ namespace Unity.Place {
       
       return 0;
     }
-  }
+  }*/
 } /* namespace */

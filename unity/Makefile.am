@@ -68,6 +68,7 @@ libunity_la_VALASOURCES = \
   shell.vala \
   theme.vala \
   unity-favorites.vala \
+  unity-place.vala \
   webapp-fetcher.vala
 
 
