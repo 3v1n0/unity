@@ -203,10 +203,7 @@ namespace Unity.Place {
      * Constructors
      */
      
-    construct {
-      _entry_renderer_info = new RendererInfo (info.entry_renderer_info);
-      _global_renderer_info = new RendererInfo (info.global_renderer_info);      
-      
+    construct {      
       if (info.dbus_path == null)
         info.dbus_path = "";
       if (info.display_name == null)
@@ -230,10 +227,17 @@ namespace Unity.Place {
       info.global_renderer_info.groups_model = "";
       info.global_renderer_info.results_model = "";
       info.global_renderer_info.hints = new HashTable<string, string> (str_hash, str_equal);
+      
+      _entry_renderer_info = new RendererInfo (info.entry_renderer_info);
+      _global_renderer_info = new RendererInfo (info.global_renderer_info);
     }
     
     public EntryInfo () {
-      /* Construct does all we need */
+      /* We need the _empty hack here to avoid a bug in valac, otherwise
+       * valac will set it to NULL somehow and cause a g_critical in
+       * g_strv_length() */
+      var _empty = new string[0];
+      GLib.Object(mimetypes : _empty);
     }
     
     /*
@@ -356,7 +360,6 @@ namespace Unity.Place {
       foreach (var entry in entries.get_values ())
       {
         result[i] = entry.entry_info.get_raw();
-        debug("GET %i", i);
         i++;
       }
       
@@ -660,8 +663,8 @@ namespace Unity.Place {
       return 0;
     }
   }*/
-
-  /*public static int main (string[] args)
+  /*
+  public static int main (string[] args)
     {
       var loop = new MainLoop (null, false);
       var ctl = new Controller ("/foo/bar");
@@ -676,6 +679,7 @@ namespace Unity.Place {
       loop.run ();
 
       return 0;
-    }*/
+    }
+  */
   
 } /* namespace */
