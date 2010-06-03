@@ -316,7 +316,8 @@ namespace Unity.Place {
         return;
       
       entries.insert (entry.dbus_path, entry);
-      // FIXME: Emit entry_added
+      entry_added (entry.get_raw ());
+      
       // FIXME: Export entry service
     }
     
@@ -331,8 +332,9 @@ namespace Unity.Place {
       
       if (entry == null)
         return;
-       
-      // FIXME: Emit entry_removed
+      
+      entry_removed (entry.dbus_path); 
+      
       // FIXME: Retract entry service
       
       entries.remove (dbus_path);
