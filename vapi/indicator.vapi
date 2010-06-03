@@ -35,6 +35,7 @@ namespace Indicator {
 	[Compact]
 	[CCode (cheader_filename = "gtk/gtk.h,libindicator/indicator.h,libindicator/indicator-object.h,libindicator/indicator-service.h,libindicator/indicator-service-manager.h")]
 	public class ObjectEntry {
+    public ObjectEntry ();
 		public weak Gtk.Image image;
 		public weak Gtk.Label label;
 		public weak Gtk.Menu menu;

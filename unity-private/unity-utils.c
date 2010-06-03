@@ -27,6 +27,8 @@
 #include <clutter/clutter.h>
 #include <clutter/x11/clutter-x11.h>
 
+#include <libindicator/indicator-object.h>
+
 #include <gio/gio.h>
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
@@ -276,4 +278,19 @@ utils_compare_images (const gchar *img1_path,
 
   /* perceptualdiff exits '0' on failed comparison and '1' on successful */
   return exit_status != 0;
+}
+
+IndicatorObjectEntry *
+indicator_object_entry_new ()
+{
+  return g_new0 (IndicatorObjectEntry, 1);
+}
+
+void
+indicator_object_entry_free (IndicatorObjectEntry *entry)
+{
+  if (G_LIKELY (entry))
+    g_free (entry);
+
+  entry = NULL;
 }

@@ -20,21 +20,21 @@
 
 using Gee;
 
-namespace Unity.Panel.Tray
+namespace Unity.Panel
 {
-  public class View : Ctk.Box
+  public class SystemTray : Ctk.Box
   {
     private TrayManager manager;
     private Clutter.Stage stage;
 
     private int n_icons = 1;
 
-    public View ()
+    public SystemTray ()
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
-              spacing:12);
+              spacing:8);
 
-      Unity.Testing.ObjectRegistry.get_default ().register ("PanelTray",
+      Unity.Testing.ObjectRegistry.get_default ().register ("PanelSystemTray",
                                                             this);
     }
 

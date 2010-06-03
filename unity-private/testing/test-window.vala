@@ -213,8 +213,9 @@ namespace Unity.Testing
       this.background.set_position (0, 0);
       this.background.set_size (width, height);
 
-      this.launcher.get_view ().set_size (ql_width, height - 23);
-      this.launcher.get_view ().set_position (0, 23);
+      this.launcher.get_view ().set_size (ql_width,
+                                          height - Unity.Panel.PANEL_HEIGHT);
+      this.launcher.get_view ().set_position (0, Unity.Panel.PANEL_HEIGHT);
 
       if (this.places_enabled)
         {
@@ -222,7 +223,7 @@ namespace Unity.Testing
           this.places.set_position (0, 0);
         }
 
-       this.panel.set_size (width, 23);
+       this.panel.set_size (width, Unity.Panel.PANEL_HEIGHT);
        this.panel.set_position (0, 0);
     }
 
@@ -329,6 +330,16 @@ namespace Unity.Testing
     public int get_indicators_width ()
     {
       return this.panel.get_indicators_width ();
+    }
+
+    public int get_launcher_width_foobar ()
+    {
+      return (int) this.launcher.get_width ();
+    }
+
+    public int get_panel_height_foobar ()
+    {
+      return (int) this.panel.get_panel_height ();
     }
 
     public void add_fullscreen_request (Object o)
