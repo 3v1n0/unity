@@ -52,10 +52,9 @@ namespace Unity.Tests.UI
       Test.add_data_func (DOMAIN + "/HomeButton", test_click_home_button);
     }
 
+
     private void test_click_home_button ()
     {
-      ObjectRegistry registry = ObjectRegistry.get_default ();
-
       director.button_press (home_button, 1, true, 1.0f, 1.0f, false);
 
       Logging.init_fatal_handler ();

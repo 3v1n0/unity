@@ -259,3 +259,17 @@ unity-private/launcher/scroller-view.c
 unity-private/launcher/unity-scroller.c
 unity/unity-favorites.c
 
+unity-private/panel/panel-background.c
+unity-private/panel/panel-home-button.c
+unity-private/panel/panel-indicator-bar.c
+unity-private/panel/panel-indicator-model.c
+unity-private/panel/panel-indicator-object-entry-view.c
+unity-private/panel/panel-indicator-object-view.c
+unity-private/panel/panel-indicators.c
+unity-private/panel/panel-menubar.c
+unity-private/panel/panel-menu-manager.c
+unity-private/panel/panel-system-tray.c
+unity-private/panel/panel-tray.c
+unity-private/panel/panel-view.c
+tests/ui/test-automate.c
+tests/ui/test-home-button.c

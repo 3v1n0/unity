@@ -90,7 +90,7 @@ public class Main
     Logging         logger;
     QuicklistSuite  quicklist_suite;
     HomeButtonSuite home_button_suite;
-    AutomationBasicTestSuite basic_test_suite;
+    //AutomationBasicTestSuite basic_test_suite;
 
 
     Environment.set_variable ("UNITY_DISABLE_TRAY", "1", true);
@@ -105,9 +105,9 @@ public class Main
 
     logger = new Logging ();
 
-    basic_test_suite = new AutomationBasicTestSuite ();
-    home_button_suite = new HomeButtonSuite ();
+    //basic_test_suite = new AutomationBasicTestSuite ();
     quicklist_suite = new QuicklistSuite ();
+    home_button_suite = new HomeButtonSuite ();
 
     Timeout.add_seconds (3, ()=> {
       Test.run ();
