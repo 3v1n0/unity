@@ -25,8 +25,8 @@ namespace Unity.Panel.Indicators
     public signal void menu_moved (Gtk.MenuDirectionType type);
 
     private Clutter.CairoTexture bg;
-    private Ctk.Image     image;
-    private Ctk.Text      text;
+    public  Ctk.Image     image;
+    public  Ctk.Text      text;
     private bool          menu_is_open = false;
 
     private uint32 click_time;
@@ -71,31 +71,39 @@ namespace Unity.Panel.Indicators
           if (entry.image.icon_name != null)
             {
               image.stock_id = entry.image.icon_name;
-
-              entry.image.notify["icon-name"].connect (() =>
-                {
-                  image.stock_id = entry.image.icon_name;
-                });
-
-              unowned Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
-              theme.changed.connect (() =>
-                {
-                  image.stock_id = entry.image.icon_name;
-                });
             }
 
           if (entry.image.pixbuf != null)
             {
               image.pixbuf = entry.image.pixbuf;
               image.size = entry.image.pixbuf.width;
-
-              entry.image.notify["pixbuf"].connect (() =>
-                {
-                  image.pixbuf = entry.image.pixbuf;
-                  image.size = entry.image.pixbuf.width;
-                });
             }
         }
+
+      entry.image.notify["pixbuf"].connect (() =>
+        {
+          if (entry.image.pixbuf is Gdk.Pixbuf)
+            {
+              image.pixbuf = entry.image.pixbuf;
+              image.size = entry.image.pixbuf.width;
+            }
+        });
+
+      entry.image.notify["icon-name"].connect (() =>
+        {
+          if (entry.image.icon_name != null)
+            {
+              image.stock_id = entry.image.icon_name;
+              image.size = 22;
+            }
+        });
+
+      unowned Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
+      theme.changed.connect (() =>
+        {
+          if (entry.image.icon_name != null)
+            image.stock_id = entry.image.icon_name;
+        });
 
       if (entry.label is Gtk.Label)
         {

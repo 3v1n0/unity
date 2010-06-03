@@ -273,3 +273,5 @@ unity-private/panel/panel-tray.c
 unity-private/panel/panel-view.c
 tests/ui/test-automate.c
 tests/ui/test-home-button.c
+tests/unit/test-panel-indicator-object-entry-view.c
+po/unity.pot
