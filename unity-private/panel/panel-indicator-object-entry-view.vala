@@ -31,7 +31,7 @@ namespace Unity.Panel.Indicators
 
     private uint32 click_time;
     private float last_found_entry_x = 0.0f;
-    
+
     public IndicatorObjectEntryView (Indicator.ObjectEntry _entry)
     {
       Object (entry:_entry,
@@ -52,8 +52,8 @@ namespace Unity.Panel.Indicators
       this.button_press_event.connect (this.on_button_press_event);
       //this.button_release_event.connect (this.on_button_release_event);
       this.motion_event.connect (this.on_motion_event);
-      //this.scroll_event.connect (on_scroll_event);
-      
+      this.scroll_event.connect (on_scroll_event);
+
       this.bg = new Clutter.CairoTexture (10, 10);
       this.bg.set_parent (this);
       this.bg.opacity = 0;
@@ -109,7 +109,7 @@ namespace Unity.Panel.Indicators
             });
         }
     }
-    
+
     private void position_menu (Gtk.Menu menu,
                                 out int  x,
                                 out int  y,
@@ -134,7 +134,19 @@ namespace Unity.Panel.Indicators
           this.menu_shown ();
         }
     }
-    
+
+    private bool on_scroll_event (Clutter.Event e)
+    {
+      Clutter.ScrollEvent event = e.scroll;
+
+      IndicatorObjectView parent = get_parent () as IndicatorObjectView;
+      unowned Indicator.Object object = parent.indicator_object;
+
+      Signal.emit_by_name (object, "scroll", 1, event.direction);
+
+      return true;
+    }
+
     public bool on_button_press_event (Clutter.Event e)
     {
       if (this.entry.menu is Gtk.Menu)
@@ -159,9 +171,9 @@ namespace Unity.Panel.Indicators
               this.menu_shown ();
             }
         }
-     return true;   
+     return true;
     }
-    
+
     public bool on_motion_event (Clutter.Event e)
     {
       if ((this.entry.menu is Gtk.Menu) && MenuManager.get_default ().menu_is_open ())
@@ -171,7 +183,7 @@ namespace Unity.Panel.Indicators
         }
       return false;
     }
-    
+
     public void menu_shown()
     {
       if (this.entry.menu is Gtk.Menu)
