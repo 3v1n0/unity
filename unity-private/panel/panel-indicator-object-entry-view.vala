@@ -32,6 +32,9 @@ namespace Unity.Panel.Indicators
     private uint32 click_time;
     private float last_found_entry_x = 0.0f;
 
+    private float last_width = 0;
+    private float last_height = 0;
+
     public IndicatorObjectEntryView (Indicator.ObjectEntry _entry)
     {
       Object (entry:_entry,
@@ -47,65 +50,65 @@ namespace Unity.Panel.Indicators
        * representations.
        * Hook up the appropriate signals
        */
-      this.padding = { 0, 4.0f, 0, 4.0f };
+      padding = { 0, 4.0f, 0, 4.0f };
 
-      this.button_press_event.connect (this.on_button_press_event);
-      //this.button_release_event.connect (this.on_button_release_event);
-      this.motion_event.connect (this.on_motion_event);
-      this.scroll_event.connect (on_scroll_event);
+      button_press_event.connect (on_button_press_event);
 
-      this.bg = new Clutter.CairoTexture (10, 10);
-      this.bg.set_parent (this);
-      this.bg.opacity = 0;
-      this.bg.show ();
+      motion_event.connect (on_motion_event);
+      scroll_event.connect (on_scroll_event);
 
-      if (this.entry.image is Gtk.Image)
+      bg = new Clutter.CairoTexture (10, 10);
+      bg.set_parent (this);
+      bg.opacity = 0;
+      bg.show ();
+
+      if (entry.image is Gtk.Image)
         {
-          this.image = new Ctk.Image (22);
-          this.add_actor (this.image);
-          this.image.show ();
+          image = new Ctk.Image (22);
+          add_actor (image);
+          image.show ();
 
-          if (this.entry.image.icon_name != null)
+          if (entry.image.icon_name != null)
             {
-              this.image.stock_id = this.entry.image.icon_name;
+              image.stock_id = entry.image.icon_name;
 
-              this.entry.image.notify["icon-name"].connect (() =>
+              entry.image.notify["icon-name"].connect (() =>
                 {
-                  this.image.stock_id = this.entry.image.icon_name;
+                  image.stock_id = entry.image.icon_name;
                 });
 
               unowned Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
               theme.changed.connect (() =>
                 {
-                  this.image.stock_id = this.entry.image.icon_name;
+                  image.stock_id = entry.image.icon_name;
                 });
             }
 
-          if (this.entry.image.pixbuf != null)
+          if (entry.image.pixbuf != null)
             {
-              this.image.pixbuf = this.entry.image.pixbuf;
-              this.image.size = this.entry.image.pixbuf.width;
+              image.pixbuf = entry.image.pixbuf;
+              image.size = entry.image.pixbuf.width;
 
-              this.entry.image.notify["pixbuf"].connect (() =>
+              entry.image.notify["pixbuf"].connect (() =>
                 {
-                  this.image.pixbuf = this.entry.image.pixbuf;
-                  this.image.size = this.entry.image.pixbuf.width;
+                  image.pixbuf = entry.image.pixbuf;
+                  image.size = entry.image.pixbuf.width;
                 });
             }
         }
 
-      if (this.entry.label is Gtk.Label)
+      if (entry.label is Gtk.Label)
         {
-          this.text = new Ctk.Text ("");
-          this.text.color = { 233, 216, 200, 255 };
-          this.add_actor (this.text);
-          this.text.show ();
+          text = new Ctk.Text ("");
+          text.color = { 233, 216, 200, 255 };
+          add_actor (text);
+          text.show ();
 
-          this.text.text = this.entry.label.label;
+          text.text = entry.label.label;
 
-          this.entry.label.notify["label"].connect (() =>
+          entry.label.notify["label"].connect (() =>
             {
-              this.text.text = this.entry.label.label;
+              text.text = entry.label.label;
             });
         }
     }
@@ -115,23 +118,23 @@ namespace Unity.Panel.Indicators
                                 out int  y,
                                 out bool push_in)
     {
-      y = (int)this.height;
-      x = (int)this.last_found_entry_x;
+      y = (int)height;
+      x = (int)last_found_entry_x;
     }
 
     public void show_menu ()
     {
-      if (this.entry.menu is Gtk.Menu)
+      if (entry.menu is Gtk.Menu)
         {
-          this.last_found_entry_x = this.x + this.get_parent ().x + this.get_parent ().get_parent ().x;
-          MenuManager.get_default ().register_visible_menu (this.entry.menu);
+          last_found_entry_x = x + get_parent ().x + get_parent ().get_parent ().x;
+          MenuManager.get_default ().register_visible_menu (entry.menu);
           entry.menu.popup (null,
                             null,
-                            this.position_menu,
+                            position_menu,
                             1,
                             Clutter.get_current_event_time ());
           click_time = Clutter.get_current_event_time ();
-          this.menu_shown ();
+          menu_shown ();
         }
     }
 
@@ -149,26 +152,26 @@ namespace Unity.Panel.Indicators
 
     public bool on_button_press_event (Clutter.Event e)
     {
-      if (this.entry.menu is Gtk.Menu)
+      if (entry.menu is Gtk.Menu)
         {
           if(menu_is_open)
             {
-              this.entry.menu.popdown();
+              entry.menu.popdown();
               menu_is_open = false;
               return true;
             }
           else
             {
-              this.last_found_entry_x = this.x + this.get_parent ().x + this.get_parent ().get_parent ().x;
-              MenuManager.get_default ().register_visible_menu (this.entry.menu);
-              this.entry.menu.popup (null,
+              last_found_entry_x = x + get_parent ().x + get_parent ().get_parent ().x;
+              MenuManager.get_default ().register_visible_menu (entry.menu);
+              entry.menu.popup (null,
                                     null,
-                                    this.position_menu,
+                                    position_menu,
                                     e.button.button,
                                     e.button.time);
               click_time = Clutter.get_current_event_time ();
               menu_is_open = true;
-              this.menu_shown ();
+              menu_shown ();
             }
         }
      return true;
@@ -176,9 +179,9 @@ namespace Unity.Panel.Indicators
 
     public bool on_motion_event (Clutter.Event e)
     {
-      if ((this.entry.menu is Gtk.Menu) && MenuManager.get_default ().menu_is_open ())
+      if ((entry.menu is Gtk.Menu) && MenuManager.get_default ().menu_is_open ())
         {
-          this.show_menu ();
+          show_menu ();
           return true;
         }
       return false;
@@ -186,26 +189,26 @@ namespace Unity.Panel.Indicators
 
     public void menu_shown()
     {
-      if (this.entry.menu is Gtk.Menu)
+      if (entry.menu is Gtk.Menu)
         {
           /* Show the menu and connect various signal to update the menu if
            * necessary.
            */
-          this.entry.menu.move_current.connect (this.menu_key_moved);
-          this.entry.menu.notify["visible"].connect (this.menu_vis_changed);
-          this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, "opacity", 255);
+          entry.menu.move_current.connect (menu_key_moved);
+          entry.menu.notify["visible"].connect (menu_vis_changed);
+          bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, "opacity", 255);
         }
     }
 
     public void menu_vis_changed ()
     {
-      bool vis = (this.entry.menu.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0;
+      bool vis = (entry.menu.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0;
       if (vis == false)
         {
           /* The menu isn't visible anymore. Disconnect some signals. */
-          this.bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, "opacity", 0);
-          this.entry.menu.move_current.disconnect (this.menu_key_moved);
-          this.entry.menu.notify["visible"].disconnect (this.menu_vis_changed);
+          bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, "opacity", 0);
+          entry.menu.move_current.disconnect (menu_key_moved);
+          entry.menu.notify["visible"].disconnect (menu_vis_changed);
           menu_is_open = false;
         }
     }
@@ -216,7 +219,7 @@ namespace Unity.Panel.Indicators
           type != Gtk.MenuDirectionType.CHILD)
         return;
 
-      this.menu_moved (type);
+      menu_moved (type);
     }
 
     /*
@@ -231,7 +234,7 @@ namespace Unity.Panel.Indicators
       base.allocate (box, flags);
 
       width = Math.floorf (box.x2 - box.x1);
-      height = Math.floorf (box.y2 - box.y1) - 1;
+      height = Math.floorf (box.y2 - box.y1);
 
       Clutter.ActorBox child_box = { 0 };
       child_box.x1 = 0;
@@ -239,39 +242,43 @@ namespace Unity.Panel.Indicators
       child_box.y1 = 0;
       child_box.y2 = height;
 
-      if (width != this.bg.width || height != this.bg.height)
+      if (width != last_width || height != last_height)
         {
-          this.update_bg ((int)width, (int)height);
+          last_width = width;
+          last_height = height;
+          Idle.add (update_bg);
         }
 
-      this.bg.allocate (child_box, flags);
+      bg.allocate (child_box, flags);
     }
 
     private override void paint ()
     {
-      this.bg.paint ();
+      bg.paint ();
       base.paint ();
     }
 
     private override void map ()
     {
       base.map ();
-      this.bg.map ();
+      bg.map ();
     }
 
     private override void unmap ()
     {
       base.unmap ();
-      this.bg.unmap ();
+      bg.unmap ();
     }
 
-    private void update_bg (int width, int height)
+    private bool update_bg ()
     {
       Cairo.Context cr;
+      int width = (int)last_width;
+      int height = (int)last_height;
 
-      //this.bg.set_surface_size (width, height);
+      bg.set_surface_size (width, height);
 
-      cr = this.bg.create ();
+      cr = bg.create ();
 
       cr.set_operator (Cairo.Operator.CLEAR);
       cr.paint ();
@@ -305,6 +312,8 @@ namespace Unity.Panel.Indicators
       pat.add_color_stop_rgba (1.0, 0.7019f, 0.6509f, 0.5137f, 1.0f);
       cr.set_source (pat);
       cr.fill ();
+
+      return false;
     }
   }
 }

@@ -39,10 +39,10 @@ public class MenuManager : Object
     current_menu = menu;
   }
 
-  
+
   public bool menu_is_open ()
   {
-    if (current_menu.visible == true)
+    if (current_menu is Gtk.Menu && current_menu.visible == true)
       {
         return true;
       }

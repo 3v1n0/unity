@@ -55,8 +55,7 @@ namespace Unity.Panel
 
       base.allocate (box, flags);
 
-      if (width != last_width
-          && height != last_height)
+      if (width != last_width || height != last_height)
         {
           last_width = width;
           last_height = height;
