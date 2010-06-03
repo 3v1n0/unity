@@ -210,12 +210,10 @@ namespace Unity.Launcher
             // this is a menu relating to us
             if (open)
               {
-                debug ("starting expose");
                 Unity.global_shell.expose_xids (app.get_xids ());
               }
             else
               {
-                debug ("ending expose");
                 Unity.global_shell.stop_expose ();
               }
           }

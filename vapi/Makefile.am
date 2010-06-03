@@ -5,8 +5,8 @@ EXTRA_DIST = \
   clutter-1.0.deps \
   cogl-1.0.vapi \
   config.vapi \
-  dbusmodel.deps \
-  dbusmodel.vapi \
+  dee-1.0.deps \
+  dee-1.0.vapi \
   indicator.deps \
   indicator.vapi \
   launcher-0.3.vapi \

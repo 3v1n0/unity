@@ -26,7 +26,7 @@ bool g_flag = false;
 
 namespace Unity.Tests.UI
 {
-  public class HomeButtonSuite : Gtk.Window, Shell
+  public class HomeButtonSuite : Object, Shell
   {
     private const string DOMAIN = "/UI/HomeButton";
 
@@ -56,7 +56,7 @@ namespace Unity.Tests.UI
     {
       ObjectRegistry registry = ObjectRegistry.get_default ();
 
-      director.button_press (home_button, 1, true, 1.0f, 1.0f);
+      director.button_press (home_button, 1, true, 1.0f, 1.0f, false);
 
       Logging.init_fatal_handler ();
 
@@ -118,7 +118,7 @@ namespace Unity.Tests.UI
     {
       // stub
     }
-   
+
     public bool
     remove_fullscreen_request (Object o)
     {

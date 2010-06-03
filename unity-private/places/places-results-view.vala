@@ -17,7 +17,7 @@
  *
  */
 
-using Dbus;
+using Dee;
 using Gee;
 using Unity.Places.Application;
 
@@ -44,7 +44,7 @@ namespace Unity.Places.Views
      * "group bar" at the top and a vbox at the bottom that contains results
      * of a place or search, grouped by the category that result belongs too.
      *
-     * The ResultsView is "powered by" a couple of DbusModel instances, and
+     * The ResultsView is "powered by" a couple of DeeSharedModel instances, and
      * expects them to be referenced in the properties that are set by the
      * PlaceProxy.
      *
@@ -62,8 +62,8 @@ namespace Unity.Places.Views
      * with the properties.
      **/
 
-    private Dbus.Model? groups_model;
-    private Dbus.Model? results_model;
+    private Dee.SharedModel? groups_model;
+    private Dee.SharedModel? results_model;
 
     private GroupView   group_view;
     private Ctk.VBox    results_view;
@@ -126,8 +126,9 @@ namespace Unity.Places.Views
       string group_model_name = props.lookup("groups-model");
       string results_model_name = props.lookup("results-model");
 
-      this.groups_model = new Dbus.Model.with_name (group_model_name);
-      this.results_model = new Dbus.Model.with_name (results_model_name);
+      this.groups_model = new Dee.SharedModel.with_name (group_model_name);
+      this.results_model = new Dee.SharedModel.with_name (results_model_name);
+
 
       this.groups_model.row_added.connect (this.on_group_added);
       this.groups_model.row_changed.connect (this.on_group_changed);
@@ -141,22 +142,22 @@ namespace Unity.Places.Views
       this.results_model.connect ();
     }
 
-    private void on_group_added (Dbus.Model model, ModelIter iter)
+    private void on_group_added (Dee.Model model, ModelIter iter)
     {
       this.group_view.add (model, iter);
     }
 
-    private void on_group_changed (Dbus.Model model, ModelIter iter)
+    private void on_group_changed (Dee.Model model, ModelIter iter)
     {
 
     }
 
-    private void on_group_removed (Dbus.Model model, ModelIter iter)
+    private void on_group_removed (Dee.Model model, ModelIter iter)
     {
 
     }
 
-    private void on_result_added (Dbus.Model model, ModelIter iter)
+    private void on_result_added (Dee.Model model, ModelIter iter)
     {
       var group_name = model.get_string (iter, ResultColumns.GROUP);
 
@@ -187,12 +188,12 @@ namespace Unity.Places.Views
         }
     }
 
-    private void on_result_changed (Dbus.Model model, ModelIter iter)
+    private void on_result_changed (Dee.Model model, ModelIter iter)
     {
 
     }
 
-    private void on_result_removed (Dbus.Model model, ModelIter iter)
+    private void on_result_removed (Dee.Model model, ModelIter iter)
     {
 
     }
@@ -212,7 +213,7 @@ namespace Unity.Places.Views
 
     }
 
-    public void add (Dbus.Model model, ModelIter iter)
+    public void add (Dee.Model model, ModelIter iter)
     {
       var text = new GroupLabel (model, iter);
 
@@ -223,12 +224,12 @@ namespace Unity.Places.Views
 
   private class GroupLabel : Ctk.Text
   {
-    public unowned Dbus.Model model { get; construct; }
+    public unowned Dee.Model model { get; construct; }
     public unowned ModelIter  iter  { get; construct; }
 
     private Clutter.Actor bg;
 
-    public GroupLabel (Dbus.Model model, ModelIter iter)
+    public GroupLabel (Dee.Model model, ModelIter iter)
     {
       Object (model:model,
               iter:iter,

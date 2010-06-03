@@ -47,6 +47,7 @@ test_ui_VALAFLAGS = \
   $(MAINTAINER_VALAFLAGS)
 
 test_ui_SOURCES = \
+  test-automate.vala \
   test-home-button.vala \
   test-quicklist.vala \
   test-ui.vala
