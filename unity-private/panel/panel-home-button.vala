@@ -101,12 +101,12 @@ namespace Unity.Panel
 
     private bool on_button_press (Clutter.Event event)
     {
-      shell.show_unity ();
       return true;
     }
 
     private bool on_button_release (Clutter.Event event)
     {
+      shell.show_unity ();
       return true;
     }
   }

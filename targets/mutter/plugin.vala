@@ -688,9 +688,7 @@ namespace Unity
     {
       if (this.places_enabled == false)
         {
-          var screen = Wnck.Screen.get_default ();
-
-          screen.toggle_showing_desktop (!screen.get_showing_desktop ());
+          show_window_picker ();
           return;
         }
       if (this.places_showing)
