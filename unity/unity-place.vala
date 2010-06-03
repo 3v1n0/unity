@@ -93,7 +93,7 @@ namespace Unity.Place {
     }
     
     /*
-     * API
+     * Public API
      */
     
     public void set_hint (string hint, string val)
@@ -214,7 +214,7 @@ namespace Unity.Place {
     }
     
     /*
-     * API
+     * Public API
      */
     
     public void set_hint (string hint, string val)
@@ -236,6 +236,14 @@ namespace Unity.Place {
     {
       info.hints.remove_all ();
     }
+    
+    /*
+     * Internal API
+     */
+     internal _EntryInfo get_raw () 
+     {
+       return info;
+     }
   }
   
   /**
@@ -244,7 +252,7 @@ namespace Unity.Place {
    * DBus interface exported by a place daemon
    */
   [DBus (name = "com.canonical.Unity.Place")]
-  private interface PlaceService : GLib.Object
+  private interface Service : GLib.Object
   {
     public abstract _EntryInfo[] get_entries () throws DBus.Error;
 
@@ -259,7 +267,7 @@ namespace Unity.Place {
    * DBus interface for a given place entry exported by a place daemon
    */
   [DBus (name = "com.canonical.Unity.PlaceEntry")]
-  private interface PlaceEntryService : GLib.Object
+  private interface EntryService : GLib.Object
   {
     public abstract uint set_global_search (string search,
                                             HashTable<string,string> hints) throws DBus.Error;
@@ -273,6 +281,68 @@ namespace Unity.Place {
     
     public signal void renderer_info_changed (_RendererInfo renderer_info);
   }
+  
+  /**
+   * UnityServiceImpl:
+   *
+   * Helper class to shield of DBus details and ugly internal structs used
+   * for marshalling
+   */
+  private class ServiceImpl : GLib.Object, Service
+  {
+    private HashTable<string,EntryInfo> entries;
+    
+    construct {
+      entries = new HashTable<string,EntryInfo> (str_hash, str_equal);
+    }
+    
+    public _EntryInfo[] get_entries () throws DBus.Error
+    {
+      _EntryInfo[] result = new _EntryInfo[entries.size ()];
+      
+      int i = 0;
+      foreach (var entry in entries.get_values ())
+      {
+        result[i] = entry.get_raw();
+        i++;
+      }
+      
+      return result;
+    }
+    
+    public void add_entry (EntryInfo entry)
+    {
+      if (entries.lookup (entry.dbus_path) != null)
+        return;
+      
+      entries.insert (entry.dbus_path, entry);
+      // FIXME: Emit entry_added
+      // FIXME: Export entry service
+    }
+    
+    public EntryInfo? get_entry (string dbus_path)
+    {
+      return entries.lookup (dbus_path);
+    }
+    
+    public void remove_entry (string dbus_path)
+    {
+      EntryInfo entry = entries.lookup (dbus_path);
+      
+      if (entry == null)
+        return;
+       
+      // FIXME: Emit entry_removed
+      // FIXME: Retract entry service
+      
+      entries.remove (dbus_path);
+    }
+  }
+  
+  /*public class Manager : GLib.Object
+  {
+    
+  }*/
   
   /*public class TestPlaceDaemon : GLib.Object, PlaceService
   {
