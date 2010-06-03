@@ -205,8 +205,31 @@ namespace Unity.Place {
      
     construct {
       _entry_renderer_info = new RendererInfo (info.entry_renderer_info);
-      _global_renderer_info = new RendererInfo (info.global_renderer_info);
+      _global_renderer_info = new RendererInfo (info.global_renderer_info);      
+      
+      if (info.dbus_path == null)
+        info.dbus_path = "";
+      if (info.display_name == null)
+        info.display_name = "";
+      if (info.icon == null)
+        info.icon = "";
+      info.position = 0;
+      if (info.mimetypes == null)
+        info.mimetypes = new string[0];
+      info.sensitive = true;
+      if (info.sections_model == null)
+        info.sections_model = "";
       info.hints = new HashTable<string,string>(str_hash, str_equal);
+      
+      info.entry_renderer_info.default_renderer = "";
+      info.entry_renderer_info.groups_model = "";
+      info.entry_renderer_info.results_model = "";
+      info.entry_renderer_info.hints = new HashTable<string, string> (str_hash, str_equal);
+      
+      info.global_renderer_info.default_renderer = "";
+      info.global_renderer_info.groups_model = "";
+      info.global_renderer_info.results_model = "";
+      info.global_renderer_info.hints = new HashTable<string, string> (str_hash, str_equal);
     }
     
     public EntryInfo () {
@@ -283,68 +306,299 @@ namespace Unity.Place {
   }
   
   /**
-   * UnityServiceImpl:
+   * UnityPlaceServiceImpl:
    *
-   * Helper class to shield of DBus details and ugly internal structs used
-   * for marshalling
+   * Private helper class to shield of DBus details and ugly
+   * internal structs used for marshalling
    */
   private class ServiceImpl : GLib.Object, Service
   {
-    private HashTable<string,EntryInfo> entries;
+    private string _dbus_path;
+    private HashTable<string,EntryServiceImpl> entries;
+    private bool _exported;
     
-    construct {
-      entries = new HashTable<string,EntryInfo> (str_hash, str_equal);
+    /*
+     * Properties
+     */
+    
+    [Property(nick = "DBus object path", blurb = "The DBus path this object is exported under")]
+    public string dbus_path {
+      get { return _dbus_path; }
+      construct { _dbus_path = value; }
     }
     
-    public _EntryInfo[] get_entries () throws DBus.Error
+    public bool exported {
+      get { return _exported; }
+    }
+    
+    /*
+     * Constructors
+     */
+    
+    construct {
+      entries = new HashTable<string,EntryServiceImpl> (str_hash, str_equal);
+    }
+    
+    public ServiceImpl (string dbus_path)
+    {
+      GLib.Object (dbus_path : dbus_path);
+    }
+    
+    /*
+     * DBus API
+     */
+    
+    public _EntryInfo[] get_entries ()
     {
       _EntryInfo[] result = new _EntryInfo[entries.size ()];
       
       int i = 0;
       foreach (var entry in entries.get_values ())
       {
-        result[i] = entry.get_raw();
+        result[i] = entry.entry_info.get_raw();
+        debug("GET %i", i);
         i++;
       }
       
       return result;
     }
     
-    public void add_entry (EntryInfo entry)
+    /*
+     * Internal API
+     */
+    
+    public void add_entry (EntryInfo entry_info)
     {
-      if (entries.lookup (entry.dbus_path) != null)
+      if (entries.lookup (entry_info.dbus_path) != null)
         return;
       
-      entries.insert (entry.dbus_path, entry);
-      entry_added (entry.get_raw ());
-      
-      // FIXME: Export entry service
+      var entry = new EntryServiceImpl(entry_info);
+      entries.insert (entry_info.dbus_path, entry);      
+      if (_exported)
+        {
+          try {
+            entry.export ();
+          } catch (DBus.Error e) {
+            critical ("Failed to export place entry '%s': %s",
+                      entry_info.dbus_path, e.message);
+          }
+        }
+      entry_added (entry_info.get_raw ());
     }
     
     public EntryInfo? get_entry (string dbus_path)
     {
-      return entries.lookup (dbus_path);
+      var entry = entries.lookup (dbus_path);
+      if (entry != null)
+        return entry.entry_info;
+      else
+        return null;
     }
     
     public void remove_entry (string dbus_path)
     {
-      EntryInfo entry = entries.lookup (dbus_path);
+      var entry = entries.lookup (dbus_path);
       
       if (entry == null)
         return;
       
-      entry_removed (entry.dbus_path); 
-      
-      // FIXME: Retract entry service
+      entry_removed (dbus_path); 
+      if (_exported)
+        {
+          try {
+            entry.unexport ();
+          } catch (DBus.Error e) {
+            critical ("Failed to unexport place entry '%s': %s",
+                      entry.entry_info.dbus_path, e.message);
+          }
+        }
       
       entries.remove (dbus_path);
     }
+    
+    public void export () throws DBus.Error
+    {
+      var conn = DBus.Bus.get (DBus.BusType. SESSION);
+      conn.register_object (_dbus_path, this);
+      
+      foreach (var entry in entries.get_values ())
+      {
+        entry.export ();
+      }
+      
+      _exported = true;
+      notify_property("exported");
+    }
+    
+    public void unexport () throws DBus.Error
+    {
+      foreach (var entry in entries.get_values ())
+      {
+        entry.unexport ();
+      }
+    
+      var conn = DBus.Bus.get (DBus.BusType. SESSION);
+      conn.unregister_object (this);
+
+      _exported = false;
+      notify_property("exported");
+    }
   }
   
-  /*public class Manager : GLib.Object
+  /**
+   * UnityPlaceEntryServiceImpl:
+   *
+   * Private helper class to shield of DBus details and ugly
+   * internal structs used for marshalling
+   */
+  private class EntryServiceImpl : GLib.Object, EntryService
   {
+    private bool _exported = false;
+    private EntryInfo _entry_info;
     
-  }*/
+    /*
+     * Properties
+     */
+    
+    public EntryInfo entry_info {
+      get { return _entry_info; }
+      construct { _entry_info = value; }
+    }
+    
+    public bool exported {
+      get { return _exported; }
+    }
+    
+    /*
+     * Constructors
+     */
+    
+    public EntryServiceImpl (EntryInfo entry_info)
+    {
+      GLib.Object(entry_info : entry_info);
+    }
+    
+    /*
+     * DBus API
+     */
+
+    public uint set_global_search (string search,
+                                   HashTable<string,string> hints)
+    {
+      return 0;
+    }
+
+    public uint set_search (string search,
+                            HashTable<string,string> hints)
+    {
+      return 0;
+    }
+    
+    public void set_active (bool is_active)
+    {
+      // pass
+    }
+
+    public void set_active_section (uint section_id)
+    {
+      // pass
+    }
+    
+    /*
+     * Internal API
+     */
+    
+    public void export () throws DBus.Error
+    {
+      var conn = DBus.Bus.get (DBus.BusType. SESSION);
+      conn.register_object (_entry_info.dbus_path, this);
+      
+      _exported = true;
+      notify_property("exported");
+    }
+    
+    public void unexport () throws DBus.Error
+    {
+      var conn = DBus.Bus.get (DBus.BusType. SESSION);
+      conn.unregister_object (this);
+      
+      _exported = false;
+      notify_property("exported");
+    }
+  }
+  
+  /**
+   * UnityPlaceController:
+   *
+   * Main handle for controlling the place entries managed by a place daemon
+   */
+  public class Controller : GLib.Object
+  {
+    private ServiceImpl service;
+    private string _dbus_path;
+    private bool _exported = false;
+    private HashTable<string,EntryInfo> entries;
+    
+    /*
+     * Properties
+     */
+    
+    [Property(nick = "DBus object path", blurb = "The DBus path this object is exported under")]
+    public string dbus_path {
+      get { return _dbus_path; }
+      construct { _dbus_path = value; }
+    }
+    
+    public bool exported {
+      get { return _exported; }
+    }
+    
+    /*
+     * Constructors
+     */
+    
+    construct {
+      service = new ServiceImpl (_dbus_path);
+    }
+    
+    public Controller (string dbus_path)
+    {
+      GLib.Object (dbus_path : dbus_path);
+    } 
+    
+    /*
+     * Public API
+     */
+     
+    public void add_entry (EntryInfo entry)
+    {
+      service.add_entry (entry);
+    }
+    
+    public EntryInfo? get_entry (string dbus_path)
+    {
+      return service.get_entry (dbus_path);
+    }
+    
+    public void remove_entry (string dbus_path)
+    {
+      service.remove_entry (dbus_path);
+    }
+    
+    public void export () throws DBus.Error
+    {
+      service.export ();
+      _exported = true;
+      notify_property("exported");
+    }
+    
+    public void unexport () throws DBus.Error
+    {
+      service.unexport ();      
+      _exported = false;
+      notify_property("exported");
+    }
+  }
   
   /*public class TestPlaceDaemon : GLib.Object, PlaceService
   {
@@ -406,4 +660,22 @@ namespace Unity.Place {
       return 0;
     }
   }*/
+
+  /*public static int main (string[] args)
+    {
+      var loop = new MainLoop (null, false);
+      var ctl = new Controller ("/foo/bar");
+      ctl.export();
+      
+      var entry = new EntryInfo();
+      entry.dbus_path = "/foo/bar/entries/0";
+      entry.display_name = "Display Name";
+      entry.set_hint ("hintkey1", "hintvalue1");
+      ctl.add_entry (entry);
+      
+      loop.run ();
+
+      return 0;
+    }*/
+  
 } /* namespace */
