@@ -87,8 +87,9 @@ public class Main
 {
   public static int main (string[] args)
   {
-    Logging        logger;
-    QuicklistSuite quicklist_suite;
+    Logging         logger;
+    QuicklistSuite  quicklist_suite;
+    HomeButtonSuite home_button_suite;
 
     Environment.set_variable ("UNITY_DISABLE_TRAY", "1", true);
     Environment.set_variable ("UNITY_DISABLE_IDLES", "1", true);
@@ -103,6 +104,7 @@ public class Main
     logger = new Logging ();
 
     quicklist_suite = new QuicklistSuite ();
+    home_button_suite = new HomeButtonSuite ();
 
     Timeout.add_seconds (3, ()=> {
       Test.run ();

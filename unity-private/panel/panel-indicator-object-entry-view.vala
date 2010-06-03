@@ -116,51 +116,14 @@ namespace Unity.Panel.Indicators
                                 out bool push_in)
     {
       y = (int)this.height;
-      x = 0; //(int)this.last_found_entry_x;
+      x = (int)this.last_found_entry_x;
     }
 
-    private unowned IndicatorEntry? entry_for_event (float root_x)
-    {
-      unowned IndicatorItem?  item = null;
-      unowned IndicatorEntry? entry = null;
-      float x = root_x - this.x;
-
-      /* Find which entry has the button press, pop it up */
-      unowned GLib.List<IndicatorItem> list = this.get_children ();
-      for (int i = 0; i < list.length (); i++)
-        {
-          unowned IndicatorItem it = (IndicatorItem)list.nth_data (i);
-
-          if (it.x < x && x < (it.x + it.width))
-            {
-              item = it;
-              break;
-            }
-        }
-
-      if (item == null)
-        return null;
-
-      x -= item.x;
-      list = item.get_children ();
-      for (int i = 0; i < list.length (); i++)
-        {
-          unowned IndicatorEntry ent = (IndicatorEntry)list.nth_data (i);
-
-          if (ent.x < x && x < (ent.x + ent.width))
-            {
-              this.last_found_entry_x = ent.x + item.x + this.x;
-              entry = ent;
-            }
-        }
-
-      return entry;
-    }
-    
     public void show_menu ()
     {
       if (this.entry.menu is Gtk.Menu)
         {
+          this.last_found_entry_x = this.x + this.get_parent ().x + this.get_parent ().get_parent ().x;
           MenuManager.get_default ().register_visible_menu (this.entry.menu);
           entry.menu.popup (null,
                             null,
@@ -174,14 +137,6 @@ namespace Unity.Panel.Indicators
     
     public bool on_button_press_event (Clutter.Event e)
     {
-      /*
-       * Register the menu with PanelMenuManager
-       * Make sure all the right signals are connected
-       * Emit menu_moved if the user presses left or right arrow in our menu,
-       * we want to chain it up to our parent so it shows the next menu
-       * or either left or right).
-       */
-      
       if (this.entry.menu is Gtk.Menu)
         {
           if(menu_is_open)
@@ -192,6 +147,7 @@ namespace Unity.Panel.Indicators
             }
           else
             {
+              this.last_found_entry_x = this.x + this.get_parent ().x + this.get_parent ().get_parent ().x;
               MenuManager.get_default ().register_visible_menu (this.entry.menu);
               this.entry.menu.popup (null,
                                     null,
@@ -208,15 +164,11 @@ namespace Unity.Panel.Indicators
     
     public bool on_motion_event (Clutter.Event e)
     {
-      unowned IndicatorEntry? entry = this.entry_for_event (e.scroll.x);
-
       if ((this.entry.menu is Gtk.Menu) && MenuManager.get_default ().menu_is_open ())
         {
-          //stdout.printf ("Motion event\n");
           this.show_menu ();
           return true;
         }
-
       return false;
     }
     
@@ -233,26 +185,9 @@ namespace Unity.Panel.Indicators
         }
     }
 
-//     private bool on_button_release_event (Clutter.Event e)
-//     {
-//       stdout.printf ("on_button_release_event\n");
-//       if (e.button.time - click_time < 300)
-//         return true;
-//       
-//       stdout.printf ("on_button_release_event:300\n");
-// 
-//       if ((this.entry.menu is Gtk.Menu) && (this.entry.menu.get_flags () & Gtk.WidgetFlags.VISIBLE) !=0)
-//         {
-//           this.entry.menu.popdown ();
-//         }
-//       menu_is_open = false;
-//       return true;
-//     }
-    
     public void menu_vis_changed ()
     {
       bool vis = (this.entry.menu.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0;
-  
       if (vis == false)
         {
           /* The menu isn't visible anymore. Disconnect some signals. */
