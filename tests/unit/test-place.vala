@@ -55,10 +55,20 @@ namespace Unity.Tests.Unit
       var ctl = new Controller("/org/ayatana/unity/testplace");
       assert (ctl.num_entries() == 0);
       
+      /* Assert that we can add one entry */
       ctl.add_entry (entry);
       assert (ctl.num_entries() == 1);
       assert (ctl.get_entry (entry_path) == entry);
       
+      var entry_paths = ctl.get_entry_paths();      
+      assert (entry_paths.length == 1);
+      assert (entry_paths[0] == entry_path);
+      
+      var entries = ctl.get_entries ();
+      assert (entries.length == 1);
+      assert (entries[0] == entry);
+      
+      /* Assert that we can remove it again */
       ctl.remove_entry (entry_path);
       assert (ctl.num_entries() == 0);
       assert (ctl.get_entry (entry_path) == null);
@@ -83,6 +93,16 @@ namespace Unity.Tests.Unit
       assert (ctl.get_entry (entry_path1) == entry1);
       assert (ctl.get_entry (entry_path2) == entry2);
       
+      var entry_paths = ctl.get_entry_paths();
+      assert (entry_paths.length == 2);
+      assert (entry_paths[0] == entry_path1);
+      assert (entry_paths[1] == entry_path2);
+      
+      var entries = ctl.get_entries ();
+      assert (entries.length == 2);
+      assert (entries[0] == entry1);
+      assert (entries[1] == entry2);
+      
       /* Assert we can't add them twice */
       
       ctl.add_entry (entry1);
@@ -102,6 +122,12 @@ namespace Unity.Tests.Unit
       assert (ctl.num_entries() == 0);
       assert (ctl.get_entry (entry_path1) == null);
       assert (ctl.get_entry (entry_path2) == null);
+      
+      entry_paths = ctl.get_entry_paths();
+      assert (entry_paths.length == 0);
+      
+      entries = ctl.get_entries ();
+      assert (entries.length == 0);
     }
   }
 }
