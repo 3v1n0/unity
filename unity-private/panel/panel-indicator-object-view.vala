@@ -166,5 +166,32 @@ namespace Unity.Panel.Indicators
           object_entry_view.show_menu ();
         }      
     }
+    
+    public bool find_entry (Indicator.ObjectEntry entry)
+    {
+      for (int i = 0; i < indicator_entry_array.size; i++)
+        {
+          IndicatorObjectEntryView object_entry_view = this.indicator_entry_array.get (i) as IndicatorObjectEntryView;
+          if (object_entry_view.entry == entry)
+            {
+              return true;
+            }
+        }
+      return false;
+    }
+    
+    public IndicatorObjectEntryView? get_entry_view (Indicator.ObjectEntry entry)
+    {
+      for (int i = 0; i < indicator_entry_array.size; i++)
+        {
+          IndicatorObjectEntryView object_entry_view = this.indicator_entry_array.get (i) as IndicatorObjectEntryView;
+          if (object_entry_view.entry == entry)
+            {
+              return object_entry_view;
+            }
+        }
+      return null;
+    }
+    
   }
 }

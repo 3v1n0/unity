@@ -50,6 +50,7 @@ test_unit_VALAFLAGS = \
 test_unit_SOURCES = \
   test-launcher.vala \
   test-panel-indicator-object-entry-view.vala \
+  test-panel-indicator-object-view.vala \
   test-places.vala \
   test-unit.vala
 
