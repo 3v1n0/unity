@@ -24,7 +24,7 @@ namespace Unity.Tests.Unit
 {
   public class FakeIndicatorObject: Indicator.Object
   {
-    public Gee.ArrayList<Indicator.ObjectEntry> indicator_entry_array;
+    public GLib.List<Indicator.ObjectEntry> indicator_entry_array;
     public Gtk.Label _label;
     public Gtk.Image _image;
     public Gtk.Menu _menu;
@@ -33,59 +33,59 @@ namespace Unity.Tests.Unit
     {
       Object();
     }
-    
+
     construct
     {
       START_FUNCTION ();
-      indicator_entry_array = new Gee.ArrayList< unowned Indicator.ObjectEntry> ();
+      indicator_entry_array = new GLib.List<Indicator.ObjectEntry> ();
       
       _label = new Gtk.Label ("Test Label");
       _image = new Gtk.Image.from_icon_name ("gtk-apply", Gtk.IconSize.MENU);
       _menu = new Gtk.Menu ();
       END_FUNCTION ();
     }
-    
+
     public void add_entry(Indicator.ObjectEntry entry)
     {
-      int pos = indicator_entry_array.index_of (entry);
-      if (pos != -1)
+      unowned GLib.List<Indicator.ObjectEntry> pos = indicator_entry_array.find (entry);
+      if (pos.length () != 0)
         return;
-      
-      indicator_entry_array.add (entry);
+
+      indicator_entry_array.prepend (entry);
       entry_added (entry);
     }
 
     public void remove_entry(Indicator.ObjectEntry entry)
     {
-      int pos = indicator_entry_array.index_of (entry);
-      if (pos != -1)
+      unowned GLib.List<Indicator.ObjectEntry> pos = indicator_entry_array.find (entry);
+      if (pos.length () != 0)
         {
-          indicator_entry_array.remove_at (pos);
+          indicator_entry_array.remove_link (pos);
           entry_removed (entry);
         }
     }
-    
+
     public override unowned Gtk.Label get_label ()
     {
       return this._label;
     }
-    
+
     public override unowned Gtk.Image get_image ()
     {
       return this._image;
     }
-    
+
     public override unowned Gtk.Menu get_menu ()
     {
       return this._menu;
     }
-    
-/*    public override unowned GLib.List get_entries ()
+
+    public override unowned GLib.List get_entries ()
     {
-      
-    }*/
+      return indicator_entry_array;
+    }
   }
-  
+
   public class PanelIndicatorObjectViewSuite : Object
   {
     public const string DOMAIN = "/Unit/Panel/Indicator/ObjectView";
