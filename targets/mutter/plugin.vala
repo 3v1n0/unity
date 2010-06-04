@@ -111,7 +111,7 @@ namespace Unity
 
     public bool expose_showing { get { return expose_manager.expose_showing; } }
 
-    private static const int PANEL_HEIGHT        = 23;
+    private static const int PANEL_HEIGHT        =  24;
     private static const int QUICKLAUNCHER_WIDTH = 58;
 
     private Clutter.Stage    stage;
@@ -688,9 +688,7 @@ namespace Unity
     {
       if (this.places_enabled == false)
         {
-          var screen = Wnck.Screen.get_default ();
-
-          screen.toggle_showing_desktop (!screen.get_showing_desktop ());
+          show_window_picker ();
           return;
         }
       if (this.places_showing)
@@ -862,12 +860,25 @@ namespace Unity
 
     public int get_panel_height ()
     {
-      return PANEL_HEIGHT;
+      return this.PANEL_HEIGHT;
     }
 
     public int get_launcher_width ()
     {
-      return QUICKLAUNCHER_WIDTH;
+      return this.QUICKLAUNCHER_WIDTH;
     }
+
+    /* this is needed to avoid a symbol clash in unity/targets/mutter/main.c */
+    public int get_panel_height_foobar ()
+    {
+      return this.get_panel_height ();
+    }
+
+    /* this is needed to avoid a symbol clash in unity/targets/mutter/main.c */
+    public int get_launcher_width_foobar ()
+    {
+      return this.get_launcher_width ();
+    }
+
   }
 }

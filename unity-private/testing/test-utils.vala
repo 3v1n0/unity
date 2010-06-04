@@ -45,17 +45,9 @@ namespace Unity.Testing
                                       LogLevelFlags flags,
                                       string?       message)
     {
-      if ("ndicator" in log_domain)
-        return false;
+      if (log_domain == null)
+        return true;
 
-      if ("widget class `GtkImage' has no property named `x-ayatana-indicator-dynamic'" in message)
-        return false;
-
-      if ("is currently inside an allocation cycle" in message)
-        return false;
-
-
-      // ignore liblauncher - we don't want to test liblauncher its going away
       if ("liblauncher" in log_domain)
         return false;
 
@@ -63,6 +55,21 @@ namespace Unity.Testing
         return false;
 
       if ("Gtk" in log_domain)
+        return false;
+
+      if ("ndicator" in log_domain)
+        return false;
+
+      if (message == null)
+        return true;
+
+      if ("widget class `GtkImage' has no property named `x-ayatana-indicator-dynamic'" in message)
+        return false;
+
+      if ("is currently inside an allocation cycle" in message)
+        return false;
+
+      if ("Bamf r" in message)
         return false;
 
       return true;

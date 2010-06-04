@@ -37,7 +37,7 @@ namespace Unity.Launcher
     public ScrollerModel model {get; construct;}
 
     /* our scroller constants */
-    public int spacing = 2;
+    public int spacing = 6;
     public int drag_sensitivity = 7;
     public float friction = 0.9f;
 
@@ -89,7 +89,7 @@ namespace Unity.Launcher
 
       mypadding.left = 0.0f;
       mypadding.right = 0.0f;
-      mypadding.top = 5.0f;
+      mypadding.top = 10.0f;
       mypadding.bottom = 5.0f;
 
       this.padding = mypadding;

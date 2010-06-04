@@ -28,6 +28,7 @@ test_ui_VALAFLAGS = \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg dbus-glib-1 \
+  --pkg dee-1.0 \
   --pkg gtk+-2.0 \
   --pkg gdk-2.0 \
   --pkg gee-1.0 \
@@ -47,6 +48,7 @@ test_ui_VALAFLAGS = \
 
 test_ui_SOURCES = \
   test-automate.vala \
+  test-home-button.vala \
   test-quicklist.vala \
   test-ui.vala
 

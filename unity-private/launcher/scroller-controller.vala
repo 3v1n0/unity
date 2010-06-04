@@ -171,11 +171,11 @@ namespace Unity.Launcher
         }
     }
 
-    private void on_favorite_removed (string uid)
+    public void on_favorite_removed (string uid)
     {
     }
 
-    private bool desktop_file_is_favorite (string desktop_file)
+    public bool desktop_file_is_favorite (string desktop_file)
     {
       var favorites = Unity.Favorites.get_default ();
 

@@ -39,6 +39,7 @@ libunity_mutter_la_VALAFLAGS = \
   --pkg clutter-gtk-0.10 \
   --pkg clutk-0.3 \
   --pkg dbus-glib-1 \
+  --pkg dee-1.0 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
   --pkg indicator \
