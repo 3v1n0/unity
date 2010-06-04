@@ -52,7 +52,7 @@ namespace Dee {
 	[CCode (cheader_filename = "dee.h")]
 	public class SequenceModel : Dee.VersionedModel, Dee.Model {
 		[CCode (type = "DeeModel*", has_construct_function = false)]
-		public SequenceModel (uint n_columns);
+		public SequenceModel (uint n_columns, ...);
 	}
 	[CCode (cheader_filename = "dee.h")]
 	public class SharedModel : Dee.ProxyModel, Dee.Model {

@@ -16,6 +16,25 @@
  * Authored by Mikkel Kamstrup Erlandsen <mikkel.kamstrup@canonical.com>
  *
  */
+
+/*
+ * IMPLEMENTATION NOTE:
+ * It may appear this code it is bit more bloated than it needs to be
+ * (considering the pure number of classes and indirections), but this has
+ * some good reasons.
+ *
+ * Firstly we want to hide away Vala's internal DBus marshalling which would
+ * expose raw structs in the. These structs are hidden away in _RendererInfo,
+ * and _EntryInfo. We wrap these in handy GObjects with properties and what not.
+ * In fact we want to hide all DBusisms, which is also why the DBus interfaces
+ * are declared private.
+ *
+ * Secondly we want the generatedd C API to be nice and not too Vala-ish. We
+ * must anticipate that place daemons consuming libunity will be written in
+ * both Vala and C.
+ *
+ */
+
 using Dee;
 using DBus;
 

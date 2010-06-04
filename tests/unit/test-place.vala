@@ -33,6 +33,8 @@ namespace Unity.Tests.Unit
                           PlaceSuite.test_one_entry);
       Test.add_data_func ("/Unit/Place/TwoEntries",
                           PlaceSuite.test_two_entries);
+      Test.add_data_func ("/Unit/Place/LocalModels",
+                          PlaceSuite.test_local_models);
     }
 
     internal static void test_empty_controller()
@@ -129,5 +131,38 @@ namespace Unity.Tests.Unit
       entries = ctl.get_entries ();
       assert (entries.length == 0);
     }
+  
+    internal static void test_local_models ()
+    {
+      var entry = new EntryInfo("/foo/bar");
+      Dee.Model sections_model = new Dee.SequenceModel(2,
+                                                       typeof(string),
+                                                       typeof(string));
+      entry.sections_model = sections_model;
+      assert (entry.sections_model == sections_model);
+      assert (sections_model.get_n_rows() == 0);
+      
+      var renderer = entry.entry_renderer_info;
+      assert (renderer is RendererInfo);
+      Dee.Model groups_model = new Dee.SequenceModel(3,
+                                                     typeof(string),
+                                                     typeof(string),
+                                                     typeof(string));
+      renderer.groups_model = groups_model;
+      assert (renderer.groups_model == groups_model);
+      assert (groups_model.get_n_rows() == 0);
+
+      Dee.Model results_model = new Dee.SequenceModel(6,
+                                                      typeof(string),
+                                                      typeof(string),
+                                                      typeof(uint),
+                                                      typeof(string),
+                                                      typeof(string),
+                                                      typeof(string));
+      renderer.results_model = results_model;
+      assert (renderer.results_model == results_model);
+      assert (results_model.get_n_rows() == 0);
+    }
+    
   }
 }
