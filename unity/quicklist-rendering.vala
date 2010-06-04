@@ -30,15 +30,15 @@ namespace Unity.QuicklistRendering
   const float MARGIN                 = 0.5f;
   const float BORDER                 = 0.25f;
   const float CORNER_RADIUS          = 0.3f;
-  const float CORNER_RADIUS_ABS      = 8.0f;
+  const float CORNER_RADIUS_ABS      = 5.0f;
   const float SHADOW_SIZE            = 1.25f;
   const float ITEM_HEIGHT            = 2.0f;
   const float ITEM_CORNER_RADIUS     = 0.3f;
-  const float ITEM_CORNER_RADIUS_ABS = 6.0f;
+  const float ITEM_CORNER_RADIUS_ABS = 4.0f;
   const float ANCHOR_HEIGHT          = 1.5f;
-  const float ANCHOR_HEIGHT_ABS      = 14.0f;
+  const float ANCHOR_HEIGHT_ABS      = 18.0f;
   const float ANCHOR_WIDTH           = 0.75f;
-  const float ANCHOR_WIDTH_ABS       = 8.0f;
+  const float ANCHOR_WIDTH_ABS       = 10.0f;
 
   public class Seperator : GLib.Object
   {
@@ -150,12 +150,21 @@ namespace Unity.QuicklistRendering
       Cairo.Surface surface = new Cairo.ImageSurface (Cairo.Format.A1, 1, 1);
       Cairo.Context cr = new Cairo.Context (surface);
       Pango.Layout layout = Pango.cairo_create_layout (cr);
+      Gtk.Settings settings = Gtk.Settings.get_default ();
       Pango.FontDescription desc = Pango.FontDescription.from_string (font);
       desc.set_weight (Pango.Weight.NORMAL);
       layout.set_font_description (desc);
       layout.set_wrap (Pango.WrapMode.WORD_CHAR);
       layout.set_ellipsize (Pango.EllipsizeMode.END);
       layout.set_text (text, -1);
+      Pango.Context pango_context = layout.get_context ();
+      Gdk.Screen screen = Gdk.Screen.get_default ();
+      Pango.cairo_context_set_font_options (pango_context,
+                                            screen.get_font_options ());
+      Pango.cairo_context_set_resolution (pango_context,
+                                          (float) settings.gtk_xft_dpi /
+                                          (float) Pango.SCALE);
+      layout.context_changed ();
       Pango.Rectangle log_rect;
       layout.get_extents (null, out log_rect);
       width  = log_rect.width / Pango.SCALE;
@@ -179,12 +188,21 @@ namespace Unity.QuicklistRendering
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
 
       Pango.Layout layout = Pango.cairo_create_layout (cr);
+      Gtk.Settings settings = Gtk.Settings.get_default ();
       Pango.FontDescription desc = Pango.FontDescription.from_string (font);
       desc.set_weight (Pango.Weight.NORMAL);
       layout.set_font_description (desc);
       layout.set_wrap (Pango.WrapMode.WORD_CHAR);
       layout.set_ellipsize (Pango.EllipsizeMode.END);
       layout.set_text (text, -1);
+      Pango.Context pango_context = layout.get_context ();
+      Gdk.Screen screen = Gdk.Screen.get_default ();
+      Pango.cairo_context_set_font_options (pango_context,
+                                            screen.get_font_options ());
+      Pango.cairo_context_set_resolution (pango_context,
+                                          (float) settings.gtk_xft_dpi /
+                                          (float) Pango.SCALE);
+      layout.context_changed ();
 
       int text_width;
       int text_height;
@@ -223,12 +241,22 @@ namespace Unity.QuicklistRendering
 
       // draw text
       Pango.Layout layout = Pango.cairo_create_layout (cr);
+      Gtk.Settings settings = Gtk.Settings.get_default ();
       Pango.FontDescription desc = Pango.FontDescription.from_string (font);
       desc.set_weight (Pango.Weight.NORMAL);
       layout.set_font_description (desc);
       layout.set_wrap (Pango.WrapMode.WORD_CHAR);
       layout.set_ellipsize (Pango.EllipsizeMode.END);
       layout.set_text (text, -1);
+
+      Pango.Context pango_context = layout.get_context ();
+      Gdk.Screen screen = Gdk.Screen.get_default ();
+      Pango.cairo_context_set_font_options (pango_context,
+                                            screen.get_font_options ());
+      Pango.cairo_context_set_resolution (pango_context,
+                                          (float) settings.gtk_xft_dpi /
+                                          (float) Pango.SCALE);
+      layout.context_changed ();
 
       int text_width;
       int text_height;
