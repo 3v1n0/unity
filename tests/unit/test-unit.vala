@@ -26,6 +26,7 @@ public class Main
   {
     PlacesSuite places;
     LauncherSuite Launcher;
+    PlaceSuite place;
 
     Gtk.init (ref args);
     Ctk.init (ref args);
@@ -33,6 +34,7 @@ public class Main
 
     Launcher = new LauncherSuite ();
     places = new PlacesSuite ();
+    place = new PlaceSuite ();
 
     Test.run ();
 

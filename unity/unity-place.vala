@@ -205,7 +205,11 @@ namespace Unity.Place {
      
     construct {      
       if (info.dbus_path == null)
-        info.dbus_path = "";
+        {
+          critical ("""No DBus path set for EntryInfo.
+'dbus-path' property in the UnityPlaceEntryInfo constructor""");
+          info.dbus_path = "";
+        }
       if (info.display_name == null)
         info.display_name = "";
       if (info.icon == null)
@@ -232,12 +236,13 @@ namespace Unity.Place {
       _global_renderer_info = new RendererInfo (info.global_renderer_info);
     }
     
-    public EntryInfo () {
+    public EntryInfo (string dbus_path) {
       /* We need the _empty hack here to avoid a bug in valac, otherwise
        * valac will set it to NULL somehow and cause a g_critical in
        * g_strv_length() */
       var _empty = new string[0];
-      GLib.Object(mimetypes : _empty);
+      GLib.Object(dbus_path : dbus_path,
+                  mimetypes : _empty);
     }
     
     /*
@@ -398,6 +403,25 @@ namespace Unity.Place {
         return null;
     }
     
+    public uint num_entries ()
+    {
+      return entries.size ();
+    }
+    
+    public string[] get_entry_paths ()
+    {
+      string[] result = new string[entries.size ()];
+      
+      int i = 0;
+      foreach (var entry in entries.get_values ())
+      {
+        result[i] = entry.entry_info.dbus_path;
+        i++;
+      }
+      
+      return result;
+    }
+    
     public void remove_entry (string dbus_path)
     {
       var entry = entries.lookup (dbus_path);
@@ -540,7 +564,6 @@ namespace Unity.Place {
     private ServiceImpl service;
     private string _dbus_path;
     private bool _exported = false;
-    private HashTable<string,EntryInfo> entries;
     
     /*
      * Properties
@@ -587,6 +610,31 @@ namespace Unity.Place {
     {
       service.remove_entry (dbus_path);
     }
+    
+    public uint num_entries ()
+    {
+      return service.num_entries ();
+    }
+    
+    public string[] get_entry_paths ()
+    {
+      return service.get_entry_paths ();
+    }
+    
+    public EntryInfo[] get_entries ()
+    {
+      uint len = num_entries();
+      var result = new EntryInfo[len];
+      var entry_paths = get_entry_paths ();
+      
+      int i = 0;
+      for (i = 0; i < len; i++)
+        {
+          result[i] = get_entry (entry_paths[i]);
+        }
+      
+      return result;
+    }   
     
     public void export () throws DBus.Error
     {
