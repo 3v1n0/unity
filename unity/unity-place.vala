@@ -482,9 +482,9 @@ namespace Unity.Place {
       {
         entry.unexport ();
       }
-    
-      var conn = DBus.Bus.get (DBus.BusType. SESSION);
-      conn.unregister_object (this);
+      // FIXME: unregister_object() depends on https://bugzilla.gnome.org/show_bug.cgi?id=620543
+      //var conn = DBus.Bus.get (DBus.BusType. SESSION);
+      //conn.unregister_object (this);
 
       _exported = false;
       notify_property("exported");
@@ -565,8 +565,9 @@ namespace Unity.Place {
     
     public void unexport () throws DBus.Error
     {
-      var conn = DBus.Bus.get (DBus.BusType. SESSION);
-      conn.unregister_object (this);
+      // FIXME: unregister_object() depends on https://bugzilla.gnome.org/show_bug.cgi?id=620543
+      //var conn = DBus.Bus.get (DBus.BusType. SESSION);
+      //conn.unregister_object (this);
       
       _exported = false;
       notify_property("exported");
