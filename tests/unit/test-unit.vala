@@ -25,6 +25,8 @@ public class Main
   public static int main (string[] args)
   {
     PanelIndicatorObjectEntryViewSuite panel_object_entry_view_suite;
+    PanelIndicatorObjectViewSuite panel_object_view_suite;
+    
     PlacesSuite places;
     LauncherSuite launcher;
 
@@ -33,6 +35,8 @@ public class Main
     Test.init (ref args);
 
     panel_object_entry_view_suite = new PanelIndicatorObjectEntryViewSuite ();
+    panel_object_view_suite = new PanelIndicatorObjectViewSuite ();
+    
     launcher = new LauncherSuite ();
     places = new PlacesSuite ();
 
