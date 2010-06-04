@@ -29,6 +29,7 @@ test_unit_VALAFLAGS = \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg dbus-glib-1 \
+  --pkg dee-1.0 \
   --pkg gtk+-2.0 \
   --pkg gdk-2.0 \
   --pkg gee-1.0 \
@@ -43,7 +44,6 @@ test_unit_VALAFLAGS = \
   --pkg unique-1.0 \
   --pkg unity \
   --pkg unity-const \
-  --pkg unity-places \
   --pkg unity-private \
   $(MAINTAINER_VALAFLAGS)
 
@@ -52,6 +52,7 @@ test_unit_SOURCES = \
   test-panel-indicator-object-entry-view.vala \
   test-panel-indicator-object-view.vala \
   test-places.vala \
+  test-place.vala \
   test-unit.vala
 
 # GTester stuff
