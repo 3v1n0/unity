@@ -24,6 +24,8 @@ unity (0.2.6-0ubuntu1) UNRELEASED; urgency=low
     - don't depend on extra mutter functionality
   * debian/patches/02_make_perceptualdiff_optional.patch, debian/control:
     - remove perceptualdiff as will be optional
+  * debian/patches/03_use_new_mutter_plugin_init_order.patch:
+    - new registration order with plugins for mutter
   * debian/patches/99_autoconf.patch:
     - refresh for change in configure.ac
 
