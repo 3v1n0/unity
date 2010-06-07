@@ -31,10 +31,6 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          mutter,
          unity-asset-pool
-Recommends: unity-place-applications,
-            indicator-datetime,
-            chromium-browser,
-            ubuntu-netbook-unity-default-settings
 Provides: indicator-renderer
 Description: Unity Interface for Ubuntu Netbook Edition
  Unity is a graphical interface designed for Ubuntu Netbook Edition
