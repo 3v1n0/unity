@@ -24,7 +24,7 @@ Build-Depends: cdbs,
                libmutter-dev (>= 2.29.0-1ubuntu1dx3+r3434),
                perceptualdiff
 Standards-Version: 3.8.3
-Homepage: https://launchpad.net/ayatana
+Homepage: https://launchpad.net/unity
 
 Package: unity
 Architecture: any

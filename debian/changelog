@@ -3,6 +3,8 @@ unity (0.2.6-0ubuntu1) UNRELEASED; urgency=low
   * New upstream release.
   * add debian/watch
   * update debian/copyright
+  * debian/control:
+    - change HomePage
 
  -- Didier Roche <didrocks@ubuntu.com>  Mon, 07 Jun 2010 12:21:02 +0200
 
