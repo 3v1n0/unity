@@ -104,7 +104,7 @@ namespace Unity
     private Mutter.Plugin? _plugin;
     public  Mutter.Plugin? plugin {
       get { return _plugin; }
-      set { _plugin = value; this.real_construct (); }
+      set { _plugin = value; Idle.add (real_construct); }
     }
 
     public bool menus_swallow_events { get { return false; } }
@@ -197,7 +197,7 @@ namespace Unity
       END_FUNCTION ();
     }
 
-    private void real_construct ()
+    private bool real_construct ()
     {
       START_FUNCTION ();
       this.wm = new WindowManagement (this);
@@ -302,6 +302,8 @@ namespace Unity
 
       if (Wnck.Screen.get_default ().get_active_window () != null)
         Wnck.Screen.get_default ().get_active_window ().state_changed.connect (on_active_window_state_changed);
+
+      return false;
     }
 
     private static void on_window_activated (Wnck.Window  window,
