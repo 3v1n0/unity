@@ -8,6 +8,9 @@ unity (0.2.6-0ubuntu1) UNRELEASED; urgency=low
     - update Standards-Version
     - remove liblauncher-dev as a build-dep
     - bump buil-dep to latest
+  * debian/rules:
+    - make it more sane in ordering includes/rules
+    - fix rm *{,l}a files
 
  -- Didier Roche <didrocks@ubuntu.com>  Mon, 07 Jun 2010 12:21:02 +0200
 
