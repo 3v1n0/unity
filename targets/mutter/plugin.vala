@@ -834,30 +834,6 @@ namespace Unity
       this.window_kill_effect (this, window, events);
     }
 
-    public void topmost_size_changed (Clutter.Actor           actor,
-                                      Clutter.ActorBox        box,
-                                      Clutter.AllocationFlags flags)
-    {
-      if (actor is Mutter.Window)
-        check_fullscreen_obstruction ();
-    }
-
-    public void topmost_changed (Mutter.Window old_window,
-                                 Mutter.Window new_window)
-    {
-      if (active_window is Mutter.Window)
-        active_window.allocation_changed.disconnect (topmost_size_changed);
-
-      active_window = new_window;
-
-      if (active_window is Mutter.Window)
-        {
-          active_window.allocation_changed.connect (topmost_size_changed);
-
-          check_fullscreen_obstruction ();
-        }
-    }
-
     public int get_panel_height ()
     {
       return this.PANEL_HEIGHT;
