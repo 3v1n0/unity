@@ -13,9 +13,11 @@ unity (0.2.6-0ubuntu1) UNRELEASED; urgency=low
     - remove unsupported Breaks: transition on mutter
     - remove uneeded dep on -dev package
     - remove recommends. Will be in seed now
+    - use unity-dbg as debug package
   * debian/rules:
     - make it more sane in ordering includes/rules
     - fix rm *{,l}a files
+    - use unity-dbg as debug package
   * debian/libunity-dev.install:
     - install vapi file
   * debian/patches/01_drop_mutter_req.patch:

@@ -9,6 +9,9 @@ CFLAGS=$(shell echo $$CFLAGS | sed -e 's/\-Wall//')
 
 DEB_DH_MAKESHLIBS_ARGS = -Xusr/lib/mutter/plugins/
 
+DEB_DBG_PACKAGE_unity = unity-dbg
+DEB_DBG_PACKAGE_libunity0 = unity-dbg
+
 common-binary-post-install-arch::
 	find debian/tmp/usr/lib -name \*.la -exec rm {} \;
 	find debian/tmp/usr/lib -name \*.a -exec rm {} \;
