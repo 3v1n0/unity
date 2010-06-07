@@ -88,6 +88,8 @@ static gpointer unity_unity_icon_parent_class = NULL;
 
 void unity_rgb_to_hsv (float r, float g, float b, float* hue, float* sat, float* val);
 void unity_hsv_to_rgb (float hue, float sat, float val, float* r, float* g, float* b);
+guint unity_pixbuf_check_threshold (GdkPixbuf* source, gint x1, gint y1, gint x2, gint y2, float threshold);
+gboolean unity_pixbuf_is_tile (GdkPixbuf* source);
 void unity_get_average_color (GdkPixbuf* source, guint* red, guint* green, guint* blue);
 GType unity_unity_icon_get_type (void);
 #define UNITY_UNITY_ICON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_UNITY_ICON, UnityUnityIconPrivate))
@@ -123,8 +125,9 @@ static void unity_unity_icon_set_property (GObject * object, guint property_id, 
 
 void unity_rgb_to_hsv (float r, float g, float b, float* hue, float* sat, float* val) {
 	float min = 0.0F;
-	float max = 0.0F;
+	float max;
 	float delta;
+	max = 0.0f;
 	if (r > g) {
 		float _tmp0_ = 0.0F;
 		if (r > b) {
@@ -252,6 +255,148 @@ void unity_hsv_to_rgb (float hue, float sat, float val, float* r, float* g, floa
 }
 
 
+guint unity_pixbuf_check_threshold (GdkPixbuf* source, gint x1, gint y1, gint x2, gint y2, float threshold) {
+	guint result = 0U;
+	gint num_channels;
+	gint width;
+	gint rowstride;
+	guint total_visible_pixels;
+	guchar* _tmp0_;
+	gint _pixels_size_;
+	gint pixels_length1;
+	guchar* pixels;
+	gboolean _tmp1_ = FALSE;
+	gboolean _tmp2_ = FALSE;
+	gboolean _tmp3_ = FALSE;
+	guint i;
+	g_return_val_if_fail (source != NULL, 0U);
+	num_channels = gdk_pixbuf_get_n_channels (source);
+	width = gdk_pixbuf_get_width (source);
+	rowstride = gdk_pixbuf_get_rowstride (source);
+	total_visible_pixels = (guint) 0;
+	pixels = (_tmp0_ = gdk_pixbuf_get_pixels (source), pixels_length1 = -1, _pixels_size_ = pixels_length1, _tmp0_);
+	if (gdk_pixbuf_get_colorspace (source) != GDK_COLORSPACE_RGB) {
+		_tmp3_ = TRUE;
+	} else {
+		_tmp3_ = gdk_pixbuf_get_bits_per_sample (source) != 8;
+	}
+	if (_tmp3_) {
+		_tmp2_ = TRUE;
+	} else {
+		_tmp2_ = !gdk_pixbuf_get_has_alpha (source);
+	}
+	if (_tmp2_) {
+		_tmp1_ = TRUE;
+	} else {
+		_tmp1_ = num_channels != 4;
+	}
+	if (_tmp1_) {
+		g_warning ("icon-postprocessor.vala:148: pixbuf is not in a friendly format, can n" \
+"ot work with it");
+		result = (guint) 0;
+		return result;
+	}
+	i = (guint) 0;
+	{
+		gint yi;
+		yi = y1;
+		{
+			gboolean _tmp4_;
+			_tmp4_ = TRUE;
+			while (TRUE) {
+				if (!_tmp4_) {
+					yi++;
+				}
+				_tmp4_ = FALSE;
+				if (!(yi < y2)) {
+					break;
+				}
+				{
+					gint xi;
+					xi = x1;
+					{
+						gboolean _tmp5_;
+						_tmp5_ = TRUE;
+						while (TRUE) {
+							float pixel;
+							if (!_tmp5_) {
+								xi++;
+							}
+							_tmp5_ = FALSE;
+							if (!(xi < x2)) {
+								break;
+							}
+							pixel = pixels[(i + (xi * 4)) + 3] / 255.0f;
+							if (pixel > threshold) {
+								total_visible_pixels = total_visible_pixels + ((guint) 1);
+							}
+						}
+					}
+				}
+				i = (guint) ((yi * (width * 4)) + rowstride);
+			}
+		}
+	}
+	result = total_visible_pixels;
+	return result;
+}
+
+
+gboolean unity_pixbuf_is_tile (GdkPixbuf* source) {
+	gboolean result = FALSE;
+	gboolean is_tile;
+	gint num_channels;
+	gint width;
+	gint height;
+	guint total_visible_pixels;
+	gboolean _tmp0_ = FALSE;
+	gboolean _tmp1_ = FALSE;
+	gboolean _tmp2_ = FALSE;
+	gint height_3;
+	gint width_3;
+	gint max_pixels;
+	g_return_val_if_fail (source != NULL, FALSE);
+	is_tile = FALSE;
+	num_channels = gdk_pixbuf_get_n_channels (source);
+	width = gdk_pixbuf_get_width (source);
+	height = gdk_pixbuf_get_height (source);
+	total_visible_pixels = (guint) 0;
+	if (gdk_pixbuf_get_colorspace (source) != GDK_COLORSPACE_RGB) {
+		_tmp2_ = TRUE;
+	} else {
+		_tmp2_ = gdk_pixbuf_get_bits_per_sample (source) != 8;
+	}
+	if (_tmp2_) {
+		_tmp1_ = TRUE;
+	} else {
+		_tmp1_ = !gdk_pixbuf_get_has_alpha (source);
+	}
+	if (_tmp1_) {
+		_tmp0_ = TRUE;
+	} else {
+		_tmp0_ = num_channels != 4;
+	}
+	if (_tmp0_) {
+		g_warning ("icon-postprocessor.vala:180: pixbuf is not in a friendly format, can n" \
+"ot work with it");
+		result = FALSE;
+		return result;
+	}
+	height_3 = height / 3;
+	width_3 = width / 3;
+	total_visible_pixels = unity_pixbuf_check_threshold (source, width_3, 0, width_3 * 2, 3, 0.1f);
+	total_visible_pixels = total_visible_pixels + unity_pixbuf_check_threshold (source, width_3, height - 3, width_3 * 2, 3, 0.1f);
+	total_visible_pixels = total_visible_pixels + unity_pixbuf_check_threshold (source, 0, height_3, 3, height_3 * 2, 0.1f);
+	total_visible_pixels = total_visible_pixels + unity_pixbuf_check_threshold (source, width - 3, height_3, 3, height_3 * 2, 0.1f);
+	max_pixels = ((width_3 * 6) + (height_3 * 6)) / 3;
+	if ((total_visible_pixels / max_pixels) > 0.33333) {
+		is_tile = TRUE;
+	}
+	result = is_tile;
+	return result;
+}
+
+
 void unity_get_average_color (GdkPixbuf* source, guint* red, guint* green, guint* blue) {
 	gint num_channels;
 	gint width;
@@ -274,7 +419,11 @@ void unity_get_average_color (GdkPixbuf* source, guint* red, guint* green, guint
 	double r_total = 0.0;
 	double g_total = 0.0;
 	double b_total = 0.0;
+	double rs_total = 0.0;
+	double gs_total = 0.0;
+	double bs_total = 0.0;
 	gint i;
+	guint total_caught_pixels;
 	g_return_if_fail (source != NULL);
 	num_channels = gdk_pixbuf_get_n_channels (source);
 	width = gdk_pixbuf_get_width (source);
@@ -303,7 +452,9 @@ void unity_get_average_color (GdkPixbuf* source, guint* red, guint* green, guint
 		return;
 	}
 	r_total = g_total = b_total = 0.0;
+	rs_total = gs_total = bs_total = 0.0;
 	i = 0;
+	total_caught_pixels = (guint) 1;
 	{
 		gint y;
 		y = 0;
@@ -334,17 +485,24 @@ void unity_get_average_color (GdkPixbuf* source, guint* red, guint* green, guint
 								break;
 							}
 							pix_index = i + (x * 4);
-							r = pixels[pix_index + 0] / 256.0f;
-							g = pixels[pix_index + 1] / 256.0f;
-							b = pixels[pix_index + 2] / 256.0f;
-							a = pixels[pix_index + 3] / 256.0f;
-							if (a < (1.0 / 256.0)) {
+							r = pixels[pix_index + 0] / 255.0f;
+							g = pixels[pix_index + 1] / 255.0f;
+							b = pixels[pix_index + 2] / 255.0f;
+							a = pixels[pix_index + 3] / 255.0f;
+							if (a < 0.5) {
 								continue;
 							}
 							unity_rgb_to_hsv (r, g, b, &hue, &sat, &val);
-							r_total = r_total + ((double) ((r * sat) * a));
-							g_total = g_total + ((double) ((g * sat) * a));
-							b_total = b_total + ((double) ((b * sat) * a));
+							rs_total = rs_total + ((double) r);
+							gs_total = gs_total + ((double) g);
+							bs_total = bs_total + ((double) b);
+							if (sat <= 0.33) {
+								continue;
+							}
+							r_total = r_total + ((double) r);
+							g_total = g_total + ((double) g);
+							b_total = b_total + ((double) b);
+							total_caught_pixels = total_caught_pixels + ((guint) 1);
 						}
 					}
 				}
@@ -352,11 +510,18 @@ void unity_get_average_color (GdkPixbuf* source, guint* red, guint* green, guint
 			}
 		}
 	}
-	r_total = r_total / (width * height);
-	g_total = g_total / (width * height);
-	b_total = b_total / (width * height);
-	unity_rgb_to_hsv ((float) r_total, (float) g_total, (float) b_total, &hue, &sat, &val);
-	unity_hsv_to_rgb (hue, fminf (sat + 0.6f, 1.0f), 0.5f, &r, &g, &b);
+	r_total = r_total / MAX (total_caught_pixels, (guint) 1);
+	g_total = g_total / MAX (total_caught_pixels, (guint) 1);
+	b_total = b_total / MAX (total_caught_pixels, (guint) 1);
+	if (total_caught_pixels <= 20) {
+		unity_rgb_to_hsv ((float) rs_total, (float) gs_total, (float) bs_total, &hue, &sat, &val);
+		sat = 0.0f;
+	} else {
+		unity_rgb_to_hsv ((float) r_total, (float) g_total, (float) b_total, &hue, &sat, &val);
+		sat = fminf (sat * 0.7f, 1.0f);
+		val = fminf (val * 1.4f, 1.0f);
+	}
+	unity_hsv_to_rgb (hue, sat, val, &r, &g, &b);
 	*red = (guint) (r * 255);
 	*green = (guint) (g * 255);
 	*blue = (guint) (b * 255);
@@ -378,14 +543,14 @@ UnityUnityIcon* unity_unity_icon_new (ClutterTexture* icon, ClutterTexture* bg_t
 static void unity_unity_icon_real_get_preferred_width (ClutterActor* base, float for_height, float* minimum_width, float* natural_width) {
 	UnityUnityIcon * self;
 	self = (UnityUnityIcon*) base;
-	*natural_width = *minimum_width = (float) 48;
+	*natural_width = *minimum_width = (float) 50;
 }
 
 
 static void unity_unity_icon_real_get_preferred_height (ClutterActor* base, float for_width, float* minimum_height, float* natural_height) {
 	UnityUnityIcon * self;
 	self = (UnityUnityIcon*) base;
-	*natural_height = *minimum_height = (float) 48;
+	*natural_height = *minimum_height = (float) 50;
 }
 
 
@@ -435,10 +600,11 @@ void unity_unity_icon_paint_real (ClutterActor* actor) {
 	cogl_material_set_color4ub (_self_->priv->bgcol_material, opacity, opacity, opacity, opacity);
 	cogl_material_set_color4ub (_self_->priv->icon_material, opacity, opacity, opacity, opacity);
 	cogl_material_set_color4ub (_self_->priv->fg_mat, opacity, opacity, opacity, opacity);
-	cogl_set_source (_self_->priv->bg_mat);
-	cogl_rectangle (box.x1, box.y1, box.x2, box.y2);
 	if (CLUTTER_IS_TEXTURE (_self_->priv->_bg_color)) {
 		cogl_set_source (_self_->priv->bgcol_material);
+		cogl_rectangle (box.x1, box.y1, box.x2, box.y2);
+	} else {
+		cogl_set_source (_self_->priv->bg_mat);
 		cogl_rectangle (box.x1, box.y1, box.x2, box.y2);
 	}
 	if (CLUTTER_IS_TEXTURE (_self_->priv->_icon)) {
@@ -611,7 +777,7 @@ static GObject * unity_unity_icon_constructor (GType type, guint n_construct_pro
 			color = (CoglHandle*) clutter_texture_get_cogl_texture (self->priv->_bg_color);
 			mask_tex = (CoglHandle*) clutter_texture_get_cogl_texture (unity_unity_icon_mk_layer);
 			cogl_material_set_layer (self->priv->bgcol_material, 0, color);
-			cogl_material_set_layer_filters (self->priv->bgcol_material, 1, COGL_MATERIAL_FILTER_NEAREST, COGL_MATERIAL_FILTER_NEAREST);
+			cogl_material_set_layer_filters (self->priv->bgcol_material, 1, COGL_MATERIAL_FILTER_LINEAR, COGL_MATERIAL_FILTER_LINEAR);
 			cogl_material_set_layer (self->priv->bgcol_material, 1, mask_tex);
 			_cogl_handle_unref0 (color);
 			_cogl_handle_unref0 (mask_tex);

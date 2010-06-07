@@ -162,8 +162,8 @@ enum  {
 UnityLauncherScrollerController* unity_launcher_scroller_controller_new (UnityLauncherScrollerModel* _model, UnityLauncherScrollerView* _view);
 UnityLauncherScrollerController* unity_launcher_scroller_controller_construct (GType object_type, UnityLauncherScrollerModel* _model, UnityLauncherScrollerView* _view);
 static void unity_launcher_scroller_controller_handle_bamf_view_opened (UnityLauncherScrollerController* self, GObject* object);
-static void _lambda14_ (BamfView* a, gboolean changed, UnityLauncherScrollerController* self);
-static void __lambda14__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self);
+static void _lambda17_ (BamfView* a, gboolean changed, UnityLauncherScrollerController* self);
+static void __lambda17__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self);
 GType unity_launcher_application_controller_get_type (void);
 static UnityLauncherApplicationController* unity_launcher_scroller_controller_find_controller_by_desktop_file (UnityLauncherScrollerController* self, const char* desktop_file);
 void unity_launcher_application_controller_attach_application (UnityLauncherApplicationController* self, BamfApplication* application);
@@ -182,8 +182,8 @@ GType unity_launcher_pin_type_get_type (void);
 void unity_launcher_scroller_model_remove (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
 static void unity_launcher_scroller_controller_build_favorites (UnityLauncherScrollerController* self);
 static void unity_launcher_scroller_controller_on_favorite_added (UnityLauncherScrollerController* self, const char* uid);
-static void unity_launcher_scroller_controller_on_favorite_removed (UnityLauncherScrollerController* self, const char* uid);
-static gboolean unity_launcher_scroller_controller_desktop_file_is_favorite (UnityLauncherScrollerController* self, const char* desktop_file);
+void unity_launcher_scroller_controller_on_favorite_removed (UnityLauncherScrollerController* self, const char* uid);
+gboolean unity_launcher_scroller_controller_desktop_file_is_favorite (UnityLauncherScrollerController* self, const char* desktop_file);
 const char* unity_launcher_application_controller_get_desktop_file (UnityLauncherApplicationController* self);
 static void unity_launcher_scroller_controller_on_unity_drag_motion (UnityLauncherScrollerController* self, UnityDragModel* drag_model, float x, float y);
 static void _unity_launcher_scroller_controller_on_unity_drag_motion_unity_drag_controller_drag_motion (UnityDragController* _sender, UnityDragModel* model, float x, float y, gpointer self);
@@ -227,7 +227,7 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static void _lambda14_ (BamfView* a, gboolean changed, UnityLauncherScrollerController* self) {
+static void _lambda17_ (BamfView* a, gboolean changed, UnityLauncherScrollerController* self) {
 	g_return_if_fail (a != NULL);
 	if (changed) {
 		BamfView* _tmp0_;
@@ -236,8 +236,8 @@ static void _lambda14_ (BamfView* a, gboolean changed, UnityLauncherScrollerCont
 }
 
 
-static void __lambda14__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self) {
-	_lambda14_ (_sender, object, self);
+static void __lambda17__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self) {
+	_lambda17_ (_sender, object, self);
 }
 
 
@@ -259,7 +259,7 @@ static void unity_launcher_scroller_controller_handle_bamf_view_opened (UnityLau
 			_g_object_unref0 (app);
 			return;
 		}
-		g_signal_connect_object ((BamfView*) app, "user-visible-changed", (GCallback) __lambda14__bamf_view_user_visible_changed, self, 0);
+		g_signal_connect_object ((BamfView*) app, "user-visible-changed", (GCallback) __lambda17__bamf_view_user_visible_changed, self, 0);
 		if (bamf_view_user_visible ((BamfView*) app)) {
 			char* desktop_file;
 			desktop_file = g_strdup (bamf_application_get_desktop_file (app));
@@ -376,13 +376,13 @@ static void unity_launcher_scroller_controller_on_favorite_added (UnityLauncherS
 }
 
 
-static void unity_launcher_scroller_controller_on_favorite_removed (UnityLauncherScrollerController* self, const char* uid) {
+void unity_launcher_scroller_controller_on_favorite_removed (UnityLauncherScrollerController* self, const char* uid) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (uid != NULL);
 }
 
 
-static gboolean unity_launcher_scroller_controller_desktop_file_is_favorite (UnityLauncherScrollerController* self, const char* desktop_file) {
+gboolean unity_launcher_scroller_controller_desktop_file_is_favorite (UnityLauncherScrollerController* self, const char* desktop_file) {
 	gboolean result = FALSE;
 	UnityFavorites* favorites;
 	GeeArrayList* favorite_list;
@@ -518,9 +518,9 @@ static void unity_launcher_scroller_controller_on_unity_drag_motion (UnityLaunch
 		gint model_index;
 		model_index = unity_launcher_scroller_view_get_model_index_at_y_pos (self->priv->_view, y);
 		if (unity_launcher_scroller_model_contains (self->priv->_model, retcont)) {
-			unity_launcher_scroller_model_move (self->priv->_model, retcont, model_index - 1);
+			unity_launcher_scroller_model_move (self->priv->_model, retcont, MAX (model_index - 1, 0));
 		} else {
-			unity_launcher_scroller_model_insert (self->priv->_model, retcont, model_index - 1);
+			unity_launcher_scroller_model_insert (self->priv->_model, retcont, MAX (model_index - 1, 0));
 		}
 		clutter_actor_queue_redraw ((ClutterActor*) self->priv->_view);
 	}

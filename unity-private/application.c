@@ -297,7 +297,9 @@ void unity_application_set_shell (UnityApplication* self, UnityShell* value) {
 
 
 static UniqueResponse _unity_application_on_message_received_unique_app_message_received (UniqueApp* _sender, gint command, UniqueMessageData* message_data, guint time_, gpointer self) {
-	return unity_application_on_message_received (self, command, message_data, time_);
+	UniqueResponse result;
+	result = unity_application_on_message_received (self, command, message_data, time_);
+	return result;
 }
 
 

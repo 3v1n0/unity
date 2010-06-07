@@ -55,6 +55,8 @@ struct _UnityShellIface {
 	ClutterStage* (*get_stage) (UnityShell* self);
 	void (*show_unity) (UnityShell* self);
 	gint (*get_indicators_width) (UnityShell* self);
+	gint (*get_launcher_width_foobar) (UnityShell* self);
+	gint (*get_panel_height_foobar) (UnityShell* self);
 	void (*ensure_input_region) (UnityShell* self);
 	void (*add_fullscreen_request) (UnityShell* self, GObject* o);
 	gboolean (*remove_fullscreen_request) (UnityShell* self, GObject* o);
@@ -78,6 +80,8 @@ UnityShellMode unity_shell_get_mode (UnityShell* self);
 ClutterStage* unity_shell_get_stage (UnityShell* self);
 void unity_shell_show_unity (UnityShell* self);
 gint unity_shell_get_indicators_width (UnityShell* self);
+gint unity_shell_get_launcher_width_foobar (UnityShell* self);
+gint unity_shell_get_panel_height_foobar (UnityShell* self);
 void unity_shell_ensure_input_region (UnityShell* self);
 void unity_shell_add_fullscreen_request (UnityShell* self, GObject* o);
 gboolean unity_shell_remove_fullscreen_request (UnityShell* self, GObject* o);
@@ -132,6 +136,16 @@ void unity_shell_show_unity (UnityShell* self) {
 
 gint unity_shell_get_indicators_width (UnityShell* self) {
 	return UNITY_SHELL_GET_INTERFACE (self)->get_indicators_width (self);
+}
+
+
+gint unity_shell_get_launcher_width_foobar (UnityShell* self) {
+	return UNITY_SHELL_GET_INTERFACE (self)->get_launcher_width_foobar (self);
+}
+
+
+gint unity_shell_get_panel_height_foobar (UnityShell* self) {
+	return UNITY_SHELL_GET_INTERFACE (self)->get_panel_height_foobar (self);
 }
 
 

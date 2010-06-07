@@ -171,11 +171,11 @@ namespace Unity.Launcher
         }
     }
 
-    private void on_favorite_removed (string uid)
+    public void on_favorite_removed (string uid)
     {
     }
 
-    private bool desktop_file_is_favorite (string desktop_file)
+    public bool desktop_file_is_favorite (string desktop_file)
     {
       var favorites = Unity.Favorites.get_default ();
 
@@ -251,9 +251,9 @@ namespace Unity.Launcher
           // find the index at this position
           int model_index = view.get_model_index_at_y_pos (y);
           if (retcont in model)
-            model.move (retcont, model_index - 1);
+            model.move (retcont, int.max (model_index - 1, 0));
           else
-            model.insert (retcont, model_index - 1);
+            model.insert (retcont, int.max (model_index - 1, 0));
 
           view.do_queue_redraw ();
         }

@@ -146,10 +146,10 @@ static void unity_launcher_quicklist_controller_on_unity_drag_start (UnityLaunch
 UnityLauncherQuicklistMenu* unity_launcher_quicklist_menu_new (void);
 UnityLauncherQuicklistMenu* unity_launcher_quicklist_menu_construct (GType object_type);
 GType unity_launcher_quicklist_menu_get_type (void);
-static void _lambda6_ (UnityLauncherQuicklistController* self);
-static void __lambda6__clutter_actor_destroy (ClutterActor* _sender, gpointer self);
-static void _lambda7_ (UnityLauncherQuicklistController* self);
-static void __lambda7__clutter_actor_destroy (ClutterActor* _sender, gpointer self);
+static void _lambda9_ (UnityLauncherQuicklistController* self);
+static void __lambda9__clutter_actor_destroy (ClutterActor* _sender, gpointer self);
+static void _lambda10_ (UnityLauncherQuicklistController* self);
+static void __lambda10__clutter_actor_destroy (ClutterActor* _sender, gpointer self);
 UnityLauncherQuicklistMenuItem* unity_launcher_quicklist_menu_item_new (const char* label);
 UnityLauncherQuicklistMenuItem* unity_launcher_quicklist_menu_item_construct (GType object_type, const char* label);
 GType unity_launcher_quicklist_menu_item_get_type (void);
@@ -205,23 +205,25 @@ static void unity_launcher_quicklist_controller_on_unity_drag_start (UnityLaunch
 }
 
 
-static void _lambda6_ (UnityLauncherQuicklistController* self) {
-	g_signal_emit_by_name (self, "menu-state-changed", FALSE);
+static void _lambda9_ (UnityLauncherQuicklistController* self) {
+	if (self->is_in_menu) {
+		g_signal_emit_by_name (self, "menu-state-changed", FALSE);
+	}
 }
 
 
-static void __lambda6__clutter_actor_destroy (ClutterActor* _sender, gpointer self) {
-	_lambda6_ (self);
+static void __lambda9__clutter_actor_destroy (ClutterActor* _sender, gpointer self) {
+	_lambda9_ (self);
 }
 
 
-static void _lambda7_ (UnityLauncherQuicklistController* self) {
+static void _lambda10_ (UnityLauncherQuicklistController* self) {
 	unity_shell_remove_fullscreen_request (unity_global_shell, (GObject*) self);
 }
 
 
-static void __lambda7__clutter_actor_destroy (ClutterActor* _sender, gpointer self) {
-	_lambda7_ (self);
+static void __lambda10__clutter_actor_destroy (ClutterActor* _sender, gpointer self) {
+	_lambda10_ (self);
 }
 
 
@@ -244,9 +246,9 @@ void unity_launcher_quicklist_controller_show_label (UnityLauncherQuicklistContr
 		clutter_actor_destroy ((ClutterActor*) self->menu);
 	}
 	menu = (_tmp0_ = g_object_ref_sink (unity_launcher_quicklist_menu_new ()), CTK_IS_MENU (_tmp0_) ? ((CtkMenu*) _tmp0_) : NULL);
-	g_signal_connect_object ((ClutterActor*) menu, "destroy", (GCallback) __lambda6__clutter_actor_destroy, self, 0);
+	g_signal_connect_object ((ClutterActor*) menu, "destroy", (GCallback) __lambda9__clutter_actor_destroy, self, 0);
 	self->menu = menu;
-	g_signal_connect_object ((ClutterActor*) self->menu, "destroy", (GCallback) __lambda7__clutter_actor_destroy, self, 0);
+	g_signal_connect_object ((ClutterActor*) self->menu, "destroy", (GCallback) __lambda10__clutter_actor_destroy, self, 0);
 	ctk_menu_set_swallow_clicks (self->menu, unity_shell_get_menus_swallow_events (unity_global_shell));
 	ctk_menu_set_detect_clicks (self->menu, FALSE);
 	menuitem = g_object_ref_sink (unity_launcher_quicklist_menu_item_new (label));
@@ -341,11 +343,11 @@ void unity_launcher_quicklist_controller_show_menu (UnityLauncherQuicklistContro
 
 void unity_launcher_quicklist_controller_close_menu (UnityLauncherQuicklistController* self) {
 	g_return_if_fail (self != NULL);
-	self->is_in_label = FALSE;
-	self->is_in_menu = FALSE;
 	if (CTK_IS_MENU (self->menu)) {
 		clutter_actor_destroy ((ClutterActor*) self->menu);
 	}
+	self->is_in_label = FALSE;
+	self->is_in_menu = FALSE;
 }
 
 

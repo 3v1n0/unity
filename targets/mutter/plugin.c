@@ -214,7 +214,7 @@ enum  {
 	UNITY_PLUGIN_MENUS_SWALLOW_EVENTS,
 	UNITY_PLUGIN_EXPOSE_SHOWING
 };
-#define UNITY_PLUGIN_PANEL_HEIGHT 23
+#define UNITY_PLUGIN_PANEL_HEIGHT 24
 #define UNITY_PLUGIN_QUICKLAUNCHER_WIDTH 58
 UnityWindowManagement* unity_window_management_new (UnityPlugin* p);
 UnityWindowManagement* unity_window_management_construct (GType object_type, UnityPlugin* p);
@@ -284,6 +284,8 @@ static void _unity_plugin_topmost_size_changed_clutter_actor_allocation_changed 
 void unity_plugin_topmost_changed (UnityPlugin* self, MutterWindow* old_window, MutterWindow* new_window);
 gint unity_plugin_get_panel_height (UnityPlugin* self);
 gint unity_plugin_get_launcher_width (UnityPlugin* self);
+static gint unity_plugin_real_get_panel_height_foobar (UnityShell* base);
+static gint unity_plugin_real_get_launcher_width_foobar (UnityShell* base);
 UnityPlugin* unity_plugin_new (void);
 UnityPlugin* unity_plugin_construct (GType object_type);
 void unity_plugin_set_plugin (UnityPlugin* self, MutterPlugin* value);
@@ -468,7 +470,9 @@ static gboolean _lambda2_ (UnityPlugin* self) {
 
 
 static gboolean __lambda2__gsource_func (gpointer self) {
-	return _lambda2_ (self);
+	gboolean result;
+	result = _lambda2_ (self);
+	return result;
 }
 
 
@@ -1066,10 +1070,7 @@ static void unity_plugin_real_show_unity (UnityShell* base) {
 	UnityPlugin * self;
 	self = (UnityPlugin*) base;
 	if (self->priv->places_enabled == FALSE) {
-		WnckScreen* screen;
-		screen = _g_object_ref0 (wnck_screen_get_default ());
-		wnck_screen_toggle_showing_desktop (screen, !wnck_screen_get_showing_desktop (screen));
-		_g_object_unref0 (screen);
+		unity_shell_show_window_picker ((UnityShell*) self);
 		return;
 	}
 	if (self->priv->places_showing) {
@@ -1230,6 +1231,24 @@ gint unity_plugin_get_launcher_width (UnityPlugin* self) {
 	gint result = 0;
 	g_return_val_if_fail (self != NULL, 0);
 	result = UNITY_PLUGIN_QUICKLAUNCHER_WIDTH;
+	return result;
+}
+
+
+static gint unity_plugin_real_get_panel_height_foobar (UnityShell* base) {
+	UnityPlugin * self;
+	gint result = 0;
+	self = (UnityPlugin*) base;
+	result = unity_plugin_get_panel_height (self);
+	return result;
+}
+
+
+static gint unity_plugin_real_get_launcher_width_foobar (UnityShell* base) {
+	UnityPlugin * self;
+	gint result = 0;
+	self = (UnityPlugin*) base;
+	result = unity_plugin_get_launcher_width (self);
 	return result;
 }
 
@@ -1415,6 +1434,8 @@ static void unity_plugin_unity_shell_interface_init (UnityShellIface * iface) {
 	iface->get_indicators_width = unity_plugin_real_get_indicators_width;
 	iface->show_unity = unity_plugin_real_show_unity;
 	iface->grab_keyboard = unity_plugin_real_grab_keyboard;
+	iface->get_panel_height_foobar = unity_plugin_real_get_panel_height_foobar;
+	iface->get_launcher_width_foobar = unity_plugin_real_get_launcher_width_foobar;
 	iface->get_menus_swallow_events = unity_plugin_real_get_menus_swallow_events;
 }
 

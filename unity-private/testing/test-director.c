@@ -52,6 +52,7 @@ struct _UnityTestingDirectorClass {
 
 struct _UnityTestingDirectorPrivate {
 	ClutterStage* _stage;
+	gboolean break_loop;
 };
 
 
@@ -66,7 +67,11 @@ enum  {
 UnityTestingDirector* unity_testing_director_new (ClutterStage* stage);
 UnityTestingDirector* unity_testing_director_construct (GType object_type, ClutterStage* stage);
 static void unity_testing_director_do_event (UnityTestingDirector* self, ClutterActor* actor, ClutterEvent* event, gboolean capture_phase);
-void unity_testing_director_button_press (UnityTestingDirector* self, ClutterActor* actor, guint32 button, gboolean autorelease, float relative_x, float relative_y);
+void unity_testing_director_do_wait_for_animation (UnityTestingDirector* self, ClutterActor* actor);
+static gboolean _lambda18_ (UnityTestingDirector* self);
+static gboolean __lambda18__gsource_func (gpointer self);
+void unity_testing_director_do_wait_for_timeout (UnityTestingDirector* self, guint32 msecs);
+void unity_testing_director_button_press (UnityTestingDirector* self, ClutterActor* actor, guint32 button, gboolean autorelease, float relative_x, float relative_y, gboolean wait_for_animation);
 void unity_testing_director_button_release (UnityTestingDirector* self, ClutterActor* actor, guint32 button, float relative_x, float relative_y);
 void unity_testing_director_enter_event (UnityTestingDirector* self, ClutterActor* actor, float relative_x, float relative_y);
 void unity_testing_director_leave_event (UnityTestingDirector* self, ClutterActor* actor, float relative_x, float relative_y);
@@ -106,7 +111,61 @@ static void unity_testing_director_do_event (UnityTestingDirector* self, Clutter
 }
 
 
-void unity_testing_director_button_press (UnityTestingDirector* self, ClutterActor* actor, guint32 button, gboolean autorelease, float relative_x, float relative_y) {
+static gpointer _g_object_ref0 (gpointer self) {
+	return self ? g_object_ref (self) : NULL;
+}
+
+
+void unity_testing_director_do_wait_for_animation (UnityTestingDirector* self, ClutterActor* actor) {
+	ClutterAnimation* anim;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (actor != NULL);
+	anim = _g_object_ref0 (clutter_actor_get_animation (actor));
+	while (TRUE) {
+		gboolean _tmp0_ = FALSE;
+		if (CLUTTER_IS_ANIMATION (anim)) {
+			_tmp0_ = clutter_timeline_is_playing (clutter_animation_get_timeline (anim));
+		} else {
+			_tmp0_ = FALSE;
+		}
+		if (!_tmp0_) {
+			break;
+		}
+		gtk_main_iteration ();
+	}
+	_g_object_unref0 (anim);
+}
+
+
+static gboolean _lambda18_ (UnityTestingDirector* self) {
+	gboolean result = FALSE;
+	self->priv->break_loop = TRUE;
+	result = FALSE;
+	return result;
+}
+
+
+static gboolean __lambda18__gsource_func (gpointer self) {
+	gboolean result;
+	result = _lambda18_ (self);
+	return result;
+}
+
+
+void unity_testing_director_do_wait_for_timeout (UnityTestingDirector* self, guint32 msecs) {
+	g_return_if_fail (self != NULL);
+	self->priv->break_loop = FALSE;
+	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) msecs, __lambda18__gsource_func, g_object_ref (self), g_object_unref);
+	while (TRUE) {
+		if (!(self->priv->break_loop != TRUE)) {
+			break;
+		}
+		gtk_main_iteration ();
+	}
+}
+
+
+void unity_testing_director_button_press (UnityTestingDirector* self, ClutterActor* actor, guint32 button, gboolean autorelease, float relative_x, float relative_y, gboolean wait_for_animation) {
 	float actor_x = 0.0F;
 	float actor_y = 0.0F;
 	ClutterButtonEvent event = {0};
@@ -125,11 +184,17 @@ void unity_testing_director_button_press (UnityTestingDirector* self, ClutterAct
 	event.y = actor_y + relative_y;
 	event.button = button;
 	unity_testing_director_do_event (self, actor, (_tmp1_ = (ClutterEvent) event, &_tmp1_), FALSE);
+	if (wait_for_animation) {
+		unity_testing_director_do_wait_for_animation (self, actor);
+	}
 	if (autorelease) {
 		ClutterEvent _tmp2_;
 		event.type = CLUTTER_BUTTON_RELEASE;
 		event.time = clutter_get_current_event_time ();
 		unity_testing_director_do_event (self, actor, (_tmp2_ = (ClutterEvent) event, &_tmp2_), FALSE);
+		if (wait_for_animation) {
+			unity_testing_director_do_wait_for_animation (self, actor);
+		}
 	}
 }
 
@@ -212,11 +277,6 @@ ClutterStage* unity_testing_director_get_stage (UnityTestingDirector* self) {
 }
 
 
-static gpointer _g_object_ref0 (gpointer self) {
-	return self ? g_object_ref (self) : NULL;
-}
-
-
 static void unity_testing_director_set_stage (UnityTestingDirector* self, ClutterStage* value) {
 	ClutterStage* _tmp0_;
 	g_return_if_fail (self != NULL);
@@ -251,6 +311,7 @@ static void unity_testing_director_class_init (UnityTestingDirectorClass * klass
 
 static void unity_testing_director_instance_init (UnityTestingDirector * self) {
 	self->priv = UNITY_TESTING_DIRECTOR_GET_PRIVATE (self);
+	self->priv->break_loop = FALSE;
 }
 
 

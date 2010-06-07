@@ -306,7 +306,7 @@ void unity_places_controller_load_remote_places (UnityPlacesController* self) {
 		GFileInfo* file_info;
 		enumerator = g_file_enumerate_children (dir, G_FILE_ATTRIBUTE_STANDARD_NAME, 0, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch10_g_error;
+			goto __catch7_g_error;
 		}
 		file_info = NULL;
 		while (TRUE) {
@@ -319,7 +319,7 @@ void unity_places_controller_load_remote_places (UnityPlacesController* self) {
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (enumerator);
 				_g_object_unref0 (file_info);
-				goto __catch10_g_error;
+				goto __catch7_g_error;
 			}
 			if (!((file_info = (_tmp1_ = _tmp0_, _g_object_unref0 (file_info), _tmp1_)) != NULL)) {
 				break;
@@ -331,8 +331,8 @@ void unity_places_controller_load_remote_places (UnityPlacesController* self) {
 		_g_object_unref0 (enumerator);
 		_g_object_unref0 (file_info);
 	}
-	goto __finally10;
-	__catch10_g_error:
+	goto __finally7;
+	__catch7_g_error:
 	{
 		GError * _error_;
 		_error_ = _inner_error_;
@@ -344,7 +344,7 @@ void unity_places_controller_load_remote_places (UnityPlacesController* self) {
 			_g_error_free0 (_error_);
 		}
 	}
-	__finally10:
+	__finally7:
 	if (_inner_error_ != NULL) {
 		_g_free0 (placesdir);
 		_g_object_unref0 (dir);
@@ -375,29 +375,29 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 		UnityPlacesPlace* place;
 		g_key_file_load_from_file (file, filename, G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch11_g_error;
+			goto __catch8_g_error;
 		}
 		name = g_key_file_get_string (file, group, "Name", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch11_g_error;
+			goto __catch8_g_error;
 		}
 		comment = g_key_file_get_string (file, group, "Comment", &_inner_error_);
 		if (_inner_error_ != NULL) {
 			_g_free0 (name);
-			goto __catch11_g_error;
+			goto __catch8_g_error;
 		}
 		icon_name = g_key_file_get_string (file, group, "Icon", &_inner_error_);
 		if (_inner_error_ != NULL) {
 			_g_free0 (name);
 			_g_free0 (comment);
-			goto __catch11_g_error;
+			goto __catch8_g_error;
 		}
 		dbus_name = g_key_file_get_string (file, group, "DBusName", &_inner_error_);
 		if (_inner_error_ != NULL) {
 			_g_free0 (name);
 			_g_free0 (comment);
 			_g_free0 (icon_name);
-			goto __catch11_g_error;
+			goto __catch8_g_error;
 		}
 		dbus_path = g_key_file_get_string (file, group, "DBusObjectPath", &_inner_error_);
 		if (_inner_error_ != NULL) {
@@ -405,7 +405,7 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 			_g_free0 (comment);
 			_g_free0 (icon_name);
 			_g_free0 (dbus_name);
-			goto __catch11_g_error;
+			goto __catch8_g_error;
 		}
 		place = (UnityPlacesPlace*) unity_places_place_proxy_new (name, icon_name, comment, dbus_name, dbus_path);
 		if (UNITY_PLACES_IS_PLACE (place)) {
@@ -419,8 +419,8 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 		_g_free0 (dbus_path);
 		_g_object_unref0 (place);
 	}
-	goto __finally11;
-	__catch11_g_error:
+	goto __finally8;
+	__catch8_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -432,7 +432,7 @@ static void unity_places_controller_load_place (UnityPlacesController* self, con
 			_g_error_free0 (e);
 		}
 	}
-	__finally11:
+	__finally8:
 	if (_inner_error_ != NULL) {
 		_g_free0 (group);
 		_g_key_file_free0 (file);
@@ -484,7 +484,9 @@ static void unity_places_controller_set_shell (UnityPlacesController* self, Unit
 
 
 static gboolean _unity_places_controller_load_places_gsource_func (gpointer self) {
-	return unity_places_controller_load_places (self);
+	gboolean result;
+	result = unity_places_controller_load_places (self);
+	return result;
 }
 
 

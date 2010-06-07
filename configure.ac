@@ -1,6 +1,6 @@
 m4_define([unity_major], [0])
 m4_define([unity_minor], [2])
-m4_define([unity_micro], [4])
+m4_define([unity_micro], [6])
 
 m4_define([unity_api],
           [unity_major.unity_minor])
@@ -82,7 +82,7 @@ MAINTAINER_CFLAGS=""
 MAINTAINER_VALAFLAGS=""
 AS_IF([test "x$enable_maintainer_flags" = "xyes" && test "x$GCC" = "xyes"],
       [
-        MAINTAINER_CFLAGS="-g -Werror -Wshadow -Wcast-align -Wno-uninitialized -Wempty-body -Wformat-security -Winit-self"
+        MAINTAINER_CFLAGS="-g -Werror -Wcast-align -Wno-uninitialized -Wempty-body -Wformat-security -Winit-self"
         MAINTAINER_VALAFLAGS="-g --save-temps"
       ]
 )

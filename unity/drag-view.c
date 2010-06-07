@@ -102,7 +102,9 @@ UnityDragView* unity_drag_view_new (ClutterStage* stage) {
 
 
 static gboolean _unity_drag_view_captured_event_clutter_actor_captured_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_drag_view_captured_event (self, event);
+	gboolean result;
+	result = unity_drag_view_captured_event (self, event);
+	return result;
 }
 
 
@@ -150,7 +152,9 @@ static gboolean unity_drag_view_captured_event (UnityDragView* self, ClutterEven
 
 
 static gboolean _unity_drag_view_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_drag_view_on_motion_event (self, event);
+	gboolean result;
+	result = unity_drag_view_on_motion_event (self, event);
+	return result;
 }
 
 
@@ -186,7 +190,9 @@ static gboolean unity_drag_view_on_motion_event (UnityDragView* self, ClutterEve
 
 
 static gboolean _unity_drag_view_on_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_drag_view_on_release_event (self, event);
+	gboolean result;
+	result = unity_drag_view_on_release_event (self, event);
+	return result;
 }
 
 

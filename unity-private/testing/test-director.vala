@@ -25,6 +25,8 @@ namespace Unity.Testing
         get;
         construct;
     }
+    
+    private bool break_loop = false;
 
     public Director (Clutter.Stage stage)
     {
@@ -45,11 +47,34 @@ namespace Unity.Testing
         Gtk.main_iteration ();
     }
 
+    public void do_wait_for_animation (Clutter.Actor actor)
+    {
+      Clutter.Animation? anim = actor.get_animation ();
+
+      while (anim is Clutter.Animation
+             && anim.timeline.is_playing ())
+        {
+          Gtk.main_iteration ();
+        }
+    }
+    
+    public void do_wait_for_timeout (uint32 msecs)
+    {
+      break_loop = false;
+      GLib.Timeout.add (msecs,
+                        () => { this.break_loop = true; return false; });
+      while (break_loop != true)
+        {
+          Gtk.main_iteration ();
+        }                
+    }
+    
     public void button_press (Clutter.Actor actor,
                               uint32        button,
                               bool          autorelease,
                               float         relative_x,
-                              float         relative_y)
+                              float         relative_y,
+                              bool          wait_for_animation)
     {
       float actor_x, actor_y;
       Clutter.ButtonEvent event = Clutter.ButtonEvent ();
@@ -66,13 +91,20 @@ namespace Unity.Testing
       event.button = button;
 
       do_event (actor, (Clutter.Event)event, false);
-
+      
+      if (wait_for_animation)
+        do_wait_for_animation(actor);
+      
       if (autorelease)
         {
           event.type = Clutter.EventType.BUTTON_RELEASE;
           event.time = Clutter.get_current_event_time ();
 
           do_event (actor, (Clutter.Event)event, false);
+          
+          if (wait_for_animation)
+            do_wait_for_animation(actor);
+
         }
     }
 

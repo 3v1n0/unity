@@ -167,7 +167,9 @@ namespace Unity {
 		public abstract void ensure_input_region ();
 		public abstract void expose_xids (GLib.Array<uint32> xids);
 		public abstract int get_indicators_width ();
+		public abstract int get_launcher_width_foobar ();
 		public abstract Unity.ShellMode get_mode ();
+		public abstract int get_panel_height_foobar ();
 		public abstract Clutter.Stage get_stage ();
 		public abstract void grab_keyboard (bool grab, uint32 timestamp);
 		public abstract bool remove_fullscreen_request (GLib.Object o);
@@ -201,6 +203,8 @@ namespace Unity {
 	public static void hsv_to_rgb (float hue, float sat, float val, out float r, out float g, out float b);
 	[CCode (cheader_filename = "unity.h")]
 	public static bool icon_name_exists_in_theme (string icon_name, string theme);
+	[CCode (cheader_filename = "unity.h")]
+	public static bool pixbuf_is_tile (Gdk.Pixbuf source);
 	[CCode (cheader_filename = "unity.h")]
 	public static void rgb_to_hsv (float r, float g, float b, out float hue, out float sat, out float val);
 }

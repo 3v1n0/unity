@@ -105,6 +105,8 @@ struct _UnityShellIface {
 	ClutterStage* (*get_stage) (UnityShell* self);
 	void (*show_unity) (UnityShell* self);
 	gint (*get_indicators_width) (UnityShell* self);
+	gint (*get_launcher_width_foobar) (UnityShell* self);
+	gint (*get_panel_height_foobar) (UnityShell* self);
 	void (*ensure_input_region) (UnityShell* self);
 	void (*add_fullscreen_request) (UnityShell* self, GObject* o);
 	gboolean (*remove_fullscreen_request) (UnityShell* self, GObject* o);

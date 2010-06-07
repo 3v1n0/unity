@@ -486,17 +486,23 @@ static void __unity_launcher_quicklist_menu_item_on_label_changed_g_object_notif
 
 
 static gboolean __unity_launcher_quicklist_menu_item_on_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return _unity_launcher_quicklist_menu_item_on_enter (self, event);
+	gboolean result;
+	result = _unity_launcher_quicklist_menu_item_on_enter (self, event);
+	return result;
 }
 
 
 static gboolean __unity_launcher_quicklist_menu_item_on_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return _unity_launcher_quicklist_menu_item_on_leave (self, event);
+	gboolean result;
+	result = _unity_launcher_quicklist_menu_item_on_leave (self, event);
+	return result;
 }
 
 
 static gboolean __unity_launcher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return _unity_launcher_quicklist_menu_item_on_mouse_down (self, event);
+	gboolean result;
+	result = _unity_launcher_quicklist_menu_item_on_mouse_down (self, event);
+	return result;
 }
 
 
