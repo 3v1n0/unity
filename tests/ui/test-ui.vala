@@ -91,6 +91,7 @@ public class Main
     QuicklistSuite  quicklist_suite;
     HomeButtonSuite home_button_suite;
     //AutomationBasicTestSuite basic_test_suite;
+    IndicatorTestSuite indicator_test_suite;
 
 
     Environment.set_variable ("UNITY_DISABLE_TRAY", "1", true);
@@ -108,6 +109,7 @@ public class Main
     //basic_test_suite = new AutomationBasicTestSuite ();
     quicklist_suite = new QuicklistSuite ();
     home_button_suite = new HomeButtonSuite ();
+    indicator_test_suite = new IndicatorTestSuite ();
 
     Timeout.add_seconds (3, ()=> {
       Test.run ();
