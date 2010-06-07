@@ -290,10 +290,18 @@ namespace Unity.Launcher
       if (icon is Gdk.Pixbuf)
         {
           Gdk.Pixbuf scaled_buf;
-          if (icon.get_width () > 48 || icon.get_height () > 48)
-            scaled_buf = icon.scale_simple (48, 48, Gdk.InterpType.HYPER);
+          int max_size = 48;
+          if (!Unity.pixbuf_is_tile (icon))
+            max_size = 40;
+
+          if (icon.get_width () > max_size || icon.get_height () > max_size)
+            {
+              scaled_buf = icon.scale_simple (max_size, max_size, Gdk.InterpType.HYPER);
+            }
           else
-            scaled_buf = icon;
+            {
+              scaled_buf = icon;
+            }
 
           Gdk.Pixbuf color_buf = new Gdk.Pixbuf (Gdk.Colorspace.RGB, true, 8, 1, 1);
           uint red, green, blue;
@@ -302,7 +310,7 @@ namespace Unity.Launcher
           pixels[0] = (uchar)red;
           pixels[1] = (uchar)green;
           pixels[2] = (uchar)blue;
-          pixels[3] = 128;
+          pixels[3] = 255;
 
           var tex = GtkClutter.texture_new_from_pixbuf (scaled_buf);
           var color = GtkClutter.texture_new_from_pixbuf (color_buf);

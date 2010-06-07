@@ -62,7 +62,10 @@ namespace Unity.Launcher
         this.menu.destroy ();
 
       var menu = new QuicklistMenu () as Ctk.Menu;
-      menu.destroy.connect (() => { menu_state_changed (false); });
+      menu.destroy.connect (() => {
+        if (is_in_menu)
+          menu_state_changed (false);
+      });
       this.menu = menu;
       this.menu.destroy.connect (() => {
         Unity.global_shell.remove_fullscreen_request (this);
@@ -128,12 +131,12 @@ namespace Unity.Launcher
 
     public void close_menu ()
     {
-      this.is_in_label = false;
-      this.is_in_menu = false;
       if (this.menu is Ctk.Menu)
         {
           this.menu.destroy ();
         }
+      this.is_in_label = false;
+      this.is_in_menu = false;
     }
 
     public bool menu_is_open ()

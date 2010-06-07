@@ -95,8 +95,8 @@ void unity_places_cairo_drawing_rectangle_box_CreateRectangleBox (UnityPlacesCai
 static void unity_places_search_field_view_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
 UnityPlacesCairoDrawingRectangleBox* unity_places_cairo_drawing_rectangle_box_new (void);
 UnityPlacesCairoDrawingRectangleBox* unity_places_cairo_drawing_rectangle_box_construct (GType object_type);
-static gboolean _lambda5_ (ClutterEvent* e, UnityPlacesSearchFieldView* self);
-static gboolean __lambda5__clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _lambda8_ (ClutterEvent* e, UnityPlacesSearchFieldView* self);
+static gboolean __lambda8__clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 UnityPlacesSearchFieldView* unity_places_search_field_view_new (void);
 UnityPlacesSearchFieldView* unity_places_search_field_view_construct (GType object_type);
 static void unity_places_search_field_view_real_map (ClutterActor* base);
@@ -137,7 +137,7 @@ static void unity_places_search_field_view_real_allocate (ClutterActor* base, co
 }
 
 
-static gboolean _lambda5_ (ClutterEvent* e, UnityPlacesSearchFieldView* self) {
+static gboolean _lambda8_ (ClutterEvent* e, UnityPlacesSearchFieldView* self) {
 	gboolean result = FALSE;
 	unity_shell_grab_keyboard (unity_global_shell, TRUE, (*e).button.time);
 	result = FALSE;
@@ -145,8 +145,10 @@ static gboolean _lambda5_ (ClutterEvent* e, UnityPlacesSearchFieldView* self) {
 }
 
 
-static gboolean __lambda5__clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return _lambda5_ (event, self);
+static gboolean __lambda8__clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	gboolean result;
+	result = _lambda8_ (event, self);
+	return result;
 }
 
 
@@ -163,7 +165,7 @@ UnityPlacesSearchFieldView* unity_places_search_field_view_construct (GType obje
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->search_icon);
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->text_field);
 	clutter_actor_show_all ((ClutterActor*) self);
-	g_signal_connect_object ((ClutterActor*) self->priv->text_field, "button-press-event", (GCallback) __lambda5__clutter_actor_button_press_event, self, 0);
+	g_signal_connect_object ((ClutterActor*) self->priv->text_field, "button-press-event", (GCallback) __lambda8__clutter_actor_button_press_event, self, 0);
 	return self;
 }
 

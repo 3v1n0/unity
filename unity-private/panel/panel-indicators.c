@@ -216,14 +216,14 @@ static void unity_panel_indicators_indicator_entry_real_paint (ClutterActor* bas
 static void unity_panel_indicators_indicator_entry_real_map (ClutterActor* base);
 static void unity_panel_indicators_indicator_entry_real_unmap (ClutterActor* base);
 static void unity_panel_indicators_indicator_entry_set_entry (UnityPanelIndicatorsIndicatorEntry* self, IndicatorObjectEntry* value);
-static void _lambda0_ (UnityPanelIndicatorsIndicatorEntry* self);
-static void __lambda0__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
-static void _lambda1_ (UnityPanelIndicatorsIndicatorEntry* self);
-static void __lambda1__gtk_icon_theme_changed (GtkIconTheme* _sender, gpointer self);
-static void _lambda2_ (UnityPanelIndicatorsIndicatorEntry* self);
-static void __lambda2__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
-static void _lambda3_ (UnityPanelIndicatorsIndicatorEntry* self);
-static void __lambda3__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _lambda4_ (UnityPanelIndicatorsIndicatorEntry* self);
+static void __lambda4__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _lambda5_ (UnityPanelIndicatorsIndicatorEntry* self);
+static void __lambda5__gtk_icon_theme_changed (GtkIconTheme* _sender, gpointer self);
+static void _lambda6_ (UnityPanelIndicatorsIndicatorEntry* self);
+static void __lambda6__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _lambda7_ (UnityPanelIndicatorsIndicatorEntry* self);
+static void __lambda7__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static GObject * unity_panel_indicators_indicator_entry_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_panel_indicators_indicator_entry_finalize (GObject* obj);
 static void unity_panel_indicators_indicator_entry_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -309,6 +309,11 @@ static gboolean unity_panel_indicators_view_load_indicators (UnityPanelIndicator
 		char* _tmp1_;
 		skip_list = (_tmp1_ = g_strdup (""), _g_free0 (skip_list), _tmp1_);
 	}
+	if (_vala_strcmp0 (skip_list, "all") == 0) {
+		result = FALSE;
+		_g_free0 (skip_list);
+		return result;
+	}
 	gtk_icon_theme_append_search_path (gtk_icon_theme_get_default (), INDICATORICONSDIR);
 	dir = g_file_new_for_path (INDICATORDIR);
 	{
@@ -316,7 +321,7 @@ static gboolean unity_panel_indicators_view_load_indicators (UnityPanelIndicator
 		GFileInfo* file_info;
 		e = g_file_enumerate_children (dir, G_FILE_ATTRIBUTE_STANDARD_NAME, 0, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch2_g_error;
+			goto __catch4_g_error;
 		}
 		file_info = NULL;
 		while (TRUE) {
@@ -330,7 +335,7 @@ static gboolean unity_panel_indicators_view_load_indicators (UnityPanelIndicator
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (e);
 				_g_object_unref0 (file_info);
-				goto __catch2_g_error;
+				goto __catch4_g_error;
 			}
 			if (!((file_info = (_tmp3_ = _tmp2_, _g_object_unref0 (file_info), _tmp3_)) != NULL)) {
 				break;
@@ -355,8 +360,8 @@ static gboolean unity_panel_indicators_view_load_indicators (UnityPanelIndicator
 		_g_object_unref0 (e);
 		_g_object_unref0 (file_info);
 	}
-	goto __finally2;
-	__catch2_g_error:
+	goto __finally4;
+	__catch4_g_error:
 	{
 		GError * _error_;
 		_error_ = _inner_error_;
@@ -366,7 +371,7 @@ static gboolean unity_panel_indicators_view_load_indicators (UnityPanelIndicator
 			_g_error_free0 (_error_);
 		}
 	}
-	__finally2:
+	__finally4:
 	if (_inner_error_ != NULL) {
 		_g_free0 (skip_list);
 		_g_object_unref0 (dir);
@@ -414,7 +419,7 @@ static void unity_panel_indicators_view_load_indicator (UnityPanelIndicatorsView
 		i->position = (gint) GPOINTER_TO_INT (gee_abstract_map_get ((GeeAbstractMap*) self->priv->indicator_order, leaf));
 		_g_object_unref0 (i);
 	} else {
-		g_warning ("panel-indicators.vala:134: Unable to load %s\n", filename);
+		g_warning ("panel-indicators.vala:137: Unable to load %s\n", filename);
 	}
 	_g_object_unref0 (o);
 }
@@ -687,27 +692,37 @@ static void unity_panel_indicators_view_on_menu_moved (UnityPanelIndicatorsView*
 
 
 static gboolean _unity_panel_indicators_view_on_button_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_panel_indicators_view_on_button_press_event (self, event);
+	gboolean result;
+	result = unity_panel_indicators_view_on_button_press_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_panel_indicators_view_on_button_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_panel_indicators_view_on_button_release_event (self, event);
+	gboolean result;
+	result = unity_panel_indicators_view_on_button_release_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_panel_indicators_view_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_panel_indicators_view_on_motion_event (self, event);
+	gboolean result;
+	result = unity_panel_indicators_view_on_motion_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_panel_indicators_view_on_scroll_event_clutter_actor_scroll_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_panel_indicators_view_on_scroll_event (self, event);
+	gboolean result;
+	result = unity_panel_indicators_view_on_scroll_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_panel_indicators_view_load_indicators_gsource_func (gpointer self) {
-	return unity_panel_indicators_view_load_indicators (self);
+	gboolean result;
+	result = unity_panel_indicators_view_load_indicators (self);
+	return result;
 }
 
 
@@ -1156,7 +1171,7 @@ GtkMenu* unity_panel_indicators_indicator_entry_get_menu (UnityPanelIndicatorsIn
 }
 
 
-static void _lambda0_ (UnityPanelIndicatorsIndicatorEntry* self) {
+static void _lambda4_ (UnityPanelIndicatorsIndicatorEntry* self) {
 	char* _tmp1_;
 	char* _tmp0_ = NULL;
 	g_object_set (self->priv->image, "stock-id", _tmp1_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp0_, NULL), _tmp0_), NULL);
@@ -1164,12 +1179,12 @@ static void _lambda0_ (UnityPanelIndicatorsIndicatorEntry* self) {
 }
 
 
-static void __lambda0__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda0_ (self);
+static void __lambda4__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda4_ (self);
 }
 
 
-static void _lambda1_ (UnityPanelIndicatorsIndicatorEntry* self) {
+static void _lambda5_ (UnityPanelIndicatorsIndicatorEntry* self) {
 	char* _tmp1_;
 	char* _tmp0_ = NULL;
 	g_object_set (self->priv->image, "stock-id", _tmp1_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp0_, NULL), _tmp0_), NULL);
@@ -1177,12 +1192,12 @@ static void _lambda1_ (UnityPanelIndicatorsIndicatorEntry* self) {
 }
 
 
-static void __lambda1__gtk_icon_theme_changed (GtkIconTheme* _sender, gpointer self) {
-	_lambda1_ (self);
+static void __lambda5__gtk_icon_theme_changed (GtkIconTheme* _sender, gpointer self) {
+	_lambda5_ (self);
 }
 
 
-static void _lambda2_ (UnityPanelIndicatorsIndicatorEntry* self) {
+static void _lambda6_ (UnityPanelIndicatorsIndicatorEntry* self) {
 	GdkPixbuf* _tmp1_;
 	GdkPixbuf* _tmp0_ = NULL;
 	GdkPixbuf* _tmp3_;
@@ -1194,18 +1209,18 @@ static void _lambda2_ (UnityPanelIndicatorsIndicatorEntry* self) {
 }
 
 
-static void __lambda2__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda2_ (self);
+static void __lambda6__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda6_ (self);
 }
 
 
-static void _lambda3_ (UnityPanelIndicatorsIndicatorEntry* self) {
+static void _lambda7_ (UnityPanelIndicatorsIndicatorEntry* self) {
 	clutter_text_set_text ((ClutterText*) self->priv->text, gtk_label_get_label (self->priv->_entry->label));
 }
 
 
-static void __lambda3__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda3_ (self);
+static void __lambda7__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda7_ (self);
 }
 
 
@@ -1242,9 +1257,9 @@ static GObject * unity_panel_indicators_indicator_entry_constructor (GType type,
 				GtkIconTheme* theme;
 				g_object_set (self->priv->image, "stock-id", _tmp9_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp8_, NULL), _tmp8_), NULL);
 				_g_free0 (_tmp9_);
-				g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::icon-name", (GCallback) __lambda0__g_object_notify, self, 0);
+				g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::icon-name", (GCallback) __lambda4__g_object_notify, self, 0);
 				theme = gtk_icon_theme_get_default ();
-				g_signal_connect_object (theme, "changed", (GCallback) __lambda1__gtk_icon_theme_changed, self, 0);
+				g_signal_connect_object (theme, "changed", (GCallback) __lambda5__gtk_icon_theme_changed, self, 0);
 			}
 			if ((_tmp12_ = (_tmp11_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp10_, NULL), _tmp10_)) != NULL, _g_object_unref0 (_tmp11_), _tmp12_)) {
 				GdkPixbuf* _tmp14_;
@@ -1255,7 +1270,7 @@ static GObject * unity_panel_indicators_indicator_entry_constructor (GType type,
 				_g_object_unref0 (_tmp14_);
 				ctk_image_set_size (self->priv->image, gdk_pixbuf_get_width (_tmp16_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp15_, NULL), _tmp15_)));
 				_g_object_unref0 (_tmp16_);
-				g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::pixbuf", (GCallback) __lambda2__g_object_notify, self, 0);
+				g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::pixbuf", (GCallback) __lambda6__g_object_notify, self, 0);
 			}
 		}
 		if (GTK_IS_LABEL (self->priv->_entry->label)) {
@@ -1267,7 +1282,7 @@ static GObject * unity_panel_indicators_indicator_entry_constructor (GType type,
 			clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->text);
 			clutter_actor_show ((ClutterActor*) self->priv->text);
 			clutter_text_set_text ((ClutterText*) self->priv->text, gtk_label_get_label (self->priv->_entry->label));
-			g_signal_connect_object ((GObject*) self->priv->_entry->label, "notify::label", (GCallback) __lambda3__g_object_notify, self, 0);
+			g_signal_connect_object ((GObject*) self->priv->_entry->label, "notify::label", (GCallback) __lambda7__g_object_notify, self, 0);
 		}
 	}
 	return obj;

@@ -156,7 +156,13 @@ static void unity_tests_ui_quicklist_suite_test_controller_show_label (UnityTest
 	first = (_tmp3_ = unity_launcher_scroller_model_get (scroller, 0), UNITY_LAUNCHER_IS_SCROLLER_CHILD (_tmp3_) ? ((UnityLauncherScrollerChild*) _tmp3_) : NULL);
 	qlcontroller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
 	unity_launcher_quicklist_controller_show_label (qlcontroller, "Ubuntu Software Centre", (CtkActor*) first);
-	g_assert (utils_compare_snapshot (self->priv->stage, img, 54, 25, 200, 50, TRUE));
+	while (TRUE) {
+		if (!gtk_events_pending ()) {
+			break;
+		}
+		gtk_main_iteration ();
+	}
+	g_assert (utils_compare_snapshot (self->priv->stage, img, 54, 30, 200, 50, TRUE));
 	unity_launcher_quicklist_controller_close_menu (qlcontroller);
 	_g_free0 (img);
 	_unity_testing_object_registry_unref0 (registry);

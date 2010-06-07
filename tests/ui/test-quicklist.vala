@@ -71,7 +71,10 @@ namespace Unity.Tests.UI
       QuicklistController qlcontroller = QuicklistController.get_default ();
       qlcontroller.show_label ("Ubuntu Software Centre", first);
 
-      assert (Utils.compare_snapshot (stage, img, 54, 25, 200, 50));
+      while (Gtk.events_pending ())
+        Gtk.main_iteration ();
+
+      assert (Utils.compare_snapshot (stage, img, 54, 30, 200, 50));
 
       /* Clean up */
       qlcontroller.close_menu ();

@@ -81,8 +81,15 @@ libunity_private_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(top_builddir)/unity/libunity.la
 am__objects_1 = libunity_private_la-application.lo \
 	libunity_private_la-unity.lo libunity_private_la-utils.lo
-am__objects_2 = libunity_private_la-panel-home.lo \
+am__objects_2 = libunity_private_la-panel-background.lo \
+	libunity_private_la-panel-home-button.lo \
+	libunity_private_la-panel-indicator-bar.lo \
+	libunity_private_la-panel-indicator-model.lo \
+	libunity_private_la-panel-indicator-object-entry-view.lo \
+	libunity_private_la-panel-indicator-object-view.lo \
 	libunity_private_la-panel-indicators.lo \
+	libunity_private_la-panel-menu-manager.lo \
+	libunity_private_la-panel-menubar.lo \
 	libunity_private_la-panel-tray.lo \
 	libunity_private_la-panel-view.lo
 am__objects_3 = libunity_private_la-application-place.lo \
@@ -382,8 +389,15 @@ private_sources = \
   utils.vala
 
 panel_sources = \
-  panel/panel-home.vala \
+  panel/panel-background.vala \
+  panel/panel-home-button.vala \
+  panel/panel-indicator-bar.vala \
+  panel/panel-indicator-model.vala \
+  panel/panel-indicator-object-entry-view.vala \
+  panel/panel-indicator-object-view.vala \
   panel/panel-indicators.vala \
+  panel/panel-menu-manager.vala \
+  panel/panel-menubar.vala \
   panel/panel-tray.vala \
   panel/panel-view.vala
 
@@ -525,8 +539,15 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-launcher-child.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-launcher.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-object-registry.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-home.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-background.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-home-button.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-indicator-bar.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-indicator-model.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-indicator-object-entry-view.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-indicator-object-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-indicators.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-menu-manager.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-menubar.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-tray.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-perf-logger.Plo@am__quote@
@@ -608,13 +629,53 @@ libunity_private_la-utils.lo: utils.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-utils.lo `test -f 'utils.c' || echo '$(srcdir)/'`utils.c
 
-libunity_private_la-panel-home.lo: panel/panel-home.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-panel-home.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-panel-home.Tpo -c -o libunity_private_la-panel-home.lo `test -f 'panel/panel-home.c' || echo '$(srcdir)/'`panel/panel-home.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-panel-home.Tpo $(DEPDIR)/libunity_private_la-panel-home.Plo
+libunity_private_la-panel-background.lo: panel/panel-background.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-panel-background.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-panel-background.Tpo -c -o libunity_private_la-panel-background.lo `test -f 'panel/panel-background.c' || echo '$(srcdir)/'`panel/panel-background.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-panel-background.Tpo $(DEPDIR)/libunity_private_la-panel-background.Plo
 @am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='panel/panel-home.c' object='libunity_private_la-panel-home.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='panel/panel-background.c' object='libunity_private_la-panel-background.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-panel-home.lo `test -f 'panel/panel-home.c' || echo '$(srcdir)/'`panel/panel-home.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-panel-background.lo `test -f 'panel/panel-background.c' || echo '$(srcdir)/'`panel/panel-background.c
+
+libunity_private_la-panel-home-button.lo: panel/panel-home-button.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-panel-home-button.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-panel-home-button.Tpo -c -o libunity_private_la-panel-home-button.lo `test -f 'panel/panel-home-button.c' || echo '$(srcdir)/'`panel/panel-home-button.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-panel-home-button.Tpo $(DEPDIR)/libunity_private_la-panel-home-button.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='panel/panel-home-button.c' object='libunity_private_la-panel-home-button.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-panel-home-button.lo `test -f 'panel/panel-home-button.c' || echo '$(srcdir)/'`panel/panel-home-button.c
+
+libunity_private_la-panel-indicator-bar.lo: panel/panel-indicator-bar.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-panel-indicator-bar.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-panel-indicator-bar.Tpo -c -o libunity_private_la-panel-indicator-bar.lo `test -f 'panel/panel-indicator-bar.c' || echo '$(srcdir)/'`panel/panel-indicator-bar.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-panel-indicator-bar.Tpo $(DEPDIR)/libunity_private_la-panel-indicator-bar.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='panel/panel-indicator-bar.c' object='libunity_private_la-panel-indicator-bar.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-panel-indicator-bar.lo `test -f 'panel/panel-indicator-bar.c' || echo '$(srcdir)/'`panel/panel-indicator-bar.c
+
+libunity_private_la-panel-indicator-model.lo: panel/panel-indicator-model.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-panel-indicator-model.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-panel-indicator-model.Tpo -c -o libunity_private_la-panel-indicator-model.lo `test -f 'panel/panel-indicator-model.c' || echo '$(srcdir)/'`panel/panel-indicator-model.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-panel-indicator-model.Tpo $(DEPDIR)/libunity_private_la-panel-indicator-model.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='panel/panel-indicator-model.c' object='libunity_private_la-panel-indicator-model.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-panel-indicator-model.lo `test -f 'panel/panel-indicator-model.c' || echo '$(srcdir)/'`panel/panel-indicator-model.c
+
+libunity_private_la-panel-indicator-object-entry-view.lo: panel/panel-indicator-object-entry-view.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-panel-indicator-object-entry-view.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-panel-indicator-object-entry-view.Tpo -c -o libunity_private_la-panel-indicator-object-entry-view.lo `test -f 'panel/panel-indicator-object-entry-view.c' || echo '$(srcdir)/'`panel/panel-indicator-object-entry-view.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-panel-indicator-object-entry-view.Tpo $(DEPDIR)/libunity_private_la-panel-indicator-object-entry-view.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='panel/panel-indicator-object-entry-view.c' object='libunity_private_la-panel-indicator-object-entry-view.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-panel-indicator-object-entry-view.lo `test -f 'panel/panel-indicator-object-entry-view.c' || echo '$(srcdir)/'`panel/panel-indicator-object-entry-view.c
+
+libunity_private_la-panel-indicator-object-view.lo: panel/panel-indicator-object-view.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-panel-indicator-object-view.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-panel-indicator-object-view.Tpo -c -o libunity_private_la-panel-indicator-object-view.lo `test -f 'panel/panel-indicator-object-view.c' || echo '$(srcdir)/'`panel/panel-indicator-object-view.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-panel-indicator-object-view.Tpo $(DEPDIR)/libunity_private_la-panel-indicator-object-view.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='panel/panel-indicator-object-view.c' object='libunity_private_la-panel-indicator-object-view.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-panel-indicator-object-view.lo `test -f 'panel/panel-indicator-object-view.c' || echo '$(srcdir)/'`panel/panel-indicator-object-view.c
 
 libunity_private_la-panel-indicators.lo: panel/panel-indicators.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-panel-indicators.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-panel-indicators.Tpo -c -o libunity_private_la-panel-indicators.lo `test -f 'panel/panel-indicators.c' || echo '$(srcdir)/'`panel/panel-indicators.c
@@ -623,6 +684,22 @@ libunity_private_la-panel-indicators.lo: panel/panel-indicators.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='panel/panel-indicators.c' object='libunity_private_la-panel-indicators.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-panel-indicators.lo `test -f 'panel/panel-indicators.c' || echo '$(srcdir)/'`panel/panel-indicators.c
+
+libunity_private_la-panel-menu-manager.lo: panel/panel-menu-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-panel-menu-manager.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-panel-menu-manager.Tpo -c -o libunity_private_la-panel-menu-manager.lo `test -f 'panel/panel-menu-manager.c' || echo '$(srcdir)/'`panel/panel-menu-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-panel-menu-manager.Tpo $(DEPDIR)/libunity_private_la-panel-menu-manager.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='panel/panel-menu-manager.c' object='libunity_private_la-panel-menu-manager.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-panel-menu-manager.lo `test -f 'panel/panel-menu-manager.c' || echo '$(srcdir)/'`panel/panel-menu-manager.c
+
+libunity_private_la-panel-menubar.lo: panel/panel-menubar.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-panel-menubar.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-panel-menubar.Tpo -c -o libunity_private_la-panel-menubar.lo `test -f 'panel/panel-menubar.c' || echo '$(srcdir)/'`panel/panel-menubar.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-panel-menubar.Tpo $(DEPDIR)/libunity_private_la-panel-menubar.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='panel/panel-menubar.c' object='libunity_private_la-panel-menubar.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-panel-menubar.lo `test -f 'panel/panel-menubar.c' || echo '$(srcdir)/'`panel/panel-menubar.c
 
 libunity_private_la-panel-tray.lo: panel/panel-tray.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-panel-tray.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-panel-tray.Tpo -c -o libunity_private_la-panel-tray.lo `test -f 'panel/panel-tray.c' || echo '$(srcdir)/'`panel/panel-tray.c

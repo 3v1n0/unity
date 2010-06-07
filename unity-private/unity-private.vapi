@@ -154,6 +154,10 @@ namespace Unity {
 		[CCode (cprefix = "UnityPanelIndicators", lower_case_cprefix = "unity_panel_indicators_")]
 		namespace Indicators {
 			[CCode (cheader_filename = "unity-private.h")]
+			public class IndicatorBar : Ctk.Box {
+				public IndicatorBar ();
+			}
+			[CCode (cheader_filename = "unity-private.h")]
 			public class IndicatorEntry : Ctk.Box {
 				public IndicatorEntry (Indicator.ObjectEntry entry);
 				public void menu_key_moved (Gtk.MenuDirectionType type);
@@ -172,36 +176,83 @@ namespace Unity {
 				public signal void menu_moved (Gtk.MenuDirectionType type);
 			}
 			[CCode (cheader_filename = "unity-private.h")]
+			public class IndicatorObjectEntryView : Ctk.Box {
+				public Ctk.Image image;
+				public Ctk.Text text;
+				public IndicatorObjectEntryView (Indicator.ObjectEntry _entry);
+				public void menu_key_moved (Gtk.MenuDirectionType type);
+				public void menu_shown ();
+				public void menu_vis_changed ();
+				public bool on_button_press_event (Clutter.Event e);
+				public bool on_motion_event (Clutter.Event e);
+				public void show_menu ();
+				public Indicator.ObjectEntry entry { get; construct; }
+				public signal void menu_moved (Gtk.MenuDirectionType type);
+			}
+			[CCode (cheader_filename = "unity-private.h")]
+			public class IndicatorObjectView : Ctk.Box {
+				public IndicatorObjectView (Indicator.Object _object);
+				public void open_first_menu_entry ();
+				public void open_last_menu_entry ();
+				public void show_entry_menu (int entry);
+				public Indicator.Object indicator_object { get; construct; }
+				public signal void menu_moved (Gtk.MenuDirectionType type);
+			}
+			[CCode (cheader_filename = "unity-private.h")]
+			public class IndicatorsFileModel : Unity.Panel.Indicators.IndicatorsModel {
+				public Gee.ArrayList<Indicator.Object> indicator_list;
+				public Gee.HashMap<Indicator.Object,string> indicator_map;
+				public static Gee.HashMap<string,int> indicator_order;
+				public IndicatorsFileModel ();
+				public override string get_indicator_name (Indicator.Object o);
+				public override Gee.ArrayList<Indicator.Object> get_indicators ();
+				public static int indicator_sort_func (string a, string b);
+			}
+			[CCode (cheader_filename = "unity-private.h")]
+			public abstract class IndicatorsModel : GLib.Object {
+				public IndicatorsModel ();
+				public static Unity.Panel.Indicators.IndicatorsModel get_default ();
+				public abstract string get_indicator_name (Indicator.Object o);
+				public abstract Gee.ArrayList<Indicator.Object> get_indicators ();
+				public static void set_default (Unity.Panel.Indicators.IndicatorsModel model);
+			}
+			[CCode (cheader_filename = "unity-private.h")]
+			public class MenuBar : Ctk.Box {
+				public MenuBar ();
+			}
+			[CCode (cheader_filename = "unity-private.h")]
 			public class View : Ctk.Box {
 				public View ();
 				public static int reorder_icons (Unity.Panel.Indicators.IndicatorItem a, Unity.Panel.Indicators.IndicatorItem b);
 				public void show_entry (Unity.Panel.Indicators.IndicatorEntry entry);
 			}
 		}
-		[CCode (cprefix = "UnityPanelTray", lower_case_cprefix = "unity_panel_tray_")]
-		namespace Tray {
-			[CCode (cheader_filename = "unity-private.h")]
-			public class View : Ctk.Box {
-				public View ();
-				public void manage_stage (Clutter.Stage stage);
-			}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class Background : Clutter.CairoTexture {
+			public const string BG;
+			public Background ();
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public class HomeButton : Ctk.Bin {
-			public Unity.ThemeImage image;
+		public class HomeButton : Ctk.Button {
+			public Unity.ThemeImage theme_image;
 			public HomeButton (Unity.Shell shell);
 			public Unity.Shell shell { get; construct; }
-			public signal void clicked (uint32 time_);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public class View : Ctk.Actor {
+		public class SystemTray : Ctk.Box {
+			public SystemTray ();
+			public void manage_stage (Clutter.Stage stage);
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class View : Ctk.Box {
+			public bool expanded;
 			public View (Unity.Shell shell);
 			public int get_indicators_width ();
+			public int get_panel_height ();
+			public void set_expanded (bool _expanded);
 			public void set_indicator_mode (bool mode);
 			public Unity.Shell shell { get; construct; }
 		}
-		[CCode (cheader_filename = "unity-private.h")]
-		public static bool? search_entry_has_focus;
 	}
 	[CCode (cprefix = "UnityPlaces", lower_case_cprefix = "unity_places_")]
 	namespace Places {
@@ -431,8 +482,10 @@ namespace Unity {
 		[CCode (cheader_filename = "unity-private.h")]
 		public class Director : GLib.Object {
 			public Director (Clutter.Stage stage);
-			public void button_press (Clutter.Actor actor, uint32 button, bool autorelease, float relative_x, float relative_y);
+			public void button_press (Clutter.Actor actor, uint32 button, bool autorelease, float relative_x, float relative_y, bool wait_for_animation);
 			public void button_release (Clutter.Actor actor, uint32 button, float relative_x, float relative_y);
+			public void do_wait_for_animation (Clutter.Actor actor);
+			public void do_wait_for_timeout (uint32 msecs);
 			public void enter_event (Clutter.Actor actor, float relative_x, float relative_y);
 			public void leave_event (Clutter.Actor actor, float relative_x, float relative_y);
 			public void motion_event (Clutter.Actor actor, float relative_startx, float relative_starty, float relative_endx, float relative_endy);
@@ -535,4 +588,11 @@ namespace G {
 			public static void set_fatal_handler (G.Test.Log.LogFatalFunc func);
 		}
 	}
+}
+[CCode (cheader_filename = "unity-private.h")]
+public class MenuManager : GLib.Object {
+	public MenuManager ();
+	public static MenuManager get_default ();
+	public bool menu_is_open ();
+	public void register_visible_menu (Gtk.Menu menu);
 }

@@ -128,7 +128,6 @@ struct _UnityLauncherQuicklistControllerClass {
 };
 
 
-extern gboolean* unity_panel_search_entry_has_focus;
 static gpointer unity_launcher_scroller_child_controller_parent_class = NULL;
 static UnityDragModelIface* unity_launcher_scroller_child_controller_unity_drag_model_parent_iface = NULL;
 
@@ -160,7 +159,7 @@ static gboolean unity_launcher_scroller_child_controller_on_enter_event (UnityLa
 CtkActor* unity_launcher_quicklist_controller_get_attached_actor (UnityLauncherQuicklistController* self);
 UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (UnityLauncherScrollerChildController* self);
 static void _unity_launcher_scroller_child_controller_ensure_menu_state_clutter_actor_destroy (ClutterActor* _sender, gpointer self);
-static gboolean _bool_equal (const gboolean* s1, const gboolean* s2);
+#define UNITY_PANEL_search_entry_has_focus FALSE
 void unity_launcher_quicklist_controller_show_label (UnityLauncherQuicklistController* self, const char* label, CtkActor* attached_widget);
 void unity_launcher_quicklist_controller_show_menu (UnityLauncherQuicklistController* self, GeeArrayList* prefix_shortcuts, GeeArrayList* affix_shortcuts, gboolean hide_on_leave);
 static ClutterActor* unity_launcher_scroller_child_controller_real_get_icon (UnityDragModel* base);
@@ -336,20 +335,6 @@ static void _unity_launcher_scroller_child_controller_ensure_menu_state_clutter_
 }
 
 
-static gboolean _bool_equal (const gboolean* s1, const gboolean* s2) {
-	if (s1 == s2) {
-		return TRUE;
-	}
-	if (s1 == NULL) {
-		return FALSE;
-	}
-	if (s2 == NULL) {
-		return FALSE;
-	}
-	return (*s1) == (*s2);
-}
-
-
 static void unity_launcher_scroller_child_controller_ensure_menu_state (UnityLauncherScrollerChildController* self) {
 	UnityLauncherQuicklistController* controller;
 	gboolean _tmp0_ = FALSE;
@@ -383,8 +368,7 @@ static void unity_launcher_scroller_child_controller_ensure_menu_state (UnityLau
 	}
 	if (self->menu_state == UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_LABEL) {
 		if (!unity_launcher_quicklist_controller_menu_is_open (controller)) {
-			gboolean _tmp3_;
-			if (_bool_equal (unity_panel_search_entry_has_focus, (_tmp3_ = FALSE, &_tmp3_)) == TRUE) {
+			if (UNITY_PANEL_search_entry_has_focus == FALSE) {
 				unity_launcher_quicklist_controller_show_label (controller, self->name, (CtkActor*) self->priv->_child);
 			}
 		}
@@ -393,15 +377,15 @@ static void unity_launcher_scroller_child_controller_ensure_menu_state (UnityLau
 		if (controller->is_in_label) {
 			GeeArrayList* shortcuts;
 			GeeArrayList* actions;
-			gboolean _tmp4_ = FALSE;
+			gboolean _tmp3_ = FALSE;
 			shortcuts = unity_launcher_scroller_child_controller_get_menu_shortcuts (self);
 			actions = unity_launcher_scroller_child_controller_get_menu_shortcut_actions (self);
 			if (gee_collection_get_size ((GeeCollection*) shortcuts) > 0) {
-				_tmp4_ = TRUE;
+				_tmp3_ = TRUE;
 			} else {
-				_tmp4_ = gee_collection_get_size ((GeeCollection*) actions) > 0;
+				_tmp3_ = gee_collection_get_size ((GeeCollection*) actions) > 0;
 			}
-			if (_tmp4_) {
+			if (_tmp3_) {
 				unity_launcher_quicklist_controller_show_menu (controller, shortcuts, actions, FALSE);
 			} else {
 				self->menu_state = UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_LABEL;
@@ -480,27 +464,37 @@ static void unity_launcher_scroller_child_controller_set_child (UnityLauncherScr
 
 
 static gboolean _unity_launcher_scroller_child_controller_on_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_launcher_scroller_child_controller_on_press_event (self, event);
+	gboolean result;
+	result = unity_launcher_scroller_child_controller_on_press_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_launcher_scroller_child_controller_on_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_launcher_scroller_child_controller_on_release_event (self, event);
+	gboolean result;
+	result = unity_launcher_scroller_child_controller_on_release_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_launcher_scroller_child_controller_on_enter_event_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_launcher_scroller_child_controller_on_enter_event (self, event);
+	gboolean result;
+	result = unity_launcher_scroller_child_controller_on_enter_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_launcher_scroller_child_controller_on_leave_event_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_launcher_scroller_child_controller_on_leave_event (self, event);
+	gboolean result;
+	result = unity_launcher_scroller_child_controller_on_leave_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_launcher_scroller_child_controller_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_launcher_scroller_child_controller_on_motion_event (self, event);
+	gboolean result;
+	result = unity_launcher_scroller_child_controller_on_motion_event (self, event);
+	return result;
 }
 
 

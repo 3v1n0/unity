@@ -32,7 +32,7 @@ namespace Unity
   public static void rgb_to_hsv (float r, float g, float b,
                                  out float hue, out float sat, out float val)
   {
-    float min, max;
+    float min, max = 0.0f;
     if (r > g)
       max = (r > b) ? r : b;
     else
@@ -131,6 +131,72 @@ namespace Unity
      }
   }
 
+  private static uint pixbuf_check_threshold (Gdk.Pixbuf source,
+                                              int x1, int y1, int x2, int y2, float threshold)
+  {
+    int num_channels = source.get_n_channels ();
+    int width = source.get_width ();
+    int rowstride = source.get_rowstride ();
+    uint total_visible_pixels = 0;
+    unowned uchar[] pixels = source.get_pixels ();
+    if (source.get_colorspace () != Gdk.Colorspace.RGB ||
+        source.get_bits_per_sample () != 8 ||
+        !source.get_has_alpha () ||
+        num_channels != 4)
+      {
+        // we can't deal with this pixbuf =\
+        warning ("pixbuf is not in a friendly format, can not work with it");
+        return 0;
+      }
+
+    uint i = 0;
+    for (int yi = y1; yi < y2; yi++)
+      {
+        for (int xi = x1; xi < x2; xi++)
+          {
+            float pixel = pixels[(i + (xi*4)) + 3] / 255.0f;
+            if (pixel > threshold)
+              total_visible_pixels += 1;
+          }
+        i = yi * (width * 4) + rowstride;
+      }
+
+    return total_visible_pixels;
+  }
+
+  public static bool pixbuf_is_tile (Gdk.Pixbuf source)
+  {
+    bool is_tile = false;
+    int num_channels = source.get_n_channels ();
+    int width = source.get_width ();
+    int height = source.get_height ();
+    uint total_visible_pixels = 0;
+    if (source.get_colorspace () != Gdk.Colorspace.RGB ||
+        source.get_bits_per_sample () != 8 ||
+        !source.get_has_alpha () ||
+        num_channels != 4)
+      {
+        // we can't deal with this pixbuf =\
+        warning ("pixbuf is not in a friendly format, can not work with it");
+        return false;
+      }
+
+    int height_3 = height / 3;
+    int width_3 = width / 3;
+
+    total_visible_pixels = pixbuf_check_threshold (source, width_3, 0, width_3*2, 3, 0.1f);
+    total_visible_pixels += pixbuf_check_threshold (source, width_3, height-3, width_3*2, 3, 0.1f);
+    total_visible_pixels += pixbuf_check_threshold (source, 0, height_3, 3, height_3*2, 0.1f);
+    total_visible_pixels += pixbuf_check_threshold (source, width - 3, height_3, 3, height_3*2, 0.1f);
+
+    int max_pixels = (width_3 * 6 + height_3 * 6) / 3;
+
+    if (total_visible_pixels / max_pixels > 0.33333)
+      is_tile = true;
+
+    return is_tile;
+  }
+
   public static void get_average_color (Gdk.Pixbuf source, out uint red, out uint green, out uint blue)
   {
     int num_channels = source.get_n_channels ();
@@ -151,39 +217,61 @@ namespace Unity
         return;
       }
 
-    double r_total, g_total, b_total;
+    double r_total, g_total, b_total, rs_total, gs_total, bs_total;
     r_total = g_total = b_total = 0.0;
+    rs_total = gs_total = bs_total = 0.0;
 
     int i = 0;
+    uint total_caught_pixels = 1;
     for (int y = 0; y < height; y++)
     {
       for (int x = 0; x < width; x++)
       {
         int pix_index = i + (x*4);
-        r = pixels[pix_index + 0] / 256.0f;
-        g = pixels[pix_index + 1] / 256.0f;
-        b = pixels[pix_index + 2] / 256.0f;
-        a = pixels[pix_index + 3] / 256.0f;
+        r = pixels[pix_index + 0] / 255.0f;
+        g = pixels[pix_index + 1] / 255.0f;
+        b = pixels[pix_index + 2] / 255.0f;
+        a = pixels[pix_index + 3] / 255.0f;
 
-        if (a < 1.0 / 256.0)
+        if (a < 0.5)
           continue;
 
         rgb_to_hsv (r, g, b, out hue, out sat, out val);
+        rs_total += r;
+        gs_total += g;
+        bs_total += b;
+
+        if (sat <= 0.33)
+          continue;
+
         // we now have the saturation and value! wewt.
-        r_total += (r * sat) * a;
-        g_total += (g * sat) * a;
-        b_total += (b * sat) * a;
+        r_total += r;
+        g_total += g;
+        b_total += b;
+
+        total_caught_pixels += 1;
       }
       i = y * (width * 4) + rowstride;
     }
     // okay we should now have a large value in our totals
-    r_total = r_total / (width * height);
-    g_total = g_total / (width * height);
-    b_total = b_total / (width * height);
+    r_total = r_total / uint.max (total_caught_pixels, 1);
+    g_total = g_total / uint.max (total_caught_pixels, 1);
+    b_total = b_total / uint.max (total_caught_pixels, 1);
 
     // get a new super saturated value based on our totals
-    rgb_to_hsv ((float)r_total, (float)g_total, (float)b_total, out hue, out sat, out val);
-    hsv_to_rgb (hue, Math.fminf (sat + 0.6f, 1.0f), 0.5f, out r, out g, out b);
+    if (total_caught_pixels <= 20)
+      {
+        rgb_to_hsv ((float)rs_total, (float)gs_total, (float)bs_total, out hue, out sat, out val);
+        sat = 0.0f;
+      }
+    else
+      {
+        rgb_to_hsv ((float)r_total, (float)g_total, (float)b_total, out hue, out sat, out val);
+        sat = Math.fminf (sat * 0.7f, 1.0f);
+        val = Math.fminf (val * 1.4f, 1.0f);
+      }
+
+    hsv_to_rgb (hue, sat, val, out r, out g, out b);
 
     red = (uint)(r * 255);
     green = (uint)(g * 255);
@@ -222,69 +310,69 @@ namespace Unity
           unity_icon_mk_layer = new ThemeImage ("prism_icon_mask");
         }
 
-      if (this.icon is Clutter.Texture)
+      if (icon is Clutter.Texture)
         {
-          this.icon.set_parent (this);
+          icon.set_parent (this);
           var icon_mat = new Cogl.Material ();
-          Cogl.Texture icon_tex = (Cogl.Texture)(this.icon.get_cogl_texture ());
+          Cogl.Texture icon_tex = (Cogl.Texture)(icon.get_cogl_texture ());
           Cogl.Texture mask_tex = (Cogl.Texture)(unity_icon_mk_layer.get_cogl_texture ());
           icon_mat.set_layer (0, icon_tex);
           icon_mat.set_layer (1, mask_tex);
-          this.icon_material = icon_mat;
+          icon_material = icon_mat;
         }
-      if (this.bg_color is Clutter.Texture)
+      if (bg_color is Clutter.Texture)
         {
-          this.bg_color.set_parent (this);
-          this.bgcol_material = new Cogl.Material ();
-          Cogl.Texture color = (Cogl.Texture)(this.bg_color.get_cogl_texture ());
+          bg_color.set_parent (this);
+          bgcol_material = new Cogl.Material ();
+          Cogl.Texture color = (Cogl.Texture)(bg_color.get_cogl_texture ());
           Cogl.Texture mask_tex = (Cogl.Texture)(unity_icon_mk_layer.get_cogl_texture ());
-          this.bgcol_material.set_layer (0, color);
-          this.bgcol_material.set_layer_filters (1, Cogl.MaterialFilter.NEAREST, Cogl.MaterialFilter.NEAREST);
-          this.bgcol_material.set_layer (1, mask_tex);
+          bgcol_material.set_layer (0, color);
+          bgcol_material.set_layer_filters (1, Cogl.MaterialFilter.LINEAR, Cogl.MaterialFilter.LINEAR);
+          bgcol_material.set_layer (1, mask_tex);
         }
 
         var mat = new Cogl.Material ();
         Cogl.Texture tex = (Cogl.Texture)(unity_icon_bg_layer.get_cogl_texture ());
         mat.set_layer (0, tex);
-        this.bg_mat = mat;
+        bg_mat = mat;
 
         mat = new Cogl.Material ();
         tex = (Cogl.Texture)(unity_icon_fg_layer.get_cogl_texture ());
         mat.set_layer (0, tex);
-        this.fg_mat = mat;
+        fg_mat = mat;
     }
 
     public override void get_preferred_width (float for_height,
                                               out float minimum_width,
                                               out float natural_width)
     {
-      natural_width = minimum_width = 48;
+      natural_width = minimum_width = 50;
     }
 
     public override void get_preferred_height (float for_width,
                                                out float minimum_height,
                                                out float natural_height)
     {
-      natural_height = minimum_height = 48;
+      natural_height = minimum_height = 50;
     }
 
     public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags)
     {
       base.allocate (box, flags);
-      if (this.icon is Clutter.Texture)
-        this.icon.allocate (box, flags);
-      if (this.bg_color is Clutter.Texture)
-        this.bg_color.allocate (box, flags);
+      if (icon is Clutter.Texture)
+        icon.allocate (box, flags);
+      if (bg_color is Clutter.Texture)
+        bg_color.allocate (box, flags);
     }
 
     public override void pick (Clutter.Color color)
     {
-      this.set_effects_painting (true);
+      set_effects_painting (true);
       var mat = new Cogl.Material ();
       mat.set_color4ub (color.red, color.green, color.blue, color.alpha);
       Cogl.rectangle (0, 0, 48, 48);
       base.pick (color);
-      this.set_effects_painting (false);
+      set_effects_painting (false);
     }
 
     /* The closest most horrible thing you will ever see in vala. its basically
@@ -307,12 +395,14 @@ namespace Unity
       self.icon_material.set_color4ub (opacity, opacity, opacity, opacity);
       self.fg_mat.set_color4ub (opacity, opacity, opacity, opacity);
 
-      Cogl.set_source (self.bg_mat);
-      Cogl.rectangle (box.x1, box.y1, box.x2, box.y2);
-
       if (self.bg_color is Clutter.Texture)
         {
           Cogl.set_source (self.bgcol_material);
+          Cogl.rectangle (box.x1, box.y1, box.x2, box.y2);
+        }
+      else
+        {
+          Cogl.set_source (self.bg_mat);
           Cogl.rectangle (box.x1, box.y1, box.x2, box.y2);
         }
       if (self.icon is Clutter.Texture)
@@ -337,36 +427,36 @@ namespace Unity
       /* we need a beter way of doing this effects stuff in vala, its horrible
        * to do, must have a think...
        */
-      unowned SList<Ctk.Effect> effects = this.get_effects ();
-      if (!this.get_effects_painting () && effects != null)
+      unowned SList<Ctk.Effect> effects = get_effects ();
+      if (!get_effects_painting () && effects != null)
         {
           unowned SList<Ctk.Effect> e;
-          this.set_effects_painting (true);
+          set_effects_painting (true);
           for (e = effects; e != null; e = e.next)
             {
               Ctk.Effect effect = e.data;
               bool last_effect = (e.next != null) ? false : true;
-              effect.paint (this.paint_real, last_effect);
+              effect.paint (paint_real, last_effect);
             }
 
-          this.set_effects_painting (false);
+          set_effects_painting (false);
         }
       else
         {
-          this.paint_real (this);
+          paint_real (this);
         }
     }
 
     public override void map ()
     {
       base.map ();
-      this.icon.map ();
+      icon.map ();
     }
 
     public override void unmap ()
     {
       base.unmap ();
-      this.icon.unmap ();
+      icon.unmap ();
     }
   }
 }

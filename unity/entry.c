@@ -75,6 +75,8 @@ struct _UnityShellIface {
 	ClutterStage* (*get_stage) (UnityShell* self);
 	void (*show_unity) (UnityShell* self);
 	gint (*get_indicators_width) (UnityShell* self);
+	gint (*get_launcher_width_foobar) (UnityShell* self);
+	gint (*get_panel_height_foobar) (UnityShell* self);
 	void (*ensure_input_region) (UnityShell* self);
 	void (*add_fullscreen_request) (UnityShell* self, GObject* o);
 	gboolean (*remove_fullscreen_request) (UnityShell* self, GObject* o);
@@ -168,7 +170,9 @@ static void unity_entry_on_activate (UnityEntry* self) {
 
 
 static gboolean _unity_entry_on_stage_captured_event_clutter_actor_captured_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_entry_on_stage_captured_event (self, event);
+	gboolean result;
+	result = unity_entry_on_stage_captured_event (self, event);
+	return result;
 }
 
 
@@ -241,7 +245,9 @@ static void _unity_entry_on_key_focus_out_clutter_actor_key_focus_out (ClutterAc
 
 
 static gboolean _unity_entry_on_button_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_entry_on_button_press_event (self, event);
+	gboolean result;
+	result = unity_entry_on_button_press_event (self, event);
+	return result;
 }
 
 

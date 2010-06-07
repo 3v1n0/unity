@@ -323,17 +323,8 @@ static gboolean string_contains (const char* self, const char* needle) {
 
 gboolean unity_testing_logging_fatal_handler (const char* log_domain, GLogLevelFlags flags, const char* message) {
 	gboolean result = FALSE;
-	if (string_contains (log_domain, "ndicator")) {
-		result = FALSE;
-		return result;
-	}
-	if (string_contains (message, "widget class `GtkImage' has no property named `x-ayatana-indicator-dyn" \
-"amic'")) {
-		result = FALSE;
-		return result;
-	}
-	if (string_contains (message, "is currently inside an allocation cycle")) {
-		result = FALSE;
+	if (log_domain == NULL) {
+		result = TRUE;
 		return result;
 	}
 	if (string_contains (log_domain, "liblauncher")) {
@@ -348,13 +339,36 @@ gboolean unity_testing_logging_fatal_handler (const char* log_domain, GLogLevelF
 		result = FALSE;
 		return result;
 	}
+	if (string_contains (log_domain, "ndicator")) {
+		result = FALSE;
+		return result;
+	}
+	if (message == NULL) {
+		result = TRUE;
+		return result;
+	}
+	if (string_contains (message, "widget class `GtkImage' has no property named `x-ayatana-indicator-dyn" \
+"amic'")) {
+		result = FALSE;
+		return result;
+	}
+	if (string_contains (message, "is currently inside an allocation cycle")) {
+		result = FALSE;
+		return result;
+	}
+	if (string_contains (message, "Bamf r")) {
+		result = FALSE;
+		return result;
+	}
 	result = TRUE;
 	return result;
 }
 
 
 static gboolean _unity_testing_logging_fatal_handler_gtest_log_log_fatal_func (const char* log_domain, GLogLevelFlags flags, const char* message, gpointer self) {
-	return unity_testing_logging_fatal_handler (log_domain, flags, message);
+	gboolean result;
+	result = unity_testing_logging_fatal_handler (log_domain, flags, message);
+	return result;
 }
 
 

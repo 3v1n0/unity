@@ -32,16 +32,16 @@
 #include <math.h>
 
 
-#define UNITY_PANEL_TRAY_TYPE_VIEW (unity_panel_tray_view_get_type ())
-#define UNITY_PANEL_TRAY_VIEW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_TRAY_TYPE_VIEW, UnityPanelTrayView))
-#define UNITY_PANEL_TRAY_VIEW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PANEL_TRAY_TYPE_VIEW, UnityPanelTrayViewClass))
-#define UNITY_PANEL_TRAY_IS_VIEW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PANEL_TRAY_TYPE_VIEW))
-#define UNITY_PANEL_TRAY_IS_VIEW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PANEL_TRAY_TYPE_VIEW))
-#define UNITY_PANEL_TRAY_VIEW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PANEL_TRAY_TYPE_VIEW, UnityPanelTrayViewClass))
+#define UNITY_PANEL_TYPE_SYSTEM_TRAY (unity_panel_system_tray_get_type ())
+#define UNITY_PANEL_SYSTEM_TRAY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_TYPE_SYSTEM_TRAY, UnityPanelSystemTray))
+#define UNITY_PANEL_SYSTEM_TRAY_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PANEL_TYPE_SYSTEM_TRAY, UnityPanelSystemTrayClass))
+#define UNITY_PANEL_IS_SYSTEM_TRAY(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PANEL_TYPE_SYSTEM_TRAY))
+#define UNITY_PANEL_IS_SYSTEM_TRAY_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PANEL_TYPE_SYSTEM_TRAY))
+#define UNITY_PANEL_SYSTEM_TRAY_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PANEL_TYPE_SYSTEM_TRAY, UnityPanelSystemTrayClass))
 
-typedef struct _UnityPanelTrayView UnityPanelTrayView;
-typedef struct _UnityPanelTrayViewClass UnityPanelTrayViewClass;
-typedef struct _UnityPanelTrayViewPrivate UnityPanelTrayViewPrivate;
+typedef struct _UnityPanelSystemTray UnityPanelSystemTray;
+typedef struct _UnityPanelSystemTrayClass UnityPanelSystemTrayClass;
+typedef struct _UnityPanelSystemTrayPrivate UnityPanelSystemTrayPrivate;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
 #define UNITY_TESTING_TYPE_OBJECT_REGISTRY (unity_testing_object_registry_get_type ())
@@ -56,28 +56,28 @@ typedef struct _UnityTestingObjectRegistryClass UnityTestingObjectRegistryClass;
 #define _unity_testing_object_registry_unref0(var) ((var == NULL) ? NULL : (var = (unity_testing_object_registry_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 
-struct _UnityPanelTrayView {
+struct _UnityPanelSystemTray {
 	CtkBox parent_instance;
-	UnityPanelTrayViewPrivate * priv;
+	UnityPanelSystemTrayPrivate * priv;
 };
 
-struct _UnityPanelTrayViewClass {
+struct _UnityPanelSystemTrayClass {
 	CtkBoxClass parent_class;
 };
 
-struct _UnityPanelTrayViewPrivate {
+struct _UnityPanelSystemTrayPrivate {
 	UnityTrayManager* manager;
 	ClutterStage* stage;
 	gint n_icons;
 };
 
 
-static gpointer unity_panel_tray_view_parent_class = NULL;
+static gpointer unity_panel_system_tray_parent_class = NULL;
 
-GType unity_panel_tray_view_get_type (void);
-#define UNITY_PANEL_TRAY_VIEW_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PANEL_TRAY_TYPE_VIEW, UnityPanelTrayViewPrivate))
+GType unity_panel_system_tray_get_type (void);
+#define UNITY_PANEL_SYSTEM_TRAY_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PANEL_TYPE_SYSTEM_TRAY, UnityPanelSystemTrayPrivate))
 enum  {
-	UNITY_PANEL_TRAY_VIEW_DUMMY_PROPERTY
+	UNITY_PANEL_SYSTEM_TRAY_DUMMY_PROPERTY
 };
 gpointer unity_testing_object_registry_ref (gpointer instance);
 void unity_testing_object_registry_unref (gpointer instance);
@@ -88,33 +88,33 @@ gpointer unity_testing_value_get_object_registry (const GValue* value);
 GType unity_testing_object_registry_get_type (void);
 UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void);
 void unity_testing_object_registry_register (UnityTestingObjectRegistry* self, const char* name, GObject* object);
-UnityPanelTrayView* unity_panel_tray_view_new (void);
-UnityPanelTrayView* unity_panel_tray_view_construct (GType object_type);
-static gboolean unity_panel_tray_view_manage_tray_idle (UnityPanelTrayView* self);
-static gboolean _unity_panel_tray_view_manage_tray_idle_gsource_func (gpointer self);
-void unity_panel_tray_view_manage_stage (UnityPanelTrayView* self, ClutterStage* stage);
-static gint unity_panel_tray_view_order_icons (ClutterActor* a, ClutterActor* b);
-static void unity_panel_tray_view_on_tray_icon_added (UnityPanelTrayView* self, ClutterActor* icon);
-static void unity_panel_tray_view_on_tray_icon_removed (UnityPanelTrayView* self, ClutterActor* icon);
-static void _unity_panel_tray_view_on_tray_icon_added_unity_tray_manager_tray_icon_added (UnityTrayManager* _sender, ClutterActor* icon, gpointer self);
-static void _unity_panel_tray_view_on_tray_icon_removed_unity_tray_manager_tray_icon_removed (UnityTrayManager* _sender, ClutterActor* icon, gpointer self);
-static GObject * unity_panel_tray_view_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
-static void unity_panel_tray_view_finalize (GObject* obj);
+UnityPanelSystemTray* unity_panel_system_tray_new (void);
+UnityPanelSystemTray* unity_panel_system_tray_construct (GType object_type);
+static gboolean unity_panel_system_tray_manage_tray_idle (UnityPanelSystemTray* self);
+static gboolean _unity_panel_system_tray_manage_tray_idle_gsource_func (gpointer self);
+void unity_panel_system_tray_manage_stage (UnityPanelSystemTray* self, ClutterStage* stage);
+static gint unity_panel_system_tray_order_icons (ClutterActor* a, ClutterActor* b);
+static void unity_panel_system_tray_on_tray_icon_added (UnityPanelSystemTray* self, ClutterActor* icon);
+static void unity_panel_system_tray_on_tray_icon_removed (UnityPanelSystemTray* self, ClutterActor* icon);
+static void _unity_panel_system_tray_on_tray_icon_added_unity_tray_manager_tray_icon_added (UnityTrayManager* _sender, ClutterActor* icon, gpointer self);
+static void _unity_panel_system_tray_on_tray_icon_removed_unity_tray_manager_tray_icon_removed (UnityTrayManager* _sender, ClutterActor* icon, gpointer self);
+static GObject * unity_panel_system_tray_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void unity_panel_system_tray_finalize (GObject* obj);
 
 
 
-UnityPanelTrayView* unity_panel_tray_view_construct (GType object_type) {
-	UnityPanelTrayView * self;
+UnityPanelSystemTray* unity_panel_system_tray_construct (GType object_type) {
+	UnityPanelSystemTray * self;
 	UnityTestingObjectRegistry* _tmp0_;
-	self = (UnityPanelTrayView*) g_object_new (object_type, "orientation", CTK_ORIENTATION_HORIZONTAL, "spacing", 12, NULL);
-	unity_testing_object_registry_register (_tmp0_ = unity_testing_object_registry_get_default (), "PanelTray", (GObject*) self);
+	self = (UnityPanelSystemTray*) g_object_new (object_type, "orientation", CTK_ORIENTATION_HORIZONTAL, "spacing", 8, NULL);
+	unity_testing_object_registry_register (_tmp0_ = unity_testing_object_registry_get_default (), "PanelSystemTray", (GObject*) self);
 	_unity_testing_object_registry_unref0 (_tmp0_);
 	return self;
 }
 
 
-UnityPanelTrayView* unity_panel_tray_view_new (void) {
-	return unity_panel_tray_view_construct (UNITY_PANEL_TRAY_TYPE_VIEW);
+UnityPanelSystemTray* unity_panel_system_tray_new (void) {
+	return unity_panel_system_tray_construct (UNITY_PANEL_TYPE_SYSTEM_TRAY);
 }
 
 
@@ -123,21 +123,23 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static gboolean _unity_panel_tray_view_manage_tray_idle_gsource_func (gpointer self) {
-	return unity_panel_tray_view_manage_tray_idle (self);
+static gboolean _unity_panel_system_tray_manage_tray_idle_gsource_func (gpointer self) {
+	gboolean result;
+	result = unity_panel_system_tray_manage_tray_idle (self);
+	return result;
 }
 
 
-void unity_panel_tray_view_manage_stage (UnityPanelTrayView* self, ClutterStage* stage) {
+void unity_panel_system_tray_manage_stage (UnityPanelSystemTray* self, ClutterStage* stage) {
 	ClutterStage* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (stage != NULL);
 	self->priv->stage = (_tmp0_ = _g_object_ref0 (stage), _g_object_unref0 (self->priv->stage), _tmp0_);
-	g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_panel_tray_view_manage_tray_idle_gsource_func, g_object_ref (self), g_object_unref);
+	g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_panel_system_tray_manage_tray_idle_gsource_func, g_object_ref (self), g_object_unref);
 }
 
 
-static gboolean unity_panel_tray_view_manage_tray_idle (UnityPanelTrayView* self) {
+static gboolean unity_panel_system_tray_manage_tray_idle (UnityPanelSystemTray* self) {
 	gboolean result = FALSE;
 	char* disable_tray;
 	g_return_val_if_fail (self != NULL, FALSE);
@@ -151,7 +153,7 @@ static gboolean unity_panel_tray_view_manage_tray_idle (UnityPanelTrayView* self
 }
 
 
-static gint unity_panel_tray_view_order_icons (ClutterActor* a, ClutterActor* b) {
+static gint unity_panel_system_tray_order_icons (ClutterActor* a, ClutterActor* b) {
 	gint result = 0;
 	const char* stra;
 	const char* strb;
@@ -178,84 +180,84 @@ static gint unity_panel_tray_view_order_icons (ClutterActor* a, ClutterActor* b)
 }
 
 
-static void unity_panel_tray_view_on_tray_icon_added (UnityPanelTrayView* self, ClutterActor* icon) {
+static void unity_panel_system_tray_on_tray_icon_added (UnityPanelSystemTray* self, ClutterActor* icon) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (icon != NULL);
 	clutter_container_add_actor ((ClutterContainer*) self, icon);
 	clutter_actor_set_size (icon, (float) 22, (float) 22);
 	clutter_actor_show (icon);
 	g_object_set_data_full ((GObject*) icon, "n_icon", (void*) g_strdup_printf ("%d", self->priv->n_icons), NULL);
-	ctk_box_sort_children ((CtkBox*) self, (GCompareFunc) unity_panel_tray_view_order_icons);
+	ctk_box_sort_children ((CtkBox*) self, (GCompareFunc) unity_panel_system_tray_order_icons);
 	self->priv->n_icons++;
 }
 
 
-static void unity_panel_tray_view_on_tray_icon_removed (UnityPanelTrayView* self, ClutterActor* icon) {
+static void unity_panel_system_tray_on_tray_icon_removed (UnityPanelSystemTray* self, ClutterActor* icon) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (icon != NULL);
 	clutter_container_remove_actor ((ClutterContainer*) self, icon);
 }
 
 
-static void _unity_panel_tray_view_on_tray_icon_added_unity_tray_manager_tray_icon_added (UnityTrayManager* _sender, ClutterActor* icon, gpointer self) {
-	unity_panel_tray_view_on_tray_icon_added (self, icon);
+static void _unity_panel_system_tray_on_tray_icon_added_unity_tray_manager_tray_icon_added (UnityTrayManager* _sender, ClutterActor* icon, gpointer self) {
+	unity_panel_system_tray_on_tray_icon_added (self, icon);
 }
 
 
-static void _unity_panel_tray_view_on_tray_icon_removed_unity_tray_manager_tray_icon_removed (UnityTrayManager* _sender, ClutterActor* icon, gpointer self) {
-	unity_panel_tray_view_on_tray_icon_removed (self, icon);
+static void _unity_panel_system_tray_on_tray_icon_removed_unity_tray_manager_tray_icon_removed (UnityTrayManager* _sender, ClutterActor* icon, gpointer self) {
+	unity_panel_system_tray_on_tray_icon_removed (self, icon);
 }
 
 
-static GObject * unity_panel_tray_view_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+static GObject * unity_panel_system_tray_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
-	UnityPanelTrayView * self;
-	parent_class = G_OBJECT_CLASS (unity_panel_tray_view_parent_class);
+	UnityPanelSystemTray * self;
+	parent_class = G_OBJECT_CLASS (unity_panel_system_tray_parent_class);
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
-	self = UNITY_PANEL_TRAY_VIEW (obj);
+	self = UNITY_PANEL_SYSTEM_TRAY (obj);
 	{
 		UnityTrayManager* _tmp0_;
 		self->priv->manager = (_tmp0_ = unity_tray_manager_new (), _g_object_unref0 (self->priv->manager), _tmp0_);
-		g_signal_connect_object (self->priv->manager, "tray-icon-added", (GCallback) _unity_panel_tray_view_on_tray_icon_added_unity_tray_manager_tray_icon_added, self, 0);
-		g_signal_connect_object (self->priv->manager, "tray-icon-removed", (GCallback) _unity_panel_tray_view_on_tray_icon_removed_unity_tray_manager_tray_icon_removed, self, 0);
+		g_signal_connect_object (self->priv->manager, "tray-icon-added", (GCallback) _unity_panel_system_tray_on_tray_icon_added_unity_tray_manager_tray_icon_added, self, 0);
+		g_signal_connect_object (self->priv->manager, "tray-icon-removed", (GCallback) _unity_panel_system_tray_on_tray_icon_removed_unity_tray_manager_tray_icon_removed, self, 0);
 	}
 	return obj;
 }
 
 
-static void unity_panel_tray_view_class_init (UnityPanelTrayViewClass * klass) {
-	unity_panel_tray_view_parent_class = g_type_class_peek_parent (klass);
-	g_type_class_add_private (klass, sizeof (UnityPanelTrayViewPrivate));
-	G_OBJECT_CLASS (klass)->constructor = unity_panel_tray_view_constructor;
-	G_OBJECT_CLASS (klass)->finalize = unity_panel_tray_view_finalize;
+static void unity_panel_system_tray_class_init (UnityPanelSystemTrayClass * klass) {
+	unity_panel_system_tray_parent_class = g_type_class_peek_parent (klass);
+	g_type_class_add_private (klass, sizeof (UnityPanelSystemTrayPrivate));
+	G_OBJECT_CLASS (klass)->constructor = unity_panel_system_tray_constructor;
+	G_OBJECT_CLASS (klass)->finalize = unity_panel_system_tray_finalize;
 }
 
 
-static void unity_panel_tray_view_instance_init (UnityPanelTrayView * self) {
-	self->priv = UNITY_PANEL_TRAY_VIEW_GET_PRIVATE (self);
+static void unity_panel_system_tray_instance_init (UnityPanelSystemTray * self) {
+	self->priv = UNITY_PANEL_SYSTEM_TRAY_GET_PRIVATE (self);
 	self->priv->n_icons = 1;
 }
 
 
-static void unity_panel_tray_view_finalize (GObject* obj) {
-	UnityPanelTrayView * self;
-	self = UNITY_PANEL_TRAY_VIEW (obj);
+static void unity_panel_system_tray_finalize (GObject* obj) {
+	UnityPanelSystemTray * self;
+	self = UNITY_PANEL_SYSTEM_TRAY (obj);
 	_g_object_unref0 (self->priv->manager);
 	_g_object_unref0 (self->priv->stage);
-	G_OBJECT_CLASS (unity_panel_tray_view_parent_class)->finalize (obj);
+	G_OBJECT_CLASS (unity_panel_system_tray_parent_class)->finalize (obj);
 }
 
 
-GType unity_panel_tray_view_get_type (void) {
-	static volatile gsize unity_panel_tray_view_type_id__volatile = 0;
-	if (g_once_init_enter (&unity_panel_tray_view_type_id__volatile)) {
-		static const GTypeInfo g_define_type_info = { sizeof (UnityPanelTrayViewClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_panel_tray_view_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityPanelTrayView), 0, (GInstanceInitFunc) unity_panel_tray_view_instance_init, NULL };
-		GType unity_panel_tray_view_type_id;
-		unity_panel_tray_view_type_id = g_type_register_static (CTK_TYPE_BOX, "UnityPanelTrayView", &g_define_type_info, 0);
-		g_once_init_leave (&unity_panel_tray_view_type_id__volatile, unity_panel_tray_view_type_id);
+GType unity_panel_system_tray_get_type (void) {
+	static volatile gsize unity_panel_system_tray_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_panel_system_tray_type_id__volatile)) {
+		static const GTypeInfo g_define_type_info = { sizeof (UnityPanelSystemTrayClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_panel_system_tray_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityPanelSystemTray), 0, (GInstanceInitFunc) unity_panel_system_tray_instance_init, NULL };
+		GType unity_panel_system_tray_type_id;
+		unity_panel_system_tray_type_id = g_type_register_static (CTK_TYPE_BOX, "UnityPanelSystemTray", &g_define_type_info, 0);
+		g_once_init_leave (&unity_panel_system_tray_type_id__volatile, unity_panel_system_tray_type_id);
 	}
-	return unity_panel_tray_view_type_id__volatile;
+	return unity_panel_system_tray_type_id__volatile;
 }
 
 

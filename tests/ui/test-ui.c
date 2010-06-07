@@ -66,6 +66,16 @@ typedef struct _MainPrivate MainPrivate;
 
 typedef struct _UnityTestsUIQuicklistSuite UnityTestsUIQuicklistSuite;
 typedef struct _UnityTestsUIQuicklistSuiteClass UnityTestsUIQuicklistSuiteClass;
+
+#define UNITY_TESTS_UI_TYPE_HOME_BUTTON_SUITE (unity_tests_ui_home_button_suite_get_type ())
+#define UNITY_TESTS_UI_HOME_BUTTON_SUITE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UI_TYPE_HOME_BUTTON_SUITE, UnityTestsUIHomeButtonSuite))
+#define UNITY_TESTS_UI_HOME_BUTTON_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UI_TYPE_HOME_BUTTON_SUITE, UnityTestsUIHomeButtonSuiteClass))
+#define UNITY_TESTS_UI_IS_HOME_BUTTON_SUITE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTS_UI_TYPE_HOME_BUTTON_SUITE))
+#define UNITY_TESTS_UI_IS_HOME_BUTTON_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTS_UI_TYPE_HOME_BUTTON_SUITE))
+#define UNITY_TESTS_UI_HOME_BUTTON_SUITE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTS_UI_TYPE_HOME_BUTTON_SUITE, UnityTestsUIHomeButtonSuiteClass))
+
+typedef struct _UnityTestsUIHomeButtonSuite UnityTestsUIHomeButtonSuite;
+typedef struct _UnityTestsUIHomeButtonSuiteClass UnityTestsUIHomeButtonSuiteClass;
 #define _unity_testing_logging_unref0(var) ((var == NULL) ? NULL : (var = (unity_testing_logging_unref (var), NULL)))
 typedef struct _ParamSpecMain ParamSpecMain;
 
@@ -126,8 +136,11 @@ enum  {
 	MAIN_DUMMY_PROPERTY
 };
 GType unity_tests_ui_quicklist_suite_get_type (void);
+GType unity_tests_ui_home_button_suite_get_type (void);
 UnityTestsUIQuicklistSuite* unity_tests_ui_quicklist_suite_new (void);
 UnityTestsUIQuicklistSuite* unity_tests_ui_quicklist_suite_construct (GType object_type);
+UnityTestsUIHomeButtonSuite* unity_tests_ui_home_button_suite_new (void);
+UnityTestsUIHomeButtonSuite* unity_tests_ui_home_button_suite_construct (GType object_type);
 static gboolean _lambda0_ (void);
 static gboolean __lambda0__gsource_func (gpointer self);
 gint main_main (char** args, int args_length1);
@@ -310,7 +323,9 @@ static gboolean _lambda0_ (void) {
 
 
 static gboolean __lambda0__gsource_func (gpointer self) {
-	return _lambda0_ ();
+	gboolean result;
+	result = _lambda0_ ();
+	return result;
 }
 
 
@@ -318,10 +333,13 @@ gint main_main (char** args, int args_length1) {
 	gint result = 0;
 	UnityTestingLogging* logger;
 	UnityTestsUIQuicklistSuite* quicklist_suite;
+	UnityTestsUIHomeButtonSuite* home_button_suite;
 	UnityTestingLogging* _tmp0_;
 	UnityTestsUIQuicklistSuite* _tmp1_;
+	UnityTestsUIHomeButtonSuite* _tmp2_;
 	logger = NULL;
 	quicklist_suite = NULL;
+	home_button_suite = NULL;
 	g_setenv ("UNITY_DISABLE_TRAY", "1", TRUE);
 	g_setenv ("UNITY_DISABLE_IDLES", "1", TRUE);
 	g_setenv ("UNITY_PANEL_INDICATORS_SKIP", "all", TRUE);
@@ -331,11 +349,13 @@ gint main_main (char** args, int args_length1) {
 	g_test_init (&args_length1, &args, NULL);
 	logger = (_tmp0_ = unity_testing_logging_new (), _unity_testing_logging_unref0 (logger), _tmp0_);
 	quicklist_suite = (_tmp1_ = unity_tests_ui_quicklist_suite_new (), _g_object_unref0 (quicklist_suite), _tmp1_);
+	home_button_suite = (_tmp2_ = unity_tests_ui_home_button_suite_new (), _g_object_unref0 (home_button_suite), _tmp2_);
 	g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 3, __lambda0__gsource_func, NULL, NULL);
 	gtk_main ();
 	result = 0;
 	_unity_testing_logging_unref0 (logger);
 	_g_object_unref0 (quicklist_suite);
+	_g_object_unref0 (home_button_suite);
 	return result;
 }
 

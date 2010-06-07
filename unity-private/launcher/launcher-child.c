@@ -231,12 +231,12 @@ static void unity_launcher_launcher_child_load_textures (UnityLauncherLauncherCh
 		GdkPixbuf* _tmp3_;
 		_tmp2_ = gdk_pixbuf_new_from_file (UNITY_LAUNCHER_HONEYCOMB_MASK_FILE, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch23_g_error;
+			goto __catch20_g_error;
 		}
 		self->priv->honeycomb_mask = (_tmp3_ = _tmp2_, _g_object_unref0 (self->priv->honeycomb_mask), _tmp3_);
 	}
-	goto __finally23;
-	__catch23_g_error:
+	goto __finally20;
+	__catch20_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -246,7 +246,7 @@ static void unity_launcher_launcher_child_load_textures (UnityLauncherLauncherCh
 			_g_error_free0 (e);
 		}
 	}
-	__finally23:
+	__finally20:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -429,7 +429,9 @@ static gboolean unity_launcher_launcher_child_check_continue_wiggle (UnityLaunch
 
 
 static gboolean _unity_launcher_launcher_child_check_continue_wiggle_gsource_func (gpointer self) {
-	return unity_launcher_launcher_child_check_continue_wiggle (self);
+	gboolean result;
+	result = unity_launcher_launcher_child_check_continue_wiggle (self);
+	return result;
 }
 
 
@@ -458,6 +460,7 @@ static void unity_launcher_launcher_child_on_icon_changed (UnityLauncherLauncher
 	g_return_if_fail (self != NULL);
 	if (GDK_IS_PIXBUF (unity_launcher_scroller_child_get_icon ((UnityLauncherScrollerChild*) self))) {
 		GdkPixbuf* scaled_buf;
+		gint max_size;
 		gboolean _tmp0_ = FALSE;
 		GdkPixbuf* color_buf;
 		guint red = 0U;
@@ -474,14 +477,18 @@ static void unity_launcher_launcher_child_on_icon_changed (UnityLauncherLauncher
 		ClutterActor* _tmp5_;
 		CtkEffectDropShadow* _tmp7_;
 		scaled_buf = NULL;
-		if (gdk_pixbuf_get_width (unity_launcher_scroller_child_get_icon ((UnityLauncherScrollerChild*) self)) > 48) {
+		max_size = 48;
+		if (!unity_pixbuf_is_tile (unity_launcher_scroller_child_get_icon ((UnityLauncherScrollerChild*) self))) {
+			max_size = 40;
+		}
+		if (gdk_pixbuf_get_width (unity_launcher_scroller_child_get_icon ((UnityLauncherScrollerChild*) self)) > max_size) {
 			_tmp0_ = TRUE;
 		} else {
-			_tmp0_ = gdk_pixbuf_get_height (unity_launcher_scroller_child_get_icon ((UnityLauncherScrollerChild*) self)) > 48;
+			_tmp0_ = gdk_pixbuf_get_height (unity_launcher_scroller_child_get_icon ((UnityLauncherScrollerChild*) self)) > max_size;
 		}
 		if (_tmp0_) {
 			GdkPixbuf* _tmp1_;
-			scaled_buf = (_tmp1_ = gdk_pixbuf_scale_simple (unity_launcher_scroller_child_get_icon ((UnityLauncherScrollerChild*) self), 48, 48, GDK_INTERP_HYPER), _g_object_unref0 (scaled_buf), _tmp1_);
+			scaled_buf = (_tmp1_ = gdk_pixbuf_scale_simple (unity_launcher_scroller_child_get_icon ((UnityLauncherScrollerChild*) self), max_size, max_size, GDK_INTERP_HYPER), _g_object_unref0 (scaled_buf), _tmp1_);
 		} else {
 			GdkPixbuf* _tmp2_;
 			scaled_buf = (_tmp2_ = _g_object_ref0 (unity_launcher_scroller_child_get_icon ((UnityLauncherScrollerChild*) self)), _g_object_unref0 (scaled_buf), _tmp2_);
@@ -492,7 +499,7 @@ static void unity_launcher_launcher_child_on_icon_changed (UnityLauncherLauncher
 		pixels[0] = (guchar) red;
 		pixels[1] = (guchar) green;
 		pixels[2] = (guchar) blue;
-		pixels[3] = (guchar) 128;
+		pixels[3] = (guchar) 255;
 		tex = _g_object_ref0 (gtk_clutter_texture_new_from_pixbuf (scaled_buf));
 		color = _g_object_ref0 (gtk_clutter_texture_new_from_pixbuf (color_buf));
 		self->priv->processed_icon = (_tmp6_ = (CtkActor*) g_object_ref_sink (unity_unity_icon_new ((_tmp4_ = tex, CLUTTER_IS_TEXTURE (_tmp4_) ? ((ClutterTexture*) _tmp4_) : NULL), (_tmp5_ = color, CLUTTER_IS_TEXTURE (_tmp5_) ? ((ClutterTexture*) _tmp5_) : NULL))), _g_object_unref0 (self->priv->processed_icon), _tmp6_);

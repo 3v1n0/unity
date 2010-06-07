@@ -340,12 +340,16 @@ void unity_expose_clone_set_darken (UnityExposeClone* self, guint8 value) {
 
 
 static gboolean _unity_expose_clone_on_mouse_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_expose_clone_on_mouse_enter (self, event);
+	gboolean result;
+	result = unity_expose_clone_on_mouse_enter (self, event);
+	return result;
 }
 
 
 static gboolean _unity_expose_clone_on_mouse_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_expose_clone_on_mouse_leave (self, event);
+	gboolean result;
+	result = unity_expose_clone_on_mouse_leave (self, event);
+	return result;
 }
 
 
@@ -511,7 +515,9 @@ static gboolean _lambda4_ (UnityExposeManager* self) {
 
 
 static gboolean __lambda4__clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return _lambda4_ (self);
+	gboolean result;
+	result = _lambda4_ (self);
+	return result;
 }
 
 
@@ -535,12 +541,16 @@ static gboolean _lambda5_ (UnityExposeManager* self) {
 
 
 static gboolean __lambda5__clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return _lambda5_ (self);
+	gboolean result;
+	result = _lambda5_ (self);
+	return result;
 }
 
 
 static gboolean _unity_expose_manager_on_stage_captured_event_clutter_actor_captured_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_expose_manager_on_stage_captured_event (self, event);
+	gboolean result;
+	result = unity_expose_manager_on_stage_captured_event (self, event);
+	return result;
 }
 
 

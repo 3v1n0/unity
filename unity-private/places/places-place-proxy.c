@@ -190,18 +190,18 @@ static void unity_places_place_proxy_setup_service (UnityPlacesPlaceProxy* self)
 		DBusGProxy* _tmp2_;
 		_tmp0_ = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch12_g_error;
+			goto __catch9_g_error;
 		}
 		self->priv->conn = (_tmp1_ = _tmp0_, _dbus_g_connection_unref0 (self->priv->conn), _tmp1_);
 		self->priv->service = (_tmp2_ = dbus_g_proxy_new_for_name (self->priv->conn, self->priv->_dbus_name, self->priv->_dbus_path, "com.canonical.Unity.Place"), _g_object_unref0 (self->priv->service), _tmp2_);
 		_dynamic_ViewChanged1_connect (self->priv->service, "ViewChanged", (GCallback) _unity_places_place_proxy_on_view_changed_dynamic_ViewChanged0_, self);
 		_dynamic_set_active0 (self->priv->service, FALSE, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch12_g_error;
+			goto __catch9_g_error;
 		}
 	}
-	goto __finally12;
-	__catch12_g_error:
+	goto __finally9;
+	__catch9_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -211,7 +211,7 @@ static void unity_places_place_proxy_setup_service (UnityPlacesPlaceProxy* self)
 			_g_error_free0 (e);
 		}
 	}
-	__finally12:
+	__finally9:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);

@@ -114,7 +114,9 @@ static gboolean _lambda0_ (void) {
 
 
 static gboolean __lambda0__gsource_func (gpointer self) {
-	return _lambda0_ ();
+	gboolean result;
+	result = _lambda0_ ();
+	return result;
 }
 
 

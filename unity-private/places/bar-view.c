@@ -205,7 +205,9 @@ static void _unity_places_bar_view_on_place_added_unity_places_model_place_added
 
 
 static gboolean _unity_places_bar_view_on_button_release_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_places_bar_view_on_button_release (self, event);
+	gboolean result;
+	result = unity_places_bar_view_on_button_release (self, event);
+	return result;
 }
 
 
@@ -389,7 +391,7 @@ gboolean unity_places_bar_view_on_button_release (UnityPlacesBarView* self, Clut
 				g_spawn_command_line_async ("xdg-open trash:///", &_inner_error_);
 				if (_inner_error_ != NULL) {
 					if (_inner_error_->domain == G_SPAWN_ERROR) {
-						goto __catch9_g_spawn_error;
+						goto __catch6_g_spawn_error;
 					}
 					_g_object_unref0 (icon);
 					_g_object_unref0 (actor);
@@ -398,8 +400,8 @@ gboolean unity_places_bar_view_on_button_release (UnityPlacesBarView* self, Clut
 					return FALSE;
 				}
 			}
-			goto __finally9;
-			__catch9_g_spawn_error:
+			goto __finally6;
+			__catch6_g_spawn_error:
 			{
 				GError * e;
 				e = _inner_error_;
@@ -409,7 +411,7 @@ gboolean unity_places_bar_view_on_button_release (UnityPlacesBarView* self, Clut
 					_g_error_free0 (e);
 				}
 			}
-			__finally9:
+			__finally6:
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (icon);
 				_g_object_unref0 (actor);
