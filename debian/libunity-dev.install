@@ -1,3 +1,4 @@
 debian/tmp/usr/include/unity/*
 #missing: debian/tmp/usr/lib/pkgconfig/unity.pc
 debian/tmp/usr/lib/libunity*.so
+debian/tmp/usr/share/vala/vapi/unity.vapi
