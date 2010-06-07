@@ -13,6 +13,10 @@ unity (0.2.6-0ubuntu1) UNRELEASED; urgency=low
     - fix rm *{,l}a files
   * debian/libunity-dev.install:
     - install vapi file
+  * debian/patches/01_drop_mutter_req.patch:
+    - don't depend on extra mutter functionality
+  * debian/patches/02_make_perceptualdiff_optional.patch, debian/control:
+    - remove perceptualdiff as will be optional
 
  -- Didier Roche <didrocks@ubuntu.com>  Mon, 07 Jun 2010 12:21:02 +0200
 
