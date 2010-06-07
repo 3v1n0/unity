@@ -5,6 +5,7 @@ unity (0.2.6-0ubuntu1) UNRELEASED; urgency=low
   * update debian/copyright
   * debian/control:
     - change HomePage
+    - update Standards-Version
 
  -- Didier Roche <didrocks@ubuntu.com>  Mon, 07 Jun 2010 12:21:02 +0200
 

@@ -23,7 +23,7 @@ Build-Depends: cdbs,
                libunity-misc-dev (>= 0.1.0),
                libmutter-dev (>= 2.29.0-1ubuntu1dx3+r3434),
                perceptualdiff
-Standards-Version: 3.8.3
+Standards-Version: 3.8.4
 Homepage: https://launchpad.net/unity
 
 Package: unity
