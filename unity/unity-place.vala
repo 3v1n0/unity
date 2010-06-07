@@ -24,7 +24,7 @@
  * some good reasons.
  *
  * Firstly we want to hide away Vala's internal DBus marshalling which would
- * expose raw structs in the. These structs are hidden away in _RendererInfo,
+ * expose raw structs in the API. These structs are hidden away in _RendererInfo,
  * and _EntryInfo. We wrap these in handy GObjects with properties and what not.
  * In fact we want to hide all DBusisms, which is also why the DBus interfaces
  * are declared private.
@@ -134,7 +134,64 @@ namespace Unity.Place {
     {
       info.hints.remove_all ();
     }
+    
+    public uint num_hints ()
+    {
+      return info.hints.size ();
+    }
   }
+  
+  /**
+   *
+   */
+  public class Search : InitiallyUnowned {
+    
+    private string search;
+    private HashTable<string,string> hints;
+    
+    /*
+     * Public API
+     */
+    
+    public Search (string search, HashTable<string,string> hints)
+    {
+      GLib.Object();
+      this.search = search;
+      this.hints = hints;
+    }
+    
+    public string get_search_string ()
+    {
+      return search;
+    }
+    
+    public void set_hint (string hint, string val)
+    {
+      hints.insert (hint, val);
+    }
+    
+    public string? get_hint (string hint)
+    {
+      return hints.lookup (hint);
+    }
+    
+    public void clear_hint (string hint)
+    {
+      hints.remove (hint);
+    }
+    
+    public void clear_hints ()
+    {
+      hints.remove_all ();
+    }
+    
+    public uint num_hints ()
+    {
+      return hints.size ();
+    }
+  }
+  
+  public delegate uint SearchHandler (Search search);
   
   /**
    * UnityPlace_EntryInfo:
@@ -162,6 +219,10 @@ namespace Unity.Place {
     private RendererInfo _entry_renderer_info;
     private RendererInfo _global_renderer_info;
     private Dee.Model _sections_model;
+    private SearchHandler _search_handler = null;
+    private SearchHandler _global_search_handler = null;
+    private bool _active = false;
+    private uint _active_section = 0;
     
     /*
      * Properties
@@ -216,6 +277,26 @@ namespace Unity.Place {
         else
           info.sections_model = "__local__";
       }
+    }
+    
+    public bool active {
+      get { return _active; }
+      set { _active = value; }
+    }
+    
+    public uint active_section {
+      get { return _active_section; }
+      set { _active_section = value; }
+    }
+    
+    public SearchHandler search_handler {
+      get { return _search_handler; }
+      set { _search_handler = value; }
+    }
+    
+    public SearchHandler global_search_handler {
+      get { return _global_search_handler; }
+      set { _global_search_handler = value; }
     }
     
     /*
@@ -286,6 +367,11 @@ namespace Unity.Place {
     public void clear_hints ()
     {
       info.hints.remove_all ();
+    }
+    
+    public uint num_hints ()
+    {
+      return info.hints.size ();
     }
     
     /*
@@ -531,23 +617,37 @@ namespace Unity.Place {
     public uint set_global_search (string search,
                                    HashTable<string,string> hints)
     {
-      return 0;
+      if (_entry_info.global_search_handler != null)
+        return _entry_info.global_search_handler (new Search (search, hints));
+      else
+        {
+          warning ("No global search handler installed for %s",
+                   _entry_info.dbus_path);
+          return 0;
+        }
     }
-
+    
     public uint set_search (string search,
                             HashTable<string,string> hints)
     {
-      return 0;
+      if (_entry_info.search_handler != null)
+        return _entry_info.search_handler (new Search (search, hints));
+      else
+        {
+          warning ("No search handler installed for %s",
+                   _entry_info.dbus_path);
+          return 0;
+        }
     }
     
     public void set_active (bool is_active)
     {
-      // pass
+      this._entry_info.active = is_active;
     }
 
     public void set_active_section (uint section_id)
     {
-      // pass
+      this._entry_info.active_section = section_id;
     }
     
     /*
@@ -597,7 +697,7 @@ namespace Unity.Place {
     
     public bool exported {
       get { return _exported; }
-    }
+    }    
     
     /*
      * Constructors
@@ -670,84 +770,5 @@ namespace Unity.Place {
       notify_property("exported");
     }
   }
-  
-  /*public class TestPlaceDaemon : GLib.Object, PlaceService
-  {
-   	private static string[] supported_mimetypes = {"text/plain", "text/html"};	
-   	
-   	public TestPlaceDaemon()
-   	{
-   	  try {
-        var conn = DBus.Bus.get (DBus.BusType. SESSION);
-
-        dynamic DBus.Object bus = conn.get_object ("org.freedesktop.DBus",
-                                                   "/org/freedesktop/DBus",
-                                                   "org.freedesktop.DBus");
-        
-        // try to register service in session bus
-        uint request_name_result = bus.request_name ("org.ayatana.TestPlace", (uint) 0);
-
-        if (request_name_result == DBus.RequestNameReply.PRIMARY_OWNER) {
-            conn.register_object ("/org/ayatana/places/test", this);            
-        } else {        
-          stderr.printf ("Unable to grab DBus name. Another test server is probably running\n");  
-        }
-      } catch (DBus.Error e) {
-          stderr.printf ("Oops: %s\n", e.message);
-      }
-   	}
-   	
-   	public _EntryInfo[] get_entries () throws DBus.Error
-   	{
-   	  var entry = _EntryInfo();
-      entry.dbus_path = "/org/foo/bar";
-      entry.name = "My Entry Name";
-      entry.icon = "__icon__";
-      entry.position = 0;
-      entry.mimetypes = supported_mimetypes;
-      entry.sensitive = true;
-      entry.sections_model = "org.ayatana.MySectionsModel";
-      entry.hints = new HashTable<string, string> (str_hash, str_equal);
-      entry.entry_renderer_info.default_renderer = "DefaultRenderer";
-      entry.entry_renderer_info.groups_model = "org.ayatana.MyGroupsModel";
-      entry.entry_renderer_info.results_model = "org.ayatana.MyResultsModel";
-      entry.entry_renderer_info.hints = new HashTable<string, string> (str_hash, str_equal);
-      entry.global_renderer_info.default_renderer = "DefaultRenderer";
-      entry.global_renderer_info.groups_model = "org.ayatana.MyGlobalGroupsModel";
-      entry.global_renderer_info.results_model = "org.ayatana.MyGlobalResultsModel";
-      entry.global_renderer_info.hints = new HashTable<string, string> (str_hash, str_equal);
-      
-      _EntryInfo[] entries = new _EntryInfo[1];
-      entries[0] = entry;
-      return entries;
-   	}
-   	
-    public static int main (string[] args)
-    {
-      var loop = new MainLoop (null, false);
-      var daemon = new TestPlaceDaemon();
-      loop.run ();
-      
-      return 0;
-    }
-  }*/
-  /*
-  public static int main (string[] args)
-    {
-      var loop = new MainLoop (null, false);
-      var ctl = new Controller ("/foo/bar");
-      ctl.export();
-      
-      var entry = new EntryInfo();
-      entry.dbus_path = "/foo/bar/entries/0";
-      entry.display_name = "Display Name";
-      entry.set_hint ("hintkey1", "hintvalue1");
-      ctl.add_entry (entry);
-      
-      loop.run ();
-
-      return 0;
-    }
-  */
   
 } /* namespace */
