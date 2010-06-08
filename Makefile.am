@@ -29,3 +29,4 @@ EXTRA_DIST = \
   autogen.sh \
   COPYING \
   unity.pc.in
+  COPYING.LGPL
