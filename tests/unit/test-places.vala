@@ -26,7 +26,7 @@ namespace Unity.Tests.Unit
   {
     public PlacesSuite ()
     {
-      Test.add_func ("/Unit/Places/TestPlace", () => {
+      /*Test.add_func ("/Unit/Places/TestPlace", () => {
 
         Logging.init_fatal_handler ();
 
@@ -49,10 +49,10 @@ namespace Unity.Tests.Unit
           {
             warning ("TestPlace error: %s", e.message);
           }
-      });
+      });*/
     }
 
-    public class TestPlace : Unity.Place
+    /*public class TestPlace : Unity.Place
     {
       public TestPlace ()
       {
@@ -63,6 +63,6 @@ namespace Unity.Tests.Unit
       {
         this.is_active.connect ((a) => {print (@"$a\n");});
       }
-    }
+    }*/
   }
 }

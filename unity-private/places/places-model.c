@@ -74,31 +74,50 @@ static void unity_places_model_finalize (GObject* obj);
 
 
 
+#line 38 "places-model.vala"
 UnityPlacesModel* unity_places_model_construct (GType object_type) {
+#line 80 "places-model.c"
 	UnityPlacesModel * self;
+#line 40 "places-model.vala"
 	self = (UnityPlacesModel*) g_object_new (object_type, NULL);
+#line 84 "places-model.c"
 	return self;
 }
 
 
+#line 38 "places-model.vala"
 UnityPlacesModel* unity_places_model_new (void) {
+#line 38 "places-model.vala"
 	return unity_places_model_construct (UNITY_PLACES_TYPE_MODEL);
+#line 93 "places-model.c"
 }
 
 
+#line 48 "places-model.vala"
 void unity_places_model_add (UnityPlacesModel* self, UnityPlacesPlace* place) {
+#line 48 "places-model.vala"
 	g_return_if_fail (self != NULL);
+#line 48 "places-model.vala"
 	g_return_if_fail (place != NULL);
+#line 50 "places-model.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->list, place);
+#line 52 "places-model.vala"
 	g_signal_emit_by_name (self, "place-added", place);
+#line 107 "places-model.c"
 }
 
 
+#line 55 "places-model.vala"
 void unity_places_model_remove (UnityPlacesModel* self, UnityPlacesPlace* place) {
+#line 55 "places-model.vala"
 	g_return_if_fail (self != NULL);
+#line 55 "places-model.vala"
 	g_return_if_fail (place != NULL);
+#line 57 "places-model.vala"
 	gee_abstract_collection_remove ((GeeAbstractCollection*) self->list, place);
+#line 59 "places-model.vala"
 	g_signal_emit_by_name (self, "place-removed", place);
+#line 121 "places-model.c"
 }
 
 
@@ -111,7 +130,9 @@ static GObject * unity_places_model_constructor (GType type, guint n_construct_p
 	self = UNITY_PLACES_MODEL (obj);
 	{
 		GeeArrayList* _tmp0_;
+#line 45 "places-model.vala"
 		self->list = (_tmp0_ = gee_array_list_new (UNITY_PLACES_TYPE_PLACE, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->list), _tmp0_);
+#line 136 "places-model.c"
 	}
 	return obj;
 }

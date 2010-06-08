@@ -140,13 +140,19 @@ static void unity_launcher_launcher_set_property (GObject * object, guint proper
 
 
 
+#line 28 "launcher.vala"
 char* unity_launcher_shortcut_item_get_name (UnityLauncherShortcutItem* self) {
+#line 28 "launcher.vala"
 	return UNITY_LAUNCHER_SHORTCUT_ITEM_GET_INTERFACE (self)->get_name (self);
+#line 148 "launcher.c"
 }
 
 
+#line 30 "launcher.vala"
 void unity_launcher_shortcut_item_activated (UnityLauncherShortcutItem* self) {
+#line 30 "launcher.vala"
 	UNITY_LAUNCHER_SHORTCUT_ITEM_GET_INTERFACE (self)->activated (self);
+#line 156 "launcher.c"
 }
 
 
@@ -171,24 +177,38 @@ GType unity_launcher_shortcut_item_get_type (void) {
 }
 
 
+#line 40 "launcher.vala"
 UnityLauncherLauncher* unity_launcher_launcher_construct (GType object_type, UnityShell* shell) {
+#line 183 "launcher.c"
 	UnityLauncherLauncher * self;
+#line 40 "launcher.vala"
 	g_return_val_if_fail (shell != NULL, NULL);
+#line 42 "launcher.vala"
 	self = (UnityLauncherLauncher*) g_object_new (object_type, "shell", shell, NULL);
+#line 189 "launcher.c"
 	return self;
 }
 
 
+#line 40 "launcher.vala"
 UnityLauncherLauncher* unity_launcher_launcher_new (UnityShell* shell) {
+#line 40 "launcher.vala"
 	return unity_launcher_launcher_construct (UNITY_LAUNCHER_TYPE_LAUNCHER, shell);
+#line 198 "launcher.c"
 }
 
 
+#line 52 "launcher.vala"
 float unity_launcher_launcher_get_width (UnityLauncherLauncher* self) {
+#line 204 "launcher.c"
 	float result = 0.0F;
+#line 52 "launcher.vala"
 	g_return_val_if_fail (self != NULL, 0.0F);
+#line 208 "launcher.c"
 	result = (float) 60;
+#line 54 "launcher.vala"
 	return result;
+#line 212 "launcher.c"
 }
 
 
@@ -197,12 +217,18 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
+#line 57 "launcher.vala"
 ClutterActor* unity_launcher_launcher_get_view (UnityLauncherLauncher* self) {
+#line 223 "launcher.c"
 	ClutterActor* result = NULL;
 	UnityLauncherScrollerView* _tmp0_;
+#line 57 "launcher.vala"
 	g_return_val_if_fail (self != NULL, NULL);
+#line 228 "launcher.c"
 	result = _g_object_ref0 ((_tmp0_ = self->priv->view, CLUTTER_IS_ACTOR (_tmp0_) ? ((ClutterActor*) _tmp0_) : NULL));
+#line 59 "launcher.vala"
 	return result;
+#line 232 "launcher.c"
 }
 
 
@@ -210,7 +236,9 @@ UnityShell* unity_launcher_launcher_get_shell (UnityLauncherLauncher* self) {
 	UnityShell* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_shell;
+#line 35 "launcher.vala"
 	return result;
+#line 242 "launcher.c"
 }
 
 
@@ -233,9 +261,13 @@ static GObject * unity_launcher_launcher_constructor (GType type, guint n_constr
 		UnityLauncherScrollerModel* _tmp0_;
 		UnityLauncherScrollerView* _tmp1_;
 		UnityLauncherScrollerController* _tmp2_;
+#line 47 "launcher.vala"
 		self->priv->model = (_tmp0_ = unity_launcher_scroller_model_new (), _g_object_unref0 (self->priv->model), _tmp0_);
+#line 48 "launcher.vala"
 		self->priv->view = (_tmp1_ = g_object_ref_sink (unity_launcher_scroller_view_new (self->priv->model)), _g_object_unref0 (self->priv->view), _tmp1_);
+#line 49 "launcher.vala"
 		self->priv->controller = (_tmp2_ = unity_launcher_scroller_controller_new (self->priv->model, self->priv->view), _g_object_unref0 (self->priv->controller), _tmp2_);
+#line 271 "launcher.c"
 	}
 	return obj;
 }

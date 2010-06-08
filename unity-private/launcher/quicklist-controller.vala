@@ -84,7 +84,7 @@ namespace Unity.Launcher
       float x;
       float y;
       this.menu.get_position (out x, out y);
-      this.menu.set_position (x - (float) 20.0f, y - 4.0f);
+      this.menu.set_position (x - (float) 22.0f, y - 1.0f);
       this.is_in_label = true;
     }
 

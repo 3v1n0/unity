@@ -17,6 +17,9 @@
 #include <gtk/gtk.h>
 #include <gio/gio.h>
 #include <gee.h>
+#include <dee.h>
+#include <dbus/dbus-glib-lowlevel.h>
+#include <dbus/dbus-glib.h>
 
 G_BEGIN_DECLS
 
@@ -172,6 +175,50 @@ typedef struct _UnityFavoritesPrivate UnityFavoritesPrivate;
 typedef struct _UnityGConfFavorites UnityGConfFavorites;
 typedef struct _UnityGConfFavoritesClass UnityGConfFavoritesClass;
 typedef struct _UnityGConfFavoritesPrivate UnityGConfFavoritesPrivate;
+
+#define UNITY_PLACE_TYPE_RENDERER_INFO (unity_place_renderer_info_get_type ())
+#define UNITY_PLACE_RENDERER_INFO(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_RENDERER_INFO, UnityPlaceRendererInfo))
+#define UNITY_PLACE_RENDERER_INFO_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACE_TYPE_RENDERER_INFO, UnityPlaceRendererInfoClass))
+#define UNITY_PLACE_IS_RENDERER_INFO(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACE_TYPE_RENDERER_INFO))
+#define UNITY_PLACE_IS_RENDERER_INFO_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACE_TYPE_RENDERER_INFO))
+#define UNITY_PLACE_RENDERER_INFO_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACE_TYPE_RENDERER_INFO, UnityPlaceRendererInfoClass))
+
+typedef struct _UnityPlaceRendererInfo UnityPlaceRendererInfo;
+typedef struct _UnityPlaceRendererInfoClass UnityPlaceRendererInfoClass;
+typedef struct _UnityPlaceRendererInfoPrivate UnityPlaceRendererInfoPrivate;
+
+#define UNITY_PLACE_TYPE_SEARCH (unity_place_search_get_type ())
+#define UNITY_PLACE_SEARCH(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_SEARCH, UnityPlaceSearch))
+#define UNITY_PLACE_SEARCH_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACE_TYPE_SEARCH, UnityPlaceSearchClass))
+#define UNITY_PLACE_IS_SEARCH(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACE_TYPE_SEARCH))
+#define UNITY_PLACE_IS_SEARCH_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACE_TYPE_SEARCH))
+#define UNITY_PLACE_SEARCH_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACE_TYPE_SEARCH, UnityPlaceSearchClass))
+
+typedef struct _UnityPlaceSearch UnityPlaceSearch;
+typedef struct _UnityPlaceSearchClass UnityPlaceSearchClass;
+typedef struct _UnityPlaceSearchPrivate UnityPlaceSearchPrivate;
+
+#define UNITY_PLACE_TYPE_ENTRY_INFO (unity_place_entry_info_get_type ())
+#define UNITY_PLACE_ENTRY_INFO(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_ENTRY_INFO, UnityPlaceEntryInfo))
+#define UNITY_PLACE_ENTRY_INFO_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACE_TYPE_ENTRY_INFO, UnityPlaceEntryInfoClass))
+#define UNITY_PLACE_IS_ENTRY_INFO(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACE_TYPE_ENTRY_INFO))
+#define UNITY_PLACE_IS_ENTRY_INFO_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACE_TYPE_ENTRY_INFO))
+#define UNITY_PLACE_ENTRY_INFO_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACE_TYPE_ENTRY_INFO, UnityPlaceEntryInfoClass))
+
+typedef struct _UnityPlaceEntryInfo UnityPlaceEntryInfo;
+typedef struct _UnityPlaceEntryInfoClass UnityPlaceEntryInfoClass;
+typedef struct _UnityPlaceEntryInfoPrivate UnityPlaceEntryInfoPrivate;
+
+#define UNITY_PLACE_TYPE_CONTROLLER (unity_place_controller_get_type ())
+#define UNITY_PLACE_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_CONTROLLER, UnityPlaceController))
+#define UNITY_PLACE_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACE_TYPE_CONTROLLER, UnityPlaceControllerClass))
+#define UNITY_PLACE_IS_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACE_TYPE_CONTROLLER))
+#define UNITY_PLACE_IS_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACE_TYPE_CONTROLLER))
+#define UNITY_PLACE_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACE_TYPE_CONTROLLER, UnityPlaceControllerClass))
+
+typedef struct _UnityPlaceController UnityPlaceController;
+typedef struct _UnityPlaceControllerClass UnityPlaceControllerClass;
+typedef struct _UnityPlaceControllerPrivate UnityPlaceControllerPrivate;
 
 #define UNITY_WEBAPP_TYPE_FETCH_FILE (unity_webapp_fetch_file_get_type ())
 #define UNITY_WEBAPP_FETCH_FILE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_WEBAPP_TYPE_FETCH_FILE, UnityWebappFetchFile))
@@ -358,6 +405,43 @@ struct _UnityGConfFavoritesClass {
 	UnityFavoritesClass parent_class;
 };
 
+struct _UnityPlaceRendererInfo {
+	GObject parent_instance;
+	UnityPlaceRendererInfoPrivate * priv;
+};
+
+struct _UnityPlaceRendererInfoClass {
+	GObjectClass parent_class;
+};
+
+struct _UnityPlaceSearch {
+	GInitiallyUnowned parent_instance;
+	UnityPlaceSearchPrivate * priv;
+};
+
+struct _UnityPlaceSearchClass {
+	GInitiallyUnownedClass parent_class;
+};
+
+typedef guint (*UnityPlaceSearchHandler) (UnityPlaceSearch* search, void* user_data);
+struct _UnityPlaceEntryInfo {
+	GObject parent_instance;
+	UnityPlaceEntryInfoPrivate * priv;
+};
+
+struct _UnityPlaceEntryInfoClass {
+	GObjectClass parent_class;
+};
+
+struct _UnityPlaceController {
+	GObject parent_instance;
+	UnityPlaceControllerPrivate * priv;
+};
+
+struct _UnityPlaceControllerClass {
+	GObjectClass parent_class;
+};
+
 struct _UnityWebappFetchFile {
 	GObject parent_instance;
 	UnityWebappFetchFilePrivate * priv;
@@ -485,6 +569,72 @@ UnityFavorites* unity_favorites_construct (GType object_type);
 GType unity_gconf_favorites_get_type (void);
 UnityGConfFavorites* unity_gconf_favorites_new (void);
 UnityGConfFavorites* unity_gconf_favorites_construct (GType object_type);
+GType unity_place_renderer_info_get_type (void);
+void unity_place_renderer_info_set_hint (UnityPlaceRendererInfo* self, const char* hint, const char* val);
+char* unity_place_renderer_info_get_hint (UnityPlaceRendererInfo* self, const char* hint);
+void unity_place_renderer_info_clear_hint (UnityPlaceRendererInfo* self, const char* hint);
+void unity_place_renderer_info_clear_hints (UnityPlaceRendererInfo* self);
+guint unity_place_renderer_info_num_hints (UnityPlaceRendererInfo* self);
+const char* unity_place_renderer_info_get_default_renderer (UnityPlaceRendererInfo* self);
+void unity_place_renderer_info_set_default_renderer (UnityPlaceRendererInfo* self, const char* value);
+DeeModel* unity_place_renderer_info_get_groups_model (UnityPlaceRendererInfo* self);
+void unity_place_renderer_info_set_groups_model (UnityPlaceRendererInfo* self, DeeModel* value);
+DeeModel* unity_place_renderer_info_get_results_model (UnityPlaceRendererInfo* self);
+void unity_place_renderer_info_set_results_model (UnityPlaceRendererInfo* self, DeeModel* value);
+GType unity_place_search_get_type (void);
+UnityPlaceSearch* unity_place_search_new (const char* search, GHashTable* hints);
+UnityPlaceSearch* unity_place_search_construct (GType object_type, const char* search, GHashTable* hints);
+char* unity_place_search_get_search_string (UnityPlaceSearch* self);
+void unity_place_search_set_hint (UnityPlaceSearch* self, const char* hint, const char* val);
+char* unity_place_search_get_hint (UnityPlaceSearch* self, const char* hint);
+void unity_place_search_clear_hint (UnityPlaceSearch* self, const char* hint);
+void unity_place_search_clear_hints (UnityPlaceSearch* self);
+guint unity_place_search_num_hints (UnityPlaceSearch* self);
+GType unity_place_entry_info_get_type (void);
+UnityPlaceEntryInfo* unity_place_entry_info_new (const char* dbus_path);
+UnityPlaceEntryInfo* unity_place_entry_info_construct (GType object_type, const char* dbus_path);
+void unity_place_entry_info_set_hint (UnityPlaceEntryInfo* self, const char* hint, const char* val);
+char* unity_place_entry_info_get_hint (UnityPlaceEntryInfo* self, const char* hint);
+void unity_place_entry_info_clear_hint (UnityPlaceEntryInfo* self, const char* hint);
+void unity_place_entry_info_clear_hints (UnityPlaceEntryInfo* self);
+guint unity_place_entry_info_num_hints (UnityPlaceEntryInfo* self);
+UnityPlaceRendererInfo* unity_place_entry_info_get_entry_renderer_info (UnityPlaceEntryInfo* self);
+UnityPlaceRendererInfo* unity_place_entry_info_get_global_renderer_info (UnityPlaceEntryInfo* self);
+const char* unity_place_entry_info_get_dbus_path (UnityPlaceEntryInfo* self);
+void unity_place_entry_info_set_dbus_path (UnityPlaceEntryInfo* self, const char* value);
+const char* unity_place_entry_info_get_display_name (UnityPlaceEntryInfo* self);
+void unity_place_entry_info_set_display_name (UnityPlaceEntryInfo* self, const char* value);
+const char* unity_place_entry_info_get_icon (UnityPlaceEntryInfo* self);
+void unity_place_entry_info_set_icon (UnityPlaceEntryInfo* self, const char* value);
+guint unity_place_entry_info_get_position (UnityPlaceEntryInfo* self);
+void unity_place_entry_info_set_position (UnityPlaceEntryInfo* self, guint value);
+char** unity_place_entry_info_get_mimetypes (UnityPlaceEntryInfo* self, int* result_length1);
+void unity_place_entry_info_set_mimetypes (UnityPlaceEntryInfo* self, char** value, int value_length1);
+gboolean unity_place_entry_info_get_sensitive (UnityPlaceEntryInfo* self);
+void unity_place_entry_info_set_sensitive (UnityPlaceEntryInfo* self, gboolean value);
+DeeModel* unity_place_entry_info_get_sections_model (UnityPlaceEntryInfo* self);
+void unity_place_entry_info_set_sections_model (UnityPlaceEntryInfo* self, DeeModel* value);
+gboolean unity_place_entry_info_get_active (UnityPlaceEntryInfo* self);
+void unity_place_entry_info_set_active (UnityPlaceEntryInfo* self, gboolean value);
+guint unity_place_entry_info_get_active_section (UnityPlaceEntryInfo* self);
+void unity_place_entry_info_set_active_section (UnityPlaceEntryInfo* self, guint value);
+UnityPlaceSearchHandler unity_place_entry_info_get_search_handler (UnityPlaceEntryInfo* self, gpointer* result_target);
+void unity_place_entry_info_set_search_handler (UnityPlaceEntryInfo* self, UnityPlaceSearchHandler value, gpointer value_target);
+UnityPlaceSearchHandler unity_place_entry_info_get_global_search_handler (UnityPlaceEntryInfo* self, gpointer* result_target);
+void unity_place_entry_info_set_global_search_handler (UnityPlaceEntryInfo* self, UnityPlaceSearchHandler value, gpointer value_target);
+GType unity_place_controller_get_type (void);
+UnityPlaceController* unity_place_controller_new (const char* dbus_path);
+UnityPlaceController* unity_place_controller_construct (GType object_type, const char* dbus_path);
+void unity_place_controller_add_entry (UnityPlaceController* self, UnityPlaceEntryInfo* entry);
+UnityPlaceEntryInfo* unity_place_controller_get_entry (UnityPlaceController* self, const char* dbus_path);
+void unity_place_controller_remove_entry (UnityPlaceController* self, const char* dbus_path);
+guint unity_place_controller_num_entries (UnityPlaceController* self);
+char** unity_place_controller_get_entry_paths (UnityPlaceController* self, int* result_length1);
+UnityPlaceEntryInfo** unity_place_controller_get_entries (UnityPlaceController* self, int* result_length1);
+void unity_place_controller_export (UnityPlaceController* self, GError** error);
+void unity_place_controller_unexport (UnityPlaceController* self, GError** error);
+const char* unity_place_controller_get_dbus_path (UnityPlaceController* self);
+gboolean unity_place_controller_get_exported (UnityPlaceController* self);
 char* unity_webapp_urlify (const char* uri);
 GType unity_webapp_fetch_file_get_type (void);
 UnityWebappFetchFile* unity_webapp_fetch_file_new (const char* uri);

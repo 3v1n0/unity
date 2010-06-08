@@ -105,54 +105,90 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
+#line 27 "panel-indicator-bar.vala"
 UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_construct (GType object_type) {
+#line 111 "panel-indicator-bar.c"
 	UnityPanelIndicatorsIndicatorBar * self;
+#line 29 "panel-indicator-bar.vala"
 	self = (UnityPanelIndicatorsIndicatorBar*) g_object_new (object_type, "orientation", CTK_ORIENTATION_HORIZONTAL, "spacing", 0, "homogeneous", FALSE, NULL);
+#line 115 "panel-indicator-bar.c"
 	return self;
 }
 
 
+#line 27 "panel-indicator-bar.vala"
 UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_new (void) {
+#line 27 "panel-indicator-bar.vala"
 	return unity_panel_indicators_indicator_bar_construct (UNITY_PANEL_INDICATORS_TYPE_INDICATOR_BAR);
+#line 124 "panel-indicator-bar.c"
 }
 
 
+#line 60 "panel-indicator-bar.vala"
 static void unity_panel_indicators_indicator_bar_on_menu_moved (UnityPanelIndicatorsIndicatorBar* self, UnityPanelIndicatorsIndicatorObjectView* object_view, GtkMenuDirectionType type) {
+#line 130 "panel-indicator-bar.c"
 	gint pos;
 	UnityPanelIndicatorsIndicatorObjectView* next_object_view;
+#line 60 "panel-indicator-bar.vala"
 	g_return_if_fail (self != NULL);
+#line 60 "panel-indicator-bar.vala"
 	g_return_if_fail (object_view != NULL);
+#line 63 "panel-indicator-bar.vala"
 	pos = gee_abstract_list_index_of ((GeeAbstractList*) self->priv->indicator_array, object_view);
+#line 64 "panel-indicator-bar.vala"
 	if (pos == (-1)) {
+#line 65 "panel-indicator-bar.vala"
 		return;
+#line 143 "panel-indicator-bar.c"
 	}
+#line 67 "panel-indicator-bar.vala"
 	if (type == GTK_MENU_DIR_PARENT) {
+#line 69 "panel-indicator-bar.vala"
 		if (pos == 0) {
+#line 71 "panel-indicator-bar.vala"
 			pos = gee_collection_get_size ((GeeCollection*) self->priv->indicator_array) - 1;
+#line 151 "panel-indicator-bar.c"
 		} else {
+#line 74 "panel-indicator-bar.vala"
 			pos = pos - 1;
+#line 155 "panel-indicator-bar.c"
 		}
 	} else {
+#line 76 "panel-indicator-bar.vala"
 		if (type == GTK_MENU_DIR_CHILD) {
+#line 78 "panel-indicator-bar.vala"
 			if (pos == (gee_collection_get_size ((GeeCollection*) self->priv->indicator_array) - 1)) {
+#line 80 "panel-indicator-bar.vala"
 				pos = 0;
+#line 164 "panel-indicator-bar.c"
 			} else {
+#line 83 "panel-indicator-bar.vala"
 				pos = pos + 1;
+#line 168 "panel-indicator-bar.c"
 			}
 		}
 	}
+#line 86 "panel-indicator-bar.vala"
 	next_object_view = (UnityPanelIndicatorsIndicatorObjectView*) gee_abstract_list_get ((GeeAbstractList*) self->priv->indicator_array, pos);
+#line 88 "panel-indicator-bar.vala"
 	if (type == GTK_MENU_DIR_PARENT) {
+#line 90 "panel-indicator-bar.vala"
 		unity_panel_indicators_indicator_object_view_open_last_menu_entry (next_object_view);
+#line 178 "panel-indicator-bar.c"
 	}
+#line 93 "panel-indicator-bar.vala"
 	if (type == GTK_MENU_DIR_CHILD) {
+#line 95 "panel-indicator-bar.vala"
 		unity_panel_indicators_indicator_object_view_open_first_menu_entry (next_object_view);
+#line 184 "panel-indicator-bar.c"
 	}
 	_g_object_unref0 (next_object_view);
 }
 
 
+#line 60 "panel-indicator-bar.vala"
 static void _unity_panel_indicators_indicator_bar_on_menu_moved_unity_panel_indicators_indicator_object_view_menu_moved (UnityPanelIndicatorsIndicatorObjectView* _sender, GtkMenuDirectionType type, gpointer self) {
+#line 192 "panel-indicator-bar.c"
 	unity_panel_indicators_indicator_bar_on_menu_moved (self, _sender, type);
 }
 
@@ -168,27 +204,46 @@ static GObject * unity_panel_indicators_indicator_bar_constructor (GType type, g
 		GeeArrayList* _tmp0_;
 		UnityPanelIndicatorsIndicatorsModel* model;
 		GeeArrayList* indicators_list;
+#line 36 "panel-indicator-bar.vala"
 		self->priv->indicator_array = (_tmp0_ = gee_array_list_new (UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->priv->indicator_array), _tmp0_);
+#line 38 "panel-indicator-bar.vala"
 		model = unity_panel_indicators_indicators_model_get_default ();
+#line 39 "panel-indicator-bar.vala"
 		indicators_list = unity_panel_indicators_indicators_model_get_indicators (model);
+#line 214 "panel-indicator-bar.c"
 		{
 			GeeIterator* _o_it;
 			_o_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) indicators_list);
+#line 41 "panel-indicator-bar.vala"
 			while (TRUE) {
+#line 220 "panel-indicator-bar.c"
 				IndicatorObject* o;
 				char* name;
+#line 41 "panel-indicator-bar.vala"
 				if (!gee_iterator_next (_o_it)) {
+#line 41 "panel-indicator-bar.vala"
 					break;
+#line 227 "panel-indicator-bar.c"
 				}
+#line 41 "panel-indicator-bar.vala"
 				o = (IndicatorObject*) gee_iterator_get (_o_it);
+#line 43 "panel-indicator-bar.vala"
 				name = unity_panel_indicators_indicators_model_get_indicator_name (model, o);
+#line 45 "panel-indicator-bar.vala"
 				if (_vala_strcmp0 (name, "libappmenu.so") != 0) {
+#line 235 "panel-indicator-bar.c"
 					UnityPanelIndicatorsIndicatorObjectView* indicator_object_view;
+#line 47 "panel-indicator-bar.vala"
 					indicator_object_view = g_object_ref_sink (unity_panel_indicators_indicator_object_view_new (o));
+#line 48 "panel-indicator-bar.vala"
 					g_signal_connect_object (indicator_object_view, "menu-moved", (GCallback) _unity_panel_indicators_indicator_bar_on_menu_moved_unity_panel_indicators_indicator_object_view_menu_moved, self, 0);
+#line 49 "panel-indicator-bar.vala"
 					gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->indicator_array, indicator_object_view);
+#line 51 "panel-indicator-bar.vala"
 					clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) indicator_object_view);
+#line 52 "panel-indicator-bar.vala"
 					clutter_actor_show ((ClutterActor*) indicator_object_view);
+#line 247 "panel-indicator-bar.c"
 					_g_object_unref0 (indicator_object_view);
 				}
 				_g_object_unref0 (o);

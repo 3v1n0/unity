@@ -105,22 +105,30 @@ static void main_finalize (Main* obj);
 const GOptionEntry options[7] = {{"show", 's', 0, G_OPTION_ARG_NONE, &show_unity, "Show Unity to the user", NULL}, {"popup", 'p', 0, G_OPTION_ARG_NONE, &popup_mode, "Popup the Unity window (for debugging)", NULL}, {"width", 'w', 0, G_OPTION_ARG_INT, &popup_width, "Width of Unity window (use with --popup/-p). Default: 1024", NULL}, {"height", 'h', 0, G_OPTION_ARG_INT, &popup_height, "Height of Unity window (use with --popup/-p). Default: 600", NULL}, {"version", 'v', 0, G_OPTION_ARG_NONE, &show_version, "Show the version and exit", NULL}, {"webapp", 'b', 0, G_OPTION_ARG_STRING, &webapp_uri, "Supply a webapp url to have unity load the webapp into your favorites", NULL}, {NULL}};
 
 
+#line 188 "main.vala"
 static gboolean _lambda0_ (void) {
+#line 111 "main.c"
 	gboolean result = FALSE;
+#line 189 "main.vala"
 	unity_timeline_logger_write_log (unity_timeline_logger_get_default (), boot_logging_filename);
+#line 115 "main.c"
 	result = FALSE;
+#line 190 "main.vala"
 	return result;
+#line 119 "main.c"
 }
 
 
+#line 188 "main.vala"
 static gboolean __lambda0__gsource_func (gpointer self) {
-	gboolean result;
-	result = _lambda0_ ();
-	return result;
+#line 125 "main.c"
+	return _lambda0_ ();
 }
 
 
+#line 91 "main.vala"
 gint main_main (char** args, int args_length1) {
+#line 132 "main.c"
 	gint result = 0;
 	GError * _inner_error_;
 	UnityApplication* app;
@@ -135,16 +143,26 @@ gint main_main (char** args, int args_length1) {
 	_inner_error_ = NULL;
 	app = NULL;
 	window = NULL;
+#line 95 "main.vala"
 	unity_timeline_logger_get_default ();
+#line 97 "main.vala"
 	textdomain (GETTEXT_PACKAGE);
+#line 98 "main.vala"
 	bindtextdomain (GETTEXT_PACKAGE, LOCALE_DIR);
+#line 99 "main.vala"
 	bind_textdomain_codeset (GETTEXT_PACKAGE, "UTF-8");
+#line 155 "main.c"
 	{
 		GOptionContext* opt_context;
+#line 103 "main.vala"
 		opt_context = g_option_context_new ("-- Unity");
+#line 104 "main.vala"
 		g_option_context_set_help_enabled (opt_context, TRUE);
+#line 105 "main.vala"
 		g_option_context_add_main_entries (opt_context, options, NULL);
+#line 106 "main.vala"
 		g_option_context_parse (opt_context, &args_length1, &args, &_inner_error_);
+#line 166 "main.c"
 		if (_inner_error_ != NULL) {
 			_g_option_context_free0 (opt_context);
 			if (_inner_error_->domain == G_OPTION_ERROR) {
@@ -166,14 +184,19 @@ gint main_main (char** args, int args_length1) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
+#line 110 "main.vala"
 			g_warning ("main.vala:110: Unable to parse arguments: %s", e->message);
+#line 111 "main.vala"
 			g_warning ("main.vala:111: Run '%s --help' to see a full list of available command" \
 " line options", args[0]);
+#line 192 "main.c"
 			result = 1;
 			_g_error_free0 (e);
 			_g_object_unref0 (app);
 			_g_object_unref0 (window);
+#line 113 "main.vala"
 			return result;
+#line 199 "main.c"
 		}
 	}
 	__finally0:
@@ -184,105 +207,183 @@ gint main_main (char** args, int args_length1) {
 		g_clear_error (&_inner_error_);
 		return 0;
 	}
+#line 116 "main.vala"
 	if (show_version) {
+#line 118 "main.vala"
 		g_print ("\nUnity %s\n", VERSION);
+#line 214 "main.c"
 		result = 0;
 		_g_object_unref0 (app);
 		_g_object_unref0 (window);
+#line 119 "main.vala"
 		return result;
+#line 220 "main.c"
 	}
+#line 122 "main.vala"
 	boot_logging_filename = (_tmp0_ = g_strdup (g_getenv ("UNITY_BOOTLOG_FILENAME")), _g_free0 (boot_logging_filename), _tmp0_);
+#line 123 "main.vala"
 	if (boot_logging_filename != NULL) {
+#line 125 "main.vala"
 		unity_is_logging = TRUE;
+#line 228 "main.c"
 	} else {
+#line 129 "main.vala"
 		unity_is_logging = FALSE;
+#line 232 "main.c"
 	}
+#line 131 "main.vala"
 	START_FUNCTION ();
+#line 134 "main.vala"
 	LOGGER_START_PROCESS ("gtk_init");
+#line 135 "main.vala"
 	gtk_init (&args_length1, &args);
+#line 136 "main.vala"
 	LOGGER_END_PROCESS ("gtk_init");
+#line 137 "main.vala"
 	LOGGER_START_PROCESS ("ctk_init");
+#line 138 "main.vala"
 	ctk_init (&args_length1, &args);
+#line 139 "main.vala"
 	LOGGER_END_PROCESS ("ctk_init");
+#line 141 "main.vala"
 	g_object_set (gtk_settings_get_default (), "gtk-icon-theme-name", "ubuntu-mono-dark", NULL);
+#line 144 "main.vala"
 	LOGGER_START_PROCESS ("unity_application_constructor");
+#line 145 "main.vala"
 	app = (_tmp1_ = unity_application_new (), _g_object_unref0 (app), _tmp1_);
+#line 146 "main.vala"
 	LOGGER_END_PROCESS ("unity_application_constructor");
+#line 148 "main.vala"
 	disable_unique = g_strdup (g_getenv ("UNITY_NO_UNIQUE"));
+#line 149 "main.vala"
 	if ((g_object_get ((UniqueApp*) app, "is-running", &_tmp3_, NULL), _tmp3_)) {
+#line 149 "main.vala"
 		_tmp2_ = disable_unique == NULL;
+#line 262 "main.c"
 	} else {
+#line 149 "main.vala"
 		_tmp2_ = FALSE;
+#line 266 "main.c"
 	}
+#line 149 "main.vala"
 	if (_tmp2_) {
+#line 270 "main.c"
 		UniqueResponse response;
 		gint _tmp4_ = 0;
+#line 151 "main.vala"
 		response = UNIQUE_RESPONSE_OK;
+#line 153 "main.vala"
 		if (show_unity) {
+#line 155 "main.vala"
 			g_print ("Showing Unity window\n");
+#line 156 "main.vala"
 			response = unique_app_send_message ((UniqueApp*) app, (gint) UNITY_APPLICATION_COMMANDS_SHOW, NULL);
+#line 281 "main.c"
 		} else {
+#line 158 "main.vala"
 			if (webapp_uri != NULL) {
+#line 285 "main.c"
 				UniqueMessageData* message;
+#line 160 "main.vala"
 				g_print ("building webapp\n");
+#line 161 "main.vala"
 				message = unique_message_data_new ();
+#line 162 "main.vala"
 				unique_message_data_set_text (message, webapp_uri, (gssize) g_utf8_strlen);
+#line 163 "main.vala"
 				response = unique_app_send_message ((UniqueApp*) app, (gint) UNITY_APPLICATION_COMMANDS_MAKE_WEBAPP, message);
+#line 295 "main.c"
 				_unique_message_data_free0 (message);
 			} else {
+#line 167 "main.vala"
 				g_print ("There already another instance of Unity running\n");
+#line 300 "main.c"
 			}
 		}
+#line 170 "main.vala"
 		if (response == UNIQUE_RESPONSE_OK) {
+#line 170 "main.vala"
 			_tmp4_ = 0;
+#line 307 "main.c"
 		} else {
+#line 170 "main.vala"
 			_tmp4_ = 1;
+#line 311 "main.c"
 		}
 		result = _tmp4_;
 		_g_object_unref0 (app);
 		_g_object_unref0 (window);
 		_g_free0 (disable_unique);
+#line 170 "main.vala"
 		return result;
+#line 319 "main.c"
 	}
+#line 174 "main.vala"
 	cur_tray_envvar = g_strdup (g_getenv ("UNITY_DISABLE_TRAY"));
+#line 175 "main.vala"
 	g_setenv ("UNITY_DISABLE_TRAY", "1", TRUE);
+#line 178 "main.vala"
 	window = (_tmp5_ = g_object_ref_sink (unity_testing_window_new (popup_mode, popup_width, popup_height)), _g_object_unref0 (window), _tmp5_);
+#line 179 "main.vala"
 	unity_application_set_shell (app, (UnityShell*) window);
+#line 180 "main.vala"
 	LOGGER_START_PROCESS ("unity_underlay_window_show");
+#line 181 "main.vala"
 	gtk_widget_show ((GtkWidget*) window);
+#line 182 "main.vala"
 	LOGGER_END_PROCESS ("unity_underlay_window_show");
+#line 184 "main.vala"
 	END_FUNCTION ();
+#line 186 "main.vala"
 	if (boot_logging_filename != NULL) {
+#line 188 "main.vala"
 		g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 1, __lambda0__gsource_func, NULL, NULL);
+#line 341 "main.c"
 	}
+#line 194 "main.vala"
 	wnck_set_client_type (WNCK_CLIENT_TYPE_PAGER);
+#line 195 "main.vala"
 	gtk_main ();
+#line 198 "main.vala"
 	g_setenv ("UNITY_DISABLE_TRAY", cur_tray_envvar, TRUE);
+#line 349 "main.c"
 	result = 0;
 	_g_object_unref0 (app);
 	_g_object_unref0 (window);
 	_g_free0 (disable_unique);
 	_g_free0 (cur_tray_envvar);
+#line 200 "main.vala"
 	return result;
+#line 357 "main.c"
 }
 
 
+#line 91 "main.vala"
 int main (int argc, char ** argv) {
+#line 363 "main.c"
 	g_thread_init (NULL);
+#line 91 "main.vala"
 	g_type_init ();
+#line 91 "main.vala"
 	return main_main (argv, argc);
+#line 369 "main.c"
 }
 
 
+#line 89 "main.vala"
 Main* main_construct (GType object_type) {
+#line 375 "main.c"
 	Main* self;
 	self = (Main*) g_type_create_instance (object_type);
 	return self;
 }
 
 
+#line 89 "main.vala"
 Main* main_new (void) {
+#line 89 "main.vala"
 	return main_construct (TYPE_MAIN);
+#line 386 "main.c"
 }
 
 

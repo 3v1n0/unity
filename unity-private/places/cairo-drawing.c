@@ -236,142 +236,251 @@ static void unity_places_cairo_drawing_entry_background_finalize (GObject* obj);
 
 
 
+#line 64 "cairo-drawing.vala"
 static void unity_places_cairo_drawing_places_background_DrawAroundMenu (UnityPlacesCairoDrawingPlacesBackground* self, cairo_t* cairoctx) {
+#line 242 "cairo-drawing.c"
 	gint radius;
 	gint arc_center_x;
 	gint arc_center_y;
+#line 64 "cairo-drawing.vala"
 	g_return_if_fail (self != NULL);
+#line 64 "cairo-drawing.vala"
 	g_return_if_fail (cairoctx != NULL);
+#line 66 "cairo-drawing.vala"
 	radius = 8;
+#line 67 "cairo-drawing.vala"
 	cairo_line_to (cairoctx, (double) ((self->priv->PlaceX + self->priv->PlaceW) + unity_places_cairo_drawing_Margin), (double) (self->priv->PlaceY + self->priv->MenuH));
+#line 68 "cairo-drawing.vala"
 	cairo_line_to (cairoctx, (double) (((self->priv->PlaceX + self->priv->PlaceW) - self->priv->MenuW) + radius), (double) (self->priv->PlaceY + self->priv->MenuH));
+#line 70 "cairo-drawing.vala"
 	arc_center_x = ((self->priv->PlaceX + self->priv->PlaceW) - self->priv->MenuW) + radius;
+#line 71 "cairo-drawing.vala"
 	arc_center_y = (self->priv->PlaceY + self->priv->MenuH) + radius;
+#line 73 "cairo-drawing.vala"
 	cairo_arc_negative (cairoctx, (double) arc_center_x, (double) arc_center_y, (double) radius, (3.0 * G_PI) / 2.0, G_PI);
+#line 75 "cairo-drawing.vala"
 	cairo_line_to (cairoctx, (double) ((self->priv->PlaceX + self->priv->PlaceW) - self->priv->MenuW), (double) ((self->priv->PlaceY + self->priv->PlaceH) - radius));
+#line 77 "cairo-drawing.vala"
 	arc_center_x = ((self->priv->PlaceX + self->priv->PlaceW) - self->priv->MenuW) - radius;
+#line 78 "cairo-drawing.vala"
 	arc_center_y = (self->priv->PlaceY + self->priv->PlaceH) - radius;
+#line 79 "cairo-drawing.vala"
 	cairo_arc (cairoctx, (double) arc_center_x, (double) arc_center_y, (double) radius, 0.0, G_PI / 2.0);
+#line 270 "cairo-drawing.c"
 }
 
 
+#line 82 "cairo-drawing.vala"
 static void unity_places_cairo_drawing_places_background_DrawTab (UnityPlacesCairoDrawingPlacesBackground* self, cairo_t* cairoctx, UnityPlacesCairoDrawingPlacesBackgroundTabRect* tab) {
+#line 276 "cairo-drawing.c"
 	gint radius;
 	gint radius_small;
 	gint arc_center_x = 0;
 	gint arc_center_y = 0;
+#line 82 "cairo-drawing.vala"
 	g_return_if_fail (self != NULL);
+#line 82 "cairo-drawing.vala"
 	g_return_if_fail (cairoctx != NULL);
+#line 84 "cairo-drawing.vala"
 	radius = 5;
+#line 85 "cairo-drawing.vala"
 	radius_small = 5;
+#line 89 "cairo-drawing.vala"
 	cairo_line_to (cairoctx, (double) ((*tab).right + radius_small), (double) self->priv->PlaceBottom);
+#line 91 "cairo-drawing.vala"
 	arc_center_x = (*tab).right + radius_small;
+#line 92 "cairo-drawing.vala"
 	arc_center_y = self->priv->PlaceBottom - radius_small;
+#line 93 "cairo-drawing.vala"
 	cairo_arc (cairoctx, (double) arc_center_x, (double) arc_center_y, (double) radius_small, G_PI / 2.0, G_PI);
+#line 95 "cairo-drawing.vala"
 	cairo_line_to (cairoctx, (double) (*tab).right, (double) ((*tab).top + radius));
+#line 97 "cairo-drawing.vala"
 	arc_center_x = (*tab).right - radius;
+#line 98 "cairo-drawing.vala"
 	arc_center_y = (*tab).top + radius;
+#line 99 "cairo-drawing.vala"
 	cairo_arc_negative (cairoctx, (double) arc_center_x, (double) arc_center_y, (double) radius, 0.0, (3.0 * G_PI) / 2.0);
+#line 101 "cairo-drawing.vala"
 	cairo_line_to (cairoctx, (double) ((*tab).left + radius), (double) (*tab).top);
+#line 103 "cairo-drawing.vala"
 	arc_center_x = (*tab).left + radius;
+#line 104 "cairo-drawing.vala"
 	arc_center_y = (*tab).top + radius;
+#line 105 "cairo-drawing.vala"
 	cairo_arc_negative (cairoctx, (double) arc_center_x, (double) arc_center_y, (double) radius, (3.0 * G_PI) / 2.0, G_PI);
+#line 107 "cairo-drawing.vala"
 	cairo_line_to (cairoctx, (double) (*tab).left, (double) (self->priv->PlaceBottom - radius_small));
+#line 109 "cairo-drawing.vala"
 	arc_center_x = (*tab).left - radius_small;
+#line 110 "cairo-drawing.vala"
 	arc_center_y = self->priv->PlaceBottom - radius_small;
+#line 111 "cairo-drawing.vala"
 	cairo_arc (cairoctx, (double) arc_center_x, (double) arc_center_y, (double) radius_small, 0.0, G_PI / 2.0);
+#line 321 "cairo-drawing.c"
 }
 
 
+#line 114 "cairo-drawing.vala"
 static void unity_places_cairo_drawing_places_background_DrawSquirl (UnityPlacesCairoDrawingPlacesBackground* self, cairo_t* cairoctx) {
+#line 327 "cairo-drawing.c"
 	gint radius_small;
 	gint arc_center_x = 0;
 	gint arc_center_y = 0;
+#line 114 "cairo-drawing.vala"
 	g_return_if_fail (self != NULL);
+#line 114 "cairo-drawing.vala"
 	g_return_if_fail (cairoctx != NULL);
+#line 116 "cairo-drawing.vala"
 	radius_small = 5;
+#line 120 "cairo-drawing.vala"
 	cairo_line_to (cairoctx, (double) ((self->priv->PlaceX + self->priv->SquirlW) + radius_small), (double) self->priv->PlaceBottom);
+#line 122 "cairo-drawing.vala"
 	arc_center_x = (self->priv->PlaceX + self->priv->SquirlW) + radius_small;
+#line 123 "cairo-drawing.vala"
 	arc_center_y = self->priv->PlaceBottom - radius_small;
+#line 124 "cairo-drawing.vala"
 	cairo_arc (cairoctx, (double) arc_center_x, (double) arc_center_y, (double) radius_small, G_PI / 2.0, G_PI);
+#line 126 "cairo-drawing.vala"
 	cairo_line_to (cairoctx, (double) (self->priv->PlaceX + self->priv->SquirlW), (double) (self->priv->MenuBottom + radius_small));
+#line 128 "cairo-drawing.vala"
 	arc_center_x = (self->priv->PlaceX + self->priv->SquirlW) - radius_small;
+#line 129 "cairo-drawing.vala"
 	arc_center_y = self->priv->MenuBottom + radius_small;
+#line 130 "cairo-drawing.vala"
 	cairo_arc_negative (cairoctx, (double) arc_center_x, (double) arc_center_y, (double) radius_small, (double) 0, (3.0 * G_PI) / 2.0);
+#line 132 "cairo-drawing.vala"
 	cairo_line_to (cairoctx, (double) (self->priv->PlaceX - unity_places_cairo_drawing_Margin), (double) self->priv->MenuBottom);
+#line 355 "cairo-drawing.c"
 }
 
 
+#line 135 "cairo-drawing.vala"
 UnityPlacesCairoDrawingPlacesBackground* unity_places_cairo_drawing_places_background_construct (GType object_type) {
+#line 361 "cairo-drawing.c"
 	UnityPlacesCairoDrawingPlacesBackground * self;
 	self = g_object_newv (object_type, 0, NULL);
+#line 137 "cairo-drawing.vala"
 	self->PlaceWidth = 0;
+#line 366 "cairo-drawing.c"
 	return self;
 }
 
 
+#line 135 "cairo-drawing.vala"
 UnityPlacesCairoDrawingPlacesBackground* unity_places_cairo_drawing_places_background_new (void) {
+#line 135 "cairo-drawing.vala"
 	return unity_places_cairo_drawing_places_background_construct (UNITY_PLACES_CAIRO_DRAWING_TYPE_PLACES_BACKGROUND);
+#line 375 "cairo-drawing.c"
 }
 
 
+#line 140 "cairo-drawing.vala"
 void unity_places_cairo_drawing_places_background_create_places_background (UnityPlacesCairoDrawingPlacesBackground* self, gint WindowWidth, gint WindowHeight, gint TabPositionX, gint TabWidth, gint menu_width) {
+#line 381 "cairo-drawing.c"
 	ClutterCairoTexture* _tmp0_;
 	cairo_t* cairoctx;
 	CtkEffectGlow* _tmp1_;
 	ClutterColor _tmp2_ = {0};
 	ClutterColor c;
+#line 140 "cairo-drawing.vala"
 	g_return_if_fail (self != NULL);
+#line 146 "cairo-drawing.vala"
 	self->PlaceWidth = WindowWidth;
+#line 147 "cairo-drawing.vala"
 	self->priv->PlaceW = WindowWidth;
+#line 148 "cairo-drawing.vala"
 	self->priv->PlaceBottom = self->priv->PlaceY + self->priv->PlaceH;
+#line 149 "cairo-drawing.vala"
 	self->priv->MenuBottom = self->priv->PlaceY + self->priv->MenuH;
+#line 151 "cairo-drawing.vala"
 	self->priv->MenuW = menu_width;
+#line 153 "cairo-drawing.vala"
 	if (CLUTTER_IS_ACTOR (ctk_bin_get_child ((CtkBin*) self))) {
+#line 155 "cairo-drawing.vala"
 		clutter_container_remove_actor ((ClutterContainer*) self, ctk_bin_get_child ((CtkBin*) self));
+#line 403 "cairo-drawing.c"
 	}
+#line 158 "cairo-drawing.vala"
 	self->cairotxt = (_tmp0_ = g_object_ref_sink ((ClutterCairoTexture*) clutter_cairo_texture_new ((guint) self->priv->PlaceW, (guint) (self->priv->PlaceH + unity_places_cairo_drawing_Margin))), _g_object_unref0 (self->cairotxt), _tmp0_);
+#line 159 "cairo-drawing.vala"
 	cairoctx = clutter_cairo_texture_create (self->cairotxt);
+#line 409 "cairo-drawing.c"
 	{
 		UnityPlacesCairoDrawingPlacesBackgroundTabRect tab = {0};
 		cairo_surface_t* surface;
 		cairo_pattern_t* pattern;
+#line 161 "cairo-drawing.vala"
 		cairo_set_operator (cairoctx, CAIRO_OPERATOR_CLEAR);
+#line 162 "cairo-drawing.vala"
 		cairo_paint (cairoctx);
+#line 163 "cairo-drawing.vala"
 		cairo_set_operator (cairoctx, CAIRO_OPERATOR_OVER);
+#line 164 "cairo-drawing.vala"
 		cairo_translate (cairoctx, (double) 0.5f, (double) 0.5f);
+#line 166 "cairo-drawing.vala"
 		cairo_set_source_rgba (cairoctx, (double) 1, (double) 1, (double) 1, 1.0);
+#line 167 "cairo-drawing.vala"
 		cairo_set_line_width (cairoctx, 1.0);
+#line 169 "cairo-drawing.vala"
 		cairo_move_to (cairoctx, (double) (self->priv->PlaceX - unity_places_cairo_drawing_Margin), (double) (self->priv->PlaceY - unity_places_cairo_drawing_Margin));
+#line 170 "cairo-drawing.vala"
 		cairo_line_to (cairoctx, (double) ((self->priv->PlaceX + self->priv->PlaceW) + unity_places_cairo_drawing_Margin), (double) (self->priv->PlaceY - unity_places_cairo_drawing_Margin));
+#line 172 "cairo-drawing.vala"
 		unity_places_cairo_drawing_places_background_DrawAroundMenu (self, cairoctx);
+#line 432 "cairo-drawing.c"
 		memset (&tab, 0, sizeof (UnityPlacesCairoDrawingPlacesBackgroundTabRect));
+#line 175 "cairo-drawing.vala"
 		tab.left = TabPositionX;
+#line 176 "cairo-drawing.vala"
 		tab.right = tab.left + TabWidth;
+#line 177 "cairo-drawing.vala"
 		tab.top = (self->priv->PlaceY + self->priv->PlaceH) - self->priv->TabH;
+#line 178 "cairo-drawing.vala"
 		tab.bottom = self->priv->PlaceY + self->priv->PlaceH;
+#line 180 "cairo-drawing.vala"
 		unity_places_cairo_drawing_places_background_DrawTab (self, cairoctx, &tab);
+#line 182 "cairo-drawing.vala"
 		unity_places_cairo_drawing_places_background_DrawSquirl (self, cairoctx);
+#line 185 "cairo-drawing.vala"
 		cairo_line_to (cairoctx, (double) (self->priv->PlaceX - unity_places_cairo_drawing_Margin), (double) (self->priv->PlaceY - unity_places_cairo_drawing_Margin));
+#line 187 "cairo-drawing.vala"
 		cairo_stroke_preserve (cairoctx);
+#line 189 "cairo-drawing.vala"
 		cairo_clip (cairoctx);
+#line 191 "cairo-drawing.vala"
 		surface = cairo_image_surface_create_from_png (PKGDATADIR "/dash_background.png");
+#line 192 "cairo-drawing.vala"
 		pattern = cairo_pattern_create_for_surface (surface);
+#line 193 "cairo-drawing.vala"
 		cairo_pattern_set_extend (pattern, CAIRO_EXTEND_REPEAT);
+#line 194 "cairo-drawing.vala"
 		cairo_set_source (cairoctx, pattern);
+#line 196 "cairo-drawing.vala"
 		cairo_paint_with_alpha (cairoctx, 0.1);
+#line 462 "cairo-drawing.c"
 		_cairo_surface_destroy0 (surface);
 		_cairo_pattern_destroy0 (pattern);
 	}
+#line 199 "cairo-drawing.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self->cairotxt, (guint8) 0xFF);
+#line 200 "cairo-drawing.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->cairotxt);
+#line 203 "cairo-drawing.vala"
 	ctk_actor_remove_all_effects ((CtkActor*) self);
+#line 207 "cairo-drawing.vala"
 	self->priv->effect_glow = (_tmp1_ = g_object_ref_sink ((CtkEffectGlow*) ctk_effect_glow_new ()), _g_object_unref0 (self->priv->effect_glow), _tmp1_);
+#line 208 "cairo-drawing.vala"
 	c = (memset (&_tmp2_, 0, sizeof (ClutterColor)), _tmp2_.red = (guint8) 255, _tmp2_.green = (guint8) 255, _tmp2_.blue = (guint8) 255, _tmp2_.alpha = (guint8) 255, _tmp2_);
+#line 216 "cairo-drawing.vala"
 	ctk_effect_glow_set_color (self->priv->effect_glow, &c);
+#line 217 "cairo-drawing.vala"
 	ctk_effect_glow_set_factor (self->priv->effect_glow, 1.0f);
+#line 218 "cairo-drawing.vala"
 	ctk_effect_set_margin ((CtkEffect*) self->priv->effect_glow, 5);
+#line 219 "cairo-drawing.vala"
 	ctk_actor_add_effect ((CtkActor*) self, (CtkEffect*) self->priv->effect_glow);
+#line 484 "cairo-drawing.c"
 	_cairo_destroy0 (cairoctx);
 }
 
@@ -455,49 +564,82 @@ GType unity_places_cairo_drawing_places_background_get_type (void) {
 }
 
 
+#line 234 "cairo-drawing.vala"
 UnityPlacesCairoDrawingPlacesVSeparator* unity_places_cairo_drawing_places_vseparator_construct (GType object_type) {
+#line 570 "cairo-drawing.c"
 	UnityPlacesCairoDrawingPlacesVSeparator * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
+#line 234 "cairo-drawing.vala"
 UnityPlacesCairoDrawingPlacesVSeparator* unity_places_cairo_drawing_places_vseparator_new (void) {
+#line 234 "cairo-drawing.vala"
 	return unity_places_cairo_drawing_places_vseparator_construct (UNITY_PLACES_CAIRO_DRAWING_TYPE_PLACES_VSEPARATOR);
+#line 581 "cairo-drawing.c"
 }
 
 
+#line 238 "cairo-drawing.vala"
 void unity_places_cairo_drawing_places_vseparator_CreateSeparator (UnityPlacesCairoDrawingPlacesVSeparator* self, gint W, gint H) {
+#line 587 "cairo-drawing.c"
 	ClutterCairoTexture* _tmp0_;
 	cairo_t* cairoctx;
 	CtkEffectGlow* effect_glow;
 	ClutterColor _tmp1_ = {0};
 	ClutterColor c;
+#line 238 "cairo-drawing.vala"
 	g_return_if_fail (self != NULL);
+#line 240 "cairo-drawing.vala"
 	self->Width = W;
+#line 241 "cairo-drawing.vala"
 	self->Height = H;
+#line 243 "cairo-drawing.vala"
 	if (CLUTTER_IS_ACTOR (ctk_bin_get_child ((CtkBin*) self))) {
+#line 245 "cairo-drawing.vala"
 		clutter_container_remove_actor ((ClutterContainer*) self, ctk_bin_get_child ((CtkBin*) self));
+#line 603 "cairo-drawing.c"
 	}
+#line 248 "cairo-drawing.vala"
 	self->cairotxt = (_tmp0_ = g_object_ref_sink ((ClutterCairoTexture*) clutter_cairo_texture_new ((guint) self->Width, (guint) self->Height)), _g_object_unref0 (self->cairotxt), _tmp0_);
+#line 249 "cairo-drawing.vala"
 	cairoctx = clutter_cairo_texture_create (self->cairotxt);
+#line 609 "cairo-drawing.c"
 	{
+#line 251 "cairo-drawing.vala"
 		cairo_set_source_rgba (cairoctx, (double) 1, (double) 1, (double) 1, 1.0);
+#line 252 "cairo-drawing.vala"
 		cairo_set_line_width (cairoctx, 1.0);
+#line 254 "cairo-drawing.vala"
 		cairo_move_to (cairoctx, self->Width / 2.0, (double) 0);
+#line 255 "cairo-drawing.vala"
 		cairo_line_to (cairoctx, self->Width / 2.0, (double) self->Height);
+#line 257 "cairo-drawing.vala"
 		cairo_stroke (cairoctx);
+#line 258 "cairo-drawing.vala"
 		cairo_set_source_rgba (cairoctx, (double) 1, (double) 1, (double) 1, 0.15);
+#line 623 "cairo-drawing.c"
 	}
+#line 261 "cairo-drawing.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self->cairotxt, (guint8) 0xFF);
+#line 262 "cairo-drawing.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->cairotxt);
+#line 265 "cairo-drawing.vala"
 	ctk_actor_remove_all_effects ((CtkActor*) self);
+#line 269 "cairo-drawing.vala"
 	effect_glow = g_object_ref_sink ((CtkEffectGlow*) ctk_effect_glow_new ());
+#line 270 "cairo-drawing.vala"
 	c = (memset (&_tmp1_, 0, sizeof (ClutterColor)), _tmp1_.red = (guint8) 255, _tmp1_.green = (guint8) 255, _tmp1_.blue = (guint8) 255, _tmp1_.alpha = (guint8) 255, _tmp1_);
+#line 278 "cairo-drawing.vala"
 	ctk_effect_glow_set_color (effect_glow, &c);
+#line 279 "cairo-drawing.vala"
 	ctk_effect_glow_set_factor (effect_glow, 1.0f);
+#line 280 "cairo-drawing.vala"
 	ctk_effect_set_margin ((CtkEffect*) effect_glow, 5);
+#line 281 "cairo-drawing.vala"
 	ctk_actor_add_effect ((CtkActor*) self, (CtkEffect*) effect_glow);
+#line 643 "cairo-drawing.c"
 	_cairo_destroy0 (cairoctx);
 	_g_object_unref0 (effect_glow);
 }
@@ -549,49 +691,82 @@ GType unity_places_cairo_drawing_places_vseparator_get_type (void) {
 }
 
 
+#line 295 "cairo-drawing.vala"
 UnityPlacesCairoDrawingPlacesHSeparator* unity_places_cairo_drawing_places_hseparator_construct (GType object_type) {
+#line 697 "cairo-drawing.c"
 	UnityPlacesCairoDrawingPlacesHSeparator * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
+#line 295 "cairo-drawing.vala"
 UnityPlacesCairoDrawingPlacesHSeparator* unity_places_cairo_drawing_places_hseparator_new (void) {
+#line 295 "cairo-drawing.vala"
 	return unity_places_cairo_drawing_places_hseparator_construct (UNITY_PLACES_CAIRO_DRAWING_TYPE_PLACES_HSEPARATOR);
+#line 708 "cairo-drawing.c"
 }
 
 
+#line 299 "cairo-drawing.vala"
 void unity_places_cairo_drawing_places_hseparator_CreateSeparator (UnityPlacesCairoDrawingPlacesHSeparator* self, gint W, gint H) {
+#line 714 "cairo-drawing.c"
 	ClutterCairoTexture* _tmp0_;
 	cairo_t* cairoctx;
 	CtkEffectGlow* effect_glow;
 	ClutterColor _tmp1_ = {0};
 	ClutterColor c;
+#line 299 "cairo-drawing.vala"
 	g_return_if_fail (self != NULL);
+#line 301 "cairo-drawing.vala"
 	self->Width = W;
+#line 302 "cairo-drawing.vala"
 	self->Height = H;
+#line 304 "cairo-drawing.vala"
 	if (CLUTTER_IS_ACTOR (ctk_bin_get_child ((CtkBin*) self))) {
+#line 306 "cairo-drawing.vala"
 		clutter_container_remove_actor ((ClutterContainer*) self, ctk_bin_get_child ((CtkBin*) self));
+#line 730 "cairo-drawing.c"
 	}
+#line 309 "cairo-drawing.vala"
 	self->cairotxt = (_tmp0_ = g_object_ref_sink ((ClutterCairoTexture*) clutter_cairo_texture_new ((guint) self->Width, (guint) self->Height)), _g_object_unref0 (self->cairotxt), _tmp0_);
+#line 310 "cairo-drawing.vala"
 	cairoctx = clutter_cairo_texture_create (self->cairotxt);
+#line 736 "cairo-drawing.c"
 	{
+#line 312 "cairo-drawing.vala"
 		cairo_set_source_rgba (cairoctx, (double) 1, (double) 1, (double) 1, 1.0);
+#line 313 "cairo-drawing.vala"
 		cairo_set_line_width (cairoctx, 1.0);
+#line 315 "cairo-drawing.vala"
 		cairo_move_to (cairoctx, (double) 0, self->Height / 2.0);
+#line 316 "cairo-drawing.vala"
 		cairo_line_to (cairoctx, (double) self->Width, self->Height / 2.0);
+#line 318 "cairo-drawing.vala"
 		cairo_stroke (cairoctx);
+#line 319 "cairo-drawing.vala"
 		cairo_set_source_rgba (cairoctx, (double) 1, (double) 1, (double) 1, 0.15);
+#line 750 "cairo-drawing.c"
 	}
+#line 322 "cairo-drawing.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self->cairotxt, (guint8) 0xFF);
+#line 323 "cairo-drawing.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->cairotxt);
+#line 326 "cairo-drawing.vala"
 	ctk_actor_remove_all_effects ((CtkActor*) self);
+#line 331 "cairo-drawing.vala"
 	effect_glow = g_object_ref_sink ((CtkEffectGlow*) ctk_effect_glow_new ());
+#line 332 "cairo-drawing.vala"
 	c = (memset (&_tmp1_, 0, sizeof (ClutterColor)), _tmp1_.red = (guint8) 255, _tmp1_.green = (guint8) 255, _tmp1_.blue = (guint8) 255, _tmp1_.alpha = (guint8) 255, _tmp1_);
+#line 340 "cairo-drawing.vala"
 	ctk_effect_glow_set_color (effect_glow, &c);
+#line 341 "cairo-drawing.vala"
 	ctk_effect_glow_set_factor (effect_glow, 1.0f);
+#line 342 "cairo-drawing.vala"
 	ctk_effect_set_margin ((CtkEffect*) effect_glow, 5);
+#line 343 "cairo-drawing.vala"
 	ctk_actor_add_effect ((CtkActor*) self, (CtkEffect*) effect_glow);
+#line 770 "cairo-drawing.c"
 	_cairo_destroy0 (cairoctx);
 	_g_object_unref0 (effect_glow);
 }
@@ -643,55 +818,94 @@ GType unity_places_cairo_drawing_places_hseparator_get_type (void) {
 }
 
 
+#line 357 "cairo-drawing.vala"
 UnityPlacesCairoDrawingRectangleBox* unity_places_cairo_drawing_rectangle_box_construct (GType object_type) {
+#line 824 "cairo-drawing.c"
 	UnityPlacesCairoDrawingRectangleBox * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
+#line 357 "cairo-drawing.vala"
 UnityPlacesCairoDrawingRectangleBox* unity_places_cairo_drawing_rectangle_box_new (void) {
+#line 357 "cairo-drawing.vala"
 	return unity_places_cairo_drawing_rectangle_box_construct (UNITY_PLACES_CAIRO_DRAWING_TYPE_RECTANGLE_BOX);
+#line 835 "cairo-drawing.c"
 }
 
 
+#line 361 "cairo-drawing.vala"
 void unity_places_cairo_drawing_rectangle_box_CreateRectangleBox (UnityPlacesCairoDrawingRectangleBox* self, gint W, gint H) {
+#line 841 "cairo-drawing.c"
 	ClutterCairoTexture* _tmp0_;
 	cairo_t* cairoctx;
 	CtkEffectGlow* effect_glow;
 	ClutterColor _tmp1_ = {0};
 	ClutterColor c;
+#line 361 "cairo-drawing.vala"
 	g_return_if_fail (self != NULL);
+#line 363 "cairo-drawing.vala"
 	self->Width = W;
+#line 364 "cairo-drawing.vala"
 	self->Height = H;
+#line 366 "cairo-drawing.vala"
 	if (CLUTTER_IS_ACTOR (ctk_bin_get_child ((CtkBin*) self))) {
+#line 368 "cairo-drawing.vala"
 		clutter_container_remove_actor ((ClutterContainer*) self, ctk_bin_get_child ((CtkBin*) self));
+#line 857 "cairo-drawing.c"
 	}
+#line 371 "cairo-drawing.vala"
 	self->cairotxt = (_tmp0_ = g_object_ref_sink ((ClutterCairoTexture*) clutter_cairo_texture_new ((guint) self->Width, (guint) self->Height)), _g_object_unref0 (self->cairotxt), _tmp0_);
+#line 372 "cairo-drawing.vala"
 	cairoctx = clutter_cairo_texture_create (self->cairotxt);
+#line 863 "cairo-drawing.c"
 	{
+#line 374 "cairo-drawing.vala"
 		cairo_set_operator (cairoctx, CAIRO_OPERATOR_CLEAR);
+#line 375 "cairo-drawing.vala"
 		cairo_paint (cairoctx);
+#line 376 "cairo-drawing.vala"
 		cairo_set_operator (cairoctx, CAIRO_OPERATOR_OVER);
+#line 377 "cairo-drawing.vala"
 		cairo_translate (cairoctx, (double) 0.5f, (double) 0.5f);
+#line 379 "cairo-drawing.vala"
 		cairo_set_source_rgba (cairoctx, (double) 1, (double) 1, (double) 1, 1.0);
+#line 380 "cairo-drawing.vala"
 		cairo_set_line_width (cairoctx, 1.0);
+#line 382 "cairo-drawing.vala"
 		cairo_move_to (cairoctx, (double) 1, (double) 1);
+#line 383 "cairo-drawing.vala"
 		cairo_line_to (cairoctx, (double) (self->Width - 1), (double) 1);
+#line 384 "cairo-drawing.vala"
 		cairo_line_to (cairoctx, (double) (self->Width - 1), (double) (self->Height - 1));
+#line 385 "cairo-drawing.vala"
 		cairo_line_to (cairoctx, (double) 1, (double) (self->Height - 1));
+#line 386 "cairo-drawing.vala"
 		cairo_line_to (cairoctx, (double) 1, (double) 1);
+#line 387 "cairo-drawing.vala"
 		cairo_stroke (cairoctx);
+#line 889 "cairo-drawing.c"
 	}
+#line 390 "cairo-drawing.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self->cairotxt, (guint8) 0xFF);
+#line 391 "cairo-drawing.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->cairotxt);
+#line 394 "cairo-drawing.vala"
 	ctk_actor_remove_all_effects ((CtkActor*) self);
+#line 398 "cairo-drawing.vala"
 	effect_glow = g_object_ref_sink ((CtkEffectGlow*) ctk_effect_glow_new ());
+#line 399 "cairo-drawing.vala"
 	c = (memset (&_tmp1_, 0, sizeof (ClutterColor)), _tmp1_.red = (guint8) 255, _tmp1_.green = (guint8) 255, _tmp1_.blue = (guint8) 255, _tmp1_.alpha = (guint8) 255, _tmp1_);
+#line 407 "cairo-drawing.vala"
 	ctk_effect_glow_set_color (effect_glow, &c);
+#line 408 "cairo-drawing.vala"
 	ctk_effect_glow_set_factor (effect_glow, 1.0f);
+#line 409 "cairo-drawing.vala"
 	ctk_effect_set_margin ((CtkEffect*) effect_glow, 5);
+#line 410 "cairo-drawing.vala"
 	ctk_actor_add_effect ((CtkActor*) self, (CtkEffect*) effect_glow);
+#line 909 "cairo-drawing.c"
 	_cairo_destroy0 (cairoctx);
 	_g_object_unref0 (effect_glow);
 }
@@ -743,44 +957,76 @@ GType unity_places_cairo_drawing_rectangle_box_get_type (void) {
 }
 
 
+#line 424 "cairo-drawing.vala"
 UnityPlacesCairoDrawingEntryBackground* unity_places_cairo_drawing_entry_background_construct (GType object_type) {
+#line 963 "cairo-drawing.c"
 	UnityPlacesCairoDrawingEntryBackground * self;
 	ClutterCairoTexture* _tmp0_;
 	self = g_object_newv (object_type, 0, NULL);
+#line 426 "cairo-drawing.vala"
 	self->cairotxt = (_tmp0_ = g_object_ref_sink ((ClutterCairoTexture*) clutter_cairo_texture_new ((guint) 120, (guint) 24)), _g_object_unref0 (self->cairotxt), _tmp0_);
+#line 427 "cairo-drawing.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->cairotxt);
+#line 971 "cairo-drawing.c"
 	return self;
 }
 
 
+#line 424 "cairo-drawing.vala"
 UnityPlacesCairoDrawingEntryBackground* unity_places_cairo_drawing_entry_background_new (void) {
+#line 424 "cairo-drawing.vala"
 	return unity_places_cairo_drawing_entry_background_construct (UNITY_PLACES_CAIRO_DRAWING_TYPE_ENTRY_BACKGROUND);
+#line 980 "cairo-drawing.c"
 }
 
 
+#line 430 "cairo-drawing.vala"
 void unity_places_cairo_drawing_entry_background_create_search_entry_background (UnityPlacesCairoDrawingEntryBackground* self, gint W, gint H) {
+#line 986 "cairo-drawing.c"
 	cairo_t* cairoctx;
+#line 430 "cairo-drawing.vala"
 	g_return_if_fail (self != NULL);
+#line 432 "cairo-drawing.vala"
 	self->Width = W;
+#line 433 "cairo-drawing.vala"
 	self->Height = H;
+#line 435 "cairo-drawing.vala"
 	cairoctx = clutter_cairo_texture_create (self->cairotxt);
+#line 996 "cairo-drawing.c"
 	{
+#line 437 "cairo-drawing.vala"
 		cairo_set_operator (cairoctx, CAIRO_OPERATOR_CLEAR);
+#line 438 "cairo-drawing.vala"
 		cairo_paint (cairoctx);
+#line 439 "cairo-drawing.vala"
 		cairo_set_operator (cairoctx, CAIRO_OPERATOR_OVER);
+#line 440 "cairo-drawing.vala"
 		cairo_translate (cairoctx, (double) (-0.5f), (double) (-0.5f));
+#line 442 "cairo-drawing.vala"
 		cairo_set_source_rgba (cairoctx, 1.0, 1.0, 1.0, 0.9);
+#line 443 "cairo-drawing.vala"
 		cairo_set_line_width (cairoctx, 1.0);
+#line 445 "cairo-drawing.vala"
 		cairo_move_to (cairoctx, (double) 10, (double) 1);
+#line 446 "cairo-drawing.vala"
 		cairo_line_to (cairoctx, (double) (self->Width - 10), (double) 1);
+#line 448 "cairo-drawing.vala"
 		cairo_curve_to (cairoctx, (double) (self->Width - 5), 1.0, (double) (self->Width - 1), 5.0, (double) (self->Width - 1), (double) (self->Height / 2.0));
+#line 449 "cairo-drawing.vala"
 		cairo_curve_to (cairoctx, (double) (self->Width - 1), (double) ((self->Height / 2.0) + 5.0), (double) (self->Width - 5), (double) (self->Height - 2), (double) (self->Width - 10), (double) (self->Height - 2));
+#line 451 "cairo-drawing.vala"
 		cairo_line_to (cairoctx, (double) 10, (double) (self->Height - 2));
+#line 453 "cairo-drawing.vala"
 		cairo_curve_to (cairoctx, 5.0, (double) (self->Height - 2), 1.0, (double) ((self->Height / 2.0) + 5.0), 1.0, (double) (self->Height / 2.0));
+#line 454 "cairo-drawing.vala"
 		cairo_curve_to (cairoctx, 1.0, 5.0, 5.0, 1.0, 10.0, 1.0);
+#line 457 "cairo-drawing.vala"
 		cairo_fill (cairoctx);
+#line 1026 "cairo-drawing.c"
 	}
+#line 459 "cairo-drawing.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self->cairotxt, (guint8) 0xFF);
+#line 1030 "cairo-drawing.c"
 	_cairo_destroy0 (cairoctx);
 }
 

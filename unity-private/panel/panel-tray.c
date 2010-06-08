@@ -103,18 +103,26 @@ static void unity_panel_system_tray_finalize (GObject* obj);
 
 
 
+#line 32 "panel-tray.vala"
 UnityPanelSystemTray* unity_panel_system_tray_construct (GType object_type) {
+#line 109 "panel-tray.c"
 	UnityPanelSystemTray * self;
 	UnityTestingObjectRegistry* _tmp0_;
+#line 34 "panel-tray.vala"
 	self = (UnityPanelSystemTray*) g_object_new (object_type, "orientation", CTK_ORIENTATION_HORIZONTAL, "spacing", 8, NULL);
+#line 37 "panel-tray.vala"
 	unity_testing_object_registry_register (_tmp0_ = unity_testing_object_registry_get_default (), "PanelSystemTray", (GObject*) self);
+#line 116 "panel-tray.c"
 	_unity_testing_object_registry_unref0 (_tmp0_);
 	return self;
 }
 
 
+#line 32 "panel-tray.vala"
 UnityPanelSystemTray* unity_panel_system_tray_new (void) {
+#line 32 "panel-tray.vala"
 	return unity_panel_system_tray_construct (UNITY_PANEL_TYPE_SYSTEM_TRAY);
+#line 126 "panel-tray.c"
 }
 
 
@@ -123,88 +131,142 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
+#line 55 "panel-tray.vala"
 static gboolean _unity_panel_system_tray_manage_tray_idle_gsource_func (gpointer self) {
-	gboolean result;
-	result = unity_panel_system_tray_manage_tray_idle (self);
-	return result;
+#line 137 "panel-tray.c"
+	return unity_panel_system_tray_manage_tray_idle (self);
 }
 
 
+#line 48 "panel-tray.vala"
 void unity_panel_system_tray_manage_stage (UnityPanelSystemTray* self, ClutterStage* stage) {
+#line 144 "panel-tray.c"
 	ClutterStage* _tmp0_;
+#line 48 "panel-tray.vala"
 	g_return_if_fail (self != NULL);
+#line 48 "panel-tray.vala"
 	g_return_if_fail (stage != NULL);
+#line 50 "panel-tray.vala"
 	self->priv->stage = (_tmp0_ = _g_object_ref0 (stage), _g_object_unref0 (self->priv->stage), _tmp0_);
+#line 52 "panel-tray.vala"
 	g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_panel_system_tray_manage_tray_idle_gsource_func, g_object_ref (self), g_object_unref);
+#line 154 "panel-tray.c"
 }
 
 
+#line 55 "panel-tray.vala"
 static gboolean unity_panel_system_tray_manage_tray_idle (UnityPanelSystemTray* self) {
+#line 160 "panel-tray.c"
 	gboolean result = FALSE;
 	char* disable_tray;
+#line 55 "panel-tray.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 57 "panel-tray.vala"
 	disable_tray = g_strdup (g_getenv ("UNITY_DISABLE_TRAY"));
+#line 59 "panel-tray.vala"
 	if (disable_tray == NULL) {
+#line 60 "panel-tray.vala"
 		unity_tray_manager_manage_stage (self->priv->manager, self->priv->stage);
+#line 171 "panel-tray.c"
 	}
 	result = FALSE;
 	_g_free0 (disable_tray);
+#line 62 "panel-tray.vala"
 	return result;
+#line 177 "panel-tray.c"
 }
 
 
+#line 65 "panel-tray.vala"
 static gint unity_panel_system_tray_order_icons (ClutterActor* a, ClutterActor* b) {
+#line 183 "panel-tray.c"
 	gint result = 0;
 	const char* stra;
 	const char* strb;
 	const char* _tmp0_;
 	const char* _tmp1_;
+#line 65 "panel-tray.vala"
 	g_return_val_if_fail (a != NULL, 0);
+#line 65 "panel-tray.vala"
 	g_return_val_if_fail (b != NULL, 0);
+#line 67 "panel-tray.vala"
 	stra = (const char*) ((const char*) g_object_get_data ((GObject*) a, "n_icon"));
+#line 68 "panel-tray.vala"
 	strb = (const char*) ((const char*) g_object_get_data ((GObject*) b, "n_icon"));
+#line 197 "panel-tray.c"
 	_tmp0_ = NULL;
+#line 70 "panel-tray.vala"
 	if (stra != NULL) {
+#line 70 "panel-tray.vala"
 		_tmp0_ = stra;
+#line 203 "panel-tray.c"
 	} else {
+#line 70 "panel-tray.vala"
 		_tmp0_ = "";
+#line 207 "panel-tray.c"
 	}
 	_tmp1_ = NULL;
+#line 71 "panel-tray.vala"
 	if (strb != NULL) {
+#line 71 "panel-tray.vala"
 		_tmp1_ = strb;
+#line 214 "panel-tray.c"
 	} else {
+#line 71 "panel-tray.vala"
 		_tmp1_ = "";
+#line 218 "panel-tray.c"
 	}
 	result = strcmp (_tmp0_, _tmp1_);
+#line 70 "panel-tray.vala"
 	return result;
+#line 223 "panel-tray.c"
 }
 
 
+#line 74 "panel-tray.vala"
 static void unity_panel_system_tray_on_tray_icon_added (UnityPanelSystemTray* self, ClutterActor* icon) {
+#line 74 "panel-tray.vala"
 	g_return_if_fail (self != NULL);
+#line 74 "panel-tray.vala"
 	g_return_if_fail (icon != NULL);
+#line 76 "panel-tray.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, icon);
+#line 77 "panel-tray.vala"
 	clutter_actor_set_size (icon, (float) 22, (float) 22);
+#line 78 "panel-tray.vala"
 	clutter_actor_show (icon);
+#line 80 "panel-tray.vala"
 	g_object_set_data_full ((GObject*) icon, "n_icon", (void*) g_strdup_printf ("%d", self->priv->n_icons), NULL);
+#line 82 "panel-tray.vala"
 	ctk_box_sort_children ((CtkBox*) self, (GCompareFunc) unity_panel_system_tray_order_icons);
+#line 84 "panel-tray.vala"
 	self->priv->n_icons++;
+#line 245 "panel-tray.c"
 }
 
 
+#line 87 "panel-tray.vala"
 static void unity_panel_system_tray_on_tray_icon_removed (UnityPanelSystemTray* self, ClutterActor* icon) {
+#line 87 "panel-tray.vala"
 	g_return_if_fail (self != NULL);
+#line 87 "panel-tray.vala"
 	g_return_if_fail (icon != NULL);
+#line 89 "panel-tray.vala"
 	clutter_container_remove_actor ((ClutterContainer*) self, icon);
+#line 257 "panel-tray.c"
 }
 
 
+#line 74 "panel-tray.vala"
 static void _unity_panel_system_tray_on_tray_icon_added_unity_tray_manager_tray_icon_added (UnityTrayManager* _sender, ClutterActor* icon, gpointer self) {
+#line 263 "panel-tray.c"
 	unity_panel_system_tray_on_tray_icon_added (self, icon);
 }
 
 
+#line 87 "panel-tray.vala"
 static void _unity_panel_system_tray_on_tray_icon_removed_unity_tray_manager_tray_icon_removed (UnityTrayManager* _sender, ClutterActor* icon, gpointer self) {
+#line 270 "panel-tray.c"
 	unity_panel_system_tray_on_tray_icon_removed (self, icon);
 }
 
@@ -218,9 +280,13 @@ static GObject * unity_panel_system_tray_constructor (GType type, guint n_constr
 	self = UNITY_PANEL_SYSTEM_TRAY (obj);
 	{
 		UnityTrayManager* _tmp0_;
+#line 43 "panel-tray.vala"
 		self->priv->manager = (_tmp0_ = unity_tray_manager_new (), _g_object_unref0 (self->priv->manager), _tmp0_);
+#line 44 "panel-tray.vala"
 		g_signal_connect_object (self->priv->manager, "tray-icon-added", (GCallback) _unity_panel_system_tray_on_tray_icon_added_unity_tray_manager_tray_icon_added, self, 0);
+#line 45 "panel-tray.vala"
 		g_signal_connect_object (self->priv->manager, "tray-icon-removed", (GCallback) _unity_panel_system_tray_on_tray_icon_removed_unity_tray_manager_tray_icon_removed, self, 0);
+#line 290 "panel-tray.c"
 	}
 	return obj;
 }

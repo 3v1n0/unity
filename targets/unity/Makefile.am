@@ -35,6 +35,7 @@ unity_VALAFLAGS = \
   --pkg clutter-gtk-0.10 \
   --pkg cogl-1.0 \
   --pkg config \
+  --pkg dee-1.0 \
   --pkg dbus-glib-1 \
   --pkg gtk+-2.0 \
   --pkg gdk-2.0 \

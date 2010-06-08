@@ -87,9 +87,8 @@ am__objects_1 = libunity_la-chrome-handler.lo \
 	libunity_la-prism-handler.lo \
 	libunity_la-quicklist-rendering.lo libunity_la-shell.lo \
 	libunity_la-theme.lo libunity_la-unity-favorites.lo \
-	libunity_la-webapp-fetcher.lo
-am_libunity_la_OBJECTS = libunity_la-unity-place.lo \
-	libunity_la-unity-place-marshal.lo $(am__objects_1)
+	libunity_la-unity-place.lo libunity_la-webapp-fetcher.lo
+am_libunity_la_OBJECTS = $(am__objects_1)
 libunity_la_OBJECTS = $(am_libunity_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
@@ -220,6 +219,8 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 POSUB = @POSUB@
 RANLIB = @RANLIB@
 SED = @SED@
@@ -284,13 +285,11 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-BUILT_SOURCES = $(DBUS_SPECS:.xml=-client.h) \
-	$(DBUS_SPECS:.xml=-server.h) unity-place-marshal.c \
-	unity-place-marshal.h libunity_la_vala.stamp
-CLEANFILES = $(BUILT_SOURCES) *.stamp $(libunity_la_APIFILES) \
+BUILT_SOURCES = libunity_la_vala.stamp
+CLEANFILES = *.stamp $(libunity_la_APIFILES) \
 	$(libunity_la_VALASOURCES:.vala=.c) *.vapi
-EXTRA_DIST = $(DBUS_SPECS) unity-place-marshal.list $(BUILT_SOURCES) \
-	$(libunity_la_APIFILES) $(libunity_la_VALASOURCES)
+EXTRA_DIST = $(BUILT_SOURCES) $(libunity_la_APIFILES) \
+	$(libunity_la_VALASOURCES)
 lib_LTLIBRARIES = \
   libunity.la
 
@@ -298,17 +297,10 @@ lib_LTLIBRARIES = \
 # Headers and vapi
 unityincludedir = $(includedir)/unity/unity
 unityinclude_HEADERS = \
-  unity.h \
-  unity-place.h \
-  unity-place-marshal.h
+  unity.h
 
 unityvapidir = $(datadir)/vala/vapi
 unityvapi_DATA = unity.vapi
-
-# DBus Specs
-DBUS_SPECS = \
- unity-place.xml
-
 @HAVE_LOCALINSTALL_FALSE@PKGDATADIR = $(datadir)/unity
 
 # libunity
@@ -331,6 +323,8 @@ libunity_la_VALAFLAGS = \
   --pkg config \
   --pkg clutter-1.0 \
   --pkg clutk-0.3 \
+  --pkg dbus-glib-1 \
+  --pkg dee-1.0 \
   --pkg gconf-2.0 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
@@ -341,10 +335,6 @@ libunity_la_VALAFLAGS = \
   $(MAINTAINER_VALAFLAGS)
 
 libunity_la_SOURCES = \
-  unity-place.c \
-  unity-place-client.h \
-  unity-place-marshal.c \
-  unity-place-server.h \
   $(libunity_la_VALASOURCES:.vala=.c)
 
 libunity_la_VALASOURCES = \
@@ -358,6 +348,7 @@ libunity_la_VALASOURCES = \
   shell.vala \
   theme.vala \
   unity-favorites.vala \
+  unity-place.vala \
   webapp-fetcher.vala
 
 libunity_la_APIFILES = \
@@ -449,7 +440,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-shell.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-theme.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-favorites.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-place-marshal.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-place.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-webapp-fetcher.Plo@am__quote@
 
@@ -476,22 +466,6 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
-
-libunity_la-unity-place.lo: unity-place.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-unity-place.lo -MD -MP -MF $(DEPDIR)/libunity_la-unity-place.Tpo -c -o libunity_la-unity-place.lo `test -f 'unity-place.c' || echo '$(srcdir)/'`unity-place.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_la-unity-place.Tpo $(DEPDIR)/libunity_la-unity-place.Plo
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='unity-place.c' object='libunity_la-unity-place.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-unity-place.lo `test -f 'unity-place.c' || echo '$(srcdir)/'`unity-place.c
-
-libunity_la-unity-place-marshal.lo: unity-place-marshal.c
-@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-unity-place-marshal.lo -MD -MP -MF $(DEPDIR)/libunity_la-unity-place-marshal.Tpo -c -o libunity_la-unity-place-marshal.lo `test -f 'unity-place-marshal.c' || echo '$(srcdir)/'`unity-place-marshal.c
-@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_la-unity-place-marshal.Tpo $(DEPDIR)/libunity_la-unity-place-marshal.Plo
-@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='unity-place-marshal.c' object='libunity_la-unity-place-marshal.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-unity-place-marshal.lo `test -f 'unity-place-marshal.c' || echo '$(srcdir)/'`unity-place-marshal.c
 
 libunity_la-chrome-handler.lo: chrome-handler.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-chrome-handler.lo -MD -MP -MF $(DEPDIR)/libunity_la-chrome-handler.Tpo -c -o libunity_la-chrome-handler.lo `test -f 'chrome-handler.c' || echo '$(srcdir)/'`chrome-handler.c
@@ -572,6 +546,14 @@ libunity_la-unity-favorites.lo: unity-favorites.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='unity-favorites.c' object='libunity_la-unity-favorites.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-unity-favorites.lo `test -f 'unity-favorites.c' || echo '$(srcdir)/'`unity-favorites.c
+
+libunity_la-unity-place.lo: unity-place.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-unity-place.lo -MD -MP -MF $(DEPDIR)/libunity_la-unity-place.Tpo -c -o libunity_la-unity-place.lo `test -f 'unity-place.c' || echo '$(srcdir)/'`unity-place.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_la-unity-place.Tpo $(DEPDIR)/libunity_la-unity-place.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='unity-place.c' object='libunity_la-unity-place.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-unity-place.lo `test -f 'unity-place.c' || echo '$(srcdir)/'`unity-place.c
 
 libunity_la-webapp-fetcher.lo: webapp-fetcher.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-webapp-fetcher.lo -MD -MP -MF $(DEPDIR)/libunity_la-webapp-fetcher.Tpo -c -o libunity_la-webapp-fetcher.lo `test -f 'webapp-fetcher.c' || echo '$(srcdir)/'`webapp-fetcher.c
@@ -835,31 +817,6 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-unityincludeHEADERS \
 	tags uninstall uninstall-am uninstall-libLTLIBRARIES \
 	uninstall-unityincludeHEADERS uninstall-unityvapiDATA
 
-
-%-client.h: %.xml
-	$(AM_V_GEN)dbus-binding-tool \
-		--prefix=_$(subst -,_,$(basename $(notdir $<)))_client \
-		--mode=glib-client \
-		--output=$@ \
-		$<
-
-%-server.h: %.xml
-	$(AM_V_GEN)dbus-binding-tool \
-		--prefix=_$(subst -,_,$(basename $(notdir $<)))_server \
-		--mode=glib-server \
-		--output=$@ \
-		$<
-
-# Signal Marshallers
-unity-place-marshal.h: $(srcdir)/unity-place-marshal.list
-	$(AM_V_GEN)glib-genmarshal --header \
-		--prefix=_unity_place_marshal $(srcdir)/unity-place-marshal.list \
-	 	> unity-place-marshal.h
-
-unity-place-marshal.c: $(srcdir)/unity-place-marshal.list
-	$(AM_V_GEN)glib-genmarshal --body \
-		--prefix=_unity_place_marshal $(srcdir)/unity-place-marshal.list \
-		> unity-place-marshal.c
 
 libunity_la_vala.stamp $(libunity_la_APIFILES): $(libunity_la_VALASOURCES)
 	$(AM_V_GEN) $(VALAC) $(libunity_la_VALAFLAGS) $^

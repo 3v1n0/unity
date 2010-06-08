@@ -22,6 +22,11 @@ dist-hook:
   	echo Failed to generate ChangeLog: not a branch >&2; \
   fi
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = unity.pc
+
 EXTRA_DIST = \
   autogen.sh \
-  COPYING
+  COPYING \
+  unity.pc.in \
+  COPYING.LGPL

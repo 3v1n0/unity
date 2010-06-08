@@ -123,29 +123,47 @@ GType unity_launcher_pin_type_get_type (void) {
 }
 
 
+#line 48 "scrollerchild.vala"
 char* unity_launcher_scroller_child_to_string (UnityLauncherScrollerChild* self) {
+#line 129 "scrollerchild.c"
 	char* result = NULL;
 	const char* _tmp0_;
 	const char* _tmp1_;
+#line 48 "scrollerchild.vala"
 	g_return_val_if_fail (self != NULL, NULL);
+#line 135 "scrollerchild.c"
 	_tmp0_ = NULL;
+#line 51 "scrollerchild.vala"
 	if (self->priv->_running) {
+#line 51 "scrollerchild.vala"
 		_tmp0_ = "yes";
+#line 141 "scrollerchild.c"
 	} else {
+#line 51 "scrollerchild.vala"
 		_tmp0_ = "no";
+#line 145 "scrollerchild.c"
 	}
 	_tmp1_ = NULL;
+#line 52 "scrollerchild.vala"
 	if (self->priv->_active) {
+#line 52 "scrollerchild.vala"
 		_tmp1_ = "yes";
+#line 152 "scrollerchild.c"
 	} else {
+#line 52 "scrollerchild.vala"
 		_tmp1_ = "no";
+#line 156 "scrollerchild.c"
 	}
 	result = g_strdup_printf ("A scroller child; running: %s, active: %s, position: %f, opacity %f", _tmp0_, _tmp1_, (double) self->priv->_position, (double) clutter_actor_get_opacity ((ClutterActor*) self));
+#line 50 "scrollerchild.vala"
 	return result;
+#line 161 "scrollerchild.c"
 }
 
 
+#line 34 "scrollerchild.vala"
 UnityLauncherScrollerChild* unity_launcher_scroller_child_construct (GType object_type) {
+#line 167 "scrollerchild.c"
 	UnityLauncherScrollerChild * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
@@ -156,7 +174,9 @@ GdkPixbuf* unity_launcher_scroller_child_get_icon (UnityLauncherScrollerChild* s
 	GdkPixbuf* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_icon;
+#line 40 "scrollerchild.vala"
 	return result;
+#line 180 "scrollerchild.c"
 }
 
 
@@ -177,7 +197,9 @@ float unity_launcher_scroller_child_get_position (UnityLauncherScrollerChild* se
 	float result;
 	g_return_val_if_fail (self != NULL, 0.0F);
 	result = self->priv->_position;
+#line 42 "scrollerchild.vala"
 	return result;
+#line 203 "scrollerchild.c"
 }
 
 
@@ -192,7 +214,9 @@ gboolean unity_launcher_scroller_child_get_running (UnityLauncherScrollerChild* 
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_running;
+#line 43 "scrollerchild.vala"
 	return result;
+#line 220 "scrollerchild.c"
 }
 
 
@@ -207,7 +231,9 @@ gboolean unity_launcher_scroller_child_get_active (UnityLauncherScrollerChild* s
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_active;
+#line 44 "scrollerchild.vala"
 	return result;
+#line 237 "scrollerchild.c"
 }
 
 
@@ -222,7 +248,9 @@ gboolean unity_launcher_scroller_child_get_needs_attention (UnityLauncherScrolle
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_needs_attention;
+#line 45 "scrollerchild.vala"
 	return result;
+#line 254 "scrollerchild.c"
 }
 
 
@@ -237,7 +265,9 @@ gboolean unity_launcher_scroller_child_get_activating (UnityLauncherScrollerChil
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_activating;
+#line 46 "scrollerchild.vala"
 	return result;
+#line 271 "scrollerchild.c"
 }
 
 

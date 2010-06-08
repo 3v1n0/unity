@@ -86,17 +86,24 @@ static void unity_testing_object_registry_finalize (UnityTestingObjectRegistry* 
 
 
 
+#line 30 "object-registry.vala"
 UnityTestingObjectRegistry* unity_testing_object_registry_construct (GType object_type) {
+#line 92 "object-registry.c"
 	UnityTestingObjectRegistry* self;
 	GeeHashMap* _tmp0_;
 	self = (UnityTestingObjectRegistry*) g_type_create_instance (object_type);
+#line 32 "object-registry.vala"
 	self->priv->object_map = (_tmp0_ = gee_hash_map_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, GEE_TYPE_ARRAY_LIST, (GBoxedCopyFunc) g_object_ref, g_object_unref, g_str_hash, g_str_equal, g_direct_equal), _g_object_unref0 (self->priv->object_map), _tmp0_);
+#line 98 "object-registry.c"
 	return self;
 }
 
 
+#line 30 "object-registry.vala"
 UnityTestingObjectRegistry* unity_testing_object_registry_new (void) {
+#line 30 "object-registry.vala"
 	return unity_testing_object_registry_construct (UNITY_TESTING_TYPE_OBJECT_REGISTRY);
+#line 107 "object-registry.c"
 }
 
 
@@ -105,38 +112,64 @@ static gpointer _unity_testing_object_registry_ref0 (gpointer self) {
 }
 
 
+#line 35 "object-registry.vala"
 UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void) {
+#line 118 "object-registry.c"
 	UnityTestingObjectRegistry* result = NULL;
+#line 37 "object-registry.vala"
 	if (unity_testing_object_registry__registry == NULL) {
+#line 122 "object-registry.c"
 		UnityTestingObjectRegistry* _tmp0_;
+#line 38 "object-registry.vala"
 		unity_testing_object_registry__registry = (_tmp0_ = unity_testing_object_registry_new (), _unity_testing_object_registry_unref0 (unity_testing_object_registry__registry), _tmp0_);
+#line 126 "object-registry.c"
 	}
 	result = _unity_testing_object_registry_ref0 (unity_testing_object_registry__registry);
+#line 40 "object-registry.vala"
 	return result;
+#line 131 "object-registry.c"
 }
 
 
+#line 43 "object-registry.vala"
 void unity_testing_object_registry_register (UnityTestingObjectRegistry* self, const char* name, GObject* object) {
+#line 137 "object-registry.c"
 	GeeArrayList* _tmp1_;
+#line 43 "object-registry.vala"
 	g_return_if_fail (self != NULL);
+#line 43 "object-registry.vala"
 	g_return_if_fail (name != NULL);
+#line 43 "object-registry.vala"
 	g_return_if_fail (object != NULL);
+#line 45 "object-registry.vala"
 	if (!gee_map_contains ((GeeMap*) self->priv->object_map, name)) {
+#line 147 "object-registry.c"
 		GeeArrayList* _tmp0_;
+#line 46 "object-registry.vala"
 		gee_abstract_map_set ((GeeAbstractMap*) self->priv->object_map, name, _tmp0_ = gee_array_list_new (G_TYPE_OBJECT, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL));
+#line 151 "object-registry.c"
 		_g_object_unref0 (_tmp0_);
 	}
+#line 48 "object-registry.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) (_tmp1_ = (GeeArrayList*) gee_abstract_map_get ((GeeAbstractMap*) self->priv->object_map, name)), object);
+#line 156 "object-registry.c"
 	_g_object_unref0 (_tmp1_);
 }
 
 
+#line 51 "object-registry.vala"
 GeeArrayList* unity_testing_object_registry_lookup (UnityTestingObjectRegistry* self, const char* name) {
+#line 163 "object-registry.c"
 	GeeArrayList* result = NULL;
+#line 51 "object-registry.vala"
 	g_return_val_if_fail (self != NULL, NULL);
+#line 51 "object-registry.vala"
 	g_return_val_if_fail (name != NULL, NULL);
+#line 169 "object-registry.c"
 	result = (GeeArrayList*) gee_abstract_map_get ((GeeAbstractMap*) self->priv->object_map, name);
+#line 53 "object-registry.vala"
 	return result;
+#line 173 "object-registry.c"
 }
 
 

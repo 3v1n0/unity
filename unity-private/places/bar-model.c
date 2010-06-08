@@ -64,24 +64,37 @@ static void unity_places_bar_model_finalize (GObject* obj);
 
 
 
+#line 30 "bar-model.vala"
 UnityPlacesBarModel* unity_places_bar_model_construct (GType object_type, const char* name, const char* icon_name, const char* tooltip) {
+#line 70 "bar-model.c"
 	UnityPlacesBarModel * self;
 	char* _tmp0_;
 	char* _tmp1_;
 	char* _tmp2_;
+#line 30 "bar-model.vala"
 	g_return_val_if_fail (name != NULL, NULL);
+#line 30 "bar-model.vala"
 	g_return_val_if_fail (icon_name != NULL, NULL);
+#line 30 "bar-model.vala"
 	g_return_val_if_fail (tooltip != NULL, NULL);
+#line 81 "bar-model.c"
 	self = g_object_newv (object_type, 0, NULL);
+#line 34 "bar-model.vala"
 	self->name = (_tmp0_ = g_strdup (name), _g_free0 (self->name), _tmp0_);
+#line 35 "bar-model.vala"
 	self->icon_name = (_tmp1_ = g_strdup (icon_name), _g_free0 (self->icon_name), _tmp1_);
+#line 36 "bar-model.vala"
 	self->tooltip = (_tmp2_ = g_strdup (tooltip), _g_free0 (self->tooltip), _tmp2_);
+#line 89 "bar-model.c"
 	return self;
 }
 
 
+#line 30 "bar-model.vala"
 UnityPlacesBarModel* unity_places_bar_model_new (const char* name, const char* icon_name, const char* tooltip) {
+#line 30 "bar-model.vala"
 	return unity_places_bar_model_construct (UNITY_PLACES_BAR_TYPE_MODEL, name, icon_name, tooltip);
+#line 98 "bar-model.c"
 }
 
 

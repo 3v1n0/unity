@@ -188,52 +188,77 @@ GType unity_launcher_anim_state_get_type (void) {
 }
 
 
+#line 288 "launcher-child.vala"
 static void _unity_launcher_launcher_child_on_icon_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+#line 194 "launcher-child.c"
 	unity_launcher_launcher_child_on_icon_changed (self);
 }
 
 
+#line 330 "launcher-child.vala"
 static void _unity_launcher_launcher_child_on_running_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+#line 201 "launcher-child.c"
 	unity_launcher_launcher_child_on_running_changed (self);
 }
 
 
+#line 344 "launcher-child.vala"
 static void _unity_launcher_launcher_child_on_active_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+#line 208 "launcher-child.c"
 	unity_launcher_launcher_child_on_active_changed (self);
 }
 
 
+#line 357 "launcher-child.vala"
 static void _unity_launcher_launcher_child_on_activating_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+#line 215 "launcher-child.c"
 	unity_launcher_launcher_child_on_activating_changed (self);
 }
 
 
+#line 387 "launcher-child.vala"
 static void _unity_launcher_launcher_child_on_needs_attention_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+#line 222 "launcher-child.c"
 	unity_launcher_launcher_child_on_needs_attention_changed (self);
 }
 
 
+#line 80 "launcher-child.vala"
 static void unity_launcher_launcher_child_load_textures (UnityLauncherLauncherChild* self) {
+#line 229 "launcher-child.c"
 	GError * _inner_error_;
 	UnityThemeImage* _tmp0_;
 	UnityThemeImage* _tmp1_;
 	CtkActor* _tmp4_;
+#line 80 "launcher-child.vala"
 	g_return_if_fail (self != NULL);
+#line 236 "launcher-child.c"
 	_inner_error_ = NULL;
+#line 82 "launcher-child.vala"
 	self->priv->active_indicator = (_tmp0_ = g_object_ref_sink (unity_theme_image_new ("application-selected")), _g_object_unref0 (self->priv->active_indicator), _tmp0_);
+#line 83 "launcher-child.vala"
 	self->priv->running_indicator = (_tmp1_ = g_object_ref_sink (unity_theme_image_new ("application-running")), _g_object_unref0 (self->priv->running_indicator), _tmp1_);
+#line 85 "launcher-child.vala"
 	clutter_actor_set_parent ((ClutterActor*) self->priv->active_indicator, (ClutterActor*) self);
+#line 86 "launcher-child.vala"
 	clutter_actor_set_parent ((ClutterActor*) self->priv->running_indicator, (ClutterActor*) self);
+#line 87 "launcher-child.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self->priv->active_indicator, (guint8) 0);
+#line 88 "launcher-child.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self->priv->running_indicator, (guint8) 0);
+#line 250 "launcher-child.c"
 	{
 		GdkPixbuf* _tmp2_;
 		GdkPixbuf* _tmp3_;
+#line 92 "launcher-child.vala"
 		_tmp2_ = gdk_pixbuf_new_from_file (UNITY_LAUNCHER_HONEYCOMB_MASK_FILE, &_inner_error_);
+#line 256 "launcher-child.c"
 		if (_inner_error_ != NULL) {
 			goto __catch20_g_error;
 		}
+#line 92 "launcher-child.vala"
 		self->priv->honeycomb_mask = (_tmp3_ = _tmp2_, _g_object_unref0 (self->priv->honeycomb_mask), _tmp3_);
+#line 262 "launcher-child.c"
 	}
 	goto __finally20;
 	__catch20_g_error:
@@ -242,7 +267,9 @@ static void unity_launcher_launcher_child_load_textures (UnityLauncherLauncherCh
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
+#line 96 "launcher-child.vala"
 			g_warning ("launcher-child.vala:96: Unable to load asset %s: %s", UNITY_LAUNCHER_HONEYCOMB_MASK_FILE, e->message);
+#line 273 "launcher-child.c"
 			_g_error_free0 (e);
 		}
 	}
@@ -252,201 +279,345 @@ static void unity_launcher_launcher_child_load_textures (UnityLauncherLauncherCh
 		g_clear_error (&_inner_error_);
 		return;
 	}
+#line 101 "launcher-child.vala"
 	self->priv->processed_icon = (_tmp4_ = (CtkActor*) g_object_ref_sink ((CtkImage*) ctk_image_new ((guint) 48)), _g_object_unref0 (self->priv->processed_icon), _tmp4_);
+#line 102 "launcher-child.vala"
 	clutter_actor_set_size ((ClutterActor*) self->priv->processed_icon, (float) 48, (float) 48);
+#line 103 "launcher-child.vala"
 	clutter_actor_set_parent ((ClutterActor*) self->priv->processed_icon, (ClutterActor*) self);
+#line 105 "launcher-child.vala"
 	g_signal_connect_object ((GObject*) self, "notify::icon", (GCallback) _unity_launcher_launcher_child_on_icon_changed_g_object_notify, self, 0);
+#line 106 "launcher-child.vala"
 	g_signal_connect_object ((GObject*) self, "notify::running", (GCallback) _unity_launcher_launcher_child_on_running_changed_g_object_notify, self, 0);
+#line 107 "launcher-child.vala"
 	g_signal_connect_object ((GObject*) self, "notify::active", (GCallback) _unity_launcher_launcher_child_on_active_changed_g_object_notify, self, 0);
+#line 108 "launcher-child.vala"
 	g_signal_connect_object ((GObject*) self, "notify::activating", (GCallback) _unity_launcher_launcher_child_on_activating_changed_g_object_notify, self, 0);
+#line 109 "launcher-child.vala"
 	g_signal_connect_object ((GObject*) self, "notify::needs-attention", (GCallback) _unity_launcher_launcher_child_on_needs_attention_changed_g_object_notify, self, 0);
+#line 112 "launcher-child.vala"
 	unity_launcher_launcher_child_on_running_changed (self);
+#line 113 "launcher-child.vala"
 	unity_launcher_launcher_child_on_active_changed (self);
+#line 303 "launcher-child.c"
 }
 
 
+#line 117 "launcher-child.vala"
 static float unity_launcher_launcher_child_get_ease_out_sine (float alpha) {
+#line 309 "launcher-child.c"
 	float result = 0.0F;
 	result = (float) sin (G_PI_2 * alpha);
+#line 119 "launcher-child.vala"
 	return result;
+#line 314 "launcher-child.c"
 }
 
 
+#line 122 "launcher-child.vala"
 static float unity_launcher_launcher_child_get_circular_alpha (float alpha) {
+#line 320 "launcher-child.c"
 	float result = 0.0F;
 	double sine;
+#line 125 "launcher-child.vala"
 	sine = sin ((alpha * (G_PI * 2)) - G_PI);
+#line 325 "launcher-child.c"
 	result = fmaxf ((((float) sine) / 2.0f) + 0.5f, 0.0f);
+#line 126 "launcher-child.vala"
 	return result;
+#line 329 "launcher-child.c"
 }
 
 
+#line 130 "launcher-child.vala"
 static void unity_launcher_launcher_child_on_glow_timeline_new_frame (UnityLauncherLauncherChild* self) {
+#line 335 "launcher-child.c"
 	float progress;
+#line 130 "launcher-child.vala"
 	g_return_if_fail (self != NULL);
+#line 132 "launcher-child.vala"
 	progress = (float) clutter_timeline_get_progress (self->priv->glow_timeline);
+#line 133 "launcher-child.vala"
 	switch (self->priv->glow_state) {
+#line 343 "launcher-child.c"
 		case UNITY_LAUNCHER_ANIM_STATE_RISING:
 		{
+#line 136 "launcher-child.vala"
 			unity_launcher_launcher_child_glow_anim_rising (self, progress);
+#line 137 "launcher-child.vala"
 			break;
+#line 350 "launcher-child.c"
 		}
 		case UNITY_LAUNCHER_ANIM_STATE_LOOPING:
 		{
+#line 140 "launcher-child.vala"
 			unity_launcher_launcher_child_glow_anim_looping (self, progress);
+#line 141 "launcher-child.vala"
 			break;
+#line 358 "launcher-child.c"
 		}
 		case UNITY_LAUNCHER_ANIM_STATE_FALLING:
 		{
+#line 144 "launcher-child.vala"
 			unity_launcher_launcher_child_glow_anim_falling (self, progress);
+#line 145 "launcher-child.vala"
 			break;
+#line 366 "launcher-child.c"
 		}
 		default:
 		{
+#line 148 "launcher-child.vala"
 			self->priv->glow_state = UNITY_LAUNCHER_ANIM_STATE_STOPPED;
+#line 149 "launcher-child.vala"
 			clutter_timeline_stop (self->priv->glow_timeline);
+#line 150 "launcher-child.vala"
 			break;
+#line 376 "launcher-child.c"
 		}
 	}
+#line 153 "launcher-child.vala"
 	clutter_actor_queue_redraw ((ClutterActor*) self->priv->processed_icon);
+#line 381 "launcher-child.c"
 }
 
 
+#line 157 "launcher-child.vala"
 static void unity_launcher_launcher_child_glow_anim_rising (UnityLauncherLauncherChild* self, float progress) {
+#line 157 "launcher-child.vala"
 	g_return_if_fail (self != NULL);
+#line 159 "launcher-child.vala"
 	progress = unity_launcher_launcher_child_get_ease_out_sine (progress);
+#line 160 "launcher-child.vala"
 	ctk_effect_set_opacity ((CtkEffect*) self->priv->effect_icon_glow, progress);
+#line 161 "launcher-child.vala"
 	self->priv->previous_glow_alpha = progress;
+#line 162 "launcher-child.vala"
 	if (progress >= 1.0) {
+#line 164 "launcher-child.vala"
 		self->priv->glow_state = UNITY_LAUNCHER_ANIM_STATE_LOOPING;
+#line 165 "launcher-child.vala"
 		clutter_timeline_stop (self->priv->glow_timeline);
+#line 166 "launcher-child.vala"
 		clutter_timeline_set_duration (self->priv->glow_timeline, UNITY_LAUNCHER_LONG_DELAY);
+#line 167 "launcher-child.vala"
 		clutter_timeline_set_loop (self->priv->glow_timeline, TRUE);
+#line 168 "launcher-child.vala"
 		clutter_timeline_start (self->priv->glow_timeline);
+#line 169 "launcher-child.vala"
 		return;
+#line 409 "launcher-child.c"
 	}
 }
 
 
+#line 173 "launcher-child.vala"
 static void unity_launcher_launcher_child_glow_anim_looping (UnityLauncherLauncherChild* self, float progress) {
+#line 173 "launcher-child.vala"
 	g_return_if_fail (self != NULL);
+#line 175 "launcher-child.vala"
 	progress = 1.0f - unity_launcher_launcher_child_get_circular_alpha (progress);
+#line 176 "launcher-child.vala"
 	ctk_effect_set_opacity ((CtkEffect*) self->priv->effect_icon_glow, progress);
+#line 177 "launcher-child.vala"
 	self->priv->previous_glow_alpha = progress;
+#line 178 "launcher-child.vala"
 	clutter_actor_queue_redraw ((ClutterActor*) self->priv->processed_icon);
+#line 426 "launcher-child.c"
 }
 
 
+#line 181 "launcher-child.vala"
 static void unity_launcher_launcher_child_glow_anim_falling (UnityLauncherLauncherChild* self, float progress) {
+#line 432 "launcher-child.c"
 	float alpha_length;
+#line 181 "launcher-child.vala"
 	g_return_if_fail (self != NULL);
+#line 183 "launcher-child.vala"
 	alpha_length = self->priv->previous_glow_alpha;
+#line 184 "launcher-child.vala"
 	ctk_effect_set_opacity ((CtkEffect*) self->priv->effect_icon_glow, alpha_length - (progress * alpha_length));
+#line 186 "launcher-child.vala"
 	if (progress >= 1.0) {
+#line 188 "launcher-child.vala"
 		self->priv->glow_state = UNITY_LAUNCHER_ANIM_STATE_STOPPED;
+#line 189 "launcher-child.vala"
 		clutter_timeline_stop (self->priv->glow_timeline);
+#line 190 "launcher-child.vala"
 		clutter_timeline_set_loop (self->priv->glow_timeline, FALSE);
+#line 448 "launcher-child.c"
 	}
 }
 
 
+#line 194 "launcher-child.vala"
 static void unity_launcher_launcher_child_on_wiggle_timeline_new_frame (UnityLauncherLauncherChild* self) {
+#line 455 "launcher-child.c"
 	float progress;
+#line 194 "launcher-child.vala"
 	g_return_if_fail (self != NULL);
+#line 196 "launcher-child.vala"
 	progress = (float) clutter_timeline_get_progress (self->priv->wiggle_timeline);
+#line 198 "launcher-child.vala"
 	switch (self->priv->wiggle_state) {
+#line 463 "launcher-child.c"
 		case UNITY_LAUNCHER_ANIM_STATE_RISING:
 		{
+#line 201 "launcher-child.vala"
 			unity_launcher_launcher_child_wiggle_anim_rising (self, progress);
+#line 202 "launcher-child.vala"
 			break;
+#line 470 "launcher-child.c"
 		}
 		case UNITY_LAUNCHER_ANIM_STATE_LOOPING:
 		{
+#line 205 "launcher-child.vala"
 			unity_launcher_launcher_child_wiggle_anim_looping (self, progress);
+#line 206 "launcher-child.vala"
 			break;
+#line 478 "launcher-child.c"
 		}
 		case UNITY_LAUNCHER_ANIM_STATE_FALLING:
 		{
+#line 209 "launcher-child.vala"
 			unity_launcher_launcher_child_wiggle_anim_falling (self, progress);
+#line 210 "launcher-child.vala"
 			break;
+#line 486 "launcher-child.c"
 		}
 		default:
 		{
+#line 213 "launcher-child.vala"
 			self->priv->wiggle_state = UNITY_LAUNCHER_ANIM_STATE_STOPPED;
+#line 214 "launcher-child.vala"
 			clutter_timeline_stop (self->priv->wiggle_timeline);
+#line 215 "launcher-child.vala"
 			break;
+#line 496 "launcher-child.c"
 		}
 	}
+#line 218 "launcher-child.vala"
 	clutter_actor_queue_redraw ((ClutterActor*) self->priv->processed_icon);
+#line 501 "launcher-child.c"
 }
 
 
+#line 222 "launcher-child.vala"
 static void unity_launcher_launcher_child_wiggle_anim_rising (UnityLauncherLauncherChild* self, float progress) {
+#line 222 "launcher-child.vala"
 	g_return_if_fail (self != NULL);
+#line 224 "launcher-child.vala"
 	progress = unity_launcher_launcher_child_get_ease_out_sine (progress);
+#line 225 "launcher-child.vala"
 	clutter_actor_set_rotation ((ClutterActor*) self->priv->processed_icon, CLUTTER_Z_AXIS, (double) (progress * UNITY_LAUNCHER_WIGGLE_SIZE), 24.0f, 24.0f, 0.0f);
+#line 227 "launcher-child.vala"
 	self->priv->previous_wiggle_alpha = progress;
+#line 228 "launcher-child.vala"
 	if (progress >= 1.0) {
+#line 230 "launcher-child.vala"
 		self->priv->wiggle_state = UNITY_LAUNCHER_ANIM_STATE_LOOPING;
+#line 231 "launcher-child.vala"
 		clutter_timeline_stop (self->priv->wiggle_timeline);
+#line 232 "launcher-child.vala"
 		clutter_timeline_set_duration (self->priv->wiggle_timeline, (guint) UNITY_LAUNCHER_WIGGLE_RUN_LENGTH);
+#line 233 "launcher-child.vala"
 		clutter_timeline_set_loop (self->priv->wiggle_timeline, TRUE);
+#line 234 "launcher-child.vala"
 		clutter_timeline_start (self->priv->wiggle_timeline);
+#line 235 "launcher-child.vala"
 		return;
+#line 529 "launcher-child.c"
 	}
 }
 
 
+#line 239 "launcher-child.vala"
 static void unity_launcher_launcher_child_wiggle_anim_looping (UnityLauncherLauncherChild* self, float progress) {
+#line 536 "launcher-child.c"
 	gint frequency;
+#line 239 "launcher-child.vala"
 	g_return_if_fail (self != NULL);
+#line 241 "launcher-child.vala"
 	if (progress >= 1.0) {
+#line 243 "launcher-child.vala"
 		self->priv->wiggle_state = UNITY_LAUNCHER_ANIM_STATE_FALLING;
+#line 244 "launcher-child.vala"
 		clutter_timeline_stop (self->priv->wiggle_timeline);
+#line 245 "launcher-child.vala"
 		clutter_timeline_set_loop (self->priv->wiggle_timeline, FALSE);
+#line 246 "launcher-child.vala"
 		clutter_timeline_start (self->priv->wiggle_timeline);
+#line 550 "launcher-child.c"
 	}
+#line 249 "launcher-child.vala"
 	frequency = UNITY_LAUNCHER_WIGGLE_FREQUENCY * (UNITY_LAUNCHER_WIGGLE_RUN_LENGTH / 1000);
+#line 250 "launcher-child.vala"
 	progress = unity_launcher_launcher_child_get_circular_alpha (fmodf (progress * frequency, 1.0f));
+#line 251 "launcher-child.vala"
 	progress = ((1.0f - progress) * 2.0f) - 1.0f;
+#line 252 "launcher-child.vala"
 	clutter_actor_set_rotation ((ClutterActor*) self->priv->processed_icon, CLUTTER_Z_AXIS, (double) (progress * UNITY_LAUNCHER_WIGGLE_SIZE), 24.0f, 24.0f, 0.0f);
+#line 254 "launcher-child.vala"
 	clutter_actor_queue_redraw ((ClutterActor*) self->priv->processed_icon);
+#line 255 "launcher-child.vala"
 	self->priv->previous_wiggle_alpha = progress;
+#line 564 "launcher-child.c"
 }
 
 
+#line 260 "launcher-child.vala"
 static gboolean unity_launcher_launcher_child_check_continue_wiggle (UnityLauncherLauncherChild* self) {
+#line 570 "launcher-child.c"
 	gboolean result = FALSE;
+#line 260 "launcher-child.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 262 "launcher-child.vala"
 	if (unity_launcher_scroller_child_get_needs_attention ((UnityLauncherScrollerChild*) self)) {
+#line 264 "launcher-child.vala"
 		clutter_timeline_set_duration (self->priv->wiggle_timeline, (guint) (500 / UNITY_LAUNCHER_WIGGLE_FREQUENCY));
+#line 265 "launcher-child.vala"
 		self->priv->wiggle_state = UNITY_LAUNCHER_ANIM_STATE_RISING;
+#line 266 "launcher-child.vala"
 		clutter_timeline_start (self->priv->wiggle_timeline);
+#line 582 "launcher-child.c"
 	}
 	result = FALSE;
+#line 268 "launcher-child.vala"
 	return result;
+#line 587 "launcher-child.c"
 }
 
 
+#line 260 "launcher-child.vala"
 static gboolean _unity_launcher_launcher_child_check_continue_wiggle_gsource_func (gpointer self) {
-	gboolean result;
-	result = unity_launcher_launcher_child_check_continue_wiggle (self);
-	return result;
+#line 593 "launcher-child.c"
+	return unity_launcher_launcher_child_check_continue_wiggle (self);
 }
 
 
+#line 271 "launcher-child.vala"
 static void unity_launcher_launcher_child_wiggle_anim_falling (UnityLauncherLauncherChild* self, float progress) {
+#line 600 "launcher-child.c"
 	float alpha_length;
 	float angle;
+#line 271 "launcher-child.vala"
 	g_return_if_fail (self != NULL);
+#line 273 "launcher-child.vala"
 	alpha_length = self->priv->previous_wiggle_alpha;
+#line 274 "launcher-child.vala"
 	angle = alpha_length - (progress * alpha_length);
+#line 275 "launcher-child.vala"
 	clutter_actor_set_rotation ((ClutterActor*) self->priv->processed_icon, CLUTTER_Z_AXIS, (double) angle, 24.0f, 24.0f, 0.0f);
+#line 278 "launcher-child.vala"
 	if (progress >= 1.0) {
+#line 280 "launcher-child.vala"
 		self->priv->wiggle_state = UNITY_LAUNCHER_ANIM_STATE_STOPPED;
+#line 281 "launcher-child.vala"
 		clutter_timeline_stop (self->priv->wiggle_timeline);
+#line 282 "launcher-child.vala"
 		clutter_timeline_set_loop (self->priv->wiggle_timeline, FALSE);
+#line 283 "launcher-child.vala"
 		g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) UNITY_LAUNCHER_WIGGLE_PAUSE_LENGTH, _unity_launcher_launcher_child_check_continue_wiggle_gsource_func, g_object_ref (self), g_object_unref);
+#line 621 "launcher-child.c"
 	}
 }
 
@@ -456,9 +627,13 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
+#line 288 "launcher-child.vala"
 static void unity_launcher_launcher_child_on_icon_changed (UnityLauncherLauncherChild* self) {
+#line 288 "launcher-child.vala"
 	g_return_if_fail (self != NULL);
+#line 290 "launcher-child.vala"
 	if (GDK_IS_PIXBUF (unity_launcher_scroller_child_get_icon ((UnityLauncherScrollerChild*) self))) {
+#line 637 "launcher-child.c"
 		GdkPixbuf* scaled_buf;
 		gint max_size;
 		gboolean _tmp0_ = FALSE;
@@ -477,38 +652,70 @@ static void unity_launcher_launcher_child_on_icon_changed (UnityLauncherLauncher
 		ClutterActor* _tmp5_;
 		CtkEffectDropShadow* _tmp7_;
 		scaled_buf = NULL;
+#line 293 "launcher-child.vala"
 		max_size = 48;
+#line 294 "launcher-child.vala"
 		if (!unity_pixbuf_is_tile (unity_launcher_scroller_child_get_icon ((UnityLauncherScrollerChild*) self))) {
+#line 295 "launcher-child.vala"
 			max_size = 40;
+#line 662 "launcher-child.c"
 		}
+#line 297 "launcher-child.vala"
 		if (gdk_pixbuf_get_width (unity_launcher_scroller_child_get_icon ((UnityLauncherScrollerChild*) self)) > max_size) {
+#line 297 "launcher-child.vala"
 			_tmp0_ = TRUE;
+#line 668 "launcher-child.c"
 		} else {
+#line 297 "launcher-child.vala"
 			_tmp0_ = gdk_pixbuf_get_height (unity_launcher_scroller_child_get_icon ((UnityLauncherScrollerChild*) self)) > max_size;
+#line 672 "launcher-child.c"
 		}
+#line 297 "launcher-child.vala"
 		if (_tmp0_) {
+#line 676 "launcher-child.c"
 			GdkPixbuf* _tmp1_;
+#line 299 "launcher-child.vala"
 			scaled_buf = (_tmp1_ = gdk_pixbuf_scale_simple (unity_launcher_scroller_child_get_icon ((UnityLauncherScrollerChild*) self), max_size, max_size, GDK_INTERP_HYPER), _g_object_unref0 (scaled_buf), _tmp1_);
+#line 680 "launcher-child.c"
 		} else {
 			GdkPixbuf* _tmp2_;
+#line 303 "launcher-child.vala"
 			scaled_buf = (_tmp2_ = _g_object_ref0 (unity_launcher_scroller_child_get_icon ((UnityLauncherScrollerChild*) self)), _g_object_unref0 (scaled_buf), _tmp2_);
+#line 685 "launcher-child.c"
 		}
+#line 306 "launcher-child.vala"
 		color_buf = gdk_pixbuf_new (GDK_COLORSPACE_RGB, TRUE, 8, 1, 1);
+#line 308 "launcher-child.vala"
 		unity_get_average_color (scaled_buf, &red, &green, &blue);
+#line 691 "launcher-child.c"
 		pixels = (_tmp3_ = gdk_pixbuf_get_pixels (color_buf), pixels_length1 = -1, _pixels_size_ = pixels_length1, _tmp3_);
+#line 310 "launcher-child.vala"
 		pixels[0] = (guchar) red;
+#line 311 "launcher-child.vala"
 		pixels[1] = (guchar) green;
+#line 312 "launcher-child.vala"
 		pixels[2] = (guchar) blue;
+#line 313 "launcher-child.vala"
 		pixels[3] = (guchar) 255;
+#line 315 "launcher-child.vala"
 		tex = _g_object_ref0 (gtk_clutter_texture_new_from_pixbuf (scaled_buf));
+#line 316 "launcher-child.vala"
 		color = _g_object_ref0 (gtk_clutter_texture_new_from_pixbuf (color_buf));
+#line 318 "launcher-child.vala"
 		self->priv->processed_icon = (_tmp6_ = (CtkActor*) g_object_ref_sink (unity_unity_icon_new ((_tmp4_ = tex, CLUTTER_IS_TEXTURE (_tmp4_) ? ((ClutterTexture*) _tmp4_) : NULL), (_tmp5_ = color, CLUTTER_IS_TEXTURE (_tmp5_) ? ((ClutterTexture*) _tmp5_) : NULL))), _g_object_unref0 (self->priv->processed_icon), _tmp6_);
+#line 319 "launcher-child.vala"
 		clutter_actor_set_parent ((ClutterActor*) self->priv->processed_icon, (ClutterActor*) self);
+#line 321 "launcher-child.vala"
 		self->priv->effect_drop_shadow = (_tmp7_ = g_object_ref_sink (ctk_effect_drop_shadow_new (5.0f, 0, 2)), _g_object_unref0 (self->priv->effect_drop_shadow), _tmp7_);
+#line 322 "launcher-child.vala"
 		ctk_effect_set_opacity ((CtkEffect*) self->priv->effect_drop_shadow, 0.4f);
+#line 323 "launcher-child.vala"
 		ctk_effect_set_margin ((CtkEffect*) self->priv->effect_drop_shadow, 5);
+#line 324 "launcher-child.vala"
 		ctk_actor_add_effect (self->priv->processed_icon, (CtkEffect*) self->priv->effect_drop_shadow);
+#line 326 "launcher-child.vala"
 		clutter_actor_queue_redraw ((ClutterActor*) self);
+#line 719 "launcher-child.c"
 		_g_object_unref0 (scaled_buf);
 		_g_object_unref0 (color_buf);
 		_g_object_unref0 (tex);
@@ -517,131 +724,229 @@ static void unity_launcher_launcher_child_on_icon_changed (UnityLauncherLauncher
 }
 
 
+#line 330 "launcher-child.vala"
 static void unity_launcher_launcher_child_on_running_changed (UnityLauncherLauncherChild* self) {
+#line 730 "launcher-child.c"
 	guint target_opacity;
 	ClutterAnimation* _tmp0_;
+#line 330 "launcher-child.vala"
 	g_return_if_fail (self != NULL);
+#line 332 "launcher-child.vala"
 	target_opacity = (guint) 0;
+#line 333 "launcher-child.vala"
 	if (unity_launcher_scroller_child_get_running ((UnityLauncherScrollerChild*) self)) {
+#line 334 "launcher-child.vala"
 		target_opacity = (guint) 255;
+#line 741 "launcher-child.c"
 	}
+#line 336 "launcher-child.vala"
 	if (CLUTTER_IS_ANIMATION (self->priv->running_indicator_anim)) {
+#line 337 "launcher-child.vala"
 		clutter_animation_completed (self->priv->running_indicator_anim);
+#line 747 "launcher-child.c"
 	}
+#line 339 "launcher-child.vala"
 	self->priv->running_indicator_anim = (_tmp0_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->running_indicator, (gulong) CLUTTER_EASE_IN_OUT_SINE, UNITY_LAUNCHER_SHORT_DELAY, "opacity", target_opacity, NULL)), _g_object_unref0 (self->priv->running_indicator_anim), _tmp0_);
+#line 751 "launcher-child.c"
 }
 
 
+#line 344 "launcher-child.vala"
 static void unity_launcher_launcher_child_on_active_changed (UnityLauncherLauncherChild* self) {
+#line 757 "launcher-child.c"
 	guint target_opacity;
 	ClutterAnimation* _tmp0_;
+#line 344 "launcher-child.vala"
 	g_return_if_fail (self != NULL);
+#line 346 "launcher-child.vala"
 	target_opacity = (guint) 0;
+#line 347 "launcher-child.vala"
 	if (unity_launcher_scroller_child_get_active ((UnityLauncherScrollerChild*) self)) {
+#line 348 "launcher-child.vala"
 		target_opacity = (guint) 255;
+#line 768 "launcher-child.c"
 	}
+#line 350 "launcher-child.vala"
 	if (CLUTTER_IS_ANIMATION (self->priv->active_indicator_anim)) {
+#line 351 "launcher-child.vala"
 		clutter_animation_completed (self->priv->active_indicator_anim);
+#line 774 "launcher-child.c"
 	}
+#line 352 "launcher-child.vala"
 	self->priv->active_indicator_anim = (_tmp0_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->active_indicator, (gulong) CLUTTER_EASE_IN_OUT_SINE, UNITY_LAUNCHER_SHORT_DELAY, "opacity", target_opacity, NULL)), _g_object_unref0 (self->priv->active_indicator_anim), _tmp0_);
+#line 778 "launcher-child.c"
 }
 
 
+#line 357 "launcher-child.vala"
 static void unity_launcher_launcher_child_on_activating_changed (UnityLauncherLauncherChild* self) {
+#line 784 "launcher-child.c"
 	gboolean _tmp0_ = FALSE;
+#line 357 "launcher-child.vala"
 	g_return_if_fail (self != NULL);
+#line 359 "launcher-child.vala"
 	if (clutter_timeline_is_playing (self->priv->glow_timeline)) {
+#line 359 "launcher-child.vala"
 		_tmp0_ = unity_launcher_scroller_child_get_activating ((UnityLauncherScrollerChild*) self) == FALSE;
+#line 792 "launcher-child.c"
 	} else {
+#line 359 "launcher-child.vala"
 		_tmp0_ = FALSE;
+#line 796 "launcher-child.c"
 	}
+#line 359 "launcher-child.vala"
 	if (_tmp0_) {
+#line 361 "launcher-child.vala"
 		clutter_timeline_stop (self->priv->glow_timeline);
+#line 362 "launcher-child.vala"
 		clutter_timeline_set_duration (self->priv->glow_timeline, UNITY_LAUNCHER_SHORT_DELAY);
+#line 363 "launcher-child.vala"
 		self->priv->glow_state = UNITY_LAUNCHER_ANIM_STATE_FALLING;
+#line 364 "launcher-child.vala"
 		clutter_timeline_start (self->priv->glow_timeline);
+#line 808 "launcher-child.c"
 	} else {
 		gboolean _tmp1_ = FALSE;
+#line 366 "launcher-child.vala"
 		if (clutter_timeline_is_playing (self->priv->glow_timeline) == FALSE) {
+#line 366 "launcher-child.vala"
 			_tmp1_ = unity_launcher_scroller_child_get_activating ((UnityLauncherScrollerChild*) self);
+#line 815 "launcher-child.c"
 		} else {
+#line 366 "launcher-child.vala"
 			_tmp1_ = FALSE;
+#line 819 "launcher-child.c"
 		}
+#line 366 "launcher-child.vala"
 		if (_tmp1_) {
+#line 823 "launcher-child.c"
 			CtkEffectGlow* _tmp2_;
 			ClutterColor _tmp3_ = {0};
 			ClutterColor c;
+#line 368 "launcher-child.vala"
 			self->priv->effect_icon_glow = (_tmp2_ = g_object_ref_sink ((CtkEffectGlow*) ctk_effect_glow_new ()), _g_object_unref0 (self->priv->effect_icon_glow), _tmp2_);
+#line 369 "launcher-child.vala"
 			c = (memset (&_tmp3_, 0, sizeof (ClutterColor)), _tmp3_.red = (guint8) 255, _tmp3_.green = (guint8) 255, _tmp3_.blue = (guint8) 255, _tmp3_.alpha = (guint8) 255, _tmp3_);
+#line 375 "launcher-child.vala"
 			ctk_effect_glow_set_background_texture (self->priv->effect_icon_glow, self->priv->honeycomb_mask);
+#line 376 "launcher-child.vala"
 			ctk_effect_glow_set_color (self->priv->effect_icon_glow, &c);
+#line 377 "launcher-child.vala"
 			ctk_effect_set_opacity ((CtkEffect*) self->priv->effect_icon_glow, 1.0f);
+#line 378 "launcher-child.vala"
 			ctk_actor_add_effect (self->priv->processed_icon, (CtkEffect*) self->priv->effect_icon_glow);
+#line 379 "launcher-child.vala"
 			ctk_effect_set_margin ((CtkEffect*) self->priv->effect_icon_glow, 6);
+#line 381 "launcher-child.vala"
 			clutter_timeline_set_duration (self->priv->glow_timeline, UNITY_LAUNCHER_SHORT_DELAY);
+#line 382 "launcher-child.vala"
 			self->priv->glow_state = UNITY_LAUNCHER_ANIM_STATE_RISING;
+#line 383 "launcher-child.vala"
 			clutter_timeline_start (self->priv->glow_timeline);
+#line 847 "launcher-child.c"
 		}
 	}
 }
 
 
+#line 387 "launcher-child.vala"
 static void unity_launcher_launcher_child_on_needs_attention_changed (UnityLauncherLauncherChild* self) {
+#line 855 "launcher-child.c"
 	gboolean _tmp0_ = FALSE;
+#line 387 "launcher-child.vala"
 	g_return_if_fail (self != NULL);
+#line 389 "launcher-child.vala"
 	if (unity_launcher_scroller_child_get_needs_attention ((UnityLauncherScrollerChild*) self)) {
+#line 389 "launcher-child.vala"
 		_tmp0_ = clutter_timeline_is_playing (self->priv->wiggle_timeline) == FALSE;
+#line 863 "launcher-child.c"
 	} else {
+#line 389 "launcher-child.vala"
 		_tmp0_ = FALSE;
+#line 867 "launcher-child.c"
 	}
+#line 389 "launcher-child.vala"
 	if (_tmp0_) {
+#line 392 "launcher-child.vala"
 		clutter_timeline_set_duration (self->priv->wiggle_timeline, (guint) (500 / UNITY_LAUNCHER_WIGGLE_FREQUENCY));
+#line 393 "launcher-child.vala"
 		self->priv->wiggle_state = UNITY_LAUNCHER_ANIM_STATE_RISING;
+#line 394 "launcher-child.vala"
 		clutter_timeline_start (self->priv->wiggle_timeline);
+#line 877 "launcher-child.c"
 	} else {
 		gboolean _tmp1_ = FALSE;
+#line 396 "launcher-child.vala"
 		if (unity_launcher_scroller_child_get_needs_attention ((UnityLauncherScrollerChild*) self) == FALSE) {
+#line 396 "launcher-child.vala"
 			_tmp1_ = clutter_timeline_is_playing (self->priv->wiggle_timeline);
+#line 884 "launcher-child.c"
 		} else {
+#line 396 "launcher-child.vala"
 			_tmp1_ = FALSE;
+#line 888 "launcher-child.c"
 		}
+#line 396 "launcher-child.vala"
 		if (_tmp1_) {
+#line 399 "launcher-child.vala"
 			clutter_timeline_stop (self->priv->wiggle_timeline);
+#line 400 "launcher-child.vala"
 			clutter_timeline_set_duration (self->priv->wiggle_timeline, (guint) (500 / UNITY_LAUNCHER_WIGGLE_FREQUENCY));
+#line 401 "launcher-child.vala"
 			self->priv->wiggle_state = UNITY_LAUNCHER_ANIM_STATE_FALLING;
+#line 402 "launcher-child.vala"
 			clutter_timeline_start (self->priv->wiggle_timeline);
+#line 900 "launcher-child.c"
 		}
 	}
 }
 
 
+#line 407 "launcher-child.vala"
 static void unity_launcher_launcher_child_real_get_preferred_width (ClutterActor* base, float for_height, float* minimum_width, float* natural_width) {
+#line 908 "launcher-child.c"
 	UnityLauncherLauncherChild * self;
 	float nat = 0.0F;
 	float min = 0.0F;
 	self = (UnityLauncherLauncherChild*) base;
+#line 412 "launcher-child.vala"
 	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->processed_icon, for_height, &min, &nat);
+#line 413 "launcher-child.vala"
 	*natural_width = nat;
+#line 414 "launcher-child.vala"
 	*minimum_width = min;
+#line 416 "launcher-child.vala"
 	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->running_indicator, for_height, &min, &nat);
+#line 417 "launcher-child.vala"
 	*natural_width = (*natural_width) + nat;
+#line 419 "launcher-child.vala"
 	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->active_indicator, for_height, &min, &nat);
+#line 420 "launcher-child.vala"
 	*natural_width = (*natural_width) + nat;
+#line 927 "launcher-child.c"
 }
 
 
+#line 423 "launcher-child.vala"
 static void unity_launcher_launcher_child_real_get_preferred_height (ClutterActor* base, float for_width, float* minimum_height, float* natural_height) {
+#line 933 "launcher-child.c"
 	UnityLauncherLauncherChild * self;
 	float nat = 0.0F;
 	float min = 0.0F;
 	self = (UnityLauncherLauncherChild*) base;
+#line 428 "launcher-child.vala"
 	clutter_actor_get_preferred_height ((ClutterActor*) self->priv->processed_icon, for_width, &min, &nat);
+#line 429 "launcher-child.vala"
 	*natural_height = nat;
+#line 430 "launcher-child.vala"
 	*minimum_height = min;
+#line 944 "launcher-child.c"
 }
 
 
+#line 433 "launcher-child.vala"
 static void unity_launcher_launcher_child_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
+#line 950 "launcher-child.c"
 	UnityLauncherLauncherChild * self;
 	float x = 0.0F;
 	float y = 0.0F;
@@ -651,89 +956,149 @@ static void unity_launcher_launcher_child_real_allocate (ClutterActor* base, con
 	float n_width = 0.0F;
 	float n_height = 0.0F;
 	self = (UnityLauncherLauncherChild*) base;
+#line 436 "launcher-child.vala"
 	x = (float) 0;
+#line 437 "launcher-child.vala"
 	y = (float) 0;
+#line 438 "launcher-child.vala"
 	CLUTTER_ACTOR_CLASS (unity_launcher_launcher_child_parent_class)->allocate ((ClutterActor*) UNITY_LAUNCHER_SCROLLER_CHILD (self), box, flags);
+#line 966 "launcher-child.c"
 	memset (&child_box, 0, sizeof (ClutterActorBox));
+#line 444 "launcher-child.vala"
 	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->running_indicator, (float) 58, &n_width, &width);
+#line 445 "launcher-child.vala"
 	clutter_actor_get_preferred_height ((ClutterActor*) self->priv->running_indicator, (float) 58, &n_height, &height);
+#line 446 "launcher-child.vala"
 	child_box.x1 = (float) 0;
+#line 447 "launcher-child.vala"
 	child_box.y1 = (clutter_actor_box_get_height (box) - height) / 2.0f;
+#line 448 "launcher-child.vala"
 	child_box.x2 = child_box.x1 + width;
+#line 449 "launcher-child.vala"
 	child_box.y2 = child_box.y1 + height;
+#line 450 "launcher-child.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->running_indicator, &child_box, flags);
+#line 451 "launcher-child.vala"
 	x = x + clutter_actor_box_get_width (&child_box);
+#line 454 "launcher-child.vala"
 	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->processed_icon, (float) 48, &width, &n_width);
+#line 455 "launcher-child.vala"
 	clutter_actor_get_preferred_height ((ClutterActor*) self->priv->processed_icon, (float) 48, &height, &n_height);
+#line 456 "launcher-child.vala"
 	child_box.x1 = (clutter_actor_box_get_width (box) - width) / 2.0f;
+#line 457 "launcher-child.vala"
 	child_box.y1 = y;
+#line 458 "launcher-child.vala"
 	child_box.x2 = child_box.x1 + 48;
+#line 459 "launcher-child.vala"
 	child_box.y2 = child_box.y1 + height;
+#line 460 "launcher-child.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->processed_icon, &child_box, flags);
+#line 463 "launcher-child.vala"
 	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->active_indicator, (float) 48, &n_width, &width);
+#line 464 "launcher-child.vala"
 	clutter_actor_get_preferred_height ((ClutterActor*) self->priv->active_indicator, (float) 48, &n_height, &height);
+#line 465 "launcher-child.vala"
 	child_box.x1 = clutter_actor_box_get_width (box) - width;
+#line 466 "launcher-child.vala"
 	child_box.y1 = (clutter_actor_box_get_height (box) - height) / 2.0f;
+#line 467 "launcher-child.vala"
 	child_box.x2 = child_box.x1 + width;
+#line 468 "launcher-child.vala"
 	child_box.y2 = child_box.y1 + height;
+#line 469 "launcher-child.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->active_indicator, &child_box, flags);
+#line 1012 "launcher-child.c"
 }
 
 
+#line 473 "launcher-child.vala"
 static void unity_launcher_launcher_child_real_pick (ClutterActor* base, const ClutterColor* color) {
+#line 1018 "launcher-child.c"
 	UnityLauncherLauncherChild * self;
 	self = (UnityLauncherLauncherChild*) base;
+#line 475 "launcher-child.vala"
 	CLUTTER_ACTOR_CLASS (unity_launcher_launcher_child_parent_class)->pick ((ClutterActor*) UNITY_LAUNCHER_SCROLLER_CHILD (self), color);
+#line 1023 "launcher-child.c"
 }
 
 
+#line 478 "launcher-child.vala"
 static void unity_launcher_launcher_child_real_paint (ClutterActor* base) {
+#line 1029 "launcher-child.c"
 	UnityLauncherLauncherChild * self;
 	self = (UnityLauncherLauncherChild*) base;
+#line 480 "launcher-child.vala"
 	clutter_actor_paint ((ClutterActor*) self->priv->active_indicator);
+#line 481 "launcher-child.vala"
 	clutter_actor_paint ((ClutterActor*) self->priv->running_indicator);
+#line 483 "launcher-child.vala"
 	clutter_actor_paint ((ClutterActor*) self->priv->processed_icon);
+#line 1038 "launcher-child.c"
 }
 
 
+#line 486 "launcher-child.vala"
 static void unity_launcher_launcher_child_real_map (ClutterActor* base) {
+#line 1044 "launcher-child.c"
 	UnityLauncherLauncherChild * self;
 	self = (UnityLauncherLauncherChild*) base;
+#line 488 "launcher-child.vala"
 	CLUTTER_ACTOR_CLASS (unity_launcher_launcher_child_parent_class)->map ((ClutterActor*) UNITY_LAUNCHER_SCROLLER_CHILD (self));
+#line 489 "launcher-child.vala"
 	clutter_actor_map ((ClutterActor*) self->priv->running_indicator);
+#line 490 "launcher-child.vala"
 	clutter_actor_map ((ClutterActor*) self->priv->active_indicator);
+#line 491 "launcher-child.vala"
 	clutter_actor_map ((ClutterActor*) self->priv->processed_icon);
+#line 1055 "launcher-child.c"
 }
 
 
+#line 494 "launcher-child.vala"
 static void unity_launcher_launcher_child_real_unmap (ClutterActor* base) {
+#line 1061 "launcher-child.c"
 	UnityLauncherLauncherChild * self;
 	self = (UnityLauncherLauncherChild*) base;
+#line 496 "launcher-child.vala"
 	CLUTTER_ACTOR_CLASS (unity_launcher_launcher_child_parent_class)->unmap ((ClutterActor*) UNITY_LAUNCHER_SCROLLER_CHILD (self));
+#line 497 "launcher-child.vala"
 	clutter_actor_unmap ((ClutterActor*) self->priv->running_indicator);
+#line 498 "launcher-child.vala"
 	clutter_actor_unmap ((ClutterActor*) self->priv->active_indicator);
+#line 499 "launcher-child.vala"
 	clutter_actor_unmap ((ClutterActor*) self->priv->processed_icon);
+#line 1072 "launcher-child.c"
 }
 
 
+#line 41 "launcher-child.vala"
 UnityLauncherLauncherChild* unity_launcher_launcher_child_construct (GType object_type) {
+#line 1078 "launcher-child.c"
 	UnityLauncherLauncherChild * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
+#line 41 "launcher-child.vala"
 UnityLauncherLauncherChild* unity_launcher_launcher_child_new (void) {
+#line 41 "launcher-child.vala"
 	return unity_launcher_launcher_child_construct (UNITY_LAUNCHER_TYPE_LAUNCHER_CHILD);
+#line 1089 "launcher-child.c"
 }
 
 
+#line 130 "launcher-child.vala"
 static void _unity_launcher_launcher_child_on_glow_timeline_new_frame_clutter_timeline_new_frame (ClutterTimeline* _sender, gint msecs, gpointer self) {
+#line 1095 "launcher-child.c"
 	unity_launcher_launcher_child_on_glow_timeline_new_frame (self);
 }
 
 
+#line 194 "launcher-child.vala"
 static void _unity_launcher_launcher_child_on_wiggle_timeline_new_frame_clutter_timeline_new_frame (ClutterTimeline* _sender, gint msecs, gpointer self) {
+#line 1102 "launcher-child.c"
 	unity_launcher_launcher_child_on_wiggle_timeline_new_frame (self);
 }
 
@@ -748,12 +1113,19 @@ static GObject * unity_launcher_launcher_child_constructor (GType type, guint n_
 	{
 		ClutterTimeline* _tmp0_;
 		ClutterTimeline* _tmp1_;
+#line 62 "launcher-child.vala"
 		unity_launcher_launcher_child_load_textures (self);
+#line 63 "launcher-child.vala"
 		unity_launcher_scroller_child_set_position ((UnityLauncherScrollerChild*) self, 0.0f);
+#line 66 "launcher-child.vala"
 		self->priv->glow_timeline = (_tmp0_ = clutter_timeline_new ((guint) 1), _g_object_unref0 (self->priv->glow_timeline), _tmp0_);
+#line 67 "launcher-child.vala"
 		self->priv->wiggle_timeline = (_tmp1_ = clutter_timeline_new ((guint) 1), _g_object_unref0 (self->priv->wiggle_timeline), _tmp1_);
+#line 69 "launcher-child.vala"
 		g_signal_connect_object (self->priv->glow_timeline, "new-frame", (GCallback) _unity_launcher_launcher_child_on_glow_timeline_new_frame_clutter_timeline_new_frame, self, 0);
+#line 70 "launcher-child.vala"
 		g_signal_connect_object (self->priv->wiggle_timeline, "new-frame", (GCallback) _unity_launcher_launcher_child_on_wiggle_timeline_new_frame_clutter_timeline_new_frame, self, 0);
+#line 1129 "launcher-child.c"
 	}
 	return obj;
 }
@@ -785,8 +1157,11 @@ static void unity_launcher_launcher_child_finalize (GObject* obj) {
 	UnityLauncherLauncherChild * self;
 	self = UNITY_LAUNCHER_LAUNCHER_CHILD (obj);
 	{
+#line 75 "launcher-child.vala"
 		clutter_actor_unparent ((ClutterActor*) self->priv->running_indicator);
+#line 76 "launcher-child.vala"
 		clutter_actor_unparent ((ClutterActor*) self->priv->active_indicator);
+#line 1165 "launcher-child.c"
 	}
 	_g_object_unref0 (self->priv->processed_icon);
 	_g_object_unref0 (self->priv->active_indicator);

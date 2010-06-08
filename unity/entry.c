@@ -2,19 +2,20 @@
  * generated from entry.vala, do not modify */
 
 /*
- * Copyright (C) 2009 Canonical Ltd
+ * Copyright (C) 2010 Canonical, Ltd.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License version 3 as
- * published by the Free Software Foundation.
+ * This library is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License
+ * version 3.0 as published by the Free Software Foundation.
  *
- * This program is distributed in the hope that it will be useful,
+ * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License version 3.0 for more details.
  *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library. If not, see
+ * <http://www.gnu.org/licenses/>.
  *
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
@@ -126,63 +127,102 @@ static const ClutterColor UNITY_ENTRY_nofocus_color = {(guint8) 0x88, (guint8) 0
 static const ClutterColor UNITY_ENTRY_focus_color = {(guint8) 0x00, (guint8) 0x00, (guint8) 0x00, (guint8) 0xff};
 
 
+#line 44 "entry.vala"
 UnityEntry* unity_entry_construct (GType object_type, const char* static_text) {
+#line 133 "entry.c"
 	UnityEntry * self;
+#line 44 "entry.vala"
 	g_return_val_if_fail (static_text != NULL, NULL);
+#line 46 "entry.vala"
 	self = (UnityEntry*) g_object_new (object_type, "static-text", static_text, NULL);
+#line 139 "entry.c"
 	return self;
 }
 
 
+#line 44 "entry.vala"
 UnityEntry* unity_entry_new (const char* static_text) {
+#line 44 "entry.vala"
 	return unity_entry_construct (UNITY_TYPE_ENTRY, static_text);
+#line 148 "entry.c"
 }
 
 
+#line 71 "entry.vala"
 static void unity_entry_on_key_focus_in (UnityEntry* self) {
+#line 71 "entry.vala"
 	g_return_if_fail (self != NULL);
+#line 73 "entry.vala"
 	if (_vala_strcmp0 (clutter_text_get_text ((ClutterText*) self), self->priv->_static_text) == 0) {
+#line 158 "entry.c"
 		ClutterColor _tmp0_;
+#line 75 "entry.vala"
 		clutter_text_set_text ((ClutterText*) self, "");
+#line 76 "entry.vala"
 		clutter_text_set_cursor_visible ((ClutterText*) self, TRUE);
+#line 77 "entry.vala"
 		clutter_text_set_selection ((ClutterText*) self, (gssize) 0, (gssize) (-1));
+#line 78 "entry.vala"
 		clutter_text_set_color ((ClutterText*) self, (_tmp0_ = UNITY_ENTRY_focus_color, &_tmp0_));
+#line 168 "entry.c"
 	}
 }
 
 
+#line 82 "entry.vala"
 static void unity_entry_on_key_focus_out (UnityEntry* self) {
+#line 175 "entry.c"
 	ClutterColor _tmp0_;
+#line 82 "entry.vala"
 	g_return_if_fail (self != NULL);
+#line 84 "entry.vala"
 	clutter_text_set_cursor_visible ((ClutterText*) self, FALSE);
+#line 85 "entry.vala"
 	clutter_text_set_text ((ClutterText*) self, self->priv->_static_text);
+#line 86 "entry.vala"
 	clutter_text_set_color ((ClutterText*) self, (_tmp0_ = UNITY_ENTRY_nofocus_color, &_tmp0_));
+#line 185 "entry.c"
 	;
+#line 88 "entry.vala"
 	unity_shell_grab_keyboard (unity_global_shell, FALSE, clutter_get_current_event_time ());
+#line 189 "entry.c"
 }
 
 
+#line 92 "entry.vala"
 static void unity_entry_on_activate (UnityEntry* self) {
+#line 92 "entry.vala"
 	g_return_if_fail (self != NULL);
+#line 94 "entry.vala"
 	unity_shell_grab_keyboard (unity_global_shell, FALSE, clutter_get_current_event_time ());
+#line 96 "entry.vala"
 	clutter_ungrab_keyboard ();
+#line 201 "entry.c"
 }
 
 
+#line 108 "entry.vala"
 static gboolean _unity_entry_on_stage_captured_event_clutter_actor_captured_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = unity_entry_on_stage_captured_event (self, event);
-	return result;
+#line 207 "entry.c"
+	return unity_entry_on_stage_captured_event (self, event);
 }
 
 
+#line 99 "entry.vala"
 static gboolean unity_entry_on_button_press_event (UnityEntry* self, ClutterEvent* event) {
+#line 214 "entry.c"
 	gboolean result = FALSE;
+#line 99 "entry.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 101 "entry.vala"
 	unity_shell_grab_keyboard (unity_global_shell, TRUE, (*event).button.time);
+#line 103 "entry.vala"
 	g_signal_connect_object (clutter_actor_get_stage ((ClutterActor*) self), "captured-event", (GCallback) _unity_entry_on_stage_captured_event_clutter_actor_captured_event, self, 0);
+#line 222 "entry.c"
 	result = FALSE;
+#line 105 "entry.vala"
 	return result;
+#line 226 "entry.c"
 }
 
 
@@ -191,27 +231,43 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
+#line 108 "entry.vala"
 static gboolean unity_entry_on_stage_captured_event (UnityEntry* self, ClutterEvent* event) {
+#line 237 "entry.c"
 	gboolean result = FALSE;
+#line 108 "entry.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 110 "entry.vala"
 	if ((*event).type == CLUTTER_BUTTON_PRESS) {
+#line 243 "entry.c"
 		ClutterActor* _tmp0_;
 		ClutterStage* stage;
 		ClutterActor* actor;
+#line 112 "entry.vala"
 		stage = _g_object_ref0 ((_tmp0_ = clutter_actor_get_stage ((ClutterActor*) self), CLUTTER_IS_STAGE (_tmp0_) ? ((ClutterStage*) _tmp0_) : NULL));
+#line 114 "entry.vala"
 		actor = _g_object_ref0 (clutter_stage_get_actor_at_pos (stage, CLUTTER_PICK_REACTIVE, (gint) (*event).button.x, (gint) (*event).button.y));
+#line 118 "entry.vala"
 		if (actor != CLUTTER_ACTOR (self)) {
+#line 253 "entry.c"
 			guint _tmp1_;
+#line 120 "entry.vala"
 			unity_shell_grab_keyboard (unity_global_shell, FALSE, (*event).button.time);
+#line 121 "entry.vala"
 			g_signal_parse_name ("captured-event", CLUTTER_TYPE_ACTOR, &_tmp1_, NULL, FALSE);
+#line 121 "entry.vala"
 			g_signal_handlers_disconnect_matched ((ClutterActor*) stage, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp1_, 0, NULL, (GCallback) _unity_entry_on_stage_captured_event_clutter_actor_captured_event, self);
+#line 123 "entry.vala"
 			clutter_ungrab_keyboard ();
+#line 263 "entry.c"
 		}
 		_g_object_unref0 (stage);
 		_g_object_unref0 (actor);
 	}
 	result = FALSE;
+#line 127 "entry.vala"
 	return result;
+#line 271 "entry.c"
 }
 
 
@@ -219,7 +275,9 @@ const char* unity_entry_get_static_text (UnityEntry* self) {
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_static_text;
+#line 33 "entry.vala"
 	return result;
+#line 281 "entry.c"
 }
 
 
@@ -227,31 +285,41 @@ void unity_entry_set_static_text (UnityEntry* self, const char* value) {
 	char* _tmp0_;
 	ClutterColor _tmp1_;
 	g_return_if_fail (self != NULL);
+#line 38 "entry.vala"
 	self->priv->_static_text = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_static_text), _tmp0_);
+#line 39 "entry.vala"
 	clutter_text_set_color ((ClutterText*) self, (_tmp1_ = UNITY_ENTRY_nofocus_color, &_tmp1_));
+#line 40 "entry.vala"
 	clutter_text_set_text ((ClutterText*) self, self->priv->_static_text);
+#line 295 "entry.c"
 	g_object_notify ((GObject *) self, "static-text");
 }
 
 
+#line 71 "entry.vala"
 static void _unity_entry_on_key_focus_in_clutter_actor_key_focus_in (ClutterActor* _sender, gpointer self) {
+#line 302 "entry.c"
 	unity_entry_on_key_focus_in (self);
 }
 
 
+#line 82 "entry.vala"
 static void _unity_entry_on_key_focus_out_clutter_actor_key_focus_out (ClutterActor* _sender, gpointer self) {
+#line 309 "entry.c"
 	unity_entry_on_key_focus_out (self);
 }
 
 
+#line 99 "entry.vala"
 static gboolean _unity_entry_on_button_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = unity_entry_on_button_press_event (self, event);
-	return result;
+#line 316 "entry.c"
+	return unity_entry_on_button_press_event (self, event);
 }
 
 
+#line 92 "entry.vala"
 static void _unity_entry_on_activate_clutter_text_activate (ClutterText* _sender, gpointer self) {
+#line 323 "entry.c"
 	unity_entry_on_activate (self);
 }
 
@@ -269,20 +337,35 @@ static GObject * unity_entry_constructor (GType type, guint n_construct_properti
 		ClutterColor _tmp2_ = {0};
 		ClutterColor _tmp3_;
 		ClutterColor _tmp4_;
+#line 51 "entry.vala"
 		clutter_actor_set_reactive ((ClutterActor*) self, TRUE);
+#line 52 "entry.vala"
 		clutter_text_set_editable ((ClutterText*) self, TRUE);
+#line 53 "entry.vala"
 		clutter_text_set_selectable ((ClutterText*) self, TRUE);
+#line 54 "entry.vala"
 		clutter_text_set_activatable ((ClutterText*) self, TRUE);
+#line 55 "entry.vala"
 		clutter_text_set_single_line_mode ((ClutterText*) self, TRUE);
+#line 57 "entry.vala"
 		clutter_text_set_cursor_visible ((ClutterText*) self, FALSE);
+#line 58 "entry.vala"
 		clutter_text_set_cursor_color ((ClutterText*) self, (_tmp1_ = (_tmp0_.red = (guint8) 0x22, _tmp0_.green = (guint8) 0x22, _tmp0_.blue = (guint8) 0x22, _tmp0_.alpha = (guint8) 0xff, _tmp0_), &_tmp1_));
+#line 59 "entry.vala"
 		clutter_text_set_selection_color ((ClutterText*) self, (_tmp3_ = (_tmp2_.red = (guint8) 0x4d, _tmp2_.green = (guint8) 0x4d, _tmp2_.blue = (guint8) 0x4d, _tmp2_.alpha = (guint8) 0xff, _tmp2_), &_tmp3_));
+#line 60 "entry.vala"
 		clutter_text_set_color ((ClutterText*) self, (_tmp4_ = UNITY_ENTRY_nofocus_color, &_tmp4_));
+#line 62 "entry.vala"
 		g_signal_connect_object ((ClutterActor*) self, "key-focus-in", (GCallback) _unity_entry_on_key_focus_in_clutter_actor_key_focus_in, self, 0);
+#line 63 "entry.vala"
 		g_signal_connect_object ((ClutterActor*) self, "key-focus-out", (GCallback) _unity_entry_on_key_focus_out_clutter_actor_key_focus_out, self, 0);
+#line 65 "entry.vala"
 		g_signal_connect_object ((ClutterActor*) self, "button-press-event", (GCallback) _unity_entry_on_button_press_event_clutter_actor_button_press_event, self, 0);
+#line 66 "entry.vala"
 		g_signal_connect_object ((ClutterText*) self, "activate", (GCallback) _unity_entry_on_activate_clutter_text_activate, self, 0);
+#line 68 "entry.vala"
 		clutter_actor_queue_redraw ((ClutterActor*) self);
+#line 369 "entry.c"
 	}
 	return obj;
 }

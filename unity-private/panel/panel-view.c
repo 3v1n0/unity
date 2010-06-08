@@ -163,46 +163,74 @@ static void unity_panel_view_set_property (GObject * object, guint property_id, 
 
 
 
+#line 37 "panel-view.vala"
 UnityPanelView* unity_panel_view_construct (GType object_type, UnityShell* shell) {
+#line 169 "panel-view.c"
 	UnityPanelView * self;
 	ClutterStage* _tmp0_;
+#line 37 "panel-view.vala"
 	g_return_val_if_fail (shell != NULL, NULL);
+#line 39 "panel-view.vala"
 	self = (UnityPanelView*) g_object_new (object_type, "shell", shell, "reactive", FALSE, "orientation", CTK_ORIENTATION_HORIZONTAL, "homogeneous", FALSE, "spacing", 0, NULL);
+#line 44 "panel-view.vala"
 	unity_panel_system_tray_manage_stage (self->priv->system_tray, _tmp0_ = unity_shell_get_stage (shell));
+#line 178 "panel-view.c"
 	_g_object_unref0 (_tmp0_);
 	return self;
 }
 
 
+#line 37 "panel-view.vala"
 UnityPanelView* unity_panel_view_new (UnityShell* shell) {
+#line 37 "panel-view.vala"
 	return unity_panel_view_construct (UNITY_PANEL_TYPE_VIEW, shell);
+#line 188 "panel-view.c"
 }
 
 
+#line 80 "panel-view.vala"
 gint unity_panel_view_get_indicators_width (UnityPanelView* self) {
+#line 194 "panel-view.c"
 	gint result = 0;
+#line 80 "panel-view.vala"
 	g_return_val_if_fail (self != NULL, 0);
+#line 198 "panel-view.c"
 	result = (gint) clutter_actor_get_width ((ClutterActor*) self->priv->indicator_bar);
+#line 82 "panel-view.vala"
 	return result;
+#line 202 "panel-view.c"
 }
 
 
+#line 86 "panel-view.vala"
 void unity_panel_view_set_expanded (UnityPanelView* self, gboolean _expanded) {
+#line 86 "panel-view.vala"
 	g_return_if_fail (self != NULL);
+#line 90 "panel-view.vala"
 	self->expanded = _expanded;
+#line 212 "panel-view.c"
 }
 
 
+#line 126 "panel-view.vala"
 gint unity_panel_view_get_panel_height (UnityPanelView* self) {
+#line 218 "panel-view.c"
 	gint result = 0;
+#line 126 "panel-view.vala"
 	g_return_val_if_fail (self != NULL, 0);
+#line 222 "panel-view.c"
 	result = UNITY_PANEL_PANEL_HEIGHT;
+#line 128 "panel-view.vala"
 	return result;
+#line 226 "panel-view.c"
 }
 
 
+#line 131 "panel-view.vala"
 void unity_panel_view_set_indicator_mode (UnityPanelView* self, gboolean mode) {
+#line 131 "panel-view.vala"
 	g_return_if_fail (self != NULL);
+#line 234 "panel-view.c"
 }
 
 
@@ -210,7 +238,9 @@ UnityShell* unity_panel_view_get_shell (UnityPanelView* self) {
 	UnityShell* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_shell;
+#line 29 "panel-view.vala"
 	return result;
+#line 244 "panel-view.c"
 }
 
 
@@ -241,25 +271,45 @@ static GObject * unity_panel_view_constructor (GType type, guint n_construct_pro
 		UnityPanelIndicatorsMenuBar* _tmp3_;
 		UnityPanelSystemTray* _tmp4_;
 		UnityPanelIndicatorsIndicatorBar* _tmp5_;
+#line 49 "panel-view.vala"
 		START_FUNCTION ();
+#line 52 "panel-view.vala"
 		_tmp0_ = unity_panel_indicators_indicators_model_get_default ();
+#line 279 "panel-view.c"
 		_g_object_unref0 (_tmp0_);
+#line 56 "panel-view.vala"
 		self->priv->bground = (_tmp1_ = g_object_ref_sink (unity_panel_background_new ()), _g_object_unref0 (self->priv->bground), _tmp1_);
+#line 57 "panel-view.vala"
 		ctk_actor_set_background ((CtkActor*) self, (ClutterActor*) self->priv->bground);
+#line 58 "panel-view.vala"
 		clutter_actor_show ((ClutterActor*) self->priv->bground);
+#line 61 "panel-view.vala"
 		self->priv->home_button = (_tmp2_ = g_object_ref_sink (unity_panel_home_button_new (self->priv->_shell)), _g_object_unref0 (self->priv->home_button), _tmp2_);
+#line 62 "panel-view.vala"
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->home_button, FALSE, TRUE);
+#line 63 "panel-view.vala"
 		clutter_actor_show ((ClutterActor*) self->priv->home_button);
+#line 65 "panel-view.vala"
 		self->priv->menu_bar = (_tmp3_ = g_object_ref_sink (unity_panel_indicators_menu_bar_new ()), _g_object_unref0 (self->priv->menu_bar), _tmp3_);
+#line 66 "panel-view.vala"
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->menu_bar, TRUE, TRUE);
+#line 67 "panel-view.vala"
 		clutter_actor_show ((ClutterActor*) self->priv->menu_bar);
+#line 69 "panel-view.vala"
 		self->priv->system_tray = (_tmp4_ = g_object_ref_sink (unity_panel_system_tray_new ()), _g_object_unref0 (self->priv->system_tray), _tmp4_);
+#line 70 "panel-view.vala"
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->system_tray, FALSE, TRUE);
+#line 71 "panel-view.vala"
 		clutter_actor_show ((ClutterActor*) self->priv->system_tray);
+#line 73 "panel-view.vala"
 		self->priv->indicator_bar = (_tmp5_ = g_object_ref_sink (unity_panel_indicators_indicator_bar_new ()), _g_object_unref0 (self->priv->indicator_bar), _tmp5_);
+#line 74 "panel-view.vala"
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->indicator_bar, FALSE, TRUE);
+#line 75 "panel-view.vala"
 		clutter_actor_show ((ClutterActor*) self->priv->indicator_bar);
+#line 77 "panel-view.vala"
 		END_FUNCTION ();
+#line 313 "panel-view.c"
 	}
 	return obj;
 }

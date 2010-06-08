@@ -47,8 +47,11 @@ void unity_places_place_view_init_with_properties (UnityPlacesPlaceView* self, G
 
 
 
+#line 34 "places-place-view.vala"
 void unity_places_place_view_init_with_properties (UnityPlacesPlaceView* self, GHashTable* props) {
+#line 34 "places-place-view.vala"
 	UNITY_PLACES_PLACE_VIEW_GET_INTERFACE (self)->init_with_properties (self, props);
+#line 55 "places-place-view.c"
 }
 
 

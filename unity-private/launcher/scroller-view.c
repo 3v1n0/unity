@@ -246,105 +246,175 @@ GType unity_launcher_scroller_phase_get_type (void) {
 }
 
 
+#line 80 "scroller-view.vala"
 UnityLauncherScrollerView* unity_launcher_scroller_view_construct (GType object_type, UnityLauncherScrollerModel* _model) {
+#line 252 "scroller-view.c"
 	UnityLauncherScrollerView * self;
+#line 80 "scroller-view.vala"
 	g_return_val_if_fail (_model != NULL, NULL);
+#line 82 "scroller-view.vala"
 	self = (UnityLauncherScrollerView*) g_object_new (object_type, "model", _model, NULL);
+#line 258 "scroller-view.c"
 	return self;
 }
 
 
+#line 80 "scroller-view.vala"
 UnityLauncherScrollerView* unity_launcher_scroller_view_new (UnityLauncherScrollerModel* _model) {
+#line 80 "scroller-view.vala"
 	return unity_launcher_scroller_view_construct (UNITY_LAUNCHER_TYPE_SCROLLER_VIEW, _model);
+#line 267 "scroller-view.c"
 }
 
 
+#line 133 "scroller-view.vala"
 gint unity_launcher_scroller_view_get_model_index_at_y_pos (UnityLauncherScrollerView* self, float y) {
+#line 273 "scroller-view.c"
 	gint result = 0;
 	float h;
 	float min_height = 0.0F;
 	float nat_height = 0.0F;
 	gint i;
+#line 133 "scroller-view.vala"
 	g_return_val_if_fail (self != NULL, 0);
+#line 137 "scroller-view.vala"
 	h = 0.0f;
+#line 139 "scroller-view.vala"
 	i = 0;
+#line 285 "scroller-view.c"
 	{
 		UnityLauncherScrollerModelIterator* _child_it;
 		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+#line 140 "scroller-view.vala"
 		while (TRUE) {
+#line 291 "scroller-view.c"
 			UnityLauncherScrollerChild* child;
 			CtkPadding _tmp0_ = {0};
 			float transformed_pos;
+#line 140 "scroller-view.vala"
 			if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+#line 140 "scroller-view.vala"
 				break;
+#line 299 "scroller-view.c"
 			}
+#line 140 "scroller-view.vala"
 			child = unity_launcher_scroller_model_iterator_get (_child_it);
+#line 142 "scroller-view.vala"
 			transformed_pos = (h + self->priv->scroll_position) + (ctk_actor_get_padding ((CtkActor*) self, &_tmp0_), _tmp0_.top);
+#line 143 "scroller-view.vala"
 			if (transformed_pos > y) {
+#line 307 "scroller-view.c"
 				result = i;
 				_g_object_unref0 (child);
 				_unity_launcher_scroller_model_iterator_unref0 (_child_it);
+#line 144 "scroller-view.vala"
 				return result;
+#line 313 "scroller-view.c"
 			}
+#line 146 "scroller-view.vala"
 			clutter_actor_get_preferred_height ((ClutterActor*) child, clutter_actor_get_width ((ClutterActor*) self), &min_height, &nat_height);
+#line 147 "scroller-view.vala"
 			h = h + (nat_height + self->spacing);
+#line 148 "scroller-view.vala"
 			i++;
+#line 321 "scroller-view.c"
 			_g_object_unref0 (child);
 		}
 		_unity_launcher_scroller_model_iterator_unref0 (_child_it);
 	}
 	result = MAX (i, 0);
+#line 151 "scroller-view.vala"
 	return result;
+#line 329 "scroller-view.c"
 }
 
 
+#line 157 "scroller-view.vala"
 static void unity_launcher_scroller_view_load_textures (UnityLauncherScrollerView* self) {
+#line 335 "scroller-view.c"
 	UnityThemeImage* _tmp0_;
 	UnityThemeImage* _tmp1_;
 	UnityThemeImage* _tmp2_;
+#line 157 "scroller-view.vala"
 	g_return_if_fail (self != NULL);
+#line 159 "scroller-view.vala"
 	self->priv->bgtex = (_tmp0_ = g_object_ref_sink (unity_theme_image_new ("launcher_background_middle")), _g_object_unref0 (self->priv->bgtex), _tmp0_);
+#line 160 "scroller-view.vala"
 	clutter_texture_set_repeat ((ClutterTexture*) self->priv->bgtex, TRUE, TRUE);
+#line 161 "scroller-view.vala"
 	clutter_actor_set_parent ((ClutterActor*) self->priv->bgtex, (ClutterActor*) self);
+#line 163 "scroller-view.vala"
 	self->priv->top_shadow = (_tmp1_ = g_object_ref_sink (unity_theme_image_new ("overflow_top")), _g_object_unref0 (self->priv->top_shadow), _tmp1_);
+#line 164 "scroller-view.vala"
 	clutter_texture_set_repeat ((ClutterTexture*) self->priv->top_shadow, TRUE, FALSE);
+#line 165 "scroller-view.vala"
 	clutter_actor_set_parent ((ClutterActor*) self->priv->top_shadow, (ClutterActor*) self);
+#line 167 "scroller-view.vala"
 	self->priv->bottom_fade = (_tmp2_ = g_object_ref_sink (unity_theme_image_new ("overflow_bottom")), _g_object_unref0 (self->priv->bottom_fade), _tmp2_);
+#line 168 "scroller-view.vala"
 	clutter_texture_set_repeat ((ClutterTexture*) self->priv->bottom_fade, TRUE, FALSE);
+#line 169 "scroller-view.vala"
 	clutter_actor_set_parent ((ClutterActor*) self->priv->bottom_fade, (ClutterActor*) self);
+#line 359 "scroller-view.c"
 }
 
 
+#line 173 "scroller-view.vala"
 static void unity_launcher_scroller_view_move_scroll_position (UnityLauncherScrollerView* self, float pixels) {
+#line 173 "scroller-view.vala"
 	g_return_if_fail (self != NULL);
+#line 175 "scroller-view.vala"
 	self->priv->scroll_position = self->priv->scroll_position + pixels;
+#line 176 "scroller-view.vala"
 	clutter_actor_queue_relayout ((ClutterActor*) self);
+#line 371 "scroller-view.c"
 }
 
 
+#line 182 "scroller-view.vala"
 static void unity_launcher_scroller_view_disable_animations_on_children (UnityLauncherScrollerView* self, ClutterEvent* event) {
+#line 377 "scroller-view.c"
 	ClutterEvent _tmp0_ = {0};
 	ClutterEvent e;
+#line 182 "scroller-view.vala"
 	g_return_if_fail (self != NULL);
+#line 184 "scroller-view.vala"
 	e = (_tmp0_.type = 0, _tmp0_);
+#line 185 "scroller-view.vala"
 	e.type = CLUTTER_LEAVE;
+#line 186 "scroller-view.vala"
 	e.crossing.time = (*event).motion.time;
+#line 187 "scroller-view.vala"
 	e.crossing.flags = (*event).motion.flags;
+#line 188 "scroller-view.vala"
 	e.crossing.stage = (*event).motion.stage;
+#line 189 "scroller-view.vala"
 	e.crossing.x = (*event).motion.x;
+#line 190 "scroller-view.vala"
 	e.crossing.y = (*event).motion.y;
+#line 396 "scroller-view.c"
 	{
 		UnityLauncherScrollerModelIterator* _child_it;
 		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+#line 192 "scroller-view.vala"
 		while (TRUE) {
+#line 402 "scroller-view.c"
 			UnityLauncherScrollerChild* child;
+#line 192 "scroller-view.vala"
 			if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+#line 192 "scroller-view.vala"
 				break;
+#line 408 "scroller-view.c"
 			}
+#line 192 "scroller-view.vala"
 			child = unity_launcher_scroller_model_iterator_get (_child_it);
+#line 194 "scroller-view.vala"
 			if (CLUTTER_IS_ACTOR (child)) {
+#line 196 "scroller-view.vala"
 				e.crossing.source = (ClutterActor*) child;
+#line 197 "scroller-view.vala"
 				clutter_actor_event ((ClutterActor*) child, &e, FALSE);
+#line 418 "scroller-view.c"
 			}
 			_g_object_unref0 (child);
 		}
@@ -353,28 +423,46 @@ static void unity_launcher_scroller_view_disable_animations_on_children (UnityLa
 }
 
 
+#line 216 "scroller-view.vala"
 static void _lambda14_ (UnityLauncherScrollerView* self) {
+#line 217 "scroller-view.vala"
 	clutter_actor_queue_relayout ((ClutterActor*) self);
+#line 431 "scroller-view.c"
 }
 
 
+#line 216 "scroller-view.vala"
 static void __lambda14__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+#line 437 "scroller-view.c"
 	_lambda14_ (self);
 }
 
 
+#line 205 "scroller-view.vala"
 static void unity_launcher_scroller_view_model_child_added (UnityLauncherScrollerView* self, UnityLauncherScrollerChild* child) {
+#line 205 "scroller-view.vala"
 	g_return_if_fail (self != NULL);
+#line 205 "scroller-view.vala"
 	g_return_if_fail (child != NULL);
+#line 207 "scroller-view.vala"
 	clutter_actor_unparent ((ClutterActor*) child);
+#line 208 "scroller-view.vala"
 	clutter_actor_set_parent ((ClutterActor*) child, (ClutterActor*) self);
+#line 211 "scroller-view.vala"
 	if (unity_launcher_scroller_model_index_of (self->priv->_model, child) == (unity_launcher_scroller_model_get_size (self->priv->_model) - 1)) {
+#line 212 "scroller-view.vala"
 		unity_launcher_scroller_view_order_children (self, TRUE);
+#line 456 "scroller-view.c"
 	} else {
+#line 214 "scroller-view.vala"
 		unity_launcher_scroller_view_order_children (self, FALSE);
+#line 460 "scroller-view.c"
 	}
+#line 215 "scroller-view.vala"
 	clutter_actor_queue_relayout ((ClutterActor*) self);
+#line 216 "scroller-view.vala"
 	g_signal_connect_object ((GObject*) child, "notify::position", (GCallback) __lambda14__g_object_notify, self, 0);
+#line 466 "scroller-view.c"
 }
 
 
@@ -383,15 +471,22 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
+#line 227 "scroller-view.vala"
 static void _lambda15_ (Block2Data* _data2_) {
+#line 477 "scroller-view.c"
 	UnityLauncherScrollerView * self;
 	self = _data2_->self;
+#line 228 "scroller-view.vala"
 	clutter_actor_unparent ((ClutterActor*) _data2_->child);
+#line 229 "scroller-view.vala"
 	gee_abstract_collection_remove ((GeeAbstractCollection*) self->priv->child_refs, _data2_->child);
+#line 484 "scroller-view.c"
 }
 
 
+#line 227 "scroller-view.vala"
 static void __lambda15__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+#line 490 "scroller-view.c"
 	_lambda15_ (self);
 }
 
@@ -411,317 +506,542 @@ static void block2_data_unref (Block2Data* _data2_) {
 }
 
 
+#line 221 "scroller-view.vala"
 static void unity_launcher_scroller_view_model_child_removed (UnityLauncherScrollerView* self, UnityLauncherScrollerChild* child) {
+#line 512 "scroller-view.c"
 	Block2Data* _data2_;
 	ClutterAnimation* anim;
+#line 221 "scroller-view.vala"
 	g_return_if_fail (self != NULL);
+#line 221 "scroller-view.vala"
 	g_return_if_fail (child != NULL);
+#line 519 "scroller-view.c"
 	_data2_ = g_slice_new0 (Block2Data);
 	_data2_->_ref_count_ = 1;
 	_data2_->self = g_object_ref (self);
 	_data2_->child = _g_object_ref0 (child);
+#line 223 "scroller-view.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->child_refs, _data2_->child);
+#line 224 "scroller-view.vala"
 	anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) _data2_->child, (gulong) CLUTTER_EASE_OUT_QUAD, UNITY_LAUNCHER_SHORT_DELAY, "opacity", 0, NULL));
+#line 227 "scroller-view.vala"
 	g_signal_connect_data (anim, "completed", (GCallback) __lambda15__clutter_animation_completed, block2_data_ref (_data2_), (GClosureNotify) block2_data_unref, 0);
+#line 232 "scroller-view.vala"
 	unity_launcher_scroller_view_order_children (self, FALSE);
+#line 233 "scroller-view.vala"
 	clutter_actor_queue_relayout ((ClutterActor*) self);
+#line 534 "scroller-view.c"
 	_g_object_unref0 (anim);
 	block2_data_unref (_data2_);
 }
 
 
+#line 236 "scroller-view.vala"
 static void unity_launcher_scroller_view_model_order_changed (UnityLauncherScrollerView* self) {
+#line 236 "scroller-view.vala"
 	g_return_if_fail (self != NULL);
+#line 238 "scroller-view.vala"
 	unity_launcher_scroller_view_order_children (self, FALSE);
+#line 239 "scroller-view.vala"
 	clutter_actor_queue_relayout ((ClutterActor*) self);
+#line 548 "scroller-view.c"
 }
 
 
+#line 263 "scroller-view.vala"
 static gboolean _unity_launcher_scroller_view_on_button_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = unity_launcher_scroller_view_on_button_release_event (self, event);
-	return result;
+#line 554 "scroller-view.c"
+	return unity_launcher_scroller_view_on_button_release_event (self, event);
 }
 
 
+#line 245 "scroller-view.vala"
 static gboolean unity_launcher_scroller_view_on_button_press_event (UnityLauncherScrollerView* self, ClutterEvent* event) {
+#line 561 "scroller-view.c"
 	gboolean result = FALSE;
+#line 245 "scroller-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 247 "scroller-view.vala"
 	if ((*event).button.button != 1) {
+#line 567 "scroller-view.c"
 		result = FALSE;
+#line 250 "scroller-view.vala"
 		return result;
+#line 571 "scroller-view.c"
 	}
+#line 254 "scroller-view.vala"
 	self->priv->button_down = TRUE;
+#line 255 "scroller-view.vala"
 	self->priv->previous_y_position = (*event).button.y;
+#line 256 "scroller-view.vala"
 	self->priv->previous_y_time = (guint) (*event).button.time;
+#line 258 "scroller-view.vala"
 	g_signal_connect_object (clutter_actor_get_stage ((ClutterActor*) self), "button-release-event", (GCallback) _unity_launcher_scroller_view_on_button_release_event_clutter_actor_button_release_event, self, 0);
+#line 581 "scroller-view.c"
 	result = TRUE;
+#line 260 "scroller-view.vala"
 	return result;
+#line 585 "scroller-view.c"
 }
 
 
+#line 301 "scroller-view.vala"
 static gboolean _unity_launcher_scroller_view_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = unity_launcher_scroller_view_on_motion_event (self, event);
-	return result;
+#line 591 "scroller-view.c"
+	return unity_launcher_scroller_view_on_motion_event (self, event);
 }
 
 
+#line 263 "scroller-view.vala"
 static gboolean unity_launcher_scroller_view_on_button_release_event (UnityLauncherScrollerView* self, ClutterEvent* event) {
+#line 598 "scroller-view.c"
 	gboolean result = FALSE;
 	guint _tmp0_;
+#line 263 "scroller-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 266 "scroller-view.vala"
 	if ((*event).button.button != 1) {
+#line 605 "scroller-view.c"
 		result = FALSE;
+#line 269 "scroller-view.vala"
 		return result;
+#line 609 "scroller-view.c"
 	}
+#line 273 "scroller-view.vala"
 	self->priv->button_down = FALSE;
+#line 274 "scroller-view.vala"
 	g_signal_parse_name ("button-release-event", CLUTTER_TYPE_ACTOR, &_tmp0_, NULL, FALSE);
+#line 274 "scroller-view.vala"
 	g_signal_handlers_disconnect_matched (clutter_actor_get_stage ((ClutterActor*) self), G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_launcher_scroller_view_on_button_release_event_clutter_actor_button_release_event, self);
+#line 275 "scroller-view.vala"
 	unity_shell_remove_fullscreen_request (unity_global_shell, (GObject*) self);
+#line 277 "scroller-view.vala"
 	if (self->priv->is_scrolling) {
+#line 621 "scroller-view.c"
 		guint _tmp1_;
+#line 279 "scroller-view.vala"
 		self->priv->is_scrolling = FALSE;
+#line 280 "scroller-view.vala"
 		clutter_ungrab_pointer ();
+#line 281 "scroller-view.vala"
 		g_signal_parse_name ("motion-event", CLUTTER_TYPE_ACTOR, &_tmp1_, NULL, FALSE);
+#line 281 "scroller-view.vala"
 		g_signal_handlers_disconnect_matched (clutter_actor_get_stage ((ClutterActor*) self), G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp1_, 0, NULL, (GCallback) _unity_launcher_scroller_view_on_motion_event_clutter_actor_motion_event, self);
+#line 282 "scroller-view.vala"
 		if (((*event).button.time - self->priv->last_motion_event_time) > 120) {
+#line 284 "scroller-view.vala"
 			self->priv->current_phase = UNITY_LAUNCHER_SCROLLER_PHASE_SETTLING;
+#line 285 "scroller-view.vala"
 			self->priv->settle_position = unity_launcher_scroller_view_get_aligned_settle_position (self);
+#line 637 "scroller-view.c"
 		} else {
+#line 289 "scroller-view.vala"
 			self->priv->current_phase = UNITY_LAUNCHER_SCROLLER_PHASE_FLUNG;
+#line 641 "scroller-view.c"
 		}
 		{
 			UnityLauncherScrollerModelIterator* _child_it;
 			_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+#line 292 "scroller-view.vala"
 			while (TRUE) {
+#line 648 "scroller-view.c"
 				UnityLauncherScrollerChild* child;
+#line 292 "scroller-view.vala"
 				if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+#line 292 "scroller-view.vala"
 					break;
+#line 654 "scroller-view.c"
 				}
+#line 292 "scroller-view.vala"
 				child = unity_launcher_scroller_model_iterator_get (_child_it);
+#line 294 "scroller-view.vala"
 				clutter_actor_set_reactive ((ClutterActor*) child, FALSE);
+#line 660 "scroller-view.c"
 				_g_object_unref0 (child);
 			}
 			_unity_launcher_scroller_model_iterator_unref0 (_child_it);
 		}
+#line 296 "scroller-view.vala"
 		clutter_timeline_start (self->priv->fling_timeline);
+#line 667 "scroller-view.c"
 	}
 	result = TRUE;
+#line 298 "scroller-view.vala"
 	return result;
+#line 672 "scroller-view.c"
 }
 
 
+#line 301 "scroller-view.vala"
 static gboolean unity_launcher_scroller_view_on_motion_event (UnityLauncherScrollerView* self, ClutterEvent* event) {
+#line 678 "scroller-view.c"
 	gboolean result = FALSE;
 	UnityDragController* drag_controller;
 	gboolean _tmp0_ = FALSE;
+#line 301 "scroller-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 303 "scroller-view.vala"
 	drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
+#line 304 "scroller-view.vala"
 	if (unity_drag_controller_get_is_dragging (drag_controller)) {
+#line 688 "scroller-view.c"
 		result = FALSE;
 		_g_object_unref0 (drag_controller);
+#line 307 "scroller-view.vala"
 		return result;
+#line 693 "scroller-view.c"
 	}
+#line 310 "scroller-view.vala"
 	self->priv->last_motion_event_time = (guint) (*event).motion.time;
+#line 312 "scroller-view.vala"
 	if (self->priv->button_down) {
+#line 312 "scroller-view.vala"
 		_tmp0_ = self->priv->is_scrolling == FALSE;
+#line 701 "scroller-view.c"
 	} else {
+#line 312 "scroller-view.vala"
 		_tmp0_ = FALSE;
+#line 705 "scroller-view.c"
 	}
+#line 312 "scroller-view.vala"
 	if (_tmp0_) {
+#line 709 "scroller-view.c"
 		float diff;
+#line 318 "scroller-view.vala"
 		diff = (*event).motion.y - self->priv->previous_y_position;
+#line 319 "scroller-view.vala"
 		if (fabsf (diff) > self->drag_sensitivity) {
+#line 321 "scroller-view.vala"
 			self->priv->is_scrolling = TRUE;
+#line 322 "scroller-view.vala"
 			unity_shell_add_fullscreen_request (unity_global_shell, (GObject*) self);
+#line 323 "scroller-view.vala"
 			clutter_grab_pointer ((ClutterActor*) self);
+#line 324 "scroller-view.vala"
 			g_signal_connect_object (clutter_actor_get_stage ((ClutterActor*) self), "motion-event", (GCallback) _unity_launcher_scroller_view_on_motion_event_clutter_actor_motion_event, self, 0);
+#line 723 "scroller-view.c"
 		}
 	}
+#line 328 "scroller-view.vala"
 	if (self->priv->is_scrolling) {
+#line 728 "scroller-view.c"
 		float pixel_diff;
 		guint time_diff;
+#line 331 "scroller-view.vala"
 		unity_launcher_scroller_view_disable_animations_on_children (self, event);
+#line 338 "scroller-view.vala"
 		pixel_diff = (*event).motion.y - self->priv->previous_y_position;
+#line 339 "scroller-view.vala"
 		time_diff = (guint) ((*event).motion.time - self->priv->previous_y_time);
+#line 340 "scroller-view.vala"
 		self->priv->scroll_speed = pixel_diff / (time_diff / 1000.0f);
+#line 342 "scroller-view.vala"
 		self->priv->previous_y_position = (*event).motion.y;
+#line 343 "scroller-view.vala"
 		self->priv->previous_y_time = (guint) (*event).motion.time;
+#line 346 "scroller-view.vala"
 		unity_launcher_scroller_view_move_scroll_position (self, pixel_diff);
+#line 745 "scroller-view.c"
 		result = TRUE;
 		_g_object_unref0 (drag_controller);
+#line 348 "scroller-view.vala"
 		return result;
+#line 750 "scroller-view.c"
 	}
 	result = FALSE;
 	_g_object_unref0 (drag_controller);
+#line 351 "scroller-view.vala"
 	return result;
+#line 756 "scroller-view.c"
 }
 
 
+#line 357 "scroller-view.vala"
 static void unity_launcher_scroller_view_on_scroller_frame (UnityLauncherScrollerView* self, ClutterTimeline* timeline, gint msecs) {
+#line 762 "scroller-view.c"
 	guint delta;
+#line 357 "scroller-view.vala"
 	g_return_if_fail (self != NULL);
+#line 357 "scroller-view.vala"
 	g_return_if_fail (timeline != NULL);
+#line 364 "scroller-view.vala"
 	delta = clutter_timeline_get_delta (timeline);
+#line 365 "scroller-view.vala"
 	delta = delta + self->priv->stored_delta;
+#line 366 "scroller-view.vala"
 	if (delta <= 16) {
+#line 368 "scroller-view.vala"
 		self->priv->stored_delta = delta;
+#line 369 "scroller-view.vala"
 		return;
+#line 778 "scroller-view.c"
 	}
+#line 372 "scroller-view.vala"
 	while (TRUE) {
+#line 372 "scroller-view.vala"
 		if (!(delta > 16)) {
+#line 372 "scroller-view.vala"
 			break;
+#line 786 "scroller-view.c"
 		}
+#line 374 "scroller-view.vala"
 		self->is_animating = TRUE;
+#line 375 "scroller-view.vala"
 		delta = delta - ((guint) 16);
+#line 376 "scroller-view.vala"
 		switch (self->priv->current_phase) {
+#line 794 "scroller-view.c"
 			case UNITY_LAUNCHER_SCROLLER_PHASE_SETTLING:
 			{
+#line 378 "scroller-view.vala"
 				unity_launcher_scroller_view_do_anim_settle (self, timeline, msecs);
+#line 379 "scroller-view.vala"
 				break;
+#line 801 "scroller-view.c"
 			}
 			case UNITY_LAUNCHER_SCROLLER_PHASE_FLUNG:
 			{
+#line 381 "scroller-view.vala"
 				unity_launcher_scroller_view_do_anim_fling (self, timeline, msecs);
+#line 382 "scroller-view.vala"
 				break;
+#line 809 "scroller-view.c"
 			}
 			case UNITY_LAUNCHER_SCROLLER_PHASE_BOUNCE:
 			{
+#line 384 "scroller-view.vala"
 				unity_launcher_scroller_view_do_anim_bounce (self, timeline, msecs);
+#line 385 "scroller-view.vala"
 				break;
+#line 817 "scroller-view.c"
 			}
 			case UNITY_LAUNCHER_SCROLLER_PHASE_NONE:
 			{
+#line 387 "scroller-view.vala"
 				clutter_timeline_stop (timeline);
+#line 388 "scroller-view.vala"
 				self->priv->scroll_speed = 0.0f;
+#line 389 "scroller-view.vala"
 				self->is_animating = FALSE;
+#line 827 "scroller-view.c"
 				{
 					UnityLauncherScrollerModelIterator* _child_it;
 					_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+#line 390 "scroller-view.vala"
 					while (TRUE) {
+#line 833 "scroller-view.c"
 						UnityLauncherScrollerChild* child;
+#line 390 "scroller-view.vala"
 						if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+#line 390 "scroller-view.vala"
 							break;
+#line 839 "scroller-view.c"
 						}
+#line 390 "scroller-view.vala"
 						child = unity_launcher_scroller_model_iterator_get (_child_it);
+#line 392 "scroller-view.vala"
 						clutter_actor_set_reactive ((ClutterActor*) child, TRUE);
+#line 845 "scroller-view.c"
 						_g_object_unref0 (child);
 					}
 					_unity_launcher_scroller_model_iterator_unref0 (_child_it);
 				}
+#line 394 "scroller-view.vala"
 				break;
+#line 852 "scroller-view.c"
 			}
 			default:
 			{
+#line 396 "scroller-view.vala"
 				g_assert_not_reached ();
+#line 858 "scroller-view.c"
 			}
 		}
 	}
+#line 400 "scroller-view.vala"
 	self->priv->stored_delta = delta;
+#line 864 "scroller-view.c"
 }
 
 
+#line 403 "scroller-view.vala"
 static void unity_launcher_scroller_view_do_anim_settle (UnityLauncherScrollerView* self, ClutterTimeline* timeline, gint msecs) {
+#line 870 "scroller-view.c"
 	float distance;
+#line 403 "scroller-view.vala"
 	g_return_if_fail (self != NULL);
+#line 403 "scroller-view.vala"
 	g_return_if_fail (timeline != NULL);
+#line 405 "scroller-view.vala"
 	distance = self->priv->settle_position - self->priv->scroll_position;
+#line 406 "scroller-view.vala"
 	unity_launcher_scroller_view_move_scroll_position (self, distance * 0.2f);
+#line 407 "scroller-view.vala"
 	if (fabs ((double) distance) < 1) {
+#line 409 "scroller-view.vala"
 		self->priv->current_phase = UNITY_LAUNCHER_SCROLLER_PHASE_NONE;
+#line 884 "scroller-view.c"
 	}
 }
 
 
+#line 414 "scroller-view.vala"
 static void unity_launcher_scroller_view_do_anim_fling (UnityLauncherScrollerView* self, ClutterTimeline* timeline, gint msecs) {
+#line 891 "scroller-view.c"
 	float scroll_move_amount;
 	gboolean _tmp0_ = FALSE;
 	gboolean _tmp1_ = FALSE;
 	gboolean _tmp3_ = FALSE;
+#line 414 "scroller-view.vala"
 	g_return_if_fail (self != NULL);
+#line 414 "scroller-view.vala"
 	g_return_if_fail (timeline != NULL);
+#line 416 "scroller-view.vala"
 	self->priv->scroll_speed = self->priv->scroll_speed * self->friction;
+#line 419 "scroller-view.vala"
 	scroll_move_amount = self->priv->scroll_speed / 60.0f;
+#line 420 "scroller-view.vala"
 	unity_launcher_scroller_view_move_scroll_position (self, scroll_move_amount);
+#line 425 "scroller-view.vala"
 	if (scroll_move_amount <= (-1.0)) {
+#line 425 "scroller-view.vala"
 		_tmp1_ = (-self->priv->scroll_position) > (self->priv->total_child_height - clutter_actor_get_height ((ClutterActor*) self));
+#line 910 "scroller-view.c"
 	} else {
+#line 425 "scroller-view.vala"
 		_tmp1_ = FALSE;
+#line 914 "scroller-view.c"
 	}
+#line 425 "scroller-view.vala"
 	if (_tmp1_) {
+#line 425 "scroller-view.vala"
 		_tmp0_ = TRUE;
+#line 920 "scroller-view.c"
 	} else {
 		gboolean _tmp2_ = FALSE;
+#line 426 "scroller-view.vala"
 		if (scroll_move_amount >= 1.0) {
+#line 426 "scroller-view.vala"
 			_tmp2_ = self->priv->scroll_position > 0;
+#line 927 "scroller-view.c"
 		} else {
+#line 426 "scroller-view.vala"
 			_tmp2_ = FALSE;
+#line 931 "scroller-view.c"
 		}
+#line 426 "scroller-view.vala"
 		_tmp0_ = _tmp2_;
+#line 935 "scroller-view.c"
 	}
+#line 425 "scroller-view.vala"
 	if (_tmp0_) {
+#line 428 "scroller-view.vala"
 		self->priv->current_phase = UNITY_LAUNCHER_SCROLLER_PHASE_BOUNCE;
+#line 941 "scroller-view.c"
 	}
+#line 431 "scroller-view.vala"
 	if (fabsf (scroll_move_amount) < 1.0) {
+#line 945 "scroller-view.c"
 		gboolean _tmp4_ = FALSE;
+#line 432 "scroller-view.vala"
 		if (self->priv->scroll_position > 0) {
+#line 432 "scroller-view.vala"
 			_tmp4_ = TRUE;
+#line 951 "scroller-view.c"
 		} else {
+#line 432 "scroller-view.vala"
 			_tmp4_ = (-self->priv->scroll_position) > (self->priv->total_child_height - clutter_actor_get_height ((ClutterActor*) self));
+#line 955 "scroller-view.c"
 		}
+#line 432 "scroller-view.vala"
 		_tmp3_ = _tmp4_;
+#line 959 "scroller-view.c"
 	} else {
+#line 431 "scroller-view.vala"
 		_tmp3_ = FALSE;
+#line 963 "scroller-view.c"
 	}
+#line 431 "scroller-view.vala"
 	if (_tmp3_) {
+#line 434 "scroller-view.vala"
 		self->priv->settle_position = unity_launcher_scroller_view_get_aligned_settle_position (self);
+#line 435 "scroller-view.vala"
 		self->priv->current_phase = UNITY_LAUNCHER_SCROLLER_PHASE_SETTLING;
+#line 971 "scroller-view.c"
 	} else {
+#line 437 "scroller-view.vala"
 		if (fabsf (scroll_move_amount) < 1.0) {
+#line 439 "scroller-view.vala"
 			self->priv->current_phase = UNITY_LAUNCHER_SCROLLER_PHASE_NONE;
+#line 977 "scroller-view.c"
 		}
 	}
 }
 
 
+#line 443 "scroller-view.vala"
 static void unity_launcher_scroller_view_do_anim_bounce (UnityLauncherScrollerView* self, ClutterTimeline* timeline, gint msecs) {
+#line 443 "scroller-view.vala"
 	g_return_if_fail (self != NULL);
+#line 443 "scroller-view.vala"
 	g_return_if_fail (timeline != NULL);
+#line 445 "scroller-view.vala"
 	self->priv->scroll_speed = self->priv->scroll_speed * 0.5f;
+#line 446 "scroller-view.vala"
 	unity_launcher_scroller_view_move_scroll_position (self, self->priv->scroll_speed / 60.0f);
+#line 447 "scroller-view.vala"
 	self->priv->settle_position = -unity_launcher_scroller_view_get_aligned_settle_position (self);
+#line 448 "scroller-view.vala"
 	self->priv->current_phase = UNITY_LAUNCHER_SCROLLER_PHASE_SETTLING;
+#line 997 "scroller-view.c"
 }
 
 
+#line 451 "scroller-view.vala"
 static float unity_launcher_scroller_view_get_aligned_settle_position (UnityLauncherScrollerView* self) {
+#line 1003 "scroller-view.c"
 	float result = 0.0F;
 	float final_position;
 	CtkPadding _tmp0_ = {0};
 	CtkPadding _tmp1_ = {0};
+#line 451 "scroller-view.vala"
 	g_return_val_if_fail (self != NULL, 0.0F);
+#line 454 "scroller-view.vala"
 	final_position = self->priv->scroll_position;
+#line 455 "scroller-view.vala"
 	if (self->priv->total_child_height < ((clutter_actor_get_height ((ClutterActor*) self) - (ctk_actor_get_padding ((CtkActor*) self, &_tmp0_), _tmp0_.top)) - (ctk_actor_get_padding ((CtkActor*) self, &_tmp1_), _tmp1_.bottom))) {
+#line 458 "scroller-view.vala"
 		final_position = (float) 0;
+#line 1016 "scroller-view.c"
 	} else {
+#line 460 "scroller-view.vala"
 		if (self->priv->scroll_position > 0) {
+#line 463 "scroller-view.vala"
 			final_position = (float) 0;
+#line 1022 "scroller-view.c"
 		} else {
 			CtkPadding _tmp2_ = {0};
 			CtkPadding _tmp3_ = {0};
+#line 465 "scroller-view.vala"
 			if ((-self->priv->scroll_position) > (((self->priv->total_child_height - clutter_actor_get_height ((ClutterActor*) self)) - (ctk_actor_get_padding ((CtkActor*) self, &_tmp2_), _tmp2_.top)) - (ctk_actor_get_padding ((CtkActor*) self, &_tmp3_), _tmp3_.bottom))) {
+#line 1028 "scroller-view.c"
 				CtkPadding _tmp4_ = {0};
+#line 468 "scroller-view.vala"
 				final_position = (self->priv->total_child_height - clutter_actor_get_height ((ClutterActor*) self)) + (ctk_actor_get_padding ((CtkActor*) self, &_tmp4_), _tmp4_.bottom);
+#line 1032 "scroller-view.c"
 			}
 		}
 	}
 	result = final_position;
+#line 471 "scroller-view.vala"
 	return result;
+#line 1039 "scroller-view.c"
 }
 
 
+#line 478 "scroller-view.vala"
 static void unity_launcher_scroller_view_real_get_preferred_width (ClutterActor* base, float for_height, float* minimum_width, float* natural_width) {
+#line 1045 "scroller-view.c"
 	UnityLauncherScrollerView * self;
 	float pmin_width;
 	float pnat_width;
@@ -730,38 +1050,62 @@ static void unity_launcher_scroller_view_real_get_preferred_width (ClutterActor*
 	CtkPadding _tmp2_ = {0};
 	CtkPadding _tmp3_ = {0};
 	self = (UnityLauncherScrollerView*) base;
+#line 482 "scroller-view.vala"
 	*minimum_width = (float) 0;
+#line 483 "scroller-view.vala"
 	*natural_width = (float) 0;
+#line 485 "scroller-view.vala"
 	pmin_width = 0.0f;
+#line 486 "scroller-view.vala"
 	pnat_width = 0.0f;
+#line 1062 "scroller-view.c"
 	{
 		UnityLauncherScrollerModelIterator* _child_it;
 		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+#line 488 "scroller-view.vala"
 		while (TRUE) {
+#line 1068 "scroller-view.c"
 			UnityLauncherScrollerChild* child;
 			float cmin_width;
 			float cnat_width;
+#line 488 "scroller-view.vala"
 			if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+#line 488 "scroller-view.vala"
 				break;
+#line 1076 "scroller-view.c"
 			}
+#line 488 "scroller-view.vala"
 			child = unity_launcher_scroller_model_iterator_get (_child_it);
+#line 490 "scroller-view.vala"
 			cmin_width = 0.0f;
+#line 491 "scroller-view.vala"
 			cnat_width = 0.0f;
+#line 493 "scroller-view.vala"
 			clutter_actor_get_preferred_width ((ClutterActor*) child, for_height, &cmin_width, &cnat_width);
+#line 497 "scroller-view.vala"
 			pmin_width = MAX (pmin_width, cmin_width);
+#line 498 "scroller-view.vala"
 			pnat_width = MAX (pnat_width, cnat_width);
+#line 1090 "scroller-view.c"
 			_g_object_unref0 (child);
 		}
 		_unity_launcher_scroller_model_iterator_unref0 (_child_it);
 	}
+#line 502 "scroller-view.vala"
 	pmin_width = pmin_width + ((ctk_actor_get_padding ((CtkActor*) self, &_tmp0_), _tmp0_.left) + (ctk_actor_get_padding ((CtkActor*) self, &_tmp1_), _tmp1_.right));
+#line 503 "scroller-view.vala"
 	pnat_width = pnat_width + ((ctk_actor_get_padding ((CtkActor*) self, &_tmp2_), _tmp2_.left) + (ctk_actor_get_padding ((CtkActor*) self, &_tmp3_), _tmp3_.right));
+#line 505 "scroller-view.vala"
 	*minimum_width = pmin_width;
+#line 506 "scroller-view.vala"
 	*natural_width = pnat_width;
+#line 1103 "scroller-view.c"
 }
 
 
+#line 510 "scroller-view.vala"
 static void unity_launcher_scroller_view_real_get_preferred_height (ClutterActor* base, float for_width, float* minimum_height, float* natural_height) {
+#line 1109 "scroller-view.c"
 	UnityLauncherScrollerView * self;
 	float cnat_height;
 	float cmin_height;
@@ -770,64 +1114,111 @@ static void unity_launcher_scroller_view_real_get_preferred_height (ClutterActor
 	CtkPadding _tmp2_ = {0};
 	CtkPadding _tmp3_ = {0};
 	self = (UnityLauncherScrollerView*) base;
+#line 514 "scroller-view.vala"
 	*minimum_height = 0.0f;
+#line 515 "scroller-view.vala"
 	*natural_height = 0.0f;
+#line 517 "scroller-view.vala"
 	cnat_height = 0.0f;
+#line 518 "scroller-view.vala"
 	cmin_height = 0.0f;
+#line 519 "scroller-view.vala"
 	self->priv->total_child_height = 0.0f;
+#line 1128 "scroller-view.c"
 	{
 		UnityLauncherScrollerModelIterator* _child_it;
 		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+#line 521 "scroller-view.vala"
 		while (TRUE) {
+#line 1134 "scroller-view.c"
 			UnityLauncherScrollerChild* child;
+#line 521 "scroller-view.vala"
 			if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+#line 521 "scroller-view.vala"
 				break;
+#line 1140 "scroller-view.c"
 			}
+#line 521 "scroller-view.vala"
 			child = unity_launcher_scroller_model_iterator_get (_child_it);
+#line 523 "scroller-view.vala"
 			cnat_height = 0.0f;
+#line 524 "scroller-view.vala"
 			cmin_height = 0.0f;
+#line 525 "scroller-view.vala"
 			clutter_actor_get_preferred_height ((ClutterActor*) child, for_width, &cmin_height, &cnat_height);
+#line 528 "scroller-view.vala"
 			self->priv->total_child_height = self->priv->total_child_height + (cnat_height + self->spacing);
+#line 1152 "scroller-view.c"
 			_g_object_unref0 (child);
 		}
 		_unity_launcher_scroller_model_iterator_unref0 (_child_it);
 	}
+#line 531 "scroller-view.vala"
 	*minimum_height = (self->priv->total_child_height + (ctk_actor_get_padding ((CtkActor*) self, &_tmp0_), _tmp0_.top)) + (ctk_actor_get_padding ((CtkActor*) self, &_tmp1_), _tmp1_.bottom);
+#line 532 "scroller-view.vala"
 	*natural_height = (self->priv->total_child_height + (ctk_actor_get_padding ((CtkActor*) self, &_tmp2_), _tmp2_.top)) + (ctk_actor_get_padding ((CtkActor*) self, &_tmp3_), _tmp3_.bottom);
+#line 533 "scroller-view.vala"
 	return;
+#line 1163 "scroller-view.c"
 }
 
 
+#line 536 "scroller-view.vala"
 static void unity_launcher_scroller_view_order_children (UnityLauncherScrollerView* self, gboolean immediate) {
+#line 1169 "scroller-view.c"
 	float h;
 	float min_height = 0.0F;
 	float nat_height = 0.0F;
+#line 536 "scroller-view.vala"
 	g_return_if_fail (self != NULL);
+#line 539 "scroller-view.vala"
 	h = 0.0f;
+#line 1177 "scroller-view.c"
 	{
 		UnityLauncherScrollerModelIterator* _child_it;
 		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+#line 541 "scroller-view.vala"
 		while (TRUE) {
+#line 1183 "scroller-view.c"
 			UnityLauncherScrollerChild* child;
+#line 541 "scroller-view.vala"
 			if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+#line 541 "scroller-view.vala"
 				break;
+#line 1189 "scroller-view.c"
 			}
+#line 541 "scroller-view.vala"
 			child = unity_launcher_scroller_model_iterator_get (_child_it);
+#line 543 "scroller-view.vala"
 			clutter_actor_get_preferred_height ((ClutterActor*) child, clutter_actor_get_width ((ClutterActor*) self), &min_height, &nat_height);
+#line 544 "scroller-view.vala"
 			if (h != unity_launcher_scroller_child_get_position (child)) {
+#line 546 "scroller-view.vala"
 				if (!immediate) {
+#line 548 "scroller-view.vala"
 					if (CLUTTER_IS_ANIMATION (clutter_actor_get_animation ((ClutterActor*) child))) {
+#line 1201 "scroller-view.c"
 						float current_pos;
+#line 550 "scroller-view.vala"
 						current_pos = unity_launcher_scroller_child_get_position (child);
+#line 551 "scroller-view.vala"
 						clutter_animation_completed (clutter_actor_get_animation ((ClutterActor*) child));
+#line 552 "scroller-view.vala"
 						unity_launcher_scroller_child_set_position (child, current_pos);
+#line 1209 "scroller-view.c"
 					}
+#line 555 "scroller-view.vala"
 					clutter_actor_animate ((ClutterActor*) child, (gulong) CLUTTER_EASE_IN_OUT_QUAD, (guint) 170, "position", h, NULL);
+#line 1213 "scroller-view.c"
 				} else {
+#line 561 "scroller-view.vala"
 					unity_launcher_scroller_child_set_position (child, h);
+#line 1217 "scroller-view.c"
 				}
 			}
+#line 565 "scroller-view.vala"
 			h = h + (nat_height + self->spacing);
+#line 1222 "scroller-view.c"
 			_g_object_unref0 (child);
 		}
 		_unity_launcher_scroller_model_iterator_unref0 (_child_it);
@@ -835,7 +1226,9 @@ static void unity_launcher_scroller_view_order_children (UnityLauncherScrollerVi
 }
 
 
+#line 569 "scroller-view.vala"
 static void unity_launcher_scroller_view_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
+#line 1232 "scroller-view.c"
 	UnityLauncherScrollerView * self;
 	ClutterActorBox child_box = {0};
 	CtkPadding _tmp0_ = {0};
@@ -848,16 +1241,25 @@ static void unity_launcher_scroller_view_real_allocate (ClutterActor* base, cons
 	gint bg_width = 0;
 	float bg_offset;
 	self = (UnityLauncherScrollerView*) base;
+#line 572 "scroller-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_launcher_scroller_view_parent_class)->allocate ((ClutterActor*) CTK_ACTOR (self), box, flags);
+#line 1247 "scroller-view.c"
 	memset (&child_box, 0, sizeof (ClutterActorBox));
+#line 574 "scroller-view.vala"
 	current_width = (ctk_actor_get_padding ((CtkActor*) self, &_tmp0_), _tmp0_.left);
+#line 575 "scroller-view.vala"
 	available_height = clutter_actor_box_get_height (box) - (ctk_actor_get_padding ((CtkActor*) self, &_tmp1_), _tmp1_.bottom);
+#line 576 "scroller-view.vala"
 	available_width = clutter_actor_box_get_width (box) - (ctk_actor_get_padding ((CtkActor*) self, &_tmp2_), _tmp2_.right);
+#line 578 "scroller-view.vala"
 	self->priv->total_child_height = 0.0f;
+#line 1257 "scroller-view.c"
 	{
 		UnityLauncherScrollerModelIterator* _child_it;
 		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+#line 580 "scroller-view.vala"
 		while (TRUE) {
+#line 1263 "scroller-view.c"
 			UnityLauncherScrollerChild* child;
 			float child_height = 0.0F;
 			float child_width = 0.0F;
@@ -865,56 +1267,99 @@ static void unity_launcher_scroller_view_real_allocate (ClutterActor* base, cons
 			float min = 0.0F;
 			CtkPadding _tmp3_ = {0};
 			CtkPadding _tmp4_ = {0};
+#line 580 "scroller-view.vala"
 			if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+#line 580 "scroller-view.vala"
 				break;
+#line 1275 "scroller-view.c"
 			}
+#line 580 "scroller-view.vala"
 			child = unity_launcher_scroller_model_iterator_get (_child_it);
+#line 584 "scroller-view.vala"
 			clutter_actor_get_preferred_width ((ClutterActor*) child, available_height, &min, &natural);
+#line 585 "scroller-view.vala"
 			child_width = fmaxf (min, fminf (natural, available_width));
+#line 587 "scroller-view.vala"
 			clutter_actor_get_preferred_height ((ClutterActor*) child, child_width, &min, &natural);
+#line 588 "scroller-view.vala"
 			child_height = fmaxf (min, fminf (natural, available_height));
+#line 590 "scroller-view.vala"
 			child_box.x1 = current_width;
+#line 591 "scroller-view.vala"
 			child_box.x2 = clutter_actor_box_get_width (box) - (ctk_actor_get_padding ((CtkActor*) self, &_tmp3_), _tmp3_.right);
+#line 592 "scroller-view.vala"
 			child_box.y1 = (unity_launcher_scroller_child_get_position (child) + (ctk_actor_get_padding ((CtkActor*) self, &_tmp4_), _tmp4_.top)) + self->priv->scroll_position;
+#line 593 "scroller-view.vala"
 			child_box.y2 = child_box.y1 + child_height;
+#line 595 "scroller-view.vala"
 			clutter_actor_allocate ((ClutterActor*) child, &child_box, flags);
+#line 597 "scroller-view.vala"
 			self->priv->total_child_height = self->priv->total_child_height + (child_height + self->spacing);
+#line 1299 "scroller-view.c"
 			_g_object_unref0 (child);
 		}
 		_unity_launcher_scroller_model_iterator_unref0 (_child_it);
 	}
+#line 600 "scroller-view.vala"
 	child_box.x1 = (float) 0;
+#line 601 "scroller-view.vala"
 	child_box.x2 = clutter_actor_box_get_width (box);
+#line 605 "scroller-view.vala"
 	clutter_texture_get_base_size ((ClutterTexture*) self->priv->bgtex, &bg_width, &bg_height);
+#line 606 "scroller-view.vala"
 	bg_offset = fmodf (self->priv->scroll_position + 1000000, (float) bg_height);
+#line 608 "scroller-view.vala"
 	child_box.y1 = bg_offset - (bg_height - 1);
+#line 609 "scroller-view.vala"
 	child_box.y2 = (bg_offset + (bg_height - 1)) + clutter_actor_box_get_height (box);
+#line 611 "scroller-view.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->bgtex, &child_box, flags);
+#line 614 "scroller-view.vala"
 	clutter_texture_get_base_size ((ClutterTexture*) self->priv->top_shadow, &bg_width, &bg_height);
+#line 615 "scroller-view.vala"
 	child_box.y1 = (float) (-1);
+#line 616 "scroller-view.vala"
 	child_box.y2 = (float) (bg_height - 1);
+#line 617 "scroller-view.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->top_shadow, &child_box, flags);
+#line 619 "scroller-view.vala"
 	clutter_texture_get_base_size ((ClutterTexture*) self->priv->bottom_fade, &bg_width, &bg_height);
+#line 620 "scroller-view.vala"
 	child_box.y1 = clutter_actor_box_get_height (box) - bg_height;
+#line 621 "scroller-view.vala"
 	child_box.y2 = clutter_actor_box_get_height (box);
+#line 622 "scroller-view.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->bottom_fade, &child_box, flags);
+#line 1334 "scroller-view.c"
 }
 
 
+#line 625 "scroller-view.vala"
 static void unity_launcher_scroller_view_real_pick (ClutterActor* base, const ClutterColor* color) {
+#line 1340 "scroller-view.c"
 	UnityLauncherScrollerView * self;
 	self = (UnityLauncherScrollerView*) base;
+#line 627 "scroller-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_launcher_scroller_view_parent_class)->pick ((ClutterActor*) CTK_ACTOR (self), color);
+#line 1345 "scroller-view.c"
 	{
 		UnityLauncherScrollerModelIterator* _child_it;
 		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+#line 628 "scroller-view.vala"
 		while (TRUE) {
+#line 1351 "scroller-view.c"
 			UnityLauncherScrollerChild* child;
+#line 628 "scroller-view.vala"
 			if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+#line 628 "scroller-view.vala"
 				break;
+#line 1357 "scroller-view.c"
 			}
+#line 628 "scroller-view.vala"
 			child = unity_launcher_scroller_model_iterator_get (_child_it);
+#line 630 "scroller-view.vala"
 			clutter_actor_paint ((ClutterActor*) child);
+#line 1363 "scroller-view.c"
 			_g_object_unref0 (child);
 		}
 		_unity_launcher_scroller_model_iterator_unref0 (_child_it);
@@ -922,28 +1367,47 @@ static void unity_launcher_scroller_view_real_pick (ClutterActor* base, const Cl
 }
 
 
+#line 635 "scroller-view.vala"
 static void unity_launcher_scroller_view_real_paint (ClutterActor* base) {
+#line 1373 "scroller-view.c"
 	UnityLauncherScrollerView * self;
 	self = (UnityLauncherScrollerView*) base;
+#line 637 "scroller-view.vala"
 	clutter_actor_paint ((ClutterActor*) self->priv->bgtex);
+#line 1378 "scroller-view.c"
 	{
 		UnityLauncherScrollerModelIterator* _child_it;
 		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+#line 638 "scroller-view.vala"
 		while (TRUE) {
+#line 1384 "scroller-view.c"
 			UnityLauncherScrollerChild* child;
 			gboolean _tmp0_ = FALSE;
+#line 638 "scroller-view.vala"
 			if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+#line 638 "scroller-view.vala"
 				break;
+#line 1391 "scroller-view.c"
 			}
+#line 638 "scroller-view.vala"
 			child = unity_launcher_scroller_model_iterator_get (_child_it);
+#line 640 "scroller-view.vala"
 			if (UNITY_LAUNCHER_IS_LAUNCHER_CHILD (child)) {
+#line 640 "scroller-view.vala"
 				_tmp0_ = clutter_actor_get_opacity ((ClutterActor*) child) > 0;
+#line 1399 "scroller-view.c"
 			} else {
+#line 640 "scroller-view.vala"
 				_tmp0_ = FALSE;
+#line 1403 "scroller-view.c"
 			}
+#line 640 "scroller-view.vala"
 			if (_tmp0_) {
+#line 1407 "scroller-view.c"
 				UnityLauncherScrollerChild* _tmp1_;
+#line 642 "scroller-view.vala"
 				clutter_actor_paint ((ClutterActor*) (_tmp1_ = child, UNITY_LAUNCHER_IS_LAUNCHER_CHILD (_tmp1_) ? ((UnityLauncherLauncherChild*) _tmp1_) : NULL));
+#line 1411 "scroller-view.c"
 			}
 			_g_object_unref0 (child);
 		}
@@ -952,39 +1416,65 @@ static void unity_launcher_scroller_view_real_paint (ClutterActor* base) {
 	{
 		GeeIterator* _child_it;
 		_child_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) self->priv->child_refs);
+#line 646 "scroller-view.vala"
 		while (TRUE) {
+#line 1422 "scroller-view.c"
 			UnityLauncherScrollerChild* child;
+#line 646 "scroller-view.vala"
 			if (!gee_iterator_next (_child_it)) {
+#line 646 "scroller-view.vala"
 				break;
+#line 1428 "scroller-view.c"
 			}
+#line 646 "scroller-view.vala"
 			child = (UnityLauncherScrollerChild*) gee_iterator_get (_child_it);
+#line 648 "scroller-view.vala"
 			clutter_actor_paint ((ClutterActor*) child);
+#line 1434 "scroller-view.c"
 			_g_object_unref0 (child);
 		}
 		_g_object_unref0 (_child_it);
 	}
+#line 651 "scroller-view.vala"
 	clutter_actor_paint ((ClutterActor*) self->priv->top_shadow);
+#line 652 "scroller-view.vala"
 	clutter_actor_paint ((ClutterActor*) self->priv->bottom_fade);
+#line 1443 "scroller-view.c"
 }
 
 
+#line 655 "scroller-view.vala"
 static void unity_launcher_scroller_view_real_map (ClutterActor* base) {
+#line 1449 "scroller-view.c"
 	UnityLauncherScrollerView * self;
 	self = (UnityLauncherScrollerView*) base;
+#line 657 "scroller-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_launcher_scroller_view_parent_class)->map ((ClutterActor*) CTK_ACTOR (self));
+#line 658 "scroller-view.vala"
 	clutter_actor_map ((ClutterActor*) self->priv->bgtex);
+#line 659 "scroller-view.vala"
 	clutter_actor_map ((ClutterActor*) self->priv->top_shadow);
+#line 660 "scroller-view.vala"
 	clutter_actor_map ((ClutterActor*) self->priv->bottom_fade);
+#line 1460 "scroller-view.c"
 	{
 		UnityLauncherScrollerModelIterator* _child_it;
 		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+#line 661 "scroller-view.vala"
 		while (TRUE) {
+#line 1466 "scroller-view.c"
 			UnityLauncherScrollerChild* child;
+#line 661 "scroller-view.vala"
 			if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+#line 661 "scroller-view.vala"
 				break;
+#line 1472 "scroller-view.c"
 			}
+#line 661 "scroller-view.vala"
 			child = unity_launcher_scroller_model_iterator_get (_child_it);
+#line 663 "scroller-view.vala"
 			clutter_actor_map ((ClutterActor*) child);
+#line 1478 "scroller-view.c"
 			_g_object_unref0 (child);
 		}
 		_unity_launcher_scroller_model_iterator_unref0 (_child_it);
@@ -992,23 +1482,38 @@ static void unity_launcher_scroller_view_real_map (ClutterActor* base) {
 }
 
 
+#line 667 "scroller-view.vala"
 static void unity_launcher_scroller_view_real_unmap (ClutterActor* base) {
+#line 1488 "scroller-view.c"
 	UnityLauncherScrollerView * self;
 	self = (UnityLauncherScrollerView*) base;
+#line 669 "scroller-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_launcher_scroller_view_parent_class)->unmap ((ClutterActor*) CTK_ACTOR (self));
+#line 670 "scroller-view.vala"
 	clutter_actor_map ((ClutterActor*) self->priv->bgtex);
+#line 671 "scroller-view.vala"
 	clutter_actor_map ((ClutterActor*) self->priv->top_shadow);
+#line 672 "scroller-view.vala"
 	clutter_actor_map ((ClutterActor*) self->priv->bottom_fade);
+#line 1499 "scroller-view.c"
 	{
 		UnityLauncherScrollerModelIterator* _child_it;
 		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+#line 673 "scroller-view.vala"
 		while (TRUE) {
+#line 1505 "scroller-view.c"
 			UnityLauncherScrollerChild* child;
+#line 673 "scroller-view.vala"
 			if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+#line 673 "scroller-view.vala"
 				break;
+#line 1511 "scroller-view.c"
 			}
+#line 673 "scroller-view.vala"
 			child = unity_launcher_scroller_model_iterator_get (_child_it);
+#line 675 "scroller-view.vala"
 			clutter_actor_unmap ((ClutterActor*) child);
+#line 1517 "scroller-view.c"
 			_g_object_unref0 (child);
 		}
 		_unity_launcher_scroller_model_iterator_unref0 (_child_it);
@@ -1020,7 +1525,9 @@ UnityLauncherScrollerModel* unity_launcher_scroller_view_get_model (UnityLaunche
 	UnityLauncherScrollerModel* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_model;
+#line 37 "scroller-view.vala"
 	return result;
+#line 1531 "scroller-view.c"
 }
 
 
@@ -1032,40 +1539,54 @@ static void unity_launcher_scroller_view_set_model (UnityLauncherScrollerView* s
 }
 
 
+#line 205 "scroller-view.vala"
 static void _unity_launcher_scroller_view_model_child_added_unity_launcher_scroller_model_child_added (UnityLauncherScrollerModel* _sender, UnityLauncherScrollerChild* child, gpointer self) {
+#line 1545 "scroller-view.c"
 	unity_launcher_scroller_view_model_child_added (self, child);
 }
 
 
+#line 221 "scroller-view.vala"
 static void _unity_launcher_scroller_view_model_child_removed_unity_launcher_scroller_model_child_removed (UnityLauncherScrollerModel* _sender, UnityLauncherScrollerChild* child, gpointer self) {
+#line 1552 "scroller-view.c"
 	unity_launcher_scroller_view_model_child_removed (self, child);
 }
 
 
+#line 236 "scroller-view.vala"
 static void _unity_launcher_scroller_view_model_order_changed_unity_launcher_scroller_model_order_changed (UnityLauncherScrollerModel* _sender, gpointer self) {
+#line 1559 "scroller-view.c"
 	unity_launcher_scroller_view_model_order_changed (self);
 }
 
 
+#line 245 "scroller-view.vala"
 static gboolean _unity_launcher_scroller_view_on_button_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = unity_launcher_scroller_view_on_button_press_event (self, event);
-	return result;
+#line 1566 "scroller-view.c"
+	return unity_launcher_scroller_view_on_button_press_event (self, event);
 }
 
 
+#line 357 "scroller-view.vala"
 static void _unity_launcher_scroller_view_on_scroller_frame_clutter_timeline_new_frame (ClutterTimeline* _sender, gint msecs, gpointer self) {
+#line 1573 "scroller-view.c"
 	unity_launcher_scroller_view_on_scroller_frame (self, _sender, msecs);
 }
 
 
+#line 121 "scroller-view.vala"
 static void _lambda16_ (UnityLauncherScrollerView* self) {
+#line 122 "scroller-view.vala"
 	self->priv->is_scrolling = FALSE;
+#line 123 "scroller-view.vala"
 	self->priv->button_down = FALSE;
+#line 1584 "scroller-view.c"
 }
 
 
+#line 121 "scroller-view.vala"
 static void __lambda16__unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self) {
+#line 1590 "scroller-view.c"
 	_lambda16_ (self);
 }
 
@@ -1084,44 +1605,78 @@ static GObject * unity_launcher_scroller_view_constructor (GType type, guint n_c
 		ClutterTimeline* _tmp2_;
 		UnityDragController* drag_controller;
 		GeeArrayList* _tmp3_;
+#line 87 "scroller-view.vala"
 		unity_testing_object_registry_register (_tmp0_ = unity_testing_object_registry_get_default (), "LauncherScrollerView", (GObject*) self);
+#line 1611 "scroller-view.c"
 		_unity_testing_object_registry_unref0 (_tmp0_);
+#line 88 "scroller-view.vala"
 		mypadding = (ctk_actor_get_padding ((CtkActor*) self, &_tmp1_), _tmp1_);
+#line 90 "scroller-view.vala"
 		mypadding.left = 0.0f;
+#line 91 "scroller-view.vala"
 		mypadding.right = 0.0f;
+#line 92 "scroller-view.vala"
 		mypadding.top = 10.0f;
+#line 93 "scroller-view.vala"
 		mypadding.bottom = 5.0f;
+#line 95 "scroller-view.vala"
 		ctk_actor_set_padding ((CtkActor*) self, &mypadding);
+#line 97 "scroller-view.vala"
 		unity_launcher_scroller_view_load_textures (self);
+#line 98 "scroller-view.vala"
 		g_signal_connect_object (self->priv->_model, "child-added", (GCallback) _unity_launcher_scroller_view_model_child_added_unity_launcher_scroller_model_child_added, self, 0);
+#line 99 "scroller-view.vala"
 		g_signal_connect_object (self->priv->_model, "child-removed", (GCallback) _unity_launcher_scroller_view_model_child_removed_unity_launcher_scroller_model_child_removed, self, 0);
+#line 100 "scroller-view.vala"
 		g_signal_connect_object (self->priv->_model, "order-changed", (GCallback) _unity_launcher_scroller_view_model_order_changed_unity_launcher_scroller_model_order_changed, self, 0);
+#line 1633 "scroller-view.c"
 		{
 			UnityLauncherScrollerModelIterator* _child_it;
 			_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+#line 104 "scroller-view.vala"
 			while (TRUE) {
+#line 1639 "scroller-view.c"
 				UnityLauncherScrollerChild* child;
+#line 104 "scroller-view.vala"
 				if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+#line 104 "scroller-view.vala"
 					break;
+#line 1645 "scroller-view.c"
 				}
+#line 104 "scroller-view.vala"
 				child = unity_launcher_scroller_model_iterator_get (_child_it);
+#line 106 "scroller-view.vala"
 				unity_launcher_scroller_view_model_child_added (self, child);
+#line 1651 "scroller-view.c"
 				_g_object_unref0 (child);
 			}
 			_unity_launcher_scroller_model_iterator_unref0 (_child_it);
 		}
+#line 110 "scroller-view.vala"
 		g_signal_connect_object ((ClutterActor*) self, "button-press-event", (GCallback) _unity_launcher_scroller_view_on_button_press_event_clutter_actor_button_press_event, self, 0);
+#line 111 "scroller-view.vala"
 		g_signal_connect_object ((ClutterActor*) self, "button-release-event", (GCallback) _unity_launcher_scroller_view_on_button_release_event_clutter_actor_button_release_event, self, 0);
+#line 112 "scroller-view.vala"
 		g_signal_connect_object ((ClutterActor*) self, "motion-event", (GCallback) _unity_launcher_scroller_view_on_motion_event_clutter_actor_motion_event, self, 0);
+#line 115 "scroller-view.vala"
 		self->priv->fling_timeline = (_tmp2_ = clutter_timeline_new ((guint) 1000), _g_object_unref0 (self->priv->fling_timeline), _tmp2_);
+#line 116 "scroller-view.vala"
 		clutter_timeline_set_loop (self->priv->fling_timeline, TRUE);
+#line 117 "scroller-view.vala"
 		g_signal_connect_object (self->priv->fling_timeline, "new-frame", (GCallback) _unity_launcher_scroller_view_on_scroller_frame_clutter_timeline_new_frame, self, 0);
+#line 120 "scroller-view.vala"
 		drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
+#line 121 "scroller-view.vala"
 		g_signal_connect_object (drag_controller, "drag-start", (GCallback) __lambda16__unity_drag_controller_drag_start, self, 0);
+#line 126 "scroller-view.vala"
 		clutter_actor_set_reactive ((ClutterActor*) self, TRUE);
+#line 128 "scroller-view.vala"
 		self->priv->child_refs = (_tmp3_ = gee_array_list_new (UNITY_LAUNCHER_TYPE_SCROLLER_CHILD, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->priv->child_refs), _tmp3_);
+#line 129 "scroller-view.vala"
 		unity_launcher_scroller_view_order_children (self, TRUE);
+#line 130 "scroller-view.vala"
 		clutter_actor_queue_relayout ((ClutterActor*) self);
+#line 1680 "scroller-view.c"
 		_g_object_unref0 (drag_controller);
 	}
 	return obj;

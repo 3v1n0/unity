@@ -29,15 +29,15 @@ namespace Unity.Launcher
   const float MARGIN                 = 0.5f;
   const float BORDER                 = 0.25f;
   const float CORNER_RADIUS          = 0.3f;
-  const float CORNER_RADIUS_ABS      = 8.0f;
+  const float CORNER_RADIUS_ABS      = 5.0f;
   const float SHADOW_SIZE            = 1.25f;
   const float ITEM_HEIGHT            = 2.0f;
   const float ITEM_CORNER_RADIUS     = 0.3f;
-  const float ITEM_CORNER_RADIUS_ABS = 6.0f;
+  const float ITEM_CORNER_RADIUS_ABS = 4.0f;
   const float ANCHOR_HEIGHT          = 1.5f;
-  const float ANCHOR_HEIGHT_ABS      = 14.0f;
+  const float ANCHOR_HEIGHT_ABS      = 18.0f;
   const float ANCHOR_WIDTH           = 0.75f;
-  const float ANCHOR_WIDTH_ABS       = 8.0f;
+  const float ANCHOR_WIDTH_ABS       = 10.0f;
 
   // we subclass Ctk.MenuSeperator here because we need to adapt it's appearance
   public class QuicklistMenuSeperator : Ctk.MenuSeperator
@@ -459,9 +459,9 @@ namespace Unity.Launcher
     {
       Ctk.Padding padding = Ctk.Padding () {
         left   = (int) (Ctk.em_to_pixel (BORDER + SHADOW_SIZE) + ANCHOR_WIDTH_ABS),
-        right  = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE),
+        right  = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE) - 1,
         top    = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE),
-        bottom = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE)
+        bottom = (int) Ctk.em_to_pixel (SHADOW_SIZE) + 1
       };
       this.set_padding (padding);
       //this.spacing = (int) Ctk.em_to_pixel (GAP);
