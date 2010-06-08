@@ -64,6 +64,13 @@ Section: libdevel
 Architecture: any
 Depends: ${misc:Depends},
          libunity0 (= ${binary:Version}),
+         libglib2.0-dev,
+         libdbus-glib-1-dev,
+         libgtk2.0-dev,
+         libclutter-1.0-dev,
+         libclutter-gtk-0.10-dev,
+         libdee-dev,
+         libgee-dev,
 Description: binding to get places into the launcher - development files
  libunity-places is a shared library to be able to interact with the launcher
  and add places in Unity environment.

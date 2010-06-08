@@ -3,6 +3,10 @@ unity (0.2.7-0ubuntu1) maverick; urgency=low
   * New upstream release.
   * debian/copyright:
     - update to latest copyright change
+  * debian/libunity-dev.install:
+    - now unity ship a .pc file
+  * debian/control:
+    - add to -dev package .pc file dependencies
 
  -- Didier Roche <didrocks@ubuntu.com>  Tue, 08 Jun 2010 12:52:04 +0200
 
