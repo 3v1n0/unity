@@ -15,14 +15,34 @@ Copyright:
 
 License:
 
-    This library is free software; you can redistribute it and/or
-    modify it under the terms of the GNU Lesser General Public
-    License Version 3.0 as published by the Free Software Foundation.
+    targets/*, tests/*, tools/*, unity-private/*:
 
-    This library is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-    Lesser General Public License for more details.
+     This program is free software: you can redistribute it and/or modify
+     it under the terms of the GNU General Public License version 3 as
+     published by the Free Software Foundation.
+  
+     This program is distributed in the hope that it will be useful,
+     but WITHOUT ANY WARRANTY; without even the implied warranty of
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+     GNU General Public License for more details.
+
+On Debian/Ubuntu systems, the full text of the GPL v3 can be found in
+`/usr/share/common-licenses/GPL-3'
+
+    unity/*:
+
+     This library is free software; you can redistribute it and/or
+     modify it under the terms of the GNU Lesser General Public
+     License Version 3.0 as published by the Free Software Foundation.
+
+     This library is distributed in the hope that it will be useful,
+     but WITHOUT ANY WARRANTY; without even the implied warranty of
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+     Lesser General Public License for more details.
+
+On Debian/Ubuntu systems, the full text of the LGPL v3 can be found in
+`/usr/share/common-licenses/LGPL-3'
+
 
 The Debian packaging is:
 
