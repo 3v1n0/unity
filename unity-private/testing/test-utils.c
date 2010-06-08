@@ -123,15 +123,20 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
+#line 24 "test-utils.vala"
 GTestLog* g_test_log_construct (GType object_type) {
+#line 129 "test-utils.c"
 	GTestLog* self;
 	self = (GTestLog*) g_type_create_instance (object_type);
 	return self;
 }
 
 
+#line 24 "test-utils.vala"
 GTestLog* g_test_log_new (void) {
+#line 24 "test-utils.vala"
 	return g_test_log_construct (G_TEST_TYPE_LOG);
+#line 140 "test-utils.c"
 }
 
 
@@ -294,146 +299,256 @@ void g_test_log_unref (gpointer instance) {
 }
 
 
+#line 87 "test-utils.vala"
 static void _unity_testing_logging_log_handler_glog_func (const char* log_domain, GLogLevelFlags log_levels, const char* message, gpointer self) {
+#line 305 "test-utils.c"
 	unity_testing_logging_log_handler (self, log_domain, log_levels, message);
 }
 
 
+#line 39 "test-utils.vala"
 UnityTestingLogging* unity_testing_logging_construct (GType object_type) {
+#line 312 "test-utils.c"
 	UnityTestingLogging* self;
 	self = (UnityTestingLogging*) g_type_create_instance (object_type);
+#line 41 "test-utils.vala"
 	g_log_set_default_handler (_unity_testing_logging_log_handler_glog_func, self);
+#line 317 "test-utils.c"
 	return self;
 }
 
 
+#line 39 "test-utils.vala"
 UnityTestingLogging* unity_testing_logging_new (void) {
+#line 39 "test-utils.vala"
 	return unity_testing_logging_construct (UNITY_TESTING_TYPE_LOGGING);
+#line 326 "test-utils.c"
 }
 
 
+#line 1048 "glib-2.0.vapi"
 static gboolean string_contains (const char* self, const char* needle) {
+#line 332 "test-utils.c"
 	gboolean result = FALSE;
+#line 1048 "glib-2.0.vapi"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 1048 "glib-2.0.vapi"
 	g_return_val_if_fail (needle != NULL, FALSE);
+#line 338 "test-utils.c"
 	result = strstr (self, needle) != NULL;
+#line 1049 "glib-2.0.vapi"
 	return result;
+#line 342 "test-utils.c"
 }
 
 
+#line 44 "test-utils.vala"
 gboolean unity_testing_logging_fatal_handler (const char* log_domain, GLogLevelFlags flags, const char* message) {
+#line 348 "test-utils.c"
 	gboolean result = FALSE;
+#line 48 "test-utils.vala"
 	if (log_domain == NULL) {
+#line 352 "test-utils.c"
 		result = TRUE;
+#line 49 "test-utils.vala"
 		return result;
+#line 356 "test-utils.c"
 	}
+#line 51 "test-utils.vala"
 	if (string_contains (log_domain, "liblauncher")) {
+#line 360 "test-utils.c"
 		result = FALSE;
+#line 52 "test-utils.vala"
 		return result;
+#line 364 "test-utils.c"
 	}
+#line 54 "test-utils.vala"
 	if (string_contains (log_domain, "bamfdaemon")) {
+#line 368 "test-utils.c"
 		result = FALSE;
+#line 55 "test-utils.vala"
 		return result;
+#line 372 "test-utils.c"
 	}
+#line 57 "test-utils.vala"
 	if (string_contains (log_domain, "Gtk")) {
+#line 376 "test-utils.c"
 		result = FALSE;
+#line 58 "test-utils.vala"
 		return result;
+#line 380 "test-utils.c"
 	}
+#line 60 "test-utils.vala"
 	if (string_contains (log_domain, "ndicator")) {
+#line 384 "test-utils.c"
 		result = FALSE;
+#line 61 "test-utils.vala"
 		return result;
+#line 388 "test-utils.c"
 	}
+#line 63 "test-utils.vala"
 	if (message == NULL) {
+#line 392 "test-utils.c"
 		result = TRUE;
+#line 64 "test-utils.vala"
 		return result;
+#line 396 "test-utils.c"
 	}
+#line 66 "test-utils.vala"
 	if (string_contains (message, "widget class `GtkImage' has no property named `x-ayatana-indicator-dyn" \
 "amic'")) {
+#line 400 "test-utils.c"
 		result = FALSE;
+#line 67 "test-utils.vala"
 		return result;
+#line 404 "test-utils.c"
 	}
+#line 69 "test-utils.vala"
 	if (string_contains (message, "is currently inside an allocation cycle")) {
+#line 408 "test-utils.c"
 		result = FALSE;
+#line 70 "test-utils.vala"
 		return result;
+#line 412 "test-utils.c"
 	}
+#line 72 "test-utils.vala"
 	if (string_contains (message, "Bamf r")) {
+#line 416 "test-utils.c"
 		result = FALSE;
+#line 73 "test-utils.vala"
 		return result;
+#line 420 "test-utils.c"
 	}
 	result = TRUE;
+#line 75 "test-utils.vala"
 	return result;
+#line 425 "test-utils.c"
 }
 
 
+#line 44 "test-utils.vala"
 static gboolean _unity_testing_logging_fatal_handler_gtest_log_log_fatal_func (const char* log_domain, GLogLevelFlags flags, const char* message, gpointer self) {
-	gboolean result;
-	result = unity_testing_logging_fatal_handler (log_domain, flags, message);
-	return result;
+#line 431 "test-utils.c"
+	return unity_testing_logging_fatal_handler (log_domain, flags, message);
 }
 
 
+#line 82 "test-utils.vala"
 void unity_testing_logging_init_fatal_handler (void) {
+#line 84 "test-utils.vala"
 	g_test_log_set_fatal_handler (_unity_testing_logging_fatal_handler_gtest_log_log_fatal_func, NULL);
+#line 440 "test-utils.c"
 }
 
 
+#line 87 "test-utils.vala"
 static void unity_testing_logging_log_handler (UnityTestingLogging* self, const char* log_domain, GLogLevelFlags flags, const char* message) {
+#line 446 "test-utils.c"
 	char* level;
 	gboolean _tmp0_ = FALSE;
 	gboolean _tmp1_ = FALSE;
 	const char* _tmp10_;
+#line 87 "test-utils.vala"
 	g_return_if_fail (self != NULL);
+#line 87 "test-utils.vala"
 	g_return_if_fail (message != NULL);
+#line 455 "test-utils.c"
 	level = NULL;
+#line 93 "test-utils.vala"
 	if (_vala_strcmp0 (log_domain, "Clutter") == 0) {
+#line 93 "test-utils.vala"
 		_tmp0_ = (flags & G_LOG_LEVEL_WARNING) != 0;
+#line 461 "test-utils.c"
 	} else {
+#line 93 "test-utils.vala"
 		_tmp0_ = FALSE;
+#line 465 "test-utils.c"
 	}
+#line 93 "test-utils.vala"
 	if (_tmp0_) {
+#line 95 "test-utils.vala"
 		if (string_contains (message, "is currently inside an allocation cycle")) {
+#line 471 "test-utils.c"
 			_g_free0 (level);
+#line 96 "test-utils.vala"
 			return;
+#line 475 "test-utils.c"
 		}
 	}
+#line 99 "test-utils.vala"
 	if (_vala_strcmp0 (log_domain, "Gtk") == 0) {
+#line 99 "test-utils.vala"
 		_tmp1_ = (flags & G_LOG_LEVEL_WARNING) != 0;
+#line 482 "test-utils.c"
 	} else {
+#line 99 "test-utils.vala"
 		_tmp1_ = FALSE;
+#line 486 "test-utils.c"
 	}
+#line 99 "test-utils.vala"
 	if (_tmp1_) {
+#line 101 "test-utils.vala"
 		if (string_contains (message, "has no property named `x-ayatana-indicator-dynamic'")) {
+#line 492 "test-utils.c"
 			_g_free0 (level);
+#line 102 "test-utils.vala"
 			return;
+#line 496 "test-utils.c"
 		}
 	}
+#line 105 "test-utils.vala"
 	if ((flags & G_LOG_LEVEL_ERROR) != 0) {
+#line 501 "test-utils.c"
 		char* _tmp2_;
+#line 106 "test-utils.vala"
 		level = (_tmp2_ = g_strdup ("FATAL"), _g_free0 (level), _tmp2_);
+#line 505 "test-utils.c"
 	} else {
+#line 107 "test-utils.vala"
 		if ((flags & G_LOG_LEVEL_CRITICAL) != 0) {
+#line 509 "test-utils.c"
 			char* _tmp3_;
+#line 108 "test-utils.vala"
 			level = (_tmp3_ = g_strdup ("CRITICAL"), _g_free0 (level), _tmp3_);
+#line 513 "test-utils.c"
 		} else {
+#line 109 "test-utils.vala"
 			if ((flags & G_LOG_LEVEL_WARNING) != 0) {
+#line 517 "test-utils.c"
 				char* _tmp4_;
+#line 110 "test-utils.vala"
 				level = (_tmp4_ = g_strdup ("WARNING"), _g_free0 (level), _tmp4_);
+#line 521 "test-utils.c"
 			} else {
+#line 111 "test-utils.vala"
 				if ((flags & G_LOG_LEVEL_MESSAGE) != 0) {
+#line 525 "test-utils.c"
 					char* _tmp5_;
+#line 112 "test-utils.vala"
 					level = (_tmp5_ = g_strdup ("MESSAGE"), _g_free0 (level), _tmp5_);
+#line 529 "test-utils.c"
 				} else {
+#line 113 "test-utils.vala"
 					if ((flags & G_LOG_LEVEL_INFO) != 0) {
+#line 533 "test-utils.c"
 						char* _tmp6_;
+#line 114 "test-utils.vala"
 						level = (_tmp6_ = g_strdup ("INFO"), _g_free0 (level), _tmp6_);
+#line 537 "test-utils.c"
 					} else {
+#line 115 "test-utils.vala"
 						if ((flags & G_LOG_LEVEL_DEBUG) != 0) {
+#line 541 "test-utils.c"
 							char* _tmp7_;
+#line 116 "test-utils.vala"
 							level = (_tmp7_ = g_strdup ("DEBUG"), _g_free0 (level), _tmp7_);
+#line 545 "test-utils.c"
 						} else {
 							char* _tmp9_;
 							GEnumValue* _tmp8_;
+#line 118 "test-utils.vala"
 							level = (_tmp9_ = g_strdup ((_tmp8_ = g_enum_get_value (g_type_class_ref (G_TYPE_INT), (int) flags), (_tmp8_ != NULL) ? _tmp8_->value_name : NULL)), _g_free0 (level), _tmp9_);
+#line 551 "test-utils.c"
 						}
 					}
 				}
@@ -441,12 +556,19 @@ static void unity_testing_logging_log_handler (UnityTestingLogging* self, const 
 		}
 	}
 	_tmp10_ = NULL;
+#line 121 "test-utils.vala"
 	if (log_domain == NULL) {
+#line 121 "test-utils.vala"
 		_tmp10_ = "Unity";
+#line 563 "test-utils.c"
 	} else {
+#line 121 "test-utils.vala"
 		_tmp10_ = log_domain;
+#line 567 "test-utils.c"
 	}
+#line 120 "test-utils.vala"
 	g_print ("%s-%s: %s\n\n", _tmp10_, level, message);
+#line 571 "test-utils.c"
 	_g_free0 (level);
 }
 

@@ -52,13 +52,15 @@ namespace Dee {
 	[CCode (cheader_filename = "dee.h")]
 	public class SequenceModel : Dee.VersionedModel, Dee.Model {
 		[CCode (type = "DeeModel*", has_construct_function = false)]
-		public SequenceModel (uint n_columns);
+		public SequenceModel (uint n_columns, ...);
 	}
 	[CCode (cheader_filename = "dee.h")]
 	public class SharedModel : Dee.ProxyModel, Dee.Model {
 		[CCode (type = "DeeModel*", has_construct_function = false)]
 		public SharedModel (string name, uint n_columns, ...);
 		public void connect ();
+		public unowned string get_swarm_name ();
+		public Dee.Peer get_peer ();
 		[CCode (type = "DeeModel*", has_construct_function = false)]
 		public SharedModel.with_back_end (string name, Dee.Model back_end);
 		[CCode (type = "DeeModel*", has_construct_function = false)]

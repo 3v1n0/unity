@@ -143,21 +143,23 @@ static void unity_places_default_view_finalize (GObject* obj);
 
 
 
+#line 82 "default-view.vala"
 static gboolean _unity_places_default_activity_widget_on_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = unity_places_default_activity_widget_on_enter (self);
-	return result;
+#line 149 "default-view.c"
+	return unity_places_default_activity_widget_on_enter (self);
 }
 
 
+#line 88 "default-view.vala"
 static gboolean _unity_places_default_activity_widget_on_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = unity_places_default_activity_widget_on_leave (self);
-	return result;
+#line 156 "default-view.c"
+	return unity_places_default_activity_widget_on_leave (self);
 }
 
 
+#line 28 "default-view.vala"
 UnityPlacesDefaultActivityWidget* unity_places_default_activity_widget_construct (GType object_type, gint spacing, gint size, const char* icon_name, const char* primary_text, const char* secondary_text) {
+#line 163 "default-view.c"
 	UnityPlacesDefaultActivityWidget * self;
 	char* process_name;
 	ClutterColor _tmp0_ = {0};
@@ -165,78 +167,141 @@ UnityPlacesDefaultActivityWidget* unity_places_default_activity_widget_construct
 	CtkImage* _tmp1_;
 	ClutterText* _tmp2_;
 	ClutterText* _tmp3_;
+#line 28 "default-view.vala"
 	g_return_val_if_fail (icon_name != NULL, NULL);
+#line 28 "default-view.vala"
 	g_return_val_if_fail (primary_text != NULL, NULL);
+#line 28 "default-view.vala"
 	g_return_val_if_fail (secondary_text != NULL, NULL);
+#line 177 "default-view.c"
 	self = g_object_newv (object_type, 0, NULL);
+#line 34 "default-view.vala"
 	process_name = g_strconcat ("activity_widget", icon_name, NULL);
+#line 35 "default-view.vala"
 	LOGGER_START_PROCESS (process_name);
+#line 36 "default-view.vala"
 	color = (_tmp0_.red = (guint8) 255, _tmp0_.green = (guint8) 255, _tmp0_.blue = (guint8) 255, _tmp0_.alpha = (guint8) 255, _tmp0_);
+#line 38 "default-view.vala"
 	ctk_box_set_homogeneous ((CtkBox*) self, FALSE);
+#line 39 "default-view.vala"
 	ctk_box_set_orientation ((CtkBox*) self, (gint) CTK_ORIENTATION_VERTICAL);
+#line 40 "default-view.vala"
 	clutter_actor_set_reactive ((ClutterActor*) self, TRUE);
+#line 42 "default-view.vala"
 	ctk_box_set_spacing ((CtkBox*) self, spacing);
+#line 44 "default-view.vala"
 	self->priv->icon = (_tmp1_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_stock ((guint) size, icon_name)), _g_object_unref0 (self->priv->icon), _tmp1_);
+#line 45 "default-view.vala"
 	clutter_actor_set_reactive ((ClutterActor*) self->priv->icon, TRUE);
+#line 47 "default-view.vala"
 	self->priv->primary_label = (_tmp2_ = g_object_ref_sink ((ClutterText*) clutter_text_new ()), _g_object_unref0 (self->priv->primary_label), _tmp2_);
+#line 48 "default-view.vala"
 	clutter_actor_set_reactive ((ClutterActor*) self->priv->primary_label, TRUE);
+#line 49 "default-view.vala"
 	clutter_actor_set_width ((ClutterActor*) self->priv->primary_label, (float) size);
+#line 50 "default-view.vala"
 	clutter_text_set_markup (self->priv->primary_label, primary_text);
+#line 51 "default-view.vala"
 	clutter_text_set_justify (self->priv->primary_label, TRUE);
+#line 52 "default-view.vala"
 	clutter_text_set_color (self->priv->primary_label, &color);
+#line 53 "default-view.vala"
 	clutter_text_set_ellipsize (self->priv->primary_label, PANGO_ELLIPSIZE_NONE);
+#line 54 "default-view.vala"
 	clutter_text_set_line_wrap (self->priv->primary_label, TRUE);
+#line 55 "default-view.vala"
 	clutter_text_set_line_alignment (self->priv->primary_label, PANGO_ALIGN_CENTER);
+#line 57 "default-view.vala"
 	self->priv->secondary_label = (_tmp3_ = g_object_ref_sink ((ClutterText*) clutter_text_new ()), _g_object_unref0 (self->priv->secondary_label), _tmp3_);
+#line 58 "default-view.vala"
 	clutter_actor_set_reactive ((ClutterActor*) self->priv->secondary_label, TRUE);
+#line 59 "default-view.vala"
 	clutter_actor_set_width ((ClutterActor*) self->priv->secondary_label, (float) (size + spacing));
+#line 61 "default-view.vala"
 	clutter_text_set_text (self->priv->secondary_label, secondary_text);
+#line 62 "default-view.vala"
 	clutter_text_set_justify (self->priv->secondary_label, FALSE);
+#line 63 "default-view.vala"
 	clutter_text_set_color (self->priv->secondary_label, &color);
+#line 65 "default-view.vala"
 	clutter_text_set_line_wrap (self->priv->secondary_label, TRUE);
+#line 66 "default-view.vala"
 	clutter_text_set_line_alignment (self->priv->secondary_label, PANGO_ALIGN_CENTER);
+#line 67 "default-view.vala"
 	clutter_text_set_line_wrap_mode (self->priv->secondary_label, PANGO_WRAP_WORD_CHAR);
+#line 68 "default-view.vala"
 	g_signal_connect_object ((ClutterActor*) self, "enter-event", (GCallback) _unity_places_default_activity_widget_on_enter_clutter_actor_enter_event, self, 0);
+#line 69 "default-view.vala"
 	g_signal_connect_object ((ClutterActor*) self, "leave-event", (GCallback) _unity_places_default_activity_widget_on_leave_clutter_actor_leave_event, self, 0);
+#line 70 "default-view.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self->priv->secondary_label, (guint8) 0);
+#line 72 "default-view.vala"
 	ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->icon, FALSE, FALSE);
+#line 73 "default-view.vala"
 	ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->primary_label, FALSE, FALSE);
+#line 74 "default-view.vala"
 	ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->secondary_label, FALSE, FALSE);
+#line 75 "default-view.vala"
 	LOGGER_END_PROCESS (process_name);
+#line 247 "default-view.c"
 	_g_free0 (process_name);
 	return self;
 }
 
 
+#line 28 "default-view.vala"
 UnityPlacesDefaultActivityWidget* unity_places_default_activity_widget_new (gint spacing, gint size, const char* icon_name, const char* primary_text, const char* secondary_text) {
+#line 28 "default-view.vala"
 	return unity_places_default_activity_widget_construct (UNITY_PLACES_DEFAULT_TYPE_ACTIVITY_WIDGET, spacing, size, icon_name, primary_text, secondary_text);
+#line 257 "default-view.c"
 }
 
 
+#line 82 "default-view.vala"
 gboolean unity_places_default_activity_widget_on_enter (UnityPlacesDefaultActivityWidget* self) {
+#line 263 "default-view.c"
 	gboolean result = FALSE;
+#line 82 "default-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 84 "default-view.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self->priv->secondary_label, (guint8) 255);
+#line 269 "default-view.c"
 	result = FALSE;
+#line 85 "default-view.vala"
 	return result;
+#line 273 "default-view.c"
 }
 
 
+#line 88 "default-view.vala"
 gboolean unity_places_default_activity_widget_on_leave (UnityPlacesDefaultActivityWidget* self) {
+#line 279 "default-view.c"
 	gboolean result = FALSE;
+#line 88 "default-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 90 "default-view.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self->priv->secondary_label, (guint8) 0);
+#line 285 "default-view.c"
 	result = FALSE;
+#line 91 "default-view.vala"
 	return result;
+#line 289 "default-view.c"
 }
 
 
+#line 94 "default-view.vala"
 gboolean unity_places_default_activity_widget_on_clicked (UnityPlacesDefaultActivityWidget* self) {
+#line 295 "default-view.c"
 	gboolean result = FALSE;
+#line 94 "default-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 96 "default-view.vala"
 	fprintf (stdout, "on_clicked() called\n");
+#line 301 "default-view.c"
 	result = FALSE;
+#line 97 "default-view.vala"
 	return result;
+#line 305 "default-view.c"
 }
 
 
@@ -288,7 +353,9 @@ GType unity_places_default_activity_widget_get_type (void) {
 }
 
 
+#line 106 "default-view.vala"
 static void unity_places_default_view_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
+#line 359 "default-view.c"
 	UnityPlacesDefaultView * self;
 	CtkPadding _tmp0_ = {0};
 	CtkPadding padding;
@@ -298,21 +365,35 @@ static void unity_places_default_view_real_allocate (ClutterActor* base, const C
 	float natural_height_p = 0.0F;
 	gint hor_spacing = 0;
 	self = (UnityPlacesDefaultView*) base;
+#line 109 "default-view.vala"
 	padding = (_tmp0_.top = 0.0f, _tmp0_.right = 0.0f, _tmp0_.bottom = 0.0f, _tmp0_.left = 0.0f, _tmp0_);
+#line 116 "default-view.vala"
 	hor_spacing = ctk_icon_view_get_spacing ((CtkIconView*) self);
+#line 117 "default-view.vala"
 	real_width = (*box).x2 - (*box).x1;
+#line 118 "default-view.vala"
 	real_height = (*box).y2 - (*box).y1;
+#line 119 "default-view.vala"
 	padding.left = ((real_width - (4 * 128)) - (3 * hor_spacing)) / 2.0f;
+#line 120 "default-view.vala"
 	padding.right = padding.left;
+#line 122 "default-view.vala"
 	clutter_actor_get_preferred_height ((ClutterActor*) self, real_width, &min_height_p, &natural_height_p);
+#line 126 "default-view.vala"
 	padding.top = (real_height - 400) / 2.0f;
+#line 127 "default-view.vala"
 	padding.bottom = padding.top;
+#line 129 "default-view.vala"
 	ctk_actor_set_padding ((CtkActor*) self, &padding);
+#line 130 "default-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_places_default_view_parent_class)->allocate ((ClutterActor*) CTK_ICON_VIEW (self), box, flags);
+#line 391 "default-view.c"
 }
 
 
+#line 133 "default-view.vala"
 UnityPlacesDefaultView* unity_places_default_view_construct (GType object_type) {
+#line 397 "default-view.c"
 	UnityPlacesDefaultView * self;
 	UnityPlacesDefaultModel* activity;
 	gint i = 0;
@@ -328,60 +409,102 @@ UnityPlacesDefaultView* unity_places_default_view_construct (GType object_type) 
 	UnityPlacesDefaultModel* _tmp7_;
 	UnityPlacesDefaultModel* _tmp8_;
 	self = g_object_newv (object_type, 0, NULL);
+#line 135 "default-view.vala"
 	START_FUNCTION ();
+#line 415 "default-view.c"
 	activity = NULL;
 	widget = NULL;
+#line 139 "default-view.vala"
 	widget_size = 128;
+#line 141 "default-view.vala"
 	self->priv->activities = (_tmp0_ = gee_array_list_new (UNITY_PLACES_DEFAULT_TYPE_MODEL, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->priv->activities), _tmp0_);
+#line 144 "default-view.vala"
 	activity = (_tmp1_ = unity_places_default_model_new ("applications-internet", "<b>Web</b>", "Search, Suft & Download"), _g_object_unref0 (activity), _tmp1_);
+#line 147 "default-view.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->activities, activity);
+#line 149 "default-view.vala"
 	activity = (_tmp2_ = unity_places_default_model_new ("rhythmbox", "<b>Music</b>", "Jukebox, Radio & Podcasts"), _g_object_unref0 (activity), _tmp2_);
+#line 152 "default-view.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->activities, activity);
+#line 154 "default-view.vala"
 	activity = (_tmp3_ = unity_places_default_model_new ("applications-multimedia", "<b>Videos</b>", "YouTube & More"), _g_object_unref0 (activity), _tmp3_);
+#line 157 "default-view.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->activities, activity);
+#line 159 "default-view.vala"
 	activity = (_tmp4_ = unity_places_default_model_new ("applications-graphics", "<b>Photos</b>", "Organize, Edit & Share"), _g_object_unref0 (activity), _tmp4_);
+#line 162 "default-view.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->activities, activity);
+#line 164 "default-view.vala"
 	activity = (_tmp5_ = unity_places_default_model_new ("applications-office", "<b>Work</b>", "Office Documents, Spreadsheets & Presentations"), _g_object_unref0 (activity), _tmp5_);
+#line 167 "default-view.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->activities, activity);
+#line 169 "default-view.vala"
 	activity = (_tmp6_ = unity_places_default_model_new ("evolution", "<b>Email</b>", "Read & Write Email"), _g_object_unref0 (activity), _tmp6_);
+#line 172 "default-view.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->activities, activity);
+#line 174 "default-view.vala"
 	activity = (_tmp7_ = unity_places_default_model_new ("empathy", "<b>Chat</b>", "AIM, Yahoo, Skype & MSN"), _g_object_unref0 (activity), _tmp7_);
+#line 177 "default-view.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->activities, activity);
+#line 179 "default-view.vala"
 	activity = (_tmp8_ = unity_places_default_model_new ("softwarecenter", "<b>Get New Apps</b>", "Ubuntu Software Center"), _g_object_unref0 (activity), _tmp8_);
+#line 182 "default-view.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->activities, activity);
+#line 454 "default-view.c"
 	{
 		gboolean _tmp9_;
+#line 185 "default-view.vala"
 		i = 0;
+#line 185 "default-view.vala"
 		_tmp9_ = TRUE;
+#line 185 "default-view.vala"
 		while (TRUE) {
+#line 463 "default-view.c"
 			UnityPlacesDefaultActivityWidget* _tmp13_;
 			UnityPlacesDefaultModel* _tmp12_;
 			UnityPlacesDefaultModel* _tmp11_;
 			UnityPlacesDefaultModel* _tmp10_;
+#line 185 "default-view.vala"
 			if (!_tmp9_) {
+#line 185 "default-view.vala"
 				i++;
+#line 472 "default-view.c"
 			}
+#line 185 "default-view.vala"
 			_tmp9_ = FALSE;
+#line 185 "default-view.vala"
 			if (!(i < gee_collection_get_size ((GeeCollection*) self->priv->activities))) {
+#line 185 "default-view.vala"
 				break;
+#line 480 "default-view.c"
 			}
+#line 187 "default-view.vala"
 			widget = (_tmp13_ = g_object_ref_sink (unity_places_default_activity_widget_new (0, widget_size, (_tmp10_ = (UnityPlacesDefaultModel*) gee_abstract_list_get ((GeeAbstractList*) self->priv->activities, i))->icon_name, (_tmp11_ = (UnityPlacesDefaultModel*) gee_abstract_list_get ((GeeAbstractList*) self->priv->activities, i))->primary_text, (_tmp12_ = (UnityPlacesDefaultModel*) gee_abstract_list_get ((GeeAbstractList*) self->priv->activities, i))->secondary_text)), _g_object_unref0 (widget), _tmp13_);
+#line 484 "default-view.c"
 			_g_object_unref0 (_tmp12_);
 			_g_object_unref0 (_tmp11_);
 			_g_object_unref0 (_tmp10_);
+#line 192 "default-view.vala"
 			clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) widget);
+#line 490 "default-view.c"
 		}
 	}
+#line 195 "default-view.vala"
 	clutter_actor_show_all ((ClutterActor*) self);
+#line 196 "default-view.vala"
 	END_FUNCTION ();
+#line 497 "default-view.c"
 	_g_object_unref0 (activity);
 	_g_object_unref0 (widget);
 	return self;
 }
 
 
+#line 133 "default-view.vala"
 UnityPlacesDefaultView* unity_places_default_view_new (void) {
+#line 133 "default-view.vala"
 	return unity_places_default_view_construct (UNITY_PLACES_DEFAULT_TYPE_VIEW);
+#line 508 "default-view.c"
 }
 
 

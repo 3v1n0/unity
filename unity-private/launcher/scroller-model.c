@@ -167,49 +167,80 @@ static void unity_launcher_scroller_model_get_property (GObject * object, guint 
 
 
 
+#line 43 "scroller-model.vala"
 UnityLauncherScrollerModel* unity_launcher_scroller_model_construct (GType object_type) {
+#line 173 "scroller-model.c"
 	UnityLauncherScrollerModel * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
+#line 43 "scroller-model.vala"
 UnityLauncherScrollerModel* unity_launcher_scroller_model_new (void) {
+#line 43 "scroller-model.vala"
 	return unity_launcher_scroller_model_construct (UNITY_LAUNCHER_TYPE_SCROLLER_MODEL);
+#line 184 "scroller-model.c"
 }
 
 
+#line 53 "scroller-model.vala"
 char* unity_launcher_scroller_model_to_string (UnityLauncherScrollerModel* self) {
+#line 190 "scroller-model.c"
 	char* result = NULL;
+#line 53 "scroller-model.vala"
 	g_return_val_if_fail (self != NULL, NULL);
+#line 194 "scroller-model.c"
 	result = g_strdup_printf ("a ScrollerModel model with %i entries", gee_collection_get_size ((GeeCollection*) self->priv->children));
+#line 55 "scroller-model.vala"
 	return result;
+#line 198 "scroller-model.c"
 }
 
 
+#line 63 "scroller-model.vala"
 UnityLauncherScrollerModelIterator* unity_launcher_scroller_model_iterator (UnityLauncherScrollerModel* self) {
+#line 204 "scroller-model.c"
 	UnityLauncherScrollerModelIterator* result = NULL;
+#line 63 "scroller-model.vala"
 	g_return_val_if_fail (self != NULL, NULL);
+#line 208 "scroller-model.c"
 	result = unity_launcher_scroller_model_iterator_new (self->priv->children);
+#line 65 "scroller-model.vala"
 	return result;
+#line 212 "scroller-model.c"
 }
 
 
+#line 91 "scroller-model.vala"
 gboolean unity_launcher_scroller_model_contains (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child) {
+#line 218 "scroller-model.c"
 	gboolean result = FALSE;
+#line 91 "scroller-model.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 91 "scroller-model.vala"
 	g_return_val_if_fail (child != NULL, FALSE);
+#line 224 "scroller-model.c"
 	result = gee_abstract_collection_contains ((GeeAbstractCollection*) self->priv->children, child);
+#line 92 "scroller-model.vala"
 	return result;
+#line 228 "scroller-model.c"
 }
 
 
+#line 95 "scroller-model.vala"
 void unity_launcher_scroller_model_add (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child) {
+#line 95 "scroller-model.vala"
 	g_return_if_fail (self != NULL);
+#line 95 "scroller-model.vala"
 	g_return_if_fail (child != NULL);
+#line 97 "scroller-model.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->children, child);
+#line 98 "scroller-model.vala"
 	g_signal_emit_by_name (self, "child-added", child);
+#line 99 "scroller-model.vala"
 	g_signal_emit_by_name (self, "order-changed");
+#line 244 "scroller-model.c"
 }
 
 
@@ -218,72 +249,125 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
+#line 102 "scroller-model.vala"
 void unity_launcher_scroller_model_remove (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child) {
+#line 255 "scroller-model.c"
 	UnityLauncherScrollerChild* tempchild;
+#line 102 "scroller-model.vala"
 	g_return_if_fail (self != NULL);
+#line 102 "scroller-model.vala"
 	g_return_if_fail (child != NULL);
+#line 104 "scroller-model.vala"
 	tempchild = _g_object_ref0 (child);
+#line 105 "scroller-model.vala"
 	gee_abstract_collection_remove ((GeeAbstractCollection*) self->priv->children, child);
+#line 106 "scroller-model.vala"
 	g_signal_emit_by_name (self, "child-removed", tempchild);
+#line 107 "scroller-model.vala"
 	g_signal_emit_by_name (self, "order-changed");
+#line 269 "scroller-model.c"
 	_g_object_unref0 (tempchild);
 }
 
 
+#line 110 "scroller-model.vala"
 void unity_launcher_scroller_model_insert (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child, gint i) {
+#line 110 "scroller-model.vala"
 	g_return_if_fail (self != NULL);
+#line 110 "scroller-model.vala"
 	g_return_if_fail (child != NULL);
+#line 112 "scroller-model.vala"
 	gee_abstract_list_insert ((GeeAbstractList*) self->priv->children, i, child);
+#line 113 "scroller-model.vala"
 	g_signal_emit_by_name (self, "child-added", child);
+#line 284 "scroller-model.c"
 }
 
 
+#line 116 "scroller-model.vala"
 void unity_launcher_scroller_model_move (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child, gint i) {
+#line 116 "scroller-model.vala"
 	g_return_if_fail (self != NULL);
+#line 116 "scroller-model.vala"
 	g_return_if_fail (child != NULL);
+#line 118 "scroller-model.vala"
 	if (!gee_abstract_collection_contains ((GeeAbstractCollection*) self->priv->children, child)) {
+#line 119 "scroller-model.vala"
 		return;
+#line 298 "scroller-model.c"
 	}
+#line 121 "scroller-model.vala"
 	if (gee_abstract_list_index_of ((GeeAbstractList*) self->priv->children, child) == i) {
+#line 122 "scroller-model.vala"
 		return;
+#line 304 "scroller-model.c"
 	}
+#line 124 "scroller-model.vala"
 	gee_abstract_collection_remove ((GeeAbstractCollection*) self->priv->children, child);
+#line 125 "scroller-model.vala"
 	gee_abstract_list_insert ((GeeAbstractList*) self->priv->children, i, child);
+#line 126 "scroller-model.vala"
 	g_signal_emit_by_name (self, "order-changed");
+#line 312 "scroller-model.c"
 }
 
 
+#line 129 "scroller-model.vala"
 gint unity_launcher_scroller_model_index_of (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child) {
+#line 318 "scroller-model.c"
 	gint result = 0;
+#line 129 "scroller-model.vala"
 	g_return_val_if_fail (self != NULL, 0);
+#line 129 "scroller-model.vala"
 	g_return_val_if_fail (child != NULL, 0);
+#line 131 "scroller-model.vala"
 	if (gee_abstract_collection_contains ((GeeAbstractCollection*) self->priv->children, child)) {
+#line 326 "scroller-model.c"
 		result = gee_abstract_list_index_of ((GeeAbstractList*) self->priv->children, child);
+#line 133 "scroller-model.vala"
 		return result;
+#line 330 "scroller-model.c"
 	}
 	result = 0;
+#line 135 "scroller-model.vala"
 	return result;
+#line 335 "scroller-model.c"
 }
 
 
+#line 138 "scroller-model.vala"
 void unity_launcher_scroller_model_sort (UnityLauncherScrollerModel* self, GCompareFunc compare) {
+#line 138 "scroller-model.vala"
 	g_return_if_fail (self != NULL);
+#line 140 "scroller-model.vala"
 	gee_list_sort ((GeeList*) self->priv->children, compare);
+#line 345 "scroller-model.c"
 }
 
 
+#line 143 "scroller-model.vala"
 UnityLauncherScrollerChild* unity_launcher_scroller_model_get (UnityLauncherScrollerModel* self, gint i) {
+#line 351 "scroller-model.c"
 	UnityLauncherScrollerChild* result = NULL;
+#line 143 "scroller-model.vala"
 	g_return_val_if_fail (self != NULL, NULL);
+#line 355 "scroller-model.c"
 	result = (UnityLauncherScrollerChild*) gee_abstract_list_get ((GeeAbstractList*) self->priv->children, i);
+#line 145 "scroller-model.vala"
 	return result;
+#line 359 "scroller-model.c"
 }
 
 
+#line 148 "scroller-model.vala"
 void unity_launcher_scroller_model_set (UnityLauncherScrollerModel* self, gint i, UnityLauncherScrollerChild* item) {
+#line 148 "scroller-model.vala"
 	g_return_if_fail (self != NULL);
+#line 148 "scroller-model.vala"
 	g_return_if_fail (item != NULL);
+#line 150 "scroller-model.vala"
 	gee_abstract_list_set ((GeeAbstractList*) self->priv->children, i, item);
+#line 371 "scroller-model.c"
 }
 
 
@@ -291,7 +375,9 @@ gint unity_launcher_scroller_model_get_size (UnityLauncherScrollerModel* self) {
 	gint result;
 	g_return_val_if_fail (self != NULL, 0);
 	result = gee_collection_get_size ((GeeCollection*) self->priv->children);
+#line 37 "scroller-model.vala"
 	return result;
+#line 381 "scroller-model.c"
 }
 
 
@@ -305,47 +391,76 @@ static GObject * unity_launcher_scroller_model_constructor (GType type, guint n_
 	{
 		UnityTestingObjectRegistry* _tmp0_;
 		GeeArrayList* _tmp1_;
+#line 49 "scroller-model.vala"
 		unity_testing_object_registry_register (_tmp0_ = unity_testing_object_registry_get_default (), "UnityScrollerModel", (GObject*) self);
+#line 397 "scroller-model.c"
 		_unity_testing_object_registry_unref0 (_tmp0_);
+#line 50 "scroller-model.vala"
 		self->priv->children = (_tmp1_ = gee_array_list_new (UNITY_LAUNCHER_TYPE_SCROLLER_CHILD, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->priv->children), _tmp1_);
+#line 401 "scroller-model.c"
 	}
 	return obj;
 }
 
 
+#line 72 "scroller-model.vala"
 UnityLauncherScrollerModelIterator* unity_launcher_scroller_model_iterator_construct (GType object_type, GeeArrayList* arraylist) {
+#line 409 "scroller-model.c"
 	UnityLauncherScrollerModelIterator* self;
 	GeeArrayList* _tmp0_;
+#line 72 "scroller-model.vala"
 	g_return_val_if_fail (arraylist != NULL, NULL);
+#line 414 "scroller-model.c"
 	self = (UnityLauncherScrollerModelIterator*) g_type_create_instance (object_type);
+#line 74 "scroller-model.vala"
 	self->priv->array = (_tmp0_ = _g_object_ref0 (arraylist), _g_object_unref0 (self->priv->array), _tmp0_);
+#line 418 "scroller-model.c"
 	return self;
 }
 
 
+#line 72 "scroller-model.vala"
 UnityLauncherScrollerModelIterator* unity_launcher_scroller_model_iterator_new (GeeArrayList* arraylist) {
+#line 72 "scroller-model.vala"
 	return unity_launcher_scroller_model_iterator_construct (UNITY_LAUNCHER_SCROLLER_MODEL_TYPE_ITERATOR, arraylist);
+#line 427 "scroller-model.c"
 }
 
 
+#line 77 "scroller-model.vala"
 gboolean unity_launcher_scroller_model_iterator_next (UnityLauncherScrollerModelIterator* self) {
+#line 433 "scroller-model.c"
 	gboolean result = FALSE;
+#line 77 "scroller-model.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 79 "scroller-model.vala"
 	if (self->priv->iter_index >= gee_collection_get_size ((GeeCollection*) self->priv->array)) {
+#line 439 "scroller-model.c"
 		result = FALSE;
+#line 80 "scroller-model.vala"
 		return result;
+#line 443 "scroller-model.c"
 	}
 	result = TRUE;
+#line 81 "scroller-model.vala"
 	return result;
+#line 448 "scroller-model.c"
 }
 
 
+#line 84 "scroller-model.vala"
 UnityLauncherScrollerChild* unity_launcher_scroller_model_iterator_get (UnityLauncherScrollerModelIterator* self) {
+#line 454 "scroller-model.c"
 	UnityLauncherScrollerChild* result = NULL;
+#line 84 "scroller-model.vala"
 	g_return_val_if_fail (self != NULL, NULL);
+#line 86 "scroller-model.vala"
 	self->priv->iter_index++;
+#line 460 "scroller-model.c"
 	result = (UnityLauncherScrollerChild*) gee_abstract_list_get ((GeeAbstractList*) self->priv->array, self->priv->iter_index - 1);
+#line 87 "scroller-model.vala"
 	return result;
+#line 464 "scroller-model.c"
 }
 
 

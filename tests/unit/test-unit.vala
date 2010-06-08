@@ -25,16 +25,22 @@ public class Main
   public static int main (string[] args)
   {
     PanelIndicatorObjectEntryViewSuite panel_object_entry_view_suite;
+    PanelIndicatorObjectViewSuite panel_object_view_suite;
+    
     PlacesSuite places;
     LauncherSuite launcher;
+    PlaceSuite place;
 
     Gtk.init (ref args);
     Ctk.init (ref args);
     Test.init (ref args);
 
     panel_object_entry_view_suite = new PanelIndicatorObjectEntryViewSuite ();
+    panel_object_view_suite = new PanelIndicatorObjectViewSuite ();
+    
     launcher = new LauncherSuite ();
     places = new PlacesSuite ();
+    place = new PlaceSuite ();
 
     Test.run ();
 

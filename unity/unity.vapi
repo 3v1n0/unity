@@ -23,6 +23,68 @@ namespace Unity {
 		[CCode (cheader_filename = "unity.h")]
 		public static Unity.Drag.Controller? controller_singleton;
 	}
+	[CCode (cprefix = "UnityPlace", lower_case_cprefix = "unity_place_")]
+	namespace Place {
+		[CCode (cheader_filename = "unity.h")]
+		public class Controller : GLib.Object {
+			public Controller (string dbus_path);
+			public void add_entry (Unity.Place.EntryInfo entry);
+			public void export () throws DBus.Error;
+			public Unity.Place.EntryInfo[] get_entries ();
+			public Unity.Place.EntryInfo? get_entry (string dbus_path);
+			public string[] get_entry_paths ();
+			public uint num_entries ();
+			public void remove_entry (string dbus_path);
+			public void unexport () throws DBus.Error;
+			public string dbus_path { get; construct; }
+			public bool exported { get; }
+		}
+		[CCode (cheader_filename = "unity.h")]
+		public class EntryInfo : GLib.Object {
+			public EntryInfo (string dbus_path);
+			public void clear_hint (string hint);
+			public void clear_hints ();
+			public string? get_hint (string hint);
+			public uint num_hints ();
+			public void set_hint (string hint, string val);
+			public bool active { get; set; }
+			public uint active_section { get; set; }
+			public string dbus_path { get; set construct; }
+			public string display_name { get; set construct; }
+			public Unity.Place.RendererInfo entry_renderer_info { get; }
+			public Unity.Place.RendererInfo global_renderer_info { get; }
+			public Unity.Place.SearchHandler global_search_handler { get; set; }
+			public string icon { get; set construct; }
+			public string[] mimetypes { get; set construct; }
+			public uint position { get; set construct; }
+			public Unity.Place.SearchHandler search_handler { get; set; }
+			public Dee.Model sections_model { get; set construct; }
+			public bool sensitive { get; set construct; }
+		}
+		[CCode (cheader_filename = "unity.h")]
+		public class RendererInfo : GLib.Object {
+			public void clear_hint (string hint);
+			public void clear_hints ();
+			public string? get_hint (string hint);
+			public uint num_hints ();
+			public void set_hint (string hint, string val);
+			public string default_renderer { get; set; }
+			public Dee.Model groups_model { get; set; }
+			public Dee.Model results_model { get; set; }
+		}
+		[CCode (cheader_filename = "unity.h")]
+		public class Search : GLib.InitiallyUnowned {
+			public Search (string search, GLib.HashTable<string,string> hints);
+			public void clear_hint (string hint);
+			public void clear_hints ();
+			public string? get_hint (string hint);
+			public string get_search_string ();
+			public uint num_hints ();
+			public void set_hint (string hint, string val);
+		}
+		[CCode (cheader_filename = "unity.h")]
+		public delegate uint SearchHandler (Unity.Place.Search search);
+	}
 	[CCode (cprefix = "UnityQuicklistRendering", lower_case_cprefix = "unity_quicklist_rendering_")]
 	namespace QuicklistRendering {
 		[CCode (cheader_filename = "unity.h")]

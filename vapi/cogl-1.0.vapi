@@ -464,6 +464,8 @@ namespace Cogl {
 	[CCode (cheader_filename = "cogl/cogl.h")]
 	public static void clip_push_window_rect (float x_offset, float y_offset, float width, float height);
 	[CCode (cheader_filename = "cogl/cogl.h")]
+	public static void clip_push_rectangle (float x0, float y0, float x1, float y1);
+	[CCode (cheader_filename = "cogl/cogl.h")]
 	public static void clip_stack_restore ();
 	[CCode (cheader_filename = "cogl/cogl.h")]
 	public static void clip_stack_save ();

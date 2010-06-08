@@ -2,26 +2,22 @@
  * generated from drag-controller.vala, do not modify */
 
 /*
- *      unity-drag.vala
- *      Copyright (C) 2010 Canonical Ltd
+ * Copyright (C) 2010 Canonical, Ltd.
  *
- *      This program is free software; you can redistribute it and/or modify
- *      it under the terms of the GNU General Public License as published by
- *      the Free Software Foundation; either version 2 of the License, or
- *      (at your option) any later version.
+ * This library is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License
+ * version 3.0 as published by the Free Software Foundation.
  *
- *      This program is distributed in the hope that it will be useful,
- *      but WITHOUT ANY WARRANTY; without even the implied warranty of
- *      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- *      GNU General Public License for more details.
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License version 3.0 for more details.
  *
- *      You should have received a copy of the GNU General Public License
- *      along with this program; if not, write to the Free Software
- *      Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
- *      MA 02110-1301, USA.
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library. If not, see
+ * <http://www.gnu.org/licenses/>.
  *
- *
- *      Authored by Gordon Allott <gord.allott@canonical.com>
+ * Authored by Gordon Allott <gord.allott@canonical.com>
  */
 
 #include <glib.h>
@@ -162,13 +158,19 @@ static void unity_drag_controller_get_property (GObject * object, guint property
 
 static void g_cclosure_user_marshal_VOID__OBJECT_FLOAT_FLOAT (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 
+#line 25 "drag-controller.vala"
 ClutterActor* unity_drag_model_get_icon (UnityDragModel* self) {
+#line 25 "drag-controller.vala"
 	return UNITY_DRAG_MODEL_GET_INTERFACE (self)->get_icon (self);
+#line 166 "drag-controller.c"
 }
 
 
+#line 26 "drag-controller.vala"
 char* unity_drag_model_get_drag_data (UnityDragModel* self) {
+#line 26 "drag-controller.vala"
 	return UNITY_DRAG_MODEL_GET_INTERFACE (self)->get_drag_data (self);
+#line 174 "drag-controller.c"
 }
 
 
@@ -193,18 +195,28 @@ GType unity_drag_model_get_type (void) {
 }
 
 
+#line 34 "drag-controller.vala"
 UnityDragController* unity_drag_controller_get_default (void) {
+#line 201 "drag-controller.c"
 	UnityDragController* result = NULL;
+#line 36 "drag-controller.vala"
 	if (unity_drag_controller_singleton == NULL) {
+#line 205 "drag-controller.c"
 		UnityDragController* _tmp0_;
+#line 37 "drag-controller.vala"
 		unity_drag_controller_singleton = (_tmp0_ = unity_drag_controller_new (), _g_object_unref0 (unity_drag_controller_singleton), _tmp0_);
+#line 209 "drag-controller.c"
 	}
 	result = unity_drag_controller_singleton;
+#line 39 "drag-controller.vala"
 	return result;
+#line 214 "drag-controller.c"
 }
 
 
+#line 79 "drag-controller.vala"
 static void _unity_drag_controller_rehouse_orphaned_child_clutter_actor_parent_set (ClutterActor* _sender, ClutterActor* old_parent, gpointer self) {
+#line 220 "drag-controller.c"
 	unity_drag_controller_rehouse_orphaned_child (self, old_parent);
 }
 
@@ -214,106 +226,173 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
+#line 100 "drag-controller.vala"
 static void _unity_drag_controller_on_view_motion_unity_drag_view_motion (UnityDragView* _sender, float x, float y, gpointer self) {
+#line 232 "drag-controller.c"
 	unity_drag_controller_on_view_motion (self, x, y);
 }
 
 
+#line 105 "drag-controller.vala"
 static void _unity_drag_controller_on_view_end_unity_drag_view_end (UnityDragView* _sender, float x, float y, gpointer self) {
+#line 239 "drag-controller.c"
 	unity_drag_controller_on_view_end (self, x, y);
 }
 
 
+#line 64 "drag-controller.vala"
 void unity_drag_controller_start_drag (UnityDragController* self, UnityDragModel* model, float offset_x, float offset_y) {
+#line 246 "drag-controller.c"
 	ClutterActor* _tmp3_;
 	ClutterActor* _tmp4_;
 	UnityDragModel* _tmp5_;
+#line 64 "drag-controller.vala"
 	g_return_if_fail (self != NULL);
+#line 64 "drag-controller.vala"
 	g_return_if_fail (model != NULL);
+#line 66 "drag-controller.vala"
 	if (!UNITY_DRAG_IS_VIEW (self->priv->view)) {
+#line 256 "drag-controller.c"
 		UnityDragView* _tmp2_;
 		ClutterActor* _tmp0_;
 		ClutterActor* _tmp1_;
+#line 67 "drag-controller.vala"
 		self->priv->view = (_tmp2_ = unity_drag_view_new ((_tmp1_ = clutter_actor_get_stage (_tmp0_ = unity_drag_model_get_icon (model)), CLUTTER_IS_STAGE (_tmp1_) ? ((ClutterStage*) _tmp1_) : NULL)), _g_object_unref0 (self->priv->view), _tmp2_);
+#line 262 "drag-controller.c"
 		_g_object_unref0 (_tmp0_);
 	}
+#line 69 "drag-controller.vala"
 	unity_drag_view_hook_actor_to_cursor (self->priv->view, _tmp3_ = unity_drag_model_get_icon (model), offset_x, offset_y);
+#line 267 "drag-controller.c"
 	_g_object_unref0 (_tmp3_);
+#line 70 "drag-controller.vala"
 	g_signal_connect_object (_tmp4_ = unity_drag_model_get_icon (model), "parent-set", (GCallback) _unity_drag_controller_rehouse_orphaned_child_clutter_actor_parent_set, self, 0);
+#line 271 "drag-controller.c"
 	_g_object_unref0 (_tmp4_);
+#line 71 "drag-controller.vala"
 	self->priv->model = (_tmp5_ = _g_object_ref0 (model), _g_object_unref0 (self->priv->model), _tmp5_);
+#line 72 "drag-controller.vala"
 	g_signal_emit_by_name (self, "drag-start", model);
+#line 73 "drag-controller.vala"
 	g_signal_connect_object (self->priv->view, "motion", (GCallback) _unity_drag_controller_on_view_motion_unity_drag_view_motion, self, 0);
+#line 74 "drag-controller.vala"
 	g_signal_connect_object (self->priv->view, "end", (GCallback) _unity_drag_controller_on_view_end_unity_drag_view_end, self, 0);
+#line 75 "drag-controller.vala"
 	self->priv->_is_dragging = TRUE;
+#line 76 "drag-controller.vala"
 	unity_shell_add_fullscreen_request (unity_global_shell, (GObject*) self);
+#line 285 "drag-controller.c"
 }
 
 
+#line 79 "drag-controller.vala"
 static void unity_drag_controller_rehouse_orphaned_child (UnityDragController* self, ClutterActor* old_parent) {
+#line 291 "drag-controller.c"
 	ClutterActor* actor;
+#line 79 "drag-controller.vala"
 	g_return_if_fail (self != NULL);
+#line 83 "drag-controller.vala"
 	if (old_parent == NULL) {
+#line 83 "drag-controller.vala"
 		return;
+#line 299 "drag-controller.c"
 	}
+#line 84 "drag-controller.vala"
 	actor = unity_drag_model_get_icon (self->priv->model);
+#line 86 "drag-controller.vala"
 	if (!CLUTTER_IS_ACTOR (clutter_actor_get_parent (actor))) {
+#line 305 "drag-controller.c"
 		ClutterActor* _tmp0_;
 		ClutterStage* stage;
+#line 89 "drag-controller.vala"
 		stage = _g_object_ref0 ((_tmp0_ = clutter_actor_get_stage (old_parent), CLUTTER_IS_STAGE (_tmp0_) ? ((ClutterStage*) _tmp0_) : NULL));
+#line 90 "drag-controller.vala"
 		clutter_actor_set_parent (actor, (ClutterActor*) stage);
+#line 91 "drag-controller.vala"
 		clutter_actor_set_position (actor, (float) (-10000), (float) (-10000));
+#line 314 "drag-controller.c"
 		_g_object_unref0 (stage);
 	}
 	_g_object_unref0 (actor);
 }
 
 
+#line 95 "drag-controller.vala"
 UnityDragModel* unity_drag_controller_get_drag_model (UnityDragController* self) {
+#line 323 "drag-controller.c"
 	UnityDragModel* result = NULL;
+#line 95 "drag-controller.vala"
 	g_return_val_if_fail (self != NULL, NULL);
+#line 327 "drag-controller.c"
 	result = _g_object_ref0 (self->priv->model);
+#line 97 "drag-controller.vala"
 	return result;
+#line 331 "drag-controller.c"
 }
 
 
+#line 100 "drag-controller.vala"
 static void unity_drag_controller_on_view_motion (UnityDragController* self, float x, float y) {
+#line 100 "drag-controller.vala"
 	g_return_if_fail (self != NULL);
+#line 102 "drag-controller.vala"
 	g_signal_emit_by_name (self, "drag-motion", self->priv->model, x, y);
+#line 341 "drag-controller.c"
 }
 
 
+#line 105 "drag-controller.vala"
 static void unity_drag_controller_on_view_end (UnityDragController* self, float x, float y) {
+#line 347 "drag-controller.c"
 	guint _tmp1_;
 	ClutterActor* _tmp0_;
 	guint _tmp2_;
 	guint _tmp3_;
 	UnityDragModel* _tmp4_;
+#line 105 "drag-controller.vala"
 	g_return_if_fail (self != NULL);
+#line 107 "drag-controller.vala"
 	g_signal_parse_name ("parent-set", CLUTTER_TYPE_ACTOR, &_tmp1_, NULL, FALSE);
+#line 107 "drag-controller.vala"
 	g_signal_handlers_disconnect_matched (_tmp0_ = unity_drag_model_get_icon (self->priv->model), G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp1_, 0, NULL, (GCallback) _unity_drag_controller_rehouse_orphaned_child_clutter_actor_parent_set, self);
+#line 359 "drag-controller.c"
 	_g_object_unref0 (_tmp0_);
+#line 108 "drag-controller.vala"
 	unity_drag_view_unhook_actor (self->priv->view);
+#line 109 "drag-controller.vala"
 	g_signal_emit_by_name (self, "drag-drop", self->priv->model, x, y);
+#line 110 "drag-controller.vala"
 	g_signal_parse_name ("motion", UNITY_DRAG_TYPE_VIEW, &_tmp2_, NULL, FALSE);
+#line 110 "drag-controller.vala"
 	g_signal_handlers_disconnect_matched (self->priv->view, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp2_, 0, NULL, (GCallback) _unity_drag_controller_on_view_motion_unity_drag_view_motion, self);
+#line 111 "drag-controller.vala"
 	g_signal_parse_name ("end", UNITY_DRAG_TYPE_VIEW, &_tmp3_, NULL, FALSE);
+#line 111 "drag-controller.vala"
 	g_signal_handlers_disconnect_matched (self->priv->view, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp3_, 0, NULL, (GCallback) _unity_drag_controller_on_view_end_unity_drag_view_end, self);
+#line 112 "drag-controller.vala"
 	self->priv->model = (_tmp4_ = NULL, _g_object_unref0 (self->priv->model), _tmp4_);
+#line 113 "drag-controller.vala"
 	self->priv->_is_dragging = FALSE;
+#line 114 "drag-controller.vala"
 	unity_shell_remove_fullscreen_request (unity_global_shell, (GObject*) self);
+#line 379 "drag-controller.c"
 }
 
 
+#line 31 "drag-controller.vala"
 UnityDragController* unity_drag_controller_construct (GType object_type) {
+#line 385 "drag-controller.c"
 	UnityDragController * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
+#line 31 "drag-controller.vala"
 UnityDragController* unity_drag_controller_new (void) {
+#line 31 "drag-controller.vala"
 	return unity_drag_controller_construct (UNITY_DRAG_TYPE_CONTROLLER);
+#line 396 "drag-controller.c"
 }
 
 
@@ -321,7 +400,9 @@ gboolean unity_drag_controller_get_is_dragging (UnityDragController* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_is_dragging;
+#line 55 "drag-controller.vala"
 	return result;
+#line 406 "drag-controller.c"
 }
 
 
@@ -333,7 +414,9 @@ static GObject * unity_drag_controller_constructor (GType type, guint n_construc
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_DRAG_CONTROLLER (obj);
 	{
+#line 61 "drag-controller.vala"
 		self->priv->_is_dragging = FALSE;
+#line 420 "drag-controller.c"
 	}
 	return obj;
 }

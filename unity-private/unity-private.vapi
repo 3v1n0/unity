@@ -192,6 +192,8 @@ namespace Unity {
 			[CCode (cheader_filename = "unity-private.h")]
 			public class IndicatorObjectView : Ctk.Box {
 				public IndicatorObjectView (Indicator.Object _object);
+				public bool find_entry (Indicator.ObjectEntry entry);
+				public Unity.Panel.Indicators.IndicatorObjectEntryView? get_entry_view (Indicator.ObjectEntry entry);
 				public void open_first_menu_entry ();
 				public void open_last_menu_entry ();
 				public void show_entry_menu (int entry);

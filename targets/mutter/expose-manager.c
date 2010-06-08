@@ -217,56 +217,96 @@ static void unity_expose_manager_set_property (GObject * object, guint property_
 
 
 
+#line 44 "expose-manager.vala"
 UnityExposeClone* unity_expose_clone_construct (GType object_type, MutterWindow* source) {
+#line 223 "expose-manager.c"
 	UnityExposeClone * self;
 	ClutterClone* _tmp0_;
 	ClutterActor* _tmp3_;
 	ClutterColor _tmp2_;
 	ClutterColor _tmp1_ = {0};
+#line 44 "expose-manager.vala"
 	g_return_val_if_fail (source != NULL, NULL);
+#line 231 "expose-manager.c"
 	self = g_object_newv (object_type, 0, NULL);
+#line 46 "expose-manager.vala"
 	unity_expose_clone_set_darken (self, (guint8) 0);
+#line 47 "expose-manager.vala"
 	unity_expose_clone_set_hovered_opacity (self, (guint8) 255);
+#line 48 "expose-manager.vala"
 	unity_expose_clone_set_unhovered_opacity (self, (guint8) 255);
+#line 50 "expose-manager.vala"
 	unity_expose_clone_set_source (self, source);
+#line 51 "expose-manager.vala"
 	self->priv->clone = (_tmp0_ = g_object_ref_sink ((ClutterClone*) clutter_clone_new ((ClutterActor*) source)), _g_object_unref0 (self->priv->clone), _tmp0_);
+#line 53 "expose-manager.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->clone);
+#line 54 "expose-manager.vala"
 	clutter_actor_show ((ClutterActor*) self->priv->clone);
+#line 55 "expose-manager.vala"
 	clutter_actor_set_position ((ClutterActor*) self->priv->clone, (float) 0, (float) 0);
+#line 57 "expose-manager.vala"
 	self->priv->darken_box = (_tmp3_ = (ClutterActor*) g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color ((_tmp2_ = (_tmp1_.red = (guint8) 0, _tmp1_.green = (guint8) 0, _tmp1_.blue = (guint8) 0, _tmp1_.alpha = (guint8) 255, _tmp1_), &_tmp2_))), _g_object_unref0 (self->priv->darken_box), _tmp3_);
+#line 58 "expose-manager.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, self->priv->darken_box);
+#line 59 "expose-manager.vala"
 	clutter_actor_raise_top (self->priv->darken_box);
+#line 61 "expose-manager.vala"
 	clutter_actor_set_position (self->priv->darken_box, (float) 0, (float) 0);
+#line 62 "expose-manager.vala"
 	clutter_actor_set_size (self->priv->darken_box, clutter_actor_get_width ((ClutterActor*) source), clutter_actor_get_height ((ClutterActor*) source));
+#line 64 "expose-manager.vala"
 	clutter_actor_set_opacity (self->priv->darken_box, unity_expose_clone_get_darken (self));
+#line 261 "expose-manager.c"
 	return self;
 }
 
 
+#line 44 "expose-manager.vala"
 UnityExposeClone* unity_expose_clone_new (MutterWindow* source) {
+#line 44 "expose-manager.vala"
 	return unity_expose_clone_construct (UNITY_TYPE_EXPOSE_CLONE, source);
+#line 270 "expose-manager.c"
 }
 
 
+#line 73 "expose-manager.vala"
 static gboolean unity_expose_clone_on_mouse_enter (UnityExposeClone* self, ClutterEvent* evnt) {
+#line 276 "expose-manager.c"
 	gboolean result = FALSE;
+#line 73 "expose-manager.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 75 "expose-manager.vala"
 	self->priv->hovered = TRUE;
+#line 76 "expose-manager.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self, self->priv->_hovered_opacity);
+#line 77 "expose-manager.vala"
 	clutter_actor_set_opacity (self->priv->darken_box, (guint8) 0);
+#line 286 "expose-manager.c"
 	result = FALSE;
+#line 78 "expose-manager.vala"
 	return result;
+#line 290 "expose-manager.c"
 }
 
 
+#line 81 "expose-manager.vala"
 static gboolean unity_expose_clone_on_mouse_leave (UnityExposeClone* self, ClutterEvent* evnt) {
+#line 296 "expose-manager.c"
 	gboolean result = FALSE;
+#line 81 "expose-manager.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 83 "expose-manager.vala"
 	self->priv->hovered = FALSE;
+#line 84 "expose-manager.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self, self->priv->_unhovered_opacity);
+#line 85 "expose-manager.vala"
 	clutter_actor_set_opacity (self->priv->darken_box, unity_expose_clone_get_darken (self));
+#line 306 "expose-manager.c"
 	result = FALSE;
+#line 86 "expose-manager.vala"
 	return result;
+#line 310 "expose-manager.c"
 }
 
 
@@ -274,7 +314,9 @@ MutterWindow* unity_expose_clone_get_source (UnityExposeClone* self) {
 	MutterWindow* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_source;
+#line 29 "expose-manager.vala"
 	return result;
+#line 320 "expose-manager.c"
 }
 
 
@@ -289,7 +331,9 @@ guint8 unity_expose_clone_get_hovered_opacity (UnityExposeClone* self) {
 	guint8 result;
 	g_return_val_if_fail (self != NULL, 0U);
 	result = self->priv->_hovered_opacity;
+#line 31 "expose-manager.vala"
 	return result;
+#line 337 "expose-manager.c"
 }
 
 
@@ -304,7 +348,9 @@ guint8 unity_expose_clone_get_unhovered_opacity (UnityExposeClone* self) {
 	guint8 result;
 	g_return_val_if_fail (self != NULL, 0U);
 	result = self->priv->_unhovered_opacity;
+#line 32 "expose-manager.vala"
 	return result;
+#line 354 "expose-manager.c"
 }
 
 
@@ -319,37 +365,48 @@ guint8 unity_expose_clone_get_darken (UnityExposeClone* self) {
 	guint8 result;
 	g_return_val_if_fail (self != NULL, 0U);
 	result = self->priv->_darken;
+#line 36 "expose-manager.vala"
 	return result;
+#line 371 "expose-manager.c"
 }
 
 
 void unity_expose_clone_set_darken (UnityExposeClone* self, guint8 value) {
 	gboolean _tmp0_ = FALSE;
 	g_return_if_fail (self != NULL);
+#line 38 "expose-manager.vala"
 	self->priv->_darken = value;
+#line 39 "expose-manager.vala"
 	if (!self->priv->hovered) {
+#line 39 "expose-manager.vala"
 		_tmp0_ = CLUTTER_IS_ACTOR (self->priv->darken_box);
+#line 384 "expose-manager.c"
 	} else {
+#line 39 "expose-manager.vala"
 		_tmp0_ = FALSE;
+#line 388 "expose-manager.c"
 	}
+#line 39 "expose-manager.vala"
 	if (_tmp0_) {
+#line 40 "expose-manager.vala"
 		clutter_actor_set_opacity (self->priv->darken_box, unity_expose_clone_get_darken (self));
+#line 394 "expose-manager.c"
 	}
 	g_object_notify ((GObject *) self, "darken");
 }
 
 
+#line 73 "expose-manager.vala"
 static gboolean _unity_expose_clone_on_mouse_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = unity_expose_clone_on_mouse_enter (self, event);
-	return result;
+#line 402 "expose-manager.c"
+	return unity_expose_clone_on_mouse_enter (self, event);
 }
 
 
+#line 81 "expose-manager.vala"
 static gboolean _unity_expose_clone_on_mouse_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = unity_expose_clone_on_mouse_leave (self, event);
-	return result;
+#line 409 "expose-manager.c"
+	return unity_expose_clone_on_mouse_leave (self, event);
 }
 
 
@@ -361,8 +418,11 @@ static GObject * unity_expose_clone_constructor (GType type, guint n_construct_p
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_EXPOSE_CLONE (obj);
 	{
+#line 69 "expose-manager.vala"
 		g_signal_connect_object ((ClutterActor*) self, "enter-event", (GCallback) _unity_expose_clone_on_mouse_enter_clutter_actor_enter_event, self, 0);
+#line 70 "expose-manager.vala"
 		g_signal_connect_object ((ClutterActor*) self, "leave-event", (GCallback) _unity_expose_clone_on_mouse_leave_clutter_actor_leave_event, self, 0);
+#line 426 "expose-manager.c"
 	}
 	return obj;
 }
@@ -465,234 +525,377 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
+#line 117 "expose-manager.vala"
 UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlugin* plugin, UnityLauncherLauncher* launcher) {
+#line 531 "expose-manager.c"
 	UnityExposeManager * self;
 	UnityLauncherLauncher* _tmp0_;
 	UnityPlugin* _tmp1_;
 	GList* _tmp2_;
 	ClutterStage* _tmp3_;
+#line 117 "expose-manager.vala"
 	g_return_val_if_fail (plugin != NULL, NULL);
+#line 117 "expose-manager.vala"
 	g_return_val_if_fail (launcher != NULL, NULL);
+#line 541 "expose-manager.c"
 	self = g_object_newv (object_type, 0, NULL);
+#line 119 "expose-manager.vala"
 	self->priv->launcher = (_tmp0_ = _g_object_ref0 (launcher), _g_object_unref0 (self->priv->launcher), _tmp0_);
+#line 120 "expose-manager.vala"
 	self->priv->owner = (_tmp1_ = _g_object_ref0 (plugin), _g_object_unref0 (self->priv->owner), _tmp1_);
+#line 121 "expose-manager.vala"
 	self->priv->exposed_windows = (_tmp2_ = NULL, __g_list_free_g_object_unref0 (self->priv->exposed_windows), _tmp2_);
+#line 122 "expose-manager.vala"
 	self->priv->stage = (_tmp3_ = CLUTTER_STAGE (unity_shell_get_stage ((UnityShell*) plugin)), _g_object_unref0 (self->priv->stage), _tmp3_);
+#line 124 "expose-manager.vala"
 	unity_expose_manager_set_hovered_opacity (self, (guint8) 255);
+#line 125 "expose-manager.vala"
 	unity_expose_manager_set_unhovered_opacity (self, (guint8) 255);
+#line 126 "expose-manager.vala"
 	unity_expose_manager_set_darken (self, (guint8) 0);
+#line 557 "expose-manager.c"
 	return self;
 }
 
 
+#line 117 "expose-manager.vala"
 UnityExposeManager* unity_expose_manager_new (UnityPlugin* plugin, UnityLauncherLauncher* launcher) {
+#line 117 "expose-manager.vala"
 	return unity_expose_manager_construct (UNITY_TYPE_EXPOSE_MANAGER, plugin, launcher);
+#line 566 "expose-manager.c"
 }
 
 
+#line 220 "expose-manager.vala"
 static void _unity_expose_manager_end_expose_clutter_actor_destroy (ClutterActor* _sender, gpointer self) {
+#line 572 "expose-manager.c"
 	unity_expose_manager_end_expose (self);
 }
 
 
+#line 182 "expose-manager.vala"
 static gboolean _lambda4_ (UnityExposeManager* self) {
+#line 579 "expose-manager.c"
 	gboolean result = FALSE;
 	UnityLauncherQuicklistController* ql_controller;
 	gboolean _tmp0_ = FALSE;
+#line 183 "expose-manager.vala"
 	ql_controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
+#line 184 "expose-manager.vala"
 	if (unity_launcher_quicklist_controller_menu_is_open (ql_controller)) {
+#line 184 "expose-manager.vala"
 		_tmp0_ = self->priv->menu_in_hover_close_state;
+#line 589 "expose-manager.c"
 	} else {
+#line 184 "expose-manager.vala"
 		_tmp0_ = FALSE;
+#line 593 "expose-manager.c"
 	}
+#line 184 "expose-manager.vala"
 	if (_tmp0_) {
+#line 186 "expose-manager.vala"
 		ctk_menu_set_close_on_leave (ql_controller->menu, FALSE);
+#line 599 "expose-manager.c"
 	}
 	result = FALSE;
 	_g_object_unref0 (ql_controller);
+#line 188 "expose-manager.vala"
 	return result;
+#line 605 "expose-manager.c"
 }
 
 
+#line 182 "expose-manager.vala"
 static gboolean __lambda4__clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = _lambda4_ (self);
-	return result;
+#line 611 "expose-manager.c"
+	return _lambda4_ (self);
 }
 
 
+#line 191 "expose-manager.vala"
 static gboolean _lambda5_ (UnityExposeManager* self) {
+#line 618 "expose-manager.c"
 	gboolean result = FALSE;
 	UnityLauncherQuicklistController* ql_controller;
 	gboolean _tmp0_ = FALSE;
+#line 192 "expose-manager.vala"
 	ql_controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
+#line 193 "expose-manager.vala"
 	if (unity_launcher_quicklist_controller_menu_is_open (ql_controller)) {
+#line 193 "expose-manager.vala"
 		_tmp0_ = self->priv->menu_in_hover_close_state;
+#line 628 "expose-manager.c"
 	} else {
+#line 193 "expose-manager.vala"
 		_tmp0_ = FALSE;
+#line 632 "expose-manager.c"
 	}
+#line 193 "expose-manager.vala"
 	if (_tmp0_) {
+#line 195 "expose-manager.vala"
 		ctk_menu_set_close_on_leave (ql_controller->menu, TRUE);
+#line 638 "expose-manager.c"
 	}
 	result = FALSE;
 	_g_object_unref0 (ql_controller);
+#line 197 "expose-manager.vala"
 	return result;
+#line 644 "expose-manager.c"
 }
 
 
+#line 191 "expose-manager.vala"
 static gboolean __lambda5__clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = _lambda5_ (self);
-	return result;
+#line 650 "expose-manager.c"
+	return _lambda5_ (self);
 }
 
 
+#line 517 "expose-manager.vala"
 static gboolean _unity_expose_manager_on_stage_captured_event_clutter_actor_captured_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = unity_expose_manager_on_stage_captured_event (self, event);
-	return result;
+#line 657 "expose-manager.c"
+	return unity_expose_manager_on_stage_captured_event (self, event);
 }
 
 
+#line 133 "expose-manager.vala"
 void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* windows) {
+#line 664 "expose-manager.c"
 	UnityLauncherQuicklistController* controller;
 	GList* _tmp0_;
 	ClutterGroup* _tmp1_;
 	ClutterActor* window_group;
 	ClutterActor* _tmp2_;
 	GList* mutter_windows;
+#line 133 "expose-manager.vala"
 	g_return_if_fail (self != NULL);
+#line 135 "expose-manager.vala"
 	controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
+#line 136 "expose-manager.vala"
 	if (unity_launcher_quicklist_controller_menu_is_open (controller)) {
+#line 138 "expose-manager.vala"
 		g_signal_connect_object ((ClutterActor*) controller->menu, "destroy", (GCallback) _unity_expose_manager_end_expose_clutter_actor_destroy, self, 0);
+#line 139 "expose-manager.vala"
 		self->priv->menu_in_hover_close_state = ctk_menu_get_close_on_leave (controller->menu);
+#line 681 "expose-manager.c"
 	}
+#line 141 "expose-manager.vala"
 	self->priv->exposed_windows = (_tmp0_ = NULL, __g_list_free_g_object_unref0 (self->priv->exposed_windows), _tmp0_);
+#line 143 "expose-manager.vala"
 	if (self->priv->expose_group != NULL) {
+#line 144 "expose-manager.vala"
 		clutter_actor_destroy ((ClutterActor*) self->priv->expose_group);
+#line 689 "expose-manager.c"
 	}
+#line 145 "expose-manager.vala"
 	self->priv->expose_group = (_tmp1_ = g_object_ref_sink ((ClutterGroup*) clutter_group_new ()), _g_object_unref0 (self->priv->expose_group), _tmp1_);
+#line 147 "expose-manager.vala"
 	window_group = _g_object_ref0 (mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self->priv->owner)));
+#line 149 "expose-manager.vala"
 	clutter_container_add_actor ((_tmp2_ = window_group, CLUTTER_IS_CONTAINER (_tmp2_) ? ((ClutterContainer*) _tmp2_) : NULL), (ClutterActor*) self->priv->expose_group);
+#line 150 "expose-manager.vala"
 	clutter_actor_raise_top ((ClutterActor*) self->priv->expose_group);
+#line 151 "expose-manager.vala"
 	clutter_actor_show ((ClutterActor*) self->priv->expose_group);
+#line 153 "expose-manager.vala"
 	mutter_windows = mutter_plugin_get_windows (unity_plugin_get_plugin (self->priv->owner));
+#line 703 "expose-manager.c"
 	{
 		GList* w_collection;
 		GList* w_it;
+#line 154 "expose-manager.vala"
 		w_collection = mutter_windows;
+#line 709 "expose-manager.c"
 		for (w_it = w_collection; w_it != NULL; w_it = w_it->next) {
 			MutterWindow* w;
+#line 154 "expose-manager.vala"
 			w = _g_object_ref0 ((MutterWindow*) w_it->data);
+#line 714 "expose-manager.c"
 			{
 				gboolean keep;
 				gulong xid;
 				MutterWindow* _tmp3_;
 				MutterWindow* _tmp4_;
+#line 156 "expose-manager.vala"
 				keep = FALSE;
+#line 157 "expose-manager.vala"
 				xid = (gulong) meta_window_get_xwindow (mutter_window_get_meta_window (w));
+#line 724 "expose-manager.c"
 				{
 					GSList* window_collection;
 					GSList* window_it;
+#line 158 "expose-manager.vala"
 					window_collection = windows;
+#line 730 "expose-manager.c"
 					for (window_it = window_collection; window_it != NULL; window_it = window_it->next) {
 						WnckWindow* window;
+#line 158 "expose-manager.vala"
 						window = _g_object_ref0 ((WnckWindow*) window_it->data);
+#line 735 "expose-manager.c"
 						{
+#line 160 "expose-manager.vala"
 							if (wnck_window_get_xid (window) == xid) {
+#line 162 "expose-manager.vala"
 								keep = TRUE;
+#line 741 "expose-manager.c"
 								_g_object_unref0 (window);
+#line 163 "expose-manager.vala"
 								break;
+#line 745 "expose-manager.c"
 							}
 							_g_object_unref0 (window);
 						}
 					}
 				}
+#line 167 "expose-manager.vala"
 				if (keep) {
+#line 753 "expose-manager.c"
 					UnityExposeClone* clone;
+#line 169 "expose-manager.vala"
 					clone = g_object_ref_sink (unity_expose_clone_new (w));
+#line 170 "expose-manager.vala"
 					clutter_actor_set_position ((ClutterActor*) clone, clutter_actor_get_x ((ClutterActor*) w), clutter_actor_get_y ((ClutterActor*) w));
+#line 171 "expose-manager.vala"
 					clutter_actor_set_size ((ClutterActor*) clone, clutter_actor_get_width ((ClutterActor*) w), clutter_actor_get_height ((ClutterActor*) w));
+#line 172 "expose-manager.vala"
 					self->priv->exposed_windows = g_list_append (self->priv->exposed_windows, _g_object_ref0 (clone));
+#line 173 "expose-manager.vala"
 					clutter_actor_set_reactive ((ClutterActor*) clone, TRUE);
+#line 175 "expose-manager.vala"
 					clutter_container_add_actor ((ClutterContainer*) self->priv->expose_group, (ClutterActor*) clone);
+#line 177 "expose-manager.vala"
 					unity_expose_clone_set_hovered_opacity (clone, self->priv->_hovered_opacity);
+#line 178 "expose-manager.vala"
 					unity_expose_clone_set_unhovered_opacity (clone, self->priv->_unhovered_opacity);
+#line 179 "expose-manager.vala"
 					clutter_actor_set_opacity ((ClutterActor*) clone, self->priv->_unhovered_opacity);
+#line 180 "expose-manager.vala"
 					unity_expose_clone_set_darken (clone, self->priv->_darken);
+#line 182 "expose-manager.vala"
 					g_signal_connect_object ((ClutterActor*) clone, "enter-event", (GCallback) __lambda4__clutter_actor_enter_event, self, 0);
+#line 191 "expose-manager.vala"
 					g_signal_connect_object ((ClutterActor*) clone, "leave-event", (GCallback) __lambda5__clutter_actor_leave_event, self, 0);
+#line 779 "expose-manager.c"
 					_g_object_unref0 (clone);
 				}
+#line 201 "expose-manager.vala"
 				if (mutter_window_get_window_type (w) == META_COMP_WINDOW_DESKTOP) {
+#line 784 "expose-manager.c"
 					_g_object_unref0 (w);
+#line 202 "expose-manager.vala"
 					continue;
+#line 788 "expose-manager.c"
 				}
+#line 204 "expose-manager.vala"
 				clutter_actor_set_reactive ((_tmp3_ = w, CLUTTER_IS_ACTOR (_tmp3_) ? ((ClutterActor*) _tmp3_) : NULL), FALSE);
+#line 205 "expose-manager.vala"
 				clutter_actor_set_opacity ((_tmp4_ = w, CLUTTER_IS_ACTOR (_tmp4_) ? ((ClutterActor*) _tmp4_) : NULL), (guint8) 0);
+#line 794 "expose-manager.c"
 				_g_object_unref0 (w);
 			}
 		}
 	}
+#line 207 "expose-manager.vala"
 	self->priv->coverflow_index = (guint) 0;
+#line 209 "expose-manager.vala"
 	if (self->priv->_coverflow) {
+#line 210 "expose-manager.vala"
 		unity_expose_manager_position_windows_coverflow (self, self->priv->exposed_windows, (ClutterActor*) ((UnityExposeClone*) g_list_nth_data (self->priv->exposed_windows, self->priv->coverflow_index)));
+#line 805 "expose-manager.c"
 	} else {
+#line 212 "expose-manager.vala"
 		unity_expose_manager_position_windows_on_grid (self, self->priv->exposed_windows);
+#line 809 "expose-manager.c"
 	}
+#line 214 "expose-manager.vala"
 	unity_expose_manager_set_expose_showing (self, TRUE);
+#line 216 "expose-manager.vala"
 	unity_shell_add_fullscreen_request ((UnityShell*) self->priv->owner, (GObject*) self);
+#line 217 "expose-manager.vala"
 	g_signal_connect_object ((ClutterActor*) self->priv->stage, "captured-event", (GCallback) _unity_expose_manager_on_stage_captured_event_clutter_actor_captured_event, self, 0);
+#line 817 "expose-manager.c"
 	_g_object_unref0 (controller);
 	_g_object_unref0 (window_group);
 }
 
 
+#line 220 "expose-manager.vala"
 void unity_expose_manager_end_expose (UnityExposeManager* self) {
+#line 825 "expose-manager.c"
 	UnityLauncherQuicklistController* controller;
 	GList* mutter_windows;
 	gboolean _tmp1_ = FALSE;
 	guint _tmp4_;
+#line 220 "expose-manager.vala"
 	g_return_if_fail (self != NULL);
+#line 222 "expose-manager.vala"
 	controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
+#line 223 "expose-manager.vala"
 	if (unity_launcher_quicklist_controller_menu_is_open (controller)) {
+#line 836 "expose-manager.c"
 		guint _tmp0_;
+#line 225 "expose-manager.vala"
 		g_signal_parse_name ("destroy", CLUTTER_TYPE_ACTOR, &_tmp0_, NULL, FALSE);
+#line 225 "expose-manager.vala"
 		g_signal_handlers_disconnect_matched ((ClutterActor*) controller->menu, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_expose_manager_end_expose_clutter_actor_destroy, self);
+#line 226 "expose-manager.vala"
 		unity_launcher_quicklist_controller_close_menu (controller);
+#line 844 "expose-manager.c"
 	}
+#line 229 "expose-manager.vala"
 	mutter_windows = mutter_plugin_get_windows (unity_plugin_get_plugin (self->priv->owner));
+#line 848 "expose-manager.c"
 	{
 		GList* window_collection;
 		GList* window_it;
+#line 230 "expose-manager.vala"
 		window_collection = mutter_windows;
+#line 854 "expose-manager.c"
 		for (window_it = window_collection; window_it != NULL; window_it = window_it->next) {
 			MutterWindow* window;
+#line 230 "expose-manager.vala"
 			window = _g_object_ref0 ((MutterWindow*) window_it->data);
+#line 859 "expose-manager.c"
 			{
 				gboolean exposed;
+#line 232 "expose-manager.vala"
 				exposed = FALSE;
+#line 864 "expose-manager.c"
 				{
 					GList* clone_collection;
 					GList* clone_it;
+#line 233 "expose-manager.vala"
 					clone_collection = self->priv->exposed_windows;
+#line 870 "expose-manager.c"
 					for (clone_it = clone_collection; clone_it != NULL; clone_it = clone_it->next) {
 						UnityExposeClone* clone;
+#line 233 "expose-manager.vala"
 						clone = _g_object_ref0 ((UnityExposeClone*) clone_it->data);
+#line 875 "expose-manager.c"
 						{
+#line 235 "expose-manager.vala"
 							if (unity_expose_clone_get_source (clone) == window) {
+#line 237 "expose-manager.vala"
 								exposed = TRUE;
+#line 881 "expose-manager.c"
 								_g_object_unref0 (clone);
+#line 238 "expose-manager.vala"
 								break;
+#line 885 "expose-manager.c"
 							}
 							_g_object_unref0 (clone);
 						}
 					}
 				}
+#line 242 "expose-manager.vala"
 				if (!exposed) {
+#line 243 "expose-manager.vala"
 					clutter_actor_animate ((ClutterActor*) window, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "opacity", 255, NULL);
+#line 895 "expose-manager.c"
 				}
+#line 244 "expose-manager.vala"
 				clutter_actor_set_reactive ((ClutterActor*) window, TRUE);
+#line 899 "expose-manager.c"
 				_g_object_unref0 (window);
 			}
 		}
@@ -700,45 +903,73 @@ void unity_expose_manager_end_expose (UnityExposeManager* self) {
 	{
 		GList* actor_collection;
 		GList* actor_it;
+#line 247 "expose-manager.vala"
 		actor_collection = self->priv->exposed_windows;
+#line 909 "expose-manager.c"
 		for (actor_it = actor_collection; actor_it != NULL; actor_it = actor_it->next) {
 			ClutterActor* actor;
+#line 247 "expose-manager.vala"
 			actor = _g_object_ref0 ((ClutterActor*) ((UnityExposeClone*) actor_it->data));
+#line 914 "expose-manager.c"
 			{
+#line 248 "expose-manager.vala"
 				unity_expose_manager_restore_window_position (self, actor);
+#line 918 "expose-manager.c"
 				_g_object_unref0 (actor);
 			}
 		}
 	}
+#line 250 "expose-manager.vala"
 	if (UNITY_IS_EXPOSE_CLONE (self->priv->last_selected_clone)) {
+#line 251 "expose-manager.vala"
 		_tmp1_ = MUTTER_IS_WINDOW (unity_expose_clone_get_source (self->priv->last_selected_clone));
+#line 927 "expose-manager.c"
 	} else {
+#line 250 "expose-manager.vala"
 		_tmp1_ = FALSE;
+#line 931 "expose-manager.c"
 	}
+#line 250 "expose-manager.vala"
 	if (_tmp1_) {
+#line 935 "expose-manager.c"
 		UnityExposeClone* clone;
 		guint32 time_ = 0U;
 		MutterWindow* _tmp2_;
 		MetaWindow* meta;
 		UnityExposeClone* _tmp3_;
+#line 253 "expose-manager.vala"
 		clone = _g_object_ref0 (self->priv->last_selected_clone);
+#line 256 "expose-manager.vala"
 		clutter_actor_raise_top ((ClutterActor*) clone);
+#line 257 "expose-manager.vala"
 		meta = mutter_window_get_meta_window ((_tmp2_ = unity_expose_clone_get_source (clone), MUTTER_IS_WINDOW (_tmp2_) ? ((MutterWindow*) _tmp2_) : NULL));
+#line 259 "expose-manager.vala"
 		time_ = meta_display_get_current_time (meta_window_get_display (meta));
+#line 260 "expose-manager.vala"
 		meta_workspace_activate (meta_window_get_workspace (meta), time_);
+#line 261 "expose-manager.vala"
 		meta_window_activate (meta, time_);
+#line 263 "expose-manager.vala"
 		self->priv->last_selected_clone = (_tmp3_ = NULL, _g_object_unref0 (self->priv->last_selected_clone), _tmp3_);
+#line 955 "expose-manager.c"
 		_g_object_unref0 (clone);
 	}
+#line 266 "expose-manager.vala"
 	unity_expose_manager_set_expose_showing (self, FALSE);
+#line 267 "expose-manager.vala"
 	unity_shell_remove_fullscreen_request ((UnityShell*) self->priv->owner, (GObject*) self);
+#line 268 "expose-manager.vala"
 	g_signal_parse_name ("captured-event", CLUTTER_TYPE_ACTOR, &_tmp4_, NULL, FALSE);
+#line 268 "expose-manager.vala"
 	g_signal_handlers_disconnect_matched ((ClutterActor*) self->priv->stage, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp4_, 0, NULL, (GCallback) _unity_expose_manager_on_stage_captured_event_clutter_actor_captured_event, self);
+#line 966 "expose-manager.c"
 	_g_object_unref0 (controller);
 }
 
 
+#line 271 "expose-manager.vala"
 static void unity_expose_manager_position_windows_coverflow (UnityExposeManager* self, GList* windows, ClutterActor* active) {
+#line 973 "expose-manager.c"
 	ClutterActor* last;
 	gint middle_size;
 	gint width;
@@ -750,76 +981,138 @@ static void unity_expose_manager_position_windows_coverflow (UnityExposeManager*
 	ClutterActor* _tmp0_;
 	gint current_x;
 	ClutterActor* _tmp3_;
+#line 271 "expose-manager.vala"
 	g_return_if_fail (self != NULL);
+#line 271 "expose-manager.vala"
 	g_return_if_fail (active != NULL);
+#line 273 "expose-manager.vala"
 	last = NULL;
+#line 275 "expose-manager.vala"
 	middle_size = (gint) (clutter_actor_get_width ((ClutterActor*) self->priv->stage) * 0.8f);
+#line 276 "expose-manager.vala"
 	width = (((gint) clutter_actor_get_width ((ClutterActor*) self->priv->stage)) - self->priv->_left_buffer) - self->priv->_right_buffer;
+#line 277 "expose-manager.vala"
 	slice_width = width / 10;
+#line 279 "expose-manager.vala"
 	middle_y = ((gint) clutter_actor_get_height ((ClutterActor*) self->priv->stage)) / 2;
+#line 280 "expose-manager.vala"
 	middle_x = self->priv->_left_buffer + (width / 2);
+#line 282 "expose-manager.vala"
 	middle_index = g_list_index (windows, active);
+#line 284 "expose-manager.vala"
 	scale = MIN (1.f, (clutter_actor_get_height ((ClutterActor*) self->priv->stage) / 2) / MAX (clutter_actor_get_height (active), clutter_actor_get_width (active)));
+#line 285 "expose-manager.vala"
 	scale = 1.f;
+#line 287 "expose-manager.vala"
 	clutter_actor_set_anchor_point_from_gravity (active, CLUTTER_GRAVITY_CENTER);
+#line 288 "expose-manager.vala"
 	clutter_actor_animate (active, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "x", (float) middle_x, "y", (float) middle_y, "depth", clutter_actor_get_width ((ClutterActor*) self->priv->stage) * (-0.7), "scale-x", scale, "scale-y", scale, "rotation-angle-y", 0.f, NULL);
+#line 295 "expose-manager.vala"
 	clutter_actor_raise_top (active);
+#line 297 "expose-manager.vala"
 	last = (_tmp0_ = _g_object_ref0 (active), _g_object_unref0 (last), _tmp0_);
+#line 299 "expose-manager.vala"
 	current_x = middle_x - middle_size;
+#line 1017 "expose-manager.c"
 	{
 		gint i;
+#line 300 "expose-manager.vala"
 		i = middle_index - 1;
+#line 1022 "expose-manager.c"
 		{
 			gboolean _tmp1_;
+#line 300 "expose-manager.vala"
 			_tmp1_ = TRUE;
+#line 300 "expose-manager.vala"
 			while (TRUE) {
+#line 1029 "expose-manager.c"
 				ClutterActor* actor;
 				ClutterActor* _tmp2_;
+#line 300 "expose-manager.vala"
 				if (!_tmp1_) {
+#line 300 "expose-manager.vala"
 					i--;
+#line 1036 "expose-manager.c"
 				}
+#line 300 "expose-manager.vala"
 				_tmp1_ = FALSE;
+#line 300 "expose-manager.vala"
 				if (!(i >= 0)) {
+#line 300 "expose-manager.vala"
 					break;
+#line 1044 "expose-manager.c"
 				}
+#line 302 "expose-manager.vala"
 				actor = _g_object_ref0 ((ClutterActor*) g_list_nth_data (windows, (guint) i));
+#line 303 "expose-manager.vala"
 				clutter_actor_set_anchor_point_from_gravity (actor, CLUTTER_GRAVITY_CENTER);
+#line 304 "expose-manager.vala"
 				clutter_actor_lower (actor, last);
+#line 306 "expose-manager.vala"
 				scale = MIN (1.f, (clutter_actor_get_height ((ClutterActor*) self->priv->stage) / 2) / MAX (clutter_actor_get_height (actor), clutter_actor_get_width (actor)));
+#line 307 "expose-manager.vala"
 				scale = 1.f;
+#line 309 "expose-manager.vala"
 				clutter_actor_animate (actor, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "x", (float) current_x, "y", (float) middle_y, "depth", clutter_actor_get_width ((ClutterActor*) self->priv->stage) * (-0.7), "scale-x", scale, "scale-y", scale, "rotation-angle-y", 60.f, NULL);
+#line 316 "expose-manager.vala"
 				current_x = current_x - slice_width;
+#line 317 "expose-manager.vala"
 				last = (_tmp2_ = _g_object_ref0 (actor), _g_object_unref0 (last), _tmp2_);
+#line 1062 "expose-manager.c"
 				_g_object_unref0 (actor);
 			}
 		}
 	}
+#line 320 "expose-manager.vala"
 	last = (_tmp3_ = _g_object_ref0 (active), _g_object_unref0 (last), _tmp3_);
+#line 322 "expose-manager.vala"
 	current_x = middle_x + middle_size;
+#line 1071 "expose-manager.c"
 	{
 		gint i;
+#line 323 "expose-manager.vala"
 		i = middle_index + 1;
+#line 1076 "expose-manager.c"
 		{
 			gboolean _tmp4_;
+#line 323 "expose-manager.vala"
 			_tmp4_ = TRUE;
+#line 323 "expose-manager.vala"
 			while (TRUE) {
+#line 1083 "expose-manager.c"
 				ClutterActor* actor;
 				ClutterActor* _tmp5_;
+#line 323 "expose-manager.vala"
 				if (!_tmp4_) {
+#line 323 "expose-manager.vala"
 					i++;
+#line 1090 "expose-manager.c"
 				}
+#line 323 "expose-manager.vala"
 				_tmp4_ = FALSE;
+#line 323 "expose-manager.vala"
 				if (!(i < g_list_length (windows))) {
+#line 323 "expose-manager.vala"
 					break;
+#line 1098 "expose-manager.c"
 				}
+#line 325 "expose-manager.vala"
 				actor = _g_object_ref0 ((ClutterActor*) g_list_nth_data (windows, (guint) i));
+#line 326 "expose-manager.vala"
 				clutter_actor_set_anchor_point_from_gravity (actor, CLUTTER_GRAVITY_CENTER);
+#line 327 "expose-manager.vala"
 				clutter_actor_lower (actor, last);
+#line 329 "expose-manager.vala"
 				scale = MIN (1.f, (clutter_actor_get_height ((ClutterActor*) self->priv->stage) / 2) / MAX (clutter_actor_get_height (actor), clutter_actor_get_width (actor)));
+#line 330 "expose-manager.vala"
 				scale = 1.f;
+#line 332 "expose-manager.vala"
 				clutter_actor_animate (actor, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "x", (float) current_x, "y", (float) middle_y, "depth", clutter_actor_get_width ((ClutterActor*) self->priv->stage) * (-0.7), "scale-x", scale, "scale-y", scale, "rotation-angle-y", -60.f, NULL);
+#line 339 "expose-manager.vala"
 				current_x = current_x + slice_width;
+#line 340 "expose-manager.vala"
 				last = (_tmp5_ = _g_object_ref0 (actor), _g_object_unref0 (last), _tmp5_);
+#line 1116 "expose-manager.c"
 				_g_object_unref0 (actor);
 			}
 		}
@@ -828,120 +1121,207 @@ static void unity_expose_manager_position_windows_coverflow (UnityExposeManager*
 }
 
 
+#line 344 "expose-manager.vala"
 static gint unity_expose_manager_direct_comparison (UnityExposeManager* self, void* a, void* b) {
+#line 1127 "expose-manager.c"
 	gint result = 0;
+#line 344 "expose-manager.vala"
 	g_return_val_if_fail (self != NULL, 0);
+#line 346 "expose-manager.vala"
 	if (a > b) {
+#line 1133 "expose-manager.c"
 		result = 1;
+#line 347 "expose-manager.vala"
 		return result;
+#line 1137 "expose-manager.c"
 	} else {
+#line 348 "expose-manager.vala"
 		if (a < b) {
+#line 1141 "expose-manager.c"
 			result = -1;
+#line 349 "expose-manager.vala"
 			return result;
+#line 1145 "expose-manager.c"
 		}
 	}
 	result = 0;
+#line 350 "expose-manager.vala"
 	return result;
+#line 1151 "expose-manager.c"
 }
 
 
+#line 353 "expose-manager.vala"
 static void unity_expose_manager_position_windows_on_grid (UnityExposeManager* self, GList* _windows) {
+#line 1157 "expose-manager.c"
 	GList* windows;
 	gint count;
 	gint cols;
 	gint rows;
 	gint boxWidth;
 	gint boxHeight;
+#line 353 "expose-manager.vala"
 	g_return_if_fail (self != NULL);
+#line 355 "expose-manager.vala"
 	windows = g_list_copy (_windows);
+#line 356 "expose-manager.vala"
 	windows = g_list_sort (windows, (GCompareFunc) unity_expose_manager_direct_comparison);
+#line 358 "expose-manager.vala"
 	count = (gint) g_list_length (windows);
+#line 359 "expose-manager.vala"
 	cols = (gint) ceil (sqrt ((double) count));
+#line 360 "expose-manager.vala"
 	rows = 1;
+#line 362 "expose-manager.vala"
 	while (TRUE) {
+#line 362 "expose-manager.vala"
 		if (!((cols * rows) < count)) {
+#line 362 "expose-manager.vala"
 			break;
+#line 1182 "expose-manager.c"
 		}
+#line 363 "expose-manager.vala"
 		rows++;
+#line 1186 "expose-manager.c"
 	}
+#line 365 "expose-manager.vala"
 	boxWidth = (gint) (((clutter_actor_get_width ((ClutterActor*) self->priv->stage) - self->priv->_left_buffer) - self->priv->_right_buffer) / cols);
+#line 366 "expose-manager.vala"
 	boxHeight = (gint) (((clutter_actor_get_height ((ClutterActor*) self->priv->stage) - self->priv->_top_buffer) - self->priv->_bottom_buffer) / rows);
+#line 1192 "expose-manager.c"
 	{
 		gint row;
+#line 368 "expose-manager.vala"
 		row = 0;
+#line 1197 "expose-manager.c"
 		{
 			gboolean _tmp0_;
+#line 368 "expose-manager.vala"
 			_tmp0_ = TRUE;
+#line 368 "expose-manager.vala"
 			while (TRUE) {
+#line 368 "expose-manager.vala"
 				if (!_tmp0_) {
+#line 368 "expose-manager.vala"
 					row++;
+#line 1208 "expose-manager.c"
 				}
+#line 368 "expose-manager.vala"
 				_tmp0_ = FALSE;
+#line 368 "expose-manager.vala"
 				if (!(row < rows)) {
+#line 368 "expose-manager.vala"
 					break;
+#line 1216 "expose-manager.c"
 				}
+#line 370 "expose-manager.vala"
 				if (row == (rows - 1)) {
+#line 373 "expose-manager.vala"
 					boxWidth = (gint) (((clutter_actor_get_width ((ClutterActor*) self->priv->stage) - self->priv->_left_buffer) - self->priv->_right_buffer) / g_list_length (windows));
+#line 1222 "expose-manager.c"
 				}
 				{
 					gint col;
+#line 376 "expose-manager.vala"
 					col = 0;
+#line 1228 "expose-manager.c"
 					{
 						gboolean _tmp1_;
+#line 376 "expose-manager.vala"
 						_tmp1_ = TRUE;
+#line 376 "expose-manager.vala"
 						while (TRUE) {
+#line 1235 "expose-manager.c"
 							gint centerX;
 							gint centerY;
 							ClutterActor* window;
 							gint windowX;
 							gint windowY;
 							float scale;
+#line 376 "expose-manager.vala"
 							if (!_tmp1_) {
+#line 376 "expose-manager.vala"
 								col++;
+#line 1246 "expose-manager.c"
 							}
+#line 376 "expose-manager.vala"
 							_tmp1_ = FALSE;
+#line 376 "expose-manager.vala"
 							if (!(col < cols)) {
+#line 376 "expose-manager.vala"
 								break;
+#line 1254 "expose-manager.c"
 							}
+#line 378 "expose-manager.vala"
 							if (g_list_length (windows) == 0) {
+#line 1258 "expose-manager.c"
 								__g_list_free_g_object_unref0 (windows);
+#line 379 "expose-manager.vala"
 								return;
+#line 1262 "expose-manager.c"
 							}
+#line 381 "expose-manager.vala"
 							centerX = ((boxWidth / 2) + (boxWidth * col)) + self->priv->_left_buffer;
+#line 382 "expose-manager.vala"
 							centerY = ((boxHeight / 2) + (boxHeight * row)) + self->priv->_top_buffer;
+#line 384 "expose-manager.vala"
 							window = NULL;
+#line 1270 "expose-manager.c"
 							{
 								GList* actor_collection;
 								GList* actor_it;
+#line 386 "expose-manager.vala"
 								actor_collection = windows;
+#line 1276 "expose-manager.c"
 								for (actor_it = actor_collection; actor_it != NULL; actor_it = actor_it->next) {
 									ClutterActor* actor;
+#line 386 "expose-manager.vala"
 									actor = _g_object_ref0 ((ClutterActor*) actor_it->data);
+#line 1281 "expose-manager.c"
 									{
 										double window_distance;
 										double actor_distance;
+#line 388 "expose-manager.vala"
 										if (window == NULL) {
+#line 1287 "expose-manager.c"
 											ClutterActor* _tmp2_;
+#line 390 "expose-manager.vala"
 											window = (_tmp2_ = _g_object_ref0 (actor), _g_object_unref0 (window), _tmp2_);
+#line 1291 "expose-manager.c"
 											_g_object_unref0 (actor);
+#line 391 "expose-manager.vala"
 											continue;
+#line 1295 "expose-manager.c"
 										}
+#line 394 "expose-manager.vala"
 										window_distance = sqrt (fabs ((double) (centerX - (clutter_actor_get_x (window) + (clutter_actor_get_width (window) / 2)))) + fabs ((double) (centerY - (clutter_actor_get_y (window) + (clutter_actor_get_height (window) / 2)))));
+#line 398 "expose-manager.vala"
 										actor_distance = sqrt (fabs ((double) (centerX - (clutter_actor_get_x (actor) + (clutter_actor_get_width (actor) / 2)))) + fabs ((double) (centerY - (clutter_actor_get_y (actor) + (clutter_actor_get_height (actor) / 2)))));
+#line 403 "expose-manager.vala"
 										if (actor_distance < window_distance) {
+#line 1303 "expose-manager.c"
 											ClutterActor* _tmp3_;
+#line 404 "expose-manager.vala"
 											window = (_tmp3_ = _g_object_ref0 (actor), _g_object_unref0 (window), _tmp3_);
+#line 1307 "expose-manager.c"
 										}
 										_g_object_unref0 (actor);
 									}
 								}
 							}
+#line 407 "expose-manager.vala"
 							windows = g_list_remove (windows, window);
+#line 409 "expose-manager.vala"
 							windowX = centerX - (((gint) clutter_actor_get_width (window)) / 2);
+#line 410 "expose-manager.vala"
 							windowY = centerY - (((gint) clutter_actor_get_height (window)) / 2);
+#line 412 "expose-manager.vala"
 							scale = MIN (MIN ((float) 1, (boxWidth - 20) / clutter_actor_get_width (window)), MIN ((float) 1, (boxHeight - 20) / clutter_actor_get_height (window)));
+#line 414 "expose-manager.vala"
 							g_object_set ((GObject*) window, "scale-gravity", CLUTTER_GRAVITY_CENTER, NULL);
+#line 415 "expose-manager.vala"
 							clutter_actor_animate (window, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "x", (float) windowX, "y", (float) windowY, "scale-x", scale, "scale-y", scale, NULL);
+#line 1325 "expose-manager.c"
 							_g_object_unref0 (window);
 						}
 					}
@@ -953,15 +1333,22 @@ static void unity_expose_manager_position_windows_on_grid (UnityExposeManager* s
 }
 
 
+#line 447 "expose-manager.vala"
 static void _lambda3_ (Block1Data* _data1_) {
+#line 1339 "expose-manager.c"
 	UnityExposeManager * self;
 	self = _data1_->self;
+#line 448 "expose-manager.vala"
 	clutter_actor_destroy (_data1_->actor);
+#line 449 "expose-manager.vala"
 	clutter_actor_set_opacity (_data1_->window, (guint8) 255);
+#line 1346 "expose-manager.c"
 }
 
 
+#line 447 "expose-manager.vala"
 static void __lambda3__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+#line 1352 "expose-manager.c"
 	_lambda3_ (self);
 }
 
@@ -982,170 +1369,298 @@ static void block1_data_unref (Block1Data* _data1_) {
 }
 
 
+#line 424 "expose-manager.vala"
 static void unity_expose_manager_restore_window_position (UnityExposeManager* self, ClutterActor* actor) {
+#line 1375 "expose-manager.c"
 	Block1Data* _data1_;
 	ClutterActor* _tmp0_;
 	guint8 opacity;
 	gboolean _tmp1_ = FALSE;
 	ClutterActor* _tmp2_;
 	ClutterAnimation* anim;
+#line 424 "expose-manager.vala"
 	g_return_if_fail (self != NULL);
+#line 424 "expose-manager.vala"
 	g_return_if_fail (actor != NULL);
+#line 1386 "expose-manager.c"
 	_data1_ = g_slice_new0 (Block1Data);
 	_data1_->_ref_count_ = 1;
 	_data1_->self = g_object_ref (self);
 	_data1_->actor = _g_object_ref0 (actor);
+#line 426 "expose-manager.vala"
 	if (!UNITY_IS_EXPOSE_CLONE (_data1_->actor)) {
+#line 1393 "expose-manager.c"
 		block1_data_unref (_data1_);
+#line 427 "expose-manager.vala"
 		return;
+#line 1397 "expose-manager.c"
 	}
+#line 429 "expose-manager.vala"
 	clutter_actor_set_anchor_point_from_gravity (_data1_->actor, CLUTTER_GRAVITY_NORTH_WEST);
+#line 1401 "expose-manager.c"
 	_data1_->window = _g_object_ref0 ((ClutterActor*) unity_expose_clone_get_source ((_tmp0_ = _data1_->actor, UNITY_IS_EXPOSE_CLONE (_tmp0_) ? ((UnityExposeClone*) _tmp0_) : NULL)));
+#line 432 "expose-manager.vala"
 	opacity = (guint8) 0;
+#line 433 "expose-manager.vala"
 	if (mutter_window_showing_on_its_workspace ((_tmp2_ = _data1_->window, MUTTER_IS_WINDOW (_tmp2_) ? ((MutterWindow*) _tmp2_) : NULL))) {
+#line 1407 "expose-manager.c"
 		ClutterActor* _tmp3_;
+#line 434 "expose-manager.vala"
 		_tmp1_ = mutter_window_get_workspace ((_tmp3_ = _data1_->window, MUTTER_IS_WINDOW (_tmp3_) ? ((MutterWindow*) _tmp3_) : NULL)) == meta_screen_get_active_workspace_index (mutter_plugin_get_screen (unity_plugin_get_plugin (self->priv->owner)));
+#line 1411 "expose-manager.c"
 	} else {
+#line 433 "expose-manager.vala"
 		_tmp1_ = FALSE;
+#line 1415 "expose-manager.c"
 	}
+#line 433 "expose-manager.vala"
 	if (_tmp1_) {
+#line 435 "expose-manager.vala"
 		opacity = (guint8) 255;
+#line 1421 "expose-manager.c"
 	}
+#line 437 "expose-manager.vala"
 	g_object_set ((GObject*) _data1_->actor, "scale-gravity", CLUTTER_GRAVITY_CENTER, NULL);
+#line 438 "expose-manager.vala"
 	anim = _g_object_ref0 (clutter_actor_animate (_data1_->actor, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "scale-x", 1.f, "scale-y", 1.f, "opacity", opacity, "x", clutter_actor_get_x (_data1_->window), "y", clutter_actor_get_y (_data1_->window), NULL));
+#line 445 "expose-manager.vala"
 	clutter_actor_set_opacity (_data1_->window, (guint8) 0);
+#line 447 "expose-manager.vala"
 	g_signal_connect_data (anim, "completed", (GCallback) __lambda3__clutter_animation_completed, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
+#line 1431 "expose-manager.c"
 	_g_object_unref0 (anim);
 	block1_data_unref (_data1_);
 }
 
 
+#line 453 "expose-manager.vala"
 static void unity_expose_manager_handle_event_coverflow (UnityExposeManager* self, ClutterEvent* event) {
+#line 453 "expose-manager.vala"
 	g_return_if_fail (self != NULL);
+#line 455 "expose-manager.vala"
 	if ((*event).type == CLUTTER_KEY_RELEASE) {
+#line 1443 "expose-manager.c"
 		guint16 keycode;
 		gboolean _tmp0_ = FALSE;
+#line 457 "expose-manager.vala"
 		keycode = clutter_event_get_key_code (event);
+#line 459 "expose-manager.vala"
 		if (keycode == 113) {
+#line 459 "expose-manager.vala"
 			_tmp0_ = self->priv->coverflow_index > 0;
+#line 1452 "expose-manager.c"
 		} else {
+#line 459 "expose-manager.vala"
 			_tmp0_ = FALSE;
+#line 1456 "expose-manager.c"
 		}
+#line 459 "expose-manager.vala"
 		if (_tmp0_) {
+#line 461 "expose-manager.vala"
 			self->priv->coverflow_index--;
+#line 1462 "expose-manager.c"
 		} else {
 			gboolean _tmp1_ = FALSE;
+#line 463 "expose-manager.vala"
 			if (keycode == 114) {
+#line 463 "expose-manager.vala"
 				_tmp1_ = self->priv->coverflow_index < (g_list_length (self->priv->exposed_windows) - 1);
+#line 1469 "expose-manager.c"
 			} else {
+#line 463 "expose-manager.vala"
 				_tmp1_ = FALSE;
+#line 1473 "expose-manager.c"
 			}
+#line 463 "expose-manager.vala"
 			if (_tmp1_) {
+#line 465 "expose-manager.vala"
 				self->priv->coverflow_index++;
+#line 1479 "expose-manager.c"
 			} else {
+#line 467 "expose-manager.vala"
 				if (keycode == 36) {
+#line 1483 "expose-manager.c"
 					UnityExposeClone* clone;
 					MutterWindow* _tmp2_;
 					MetaWindow* meta;
+#line 469 "expose-manager.vala"
 					clone = _g_object_ref0 ((UnityExposeClone*) g_list_nth_data (self->priv->exposed_windows, self->priv->coverflow_index));
+#line 470 "expose-manager.vala"
 					clutter_actor_raise_top ((ClutterActor*) clone);
+#line 471 "expose-manager.vala"
 					meta = mutter_window_get_meta_window ((_tmp2_ = unity_expose_clone_get_source (clone), MUTTER_IS_WINDOW (_tmp2_) ? ((MutterWindow*) _tmp2_) : NULL));
+#line 472 "expose-manager.vala"
 					meta_workspace_activate (meta_window_get_workspace (meta), clutter_event_get_time (event));
+#line 473 "expose-manager.vala"
 					meta_window_activate (meta, clutter_event_get_time (event));
+#line 474 "expose-manager.vala"
 					unity_expose_manager_end_expose (self);
+#line 1499 "expose-manager.c"
 					_g_object_unref0 (clone);
 				}
 			}
 		}
+#line 477 "expose-manager.vala"
 		unity_expose_manager_position_windows_coverflow (self, self->priv->exposed_windows, (ClutterActor*) ((UnityExposeClone*) g_list_nth_data (self->priv->exposed_windows, self->priv->coverflow_index)));
+#line 1506 "expose-manager.c"
 	}
 }
 
 
+#line 481 "expose-manager.vala"
 static void unity_expose_manager_handle_event_expose (UnityExposeManager* self, ClutterEvent* event, ClutterActor* actor) {
+#line 1513 "expose-manager.c"
 	gboolean _tmp0_ = FALSE;
+#line 481 "expose-manager.vala"
 	g_return_if_fail (self != NULL);
+#line 481 "expose-manager.vala"
 	g_return_if_fail (actor != NULL);
+#line 483 "expose-manager.vala"
 	if ((*event).type == CLUTTER_BUTTON_RELEASE) {
+#line 483 "expose-manager.vala"
 		_tmp0_ = clutter_event_get_button (event) == 1;
+#line 1523 "expose-manager.c"
 	} else {
+#line 483 "expose-manager.vala"
 		_tmp0_ = FALSE;
+#line 1527 "expose-manager.c"
 	}
+#line 483 "expose-manager.vala"
 	if (_tmp0_) {
+#line 1531 "expose-manager.c"
 		ClutterActor* _tmp2_;
 		UnityExposeClone* clone;
 		gboolean _tmp3_ = FALSE;
 		guint _tmp5_;
+#line 485 "expose-manager.vala"
 		while (TRUE) {
+#line 1538 "expose-manager.c"
 			gboolean _tmp1_ = FALSE;
+#line 485 "expose-manager.vala"
 			if (clutter_actor_get_parent (actor) != NULL) {
+#line 485 "expose-manager.vala"
 				_tmp1_ = !UNITY_IS_EXPOSE_CLONE (actor);
+#line 1544 "expose-manager.c"
 			} else {
+#line 485 "expose-manager.vala"
 				_tmp1_ = FALSE;
+#line 1548 "expose-manager.c"
 			}
+#line 485 "expose-manager.vala"
 			if (!_tmp1_) {
+#line 485 "expose-manager.vala"
 				break;
+#line 1554 "expose-manager.c"
 			}
+#line 486 "expose-manager.vala"
 			actor = clutter_actor_get_parent (actor);
+#line 1558 "expose-manager.c"
 		}
+#line 488 "expose-manager.vala"
 		clone = _g_object_ref0 ((_tmp2_ = actor, UNITY_IS_EXPOSE_CLONE (_tmp2_) ? ((UnityExposeClone*) _tmp2_) : NULL));
+#line 489 "expose-manager.vala"
 		if (clone != NULL) {
+#line 489 "expose-manager.vala"
 			_tmp3_ = MUTTER_IS_WINDOW (unity_expose_clone_get_source (clone));
+#line 1566 "expose-manager.c"
 		} else {
+#line 489 "expose-manager.vala"
 			_tmp3_ = FALSE;
+#line 1570 "expose-manager.c"
 		}
+#line 489 "expose-manager.vala"
 		if (_tmp3_) {
+#line 1574 "expose-manager.c"
 			MutterWindow* _tmp4_;
 			MetaWindow* meta;
+#line 491 "expose-manager.vala"
 			clutter_actor_raise_top ((ClutterActor*) clone);
+#line 492 "expose-manager.vala"
 			meta = mutter_window_get_meta_window ((_tmp4_ = unity_expose_clone_get_source (clone), MUTTER_IS_WINDOW (_tmp4_) ? ((MutterWindow*) _tmp4_) : NULL));
+#line 493 "expose-manager.vala"
 			meta_workspace_activate (meta_window_get_workspace (meta), clutter_event_get_time (event));
+#line 494 "expose-manager.vala"
 			meta_window_activate (meta, clutter_event_get_time (event));
+#line 1585 "expose-manager.c"
 		}
+#line 496 "expose-manager.vala"
 		g_signal_parse_name ("captured-event", CLUTTER_TYPE_ACTOR, &_tmp5_, NULL, FALSE);
+#line 496 "expose-manager.vala"
 		g_signal_handlers_disconnect_matched ((ClutterActor*) self->priv->stage, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp5_, 0, NULL, (GCallback) _unity_expose_manager_on_stage_captured_event_clutter_actor_captured_event, self);
+#line 497 "expose-manager.vala"
 		unity_expose_manager_end_expose (self);
+#line 1593 "expose-manager.c"
 		_g_object_unref0 (clone);
 	}
 }
 
 
+#line 501 "expose-manager.vala"
 static void unity_expose_manager_pick_window (UnityExposeManager* self, ClutterEvent* event, ClutterActor* actor) {
+#line 1601 "expose-manager.c"
 	ClutterActor* _tmp1_;
 	UnityExposeClone* clone;
 	gboolean _tmp2_ = FALSE;
+#line 501 "expose-manager.vala"
 	g_return_if_fail (self != NULL);
+#line 501 "expose-manager.vala"
 	g_return_if_fail (actor != NULL);
+#line 503 "expose-manager.vala"
 	while (TRUE) {
+#line 1611 "expose-manager.c"
 		gboolean _tmp0_ = FALSE;
+#line 503 "expose-manager.vala"
 		if (clutter_actor_get_parent (actor) != NULL) {
+#line 503 "expose-manager.vala"
 			_tmp0_ = !UNITY_IS_EXPOSE_CLONE (actor);
+#line 1617 "expose-manager.c"
 		} else {
+#line 503 "expose-manager.vala"
 			_tmp0_ = FALSE;
+#line 1621 "expose-manager.c"
 		}
+#line 503 "expose-manager.vala"
 		if (!_tmp0_) {
+#line 503 "expose-manager.vala"
 			break;
+#line 1627 "expose-manager.c"
 		}
+#line 504 "expose-manager.vala"
 		actor = clutter_actor_get_parent (actor);
+#line 1631 "expose-manager.c"
 	}
+#line 506 "expose-manager.vala"
 	clone = _g_object_ref0 ((_tmp1_ = actor, UNITY_IS_EXPOSE_CLONE (_tmp1_) ? ((UnityExposeClone*) _tmp1_) : NULL));
+#line 507 "expose-manager.vala"
 	if (clone != NULL) {
+#line 507 "expose-manager.vala"
 		_tmp2_ = MUTTER_IS_WINDOW (unity_expose_clone_get_source (clone));
+#line 1639 "expose-manager.c"
 	} else {
+#line 507 "expose-manager.vala"
 		_tmp2_ = FALSE;
+#line 1643 "expose-manager.c"
 	}
+#line 507 "expose-manager.vala"
 	if (_tmp2_) {
+#line 1647 "expose-manager.c"
 		UnityExposeClone* _tmp3_;
+#line 509 "expose-manager.vala"
 		self->priv->last_selected_clone = (_tmp3_ = _g_object_ref0 (clone), _g_object_unref0 (self->priv->last_selected_clone), _tmp3_);
+#line 1651 "expose-manager.c"
 	} else {
 		UnityExposeClone* _tmp4_;
+#line 513 "expose-manager.vala"
 		self->priv->last_selected_clone = (_tmp4_ = NULL, _g_object_unref0 (self->priv->last_selected_clone), _tmp4_);
+#line 1656 "expose-manager.c"
 	}
 	_g_object_unref0 (clone);
 }
 
 
+#line 517 "expose-manager.vala"
 static gboolean unity_expose_manager_on_stage_captured_event (UnityExposeManager* self, ClutterEvent* event) {
+#line 1664 "expose-manager.c"
 	gboolean result = FALSE;
 	gboolean _tmp0_ = FALSE;
 	gboolean event_over_menu;
@@ -1154,64 +1669,118 @@ static gboolean unity_expose_manager_on_stage_captured_event (UnityExposeManager
 	ClutterActor* actor;
 	ClutterActor* menu;
 	gboolean _tmp4_ = FALSE;
+#line 517 "expose-manager.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 519 "expose-manager.vala"
 	if ((*event).type == CLUTTER_ENTER) {
+#line 519 "expose-manager.vala"
 		_tmp0_ = TRUE;
+#line 1679 "expose-manager.c"
 	} else {
+#line 519 "expose-manager.vala"
 		_tmp0_ = (*event).type == CLUTTER_LEAVE;
+#line 1683 "expose-manager.c"
 	}
+#line 519 "expose-manager.vala"
 	if (_tmp0_) {
+#line 1687 "expose-manager.c"
 		result = FALSE;
+#line 520 "expose-manager.vala"
 		return result;
+#line 1691 "expose-manager.c"
 	}
+#line 522 "expose-manager.vala"
 	event_over_menu = FALSE;
+#line 525 "expose-manager.vala"
 	clutter_event_get_coords (event, &x, &y);
+#line 527 "expose-manager.vala"
 	actor = clutter_stage_get_actor_at_pos (self->priv->stage, CLUTTER_PICK_REACTIVE, (gint) x, (gint) y);
+#line 529 "expose-manager.vala"
 	menu = NULL;
+#line 530 "expose-manager.vala"
 	if (unity_launcher_quicklist_controller_menu_is_open (unity_launcher_quicklist_controller_get_default ())) {
+#line 531 "expose-manager.vala"
 		menu = (ClutterActor*) unity_launcher_quicklist_controller_get_default ()->menu;
+#line 1705 "expose-manager.c"
 	}
+#line 532 "expose-manager.vala"
 	if (menu != NULL) {
+#line 1709 "expose-manager.c"
 		gboolean _tmp1_ = FALSE;
 		gboolean _tmp2_ = FALSE;
 		gboolean _tmp3_ = FALSE;
+#line 534 "expose-manager.vala"
 		if (x > clutter_actor_get_x (menu)) {
+#line 534 "expose-manager.vala"
 			_tmp3_ = x < (clutter_actor_get_x (menu) + clutter_actor_get_width (menu));
+#line 1717 "expose-manager.c"
 		} else {
+#line 534 "expose-manager.vala"
 			_tmp3_ = FALSE;
+#line 1721 "expose-manager.c"
 		}
+#line 534 "expose-manager.vala"
 		if (_tmp3_) {
+#line 534 "expose-manager.vala"
 			_tmp2_ = y > clutter_actor_get_y (menu);
+#line 1727 "expose-manager.c"
 		} else {
+#line 534 "expose-manager.vala"
 			_tmp2_ = FALSE;
+#line 1731 "expose-manager.c"
 		}
+#line 534 "expose-manager.vala"
 		if (_tmp2_) {
+#line 534 "expose-manager.vala"
 			_tmp1_ = y < (clutter_actor_get_y (menu) + clutter_actor_get_height (menu));
+#line 1737 "expose-manager.c"
 		} else {
+#line 534 "expose-manager.vala"
 			_tmp1_ = FALSE;
+#line 1741 "expose-manager.c"
 		}
+#line 534 "expose-manager.vala"
 		if (_tmp1_) {
+#line 535 "expose-manager.vala"
 			event_over_menu = TRUE;
+#line 1747 "expose-manager.c"
 		}
 	}
+#line 538 "expose-manager.vala"
 	if ((*event).type == CLUTTER_BUTTON_PRESS) {
+#line 538 "expose-manager.vala"
 		_tmp4_ = !event_over_menu;
+#line 1754 "expose-manager.c"
 	} else {
+#line 538 "expose-manager.vala"
 		_tmp4_ = FALSE;
+#line 1758 "expose-manager.c"
 	}
+#line 538 "expose-manager.vala"
 	if (_tmp4_) {
+#line 539 "expose-manager.vala"
 		unity_expose_manager_pick_window (self, event, actor);
+#line 1764 "expose-manager.c"
 	} else {
 		UnityExposeClone* _tmp5_;
+#line 541 "expose-manager.vala"
 		self->priv->last_selected_clone = (_tmp5_ = NULL, _g_object_unref0 (self->priv->last_selected_clone), _tmp5_);
+#line 1769 "expose-manager.c"
 	}
+#line 543 "expose-manager.vala"
 	if (self->priv->_coverflow) {
+#line 544 "expose-manager.vala"
 		unity_expose_manager_handle_event_coverflow (self, event);
+#line 1775 "expose-manager.c"
 	} else {
+#line 546 "expose-manager.vala"
 		unity_expose_manager_handle_event_expose (self, event, actor);
+#line 1779 "expose-manager.c"
 	}
 	result = !event_over_menu;
+#line 548 "expose-manager.vala"
 	return result;
+#line 1784 "expose-manager.c"
 }
 
 
@@ -1219,7 +1788,9 @@ gboolean unity_expose_manager_get_expose_showing (UnityExposeManager* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_expose_showing;
+#line 98 "expose-manager.vala"
 	return result;
+#line 1794 "expose-manager.c"
 }
 
 
@@ -1234,7 +1805,9 @@ gboolean unity_expose_manager_get_coverflow (UnityExposeManager* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_coverflow;
+#line 99 "expose-manager.vala"
 	return result;
+#line 1811 "expose-manager.c"
 }
 
 
@@ -1249,7 +1822,9 @@ gint unity_expose_manager_get_left_buffer (UnityExposeManager* self) {
 	gint result;
 	g_return_val_if_fail (self != NULL, 0);
 	result = self->priv->_left_buffer;
+#line 101 "expose-manager.vala"
 	return result;
+#line 1828 "expose-manager.c"
 }
 
 
@@ -1264,7 +1839,9 @@ gint unity_expose_manager_get_right_buffer (UnityExposeManager* self) {
 	gint result;
 	g_return_val_if_fail (self != NULL, 0);
 	result = self->priv->_right_buffer;
+#line 102 "expose-manager.vala"
 	return result;
+#line 1845 "expose-manager.c"
 }
 
 
@@ -1279,7 +1856,9 @@ gint unity_expose_manager_get_top_buffer (UnityExposeManager* self) {
 	gint result;
 	g_return_val_if_fail (self != NULL, 0);
 	result = self->priv->_top_buffer;
+#line 103 "expose-manager.vala"
 	return result;
+#line 1862 "expose-manager.c"
 }
 
 
@@ -1294,7 +1873,9 @@ gint unity_expose_manager_get_bottom_buffer (UnityExposeManager* self) {
 	gint result;
 	g_return_val_if_fail (self != NULL, 0);
 	result = self->priv->_bottom_buffer;
+#line 104 "expose-manager.vala"
 	return result;
+#line 1879 "expose-manager.c"
 }
 
 
@@ -1309,7 +1890,9 @@ guint8 unity_expose_manager_get_hovered_opacity (UnityExposeManager* self) {
 	guint8 result;
 	g_return_val_if_fail (self != NULL, 0U);
 	result = self->priv->_hovered_opacity;
+#line 106 "expose-manager.vala"
 	return result;
+#line 1896 "expose-manager.c"
 }
 
 
@@ -1324,7 +1907,9 @@ guint8 unity_expose_manager_get_unhovered_opacity (UnityExposeManager* self) {
 	guint8 result;
 	g_return_val_if_fail (self != NULL, 0U);
 	result = self->priv->_unhovered_opacity;
+#line 107 "expose-manager.vala"
 	return result;
+#line 1913 "expose-manager.c"
 }
 
 
@@ -1339,7 +1924,9 @@ guint8 unity_expose_manager_get_darken (UnityExposeManager* self) {
 	guint8 result;
 	g_return_val_if_fail (self != NULL, 0U);
 	result = self->priv->_darken;
+#line 109 "expose-manager.vala"
 	return result;
+#line 1930 "expose-manager.c"
 }
 
 

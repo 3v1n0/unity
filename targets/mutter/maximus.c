@@ -73,24 +73,36 @@ static void unity_maximus_finalize (GObject* obj);
 
 
 
+#line 48 "maximus.vala"
 UnityMaximus* unity_maximus_construct (GType object_type) {
+#line 79 "maximus.c"
 	UnityMaximus * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
+#line 48 "maximus.vala"
 UnityMaximus* unity_maximus_new (void) {
+#line 48 "maximus.vala"
 	return unity_maximus_construct (UNITY_TYPE_MAXIMUS);
+#line 90 "maximus.c"
 }
 
 
+#line 1048 "glib-2.0.vapi"
 static gboolean string_contains (const char* self, const char* needle) {
+#line 96 "maximus.c"
 	gboolean result = FALSE;
+#line 1048 "glib-2.0.vapi"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 1048 "glib-2.0.vapi"
 	g_return_val_if_fail (needle != NULL, FALSE);
+#line 102 "maximus.c"
 	result = strstr (self, needle) != NULL;
+#line 1049 "glib-2.0.vapi"
 	return result;
+#line 106 "maximus.c"
 }
 
 
@@ -99,99 +111,165 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
+#line 56 "maximus.vala"
 static gboolean unity_maximus_window_is_excluded (UnityMaximus* self, MutterWindow* window) {
+#line 117 "maximus.c"
 	gboolean result = FALSE;
 	MetaCompWindowType type;
 	MetaWindow* meta;
 	gboolean _tmp0_ = FALSE;
 	const char* res_class;
 	void* hint;
+#line 56 "maximus.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 56 "maximus.vala"
 	g_return_val_if_fail (window != NULL, FALSE);
+#line 58 "maximus.vala"
 	type = mutter_window_get_window_type (window);
+#line 60 "maximus.vala"
 	if (type != META_COMP_WINDOW_NORMAL) {
+#line 132 "maximus.c"
 		result = TRUE;
+#line 61 "maximus.vala"
 		return result;
+#line 136 "maximus.c"
 	}
+#line 63 "maximus.vala"
 	meta = mutter_window_get_meta_window (window);
+#line 65 "maximus.vala"
 	if (meta_window_is_maximized (meta)) {
+#line 65 "maximus.vala"
 		_tmp0_ = TRUE;
+#line 144 "maximus.c"
 	} else {
+#line 66 "maximus.vala"
 		_tmp0_ = !meta_window_allows_resize (meta);
+#line 148 "maximus.c"
 	}
+#line 65 "maximus.vala"
 	if (_tmp0_) {
+#line 152 "maximus.c"
 		result = TRUE;
+#line 67 "maximus.vala"
 		return result;
+#line 156 "maximus.c"
 	}
+#line 69 "maximus.vala"
 	res_class = meta_window_get_wm_class (meta);
+#line 160 "maximus.c"
 	{
 		char** s_collection;
 		int s_collection_length1;
 		int s_it;
+#line 70 "maximus.vala"
 		s_collection = unity_maximus_default_exclude_classes;
+#line 167 "maximus.c"
 		s_collection_length1 = unity_maximus_default_exclude_classes_length1;
 		for (s_it = 0; s_it < unity_maximus_default_exclude_classes_length1; s_it = s_it + 1) {
 			char* s;
 			s = g_strdup (s_collection[s_it]);
 			{
+#line 71 "maximus.vala"
 				if (string_contains (res_class, s)) {
+#line 175 "maximus.c"
 					result = TRUE;
 					_g_free0 (s);
+#line 72 "maximus.vala"
 					return result;
+#line 180 "maximus.c"
 				}
 				_g_free0 (s);
 			}
 		}
 	}
+#line 74 "maximus.vala"
 	hint = g_object_get_data ((GObject*) window, unity_maximus_user_unmaximize_hint);
+#line 75 "maximus.vala"
 	if (hint != NULL) {
+#line 190 "maximus.c"
 		result = TRUE;
+#line 76 "maximus.vala"
 		return result;
+#line 194 "maximus.c"
 	}
 	{
 		ClutterActor* stage;
 		gboolean _tmp1_ = FALSE;
 		gboolean _tmp2_ = FALSE;
 		gboolean _tmp3_ = FALSE;
+#line 79 "maximus.vala"
 		stage = _g_object_ref0 (clutter_stage_get_default ());
+#line 81 "maximus.vala"
 		if (clutter_actor_get_width ((ClutterActor*) window) < (clutter_actor_get_width (stage) * 0.6)) {
+#line 81 "maximus.vala"
 			_tmp3_ = TRUE;
+#line 207 "maximus.c"
 		} else {
+#line 82 "maximus.vala"
 			_tmp3_ = clutter_actor_get_height ((ClutterActor*) window) < (clutter_actor_get_height (stage) * 0.6);
+#line 211 "maximus.c"
 		}
+#line 81 "maximus.vala"
 		if (_tmp3_) {
+#line 81 "maximus.vala"
 			_tmp2_ = TRUE;
+#line 217 "maximus.c"
 		} else {
+#line 83 "maximus.vala"
 			_tmp2_ = (clutter_actor_get_width ((ClutterActor*) window) / clutter_actor_get_height ((ClutterActor*) window)) < 0.6;
+#line 221 "maximus.c"
 		}
+#line 81 "maximus.vala"
 		if (_tmp2_) {
+#line 81 "maximus.vala"
 			_tmp1_ = TRUE;
+#line 227 "maximus.c"
 		} else {
+#line 84 "maximus.vala"
 			_tmp1_ = (clutter_actor_get_width ((ClutterActor*) window) / clutter_actor_get_height ((ClutterActor*) window)) > 2.0;
+#line 231 "maximus.c"
 		}
+#line 81 "maximus.vala"
 		if (_tmp1_) {
+#line 235 "maximus.c"
 			result = TRUE;
 			_g_object_unref0 (stage);
+#line 86 "maximus.vala"
 			return result;
+#line 240 "maximus.c"
 		}
 		_g_object_unref0 (stage);
 	}
 	result = FALSE;
+#line 91 "maximus.vala"
 	return result;
+#line 247 "maximus.c"
 }
 
 
+#line 94 "maximus.vala"
 gboolean unity_maximus_process_window (UnityMaximus* self, MutterWindow* window) {
+#line 253 "maximus.c"
 	gboolean result = FALSE;
+#line 94 "maximus.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 94 "maximus.vala"
 	g_return_val_if_fail (window != NULL, FALSE);
+#line 96 "maximus.vala"
 	if (unity_maximus_window_is_excluded (self, window)) {
+#line 261 "maximus.c"
 		result = TRUE;
+#line 97 "maximus.vala"
 		return result;
+#line 265 "maximus.c"
 	}
+#line 99 "maximus.vala"
 	meta_window_maximize (mutter_window_get_meta_window (window), META_MAXIMIZE_HORIZONTAL | META_MAXIMIZE_VERTICAL);
+#line 269 "maximus.c"
 	result = TRUE;
+#line 101 "maximus.vala"
 	return result;
+#line 273 "maximus.c"
 }
 
 

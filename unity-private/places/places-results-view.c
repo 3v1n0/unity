@@ -272,19 +272,28 @@ GType unity_places_views_result_columns_get_type (void) {
 }
 
 
+#line 73 "places-results-view.vala"
 UnityPlacesViewsResultsView* unity_places_views_results_view_construct (GType object_type) {
+#line 278 "places-results-view.c"
 	UnityPlacesViewsResultsView * self;
+#line 75 "places-results-view.vala"
 	self = (UnityPlacesViewsResultsView*) g_object_new (object_type, "orientation", CTK_ORIENTATION_VERTICAL, NULL);
+#line 282 "places-results-view.c"
 	return self;
 }
 
 
+#line 73 "places-results-view.vala"
 UnityPlacesViewsResultsView* unity_places_views_results_view_new (void) {
+#line 73 "places-results-view.vala"
 	return unity_places_views_results_view_construct (UNITY_PLACES_VIEWS_TYPE_RESULTS_VIEW);
+#line 291 "places-results-view.c"
 }
 
 
+#line 95 "places-results-view.vala"
 static void unity_places_views_results_view_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
+#line 297 "places-results-view.c"
 	UnityPlacesViewsResultsView * self;
 	ClutterActorBox _tmp0_ = {0};
 	ClutterActorBox child_box;
@@ -293,127 +302,208 @@ static void unity_places_views_results_view_real_allocate (ClutterActor* base, c
 	float padding;
 	float natheight;
 	self = (UnityPlacesViewsResultsView*) base;
+#line 98 "places-results-view.vala"
 	child_box = (_tmp0_.x1 = (float) 0, _tmp0_.y1 = (float) 0, _tmp0_.x2 = (float) 0, _tmp0_.y2 = (float) 0, _tmp0_);
+#line 100 "places-results-view.vala"
 	padding = (float) 24;
+#line 101 "places-results-view.vala"
 	natheight = (float) 0;
+#line 103 "places-results-view.vala"
 	width = ((*box).x2 - (*box).x1) - (padding * 2);
+#line 104 "places-results-view.vala"
 	height = ((*box).y2 - (*box).y1) - (padding * 2);
+#line 106 "places-results-view.vala"
 	child_box.x1 = padding;
+#line 107 "places-results-view.vala"
 	child_box.x2 = width;
+#line 108 "places-results-view.vala"
 	child_box.y1 = padding;
+#line 109 "places-results-view.vala"
 	child_box.y2 = padding * 2;
+#line 110 "places-results-view.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->group_view, &child_box, flags);
+#line 112 "places-results-view.vala"
 	clutter_actor_get_preferred_height ((ClutterActor*) self->priv->results_view, width, &natheight, &natheight);
+#line 115 "places-results-view.vala"
 	child_box.y1 = child_box.y1 + child_box.y2;
+#line 116 "places-results-view.vala"
 	child_box.y2 = child_box.y1 + natheight;
+#line 117 "places-results-view.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->results_view, &child_box, flags);
+#line 334 "places-results-view.c"
 }
 
 
+#line 145 "places-results-view.vala"
 static void _unity_places_views_results_view_on_group_added_dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
+#line 340 "places-results-view.c"
 	unity_places_views_results_view_on_group_added (self, _sender, iter);
 }
 
 
+#line 150 "places-results-view.vala"
 static void _unity_places_views_results_view_on_group_changed_dee_model_row_changed (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
+#line 347 "places-results-view.c"
 	unity_places_views_results_view_on_group_changed (self, _sender, iter);
 }
 
 
+#line 155 "places-results-view.vala"
 static void _unity_places_views_results_view_on_group_removed_dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
+#line 354 "places-results-view.c"
 	unity_places_views_results_view_on_group_removed (self, _sender, iter);
 }
 
 
+#line 160 "places-results-view.vala"
 static void _unity_places_views_results_view_on_result_added_dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
+#line 361 "places-results-view.c"
 	unity_places_views_results_view_on_result_added (self, _sender, iter);
 }
 
 
+#line 191 "places-results-view.vala"
 static void _unity_places_views_results_view_on_result_changed_dee_model_row_changed (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
+#line 368 "places-results-view.c"
 	unity_places_views_results_view_on_result_changed (self, _sender, iter);
 }
 
 
+#line 196 "places-results-view.vala"
 static void _unity_places_views_results_view_on_result_removed_dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
+#line 375 "places-results-view.c"
 	unity_places_views_results_view_on_result_removed (self, _sender, iter);
 }
 
 
+#line 124 "places-results-view.vala"
 static void unity_places_views_results_view_real_init_with_properties (UnityPlacesPlaceView* base, GHashTable* props) {
+#line 382 "places-results-view.c"
 	UnityPlacesViewsResultsView * self;
 	char* group_model_name;
 	char* results_model_name;
 	DeeSharedModel* _tmp0_;
 	DeeSharedModel* _tmp1_;
 	self = (UnityPlacesViewsResultsView*) base;
+#line 124 "places-results-view.vala"
 	g_return_if_fail (props != NULL);
+#line 126 "places-results-view.vala"
 	group_model_name = g_strdup ((const char*) g_hash_table_lookup (props, "groups-model"));
+#line 127 "places-results-view.vala"
 	results_model_name = g_strdup ((const char*) g_hash_table_lookup (props, "results-model"));
+#line 129 "places-results-view.vala"
 	self->priv->groups_model = (_tmp0_ = (DeeSharedModel*) dee_shared_model_new_with_name (group_model_name), _g_object_unref0 (self->priv->groups_model), _tmp0_);
+#line 130 "places-results-view.vala"
 	self->priv->results_model = (_tmp1_ = (DeeSharedModel*) dee_shared_model_new_with_name (results_model_name), _g_object_unref0 (self->priv->results_model), _tmp1_);
+#line 133 "places-results-view.vala"
 	g_signal_connect_object ((DeeModel*) self->priv->groups_model, "row-added", (GCallback) _unity_places_views_results_view_on_group_added_dee_model_row_added, self, 0);
+#line 134 "places-results-view.vala"
 	g_signal_connect_object ((DeeModel*) self->priv->groups_model, "row-changed", (GCallback) _unity_places_views_results_view_on_group_changed_dee_model_row_changed, self, 0);
+#line 135 "places-results-view.vala"
 	g_signal_connect_object ((DeeModel*) self->priv->groups_model, "row-removed", (GCallback) _unity_places_views_results_view_on_group_removed_dee_model_row_removed, self, 0);
+#line 137 "places-results-view.vala"
 	g_signal_connect_object ((DeeModel*) self->priv->results_model, "row-added", (GCallback) _unity_places_views_results_view_on_result_added_dee_model_row_added, self, 0);
+#line 138 "places-results-view.vala"
 	g_signal_connect_object ((DeeModel*) self->priv->results_model, "row-changed", (GCallback) _unity_places_views_results_view_on_result_changed_dee_model_row_changed, self, 0);
+#line 139 "places-results-view.vala"
 	g_signal_connect_object ((DeeModel*) self->priv->results_model, "row-removed", (GCallback) _unity_places_views_results_view_on_result_removed_dee_model_row_removed, self, 0);
+#line 141 "places-results-view.vala"
 	dee_shared_model_connect (self->priv->groups_model);
+#line 142 "places-results-view.vala"
 	dee_shared_model_connect (self->priv->results_model);
+#line 415 "places-results-view.c"
 	_g_free0 (group_model_name);
 	_g_free0 (results_model_name);
 }
 
 
+#line 145 "places-results-view.vala"
 static void unity_places_views_results_view_on_group_added (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter) {
+#line 145 "places-results-view.vala"
 	g_return_if_fail (self != NULL);
+#line 145 "places-results-view.vala"
 	g_return_if_fail (model != NULL);
+#line 145 "places-results-view.vala"
 	g_return_if_fail (iter != NULL);
+#line 147 "places-results-view.vala"
 	unity_places_views_group_view_add (self->priv->group_view, model, iter);
+#line 431 "places-results-view.c"
 }
 
 
+#line 150 "places-results-view.vala"
 static void unity_places_views_results_view_on_group_changed (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter) {
+#line 150 "places-results-view.vala"
 	g_return_if_fail (self != NULL);
+#line 150 "places-results-view.vala"
 	g_return_if_fail (model != NULL);
+#line 150 "places-results-view.vala"
 	g_return_if_fail (iter != NULL);
+#line 443 "places-results-view.c"
 }
 
 
+#line 155 "places-results-view.vala"
 static void unity_places_views_results_view_on_group_removed (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter) {
+#line 155 "places-results-view.vala"
 	g_return_if_fail (self != NULL);
+#line 155 "places-results-view.vala"
 	g_return_if_fail (model != NULL);
+#line 155 "places-results-view.vala"
 	g_return_if_fail (iter != NULL);
+#line 455 "places-results-view.c"
 }
 
 
+#line 160 "places-results-view.vala"
 static void unity_places_views_results_view_on_result_added (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter) {
+#line 461 "places-results-view.c"
 	char* group_name;
 	UnityPlacesApplicationApplicationGroup* group;
+#line 160 "places-results-view.vala"
 	g_return_if_fail (self != NULL);
+#line 160 "places-results-view.vala"
 	g_return_if_fail (model != NULL);
+#line 160 "places-results-view.vala"
 	g_return_if_fail (iter != NULL);
+#line 162 "places-results-view.vala"
 	group_name = g_strdup (dee_model_get_string (model, iter, (guint) UNITY_PLACES_VIEWS_RESULT_COLUMNS_GROUP));
+#line 472 "places-results-view.c"
 	group = (UnityPlacesApplicationApplicationGroup*) gee_abstract_map_get ((GeeAbstractMap*) self->priv->groups, group_name);
+#line 166 "places-results-view.vala"
 	if (!UNITY_PLACES_APPLICATION_IS_APPLICATION_GROUP (group)) {
+#line 476 "places-results-view.c"
 		UnityPlacesApplicationApplicationGroup* _tmp0_;
+#line 168 "places-results-view.vala"
 		group = (_tmp0_ = g_object_ref_sink (unity_places_application_application_group_new (group_name)), _g_object_unref0 (group), _tmp0_);
+#line 169 "places-results-view.vala"
 		clutter_container_add_actor ((ClutterContainer*) self->priv->results_view, (ClutterActor*) group);
+#line 170 "places-results-view.vala"
 		clutter_actor_show ((ClutterActor*) group);
+#line 172 "places-results-view.vala"
 		gee_abstract_map_set ((GeeAbstractMap*) self->priv->groups, group_name, group);
+#line 486 "places-results-view.c"
 	}
+#line 175 "places-results-view.vala"
 	if (group->n_items < 6) {
+#line 490 "places-results-view.c"
 		UnityPlacesApplicationApplicationIcon* app;
 		char* name;
 		char* icon_name;
 		char* comment;
 		UnityPlacesApplicationApplicationIcon* _tmp1_;
 		app = NULL;
+#line 178 "places-results-view.vala"
 		name = g_strdup (dee_model_get_string (model, iter, (guint) UNITY_PLACES_VIEWS_RESULT_COLUMNS_NAME));
+#line 179 "places-results-view.vala"
 		icon_name = g_strdup (dee_model_get_string (model, iter, (guint) UNITY_PLACES_VIEWS_RESULT_COLUMNS_ICON_NAME));
+#line 180 "places-results-view.vala"
 		comment = g_strdup (dee_model_get_string (model, iter, (guint) UNITY_PLACES_VIEWS_RESULT_COLUMNS_COMMENT));
+#line 182 "places-results-view.vala"
 		app = (_tmp1_ = unity_places_application_application_icon_new (48, name, icon_name, comment), _unity_places_application_application_icon_unref0 (app), _tmp1_);
+#line 187 "places-results-view.vala"
 		unity_places_application_application_group_add_icon (group, app);
+#line 507 "places-results-view.c"
 		_unity_places_application_application_icon_unref0 (app);
 		_g_free0 (name);
 		_g_free0 (icon_name);
@@ -424,17 +514,27 @@ static void unity_places_views_results_view_on_result_added (UnityPlacesViewsRes
 }
 
 
+#line 191 "places-results-view.vala"
 static void unity_places_views_results_view_on_result_changed (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter) {
+#line 191 "places-results-view.vala"
 	g_return_if_fail (self != NULL);
+#line 191 "places-results-view.vala"
 	g_return_if_fail (model != NULL);
+#line 191 "places-results-view.vala"
 	g_return_if_fail (iter != NULL);
+#line 526 "places-results-view.c"
 }
 
 
+#line 196 "places-results-view.vala"
 static void unity_places_views_results_view_on_result_removed (UnityPlacesViewsResultsView* self, DeeModel* model, DeeModelIter* iter) {
+#line 196 "places-results-view.vala"
 	g_return_if_fail (self != NULL);
+#line 196 "places-results-view.vala"
 	g_return_if_fail (model != NULL);
+#line 196 "places-results-view.vala"
 	g_return_if_fail (iter != NULL);
+#line 538 "places-results-view.c"
 }
 
 
@@ -449,14 +549,23 @@ static GObject * unity_places_views_results_view_constructor (GType type, guint 
 		UnityPlacesViewsGroupView* _tmp0_;
 		CtkVBox* _tmp1_;
 		GeeHashMap* _tmp2_;
+#line 80 "places-results-view.vala"
 		self->priv->group_view = (_tmp0_ = g_object_ref_sink (unity_places_views_group_view_new ()), _g_object_unref0 (self->priv->group_view), _tmp0_);
+#line 81 "places-results-view.vala"
 		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->group_view);
+#line 82 "places-results-view.vala"
 		clutter_actor_show ((ClutterActor*) self->priv->group_view);
+#line 84 "places-results-view.vala"
 		self->priv->results_view = (_tmp1_ = g_object_ref_sink ((CtkVBox*) ctk_vbox_new ((guint) 12)), _g_object_unref0 (self->priv->results_view), _tmp1_);
+#line 85 "places-results-view.vala"
 		ctk_box_set_homogeneous ((CtkBox*) self->priv->results_view, FALSE);
+#line 86 "places-results-view.vala"
 		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->results_view);
+#line 87 "places-results-view.vala"
 		clutter_actor_show ((ClutterActor*) self->priv->results_view);
+#line 89 "places-results-view.vala"
 		self->priv->groups = (_tmp2_ = gee_hash_map_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, UNITY_PLACES_APPLICATION_TYPE_APPLICATION_GROUP, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL, NULL, NULL), _g_object_unref0 (self->priv->groups), _tmp2_);
+#line 569 "places-results-view.c"
 	}
 	return obj;
 }
@@ -508,26 +617,42 @@ GType unity_places_views_results_view_get_type (void) {
 }
 
 
+#line 204 "places-results-view.vala"
 UnityPlacesViewsGroupView* unity_places_views_group_view_construct (GType object_type) {
+#line 623 "places-results-view.c"
 	UnityPlacesViewsGroupView * self;
+#line 206 "places-results-view.vala"
 	self = (UnityPlacesViewsGroupView*) g_object_new (object_type, "orientation", CTK_ORIENTATION_HORIZONTAL, "spacing", 12, "homogeneous", FALSE, NULL);
+#line 627 "places-results-view.c"
 	return self;
 }
 
 
+#line 204 "places-results-view.vala"
 UnityPlacesViewsGroupView* unity_places_views_group_view_new (void) {
+#line 204 "places-results-view.vala"
 	return unity_places_views_group_view_construct (UNITY_PLACES_VIEWS_TYPE_GROUP_VIEW);
+#line 636 "places-results-view.c"
 }
 
 
+#line 216 "places-results-view.vala"
 void unity_places_views_group_view_add (UnityPlacesViewsGroupView* self, DeeModel* model, DeeModelIter* iter) {
+#line 642 "places-results-view.c"
 	UnityPlacesViewsGroupLabel* text;
+#line 216 "places-results-view.vala"
 	g_return_if_fail (self != NULL);
+#line 216 "places-results-view.vala"
 	g_return_if_fail (model != NULL);
+#line 216 "places-results-view.vala"
 	g_return_if_fail (iter != NULL);
+#line 218 "places-results-view.vala"
 	text = g_object_ref_sink (unity_places_views_group_label_new (model, iter));
+#line 220 "places-results-view.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) text);
+#line 221 "places-results-view.vala"
 	clutter_actor_show ((ClutterActor*) text);
+#line 656 "places-results-view.c"
 	_g_object_unref0 (text);
 }
 
@@ -567,70 +692,112 @@ GType unity_places_views_group_view_get_type (void) {
 }
 
 
+#line 232 "places-results-view.vala"
 UnityPlacesViewsGroupLabel* unity_places_views_group_label_construct (GType object_type, DeeModel* model, DeeModelIter* iter) {
+#line 698 "places-results-view.c"
 	UnityPlacesViewsGroupLabel * self;
+#line 232 "places-results-view.vala"
 	g_return_val_if_fail (model != NULL, NULL);
+#line 232 "places-results-view.vala"
 	g_return_val_if_fail (iter != NULL, NULL);
+#line 234 "places-results-view.vala"
 	self = (UnityPlacesViewsGroupLabel*) g_object_new (object_type, "model", model, "iter", iter, "text", dee_model_get_string (model, iter, (guint) UNITY_PLACES_VIEWS_GROUP_COLUMNS_NAME), NULL);
+#line 706 "places-results-view.c"
 	return self;
 }
 
 
+#line 232 "places-results-view.vala"
 UnityPlacesViewsGroupLabel* unity_places_views_group_label_new (DeeModel* model, DeeModelIter* iter) {
+#line 232 "places-results-view.vala"
 	return unity_places_views_group_label_construct (UNITY_PLACES_VIEWS_TYPE_GROUP_LABEL, model, iter);
+#line 715 "places-results-view.c"
 }
 
 
+#line 250 "places-results-view.vala"
 static void unity_places_views_group_label_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
+#line 721 "places-results-view.c"
 	UnityPlacesViewsGroupLabel * self;
 	ClutterActorBox _tmp0_ = {0};
 	ClutterActorBox child_box;
 	self = (UnityPlacesViewsGroupLabel*) base;
+#line 253 "places-results-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_places_views_group_label_parent_class)->allocate ((ClutterActor*) CTK_TEXT (self), box, flags);
+#line 255 "places-results-view.vala"
 	child_box = (_tmp0_.x1 = (float) 0, _tmp0_.y1 = (float) 0, _tmp0_.x2 = (float) 0, _tmp0_.y2 = (float) 0, _tmp0_);
+#line 256 "places-results-view.vala"
 	child_box.x2 = (*box).x2 - (*box).x1;
+#line 257 "places-results-view.vala"
 	child_box.y2 = ((*box).y2 - (*box).y1) - 3;
+#line 259 "places-results-view.vala"
 	clutter_actor_allocate (self->priv->bg, &child_box, flags);
+#line 736 "places-results-view.c"
 }
 
 
+#line 262 "places-results-view.vala"
 static void unity_places_views_group_label_real_map (ClutterActor* base) {
+#line 742 "places-results-view.c"
 	UnityPlacesViewsGroupLabel * self;
 	self = (UnityPlacesViewsGroupLabel*) base;
+#line 264 "places-results-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_places_views_group_label_parent_class)->map ((ClutterActor*) CTK_TEXT (self));
+#line 265 "places-results-view.vala"
 	clutter_actor_map (self->priv->bg);
+#line 749 "places-results-view.c"
 }
 
 
+#line 268 "places-results-view.vala"
 static void unity_places_views_group_label_real_unmap (ClutterActor* base) {
+#line 755 "places-results-view.c"
 	UnityPlacesViewsGroupLabel * self;
 	self = (UnityPlacesViewsGroupLabel*) base;
+#line 270 "places-results-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_places_views_group_label_parent_class)->unmap ((ClutterActor*) CTK_TEXT (self));
+#line 271 "places-results-view.vala"
 	clutter_actor_unmap (self->priv->bg);
+#line 762 "places-results-view.c"
 }
 
 
+#line 274 "places-results-view.vala"
 static void unity_places_views_group_label_real_show (ClutterActor* base) {
+#line 768 "places-results-view.c"
 	UnityPlacesViewsGroupLabel * self;
 	self = (UnityPlacesViewsGroupLabel*) base;
+#line 276 "places-results-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_places_views_group_label_parent_class)->show ((ClutterActor*) CTK_TEXT (self));
+#line 277 "places-results-view.vala"
 	clutter_actor_show (self->priv->bg);
+#line 775 "places-results-view.c"
 }
 
 
+#line 280 "places-results-view.vala"
 static void unity_places_views_group_label_real_hide (ClutterActor* base) {
+#line 781 "places-results-view.c"
 	UnityPlacesViewsGroupLabel * self;
 	self = (UnityPlacesViewsGroupLabel*) base;
+#line 282 "places-results-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_places_views_group_label_parent_class)->hide ((ClutterActor*) CTK_TEXT (self));
+#line 283 "places-results-view.vala"
 	clutter_actor_hide (self->priv->bg);
+#line 788 "places-results-view.c"
 }
 
 
+#line 286 "places-results-view.vala"
 static void unity_places_views_group_label_real_paint (ClutterActor* base) {
+#line 794 "places-results-view.c"
 	UnityPlacesViewsGroupLabel * self;
 	self = (UnityPlacesViewsGroupLabel*) base;
+#line 288 "places-results-view.vala"
 	clutter_actor_paint (self->priv->bg);
+#line 289 "places-results-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_places_views_group_label_parent_class)->paint ((ClutterActor*) CTK_TEXT (self));
+#line 801 "places-results-view.c"
 }
 
 
@@ -638,7 +805,9 @@ DeeModel* unity_places_views_group_label_get_model (UnityPlacesViewsGroupLabel* 
 	DeeModel* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_model;
+#line 227 "places-results-view.vala"
 	return result;
+#line 811 "places-results-view.c"
 }
 
 
@@ -653,7 +822,9 @@ DeeModelIter* unity_places_views_group_label_get_iter (UnityPlacesViewsGroupLabe
 	DeeModelIter* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_iter;
+#line 228 "places-results-view.vala"
 	return result;
+#line 828 "places-results-view.c"
 }
 
 
@@ -681,11 +852,17 @@ static GObject * unity_places_views_group_label_constructor (GType type, guint n
 		ClutterColor white;
 		ClutterRectangle* rect;
 		ClutterActor* _tmp4_;
+#line 241 "places-results-view.vala"
 		white = (_tmp3_.red = (guint8) 0xff, _tmp3_.green = (guint8) 0xff, _tmp3_.blue = (guint8) 0xff, _tmp3_.alpha = (guint8) 0x33, _tmp3_);
+#line 243 "places-results-view.vala"
 		rect = g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color (&white));
+#line 245 "places-results-view.vala"
 		self->priv->bg = (_tmp4_ = _g_object_ref0 (CLUTTER_ACTOR (rect)), _g_object_unref0 (self->priv->bg), _tmp4_);
+#line 246 "places-results-view.vala"
 		clutter_actor_set_parent (self->priv->bg, (ClutterActor*) self);
+#line 247 "places-results-view.vala"
 		clutter_actor_show (self->priv->bg);
+#line 866 "places-results-view.c"
 		_g_object_unref0 (rect);
 	}
 	return obj;

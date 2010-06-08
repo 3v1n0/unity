@@ -190,6 +190,8 @@ PACKAGE_URL = @PACKAGE_URL@
 PACKAGE_VERSION = @PACKAGE_VERSION@
 PATH_SEPARATOR = @PATH_SEPARATOR@
 PKG_CONFIG = @PKG_CONFIG@
+PKG_CONFIG_LIBDIR = @PKG_CONFIG_LIBDIR@
+PKG_CONFIG_PATH = @PKG_CONFIG_PATH@
 POSUB = @POSUB@
 RANLIB = @RANLIB@
 SED = @SED@
@@ -280,6 +282,7 @@ unity_VALAFLAGS = \
   --pkg clutter-gtk-0.10 \
   --pkg cogl-1.0 \
   --pkg config \
+  --pkg dee-1.0 \
   --pkg dbus-glib-1 \
   --pkg gtk+-2.0 \
   --pkg gdk-2.0 \

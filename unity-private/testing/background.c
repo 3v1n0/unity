@@ -84,46 +84,78 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
+#line 96 "background.vala"
 static void unity_testing_background_on_filename_changed (UnityTestingBackground* self, GConfClient* client, guint cxnid, GConfEntry* entry) {
+#line 90 "background.c"
 	char* new_filename;
 	char* _tmp0_;
+#line 96 "background.vala"
 	g_return_if_fail (self != NULL);
+#line 96 "background.vala"
 	g_return_if_fail (client != NULL);
+#line 96 "background.vala"
 	g_return_if_fail (entry != NULL);
+#line 100 "background.vala"
 	new_filename = g_strdup (gconf_value_get_string (gconf_entry_get_value (entry)));
+#line 102 "background.vala"
 	if (_vala_strcmp0 (new_filename, self->priv->filename) == 0) {
+#line 103 "background.c"
 		_g_free0 (new_filename);
+#line 103 "background.vala"
 		return;
+#line 107 "background.c"
 	}
+#line 105 "background.vala"
 	self->priv->filename = (_tmp0_ = g_strdup (new_filename), _g_free0 (self->priv->filename), _tmp0_);
+#line 106 "background.vala"
 	unity_testing_background_ensure_layout (self);
+#line 113 "background.c"
 	_g_free0 (new_filename);
 }
 
 
+#line 109 "background.vala"
 static void unity_testing_background_on_option_changed (UnityTestingBackground* self, GConfClient* client, guint cxnid, GConfEntry* entry) {
+#line 120 "background.c"
 	char* new_option;
 	char* _tmp0_;
+#line 109 "background.vala"
 	g_return_if_fail (self != NULL);
+#line 109 "background.vala"
 	g_return_if_fail (client != NULL);
+#line 109 "background.vala"
 	g_return_if_fail (entry != NULL);
+#line 113 "background.vala"
 	new_option = g_strdup (gconf_value_get_string (gconf_entry_get_value (entry)));
+#line 115 "background.vala"
 	if (_vala_strcmp0 (new_option, self->priv->option) == 0) {
+#line 133 "background.c"
 		_g_free0 (new_option);
+#line 116 "background.vala"
 		return;
+#line 137 "background.c"
 	}
+#line 118 "background.vala"
 	self->priv->option = (_tmp0_ = g_strdup (new_option), _g_free0 (self->priv->option), _tmp0_);
+#line 119 "background.vala"
 	unity_testing_background_ensure_layout (self);
+#line 143 "background.c"
 	_g_free0 (new_option);
 }
 
 
+#line 122 "background.vala"
 static void unity_testing_background_ensure_layout (UnityTestingBackground* self) {
+#line 150 "background.c"
 	GError * _inner_error_;
+#line 122 "background.vala"
 	g_return_if_fail (self != NULL);
+#line 154 "background.c"
 	_inner_error_ = NULL;
 	{
+#line 126 "background.vala"
 		clutter_texture_set_from_file (self->priv->bg, self->priv->filename, &_inner_error_);
+#line 159 "background.c"
 		if (_inner_error_ != NULL) {
 			goto __catch21_g_error;
 		}
@@ -135,7 +167,9 @@ static void unity_testing_background_ensure_layout (UnityTestingBackground* self
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
+#line 130 "background.vala"
 			g_warning ("background.vala:130: Background: Unable to load background file %s: %s", self->priv->filename, e->message);
+#line 173 "background.c"
 			_g_error_free0 (e);
 		}
 	}
@@ -145,19 +179,26 @@ static void unity_testing_background_ensure_layout (UnityTestingBackground* self
 		g_clear_error (&_inner_error_);
 		return;
 	}
+#line 135 "background.vala"
 	clutter_actor_queue_relayout ((ClutterActor*) self);
+#line 185 "background.c"
 }
 
 
+#line 22 "background.vala"
 UnityTestingBackground* unity_testing_background_construct (GType object_type) {
+#line 191 "background.c"
 	UnityTestingBackground * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
+#line 22 "background.vala"
 UnityTestingBackground* unity_testing_background_new (void) {
+#line 22 "background.vala"
 	return unity_testing_background_construct (UNITY_TESTING_TYPE_BACKGROUND);
+#line 202 "background.c"
 }
 
 
@@ -166,12 +207,16 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
+#line 96 "background.vala"
 static void _unity_testing_background_on_filename_changed_gconf_client_notify_func (GConfClient* client, guint cnxn_id, GConfEntry* entry, gpointer self) {
+#line 213 "background.c"
 	unity_testing_background_on_filename_changed (self, client, cnxn_id, entry);
 }
 
 
+#line 109 "background.vala"
 static void _unity_testing_background_on_option_changed_gconf_client_notify_func (GConfClient* client, guint cnxn_id, GConfEntry* entry, gpointer self) {
+#line 220 "background.c"
 	unity_testing_background_on_option_changed (self, client, cnxn_id, entry);
 }
 
@@ -188,10 +233,15 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 	{
 		GConfClient* client;
 		ClutterTexture* _tmp6_;
+#line 36 "background.vala"
 		START_FUNCTION ();
+#line 37 "background.vala"
 		client = _g_object_ref0 (gconf_client_get_default ());
+#line 241 "background.c"
 		{
+#line 42 "background.vala"
 			gconf_client_add_dir (client, self->priv->BG_DIR, GCONF_CLIENT_PRELOAD_NONE, &_inner_error_);
+#line 245 "background.c"
 			if (_inner_error_ != NULL) {
 				goto __catch22_g_error;
 			}
@@ -203,7 +253,9 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
+#line 46 "background.vala"
 				g_warning ("background.vala:46: Background: Unable to monitor background: %s", e->message);
+#line 259 "background.c"
 				_g_error_free0 (e);
 			}
 		}
@@ -216,11 +268,15 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 		{
 			char* _tmp0_;
 			char* _tmp1_;
+#line 51 "background.vala"
 			_tmp0_ = gconf_client_get_string (client, self->priv->BG_FILE, &_inner_error_);
+#line 274 "background.c"
 			if (_inner_error_ != NULL) {
 				goto __catch23_g_error;
 			}
+#line 51 "background.vala"
 			self->priv->filename = (_tmp1_ = _tmp0_, _g_free0 (self->priv->filename), _tmp1_);
+#line 280 "background.c"
 		}
 		goto __finally23;
 		__catch23_g_error:
@@ -230,7 +286,9 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 			_inner_error_ = NULL;
 			{
 				char* _tmp2_;
+#line 55 "background.vala"
 				self->priv->filename = (_tmp2_ = g_strdup ("/usr/share/backgrounds/warty-final.png"), _g_free0 (self->priv->filename), _tmp2_);
+#line 292 "background.c"
 				_g_error_free0 (e);
 			}
 		}
@@ -241,7 +299,9 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 			g_clear_error (&_inner_error_);
 		}
 		{
+#line 60 "background.vala"
 			gconf_client_notify_add (client, self->priv->BG_FILE, _unity_testing_background_on_filename_changed_gconf_client_notify_func, g_object_ref (self), g_object_unref, &_inner_error_);
+#line 305 "background.c"
 			if (_inner_error_ != NULL) {
 				goto __catch24_g_error;
 			}
@@ -253,8 +313,10 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
+#line 64 "background.vala"
 				g_warning ("background.vala:64: Background: Unable to monitor background filename:" \
 " %s", e->message);
+#line 319 "background.c"
 				_g_error_free0 (e);
 			}
 		}
@@ -267,11 +329,15 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 		{
 			char* _tmp3_;
 			char* _tmp4_;
+#line 69 "background.vala"
 			_tmp3_ = gconf_client_get_string (client, self->priv->BG_OPTION, &_inner_error_);
+#line 334 "background.c"
 			if (_inner_error_ != NULL) {
 				goto __catch25_g_error;
 			}
+#line 69 "background.vala"
 			self->priv->option = (_tmp4_ = _tmp3_, _g_free0 (self->priv->option), _tmp4_);
+#line 340 "background.c"
 		}
 		goto __finally25;
 		__catch25_g_error:
@@ -281,7 +347,9 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 			_inner_error_ = NULL;
 			{
 				char* _tmp5_;
+#line 73 "background.vala"
 				self->priv->option = (_tmp5_ = g_strdup ("wallpaper"), _g_free0 (self->priv->option), _tmp5_);
+#line 352 "background.c"
 				_g_error_free0 (e);
 			}
 		}
@@ -292,7 +360,9 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 			g_clear_error (&_inner_error_);
 		}
 		{
+#line 77 "background.vala"
 			gconf_client_notify_add (client, self->priv->BG_OPTION, _unity_testing_background_on_option_changed_gconf_client_notify_func, g_object_ref (self), g_object_unref, &_inner_error_);
+#line 365 "background.c"
 			if (_inner_error_ != NULL) {
 				goto __catch26_g_error;
 			}
@@ -304,8 +374,10 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
+#line 81 "background.vala"
 				g_warning ("background.vala:81: Background: Unable to monitor background options: " \
 "%s", e->message);
+#line 379 "background.c"
 				_g_error_free0 (e);
 			}
 		}
@@ -315,12 +387,19 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
 		}
+#line 86 "background.vala"
 		self->priv->bg = (_tmp6_ = g_object_ref_sink ((ClutterTexture*) clutter_texture_new ()), _g_object_unref0 (self->priv->bg), _tmp6_);
+#line 87 "background.vala"
 		clutter_texture_set_load_async (self->priv->bg, TRUE);
+#line 88 "background.vala"
 		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->bg);
+#line 89 "background.vala"
 		clutter_actor_show ((ClutterActor*) self->priv->bg);
+#line 92 "background.vala"
 		unity_testing_background_ensure_layout (self);
+#line 93 "background.vala"
 		END_FUNCTION ();
+#line 401 "background.c"
 		_g_object_unref0 (client);
 	}
 	return obj;

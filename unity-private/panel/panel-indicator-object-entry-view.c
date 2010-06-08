@@ -145,42 +145,69 @@ static void unity_panel_indicators_indicator_object_entry_view_set_property (GOb
 
 
 
+#line 38 "panel-indicator-object-entry-view.vala"
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_entry_view_construct (GType object_type, IndicatorObjectEntry* _entry) {
+#line 151 "panel-indicator-object-entry-view.c"
 	UnityPanelIndicatorsIndicatorObjectEntryView * self;
+#line 38 "panel-indicator-object-entry-view.vala"
 	g_return_val_if_fail (_entry != NULL, NULL);
+#line 40 "panel-indicator-object-entry-view.vala"
 	self = (UnityPanelIndicatorsIndicatorObjectEntryView*) g_object_new (object_type, "entry", _entry, "orientation", CTK_ORIENTATION_HORIZONTAL, "spacing", 3, "homogeneous", FALSE, "reactive", TRUE, NULL);
+#line 157 "panel-indicator-object-entry-view.c"
 	return self;
 }
 
 
+#line 38 "panel-indicator-object-entry-view.vala"
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_entry_view_new (IndicatorObjectEntry* _entry) {
+#line 38 "panel-indicator-object-entry-view.vala"
 	return unity_panel_indicators_indicator_object_entry_view_construct (UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_ENTRY_VIEW, _entry);
+#line 166 "panel-indicator-object-entry-view.c"
 }
 
 
+#line 124 "panel-indicator-object-entry-view.vala"
 static void unity_panel_indicators_indicator_object_entry_view_position_menu (UnityPanelIndicatorsIndicatorObjectEntryView* self, GtkMenu* menu, gint* x, gint* y, gboolean* push_in) {
+#line 124 "panel-indicator-object-entry-view.vala"
 	g_return_if_fail (self != NULL);
+#line 124 "panel-indicator-object-entry-view.vala"
 	g_return_if_fail (menu != NULL);
+#line 129 "panel-indicator-object-entry-view.vala"
 	*y = (gint) clutter_actor_get_height ((ClutterActor*) self);
+#line 130 "panel-indicator-object-entry-view.vala"
 	*x = (gint) self->priv->last_found_entry_x;
+#line 180 "panel-indicator-object-entry-view.c"
 }
 
 
+#line 124 "panel-indicator-object-entry-view.vala"
 static void _unity_panel_indicators_indicator_object_entry_view_position_menu_gtk_menu_position_func (GtkMenu* menu, gint* x, gint* y, gboolean* push_in, gpointer self) {
+#line 186 "panel-indicator-object-entry-view.c"
 	unity_panel_indicators_indicator_object_entry_view_position_menu (self, menu, x, y, push_in);
 }
 
 
+#line 133 "panel-indicator-object-entry-view.vala"
 void unity_panel_indicators_indicator_object_entry_view_show_menu (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
+#line 133 "panel-indicator-object-entry-view.vala"
 	g_return_if_fail (self != NULL);
+#line 135 "panel-indicator-object-entry-view.vala"
 	if (GTK_IS_MENU (self->priv->_entry->menu)) {
+#line 197 "panel-indicator-object-entry-view.c"
 		MenuManager* _tmp0_;
+#line 137 "panel-indicator-object-entry-view.vala"
 		self->priv->last_found_entry_x = (clutter_actor_get_x ((ClutterActor*) self) + clutter_actor_get_x (clutter_actor_get_parent ((ClutterActor*) self))) + clutter_actor_get_x (clutter_actor_get_parent (clutter_actor_get_parent ((ClutterActor*) self)));
+#line 138 "panel-indicator-object-entry-view.vala"
 		menu_manager_register_visible_menu (_tmp0_ = menu_manager_get_default (), self->priv->_entry->menu);
+#line 203 "panel-indicator-object-entry-view.c"
 		_g_object_unref0 (_tmp0_);
+#line 139 "panel-indicator-object-entry-view.vala"
 		gtk_menu_popup (self->priv->_entry->menu, NULL, NULL, _unity_panel_indicators_indicator_object_entry_view_position_menu_gtk_menu_position_func, self, (guint) 1, clutter_get_current_event_time ());
+#line 144 "panel-indicator-object-entry-view.vala"
 		self->priv->click_time = clutter_get_current_event_time ();
+#line 145 "panel-indicator-object-entry-view.vala"
 		unity_panel_indicators_indicator_object_entry_view_menu_shown (self);
+#line 211 "panel-indicator-object-entry-view.c"
 	}
 }
 
@@ -190,130 +217,215 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
+#line 149 "panel-indicator-object-entry-view.vala"
 static gboolean unity_panel_indicators_indicator_object_entry_view_on_scroll_event (UnityPanelIndicatorsIndicatorObjectEntryView* self, ClutterEvent* e) {
+#line 223 "panel-indicator-object-entry-view.c"
 	gboolean result = FALSE;
 	ClutterScrollEvent event;
 	ClutterActor* _tmp0_;
 	UnityPanelIndicatorsIndicatorObjectView* parent;
 	IndicatorObject* object;
+#line 149 "panel-indicator-object-entry-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 151 "panel-indicator-object-entry-view.vala"
 	event = (*e).scroll;
+#line 153 "panel-indicator-object-entry-view.vala"
 	parent = _g_object_ref0 ((_tmp0_ = clutter_actor_get_parent ((ClutterActor*) self), UNITY_PANEL_INDICATORS_IS_INDICATOR_OBJECT_VIEW (_tmp0_) ? ((UnityPanelIndicatorsIndicatorObjectView*) _tmp0_) : NULL));
+#line 154 "panel-indicator-object-entry-view.vala"
 	object = unity_panel_indicators_indicator_object_view_get_indicator_object (parent);
+#line 156 "panel-indicator-object-entry-view.vala"
 	g_signal_emit_by_name (object, "scroll", 1, event.direction, NULL);
+#line 239 "panel-indicator-object-entry-view.c"
 	result = TRUE;
 	_g_object_unref0 (parent);
+#line 158 "panel-indicator-object-entry-view.vala"
 	return result;
+#line 244 "panel-indicator-object-entry-view.c"
 }
 
 
+#line 161 "panel-indicator-object-entry-view.vala"
 gboolean unity_panel_indicators_indicator_object_entry_view_on_button_press_event (UnityPanelIndicatorsIndicatorObjectEntryView* self, ClutterEvent* e) {
+#line 250 "panel-indicator-object-entry-view.c"
 	gboolean result = FALSE;
+#line 161 "panel-indicator-object-entry-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 163 "panel-indicator-object-entry-view.vala"
 	if (GTK_IS_MENU (self->priv->_entry->menu)) {
+#line 165 "panel-indicator-object-entry-view.vala"
 		if (self->priv->menu_is_open) {
+#line 167 "panel-indicator-object-entry-view.vala"
 			gtk_menu_popdown (self->priv->_entry->menu);
+#line 168 "panel-indicator-object-entry-view.vala"
 			self->priv->menu_is_open = FALSE;
+#line 262 "panel-indicator-object-entry-view.c"
 			result = TRUE;
+#line 169 "panel-indicator-object-entry-view.vala"
 			return result;
+#line 266 "panel-indicator-object-entry-view.c"
 		} else {
 			MenuManager* _tmp0_;
+#line 173 "panel-indicator-object-entry-view.vala"
 			self->priv->last_found_entry_x = (clutter_actor_get_x ((ClutterActor*) self) + clutter_actor_get_x (clutter_actor_get_parent ((ClutterActor*) self))) + clutter_actor_get_x (clutter_actor_get_parent (clutter_actor_get_parent ((ClutterActor*) self)));
+#line 174 "panel-indicator-object-entry-view.vala"
 			menu_manager_register_visible_menu (_tmp0_ = menu_manager_get_default (), self->priv->_entry->menu);
+#line 273 "panel-indicator-object-entry-view.c"
 			_g_object_unref0 (_tmp0_);
+#line 175 "panel-indicator-object-entry-view.vala"
 			gtk_menu_popup (self->priv->_entry->menu, NULL, NULL, _unity_panel_indicators_indicator_object_entry_view_position_menu_gtk_menu_position_func, self, (guint) (*e).button.button, (*e).button.time);
+#line 180 "panel-indicator-object-entry-view.vala"
 			self->priv->click_time = clutter_get_current_event_time ();
+#line 181 "panel-indicator-object-entry-view.vala"
 			self->priv->menu_is_open = TRUE;
+#line 182 "panel-indicator-object-entry-view.vala"
 			unity_panel_indicators_indicator_object_entry_view_menu_shown (self);
+#line 283 "panel-indicator-object-entry-view.c"
 		}
 	}
 	result = TRUE;
+#line 185 "panel-indicator-object-entry-view.vala"
 	return result;
+#line 289 "panel-indicator-object-entry-view.c"
 }
 
 
+#line 188 "panel-indicator-object-entry-view.vala"
 gboolean unity_panel_indicators_indicator_object_entry_view_on_motion_event (UnityPanelIndicatorsIndicatorObjectEntryView* self, ClutterEvent* e) {
+#line 295 "panel-indicator-object-entry-view.c"
 	gboolean result = FALSE;
 	gboolean _tmp0_ = FALSE;
+#line 188 "panel-indicator-object-entry-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 190 "panel-indicator-object-entry-view.vala"
 	if (GTK_IS_MENU (self->priv->_entry->menu)) {
+#line 302 "panel-indicator-object-entry-view.c"
 		MenuManager* _tmp1_;
+#line 190 "panel-indicator-object-entry-view.vala"
 		_tmp0_ = menu_manager_menu_is_open (_tmp1_ = menu_manager_get_default ());
+#line 306 "panel-indicator-object-entry-view.c"
 		_g_object_unref0 (_tmp1_);
 	} else {
+#line 190 "panel-indicator-object-entry-view.vala"
 		_tmp0_ = FALSE;
+#line 311 "panel-indicator-object-entry-view.c"
 	}
+#line 190 "panel-indicator-object-entry-view.vala"
 	if (_tmp0_) {
+#line 192 "panel-indicator-object-entry-view.vala"
 		unity_panel_indicators_indicator_object_entry_view_show_menu (self);
+#line 317 "panel-indicator-object-entry-view.c"
 		result = TRUE;
+#line 193 "panel-indicator-object-entry-view.vala"
 		return result;
+#line 321 "panel-indicator-object-entry-view.c"
 	}
 	result = FALSE;
+#line 195 "panel-indicator-object-entry-view.vala"
 	return result;
+#line 326 "panel-indicator-object-entry-view.c"
 }
 
 
+#line 224 "panel-indicator-object-entry-view.vala"
 static void _unity_panel_indicators_indicator_object_entry_view_menu_key_moved_gtk_menu_shell_move_current (GtkMenuShell* _sender, GtkMenuDirectionType direction, gpointer self) {
+#line 332 "panel-indicator-object-entry-view.c"
 	unity_panel_indicators_indicator_object_entry_view_menu_key_moved (self, direction);
 }
 
 
+#line 211 "panel-indicator-object-entry-view.vala"
 static void _unity_panel_indicators_indicator_object_entry_view_menu_vis_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+#line 339 "panel-indicator-object-entry-view.c"
 	unity_panel_indicators_indicator_object_entry_view_menu_vis_changed (self);
 }
 
 
+#line 198 "panel-indicator-object-entry-view.vala"
 void unity_panel_indicators_indicator_object_entry_view_menu_shown (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
+#line 198 "panel-indicator-object-entry-view.vala"
 	g_return_if_fail (self != NULL);
+#line 200 "panel-indicator-object-entry-view.vala"
 	if (GTK_IS_MENU (self->priv->_entry->menu)) {
+#line 205 "panel-indicator-object-entry-view.vala"
 		g_signal_connect_object ((GtkMenuShell*) self->priv->_entry->menu, "move-current", (GCallback) _unity_panel_indicators_indicator_object_entry_view_menu_key_moved_gtk_menu_shell_move_current, self, 0);
+#line 206 "panel-indicator-object-entry-view.vala"
 		g_signal_connect_object ((GObject*) self->priv->_entry->menu, "notify::visible", (GCallback) _unity_panel_indicators_indicator_object_entry_view_menu_vis_changed_g_object_notify, self, 0);
+#line 207 "panel-indicator-object-entry-view.vala"
 		clutter_actor_animate ((ClutterActor*) self->priv->bg, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 200, "opacity", 255, NULL);
+#line 356 "panel-indicator-object-entry-view.c"
 	}
 }
 
 
+#line 211 "panel-indicator-object-entry-view.vala"
 void unity_panel_indicators_indicator_object_entry_view_menu_vis_changed (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
+#line 363 "panel-indicator-object-entry-view.c"
 	gboolean vis;
+#line 211 "panel-indicator-object-entry-view.vala"
 	g_return_if_fail (self != NULL);
+#line 213 "panel-indicator-object-entry-view.vala"
 	vis = (GTK_WIDGET_FLAGS ((GtkWidget*) self->priv->_entry->menu) & GTK_VISIBLE) != 0;
+#line 214 "panel-indicator-object-entry-view.vala"
 	if (vis == FALSE) {
+#line 371 "panel-indicator-object-entry-view.c"
 		guint _tmp0_;
 		GQuark _tmp2_;
 		guint _tmp1_;
+#line 217 "panel-indicator-object-entry-view.vala"
 		clutter_actor_animate ((ClutterActor*) self->priv->bg, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 200, "opacity", 0, NULL);
+#line 218 "panel-indicator-object-entry-view.vala"
 		g_signal_parse_name ("move-current", GTK_TYPE_MENU_SHELL, &_tmp0_, NULL, FALSE);
+#line 218 "panel-indicator-object-entry-view.vala"
 		g_signal_handlers_disconnect_matched ((GtkMenuShell*) self->priv->_entry->menu, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_panel_indicators_indicator_object_entry_view_menu_key_moved_gtk_menu_shell_move_current, self);
+#line 219 "panel-indicator-object-entry-view.vala"
 		g_signal_parse_name ("notify::visible", G_TYPE_OBJECT, &_tmp1_, &_tmp2_, TRUE);
+#line 219 "panel-indicator-object-entry-view.vala"
 		g_signal_handlers_disconnect_matched ((GObject*) self->priv->_entry->menu, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_DETAIL | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp1_, _tmp2_, NULL, (GCallback) _unity_panel_indicators_indicator_object_entry_view_menu_vis_changed_g_object_notify, self);
+#line 220 "panel-indicator-object-entry-view.vala"
 		self->priv->menu_is_open = FALSE;
+#line 387 "panel-indicator-object-entry-view.c"
 	}
 }
 
 
+#line 224 "panel-indicator-object-entry-view.vala"
 void unity_panel_indicators_indicator_object_entry_view_menu_key_moved (UnityPanelIndicatorsIndicatorObjectEntryView* self, GtkMenuDirectionType type) {
+#line 394 "panel-indicator-object-entry-view.c"
 	gboolean _tmp0_ = FALSE;
+#line 224 "panel-indicator-object-entry-view.vala"
 	g_return_if_fail (self != NULL);
+#line 226 "panel-indicator-object-entry-view.vala"
 	if (type != GTK_MENU_DIR_PARENT) {
+#line 227 "panel-indicator-object-entry-view.vala"
 		_tmp0_ = type != GTK_MENU_DIR_CHILD;
+#line 402 "panel-indicator-object-entry-view.c"
 	} else {
+#line 226 "panel-indicator-object-entry-view.vala"
 		_tmp0_ = FALSE;
+#line 406 "panel-indicator-object-entry-view.c"
 	}
+#line 226 "panel-indicator-object-entry-view.vala"
 	if (_tmp0_) {
+#line 228 "panel-indicator-object-entry-view.vala"
 		return;
+#line 412 "panel-indicator-object-entry-view.c"
 	}
+#line 230 "panel-indicator-object-entry-view.vala"
 	g_signal_emit_by_name (self, "menu-moved", type);
+#line 416 "panel-indicator-object-entry-view.c"
 }
 
 
+#line 281 "panel-indicator-object-entry-view.vala"
 static gboolean _unity_panel_indicators_indicator_object_entry_view_update_bg_gsource_func (gpointer self) {
-	gboolean result;
-	result = unity_panel_indicators_indicator_object_entry_view_update_bg (self);
-	return result;
+#line 422 "panel-indicator-object-entry-view.c"
+	return unity_panel_indicators_indicator_object_entry_view_update_bg (self);
 }
 
 
+#line 236 "panel-indicator-object-entry-view.vala"
 static void unity_panel_indicators_indicator_object_entry_view_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
+#line 429 "panel-indicator-object-entry-view.c"
 	UnityPanelIndicatorsIndicatorObjectEntryView * self;
 	float width = 0.0F;
 	float height = 0.0F;
@@ -321,86 +433,149 @@ static void unity_panel_indicators_indicator_object_entry_view_real_allocate (Cl
 	ClutterActorBox child_box;
 	gboolean _tmp1_ = FALSE;
 	self = (UnityPanelIndicatorsIndicatorObjectEntryView*) base;
+#line 242 "panel-indicator-object-entry-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_panel_indicators_indicator_object_entry_view_parent_class)->allocate ((ClutterActor*) CTK_BOX (self), box, flags);
+#line 244 "panel-indicator-object-entry-view.vala"
 	width = floorf ((*box).x2 - (*box).x1);
+#line 245 "panel-indicator-object-entry-view.vala"
 	height = floorf ((*box).y2 - (*box).y1);
+#line 247 "panel-indicator-object-entry-view.vala"
 	child_box = (_tmp0_.x1 = (float) 0, _tmp0_);
+#line 248 "panel-indicator-object-entry-view.vala"
 	child_box.x1 = (float) 0;
+#line 249 "panel-indicator-object-entry-view.vala"
 	child_box.x2 = width;
+#line 250 "panel-indicator-object-entry-view.vala"
 	child_box.y1 = (float) 0;
+#line 251 "panel-indicator-object-entry-view.vala"
 	child_box.y2 = height;
+#line 253 "panel-indicator-object-entry-view.vala"
 	if (width != self->priv->last_width) {
+#line 253 "panel-indicator-object-entry-view.vala"
 		_tmp1_ = TRUE;
+#line 457 "panel-indicator-object-entry-view.c"
 	} else {
+#line 253 "panel-indicator-object-entry-view.vala"
 		_tmp1_ = height != self->priv->last_height;
+#line 461 "panel-indicator-object-entry-view.c"
 	}
+#line 253 "panel-indicator-object-entry-view.vala"
 	if (_tmp1_) {
+#line 255 "panel-indicator-object-entry-view.vala"
 		self->priv->last_width = width;
+#line 256 "panel-indicator-object-entry-view.vala"
 		self->priv->last_height = height;
+#line 257 "panel-indicator-object-entry-view.vala"
 		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_panel_indicators_indicator_object_entry_view_update_bg_gsource_func, g_object_ref (self), g_object_unref);
+#line 471 "panel-indicator-object-entry-view.c"
 	}
+#line 260 "panel-indicator-object-entry-view.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->bg, &child_box, flags);
+#line 475 "panel-indicator-object-entry-view.c"
 }
 
 
+#line 263 "panel-indicator-object-entry-view.vala"
 static void unity_panel_indicators_indicator_object_entry_view_real_paint (ClutterActor* base) {
+#line 481 "panel-indicator-object-entry-view.c"
 	UnityPanelIndicatorsIndicatorObjectEntryView * self;
 	self = (UnityPanelIndicatorsIndicatorObjectEntryView*) base;
+#line 265 "panel-indicator-object-entry-view.vala"
 	clutter_actor_paint ((ClutterActor*) self->priv->bg);
+#line 266 "panel-indicator-object-entry-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_panel_indicators_indicator_object_entry_view_parent_class)->paint ((ClutterActor*) CTK_BOX (self));
+#line 488 "panel-indicator-object-entry-view.c"
 }
 
 
+#line 269 "panel-indicator-object-entry-view.vala"
 static void unity_panel_indicators_indicator_object_entry_view_real_map (ClutterActor* base) {
+#line 494 "panel-indicator-object-entry-view.c"
 	UnityPanelIndicatorsIndicatorObjectEntryView * self;
 	self = (UnityPanelIndicatorsIndicatorObjectEntryView*) base;
+#line 271 "panel-indicator-object-entry-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_panel_indicators_indicator_object_entry_view_parent_class)->map ((ClutterActor*) CTK_BOX (self));
+#line 272 "panel-indicator-object-entry-view.vala"
 	clutter_actor_map ((ClutterActor*) self->priv->bg);
+#line 501 "panel-indicator-object-entry-view.c"
 }
 
 
+#line 275 "panel-indicator-object-entry-view.vala"
 static void unity_panel_indicators_indicator_object_entry_view_real_unmap (ClutterActor* base) {
+#line 507 "panel-indicator-object-entry-view.c"
 	UnityPanelIndicatorsIndicatorObjectEntryView * self;
 	self = (UnityPanelIndicatorsIndicatorObjectEntryView*) base;
+#line 277 "panel-indicator-object-entry-view.vala"
 	CLUTTER_ACTOR_CLASS (unity_panel_indicators_indicator_object_entry_view_parent_class)->unmap ((ClutterActor*) CTK_BOX (self));
+#line 278 "panel-indicator-object-entry-view.vala"
 	clutter_actor_unmap ((ClutterActor*) self->priv->bg);
+#line 514 "panel-indicator-object-entry-view.c"
 }
 
 
+#line 281 "panel-indicator-object-entry-view.vala"
 static gboolean unity_panel_indicators_indicator_object_entry_view_update_bg (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
+#line 520 "panel-indicator-object-entry-view.c"
 	gboolean result = FALSE;
 	cairo_t* cr;
 	gint width;
 	gint height;
 	cairo_t* _tmp0_;
 	cairo_pattern_t* pat;
+#line 281 "panel-indicator-object-entry-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
+#line 529 "panel-indicator-object-entry-view.c"
 	cr = NULL;
+#line 284 "panel-indicator-object-entry-view.vala"
 	width = (gint) self->priv->last_width;
+#line 285 "panel-indicator-object-entry-view.vala"
 	height = (gint) self->priv->last_height;
+#line 287 "panel-indicator-object-entry-view.vala"
 	clutter_cairo_texture_set_surface_size (self->priv->bg, (guint) width, (guint) height);
+#line 289 "panel-indicator-object-entry-view.vala"
 	cr = (_tmp0_ = clutter_cairo_texture_create (self->priv->bg), _cairo_destroy0 (cr), _tmp0_);
+#line 291 "panel-indicator-object-entry-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+#line 292 "panel-indicator-object-entry-view.vala"
 	cairo_paint (cr);
+#line 294 "panel-indicator-object-entry-view.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+#line 296 "panel-indicator-object-entry-view.vala"
 	cairo_set_line_width (cr, 1.0);
+#line 298 "panel-indicator-object-entry-view.vala"
 	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.2);
+#line 300 "panel-indicator-object-entry-view.vala"
 	cairo_move_to (cr, (double) 1, (double) height);
+#line 302 "panel-indicator-object-entry-view.vala"
 	cairo_line_to (cr, (double) 1, (double) 7);
+#line 304 "panel-indicator-object-entry-view.vala"
 	cairo_curve_to (cr, (double) 1, (double) 2, (double) 1, (double) 2, (double) 10, (double) 2);
+#line 308 "panel-indicator-object-entry-view.vala"
 	cairo_line_to (cr, (double) (width - 10), (double) 2);
+#line 310 "panel-indicator-object-entry-view.vala"
 	cairo_curve_to (cr, (double) width, (double) 2, (double) width, (double) 2, (double) width, (double) 7);
+#line 314 "panel-indicator-object-entry-view.vala"
 	cairo_line_to (cr, (double) width, (double) height);
+#line 316 "panel-indicator-object-entry-view.vala"
 	cairo_line_to (cr, (double) 1, (double) height);
+#line 318 "panel-indicator-object-entry-view.vala"
 	pat = cairo_pattern_create_linear ((double) 1, (double) 0, (double) 1, (double) height);
+#line 319 "panel-indicator-object-entry-view.vala"
 	cairo_pattern_add_color_stop_rgba (pat, 0.0, (double) 0.8509f, (double) 0.8196f, (double) 0.7294f, (double) 1.0f);
+#line 320 "panel-indicator-object-entry-view.vala"
 	cairo_pattern_add_color_stop_rgba (pat, 1.0, (double) 0.7019f, (double) 0.6509f, (double) 0.5137f, (double) 1.0f);
+#line 321 "panel-indicator-object-entry-view.vala"
 	cairo_set_source (cr, pat);
+#line 322 "panel-indicator-object-entry-view.vala"
 	cairo_fill (cr);
+#line 573 "panel-indicator-object-entry-view.c"
 	result = FALSE;
 	_cairo_destroy0 (cr);
 	_cairo_pattern_destroy0 (pat);
+#line 324 "panel-indicator-object-entry-view.vala"
 	return result;
+#line 579 "panel-indicator-object-entry-view.c"
 }
 
 
@@ -408,7 +583,9 @@ IndicatorObjectEntry* unity_panel_indicators_indicator_object_entry_view_get_ent
 	IndicatorObjectEntry* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_entry;
+#line 24 "panel-indicator-object-entry-view.vala"
 	return result;
+#line 589 "panel-indicator-object-entry-view.c"
 }
 
 
@@ -419,92 +596,125 @@ static void unity_panel_indicators_indicator_object_entry_view_set_entry (UnityP
 }
 
 
+#line 161 "panel-indicator-object-entry-view.vala"
 static gboolean _unity_panel_indicators_indicator_object_entry_view_on_button_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = unity_panel_indicators_indicator_object_entry_view_on_button_press_event (self, event);
-	return result;
+#line 602 "panel-indicator-object-entry-view.c"
+	return unity_panel_indicators_indicator_object_entry_view_on_button_press_event (self, event);
 }
 
 
+#line 188 "panel-indicator-object-entry-view.vala"
 static gboolean _unity_panel_indicators_indicator_object_entry_view_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = unity_panel_indicators_indicator_object_entry_view_on_motion_event (self, event);
-	return result;
+#line 609 "panel-indicator-object-entry-view.c"
+	return unity_panel_indicators_indicator_object_entry_view_on_motion_event (self, event);
 }
 
 
+#line 149 "panel-indicator-object-entry-view.vala"
 static gboolean _unity_panel_indicators_indicator_object_entry_view_on_scroll_event_clutter_actor_scroll_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = unity_panel_indicators_indicator_object_entry_view_on_scroll_event (self, event);
-	return result;
+#line 616 "panel-indicator-object-entry-view.c"
+	return unity_panel_indicators_indicator_object_entry_view_on_scroll_event (self, event);
 }
 
 
+#line 83 "panel-indicator-object-entry-view.vala"
 static void _lambda0_ (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
+#line 623 "panel-indicator-object-entry-view.c"
 	GdkPixbuf* _tmp1_;
 	GdkPixbuf* _tmp0_ = NULL;
 	gboolean _tmp2_;
+#line 85 "panel-indicator-object-entry-view.vala"
 	if ((_tmp2_ = GDK_IS_PIXBUF (_tmp1_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp0_, NULL), _tmp0_)), _g_object_unref0 (_tmp1_), _tmp2_)) {
+#line 629 "panel-indicator-object-entry-view.c"
 		GdkPixbuf* _tmp4_;
 		GdkPixbuf* _tmp3_ = NULL;
 		GdkPixbuf* _tmp6_;
 		GdkPixbuf* _tmp5_ = NULL;
+#line 87 "panel-indicator-object-entry-view.vala"
 		g_object_set (self->image, "pixbuf", _tmp4_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp3_, NULL), _tmp3_), NULL);
+#line 636 "panel-indicator-object-entry-view.c"
 		_g_object_unref0 (_tmp4_);
+#line 88 "panel-indicator-object-entry-view.vala"
 		ctk_image_set_size (self->image, gdk_pixbuf_get_width (_tmp6_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp5_, NULL), _tmp5_)));
+#line 640 "panel-indicator-object-entry-view.c"
 		_g_object_unref0 (_tmp6_);
 	}
 }
 
 
+#line 83 "panel-indicator-object-entry-view.vala"
 static void __lambda0__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+#line 648 "panel-indicator-object-entry-view.c"
 	_lambda0_ (self);
 }
 
 
+#line 92 "panel-indicator-object-entry-view.vala"
 static void _lambda1_ (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
+#line 655 "panel-indicator-object-entry-view.c"
 	char* _tmp1_;
 	char* _tmp0_ = NULL;
 	gboolean _tmp2_;
+#line 94 "panel-indicator-object-entry-view.vala"
 	if ((_tmp2_ = (_tmp1_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp0_, NULL), _tmp0_)) != NULL, _g_free0 (_tmp1_), _tmp2_)) {
+#line 661 "panel-indicator-object-entry-view.c"
 		char* _tmp4_;
 		char* _tmp3_ = NULL;
+#line 96 "panel-indicator-object-entry-view.vala"
 		g_object_set (self->image, "stock-id", _tmp4_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp3_, NULL), _tmp3_), NULL);
+#line 666 "panel-indicator-object-entry-view.c"
 		_g_free0 (_tmp4_);
+#line 97 "panel-indicator-object-entry-view.vala"
 		ctk_image_set_size (self->image, 22);
+#line 670 "panel-indicator-object-entry-view.c"
 	}
 }
 
 
+#line 92 "panel-indicator-object-entry-view.vala"
 static void __lambda1__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+#line 677 "panel-indicator-object-entry-view.c"
 	_lambda1_ (self);
 }
 
 
+#line 102 "panel-indicator-object-entry-view.vala"
 static void _lambda2_ (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
+#line 684 "panel-indicator-object-entry-view.c"
 	char* _tmp1_;
 	char* _tmp0_ = NULL;
 	gboolean _tmp2_;
+#line 104 "panel-indicator-object-entry-view.vala"
 	if ((_tmp2_ = (_tmp1_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp0_, NULL), _tmp0_)) != NULL, _g_free0 (_tmp1_), _tmp2_)) {
+#line 690 "panel-indicator-object-entry-view.c"
 		char* _tmp4_;
 		char* _tmp3_ = NULL;
+#line 105 "panel-indicator-object-entry-view.vala"
 		g_object_set (self->image, "stock-id", _tmp4_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp3_, NULL), _tmp3_), NULL);
+#line 695 "panel-indicator-object-entry-view.c"
 		_g_free0 (_tmp4_);
 	}
 }
 
 
+#line 102 "panel-indicator-object-entry-view.vala"
 static void __lambda2__gtk_icon_theme_changed (GtkIconTheme* _sender, gpointer self) {
+#line 703 "panel-indicator-object-entry-view.c"
 	_lambda2_ (self);
 }
 
 
+#line 117 "panel-indicator-object-entry-view.vala"
 static void _lambda3_ (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
+#line 119 "panel-indicator-object-entry-view.vala"
 	clutter_text_set_text ((ClutterText*) self->text, gtk_label_get_label (self->priv->_entry->label));
+#line 712 "panel-indicator-object-entry-view.c"
 }
 
 
+#line 117 "panel-indicator-object-entry-view.vala"
 static void __lambda3__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+#line 718 "panel-indicator-object-entry-view.c"
 	_lambda3_ (self);
 }
 
@@ -521,15 +731,25 @@ static GObject * unity_panel_indicators_indicator_object_entry_view_constructor 
 		CtkPadding _tmp1_;
 		ClutterCairoTexture* _tmp2_;
 		GtkIconTheme* theme;
+#line 53 "panel-indicator-object-entry-view.vala"
 		ctk_actor_set_padding ((CtkActor*) self, (_tmp1_ = (_tmp0_.top = (float) 0, _tmp0_.right = 4.0f, _tmp0_.bottom = (float) 0, _tmp0_.left = 4.0f, _tmp0_), &_tmp1_));
+#line 55 "panel-indicator-object-entry-view.vala"
 		g_signal_connect_object ((ClutterActor*) self, "button-press-event", (GCallback) _unity_panel_indicators_indicator_object_entry_view_on_button_press_event_clutter_actor_button_press_event, self, 0);
+#line 57 "panel-indicator-object-entry-view.vala"
 		g_signal_connect_object ((ClutterActor*) self, "motion-event", (GCallback) _unity_panel_indicators_indicator_object_entry_view_on_motion_event_clutter_actor_motion_event, self, 0);
+#line 58 "panel-indicator-object-entry-view.vala"
 		g_signal_connect_object ((ClutterActor*) self, "scroll-event", (GCallback) _unity_panel_indicators_indicator_object_entry_view_on_scroll_event_clutter_actor_scroll_event, self, 0);
+#line 60 "panel-indicator-object-entry-view.vala"
 		self->priv->bg = (_tmp2_ = g_object_ref_sink ((ClutterCairoTexture*) clutter_cairo_texture_new ((guint) 10, (guint) 10)), _g_object_unref0 (self->priv->bg), _tmp2_);
+#line 61 "panel-indicator-object-entry-view.vala"
 		clutter_actor_set_parent ((ClutterActor*) self->priv->bg, (ClutterActor*) self);
+#line 62 "panel-indicator-object-entry-view.vala"
 		clutter_actor_set_opacity ((ClutterActor*) self->priv->bg, (guint8) 0);
+#line 63 "panel-indicator-object-entry-view.vala"
 		clutter_actor_show ((ClutterActor*) self->priv->bg);
+#line 65 "panel-indicator-object-entry-view.vala"
 		if (GTK_IS_IMAGE (self->priv->_entry->image)) {
+#line 753 "panel-indicator-object-entry-view.c"
 			CtkImage* _tmp3_;
 			char* _tmp5_;
 			char* _tmp4_ = NULL;
@@ -537,40 +757,66 @@ static GObject * unity_panel_indicators_indicator_object_entry_view_constructor 
 			GdkPixbuf* _tmp10_;
 			GdkPixbuf* _tmp9_ = NULL;
 			gboolean _tmp11_;
+#line 67 "panel-indicator-object-entry-view.vala"
 			self->image = (_tmp3_ = g_object_ref_sink ((CtkImage*) ctk_image_new ((guint) 22)), _g_object_unref0 (self->image), _tmp3_);
+#line 68 "panel-indicator-object-entry-view.vala"
 			clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->image);
+#line 69 "panel-indicator-object-entry-view.vala"
 			clutter_actor_show ((ClutterActor*) self->image);
+#line 71 "panel-indicator-object-entry-view.vala"
 			if ((_tmp6_ = (_tmp5_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp4_, NULL), _tmp4_)) != NULL, _g_free0 (_tmp5_), _tmp6_)) {
+#line 769 "panel-indicator-object-entry-view.c"
 				char* _tmp8_;
 				char* _tmp7_ = NULL;
+#line 73 "panel-indicator-object-entry-view.vala"
 				g_object_set (self->image, "stock-id", _tmp8_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp7_, NULL), _tmp7_), NULL);
+#line 774 "panel-indicator-object-entry-view.c"
 				_g_free0 (_tmp8_);
 			}
+#line 76 "panel-indicator-object-entry-view.vala"
 			if ((_tmp11_ = (_tmp10_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp9_, NULL), _tmp9_)) != NULL, _g_object_unref0 (_tmp10_), _tmp11_)) {
+#line 779 "panel-indicator-object-entry-view.c"
 				GdkPixbuf* _tmp13_;
 				GdkPixbuf* _tmp12_ = NULL;
 				GdkPixbuf* _tmp15_;
 				GdkPixbuf* _tmp14_ = NULL;
+#line 78 "panel-indicator-object-entry-view.vala"
 				g_object_set (self->image, "pixbuf", _tmp13_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp12_, NULL), _tmp12_), NULL);
+#line 786 "panel-indicator-object-entry-view.c"
 				_g_object_unref0 (_tmp13_);
+#line 79 "panel-indicator-object-entry-view.vala"
 				ctk_image_set_size (self->image, gdk_pixbuf_get_width (_tmp15_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp14_, NULL), _tmp14_)));
+#line 790 "panel-indicator-object-entry-view.c"
 				_g_object_unref0 (_tmp15_);
 			}
 		}
+#line 83 "panel-indicator-object-entry-view.vala"
 		g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::pixbuf", (GCallback) __lambda0__g_object_notify, self, 0);
+#line 92 "panel-indicator-object-entry-view.vala"
 		g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::icon-name", (GCallback) __lambda1__g_object_notify, self, 0);
+#line 101 "panel-indicator-object-entry-view.vala"
 		theme = gtk_icon_theme_get_default ();
+#line 102 "panel-indicator-object-entry-view.vala"
 		g_signal_connect_object (theme, "changed", (GCallback) __lambda2__gtk_icon_theme_changed, self, 0);
+#line 108 "panel-indicator-object-entry-view.vala"
 		if (GTK_IS_LABEL (self->priv->_entry->label)) {
+#line 804 "panel-indicator-object-entry-view.c"
 			CtkText* _tmp16_;
 			ClutterColor _tmp17_ = {0};
 			ClutterColor _tmp18_;
+#line 110 "panel-indicator-object-entry-view.vala"
 			self->text = (_tmp16_ = g_object_ref_sink ((CtkText*) ctk_text_new ("")), _g_object_unref0 (self->text), _tmp16_);
+#line 111 "panel-indicator-object-entry-view.vala"
 			clutter_text_set_color ((ClutterText*) self->text, (_tmp18_ = (_tmp17_.red = (guint8) 233, _tmp17_.green = (guint8) 216, _tmp17_.blue = (guint8) 200, _tmp17_.alpha = (guint8) 255, _tmp17_), &_tmp18_));
+#line 112 "panel-indicator-object-entry-view.vala"
 			clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->text);
+#line 113 "panel-indicator-object-entry-view.vala"
 			clutter_actor_show ((ClutterActor*) self->text);
+#line 115 "panel-indicator-object-entry-view.vala"
 			clutter_text_set_text ((ClutterText*) self->text, gtk_label_get_label (self->priv->_entry->label));
+#line 117 "panel-indicator-object-entry-view.vala"
 			g_signal_connect_object ((GObject*) self->priv->_entry->label, "notify::label", (GCallback) __lambda3__g_object_notify, self, 0);
+#line 820 "panel-indicator-object-entry-view.c"
 		}
 	}
 	return obj;

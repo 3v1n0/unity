@@ -23,12 +23,6 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <unity-private.h>
-#include <unity/unity-place.h>
-#include <dbus/dbus-glib-lowlevel.h>
-#include <dbus/dbus-glib.h>
-#include <stdlib.h>
-#include <string.h>
 #include <gobject/gvaluecollector.h>
 
 
@@ -42,22 +36,6 @@
 typedef struct _UnityTestsUnitPlacesSuite UnityTestsUnitPlacesSuite;
 typedef struct _UnityTestsUnitPlacesSuiteClass UnityTestsUnitPlacesSuiteClass;
 typedef struct _UnityTestsUnitPlacesSuitePrivate UnityTestsUnitPlacesSuitePrivate;
-
-#define UNITY_TESTS_UNIT_PLACES_SUITE_TYPE_TEST_PLACE (unity_tests_unit_places_suite_test_place_get_type ())
-#define UNITY_TESTS_UNIT_PLACES_SUITE_TEST_PLACE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UNIT_PLACES_SUITE_TYPE_TEST_PLACE, UnityTestsUnitPlacesSuiteTestPlace))
-#define UNITY_TESTS_UNIT_PLACES_SUITE_TEST_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UNIT_PLACES_SUITE_TYPE_TEST_PLACE, UnityTestsUnitPlacesSuiteTestPlaceClass))
-#define UNITY_TESTS_UNIT_PLACES_SUITE_IS_TEST_PLACE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTS_UNIT_PLACES_SUITE_TYPE_TEST_PLACE))
-#define UNITY_TESTS_UNIT_PLACES_SUITE_IS_TEST_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTS_UNIT_PLACES_SUITE_TYPE_TEST_PLACE))
-#define UNITY_TESTS_UNIT_PLACES_SUITE_TEST_PLACE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTS_UNIT_PLACES_SUITE_TYPE_TEST_PLACE, UnityTestsUnitPlacesSuiteTestPlaceClass))
-
-typedef struct _UnityTestsUnitPlacesSuiteTestPlace UnityTestsUnitPlacesSuiteTestPlace;
-typedef struct _UnityTestsUnitPlacesSuiteTestPlaceClass UnityTestsUnitPlacesSuiteTestPlaceClass;
-#define _dbus_g_connection_unref0(var) ((var == NULL) ? NULL : (var = (dbus_g_connection_unref (var), NULL)))
-#define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
-#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
-#define _g_main_loop_unref0(var) ((var == NULL) ? NULL : (var = (g_main_loop_unref (var), NULL)))
-typedef struct _UnityTestsUnitPlacesSuiteTestPlacePrivate UnityTestsUnitPlacesSuiteTestPlacePrivate;
-#define _g_free0(var) (var = (g_free (var), NULL))
 typedef struct _UnityTestsUnitParamSpecPlacesSuite UnityTestsUnitParamSpecPlacesSuite;
 
 struct _UnityTestsUnitPlacesSuite {
@@ -71,21 +49,11 @@ struct _UnityTestsUnitPlacesSuiteClass {
 	void (*finalize) (UnityTestsUnitPlacesSuite *self);
 };
 
-struct _UnityTestsUnitPlacesSuiteTestPlace {
-	UnityPlace parent_instance;
-	UnityTestsUnitPlacesSuiteTestPlacePrivate * priv;
-};
-
-struct _UnityTestsUnitPlacesSuiteTestPlaceClass {
-	UnityPlaceClass parent_class;
-};
-
 struct _UnityTestsUnitParamSpecPlacesSuite {
 	GParamSpec parent_instance;
 };
 
 
-static gpointer unity_tests_unit_places_suite_test_place_parent_class = NULL;
 static gpointer unity_tests_unit_places_suite_parent_class = NULL;
 
 gpointer unity_tests_unit_places_suite_ref (gpointer instance);
@@ -98,155 +66,26 @@ GType unity_tests_unit_places_suite_get_type (void);
 enum  {
 	UNITY_TESTS_UNIT_PLACES_SUITE_DUMMY_PROPERTY
 };
-UnityTestsUnitPlacesSuiteTestPlace* unity_tests_unit_places_suite_test_place_new (void);
-UnityTestsUnitPlacesSuiteTestPlace* unity_tests_unit_places_suite_test_place_construct (GType object_type);
-GType unity_tests_unit_places_suite_test_place_get_type (void);
-static void _lambda0_ (void);
-static void __lambda0__gcallback (void);
 UnityTestsUnitPlacesSuite* unity_tests_unit_places_suite_new (void);
 UnityTestsUnitPlacesSuite* unity_tests_unit_places_suite_construct (GType object_type);
-enum  {
-	UNITY_TESTS_UNIT_PLACES_SUITE_TEST_PLACE_DUMMY_PROPERTY
-};
-static void _lambda1_ (gboolean a, UnityTestsUnitPlacesSuiteTestPlace* self);
-static void __lambda1__unity_place_is_active (UnityPlace* _sender, gboolean is_active, gpointer self);
-static GObject * unity_tests_unit_places_suite_test_place_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_tests_unit_places_suite_finalize (UnityTestsUnitPlacesSuite* obj);
 
 
 
-static void _lambda0_ (void) {
-	GError * _inner_error_;
-	UnityTestsUnitPlacesSuiteTestPlace* place;
-	GMainLoop* loop;
-	_inner_error_ = NULL;
-	unity_testing_logging_init_fatal_handler ();
-	place = unity_tests_unit_places_suite_test_place_new ();
-	g_assert (UNITY_TESTS_UNIT_PLACES_SUITE_IS_TEST_PLACE (place));
-	loop = g_main_loop_new (NULL, FALSE);
-	{
-		DBusGConnection* conn;
-		conn = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
-		if (_inner_error_ != NULL) {
-			goto __catch0_g_error;
-		}
-		utils_register_object_on_dbus (conn, "/com/canonical/Unity/Place", (GObject*) place);
-		g_main_context_iteration (g_main_loop_get_context (loop), TRUE);
-		_dbus_g_connection_unref0 (conn);
-	}
-	goto __finally0;
-	__catch0_g_error:
-	{
-		GError * e;
-		e = _inner_error_;
-		_inner_error_ = NULL;
-		{
-			g_warning ("test-places.vala:50: TestPlace error: %s", e->message);
-			_g_error_free0 (e);
-		}
-	}
-	__finally0:
-	if (_inner_error_ != NULL) {
-		_g_object_unref0 (place);
-		_g_main_loop_unref0 (loop);
-		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-		g_clear_error (&_inner_error_);
-		return;
-	}
-	_g_object_unref0 (place);
-	_g_main_loop_unref0 (loop);
-}
-
-
-static void __lambda0__gcallback (void) {
-	_lambda0_ ();
-}
-
-
+#line 27 "test-places.vala"
 UnityTestsUnitPlacesSuite* unity_tests_unit_places_suite_construct (GType object_type) {
+#line 78 "test-places.c"
 	UnityTestsUnitPlacesSuite* self;
 	self = (UnityTestsUnitPlacesSuite*) g_type_create_instance (object_type);
-	g_test_add_func ("/Unit/Places/TestPlace", __lambda0__gcallback);
 	return self;
 }
 
 
+#line 27 "test-places.vala"
 UnityTestsUnitPlacesSuite* unity_tests_unit_places_suite_new (void) {
+#line 27 "test-places.vala"
 	return unity_tests_unit_places_suite_construct (UNITY_TESTS_UNIT_TYPE_PLACES_SUITE);
-}
-
-
-UnityTestsUnitPlacesSuiteTestPlace* unity_tests_unit_places_suite_test_place_construct (GType object_type) {
-	UnityTestsUnitPlacesSuiteTestPlace * self;
-	self = (UnityTestsUnitPlacesSuiteTestPlace*) g_object_new (object_type, "name", "neil", "icon-name", "gtk-apply", "tooltip", "hello", NULL);
-	return self;
-}
-
-
-UnityTestsUnitPlacesSuiteTestPlace* unity_tests_unit_places_suite_test_place_new (void) {
-	return unity_tests_unit_places_suite_test_place_construct (UNITY_TESTS_UNIT_PLACES_SUITE_TYPE_TEST_PLACE);
-}
-
-
-static char* bool_to_string (gboolean self) {
-	char* result = NULL;
-	if (self) {
-		result = g_strdup ("true");
-		return result;
-	} else {
-		result = g_strdup ("false");
-		return result;
-	}
-}
-
-
-static void _lambda1_ (gboolean a, UnityTestsUnitPlacesSuiteTestPlace* self) {
-	char* _tmp1_;
-	char* _tmp0_;
-	g_print ("%s", _tmp1_ = g_strconcat (_tmp0_ = bool_to_string (a), "\n", NULL));
-	_g_free0 (_tmp1_);
-	_g_free0 (_tmp0_);
-}
-
-
-static void __lambda1__unity_place_is_active (UnityPlace* _sender, gboolean is_active, gpointer self) {
-	_lambda1_ (is_active, self);
-}
-
-
-static GObject * unity_tests_unit_places_suite_test_place_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
-	GObject * obj;
-	GObjectClass * parent_class;
-	UnityTestsUnitPlacesSuiteTestPlace * self;
-	parent_class = G_OBJECT_CLASS (unity_tests_unit_places_suite_test_place_parent_class);
-	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
-	self = UNITY_TESTS_UNIT_PLACES_SUITE_TEST_PLACE (obj);
-	{
-		g_signal_connect_object ((UnityPlace*) self, "is-active", (GCallback) __lambda1__unity_place_is_active, self, 0);
-	}
-	return obj;
-}
-
-
-static void unity_tests_unit_places_suite_test_place_class_init (UnityTestsUnitPlacesSuiteTestPlaceClass * klass) {
-	unity_tests_unit_places_suite_test_place_parent_class = g_type_class_peek_parent (klass);
-	G_OBJECT_CLASS (klass)->constructor = unity_tests_unit_places_suite_test_place_constructor;
-}
-
-
-static void unity_tests_unit_places_suite_test_place_instance_init (UnityTestsUnitPlacesSuiteTestPlace * self) {
-}
-
-
-GType unity_tests_unit_places_suite_test_place_get_type (void) {
-	static volatile gsize unity_tests_unit_places_suite_test_place_type_id__volatile = 0;
-	if (g_once_init_enter (&unity_tests_unit_places_suite_test_place_type_id__volatile)) {
-		static const GTypeInfo g_define_type_info = { sizeof (UnityTestsUnitPlacesSuiteTestPlaceClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_tests_unit_places_suite_test_place_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityTestsUnitPlacesSuiteTestPlace), 0, (GInstanceInitFunc) unity_tests_unit_places_suite_test_place_instance_init, NULL };
-		GType unity_tests_unit_places_suite_test_place_type_id;
-		unity_tests_unit_places_suite_test_place_type_id = g_type_register_static (UNITY_TYPE_PLACE, "UnityTestsUnitPlacesSuiteTestPlace", &g_define_type_info, 0);
-		g_once_init_leave (&unity_tests_unit_places_suite_test_place_type_id__volatile, unity_tests_unit_places_suite_test_place_type_id);
-	}
-	return unity_tests_unit_places_suite_test_place_type_id__volatile;
+#line 89 "test-places.c"
 }
 
 
