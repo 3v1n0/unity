@@ -24,11 +24,11 @@ namespace Unity.Tests.Unit
 {
   public class FakeIndicatorObject: Indicator.Object
   {
-    public GLib.List<Indicator.ObjectEntry> indicator_entry_array;
+    public Gee.ArrayList<Indicator.ObjectEntry> indicator_entry_array;
     public Gtk.Label _label;
     public Gtk.Image _image;
     public Gtk.Menu _menu;
-    
+
     public FakeIndicatorObject ()
     {
       Object();
@@ -37,7 +37,7 @@ namespace Unity.Tests.Unit
     construct
     {
       START_FUNCTION ();
-      indicator_entry_array = new GLib.List<Indicator.ObjectEntry> ();
+      indicator_entry_array = new Gee.ArrayList< unowned Indicator.ObjectEntry> ();
       
       _label = new Gtk.Label ("Test Label");
       _image = new Gtk.Image.from_icon_name ("gtk-apply", Gtk.IconSize.MENU);
@@ -47,20 +47,20 @@ namespace Unity.Tests.Unit
 
     public void add_entry(Indicator.ObjectEntry entry)
     {
-      unowned GLib.List<Indicator.ObjectEntry> pos = indicator_entry_array.find (entry);
-      if (pos.length () != 0)
+      int pos = indicator_entry_array.index_of (entry);
+      if (pos != -1)
         return;
-
-      indicator_entry_array.prepend (entry);
+      
+      indicator_entry_array.add (entry);
       entry_added (entry);
     }
 
     public void remove_entry(Indicator.ObjectEntry entry)
     {
-      unowned GLib.List<Indicator.ObjectEntry> pos = indicator_entry_array.find (entry);
-      if (pos.length () != 0)
+      int pos = indicator_entry_array.index_of (entry);
+      if (pos != -1)
         {
-          indicator_entry_array.remove_link (pos);
+          indicator_entry_array.remove_at (pos);
           entry_removed (entry);
         }
     }
@@ -80,10 +80,15 @@ namespace Unity.Tests.Unit
       return this._menu;
     }
 
-    public override unowned GLib.List get_entries ()
-    {
-      return indicator_entry_array;
-    }
+//     public override GLib.List<unowned Indicator.ObjectEntry> get_entries ()
+//     {
+//       GLib.List<unowned Indicator.ObjectEntry> list = new GLib.List<unowned Indicator.ObjectEntry> ();
+//       foreach(unowned Indicator.ObjectEntry element in indicator_entry_array)
+//       {
+//         list.append (element);
+//       }
+//       return list;
+//     }
   }
 
   public class PanelIndicatorObjectViewSuite : Object

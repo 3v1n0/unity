@@ -88,8 +88,8 @@ public class Main
   public static int main (string[] args)
   {
     Logging         logger;
-    QuicklistSuite  quicklist_suite;
-    HomeButtonSuite home_button_suite;
+    //QuicklistSuite  quicklist_suite;
+    //HomeButtonSuite home_button_suite;
     //AutomationBasicTestSuite basic_test_suite;
     IndicatorTestSuite indicator_test_suite;
 
@@ -107,11 +107,11 @@ public class Main
     logger = new Logging ();
 
     //basic_test_suite = new AutomationBasicTestSuite ();
-    quicklist_suite = new QuicklistSuite ();
-    home_button_suite = new HomeButtonSuite ();
+    //quicklist_suite = new QuicklistSuite ();
+    //home_button_suite = new HomeButtonSuite ();
     indicator_test_suite = new IndicatorTestSuite ();
 
-    Timeout.add_seconds (3, ()=> {
+    Timeout.add_seconds (13, ()=> {
       Test.run ();
       Gtk.main_quit ();
       return false;

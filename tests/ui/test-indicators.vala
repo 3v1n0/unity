@@ -28,6 +28,8 @@ namespace Unity.Tests.UI
   public class FakeIndicatorObject: Indicator.Object
   {
     public Gee.ArrayList<Indicator.ObjectEntry> indicator_entry_array;
+    //GLib.List<Indicator.ObjectEntry> list;
+    
     public Gtk.Label _label = null;
     public Gtk.Image _image = null;
     public Gtk.Menu _menu = null;
@@ -86,30 +88,31 @@ namespace Unity.Tests.UI
       return this._menu;
     }
     
-/*    public override unowned GLib.List get_entries ()
-    {
-      
-    }*/
+//     public override unowned GLib.List<Indicator.ObjectEntry> get_entries ()
+//     {
+//       list = new GLib.List<Indicator.ObjectEntry> ();
+//       foreach(Indicator.ObjectEntry element in indicator_entry_array)
+//       {
+//         list.append (element);
+//       }
+//       return list;
+//     }    
   }
   
   public class FakeIndicatorsModel : IndicatorsModel
   {
-    //public static Gee.HashMap<string, int> indicator_order = null;
     public Gee.HashMap<Indicator.Object, string> indicator_map;
     public Gee.ArrayList<Indicator.Object> indicator_list;
     
-    private Indicator.ObjectEntry entry;
-    private Gtk.Menu  menu;
-    private Gtk.Label label;
-    private Gtk.Image image;
-    private Gtk.MenuItem item;
+    
+    public FakeIndicatorObject indicator_object_0;
+    public FakeIndicatorObject indicator_object_1;
     
     public FakeIndicatorsModel ()
     {
       START_FUNCTION ();
 
       indicator_map = new Gee.HashMap<Indicator.Object, string> ();
-      //indicator_order = new Gee.HashMap<string, int> ();
       indicator_list = new Gee.ArrayList<Indicator.Object> ();
 
       load_fake_indicators ();
@@ -119,32 +122,14 @@ namespace Unity.Tests.UI
 
     private void load_fake_indicators ()
     {
-      entry =  new Indicator.ObjectEntry ();
-      menu = new Gtk.Menu ();
-      item = new Gtk.MenuItem.with_label ("lala");
-      //menu.append (item);
-      entry.menu = menu;
+      indicator_object_0 = new FakeIndicatorObject (0);
+      indicator_object_1 = new FakeIndicatorObject (1);
 
-      label = new Gtk.Label ("Label");
-      entry.label = label;
-
-      image = new Gtk.Image.from_icon_name ("gtk-apply", Gtk.IconSize.MENU);
-      entry.image = image;
-      
-      FakeIndicatorObject o;
-
-      o = new FakeIndicatorObject (0);
-
-      if (o is Indicator.Object)
-        {
-          o.add_entry (entry);
-          this.indicator_map[o] = "fakeindicator0";
-          indicator_list.add (o);
-        }
-        
-      /*o = new FakeIndicatorObject (1);
-      this.indicator_map[o] = "fakeindicator1";
-      indicator_list.add (o);*/
+      this.indicator_map[indicator_object_0] = "fakeindicator0";
+      indicator_list.add (indicator_object_0);
+      this.indicator_map[indicator_object_1] = "fakeindicator1";
+      indicator_list.add (indicator_object_1);
+          
     }
 
     public override Gee.ArrayList<Indicator.Object> get_indicators ()
@@ -168,6 +153,14 @@ namespace Unity.Tests.UI
     Clutter.Stage?         stage;
     Unity.Testing.Director director;
 
+    public Indicator.ObjectEntry entry0;
+    public Indicator.ObjectEntry entry1;
+
+    private Gtk.Menu  menu;
+    private Gtk.Label label;
+    private Gtk.Image image;
+    private Gtk.MenuItem item;
+    
     public IndicatorTestSuite ()
     {
       Logging.init_fatal_handler ();
@@ -175,6 +168,7 @@ namespace Unity.Tests.UI
       FakeIndicatorsModel fake_indicator_model = new FakeIndicatorsModel ();
       IndicatorsModel.set_default (fake_indicator_model);
       
+     
       /* Testup the test window */
       window = new Unity.Testing.Window (true, 1024, 600);
       window.init_test_mode ();
@@ -185,17 +179,37 @@ namespace Unity.Tests.UI
       director = new Unity.Testing.Director (stage);
 
      
+      FakeIndicatorsModel indicator_model = IndicatorsModel.get_default () as FakeIndicatorsModel;
+      
+      menu = new Gtk.Menu ();
+      label = new Gtk.Label ("Entry0");
+      image = new Gtk.Image.from_icon_name ("gtk-apply", Gtk.IconSize.MENU);
+      
+      entry0 = new Indicator.ObjectEntry ();
+      entry0.menu = menu;
+      entry0.label = label;
+      entry0.image = image;
+      indicator_model.indicator_object_0.add_entry (entry0);
+
+      menu = new Gtk.Menu ();
+      label = new Gtk.Label ("Entry1");
+      image = new Gtk.Image.from_icon_name ("gtk-apply", Gtk.IconSize.MENU);
+      item = new Gtk.MenuItem.with_label ("MenuItem0");
+      menu.append (item);
+      
+      entry1 =  new Indicator.ObjectEntry ();
+      entry1.menu = menu;
+      entry1.label = label;
+      entry1.image = image;
+      indicator_model.indicator_object_1.add_entry (entry1);
+      
       Test.add_data_func (DOMAIN + "/Indicators", test_indicators);
     }
 
 
     private void test_indicators ()
     {
-      //director.button_press (home_button, 1, true, 1.0f, 1.0f, false);
 
-      //Logging.init_fatal_handler ();
-
-      //assert (g_flag == true);
     }
 
     //
@@ -208,8 +222,6 @@ namespace Unity.Tests.UI
     {
       return ShellMode.UNDERLAY;
     }
-
-
   }
 }
 
