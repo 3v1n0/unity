@@ -161,6 +161,7 @@ AC_SUBST(INDICATORICONSDIR)
 dnl Create the Makefiles
 AC_CONFIG_FILES([
   Makefile
+  unity.pc
   data/Makefile
   targets/Makefile
   targets/mutter/Makefile
