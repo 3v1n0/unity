@@ -156,9 +156,14 @@ namespace Unity.Tests.UI
     public Indicator.ObjectEntry entry0;
     public Indicator.ObjectEntry entry1;
 
-    private Gtk.Menu  menu;
-    private Gtk.Label label;
-    private Gtk.Image image;
+    private Gtk.Menu  menu0;
+    private Gtk.Label label0;
+    private Gtk.Image image0;
+    
+    private Gtk.Menu  menu1;
+    private Gtk.Label label1;
+    private Gtk.Image image1;
+    
     private Gtk.MenuItem item;
     
     public IndicatorTestSuite ()
@@ -176,31 +181,53 @@ namespace Unity.Tests.UI
       window.title = "Indicators testing";
       window.show_all ();
 
+      
       director = new Unity.Testing.Director (stage);
-
-     
+    
       FakeIndicatorsModel indicator_model = IndicatorsModel.get_default () as FakeIndicatorsModel;
       
-      menu = new Gtk.Menu ();
-      label = new Gtk.Label ("Entry0");
-      image = new Gtk.Image.from_icon_name ("gtk-apply", Gtk.IconSize.MENU);
+      menu0 = new Gtk.Menu ();
+      label0 = new Gtk.Label ("Entry0");
+      image0 = new Gtk.Image.from_icon_name ("gtk-apply", Gtk.IconSize.MENU);
+      item = new Gtk.MenuItem.with_label ("MenuItem0");
+      item.show();
+      menu0.append (item);
+      item = new Gtk.MenuItem.with_label ("MenuItem1");
+      item.show();
+      menu0.append (item);
+      item = new Gtk.MenuItem.with_label ("MenuItem2");
+      item.show();
+      menu0.append (item);
+      item = new Gtk.MenuItem.with_label ("MenuItem3");
+      item.show();
+      menu0.append (item);
       
       entry0 = new Indicator.ObjectEntry ();
-      entry0.menu = menu;
-      entry0.label = label;
-      entry0.image = image;
+      entry0.menu = menu0;
+      entry0.label = label0;
+      entry0.image = image0;
       indicator_model.indicator_object_0.add_entry (entry0);
 
-      menu = new Gtk.Menu ();
-      label = new Gtk.Label ("Entry1");
-      image = new Gtk.Image.from_icon_name ("gtk-apply", Gtk.IconSize.MENU);
+      menu1 = new Gtk.Menu ();
+      label1 = new Gtk.Label ("Entry1");
+      image1 = new Gtk.Image.from_icon_name ("gtk-apply", Gtk.IconSize.MENU);
       item = new Gtk.MenuItem.with_label ("MenuItem0");
-      menu.append (item);
+      item.show();
+      menu1.append (item);
+      item = new Gtk.MenuItem.with_label ("MenuItem1");
+      item.show();
+      menu1.append (item);
+      item = new Gtk.MenuItem.with_label ("MenuItem2");
+      item.show();
+      menu1.append (item);
+      item = new Gtk.MenuItem.with_label ("MenuItem3");
+      item.show();
+      menu1.append (item);
       
       entry1 =  new Indicator.ObjectEntry ();
-      entry1.menu = menu;
-      entry1.label = label;
-      entry1.image = image;
+      entry1.menu = menu1;
+      entry1.label = label1;
+      entry1.image = image1;
       indicator_model.indicator_object_1.add_entry (entry1);
       
       Test.add_data_func (DOMAIN + "/Indicators", test_indicators);
@@ -209,7 +236,26 @@ namespace Unity.Tests.UI
 
     private void test_indicators ()
     {
-
+      ObjectRegistry registry = ObjectRegistry.get_default ();
+      Logging.init_fatal_handler ();
+      
+      FakeIndicatorsModel indicator_model = IndicatorsModel.get_default () as FakeIndicatorsModel;
+      
+      IndicatorBar indicator_bar = registry.lookup ("IndicatorBar").get (0) as IndicatorBar;
+      assert (indicator_bar != null);
+      
+      IndicatorObjectView indicator_object_view = indicator_bar.get_indicator_view_matching (indicator_model.indicator_object_0);
+      assert (indicator_object_view != null);
+      
+      IndicatorObjectEntryView object_entry = indicator_object_view.get_entry_view (entry0);
+      assert (object_entry != null);
+      
+      stdout.printf("pressing\n");
+      director.button_press (object_entry, 1, true, 1.0f, 1.0f, false);
+      
+      director.do_wait_for_timeout (2000);
+      
+      //dir.button_press (entry0, 1, true, 1.0f, 1.0f, false);
     }
 
     //

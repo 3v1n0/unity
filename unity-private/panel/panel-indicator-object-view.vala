@@ -192,6 +192,5 @@ namespace Unity.Panel.Indicators
         }
       return null;
     }
-    
   }
 }

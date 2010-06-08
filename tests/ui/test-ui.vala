@@ -111,7 +111,7 @@ public class Main
     //home_button_suite = new HomeButtonSuite ();
     indicator_test_suite = new IndicatorTestSuite ();
 
-    Timeout.add_seconds (13, ()=> {
+    Timeout.add_seconds (5, ()=> {
       Test.run ();
       Gtk.main_quit ();
       return false;
