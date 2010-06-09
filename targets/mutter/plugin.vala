@@ -533,22 +533,11 @@ namespace Unity
 
       unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
 
-      GLib.SList <Wnck.Window> windows = null;
+      GLib.SList <Clutter.Actor> windows = null;
 
       foreach (Mutter.Window window in mutter_windows)
         {
-          int type = window.get_window_type ();
-
-          if (type == Mutter.MetaWindowType.NORMAL ||
-              type == Mutter.MetaWindowType.DIALOG ||
-              type == Mutter.MetaWindowType.MODAL_DIALOG
-              )
-            {
-              ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
-              Wnck.Window wnck_window = Wnck.Window.get (xid);
-              if (wnck_window is Wnck.Window)
-               windows.append (wnck_window);
-            }
+          windows.append (window as Clutter.Actor);
         }
 
       this.expose_windows (windows, 80);
@@ -570,23 +559,32 @@ namespace Unity
         }
     }
 
-		public void	expose_xids (Array<uint32> xids)
-		{
-			SList<Wnck.Window> windows = new SList<Wnck.Window> ();
-			for (int i = 0; i < xids.length; i++)
+    public void expose_xids (Array<uint32> xids)
+    {
+      SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
+      for (int i = 0; i < xids.length; i++)
         {
           uint32 xid = xids.index (i);
-          Wnck.Window window = Wnck.Window.get (xid);
-          if (window is Wnck.Window)
-            windows.append (window);
+          
+          unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
+          foreach (Mutter.Window w in mutter_windows)
+            {
+              uint32 wxid = (uint32) Mutter.MetaWindow.get_xwindow (w.get_meta_window ());
+              if (wxid == xid)
+                {
+                  windows.append (window);
+                  break;
+                }
+            }
         }
-			expose_windows (windows);
-		}
+        
+      expose_windows (windows);
+    }
 
-		public void stop_expose ()
-		{
-			dexpose_windows ();
-		}
+    public void stop_expose ()
+    {
+      dexpose_windows ();
+    }
 
     public void show_window (uint32 xid)
     {

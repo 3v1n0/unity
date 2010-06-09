@@ -150,7 +150,6 @@ namespace Unity
       expose_group.raise_top ();
       expose_group.show ();
 
-      unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
       foreach (Clutter.Actor actor in windows)
         {
           ExposeClone clone = new ExposeClone (actor);
@@ -185,6 +184,7 @@ namespace Unity
               });
         }
       
+      unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
       foreach (Mutter.Window w in mutter_windows)
         {
             if (w.get_window_type () == Mutter.MetaCompWindowType.DESKTOP)
