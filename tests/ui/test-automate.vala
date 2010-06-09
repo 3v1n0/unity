@@ -79,7 +79,7 @@ namespace Unity.Tests.UI
       Logging.init_fatal_handler ();
 
       QuicklistController qlcontroller = QuicklistController.get_default ();
-      ScrollerModel scroller = registry.lookup ("UnityScrollerModel") as ScrollerModel;
+      ScrollerModel scroller = registry.lookup ("UnityScrollerModel").get(0) as ScrollerModel;
       
       gTimer = new GLib.Timer();
       int DT = 2500;
