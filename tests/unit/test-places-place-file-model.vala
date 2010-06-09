@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Canonical Ltd
+ * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,34 +16,28 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
+using Unity;
+using Unity.Testing;
+using Unity.Places;
 
-using Gee;
-
-namespace Unity.Places
+namespace Unity.Tests.Unit
 {
-  public class Controller : Object
+  public class PlacesPlaceFileModel : Object
   {
-    /**
-     * This class takes care of reading in the places, creating the view and
-     * keeping it up-to-date
-     **/
-    public  Shell shell { get; construct; }
-    private View view;
+    public const string DOMAIN = "/Unit/Places/PlaceFileModel";
 
-    public Controller (Shell shell)
+    public PlacesPlaceFileModel ()
     {
-      Object (shell:shell);
+      Logging.init_fatal_handler ();
+
+      Test.add_data_func (DOMAIN + "/Allocation", test_allocation);
     }
 
-    construct
+    private void test_allocation ()
     {
-      view = new View (shell);
-    }
-
-    public View get_view ()
-    {
-      return view;
+      var model = new PlaceFileModel.with_directory (TESTDIR+"/data");
+      assert (model is PlaceFileModel);
+      assert (model.size == 2);
     }
   }
 }
-

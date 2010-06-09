@@ -84,21 +84,12 @@ panel_sources = \
   panel/panel-view.vala
 
 places_sources = \
-  places/application-place.vala \
-  places/bar-model.vala \
-  places/bar-view.vala \
-  places/cairo-drawing.vala \
-  places/default-model.vala \
-  places/default-view.vala \
-  places/file-place.vala \
   places/places-controller.vala \
-  places/places-model.vala \
+  places/places-place-entry.vala \
+  places/places-place-model.vala \
   places/places-place.vala \
-  places/places-place-proxy.vala \
-  places/places-place-view.vala \
-  places/places-results-view.vala \
-  places/places-view.vala \
-  places/search-field.vala
+  places/places-model.vala \
+  places/places-view.vala
 
 launcher_sources = \
   launcher/application-controller.vala \

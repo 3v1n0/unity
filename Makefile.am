@@ -24,4 +24,5 @@ dist-hook:
 
 EXTRA_DIST = \
   autogen.sh \
-  COPYING
+  COPYING \
+  COPYING.LGPL

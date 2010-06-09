@@ -1,0 +1,27 @@
+[Place]
+DBusName=org.ayatana.Unity.Place1
+DBusPath=/org/ayatana/Unity/Place1
+
+[Entry:One]
+DBusObjectPath=/org/ayatana/Unity/Entry1
+Icon=gtk-apply
+Name=One
+Description=One Description
+ShowGlobal=True
+ShowEntry=False
+
+[Entry:Two]
+DBusObjectPath=/org/ayatana/Unity/Entry2
+Icon=gtk-close
+Name=Two
+Description=Two Description
+ShowGlobal=False
+ShowEntry=True
+
+[Entry:Three]
+DBusObjectPath=/org/ayatana/Unity/Entry3
+Icon=gtk-cancel
+Name=Three
+Description=Three Description
+ShowGlobal=False
+ShowEntry=False

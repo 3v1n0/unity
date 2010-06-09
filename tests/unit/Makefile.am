@@ -51,6 +51,7 @@ test_unit_SOURCES = \
   test-launcher.vala \
   test-panel-indicator-object-entry-view.vala \
   test-panel-indicator-object-view.vala \
+  test-places-place-file-model.vala \
   test-places.vala \
   test-place.vala \
   test-unit.vala
