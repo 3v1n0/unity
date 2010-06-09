@@ -32,8 +32,10 @@ namespace Unity.Tests.Unit
       Logging.init_fatal_handler ();
 
       Test.add_data_func (DOMAIN + "/Allocation", test_allocation);
-      Test.add_data_func (DOMAIN + "/SimpleKeyfile", test_simple_placefile);
-      Test.add_data_func (DOMAIN + "/AdvancedKeyFile", test_advanced_placefile);
+      Test.add_data_func (DOMAIN + "/SimplePlaceFile", test_simple_placefile);
+      Test.add_data_func (DOMAIN + "/AdvancedPlaceFile", test_advanced_place_file);
+      Test.add_data_func (DOMAIN + "/BadSimplePlaceFile", test_bad_simple_place_file);
+      Test.add_data_func (DOMAIN + "/BadAdvancedPlaceFile", test_bad_advanced_place_file);
     }
 
     private void test_allocation ()
@@ -65,7 +67,7 @@ namespace Unity.Tests.Unit
       assert (place.n_entries == 0);
     }
 
-    private void test_advanced_placefile ()
+    private void test_advanced_place_file ()
     {
       var file = new KeyFile ();
       try {
@@ -114,6 +116,46 @@ namespace Unity.Tests.Unit
       assert (e.description == "Three Description");
       assert (e.show_global == false);
       assert (e.show_entry == false);
+    }
+
+    private void test_bad_simple_place_file ()
+    {
+      var file = new KeyFile ();
+      try {
+        file.load_from_file (TESTDIR + "/data/place0.badplace",
+                             KeyFileFlags.NONE);
+      } catch (Error error) {
+          warning ("Unable to load test place: %s", error.message);
+      }
+
+      if (trap_fork (0, TestTrapFlags.SILENCE_STDOUT | TestTrapFlags.SILENCE_STDERR))
+        {
+          var place = Places.Place.new_from_keyfile (file);
+          assert (place is Places.Place);
+          Posix.exit (0);
+        }
+        trap_has_passed ();
+        trap_assert_stderr ("*Does not contain 'Place' grou*");
+    }
+
+    private void test_bad_advanced_place_file ()
+    {
+      var file = new KeyFile ();
+      try {
+        file.load_from_file (TESTDIR + "/data/place1.badplace",
+                             KeyFileFlags.NONE);
+      } catch (Error error) {
+          warning ("Unable to load test place: %s", error.message);
+      }
+
+      if (trap_fork (0, TestTrapFlags.SILENCE_STDOUT | TestTrapFlags.SILENCE_STDERR))
+        {
+          var place = Places.Place.new_from_keyfile (file);
+          assert (place is Places.Place);
+          Posix.exit (0);
+        }
+        trap_has_passed ();
+        trap_assert_stderr ("*Does not contain valid DBusObjectPat*");
     }
   }
 }
