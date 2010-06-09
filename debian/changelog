@@ -2,6 +2,12 @@ unity (0.2.7-0ubuntu2) UNRELEASED; urgency=low
 
   * debian/rules:
     - include gnome.mk for installing default schema
+  * debian/control:
+    - Add transitional netbook-launcher package, and have Unity
+      C/R/P: netbook-launcher.
+  * debian/rules:
+    - Force an epoch bump on the transitional netbook-launcher package,
+      since the original package has a higher version.
 
  -- Didier Roche <didrocks@ubuntu.com>  Wed, 09 Jun 2010 12:09:53 +0200
 
