@@ -346,49 +346,6 @@ namespace Unity
       check_fullscreen_obstruction ();
     }
 
-/*
-    private void on_launcher_changed_event (LauncherView? last, LauncherView? current)
-    {
-      if (last != null)
-        {
-          last.menu_opened.disconnect (on_launcher_menu_opened);
-          last.menu_closed.disconnect (on_launcher_menu_closed);
-        }
-
-      if (current != null)
-        {
-          current.menu_opened.connect (on_launcher_menu_opened);
-          current.menu_closed.connect (on_launcher_menu_closed);
-        }
-
-      check_fullscreen_obstruction ();
-    }
-*/
-/*
-
-    private void on_launcher_menu_opened (LauncherView sender)
-    {
-      if (sender != quicklauncher.manager.active_launcher || sender == null)
-        return;
-
-      if (sender.model is ApplicationModel && sender.model.is_active)
-        {
-          if (QuicklistController.get_default ().menu_is_open ())
-            expose_windows ((sender.model as ApplicationModel).windows);
-        }
-    }
-*/
-/*
-
-    private void on_launcher_menu_closed (LauncherView sender)
-    {
-      if (sender != quicklauncher.manager.active_launcher)
-        return;
-
-      dexpose_windows ();
-    }
-*/
-
     private void got_screensaver_changed (dynamic DBus.Object screensaver, bool changed)
     {
       if (changed)
