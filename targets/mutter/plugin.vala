@@ -238,12 +238,6 @@ namespace Unity
       this.background.lower_bottom ();
       this.background.show ();
 
-      /* Allows us to activate windows, essential as we are the WM */
-/*
-      LibLauncher.Application.set_window_activate_func (this.on_window_activated,
-                                                     this.plugin);
-*/
-
       this.launcher = new Launcher.Launcher (this);
       this.launcher.get_view ().opacity = 0;
 
@@ -297,53 +291,6 @@ namespace Unity
         }
 
       this.ensure_input_region ();
-
-      Wnck.Screen.get_default ().active_window_changed.connect (on_active_window_changed);
-
-      if (Wnck.Screen.get_default ().get_active_window () != null)
-        Wnck.Screen.get_default ().get_active_window ().state_changed.connect (on_active_window_state_changed);
-    }
-
-    private static void on_window_activated (Wnck.Window  window,
-                                             uint32       timestamp,
-                                             void        *data)
-    {
-      Mutter.Plugin plugin = data as Mutter.Plugin;
-
-      unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
-      foreach (Mutter.Window w in mutter_windows)
-        {
-          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (w.get_meta_window ());
-          if (window.get_xid () == xid)
-            {
-              unowned Mutter.MetaWindow win  = w.get_meta_window ();
-
-              Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace(win),
-                                             timestamp);
-              Mutter.MetaWindow.activate (win, timestamp);
-              break;
-            }
-        }
-    }
-
-    private void on_active_window_state_changed (Wnck.WindowState change_mask, Wnck.WindowState new_state)
-    {
-      check_fullscreen_obstruction ();
-    }
-
-    private void on_active_window_changed (Wnck.Window? previous_window)
-    {
-      if (previous_window != null)
-        previous_window.state_changed.disconnect (on_active_window_state_changed);
-
-
-      Wnck.Window current = Wnck.Screen.get_default ().get_active_window ();
-      if (current == null)
-        return;
-
-      current.state_changed.connect (on_active_window_state_changed);
-
-      check_fullscreen_obstruction ();
     }
 
     private void got_screensaver_changed (dynamic DBus.Object screensaver, bool changed)
@@ -365,7 +312,7 @@ namespace Unity
         }
     }
 
-    bool window_is_obstructing (Wnck.Window window)
+    bool window_is_obstructing (Mutter.Window window)
     {
       if (window.is_fullscreen ())
           return true;
@@ -405,11 +352,20 @@ namespace Unity
 
     void check_fullscreen_obstruction ()
     {
-      Wnck.Window current = Wnck.Screen.get_default ().get_active_window ();
-      if (current == null)
-        return;
+      bool obstructed = false;
+      Mutter.Window focus = null;
 
-      if (window_is_obstructing (current))
+      unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
+      foreach (Mutter.Window w in mutter_windows)
+        {
+          if (Mutter.MetaWindow.has_focus (w.get_meta_window ()))
+            focus = w;
+        }
+      
+      if (focus == null)
+        return;
+      
+      if (Mutter.MetaWindow.is_maximized (focus.get_meta_window ()))
         {
           this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
@@ -749,21 +705,6 @@ namespace Unity
     {
       this.maximus.process_window (window);
       this.window_mapped (this, window);
-
-/*
-      int type = window.get_window_type ();
-
-      if (type == Mutter.MetaWindowType.NORMAL ||
-          type == Mutter.MetaWindowType.DIALOG ||
-          type == Mutter.MetaWindowType.MODAL_DIALOG
-          )
-        {
-          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
-          Wnck.Window wnck_window = Wnck.Window.get (xid);
-          if (wnck_window is Wnck.Window)
-            Launcher.Session.get_default ().update_windows (wnck_window);
-        }
-*/
     }
 
     public void destroy (Mutter.Window window)
