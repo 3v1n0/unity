@@ -9,6 +9,8 @@ unity (0.2.7-0ubuntu2) UNRELEASED; urgency=low
   * debian/rules:
     - Force an epoch bump on the transitional netbook-launcher package,
       since the original package has a higher version.
+  * debian/unity.preinst:
+    - Remove netbook-launcher autostart .desktop conffile on upgrade.
   * debian/copyright:
     - fix typo
 
