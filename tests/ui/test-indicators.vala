@@ -49,7 +49,7 @@ namespace Unity.Tests.UI
       _label = new Gtk.Label ("Indicator" + index_string);
       _image = new Gtk.Image.from_icon_name ("gtk-apply", Gtk.IconSize.MENU);
       _menu = new Gtk.Menu ();
-      //_menu.append (new Gtk.MenuItem.with_label ("lala"));
+
       END_FUNCTION ();
     }
     
@@ -230,11 +230,12 @@ namespace Unity.Tests.UI
       entry1.image = image1;
       indicator_model.indicator_object_1.add_entry (entry1);
       
-      Test.add_data_func (DOMAIN + "/Indicators", test_indicators);
+      Test.add_data_func (DOMAIN + "/IndicatorMouseEvent", test_indicators_mouse_event);
+      Test.add_data_func (DOMAIN + "/IndicatorKeyboardEvent", test_indicators_keyboard_event);
     }
 
 
-    private void test_indicators ()
+    private void test_indicators_mouse_event ()
     {
       ObjectRegistry registry = ObjectRegistry.get_default ();
       Logging.init_fatal_handler ();
@@ -243,19 +244,91 @@ namespace Unity.Tests.UI
       
       IndicatorBar indicator_bar = registry.lookup ("IndicatorBar").get (0) as IndicatorBar;
       assert (indicator_bar != null);
+
+      IndicatorObjectView indicator_object_view0 = indicator_bar.get_indicator_view_matching (indicator_model.indicator_object_0);
+      assert (indicator_object_view0 != null);
+      IndicatorObjectView indicator_object_view1 = indicator_bar.get_indicator_view_matching (indicator_model.indicator_object_1);
+      assert (indicator_object_view1 != null);
+
+      indicator_object_view0.remove_first_entry ();
+      indicator_object_view1.remove_first_entry ();
       
-      IndicatorObjectView indicator_object_view = indicator_bar.get_indicator_view_matching (indicator_model.indicator_object_0);
-      assert (indicator_object_view != null);
+      indicator_bar.do_queue_redraw ();
+
+      IndicatorObjectEntryView object_entry0 = indicator_object_view0.get_entry_view (entry0);
+      assert (object_entry0 != null);
+      IndicatorObjectEntryView object_entry1 = indicator_object_view1.get_entry_view (entry1);
+      assert (object_entry1 != null);
       
-      IndicatorObjectEntryView object_entry = indicator_object_view.get_entry_view (entry0);
-      assert (object_entry != null);
+      // Test button press on first indicator
+      director.button_press (object_entry0, 1, true, 1.0f, 1.0f, false);
+      assert (object_entry0.is_open () == true);
+      assert (object_entry1.is_open () == false);
+      director.do_wait_for_timeout (1000);
+
+      // Test button press on second indicator      
+      director.button_press (object_entry1, 1, true, 1.0f, 1.0f, false);
+      assert (object_entry0.is_open () == false);
+      assert (object_entry1.is_open () == true);
+      director.do_wait_for_timeout (1000);
       
-      stdout.printf("pressing\n");
-      director.button_press (object_entry, 1, true, 1.0f, 1.0f, false);
+      // Press to close
+      director.button_press (object_entry1, 1, true, 1.0f, 1.0f, false);
+      assert (object_entry0.is_open () == false);
+      assert (object_entry1.is_open () == false);
       
-      director.do_wait_for_timeout (2000);
+    }
+      // Simulate scrubbing
+//       stdout.printf ("Begin scrubbing navigation\n");
+//       director.do_wait_for_timeout (1000);
+//       director.button_press (object_entry0, 1, true, 1.0f, 1.0f, false);
+//       
+//       director.do_wait_for_timeout (1000);
+//       director.enter_event (object_entry1, 1, 1);
+// 
+//       director.do_wait_for_timeout (1000);
+//       director.enter_event (object_entry0, 1, 1);
+//       
+//       // Press to close
+//       director.button_press (object_entry0, 1, true, 1.0f, 1.0f, false);
+//       stdout.printf ("End scrubbing navigation\n");
+
+    private void test_indicators_keyboard_event ()
+    {
+      ObjectRegistry registry = ObjectRegistry.get_default ();
+      Logging.init_fatal_handler ();
       
-      //dir.button_press (entry0, 1, true, 1.0f, 1.0f, false);
+      FakeIndicatorsModel indicator_model = IndicatorsModel.get_default () as FakeIndicatorsModel;
+      
+      IndicatorBar indicator_bar = registry.lookup ("IndicatorBar").get (0) as IndicatorBar;
+      assert (indicator_bar != null);
+
+      IndicatorObjectView indicator_object_view0 = indicator_bar.get_indicator_view_matching (indicator_model.indicator_object_0);
+      assert (indicator_object_view0 != null);
+      IndicatorObjectView indicator_object_view1 = indicator_bar.get_indicator_view_matching (indicator_model.indicator_object_1);
+      assert (indicator_object_view1 != null);
+      
+      IndicatorObjectEntryView object_entry0 = indicator_object_view0.get_entry_view (entry0);
+      assert (object_entry0 != null);
+      IndicatorObjectEntryView object_entry1 = indicator_object_view1.get_entry_view (entry1);
+      assert (object_entry1 != null);      
+      
+      //Simulate key navigation
+      director.do_wait_for_timeout (1000);
+      director.button_press (object_entry0, 1, true, 1.0f, 1.0f, false);
+      assert (object_entry0.is_open () == true);
+      assert (object_entry1.is_open () == false);
+      director.do_wait_for_timeout (1000);
+      
+      object_entry0.entry.menu.move_current (Gtk.MenuDirectionType.CHILD);
+      assert (object_entry0.is_open () == false);
+      assert (object_entry1.is_open () == true);
+      director.do_wait_for_timeout (1000);
+      object_entry1.entry.menu.move_current (Gtk.MenuDirectionType.PARENT);
+      assert (object_entry0.is_open () == true);
+      assert (object_entry1.is_open () == false);
+      director.do_wait_for_timeout (1000);
+      
     }
 
     //

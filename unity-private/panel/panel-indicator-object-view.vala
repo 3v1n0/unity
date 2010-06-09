@@ -192,5 +192,17 @@ namespace Unity.Panel.Indicators
         }
       return null;
     }
+    
+    
+    
+    /* Hack for testing purpose */
+    public void remove_first_entry ()
+    {
+      if(indicator_entry_array.size == 0)
+        return;
+   
+      this.remove_actor (indicator_entry_array.remove_at (0));
+      //indicator_entry_array.remove_at (0);
+    }
   }
 }
