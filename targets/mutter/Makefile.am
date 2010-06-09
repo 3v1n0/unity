@@ -43,7 +43,6 @@ libunity_mutter_la_VALAFLAGS = \
   --pkg gee-1.0 \
   --pkg indicator \
   --pkg mutter-2.28 \
-  --pkg libwnck-1.0 \
   --pkg unique-1.0 \
   --pkg x11 \
   --pkg unity-const \
