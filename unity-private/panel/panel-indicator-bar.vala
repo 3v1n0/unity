@@ -33,6 +33,8 @@ namespace Unity.Panel.Indicators
 
     construct
     {
+      Unity.Testing.ObjectRegistry.get_default ().register ("IndicatorBar", this);
+      
       indicator_array = new Gee.ArrayList<Indicators.IndicatorObjectView> ();
 
       var model = IndicatorsModel.get_default ();
@@ -94,6 +96,16 @@ namespace Unity.Panel.Indicators
         {
           next_object_view.open_first_menu_entry ();
         }       
+    }
+    
+    public IndicatorObjectView? get_indicator_view_matching (Indicator.Object o)
+    {
+      foreach (Indicators.IndicatorObjectView i in indicator_array)
+        {
+          if(i.indicator_object == o)
+            return i;
+        }
+      return null;
     }
   }
 }

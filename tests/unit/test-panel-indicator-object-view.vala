@@ -28,12 +28,12 @@ namespace Unity.Tests.Unit
     public Gtk.Label _label;
     public Gtk.Image _image;
     public Gtk.Menu _menu;
-    
+
     public FakeIndicatorObject ()
     {
       Object();
     }
-    
+
     construct
     {
       START_FUNCTION ();
@@ -44,7 +44,7 @@ namespace Unity.Tests.Unit
       _menu = new Gtk.Menu ();
       END_FUNCTION ();
     }
-    
+
     public void add_entry(Indicator.ObjectEntry entry)
     {
       int pos = indicator_entry_array.index_of (entry);
@@ -64,28 +64,33 @@ namespace Unity.Tests.Unit
           entry_removed (entry);
         }
     }
-    
+
     public override unowned Gtk.Label get_label ()
     {
       return this._label;
     }
-    
+
     public override unowned Gtk.Image get_image ()
     {
       return this._image;
     }
-    
+
     public override unowned Gtk.Menu get_menu ()
     {
       return this._menu;
     }
-    
-/*    public override unowned GLib.List get_entries ()
-    {
-      
-    }*/
+
+//     public override GLib.List<unowned Indicator.ObjectEntry> get_entries ()
+//     {
+//       GLib.List<unowned Indicator.ObjectEntry> list = new GLib.List<unowned Indicator.ObjectEntry> ();
+//       foreach(unowned Indicator.ObjectEntry element in indicator_entry_array)
+//       {
+//         list.append (element);
+//       }
+//       return list;
+//     }
   }
-  
+
   public class PanelIndicatorObjectViewSuite : Object
   {
     public const string DOMAIN = "/Unit/Panel/Indicator/ObjectView";
