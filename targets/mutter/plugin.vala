@@ -312,50 +312,12 @@ namespace Unity
         }
     }
 
-    bool window_is_obstructing (Mutter.Window window)
-    {
-      if (window.is_fullscreen ())
-          return true;
-
-      /* Sometimes we're not getting the fullscreen hint updating fast enough
-       * but the geometry seems to mostly be in sync. Seeing if the window is
-       * size-wise fullscreen seems to give us a good fallback when the props
-       * aren't in-sync.
-       * The -2.0 is because we have some variation when converting float to int
-       * from the stage.
-       */
-      int x, y, w, h;
-      window.get_geometry (out x, out y, out w, out h);
-
-      if (w >= (int)this.stage.width - 2.0
-          && h >= (int)this.stage.height - 2.0)
-          return true;
-
-      /* Finally try figuring out if the window is fullscreen in Mutter
-       * itself */
-      unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
-      foreach (Mutter.Window win in mutter_windows)
-        {
-          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (win.get_meta_window ());
-          if (xid == window.get_xid ())
-            {
-              if (win.width >= ((int)this.stage.width - 2.0) &&
-                  win.height >= ((int)this.stage.height - 2.0))
-                {
-                  return true;
-                }
-            }
-        }
-
-      return false;
-    }
-
     void check_fullscreen_obstruction ()
     {
-      bool obstructed = false;
       Mutter.Window focus = null;
+      bool fullscreen = false;
 
-      unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
+      unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
       foreach (Mutter.Window w in mutter_windows)
         {
           if (Mutter.MetaWindow.has_focus (w.get_meta_window ()))
@@ -365,7 +327,8 @@ namespace Unity
       if (focus == null)
         return;
       
-      if (Mutter.MetaWindow.is_maximized (focus.get_meta_window ()))
+      (focus.get_meta_window () as GLib.Object).get ("fullscreen", ref fullscreen);
+      if (fullscreen)
         {
           this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
@@ -487,10 +450,9 @@ namespace Unity
           return;
         }
 
-      unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
-
       GLib.SList <Clutter.Actor> windows = null;
 
+      unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
       foreach (Mutter.Window window in mutter_windows)
         {
           windows.append (window as Clutter.Actor);
@@ -509,9 +471,16 @@ namespace Unity
       for (int i = 0; i < xids.length; i++)
         {
           uint32 xid = xids.index (i);
-          Wnck.Window window = Wnck.Window.get (xid);
-          if (window is Wnck.Window)
-            window.close (Clutter.get_current_event_time ());
+          
+          unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
+          foreach (Mutter.Window window in mutter_windows)
+            {
+              uint32 wxid = (uint32) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
+              if (wxid == xid)
+                {
+                  Mutter.MetaWindow.delete (window.get_meta_window (), Clutter.get_current_event_time ());
+                }
+            }
         }
     }
 
