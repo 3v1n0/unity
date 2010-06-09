@@ -28,11 +28,11 @@ namespace Unity.Panel
     public bool expanded = true;
     public Shell shell { get; construct;}
 
-    Background   bground;
-    HomeButton   home_button;
-    MenuBar      menu_bar;
-    SystemTray   system_tray;
-    IndicatorBar indicator_bar;
+    Background            bground;
+    HomeButton            home_button;
+    MenuBar               menu_bar;
+    SystemTray            system_tray;
+    IndicatorBar          indicator_bar;
 
     public View (Shell shell)
     {
@@ -56,7 +56,7 @@ namespace Unity.Panel
       bground = new Background ();
       set_background (bground);
       bground.show ();
-
+      
       /* Create the views and add them to the box */
       home_button = new HomeButton (shell);
       pack (home_button, false, true);
@@ -130,6 +130,23 @@ namespace Unity.Panel
 
     public void set_indicator_mode (bool mode)
     {
+    	if (mode)
+    		{
+          menu_bar.hide ();
+          bground.hide ();
+          system_tray.hide ();
+          indicator_bar.set_indicator_mode (mode);
+    		}
+    	else
+        {
+          menu_bar.show ();
+          bground.show ();
+          system_tray.show ();
+          indicator_bar.set_indicator_mode (mode);
+    		}
+    	
+    	//do_queue_redraw ();
+    		
 //       float x;
 //       x = mode ? this.width - this.get_indicators_width () : 0;
 //       this.rect.set_clip (x,
