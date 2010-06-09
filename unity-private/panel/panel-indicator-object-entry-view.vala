@@ -260,6 +260,11 @@ namespace Unity.Panel.Indicators
       bg.allocate (child_box, flags);
     }
 
+    public bool is_open ()
+    {
+      return (entry.menu.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0;
+    }
+        
     private override void paint ()
     {
       bg.paint ();
