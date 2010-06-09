@@ -8,6 +8,8 @@ unity (0.2.7-0ubuntu2) UNRELEASED; urgency=low
   * debian/rules:
     - Force an epoch bump on the transitional netbook-launcher package,
       since the original package has a higher version.
+  * debian/copyright:
+    - fix typo
 
  -- Didier Roche <didrocks@ubuntu.com>  Wed, 09 Jun 2010 12:09:53 +0200
 
