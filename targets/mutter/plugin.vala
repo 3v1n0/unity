@@ -566,13 +566,13 @@ namespace Unity
         {
           uint32 xid = xids.index (i);
           
-          unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
+          unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
           foreach (Mutter.Window w in mutter_windows)
             {
               uint32 wxid = (uint32) Mutter.MetaWindow.get_xwindow (w.get_meta_window ());
               if (wxid == xid)
                 {
-                  windows.append (window);
+                  windows.append (w);
                   break;
                 }
             }
@@ -627,7 +627,7 @@ namespace Unity
       return this.panel.get_indicators_width ();
     }
 
-    public void expose_windows (GLib.SList<Wnck.Window> windows,
+    public void expose_windows (GLib.SList<Clutter.Actor> windows,
                                 int left_buffer = 250)
     {
       expose_manager.left_buffer = left_buffer;
