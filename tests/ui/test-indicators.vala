@@ -134,7 +134,6 @@ namespace Unity.Tests.UI
 
     public override Gee.ArrayList<Indicator.Object> get_indicators ()
     {
-      stdout.printf ("Returning indicator list\n");
       return indicator_list;
     }
 
@@ -250,6 +249,7 @@ namespace Unity.Tests.UI
       IndicatorObjectView indicator_object_view1 = indicator_bar.get_indicator_view_matching (indicator_model.indicator_object_1);
       assert (indicator_object_view1 != null);
 
+      /* Hack to remove the default entries: because get_entries has not been overriden in FakeIndicatorObject */
       indicator_object_view0.remove_first_entry ();
       indicator_object_view1.remove_first_entry ();
       
@@ -278,20 +278,6 @@ namespace Unity.Tests.UI
       assert (object_entry1.is_open () == false);
       
     }
-      // Simulate scrubbing
-//       stdout.printf ("Begin scrubbing navigation\n");
-//       director.do_wait_for_timeout (1000);
-//       director.button_press (object_entry0, 1, true, 1.0f, 1.0f, false);
-//       
-//       director.do_wait_for_timeout (1000);
-//       director.enter_event (object_entry1, 1, 1);
-// 
-//       director.do_wait_for_timeout (1000);
-//       director.enter_event (object_entry0, 1, 1);
-//       
-//       // Press to close
-//       director.button_press (object_entry0, 1, true, 1.0f, 1.0f, false);
-//       stdout.printf ("End scrubbing navigation\n");
 
     private void test_indicators_keyboard_event ()
     {
@@ -329,17 +315,6 @@ namespace Unity.Tests.UI
       assert (object_entry1.is_open () == false);
       director.do_wait_for_timeout (1000);
       
-    }
-
-    //
-    // mostly a dummy shell-implementation to satisfy the interface
-    //
-    public bool menus_swallow_events { get { return true; } }
-
-    public ShellMode
-    get_mode ()
-    {
-      return ShellMode.UNDERLAY;
     }
   }
 }
