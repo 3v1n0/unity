@@ -29,7 +29,8 @@ public class Main
     PanelIndicatorObjectEntryViewSuite panel_object_entry_view_suite;
     PanelIndicatorObjectViewSuite panel_object_view_suite;
 
-    PlacesPlaceFileModel place_file_model;
+    PlacesPlaceFileModelSuite place_file_model;
+    PlacesPlaceSuite places_place;
     PlacesSuite places;
     PlaceSuite place;
 
@@ -43,7 +44,8 @@ public class Main
     /* Panel tests */
     panel_object_entry_view_suite = new PanelIndicatorObjectEntryViewSuite ();
     panel_object_view_suite = new PanelIndicatorObjectViewSuite ();
-    place_file_model = new PlacesPlaceFileModel ();
+    place_file_model = new PlacesPlaceFileModelSuite ();
+    places_place = new PlacesPlaceSuite ();
 
     /* Places tests */
     places = new PlacesSuite ();

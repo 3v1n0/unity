@@ -40,6 +40,7 @@ test_unit_VALAFLAGS = \
   --pkg clutk-0.3 \
   --pkg launcher-0.3 \
   --pkg libwnck-1.0 \
+  --pkg posix \
   --pkg test-const \
   --pkg unique-1.0 \
   --pkg unity \
@@ -52,6 +53,7 @@ test_unit_SOURCES = \
   test-panel-indicator-object-entry-view.vala \
   test-panel-indicator-object-view.vala \
   test-places-place-file-model.vala \
+  test-places-place.vala \
   test-places.vala \
   test-place.vala \
   test-unit.vala

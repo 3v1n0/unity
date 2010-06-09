@@ -31,8 +31,8 @@ namespace Unity.Places
     public string  icon        { get; construct set; }
     public string  name        { get; construct set; }
     public string  description { get; construct set; }
-    public string  show_global { get; construct set; }
-    public string  show_entry  { get; construct set; }
+    public bool    show_global { get; construct set; }
+    public bool    show_entry  { get; construct set; }
 
     /* Whether the Entry is available on the bus, this is only when we want to
      * do optimisations for startup (showing the entries before actually
@@ -50,8 +50,8 @@ namespace Unity.Places
                                  string name,
                                  string icon,
                                  string description,
-                                 string show_global,
-                                 string show_entry)
+                                 bool   show_global,
+                                 bool   show_entry)
     {
       Object (dbus_name:dbus_name,
               dbus_path:dbus_path,

@@ -22,11 +22,11 @@ using Unity.Places;
 
 namespace Unity.Tests.Unit
 {
-  public class PlacesPlaceFileModel : Object
+  public class PlacesPlaceFileModelSuite : Object
   {
     public const string DOMAIN = "/Unit/Places/PlaceFileModel";
 
-    public PlacesPlaceFileModel ()
+    public PlacesPlaceFileModelSuite ()
     {
       Logging.init_fatal_handler ();
 

@@ -32,8 +32,14 @@ namespace Unity.Places
     const string ENTRY_PREFIX = "Entry:";
 
     /* Properties */
-    public string dbus_name { get; set; }
-    public string dbus_path { get; set; }
+    public string dbus_name { get; construct; }
+    public string dbus_path { get; construct; }
+
+    public int n_entries {
+      get {
+        return entries_array.size;
+      }
+    }
 
     /* Whether the Place is available on the bus, this is only when we want to
      * do optimisations for startup (showing the entries before actually
@@ -41,7 +47,7 @@ namespace Unity.Places
      */
     public bool   online    { get; set; }
 
-    private ArrayList<PlaceEntry> places_array;
+    private ArrayList<PlaceEntry> entries_array;
 
     /* Signals */
     public signal void entry_added   (PlaceEntry entry);
@@ -50,13 +56,13 @@ namespace Unity.Places
     /* Constructors */
     public Place (string dbus_name, string dbus_path)
     {
-      Object ();
+      Object (dbus_name:dbus_name, dbus_path:dbus_path);
     }
 
     construct
     {
       online = false;
-      places_array = new ArrayList<PlaceEntry> ();
+      entries_array = new ArrayList<PlaceEntry> ();
     }
 
     /* Public Methods */
@@ -85,6 +91,11 @@ namespace Unity.Places
       }
     }
 
+    public PlaceEntry? get_nth_entry (int index)
+    {
+      return entries_array.get (index);
+    }
+
     /* Private Methods */
     private void load_keyfile_entries (KeyFile file)
     {
@@ -96,12 +107,49 @@ namespace Unity.Places
         {
           if (group.has_prefix (ENTRY_PREFIX))
             {
-              print (@"$group");
+              PlaceEntry? entry = load_entry_from_keyfile (file, group);
+              if (entry is PlaceEntry)
+                {
+                  entries_array.add (entry);
+                  entry_added (entry);
+                }
             }
         }
-
     }
 
+    private PlaceEntry? load_entry_from_keyfile (KeyFile file, string group)
+    {
+      try {
+          var path = file.get_string (group, "DBusObjectPath");
+
+          /* As we use the path to match those entries from the online daemon
+           * to the loaded state, we really need the path
+           */
+          if (path == null || path == "" || path[0] != '/')
+            {
+              warning (@"Cannot load entry '$group': Does not contain valid DBusObjectPath");
+              return null;
+            }
+
+          var name = file.get_string (group, "Name");
+          var icon = file.get_string (group, "Icon");
+          var desc = file.get_string (group, "Description");
+          var show_global = file.get_boolean (group, "ShowGlobal");
+          var show_entry = file.get_boolean (group, "ShowEntry");
+
+          return new PlaceEntry.with_info (dbus_name,
+                                           path,
+                                           name,
+                                           icon,
+                                           desc,
+                                           show_global,
+                                           show_entry);
+
+      } catch (Error e) {
+        warning (@"Cannot load entry '$group': %s", e.message);
+        return null;
+      }
+    }
   }
 }
 

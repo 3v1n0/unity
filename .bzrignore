@@ -281,3 +281,4 @@ tests/unit/test-places-place-file-model.c
 unity/unity-place.c
 unity-private/places/places-place-entry.c
 unity-private/places/places-place-model.c
+tests/unit/test-places-place.c
