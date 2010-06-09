@@ -588,33 +588,29 @@ namespace Unity
 
     public void show_window (uint32 xid)
     {
-      Wnck.Window window = Wnck.Window.get (xid);
-      if (window is Wnck.Window)
+      unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
+
+      foreach (Mutter.Window mutter_window in mutter_windows)
         {
-          unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
+          int type = mutter_window.get_window_type ();
 
-          foreach (Mutter.Window mutter_window in mutter_windows)
+          if (type == Mutter.MetaWindowType.NORMAL ||
+              type == Mutter.MetaWindowType.DIALOG ||
+              type == Mutter.MetaWindowType.MODAL_DIALOG
+              )
             {
-              int type = mutter_window.get_window_type ();
-
-              if (type == Mutter.MetaWindowType.NORMAL ||
-                  type == Mutter.MetaWindowType.DIALOG ||
-                  type == Mutter.MetaWindowType.MODAL_DIALOG
-                  )
+              ulong window_xid = (ulong) Mutter.MetaWindow.get_xwindow (mutter_window.get_meta_window ());
+              if (window_xid == xid)
                 {
-                  ulong window_xid = (ulong) Mutter.MetaWindow.get_xwindow (mutter_window.get_meta_window ());
-                  if (window_xid == xid)
-                    {
-                      uint32 time_;
-                      unowned Mutter.MetaWindow meta = mutter_window.get_meta_window ();
+                  uint32 time_;
+                  unowned Mutter.MetaWindow meta = mutter_window.get_meta_window ();
 
-                      time_ = Mutter.MetaDisplay.get_current_time (Mutter.MetaWindow.get_display (meta));
-                      Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace (meta), time_);
-                      Mutter.MetaWindow.activate (meta, time_);
-                    }
+                  time_ = Mutter.MetaDisplay.get_current_time (Mutter.MetaWindow.get_display (meta));
+                  Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace (meta), time_);
+                  Mutter.MetaWindow.activate (meta, time_);
                 }
-            }
-        }
+             }
+          }
     }
 
     public ShellMode get_mode ()
