@@ -425,9 +425,8 @@ namespace Unity.Launcher
                                                out float natural_height)
     {
       float nat, min;
-      processed_icon.get_preferred_height (for_width, out min, out nat);
-      natural_height = nat;
-      minimum_height = min;
+      natural_height = 48;
+      minimum_height = 48;
     }
 
     public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags)
