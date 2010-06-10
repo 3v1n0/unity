@@ -238,12 +238,6 @@ namespace Unity
       this.background.lower_bottom ();
       this.background.show ();
 
-      /* Allows us to activate windows, essential as we are the WM */
-/*
-      LibLauncher.Application.set_window_activate_func (this.on_window_activated,
-                                                     this.plugin);
-*/
-
       this.launcher = new Launcher.Launcher (this);
       this.launcher.get_view ().opacity = 0;
 
@@ -297,99 +291,8 @@ namespace Unity
         }
 
       this.ensure_input_region ();
-
-      Wnck.Screen.get_default ().active_window_changed.connect (on_active_window_changed);
-
-      if (Wnck.Screen.get_default ().get_active_window () != null)
-        Wnck.Screen.get_default ().get_active_window ().state_changed.connect (on_active_window_state_changed);
-
       return false;
     }
-
-    private static void on_window_activated (Wnck.Window  window,
-                                             uint32       timestamp,
-                                             void        *data)
-    {
-      Mutter.Plugin plugin = data as Mutter.Plugin;
-
-      unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
-      foreach (Mutter.Window w in mutter_windows)
-        {
-          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (w.get_meta_window ());
-          if (window.get_xid () == xid)
-            {
-              unowned Mutter.MetaWindow win  = w.get_meta_window ();
-
-              Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace(win),
-                                             timestamp);
-              Mutter.MetaWindow.activate (win, timestamp);
-              break;
-            }
-        }
-    }
-
-    private void on_active_window_state_changed (Wnck.WindowState change_mask, Wnck.WindowState new_state)
-    {
-      check_fullscreen_obstruction ();
-    }
-
-    private void on_active_window_changed (Wnck.Window? previous_window)
-    {
-      if (previous_window != null)
-        previous_window.state_changed.disconnect (on_active_window_state_changed);
-
-
-      Wnck.Window current = Wnck.Screen.get_default ().get_active_window ();
-      if (current == null)
-        return;
-
-      current.state_changed.connect (on_active_window_state_changed);
-
-      check_fullscreen_obstruction ();
-    }
-
-/*
-    private void on_launcher_changed_event (LauncherView? last, LauncherView? current)
-    {
-      if (last != null)
-        {
-          last.menu_opened.disconnect (on_launcher_menu_opened);
-          last.menu_closed.disconnect (on_launcher_menu_closed);
-        }
-
-      if (current != null)
-        {
-          current.menu_opened.connect (on_launcher_menu_opened);
-          current.menu_closed.connect (on_launcher_menu_closed);
-        }
-
-      check_fullscreen_obstruction ();
-    }
-*/
-/*
-
-    private void on_launcher_menu_opened (LauncherView sender)
-    {
-      if (sender != quicklauncher.manager.active_launcher || sender == null)
-        return;
-
-      if (sender.model is ApplicationModel && sender.model.is_active)
-        {
-          if (QuicklistController.get_default ().menu_is_open ())
-            expose_windows ((sender.model as ApplicationModel).windows);
-        }
-    }
-*/
-/*
-
-    private void on_launcher_menu_closed (LauncherView sender)
-    {
-      if (sender != quicklauncher.manager.active_launcher)
-        return;
-
-      dexpose_windows ();
-    }
-*/
 
     private void got_screensaver_changed (dynamic DBus.Object screensaver, bool changed)
     {
@@ -410,51 +313,23 @@ namespace Unity
         }
     }
 
-    bool window_is_obstructing (Wnck.Window window)
-    {
-      if (window.is_fullscreen ())
-          return true;
-
-      /* Sometimes we're not getting the fullscreen hint updating fast enough
-       * but the geometry seems to mostly be in sync. Seeing if the window is
-       * size-wise fullscreen seems to give us a good fallback when the props
-       * aren't in-sync.
-       * The -2.0 is because we have some variation when converting float to int
-       * from the stage.
-       */
-      int x, y, w, h;
-      window.get_geometry (out x, out y, out w, out h);
-
-      if (w >= (int)this.stage.width - 2.0
-          && h >= (int)this.stage.height - 2.0)
-          return true;
-
-      /* Finally try figuring out if the window is fullscreen in Mutter
-       * itself */
-      unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
-      foreach (Mutter.Window win in mutter_windows)
-        {
-          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (win.get_meta_window ());
-          if (xid == window.get_xid ())
-            {
-              if (win.width >= ((int)this.stage.width - 2.0) &&
-                  win.height >= ((int)this.stage.height - 2.0))
-                {
-                  return true;
-                }
-            }
-        }
-
-      return false;
-    }
-
     void check_fullscreen_obstruction ()
     {
-      Wnck.Window current = Wnck.Screen.get_default ().get_active_window ();
-      if (current == null)
-        return;
+      Mutter.Window focus = null;
+      bool fullscreen = false;
 
-      if (window_is_obstructing (current))
+      unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
+      foreach (Mutter.Window w in mutter_windows)
+        {
+          if (Mutter.MetaWindow.has_focus (w.get_meta_window ()))
+            focus = w;
+        }
+      
+      if (focus == null)
+        return;
+      
+      (focus.get_meta_window () as GLib.Object).get ("fullscreen", ref fullscreen);
+      if (fullscreen)
         {
           this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
@@ -576,24 +451,12 @@ namespace Unity
           return;
         }
 
+      GLib.SList <Clutter.Actor> windows = null;
+
       unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
-
-      GLib.SList <Wnck.Window> windows = null;
-
       foreach (Mutter.Window window in mutter_windows)
         {
-          int type = window.get_window_type ();
-
-          if (type == Mutter.MetaWindowType.NORMAL ||
-              type == Mutter.MetaWindowType.DIALOG ||
-              type == Mutter.MetaWindowType.MODAL_DIALOG
-              )
-            {
-              ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
-              Wnck.Window wnck_window = Wnck.Window.get (xid);
-              if (wnck_window is Wnck.Window)
-               windows.append (wnck_window);
-            }
+          windows.append (window as Clutter.Actor);
         }
 
       this.expose_windows (windows, 80);
@@ -609,58 +472,69 @@ namespace Unity
       for (int i = 0; i < xids.length; i++)
         {
           uint32 xid = xids.index (i);
-          Wnck.Window window = Wnck.Window.get (xid);
-          if (window is Wnck.Window)
-            window.close (Clutter.get_current_event_time ());
+          
+          unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
+          foreach (Mutter.Window window in mutter_windows)
+            {
+              uint32 wxid = (uint32) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
+              if (wxid == xid)
+                {
+                  Mutter.MetaWindow.delete (window.get_meta_window (), Clutter.get_current_event_time ());
+                }
+            }
         }
     }
 
-		public void	expose_xids (Array<uint32> xids)
-		{
-			SList<Wnck.Window> windows = new SList<Wnck.Window> ();
-			for (int i = 0; i < xids.length; i++)
+    public void expose_xids (Array<uint32> xids)
+    {
+      SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
+      for (int i = 0; i < xids.length; i++)
         {
           uint32 xid = xids.index (i);
-          Wnck.Window window = Wnck.Window.get (xid);
-          if (window is Wnck.Window)
-            windows.append (window);
+          
+          unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
+          foreach (Mutter.Window w in mutter_windows)
+            {
+              uint32 wxid = (uint32) Mutter.MetaWindow.get_xwindow (w.get_meta_window ());
+              if (wxid == xid)
+                {
+                  windows.append (w);
+                  break;
+                }
+            }
         }
-			expose_windows (windows);
-		}
+        
+      expose_windows (windows);
+    }
 
-		public void stop_expose ()
-		{
-			dexpose_windows ();
-		}
+    public void stop_expose ()
+    {
+      dexpose_windows ();
+    }
 
     public void show_window (uint32 xid)
     {
-      Wnck.Window window = Wnck.Window.get (xid);
-      if (window is Wnck.Window)
+      unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
+
+      foreach (Mutter.Window mutter_window in mutter_windows)
         {
-          unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
+          ulong window_xid = (ulong) Mutter.MetaWindow.get_xwindow (mutter_window.get_meta_window ());
+          if (window_xid != xid)
+            continue;
+          
+          int type = mutter_window.get_window_type ();
 
-          foreach (Mutter.Window mutter_window in mutter_windows)
-            {
-              int type = mutter_window.get_window_type ();
+          if (type != Mutter.MetaWindowType.NORMAL &&
+              type != Mutter.MetaWindowType.DIALOG &&
+              type != Mutter.MetaWindowType.MODAL_DIALOG)
+            continue;
+          
+          uint32 time_;
+          unowned Mutter.MetaWindow meta = mutter_window.get_meta_window ();
 
-              if (type == Mutter.MetaWindowType.NORMAL ||
-                  type == Mutter.MetaWindowType.DIALOG ||
-                  type == Mutter.MetaWindowType.MODAL_DIALOG
-                  )
-                {
-                  ulong window_xid = (ulong) Mutter.MetaWindow.get_xwindow (mutter_window.get_meta_window ());
-                  if (window_xid == xid)
-                    {
-                      uint32 time_;
-                      unowned Mutter.MetaWindow meta = mutter_window.get_meta_window ();
-
-                      time_ = Mutter.MetaDisplay.get_current_time (Mutter.MetaWindow.get_display (meta));
-                      Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace (meta), time_);
-                      Mutter.MetaWindow.activate (meta, time_);
-                    }
-                }
-            }
+          time_ = Mutter.MetaDisplay.get_current_time (Mutter.MetaWindow.get_display (meta));
+          Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace (meta), time_);
+          Mutter.MetaWindow.activate (meta, time_);
         }
     }
 
@@ -674,7 +548,7 @@ namespace Unity
       return this.panel.get_indicators_width ();
     }
 
-    public void expose_windows (GLib.SList<Wnck.Window> windows,
+    public void expose_windows (GLib.SList<Clutter.Actor> windows,
                                 int left_buffer = 250)
     {
       expose_manager.left_buffer = left_buffer;
@@ -801,21 +675,6 @@ namespace Unity
     {
       this.maximus.process_window (window);
       this.window_mapped (this, window);
-
-/*
-      int type = window.get_window_type ();
-
-      if (type == Mutter.MetaWindowType.NORMAL ||
-          type == Mutter.MetaWindowType.DIALOG ||
-          type == Mutter.MetaWindowType.MODAL_DIALOG
-          )
-        {
-          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
-          Wnck.Window wnck_window = Wnck.Window.get (xid);
-          if (wnck_window is Wnck.Window)
-            Launcher.Session.get_default ().update_windows (wnck_window);
-        }
-*/
     }
 
     public void destroy (Mutter.Window window)

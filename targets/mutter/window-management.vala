@@ -295,20 +295,16 @@ namespace Unity
 
       int speed = get_animation_speed (window);
 
-      ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
-      Wnck.Window wnck_window = Wnck.Window.get (xid);
-
       Mutter.MetaRectangle rect = {0, 0, 0, 0};
-      if (wnck_window is Wnck.Window &&
-          Mutter.MetaWindow.get_icon_geometry (window.get_meta_window (), rect))
+      if (Mutter.MetaWindow.get_icon_geometry (window.get_meta_window (), rect))
         {
-          int x, y, w, h;
-          wnck_window.get_geometry (out x, out y, out w, out h);
+          rect = {0, 0, 0, 0};
+          Mutter.MetaWindow.get_outer_rect (window.get_meta_window (), rect);
           actor.set ("scale-gravity", Clutter.Gravity.CENTER);
           anim = actor.animate (Clutter.AnimationMode.EASE_IN_SINE, speed,
                          "opacity", 255,
-                         "x", (float) x,
-                         "y", (float) y,
+                         "x", (float) rect.x,
+                         "y", (float) rect.y,
                          "scale-x", 1f,
                          "scale-y", 1f);
         }

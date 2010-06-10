@@ -107,7 +107,6 @@ PKG_CHECK_MODULES(BASE,
                   gconf-2.0
                   indicator
                   libbamf >= 0.2
-                  libwnck-1.0 >= 2.28.0
                   unique-1.0
                   unity-misc
                   x11)
