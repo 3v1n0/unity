@@ -1,3 +1,13 @@
+unity (0.2.7-0ubuntu3) UNRELEASED; urgency=low
+
+  * removed patches integrated upstream:
+    debian/patches/01_drop_mutter_req.patch
+    debian/patches/02_make_perceptualdiff_optional.patch
+    debian/patches/03_use_new_mutter_plugin_init_order.patch
+    debian/patches/99_autoconf.patch
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 10 Jun 2010 13:43:32 +0200
+
 unity (0.2.7-0ubuntu2) maverick; urgency=low
 
   * debian/rules:
