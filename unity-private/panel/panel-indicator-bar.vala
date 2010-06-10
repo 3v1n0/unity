@@ -23,7 +23,8 @@ namespace Unity.Panel.Indicators
   public class IndicatorBar : Ctk.Box
   {
     private Gee.ArrayList<Indicators.IndicatorObjectView> indicator_array;
-
+    IndicatorBackground   indicator_bground;
+        
     public IndicatorBar ()
     {
       Object (orientation: Ctk.Orientation.HORIZONTAL,
@@ -33,6 +34,12 @@ namespace Unity.Panel.Indicators
 
     construct
     {
+      Unity.Testing.ObjectRegistry.get_default ().register ("IndicatorBar", this);
+      
+      indicator_bground = new IndicatorBackground ();
+      set_background (indicator_bground);
+      indicator_bground.hide ();
+      
       indicator_array = new Gee.ArrayList<Indicators.IndicatorObjectView> ();
 
       var model = IndicatorsModel.get_default ();
@@ -94,6 +101,28 @@ namespace Unity.Panel.Indicators
         {
           next_object_view.open_first_menu_entry ();
         }       
+    }
+    
+    public IndicatorObjectView? get_indicator_view_matching (Indicator.Object o)
+    {
+      foreach (Indicators.IndicatorObjectView i in indicator_array)
+        {
+          if(i.indicator_object == o)
+            return i;
+        }
+      return null;
+    }
+    
+    public void set_indicator_mode (bool mode)
+    {
+    	if (mode)
+    		{
+    		  indicator_bground.show ();
+    		}
+      else
+        {
+          indicator_bground.hide ();
+        }
     }
   }
 }

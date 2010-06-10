@@ -241,6 +241,8 @@ namespace Unity.Launcher
           is_favorite = false;
           child.pin_type = PinType.UNPINNED;
           closed ();
+          if (".local" in desktop_filename)
++           FileUtils.remove (desktop_filename);
         }
     }
 

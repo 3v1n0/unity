@@ -72,20 +72,15 @@ static void unity_tests_unit_places_suite_finalize (UnityTestsUnitPlacesSuite* o
 
 
 
-#line 27 "test-places.vala"
 UnityTestsUnitPlacesSuite* unity_tests_unit_places_suite_construct (GType object_type) {
-#line 78 "test-places.c"
 	UnityTestsUnitPlacesSuite* self;
 	self = (UnityTestsUnitPlacesSuite*) g_type_create_instance (object_type);
 	return self;
 }
 
 
-#line 27 "test-places.vala"
 UnityTestsUnitPlacesSuite* unity_tests_unit_places_suite_new (void) {
-#line 27 "test-places.vala"
 	return unity_tests_unit_places_suite_construct (UNITY_TESTS_UNIT_TYPE_PLACES_SUITE);
-#line 89 "test-places.c"
 }
 
 

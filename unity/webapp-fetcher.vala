@@ -206,7 +206,7 @@ namespace Unity.Webapp
       }
 
       // set the icon name in the desktop file to the default webapp icon
-      this.set_desktop_file_icon ("webapp-default-icon");
+      this.set_desktop_file_icon ("emblem-web");
     }
 
     private void set_desktop_file_icon (string iconname)

@@ -224,113 +224,74 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 1072 "glib-2.0.vapi"
 static const char* string_to_string (const char* self) {
-#line 230 "application-place.c"
 	const char* result = NULL;
-#line 1072 "glib-2.0.vapi"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 234 "application-place.c"
 	result = self;
-#line 1073 "glib-2.0.vapi"
 	return result;
-#line 238 "application-place.c"
 }
 
 
-#line 34 "application-place.vala"
 UnityPlacesApplicationApplicationIcon* unity_places_application_application_icon_construct (GType object_type, gint width, const char* name, const char* icon_name, const char* tooltip) {
-#line 244 "application-place.c"
 	GError * _inner_error_;
 	UnityPlacesApplicationApplicationIcon* self;
 	UnityPlacesBarModel* _tmp0_;
 	CtkText* _tmp10_;
-#line 34 "application-place.vala"
 	g_return_val_if_fail (name != NULL, NULL);
-#line 34 "application-place.vala"
 	g_return_val_if_fail (icon_name != NULL, NULL);
-#line 34 "application-place.vala"
 	g_return_val_if_fail (tooltip != NULL, NULL);
-#line 255 "application-place.c"
 	_inner_error_ = NULL;
 	self = (UnityPlacesApplicationApplicationIcon*) g_type_create_instance (object_type);
-#line 36 "application-place.vala"
 	self->priv->model = (_tmp0_ = unity_places_bar_model_new (name, icon_name, tooltip), _g_object_unref0 (self->priv->model), _tmp0_);
-#line 38 "application-place.vala"
 	if (g_utf8_get_char (g_utf8_offset_to_pointer (icon_name, 0)) == '/') {
-#line 262 "application-place.c"
 		CtkImage* _tmp1_;
-#line 39 "application-place.vala"
 		self->view = (_tmp1_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) width, icon_name)), _g_object_unref0 (self->view), _tmp1_);
-#line 266 "application-place.c"
 	} else {
-#line 40 "application-place.vala"
 		if (g_utf8_get_char (g_utf8_offset_to_pointer (icon_name, -4)) == '.') {
-#line 270 "application-place.c"
 			CtkImage* _tmp3_;
 			char* _tmp2_;
-#line 41 "application-place.vala"
 			self->view = (_tmp3_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) width, _tmp2_ = g_strconcat ("/usr/share/pixmaps/", icon_name, NULL))), _g_object_unref0 (self->view), _tmp3_);
-#line 275 "application-place.c"
 			_g_free0 (_tmp2_);
 		} else {
-#line 43 "application-place.vala"
 			if (g_utf8_get_char (g_utf8_offset_to_pointer (icon_name, 0)) == '.') {
-#line 280 "application-place.c"
 				GIcon* icon;
 				icon = NULL;
 				{
 					GIcon* _tmp4_;
 					GIcon* _tmp5_;
 					GtkIconInfo* info;
-#line 49 "application-place.vala"
 					_tmp4_ = g_icon_new_for_string (icon_name, &_inner_error_);
-#line 289 "application-place.c"
 					if (_inner_error_ != NULL) {
-						goto __catch5_g_error;
+						goto __catch6_g_error;
 					}
-#line 49 "application-place.vala"
 					icon = (_tmp5_ = _g_object_ref0 (_tmp4_), _g_object_unref0 (icon), _tmp5_);
-#line 50 "application-place.vala"
 					info = gtk_icon_theme_lookup_by_gicon (gtk_icon_theme_get_default (), icon, 48, 0);
-#line 51 "application-place.vala"
 					if (info != NULL) {
-#line 299 "application-place.c"
 						CtkImage* _tmp6_;
-#line 52 "application-place.vala"
 						self->view = (_tmp6_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) width, gtk_icon_info_get_filename (info))), _g_object_unref0 (self->view), _tmp6_);
-#line 303 "application-place.c"
 					} else {
 						CtkImage* _tmp7_;
-#line 54 "application-place.vala"
 						self->view = (_tmp7_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_stock ((guint) width, icon_name)), _g_object_unref0 (self->view), _tmp7_);
-#line 308 "application-place.c"
 					}
-#line 55 "application-place.vala"
 					if (self->view == NULL) {
-#line 312 "application-place.c"
 						char* _tmp8_;
-#line 56 "application-place.vala"
 						g_warning ("application-place.vala:56: %s", _tmp8_ = g_strconcat ("Failed to load icon for ", string_to_string (icon_name), NULL));
-#line 316 "application-place.c"
 						_g_free0 (_tmp8_);
 					}
 					_gtk_icon_info_free0 (info);
 				}
-				goto __finally5;
-				__catch5_g_error:
+				goto __finally6;
+				__catch6_g_error:
 				{
 					GError * _error_;
 					_error_ = _inner_error_;
 					_inner_error_ = NULL;
 					{
-#line 60 "application-place.vala"
 						g_warning ("application-place.vala:60: Failed to load icon: %s", _error_->message);
-#line 330 "application-place.c"
 						_g_error_free0 (_error_);
 					}
 				}
-				__finally5:
+				__finally6:
 				if (_inner_error_ != NULL) {
 					_g_object_unref0 (icon);
 					g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -340,30 +301,20 @@ UnityPlacesApplicationApplicationIcon* unity_places_application_application_icon
 				_g_object_unref0 (icon);
 			} else {
 				CtkImage* _tmp9_;
-#line 64 "application-place.vala"
 				self->view = (_tmp9_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_stock ((guint) width, icon_name)), _g_object_unref0 (self->view), _tmp9_);
-#line 346 "application-place.c"
 			}
 		}
 	}
-#line 66 "application-place.vala"
 	clutter_actor_set_reactive ((ClutterActor*) self->view, TRUE);
-#line 67 "application-place.vala"
 	self->label = (_tmp10_ = g_object_ref_sink ((CtkText*) ctk_text_new (name)), _g_object_unref0 (self->label), _tmp10_);
-#line 68 "application-place.vala"
 	clutter_text_set_line_wrap ((ClutterText*) self->label, TRUE);
-#line 69 "application-place.vala"
 	clutter_text_set_line_alignment ((ClutterText*) self->label, PANGO_ALIGN_CENTER);
-#line 358 "application-place.c"
 	return self;
 }
 
 
-#line 34 "application-place.vala"
 UnityPlacesApplicationApplicationIcon* unity_places_application_application_icon_new (gint width, const char* name, const char* icon_name, const char* tooltip) {
-#line 34 "application-place.vala"
 	return unity_places_application_application_icon_construct (UNITY_PLACES_APPLICATION_TYPE_APPLICATION_ICON, width, name, icon_name, tooltip);
-#line 367 "application-place.c"
 }
 
 
@@ -531,9 +482,7 @@ void unity_places_application_application_icon_unref (gpointer instance) {
 }
 
 
-#line 86 "application-place.vala"
 static void unity_places_application_application_group_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-#line 537 "application-place.c"
 	UnityPlacesApplicationApplicationGroup * self;
 	gint width;
 	gint IconWidth;
@@ -549,186 +498,105 @@ static void unity_places_application_application_group_real_allocate (ClutterAct
 	ClutterActorBox child_box;
 	gint i = 0;
 	self = (UnityPlacesApplicationApplicationGroup*) base;
-#line 89 "application-place.vala"
 	width = (gint) ((*box).x2 - (*box).x1);
-#line 90 "application-place.vala"
 	IconWidth = 120;
-#line 91 "application-place.vala"
 	IconHeight = 48;
-#line 92 "application-place.vala"
 	ApplicationIconSpacing = 24;
-#line 94 "application-place.vala"
 	HeaderBorderPositionX = 0;
-#line 95 "application-place.vala"
 	HeaderBorderPositionY = 0;
-#line 96 "application-place.vala"
 	IconBorderPositionX = 15;
-#line 97 "application-place.vala"
 	IconBorderPositionY = 30;
-#line 98 "application-place.vala"
 	LineBorderPositionX = 0;
-#line 99 "application-place.vala"
 	LineBorderPositionY = 20;
-#line 101 "application-place.vala"
 	child_box = (_tmp0_.x1 = 0.0f, _tmp0_.y1 = 0.0f, _tmp0_.x2 = 0.0f, _tmp0_.y2 = 0.0f, _tmp0_);
-#line 103 "application-place.vala"
 	CLUTTER_ACTOR_CLASS (unity_places_application_application_group_parent_class)->allocate ((ClutterActor*) CTK_BOX (self), box, flags);
-#line 105 "application-place.vala"
 	child_box.x1 = (float) IconBorderPositionX;
-#line 106 "application-place.vala"
 	child_box.x2 = (float) IconWidth;
-#line 107 "application-place.vala"
 	child_box.y1 = (float) IconBorderPositionY;
-#line 108 "application-place.vala"
 	child_box.y2 = child_box.y1 + IconHeight;
-#line 585 "application-place.c"
 	{
 		gboolean _tmp1_;
-#line 111 "application-place.vala"
 		i = 0;
-#line 111 "application-place.vala"
 		_tmp1_ = TRUE;
-#line 111 "application-place.vala"
 		while (TRUE) {
-#line 594 "application-place.c"
 			UnityPlacesApplicationApplicationIcon* _tmp2_;
 			ClutterActorBox _tmp3_ = {0};
 			ClutterActorBox label_box;
 			UnityPlacesApplicationApplicationIcon* _tmp4_;
-#line 111 "application-place.vala"
 			if (!_tmp1_) {
-#line 111 "application-place.vala"
 				i++;
-#line 603 "application-place.c"
 			}
-#line 111 "application-place.vala"
 			_tmp1_ = FALSE;
-#line 111 "application-place.vala"
 			if (!(i < gee_collection_get_size ((GeeCollection*) self->priv->application_icon_array))) {
-#line 111 "application-place.vala"
 				break;
-#line 611 "application-place.c"
 			}
-#line 113 "application-place.vala"
 			child_box.x2 = child_box.x1 + IconWidth;
-#line 114 "application-place.vala"
 			clutter_actor_allocate ((ClutterActor*) (_tmp2_ = (UnityPlacesApplicationApplicationIcon*) gee_abstract_list_get ((GeeAbstractList*) self->priv->application_icon_array, i))->view, &child_box, flags);
-#line 617 "application-place.c"
 			_unity_places_application_application_icon_unref0 (_tmp2_);
-#line 116 "application-place.vala"
 			label_box = (_tmp3_.x1 = 0.0f, _tmp3_.y1 = 0.0f, _tmp3_.x2 = 0.0f, _tmp3_.y2 = 0.0f, _tmp3_);
-#line 117 "application-place.vala"
 			label_box.x1 = child_box.x1;
-#line 118 "application-place.vala"
 			label_box.x2 = child_box.x2;
-#line 119 "application-place.vala"
 			label_box.y1 = (IconBorderPositionY + IconHeight) + 12.0f;
-#line 120 "application-place.vala"
 			label_box.y2 = label_box.y1 + 64;
-#line 121 "application-place.vala"
 			clutter_actor_allocate ((ClutterActor*) (_tmp4_ = (UnityPlacesApplicationApplicationIcon*) gee_abstract_list_get ((GeeAbstractList*) self->priv->application_icon_array, i))->label, &label_box, flags);
-#line 631 "application-place.c"
 			_unity_places_application_application_icon_unref0 (_tmp4_);
-#line 123 "application-place.vala"
 			child_box.x1 = child_box.x1 + ((float) (IconWidth + ApplicationIconSpacing));
-#line 635 "application-place.c"
 		}
 	}
-#line 126 "application-place.vala"
 	if (self->priv->Separator->Width != width) {
-#line 128 "application-place.vala"
 		unity_places_cairo_drawing_places_hseparator_CreateSeparator (self->priv->Separator, width, 5);
-#line 642 "application-place.c"
 	}
-#line 130 "application-place.vala"
 	child_box.x1 = (float) LineBorderPositionX;
-#line 131 "application-place.vala"
 	child_box.x2 = child_box.x1 + width;
-#line 132 "application-place.vala"
 	child_box.y1 = (float) LineBorderPositionY;
-#line 133 "application-place.vala"
 	child_box.y2 = (float) (LineBorderPositionY + 5);
-#line 134 "application-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->Separator, &child_box, flags);
-#line 136 "application-place.vala"
 	child_box.x1 = (float) HeaderBorderPositionX;
-#line 137 "application-place.vala"
 	child_box.x2 = child_box.x1 + 22;
-#line 138 "application-place.vala"
 	child_box.y1 = (float) HeaderBorderPositionY;
-#line 139 "application-place.vala"
 	child_box.y2 = (float) (HeaderBorderPositionY + 23);
-#line 140 "application-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->Star, &child_box, flags);
-#line 142 "application-place.vala"
 	child_box.x1 = (float) (HeaderBorderPositionX + 22);
-#line 143 "application-place.vala"
 	child_box.x2 = child_box.x1 + 100;
-#line 144 "application-place.vala"
 	child_box.y1 = (float) HeaderBorderPositionY;
-#line 145 "application-place.vala"
 	child_box.y2 = (float) (HeaderBorderPositionY + 23);
-#line 146 "application-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->GroupName, &child_box, flags);
-#line 148 "application-place.vala"
 	child_box.x1 = child_box.x1 + ((float) (width - 50));
-#line 149 "application-place.vala"
 	child_box.x2 = child_box.x1 + 16;
-#line 150 "application-place.vala"
 	child_box.y1 = (float) HeaderBorderPositionY;
-#line 151 "application-place.vala"
 	child_box.y2 = (float) (HeaderBorderPositionY + 19);
-#line 152 "application-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->maximize_button, &child_box, flags);
-#line 153 "application-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->minimize_button, &child_box, flags);
-#line 686 "application-place.c"
 }
 
 
-#line 156 "application-place.vala"
 static void unity_places_application_application_group_real_get_preferred_width (ClutterActor* base, float for_height, float* minimum_width, float* natural_width) {
-#line 692 "application-place.c"
 	UnityPlacesApplicationApplicationGroup * self;
 	self = (UnityPlacesApplicationApplicationGroup*) base;
-#line 160 "application-place.vala"
 	*minimum_width = 800.0f;
-#line 161 "application-place.vala"
 	*natural_width = 800.0f;
-#line 699 "application-place.c"
 }
 
 
-#line 164 "application-place.vala"
 static void unity_places_application_application_group_real_get_preferred_height (ClutterActor* base, float for_width, float* minimum_height, float* natural_height) {
-#line 705 "application-place.c"
 	UnityPlacesApplicationApplicationGroup * self;
 	self = (UnityPlacesApplicationApplicationGroup*) base;
-#line 168 "application-place.vala"
 	*minimum_height = 135.0f;
-#line 169 "application-place.vala"
 	*natural_height = 135.0f;
-#line 712 "application-place.c"
 }
 
 
-#line 234 "application-place.vala"
 static gboolean _unity_places_application_application_group_on_maximize_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 718 "application-place.c"
 	return unity_places_application_application_group_on_maximize (self, event);
 }
 
 
-#line 226 "application-place.vala"
 static gboolean _unity_places_application_application_group_on_minimize_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 725 "application-place.c"
 	return unity_places_application_application_group_on_minimize (self, event);
 }
 
 
-#line 172 "application-place.vala"
 UnityPlacesApplicationApplicationGroup* unity_places_application_application_group_construct (GType object_type, const char* group_name) {
-#line 732 "application-place.c"
 	UnityPlacesApplicationApplicationGroup * self;
 	CtkText* _tmp0_;
 	CtkImage* _tmp1_;
@@ -736,120 +604,67 @@ UnityPlacesApplicationApplicationGroup* unity_places_application_application_gro
 	CtkImage* _tmp3_;
 	CtkImage* _tmp4_;
 	GeeArrayList* _tmp5_;
-#line 172 "application-place.vala"
 	g_return_val_if_fail (group_name != NULL, NULL);
-#line 742 "application-place.c"
 	self = g_object_newv (object_type, 0, NULL);
-#line 174 "application-place.vala"
 	ctk_box_set_homogeneous ((CtkBox*) self, FALSE);
-#line 175 "application-place.vala"
 	ctk_box_set_orientation ((CtkBox*) self, (gint) CTK_ORIENTATION_HORIZONTAL);
-#line 177 "application-place.vala"
 	self->priv->GroupName = (_tmp0_ = g_object_ref_sink ((CtkText*) ctk_text_new (group_name)), _g_object_unref0 (self->priv->GroupName), _tmp0_);
-#line 178 "application-place.vala"
 	self->priv->Star = (_tmp1_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) 23, UNITY_PLACES_APPLICATION_FAVOURITES_ICON)), _g_object_unref0 (self->priv->Star), _tmp1_);
-#line 179 "application-place.vala"
 	self->priv->Separator = (_tmp2_ = g_object_ref_sink (unity_places_cairo_drawing_places_hseparator_new ()), _g_object_unref0 (self->priv->Separator), _tmp2_);
-#line 180 "application-place.vala"
 	self->priv->maximize_button = (_tmp3_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) 16, UNITY_PLACES_APPLICATION_MAXIMIZE_ICON)), _g_object_unref0 (self->priv->maximize_button), _tmp3_);
-#line 181 "application-place.vala"
 	self->priv->minimize_button = (_tmp4_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) 16, UNITY_PLACES_APPLICATION_MINIMIZE_ICON)), _g_object_unref0 (self->priv->minimize_button), _tmp4_);
-#line 183 "application-place.vala"
 	self->priv->application_icon_array = (_tmp5_ = gee_array_list_new (UNITY_PLACES_APPLICATION_TYPE_APPLICATION_ICON, (GBoxedCopyFunc) unity_places_application_application_icon_ref, unity_places_application_application_icon_unref, NULL), _g_object_unref0 (self->priv->application_icon_array), _tmp5_);
-#line 195 "application-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->Star);
-#line 196 "application-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->Separator);
-#line 197 "application-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->GroupName);
-#line 198 "application-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->maximize_button);
-#line 199 "application-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->minimize_button);
-#line 201 "application-place.vala"
 	self->priv->is_open = TRUE;
-#line 202 "application-place.vala"
 	clutter_actor_show_all ((ClutterActor*) self);
-#line 204 "application-place.vala"
 	clutter_actor_set_reactive ((ClutterActor*) self->priv->maximize_button, TRUE);
-#line 205 "application-place.vala"
 	clutter_actor_set_reactive ((ClutterActor*) self->priv->minimize_button, TRUE);
-#line 206 "application-place.vala"
 	clutter_actor_hide ((ClutterActor*) self->priv->maximize_button);
-#line 207 "application-place.vala"
 	clutter_actor_show ((ClutterActor*) self->priv->minimize_button);
-#line 209 "application-place.vala"
 	g_signal_connect_object ((ClutterActor*) self->priv->maximize_button, "button-release-event", (GCallback) _unity_places_application_application_group_on_maximize_clutter_actor_button_release_event, self, 0);
-#line 210 "application-place.vala"
 	g_signal_connect_object ((ClutterActor*) self->priv->minimize_button, "button-release-event", (GCallback) _unity_places_application_application_group_on_minimize_clutter_actor_button_release_event, self, 0);
-#line 786 "application-place.c"
 	return self;
 }
 
 
-#line 172 "application-place.vala"
 UnityPlacesApplicationApplicationGroup* unity_places_application_application_group_new (const char* group_name) {
-#line 172 "application-place.vala"
 	return unity_places_application_application_group_construct (UNITY_PLACES_APPLICATION_TYPE_APPLICATION_GROUP, group_name);
-#line 795 "application-place.c"
 }
 
 
-#line 213 "application-place.vala"
 void unity_places_application_application_group_add_icon (UnityPlacesApplicationApplicationGroup* self, UnityPlacesApplicationApplicationIcon* app) {
-#line 213 "application-place.vala"
 	g_return_if_fail (self != NULL);
-#line 213 "application-place.vala"
 	g_return_if_fail (app != NULL);
-#line 215 "application-place.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->application_icon_array, app);
-#line 216 "application-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) app->view);
-#line 217 "application-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) app->label);
-#line 219 "application-place.vala"
 	self->n_items++;
-#line 813 "application-place.c"
 }
 
 
-#line 226 "application-place.vala"
 gboolean unity_places_application_application_group_on_minimize (UnityPlacesApplicationApplicationGroup* self, ClutterEvent* event) {
-#line 819 "application-place.c"
 	gboolean result = FALSE;
-#line 226 "application-place.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 228 "application-place.vala"
 	clutter_actor_show ((ClutterActor*) self->priv->maximize_button);
-#line 229 "application-place.vala"
 	clutter_actor_hide ((ClutterActor*) self->priv->minimize_button);
-#line 230 "application-place.vala"
 	self->priv->is_open = FALSE;
-#line 829 "application-place.c"
 	result = FALSE;
-#line 231 "application-place.vala"
 	return result;
-#line 833 "application-place.c"
 }
 
 
-#line 234 "application-place.vala"
 gboolean unity_places_application_application_group_on_maximize (UnityPlacesApplicationApplicationGroup* self, ClutterEvent* event) {
-#line 839 "application-place.c"
 	gboolean result = FALSE;
-#line 234 "application-place.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 236 "application-place.vala"
 	clutter_actor_hide ((ClutterActor*) self->priv->maximize_button);
-#line 237 "application-place.vala"
 	clutter_actor_show ((ClutterActor*) self->priv->minimize_button);
-#line 238 "application-place.vala"
 	self->priv->is_open = TRUE;
-#line 849 "application-place.c"
 	result = FALSE;
-#line 239 "application-place.vala"
 	return result;
-#line 853 "application-place.c"
 }
 
 
@@ -908,9 +723,7 @@ GType unity_places_application_application_group_get_type (void) {
 }
 
 
-#line 248 "application-place.vala"
 static void unity_places_application_application_view_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-#line 914 "application-place.c"
 	UnityPlacesApplicationApplicationView * self;
 	ClutterActorBox _tmp0_ = {0};
 	ClutterActorBox child_box;
@@ -919,76 +732,45 @@ static void unity_places_application_application_view_real_allocate (ClutterActo
 	float child_width = 0.0F;
 	float child_height = 0.0F;
 	self = (UnityPlacesApplicationApplicationView*) base;
-#line 251 "application-place.vala"
 	child_box = (_tmp0_.x1 = 0.0f, _tmp0_.y1 = 0.0f, _tmp0_.x2 = 0.0f, _tmp0_.y2 = 0.0f, _tmp0_);
-#line 255 "application-place.vala"
 	CLUTTER_ACTOR_CLASS (unity_places_application_application_view_parent_class)->allocate ((ClutterActor*) CTK_BOX (self), box, flags);
-#line 257 "application-place.vala"
 	width = (*box).x2 - (*box).x1;
-#line 258 "application-place.vala"
 	height = (*box).y2 - (*box).y1;
-#line 260 "application-place.vala"
 	clutter_actor_get_preferred_width ((ClutterActor*) self->recent_app_group, height, &child_width, &child_width);
-#line 263 "application-place.vala"
 	clutter_actor_get_preferred_height ((ClutterActor*) self->recent_app_group, width, &child_height, &child_height);
-#line 266 "application-place.vala"
 	child_box.x1 = (width - child_width) / 2.0f;
-#line 267 "application-place.vala"
 	child_box.x2 = child_box.x1 + child_width;
-#line 268 "application-place.vala"
 	child_box.y1 = 0.0f;
-#line 269 "application-place.vala"
 	child_box.y2 = child_height;
-#line 270 "application-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->recent_app_group, &child_box, flags);
-#line 272 "application-place.vala"
 	child_box.y1 = child_box.y1 + child_height;
-#line 273 "application-place.vala"
 	child_box.y2 = child_box.y1 + child_height;
-#line 274 "application-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->yesterday_app_group, &child_box, flags);
-#line 276 "application-place.vala"
 	child_box.y1 = child_box.y1 + child_height;
-#line 277 "application-place.vala"
 	child_box.y2 = child_box.y1 + child_height;
-#line 278 "application-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->lastweek_app_group, &child_box, flags);
-#line 957 "application-place.c"
 }
 
 
-#line 281 "application-place.vala"
 UnityPlacesApplicationApplicationView* unity_places_application_application_view_construct (GType object_type) {
-#line 963 "application-place.c"
 	UnityPlacesApplicationApplicationView * self;
 	UnityPlacesApplicationApplicationGroup* _tmp0_;
 	UnityPlacesApplicationApplicationGroup* _tmp1_;
 	UnityPlacesApplicationApplicationGroup* _tmp2_;
 	self = g_object_newv (object_type, 0, NULL);
-#line 283 "application-place.vala"
 	self->recent_app_group = (_tmp0_ = g_object_ref_sink (unity_places_application_application_group_new ("Recent apps")), _g_object_unref0 (self->recent_app_group), _tmp0_);
-#line 284 "application-place.vala"
 	self->yesterday_app_group = (_tmp1_ = g_object_ref_sink (unity_places_application_application_group_new ("Yesterday apps")), _g_object_unref0 (self->yesterday_app_group), _tmp1_);
-#line 285 "application-place.vala"
 	self->lastweek_app_group = (_tmp2_ = g_object_ref_sink (unity_places_application_application_group_new ("Last week apps")), _g_object_unref0 (self->lastweek_app_group), _tmp2_);
-#line 287 "application-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->recent_app_group);
-#line 288 "application-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->yesterday_app_group);
-#line 289 "application-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->lastweek_app_group);
-#line 290 "application-place.vala"
 	clutter_actor_show_all ((ClutterActor*) self);
-#line 983 "application-place.c"
 	return self;
 }
 
 
-#line 281 "application-place.vala"
 UnityPlacesApplicationApplicationView* unity_places_application_application_view_new (void) {
-#line 281 "application-place.vala"
 	return unity_places_application_application_view_construct (UNITY_PLACES_APPLICATION_TYPE_APPLICATION_VIEW);
-#line 992 "application-place.c"
 }
 
 

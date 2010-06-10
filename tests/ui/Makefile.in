@@ -37,8 +37,8 @@ host_triplet = @host@
 noinst_PROGRAMS = test-ui$(EXEEXT)
 subdir = tests/ui
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	test-automate.c test-home-button.c test-quicklist.c test-ui.c \
-	test_ui_vala.stamp
+	test-automate.c test-home-button.c test-indicators.c \
+	test-quicklist.c test-ui.c test_ui_vala.stamp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/gettext.m4 \
 	$(top_srcdir)/m4/iconv.m4 $(top_srcdir)/m4/intlmacosx.m4 \
@@ -58,6 +58,7 @@ CONFIG_CLEAN_VPATH_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
 am_test_ui_OBJECTS = test_ui-test-automate.$(OBJEXT) \
 	test_ui-test-home-button.$(OBJEXT) \
+	test_ui-test-indicators.$(OBJEXT) \
 	test_ui-test-quicklist.$(OBJEXT) test_ui-test-ui.$(OBJEXT)
 test_ui_OBJECTS = $(am_test_ui_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -338,7 +339,6 @@ test_ui_VALAFLAGS = \
   --pkg indicator \
   --pkg clutk-0.3 \
   --pkg launcher-0.3 \
-  --pkg libwnck-1.0 \
   --pkg test-const \
   --pkg unique-1.0 \
   --pkg unity \
@@ -349,6 +349,7 @@ test_ui_VALAFLAGS = \
 test_ui_SOURCES = \
   test-automate.vala \
   test-home-button.vala \
+  test-indicators.vala \
   test-quicklist.vala \
   test-ui.vala
 
@@ -413,6 +414,7 @@ distclean-compile:
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_ui-test-automate.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_ui-test-home-button.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_ui-test-indicators.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_ui-test-quicklist.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_ui-test-ui.Po@am__quote@
 
@@ -472,6 +474,22 @@ test_ui-test-home-button.obj: test-home-button.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_ui_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_ui-test-home-button.obj `if test -f 'test-home-button.c'; then $(CYGPATH_W) 'test-home-button.c'; else $(CYGPATH_W) '$(srcdir)/test-home-button.c'; fi`
 
+test_ui-test-indicators.o: test-indicators.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_ui_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_ui-test-indicators.o -MD -MP -MF $(DEPDIR)/test_ui-test-indicators.Tpo -c -o test_ui-test-indicators.o `test -f 'test-indicators.c' || echo '$(srcdir)/'`test-indicators.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_ui-test-indicators.Tpo $(DEPDIR)/test_ui-test-indicators.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-indicators.c' object='test_ui-test-indicators.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_ui_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_ui-test-indicators.o `test -f 'test-indicators.c' || echo '$(srcdir)/'`test-indicators.c
+
+test_ui-test-indicators.obj: test-indicators.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_ui_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_ui-test-indicators.obj -MD -MP -MF $(DEPDIR)/test_ui-test-indicators.Tpo -c -o test_ui-test-indicators.obj `if test -f 'test-indicators.c'; then $(CYGPATH_W) 'test-indicators.c'; else $(CYGPATH_W) '$(srcdir)/test-indicators.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_ui-test-indicators.Tpo $(DEPDIR)/test_ui-test-indicators.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-indicators.c' object='test_ui-test-indicators.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_ui_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_ui-test-indicators.obj `if test -f 'test-indicators.c'; then $(CYGPATH_W) 'test-indicators.c'; else $(CYGPATH_W) '$(srcdir)/test-indicators.c'; fi`
+
 test_ui-test-quicklist.o: test-quicklist.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_ui_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_ui-test-quicklist.o -MD -MP -MF $(DEPDIR)/test_ui-test-quicklist.Tpo -c -o test_ui-test-quicklist.o `test -f 'test-quicklist.c' || echo '$(srcdir)/'`test-quicklist.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_ui-test-quicklist.Tpo $(DEPDIR)/test_ui-test-quicklist.Po
@@ -509,6 +527,11 @@ $(srcdir)/test-automate.c: $(srcdir)/test_ui_vala.stamp
 	  $(am__cd) $(srcdir) && $(MAKE) $(AM_MAKEFLAGS) test_ui_vala.stamp; \
 	fi
 $(srcdir)/test-home-button.c: $(srcdir)/test_ui_vala.stamp
+	@if test -f $@; then :; else \
+	  rm -f $(srcdir)/test_ui_vala.stamp; \
+	  $(am__cd) $(srcdir) && $(MAKE) $(AM_MAKEFLAGS) test_ui_vala.stamp; \
+	fi
+$(srcdir)/test-indicators.c: $(srcdir)/test_ui_vala.stamp
 	@if test -f $@; then :; else \
 	  rm -f $(srcdir)/test_ui_vala.stamp; \
 	  $(am__cd) $(srcdir) && $(MAKE) $(AM_MAKEFLAGS) test_ui_vala.stamp; \
@@ -760,6 +783,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 	-rm -f test-automate.c
 	-rm -f test-home-button.c
+	-rm -f test-indicators.c
 	-rm -f test-quicklist.c
 	-rm -f test-ui.c
 	-rm -f test_ui_vala.stamp

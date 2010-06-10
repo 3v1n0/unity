@@ -191,7 +191,6 @@ public class Main
         });
       }
 
-    Wnck.set_client_type (Wnck.ClientType.PAGER);
     Gtk.main ();
 
     /* Restore envvar */

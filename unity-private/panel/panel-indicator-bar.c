@@ -25,11 +25,11 @@
 #include <glib-object.h>
 #include <clutk/clutk.h>
 #include <gee.h>
+#include <clutter/clutter.h>
 #include <gtk/gtk.h>
 #include <libindicator/indicator-object.h>
 #include <stdlib.h>
 #include <string.h>
-#include <clutter/clutter.h>
 
 
 #define UNITY_PANEL_INDICATORS_TYPE_INDICATOR_BAR (unity_panel_indicators_indicator_bar_get_type ())
@@ -52,7 +52,28 @@ typedef struct _UnityPanelIndicatorsIndicatorBarPrivate UnityPanelIndicatorsIndi
 
 typedef struct _UnityPanelIndicatorsIndicatorObjectView UnityPanelIndicatorsIndicatorObjectView;
 typedef struct _UnityPanelIndicatorsIndicatorObjectViewClass UnityPanelIndicatorsIndicatorObjectViewClass;
+
+#define UNITY_PANEL_TYPE_INDICATOR_BACKGROUND (unity_panel_indicator_background_get_type ())
+#define UNITY_PANEL_INDICATOR_BACKGROUND(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_TYPE_INDICATOR_BACKGROUND, UnityPanelIndicatorBackground))
+#define UNITY_PANEL_INDICATOR_BACKGROUND_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PANEL_TYPE_INDICATOR_BACKGROUND, UnityPanelIndicatorBackgroundClass))
+#define UNITY_PANEL_IS_INDICATOR_BACKGROUND(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PANEL_TYPE_INDICATOR_BACKGROUND))
+#define UNITY_PANEL_IS_INDICATOR_BACKGROUND_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PANEL_TYPE_INDICATOR_BACKGROUND))
+#define UNITY_PANEL_INDICATOR_BACKGROUND_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PANEL_TYPE_INDICATOR_BACKGROUND, UnityPanelIndicatorBackgroundClass))
+
+typedef struct _UnityPanelIndicatorBackground UnityPanelIndicatorBackground;
+typedef struct _UnityPanelIndicatorBackgroundClass UnityPanelIndicatorBackgroundClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+
+#define UNITY_TESTING_TYPE_OBJECT_REGISTRY (unity_testing_object_registry_get_type ())
+#define UNITY_TESTING_OBJECT_REGISTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTING_TYPE_OBJECT_REGISTRY, UnityTestingObjectRegistry))
+#define UNITY_TESTING_OBJECT_REGISTRY_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTING_TYPE_OBJECT_REGISTRY, UnityTestingObjectRegistryClass))
+#define UNITY_TESTING_IS_OBJECT_REGISTRY(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTING_TYPE_OBJECT_REGISTRY))
+#define UNITY_TESTING_IS_OBJECT_REGISTRY_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTING_TYPE_OBJECT_REGISTRY))
+#define UNITY_TESTING_OBJECT_REGISTRY_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTING_TYPE_OBJECT_REGISTRY, UnityTestingObjectRegistryClass))
+
+typedef struct _UnityTestingObjectRegistry UnityTestingObjectRegistry;
+typedef struct _UnityTestingObjectRegistryClass UnityTestingObjectRegistryClass;
+#define _unity_testing_object_registry_unref0(var) ((var == NULL) ? NULL : (var = (unity_testing_object_registry_unref (var), NULL)))
 
 #define UNITY_PANEL_INDICATORS_TYPE_INDICATORS_MODEL (unity_panel_indicators_indicators_model_get_type ())
 #define UNITY_PANEL_INDICATORS_INDICATORS_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_INDICATORS_TYPE_INDICATORS_MODEL, UnityPanelIndicatorsIndicatorsModel))
@@ -76,6 +97,7 @@ struct _UnityPanelIndicatorsIndicatorBarClass {
 
 struct _UnityPanelIndicatorsIndicatorBarPrivate {
 	GeeArrayList* indicator_array;
+	UnityPanelIndicatorBackground* indicator_bground;
 };
 
 
@@ -83,6 +105,7 @@ static gpointer unity_panel_indicators_indicator_bar_parent_class = NULL;
 
 GType unity_panel_indicators_indicator_bar_get_type (void);
 GType unity_panel_indicators_indicator_object_view_get_type (void);
+GType unity_panel_indicator_background_get_type (void);
 #define UNITY_PANEL_INDICATORS_INDICATOR_BAR_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_BAR, UnityPanelIndicatorsIndicatorBarPrivate))
 enum  {
 	UNITY_PANEL_INDICATORS_INDICATOR_BAR_DUMMY_PROPERTY
@@ -92,6 +115,20 @@ UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_construct
 void unity_panel_indicators_indicator_object_view_open_last_menu_entry (UnityPanelIndicatorsIndicatorObjectView* self);
 void unity_panel_indicators_indicator_object_view_open_first_menu_entry (UnityPanelIndicatorsIndicatorObjectView* self);
 static void unity_panel_indicators_indicator_bar_on_menu_moved (UnityPanelIndicatorsIndicatorBar* self, UnityPanelIndicatorsIndicatorObjectView* object_view, GtkMenuDirectionType type);
+IndicatorObject* unity_panel_indicators_indicator_object_view_get_indicator_object (UnityPanelIndicatorsIndicatorObjectView* self);
+UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_bar_get_indicator_view_matching (UnityPanelIndicatorsIndicatorBar* self, IndicatorObject* o);
+void unity_panel_indicators_indicator_bar_set_indicator_mode (UnityPanelIndicatorsIndicatorBar* self, gboolean mode);
+gpointer unity_testing_object_registry_ref (gpointer instance);
+void unity_testing_object_registry_unref (gpointer instance);
+GParamSpec* unity_testing_param_spec_object_registry (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
+void unity_testing_value_set_object_registry (GValue* value, gpointer v_object);
+void unity_testing_value_take_object_registry (GValue* value, gpointer v_object);
+gpointer unity_testing_value_get_object_registry (const GValue* value);
+GType unity_testing_object_registry_get_type (void);
+UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void);
+void unity_testing_object_registry_register (UnityTestingObjectRegistry* self, const char* name, GObject* object);
+UnityPanelIndicatorBackground* unity_panel_indicator_background_new (void);
+UnityPanelIndicatorBackground* unity_panel_indicator_background_construct (GType object_type);
 GType unity_panel_indicators_indicators_model_get_type (void);
 UnityPanelIndicatorsIndicatorsModel* unity_panel_indicators_indicators_model_get_default (void);
 GeeArrayList* unity_panel_indicators_indicators_model_get_indicators (UnityPanelIndicatorsIndicatorsModel* self);
@@ -105,90 +142,91 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
-#line 27 "panel-indicator-bar.vala"
 UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_construct (GType object_type) {
-#line 111 "panel-indicator-bar.c"
 	UnityPanelIndicatorsIndicatorBar * self;
-#line 29 "panel-indicator-bar.vala"
 	self = (UnityPanelIndicatorsIndicatorBar*) g_object_new (object_type, "orientation", CTK_ORIENTATION_HORIZONTAL, "spacing", 0, "homogeneous", FALSE, NULL);
-#line 115 "panel-indicator-bar.c"
 	return self;
 }
 
 
-#line 27 "panel-indicator-bar.vala"
 UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_new (void) {
-#line 27 "panel-indicator-bar.vala"
 	return unity_panel_indicators_indicator_bar_construct (UNITY_PANEL_INDICATORS_TYPE_INDICATOR_BAR);
-#line 124 "panel-indicator-bar.c"
 }
 
 
-#line 60 "panel-indicator-bar.vala"
 static void unity_panel_indicators_indicator_bar_on_menu_moved (UnityPanelIndicatorsIndicatorBar* self, UnityPanelIndicatorsIndicatorObjectView* object_view, GtkMenuDirectionType type) {
-#line 130 "panel-indicator-bar.c"
 	gint pos;
 	UnityPanelIndicatorsIndicatorObjectView* next_object_view;
-#line 60 "panel-indicator-bar.vala"
 	g_return_if_fail (self != NULL);
-#line 60 "panel-indicator-bar.vala"
 	g_return_if_fail (object_view != NULL);
-#line 63 "panel-indicator-bar.vala"
 	pos = gee_abstract_list_index_of ((GeeAbstractList*) self->priv->indicator_array, object_view);
-#line 64 "panel-indicator-bar.vala"
 	if (pos == (-1)) {
-#line 65 "panel-indicator-bar.vala"
 		return;
-#line 143 "panel-indicator-bar.c"
 	}
-#line 67 "panel-indicator-bar.vala"
 	if (type == GTK_MENU_DIR_PARENT) {
-#line 69 "panel-indicator-bar.vala"
 		if (pos == 0) {
-#line 71 "panel-indicator-bar.vala"
 			pos = gee_collection_get_size ((GeeCollection*) self->priv->indicator_array) - 1;
-#line 151 "panel-indicator-bar.c"
 		} else {
-#line 74 "panel-indicator-bar.vala"
 			pos = pos - 1;
-#line 155 "panel-indicator-bar.c"
 		}
 	} else {
-#line 76 "panel-indicator-bar.vala"
 		if (type == GTK_MENU_DIR_CHILD) {
-#line 78 "panel-indicator-bar.vala"
 			if (pos == (gee_collection_get_size ((GeeCollection*) self->priv->indicator_array) - 1)) {
-#line 80 "panel-indicator-bar.vala"
 				pos = 0;
-#line 164 "panel-indicator-bar.c"
 			} else {
-#line 83 "panel-indicator-bar.vala"
 				pos = pos + 1;
-#line 168 "panel-indicator-bar.c"
 			}
 		}
 	}
-#line 86 "panel-indicator-bar.vala"
 	next_object_view = (UnityPanelIndicatorsIndicatorObjectView*) gee_abstract_list_get ((GeeAbstractList*) self->priv->indicator_array, pos);
-#line 88 "panel-indicator-bar.vala"
 	if (type == GTK_MENU_DIR_PARENT) {
-#line 90 "panel-indicator-bar.vala"
 		unity_panel_indicators_indicator_object_view_open_last_menu_entry (next_object_view);
-#line 178 "panel-indicator-bar.c"
 	}
-#line 93 "panel-indicator-bar.vala"
 	if (type == GTK_MENU_DIR_CHILD) {
-#line 95 "panel-indicator-bar.vala"
 		unity_panel_indicators_indicator_object_view_open_first_menu_entry (next_object_view);
-#line 184 "panel-indicator-bar.c"
 	}
 	_g_object_unref0 (next_object_view);
 }
 
 
-#line 60 "panel-indicator-bar.vala"
+UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_bar_get_indicator_view_matching (UnityPanelIndicatorsIndicatorBar* self, IndicatorObject* o) {
+	UnityPanelIndicatorsIndicatorObjectView* result = NULL;
+	g_return_val_if_fail (self != NULL, NULL);
+	g_return_val_if_fail (o != NULL, NULL);
+	{
+		GeeIterator* _i_it;
+		_i_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) self->priv->indicator_array);
+		while (TRUE) {
+			UnityPanelIndicatorsIndicatorObjectView* i;
+			if (!gee_iterator_next (_i_it)) {
+				break;
+			}
+			i = (UnityPanelIndicatorsIndicatorObjectView*) gee_iterator_get (_i_it);
+			if (unity_panel_indicators_indicator_object_view_get_indicator_object (i) == o) {
+				result = i;
+				_g_object_unref0 (_i_it);
+				return result;
+			}
+			_g_object_unref0 (i);
+		}
+		_g_object_unref0 (_i_it);
+	}
+	result = NULL;
+	return result;
+}
+
+
+void unity_panel_indicators_indicator_bar_set_indicator_mode (UnityPanelIndicatorsIndicatorBar* self, gboolean mode) {
+	g_return_if_fail (self != NULL);
+	if (mode) {
+		clutter_actor_show ((ClutterActor*) self->priv->indicator_bground);
+	} else {
+		clutter_actor_hide ((ClutterActor*) self->priv->indicator_bground);
+	}
+}
+
+
 static void _unity_panel_indicators_indicator_bar_on_menu_moved_unity_panel_indicators_indicator_object_view_menu_moved (UnityPanelIndicatorsIndicatorObjectView* _sender, GtkMenuDirectionType type, gpointer self) {
-#line 192 "panel-indicator-bar.c"
 	unity_panel_indicators_indicator_bar_on_menu_moved (self, _sender, type);
 }
 
@@ -201,49 +239,37 @@ static GObject * unity_panel_indicators_indicator_bar_constructor (GType type, g
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_PANEL_INDICATORS_INDICATOR_BAR (obj);
 	{
-		GeeArrayList* _tmp0_;
+		UnityTestingObjectRegistry* _tmp0_;
+		UnityPanelIndicatorBackground* _tmp1_;
+		GeeArrayList* _tmp2_;
 		UnityPanelIndicatorsIndicatorsModel* model;
 		GeeArrayList* indicators_list;
-#line 36 "panel-indicator-bar.vala"
-		self->priv->indicator_array = (_tmp0_ = gee_array_list_new (UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->priv->indicator_array), _tmp0_);
-#line 38 "panel-indicator-bar.vala"
+		unity_testing_object_registry_register (_tmp0_ = unity_testing_object_registry_get_default (), "IndicatorBar", (GObject*) self);
+		_unity_testing_object_registry_unref0 (_tmp0_);
+		self->priv->indicator_bground = (_tmp1_ = g_object_ref_sink (unity_panel_indicator_background_new ()), _g_object_unref0 (self->priv->indicator_bground), _tmp1_);
+		ctk_actor_set_background ((CtkActor*) self, (ClutterActor*) self->priv->indicator_bground);
+		clutter_actor_hide ((ClutterActor*) self->priv->indicator_bground);
+		self->priv->indicator_array = (_tmp2_ = gee_array_list_new (UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->priv->indicator_array), _tmp2_);
 		model = unity_panel_indicators_indicators_model_get_default ();
-#line 39 "panel-indicator-bar.vala"
 		indicators_list = unity_panel_indicators_indicators_model_get_indicators (model);
-#line 214 "panel-indicator-bar.c"
 		{
 			GeeIterator* _o_it;
 			_o_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) indicators_list);
-#line 41 "panel-indicator-bar.vala"
 			while (TRUE) {
-#line 220 "panel-indicator-bar.c"
 				IndicatorObject* o;
 				char* name;
-#line 41 "panel-indicator-bar.vala"
 				if (!gee_iterator_next (_o_it)) {
-#line 41 "panel-indicator-bar.vala"
 					break;
-#line 227 "panel-indicator-bar.c"
 				}
-#line 41 "panel-indicator-bar.vala"
 				o = (IndicatorObject*) gee_iterator_get (_o_it);
-#line 43 "panel-indicator-bar.vala"
 				name = unity_panel_indicators_indicators_model_get_indicator_name (model, o);
-#line 45 "panel-indicator-bar.vala"
 				if (_vala_strcmp0 (name, "libappmenu.so") != 0) {
-#line 235 "panel-indicator-bar.c"
 					UnityPanelIndicatorsIndicatorObjectView* indicator_object_view;
-#line 47 "panel-indicator-bar.vala"
 					indicator_object_view = g_object_ref_sink (unity_panel_indicators_indicator_object_view_new (o));
-#line 48 "panel-indicator-bar.vala"
 					g_signal_connect_object (indicator_object_view, "menu-moved", (GCallback) _unity_panel_indicators_indicator_bar_on_menu_moved_unity_panel_indicators_indicator_object_view_menu_moved, self, 0);
-#line 49 "panel-indicator-bar.vala"
 					gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->indicator_array, indicator_object_view);
-#line 51 "panel-indicator-bar.vala"
 					clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) indicator_object_view);
-#line 52 "panel-indicator-bar.vala"
 					clutter_actor_show ((ClutterActor*) indicator_object_view);
-#line 247 "panel-indicator-bar.c"
 					_g_object_unref0 (indicator_object_view);
 				}
 				_g_object_unref0 (o);
@@ -275,6 +301,7 @@ static void unity_panel_indicators_indicator_bar_finalize (GObject* obj) {
 	UnityPanelIndicatorsIndicatorBar * self;
 	self = UNITY_PANEL_INDICATORS_INDICATOR_BAR (obj);
 	_g_object_unref0 (self->priv->indicator_array);
+	_g_object_unref0 (self->priv->indicator_bground);
 	G_OBJECT_CLASS (unity_panel_indicators_indicator_bar_parent_class)->finalize (obj);
 }
 

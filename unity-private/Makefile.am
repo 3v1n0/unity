@@ -74,6 +74,7 @@ private_sources = \
 panel_sources = \
   panel/panel-background.vala \
   panel/panel-home-button.vala \
+  panel/panel-indicator-background.vala \
   panel/panel-indicator-bar.vala \
   panel/panel-indicator-model.vala \
   panel/panel-indicator-object-entry-view.vala \

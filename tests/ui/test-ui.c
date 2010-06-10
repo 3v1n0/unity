@@ -76,6 +76,26 @@ typedef struct _UnityTestsUIQuicklistSuiteClass UnityTestsUIQuicklistSuiteClass;
 
 typedef struct _UnityTestsUIHomeButtonSuite UnityTestsUIHomeButtonSuite;
 typedef struct _UnityTestsUIHomeButtonSuiteClass UnityTestsUIHomeButtonSuiteClass;
+
+#define UNITY_TESTS_UI_TYPE_AUTOMATION_BASIC_TEST_SUITE (unity_tests_ui_automation_basic_test_suite_get_type ())
+#define UNITY_TESTS_UI_AUTOMATION_BASIC_TEST_SUITE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UI_TYPE_AUTOMATION_BASIC_TEST_SUITE, UnityTestsUIAutomationBasicTestSuite))
+#define UNITY_TESTS_UI_AUTOMATION_BASIC_TEST_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UI_TYPE_AUTOMATION_BASIC_TEST_SUITE, UnityTestsUIAutomationBasicTestSuiteClass))
+#define UNITY_TESTS_UI_IS_AUTOMATION_BASIC_TEST_SUITE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTS_UI_TYPE_AUTOMATION_BASIC_TEST_SUITE))
+#define UNITY_TESTS_UI_IS_AUTOMATION_BASIC_TEST_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTS_UI_TYPE_AUTOMATION_BASIC_TEST_SUITE))
+#define UNITY_TESTS_UI_AUTOMATION_BASIC_TEST_SUITE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTS_UI_TYPE_AUTOMATION_BASIC_TEST_SUITE, UnityTestsUIAutomationBasicTestSuiteClass))
+
+typedef struct _UnityTestsUIAutomationBasicTestSuite UnityTestsUIAutomationBasicTestSuite;
+typedef struct _UnityTestsUIAutomationBasicTestSuiteClass UnityTestsUIAutomationBasicTestSuiteClass;
+
+#define UNITY_TESTS_UI_TYPE_INDICATOR_TEST_SUITE (unity_tests_ui_indicator_test_suite_get_type ())
+#define UNITY_TESTS_UI_INDICATOR_TEST_SUITE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UI_TYPE_INDICATOR_TEST_SUITE, UnityTestsUIIndicatorTestSuite))
+#define UNITY_TESTS_UI_INDICATOR_TEST_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UI_TYPE_INDICATOR_TEST_SUITE, UnityTestsUIIndicatorTestSuiteClass))
+#define UNITY_TESTS_UI_IS_INDICATOR_TEST_SUITE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTS_UI_TYPE_INDICATOR_TEST_SUITE))
+#define UNITY_TESTS_UI_IS_INDICATOR_TEST_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTS_UI_TYPE_INDICATOR_TEST_SUITE))
+#define UNITY_TESTS_UI_INDICATOR_TEST_SUITE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTS_UI_TYPE_INDICATOR_TEST_SUITE, UnityTestsUIIndicatorTestSuiteClass))
+
+typedef struct _UnityTestsUIIndicatorTestSuite UnityTestsUIIndicatorTestSuite;
+typedef struct _UnityTestsUIIndicatorTestSuiteClass UnityTestsUIIndicatorTestSuiteClass;
 #define _unity_testing_logging_unref0(var) ((var == NULL) ? NULL : (var = (unity_testing_logging_unref (var), NULL)))
 typedef struct _ParamSpecMain ParamSpecMain;
 
@@ -137,10 +157,16 @@ enum  {
 };
 GType unity_tests_ui_quicklist_suite_get_type (void);
 GType unity_tests_ui_home_button_suite_get_type (void);
+GType unity_tests_ui_automation_basic_test_suite_get_type (void);
+GType unity_tests_ui_indicator_test_suite_get_type (void);
+UnityTestsUIAutomationBasicTestSuite* unity_tests_ui_automation_basic_test_suite_new (void);
+UnityTestsUIAutomationBasicTestSuite* unity_tests_ui_automation_basic_test_suite_construct (GType object_type);
 UnityTestsUIQuicklistSuite* unity_tests_ui_quicklist_suite_new (void);
 UnityTestsUIQuicklistSuite* unity_tests_ui_quicklist_suite_construct (GType object_type);
 UnityTestsUIHomeButtonSuite* unity_tests_ui_home_button_suite_new (void);
 UnityTestsUIHomeButtonSuite* unity_tests_ui_home_button_suite_construct (GType object_type);
+UnityTestsUIIndicatorTestSuite* unity_tests_ui_indicator_test_suite_new (void);
+UnityTestsUIIndicatorTestSuite* unity_tests_ui_indicator_test_suite_construct (GType object_type);
 static gboolean _lambda0_ (void);
 static gboolean __lambda0__gsource_func (gpointer self);
 gint main_main (char** args, int args_length1);
@@ -151,212 +177,132 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
-#line 28 "test-ui.vala"
 static GeeArrayList* unity_tests_ui_test_favorites_real_get_favorites (UnityFavorites* base) {
-#line 157 "test-ui.c"
 	UnityTestsUITestFavorites * self;
 	GeeArrayList* result = NULL;
 	GeeArrayList* retlist;
 	self = (UnityTestsUITestFavorites*) base;
-#line 30 "test-ui.vala"
 	retlist = gee_array_list_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, NULL);
-#line 31 "test-ui.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) retlist, "app-firefox");
-#line 166 "test-ui.c"
 	result = retlist;
-#line 32 "test-ui.vala"
 	return result;
-#line 170 "test-ui.c"
 }
 
 
-#line 35 "test-ui.vala"
 static void unity_tests_ui_test_favorites_real_add_favorite (UnityFavorites* base, const char* uid) {
-#line 176 "test-ui.c"
 	UnityTestsUITestFavorites * self;
 	self = (UnityTestsUITestFavorites*) base;
-#line 35 "test-ui.vala"
 	g_return_if_fail (uid != NULL);
-#line 181 "test-ui.c"
 }
 
 
-#line 38 "test-ui.vala"
 static void unity_tests_ui_test_favorites_real_remove_favorite (UnityFavorites* base, const char* uid) {
-#line 187 "test-ui.c"
 	UnityTestsUITestFavorites * self;
 	self = (UnityTestsUITestFavorites*) base;
-#line 38 "test-ui.vala"
 	g_return_if_fail (uid != NULL);
-#line 192 "test-ui.c"
 }
 
 
-#line 41 "test-ui.vala"
 static gboolean unity_tests_ui_test_favorites_real_is_favorite (UnityFavorites* base, const char* uid) {
-#line 198 "test-ui.c"
 	UnityTestsUITestFavorites * self;
 	gboolean result = FALSE;
 	self = (UnityTestsUITestFavorites*) base;
-#line 41 "test-ui.vala"
 	g_return_val_if_fail (uid != NULL, FALSE);
-#line 204 "test-ui.c"
 	result = TRUE;
-#line 43 "test-ui.vala"
 	return result;
-#line 208 "test-ui.c"
 }
 
 
-#line 46 "test-ui.vala"
 static char* unity_tests_ui_test_favorites_real_get_string (UnityFavorites* base, const char* uid, const char* name) {
-#line 214 "test-ui.c"
 	UnityTestsUITestFavorites * self;
 	char* result = NULL;
 	self = (UnityTestsUITestFavorites*) base;
-#line 46 "test-ui.vala"
 	g_return_val_if_fail (uid != NULL, NULL);
-#line 46 "test-ui.vala"
 	g_return_val_if_fail (name != NULL, NULL);
-#line 48 "test-ui.vala"
 	if (_vala_strcmp0 (name, "type") == 0) {
-#line 224 "test-ui.c"
 		result = g_strdup ("application");
-#line 49 "test-ui.vala"
 		return result;
-#line 228 "test-ui.c"
 	}
 	result = g_strdup ("/usr/share/applications/firefox.desktop");
-#line 51 "test-ui.vala"
 	return result;
-#line 233 "test-ui.c"
 }
 
 
-#line 54 "test-ui.vala"
 static void unity_tests_ui_test_favorites_real_set_string (UnityFavorites* base, const char* uid, const char* name, const char* value) {
-#line 239 "test-ui.c"
 	UnityTestsUITestFavorites * self;
 	self = (UnityTestsUITestFavorites*) base;
-#line 54 "test-ui.vala"
 	g_return_if_fail (uid != NULL);
-#line 54 "test-ui.vala"
 	g_return_if_fail (name != NULL);
-#line 54 "test-ui.vala"
 	g_return_if_fail (value != NULL);
-#line 248 "test-ui.c"
 }
 
 
-#line 58 "test-ui.vala"
 static gint* unity_tests_ui_test_favorites_real_get_int (UnityFavorites* base, const char* uid, const char* name) {
-#line 254 "test-ui.c"
 	UnityTestsUITestFavorites * self;
 	gint* result = NULL;
 	self = (UnityTestsUITestFavorites*) base;
-#line 58 "test-ui.vala"
 	g_return_val_if_fail (uid != NULL, NULL);
-#line 58 "test-ui.vala"
 	g_return_val_if_fail (name != NULL, NULL);
-#line 262 "test-ui.c"
 	result = NULL;
-#line 60 "test-ui.vala"
 	return result;
-#line 266 "test-ui.c"
 }
 
 
-#line 62 "test-ui.vala"
 static void unity_tests_ui_test_favorites_real_set_int (UnityFavorites* base, const char* uid, const char* name, gint value) {
-#line 272 "test-ui.c"
 	UnityTestsUITestFavorites * self;
 	self = (UnityTestsUITestFavorites*) base;
-#line 62 "test-ui.vala"
 	g_return_if_fail (uid != NULL);
-#line 62 "test-ui.vala"
 	g_return_if_fail (name != NULL);
-#line 279 "test-ui.c"
 }
 
 
-#line 67 "test-ui.vala"
 static float* unity_tests_ui_test_favorites_real_get_float (UnityFavorites* base, const char* uid, const char* name) {
-#line 285 "test-ui.c"
 	UnityTestsUITestFavorites * self;
 	float* result = NULL;
 	self = (UnityTestsUITestFavorites*) base;
-#line 67 "test-ui.vala"
 	g_return_val_if_fail (uid != NULL, NULL);
-#line 67 "test-ui.vala"
 	g_return_val_if_fail (name != NULL, NULL);
-#line 293 "test-ui.c"
 	result = NULL;
-#line 69 "test-ui.vala"
 	return result;
-#line 297 "test-ui.c"
 }
 
 
-#line 71 "test-ui.vala"
 static void unity_tests_ui_test_favorites_real_set_float (UnityFavorites* base, const char* uid, const char* name, float value) {
-#line 303 "test-ui.c"
 	UnityTestsUITestFavorites * self;
 	self = (UnityTestsUITestFavorites*) base;
-#line 71 "test-ui.vala"
 	g_return_if_fail (uid != NULL);
-#line 71 "test-ui.vala"
 	g_return_if_fail (name != NULL);
-#line 310 "test-ui.c"
 }
 
 
-#line 75 "test-ui.vala"
 static gboolean* unity_tests_ui_test_favorites_real_get_bool (UnityFavorites* base, const char* uid, const char* name) {
-#line 316 "test-ui.c"
 	UnityTestsUITestFavorites * self;
 	gboolean* result = NULL;
 	self = (UnityTestsUITestFavorites*) base;
-#line 75 "test-ui.vala"
 	g_return_val_if_fail (uid != NULL, NULL);
-#line 75 "test-ui.vala"
 	g_return_val_if_fail (name != NULL, NULL);
-#line 324 "test-ui.c"
 	result = NULL;
-#line 77 "test-ui.vala"
 	return result;
-#line 328 "test-ui.c"
 }
 
 
-#line 80 "test-ui.vala"
 static void unity_tests_ui_test_favorites_real_set_bool (UnityFavorites* base, const char* uid, const char* name, gboolean value) {
-#line 334 "test-ui.c"
 	UnityTestsUITestFavorites * self;
 	self = (UnityTestsUITestFavorites*) base;
-#line 80 "test-ui.vala"
 	g_return_if_fail (uid != NULL);
-#line 80 "test-ui.vala"
 	g_return_if_fail (name != NULL);
-#line 341 "test-ui.c"
 }
 
 
-#line 26 "test-ui.vala"
 UnityTestsUITestFavorites* unity_tests_ui_test_favorites_construct (GType object_type) {
-#line 347 "test-ui.c"
 	UnityTestsUITestFavorites * self;
-#line 26 "test-ui.vala"
 	self = (UnityTestsUITestFavorites*) unity_favorites_construct (object_type);
-#line 351 "test-ui.c"
 	return self;
 }
 
 
-#line 26 "test-ui.vala"
 UnityTestsUITestFavorites* unity_tests_ui_test_favorites_new (void) {
-#line 26 "test-ui.vala"
 	return unity_tests_ui_test_favorites_construct (UNITY_TESTS_UI_TYPE_TEST_FAVORITES);
-#line 360 "test-ui.c"
 }
 
 
@@ -393,101 +339,76 @@ GType unity_tests_ui_test_favorites_get_type (void) {
 }
 
 
-#line 112 "test-ui.vala"
 static gboolean _lambda0_ (void) {
-#line 399 "test-ui.c"
 	gboolean result = FALSE;
-#line 113 "test-ui.vala"
 	g_test_run ();
-#line 114 "test-ui.vala"
 	gtk_main_quit ();
-#line 405 "test-ui.c"
 	result = FALSE;
-#line 115 "test-ui.vala"
 	return result;
-#line 409 "test-ui.c"
 }
 
 
-#line 112 "test-ui.vala"
 static gboolean __lambda0__gsource_func (gpointer self) {
-#line 415 "test-ui.c"
 	return _lambda0_ ();
 }
 
 
-#line 88 "test-ui.vala"
 gint main_main (char** args, int args_length1) {
-#line 422 "test-ui.c"
 	gint result = 0;
 	UnityTestingLogging* logger;
 	UnityTestsUIQuicklistSuite* quicklist_suite;
 	UnityTestsUIHomeButtonSuite* home_button_suite;
+	UnityTestsUIAutomationBasicTestSuite* basic_test_suite;
+	UnityTestsUIIndicatorTestSuite* indicator_test_suite;
 	UnityTestingLogging* _tmp0_;
-	UnityTestsUIQuicklistSuite* _tmp1_;
-	UnityTestsUIHomeButtonSuite* _tmp2_;
+	UnityTestsUIAutomationBasicTestSuite* _tmp1_;
+	UnityTestsUIQuicklistSuite* _tmp2_;
+	UnityTestsUIHomeButtonSuite* _tmp3_;
+	UnityTestsUIIndicatorTestSuite* _tmp4_;
 	logger = NULL;
 	quicklist_suite = NULL;
 	home_button_suite = NULL;
-#line 96 "test-ui.vala"
+	basic_test_suite = NULL;
+	indicator_test_suite = NULL;
 	g_setenv ("UNITY_DISABLE_TRAY", "1", TRUE);
-#line 97 "test-ui.vala"
 	g_setenv ("UNITY_DISABLE_IDLES", "1", TRUE);
-#line 98 "test-ui.vala"
 	g_setenv ("UNITY_PANEL_INDICATORS_SKIP", "all", TRUE);
-#line 100 "test-ui.vala"
 	gtk_init (&args_length1, &args);
-#line 101 "test-ui.vala"
 	g_object_set (gtk_settings_get_default (), "gtk-xft-dpi", 96 * 1024, NULL);
-#line 103 "test-ui.vala"
 	ctk_init (&args_length1, &args);
-#line 104 "test-ui.vala"
 	g_test_init (&args_length1, &args, NULL);
-#line 106 "test-ui.vala"
 	logger = (_tmp0_ = unity_testing_logging_new (), _unity_testing_logging_unref0 (logger), _tmp0_);
-#line 109 "test-ui.vala"
-	quicklist_suite = (_tmp1_ = unity_tests_ui_quicklist_suite_new (), _g_object_unref0 (quicklist_suite), _tmp1_);
-#line 110 "test-ui.vala"
-	home_button_suite = (_tmp2_ = unity_tests_ui_home_button_suite_new (), _g_object_unref0 (home_button_suite), _tmp2_);
-#line 112 "test-ui.vala"
+	basic_test_suite = (_tmp1_ = unity_tests_ui_automation_basic_test_suite_new (), _g_object_unref0 (basic_test_suite), _tmp1_);
+	quicklist_suite = (_tmp2_ = unity_tests_ui_quicklist_suite_new (), _g_object_unref0 (quicklist_suite), _tmp2_);
+	home_button_suite = (_tmp3_ = unity_tests_ui_home_button_suite_new (), _g_object_unref0 (home_button_suite), _tmp3_);
+	indicator_test_suite = (_tmp4_ = unity_tests_ui_indicator_test_suite_new (), _g_object_unref0 (indicator_test_suite), _tmp4_);
 	g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 3, __lambda0__gsource_func, NULL, NULL);
-#line 118 "test-ui.vala"
 	gtk_main ();
-#line 457 "test-ui.c"
 	result = 0;
 	_unity_testing_logging_unref0 (logger);
 	_g_object_unref0 (quicklist_suite);
 	_g_object_unref0 (home_button_suite);
-#line 120 "test-ui.vala"
+	_g_object_unref0 (basic_test_suite);
+	_g_object_unref0 (indicator_test_suite);
 	return result;
-#line 464 "test-ui.c"
 }
 
 
-#line 88 "test-ui.vala"
 int main (int argc, char ** argv) {
-#line 88 "test-ui.vala"
 	g_type_init ();
-#line 88 "test-ui.vala"
 	return main_main (argv, argc);
-#line 474 "test-ui.c"
 }
 
 
-#line 86 "test-ui.vala"
 Main* main_construct (GType object_type) {
-#line 480 "test-ui.c"
 	Main* self;
 	self = (Main*) g_type_create_instance (object_type);
 	return self;
 }
 
 
-#line 86 "test-ui.vala"
 Main* main_new (void) {
-#line 86 "test-ui.vala"
 	return main_construct (TYPE_MAIN);
-#line 491 "test-ui.c"
 }
 
 

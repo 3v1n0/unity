@@ -208,26 +208,17 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
-#line 37 "scroller-controller.vala"
 UnityLauncherScrollerController* unity_launcher_scroller_controller_construct (GType object_type, UnityLauncherScrollerModel* _model, UnityLauncherScrollerView* _view) {
-#line 214 "scroller-controller.c"
 	UnityLauncherScrollerController * self;
-#line 37 "scroller-controller.vala"
 	g_return_val_if_fail (_model != NULL, NULL);
-#line 37 "scroller-controller.vala"
 	g_return_val_if_fail (_view != NULL, NULL);
-#line 39 "scroller-controller.vala"
 	self = (UnityLauncherScrollerController*) g_object_new (object_type, "model", _model, "view", _view, NULL);
-#line 222 "scroller-controller.c"
 	return self;
 }
 
 
-#line 37 "scroller-controller.vala"
 UnityLauncherScrollerController* unity_launcher_scroller_controller_new (UnityLauncherScrollerModel* _model, UnityLauncherScrollerView* _view) {
-#line 37 "scroller-controller.vala"
 	return unity_launcher_scroller_controller_construct (UNITY_LAUNCHER_TYPE_SCROLLER_CONTROLLER, _model, _view);
-#line 231 "scroller-controller.c"
 }
 
 
@@ -236,95 +227,56 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 83 "scroller-controller.vala"
 static void _lambda17_ (BamfView* a, gboolean changed, UnityLauncherScrollerController* self) {
-#line 83 "scroller-controller.vala"
 	g_return_if_fail (a != NULL);
-#line 84 "scroller-controller.vala"
 	if (changed) {
-#line 246 "scroller-controller.c"
 		BamfView* _tmp0_;
-#line 86 "scroller-controller.vala"
 		unity_launcher_scroller_controller_handle_bamf_view_opened (self, (_tmp0_ = a, G_IS_OBJECT (_tmp0_) ? ((GObject*) _tmp0_) : NULL));
-#line 250 "scroller-controller.c"
 	}
 }
 
 
-#line 83 "scroller-controller.vala"
 static void __lambda17__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self) {
-#line 257 "scroller-controller.c"
 	_lambda17_ (_sender, object, self);
 }
 
 
-#line 114 "scroller-controller.vala"
 static void _unity_launcher_scroller_controller_on_scroller_controller_closed_unity_launcher_scroller_child_controller_closed (UnityLauncherScrollerChildController* _sender, gpointer self) {
-#line 264 "scroller-controller.c"
 	unity_launcher_scroller_controller_on_scroller_controller_closed (self, _sender);
 }
 
 
-#line 70 "scroller-controller.vala"
 static void unity_launcher_scroller_controller_handle_bamf_view_opened (UnityLauncherScrollerController* self, GObject* object) {
-#line 70 "scroller-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 70 "scroller-controller.vala"
 	g_return_if_fail (object != NULL);
-#line 275 "scroller-controller.c"
 	g_return_if_fail (BAMF_IS_VIEW (object));
-#line 73 "scroller-controller.vala"
 	if (BAMF_IS_APPLICATION (object)) {
-#line 279 "scroller-controller.c"
 		GObject* _tmp0_;
 		BamfApplication* app;
-#line 75 "scroller-controller.vala"
 		app = _g_object_ref0 ((_tmp0_ = object, BAMF_IS_APPLICATION (_tmp0_) ? ((BamfApplication*) _tmp0_) : NULL));
-#line 77 "scroller-controller.vala"
 		if (_vala_strcmp0 (bamf_application_get_desktop_file (app), "") == 0) {
-#line 79 "scroller-controller.vala"
 			g_debug ("scroller-controller.vala:79: no desktop file for this app");
-#line 288 "scroller-controller.c"
 			_g_object_unref0 (app);
-#line 80 "scroller-controller.vala"
 			return;
-#line 292 "scroller-controller.c"
 		}
-#line 83 "scroller-controller.vala"
 		g_signal_connect_object ((BamfView*) app, "user-visible-changed", (GCallback) __lambda17__bamf_view_user_visible_changed, self, 0);
-#line 90 "scroller-controller.vala"
 		if (bamf_view_user_visible ((BamfView*) app)) {
-#line 298 "scroller-controller.c"
 			char* desktop_file;
-#line 92 "scroller-controller.vala"
 			desktop_file = g_strdup (bamf_application_get_desktop_file (app));
-#line 93 "scroller-controller.vala"
 			if (desktop_file != NULL) {
-#line 304 "scroller-controller.c"
 				UnityLauncherApplicationController* controller;
-#line 95 "scroller-controller.vala"
 				controller = unity_launcher_scroller_controller_find_controller_by_desktop_file (self, desktop_file);
-#line 96 "scroller-controller.vala"
 				if (UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (controller)) {
-#line 98 "scroller-controller.vala"
 					unity_launcher_application_controller_attach_application (controller, app);
-#line 312 "scroller-controller.c"
 				} else {
 					UnityLauncherLauncherChild* child;
 					UnityLauncherApplicationController* _tmp1_;
-#line 102 "scroller-controller.vala"
 					child = g_object_ref_sink (unity_launcher_launcher_child_new ());
-#line 103 "scroller-controller.vala"
 					controller = (_tmp1_ = unity_launcher_application_controller_new (desktop_file, (UnityLauncherScrollerChild*) child), _g_object_unref0 (controller), _tmp1_);
-#line 104 "scroller-controller.vala"
 					unity_launcher_application_controller_attach_application (controller, app);
-#line 105 "scroller-controller.vala"
 					unity_launcher_scroller_model_add (self->priv->_model, (UnityLauncherScrollerChild*) child);
-#line 106 "scroller-controller.vala"
 					gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->childcontrollers, (UnityLauncherScrollerChildController*) controller);
-#line 107 "scroller-controller.vala"
 					g_signal_connect_object ((UnityLauncherScrollerChildController*) controller, "closed", (GCallback) _unity_launcher_scroller_controller_on_scroller_controller_closed_unity_launcher_scroller_child_controller_closed, self, 0);
-#line 328 "scroller-controller.c"
 					_g_object_unref0 (child);
 				}
 				_g_object_unref0 (controller);
@@ -336,92 +288,56 @@ static void unity_launcher_scroller_controller_handle_bamf_view_opened (UnityLau
 }
 
 
-#line 114 "scroller-controller.vala"
 static void unity_launcher_scroller_controller_on_scroller_controller_closed (UnityLauncherScrollerController* self, UnityLauncherScrollerChildController* controller) {
-#line 114 "scroller-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 114 "scroller-controller.vala"
 	g_return_if_fail (controller != NULL);
-#line 116 "scroller-controller.vala"
 	if (UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (controller)) {
-#line 118 "scroller-controller.vala"
 		if (unity_launcher_scroller_child_controller_get_child (controller)->pin_type == UNITY_LAUNCHER_PIN_TYPE_UNPINNED) {
-#line 120 "scroller-controller.vala"
 			unity_launcher_scroller_model_remove (self->priv->_model, unity_launcher_scroller_child_controller_get_child (controller));
-#line 121 "scroller-controller.vala"
 			gee_abstract_collection_remove ((GeeAbstractCollection*) self->priv->childcontrollers, controller);
-#line 354 "scroller-controller.c"
 		}
 	}
 }
 
 
-#line 126 "scroller-controller.vala"
 static void unity_launcher_scroller_controller_build_favorites (UnityLauncherScrollerController* self) {
-#line 126 "scroller-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 364 "scroller-controller.c"
 	{
 		GeeArrayList* _tmp0_;
 		GeeIterator* _tmp1_;
 		GeeIterator* _uid_it;
 		_uid_it = (_tmp1_ = gee_abstract_collection_iterator ((GeeAbstractCollection*) (_tmp0_ = unity_favorites_get_favorites (self->priv->favorites))), _g_object_unref0 (_tmp0_), _tmp1_);
-#line 129 "scroller-controller.vala"
 		while (TRUE) {
-#line 372 "scroller-controller.c"
 			char* uid;
 			char* type;
 			char* desktop_file;
 			UnityLauncherApplicationController* controller;
-#line 129 "scroller-controller.vala"
 			if (!gee_iterator_next (_uid_it)) {
-#line 129 "scroller-controller.vala"
 				break;
-#line 381 "scroller-controller.c"
 			}
-#line 129 "scroller-controller.vala"
 			uid = (char*) gee_iterator_get (_uid_it);
-#line 131 "scroller-controller.vala"
 			type = unity_favorites_get_string (self->priv->favorites, uid, "type");
-#line 132 "scroller-controller.vala"
 			if (_vala_strcmp0 (type, "application") != 0) {
-#line 389 "scroller-controller.c"
 				_g_free0 (uid);
 				_g_free0 (type);
-#line 133 "scroller-controller.vala"
 				continue;
-#line 394 "scroller-controller.c"
 			}
-#line 135 "scroller-controller.vala"
 			desktop_file = unity_favorites_get_string (self->priv->favorites, uid, "desktop_file");
-#line 136 "scroller-controller.vala"
 			if (!g_file_test (desktop_file, G_FILE_TEST_EXISTS)) {
-#line 400 "scroller-controller.c"
 				_g_free0 (uid);
 				_g_free0 (type);
 				_g_free0 (desktop_file);
-#line 139 "scroller-controller.vala"
 				continue;
-#line 406 "scroller-controller.c"
 			}
-#line 142 "scroller-controller.vala"
 			controller = unity_launcher_scroller_controller_find_controller_by_desktop_file (self, desktop_file);
-#line 143 "scroller-controller.vala"
 			if (!UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER (controller)) {
-#line 412 "scroller-controller.c"
 				UnityLauncherLauncherChild* child;
 				UnityLauncherApplicationController* _tmp2_;
-#line 145 "scroller-controller.vala"
 				child = g_object_ref_sink (unity_launcher_launcher_child_new ());
-#line 146 "scroller-controller.vala"
 				controller = (_tmp2_ = unity_launcher_application_controller_new (desktop_file, (UnityLauncherScrollerChild*) child), _g_object_unref0 (controller), _tmp2_);
-#line 147 "scroller-controller.vala"
 				unity_launcher_scroller_model_add (self->priv->_model, (UnityLauncherScrollerChild*) child);
-#line 148 "scroller-controller.vala"
 				gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->childcontrollers, (UnityLauncherScrollerChildController*) controller);
-#line 149 "scroller-controller.vala"
 				g_signal_connect_object ((UnityLauncherScrollerChildController*) controller, "closed", (GCallback) _unity_launcher_scroller_controller_on_scroller_controller_closed_unity_launcher_scroller_child_controller_closed, self, 0);
-#line 425 "scroller-controller.c"
 				_g_object_unref0 (child);
 			}
 			_g_free0 (uid);
@@ -434,43 +350,25 @@ static void unity_launcher_scroller_controller_build_favorites (UnityLauncherScr
 }
 
 
-#line 154 "scroller-controller.vala"
 static void unity_launcher_scroller_controller_on_favorite_added (UnityLauncherScrollerController* self, const char* uid) {
-#line 440 "scroller-controller.c"
 	char* desktop_file;
 	UnityLauncherApplicationController* controller;
-#line 154 "scroller-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 154 "scroller-controller.vala"
 	g_return_if_fail (uid != NULL);
-#line 156 "scroller-controller.vala"
 	desktop_file = unity_favorites_get_string (self->priv->favorites, uid, "desktop_file");
-#line 157 "scroller-controller.vala"
 	if (!g_file_test (desktop_file, G_FILE_TEST_EXISTS)) {
-#line 451 "scroller-controller.c"
 		_g_free0 (desktop_file);
-#line 160 "scroller-controller.vala"
 		return;
-#line 455 "scroller-controller.c"
 	}
-#line 163 "scroller-controller.vala"
 	controller = unity_launcher_scroller_controller_find_controller_by_desktop_file (self, desktop_file);
-#line 164 "scroller-controller.vala"
 	if (!UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER (controller)) {
-#line 461 "scroller-controller.c"
 		UnityLauncherLauncherChild* child;
 		UnityLauncherApplicationController* _tmp0_;
-#line 166 "scroller-controller.vala"
 		child = g_object_ref_sink (unity_launcher_launcher_child_new ());
-#line 167 "scroller-controller.vala"
 		controller = (_tmp0_ = unity_launcher_application_controller_new (desktop_file, (UnityLauncherScrollerChild*) child), _g_object_unref0 (controller), _tmp0_);
-#line 168 "scroller-controller.vala"
 		unity_launcher_scroller_model_add (self->priv->_model, (UnityLauncherScrollerChild*) child);
-#line 169 "scroller-controller.vala"
 		gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->childcontrollers, (UnityLauncherScrollerChildController*) controller);
-#line 170 "scroller-controller.vala"
 		g_signal_connect_object ((UnityLauncherScrollerChildController*) controller, "closed", (GCallback) _unity_launcher_scroller_controller_on_scroller_controller_closed_unity_launcher_scroller_child_controller_closed, self, 0);
-#line 474 "scroller-controller.c"
 		_g_object_unref0 (child);
 	}
 	_g_free0 (desktop_file);
@@ -478,64 +376,39 @@ static void unity_launcher_scroller_controller_on_favorite_added (UnityLauncherS
 }
 
 
-#line 174 "scroller-controller.vala"
 void unity_launcher_scroller_controller_on_favorite_removed (UnityLauncherScrollerController* self, const char* uid) {
-#line 174 "scroller-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 174 "scroller-controller.vala"
 	g_return_if_fail (uid != NULL);
-#line 488 "scroller-controller.c"
 }
 
 
-#line 178 "scroller-controller.vala"
 gboolean unity_launcher_scroller_controller_desktop_file_is_favorite (UnityLauncherScrollerController* self, const char* desktop_file) {
-#line 494 "scroller-controller.c"
 	gboolean result = FALSE;
 	UnityFavorites* favorites;
 	GeeArrayList* favorite_list;
-#line 178 "scroller-controller.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 178 "scroller-controller.vala"
 	g_return_val_if_fail (desktop_file != NULL, FALSE);
-#line 180 "scroller-controller.vala"
 	favorites = unity_favorites_get_default ();
-#line 182 "scroller-controller.vala"
 	favorite_list = unity_favorites_get_favorites (favorites);
-#line 506 "scroller-controller.c"
 	{
 		GeeIterator* _uid_it;
 		_uid_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) favorite_list);
-#line 183 "scroller-controller.vala"
 		while (TRUE) {
-#line 512 "scroller-controller.c"
 			char* uid;
 			char* type;
 			char* fav_desktop_file;
-#line 183 "scroller-controller.vala"
 			if (!gee_iterator_next (_uid_it)) {
-#line 183 "scroller-controller.vala"
 				break;
-#line 520 "scroller-controller.c"
 			}
-#line 183 "scroller-controller.vala"
 			uid = (char*) gee_iterator_get (_uid_it);
-#line 185 "scroller-controller.vala"
 			type = unity_favorites_get_string (favorites, uid, "type");
-#line 186 "scroller-controller.vala"
 			if (_vala_strcmp0 (type, "application") != 0) {
-#line 528 "scroller-controller.c"
 				_g_free0 (uid);
 				_g_free0 (type);
-#line 187 "scroller-controller.vala"
 				continue;
-#line 533 "scroller-controller.c"
 			}
-#line 189 "scroller-controller.vala"
 			fav_desktop_file = unity_favorites_get_string (favorites, uid, "desktop_file");
-#line 190 "scroller-controller.vala"
 			if (_vala_strcmp0 (desktop_file, fav_desktop_file) == 0) {
-#line 539 "scroller-controller.c"
 				result = TRUE;
 				_g_free0 (uid);
 				_g_free0 (type);
@@ -543,9 +416,7 @@ gboolean unity_launcher_scroller_controller_desktop_file_is_favorite (UnityLaunc
 				_g_object_unref0 (_uid_it);
 				_g_object_unref0 (favorites);
 				_g_object_unref0 (favorite_list);
-#line 192 "scroller-controller.vala"
 				return result;
-#line 549 "scroller-controller.c"
 			}
 			_g_free0 (uid);
 			_g_free0 (type);
@@ -556,50 +427,31 @@ gboolean unity_launcher_scroller_controller_desktop_file_is_favorite (UnityLaunc
 	result = FALSE;
 	_g_object_unref0 (favorites);
 	_g_object_unref0 (favorite_list);
-#line 196 "scroller-controller.vala"
 	return result;
-#line 562 "scroller-controller.c"
 }
 
 
-#line 199 "scroller-controller.vala"
 static UnityLauncherApplicationController* unity_launcher_scroller_controller_find_controller_by_desktop_file (UnityLauncherScrollerController* self, const char* desktop_file) {
-#line 568 "scroller-controller.c"
 	UnityLauncherApplicationController* result = NULL;
-#line 199 "scroller-controller.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 199 "scroller-controller.vala"
 	g_return_val_if_fail (desktop_file != NULL, NULL);
-#line 574 "scroller-controller.c"
 	{
 		GeeIterator* _controller_it;
 		_controller_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) self->priv->childcontrollers);
-#line 201 "scroller-controller.vala"
 		while (TRUE) {
-#line 580 "scroller-controller.c"
 			UnityLauncherScrollerChildController* controller;
-#line 201 "scroller-controller.vala"
 			if (!gee_iterator_next (_controller_it)) {
-#line 201 "scroller-controller.vala"
 				break;
-#line 586 "scroller-controller.c"
 			}
-#line 201 "scroller-controller.vala"
 			controller = (UnityLauncherScrollerChildController*) gee_iterator_get (_controller_it);
-#line 203 "scroller-controller.vala"
 			if (UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (controller)) {
-#line 592 "scroller-controller.c"
 				UnityLauncherScrollerChildController* _tmp0_;
-#line 205 "scroller-controller.vala"
 				if (_vala_strcmp0 (unity_launcher_application_controller_get_desktop_file ((_tmp0_ = controller, UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (_tmp0_) ? ((UnityLauncherApplicationController*) _tmp0_) : NULL)), desktop_file) == 0) {
-#line 596 "scroller-controller.c"
 					UnityLauncherScrollerChildController* _tmp1_;
 					result = _g_object_ref0 ((_tmp1_ = controller, UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (_tmp1_) ? ((UnityLauncherApplicationController*) _tmp1_) : NULL));
 					_g_object_unref0 (controller);
 					_g_object_unref0 (_controller_it);
-#line 207 "scroller-controller.vala"
 					return result;
-#line 603 "scroller-controller.c"
 				}
 			}
 			_g_object_unref0 (controller);
@@ -607,65 +459,44 @@ static UnityLauncherApplicationController* unity_launcher_scroller_controller_fi
 		_g_object_unref0 (_controller_it);
 	}
 	result = NULL;
-#line 211 "scroller-controller.vala"
 	return result;
-#line 613 "scroller-controller.c"
 }
 
 
-#line 233 "scroller-controller.vala"
 static void _unity_launcher_scroller_controller_on_unity_drag_motion_unity_drag_controller_drag_motion (UnityDragController* _sender, UnityDragModel* model, float x, float y, gpointer self) {
-#line 619 "scroller-controller.c"
 	unity_launcher_scroller_controller_on_unity_drag_motion (self, model, x, y);
 }
 
 
-#line 262 "scroller-controller.vala"
 static void _unity_launcher_scroller_controller_on_unity_drag_drop_unity_drag_controller_drag_drop (UnityDragController* _sender, UnityDragModel* model, float x, float y, gpointer self) {
-#line 626 "scroller-controller.c"
 	unity_launcher_scroller_controller_on_unity_drag_drop (self, model, x, y);
 }
 
 
-#line 217 "scroller-controller.vala"
 static void unity_launcher_scroller_controller_on_unity_drag_start (UnityLauncherScrollerController* self, UnityDragModel* drag_model) {
-#line 633 "scroller-controller.c"
 	UnityDragController* drag_controller;
 	UnityDragModel* _tmp0_;
 	gboolean _tmp1_;
-#line 217 "scroller-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 217 "scroller-controller.vala"
 	g_return_if_fail (drag_model != NULL);
-#line 219 "scroller-controller.vala"
 	drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
-#line 221 "scroller-controller.vala"
 	g_signal_connect_object (drag_controller, "drag-motion", (GCallback) _unity_launcher_scroller_controller_on_unity_drag_motion_unity_drag_controller_drag_motion, self, 0);
-#line 222 "scroller-controller.vala"
 	g_signal_connect_object (drag_controller, "drag-drop", (GCallback) _unity_launcher_scroller_controller_on_unity_drag_drop_unity_drag_controller_drag_drop, self, 0);
-#line 225 "scroller-controller.vala"
 	if ((_tmp1_ = UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER (_tmp0_ = unity_drag_controller_get_drag_model (drag_controller)), _g_object_unref0 (_tmp0_), _tmp1_)) {
-#line 649 "scroller-controller.c"
 		UnityLauncherScrollerChildController* _tmp3_;
 		UnityDragModel* _tmp2_;
 		UnityLauncherScrollerChild* _tmp4_;
 		UnityLauncherScrollerChild* child;
-#line 227 "scroller-controller.vala"
 		child = (_tmp4_ = _g_object_ref0 (unity_launcher_scroller_child_controller_get_child (_tmp3_ = (_tmp2_ = unity_drag_controller_get_drag_model (drag_controller), UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER (_tmp2_) ? ((UnityLauncherScrollerChildController*) _tmp2_) : NULL))), _g_object_unref0 (_tmp3_), _tmp4_);
-#line 228 "scroller-controller.vala"
 		clutter_actor_set_opacity ((ClutterActor*) child, (guint8) 0);
-#line 229 "scroller-controller.vala"
 		clutter_actor_queue_redraw ((ClutterActor*) self->priv->_view);
-#line 660 "scroller-controller.c"
 		_g_object_unref0 (child);
 	}
 	_g_object_unref0 (drag_controller);
 }
 
 
-#line 233 "scroller-controller.vala"
 static void unity_launcher_scroller_controller_on_unity_drag_motion (UnityLauncherScrollerController* self, UnityDragModel* drag_model, float x, float y) {
-#line 669 "scroller-controller.c"
 	UnityDragController* drag_controller;
 	UnityDragModel* _tmp0_;
 	gboolean _tmp1_;
@@ -673,53 +504,32 @@ static void unity_launcher_scroller_controller_on_unity_drag_motion (UnityLaunch
 	UnityDragModel* _tmp2_;
 	UnityLauncherScrollerChild* _tmp4_;
 	UnityLauncherScrollerChild* retcont;
-#line 233 "scroller-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 233 "scroller-controller.vala"
 	g_return_if_fail (drag_model != NULL);
-#line 235 "scroller-controller.vala"
 	drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
-#line 237 "scroller-controller.vala"
 	if ((_tmp1_ = !UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER (_tmp0_ = unity_drag_controller_get_drag_model (drag_controller)), _g_object_unref0 (_tmp0_), _tmp1_)) {
-#line 685 "scroller-controller.c"
 		_g_object_unref0 (drag_controller);
-#line 239 "scroller-controller.vala"
 		return;
-#line 689 "scroller-controller.c"
 	}
-#line 241 "scroller-controller.vala"
 	retcont = (_tmp4_ = _g_object_ref0 (unity_launcher_scroller_child_controller_get_child (_tmp3_ = (_tmp2_ = unity_drag_controller_get_drag_model (drag_controller), UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER (_tmp2_) ? ((UnityLauncherScrollerChildController*) _tmp2_) : NULL))), _g_object_unref0 (_tmp3_), _tmp4_);
-#line 243 "scroller-controller.vala"
 	if (x > (clutter_actor_get_width ((ClutterActor*) self->priv->_view) + UNITY_LAUNCHER_SCROLLER_CONTROLLER_DRAG_SAFE_ZONE)) {
-#line 246 "scroller-controller.vala"
 		unity_launcher_scroller_model_remove (self->priv->_model, retcont);
-#line 697 "scroller-controller.c"
 	} else {
 		gint model_index;
-#line 252 "scroller-controller.vala"
 		model_index = unity_launcher_scroller_view_get_model_index_at_y_pos (self->priv->_view, y);
-#line 253 "scroller-controller.vala"
 		if (unity_launcher_scroller_model_contains (self->priv->_model, retcont)) {
-#line 254 "scroller-controller.vala"
 			unity_launcher_scroller_model_move (self->priv->_model, retcont, MAX (model_index - 1, 0));
-#line 706 "scroller-controller.c"
 		} else {
-#line 256 "scroller-controller.vala"
 			unity_launcher_scroller_model_insert (self->priv->_model, retcont, MAX (model_index - 1, 0));
-#line 710 "scroller-controller.c"
 		}
-#line 258 "scroller-controller.vala"
 		clutter_actor_queue_redraw ((ClutterActor*) self->priv->_view);
-#line 714 "scroller-controller.c"
 	}
 	_g_object_unref0 (drag_controller);
 	_g_object_unref0 (retcont);
 }
 
 
-#line 262 "scroller-controller.vala"
 static void unity_launcher_scroller_controller_on_unity_drag_drop (UnityLauncherScrollerController* self, UnityDragModel* drag_model, float x, float y) {
-#line 723 "scroller-controller.c"
 	UnityDragController* drag_controller;
 	UnityDragModel* _tmp0_;
 	gboolean _tmp1_;
@@ -728,50 +538,28 @@ static void unity_launcher_scroller_controller_on_unity_drag_drop (UnityLauncher
 	UnityLauncherScrollerChild* retcont;
 	guint _tmp3_;
 	guint _tmp4_;
-#line 262 "scroller-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 262 "scroller-controller.vala"
 	g_return_if_fail (drag_model != NULL);
-#line 264 "scroller-controller.vala"
 	drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
-#line 266 "scroller-controller.vala"
 	if ((_tmp1_ = !UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER (_tmp0_ = unity_drag_controller_get_drag_model (drag_controller)), _g_object_unref0 (_tmp0_), _tmp1_)) {
-#line 740 "scroller-controller.c"
 		_g_object_unref0 (drag_controller);
-#line 268 "scroller-controller.vala"
 		return;
-#line 744 "scroller-controller.c"
 	}
-#line 270 "scroller-controller.vala"
 	model_controller = (_tmp2_ = unity_drag_controller_get_drag_model (drag_controller), UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER (_tmp2_) ? ((UnityLauncherScrollerChildController*) _tmp2_) : NULL);
-#line 271 "scroller-controller.vala"
 	retcont = _g_object_ref0 (unity_launcher_scroller_child_controller_get_child (model_controller));
-#line 273 "scroller-controller.vala"
 	if (x > clutter_actor_get_width ((ClutterActor*) self->priv->_view)) {
-#line 276 "scroller-controller.vala"
 		if (unity_launcher_scroller_model_contains (self->priv->_model, retcont)) {
-#line 277 "scroller-controller.vala"
 			unity_launcher_scroller_model_remove (self->priv->_model, retcont);
-#line 756 "scroller-controller.c"
 		}
-#line 279 "scroller-controller.vala"
 		if (gee_abstract_collection_contains ((GeeAbstractCollection*) self->priv->childcontrollers, model_controller)) {
-#line 280 "scroller-controller.vala"
 			gee_abstract_collection_remove ((GeeAbstractCollection*) self->priv->childcontrollers, model_controller);
-#line 762 "scroller-controller.c"
 		}
 	}
-#line 283 "scroller-controller.vala"
 	clutter_actor_set_opacity ((ClutterActor*) retcont, (guint8) 255);
-#line 285 "scroller-controller.vala"
 	g_signal_parse_name ("drag-motion", UNITY_DRAG_TYPE_CONTROLLER, &_tmp3_, NULL, FALSE);
-#line 285 "scroller-controller.vala"
 	g_signal_handlers_disconnect_matched (drag_controller, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp3_, 0, NULL, (GCallback) _unity_launcher_scroller_controller_on_unity_drag_motion_unity_drag_controller_drag_motion, self);
-#line 286 "scroller-controller.vala"
 	g_signal_parse_name ("drag-drop", UNITY_DRAG_TYPE_CONTROLLER, &_tmp4_, NULL, FALSE);
-#line 286 "scroller-controller.vala"
 	g_signal_handlers_disconnect_matched (drag_controller, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp4_, 0, NULL, (GCallback) _unity_launcher_scroller_controller_on_unity_drag_drop_unity_drag_controller_drag_drop, self);
-#line 775 "scroller-controller.c"
 	_g_object_unref0 (drag_controller);
 	_g_object_unref0 (model_controller);
 	_g_object_unref0 (retcont);
@@ -782,9 +570,7 @@ UnityLauncherScrollerModel* unity_launcher_scroller_controller_get_model (UnityL
 	UnityLauncherScrollerModel* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_model;
-#line 25 "scroller-controller.vala"
 	return result;
-#line 788 "scroller-controller.c"
 }
 
 
@@ -800,9 +586,7 @@ UnityLauncherScrollerView* unity_launcher_scroller_controller_get_view (UnityLau
 	UnityLauncherScrollerView* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_view;
-#line 26 "scroller-controller.vala"
 	return result;
-#line 806 "scroller-controller.c"
 }
 
 
@@ -814,23 +598,17 @@ static void unity_launcher_scroller_controller_set_view (UnityLauncherScrollerCo
 }
 
 
-#line 154 "scroller-controller.vala"
 static void _unity_launcher_scroller_controller_on_favorite_added_unity_favorites_favorite_added (UnityFavorites* _sender, const char* uid, gpointer self) {
-#line 820 "scroller-controller.c"
 	unity_launcher_scroller_controller_on_favorite_added (self, uid);
 }
 
 
-#line 70 "scroller-controller.vala"
 static void _unity_launcher_scroller_controller_handle_bamf_view_opened_bamf_matcher_view_opened (BamfMatcher* _sender, GObject* object, gpointer self) {
-#line 827 "scroller-controller.c"
 	unity_launcher_scroller_controller_handle_bamf_view_opened (self, object);
 }
 
 
-#line 217 "scroller-controller.vala"
 static void _unity_launcher_scroller_controller_on_unity_drag_start_unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self) {
-#line 834 "scroller-controller.c"
 	unity_launcher_scroller_controller_on_unity_drag_start (self, model);
 }
 
@@ -847,50 +625,31 @@ static GObject * unity_launcher_scroller_controller_constructor (GType type, gui
 		BamfMatcher* _tmp1_;
 		UnityFavorites* _tmp2_;
 		UnityDragController* drag_controller;
-#line 44 "scroller-controller.vala"
 		self->priv->childcontrollers = (_tmp0_ = gee_array_list_new (UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->priv->childcontrollers), _tmp0_);
-#line 46 "scroller-controller.vala"
 		self->priv->matcher = (_tmp1_ = _g_object_ref0 (bamf_matcher_get_default ()), _g_object_unref0 (self->priv->matcher), _tmp1_);
-#line 47 "scroller-controller.vala"
 		self->priv->favorites = (_tmp2_ = unity_favorites_get_default (), _g_object_unref0 (self->priv->favorites), _tmp2_);
-#line 48 "scroller-controller.vala"
 		g_signal_connect_object (self->priv->favorites, "favorite-added", (GCallback) _unity_launcher_scroller_controller_on_favorite_added_unity_favorites_favorite_added, self, 0);
-#line 49 "scroller-controller.vala"
 		g_signal_connect_object (self->priv->matcher, "view-opened", (GCallback) _unity_launcher_scroller_controller_handle_bamf_view_opened_bamf_matcher_view_opened, self, 0);
-#line 51 "scroller-controller.vala"
 		unity_launcher_scroller_controller_build_favorites (self);
-#line 863 "scroller-controller.c"
 		{
 			GList* object_collection;
 			GList* object_it;
-#line 53 "scroller-controller.vala"
 			object_collection = (GList*) bamf_matcher_get_running_applications (self->priv->matcher);
-#line 869 "scroller-controller.c"
 			for (object_it = object_collection; object_it != NULL; object_it = object_it->next) {
 				GObject* object;
-#line 53 "scroller-controller.vala"
 				object = _g_object_ref0 ((GObject*) ((BamfView*) object_it->data));
-#line 874 "scroller-controller.c"
 				{
-#line 55 "scroller-controller.vala"
 					if (BAMF_IS_VIEW (object)) {
-#line 57 "scroller-controller.vala"
 						unity_launcher_scroller_controller_handle_bamf_view_opened (self, object);
-#line 880 "scroller-controller.c"
 					} else {
-#line 61 "scroller-controller.vala"
 						g_error ("scroller-controller.vala:61: Bamf returned a strange object");
-#line 884 "scroller-controller.c"
 					}
 					_g_object_unref0 (object);
 				}
 			}
 		}
-#line 66 "scroller-controller.vala"
 		drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
-#line 67 "scroller-controller.vala"
 		g_signal_connect_object (drag_controller, "drag-start", (GCallback) _unity_launcher_scroller_controller_on_unity_drag_start_unity_drag_controller_drag_start, self, 0);
-#line 894 "scroller-controller.c"
 		_g_object_unref0 (drag_controller);
 	}
 	return obj;

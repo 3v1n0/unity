@@ -164,7 +164,7 @@ struct _UnityPlaceRendererInfoClass {
 };
 
 struct _UnityPlaceRendererInfoPrivate {
-	UnityPlace_RendererInfo info;
+	UnityPlace_RendererInfo* info;
 	DeeModel* _groups_model;
 	DeeModel* _results_model;
 };
@@ -597,114 +597,69 @@ GType unity_place__rendererinfo_get_type (void) {
 }
 
 
-#line 109 "unity-place.vala"
 UnityPlaceRendererInfo* unity_place_renderer_info_construct (GType object_type, UnityPlace_RendererInfo* info) {
-#line 603 "unity-place.c"
 	UnityPlaceRendererInfo * self;
-	UnityPlace_RendererInfo _tmp1_;
-	UnityPlace_RendererInfo _tmp0_ = {0};
-	GHashTable* _tmp2_;
-#line 109 "unity-place.vala"
 	self = (UnityPlaceRendererInfo*) g_object_new (object_type, NULL);
-#line 111 "unity-place.vala"
-	self->priv->info = (_tmp1_ = (unity_place__rendererinfo_copy (info, &_tmp0_), _tmp0_), unity_place__rendererinfo_destroy (&self->priv->info), _tmp1_);
-#line 112 "unity-place.vala"
-	(*info).hints = (_tmp2_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 ((*info).hints), _tmp2_);
-#line 614 "unity-place.c"
+	self->priv->info = info;
 	return self;
 }
 
 
-#line 109 "unity-place.vala"
 UnityPlaceRendererInfo* unity_place_renderer_info_new (UnityPlace_RendererInfo* info) {
-#line 109 "unity-place.vala"
 	return unity_place_renderer_info_construct (UNITY_PLACE_TYPE_RENDERER_INFO, info);
-#line 623 "unity-place.c"
 }
 
 
-#line 119 "unity-place.vala"
 void unity_place_renderer_info_set_hint (UnityPlaceRendererInfo* self, const char* hint, const char* val) {
-#line 119 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 119 "unity-place.vala"
 	g_return_if_fail (hint != NULL);
-#line 119 "unity-place.vala"
 	g_return_if_fail (val != NULL);
-#line 121 "unity-place.vala"
-	g_hash_table_insert (self->priv->info.hints, g_strdup (hint), g_strdup (val));
-#line 637 "unity-place.c"
+	g_hash_table_insert ((*self->priv->info).hints, g_strdup (hint), g_strdup (val));
 }
 
 
-#line 124 "unity-place.vala"
 char* unity_place_renderer_info_get_hint (UnityPlaceRendererInfo* self, const char* hint) {
-#line 643 "unity-place.c"
 	char* result = NULL;
-#line 124 "unity-place.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 124 "unity-place.vala"
 	g_return_val_if_fail (hint != NULL, NULL);
-#line 649 "unity-place.c"
-	result = g_strdup ((const char*) g_hash_table_lookup (self->priv->info.hints, hint));
-#line 126 "unity-place.vala"
+	result = g_strdup ((const char*) g_hash_table_lookup ((*self->priv->info).hints, hint));
 	return result;
-#line 653 "unity-place.c"
 }
 
 
-#line 129 "unity-place.vala"
 void unity_place_renderer_info_clear_hint (UnityPlaceRendererInfo* self, const char* hint) {
-#line 129 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 129 "unity-place.vala"
 	g_return_if_fail (hint != NULL);
-#line 131 "unity-place.vala"
-	g_hash_table_remove (self->priv->info.hints, hint);
-#line 665 "unity-place.c"
+	g_hash_table_remove ((*self->priv->info).hints, hint);
 }
 
 
-#line 134 "unity-place.vala"
 void unity_place_renderer_info_clear_hints (UnityPlaceRendererInfo* self) {
-#line 134 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 136 "unity-place.vala"
-	g_hash_table_remove_all (self->priv->info.hints);
-#line 675 "unity-place.c"
+	g_hash_table_remove_all ((*self->priv->info).hints);
 }
 
 
-#line 139 "unity-place.vala"
 guint unity_place_renderer_info_num_hints (UnityPlaceRendererInfo* self) {
-#line 681 "unity-place.c"
 	guint result = 0U;
-#line 139 "unity-place.vala"
 	g_return_val_if_fail (self != NULL, 0U);
-#line 685 "unity-place.c"
-	result = g_hash_table_size (self->priv->info.hints);
-#line 141 "unity-place.vala"
+	result = g_hash_table_size ((*self->priv->info).hints);
 	return result;
-#line 689 "unity-place.c"
 }
 
 
 const char* unity_place_renderer_info_get_default_renderer (UnityPlaceRendererInfo* self) {
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
-	result = self->priv->info.default_renderer;
-#line 73 "unity-place.vala"
+	result = (*self->priv->info).default_renderer;
 	return result;
-#line 699 "unity-place.c"
 }
 
 
 void unity_place_renderer_info_set_default_renderer (UnityPlaceRendererInfo* self, const char* value) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
-#line 74 "unity-place.vala"
-	self->priv->info.default_renderer = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->info.default_renderer), _tmp0_);
-#line 708 "unity-place.c"
+	(*self->priv->info).default_renderer = (_tmp0_ = g_strdup (value), _g_free0 ((*self->priv->info).default_renderer), _tmp0_);
 	g_object_notify ((GObject *) self, "default-renderer");
 }
 
@@ -713,9 +668,7 @@ DeeModel* unity_place_renderer_info_get_groups_model (UnityPlaceRendererInfo* se
 	DeeModel* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_groups_model;
-#line 78 "unity-place.vala"
 	return result;
-#line 719 "unity-place.c"
 }
 
 
@@ -727,25 +680,17 @@ static gpointer _g_object_ref0 (gpointer self) {
 void unity_place_renderer_info_set_groups_model (UnityPlaceRendererInfo* self, DeeModel* value) {
 	DeeModel* _tmp0_;
 	g_return_if_fail (self != NULL);
-#line 80 "unity-place.vala"
 	self->priv->_groups_model = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_groups_model), _tmp0_);
-#line 81 "unity-place.vala"
 	if (DEE_IS_SHARED_MODEL (value)) {
-#line 735 "unity-place.c"
 		DeeModel* _tmp1_;
 		DeeSharedModel* model;
 		char* _tmp2_;
-#line 83 "unity-place.vala"
 		model = _g_object_ref0 ((_tmp1_ = value, DEE_IS_SHARED_MODEL (_tmp1_) ? ((DeeSharedModel*) _tmp1_) : NULL));
-#line 84 "unity-place.vala"
-		self->priv->info.groups_model = (_tmp2_ = g_strdup (dee_shared_model_get_swarm_name (model)), _g_free0 (self->priv->info.groups_model), _tmp2_);
-#line 743 "unity-place.c"
+		(*self->priv->info).groups_model = (_tmp2_ = g_strdup (dee_shared_model_get_swarm_name (model)), _g_free0 ((*self->priv->info).groups_model), _tmp2_);
 		_g_object_unref0 (model);
 	} else {
 		char* _tmp3_;
-#line 87 "unity-place.vala"
-		self->priv->info.groups_model = (_tmp3_ = g_strdup ("__local__"), _g_free0 (self->priv->info.groups_model), _tmp3_);
-#line 749 "unity-place.c"
+		(*self->priv->info).groups_model = (_tmp3_ = g_strdup ("__local__"), _g_free0 ((*self->priv->info).groups_model), _tmp3_);
 	}
 	g_object_notify ((GObject *) self, "groups-model");
 }
@@ -755,34 +700,24 @@ DeeModel* unity_place_renderer_info_get_results_model (UnityPlaceRendererInfo* s
 	DeeModel* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_results_model;
-#line 92 "unity-place.vala"
 	return result;
-#line 761 "unity-place.c"
 }
 
 
 void unity_place_renderer_info_set_results_model (UnityPlaceRendererInfo* self, DeeModel* value) {
 	DeeModel* _tmp0_;
 	g_return_if_fail (self != NULL);
-#line 94 "unity-place.vala"
 	self->priv->_results_model = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_results_model), _tmp0_);
-#line 95 "unity-place.vala"
 	if (DEE_IS_SHARED_MODEL (value)) {
-#line 772 "unity-place.c"
 		DeeModel* _tmp1_;
 		DeeSharedModel* model;
 		char* _tmp2_;
-#line 97 "unity-place.vala"
 		model = _g_object_ref0 ((_tmp1_ = value, DEE_IS_SHARED_MODEL (_tmp1_) ? ((DeeSharedModel*) _tmp1_) : NULL));
-#line 98 "unity-place.vala"
-		self->priv->info.results_model = (_tmp2_ = g_strdup (dee_shared_model_get_swarm_name (model)), _g_free0 (self->priv->info.results_model), _tmp2_);
-#line 780 "unity-place.c"
+		(*self->priv->info).results_model = (_tmp2_ = g_strdup (dee_shared_model_get_swarm_name (model)), _g_free0 ((*self->priv->info).results_model), _tmp2_);
 		_g_object_unref0 (model);
 	} else {
 		char* _tmp3_;
-#line 101 "unity-place.vala"
-		self->priv->info.results_model = (_tmp3_ = g_strdup ("__local__"), _g_free0 (self->priv->info.results_model), _tmp3_);
-#line 786 "unity-place.c"
+		(*self->priv->info).results_model = (_tmp3_ = g_strdup ("__local__"), _g_free0 ((*self->priv->info).results_model), _tmp3_);
 	}
 	g_object_notify ((GObject *) self, "results-model");
 }
@@ -808,7 +743,6 @@ static void unity_place_renderer_info_instance_init (UnityPlaceRendererInfo * se
 static void unity_place_renderer_info_finalize (GObject* obj) {
 	UnityPlaceRendererInfo * self;
 	self = UNITY_PLACE_RENDERER_INFO (obj);
-	unity_place__rendererinfo_destroy (&self->priv->info);
 	_g_object_unref0 (self->priv->_groups_model);
 	_g_object_unref0 (self->priv->_results_model);
 	G_OBJECT_CLASS (unity_place_renderer_info_parent_class)->finalize (obj);
@@ -867,112 +801,67 @@ static void unity_place_renderer_info_set_property (GObject * object, guint prop
 }
 
 
-#line 157 "unity-place.vala"
 UnityPlaceSearch* unity_place_search_construct (GType object_type, const char* search, GHashTable* hints) {
-#line 873 "unity-place.c"
 	UnityPlaceSearch * self;
 	char* _tmp0_;
 	GHashTable* _tmp1_;
-#line 157 "unity-place.vala"
 	g_return_val_if_fail (search != NULL, NULL);
-#line 157 "unity-place.vala"
 	g_return_val_if_fail (hints != NULL, NULL);
-#line 159 "unity-place.vala"
 	self = (UnityPlaceSearch*) g_object_new (object_type, NULL);
-#line 160 "unity-place.vala"
 	self->priv->search = (_tmp0_ = g_strdup (search), _g_free0 (self->priv->search), _tmp0_);
-#line 161 "unity-place.vala"
 	self->priv->hints = (_tmp1_ = _g_hash_table_ref0 (hints), _g_hash_table_unref0 (self->priv->hints), _tmp1_);
-#line 887 "unity-place.c"
 	return self;
 }
 
 
-#line 157 "unity-place.vala"
 UnityPlaceSearch* unity_place_search_new (const char* search, GHashTable* hints) {
-#line 157 "unity-place.vala"
 	return unity_place_search_construct (UNITY_PLACE_TYPE_SEARCH, search, hints);
-#line 896 "unity-place.c"
 }
 
 
-#line 164 "unity-place.vala"
 char* unity_place_search_get_search_string (UnityPlaceSearch* self) {
-#line 902 "unity-place.c"
 	char* result = NULL;
-#line 164 "unity-place.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 906 "unity-place.c"
 	result = g_strdup (self->priv->search);
-#line 166 "unity-place.vala"
 	return result;
-#line 910 "unity-place.c"
 }
 
 
-#line 169 "unity-place.vala"
 void unity_place_search_set_hint (UnityPlaceSearch* self, const char* hint, const char* val) {
-#line 169 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 169 "unity-place.vala"
 	g_return_if_fail (hint != NULL);
-#line 169 "unity-place.vala"
 	g_return_if_fail (val != NULL);
-#line 171 "unity-place.vala"
 	g_hash_table_insert (self->priv->hints, g_strdup (hint), g_strdup (val));
-#line 924 "unity-place.c"
 }
 
 
-#line 174 "unity-place.vala"
 char* unity_place_search_get_hint (UnityPlaceSearch* self, const char* hint) {
-#line 930 "unity-place.c"
 	char* result = NULL;
-#line 174 "unity-place.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 174 "unity-place.vala"
 	g_return_val_if_fail (hint != NULL, NULL);
-#line 936 "unity-place.c"
 	result = g_strdup ((const char*) g_hash_table_lookup (self->priv->hints, hint));
-#line 176 "unity-place.vala"
 	return result;
-#line 940 "unity-place.c"
 }
 
 
-#line 179 "unity-place.vala"
 void unity_place_search_clear_hint (UnityPlaceSearch* self, const char* hint) {
-#line 179 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 179 "unity-place.vala"
 	g_return_if_fail (hint != NULL);
-#line 181 "unity-place.vala"
 	g_hash_table_remove (self->priv->hints, hint);
-#line 952 "unity-place.c"
 }
 
 
-#line 184 "unity-place.vala"
 void unity_place_search_clear_hints (UnityPlaceSearch* self) {
-#line 184 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 186 "unity-place.vala"
 	g_hash_table_remove_all (self->priv->hints);
-#line 962 "unity-place.c"
 }
 
 
-#line 189 "unity-place.vala"
 guint unity_place_search_num_hints (UnityPlaceSearch* self) {
-#line 968 "unity-place.c"
 	guint result = 0U;
-#line 189 "unity-place.vala"
 	g_return_val_if_fail (self != NULL, 0U);
-#line 972 "unity-place.c"
 	result = g_hash_table_size (self->priv->hints);
-#line 191 "unity-place.vala"
 	return result;
-#line 976 "unity-place.c"
 }
 
 
@@ -1075,111 +964,68 @@ GType unity_place__entryinfo_get_type (void) {
 }
 
 
-#line 340 "unity-place.vala"
 UnityPlaceEntryInfo* unity_place_entry_info_construct (GType object_type, const char* dbus_path) {
-#line 1081 "unity-place.c"
 	UnityPlaceEntryInfo * self;
 	char** _tmp0_;
 	gint __empty_size_;
 	gint _empty_length1;
 	char** _empty;
-#line 340 "unity-place.vala"
 	g_return_val_if_fail (dbus_path != NULL, NULL);
-#line 1089 "unity-place.c"
 	_empty = (_tmp0_ = g_new0 (char*, 0 + 1), _empty_length1 = 0, __empty_size_ = _empty_length1, _tmp0_);
-#line 345 "unity-place.vala"
 	self = (UnityPlaceEntryInfo*) g_object_new (object_type, "dbus-path", dbus_path, "mimetypes", _empty, NULL);
-#line 1093 "unity-place.c"
 	_empty = (_vala_array_free (_empty, _empty_length1, (GDestroyNotify) g_free), NULL);
 	return self;
 }
 
 
-#line 340 "unity-place.vala"
 UnityPlaceEntryInfo* unity_place_entry_info_new (const char* dbus_path) {
-#line 340 "unity-place.vala"
 	return unity_place_entry_info_construct (UNITY_PLACE_TYPE_ENTRY_INFO, dbus_path);
-#line 1103 "unity-place.c"
 }
 
 
-#line 353 "unity-place.vala"
 void unity_place_entry_info_set_hint (UnityPlaceEntryInfo* self, const char* hint, const char* val) {
-#line 353 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 353 "unity-place.vala"
 	g_return_if_fail (hint != NULL);
-#line 353 "unity-place.vala"
 	g_return_if_fail (val != NULL);
-#line 355 "unity-place.vala"
 	g_hash_table_insert (self->priv->info.hints, g_strdup (hint), g_strdup (val));
-#line 1117 "unity-place.c"
 }
 
 
-#line 358 "unity-place.vala"
 char* unity_place_entry_info_get_hint (UnityPlaceEntryInfo* self, const char* hint) {
-#line 1123 "unity-place.c"
 	char* result = NULL;
-#line 358 "unity-place.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 358 "unity-place.vala"
 	g_return_val_if_fail (hint != NULL, NULL);
-#line 1129 "unity-place.c"
 	result = g_strdup ((const char*) g_hash_table_lookup (self->priv->info.hints, hint));
-#line 360 "unity-place.vala"
 	return result;
-#line 1133 "unity-place.c"
 }
 
 
-#line 363 "unity-place.vala"
 void unity_place_entry_info_clear_hint (UnityPlaceEntryInfo* self, const char* hint) {
-#line 363 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 363 "unity-place.vala"
 	g_return_if_fail (hint != NULL);
-#line 365 "unity-place.vala"
 	g_hash_table_remove (self->priv->info.hints, hint);
-#line 1145 "unity-place.c"
 }
 
 
-#line 368 "unity-place.vala"
 void unity_place_entry_info_clear_hints (UnityPlaceEntryInfo* self) {
-#line 368 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 370 "unity-place.vala"
 	g_hash_table_remove_all (self->priv->info.hints);
-#line 1155 "unity-place.c"
 }
 
 
-#line 373 "unity-place.vala"
 guint unity_place_entry_info_num_hints (UnityPlaceEntryInfo* self) {
-#line 1161 "unity-place.c"
 	guint result = 0U;
-#line 373 "unity-place.vala"
 	g_return_val_if_fail (self != NULL, 0U);
-#line 1165 "unity-place.c"
 	result = g_hash_table_size (self->priv->info.hints);
-#line 375 "unity-place.vala"
 	return result;
-#line 1169 "unity-place.c"
 }
 
 
-#line 381 "unity-place.vala"
 void unity_place_entry_info_get_raw (UnityPlaceEntryInfo* self, UnityPlace_EntryInfo* result) {
-#line 1175 "unity-place.c"
 	UnityPlace_EntryInfo _tmp0_ = {0};
-#line 381 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 1179 "unity-place.c"
 	*result = (unity_place__entryinfo_copy (&self->priv->info, &_tmp0_), _tmp0_);
-#line 383 "unity-place.vala"
 	return;
-#line 1183 "unity-place.c"
 }
 
 
@@ -1187,9 +1033,7 @@ UnityPlaceRendererInfo* unity_place_entry_info_get_entry_renderer_info (UnityPla
 	UnityPlaceRendererInfo* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_entry_renderer_info;
-#line 232 "unity-place.vala"
 	return result;
-#line 1193 "unity-place.c"
 }
 
 
@@ -1197,9 +1041,7 @@ UnityPlaceRendererInfo* unity_place_entry_info_get_global_renderer_info (UnityPl
 	UnityPlaceRendererInfo* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_global_renderer_info;
-#line 236 "unity-place.vala"
 	return result;
-#line 1203 "unity-place.c"
 }
 
 
@@ -1207,18 +1049,14 @@ const char* unity_place_entry_info_get_dbus_path (UnityPlaceEntryInfo* self) {
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->info.dbus_path;
-#line 240 "unity-place.vala"
 	return result;
-#line 1213 "unity-place.c"
 }
 
 
 void unity_place_entry_info_set_dbus_path (UnityPlaceEntryInfo* self, const char* value) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
-#line 241 "unity-place.vala"
 	self->priv->info.dbus_path = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->info.dbus_path), _tmp0_);
-#line 1222 "unity-place.c"
 	g_object_notify ((GObject *) self, "dbus-path");
 }
 
@@ -1227,18 +1065,14 @@ const char* unity_place_entry_info_get_display_name (UnityPlaceEntryInfo* self) 
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->info.display_name;
-#line 245 "unity-place.vala"
 	return result;
-#line 1233 "unity-place.c"
 }
 
 
 void unity_place_entry_info_set_display_name (UnityPlaceEntryInfo* self, const char* value) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
-#line 246 "unity-place.vala"
 	self->priv->info.display_name = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->info.display_name), _tmp0_);
-#line 1242 "unity-place.c"
 	g_object_notify ((GObject *) self, "display-name");
 }
 
@@ -1247,18 +1081,14 @@ const char* unity_place_entry_info_get_icon (UnityPlaceEntryInfo* self) {
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->info.icon;
-#line 250 "unity-place.vala"
 	return result;
-#line 1253 "unity-place.c"
 }
 
 
 void unity_place_entry_info_set_icon (UnityPlaceEntryInfo* self, const char* value) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
-#line 251 "unity-place.vala"
 	self->priv->info.icon = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->info.icon), _tmp0_);
-#line 1262 "unity-place.c"
 	g_object_notify ((GObject *) self, "icon");
 }
 
@@ -1267,17 +1097,13 @@ guint unity_place_entry_info_get_position (UnityPlaceEntryInfo* self) {
 	guint result;
 	g_return_val_if_fail (self != NULL, 0U);
 	result = self->priv->info.position;
-#line 255 "unity-place.vala"
 	return result;
-#line 1273 "unity-place.c"
 }
 
 
 void unity_place_entry_info_set_position (UnityPlaceEntryInfo* self, guint value) {
 	g_return_if_fail (self != NULL);
-#line 256 "unity-place.vala"
 	self->priv->info.position = value;
-#line 1281 "unity-place.c"
 	g_object_notify ((GObject *) self, "position");
 }
 
@@ -1287,9 +1113,7 @@ char** unity_place_entry_info_get_mimetypes (UnityPlaceEntryInfo* self, int* res
 	char** _tmp0_;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = (_tmp0_ = self->priv->info.mimetypes, *result_length1 = self->priv->info.mimetypes_length1, _tmp0_);
-#line 260 "unity-place.vala"
 	return result;
-#line 1293 "unity-place.c"
 }
 
 
@@ -1308,9 +1132,7 @@ void unity_place_entry_info_set_mimetypes (UnityPlaceEntryInfo* self, char** val
 	char** _tmp2_;
 	char** _tmp1_;
 	g_return_if_fail (self != NULL);
-#line 261 "unity-place.vala"
 	self->priv->info.mimetypes = (_tmp2_ = (_tmp1_ = value, (_tmp1_ == NULL) ? ((gpointer) _tmp1_) : _vala_array_dup2 (_tmp1_, value_length1)), self->priv->info.mimetypes = (_vala_array_free (self->priv->info.mimetypes, self->priv->info.mimetypes_length1, (GDestroyNotify) g_free), NULL), self->priv->info.mimetypes_length1 = value_length1, self->priv->info._mimetypes_size_ = self->priv->info.mimetypes_length1, _tmp2_);
-#line 1314 "unity-place.c"
 	g_object_notify ((GObject *) self, "mimetypes");
 }
 
@@ -1319,17 +1141,13 @@ gboolean unity_place_entry_info_get_sensitive (UnityPlaceEntryInfo* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->info.sensitive;
-#line 265 "unity-place.vala"
 	return result;
-#line 1325 "unity-place.c"
 }
 
 
 void unity_place_entry_info_set_sensitive (UnityPlaceEntryInfo* self, gboolean value) {
 	g_return_if_fail (self != NULL);
-#line 266 "unity-place.vala"
 	self->priv->info.sensitive = value;
-#line 1333 "unity-place.c"
 	g_object_notify ((GObject *) self, "sensitive");
 }
 
@@ -1338,34 +1156,24 @@ DeeModel* unity_place_entry_info_get_sections_model (UnityPlaceEntryInfo* self) 
 	DeeModel* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_sections_model;
-#line 270 "unity-place.vala"
 	return result;
-#line 1344 "unity-place.c"
 }
 
 
 void unity_place_entry_info_set_sections_model (UnityPlaceEntryInfo* self, DeeModel* value) {
 	DeeModel* _tmp0_;
 	g_return_if_fail (self != NULL);
-#line 272 "unity-place.vala"
 	self->priv->_sections_model = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_sections_model), _tmp0_);
-#line 273 "unity-place.vala"
 	if (DEE_IS_SHARED_MODEL (value)) {
-#line 1355 "unity-place.c"
 		DeeModel* _tmp1_;
 		DeeSharedModel* model;
 		char* _tmp2_;
-#line 275 "unity-place.vala"
 		model = _g_object_ref0 ((_tmp1_ = value, DEE_IS_SHARED_MODEL (_tmp1_) ? ((DeeSharedModel*) _tmp1_) : NULL));
-#line 276 "unity-place.vala"
 		self->priv->info.sections_model = (_tmp2_ = g_strdup (dee_shared_model_get_swarm_name (model)), _g_free0 (self->priv->info.sections_model), _tmp2_);
-#line 1363 "unity-place.c"
 		_g_object_unref0 (model);
 	} else {
 		char* _tmp3_;
-#line 279 "unity-place.vala"
 		self->priv->info.sections_model = (_tmp3_ = g_strdup ("__local__"), _g_free0 (self->priv->info.sections_model), _tmp3_);
-#line 1369 "unity-place.c"
 	}
 	g_object_notify ((GObject *) self, "sections-model");
 }
@@ -1375,17 +1183,13 @@ gboolean unity_place_entry_info_get_active (UnityPlaceEntryInfo* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_active;
-#line 284 "unity-place.vala"
 	return result;
-#line 1381 "unity-place.c"
 }
 
 
 void unity_place_entry_info_set_active (UnityPlaceEntryInfo* self, gboolean value) {
 	g_return_if_fail (self != NULL);
-#line 285 "unity-place.vala"
 	self->priv->_active = value;
-#line 1389 "unity-place.c"
 	g_object_notify ((GObject *) self, "active");
 }
 
@@ -1394,17 +1198,13 @@ guint unity_place_entry_info_get_active_section (UnityPlaceEntryInfo* self) {
 	guint result;
 	g_return_val_if_fail (self != NULL, 0U);
 	result = self->priv->_active_section;
-#line 289 "unity-place.vala"
 	return result;
-#line 1400 "unity-place.c"
 }
 
 
 void unity_place_entry_info_set_active_section (UnityPlaceEntryInfo* self, guint value) {
 	g_return_if_fail (self != NULL);
-#line 290 "unity-place.vala"
 	self->priv->_active_section = value;
-#line 1408 "unity-place.c"
 	g_object_notify ((GObject *) self, "active-section");
 }
 
@@ -1414,18 +1214,14 @@ UnityPlaceSearchHandler unity_place_entry_info_get_search_handler (UnityPlaceEnt
 	UnityPlaceSearchHandler _tmp0_;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = (_tmp0_ = self->priv->_search_handler, *result_target = self->priv->_search_handler_target, _tmp0_);
-#line 294 "unity-place.vala"
 	return result;
-#line 1420 "unity-place.c"
 }
 
 
 void unity_place_entry_info_set_search_handler (UnityPlaceEntryInfo* self, UnityPlaceSearchHandler value, gpointer value_target) {
 	UnityPlaceSearchHandler _tmp1_;
 	g_return_if_fail (self != NULL);
-#line 295 "unity-place.vala"
 	self->priv->_search_handler = (_tmp1_ = value, ((self->priv->_search_handler_target_destroy_notify == NULL) ? NULL : (self->priv->_search_handler_target_destroy_notify (self->priv->_search_handler_target), NULL), self->priv->_search_handler = NULL, self->priv->_search_handler_target = NULL, self->priv->_search_handler_target_destroy_notify = NULL), self->priv->_search_handler_target = value_target, self->priv->_search_handler_target_destroy_notify = NULL, _tmp1_);
-#line 1429 "unity-place.c"
 }
 
 
@@ -1434,18 +1230,14 @@ UnityPlaceSearchHandler unity_place_entry_info_get_global_search_handler (UnityP
 	UnityPlaceSearchHandler _tmp0_;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = (_tmp0_ = self->priv->_global_search_handler, *result_target = self->priv->_global_search_handler_target, _tmp0_);
-#line 299 "unity-place.vala"
 	return result;
-#line 1440 "unity-place.c"
 }
 
 
 void unity_place_entry_info_set_global_search_handler (UnityPlaceEntryInfo* self, UnityPlaceSearchHandler value, gpointer value_target) {
 	UnityPlaceSearchHandler _tmp1_;
 	g_return_if_fail (self != NULL);
-#line 300 "unity-place.vala"
 	self->priv->_global_search_handler = (_tmp1_ = value, ((self->priv->_global_search_handler_target_destroy_notify == NULL) ? NULL : (self->priv->_global_search_handler_target_destroy_notify (self->priv->_global_search_handler_target), NULL), self->priv->_global_search_handler = NULL, self->priv->_global_search_handler_target = NULL, self->priv->_global_search_handler_target_destroy_notify = NULL), self->priv->_global_search_handler_target = value_target, self->priv->_global_search_handler_target_destroy_notify = NULL, _tmp1_);
-#line 1449 "unity-place.c"
 }
 
 
@@ -1468,76 +1260,41 @@ static GObject * unity_place_entry_info_constructor (GType type, guint n_constru
 		GHashTable* _tmp17_;
 		UnityPlaceRendererInfo* _tmp18_;
 		UnityPlaceRendererInfo* _tmp19_;
-#line 308 "unity-place.vala"
 		if (self->priv->info.dbus_path == NULL) {
-#line 1474 "unity-place.c"
 			char* _tmp4_;
-#line 310 "unity-place.vala"
-			g_critical ("unity-place.vala:310: No DBus path set for EntryInfo.\n" \
+			g_critical ("unity-place.vala:311: No DBus path set for EntryInfo.\n" \
 "'dbus-path' property in the UnityPlaceEntryInfo constructor");
-#line 312 "unity-place.vala"
 			self->priv->info.dbus_path = (_tmp4_ = g_strdup (""), _g_free0 (self->priv->info.dbus_path), _tmp4_);
-#line 1480 "unity-place.c"
 		}
-#line 314 "unity-place.vala"
 		if (self->priv->info.display_name == NULL) {
-#line 1484 "unity-place.c"
 			char* _tmp5_;
-#line 315 "unity-place.vala"
 			self->priv->info.display_name = (_tmp5_ = g_strdup (""), _g_free0 (self->priv->info.display_name), _tmp5_);
-#line 1488 "unity-place.c"
 		}
-#line 316 "unity-place.vala"
 		if (self->priv->info.icon == NULL) {
-#line 1492 "unity-place.c"
 			char* _tmp6_;
-#line 317 "unity-place.vala"
 			self->priv->info.icon = (_tmp6_ = g_strdup (""), _g_free0 (self->priv->info.icon), _tmp6_);
-#line 1496 "unity-place.c"
 		}
-#line 318 "unity-place.vala"
 		self->priv->info.position = (guint) 0;
-#line 319 "unity-place.vala"
 		if (self->priv->info.mimetypes == NULL) {
-#line 1502 "unity-place.c"
 			char** _tmp7_;
-#line 320 "unity-place.vala"
 			self->priv->info.mimetypes = (_tmp7_ = g_new0 (char*, 0 + 1), self->priv->info.mimetypes = (_vala_array_free (self->priv->info.mimetypes, self->priv->info.mimetypes_length1, (GDestroyNotify) g_free), NULL), self->priv->info.mimetypes_length1 = 0, self->priv->info._mimetypes_size_ = self->priv->info.mimetypes_length1, _tmp7_);
-#line 1506 "unity-place.c"
 		}
-#line 321 "unity-place.vala"
 		self->priv->info.sensitive = TRUE;
-#line 322 "unity-place.vala"
 		if (self->priv->info.sections_model == NULL) {
-#line 1512 "unity-place.c"
 			char* _tmp8_;
-#line 323 "unity-place.vala"
 			self->priv->info.sections_model = (_tmp8_ = g_strdup (""), _g_free0 (self->priv->info.sections_model), _tmp8_);
-#line 1516 "unity-place.c"
 		}
-#line 324 "unity-place.vala"
 		self->priv->info.hints = (_tmp9_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->info.hints), _tmp9_);
-#line 326 "unity-place.vala"
 		self->priv->info.entry_renderer_info.default_renderer = (_tmp10_ = g_strdup (""), _g_free0 (self->priv->info.entry_renderer_info.default_renderer), _tmp10_);
-#line 327 "unity-place.vala"
 		self->priv->info.entry_renderer_info.groups_model = (_tmp11_ = g_strdup (""), _g_free0 (self->priv->info.entry_renderer_info.groups_model), _tmp11_);
-#line 328 "unity-place.vala"
 		self->priv->info.entry_renderer_info.results_model = (_tmp12_ = g_strdup (""), _g_free0 (self->priv->info.entry_renderer_info.results_model), _tmp12_);
-#line 329 "unity-place.vala"
 		self->priv->info.entry_renderer_info.hints = (_tmp13_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->info.entry_renderer_info.hints), _tmp13_);
-#line 331 "unity-place.vala"
 		self->priv->info.global_renderer_info.default_renderer = (_tmp14_ = g_strdup (""), _g_free0 (self->priv->info.global_renderer_info.default_renderer), _tmp14_);
-#line 332 "unity-place.vala"
 		self->priv->info.global_renderer_info.groups_model = (_tmp15_ = g_strdup (""), _g_free0 (self->priv->info.global_renderer_info.groups_model), _tmp15_);
-#line 333 "unity-place.vala"
 		self->priv->info.global_renderer_info.results_model = (_tmp16_ = g_strdup (""), _g_free0 (self->priv->info.global_renderer_info.results_model), _tmp16_);
-#line 334 "unity-place.vala"
 		self->priv->info.global_renderer_info.hints = (_tmp17_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->info.global_renderer_info.hints), _tmp17_);
-#line 336 "unity-place.vala"
 		self->priv->_entry_renderer_info = (_tmp18_ = unity_place_renderer_info_new (&self->priv->info.entry_renderer_info), _g_object_unref0 (self->priv->_entry_renderer_info), _tmp18_);
-#line 337 "unity-place.vala"
 		self->priv->_global_renderer_info = (_tmp19_ = unity_place_renderer_info_new (&self->priv->info.global_renderer_info), _g_object_unref0 (self->priv->_global_renderer_info), _tmp19_);
-#line 1540 "unity-place.c"
 	}
 	return obj;
 }
@@ -1691,11 +1448,8 @@ static void unity_place_entry_info_set_property (GObject * object, guint propert
 }
 
 
-#line 395 "unity-place.vala"
 UnityPlace_EntryInfo* unity_place_service_get_entries (UnityPlaceService* self, int* result_length1, GError** error) {
-#line 395 "unity-place.vala"
 	return UNITY_PLACE_SERVICE_GET_INTERFACE (self)->get_entries (self, result_length1, error);
-#line 1698 "unity-place.c"
 }
 
 
@@ -2772,35 +2526,23 @@ static void unity_place_service_dbus_proxy_set_property (GObject * object, guint
 }
 
 
-#line 410 "unity-place.vala"
 guint unity_place_entry_service_set_global_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error) {
-#line 410 "unity-place.vala"
 	return UNITY_PLACE_ENTRY_SERVICE_GET_INTERFACE (self)->set_global_search (self, search, hints, error);
-#line 2779 "unity-place.c"
 }
 
 
-#line 413 "unity-place.vala"
 guint unity_place_entry_service_set_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error) {
-#line 413 "unity-place.vala"
 	return UNITY_PLACE_ENTRY_SERVICE_GET_INTERFACE (self)->set_search (self, search, hints, error);
-#line 2787 "unity-place.c"
 }
 
 
-#line 416 "unity-place.vala"
 void unity_place_entry_service_set_active (UnityPlaceEntryService* self, gboolean is_active, GError** error) {
-#line 416 "unity-place.vala"
 	UNITY_PLACE_ENTRY_SERVICE_GET_INTERFACE (self)->set_active (self, is_active, error);
-#line 2795 "unity-place.c"
 }
 
 
-#line 418 "unity-place.vala"
 void unity_place_entry_service_set_active_section (UnityPlaceEntryService* self, guint section_id, GError** error) {
-#line 418 "unity-place.vala"
 	UNITY_PLACE_ENTRY_SERVICE_GET_INTERFACE (self)->set_active_section (self, section_id, error);
-#line 2803 "unity-place.c"
 }
 
 
@@ -4180,30 +3922,20 @@ static void unity_place_entry_service_dbus_proxy_set_property (GObject * object,
 }
 
 
-#line 457 "unity-place.vala"
 UnityPlaceServiceImpl* unity_place_service_impl_construct (GType object_type, const char* dbus_path) {
-#line 4185 "unity-place.c"
 	UnityPlaceServiceImpl * self;
-#line 457 "unity-place.vala"
 	g_return_val_if_fail (dbus_path != NULL, NULL);
-#line 459 "unity-place.vala"
 	self = (UnityPlaceServiceImpl*) g_object_new (object_type, "dbus-path", dbus_path, NULL);
-#line 4191 "unity-place.c"
 	return self;
 }
 
 
-#line 457 "unity-place.vala"
 UnityPlaceServiceImpl* unity_place_service_impl_new (const char* dbus_path) {
-#line 457 "unity-place.vala"
 	return unity_place_service_impl_construct (UNITY_PLACE_TYPE_SERVICE_IMPL, dbus_path);
-#line 4200 "unity-place.c"
 }
 
 
-#line 466 "unity-place.vala"
 static UnityPlace_EntryInfo* unity_place_service_impl_real_get_entries (UnityPlaceService* base, int* result_length1, GError** error) {
-#line 4206 "unity-place.c"
 	UnityPlaceServiceImpl * self;
 	UnityPlace_EntryInfo* result = NULL;
 	UnityPlace_EntryInfo* _tmp1_;
@@ -4215,73 +3947,46 @@ static UnityPlace_EntryInfo* unity_place_service_impl_real_get_entries (UnityPla
 	UnityPlace_EntryInfo* _tmp4_;
 	self = (UnityPlaceServiceImpl*) base;
 	_result_ = (_tmp1_ = g_new0 (UnityPlace_EntryInfo, _tmp0_ = g_hash_table_size (self->priv->entries)), _result__length1 = _tmp0_, __result__size_ = _result__length1, _tmp1_);
-#line 470 "unity-place.vala"
 	i = 0;
-#line 4220 "unity-place.c"
 	{
 		GList* entry_collection;
 		GList* entry_it;
-#line 471 "unity-place.vala"
 		entry_collection = g_hash_table_get_values (self->priv->entries);
-#line 4226 "unity-place.c"
 		for (entry_it = entry_collection; entry_it != NULL; entry_it = entry_it->next) {
 			UnityPlaceEntryServiceImpl* entry;
-#line 471 "unity-place.vala"
 			entry = (UnityPlaceEntryServiceImpl*) entry_it->data;
-#line 4231 "unity-place.c"
 			{
 				UnityPlace_EntryInfo _tmp3_;
 				UnityPlace_EntryInfo _tmp2_ = {0};
-#line 473 "unity-place.vala"
 				_result_[i] = (_tmp3_ = (unity_place_entry_info_get_raw (unity_place_entry_service_impl_get_entry_info (entry), &_tmp2_), _tmp2_), unity_place__entryinfo_destroy (&_result_[i]), _tmp3_);
-#line 474 "unity-place.vala"
 				i++;
-#line 4239 "unity-place.c"
 			}
 		}
-#line 471 "unity-place.vala"
 		_g_list_free0 (entry_collection);
-#line 4244 "unity-place.c"
 	}
 	result = (_tmp4_ = _result_, *result_length1 = _result__length1, _tmp4_);
-#line 477 "unity-place.vala"
 	return result;
-#line 4249 "unity-place.c"
 	_result_ = (_vala_UnityPlace_EntryInfo_array_free (_result_, _result__length1), NULL);
 }
 
 
-#line 484 "unity-place.vala"
 void unity_place_service_impl_add_entry (UnityPlaceServiceImpl* self, UnityPlaceEntryInfo* entry_info) {
-#line 4256 "unity-place.c"
 	GError * _inner_error_;
 	UnityPlaceEntryServiceImpl* entry;
 	UnityPlace_EntryInfo _tmp2_;
 	UnityPlace_EntryInfo _tmp1_;
 	UnityPlace_EntryInfo _tmp0_ = {0};
-#line 484 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 484 "unity-place.vala"
 	g_return_if_fail (entry_info != NULL);
-#line 4266 "unity-place.c"
 	_inner_error_ = NULL;
-#line 486 "unity-place.vala"
 	if (((UnityPlaceEntryServiceImpl*) g_hash_table_lookup (self->priv->entries, unity_place_entry_info_get_dbus_path (entry_info))) != NULL) {
-#line 487 "unity-place.vala"
 		return;
-#line 4272 "unity-place.c"
 	}
-#line 489 "unity-place.vala"
 	entry = unity_place_entry_service_impl_new (entry_info);
-#line 490 "unity-place.vala"
 	g_hash_table_insert (self->priv->entries, g_strdup (unity_place_entry_info_get_dbus_path (entry_info)), _g_object_ref0 (entry));
-#line 491 "unity-place.vala"
 	if (self->priv->_exported) {
-#line 4280 "unity-place.c"
 		{
-#line 494 "unity-place.vala"
 			unity_place_entry_service_impl_export (entry, &_inner_error_);
-#line 4284 "unity-place.c"
 			if (_inner_error_ != NULL) {
 				if (_inner_error_->domain == DBUS_GERROR) {
 					goto __catch23_dbus_gerror;
@@ -4299,9 +4004,7 @@ void unity_place_service_impl_add_entry (UnityPlaceServiceImpl* self, UnityPlace
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-#line 496 "unity-place.vala"
-				g_critical ("unity-place.vala:496: Failed to export place entry '%s': %s", unity_place_entry_info_get_dbus_path (entry_info), e->message);
-#line 4304 "unity-place.c"
+				g_critical ("unity-place.vala:501: Failed to export place entry '%s': %s", unity_place_entry_info_get_dbus_path (entry_info), e->message);
 				_g_error_free0 (e);
 			}
 		}
@@ -4313,61 +4016,40 @@ void unity_place_service_impl_add_entry (UnityPlaceServiceImpl* self, UnityPlace
 			return;
 		}
 	}
-#line 500 "unity-place.vala"
 	g_signal_emit_by_name ((UnityPlaceService*) self, "entry-added", (_tmp2_ = _tmp1_ = (unity_place_entry_info_get_raw (entry_info, &_tmp0_), _tmp0_), &_tmp2_));
-#line 4318 "unity-place.c"
 	unity_place__entryinfo_destroy (&_tmp1_);
 	_g_object_unref0 (entry);
 }
 
 
-#line 503 "unity-place.vala"
 UnityPlaceEntryInfo* unity_place_service_impl_get_entry (UnityPlaceServiceImpl* self, const char* dbus_path) {
-#line 4326 "unity-place.c"
 	UnityPlaceEntryInfo* result = NULL;
 	UnityPlaceEntryServiceImpl* entry;
-#line 503 "unity-place.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 503 "unity-place.vala"
 	g_return_val_if_fail (dbus_path != NULL, NULL);
-#line 505 "unity-place.vala"
 	entry = _g_object_ref0 ((UnityPlaceEntryServiceImpl*) g_hash_table_lookup (self->priv->entries, dbus_path));
-#line 506 "unity-place.vala"
 	if (entry != NULL) {
-#line 4337 "unity-place.c"
 		result = _g_object_ref0 (unity_place_entry_service_impl_get_entry_info (entry));
 		_g_object_unref0 (entry);
-#line 507 "unity-place.vala"
 		return result;
-#line 4342 "unity-place.c"
 	} else {
 		result = NULL;
 		_g_object_unref0 (entry);
-#line 509 "unity-place.vala"
 		return result;
-#line 4348 "unity-place.c"
 	}
 	_g_object_unref0 (entry);
 }
 
 
-#line 512 "unity-place.vala"
 guint unity_place_service_impl_num_entries (UnityPlaceServiceImpl* self) {
-#line 4356 "unity-place.c"
 	guint result = 0U;
-#line 512 "unity-place.vala"
 	g_return_val_if_fail (self != NULL, 0U);
-#line 4360 "unity-place.c"
 	result = g_hash_table_size (self->priv->entries);
-#line 514 "unity-place.vala"
 	return result;
-#line 4364 "unity-place.c"
 }
 
 
-#line 517 "unity-place.vala"
 char** unity_place_service_impl_get_entry_paths (UnityPlaceServiceImpl* self, int* result_length1) {
-#line 4370 "unity-place.c"
 	char** result = NULL;
 	char** _tmp1_;
 	gint __result__size_;
@@ -4376,75 +4058,45 @@ char** unity_place_service_impl_get_entry_paths (UnityPlaceServiceImpl* self, in
 	char** _result_;
 	gint i;
 	char** _tmp3_;
-#line 517 "unity-place.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 4381 "unity-place.c"
 	_result_ = (_tmp1_ = g_new0 (char*, (_tmp0_ = g_hash_table_size (self->priv->entries)) + 1), _result__length1 = _tmp0_, __result__size_ = _result__length1, _tmp1_);
-#line 521 "unity-place.vala"
 	i = 0;
-#line 4385 "unity-place.c"
 	{
 		GList* entry_collection;
 		GList* entry_it;
-#line 522 "unity-place.vala"
 		entry_collection = g_hash_table_get_values (self->priv->entries);
-#line 4391 "unity-place.c"
 		for (entry_it = entry_collection; entry_it != NULL; entry_it = entry_it->next) {
 			UnityPlaceEntryServiceImpl* entry;
-#line 522 "unity-place.vala"
 			entry = (UnityPlaceEntryServiceImpl*) entry_it->data;
-#line 4396 "unity-place.c"
 			{
 				char* _tmp2_;
-#line 524 "unity-place.vala"
 				_result_[i] = (_tmp2_ = g_strdup (unity_place_entry_info_get_dbus_path (unity_place_entry_service_impl_get_entry_info (entry))), _g_free0 (_result_[i]), _tmp2_);
-#line 525 "unity-place.vala"
 				i++;
-#line 4403 "unity-place.c"
 			}
 		}
-#line 522 "unity-place.vala"
 		_g_list_free0 (entry_collection);
-#line 4408 "unity-place.c"
 	}
 	result = (_tmp3_ = _result_, *result_length1 = _result__length1, _tmp3_);
-#line 528 "unity-place.vala"
 	return result;
-#line 4413 "unity-place.c"
 	_result_ = (_vala_array_free (_result_, _result__length1, (GDestroyNotify) g_free), NULL);
 }
 
 
-#line 531 "unity-place.vala"
 void unity_place_service_impl_remove_entry (UnityPlaceServiceImpl* self, const char* dbus_path) {
-#line 4420 "unity-place.c"
 	GError * _inner_error_;
 	UnityPlaceEntryServiceImpl* entry;
-#line 531 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 531 "unity-place.vala"
 	g_return_if_fail (dbus_path != NULL);
-#line 4427 "unity-place.c"
 	_inner_error_ = NULL;
-#line 533 "unity-place.vala"
 	entry = _g_object_ref0 ((UnityPlaceEntryServiceImpl*) g_hash_table_lookup (self->priv->entries, dbus_path));
-#line 535 "unity-place.vala"
 	if (entry == NULL) {
-#line 4433 "unity-place.c"
 		_g_object_unref0 (entry);
-#line 536 "unity-place.vala"
 		return;
-#line 4437 "unity-place.c"
 	}
-#line 538 "unity-place.vala"
 	g_signal_emit_by_name ((UnityPlaceService*) self, "entry-removed", dbus_path);
-#line 539 "unity-place.vala"
 	if (self->priv->_exported) {
-#line 4443 "unity-place.c"
 		{
-#line 542 "unity-place.vala"
 			unity_place_entry_service_impl_unexport (entry, &_inner_error_);
-#line 4447 "unity-place.c"
 			if (_inner_error_ != NULL) {
 				if (_inner_error_->domain == DBUS_GERROR) {
 					goto __catch24_dbus_gerror;
@@ -4462,9 +4114,7 @@ void unity_place_service_impl_remove_entry (UnityPlaceServiceImpl* self, const c
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-#line 544 "unity-place.vala"
-				g_critical ("unity-place.vala:544: Failed to unexport place entry '%s': %s", unity_place_entry_info_get_dbus_path (unity_place_entry_service_impl_get_entry_info (entry)), e->message);
-#line 4467 "unity-place.c"
+				g_critical ("unity-place.vala:549: Failed to unexport place entry '%s': %s", unity_place_entry_info_get_dbus_path (unity_place_entry_service_impl_get_entry_info (entry)), e->message);
 				_g_error_free0 (e);
 			}
 		}
@@ -4476,25 +4126,17 @@ void unity_place_service_impl_remove_entry (UnityPlaceServiceImpl* self, const c
 			return;
 		}
 	}
-#line 549 "unity-place.vala"
 	g_hash_table_remove (self->priv->entries, dbus_path);
-#line 4481 "unity-place.c"
 	_g_object_unref0 (entry);
 }
 
 
-#line 552 "unity-place.vala"
 void unity_place_service_impl_export (UnityPlaceServiceImpl* self, GError** error) {
-#line 4488 "unity-place.c"
 	GError * _inner_error_;
 	DBusGConnection* conn;
-#line 552 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 4493 "unity-place.c"
 	_inner_error_ = NULL;
-#line 554 "unity-place.vala"
 	conn = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
-#line 4497 "unity-place.c"
 	if (_inner_error_ != NULL) {
 		if (_inner_error_->domain == DBUS_GERROR) {
 			g_propagate_error (error, _inner_error_);
@@ -4505,24 +4147,16 @@ void unity_place_service_impl_export (UnityPlaceServiceImpl* self, GError** erro
 			return;
 		}
 	}
-#line 555 "unity-place.vala"
 	_vala_dbus_register_object (dbus_g_connection_get_connection (conn), self->priv->_dbus_path, (GObject*) self);
-#line 4510 "unity-place.c"
 	{
 		GList* entry_collection;
 		GList* entry_it;
-#line 557 "unity-place.vala"
 		entry_collection = g_hash_table_get_values (self->priv->entries);
-#line 4516 "unity-place.c"
 		for (entry_it = entry_collection; entry_it != NULL; entry_it = entry_it->next) {
 			UnityPlaceEntryServiceImpl* entry;
-#line 557 "unity-place.vala"
 			entry = (UnityPlaceEntryServiceImpl*) entry_it->data;
-#line 4521 "unity-place.c"
 			{
-#line 559 "unity-place.vala"
 				unity_place_entry_service_impl_export (entry, &_inner_error_);
-#line 4525 "unity-place.c"
 				if (_inner_error_ != NULL) {
 					if (_inner_error_->domain == DBUS_GERROR) {
 						g_propagate_error (error, _inner_error_);
@@ -4539,42 +4173,27 @@ void unity_place_service_impl_export (UnityPlaceServiceImpl* self, GError** erro
 				}
 			}
 		}
-#line 557 "unity-place.vala"
 		_g_list_free0 (entry_collection);
-#line 4544 "unity-place.c"
 	}
-#line 562 "unity-place.vala"
 	self->priv->_exported = TRUE;
-#line 563 "unity-place.vala"
 	g_object_notify ((GObject*) self, "exported");
-#line 4550 "unity-place.c"
 	_dbus_g_connection_unref0 (conn);
 }
 
 
-#line 566 "unity-place.vala"
 void unity_place_service_impl_unexport (UnityPlaceServiceImpl* self, GError** error) {
-#line 4557 "unity-place.c"
 	GError * _inner_error_;
-#line 566 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 4561 "unity-place.c"
 	_inner_error_ = NULL;
 	{
 		GList* entry_collection;
 		GList* entry_it;
-#line 568 "unity-place.vala"
 		entry_collection = g_hash_table_get_values (self->priv->entries);
-#line 4568 "unity-place.c"
 		for (entry_it = entry_collection; entry_it != NULL; entry_it = entry_it->next) {
 			UnityPlaceEntryServiceImpl* entry;
-#line 568 "unity-place.vala"
 			entry = (UnityPlaceEntryServiceImpl*) entry_it->data;
-#line 4573 "unity-place.c"
 			{
-#line 570 "unity-place.vala"
 				unity_place_entry_service_impl_unexport (entry, &_inner_error_);
-#line 4577 "unity-place.c"
 				if (_inner_error_ != NULL) {
 					if (_inner_error_->domain == DBUS_GERROR) {
 						g_propagate_error (error, _inner_error_);
@@ -4589,15 +4208,10 @@ void unity_place_service_impl_unexport (UnityPlaceServiceImpl* self, GError** er
 				}
 			}
 		}
-#line 568 "unity-place.vala"
 		_g_list_free0 (entry_collection);
-#line 4594 "unity-place.c"
 	}
-#line 576 "unity-place.vala"
 	self->priv->_exported = FALSE;
-#line 577 "unity-place.vala"
 	g_object_notify ((GObject*) self, "exported");
-#line 4600 "unity-place.c"
 }
 
 
@@ -4605,18 +4219,14 @@ const char* unity_place_service_impl_get_dbus_path (UnityPlaceServiceImpl* self)
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_dbus_path;
-#line 441 "unity-place.vala"
 	return result;
-#line 4610 "unity-place.c"
 }
 
 
 static void unity_place_service_impl_set_dbus_path (UnityPlaceServiceImpl* self, const char* value) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
-#line 442 "unity-place.vala"
 	self->priv->_dbus_path = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_dbus_path), _tmp0_);
-#line 4619 "unity-place.c"
 	g_object_notify ((GObject *) self, "dbus-path");
 }
 
@@ -4625,9 +4235,7 @@ gboolean unity_place_service_impl_get_exported (UnityPlaceServiceImpl* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_exported;
-#line 446 "unity-place.vala"
 	return result;
-#line 4630 "unity-place.c"
 }
 
 
@@ -4640,9 +4248,7 @@ static GObject * unity_place_service_impl_constructor (GType type, guint n_const
 	self = UNITY_PLACE_SERVICE_IMPL (obj);
 	{
 		GHashTable* _tmp243_;
-#line 454 "unity-place.vala"
 		self->priv->entries = (_tmp243_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->entries), _tmp243_);
-#line 4645 "unity-place.c"
 	}
 	return obj;
 }
@@ -4784,127 +4390,81 @@ static void unity_place_service_impl_set_property (GObject * object, guint prope
 }
 
 
-#line 609 "unity-place.vala"
 UnityPlaceEntryServiceImpl* unity_place_entry_service_impl_construct (GType object_type, UnityPlaceEntryInfo* entry_info) {
-#line 4789 "unity-place.c"
 	UnityPlaceEntryServiceImpl * self;
-#line 609 "unity-place.vala"
 	g_return_val_if_fail (entry_info != NULL, NULL);
-#line 611 "unity-place.vala"
 	self = (UnityPlaceEntryServiceImpl*) g_object_new (object_type, "entry-info", entry_info, NULL);
-#line 4795 "unity-place.c"
 	return self;
 }
 
 
-#line 609 "unity-place.vala"
 UnityPlaceEntryServiceImpl* unity_place_entry_service_impl_new (UnityPlaceEntryInfo* entry_info) {
-#line 609 "unity-place.vala"
 	return unity_place_entry_service_impl_construct (UNITY_PLACE_TYPE_ENTRY_SERVICE_IMPL, entry_info);
-#line 4804 "unity-place.c"
 }
 
 
-#line 618 "unity-place.vala"
 static guint unity_place_entry_service_impl_real_set_global_search (UnityPlaceEntryService* base, const char* search, GHashTable* hints, GError** error) {
-#line 4810 "unity-place.c"
 	UnityPlaceEntryServiceImpl * self;
 	guint result = 0U;
 	void* _tmp0_ = NULL;
 	self = (UnityPlaceEntryServiceImpl*) base;
-#line 618 "unity-place.vala"
 	g_return_val_if_fail (search != NULL, 0U);
-#line 618 "unity-place.vala"
 	g_return_val_if_fail (hints != NULL, 0U);
-#line 621 "unity-place.vala"
 	if (unity_place_entry_info_get_global_search_handler (self->priv->_entry_info, &_tmp0_) != NULL) {
-#line 4821 "unity-place.c"
 		UnityPlaceSearch* _tmp2_;
 		void* _tmp1_ = NULL;
 		guint _tmp3_;
 		result = (_tmp3_ = unity_place_entry_info_get_global_search_handler (self->priv->_entry_info, &_tmp1_) (_tmp2_ = g_object_ref_sink (unity_place_search_new (search, hints)), _tmp1_), _g_object_unref0 (_tmp2_), _tmp3_);
-#line 622 "unity-place.vala"
 		return result;
-#line 4828 "unity-place.c"
 	} else {
-#line 625 "unity-place.vala"
-		g_warning ("unity-place.vala:625: No global search handler installed for %s", unity_place_entry_info_get_dbus_path (self->priv->_entry_info));
-#line 4832 "unity-place.c"
+		g_warning ("unity-place.vala:630: No global search handler installed for %s", unity_place_entry_info_get_dbus_path (self->priv->_entry_info));
 		result = (guint) 0;
-#line 627 "unity-place.vala"
 		return result;
-#line 4836 "unity-place.c"
 	}
 }
 
 
-#line 631 "unity-place.vala"
 static guint unity_place_entry_service_impl_real_set_search (UnityPlaceEntryService* base, const char* search, GHashTable* hints, GError** error) {
-#line 4843 "unity-place.c"
 	UnityPlaceEntryServiceImpl * self;
 	guint result = 0U;
 	void* _tmp0_ = NULL;
 	self = (UnityPlaceEntryServiceImpl*) base;
-#line 631 "unity-place.vala"
 	g_return_val_if_fail (search != NULL, 0U);
-#line 631 "unity-place.vala"
 	g_return_val_if_fail (hints != NULL, 0U);
-#line 634 "unity-place.vala"
 	if (unity_place_entry_info_get_search_handler (self->priv->_entry_info, &_tmp0_) != NULL) {
-#line 4854 "unity-place.c"
 		UnityPlaceSearch* _tmp2_;
 		void* _tmp1_ = NULL;
 		guint _tmp3_;
 		result = (_tmp3_ = unity_place_entry_info_get_search_handler (self->priv->_entry_info, &_tmp1_) (_tmp2_ = g_object_ref_sink (unity_place_search_new (search, hints)), _tmp1_), _g_object_unref0 (_tmp2_), _tmp3_);
-#line 635 "unity-place.vala"
 		return result;
-#line 4861 "unity-place.c"
 	} else {
-#line 638 "unity-place.vala"
-		g_warning ("unity-place.vala:638: No search handler installed for %s", unity_place_entry_info_get_dbus_path (self->priv->_entry_info));
-#line 4865 "unity-place.c"
+		g_warning ("unity-place.vala:643: No search handler installed for %s", unity_place_entry_info_get_dbus_path (self->priv->_entry_info));
 		result = (guint) 0;
-#line 640 "unity-place.vala"
 		return result;
-#line 4869 "unity-place.c"
 	}
 }
 
 
-#line 644 "unity-place.vala"
 static void unity_place_entry_service_impl_real_set_active (UnityPlaceEntryService* base, gboolean is_active, GError** error) {
-#line 4876 "unity-place.c"
 	UnityPlaceEntryServiceImpl * self;
 	self = (UnityPlaceEntryServiceImpl*) base;
-#line 646 "unity-place.vala"
 	unity_place_entry_info_set_active (self->priv->_entry_info, is_active);
-#line 4881 "unity-place.c"
 }
 
 
-#line 649 "unity-place.vala"
 static void unity_place_entry_service_impl_real_set_active_section (UnityPlaceEntryService* base, guint section_id, GError** error) {
-#line 4887 "unity-place.c"
 	UnityPlaceEntryServiceImpl * self;
 	self = (UnityPlaceEntryServiceImpl*) base;
-#line 651 "unity-place.vala"
 	unity_place_entry_info_set_active_section (self->priv->_entry_info, section_id);
-#line 4892 "unity-place.c"
 }
 
 
-#line 658 "unity-place.vala"
 void unity_place_entry_service_impl_export (UnityPlaceEntryServiceImpl* self, GError** error) {
-#line 4898 "unity-place.c"
 	GError * _inner_error_;
 	DBusGConnection* conn;
-#line 658 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 4903 "unity-place.c"
 	_inner_error_ = NULL;
-#line 660 "unity-place.vala"
 	conn = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
-#line 4907 "unity-place.c"
 	if (_inner_error_ != NULL) {
 		if (_inner_error_->domain == DBUS_GERROR) {
 			g_propagate_error (error, _inner_error_);
@@ -4915,26 +4475,17 @@ void unity_place_entry_service_impl_export (UnityPlaceEntryServiceImpl* self, GE
 			return;
 		}
 	}
-#line 661 "unity-place.vala"
 	_vala_dbus_register_object (dbus_g_connection_get_connection (conn), unity_place_entry_info_get_dbus_path (self->priv->_entry_info), (GObject*) self);
-#line 663 "unity-place.vala"
 	self->priv->_exported = TRUE;
-#line 664 "unity-place.vala"
 	g_object_notify ((GObject*) self, "exported");
-#line 4924 "unity-place.c"
 	_dbus_g_connection_unref0 (conn);
 }
 
 
-#line 667 "unity-place.vala"
 void unity_place_entry_service_impl_unexport (UnityPlaceEntryServiceImpl* self, GError** error) {
-#line 667 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 673 "unity-place.vala"
 	self->priv->_exported = FALSE;
-#line 674 "unity-place.vala"
 	g_object_notify ((GObject*) self, "exported");
-#line 4937 "unity-place.c"
 }
 
 
@@ -4942,18 +4493,14 @@ UnityPlaceEntryInfo* unity_place_entry_service_impl_get_entry_info (UnityPlaceEn
 	UnityPlaceEntryInfo* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_entry_info;
-#line 597 "unity-place.vala"
 	return result;
-#line 4947 "unity-place.c"
 }
 
 
 static void unity_place_entry_service_impl_set_entry_info (UnityPlaceEntryServiceImpl* self, UnityPlaceEntryInfo* value) {
 	UnityPlaceEntryInfo* _tmp0_;
 	g_return_if_fail (self != NULL);
-#line 598 "unity-place.vala"
 	self->priv->_entry_info = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_entry_info), _tmp0_);
-#line 4956 "unity-place.c"
 	g_object_notify ((GObject *) self, "entry-info");
 }
 
@@ -4962,9 +4509,7 @@ gboolean unity_place_entry_service_impl_get_exported (UnityPlaceEntryServiceImpl
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_exported;
-#line 602 "unity-place.vala"
 	return result;
-#line 4967 "unity-place.c"
 }
 
 
@@ -5106,100 +4651,61 @@ static void unity_place_entry_service_impl_set_property (GObject * object, guint
 }
 
 
-#line 711 "unity-place.vala"
 UnityPlaceController* unity_place_controller_construct (GType object_type, const char* dbus_path) {
-#line 5111 "unity-place.c"
 	UnityPlaceController * self;
-#line 711 "unity-place.vala"
 	g_return_val_if_fail (dbus_path != NULL, NULL);
-#line 713 "unity-place.vala"
 	self = (UnityPlaceController*) g_object_new (object_type, "dbus-path", dbus_path, NULL);
-#line 5117 "unity-place.c"
 	return self;
 }
 
 
-#line 711 "unity-place.vala"
 UnityPlaceController* unity_place_controller_new (const char* dbus_path) {
-#line 711 "unity-place.vala"
 	return unity_place_controller_construct (UNITY_PLACE_TYPE_CONTROLLER, dbus_path);
-#line 5126 "unity-place.c"
 }
 
 
-#line 720 "unity-place.vala"
 void unity_place_controller_add_entry (UnityPlaceController* self, UnityPlaceEntryInfo* entry) {
-#line 720 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 720 "unity-place.vala"
 	g_return_if_fail (entry != NULL);
-#line 722 "unity-place.vala"
 	unity_place_service_impl_add_entry (self->priv->service, entry);
-#line 5138 "unity-place.c"
 }
 
 
-#line 725 "unity-place.vala"
 UnityPlaceEntryInfo* unity_place_controller_get_entry (UnityPlaceController* self, const char* dbus_path) {
-#line 5144 "unity-place.c"
 	UnityPlaceEntryInfo* result = NULL;
-#line 725 "unity-place.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 725 "unity-place.vala"
 	g_return_val_if_fail (dbus_path != NULL, NULL);
-#line 5150 "unity-place.c"
 	result = unity_place_service_impl_get_entry (self->priv->service, dbus_path);
-#line 727 "unity-place.vala"
 	return result;
-#line 5154 "unity-place.c"
 }
 
 
-#line 730 "unity-place.vala"
 void unity_place_controller_remove_entry (UnityPlaceController* self, const char* dbus_path) {
-#line 730 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 730 "unity-place.vala"
 	g_return_if_fail (dbus_path != NULL);
-#line 732 "unity-place.vala"
 	unity_place_service_impl_remove_entry (self->priv->service, dbus_path);
-#line 5166 "unity-place.c"
 }
 
 
-#line 735 "unity-place.vala"
 guint unity_place_controller_num_entries (UnityPlaceController* self) {
-#line 5172 "unity-place.c"
 	guint result = 0U;
-#line 735 "unity-place.vala"
 	g_return_val_if_fail (self != NULL, 0U);
-#line 5176 "unity-place.c"
 	result = unity_place_service_impl_num_entries (self->priv->service);
-#line 737 "unity-place.vala"
 	return result;
-#line 5180 "unity-place.c"
 }
 
 
-#line 740 "unity-place.vala"
 char** unity_place_controller_get_entry_paths (UnityPlaceController* self, int* result_length1) {
-#line 5186 "unity-place.c"
 	char** result = NULL;
 	gint _tmp0_;
 	char** _tmp1_;
-#line 740 "unity-place.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 5192 "unity-place.c"
 	result = (_tmp1_ = unity_place_service_impl_get_entry_paths (self->priv->service, &_tmp0_), *result_length1 = _tmp0_, _tmp1_);
-#line 742 "unity-place.vala"
 	return result;
-#line 5196 "unity-place.c"
 }
 
 
-#line 745 "unity-place.vala"
 UnityPlaceEntryInfo** unity_place_controller_get_entries (UnityPlaceController* self, int* result_length1) {
-#line 5202 "unity-place.c"
 	UnityPlaceEntryInfo** result = NULL;
 	guint len;
 	UnityPlaceEntryInfo** _tmp0_;
@@ -5213,66 +4719,40 @@ UnityPlaceEntryInfo** unity_place_controller_get_entries (UnityPlaceController* 
 	char** entry_paths;
 	gint i;
 	UnityPlaceEntryInfo** _tmp5_;
-#line 745 "unity-place.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 747 "unity-place.vala"
 	len = unity_place_controller_num_entries (self);
-#line 5220 "unity-place.c"
 	_result_ = (_tmp0_ = g_new0 (UnityPlaceEntryInfo*, len + 1), _result__length1 = len, __result__size_ = _result__length1, _tmp0_);
 	entry_paths = (_tmp2_ = unity_place_controller_get_entry_paths (self, &_tmp1_), entry_paths_length1 = _tmp1_, _entry_paths_size_ = entry_paths_length1, _tmp2_);
-#line 751 "unity-place.vala"
 	i = 0;
-#line 5225 "unity-place.c"
 	{
 		gboolean _tmp3_;
-#line 752 "unity-place.vala"
 		i = 0;
-#line 752 "unity-place.vala"
 		_tmp3_ = TRUE;
-#line 752 "unity-place.vala"
 		while (TRUE) {
-#line 5234 "unity-place.c"
 			UnityPlaceEntryInfo* _tmp4_;
-#line 752 "unity-place.vala"
 			if (!_tmp3_) {
-#line 752 "unity-place.vala"
 				i++;
-#line 5240 "unity-place.c"
 			}
-#line 752 "unity-place.vala"
 			_tmp3_ = FALSE;
-#line 752 "unity-place.vala"
 			if (!(i < len)) {
-#line 752 "unity-place.vala"
 				break;
-#line 5248 "unity-place.c"
 			}
-#line 754 "unity-place.vala"
 			_result_[i] = (_tmp4_ = unity_place_controller_get_entry (self, entry_paths[i]), _g_object_unref0 (_result_[i]), _tmp4_);
-#line 5252 "unity-place.c"
 		}
 	}
 	result = (_tmp5_ = _result_, *result_length1 = _result__length1, _tmp5_);
 	entry_paths = (_vala_array_free (entry_paths, entry_paths_length1, (GDestroyNotify) g_free), NULL);
-#line 757 "unity-place.vala"
 	return result;
-#line 5259 "unity-place.c"
 	_result_ = (_vala_array_free (_result_, _result__length1, (GDestroyNotify) g_object_unref), NULL);
 	entry_paths = (_vala_array_free (entry_paths, entry_paths_length1, (GDestroyNotify) g_free), NULL);
 }
 
 
-#line 760 "unity-place.vala"
 void unity_place_controller_export (UnityPlaceController* self, GError** error) {
-#line 5267 "unity-place.c"
 	GError * _inner_error_;
-#line 760 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 5271 "unity-place.c"
 	_inner_error_ = NULL;
-#line 762 "unity-place.vala"
 	unity_place_service_impl_export (self->priv->service, &_inner_error_);
-#line 5275 "unity-place.c"
 	if (_inner_error_ != NULL) {
 		if (_inner_error_->domain == DBUS_GERROR) {
 			g_propagate_error (error, _inner_error_);
@@ -5283,25 +4763,16 @@ void unity_place_controller_export (UnityPlaceController* self, GError** error) 
 			return;
 		}
 	}
-#line 763 "unity-place.vala"
 	self->priv->_exported = TRUE;
-#line 764 "unity-place.vala"
 	g_object_notify ((GObject*) self, "exported");
-#line 5290 "unity-place.c"
 }
 
 
-#line 767 "unity-place.vala"
 void unity_place_controller_unexport (UnityPlaceController* self, GError** error) {
-#line 5296 "unity-place.c"
 	GError * _inner_error_;
-#line 767 "unity-place.vala"
 	g_return_if_fail (self != NULL);
-#line 5300 "unity-place.c"
 	_inner_error_ = NULL;
-#line 769 "unity-place.vala"
 	unity_place_service_impl_unexport (self->priv->service, &_inner_error_);
-#line 5304 "unity-place.c"
 	if (_inner_error_ != NULL) {
 		if (_inner_error_->domain == DBUS_GERROR) {
 			g_propagate_error (error, _inner_error_);
@@ -5312,11 +4783,8 @@ void unity_place_controller_unexport (UnityPlaceController* self, GError** error
 			return;
 		}
 	}
-#line 770 "unity-place.vala"
 	self->priv->_exported = FALSE;
-#line 771 "unity-place.vala"
 	g_object_notify ((GObject*) self, "exported");
-#line 5319 "unity-place.c"
 }
 
 
@@ -5324,18 +4792,14 @@ const char* unity_place_controller_get_dbus_path (UnityPlaceController* self) {
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_dbus_path;
-#line 695 "unity-place.vala"
 	return result;
-#line 5329 "unity-place.c"
 }
 
 
 static void unity_place_controller_set_dbus_path (UnityPlaceController* self, const char* value) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
-#line 696 "unity-place.vala"
 	self->priv->_dbus_path = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_dbus_path), _tmp0_);
-#line 5338 "unity-place.c"
 	g_object_notify ((GObject *) self, "dbus-path");
 }
 
@@ -5344,9 +4808,7 @@ gboolean unity_place_controller_get_exported (UnityPlaceController* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_exported;
-#line 700 "unity-place.vala"
 	return result;
-#line 5349 "unity-place.c"
 }
 
 
@@ -5359,9 +4821,7 @@ static GObject * unity_place_controller_constructor (GType type, guint n_constru
 	self = UNITY_PLACE_CONTROLLER (obj);
 	{
 		UnityPlaceServiceImpl* _tmp244_;
-#line 708 "unity-place.vala"
 		self->priv->service = (_tmp244_ = unity_place_service_impl_new (self->priv->_dbus_path), _g_object_unref0 (self->priv->service), _tmp244_);
-#line 5364 "unity-place.c"
 	}
 	return obj;
 }

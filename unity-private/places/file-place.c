@@ -193,39 +193,25 @@ static void unity_places_file_file_view_finalize (GObject* obj);
 
 
 
-#line 16 "file-place.vala"
 UnityPlacesFileFileIcon* unity_places_file_file_icon_construct (GType object_type, gint width, const char* name, const char* icon_name, const char* tooltip) {
-#line 199 "file-place.c"
 	UnityPlacesFileFileIcon* self;
 	UnityPlacesBarModel* _tmp0_;
 	CtkImage* _tmp1_;
 	CtkText* _tmp2_;
-#line 16 "file-place.vala"
 	g_return_val_if_fail (name != NULL, NULL);
-#line 16 "file-place.vala"
 	g_return_val_if_fail (icon_name != NULL, NULL);
-#line 16 "file-place.vala"
 	g_return_val_if_fail (tooltip != NULL, NULL);
-#line 210 "file-place.c"
 	self = (UnityPlacesFileFileIcon*) g_type_create_instance (object_type);
-#line 18 "file-place.vala"
 	self->priv->model = (_tmp0_ = unity_places_bar_model_new (name, icon_name, tooltip), _g_object_unref0 (self->priv->model), _tmp0_);
-#line 19 "file-place.vala"
 	self->view = (_tmp1_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) width, icon_name)), _g_object_unref0 (self->view), _tmp1_);
-#line 20 "file-place.vala"
 	clutter_actor_set_reactive ((ClutterActor*) self->view, TRUE);
-#line 21 "file-place.vala"
 	self->label = (_tmp2_ = g_object_ref_sink ((CtkText*) ctk_text_new (name)), _g_object_unref0 (self->label), _tmp2_);
-#line 220 "file-place.c"
 	return self;
 }
 
 
-#line 16 "file-place.vala"
 UnityPlacesFileFileIcon* unity_places_file_file_icon_new (gint width, const char* name, const char* icon_name, const char* tooltip) {
-#line 16 "file-place.vala"
 	return unity_places_file_file_icon_construct (UNITY_PLACES_FILE_TYPE_FILE_ICON, width, name, icon_name, tooltip);
-#line 229 "file-place.c"
 }
 
 
@@ -393,9 +379,7 @@ void unity_places_file_file_icon_unref (gpointer instance) {
 }
 
 
-#line 36 "file-place.vala"
 static void unity_places_file_file_group_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-#line 399 "file-place.c"
 	UnityPlacesFileFileGroup * self;
 	gint IconWidth;
 	gint IconHeight;
@@ -410,184 +394,104 @@ static void unity_places_file_file_group_real_allocate (ClutterActor* base, cons
 	ClutterActorBox child_box;
 	gint i = 0;
 	self = (UnityPlacesFileFileGroup*) base;
-#line 39 "file-place.vala"
 	IconWidth = 48;
-#line 40 "file-place.vala"
 	IconHeight = 48;
-#line 41 "file-place.vala"
 	FileIconSpacing = 100;
-#line 43 "file-place.vala"
 	HeaderBorderPositionX = 0;
-#line 44 "file-place.vala"
 	HeaderBorderPositionY = 60;
-#line 45 "file-place.vala"
 	IconBorderPositionX = 0;
-#line 46 "file-place.vala"
 	IconBorderPositionY = 100;
-#line 47 "file-place.vala"
 	LineBorderPositionX = 0;
-#line 48 "file-place.vala"
 	LineBorderPositionY = 90;
-#line 50 "file-place.vala"
 	child_box = (_tmp0_.x1 = 0.0f, _tmp0_.y1 = 0.0f, _tmp0_.x2 = 0.0f, _tmp0_.y2 = 0.0f, _tmp0_);
-#line 52 "file-place.vala"
 	CLUTTER_ACTOR_CLASS (unity_places_file_file_group_parent_class)->allocate ((ClutterActor*) CTK_BOX (self), box, flags);
-#line 54 "file-place.vala"
 	child_box.x1 = (float) IconBorderPositionX;
-#line 55 "file-place.vala"
 	child_box.x2 = (float) 0;
-#line 56 "file-place.vala"
 	child_box.y1 = (float) IconBorderPositionY;
-#line 57 "file-place.vala"
 	child_box.y2 = child_box.y1 + IconHeight;
-#line 444 "file-place.c"
 	{
 		gboolean _tmp1_;
-#line 60 "file-place.vala"
 		i = 0;
-#line 60 "file-place.vala"
 		_tmp1_ = TRUE;
-#line 60 "file-place.vala"
 		while (TRUE) {
-#line 453 "file-place.c"
 			UnityPlacesFileFileIcon* _tmp2_;
 			ClutterActorBox _tmp3_ = {0};
 			ClutterActorBox label_box;
 			UnityPlacesFileFileIcon* _tmp4_;
-#line 60 "file-place.vala"
 			if (!_tmp1_) {
-#line 60 "file-place.vala"
 				i++;
-#line 462 "file-place.c"
 			}
-#line 60 "file-place.vala"
 			_tmp1_ = FALSE;
-#line 60 "file-place.vala"
 			if (!(i < gee_collection_get_size ((GeeCollection*) self->priv->file_icon_array))) {
-#line 60 "file-place.vala"
 				break;
-#line 470 "file-place.c"
 			}
-#line 62 "file-place.vala"
 			child_box.x2 = child_box.x1 + IconWidth;
-#line 63 "file-place.vala"
 			clutter_actor_allocate ((ClutterActor*) (_tmp2_ = (UnityPlacesFileFileIcon*) gee_abstract_list_get ((GeeAbstractList*) self->priv->file_icon_array, i))->view, &child_box, flags);
-#line 476 "file-place.c"
 			_unity_places_file_file_icon_unref0 (_tmp2_);
-#line 65 "file-place.vala"
 			label_box = (_tmp3_.x1 = 0.0f, _tmp3_.y1 = 0.0f, _tmp3_.x2 = 0.0f, _tmp3_.y2 = 0.0f, _tmp3_);
-#line 66 "file-place.vala"
 			label_box.x1 = child_box.x1;
-#line 67 "file-place.vala"
 			label_box.x2 = child_box.x2;
-#line 68 "file-place.vala"
 			label_box.y1 = (float) (IconBorderPositionY + IconHeight);
-#line 69 "file-place.vala"
 			label_box.y2 = label_box.y1 + 64;
-#line 70 "file-place.vala"
 			clutter_actor_allocate ((ClutterActor*) (_tmp4_ = (UnityPlacesFileFileIcon*) gee_abstract_list_get ((GeeAbstractList*) self->priv->file_icon_array, i))->label, &label_box, flags);
-#line 490 "file-place.c"
 			_unity_places_file_file_icon_unref0 (_tmp4_);
-#line 72 "file-place.vala"
 			child_box.x1 = child_box.x1 + ((float) (IconWidth + FileIconSpacing));
-#line 494 "file-place.c"
 		}
 	}
-#line 75 "file-place.vala"
 	if (self->priv->Separator->Width != 800) {
-#line 77 "file-place.vala"
 		unity_places_cairo_drawing_places_hseparator_CreateSeparator (self->priv->Separator, 800, 5);
-#line 501 "file-place.c"
 	}
-#line 79 "file-place.vala"
 	child_box.x1 = (float) LineBorderPositionX;
-#line 80 "file-place.vala"
 	child_box.x2 = child_box.x1 + 800;
-#line 81 "file-place.vala"
 	child_box.y1 = (float) LineBorderPositionY;
-#line 82 "file-place.vala"
 	child_box.y2 = (float) (LineBorderPositionY + 5);
-#line 83 "file-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->Separator, &child_box, flags);
-#line 85 "file-place.vala"
 	child_box.x1 = (float) HeaderBorderPositionX;
-#line 86 "file-place.vala"
 	child_box.x2 = child_box.x1 + 22;
-#line 87 "file-place.vala"
 	child_box.y1 = (float) HeaderBorderPositionY;
-#line 88 "file-place.vala"
 	child_box.y2 = (float) (HeaderBorderPositionY + 23);
-#line 89 "file-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->Star, &child_box, flags);
-#line 91 "file-place.vala"
 	child_box.x1 = (float) (HeaderBorderPositionX + 22);
-#line 92 "file-place.vala"
 	child_box.x2 = child_box.x1 + 100;
-#line 93 "file-place.vala"
 	child_box.y1 = (float) HeaderBorderPositionY;
-#line 94 "file-place.vala"
 	child_box.y2 = (float) (HeaderBorderPositionY + 23);
-#line 95 "file-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->GroupName, &child_box, flags);
-#line 97 "file-place.vala"
 	child_box.x1 = child_box.x1 + ((float) 750);
-#line 98 "file-place.vala"
 	child_box.x2 = child_box.x1 + 16;
-#line 99 "file-place.vala"
 	child_box.y1 = (float) HeaderBorderPositionY;
-#line 100 "file-place.vala"
 	child_box.y2 = (float) (HeaderBorderPositionY + 19);
-#line 101 "file-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->maximize_button, &child_box, flags);
-#line 102 "file-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->minimize_button, &child_box, flags);
-#line 545 "file-place.c"
 }
 
 
-#line 105 "file-place.vala"
 static void unity_places_file_file_group_real_get_preferred_width (ClutterActor* base, float for_height, float* minimum_width, float* natural_width) {
-#line 551 "file-place.c"
 	UnityPlacesFileFileGroup * self;
 	self = (UnityPlacesFileFileGroup*) base;
-#line 109 "file-place.vala"
 	*minimum_width = 800.0f;
-#line 110 "file-place.vala"
 	*natural_width = 800.0f;
-#line 558 "file-place.c"
 }
 
 
-#line 113 "file-place.vala"
 static void unity_places_file_file_group_real_get_preferred_height (ClutterActor* base, float for_width, float* minimum_height, float* natural_height) {
-#line 564 "file-place.c"
 	UnityPlacesFileFileGroup * self;
 	self = (UnityPlacesFileFileGroup*) base;
-#line 117 "file-place.vala"
 	*minimum_height = 150.0f;
-#line 118 "file-place.vala"
 	*natural_height = 150.0f;
-#line 571 "file-place.c"
 }
 
 
-#line 176 "file-place.vala"
 static gboolean _unity_places_file_file_group_on_maximize_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 577 "file-place.c"
 	return unity_places_file_file_group_on_maximize (self, event);
 }
 
 
-#line 168 "file-place.vala"
 static gboolean _unity_places_file_file_group_on_minimize_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 584 "file-place.c"
 	return unity_places_file_file_group_on_minimize (self, event);
 }
 
 
-#line 122 "file-place.vala"
 UnityPlacesFileFileGroup* unity_places_file_file_group_construct (GType object_type, const char* group_name) {
-#line 591 "file-place.c"
 	UnityPlacesFileFileGroup * self;
 	CtkText* _tmp0_;
 	CtkImage* _tmp1_;
@@ -595,143 +499,80 @@ UnityPlacesFileFileGroup* unity_places_file_file_group_construct (GType object_t
 	CtkImage* _tmp3_;
 	CtkImage* _tmp4_;
 	GeeArrayList* _tmp5_;
-#line 122 "file-place.vala"
 	g_return_val_if_fail (group_name != NULL, NULL);
-#line 601 "file-place.c"
 	self = g_object_newv (object_type, 0, NULL);
-#line 124 "file-place.vala"
 	ctk_box_set_homogeneous ((CtkBox*) self, FALSE);
-#line 125 "file-place.vala"
 	ctk_box_set_orientation ((CtkBox*) self, (gint) CTK_ORIENTATION_HORIZONTAL);
-#line 127 "file-place.vala"
 	self->priv->GroupName = (_tmp0_ = g_object_ref_sink ((CtkText*) ctk_text_new (group_name)), _g_object_unref0 (self->priv->GroupName), _tmp0_);
-#line 128 "file-place.vala"
 	self->priv->Star = (_tmp1_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) 23, UNITY_PLACES_FILE_FAVOURITES_ICON)), _g_object_unref0 (self->priv->Star), _tmp1_);
-#line 129 "file-place.vala"
 	self->priv->Separator = (_tmp2_ = g_object_ref_sink (unity_places_cairo_drawing_places_hseparator_new ()), _g_object_unref0 (self->priv->Separator), _tmp2_);
-#line 130 "file-place.vala"
 	self->priv->maximize_button = (_tmp3_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) 16, UNITY_PLACES_FILE_MAXIMIZE_ICON)), _g_object_unref0 (self->priv->maximize_button), _tmp3_);
-#line 131 "file-place.vala"
 	self->priv->minimize_button = (_tmp4_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) 16, UNITY_PLACES_FILE_MINIMIZE_ICON)), _g_object_unref0 (self->priv->minimize_button), _tmp4_);
-#line 133 "file-place.vala"
 	self->priv->file_icon_array = (_tmp5_ = gee_array_list_new (UNITY_PLACES_FILE_TYPE_FILE_ICON, (GBoxedCopyFunc) unity_places_file_file_icon_ref, unity_places_file_file_icon_unref, NULL), _g_object_unref0 (self->priv->file_icon_array), _tmp5_);
-#line 619 "file-place.c"
 	{
 		gint i;
-#line 134 "file-place.vala"
 		i = 0;
-#line 624 "file-place.c"
 		{
 			gboolean _tmp6_;
-#line 134 "file-place.vala"
 			_tmp6_ = TRUE;
-#line 134 "file-place.vala"
 			while (TRUE) {
-#line 631 "file-place.c"
 				UnityPlacesFileFileIcon* file;
-#line 134 "file-place.vala"
 				if (!_tmp6_) {
-#line 134 "file-place.vala"
 					i++;
-#line 637 "file-place.c"
 				}
-#line 134 "file-place.vala"
 				_tmp6_ = FALSE;
-#line 134 "file-place.vala"
 				if (!(i < 5)) {
-#line 134 "file-place.vala"
 					break;
-#line 645 "file-place.c"
 				}
-#line 136 "file-place.vala"
 				file = unity_places_file_file_icon_new (48, "Files", UNITY_PLACES_FILE_FILES_FILE, "Your files stored locally");
-#line 139 "file-place.vala"
 				gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->file_icon_array, file);
-#line 140 "file-place.vala"
 				clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) file->view);
-#line 141 "file-place.vala"
 				clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) file->label);
-#line 655 "file-place.c"
 				_unity_places_file_file_icon_unref0 (file);
 			}
 		}
 	}
-#line 144 "file-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->Star);
-#line 145 "file-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->Separator);
-#line 146 "file-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->GroupName);
-#line 147 "file-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->maximize_button);
-#line 148 "file-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->minimize_button);
-#line 150 "file-place.vala"
 	self->priv->is_open = TRUE;
-#line 151 "file-place.vala"
 	clutter_actor_show_all ((ClutterActor*) self);
-#line 153 "file-place.vala"
 	clutter_actor_set_reactive ((ClutterActor*) self->priv->maximize_button, TRUE);
-#line 154 "file-place.vala"
 	clutter_actor_set_reactive ((ClutterActor*) self->priv->minimize_button, TRUE);
-#line 155 "file-place.vala"
 	clutter_actor_hide ((ClutterActor*) self->priv->maximize_button);
-#line 156 "file-place.vala"
 	clutter_actor_show ((ClutterActor*) self->priv->minimize_button);
-#line 158 "file-place.vala"
 	g_signal_connect_object ((ClutterActor*) self->priv->maximize_button, "button-release-event", (GCallback) _unity_places_file_file_group_on_maximize_clutter_actor_button_release_event, self, 0);
-#line 159 "file-place.vala"
 	g_signal_connect_object ((ClutterActor*) self->priv->minimize_button, "button-release-event", (GCallback) _unity_places_file_file_group_on_minimize_clutter_actor_button_release_event, self, 0);
-#line 686 "file-place.c"
 	return self;
 }
 
 
-#line 122 "file-place.vala"
 UnityPlacesFileFileGroup* unity_places_file_file_group_new (const char* group_name) {
-#line 122 "file-place.vala"
 	return unity_places_file_file_group_construct (UNITY_PLACES_FILE_TYPE_FILE_GROUP, group_name);
-#line 695 "file-place.c"
 }
 
 
-#line 168 "file-place.vala"
 gboolean unity_places_file_file_group_on_minimize (UnityPlacesFileFileGroup* self, ClutterEvent* event) {
-#line 701 "file-place.c"
 	gboolean result = FALSE;
-#line 168 "file-place.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 170 "file-place.vala"
 	clutter_actor_show ((ClutterActor*) self->priv->maximize_button);
-#line 171 "file-place.vala"
 	clutter_actor_hide ((ClutterActor*) self->priv->minimize_button);
-#line 172 "file-place.vala"
 	self->priv->is_open = FALSE;
-#line 711 "file-place.c"
 	result = FALSE;
-#line 173 "file-place.vala"
 	return result;
-#line 715 "file-place.c"
 }
 
 
-#line 176 "file-place.vala"
 gboolean unity_places_file_file_group_on_maximize (UnityPlacesFileFileGroup* self, ClutterEvent* event) {
-#line 721 "file-place.c"
 	gboolean result = FALSE;
-#line 176 "file-place.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 178 "file-place.vala"
 	clutter_actor_hide ((ClutterActor*) self->priv->maximize_button);
-#line 179 "file-place.vala"
 	clutter_actor_show ((ClutterActor*) self->priv->minimize_button);
-#line 180 "file-place.vala"
 	self->priv->is_open = TRUE;
-#line 731 "file-place.c"
 	result = FALSE;
-#line 181 "file-place.vala"
 	return result;
-#line 735 "file-place.c"
 }
 
 
@@ -789,9 +630,7 @@ GType unity_places_file_file_group_get_type (void) {
 }
 
 
-#line 190 "file-place.vala"
 static void unity_places_file_file_view_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-#line 795 "file-place.c"
 	UnityPlacesFileFileView * self;
 	ClutterActorBox _tmp0_ = {0};
 	ClutterActorBox child_box;
@@ -800,76 +639,45 @@ static void unity_places_file_file_view_real_allocate (ClutterActor* base, const
 	float child_width = 0.0F;
 	float child_height = 0.0F;
 	self = (UnityPlacesFileFileView*) base;
-#line 193 "file-place.vala"
 	child_box = (_tmp0_.x1 = 0.0f, _tmp0_.y1 = 0.0f, _tmp0_.x2 = 0.0f, _tmp0_.y2 = 0.0f, _tmp0_);
-#line 197 "file-place.vala"
 	CLUTTER_ACTOR_CLASS (unity_places_file_file_view_parent_class)->allocate ((ClutterActor*) CTK_BOX (self), box, flags);
-#line 199 "file-place.vala"
 	width = (*box).x2 - (*box).x1;
-#line 200 "file-place.vala"
 	height = (*box).y2 - (*box).y1;
-#line 202 "file-place.vala"
 	clutter_actor_get_preferred_width ((ClutterActor*) self->recent_file_group, height, &child_width, &child_width);
-#line 205 "file-place.vala"
 	clutter_actor_get_preferred_height ((ClutterActor*) self->recent_file_group, width, &child_height, &child_height);
-#line 208 "file-place.vala"
 	child_box.x1 = (width - child_width) / 2.0f;
-#line 209 "file-place.vala"
 	child_box.x2 = child_box.x1 + child_width;
-#line 210 "file-place.vala"
 	child_box.y1 = 0.0f;
-#line 211 "file-place.vala"
 	child_box.y2 = child_height;
-#line 212 "file-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->recent_file_group, &child_box, flags);
-#line 214 "file-place.vala"
 	child_box.y1 = child_box.y1 + child_height;
-#line 215 "file-place.vala"
 	child_box.y2 = child_box.y1 + child_height;
-#line 216 "file-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->favourite_folder_group, &child_box, flags);
-#line 218 "file-place.vala"
 	child_box.y1 = child_box.y1 + child_height;
-#line 219 "file-place.vala"
 	child_box.y2 = child_box.y1 + child_height;
-#line 220 "file-place.vala"
 	clutter_actor_allocate ((ClutterActor*) self->downloaded_file_group, &child_box, flags);
-#line 838 "file-place.c"
 }
 
 
-#line 223 "file-place.vala"
 UnityPlacesFileFileView* unity_places_file_file_view_construct (GType object_type) {
-#line 844 "file-place.c"
 	UnityPlacesFileFileView * self;
 	UnityPlacesFileFileGroup* _tmp0_;
 	UnityPlacesFileFileGroup* _tmp1_;
 	UnityPlacesFileFileGroup* _tmp2_;
 	self = g_object_newv (object_type, 0, NULL);
-#line 225 "file-place.vala"
 	self->recent_file_group = (_tmp0_ = g_object_ref_sink (unity_places_file_file_group_new ("Recent Files")), _g_object_unref0 (self->recent_file_group), _tmp0_);
-#line 226 "file-place.vala"
 	self->favourite_folder_group = (_tmp1_ = g_object_ref_sink (unity_places_file_file_group_new ("Favourite Files")), _g_object_unref0 (self->favourite_folder_group), _tmp1_);
-#line 227 "file-place.vala"
 	self->downloaded_file_group = (_tmp2_ = g_object_ref_sink (unity_places_file_file_group_new ("Downloaded Files")), _g_object_unref0 (self->downloaded_file_group), _tmp2_);
-#line 229 "file-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->recent_file_group);
-#line 230 "file-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->favourite_folder_group);
-#line 231 "file-place.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->downloaded_file_group);
-#line 232 "file-place.vala"
 	clutter_actor_show_all ((ClutterActor*) self);
-#line 864 "file-place.c"
 	return self;
 }
 
 
-#line 223 "file-place.vala"
 UnityPlacesFileFileView* unity_places_file_file_view_new (void) {
-#line 223 "file-place.vala"
 	return unity_places_file_file_view_construct (UNITY_PLACES_FILE_TYPE_FILE_VIEW);
-#line 873 "file-place.c"
 }
 
 

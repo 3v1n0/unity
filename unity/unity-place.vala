@@ -61,8 +61,10 @@ namespace Unity.Place {
    *
    */
   public class RendererInfo : GLib.Object {
-
-    private _RendererInfo info;
+    
+    /* We use a pointer to the _RendererInfo to avoid Vala duping the struct
+     * values. The actual struct pointed to is owned by the parent EntryInfo */
+    private _RendererInfo* info;
     private Dee.Model _groups_model;
     private Dee.Model _results_model;
 
@@ -70,8 +72,8 @@ namespace Unity.Place {
      * Properties
      */
     public string default_renderer {
-      get { return info.default_renderer; }
-      set { info.default_renderer = value; }
+      get { return info->default_renderer; }
+      set { info->default_renderer = value; }
     }
 
     public Dee.Model groups_model {
@@ -81,10 +83,10 @@ namespace Unity.Place {
         if (value is Dee.SharedModel)
         {
           Dee.SharedModel model = value as Dee.SharedModel;
-          info.groups_model = model.get_swarm_name();
+          info->groups_model = model.get_swarm_name();
         }
         else
-          info.groups_model = "__local__";
+          info->groups_model = "__local__";
       }
     }
 
@@ -95,10 +97,10 @@ namespace Unity.Place {
         if (value is Dee.SharedModel)
         {
           Dee.SharedModel model = value as Dee.SharedModel;
-          info.results_model = model.get_swarm_name();
+          info->results_model = model.get_swarm_name();
         }
         else
-          info.results_model = "__local__";
+          info->results_model = "__local__";
       }
     }
 
@@ -106,10 +108,9 @@ namespace Unity.Place {
      * Constructors
      */
 
-    internal RendererInfo (_RendererInfo info)
+    internal RendererInfo (_RendererInfo* info)
     {
       this.info = info;
-      info.hints = new HashTable<string,string>(str_hash, str_equal);
     }
 
     /*
@@ -118,27 +119,27 @@ namespace Unity.Place {
 
     public void set_hint (string hint, string val)
     {
-      info.hints.insert (hint, val);
+      info->hints.insert (hint, val);
     }
 
     public string? get_hint (string hint)
     {
-      return info.hints.lookup (hint);
+      return info->hints.lookup (hint);
     }
 
     public void clear_hint (string hint)
     {
-      info.hints.remove (hint);
+      info->hints.remove (hint);
     }
 
     public void clear_hints ()
     {
-      info.hints.remove_all ();
+      info->hints.remove_all ();
     }
 
     public uint num_hints ()
     {
-      return info.hints.size ();
+      return info->hints.size ();
     }
   }
 
@@ -333,8 +334,12 @@ namespace Unity.Place {
       info.global_renderer_info.results_model = "";
       info.global_renderer_info.hints = new HashTable<string, string> (str_hash, str_equal);
 
-      _entry_renderer_info = new RendererInfo (info.entry_renderer_info);
-      _global_renderer_info = new RendererInfo (info.global_renderer_info);
+      /* Pass in the address of the _RendererInfos as they are embedded
+       * by value inside the _EntryInfo struct. The RendererInfo will then
+       * only access the pointer to the struct to avoid memory duping which
+       * would give incorrect return values for our DBus methods */
+      _entry_renderer_info = new RendererInfo (&(info.entry_renderer_info));
+      _global_renderer_info = new RendererInfo (&(info.global_renderer_info));
     }
 
     public EntryInfo (string dbus_path) {

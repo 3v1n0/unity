@@ -103,60 +103,38 @@ GType unity_application_commands_get_type (void) {
 }
 
 
-#line 38 "application.vala"
 UnityApplication* unity_application_construct (GType object_type) {
-#line 109 "application.c"
 	UnityApplication * self;
-#line 40 "application.vala"
 	self = (UnityApplication*) g_object_new (object_type, "name", "com.canonical.Unity", NULL);
-#line 113 "application.c"
 	return self;
 }
 
 
-#line 38 "application.vala"
 UnityApplication* unity_application_new (void) {
-#line 38 "application.vala"
 	return unity_application_construct (UNITY_TYPE_APPLICATION);
-#line 122 "application.c"
 }
 
 
-#line 51 "application.vala"
 UniqueResponse unity_application_on_message_received (UnityApplication* self, gint command, UniqueMessageData* data, guint time_) {
-#line 128 "application.c"
 	UniqueResponse result = 0;
 	GError * _inner_error_;
 	UniqueResponse res;
 	char* _tmp0_;
-#line 51 "application.vala"
 	g_return_val_if_fail (self != NULL, 0);
-#line 51 "application.vala"
 	g_return_val_if_fail (data != NULL, 0);
-#line 137 "application.c"
 	_inner_error_ = NULL;
-#line 55 "application.vala"
 	res = UNIQUE_RESPONSE_OK;
-#line 57 "application.vala"
 	g_debug ("application.vala:57: Message Received: %d '%s' %d", command, _tmp0_ = unique_message_data_get_text (data), (gint) time_);
-#line 143 "application.c"
 	_g_free0 (_tmp0_);
-#line 62 "application.vala"
 	switch (command) {
-#line 147 "application.c"
 		case UNITY_APPLICATION_COMMANDS_SHOW:
 		{
 			{
-#line 66 "application.vala"
 				if (UNITY_IS_SHELL (unity_application_get_shell (self))) {
-#line 67 "application.vala"
 					unity_shell_show_unity (unity_application_get_shell (self));
-#line 155 "application.c"
 				}
 			}
-#line 69 "application.vala"
 			break;
-#line 160 "application.c"
 		}
 		case UNITY_APPLICATION_COMMANDS_MAKE_WEBAPP:
 		{
@@ -178,19 +156,12 @@ UniqueResponse unity_application_on_message_received (UnityApplication* self, gi
 				char* _tmp9_;
 				char* _tmp8_;
 				char* _tmp7_;
-#line 73 "application.vala"
 				uri = unique_message_data_get_text (data);
-#line 74 "application.vala"
 				icon_dirstring = g_strconcat (g_get_home_dir (), "/.local/share/icons/", NULL);
-#line 75 "application.vala"
 				icon_directory = g_file_new_for_path (icon_dirstring);
-#line 188 "application.c"
 				{
-#line 77 "application.vala"
 					if (!g_file_query_exists (icon_directory, NULL)) {
-#line 79 "application.vala"
 						g_file_make_directory_with_parents (icon_directory, NULL, &_inner_error_);
-#line 194 "application.c"
 						if (_inner_error_ != NULL) {
 							goto __catch0_g_error;
 						}
@@ -216,16 +187,12 @@ UniqueResponse unity_application_on_message_received (UnityApplication* self, gi
 					return 0;
 				}
 				split_url = (_tmp2_ = _tmp1_ = g_strsplit (uri, "://", 2), split_url_length1 = _vala_array_length (_tmp1_), _split_url_size_ = split_url_length1, _tmp2_);
-#line 85 "application.vala"
 				name = g_strdup (split_url[1]);
-#line 222 "application.c"
 				{
 					GRegex* regex;
 					char* _tmp3_;
 					char* _tmp4_;
-#line 88 "application.vala"
 					regex = g_regex_new ("(/)", 0, 0, &_inner_error_);
-#line 229 "application.c"
 					if (_inner_error_ != NULL) {
 						if (_inner_error_->domain == G_REGEX_ERROR) {
 							goto __catch1_g_regex_error;
@@ -239,9 +206,7 @@ UniqueResponse unity_application_on_message_received (UnityApplication* self, gi
 						g_clear_error (&_inner_error_);
 						return 0;
 					}
-#line 89 "application.vala"
 					_tmp3_ = g_regex_replace (regex, name, (gssize) (-1), 0, "", 0, &_inner_error_);
-#line 245 "application.c"
 					if (_inner_error_ != NULL) {
 						_g_regex_unref0 (regex);
 						if (_inner_error_->domain == G_REGEX_ERROR) {
@@ -257,9 +222,7 @@ UniqueResponse unity_application_on_message_received (UnityApplication* self, gi
 						g_clear_error (&_inner_error_);
 						return 0;
 					}
-#line 89 "application.vala"
 					name = (_tmp4_ = _tmp3_, _g_free0 (name), _tmp4_);
-#line 263 "application.c"
 					_g_regex_unref0 (regex);
 				}
 				goto __finally1;
@@ -269,9 +232,7 @@ UniqueResponse unity_application_on_message_received (UnityApplication* self, gi
 					e = _inner_error_;
 					_inner_error_ = NULL;
 					{
-#line 91 "application.vala"
 						g_warning ("application.vala:91: %s", e->message);
-#line 275 "application.c"
 						_g_error_free0 (e);
 					}
 				}
@@ -286,21 +247,14 @@ UniqueResponse unity_application_on_message_received (UnityApplication* self, gi
 					g_clear_error (&_inner_error_);
 					return 0;
 				}
-#line 94 "application.vala"
 				hostname = unity_webapp_get_hostname (uri);
-#line 95 "application.vala"
 				webapp = (_tmp6_ = unity_webapp_chromium_web_app_new (uri, _tmp5_ = g_strconcat (name, ".png", NULL)), _g_free0 (_tmp5_), _tmp6_);
-#line 97 "application.vala"
 				self->priv->webicon_fetcher = (_tmp10_ = unity_webapp_webicon_fetcher_new (uri, _tmp8_ = g_strconcat (_tmp7_ = g_strconcat (icon_dirstring, hostname, NULL), ".png", NULL), _tmp9_ = unity_webapp_chromium_web_app_desktop_file_path (webapp)), _g_object_unref0 (self->priv->webicon_fetcher), _tmp10_);
-#line 296 "application.c"
 				_g_free0 (_tmp9_);
 				_g_free0 (_tmp8_);
 				_g_free0 (_tmp7_);
-#line 100 "application.vala"
 				unity_webapp_webicon_fetcher_fetch_webapp_data (self->priv->webicon_fetcher);
-#line 102 "application.vala"
 				unity_webapp_chromium_web_app_add_to_favorites (webapp);
-#line 304 "application.c"
 				_g_free0 (uri);
 				_g_free0 (icon_dirstring);
 				_g_object_unref0 (icon_directory);
@@ -309,21 +263,15 @@ UniqueResponse unity_application_on_message_received (UnityApplication* self, gi
 				_g_free0 (hostname);
 				_g_object_unref0 (webapp);
 			}
-#line 105 "application.vala"
 			break;
-#line 315 "application.c"
 		}
 		default:
 		{
-#line 107 "application.vala"
 			break;
-#line 321 "application.c"
 		}
 	}
 	result = res;
-#line 110 "application.vala"
 	return result;
-#line 327 "application.c"
 }
 
 
@@ -331,9 +279,7 @@ UnityShell* unity_application_get_shell (UnityApplication* self) {
 	UnityShell* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_shell;
-#line 33 "application.vala"
 	return result;
-#line 337 "application.c"
 }
 
 
@@ -345,16 +291,12 @@ static gpointer _g_object_ref0 (gpointer self) {
 void unity_application_set_shell (UnityApplication* self, UnityShell* value) {
 	UnityShell* _tmp0_;
 	g_return_if_fail (self != NULL);
-#line 34 "application.vala"
 	self->priv->_shell = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_shell), _tmp0_);
-#line 351 "application.c"
 	g_object_notify ((GObject *) self, "shell");
 }
 
 
-#line 51 "application.vala"
 static UniqueResponse _unity_application_on_message_received_unique_app_message_received (UniqueApp* _sender, gint command, UniqueMessageData* message_data, guint time_, gpointer self) {
-#line 358 "application.c"
 	return unity_application_on_message_received (self, command, message_data, time_);
 }
 
@@ -367,13 +309,9 @@ static GObject * unity_application_constructor (GType type, guint n_construct_pr
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_APPLICATION (obj);
 	{
-#line 45 "application.vala"
 		unique_app_add_command ((UniqueApp*) self, "show", (gint) UNITY_APPLICATION_COMMANDS_SHOW);
-#line 46 "application.vala"
 		unique_app_add_command ((UniqueApp*) self, "make webapp", (gint) UNITY_APPLICATION_COMMANDS_MAKE_WEBAPP);
-#line 48 "application.vala"
 		g_signal_connect_object ((UniqueApp*) self, "message-received", (GCallback) _unity_application_on_message_received_unique_app_message_received, self, 0);
-#line 377 "application.c"
 	}
 	return obj;
 }

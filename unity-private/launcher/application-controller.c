@@ -38,9 +38,9 @@
 #include <float.h>
 #include <math.h>
 #include <clutk/clutk.h>
+#include <glib/gstdio.h>
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
-#include <glib/gstdio.h>
 
 
 #define UNITY_LAUNCHER_TYPE_SHORTCUT_ITEM (unity_launcher_shortcut_item_get_type ())
@@ -356,83 +356,62 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
-#line 33 "application-controller.vala"
 static char* unity_launcher_application_shortcut_real_get_name (UnityLauncherShortcutItem* base) {
-#line 362 "application-controller.c"
 	UnityLauncherApplicationShortcut * self;
 	char* result = NULL;
 	self = (UnityLauncherApplicationShortcut*) base;
 	result = g_strdup (self->name);
-#line 35 "application-controller.vala"
 	return result;
-#line 369 "application-controller.c"
 }
 
 
-#line 38 "application-controller.vala"
 static void unity_launcher_application_shortcut_real_activated (UnityLauncherShortcutItem* base) {
-#line 375 "application-controller.c"
 	UnityLauncherApplicationShortcut * self;
 	GError * _inner_error_;
 	GdkAppLaunchContext* context;
 	self = (UnityLauncherApplicationShortcut*) base;
 	_inner_error_ = NULL;
-#line 40 "application-controller.vala"
 	context = gdk_app_launch_context_new ();
-#line 383 "application-controller.c"
 	{
 		GKeyFile* desktop_file;
 		GAppInfo* appinfo;
-#line 43 "application-controller.vala"
 		desktop_file = g_key_file_new ();
-#line 44 "application-controller.vala"
 		g_key_file_load_from_file (desktop_file, self->desktop_location, 0, &_inner_error_);
-#line 391 "application-controller.c"
 		if (_inner_error_ != NULL) {
 			_g_key_file_free0 (desktop_file);
-			goto __catch10_g_error;
+			goto __catch11_g_error;
 		}
-#line 45 "application-controller.vala"
 		g_key_file_set_string (desktop_file, "Desktop Entry", "Exec", self->exec);
-#line 46 "application-controller.vala"
 		appinfo = (GAppInfo*) g_desktop_app_info_new_from_keyfile (desktop_file);
-#line 47 "application-controller.vala"
 		g_app_info_create_from_commandline (self->exec, self->name, 0, &_inner_error_);
-#line 402 "application-controller.c"
 		if (_inner_error_ != NULL) {
 			_g_key_file_free0 (desktop_file);
 			_g_object_unref0 (appinfo);
-			goto __catch10_g_error;
+			goto __catch11_g_error;
 		}
-#line 48 "application-controller.vala"
 		gdk_app_launch_context_set_screen (context, gdk_display_get_default_screen (gdk_display_get_default ()));
-#line 49 "application-controller.vala"
 		gdk_app_launch_context_set_timestamp (context, (guint32) GDK_CURRENT_TIME);
-#line 51 "application-controller.vala"
 		g_app_info_launch (appinfo, NULL, (GAppLaunchContext*) context, &_inner_error_);
-#line 414 "application-controller.c"
 		if (_inner_error_ != NULL) {
 			_g_key_file_free0 (desktop_file);
 			_g_object_unref0 (appinfo);
-			goto __catch10_g_error;
+			goto __catch11_g_error;
 		}
 		_g_key_file_free0 (desktop_file);
 		_g_object_unref0 (appinfo);
 	}
-	goto __finally10;
-	__catch10_g_error:
+	goto __finally11;
+	__catch11_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 55 "application-controller.vala"
 			g_warning ("application-controller.vala:55: %s", e->message);
-#line 432 "application-controller.c"
 			_g_error_free0 (e);
 		}
 	}
-	__finally10:
+	__finally11:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (context);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -443,22 +422,15 @@ static void unity_launcher_application_shortcut_real_activated (UnityLauncherSho
 }
 
 
-#line 27 "application-controller.vala"
 UnityLauncherApplicationShortcut* unity_launcher_application_shortcut_construct (GType object_type) {
-#line 449 "application-controller.c"
 	UnityLauncherApplicationShortcut * self;
-#line 27 "application-controller.vala"
 	self = (UnityLauncherApplicationShortcut*) g_object_new (object_type, NULL);
-#line 453 "application-controller.c"
 	return self;
 }
 
 
-#line 27 "application-controller.vala"
 UnityLauncherApplicationShortcut* unity_launcher_application_shortcut_new (void) {
-#line 27 "application-controller.vala"
 	return unity_launcher_application_shortcut_construct (UNITY_LAUNCHER_TYPE_APPLICATION_SHORTCUT);
-#line 462 "application-controller.c"
 }
 
 
@@ -503,50 +475,34 @@ GType unity_launcher_application_shortcut_get_type (void) {
 }
 
 
-#line 70 "application-controller.vala"
 static char* unity_launcher_lib_launcher_shortcut_real_get_name (UnityLauncherShortcutItem* base) {
-#line 509 "application-controller.c"
 	UnityLauncherLibLauncherShortcut * self;
 	char* result = NULL;
 	self = (UnityLauncherLibLauncherShortcut*) base;
 	result = g_strdup (_ ("Quit"));
-#line 72 "application-controller.vala"
 	return result;
-#line 516 "application-controller.c"
 }
 
 
-#line 75 "application-controller.vala"
 static void unity_launcher_lib_launcher_shortcut_real_activated (UnityLauncherShortcutItem* base) {
-#line 522 "application-controller.c"
 	UnityLauncherLibLauncherShortcut * self;
 	GArray* xids;
 	self = (UnityLauncherLibLauncherShortcut*) base;
-#line 77 "application-controller.vala"
 	xids = bamf_application_get_xids (self->app);
-#line 78 "application-controller.vala"
 	unity_shell_close_xids (unity_global_shell, xids);
-#line 530 "application-controller.c"
 	_g_array_free0 (xids);
 }
 
 
-#line 65 "application-controller.vala"
 UnityLauncherLibLauncherShortcut* unity_launcher_lib_launcher_shortcut_construct (GType object_type) {
-#line 537 "application-controller.c"
 	UnityLauncherLibLauncherShortcut * self;
-#line 65 "application-controller.vala"
 	self = (UnityLauncherLibLauncherShortcut*) g_object_new (object_type, NULL);
-#line 541 "application-controller.c"
 	return self;
 }
 
 
-#line 65 "application-controller.vala"
 UnityLauncherLibLauncherShortcut* unity_launcher_lib_launcher_shortcut_new (void) {
-#line 65 "application-controller.vala"
 	return unity_launcher_lib_launcher_shortcut_construct (UNITY_LAUNCHER_TYPE_LIB_LAUNCHER_SHORTCUT);
-#line 550 "application-controller.c"
 }
 
 
@@ -590,49 +546,32 @@ GType unity_launcher_lib_launcher_shortcut_get_type (void) {
 }
 
 
-#line 104 "application-controller.vala"
 static gboolean unity_launcher_launcher_pinning_shortcut_is_sticky (UnityLauncherLauncherPinningShortcut* self) {
-#line 596 "application-controller.c"
 	gboolean result = FALSE;
 	UnityFavorites* favorites;
-#line 104 "application-controller.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 106 "application-controller.vala"
 	favorites = unity_favorites_get_default ();
-#line 603 "application-controller.c"
 	{
 		GeeArrayList* _tmp0_;
 		GeeIterator* _tmp1_;
 		GeeIterator* _uid_it;
 		_uid_it = (_tmp1_ = gee_abstract_collection_iterator ((GeeAbstractCollection*) (_tmp0_ = unity_favorites_get_favorites (favorites))), _g_object_unref0 (_tmp0_), _tmp1_);
-#line 107 "application-controller.vala"
 		while (TRUE) {
-#line 611 "application-controller.c"
 			char* uid;
 			char* _tmp2_;
 			gboolean _tmp3_;
-#line 107 "application-controller.vala"
 			if (!gee_iterator_next (_uid_it)) {
-#line 107 "application-controller.vala"
 				break;
-#line 619 "application-controller.c"
 			}
-#line 107 "application-controller.vala"
 			uid = (char*) gee_iterator_get (_uid_it);
-#line 109 "application-controller.vala"
 			if ((_tmp3_ = _vala_strcmp0 (_tmp2_ = unity_favorites_get_string (favorites, uid, "desktop_file"), self->priv->_desktop_file) == 0, _g_free0 (_tmp2_), _tmp3_)) {
-#line 625 "application-controller.c"
 				char* _tmp4_;
-#line 111 "application-controller.vala"
 				self->priv->cached_uid = (_tmp4_ = g_strdup (uid), _g_free0 (self->priv->cached_uid), _tmp4_);
-#line 629 "application-controller.c"
 				result = TRUE;
 				_g_free0 (uid);
 				_g_object_unref0 (_uid_it);
 				_g_object_unref0 (favorites);
-#line 112 "application-controller.vala"
 				return result;
-#line 636 "application-controller.c"
 			}
 			_g_free0 (uid);
 		}
@@ -640,77 +579,49 @@ static gboolean unity_launcher_launcher_pinning_shortcut_is_sticky (UnityLaunche
 	}
 	result = FALSE;
 	_g_object_unref0 (favorites);
-#line 115 "application-controller.vala"
 	return result;
-#line 646 "application-controller.c"
 }
 
 
-#line 118 "application-controller.vala"
 UnityLauncherLauncherPinningShortcut* unity_launcher_launcher_pinning_shortcut_construct (GType object_type, const char* _desktop_file) {
-#line 652 "application-controller.c"
 	UnityLauncherLauncherPinningShortcut * self;
-#line 118 "application-controller.vala"
 	g_return_val_if_fail (_desktop_file != NULL, NULL);
-#line 120 "application-controller.vala"
 	self = (UnityLauncherLauncherPinningShortcut*) g_object_new (object_type, "desktop-file", _desktop_file, NULL);
-#line 658 "application-controller.c"
 	return self;
 }
 
 
-#line 118 "application-controller.vala"
 UnityLauncherLauncherPinningShortcut* unity_launcher_launcher_pinning_shortcut_new (const char* _desktop_file) {
-#line 118 "application-controller.vala"
 	return unity_launcher_launcher_pinning_shortcut_construct (UNITY_LAUNCHER_TYPE_LAUNCHER_PINNING_SHORTCUT, _desktop_file);
-#line 667 "application-controller.c"
 }
 
 
-#line 127 "application-controller.vala"
 static char* unity_launcher_launcher_pinning_shortcut_real_get_name (UnityLauncherShortcutItem* base) {
-#line 673 "application-controller.c"
 	UnityLauncherLauncherPinningShortcut * self;
 	char* result = NULL;
 	self = (UnityLauncherLauncherPinningShortcut*) base;
 	result = g_strdup (unity_launcher_launcher_pinning_shortcut_get_name (self));
-#line 129 "application-controller.vala"
 	return result;
-#line 680 "application-controller.c"
 }
 
 
-#line 132 "application-controller.vala"
 static void unity_launcher_launcher_pinning_shortcut_real_activated (UnityLauncherShortcutItem* base) {
-#line 686 "application-controller.c"
 	UnityLauncherLauncherPinningShortcut * self;
 	UnityFavorites* favorites;
 	self = (UnityLauncherLauncherPinningShortcut*) base;
-#line 134 "application-controller.vala"
 	favorites = unity_favorites_get_default ();
-#line 135 "application-controller.vala"
 	if (!unity_launcher_launcher_pinning_shortcut_is_sticky (self)) {
-#line 137 "application-controller.vala"
 		if (self->priv->cached_uid == NULL) {
-#line 696 "application-controller.c"
 			char* _tmp1_;
 			char* _tmp0_;
-#line 140 "application-controller.vala"
 			self->priv->cached_uid = (_tmp1_ = g_strconcat ("app-", _tmp0_ = g_path_get_basename (self->priv->_desktop_file), NULL), _g_free0 (self->priv->cached_uid), _tmp1_);
-#line 701 "application-controller.c"
 			_g_free0 (_tmp0_);
 		}
-#line 142 "application-controller.vala"
 		unity_favorites_set_string (favorites, self->priv->cached_uid, "type", "application");
-#line 143 "application-controller.vala"
 		unity_favorites_set_string (favorites, self->priv->cached_uid, "desktop_file", self->priv->_desktop_file);
-#line 144 "application-controller.vala"
 		unity_favorites_add_favorite (favorites, self->priv->cached_uid);
-#line 710 "application-controller.c"
 	} else {
-#line 148 "application-controller.vala"
 		unity_favorites_remove_favorite (favorites, self->priv->cached_uid);
-#line 714 "application-controller.c"
 	}
 	_g_object_unref0 (favorites);
 }
@@ -720,9 +631,7 @@ const char* unity_launcher_launcher_pinning_shortcut_get_desktop_file (UnityLaun
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_desktop_file;
-#line 88 "application-controller.vala"
 	return result;
-#line 726 "application-controller.c"
 }
 
 
@@ -737,18 +646,12 @@ static void unity_launcher_launcher_pinning_shortcut_set_desktop_file (UnityLaun
 const char* unity_launcher_launcher_pinning_shortcut_get_name (UnityLauncherLauncherPinningShortcut* self) {
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
-#line 91 "application-controller.vala"
 	if (unity_launcher_launcher_pinning_shortcut_is_sticky (self)) {
-#line 743 "application-controller.c"
 		result = _ ("Remove from Launcher");
-#line 93 "application-controller.vala"
 		return result;
-#line 747 "application-controller.c"
 	} else {
 		result = _ ("Keep In Launcher");
-#line 97 "application-controller.vala"
 		return result;
-#line 752 "application-controller.c"
 	}
 }
 
@@ -845,102 +748,66 @@ static void unity_launcher_launcher_pinning_shortcut_set_property (GObject * obj
 }
 
 
-#line 174 "application-controller.vala"
 UnityLauncherApplicationController* unity_launcher_application_controller_construct (GType object_type, const char* desktop_file_, UnityLauncherScrollerChild* child_) {
-#line 851 "application-controller.c"
 	UnityLauncherApplicationController * self;
-#line 174 "application-controller.vala"
 	g_return_val_if_fail (desktop_file_ != NULL, NULL);
-#line 174 "application-controller.vala"
 	g_return_val_if_fail (child_ != NULL, NULL);
-#line 176 "application-controller.vala"
 	self = (UnityLauncherApplicationController*) g_object_new (object_type, "desktop-file", desktop_file_, "child", child_, NULL);
-#line 859 "application-controller.c"
 	return self;
 }
 
 
-#line 174 "application-controller.vala"
 UnityLauncherApplicationController* unity_launcher_application_controller_new (const char* desktop_file_, UnityLauncherScrollerChild* child_) {
-#line 174 "application-controller.vala"
 	return unity_launcher_application_controller_construct (UNITY_LAUNCHER_TYPE_APPLICATION_CONTROLLER, desktop_file_, child_);
-#line 868 "application-controller.c"
 }
 
 
-#line 223 "application-controller.vala"
 static void unity_launcher_application_controller_on_favorite_added (UnityLauncherApplicationController* self, const char* uid) {
-#line 874 "application-controller.c"
 	UnityFavorites* favorites;
 	char* desktop_filename;
-#line 223 "application-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 223 "application-controller.vala"
 	g_return_if_fail (uid != NULL);
-#line 226 "application-controller.vala"
 	favorites = unity_favorites_get_default ();
-#line 227 "application-controller.vala"
 	desktop_filename = unity_favorites_get_string (favorites, uid, "desktop_file");
-#line 228 "application-controller.vala"
 	if (_vala_strcmp0 (desktop_filename, unity_launcher_application_controller_get_desktop_file (self)) == 0) {
-#line 230 "application-controller.vala"
 		self->priv->is_favorite = TRUE;
-#line 231 "application-controller.vala"
 		unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self)->pin_type = UNITY_LAUNCHER_PIN_TYPE_PINNED;
-#line 891 "application-controller.c"
 	}
 	_g_object_unref0 (favorites);
 	_g_free0 (desktop_filename);
 }
 
 
-#line 235 "application-controller.vala"
+static gboolean string_contains (const char* self, const char* needle) {
+	gboolean result = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	g_return_val_if_fail (needle != NULL, FALSE);
+	result = strstr (self, needle) != NULL;
+	return result;
+}
+
+
 static void unity_launcher_application_controller_on_favorite_removed (UnityLauncherApplicationController* self, const char* uid) {
-#line 900 "application-controller.c"
 	UnityFavorites* favorites;
 	char* desktop_filename;
-#line 235 "application-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 235 "application-controller.vala"
 	g_return_if_fail (uid != NULL);
-#line 237 "application-controller.vala"
 	favorites = unity_favorites_get_default ();
-#line 238 "application-controller.vala"
 	desktop_filename = unity_favorites_get_string (favorites, uid, "desktop_file");
-#line 239 "application-controller.vala"
 	if (_vala_strcmp0 (desktop_filename, unity_launcher_application_controller_get_desktop_file (self)) == 0) {
-#line 241 "application-controller.vala"
 		self->priv->is_favorite = FALSE;
-#line 242 "application-controller.vala"
 		unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self)->pin_type = UNITY_LAUNCHER_PIN_TYPE_UNPINNED;
-#line 243 "application-controller.vala"
 		g_signal_emit_by_name ((UnityLauncherScrollerChildController*) self, "closed");
-#line 919 "application-controller.c"
+		if (string_contains (desktop_filename, ".local")) {
+			+g_remove (desktop_filename);
+		}
 	}
 	_g_object_unref0 (favorites);
 	_g_free0 (desktop_filename);
 }
 
 
-#line 1048 "glib-2.0.vapi"
-static gboolean string_contains (const char* self, const char* needle) {
-#line 928 "application-controller.c"
-	gboolean result = FALSE;
-#line 1048 "glib-2.0.vapi"
-	g_return_val_if_fail (self != NULL, FALSE);
-#line 1048 "glib-2.0.vapi"
-	g_return_val_if_fail (needle != NULL, FALSE);
-#line 934 "application-controller.c"
-	result = strstr (self, needle) != NULL;
-#line 1049 "glib-2.0.vapi"
-	return result;
-#line 938 "application-controller.c"
-}
-
-
-#line 247 "application-controller.vala"
 static GeeArrayList* unity_launcher_application_controller_real_get_menu_shortcuts (UnityLauncherScrollerChildController* base) {
-#line 944 "application-controller.c"
 	UnityLauncherApplicationController * self;
 	GeeArrayList* result = NULL;
 	GError * _inner_error_;
@@ -953,46 +820,33 @@ static GeeArrayList* unity_launcher_application_controller_real_get_menu_shortcu
 	char** groups;
 	self = (UnityLauncherApplicationController*) base;
 	_inner_error_ = NULL;
-#line 250 "application-controller.vala"
 	ret_list = gee_array_list_new (UNITY_LAUNCHER_TYPE_SHORTCUT_ITEM, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL);
-#line 251 "application-controller.vala"
 	if (unity_launcher_application_controller_get_desktop_file (self) == NULL) {
-#line 961 "application-controller.c"
 		result = ret_list;
-#line 252 "application-controller.vala"
 		return result;
-#line 965 "application-controller.c"
 	}
-#line 254 "application-controller.vala"
 	desktop_keyfile = g_key_file_new ();
-#line 969 "application-controller.c"
 	{
-#line 257 "application-controller.vala"
 		g_key_file_load_from_file (desktop_keyfile, unity_launcher_application_controller_get_desktop_file (self), 0, &_inner_error_);
-#line 973 "application-controller.c"
 		if (_inner_error_ != NULL) {
-			goto __catch11_g_error;
+			goto __catch12_g_error;
 		}
 	}
-	goto __finally11;
-	__catch11_g_error:
+	goto __finally12;
+	__catch12_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 261 "application-controller.vala"
-			g_warning ("application-controller.vala:261: Unable to load desktop file '%s': %s", unity_launcher_application_controller_get_desktop_file (self), e->message);
-#line 987 "application-controller.c"
+			g_warning ("application-controller.vala:263: Unable to load desktop file '%s': %s", unity_launcher_application_controller_get_desktop_file (self), e->message);
 			result = ret_list;
 			_g_error_free0 (e);
 			_g_key_file_free0 (desktop_keyfile);
-#line 264 "application-controller.vala"
 			return result;
-#line 993 "application-controller.c"
 		}
 	}
-	__finally11:
+	__finally12:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (ret_list);
 		_g_key_file_free0 (desktop_keyfile);
@@ -1003,85 +857,58 @@ static GeeArrayList* unity_launcher_application_controller_real_get_menu_shortcu
 	groups = (_tmp1_ = g_key_file_get_groups (desktop_keyfile, &_tmp0_), groups_length1 = _tmp0_, _groups_size_ = groups_length1, _tmp1_);
 	{
 		gint a;
-#line 268 "application-controller.vala"
 		a = 0;
-#line 1009 "application-controller.c"
 		{
 			gboolean _tmp2_;
-#line 268 "application-controller.vala"
 			_tmp2_ = TRUE;
-#line 268 "application-controller.vala"
 			while (TRUE) {
-#line 268 "application-controller.vala"
 				if (!_tmp2_) {
-#line 268 "application-controller.vala"
 					a++;
-#line 1020 "application-controller.c"
 				}
-#line 268 "application-controller.vala"
 				_tmp2_ = FALSE;
-#line 268 "application-controller.vala"
 				if (!(a < groups_length1)) {
-#line 268 "application-controller.vala"
 					break;
-#line 1028 "application-controller.c"
 				}
-#line 270 "application-controller.vala"
 				if (string_contains (groups[a], "QuickList Entry")) {
-#line 1032 "application-controller.c"
 					char* exec;
 					char* name;
 					UnityLauncherApplicationShortcut* shortcut;
 					char* _tmp7_;
 					char* _tmp8_;
 					char* _tmp9_;
-#line 272 "application-controller.vala"
 					exec = g_strdup ("");
-#line 273 "application-controller.vala"
 					name = g_strdup ("");
-#line 1043 "application-controller.c"
 					{
 						char* _tmp3_;
 						char* _tmp4_;
 						char* _tmp5_;
 						char* _tmp6_;
-#line 276 "application-controller.vala"
 						_tmp3_ = g_key_file_get_value (desktop_keyfile, groups[a], "Exec", &_inner_error_);
-#line 1051 "application-controller.c"
 						if (_inner_error_ != NULL) {
-							goto __catch12_g_error;
+							goto __catch13_g_error;
 						}
-#line 276 "application-controller.vala"
 						exec = (_tmp4_ = _tmp3_, _g_free0 (exec), _tmp4_);
-#line 277 "application-controller.vala"
 						_tmp5_ = g_key_file_get_locale_string (desktop_keyfile, groups[a], "Name", "", &_inner_error_);
-#line 1059 "application-controller.c"
 						if (_inner_error_ != NULL) {
-							goto __catch12_g_error;
+							goto __catch13_g_error;
 						}
-#line 277 "application-controller.vala"
 						name = (_tmp6_ = _tmp5_, _g_free0 (name), _tmp6_);
-#line 1065 "application-controller.c"
 					}
-					goto __finally12;
-					__catch12_g_error:
+					goto __finally13;
+					__catch13_g_error:
 					{
 						GError * e;
 						e = _inner_error_;
 						_inner_error_ = NULL;
 						{
-#line 280 "application-controller.vala"
-							g_warning ("application-controller.vala:280: %s", e->message);
-#line 1076 "application-controller.c"
+							g_warning ("application-controller.vala:282: %s", e->message);
 							_g_error_free0 (e);
 							_g_free0 (exec);
 							_g_free0 (name);
-#line 281 "application-controller.vala"
 							continue;
-#line 1082 "application-controller.c"
 						}
 					}
-					__finally12:
+					__finally13:
 					if (_inner_error_ != NULL) {
 						_g_free0 (exec);
 						_g_free0 (name);
@@ -1092,17 +919,11 @@ static GeeArrayList* unity_launcher_application_controller_real_get_menu_shortcu
 						g_clear_error (&_inner_error_);
 						return NULL;
 					}
-#line 283 "application-controller.vala"
 					shortcut = unity_launcher_application_shortcut_new ();
-#line 284 "application-controller.vala"
 					shortcut->exec = (_tmp7_ = g_strdup (exec), _g_free0 (shortcut->exec), _tmp7_);
-#line 285 "application-controller.vala"
 					shortcut->name = (_tmp8_ = g_strdup (name), _g_free0 (shortcut->name), _tmp8_);
-#line 286 "application-controller.vala"
 					shortcut->desktop_location = (_tmp9_ = g_strdup (unity_launcher_application_controller_get_desktop_file (self)), _g_free0 (shortcut->desktop_location), _tmp9_);
-#line 287 "application-controller.vala"
 					gee_abstract_collection_add ((GeeAbstractCollection*) ret_list, (UnityLauncherShortcutItem*) shortcut);
-#line 1106 "application-controller.c"
 					_g_free0 (exec);
 					_g_free0 (name);
 					_g_object_unref0 (shortcut);
@@ -1113,9 +934,7 @@ static GeeArrayList* unity_launcher_application_controller_real_get_menu_shortcu
 	result = ret_list;
 	_g_key_file_free0 (desktop_keyfile);
 	groups = (_vala_array_free (groups, groups_length1, (GDestroyNotify) g_free), NULL);
-#line 290 "application-controller.vala"
 	return result;
-#line 1119 "application-controller.c"
 }
 
 
@@ -1124,105 +943,64 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 293 "application-controller.vala"
 static GeeArrayList* unity_launcher_application_controller_real_get_menu_shortcut_actions (UnityLauncherScrollerChildController* base) {
-#line 1130 "application-controller.c"
 	UnityLauncherApplicationController * self;
 	GeeArrayList* result = NULL;
 	GeeArrayList* ret_list;
 	self = (UnityLauncherApplicationController*) base;
-#line 295 "application-controller.vala"
 	ret_list = gee_array_list_new (UNITY_LAUNCHER_TYPE_SHORTCUT_ITEM, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL);
-#line 296 "application-controller.vala"
 	if (unity_launcher_application_controller_get_desktop_file (self) != NULL) {
-#line 1139 "application-controller.c"
 		UnityLauncherLauncherPinningShortcut* pin_entry;
-#line 298 "application-controller.vala"
 		pin_entry = unity_launcher_launcher_pinning_shortcut_new (unity_launcher_application_controller_get_desktop_file (self));
-#line 299 "application-controller.vala"
 		gee_abstract_collection_add ((GeeAbstractCollection*) ret_list, (UnityLauncherShortcutItem*) pin_entry);
-#line 1145 "application-controller.c"
 		_g_object_unref0 (pin_entry);
 	}
-#line 302 "application-controller.vala"
 	if (BAMF_IS_APPLICATION (self->priv->app)) {
-#line 304 "application-controller.vala"
 		if (bamf_view_is_running ((BamfView*) self->priv->app)) {
-#line 1152 "application-controller.c"
 			UnityLauncherLibLauncherShortcut* open_entry;
 			BamfApplication* _tmp0_;
-#line 305 "application-controller.vala"
 			open_entry = unity_launcher_lib_launcher_shortcut_new ();
-#line 306 "application-controller.vala"
 			open_entry->app = (_tmp0_ = _g_object_ref0 (self->priv->app), _g_object_unref0 (open_entry->app), _tmp0_);
-#line 307 "application-controller.vala"
 			gee_abstract_collection_add ((GeeAbstractCollection*) ret_list, (UnityLauncherShortcutItem*) open_entry);
-#line 1161 "application-controller.c"
 			_g_object_unref0 (open_entry);
 		}
 	}
 	result = ret_list;
-#line 311 "application-controller.vala"
 	return result;
-#line 1168 "application-controller.c"
 }
 
 
-#line 351 "application-controller.vala"
 static gboolean _unity_launcher_application_controller_on_launch_timeout_gsource_func (gpointer self) {
-#line 1174 "application-controller.c"
 	return unity_launcher_application_controller_on_launch_timeout (self);
 }
 
 
-#line 314 "application-controller.vala"
 static void unity_launcher_application_controller_real_activate (UnityLauncherScrollerChildController* base) {
-#line 1181 "application-controller.c"
 	UnityLauncherApplicationController * self;
 	GError * _inner_error_;
 	self = (UnityLauncherApplicationController*) base;
 	_inner_error_ = NULL;
-#line 316 "application-controller.vala"
 	if (BAMF_IS_APPLICATION (self->priv->app)) {
-#line 318 "application-controller.vala"
 		if (bamf_view_is_running ((BamfView*) self->priv->app)) {
-#line 1190 "application-controller.c"
 			GArray* xids;
-#line 320 "application-controller.vala"
 			xids = bamf_application_get_xids (self->priv->app);
-#line 1194 "application-controller.c"
 			{
 				gint i;
-#line 321 "application-controller.vala"
 				i = 0;
-#line 1199 "application-controller.c"
 				{
 					gboolean _tmp0_;
-#line 321 "application-controller.vala"
 					_tmp0_ = TRUE;
-#line 321 "application-controller.vala"
 					while (TRUE) {
-#line 1206 "application-controller.c"
 						guint32 xid;
-#line 321 "application-controller.vala"
 						if (!_tmp0_) {
-#line 321 "application-controller.vala"
 							i++;
-#line 1212 "application-controller.c"
 						}
-#line 321 "application-controller.vala"
 						_tmp0_ = FALSE;
-#line 321 "application-controller.vala"
 						if (!(i < xids->len)) {
-#line 321 "application-controller.vala"
 							break;
-#line 1220 "application-controller.c"
 						}
-#line 323 "application-controller.vala"
 						xid = g_array_index (xids, guint32, (guint) i);
-#line 324 "application-controller.vala"
 						unity_shell_show_window (unity_global_shell, xid);
-#line 1226 "application-controller.c"
 					}
 				}
 			}
@@ -1230,57 +1008,42 @@ static void unity_launcher_application_controller_real_activate (UnityLauncherSc
 		}
 	} else {
 		GdkAppLaunchContext* context;
-#line 330 "application-controller.vala"
 		context = gdk_app_launch_context_new ();
-#line 1236 "application-controller.c"
 		{
 			GKeyFile* desktop_keyfile;
 			GAppInfo* appinfo;
-#line 333 "application-controller.vala"
 			desktop_keyfile = g_key_file_new ();
-#line 334 "application-controller.vala"
 			g_key_file_load_from_file (desktop_keyfile, unity_launcher_application_controller_get_desktop_file (self), 0, &_inner_error_);
-#line 1244 "application-controller.c"
 			if (_inner_error_ != NULL) {
 				_g_key_file_free0 (desktop_keyfile);
-				goto __catch13_g_error;
+				goto __catch14_g_error;
 			}
-#line 335 "application-controller.vala"
 			appinfo = (GAppInfo*) g_desktop_app_info_new_from_keyfile (desktop_keyfile);
-#line 336 "application-controller.vala"
 			gdk_app_launch_context_set_screen (context, gdk_display_get_default_screen (gdk_display_get_default ()));
-#line 337 "application-controller.vala"
 			gdk_app_launch_context_set_timestamp (context, (guint32) GDK_CURRENT_TIME);
-#line 339 "application-controller.vala"
 			g_app_info_launch (appinfo, NULL, (GAppLaunchContext*) context, &_inner_error_);
-#line 1257 "application-controller.c"
 			if (_inner_error_ != NULL) {
 				_g_key_file_free0 (desktop_keyfile);
 				_g_object_unref0 (appinfo);
-				goto __catch13_g_error;
+				goto __catch14_g_error;
 			}
-#line 340 "application-controller.vala"
 			unity_launcher_scroller_child_set_activating (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), TRUE);
-#line 342 "application-controller.vala"
 			g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 8, _unity_launcher_application_controller_on_launch_timeout_gsource_func, g_object_ref (self), g_object_unref);
-#line 1267 "application-controller.c"
 			_g_key_file_free0 (desktop_keyfile);
 			_g_object_unref0 (appinfo);
 		}
-		goto __finally13;
-		__catch13_g_error:
+		goto __finally14;
+		__catch14_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-#line 346 "application-controller.vala"
-				g_warning ("application-controller.vala:346: %s", e->message);
-#line 1280 "application-controller.c"
+				g_warning ("application-controller.vala:348: %s", e->message);
 				_g_error_free0 (e);
 			}
 		}
-		__finally13:
+		__finally14:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (context);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -1292,264 +1055,139 @@ static void unity_launcher_application_controller_real_activate (UnityLauncherSc
 }
 
 
-#line 351 "application-controller.vala"
 static gboolean unity_launcher_application_controller_on_launch_timeout (UnityLauncherApplicationController* self) {
-#line 1298 "application-controller.c"
 	gboolean result = FALSE;
-#line 351 "application-controller.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 353 "application-controller.vala"
 	unity_launcher_scroller_child_set_activating (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), FALSE);
-#line 1304 "application-controller.c"
 	result = FALSE;
-#line 354 "application-controller.vala"
 	return result;
-#line 1308 "application-controller.c"
 }
 
 
-#line 398 "application-controller.vala"
 static void _unity_launcher_application_controller_on_app_running_changed_bamf_view_running_changed (BamfView* _sender, gboolean object, gpointer self) {
-#line 1314 "application-controller.c"
 	unity_launcher_application_controller_on_app_running_changed (self, object);
 }
 
 
-#line 407 "application-controller.vala"
 static void _unity_launcher_application_controller_on_app_active_changed_bamf_view_active_changed (BamfView* _sender, gboolean object, gpointer self) {
-#line 1321 "application-controller.c"
 	unity_launcher_application_controller_on_app_active_changed (self, object);
 }
 
 
-#line 380 "application-controller.vala"
 static void _unity_launcher_application_controller_detach_application_bamf_view_closed (BamfView* _sender, gpointer self) {
-#line 1328 "application-controller.c"
 	unity_launcher_application_controller_detach_application (self);
 }
 
 
-#line 412 "application-controller.vala"
 static void _unity_launcher_application_controller_on_app_urgant_changed_bamf_view_urgent_changed (BamfView* _sender, gboolean object, gpointer self) {
-#line 1335 "application-controller.c"
 	unity_launcher_application_controller_on_app_urgant_changed (self, object);
 }
 
 
-#line 1072 "glib-2.0.vapi"
 static const char* string_to_string (const char* self) {
-#line 1342 "application-controller.c"
 	const char* result = NULL;
-#line 1072 "glib-2.0.vapi"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 1346 "application-controller.c"
 	result = self;
-#line 1073 "glib-2.0.vapi"
 	return result;
-#line 1350 "application-controller.c"
 }
 
 
-#line 356 "application-controller.vala"
 void unity_launcher_application_controller_attach_application (UnityLauncherApplicationController* self, BamfApplication* application) {
-#line 1356 "application-controller.c"
 	BamfApplication* _tmp0_;
 	char* _tmp1_;
 	char* potential_icon_name;
-#line 356 "application-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 356 "application-controller.vala"
 	g_return_if_fail (application != NULL);
-#line 358 "application-controller.vala"
 	self->priv->app = (_tmp0_ = _g_object_ref0 (application), _g_object_unref0 (self->priv->app), _tmp0_);
-#line 359 "application-controller.vala"
 	unity_launcher_scroller_child_set_running (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), bamf_view_is_running ((BamfView*) self->priv->app));
-#line 360 "application-controller.vala"
 	unity_launcher_scroller_child_set_active (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), bamf_view_is_active ((BamfView*) self->priv->app));
-#line 361 "application-controller.vala"
 	unity_launcher_scroller_child_set_activating (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), FALSE);
-#line 363 "application-controller.vala"
 	g_signal_connect_object ((BamfView*) self->priv->app, "running-changed", (GCallback) _unity_launcher_application_controller_on_app_running_changed_bamf_view_running_changed, self, 0);
-#line 364 "application-controller.vala"
 	g_signal_connect_object ((BamfView*) self->priv->app, "active-changed", (GCallback) _unity_launcher_application_controller_on_app_active_changed_bamf_view_active_changed, self, 0);
-#line 365 "application-controller.vala"
 	g_signal_connect_object ((BamfView*) self->priv->app, "closed", (GCallback) _unity_launcher_application_controller_detach_application_bamf_view_closed, self, 0);
-#line 366 "application-controller.vala"
 	g_signal_connect_object ((BamfView*) self->priv->app, "urgent-changed", (GCallback) _unity_launcher_application_controller_on_app_urgant_changed_bamf_view_urgent_changed, self, 0);
-#line 367 "application-controller.vala"
 	((UnityLauncherScrollerChildController*) self)->name = (_tmp1_ = bamf_view_get_name ((BamfView*) self->priv->app), _g_free0 (((UnityLauncherScrollerChildController*) self)->name), _tmp1_);
-#line 368 "application-controller.vala"
 	if (_vala_strcmp0 (((UnityLauncherScrollerChildController*) self)->name, "") == 0) {
-#line 1384 "application-controller.c"
 		char* _tmp2_;
-#line 369 "application-controller.vala"
-		g_warning ("application-controller.vala:369: %s", _tmp2_ = g_strconcat ("Bamf returned null for app.get_name (): ", string_to_string (unity_launcher_application_controller_get_desktop_file (self)), NULL));
-#line 1388 "application-controller.c"
+		g_warning ("application-controller.vala:371: %s", _tmp2_ = g_strconcat ("Bamf returned null for app.get_name (): ", string_to_string (unity_launcher_application_controller_get_desktop_file (self)), NULL));
 		_g_free0 (_tmp2_);
 	}
-#line 371 "application-controller.vala"
 	potential_icon_name = bamf_view_get_icon ((BamfView*) self->priv->app);
-#line 372 "application-controller.vala"
 	if (_vala_strcmp0 (potential_icon_name, "") == 0) {
-#line 1395 "application-controller.c"
 		char* _tmp3_;
-#line 373 "application-controller.vala"
-		g_warning ("application-controller.vala:373: %s", _tmp3_ = g_strconcat ("Bamf returned null for app.get_icon (): ", string_to_string (unity_launcher_application_controller_get_desktop_file (self)), NULL));
-#line 1399 "application-controller.c"
+		g_warning ("application-controller.vala:375: %s", _tmp3_ = g_strconcat ("Bamf returned null for app.get_icon (): ", string_to_string (unity_launcher_application_controller_get_desktop_file (self)), NULL));
 		_g_free0 (_tmp3_);
 	} else {
-#line 375 "application-controller.vala"
 		_vala_strcmp0 (self->priv->icon_name, potential_icon_name) == 0;
-#line 1404 "application-controller.c"
 	}
-#line 377 "application-controller.vala"
 	unity_launcher_application_controller_load_icon_from_icon_name (self);
-#line 1408 "application-controller.c"
 	_g_free0 (potential_icon_name);
 }
 
 
-#line 380 "application-controller.vala"
 void unity_launcher_application_controller_detach_application (UnityLauncherApplicationController* self) {
-#line 1415 "application-controller.c"
 	guint _tmp0_;
 	guint _tmp1_;
 	guint _tmp2_;
 	guint _tmp3_;
 	BamfApplication* _tmp4_;
-#line 380 "application-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 382 "application-controller.vala"
 	g_signal_parse_name ("running-changed", BAMF_TYPE_VIEW, &_tmp0_, NULL, FALSE);
-#line 382 "application-controller.vala"
 	g_signal_handlers_disconnect_matched ((BamfView*) self->priv->app, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_launcher_application_controller_on_app_running_changed_bamf_view_running_changed, self);
-#line 383 "application-controller.vala"
 	g_signal_parse_name ("active-changed", BAMF_TYPE_VIEW, &_tmp1_, NULL, FALSE);
-#line 383 "application-controller.vala"
 	g_signal_handlers_disconnect_matched ((BamfView*) self->priv->app, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp1_, 0, NULL, (GCallback) _unity_launcher_application_controller_on_app_active_changed_bamf_view_active_changed, self);
-#line 384 "application-controller.vala"
 	g_signal_parse_name ("urgent-changed", BAMF_TYPE_VIEW, &_tmp2_, NULL, FALSE);
-#line 384 "application-controller.vala"
 	g_signal_handlers_disconnect_matched ((BamfView*) self->priv->app, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp2_, 0, NULL, (GCallback) _unity_launcher_application_controller_on_app_urgant_changed_bamf_view_urgent_changed, self);
-#line 385 "application-controller.vala"
 	g_signal_parse_name ("closed", BAMF_TYPE_VIEW, &_tmp3_, NULL, FALSE);
-#line 385 "application-controller.vala"
 	g_signal_handlers_disconnect_matched ((BamfView*) self->priv->app, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp3_, 0, NULL, (GCallback) _unity_launcher_application_controller_detach_application_bamf_view_closed, self);
-#line 386 "application-controller.vala"
 	self->priv->app = (_tmp4_ = NULL, _g_object_unref0 (self->priv->app), _tmp4_);
-#line 387 "application-controller.vala"
 	unity_launcher_scroller_child_set_running (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), FALSE);
-#line 388 "application-controller.vala"
 	unity_launcher_scroller_child_set_active (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), FALSE);
-#line 389 "application-controller.vala"
 	unity_launcher_scroller_child_set_needs_attention (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), FALSE);
-#line 390 "application-controller.vala"
 	g_signal_emit_by_name ((UnityLauncherScrollerChildController*) self, "closed");
-#line 1449 "application-controller.c"
 }
 
 
-#line 393 "application-controller.vala"
 gboolean unity_launcher_application_controller_debug_is_application_attached (UnityLauncherApplicationController* self) {
-#line 1455 "application-controller.c"
 	gboolean result = FALSE;
-#line 393 "application-controller.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 1459 "application-controller.c"
 	result = self->priv->app != NULL;
-#line 395 "application-controller.vala"
 	return result;
-#line 1463 "application-controller.c"
 }
 
 
-#line 398 "application-controller.vala"
 static void unity_launcher_application_controller_on_app_running_changed (UnityLauncherApplicationController* self, gboolean running) {
-#line 398 "application-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 400 "application-controller.vala"
 	unity_launcher_scroller_child_set_running (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), running);
-#line 401 "application-controller.vala"
 	if (!running) {
-#line 403 "application-controller.vala"
 		unity_launcher_application_controller_detach_application (self);
-#line 1477 "application-controller.c"
 	}
 }
 
 
-#line 407 "application-controller.vala"
 static void unity_launcher_application_controller_on_app_active_changed (UnityLauncherApplicationController* self, gboolean active) {
-#line 407 "application-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 409 "application-controller.vala"
 	unity_launcher_scroller_child_set_active (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), active);
-#line 1488 "application-controller.c"
 }
 
 
-#line 412 "application-controller.vala"
 static void unity_launcher_application_controller_on_app_urgant_changed (UnityLauncherApplicationController* self, gboolean urgancy) {
-#line 412 "application-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 414 "application-controller.vala"
 	unity_launcher_scroller_child_set_needs_attention (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), urgancy);
-#line 1498 "application-controller.c"
 }
 
 
-#line 417 "application-controller.vala"
 static void unity_launcher_application_controller_load_desktop_file_info (UnityLauncherApplicationController* self) {
-#line 1504 "application-controller.c"
 	GError * _inner_error_;
-#line 417 "application-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 1508 "application-controller.c"
 	_inner_error_ = NULL;
 	{
 		GKeyFile* _tmp0_;
-#line 421 "application-controller.vala"
 		self->priv->desktop_keyfile = (_tmp0_ = g_key_file_new (), _g_key_file_free0 (self->priv->desktop_keyfile), _tmp0_);
-#line 422 "application-controller.vala"
 		g_key_file_load_from_file (self->priv->desktop_keyfile, unity_launcher_application_controller_get_desktop_file (self), G_KEY_FILE_NONE, &_inner_error_);
-#line 1516 "application-controller.c"
-		if (_inner_error_ != NULL) {
-			goto __catch14_g_error;
-		}
-	}
-	goto __finally14;
-	__catch14_g_error:
-	{
-		GError * e;
-		e = _inner_error_;
-		_inner_error_ = NULL;
-		{
-#line 426 "application-controller.vala"
-			g_warning ("application-controller.vala:426: could not load desktop file: %s", e->message);
-#line 1530 "application-controller.c"
-			_g_error_free0 (e);
-		}
-	}
-	__finally14:
-	if (_inner_error_ != NULL) {
-		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-		g_clear_error (&_inner_error_);
-		return;
-	}
-	{
-		char* _tmp1_;
-		char* _tmp2_;
-#line 431 "application-controller.vala"
-		_tmp1_ = g_key_file_get_string (self->priv->desktop_keyfile, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_ICON, &_inner_error_);
-#line 1545 "application-controller.c"
 		if (_inner_error_ != NULL) {
 			goto __catch15_g_error;
 		}
-#line 431 "application-controller.vala"
-		self->priv->icon_name = (_tmp2_ = _tmp1_, _g_free0 (self->priv->icon_name), _tmp2_);
-#line 432 "application-controller.vala"
-		unity_launcher_application_controller_load_icon_from_icon_name (self);
-#line 1553 "application-controller.c"
 	}
 	goto __finally15;
 	__catch15_g_error:
@@ -1558,10 +1196,7 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 436 "application-controller.vala"
-			g_warning ("application-controller.vala:436: could not load icon name from desktop" \
-" file: %s", e->message);
-#line 1564 "application-controller.c"
+			g_warning ("application-controller.vala:428: could not load desktop file: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
@@ -1572,17 +1207,14 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 		return;
 	}
 	{
-		char* _tmp3_;
-		char* _tmp4_;
-#line 441 "application-controller.vala"
-		_tmp3_ = g_key_file_get_string (self->priv->desktop_keyfile, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_NAME, &_inner_error_);
-#line 1579 "application-controller.c"
+		char* _tmp1_;
+		char* _tmp2_;
+		_tmp1_ = g_key_file_get_string (self->priv->desktop_keyfile, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_ICON, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch16_g_error;
 		}
-#line 441 "application-controller.vala"
-		((UnityLauncherScrollerChildController*) self)->name = (_tmp4_ = _tmp3_, _g_free0 (((UnityLauncherScrollerChildController*) self)->name), _tmp4_);
-#line 1585 "application-controller.c"
+		self->priv->icon_name = (_tmp2_ = _tmp1_, _g_free0 (self->priv->icon_name), _tmp2_);
+		unity_launcher_application_controller_load_icon_from_icon_name (self);
 	}
 	goto __finally16;
 	__catch16_g_error:
@@ -1591,10 +1223,8 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 445 "application-controller.vala"
-			g_warning ("application-controller.vala:445: could not load name from desktop file" \
-": %s", e->message);
-#line 1596 "application-controller.c"
+			g_warning ("application-controller.vala:438: could not load icon name from desktop" \
+" file: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
@@ -1604,32 +1234,14 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 		g_clear_error (&_inner_error_);
 		return;
 	}
-}
-
-
-#line 477 "application-controller.vala"
-static void _lambda11_ (UnityThemeFilePath* theme, const char* filepath, UnityLauncherApplicationController* self) {
-#line 1611 "application-controller.c"
-	GError * _inner_error_;
-#line 477 "application-controller.vala"
-	g_return_if_fail (theme != NULL);
-#line 477 "application-controller.vala"
-	g_return_if_fail (filepath != NULL);
-#line 1617 "application-controller.c"
-	_inner_error_ = NULL;
 	{
-		GdkPixbuf* _tmp0_;
-		GdkPixbuf* _tmp1_;
-#line 480 "application-controller.vala"
-		_tmp0_ = gdk_pixbuf_new_from_file (filepath, &_inner_error_);
-#line 1624 "application-controller.c"
+		char* _tmp3_;
+		char* _tmp4_;
+		_tmp3_ = g_key_file_get_string (self->priv->desktop_keyfile, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_NAME, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch17_g_error;
 		}
-#line 480 "application-controller.vala"
-		unity_launcher_scroller_child_set_icon (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), _tmp1_ = _tmp0_);
-#line 1630 "application-controller.c"
-		_g_object_unref0 (_tmp1_);
+		((UnityLauncherScrollerChildController*) self)->name = (_tmp4_ = _tmp3_, _g_free0 (((UnityLauncherScrollerChildController*) self)->name), _tmp4_);
 	}
 	goto __finally17;
 	__catch17_g_error:
@@ -1638,11 +1250,8 @@ static void _lambda11_ (UnityThemeFilePath* theme, const char* filepath, UnityLa
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			char* _tmp2_;
-#line 484 "application-controller.vala"
-			g_warning ("application-controller.vala:484: %s", _tmp2_ = g_strconcat ("Could not load from ", string_to_string (filepath), NULL));
-#line 1643 "application-controller.c"
-			_g_free0 (_tmp2_);
+			g_warning ("application-controller.vala:447: could not load name from desktop file" \
+": %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
@@ -1655,34 +1264,20 @@ static void _lambda11_ (UnityThemeFilePath* theme, const char* filepath, UnityLa
 }
 
 
-#line 477 "application-controller.vala"
-static void __lambda11__unity_theme_file_path_found_icon_path (UnityThemeFilePath* _sender, const char* filepath, gpointer self) {
-#line 1659 "application-controller.c"
-	_lambda11_ (_sender, filepath, self);
-}
-
-
-#line 487 "application-controller.vala"
-static void _lambda12_ (UnityLauncherApplicationController* self) {
-#line 1666 "application-controller.c"
+static void _lambda11_ (UnityThemeFilePath* theme, const char* filepath, UnityLauncherApplicationController* self) {
 	GError * _inner_error_;
+	g_return_if_fail (theme != NULL);
+	g_return_if_fail (filepath != NULL);
 	_inner_error_ = NULL;
 	{
-		GtkIconTheme* default_theme;
 		GdkPixbuf* _tmp0_;
-#line 491 "application-controller.vala"
-		default_theme = _g_object_ref0 (gtk_icon_theme_get_default ());
-#line 492 "application-controller.vala"
-		_tmp0_ = gtk_icon_theme_load_icon (default_theme, GTK_STOCK_MISSING_IMAGE, 48, 0, &_inner_error_);
-#line 1676 "application-controller.c"
+		GdkPixbuf* _tmp1_;
+		_tmp0_ = gdk_pixbuf_new_from_file (filepath, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			_g_object_unref0 (default_theme);
 			goto __catch18_g_error;
 		}
-#line 492 "application-controller.vala"
-		unity_launcher_scroller_child_set_icon (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), _tmp0_);
-#line 1683 "application-controller.c"
-		_g_object_unref0 (default_theme);
+		unity_launcher_scroller_child_set_icon (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), _tmp1_ = _tmp0_);
+		_g_object_unref0 (_tmp1_);
 	}
 	goto __finally18;
 	__catch18_g_error:
@@ -1691,11 +1286,9 @@ static void _lambda12_ (UnityLauncherApplicationController* self) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			char* _tmp1_;
-#line 496 "application-controller.vala"
-			g_warning ("application-controller.vala:496: Could not load any icon for %s", _tmp1_ = bamf_view_get_name ((BamfView*) self->priv->app));
-#line 1696 "application-controller.c"
-			_g_free0 (_tmp1_);
+			char* _tmp2_;
+			g_warning ("application-controller.vala:486: %s", _tmp2_ = g_strconcat ("Could not load from ", string_to_string (filepath), NULL));
+			_g_free0 (_tmp2_);
 			_g_error_free0 (e);
 		}
 	}
@@ -1708,130 +1301,128 @@ static void _lambda12_ (UnityLauncherApplicationController* self) {
 }
 
 
-#line 487 "application-controller.vala"
+static void __lambda11__unity_theme_file_path_found_icon_path (UnityThemeFilePath* _sender, const char* filepath, gpointer self) {
+	_lambda11_ (_sender, filepath, self);
+}
+
+
+static void _lambda12_ (UnityLauncherApplicationController* self) {
+	GError * _inner_error_;
+	_inner_error_ = NULL;
+	{
+		GtkIconTheme* default_theme;
+		GdkPixbuf* _tmp0_;
+		default_theme = _g_object_ref0 (gtk_icon_theme_get_default ());
+		_tmp0_ = gtk_icon_theme_load_icon (default_theme, GTK_STOCK_MISSING_IMAGE, 48, 0, &_inner_error_);
+		if (_inner_error_ != NULL) {
+			_g_object_unref0 (default_theme);
+			goto __catch19_g_error;
+		}
+		unity_launcher_scroller_child_set_icon (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), _tmp0_);
+		_g_object_unref0 (default_theme);
+	}
+	goto __finally19;
+	__catch19_g_error:
+	{
+		GError * e;
+		e = _inner_error_;
+		_inner_error_ = NULL;
+		{
+			char* _tmp1_;
+			g_warning ("application-controller.vala:498: Could not load any icon for %s", _tmp1_ = bamf_view_get_name ((BamfView*) self->priv->app));
+			_g_free0 (_tmp1_);
+			_g_error_free0 (e);
+		}
+	}
+	__finally19:
+	if (_inner_error_ != NULL) {
+		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+		g_clear_error (&_inner_error_);
+		return;
+	}
+}
+
+
 static void __lambda12__unity_theme_file_path_failed (UnityThemeFilePath* _sender, gpointer self) {
-#line 1712 "application-controller.c"
 	_lambda12_ (self);
 }
 
 
-#line 452 "application-controller.vala"
 static void unity_launcher_application_controller_load_icon_from_icon_name (UnityLauncherApplicationController* self) {
-#line 1719 "application-controller.c"
 	char* _tmp0_;
 	gboolean _tmp1_;
 	UnityThemeFilePath* _tmp2_;
 	GtkIconTheme* theme;
 	GtkIconTheme* _tmp3_;
-#line 452 "application-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 455 "application-controller.vala"
 	if (unity_launcher_application_controller_try_load_from_file (self, self->priv->icon_name)) {
-#line 457 "application-controller.vala"
 		return;
-#line 1731 "application-controller.c"
 	}
-#line 461 "application-controller.vala"
 	if ((_tmp1_ = unity_launcher_application_controller_try_load_from_file (self, _tmp0_ = g_strconcat ("/usr/share/pixmaps/", self->priv->icon_name, NULL)), _g_free0 (_tmp0_), _tmp1_)) {
-#line 463 "application-controller.vala"
 		return;
-#line 1737 "application-controller.c"
 	}
-#line 466 "application-controller.vala"
 	self->priv->theme_file_path = (_tmp2_ = unity_theme_file_path_new (), _g_object_unref0 (self->priv->theme_file_path), _tmp2_);
-#line 469 "application-controller.vala"
 	theme = _g_object_ref0 (gtk_icon_theme_get_default ());
-#line 470 "application-controller.vala"
 	unity_theme_file_path_add_icon_theme (self->priv->theme_file_path, theme);
-#line 471 "application-controller.vala"
 	theme = (_tmp3_ = gtk_icon_theme_new (), _g_object_unref0 (theme), _tmp3_);
-#line 472 "application-controller.vala"
 	gtk_icon_theme_set_custom_theme (theme, "unity-icon-theme");
-#line 473 "application-controller.vala"
 	unity_theme_file_path_add_icon_theme (self->priv->theme_file_path, theme);
-#line 474 "application-controller.vala"
 	gtk_icon_theme_set_custom_theme (theme, "Web");
-#line 475 "application-controller.vala"
 	unity_theme_file_path_add_icon_theme (self->priv->theme_file_path, theme);
-#line 477 "application-controller.vala"
 	g_signal_connect_object (self->priv->theme_file_path, "found-icon-path", (GCallback) __lambda11__unity_theme_file_path_found_icon_path, self, 0);
-#line 487 "application-controller.vala"
 	g_signal_connect_object (self->priv->theme_file_path, "failed", (GCallback) __lambda12__unity_theme_file_path_failed, self, 0);
-#line 500 "application-controller.vala"
 	unity_theme_file_path_get_icon_filepath (self->priv->theme_file_path, self->priv->icon_name, NULL, NULL);
-#line 1761 "application-controller.c"
 	_g_object_unref0 (theme);
 }
 
 
-#line 503 "application-controller.vala"
 static gboolean unity_launcher_application_controller_try_load_from_file (UnityLauncherApplicationController* self, const char* filepath) {
-#line 1768 "application-controller.c"
 	gboolean result = FALSE;
 	GError * _inner_error_;
 	GdkPixbuf* pixbuf;
-#line 503 "application-controller.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 503 "application-controller.vala"
 	g_return_val_if_fail (filepath != NULL, FALSE);
-#line 1776 "application-controller.c"
 	_inner_error_ = NULL;
-#line 505 "application-controller.vala"
 	pixbuf = NULL;
-#line 506 "application-controller.vala"
 	if (g_file_test (filepath, G_FILE_TEST_IS_REGULAR)) {
-#line 1782 "application-controller.c"
 		{
 			GdkPixbuf* _tmp0_;
 			GdkPixbuf* _tmp1_;
-#line 510 "application-controller.vala"
 			_tmp0_ = gdk_pixbuf_new_from_file_at_scale (filepath, 48, 48, TRUE, &_inner_error_);
-#line 1788 "application-controller.c"
 			if (_inner_error_ != NULL) {
-				goto __catch19_g_error;
+				goto __catch20_g_error;
 			}
-#line 510 "application-controller.vala"
 			pixbuf = (_tmp1_ = _tmp0_, _g_object_unref0 (pixbuf), _tmp1_);
-#line 1794 "application-controller.c"
 		}
-		goto __finally19;
-		__catch19_g_error:
+		goto __finally20;
+		__catch20_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-#line 515 "application-controller.vala"
-				g_warning ("application-controller.vala:515: Unable to load image from file '%s': " \
+				g_warning ("application-controller.vala:517: Unable to load image from file '%s': " \
 "%s", filepath, e->message);
-#line 1805 "application-controller.c"
 				_g_error_free0 (e);
 			}
 		}
-		__finally19:
+		__finally20:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (pixbuf);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
 			return FALSE;
 		}
-#line 520 "application-controller.vala"
 		if (GDK_IS_PIXBUF (pixbuf)) {
-#line 522 "application-controller.vala"
 			unity_launcher_scroller_child_set_icon (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), pixbuf);
-#line 1820 "application-controller.c"
 			result = TRUE;
 			_g_object_unref0 (pixbuf);
-#line 523 "application-controller.vala"
 			return result;
-#line 1825 "application-controller.c"
 		}
 	}
 	result = FALSE;
 	_g_object_unref0 (pixbuf);
-#line 526 "application-controller.vala"
 	return result;
-#line 1832 "application-controller.c"
 }
 
 
@@ -1839,78 +1430,53 @@ const char* unity_launcher_application_controller_get_desktop_file (UnityLaunche
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_desktop_file;
-#line 159 "application-controller.vala"
 	return result;
-#line 1842 "application-controller.c"
 }
 
 
 static void unity_launcher_application_controller_set_desktop_file (UnityLauncherApplicationController* self, const char* value) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
-#line 163 "application-controller.vala"
 	self->priv->_desktop_file = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_desktop_file), _tmp0_);
-#line 164 "application-controller.vala"
 	unity_launcher_application_controller_load_desktop_file_info (self);
-#line 1853 "application-controller.c"
 	g_object_notify ((GObject *) self, "desktop-file");
 }
 
 
-#line 223 "application-controller.vala"
 static void _unity_launcher_application_controller_on_favorite_added_unity_favorites_favorite_added (UnityFavorites* _sender, const char* uid, gpointer self) {
-#line 1860 "application-controller.c"
 	unity_launcher_application_controller_on_favorite_added (self, uid);
 }
 
 
-#line 235 "application-controller.vala"
 static void _unity_launcher_application_controller_on_favorite_removed_unity_favorites_favorite_removed (UnityFavorites* _sender, const char* uid, gpointer self) {
-#line 1867 "application-controller.c"
 	unity_launcher_application_controller_on_favorite_removed (self, uid);
 }
 
 
-#line 207 "application-controller.vala"
 static void _lambda13_ (gboolean open, Block1Data* _data1_) {
-#line 1874 "application-controller.c"
 	UnityLauncherApplicationController * self;
 	gboolean _tmp0_ = FALSE;
 	CtkActor* _tmp1_;
 	gboolean _tmp2_;
 	self = _data1_->self;
-#line 208 "application-controller.vala"
 	if ((_tmp2_ = (_tmp1_ = unity_launcher_quicklist_controller_get_attached_actor (_data1_->controller)) == CTK_ACTOR (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self)), _g_object_unref0 (_tmp1_), _tmp2_)) {
-#line 208 "application-controller.vala"
 		_tmp0_ = self->priv->app != NULL;
-#line 1884 "application-controller.c"
 	} else {
-#line 208 "application-controller.vala"
 		_tmp0_ = FALSE;
-#line 1888 "application-controller.c"
 	}
-#line 208 "application-controller.vala"
 	if (_tmp0_) {
-#line 211 "application-controller.vala"
 		if (open) {
-#line 1894 "application-controller.c"
 			GArray* _tmp3_;
-#line 213 "application-controller.vala"
 			unity_shell_expose_xids (unity_global_shell, _tmp3_ = bamf_application_get_xids (self->priv->app));
-#line 1898 "application-controller.c"
 			_g_array_free0 (_tmp3_);
 		} else {
-#line 217 "application-controller.vala"
 			unity_shell_stop_expose (unity_global_shell);
-#line 1903 "application-controller.c"
 		}
 	}
 }
 
 
-#line 207 "application-controller.vala"
 static void __lambda13__unity_launcher_quicklist_controller_menu_state_changed (UnityLauncherQuicklistController* _sender, gboolean open, gpointer self) {
-#line 1911 "application-controller.c"
 	_lambda13_ (open, self);
 }
 
@@ -1944,58 +1510,37 @@ static GObject * unity_launcher_application_controller_constructor (GType type, 
 		_data1_ = g_slice_new0 (Block1Data);
 		_data1_->_ref_count_ = 1;
 		_data1_->self = g_object_ref (self);
-#line 186 "application-controller.vala"
 		self->priv->theme_file_path = (_tmp0_ = unity_theme_file_path_new (), _g_object_unref0 (self->priv->theme_file_path), _tmp0_);
-#line 187 "application-controller.vala"
 		favorites = unity_favorites_get_default ();
-#line 188 "application-controller.vala"
 		g_signal_connect_object (favorites, "favorite-added", (GCallback) _unity_launcher_application_controller_on_favorite_added_unity_favorites_favorite_added, self, 0);
-#line 189 "application-controller.vala"
 		g_signal_connect_object (favorites, "favorite-removed", (GCallback) _unity_launcher_application_controller_on_favorite_removed_unity_favorites_favorite_removed, self, 0);
-#line 192 "application-controller.vala"
 		self->priv->is_favorite = TRUE;
-#line 193 "application-controller.vala"
 		unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self)->pin_type = UNITY_LAUNCHER_PIN_TYPE_UNPINNED;
-#line 1957 "application-controller.c"
 		{
 			GeeArrayList* _tmp1_;
 			GeeIterator* _tmp2_;
 			GeeIterator* _uid_it;
 			_uid_it = (_tmp2_ = gee_abstract_collection_iterator ((GeeAbstractCollection*) (_tmp1_ = unity_favorites_get_favorites (favorites))), _g_object_unref0 (_tmp1_), _tmp2_);
-#line 194 "application-controller.vala"
 			while (TRUE) {
-#line 1965 "application-controller.c"
 				char* uid;
 				char* _tmp3_;
 				gboolean _tmp4_;
-#line 194 "application-controller.vala"
 				if (!gee_iterator_next (_uid_it)) {
-#line 194 "application-controller.vala"
 					break;
-#line 1973 "application-controller.c"
 				}
-#line 194 "application-controller.vala"
 				uid = (char*) gee_iterator_get (_uid_it);
-#line 196 "application-controller.vala"
 				if ((_tmp4_ = _vala_strcmp0 (_tmp3_ = unity_favorites_get_string (favorites, uid, "desktop_file"), unity_launcher_application_controller_get_desktop_file (self)) == 0, _g_free0 (_tmp3_), _tmp4_)) {
-#line 198 "application-controller.vala"
 					self->priv->is_favorite = TRUE;
-#line 199 "application-controller.vala"
 					unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self)->pin_type = UNITY_LAUNCHER_PIN_TYPE_PINNED;
-#line 1983 "application-controller.c"
 					_g_free0 (uid);
-#line 200 "application-controller.vala"
 					break;
-#line 1987 "application-controller.c"
 				}
 				_g_free0 (uid);
 			}
 			_g_object_unref0 (_uid_it);
 		}
 		_data1_->controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
-#line 207 "application-controller.vala"
 		g_signal_connect_data (_data1_->controller, "menu-state-changed", (GCallback) __lambda13__unity_launcher_quicklist_controller_menu_state_changed, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
-#line 1996 "application-controller.c"
 		_g_object_unref0 (favorites);
 		block1_data_unref (_data1_);
 	}

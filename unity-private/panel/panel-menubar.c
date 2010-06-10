@@ -97,38 +97,25 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
-#line 25 "panel-menubar.vala"
 UnityPanelIndicatorsMenuBar* unity_panel_indicators_menu_bar_construct (GType object_type) {
-#line 103 "panel-menubar.c"
 	UnityPanelIndicatorsMenuBar * self;
-#line 27 "panel-menubar.vala"
 	self = (UnityPanelIndicatorsMenuBar*) g_object_new (object_type, "spacing", 0, "homogeneous", FALSE, "orientation", CTK_ORIENTATION_HORIZONTAL, NULL);
-#line 107 "panel-menubar.c"
 	return self;
 }
 
 
-#line 25 "panel-menubar.vala"
 UnityPanelIndicatorsMenuBar* unity_panel_indicators_menu_bar_new (void) {
-#line 25 "panel-menubar.vala"
 	return unity_panel_indicators_menu_bar_construct (UNITY_PANEL_INDICATORS_TYPE_MENU_BAR);
-#line 116 "panel-menubar.c"
 }
 
 
-#line 59 "panel-menubar.vala"
 static void unity_panel_indicators_menu_bar_on_menu_moved (UnityPanelIndicatorsMenuBar* self, UnityPanelIndicatorsIndicatorObjectView* object_view, GtkMenuDirectionType type) {
-#line 59 "panel-menubar.vala"
 	g_return_if_fail (self != NULL);
-#line 59 "panel-menubar.vala"
 	g_return_if_fail (object_view != NULL);
-#line 126 "panel-menubar.c"
 }
 
 
-#line 59 "panel-menubar.vala"
 static void _unity_panel_indicators_menu_bar_on_menu_moved_unity_panel_indicators_indicator_object_view_menu_moved (UnityPanelIndicatorsIndicatorObjectView* _sender, GtkMenuDirectionType type, gpointer self) {
-#line 132 "panel-menubar.c"
 	unity_panel_indicators_menu_bar_on_menu_moved (self, _sender, type);
 }
 
@@ -146,61 +133,38 @@ static GObject * unity_panel_indicators_menu_bar_constructor (GType type, guint 
 		ClutterColor _tmp1_;
 		ClutterColor _tmp0_ = {0};
 		ClutterRectangle* rect;
-#line 34 "panel-menubar.vala"
 		model = unity_panel_indicators_indicators_model_get_default ();
-#line 35 "panel-menubar.vala"
 		indicators_list = unity_panel_indicators_indicators_model_get_indicators (model);
-#line 154 "panel-menubar.c"
 		{
 			GeeIterator* _o_it;
 			_o_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) indicators_list);
-#line 37 "panel-menubar.vala"
 			while (TRUE) {
-#line 160 "panel-menubar.c"
 				IndicatorObject* o;
 				char* name;
-#line 37 "panel-menubar.vala"
 				if (!gee_iterator_next (_o_it)) {
-#line 37 "panel-menubar.vala"
 					break;
-#line 167 "panel-menubar.c"
 				}
-#line 37 "panel-menubar.vala"
 				o = (IndicatorObject*) gee_iterator_get (_o_it);
-#line 39 "panel-menubar.vala"
 				name = unity_panel_indicators_indicators_model_get_indicator_name (model, o);
-#line 41 "panel-menubar.vala"
 				if (_vala_strcmp0 (name, "libappmenu.so") == 0) {
-#line 175 "panel-menubar.c"
 					UnityPanelIndicatorsIndicatorObjectView* indicator_object_view;
-#line 43 "panel-menubar.vala"
 					indicator_object_view = g_object_ref_sink (unity_panel_indicators_indicator_object_view_new (o));
-#line 44 "panel-menubar.vala"
 					g_signal_connect_object (indicator_object_view, "menu-moved", (GCallback) _unity_panel_indicators_menu_bar_on_menu_moved_unity_panel_indicators_indicator_object_view_menu_moved, self, 0);
-#line 46 "panel-menubar.vala"
 					ctk_box_pack ((CtkBox*) self, (ClutterActor*) indicator_object_view, FALSE, TRUE);
-#line 47 "panel-menubar.vala"
 					clutter_actor_show ((ClutterActor*) indicator_object_view);
-#line 185 "panel-menubar.c"
 					_g_object_unref0 (indicator_object_view);
 					_g_object_unref0 (o);
 					_g_free0 (name);
-#line 49 "panel-menubar.vala"
 					break;
-#line 191 "panel-menubar.c"
 				}
 				_g_object_unref0 (o);
 				_g_free0 (name);
 			}
 			_g_object_unref0 (_o_it);
 		}
-#line 54 "panel-menubar.vala"
 		rect = g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color ((_tmp1_ = (_tmp0_.red = (guint8) 255, _tmp0_.green = (guint8) 0, _tmp0_.blue = (guint8) 0, _tmp0_.alpha = (guint8) 0, _tmp0_), &_tmp1_)));
-#line 55 "panel-menubar.vala"
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) rect, TRUE, TRUE);
-#line 56 "panel-menubar.vala"
 		clutter_actor_show ((ClutterActor*) rect);
-#line 204 "panel-menubar.c"
 		_g_object_unref0 (model);
 		_g_object_unref0 (indicators_list);
 		_g_object_unref0 (rect);

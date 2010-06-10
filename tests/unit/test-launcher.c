@@ -175,179 +175,116 @@ static void _g_list_free_g_object_unref (GList* self) {
 }
 
 
-#line 41 "test-launcher.vala"
 UnityTestsUnitTestBamfApplication* unity_tests_unit_test_bamf_application_construct (GType object_type) {
-#line 181 "test-launcher.c"
 	UnityTestsUnitTestBamfApplication * self;
-#line 43 "test-launcher.vala"
 	self = (UnityTestsUnitTestBamfApplication*) g_object_new (object_type, "path", "/null", NULL);
-#line 185 "test-launcher.c"
 	return self;
 }
 
 
-#line 41 "test-launcher.vala"
 UnityTestsUnitTestBamfApplication* unity_tests_unit_test_bamf_application_new (void) {
-#line 41 "test-launcher.vala"
 	return unity_tests_unit_test_bamf_application_construct (UNITY_TESTS_UNIT_TYPE_TEST_BAMF_APPLICATION);
-#line 194 "test-launcher.c"
 }
 
 
-#line 50 "test-launcher.vala"
 const char* unity_tests_unit_test_bamf_application_get_desktop_file (UnityTestsUnitTestBamfApplication* self) {
-#line 200 "test-launcher.c"
 	const char* result = NULL;
-#line 50 "test-launcher.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 204 "test-launcher.c"
 	result = self->desktop_file;
-#line 52 "test-launcher.vala"
 	return result;
-#line 208 "test-launcher.c"
 }
 
 
-#line 56 "test-launcher.vala"
 GList* unity_tests_unit_test_bamf_application_get_windows (UnityTestsUnitTestBamfApplication* self) {
-#line 214 "test-launcher.c"
 	GList* result = NULL;
 	GList* _tmp0_;
-#line 56 "test-launcher.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 58 "test-launcher.vala"
 	self->priv->temp_list = (_tmp0_ = NULL, __g_list_free_g_object_unref0 (self->priv->temp_list), _tmp0_);
-#line 221 "test-launcher.c"
 	result = self->priv->temp_list;
-#line 59 "test-launcher.vala"
 	return result;
-#line 225 "test-launcher.c"
 }
 
 
-#line 62 "test-launcher.vala"
 GArray* unity_tests_unit_test_bamf_application_get_xids (UnityTestsUnitTestBamfApplication* self) {
-#line 231 "test-launcher.c"
 	GArray* result = NULL;
 	GArray* retarray;
-#line 62 "test-launcher.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 64 "test-launcher.vala"
 	retarray = g_array_new (TRUE, FALSE, (guint) sizeof (guint32));
-#line 238 "test-launcher.c"
 	result = retarray;
-#line 65 "test-launcher.vala"
 	return result;
-#line 242 "test-launcher.c"
 }
 
 
-#line 68 "test-launcher.vala"
 static GList* unity_tests_unit_test_bamf_application_real_get_children (BamfView* base) {
-#line 248 "test-launcher.c"
 	UnityTestsUnitTestBamfApplication * self;
 	GList* result = NULL;
 	GList* temp_list_children;
 	self = (UnityTestsUnitTestBamfApplication*) base;
-#line 70 "test-launcher.vala"
 	temp_list_children = NULL;
-#line 255 "test-launcher.c"
 	result = temp_list_children;
-#line 71 "test-launcher.vala"
 	return result;
-#line 259 "test-launcher.c"
 }
 
 
-#line 74 "test-launcher.vala"
 static char* unity_tests_unit_test_bamf_application_real_get_icon (BamfView* base) {
-#line 265 "test-launcher.c"
 	UnityTestsUnitTestBamfApplication * self;
 	char* result = NULL;
 	self = (UnityTestsUnitTestBamfApplication*) base;
 	result = g_strdup (self->icon);
-#line 76 "test-launcher.vala"
 	return result;
-#line 272 "test-launcher.c"
 }
 
 
-#line 79 "test-launcher.vala"
 static char* unity_tests_unit_test_bamf_application_real_get_name (BamfView* base) {
-#line 278 "test-launcher.c"
 	UnityTestsUnitTestBamfApplication * self;
 	char* result = NULL;
 	self = (UnityTestsUnitTestBamfApplication*) base;
 	result = g_strdup (self->name);
-#line 81 "test-launcher.vala"
 	return result;
-#line 285 "test-launcher.c"
 }
 
 
-#line 84 "test-launcher.vala"
 static gboolean unity_tests_unit_test_bamf_application_real_is_active (BamfView* base) {
-#line 291 "test-launcher.c"
 	UnityTestsUnitTestBamfApplication * self;
 	gboolean result = FALSE;
 	self = (UnityTestsUnitTestBamfApplication*) base;
 	result = self->test_is_active;
-#line 86 "test-launcher.vala"
 	return result;
-#line 298 "test-launcher.c"
 }
 
 
-#line 89 "test-launcher.vala"
 static gboolean unity_tests_unit_test_bamf_application_real_is_running (BamfView* base) {
-#line 304 "test-launcher.c"
 	UnityTestsUnitTestBamfApplication * self;
 	gboolean result = FALSE;
 	self = (UnityTestsUnitTestBamfApplication*) base;
 	result = self->test_is_running;
-#line 91 "test-launcher.vala"
 	return result;
-#line 311 "test-launcher.c"
 }
 
 
-#line 94 "test-launcher.vala"
 static gboolean unity_tests_unit_test_bamf_application_real_is_urgent (BamfView* base) {
-#line 317 "test-launcher.c"
 	UnityTestsUnitTestBamfApplication * self;
 	gboolean result = FALSE;
 	self = (UnityTestsUnitTestBamfApplication*) base;
 	result = self->test_is_urgent;
-#line 96 "test-launcher.vala"
 	return result;
-#line 324 "test-launcher.c"
 }
 
 
-#line 99 "test-launcher.vala"
 gboolean unity_tests_unit_test_bamf_application_user_visible (UnityTestsUnitTestBamfApplication* self) {
-#line 330 "test-launcher.c"
 	gboolean result = FALSE;
-#line 99 "test-launcher.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 334 "test-launcher.c"
 	result = self->test_user_visible;
-#line 101 "test-launcher.vala"
 	return result;
-#line 338 "test-launcher.c"
 }
 
 
-#line 104 "test-launcher.vala"
 static char* unity_tests_unit_test_bamf_application_real_view_type (BamfView* base) {
-#line 344 "test-launcher.c"
 	UnityTestsUnitTestBamfApplication * self;
 	char* result = NULL;
 	self = (UnityTestsUnitTestBamfApplication*) base;
 	result = g_strdup ("test");
-#line 106 "test-launcher.vala"
 	return result;
-#line 351 "test-launcher.c"
 }
 
 
@@ -414,45 +351,31 @@ GType unity_tests_unit_test_bamf_application_get_type (void) {
 }
 
 
-#line 124 "test-launcher.vala"
 static void _unity_tests_unit_launcher_suite_test_scroller_model_gdata_test_func (gpointer self) {
-#line 420 "test-launcher.c"
 	unity_tests_unit_launcher_suite_test_scroller_model (self);
 }
 
 
-#line 152 "test-launcher.vala"
 static void _unity_tests_unit_launcher_suite_test_scroller_child_controller_gdata_test_func (gpointer self) {
-#line 427 "test-launcher.c"
 	unity_tests_unit_launcher_suite_test_scroller_child_controller (self);
 }
 
 
-#line 112 "test-launcher.vala"
 UnityTestsUnitLauncherSuite* unity_tests_unit_launcher_suite_construct (GType object_type) {
-#line 434 "test-launcher.c"
 	UnityTestsUnitLauncherSuite* self;
 	self = (UnityTestsUnitLauncherSuite*) g_type_create_instance (object_type);
-#line 114 "test-launcher.vala"
 	g_test_add_data_func ("/Unity/Launcher/TestScrollerModel", self, _unity_tests_unit_launcher_suite_test_scroller_model_gdata_test_func);
-#line 115 "test-launcher.vala"
 	g_test_add_data_func ("/Unity/Launcher/TestScrollerChildController", self, _unity_tests_unit_launcher_suite_test_scroller_child_controller_gdata_test_func);
-#line 441 "test-launcher.c"
 	return self;
 }
 
 
-#line 112 "test-launcher.vala"
 UnityTestsUnitLauncherSuite* unity_tests_unit_launcher_suite_new (void) {
-#line 112 "test-launcher.vala"
 	return unity_tests_unit_launcher_suite_construct (UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE);
-#line 450 "test-launcher.c"
 }
 
 
-#line 124 "test-launcher.vala"
 static void unity_tests_unit_launcher_suite_test_scroller_model (UnityTestsUnitLauncherSuite* self) {
-#line 456 "test-launcher.c"
 	UnityLauncherScrollerModel* model;
 	UnityLauncherScrollerChild* child_a;
 	UnityLauncherScrollerChild* child_b;
@@ -460,59 +383,35 @@ static void unity_tests_unit_launcher_suite_test_scroller_model (UnityTestsUnitL
 	UnityLauncherScrollerChild* _tmp0_;
 	UnityLauncherScrollerChild* _tmp1_;
 	UnityLauncherScrollerChild* _tmp2_;
-#line 124 "test-launcher.vala"
 	g_return_if_fail (self != NULL);
-#line 126 "test-launcher.vala"
 	model = unity_launcher_scroller_model_new ();
-#line 127 "test-launcher.vala"
 	child_a = (UnityLauncherScrollerChild*) g_object_ref_sink (unity_tests_unit_launcher_suite_test_scroller_child_new ());
-#line 128 "test-launcher.vala"
 	child_b = (UnityLauncherScrollerChild*) g_object_ref_sink (unity_tests_unit_launcher_suite_test_scroller_child_new ());
-#line 129 "test-launcher.vala"
 	child_c = (UnityLauncherScrollerChild*) g_object_ref_sink (unity_tests_unit_launcher_suite_test_scroller_child_new ());
-#line 131 "test-launcher.vala"
 	unity_launcher_scroller_model_add (model, child_a);
-#line 132 "test-launcher.vala"
 	unity_launcher_scroller_model_add (model, child_c);
-#line 133 "test-launcher.vala"
 	unity_launcher_scroller_model_insert (model, child_b, 1);
-#line 136 "test-launcher.vala"
 	g_assert ((_tmp0_ = unity_launcher_scroller_model_get (model, 1)) == child_b);
-#line 482 "test-launcher.c"
 	_g_object_unref0 (_tmp0_);
-#line 137 "test-launcher.vala"
 	g_assert ((_tmp1_ = unity_launcher_scroller_model_get (model, 2)) == child_c);
-#line 486 "test-launcher.c"
 	_g_object_unref0 (_tmp1_);
 	{
 		UnityLauncherScrollerModelIterator* _child_it;
 		_child_it = unity_launcher_scroller_model_iterator (model);
-#line 140 "test-launcher.vala"
 		while (TRUE) {
-#line 493 "test-launcher.c"
 			UnityLauncherScrollerChild* child;
-#line 140 "test-launcher.vala"
 			if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
-#line 140 "test-launcher.vala"
 				break;
-#line 499 "test-launcher.c"
 			}
-#line 140 "test-launcher.vala"
 			child = unity_launcher_scroller_model_iterator_get (_child_it);
-#line 142 "test-launcher.vala"
 			g_assert (UNITY_LAUNCHER_IS_SCROLLER_CHILD (child));
-#line 505 "test-launcher.c"
 			_g_object_unref0 (child);
 		}
 		_unity_launcher_scroller_model_iterator_unref0 (_child_it);
 	}
-#line 145 "test-launcher.vala"
 	g_assert (unity_launcher_scroller_model_contains (model, child_a));
-#line 148 "test-launcher.vala"
 	unity_launcher_scroller_model_remove (model, child_b);
-#line 149 "test-launcher.vala"
 	g_assert ((_tmp2_ = unity_launcher_scroller_model_get (model, 1)) == child_c);
-#line 516 "test-launcher.c"
 	_g_object_unref0 (_tmp2_);
 	_g_object_unref0 (model);
 	_g_object_unref0 (child_a);
@@ -521,90 +420,54 @@ static void unity_tests_unit_launcher_suite_test_scroller_model (UnityTestsUnitL
 }
 
 
-#line 152 "test-launcher.vala"
 static void unity_tests_unit_launcher_suite_test_scroller_child_controller (UnityTestsUnitLauncherSuite* self) {
-#line 527 "test-launcher.c"
 	UnityTestsUnitTestBamfApplication* test_app;
 	UnityLauncherScrollerChild* child;
 	UnityLauncherApplicationController* controller;
 	char* _tmp0_;
 	char* _tmp1_;
 	char* _tmp2_;
-#line 152 "test-launcher.vala"
 	g_return_if_fail (self != NULL);
-#line 154 "test-launcher.vala"
 	test_app = unity_tests_unit_test_bamf_application_new ();
-#line 155 "test-launcher.vala"
 	child = (UnityLauncherScrollerChild*) g_object_ref_sink (unity_tests_unit_launcher_suite_test_scroller_child_new ());
-#line 156 "test-launcher.vala"
 	controller = unity_launcher_application_controller_new (TESTDIR "/data/test_desktop_file.desktop", child);
-#line 158 "test-launcher.vala"
 	test_app->name = (_tmp0_ = g_strdup ("Test Application-New"), _g_free0 (test_app->name), _tmp0_);
-#line 159 "test-launcher.vala"
 	test_app->desktop_file = (_tmp1_ = g_strdup (TESTDIR "/data/test_desktop_file.desktop"), _g_free0 (test_app->desktop_file), _tmp1_);
-#line 160 "test-launcher.vala"
 	test_app->icon = (_tmp2_ = g_strdup (TESTDIR "/data/test_desktop_icon.png"), _g_free0 (test_app->icon), _tmp2_);
-#line 161 "test-launcher.vala"
 	test_app->test_is_active = TRUE;
-#line 162 "test-launcher.vala"
 	test_app->test_is_urgent = FALSE;
-#line 163 "test-launcher.vala"
 	test_app->test_user_visible = TRUE;
-#line 164 "test-launcher.vala"
 	test_app->test_is_running = TRUE;
-#line 167 "test-launcher.vala"
 	g_assert (unity_launcher_scroller_child_get_running (child) == FALSE);
-#line 168 "test-launcher.vala"
 	g_assert (unity_launcher_scroller_child_get_active (child) == FALSE);
-#line 169 "test-launcher.vala"
 	g_assert (unity_launcher_scroller_child_get_needs_attention (child) == FALSE);
-#line 170 "test-launcher.vala"
 	g_assert (_vala_strcmp0 (((UnityLauncherScrollerChildController*) controller)->name, "Test Application") == 0);
-#line 172 "test-launcher.vala"
 	unity_launcher_application_controller_attach_application (controller, (BamfApplication*) test_app);
-#line 173 "test-launcher.vala"
 	g_assert (unity_launcher_scroller_child_get_running (child) == TRUE);
-#line 174 "test-launcher.vala"
 	g_assert (unity_launcher_scroller_child_get_active (child) == TRUE);
-#line 175 "test-launcher.vala"
 	g_assert (_vala_strcmp0 (((UnityLauncherScrollerChildController*) controller)->name, "Test Application-New") == 0);
-#line 177 "test-launcher.vala"
 	test_app->test_is_active = FALSE;
-#line 178 "test-launcher.vala"
 	g_signal_emit_by_name ((BamfView*) test_app, "active-changed", test_app->test_is_active);
-#line 179 "test-launcher.vala"
 	g_assert (unity_launcher_scroller_child_get_active (child) == FALSE);
-#line 181 "test-launcher.vala"
 	test_app->test_is_running = FALSE;
-#line 182 "test-launcher.vala"
 	g_signal_emit_by_name ((BamfView*) test_app, "running-changed", test_app->test_is_running);
-#line 183 "test-launcher.vala"
 	g_assert (unity_launcher_scroller_child_get_running (child) == FALSE);
-#line 184 "test-launcher.vala"
 	g_assert (unity_launcher_application_controller_debug_is_application_attached (controller) == FALSE);
-#line 586 "test-launcher.c"
 	_g_object_unref0 (test_app);
 	_g_object_unref0 (child);
 	_g_object_unref0 (controller);
 }
 
 
-#line 118 "test-launcher.vala"
 UnityTestsUnitLauncherSuiteTestScrollerChild* unity_tests_unit_launcher_suite_test_scroller_child_construct (GType object_type) {
-#line 595 "test-launcher.c"
 	UnityTestsUnitLauncherSuiteTestScrollerChild * self;
-#line 118 "test-launcher.vala"
 	self = (UnityTestsUnitLauncherSuiteTestScrollerChild*) unity_launcher_scroller_child_construct (object_type);
-#line 599 "test-launcher.c"
 	return self;
 }
 
 
-#line 118 "test-launcher.vala"
 UnityTestsUnitLauncherSuiteTestScrollerChild* unity_tests_unit_launcher_suite_test_scroller_child_new (void) {
-#line 118 "test-launcher.vala"
 	return unity_tests_unit_launcher_suite_test_scroller_child_construct (UNITY_TESTS_UNIT_LAUNCHER_SUITE_TYPE_TEST_SCROLLER_CHILD);
-#line 608 "test-launcher.c"
 }
 
 

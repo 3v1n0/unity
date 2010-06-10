@@ -119,243 +119,139 @@ static void unity_unity_icon_set_property (GObject * object, guint property_id, 
 
 
 
-#line 28 "icon-postprocessor.vala"
 void unity_rgb_to_hsv (float r, float g, float b, float* hue, float* sat, float* val) {
-#line 125 "icon-postprocessor.c"
 	float min = 0.0F;
 	float max;
 	float delta;
-#line 31 "icon-postprocessor.vala"
 	max = 0.0f;
-#line 32 "icon-postprocessor.vala"
 	if (r > g) {
-#line 133 "icon-postprocessor.c"
 		float _tmp0_ = 0.0F;
-#line 33 "icon-postprocessor.vala"
 		if (r > b) {
-#line 33 "icon-postprocessor.vala"
 			_tmp0_ = r;
-#line 139 "icon-postprocessor.c"
 		} else {
-#line 33 "icon-postprocessor.vala"
 			_tmp0_ = b;
-#line 143 "icon-postprocessor.c"
 		}
-#line 33 "icon-postprocessor.vala"
 		max = _tmp0_;
-#line 147 "icon-postprocessor.c"
 	} else {
 		float _tmp1_ = 0.0F;
-#line 35 "icon-postprocessor.vala"
 		if (g > b) {
-#line 35 "icon-postprocessor.vala"
 			_tmp1_ = g;
-#line 154 "icon-postprocessor.c"
 		} else {
-#line 35 "icon-postprocessor.vala"
 			_tmp1_ = b;
-#line 158 "icon-postprocessor.c"
 		}
-#line 35 "icon-postprocessor.vala"
 		max = _tmp1_;
-#line 162 "icon-postprocessor.c"
 	}
-#line 36 "icon-postprocessor.vala"
 	if (r < g) {
-#line 166 "icon-postprocessor.c"
 		float _tmp2_ = 0.0F;
-#line 37 "icon-postprocessor.vala"
 		if (r < b) {
-#line 37 "icon-postprocessor.vala"
 			_tmp2_ = r;
-#line 172 "icon-postprocessor.c"
 		} else {
-#line 37 "icon-postprocessor.vala"
 			_tmp2_ = b;
-#line 176 "icon-postprocessor.c"
 		}
-#line 37 "icon-postprocessor.vala"
 		min = _tmp2_;
-#line 180 "icon-postprocessor.c"
 	} else {
 		float _tmp3_ = 0.0F;
-#line 39 "icon-postprocessor.vala"
 		if (g < b) {
-#line 39 "icon-postprocessor.vala"
 			_tmp3_ = g;
-#line 187 "icon-postprocessor.c"
 		} else {
-#line 39 "icon-postprocessor.vala"
 			_tmp3_ = b;
-#line 191 "icon-postprocessor.c"
 		}
-#line 39 "icon-postprocessor.vala"
 		min = _tmp3_;
-#line 195 "icon-postprocessor.c"
 	}
-#line 41 "icon-postprocessor.vala"
 	*val = max;
-#line 43 "icon-postprocessor.vala"
 	delta = max - min;
-#line 44 "icon-postprocessor.vala"
 	if (delta > 0.000001) {
-#line 46 "icon-postprocessor.vala"
 		*sat = delta / max;
-#line 47 "icon-postprocessor.vala"
 		*hue = 0.0f;
-#line 48 "icon-postprocessor.vala"
 		if (r == max) {
-#line 50 "icon-postprocessor.vala"
 			*hue = (g - b) / delta;
-#line 51 "icon-postprocessor.vala"
 			if ((*hue) < 0.0f) {
-#line 52 "icon-postprocessor.vala"
 				*hue = (*hue) + 6.0f;
-#line 215 "icon-postprocessor.c"
 			}
 		} else {
-#line 54 "icon-postprocessor.vala"
 			if (g == max) {
-#line 56 "icon-postprocessor.vala"
 				*hue = 2.0f + ((b - r) / delta);
-#line 222 "icon-postprocessor.c"
 			} else {
-#line 58 "icon-postprocessor.vala"
 				if (b == max) {
-#line 60 "icon-postprocessor.vala"
 					*hue = 4.0f + ((r - g) / delta);
-#line 228 "icon-postprocessor.c"
 				}
 			}
 		}
-#line 62 "icon-postprocessor.vala"
 		*hue = (*hue) / 6.0f;
-#line 234 "icon-postprocessor.c"
 	} else {
-#line 66 "icon-postprocessor.vala"
 		*sat = 0.0f;
-#line 67 "icon-postprocessor.vala"
 		*hue = 0.0f;
-#line 240 "icon-postprocessor.c"
 	}
 }
 
 
-#line 71 "icon-postprocessor.vala"
 void unity_hsv_to_rgb (float hue, float sat, float val, float* r, float* g, float* b) {
-#line 247 "icon-postprocessor.c"
 	gint i = 0;
 	float f = 0.0F;
 	float w = 0.0F;
 	float q = 0.0F;
 	float t = 0.0F;
-#line 77 "icon-postprocessor.vala"
 	if (sat == 0.0) {
-#line 79 "icon-postprocessor.vala"
 		*r = *g = *b = val;
-#line 257 "icon-postprocessor.c"
 	} else {
-#line 83 "icon-postprocessor.vala"
 		if (hue == 1.0) {
-#line 84 "icon-postprocessor.vala"
 			hue = 0.0f;
-#line 263 "icon-postprocessor.c"
 		}
-#line 86 "icon-postprocessor.vala"
 		hue = hue * 6.0f;
-#line 88 "icon-postprocessor.vala"
 		i = (gint) hue;
-#line 89 "icon-postprocessor.vala"
 		f = hue - i;
-#line 90 "icon-postprocessor.vala"
 		w = val * (1.0f - sat);
-#line 91 "icon-postprocessor.vala"
 		q = val * (1.0f - (sat * f));
-#line 92 "icon-postprocessor.vala"
 		t = val * (1.0f - (sat * (1.0f - f)));
-#line 94 "icon-postprocessor.vala"
 		switch (i) {
-#line 279 "icon-postprocessor.c"
 			case 0:
 			{
-#line 97 "icon-postprocessor.vala"
 				*r = val;
-#line 98 "icon-postprocessor.vala"
 				*g = t;
-#line 99 "icon-postprocessor.vala"
 				*b = w;
-#line 100 "icon-postprocessor.vala"
 				break;
-#line 290 "icon-postprocessor.c"
 			}
 			case 1:
 			{
-#line 102 "icon-postprocessor.vala"
 				*r = q;
-#line 103 "icon-postprocessor.vala"
 				*g = val;
-#line 104 "icon-postprocessor.vala"
 				*b = w;
-#line 105 "icon-postprocessor.vala"
 				break;
-#line 302 "icon-postprocessor.c"
 			}
 			case 2:
 			{
-#line 107 "icon-postprocessor.vala"
 				*r = w;
-#line 108 "icon-postprocessor.vala"
 				*g = val;
-#line 109 "icon-postprocessor.vala"
 				*b = t;
-#line 110 "icon-postprocessor.vala"
 				break;
-#line 314 "icon-postprocessor.c"
 			}
 			case 3:
 			{
-#line 112 "icon-postprocessor.vala"
 				*r = w;
-#line 113 "icon-postprocessor.vala"
 				*g = q;
-#line 114 "icon-postprocessor.vala"
 				*b = val;
-#line 115 "icon-postprocessor.vala"
 				break;
-#line 326 "icon-postprocessor.c"
 			}
 			case 4:
 			{
-#line 117 "icon-postprocessor.vala"
 				*r = t;
-#line 118 "icon-postprocessor.vala"
 				*g = w;
-#line 119 "icon-postprocessor.vala"
 				*b = val;
-#line 120 "icon-postprocessor.vala"
 				break;
-#line 338 "icon-postprocessor.c"
 			}
 			case 5:
 			{
-#line 122 "icon-postprocessor.vala"
 				*r = val;
-#line 123 "icon-postprocessor.vala"
 				*g = w;
-#line 124 "icon-postprocessor.vala"
 				*b = q;
-#line 125 "icon-postprocessor.vala"
 				break;
-#line 350 "icon-postprocessor.c"
 			}
 		}
 	}
 }
 
 
-#line 130 "icon-postprocessor.vala"
 guint unity_pixbuf_check_threshold (GdkPixbuf* source, gint x1, gint y1, gint x2, gint y2, float threshold) {
-#line 359 "icon-postprocessor.c"
 	guint result = 0U;
 	gint num_channels;
 	gint width;
@@ -369,141 +265,80 @@ guint unity_pixbuf_check_threshold (GdkPixbuf* source, gint x1, gint y1, gint x2
 	gboolean _tmp2_ = FALSE;
 	gboolean _tmp3_ = FALSE;
 	guint i;
-#line 130 "icon-postprocessor.vala"
 	g_return_val_if_fail (source != NULL, 0U);
-#line 133 "icon-postprocessor.vala"
 	num_channels = gdk_pixbuf_get_n_channels (source);
-#line 134 "icon-postprocessor.vala"
 	width = gdk_pixbuf_get_width (source);
-#line 135 "icon-postprocessor.vala"
 	rowstride = gdk_pixbuf_get_rowstride (source);
-#line 136 "icon-postprocessor.vala"
 	total_visible_pixels = (guint) 0;
-#line 383 "icon-postprocessor.c"
 	pixels = (_tmp0_ = gdk_pixbuf_get_pixels (source), pixels_length1 = -1, _pixels_size_ = pixels_length1, _tmp0_);
-#line 138 "icon-postprocessor.vala"
 	if (gdk_pixbuf_get_colorspace (source) != GDK_COLORSPACE_RGB) {
-#line 138 "icon-postprocessor.vala"
 		_tmp3_ = TRUE;
-#line 389 "icon-postprocessor.c"
 	} else {
-#line 139 "icon-postprocessor.vala"
 		_tmp3_ = gdk_pixbuf_get_bits_per_sample (source) != 8;
-#line 393 "icon-postprocessor.c"
 	}
-#line 138 "icon-postprocessor.vala"
 	if (_tmp3_) {
-#line 138 "icon-postprocessor.vala"
 		_tmp2_ = TRUE;
-#line 399 "icon-postprocessor.c"
 	} else {
-#line 140 "icon-postprocessor.vala"
 		_tmp2_ = !gdk_pixbuf_get_has_alpha (source);
-#line 403 "icon-postprocessor.c"
 	}
-#line 138 "icon-postprocessor.vala"
 	if (_tmp2_) {
-#line 138 "icon-postprocessor.vala"
 		_tmp1_ = TRUE;
-#line 409 "icon-postprocessor.c"
 	} else {
-#line 141 "icon-postprocessor.vala"
 		_tmp1_ = num_channels != 4;
-#line 413 "icon-postprocessor.c"
 	}
-#line 138 "icon-postprocessor.vala"
 	if (_tmp1_) {
-#line 144 "icon-postprocessor.vala"
 		g_warning ("icon-postprocessor.vala:144: pixbuf is not in a friendly format, can n" \
 "ot work with it");
-#line 419 "icon-postprocessor.c"
 		result = (guint) 0;
-#line 145 "icon-postprocessor.vala"
 		return result;
-#line 423 "icon-postprocessor.c"
 	}
-#line 148 "icon-postprocessor.vala"
 	i = (guint) 0;
-#line 427 "icon-postprocessor.c"
 	{
 		gint yi;
-#line 149 "icon-postprocessor.vala"
 		yi = y1;
-#line 432 "icon-postprocessor.c"
 		{
 			gboolean _tmp4_;
-#line 149 "icon-postprocessor.vala"
 			_tmp4_ = TRUE;
-#line 149 "icon-postprocessor.vala"
 			while (TRUE) {
-#line 149 "icon-postprocessor.vala"
 				if (!_tmp4_) {
-#line 149 "icon-postprocessor.vala"
 					yi++;
-#line 443 "icon-postprocessor.c"
 				}
-#line 149 "icon-postprocessor.vala"
 				_tmp4_ = FALSE;
-#line 149 "icon-postprocessor.vala"
 				if (!(yi < y2)) {
-#line 149 "icon-postprocessor.vala"
 					break;
-#line 451 "icon-postprocessor.c"
 				}
 				{
 					gint xi;
-#line 151 "icon-postprocessor.vala"
 					xi = x1;
-#line 457 "icon-postprocessor.c"
 					{
 						gboolean _tmp5_;
-#line 151 "icon-postprocessor.vala"
 						_tmp5_ = TRUE;
-#line 151 "icon-postprocessor.vala"
 						while (TRUE) {
-#line 464 "icon-postprocessor.c"
 							float pixel;
-#line 151 "icon-postprocessor.vala"
 							if (!_tmp5_) {
-#line 151 "icon-postprocessor.vala"
 								xi++;
-#line 470 "icon-postprocessor.c"
 							}
-#line 151 "icon-postprocessor.vala"
 							_tmp5_ = FALSE;
-#line 151 "icon-postprocessor.vala"
 							if (!(xi < x2)) {
-#line 151 "icon-postprocessor.vala"
 								break;
-#line 478 "icon-postprocessor.c"
 							}
-#line 153 "icon-postprocessor.vala"
 							pixel = pixels[(i + (xi * 4)) + 3] / 255.0f;
-#line 154 "icon-postprocessor.vala"
 							if (pixel > threshold) {
-#line 155 "icon-postprocessor.vala"
 								total_visible_pixels = total_visible_pixels + ((guint) 1);
-#line 486 "icon-postprocessor.c"
 							}
 						}
 					}
 				}
-#line 157 "icon-postprocessor.vala"
 				i = (guint) ((yi * (width * 4)) + rowstride);
-#line 493 "icon-postprocessor.c"
 			}
 		}
 	}
 	result = total_visible_pixels;
-#line 160 "icon-postprocessor.vala"
 	return result;
-#line 500 "icon-postprocessor.c"
 }
 
 
-#line 163 "icon-postprocessor.vala"
 gboolean unity_pixbuf_is_tile (GdkPixbuf* source) {
-#line 506 "icon-postprocessor.c"
 	gboolean result = FALSE;
 	gboolean is_tile;
 	gint num_channels;
@@ -516,89 +351,49 @@ gboolean unity_pixbuf_is_tile (GdkPixbuf* source) {
 	gint height_3;
 	gint width_3;
 	gint max_pixels;
-#line 163 "icon-postprocessor.vala"
 	g_return_val_if_fail (source != NULL, FALSE);
-#line 165 "icon-postprocessor.vala"
 	is_tile = FALSE;
-#line 166 "icon-postprocessor.vala"
 	num_channels = gdk_pixbuf_get_n_channels (source);
-#line 167 "icon-postprocessor.vala"
 	width = gdk_pixbuf_get_width (source);
-#line 168 "icon-postprocessor.vala"
 	height = gdk_pixbuf_get_height (source);
-#line 169 "icon-postprocessor.vala"
 	total_visible_pixels = (guint) 0;
-#line 170 "icon-postprocessor.vala"
 	if (gdk_pixbuf_get_colorspace (source) != GDK_COLORSPACE_RGB) {
-#line 170 "icon-postprocessor.vala"
 		_tmp2_ = TRUE;
-#line 535 "icon-postprocessor.c"
 	} else {
-#line 171 "icon-postprocessor.vala"
 		_tmp2_ = gdk_pixbuf_get_bits_per_sample (source) != 8;
-#line 539 "icon-postprocessor.c"
 	}
-#line 170 "icon-postprocessor.vala"
 	if (_tmp2_) {
-#line 170 "icon-postprocessor.vala"
 		_tmp1_ = TRUE;
-#line 545 "icon-postprocessor.c"
 	} else {
-#line 172 "icon-postprocessor.vala"
 		_tmp1_ = !gdk_pixbuf_get_has_alpha (source);
-#line 549 "icon-postprocessor.c"
 	}
-#line 170 "icon-postprocessor.vala"
 	if (_tmp1_) {
-#line 170 "icon-postprocessor.vala"
 		_tmp0_ = TRUE;
-#line 555 "icon-postprocessor.c"
 	} else {
-#line 173 "icon-postprocessor.vala"
 		_tmp0_ = num_channels != 4;
-#line 559 "icon-postprocessor.c"
 	}
-#line 170 "icon-postprocessor.vala"
 	if (_tmp0_) {
-#line 176 "icon-postprocessor.vala"
 		g_warning ("icon-postprocessor.vala:176: pixbuf is not in a friendly format, can n" \
 "ot work with it");
-#line 565 "icon-postprocessor.c"
 		result = FALSE;
-#line 177 "icon-postprocessor.vala"
 		return result;
-#line 569 "icon-postprocessor.c"
 	}
-#line 180 "icon-postprocessor.vala"
 	height_3 = height / 3;
-#line 181 "icon-postprocessor.vala"
 	width_3 = width / 3;
-#line 183 "icon-postprocessor.vala"
 	total_visible_pixels = unity_pixbuf_check_threshold (source, width_3, 0, width_3 * 2, 3, 0.1f);
-#line 184 "icon-postprocessor.vala"
 	total_visible_pixels = total_visible_pixels + unity_pixbuf_check_threshold (source, width_3, height - 3, width_3 * 2, 3, 0.1f);
-#line 185 "icon-postprocessor.vala"
 	total_visible_pixels = total_visible_pixels + unity_pixbuf_check_threshold (source, 0, height_3, 3, height_3 * 2, 0.1f);
-#line 186 "icon-postprocessor.vala"
 	total_visible_pixels = total_visible_pixels + unity_pixbuf_check_threshold (source, width - 3, height_3, 3, height_3 * 2, 0.1f);
-#line 188 "icon-postprocessor.vala"
 	max_pixels = ((width_3 * 6) + (height_3 * 6)) / 3;
-#line 190 "icon-postprocessor.vala"
 	if ((total_visible_pixels / max_pixels) > 0.33333) {
-#line 191 "icon-postprocessor.vala"
 		is_tile = TRUE;
-#line 589 "icon-postprocessor.c"
 	}
 	result = is_tile;
-#line 193 "icon-postprocessor.vala"
 	return result;
-#line 594 "icon-postprocessor.c"
 }
 
 
-#line 196 "icon-postprocessor.vala"
 void unity_get_average_color (GdkPixbuf* source, guint* red, guint* green, guint* blue) {
-#line 600 "icon-postprocessor.c"
 	gint num_channels;
 	gint width;
 	gint height;
@@ -625,285 +420,159 @@ void unity_get_average_color (GdkPixbuf* source, guint* red, guint* green, guint
 	double bs_total = 0.0;
 	gint i;
 	guint total_caught_pixels;
-#line 196 "icon-postprocessor.vala"
 	g_return_if_fail (source != NULL);
-#line 198 "icon-postprocessor.vala"
 	num_channels = gdk_pixbuf_get_n_channels (source);
-#line 199 "icon-postprocessor.vala"
 	width = gdk_pixbuf_get_width (source);
-#line 200 "icon-postprocessor.vala"
 	height = gdk_pixbuf_get_height (source);
-#line 201 "icon-postprocessor.vala"
 	rowstride = gdk_pixbuf_get_rowstride (source);
-#line 637 "icon-postprocessor.c"
 	pixels = (_tmp0_ = gdk_pixbuf_get_pixels (source), pixels_length1 = -1, _pixels_size_ = pixels_length1, _tmp0_);
-#line 204 "icon-postprocessor.vala"
 	if (gdk_pixbuf_get_colorspace (source) != GDK_COLORSPACE_RGB) {
-#line 204 "icon-postprocessor.vala"
 		_tmp3_ = TRUE;
-#line 643 "icon-postprocessor.c"
 	} else {
-#line 205 "icon-postprocessor.vala"
 		_tmp3_ = gdk_pixbuf_get_bits_per_sample (source) != 8;
-#line 647 "icon-postprocessor.c"
 	}
-#line 204 "icon-postprocessor.vala"
 	if (_tmp3_) {
-#line 204 "icon-postprocessor.vala"
 		_tmp2_ = TRUE;
-#line 653 "icon-postprocessor.c"
 	} else {
-#line 206 "icon-postprocessor.vala"
 		_tmp2_ = !gdk_pixbuf_get_has_alpha (source);
-#line 657 "icon-postprocessor.c"
 	}
-#line 204 "icon-postprocessor.vala"
 	if (_tmp2_) {
-#line 204 "icon-postprocessor.vala"
 		_tmp1_ = TRUE;
-#line 663 "icon-postprocessor.c"
 	} else {
-#line 207 "icon-postprocessor.vala"
 		_tmp1_ = num_channels != 4;
-#line 667 "icon-postprocessor.c"
 	}
-#line 204 "icon-postprocessor.vala"
 	if (_tmp1_) {
-#line 210 "icon-postprocessor.vala"
 		*red = (guint) 255;
-#line 211 "icon-postprocessor.vala"
 		*green = (guint) 255;
-#line 212 "icon-postprocessor.vala"
 		*blue = (guint) 255;
-#line 213 "icon-postprocessor.vala"
 		return;
-#line 679 "icon-postprocessor.c"
 	}
-#line 217 "icon-postprocessor.vala"
 	r_total = g_total = b_total = 0.0;
-#line 218 "icon-postprocessor.vala"
 	rs_total = gs_total = bs_total = 0.0;
-#line 220 "icon-postprocessor.vala"
 	i = 0;
-#line 221 "icon-postprocessor.vala"
 	total_caught_pixels = (guint) 1;
-#line 689 "icon-postprocessor.c"
 	{
 		gint y;
-#line 222 "icon-postprocessor.vala"
 		y = 0;
-#line 694 "icon-postprocessor.c"
 		{
 			gboolean _tmp4_;
-#line 222 "icon-postprocessor.vala"
 			_tmp4_ = TRUE;
-#line 222 "icon-postprocessor.vala"
 			while (TRUE) {
-#line 222 "icon-postprocessor.vala"
 				if (!_tmp4_) {
-#line 222 "icon-postprocessor.vala"
 					y++;
-#line 705 "icon-postprocessor.c"
 				}
-#line 222 "icon-postprocessor.vala"
 				_tmp4_ = FALSE;
-#line 222 "icon-postprocessor.vala"
 				if (!(y < height)) {
-#line 222 "icon-postprocessor.vala"
 					break;
-#line 713 "icon-postprocessor.c"
 				}
 				{
 					gint x;
-#line 224 "icon-postprocessor.vala"
 					x = 0;
-#line 719 "icon-postprocessor.c"
 					{
 						gboolean _tmp5_;
-#line 224 "icon-postprocessor.vala"
 						_tmp5_ = TRUE;
-#line 224 "icon-postprocessor.vala"
 						while (TRUE) {
-#line 726 "icon-postprocessor.c"
 							gint pix_index;
-#line 224 "icon-postprocessor.vala"
 							if (!_tmp5_) {
-#line 224 "icon-postprocessor.vala"
 								x++;
-#line 732 "icon-postprocessor.c"
 							}
-#line 224 "icon-postprocessor.vala"
 							_tmp5_ = FALSE;
-#line 224 "icon-postprocessor.vala"
 							if (!(x < width)) {
-#line 224 "icon-postprocessor.vala"
 								break;
-#line 740 "icon-postprocessor.c"
 							}
-#line 226 "icon-postprocessor.vala"
 							pix_index = i + (x * 4);
-#line 227 "icon-postprocessor.vala"
 							r = pixels[pix_index + 0] / 255.0f;
-#line 228 "icon-postprocessor.vala"
 							g = pixels[pix_index + 1] / 255.0f;
-#line 229 "icon-postprocessor.vala"
 							b = pixels[pix_index + 2] / 255.0f;
-#line 230 "icon-postprocessor.vala"
 							a = pixels[pix_index + 3] / 255.0f;
-#line 232 "icon-postprocessor.vala"
 							if (a < 0.5) {
-#line 233 "icon-postprocessor.vala"
 								continue;
-#line 756 "icon-postprocessor.c"
 							}
-#line 235 "icon-postprocessor.vala"
 							unity_rgb_to_hsv (r, g, b, &hue, &sat, &val);
-#line 236 "icon-postprocessor.vala"
 							rs_total = rs_total + ((double) r);
-#line 237 "icon-postprocessor.vala"
 							gs_total = gs_total + ((double) g);
-#line 238 "icon-postprocessor.vala"
 							bs_total = bs_total + ((double) b);
-#line 240 "icon-postprocessor.vala"
 							if (sat <= 0.33) {
-#line 241 "icon-postprocessor.vala"
 								continue;
-#line 770 "icon-postprocessor.c"
 							}
-#line 244 "icon-postprocessor.vala"
 							r_total = r_total + ((double) r);
-#line 245 "icon-postprocessor.vala"
 							g_total = g_total + ((double) g);
-#line 246 "icon-postprocessor.vala"
 							b_total = b_total + ((double) b);
-#line 248 "icon-postprocessor.vala"
 							total_caught_pixels = total_caught_pixels + ((guint) 1);
-#line 780 "icon-postprocessor.c"
 						}
 					}
 				}
-#line 250 "icon-postprocessor.vala"
 				i = (y * (width * 4)) + rowstride;
-#line 786 "icon-postprocessor.c"
 			}
 		}
 	}
-#line 253 "icon-postprocessor.vala"
 	r_total = r_total / MAX (total_caught_pixels, (guint) 1);
-#line 254 "icon-postprocessor.vala"
 	g_total = g_total / MAX (total_caught_pixels, (guint) 1);
-#line 255 "icon-postprocessor.vala"
 	b_total = b_total / MAX (total_caught_pixels, (guint) 1);
-#line 258 "icon-postprocessor.vala"
 	if (total_caught_pixels <= 20) {
-#line 260 "icon-postprocessor.vala"
 		unity_rgb_to_hsv ((float) rs_total, (float) gs_total, (float) bs_total, &hue, &sat, &val);
-#line 261 "icon-postprocessor.vala"
 		sat = 0.0f;
-#line 802 "icon-postprocessor.c"
 	} else {
-#line 265 "icon-postprocessor.vala"
 		unity_rgb_to_hsv ((float) r_total, (float) g_total, (float) b_total, &hue, &sat, &val);
-#line 266 "icon-postprocessor.vala"
 		sat = fminf (sat * 0.7f, 1.0f);
-#line 267 "icon-postprocessor.vala"
 		val = fminf (val * 1.4f, 1.0f);
-#line 810 "icon-postprocessor.c"
 	}
-#line 270 "icon-postprocessor.vala"
 	unity_hsv_to_rgb (hue, sat, val, &r, &g, &b);
-#line 272 "icon-postprocessor.vala"
 	*red = (guint) (r * 255);
-#line 273 "icon-postprocessor.vala"
 	*green = (guint) (g * 255);
-#line 274 "icon-postprocessor.vala"
 	*blue = (guint) (b * 255);
-#line 820 "icon-postprocessor.c"
 }
 
 
-#line 295 "icon-postprocessor.vala"
 UnityUnityIcon* unity_unity_icon_construct (GType object_type, ClutterTexture* icon, ClutterTexture* bg_tex) {
-#line 826 "icon-postprocessor.c"
 	UnityUnityIcon * self;
-#line 297 "icon-postprocessor.vala"
 	self = (UnityUnityIcon*) g_object_new (object_type, "icon", icon, "bg-color", bg_tex, NULL);
-#line 830 "icon-postprocessor.c"
 	return self;
 }
 
 
-#line 295 "icon-postprocessor.vala"
 UnityUnityIcon* unity_unity_icon_new (ClutterTexture* icon, ClutterTexture* bg_tex) {
-#line 295 "icon-postprocessor.vala"
 	return unity_unity_icon_construct (UNITY_TYPE_UNITY_ICON, icon, bg_tex);
-#line 839 "icon-postprocessor.c"
 }
 
 
-#line 341 "icon-postprocessor.vala"
 static void unity_unity_icon_real_get_preferred_width (ClutterActor* base, float for_height, float* minimum_width, float* natural_width) {
-#line 845 "icon-postprocessor.c"
 	UnityUnityIcon * self;
 	self = (UnityUnityIcon*) base;
-#line 345 "icon-postprocessor.vala"
 	*natural_width = *minimum_width = (float) 50;
-#line 850 "icon-postprocessor.c"
 }
 
 
-#line 348 "icon-postprocessor.vala"
 static void unity_unity_icon_real_get_preferred_height (ClutterActor* base, float for_width, float* minimum_height, float* natural_height) {
-#line 856 "icon-postprocessor.c"
 	UnityUnityIcon * self;
 	self = (UnityUnityIcon*) base;
-#line 352 "icon-postprocessor.vala"
 	*natural_height = *minimum_height = (float) 50;
-#line 861 "icon-postprocessor.c"
 }
 
 
-#line 355 "icon-postprocessor.vala"
 static void unity_unity_icon_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-#line 867 "icon-postprocessor.c"
 	UnityUnityIcon * self;
 	self = (UnityUnityIcon*) base;
-#line 357 "icon-postprocessor.vala"
 	CLUTTER_ACTOR_CLASS (unity_unity_icon_parent_class)->allocate ((ClutterActor*) CTK_ACTOR (self), box, flags);
-#line 358 "icon-postprocessor.vala"
 	if (CLUTTER_IS_TEXTURE (self->priv->_icon)) {
-#line 359 "icon-postprocessor.vala"
 		clutter_actor_allocate ((ClutterActor*) self->priv->_icon, box, flags);
-#line 876 "icon-postprocessor.c"
 	}
-#line 360 "icon-postprocessor.vala"
 	if (CLUTTER_IS_TEXTURE (self->priv->_bg_color)) {
-#line 361 "icon-postprocessor.vala"
 		clutter_actor_allocate ((ClutterActor*) self->priv->_bg_color, box, flags);
-#line 882 "icon-postprocessor.c"
 	}
 }
 
 
-#line 364 "icon-postprocessor.vala"
 static void unity_unity_icon_real_pick (ClutterActor* base, const ClutterColor* color) {
-#line 889 "icon-postprocessor.c"
 	UnityUnityIcon * self;
 	CoglHandle* mat;
 	self = (UnityUnityIcon*) base;
-#line 366 "icon-postprocessor.vala"
 	ctk_actor_set_effects_painting ((CtkActor*) self, TRUE);
-#line 367 "icon-postprocessor.vala"
 	mat = cogl_material_new ();
-#line 368 "icon-postprocessor.vala"
 	cogl_material_set_color4ub (mat, (guchar) (*color).red, (guchar) (*color).green, (guchar) (*color).blue, (guchar) (*color).alpha);
-#line 369 "icon-postprocessor.vala"
 	cogl_rectangle ((float) 0, (float) 0, (float) 48, (float) 48);
-#line 370 "icon-postprocessor.vala"
 	CLUTTER_ACTOR_CLASS (unity_unity_icon_parent_class)->pick ((ClutterActor*) CTK_ACTOR (self), color);
-#line 371 "icon-postprocessor.vala"
 	ctk_actor_set_effects_painting ((CtkActor*) self, FALSE);
-#line 905 "icon-postprocessor.c"
 	_cogl_handle_unref0 (mat);
 }
 
@@ -913,187 +582,110 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 377 "icon-postprocessor.vala"
 void unity_unity_icon_paint_real (ClutterActor* actor) {
-#line 917 "icon-postprocessor.c"
 	ClutterActor* _tmp0_;
 	UnityUnityIcon* _self_;
 	ClutterActorBox box = {0};
 	guchar opacity;
-#line 377 "icon-postprocessor.vala"
 	g_return_if_fail (actor != NULL);
-#line 379 "icon-postprocessor.vala"
 	_self_ = _g_object_ref0 ((_tmp0_ = actor, UNITY_IS_UNITY_ICON (_tmp0_) ? ((UnityUnityIcon*) _tmp0_) : NULL));
-#line 926 "icon-postprocessor.c"
 	memset (&box, 0, sizeof (ClutterActorBox));
-#line 382 "icon-postprocessor.vala"
 	ctk_actor_get_stored_allocation ((CtkActor*) _self_, &box);
-#line 387 "icon-postprocessor.vala"
 	opacity = (guchar) clutter_actor_get_paint_opacity ((ClutterActor*) _self_);
-#line 389 "icon-postprocessor.vala"
 	cogl_material_set_color4ub (_self_->priv->bg_mat, opacity, opacity, opacity, opacity);
-#line 390 "icon-postprocessor.vala"
 	cogl_material_set_color4ub (_self_->priv->bgcol_material, opacity, opacity, opacity, opacity);
-#line 391 "icon-postprocessor.vala"
 	cogl_material_set_color4ub (_self_->priv->icon_material, opacity, opacity, opacity, opacity);
-#line 392 "icon-postprocessor.vala"
 	cogl_material_set_color4ub (_self_->priv->fg_mat, opacity, opacity, opacity, opacity);
-#line 394 "icon-postprocessor.vala"
 	if (CLUTTER_IS_TEXTURE (_self_->priv->_bg_color)) {
-#line 396 "icon-postprocessor.vala"
 		cogl_set_source (_self_->priv->bgcol_material);
-#line 397 "icon-postprocessor.vala"
 		cogl_rectangle (box.x1, box.y1, box.x2, box.y2);
-#line 946 "icon-postprocessor.c"
 	} else {
-#line 401 "icon-postprocessor.vala"
 		cogl_set_source (_self_->priv->bg_mat);
-#line 402 "icon-postprocessor.vala"
 		cogl_rectangle (box.x1, box.y1, box.x2, box.y2);
-#line 952 "icon-postprocessor.c"
 	}
-#line 404 "icon-postprocessor.vala"
 	if (CLUTTER_IS_TEXTURE (_self_->priv->_icon)) {
-#line 956 "icon-postprocessor.c"
 		gint width = 0;
 		gint height = 0;
 		float xpad = 0.0F;
 		float ypad = 0.0F;
-#line 408 "icon-postprocessor.vala"
 		clutter_texture_get_base_size (_self_->priv->_icon, &width, &height);
-#line 410 "icon-postprocessor.vala"
 		xpad = (clutter_actor_box_get_width (&box) - width) / 2.0f;
-#line 411 "icon-postprocessor.vala"
 		ypad = (clutter_actor_box_get_height (&box) - height) / 2.0f;
-#line 413 "icon-postprocessor.vala"
 		cogl_set_source (_self_->priv->icon_material);
-#line 414 "icon-postprocessor.vala"
 		cogl_rectangle (xpad, ypad, box.x2 - xpad, box.y2 - ypad);
-#line 971 "icon-postprocessor.c"
 	}
-#line 417 "icon-postprocessor.vala"
 	cogl_set_source (_self_->priv->fg_mat);
-#line 418 "icon-postprocessor.vala"
 	cogl_rectangle (box.x1, box.y1, box.x2, box.y2);
-#line 977 "icon-postprocessor.c"
 	_g_object_unref0 (_self_);
 }
 
 
-#line 377 "icon-postprocessor.vala"
 static void _unity_unity_icon_paint_real_ctk_effect_paint_func (ClutterActor* actor) {
-#line 984 "icon-postprocessor.c"
 	unity_unity_icon_paint_real (actor);
 }
 
 
-#line 421 "icon-postprocessor.vala"
 static void unity_unity_icon_real_paint (ClutterActor* base) {
-#line 991 "icon-postprocessor.c"
 	UnityUnityIcon * self;
 	GSList* effects;
 	gboolean _tmp0_ = FALSE;
 	self = (UnityUnityIcon*) base;
-#line 426 "icon-postprocessor.vala"
 	effects = ctk_actor_get_effects ((CtkActor*) self);
-#line 427 "icon-postprocessor.vala"
 	if (!ctk_actor_get_effects_painting ((CtkActor*) self)) {
-#line 427 "icon-postprocessor.vala"
 		_tmp0_ = effects != NULL;
-#line 1002 "icon-postprocessor.c"
 	} else {
-#line 427 "icon-postprocessor.vala"
 		_tmp0_ = FALSE;
-#line 1006 "icon-postprocessor.c"
 	}
-#line 427 "icon-postprocessor.vala"
 	if (_tmp0_) {
-#line 1010 "icon-postprocessor.c"
 		GSList* e;
 		e = NULL;
-#line 430 "icon-postprocessor.vala"
 		ctk_actor_set_effects_painting ((CtkActor*) self, TRUE);
-#line 1015 "icon-postprocessor.c"
 		{
 			gboolean _tmp1_;
-#line 431 "icon-postprocessor.vala"
 			e = effects;
-#line 431 "icon-postprocessor.vala"
 			_tmp1_ = TRUE;
-#line 431 "icon-postprocessor.vala"
 			while (TRUE) {
-#line 1024 "icon-postprocessor.c"
 				CtkEffect* effect;
 				gboolean _tmp2_ = FALSE;
 				gboolean last_effect;
-#line 431 "icon-postprocessor.vala"
 				if (!_tmp1_) {
-#line 431 "icon-postprocessor.vala"
 					e = e->next;
-#line 1032 "icon-postprocessor.c"
 				}
-#line 431 "icon-postprocessor.vala"
 				_tmp1_ = FALSE;
-#line 431 "icon-postprocessor.vala"
 				if (!(e != NULL)) {
-#line 431 "icon-postprocessor.vala"
 					break;
-#line 1040 "icon-postprocessor.c"
 				}
-#line 433 "icon-postprocessor.vala"
 				effect = _g_object_ref0 ((CtkEffect*) e->data);
-#line 434 "icon-postprocessor.vala"
 				if (e->next != NULL) {
-#line 434 "icon-postprocessor.vala"
 					_tmp2_ = FALSE;
-#line 1048 "icon-postprocessor.c"
 				} else {
-#line 434 "icon-postprocessor.vala"
 					_tmp2_ = TRUE;
-#line 1052 "icon-postprocessor.c"
 				}
-#line 434 "icon-postprocessor.vala"
 				last_effect = _tmp2_;
-#line 435 "icon-postprocessor.vala"
 				ctk_effect_paint (effect, _unity_unity_icon_paint_real_ctk_effect_paint_func, last_effect);
-#line 1058 "icon-postprocessor.c"
 				_g_object_unref0 (effect);
 			}
 		}
-#line 438 "icon-postprocessor.vala"
 		ctk_actor_set_effects_painting ((CtkActor*) self, FALSE);
-#line 1064 "icon-postprocessor.c"
 	} else {
-#line 442 "icon-postprocessor.vala"
 		unity_unity_icon_paint_real ((ClutterActor*) self);
-#line 1068 "icon-postprocessor.c"
 	}
 }
 
 
-#line 446 "icon-postprocessor.vala"
 static void unity_unity_icon_real_map (ClutterActor* base) {
-#line 1075 "icon-postprocessor.c"
 	UnityUnityIcon * self;
 	self = (UnityUnityIcon*) base;
-#line 448 "icon-postprocessor.vala"
 	CLUTTER_ACTOR_CLASS (unity_unity_icon_parent_class)->map ((ClutterActor*) CTK_ACTOR (self));
-#line 449 "icon-postprocessor.vala"
 	clutter_actor_map ((ClutterActor*) self->priv->_icon);
-#line 1082 "icon-postprocessor.c"
 }
 
 
-#line 452 "icon-postprocessor.vala"
 static void unity_unity_icon_real_unmap (ClutterActor* base) {
-#line 1088 "icon-postprocessor.c"
 	UnityUnityIcon * self;
 	self = (UnityUnityIcon*) base;
-#line 454 "icon-postprocessor.vala"
 	CLUTTER_ACTOR_CLASS (unity_unity_icon_parent_class)->unmap ((ClutterActor*) CTK_ACTOR (self));
-#line 455 "icon-postprocessor.vala"
 	clutter_actor_unmap ((ClutterActor*) self->priv->_icon);
-#line 1095 "icon-postprocessor.c"
 }
 
 
@@ -1101,9 +693,7 @@ ClutterTexture* unity_unity_icon_get_icon (UnityUnityIcon* self) {
 	ClutterTexture* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_icon;
-#line 286 "icon-postprocessor.vala"
 	return result;
-#line 1105 "icon-postprocessor.c"
 }
 
 
@@ -1119,9 +709,7 @@ ClutterTexture* unity_unity_icon_get_bg_color (UnityUnityIcon* self) {
 	ClutterTexture* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_bg_color;
-#line 287 "icon-postprocessor.vala"
 	return result;
-#line 1123 "icon-postprocessor.c"
 }
 
 
@@ -1152,87 +740,52 @@ static GObject * unity_unity_icon_constructor (GType type, guint n_construct_pro
 		CoglHandle* _tmp6_;
 		CoglHandle* _tmp7_;
 		CoglHandle* _tmp8_;
-#line 302 "icon-postprocessor.vala"
 		if (!CLUTTER_IS_TEXTURE (unity_unity_icon_bg_layer)) {
-#line 1156 "icon-postprocessor.c"
 			ClutterTexture* _tmp0_;
 			ClutterTexture* _tmp1_;
 			ClutterTexture* _tmp2_;
-#line 304 "icon-postprocessor.vala"
 			unity_unity_icon_bg_layer = (_tmp0_ = (ClutterTexture*) g_object_ref_sink (unity_theme_image_new ("prism_icon_background")), _g_object_unref0 (unity_unity_icon_bg_layer), _tmp0_);
-#line 305 "icon-postprocessor.vala"
 			unity_unity_icon_fg_layer = (_tmp1_ = (ClutterTexture*) g_object_ref_sink (unity_theme_image_new ("prism_icon_foreground")), _g_object_unref0 (unity_unity_icon_fg_layer), _tmp1_);
-#line 306 "icon-postprocessor.vala"
 			unity_unity_icon_mk_layer = (_tmp2_ = (ClutterTexture*) g_object_ref_sink (unity_theme_image_new ("prism_icon_mask")), _g_object_unref0 (unity_unity_icon_mk_layer), _tmp2_);
-#line 1166 "icon-postprocessor.c"
 		}
-#line 309 "icon-postprocessor.vala"
 		if (CLUTTER_IS_TEXTURE (self->priv->_icon)) {
-#line 1170 "icon-postprocessor.c"
 			CoglHandle* icon_mat;
 			CoglHandle* icon_tex;
 			CoglHandle* mask_tex;
 			CoglHandle* _tmp3_;
-#line 311 "icon-postprocessor.vala"
 			clutter_actor_set_parent ((ClutterActor*) self->priv->_icon, (ClutterActor*) self);
-#line 312 "icon-postprocessor.vala"
 			icon_mat = cogl_material_new ();
-#line 313 "icon-postprocessor.vala"
 			icon_tex = (CoglHandle*) clutter_texture_get_cogl_texture (self->priv->_icon);
-#line 314 "icon-postprocessor.vala"
 			mask_tex = (CoglHandle*) clutter_texture_get_cogl_texture (unity_unity_icon_mk_layer);
-#line 315 "icon-postprocessor.vala"
 			cogl_material_set_layer (icon_mat, 0, icon_tex);
-#line 316 "icon-postprocessor.vala"
 			cogl_material_set_layer (icon_mat, 1, mask_tex);
-#line 317 "icon-postprocessor.vala"
 			self->priv->icon_material = (_tmp3_ = _cogl_handle_ref0 (icon_mat), _cogl_handle_unref0 (self->priv->icon_material), _tmp3_);
-#line 1189 "icon-postprocessor.c"
 			_cogl_handle_unref0 (icon_mat);
 			_cogl_handle_unref0 (icon_tex);
 			_cogl_handle_unref0 (mask_tex);
 		}
-#line 319 "icon-postprocessor.vala"
 		if (CLUTTER_IS_TEXTURE (self->priv->_bg_color)) {
-#line 1196 "icon-postprocessor.c"
 			CoglHandle* _tmp4_;
 			CoglHandle* color;
 			CoglHandle* mask_tex;
-#line 321 "icon-postprocessor.vala"
 			clutter_actor_set_parent ((ClutterActor*) self->priv->_bg_color, (ClutterActor*) self);
-#line 322 "icon-postprocessor.vala"
 			self->priv->bgcol_material = (_tmp4_ = cogl_material_new (), _cogl_handle_unref0 (self->priv->bgcol_material), _tmp4_);
-#line 323 "icon-postprocessor.vala"
 			color = (CoglHandle*) clutter_texture_get_cogl_texture (self->priv->_bg_color);
-#line 324 "icon-postprocessor.vala"
 			mask_tex = (CoglHandle*) clutter_texture_get_cogl_texture (unity_unity_icon_mk_layer);
-#line 325 "icon-postprocessor.vala"
 			cogl_material_set_layer (self->priv->bgcol_material, 0, color);
-#line 326 "icon-postprocessor.vala"
 			cogl_material_set_layer_filters (self->priv->bgcol_material, 1, COGL_MATERIAL_FILTER_LINEAR, COGL_MATERIAL_FILTER_LINEAR);
-#line 327 "icon-postprocessor.vala"
 			cogl_material_set_layer (self->priv->bgcol_material, 1, mask_tex);
-#line 1214 "icon-postprocessor.c"
 			_cogl_handle_unref0 (color);
 			_cogl_handle_unref0 (mask_tex);
 		}
-#line 330 "icon-postprocessor.vala"
 		mat = cogl_material_new ();
-#line 331 "icon-postprocessor.vala"
 		tex = (CoglHandle*) clutter_texture_get_cogl_texture (unity_unity_icon_bg_layer);
-#line 332 "icon-postprocessor.vala"
 		cogl_material_set_layer (mat, 0, tex);
-#line 333 "icon-postprocessor.vala"
 		self->priv->bg_mat = (_tmp5_ = _cogl_handle_ref0 (mat), _cogl_handle_unref0 (self->priv->bg_mat), _tmp5_);
-#line 335 "icon-postprocessor.vala"
 		mat = (_tmp6_ = cogl_material_new (), _cogl_handle_unref0 (mat), _tmp6_);
-#line 336 "icon-postprocessor.vala"
 		tex = (_tmp7_ = (CoglHandle*) clutter_texture_get_cogl_texture (unity_unity_icon_fg_layer), _cogl_handle_unref0 (tex), _tmp7_);
-#line 337 "icon-postprocessor.vala"
 		cogl_material_set_layer (mat, 0, tex);
-#line 338 "icon-postprocessor.vala"
 		self->priv->fg_mat = (_tmp8_ = _cogl_handle_ref0 (mat), _cogl_handle_unref0 (self->priv->fg_mat), _tmp8_);
-#line 1234 "icon-postprocessor.c"
 		_cogl_handle_unref0 (mat);
 		_cogl_handle_unref0 (tex);
 	}

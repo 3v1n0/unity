@@ -19,8 +19,8 @@
 #include <X11/Xutil.h>
 #include <X11/Xregion.h>
 #include <clutk/clutk.h>
-#include <gee.h>
 #include <libindicator/indicator-object.h>
+#include <gee.h>
 #include <libindicator/indicator.h>
 #include <libindicator/indicator-service.h>
 #include <libindicator/indicator-service-manager.h>
@@ -29,7 +29,6 @@
 #include <math.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
 #include <clutter-gtk/clutter-gtk.h>
-#include <libwnck/libwnck.h>
 
 G_BEGIN_DECLS
 
@@ -69,6 +68,17 @@ typedef struct _UnityPanelHomeButton UnityPanelHomeButton;
 typedef struct _UnityPanelHomeButtonClass UnityPanelHomeButtonClass;
 typedef struct _UnityPanelHomeButtonPrivate UnityPanelHomeButtonPrivate;
 
+#define UNITY_PANEL_TYPE_INDICATOR_BACKGROUND (unity_panel_indicator_background_get_type ())
+#define UNITY_PANEL_INDICATOR_BACKGROUND(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_TYPE_INDICATOR_BACKGROUND, UnityPanelIndicatorBackground))
+#define UNITY_PANEL_INDICATOR_BACKGROUND_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PANEL_TYPE_INDICATOR_BACKGROUND, UnityPanelIndicatorBackgroundClass))
+#define UNITY_PANEL_IS_INDICATOR_BACKGROUND(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PANEL_TYPE_INDICATOR_BACKGROUND))
+#define UNITY_PANEL_IS_INDICATOR_BACKGROUND_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PANEL_TYPE_INDICATOR_BACKGROUND))
+#define UNITY_PANEL_INDICATOR_BACKGROUND_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PANEL_TYPE_INDICATOR_BACKGROUND, UnityPanelIndicatorBackgroundClass))
+
+typedef struct _UnityPanelIndicatorBackground UnityPanelIndicatorBackground;
+typedef struct _UnityPanelIndicatorBackgroundClass UnityPanelIndicatorBackgroundClass;
+typedef struct _UnityPanelIndicatorBackgroundPrivate UnityPanelIndicatorBackgroundPrivate;
+
 #define UNITY_PANEL_INDICATORS_TYPE_INDICATOR_BAR (unity_panel_indicators_indicator_bar_get_type ())
 #define UNITY_PANEL_INDICATORS_INDICATOR_BAR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_BAR, UnityPanelIndicatorsIndicatorBar))
 #define UNITY_PANEL_INDICATORS_INDICATOR_BAR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_BAR, UnityPanelIndicatorsIndicatorBarClass))
@@ -79,6 +89,16 @@ typedef struct _UnityPanelHomeButtonPrivate UnityPanelHomeButtonPrivate;
 typedef struct _UnityPanelIndicatorsIndicatorBar UnityPanelIndicatorsIndicatorBar;
 typedef struct _UnityPanelIndicatorsIndicatorBarClass UnityPanelIndicatorsIndicatorBarClass;
 typedef struct _UnityPanelIndicatorsIndicatorBarPrivate UnityPanelIndicatorsIndicatorBarPrivate;
+
+#define UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW (unity_panel_indicators_indicator_object_view_get_type ())
+#define UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_VIEW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW, UnityPanelIndicatorsIndicatorObjectView))
+#define UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_VIEW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW, UnityPanelIndicatorsIndicatorObjectViewClass))
+#define UNITY_PANEL_INDICATORS_IS_INDICATOR_OBJECT_VIEW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW))
+#define UNITY_PANEL_INDICATORS_IS_INDICATOR_OBJECT_VIEW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW))
+#define UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_VIEW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW, UnityPanelIndicatorsIndicatorObjectViewClass))
+
+typedef struct _UnityPanelIndicatorsIndicatorObjectView UnityPanelIndicatorsIndicatorObjectView;
+typedef struct _UnityPanelIndicatorsIndicatorObjectViewClass UnityPanelIndicatorsIndicatorObjectViewClass;
 
 #define UNITY_PANEL_INDICATORS_TYPE_INDICATORS_MODEL (unity_panel_indicators_indicators_model_get_type ())
 #define UNITY_PANEL_INDICATORS_INDICATORS_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_INDICATORS_TYPE_INDICATORS_MODEL, UnityPanelIndicatorsIndicatorsModel))
@@ -112,16 +132,6 @@ typedef struct _UnityPanelIndicatorsIndicatorsFileModelPrivate UnityPanelIndicat
 typedef struct _UnityPanelIndicatorsIndicatorObjectEntryView UnityPanelIndicatorsIndicatorObjectEntryView;
 typedef struct _UnityPanelIndicatorsIndicatorObjectEntryViewClass UnityPanelIndicatorsIndicatorObjectEntryViewClass;
 typedef struct _UnityPanelIndicatorsIndicatorObjectEntryViewPrivate UnityPanelIndicatorsIndicatorObjectEntryViewPrivate;
-
-#define UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW (unity_panel_indicators_indicator_object_view_get_type ())
-#define UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_VIEW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW, UnityPanelIndicatorsIndicatorObjectView))
-#define UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_VIEW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW, UnityPanelIndicatorsIndicatorObjectViewClass))
-#define UNITY_PANEL_INDICATORS_IS_INDICATOR_OBJECT_VIEW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW))
-#define UNITY_PANEL_INDICATORS_IS_INDICATOR_OBJECT_VIEW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW))
-#define UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_VIEW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW, UnityPanelIndicatorsIndicatorObjectViewClass))
-
-typedef struct _UnityPanelIndicatorsIndicatorObjectView UnityPanelIndicatorsIndicatorObjectView;
-typedef struct _UnityPanelIndicatorsIndicatorObjectViewClass UnityPanelIndicatorsIndicatorObjectViewClass;
 typedef struct _UnityPanelIndicatorsIndicatorObjectViewPrivate UnityPanelIndicatorsIndicatorObjectViewPrivate;
 
 #define UNITY_PANEL_INDICATORS_TYPE_VIEW (unity_panel_indicators_view_get_type ())
@@ -761,6 +771,15 @@ struct _UnityPanelHomeButton {
 
 struct _UnityPanelHomeButtonClass {
 	CtkButtonClass parent_class;
+};
+
+struct _UnityPanelIndicatorBackground {
+	ClutterCairoTexture parent_instance;
+	UnityPanelIndicatorBackgroundPrivate * priv;
+};
+
+struct _UnityPanelIndicatorBackgroundClass {
+	ClutterCairoTextureClass parent_class;
 };
 
 struct _UnityPanelIndicatorsIndicatorBar {
@@ -1425,9 +1444,16 @@ GType unity_panel_home_button_get_type (void);
 UnityPanelHomeButton* unity_panel_home_button_new (UnityShell* shell);
 UnityPanelHomeButton* unity_panel_home_button_construct (GType object_type, UnityShell* shell);
 UnityShell* unity_panel_home_button_get_shell (UnityPanelHomeButton* self);
+GType unity_panel_indicator_background_get_type (void);
+#define UNITY_PANEL_INDICATOR_BACKGROUND_BG "/usr/share/unity/themes/panel_background.png"
+UnityPanelIndicatorBackground* unity_panel_indicator_background_new (void);
+UnityPanelIndicatorBackground* unity_panel_indicator_background_construct (GType object_type);
 GType unity_panel_indicators_indicator_bar_get_type (void);
 UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_new (void);
 UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_construct (GType object_type);
+GType unity_panel_indicators_indicator_object_view_get_type (void);
+UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_bar_get_indicator_view_matching (UnityPanelIndicatorsIndicatorBar* self, IndicatorObject* o);
+void unity_panel_indicators_indicator_bar_set_indicator_mode (UnityPanelIndicatorsIndicatorBar* self, gboolean mode);
 GType unity_panel_indicators_indicators_model_get_type (void);
 UnityPanelIndicatorsIndicatorsModel* unity_panel_indicators_indicators_model_get_default (void);
 void unity_panel_indicators_indicators_model_set_default (UnityPanelIndicatorsIndicatorsModel* model);
@@ -1448,8 +1474,8 @@ gboolean unity_panel_indicators_indicator_object_entry_view_on_motion_event (Uni
 void unity_panel_indicators_indicator_object_entry_view_menu_shown (UnityPanelIndicatorsIndicatorObjectEntryView* self);
 void unity_panel_indicators_indicator_object_entry_view_menu_vis_changed (UnityPanelIndicatorsIndicatorObjectEntryView* self);
 void unity_panel_indicators_indicator_object_entry_view_menu_key_moved (UnityPanelIndicatorsIndicatorObjectEntryView* self, GtkMenuDirectionType type);
+gboolean unity_panel_indicators_indicator_object_entry_view_is_open (UnityPanelIndicatorsIndicatorObjectEntryView* self);
 IndicatorObjectEntry* unity_panel_indicators_indicator_object_entry_view_get_entry (UnityPanelIndicatorsIndicatorObjectEntryView* self);
-GType unity_panel_indicators_indicator_object_view_get_type (void);
 UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_object_view_new (IndicatorObject* _object);
 UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_object_view_construct (GType object_type, IndicatorObject* _object);
 void unity_panel_indicators_indicator_object_view_show_entry_menu (UnityPanelIndicatorsIndicatorObjectView* self, gint entry);
@@ -1457,6 +1483,7 @@ void unity_panel_indicators_indicator_object_view_open_first_menu_entry (UnityPa
 void unity_panel_indicators_indicator_object_view_open_last_menu_entry (UnityPanelIndicatorsIndicatorObjectView* self);
 gboolean unity_panel_indicators_indicator_object_view_find_entry (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObjectEntry* entry);
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_view_get_entry_view (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObjectEntry* entry);
+void unity_panel_indicators_indicator_object_view_remove_first_entry (UnityPanelIndicatorsIndicatorObjectView* self);
 IndicatorObject* unity_panel_indicators_indicator_object_view_get_indicator_object (UnityPanelIndicatorsIndicatorObjectView* self);
 GType unity_panel_indicators_view_get_type (void);
 UnityPanelIndicatorsView* unity_panel_indicators_view_new (void);
@@ -1786,7 +1813,6 @@ GType unity_testing_window_get_type (void);
 UnityTestingWindow* unity_testing_window_new (gboolean popup, gint width, gint height);
 UnityTestingWindow* unity_testing_window_construct (GType object_type, gboolean popup, gint width, gint height);
 void unity_testing_window_init_test_mode (UnityTestingWindow* self);
-void unity_testing_window_on_active_window_changed (UnityTestingWindow* self, WnckWindow* previous_window);
 gboolean unity_testing_window_on_stage_button_press (UnityTestingWindow* self, ClutterEvent* src);
 gboolean unity_testing_window_get_is_popup (UnityTestingWindow* self);
 gint unity_testing_window_get_popup_width (UnityTestingWindow* self);

@@ -101,228 +101,152 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 56 "test-home-button.vala"
 static void _unity_tests_ui_home_button_suite_test_click_home_button_gdata_test_func (gpointer self) {
-#line 107 "test-home-button.c"
 	unity_tests_ui_home_button_suite_test_click_home_button (self);
 }
 
 
-#line 38 "test-home-button.vala"
 UnityTestsUIHomeButtonSuite* unity_tests_ui_home_button_suite_construct (GType object_type) {
-#line 114 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	UnityTestingWindow* _tmp0_;
 	ClutterStage* _tmp1_;
 	UnityPanelHomeButton* _tmp2_;
 	UnityTestingDirector* _tmp3_;
-#line 38 "test-home-button.vala"
 	self = (UnityTestsUIHomeButtonSuite*) g_object_new (object_type, NULL);
-#line 40 "test-home-button.vala"
 	unity_testing_logging_init_fatal_handler ();
-#line 43 "test-home-button.vala"
 	self->priv->window = (_tmp0_ = g_object_ref_sink (unity_testing_window_new (TRUE, 1024, 600)), _g_object_unref0 (self->priv->window), _tmp0_);
-#line 44 "test-home-button.vala"
 	unity_testing_window_init_test_mode (self->priv->window);
-#line 45 "test-home-button.vala"
 	self->priv->stage = (_tmp1_ = _g_object_ref0 (self->priv->window->stage), _g_object_unref0 (self->priv->stage), _tmp1_);
-#line 46 "test-home-button.vala"
 	gtk_window_set_title ((GtkWindow*) self->priv->window, "HomeButton Test");
-#line 47 "test-home-button.vala"
 	gtk_widget_show_all ((GtkWidget*) self->priv->window);
-#line 49 "test-home-button.vala"
 	self->priv->home_button = (_tmp2_ = g_object_ref_sink (unity_panel_home_button_new ((UnityShell*) self)), _g_object_unref0 (self->priv->home_button), _tmp2_);
-#line 50 "test-home-button.vala"
 	self->priv->director = (_tmp3_ = unity_testing_director_new (self->priv->stage), _g_object_unref0 (self->priv->director), _tmp3_);
-#line 52 "test-home-button.vala"
 	g_test_add_data_func (UNITY_TESTS_UI_HOME_BUTTON_SUITE_DOMAIN "/HomeButton", self, _unity_tests_ui_home_button_suite_test_click_home_button_gdata_test_func);
-#line 140 "test-home-button.c"
 	return self;
 }
 
 
-#line 38 "test-home-button.vala"
 UnityTestsUIHomeButtonSuite* unity_tests_ui_home_button_suite_new (void) {
-#line 38 "test-home-button.vala"
 	return unity_tests_ui_home_button_suite_construct (UNITY_TESTS_UI_TYPE_HOME_BUTTON_SUITE);
-#line 149 "test-home-button.c"
 }
 
 
-#line 56 "test-home-button.vala"
 static void unity_tests_ui_home_button_suite_test_click_home_button (UnityTestsUIHomeButtonSuite* self) {
-#line 56 "test-home-button.vala"
 	g_return_if_fail (self != NULL);
-#line 58 "test-home-button.vala"
 	unity_testing_director_button_press (self->priv->director, (ClutterActor*) self->priv->home_button, (guint32) 1, TRUE, 1.0f, 1.0f, FALSE);
-#line 60 "test-home-button.vala"
 	unity_testing_logging_init_fatal_handler ();
-#line 62 "test-home-button.vala"
 	g_assert (g_flag == TRUE);
-#line 163 "test-home-button.c"
 }
 
 
-#line 70 "test-home-button.vala"
 static UnityShellMode unity_tests_ui_home_button_suite_real_get_mode (UnityShell* base) {
-#line 169 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	UnityShellMode result = 0;
 	self = (UnityTestsUIHomeButtonSuite*) base;
 	result = UNITY_SHELL_MODE_UNDERLAY;
-#line 73 "test-home-button.vala"
 	return result;
-#line 176 "test-home-button.c"
 }
 
 
-#line 76 "test-home-button.vala"
 static ClutterStage* unity_tests_ui_home_button_suite_real_get_stage (UnityShell* base) {
-#line 182 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	ClutterStage* result = NULL;
 	self = (UnityTestsUIHomeButtonSuite*) base;
 	result = _g_object_ref0 (self->priv->stage);
-#line 79 "test-home-button.vala"
 	return result;
-#line 189 "test-home-button.c"
 }
 
 
-#line 82 "test-home-button.vala"
 static void unity_tests_ui_home_button_suite_real_show_unity (UnityShell* base) {
-#line 195 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	self = (UnityTestsUIHomeButtonSuite*) base;
-#line 85 "test-home-button.vala"
 	g_flag = TRUE;
-#line 200 "test-home-button.c"
 }
 
 
-#line 88 "test-home-button.vala"
 static gint unity_tests_ui_home_button_suite_real_get_indicators_width (UnityShell* base) {
-#line 206 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	gint result = 0;
 	self = (UnityTestsUIHomeButtonSuite*) base;
 	result = 0;
-#line 92 "test-home-button.vala"
 	return result;
-#line 213 "test-home-button.c"
 }
 
 
-#line 95 "test-home-button.vala"
 static gint unity_tests_ui_home_button_suite_real_get_launcher_width_foobar (UnityShell* base) {
-#line 219 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	gint result = 0;
 	self = (UnityTestsUIHomeButtonSuite*) base;
 	result = 0;
-#line 99 "test-home-button.vala"
 	return result;
-#line 226 "test-home-button.c"
 }
 
 
-#line 102 "test-home-button.vala"
 static gint unity_tests_ui_home_button_suite_real_get_panel_height_foobar (UnityShell* base) {
-#line 232 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	gint result = 0;
 	self = (UnityTestsUIHomeButtonSuite*) base;
 	result = 0;
-#line 106 "test-home-button.vala"
 	return result;
-#line 239 "test-home-button.c"
 }
 
 
-#line 109 "test-home-button.vala"
 static void unity_tests_ui_home_button_suite_real_ensure_input_region (UnityShell* base) {
-#line 245 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	self = (UnityTestsUIHomeButtonSuite*) base;
 }
 
 
-#line 115 "test-home-button.vala"
 static void unity_tests_ui_home_button_suite_real_add_fullscreen_request (UnityShell* base, GObject* o) {
-#line 253 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	self = (UnityTestsUIHomeButtonSuite*) base;
-#line 115 "test-home-button.vala"
 	g_return_if_fail (o != NULL);
-#line 258 "test-home-button.c"
 }
 
 
-#line 121 "test-home-button.vala"
 static gboolean unity_tests_ui_home_button_suite_real_remove_fullscreen_request (UnityShell* base, GObject* o) {
-#line 264 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	gboolean result = FALSE;
 	self = (UnityTestsUIHomeButtonSuite*) base;
-#line 121 "test-home-button.vala"
 	g_return_val_if_fail (o != NULL, FALSE);
-#line 270 "test-home-button.c"
 	result = FALSE;
-#line 125 "test-home-button.vala"
 	return result;
-#line 274 "test-home-button.c"
 }
 
 
-#line 128 "test-home-button.vala"
 static void unity_tests_ui_home_button_suite_real_grab_keyboard (UnityShell* base, gboolean grab, guint32 timestamp) {
-#line 280 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	self = (UnityTestsUIHomeButtonSuite*) base;
 }
 
 
-#line 134 "test-home-button.vala"
 static void unity_tests_ui_home_button_suite_real_show_window_picker (UnityShell* base) {
-#line 288 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	self = (UnityTestsUIHomeButtonSuite*) base;
 }
 
 
-#line 140 "test-home-button.vala"
 static void unity_tests_ui_home_button_suite_real_close_xids (UnityShell* base, GArray* xids) {
-#line 296 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	self = (UnityTestsUIHomeButtonSuite*) base;
-#line 140 "test-home-button.vala"
 	g_return_if_fail (xids != NULL);
-#line 301 "test-home-button.c"
 }
 
 
-#line 146 "test-home-button.vala"
 static void unity_tests_ui_home_button_suite_real_show_window (UnityShell* base, guint32 xid) {
-#line 307 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	self = (UnityTestsUIHomeButtonSuite*) base;
 }
 
 
-#line 152 "test-home-button.vala"
 static void unity_tests_ui_home_button_suite_real_expose_xids (UnityShell* base, GArray* xids) {
-#line 315 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	self = (UnityTestsUIHomeButtonSuite*) base;
-#line 152 "test-home-button.vala"
 	g_return_if_fail (xids != NULL);
-#line 320 "test-home-button.c"
 }
 
 
-#line 158 "test-home-button.vala"
 static void unity_tests_ui_home_button_suite_real_stop_expose (UnityShell* base) {
-#line 326 "test-home-button.c"
 	UnityTestsUIHomeButtonSuite * self;
 	self = (UnityTestsUIHomeButtonSuite*) base;
 }
@@ -333,9 +257,7 @@ static gboolean unity_tests_ui_home_button_suite_real_get_menus_swallow_events (
 	UnityTestsUIHomeButtonSuite* self;
 	self = (UnityTestsUIHomeButtonSuite*) base;
 	result = TRUE;
-#line 68 "test-home-button.vala"
 	return result;
-#line 339 "test-home-button.c"
 }
 
 
