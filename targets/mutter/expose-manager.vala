@@ -26,7 +26,7 @@ namespace Unity
     private Clutter.Actor darken_box;
     private bool hovered;
 
-    public unowned Mutter.Window source { get; private set; }
+    public unowned Clutter.Actor source { get; private set; }
 
     public uint8 hovered_opacity { get; set; }
     public uint8 unhovered_opacity { get; set; }
@@ -41,7 +41,7 @@ namespace Unity
       }
     }
 
-    public ExposeClone (Mutter.Window source)
+    public ExposeClone (Clutter.Actor source)
     {
       darken = 0;
       hovered_opacity = 255;
@@ -130,7 +130,7 @@ namespace Unity
     {
     }
 
-    public void start_expose (SList<Wnck.Window> windows)
+    public void start_expose (SList<Clutter.Actor> windows)
     {
       var controller = Launcher.QuicklistController.get_default ();
       if (controller.menu_is_open ())
@@ -150,36 +150,22 @@ namespace Unity
       expose_group.raise_top ();
       expose_group.show ();
 
-      unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
-      foreach (Mutter.Window w in mutter_windows)
+      foreach (Clutter.Actor actor in windows)
         {
-          bool keep = false;
-          ulong xid = (ulong) Mutter.MetaWindow.get_xwindow (w.get_meta_window ());
-          foreach (Wnck.Window window in windows)
-            {
-              if (window.get_xid () == xid)
-                {
-                  keep = true;
-                  break;
-                }
-            }
-
-          if (keep)
-            {
-              ExposeClone clone = new ExposeClone (w);
-              clone.set_position (w.x, w.y);
-              clone.set_size (w.width, w.height);
-              exposed_windows.append (clone);
-              clone.reactive = true;
-
-              expose_group.add_actor (clone);
-
-              clone.hovered_opacity = hovered_opacity;
-              clone.unhovered_opacity = unhovered_opacity;
-              clone.opacity = unhovered_opacity;
-              clone.darken = darken;
-
-              clone.enter_event.connect (() => {
+          ExposeClone clone = new ExposeClone (actor);
+          clone.set_position (actor.x, actor.y);
+          clone.set_size (actor.width, actor.height);
+          exposed_windows.append (clone);
+          clone.reactive = true;
+          
+          expose_group.add_actor (clone);
+          
+          clone.hovered_opacity = hovered_opacity;
+          clone.unhovered_opacity = unhovered_opacity;
+          clone.opacity = unhovered_opacity;
+          clone.darken = darken;
+          
+          clone.enter_event.connect (() => {
                 var ql_controller = Launcher.QuicklistController.get_default ();
                 if (ql_controller.menu_is_open () && this.menu_in_hover_close_state)
                   {
@@ -188,7 +174,7 @@ namespace Unity
                 return false;
               });
 
-              clone.leave_event.connect (() => {
+          clone.leave_event.connect (() => {
                 var ql_controller = Launcher.QuicklistController.get_default ();
                 if (ql_controller.menu_is_open () && this.menu_in_hover_close_state)
                   {
@@ -196,8 +182,11 @@ namespace Unity
                   }
                 return false;
               });
-            }
-
+        }
+      
+      unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
+      foreach (Mutter.Window w in mutter_windows)
+        {
             if (w.get_window_type () == Mutter.MetaCompWindowType.DESKTOP)
               continue;
 
