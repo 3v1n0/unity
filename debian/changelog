@@ -1,6 +1,7 @@
-unity (0.2.8-0ubuntu1) UNRELEASED; urgency=low
+unity (0.2.8-0ubuntu1) maverick; urgency=low
 
   * New upstream release.
+    (LP: #592120, #590728, #580104, #586015, #587237, #582530, #586002, #591742)
   * removed patches integrated upstream:
     debian/patches/01_drop_mutter_req.patch
     debian/patches/02_make_perceptualdiff_optional.patch
@@ -9,7 +10,7 @@ unity (0.2.8-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - remove libwnck-dev dep
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 10 Jun 2010 19:07:12 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 10 Jun 2010 19:21:55 +0200
 
 unity (0.2.7-0ubuntu2) maverick; urgency=low
 
