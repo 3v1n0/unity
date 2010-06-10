@@ -152,6 +152,12 @@ namespace Unity
 
       foreach (Clutter.Actor actor in windows)
         {
+          if (!(actor is Mutter.Window) || 
+               ((actor as Mutter.Window).get_window_type () != Mutter.MetaCompWindowType.NORMAL &&
+                (actor as Mutter.Window).get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
+                (actor as Mutter.Window).get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG))
+            continue;
+        
           ExposeClone clone = new ExposeClone (actor);
           clone.set_position (actor.x, actor.y);
           clone.set_size (actor.width, actor.height);
