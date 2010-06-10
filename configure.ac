@@ -106,7 +106,6 @@ PKG_CHECK_MODULES(BASE,
                   clutk-0.3 >= 0.3.26
                   indicator
                   libbamf >= 0.2
-                  libwnck-1.0 >= 2.28.0
                   unique-1.0
                   unity-misc
                   x11)
