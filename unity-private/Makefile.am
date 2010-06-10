@@ -83,7 +83,8 @@ panel_sources = \
   panel/panel-menu-manager.vala \
   panel/panel-menubar.vala \
   panel/panel-tray.vala \
-  panel/panel-view.vala
+  panel/panel-view.vala \
+  panel/panel-home.vala
 
 places_sources = \
   places/application-place.vala \
