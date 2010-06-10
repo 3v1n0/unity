@@ -53,7 +53,7 @@ namespace Unity.Panel
       int width = (int)(box.x2 - box.x1) + 12;
       int height = (int)(box.y2 - box.y1);
 
-      Clutter.ActorBox child = new Clutter.ActorBox ();
+      Clutter.ActorBox child;
       child = box;
       child.x1 = child.x1 - 12;
       child.x2 = child.x2 + 12;

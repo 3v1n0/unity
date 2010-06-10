@@ -144,15 +144,6 @@ namespace Unity.Panel
           system_tray.show ();
           indicator_bar.set_indicator_mode (mode);
     		}
-    	
-    	//do_queue_redraw ();
-    		
-//       float x;
-//       x = mode ? this.width - this.get_indicators_width () : 0;
-//       this.rect.set_clip (x,
-//                           0,
-//                           mode ? this.get_indicators_width () : this.width,
-//                           mode ? PANEL_HEIGHT -1 : PANEL_HEIGHT);
     }
   }
 }
