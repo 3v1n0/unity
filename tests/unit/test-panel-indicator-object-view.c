@@ -122,110 +122,69 @@ static void unity_tests_unit_panel_indicator_object_view_suite_finalize (GObject
 
 
 
-#line 32 "test-panel-indicator-object-view.vala"
 UnityTestsUnitFakeIndicatorObject* unity_tests_unit_fake_indicator_object_construct (GType object_type) {
-#line 128 "test-panel-indicator-object-view.c"
 	UnityTestsUnitFakeIndicatorObject * self;
-#line 34 "test-panel-indicator-object-view.vala"
 	self = (UnityTestsUnitFakeIndicatorObject*) g_object_new (object_type, NULL);
-#line 132 "test-panel-indicator-object-view.c"
 	return self;
 }
 
 
-#line 32 "test-panel-indicator-object-view.vala"
 UnityTestsUnitFakeIndicatorObject* unity_tests_unit_fake_indicator_object_new (void) {
-#line 32 "test-panel-indicator-object-view.vala"
 	return unity_tests_unit_fake_indicator_object_construct (UNITY_TESTS_UNIT_TYPE_FAKE_INDICATOR_OBJECT);
-#line 141 "test-panel-indicator-object-view.c"
 }
 
 
-#line 48 "test-panel-indicator-object-view.vala"
 void unity_tests_unit_fake_indicator_object_add_entry (UnityTestsUnitFakeIndicatorObject* self, IndicatorObjectEntry* entry) {
-#line 147 "test-panel-indicator-object-view.c"
 	gint pos;
-#line 48 "test-panel-indicator-object-view.vala"
 	g_return_if_fail (self != NULL);
-#line 48 "test-panel-indicator-object-view.vala"
 	g_return_if_fail (entry != NULL);
-#line 50 "test-panel-indicator-object-view.vala"
 	pos = gee_abstract_list_index_of ((GeeAbstractList*) self->indicator_entry_array, entry);
-#line 51 "test-panel-indicator-object-view.vala"
 	if (pos != (-1)) {
-#line 52 "test-panel-indicator-object-view.vala"
 		return;
-#line 159 "test-panel-indicator-object-view.c"
 	}
-#line 54 "test-panel-indicator-object-view.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->indicator_entry_array, entry);
-#line 55 "test-panel-indicator-object-view.vala"
 	g_signal_emit_by_name ((IndicatorObject*) self, "entry-added", entry);
-#line 165 "test-panel-indicator-object-view.c"
 }
 
 
-#line 58 "test-panel-indicator-object-view.vala"
 void unity_tests_unit_fake_indicator_object_remove_entry (UnityTestsUnitFakeIndicatorObject* self, IndicatorObjectEntry* entry) {
-#line 171 "test-panel-indicator-object-view.c"
 	gint pos;
-#line 58 "test-panel-indicator-object-view.vala"
 	g_return_if_fail (self != NULL);
-#line 58 "test-panel-indicator-object-view.vala"
 	g_return_if_fail (entry != NULL);
-#line 60 "test-panel-indicator-object-view.vala"
 	pos = gee_abstract_list_index_of ((GeeAbstractList*) self->indicator_entry_array, entry);
-#line 61 "test-panel-indicator-object-view.vala"
 	if (pos != (-1)) {
-#line 181 "test-panel-indicator-object-view.c"
 		IndicatorObjectEntry* _tmp0_;
-#line 63 "test-panel-indicator-object-view.vala"
 		_tmp0_ = (IndicatorObjectEntry*) gee_abstract_list_remove_at ((GeeAbstractList*) self->indicator_entry_array, pos);
-#line 185 "test-panel-indicator-object-view.c"
 		_indicator_object_entry_free0 (_tmp0_);
-#line 64 "test-panel-indicator-object-view.vala"
 		g_signal_emit_by_name ((IndicatorObject*) self, "entry-removed", entry);
-#line 189 "test-panel-indicator-object-view.c"
 	}
 }
 
 
-#line 68 "test-panel-indicator-object-view.vala"
 static GtkLabel* unity_tests_unit_fake_indicator_object_real_get_label (IndicatorObject* base) {
-#line 196 "test-panel-indicator-object-view.c"
 	UnityTestsUnitFakeIndicatorObject * self;
 	GtkLabel* result = NULL;
 	self = (UnityTestsUnitFakeIndicatorObject*) base;
 	result = self->_label;
-#line 70 "test-panel-indicator-object-view.vala"
 	return result;
-#line 203 "test-panel-indicator-object-view.c"
 }
 
 
-#line 73 "test-panel-indicator-object-view.vala"
 static GtkImage* unity_tests_unit_fake_indicator_object_real_get_image (IndicatorObject* base) {
-#line 209 "test-panel-indicator-object-view.c"
 	UnityTestsUnitFakeIndicatorObject * self;
 	GtkImage* result = NULL;
 	self = (UnityTestsUnitFakeIndicatorObject*) base;
 	result = self->_image;
-#line 75 "test-panel-indicator-object-view.vala"
 	return result;
-#line 216 "test-panel-indicator-object-view.c"
 }
 
 
-#line 78 "test-panel-indicator-object-view.vala"
 static GtkMenu* unity_tests_unit_fake_indicator_object_real_get_menu (IndicatorObject* base) {
-#line 222 "test-panel-indicator-object-view.c"
 	UnityTestsUnitFakeIndicatorObject * self;
 	GtkMenu* result = NULL;
 	self = (UnityTestsUnitFakeIndicatorObject*) base;
 	result = self->_menu;
-#line 80 "test-panel-indicator-object-view.vala"
 	return result;
-#line 229 "test-panel-indicator-object-view.c"
 }
 
 
@@ -241,19 +200,12 @@ static GObject * unity_tests_unit_fake_indicator_object_constructor (GType type,
 		GtkLabel* _tmp1_;
 		GtkImage* _tmp2_;
 		GtkMenu* _tmp3_;
-#line 39 "test-panel-indicator-object-view.vala"
 		START_FUNCTION ();
-#line 40 "test-panel-indicator-object-view.vala"
 		self->indicator_entry_array = (_tmp0_ = gee_array_list_new (G_TYPE_POINTER, NULL, NULL, NULL), _g_object_unref0 (self->indicator_entry_array), _tmp0_);
-#line 42 "test-panel-indicator-object-view.vala"
 		self->_label = (_tmp1_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Test Label")), _g_object_unref0 (self->_label), _tmp1_);
-#line 43 "test-panel-indicator-object-view.vala"
 		self->_image = (_tmp2_ = g_object_ref_sink ((GtkImage*) gtk_image_new_from_icon_name ("gtk-apply", GTK_ICON_SIZE_MENU)), _g_object_unref0 (self->_image), _tmp2_);
-#line 44 "test-panel-indicator-object-view.vala"
 		self->_menu = (_tmp3_ = g_object_ref_sink ((GtkMenu*) gtk_menu_new ()), _g_object_unref0 (self->_menu), _tmp3_);
-#line 45 "test-panel-indicator-object-view.vala"
 		END_FUNCTION ();
-#line 257 "test-panel-indicator-object-view.c"
 	}
 	return obj;
 }
@@ -296,133 +248,83 @@ GType unity_tests_unit_fake_indicator_object_get_type (void) {
 }
 
 
-#line 118 "test-panel-indicator-object-view.vala"
 static void _unity_tests_unit_panel_indicator_object_view_suite_test_fake_indicator_object_gdata_test_func (gpointer self) {
-#line 302 "test-panel-indicator-object-view.c"
 	unity_tests_unit_panel_indicator_object_view_suite_test_fake_indicator_object (self);
 }
 
 
-#line 125 "test-panel-indicator-object-view.vala"
 static void _unity_tests_unit_panel_indicator_object_view_suite_test_indicator_add_entry_gdata_test_func (gpointer self) {
-#line 309 "test-panel-indicator-object-view.c"
 	unity_tests_unit_panel_indicator_object_view_suite_test_indicator_add_entry (self);
 }
 
 
-#line 135 "test-panel-indicator-object-view.vala"
 static void _unity_tests_unit_panel_indicator_object_view_suite_test_indicator_enty_view_gdata_test_func (gpointer self) {
-#line 316 "test-panel-indicator-object-view.c"
 	unity_tests_unit_panel_indicator_object_view_suite_test_indicator_enty_view (self);
 }
 
 
-#line 98 "test-panel-indicator-object-view.vala"
 UnityTestsUnitPanelIndicatorObjectViewSuite* unity_tests_unit_panel_indicator_object_view_suite_construct (GType object_type) {
-#line 323 "test-panel-indicator-object-view.c"
 	UnityTestsUnitPanelIndicatorObjectViewSuite * self;
 	IndicatorObjectEntry* _tmp0_;
 	GtkMenu* _tmp1_;
 	GtkLabel* _tmp2_;
 	GtkImage* _tmp3_;
-#line 98 "test-panel-indicator-object-view.vala"
 	self = (UnityTestsUnitPanelIndicatorObjectViewSuite*) g_object_new (object_type, NULL);
-#line 100 "test-panel-indicator-object-view.vala"
 	unity_testing_logging_init_fatal_handler ();
-#line 102 "test-panel-indicator-object-view.vala"
 	self->priv->entry = (_tmp0_ = indicator_object_entry_new (), _indicator_object_entry_free0 (self->priv->entry), _tmp0_);
-#line 104 "test-panel-indicator-object-view.vala"
 	self->priv->menu = (_tmp1_ = g_object_ref_sink ((GtkMenu*) gtk_menu_new ()), _g_object_unref0 (self->priv->menu), _tmp1_);
-#line 105 "test-panel-indicator-object-view.vala"
 	self->priv->entry->menu = self->priv->menu;
-#line 107 "test-panel-indicator-object-view.vala"
 	self->priv->label = (_tmp2_ = g_object_ref_sink ((GtkLabel*) gtk_label_new ("Test Label")), _g_object_unref0 (self->priv->label), _tmp2_);
-#line 108 "test-panel-indicator-object-view.vala"
 	self->priv->entry->label = self->priv->label;
-#line 110 "test-panel-indicator-object-view.vala"
 	self->priv->image = (_tmp3_ = g_object_ref_sink ((GtkImage*) gtk_image_new_from_icon_name ("gtk-apply", GTK_ICON_SIZE_MENU)), _g_object_unref0 (self->priv->image), _tmp3_);
-#line 111 "test-panel-indicator-object-view.vala"
 	self->priv->entry->image = self->priv->image;
-#line 113 "test-panel-indicator-object-view.vala"
 	g_test_add_data_func (UNITY_TESTS_UNIT_PANEL_INDICATOR_OBJECT_VIEW_SUITE_DOMAIN "/FakeIndicator", self, _unity_tests_unit_panel_indicator_object_view_suite_test_fake_indicator_object_gdata_test_func);
-#line 114 "test-panel-indicator-object-view.vala"
 	g_test_add_data_func (UNITY_TESTS_UNIT_PANEL_INDICATOR_OBJECT_VIEW_SUITE_DOMAIN "/FakeIndicatorAddEntry", self, _unity_tests_unit_panel_indicator_object_view_suite_test_indicator_add_entry_gdata_test_func);
-#line 115 "test-panel-indicator-object-view.vala"
 	g_test_add_data_func (UNITY_TESTS_UNIT_PANEL_INDICATOR_OBJECT_VIEW_SUITE_DOMAIN "/TestEntryView", self, _unity_tests_unit_panel_indicator_object_view_suite_test_indicator_enty_view_gdata_test_func);
-#line 353 "test-panel-indicator-object-view.c"
 	return self;
 }
 
 
-#line 98 "test-panel-indicator-object-view.vala"
 UnityTestsUnitPanelIndicatorObjectViewSuite* unity_tests_unit_panel_indicator_object_view_suite_new (void) {
-#line 98 "test-panel-indicator-object-view.vala"
 	return unity_tests_unit_panel_indicator_object_view_suite_construct (UNITY_TESTS_UNIT_TYPE_PANEL_INDICATOR_OBJECT_VIEW_SUITE);
-#line 362 "test-panel-indicator-object-view.c"
 }
 
 
-#line 118 "test-panel-indicator-object-view.vala"
 static void unity_tests_unit_panel_indicator_object_view_suite_test_fake_indicator_object (UnityTestsUnitPanelIndicatorObjectViewSuite* self) {
-#line 368 "test-panel-indicator-object-view.c"
 	UnityTestsUnitFakeIndicatorObject* fakeobject;
-#line 118 "test-panel-indicator-object-view.vala"
 	g_return_if_fail (self != NULL);
-#line 120 "test-panel-indicator-object-view.vala"
 	fakeobject = unity_tests_unit_fake_indicator_object_new ();
-#line 122 "test-panel-indicator-object-view.vala"
 	g_assert (UNITY_TESTS_UNIT_IS_FAKE_INDICATOR_OBJECT (fakeobject));
-#line 376 "test-panel-indicator-object-view.c"
 	_g_object_unref0 (fakeobject);
 }
 
 
-#line 125 "test-panel-indicator-object-view.vala"
 static void unity_tests_unit_panel_indicator_object_view_suite_test_indicator_add_entry (UnityTestsUnitPanelIndicatorObjectViewSuite* self) {
-#line 383 "test-panel-indicator-object-view.c"
 	UnityTestsUnitFakeIndicatorObject* fakeobject;
 	UnityPanelIndicatorsIndicatorObjectView* e;
-#line 125 "test-panel-indicator-object-view.vala"
 	g_return_if_fail (self != NULL);
-#line 127 "test-panel-indicator-object-view.vala"
 	fakeobject = unity_tests_unit_fake_indicator_object_new ();
-#line 128 "test-panel-indicator-object-view.vala"
 	e = g_object_ref_sink (unity_panel_indicators_indicator_object_view_new ((IndicatorObject*) fakeobject));
-#line 130 "test-panel-indicator-object-view.vala"
 	unity_tests_unit_fake_indicator_object_add_entry (fakeobject, self->priv->entry);
-#line 132 "test-panel-indicator-object-view.vala"
 	g_assert (unity_panel_indicators_indicator_object_view_find_entry (e, self->priv->entry));
-#line 396 "test-panel-indicator-object-view.c"
 	_g_object_unref0 (fakeobject);
 	_g_object_unref0 (e);
 }
 
 
-#line 135 "test-panel-indicator-object-view.vala"
 static void unity_tests_unit_panel_indicator_object_view_suite_test_indicator_enty_view (UnityTestsUnitPanelIndicatorObjectViewSuite* self) {
-#line 404 "test-panel-indicator-object-view.c"
 	UnityTestsUnitFakeIndicatorObject* fakeobject;
 	UnityPanelIndicatorsIndicatorObjectView* e;
 	UnityPanelIndicatorsIndicatorObjectEntryView* entry_view;
-#line 135 "test-panel-indicator-object-view.vala"
 	g_return_if_fail (self != NULL);
-#line 137 "test-panel-indicator-object-view.vala"
 	fakeobject = unity_tests_unit_fake_indicator_object_new ();
-#line 138 "test-panel-indicator-object-view.vala"
 	e = g_object_ref_sink (unity_panel_indicators_indicator_object_view_new ((IndicatorObject*) fakeobject));
-#line 140 "test-panel-indicator-object-view.vala"
 	unity_tests_unit_fake_indicator_object_add_entry (fakeobject, self->priv->entry);
-#line 141 "test-panel-indicator-object-view.vala"
 	entry_view = unity_panel_indicators_indicator_object_view_get_entry_view (e, self->priv->entry);
-#line 143 "test-panel-indicator-object-view.vala"
 	g_assert (unity_panel_indicators_indicator_object_entry_view_get_entry (entry_view) == self->priv->entry);
-#line 144 "test-panel-indicator-object-view.vala"
 	g_assert (unity_panel_indicators_indicator_object_entry_view_get_entry (entry_view)->label == self->priv->entry->label);
-#line 145 "test-panel-indicator-object-view.vala"
 	g_assert (unity_panel_indicators_indicator_object_entry_view_get_entry (entry_view)->image == self->priv->entry->image);
-#line 146 "test-panel-indicator-object-view.vala"
 	g_assert (unity_panel_indicators_indicator_object_entry_view_get_entry (entry_view)->menu == self->priv->entry->menu);
-#line 426 "test-panel-indicator-object-view.c"
 	_g_object_unref0 (fakeobject);
 	_g_object_unref0 (e);
 	_g_object_unref0 (entry_view);

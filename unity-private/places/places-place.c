@@ -86,35 +86,24 @@ static void unity_places_place_set_property (GObject * object, guint property_id
 
 
 
-#line 50 "places-place.vala"
 UnityPlacesPlace* unity_places_place_construct (GType object_type, const char* name, const char* icon_name) {
-#line 92 "places-place.c"
 	UnityPlacesPlace * self;
-#line 50 "places-place.vala"
 	g_return_val_if_fail (name != NULL, NULL);
-#line 50 "places-place.vala"
 	g_return_val_if_fail (icon_name != NULL, NULL);
-#line 52 "places-place.vala"
 	self = (UnityPlacesPlace*) g_object_new (object_type, "name", name, "icon-name", icon_name, NULL);
-#line 100 "places-place.c"
 	return self;
 }
 
 
-#line 60 "places-place.vala"
 static ClutterActor* unity_places_place_real_get_view (UnityPlacesPlace* self) {
-#line 107 "places-place.c"
 	g_return_val_if_fail (self != NULL, NULL);
 	g_critical ("Type `%s' does not implement abstract method `unity_places_place_get_view'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
 	return NULL;
 }
 
 
-#line 60 "places-place.vala"
 ClutterActor* unity_places_place_get_view (UnityPlacesPlace* self) {
-#line 60 "places-place.vala"
 	return UNITY_PLACES_PLACE_GET_CLASS (self)->get_view (self);
-#line 118 "places-place.c"
 }
 
 
@@ -122,9 +111,7 @@ const char* unity_places_place_get_name (UnityPlacesPlace* self) {
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_name;
-#line 30 "places-place.vala"
 	return result;
-#line 128 "places-place.c"
 }
 
 
@@ -140,9 +127,7 @@ const char* unity_places_place_get_icon_name (UnityPlacesPlace* self) {
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_icon_name;
-#line 31 "places-place.vala"
 	return result;
-#line 146 "places-place.c"
 }
 
 
@@ -158,9 +143,7 @@ const char* unity_places_place_get_comment (UnityPlacesPlace* self) {
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_comment;
-#line 32 "places-place.vala"
 	return result;
-#line 164 "places-place.c"
 }
 
 
@@ -176,23 +159,16 @@ gboolean unity_places_place_get_active (UnityPlacesPlace* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_active;
-#line 37 "places-place.vala"
 	return result;
-#line 182 "places-place.c"
 }
 
 
 void unity_places_place_set_active (UnityPlacesPlace* self, gboolean value) {
 	g_return_if_fail (self != NULL);
-#line 38 "places-place.vala"
 	if (self->priv->_active != value) {
-#line 40 "places-place.vala"
 		self->priv->_active = value;
-#line 41 "places-place.vala"
 		if (self->priv->_active) {
-#line 42 "places-place.vala"
 			g_signal_emit_by_name (self, "activated");
-#line 196 "places-place.c"
 		}
 	}
 	g_object_notify ((GObject *) self, "active");
@@ -207,9 +183,7 @@ static GObject * unity_places_place_constructor (GType type, guint n_construct_p
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_PLACES_PLACE (obj);
 	{
-#line 57 "places-place.vala"
 		self->priv->_active = FALSE;
-#line 213 "places-place.c"
 	}
 	return obj;
 }

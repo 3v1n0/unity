@@ -92,10 +92,6 @@ static void unity_mutter_kill_effect (MutterPlugin  *self,
 static gboolean unity_mutter_xevent_filter (MutterPlugin *self,
                                       XEvent      *event);
 
-static void unity_mutter_topmost_changed (MutterPlugin *plugin,
-                                          MutterWindow *old_window,
-                                          MutterWindow *new_window);
-
 static void on_restore_input_region (UnityPlugin *plugin, gboolean fullscreen);
 
 static const MutterPluginInfo * unity_mutter_plugin_info (MutterPlugin *self);
@@ -117,7 +113,6 @@ unity_mutter_class_init (UnityMutterClass *klass)
   mut_class->kill_effect      = unity_mutter_kill_effect;
   mut_class->xevent_filter    = unity_mutter_xevent_filter;
   mut_class->plugin_info      = unity_mutter_plugin_info;
-  mut_class->topmost_changed  = unity_mutter_topmost_changed;
 }
 
 static void
@@ -267,16 +262,6 @@ unity_mutter_kill_effect (MutterPlugin  *self,
                           gulong         events)
 {
   unity_plugin_kill_effect (UNITY_MUTTER (self)->plugin, window, events);
-}
-
-static void
-unity_mutter_topmost_changed (MutterPlugin *self,
-                              MutterWindow *old_window,
-                              MutterWindow *new_window)
-{
-  unity_plugin_topmost_changed (UNITY_MUTTER (self)->plugin,
-                                old_window,
-                                new_window);
 }
 
 static gboolean

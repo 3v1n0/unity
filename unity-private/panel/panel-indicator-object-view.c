@@ -94,6 +94,7 @@ void unity_panel_indicators_indicator_object_view_open_first_menu_entry (UnityPa
 void unity_panel_indicators_indicator_object_view_open_last_menu_entry (UnityPanelIndicatorsIndicatorObjectView* self);
 gboolean unity_panel_indicators_indicator_object_view_find_entry (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObjectEntry* entry);
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_view_get_entry_view (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObjectEntry* entry);
+void unity_panel_indicators_indicator_object_view_remove_first_entry (UnityPanelIndicatorsIndicatorObjectView* self);
 IndicatorObject* unity_panel_indicators_indicator_object_view_get_indicator_object (UnityPanelIndicatorsIndicatorObjectView* self);
 static void unity_panel_indicators_indicator_object_view_set_indicator_object (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObject* value);
 static void _unity_panel_indicators_indicator_object_view_on_entry_added_indicator_object_entry_added (IndicatorObject* _sender, IndicatorObjectEntry* entry, gpointer self);
@@ -105,207 +106,120 @@ static void unity_panel_indicators_indicator_object_view_set_property (GObject *
 
 
 
-#line 33 "panel-indicator-object-view.vala"
 UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_object_view_construct (GType object_type, IndicatorObject* _object) {
-#line 111 "panel-indicator-object-view.c"
 	UnityPanelIndicatorsIndicatorObjectView * self;
-#line 33 "panel-indicator-object-view.vala"
 	g_return_val_if_fail (_object != NULL, NULL);
-#line 35 "panel-indicator-object-view.vala"
 	self = (UnityPanelIndicatorsIndicatorObjectView*) g_object_new (object_type, "indicator-object", _object, "orientation", CTK_ORIENTATION_HORIZONTAL, "spacing", 0, "homogeneous", FALSE, NULL);
-#line 117 "panel-indicator-object-view.c"
 	return self;
 }
 
 
-#line 33 "panel-indicator-object-view.vala"
 UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_object_view_new (IndicatorObject* _object) {
-#line 33 "panel-indicator-object-view.vala"
 	return unity_panel_indicators_indicator_object_view_construct (UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW, _object);
-#line 126 "panel-indicator-object-view.c"
 }
 
 
-#line 78 "panel-indicator-object-view.vala"
 void unity_panel_indicators_indicator_object_view_show_entry_menu (UnityPanelIndicatorsIndicatorObjectView* self, gint entry) {
-#line 78 "panel-indicator-object-view.vala"
 	g_return_if_fail (self != NULL);
-#line 134 "panel-indicator-object-view.c"
 }
 
 
-#line 87 "panel-indicator-object-view.vala"
 static void unity_panel_indicators_indicator_object_view_on_menu_moved (UnityPanelIndicatorsIndicatorObjectView* self, UnityPanelIndicatorsIndicatorObjectEntryView* object_entry_view, GtkMenuDirectionType type) {
-#line 140 "panel-indicator-object-view.c"
 	gint pos;
 	UnityPanelIndicatorsIndicatorObjectEntryView* next_object_entry_view;
-#line 87 "panel-indicator-object-view.vala"
 	g_return_if_fail (self != NULL);
-#line 87 "panel-indicator-object-view.vala"
 	g_return_if_fail (object_entry_view != NULL);
-#line 89 "panel-indicator-object-view.vala"
 	pos = gee_abstract_list_index_of ((GeeAbstractList*) self->priv->indicator_entry_array, object_entry_view);
-#line 90 "panel-indicator-object-view.vala"
 	if (pos == (-1)) {
-#line 91 "panel-indicator-object-view.vala"
 		return;
-#line 153 "panel-indicator-object-view.c"
 	}
-#line 93 "panel-indicator-object-view.vala"
 	if (type == GTK_MENU_DIR_PARENT) {
-#line 95 "panel-indicator-object-view.vala"
 		if (pos == 0) {
-#line 97 "panel-indicator-object-view.vala"
 			g_signal_emit_by_name (self, "menu-moved", type);
-#line 98 "panel-indicator-object-view.vala"
 			return;
-#line 163 "panel-indicator-object-view.c"
 		}
-#line 100 "panel-indicator-object-view.vala"
 		pos = pos - 1;
-#line 167 "panel-indicator-object-view.c"
 	} else {
-#line 102 "panel-indicator-object-view.vala"
 		if (type == GTK_MENU_DIR_CHILD) {
-#line 104 "panel-indicator-object-view.vala"
 			if (pos == (gee_collection_get_size ((GeeCollection*) self->priv->indicator_entry_array) - 1)) {
-#line 106 "panel-indicator-object-view.vala"
 				g_signal_emit_by_name (self, "menu-moved", type);
-#line 107 "panel-indicator-object-view.vala"
 				return;
-#line 177 "panel-indicator-object-view.c"
 			}
-#line 109 "panel-indicator-object-view.vala"
 			pos = pos + 1;
-#line 181 "panel-indicator-object-view.c"
 		}
 	}
-#line 112 "panel-indicator-object-view.vala"
 	next_object_entry_view = (UnityPanelIndicatorsIndicatorObjectEntryView*) gee_abstract_list_get ((GeeAbstractList*) self->priv->indicator_entry_array, pos);
-#line 113 "panel-indicator-object-view.vala"
 	unity_panel_indicators_indicator_object_entry_view_show_menu (next_object_entry_view);
-#line 188 "panel-indicator-object-view.c"
 	_g_object_unref0 (next_object_entry_view);
 }
 
 
-#line 87 "panel-indicator-object-view.vala"
 static void _unity_panel_indicators_indicator_object_view_on_menu_moved_unity_panel_indicators_indicator_object_entry_view_menu_moved (UnityPanelIndicatorsIndicatorObjectEntryView* _sender, GtkMenuDirectionType type, gpointer self) {
-#line 195 "panel-indicator-object-view.c"
 	unity_panel_indicators_indicator_object_view_on_menu_moved (self, _sender, type);
 }
 
 
-#line 118 "panel-indicator-object-view.vala"
 static void unity_panel_indicators_indicator_object_view_on_entry_added (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObject* object, IndicatorObjectEntry* indicator_object_entry) {
-#line 202 "panel-indicator-object-view.c"
 	UnityPanelIndicatorsIndicatorObjectEntryView* object_entry_view;
-#line 118 "panel-indicator-object-view.vala"
 	g_return_if_fail (self != NULL);
-#line 118 "panel-indicator-object-view.vala"
 	g_return_if_fail (object != NULL);
-#line 118 "panel-indicator-object-view.vala"
 	g_return_if_fail (indicator_object_entry != NULL);
-#line 210 "panel-indicator-object-view.c"
 	{
 		gint i;
-#line 121 "panel-indicator-object-view.vala"
 		i = 0;
-#line 215 "panel-indicator-object-view.c"
 		{
 			gboolean _tmp0_;
-#line 121 "panel-indicator-object-view.vala"
 			_tmp0_ = TRUE;
-#line 121 "panel-indicator-object-view.vala"
 			while (TRUE) {
-#line 222 "panel-indicator-object-view.c"
 				UnityPanelIndicatorsIndicatorObjectEntryView* _tmp1_;
 				UnityPanelIndicatorsIndicatorObjectEntryView* entry_view;
-#line 121 "panel-indicator-object-view.vala"
 				if (!_tmp0_) {
-#line 121 "panel-indicator-object-view.vala"
 					i++;
-#line 229 "panel-indicator-object-view.c"
 				}
-#line 121 "panel-indicator-object-view.vala"
 				_tmp0_ = FALSE;
-#line 121 "panel-indicator-object-view.vala"
 				if (!(i < gee_collection_get_size ((GeeCollection*) self->priv->indicator_entry_array))) {
-#line 121 "panel-indicator-object-view.vala"
 					break;
-#line 237 "panel-indicator-object-view.c"
 				}
-#line 123 "panel-indicator-object-view.vala"
 				entry_view = (_tmp1_ = (UnityPanelIndicatorsIndicatorObjectEntryView*) gee_abstract_list_get ((GeeAbstractList*) self->priv->indicator_entry_array, i), UNITY_PANEL_INDICATORS_IS_INDICATOR_OBJECT_ENTRY_VIEW (_tmp1_) ? ((UnityPanelIndicatorsIndicatorObjectEntryView*) _tmp1_) : NULL);
-#line 124 "panel-indicator-object-view.vala"
 				if (unity_panel_indicators_indicator_object_entry_view_get_entry (entry_view) == indicator_object_entry) {
-#line 243 "panel-indicator-object-view.c"
 					_g_object_unref0 (entry_view);
-#line 126 "panel-indicator-object-view.vala"
 					return;
-#line 247 "panel-indicator-object-view.c"
 				}
 				_g_object_unref0 (entry_view);
 			}
 		}
 	}
-#line 130 "panel-indicator-object-view.vala"
 	object_entry_view = g_object_ref_sink (unity_panel_indicators_indicator_object_entry_view_new (indicator_object_entry));
-#line 132 "panel-indicator-object-view.vala"
 	g_signal_connect_object (object_entry_view, "menu-moved", (GCallback) _unity_panel_indicators_indicator_object_view_on_menu_moved_unity_panel_indicators_indicator_object_entry_view_menu_moved, self, 0);
-#line 134 "panel-indicator-object-view.vala"
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->indicator_entry_array, object_entry_view);
-#line 135 "panel-indicator-object-view.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) object_entry_view);
-#line 261 "panel-indicator-object-view.c"
 	_g_object_unref0 (object_entry_view);
 }
 
 
-#line 139 "panel-indicator-object-view.vala"
 static void unity_panel_indicators_indicator_object_view_remove_entry (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObjectEntry* entry) {
-#line 139 "panel-indicator-object-view.vala"
 	g_return_if_fail (self != NULL);
-#line 139 "panel-indicator-object-view.vala"
 	g_return_if_fail (entry != NULL);
-#line 272 "panel-indicator-object-view.c"
 	{
 		gint i;
-#line 141 "panel-indicator-object-view.vala"
 		i = 0;
-#line 277 "panel-indicator-object-view.c"
 		{
 			gboolean _tmp0_;
-#line 141 "panel-indicator-object-view.vala"
 			_tmp0_ = TRUE;
-#line 141 "panel-indicator-object-view.vala"
 			while (TRUE) {
-#line 284 "panel-indicator-object-view.c"
 				UnityPanelIndicatorsIndicatorObjectEntryView* _tmp1_;
 				UnityPanelIndicatorsIndicatorObjectEntryView* object_entry_view;
-#line 141 "panel-indicator-object-view.vala"
 				if (!_tmp0_) {
-#line 141 "panel-indicator-object-view.vala"
 					i++;
-#line 291 "panel-indicator-object-view.c"
 				}
-#line 141 "panel-indicator-object-view.vala"
 				_tmp0_ = FALSE;
-#line 141 "panel-indicator-object-view.vala"
 				if (!(i < gee_collection_get_size ((GeeCollection*) self->priv->indicator_entry_array))) {
-#line 141 "panel-indicator-object-view.vala"
 					break;
-#line 299 "panel-indicator-object-view.c"
 				}
-#line 143 "panel-indicator-object-view.vala"
 				object_entry_view = (_tmp1_ = (UnityPanelIndicatorsIndicatorObjectEntryView*) gee_abstract_list_get ((GeeAbstractList*) self->priv->indicator_entry_array, i), UNITY_PANEL_INDICATORS_IS_INDICATOR_OBJECT_ENTRY_VIEW (_tmp1_) ? ((UnityPanelIndicatorsIndicatorObjectEntryView*) _tmp1_) : NULL);
-#line 144 "panel-indicator-object-view.vala"
 				if (unity_panel_indicators_indicator_object_entry_view_get_entry (object_entry_view) == entry) {
-#line 146 "panel-indicator-object-view.vala"
 					clutter_container_remove_actor ((ClutterContainer*) self, (ClutterActor*) object_entry_view);
-#line 147 "panel-indicator-object-view.vala"
 					gee_abstract_collection_remove ((GeeAbstractCollection*) self->priv->indicator_entry_array, object_entry_view);
-#line 309 "panel-indicator-object-view.c"
 				}
 				_g_object_unref0 (object_entry_view);
 			}
@@ -314,156 +228,105 @@ static void unity_panel_indicators_indicator_object_view_remove_entry (UnityPane
 }
 
 
-#line 152 "panel-indicator-object-view.vala"
 void unity_panel_indicators_indicator_object_view_open_first_menu_entry (UnityPanelIndicatorsIndicatorObjectView* self) {
-#line 152 "panel-indicator-object-view.vala"
 	g_return_if_fail (self != NULL);
-#line 154 "panel-indicator-object-view.vala"
 	if (gee_collection_get_size ((GeeCollection*) self->priv->indicator_entry_array) > 0) {
-#line 324 "panel-indicator-object-view.c"
 		UnityPanelIndicatorsIndicatorObjectEntryView* object_entry_view;
-#line 156 "panel-indicator-object-view.vala"
 		object_entry_view = (UnityPanelIndicatorsIndicatorObjectEntryView*) gee_abstract_list_get ((GeeAbstractList*) self->priv->indicator_entry_array, 0);
-#line 157 "panel-indicator-object-view.vala"
 		unity_panel_indicators_indicator_object_entry_view_show_menu (object_entry_view);
-#line 330 "panel-indicator-object-view.c"
 		_g_object_unref0 (object_entry_view);
 	}
 }
 
 
-#line 161 "panel-indicator-object-view.vala"
 void unity_panel_indicators_indicator_object_view_open_last_menu_entry (UnityPanelIndicatorsIndicatorObjectView* self) {
-#line 161 "panel-indicator-object-view.vala"
 	g_return_if_fail (self != NULL);
-#line 163 "panel-indicator-object-view.vala"
 	if (gee_collection_get_size ((GeeCollection*) self->priv->indicator_entry_array) > 0) {
-#line 342 "panel-indicator-object-view.c"
 		UnityPanelIndicatorsIndicatorObjectEntryView* object_entry_view;
-#line 165 "panel-indicator-object-view.vala"
 		object_entry_view = (UnityPanelIndicatorsIndicatorObjectEntryView*) gee_abstract_list_get ((GeeAbstractList*) self->priv->indicator_entry_array, gee_collection_get_size ((GeeCollection*) self->priv->indicator_entry_array) - 1);
-#line 166 "panel-indicator-object-view.vala"
 		unity_panel_indicators_indicator_object_entry_view_show_menu (object_entry_view);
-#line 348 "panel-indicator-object-view.c"
 		_g_object_unref0 (object_entry_view);
 	}
 }
 
 
-#line 170 "panel-indicator-object-view.vala"
 gboolean unity_panel_indicators_indicator_object_view_find_entry (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObjectEntry* entry) {
-#line 356 "panel-indicator-object-view.c"
 	gboolean result = FALSE;
-#line 170 "panel-indicator-object-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 170 "panel-indicator-object-view.vala"
 	g_return_val_if_fail (entry != NULL, FALSE);
-#line 362 "panel-indicator-object-view.c"
 	{
 		gint i;
-#line 172 "panel-indicator-object-view.vala"
 		i = 0;
-#line 367 "panel-indicator-object-view.c"
 		{
 			gboolean _tmp0_;
-#line 172 "panel-indicator-object-view.vala"
 			_tmp0_ = TRUE;
-#line 172 "panel-indicator-object-view.vala"
 			while (TRUE) {
-#line 374 "panel-indicator-object-view.c"
 				UnityPanelIndicatorsIndicatorObjectEntryView* _tmp1_;
 				UnityPanelIndicatorsIndicatorObjectEntryView* object_entry_view;
-#line 172 "panel-indicator-object-view.vala"
 				if (!_tmp0_) {
-#line 172 "panel-indicator-object-view.vala"
 					i++;
-#line 381 "panel-indicator-object-view.c"
 				}
-#line 172 "panel-indicator-object-view.vala"
 				_tmp0_ = FALSE;
-#line 172 "panel-indicator-object-view.vala"
 				if (!(i < gee_collection_get_size ((GeeCollection*) self->priv->indicator_entry_array))) {
-#line 172 "panel-indicator-object-view.vala"
 					break;
-#line 389 "panel-indicator-object-view.c"
 				}
-#line 174 "panel-indicator-object-view.vala"
 				object_entry_view = (_tmp1_ = (UnityPanelIndicatorsIndicatorObjectEntryView*) gee_abstract_list_get ((GeeAbstractList*) self->priv->indicator_entry_array, i), UNITY_PANEL_INDICATORS_IS_INDICATOR_OBJECT_ENTRY_VIEW (_tmp1_) ? ((UnityPanelIndicatorsIndicatorObjectEntryView*) _tmp1_) : NULL);
-#line 175 "panel-indicator-object-view.vala"
 				if (unity_panel_indicators_indicator_object_entry_view_get_entry (object_entry_view) == entry) {
-#line 395 "panel-indicator-object-view.c"
 					result = TRUE;
 					_g_object_unref0 (object_entry_view);
-#line 177 "panel-indicator-object-view.vala"
 					return result;
-#line 400 "panel-indicator-object-view.c"
 				}
 				_g_object_unref0 (object_entry_view);
 			}
 		}
 	}
 	result = FALSE;
-#line 180 "panel-indicator-object-view.vala"
 	return result;
-#line 409 "panel-indicator-object-view.c"
 }
 
 
-#line 183 "panel-indicator-object-view.vala"
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_view_get_entry_view (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObjectEntry* entry) {
-#line 415 "panel-indicator-object-view.c"
 	UnityPanelIndicatorsIndicatorObjectEntryView* result = NULL;
-#line 183 "panel-indicator-object-view.vala"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 183 "panel-indicator-object-view.vala"
 	g_return_val_if_fail (entry != NULL, NULL);
-#line 421 "panel-indicator-object-view.c"
 	{
 		gint i;
-#line 185 "panel-indicator-object-view.vala"
 		i = 0;
-#line 426 "panel-indicator-object-view.c"
 		{
 			gboolean _tmp0_;
-#line 185 "panel-indicator-object-view.vala"
 			_tmp0_ = TRUE;
-#line 185 "panel-indicator-object-view.vala"
 			while (TRUE) {
-#line 433 "panel-indicator-object-view.c"
 				UnityPanelIndicatorsIndicatorObjectEntryView* _tmp1_;
 				UnityPanelIndicatorsIndicatorObjectEntryView* object_entry_view;
-#line 185 "panel-indicator-object-view.vala"
 				if (!_tmp0_) {
-#line 185 "panel-indicator-object-view.vala"
 					i++;
-#line 440 "panel-indicator-object-view.c"
 				}
-#line 185 "panel-indicator-object-view.vala"
 				_tmp0_ = FALSE;
-#line 185 "panel-indicator-object-view.vala"
 				if (!(i < gee_collection_get_size ((GeeCollection*) self->priv->indicator_entry_array))) {
-#line 185 "panel-indicator-object-view.vala"
 					break;
-#line 448 "panel-indicator-object-view.c"
 				}
-#line 187 "panel-indicator-object-view.vala"
 				object_entry_view = (_tmp1_ = (UnityPanelIndicatorsIndicatorObjectEntryView*) gee_abstract_list_get ((GeeAbstractList*) self->priv->indicator_entry_array, i), UNITY_PANEL_INDICATORS_IS_INDICATOR_OBJECT_ENTRY_VIEW (_tmp1_) ? ((UnityPanelIndicatorsIndicatorObjectEntryView*) _tmp1_) : NULL);
-#line 188 "panel-indicator-object-view.vala"
 				if (unity_panel_indicators_indicator_object_entry_view_get_entry (object_entry_view) == entry) {
-#line 454 "panel-indicator-object-view.c"
 					result = object_entry_view;
-#line 190 "panel-indicator-object-view.vala"
 					return result;
-#line 458 "panel-indicator-object-view.c"
 				}
 				_g_object_unref0 (object_entry_view);
 			}
 		}
 	}
 	result = NULL;
-#line 193 "panel-indicator-object-view.vala"
 	return result;
-#line 467 "panel-indicator-object-view.c"
+}
+
+
+void unity_panel_indicators_indicator_object_view_remove_first_entry (UnityPanelIndicatorsIndicatorObjectView* self) {
+	UnityPanelIndicatorsIndicatorObjectEntryView* _tmp0_;
+	g_return_if_fail (self != NULL);
+	if (gee_collection_get_size ((GeeCollection*) self->priv->indicator_entry_array) == 0) {
+		return;
+	}
+	clutter_container_remove_actor ((ClutterContainer*) self, (ClutterActor*) (_tmp0_ = (UnityPanelIndicatorsIndicatorObjectEntryView*) gee_abstract_list_remove_at ((GeeAbstractList*) self->priv->indicator_entry_array, 0)));
+	_g_object_unref0 (_tmp0_);
 }
 
 
@@ -471,9 +334,7 @@ IndicatorObject* unity_panel_indicators_indicator_object_view_get_indicator_obje
 	IndicatorObject* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_indicator_object;
-#line 27 "panel-indicator-object-view.vala"
 	return result;
-#line 477 "panel-indicator-object-view.c"
 }
 
 
@@ -490,16 +351,12 @@ static void unity_panel_indicators_indicator_object_view_set_indicator_object (U
 }
 
 
-#line 118 "panel-indicator-object-view.vala"
 static void _unity_panel_indicators_indicator_object_view_on_entry_added_indicator_object_entry_added (IndicatorObject* _sender, IndicatorObjectEntry* entry, gpointer self) {
-#line 496 "panel-indicator-object-view.c"
 	unity_panel_indicators_indicator_object_view_on_entry_added (self, _sender, entry);
 }
 
 
-#line 139 "panel-indicator-object-view.vala"
 static void _unity_panel_indicators_indicator_object_view_remove_entry_indicator_object_entry_removed (IndicatorObject* _sender, IndicatorObjectEntry* entry, gpointer self) {
-#line 503 "panel-indicator-object-view.c"
 	unity_panel_indicators_indicator_object_view_remove_entry (self, entry);
 }
 
@@ -514,63 +371,37 @@ static GObject * unity_panel_indicators_indicator_object_view_constructor (GType
 	{
 		GeeArrayList* _tmp0_;
 		GList* list;
-#line 43 "panel-indicator-object-view.vala"
 		START_FUNCTION ();
-#line 56 "panel-indicator-object-view.vala"
 		self->priv->indicator_entry_array = (_tmp0_ = gee_array_list_new (UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_ENTRY_VIEW, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->priv->indicator_entry_array), _tmp0_);
-#line 58 "panel-indicator-object-view.vala"
 		g_signal_connect_object (self->priv->_indicator_object, "entry-added", (GCallback) _unity_panel_indicators_indicator_object_view_on_entry_added_indicator_object_entry_added, self, 0);
-#line 59 "panel-indicator-object-view.vala"
 		g_signal_connect_object (self->priv->_indicator_object, "entry-removed", (GCallback) _unity_panel_indicators_indicator_object_view_remove_entry_indicator_object_entry_removed, self, 0);
-#line 61 "panel-indicator-object-view.vala"
 		list = indicator_object_get_entries (self->priv->_indicator_object);
-#line 528 "panel-indicator-object-view.c"
 		{
 			gint i;
-#line 63 "panel-indicator-object-view.vala"
 			i = 0;
-#line 533 "panel-indicator-object-view.c"
 			{
 				gboolean _tmp1_;
-#line 63 "panel-indicator-object-view.vala"
 				_tmp1_ = TRUE;
-#line 63 "panel-indicator-object-view.vala"
 				while (TRUE) {
-#line 540 "panel-indicator-object-view.c"
 					IndicatorObjectEntry* indicator_object_entry;
 					UnityPanelIndicatorsIndicatorObjectEntryView* object_entry_view;
-#line 63 "panel-indicator-object-view.vala"
 					if (!_tmp1_) {
-#line 63 "panel-indicator-object-view.vala"
 						i++;
-#line 547 "panel-indicator-object-view.c"
 					}
-#line 63 "panel-indicator-object-view.vala"
 					_tmp1_ = FALSE;
-#line 63 "panel-indicator-object-view.vala"
 					if (!(i < g_list_length (list))) {
-#line 63 "panel-indicator-object-view.vala"
 						break;
-#line 555 "panel-indicator-object-view.c"
 					}
-#line 65 "panel-indicator-object-view.vala"
 					indicator_object_entry = (IndicatorObjectEntry*) ((IndicatorObjectEntry*) g_list_nth_data (list, (guint) i));
-#line 67 "panel-indicator-object-view.vala"
 					object_entry_view = g_object_ref_sink (unity_panel_indicators_indicator_object_entry_view_new (indicator_object_entry));
-#line 69 "panel-indicator-object-view.vala"
 					g_signal_connect_object (object_entry_view, "menu-moved", (GCallback) _unity_panel_indicators_indicator_object_view_on_menu_moved_unity_panel_indicators_indicator_object_entry_view_menu_moved, self, 0);
-#line 71 "panel-indicator-object-view.vala"
 					gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->indicator_entry_array, object_entry_view);
-#line 72 "panel-indicator-object-view.vala"
 					clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) object_entry_view);
-#line 567 "panel-indicator-object-view.c"
 					_g_object_unref0 (object_entry_view);
 				}
 			}
 		}
-#line 75 "panel-indicator-object-view.vala"
 		END_FUNCTION ();
-#line 574 "panel-indicator-object-view.c"
 	}
 	return obj;
 }

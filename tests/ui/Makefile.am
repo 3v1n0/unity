@@ -38,7 +38,6 @@ test_ui_VALAFLAGS = \
   --pkg indicator \
   --pkg clutk-0.3 \
   --pkg launcher-0.3 \
-  --pkg libwnck-1.0 \
   --pkg test-const \
   --pkg unique-1.0 \
   --pkg unity \
@@ -49,6 +48,7 @@ test_ui_VALAFLAGS = \
 test_ui_SOURCES = \
   test-automate.vala \
   test-home-button.vala \
+  test-indicators.vala \
   test-quicklist.vala \
   test-ui.vala
 

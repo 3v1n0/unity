@@ -107,148 +107,90 @@ static void unity_places_search_field_view_finalize (GObject* obj);
 
 
 
-#line 31 "search-field.vala"
 static void unity_places_search_field_view_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-#line 113 "search-field.c"
 	UnityPlacesSearchFieldView * self;
 	ClutterActorBox _tmp0_ = {0};
 	ClutterActorBox child_box;
 	float width;
 	self = (UnityPlacesSearchFieldView*) base;
-#line 34 "search-field.vala"
 	child_box = (_tmp0_.x1 = 0.0f, _tmp0_.y1 = 0.0f, _tmp0_.x2 = 0.0f, _tmp0_.y2 = 0.0f, _tmp0_);
-#line 35 "search-field.vala"
 	width = (*box).x2 - (*box).x1;
-#line 36 "search-field.vala"
 	CLUTTER_ACTOR_CLASS (unity_places_search_field_view_parent_class)->allocate ((ClutterActor*) CTK_BOX (self), box, flags);
-#line 38 "search-field.vala"
 	if (self->priv->rect_box->Width != 200) {
-#line 40 "search-field.vala"
 		unity_places_cairo_drawing_rectangle_box_CreateRectangleBox (self->priv->rect_box, 200, 22);
-#line 129 "search-field.c"
 	}
-#line 43 "search-field.vala"
 	child_box.x1 = (float) 0;
-#line 44 "search-field.vala"
 	child_box.x2 = (float) 200;
-#line 45 "search-field.vala"
 	child_box.y1 = (float) 0;
-#line 46 "search-field.vala"
 	child_box.y2 = (float) 22;
-#line 47 "search-field.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->rect_box, &child_box, flags);
-#line 49 "search-field.vala"
 	child_box.x1 = (float) 0;
-#line 50 "search-field.vala"
 	child_box.x2 = (float) 22;
-#line 51 "search-field.vala"
 	child_box.y1 = (float) 0;
-#line 52 "search-field.vala"
 	child_box.y2 = (float) 22;
-#line 53 "search-field.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->search_icon, &child_box, flags);
-#line 55 "search-field.vala"
 	child_box.x1 = child_box.x2 + 3;
-#line 56 "search-field.vala"
 	child_box.x2 = (child_box.x1 + width) - 22;
-#line 57 "search-field.vala"
 	child_box.y1 = (float) 4;
-#line 58 "search-field.vala"
 	child_box.y2 = (float) 22;
-#line 59 "search-field.vala"
 	clutter_actor_allocate ((ClutterActor*) self->priv->text_field, &child_box, flags);
-#line 161 "search-field.c"
 }
 
 
-#line 75 "search-field.vala"
 static gboolean _lambda8_ (ClutterEvent* e, UnityPlacesSearchFieldView* self) {
-#line 167 "search-field.c"
 	gboolean result = FALSE;
-#line 77 "search-field.vala"
 	unity_shell_grab_keyboard (unity_global_shell, TRUE, (*e).button.time);
-#line 171 "search-field.c"
 	result = FALSE;
-#line 79 "search-field.vala"
 	return result;
-#line 175 "search-field.c"
 }
 
 
-#line 75 "search-field.vala"
 static gboolean __lambda8__clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 181 "search-field.c"
 	return _lambda8_ (event, self);
 }
 
 
-#line 63 "search-field.vala"
 UnityPlacesSearchFieldView* unity_places_search_field_view_construct (GType object_type) {
-#line 188 "search-field.c"
 	UnityPlacesSearchFieldView * self;
 	CtkImage* _tmp0_;
 	CtkText* _tmp1_;
 	UnityPlacesCairoDrawingRectangleBox* _tmp2_;
 	self = g_object_newv (object_type, 0, NULL);
-#line 65 "search-field.vala"
 	self->priv->search_icon = (_tmp0_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) 22, UNITY_PLACES_SEARCH_FIELD_SEARCH_ICON)), _g_object_unref0 (self->priv->search_icon), _tmp0_);
-#line 66 "search-field.vala"
 	self->priv->text_field = (_tmp1_ = (CtkText*) g_object_ref_sink (unity_entry_new ("Search")), _g_object_unref0 (self->priv->text_field), _tmp1_);
-#line 67 "search-field.vala"
 	self->priv->rect_box = (_tmp2_ = g_object_ref_sink (unity_places_cairo_drawing_rectangle_box_new ()), _g_object_unref0 (self->priv->rect_box), _tmp2_);
-#line 69 "search-field.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->rect_box);
-#line 70 "search-field.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->search_icon);
-#line 71 "search-field.vala"
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->text_field);
-#line 73 "search-field.vala"
 	clutter_actor_show_all ((ClutterActor*) self);
-#line 75 "search-field.vala"
 	g_signal_connect_object ((ClutterActor*) self->priv->text_field, "button-press-event", (GCallback) __lambda8__clutter_actor_button_press_event, self, 0);
-#line 210 "search-field.c"
 	return self;
 }
 
 
-#line 63 "search-field.vala"
 UnityPlacesSearchFieldView* unity_places_search_field_view_new (void) {
-#line 63 "search-field.vala"
 	return unity_places_search_field_view_construct (UNITY_PLACES_SEARCH_FIELD_TYPE_VIEW);
-#line 219 "search-field.c"
 }
 
 
-#line 87 "search-field.vala"
 static void unity_places_search_field_view_real_map (ClutterActor* base) {
-#line 225 "search-field.c"
 	UnityPlacesSearchFieldView * self;
 	self = (UnityPlacesSearchFieldView*) base;
-#line 89 "search-field.vala"
 	CLUTTER_ACTOR_CLASS (unity_places_search_field_view_parent_class)->map ((ClutterActor*) CTK_BOX (self));
-#line 230 "search-field.c"
 }
 
 
-#line 92 "search-field.vala"
 static void unity_places_search_field_view_real_unmap (ClutterActor* base) {
-#line 236 "search-field.c"
 	UnityPlacesSearchFieldView * self;
 	self = (UnityPlacesSearchFieldView*) base;
-#line 94 "search-field.vala"
 	CLUTTER_ACTOR_CLASS (unity_places_search_field_view_parent_class)->unmap ((ClutterActor*) CTK_BOX (self));
-#line 241 "search-field.c"
 }
 
 
-#line 97 "search-field.vala"
 static void unity_places_search_field_view_real_paint (ClutterActor* base) {
-#line 247 "search-field.c"
 	UnityPlacesSearchFieldView * self;
 	self = (UnityPlacesSearchFieldView*) base;
-#line 99 "search-field.vala"
 	CLUTTER_ACTOR_CLASS (unity_places_search_field_view_parent_class)->paint ((ClutterActor*) CTK_BOX (self));
-#line 252 "search-field.c"
 }
 
 

@@ -196,7 +196,7 @@ ClutterActor* unity_launcher_launcher_get_view (UnityLauncherLauncher* self);
 #define UNITY_PANEL_PANEL_HEIGHT 24
 static void unity_testing_window_relayout (UnityTestingWindow* self);
 static void unity_testing_window_real_show (GtkWidget* base);
-void unity_testing_window_on_active_window_changed (UnityTestingWindow* self, WnckWindow* previous_window);
+static void unity_testing_window_on_active_window_changed (UnityTestingWindow* self, WnckWindow* previous_window);
 gboolean unity_testing_window_on_stage_button_press (UnityTestingWindow* self, ClutterEvent* src);
 static void unity_testing_window_real_show_window_picker (UnityShell* base);
 static void unity_testing_window_real_grab_keyboard (UnityShell* base, gboolean grab, guint32 timestamp);
@@ -254,54 +254,34 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
-#line 50 "test-window.vala"
 UnityTestingWindow* unity_testing_window_construct (GType object_type, gboolean popup, gint width, gint height) {
-#line 260 "test-window.c"
 	UnityTestingWindow * self;
-#line 52 "test-window.vala"
 	self = (UnityTestingWindow*) g_object_new (object_type, "is-popup", popup, "popup-width", width, "popup-height", height, NULL);
-#line 264 "test-window.c"
 	return self;
 }
 
 
-#line 50 "test-window.vala"
 UnityTestingWindow* unity_testing_window_new (gboolean popup, gint width, gint height) {
-#line 50 "test-window.vala"
 	return unity_testing_window_construct (UNITY_TESTING_TYPE_WINDOW, popup, width, height);
-#line 273 "test-window.c"
 }
 
 
-#line 167 "test-window.vala"
 void unity_testing_window_init_test_mode (UnityTestingWindow* self) {
-#line 279 "test-window.c"
 	ClutterColor _tmp0_ = {0};
 	ClutterColor _tmp1_;
 	GtkSettings* settings;
-#line 167 "test-window.vala"
 	g_return_if_fail (self != NULL);
-#line 170 "test-window.vala"
 	clutter_stage_set_color (self->stage, (_tmp1_ = (_tmp0_.red = (guint8) 148, _tmp0_.green = (guint8) 86, _tmp0_.blue = (guint8) 99, _tmp0_.alpha = (guint8) 255, _tmp0_), &_tmp1_));
-#line 171 "test-window.vala"
 	clutter_actor_set_opacity ((ClutterActor*) self->priv->background, (guint8) 0);
-#line 174 "test-window.vala"
 	settings = gtk_settings_get_default ();
-#line 175 "test-window.vala"
 	g_object_set (settings, "gtk-xft-dpi", 96 * 1024, NULL);
-#line 176 "test-window.vala"
 	g_object_set (settings, "gtk-font-name", "Sans 10", NULL);
-#line 177 "test-window.vala"
 	g_object_set (settings, "gtk-icon-theme-name", "ubuntu-mono-dark", NULL);
-#line 178 "test-window.vala"
 	g_object_set (settings, "gtk-theme-name", "Ambiance", NULL);
-#line 299 "test-window.c"
 }
 
 
-#line 181 "test-window.vala"
 static void unity_testing_window_relayout (UnityTestingWindow* self) {
-#line 305 "test-window.c"
 	gint x = 0;
 	gint y = 0;
 	gint width = 0;
@@ -309,85 +289,47 @@ static void unity_testing_window_relayout (UnityTestingWindow* self) {
 	float ql_width = 0.0F;
 	ClutterActor* _tmp0_;
 	ClutterActor* _tmp1_;
-#line 181 "test-window.vala"
 	g_return_if_fail (self != NULL);
-#line 185 "test-window.vala"
 	if (self->priv->_is_popup) {
-#line 187 "test-window.vala"
 		x = 0;
-#line 188 "test-window.vala"
 		y = 0;
-#line 189 "test-window.vala"
 		width = self->priv->_popup_width;
-#line 190 "test-window.vala"
 		height = self->priv->_popup_height;
-#line 325 "test-window.c"
 	} else {
 		GdkRectangle size = {0};
-#line 196 "test-window.vala"
 		gdk_screen_get_monitor_geometry (gtk_window_get_screen ((GtkWindow*) self), 0, &size);
-#line 197 "test-window.vala"
 		x = size.x;
-#line 198 "test-window.vala"
 		y = size.y;
-#line 199 "test-window.vala"
 		width = size.width;
-#line 200 "test-window.vala"
 		height = size.height;
-#line 338 "test-window.c"
 	}
-#line 203 "test-window.vala"
 	ql_width = (float) 58;
-#line 204 "test-window.vala"
 	gtk_window_resize ((GtkWindow*) self, width, height);
-#line 205 "test-window.vala"
 	clutter_actor_set_size ((ClutterActor*) self->stage, (float) width, (float) height);
-#line 207 "test-window.vala"
 	if (!self->priv->_is_popup) {
-#line 208 "test-window.vala"
 		utils_set_strut (GTK_WINDOW (self), (guint32) ((guint) ql_width), (guint32) 0, (guint32) height, (guint32) 24, (guint32) 0, (guint32) width);
-#line 350 "test-window.c"
 	}
-#line 213 "test-window.vala"
 	clutter_actor_set_position ((ClutterActor*) self->priv->background, (float) 0, (float) 0);
-#line 214 "test-window.vala"
 	clutter_actor_set_size ((ClutterActor*) self->priv->background, (float) width, (float) height);
-#line 216 "test-window.vala"
 	clutter_actor_set_size (_tmp0_ = unity_launcher_launcher_get_view (self->priv->launcher), ql_width, (float) (height - UNITY_PANEL_PANEL_HEIGHT));
-#line 358 "test-window.c"
 	_g_object_unref0 (_tmp0_);
-#line 218 "test-window.vala"
 	clutter_actor_set_position (_tmp1_ = unity_launcher_launcher_get_view (self->priv->launcher), (float) 0, (float) UNITY_PANEL_PANEL_HEIGHT);
-#line 362 "test-window.c"
 	_g_object_unref0 (_tmp1_);
-#line 220 "test-window.vala"
 	if (self->priv->places_enabled) {
-#line 222 "test-window.vala"
 		clutter_actor_set_size ((ClutterActor*) self->priv->places, (float) width, (float) height);
-#line 223 "test-window.vala"
 		clutter_actor_set_position ((ClutterActor*) self->priv->places, (float) 0, (float) 0);
-#line 370 "test-window.c"
 	}
-#line 226 "test-window.vala"
 	clutter_actor_set_size ((ClutterActor*) self->priv->panel, (float) width, (float) UNITY_PANEL_PANEL_HEIGHT);
-#line 227 "test-window.vala"
 	clutter_actor_set_position ((ClutterActor*) self->priv->panel, (float) 0, (float) 0);
-#line 376 "test-window.c"
 }
 
 
-#line 230 "test-window.vala"
 static void unity_testing_window_real_show (GtkWidget* base) {
-#line 382 "test-window.c"
 	UnityTestingWindow * self;
 	self = (UnityTestingWindow*) base;
-#line 232 "test-window.vala"
 	GTK_WIDGET_CLASS (unity_testing_window_parent_class)->show ((GtkWidget*) GTK_WINDOW (self));
-#line 233 "test-window.vala"
 	gtk_widget_show ((GtkWidget*) self->gtk_clutter);
-#line 234 "test-window.vala"
 	clutter_actor_show_all ((ClutterActor*) self->stage);
-#line 391 "test-window.c"
 }
 
 
@@ -396,297 +338,181 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 240 "test-window.vala"
-void unity_testing_window_on_active_window_changed (UnityTestingWindow* self, WnckWindow* previous_window) {
-#line 402 "test-window.c"
+static void unity_testing_window_on_active_window_changed (UnityTestingWindow* self, WnckWindow* previous_window) {
 	WnckWindow* new_window;
 	gboolean _tmp0_ = FALSE;
 	gboolean _tmp1_ = FALSE;
-#line 240 "test-window.vala"
 	g_return_if_fail (self != NULL);
-#line 242 "test-window.vala"
 	new_window = _g_object_ref0 (wnck_screen_get_active_window (self->priv->wnck_screen));
-#line 243 "test-window.vala"
 	if (new_window == NULL) {
-#line 412 "test-window.c"
 		_g_object_unref0 (new_window);
-#line 244 "test-window.vala"
 		return;
-#line 416 "test-window.c"
 	}
-#line 247 "test-window.vala"
 	if (WNCK_IS_WINDOW (new_window)) {
-#line 248 "test-window.vala"
 		_tmp1_ = G_TYPE_FROM_INSTANCE ((GObject*) new_window) != WNCK_WINDOW_DESKTOP;
-#line 422 "test-window.c"
 	} else {
-#line 247 "test-window.vala"
 		_tmp1_ = FALSE;
-#line 426 "test-window.c"
 	}
-#line 247 "test-window.vala"
 	if (_tmp1_) {
-#line 249 "test-window.vala"
 		_tmp0_ = _vala_strcmp0 (wnck_window_get_name (new_window), "Unity") == 0;
-#line 432 "test-window.c"
 	} else {
-#line 247 "test-window.vala"
 		_tmp0_ = FALSE;
-#line 436 "test-window.c"
 	}
-#line 247 "test-window.vala"
 	if (_tmp0_) {
-#line 252 "test-window.vala"
 		self->priv->is_showing = TRUE;
-#line 442 "test-window.c"
 	} else {
-#line 260 "test-window.vala"
 		self->priv->is_showing = FALSE;
-#line 446 "test-window.c"
 	}
 	_g_object_unref0 (new_window);
 }
 
 
-#line 264 "test-window.vala"
 gboolean unity_testing_window_on_stage_button_press (UnityTestingWindow* self, ClutterEvent* src) {
-#line 454 "test-window.c"
 	gboolean result = FALSE;
-#line 264 "test-window.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 266 "test-window.vala"
 	if (self->priv->_is_popup) {
-#line 460 "test-window.c"
 		result = FALSE;
-#line 267 "test-window.vala"
 		return result;
-#line 464 "test-window.c"
 	}
-#line 269 "test-window.vala"
 	if (self->priv->is_showing) {
-#line 468 "test-window.c"
 		;
 	} else {
 	}
 	result = FALSE;
-#line 277 "test-window.vala"
 	return result;
-#line 475 "test-window.c"
 }
 
 
-#line 284 "test-window.vala"
 static void unity_testing_window_real_show_window_picker (UnityShell* base) {
-#line 481 "test-window.c"
 	UnityTestingWindow * self;
 	self = (UnityTestingWindow*) base;
-#line 286 "test-window.vala"
 	unity_shell_show_unity ((UnityShell*) self);
-#line 486 "test-window.c"
 }
 
 
-#line 289 "test-window.vala"
 static void unity_testing_window_real_grab_keyboard (UnityShell* base, gboolean grab, guint32 timestamp) {
-#line 492 "test-window.c"
 	UnityTestingWindow * self;
 	self = (UnityTestingWindow*) base;
 }
 
 
-#line 294 "test-window.vala"
 static ClutterStage* unity_testing_window_real_get_stage (UnityShell* base) {
-#line 500 "test-window.c"
 	UnityTestingWindow * self;
 	ClutterStage* result = NULL;
 	self = (UnityTestingWindow*) base;
 	result = _g_object_ref0 (self->stage);
-#line 296 "test-window.vala"
 	return result;
-#line 507 "test-window.c"
 }
 
 
-#line 299 "test-window.vala"
 static UnityShellMode unity_testing_window_real_get_mode (UnityShell* base) {
-#line 513 "test-window.c"
 	UnityTestingWindow * self;
 	UnityShellMode result = 0;
 	self = (UnityTestingWindow*) base;
 	result = UNITY_SHELL_MODE_UNDERLAY;
-#line 301 "test-window.vala"
 	return result;
-#line 520 "test-window.c"
 }
 
 
-#line 304 "test-window.vala"
 static void unity_testing_window_real_show_unity (UnityShell* base) {
-#line 526 "test-window.c"
 	UnityTestingWindow * self;
 	self = (UnityTestingWindow*) base;
-#line 306 "test-window.vala"
 	if (self->priv->places_enabled != TRUE) {
-#line 531 "test-window.c"
 		WnckScreen* screen;
-#line 308 "test-window.vala"
 		screen = _g_object_ref0 (wnck_screen_get_default ());
-#line 310 "test-window.vala"
 		wnck_screen_toggle_showing_desktop (screen, !wnck_screen_get_showing_desktop (screen));
-#line 537 "test-window.c"
 		_g_object_unref0 (screen);
-#line 311 "test-window.vala"
 		return;
-#line 541 "test-window.c"
 	}
-#line 314 "test-window.vala"
 	if (self->priv->showing_places) {
-#line 316 "test-window.vala"
 		self->priv->showing_places = FALSE;
-#line 317 "test-window.vala"
 		unity_panel_view_set_indicator_mode (self->priv->panel, TRUE);
-#line 318 "test-window.vala"
 		clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 255);
-#line 551 "test-window.c"
 	} else {
-#line 322 "test-window.vala"
 		self->priv->showing_places = TRUE;
-#line 323 "test-window.vala"
 		unity_panel_view_set_indicator_mode (self->priv->panel, FALSE);
-#line 324 "test-window.vala"
 		clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 0);
-#line 559 "test-window.c"
 	}
-#line 327 "test-window.vala"
 	clutter_actor_queue_redraw ((ClutterActor*) self->priv->places);
-#line 563 "test-window.c"
 }
 
 
-#line 330 "test-window.vala"
 static gint unity_testing_window_real_get_indicators_width (UnityShell* base) {
-#line 569 "test-window.c"
 	UnityTestingWindow * self;
 	gint result = 0;
 	self = (UnityTestingWindow*) base;
 	result = unity_panel_view_get_indicators_width (self->priv->panel);
-#line 332 "test-window.vala"
 	return result;
-#line 576 "test-window.c"
 }
 
 
-#line 335 "test-window.vala"
 static gint unity_testing_window_real_get_launcher_width_foobar (UnityShell* base) {
-#line 582 "test-window.c"
 	UnityTestingWindow * self;
 	gint result = 0;
 	self = (UnityTestingWindow*) base;
 	result = (gint) unity_launcher_launcher_get_width (self->priv->launcher);
-#line 337 "test-window.vala"
 	return result;
-#line 589 "test-window.c"
 }
 
 
-#line 340 "test-window.vala"
 static gint unity_testing_window_real_get_panel_height_foobar (UnityShell* base) {
-#line 595 "test-window.c"
 	UnityTestingWindow * self;
 	gint result = 0;
 	self = (UnityTestingWindow*) base;
 	result = (gint) unity_panel_view_get_panel_height (self->priv->panel);
-#line 342 "test-window.vala"
 	return result;
-#line 602 "test-window.c"
 }
 
 
-#line 345 "test-window.vala"
 static void unity_testing_window_real_add_fullscreen_request (UnityShell* base, GObject* o) {
-#line 608 "test-window.c"
 	UnityTestingWindow * self;
 	self = (UnityTestingWindow*) base;
-#line 345 "test-window.vala"
 	g_return_if_fail (o != NULL);
-#line 347 "test-window.vala"
 	return;
-#line 615 "test-window.c"
 }
 
 
-#line 350 "test-window.vala"
 static gboolean unity_testing_window_real_remove_fullscreen_request (UnityShell* base, GObject* o) {
-#line 621 "test-window.c"
 	UnityTestingWindow * self;
 	gboolean result = FALSE;
 	self = (UnityTestingWindow*) base;
-#line 350 "test-window.vala"
 	g_return_val_if_fail (o != NULL, FALSE);
-#line 627 "test-window.c"
 	result = FALSE;
-#line 352 "test-window.vala"
 	return result;
-#line 631 "test-window.c"
 }
 
 
-#line 355 "test-window.vala"
 static void unity_testing_window_real_ensure_input_region (UnityShell* base) {
-#line 637 "test-window.c"
 	UnityTestingWindow * self;
 	self = (UnityTestingWindow*) base;
-#line 358 "test-window.vala"
 	return;
-#line 642 "test-window.c"
 }
 
 
-#line 361 "test-window.vala"
 static void unity_testing_window_real_close_xids (UnityShell* base, GArray* xids) {
-#line 648 "test-window.c"
 	UnityTestingWindow * self;
 	self = (UnityTestingWindow*) base;
-#line 361 "test-window.vala"
 	g_return_if_fail (xids != NULL);
-#line 653 "test-window.c"
 	{
 		gint i;
-#line 363 "test-window.vala"
 		i = 0;
-#line 658 "test-window.c"
 		{
 			gboolean _tmp0_;
-#line 363 "test-window.vala"
 			_tmp0_ = TRUE;
-#line 363 "test-window.vala"
 			while (TRUE) {
-#line 665 "test-window.c"
 				guint32 xid;
 				WnckWindow* window;
-#line 363 "test-window.vala"
 				if (!_tmp0_) {
-#line 363 "test-window.vala"
 					i++;
-#line 672 "test-window.c"
 				}
-#line 363 "test-window.vala"
 				_tmp0_ = FALSE;
-#line 363 "test-window.vala"
 				if (!(i < xids->len)) {
-#line 363 "test-window.vala"
 					break;
-#line 680 "test-window.c"
 				}
-#line 365 "test-window.vala"
 				xid = g_array_index (xids, guint32, (guint) i);
-#line 366 "test-window.vala"
 				window = _g_object_ref0 (wnck_window_get ((gulong) xid));
-#line 367 "test-window.vala"
 				if (WNCK_IS_WINDOW (window)) {
-#line 368 "test-window.vala"
 					wnck_window_close (window, clutter_get_current_event_time ());
-#line 690 "test-window.c"
 				}
 				_g_object_unref0 (window);
 			}
@@ -695,38 +521,26 @@ static void unity_testing_window_real_close_xids (UnityShell* base, GArray* xids
 }
 
 
-#line 372 "test-window.vala"
 static void unity_testing_window_real_expose_xids (UnityShell* base, GArray* xids) {
-#line 701 "test-window.c"
 	UnityTestingWindow * self;
 	self = (UnityTestingWindow*) base;
-#line 372 "test-window.vala"
 	g_return_if_fail (xids != NULL);
-#line 706 "test-window.c"
 }
 
 
-#line 377 "test-window.vala"
 static void unity_testing_window_real_stop_expose (UnityShell* base) {
-#line 712 "test-window.c"
 	UnityTestingWindow * self;
 	self = (UnityTestingWindow*) base;
 }
 
 
-#line 382 "test-window.vala"
 static void unity_testing_window_real_show_window (UnityShell* base, guint32 xid) {
-#line 720 "test-window.c"
 	UnityTestingWindow * self;
 	WnckWindow* window;
 	self = (UnityTestingWindow*) base;
-#line 384 "test-window.vala"
 	window = _g_object_ref0 (wnck_window_get ((gulong) xid));
-#line 385 "test-window.vala"
 	if (WNCK_IS_WINDOW (window)) {
-#line 386 "test-window.vala"
 		wnck_window_activate (window, clutter_get_current_event_time ());
-#line 730 "test-window.c"
 	}
 	_g_object_unref0 (window);
 }
@@ -737,9 +551,7 @@ static gboolean unity_testing_window_real_get_menus_swallow_events (UnityShell* 
 	UnityTestingWindow* self;
 	self = (UnityTestingWindow*) base;
 	result = TRUE;
-#line 28 "test-window.vala"
 	return result;
-#line 743 "test-window.c"
 }
 
 
@@ -747,9 +559,7 @@ gboolean unity_testing_window_get_is_popup (UnityTestingWindow* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_is_popup;
-#line 29 "test-window.vala"
 	return result;
-#line 753 "test-window.c"
 }
 
 
@@ -764,9 +574,7 @@ gint unity_testing_window_get_popup_width (UnityTestingWindow* self) {
 	gint result;
 	g_return_val_if_fail (self != NULL, 0);
 	result = self->priv->_popup_width;
-#line 30 "test-window.vala"
 	return result;
-#line 770 "test-window.c"
 }
 
 
@@ -781,9 +589,7 @@ gint unity_testing_window_get_popup_height (UnityTestingWindow* self) {
 	gint result;
 	g_return_val_if_fail (self != NULL, 0);
 	result = self->priv->_popup_height;
-#line 31 "test-window.vala"
 	return result;
-#line 787 "test-window.c"
 }
 
 
@@ -794,89 +600,59 @@ static void unity_testing_window_set_popup_height (UnityTestingWindow* self, gin
 }
 
 
-#line 68 "test-window.vala"
 static gboolean _lambda19_ (UnityTestingWindow* self) {
-#line 800 "test-window.c"
 	gboolean result = FALSE;
-#line 70 "test-window.vala"
 	gtk_main_quit ();
-#line 804 "test-window.c"
 	result = FALSE;
-#line 71 "test-window.vala"
 	return result;
-#line 808 "test-window.c"
 }
 
 
-#line 68 "test-window.vala"
 static gboolean __lambda19__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
-#line 814 "test-window.c"
 	return _lambda19_ (self);
 }
 
 
-#line 84 "test-window.vala"
 static gboolean _lambda20_ (UnityTestingWindow* self) {
-#line 821 "test-window.c"
 	gboolean result = FALSE;
 	result = TRUE;
-#line 84 "test-window.vala"
 	return result;
-#line 826 "test-window.c"
 }
 
 
-#line 84 "test-window.vala"
 static gboolean __lambda20__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
-#line 832 "test-window.c"
 	return _lambda20_ (self);
 }
 
 
-#line 85 "test-window.vala"
 static void _lambda21_ (GdkScreen* s, UnityTestingWindow* self) {
-#line 85 "test-window.vala"
 	g_return_if_fail (s != NULL);
-#line 86 "test-window.vala"
 	unity_testing_window_relayout (self);
-#line 843 "test-window.c"
 }
 
 
-#line 85 "test-window.vala"
 static void __lambda21__gdk_screen_size_changed (GdkScreen* _sender, gpointer self) {
-#line 849 "test-window.c"
 	_lambda21_ (_sender, self);
 }
 
 
-#line 87 "test-window.vala"
 static void _lambda22_ (GdkScreen* s, UnityTestingWindow* self) {
-#line 87 "test-window.vala"
 	g_return_if_fail (s != NULL);
-#line 88 "test-window.vala"
 	unity_testing_window_relayout (self);
-#line 860 "test-window.c"
 }
 
 
-#line 87 "test-window.vala"
 static void __lambda22__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self) {
-#line 866 "test-window.c"
 	_lambda22_ (_sender, self);
 }
 
 
-#line 264 "test-window.vala"
 static gboolean _unity_testing_window_on_stage_button_press_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 873 "test-window.c"
 	return unity_testing_window_on_stage_button_press (self, event);
 }
 
 
-#line 240 "test-window.vala"
 static void _unity_testing_window_on_active_window_changed_wnck_screen_active_window_changed (WnckScreen* _sender, WnckWindow* previous_window, gpointer self) {
-#line 880 "test-window.c"
 	unity_testing_window_on_active_window_changed (self, previous_window);
 }
 
@@ -912,144 +688,75 @@ static GObject * unity_testing_window_constructor (GType type, guint n_construct
 		ClutterActor* _tmp16_;
 		UnityPanelView* _tmp19_;
 		WnckScreen* _tmp20_;
-#line 57 "test-window.vala"
 		START_FUNCTION ();
-#line 58 "test-window.vala"
 		unity_global_shell = (_tmp0_ = _g_object_ref0 ((UnityShell*) self), _g_object_unref0 (unity_global_shell), _tmp0_);
-#line 59 "test-window.vala"
 		self->priv->workarea_size = (_tmp1_ = unity_testing_workarea_new (), _unity_testing_workarea_unref0 (self->priv->workarea_size), _tmp1_);
-#line 60 "test-window.vala"
 		unity_testing_workarea_update_net_workarea (self->priv->workarea_size);
-#line 62 "test-window.vala"
 		if (self->priv->_is_popup) {
-#line 64 "test-window.vala"
 			gtk_window_set_type_hint ((GtkWindow*) self, GDK_WINDOW_TYPE_HINT_NORMAL);
-#line 65 "test-window.vala"
 			gtk_window_set_decorated ((GtkWindow*) self, TRUE);
-#line 66 "test-window.vala"
 			gtk_window_set_skip_taskbar_hint ((GtkWindow*) self, FALSE);
-#line 67 "test-window.vala"
 			gtk_window_set_skip_pager_hint ((GtkWindow*) self, FALSE);
-#line 68 "test-window.vala"
 			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda19__gtk_widget_delete_event, self, 0);
-#line 936 "test-window.c"
 		} else {
-#line 77 "test-window.vala"
 			gtk_window_set_type_hint ((GtkWindow*) self, GDK_WINDOW_TYPE_HINT_DESKTOP);
-#line 78 "test-window.vala"
 			gtk_window_set_keep_below ((GtkWindow*) self, TRUE);
-#line 79 "test-window.vala"
 			gtk_window_set_decorated ((GtkWindow*) self, FALSE);
-#line 80 "test-window.vala"
 			gtk_window_set_skip_taskbar_hint ((GtkWindow*) self, TRUE);
-#line 81 "test-window.vala"
 			gtk_window_set_skip_pager_hint ((GtkWindow*) self, TRUE);
-#line 82 "test-window.vala"
 			gtk_window_set_accept_focus ((GtkWindow*) self, FALSE);
-#line 83 "test-window.vala"
 			g_object_set ((GtkWidget*) self, "can-focus", FALSE, NULL);
-#line 84 "test-window.vala"
 			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda20__gtk_widget_delete_event, self, 0);
-#line 85 "test-window.vala"
 			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "size-changed", (GCallback) __lambda21__gdk_screen_size_changed, self, 0);
-#line 87 "test-window.vala"
 			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "monitors-changed", (GCallback) __lambda22__gdk_screen_monitors_changed, self, 0);
-#line 958 "test-window.c"
 		}
-#line 90 "test-window.vala"
 		gtk_window_set_title ((GtkWindow*) self, "Unity");
-#line 91 "test-window.vala"
 		gtk_window_set_icon_name ((GtkWindow*) self, "distributor-logo");
-#line 92 "test-window.vala"
 		self->priv->is_showing = FALSE;
-#line 95 "test-window.vala"
 		LOGGER_START_PROCESS ("unity_underlay_window_realize");
-#line 96 "test-window.vala"
 		gtk_widget_realize ((GtkWidget*) self);
-#line 97 "test-window.vala"
 		LOGGER_END_PROCESS ("unity_underlay_window_realize");
-#line 99 "test-window.vala"
 		self->gtk_clutter = (_tmp2_ = g_object_ref_sink ((GtkClutterEmbed*) gtk_clutter_embed_new ()), _g_object_unref0 (self->gtk_clutter), _tmp2_);
-#line 100 "test-window.vala"
 		gtk_container_add ((GtkContainer*) self, (GtkWidget*) self->gtk_clutter);
-#line 101 "test-window.vala"
 		LOGGER_START_PROCESS ("gtk_clutter_realize");
-#line 102 "test-window.vala"
 		gtk_widget_realize ((GtkWidget*) self->gtk_clutter);
-#line 103 "test-window.vala"
 		LOGGER_END_PROCESS ("gtk_clutter_realize");
-#line 982 "test-window.c"
 		target_list = (_tmp10_ = (_tmp9_ = g_new0 (GtkTargetEntry, 6), _tmp9_[0] = (memset (&_tmp3_, 0, sizeof (GtkTargetEntry)), _tmp3_.target = "STRING", _tmp3_.flags = (guint) 0, _tmp3_.info = (guint) UNITY_DND_TARGETS_TARGET_STRING, _tmp3_), _tmp9_[1] = (memset (&_tmp4_, 0, sizeof (GtkTargetEntry)), _tmp4_.target = "text/plain", _tmp4_.flags = (guint) 0, _tmp4_.info = (guint) UNITY_DND_TARGETS_TARGET_STRING, _tmp4_), _tmp9_[2] = (memset (&_tmp5_, 0, sizeof (GtkTargetEntry)), _tmp5_.target = "text/uri-list", _tmp5_.flags = (guint) 0, _tmp5_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp5_), _tmp9_[3] = (memset (&_tmp6_, 0, sizeof (GtkTargetEntry)), _tmp6_.target = "x-url/http", _tmp6_.flags = (guint) 0, _tmp6_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp6_), _tmp9_[4] = (memset (&_tmp7_, 0, sizeof (GtkTargetEntry)), _tmp7_.target = "x-url/ftp", _tmp7_.flags = (guint) 0, _tmp7_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp7_), _tmp9_[5] = (memset (&_tmp8_, 0, sizeof (GtkTargetEntry)), _tmp8_.target = "_NETSCAPE_URL", _tmp8_.flags = (guint) 0, _tmp8_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp8_), _tmp9_), target_list_length1 = 6, _target_list_size_ = target_list_length1, _tmp10_);
-#line 114 "test-window.vala"
 		LOGGER_START_PROCESS ("ctk_dnd_init");
-#line 115 "test-window.vala"
 		ctk_dnd_init ((GtkWidget*) self->gtk_clutter, target_list, target_list_length1);
-#line 116 "test-window.vala"
 		LOGGER_END_PROCESS ("ctk_dnd_init");
-#line 118 "test-window.vala"
 		self->stage = (_tmp11_ = _g_object_ref0 (CLUTTER_STAGE (gtk_clutter_embed_get_stage (self->gtk_clutter))), _g_object_unref0 (self->stage), _tmp11_);
-#line 120 "test-window.vala"
 		stage_bg = (memset (&_tmp12_, 0, sizeof (ClutterColor)), _tmp12_.red = (guint8) 0x00, _tmp12_.green = (guint8) 0x00, _tmp12_.blue = (guint8) 0x00, _tmp12_.alpha = (guint8) 0xff, _tmp12_);
-#line 126 "test-window.vala"
 		clutter_stage_set_color (self->stage, &stage_bg);
-#line 127 "test-window.vala"
 		g_signal_connect_object ((ClutterActor*) self->stage, "button-press-event", (GCallback) _unity_testing_window_on_stage_button_press_clutter_actor_button_press_event, self, 0);
-#line 129 "test-window.vala"
 		self->priv->places_enabled = g_getenv ("UNITY_ENABLE_PLACES") != NULL;
-#line 132 "test-window.vala"
 		self->priv->background = (_tmp13_ = g_object_ref_sink (unity_testing_background_new ()), _g_object_unref0 (self->priv->background), _tmp13_);
-#line 133 "test-window.vala"
 		clutter_container_add_actor ((ClutterContainer*) self->stage, (ClutterActor*) self->priv->background);
-#line 134 "test-window.vala"
 		clutter_actor_show ((ClutterActor*) self->priv->background);
-#line 136 "test-window.vala"
 		self->priv->launcher = (_tmp14_ = unity_launcher_launcher_new ((UnityShell*) self), _g_object_unref0 (self->priv->launcher), _tmp14_);
-#line 137 "test-window.vala"
 		clutter_container_add_actor ((ClutterContainer*) self->stage, _tmp15_ = unity_launcher_launcher_get_view (self->priv->launcher));
-#line 1010 "test-window.c"
 		_g_object_unref0 (_tmp15_);
-#line 138 "test-window.vala"
 		clutter_actor_show (_tmp16_ = unity_launcher_launcher_get_view (self->priv->launcher));
-#line 1014 "test-window.c"
 		_g_object_unref0 (_tmp16_);
-#line 140 "test-window.vala"
 		if (self->priv->places_enabled) {
-#line 1018 "test-window.c"
 			UnityPlacesController* _tmp17_;
 			UnityPlacesView* _tmp18_;
-#line 142 "test-window.vala"
 			self->priv->controller = (_tmp17_ = unity_places_controller_new ((UnityShell*) self), _g_object_unref0 (self->priv->controller), _tmp17_);
-#line 143 "test-window.vala"
 			self->priv->places = (_tmp18_ = unity_places_controller_get_view (self->priv->controller), _g_object_unref0 (self->priv->places), _tmp18_);
-#line 144 "test-window.vala"
 			clutter_container_add_actor ((ClutterContainer*) self->stage, (ClutterActor*) self->priv->places);
-#line 145 "test-window.vala"
 			clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 0);
-#line 146 "test-window.vala"
 			self->priv->showing_places = FALSE;
-#line 1031 "test-window.c"
 		}
-#line 149 "test-window.vala"
 		self->priv->panel = (_tmp19_ = g_object_ref_sink (unity_panel_view_new ((UnityShell*) self)), _g_object_unref0 (self->priv->panel), _tmp19_);
-#line 150 "test-window.vala"
 		clutter_container_add_actor ((ClutterContainer*) self->stage, (ClutterActor*) self->priv->panel);
-#line 151 "test-window.vala"
 		clutter_actor_show ((ClutterActor*) self->priv->panel);
-#line 154 "test-window.vala"
 		gtk_window_move ((GtkWindow*) self, 0, 0);
-#line 155 "test-window.vala"
 		unity_testing_window_relayout (self);
-#line 158 "test-window.vala"
 		self->priv->wnck_screen = (_tmp20_ = _g_object_ref0 (wnck_screen_get_default ()), _g_object_unref0 (self->priv->wnck_screen), _tmp20_);
-#line 159 "test-window.vala"
 		if (!self->priv->_is_popup) {
-#line 161 "test-window.vala"
 			g_signal_connect_object (self->priv->wnck_screen, "active-window-changed", (GCallback) _unity_testing_window_on_active_window_changed_wnck_screen_active_window_changed, self, 0);
-#line 1049 "test-window.c"
 		}
-#line 164 "test-window.vala"
 		END_FUNCTION ();
-#line 1053 "test-window.c"
 		target_list = (g_free (target_list), NULL);
 	}
 	return obj;
@@ -1171,47 +878,29 @@ static void unity_testing_window_set_property (GObject * object, guint property_
 }
 
 
-#line 398 "test-window.vala"
 UnityTestingWorkarea* unity_testing_workarea_construct (GType object_type) {
-#line 1177 "test-window.c"
 	UnityTestingWorkarea* self;
 	self = (UnityTestingWorkarea*) g_type_create_instance (object_type);
-#line 400 "test-window.vala"
 	self->left = 0;
-#line 401 "test-window.vala"
 	self->right = 0;
-#line 402 "test-window.vala"
 	self->top = 0;
-#line 403 "test-window.vala"
 	self->bottom = 0;
-#line 405 "test-window.vala"
 	unity_testing_workarea_update_net_workarea (self);
-#line 1190 "test-window.c"
 	return self;
 }
 
 
-#line 398 "test-window.vala"
 UnityTestingWorkarea* unity_testing_workarea_new (void) {
-#line 398 "test-window.vala"
 	return unity_testing_workarea_construct (UNITY_TESTING_TYPE_WORKAREA);
-#line 1199 "test-window.c"
 }
 
 
-#line 408 "test-window.vala"
 void unity_testing_workarea_update_net_workarea (UnityTestingWorkarea* self) {
-#line 408 "test-window.vala"
 	g_return_if_fail (self != NULL);
-#line 413 "test-window.vala"
 	self->left = 0;
-#line 414 "test-window.vala"
 	self->right = 0;
-#line 415 "test-window.vala"
 	self->top = 24;
-#line 416 "test-window.vala"
 	self->bottom = 0;
-#line 1215 "test-window.c"
 }
 
 

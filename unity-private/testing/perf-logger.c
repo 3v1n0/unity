@@ -128,31 +128,20 @@ static void unity_timeline_logger_finalize (GObject* obj);
 
 
 
-#line 25 "perf-logger.vala"
 UnityProcessInfo* unity_process_info_construct (GType object_type, const char* name) {
-#line 134 "perf-logger.c"
 	UnityProcessInfo* self;
 	char* _tmp0_;
-#line 25 "perf-logger.vala"
 	g_return_val_if_fail (name != NULL, NULL);
-#line 139 "perf-logger.c"
 	self = (UnityProcessInfo*) g_type_create_instance (object_type);
-#line 27 "perf-logger.vala"
 	self->name = (_tmp0_ = g_strdup (name), _g_free0 (self->name), _tmp0_);
-#line 28 "perf-logger.vala"
 	self->start = (double) 0;
-#line 29 "perf-logger.vala"
 	self->end = (double) 0;
-#line 147 "perf-logger.c"
 	return self;
 }
 
 
-#line 25 "perf-logger.vala"
 UnityProcessInfo* unity_process_info_new (const char* name) {
-#line 25 "perf-logger.vala"
 	return unity_process_info_construct (UNITY_TYPE_PROCESS_INFO, name);
-#line 156 "perf-logger.c"
 }
 
 
@@ -316,190 +305,126 @@ void unity_process_info_unref (gpointer instance) {
 }
 
 
-#line 44 "perf-logger.vala"
 UnityTimelineLogger* unity_timeline_logger_get_default (void) {
-#line 322 "perf-logger.c"
 	UnityTimelineLogger* result = NULL;
-#line 46 "perf-logger.vala"
 	if (unity_timeline_singleton == NULL) {
-#line 326 "perf-logger.c"
 		UnityTimelineLogger* _tmp0_;
-#line 48 "perf-logger.vala"
 		unity_timeline_singleton = (_tmp0_ = unity_timeline_logger_new (), _g_object_unref0 (unity_timeline_singleton), _tmp0_);
-#line 330 "perf-logger.c"
 	}
 	result = unity_timeline_singleton;
-#line 51 "perf-logger.vala"
 	return result;
-#line 335 "perf-logger.c"
 }
 
 
-#line 61 "perf-logger.vala"
 void unity_timeline_logger_start_process (UnityTimelineLogger* self, const char* name) {
-#line 341 "perf-logger.c"
 	GeeSet* _tmp0_;
 	gboolean _tmp1_;
 	UnityProcessInfo* info;
-#line 61 "perf-logger.vala"
 	g_return_if_fail (self != NULL);
-#line 61 "perf-logger.vala"
 	g_return_if_fail (name != NULL);
-#line 63 "perf-logger.vala"
 	if ((_tmp1_ = gee_collection_contains ((GeeCollection*) (_tmp0_ = gee_map_get_keys ((GeeMap*) self->priv->process_map)), name), _g_object_unref0 (_tmp0_), _tmp1_)) {
-#line 65 "perf-logger.vala"
 		g_warning ("perf-logger.vala:65: already started process: %s", name);
-#line 66 "perf-logger.vala"
 		return;
-#line 355 "perf-logger.c"
 	}
-#line 69 "perf-logger.vala"
 	info = unity_process_info_new (name);
-#line 70 "perf-logger.vala"
 	gee_abstract_map_set ((GeeAbstractMap*) self->priv->process_map, name, info);
-#line 71 "perf-logger.vala"
 	info->start = g_timer_elapsed (self->priv->global_timer, NULL);
-#line 363 "perf-logger.c"
 	_unity_process_info_unref0 (info);
 }
 
 
-#line 74 "perf-logger.vala"
 void unity_timeline_logger_end_process (UnityTimelineLogger* self, const char* name) {
-#line 370 "perf-logger.c"
 	double end_time;
 	GeeSet* _tmp0_;
 	gboolean _tmp1_;
-#line 74 "perf-logger.vala"
 	g_return_if_fail (self != NULL);
-#line 74 "perf-logger.vala"
 	g_return_if_fail (name != NULL);
-#line 76 "perf-logger.vala"
 	end_time = g_timer_elapsed (self->priv->global_timer, NULL);
-#line 78 "perf-logger.vala"
 	if ((_tmp1_ = gee_collection_contains ((GeeCollection*) (_tmp0_ = gee_map_get_keys ((GeeMap*) self->priv->process_map)), name), _g_object_unref0 (_tmp0_), _tmp1_)) {
-#line 382 "perf-logger.c"
 		UnityProcessInfo* _tmp2_;
-#line 80 "perf-logger.vala"
 		(_tmp2_ = (UnityProcessInfo*) gee_abstract_map_get ((GeeAbstractMap*) self->priv->process_map, name))->end = end_time;
-#line 386 "perf-logger.c"
 		_unity_process_info_unref0 (_tmp2_);
 	} else {
-#line 84 "perf-logger.vala"
 		g_warning ("perf-logger.vala:84: process %s not started", name);
-#line 391 "perf-logger.c"
 	}
 }
 
 
-#line 88 "perf-logger.vala"
 void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* filename) {
-#line 398 "perf-logger.c"
 	GError * _inner_error_;
 	GFile* log_file;
 	GFileOutputStream* file_stream;
-#line 88 "perf-logger.vala"
 	g_return_if_fail (self != NULL);
-#line 88 "perf-logger.vala"
 	g_return_if_fail (filename != NULL);
-#line 406 "perf-logger.c"
 	_inner_error_ = NULL;
-#line 90 "perf-logger.vala"
 	g_debug ("perf-logger.vala:90: Writing performance log file: %s...", filename);
-#line 91 "perf-logger.vala"
 	log_file = g_file_new_for_path (filename);
-#line 412 "perf-logger.c"
 	file_stream = NULL;
 	{
 		GDataOutputStream* output_stream;
-#line 95 "perf-logger.vala"
 		if (!g_file_query_exists (log_file, NULL)) {
-#line 418 "perf-logger.c"
 			GFileOutputStream* _tmp0_;
 			GFileOutputStream* _tmp1_;
-#line 96 "perf-logger.vala"
 			_tmp0_ = g_file_create (log_file, G_FILE_CREATE_NONE, NULL, &_inner_error_);
-#line 423 "perf-logger.c"
 			if (_inner_error_ != NULL) {
-				goto __catch27_g_error;
+				goto __catch28_g_error;
 			}
-#line 96 "perf-logger.vala"
 			file_stream = (_tmp1_ = _tmp0_, _g_object_unref0 (file_stream), _tmp1_);
-#line 429 "perf-logger.c"
 		} else {
 			GFileOutputStream* _tmp2_;
 			GFileOutputStream* _tmp3_;
-#line 100 "perf-logger.vala"
 			_tmp2_ = g_file_replace (log_file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, &_inner_error_);
-#line 435 "perf-logger.c"
 			if (_inner_error_ != NULL) {
-				goto __catch27_g_error;
+				goto __catch28_g_error;
 			}
-#line 100 "perf-logger.vala"
 			file_stream = (_tmp3_ = _tmp2_, _g_object_unref0 (file_stream), _tmp3_);
-#line 441 "perf-logger.c"
 		}
-#line 103 "perf-logger.vala"
 		output_stream = g_data_output_stream_new ((GOutputStream*) file_stream);
-#line 445 "perf-logger.c"
 		{
 			GeeCollection* _tmp4_;
 			GeeIterator* _tmp5_;
 			GeeIterator* _info_it;
 			_info_it = (_tmp5_ = gee_iterable_iterator ((GeeIterable*) (_tmp4_ = gee_map_get_values ((GeeMap*) self->priv->process_map))), _g_object_unref0 (_tmp4_), _tmp5_);
-#line 105 "perf-logger.vala"
 			while (TRUE) {
-#line 453 "perf-logger.c"
 				UnityProcessInfo* info;
 				char* outline;
-#line 105 "perf-logger.vala"
 				if (!gee_iterator_next (_info_it)) {
-#line 105 "perf-logger.vala"
 					break;
-#line 460 "perf-logger.c"
 				}
-#line 105 "perf-logger.vala"
 				info = (UnityProcessInfo*) gee_iterator_get (_info_it);
-#line 107 "perf-logger.vala"
 				outline = g_strdup_printf ("%s, %f, %f\n", info->name, info->start, info->end);
-#line 108 "perf-logger.vala"
 				g_data_output_stream_put_string (output_stream, outline, NULL, &_inner_error_);
-#line 468 "perf-logger.c"
 				if (_inner_error_ != NULL) {
 					_unity_process_info_unref0 (info);
 					_g_free0 (outline);
 					_g_object_unref0 (_info_it);
 					_g_object_unref0 (output_stream);
-					goto __catch27_g_error;
+					goto __catch28_g_error;
 				}
 				_unity_process_info_unref0 (info);
 				_g_free0 (outline);
 			}
 			_g_object_unref0 (_info_it);
 		}
-#line 111 "perf-logger.vala"
 		g_output_stream_close ((GOutputStream*) file_stream, NULL, &_inner_error_);
-#line 483 "perf-logger.c"
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (output_stream);
-			goto __catch27_g_error;
+			goto __catch28_g_error;
 		}
 		_g_object_unref0 (output_stream);
 	}
-	goto __finally27;
-	__catch27_g_error:
+	goto __finally28;
+	__catch28_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 114 "perf-logger.vala"
 			g_warning ("perf-logger.vala:114: %s", e->message);
-#line 499 "perf-logger.c"
 			_g_error_free0 (e);
 		}
 	}
-	__finally27:
+	__finally28:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (log_file);
 		_g_object_unref0 (file_stream);
@@ -507,28 +432,21 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 		g_clear_error (&_inner_error_);
 		return;
 	}
-#line 116 "perf-logger.vala"
 	g_debug ("perf-logger.vala:116: Done writing performance log file: %s", filename);
-#line 513 "perf-logger.c"
 	_g_object_unref0 (log_file);
 	_g_object_unref0 (file_stream);
 }
 
 
-#line 39 "perf-logger.vala"
 UnityTimelineLogger* unity_timeline_logger_construct (GType object_type) {
-#line 521 "perf-logger.c"
 	UnityTimelineLogger * self;
 	self = g_object_newv (object_type, 0, NULL);
 	return self;
 }
 
 
-#line 39 "perf-logger.vala"
 UnityTimelineLogger* unity_timeline_logger_new (void) {
-#line 39 "perf-logger.vala"
 	return unity_timeline_logger_construct (UNITY_TYPE_TIMELINE_LOGGER);
-#line 532 "perf-logger.c"
 }
 
 
@@ -542,13 +460,9 @@ static GObject * unity_timeline_logger_constructor (GType type, guint n_construc
 	{
 		GeeHashMap* _tmp0_;
 		GTimer* _tmp1_;
-#line 56 "perf-logger.vala"
 		self->priv->process_map = (_tmp0_ = gee_hash_map_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, UNITY_TYPE_PROCESS_INFO, (GBoxedCopyFunc) unity_process_info_ref, unity_process_info_unref, NULL, NULL, NULL), _g_object_unref0 (self->priv->process_map), _tmp0_);
-#line 57 "perf-logger.vala"
 		self->priv->global_timer = (_tmp1_ = g_timer_new (), _g_timer_destroy0 (self->priv->global_timer), _tmp1_);
-#line 58 "perf-logger.vala"
 		g_timer_start (self->priv->global_timer);
-#line 552 "perf-logger.c"
 	}
 	return obj;
 }

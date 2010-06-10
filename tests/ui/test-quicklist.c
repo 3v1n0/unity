@@ -97,75 +97,48 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 61 "test-quicklist.vala"
 static void _unity_tests_ui_quicklist_suite_test_controller_show_label_gdata_test_func (gpointer self) {
-#line 103 "test-quicklist.c"
 	unity_tests_ui_quicklist_suite_test_controller_show_label (self);
 }
 
 
-#line 55 "test-quicklist.vala"
 static void _unity_tests_ui_quicklist_suite_test_teardown_gdata_test_func (gpointer self) {
-#line 110 "test-quicklist.c"
 	unity_tests_ui_quicklist_suite_test_teardown (self);
 }
 
 
-#line 33 "test-quicklist.vala"
 UnityTestsUIQuicklistSuite* unity_tests_ui_quicklist_suite_construct (GType object_type) {
-#line 117 "test-quicklist.c"
 	UnityTestsUIQuicklistSuite * self;
 	UnityFavorites* _tmp0_;
 	UnityTestingWindow* _tmp1_;
 	ClutterStage* _tmp2_;
-#line 33 "test-quicklist.vala"
 	self = (UnityTestsUIQuicklistSuite*) g_object_new (object_type, NULL);
-#line 35 "test-quicklist.vala"
 	unity_testing_logging_init_fatal_handler ();
-#line 38 "test-quicklist.vala"
 	unity_favorites_singleton = (_tmp0_ = (UnityFavorites*) unity_tests_ui_test_favorites_new (), _g_object_unref0 (unity_favorites_singleton), _tmp0_);
-#line 39 "test-quicklist.vala"
 	self->priv->window = (_tmp1_ = g_object_ref_sink (unity_testing_window_new (TRUE, 1024, 600)), _g_object_unref0 (self->priv->window), _tmp1_);
-#line 40 "test-quicklist.vala"
 	unity_testing_window_init_test_mode (self->priv->window);
-#line 41 "test-quicklist.vala"
 	self->priv->stage = (_tmp2_ = _g_object_ref0 (self->priv->window->stage), _g_object_unref0 (self->priv->stage), _tmp2_);
-#line 42 "test-quicklist.vala"
 	gtk_window_set_title ((GtkWindow*) self->priv->window, "Quicklist Tests");
-#line 43 "test-quicklist.vala"
 	gtk_widget_show_all ((GtkWidget*) self->priv->window);
-#line 45 "test-quicklist.vala"
 	g_test_add_data_func (UNITY_TESTS_UI_QUICKLIST_SUITE_DOMAIN "/ControllerShowLabel", self, _unity_tests_ui_quicklist_suite_test_controller_show_label_gdata_test_func);
-#line 52 "test-quicklist.vala"
 	g_test_add_data_func (UNITY_TESTS_UI_QUICKLIST_SUITE_DOMAIN "/Teardown", self, _unity_tests_ui_quicklist_suite_test_teardown_gdata_test_func);
-#line 142 "test-quicklist.c"
 	return self;
 }
 
 
-#line 33 "test-quicklist.vala"
 UnityTestsUIQuicklistSuite* unity_tests_ui_quicklist_suite_new (void) {
-#line 33 "test-quicklist.vala"
 	return unity_tests_ui_quicklist_suite_construct (UNITY_TESTS_UI_TYPE_QUICKLIST_SUITE);
-#line 151 "test-quicklist.c"
 }
 
 
-#line 55 "test-quicklist.vala"
 static void unity_tests_ui_quicklist_suite_test_teardown (UnityTestsUIQuicklistSuite* self) {
-#line 157 "test-quicklist.c"
 	ClutterStage* _tmp0_;
-#line 55 "test-quicklist.vala"
 	g_return_if_fail (self != NULL);
-#line 58 "test-quicklist.vala"
 	self->priv->stage = (_tmp0_ = NULL, _g_object_unref0 (self->priv->stage), _tmp0_);
-#line 163 "test-quicklist.c"
 }
 
 
-#line 61 "test-quicklist.vala"
 static void unity_tests_ui_quicklist_suite_test_controller_show_label (UnityTestsUIQuicklistSuite* self) {
-#line 169 "test-quicklist.c"
 	char* img;
 	UnityTestingObjectRegistry* registry;
 	GeeArrayList* _tmp0_;
@@ -175,39 +148,22 @@ static void unity_tests_ui_quicklist_suite_test_controller_show_label (UnityTest
 	UnityLauncherScrollerChild* _tmp3_;
 	UnityLauncherScrollerChild* first;
 	UnityLauncherQuicklistController* qlcontroller;
-#line 61 "test-quicklist.vala"
 	g_return_if_fail (self != NULL);
-#line 63 "test-quicklist.vala"
 	img = g_strdup (TESTDIR "/data/quicklist_controller_show_label.png");
-#line 64 "test-quicklist.vala"
 	registry = unity_testing_object_registry_get_default ();
-#line 66 "test-quicklist.vala"
 	unity_testing_logging_init_fatal_handler ();
-#line 68 "test-quicklist.vala"
 	scroller = (_tmp2_ = (_tmp1_ = (GObject*) gee_abstract_list_get ((GeeAbstractList*) (_tmp0_ = unity_testing_object_registry_lookup (registry, "UnityScrollerModel")), 0), UNITY_LAUNCHER_IS_SCROLLER_MODEL (_tmp1_) ? ((UnityLauncherScrollerModel*) _tmp1_) : NULL), _g_object_unref0 (_tmp0_), _tmp2_);
-#line 69 "test-quicklist.vala"
 	first = (_tmp3_ = unity_launcher_scroller_model_get (scroller, 0), UNITY_LAUNCHER_IS_SCROLLER_CHILD (_tmp3_) ? ((UnityLauncherScrollerChild*) _tmp3_) : NULL);
-#line 71 "test-quicklist.vala"
 	qlcontroller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
-#line 72 "test-quicklist.vala"
 	unity_launcher_quicklist_controller_show_label (qlcontroller, "Ubuntu Software Centre", (CtkActor*) first);
-#line 74 "test-quicklist.vala"
 	while (TRUE) {
-#line 74 "test-quicklist.vala"
 		if (!gtk_events_pending ()) {
-#line 74 "test-quicklist.vala"
 			break;
-#line 201 "test-quicklist.c"
 		}
-#line 75 "test-quicklist.vala"
 		gtk_main_iteration ();
-#line 205 "test-quicklist.c"
 	}
-#line 77 "test-quicklist.vala"
 	g_assert (utils_compare_snapshot (self->priv->stage, img, 54, 30, 200, 50, TRUE));
-#line 80 "test-quicklist.vala"
 	unity_launcher_quicklist_controller_close_menu (qlcontroller);
-#line 211 "test-quicklist.c"
 	_g_free0 (img);
 	_unity_testing_object_registry_unref0 (registry);
 	_g_object_unref0 (scroller);

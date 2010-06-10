@@ -81,65 +81,41 @@ static void unity_panel_background_finalize (GObject* obj);
 
 
 
-#line 30 "panel-background.vala"
 UnityPanelBackground* unity_panel_background_construct (GType object_type) {
-#line 87 "panel-background.c"
 	UnityPanelBackground * self;
-#line 32 "panel-background.vala"
 	self = (UnityPanelBackground*) g_object_new (object_type, NULL);
-#line 91 "panel-background.c"
 	return self;
 }
 
 
-#line 30 "panel-background.vala"
 UnityPanelBackground* unity_panel_background_new (void) {
-#line 30 "panel-background.vala"
 	return unity_panel_background_construct (UNITY_PANEL_TYPE_BACKGROUND);
-#line 100 "panel-background.c"
 }
 
 
-#line 67 "panel-background.vala"
 static gboolean _unity_panel_background_update_background_gsource_func (gpointer self) {
-#line 106 "panel-background.c"
 	return unity_panel_background_update_background (self);
 }
 
 
-#line 50 "panel-background.vala"
 static void unity_panel_background_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
-#line 113 "panel-background.c"
 	UnityPanelBackground * self;
 	gint width;
 	gint height;
 	gboolean _tmp0_ = FALSE;
 	self = (UnityPanelBackground*) base;
-#line 53 "panel-background.vala"
 	width = (gint) ((*box).x2 - (*box).x1);
-#line 54 "panel-background.vala"
 	height = (gint) ((*box).y2 - (*box).y1);
-#line 56 "panel-background.vala"
 	CLUTTER_ACTOR_CLASS (unity_panel_background_parent_class)->allocate ((ClutterActor*) CLUTTER_CAIRO_TEXTURE (self), box, flags);
-#line 58 "panel-background.vala"
 	if (width != self->priv->last_width) {
-#line 58 "panel-background.vala"
 		_tmp0_ = TRUE;
-#line 129 "panel-background.c"
 	} else {
-#line 58 "panel-background.vala"
 		_tmp0_ = height != self->priv->last_height;
-#line 133 "panel-background.c"
 	}
-#line 58 "panel-background.vala"
 	if (_tmp0_) {
-#line 60 "panel-background.vala"
 		self->priv->last_width = width;
-#line 61 "panel-background.vala"
 		self->priv->last_height = height;
-#line 63 "panel-background.vala"
 		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_panel_background_update_background_gsource_func, g_object_ref (self), g_object_unref);
-#line 143 "panel-background.c"
 	}
 }
 
@@ -149,56 +125,33 @@ static gpointer _cairo_pattern_reference0 (gpointer self) {
 }
 
 
-#line 67 "panel-background.vala"
 static gboolean unity_panel_background_update_background (UnityPanelBackground* self) {
-#line 155 "panel-background.c"
 	gboolean result = FALSE;
 	cairo_t* cr;
 	cairo_t* _tmp0_;
-#line 67 "panel-background.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 161 "panel-background.c"
 	cr = NULL;
-#line 71 "panel-background.vala"
 	clutter_cairo_texture_set_surface_size ((ClutterCairoTexture*) self, (guint) self->priv->last_width, (guint) self->priv->last_height);
-#line 73 "panel-background.vala"
 	cr = (_tmp0_ = clutter_cairo_texture_create ((ClutterCairoTexture*) self), _cairo_destroy0 (cr), _tmp0_);
-#line 75 "panel-background.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
-#line 76 "panel-background.vala"
 	cairo_paint (cr);
-#line 78 "panel-background.vala"
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-#line 79 "panel-background.vala"
 	cairo_set_line_width (cr, 1.0);
-#line 81 "panel-background.vala"
 	cairo_rectangle (cr, (double) 0, (double) 0, (double) self->priv->last_width, (double) self->priv->last_height);
-#line 82 "panel-background.vala"
 	cairo_set_source_rgb (cr, 61 / 255.0, 60 / 255.0, 56 / 255.0);
-#line 83 "panel-background.vala"
 	cairo_fill (cr);
-#line 85 "panel-background.vala"
 	cairo_rectangle (cr, (double) 0, (double) 0, (double) self->priv->last_width, (double) (self->priv->last_height - 3));
-#line 86 "panel-background.vala"
 	if (GDK_IS_PIXBUF (self->priv->tile)) {
-#line 185 "panel-background.c"
 		cairo_pattern_t* pat;
-#line 88 "panel-background.vala"
 		gdk_cairo_set_source_pixbuf (cr, self->priv->tile, (double) 0, (double) 0);
-#line 89 "panel-background.vala"
 		pat = _cairo_pattern_reference0 (cairo_get_source (cr));
-#line 90 "panel-background.vala"
 		cairo_pattern_set_extend (pat, CAIRO_EXTEND_REPEAT);
-#line 91 "panel-background.vala"
 		cairo_fill (cr);
-#line 195 "panel-background.c"
 		_cairo_pattern_destroy0 (pat);
 	}
 	result = FALSE;
 	_cairo_destroy0 (cr);
-#line 94 "panel-background.vala"
 	return result;
-#line 202 "panel-background.c"
 }
 
 
@@ -215,15 +168,11 @@ static GObject * unity_panel_background_constructor (GType type, guint n_constru
 		{
 			GdkPixbuf* _tmp0_;
 			GdkPixbuf* _tmp1_;
-#line 42 "panel-background.vala"
 			_tmp0_ = gdk_pixbuf_new_from_file (UNITY_PANEL_BACKGROUND_BG, &_inner_error_);
-#line 221 "panel-background.c"
 			if (_inner_error_ != NULL) {
 				goto __catch2_g_error;
 			}
-#line 42 "panel-background.vala"
 			self->priv->tile = (_tmp1_ = _tmp0_, _g_object_unref0 (self->priv->tile), _tmp1_);
-#line 227 "panel-background.c"
 		}
 		goto __finally2;
 		__catch2_g_error:
@@ -232,9 +181,7 @@ static GObject * unity_panel_background_constructor (GType type, guint n_constru
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-#line 46 "panel-background.vala"
 				g_warning ("panel-background.vala:46: Unable to load panel background");
-#line 238 "panel-background.c"
 				_g_error_free0 (e);
 			}
 		}

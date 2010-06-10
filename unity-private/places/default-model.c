@@ -64,37 +64,24 @@ static void unity_places_default_model_finalize (GObject* obj);
 
 
 
-#line 30 "default-model.vala"
 UnityPlacesDefaultModel* unity_places_default_model_construct (GType object_type, const char* icon_name, const char* primary_text, const char* secondary_text) {
-#line 70 "default-model.c"
 	UnityPlacesDefaultModel * self;
 	char* _tmp0_;
 	char* _tmp1_;
 	char* _tmp2_;
-#line 30 "default-model.vala"
 	g_return_val_if_fail (icon_name != NULL, NULL);
-#line 30 "default-model.vala"
 	g_return_val_if_fail (primary_text != NULL, NULL);
-#line 30 "default-model.vala"
 	g_return_val_if_fail (secondary_text != NULL, NULL);
-#line 81 "default-model.c"
 	self = g_object_newv (object_type, 0, NULL);
-#line 34 "default-model.vala"
 	self->icon_name = (_tmp0_ = g_strdup (icon_name), _g_free0 (self->icon_name), _tmp0_);
-#line 35 "default-model.vala"
 	self->primary_text = (_tmp1_ = g_strdup (primary_text), _g_free0 (self->primary_text), _tmp1_);
-#line 36 "default-model.vala"
 	self->secondary_text = (_tmp2_ = g_strdup (secondary_text), _g_free0 (self->secondary_text), _tmp2_);
-#line 89 "default-model.c"
 	return self;
 }
 
 
-#line 30 "default-model.vala"
 UnityPlacesDefaultModel* unity_places_default_model_new (const char* icon_name, const char* primary_text, const char* secondary_text) {
-#line 30 "default-model.vala"
 	return unity_places_default_model_construct (UNITY_PLACES_DEFAULT_TYPE_MODEL, icon_name, primary_text, secondary_text);
-#line 98 "default-model.c"
 }
 
 

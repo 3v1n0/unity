@@ -237,7 +237,7 @@ namespace Unity.Testing
     /*
      * UNDERLAY WINDOW MANAGEMENT
      */
-    public void on_active_window_changed (Wnck.Window? previous_window)
+    private void on_active_window_changed (Wnck.Window? previous_window)
     {
       Wnck.Window new_window = this.wnck_screen.get_active_window ();
       if (new_window == null)

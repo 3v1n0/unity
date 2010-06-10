@@ -163,9 +163,7 @@ static void main_finalize (Main* obj);
 
 
 
-#line 25 "test-unit.vala"
 gint main_main (char** args, int args_length1) {
-#line 169 "test-unit.c"
 	gint result = 0;
 	UnityTestsUnitPanelIndicatorObjectEntryViewSuite* panel_object_entry_view_suite;
 	UnityTestsUnitPanelIndicatorObjectViewSuite* panel_object_view_suite;
@@ -182,61 +180,40 @@ gint main_main (char** args, int args_length1) {
 	places = NULL;
 	launcher = NULL;
 	place = NULL;
-#line 34 "test-unit.vala"
 	gtk_init (&args_length1, &args);
-#line 35 "test-unit.vala"
 	ctk_init (&args_length1, &args);
-#line 36 "test-unit.vala"
 	g_test_init (&args_length1, &args, NULL);
-#line 38 "test-unit.vala"
 	panel_object_entry_view_suite = (_tmp0_ = unity_tests_unit_panel_indicator_object_entry_view_suite_new (), _g_object_unref0 (panel_object_entry_view_suite), _tmp0_);
-#line 39 "test-unit.vala"
 	panel_object_view_suite = (_tmp1_ = unity_tests_unit_panel_indicator_object_view_suite_new (), _g_object_unref0 (panel_object_view_suite), _tmp1_);
-#line 41 "test-unit.vala"
 	launcher = (_tmp2_ = unity_tests_unit_launcher_suite_new (), _unity_tests_unit_launcher_suite_unref0 (launcher), _tmp2_);
-#line 42 "test-unit.vala"
 	places = (_tmp3_ = unity_tests_unit_places_suite_new (), _unity_tests_unit_places_suite_unref0 (places), _tmp3_);
-#line 43 "test-unit.vala"
 	place = (_tmp4_ = unity_tests_unit_place_suite_new (), _unity_tests_unit_place_suite_unref0 (place), _tmp4_);
-#line 45 "test-unit.vala"
 	g_test_run ();
-#line 204 "test-unit.c"
 	result = 0;
 	_g_object_unref0 (panel_object_entry_view_suite);
 	_g_object_unref0 (panel_object_view_suite);
 	_unity_tests_unit_places_suite_unref0 (places);
 	_unity_tests_unit_launcher_suite_unref0 (launcher);
 	_unity_tests_unit_place_suite_unref0 (place);
-#line 47 "test-unit.vala"
 	return result;
-#line 213 "test-unit.c"
 }
 
 
-#line 25 "test-unit.vala"
 int main (int argc, char ** argv) {
-#line 25 "test-unit.vala"
 	g_type_init ();
-#line 25 "test-unit.vala"
 	return main_main (argv, argc);
-#line 223 "test-unit.c"
 }
 
 
-#line 23 "test-unit.vala"
 Main* main_construct (GType object_type) {
-#line 229 "test-unit.c"
 	Main* self;
 	self = (Main*) g_type_create_instance (object_type);
 	return self;
 }
 
 
-#line 23 "test-unit.vala"
 Main* main_new (void) {
-#line 23 "test-unit.vala"
 	return main_construct (TYPE_MAIN);
-#line 240 "test-unit.c"
 }
 
 

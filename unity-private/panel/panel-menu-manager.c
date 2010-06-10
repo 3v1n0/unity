@@ -75,115 +75,67 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 26 "panel-menu-manager.vala"
 MenuManager* menu_manager_get_default (void) {
-#line 81 "panel-menu-manager.c"
 	MenuManager* result = NULL;
-#line 28 "panel-menu-manager.vala"
 	if (menu_manager__menu_manager_global == NULL) {
-#line 85 "panel-menu-manager.c"
 		MenuManager* _tmp0_;
-#line 29 "panel-menu-manager.vala"
 		menu_manager__menu_manager_global = (_tmp0_ = menu_manager_new (), _g_object_unref0 (menu_manager__menu_manager_global), _tmp0_);
-#line 89 "panel-menu-manager.c"
 	}
 	result = _g_object_ref0 (menu_manager__menu_manager_global);
-#line 31 "panel-menu-manager.vala"
 	return result;
-#line 94 "panel-menu-manager.c"
 }
 
 
-#line 34 "panel-menu-manager.vala"
 void menu_manager_register_visible_menu (MenuManager* self, GtkMenu* menu) {
-#line 100 "panel-menu-manager.c"
 	gboolean _tmp0_ = FALSE;
 	gboolean _tmp1_ = FALSE;
 	GtkMenu* _tmp2_;
-#line 34 "panel-menu-manager.vala"
 	g_return_if_fail (self != NULL);
-#line 34 "panel-menu-manager.vala"
 	g_return_if_fail (menu != NULL);
-#line 36 "panel-menu-manager.vala"
 	if (GTK_IS_MENU (self->priv->current_menu)) {
-#line 36 "panel-menu-manager.vala"
 		_tmp1_ = gtk_widget_get_visible ((GtkWidget*) self->priv->current_menu) == TRUE;
-#line 112 "panel-menu-manager.c"
 	} else {
-#line 36 "panel-menu-manager.vala"
 		_tmp1_ = FALSE;
-#line 116 "panel-menu-manager.c"
 	}
-#line 36 "panel-menu-manager.vala"
 	if (_tmp1_) {
-#line 36 "panel-menu-manager.vala"
 		_tmp0_ = self->priv->current_menu != menu;
-#line 122 "panel-menu-manager.c"
 	} else {
-#line 36 "panel-menu-manager.vala"
 		_tmp0_ = FALSE;
-#line 126 "panel-menu-manager.c"
 	}
-#line 36 "panel-menu-manager.vala"
 	if (_tmp0_) {
-#line 37 "panel-menu-manager.vala"
 		gtk_menu_popdown (self->priv->current_menu);
-#line 132 "panel-menu-manager.c"
 	}
-#line 39 "panel-menu-manager.vala"
 	self->priv->current_menu = (_tmp2_ = _g_object_ref0 (menu), _g_object_unref0 (self->priv->current_menu), _tmp2_);
-#line 136 "panel-menu-manager.c"
 }
 
 
-#line 43 "panel-menu-manager.vala"
 gboolean menu_manager_menu_is_open (MenuManager* self) {
-#line 142 "panel-menu-manager.c"
 	gboolean result = FALSE;
 	gboolean _tmp0_ = FALSE;
-#line 43 "panel-menu-manager.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 45 "panel-menu-manager.vala"
 	if (GTK_IS_MENU (self->priv->current_menu)) {
-#line 45 "panel-menu-manager.vala"
 		_tmp0_ = gtk_widget_get_visible ((GtkWidget*) self->priv->current_menu) == TRUE;
-#line 151 "panel-menu-manager.c"
 	} else {
-#line 45 "panel-menu-manager.vala"
 		_tmp0_ = FALSE;
-#line 155 "panel-menu-manager.c"
 	}
-#line 45 "panel-menu-manager.vala"
 	if (_tmp0_) {
-#line 159 "panel-menu-manager.c"
 		result = TRUE;
-#line 47 "panel-menu-manager.vala"
 		return result;
-#line 163 "panel-menu-manager.c"
 	}
 	result = FALSE;
-#line 49 "panel-menu-manager.vala"
 	return result;
-#line 168 "panel-menu-manager.c"
 }
 
 
-#line 21 "panel-menu-manager.vala"
 MenuManager* menu_manager_construct (GType object_type) {
-#line 174 "panel-menu-manager.c"
 	MenuManager * self;
-#line 21 "panel-menu-manager.vala"
 	self = (MenuManager*) g_object_new (object_type, NULL);
-#line 178 "panel-menu-manager.c"
 	return self;
 }
 
 
-#line 21 "panel-menu-manager.vala"
 MenuManager* menu_manager_new (void) {
-#line 21 "panel-menu-manager.vala"
 	return menu_manager_construct (TYPE_MENU_MANAGER);
-#line 187 "panel-menu-manager.c"
 }
 
 

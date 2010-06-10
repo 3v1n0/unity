@@ -156,6 +156,8 @@ namespace Unity {
 			[CCode (cheader_filename = "unity-private.h")]
 			public class IndicatorBar : Ctk.Box {
 				public IndicatorBar ();
+				public Unity.Panel.Indicators.IndicatorObjectView? get_indicator_view_matching (Indicator.Object o);
+				public void set_indicator_mode (bool mode);
 			}
 			[CCode (cheader_filename = "unity-private.h")]
 			public class IndicatorEntry : Ctk.Box {
@@ -180,6 +182,7 @@ namespace Unity {
 				public Ctk.Image image;
 				public Ctk.Text text;
 				public IndicatorObjectEntryView (Indicator.ObjectEntry _entry);
+				public bool is_open ();
 				public void menu_key_moved (Gtk.MenuDirectionType type);
 				public void menu_shown ();
 				public void menu_vis_changed ();
@@ -196,6 +199,7 @@ namespace Unity {
 				public Unity.Panel.Indicators.IndicatorObjectEntryView? get_entry_view (Indicator.ObjectEntry entry);
 				public void open_first_menu_entry ();
 				public void open_last_menu_entry ();
+				public void remove_first_entry ();
 				public void show_entry_menu (int entry);
 				public Indicator.Object indicator_object { get; construct; }
 				public signal void menu_moved (Gtk.MenuDirectionType type);
@@ -239,6 +243,11 @@ namespace Unity {
 			public Unity.ThemeImage theme_image;
 			public HomeButton (Unity.Shell shell);
 			public Unity.Shell shell { get; construct; }
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class IndicatorBackground : Clutter.CairoTexture {
+			public const string BG;
+			public IndicatorBackground ();
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class SystemTray : Ctk.Box {
@@ -512,7 +521,6 @@ namespace Unity {
 			public Clutter.Stage stage;
 			public Window (bool popup, int width, int height);
 			public void init_test_mode ();
-			public void on_active_window_changed (Wnck.Window? previous_window);
 			public bool on_stage_button_press (Clutter.Event src);
 			public override void show ();
 			public bool is_popup { get; construct; }

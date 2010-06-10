@@ -119,78 +119,51 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 30 "panel-indicator-model.vala"
 UnityPanelIndicatorsIndicatorsModel* unity_panel_indicators_indicators_model_get_default (void) {
-#line 125 "panel-indicator-model.c"
 	UnityPanelIndicatorsIndicatorsModel* result = NULL;
-#line 32 "panel-indicator-model.vala"
 	if (unity_panel_indicators_indicators_model__global_model == NULL) {
-#line 129 "panel-indicator-model.c"
 		UnityPanelIndicatorsIndicatorsModel* _tmp0_;
-#line 34 "panel-indicator-model.vala"
 		unity_panel_indicators_indicators_model__global_model = (_tmp0_ = (UnityPanelIndicatorsIndicatorsModel*) unity_panel_indicators_indicators_file_model_new (), _g_object_unref0 (unity_panel_indicators_indicators_model__global_model), _tmp0_);
-#line 133 "panel-indicator-model.c"
 	}
 	result = _g_object_ref0 (unity_panel_indicators_indicators_model__global_model);
-#line 37 "panel-indicator-model.vala"
 	return result;
-#line 138 "panel-indicator-model.c"
 }
 
 
-#line 43 "panel-indicator-model.vala"
 void unity_panel_indicators_indicators_model_set_default (UnityPanelIndicatorsIndicatorsModel* model) {
-#line 144 "panel-indicator-model.c"
 	UnityPanelIndicatorsIndicatorsModel* _tmp0_;
-#line 43 "panel-indicator-model.vala"
 	g_return_if_fail (model != NULL);
-#line 45 "panel-indicator-model.vala"
 	unity_panel_indicators_indicators_model__global_model = (_tmp0_ = _g_object_ref0 (model), _g_object_unref0 (unity_panel_indicators_indicators_model__global_model), _tmp0_);
-#line 150 "panel-indicator-model.c"
 }
 
 
-#line 49 "panel-indicator-model.vala"
 static GeeArrayList* unity_panel_indicators_indicators_model_real_get_indicators (UnityPanelIndicatorsIndicatorsModel* self) {
-#line 156 "panel-indicator-model.c"
 	g_return_val_if_fail (self != NULL, NULL);
 	g_critical ("Type `%s' does not implement abstract method `unity_panel_indicators_indicators_model_get_indicators'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
 	return NULL;
 }
 
 
-#line 49 "panel-indicator-model.vala"
 GeeArrayList* unity_panel_indicators_indicators_model_get_indicators (UnityPanelIndicatorsIndicatorsModel* self) {
-#line 49 "panel-indicator-model.vala"
 	return UNITY_PANEL_INDICATORS_INDICATORS_MODEL_GET_CLASS (self)->get_indicators (self);
-#line 167 "panel-indicator-model.c"
 }
 
 
-#line 50 "panel-indicator-model.vala"
 static char* unity_panel_indicators_indicators_model_real_get_indicator_name (UnityPanelIndicatorsIndicatorsModel* self, IndicatorObject* o) {
-#line 173 "panel-indicator-model.c"
 	g_return_val_if_fail (self != NULL, NULL);
 	g_critical ("Type `%s' does not implement abstract method `unity_panel_indicators_indicators_model_get_indicator_name'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
 	return NULL;
 }
 
 
-#line 50 "panel-indicator-model.vala"
 char* unity_panel_indicators_indicators_model_get_indicator_name (UnityPanelIndicatorsIndicatorsModel* self, IndicatorObject* o) {
-#line 50 "panel-indicator-model.vala"
 	return UNITY_PANEL_INDICATORS_INDICATORS_MODEL_GET_CLASS (self)->get_indicator_name (self, o);
-#line 184 "panel-indicator-model.c"
 }
 
 
-#line 26 "panel-indicator-model.vala"
 UnityPanelIndicatorsIndicatorsModel* unity_panel_indicators_indicators_model_construct (GType object_type) {
-#line 190 "panel-indicator-model.c"
 	UnityPanelIndicatorsIndicatorsModel * self;
-#line 26 "panel-indicator-model.vala"
 	self = (UnityPanelIndicatorsIndicatorsModel*) g_object_new (object_type, NULL);
-#line 194 "panel-indicator-model.c"
 	return self;
 }
 
@@ -226,85 +199,49 @@ GType unity_panel_indicators_indicators_model_get_type (void) {
 }
 
 
-#line 1048 "glib-2.0.vapi"
 static gboolean string_contains (const char* self, const char* needle) {
-#line 232 "panel-indicator-model.c"
 	gboolean result = FALSE;
-#line 1048 "glib-2.0.vapi"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 1048 "glib-2.0.vapi"
 	g_return_val_if_fail (needle != NULL, FALSE);
-#line 238 "panel-indicator-model.c"
 	result = strstr (self, needle) != NULL;
-#line 1049 "glib-2.0.vapi"
 	return result;
-#line 242 "panel-indicator-model.c"
 }
 
 
-#line 997 "glib-2.0.vapi"
 static char* string_slice (const char* self, glong start, glong end) {
-#line 248 "panel-indicator-model.c"
 	char* result = NULL;
 	glong string_length;
 	gboolean _tmp0_ = FALSE;
 	gboolean _tmp1_ = FALSE;
 	const char* start_string;
-#line 997 "glib-2.0.vapi"
 	g_return_val_if_fail (self != NULL, NULL);
-#line 998 "glib-2.0.vapi"
 	string_length = g_utf8_strlen (self, -1);
-#line 999 "glib-2.0.vapi"
 	if (start < 0) {
-#line 1000 "glib-2.0.vapi"
 		start = string_length + start;
-#line 262 "panel-indicator-model.c"
 	}
-#line 1002 "glib-2.0.vapi"
 	if (end < 0) {
-#line 1003 "glib-2.0.vapi"
 		end = string_length + end;
-#line 268 "panel-indicator-model.c"
 	}
-#line 1005 "glib-2.0.vapi"
 	if (start >= 0) {
-#line 1005 "glib-2.0.vapi"
 		_tmp0_ = start <= string_length;
-#line 274 "panel-indicator-model.c"
 	} else {
-#line 1005 "glib-2.0.vapi"
 		_tmp0_ = FALSE;
-#line 278 "panel-indicator-model.c"
 	}
-#line 1005 "glib-2.0.vapi"
 	g_return_val_if_fail (_tmp0_, NULL);
-#line 1006 "glib-2.0.vapi"
 	if (end >= 0) {
-#line 1006 "glib-2.0.vapi"
 		_tmp1_ = end <= string_length;
-#line 286 "panel-indicator-model.c"
 	} else {
-#line 1006 "glib-2.0.vapi"
 		_tmp1_ = FALSE;
-#line 290 "panel-indicator-model.c"
 	}
-#line 1006 "glib-2.0.vapi"
 	g_return_val_if_fail (_tmp1_, NULL);
-#line 1007 "glib-2.0.vapi"
 	g_return_val_if_fail (start <= end, NULL);
-#line 1008 "glib-2.0.vapi"
 	start_string = g_utf8_offset_to_pointer (self, start);
-#line 298 "panel-indicator-model.c"
 	result = g_strndup (start_string, ((gchar*) g_utf8_offset_to_pointer (start_string, end - start)) - ((gchar*) start_string));
-#line 1009 "glib-2.0.vapi"
 	return result;
-#line 302 "panel-indicator-model.c"
 }
 
 
-#line 59 "panel-indicator-model.vala"
 UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_model_construct (GType object_type) {
-#line 308 "panel-indicator-model.c"
 	GError * _inner_error_;
 	UnityPanelIndicatorsIndicatorsFileModel * self;
 	char* skip_list;
@@ -314,134 +251,79 @@ UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_
 	char* _tmp3_;
 	GFile* dir;
 	_inner_error_ = NULL;
-#line 59 "panel-indicator-model.vala"
 	self = (UnityPanelIndicatorsIndicatorsFileModel*) unity_panel_indicators_indicators_model_construct (object_type);
-#line 61 "panel-indicator-model.vala"
 	START_FUNCTION ();
-#line 322 "panel-indicator-model.c"
 	skip_list = NULL;
-#line 65 "panel-indicator-model.vala"
 	self->indicator_map = (_tmp0_ = gee_hash_map_new (INDICATOR_TYPE_OBJECT, (GBoxedCopyFunc) g_object_ref, g_object_unref, G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, NULL, NULL, NULL), _g_object_unref0 (self->indicator_map), _tmp0_);
-#line 66 "panel-indicator-model.vala"
 	unity_panel_indicators_indicators_file_model_indicator_order = (_tmp1_ = gee_hash_map_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, G_TYPE_INT, NULL, NULL, NULL, NULL, NULL), _g_object_unref0 (unity_panel_indicators_indicators_file_model_indicator_order), _tmp1_);
-#line 67 "panel-indicator-model.vala"
 	self->indicator_list = (_tmp2_ = gee_array_list_new (INDICATOR_TYPE_OBJECT, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->indicator_list), _tmp2_);
-#line 73 "panel-indicator-model.vala"
 	gee_abstract_map_set ((GeeAbstractMap*) unity_panel_indicators_indicators_file_model_indicator_order, "libappmenu.so", GINT_TO_POINTER (1));
-#line 74 "panel-indicator-model.vala"
 	gee_abstract_map_set ((GeeAbstractMap*) unity_panel_indicators_indicators_file_model_indicator_order, "libapplication.so", GINT_TO_POINTER (2));
-#line 75 "panel-indicator-model.vala"
 	gee_abstract_map_set ((GeeAbstractMap*) unity_panel_indicators_indicators_file_model_indicator_order, "libsoundmenu.so", GINT_TO_POINTER (3));
-#line 76 "panel-indicator-model.vala"
 	gee_abstract_map_set ((GeeAbstractMap*) unity_panel_indicators_indicators_file_model_indicator_order, "libmessaging.so", GINT_TO_POINTER (4));
-#line 77 "panel-indicator-model.vala"
 	gee_abstract_map_set ((GeeAbstractMap*) unity_panel_indicators_indicators_file_model_indicator_order, "libdatetime.so", GINT_TO_POINTER (5));
-#line 78 "panel-indicator-model.vala"
 	gee_abstract_map_set ((GeeAbstractMap*) unity_panel_indicators_indicators_file_model_indicator_order, "libme.so", GINT_TO_POINTER (6));
-#line 79 "panel-indicator-model.vala"
 	gee_abstract_map_set ((GeeAbstractMap*) unity_panel_indicators_indicators_file_model_indicator_order, "libsession.so", GINT_TO_POINTER (7));
-#line 82 "panel-indicator-model.vala"
 	skip_list = (_tmp3_ = g_strdup (g_getenv ("UNITY_PANEL_INDICATORS_SKIP")), _g_free0 (skip_list), _tmp3_);
-#line 83 "panel-indicator-model.vala"
 	if (skip_list == NULL) {
-#line 348 "panel-indicator-model.c"
 		char* _tmp4_;
-#line 84 "panel-indicator-model.vala"
 		skip_list = (_tmp4_ = g_strdup (""), _g_free0 (skip_list), _tmp4_);
-#line 352 "panel-indicator-model.c"
 	}
-#line 86 "panel-indicator-model.vala"
 	if (_vala_strcmp0 (skip_list, "all") == 0) {
-#line 88 "panel-indicator-model.vala"
 		g_message ("panel-indicator-model.vala:88: Skipping all indicator loading");
-#line 358 "panel-indicator-model.c"
 		_g_free0 (skip_list);
-#line 89 "panel-indicator-model.vala"
 		return self;
-#line 362 "panel-indicator-model.c"
 	}
-#line 93 "panel-indicator-model.vala"
 	gtk_icon_theme_append_search_path (gtk_icon_theme_get_default (), INDICATORICONSDIR);
-#line 96 "panel-indicator-model.vala"
 	dir = g_file_new_for_path (INDICATORDIR);
-#line 368 "panel-indicator-model.c"
 	{
 		GFileEnumerator* e;
 		GeeArrayList* sos;
 		GFileInfo* file_info;
-#line 99 "panel-indicator-model.vala"
 		e = g_file_enumerate_children (dir, G_FILE_ATTRIBUTE_STANDARD_NAME, 0, NULL, &_inner_error_);
-#line 375 "panel-indicator-model.c"
 		if (_inner_error_ != NULL) {
-			goto __catch3_g_error;
+			goto __catch4_g_error;
 		}
-#line 101 "panel-indicator-model.vala"
 		sos = gee_array_list_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, NULL);
-#line 381 "panel-indicator-model.c"
 		file_info = NULL;
-#line 104 "panel-indicator-model.vala"
 		while (TRUE) {
-#line 385 "panel-indicator-model.c"
 			GFileInfo* _tmp5_;
 			GFileInfo* _tmp6_;
 			char* leaf;
 			char* _tmp7_;
 			gboolean _tmp8_;
-#line 104 "panel-indicator-model.vala"
 			_tmp5_ = g_file_enumerator_next_file (e, NULL, &_inner_error_);
-#line 393 "panel-indicator-model.c"
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (e);
 				_g_object_unref0 (sos);
 				_g_object_unref0 (file_info);
-				goto __catch3_g_error;
+				goto __catch4_g_error;
 			}
-#line 104 "panel-indicator-model.vala"
 			if (!((file_info = (_tmp6_ = _tmp5_, _g_object_unref0 (file_info), _tmp6_)) != NULL)) {
-#line 104 "panel-indicator-model.vala"
 				break;
-#line 404 "panel-indicator-model.c"
 			}
-#line 106 "panel-indicator-model.vala"
 			leaf = g_strdup (g_file_info_get_name (file_info));
-#line 108 "panel-indicator-model.vala"
 			if (string_contains (skip_list, leaf)) {
-#line 410 "panel-indicator-model.c"
 				_g_free0 (leaf);
-#line 109 "panel-indicator-model.vala"
 				continue;
-#line 414 "panel-indicator-model.c"
 			}
-#line 111 "panel-indicator-model.vala"
 			if ((_tmp8_ = _vala_strcmp0 (_tmp7_ = string_slice (leaf, g_utf8_strlen (leaf, -1) - 3, g_utf8_strlen (leaf, -1)), ".so") == 0, _g_free0 (_tmp7_), _tmp8_)) {
-#line 113 "panel-indicator-model.vala"
 				gee_abstract_collection_add ((GeeAbstractCollection*) sos, leaf);
-#line 420 "panel-indicator-model.c"
 			}
 			_g_free0 (leaf);
 		}
-#line 118 "panel-indicator-model.vala"
 		gee_list_sort ((GeeList*) sos, (GCompareFunc) unity_panel_indicators_indicators_file_model_indicator_sort_func);
-#line 426 "panel-indicator-model.c"
 		{
 			GeeIterator* _leaf_it;
 			_leaf_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) sos);
-#line 120 "panel-indicator-model.vala"
 			while (TRUE) {
-#line 432 "panel-indicator-model.c"
 				char* leaf;
 				char* _tmp9_;
-#line 120 "panel-indicator-model.vala"
 				if (!gee_iterator_next (_leaf_it)) {
-#line 120 "panel-indicator-model.vala"
 					break;
-#line 439 "panel-indicator-model.c"
 				}
-#line 120 "panel-indicator-model.vala"
 				leaf = (char*) gee_iterator_get (_leaf_it);
-#line 121 "panel-indicator-model.vala"
 				unity_panel_indicators_indicators_file_model_load_indicator (self, _tmp9_ = g_strconcat (INDICATORDIR, leaf, NULL), leaf);
-#line 445 "panel-indicator-model.c"
 				_g_free0 (_tmp9_);
 				_g_free0 (leaf);
 			}
@@ -451,20 +333,18 @@ UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_
 		_g_object_unref0 (sos);
 		_g_object_unref0 (file_info);
 	}
-	goto __finally3;
-	__catch3_g_error:
+	goto __finally4;
+	__catch4_g_error:
 	{
 		GError * _error_;
 		_error_ = _inner_error_;
 		_inner_error_ = NULL;
 		{
-#line 125 "panel-indicator-model.vala"
 			g_print ("Unable to read indicators: %s\n", _error_->message);
-#line 464 "panel-indicator-model.c"
 			_g_error_free0 (_error_);
 		}
 	}
-	__finally3:
+	__finally4:
 	if (_inner_error_ != NULL) {
 		_g_free0 (skip_list);
 		_g_object_unref0 (dir);
@@ -472,96 +352,61 @@ UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_
 		g_clear_error (&_inner_error_);
 		return NULL;
 	}
-#line 128 "panel-indicator-model.vala"
 	END_FUNCTION ();
-#line 478 "panel-indicator-model.c"
 	_g_free0 (skip_list);
 	_g_object_unref0 (dir);
 	return self;
 }
 
 
-#line 59 "panel-indicator-model.vala"
 UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_model_new (void) {
-#line 59 "panel-indicator-model.vala"
 	return unity_panel_indicators_indicators_file_model_construct (UNITY_PANEL_INDICATORS_TYPE_INDICATORS_FILE_MODEL);
-#line 489 "panel-indicator-model.c"
 }
 
 
-#line 131 "panel-indicator-model.vala"
 gint unity_panel_indicators_indicators_file_model_indicator_sort_func (const char* a, const char* b) {
-#line 495 "panel-indicator-model.c"
 	gint result = 0;
-#line 131 "panel-indicator-model.vala"
 	g_return_val_if_fail (a != NULL, 0);
-#line 131 "panel-indicator-model.vala"
 	g_return_val_if_fail (b != NULL, 0);
-#line 501 "panel-indicator-model.c"
 	result = GPOINTER_TO_INT (gee_abstract_map_get ((GeeAbstractMap*) unity_panel_indicators_indicators_file_model_indicator_order, a)) - GPOINTER_TO_INT (gee_abstract_map_get ((GeeAbstractMap*) unity_panel_indicators_indicators_file_model_indicator_order, b));
-#line 133 "panel-indicator-model.vala"
 	return result;
-#line 505 "panel-indicator-model.c"
 }
 
 
-#line 136 "panel-indicator-model.vala"
 static void unity_panel_indicators_indicators_file_model_load_indicator (UnityPanelIndicatorsIndicatorsFileModel* self, const char* filename, const char* leaf) {
-#line 511 "panel-indicator-model.c"
 	IndicatorObject* o;
 	IndicatorObject* _tmp0_;
-#line 136 "panel-indicator-model.vala"
 	g_return_if_fail (self != NULL);
-#line 136 "panel-indicator-model.vala"
 	g_return_if_fail (filename != NULL);
-#line 136 "panel-indicator-model.vala"
 	g_return_if_fail (leaf != NULL);
-#line 520 "panel-indicator-model.c"
 	o = NULL;
-#line 140 "panel-indicator-model.vala"
 	o = (_tmp0_ = indicator_object_new_from_file (filename), _g_object_unref0 (o), _tmp0_);
-#line 142 "panel-indicator-model.vala"
 	if (INDICATOR_IS_OBJECT (o)) {
-#line 144 "panel-indicator-model.vala"
 		gee_abstract_map_set ((GeeAbstractMap*) self->indicator_map, o, leaf);
-#line 145 "panel-indicator-model.vala"
 		gee_abstract_collection_add ((GeeAbstractCollection*) self->indicator_list, o);
-#line 530 "panel-indicator-model.c"
 	} else {
-#line 149 "panel-indicator-model.vala"
 		g_warning ("panel-indicator-model.vala:149: Unable to load %s\n", filename);
-#line 534 "panel-indicator-model.c"
 	}
 	_g_object_unref0 (o);
 }
 
 
-#line 153 "panel-indicator-model.vala"
 static GeeArrayList* unity_panel_indicators_indicators_file_model_real_get_indicators (UnityPanelIndicatorsIndicatorsModel* base) {
-#line 542 "panel-indicator-model.c"
 	UnityPanelIndicatorsIndicatorsFileModel * self;
 	GeeArrayList* result = NULL;
 	self = (UnityPanelIndicatorsIndicatorsFileModel*) base;
 	result = _g_object_ref0 (self->indicator_list);
-#line 155 "panel-indicator-model.vala"
 	return result;
-#line 549 "panel-indicator-model.c"
 }
 
 
-#line 158 "panel-indicator-model.vala"
 static char* unity_panel_indicators_indicators_file_model_real_get_indicator_name (UnityPanelIndicatorsIndicatorsModel* base, IndicatorObject* o) {
-#line 555 "panel-indicator-model.c"
 	UnityPanelIndicatorsIndicatorsFileModel * self;
 	char* result = NULL;
 	self = (UnityPanelIndicatorsIndicatorsFileModel*) base;
-#line 158 "panel-indicator-model.vala"
 	g_return_val_if_fail (o != NULL, NULL);
-#line 561 "panel-indicator-model.c"
 	result = (char*) gee_abstract_map_get ((GeeAbstractMap*) self->indicator_map, o);
-#line 160 "panel-indicator-model.vala"
 	return result;
-#line 565 "panel-indicator-model.c"
 }
 
 

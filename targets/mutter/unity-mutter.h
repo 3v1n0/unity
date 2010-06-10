@@ -6,13 +6,12 @@
 
 #include <glib.h>
 #include <clutter/clutter.h>
-#include <mutter-plugins.h>
 #include <glib-object.h>
 #include <unity-private.h>
-#include <libwnck/libwnck.h>
 #include <gtk/gtk.h>
 #include <clutk/clutk.h>
 #include <unity.h>
+#include <mutter-plugins.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -170,9 +169,9 @@ struct _UnityWindowManagementClass {
 
 
 GType unity_expose_clone_get_type (void);
-UnityExposeClone* unity_expose_clone_new (MutterWindow* source);
-UnityExposeClone* unity_expose_clone_construct (GType object_type, MutterWindow* source);
-MutterWindow* unity_expose_clone_get_source (UnityExposeClone* self);
+UnityExposeClone* unity_expose_clone_new (ClutterActor* source);
+UnityExposeClone* unity_expose_clone_construct (GType object_type, ClutterActor* source);
+ClutterActor* unity_expose_clone_get_source (UnityExposeClone* self);
 guint8 unity_expose_clone_get_hovered_opacity (UnityExposeClone* self);
 void unity_expose_clone_set_hovered_opacity (UnityExposeClone* self, guint8 value);
 guint8 unity_expose_clone_get_unhovered_opacity (UnityExposeClone* self);
@@ -218,8 +217,6 @@ void unity_plugin_map (UnityPlugin* self, MutterWindow* window);
 void unity_plugin_destroy (UnityPlugin* self, MutterWindow* window);
 void unity_plugin_switch_workspace (UnityPlugin* self, GList* windows, gint from, gint to, gint direction);
 void unity_plugin_kill_effect (UnityPlugin* self, MutterWindow* window, gulong events);
-void unity_plugin_topmost_size_changed (UnityPlugin* self, ClutterActor* actor, const ClutterActorBox* box, ClutterAllocationFlags flags);
-void unity_plugin_topmost_changed (UnityPlugin* self, MutterWindow* old_window, MutterWindow* new_window);
 gint unity_plugin_get_panel_height (UnityPlugin* self);
 gint unity_plugin_get_launcher_width (UnityPlugin* self);
 UnityPlugin* unity_plugin_new (void);

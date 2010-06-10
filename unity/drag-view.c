@@ -84,212 +84,122 @@ static void unity_drag_view_set_property (GObject * object, guint property_id, c
 
 static void g_cclosure_user_marshal_VOID__FLOAT_FLOAT (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 
-#line 33 "drag-view.vala"
 UnityDragView* unity_drag_view_construct (GType object_type, ClutterStage* stage) {
-#line 90 "drag-view.c"
 	UnityDragView * self;
-#line 33 "drag-view.vala"
 	g_return_val_if_fail (stage != NULL, NULL);
-#line 35 "drag-view.vala"
 	self = (UnityDragView*) g_object_new (object_type, "stage", stage, NULL);
-#line 96 "drag-view.c"
 	return self;
 }
 
 
-#line 33 "drag-view.vala"
 UnityDragView* unity_drag_view_new (ClutterStage* stage) {
-#line 33 "drag-view.vala"
 	return unity_drag_view_construct (UNITY_DRAG_TYPE_VIEW, stage);
-#line 105 "drag-view.c"
 }
 
 
-#line 65 "drag-view.vala"
 static gboolean _unity_drag_view_captured_event_clutter_actor_captured_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 111 "drag-view.c"
 	return unity_drag_view_captured_event (self, event);
 }
 
 
-#line 42 "drag-view.vala"
 void unity_drag_view_hook_actor_to_cursor (UnityDragView* self, ClutterActor* actor, float offset_x, float offset_y) {
-#line 118 "drag-view.c"
 	float x = 0.0F;
 	float y = 0.0F;
 	ClutterActor* _tmp0_;
-#line 42 "drag-view.vala"
 	g_return_if_fail (self != NULL);
-#line 42 "drag-view.vala"
 	g_return_if_fail (actor != NULL);
-#line 44 "drag-view.vala"
 	if (CLUTTER_IS_ACTOR (self->priv->hooked_actor)) {
-#line 45 "drag-view.vala"
 		g_warning ("drag-view.vala:45: attempted to hook a new actor to dnd without unhook" \
 "ing previous actor");
-#line 46 "drag-view.vala"
 		unity_drag_view_unhook_actor (self);
-#line 132 "drag-view.c"
 	}
-#line 49 "drag-view.vala"
 	self->priv->offset_x = offset_x;
-#line 50 "drag-view.vala"
 	self->priv->offset_y = offset_y;
-#line 52 "drag-view.vala"
 	self->priv->hooked_actor = (_tmp0_ = (ClutterActor*) g_object_ref_sink ((ClutterClone*) clutter_clone_new (actor)), _g_object_unref0 (self->priv->hooked_actor), _tmp0_);
-#line 53 "drag-view.vala"
 	clutter_actor_unparent (self->priv->hooked_actor);
-#line 54 "drag-view.vala"
 	clutter_container_add_actor ((ClutterContainer*) self->priv->_stage, self->priv->hooked_actor);
-#line 56 "drag-view.vala"
 	clutter_actor_get_transformed_position (actor, &x, &y);
-#line 57 "drag-view.vala"
 	clutter_actor_set_position (self->priv->hooked_actor, x, y);
-#line 58 "drag-view.vala"
 	clutter_actor_set_width (self->priv->hooked_actor, clutter_actor_get_width (actor));
-#line 59 "drag-view.vala"
 	clutter_actor_set_height (self->priv->hooked_actor, clutter_actor_get_height (actor));
-#line 60 "drag-view.vala"
 	clutter_actor_show (self->priv->hooked_actor);
-#line 62 "drag-view.vala"
 	g_signal_connect_object ((ClutterActor*) self->priv->_stage, "captured-event", (GCallback) _unity_drag_view_captured_event_clutter_actor_captured_event, self, 0);
-#line 156 "drag-view.c"
 }
 
 
-#line 65 "drag-view.vala"
 static gboolean unity_drag_view_captured_event (UnityDragView* self, ClutterEvent* event) {
-#line 162 "drag-view.c"
 	gboolean result = FALSE;
-#line 65 "drag-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 67 "drag-view.vala"
 	if ((*event).type == CLUTTER_MOTION) {
-#line 69 "drag-view.vala"
 		unity_drag_view_on_motion_event (self, event);
-#line 170 "drag-view.c"
 		result = TRUE;
-#line 70 "drag-view.vala"
 		return result;
-#line 174 "drag-view.c"
 	}
-#line 72 "drag-view.vala"
 	if ((*event).type == CLUTTER_BUTTON_RELEASE) {
-#line 74 "drag-view.vala"
 		unity_drag_view_on_release_event (self, event);
-#line 180 "drag-view.c"
 		result = TRUE;
-#line 75 "drag-view.vala"
 		return result;
-#line 184 "drag-view.c"
 	}
 	result = FALSE;
-#line 77 "drag-view.vala"
 	return result;
-#line 189 "drag-view.c"
 }
 
 
-#line 88 "drag-view.vala"
 static gboolean _unity_drag_view_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 195 "drag-view.c"
 	return unity_drag_view_on_motion_event (self, event);
 }
 
 
-#line 80 "drag-view.vala"
 void unity_drag_view_unhook_actor (UnityDragView* self) {
-#line 202 "drag-view.c"
 	guint _tmp0_;
 	ClutterActor* _tmp1_;
-#line 80 "drag-view.vala"
 	g_return_if_fail (self != NULL);
-#line 82 "drag-view.vala"
 	if (self->priv->hooked_actor == NULL) {
-#line 82 "drag-view.vala"
 		return;
-#line 211 "drag-view.c"
 	}
-#line 83 "drag-view.vala"
 	clutter_container_remove_actor ((ClutterContainer*) self->priv->_stage, self->priv->hooked_actor);
-#line 84 "drag-view.vala"
 	g_signal_parse_name ("motion-event", CLUTTER_TYPE_ACTOR, &_tmp0_, NULL, FALSE);
-#line 84 "drag-view.vala"
 	g_signal_handlers_disconnect_matched ((ClutterActor*) self->priv->_stage, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_drag_view_on_motion_event_clutter_actor_motion_event, self);
-#line 85 "drag-view.vala"
 	self->priv->hooked_actor = (_tmp1_ = NULL, _g_object_unref0 (self->priv->hooked_actor), _tmp1_);
-#line 221 "drag-view.c"
 }
 
 
-#line 88 "drag-view.vala"
 static gboolean unity_drag_view_on_motion_event (UnityDragView* self, ClutterEvent* event) {
-#line 227 "drag-view.c"
 	gboolean result = FALSE;
-#line 88 "drag-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 90 "drag-view.vala"
 	if (!CLUTTER_IS_ACTOR (self->priv->hooked_actor)) {
-#line 233 "drag-view.c"
 		guint _tmp0_;
-#line 91 "drag-view.vala"
 		g_signal_parse_name ("captured-event", CLUTTER_TYPE_ACTOR, &_tmp0_, NULL, FALSE);
-#line 91 "drag-view.vala"
 		g_signal_handlers_disconnect_matched ((ClutterActor*) self->priv->_stage, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_drag_view_captured_event_clutter_actor_captured_event, self);
-#line 239 "drag-view.c"
 		result = FALSE;
-#line 92 "drag-view.vala"
 		return result;
-#line 243 "drag-view.c"
 	}
-#line 94 "drag-view.vala"
 	clutter_actor_set_position (self->priv->hooked_actor, (*event).motion.x - self->priv->offset_x, (*event).motion.y - self->priv->offset_y);
-#line 96 "drag-view.vala"
 	g_signal_emit_by_name (self, "motion", (*event).motion.x, (*event).motion.y);
-#line 249 "drag-view.c"
 	result = FALSE;
-#line 97 "drag-view.vala"
 	return result;
-#line 253 "drag-view.c"
 }
 
 
-#line 100 "drag-view.vala"
 static gboolean _unity_drag_view_on_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 259 "drag-view.c"
 	return unity_drag_view_on_release_event (self, event);
 }
 
 
-#line 100 "drag-view.vala"
 static gboolean unity_drag_view_on_release_event (UnityDragView* self, ClutterEvent* event) {
-#line 266 "drag-view.c"
 	gboolean result = FALSE;
-#line 100 "drag-view.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 102 "drag-view.vala"
 	if (!CLUTTER_IS_ACTOR (self->priv->hooked_actor)) {
-#line 272 "drag-view.c"
 		guint _tmp0_;
-#line 103 "drag-view.vala"
 		g_signal_parse_name ("button-release-event", CLUTTER_TYPE_ACTOR, &_tmp0_, NULL, FALSE);
-#line 103 "drag-view.vala"
 		g_signal_handlers_disconnect_matched ((ClutterActor*) self->priv->_stage, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_drag_view_on_release_event_clutter_actor_button_release_event, self);
-#line 278 "drag-view.c"
 		result = FALSE;
-#line 104 "drag-view.vala"
 		return result;
-#line 282 "drag-view.c"
 	}
-#line 106 "drag-view.vala"
 	unity_drag_view_unhook_actor (self);
-#line 107 "drag-view.vala"
 	g_signal_emit_by_name (self, "end", (*event).button.x, (*event).button.y);
-#line 288 "drag-view.c"
 	result = FALSE;
-#line 108 "drag-view.vala"
 	return result;
-#line 292 "drag-view.c"
 }
 
 
@@ -297,9 +207,7 @@ ClutterStage* unity_drag_view_get_stage (UnityDragView* self) {
 	ClutterStage* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_stage;
-#line 25 "drag-view.vala"
 	return result;
-#line 302 "drag-view.c"
 }
 
 

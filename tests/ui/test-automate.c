@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
+#include <gee.h>
 #include <stdio.h>
 #include <clutk/clutk.h>
 #include <float.h>
@@ -86,19 +87,13 @@ static void unity_tests_ui_automation_basic_test_suite_finalize (GObject* obj);
 
 
 
-#line 25 "test-automate.vala"
 void on_animation_started (ClutterAnimation* anim) {
-#line 29 "test-automate.vala"
 	g_timer_start (gTimer);
-#line 94 "test-automate.c"
 }
 
 
-#line 32 "test-automate.vala"
 void on_animation_completed (ClutterAnimation* anim) {
-#line 36 "test-automate.vala"
 	g_timer_stop (gTimer);
-#line 102 "test-automate.c"
 }
 
 
@@ -107,170 +102,108 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 75 "test-automate.vala"
 static void _unity_tests_ui_automation_basic_test_suite_test_automation_gdata_test_func (gpointer self) {
-#line 113 "test-automate.c"
 	unity_tests_ui_automation_basic_test_suite_test_automation (self);
 }
 
 
-#line 69 "test-automate.vala"
 static void _unity_tests_ui_automation_basic_test_suite_test_teardown_gdata_test_func (gpointer self) {
-#line 120 "test-automate.c"
 	unity_tests_ui_automation_basic_test_suite_test_teardown (self);
 }
 
 
-#line 48 "test-automate.vala"
 UnityTestsUIAutomationBasicTestSuite* unity_tests_ui_automation_basic_test_suite_construct (GType object_type) {
-#line 127 "test-automate.c"
 	UnityTestsUIAutomationBasicTestSuite * self;
 	UnityTestingWindow* _tmp0_;
 	ClutterStage* _tmp1_;
-#line 48 "test-automate.vala"
 	self = (UnityTestsUIAutomationBasicTestSuite*) g_object_new (object_type, NULL);
-#line 50 "test-automate.vala"
 	unity_testing_logging_init_fatal_handler ();
-#line 53 "test-automate.vala"
 	self->priv->window = (_tmp0_ = g_object_ref_sink (unity_testing_window_new (TRUE, 1024, 600)), _g_object_unref0 (self->priv->window), _tmp0_);
-#line 54 "test-automate.vala"
 	unity_testing_window_init_test_mode (self->priv->window);
-#line 55 "test-automate.vala"
 	self->priv->stage = (_tmp1_ = _g_object_ref0 (self->priv->window->stage), _g_object_unref0 (self->priv->stage), _tmp1_);
-#line 56 "test-automate.vala"
 	gtk_window_set_title ((GtkWindow*) self->priv->window, "Automation Tests");
-#line 57 "test-automate.vala"
 	gtk_widget_show_all ((GtkWidget*) self->priv->window);
-#line 59 "test-automate.vala"
 	g_test_add_data_func (UNITY_TESTS_UI_AUTOMATION_BASIC_TEST_SUITE_DOMAIN "/Automation", self, _unity_tests_ui_automation_basic_test_suite_test_automation_gdata_test_func);
-#line 66 "test-automate.vala"
 	g_test_add_data_func (UNITY_TESTS_UI_AUTOMATION_BASIC_TEST_SUITE_DOMAIN "/Teardown", self, _unity_tests_ui_automation_basic_test_suite_test_teardown_gdata_test_func);
-#line 149 "test-automate.c"
 	return self;
 }
 
 
-#line 48 "test-automate.vala"
 UnityTestsUIAutomationBasicTestSuite* unity_tests_ui_automation_basic_test_suite_new (void) {
-#line 48 "test-automate.vala"
 	return unity_tests_ui_automation_basic_test_suite_construct (UNITY_TESTS_UI_TYPE_AUTOMATION_BASIC_TEST_SUITE);
-#line 158 "test-automate.c"
 }
 
 
-#line 69 "test-automate.vala"
 static void unity_tests_ui_automation_basic_test_suite_test_teardown (UnityTestsUIAutomationBasicTestSuite* self) {
-#line 164 "test-automate.c"
 	ClutterStage* _tmp0_;
-#line 69 "test-automate.vala"
 	g_return_if_fail (self != NULL);
-#line 72 "test-automate.vala"
 	self->priv->stage = (_tmp0_ = NULL, _g_object_unref0 (self->priv->stage), _tmp0_);
-#line 170 "test-automate.c"
 }
 
 
-#line 32 "test-automate.vala"
 static void _on_animation_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-#line 176 "test-automate.c"
 	on_animation_completed (_sender);
 }
 
 
-#line 75 "test-automate.vala"
 static void unity_tests_ui_automation_basic_test_suite_test_automation (UnityTestsUIAutomationBasicTestSuite* self) {
-#line 183 "test-automate.c"
 	UnityTestingObjectRegistry* registry;
 	UnityLauncherQuicklistController* qlcontroller;
 	GeeArrayList* _tmp0_;
+	GObject* _tmp1_;
+	UnityLauncherScrollerModel* _tmp2_;
 	UnityLauncherScrollerModel* scroller;
-	GTimer* _tmp1_;
+	GTimer* _tmp3_;
 	gint DT;
-#line 75 "test-automate.vala"
 	g_return_if_fail (self != NULL);
-#line 77 "test-automate.vala"
 	registry = unity_testing_object_registry_get_default ();
-#line 79 "test-automate.vala"
 	unity_testing_logging_init_fatal_handler ();
-#line 81 "test-automate.vala"
 	qlcontroller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
-#line 82 "test-automate.vala"
-	scroller = (_tmp0_ = unity_testing_object_registry_lookup (registry, "UnityScrollerModel"), UNITY_LAUNCHER_IS_SCROLLER_MODEL (_tmp0_) ? ((UnityLauncherScrollerModel*) _tmp0_) : NULL);
-#line 84 "test-automate.vala"
-	gTimer = (_tmp1_ = g_timer_new (), _g_timer_destroy0 (gTimer), _tmp1_);
-#line 85 "test-automate.vala"
+	scroller = (_tmp2_ = (_tmp1_ = (GObject*) gee_abstract_list_get ((GeeAbstractList*) (_tmp0_ = unity_testing_object_registry_lookup (registry, "UnityScrollerModel")), 0), UNITY_LAUNCHER_IS_SCROLLER_MODEL (_tmp1_) ? ((UnityLauncherScrollerModel*) _tmp1_) : NULL), _g_object_unref0 (_tmp0_), _tmp2_);
+	gTimer = (_tmp3_ = g_timer_new (), _g_timer_destroy0 (gTimer), _tmp3_);
 	DT = 2500;
-#line 86 "test-automate.vala"
 	fprintf (stdout, "\n");
-#line 206 "test-automate.c"
 	{
 		UnityLauncherScrollerModelIterator* _launcher_it;
 		_launcher_it = unity_launcher_scroller_model_iterator (scroller);
-#line 88 "test-automate.vala"
 		while (TRUE) {
-#line 212 "test-automate.c"
 			UnityLauncherScrollerChild* launcher;
-			ClutterActor* _tmp2_;
+			ClutterActor* _tmp4_;
 			UnityTestingDirector* dir;
 			ClutterAnimation* anim;
-			ClutterAnimation* _tmp3_;
+			ClutterAnimation* _tmp5_;
 			float dt;
 			float dt0;
-			ClutterAnimation* _tmp4_;
-#line 88 "test-automate.vala"
+			ClutterAnimation* _tmp6_;
 			if (!unity_launcher_scroller_model_iterator_next (_launcher_it)) {
-#line 88 "test-automate.vala"
 				break;
-#line 225 "test-automate.c"
 			}
-#line 88 "test-automate.vala"
 			launcher = unity_launcher_scroller_model_iterator_get (_launcher_it);
-#line 91 "test-automate.vala"
-			dir = unity_testing_director_new ((_tmp2_ = clutter_actor_get_stage ((ClutterActor*) launcher), CLUTTER_IS_STAGE (_tmp2_) ? ((ClutterStage*) _tmp2_) : NULL));
-#line 93 "test-automate.vala"
+			dir = unity_testing_director_new ((_tmp4_ = clutter_actor_get_stage ((ClutterActor*) launcher), CLUTTER_IS_STAGE (_tmp4_) ? ((ClutterStage*) _tmp4_) : NULL));
 			unity_launcher_quicklist_controller_show_label (qlcontroller, "Ubuntu Software Centre", (CtkActor*) launcher);
-#line 233 "test-automate.c"
 			anim = NULL;
-#line 96 "test-automate.vala"
 			clutter_actor_set_opacity ((ClutterActor*) launcher, (guint8) 255);
-#line 99 "test-automate.vala"
 			g_timer_start (gTimer);
-#line 100 "test-automate.vala"
-			anim = (_tmp3_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) launcher, (gulong) CLUTTER_EASE_IN_SINE, (guint) 2500, "opacity", 0, NULL)), _g_object_unref0 (anim), _tmp3_);
-#line 102 "test-automate.vala"
+			anim = (_tmp5_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) launcher, (gulong) CLUTTER_EASE_IN_SINE, (guint) 2500, "opacity", 0, NULL)), _g_object_unref0 (anim), _tmp5_);
 			g_signal_connect (anim, "completed", (GCallback) _on_animation_completed_clutter_animation_completed, NULL);
-#line 103 "test-automate.vala"
 			unity_testing_director_do_wait_for_animation (dir, (ClutterActor*) launcher);
-#line 105 "test-automate.vala"
 			dt = (float) g_timer_elapsed (gTimer, NULL);
-#line 106 "test-automate.vala"
 			dt0 = ((float) DT) / 1000.0f;
-#line 107 "test-automate.vala"
 			fprintf (stdout, "Expected Duration: %2.3f, Observed Duration: %2.3f, Error: %2.3f%%\n", (double) dt0, (double) dt, (double) (((dt - dt0) * 100.0f) / dt0));
-#line 110 "test-automate.vala"
 			g_timer_start (gTimer);
-#line 111 "test-automate.vala"
-			anim = (_tmp4_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) launcher, (gulong) CLUTTER_EASE_IN_SINE, (guint) 2500, "opacity", 255, NULL)), _g_object_unref0 (anim), _tmp4_);
-#line 113 "test-automate.vala"
+			anim = (_tmp6_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) launcher, (gulong) CLUTTER_EASE_IN_SINE, (guint) 2500, "opacity", 255, NULL)), _g_object_unref0 (anim), _tmp6_);
 			g_signal_connect (anim, "completed", (GCallback) _on_animation_completed_clutter_animation_completed, NULL);
-#line 114 "test-automate.vala"
 			unity_testing_director_do_wait_for_animation (dir, (ClutterActor*) launcher);
-#line 116 "test-automate.vala"
 			dt = (float) g_timer_elapsed (gTimer, NULL);
-#line 117 "test-automate.vala"
 			dt0 = ((float) DT) / 1000.0f;
-#line 118 "test-automate.vala"
 			fprintf (stdout, "Expected Duration: %2.3f, Observed Duration: %2.3f, Error: %2.3f%%\n", (double) dt0, (double) dt, (double) (((dt - dt0) * 100.0f) / dt0));
-#line 265 "test-automate.c"
 			_g_object_unref0 (launcher);
 			_g_object_unref0 (dir);
 			_g_object_unref0 (anim);
 		}
 		_unity_launcher_scroller_model_iterator_unref0 (_launcher_it);
 	}
-#line 127 "test-automate.vala"
 	unity_launcher_quicklist_controller_close_menu (qlcontroller);
-#line 274 "test-automate.c"
 	_unity_testing_object_registry_unref0 (registry);
 	_g_object_unref0 (qlcontroller);
 	_g_object_unref0 (scroller);

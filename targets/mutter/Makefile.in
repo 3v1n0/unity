@@ -337,7 +337,6 @@ EXTRA_DIST = $(am__append_3)
 @ENABLE_MUTTER_TRUE@  --pkg gee-1.0 \
 @ENABLE_MUTTER_TRUE@  --pkg indicator \
 @ENABLE_MUTTER_TRUE@  --pkg mutter-2.28 \
-@ENABLE_MUTTER_TRUE@  --pkg libwnck-1.0 \
 @ENABLE_MUTTER_TRUE@  --pkg unique-1.0 \
 @ENABLE_MUTTER_TRUE@  --pkg x11 \
 @ENABLE_MUTTER_TRUE@  --pkg unity-const \

@@ -120,123 +120,78 @@ GType unity_dnd_targets_get_type (void) {
 }
 
 
-#line 38 "shell.vala"
 UnityShellMode unity_shell_get_mode (UnityShell* self) {
-#line 38 "shell.vala"
 	return UNITY_SHELL_GET_INTERFACE (self)->get_mode (self);
-#line 128 "shell.c"
 }
 
 
-#line 39 "shell.vala"
 ClutterStage* unity_shell_get_stage (UnityShell* self) {
-#line 39 "shell.vala"
 	return UNITY_SHELL_GET_INTERFACE (self)->get_stage (self);
-#line 136 "shell.c"
 }
 
 
-#line 40 "shell.vala"
 void unity_shell_show_unity (UnityShell* self) {
-#line 40 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->show_unity (self);
-#line 144 "shell.c"
 }
 
 
-#line 41 "shell.vala"
 gint unity_shell_get_indicators_width (UnityShell* self) {
-#line 41 "shell.vala"
 	return UNITY_SHELL_GET_INTERFACE (self)->get_indicators_width (self);
-#line 152 "shell.c"
 }
 
 
-#line 42 "shell.vala"
 gint unity_shell_get_launcher_width_foobar (UnityShell* self) {
-#line 42 "shell.vala"
 	return UNITY_SHELL_GET_INTERFACE (self)->get_launcher_width_foobar (self);
-#line 160 "shell.c"
 }
 
 
-#line 43 "shell.vala"
 gint unity_shell_get_panel_height_foobar (UnityShell* self) {
-#line 43 "shell.vala"
 	return UNITY_SHELL_GET_INTERFACE (self)->get_panel_height_foobar (self);
-#line 168 "shell.c"
 }
 
 
-#line 44 "shell.vala"
 void unity_shell_ensure_input_region (UnityShell* self) {
-#line 44 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->ensure_input_region (self);
-#line 176 "shell.c"
 }
 
 
-#line 45 "shell.vala"
 void unity_shell_add_fullscreen_request (UnityShell* self, GObject* o) {
-#line 45 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->add_fullscreen_request (self, o);
-#line 184 "shell.c"
 }
 
 
-#line 46 "shell.vala"
 gboolean unity_shell_remove_fullscreen_request (UnityShell* self, GObject* o) {
-#line 46 "shell.vala"
 	return UNITY_SHELL_GET_INTERFACE (self)->remove_fullscreen_request (self, o);
-#line 192 "shell.c"
 }
 
 
-#line 47 "shell.vala"
 void unity_shell_grab_keyboard (UnityShell* self, gboolean grab, guint32 timestamp) {
-#line 47 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->grab_keyboard (self, grab, timestamp);
-#line 200 "shell.c"
 }
 
 
-#line 48 "shell.vala"
 void unity_shell_show_window_picker (UnityShell* self) {
-#line 48 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->show_window_picker (self);
-#line 208 "shell.c"
 }
 
 
-#line 50 "shell.vala"
 void unity_shell_close_xids (UnityShell* self, GArray* xids) {
-#line 50 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->close_xids (self, xids);
-#line 216 "shell.c"
 }
 
 
-#line 51 "shell.vala"
 void unity_shell_show_window (UnityShell* self, guint32 xid) {
-#line 51 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->show_window (self, xid);
-#line 224 "shell.c"
 }
 
 
-#line 53 "shell.vala"
 void unity_shell_expose_xids (UnityShell* self, GArray* xids) {
-#line 53 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->expose_xids (self, xids);
-#line 232 "shell.c"
 }
 
 
-#line 54 "shell.vala"
 void unity_shell_stop_expose (UnityShell* self) {
-#line 54 "shell.vala"
 	UNITY_SHELL_GET_INTERFACE (self)->stop_expose (self);
-#line 240 "shell.c"
 }
 
 

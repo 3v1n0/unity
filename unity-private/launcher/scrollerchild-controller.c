@@ -191,142 +191,91 @@ GType unity_launcher_scroller_child_controller_menu_state_get_type (void) {
 }
 
 
-#line 50 "scrollerchild-controller.vala"
 UnityLauncherScrollerChildController* unity_launcher_scroller_child_controller_construct (GType object_type, UnityLauncherScrollerChild* child_) {
-#line 197 "scrollerchild-controller.c"
 	UnityLauncherScrollerChildController * self;
-#line 50 "scrollerchild-controller.vala"
 	g_return_val_if_fail (child_ != NULL, NULL);
-#line 52 "scrollerchild-controller.vala"
 	self = (UnityLauncherScrollerChildController*) g_object_new (object_type, "child", child_, NULL);
-#line 203 "scrollerchild-controller.c"
 	return self;
 }
 
 
-#line 70 "scrollerchild-controller.vala"
 static GeeArrayList* unity_launcher_scroller_child_controller_real_get_menu_shortcuts (UnityLauncherScrollerChildController* self) {
-#line 210 "scrollerchild-controller.c"
 	g_return_val_if_fail (self != NULL, NULL);
 	g_critical ("Type `%s' does not implement abstract method `unity_launcher_scroller_child_controller_get_menu_shortcuts'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
 	return NULL;
 }
 
 
-#line 70 "scrollerchild-controller.vala"
 GeeArrayList* unity_launcher_scroller_child_controller_get_menu_shortcuts (UnityLauncherScrollerChildController* self) {
-#line 70 "scrollerchild-controller.vala"
 	return UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS (self)->get_menu_shortcuts (self);
-#line 221 "scrollerchild-controller.c"
 }
 
 
-#line 71 "scrollerchild-controller.vala"
 static GeeArrayList* unity_launcher_scroller_child_controller_real_get_menu_shortcut_actions (UnityLauncherScrollerChildController* self) {
-#line 227 "scrollerchild-controller.c"
 	g_return_val_if_fail (self != NULL, NULL);
 	g_critical ("Type `%s' does not implement abstract method `unity_launcher_scroller_child_controller_get_menu_shortcut_actions'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
 	return NULL;
 }
 
 
-#line 71 "scrollerchild-controller.vala"
 GeeArrayList* unity_launcher_scroller_child_controller_get_menu_shortcut_actions (UnityLauncherScrollerChildController* self) {
-#line 71 "scrollerchild-controller.vala"
 	return UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS (self)->get_menu_shortcut_actions (self);
-#line 238 "scrollerchild-controller.c"
 }
 
 
-#line 72 "scrollerchild-controller.vala"
 static void unity_launcher_scroller_child_controller_real_activate (UnityLauncherScrollerChildController* self) {
-#line 244 "scrollerchild-controller.c"
 	g_return_if_fail (self != NULL);
 	g_critical ("Type `%s' does not implement abstract method `unity_launcher_scroller_child_controller_activate'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
 	return;
 }
 
 
-#line 72 "scrollerchild-controller.vala"
 void unity_launcher_scroller_child_controller_activate (UnityLauncherScrollerChildController* self) {
-#line 72 "scrollerchild-controller.vala"
 	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS (self)->activate (self);
-#line 255 "scrollerchild-controller.c"
 }
 
 
-#line 74 "scrollerchild-controller.vala"
 static gboolean unity_launcher_scroller_child_controller_on_leave_event (UnityLauncherScrollerChildController* self, ClutterEvent* event) {
-#line 261 "scrollerchild-controller.c"
 	gboolean result = FALSE;
-#line 74 "scrollerchild-controller.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 76 "scrollerchild-controller.vala"
 	self->button_down = FALSE;
-#line 77 "scrollerchild-controller.vala"
 	if (self->menu_state != UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_MENU) {
-#line 79 "scrollerchild-controller.vala"
 		self->menu_state = UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_NO_MENU;
-#line 271 "scrollerchild-controller.c"
 	}
-#line 82 "scrollerchild-controller.vala"
 	unity_launcher_scroller_child_controller_ensure_menu_state (self);
-#line 275 "scrollerchild-controller.c"
 	result = FALSE;
-#line 83 "scrollerchild-controller.vala"
 	return result;
-#line 279 "scrollerchild-controller.c"
 }
 
 
-#line 86 "scrollerchild-controller.vala"
 static gboolean unity_launcher_scroller_child_controller_on_press_event (UnityLauncherScrollerChildController* self, ClutterEvent* event) {
-#line 285 "scrollerchild-controller.c"
 	gboolean result = FALSE;
-#line 86 "scrollerchild-controller.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 88 "scrollerchild-controller.vala"
 	switch ((*event).button.button) {
-#line 291 "scrollerchild-controller.c"
 		case 1:
 		{
 			{
-#line 92 "scrollerchild-controller.vala"
 				self->last_press_time = (*event).button.time;
-#line 93 "scrollerchild-controller.vala"
 				self->button_down = TRUE;
-#line 94 "scrollerchild-controller.vala"
 				self->click_start_pos = (*event).button.x;
-#line 301 "scrollerchild-controller.c"
 			}
-#line 95 "scrollerchild-controller.vala"
 			break;
-#line 305 "scrollerchild-controller.c"
 		}
 		case 3:
 		{
 			{
-#line 98 "scrollerchild-controller.vala"
 				self->menu_state = UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_MENU;
-#line 99 "scrollerchild-controller.vala"
 				unity_launcher_scroller_child_controller_ensure_menu_state (self);
-#line 314 "scrollerchild-controller.c"
 			}
-#line 100 "scrollerchild-controller.vala"
 			break;
-#line 318 "scrollerchild-controller.c"
 		}
 		default:
 		{
-#line 101 "scrollerchild-controller.vala"
 			break;
-#line 324 "scrollerchild-controller.c"
 		}
 	}
 	result = FALSE;
-#line 103 "scrollerchild-controller.vala"
 	return result;
-#line 330 "scrollerchild-controller.c"
 }
 
 
@@ -335,199 +284,111 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 106 "scrollerchild-controller.vala"
 static gboolean unity_launcher_scroller_child_controller_on_release_event (UnityLauncherScrollerChildController* self, ClutterEvent* event) {
-#line 341 "scrollerchild-controller.c"
 	gboolean result = FALSE;
 	gboolean _tmp0_ = FALSE;
 	gboolean _tmp1_ = FALSE;
-#line 106 "scrollerchild-controller.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 108 "scrollerchild-controller.vala"
 	if ((*event).button.button == 1) {
-#line 109 "scrollerchild-controller.vala"
 		_tmp1_ = self->button_down == TRUE;
-#line 351 "scrollerchild-controller.c"
 	} else {
-#line 108 "scrollerchild-controller.vala"
 		_tmp1_ = FALSE;
-#line 355 "scrollerchild-controller.c"
 	}
-#line 108 "scrollerchild-controller.vala"
 	if (_tmp1_) {
-#line 110 "scrollerchild-controller.vala"
 		_tmp0_ = ((*event).button.time - self->last_press_time) < 500;
-#line 361 "scrollerchild-controller.c"
 	} else {
-#line 108 "scrollerchild-controller.vala"
 		_tmp0_ = FALSE;
-#line 365 "scrollerchild-controller.c"
 	}
-#line 108 "scrollerchild-controller.vala"
 	if (_tmp0_) {
-#line 369 "scrollerchild-controller.c"
 		UnityLauncherQuicklistController* controller;
 		gboolean _tmp2_ = FALSE;
-#line 112 "scrollerchild-controller.vala"
 		controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
-#line 113 "scrollerchild-controller.vala"
 		if (controller->is_in_label) {
-#line 113 "scrollerchild-controller.vala"
 			_tmp2_ = TRUE;
-#line 378 "scrollerchild-controller.c"
 		} else {
-#line 113 "scrollerchild-controller.vala"
 			_tmp2_ = unity_launcher_quicklist_controller_menu_is_open (controller);
-#line 382 "scrollerchild-controller.c"
 		}
-#line 113 "scrollerchild-controller.vala"
 		if (_tmp2_) {
-#line 115 "scrollerchild-controller.vala"
 			unity_launcher_quicklist_controller_close_menu (controller);
-#line 388 "scrollerchild-controller.c"
 		}
-#line 118 "scrollerchild-controller.vala"
 		unity_launcher_scroller_child_controller_activate (self);
-#line 392 "scrollerchild-controller.c"
 		_g_object_unref0 (controller);
 	}
-#line 120 "scrollerchild-controller.vala"
 	self->button_down = FALSE;
-#line 397 "scrollerchild-controller.c"
 	result = FALSE;
-#line 121 "scrollerchild-controller.vala"
 	return result;
-#line 401 "scrollerchild-controller.c"
 }
 
 
-#line 124 "scrollerchild-controller.vala"
 static gboolean unity_launcher_scroller_child_controller_on_enter_event (UnityLauncherScrollerChildController* self, ClutterEvent* event) {
-#line 407 "scrollerchild-controller.c"
 	gboolean result = FALSE;
-#line 124 "scrollerchild-controller.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 126 "scrollerchild-controller.vala"
 	self->menu_state = UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_LABEL;
-#line 127 "scrollerchild-controller.vala"
 	unity_launcher_scroller_child_controller_ensure_menu_state (self);
-#line 415 "scrollerchild-controller.c"
 	result = FALSE;
-#line 128 "scrollerchild-controller.vala"
 	return result;
-#line 419 "scrollerchild-controller.c"
 }
 
 
-#line 131 "scrollerchild-controller.vala"
 static void _unity_launcher_scroller_child_controller_ensure_menu_state_clutter_actor_destroy (ClutterActor* _sender, gpointer self) {
-#line 425 "scrollerchild-controller.c"
 	unity_launcher_scroller_child_controller_ensure_menu_state (self);
 }
 
 
-#line 131 "scrollerchild-controller.vala"
 static void unity_launcher_scroller_child_controller_ensure_menu_state (UnityLauncherScrollerChildController* self) {
-#line 432 "scrollerchild-controller.c"
 	UnityLauncherQuicklistController* controller;
 	gboolean _tmp0_ = FALSE;
-#line 131 "scrollerchild-controller.vala"
 	g_return_if_fail (self != NULL);
-#line 134 "scrollerchild-controller.vala"
 	if (unity_drag_controller_get_is_dragging (unity_drag_controller_get_default ())) {
-#line 134 "scrollerchild-controller.vala"
 		return;
-#line 441 "scrollerchild-controller.c"
 	}
-#line 136 "scrollerchild-controller.vala"
 	controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
-#line 137 "scrollerchild-controller.vala"
 	if (unity_launcher_quicklist_controller_menu_is_open (controller)) {
-#line 447 "scrollerchild-controller.c"
 		CtkActor* _tmp1_;
-#line 137 "scrollerchild-controller.vala"
 		_tmp0_ = (_tmp1_ = unity_launcher_quicklist_controller_get_attached_actor (controller)) != CTK_ACTOR (self->priv->_child);
-#line 451 "scrollerchild-controller.c"
 		_g_object_unref0 (_tmp1_);
 	} else {
-#line 137 "scrollerchild-controller.vala"
 		_tmp0_ = FALSE;
-#line 456 "scrollerchild-controller.c"
 	}
-#line 137 "scrollerchild-controller.vala"
 	if (_tmp0_) {
-#line 141 "scrollerchild-controller.vala"
 		g_signal_connect_object ((ClutterActor*) controller->menu, "destroy", (GCallback) _unity_launcher_scroller_child_controller_ensure_menu_state_clutter_actor_destroy, self, 0);
-#line 462 "scrollerchild-controller.c"
 		_g_object_unref0 (controller);
-#line 142 "scrollerchild-controller.vala"
 		return;
-#line 466 "scrollerchild-controller.c"
 	}
-#line 145 "scrollerchild-controller.vala"
 	if (self->menu_state == UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_NO_MENU) {
-#line 470 "scrollerchild-controller.c"
 		gboolean _tmp2_ = FALSE;
-#line 147 "scrollerchild-controller.vala"
 		if (controller->is_in_label) {
-#line 147 "scrollerchild-controller.vala"
 			_tmp2_ = TRUE;
-#line 476 "scrollerchild-controller.c"
 		} else {
-#line 147 "scrollerchild-controller.vala"
 			_tmp2_ = unity_launcher_quicklist_controller_menu_is_open (controller);
-#line 480 "scrollerchild-controller.c"
 		}
-#line 147 "scrollerchild-controller.vala"
 		if (_tmp2_) {
-#line 149 "scrollerchild-controller.vala"
 			unity_launcher_quicklist_controller_close_menu (controller);
-#line 486 "scrollerchild-controller.c"
 		}
 	}
-#line 153 "scrollerchild-controller.vala"
 	if (self->menu_state == UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_LABEL) {
-#line 155 "scrollerchild-controller.vala"
 		if (!unity_launcher_quicklist_controller_menu_is_open (controller)) {
-#line 157 "scrollerchild-controller.vala"
 			if (UNITY_PANEL_search_entry_has_focus == FALSE) {
-#line 158 "scrollerchild-controller.vala"
 				unity_launcher_quicklist_controller_show_label (controller, self->name, (CtkActor*) self->priv->_child);
-#line 497 "scrollerchild-controller.c"
 			}
 		}
 	}
-#line 162 "scrollerchild-controller.vala"
 	if (self->menu_state == UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_MENU) {
-#line 164 "scrollerchild-controller.vala"
 		if (controller->is_in_label) {
-#line 505 "scrollerchild-controller.c"
 			GeeArrayList* shortcuts;
 			GeeArrayList* actions;
 			gboolean _tmp3_ = FALSE;
-#line 166 "scrollerchild-controller.vala"
 			shortcuts = unity_launcher_scroller_child_controller_get_menu_shortcuts (self);
-#line 167 "scrollerchild-controller.vala"
 			actions = unity_launcher_scroller_child_controller_get_menu_shortcut_actions (self);
-#line 168 "scrollerchild-controller.vala"
 			if (gee_collection_get_size ((GeeCollection*) shortcuts) > 0) {
-#line 168 "scrollerchild-controller.vala"
 				_tmp3_ = TRUE;
-#line 517 "scrollerchild-controller.c"
 			} else {
-#line 168 "scrollerchild-controller.vala"
 				_tmp3_ = gee_collection_get_size ((GeeCollection*) actions) > 0;
-#line 521 "scrollerchild-controller.c"
 			}
-#line 168 "scrollerchild-controller.vala"
 			if (_tmp3_) {
-#line 170 "scrollerchild-controller.vala"
 				unity_launcher_quicklist_controller_show_menu (controller, shortcuts, actions, FALSE);
-#line 527 "scrollerchild-controller.c"
 			} else {
-#line 176 "scrollerchild-controller.vala"
 				self->menu_state = UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_LABEL;
-#line 531 "scrollerchild-controller.c"
 			}
 			_g_object_unref0 (shortcuts);
 			_g_object_unref0 (actions);
@@ -537,82 +398,52 @@ static void unity_launcher_scroller_child_controller_ensure_menu_state (UnityLau
 }
 
 
-#line 183 "scrollerchild-controller.vala"
 static ClutterActor* unity_launcher_scroller_child_controller_real_get_icon (UnityDragModel* base) {
-#line 543 "scrollerchild-controller.c"
 	UnityLauncherScrollerChildController * self;
 	ClutterActor* result = NULL;
 	self = (UnityLauncherScrollerChildController*) base;
 	result = _g_object_ref0 ((ClutterActor*) self->priv->_child);
-#line 185 "scrollerchild-controller.vala"
 	return result;
-#line 550 "scrollerchild-controller.c"
 }
 
 
-#line 188 "scrollerchild-controller.vala"
 static char* unity_launcher_scroller_child_controller_real_get_drag_data (UnityDragModel* base) {
-#line 556 "scrollerchild-controller.c"
 	UnityLauncherScrollerChildController * self;
 	char* result = NULL;
 	self = (UnityLauncherScrollerChildController*) base;
 	result = g_strdup (self->name);
-#line 190 "scrollerchild-controller.vala"
 	return result;
-#line 563 "scrollerchild-controller.c"
 }
 
 
-#line 193 "scrollerchild-controller.vala"
 static gboolean unity_launcher_scroller_child_controller_on_motion_event (UnityLauncherScrollerChildController* self, ClutterEvent* event) {
-#line 569 "scrollerchild-controller.c"
 	gboolean result = FALSE;
 	UnityDragController* drag_controller;
 	gboolean _tmp0_ = FALSE;
-#line 193 "scrollerchild-controller.vala"
 	g_return_val_if_fail (self != NULL, FALSE);
-#line 195 "scrollerchild-controller.vala"
 	drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
-#line 196 "scrollerchild-controller.vala"
 	if (self->button_down) {
-#line 196 "scrollerchild-controller.vala"
 		_tmp0_ = unity_drag_controller_get_is_dragging (drag_controller) == FALSE;
-#line 581 "scrollerchild-controller.c"
 	} else {
-#line 196 "scrollerchild-controller.vala"
 		_tmp0_ = FALSE;
-#line 585 "scrollerchild-controller.c"
 	}
-#line 196 "scrollerchild-controller.vala"
 	if (_tmp0_) {
-#line 589 "scrollerchild-controller.c"
 		float diff;
-#line 198 "scrollerchild-controller.vala"
 		diff = fabsf ((*event).motion.x - self->click_start_pos);
-#line 199 "scrollerchild-controller.vala"
 		if (diff > self->drag_sensitivity) {
-#line 595 "scrollerchild-controller.c"
 			float x = 0.0F;
 			float y = 0.0F;
-#line 202 "scrollerchild-controller.vala"
 			clutter_actor_get_transformed_position ((ClutterActor*) self->priv->_child, &x, &y);
-#line 203 "scrollerchild-controller.vala"
 			unity_drag_controller_start_drag (drag_controller, (UnityDragModel*) self, (*event).button.x - x, (*event).button.y - y);
-#line 206 "scrollerchild-controller.vala"
 			self->button_down = FALSE;
-#line 604 "scrollerchild-controller.c"
 			result = TRUE;
 			_g_object_unref0 (drag_controller);
-#line 207 "scrollerchild-controller.vala"
 			return result;
-#line 609 "scrollerchild-controller.c"
 		}
 	}
 	result = FALSE;
 	_g_object_unref0 (drag_controller);
-#line 210 "scrollerchild-controller.vala"
 	return result;
-#line 616 "scrollerchild-controller.c"
 }
 
 
@@ -620,9 +451,7 @@ UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (
 	UnityLauncherScrollerChild* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_child;
-#line 38 "scrollerchild-controller.vala"
 	return result;
-#line 626 "scrollerchild-controller.c"
 }
 
 
@@ -634,37 +463,27 @@ static void unity_launcher_scroller_child_controller_set_child (UnityLauncherScr
 }
 
 
-#line 86 "scrollerchild-controller.vala"
 static gboolean _unity_launcher_scroller_child_controller_on_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 640 "scrollerchild-controller.c"
 	return unity_launcher_scroller_child_controller_on_press_event (self, event);
 }
 
 
-#line 106 "scrollerchild-controller.vala"
 static gboolean _unity_launcher_scroller_child_controller_on_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 647 "scrollerchild-controller.c"
 	return unity_launcher_scroller_child_controller_on_release_event (self, event);
 }
 
 
-#line 124 "scrollerchild-controller.vala"
 static gboolean _unity_launcher_scroller_child_controller_on_enter_event_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 654 "scrollerchild-controller.c"
 	return unity_launcher_scroller_child_controller_on_enter_event (self, event);
 }
 
 
-#line 74 "scrollerchild-controller.vala"
 static gboolean _unity_launcher_scroller_child_controller_on_leave_event_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 661 "scrollerchild-controller.c"
 	return unity_launcher_scroller_child_controller_on_leave_event (self, event);
 }
 
 
-#line 193 "scrollerchild-controller.vala"
 static gboolean _unity_launcher_scroller_child_controller_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-#line 668 "scrollerchild-controller.c"
 	return unity_launcher_scroller_child_controller_on_motion_event (self, event);
 }
 
@@ -678,23 +497,14 @@ static GObject * unity_launcher_scroller_child_controller_constructor (GType typ
 	self = UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER (obj);
 	{
 		ClutterAnimation* anim;
-#line 57 "scrollerchild-controller.vala"
 		g_signal_connect_object ((ClutterActor*) self->priv->_child, "button-press-event", (GCallback) _unity_launcher_scroller_child_controller_on_press_event_clutter_actor_button_press_event, self, 0);
-#line 58 "scrollerchild-controller.vala"
 		g_signal_connect_object ((ClutterActor*) self->priv->_child, "button-release-event", (GCallback) _unity_launcher_scroller_child_controller_on_release_event_clutter_actor_button_release_event, self, 0);
-#line 59 "scrollerchild-controller.vala"
 		g_signal_connect_object ((ClutterActor*) self->priv->_child, "enter-event", (GCallback) _unity_launcher_scroller_child_controller_on_enter_event_clutter_actor_enter_event, self, 0);
-#line 60 "scrollerchild-controller.vala"
 		g_signal_connect_object ((ClutterActor*) self->priv->_child, "leave-event", (GCallback) _unity_launcher_scroller_child_controller_on_leave_event_clutter_actor_leave_event, self, 0);
-#line 61 "scrollerchild-controller.vala"
 		g_signal_connect_object ((ClutterActor*) self->priv->_child, "motion-event", (GCallback) _unity_launcher_scroller_child_controller_on_motion_event_clutter_actor_motion_event, self, 0);
-#line 63 "scrollerchild-controller.vala"
 		clutter_actor_set_reactive ((ClutterActor*) self->priv->_child, TRUE);
-#line 64 "scrollerchild-controller.vala"
 		clutter_actor_set_opacity ((ClutterActor*) self->priv->_child, (guint8) 0);
-#line 65 "scrollerchild-controller.vala"
 		anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->_child, (gulong) CLUTTER_EASE_IN_QUAD, UNITY_LAUNCHER_SHORT_DELAY, "opacity", 0xff, NULL));
-#line 698 "scrollerchild-controller.c"
 		_g_object_unref0 (anim);
 	}
 	return obj;

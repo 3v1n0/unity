@@ -85,46 +85,28 @@ static void unity_testing_director_set_property (GObject * object, guint propert
 
 
 
-#line 31 "test-director.vala"
 UnityTestingDirector* unity_testing_director_construct (GType object_type, ClutterStage* stage) {
-#line 91 "test-director.c"
 	UnityTestingDirector * self;
-#line 31 "test-director.vala"
 	g_return_val_if_fail (stage != NULL, NULL);
-#line 33 "test-director.vala"
 	self = (UnityTestingDirector*) g_object_new (object_type, "stage", stage, NULL);
-#line 97 "test-director.c"
 	return self;
 }
 
 
-#line 31 "test-director.vala"
 UnityTestingDirector* unity_testing_director_new (ClutterStage* stage) {
-#line 31 "test-director.vala"
 	return unity_testing_director_construct (UNITY_TESTING_TYPE_DIRECTOR, stage);
-#line 106 "test-director.c"
 }
 
 
-#line 41 "test-director.vala"
 static void unity_testing_director_do_event (UnityTestingDirector* self, ClutterActor* actor, ClutterEvent* event, gboolean capture_phase) {
-#line 41 "test-director.vala"
 	g_return_if_fail (self != NULL);
-#line 41 "test-director.vala"
 	g_return_if_fail (actor != NULL);
-#line 45 "test-director.vala"
 	clutter_actor_event (actor, event, capture_phase);
-#line 46 "test-director.vala"
 	while (TRUE) {
-#line 46 "test-director.vala"
 		if (!gtk_events_pending ()) {
-#line 46 "test-director.vala"
 			break;
-#line 124 "test-director.c"
 		}
-#line 47 "test-director.vala"
 		gtk_main_iteration ();
-#line 128 "test-director.c"
 	}
 }
 
@@ -134,265 +116,154 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 50 "test-director.vala"
 void unity_testing_director_do_wait_for_animation (UnityTestingDirector* self, ClutterActor* actor) {
-#line 140 "test-director.c"
 	ClutterAnimation* anim;
-#line 50 "test-director.vala"
 	g_return_if_fail (self != NULL);
-#line 50 "test-director.vala"
 	g_return_if_fail (actor != NULL);
-#line 52 "test-director.vala"
 	anim = _g_object_ref0 (clutter_actor_get_animation (actor));
-#line 54 "test-director.vala"
 	while (TRUE) {
-#line 150 "test-director.c"
 		gboolean _tmp0_ = FALSE;
-#line 54 "test-director.vala"
 		if (CLUTTER_IS_ANIMATION (anim)) {
-#line 55 "test-director.vala"
 			_tmp0_ = clutter_timeline_is_playing (clutter_animation_get_timeline (anim));
-#line 156 "test-director.c"
 		} else {
-#line 54 "test-director.vala"
 			_tmp0_ = FALSE;
-#line 160 "test-director.c"
 		}
-#line 54 "test-director.vala"
 		if (!_tmp0_) {
-#line 54 "test-director.vala"
 			break;
-#line 166 "test-director.c"
 		}
-#line 57 "test-director.vala"
 		gtk_main_iteration ();
-#line 170 "test-director.c"
 	}
 	_g_object_unref0 (anim);
 }
 
 
-#line 65 "test-director.vala"
 static gboolean _lambda18_ (UnityTestingDirector* self) {
-#line 178 "test-director.c"
 	gboolean result = FALSE;
-#line 65 "test-director.vala"
 	self->priv->break_loop = TRUE;
-#line 182 "test-director.c"
 	result = FALSE;
-#line 65 "test-director.vala"
 	return result;
-#line 186 "test-director.c"
 }
 
 
-#line 65 "test-director.vala"
 static gboolean __lambda18__gsource_func (gpointer self) {
-#line 192 "test-director.c"
 	return _lambda18_ (self);
 }
 
 
-#line 61 "test-director.vala"
 void unity_testing_director_do_wait_for_timeout (UnityTestingDirector* self, guint32 msecs) {
-#line 61 "test-director.vala"
 	g_return_if_fail (self != NULL);
-#line 63 "test-director.vala"
 	self->priv->break_loop = FALSE;
-#line 64 "test-director.vala"
 	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) msecs, __lambda18__gsource_func, g_object_ref (self), g_object_unref);
-#line 66 "test-director.vala"
 	while (TRUE) {
-#line 66 "test-director.vala"
 		if (!(self->priv->break_loop != TRUE)) {
-#line 66 "test-director.vala"
 			break;
-#line 211 "test-director.c"
 		}
-#line 68 "test-director.vala"
 		gtk_main_iteration ();
-#line 215 "test-director.c"
 	}
 }
 
 
-#line 72 "test-director.vala"
 void unity_testing_director_button_press (UnityTestingDirector* self, ClutterActor* actor, guint32 button, gboolean autorelease, float relative_x, float relative_y, gboolean wait_for_animation) {
-#line 222 "test-director.c"
 	float actor_x = 0.0F;
 	float actor_y = 0.0F;
 	ClutterButtonEvent event = {0};
 	ClutterActor* _tmp0_;
 	ClutterEvent _tmp1_;
-#line 72 "test-director.vala"
 	g_return_if_fail (self != NULL);
-#line 72 "test-director.vala"
 	g_return_if_fail (actor != NULL);
-#line 232 "test-director.c"
 	memset (&event, 0, sizeof (ClutterButtonEvent));
-#line 82 "test-director.vala"
 	clutter_actor_get_transformed_position (actor, &actor_x, &actor_y);
-#line 84 "test-director.vala"
 	event.type = CLUTTER_BUTTON_PRESS;
-#line 85 "test-director.vala"
 	event.time = clutter_get_current_event_time ();
-#line 86 "test-director.vala"
 	event.flags = event.flags & CLUTTER_EVENT_FLAG_SYNTHETIC;
-#line 87 "test-director.vala"
 	event.stage = (_tmp0_ = clutter_actor_get_stage (actor), CLUTTER_IS_STAGE (_tmp0_) ? ((ClutterStage*) _tmp0_) : NULL);
-#line 88 "test-director.vala"
 	event.source = actor;
-#line 89 "test-director.vala"
 	event.x = actor_x + relative_x;
-#line 90 "test-director.vala"
 	event.y = actor_y + relative_y;
-#line 91 "test-director.vala"
 	event.button = button;
-#line 93 "test-director.vala"
 	unity_testing_director_do_event (self, actor, (_tmp1_ = (ClutterEvent) event, &_tmp1_), FALSE);
-#line 95 "test-director.vala"
 	if (wait_for_animation) {
-#line 96 "test-director.vala"
 		unity_testing_director_do_wait_for_animation (self, actor);
-#line 258 "test-director.c"
 	}
-#line 98 "test-director.vala"
 	if (autorelease) {
-#line 262 "test-director.c"
 		ClutterEvent _tmp2_;
-#line 100 "test-director.vala"
 		event.type = CLUTTER_BUTTON_RELEASE;
-#line 101 "test-director.vala"
 		event.time = clutter_get_current_event_time ();
-#line 103 "test-director.vala"
 		unity_testing_director_do_event (self, actor, (_tmp2_ = (ClutterEvent) event, &_tmp2_), FALSE);
-#line 105 "test-director.vala"
 		if (wait_for_animation) {
-#line 106 "test-director.vala"
 			unity_testing_director_do_wait_for_animation (self, actor);
-#line 274 "test-director.c"
 		}
 	}
 }
 
 
-#line 111 "test-director.vala"
 void unity_testing_director_button_release (UnityTestingDirector* self, ClutterActor* actor, guint32 button, float relative_x, float relative_y) {
-#line 282 "test-director.c"
 	float actor_x = 0.0F;
 	float actor_y = 0.0F;
 	ClutterButtonEvent event = {0};
 	ClutterActor* _tmp0_;
 	ClutterEvent _tmp1_;
-#line 111 "test-director.vala"
 	g_return_if_fail (self != NULL);
-#line 111 "test-director.vala"
 	g_return_if_fail (actor != NULL);
-#line 292 "test-director.c"
 	memset (&event, 0, sizeof (ClutterButtonEvent));
-#line 119 "test-director.vala"
 	clutter_actor_get_transformed_position (actor, &actor_x, &actor_y);
-#line 121 "test-director.vala"
 	event.type = CLUTTER_BUTTON_RELEASE;
-#line 122 "test-director.vala"
 	event.time = clutter_get_current_event_time ();
-#line 123 "test-director.vala"
 	event.flags = event.flags & CLUTTER_EVENT_FLAG_SYNTHETIC;
-#line 124 "test-director.vala"
 	event.stage = (_tmp0_ = clutter_actor_get_stage (actor), CLUTTER_IS_STAGE (_tmp0_) ? ((ClutterStage*) _tmp0_) : NULL);
-#line 125 "test-director.vala"
 	event.source = actor;
-#line 126 "test-director.vala"
 	event.x = actor_x + relative_x;
-#line 127 "test-director.vala"
 	event.y = actor_y + relative_y;
-#line 128 "test-director.vala"
 	event.button = button;
-#line 130 "test-director.vala"
 	unity_testing_director_do_event (self, actor, (_tmp1_ = (ClutterEvent) event, &_tmp1_), FALSE);
-#line 314 "test-director.c"
 }
 
 
-#line 133 "test-director.vala"
 void unity_testing_director_enter_event (UnityTestingDirector* self, ClutterActor* actor, float relative_x, float relative_y) {
-#line 320 "test-director.c"
 	float actor_x = 0.0F;
 	float actor_y = 0.0F;
 	ClutterCrossingEvent event = {0};
 	ClutterActor* _tmp0_;
 	ClutterEvent _tmp1_;
-#line 133 "test-director.vala"
 	g_return_if_fail (self != NULL);
-#line 133 "test-director.vala"
 	g_return_if_fail (actor != NULL);
-#line 330 "test-director.c"
 	memset (&event, 0, sizeof (ClutterCrossingEvent));
-#line 140 "test-director.vala"
 	clutter_actor_get_transformed_position (actor, &actor_x, &actor_y);
-#line 142 "test-director.vala"
 	event.type = CLUTTER_ENTER;
-#line 143 "test-director.vala"
 	event.time = clutter_get_current_event_time ();
-#line 144 "test-director.vala"
 	event.flags = event.flags & CLUTTER_EVENT_FLAG_SYNTHETIC;
-#line 145 "test-director.vala"
 	event.stage = (_tmp0_ = clutter_actor_get_stage (actor), CLUTTER_IS_STAGE (_tmp0_) ? ((ClutterStage*) _tmp0_) : NULL);
-#line 146 "test-director.vala"
 	event.source = (ClutterActor*) event.stage;
-#line 147 "test-director.vala"
 	event.x = actor_x + relative_x;
-#line 148 "test-director.vala"
 	event.y = actor_y + relative_y;
-#line 150 "test-director.vala"
 	unity_testing_director_do_event (self, actor, (_tmp1_ = (ClutterEvent) event, &_tmp1_), FALSE);
-#line 350 "test-director.c"
 }
 
 
-#line 153 "test-director.vala"
 void unity_testing_director_leave_event (UnityTestingDirector* self, ClutterActor* actor, float relative_x, float relative_y) {
-#line 356 "test-director.c"
 	float actor_x = 0.0F;
 	float actor_y = 0.0F;
 	ClutterCrossingEvent event = {0};
 	ClutterActor* _tmp0_;
 	ClutterEvent _tmp1_;
-#line 153 "test-director.vala"
 	g_return_if_fail (self != NULL);
-#line 153 "test-director.vala"
 	g_return_if_fail (actor != NULL);
-#line 366 "test-director.c"
 	memset (&event, 0, sizeof (ClutterCrossingEvent));
-#line 160 "test-director.vala"
 	clutter_actor_get_transformed_position (actor, &actor_x, &actor_y);
-#line 162 "test-director.vala"
 	event.type = CLUTTER_LEAVE;
-#line 163 "test-director.vala"
 	event.time = clutter_get_current_event_time ();
-#line 164 "test-director.vala"
 	event.flags = event.flags & CLUTTER_EVENT_FLAG_SYNTHETIC;
-#line 165 "test-director.vala"
 	event.stage = (_tmp0_ = clutter_actor_get_stage (actor), CLUTTER_IS_STAGE (_tmp0_) ? ((ClutterStage*) _tmp0_) : NULL);
-#line 166 "test-director.vala"
 	event.source = (ClutterActor*) event.stage;
-#line 167 "test-director.vala"
 	event.x = actor_x + relative_x;
-#line 168 "test-director.vala"
 	event.y = actor_y + relative_y;
-#line 170 "test-director.vala"
 	unity_testing_director_do_event (self, actor, (_tmp1_ = (ClutterEvent) event, &_tmp1_), FALSE);
-#line 386 "test-director.c"
 }
 
 
-#line 173 "test-director.vala"
 void unity_testing_director_motion_event (UnityTestingDirector* self, ClutterActor* actor, float relative_startx, float relative_starty, float relative_endx, float relative_endy) {
-#line 173 "test-director.vala"
 	g_return_if_fail (self != NULL);
-#line 173 "test-director.vala"
 	g_return_if_fail (actor != NULL);
-#line 396 "test-director.c"
 }
 
 
@@ -400,9 +271,7 @@ ClutterStage* unity_testing_director_get_stage (UnityTestingDirector* self) {
 	ClutterStage* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_stage;
-#line 25 "test-director.vala"
 	return result;
-#line 406 "test-director.c"
 }
 
 

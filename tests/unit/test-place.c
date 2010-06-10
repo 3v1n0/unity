@@ -89,86 +89,57 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
-#line 40 "test-place.vala"
 static void _unity_tests_unit_place_suite_test_empty_controller_gdata_test_func (gpointer self) {
-#line 95 "test-place.c"
 	unity_tests_unit_place_suite_test_empty_controller ();
 }
 
 
-#line 50 "test-place.vala"
 static void _unity_tests_unit_place_suite_test_one_entry_gdata_test_func (gpointer self) {
-#line 102 "test-place.c"
 	unity_tests_unit_place_suite_test_one_entry ();
 }
 
 
-#line 79 "test-place.vala"
 static void _unity_tests_unit_place_suite_test_two_entries_gdata_test_func (gpointer self) {
-#line 109 "test-place.c"
 	unity_tests_unit_place_suite_test_two_entries ();
 }
 
 
-#line 135 "test-place.vala"
 static void _unity_tests_unit_place_suite_test_local_models_gdata_test_func (gpointer self) {
-#line 116 "test-place.c"
 	unity_tests_unit_place_suite_test_local_models ();
 }
 
 
-#line 28 "test-place.vala"
 UnityTestsUnitPlaceSuite* unity_tests_unit_place_suite_construct (GType object_type) {
-#line 123 "test-place.c"
 	UnityTestsUnitPlaceSuite* self;
 	self = (UnityTestsUnitPlaceSuite*) g_type_create_instance (object_type);
-#line 30 "test-place.vala"
 	g_test_add_data_func ("/Unit/Place/Empty", NULL, _unity_tests_unit_place_suite_test_empty_controller_gdata_test_func);
-#line 32 "test-place.vala"
 	g_test_add_data_func ("/Unit/Place/OneEntry", NULL, _unity_tests_unit_place_suite_test_one_entry_gdata_test_func);
-#line 34 "test-place.vala"
 	g_test_add_data_func ("/Unit/Place/TwoEntries", NULL, _unity_tests_unit_place_suite_test_two_entries_gdata_test_func);
-#line 36 "test-place.vala"
 	g_test_add_data_func ("/Unit/Place/LocalModels", NULL, _unity_tests_unit_place_suite_test_local_models_gdata_test_func);
-#line 134 "test-place.c"
 	return self;
 }
 
 
-#line 28 "test-place.vala"
 UnityTestsUnitPlaceSuite* unity_tests_unit_place_suite_new (void) {
-#line 28 "test-place.vala"
 	return unity_tests_unit_place_suite_construct (UNITY_TESTS_UNIT_TYPE_PLACE_SUITE);
-#line 143 "test-place.c"
 }
 
 
-#line 40 "test-place.vala"
 void unity_tests_unit_place_suite_test_empty_controller (void) {
-#line 149 "test-place.c"
 	UnityPlaceController* ctl;
 	UnityPlaceEntryInfo* _tmp0_;
-#line 42 "test-place.vala"
 	ctl = unity_place_controller_new ("/org/ayatana/unity/testplace");
-#line 43 "test-place.vala"
 	g_assert (UNITY_PLACE_IS_CONTROLLER (ctl));
-#line 44 "test-place.vala"
 	g_assert (!unity_place_controller_get_exported (ctl));
-#line 45 "test-place.vala"
 	g_assert (_vala_strcmp0 (unity_place_controller_get_dbus_path (ctl), "/org/ayatana/unity/testplace") == 0);
-#line 46 "test-place.vala"
 	g_assert (unity_place_controller_num_entries (ctl) == 0);
-#line 47 "test-place.vala"
 	g_assert ((_tmp0_ = unity_place_controller_get_entry (ctl, "no such entry")) == NULL);
-#line 164 "test-place.c"
 	_g_object_unref0 (_tmp0_);
 	_g_object_unref0 (ctl);
 }
 
 
-#line 50 "test-place.vala"
 void unity_tests_unit_place_suite_test_one_entry (void) {
-#line 172 "test-place.c"
 	char* entry_path;
 	UnityPlaceEntryInfo* entry;
 	UnityPlaceController* ctl;
@@ -184,44 +155,25 @@ void unity_tests_unit_place_suite_test_one_entry (void) {
 	gint _tmp3_;
 	UnityPlaceEntryInfo** entries;
 	UnityPlaceEntryInfo* _tmp5_;
-#line 52 "test-place.vala"
 	entry_path = g_strdup ("/org/ayatana/unity/testplace/testentry1");
-#line 53 "test-place.vala"
 	entry = unity_place_entry_info_new (entry_path);
-#line 54 "test-place.vala"
 	g_assert (UNITY_PLACE_IS_ENTRY_INFO (entry));
-#line 55 "test-place.vala"
 	g_assert (_vala_strcmp0 (unity_place_entry_info_get_dbus_path (entry), entry_path) == 0);
-#line 57 "test-place.vala"
 	ctl = unity_place_controller_new ("/org/ayatana/unity/testplace");
-#line 58 "test-place.vala"
 	g_assert (unity_place_controller_num_entries (ctl) == 0);
-#line 61 "test-place.vala"
 	unity_place_controller_add_entry (ctl, entry);
-#line 62 "test-place.vala"
 	g_assert (unity_place_controller_num_entries (ctl) == 1);
-#line 63 "test-place.vala"
 	g_assert ((_tmp0_ = unity_place_controller_get_entry (ctl, entry_path)) == entry);
-#line 206 "test-place.c"
 	_g_object_unref0 (_tmp0_);
 	entry_paths = (_tmp2_ = unity_place_controller_get_entry_paths (ctl, &_tmp1_), entry_paths_length1 = _tmp1_, _entry_paths_size_ = entry_paths_length1, _tmp2_);
-#line 66 "test-place.vala"
 	g_assert (entry_paths_length1 == 1);
-#line 67 "test-place.vala"
 	g_assert (_vala_strcmp0 (entry_paths[0], entry_path) == 0);
-#line 213 "test-place.c"
 	entries = (_tmp4_ = unity_place_controller_get_entries (ctl, &_tmp3_), entries_length1 = _tmp3_, _entries_size_ = entries_length1, _tmp4_);
-#line 70 "test-place.vala"
 	g_assert (entries_length1 == 1);
-#line 71 "test-place.vala"
 	g_assert (entries[0] == entry);
-#line 74 "test-place.vala"
 	unity_place_controller_remove_entry (ctl, entry_path);
-#line 75 "test-place.vala"
 	g_assert (unity_place_controller_num_entries (ctl) == 0);
-#line 76 "test-place.vala"
 	g_assert ((_tmp5_ = unity_place_controller_get_entry (ctl, entry_path)) == NULL);
-#line 225 "test-place.c"
 	_g_object_unref0 (_tmp5_);
 	_g_free0 (entry_path);
 	_g_object_unref0 (entry);
@@ -231,9 +183,7 @@ void unity_tests_unit_place_suite_test_one_entry (void) {
 }
 
 
-#line 79 "test-place.vala"
 void unity_tests_unit_place_suite_test_two_entries (void) {
-#line 237 "test-place.c"
 	char* entry_path1;
 	char* entry_path2;
 	UnityPlaceEntryInfo* entry1;
@@ -259,90 +209,48 @@ void unity_tests_unit_place_suite_test_two_entries (void) {
 	gint _tmp10_;
 	UnityPlaceEntryInfo** _tmp13_;
 	gint _tmp12_;
-#line 81 "test-place.vala"
 	entry_path1 = g_strdup ("/org/ayatana/unity/testplace/testentry1");
-#line 82 "test-place.vala"
 	entry_path2 = g_strdup ("/org/ayatana/unity/testplace/testentry2");
-#line 83 "test-place.vala"
 	entry1 = unity_place_entry_info_new (entry_path1);
-#line 84 "test-place.vala"
 	entry2 = unity_place_entry_info_new (entry_path2);
-#line 86 "test-place.vala"
 	ctl = unity_place_controller_new ("/org/ayatana/unity/testplace");
-#line 87 "test-place.vala"
 	g_assert (unity_place_controller_num_entries (ctl) == 0);
-#line 89 "test-place.vala"
 	unity_place_controller_add_entry (ctl, entry1);
-#line 90 "test-place.vala"
 	g_assert (unity_place_controller_num_entries (ctl) == 1);
-#line 92 "test-place.vala"
 	unity_place_controller_add_entry (ctl, entry2);
-#line 93 "test-place.vala"
 	g_assert (unity_place_controller_num_entries (ctl) == 2);
-#line 95 "test-place.vala"
 	g_assert ((_tmp0_ = unity_place_controller_get_entry (ctl, entry_path1)) == entry1);
-#line 285 "test-place.c"
 	_g_object_unref0 (_tmp0_);
-#line 96 "test-place.vala"
 	g_assert ((_tmp1_ = unity_place_controller_get_entry (ctl, entry_path2)) == entry2);
-#line 289 "test-place.c"
 	_g_object_unref0 (_tmp1_);
 	entry_paths = (_tmp3_ = unity_place_controller_get_entry_paths (ctl, &_tmp2_), entry_paths_length1 = _tmp2_, _entry_paths_size_ = entry_paths_length1, _tmp3_);
-#line 99 "test-place.vala"
 	g_assert (entry_paths_length1 == 2);
-#line 100 "test-place.vala"
 	g_assert (_vala_strcmp0 (entry_paths[0], entry_path1) == 0);
-#line 101 "test-place.vala"
 	g_assert (_vala_strcmp0 (entry_paths[1], entry_path2) == 0);
-#line 298 "test-place.c"
 	entries = (_tmp5_ = unity_place_controller_get_entries (ctl, &_tmp4_), entries_length1 = _tmp4_, _entries_size_ = entries_length1, _tmp5_);
-#line 104 "test-place.vala"
 	g_assert (entries_length1 == 2);
-#line 105 "test-place.vala"
 	g_assert (entries[0] == entry1);
-#line 106 "test-place.vala"
 	g_assert (entries[1] == entry2);
-#line 110 "test-place.vala"
 	unity_place_controller_add_entry (ctl, entry1);
-#line 111 "test-place.vala"
 	g_assert (unity_place_controller_num_entries (ctl) == 2);
-#line 113 "test-place.vala"
 	unity_place_controller_add_entry (ctl, entry2);
-#line 114 "test-place.vala"
 	g_assert (unity_place_controller_num_entries (ctl) == 2);
-#line 118 "test-place.vala"
 	unity_place_controller_remove_entry (ctl, entry_path1);
-#line 119 "test-place.vala"
 	g_assert (unity_place_controller_num_entries (ctl) == 1);
-#line 120 "test-place.vala"
 	g_assert ((_tmp6_ = unity_place_controller_get_entry (ctl, entry_path1)) == NULL);
-#line 320 "test-place.c"
 	_g_object_unref0 (_tmp6_);
-#line 121 "test-place.vala"
 	g_assert ((_tmp7_ = unity_place_controller_get_entry (ctl, entry_path2)) == entry2);
-#line 324 "test-place.c"
 	_g_object_unref0 (_tmp7_);
-#line 123 "test-place.vala"
 	unity_place_controller_remove_entry (ctl, entry_path2);
-#line 124 "test-place.vala"
 	g_assert (unity_place_controller_num_entries (ctl) == 0);
-#line 125 "test-place.vala"
 	g_assert ((_tmp8_ = unity_place_controller_get_entry (ctl, entry_path1)) == NULL);
-#line 332 "test-place.c"
 	_g_object_unref0 (_tmp8_);
-#line 126 "test-place.vala"
 	g_assert ((_tmp9_ = unity_place_controller_get_entry (ctl, entry_path2)) == NULL);
-#line 336 "test-place.c"
 	_g_object_unref0 (_tmp9_);
-#line 128 "test-place.vala"
 	entry_paths = (_tmp11_ = unity_place_controller_get_entry_paths (ctl, &_tmp10_), entry_paths = (_vala_array_free (entry_paths, entry_paths_length1, (GDestroyNotify) g_free), NULL), entry_paths_length1 = _tmp10_, _entry_paths_size_ = entry_paths_length1, _tmp11_);
-#line 129 "test-place.vala"
 	g_assert (entry_paths_length1 == 0);
-#line 131 "test-place.vala"
 	entries = (_tmp13_ = unity_place_controller_get_entries (ctl, &_tmp12_), entries = (_vala_array_free (entries, entries_length1, (GDestroyNotify) g_object_unref), NULL), entries_length1 = _tmp12_, _entries_size_ = entries_length1, _tmp13_);
-#line 132 "test-place.vala"
 	g_assert (entries_length1 == 0);
-#line 346 "test-place.c"
 	_g_free0 (entry_path1);
 	_g_free0 (entry_path2);
 	_g_object_unref0 (entry1);
@@ -358,45 +266,27 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-#line 135 "test-place.vala"
 void unity_tests_unit_place_suite_test_local_models (void) {
-#line 364 "test-place.c"
 	UnityPlaceEntryInfo* entry;
 	DeeModel* sections_model;
 	UnityPlaceRendererInfo* renderer;
 	DeeModel* groups_model;
 	DeeModel* results_model;
-#line 137 "test-place.vala"
 	entry = unity_place_entry_info_new ("/foo/bar");
-#line 138 "test-place.vala"
 	sections_model = (DeeModel*) ((DeeSequenceModel*) dee_sequence_model_new ((guint) 2, G_TYPE_STRING, G_TYPE_STRING, NULL));
-#line 141 "test-place.vala"
 	unity_place_entry_info_set_sections_model (entry, sections_model);
-#line 142 "test-place.vala"
 	g_assert (unity_place_entry_info_get_sections_model (entry) == sections_model);
-#line 143 "test-place.vala"
 	g_assert (dee_model_get_n_rows (sections_model) == 0);
-#line 145 "test-place.vala"
 	renderer = _g_object_ref0 (unity_place_entry_info_get_entry_renderer_info (entry));
-#line 146 "test-place.vala"
 	g_assert (UNITY_PLACE_IS_RENDERER_INFO (renderer));
-#line 147 "test-place.vala"
 	groups_model = (DeeModel*) ((DeeSequenceModel*) dee_sequence_model_new ((guint) 3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, NULL));
-#line 151 "test-place.vala"
 	unity_place_renderer_info_set_groups_model (renderer, groups_model);
-#line 152 "test-place.vala"
 	g_assert (unity_place_renderer_info_get_groups_model (renderer) == groups_model);
-#line 153 "test-place.vala"
 	g_assert (dee_model_get_n_rows (groups_model) == 0);
-#line 155 "test-place.vala"
 	results_model = (DeeModel*) ((DeeSequenceModel*) dee_sequence_model_new ((guint) 6, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, NULL));
-#line 162 "test-place.vala"
 	unity_place_renderer_info_set_results_model (renderer, results_model);
-#line 163 "test-place.vala"
 	g_assert (unity_place_renderer_info_get_results_model (renderer) == results_model);
-#line 164 "test-place.vala"
 	g_assert (dee_model_get_n_rows (results_model) == 0);
-#line 400 "test-place.c"
 	_g_object_unref0 (entry);
 	_g_object_unref0 (sections_model);
 	_g_object_unref0 (renderer);
