@@ -1,6 +1,6 @@
 m4_define([unity_major], [0])
 m4_define([unity_minor], [2])
-m4_define([unity_micro], [7])
+m4_define([unity_micro], [8])
 
 m4_define([unity_api],
           [unity_major.unity_minor])
@@ -92,7 +92,7 @@ AC_SUBST(MAINTAINER_VALAFLAGS)
 dnl Check for module and library dependancies
 GLIB_REQUIRED=2.22
 GTK_REQUIRED=2.18
-PKG_CHECK_MODULES(BASE,                  
+PKG_CHECK_MODULES(BASE,
                   clutter-1.0 >= 1.0
                   clutter-gtk-0.10 >= 0.10
                   clutk-0.3 >= 0.3.26
