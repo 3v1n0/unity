@@ -32,7 +32,7 @@ Comment=A Chromium Webapp
 Terminal=false
 X-MultipleArgs=false
 Type=Application
-Icon=%s
+Icon=emblem-web
 Categories=Network;
 MimeType=text/html;
 StartupWMClass=Chromium
@@ -56,7 +56,7 @@ StartupNotify=true
       this.name = split_url[1];
 
       try {
-        var regex = new Regex ("(/)");
+        var regex = new Regex ("(\\?|/|~|=)");
         name = regex.replace (name, -1, 0, "-");
       } catch (RegexError e) {
         warning ("%s", e.message);
