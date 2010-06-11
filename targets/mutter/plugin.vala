@@ -128,6 +128,8 @@ namespace Unity
     private Panel.View         panel;
     private ActorBlur          actor_blur;
     private Clutter.Rectangle  dark_box;
+    private unowned Mutter.MetaWindow?  focus_window = null;
+    private unowned Mutter.MetaDisplay? display = null;
 
     private bool     places_enabled = false;
 
@@ -152,8 +154,6 @@ namespace Unity
     private bool grab_enabled = false;
     private DBus.Connection screensaver_conn;
     private dynamic DBus.Object screensaver;
-
-    private unowned Mutter.Window? active_window = null;
 
     construct
     {
@@ -293,6 +293,25 @@ namespace Unity
       this.ensure_input_region ();
       return false;
     }
+    
+    private void on_focus_window_changed ()
+    {
+      check_fullscreen_obstruction ();
+      
+      if (focus_window != null)
+        {
+          focus_window.notify["fullscreen"].disconnect (on_focus_window_fullscreen_changed);
+        }
+      
+      display.get ("focus-window", ref focus_window);
+      focus_window.notify["fullscreen"].connect (on_focus_window_fullscreen_changed);
+    }
+    
+    private void on_focus_window_fullscreen_changed ()
+    {
+      warning ("FOCUS WINDOW FULLSCREEN CHANGED");
+      check_fullscreen_obstruction ();
+    }
 
     private void got_screensaver_changed (dynamic DBus.Object screensaver, bool changed)
     {
@@ -317,12 +336,21 @@ namespace Unity
     {
       Mutter.Window focus = null;
       bool fullscreen = false;
-
+      
+      // prevent segfault when mutter beats us to the initialization punch
+      if (!(launcher is Launcher.Launcher) || !(panel is Clutter.Actor))
+        return;
+      
       unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
       foreach (Mutter.Window w in mutter_windows)
         {
-          if (Mutter.MetaWindow.has_focus (w.get_meta_window ()))
-            focus = w;
+          unowned Mutter.MetaWindow meta = w.get_meta_window ();
+          
+          if (meta != null && Mutter.MetaWindow.has_focus (w.get_meta_window ()))
+            {  
+              focus = w;
+              break;
+            }
         }
       
       if (focus == null)
@@ -675,6 +703,12 @@ namespace Unity
     {
       this.maximus.process_window (window);
       this.window_mapped (this, window);
+      
+      if (display == null)
+        {
+          display = Mutter.MetaWindow.get_display (window.get_meta_window ());
+          display.notify["focus-window"].connect (on_focus_window_changed);
+        }
     }
 
     public void destroy (Mutter.Window window)
