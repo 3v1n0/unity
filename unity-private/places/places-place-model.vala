@@ -91,7 +91,10 @@ namespace Unity.Places
                 var place = load_place (Path.build_filename (directory,
                                                              info.get_name ()));
                 if (place is Place)
-                  add (place);
+                  {
+                    place.connect ();
+                    add (place);
+                  }
               }
           }
 

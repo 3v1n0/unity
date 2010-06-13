@@ -282,3 +282,5 @@ unity/unity-place.c
 unity-private/places/places-place-entry.c
 unity-private/places/places-place-model.c
 tests/unit/test-places-place.c
+unity.pc
+tests/ui/test-indicators.c
