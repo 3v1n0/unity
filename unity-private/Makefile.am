@@ -85,6 +85,7 @@ panel_sources = \
 
 places_sources = \
   places/places-controller.vala \
+  places/places-place-bar.vala \
   places/places-place-entry.vala \
   places/places-place-model.vala \
   places/places-place.vala \
