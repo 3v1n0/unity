@@ -120,7 +120,6 @@ namespace Unity
     private Maximus          maximus;
 
     /* Unity Components */
-    private Background         background;
     private ExposeManager      expose_manager;
     private Launcher.Launcher  launcher;
     private Places.Controller  places_controller;
@@ -232,11 +231,6 @@ namespace Unity
       this.places_enabled = envvar_is_enabled ("UNITY_ENABLE_PLACES");
 
       Clutter.Group window_group = (Clutter.Group) this.plugin.get_window_group ();
-
-      this.background = new Background ();
-      this.stage.add_actor (background);
-      this.background.lower_bottom ();
-      this.background.show ();
 
       this.launcher = new Launcher.Launcher (this);
       this.launcher.get_view ().opacity = 0;
@@ -381,9 +375,6 @@ namespace Unity
       this.drag_dest.resize (this.QUICKLAUNCHER_WIDTH,
                              (int)height - this.PANEL_HEIGHT);
       this.drag_dest.move (0, this.PANEL_HEIGHT);
-
-      this.background.set_size (width, height);
-      this.background.set_position (0, 0);
 
       this.launcher.get_view ().set_size (this.QUICKLAUNCHER_WIDTH,
                                    (height-this.PANEL_HEIGHT));
