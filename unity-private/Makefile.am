@@ -92,7 +92,6 @@ places_sources = \
   places/places-place-model.vala \
   places/places-place-view.vala \
   places/places-place.vala \
-  places/places-model.vala \
   places/places-view.vala
 
 launcher_sources = \
