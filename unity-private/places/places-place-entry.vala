@@ -63,6 +63,18 @@ namespace Unity.Places
     public bool    show_global { get; construct set; }
     public bool    show_entry  { get; construct set; }
 
+    private bool _active = false;
+    public bool active {
+      get { return _active; }
+      set {
+        if (_active != value)
+          {
+            _active = value;
+            service.set_active (_active);
+          }
+      }
+    }
+
     /* Whether the Entry is available on the bus, this is only when we want to
      * do optimisations for startup (showing the entries before actually
      * starting the daemon. We can also abuse this for testing :)

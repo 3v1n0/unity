@@ -24,6 +24,8 @@ namespace Unity.Places
     /* Properties */
     public Place place { get; construct; }
 
+    public signal void entry_activated (PlaceEntryView entry_view);
+
     public PlaceView (Place place)
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
@@ -39,7 +41,20 @@ namespace Unity.Places
           var view = new PlaceEntryView (entry);
           add_actor (view);
           view.show ();
+
+          view.button_release_event.connect (on_entry_clicked);
         }
+    }
+
+    private bool on_entry_clicked (Clutter.Actor view,
+                                   Clutter.Event e)
+    {
+      if (e.button.button != 1)
+        return true;
+
+      entry_activated (view as PlaceEntryView);
+
+      return false;
     }
   }
 }

@@ -217,6 +217,9 @@ namespace Unity.Testing
                                           height - Unity.Panel.PANEL_HEIGHT);
       this.launcher.get_view ().set_position (0, Unity.Panel.PANEL_HEIGHT);
 
+      this.launcher.get_view ().set_clip (0, 0,
+                                          ql_width, height);
+
       if (this.places_enabled)
         {
           this.places.set_size (width, height);
