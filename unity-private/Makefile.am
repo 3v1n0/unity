@@ -74,6 +74,7 @@ private_sources = \
 panel_sources = \
   panel/panel-background.vala \
   panel/panel-home-button.vala \
+  panel/panel-indicator-background.vala \
   panel/panel-indicator-bar.vala \
   panel/panel-indicator-model.vala \
   panel/panel-indicator-object-entry-view.vala \
@@ -86,8 +87,10 @@ panel_sources = \
 places_sources = \
   places/places-controller.vala \
   places/places-place-bar.vala \
+  places/places-place-entry-view.vala \
   places/places-place-entry.vala \
   places/places-place-model.vala \
+  places/places-place-view.vala \
   places/places-place.vala \
   places/places-model.vala \
   places/places-view.vala

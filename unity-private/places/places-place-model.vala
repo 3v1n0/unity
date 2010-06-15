@@ -93,6 +93,7 @@ namespace Unity.Places
                 if (place is Place)
                   {
                     place.connect ();
+                    (place as GLib.Object).ref ();
                     add (place);
                   }
               }

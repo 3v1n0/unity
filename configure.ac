@@ -1,6 +1,6 @@
 m4_define([unity_major], [0])
 m4_define([unity_minor], [2])
-m4_define([unity_micro], [7])
+m4_define([unity_micro], [9])
 
 m4_define([unity_api],
           [unity_major.unity_minor])
@@ -53,7 +53,7 @@ IT_PROG_INTLTOOL([0.35.0])
 dnl Check for perceptualdiff
 AC_CHECK_PROG(HAVE_IMAGEDIFF, perceptualdiff, true, false)
 if test "x${HAVE_IMAGEDIFF}" = "xfalse"; then
-  AC_MSG_ERROR([*** `perceptualdiff` not found, required for UI tests])
+  AC_MSG_WARN([*** `perceptualdiff` not found, required for UI tests])
 fi
 
 dnl Setup a few consts
@@ -92,7 +92,7 @@ AC_SUBST(MAINTAINER_VALAFLAGS)
 dnl Check for module and library dependancies
 GLIB_REQUIRED=2.22
 GTK_REQUIRED=2.18
-PKG_CHECK_MODULES(BASE,                  
+PKG_CHECK_MODULES(BASE,
                   clutter-1.0 >= 1.0
                   clutter-gtk-0.10 >= 0.10
                   clutk-0.3 >= 0.3.26
@@ -107,7 +107,6 @@ PKG_CHECK_MODULES(BASE,
                   gconf-2.0
                   indicator
                   libbamf >= 0.2
-                  libwnck-1.0 >= 2.28.0
                   unique-1.0
                   unity-misc
                   x11)

@@ -19,19 +19,28 @@
 
 namespace Unity.Places
 {
-  public interface PlaceView : Clutter.Actor
+  public class PlaceView : Ctk.Box
   {
-    /**
-     * This interface should be implemented by any view that represents a
-     * place. This allows the place to request a view over dbus by the
-     * (hopefully) unique name of the view, together with a bunch of properties
-     * that it wants to set on the view (to basically initialise the view).
-     *
-     * The interface is very, very small, but it needs to be done so we can, in
-     * the future, load in views from dynamic modules installed by the places
-     **/
+    /* Properties */
+    public Place place { get; construct; }
 
-    public abstract void init_with_properties (HashTable<string, string> props);
+    public PlaceView (Place place)
+    {
+      Object (orientation:Ctk.Orientation.HORIZONTAL,
+              place:place,
+              spacing:0);
+
+    }
+
+    construct
+    {
+      foreach (PlaceEntry entry in place.get_entries ())
+        {
+          var view = new PlaceEntryView (entry);
+          add_actor (view);
+          view.show ();
+        }
+    }
   }
 }
 

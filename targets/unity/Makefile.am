@@ -44,7 +44,6 @@ unity_VALAFLAGS = \
   --pkg x11 \
   --pkg gtk+-2.0 \
   --pkg gee-1.0 \
-  --pkg libwnck-1.0 \
   --pkg unique-1.0 \
   --pkg unity \
   --pkg unity-const \

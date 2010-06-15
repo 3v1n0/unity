@@ -223,7 +223,7 @@ namespace Unity.Launcher
     {
       progress = get_ease_out_sine (progress);
       processed_icon.set_rotation (Clutter.RotateAxis.Z_AXIS, progress * WIGGLE_SIZE,
-                                   24.0f, 24.0f, 0.0f);
+                                   25.0f, 25.0f, 0.0f);
       previous_wiggle_alpha = progress;
       if (progress >= 1.0)
         {
@@ -250,7 +250,7 @@ namespace Unity.Launcher
       progress = get_circular_alpha (Math.fmodf (progress * frequency, 1.0f));
       progress = (1.0f - progress) * 2.0f - 1.0f;
       processed_icon.set_rotation (Clutter.RotateAxis.Z_AXIS, progress * WIGGLE_SIZE,
-                                   24.0f, 24.0f, 0.0f);
+                                   25.0f, 25.0f, 0.0f);
       processed_icon.do_queue_redraw ();
       previous_wiggle_alpha = progress;
 
@@ -273,7 +273,7 @@ namespace Unity.Launcher
       float alpha_length = previous_wiggle_alpha;
       float angle = alpha_length - (progress * alpha_length);
       processed_icon.set_rotation (Clutter.RotateAxis.Z_AXIS, angle,
-                                   24.0f, 24.0f, 0.0f);
+                                   25.0f, 25.0f, 0.0f);
 
       if (progress >= 1.0)
         {
@@ -424,10 +424,8 @@ namespace Unity.Launcher
                                                out float minimum_height,
                                                out float natural_height)
     {
-      float nat, min;
-      processed_icon.get_preferred_height (for_width, out min, out nat);
-      natural_height = nat;
-      minimum_height = min;
+      natural_height = 48;
+      minimum_height = 48;
     }
 
     public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags)

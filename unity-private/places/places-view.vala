@@ -25,14 +25,14 @@ namespace Unity.Places
     private PlaceModel _model;
 
     /* Properties */
-    public Shell shell {
-      get;
-      construct;
-    }
+    public Shell shell { get; construct; }
+
     public PlaceModel model {
       get { return _model; }
       set { _model = value; }
     }
+
+    private PlaceBar place_bar;
 
     public View (Shell shell)
     {
@@ -42,6 +42,14 @@ namespace Unity.Places
     construct
     {
       _model = new PlaceFileModel () as PlaceModel;
+
+      Idle.add (() => {
+        place_bar = new PlaceBar (shell, _model);
+        pack (place_bar, false, true);
+        place_bar.show ();
+
+        return false;
+      });
     }
   }
 }

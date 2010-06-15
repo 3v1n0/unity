@@ -39,7 +39,6 @@ test_unit_VALAFLAGS = \
   --pkg indicator \
   --pkg clutk-0.3 \
   --pkg launcher-0.3 \
-  --pkg libwnck-1.0 \
   --pkg posix \
   --pkg test-const \
   --pkg unique-1.0 \

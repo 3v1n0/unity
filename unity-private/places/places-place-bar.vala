@@ -29,12 +29,39 @@ namespace Unity.Places
     {
       Object (shell:shell,
               model:model,
-              orientation:Ctk.Orientation.HORIZONTAL);
+              orientation:Ctk.Orientation.HORIZONTAL,
+              homogeneous:false,
+              spacing:0);
     }
 
     construct
     {
+      foreach (Place place in model)
+        {
+          var view = new PlaceView (place);
+          pack (view, false, true);
+          view.show ();
+        }
+    }
 
+    private override void allocate (Clutter.ActorBox        box,
+                                    Clutter.AllocationFlags flags)
+    {
+      padding = {
+        0.0f,
+        (float)shell.get_indicators_width (),
+        0.0f,
+        (float)shell.get_launcher_width_foobar ()};
+
+      base.allocate (box, flags);
+    }
+
+    private override void get_preferred_height (float     for_width,
+                                                out float min_height,
+                                                out float nat_height)
+    {
+      min_height = 56.0f;
+      nat_height = 56.0f;
     }
   }
 }

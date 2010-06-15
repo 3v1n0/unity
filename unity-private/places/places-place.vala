@@ -92,6 +92,11 @@ namespace Unity.Places
       }
     }
 
+    public unowned ArrayList<PlaceEntry> get_entries ()
+    {
+      return entries_array;
+    }
+
     public PlaceEntry? get_nth_entry (int index)
     {
       return entries_array.get (index);
