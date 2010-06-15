@@ -57,7 +57,7 @@ namespace Unity.Places
     public string[] mimetypes { get; set; }
     public bool     sensitive { get; set; }
 
-    public string   sections_model { get; set; }
+    public string   sections_model_name { get; set; }
     public HashTable<string, string> hints { get; set; }
 
     public bool    show_global { get; construct set; }
@@ -72,6 +72,24 @@ namespace Unity.Places
             _active = value;
             service.set_active (_active);
           }
+      }
+    }
+
+    private Dee.Model? _sections_model = null;
+    public Dee.Model? sections_model {
+      get {
+        if (_sections_model is Dee.Model == false)
+          {
+            if (sections_model_name != null)
+              {
+                _sections_model = new Dee.SharedModel.with_name (sections_model_name);
+                (_sections_model as Dee.SharedModel).connect ();
+              }
+          }
+        return _sections_model;
+      }
+      set {
+        _sections_model = value;
       }
     }
 
@@ -122,10 +140,8 @@ namespace Unity.Places
       icon = value_array.get_nth (2).get_string ();
       position = value_array.get_nth (3).get_uint ();
       sensitive = value_array.get_nth (5).get_boolean ();
-      sections_model = value_array.get_nth (6).get_string ();
+      sections_model_name = value_array.get_nth (6).get_string ();
       /* FIXME: Need to unmarshal the rest of the data too */
-
-      print (@"$name, $icon, $position, $sensitive, $sections_model\n");
     }
 
     public new void connect ()

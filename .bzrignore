@@ -306,3 +306,5 @@ places/search-field.c
 unity-private/panel/panel-indicator-background.c
 unity-private/places/places-place-bar.c
 unity-private/places/places-place-entry-view.c
+unity-private/places/places-place-search-bar.cunity-private/places/places-place-search-bar.c
+unity-private/places/places-place-search-bar.c

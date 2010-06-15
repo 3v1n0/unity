@@ -22,6 +22,7 @@ namespace Unity.Places
   public class PlaceEntryView : Ctk.Image
   {
     static const int WIDTH = 80;
+
     /* Properties */
     public PlaceEntry entry { get; construct; }
 

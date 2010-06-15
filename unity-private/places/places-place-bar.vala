@@ -29,6 +29,8 @@ namespace Unity.Places
     private Ctk.EffectGlow     glow;
     private PlaceEntryView     active_view = null;
 
+    public signal void entry_view_activated (PlaceEntryView view, int x);
+
     public PlaceBar (Shell shell, PlaceModel model)
     {
       Object (shell:shell,
@@ -88,14 +90,14 @@ namespace Unity.Places
           active_view.entry.active = false;
         }
 
-      if (entry_view is PlaceEntryView)
-        {
-          active_view = entry_view;
-          active_view.entry.active = true;
-          bg.entry_position = (int)(view.x + entry_view.x);
+        active_view = entry_view;
+        active_view.entry.active = true;
+        bg.entry_position = (int)(view.x + entry_view.x);
 
-          glow.set_invalidate_effect_cache (true);
-        }
+        glow.set_invalidate_effect_cache (true);
+
+        entry_view_activated (entry_view,
+                              bg.entry_position + (PlaceEntryView.WIDTH/2));
     }
   }
 

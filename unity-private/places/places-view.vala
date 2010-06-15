@@ -32,7 +32,11 @@ namespace Unity.Places
       set { _model = value; }
     }
 
-    private PlaceBar place_bar;
+    private PlaceBar       place_bar;
+
+    private Ctk.VBox       content_box;
+
+    private PlaceSearchBar search_bar;
 
     public View (Shell shell)
     {
@@ -48,8 +52,35 @@ namespace Unity.Places
         pack (place_bar, false, true);
         place_bar.show ();
 
+        place_bar.entry_view_activated.connect (on_entry_view_activated);
+
+        content_box = new Ctk.VBox (12);
+        content_box.padding = {
+          0.0f,
+          8.0f,
+          0.0f,
+          shell.get_launcher_width_foobar () + 8.0f
+        };
+        pack (content_box, true, true);
+        content_box.show ();
+
+        search_bar = new PlaceSearchBar ();
+        content_box.pack (search_bar, false, true);
+        search_bar.show ();
+
         return false;
       });
+    }
+
+    private void on_entry_view_activated (PlaceEntryView entry_view, int x)
+    {
+      /* Create the correct results view */
+
+      /* Update the search bar */
+      search_bar.set_active_entry_view (entry_view.entry,
+                                        x
+                                          - shell.get_launcher_width_foobar ()
+                                          - 8);
     }
   }
 }
