@@ -392,7 +392,7 @@ namespace Unity
       Cogl.Matrix projection = Cogl.Matrix.identity (); // projection matrix
       //projection.frustum (-25.0f, 25.0f, -25.0f, 25.0f, -100.0f, 100.0f);
       projection.perspective (90.0f, 1.0f, 0.1f, 100.0f);
-      modelview.translate (0.0f, 0.0f, -25.0f);
+      //modelview.translate (0.0f, 0.0f, -25.0f);
       modelview.rotate (self.rotation, 1.0f, 0.0f, 0.0f);
 
       Cogl.Matrix viewmatrix = Cogl.Matrix.multiply (projection, modelview);
