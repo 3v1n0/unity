@@ -173,6 +173,7 @@ namespace Unity.Launcher
       rotation = degrees;
       rotate_state = AnimState.STOPPED;
       rotate_timeline.stop ();
+      do_queue_redraw ();
     }
 
     private void on_glow_timeline_new_frame ()
@@ -365,6 +366,7 @@ namespace Unity.Launcher
 
           processed_icon = new UnityIcon (tex as Clutter.Texture, color as Clutter.Texture);
           processed_icon.set_parent (this);
+          processed_icon.rotation = rotation;
 
           this.effect_drop_shadow = new Ctk.EffectDropShadow (5.0f, 0, 2);
           effect_drop_shadow.set_opacity (0.4f);
@@ -404,18 +406,11 @@ namespace Unity.Launcher
 
     private void on_rotation_changed ()
     {
-      //float null_x;
-      //old_rotate_value = (float)processed_icon.get_rotation (Clutter.RotateAxis.X_AXIS, out null_x, out null_x, out null_x);
-
       old_rotate_value = processed_icon.rotation;
       if (rotate_timeline.is_playing ())
         {
           rotate_timeline.stop ();
           processed_icon.rotation = old_rotate_value;
-/*
-          processed_icon.set_rotation (Clutter.RotateAxis.X_AXIS, old_rotate_value,
-                                       0.0f, 24.0f, 0.0f);
-*/
         }
 
       rotate_timeline.set_duration (300);

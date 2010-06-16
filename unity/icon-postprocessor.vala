@@ -390,7 +390,6 @@ namespace Unity
 
       Cogl.Matrix modelview = Cogl.Matrix.identity (); //model view matrix
       Cogl.Matrix projection = Cogl.Matrix.identity (); // projection matrix
-      //projection.frustum (-25.0f, 25.0f, -25.0f, 25.0f, -100.0f, 100.0f);
       projection.perspective (60.0f, 1.0f, 0.1f, 100.0f);
       modelview.translate (0.0f, 0.0f, -44.0f - Math.fabsf (self.rotation / 360.0f) * 100);
       modelview.rotate (self.rotation, 1.0f, 0.0f, 0.0f);
@@ -471,19 +470,6 @@ namespace Unity
       xpad = 1 + (box.get_width () - base_width) / 2.0f;
       ypad = ((box.get_height () - base_height) / 2.0f) - 1;
 
-/*
-      base_height /= 2;
-      base_width /= 2;
-*/
-
-/*
-      p1_x =  -base_width - xpad; p1_y = -base_height - ypad;
-      p2_x =   base_width + xpad; p2_y = -base_height - ypad;
-      p3_x =   base_width + xpad; p3_y =  base_height + ypad;
-      p4_x =  -base_width - xpad; p4_y =  base_height + ypad;
-      z = 0.0f;
-      w = 0.0f;
-*/
       p1_x = -25.0f; p1_y = -25.0f;
       p2_x =  25.0f; p2_y = -25.0f;
       p3_x =  25.0f; p3_y =  25.0f;

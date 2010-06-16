@@ -85,7 +85,7 @@ namespace Unity.Launcher
     private uint stored_delta = 0;
     private float scroll_speed = 0.0f; // the current speed (pixels/per second) that we are scrolling
 
-    private float contract_icon_degrees = 45.0f;
+    private float contract_icon_degrees = 30.0f;
     private int focused_launcher = 0;
 
     /* helps out with draw order */
@@ -193,6 +193,7 @@ namespace Unity.Launcher
     private void move_scroll_position (float pixels)
     {
       scroll_position += pixels;
+      order_children (true);
       queue_relayout ();
     }
 
@@ -332,7 +333,7 @@ namespace Unity.Launcher
       var old_scroll_position = scroll_position;
       scroll_position = 0;
       order_children (true);
-      var new_scroll_position = model[index].position - event.crossing.y;
+      var new_scroll_position = -model[index].position + event.crossing.y;
 
       //reset our view so that we animate cleanly to the new view
       view_type = ScrollerViewType.CONTRACTED;
@@ -657,7 +658,7 @@ namespace Unity.Launcher
       {
         child.get_preferred_height (get_width (), out min_height, out nat_height);
         var transition = new ChildTransition ();
-        transition.position = h - scroll_position;
+        transition.position = h + scroll_position;
         transition.rotation = 0.0f;
         ret_transitions.add (transition);
         if (!(child in draw_ftb || child in draw_ftb))
