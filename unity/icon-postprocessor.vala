@@ -411,8 +411,8 @@ namespace Unity
 
       Cogl.TextureVertex[4] points = {
         Cogl.TextureVertex () {
-          x = p1_x,
-          y = p1_y + 25,
+          x = (p1_x * 50.0f),
+          y = (p1_y * 50.0f) + 25,
           z = 0.0f,
           tx = 0.0f,
           ty = 0.0f,
@@ -424,8 +424,8 @@ namespace Unity
           }
         },
         Cogl.TextureVertex () {
-          x = p2_x,
-          y = p2_y + 25,
+          x = (p2_x * 50.0f),
+          y = (p2_y * 50.0f) + 25,
           z = 0.0f,
           tx = 1.0f,
           ty = 0.0f,
@@ -437,8 +437,8 @@ namespace Unity
           }
         },
         Cogl.TextureVertex () {
-          x = p3_x,
-          y = p3_y + 25,
+          x = (p3_x * 50.0f),
+          y = (p3_y * 50.0f) + 25,
           z = 0.0f,
           tx = 1.0f,
           ty = 1.0f,
@@ -450,8 +450,8 @@ namespace Unity
           }
         },
         Cogl.TextureVertex () {
-          x = p4_x,
-          y = p4_y + 25,
+          x = (p4_x * 50.0f),
+          y = (p4_y * 50.0f) + 25,
           z = 0.0f,
           tx = 0.0f,
           ty = 1.0f,
