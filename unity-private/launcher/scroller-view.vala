@@ -321,6 +321,7 @@ namespace Unity.Launcher
 
     private bool on_enter_event (Clutter.Event event)
     {
+      debug (@"got enter event at $(event.crossing.y)");
       if (view_type == ScrollerViewType.EXPANDED) return false;
       view_type = ScrollerViewType.EXPANDED;
 
@@ -352,6 +353,7 @@ namespace Unity.Launcher
 
     private bool on_leave_event (Clutter.Event event)
     {
+      debug (@"got leave event at $(event.crossing.y)");
       if (view_type == ScrollerViewType.CONTRACTED) return false;
       if (event.crossing.x < get_width ()) return false;
 
