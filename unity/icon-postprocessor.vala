@@ -391,8 +391,8 @@ namespace Unity
       Cogl.Matrix modelview = Cogl.Matrix.identity (); //model view matrix
       Cogl.Matrix projection = Cogl.Matrix.identity (); // projection matrix
       //projection.frustum (-25.0f, 25.0f, -25.0f, 25.0f, -100.0f, 100.0f);
-      projection.perspective (45.0f, 1.0f, 0.1f, 100.0f);
-      modelview.translate (0.0f, 0.0f, -50.0f);
+      projection.perspective (60.0f, 1.0f, 0.1f, 100.0f);
+      modelview.translate (0.0f, 0.0f, -44.0f - Math.fabsf (self.rotation / 360.0f) * 100);
       modelview.rotate (self.rotation, 1.0f, 0.0f, 0.0f);
 
       Cogl.Matrix viewmatrix = Cogl.Matrix.multiply (projection, modelview);
@@ -411,8 +411,8 @@ namespace Unity
 
       Cogl.TextureVertex[4] points = {
         Cogl.TextureVertex () {
-          x = 48 * (p1_x + 1) / 2,
-          y = 48 * (p1_y - 1) / 2,
+          x = (50 * (p1_x + 1) / 2),
+          y = 48 + (50 * (p1_y - 1) / 2),
           z = 0.0f,
           tx = 0.0f,
           ty = 0.0f,
@@ -424,8 +424,8 @@ namespace Unity
           }
         },
         Cogl.TextureVertex () {
-          x = 48 * (p2_x + 1) / 2,
-          y = 48 * (p2_y - 1) / 2,
+          x = (50 * (p2_x + 1) / 2),
+          y = 48 + (50 * (p2_y - 1) / 2),
           z = 0.0f,
           tx = 1.0f,
           ty = 0.0f,
@@ -437,8 +437,8 @@ namespace Unity
           }
         },
         Cogl.TextureVertex () {
-          x = 48 * (p3_x + 1) / 2,
-          y = 48 * (p3_y - 1) / 2,
+          x = (50 * (p3_x + 1) / 2),
+          y = 48 + (50 * (p3_y - 1) / 2),
           z = 0.0f,
           tx = 1.0f,
           ty = 1.0f,
@@ -450,8 +450,8 @@ namespace Unity
           }
         },
         Cogl.TextureVertex () {
-          x = 48 * (p4_x + 1) / 2,
-          y = 48 * (p4_y - 1) / 2,
+          x = (50 * (p4_x + 1) / 2),
+          y = 48 + (50 * (p4_y - 1) / 2),
           z = 0.0f,
           tx = 0.0f,
           ty = 1.0f,
@@ -468,27 +468,37 @@ namespace Unity
       int base_width, base_height;
       float xpad, ypad;
       self.icon.get_base_size (out base_width, out base_height);
-      xpad = (box.get_width () - base_width) / 2.0f;
-      ypad = (box.get_height () - base_height) / 2.0f;
+      xpad = 1 + (box.get_width () - base_width) / 2.0f;
+      ypad = ((box.get_height () - base_height) / 2.0f) - 1;
 
+/*
       base_height /= 2;
+      base_width /= 2;
+*/
 
-      p1_x =  xpad;               p1_y = -base_height;// + ypad;
-      p2_x =  base_width + xpad;  p2_y = -base_height;//ypad;
-      p3_x =  base_width + xpad;  p3_y = base_height;// + ypad;
-      p4_x =  xpad;               p4_y = base_height;// + ypad;
+/*
+      p1_x =  -base_width - xpad; p1_y = -base_height - ypad;
+      p2_x =   base_width + xpad; p2_y = -base_height - ypad;
+      p3_x =   base_width + xpad; p3_y =  base_height + ypad;
+      p4_x =  -base_width - xpad; p4_y =  base_height + ypad;
       z = 0.0f;
       w = 0.0f;
+*/
+      p1_x = -25.0f; p1_y = -25.0f;
+      p2_x =  25.0f; p2_y = -25.0f;
+      p3_x =  25.0f; p3_y =  25.0f;
+      p4_x = -25.0f; p4_y =  25.0f;
+      z = 0.0f;
+      w = 1.0f;
 
-      viewmatrix.transform_point (out p1_x, out p1_y, out z, out w); z = 0.0f; w = 0.0f;
-      viewmatrix.transform_point (out p2_x, out p2_y, out z, out w); z = 0.0f; w = 0.0f;
-      viewmatrix.transform_point (out p3_x, out p3_y, out z, out w); z = 0.0f; w = 0.0f;
-      viewmatrix.transform_point (out p4_x, out p4_y, out z, out w); z = 0.0f; w = 0.0f;
-
+      viewmatrix.transform_point (out p1_x, out p1_y, out z, out w); p1_x /= w; p1_y /= w; z = 0.0f; w = 1.0f;
+      viewmatrix.transform_point (out p2_x, out p2_y, out z, out w); p2_x /= w; p2_y /= w; z = 0.0f; w = 1.0f;
+      viewmatrix.transform_point (out p3_x, out p3_y, out z, out w); p3_x /= w; p3_y /= w; z = 0.0f; w = 1.0f;
+      viewmatrix.transform_point (out p4_x, out p4_y, out z, out w); p4_x /= w; p4_y /= w; z = 0.0f; w = 1.0f;
       Cogl.TextureVertex[4] icon_points = {
-        Cogl.TextureVertex () {
-          x = p1_x,
-          y = p1_y + base_height + ypad,
+         Cogl.TextureVertex () {
+          x = xpad +(base_width * (p1_x + 1) / 2),
+          y = (48 - ypad) + (base_height * (p1_y - 1) / 2),
           z = 0.0f,
           tx = 0.0f,
           ty = 0.0f,
@@ -500,8 +510,8 @@ namespace Unity
           }
         },
         Cogl.TextureVertex () {
-          x = p2_x,
-          y = p2_y + base_height + ypad,
+          x = xpad + (base_width * (p2_x + 1) / 2),
+          y = (48 - ypad) + (base_height * (p2_y - 1) / 2),
           z = 0.0f,
           tx = 1.0f,
           ty = 0.0f,
@@ -513,8 +523,8 @@ namespace Unity
           }
         },
         Cogl.TextureVertex () {
-          x = p3_x,
-          y = p3_y + base_height + ypad,
+          x = xpad + (base_width * (p3_x + 1) / 2),
+          y = (48 - ypad) + (base_height * (p3_y - 1) / 2),
           z = 0.0f,
           tx = 1.0f,
           ty = 1.0f,
@@ -526,8 +536,8 @@ namespace Unity
           }
         },
         Cogl.TextureVertex () {
-          x = p4_x,
-          y = p4_y + base_height + ypad,
+          x = xpad +(base_width * (p4_x + 1) / 2),
+          y = (48 - ypad) + (base_height * (p4_y - 1) / 2),
           z = 0.0f,
           tx = 0.0f,
           ty = 1.0f,
@@ -566,7 +576,7 @@ namespace Unity
           ypad = (box.get_height () - height) / 2.0f;
 
           Cogl.set_source (self.icon_material);
-          //Cogl.polygon (icon_points, true);
+          Cogl.polygon (icon_points, true);
         }
 
       Cogl.set_source (self.fg_mat);
