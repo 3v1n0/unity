@@ -152,7 +152,7 @@ namespace Unity.Places
 
     public void set_active_section (uint section_id)
     {
-      service.search_active_section (section_id);
+      service.set_active_section (section_id);
     }
 
     public void set_global_search (string                    search,

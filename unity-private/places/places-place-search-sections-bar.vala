@@ -73,6 +73,8 @@ namespace Unity.Places
         }
 
       model.row_added.connect (on_section_added);
+      model.row_changed.connect (on_section_changed);
+      model.row_removed.connect (on_section_removed);
     }
 
     private void on_section_added (Dee.Model model, Dee.ModelIter iter)
@@ -88,6 +90,39 @@ namespace Unity.Places
           active_section = section;
           section.active = true;
           active_entry.set_active_section (0);
+        }
+    }
+
+    private Section? get_section_for_iter (Dee.ModelIter iter)
+    {
+      GLib.List<Clutter.Actor> children = get_children ();
+      foreach (Clutter.Actor child in children)
+        {
+          Section section = child as Section;
+          if (section.iter == iter)
+            return section;
+        }
+
+      return null;
+    }
+
+    private void on_section_changed (Dee.Model model, Dee.ModelIter iter)
+    {
+
+    }
+
+    private void on_section_removed (Dee.Model model, Dee.ModelIter iter)
+    {
+      Section? section = get_section_for_iter (iter);
+
+      if (section is Section)
+        {
+          if (section == active_section)
+            {
+              active_section = get_section_for_iter (model.get_first_iter ());
+              active_entry.set_active_section (0);
+            }
+          section.destroy ();
         }
     }
 
