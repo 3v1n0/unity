@@ -404,10 +404,10 @@ namespace Unity
       z = 0.0f;
       w = 0.0f;
 
-      viewmatrix.transform_point (out p1_x, out p1_y, out z, out w); z = 0.0f; w = 0.0f;
-      viewmatrix.transform_point (out p2_x, out p2_y, out z, out w); z = 0.0f; w = 0.0f;
-      viewmatrix.transform_point (out p3_x, out p3_y, out z, out w); z = 0.0f; w = 0.0f;
-      viewmatrix.transform_point (out p4_x, out p4_y, out z, out w); z = 0.0f; w = 0.0f;
+      viewmatrix.transform_point (out p1_x, out p1_y, out z, out w); p1_x /= w; p1_y /= w; z = 0.0f; w = 0.0f;
+      viewmatrix.transform_point (out p2_x, out p2_y, out z, out w); p2_x /= w; p2_y /= w; z = 0.0f; w = 0.0f;
+      viewmatrix.transform_point (out p3_x, out p3_y, out z, out w); p3_x /= w; p3_y /= w; z = 0.0f; w = 0.0f;
+      viewmatrix.transform_point (out p4_x, out p4_y, out z, out w); p4_x /= w; p4_y /= w; z = 0.0f; w = 0.0f;
 
       Cogl.TextureVertex[4] points = {
         Cogl.TextureVertex () {
