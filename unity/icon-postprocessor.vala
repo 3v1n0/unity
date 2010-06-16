@@ -291,6 +291,8 @@ namespace Unity
     private Cogl.Material icon_material;
     private Cogl.Material bgcol_material;
 
+    public float rotation = 0.0f;
+
 
     public UnityIcon (Clutter.Texture? icon, Clutter.Texture? bg_tex)
     {
@@ -377,13 +379,167 @@ namespace Unity
     public static void paint_real (Clutter.Actor actor)
     {
       UnityIcon self = actor as UnityIcon;
+      float p1_x, p1_y;
+      float p2_x, p2_y;
+      float p3_x, p3_y;
+      float p4_x, p4_y;
+      float z, w;
 
       Clutter.ActorBox box = Clutter.ActorBox ();
       self.get_stored_allocation (out box);
 
-      /* we draw everything with cogl because Clutter.Texture seems to be made
-       * of dumb. also it likes to double allocate everything
-       */
+      Cogl.Matrix modelview = Cogl.Matrix.identity (); //model view matrix
+      Cogl.Matrix projection = Cogl.Matrix.identity (); // projection matrix
+      //projection.frustum (-25.0f, 25.0f, -25.0f, 25.0f, -100.0f, 100.0f);
+      projection.perspective (90.0f, 1.0f, 0.1f, 100.0f);
+      modelview.translate (0.0f, 0.0f, -25.0f);
+      modelview.rotate (self.rotation, 1.0f, 0.0f, 0.0f);
+
+      Cogl.Matrix viewmatrix = Cogl.Matrix.multiply (projection, modelview);
+
+      p1_x = -0.0f;  p1_y = -25.0f;
+      p2_x =  50.0f; p2_y = -25.0f;
+      p3_x =  50.0f; p3_y =  25.0f;
+      p4_x = -0.0f;  p4_y =  25.0f;
+      z = 0.0f;
+      w = 0.0f;
+
+      viewmatrix.transform_point (out p1_x, out p1_y, out z, out w); z = 0.0f; w = 0.0f;
+      viewmatrix.transform_point (out p2_x, out p2_y, out z, out w); z = 0.0f; w = 0.0f;
+      viewmatrix.transform_point (out p3_x, out p3_y, out z, out w); z = 0.0f; w = 0.0f;
+      viewmatrix.transform_point (out p4_x, out p4_y, out z, out w); z = 0.0f; w = 0.0f;
+
+      Cogl.TextureVertex[4] points = {
+        Cogl.TextureVertex () {
+          x = p1_x,
+          y = p1_y + 25,
+          z = 0.0f,
+          tx = 0.0f,
+          ty = 0.0f,
+          color = Cogl.Color () {
+            red = 0xff,
+            green = 0xff,
+            blue = 0xff,
+            alpha = 0xff
+          }
+        },
+        Cogl.TextureVertex () {
+          x = p2_x,
+          y = p2_y + 25,
+          z = 0.0f,
+          tx = 1.0f,
+          ty = 0.0f,
+          color = Cogl.Color () {
+            red = 0xff,
+            green = 0xff,
+            blue = 0xff,
+            alpha = 0xff
+          }
+        },
+        Cogl.TextureVertex () {
+          x = p3_x,
+          y = p3_y + 25,
+          z = 0.0f,
+          tx = 1.0f,
+          ty = 1.0f,
+          color = Cogl.Color () {
+            red = 0xff,
+            green = 0xff,
+            blue = 0xff,
+            alpha = 0xff
+          }
+        },
+        Cogl.TextureVertex () {
+          x = p4_x,
+          y = p4_y + 25,
+          z = 0.0f,
+          tx = 0.0f,
+          ty = 1.0f,
+          color = Cogl.Color () {
+            red = 0xff,
+            green = 0xff,
+            blue = 0xff,
+            alpha = 0xff
+          }
+        }
+      };
+
+      // we also need to transform the smaller (potentially) icon
+      int base_width, base_height;
+      float xpad, ypad;
+      self.icon.get_base_size (out base_width, out base_height);
+      xpad = (box.get_width () - base_width) / 2.0f;
+      ypad = (box.get_height () - base_height) / 2.0f;
+
+      base_height /= 2;
+
+      p1_x =  xpad;               p1_y = -base_height;// + ypad;
+      p2_x =  base_width + xpad;  p2_y = -base_height;//ypad;
+      p3_x =  base_width + xpad;  p3_y = base_height;// + ypad;
+      p4_x =  xpad;               p4_y = base_height;// + ypad;
+      z = 0.0f;
+      w = 0.0f;
+
+      viewmatrix.transform_point (out p1_x, out p1_y, out z, out w); z = 0.0f; w = 0.0f;
+      viewmatrix.transform_point (out p2_x, out p2_y, out z, out w); z = 0.0f; w = 0.0f;
+      viewmatrix.transform_point (out p3_x, out p3_y, out z, out w); z = 0.0f; w = 0.0f;
+      viewmatrix.transform_point (out p4_x, out p4_y, out z, out w); z = 0.0f; w = 0.0f;
+
+      Cogl.TextureVertex[4] icon_points = {
+        Cogl.TextureVertex () {
+          x = p1_x,
+          y = p1_y + base_height + ypad,
+          z = 0.0f,
+          tx = 0.0f,
+          ty = 0.0f,
+          color = Cogl.Color () {
+            red = 0xff,
+            green = 0xff,
+            blue = 0xff,
+            alpha = 0xff
+          }
+        },
+        Cogl.TextureVertex () {
+          x = p2_x,
+          y = p2_y + base_height + ypad,
+          z = 0.0f,
+          tx = 1.0f,
+          ty = 0.0f,
+          color = Cogl.Color () {
+            red = 0xff,
+            green = 0xff,
+            blue = 0xff,
+            alpha = 0xff
+          }
+        },
+        Cogl.TextureVertex () {
+          x = p3_x,
+          y = p3_y + base_height + ypad,
+          z = 0.0f,
+          tx = 1.0f,
+          ty = 1.0f,
+          color = Cogl.Color () {
+            red = 0xff,
+            green = 0xff,
+            blue = 0xff,
+            alpha = 0xff
+          }
+        },
+        Cogl.TextureVertex () {
+          x = p4_x,
+          y = p4_y + base_height + ypad,
+          z = 0.0f,
+          tx = 0.0f,
+          ty = 1.0f,
+          color = Cogl.Color () {
+            red = 0xff,
+            green = 0xff,
+            blue = 0xff,
+            alpha = 0xff
+          }
+        }
+      };
+
       uchar opacity = self.get_paint_opacity ();
 
       self.bg_mat.set_color4ub (opacity, opacity, opacity, opacity);
@@ -394,28 +550,27 @@ namespace Unity
       if (self.bg_color is Clutter.Texture)
         {
           Cogl.set_source (self.bgcol_material);
-          Cogl.rectangle (box.x1, box.y1, box.x2, box.y2);
+          Cogl.polygon (points, true);
         }
       else
         {
           Cogl.set_source (self.bg_mat);
-          Cogl.rectangle (box.x1, box.y1, box.x2, box.y2);
+          Cogl.polygon (points, true);
         }
       if (self.icon is Clutter.Texture)
         {
           int width, height;
-          float xpad, ypad;
           self.icon.get_base_size (out width, out height);
 
           xpad = (box.get_width () - width) / 2.0f;
           ypad = (box.get_height () - height) / 2.0f;
 
           Cogl.set_source (self.icon_material);
-          Cogl.rectangle (xpad, ypad, box.x2 - xpad, box.y2 - ypad);
+          Cogl.polygon (icon_points, true);
         }
 
       Cogl.set_source (self.fg_mat);
-      Cogl.rectangle (box.x1, box.y1, box.x2, box.y2);
+      Cogl.polygon (points, true);
     }
 
     public override void paint ()
