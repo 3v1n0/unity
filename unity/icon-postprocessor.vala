@@ -301,6 +301,9 @@ namespace Unity
 
     construct
     {
+      icon_material = new Cogl.Material ();
+      bgcol_material = new Cogl.Material ();
+
       if (!(unity_icon_bg_layer is Clutter.Texture))
         {
           unity_icon_bg_layer = new ThemeImage ("prism_icon_background");
@@ -463,79 +466,6 @@ namespace Unity
         }
       };
 
-      // we also need to transform the smaller (potentially) icon
-      int base_width, base_height;
-      float xpad, ypad;
-      self.icon.get_base_size (out base_width, out base_height);
-      xpad = 1 + (box.get_width () - base_width) / 2.0f;
-      ypad = ((box.get_height () - base_height) / 2.0f) - 1;
-
-      p1_x = -25.0f; p1_y = -25.0f;
-      p2_x =  25.0f; p2_y = -25.0f;
-      p3_x =  25.0f; p3_y =  25.0f;
-      p4_x = -25.0f; p4_y =  25.0f;
-      z = 0.0f;
-      w = 1.0f;
-
-      viewmatrix.transform_point (out p1_x, out p1_y, out z, out w); p1_x /= w; p1_y /= w; z = 0.0f; w = 1.0f;
-      viewmatrix.transform_point (out p2_x, out p2_y, out z, out w); p2_x /= w; p2_y /= w; z = 0.0f; w = 1.0f;
-      viewmatrix.transform_point (out p3_x, out p3_y, out z, out w); p3_x /= w; p3_y /= w; z = 0.0f; w = 1.0f;
-      viewmatrix.transform_point (out p4_x, out p4_y, out z, out w); p4_x /= w; p4_y /= w; z = 0.0f; w = 1.0f;
-      Cogl.TextureVertex[4] icon_points = {
-         Cogl.TextureVertex () {
-          x = xpad +(base_width * (p1_x + 1) / 2),
-          y = (48 - ypad) + (base_height * (p1_y - 1) / 2),
-          z = 0.0f,
-          tx = 0.0f,
-          ty = 0.0f,
-          color = Cogl.Color () {
-            red = 0xff,
-            green = 0xff,
-            blue = 0xff,
-            alpha = 0xff
-          }
-        },
-        Cogl.TextureVertex () {
-          x = xpad + (base_width * (p2_x + 1) / 2),
-          y = (48 - ypad) + (base_height * (p2_y - 1) / 2),
-          z = 0.0f,
-          tx = 1.0f,
-          ty = 0.0f,
-          color = Cogl.Color () {
-            red = 0xff,
-            green = 0xff,
-            blue = 0xff,
-            alpha = 0xff
-          }
-        },
-        Cogl.TextureVertex () {
-          x = xpad + (base_width * (p3_x + 1) / 2),
-          y = (48 - ypad) + (base_height * (p3_y - 1) / 2),
-          z = 0.0f,
-          tx = 1.0f,
-          ty = 1.0f,
-          color = Cogl.Color () {
-            red = 0xff,
-            green = 0xff,
-            blue = 0xff,
-            alpha = 0xff
-          }
-        },
-        Cogl.TextureVertex () {
-          x = xpad +(base_width * (p4_x + 1) / 2),
-          y = (48 - ypad) + (base_height * (p4_y - 1) / 2),
-          z = 0.0f,
-          tx = 0.0f,
-          ty = 1.0f,
-          color = Cogl.Color () {
-            red = 0xff,
-            green = 0xff,
-            blue = 0xff,
-            alpha = 0xff
-          }
-        }
-      };
-
       uchar opacity = self.get_paint_opacity ();
 
       self.bg_mat.set_color4ub (opacity, opacity, opacity, opacity);
@@ -555,6 +485,79 @@ namespace Unity
         }
       if (self.icon is Clutter.Texture)
         {
+          // we also need to transform the smaller (potentially) icon
+          int base_width, base_height;
+          float xpad, ypad;
+          self.icon.get_base_size (out base_width, out base_height);
+          xpad = 1 + (box.get_width () - base_width) / 2.0f;
+          ypad = ((box.get_height () - base_height) / 2.0f) - 1;
+
+          p1_x = -25.0f; p1_y = -25.0f;
+          p2_x =  25.0f; p2_y = -25.0f;
+          p3_x =  25.0f; p3_y =  25.0f;
+          p4_x = -25.0f; p4_y =  25.0f;
+          z = 0.0f;
+          w = 1.0f;
+
+          viewmatrix.transform_point (out p1_x, out p1_y, out z, out w); p1_x /= w; p1_y /= w; z = 0.0f; w = 1.0f;
+          viewmatrix.transform_point (out p2_x, out p2_y, out z, out w); p2_x /= w; p2_y /= w; z = 0.0f; w = 1.0f;
+          viewmatrix.transform_point (out p3_x, out p3_y, out z, out w); p3_x /= w; p3_y /= w; z = 0.0f; w = 1.0f;
+          viewmatrix.transform_point (out p4_x, out p4_y, out z, out w); p4_x /= w; p4_y /= w; z = 0.0f; w = 1.0f;
+          Cogl.TextureVertex[4] icon_points = {
+             Cogl.TextureVertex () {
+              x = xpad +(base_width * (p1_x + 1) / 2),
+              y = (48 - ypad) + (base_height * (p1_y - 1) / 2),
+              z = 0.0f,
+              tx = 0.0f,
+              ty = 0.0f,
+              color = Cogl.Color () {
+                red = 0xff,
+                green = 0xff,
+                blue = 0xff,
+                alpha = 0xff
+              }
+            },
+            Cogl.TextureVertex () {
+              x = xpad + (base_width * (p2_x + 1) / 2),
+              y = (48 - ypad) + (base_height * (p2_y - 1) / 2),
+              z = 0.0f,
+              tx = 1.0f,
+              ty = 0.0f,
+              color = Cogl.Color () {
+                red = 0xff,
+                green = 0xff,
+                blue = 0xff,
+                alpha = 0xff
+              }
+            },
+            Cogl.TextureVertex () {
+              x = xpad + (base_width * (p3_x + 1) / 2),
+              y = (48 - ypad) + (base_height * (p3_y - 1) / 2),
+              z = 0.0f,
+              tx = 1.0f,
+              ty = 1.0f,
+              color = Cogl.Color () {
+                red = 0xff,
+                green = 0xff,
+                blue = 0xff,
+                alpha = 0xff
+              }
+            },
+            Cogl.TextureVertex () {
+              x = xpad +(base_width * (p4_x + 1) / 2),
+              y = (48 - ypad) + (base_height * (p4_y - 1) / 2),
+              z = 0.0f,
+              tx = 0.0f,
+              ty = 1.0f,
+              color = Cogl.Color () {
+                red = 0xff,
+                green = 0xff,
+                blue = 0xff,
+                alpha = 0xff
+              }
+            }
+          };
+
           int width, height;
           self.icon.get_base_size (out width, out height);
 
