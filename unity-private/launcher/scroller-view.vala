@@ -321,9 +321,11 @@ namespace Unity.Launcher
 
     private bool on_enter_event (Clutter.Event event)
     {
-      debug (@"got enter event at $(event.crossing.y)");
       if (view_type == ScrollerViewType.EXPANDED) return false;
       view_type = ScrollerViewType.EXPANDED;
+
+      Unity.global_shell.add_fullscreen_request (this);
+      Clutter.grab_pointer (this);
 
       // we need to set a new scroll position
       // get the index of the icon we are hovering over
@@ -353,9 +355,11 @@ namespace Unity.Launcher
 
     private bool on_leave_event (Clutter.Event event)
     {
-      debug (@"got leave event at $(event.crossing.y)");
       if (view_type == ScrollerViewType.CONTRACTED) return false;
-      if (event.crossing.x < get_width ()) return false;
+      if (event.crossing.x < get_width ()-1) return false;
+
+      Unity.global_shell.remove_fullscreen_request (this);
+      Clutter.ungrab_pointer ();
 
       // need to store the focused item
       focused_launcher = get_model_index_at_y_pos (event.crossing.y);
