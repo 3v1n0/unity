@@ -85,6 +85,9 @@ namespace Unity.Places
 
     private void on_entry_activated (PlaceView view, PlaceEntryView entry_view)
     {
+      if (active_view == entry_view)
+        return;
+
       if (active_view is PlaceEntryView)
         {
           active_view.entry.active = false;
@@ -157,7 +160,7 @@ namespace Unity.Places
           last_width = width;
           last_height = height;
 
-          Idle.add (update_background);
+          Timeout.add (0, update_background);
         }
     }
 

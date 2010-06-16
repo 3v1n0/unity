@@ -308,3 +308,6 @@ unity-private/places/places-place-bar.c
 unity-private/places/places-place-entry-view.c
 unity-private/places/places-place-search-bar.cunity-private/places/places-place-search-bar.c
 unity-private/places/places-place-search-bar.c
+unity/unity-cairo-canvas.c
+unity-private/places/places-place-search-entry.c
+unity-private/places/places-place-search-sections-bar.c

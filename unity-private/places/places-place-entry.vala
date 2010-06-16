@@ -25,27 +25,6 @@ namespace Unity.Places
    **/
   public class PlaceEntry : Object
   {
-    /* FIXME: Use what's in libunity */
-    public struct _RendererInfo {
-      public string default_renderer;
-      public string groups_model;
-      public string results_model;
-      public HashTable<string,string> hints;
-    }
-
-    public struct _EntryInfo {
-      public string   dbus_path;
-      public string   display_name;
-      public string   icon;
-      public uint     position;
-      public string[] mimetypes;
-      public bool     sensitive;
-      public string   sections_model;
-      public HashTable<string,string> hints;
-      public _RendererInfo entry_renderer_info;
-      public _RendererInfo global_renderer_info;
-    }
-
     /* Properties */
     public string? dbus_name   { get; construct; }
     public string? dbus_path   { get; construct; }
@@ -162,6 +141,24 @@ namespace Unity.Places
       }
 
       online = true;
+    }
+
+    public void set_search (string search, HashTable<string, string> hints)
+    {
+      uint id;
+
+      id = service.set_search (search, hints);
+    }
+
+    public void set_active_section (uint section_id)
+    {
+      service.search_active_section (section_id);
+    }
+
+    public void set_global_search (string                    search,
+                                   HashTable<string, string> hints)
+    {
+      service.set_global_search (search, hints);
     }
 
     /*

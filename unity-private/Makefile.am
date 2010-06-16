@@ -93,6 +93,8 @@ places_sources = \
   places/places-place-view.vala \
   places/places-place.vala \
   places/places-place-search-bar.vala \
+  places/places-place-search-entry.vala \
+  places/places-place-search-sections-bar.vala \
   places/places-view.vala
 
 launcher_sources = \

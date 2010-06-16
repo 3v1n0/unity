@@ -21,13 +21,15 @@ namespace Unity.Places
 {
   public class PlaceSearchBar : Ctk.Box
   {
-    static const int SPACING = 8;
+    static const int SPACING = 10;
 
     /* Properties */
     private PlaceEntry? active_entry = null;
 
     private PlaceSearchBarBackground bg;
-    private Ctk.EffectGlow     glow;
+
+    private PlaceSearchEntry       entry;
+    private PlaceSearchSectionsBar sections;
 
     public PlaceSearchBar ()
     {
@@ -38,25 +40,59 @@ namespace Unity.Places
 
     construct
     {
-      bg = new PlaceSearchBarBackground ();
+      padding = {
+        SPACING * 2.0f,
+        SPACING * 1.0f,
+        SPACING * 1.0f,
+        SPACING * 1.0f
+      };
+
+      entry = new PlaceSearchEntry ();
+      pack (entry, true, true);
+      entry.show ();
+      entry.text_changed.connect (on_search_text_changed);
+
+      sections = new PlaceSearchSectionsBar ();
+      pack (sections, false, true);
+      entry.show ();
+
+      bg = new PlaceSearchBarBackground (entry);
       set_background (bg);
       bg.show ();
-
-      /* Enable once clutk bug is fixed */
-      glow = new Ctk.EffectGlow ();
-      glow.set_color ({ 255, 255, 255, 255 });
-      glow.set_factor (1.0f);
-      glow.set_margin (5);
-      //add_effect (glow);
     }
 
+    private override void allocate (Clutter.ActorBox        box,
+                                    Clutter.AllocationFlags flags)
+    {
+      float ex = entry.x;
+      float ewidth = entry.width;
+
+      base.allocate (box, flags);
+
+      if (entry.x != ex || entry.width != ewidth)
+        {
+          Timeout.add (0, bg.update_background);
+        }
+    }
 
     private override void get_preferred_height (float     for_width,
                                                 out float min_height,
                                                 out float nat_height)
     {
-      min_height = 40.0f;
-      nat_height = 40.0f;
+      float mheight, nheight;
+
+      entry.get_preferred_height (400, out mheight, out nheight);
+      min_height = mheight + SPACING * 3;
+      nat_height = nheight + SPACING * 3;
+    }
+
+    private void on_search_text_changed (string text)
+    {
+      if (active_entry is PlaceEntry)
+        {
+          var hints = new HashTable<string, string> (str_hash, str_equal);
+          active_entry.set_search (text, hints);
+        }
     }
 
     /*
@@ -66,10 +102,11 @@ namespace Unity.Places
     {
       active_entry = entry;
       bg.entry_position = x;
+      sections.set_active_entry (entry);
     }
   }
 
-  public class PlaceSearchBarBackground : Clutter.CairoTexture
+  public class PlaceSearchBarBackground : Ctk.Bin
   {
     public const string BG = "/usr/share/unity/dash_background.png";
 
@@ -90,9 +127,14 @@ namespace Unity.Places
       }
     }
 
-    public PlaceSearchBarBackground ()
+    private Clutter.CairoTexture texture;
+    private Ctk.EffectGlow       glow;
+
+    public PlaceSearchEntry search_entry { get; construct; }
+
+    public PlaceSearchBarBackground (PlaceSearchEntry search_entry)
     {
-      Object ();
+      Object (search_entry:search_entry);
     }
 
     construct
@@ -108,6 +150,17 @@ namespace Unity.Places
         {
           warning ("Unable to load dash background");
         }
+
+      texture = new Clutter.CairoTexture (10, 10);
+      add_actor (texture);
+      texture.show ();
+
+      /* Enable once clutk bug is fixed */
+      glow = new Ctk.EffectGlow ();
+      glow.set_color ({ 255, 255, 255, 255 });
+      glow.set_factor (1.0f);
+      glow.set_margin (5);
+      add_effect (glow);
     }
 
     private override void allocate (Clutter.ActorBox        box,
@@ -123,17 +176,17 @@ namespace Unity.Places
           last_width = width;
           last_height = height;
 
-          Idle.add (update_background);
+          Timeout.add (0, update_background);
         }
     }
 
-    private bool update_background ()
+    public bool update_background ()
     {
       Cairo.Context cr;
 
-      set_surface_size (last_width, last_height);
+      texture.set_surface_size (last_width, last_height);
 
-      cr = create ();
+      cr = texture.create ();
 
       cr.set_operator (Cairo.Operator.CLEAR);
       cr.paint ();
@@ -149,9 +202,7 @@ namespace Unity.Places
       var y = PlaceSearchBar.SPACING;
       var width = last_width -2;
       var height = last_height - 2;
-      var radius = 13;
-
-      //cr.rectangle (x, y, width, height);
+      var radius = 10;
 
       cr.move_to  (x, y + radius);
       cr.curve_to (x, y,
@@ -160,9 +211,9 @@ namespace Unity.Places
 
       if (entry_position != 0)
         {
-          cr.line_to (entry_position - radius, y);
+          cr.line_to (entry_position - y, y);
           cr.line_to (entry_position, y - y);
-          cr.line_to (entry_position + radius, y);
+          cr.line_to (entry_position + y, y);
         }
 
       cr.line_to  (width - radius, y);
@@ -196,8 +247,41 @@ namespace Unity.Places
       cr.set_source_rgba (1.0, 1.0, 1.0, 0.6);
       cr.stroke ();
 
+      /* Cut out the search entry */
+      cr.set_operator (Cairo.Operator.CLEAR);
+
+      x = (int)search_entry.x;
+      y = (int)(search_entry.y) - 1;
+      width = x + (int)search_entry.width;
+      height = y + (int)search_entry.height +1;
+
+      cr.move_to  (x, y + radius);
+      cr.curve_to (x, y,
+                   x, y,
+                   x + radius, y);
+      cr.line_to  (width - radius, y);
+      cr.curve_to (width, y,
+                   width, y,
+                   width, y + radius);
+      cr.line_to  (width, height - radius);
+      cr.curve_to (width, height,
+                   width, height,
+                   width - radius, height);
+      cr.line_to  (x + radius, height);
+      cr.curve_to (x, height,
+                   x, height,
+                   x, height - radius);
+      cr.close_path ();
+
+      cr.fill_preserve ();
+
+      cr.set_operator  (Cairo.Operator.OVER);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.6f);
+      cr.stroke ();
+
+      glow.set_invalidate_effect_cache (true);
+
       return false;
     }
   }
 }
-
