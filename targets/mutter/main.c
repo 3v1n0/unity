@@ -180,7 +180,7 @@ on_restore_input_region (UnityPlugin *plugin, gboolean fullscreen)
       /* Launcher */
       rects[1].x = 0;
       rects[1].y = rects[0].height;
-      rects[1].width = unity_plugin_get_launcher_width (plugin);
+      rects[1].width = unity_plugin_get_launcher_width (plugin) + 1;
       rects[1].height = height - rects[0].height;
 
       /* Update region */
