@@ -1,6 +1,11 @@
 unity (0.2.10-0ubuntu1) UNRELEASED; urgency=low
 
-  * New upstream release.
+  * New upstream release:
+    - Panels don't reappear after leaving fullscreen (LP: #578956)
+    - Background seems to be wrongly detecting screen size (LP: #578686)
+    - Unity panels don't disapear when VLC is on full side mode (LP: #583053)
+    - Clicking on launcher does not raise the last used window of the
+      application (LP: #592583)
   * debian/netbook-launcher.preinst, debian/unity.preinst:
     - add debhelper token
   * debian/patches/01_draw_background_with_nautilus_off.patch:
