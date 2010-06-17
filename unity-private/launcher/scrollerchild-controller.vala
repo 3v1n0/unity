@@ -130,7 +130,6 @@ namespace Unity.Launcher
 
     private void ensure_menu_state ()
     {
-      return;
       //no tooltips on drag
       if (Unity.Drag.Controller.get_default ().is_dragging) return;
 
