@@ -76,6 +76,10 @@ namespace Unity.Panel
       this.add_actor (icon);
       icon.set_size (22, 22);
       icon.show ();
+      
+      icon.opacity = 0;
+      icon.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 1000,
+                    "opacity", 255);
 
       icon.set_data ("n_icon", (void*)"%d".printf (this.n_icons));
 
