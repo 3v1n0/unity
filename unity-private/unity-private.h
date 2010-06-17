@@ -1298,6 +1298,7 @@ struct _UnityLauncherScrollerChild {
 
 struct _UnityLauncherScrollerChildClass {
 	CtkActorClass parent_class;
+	void (*force_rotation_jump) (UnityLauncherScrollerChild* self, float degrees);
 };
 
 struct _UnityLauncherScrollerModel {
@@ -1704,6 +1705,7 @@ GeeArrayList* unity_launcher_scroller_child_controller_get_menu_shortcut_actions
 void unity_launcher_scroller_child_controller_activate (UnityLauncherScrollerChildController* self);
 UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (UnityLauncherScrollerChildController* self);
 GType unity_launcher_pin_type_get_type (void);
+void unity_launcher_scroller_child_force_rotation_jump (UnityLauncherScrollerChild* self, float degrees);
 char* unity_launcher_scroller_child_to_string (UnityLauncherScrollerChild* self);
 UnityLauncherScrollerChild* unity_launcher_scroller_child_construct (GType object_type);
 GdkPixbuf* unity_launcher_scroller_child_get_icon (UnityLauncherScrollerChild* self);
@@ -1718,6 +1720,8 @@ gboolean unity_launcher_scroller_child_get_needs_attention (UnityLauncherScrolle
 void unity_launcher_scroller_child_set_needs_attention (UnityLauncherScrollerChild* self, gboolean value);
 gboolean unity_launcher_scroller_child_get_activating (UnityLauncherScrollerChild* self);
 void unity_launcher_scroller_child_set_activating (UnityLauncherScrollerChild* self, gboolean value);
+float unity_launcher_scroller_child_get_rotation (UnityLauncherScrollerChild* self);
+void unity_launcher_scroller_child_set_rotation (UnityLauncherScrollerChild* self, float value);
 GType unity_launcher_scroller_model_get_type (void);
 UnityLauncherScrollerModel* unity_launcher_scroller_model_new (void);
 UnityLauncherScrollerModel* unity_launcher_scroller_model_construct (GType object_type);

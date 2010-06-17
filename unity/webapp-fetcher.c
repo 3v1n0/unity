@@ -937,7 +937,9 @@ static gboolean _lambda3_ (UnityWebappWebiconFetcher* self) {
 
 
 static gboolean __lambda3__gsource_func (gpointer self) {
-	return _lambda3_ (self);
+	gboolean result;
+	result = _lambda3_ (self);
+	return result;
 }
 
 

@@ -78,12 +78,14 @@ namespace Unity {
 		public abstract class ScrollerChild : Ctk.Actor {
 			public Unity.Launcher.PinType pin_type;
 			public ScrollerChild ();
+			public abstract void force_rotation_jump (float degrees);
 			public string to_string ();
 			public bool activating { get; set; }
 			public bool active { get; set; }
 			public Gdk.Pixbuf icon { get; set; }
 			public bool needs_attention { get; set; }
 			public float position { get; set; }
+			public float rotation { get; set; }
 			public bool running { get; set; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]

@@ -482,12 +482,16 @@ static void unity_places_file_file_group_real_get_preferred_height (ClutterActor
 
 
 static gboolean _unity_places_file_file_group_on_maximize_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_places_file_file_group_on_maximize (self, event);
+	gboolean result;
+	result = unity_places_file_file_group_on_maximize (self, event);
+	return result;
 }
 
 
 static gboolean _unity_places_file_file_group_on_minimize_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_places_file_file_group_on_minimize (self, event);
+	gboolean result;
+	result = unity_places_file_file_group_on_minimize (self, event);
+	return result;
 }
 
 

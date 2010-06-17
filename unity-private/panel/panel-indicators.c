@@ -692,27 +692,37 @@ static void unity_panel_indicators_view_on_menu_moved (UnityPanelIndicatorsView*
 
 
 static gboolean _unity_panel_indicators_view_on_button_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_panel_indicators_view_on_button_press_event (self, event);
+	gboolean result;
+	result = unity_panel_indicators_view_on_button_press_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_panel_indicators_view_on_button_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_panel_indicators_view_on_button_release_event (self, event);
+	gboolean result;
+	result = unity_panel_indicators_view_on_button_release_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_panel_indicators_view_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_panel_indicators_view_on_motion_event (self, event);
+	gboolean result;
+	result = unity_panel_indicators_view_on_motion_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_panel_indicators_view_on_scroll_event_clutter_actor_scroll_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_panel_indicators_view_on_scroll_event (self, event);
+	gboolean result;
+	result = unity_panel_indicators_view_on_scroll_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_panel_indicators_view_load_indicators_gsource_func (gpointer self) {
-	return unity_panel_indicators_view_load_indicators (self);
+	gboolean result;
+	result = unity_panel_indicators_view_load_indicators (self);
+	return result;
 }
 
 

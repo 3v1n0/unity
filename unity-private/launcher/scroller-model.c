@@ -261,7 +261,7 @@ gint unity_launcher_scroller_model_index_of (UnityLauncherScrollerModel* self, U
 		result = gee_abstract_list_index_of ((GeeAbstractList*) self->priv->children, child);
 		return result;
 	}
-	result = 0;
+	result = -1;
 	return result;
 }
 

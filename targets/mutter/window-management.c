@@ -456,7 +456,9 @@ static gboolean unity_window_management_force_activate (UnityWindowManagement* s
 
 
 static gboolean _unity_window_management_force_activate_gsource_func (gpointer self) {
-	return unity_window_management_force_activate (self);
+	gboolean result;
+	result = unity_window_management_force_activate (self);
+	return result;
 }
 
 

@@ -173,8 +173,6 @@ namespace Cogl {
 		public uint32 padding0;
 		public uint32 padding1;
 		public uint32 padding2;
-		[CCode (cname = "cogl_color_new", has_construct_function = false)]
-		public Color ();
 		public Cogl.Color copy ();
 		public static bool equal (void* v1, void* v2);
 		public float get_alpha ();
@@ -236,7 +234,7 @@ namespace Cogl {
 		public void perspective (float fov_y, float aspect, float z_near, float z_far);
 		public void rotate (float angle, float x, float y, float z);
 		public void scale (float sx, float sy, float sz);
-		public void transform_point (float x, float y, float z, float w);
+		public void transform_point (out float x, out float y, out float z, out float w);
 		public void translate (float x, float y, float z);
 	}
 	[CCode (type_id = "COGL_TYPE_TEXTURE_VERTEX", cheader_filename = "cogl/cogl.h")]

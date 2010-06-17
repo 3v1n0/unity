@@ -157,7 +157,6 @@ struct _UnityPluginPrivate {
 	UnityApplication* app;
 	UnityWindowManagement* wm;
 	UnityMaximus* maximus;
-	UnityTestingBackground* background;
 	UnityExposeManager* expose_manager;
 	UnityLauncherLauncher* launcher;
 	UnityPlacesController* places_controller;
@@ -165,6 +164,8 @@ struct _UnityPluginPrivate {
 	UnityPanelView* panel;
 	UnityActorBlur* actor_blur;
 	ClutterRectangle* dark_box;
+	MetaWindow* focus_window;
+	MetaDisplay* display;
 	gboolean places_enabled;
 	UnityDragDest* drag_dest;
 	gboolean places_showing;
@@ -174,7 +175,6 @@ struct _UnityPluginPrivate {
 	gboolean grab_enabled;
 	DBusGConnection* screensaver_conn;
 	DBusGProxy* screensaver;
-	MutterWindow* active_window;
 };
 
 
@@ -240,9 +240,12 @@ static void _unity_plugin_relayout_g_object_notify (GObject* _sender, GParamSpec
 static gboolean _lambda2_ (UnityPlugin* self);
 static gboolean __lambda2__gsource_func (gpointer self);
 static gboolean unity_plugin_real_construct (UnityPlugin* self);
+static void unity_plugin_check_fullscreen_obstruction (UnityPlugin* self);
+static void unity_plugin_on_focus_window_fullscreen_changed (UnityPlugin* self);
+static void _unity_plugin_on_focus_window_fullscreen_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void unity_plugin_on_focus_window_changed (UnityPlugin* self);
 static void unity_plugin_set_fullscreen_obstruction (UnityPlugin* self, gboolean value);
 static void unity_plugin_got_screensaver_changed (UnityPlugin* self, DBusGProxy* screensaver, gboolean changed);
-static void unity_plugin_check_fullscreen_obstruction (UnityPlugin* self);
 static void unity_plugin_real_add_fullscreen_request (UnityShell* base, GObject* o);
 static gboolean unity_plugin_real_remove_fullscreen_request (UnityShell* base, GObject* o);
 static gboolean unity_plugin_get_fullscreen_obstruction (UnityPlugin* self);
@@ -268,6 +271,7 @@ void unity_plugin_minimize (UnityPlugin* self, MutterWindow* window);
 void unity_plugin_maximize (UnityPlugin* self, MutterWindow* window, gint x, gint y, gint width, gint height);
 void unity_plugin_unmaximize (UnityPlugin* self, MutterWindow* window, gint x, gint y, gint width, gint height);
 gboolean unity_maximus_process_window (UnityMaximus* self, MutterWindow* window);
+static void _unity_plugin_on_focus_window_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 void unity_plugin_map (UnityPlugin* self, MutterWindow* window);
 void unity_plugin_destroy (UnityPlugin* self, MutterWindow* window);
 void unity_plugin_switch_workspace (UnityPlugin* self, GList* windows, gint from, gint to, gint direction);
@@ -461,7 +465,9 @@ static gboolean _lambda2_ (UnityPlugin* self) {
 
 
 static gboolean __lambda2__gsource_func (gpointer self) {
-	return _lambda2_ (self);
+	gboolean result;
+	result = _lambda2_ (self);
+	return result;
 }
 
 
@@ -484,15 +490,14 @@ static gboolean unity_plugin_real_construct (UnityPlugin* self) {
 	GtkTargetEntry _tmp10_ = {0};
 	GtkTargetEntry* target_list;
 	ClutterGroup* window_group;
-	UnityTestingBackground* _tmp13_;
-	UnityLauncherLauncher* _tmp14_;
-	ClutterActor* _tmp15_;
-	UnityExposeManager* _tmp16_;
+	UnityLauncherLauncher* _tmp13_;
+	ClutterActor* _tmp14_;
+	UnityExposeManager* _tmp15_;
+	ClutterActor* _tmp16_;
 	ClutterActor* _tmp17_;
 	ClutterActor* _tmp18_;
-	ClutterActor* _tmp19_;
-	UnityPanelView* _tmp23_;
-	ClutterActor* _tmp24_;
+	UnityPanelView* _tmp22_;
+	ClutterActor* _tmp23_;
 	g_return_val_if_fail (self != NULL, FALSE);
 	START_FUNCTION ();
 	self->priv->wm = (_tmp0_ = unity_window_management_new (self), _g_object_unref0 (self->priv->wm), _tmp0_);
@@ -507,44 +512,40 @@ static gboolean unity_plugin_real_construct (UnityPlugin* self) {
 	ctk_dnd_init (GTK_WIDGET (self->priv->drag_dest), target_list, target_list_length1);
 	self->priv->places_enabled = unity_plugin_envvar_is_enabled (self, "UNITY_ENABLE_PLACES");
 	window_group = _g_object_ref0 (CLUTTER_GROUP (mutter_plugin_get_window_group (unity_plugin_get_plugin (self))));
-	self->priv->background = (_tmp13_ = g_object_ref_sink (unity_testing_background_new ()), _g_object_unref0 (self->priv->background), _tmp13_);
-	clutter_container_add_actor ((ClutterContainer*) self->priv->stage, (ClutterActor*) self->priv->background);
-	clutter_actor_lower_bottom ((ClutterActor*) self->priv->background);
-	clutter_actor_show ((ClutterActor*) self->priv->background);
-	self->priv->launcher = (_tmp14_ = unity_launcher_launcher_new ((UnityShell*) self), _g_object_unref0 (self->priv->launcher), _tmp14_);
-	clutter_actor_set_opacity (_tmp15_ = unity_launcher_launcher_get_view (self->priv->launcher), (guint8) 0);
-	_g_object_unref0 (_tmp15_);
-	self->priv->expose_manager = (_tmp16_ = unity_expose_manager_new (self, self->priv->launcher), _g_object_unref0 (self->priv->expose_manager), _tmp16_);
+	self->priv->launcher = (_tmp13_ = unity_launcher_launcher_new ((UnityShell*) self), _g_object_unref0 (self->priv->launcher), _tmp13_);
+	clutter_actor_set_opacity (_tmp14_ = unity_launcher_launcher_get_view (self->priv->launcher), (guint8) 0);
+	_g_object_unref0 (_tmp14_);
+	self->priv->expose_manager = (_tmp15_ = unity_expose_manager_new (self, self->priv->launcher), _g_object_unref0 (self->priv->expose_manager), _tmp15_);
 	unity_expose_manager_set_hovered_opacity (self->priv->expose_manager, (guint8) 255);
 	unity_expose_manager_set_unhovered_opacity (self->priv->expose_manager, (guint8) 255);
 	unity_expose_manager_set_darken (self->priv->expose_manager, (guint8) 25);
 	unity_expose_manager_set_right_buffer (self->priv->expose_manager, 10);
 	unity_expose_manager_set_top_buffer (self->priv->expose_manager, (unity_expose_manager_set_bottom_buffer (self->priv->expose_manager, 20), unity_expose_manager_get_bottom_buffer (self->priv->expose_manager)));
 	unity_expose_manager_set_coverflow (self->priv->expose_manager, FALSE);
-	clutter_container_add_actor ((ClutterContainer*) window_group, _tmp17_ = unity_launcher_launcher_get_view (self->priv->launcher));
+	clutter_container_add_actor ((ClutterContainer*) window_group, _tmp16_ = unity_launcher_launcher_get_view (self->priv->launcher));
+	_g_object_unref0 (_tmp16_);
+	clutter_container_raise_child ((ClutterContainer*) window_group, _tmp17_ = unity_launcher_launcher_get_view (self->priv->launcher), mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self)));
 	_g_object_unref0 (_tmp17_);
-	clutter_container_raise_child ((ClutterContainer*) window_group, _tmp18_ = unity_launcher_launcher_get_view (self->priv->launcher), mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self)));
+	clutter_actor_animate (_tmp18_ = unity_launcher_launcher_get_view (self->priv->launcher), (gulong) CLUTTER_EASE_IN_SINE, (guint) 400, "opacity", 255, NULL);
 	_g_object_unref0 (_tmp18_);
-	clutter_actor_animate (_tmp19_ = unity_launcher_launcher_get_view (self->priv->launcher), (gulong) CLUTTER_EASE_IN_SINE, (guint) 400, "opacity", 255, NULL);
-	_g_object_unref0 (_tmp19_);
 	if (self->priv->places_enabled) {
-		UnityPlacesController* _tmp20_;
-		UnityPlacesView* _tmp21_;
-		ClutterActor* _tmp22_;
-		self->priv->places_controller = (_tmp20_ = unity_places_controller_new ((UnityShell*) self), _g_object_unref0 (self->priv->places_controller), _tmp20_);
-		self->priv->places = (_tmp21_ = unity_places_controller_get_view (self->priv->places_controller), _g_object_unref0 (self->priv->places), _tmp21_);
+		UnityPlacesController* _tmp19_;
+		UnityPlacesView* _tmp20_;
+		ClutterActor* _tmp21_;
+		self->priv->places_controller = (_tmp19_ = unity_places_controller_new ((UnityShell*) self), _g_object_unref0 (self->priv->places_controller), _tmp19_);
+		self->priv->places = (_tmp20_ = unity_places_controller_get_view (self->priv->places_controller), _g_object_unref0 (self->priv->places), _tmp20_);
 		clutter_container_add_actor ((ClutterContainer*) window_group, (ClutterActor*) self->priv->places);
-		clutter_container_raise_child ((ClutterContainer*) window_group, (ClutterActor*) self->priv->places, _tmp22_ = unity_launcher_launcher_get_view (self->priv->launcher));
-		_g_object_unref0 (_tmp22_);
+		clutter_container_raise_child ((ClutterContainer*) window_group, (ClutterActor*) self->priv->places, _tmp21_ = unity_launcher_launcher_get_view (self->priv->launcher));
+		_g_object_unref0 (_tmp21_);
 		clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 0);
 		clutter_actor_set_reactive ((ClutterActor*) self->priv->places, FALSE);
 		clutter_actor_hide ((ClutterActor*) self->priv->places);
 		self->priv->places_showing = FALSE;
 	}
-	self->priv->panel = (_tmp23_ = g_object_ref_sink (unity_panel_view_new ((UnityShell*) self)), _g_object_unref0 (self->priv->panel), _tmp23_);
+	self->priv->panel = (_tmp22_ = g_object_ref_sink (unity_panel_view_new ((UnityShell*) self)), _g_object_unref0 (self->priv->panel), _tmp22_);
 	clutter_container_add_actor ((ClutterContainer*) window_group, (ClutterActor*) self->priv->panel);
-	clutter_container_raise_child ((ClutterContainer*) window_group, (ClutterActor*) self->priv->panel, _tmp24_ = unity_launcher_launcher_get_view (self->priv->launcher));
-	_g_object_unref0 (_tmp24_);
+	clutter_container_raise_child ((ClutterContainer*) window_group, (ClutterActor*) self->priv->panel, _tmp23_ = unity_launcher_launcher_get_view (self->priv->launcher));
+	_g_object_unref0 (_tmp23_);
 	clutter_actor_show ((ClutterActor*) self->priv->panel);
 	g_signal_connect_object ((GObject*) self->priv->stage, "notify::width", (GCallback) _unity_plugin_relayout_g_object_notify, self, 0);
 	g_signal_connect_object ((GObject*) self->priv->stage, "notify::height", (GCallback) _unity_plugin_relayout_g_object_notify, self, 0);
@@ -558,6 +559,32 @@ static gboolean unity_plugin_real_construct (UnityPlugin* self) {
 	target_list = (g_free (target_list), NULL);
 	_g_object_unref0 (window_group);
 	return result;
+}
+
+
+static void _unity_plugin_on_focus_window_fullscreen_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	unity_plugin_on_focus_window_fullscreen_changed (self);
+}
+
+
+static void unity_plugin_on_focus_window_changed (UnityPlugin* self) {
+	g_return_if_fail (self != NULL);
+	unity_plugin_check_fullscreen_obstruction (self);
+	if (self->priv->focus_window != NULL) {
+		GQuark _tmp1_;
+		guint _tmp0_;
+		g_signal_parse_name ("notify::fullscreen", G_TYPE_OBJECT, &_tmp0_, &_tmp1_, TRUE);
+		g_signal_handlers_disconnect_matched ((GObject*) self->priv->focus_window, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_DETAIL | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, _tmp1_, NULL, (GCallback) _unity_plugin_on_focus_window_fullscreen_changed_g_object_notify, self);
+	}
+	g_object_get ((GObject*) self->priv->display, "focus-window", &self->priv->focus_window, NULL);
+	g_signal_connect_object ((GObject*) self->priv->focus_window, "notify::fullscreen", (GCallback) _unity_plugin_on_focus_window_fullscreen_changed_g_object_notify, self, 0);
+}
+
+
+static void unity_plugin_on_focus_window_fullscreen_changed (UnityPlugin* self) {
+	g_return_if_fail (self != NULL);
+	g_warning ("plugin.vala:306: FOCUS WINDOW FULLSCREEN CHANGED");
+	unity_plugin_check_fullscreen_obstruction (self);
 }
 
 
@@ -589,11 +616,21 @@ static void unity_plugin_got_screensaver_changed (UnityPlugin* self, DBusGProxy*
 static void unity_plugin_check_fullscreen_obstruction (UnityPlugin* self) {
 	MutterWindow* focus;
 	gboolean fullscreen;
+	gboolean _tmp0_ = FALSE;
 	GList* mutter_windows;
-	MetaWindow* _tmp1_;
+	MetaWindow* _tmp3_;
 	g_return_if_fail (self != NULL);
 	focus = NULL;
 	fullscreen = FALSE;
+	if (!UNITY_LAUNCHER_IS_LAUNCHER (self->priv->launcher)) {
+		_tmp0_ = TRUE;
+	} else {
+		_tmp0_ = !CLUTTER_IS_ACTOR (self->priv->panel);
+	}
+	if (_tmp0_) {
+		_g_object_unref0 (focus);
+		return;
+	}
 	mutter_windows = mutter_plugin_get_windows (unity_plugin_get_plugin (self));
 	{
 		GList* w_collection;
@@ -603,9 +640,19 @@ static void unity_plugin_check_fullscreen_obstruction (UnityPlugin* self) {
 			MutterWindow* w;
 			w = _g_object_ref0 ((MutterWindow*) w_it->data);
 			{
-				if (meta_window_has_focus (mutter_window_get_meta_window (w))) {
-					MutterWindow* _tmp0_;
-					focus = (_tmp0_ = _g_object_ref0 (w), _g_object_unref0 (focus), _tmp0_);
+				MetaWindow* meta;
+				gboolean _tmp1_ = FALSE;
+				meta = mutter_window_get_meta_window (w);
+				if (meta != NULL) {
+					_tmp1_ = meta_window_has_focus (mutter_window_get_meta_window (w));
+				} else {
+					_tmp1_ = FALSE;
+				}
+				if (_tmp1_) {
+					MutterWindow* _tmp2_;
+					focus = (_tmp2_ = _g_object_ref0 (w), _g_object_unref0 (focus), _tmp2_);
+					_g_object_unref0 (w);
+					break;
 				}
 				_g_object_unref0 (w);
 			}
@@ -615,17 +662,17 @@ static void unity_plugin_check_fullscreen_obstruction (UnityPlugin* self) {
 		_g_object_unref0 (focus);
 		return;
 	}
-	g_object_get ((_tmp1_ = mutter_window_get_meta_window (focus), G_IS_OBJECT (_tmp1_) ? ((GObject*) _tmp1_) : NULL), "fullscreen", &fullscreen, NULL);
+	g_object_get ((_tmp3_ = mutter_window_get_meta_window (focus), G_IS_OBJECT (_tmp3_) ? ((GObject*) _tmp3_) : NULL), "fullscreen", &fullscreen, NULL);
 	if (fullscreen) {
-		ClutterActor* _tmp2_;
-		clutter_actor_animate (_tmp2_ = unity_launcher_launcher_get_view (self->priv->launcher), (gulong) CLUTTER_EASE_IN_SINE, (guint) 200, "x", -100.f, NULL);
-		_g_object_unref0 (_tmp2_);
+		ClutterActor* _tmp4_;
+		clutter_actor_animate (_tmp4_ = unity_launcher_launcher_get_view (self->priv->launcher), (gulong) CLUTTER_EASE_IN_SINE, (guint) 200, "x", -100.f, NULL);
+		_g_object_unref0 (_tmp4_);
 		clutter_actor_animate ((ClutterActor*) self->priv->panel, (gulong) CLUTTER_EASE_IN_SINE, (guint) 200, "opacity", 0, NULL);
 		unity_plugin_set_fullscreen_obstruction (self, TRUE);
 	} else {
-		ClutterActor* _tmp3_;
-		clutter_actor_animate (_tmp3_ = unity_launcher_launcher_get_view (self->priv->launcher), (gulong) CLUTTER_EASE_IN_SINE, (guint) 200, "x", 0.f, NULL);
-		_g_object_unref0 (_tmp3_);
+		ClutterActor* _tmp5_;
+		clutter_actor_animate (_tmp5_ = unity_launcher_launcher_get_view (self->priv->launcher), (gulong) CLUTTER_EASE_IN_SINE, (guint) 200, "x", 0.f, NULL);
+		_g_object_unref0 (_tmp5_);
 		clutter_actor_animate ((ClutterActor*) self->priv->panel, (gulong) CLUTTER_EASE_IN_SINE, (guint) 200, "opacity", 255, NULL);
 		unity_plugin_set_fullscreen_obstruction (self, FALSE);
 	}
@@ -644,8 +691,6 @@ static void unity_plugin_relayout (UnityPlugin* self) {
 	clutter_actor_get_size ((ClutterActor*) self->priv->stage, &width, &height);
 	gtk_window_resize ((GtkWindow*) self->priv->drag_dest, UNITY_PLUGIN_QUICKLAUNCHER_WIDTH, ((gint) height) - UNITY_PLUGIN_PANEL_HEIGHT);
 	gtk_window_move ((GtkWindow*) self->priv->drag_dest, 0, UNITY_PLUGIN_PANEL_HEIGHT);
-	clutter_actor_set_size ((ClutterActor*) self->priv->background, width, height);
-	clutter_actor_set_position ((ClutterActor*) self->priv->background, (float) 0, (float) 0);
 	clutter_actor_set_size (_tmp0_ = unity_launcher_launcher_get_view (self->priv->launcher), (float) UNITY_PLUGIN_QUICKLAUNCHER_WIDTH, height - UNITY_PLUGIN_PANEL_HEIGHT);
 	_g_object_unref0 (_tmp0_);
 	clutter_actor_set_position (_tmp1_ = unity_launcher_launcher_get_view (self->priv->launcher), (float) 0, (float) UNITY_PLUGIN_PANEL_HEIGHT);
@@ -1050,11 +1095,20 @@ void unity_plugin_unmaximize (UnityPlugin* self, MutterWindow* window, gint x, g
 }
 
 
+static void _unity_plugin_on_focus_window_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	unity_plugin_on_focus_window_changed (self);
+}
+
+
 void unity_plugin_map (UnityPlugin* self, MutterWindow* window) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (window != NULL);
 	unity_maximus_process_window (self->priv->maximus, window);
 	g_signal_emit_by_name (self, "window-mapped", self, window);
+	if (self->priv->display == NULL) {
+		self->priv->display = meta_window_get_display (mutter_window_get_meta_window (window));
+		g_signal_connect_object ((GObject*) self->priv->display, "notify::focus-window", (GCallback) _unity_plugin_on_focus_window_changed_g_object_notify, self, 0);
+	}
 }
 
 
@@ -1133,7 +1187,9 @@ MutterPlugin* unity_plugin_get_plugin (UnityPlugin* self) {
 
 
 static gboolean _unity_plugin_real_construct_gsource_func (gpointer self) {
-	return unity_plugin_real_construct (self);
+	gboolean result;
+	result = unity_plugin_real_construct (self);
+	return result;
 }
 
 
@@ -1245,7 +1301,7 @@ static GObject * unity_plugin_constructor (GType type, guint n_construct_propert
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("plugin.vala:195: %s", e->message);
+				g_warning ("plugin.vala:194: %s", e->message);
 				_g_error_free0 (e);
 			}
 		}
@@ -1306,10 +1362,11 @@ static void unity_plugin_unity_shell_interface_init (UnityShellIface * iface) {
 
 static void unity_plugin_instance_init (UnityPlugin * self) {
 	self->priv = UNITY_PLUGIN_GET_PRIVATE (self);
+	self->priv->focus_window = NULL;
+	self->priv->display = NULL;
 	self->priv->places_enabled = FALSE;
 	self->priv->last_input_state = UNITY_INPUT_STATE_NONE;
 	self->priv->grab_enabled = FALSE;
-	self->priv->active_window = NULL;
 }
 
 
@@ -1321,7 +1378,6 @@ static void unity_plugin_finalize (GObject* obj) {
 	_g_object_unref0 (self->priv->app);
 	_g_object_unref0 (self->priv->wm);
 	_g_object_unref0 (self->priv->maximus);
-	_g_object_unref0 (self->priv->background);
 	_g_object_unref0 (self->priv->expose_manager);
 	_g_object_unref0 (self->priv->launcher);
 	_g_object_unref0 (self->priv->places_controller);

@@ -210,6 +210,7 @@ namespace Unity {
 	}
 	[CCode (cheader_filename = "unity.h")]
 	public class UnityIcon : Ctk.Actor {
+		public float rotation;
 		public UnityIcon (Clutter.Texture? icon, Clutter.Texture? bg_tex);
 		public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
 		public override void get_preferred_height (float for_width, out float minimum_height, out float natural_height);

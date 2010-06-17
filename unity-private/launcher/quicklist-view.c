@@ -452,7 +452,6 @@ static gboolean _unity_launcher_quicklist_menu_item_on_enter (UnityLauncherQuick
 	g_return_val_if_fail (UNITY_LAUNCHER_IS_QUICKLIST_MENU_ITEM (self), FALSE);
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 0), FALSE);
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 1), TRUE);
-	clutter_actor_queue_redraw ((ClutterActor*) self->priv->item_background);
 	result = FALSE;
 	return result;
 }
@@ -464,7 +463,6 @@ static gboolean _unity_launcher_quicklist_menu_item_on_leave (UnityLauncherQuick
 	g_return_val_if_fail (UNITY_LAUNCHER_IS_QUICKLIST_MENU_ITEM (self), FALSE);
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 0), TRUE);
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 1), FALSE);
-	clutter_actor_queue_redraw ((ClutterActor*) self->priv->item_background);
 	result = FALSE;
 	return result;
 }
@@ -486,17 +484,23 @@ static void __unity_launcher_quicklist_menu_item_on_label_changed_g_object_notif
 
 
 static gboolean __unity_launcher_quicklist_menu_item_on_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return _unity_launcher_quicklist_menu_item_on_enter (self, event);
+	gboolean result;
+	result = _unity_launcher_quicklist_menu_item_on_enter (self, event);
+	return result;
 }
 
 
 static gboolean __unity_launcher_quicklist_menu_item_on_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return _unity_launcher_quicklist_menu_item_on_leave (self, event);
+	gboolean result;
+	result = _unity_launcher_quicklist_menu_item_on_leave (self, event);
+	return result;
 }
 
 
 static gboolean __unity_launcher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return _unity_launcher_quicklist_menu_item_on_mouse_down (self, event);
+	gboolean result;
+	result = _unity_launcher_quicklist_menu_item_on_mouse_down (self, event);
+	return result;
 }
 
 

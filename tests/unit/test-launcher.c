@@ -30,6 +30,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unity-private.h>
+#include <float.h>
+#include <math.h>
 #include <gobject/gvaluecollector.h>
 
 
@@ -164,6 +166,7 @@ GType unity_tests_unit_launcher_suite_test_scroller_child_get_type (void);
 enum  {
 	UNITY_TESTS_UNIT_LAUNCHER_SUITE_TEST_SCROLLER_CHILD_DUMMY_PROPERTY
 };
+static void unity_tests_unit_launcher_suite_test_scroller_child_real_force_rotation_jump (UnityLauncherScrollerChild* base, float degrees);
 static void unity_tests_unit_launcher_suite_finalize (UnityTestsUnitLauncherSuite* obj);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
@@ -459,6 +462,12 @@ static void unity_tests_unit_launcher_suite_test_scroller_child_controller (Unit
 }
 
 
+static void unity_tests_unit_launcher_suite_test_scroller_child_real_force_rotation_jump (UnityLauncherScrollerChild* base, float degrees) {
+	UnityTestsUnitLauncherSuiteTestScrollerChild * self;
+	self = (UnityTestsUnitLauncherSuiteTestScrollerChild*) base;
+}
+
+
 UnityTestsUnitLauncherSuiteTestScrollerChild* unity_tests_unit_launcher_suite_test_scroller_child_construct (GType object_type) {
 	UnityTestsUnitLauncherSuiteTestScrollerChild * self;
 	self = (UnityTestsUnitLauncherSuiteTestScrollerChild*) unity_launcher_scroller_child_construct (object_type);
@@ -473,6 +482,7 @@ UnityTestsUnitLauncherSuiteTestScrollerChild* unity_tests_unit_launcher_suite_te
 
 static void unity_tests_unit_launcher_suite_test_scroller_child_class_init (UnityTestsUnitLauncherSuiteTestScrollerChildClass * klass) {
 	unity_tests_unit_launcher_suite_test_scroller_child_parent_class = g_type_class_peek_parent (klass);
+	UNITY_LAUNCHER_SCROLLER_CHILD_CLASS (klass)->force_rotation_jump = unity_tests_unit_launcher_suite_test_scroller_child_real_force_rotation_jump;
 }
 
 

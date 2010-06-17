@@ -484,7 +484,9 @@ static void unity_places_controller_set_shell (UnityPlacesController* self, Unit
 
 
 static gboolean _unity_places_controller_load_places_gsource_func (gpointer self) {
-	return unity_places_controller_load_places (self);
+	gboolean result;
+	result = unity_places_controller_load_places (self);
+	return result;
 }
 
 

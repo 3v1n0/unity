@@ -29,9 +29,9 @@
 #include <unity.h>
 #include <stdlib.h>
 #include <string.h>
-#include <glib/gstdio.h>
 #include <float.h>
 #include <math.h>
+#include <glib/gstdio.h>
 #include <clutter/clutter.h>
 
 
@@ -143,6 +143,7 @@ struct _UnityLauncherScrollerChild {
 
 struct _UnityLauncherScrollerChildClass {
 	CtkActorClass parent_class;
+	void (*force_rotation_jump) (UnityLauncherScrollerChild* self, float degrees);
 };
 
 
@@ -162,8 +163,8 @@ enum  {
 UnityLauncherScrollerController* unity_launcher_scroller_controller_new (UnityLauncherScrollerModel* _model, UnityLauncherScrollerView* _view);
 UnityLauncherScrollerController* unity_launcher_scroller_controller_construct (GType object_type, UnityLauncherScrollerModel* _model, UnityLauncherScrollerView* _view);
 static void unity_launcher_scroller_controller_handle_bamf_view_opened (UnityLauncherScrollerController* self, GObject* object);
-static void _lambda17_ (BamfView* a, gboolean changed, UnityLauncherScrollerController* self);
-static void __lambda17__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self);
+static void _lambda18_ (BamfView* a, gboolean changed, UnityLauncherScrollerController* self);
+static void __lambda18__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self);
 GType unity_launcher_application_controller_get_type (void);
 static UnityLauncherApplicationController* unity_launcher_scroller_controller_find_controller_by_desktop_file (UnityLauncherScrollerController* self, const char* desktop_file);
 void unity_launcher_application_controller_attach_application (UnityLauncherApplicationController* self, BamfApplication* application);
@@ -227,7 +228,7 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static void _lambda17_ (BamfView* a, gboolean changed, UnityLauncherScrollerController* self) {
+static void _lambda18_ (BamfView* a, gboolean changed, UnityLauncherScrollerController* self) {
 	g_return_if_fail (a != NULL);
 	if (changed) {
 		BamfView* _tmp0_;
@@ -236,8 +237,8 @@ static void _lambda17_ (BamfView* a, gboolean changed, UnityLauncherScrollerCont
 }
 
 
-static void __lambda17__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self) {
-	_lambda17_ (_sender, object, self);
+static void __lambda18__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self) {
+	_lambda18_ (_sender, object, self);
 }
 
 
@@ -259,7 +260,7 @@ static void unity_launcher_scroller_controller_handle_bamf_view_opened (UnityLau
 			_g_object_unref0 (app);
 			return;
 		}
-		g_signal_connect_object ((BamfView*) app, "user-visible-changed", (GCallback) __lambda17__bamf_view_user_visible_changed, self, 0);
+		g_signal_connect_object ((BamfView*) app, "user-visible-changed", (GCallback) __lambda18__bamf_view_user_visible_changed, self, 0);
 		if (bamf_view_user_visible ((BamfView*) app)) {
 			char* desktop_file;
 			desktop_file = g_strdup (bamf_application_get_desktop_file (app));

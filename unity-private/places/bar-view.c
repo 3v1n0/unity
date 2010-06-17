@@ -205,7 +205,9 @@ static void _unity_places_bar_view_on_place_added_unity_places_model_place_added
 
 
 static gboolean _unity_places_bar_view_on_button_release_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_places_bar_view_on_button_release (self, event);
+	gboolean result;
+	result = unity_places_bar_view_on_button_release (self, event);
+	return result;
 }
 
 

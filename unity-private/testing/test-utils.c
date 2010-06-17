@@ -366,7 +366,9 @@ gboolean unity_testing_logging_fatal_handler (const char* log_domain, GLogLevelF
 
 
 static gboolean _unity_testing_logging_fatal_handler_gtest_log_log_fatal_func (const char* log_domain, GLogLevelFlags flags, const char* message, gpointer self) {
-	return unity_testing_logging_fatal_handler (log_domain, flags, message);
+	gboolean result;
+	result = unity_testing_logging_fatal_handler (log_domain, flags, message);
+	return result;
 }
 
 
