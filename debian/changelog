@@ -1,6 +1,9 @@
 unity (0.2.10-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+  * debian/netbook-launcher.preinst, debian/unity.preinst:
+    - add debhelper token
+
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 17 Jun 2010 17:32:21 +0200
 
