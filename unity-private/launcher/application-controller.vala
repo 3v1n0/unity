@@ -313,18 +313,43 @@ namespace Unity.Launcher
       return ret_list;
     }
 
+    private static int order_app_windows (void* a, void* b)
+    {
+      if ((b as Bamf.Window).last_active () < (a as Bamf.Window).last_active ())
+        {
+          return 1;
+        }
+      else if ((b as Bamf.Window).last_active () == (a as Bamf.Window).last_active ())
+        {
+          return 0;
+        }
+
+      return -1;
+    }
+
+
     public override void activate ()
     {
+      debug ("activated");
       if (app is Bamf.Application)
         {
           if (app.is_running ())
             {
+              unowned List<Bamf.Window> windows = app.get_windows ();
+              windows.sort ((CompareFunc)order_app_windows);
+/*
+              debug ("time val is %l", windows.nth_data(0).last_active ());
+              debug ("time val is %l", windows.nth_data(windows.length ()-1).last_active ());
+*/
+/*
+
               Array<uint32> xids = app.get_xids ();
               for (int i = 0; i < xids.length; i++)
                 {
                   uint32 xid = xids.index (i);
                   Unity.global_shell.show_window (xid);
                 }
+*/
             }
         }
       else
