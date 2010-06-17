@@ -40,7 +40,7 @@ namespace Unity.Launcher
 
   class LauncherChild : ScrollerChild
   {
-    private Ctk.Actor processed_icon;
+    private UnityIcon processed_icon;
     private ThemeImage active_indicator;
     private ThemeImage running_indicator;
     private Gdk.Pixbuf honeycomb_mask;
@@ -52,10 +52,15 @@ namespace Unity.Launcher
     // animations
     private Clutter.Animation active_indicator_anim;
     private Clutter.Animation running_indicator_anim;
+    private Clutter.Animation rotate_anim;
     private Clutter.Timeline  wiggle_timeline;
     private Clutter.Timeline  glow_timeline;
+    private Clutter.Timeline  rotate_timeline;
     private AnimState glow_state;
     private AnimState wiggle_state;
+    private AnimState rotate_state;
+
+    private float old_rotate_value = 0.0f;
 
     construct
     {
@@ -65,9 +70,13 @@ namespace Unity.Launcher
       //icon glow
       glow_timeline = new Clutter.Timeline (1);
       wiggle_timeline = new Clutter.Timeline (1);
+      rotate_timeline = new Clutter.Timeline (1);
 
       glow_timeline.new_frame.connect (on_glow_timeline_new_frame);
       wiggle_timeline.new_frame.connect (on_wiggle_timeline_new_frame);
+      rotate_timeline.new_frame.connect (on_rotate_timeline_new_frame);
+
+      notify["rotation"].connect (on_rotation_changed);
     }
 
     ~LauncherChild ()
@@ -98,7 +107,7 @@ namespace Unity.Launcher
                    e.message);
         }
 
-        processed_icon = new Ctk.Image (48);
+        processed_icon = new UnityIcon (null, null);
         processed_icon.set_size (48, 48);
         processed_icon.set_parent (this);
 
@@ -111,6 +120,7 @@ namespace Unity.Launcher
         // just trigger some notifications now to set inital state
         on_running_changed ();
         on_active_changed ();
+        on_rotation_changed ();
     }
 
     /* alpha helpers */
@@ -126,6 +136,45 @@ namespace Unity.Launcher
       return Math.fmaxf(((float)sine / 2.0f) + 0.5f, 0.0f);;
     }
     /* animation callbacks */
+
+    private void on_rotate_timeline_new_frame ()
+    {
+      float progress = (float)rotate_timeline.get_progress ();
+      switch (rotate_state)
+        {
+          case AnimState.RISING:
+            rotate_anim_rising (progress);
+            break;
+
+          case AnimState.STOPPED:
+            rotate_timeline.stop ();
+            break;
+        }
+      processed_icon.do_queue_redraw ();
+    }
+
+    private void rotate_anim_rising (float progress)
+    {
+      progress = get_ease_out_sine (progress);
+      var diff = rotation - old_rotate_value;
+      float rotate_val = old_rotate_value + (progress * diff);
+
+      processed_icon.rotation = rotate_val;
+      if (progress >= 1.0)
+        {
+          rotate_state = AnimState.STOPPED;
+          rotate_timeline.stop ();
+        }
+    }
+
+    public override void force_rotation_jump (float degrees)
+    {
+      processed_icon.rotation = degrees;
+      rotation = degrees;
+      rotate_state = AnimState.STOPPED;
+      rotate_timeline.stop ();
+      do_queue_redraw ();
+    }
 
     private void on_glow_timeline_new_frame ()
     {
@@ -317,6 +366,7 @@ namespace Unity.Launcher
 
           processed_icon = new UnityIcon (tex as Clutter.Texture, color as Clutter.Texture);
           processed_icon.set_parent (this);
+          processed_icon.rotation = rotation;
 
           this.effect_drop_shadow = new Ctk.EffectDropShadow (5.0f, 0, 2);
           effect_drop_shadow.set_opacity (0.4f);
@@ -352,6 +402,20 @@ namespace Unity.Launcher
       active_indicator_anim = active_indicator.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE,
                                                         SHORT_DELAY,
                                                         "opacity", target_opacity);
+    }
+
+    private void on_rotation_changed ()
+    {
+      old_rotate_value = processed_icon.rotation;
+      if (rotate_timeline.is_playing ())
+        {
+          rotate_timeline.stop ();
+          processed_icon.rotation = old_rotate_value;
+        }
+
+      rotate_timeline.set_duration (300);
+      rotate_state = AnimState.RISING;
+      rotate_timeline.start ();
     }
 
     private void on_activating_changed ()
