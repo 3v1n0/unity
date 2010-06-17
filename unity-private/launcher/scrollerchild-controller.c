@@ -464,27 +464,37 @@ static void unity_launcher_scroller_child_controller_set_child (UnityLauncherScr
 
 
 static gboolean _unity_launcher_scroller_child_controller_on_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_launcher_scroller_child_controller_on_press_event (self, event);
+	gboolean result;
+	result = unity_launcher_scroller_child_controller_on_press_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_launcher_scroller_child_controller_on_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_launcher_scroller_child_controller_on_release_event (self, event);
+	gboolean result;
+	result = unity_launcher_scroller_child_controller_on_release_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_launcher_scroller_child_controller_on_enter_event_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_launcher_scroller_child_controller_on_enter_event (self, event);
+	gboolean result;
+	result = unity_launcher_scroller_child_controller_on_enter_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_launcher_scroller_child_controller_on_leave_event_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_launcher_scroller_child_controller_on_leave_event (self, event);
+	gboolean result;
+	result = unity_launcher_scroller_child_controller_on_leave_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_launcher_scroller_child_controller_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_launcher_scroller_child_controller_on_motion_event (self, event);
+	gboolean result;
+	result = unity_launcher_scroller_child_controller_on_motion_event (self, event);
+	return result;
 }
 
 

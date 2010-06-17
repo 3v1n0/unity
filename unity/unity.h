@@ -280,6 +280,7 @@ struct _UnityEntryClass {
 struct _UnityUnityIcon {
 	CtkActor parent_instance;
 	UnityUnityIconPrivate * priv;
+	float rotation;
 };
 
 struct _UnityUnityIconClass {

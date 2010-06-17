@@ -146,7 +146,9 @@ static gboolean _lambda8_ (ClutterEvent* e, UnityPlacesSearchFieldView* self) {
 
 
 static gboolean __lambda8__clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return _lambda8_ (event, self);
+	gboolean result;
+	result = _lambda8_ (event, self);
+	return result;
 }
 
 

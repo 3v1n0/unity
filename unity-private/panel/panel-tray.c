@@ -124,7 +124,9 @@ static gpointer _g_object_ref0 (gpointer self) {
 
 
 static gboolean _unity_panel_system_tray_manage_tray_idle_gsource_func (gpointer self) {
-	return unity_panel_system_tray_manage_tray_idle (self);
+	gboolean result;
+	result = unity_panel_system_tray_manage_tray_idle (self);
+	return result;
 }
 
 
@@ -173,7 +175,7 @@ static gint unity_panel_system_tray_order_icons (ClutterActor* a, ClutterActor* 
 	} else {
 		_tmp1_ = "";
 	}
-	result = strcmp (_tmp0_, _tmp1_);
+	result = g_strcmp0 (_tmp0_, _tmp1_);
 	return result;
 }
 

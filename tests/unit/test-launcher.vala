@@ -117,6 +117,9 @@ namespace Unity.Tests.Unit
 
     public class TestScrollerChild : ScrollerChild
     {
+      public override void force_rotation_jump (float degrees)
+      {
+      }
     }
 
     // very basic tests for scroller model, makes sure its list interface works

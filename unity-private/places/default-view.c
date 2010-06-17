@@ -144,12 +144,16 @@ static void unity_places_default_view_finalize (GObject* obj);
 
 
 static gboolean _unity_places_default_activity_widget_on_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_places_default_activity_widget_on_enter (self);
+	gboolean result;
+	result = unity_places_default_activity_widget_on_enter (self);
+	return result;
 }
 
 
 static gboolean _unity_places_default_activity_widget_on_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_places_default_activity_widget_on_leave (self);
+	gboolean result;
+	result = unity_places_default_activity_widget_on_leave (self);
+	return result;
 }
 
 

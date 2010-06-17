@@ -406,6 +406,7 @@ static GObject * unity_place_entry_info_constructor (GType type, guint n_constru
 static void unity_place_entry_info_finalize (GObject* obj);
 static void unity_place_entry_info_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_place_entry_info_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+UnityPlaceService* unity_place_service_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
 GType unity_place_service_get_type (void);
 UnityPlace_EntryInfo* unity_place_service_get_entries (UnityPlaceService* self, int* result_length1, GError** error);
 void unity_place_service_dbus_register_object (DBusConnection* connection, const char* path, void* object);
@@ -418,7 +419,6 @@ static DBusHandlerResult _dbus_unity_place_service_get_entries (UnityPlaceServic
 static void _dbus_unity_place_service_entry_added (GObject* _sender, UnityPlace_EntryInfo* entry, DBusConnection* _connection);
 static void _dbus_unity_place_service_entry_removed (GObject* _sender, const char* entry_dbus_path, DBusConnection* _connection);
 GType unity_place_service_dbus_proxy_get_type (void);
-UnityPlaceService* unity_place_service_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
 static void _dbus_handle_unity_place_service_entry_added (UnityPlaceService* self, DBusConnection* connection, DBusMessage* message);
 static void _dbus_handle_unity_place_service_entry_removed (UnityPlaceService* self, DBusConnection* connection, DBusMessage* message);
 DBusHandlerResult unity_place_service_dbus_proxy_filter (DBusConnection* connection, DBusMessage* message, void* user_data);
@@ -429,6 +429,7 @@ static UnityPlace_EntryInfo* unity_place_service_dbus_proxy_get_entries (UnityPl
 static void unity_place_service_dbus_proxy_unity_place_service__interface_init (UnityPlaceServiceIface* iface);
 static void unity_place_service_dbus_proxy_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_place_service_dbus_proxy_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+UnityPlaceEntryService* unity_place_entry_service_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
 GType unity_place_entry_service_get_type (void);
 guint unity_place_entry_service_set_global_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error);
 guint unity_place_entry_service_set_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error);
@@ -445,7 +446,6 @@ static DBusHandlerResult _dbus_unity_place_entry_service_set_active (UnityPlaceE
 static DBusHandlerResult _dbus_unity_place_entry_service_set_active_section (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message);
 static void _dbus_unity_place_entry_service_renderer_info_changed (GObject* _sender, UnityPlace_RendererInfo* renderer_info, DBusConnection* _connection);
 GType unity_place_entry_service_dbus_proxy_get_type (void);
-UnityPlaceEntryService* unity_place_entry_service_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
 static void _dbus_handle_unity_place_entry_service_renderer_info_changed (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message);
 DBusHandlerResult unity_place_entry_service_dbus_proxy_filter (DBusConnection* connection, DBusMessage* message, void* user_data);
 enum  {
@@ -1284,15 +1284,15 @@ static GObject * unity_place_entry_info_constructor (GType type, guint n_constru
 			char* _tmp8_;
 			self->priv->info.sections_model = (_tmp8_ = g_strdup (""), _g_free0 (self->priv->info.sections_model), _tmp8_);
 		}
-		self->priv->info.hints = (_tmp9_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->info.hints), _tmp9_);
+		self->priv->info.hints = (_tmp9_ = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free), _g_hash_table_unref0 (self->priv->info.hints), _tmp9_);
 		self->priv->info.entry_renderer_info.default_renderer = (_tmp10_ = g_strdup (""), _g_free0 (self->priv->info.entry_renderer_info.default_renderer), _tmp10_);
 		self->priv->info.entry_renderer_info.groups_model = (_tmp11_ = g_strdup (""), _g_free0 (self->priv->info.entry_renderer_info.groups_model), _tmp11_);
 		self->priv->info.entry_renderer_info.results_model = (_tmp12_ = g_strdup (""), _g_free0 (self->priv->info.entry_renderer_info.results_model), _tmp12_);
-		self->priv->info.entry_renderer_info.hints = (_tmp13_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->info.entry_renderer_info.hints), _tmp13_);
+		self->priv->info.entry_renderer_info.hints = (_tmp13_ = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free), _g_hash_table_unref0 (self->priv->info.entry_renderer_info.hints), _tmp13_);
 		self->priv->info.global_renderer_info.default_renderer = (_tmp14_ = g_strdup (""), _g_free0 (self->priv->info.global_renderer_info.default_renderer), _tmp14_);
 		self->priv->info.global_renderer_info.groups_model = (_tmp15_ = g_strdup (""), _g_free0 (self->priv->info.global_renderer_info.groups_model), _tmp15_);
 		self->priv->info.global_renderer_info.results_model = (_tmp16_ = g_strdup (""), _g_free0 (self->priv->info.global_renderer_info.results_model), _tmp16_);
-		self->priv->info.global_renderer_info.hints = (_tmp17_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->info.global_renderer_info.hints), _tmp17_);
+		self->priv->info.global_renderer_info.hints = (_tmp17_ = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free), _g_hash_table_unref0 (self->priv->info.global_renderer_info.hints), _tmp17_);
 		self->priv->_entry_renderer_info = (_tmp18_ = unity_place_renderer_info_new (&self->priv->info.entry_renderer_info), _g_object_unref0 (self->priv->_entry_renderer_info), _tmp18_);
 		self->priv->_global_renderer_info = (_tmp19_ = unity_place_renderer_info_new (&self->priv->info.global_renderer_info), _g_object_unref0 (self->priv->_global_renderer_info), _tmp19_);
 	}
@@ -4248,7 +4248,7 @@ static GObject * unity_place_service_impl_constructor (GType type, guint n_const
 	self = UNITY_PLACE_SERVICE_IMPL (obj);
 	{
 		GHashTable* _tmp243_;
-		self->priv->entries = (_tmp243_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->entries), _tmp243_);
+		self->priv->entries = (_tmp243_ = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref), _g_hash_table_unref0 (self->priv->entries), _tmp243_);
 	}
 	return obj;
 }

@@ -238,6 +238,7 @@ struct _UnityLauncherScrollerChild {
 
 struct _UnityLauncherScrollerChildClass {
 	CtkActorClass parent_class;
+	void (*force_rotation_jump) (UnityLauncherScrollerChild* self, float degrees);
 };
 
 struct _Block1Data {
@@ -971,7 +972,9 @@ static GeeArrayList* unity_launcher_application_controller_real_get_menu_shortcu
 
 
 static gboolean _unity_launcher_application_controller_on_launch_timeout_gsource_func (gpointer self) {
-	return unity_launcher_application_controller_on_launch_timeout (self);
+	gboolean result;
+	result = unity_launcher_application_controller_on_launch_timeout (self);
+	return result;
 }
 
 

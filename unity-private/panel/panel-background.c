@@ -94,7 +94,9 @@ UnityPanelBackground* unity_panel_background_new (void) {
 
 
 static gboolean _unity_panel_background_update_background_gsource_func (gpointer self) {
-	return unity_panel_background_update_background (self);
+	gboolean result;
+	result = unity_panel_background_update_background (self);
+	return result;
 }
 
 

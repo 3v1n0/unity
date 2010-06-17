@@ -58,6 +58,7 @@ typedef struct _UnityThemeImageClass UnityThemeImageClass;
 struct _UnityUnityIcon {
 	CtkActor parent_instance;
 	UnityUnityIconPrivate * priv;
+	float rotation;
 };
 
 struct _UnityUnityIconClass {
@@ -585,12 +586,75 @@ static gpointer _g_object_ref0 (gpointer self) {
 void unity_unity_icon_paint_real (ClutterActor* actor) {
 	ClutterActor* _tmp0_;
 	UnityUnityIcon* _self_;
+	float p1_x = 0.0F;
+	float p1_y = 0.0F;
+	float p2_x = 0.0F;
+	float p2_y = 0.0F;
+	float p3_x = 0.0F;
+	float p3_y = 0.0F;
+	float p4_x = 0.0F;
+	float p4_y = 0.0F;
+	float z = 0.0F;
+	float w = 0.0F;
 	ClutterActorBox box = {0};
+	CoglMatrix modelview = {0};
+	CoglMatrix projection = {0};
+	CoglMatrix viewmatrix = {0};
+	CoglTextureVertex* _tmp10_;
+	gint _points_size_;
+	gint points_length1;
+	CoglTextureVertex* _tmp9_ = NULL;
+	CoglColor _tmp1_ = {0};
+	CoglTextureVertex _tmp2_ = {0};
+	CoglColor _tmp3_ = {0};
+	CoglTextureVertex _tmp4_ = {0};
+	CoglColor _tmp5_ = {0};
+	CoglTextureVertex _tmp6_ = {0};
+	CoglColor _tmp7_ = {0};
+	CoglTextureVertex _tmp8_ = {0};
+	CoglTextureVertex* points;
 	guchar opacity;
 	g_return_if_fail (actor != NULL);
 	_self_ = _g_object_ref0 ((_tmp0_ = actor, UNITY_IS_UNITY_ICON (_tmp0_) ? ((UnityUnityIcon*) _tmp0_) : NULL));
 	memset (&box, 0, sizeof (ClutterActorBox));
 	ctk_actor_get_stored_allocation ((CtkActor*) _self_, &box);
+	cogl_matrix_init_identity (&modelview);
+	cogl_matrix_init_identity (&projection);
+	cogl_matrix_perspective (&projection, 60.0f, 1.0f, 0.1f, 100.0f);
+	cogl_matrix_translate (&modelview, 0.0f, 0.0f, (-44.0f) - (fabsf (_self_->rotation / 360.0f) * 100));
+	cogl_matrix_rotate (&modelview, _self_->rotation, 1.0f, 0.0f, 0.0f);
+	cogl_matrix_multiply (&viewmatrix, &projection, &modelview);
+	p1_x = -25.0f;
+	p1_y = -25.0f;
+	p2_x = 25.0f;
+	p2_y = -25.0f;
+	p3_x = 25.0f;
+	p3_y = 25.0f;
+	p4_x = -25.0f;
+	p4_y = 25.0f;
+	z = 0.0f;
+	w = 1.0f;
+	cogl_matrix_transform_point (&viewmatrix, &p1_x, &p1_y, &z, &w);
+	p1_x = p1_x / w;
+	p1_y = p1_y / w;
+	z = 0.0f;
+	w = 1.0f;
+	cogl_matrix_transform_point (&viewmatrix, &p2_x, &p2_y, &z, &w);
+	p2_x = p2_x / w;
+	p2_y = p2_y / w;
+	z = 0.0f;
+	w = 1.0f;
+	cogl_matrix_transform_point (&viewmatrix, &p3_x, &p3_y, &z, &w);
+	p3_x = p3_x / w;
+	p3_y = p3_y / w;
+	z = 0.0f;
+	w = 1.0f;
+	cogl_matrix_transform_point (&viewmatrix, &p4_x, &p4_y, &z, &w);
+	p4_x = p4_x / w;
+	p4_y = p4_y / w;
+	z = 0.0f;
+	w = 1.0f;
+	points = (_tmp10_ = (_tmp9_ = g_new0 (CoglTextureVertex, 4), _tmp9_[0] = (memset (&_tmp2_, 0, sizeof (CoglTextureVertex)), _tmp2_.x = (50 * (p1_x + 1)) / 2, _tmp2_.y = 48 + ((50 * (p1_y - 1)) / 2), _tmp2_.z = 0.0f, _tmp2_.tx = 0.0f, _tmp2_.ty = 0.0f, _tmp2_.color = (memset (&_tmp1_, 0, sizeof (CoglColor)), _tmp1_.red = (guchar) 0xff, _tmp1_.green = (guchar) 0xff, _tmp1_.blue = (guchar) 0xff, _tmp1_.alpha = (guchar) 0xff, _tmp1_), _tmp2_), _tmp9_[1] = (memset (&_tmp4_, 0, sizeof (CoglTextureVertex)), _tmp4_.x = (50 * (p2_x + 1)) / 2, _tmp4_.y = 48 + ((50 * (p2_y - 1)) / 2), _tmp4_.z = 0.0f, _tmp4_.tx = 1.0f, _tmp4_.ty = 0.0f, _tmp4_.color = (memset (&_tmp3_, 0, sizeof (CoglColor)), _tmp3_.red = (guchar) 0xff, _tmp3_.green = (guchar) 0xff, _tmp3_.blue = (guchar) 0xff, _tmp3_.alpha = (guchar) 0xff, _tmp3_), _tmp4_), _tmp9_[2] = (memset (&_tmp6_, 0, sizeof (CoglTextureVertex)), _tmp6_.x = (50 * (p3_x + 1)) / 2, _tmp6_.y = 48 + ((50 * (p3_y - 1)) / 2), _tmp6_.z = 0.0f, _tmp6_.tx = 1.0f, _tmp6_.ty = 1.0f, _tmp6_.color = (memset (&_tmp5_, 0, sizeof (CoglColor)), _tmp5_.red = (guchar) 0xff, _tmp5_.green = (guchar) 0xff, _tmp5_.blue = (guchar) 0xff, _tmp5_.alpha = (guchar) 0xff, _tmp5_), _tmp6_), _tmp9_[3] = (memset (&_tmp8_, 0, sizeof (CoglTextureVertex)), _tmp8_.x = (50 * (p4_x + 1)) / 2, _tmp8_.y = 48 + ((50 * (p4_y - 1)) / 2), _tmp8_.z = 0.0f, _tmp8_.tx = 0.0f, _tmp8_.ty = 1.0f, _tmp8_.color = (memset (&_tmp7_, 0, sizeof (CoglColor)), _tmp7_.red = (guchar) 0xff, _tmp7_.green = (guchar) 0xff, _tmp7_.blue = (guchar) 0xff, _tmp7_.alpha = (guchar) 0xff, _tmp7_), _tmp8_), _tmp9_), points_length1 = 4, _points_size_ = points_length1, _tmp10_);
 	opacity = (guchar) clutter_actor_get_paint_opacity ((ClutterActor*) _self_);
 	cogl_material_set_color4ub (_self_->priv->bg_mat, opacity, opacity, opacity, opacity);
 	cogl_material_set_color4ub (_self_->priv->bgcol_material, opacity, opacity, opacity, opacity);
@@ -598,25 +662,76 @@ void unity_unity_icon_paint_real (ClutterActor* actor) {
 	cogl_material_set_color4ub (_self_->priv->fg_mat, opacity, opacity, opacity, opacity);
 	if (CLUTTER_IS_TEXTURE (_self_->priv->_bg_color)) {
 		cogl_set_source (_self_->priv->bgcol_material);
-		cogl_rectangle (box.x1, box.y1, box.x2, box.y2);
+		cogl_polygon (points, points_length1, TRUE);
 	} else {
 		cogl_set_source (_self_->priv->bg_mat);
-		cogl_rectangle (box.x1, box.y1, box.x2, box.y2);
+		cogl_polygon (points, points_length1, TRUE);
 	}
 	if (CLUTTER_IS_TEXTURE (_self_->priv->_icon)) {
-		gint width = 0;
-		gint height = 0;
+		gint base_width = 0;
+		gint base_height = 0;
 		float xpad = 0.0F;
 		float ypad = 0.0F;
+		CoglTextureVertex* _tmp20_;
+		gint _icon_points_size_;
+		gint icon_points_length1;
+		CoglTextureVertex* _tmp19_ = NULL;
+		CoglColor _tmp11_ = {0};
+		CoglTextureVertex _tmp12_ = {0};
+		CoglColor _tmp13_ = {0};
+		CoglTextureVertex _tmp14_ = {0};
+		CoglColor _tmp15_ = {0};
+		CoglTextureVertex _tmp16_ = {0};
+		CoglColor _tmp17_ = {0};
+		CoglTextureVertex _tmp18_ = {0};
+		CoglTextureVertex* icon_points;
+		gint width = 0;
+		gint height = 0;
+		clutter_texture_get_base_size (_self_->priv->_icon, &base_width, &base_height);
+		xpad = 1 + ((clutter_actor_box_get_width (&box) - base_width) / 2.0f);
+		ypad = ((clutter_actor_box_get_height (&box) - base_height) / 2.0f) - 1;
+		p1_x = -25.0f;
+		p1_y = -25.0f;
+		p2_x = 25.0f;
+		p2_y = -25.0f;
+		p3_x = 25.0f;
+		p3_y = 25.0f;
+		p4_x = -25.0f;
+		p4_y = 25.0f;
+		z = 0.0f;
+		w = 1.0f;
+		cogl_matrix_transform_point (&viewmatrix, &p1_x, &p1_y, &z, &w);
+		p1_x = p1_x / w;
+		p1_y = p1_y / w;
+		z = 0.0f;
+		w = 1.0f;
+		cogl_matrix_transform_point (&viewmatrix, &p2_x, &p2_y, &z, &w);
+		p2_x = p2_x / w;
+		p2_y = p2_y / w;
+		z = 0.0f;
+		w = 1.0f;
+		cogl_matrix_transform_point (&viewmatrix, &p3_x, &p3_y, &z, &w);
+		p3_x = p3_x / w;
+		p3_y = p3_y / w;
+		z = 0.0f;
+		w = 1.0f;
+		cogl_matrix_transform_point (&viewmatrix, &p4_x, &p4_y, &z, &w);
+		p4_x = p4_x / w;
+		p4_y = p4_y / w;
+		z = 0.0f;
+		w = 1.0f;
+		icon_points = (_tmp20_ = (_tmp19_ = g_new0 (CoglTextureVertex, 4), _tmp19_[0] = (memset (&_tmp12_, 0, sizeof (CoglTextureVertex)), _tmp12_.x = xpad + ((base_width * (p1_x + 1)) / 2), _tmp12_.y = (48 - ypad) + ((base_height * (p1_y - 1)) / 2), _tmp12_.z = 0.0f, _tmp12_.tx = 0.0f, _tmp12_.ty = 0.0f, _tmp12_.color = (memset (&_tmp11_, 0, sizeof (CoglColor)), _tmp11_.red = (guchar) 0xff, _tmp11_.green = (guchar) 0xff, _tmp11_.blue = (guchar) 0xff, _tmp11_.alpha = (guchar) 0xff, _tmp11_), _tmp12_), _tmp19_[1] = (memset (&_tmp14_, 0, sizeof (CoglTextureVertex)), _tmp14_.x = xpad + ((base_width * (p2_x + 1)) / 2), _tmp14_.y = (48 - ypad) + ((base_height * (p2_y - 1)) / 2), _tmp14_.z = 0.0f, _tmp14_.tx = 1.0f, _tmp14_.ty = 0.0f, _tmp14_.color = (memset (&_tmp13_, 0, sizeof (CoglColor)), _tmp13_.red = (guchar) 0xff, _tmp13_.green = (guchar) 0xff, _tmp13_.blue = (guchar) 0xff, _tmp13_.alpha = (guchar) 0xff, _tmp13_), _tmp14_), _tmp19_[2] = (memset (&_tmp16_, 0, sizeof (CoglTextureVertex)), _tmp16_.x = xpad + ((base_width * (p3_x + 1)) / 2), _tmp16_.y = (48 - ypad) + ((base_height * (p3_y - 1)) / 2), _tmp16_.z = 0.0f, _tmp16_.tx = 1.0f, _tmp16_.ty = 1.0f, _tmp16_.color = (memset (&_tmp15_, 0, sizeof (CoglColor)), _tmp15_.red = (guchar) 0xff, _tmp15_.green = (guchar) 0xff, _tmp15_.blue = (guchar) 0xff, _tmp15_.alpha = (guchar) 0xff, _tmp15_), _tmp16_), _tmp19_[3] = (memset (&_tmp18_, 0, sizeof (CoglTextureVertex)), _tmp18_.x = xpad + ((base_width * (p4_x + 1)) / 2), _tmp18_.y = (48 - ypad) + ((base_height * (p4_y - 1)) / 2), _tmp18_.z = 0.0f, _tmp18_.tx = 0.0f, _tmp18_.ty = 1.0f, _tmp18_.color = (memset (&_tmp17_, 0, sizeof (CoglColor)), _tmp17_.red = (guchar) 0xff, _tmp17_.green = (guchar) 0xff, _tmp17_.blue = (guchar) 0xff, _tmp17_.alpha = (guchar) 0xff, _tmp17_), _tmp18_), _tmp19_), icon_points_length1 = 4, _icon_points_size_ = icon_points_length1, _tmp20_);
 		clutter_texture_get_base_size (_self_->priv->_icon, &width, &height);
 		xpad = (clutter_actor_box_get_width (&box) - width) / 2.0f;
 		ypad = (clutter_actor_box_get_height (&box) - height) / 2.0f;
 		cogl_set_source (_self_->priv->icon_material);
-		cogl_rectangle (xpad, ypad, box.x2 - xpad, box.y2 - ypad);
+		cogl_polygon (icon_points, icon_points_length1, TRUE);
+		icon_points = (g_free (icon_points), NULL);
 	}
 	cogl_set_source (_self_->priv->fg_mat);
-	cogl_rectangle (box.x1, box.y1, box.x2, box.y2);
+	cogl_polygon (points, points_length1, TRUE);
 	_g_object_unref0 (_self_);
+	points = (g_free (points), NULL);
 }
 
 
@@ -734,42 +849,46 @@ static GObject * unity_unity_icon_constructor (GType type, guint n_construct_pro
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_UNITY_ICON (obj);
 	{
+		CoglHandle* _tmp0_;
+		CoglHandle* _tmp1_;
 		CoglHandle* mat;
 		CoglHandle* tex;
-		CoglHandle* _tmp5_;
-		CoglHandle* _tmp6_;
 		CoglHandle* _tmp7_;
 		CoglHandle* _tmp8_;
+		CoglHandle* _tmp9_;
+		CoglHandle* _tmp10_;
+		self->priv->icon_material = (_tmp0_ = cogl_material_new (), _cogl_handle_unref0 (self->priv->icon_material), _tmp0_);
+		self->priv->bgcol_material = (_tmp1_ = cogl_material_new (), _cogl_handle_unref0 (self->priv->bgcol_material), _tmp1_);
 		if (!CLUTTER_IS_TEXTURE (unity_unity_icon_bg_layer)) {
-			ClutterTexture* _tmp0_;
-			ClutterTexture* _tmp1_;
 			ClutterTexture* _tmp2_;
-			unity_unity_icon_bg_layer = (_tmp0_ = (ClutterTexture*) g_object_ref_sink (unity_theme_image_new ("prism_icon_background")), _g_object_unref0 (unity_unity_icon_bg_layer), _tmp0_);
-			unity_unity_icon_fg_layer = (_tmp1_ = (ClutterTexture*) g_object_ref_sink (unity_theme_image_new ("prism_icon_foreground")), _g_object_unref0 (unity_unity_icon_fg_layer), _tmp1_);
-			unity_unity_icon_mk_layer = (_tmp2_ = (ClutterTexture*) g_object_ref_sink (unity_theme_image_new ("prism_icon_mask")), _g_object_unref0 (unity_unity_icon_mk_layer), _tmp2_);
+			ClutterTexture* _tmp3_;
+			ClutterTexture* _tmp4_;
+			unity_unity_icon_bg_layer = (_tmp2_ = (ClutterTexture*) g_object_ref_sink (unity_theme_image_new ("prism_icon_background")), _g_object_unref0 (unity_unity_icon_bg_layer), _tmp2_);
+			unity_unity_icon_fg_layer = (_tmp3_ = (ClutterTexture*) g_object_ref_sink (unity_theme_image_new ("prism_icon_foreground")), _g_object_unref0 (unity_unity_icon_fg_layer), _tmp3_);
+			unity_unity_icon_mk_layer = (_tmp4_ = (ClutterTexture*) g_object_ref_sink (unity_theme_image_new ("prism_icon_mask")), _g_object_unref0 (unity_unity_icon_mk_layer), _tmp4_);
 		}
 		if (CLUTTER_IS_TEXTURE (self->priv->_icon)) {
 			CoglHandle* icon_mat;
 			CoglHandle* icon_tex;
 			CoglHandle* mask_tex;
-			CoglHandle* _tmp3_;
+			CoglHandle* _tmp5_;
 			clutter_actor_set_parent ((ClutterActor*) self->priv->_icon, (ClutterActor*) self);
 			icon_mat = cogl_material_new ();
 			icon_tex = (CoglHandle*) clutter_texture_get_cogl_texture (self->priv->_icon);
 			mask_tex = (CoglHandle*) clutter_texture_get_cogl_texture (unity_unity_icon_mk_layer);
 			cogl_material_set_layer (icon_mat, 0, icon_tex);
 			cogl_material_set_layer (icon_mat, 1, mask_tex);
-			self->priv->icon_material = (_tmp3_ = _cogl_handle_ref0 (icon_mat), _cogl_handle_unref0 (self->priv->icon_material), _tmp3_);
+			self->priv->icon_material = (_tmp5_ = _cogl_handle_ref0 (icon_mat), _cogl_handle_unref0 (self->priv->icon_material), _tmp5_);
 			_cogl_handle_unref0 (icon_mat);
 			_cogl_handle_unref0 (icon_tex);
 			_cogl_handle_unref0 (mask_tex);
 		}
 		if (CLUTTER_IS_TEXTURE (self->priv->_bg_color)) {
-			CoglHandle* _tmp4_;
+			CoglHandle* _tmp6_;
 			CoglHandle* color;
 			CoglHandle* mask_tex;
 			clutter_actor_set_parent ((ClutterActor*) self->priv->_bg_color, (ClutterActor*) self);
-			self->priv->bgcol_material = (_tmp4_ = cogl_material_new (), _cogl_handle_unref0 (self->priv->bgcol_material), _tmp4_);
+			self->priv->bgcol_material = (_tmp6_ = cogl_material_new (), _cogl_handle_unref0 (self->priv->bgcol_material), _tmp6_);
 			color = (CoglHandle*) clutter_texture_get_cogl_texture (self->priv->_bg_color);
 			mask_tex = (CoglHandle*) clutter_texture_get_cogl_texture (unity_unity_icon_mk_layer);
 			cogl_material_set_layer (self->priv->bgcol_material, 0, color);
@@ -781,11 +900,11 @@ static GObject * unity_unity_icon_constructor (GType type, guint n_construct_pro
 		mat = cogl_material_new ();
 		tex = (CoglHandle*) clutter_texture_get_cogl_texture (unity_unity_icon_bg_layer);
 		cogl_material_set_layer (mat, 0, tex);
-		self->priv->bg_mat = (_tmp5_ = _cogl_handle_ref0 (mat), _cogl_handle_unref0 (self->priv->bg_mat), _tmp5_);
-		mat = (_tmp6_ = cogl_material_new (), _cogl_handle_unref0 (mat), _tmp6_);
-		tex = (_tmp7_ = (CoglHandle*) clutter_texture_get_cogl_texture (unity_unity_icon_fg_layer), _cogl_handle_unref0 (tex), _tmp7_);
+		self->priv->bg_mat = (_tmp7_ = _cogl_handle_ref0 (mat), _cogl_handle_unref0 (self->priv->bg_mat), _tmp7_);
+		mat = (_tmp8_ = cogl_material_new (), _cogl_handle_unref0 (mat), _tmp8_);
+		tex = (_tmp9_ = (CoglHandle*) clutter_texture_get_cogl_texture (unity_unity_icon_fg_layer), _cogl_handle_unref0 (tex), _tmp9_);
 		cogl_material_set_layer (mat, 0, tex);
-		self->priv->fg_mat = (_tmp8_ = _cogl_handle_ref0 (mat), _cogl_handle_unref0 (self->priv->fg_mat), _tmp8_);
+		self->priv->fg_mat = (_tmp10_ = _cogl_handle_ref0 (mat), _cogl_handle_unref0 (self->priv->fg_mat), _tmp10_);
 		_cogl_handle_unref0 (mat);
 		_cogl_handle_unref0 (tex);
 	}
@@ -814,6 +933,7 @@ static void unity_unity_icon_class_init (UnityUnityIconClass * klass) {
 
 static void unity_unity_icon_instance_init (UnityUnityIcon * self) {
 	self->priv = UNITY_UNITY_ICON_GET_PRIVATE (self);
+	self->rotation = 0.0f;
 }
 
 

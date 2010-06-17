@@ -171,7 +171,9 @@ static void unity_entry_on_activate (UnityEntry* self) {
 
 
 static gboolean _unity_entry_on_stage_captured_event_clutter_actor_captured_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_entry_on_stage_captured_event (self, event);
+	gboolean result;
+	result = unity_entry_on_stage_captured_event (self, event);
+	return result;
 }
 
 
@@ -244,7 +246,9 @@ static void _unity_entry_on_key_focus_out_clutter_actor_key_focus_out (ClutterAc
 
 
 static gboolean _unity_entry_on_button_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_entry_on_button_press_event (self, event);
+	gboolean result;
+	result = unity_entry_on_button_press_event (self, event);
+	return result;
 }
 
 
