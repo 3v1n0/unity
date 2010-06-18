@@ -30,11 +30,7 @@ Depends: ${shlibs:Depends},
          ${misc:Depends},
          mutter,
          unity-asset-pool
-Conflicts: netbook-launcher (<= 1:2.1.18)
-Replaces: netbook-launcher (<= 1:2.1.18)
-Provides: indicator-renderer,
-          netbook-launcher
-Breaks: maximus (<< 0.4.14-1ubuntu2)
+Provides: indicator-renderer
 Description: Unity Interface for Ubuntu Netbook Edition
  Unity is a graphical interface designed for Ubuntu Netbook Edition
 
@@ -79,14 +75,4 @@ Description: binding to get places into the launcher - development files
  and add places in Unity environment.
  .
  This package contains files that are needed to build applications.
-
-Package: netbook-launcher
-Section: oldlibs
-Architecture: all
-Depends: unity
-Description: transitional package
- Unity supersedes netbook-launcher in maverick.
- .
- This package ensures a clean upgrade path, and can be safely removed after
- the upgrade. 
 
