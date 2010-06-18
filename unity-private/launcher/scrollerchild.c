@@ -27,9 +27,9 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <clutk/clutk.h>
-#include <gdk-pixbuf/gdk-pixdata.h>
 #include <float.h>
 #include <math.h>
+#include <gdk-pixbuf/gdk-pixdata.h>
 #include <stdlib.h>
 #include <string.h>
 #include <clutter/clutter.h>
@@ -64,6 +64,7 @@ struct _UnityLauncherScrollerChild {
 
 struct _UnityLauncherScrollerChildClass {
 	CtkActorClass parent_class;
+	void (*force_rotation_jump) (UnityLauncherScrollerChild* self, float degrees);
 };
 
 struct _UnityLauncherScrollerChildPrivate {
@@ -73,6 +74,7 @@ struct _UnityLauncherScrollerChildPrivate {
 	gboolean _active;
 	gboolean _needs_attention;
 	gboolean _activating;
+	float _rotation;
 };
 
 
@@ -88,8 +90,11 @@ enum  {
 	UNITY_LAUNCHER_SCROLLER_CHILD_RUNNING,
 	UNITY_LAUNCHER_SCROLLER_CHILD_ACTIVE,
 	UNITY_LAUNCHER_SCROLLER_CHILD_NEEDS_ATTENTION,
-	UNITY_LAUNCHER_SCROLLER_CHILD_ACTIVATING
+	UNITY_LAUNCHER_SCROLLER_CHILD_ACTIVATING,
+	UNITY_LAUNCHER_SCROLLER_CHILD_ROTATION
 };
+void unity_launcher_scroller_child_force_rotation_jump (UnityLauncherScrollerChild* self, float degrees);
+static void unity_launcher_scroller_child_real_force_rotation_jump (UnityLauncherScrollerChild* self, float degrees);
 gboolean unity_launcher_scroller_child_get_running (UnityLauncherScrollerChild* self);
 gboolean unity_launcher_scroller_child_get_active (UnityLauncherScrollerChild* self);
 float unity_launcher_scroller_child_get_position (UnityLauncherScrollerChild* self);
@@ -104,6 +109,8 @@ gboolean unity_launcher_scroller_child_get_needs_attention (UnityLauncherScrolle
 void unity_launcher_scroller_child_set_needs_attention (UnityLauncherScrollerChild* self, gboolean value);
 gboolean unity_launcher_scroller_child_get_activating (UnityLauncherScrollerChild* self);
 void unity_launcher_scroller_child_set_activating (UnityLauncherScrollerChild* self, gboolean value);
+float unity_launcher_scroller_child_get_rotation (UnityLauncherScrollerChild* self);
+void unity_launcher_scroller_child_set_rotation (UnityLauncherScrollerChild* self, float value);
 static GObject * unity_launcher_scroller_child_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_launcher_scroller_child_finalize (GObject* obj);
 static void unity_launcher_scroller_child_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -120,6 +127,18 @@ GType unity_launcher_pin_type_get_type (void) {
 		g_once_init_leave (&unity_launcher_pin_type_type_id__volatile, unity_launcher_pin_type_type_id);
 	}
 	return unity_launcher_pin_type_type_id__volatile;
+}
+
+
+static void unity_launcher_scroller_child_real_force_rotation_jump (UnityLauncherScrollerChild* self, float degrees) {
+	g_return_if_fail (self != NULL);
+	g_critical ("Type `%s' does not implement abstract method `unity_launcher_scroller_child_force_rotation_jump'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
+	return;
+}
+
+
+void unity_launcher_scroller_child_force_rotation_jump (UnityLauncherScrollerChild* self, float degrees) {
+	UNITY_LAUNCHER_SCROLLER_CHILD_GET_CLASS (self)->force_rotation_jump (self, degrees);
 }
 
 
@@ -248,6 +267,21 @@ void unity_launcher_scroller_child_set_activating (UnityLauncherScrollerChild* s
 }
 
 
+float unity_launcher_scroller_child_get_rotation (UnityLauncherScrollerChild* self) {
+	float result;
+	g_return_val_if_fail (self != NULL, 0.0F);
+	result = self->priv->_rotation;
+	return result;
+}
+
+
+void unity_launcher_scroller_child_set_rotation (UnityLauncherScrollerChild* self, float value) {
+	g_return_if_fail (self != NULL);
+	self->priv->_rotation = value;
+	g_object_notify ((GObject *) self, "rotation");
+}
+
+
 static GObject * unity_launcher_scroller_child_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -264,6 +298,7 @@ static GObject * unity_launcher_scroller_child_constructor (GType type, guint n_
 static void unity_launcher_scroller_child_class_init (UnityLauncherScrollerChildClass * klass) {
 	unity_launcher_scroller_child_parent_class = g_type_class_peek_parent (klass);
 	g_type_class_add_private (klass, sizeof (UnityLauncherScrollerChildPrivate));
+	UNITY_LAUNCHER_SCROLLER_CHILD_CLASS (klass)->force_rotation_jump = unity_launcher_scroller_child_real_force_rotation_jump;
 	G_OBJECT_CLASS (klass)->get_property = unity_launcher_scroller_child_get_property;
 	G_OBJECT_CLASS (klass)->set_property = unity_launcher_scroller_child_set_property;
 	G_OBJECT_CLASS (klass)->constructor = unity_launcher_scroller_child_constructor;
@@ -274,6 +309,7 @@ static void unity_launcher_scroller_child_class_init (UnityLauncherScrollerChild
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_ACTIVE, g_param_spec_boolean ("active", "active", "active", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_NEEDS_ATTENTION, g_param_spec_boolean ("needs-attention", "needs-attention", "needs-attention", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_ACTIVATING, g_param_spec_boolean ("activating", "activating", "activating", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_ROTATION, g_param_spec_float ("rotation", "rotation", "rotation", -G_MAXFLOAT, G_MAXFLOAT, 0.0F, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 
@@ -324,6 +360,9 @@ static void unity_launcher_scroller_child_get_property (GObject * object, guint 
 		case UNITY_LAUNCHER_SCROLLER_CHILD_ACTIVATING:
 		g_value_set_boolean (value, unity_launcher_scroller_child_get_activating (self));
 		break;
+		case UNITY_LAUNCHER_SCROLLER_CHILD_ROTATION:
+		g_value_set_float (value, unity_launcher_scroller_child_get_rotation (self));
+		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
@@ -352,6 +391,9 @@ static void unity_launcher_scroller_child_set_property (GObject * object, guint 
 		break;
 		case UNITY_LAUNCHER_SCROLLER_CHILD_ACTIVATING:
 		unity_launcher_scroller_child_set_activating (self, g_value_get_boolean (value));
+		break;
+		case UNITY_LAUNCHER_SCROLLER_CHILD_ROTATION:
+		unity_launcher_scroller_child_set_rotation (self, g_value_get_float (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

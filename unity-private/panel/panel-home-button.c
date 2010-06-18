@@ -199,12 +199,16 @@ static void unity_panel_home_button_set_shell (UnityPanelHomeButton* self, Unity
 
 
 static gboolean _unity_panel_home_button_on_button_press_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_panel_home_button_on_button_press (self, event);
+	gboolean result;
+	result = unity_panel_home_button_on_button_press (self, event);
+	return result;
 }
 
 
 static gboolean _unity_panel_home_button_on_button_release_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_panel_home_button_on_button_release (self, event);
+	gboolean result;
+	result = unity_panel_home_button_on_button_release (self, event);
+	return result;
 }
 
 

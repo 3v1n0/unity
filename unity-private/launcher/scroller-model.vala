@@ -87,8 +87,8 @@ namespace Unity.Launcher
             return array[iter_index - 1];
           }
     }
-
-    public bool contains(ScrollerChild child) {
+    public bool contains(ScrollerChild child)
+    {
         return child in children;
     }
 
@@ -132,7 +132,7 @@ namespace Unity.Launcher
         {
           return children.index_of (child);
         }
-      return 0;
+      return -1;
     }
 
     public void sort (CompareFunc compare)

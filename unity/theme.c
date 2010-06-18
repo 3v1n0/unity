@@ -302,7 +302,9 @@ static void unity_theme_file_path_path_from_theme_ready (GObject* source_object,
 
 
 static gboolean _unity_theme_file_path_path_from_theme_co_gsource_func (gpointer self) {
-	return unity_theme_file_path_path_from_theme_co (self);
+	gboolean result;
+	result = unity_theme_file_path_path_from_theme_co (self);
+	return result;
 }
 
 

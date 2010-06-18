@@ -85,7 +85,7 @@ namespace Mutter {
 	}
 	[Compact]
 	[CCode (cheader_filename = "mutter-plugins.h", cname = "MetaDisplay")]
-	public class MetaDisplay {
+	public class MetaDisplay : GLib.Object {
 		[CCode (cname = "meta_display_begin_grab_op")]
 		public static bool begin_grab_op (Mutter.MetaDisplay display, Mutter.MetaScreen screen, Mutter.MetaWindow window, Mutter.MetaGrabOp op, bool pointer_already_grabbed, bool frame_action, int button, ulong modmask, uint32 timestamp, int root_x, int root_y);
 		[CCode (cname = "meta_display_end_grab_op")]
@@ -675,7 +675,7 @@ namespace Mutter {
 	}
 	[Compact]
 	[CCode (cheader_filename = "mutter-plugins.h", cname = "MetaWindow")]
-	public class MetaWindow {
+	public class MetaWindow : GLib.Object {
 		[CCode (cname = "meta_window_activate")]
 		public static void activate (Mutter.MetaWindow window, uint32 current_time);
 		[CCode (cname = "meta_window_activate_with_workspace")]

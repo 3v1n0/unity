@@ -1,0 +1,33 @@
+diff -Nur -x '*.orig' -x '*~' unity-packaging//targets/mutter/plugin.vala unity-packaging.new//targets/mutter/plugin.vala
+--- unity-packaging//targets/mutter/plugin.vala	2010-06-17 17:32:20.676198000 +0200
++++ unity-packaging.new//targets/mutter/plugin.vala	2010-06-17 18:16:50.665663000 +0200
+@@ -120,6 +120,7 @@
+     private Maximus          maximus;
+ 
+     /* Unity Components */
++    private Background         background;
+     private ExposeManager      expose_manager;
+     private Launcher.Launcher  launcher;
+     private Places.Controller  places_controller;
+@@ -232,6 +233,11 @@
+ 
+       Clutter.Group window_group = (Clutter.Group) this.plugin.get_window_group ();
+ 
++      this.background = new Background ();
++      this.stage.add_actor (background);
++      this.background.lower_bottom ();
++      this.background.show ();
++
+       this.launcher = new Launcher.Launcher (this);
+       this.launcher.get_view ().opacity = 0;
+ 
+@@ -376,6 +382,9 @@
+                              (int)height - this.PANEL_HEIGHT);
+       this.drag_dest.move (0, this.PANEL_HEIGHT);
+ 
++      this.background.set_size (width, height);
++      this.background.set_position (0, 0);
++
+       this.launcher.get_view ().set_size (this.QUICKLAUNCHER_WIDTH,
+                                    (height-this.PANEL_HEIGHT));
+       this.launcher.get_view ().set_position (0, this.PANEL_HEIGHT);

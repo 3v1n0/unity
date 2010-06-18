@@ -44,6 +44,9 @@ namespace Unity.Launcher
     public bool active {get; set;}
     public bool needs_attention {get; set;}
     public bool activating {get; set;}
+    public float rotation {get; set;}
+
+    public abstract void force_rotation_jump (float degrees);
 
     public string to_string ()
     {

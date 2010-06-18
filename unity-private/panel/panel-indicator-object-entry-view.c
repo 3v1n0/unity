@@ -308,7 +308,9 @@ void unity_panel_indicators_indicator_object_entry_view_menu_key_moved (UnityPan
 
 
 static gboolean _unity_panel_indicators_indicator_object_entry_view_update_bg_gsource_func (gpointer self) {
-	return unity_panel_indicators_indicator_object_entry_view_update_bg (self);
+	gboolean result;
+	result = unity_panel_indicators_indicator_object_entry_view_update_bg (self);
+	return result;
 }
 
 
@@ -427,17 +429,23 @@ static void unity_panel_indicators_indicator_object_entry_view_set_entry (UnityP
 
 
 static gboolean _unity_panel_indicators_indicator_object_entry_view_on_button_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_panel_indicators_indicator_object_entry_view_on_button_press_event (self, event);
+	gboolean result;
+	result = unity_panel_indicators_indicator_object_entry_view_on_button_press_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_panel_indicators_indicator_object_entry_view_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_panel_indicators_indicator_object_entry_view_on_motion_event (self, event);
+	gboolean result;
+	result = unity_panel_indicators_indicator_object_entry_view_on_motion_event (self, event);
+	return result;
 }
 
 
 static gboolean _unity_panel_indicators_indicator_object_entry_view_on_scroll_event_clutter_actor_scroll_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	return unity_panel_indicators_indicator_object_entry_view_on_scroll_event (self, event);
+	gboolean result;
+	result = unity_panel_indicators_indicator_object_entry_view_on_scroll_event (self, event);
+	return result;
 }
 
 

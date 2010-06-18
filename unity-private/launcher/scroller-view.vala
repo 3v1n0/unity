@@ -31,6 +31,20 @@ namespace Unity.Launcher
     NONE
   }
 
+  private enum ScrollerViewType
+  {
+    EXPANDED,
+    CONTRACTED
+  }
+
+  // sucks that we have to use a class, obviously slower than we need it to be
+  // but vala doesn't work with structs+gee right now.
+  private class ChildTransition
+  {
+    public float position;
+    public float rotation;
+  }
+
   class ScrollerView : Ctk.Actor
   {
     // please don't reference this outside of this view, its only public for construct
@@ -49,7 +63,6 @@ namespace Unity.Launcher
      */
     private ThemeImage bgtex;
     private ThemeImage top_shadow;
-    private ThemeImage bottom_fade;
     /*
      * state tracking variables
      */
@@ -57,7 +70,7 @@ namespace Unity.Launcher
     private float total_child_height = 0.0f;
     private ScrollerPhase current_phase = ScrollerPhase.NONE;
     private uint last_motion_event_time = 0;
-
+    private ScrollerViewType view_type = ScrollerViewType.CONTRACTED;
     /*
      * scrolling variables
      */
@@ -71,6 +84,13 @@ namespace Unity.Launcher
     private uint previous_y_time = 0; // the time (ms) that previous_y_position was set
     private uint stored_delta = 0;
     private float scroll_speed = 0.0f; // the current speed (pixels/per second) that we are scrolling
+
+    private float contract_icon_degrees = 30.0f;
+    private int focused_launcher = 0;
+
+    /* helps out with draw order */
+    private Gee.ArrayList<ScrollerChild> draw_ftb;
+    private Gee.ArrayList<ScrollerChild> draw_btf;
 
     /*
      * Refrence holders
@@ -110,6 +130,8 @@ namespace Unity.Launcher
       button_press_event.connect (on_button_press_event);
       button_release_event.connect (on_button_release_event);
       motion_event.connect (on_motion_event);
+      enter_event.connect (on_enter_event);
+      leave_event.connect (on_leave_event);
 
       // set a timeline for our fling animation
       fling_timeline = new Clutter.Timeline (1000);
@@ -128,27 +150,29 @@ namespace Unity.Launcher
       child_refs = new Gee.ArrayList <ScrollerChild> ();
       order_children (true);
       queue_relayout ();
+      Idle.add (() => {
+        order_children (true);
+      });
     }
 
     public int get_model_index_at_y_pos (float y)
     {
       // returns the model index at the screenspace position given
-      // this is slow but we can't use child.position because of animations.
-      float h = 0.0f;
-      float min_height, nat_height;
+
+      float pos_x, pos_y;
+      get_position (out pos_x, out pos_y);
+      y -= pos_y;
       int i = 0;
       foreach (ScrollerChild child in model)
         {
-          float transformed_pos = h + scroll_position + padding.top;
+          float transformed_pos = child.position + padding.top;
           if (transformed_pos > y)
             return i;
 
-          child.get_preferred_height (get_width (), out min_height, out nat_height);
-          h += nat_height + spacing;
           i++;
         }
 
-      return int.max (i, 0);
+      return int.min (int.max (i, 0), model.size - 1);
     }
 
     /*
@@ -163,16 +187,13 @@ namespace Unity.Launcher
       top_shadow = new ThemeImage ("overflow_top");
       top_shadow.set_repeat (true, false);
       top_shadow.set_parent (this);
-
-      bottom_fade = new ThemeImage ("overflow_bottom");
-      bottom_fade.set_repeat (true, false);
-      bottom_fade.set_parent (this);
     }
 
     // will move the scroller by the given pixels
     private void move_scroll_position (float pixels)
     {
       scroll_position += pixels;
+      order_children (true);
       queue_relayout ();
     }
 
@@ -298,6 +319,60 @@ namespace Unity.Launcher
       return true;
     }
 
+    private bool on_enter_event (Clutter.Event event)
+    {
+      if (view_type == ScrollerViewType.EXPANDED) return false;
+      view_type = ScrollerViewType.EXPANDED;
+
+      Unity.global_shell.add_fullscreen_request (this);
+
+      // we need to set a new scroll position
+      // get the index of the icon we are hovering over
+      if (get_total_children_height () > get_available_height ())
+        {
+          int index = get_model_index_at_y_pos (event.crossing.y);
+
+          // set our state to what we will end up being so we can find the correct
+          //place to be.
+          var old_scroll_position = scroll_position;
+          scroll_position = 0;
+          order_children (true);
+          float child_height = model[index].get_height () / 2;
+          var new_scroll_position = -model[index].position + event.crossing.y;
+
+          //reset our view so that we animate cleanly to the new view
+          view_type = ScrollerViewType.CONTRACTED;
+          scroll_position = old_scroll_position;
+          order_children (true);
+
+          // and finally animate to the new view
+          view_type = ScrollerViewType.EXPANDED;
+
+          scroll_position = new_scroll_position;
+          order_children (false); // have to order twice, boo
+
+          queue_relayout ();
+        }
+
+      return false;
+    }
+
+    private bool on_leave_event (Clutter.Event event)
+    {
+      if (view_type == ScrollerViewType.CONTRACTED) return false;
+      if (event.crossing.x < get_width ()-1) return false;
+
+      Unity.global_shell.remove_fullscreen_request (this);
+
+      // need to store the focused item
+      focused_launcher = get_model_index_at_y_pos (event.crossing.y);
+
+      view_type = ScrollerViewType.CONTRACTED;
+      order_children (false);
+      queue_relayout ();
+      return false;
+    }
+
     private bool on_motion_event (Clutter.Event event)
     {
       var drag_controller = Drag.Controller.get_default ();
@@ -309,7 +384,7 @@ namespace Unity.Launcher
 
       last_motion_event_time = event.motion.time;
 
-      if (button_down && is_scrolling == false)
+      if (button_down && is_scrolling == false && view_type != ScrollerViewType.CONTRACTED)
         {
           /* we have a left button down, but we aren't dragging yet, we need to
            * monitor how far away we have dragged from the original click, once
@@ -535,35 +610,195 @@ namespace Unity.Launcher
 
     private void order_children (bool immediate)
     {
-      // figures out the position of each child based on its order in the model
-      float h = 0.0f;
-      float min_height, nat_height;
-      foreach (ScrollerChild child in model)
-      {
-        child.get_preferred_height (get_width (), out min_height, out nat_height);
-        if (h != child.position)
+      Gee.ArrayList<ChildTransition> transitions;
+      if (get_total_children_height () < get_available_height ())
         {
-          if (!immediate)
+          transitions = order_children_expanded ();
+        }
+      else
+        {
+          switch (view_type)
+            {
+              case ScrollerViewType.CONTRACTED:
+                transitions = order_children_contracted ();
+                break;
+
+              case ScrollerViewType.EXPANDED:
+                transitions = order_children_expanded ();
+                break;
+
+              default:
+                assert_not_reached ();
+            }
+        }
+
+      for (int index = 0; index < model.size; index++)
+        {
+          var child = model[index];
+          if (immediate)
+            {
+              child.position = transitions[index].position;
+              child.force_rotation_jump (transitions[index].rotation);
+            }
+          else
             {
               if (child.get_animation () is Clutter.Animation)
                 {
+                  // disable the current animation before starting a new one
                   float current_pos = child.position;
                   child.get_animation ().completed ();
                   child.position = current_pos;
                 }
 
+              child.rotation = transitions[index].rotation;
               child.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD,
-                             170,
-                             "position", h);
+                             300,
+                             "position", transitions[index].position
+                             );
+            }
+        }
+    }
+
+    private Gee.ArrayList<ChildTransition> order_children_expanded ()
+    {
+      // figures out the position of each child based on its order in the model
+      Gee.ArrayList<ChildTransition> ret_transitions = new Gee.ArrayList<ChildTransition> ();
+      float h = 0.0f;
+      float min_height, nat_height;
+      if (!(draw_ftb is Gee.ArrayList))
+        draw_ftb = new Gee.ArrayList<ScrollerChild> ();
+        draw_btf = new Gee.ArrayList<ScrollerChild> ();
+
+      foreach (ScrollerChild child in model)
+      {
+        child.get_preferred_height (get_width (), out min_height, out nat_height);
+        var transition = new ChildTransition ();
+        transition.position = h + scroll_position;
+        transition.rotation = 0.0f;
+        ret_transitions.add (transition);
+        if (!(child in draw_ftb || child in draw_ftb))
+          draw_ftb.add (child);
+        h += nat_height + spacing;
+      }
+      return ret_transitions;
+    }
+
+    private Gee.ArrayList<ChildTransition> order_children_contracted ()
+    {
+      Gee.ArrayList<ChildTransition> ret_transitions = new Gee.ArrayList<ChildTransition> ();
+      float h = 0.0f;
+      float min_height, nat_height;
+      int num_launchers = 0;
+      //get the total size of the children in a flat state
+      float total_child_height = get_total_children_height ();
+
+      if (total_child_height > get_available_height ())
+        {
+          // we need to contract some icons
+
+          // we need to calculate how many launchers fit on our launcher
+          num_launchers = (int)Math.floorf ((get_available_height () - (spacing * 2)) / (48.0f + spacing));
+
+          for (; num_launchers >= 1; num_launchers--)
+            {
+              //check to see if we can fit everything in
+              float flat_space = num_launchers * (48.0f + spacing);
+              float contracted_space = 0.0f;
+              contracted_space = ((model.size - num_launchers) * (8 + spacing));
+
+              if (flat_space + contracted_space < (get_available_height () - (spacing * 2)))
+                {
+                  // everything fits in at this level, woo!
+                  break;
+                }
+            }
+          num_launchers = int.max (num_launchers, 1);
+          // num_launchers now contains how many launchers should be "flat"
+        }
+      else
+        {
+          num_launchers = model.size;
+        }
+
+      int num_children_handled = 0;
+      int index_start_flat, index_end_flat = 0;
+
+      if (focused_launcher < model.size - (num_launchers -(num_launchers / 2)))
+        {
+          index_start_flat = int.max (0, focused_launcher - (num_launchers / 2));
+          index_end_flat = index_start_flat + num_launchers;
+        }
+      else
+        {
+          index_end_flat = model.size;
+          index_start_flat = index_end_flat - num_launchers;
+        }
+      draw_ftb = new Gee.ArrayList<ScrollerChild> ();
+      draw_btf = new Gee.ArrayList<ScrollerChild> ();
+
+      for (int index = 0; index < model.size; index++)
+        {
+          ScrollerChild child = model[index];
+          var transition = new ChildTransition ();
+          if (index >= index_start_flat && index < index_end_flat)
+            {
+
+              child.get_preferred_height (get_width (), out min_height, out nat_height);
+              transition.position = h;
+              h += nat_height + spacing;
+              num_children_handled++;
+              transition.rotation = 0.0f;
+
+              if (index == index_start_flat)
+                draw_ftb.add (child);
+              else
+                draw_btf.add (child);
             }
           else
             {
-              child.position = h;
+              // contracted launcher
+              if (index == index_end_flat) h -= spacing;
+
+              transition.position = h;
+              h += 8 + spacing;
+              if (num_children_handled < index_start_flat)
+                {
+                  transition.rotation = -contract_icon_degrees;
+                  draw_ftb.add (child);
+                }
+              else
+                {
+                  transition.rotation = contract_icon_degrees;
+                  draw_btf.add (child);
+                }
+              num_children_handled++;
+
+              if (index +1 == index_start_flat) h += 30;
             }
+          ret_transitions.add (transition);
         }
 
-        h += nat_height + spacing;
-      }
+      return ret_transitions;
+    }
+
+
+    private float get_total_children_height ()
+    {
+      float h = 0.0f;
+      float min_height, nat_height;
+      foreach (ScrollerChild child in model)
+        {
+          child.get_preferred_height (get_width (), out min_height, out nat_height);
+          h += nat_height + spacing;
+        }
+      return h;
+    }
+
+    private float get_available_height ()
+    {
+      Clutter.ActorBox box;
+      get_stored_allocation (out box);
+      return box.get_height () - padding.top - padding.bottom;
     }
 
     public override void allocate (Clutter.ActorBox box,
@@ -589,7 +824,7 @@ namespace Unity.Launcher
 
           child_box.x1 = current_width;
           child_box.x2 = box.get_width () - padding.right;
-          child_box.y1 = child.position + padding.top + scroll_position;
+          child_box.y1 = child.position + padding.top;
           child_box.y2 = child_box.y1 + child_height;
 
           child.allocate (child_box, flags);
@@ -615,11 +850,6 @@ namespace Unity.Launcher
       child_box.y1 = -1;
       child_box.y2 = bg_height -1;
       top_shadow.allocate (child_box, flags);
-
-      bottom_fade.get_base_size (out bg_width, out bg_height);
-      child_box.y1 = box.get_height() - bg_height;
-      child_box.y2 = box.get_height();
-      bottom_fade.allocate (child_box, flags);
     }
 
     public override void pick (Clutter.Color color)
@@ -635,7 +865,16 @@ namespace Unity.Launcher
     public override void paint ()
     {
       bgtex.paint ();
-      foreach (ScrollerChild child in model)
+      for (int index = draw_btf.size-1; index >= 0; index--)
+        {
+          ScrollerChild child = draw_btf[index];
+          if (child is LauncherChild && child.opacity > 0)
+            {
+              (child as LauncherChild).paint ();
+            }
+        }
+
+      foreach (ScrollerChild child in draw_ftb)
         {
           if (child is LauncherChild && child.opacity > 0)
             {
@@ -649,7 +888,6 @@ namespace Unity.Launcher
         }
 
       top_shadow.paint ();
-      bottom_fade.paint ();
     }
 
     public override void map ()
@@ -657,7 +895,6 @@ namespace Unity.Launcher
       base.map ();
       bgtex.map ();
       top_shadow.map ();
-      bottom_fade.map ();
       foreach (ScrollerChild child in model)
         {
           child.map ();
@@ -669,7 +906,6 @@ namespace Unity.Launcher
       base.unmap ();
       bgtex.map ();
       top_shadow.map ();
-      bottom_fade.map ();
       foreach (ScrollerChild child in model)
         {
           child.unmap ();

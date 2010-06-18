@@ -68,8 +68,8 @@ UnityTestingDirector* unity_testing_director_new (ClutterStage* stage);
 UnityTestingDirector* unity_testing_director_construct (GType object_type, ClutterStage* stage);
 static void unity_testing_director_do_event (UnityTestingDirector* self, ClutterActor* actor, ClutterEvent* event, gboolean capture_phase);
 void unity_testing_director_do_wait_for_animation (UnityTestingDirector* self, ClutterActor* actor);
-static gboolean _lambda18_ (UnityTestingDirector* self);
-static gboolean __lambda18__gsource_func (gpointer self);
+static gboolean _lambda19_ (UnityTestingDirector* self);
+static gboolean __lambda19__gsource_func (gpointer self);
 void unity_testing_director_do_wait_for_timeout (UnityTestingDirector* self, guint32 msecs);
 void unity_testing_director_button_press (UnityTestingDirector* self, ClutterActor* actor, guint32 button, gboolean autorelease, float relative_x, float relative_y, gboolean wait_for_animation);
 void unity_testing_director_button_release (UnityTestingDirector* self, ClutterActor* actor, guint32 button, float relative_x, float relative_y);
@@ -137,7 +137,7 @@ void unity_testing_director_do_wait_for_animation (UnityTestingDirector* self, C
 }
 
 
-static gboolean _lambda18_ (UnityTestingDirector* self) {
+static gboolean _lambda19_ (UnityTestingDirector* self) {
 	gboolean result = FALSE;
 	self->priv->break_loop = TRUE;
 	result = FALSE;
@@ -145,15 +145,17 @@ static gboolean _lambda18_ (UnityTestingDirector* self) {
 }
 
 
-static gboolean __lambda18__gsource_func (gpointer self) {
-	return _lambda18_ (self);
+static gboolean __lambda19__gsource_func (gpointer self) {
+	gboolean result;
+	result = _lambda19_ (self);
+	return result;
 }
 
 
 void unity_testing_director_do_wait_for_timeout (UnityTestingDirector* self, guint32 msecs) {
 	g_return_if_fail (self != NULL);
 	self->priv->break_loop = FALSE;
-	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) msecs, __lambda18__gsource_func, g_object_ref (self), g_object_unref);
+	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) msecs, __lambda19__gsource_func, g_object_ref (self), g_object_unref);
 	while (TRUE) {
 		if (!(self->priv->break_loop != TRUE)) {
 			break;
