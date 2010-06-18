@@ -37,7 +37,7 @@ namespace Unity.Panel
     public View (Shell shell)
     {
       Object (shell:shell,
-              reactive:false,
+              reactive:true,
               orientation:Ctk.Orientation.HORIZONTAL,
               homogeneous:false,
               spacing:0);
@@ -74,7 +74,17 @@ namespace Unity.Panel
       pack (indicator_bar, false, true);
       indicator_bar.show ();
 
+      this.button_release_event.connect (this.on_button_release_event);
+
       END_FUNCTION ();
+    }
+
+    private bool on_button_release_event (Clutter.Event e)
+    {
+      MenuManager manager = MenuManager.get_default ();
+      manager.popdown_current_menu ();
+
+      return false;
     }
 
     public int get_indicators_width ()
