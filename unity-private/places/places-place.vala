@@ -124,8 +124,8 @@ namespace Unity.Places
       }
 
       /* Connect to necessary signals */
-      service.EntryAdded += on_service_entry_added;
-      service.EntryRemoved += on_service_entry_removed;
+      service.EntryAdded.connect (on_service_entry_added);
+      service.EntryRemoved.connect (on_service_entry_removed);
 
       /* Make sure our entries are up-to-date */
       ValueArray[] entries = service.get_entries ();

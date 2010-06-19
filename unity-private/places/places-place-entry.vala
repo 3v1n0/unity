@@ -25,6 +25,15 @@ namespace Unity.Places
    **/
   public class PlaceEntry : Object
   {
+    public struct RenderInfo
+    {
+      string default_renderer;
+      string groups_model;
+      string results_model;
+
+      HashTable<string, string> renderer_hints;
+    }
+
     /* Properties */
     public string? dbus_name   { get; construct; }
     public string? dbus_path   { get; construct; }
@@ -71,6 +80,8 @@ namespace Unity.Places
         _sections_model = value;
       }
     }
+
+    public RenderInfo entry_renderer_info;
 
     /* Whether the Entry is available on the bus, this is only when we want to
      * do optimisations for startup (showing the entries before actually
@@ -120,7 +131,14 @@ namespace Unity.Places
       position = value_array.get_nth (3).get_uint ();
       sensitive = value_array.get_nth (5).get_boolean ();
       sections_model_name = value_array.get_nth (6).get_string ();
+
       /* FIXME: Need to unmarshal the rest of the data too */
+
+      /* Unmarshal the RenderInfo */
+      unowned ValueArray ea = (ValueArray)(value_array.get_nth (8).get_pointer ());
+      entry_renderer_info.default_renderer = ea.get_nth (0).get_string ();
+      entry_renderer_info.groups_model = ea.get_nth (1).get_string ();
+      entry_renderer_info.results_model = ea.get_nth (2).get_string ();
     }
 
     public new void connect ()
