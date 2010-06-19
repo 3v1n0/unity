@@ -172,7 +172,7 @@ namespace Unity.Launcher
           i++;
         }
 
-      return int.min (int.max (i, 0), model.size -1);
+      return int.min (int.max (i, 0), model.size - 1);
     }
 
     /*
@@ -325,30 +325,34 @@ namespace Unity.Launcher
       view_type = ScrollerViewType.EXPANDED;
 
       Unity.global_shell.add_fullscreen_request (this);
-      Clutter.grab_pointer (this);
 
       // we need to set a new scroll position
       // get the index of the icon we are hovering over
-      int index = get_model_index_at_y_pos (event.crossing.y);
+      if (get_total_children_height () > get_available_height ())
+        {
+          int index = get_model_index_at_y_pos (event.crossing.y);
 
-      // set our state to what we will end up being so we can find the correct
-      //place to be.
-      var old_scroll_position = scroll_position;
-      scroll_position = 0;
-      order_children (true);
-      var new_scroll_position = -model[index].position + event.crossing.y;
+          // set our state to what we will end up being so we can find the correct
+          //place to be.
+          var old_scroll_position = scroll_position;
+          scroll_position = 0;
+          order_children (true);
+          float child_height = model[index].get_height () / 2;
+          var new_scroll_position = -model[index].position + event.crossing.y;
 
-      //reset our view so that we animate cleanly to the new view
-      view_type = ScrollerViewType.CONTRACTED;
-      scroll_position = old_scroll_position;
-      order_children (true);
+          //reset our view so that we animate cleanly to the new view
+          view_type = ScrollerViewType.CONTRACTED;
+          scroll_position = old_scroll_position;
+          order_children (true);
 
-      // and finally animate to the new view
-      view_type = ScrollerViewType.EXPANDED;
-      scroll_position = new_scroll_position;
-      order_children (false); // have to order twice, boo
+          // and finally animate to the new view
+          view_type = ScrollerViewType.EXPANDED;
 
-      queue_relayout ();
+          scroll_position = new_scroll_position;
+          order_children (false); // have to order twice, boo
+
+          queue_relayout ();
+        }
 
       return false;
     }
@@ -359,7 +363,6 @@ namespace Unity.Launcher
       if (event.crossing.x < get_width ()-1) return false;
 
       Unity.global_shell.remove_fullscreen_request (this);
-      Clutter.ungrab_pointer ();
 
       // need to store the focused item
       focused_launcher = get_model_index_at_y_pos (event.crossing.y);
@@ -608,19 +611,25 @@ namespace Unity.Launcher
     private void order_children (bool immediate)
     {
       Gee.ArrayList<ChildTransition> transitions;
-
-      switch (view_type)
+      if (get_total_children_height () < get_available_height ())
         {
-          case ScrollerViewType.CONTRACTED:
-            transitions = order_children_contracted ();
-            break;
+          transitions = order_children_expanded ();
+        }
+      else
+        {
+          switch (view_type)
+            {
+              case ScrollerViewType.CONTRACTED:
+                transitions = order_children_contracted ();
+                break;
 
-          case ScrollerViewType.EXPANDED:
-            transitions = order_children_expanded ();
-            break;
+              case ScrollerViewType.EXPANDED:
+                transitions = order_children_expanded ();
+                break;
 
-          default:
-            assert_not_reached ();
+              default:
+                assert_not_reached ();
+            }
         }
 
       for (int index = 0; index < model.size; index++)
@@ -688,7 +697,7 @@ namespace Unity.Launcher
           // we need to contract some icons
 
           // we need to calculate how many launchers fit on our launcher
-          num_launchers = (int)Math.floorf (get_available_height () / (48.0f + spacing));
+          num_launchers = (int)Math.floorf ((get_available_height () - (spacing * 2)) / (48.0f + spacing));
 
           for (; num_launchers >= 1; num_launchers--)
             {
@@ -697,7 +706,7 @@ namespace Unity.Launcher
               float contracted_space = 0.0f;
               contracted_space = ((model.size - num_launchers) * (8 + spacing));
 
-              if (flat_space + contracted_space < get_available_height ())
+              if (flat_space + contracted_space < (get_available_height () - (spacing * 2)))
                 {
                   // everything fits in at this level, woo!
                   break;
