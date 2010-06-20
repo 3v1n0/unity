@@ -379,7 +379,7 @@ namespace Unity.Places
               entry_results_model = null;
             }
 
-          HashTable<string, string>hash = (HashTable<string, string>)(ea.get_nth (3).get_pointer ());
+          HashTable<string, string>hash = (HashTable<string, string>)(ea.get_nth (3).get_boxed ());
           if (hash != null)
             entry_renderer_hints = map_from_hash (hash);
           else
