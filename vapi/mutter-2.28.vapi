@@ -523,7 +523,7 @@ namespace Mutter {
 	public class MetaResizePopup {
 	}
 	[Compact]
-	[CCode (cheader_filename = "mutter-plugins.h")]
+	[CCode (cheader_filename = "mutter-plugins.h", cname = "MetaScreen")]
 	public class MetaScreen {
 		[CCode (cname = "meta_screen_append_new_workspace")]
 		public static unowned Mutter.MetaWorkspace append_new_workspace (Mutter.MetaScreen screen, bool activate, uint32 timestamp);
@@ -794,7 +794,7 @@ namespace Mutter {
 	public class MetaWindowMenu {
 	}
 	[Compact]
-	[CCode (cheader_filename = "mutter-plugins.h")]
+	[CCode (cheader_filename = "mutter-plugins.h", cname = "MetaWorkspace")]
 	public class MetaWorkspace {
 		[CCode (cname = "meta_workspace_activate")]
 		public static void activate (Mutter.MetaWorkspace workspace, uint32 timestamp);

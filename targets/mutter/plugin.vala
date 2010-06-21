@@ -122,6 +122,7 @@ namespace Unity
     /* Unity Components */
     private Background         background;
     private ExposeManager      expose_manager;
+    private SpacesManager      spaces_manager;
     private Launcher.Launcher  launcher;
     private Places.Controller  places_controller;
     private Places.View        places;
@@ -240,6 +241,8 @@ namespace Unity
 
       this.launcher = new Launcher.Launcher (this);
       this.launcher.get_view ().opacity = 0;
+      
+      this.spaces_manager = new SpacesManager (this);
 
       this.expose_manager = new ExposeManager (this, launcher);
       this.expose_manager.hovered_opacity = 255;
@@ -467,7 +470,8 @@ namespace Unity
 
     public void show_window_picker ()
     {
-      if (this.places_enabled == true)
+      spaces_manager.ShowSpacesPicker ();
+      /*if (this.places_enabled == true)
         {
           this.show_unity ();
           return;
@@ -487,7 +491,7 @@ namespace Unity
           windows.append (window as Clutter.Actor);
         }
 
-      this.expose_windows (windows, 80);
+      this.expose_windows (windows, 80);*/
     }
 
     public Clutter.Stage get_stage ()
