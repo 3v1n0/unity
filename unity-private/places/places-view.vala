@@ -17,6 +17,7 @@
  *             Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
+using Unity;
 
 namespace Unity.Places
 {
@@ -36,7 +37,8 @@ namespace Unity.Places
 
     private Ctk.VBox       content_box;
 
-    private PlaceSearchBar search_bar;
+    private PlaceSearchBar       search_bar;
+    private Unity.Place.Renderer renderer;
 
     public View (Shell shell)
     {
@@ -74,13 +76,30 @@ namespace Unity.Places
 
     private void on_entry_view_activated (PlaceEntryView entry_view, int x)
     {
+      PlaceEntry entry = entry_view.entry;
+
       /* Create the correct results view */
+      if (renderer is Clutter.Actor)
+        {
+          renderer.destroy ();
+        }
+      renderer = lookup_renderer (entry.entry_renderer_name);
+      content_box.pack (renderer, true, true);
+      renderer.set_models (entry.entry_groups_model,
+                           entry.entry_results_model,
+                           entry.entry_renderer_hints);
+      renderer.show ();
 
       /* Update the search bar */
-      search_bar.set_active_entry_view (entry_view.entry,
+      search_bar.set_active_entry_view (entry,
                                         x
                                           - shell.get_launcher_width_foobar ()
                                           - 8);
+    }
+
+    private Unity.Place.Renderer lookup_renderer (string renderer)
+    {
+      return new DefaultRenderer ();
     }
   }
 }

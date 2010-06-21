@@ -257,9 +257,9 @@ namespace Unity.Places
           entry_renderer_name = ea.get_nth (0).get_string ();
 
           var str = ea.get_nth (1).get_string ();
-          if (entry_groups_model_name != name)
+          if (entry_groups_model_name != str)
             {
-              entry_groups_model_name = name;
+              entry_groups_model_name = str;
               entry_groups_model = null;
             }
 
@@ -279,17 +279,14 @@ namespace Unity.Places
 
       /* Unmarshal the Global RenderInfo */
       unowned ValueArray ga = (ValueArray)(value_array.get_nth (9).get_boxed ());
-      /* Because Mikkel hates me and sends null values for structs. I'll get
-       * that Dane one day.
-       */
       if (ga != null)
         {
           global_renderer_name = ga.get_nth (0).get_string ();
 
           var str = ga.get_nth (1).get_string ();
-          if (global_groups_model_name != name)
+          if (global_groups_model_name != str)
             {
-              global_groups_model_name = name;
+              global_groups_model_name = str;
               global_groups_model = null;
             }
 
@@ -366,9 +363,9 @@ namespace Unity.Places
           entry_renderer_name = ea.get_nth (0).get_string ();
 
           var str = ea.get_nth (1).get_string ();
-          if (entry_groups_model_name != name)
+          if (entry_groups_model_name != str)
             {
-              entry_groups_model_name = name;
+              entry_groups_model_name = str;
               entry_groups_model = null;
             }
 
@@ -402,7 +399,6 @@ namespace Unity.Places
           unowned string v = (string)val;
 
           map[k] = v;
-          print (@"$k = $v");
         }
 
       return map;

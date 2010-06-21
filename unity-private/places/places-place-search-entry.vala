@@ -48,7 +48,7 @@ namespace Unity.Places
       pack (left_icon, false, true);
       left_icon.show ();
 
-      text = new Ctk.Text ("Search Me...");
+      text = new Ctk.Text ("Search");
       text.reactive = true;
       text.selectable = true;
       text.editable = true;
