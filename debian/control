@@ -74,6 +74,7 @@ Depends: ${misc:Depends},
          libclutter-gtk-0.10-dev,
          libdee-dev,
          libgee-dev,
+         libclutk-dev,
 Description: binding to get places into the launcher - development files
  libunity-places is a shared library to be able to interact with the launcher
  and add places in Unity environment.
