@@ -51,6 +51,9 @@ namespace Unity {
     }
     
     public void ShowSpacesPicker () {
+      if (showing)
+        return;
+      
       showing = true;
       plugin.add_fullscreen_request (this);
       
@@ -60,7 +63,7 @@ namespace Unity {
       
       foreach (unowned Mutter.MetaWorkspace workspace in workspaces)
         {
-          Clutter.Actor clone = WorkspaceClone (workspace);
+          Clutter.Actor clone = workspace_clone (workspace);
           clones.append (clone);
           
           window_group.add_actor (clone);
@@ -72,7 +75,7 @@ namespace Unity {
           clone.button_release_event.connect (() => { select_workspace (cpy); return true; });
         }
       
-      LayoutWorkspaces (clones, screen);
+      layout_workspaces (clones, screen);
       
       unowned GLib.List<Mutter.Window> windows = plugin.plugin.get_windows ();
       foreach (Mutter.Window w in windows)
@@ -82,25 +85,16 @@ namespace Unity {
     }
     
     private void select_workspace (Mutter.MetaWorkspace workspace) {
-      foreach (Clutter.Actor clone in clones)
-        {
-          clone.destroy ();
-        }
-      
-      unowned GLib.List<Mutter.Window> windows = plugin.plugin.get_windows ();
-      foreach (Mutter.Window w in windows)
-        {
-            (w as Clutter.Actor).opacity = 255;
-        }
-      
+      unlayout_workspaces (clones, plugin.plugin.get_screen (), Mutter.MetaWorkspace.index (workspace));
       clones = null;
       
       uint time_ = Mutter.MetaDisplay.get_current_time (Mutter.MetaScreen.get_display (Mutter.MetaWorkspace.get_screen (workspace)));
       Mutter.MetaWorkspace.activate (workspace, time_);
       plugin.remove_fullscreen_request (this);
+      showing = false;
     }
     
-    private Clutter.Actor WorkspaceClone (Mutter.MetaWorkspace workspace) {
+    private Clutter.Actor workspace_clone (Mutter.MetaWorkspace workspace) {
       Clutter.Group wsp;
       unowned GLib.List<Mutter.Window> windows = plugin.plugin.get_windows ();
       
@@ -130,7 +124,47 @@ namespace Unity {
       return wsp;
     }
     
-    private void LayoutWorkspaces (List<Clutter.Actor> clones, Mutter.MetaScreen screen) {
+    private void unlayout_workspaces (List<Clutter.Actor> clones, Mutter.MetaScreen screen, int focus) {
+      uint length = clones.length ();
+      
+      int width  = (int) Math.ceil  (Math.sqrt ((double) length));
+      int height = (int) Math.floor (Math.sqrt ((double) length));
+      
+      Mutter.MetaRectangle rect = {0, 0, 0, 0};
+      Mutter.MetaScreen.get_monitor_geometry (screen, 0, rect);
+      
+      for (int y = 0; y < height; y++)
+        {
+          for (int x = 0; x < width; x++)
+            {
+              int index = y * width + x;
+              
+              int xoffset = (x - (focus % width)) * rect.width;
+              int yoffset = (y - (focus / height)) * rect.height;
+              
+              warning ("%i %i", xoffset, yoffset);
+              
+              Clutter.Actor clone = (Clutter.Actor) clones.nth_data (index);
+              
+              Clutter.Animation anim = clone.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
+                      "x", (float) xoffset,
+                      "y", (float) yoffset,
+                      "scale-x", 1.0f,
+                      "scale-y", 1.0f);
+              
+              anim.completed.connect (() => {
+                clone.destroy ();
+                unowned GLib.List<Mutter.Window> windows = plugin.plugin.get_windows ();
+                foreach (Mutter.Window w in windows)
+                  {
+                    (w as Clutter.Actor).opacity = 255;
+                  }
+              });
+            }
+        }
+    }
+    
+    private void layout_workspaces (List<Clutter.Actor> clones, Mutter.MetaScreen screen) {
       uint length = clones.length ();
       
       int width  = (int) Math.ceil  (Math.sqrt ((double) length));
