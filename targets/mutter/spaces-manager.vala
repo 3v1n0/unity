@@ -36,12 +36,21 @@ namespace Unity {
     
     public SpacesManager (Plugin plugin) {
       this.plugin = plugin;
+      this.plugin.workspace_switch_event.connect (this.workspace_switched);
     }
     
     construct
     {
       set_padding (50, 50, 50, 50);
       spacing = 15;
+    }
+    
+    private void workspace_switched (Plugin plugin,
+                                     List<Mutter.Window> windows,
+                                     int from,
+                                     int to,
+                                     int direction) {
+      this.plugin.plugin.effect_completed (windows.nth_data (0), Mutter.PLUGIN_SWITCH_WORKSPACE);
     }
     
     public void set_padding (uint top, uint right, uint left, uint bottom) {
@@ -149,7 +158,7 @@ namespace Unity {
               int index = y * width + x;
               
               int xoffset = (x - (focus % width)) * rect.width;
-              int yoffset = (y - (focus / height)) * rect.height;
+              int yoffset = (y - (focus / width)) * rect.height;
               
               warning ("%i %i", xoffset, yoffset);
               
@@ -190,7 +199,7 @@ namespace Unity {
       int active = Mutter.MetaScreen.get_active_workspace_index (screen);
        
       int xoffset = -(active % width) * rect.width;
-      int yoffset = -(active / height) * rect.height;
+      int yoffset = -(active / width) * rect.height;
        
       uint item_width = (rect.width - left_padding - right_padding - (width - 1) * spacing) / width;
       float item_scale = (float) item_width / (float) rect.width;
