@@ -243,6 +243,7 @@ namespace Unity
       this.launcher.get_view ().opacity = 0;
       
       this.spaces_manager = new SpacesManager (this);
+      this.spaces_manager.set_padding (50, 50, 125, 50);
 
       this.expose_manager = new ExposeManager (this, launcher);
       this.expose_manager.hovered_opacity = 255;

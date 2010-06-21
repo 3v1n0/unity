@@ -39,11 +39,11 @@ namespace Unity {
     
     construct
     {
-      SetPadding (50, 50, 50, 50);
+      set_padding (50, 50, 50, 50);
       spacing = 15;
     }
     
-    public void SetPadding (uint top, uint right, uint left, uint bottom) {
+    public void set_padding (uint top, uint right, uint left, uint bottom) {
       top_padding    = top;
       right_padding  = right;
       left_padding   = left;
@@ -61,7 +61,7 @@ namespace Unity {
       foreach (unowned Mutter.MetaWorkspace workspace in workspaces)
         {
           Clutter.Actor clone = WorkspaceClone (workspace);
-          clones.prepend (clone);
+          clones.append (clone);
           
           window_group.add_actor (clone);
           clone.reactive = true;
@@ -138,6 +138,11 @@ namespace Unity {
       
       Mutter.MetaRectangle rect = {0, 0, 0, 0};
       Mutter.MetaScreen.get_monitor_geometry (screen, 0, rect);
+      
+      int active = Mutter.MetaScreen.get_active_workspace_index (screen);
+       
+      int xoffset = -(active % width) * rect.width;
+      int yoffset = -(active / height) * rect.height;
        
       uint item_width = (rect.width - left_padding - right_padding - (width - 1) * spacing) / width;
       float item_scale = (float) item_width / (float) rect.width;
@@ -150,10 +155,16 @@ namespace Unity {
               int index = y * width + x;
               Clutter.Actor clone = (Clutter.Actor) clones.nth_data (index);
               
-              clone.set_scale (item_scale, item_scale);
+              clone.set_scale (1.0f, 1.0f);
               
-              clone.x = left_padding + ((item_width + spacing) * x);
-              clone.y = top_padding + ((item_height + spacing) * y);
+              clone.x = (float) rect.width * x + xoffset;
+              clone.y = (float) rect.height * y + yoffset;
+              
+              clone.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
+                      "x", (float) left_padding + ((item_width + spacing) * x),
+                      "y", (float) top_padding + ((item_height + spacing) * y),
+                      "scale-x", item_scale,
+                      "scale-y", item_scale);
             }
         }
     }
