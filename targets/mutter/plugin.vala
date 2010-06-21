@@ -104,7 +104,7 @@ namespace Unity
     private Mutter.Plugin? _plugin;
     public  Mutter.Plugin? plugin {
       get { return _plugin; }
-      set { _plugin = value; Idle.add (real_construct); }
+      set { _plugin = value; real_construct (); }
     }
 
     public bool menus_swallow_events { get { return false; } }
