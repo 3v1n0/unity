@@ -37,10 +37,7 @@ namespace Unity.Places
       padding = { PADDING, PADDING, PADDING , PADDING};
       orientation = Ctk.Orientation.VERTICAL;
       spacing = SPACING;
-
-      var rect = new Clutter.Rectangle.with_color({255, 0, 0, 255});
-      set_background (rect);
-      rect.show ();
+      homogeneous = false;
     }
 
     /*
@@ -55,16 +52,15 @@ namespace Unity.Places
 
       groups_model.row_added.connect (on_group_added);
       groups_model.row_removed.connect (on_group_removed);
-
-      results_model.row_added.connect (on_result_added);
-      results_model.row_removed.connect (on_result_removed);
     }
 
     private void on_group_added (Dee.Model model, Dee.ModelIter iter)
     {
-      var group = new DefaultRendererGroup (model.get_string (iter, 0),
+      var group = new DefaultRendererGroup (model.get_position (iter),
+                                            model.get_string (iter, 0),
                                             model.get_string (iter, 1),
-                                            model.get_string (iter, 2));
+                                            model.get_string (iter, 2),
+                                            results_model);
       group.set_data<unowned Dee.ModelIter> ("model-iter", iter);
       pack (group, false, true);
       group.show ();
@@ -82,16 +78,6 @@ namespace Unity.Places
               break;
             }
         }
-    }
-
-    private void on_result_added (Dee.Model model, Dee.ModelIter iter)
-    {
-      print ("Result: %s\n", model.get_string (iter, 4));
-    }
-
-    private void on_result_removed (Dee.Model model, Dee.ModelIter iter)
-    {
-      print ("Result Removed: %s\n", model.get_string (iter, 4));
     }
   }
 }
