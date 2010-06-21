@@ -471,7 +471,7 @@ namespace Unity
 
     public void show_window_picker ()
     {
-      spaces_manager.ShowSpacesPicker ();
+      spaces_manager.show_spaces_picker ();
       /*if (this.places_enabled == true)
         {
           this.show_unity ();

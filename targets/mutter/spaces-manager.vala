@@ -50,7 +50,7 @@ namespace Unity {
       bottom_padding = bottom;
     }
     
-    public void ShowSpacesPicker () {
+    public void show_spaces_picker () {
       if (showing)
         return;
       
@@ -59,7 +59,7 @@ namespace Unity {
       
       unowned Mutter.MetaScreen screen = plugin.plugin.get_screen (); 
       unowned GLib.List<Mutter.MetaWorkspace> workspaces = Mutter.MetaScreen.get_workspaces (screen);
-      unowned Clutter.Container window_group = plugin.plugin.get_window_group() as Clutter.Container;
+      unowned Clutter.Container window_group = plugin.plugin.get_normal_window_group() as Clutter.Container;
       
       foreach (unowned Mutter.MetaWorkspace workspace in workspaces)
         {
