@@ -52,6 +52,7 @@ namespace Unity {
     
     public void ShowSpacesPicker () {
       showing = true;
+      plugin.add_fullscreen_request (this);
       
       unowned Mutter.MetaScreen screen = plugin.plugin.get_screen (); 
       unowned GLib.List<Mutter.MetaWorkspace> workspaces = Mutter.MetaScreen.get_workspaces (screen);
@@ -63,8 +64,12 @@ namespace Unity {
           clones.prepend (clone);
           
           window_group.add_actor (clone);
+          clone.reactive = true;
           clone.raise_top ();
           clone.show ();
+          
+          unowned Mutter.MetaWorkspace cpy = workspace;
+          clone.button_release_event.connect (() => { select_workspace (cpy); return true; });
         }
       
       LayoutWorkspaces (clones, screen);
@@ -72,9 +77,27 @@ namespace Unity {
       unowned GLib.List<Mutter.Window> windows = plugin.plugin.get_windows ();
       foreach (Mutter.Window w in windows)
         {
-            (w as Clutter.Actor).reactive = false;
             (w as Clutter.Actor).opacity = 0;
         }
+    }
+    
+    private void select_workspace (Mutter.MetaWorkspace workspace) {
+      foreach (Clutter.Actor clone in clones)
+        {
+          clone.destroy ();
+        }
+      
+      unowned GLib.List<Mutter.Window> windows = plugin.plugin.get_windows ();
+      foreach (Mutter.Window w in windows)
+        {
+            (w as Clutter.Actor).opacity = 255;
+        }
+      
+      clones = null;
+      
+      uint time_ = Mutter.MetaDisplay.get_current_time (Mutter.MetaScreen.get_display (Mutter.MetaWorkspace.get_screen (workspace)));
+      Mutter.MetaWorkspace.activate (workspace, time_);
+      plugin.remove_fullscreen_request (this);
     }
     
     private Clutter.Actor WorkspaceClone (Mutter.MetaWorkspace workspace) {
@@ -95,7 +118,6 @@ namespace Unity {
               clone.set_size (window.width, window.height);
               clone.set_position (window.x, window.y);
               
-              clone.reactive = true;
               clone.show ();
               
               if (window.get_window_type () == Mutter.MetaCompWindowType.DESKTOP)
