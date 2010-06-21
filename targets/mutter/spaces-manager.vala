@@ -21,6 +21,7 @@ namespace Unity {
   
   public class SpacesManager : GLib.Object
   {
+    Clutter.Actor background;
     List<Clutter.Actor> clones;
     Plugin plugin;
     unowned Mutter.MetaScreen screen;
@@ -57,9 +58,17 @@ namespace Unity {
       showing = true;
       plugin.add_fullscreen_request (this);
       
+      background = new Clutter.Rectangle.with_color ({0, 0, 0, 255});
       unowned Mutter.MetaScreen screen = plugin.plugin.get_screen (); 
       unowned GLib.List<Mutter.MetaWorkspace> workspaces = Mutter.MetaScreen.get_workspaces (screen);
       unowned Clutter.Container window_group = plugin.plugin.get_normal_window_group() as Clutter.Container;
+      
+      Mutter.MetaRectangle rect = {0, 0, 0, 0};
+      Mutter.MetaScreen.get_monitor_geometry (screen, 0, rect);
+      background.set_size (rect.width, rect.height);
+      
+      window_group.add_actor (background);
+      background.raise_top ();
       
       foreach (unowned Mutter.MetaWorkspace workspace in workspaces)
         {
@@ -154,6 +163,11 @@ namespace Unity {
               
               anim.completed.connect (() => {
                 clone.destroy ();
+                if (background != null)
+                  {
+                    background.destroy ();
+                    background = null;
+                  }
                 unowned GLib.List<Mutter.Window> windows = plugin.plugin.get_windows ();
                 foreach (Mutter.Window w in windows)
                   {
