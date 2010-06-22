@@ -312,7 +312,7 @@ namespace Unity.Testing
       this.places.do_queue_redraw ();
     }
 
-    public void about_to_show ()
+    public void about_to_show_places ()
     {
       places.about_to_show ();
     }

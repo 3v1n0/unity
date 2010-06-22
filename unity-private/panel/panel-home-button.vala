@@ -113,7 +113,7 @@ namespace Unity.Panel
 
     private bool on_motion_event (Clutter.Event event)
     {
-      shell.about_to_show ();
+      shell.about_to_show_places ();
 
       return true;
     }

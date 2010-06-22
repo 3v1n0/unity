@@ -54,11 +54,13 @@ namespace Unity.Places
         {
           var old_model = active_entry.sections_model;
           old_model.row_added.disconnect (on_section_added);
+          old_model.row_changed.disconnect (on_section_changed);
+          old_model.row_removed.disconnect (on_section_removed);
 
-          (this as Clutter.Container).foreach ((actor) => {
-                                                   actor.destroy ();
-                                                 },
-                                               null);
+          var children = get_children ();
+          foreach (Clutter.Actor actor in children)
+            actor.destroy ();
+
           active_section = null;
         }
 

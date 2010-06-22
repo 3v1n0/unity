@@ -45,8 +45,7 @@ namespace Unity
     public abstract void          add_fullscreen_request (Object o);
     public abstract bool          remove_fullscreen_request (Object o);
     public abstract void          grab_keyboard (bool grab, uint32 timestamp);
-    public abstract void          show_window_picker ();
-    public abstract void          about_to_show ();
+    public abstract void          about_to_show_places ();
 
     public abstract void          close_xids (Array<uint32> xids);
     public abstract void          show_window (uint32 xid);

@@ -107,7 +107,7 @@ unity_mutter_class_init (UnityMutterClass *klass)
   mut_class->minimize         = unity_mutter_minimize;
   mut_class->maximize         = unity_mutter_maximize;
   mut_class->unmaximize       = unity_mutter_unmaximize;
-  if (1 == 0) mut_class->map              = unity_mutter_map;
+  mut_class->map              = unity_mutter_map;
   mut_class->destroy          = unity_mutter_destroy;
   mut_class->switch_workspace = unity_mutter_switch_workspace;
   mut_class->kill_effect      = unity_mutter_kill_effect;
