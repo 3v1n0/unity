@@ -109,7 +109,8 @@ namespace Unity.Panel
     {
       if (mode)
         {
-          menu_bar.indicator_object_view.hide ();
+         if (menu_bar.indicator_object_view is Clutter.Actor)
+            menu_bar.indicator_object_view.hide ();
           bground.hide ();
           system_tray.hide ();
           indicator_bar.set_indicator_mode (mode);
@@ -117,7 +118,8 @@ namespace Unity.Panel
         }
       else
         {
-          menu_bar.indicator_object_view.show ();
+          if (menu_bar.indicator_object_view is Clutter.Actor)
+            menu_bar.indicator_object_view.show ();
           bground.show ();
           system_tray.show ();
           indicator_bar.set_indicator_mode (mode);

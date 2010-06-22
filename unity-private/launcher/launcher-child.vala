@@ -407,6 +407,10 @@ namespace Unity.Launcher
     private void on_rotation_changed ()
     {
       old_rotate_value = processed_icon.rotation;
+
+      if (rotate_timeline is Clutter.Timeline == false)
+        return;
+
       if (rotate_timeline.is_playing ())
         {
           rotate_timeline.stop ();

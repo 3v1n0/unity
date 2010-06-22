@@ -600,7 +600,8 @@ namespace Unity
     public override void map ()
     {
       base.map ();
-      icon.map ();
+      if (icon is Clutter.Actor)
+        icon.map ();
     }
 
     public override void unmap ()
