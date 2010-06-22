@@ -108,6 +108,8 @@ namespace Unity.Panel
     private bool on_button_release (Clutter.Event event)
     {
       shell.show_unity ();
+      MenuManager manager = MenuManager.get_default ();
+      manager.popdown_current_menu ();
       return true;
     }
 
