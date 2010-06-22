@@ -19,11 +19,12 @@
 
 namespace Unity.Places
 {
-  public class DefaultRenderer : Ctk.Box, Unity.Place.Renderer
+  public class DefaultRenderer : Ctk.ScrollView, Unity.Place.Renderer
   {
     static const float PADDING = 12.0f;
     static const int   SPACING = 12;
 
+    private Ctk.VBox box;
     private Dee.Model groups_model;
     private Dee.Model results_model;
 
@@ -34,10 +35,12 @@ namespace Unity.Places
 
     construct
     {
-      padding = { PADDING, PADDING, PADDING , PADDING};
-      orientation = Ctk.Orientation.VERTICAL;
-      spacing = SPACING;
-      homogeneous = false;
+      padding = { 0.0f, 0.0f, PADDING, 0.0f };
+      box = new Ctk.VBox (SPACING);
+      box.padding = { PADDING, PADDING, PADDING , PADDING};
+      box.homogeneous = false;
+      add_actor (box);
+      box.show ();
     }
 
     /*
@@ -62,13 +65,12 @@ namespace Unity.Places
                                             model.get_string (iter, 2),
                                             results_model);
       group.set_data<unowned Dee.ModelIter> ("model-iter", iter);
-      pack (group, false, true);
-      group.show ();
+      box.pack (group, false, true);
     }
 
     private void on_group_removed (Dee.Model model, Dee.ModelIter iter)
     {
-      GLib.List<Clutter.Actor> children = get_children ();
+      GLib.List<Clutter.Actor> children = box.get_children ();
       foreach (Clutter.Actor actor in children)
         {
           unowned Dee.ModelIter i = (Dee.ModelIter)actor.get_data<Dee.ModelIter> ("model-iter");

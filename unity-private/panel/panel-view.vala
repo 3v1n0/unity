@@ -56,7 +56,7 @@ namespace Unity.Panel
       bground = new Background ();
       set_background (bground);
       bground.show ();
-      
+
       /* Create the views and add them to the box */
       home_button = new HomeButton (shell);
       pack (home_button, false, true);
@@ -74,7 +74,7 @@ namespace Unity.Panel
       pack (indicator_bar, false, true);
       indicator_bar.show ();
 
-      this.button_release_event.connect (this.on_button_release_event);
+      button_release_event.connect (on_button_release_event);
 
       END_FUNCTION ();
     }
@@ -89,49 +89,16 @@ namespace Unity.Panel
 
     public int get_indicators_width ()
     {
-      return (int) this.indicator_bar.get_width ();
-      //this.system_tray.width + this.indicator_bar.width;
+      return (int) indicator_bar.get_width ();
+      //system_tray.width + indicator_bar.width;
     }
 
     public void set_expanded (bool _expanded)
     {
       // Hide menubar
       // Put background into expanded mode
-      this.expanded = _expanded;
+      expanded = _expanded;
     }
-
-//     private override void allocate (Clutter.ActorBox        box,
-//                                     Clutter.AllocationFlags flags)
-//     {
-//       Clutter.ActorBox child_box = { 0, 0, box.x2 - box.x1, box.y2 - box.y1 };
-//       float            width;
-//       float            child_width;
-//
-//       base.allocate (box, flags);
-//
-//       width = box.x2 - box.x1;
-//
-//       this.rect.set_clip (0, 0, width, box.y2 - box.y1);
-//
-//       First the background
-//       child_box.y2 += 3.0f;
-//       this.rect.allocate (child_box, flags);
-// //
-// //       Home button
-// //       child_box.x1 = 0;
-// //       child_box.x2 = 60;
-// //       child_box.y1 = 0;
-// //       child_box.y2 = PANEL_HEIGHT;
-// //       this.home.allocate (child_box, flags);
-//
-//       this.indicator_bar.get_preferred_width (PANEL_HEIGHT,
-//                                            out child_width,
-//                                            out child_width);
-//       child_box.x1 = width - child_width;
-//       child_box.x2 = width;
-//       this.indicator_bar.allocate (child_box, flags);
-//     }
-
 
     public int get_panel_height ()
     {
@@ -140,20 +107,22 @@ namespace Unity.Panel
 
     public void set_indicator_mode (bool mode)
     {
-    	if (mode)
-    		{
-          menu_bar.hide ();
+      if (mode)
+        {
+          menu_bar.indicator_object_view.hide ();
           bground.hide ();
           system_tray.hide ();
           indicator_bar.set_indicator_mode (mode);
-    		}
-    	else
+          reactive = false;
+        }
+      else
         {
-          menu_bar.show ();
+          menu_bar.indicator_object_view.show ();
           bground.show ();
           system_tray.show ();
           indicator_bar.set_indicator_mode (mode);
-    		}
+          reactive = true;
+      }
     }
   }
 }

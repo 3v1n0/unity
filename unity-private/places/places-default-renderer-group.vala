@@ -55,6 +55,7 @@ namespace Unity.Places
       orientation = Ctk.Orientation.VERTICAL;
       spacing = SPACING;
       homogeneous = false;
+      hide ();
 
       title_box = new Ctk.HBox (12);
       pack (title_box, false, true);
@@ -116,7 +117,6 @@ namespace Unity.Places
       var button = new Tile ();
       button.set_label (results.get_string (iter, 4));
       unowned Ctk.Text text = button.get_text ();
-      text.line_wrap = false;
       text.ellipsize = Pango.EllipsizeMode.END;
       button.get_image ().set_from_stock ("text-x-preview");
       renderer.add_actor (button);
@@ -136,6 +136,8 @@ namespace Unity.Places
            warning ("Unable to launch: %s", e.message);
          }
       });
+
+      show ();
     }
 
     private void on_result_removed (Dee.ModelIter iter)
@@ -155,6 +157,9 @@ namespace Unity.Places
               break;
             }
         }
+
+      if (children.length () <= 1)
+        hide ();
     }
 
     private bool interesting (Dee.ModelIter iter)
@@ -171,18 +176,11 @@ namespace Unity.Places
     }
 
     private override void get_preferred_width (float for_height,
-                                      out float mwidth,
-                                      out float nwidth)
+                                               out float mwidth,
+                                               out float nwidth)
     {
       mwidth = 160.0f;
       nwidth = 160.0f;
-    }
-
-    private override void allocate (Clutter.ActorBox box,
-                                    Clutter.AllocationFlags flags)
-    {
-      base.allocate (box, flags);
-      set_clip (0, 0, box.x2 - box.x1, box.y2 - box.y1);
     }
   }
 }
