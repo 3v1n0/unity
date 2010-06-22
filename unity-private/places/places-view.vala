@@ -23,7 +23,7 @@ namespace Unity.Places
 {
   public class View : Ctk.Box
   {
-    private PlaceModel _model;
+    private PlaceModel _model = null;
 
     /* Properties */
     public Shell shell { get; construct; }
@@ -47,31 +47,34 @@ namespace Unity.Places
 
     construct
     {
+    }
+
+    public void about_to_show ()
+    {
+      if (_model is PlaceFileModel)
+        return;
+
       _model = new PlaceFileModel () as PlaceModel;
 
-      Idle.add (() => {
-        place_bar = new PlaceBar (shell, _model);
-        pack (place_bar, false, true);
-        place_bar.show ();
+      place_bar = new PlaceBar (shell, _model);
+      pack (place_bar, false, true);
+      place_bar.show ();
 
-        place_bar.entry_view_activated.connect (on_entry_view_activated);
+      place_bar.entry_view_activated.connect (on_entry_view_activated);
 
-        content_box = new Ctk.VBox (12);
-        content_box.padding = {
-          0.0f,
-          8.0f,
-          0.0f,
-          shell.get_launcher_width_foobar () + 8.0f
-        };
-        pack (content_box, true, true);
-        content_box.show ();
+      content_box = new Ctk.VBox (12);
+      content_box.padding = {
+        0.0f,
+        8.0f,
+        0.0f,
+        shell.get_launcher_width_foobar () + 8.0f
+      };
+      pack (content_box, true, true);
+      content_box.show ();
 
-        search_bar = new PlaceSearchBar ();
-        content_box.pack (search_bar, false, true);
-        search_bar.show ();
-
-        return false;
-      });
+      search_bar = new PlaceSearchBar ();
+      content_box.pack (search_bar, false, true);
+      search_bar.show ();
     }
 
     private void on_entry_view_activated (PlaceEntryView entry_view, int x)

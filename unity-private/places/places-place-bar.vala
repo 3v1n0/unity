@@ -61,6 +61,13 @@ namespace Unity.Places
 
           view.entry_activated.connect (on_entry_activated);
         }
+      model.place_added.connect ((p) => {
+        var view = new PlaceView (p);
+        pack (view, false, true);
+        view.show ();
+
+        view.entry_activated.connect (on_entry_activated);
+      });
     }
 
     private override void allocate (Clutter.ActorBox        box,

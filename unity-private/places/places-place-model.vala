@@ -27,6 +27,7 @@ namespace Unity.Places
    **/
   public abstract class PlaceModel : Gee.ArrayList<Place>
   {
+    public signal void place_added (Place place);
   }
 
 
@@ -95,6 +96,7 @@ namespace Unity.Places
                     place.connect ();
                     (place as GLib.Object).ref ();
                     add (place);
+                    place_added (place);
                   }
               }
           }
@@ -119,7 +121,10 @@ namespace Unity.Places
 
               var place = load_place (Path.build_filename (directory, leaf));
               if (place is Place)
-                add (place);
+                {
+                  add (place);
+                  place_added (place);
+                }
             }
 
       } catch (Error error) {

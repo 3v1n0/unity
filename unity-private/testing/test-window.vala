@@ -43,8 +43,6 @@ namespace Unity.Testing
     private Places.Controller   controller;
     private Unity.Places.View   places;
 
-    private bool places_enabled = false;
-
     private bool showing_places;
 
     public Window (bool popup, int width, int height)
@@ -126,8 +124,6 @@ namespace Unity.Testing
       this.stage.set_color (stage_bg);
       this.stage.button_press_event.connect (this.on_stage_button_press);
 
-      this.places_enabled = Environment.get_variable ("UNITY_ENABLE_PLACES") != null;
-
       /* Components */
       this.background = new Background ();
       this.stage.add_actor (this.background);
@@ -137,14 +133,11 @@ namespace Unity.Testing
       this.stage.add_actor (this.launcher.get_view ());
       this.launcher.get_view ().show ();
 
-      if (this.places_enabled)
-        {
-          this.controller = new Places.Controller (this);
-          this.places = this.controller.get_view ();
-          this.stage.add_actor (this.places);
-          this.places.opacity = 0;
-          this.showing_places = false;
-        }
+      this.controller = new Places.Controller (this);
+      this.places = this.controller.get_view ();
+      this.stage.add_actor (this.places);
+      this.places.opacity = 0;
+      this.showing_places = false;
 
       this.panel = new Panel.View (this);
       this.stage.add_actor (this.panel);
@@ -220,11 +213,8 @@ namespace Unity.Testing
       this.launcher.get_view ().set_clip (0, 0,
                                           ql_width, height);
 
-      if (this.places_enabled)
-        {
-          this.places.set_size (width, height);
-          this.places.set_position (0, 0);
-        }
+      this.places.set_size (width, height);
+      this.places.set_position (0, 0);
 
        this.panel.set_size (width, Unity.Panel.PANEL_HEIGHT);
        this.panel.set_position (0, 0);
@@ -306,14 +296,6 @@ namespace Unity.Testing
 
     public void show_unity ()
     {
-      if (this.places_enabled != true)
-        {
-          var screen = Wnck.Screen.get_default ();
-
-          screen.toggle_showing_desktop (!screen.get_showing_desktop ());
-          return;
-        }
-
       if (this.showing_places)
         {
           this.showing_places = false;
@@ -328,6 +310,11 @@ namespace Unity.Testing
         }
 
       this.places.do_queue_redraw ();
+    }
+
+    public void about_to_show ()
+    {
+      places.about_to_show ();
     }
 
     public int get_indicators_width ()

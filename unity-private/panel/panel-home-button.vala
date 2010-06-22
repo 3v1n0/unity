@@ -12,7 +12,7 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * along with program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by Mirco Müller <mirco.mueller@canonical.com>
  *
@@ -42,9 +42,9 @@ namespace Unity.Panel
       float       pheight;
       Ctk.Padding pad = { 0 };
 
-      lwidth  = (float) this.shell.get_launcher_width_foobar ();
-      pheight = (float) this.shell.get_panel_height_foobar ();
-      this.theme_image.get_preferred_size (out cwidth, out cheight,
+      lwidth  = (float) shell.get_launcher_width_foobar ();
+      pheight = (float) shell.get_panel_height_foobar ();
+      theme_image.get_preferred_size (out cwidth, out cheight,
                                            out cwidth, out cheight);
 
       /* adapt icon-width to launcher-width with padding */
@@ -75,19 +75,20 @@ namespace Unity.Panel
           pad.bottom = pad.top;
         }
 
-      this.padding = pad;
+      padding = pad;
 
       base.allocate (box, flags);
     }
 
     construct
     {
-      this.theme_image = new ThemeImage ("distributor-logo");
-      this.add_actor (this.theme_image);
-      this.theme_image.show ();
+      theme_image = new ThemeImage ("distributor-logo");
+      add_actor (theme_image);
+      theme_image.show ();
 
-      this.button_press_event.connect (this.on_button_press);
-      this.button_release_event.connect (this.on_button_release);
+      button_press_event.connect (on_button_press);
+      button_release_event.connect (on_button_release);
+      motion_event.connect (on_motion_event);
     }
 
     /* We always want to be the width of the launcher */
@@ -95,8 +96,8 @@ namespace Unity.Panel
                                                out float min_width,
                                                out float nat_width)
     {
-      min_width = this.shell.get_launcher_width_foobar ();
-      nat_width = this.shell.get_launcher_width_foobar ();
+      min_width = shell.get_launcher_width_foobar ();
+      nat_width = shell.get_launcher_width_foobar ();
     }
 
     private bool on_button_press (Clutter.Event event)
@@ -107,6 +108,13 @@ namespace Unity.Panel
     private bool on_button_release (Clutter.Event event)
     {
       shell.show_unity ();
+      return true;
+    }
+
+    private bool on_motion_event (Clutter.Event event)
+    {
+      shell.about_to_show ();
+
       return true;
     }
   }
