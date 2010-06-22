@@ -473,8 +473,7 @@ namespace Unity
 
     public void show_window_picker ()
     {
-      spaces_manager.show_spaces_picker ();
-      /*if (this.places_enabled == true)
+      if (this.places_enabled == true)
         {
           this.show_unity ();
           return;
@@ -494,7 +493,7 @@ namespace Unity
           windows.append (window as Clutter.Actor);
         }
 
-      this.expose_windows (windows, 80);*/
+      this.expose_windows (windows, 80);
     }
 
     public Clutter.Stage get_stage ()
