@@ -117,7 +117,7 @@ static void unity_panel_background_real_allocate (ClutterActor* base, const Clut
 	if (_tmp0_) {
 		self->priv->last_width = width;
 		self->priv->last_height = height;
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_panel_background_update_background_gsource_func, g_object_ref (self), g_object_unref);
+		g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, _unity_panel_background_update_background_gsource_func, g_object_ref (self), g_object_unref);
 	}
 }
 

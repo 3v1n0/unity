@@ -86,7 +86,7 @@ static void unity_tests_ui_home_button_suite_real_ensure_input_region (UnityShel
 static void unity_tests_ui_home_button_suite_real_add_fullscreen_request (UnityShell* base, GObject* o);
 static gboolean unity_tests_ui_home_button_suite_real_remove_fullscreen_request (UnityShell* base, GObject* o);
 static void unity_tests_ui_home_button_suite_real_grab_keyboard (UnityShell* base, gboolean grab, guint32 timestamp);
-static void unity_tests_ui_home_button_suite_real_show_window_picker (UnityShell* base);
+static void unity_tests_ui_home_button_suite_real_about_to_show_places (UnityShell* base);
 static void unity_tests_ui_home_button_suite_real_close_xids (UnityShell* base, GArray* xids);
 static void unity_tests_ui_home_button_suite_real_show_window (UnityShell* base, guint32 xid);
 static void unity_tests_ui_home_button_suite_real_expose_xids (UnityShell* base, GArray* xids);
@@ -220,7 +220,7 @@ static void unity_tests_ui_home_button_suite_real_grab_keyboard (UnityShell* bas
 }
 
 
-static void unity_tests_ui_home_button_suite_real_show_window_picker (UnityShell* base) {
+static void unity_tests_ui_home_button_suite_real_about_to_show_places (UnityShell* base) {
 	UnityTestsUIHomeButtonSuite * self;
 	self = (UnityTestsUIHomeButtonSuite*) base;
 }
@@ -282,7 +282,7 @@ static void unity_tests_ui_home_button_suite_unity_shell_interface_init (UnitySh
 	iface->add_fullscreen_request = unity_tests_ui_home_button_suite_real_add_fullscreen_request;
 	iface->remove_fullscreen_request = unity_tests_ui_home_button_suite_real_remove_fullscreen_request;
 	iface->grab_keyboard = unity_tests_ui_home_button_suite_real_grab_keyboard;
-	iface->show_window_picker = unity_tests_ui_home_button_suite_real_show_window_picker;
+	iface->about_to_show_places = unity_tests_ui_home_button_suite_real_about_to_show_places;
 	iface->close_xids = unity_tests_ui_home_button_suite_real_close_xids;
 	iface->show_window = unity_tests_ui_home_button_suite_real_show_window;
 	iface->expose_xids = unity_tests_ui_home_button_suite_real_expose_xids;

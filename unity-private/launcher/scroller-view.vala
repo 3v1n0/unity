@@ -316,6 +316,10 @@ namespace Unity.Launcher
             }
           fling_timeline.start ();
         }
+
+      MenuManager manager = MenuManager.get_default ();
+      manager.popdown_current_menu ();
+
       return true;
     }
 

@@ -407,6 +407,10 @@ namespace Unity.Launcher
     private void on_rotation_changed ()
     {
       old_rotate_value = processed_icon.rotation;
+
+      if (rotate_timeline is Clutter.Timeline == false)
+        return;
+
       if (rotate_timeline.is_playing ())
         {
           rotate_timeline.stop ();
@@ -488,7 +492,6 @@ namespace Unity.Launcher
                                                out float minimum_height,
                                                out float natural_height)
     {
-      float nat, min;
       natural_height = 48;
       minimum_height = 48;
     }

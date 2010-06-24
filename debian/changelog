@@ -1,11 +1,23 @@
-unity (0.2.10-0ubuntu2) UNRELEASED; urgency=low
+unity (0.2.12-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream release:
+    - reordered applications launchers don't save their location (LP: #592087)
+    - cannot close panel menus unless clicking on particular zones of the
+      display (LP: #595880)
+    - cannot close indicators with a click unless the cursor is moved
+      (LP: #591660)
+    - Add support for switching workspaces (LP: #594157)
+    - Indicators should listen to show/hide from GtkWidget (LP: #590920)
+    - Race in expose manager event processing (LP: #588299)
+    - Files Place (View) - add support for file grouping (LP: #597256)
+    - Apps Place (View) - add basic support (LP: #597257)
   * debian/patches/01_draw_background_with_nautilus_off.patch:
     - integrated upstream
   * debian/control:
     - add libclutk-dev as a dep to libunity-dev
+    - bump clutk, dee and bamf dep to latest
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 17 Jun 2010 22:00:33 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 24 Jun 2010 17:54:23 +0200
 
 unity (0.2.10-0ubuntu1) maverick; urgency=low
 

@@ -186,6 +186,8 @@ static void unity_panel_system_tray_on_tray_icon_added (UnityPanelSystemTray* se
 	clutter_container_add_actor ((ClutterContainer*) self, icon);
 	clutter_actor_set_size (icon, (float) 22, (float) 22);
 	clutter_actor_show (icon);
+	clutter_actor_set_opacity (icon, (guint8) 0);
+	clutter_actor_animate (icon, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 1000, "opacity", 255, NULL);
 	g_object_set_data_full ((GObject*) icon, "n_icon", (void*) g_strdup_printf ("%d", self->priv->n_icons), NULL);
 	ctk_box_sort_children ((CtkBox*) self, (GCompareFunc) unity_panel_system_tray_order_icons);
 	self->priv->n_icons++;

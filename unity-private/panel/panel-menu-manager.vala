@@ -39,6 +39,10 @@ public class MenuManager : Object
     current_menu = menu;
   }
 
+  public void popdown_current_menu ()
+  {
+    current_menu.popdown ();
+  }
 
   public bool menu_is_open ()
   {

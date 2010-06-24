@@ -95,10 +95,11 @@ am__DEPENDENCIES_1 =
 @ENABLE_MUTTER_TRUE@	$(am__DEPENDENCIES_1) \
 @ENABLE_MUTTER_TRUE@	$(am__DEPENDENCIES_1)
 am__libunity_mutter_la_SOURCES_DIST = main.c mutter-plugins.h \
-	unity-mutter.h expose-manager.c plugin.c maximus.c \
-	window-management.c
+	unity-mutter.h expose-manager.c spaces-manager.c plugin.c \
+	maximus.c window-management.c
 @ENABLE_MUTTER_TRUE@am__objects_1 =  \
 @ENABLE_MUTTER_TRUE@	libunity_mutter_la-expose-manager.lo \
+@ENABLE_MUTTER_TRUE@	libunity_mutter_la-spaces-manager.lo \
 @ENABLE_MUTTER_TRUE@	libunity_mutter_la-plugin.lo \
 @ENABLE_MUTTER_TRUE@	libunity_mutter_la-maximus.lo \
 @ENABLE_MUTTER_TRUE@	libunity_mutter_la-window-management.lo
@@ -358,6 +359,7 @@ EXTRA_DIST = $(am__append_3)
 
 @ENABLE_MUTTER_TRUE@libunity_mutter_la_VALASOURCES = \
 @ENABLE_MUTTER_TRUE@  expose-manager.vala \
+@ENABLE_MUTTER_TRUE@  spaces-manager.vala \
 @ENABLE_MUTTER_TRUE@  plugin.vala \
 @ENABLE_MUTTER_TRUE@  maximus.vala \
 @ENABLE_MUTTER_TRUE@  window-management.vala
@@ -445,6 +447,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_mutter_la-main.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_mutter_la-maximus.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_mutter_la-plugin.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_mutter_la-spaces-manager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_mutter_la-window-management.Plo@am__quote@
 
 .c.o:
@@ -486,6 +489,14 @@ libunity_mutter_la-expose-manager.lo: expose-manager.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='expose-manager.c' object='libunity_mutter_la-expose-manager.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_mutter_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_mutter_la-expose-manager.lo `test -f 'expose-manager.c' || echo '$(srcdir)/'`expose-manager.c
+
+libunity_mutter_la-spaces-manager.lo: spaces-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_mutter_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_mutter_la-spaces-manager.lo -MD -MP -MF $(DEPDIR)/libunity_mutter_la-spaces-manager.Tpo -c -o libunity_mutter_la-spaces-manager.lo `test -f 'spaces-manager.c' || echo '$(srcdir)/'`spaces-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_mutter_la-spaces-manager.Tpo $(DEPDIR)/libunity_mutter_la-spaces-manager.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='spaces-manager.c' object='libunity_mutter_la-spaces-manager.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_mutter_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_mutter_la-spaces-manager.lo `test -f 'spaces-manager.c' || echo '$(srcdir)/'`spaces-manager.c
 
 libunity_mutter_la-plugin.lo: plugin.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_mutter_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_mutter_la-plugin.lo -MD -MP -MF $(DEPDIR)/libunity_mutter_la-plugin.Tpo -c -o libunity_mutter_la-plugin.lo `test -f 'plugin.c' || echo '$(srcdir)/'`plugin.c

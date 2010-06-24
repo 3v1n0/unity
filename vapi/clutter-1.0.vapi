@@ -932,7 +932,7 @@ namespace Clutter {
 		public abstract void @foreach (Clutter.Callback callback, void *userdata);
 		public abstract void foreach_with_internals (Clutter.Callback callback, void *userdata);
 		public abstract Clutter.ChildMeta? get_child_meta (Clutter.Actor actor);
-		public unowned GLib.List get_children ();
+		public GLib.List<unowned Clutter.Actor> get_children ();
 		public abstract void lower (Clutter.Actor actor, Clutter.Actor sibling);
 		public void lower_child (Clutter.Actor actor, Clutter.Actor sibling);
 		public abstract void raise (Clutter.Actor actor, Clutter.Actor sibling);

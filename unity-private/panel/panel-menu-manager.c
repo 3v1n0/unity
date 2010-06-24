@@ -65,6 +65,7 @@ MenuManager* menu_manager_new (void);
 MenuManager* menu_manager_construct (GType object_type);
 MenuManager* menu_manager_get_default (void);
 void menu_manager_register_visible_menu (MenuManager* self, GtkMenu* menu);
+void menu_manager_popdown_current_menu (MenuManager* self);
 gboolean menu_manager_menu_is_open (MenuManager* self);
 static void menu_manager_finalize (GObject* obj);
 
@@ -106,6 +107,12 @@ void menu_manager_register_visible_menu (MenuManager* self, GtkMenu* menu) {
 		gtk_menu_popdown (self->priv->current_menu);
 	}
 	self->priv->current_menu = (_tmp2_ = _g_object_ref0 (menu), _g_object_unref0 (self->priv->current_menu), _tmp2_);
+}
+
+
+void menu_manager_popdown_current_menu (MenuManager* self) {
+	g_return_if_fail (self != NULL);
+	gtk_menu_popdown (self->priv->current_menu);
 }
 
 
