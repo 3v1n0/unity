@@ -38,8 +38,9 @@ noinst_PROGRAMS = test-unit$(EXEEXT)
 subdir = tests/unit
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
 	test-launcher.c test-panel-indicator-object-entry-view.c \
-	test-panel-indicator-object-view.c test-place.c test-places.c \
-	test-unit.c test_unit_vala.stamp
+	test-panel-indicator-object-view.c test-place.c \
+	test-places-place-file-model.c test-places-place.c \
+	test-places.c test-unit.c test_unit_vala.stamp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/gettext.m4 \
 	$(top_srcdir)/m4/iconv.m4 $(top_srcdir)/m4/intlmacosx.m4 \
@@ -60,6 +61,8 @@ PROGRAMS = $(noinst_PROGRAMS)
 am_test_unit_OBJECTS = test_unit-test-launcher.$(OBJEXT) \
 	test_unit-test-panel-indicator-object-entry-view.$(OBJEXT) \
 	test_unit-test-panel-indicator-object-view.$(OBJEXT) \
+	test_unit-test-places-place-file-model.$(OBJEXT) \
+	test_unit-test-places-place.$(OBJEXT) \
 	test_unit-test-places.$(OBJEXT) test_unit-test-place.$(OBJEXT) \
 	test_unit-test-unit.$(OBJEXT)
 test_unit_OBJECTS = $(am_test_unit_OBJECTS)
@@ -342,6 +345,7 @@ test_unit_VALAFLAGS = \
   --pkg indicator \
   --pkg clutk-0.3 \
   --pkg launcher-0.3 \
+  --pkg posix \
   --pkg test-const \
   --pkg unique-1.0 \
   --pkg unity \
@@ -353,6 +357,8 @@ test_unit_SOURCES = \
   test-launcher.vala \
   test-panel-indicator-object-entry-view.vala \
   test-panel-indicator-object-view.vala \
+  test-places-place-file-model.vala \
+  test-places-place.vala \
   test-places.vala \
   test-place.vala \
   test-unit.vala
@@ -420,6 +426,8 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-panel-indicator-object-entry-view.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-panel-indicator-object-view.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-place.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-places-place-file-model.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-places-place.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-places.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-unit.Po@am__quote@
 
@@ -495,6 +503,38 @@ test_unit-test-panel-indicator-object-view.obj: test-panel-indicator-object-view
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-panel-indicator-object-view.obj `if test -f 'test-panel-indicator-object-view.c'; then $(CYGPATH_W) 'test-panel-indicator-object-view.c'; else $(CYGPATH_W) '$(srcdir)/test-panel-indicator-object-view.c'; fi`
 
+test_unit-test-places-place-file-model.o: test-places-place-file-model.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-places-place-file-model.o -MD -MP -MF $(DEPDIR)/test_unit-test-places-place-file-model.Tpo -c -o test_unit-test-places-place-file-model.o `test -f 'test-places-place-file-model.c' || echo '$(srcdir)/'`test-places-place-file-model.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-places-place-file-model.Tpo $(DEPDIR)/test_unit-test-places-place-file-model.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-places-place-file-model.c' object='test_unit-test-places-place-file-model.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-places-place-file-model.o `test -f 'test-places-place-file-model.c' || echo '$(srcdir)/'`test-places-place-file-model.c
+
+test_unit-test-places-place-file-model.obj: test-places-place-file-model.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-places-place-file-model.obj -MD -MP -MF $(DEPDIR)/test_unit-test-places-place-file-model.Tpo -c -o test_unit-test-places-place-file-model.obj `if test -f 'test-places-place-file-model.c'; then $(CYGPATH_W) 'test-places-place-file-model.c'; else $(CYGPATH_W) '$(srcdir)/test-places-place-file-model.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-places-place-file-model.Tpo $(DEPDIR)/test_unit-test-places-place-file-model.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-places-place-file-model.c' object='test_unit-test-places-place-file-model.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-places-place-file-model.obj `if test -f 'test-places-place-file-model.c'; then $(CYGPATH_W) 'test-places-place-file-model.c'; else $(CYGPATH_W) '$(srcdir)/test-places-place-file-model.c'; fi`
+
+test_unit-test-places-place.o: test-places-place.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-places-place.o -MD -MP -MF $(DEPDIR)/test_unit-test-places-place.Tpo -c -o test_unit-test-places-place.o `test -f 'test-places-place.c' || echo '$(srcdir)/'`test-places-place.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-places-place.Tpo $(DEPDIR)/test_unit-test-places-place.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-places-place.c' object='test_unit-test-places-place.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-places-place.o `test -f 'test-places-place.c' || echo '$(srcdir)/'`test-places-place.c
+
+test_unit-test-places-place.obj: test-places-place.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-places-place.obj -MD -MP -MF $(DEPDIR)/test_unit-test-places-place.Tpo -c -o test_unit-test-places-place.obj `if test -f 'test-places-place.c'; then $(CYGPATH_W) 'test-places-place.c'; else $(CYGPATH_W) '$(srcdir)/test-places-place.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-places-place.Tpo $(DEPDIR)/test_unit-test-places-place.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-places-place.c' object='test_unit-test-places-place.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-places-place.obj `if test -f 'test-places-place.c'; then $(CYGPATH_W) 'test-places-place.c'; else $(CYGPATH_W) '$(srcdir)/test-places-place.c'; fi`
+
 test_unit-test-places.o: test-places.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-places.o -MD -MP -MF $(DEPDIR)/test_unit-test-places.Tpo -c -o test_unit-test-places.o `test -f 'test-places.c' || echo '$(srcdir)/'`test-places.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-places.Tpo $(DEPDIR)/test_unit-test-places.Po
@@ -553,6 +593,16 @@ $(srcdir)/test-panel-indicator-object-entry-view.c: $(srcdir)/test_unit_vala.sta
 	  $(am__cd) $(srcdir) && $(MAKE) $(AM_MAKEFLAGS) test_unit_vala.stamp; \
 	fi
 $(srcdir)/test-panel-indicator-object-view.c: $(srcdir)/test_unit_vala.stamp
+	@if test -f $@; then :; else \
+	  rm -f $(srcdir)/test_unit_vala.stamp; \
+	  $(am__cd) $(srcdir) && $(MAKE) $(AM_MAKEFLAGS) test_unit_vala.stamp; \
+	fi
+$(srcdir)/test-places-place-file-model.c: $(srcdir)/test_unit_vala.stamp
+	@if test -f $@; then :; else \
+	  rm -f $(srcdir)/test_unit_vala.stamp; \
+	  $(am__cd) $(srcdir) && $(MAKE) $(AM_MAKEFLAGS) test_unit_vala.stamp; \
+	fi
+$(srcdir)/test-places-place.c: $(srcdir)/test_unit_vala.stamp
 	@if test -f $@; then :; else \
 	  rm -f $(srcdir)/test_unit_vala.stamp; \
 	  $(am__cd) $(srcdir) && $(MAKE) $(AM_MAKEFLAGS) test_unit_vala.stamp; \
@@ -811,6 +861,8 @@ maintainer-clean-generic:
 	-rm -f test-panel-indicator-object-entry-view.c
 	-rm -f test-panel-indicator-object-view.c
 	-rm -f test-place.c
+	-rm -f test-places-place-file-model.c
+	-rm -f test-places-place.c
 	-rm -f test-places.c
 	-rm -f test-unit.c
 	-rm -f test_unit_vala.stamp

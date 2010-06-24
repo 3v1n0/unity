@@ -156,7 +156,7 @@ struct _UnityShellIface {
 	void (*add_fullscreen_request) (UnityShell* self, GObject* o);
 	gboolean (*remove_fullscreen_request) (UnityShell* self, GObject* o);
 	void (*grab_keyboard) (UnityShell* self, gboolean grab, guint32 timestamp);
-	void (*show_window_picker) (UnityShell* self);
+	void (*about_to_show_places) (UnityShell* self);
 	void (*close_xids) (UnityShell* self, GArray* xids);
 	void (*show_window) (UnityShell* self, guint32 xid);
 	void (*expose_xids) (UnityShell* self, GArray* xids);
@@ -581,8 +581,8 @@ static gboolean unity_webapp_fetch_file_read_something_async_co (UnityWebappFetc
 	switch (data->_state_) {
 		case 0:
 		goto _state_0;
-		case 3:
-		goto _state_3;
+		case 5:
+		goto _state_5;
 		default:
 		g_assert_not_reached ();
 	}
@@ -601,10 +601,10 @@ static gboolean unity_webapp_fetch_file_read_something_async_co (UnityWebappFetc
 				}
 				data->_tmp1_ = FALSE;
 				{
-					data->_state_ = 3;
+					data->_state_ = 5;
 					g_input_stream_read_async ((GInputStream*) data->self->priv->stream, data->buffer, (gsize) data->size, G_PRIORITY_DEFAULT, NULL, unity_webapp_fetch_file_read_something_async_ready, data);
 					return FALSE;
-					_state_3:
+					_state_5:
 					data->_tmp2_ = g_input_stream_read_finish ((GInputStream*) data->self->priv->stream, data->_res_, &data->_inner_error_);
 					if (data->_inner_error_ != NULL) {
 						goto __catch30_g_error;

@@ -219,7 +219,13 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-EXTRA_DIST = test_desktop_file.desktop
+EXTRA_DIST = \
+  place0.badplace \
+  place0.place \
+  place1.badplace \
+  place1.place \
+  test_desktop_file.desktop
+
 all: all-am
 
 .SUFFIXES:

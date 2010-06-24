@@ -79,6 +79,9 @@ typedef struct _UnityLauncherScrollerChildClass UnityLauncherScrollerChildClass;
 typedef struct _UnityLauncherQuicklistController UnityLauncherQuicklistController;
 typedef struct _UnityLauncherQuicklistControllerClass UnityLauncherQuicklistControllerClass;
 typedef struct _UnityLauncherQuicklistControllerPrivate UnityLauncherQuicklistControllerPrivate;
+typedef struct _UnityLauncherScrollerChildPrivate UnityLauncherScrollerChildPrivate;
+
+#define UNITY_LAUNCHER_TYPE_PIN_TYPE (unity_launcher_pin_type_get_type ())
 
 typedef enum  {
 	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_NO_MENU,
@@ -127,6 +130,25 @@ struct _UnityLauncherQuicklistControllerClass {
 	GObjectClass parent_class;
 };
 
+typedef enum  {
+	UNITY_LAUNCHER_PIN_TYPE_UNPINNED,
+	UNITY_LAUNCHER_PIN_TYPE_PINNED,
+	UNITY_LAUNCHER_PIN_TYPE_ALWAYS,
+	UNITY_LAUNCHER_PIN_TYPE_NEVER
+} UnityLauncherPinType;
+
+struct _UnityLauncherScrollerChild {
+	CtkActor parent_instance;
+	UnityLauncherScrollerChildPrivate * priv;
+	UnityLauncherPinType pin_type;
+	UnityLauncherScrollerChildController* controller;
+};
+
+struct _UnityLauncherScrollerChildClass {
+	CtkActorClass parent_class;
+	void (*force_rotation_jump) (UnityLauncherScrollerChild* self, float degrees);
+};
+
 
 static gpointer unity_launcher_scroller_child_controller_parent_class = NULL;
 static UnityDragModelIface* unity_launcher_scroller_child_controller_unity_drag_model_parent_iface = NULL;
@@ -166,6 +188,7 @@ static ClutterActor* unity_launcher_scroller_child_controller_real_get_icon (Uni
 static char* unity_launcher_scroller_child_controller_real_get_drag_data (UnityDragModel* base);
 static gboolean unity_launcher_scroller_child_controller_on_motion_event (UnityLauncherScrollerChildController* self, ClutterEvent* event);
 static void unity_launcher_scroller_child_controller_set_child (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChild* value);
+GType unity_launcher_pin_type_get_type (void);
 static gboolean _unity_launcher_scroller_child_controller_on_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static gboolean _unity_launcher_scroller_child_controller_on_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static gboolean _unity_launcher_scroller_child_controller_on_enter_event_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
@@ -506,7 +529,9 @@ static GObject * unity_launcher_scroller_child_controller_constructor (GType typ
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER (obj);
 	{
+		UnityLauncherScrollerChildController* _tmp0_;
 		ClutterAnimation* anim;
+		self->priv->_child->controller = (_tmp0_ = _g_object_ref0 (self), _g_object_unref0 (self->priv->_child->controller), _tmp0_);
 		g_signal_connect_object ((ClutterActor*) self->priv->_child, "button-press-event", (GCallback) _unity_launcher_scroller_child_controller_on_press_event_clutter_actor_button_press_event, self, 0);
 		g_signal_connect_object ((ClutterActor*) self->priv->_child, "button-release-event", (GCallback) _unity_launcher_scroller_child_controller_on_release_event_clutter_actor_button_release_event, self, 0);
 		g_signal_connect_object ((ClutterActor*) self->priv->_child, "enter-event", (GCallback) _unity_launcher_scroller_child_controller_on_enter_event_clutter_actor_enter_event, self, 0);

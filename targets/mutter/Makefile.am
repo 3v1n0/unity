@@ -65,6 +65,7 @@ libunity_mutter_la_SOURCES = \
 
 libunity_mutter_la_VALASOURCES = \
   expose-manager.vala \
+  spaces-manager.vala \
   plugin.vala \
   maximus.vala \
   window-management.vala

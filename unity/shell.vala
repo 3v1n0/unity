@@ -45,13 +45,13 @@ namespace Unity
     public abstract void          add_fullscreen_request (Object o);
     public abstract bool          remove_fullscreen_request (Object o);
     public abstract void          grab_keyboard (bool grab, uint32 timestamp);
-    public abstract void          show_window_picker ();
+    public abstract void          about_to_show_places ();
 
     public abstract void          close_xids (Array<uint32> xids);
     public abstract void          show_window (uint32 xid);
 
-		public abstract void					expose_xids (Array<uint32> xids);
-		public abstract void					stop_expose ();
+    public abstract void          expose_xids (Array<uint32> xids);
+    public abstract void          stop_expose ();
 
     public signal   void need_new_icon_cache ();
     public signal   void indicators_changed (int width);

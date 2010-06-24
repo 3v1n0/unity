@@ -43,6 +43,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <dee.h>
+#include <gio/gio.h>
 #include <dbus/dbus-glib-lowlevel.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus.h>
@@ -109,6 +110,8 @@ typedef struct _UnityPlaceEntryService UnityPlaceEntryService;
 typedef struct _UnityPlaceEntryServiceIface UnityPlaceEntryServiceIface;
 typedef struct _UnityPlaceEntryServiceDBusProxy UnityPlaceEntryServiceDBusProxy;
 typedef DBusGProxyClass UnityPlaceEntryServiceDBusProxyClass;
+typedef struct _UnityPlaceEntryServiceDBusProxySetGlobalSearchData UnityPlaceEntryServiceDBusProxySetGlobalSearchData;
+typedef struct _UnityPlaceEntryServiceDBusProxySetSearchData UnityPlaceEntryServiceDBusProxySetSearchData;
 
 #define UNITY_PLACE_TYPE_SERVICE_IMPL (unity_place_service_impl_get_type ())
 #define UNITY_PLACE_SERVICE_IMPL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_SERVICE_IMPL, UnityPlaceServiceImpl))
@@ -134,6 +137,8 @@ typedef struct _UnityPlaceEntryServiceImplClass UnityPlaceEntryServiceImplClass;
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 #define _dbus_g_connection_unref0(var) ((var == NULL) ? NULL : (var = (dbus_g_connection_unref (var), NULL)))
 typedef struct _UnityPlaceEntryServiceImplPrivate UnityPlaceEntryServiceImplPrivate;
+typedef struct _UnityPlaceEntryServiceImplSetGlobalSearchData UnityPlaceEntryServiceImplSetGlobalSearchData;
+typedef struct _UnityPlaceEntryServiceImplSetSearchData UnityPlaceEntryServiceImplSetSearchData;
 
 #define UNITY_PLACE_TYPE_CONTROLLER (unity_place_controller_get_type ())
 #define UNITY_PLACE_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_CONTROLLER, UnityPlaceController))
@@ -183,7 +188,6 @@ struct _UnityPlaceSearchPrivate {
 	GHashTable* hints;
 };
 
-typedef guint (*UnityPlaceSearchHandler) (UnityPlaceSearch* search, void* user_data);
 struct _UnityPlace_EntryInfo {
 	char* dbus_path;
 	char* display_name;
@@ -206,6 +210,10 @@ struct _UnityPlaceEntryInfo {
 
 struct _UnityPlaceEntryInfoClass {
 	GObjectClass parent_class;
+	void (*set_global_search) (UnityPlaceEntryInfo* self, UnityPlaceSearch* search, GAsyncReadyCallback _callback_, gpointer _user_data_);
+	guint (*set_global_search_finish) (UnityPlaceEntryInfo* self, GAsyncResult* _res_);
+	void (*set_search) (UnityPlaceEntryInfo* self, UnityPlaceSearch* search, GAsyncReadyCallback _callback_, gpointer _user_data_);
+	guint (*set_search_finish) (UnityPlaceEntryInfo* self, GAsyncResult* _res_);
 };
 
 struct _UnityPlaceEntryInfoPrivate {
@@ -213,12 +221,6 @@ struct _UnityPlaceEntryInfoPrivate {
 	UnityPlaceRendererInfo* _entry_renderer_info;
 	UnityPlaceRendererInfo* _global_renderer_info;
 	DeeModel* _sections_model;
-	UnityPlaceSearchHandler _search_handler;
-	gpointer _search_handler_target;
-	GDestroyNotify _search_handler_target_destroy_notify;
-	UnityPlaceSearchHandler _global_search_handler;
-	gpointer _global_search_handler_target;
-	GDestroyNotify _global_search_handler_target_destroy_notify;
 	gboolean _active;
 	guint _active_section;
 };
@@ -235,8 +237,10 @@ struct _UnityPlaceServiceDBusProxy {
 
 struct _UnityPlaceEntryServiceIface {
 	GTypeInterface parent_iface;
-	guint (*set_global_search) (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error);
-	guint (*set_search) (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error);
+	void (*set_global_search) (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GAsyncReadyCallback _callback_, gpointer _user_data_);
+	guint (*set_global_search_finish) (UnityPlaceEntryService* self, GAsyncResult* _res_, GError** error);
+	void (*set_search) (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GAsyncReadyCallback _callback_, gpointer _user_data_);
+	guint (*set_search_finish) (UnityPlaceEntryService* self, GAsyncResult* _res_, GError** error);
 	void (*set_active) (UnityPlaceEntryService* self, gboolean is_active, GError** error);
 	void (*set_active_section) (UnityPlaceEntryService* self, guint section_id, GError** error);
 };
@@ -244,6 +248,18 @@ struct _UnityPlaceEntryServiceIface {
 struct _UnityPlaceEntryServiceDBusProxy {
 	DBusGProxy parent_instance;
 	gboolean disposed;
+};
+
+struct _UnityPlaceEntryServiceDBusProxySetGlobalSearchData {
+	GAsyncReadyCallback _callback_;
+	gpointer _user_data_;
+	DBusPendingCall* pending;
+};
+
+struct _UnityPlaceEntryServiceDBusProxySetSearchData {
+	GAsyncReadyCallback _callback_;
+	gpointer _user_data_;
+	DBusPendingCall* pending;
 };
 
 struct _UnityPlaceServiceImpl {
@@ -273,6 +289,32 @@ struct _UnityPlaceEntryServiceImplClass {
 struct _UnityPlaceEntryServiceImplPrivate {
 	gboolean _exported;
 	UnityPlaceEntryInfo* _entry_info;
+};
+
+struct _UnityPlaceEntryServiceImplSetGlobalSearchData {
+	int _state_;
+	GAsyncResult* _res_;
+	GSimpleAsyncResult* _async_result;
+	UnityPlaceEntryServiceImpl* self;
+	char* search;
+	GHashTable* hints;
+	guint result;
+	guint _result_;
+	UnityPlaceSearch* _tmp0_;
+	guint _tmp1_;
+};
+
+struct _UnityPlaceEntryServiceImplSetSearchData {
+	int _state_;
+	GAsyncResult* _res_;
+	GSimpleAsyncResult* _async_result;
+	UnityPlaceEntryServiceImpl* self;
+	char* search;
+	GHashTable* hints;
+	guint result;
+	guint _result_;
+	UnityPlaceSearch* _tmp0_;
+	guint _tmp1_;
 };
 
 struct _UnityPlaceController {
@@ -369,13 +411,16 @@ enum  {
 	UNITY_PLACE_ENTRY_INFO_ACTIVE,
 	UNITY_PLACE_ENTRY_INFO_ACTIVE_SECTION
 };
-UnityPlaceEntryInfo* unity_place_entry_info_new (const char* dbus_path);
 UnityPlaceEntryInfo* unity_place_entry_info_construct (GType object_type, const char* dbus_path);
 void unity_place_entry_info_set_hint (UnityPlaceEntryInfo* self, const char* hint, const char* val);
 char* unity_place_entry_info_get_hint (UnityPlaceEntryInfo* self, const char* hint);
 void unity_place_entry_info_clear_hint (UnityPlaceEntryInfo* self, const char* hint);
 void unity_place_entry_info_clear_hints (UnityPlaceEntryInfo* self);
 guint unity_place_entry_info_num_hints (UnityPlaceEntryInfo* self);
+void unity_place_entry_info_set_global_search (UnityPlaceEntryInfo* self, UnityPlaceSearch* search, GAsyncReadyCallback _callback_, gpointer _user_data_);
+guint unity_place_entry_info_set_global_search_finish (UnityPlaceEntryInfo* self, GAsyncResult* _res_);
+void unity_place_entry_info_set_search (UnityPlaceEntryInfo* self, UnityPlaceSearch* search, GAsyncReadyCallback _callback_, gpointer _user_data_);
+guint unity_place_entry_info_set_search_finish (UnityPlaceEntryInfo* self, GAsyncResult* _res_);
 void unity_place_entry_info_get_raw (UnityPlaceEntryInfo* self, UnityPlace_EntryInfo* result);
 UnityPlaceRendererInfo* unity_place_entry_info_get_entry_renderer_info (UnityPlaceEntryInfo* self);
 UnityPlaceRendererInfo* unity_place_entry_info_get_global_renderer_info (UnityPlaceEntryInfo* self);
@@ -398,15 +443,10 @@ gboolean unity_place_entry_info_get_active (UnityPlaceEntryInfo* self);
 void unity_place_entry_info_set_active (UnityPlaceEntryInfo* self, gboolean value);
 guint unity_place_entry_info_get_active_section (UnityPlaceEntryInfo* self);
 void unity_place_entry_info_set_active_section (UnityPlaceEntryInfo* self, guint value);
-UnityPlaceSearchHandler unity_place_entry_info_get_search_handler (UnityPlaceEntryInfo* self, gpointer* result_target);
-void unity_place_entry_info_set_search_handler (UnityPlaceEntryInfo* self, UnityPlaceSearchHandler value, gpointer value_target);
-UnityPlaceSearchHandler unity_place_entry_info_get_global_search_handler (UnityPlaceEntryInfo* self, gpointer* result_target);
-void unity_place_entry_info_set_global_search_handler (UnityPlaceEntryInfo* self, UnityPlaceSearchHandler value, gpointer value_target);
 static GObject * unity_place_entry_info_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_place_entry_info_finalize (GObject* obj);
 static void unity_place_entry_info_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_place_entry_info_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
-UnityPlaceService* unity_place_service_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
 GType unity_place_service_get_type (void);
 UnityPlace_EntryInfo* unity_place_service_get_entries (UnityPlaceService* self, int* result_length1, GError** error);
 void unity_place_service_dbus_register_object (DBusConnection* connection, const char* path, void* object);
@@ -419,6 +459,7 @@ static DBusHandlerResult _dbus_unity_place_service_get_entries (UnityPlaceServic
 static void _dbus_unity_place_service_entry_added (GObject* _sender, UnityPlace_EntryInfo* entry, DBusConnection* _connection);
 static void _dbus_unity_place_service_entry_removed (GObject* _sender, const char* entry_dbus_path, DBusConnection* _connection);
 GType unity_place_service_dbus_proxy_get_type (void);
+UnityPlaceService* unity_place_service_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
 static void _dbus_handle_unity_place_service_entry_added (UnityPlaceService* self, DBusConnection* connection, DBusMessage* message);
 static void _dbus_handle_unity_place_service_entry_removed (UnityPlaceService* self, DBusConnection* connection, DBusMessage* message);
 DBusHandlerResult unity_place_service_dbus_proxy_filter (DBusConnection* connection, DBusMessage* message, void* user_data);
@@ -429,10 +470,11 @@ static UnityPlace_EntryInfo* unity_place_service_dbus_proxy_get_entries (UnityPl
 static void unity_place_service_dbus_proxy_unity_place_service__interface_init (UnityPlaceServiceIface* iface);
 static void unity_place_service_dbus_proxy_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_place_service_dbus_proxy_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
-UnityPlaceEntryService* unity_place_entry_service_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
 GType unity_place_entry_service_get_type (void);
-guint unity_place_entry_service_set_global_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error);
-guint unity_place_entry_service_set_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error);
+void unity_place_entry_service_set_global_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GAsyncReadyCallback _callback_, gpointer _user_data_);
+guint unity_place_entry_service_set_global_search_finish (UnityPlaceEntryService* self, GAsyncResult* _res_, GError** error);
+void unity_place_entry_service_set_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GAsyncReadyCallback _callback_, gpointer _user_data_);
+guint unity_place_entry_service_set_search_finish (UnityPlaceEntryService* self, GAsyncResult* _res_, GError** error);
 void unity_place_entry_service_set_active (UnityPlaceEntryService* self, gboolean is_active, GError** error);
 void unity_place_entry_service_set_active_section (UnityPlaceEntryService* self, guint section_id, GError** error);
 void unity_place_entry_service_dbus_register_object (DBusConnection* connection, const char* path, void* object);
@@ -441,18 +483,25 @@ DBusHandlerResult unity_place_entry_service_dbus_message (DBusConnection* connec
 static DBusHandlerResult _dbus_unity_place_entry_service_introspect (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message);
 static DBusHandlerResult _dbus_unity_place_entry_service_property_get_all (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message);
 static DBusHandlerResult _dbus_unity_place_entry_service_set_global_search (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message);
+static void _dbus_unity_place_entry_service_set_global_search_ready (GObject * source_object, GAsyncResult * _res_, gpointer * _user_data_);
 static DBusHandlerResult _dbus_unity_place_entry_service_set_search (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message);
+static void _dbus_unity_place_entry_service_set_search_ready (GObject * source_object, GAsyncResult * _res_, gpointer * _user_data_);
 static DBusHandlerResult _dbus_unity_place_entry_service_set_active (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message);
 static DBusHandlerResult _dbus_unity_place_entry_service_set_active_section (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message);
 static void _dbus_unity_place_entry_service_renderer_info_changed (GObject* _sender, UnityPlace_RendererInfo* renderer_info, DBusConnection* _connection);
 GType unity_place_entry_service_dbus_proxy_get_type (void);
+UnityPlaceEntryService* unity_place_entry_service_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
 static void _dbus_handle_unity_place_entry_service_renderer_info_changed (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message);
 DBusHandlerResult unity_place_entry_service_dbus_proxy_filter (DBusConnection* connection, DBusMessage* message, void* user_data);
 enum  {
 	UNITY_PLACE_ENTRY_SERVICE_DBUS_PROXY_DUMMY_PROPERTY
 };
-static guint unity_place_entry_service_dbus_proxy_set_global_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error);
-static guint unity_place_entry_service_dbus_proxy_set_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error);
+static void unity_place_entry_service_dbus_proxy_set_global_search_async (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GAsyncReadyCallback _callback_, gpointer _user_data_);
+static void unity_place_entry_service_dbus_proxy_set_global_search_ready (DBusPendingCall* pending, void* user_data);
+static guint unity_place_entry_service_dbus_proxy_set_global_search_finish (UnityPlaceEntryService* self, GAsyncResult* _res_, GError** error);
+static void unity_place_entry_service_dbus_proxy_set_search_async (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GAsyncReadyCallback _callback_, gpointer _user_data_);
+static void unity_place_entry_service_dbus_proxy_set_search_ready (DBusPendingCall* pending, void* user_data);
+static guint unity_place_entry_service_dbus_proxy_set_search_finish (UnityPlaceEntryService* self, GAsyncResult* _res_, GError** error);
 static void unity_place_entry_service_dbus_proxy_set_active (UnityPlaceEntryService* self, gboolean is_active, GError** error);
 static void unity_place_entry_service_dbus_proxy_set_active_section (UnityPlaceEntryService* self, guint section_id, GError** error);
 static void unity_place_entry_service_dbus_proxy_unity_place_entry_service__interface_init (UnityPlaceEntryServiceIface* iface);
@@ -498,8 +547,14 @@ enum  {
 	UNITY_PLACE_ENTRY_SERVICE_IMPL_ENTRY_INFO,
 	UNITY_PLACE_ENTRY_SERVICE_IMPL_EXPORTED
 };
-static guint unity_place_entry_service_impl_real_set_global_search (UnityPlaceEntryService* base, const char* search, GHashTable* hints, GError** error);
-static guint unity_place_entry_service_impl_real_set_search (UnityPlaceEntryService* base, const char* search, GHashTable* hints, GError** error);
+static void unity_place_entry_service_impl_real_set_global_search_data_free (gpointer _data);
+static void unity_place_entry_service_impl_real_set_global_search (UnityPlaceEntryService* base, const char* search, GHashTable* hints, GAsyncReadyCallback _callback_, gpointer _user_data_);
+static void unity_place_entry_service_impl_set_global_search_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
+static gboolean unity_place_entry_service_impl_real_set_global_search_co (UnityPlaceEntryServiceImplSetGlobalSearchData* data);
+static void unity_place_entry_service_impl_real_set_search_data_free (gpointer _data);
+static void unity_place_entry_service_impl_real_set_search (UnityPlaceEntryService* base, const char* search, GHashTable* hints, GAsyncReadyCallback _callback_, gpointer _user_data_);
+static void unity_place_entry_service_impl_set_search_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
+static gboolean unity_place_entry_service_impl_real_set_search_co (UnityPlaceEntryServiceImplSetSearchData* data);
 static void unity_place_entry_service_impl_real_set_active (UnityPlaceEntryService* base, gboolean is_active, GError** error);
 static void unity_place_entry_service_impl_real_set_active_section (UnityPlaceEntryService* base, guint section_id, GError** error);
 static void unity_place_entry_service_impl_set_entry_info (UnityPlaceEntryServiceImpl* self, UnityPlaceEntryInfo* value);
@@ -978,11 +1033,6 @@ UnityPlaceEntryInfo* unity_place_entry_info_construct (GType object_type, const 
 }
 
 
-UnityPlaceEntryInfo* unity_place_entry_info_new (const char* dbus_path) {
-	return unity_place_entry_info_construct (UNITY_PLACE_TYPE_ENTRY_INFO, dbus_path);
-}
-
-
 void unity_place_entry_info_set_hint (UnityPlaceEntryInfo* self, const char* hint, const char* val) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (hint != NULL);
@@ -1018,6 +1068,26 @@ guint unity_place_entry_info_num_hints (UnityPlaceEntryInfo* self) {
 	g_return_val_if_fail (self != NULL, 0U);
 	result = g_hash_table_size (self->priv->info.hints);
 	return result;
+}
+
+
+void unity_place_entry_info_set_global_search (UnityPlaceEntryInfo* self, UnityPlaceSearch* search, GAsyncReadyCallback _callback_, gpointer _user_data_) {
+	UNITY_PLACE_ENTRY_INFO_GET_CLASS (self)->set_global_search (self, search, _callback_, _user_data_);
+}
+
+
+guint unity_place_entry_info_set_global_search_finish (UnityPlaceEntryInfo* self, GAsyncResult* _res_) {
+	return UNITY_PLACE_ENTRY_INFO_GET_CLASS (self)->set_global_search_finish (self, _res_);
+}
+
+
+void unity_place_entry_info_set_search (UnityPlaceEntryInfo* self, UnityPlaceSearch* search, GAsyncReadyCallback _callback_, gpointer _user_data_) {
+	UNITY_PLACE_ENTRY_INFO_GET_CLASS (self)->set_search (self, search, _callback_, _user_data_);
+}
+
+
+guint unity_place_entry_info_set_search_finish (UnityPlaceEntryInfo* self, GAsyncResult* _res_) {
+	return UNITY_PLACE_ENTRY_INFO_GET_CLASS (self)->set_search_finish (self, _res_);
 }
 
 
@@ -1209,38 +1279,6 @@ void unity_place_entry_info_set_active_section (UnityPlaceEntryInfo* self, guint
 }
 
 
-UnityPlaceSearchHandler unity_place_entry_info_get_search_handler (UnityPlaceEntryInfo* self, gpointer* result_target) {
-	UnityPlaceSearchHandler result;
-	UnityPlaceSearchHandler _tmp0_;
-	g_return_val_if_fail (self != NULL, NULL);
-	result = (_tmp0_ = self->priv->_search_handler, *result_target = self->priv->_search_handler_target, _tmp0_);
-	return result;
-}
-
-
-void unity_place_entry_info_set_search_handler (UnityPlaceEntryInfo* self, UnityPlaceSearchHandler value, gpointer value_target) {
-	UnityPlaceSearchHandler _tmp1_;
-	g_return_if_fail (self != NULL);
-	self->priv->_search_handler = (_tmp1_ = value, ((self->priv->_search_handler_target_destroy_notify == NULL) ? NULL : (self->priv->_search_handler_target_destroy_notify (self->priv->_search_handler_target), NULL), self->priv->_search_handler = NULL, self->priv->_search_handler_target = NULL, self->priv->_search_handler_target_destroy_notify = NULL), self->priv->_search_handler_target = value_target, self->priv->_search_handler_target_destroy_notify = NULL, _tmp1_);
-}
-
-
-UnityPlaceSearchHandler unity_place_entry_info_get_global_search_handler (UnityPlaceEntryInfo* self, gpointer* result_target) {
-	UnityPlaceSearchHandler result;
-	UnityPlaceSearchHandler _tmp0_;
-	g_return_val_if_fail (self != NULL, NULL);
-	result = (_tmp0_ = self->priv->_global_search_handler, *result_target = self->priv->_global_search_handler_target, _tmp0_);
-	return result;
-}
-
-
-void unity_place_entry_info_set_global_search_handler (UnityPlaceEntryInfo* self, UnityPlaceSearchHandler value, gpointer value_target) {
-	UnityPlaceSearchHandler _tmp1_;
-	g_return_if_fail (self != NULL);
-	self->priv->_global_search_handler = (_tmp1_ = value, ((self->priv->_global_search_handler_target_destroy_notify == NULL) ? NULL : (self->priv->_global_search_handler_target_destroy_notify (self->priv->_global_search_handler_target), NULL), self->priv->_global_search_handler = NULL, self->priv->_global_search_handler_target = NULL, self->priv->_global_search_handler_target_destroy_notify = NULL), self->priv->_global_search_handler_target = value_target, self->priv->_global_search_handler_target_destroy_notify = NULL, _tmp1_);
-}
-
-
 static GObject * unity_place_entry_info_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -1262,7 +1300,7 @@ static GObject * unity_place_entry_info_constructor (GType type, guint n_constru
 		UnityPlaceRendererInfo* _tmp19_;
 		if (self->priv->info.dbus_path == NULL) {
 			char* _tmp4_;
-			g_critical ("unity-place.vala:311: No DBus path set for EntryInfo.\n" \
+			g_critical ("unity-place.vala:297: No DBus path set for EntryInfo.\n" \
 "'dbus-path' property in the UnityPlaceEntryInfo constructor");
 			self->priv->info.dbus_path = (_tmp4_ = g_strdup (""), _g_free0 (self->priv->info.dbus_path), _tmp4_);
 		}
@@ -1284,15 +1322,15 @@ static GObject * unity_place_entry_info_constructor (GType type, guint n_constru
 			char* _tmp8_;
 			self->priv->info.sections_model = (_tmp8_ = g_strdup (""), _g_free0 (self->priv->info.sections_model), _tmp8_);
 		}
-		self->priv->info.hints = (_tmp9_ = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free), _g_hash_table_unref0 (self->priv->info.hints), _tmp9_);
+		self->priv->info.hints = (_tmp9_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->info.hints), _tmp9_);
 		self->priv->info.entry_renderer_info.default_renderer = (_tmp10_ = g_strdup (""), _g_free0 (self->priv->info.entry_renderer_info.default_renderer), _tmp10_);
 		self->priv->info.entry_renderer_info.groups_model = (_tmp11_ = g_strdup (""), _g_free0 (self->priv->info.entry_renderer_info.groups_model), _tmp11_);
 		self->priv->info.entry_renderer_info.results_model = (_tmp12_ = g_strdup (""), _g_free0 (self->priv->info.entry_renderer_info.results_model), _tmp12_);
-		self->priv->info.entry_renderer_info.hints = (_tmp13_ = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free), _g_hash_table_unref0 (self->priv->info.entry_renderer_info.hints), _tmp13_);
+		self->priv->info.entry_renderer_info.hints = (_tmp13_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->info.entry_renderer_info.hints), _tmp13_);
 		self->priv->info.global_renderer_info.default_renderer = (_tmp14_ = g_strdup (""), _g_free0 (self->priv->info.global_renderer_info.default_renderer), _tmp14_);
 		self->priv->info.global_renderer_info.groups_model = (_tmp15_ = g_strdup (""), _g_free0 (self->priv->info.global_renderer_info.groups_model), _tmp15_);
 		self->priv->info.global_renderer_info.results_model = (_tmp16_ = g_strdup (""), _g_free0 (self->priv->info.global_renderer_info.results_model), _tmp16_);
-		self->priv->info.global_renderer_info.hints = (_tmp17_ = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free), _g_hash_table_unref0 (self->priv->info.global_renderer_info.hints), _tmp17_);
+		self->priv->info.global_renderer_info.hints = (_tmp17_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->info.global_renderer_info.hints), _tmp17_);
 		self->priv->_entry_renderer_info = (_tmp18_ = unity_place_renderer_info_new (&self->priv->info.entry_renderer_info), _g_object_unref0 (self->priv->_entry_renderer_info), _tmp18_);
 		self->priv->_global_renderer_info = (_tmp19_ = unity_place_renderer_info_new (&self->priv->info.global_renderer_info), _g_object_unref0 (self->priv->_global_renderer_info), _tmp19_);
 	}
@@ -1325,8 +1363,6 @@ static void unity_place_entry_info_instance_init (UnityPlaceEntryInfo * self) {
 	UnityPlace_EntryInfo _tmp3_ = {0};
 	self->priv = UNITY_PLACE_ENTRY_INFO_GET_PRIVATE (self);
 	self->priv->info = (memset (&_tmp3_, 0, sizeof (UnityPlace_EntryInfo)), _tmp3_);
-	self->priv->_search_handler = NULL;
-	self->priv->_global_search_handler = NULL;
 	self->priv->_active = FALSE;
 	self->priv->_active_section = (guint) 0;
 }
@@ -1339,14 +1375,6 @@ static void unity_place_entry_info_finalize (GObject* obj) {
 	_g_object_unref0 (self->priv->_entry_renderer_info);
 	_g_object_unref0 (self->priv->_global_renderer_info);
 	_g_object_unref0 (self->priv->_sections_model);
-	(self->priv->_search_handler_target_destroy_notify == NULL) ? NULL : (self->priv->_search_handler_target_destroy_notify (self->priv->_search_handler_target), NULL);
-	self->priv->_search_handler = NULL;
-	self->priv->_search_handler_target = NULL;
-	self->priv->_search_handler_target_destroy_notify = NULL;
-	(self->priv->_global_search_handler_target_destroy_notify == NULL) ? NULL : (self->priv->_global_search_handler_target_destroy_notify (self->priv->_global_search_handler_target), NULL);
-	self->priv->_global_search_handler = NULL;
-	self->priv->_global_search_handler_target = NULL;
-	self->priv->_global_search_handler_target_destroy_notify = NULL;
 	G_OBJECT_CLASS (unity_place_entry_info_parent_class)->finalize (obj);
 }
 
@@ -1356,7 +1384,7 @@ GType unity_place_entry_info_get_type (void) {
 	if (g_once_init_enter (&unity_place_entry_info_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (UnityPlaceEntryInfoClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_place_entry_info_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityPlaceEntryInfo), 0, (GInstanceInitFunc) unity_place_entry_info_instance_init, NULL };
 		GType unity_place_entry_info_type_id;
-		unity_place_entry_info_type_id = g_type_register_static (G_TYPE_OBJECT, "UnityPlaceEntryInfo", &g_define_type_info, 0);
+		unity_place_entry_info_type_id = g_type_register_static (G_TYPE_OBJECT, "UnityPlaceEntryInfo", &g_define_type_info, G_TYPE_FLAG_ABSTRACT);
 		g_once_init_leave (&unity_place_entry_info_type_id__volatile, unity_place_entry_info_type_id);
 	}
 	return unity_place_entry_info_type_id__volatile;
@@ -2526,13 +2554,23 @@ static void unity_place_service_dbus_proxy_set_property (GObject * object, guint
 }
 
 
-guint unity_place_entry_service_set_global_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error) {
-	return UNITY_PLACE_ENTRY_SERVICE_GET_INTERFACE (self)->set_global_search (self, search, hints, error);
+void unity_place_entry_service_set_global_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GAsyncReadyCallback _callback_, gpointer _user_data_) {
+	UNITY_PLACE_ENTRY_SERVICE_GET_INTERFACE (self)->set_global_search (self, search, hints, _callback_, _user_data_);
 }
 
 
-guint unity_place_entry_service_set_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error) {
-	return UNITY_PLACE_ENTRY_SERVICE_GET_INTERFACE (self)->set_search (self, search, hints, error);
+guint unity_place_entry_service_set_global_search_finish (UnityPlaceEntryService* self, GAsyncResult* _res_, GError** error) {
+	return UNITY_PLACE_ENTRY_SERVICE_GET_INTERFACE (self)->set_global_search_finish (self, _res_, error);
+}
+
+
+void unity_place_entry_service_set_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GAsyncReadyCallback _callback_, gpointer _user_data_) {
+	UNITY_PLACE_ENTRY_SERVICE_GET_INTERFACE (self)->set_search (self, search, hints, _callback_, _user_data_);
+}
+
+
+guint unity_place_entry_service_set_search_finish (UnityPlaceEntryService* self, GAsyncResult* _res_, GError** error) {
+	return UNITY_PLACE_ENTRY_SERVICE_GET_INTERFACE (self)->set_search_finish (self, _res_, error);
 }
 
 
@@ -2612,17 +2650,13 @@ static DBusHandlerResult _dbus_unity_place_entry_service_property_get_all (Unity
 
 static DBusHandlerResult _dbus_unity_place_entry_service_set_global_search (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message) {
 	DBusMessageIter iter;
-	GError* error;
 	char* search = NULL;
 	const char* _tmp182_;
 	GHashTable* hints = NULL;
 	GHashTable* _tmp183_;
 	DBusMessageIter _tmp184_;
 	DBusMessageIter _tmp185_;
-	guint result;
-	DBusMessage* reply;
-	dbus_uint32_t _tmp188_;
-	error = NULL;
+	gpointer * _user_data_;
 	if (strcmp (dbus_message_get_signature (message), "sa{ss}")) {
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 	}
@@ -2649,7 +2683,28 @@ static DBusHandlerResult _dbus_unity_place_entry_service_set_global_search (Unit
 	}
 	dbus_message_iter_next (&iter);
 	hints = _tmp183_;
-	result = unity_place_entry_service_set_global_search (self, search, hints, &error);
+	_user_data_ = g_new0 (gpointer, 2);
+	_user_data_[0] = dbus_connection_ref (connection);
+	_user_data_[1] = dbus_message_ref (message);
+	unity_place_entry_service_set_global_search (self, search, hints, (GAsyncReadyCallback) _dbus_unity_place_entry_service_set_global_search_ready, _user_data_);
+	_g_free0 (search);
+	_g_hash_table_unref0 (hints);
+	return DBUS_HANDLER_RESULT_HANDLED;
+}
+
+
+static void _dbus_unity_place_entry_service_set_global_search_ready (GObject * source_object, GAsyncResult * _res_, gpointer * _user_data_) {
+	DBusConnection * connection;
+	DBusMessage * message;
+	DBusMessageIter iter;
+	GError* error;
+	guint result;
+	DBusMessage* reply;
+	dbus_uint32_t _tmp188_;
+	connection = _user_data_[0];
+	message = _user_data_[1];
+	error = NULL;
+	result = unity_place_entry_service_set_global_search_finish ((UnityPlaceEntryService*) source_object, _res_, &error);
 	if (error) {
 		if (error->domain == DBUS_GERROR) {
 			switch (error->code) {
@@ -2756,37 +2811,29 @@ static DBusHandlerResult _dbus_unity_place_entry_service_set_global_search (Unit
 		}
 		dbus_connection_send (connection, reply, NULL);
 		dbus_message_unref (reply);
-		return DBUS_HANDLER_RESULT_HANDLED;
+		return;
 	}
 	reply = dbus_message_new_method_return (message);
 	dbus_message_iter_init_append (reply, &iter);
-	_g_free0 (search);
-	_g_hash_table_unref0 (hints);
 	_tmp188_ = result;
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &_tmp188_);
-	if (reply) {
-		dbus_connection_send (connection, reply, NULL);
-		dbus_message_unref (reply);
-		return DBUS_HANDLER_RESULT_HANDLED;
-	} else {
-		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-	}
+	dbus_connection_send (connection, reply, NULL);
+	dbus_message_unref (reply);
+	dbus_connection_unref (connection);
+	dbus_message_unref (message);
+	g_free (_user_data_);
 }
 
 
 static DBusHandlerResult _dbus_unity_place_entry_service_set_search (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message) {
 	DBusMessageIter iter;
-	GError* error;
 	char* search = NULL;
 	const char* _tmp189_;
 	GHashTable* hints = NULL;
 	GHashTable* _tmp190_;
 	DBusMessageIter _tmp191_;
 	DBusMessageIter _tmp192_;
-	guint result;
-	DBusMessage* reply;
-	dbus_uint32_t _tmp195_;
-	error = NULL;
+	gpointer * _user_data_;
 	if (strcmp (dbus_message_get_signature (message), "sa{ss}")) {
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 	}
@@ -2813,7 +2860,28 @@ static DBusHandlerResult _dbus_unity_place_entry_service_set_search (UnityPlaceE
 	}
 	dbus_message_iter_next (&iter);
 	hints = _tmp190_;
-	result = unity_place_entry_service_set_search (self, search, hints, &error);
+	_user_data_ = g_new0 (gpointer, 2);
+	_user_data_[0] = dbus_connection_ref (connection);
+	_user_data_[1] = dbus_message_ref (message);
+	unity_place_entry_service_set_search (self, search, hints, (GAsyncReadyCallback) _dbus_unity_place_entry_service_set_search_ready, _user_data_);
+	_g_free0 (search);
+	_g_hash_table_unref0 (hints);
+	return DBUS_HANDLER_RESULT_HANDLED;
+}
+
+
+static void _dbus_unity_place_entry_service_set_search_ready (GObject * source_object, GAsyncResult * _res_, gpointer * _user_data_) {
+	DBusConnection * connection;
+	DBusMessage * message;
+	DBusMessageIter iter;
+	GError* error;
+	guint result;
+	DBusMessage* reply;
+	dbus_uint32_t _tmp195_;
+	connection = _user_data_[0];
+	message = _user_data_[1];
+	error = NULL;
+	result = unity_place_entry_service_set_search_finish ((UnityPlaceEntryService*) source_object, _res_, &error);
 	if (error) {
 		if (error->domain == DBUS_GERROR) {
 			switch (error->code) {
@@ -2920,21 +2988,17 @@ static DBusHandlerResult _dbus_unity_place_entry_service_set_search (UnityPlaceE
 		}
 		dbus_connection_send (connection, reply, NULL);
 		dbus_message_unref (reply);
-		return DBUS_HANDLER_RESULT_HANDLED;
+		return;
 	}
 	reply = dbus_message_new_method_return (message);
 	dbus_message_iter_init_append (reply, &iter);
-	_g_free0 (search);
-	_g_hash_table_unref0 (hints);
 	_tmp195_ = result;
 	dbus_message_iter_append_basic (&iter, DBUS_TYPE_UINT32, &_tmp195_);
-	if (reply) {
-		dbus_connection_send (connection, reply, NULL);
-		dbus_message_unref (reply);
-		return DBUS_HANDLER_RESULT_HANDLED;
-	} else {
-		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
-	}
+	dbus_connection_send (connection, reply, NULL);
+	dbus_message_unref (reply);
+	dbus_connection_unref (connection);
+	dbus_message_unref (message);
+	g_free (_user_data_);
 }
 
 
@@ -3422,21 +3486,16 @@ static void unity_place_entry_service_dbus_proxy_init (UnityPlaceEntryServiceDBu
 }
 
 
-static guint unity_place_entry_service_dbus_proxy_set_global_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error) {
-	DBusError _dbus_error;
+static void unity_place_entry_service_dbus_proxy_set_global_search_async (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GAsyncReadyCallback _callback_, gpointer _user_data_) {
 	DBusGConnection *_connection;
-	DBusMessage *_message, *_reply;
+	DBusMessage *_message;
+	DBusPendingCall *_pending;
 	DBusMessageIter _iter;
 	const char* _tmp219_;
 	DBusMessageIter _tmp220_, _tmp221_;
 	GHashTableIter _tmp222_;
 	gpointer _tmp223_, _tmp224_;
-	guint _result;
-	dbus_uint32_t _tmp227_;
-	if (((UnityPlaceEntryServiceDBusProxy*) self)->disposed) {
-		g_set_error (error, DBUS_GERROR, DBUS_GERROR_DISCONNECTED, "%s", "Connection is closed");
-		return 0U;
-	}
+	UnityPlaceEntryServiceDBusProxySetGlobalSearchData* _data_;
 	_message = dbus_message_new_method_call (dbus_g_proxy_get_bus_name ((DBusGProxy*) self), dbus_g_proxy_get_path ((DBusGProxy*) self), "com.canonical.Unity.PlaceEntry", "SetGlobalSearch");
 	dbus_message_iter_init_append (_message, &_iter);
 	_tmp219_ = search;
@@ -3459,10 +3518,43 @@ static guint unity_place_entry_service_dbus_proxy_set_global_search (UnityPlaceE
 	}
 	dbus_message_iter_close_container (&_iter, &_tmp220_);
 	g_object_get (self, "connection", &_connection, NULL);
-	dbus_error_init (&_dbus_error);
-	_reply = dbus_connection_send_with_reply_and_block (dbus_g_connection_get_connection (_connection), _message, -1, &_dbus_error);
+	dbus_connection_send_with_reply (dbus_g_connection_get_connection (_connection), _message, &_pending, -1);
 	dbus_g_connection_unref (_connection);
 	dbus_message_unref (_message);
+	_data_ = g_slice_new0 (UnityPlaceEntryServiceDBusProxySetGlobalSearchData);
+	_data_->_callback_ = _callback_;
+	_data_->_user_data_ = _user_data_;
+	_data_->pending = _pending;
+	dbus_pending_call_set_notify (_pending, unity_place_entry_service_dbus_proxy_set_global_search_ready, _data_, NULL);
+}
+
+
+static void unity_place_entry_service_dbus_proxy_set_global_search_ready (DBusPendingCall* pending, void* user_data) {
+	UnityPlaceEntryServiceDBusProxySetGlobalSearchData* _data_;
+	GObject * _obj_;
+	GSimpleAsyncResult * _res_;
+	_data_ = user_data;
+	_obj_ = g_object_newv (G_TYPE_OBJECT, 0, NULL);
+	_res_ = g_simple_async_result_new (_obj_, _data_->_callback_, _data_->_user_data_, _data_);
+	g_simple_async_result_complete (_res_);
+	g_object_unref (_obj_);
+	g_object_unref (_res_);
+	g_slice_free (UnityPlaceEntryServiceDBusProxySetGlobalSearchData, _data_);
+	dbus_pending_call_unref (pending);
+}
+
+
+static guint unity_place_entry_service_dbus_proxy_set_global_search_finish (UnityPlaceEntryService* self, GAsyncResult* _res_, GError** error) {
+	UnityPlaceEntryServiceDBusProxySetGlobalSearchData* _data_;
+	DBusError _dbus_error;
+	DBusMessage *_reply;
+	DBusMessageIter _iter;
+	guint _result;
+	dbus_uint32_t _tmp237_;
+	_data_ = g_simple_async_result_get_source_tag ((GSimpleAsyncResult *) _res_);
+	dbus_error_init (&_dbus_error);
+	_reply = dbus_pending_call_steal_reply (_data_->pending);
+	dbus_set_error_from_message (&_dbus_error, _reply);
 	if (dbus_error_is_set (&_dbus_error)) {
 		GQuark _edomain;
 		gint _ecode;
@@ -3548,127 +3640,155 @@ static guint unity_place_entry_service_dbus_proxy_set_global_search (UnityPlaceE
 		return 0U;
 	}
 	dbus_message_iter_init (_reply, &_iter);
-	dbus_message_iter_get_basic (&_iter, &_tmp227_);
+	dbus_message_iter_get_basic (&_iter, &_tmp237_);
 	dbus_message_iter_next (&_iter);
-	_result = _tmp227_;
+	_result = _tmp237_;
 	dbus_message_unref (_reply);
 	return _result;
 }
 
 
-static guint unity_place_entry_service_dbus_proxy_set_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error) {
-	DBusError _dbus_error;
+static void unity_place_entry_service_dbus_proxy_set_search_async (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GAsyncReadyCallback _callback_, gpointer _user_data_) {
 	DBusGConnection *_connection;
-	DBusMessage *_message, *_reply;
+	DBusMessage *_message;
+	DBusPendingCall *_pending;
 	DBusMessageIter _iter;
-	const char* _tmp229_;
-	DBusMessageIter _tmp230_, _tmp231_;
-	GHashTableIter _tmp232_;
-	gpointer _tmp233_, _tmp234_;
-	guint _result;
-	dbus_uint32_t _tmp237_;
-	if (((UnityPlaceEntryServiceDBusProxy*) self)->disposed) {
-		g_set_error (error, DBUS_GERROR, DBUS_GERROR_DISCONNECTED, "%s", "Connection is closed");
-		return 0U;
-	}
+	const char* _tmp238_;
+	DBusMessageIter _tmp239_, _tmp240_;
+	GHashTableIter _tmp241_;
+	gpointer _tmp242_, _tmp243_;
+	UnityPlaceEntryServiceDBusProxySetSearchData* _data_;
 	_message = dbus_message_new_method_call (dbus_g_proxy_get_bus_name ((DBusGProxy*) self), dbus_g_proxy_get_path ((DBusGProxy*) self), "com.canonical.Unity.PlaceEntry", "SetSearch");
 	dbus_message_iter_init_append (_message, &_iter);
-	_tmp229_ = search;
-	dbus_message_iter_append_basic (&_iter, DBUS_TYPE_STRING, &_tmp229_);
-	dbus_message_iter_open_container (&_iter, DBUS_TYPE_ARRAY, "{ss}", &_tmp230_);
-	g_hash_table_iter_init (&_tmp232_, hints);
-	while (g_hash_table_iter_next (&_tmp232_, &_tmp233_, &_tmp234_)) {
+	_tmp238_ = search;
+	dbus_message_iter_append_basic (&_iter, DBUS_TYPE_STRING, &_tmp238_);
+	dbus_message_iter_open_container (&_iter, DBUS_TYPE_ARRAY, "{ss}", &_tmp239_);
+	g_hash_table_iter_init (&_tmp241_, hints);
+	while (g_hash_table_iter_next (&_tmp241_, &_tmp242_, &_tmp243_)) {
 		char* _key;
 		char* _value;
-		const char* _tmp235_;
-		const char* _tmp236_;
-		dbus_message_iter_open_container (&_tmp230_, DBUS_TYPE_DICT_ENTRY, NULL, &_tmp231_);
-		_key = (char*) _tmp233_;
-		_value = (char*) _tmp234_;
-		_tmp235_ = _key;
-		dbus_message_iter_append_basic (&_tmp231_, DBUS_TYPE_STRING, &_tmp235_);
-		_tmp236_ = _value;
-		dbus_message_iter_append_basic (&_tmp231_, DBUS_TYPE_STRING, &_tmp236_);
-		dbus_message_iter_close_container (&_tmp230_, &_tmp231_);
+		const char* _tmp244_;
+		const char* _tmp245_;
+		dbus_message_iter_open_container (&_tmp239_, DBUS_TYPE_DICT_ENTRY, NULL, &_tmp240_);
+		_key = (char*) _tmp242_;
+		_value = (char*) _tmp243_;
+		_tmp244_ = _key;
+		dbus_message_iter_append_basic (&_tmp240_, DBUS_TYPE_STRING, &_tmp244_);
+		_tmp245_ = _value;
+		dbus_message_iter_append_basic (&_tmp240_, DBUS_TYPE_STRING, &_tmp245_);
+		dbus_message_iter_close_container (&_tmp239_, &_tmp240_);
 	}
-	dbus_message_iter_close_container (&_iter, &_tmp230_);
+	dbus_message_iter_close_container (&_iter, &_tmp239_);
 	g_object_get (self, "connection", &_connection, NULL);
-	dbus_error_init (&_dbus_error);
-	_reply = dbus_connection_send_with_reply_and_block (dbus_g_connection_get_connection (_connection), _message, -1, &_dbus_error);
+	dbus_connection_send_with_reply (dbus_g_connection_get_connection (_connection), _message, &_pending, -1);
 	dbus_g_connection_unref (_connection);
 	dbus_message_unref (_message);
+	_data_ = g_slice_new0 (UnityPlaceEntryServiceDBusProxySetSearchData);
+	_data_->_callback_ = _callback_;
+	_data_->_user_data_ = _user_data_;
+	_data_->pending = _pending;
+	dbus_pending_call_set_notify (_pending, unity_place_entry_service_dbus_proxy_set_search_ready, _data_, NULL);
+}
+
+
+static void unity_place_entry_service_dbus_proxy_set_search_ready (DBusPendingCall* pending, void* user_data) {
+	UnityPlaceEntryServiceDBusProxySetSearchData* _data_;
+	GObject * _obj_;
+	GSimpleAsyncResult * _res_;
+	_data_ = user_data;
+	_obj_ = g_object_newv (G_TYPE_OBJECT, 0, NULL);
+	_res_ = g_simple_async_result_new (_obj_, _data_->_callback_, _data_->_user_data_, _data_);
+	g_simple_async_result_complete (_res_);
+	g_object_unref (_obj_);
+	g_object_unref (_res_);
+	g_slice_free (UnityPlaceEntryServiceDBusProxySetSearchData, _data_);
+	dbus_pending_call_unref (pending);
+}
+
+
+static guint unity_place_entry_service_dbus_proxy_set_search_finish (UnityPlaceEntryService* self, GAsyncResult* _res_, GError** error) {
+	UnityPlaceEntryServiceDBusProxySetSearchData* _data_;
+	DBusError _dbus_error;
+	DBusMessage *_reply;
+	DBusMessageIter _iter;
+	guint _result;
+	dbus_uint32_t _tmp256_;
+	_data_ = g_simple_async_result_get_source_tag ((GSimpleAsyncResult *) _res_);
+	dbus_error_init (&_dbus_error);
+	_reply = dbus_pending_call_steal_reply (_data_->pending);
+	dbus_set_error_from_message (&_dbus_error, _reply);
 	if (dbus_error_is_set (&_dbus_error)) {
 		GQuark _edomain;
 		gint _ecode;
 		if (strstr (_dbus_error.name, "org.freedesktop.DBus.Error") == _dbus_error.name) {
-			const char* _tmp238_;
+			const char* _tmp247_;
 			_edomain = DBUS_GERROR;
-			_tmp238_ = _dbus_error.name + 27;
-			if (strcmp (_tmp238_, "Failed") == 0) {
+			_tmp247_ = _dbus_error.name + 27;
+			if (strcmp (_tmp247_, "Failed") == 0) {
 				_ecode = DBUS_GERROR_FAILED;
-			} else if (strcmp (_tmp238_, "NoMemory") == 0) {
+			} else if (strcmp (_tmp247_, "NoMemory") == 0) {
 				_ecode = DBUS_GERROR_NO_MEMORY;
-			} else if (strcmp (_tmp238_, "ServiceUnknown") == 0) {
+			} else if (strcmp (_tmp247_, "ServiceUnknown") == 0) {
 				_ecode = DBUS_GERROR_SERVICE_UNKNOWN;
-			} else if (strcmp (_tmp238_, "NameHasNoOwner") == 0) {
+			} else if (strcmp (_tmp247_, "NameHasNoOwner") == 0) {
 				_ecode = DBUS_GERROR_NAME_HAS_NO_OWNER;
-			} else if (strcmp (_tmp238_, "NoReply") == 0) {
+			} else if (strcmp (_tmp247_, "NoReply") == 0) {
 				_ecode = DBUS_GERROR_NO_REPLY;
-			} else if (strcmp (_tmp238_, "IOError") == 0) {
+			} else if (strcmp (_tmp247_, "IOError") == 0) {
 				_ecode = DBUS_GERROR_IO_ERROR;
-			} else if (strcmp (_tmp238_, "BadAddress") == 0) {
+			} else if (strcmp (_tmp247_, "BadAddress") == 0) {
 				_ecode = DBUS_GERROR_BAD_ADDRESS;
-			} else if (strcmp (_tmp238_, "NotSupported") == 0) {
+			} else if (strcmp (_tmp247_, "NotSupported") == 0) {
 				_ecode = DBUS_GERROR_NOT_SUPPORTED;
-			} else if (strcmp (_tmp238_, "LimitsExceeded") == 0) {
+			} else if (strcmp (_tmp247_, "LimitsExceeded") == 0) {
 				_ecode = DBUS_GERROR_LIMITS_EXCEEDED;
-			} else if (strcmp (_tmp238_, "AccessDenied") == 0) {
+			} else if (strcmp (_tmp247_, "AccessDenied") == 0) {
 				_ecode = DBUS_GERROR_ACCESS_DENIED;
-			} else if (strcmp (_tmp238_, "AuthFailed") == 0) {
+			} else if (strcmp (_tmp247_, "AuthFailed") == 0) {
 				_ecode = DBUS_GERROR_AUTH_FAILED;
-			} else if (strcmp (_tmp238_, "NoServer") == 0) {
+			} else if (strcmp (_tmp247_, "NoServer") == 0) {
 				_ecode = DBUS_GERROR_NO_SERVER;
-			} else if (strcmp (_tmp238_, "Timeout") == 0) {
+			} else if (strcmp (_tmp247_, "Timeout") == 0) {
 				_ecode = DBUS_GERROR_TIMEOUT;
-			} else if (strcmp (_tmp238_, "NoNetwork") == 0) {
+			} else if (strcmp (_tmp247_, "NoNetwork") == 0) {
 				_ecode = DBUS_GERROR_NO_NETWORK;
-			} else if (strcmp (_tmp238_, "AddressInUse") == 0) {
+			} else if (strcmp (_tmp247_, "AddressInUse") == 0) {
 				_ecode = DBUS_GERROR_ADDRESS_IN_USE;
-			} else if (strcmp (_tmp238_, "Disconnected") == 0) {
+			} else if (strcmp (_tmp247_, "Disconnected") == 0) {
 				_ecode = DBUS_GERROR_DISCONNECTED;
-			} else if (strcmp (_tmp238_, "InvalidArgs") == 0) {
+			} else if (strcmp (_tmp247_, "InvalidArgs") == 0) {
 				_ecode = DBUS_GERROR_INVALID_ARGS;
-			} else if (strcmp (_tmp238_, "FileNotFound") == 0) {
+			} else if (strcmp (_tmp247_, "FileNotFound") == 0) {
 				_ecode = DBUS_GERROR_FILE_NOT_FOUND;
-			} else if (strcmp (_tmp238_, "FileExists") == 0) {
+			} else if (strcmp (_tmp247_, "FileExists") == 0) {
 				_ecode = DBUS_GERROR_FILE_EXISTS;
-			} else if (strcmp (_tmp238_, "UnknownMethod") == 0) {
+			} else if (strcmp (_tmp247_, "UnknownMethod") == 0) {
 				_ecode = DBUS_GERROR_UNKNOWN_METHOD;
-			} else if (strcmp (_tmp238_, "TimedOut") == 0) {
+			} else if (strcmp (_tmp247_, "TimedOut") == 0) {
 				_ecode = DBUS_GERROR_TIMED_OUT;
-			} else if (strcmp (_tmp238_, "MatchRuleNotFound") == 0) {
+			} else if (strcmp (_tmp247_, "MatchRuleNotFound") == 0) {
 				_ecode = DBUS_GERROR_MATCH_RULE_NOT_FOUND;
-			} else if (strcmp (_tmp238_, "MatchRuleInvalid") == 0) {
+			} else if (strcmp (_tmp247_, "MatchRuleInvalid") == 0) {
 				_ecode = DBUS_GERROR_MATCH_RULE_INVALID;
-			} else if (strcmp (_tmp238_, "Spawn.ExecFailed") == 0) {
+			} else if (strcmp (_tmp247_, "Spawn.ExecFailed") == 0) {
 				_ecode = DBUS_GERROR_SPAWN_EXEC_FAILED;
-			} else if (strcmp (_tmp238_, "Spawn.ForkFailed") == 0) {
+			} else if (strcmp (_tmp247_, "Spawn.ForkFailed") == 0) {
 				_ecode = DBUS_GERROR_SPAWN_FORK_FAILED;
-			} else if (strcmp (_tmp238_, "Spawn.ChildExited") == 0) {
+			} else if (strcmp (_tmp247_, "Spawn.ChildExited") == 0) {
 				_ecode = DBUS_GERROR_SPAWN_CHILD_EXITED;
-			} else if (strcmp (_tmp238_, "Spawn.ChildSignaled") == 0) {
+			} else if (strcmp (_tmp247_, "Spawn.ChildSignaled") == 0) {
 				_ecode = DBUS_GERROR_SPAWN_CHILD_SIGNALED;
-			} else if (strcmp (_tmp238_, "Spawn.Failed") == 0) {
+			} else if (strcmp (_tmp247_, "Spawn.Failed") == 0) {
 				_ecode = DBUS_GERROR_SPAWN_FAILED;
-			} else if (strcmp (_tmp238_, "UnixProcessIdUnknown") == 0) {
+			} else if (strcmp (_tmp247_, "UnixProcessIdUnknown") == 0) {
 				_ecode = DBUS_GERROR_UNIX_PROCESS_ID_UNKNOWN;
-			} else if (strcmp (_tmp238_, "InvalidSignature") == 0) {
+			} else if (strcmp (_tmp247_, "InvalidSignature") == 0) {
 				_ecode = DBUS_GERROR_INVALID_SIGNATURE;
-			} else if (strcmp (_tmp238_, "InvalidFileContent") == 0) {
+			} else if (strcmp (_tmp247_, "InvalidFileContent") == 0) {
 				_ecode = DBUS_GERROR_INVALID_FILE_CONTENT;
-			} else if (strcmp (_tmp238_, "SELinuxSecurityContextUnknown") == 0) {
+			} else if (strcmp (_tmp247_, "SELinuxSecurityContextUnknown") == 0) {
 				_ecode = DBUS_GERROR_SELINUX_SECURITY_CONTEXT_UNKNOWN;
-			} else if (strcmp (_tmp238_, "RemoteException") == 0) {
+			} else if (strcmp (_tmp247_, "RemoteException") == 0) {
 				_ecode = DBUS_GERROR_REMOTE_EXCEPTION;
 			}
 		}
@@ -3682,9 +3802,9 @@ static guint unity_place_entry_service_dbus_proxy_set_search (UnityPlaceEntrySer
 		return 0U;
 	}
 	dbus_message_iter_init (_reply, &_iter);
-	dbus_message_iter_get_basic (&_iter, &_tmp237_);
+	dbus_message_iter_get_basic (&_iter, &_tmp256_);
 	dbus_message_iter_next (&_iter);
-	_result = _tmp237_;
+	_result = _tmp256_;
 	dbus_message_unref (_reply);
 	return _result;
 }
@@ -3695,15 +3815,15 @@ static void unity_place_entry_service_dbus_proxy_set_active (UnityPlaceEntryServ
 	DBusGConnection *_connection;
 	DBusMessage *_message, *_reply;
 	DBusMessageIter _iter;
-	dbus_bool_t _tmp239_;
+	dbus_bool_t _tmp257_;
 	if (((UnityPlaceEntryServiceDBusProxy*) self)->disposed) {
 		g_set_error (error, DBUS_GERROR, DBUS_GERROR_DISCONNECTED, "%s", "Connection is closed");
 		return;
 	}
 	_message = dbus_message_new_method_call (dbus_g_proxy_get_bus_name ((DBusGProxy*) self), dbus_g_proxy_get_path ((DBusGProxy*) self), "com.canonical.Unity.PlaceEntry", "SetActive");
 	dbus_message_iter_init_append (_message, &_iter);
-	_tmp239_ = is_active;
-	dbus_message_iter_append_basic (&_iter, DBUS_TYPE_BOOLEAN, &_tmp239_);
+	_tmp257_ = is_active;
+	dbus_message_iter_append_basic (&_iter, DBUS_TYPE_BOOLEAN, &_tmp257_);
 	g_object_get (self, "connection", &_connection, NULL);
 	dbus_error_init (&_dbus_error);
 	_reply = dbus_connection_send_with_reply_and_block (dbus_g_connection_get_connection (_connection), _message, -1, &_dbus_error);
@@ -3713,74 +3833,74 @@ static void unity_place_entry_service_dbus_proxy_set_active (UnityPlaceEntryServ
 		GQuark _edomain;
 		gint _ecode;
 		if (strstr (_dbus_error.name, "org.freedesktop.DBus.Error") == _dbus_error.name) {
-			const char* _tmp240_;
+			const char* _tmp258_;
 			_edomain = DBUS_GERROR;
-			_tmp240_ = _dbus_error.name + 27;
-			if (strcmp (_tmp240_, "Failed") == 0) {
+			_tmp258_ = _dbus_error.name + 27;
+			if (strcmp (_tmp258_, "Failed") == 0) {
 				_ecode = DBUS_GERROR_FAILED;
-			} else if (strcmp (_tmp240_, "NoMemory") == 0) {
+			} else if (strcmp (_tmp258_, "NoMemory") == 0) {
 				_ecode = DBUS_GERROR_NO_MEMORY;
-			} else if (strcmp (_tmp240_, "ServiceUnknown") == 0) {
+			} else if (strcmp (_tmp258_, "ServiceUnknown") == 0) {
 				_ecode = DBUS_GERROR_SERVICE_UNKNOWN;
-			} else if (strcmp (_tmp240_, "NameHasNoOwner") == 0) {
+			} else if (strcmp (_tmp258_, "NameHasNoOwner") == 0) {
 				_ecode = DBUS_GERROR_NAME_HAS_NO_OWNER;
-			} else if (strcmp (_tmp240_, "NoReply") == 0) {
+			} else if (strcmp (_tmp258_, "NoReply") == 0) {
 				_ecode = DBUS_GERROR_NO_REPLY;
-			} else if (strcmp (_tmp240_, "IOError") == 0) {
+			} else if (strcmp (_tmp258_, "IOError") == 0) {
 				_ecode = DBUS_GERROR_IO_ERROR;
-			} else if (strcmp (_tmp240_, "BadAddress") == 0) {
+			} else if (strcmp (_tmp258_, "BadAddress") == 0) {
 				_ecode = DBUS_GERROR_BAD_ADDRESS;
-			} else if (strcmp (_tmp240_, "NotSupported") == 0) {
+			} else if (strcmp (_tmp258_, "NotSupported") == 0) {
 				_ecode = DBUS_GERROR_NOT_SUPPORTED;
-			} else if (strcmp (_tmp240_, "LimitsExceeded") == 0) {
+			} else if (strcmp (_tmp258_, "LimitsExceeded") == 0) {
 				_ecode = DBUS_GERROR_LIMITS_EXCEEDED;
-			} else if (strcmp (_tmp240_, "AccessDenied") == 0) {
+			} else if (strcmp (_tmp258_, "AccessDenied") == 0) {
 				_ecode = DBUS_GERROR_ACCESS_DENIED;
-			} else if (strcmp (_tmp240_, "AuthFailed") == 0) {
+			} else if (strcmp (_tmp258_, "AuthFailed") == 0) {
 				_ecode = DBUS_GERROR_AUTH_FAILED;
-			} else if (strcmp (_tmp240_, "NoServer") == 0) {
+			} else if (strcmp (_tmp258_, "NoServer") == 0) {
 				_ecode = DBUS_GERROR_NO_SERVER;
-			} else if (strcmp (_tmp240_, "Timeout") == 0) {
+			} else if (strcmp (_tmp258_, "Timeout") == 0) {
 				_ecode = DBUS_GERROR_TIMEOUT;
-			} else if (strcmp (_tmp240_, "NoNetwork") == 0) {
+			} else if (strcmp (_tmp258_, "NoNetwork") == 0) {
 				_ecode = DBUS_GERROR_NO_NETWORK;
-			} else if (strcmp (_tmp240_, "AddressInUse") == 0) {
+			} else if (strcmp (_tmp258_, "AddressInUse") == 0) {
 				_ecode = DBUS_GERROR_ADDRESS_IN_USE;
-			} else if (strcmp (_tmp240_, "Disconnected") == 0) {
+			} else if (strcmp (_tmp258_, "Disconnected") == 0) {
 				_ecode = DBUS_GERROR_DISCONNECTED;
-			} else if (strcmp (_tmp240_, "InvalidArgs") == 0) {
+			} else if (strcmp (_tmp258_, "InvalidArgs") == 0) {
 				_ecode = DBUS_GERROR_INVALID_ARGS;
-			} else if (strcmp (_tmp240_, "FileNotFound") == 0) {
+			} else if (strcmp (_tmp258_, "FileNotFound") == 0) {
 				_ecode = DBUS_GERROR_FILE_NOT_FOUND;
-			} else if (strcmp (_tmp240_, "FileExists") == 0) {
+			} else if (strcmp (_tmp258_, "FileExists") == 0) {
 				_ecode = DBUS_GERROR_FILE_EXISTS;
-			} else if (strcmp (_tmp240_, "UnknownMethod") == 0) {
+			} else if (strcmp (_tmp258_, "UnknownMethod") == 0) {
 				_ecode = DBUS_GERROR_UNKNOWN_METHOD;
-			} else if (strcmp (_tmp240_, "TimedOut") == 0) {
+			} else if (strcmp (_tmp258_, "TimedOut") == 0) {
 				_ecode = DBUS_GERROR_TIMED_OUT;
-			} else if (strcmp (_tmp240_, "MatchRuleNotFound") == 0) {
+			} else if (strcmp (_tmp258_, "MatchRuleNotFound") == 0) {
 				_ecode = DBUS_GERROR_MATCH_RULE_NOT_FOUND;
-			} else if (strcmp (_tmp240_, "MatchRuleInvalid") == 0) {
+			} else if (strcmp (_tmp258_, "MatchRuleInvalid") == 0) {
 				_ecode = DBUS_GERROR_MATCH_RULE_INVALID;
-			} else if (strcmp (_tmp240_, "Spawn.ExecFailed") == 0) {
+			} else if (strcmp (_tmp258_, "Spawn.ExecFailed") == 0) {
 				_ecode = DBUS_GERROR_SPAWN_EXEC_FAILED;
-			} else if (strcmp (_tmp240_, "Spawn.ForkFailed") == 0) {
+			} else if (strcmp (_tmp258_, "Spawn.ForkFailed") == 0) {
 				_ecode = DBUS_GERROR_SPAWN_FORK_FAILED;
-			} else if (strcmp (_tmp240_, "Spawn.ChildExited") == 0) {
+			} else if (strcmp (_tmp258_, "Spawn.ChildExited") == 0) {
 				_ecode = DBUS_GERROR_SPAWN_CHILD_EXITED;
-			} else if (strcmp (_tmp240_, "Spawn.ChildSignaled") == 0) {
+			} else if (strcmp (_tmp258_, "Spawn.ChildSignaled") == 0) {
 				_ecode = DBUS_GERROR_SPAWN_CHILD_SIGNALED;
-			} else if (strcmp (_tmp240_, "Spawn.Failed") == 0) {
+			} else if (strcmp (_tmp258_, "Spawn.Failed") == 0) {
 				_ecode = DBUS_GERROR_SPAWN_FAILED;
-			} else if (strcmp (_tmp240_, "UnixProcessIdUnknown") == 0) {
+			} else if (strcmp (_tmp258_, "UnixProcessIdUnknown") == 0) {
 				_ecode = DBUS_GERROR_UNIX_PROCESS_ID_UNKNOWN;
-			} else if (strcmp (_tmp240_, "InvalidSignature") == 0) {
+			} else if (strcmp (_tmp258_, "InvalidSignature") == 0) {
 				_ecode = DBUS_GERROR_INVALID_SIGNATURE;
-			} else if (strcmp (_tmp240_, "InvalidFileContent") == 0) {
+			} else if (strcmp (_tmp258_, "InvalidFileContent") == 0) {
 				_ecode = DBUS_GERROR_INVALID_FILE_CONTENT;
-			} else if (strcmp (_tmp240_, "SELinuxSecurityContextUnknown") == 0) {
+			} else if (strcmp (_tmp258_, "SELinuxSecurityContextUnknown") == 0) {
 				_ecode = DBUS_GERROR_SELINUX_SECURITY_CONTEXT_UNKNOWN;
-			} else if (strcmp (_tmp240_, "RemoteException") == 0) {
+			} else if (strcmp (_tmp258_, "RemoteException") == 0) {
 				_ecode = DBUS_GERROR_REMOTE_EXCEPTION;
 			}
 		}
@@ -3803,15 +3923,15 @@ static void unity_place_entry_service_dbus_proxy_set_active_section (UnityPlaceE
 	DBusGConnection *_connection;
 	DBusMessage *_message, *_reply;
 	DBusMessageIter _iter;
-	dbus_uint32_t _tmp241_;
+	dbus_uint32_t _tmp259_;
 	if (((UnityPlaceEntryServiceDBusProxy*) self)->disposed) {
 		g_set_error (error, DBUS_GERROR, DBUS_GERROR_DISCONNECTED, "%s", "Connection is closed");
 		return;
 	}
 	_message = dbus_message_new_method_call (dbus_g_proxy_get_bus_name ((DBusGProxy*) self), dbus_g_proxy_get_path ((DBusGProxy*) self), "com.canonical.Unity.PlaceEntry", "SetActiveSection");
 	dbus_message_iter_init_append (_message, &_iter);
-	_tmp241_ = section_id;
-	dbus_message_iter_append_basic (&_iter, DBUS_TYPE_UINT32, &_tmp241_);
+	_tmp259_ = section_id;
+	dbus_message_iter_append_basic (&_iter, DBUS_TYPE_UINT32, &_tmp259_);
 	g_object_get (self, "connection", &_connection, NULL);
 	dbus_error_init (&_dbus_error);
 	_reply = dbus_connection_send_with_reply_and_block (dbus_g_connection_get_connection (_connection), _message, -1, &_dbus_error);
@@ -3821,74 +3941,74 @@ static void unity_place_entry_service_dbus_proxy_set_active_section (UnityPlaceE
 		GQuark _edomain;
 		gint _ecode;
 		if (strstr (_dbus_error.name, "org.freedesktop.DBus.Error") == _dbus_error.name) {
-			const char* _tmp242_;
+			const char* _tmp260_;
 			_edomain = DBUS_GERROR;
-			_tmp242_ = _dbus_error.name + 27;
-			if (strcmp (_tmp242_, "Failed") == 0) {
+			_tmp260_ = _dbus_error.name + 27;
+			if (strcmp (_tmp260_, "Failed") == 0) {
 				_ecode = DBUS_GERROR_FAILED;
-			} else if (strcmp (_tmp242_, "NoMemory") == 0) {
+			} else if (strcmp (_tmp260_, "NoMemory") == 0) {
 				_ecode = DBUS_GERROR_NO_MEMORY;
-			} else if (strcmp (_tmp242_, "ServiceUnknown") == 0) {
+			} else if (strcmp (_tmp260_, "ServiceUnknown") == 0) {
 				_ecode = DBUS_GERROR_SERVICE_UNKNOWN;
-			} else if (strcmp (_tmp242_, "NameHasNoOwner") == 0) {
+			} else if (strcmp (_tmp260_, "NameHasNoOwner") == 0) {
 				_ecode = DBUS_GERROR_NAME_HAS_NO_OWNER;
-			} else if (strcmp (_tmp242_, "NoReply") == 0) {
+			} else if (strcmp (_tmp260_, "NoReply") == 0) {
 				_ecode = DBUS_GERROR_NO_REPLY;
-			} else if (strcmp (_tmp242_, "IOError") == 0) {
+			} else if (strcmp (_tmp260_, "IOError") == 0) {
 				_ecode = DBUS_GERROR_IO_ERROR;
-			} else if (strcmp (_tmp242_, "BadAddress") == 0) {
+			} else if (strcmp (_tmp260_, "BadAddress") == 0) {
 				_ecode = DBUS_GERROR_BAD_ADDRESS;
-			} else if (strcmp (_tmp242_, "NotSupported") == 0) {
+			} else if (strcmp (_tmp260_, "NotSupported") == 0) {
 				_ecode = DBUS_GERROR_NOT_SUPPORTED;
-			} else if (strcmp (_tmp242_, "LimitsExceeded") == 0) {
+			} else if (strcmp (_tmp260_, "LimitsExceeded") == 0) {
 				_ecode = DBUS_GERROR_LIMITS_EXCEEDED;
-			} else if (strcmp (_tmp242_, "AccessDenied") == 0) {
+			} else if (strcmp (_tmp260_, "AccessDenied") == 0) {
 				_ecode = DBUS_GERROR_ACCESS_DENIED;
-			} else if (strcmp (_tmp242_, "AuthFailed") == 0) {
+			} else if (strcmp (_tmp260_, "AuthFailed") == 0) {
 				_ecode = DBUS_GERROR_AUTH_FAILED;
-			} else if (strcmp (_tmp242_, "NoServer") == 0) {
+			} else if (strcmp (_tmp260_, "NoServer") == 0) {
 				_ecode = DBUS_GERROR_NO_SERVER;
-			} else if (strcmp (_tmp242_, "Timeout") == 0) {
+			} else if (strcmp (_tmp260_, "Timeout") == 0) {
 				_ecode = DBUS_GERROR_TIMEOUT;
-			} else if (strcmp (_tmp242_, "NoNetwork") == 0) {
+			} else if (strcmp (_tmp260_, "NoNetwork") == 0) {
 				_ecode = DBUS_GERROR_NO_NETWORK;
-			} else if (strcmp (_tmp242_, "AddressInUse") == 0) {
+			} else if (strcmp (_tmp260_, "AddressInUse") == 0) {
 				_ecode = DBUS_GERROR_ADDRESS_IN_USE;
-			} else if (strcmp (_tmp242_, "Disconnected") == 0) {
+			} else if (strcmp (_tmp260_, "Disconnected") == 0) {
 				_ecode = DBUS_GERROR_DISCONNECTED;
-			} else if (strcmp (_tmp242_, "InvalidArgs") == 0) {
+			} else if (strcmp (_tmp260_, "InvalidArgs") == 0) {
 				_ecode = DBUS_GERROR_INVALID_ARGS;
-			} else if (strcmp (_tmp242_, "FileNotFound") == 0) {
+			} else if (strcmp (_tmp260_, "FileNotFound") == 0) {
 				_ecode = DBUS_GERROR_FILE_NOT_FOUND;
-			} else if (strcmp (_tmp242_, "FileExists") == 0) {
+			} else if (strcmp (_tmp260_, "FileExists") == 0) {
 				_ecode = DBUS_GERROR_FILE_EXISTS;
-			} else if (strcmp (_tmp242_, "UnknownMethod") == 0) {
+			} else if (strcmp (_tmp260_, "UnknownMethod") == 0) {
 				_ecode = DBUS_GERROR_UNKNOWN_METHOD;
-			} else if (strcmp (_tmp242_, "TimedOut") == 0) {
+			} else if (strcmp (_tmp260_, "TimedOut") == 0) {
 				_ecode = DBUS_GERROR_TIMED_OUT;
-			} else if (strcmp (_tmp242_, "MatchRuleNotFound") == 0) {
+			} else if (strcmp (_tmp260_, "MatchRuleNotFound") == 0) {
 				_ecode = DBUS_GERROR_MATCH_RULE_NOT_FOUND;
-			} else if (strcmp (_tmp242_, "MatchRuleInvalid") == 0) {
+			} else if (strcmp (_tmp260_, "MatchRuleInvalid") == 0) {
 				_ecode = DBUS_GERROR_MATCH_RULE_INVALID;
-			} else if (strcmp (_tmp242_, "Spawn.ExecFailed") == 0) {
+			} else if (strcmp (_tmp260_, "Spawn.ExecFailed") == 0) {
 				_ecode = DBUS_GERROR_SPAWN_EXEC_FAILED;
-			} else if (strcmp (_tmp242_, "Spawn.ForkFailed") == 0) {
+			} else if (strcmp (_tmp260_, "Spawn.ForkFailed") == 0) {
 				_ecode = DBUS_GERROR_SPAWN_FORK_FAILED;
-			} else if (strcmp (_tmp242_, "Spawn.ChildExited") == 0) {
+			} else if (strcmp (_tmp260_, "Spawn.ChildExited") == 0) {
 				_ecode = DBUS_GERROR_SPAWN_CHILD_EXITED;
-			} else if (strcmp (_tmp242_, "Spawn.ChildSignaled") == 0) {
+			} else if (strcmp (_tmp260_, "Spawn.ChildSignaled") == 0) {
 				_ecode = DBUS_GERROR_SPAWN_CHILD_SIGNALED;
-			} else if (strcmp (_tmp242_, "Spawn.Failed") == 0) {
+			} else if (strcmp (_tmp260_, "Spawn.Failed") == 0) {
 				_ecode = DBUS_GERROR_SPAWN_FAILED;
-			} else if (strcmp (_tmp242_, "UnixProcessIdUnknown") == 0) {
+			} else if (strcmp (_tmp260_, "UnixProcessIdUnknown") == 0) {
 				_ecode = DBUS_GERROR_UNIX_PROCESS_ID_UNKNOWN;
-			} else if (strcmp (_tmp242_, "InvalidSignature") == 0) {
+			} else if (strcmp (_tmp260_, "InvalidSignature") == 0) {
 				_ecode = DBUS_GERROR_INVALID_SIGNATURE;
-			} else if (strcmp (_tmp242_, "InvalidFileContent") == 0) {
+			} else if (strcmp (_tmp260_, "InvalidFileContent") == 0) {
 				_ecode = DBUS_GERROR_INVALID_FILE_CONTENT;
-			} else if (strcmp (_tmp242_, "SELinuxSecurityContextUnknown") == 0) {
+			} else if (strcmp (_tmp260_, "SELinuxSecurityContextUnknown") == 0) {
 				_ecode = DBUS_GERROR_SELINUX_SECURITY_CONTEXT_UNKNOWN;
-			} else if (strcmp (_tmp242_, "RemoteException") == 0) {
+			} else if (strcmp (_tmp260_, "RemoteException") == 0) {
 				_ecode = DBUS_GERROR_REMOTE_EXCEPTION;
 			}
 		}
@@ -3907,8 +4027,10 @@ static void unity_place_entry_service_dbus_proxy_set_active_section (UnityPlaceE
 
 
 static void unity_place_entry_service_dbus_proxy_unity_place_entry_service__interface_init (UnityPlaceEntryServiceIface* iface) {
-	iface->set_global_search = unity_place_entry_service_dbus_proxy_set_global_search;
-	iface->set_search = unity_place_entry_service_dbus_proxy_set_search;
+	iface->set_global_search = unity_place_entry_service_dbus_proxy_set_global_search_async;
+	iface->set_global_search_finish = unity_place_entry_service_dbus_proxy_set_global_search_finish;
+	iface->set_search = unity_place_entry_service_dbus_proxy_set_search_async;
+	iface->set_search_finish = unity_place_entry_service_dbus_proxy_set_search_finish;
 	iface->set_active = unity_place_entry_service_dbus_proxy_set_active;
 	iface->set_active_section = unity_place_entry_service_dbus_proxy_set_active_section;
 }
@@ -4004,7 +4126,7 @@ void unity_place_service_impl_add_entry (UnityPlaceServiceImpl* self, UnityPlace
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_critical ("unity-place.vala:501: Failed to export place entry '%s': %s", unity_place_entry_info_get_dbus_path (entry_info), e->message);
+				g_critical ("unity-place.vala:495: Failed to export place entry '%s': %s", unity_place_entry_info_get_dbus_path (entry_info), e->message);
 				_g_error_free0 (e);
 			}
 		}
@@ -4114,7 +4236,7 @@ void unity_place_service_impl_remove_entry (UnityPlaceServiceImpl* self, const c
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_critical ("unity-place.vala:549: Failed to unexport place entry '%s': %s", unity_place_entry_info_get_dbus_path (unity_place_entry_service_impl_get_entry_info (entry)), e->message);
+				g_critical ("unity-place.vala:543: Failed to unexport place entry '%s': %s", unity_place_entry_info_get_dbus_path (unity_place_entry_service_impl_get_entry_info (entry)), e->message);
 				_g_error_free0 (e);
 			}
 		}
@@ -4247,8 +4369,8 @@ static GObject * unity_place_service_impl_constructor (GType type, guint n_const
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_PLACE_SERVICE_IMPL (obj);
 	{
-		GHashTable* _tmp243_;
-		self->priv->entries = (_tmp243_ = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref), _g_hash_table_unref0 (self->priv->entries), _tmp243_);
+		GHashTable* _tmp261_;
+		self->priv->entries = (_tmp261_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->entries), _tmp261_);
 	}
 	return obj;
 }
@@ -4403,44 +4525,162 @@ UnityPlaceEntryServiceImpl* unity_place_entry_service_impl_new (UnityPlaceEntryI
 }
 
 
-static guint unity_place_entry_service_impl_real_set_global_search (UnityPlaceEntryService* base, const char* search, GHashTable* hints, GError** error) {
+static void unity_place_entry_service_impl_real_set_global_search_data_free (gpointer _data) {
+	UnityPlaceEntryServiceImplSetGlobalSearchData* data;
+	data = _data;
+	_g_free0 (data->search);
+	_g_hash_table_unref0 (data->hints);
+	g_object_unref (data->self);
+	g_slice_free (UnityPlaceEntryServiceImplSetGlobalSearchData, data);
+}
+
+
+static void unity_place_entry_service_impl_real_set_global_search (UnityPlaceEntryService* base, const char* search, GHashTable* hints, GAsyncReadyCallback _callback_, gpointer _user_data_) {
 	UnityPlaceEntryServiceImpl * self;
-	guint result = 0U;
-	void* _tmp0_ = NULL;
+	UnityPlaceEntryServiceImplSetGlobalSearchData* _data_;
 	self = (UnityPlaceEntryServiceImpl*) base;
-	g_return_val_if_fail (search != NULL, 0U);
-	g_return_val_if_fail (hints != NULL, 0U);
-	if (unity_place_entry_info_get_global_search_handler (self->priv->_entry_info, &_tmp0_) != NULL) {
-		UnityPlaceSearch* _tmp2_;
-		void* _tmp1_ = NULL;
-		guint _tmp3_;
-		result = (_tmp3_ = unity_place_entry_info_get_global_search_handler (self->priv->_entry_info, &_tmp1_) (_tmp2_ = g_object_ref_sink (unity_place_search_new (search, hints)), _tmp1_), _g_object_unref0 (_tmp2_), _tmp3_);
-		return result;
-	} else {
-		g_warning ("unity-place.vala:630: No global search handler installed for %s", unity_place_entry_info_get_dbus_path (self->priv->_entry_info));
-		result = (guint) 0;
-		return result;
+	_data_ = g_slice_new0 (UnityPlaceEntryServiceImplSetGlobalSearchData);
+	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, unity_place_entry_service_impl_real_set_global_search);
+	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, unity_place_entry_service_impl_real_set_global_search_data_free);
+	_data_->self = g_object_ref (self);
+	_data_->search = g_strdup (search);
+	_data_->hints = _g_hash_table_ref0 (hints);
+	unity_place_entry_service_impl_real_set_global_search_co (_data_);
+}
+
+
+static guint unity_place_entry_service_impl_real_set_global_search_finish (UnityPlaceEntryService* base, GAsyncResult* _res_, GError** error) {
+	guint result;
+	UnityPlaceEntryServiceImplSetGlobalSearchData* _data_;
+	_data_ = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (_res_));
+	result = _data_->result;
+	return result;
+}
+
+
+static void unity_place_entry_service_impl_set_global_search_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_) {
+	UnityPlaceEntryServiceImplSetGlobalSearchData* data;
+	data = _user_data_;
+	data->_res_ = _res_;
+	unity_place_entry_service_impl_real_set_global_search_co (data);
+}
+
+
+static gboolean unity_place_entry_service_impl_real_set_global_search_co (UnityPlaceEntryServiceImplSetGlobalSearchData* data) {
+	switch (data->_state_) {
+		case 0:
+		goto _state_0;
+		case 3:
+		goto _state_3;
+		default:
+		g_assert_not_reached ();
+	}
+	_state_0:
+	{
+		data->_state_ = 3;
+		unity_place_entry_info_set_global_search (unity_place_entry_service_impl_get_entry_info (data->self), data->_tmp0_ = g_object_ref_sink (unity_place_search_new (data->search, data->hints)), unity_place_entry_service_impl_set_global_search_ready, data);
+		return FALSE;
+		_state_3:
+		data->_result_ = (data->_tmp1_ = unity_place_entry_info_set_global_search_finish (unity_place_entry_service_impl_get_entry_info (data->self), data->_res_), _g_object_unref0 (data->_tmp0_), data->_tmp1_);
+		data->result = data->_result_;
+		{
+			if (data->_state_ == 0) {
+				g_simple_async_result_complete_in_idle (data->_async_result);
+			} else {
+				g_simple_async_result_complete (data->_async_result);
+			}
+			g_object_unref (data->_async_result);
+			return FALSE;
+		}
+	}
+	{
+		if (data->_state_ == 0) {
+			g_simple_async_result_complete_in_idle (data->_async_result);
+		} else {
+			g_simple_async_result_complete (data->_async_result);
+		}
+		g_object_unref (data->_async_result);
+		return FALSE;
 	}
 }
 
 
-static guint unity_place_entry_service_impl_real_set_search (UnityPlaceEntryService* base, const char* search, GHashTable* hints, GError** error) {
+static void unity_place_entry_service_impl_real_set_search_data_free (gpointer _data) {
+	UnityPlaceEntryServiceImplSetSearchData* data;
+	data = _data;
+	_g_free0 (data->search);
+	_g_hash_table_unref0 (data->hints);
+	g_object_unref (data->self);
+	g_slice_free (UnityPlaceEntryServiceImplSetSearchData, data);
+}
+
+
+static void unity_place_entry_service_impl_real_set_search (UnityPlaceEntryService* base, const char* search, GHashTable* hints, GAsyncReadyCallback _callback_, gpointer _user_data_) {
 	UnityPlaceEntryServiceImpl * self;
-	guint result = 0U;
-	void* _tmp0_ = NULL;
+	UnityPlaceEntryServiceImplSetSearchData* _data_;
 	self = (UnityPlaceEntryServiceImpl*) base;
-	g_return_val_if_fail (search != NULL, 0U);
-	g_return_val_if_fail (hints != NULL, 0U);
-	if (unity_place_entry_info_get_search_handler (self->priv->_entry_info, &_tmp0_) != NULL) {
-		UnityPlaceSearch* _tmp2_;
-		void* _tmp1_ = NULL;
-		guint _tmp3_;
-		result = (_tmp3_ = unity_place_entry_info_get_search_handler (self->priv->_entry_info, &_tmp1_) (_tmp2_ = g_object_ref_sink (unity_place_search_new (search, hints)), _tmp1_), _g_object_unref0 (_tmp2_), _tmp3_);
-		return result;
-	} else {
-		g_warning ("unity-place.vala:643: No search handler installed for %s", unity_place_entry_info_get_dbus_path (self->priv->_entry_info));
-		result = (guint) 0;
-		return result;
+	_data_ = g_slice_new0 (UnityPlaceEntryServiceImplSetSearchData);
+	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, unity_place_entry_service_impl_real_set_search);
+	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, unity_place_entry_service_impl_real_set_search_data_free);
+	_data_->self = g_object_ref (self);
+	_data_->search = g_strdup (search);
+	_data_->hints = _g_hash_table_ref0 (hints);
+	unity_place_entry_service_impl_real_set_search_co (_data_);
+}
+
+
+static guint unity_place_entry_service_impl_real_set_search_finish (UnityPlaceEntryService* base, GAsyncResult* _res_, GError** error) {
+	guint result;
+	UnityPlaceEntryServiceImplSetSearchData* _data_;
+	_data_ = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (_res_));
+	result = _data_->result;
+	return result;
+}
+
+
+static void unity_place_entry_service_impl_set_search_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_) {
+	UnityPlaceEntryServiceImplSetSearchData* data;
+	data = _user_data_;
+	data->_res_ = _res_;
+	unity_place_entry_service_impl_real_set_search_co (data);
+}
+
+
+static gboolean unity_place_entry_service_impl_real_set_search_co (UnityPlaceEntryServiceImplSetSearchData* data) {
+	switch (data->_state_) {
+		case 0:
+		goto _state_0;
+		case 4:
+		goto _state_4;
+		default:
+		g_assert_not_reached ();
+	}
+	_state_0:
+	{
+		data->_state_ = 4;
+		unity_place_entry_info_set_search (unity_place_entry_service_impl_get_entry_info (data->self), data->_tmp0_ = g_object_ref_sink (unity_place_search_new (data->search, data->hints)), unity_place_entry_service_impl_set_search_ready, data);
+		return FALSE;
+		_state_4:
+		data->_result_ = (data->_tmp1_ = unity_place_entry_info_set_search_finish (unity_place_entry_service_impl_get_entry_info (data->self), data->_res_), _g_object_unref0 (data->_tmp0_), data->_tmp1_);
+		data->result = data->_result_;
+		{
+			if (data->_state_ == 0) {
+				g_simple_async_result_complete_in_idle (data->_async_result);
+			} else {
+				g_simple_async_result_complete (data->_async_result);
+			}
+			g_object_unref (data->_async_result);
+			return FALSE;
+		}
+	}
+	{
+		if (data->_state_ == 0) {
+			g_simple_async_result_complete_in_idle (data->_async_result);
+		} else {
+			g_simple_async_result_complete (data->_async_result);
+		}
+		g_object_unref (data->_async_result);
+		return FALSE;
 	}
 }
 
@@ -4586,7 +4826,9 @@ static void unity_place_entry_service_impl_class_init (UnityPlaceEntryServiceImp
 static void unity_place_entry_service_impl_unity_place_entry_service_interface_init (UnityPlaceEntryServiceIface * iface) {
 	unity_place_entry_service_impl_unity_place_entry_service_parent_iface = g_type_interface_peek_parent (iface);
 	iface->set_global_search = unity_place_entry_service_impl_real_set_global_search;
+	iface->set_global_search_finish = unity_place_entry_service_impl_real_set_global_search_finish;
 	iface->set_search = unity_place_entry_service_impl_real_set_search;
+	iface->set_search_finish = unity_place_entry_service_impl_real_set_search_finish;
 	iface->set_active = unity_place_entry_service_impl_real_set_active;
 	iface->set_active_section = unity_place_entry_service_impl_real_set_active_section;
 }
@@ -4820,8 +5062,8 @@ static GObject * unity_place_controller_constructor (GType type, guint n_constru
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_PLACE_CONTROLLER (obj);
 	{
-		UnityPlaceServiceImpl* _tmp244_;
-		self->priv->service = (_tmp244_ = unity_place_service_impl_new (self->priv->_dbus_path), _g_object_unref0 (self->priv->service), _tmp244_);
+		UnityPlaceServiceImpl* _tmp262_;
+		self->priv->service = (_tmp262_ = unity_place_service_impl_new (self->priv->_dbus_path), _g_object_unref0 (self->priv->service), _tmp262_);
 	}
 	return obj;
 }

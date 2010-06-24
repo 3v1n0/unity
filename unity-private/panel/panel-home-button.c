@@ -55,6 +55,16 @@ typedef struct _UnityTestingObjectRegistry UnityTestingObjectRegistry;
 typedef struct _UnityTestingObjectRegistryClass UnityTestingObjectRegistryClass;
 #define _unity_testing_object_registry_unref0(var) ((var == NULL) ? NULL : (var = (unity_testing_object_registry_unref (var), NULL)))
 
+#define TYPE_MENU_MANAGER (menu_manager_get_type ())
+#define MENU_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MENU_MANAGER, MenuManager))
+#define MENU_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MENU_MANAGER, MenuManagerClass))
+#define IS_MENU_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MENU_MANAGER))
+#define IS_MENU_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MENU_MANAGER))
+#define MENU_MANAGER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MENU_MANAGER, MenuManagerClass))
+
+typedef struct _MenuManager MenuManager;
+typedef struct _MenuManagerClass MenuManagerClass;
+
 struct _UnityPanelHomeButton {
 	CtkButton parent_instance;
 	UnityPanelHomeButtonPrivate * priv;
@@ -93,10 +103,15 @@ UnityShell* unity_panel_home_button_get_shell (UnityPanelHomeButton* self);
 static void unity_panel_home_button_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
 static void unity_panel_home_button_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width, float* nat_width);
 static gboolean unity_panel_home_button_on_button_press (UnityPanelHomeButton* self, ClutterEvent* event);
+GType menu_manager_get_type (void);
+MenuManager* menu_manager_get_default (void);
+void menu_manager_popdown_current_menu (MenuManager* self);
 static gboolean unity_panel_home_button_on_button_release (UnityPanelHomeButton* self, ClutterEvent* event);
+static gboolean unity_panel_home_button_on_motion_event (UnityPanelHomeButton* self, ClutterEvent* event);
 static void unity_panel_home_button_set_shell (UnityPanelHomeButton* self, UnityShell* value);
 static gboolean _unity_panel_home_button_on_button_press_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static gboolean _unity_panel_home_button_on_button_release_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _unity_panel_home_button_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static GObject * unity_panel_home_button_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_panel_home_button_finalize (GObject* obj);
 static void unity_panel_home_button_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -170,8 +185,21 @@ static gboolean unity_panel_home_button_on_button_press (UnityPanelHomeButton* s
 
 static gboolean unity_panel_home_button_on_button_release (UnityPanelHomeButton* self, ClutterEvent* event) {
 	gboolean result = FALSE;
+	MenuManager* manager;
 	g_return_val_if_fail (self != NULL, FALSE);
 	unity_shell_show_unity (self->priv->_shell);
+	manager = menu_manager_get_default ();
+	menu_manager_popdown_current_menu (manager);
+	result = TRUE;
+	_g_object_unref0 (manager);
+	return result;
+}
+
+
+static gboolean unity_panel_home_button_on_motion_event (UnityPanelHomeButton* self, ClutterEvent* event) {
+	gboolean result = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	unity_shell_about_to_show_places (self->priv->_shell);
 	result = TRUE;
 	return result;
 }
@@ -212,6 +240,13 @@ static gboolean _unity_panel_home_button_on_button_release_clutter_actor_button_
 }
 
 
+static gboolean _unity_panel_home_button_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	gboolean result;
+	result = unity_panel_home_button_on_motion_event (self, event);
+	return result;
+}
+
+
 static GObject * unity_panel_home_button_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -226,6 +261,7 @@ static GObject * unity_panel_home_button_constructor (GType type, guint n_constr
 		clutter_actor_show ((ClutterActor*) self->theme_image);
 		g_signal_connect_object ((ClutterActor*) self, "button-press-event", (GCallback) _unity_panel_home_button_on_button_press_clutter_actor_button_press_event, self, 0);
 		g_signal_connect_object ((ClutterActor*) self, "button-release-event", (GCallback) _unity_panel_home_button_on_button_release_clutter_actor_button_release_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self, "motion-event", (GCallback) _unity_panel_home_button_on_motion_event_clutter_actor_motion_event, self, 0);
 	}
 	return obj;
 }

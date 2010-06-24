@@ -120,7 +120,9 @@ namespace Unity
     private Maximus          maximus;
 
     /* Unity Components */
+    private Background         background;
     private ExposeManager      expose_manager;
+    private SpacesManager      spaces_manager;
     private Launcher.Launcher  launcher;
     private Places.Controller  places_controller;
     private Places.View        places;
@@ -129,8 +131,6 @@ namespace Unity
     private Clutter.Rectangle  dark_box;
     private unowned Mutter.MetaWindow?  focus_window = null;
     private unowned Mutter.MetaDisplay? display = null;
-
-    private bool     places_enabled = false;
 
     private DragDest drag_dest;
     private bool     places_showing;
@@ -193,14 +193,16 @@ namespace Unity
         {
           warning (e.message);
         }
+
+      this.wm = new WindowManagement (this);
+      this.maximus = new Maximus ();
+      
       END_FUNCTION ();
     }
 
     private bool real_construct ()
     {
       START_FUNCTION ();
-      this.wm = new WindowManagement (this);
-      this.maximus = new Maximus ();
 
       fullscreen_requests = new Gee.ArrayList<Object> ();
 
@@ -228,12 +230,18 @@ namespace Unity
 
       Ctk.dnd_init ((Gtk.Widget)this.drag_dest, target_list);
 
-      this.places_enabled = envvar_is_enabled ("UNITY_ENABLE_PLACES");
-
       Clutter.Group window_group = (Clutter.Group) this.plugin.get_window_group ();
+
+      this.background = new Background ();
+      this.stage.add_actor (background);
+      this.background.lower_bottom ();
+      this.background.show ();
 
       this.launcher = new Launcher.Launcher (this);
       this.launcher.get_view ().opacity = 0;
+      
+      this.spaces_manager = new SpacesManager (this);
+      this.spaces_manager.set_padding (50, 50, 125, 50);
 
       this.expose_manager = new ExposeManager (this, launcher);
       this.expose_manager.hovered_opacity = 255;
@@ -250,19 +258,16 @@ namespace Unity
       this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 400,
                                   "opacity", 255);
 
-      if (this.places_enabled)
-        {
-          this.places_controller = new Places.Controller (this);
-          this.places = this.places_controller.get_view ();
+      this.places_controller = new Places.Controller (this);
+      this.places = this.places_controller.get_view ();
 
-          window_group.add_actor (this.places);
-          window_group.raise_child (this.places,
-                                    this.launcher.get_view ());
-          this.places.opacity = 0;
-          this.places.reactive = false;
-          this.places.hide ();
-          this.places_showing = false;
-        }
+      window_group.add_actor (this.places);
+      window_group.raise_child (this.places,
+                                this.launcher.get_view ());
+      this.places.opacity = 0;
+      this.places.reactive = false;
+      this.places.hide ();
+      this.places_showing = false;
 
       this.panel = new Panel.View (this);
       window_group.add_actor (this.panel);
@@ -287,20 +292,20 @@ namespace Unity
       this.ensure_input_region ();
       return false;
     }
-    
+
     private void on_focus_window_changed ()
     {
       check_fullscreen_obstruction ();
-      
+
       if (focus_window != null)
         {
           focus_window.notify["fullscreen"].disconnect (on_focus_window_fullscreen_changed);
         }
-      
+
       display.get ("focus-window", ref focus_window);
       focus_window.notify["fullscreen"].connect (on_focus_window_fullscreen_changed);
     }
-    
+
     private void on_focus_window_fullscreen_changed ()
     {
       warning ("FOCUS WINDOW FULLSCREEN CHANGED");
@@ -330,26 +335,26 @@ namespace Unity
     {
       Mutter.Window focus = null;
       bool fullscreen = false;
-      
+
       // prevent segfault when mutter beats us to the initialization punch
       if (!(launcher is Launcher.Launcher) || !(panel is Clutter.Actor))
         return;
-      
+
       unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
       foreach (Mutter.Window w in mutter_windows)
         {
           unowned Mutter.MetaWindow meta = w.get_meta_window ();
-          
+
           if (meta != null && Mutter.MetaWindow.has_focus (w.get_meta_window ()))
-            {  
+            {
               focus = w;
               break;
             }
         }
-      
+
       if (focus == null)
         return;
-      
+
       (focus.get_meta_window () as GLib.Object).get ("fullscreen", ref fullscreen);
       if (fullscreen)
         {
@@ -376,6 +381,9 @@ namespace Unity
                              (int)height - this.PANEL_HEIGHT);
       this.drag_dest.move (0, this.PANEL_HEIGHT);
 
+      this.background.set_size (width, height);
+      this.background.set_position (0, 0);
+
       this.launcher.get_view ().set_size (this.QUICKLAUNCHER_WIDTH,
                                    (height-this.PANEL_HEIGHT));
       this.launcher.get_view ().set_position (0, this.PANEL_HEIGHT);
@@ -386,11 +394,8 @@ namespace Unity
                        this.QUICKLAUNCHER_WIDTH - 1, 0, (uint32)height,
                        PANEL_HEIGHT, 0, (uint32)width);
 
-      if (this.places_enabled)
-        {
-          this.places.set_size (width, height);
-          this.places.set_position (0, 0);
-        }
+      this.places.set_size (width, height);
+      this.places.set_position (0, 0);
 
       this.panel.set_size (width, 24);
       this.panel.set_position (0, 0);
@@ -456,11 +461,10 @@ namespace Unity
      * SHELL IMPLEMENTATION
      */
 
+    /*
     public void show_window_picker ()
     {
-      if (this.places_enabled == true)
-        {
-          this.show_unity ();
+      this.show_unity ();
           return;
         }
 
@@ -480,6 +484,7 @@ namespace Unity
 
       this.expose_windows (windows, 80);
     }
+    */
 
     public Clutter.Stage get_stage ()
     {
@@ -491,7 +496,7 @@ namespace Unity
       for (int i = 0; i < xids.length; i++)
         {
           uint32 xid = xids.index (i);
-          
+
           unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
           foreach (Mutter.Window window in mutter_windows)
             {
@@ -510,7 +515,7 @@ namespace Unity
       for (int i = 0; i < xids.length; i++)
         {
           uint32 xid = xids.index (i);
-          
+
           unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
           foreach (Mutter.Window w in mutter_windows)
             {
@@ -522,7 +527,7 @@ namespace Unity
                 }
             }
         }
-        
+
       expose_windows (windows);
     }
 
@@ -540,14 +545,14 @@ namespace Unity
           ulong window_xid = (ulong) Mutter.MetaWindow.get_xwindow (mutter_window.get_meta_window ());
           if (window_xid != xid)
             continue;
-          
+
           int type = mutter_window.get_window_type ();
 
           if (type != Mutter.MetaWindowType.NORMAL &&
               type != Mutter.MetaWindowType.DIALOG &&
               type != Mutter.MetaWindowType.MODAL_DIALOG)
             continue;
-          
+
           uint32 time_;
           unowned Mutter.MetaWindow meta = mutter_window.get_meta_window ();
 
@@ -581,23 +586,24 @@ namespace Unity
 
     public void show_unity ()
     {
-      if (this.places_enabled == false)
-        {
-          show_window_picker ();
-          return;
-        }
       if (this.places_showing)
         {
           this.places_showing = false;
 
-          this.places.hide ();
-          this.places.opacity = 0;
-          this.places.reactive = false;
+          var anim = dark_box.animate (Clutter.AnimationMode.EASE_IN_QUAD, 100, "opacity", 0);
+          anim.completed.connect ((an) => {
+            (an.get_object () as Clutter.Actor).destroy ();
+          });
 
-          this.actor_blur.destroy ();
-          this.dark_box.destroy ();
+          plugin.get_normal_window_group ().animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100, "opacity", 255);
+
+          anim = places.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100,
+                          "opacity", 0);
+          anim.completed.connect ((an) => {
+            (an.get_object () as Clutter.Actor).hide ();
+            });
+
           this.panel.set_indicator_mode (false);
-
           this.ensure_input_region ();
         }
       else
@@ -605,26 +611,17 @@ namespace Unity
           this.places_showing = true;
 
           this.places.show ();
-          this.places.opacity = 255;
-          this.places.reactive = true;
-
-          this.actor_blur = new ActorBlur (this.plugin.get_normal_window_group ());
-
-          (this.plugin.get_window_group () as Clutter.Container).add_actor (this.actor_blur);
-          (this.actor_blur as Clutter.Actor).raise (this.plugin.get_normal_window_group ());
-
-          this.actor_blur.set_position (0, 0);
-
+          this.places.opacity = 0;
           this.dark_box = new Clutter.Rectangle.with_color ({0, 0, 0, 255});
 
           (this.plugin.get_window_group () as Clutter.Container).add_actor (this.dark_box);
-          this.dark_box.raise (this.actor_blur);
+          this.dark_box.raise (plugin.get_normal_window_group ());
 
           this.dark_box.set_position (0, 0);
           this.dark_box.set_size (this.stage.width, this.stage.height);
 
           this.dark_box.show ();
-          this.actor_blur.show ();
+
           this.panel.set_indicator_mode (true);
 
           this.ensure_input_region ();
@@ -632,10 +629,17 @@ namespace Unity
           new X.Display (null).flush ();
 
           this.dark_box.opacity = 0;
-          this.actor_blur.opacity = 255;
 
-          this.dark_box.animate   (Clutter.AnimationMode.EASE_IN_SINE, 250, "opacity", 180);
+          this.dark_box.animate   (Clutter.AnimationMode.EASE_IN_QUAD, 100, "opacity", 180);
+          plugin.get_normal_window_group ().animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100, "opacity", 0);
+          places.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100,
+                          "opacity", 255);
         }
+    }
+
+    public void about_to_show_places ()
+    {
+      places.about_to_show ();
     }
 
     public void grab_keyboard (bool grab, uint32 timestamp)
@@ -694,7 +698,7 @@ namespace Unity
     {
       this.maximus.process_window (window);
       this.window_mapped (this, window);
-      
+
       if (display == null)
         {
           display = Mutter.MetaWindow.get_display (window.get_meta_window ());

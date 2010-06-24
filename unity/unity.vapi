@@ -40,24 +40,24 @@ namespace Unity {
 			public bool exported { get; }
 		}
 		[CCode (cheader_filename = "unity.h")]
-		public class EntryInfo : GLib.Object {
+		public abstract class EntryInfo : GLib.Object {
 			public EntryInfo (string dbus_path);
 			public void clear_hint (string hint);
 			public void clear_hints ();
 			public string? get_hint (string hint);
 			public uint num_hints ();
+			public abstract async uint set_global_search (Unity.Place.Search search);
 			public void set_hint (string hint, string val);
+			public abstract async uint set_search (Unity.Place.Search search);
 			public bool active { get; set; }
 			public uint active_section { get; set; }
 			public string dbus_path { get; set construct; }
 			public string display_name { get; set construct; }
 			public Unity.Place.RendererInfo entry_renderer_info { get; }
 			public Unity.Place.RendererInfo global_renderer_info { get; }
-			public Unity.Place.SearchHandler global_search_handler { get; set; }
 			public string icon { get; set construct; }
 			public string[] mimetypes { get; set construct; }
 			public uint position { get; set construct; }
-			public Unity.Place.SearchHandler search_handler { get; set; }
 			public Dee.Model sections_model { get; set construct; }
 			public bool sensitive { get; set construct; }
 		}
@@ -83,7 +83,9 @@ namespace Unity {
 			public void set_hint (string hint, string val);
 		}
 		[CCode (cheader_filename = "unity.h")]
-		public delegate uint SearchHandler (Unity.Place.Search search);
+		public interface Renderer : Ctk.Actor {
+			public abstract void set_models (Dee.Model groups, Dee.Model results, Gee.HashMap<string,string> hints);
+		}
 	}
 	[CCode (cprefix = "UnityQuicklistRendering", lower_case_cprefix = "unity_quicklist_rendering_")]
 	namespace QuicklistRendering {
@@ -152,6 +154,14 @@ namespace Unity {
 		public static string get_hostname (string uri);
 		[CCode (cheader_filename = "unity.h")]
 		public static string urlify (string uri);
+	}
+	[CCode (cheader_filename = "unity.h")]
+	public class CairoCanvas : Ctk.Bin {
+		[CCode (cheader_filename = "unity.h")]
+		public delegate void CairoCanvasPaint (Cairo.Context cr, int width, int height);
+		public Clutter.CairoTexture texture;
+		public CairoCanvas (Unity.CairoCanvas.CairoCanvasPaint _func);
+		public void update ();
 	}
 	[CCode (cheader_filename = "unity.h")]
 	public class Entry : Ctk.Text {
@@ -225,6 +235,7 @@ namespace Unity {
 	}
 	[CCode (cheader_filename = "unity.h")]
 	public interface Shell : GLib.Object {
+		public abstract void about_to_show_places ();
 		public abstract void add_fullscreen_request (GLib.Object o);
 		public abstract void close_xids (GLib.Array<uint32> xids);
 		public abstract void ensure_input_region ();
@@ -238,7 +249,6 @@ namespace Unity {
 		public abstract bool remove_fullscreen_request (GLib.Object o);
 		public abstract void show_unity ();
 		public abstract void show_window (uint32 xid);
-		public abstract void show_window_picker ();
 		public abstract void stop_expose ();
 		public abstract bool menus_swallow_events { get; }
 		public signal void indicators_changed (int width);

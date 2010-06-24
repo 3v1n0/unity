@@ -22,12 +22,12 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <clutter/clutter.h>
 #include <mutter-plugins.h>
-#include <float.h>
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <clutter/clutter.h>
+#include <float.h>
+#include <math.h>
 
 
 #define UNITY_TYPE_WINDOW_MANAGEMENT (unity_window_management_get_type ())
@@ -51,7 +51,6 @@ typedef struct _UnityWindowManagementPrivate UnityWindowManagementPrivate;
 typedef struct _UnityPlugin UnityPlugin;
 typedef struct _UnityPluginClass UnityPluginClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
-#define __g_list_free_g_object_unref0(var) ((var == NULL) ? NULL : (var = (_g_list_free_g_object_unref (var), NULL)))
 
 struct _UnityWindowManagement {
 	GObject parent_instance;
@@ -64,9 +63,6 @@ struct _UnityWindowManagementClass {
 
 struct _UnityWindowManagementPrivate {
 	UnityPlugin* plugin;
-	GList* switch_windows;
-	ClutterGroup* workgroup1;
-	ClutterGroup* workgroup2;
 	gint switch_signals_to_send;
 	MutterWindow* last_mapped;
 };
@@ -81,7 +77,6 @@ GType unity_plugin_get_type (void);
 enum  {
 	UNITY_WINDOW_MANAGEMENT_DUMMY_PROPERTY
 };
-static void _g_list_free_g_object_unref (GList* self);
 static void unity_window_management_window_minimized (UnityWindowManagement* self, UnityPlugin* plugin, MutterWindow* window);
 static void _unity_window_management_window_minimized_unity_plugin_window_minimized (UnityPlugin* _sender, UnityPlugin* plugin, MutterWindow* window, gpointer self);
 static void unity_window_management_window_maximized (UnityWindowManagement* self, UnityPlugin* plugin, MutterWindow* window, gint x, gint y, gint width, gint height);
@@ -94,15 +89,10 @@ static void unity_window_management_window_destroyed (UnityWindowManagement* sel
 static void _unity_window_management_window_destroyed_unity_plugin_window_destroyed (UnityPlugin* _sender, UnityPlugin* plugin, MutterWindow* window, gpointer self);
 static void unity_window_management_window_kill_effect (UnityWindowManagement* self, UnityPlugin* plugin, MutterWindow* window, gulong events);
 static void _unity_window_management_window_kill_effect_unity_plugin_window_kill_effect (UnityPlugin* _sender, UnityPlugin* plugin, MutterWindow* window, gulong events, gpointer self);
-static void unity_window_management_workspace_switched (UnityWindowManagement* self, UnityPlugin* plugin, GList* windows, gint from, gint to, gint direction);
-static void _unity_window_management_workspace_switched_unity_plugin_workspace_switch_event (UnityPlugin* _sender, UnityPlugin* plugin, GList* windows, gint from, gint to, gint direction, gpointer self);
 UnityWindowManagement* unity_window_management_new (UnityPlugin* p);
 UnityWindowManagement* unity_window_management_construct (GType object_type, UnityPlugin* p);
 static gint unity_window_management_get_animation_speed (UnityWindowManagement* self, MutterWindow* window);
-gboolean unity_plugin_get_expose_showing (UnityPlugin* self);
 MutterPlugin* unity_plugin_get_plugin (UnityPlugin* self);
-static void unity_window_management_on_workspace_switch_completed (UnityWindowManagement* self, ClutterAnimation* anim);
-static void _unity_window_management_on_workspace_switch_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static void unity_window_management_window_minimized_completed (UnityWindowManagement* self, ClutterAnimation* anim);
 static void _unity_window_management_window_minimized_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static gboolean unity_window_management_force_activate (UnityWindowManagement* self);
@@ -114,12 +104,6 @@ static void _unity_window_management_window_destroyed_completed_clutter_animatio
 static GObject * unity_window_management_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_window_management_finalize (GObject* obj);
 
-
-
-static void _g_list_free_g_object_unref (GList* self) {
-	g_list_foreach (self, (GFunc) g_object_unref, NULL);
-	g_list_free (self);
-}
 
 
 static gpointer _g_object_ref0 (gpointer self) {
@@ -157,11 +141,6 @@ static void _unity_window_management_window_kill_effect_unity_plugin_window_kill
 }
 
 
-static void _unity_window_management_workspace_switched_unity_plugin_workspace_switch_event (UnityPlugin* _sender, UnityPlugin* plugin, GList* windows, gint from, gint to, gint direction, gpointer self) {
-	unity_window_management_workspace_switched (self, plugin, windows, from, to, direction);
-}
-
-
 UnityWindowManagement* unity_window_management_construct (GType object_type, UnityPlugin* p) {
 	UnityWindowManagement * self;
 	UnityPlugin* _tmp0_;
@@ -174,7 +153,6 @@ UnityWindowManagement* unity_window_management_construct (GType object_type, Uni
 	g_signal_connect_object (self->priv->plugin, "window-mapped", (GCallback) _unity_window_management_window_mapped_unity_plugin_window_mapped, self, 0);
 	g_signal_connect_object (self->priv->plugin, "window-destroyed", (GCallback) _unity_window_management_window_destroyed_unity_plugin_window_destroyed, self, 0);
 	g_signal_connect_object (self->priv->plugin, "window-kill-effect", (GCallback) _unity_window_management_window_kill_effect_unity_plugin_window_kill_effect, self, 0);
-	g_signal_connect_object (self->priv->plugin, "workspace-switch-event", (GCallback) _unity_window_management_workspace_switched_unity_plugin_workspace_switch_event, self, 0);
 	return self;
 }
 
@@ -208,142 +186,6 @@ static gint unity_window_management_get_animation_speed (UnityWindowManagement* 
 	}
 	result = 80;
 	return result;
-}
-
-
-static void _unity_window_management_on_workspace_switch_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	unity_window_management_on_workspace_switch_completed (self, _sender);
-}
-
-
-static void unity_window_management_workspace_switched (UnityWindowManagement* self, UnityPlugin* plugin, GList* windows, gint from, gint to, gint direction) {
-	ClutterActor* stage;
-	float x_delta;
-	float y_delta;
-	ClutterAnimation* anim;
-	GList* _tmp1_;
-	ClutterGroup* _tmp2_;
-	ClutterGroup* _tmp3_;
-	ClutterActor* _tmp4_;
-	ClutterActor* _tmp5_;
-	ClutterGroup* _tmp6_;
-	ClutterGroup* _tmp7_;
-	ClutterAnimation* _tmp9_;
-	float y;
-	float x;
-	ClutterAnimation* _tmp10_;
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (plugin != NULL);
-	if (unity_plugin_get_expose_showing (plugin)) {
-		MutterWindow* window;
-		window = (MutterWindow*) g_list_nth_data (windows, (guint) 0);
-		mutter_plugin_effect_completed (unity_plugin_get_plugin (plugin), window, (guint) MUTTER_PLUGIN_SWITCH_WORKSPACE);
-		return;
-	}
-	self->priv->switch_signals_to_send++;
-	stage = mutter_plugin_get_stage (unity_plugin_get_plugin (plugin));
-	x_delta = (float) 0;
-	y_delta = (float) 0;
-	anim = NULL;
-	if (direction == (-4)) {
-		x_delta = clutter_actor_get_width (stage);
-	} else {
-		if (direction == (-3)) {
-			x_delta = -clutter_actor_get_width (stage);
-		} else {
-			if (direction == (-2)) {
-				y_delta = clutter_actor_get_height (stage);
-			} else {
-				if (direction == (-1)) {
-					y_delta = -clutter_actor_get_height (stage);
-				}
-			}
-		}
-	}
-	if (self->priv->switch_signals_to_send > 1) {
-		guint _tmp0_;
-		g_signal_parse_name ("completed", CLUTTER_TYPE_ANIMATION, &_tmp0_, NULL, FALSE);
-		g_signal_handlers_disconnect_matched (clutter_actor_get_animation ((ClutterActor*) self->priv->workgroup2), G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_window_management_on_workspace_switch_completed_clutter_animation_completed, self);
-		unity_window_management_on_workspace_switch_completed (self, NULL);
-	}
-	self->priv->switch_windows = (_tmp1_ = NULL, __g_list_free_g_object_unref0 (self->priv->switch_windows), _tmp1_);
-	self->priv->workgroup1 = (_tmp2_ = g_object_ref_sink ((ClutterGroup*) clutter_group_new ()), _g_object_unref0 (self->priv->workgroup1), _tmp2_);
-	self->priv->workgroup2 = (_tmp3_ = g_object_ref_sink ((ClutterGroup*) clutter_group_new ()), _g_object_unref0 (self->priv->workgroup2), _tmp3_);
-	clutter_container_add_actor ((_tmp4_ = mutter_plugin_get_window_group (unity_plugin_get_plugin (plugin)), CLUTTER_IS_CONTAINER (_tmp4_) ? ((ClutterContainer*) _tmp4_) : NULL), (ClutterActor*) self->priv->workgroup1);
-	clutter_container_add_actor ((_tmp5_ = mutter_plugin_get_window_group (unity_plugin_get_plugin (plugin)), CLUTTER_IS_CONTAINER (_tmp5_) ? ((ClutterContainer*) _tmp5_) : NULL), (ClutterActor*) self->priv->workgroup2);
-	clutter_actor_raise ((_tmp6_ = self->priv->workgroup1, CLUTTER_IS_ACTOR (_tmp6_) ? ((ClutterActor*) _tmp6_) : NULL), mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (plugin)));
-	clutter_actor_raise ((_tmp7_ = self->priv->workgroup2, CLUTTER_IS_ACTOR (_tmp7_) ? ((ClutterActor*) _tmp7_) : NULL), mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (plugin)));
-	{
-		GList* window_collection;
-		GList* window_it;
-		window_collection = windows;
-		for (window_it = window_collection; window_it != NULL; window_it = window_it->next) {
-			MutterWindow* window;
-			window = (MutterWindow*) window_it->data;
-			{
-				ClutterActor* clone;
-				clone = (ClutterActor*) g_object_ref_sink ((ClutterClone*) clutter_clone_new ((ClutterActor*) window));
-				self->priv->switch_windows = g_list_prepend (self->priv->switch_windows, _g_object_ref0 (clone));
-				clutter_actor_set_position (clone, clutter_actor_get_x ((ClutterActor*) window), clutter_actor_get_y ((ClutterActor*) window));
-				clutter_actor_set_size (clone, clutter_actor_get_width ((ClutterActor*) window), clutter_actor_get_height ((ClutterActor*) window));
-				clutter_actor_set_opacity ((ClutterActor*) window, (guint8) 0);
-				clutter_actor_set_opacity (clone, (guint8) 255);
-				if (mutter_window_get_window_type (window) == META_COMP_WINDOW_DESKTOP) {
-					ClutterActor* _tmp8_;
-					clutter_container_add_actor ((_tmp8_ = mutter_plugin_get_window_group (unity_plugin_get_plugin (plugin)), CLUTTER_IS_CONTAINER (_tmp8_) ? ((ClutterContainer*) _tmp8_) : NULL), clone);
-					clutter_actor_raise (clone, mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (plugin)));
-					_g_object_unref0 (clone);
-					continue;
-				}
-				if (mutter_window_get_workspace (window) == from) {
-					clutter_container_add_actor ((ClutterContainer*) self->priv->workgroup1, clone);
-				} else {
-					if (mutter_window_get_workspace (window) == to) {
-						clutter_container_add_actor ((ClutterContainer*) self->priv->workgroup2, clone);
-					}
-				}
-				_g_object_unref0 (clone);
-			}
-		}
-	}
-	anim = (_tmp9_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->workgroup1, (gulong) CLUTTER_LINEAR, (guint) 150, "x", -x_delta, "y", -y_delta, NULL)), _g_object_unref0 (anim), _tmp9_);
-	y = clutter_actor_get_y ((ClutterActor*) self->priv->workgroup2);
-	x = clutter_actor_get_x ((ClutterActor*) self->priv->workgroup2);
-	clutter_actor_set_x ((ClutterActor*) self->priv->workgroup2, x_delta);
-	clutter_actor_set_y ((ClutterActor*) self->priv->workgroup2, y_delta);
-	anim = (_tmp10_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->workgroup2, (gulong) CLUTTER_LINEAR, (guint) 150, "x", x, "y", y, NULL)), _g_object_unref0 (anim), _tmp10_);
-	g_signal_connect_object (anim, "completed", (GCallback) _unity_window_management_on_workspace_switch_completed_clutter_animation_completed, self, 0);
-	_g_object_unref0 (anim);
-}
-
-
-static void unity_window_management_on_workspace_switch_completed (UnityWindowManagement* self, ClutterAnimation* anim) {
-	MutterWindow* window;
-	g_return_if_fail (self != NULL);
-	window = NULL;
-	{
-		GList* actor_collection;
-		GList* actor_it;
-		actor_collection = self->priv->switch_windows;
-		for (actor_it = actor_collection; actor_it != NULL; actor_it = actor_it->next) {
-			ClutterActor* actor;
-			actor = _g_object_ref0 ((ClutterActor*) actor_it->data);
-			{
-				MutterWindow* _tmp2_;
-				ClutterActor* _tmp0_;
-				ClutterActor* _tmp1_;
-				window = (_tmp2_ = _g_object_ref0 ((_tmp1_ = clutter_clone_get_source ((_tmp0_ = actor, CLUTTER_IS_CLONE (_tmp0_) ? ((ClutterClone*) _tmp0_) : NULL)), MUTTER_IS_WINDOW (_tmp1_) ? ((MutterWindow*) _tmp1_) : NULL)), _g_object_unref0 (window), _tmp2_);
-				clutter_actor_set_opacity ((ClutterActor*) window, (guint8) 255);
-				clutter_actor_destroy (actor);
-				_g_object_unref0 (actor);
-			}
-		}
-	}
-	clutter_actor_destroy ((ClutterActor*) self->priv->workgroup1);
-	clutter_actor_destroy ((ClutterActor*) self->priv->workgroup2);
-	mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_SWITCH_WORKSPACE);
-	self->priv->switch_signals_to_send--;
-	_g_object_unref0 (window);
 }
 
 
@@ -640,9 +482,6 @@ static void unity_window_management_finalize (GObject* obj) {
 	UnityWindowManagement * self;
 	self = UNITY_WINDOW_MANAGEMENT (obj);
 	_g_object_unref0 (self->priv->plugin);
-	__g_list_free_g_object_unref0 (self->priv->switch_windows);
-	_g_object_unref0 (self->priv->workgroup1);
-	_g_object_unref0 (self->priv->workgroup2);
 	G_OBJECT_CLASS (unity_window_management_parent_class)->finalize (obj);
 }
 

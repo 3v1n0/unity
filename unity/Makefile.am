@@ -66,7 +66,9 @@ libunity_la_VALASOURCES = \
   quicklist-rendering.vala \
   shell.vala \
   theme.vala \
+  unity-cairo-canvas.vala \
   unity-favorites.vala \
+  unity-place-renderer.vala \
   unity-place.vala \
   webapp-fetcher.vala
 

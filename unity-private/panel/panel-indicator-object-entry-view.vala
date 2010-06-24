@@ -66,7 +66,6 @@ namespace Unity.Panel.Indicators
         {
           image = new Ctk.Image (22);
           add_actor (image);
-          image.show ();
 
           if (entry.image.icon_name != null)
             {
@@ -78,6 +77,30 @@ namespace Unity.Panel.Indicators
               image.pixbuf = entry.image.pixbuf;
               image.size = entry.image.pixbuf.width;
             }
+
+          if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
+            {
+              image.show ();
+            }
+          else
+            {
+              image.hide ();
+            }
+            
+          entry.image.notify["visible"].connect (() =>
+            {
+              if (entry.image != null)
+                {
+                  if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
+                    {
+                      image.show ();
+                    }
+                  else
+                    {
+                      image.hide ();
+                    }
+                }
+            });
         }
 
       entry.image.notify["pixbuf"].connect (() =>
@@ -110,7 +133,6 @@ namespace Unity.Panel.Indicators
           text = new Ctk.Text ("");
           text.color = { 233, 216, 200, 255 };
           add_actor (text);
-          text.show ();
 
           text.text = entry.label.label;
 
@@ -118,6 +140,30 @@ namespace Unity.Panel.Indicators
             {
               text.text = entry.label.label;
             });
+            
+          if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
+            {
+              text.show ();
+            }
+          else
+            {
+              text.hide ();
+            }
+            
+          entry.label.notify["visible"].connect (() =>
+            {
+              if (entry.label != null)
+                {
+                  if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
+                    {
+                      text.show ();
+                    }
+                  else
+                    {
+                      text.hide ();
+                    }
+                }
+            });            
         }
     }
 

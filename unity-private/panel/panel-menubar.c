@@ -52,6 +52,7 @@ typedef struct _UnityPanelIndicatorsMenuBarPrivate UnityPanelIndicatorsMenuBarPr
 
 typedef struct _UnityPanelIndicatorsIndicatorObjectView UnityPanelIndicatorsIndicatorObjectView;
 typedef struct _UnityPanelIndicatorsIndicatorObjectViewClass UnityPanelIndicatorsIndicatorObjectViewClass;
+#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
 #define UNITY_PANEL_INDICATORS_TYPE_INDICATORS_MODEL (unity_panel_indicators_indicators_model_get_type ())
 #define UNITY_PANEL_INDICATORS_INDICATORS_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_INDICATORS_TYPE_INDICATORS_MODEL, UnityPanelIndicatorsIndicatorsModel))
@@ -62,12 +63,12 @@ typedef struct _UnityPanelIndicatorsIndicatorObjectViewClass UnityPanelIndicator
 
 typedef struct _UnityPanelIndicatorsIndicatorsModel UnityPanelIndicatorsIndicatorsModel;
 typedef struct _UnityPanelIndicatorsIndicatorsModelClass UnityPanelIndicatorsIndicatorsModelClass;
-#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 
 struct _UnityPanelIndicatorsMenuBar {
 	CtkBox parent_instance;
 	UnityPanelIndicatorsMenuBarPrivate * priv;
+	UnityPanelIndicatorsIndicatorObjectView* indicator_object_view;
 };
 
 struct _UnityPanelIndicatorsMenuBarClass {
@@ -78,12 +79,12 @@ struct _UnityPanelIndicatorsMenuBarClass {
 static gpointer unity_panel_indicators_menu_bar_parent_class = NULL;
 
 GType unity_panel_indicators_menu_bar_get_type (void);
+GType unity_panel_indicators_indicator_object_view_get_type (void);
 enum  {
 	UNITY_PANEL_INDICATORS_MENU_BAR_DUMMY_PROPERTY
 };
 UnityPanelIndicatorsMenuBar* unity_panel_indicators_menu_bar_new (void);
 UnityPanelIndicatorsMenuBar* unity_panel_indicators_menu_bar_construct (GType object_type);
-GType unity_panel_indicators_indicator_object_view_get_type (void);
 static void unity_panel_indicators_menu_bar_on_menu_moved (UnityPanelIndicatorsMenuBar* self, UnityPanelIndicatorsIndicatorObjectView* object_view, GtkMenuDirectionType type);
 GType unity_panel_indicators_indicators_model_get_type (void);
 UnityPanelIndicatorsIndicatorsModel* unity_panel_indicators_indicators_model_get_default (void);
@@ -93,6 +94,7 @@ UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_object
 UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_object_view_construct (GType object_type, IndicatorObject* _object);
 static void _unity_panel_indicators_menu_bar_on_menu_moved_unity_panel_indicators_indicator_object_view_menu_moved (UnityPanelIndicatorsIndicatorObjectView* _sender, GtkMenuDirectionType type, gpointer self);
 static GObject * unity_panel_indicators_menu_bar_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void unity_panel_indicators_menu_bar_finalize (GObject* obj);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
@@ -130,8 +132,8 @@ static GObject * unity_panel_indicators_menu_bar_constructor (GType type, guint 
 	{
 		UnityPanelIndicatorsIndicatorsModel* model;
 		GeeArrayList* indicators_list;
-		ClutterColor _tmp1_;
-		ClutterColor _tmp0_ = {0};
+		ClutterColor _tmp2_;
+		ClutterColor _tmp1_ = {0};
 		ClutterRectangle* rect;
 		model = unity_panel_indicators_indicators_model_get_default ();
 		indicators_list = unity_panel_indicators_indicators_model_get_indicators (model);
@@ -147,12 +149,11 @@ static GObject * unity_panel_indicators_menu_bar_constructor (GType type, guint 
 				o = (IndicatorObject*) gee_iterator_get (_o_it);
 				name = unity_panel_indicators_indicators_model_get_indicator_name (model, o);
 				if (_vala_strcmp0 (name, "libappmenu.so") == 0) {
-					UnityPanelIndicatorsIndicatorObjectView* indicator_object_view;
-					indicator_object_view = g_object_ref_sink (unity_panel_indicators_indicator_object_view_new (o));
-					g_signal_connect_object (indicator_object_view, "menu-moved", (GCallback) _unity_panel_indicators_menu_bar_on_menu_moved_unity_panel_indicators_indicator_object_view_menu_moved, self, 0);
-					ctk_box_pack ((CtkBox*) self, (ClutterActor*) indicator_object_view, FALSE, TRUE);
-					clutter_actor_show ((ClutterActor*) indicator_object_view);
-					_g_object_unref0 (indicator_object_view);
+					UnityPanelIndicatorsIndicatorObjectView* _tmp0_;
+					self->indicator_object_view = (_tmp0_ = g_object_ref_sink (unity_panel_indicators_indicator_object_view_new (o)), _g_object_unref0 (self->indicator_object_view), _tmp0_);
+					g_signal_connect_object (self->indicator_object_view, "menu-moved", (GCallback) _unity_panel_indicators_menu_bar_on_menu_moved_unity_panel_indicators_indicator_object_view_menu_moved, self, 0);
+					ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->indicator_object_view, FALSE, TRUE);
+					clutter_actor_show ((ClutterActor*) self->indicator_object_view);
 					_g_object_unref0 (o);
 					_g_free0 (name);
 					break;
@@ -162,7 +163,7 @@ static GObject * unity_panel_indicators_menu_bar_constructor (GType type, guint 
 			}
 			_g_object_unref0 (_o_it);
 		}
-		rect = g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color ((_tmp1_ = (_tmp0_.red = (guint8) 255, _tmp0_.green = (guint8) 0, _tmp0_.blue = (guint8) 0, _tmp0_.alpha = (guint8) 0, _tmp0_), &_tmp1_)));
+		rect = g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color ((_tmp2_ = (_tmp1_.red = (guint8) 255, _tmp1_.green = (guint8) 0, _tmp1_.blue = (guint8) 0, _tmp1_.alpha = (guint8) 0, _tmp1_), &_tmp2_)));
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) rect, TRUE, TRUE);
 		clutter_actor_show ((ClutterActor*) rect);
 		_g_object_unref0 (model);
@@ -176,10 +177,19 @@ static GObject * unity_panel_indicators_menu_bar_constructor (GType type, guint 
 static void unity_panel_indicators_menu_bar_class_init (UnityPanelIndicatorsMenuBarClass * klass) {
 	unity_panel_indicators_menu_bar_parent_class = g_type_class_peek_parent (klass);
 	G_OBJECT_CLASS (klass)->constructor = unity_panel_indicators_menu_bar_constructor;
+	G_OBJECT_CLASS (klass)->finalize = unity_panel_indicators_menu_bar_finalize;
 }
 
 
 static void unity_panel_indicators_menu_bar_instance_init (UnityPanelIndicatorsMenuBar * self) {
+}
+
+
+static void unity_panel_indicators_menu_bar_finalize (GObject* obj) {
+	UnityPanelIndicatorsMenuBar * self;
+	self = UNITY_PANEL_INDICATORS_MENU_BAR (obj);
+	_g_object_unref0 (self->indicator_object_view);
+	G_OBJECT_CLASS (unity_panel_indicators_menu_bar_parent_class)->finalize (obj);
 }
 
 

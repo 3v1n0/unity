@@ -179,10 +179,10 @@ MutterPlugin* unity_plugin_get_plugin (UnityPlugin* self);
 guint8 unity_expose_manager_get_hovered_opacity (UnityExposeManager* self);
 guint8 unity_expose_manager_get_unhovered_opacity (UnityExposeManager* self);
 guint8 unity_expose_manager_get_darken (UnityExposeManager* self);
-static gboolean _lambda4_ (UnityExposeManager* self);
-static gboolean __lambda4__clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
-static gboolean _lambda5_ (UnityExposeManager* self);
-static gboolean __lambda5__clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _lambda6_ (UnityExposeManager* self);
+static gboolean __lambda6__clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _lambda7_ (UnityExposeManager* self);
+static gboolean __lambda7__clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 gboolean unity_expose_manager_get_coverflow (UnityExposeManager* self);
 static void unity_expose_manager_position_windows_coverflow (UnityExposeManager* self, GList* windows, ClutterActor* active);
 static void unity_expose_manager_position_windows_on_grid (UnityExposeManager* self, GList* _windows);
@@ -196,8 +196,8 @@ gint unity_expose_manager_get_right_buffer (UnityExposeManager* self);
 static gint unity_expose_manager_direct_comparison (UnityExposeManager* self, void* a, void* b);
 gint unity_expose_manager_get_top_buffer (UnityExposeManager* self);
 gint unity_expose_manager_get_bottom_buffer (UnityExposeManager* self);
-static void _lambda3_ (Block1Data* _data1_);
-static void __lambda3__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
+static void _lambda5_ (Block1Data* _data1_);
+static void __lambda5__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static Block1Data* block1_data_ref (Block1Data* _data1_);
 static void block1_data_unref (Block1Data* _data1_);
 static void unity_expose_manager_handle_event_coverflow (UnityExposeManager* self, ClutterEvent* event);
@@ -494,7 +494,7 @@ static void _unity_expose_manager_end_expose_clutter_actor_destroy (ClutterActor
 }
 
 
-static gboolean _lambda4_ (UnityExposeManager* self) {
+static gboolean _lambda6_ (UnityExposeManager* self) {
 	gboolean result = FALSE;
 	UnityLauncherQuicklistController* ql_controller;
 	gboolean _tmp0_ = FALSE;
@@ -513,14 +513,14 @@ static gboolean _lambda4_ (UnityExposeManager* self) {
 }
 
 
-static gboolean __lambda4__clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean __lambda6__clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
-	result = _lambda4_ (self);
+	result = _lambda6_ (self);
 	return result;
 }
 
 
-static gboolean _lambda5_ (UnityExposeManager* self) {
+static gboolean _lambda7_ (UnityExposeManager* self) {
 	gboolean result = FALSE;
 	UnityLauncherQuicklistController* ql_controller;
 	gboolean _tmp0_ = FALSE;
@@ -539,9 +539,9 @@ static gboolean _lambda5_ (UnityExposeManager* self) {
 }
 
 
-static gboolean __lambda5__clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean __lambda7__clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
-	result = _lambda5_ (self);
+	result = _lambda7_ (self);
 	return result;
 }
 
@@ -619,8 +619,8 @@ void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* window
 				unity_expose_clone_set_unhovered_opacity (clone, self->priv->_unhovered_opacity);
 				clutter_actor_set_opacity ((ClutterActor*) clone, self->priv->_unhovered_opacity);
 				unity_expose_clone_set_darken (clone, self->priv->_darken);
-				g_signal_connect_object ((ClutterActor*) clone, "enter-event", (GCallback) __lambda4__clutter_actor_enter_event, self, 0);
-				g_signal_connect_object ((ClutterActor*) clone, "leave-event", (GCallback) __lambda5__clutter_actor_leave_event, self, 0);
+				g_signal_connect_object ((ClutterActor*) clone, "enter-event", (GCallback) __lambda6__clutter_actor_enter_event, self, 0);
+				g_signal_connect_object ((ClutterActor*) clone, "leave-event", (GCallback) __lambda7__clutter_actor_leave_event, self, 0);
 				_g_object_unref0 (actor);
 				_g_object_unref0 (clone);
 			}
@@ -966,7 +966,7 @@ static void unity_expose_manager_position_windows_on_grid (UnityExposeManager* s
 }
 
 
-static void _lambda3_ (Block1Data* _data1_) {
+static void _lambda5_ (Block1Data* _data1_) {
 	UnityExposeManager * self;
 	self = _data1_->self;
 	clutter_actor_destroy (_data1_->actor);
@@ -974,8 +974,8 @@ static void _lambda3_ (Block1Data* _data1_) {
 }
 
 
-static void __lambda3__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	_lambda3_ (self);
+static void __lambda5__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+	_lambda5_ (self);
 }
 
 
@@ -1027,7 +1027,7 @@ static void unity_expose_manager_restore_window_position (UnityExposeManager* se
 	g_object_set ((GObject*) _data1_->actor, "scale-gravity", CLUTTER_GRAVITY_CENTER, NULL);
 	anim = _g_object_ref0 (clutter_actor_animate (_data1_->actor, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "scale-x", 1.f, "scale-y", 1.f, "opacity", opacity, "x", clutter_actor_get_x (_data1_->window), "y", clutter_actor_get_y (_data1_->window), NULL));
 	clutter_actor_set_opacity (_data1_->window, (guint8) 0);
-	g_signal_connect_data (anim, "completed", (GCallback) __lambda3__clutter_animation_completed, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
+	g_signal_connect_data (anim, "completed", (GCallback) __lambda5__clutter_animation_completed, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
 	_g_object_unref0 (anim);
 	block1_data_unref (_data1_);
 }
@@ -1214,9 +1214,6 @@ static gboolean unity_expose_manager_on_stage_captured_event (UnityExposeManager
 	}
 	if (_tmp4_) {
 		unity_expose_manager_pick_window (self, event, actor);
-	} else {
-		UnityExposeClone* _tmp5_;
-		self->priv->last_selected_clone = (_tmp5_ = NULL, _g_object_unref0 (self->priv->last_selected_clone), _tmp5_);
 	}
 	if (self->priv->_coverflow) {
 		unity_expose_manager_handle_event_coverflow (self, event);
