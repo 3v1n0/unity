@@ -532,8 +532,6 @@ namespace Unity
 
       if (event.type == Clutter.EventType.BUTTON_PRESS && !event_over_menu)
         pick_window (event, actor);
-      else
-        this.last_selected_clone = null;
 
       if (coverflow)
         handle_event_coverflow (event);
