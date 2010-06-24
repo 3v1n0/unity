@@ -37,7 +37,7 @@ namespace Unity.Places
     {
       padding = { 0.0f, 0.0f, PADDING, 0.0f };
       box = new Ctk.VBox (SPACING);
-      box.padding = { PADDING, PADDING, PADDING , PADDING};
+      box.padding = { 0.0f, PADDING, PADDING , PADDING};
       box.homogeneous = false;
       add_actor (box);
       box.show ();
@@ -52,6 +52,14 @@ namespace Unity.Places
     {
       groups_model = groups;
       results_model = results;
+
+      unowned Dee.ModelIter iter = groups.get_first_iter ();
+      while (!groups.is_last (iter))
+        {
+          on_group_added (groups, iter);
+
+          iter = groups.next (iter);
+        }
 
       groups_model.row_added.connect (on_group_added);
       groups_model.row_removed.connect (on_group_removed);

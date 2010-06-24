@@ -84,6 +84,15 @@ namespace Unity.Places
       pack (renderer, true, true);
       renderer.show ();
 
+      unowned Dee.ModelIter iter = results.get_first_iter ();
+      while (!results.is_last (iter))
+        {
+          if (interesting (iter))
+            on_result_added (iter);
+
+          iter = results.next (iter);
+        }
+
       results.row_added.connect (on_result_added);
       results.row_removed.connect (on_result_removed);
     }
@@ -114,28 +123,14 @@ namespace Unity.Places
       if (!interesting (iter))
         return;
 
-      var button = new Tile ();
-      button.set_label (results.get_string (iter, 4));
-      unowned Ctk.Text text = button.get_text ();
-      text.ellipsize = Pango.EllipsizeMode.END;
-      button.get_image ().set_from_stock ("text-x-preview");
+      var button = new Tile (iter,
+                             results.get_string (iter, 0),
+                             results.get_string (iter, 1),
+                             results.get_string (iter, 3),
+                             results.get_string (iter, 4),
+                             results.get_string (iter, 5));
       renderer.add_actor (button);
       button.show ();
-
-      button.set_data<unowned Dee.ModelIter> ("model-iter", iter);
-      button.set_data<string> ("uri", "%s".printf (results.get_string (iter, 0)));
-      button.clicked.connect ((b) => {
-        unowned string uri = b.get_data<unowned string> ("uri");
-
-        print (@"Launching $uri\n");
-        try {
-          Gtk.show_uri (Gdk.Screen.get_default (),
-                        uri,
-                        0);
-         } catch (GLib.Error e) {
-           warning ("Unable to launch: %s", e.message);
-         }
-      });
 
       show ();
     }
@@ -148,10 +143,9 @@ namespace Unity.Places
       var children = renderer.get_children ();
       foreach (Clutter.Actor actor in children)
         {
-          unowned Dee.ModelIter i;
+          Tile tile = actor as Tile;
 
-          i = actor.get_data<unowned Dee.ModelIter> ("model-iter");
-          if (i == iter)
+          if (tile.iter == iter)
             {
               actor.destroy ();
               break;
@@ -170,9 +164,40 @@ namespace Unity.Places
 
   public class Tile : Ctk.Button
   {
-    public Tile ()
+    public unowned Dee.ModelIter iter { get; construct; }
+
+    public string  display_name { get; construct; }
+    public string? icon_hint    { get; construct; }
+    public string  uri          { get; construct; }
+    public string? mimetype     { get; construct; }
+    public string? comment      { get; construct; }
+
+    public Tile (Dee.ModelIter iter,
+                 string        uri,
+                 string?       icon_hint,
+                 string?       mimetype,
+                 string        display_name,
+                 string?       comment)
     {
-      Object (orientation:Ctk.Orientation.VERTICAL);
+      Object (orientation:Ctk.Orientation.VERTICAL,
+              iter:iter,
+              display_name:display_name,
+              icon_hint:icon_hint,
+              uri:uri,
+              mimetype:mimetype,
+              comment:comment);
+    }
+
+    construct
+    {
+      set_label (display_name);
+
+      unowned Ctk.Text text = get_text ();
+      text.ellipsize = Pango.EllipsizeMode.END;
+
+      get_image ().set_from_stock ("text-x-preview");
+
+      Idle.add (load_icon);
     }
 
     private override void get_preferred_width (float for_height,
@@ -181,6 +206,78 @@ namespace Unity.Places
     {
       mwidth = 160.0f;
       nwidth = 160.0f;
+    }
+
+    private override void clicked ()
+    {
+      debug (@"Launching $uri");
+
+      if (uri.has_prefix ("application://"))
+        {
+          var id = uri.offset ("application://".length);
+
+          var info = new GLib.DesktopAppInfo (id);
+          if (info is GLib.DesktopAppInfo)
+            {
+              try {
+                info.launch (null,null);
+
+              } catch (Error e) {
+                warning ("Unable to launch desktop file %s: %s\n",
+                         id,
+                         e.message);
+              }
+            }
+          else
+            {
+              warning ("%s is an invalid DesktopAppInfo id\n", id);
+            }
+          return;
+        }
+
+      try {
+        Gtk.show_uri (Gdk.Screen.get_default (),
+                      uri,
+                      0);
+       } catch (GLib.Error e) {
+         warning ("Unable to launch: %s\n", e.message);
+       }
+    }
+
+    private bool load_icon ()
+    {
+      if (uri.has_prefix ("application://"))
+        {
+          var id = uri.offset ("application://".length);
+          var info = new GLib.DesktopAppInfo (id);
+
+          if (info is GLib.DesktopAppInfo)
+            {
+              var icon = info.get_icon ();
+              if (icon is GLib.ThemedIcon)
+                get_image ().set_from_gicon (icon);
+              else if (icon is GLib.FileIcon)
+                {
+                  var file = (icon as GLib.FileIcon).get_file ();
+                  get_image ().set_from_filename (file.get_path ());
+                }
+            }
+        }
+      else if (mimetype != null)
+        {
+          var icon = GLib.g_content_type_get_icon (mimetype) as ThemedIcon;
+          if (icon is GLib.ThemedIcon)
+            {
+              get_image ().set_from_gicon (icon);
+            }
+          else if (icon is GLib.FileIcon)
+            {
+              var file = (icon as GLib.FileIcon).get_file ();
+              get_image ().set_from_filename (file.get_path ());
+            }
+        }
+
+      return false;
     }
   }
 }
