@@ -1,4 +1,4 @@
-unity (0.2.12-0ubuntu1) UNRELEASED; urgency=low
+unity (0.2.12-0ubuntu1) maverick; urgency=low
 
   * New upstream release:
     - reordered applications launchers don't save their location (LP: #592087)
@@ -15,7 +15,7 @@ unity (0.2.12-0ubuntu1) UNRELEASED; urgency=low
     - add libclutk-dev as a dep to libunity-dev
     - bump clutk, dee and bamf dep to latest
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 24 Jun 2010 17:54:23 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 24 Jun 2010 21:12:40 +0200
 
 unity (0.2.10-0ubuntu1) maverick; urgency=low
 
