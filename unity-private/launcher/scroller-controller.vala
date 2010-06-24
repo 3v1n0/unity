@@ -317,6 +317,11 @@ namespace Unity.Launcher
           if (model_controller in childcontrollers)
             childcontrollers.remove (model_controller);
         }
+      else
+        {
+          if (model_controller is ApplicationController)
+            (model_controller as ApplicationController).set_sticky ();
+        }
       // if it was dropped inside of the launcher, its allready been added
       retcont.opacity = 255;
       // disconnect our drag controller signals

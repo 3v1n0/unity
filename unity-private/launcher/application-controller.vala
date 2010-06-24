@@ -223,6 +223,18 @@ namespace Unity.Launcher
       });
     }
 
+    public void set_sticky ()
+    {
+      if (desktop_file == "" || desktop_file == null)
+        return;
+      string uid = "app-" + Path.get_basename (desktop_file);
+      var favorites = Unity.Favorites.get_default ();
+
+      favorites.set_string (uid, "type", "application");
+      favorites.set_string (uid, "desktop_file", desktop_file);
+      favorites.add_favorite (uid);
+    }
+
     public void set_priority (float priority)
     {
       if (desktop_file == "" || desktop_file == null)
