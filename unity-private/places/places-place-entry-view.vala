@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Canonical Ltd
+ * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,32 +17,34 @@
  *
  */
 
-using Gee;
-
 namespace Unity.Places
 {
-  public class Controller : Object
+  public class PlaceEntryView : Ctk.Image
   {
-    /**
-     * This class takes care of reading in the places, creating the view and
-     * keeping it up-to-date
-     **/
-    public  Shell shell { get; construct; }
-    private View view;
+    static const int WIDTH = 80;
 
-    public Controller (Shell shell)
+    /* Properties */
+    public PlaceEntry entry { get; construct; }
+
+    public PlaceEntryView (PlaceEntry entry)
     {
-      Object (shell:shell);
+      Object (entry:entry,
+              size:48,
+              reactive:true);
+
+      set_from_filename (entry.icon);
     }
 
     construct
     {
-      view = new View (shell);
     }
 
-    public View get_view ()
+    private override void get_preferred_width (float     for_height,
+                                               out float min_width,
+                                               out float nat_width)
     {
-      return view;
+      min_width = (float) WIDTH;
+      nat_width = (float) WIDTH;
     }
   }
 }

@@ -171,6 +171,7 @@ namespace Unity.Launcher
         }
     }
 
+    /*
     public void on_favorite_removed (string uid)
     {
     }
@@ -195,7 +196,7 @@ namespace Unity.Launcher
 
       return false;
     }
-
+    */
     private ApplicationController? find_controller_by_desktop_file (string desktop_file)
     {
       foreach (ScrollerChildController controller in childcontrollers)
