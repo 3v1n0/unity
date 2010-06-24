@@ -4,8 +4,6 @@ unity (0.2.12-0ubuntu1) UNRELEASED; urgency=low
     - reordered applications launchers don't save their location (LP: #592087)
     - cannot close panel menus unless clicking on particular zones of the
       display (LP: #595880)
-    - cannot close indicators with a click unless the cursor is moved
-      (LP: #591660)
     - Add support for switching workspaces (LP: #594157)
     - Indicators should listen to show/hide from GtkWidget (LP: #590920)
     - Race in expose manager event processing (LP: #588299)

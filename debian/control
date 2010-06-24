@@ -35,6 +35,8 @@ Replaces: netbook-launcher (<= 1:2.1.18)
 Provides: indicator-renderer,
           netbook-launcher
 Breaks: maximus (<< 0.4.14-1ubuntu2)
+Recommends: unity-place-applications,
+            unity-place-files
 Description: Unity Interface for Ubuntu Netbook Edition
  Unity is a graphical interface designed for Ubuntu Netbook Edition
 
