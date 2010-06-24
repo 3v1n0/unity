@@ -149,6 +149,9 @@ namespace Unity.Launcher
         }
     }
   }
+  public errordomain AppTypeError {
+    NO_DESKTOP_FILE
+  }
 
   public class ApplicationController : ScrollerChildController
   {
@@ -220,6 +223,26 @@ namespace Unity.Launcher
       });
     }
 
+    public void set_priority (float priority)
+    {
+      if (desktop_file == "" || desktop_file == null)
+        return;
+
+      string uid = "app-" + Path.get_basename (desktop_file);
+      var favorites = Unity.Favorites.get_default ();
+      favorites.set_float (uid, "priority", priority);
+    }
+
+    public float get_priority () throws AppTypeError
+    {
+      if (desktop_file == "" || desktop_file == null)
+        throw new AppTypeError.NO_DESKTOP_FILE("There is no desktop file for this app, can't get priority");
+
+      string uid = "app-" + Path.get_basename (desktop_file);
+      var favorites = Unity.Favorites.get_default ();
+      return favorites.get_float (uid, "priority");
+    }
+
     private void on_favorite_added (string uid)
     {
       //check to see if we are the favorite
@@ -242,7 +265,7 @@ namespace Unity.Launcher
           child.pin_type = PinType.UNPINNED;
           closed ();
           if (".local" in desktop_filename)
-+           FileUtils.remove (desktop_filename);
+           FileUtils.remove (desktop_filename);
         }
     }
 
