@@ -122,6 +122,7 @@ namespace Unity
     /* Unity Components */
     private Background         background;
     private ExposeManager      expose_manager;
+    private SpacesManager      spaces_manager;
     private Launcher.Launcher  launcher;
     private Places.Controller  places_controller;
     private Places.View        places;
@@ -192,14 +193,16 @@ namespace Unity
         {
           warning (e.message);
         }
+
+      this.wm = new WindowManagement (this);
+      this.maximus = new Maximus ();
+      
       END_FUNCTION ();
     }
 
     private bool real_construct ()
     {
       START_FUNCTION ();
-      this.wm = new WindowManagement (this);
-      this.maximus = new Maximus ();
 
       fullscreen_requests = new Gee.ArrayList<Object> ();
 
@@ -236,6 +239,9 @@ namespace Unity
 
       this.launcher = new Launcher.Launcher (this);
       this.launcher.get_view ().opacity = 0;
+      
+      this.spaces_manager = new SpacesManager (this);
+      this.spaces_manager.set_padding (50, 50, 125, 50);
 
       this.expose_manager = new ExposeManager (this, launcher);
       this.expose_manager.hovered_opacity = 255;
