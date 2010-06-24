@@ -41,6 +41,7 @@ namespace Unity.Launcher
 
     construct
     {
+      model.order_changed.connect (model_order_changed);
       childcontrollers = new Gee.ArrayList<ScrollerChildController> ();
 
       matcher = Bamf.Matcher.get_default ();
@@ -123,32 +124,68 @@ namespace Unity.Launcher
         }
     }
 
+    private static int compare_prioritys (ScrollerChild a, ScrollerChild b)
+    {
+      float prioritya = -1.0f, priorityb = -1.0f;
+      ScrollerChildController? childcontroller = null;
+
+      try
+        {
+          childcontroller = a.controller;
+          if (childcontroller is ApplicationController)
+            prioritya = (childcontroller as ApplicationController).get_priority ();
+        }
+      catch (AppTypeError e)
+        {
+          prioritya = 10000.0f;
+        }
+
+      try
+        {
+          childcontroller = b.controller;
+          if (childcontroller is ApplicationController)
+            priorityb = (childcontroller as ApplicationController).get_priority ();
+        }
+      catch (AppTypeError e)
+        {
+          priorityb = 10000.0f;
+        }
+
+      if (prioritya < priorityb) return -1;
+      if (prioritya > priorityb) return  1;
+      return 0;
+    }
+
     private void build_favorites ()
     {
-
+      model.order_changed.disconnect (model_order_changed);
       foreach (string uid in favorites.get_favorites ())
-      {
-        var type = favorites.get_string (uid, "type");
-        if (type != "application")
-          continue;
-
-        var desktop_file = favorites.get_string (uid, "desktop_file");
-        if (!FileUtils.test (desktop_file, FileTest.EXISTS))
-          {
-            // no desktop file for this favorite or it does not exist
+        {
+          var type = favorites.get_string (uid, "type");
+          if (type != "application")
             continue;
-          }
 
-        ApplicationController controller = find_controller_by_desktop_file (desktop_file);
-        if (!(controller is ScrollerChildController))
-          {
-            LauncherChild child = new LauncherChild ();
-            controller = new ApplicationController (desktop_file, child);
-            model.add (child);
-            childcontrollers.add (controller);
-            controller.closed.connect (on_scroller_controller_closed);
-          }
-      }
+          var desktop_file = favorites.get_string (uid, "desktop_file");
+          if (!FileUtils.test (desktop_file, FileTest.EXISTS))
+            {
+              // no desktop file for this favorite or it does not exist
+              continue;
+            }
+
+          ApplicationController controller = find_controller_by_desktop_file (desktop_file);
+          if (!(controller is ScrollerChildController))
+            {
+              LauncherChild child = new LauncherChild ();
+              controller = new ApplicationController (desktop_file, child);
+              model.add (child);
+              childcontrollers.add (controller);
+              controller.closed.connect (on_scroller_controller_closed);
+            }
+        }
+
+      // need to sort the list now
+      model.sort ((CompareFunc)compare_prioritys);
+      model.order_changed.connect (model_order_changed);
     }
 
     private void on_favorite_added (string uid)
@@ -280,11 +317,40 @@ namespace Unity.Launcher
           if (model_controller in childcontrollers)
             childcontrollers.remove (model_controller);
         }
+      else
+        {
+          if (model_controller is ApplicationController)
+            (model_controller as ApplicationController).set_sticky ();
+        }
       // if it was dropped inside of the launcher, its allready been added
       retcont.opacity = 255;
       // disconnect our drag controller signals
       drag_controller.drag_motion.disconnect (this.on_unity_drag_motion);
       drag_controller.drag_drop.disconnect (this.on_unity_drag_drop);
+    }
+
+    private ScrollerChildController? get_controller_for_view (ScrollerChild childview)
+    {
+      foreach (ScrollerChildController childcontroller in childcontrollers)
+        {
+          if (childcontroller.child == childview)
+            return childcontroller;
+        }
+
+      warning (@"Could not find controller for given view: $childview");
+      return null;
+    }
+
+    private void model_order_changed ()
+    {
+      float index = 1.0f;
+      foreach (ScrollerChild childview in model)
+      {
+        ScrollerChildController? childcontroller = get_controller_for_view (childview);
+        if (childcontroller is ApplicationController)
+          (childcontroller as ApplicationController).set_priority (index);
+        index += 1.0f;
+      }
     }
   }
 }
