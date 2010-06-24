@@ -84,6 +84,15 @@ namespace Unity.Places
       pack (renderer, true, true);
       renderer.show ();
 
+      unowned Dee.ModelIter iter = results.get_first_iter ();
+      while (!results.is_last (iter))
+        {
+          if (interesting (iter))
+            on_result_added (iter);
+
+          iter = results.next (iter);
+        }
+
       results.row_added.connect (on_result_added);
       results.row_removed.connect (on_result_removed);
     }
