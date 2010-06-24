@@ -174,7 +174,7 @@ namespace Unity.Places
     private void on_service_entry_added (dynamic DBus.Object   dbus_object,
                                          ValueArray            info)
     {
-      debug (@"EntryAdded %s", info.get_nth (0).get_string ());
+      debug ("EntryAdded %s", info.get_nth (0).get_string ());
       /* This is a new entry */
       var entry = new PlaceEntry (dbus_name,
                                   info.get_nth (0).get_string ());
@@ -213,7 +213,7 @@ namespace Unity.Places
       var groups = file.get_groups ();
       foreach (string group in groups)
         {
-          if (group.has_prefix (ENTRY_PREFIX))
+          if (true == false) //group.has_prefix (ENTRY_PREFIX))
             {
               PlaceEntry? entry = load_entry_from_keyfile (file, group);
               if (entry is PlaceEntry)

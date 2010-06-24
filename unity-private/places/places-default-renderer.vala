@@ -37,7 +37,7 @@ namespace Unity.Places
     {
       padding = { 0.0f, 0.0f, PADDING, 0.0f };
       box = new Ctk.VBox (SPACING);
-      box.padding = { PADDING, PADDING, PADDING , PADDING};
+      box.padding = { 0.0f, PADDING, PADDING , PADDING};
       box.homogeneous = false;
       add_actor (box);
       box.show ();
