@@ -89,6 +89,7 @@ namespace Unity.Places
                 if (info.get_name ().has_suffix (".place") == false)
                   continue;
 
+                /* FIXME: load_place needs to be async */
                 var place = load_place (Path.build_filename (directory,
                                                              info.get_name ()));
                 if (place is Place)

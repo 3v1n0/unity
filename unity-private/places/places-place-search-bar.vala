@@ -22,6 +22,7 @@ namespace Unity.Places
   public class PlaceSearchBar : Ctk.Box
   {
     static const int SPACING = 10;
+    static const int RANDOM_TEXT_WIDTH = 400;
 
     /* Properties */
     private PlaceEntry? active_entry = null;
@@ -71,6 +72,13 @@ namespace Unity.Places
 
       if (entry.x != ex || entry.width != ewidth)
         {
+          /* After discussion with upstream Clutter guys, it seems like the
+           * warning when resizing a CairoTexture is a bug in Clutter, however
+           * the fix is not trivial, so it was suggested to use a 0-sec timeout.
+           * We don't use an idle as it seems to have a lower priority and the
+           * user will see a jump between states, the 0-sec timeout seems to be
+           * dealt with immediately in the text iteration.
+           */
           Timeout.add (0, bg.update_background);
         }
     }
@@ -81,7 +89,7 @@ namespace Unity.Places
     {
       float mheight, nheight;
 
-      entry.get_preferred_height (400, out mheight, out nheight);
+      entry.get_preferred_height (RANDOM_TEXT_WIDTH, out mheight, out nheight);
       min_height = mheight + SPACING * 3;
       nat_height = nheight + SPACING * 3;
     }
@@ -108,6 +116,10 @@ namespace Unity.Places
 
   public class PlaceSearchBarBackground : Ctk.Bin
   {
+    /* This is a full path right now as we get this asset from the assets
+     * package that is not installable (easily) normally. Will change to
+     * Config.DATADIR as soon as this is fixed in the other package.
+     */
     public const string BG = "/usr/share/unity/dash_background.png";
 
     private int last_width = 0;
