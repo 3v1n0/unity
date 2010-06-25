@@ -90,6 +90,27 @@ typedef struct _UnityPanelIndicatorsIndicatorBar UnityPanelIndicatorsIndicatorBa
 typedef struct _UnityPanelIndicatorsIndicatorBarClass UnityPanelIndicatorsIndicatorBarClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
+#define TYPE_MENU_MANAGER (menu_manager_get_type ())
+#define MENU_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MENU_MANAGER, MenuManager))
+#define MENU_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), TYPE_MENU_MANAGER, MenuManagerClass))
+#define IS_MENU_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), TYPE_MENU_MANAGER))
+#define IS_MENU_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), TYPE_MENU_MANAGER))
+#define MENU_MANAGER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), TYPE_MENU_MANAGER, MenuManagerClass))
+
+typedef struct _MenuManager MenuManager;
+typedef struct _MenuManagerClass MenuManagerClass;
+typedef struct _UnityPanelIndicatorsMenuBarPrivate UnityPanelIndicatorsMenuBarPrivate;
+
+#define UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW (unity_panel_indicators_indicator_object_view_get_type ())
+#define UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_VIEW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW, UnityPanelIndicatorsIndicatorObjectView))
+#define UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_VIEW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW, UnityPanelIndicatorsIndicatorObjectViewClass))
+#define UNITY_PANEL_INDICATORS_IS_INDICATOR_OBJECT_VIEW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW))
+#define UNITY_PANEL_INDICATORS_IS_INDICATOR_OBJECT_VIEW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW))
+#define UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_VIEW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW, UnityPanelIndicatorsIndicatorObjectViewClass))
+
+typedef struct _UnityPanelIndicatorsIndicatorObjectView UnityPanelIndicatorsIndicatorObjectView;
+typedef struct _UnityPanelIndicatorsIndicatorObjectViewClass UnityPanelIndicatorsIndicatorObjectViewClass;
+
 #define UNITY_PANEL_INDICATORS_TYPE_INDICATORS_MODEL (unity_panel_indicators_indicators_model_get_type ())
 #define UNITY_PANEL_INDICATORS_INDICATORS_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_INDICATORS_TYPE_INDICATORS_MODEL, UnityPanelIndicatorsIndicatorsModel))
 #define UNITY_PANEL_INDICATORS_INDICATORS_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PANEL_INDICATORS_TYPE_INDICATORS_MODEL, UnityPanelIndicatorsIndicatorsModelClass))
@@ -119,6 +140,16 @@ struct _UnityPanelViewPrivate {
 	UnityPanelIndicatorsIndicatorBar* indicator_bar;
 };
 
+struct _UnityPanelIndicatorsMenuBar {
+	CtkBox parent_instance;
+	UnityPanelIndicatorsMenuBarPrivate * priv;
+	UnityPanelIndicatorsIndicatorObjectView* indicator_object_view;
+};
+
+struct _UnityPanelIndicatorsMenuBarClass {
+	CtkBoxClass parent_class;
+};
+
 
 static gpointer unity_panel_view_parent_class = NULL;
 
@@ -138,9 +169,14 @@ enum  {
 void unity_panel_system_tray_manage_stage (UnityPanelSystemTray* self, ClutterStage* stage);
 UnityPanelView* unity_panel_view_new (UnityShell* shell);
 UnityPanelView* unity_panel_view_construct (GType object_type, UnityShell* shell);
+GType menu_manager_get_type (void);
+MenuManager* menu_manager_get_default (void);
+void menu_manager_popdown_current_menu (MenuManager* self);
+static gboolean unity_panel_view_on_button_release_event (UnityPanelView* self, ClutterEvent* e);
 gint unity_panel_view_get_indicators_width (UnityPanelView* self);
 void unity_panel_view_set_expanded (UnityPanelView* self, gboolean _expanded);
 gint unity_panel_view_get_panel_height (UnityPanelView* self);
+GType unity_panel_indicators_indicator_object_view_get_type (void);
 void unity_panel_indicators_indicator_bar_set_indicator_mode (UnityPanelIndicatorsIndicatorBar* self, gboolean mode);
 void unity_panel_view_set_indicator_mode (UnityPanelView* self, gboolean mode);
 UnityShell* unity_panel_view_get_shell (UnityPanelView* self);
@@ -157,6 +193,7 @@ UnityPanelSystemTray* unity_panel_system_tray_new (void);
 UnityPanelSystemTray* unity_panel_system_tray_construct (GType object_type);
 UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_new (void);
 UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_construct (GType object_type);
+static gboolean _unity_panel_view_on_button_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static GObject * unity_panel_view_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_panel_view_finalize (GObject* obj);
 static void unity_panel_view_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -168,7 +205,7 @@ UnityPanelView* unity_panel_view_construct (GType object_type, UnityShell* shell
 	UnityPanelView * self;
 	ClutterStage* _tmp0_;
 	g_return_val_if_fail (shell != NULL, NULL);
-	self = (UnityPanelView*) g_object_new (object_type, "shell", shell, "reactive", FALSE, "orientation", CTK_ORIENTATION_HORIZONTAL, "homogeneous", FALSE, "spacing", 0, NULL);
+	self = (UnityPanelView*) g_object_new (object_type, "shell", shell, "reactive", TRUE, "orientation", CTK_ORIENTATION_HORIZONTAL, "homogeneous", FALSE, "spacing", 0, NULL);
 	unity_panel_system_tray_manage_stage (self->priv->system_tray, _tmp0_ = unity_shell_get_stage (shell));
 	_g_object_unref0 (_tmp0_);
 	return self;
@@ -177,6 +214,18 @@ UnityPanelView* unity_panel_view_construct (GType object_type, UnityShell* shell
 
 UnityPanelView* unity_panel_view_new (UnityShell* shell) {
 	return unity_panel_view_construct (UNITY_PANEL_TYPE_VIEW, shell);
+}
+
+
+static gboolean unity_panel_view_on_button_release_event (UnityPanelView* self, ClutterEvent* e) {
+	gboolean result = FALSE;
+	MenuManager* manager;
+	g_return_val_if_fail (self != NULL, FALSE);
+	manager = menu_manager_get_default ();
+	menu_manager_popdown_current_menu (manager);
+	result = FALSE;
+	_g_object_unref0 (manager);
+	return result;
 }
 
 
@@ -205,15 +254,21 @@ gint unity_panel_view_get_panel_height (UnityPanelView* self) {
 void unity_panel_view_set_indicator_mode (UnityPanelView* self, gboolean mode) {
 	g_return_if_fail (self != NULL);
 	if (mode) {
-		clutter_actor_hide ((ClutterActor*) self->priv->menu_bar);
+		if (CLUTTER_IS_ACTOR (self->priv->menu_bar->indicator_object_view)) {
+			clutter_actor_hide ((ClutterActor*) self->priv->menu_bar->indicator_object_view);
+		}
 		clutter_actor_hide ((ClutterActor*) self->priv->bground);
 		clutter_actor_hide ((ClutterActor*) self->priv->system_tray);
 		unity_panel_indicators_indicator_bar_set_indicator_mode (self->priv->indicator_bar, mode);
+		clutter_actor_set_reactive ((ClutterActor*) self, FALSE);
 	} else {
-		clutter_actor_show ((ClutterActor*) self->priv->menu_bar);
+		if (CLUTTER_IS_ACTOR (self->priv->menu_bar->indicator_object_view)) {
+			clutter_actor_show ((ClutterActor*) self->priv->menu_bar->indicator_object_view);
+		}
 		clutter_actor_show ((ClutterActor*) self->priv->bground);
 		clutter_actor_show ((ClutterActor*) self->priv->system_tray);
 		unity_panel_indicators_indicator_bar_set_indicator_mode (self->priv->indicator_bar, mode);
+		clutter_actor_set_reactive ((ClutterActor*) self, TRUE);
 	}
 }
 
@@ -236,6 +291,13 @@ static void unity_panel_view_set_shell (UnityPanelView* self, UnityShell* value)
 	g_return_if_fail (self != NULL);
 	self->priv->_shell = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_shell), _tmp0_);
 	g_object_notify ((GObject *) self, "shell");
+}
+
+
+static gboolean _unity_panel_view_on_button_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	gboolean result;
+	result = unity_panel_view_on_button_release_event (self, event);
+	return result;
 }
 
 
@@ -271,6 +333,7 @@ static GObject * unity_panel_view_constructor (GType type, guint n_construct_pro
 		self->priv->indicator_bar = (_tmp5_ = g_object_ref_sink (unity_panel_indicators_indicator_bar_new ()), _g_object_unref0 (self->priv->indicator_bar), _tmp5_);
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->indicator_bar, FALSE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->indicator_bar);
+		g_signal_connect_object ((ClutterActor*) self, "button-release-event", (GCallback) _unity_panel_view_on_button_release_event_clutter_actor_button_release_event, self, 0);
 		END_FUNCTION ();
 	}
 	return obj;

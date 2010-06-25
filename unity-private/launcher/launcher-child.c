@@ -49,6 +49,16 @@ typedef struct _UnityLauncherScrollerChildPrivate UnityLauncherScrollerChildPriv
 
 #define UNITY_LAUNCHER_TYPE_PIN_TYPE (unity_launcher_pin_type_get_type ())
 
+#define UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER (unity_launcher_scroller_child_controller_get_type ())
+#define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildController))
+#define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildControllerClass))
+#define UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER))
+#define UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER))
+#define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildControllerClass))
+
+typedef struct _UnityLauncherScrollerChildController UnityLauncherScrollerChildController;
+typedef struct _UnityLauncherScrollerChildControllerClass UnityLauncherScrollerChildControllerClass;
+
 #define UNITY_LAUNCHER_TYPE_LAUNCHER_CHILD (unity_launcher_launcher_child_get_type ())
 #define UNITY_LAUNCHER_LAUNCHER_CHILD(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_LAUNCHER_CHILD, UnityLauncherLauncherChild))
 #define UNITY_LAUNCHER_LAUNCHER_CHILD_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_LAUNCHER_CHILD, UnityLauncherLauncherChildClass))
@@ -80,6 +90,7 @@ struct _UnityLauncherScrollerChild {
 	CtkActor parent_instance;
 	UnityLauncherScrollerChildPrivate * priv;
 	UnityLauncherPinType pin_type;
+	UnityLauncherScrollerChildController* controller;
 };
 
 struct _UnityLauncherScrollerChildClass {
@@ -129,6 +140,7 @@ static gpointer unity_launcher_launcher_child_parent_class = NULL;
 GType unity_launcher_anim_state_get_type (void);
 GType unity_launcher_scroller_child_get_type (void);
 GType unity_launcher_pin_type_get_type (void);
+GType unity_launcher_scroller_child_controller_get_type (void);
 GType unity_launcher_launcher_child_get_type (void);
 #define UNITY_LAUNCHER_LAUNCHER_CHILD_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_LAUNCHER_CHILD, UnityLauncherLauncherChildPrivate))
 enum  {
@@ -244,12 +256,12 @@ static void unity_launcher_launcher_child_load_textures (UnityLauncherLauncherCh
 		GdkPixbuf* _tmp3_;
 		_tmp2_ = gdk_pixbuf_new_from_file (UNITY_LAUNCHER_HONEYCOMB_MASK_FILE, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch21_g_error;
+			goto __catch27_g_error;
 		}
 		self->priv->honeycomb_mask = (_tmp3_ = _tmp2_, _g_object_unref0 (self->priv->honeycomb_mask), _tmp3_);
 	}
-	goto __finally21;
-	__catch21_g_error:
+	goto __finally27;
+	__catch27_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -259,7 +271,7 @@ static void unity_launcher_launcher_child_load_textures (UnityLauncherLauncherCh
 			_g_error_free0 (e);
 		}
 	}
-	__finally21:
+	__finally27:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -611,6 +623,9 @@ static void unity_launcher_launcher_child_on_active_changed (UnityLauncherLaunch
 static void unity_launcher_launcher_child_on_rotation_changed (UnityLauncherLauncherChild* self) {
 	g_return_if_fail (self != NULL);
 	self->priv->old_rotate_value = self->priv->processed_icon->rotation;
+	if (CLUTTER_IS_TIMELINE (self->priv->rotate_timeline) == FALSE) {
+		return;
+	}
 	if (clutter_timeline_is_playing (self->priv->rotate_timeline)) {
 		clutter_timeline_stop (self->priv->rotate_timeline);
 		self->priv->processed_icon->rotation = self->priv->old_rotate_value;
@@ -706,8 +721,6 @@ static void unity_launcher_launcher_child_real_get_preferred_width (ClutterActor
 
 static void unity_launcher_launcher_child_real_get_preferred_height (ClutterActor* base, float for_width, float* minimum_height, float* natural_height) {
 	UnityLauncherLauncherChild * self;
-	float nat = 0.0F;
-	float min = 0.0F;
 	self = (UnityLauncherLauncherChild*) base;
 	*natural_height = (float) 48;
 	*minimum_height = (float) 48;

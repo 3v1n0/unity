@@ -47,6 +47,16 @@
 typedef struct _UnityLauncherScrollerChild UnityLauncherScrollerChild;
 typedef struct _UnityLauncherScrollerChildClass UnityLauncherScrollerChildClass;
 typedef struct _UnityLauncherScrollerChildPrivate UnityLauncherScrollerChildPrivate;
+
+#define UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER (unity_launcher_scroller_child_controller_get_type ())
+#define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildController))
+#define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildControllerClass))
+#define UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER))
+#define UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER))
+#define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildControllerClass))
+
+typedef struct _UnityLauncherScrollerChildController UnityLauncherScrollerChildController;
+typedef struct _UnityLauncherScrollerChildControllerClass UnityLauncherScrollerChildControllerClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
 typedef enum  {
@@ -60,6 +70,7 @@ struct _UnityLauncherScrollerChild {
 	CtkActor parent_instance;
 	UnityLauncherScrollerChildPrivate * priv;
 	UnityLauncherPinType pin_type;
+	UnityLauncherScrollerChildController* controller;
 };
 
 struct _UnityLauncherScrollerChildClass {
@@ -82,6 +93,7 @@ static gpointer unity_launcher_scroller_child_parent_class = NULL;
 
 GType unity_launcher_pin_type_get_type (void);
 GType unity_launcher_scroller_child_get_type (void);
+GType unity_launcher_scroller_child_controller_get_type (void);
 #define UNITY_LAUNCHER_SCROLLER_CHILD_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD, UnityLauncherScrollerChildPrivate))
 enum  {
 	UNITY_LAUNCHER_SCROLLER_CHILD_DUMMY_PROPERTY,
@@ -322,6 +334,7 @@ static void unity_launcher_scroller_child_finalize (GObject* obj) {
 	UnityLauncherScrollerChild * self;
 	self = UNITY_LAUNCHER_SCROLLER_CHILD (obj);
 	_g_object_unref0 (self->priv->_icon);
+	_g_object_unref0 (self->controller);
 	G_OBJECT_CLASS (unity_launcher_scroller_child_parent_class)->finalize (obj);
 }
 

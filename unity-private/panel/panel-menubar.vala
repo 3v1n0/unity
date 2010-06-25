@@ -22,6 +22,8 @@ namespace Unity.Panel.Indicators
 {
   public class MenuBar : Ctk.Box
   {
+    public IndicatorObjectView indicator_object_view;
+
     public MenuBar ()
     {
       Object (spacing:0,
@@ -40,7 +42,7 @@ namespace Unity.Panel.Indicators
 
           if (name ==  "libappmenu.so")
             {
-              IndicatorObjectView indicator_object_view = new IndicatorObjectView (o);
+              indicator_object_view = new IndicatorObjectView (o);
               indicator_object_view.menu_moved.connect (this.on_menu_moved);
 
               pack (indicator_object_view, false, true);

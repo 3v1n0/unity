@@ -136,9 +136,13 @@ static void __lambda0__g_object_notify (GObject* _sender, GParamSpec* pspec, gpo
 static void _lambda1_ (UnityPanelIndicatorsIndicatorObjectEntryView* self);
 static void __lambda1__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static void _lambda2_ (UnityPanelIndicatorsIndicatorObjectEntryView* self);
-static void __lambda2__gtk_icon_theme_changed (GtkIconTheme* _sender, gpointer self);
+static void __lambda2__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static void _lambda3_ (UnityPanelIndicatorsIndicatorObjectEntryView* self);
-static void __lambda3__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void __lambda3__gtk_icon_theme_changed (GtkIconTheme* _sender, gpointer self);
+static void _lambda4_ (UnityPanelIndicatorsIndicatorObjectEntryView* self);
+static void __lambda4__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _lambda5_ (UnityPanelIndicatorsIndicatorObjectEntryView* self);
+static void __lambda5__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static GObject * unity_panel_indicators_indicator_object_entry_view_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_panel_indicators_indicator_object_entry_view_finalize (GObject* obj);
 static void unity_panel_indicators_indicator_object_entry_view_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -450,6 +454,22 @@ static gboolean _unity_panel_indicators_indicator_object_entry_view_on_scroll_ev
 
 
 static void _lambda0_ (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
+	if (self->priv->_entry->image != NULL) {
+		if ((GTK_WIDGET_FLAGS ((GtkWidget*) self->priv->_entry->image) & GTK_VISIBLE) != 0) {
+			clutter_actor_show ((ClutterActor*) self->image);
+		} else {
+			clutter_actor_hide ((ClutterActor*) self->image);
+		}
+	}
+}
+
+
+static void __lambda0__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda0_ (self);
+}
+
+
+static void _lambda1_ (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
 	GdkPixbuf* _tmp1_;
 	GdkPixbuf* _tmp0_ = NULL;
 	gboolean _tmp2_;
@@ -462,25 +482,6 @@ static void _lambda0_ (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
 		_g_object_unref0 (_tmp4_);
 		ctk_image_set_size (self->image, gdk_pixbuf_get_width (_tmp6_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp5_, NULL), _tmp5_)));
 		_g_object_unref0 (_tmp6_);
-	}
-}
-
-
-static void __lambda0__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda0_ (self);
-}
-
-
-static void _lambda1_ (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
-	char* _tmp1_;
-	char* _tmp0_ = NULL;
-	gboolean _tmp2_;
-	if ((_tmp2_ = (_tmp1_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp0_, NULL), _tmp0_)) != NULL, _g_free0 (_tmp1_), _tmp2_)) {
-		char* _tmp4_;
-		char* _tmp3_ = NULL;
-		g_object_set (self->image, "stock-id", _tmp4_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp3_, NULL), _tmp3_), NULL);
-		_g_free0 (_tmp4_);
-		ctk_image_set_size (self->image, 22);
 	}
 }
 
@@ -499,22 +500,57 @@ static void _lambda2_ (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
 		char* _tmp3_ = NULL;
 		g_object_set (self->image, "stock-id", _tmp4_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp3_, NULL), _tmp3_), NULL);
 		_g_free0 (_tmp4_);
+		ctk_image_set_size (self->image, 22);
 	}
 }
 
 
-static void __lambda2__gtk_icon_theme_changed (GtkIconTheme* _sender, gpointer self) {
+static void __lambda2__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
 	_lambda2_ (self);
 }
 
 
 static void _lambda3_ (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
+	char* _tmp1_;
+	char* _tmp0_ = NULL;
+	gboolean _tmp2_;
+	if ((_tmp2_ = (_tmp1_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp0_, NULL), _tmp0_)) != NULL, _g_free0 (_tmp1_), _tmp2_)) {
+		char* _tmp4_;
+		char* _tmp3_ = NULL;
+		g_object_set (self->image, "stock-id", _tmp4_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp3_, NULL), _tmp3_), NULL);
+		_g_free0 (_tmp4_);
+	}
+}
+
+
+static void __lambda3__gtk_icon_theme_changed (GtkIconTheme* _sender, gpointer self) {
+	_lambda3_ (self);
+}
+
+
+static void _lambda4_ (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
 	clutter_text_set_text ((ClutterText*) self->text, gtk_label_get_label (self->priv->_entry->label));
 }
 
 
-static void __lambda3__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda3_ (self);
+static void __lambda4__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda4_ (self);
+}
+
+
+static void _lambda5_ (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
+	if (self->priv->_entry->label != NULL) {
+		if ((GTK_WIDGET_FLAGS ((GtkWidget*) self->priv->_entry->label) & GTK_VISIBLE) != 0) {
+			clutter_actor_show ((ClutterActor*) self->text);
+		} else {
+			clutter_actor_hide ((ClutterActor*) self->text);
+		}
+	}
+}
+
+
+static void __lambda5__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda5_ (self);
 }
 
 
@@ -548,7 +584,6 @@ static GObject * unity_panel_indicators_indicator_object_entry_view_constructor 
 			gboolean _tmp11_;
 			self->image = (_tmp3_ = g_object_ref_sink ((CtkImage*) ctk_image_new ((guint) 22)), _g_object_unref0 (self->image), _tmp3_);
 			clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->image);
-			clutter_actor_show ((ClutterActor*) self->image);
 			if ((_tmp6_ = (_tmp5_ = (g_object_get (self->priv->_entry->image, "icon-name", &_tmp4_, NULL), _tmp4_)) != NULL, _g_free0 (_tmp5_), _tmp6_)) {
 				char* _tmp8_;
 				char* _tmp7_ = NULL;
@@ -565,11 +600,17 @@ static GObject * unity_panel_indicators_indicator_object_entry_view_constructor 
 				ctk_image_set_size (self->image, gdk_pixbuf_get_width (_tmp15_ = (g_object_get (self->priv->_entry->image, "pixbuf", &_tmp14_, NULL), _tmp14_)));
 				_g_object_unref0 (_tmp15_);
 			}
+			if ((GTK_WIDGET_FLAGS ((GtkWidget*) self->priv->_entry->image) & GTK_VISIBLE) != 0) {
+				clutter_actor_show ((ClutterActor*) self->image);
+			} else {
+				clutter_actor_hide ((ClutterActor*) self->image);
+			}
+			g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::visible", (GCallback) __lambda0__g_object_notify, self, 0);
 		}
-		g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::pixbuf", (GCallback) __lambda0__g_object_notify, self, 0);
-		g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::icon-name", (GCallback) __lambda1__g_object_notify, self, 0);
+		g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::pixbuf", (GCallback) __lambda1__g_object_notify, self, 0);
+		g_signal_connect_object ((GObject*) self->priv->_entry->image, "notify::icon-name", (GCallback) __lambda2__g_object_notify, self, 0);
 		theme = gtk_icon_theme_get_default ();
-		g_signal_connect_object (theme, "changed", (GCallback) __lambda2__gtk_icon_theme_changed, self, 0);
+		g_signal_connect_object (theme, "changed", (GCallback) __lambda3__gtk_icon_theme_changed, self, 0);
 		if (GTK_IS_LABEL (self->priv->_entry->label)) {
 			CtkText* _tmp16_;
 			ClutterColor _tmp17_ = {0};
@@ -577,9 +618,14 @@ static GObject * unity_panel_indicators_indicator_object_entry_view_constructor 
 			self->text = (_tmp16_ = g_object_ref_sink ((CtkText*) ctk_text_new ("")), _g_object_unref0 (self->text), _tmp16_);
 			clutter_text_set_color ((ClutterText*) self->text, (_tmp18_ = (_tmp17_.red = (guint8) 233, _tmp17_.green = (guint8) 216, _tmp17_.blue = (guint8) 200, _tmp17_.alpha = (guint8) 255, _tmp17_), &_tmp18_));
 			clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->text);
-			clutter_actor_show ((ClutterActor*) self->text);
 			clutter_text_set_text ((ClutterText*) self->text, gtk_label_get_label (self->priv->_entry->label));
-			g_signal_connect_object ((GObject*) self->priv->_entry->label, "notify::label", (GCallback) __lambda3__g_object_notify, self, 0);
+			g_signal_connect_object ((GObject*) self->priv->_entry->label, "notify::label", (GCallback) __lambda4__g_object_notify, self, 0);
+			if ((GTK_WIDGET_FLAGS ((GtkWidget*) self->priv->_entry->label) & GTK_VISIBLE) != 0) {
+				clutter_actor_show ((ClutterActor*) self->text);
+			} else {
+				clutter_actor_hide ((ClutterActor*) self->text);
+			}
+			g_signal_connect_object ((GObject*) self->priv->_entry->label, "notify::visible", (GCallback) __lambda5__g_object_notify, self, 0);
 		}
 	}
 	return obj;

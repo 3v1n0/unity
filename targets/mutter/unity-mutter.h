@@ -50,6 +50,17 @@ typedef struct _UnityExposeManagerPrivate UnityExposeManagerPrivate;
 typedef struct _UnityPlugin UnityPlugin;
 typedef struct _UnityPluginClass UnityPluginClass;
 
+#define UNITY_TYPE_SPACES_MANAGER (unity_spaces_manager_get_type ())
+#define UNITY_SPACES_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_SPACES_MANAGER, UnitySpacesManager))
+#define UNITY_SPACES_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_SPACES_MANAGER, UnitySpacesManagerClass))
+#define UNITY_IS_SPACES_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_SPACES_MANAGER))
+#define UNITY_IS_SPACES_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_SPACES_MANAGER))
+#define UNITY_SPACES_MANAGER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_SPACES_MANAGER, UnitySpacesManagerClass))
+
+typedef struct _UnitySpacesManager UnitySpacesManager;
+typedef struct _UnitySpacesManagerClass UnitySpacesManagerClass;
+typedef struct _UnitySpacesManagerPrivate UnitySpacesManagerPrivate;
+
 #define UNITY_TYPE_DRAG_DEST (unity_drag_dest_get_type ())
 #define UNITY_DRAG_DEST(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_DRAG_DEST, UnityDragDest))
 #define UNITY_DRAG_DEST_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_DRAG_DEST, UnityDragDestClass))
@@ -112,6 +123,15 @@ struct _UnityExposeManager {
 };
 
 struct _UnityExposeManagerClass {
+	GObjectClass parent_class;
+};
+
+struct _UnitySpacesManager {
+	GObject parent_instance;
+	UnitySpacesManagerPrivate * priv;
+};
+
+struct _UnitySpacesManagerClass {
 	GObjectClass parent_class;
 };
 
@@ -201,6 +221,22 @@ guint8 unity_expose_manager_get_unhovered_opacity (UnityExposeManager* self);
 void unity_expose_manager_set_unhovered_opacity (UnityExposeManager* self, guint8 value);
 guint8 unity_expose_manager_get_darken (UnityExposeManager* self);
 void unity_expose_manager_set_darken (UnityExposeManager* self, guint8 value);
+GType unity_spaces_manager_get_type (void);
+UnitySpacesManager* unity_spaces_manager_new (UnityPlugin* plugin);
+UnitySpacesManager* unity_spaces_manager_construct (GType object_type, UnityPlugin* plugin);
+void unity_spaces_manager_set_padding (UnitySpacesManager* self, guint top, guint right, guint left, guint bottom);
+void unity_spaces_manager_show_spaces_picker (UnitySpacesManager* self);
+guint unity_spaces_manager_get_top_padding (UnitySpacesManager* self);
+void unity_spaces_manager_set_top_padding (UnitySpacesManager* self, guint value);
+guint unity_spaces_manager_get_right_padding (UnitySpacesManager* self);
+void unity_spaces_manager_set_right_padding (UnitySpacesManager* self, guint value);
+guint unity_spaces_manager_get_bottom_padding (UnitySpacesManager* self);
+void unity_spaces_manager_set_bottom_padding (UnitySpacesManager* self, guint value);
+guint unity_spaces_manager_get_left_padding (UnitySpacesManager* self);
+void unity_spaces_manager_set_left_padding (UnitySpacesManager* self, guint value);
+guint unity_spaces_manager_get_spacing (UnitySpacesManager* self);
+void unity_spaces_manager_set_spacing (UnitySpacesManager* self, guint value);
+gboolean unity_spaces_manager_get_showing (UnitySpacesManager* self);
 GType unity_drag_dest_get_type (void);
 UnityDragDest* unity_drag_dest_new (void);
 UnityDragDest* unity_drag_dest_construct (GType object_type);

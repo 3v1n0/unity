@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Canonical Ltd
+ * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -17,87 +17,92 @@
  *             Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
+using Unity;
 
 namespace Unity.Places
 {
   public class View : Ctk.Box
   {
-    public Model model { get; construct; }
+    private PlaceModel _model = null;
+
+    /* Properties */
     public Shell shell { get; construct; }
 
-    private Bar.View       bar_view;
-    private Clutter.Actor? content_view;
-	  private SearchField.View search_view;
-
-    public View (Model model, Shell shell)
-    {
-      Ctk.Padding padding = { 0.0f, 0.0f, 0.0f, 68.0f };
-
-      Object (model:model, shell:shell);
-
-      this.orientation  = Ctk.Orientation.VERTICAL;
-
-      this.bar_view = new Bar.View (this.model, this.shell);
-      this.bar_view.padding = padding;
-      this.add_actor (this.bar_view);
-
-      this.search_view = new SearchField.View ();
-      this.add_actor (this.search_view);
-      
+    public PlaceModel model {
+      get { return _model; }
+      set { _model = value; }
     }
 
-    public override void allocate (Clutter.ActorBox        box,
-                                   Clutter.AllocationFlags flags)
+    private PlaceBar       place_bar;
+
+    private Ctk.VBox       content_box;
+
+    private PlaceSearchBar       search_bar;
+    private Unity.Place.Renderer renderer;
+
+    public View (Shell shell)
     {
-      Clutter.ActorBox child_box = { 0.0f, 0.0f, 0.0f, 0.0f };
+      Object (shell:shell, orientation:Ctk.Orientation.VERTICAL);
+    }
 
-      child_box.x1 = 0;
-      child_box.x2 = box.x2 - box.x1;
-      child_box.y1 = 0;
-      child_box.y2 = 62;
+    construct
+    {
+    }
 
-      this.bar_view.allocate (child_box, flags);
+    public void about_to_show ()
+    {
+      if (_model is PlaceFileModel)
+        return;
 
-      child_box.x1 = 58;
-      child_box.x2 = box.x2 - box.x1;
-      child_box.y1 = box.y1 + 62;
-      child_box.y2 = box.y2 - box.y1;
+      _model = new PlaceFileModel () as PlaceModel;
 
-      if (this.content_view is Clutter.Actor)
+      place_bar = new PlaceBar (shell, _model);
+      pack (place_bar, false, true);
+      place_bar.show ();
+
+      place_bar.entry_view_activated.connect (on_entry_view_activated);
+
+      content_box = new Ctk.VBox (12);
+      content_box.padding = {
+        0.0f,
+        8.0f,
+        0.0f,
+        shell.get_launcher_width_foobar () + 8.0f
+      };
+      pack (content_box, true, true);
+      content_box.show ();
+
+      search_bar = new PlaceSearchBar ();
+      content_box.pack (search_bar, false, true);
+      search_bar.show ();
+    }
+
+    private void on_entry_view_activated (PlaceEntryView entry_view, int x)
+    {
+      PlaceEntry entry = entry_view.entry;
+
+      /* Create the correct results view */
+      if (renderer is Clutter.Actor)
         {
-          this.content_view.allocate (child_box, flags);
+          renderer.destroy ();
         }
+      renderer = lookup_renderer (entry.entry_renderer_name);
+      content_box.pack (renderer, true, true);
+      renderer.set_models (entry.entry_groups_model,
+                           entry.entry_results_model,
+                           entry.entry_renderer_hints);
+      renderer.show ();
 
-      child_box.x1 = child_box.x2 - this.shell.get_indicators_width() + 8;
-      child_box.x2 = child_box.x1 + this.shell.get_indicators_width() - 8;
-      child_box.y1 = 32;
-      child_box.y2 = child_box.y1 + 22;
-      this.search_view.allocate (child_box, flags);
+      /* Update the search bar */
+      search_bar.set_active_entry_view (entry,
+                                        x
+                                          - shell.get_launcher_width_foobar ()
+                                          - 8);
     }
 
-    /* Public methods */
-    public void set_content_view (Clutter.Actor actor)
+    private Unity.Place.Renderer lookup_renderer (string renderer)
     {
-      if (this.content_view is Clutter.Actor)
-      {
-        this.content_view.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 300,
-                                   "opacity", 0,
-                                   "signal::completed", on_fade_out_done,
-                                   this.content_view);
-      }
-
-      this.content_view = actor;
-      this.add_actor (this.content_view);
-      this.content_view.show ();
-
-      actor.opacity = 0;
-      actor.animate (Clutter.AnimationMode.EASE_IN_QUAD, 300,
-                     "opacity", 255);
-    }
-
-    static void on_fade_out_done (Clutter.Animation anim, Clutter.Actor actor)
-    {
-      actor.destroy ();
+      return new DefaultRenderer ();
     }
   }
 }

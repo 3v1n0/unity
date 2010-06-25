@@ -132,7 +132,7 @@ namespace Unity.Tests.UI
     }
 
     public void
-    show_window_picker ()
+    about_to_show_places ()
     {
       // stub
     }

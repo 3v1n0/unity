@@ -40,6 +40,16 @@ typedef struct _Main Main;
 typedef struct _MainClass MainClass;
 typedef struct _MainPrivate MainPrivate;
 
+#define UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE (unity_tests_unit_launcher_suite_get_type ())
+#define UNITY_TESTS_UNIT_LAUNCHER_SUITE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE, UnityTestsUnitLauncherSuite))
+#define UNITY_TESTS_UNIT_LAUNCHER_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE, UnityTestsUnitLauncherSuiteClass))
+#define UNITY_TESTS_UNIT_IS_LAUNCHER_SUITE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE))
+#define UNITY_TESTS_UNIT_IS_LAUNCHER_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE))
+#define UNITY_TESTS_UNIT_LAUNCHER_SUITE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE, UnityTestsUnitLauncherSuiteClass))
+
+typedef struct _UnityTestsUnitLauncherSuite UnityTestsUnitLauncherSuite;
+typedef struct _UnityTestsUnitLauncherSuiteClass UnityTestsUnitLauncherSuiteClass;
+
 #define UNITY_TESTS_UNIT_TYPE_PANEL_INDICATOR_OBJECT_ENTRY_VIEW_SUITE (unity_tests_unit_panel_indicator_object_entry_view_suite_get_type ())
 #define UNITY_TESTS_UNIT_PANEL_INDICATOR_OBJECT_ENTRY_VIEW_SUITE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UNIT_TYPE_PANEL_INDICATOR_OBJECT_ENTRY_VIEW_SUITE, UnityTestsUnitPanelIndicatorObjectEntryViewSuite))
 #define UNITY_TESTS_UNIT_PANEL_INDICATOR_OBJECT_ENTRY_VIEW_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UNIT_TYPE_PANEL_INDICATOR_OBJECT_ENTRY_VIEW_SUITE, UnityTestsUnitPanelIndicatorObjectEntryViewSuiteClass))
@@ -60,6 +70,26 @@ typedef struct _UnityTestsUnitPanelIndicatorObjectEntryViewSuiteClass UnityTests
 typedef struct _UnityTestsUnitPanelIndicatorObjectViewSuite UnityTestsUnitPanelIndicatorObjectViewSuite;
 typedef struct _UnityTestsUnitPanelIndicatorObjectViewSuiteClass UnityTestsUnitPanelIndicatorObjectViewSuiteClass;
 
+#define UNITY_TESTS_UNIT_TYPE_PLACES_PLACE_FILE_MODEL_SUITE (unity_tests_unit_places_place_file_model_suite_get_type ())
+#define UNITY_TESTS_UNIT_PLACES_PLACE_FILE_MODEL_SUITE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UNIT_TYPE_PLACES_PLACE_FILE_MODEL_SUITE, UnityTestsUnitPlacesPlaceFileModelSuite))
+#define UNITY_TESTS_UNIT_PLACES_PLACE_FILE_MODEL_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UNIT_TYPE_PLACES_PLACE_FILE_MODEL_SUITE, UnityTestsUnitPlacesPlaceFileModelSuiteClass))
+#define UNITY_TESTS_UNIT_IS_PLACES_PLACE_FILE_MODEL_SUITE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTS_UNIT_TYPE_PLACES_PLACE_FILE_MODEL_SUITE))
+#define UNITY_TESTS_UNIT_IS_PLACES_PLACE_FILE_MODEL_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTS_UNIT_TYPE_PLACES_PLACE_FILE_MODEL_SUITE))
+#define UNITY_TESTS_UNIT_PLACES_PLACE_FILE_MODEL_SUITE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTS_UNIT_TYPE_PLACES_PLACE_FILE_MODEL_SUITE, UnityTestsUnitPlacesPlaceFileModelSuiteClass))
+
+typedef struct _UnityTestsUnitPlacesPlaceFileModelSuite UnityTestsUnitPlacesPlaceFileModelSuite;
+typedef struct _UnityTestsUnitPlacesPlaceFileModelSuiteClass UnityTestsUnitPlacesPlaceFileModelSuiteClass;
+
+#define UNITY_TESTS_UNIT_TYPE_PLACES_PLACE_SUITE (unity_tests_unit_places_place_suite_get_type ())
+#define UNITY_TESTS_UNIT_PLACES_PLACE_SUITE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UNIT_TYPE_PLACES_PLACE_SUITE, UnityTestsUnitPlacesPlaceSuite))
+#define UNITY_TESTS_UNIT_PLACES_PLACE_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UNIT_TYPE_PLACES_PLACE_SUITE, UnityTestsUnitPlacesPlaceSuiteClass))
+#define UNITY_TESTS_UNIT_IS_PLACES_PLACE_SUITE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTS_UNIT_TYPE_PLACES_PLACE_SUITE))
+#define UNITY_TESTS_UNIT_IS_PLACES_PLACE_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTS_UNIT_TYPE_PLACES_PLACE_SUITE))
+#define UNITY_TESTS_UNIT_PLACES_PLACE_SUITE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTS_UNIT_TYPE_PLACES_PLACE_SUITE, UnityTestsUnitPlacesPlaceSuiteClass))
+
+typedef struct _UnityTestsUnitPlacesPlaceSuite UnityTestsUnitPlacesPlaceSuite;
+typedef struct _UnityTestsUnitPlacesPlaceSuiteClass UnityTestsUnitPlacesPlaceSuiteClass;
+
 #define UNITY_TESTS_UNIT_TYPE_PLACES_SUITE (unity_tests_unit_places_suite_get_type ())
 #define UNITY_TESTS_UNIT_PLACES_SUITE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UNIT_TYPE_PLACES_SUITE, UnityTestsUnitPlacesSuite))
 #define UNITY_TESTS_UNIT_PLACES_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UNIT_TYPE_PLACES_SUITE, UnityTestsUnitPlacesSuiteClass))
@@ -70,16 +100,6 @@ typedef struct _UnityTestsUnitPanelIndicatorObjectViewSuiteClass UnityTestsUnitP
 typedef struct _UnityTestsUnitPlacesSuite UnityTestsUnitPlacesSuite;
 typedef struct _UnityTestsUnitPlacesSuiteClass UnityTestsUnitPlacesSuiteClass;
 
-#define UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE (unity_tests_unit_launcher_suite_get_type ())
-#define UNITY_TESTS_UNIT_LAUNCHER_SUITE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE, UnityTestsUnitLauncherSuite))
-#define UNITY_TESTS_UNIT_LAUNCHER_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE, UnityTestsUnitLauncherSuiteClass))
-#define UNITY_TESTS_UNIT_IS_LAUNCHER_SUITE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE))
-#define UNITY_TESTS_UNIT_IS_LAUNCHER_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE))
-#define UNITY_TESTS_UNIT_LAUNCHER_SUITE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTS_UNIT_TYPE_LAUNCHER_SUITE, UnityTestsUnitLauncherSuiteClass))
-
-typedef struct _UnityTestsUnitLauncherSuite UnityTestsUnitLauncherSuite;
-typedef struct _UnityTestsUnitLauncherSuiteClass UnityTestsUnitLauncherSuiteClass;
-
 #define UNITY_TESTS_UNIT_TYPE_PLACE_SUITE (unity_tests_unit_place_suite_get_type ())
 #define UNITY_TESTS_UNIT_PLACE_SUITE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UNIT_TYPE_PLACE_SUITE, UnityTestsUnitPlaceSuite))
 #define UNITY_TESTS_UNIT_PLACE_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UNIT_TYPE_PLACE_SUITE, UnityTestsUnitPlaceSuiteClass))
@@ -89,8 +109,8 @@ typedef struct _UnityTestsUnitLauncherSuiteClass UnityTestsUnitLauncherSuiteClas
 
 typedef struct _UnityTestsUnitPlaceSuite UnityTestsUnitPlaceSuite;
 typedef struct _UnityTestsUnitPlaceSuiteClass UnityTestsUnitPlaceSuiteClass;
-#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _unity_tests_unit_launcher_suite_unref0(var) ((var == NULL) ? NULL : (var = (unity_tests_unit_launcher_suite_unref (var), NULL)))
+#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _unity_tests_unit_places_suite_unref0(var) ((var == NULL) ? NULL : (var = (unity_tests_unit_places_suite_unref (var), NULL)))
 #define _unity_tests_unit_place_suite_unref0(var) ((var == NULL) ? NULL : (var = (unity_tests_unit_place_suite_unref (var), NULL)))
 typedef struct _ParamSpecMain ParamSpecMain;
@@ -123,15 +143,6 @@ GType main_get_type (void);
 enum  {
 	MAIN_DUMMY_PROPERTY
 };
-GType unity_tests_unit_panel_indicator_object_entry_view_suite_get_type (void);
-GType unity_tests_unit_panel_indicator_object_view_suite_get_type (void);
-gpointer unity_tests_unit_places_suite_ref (gpointer instance);
-void unity_tests_unit_places_suite_unref (gpointer instance);
-GParamSpec* unity_tests_unit_param_spec_places_suite (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
-void unity_tests_unit_value_set_places_suite (GValue* value, gpointer v_object);
-void unity_tests_unit_value_take_places_suite (GValue* value, gpointer v_object);
-gpointer unity_tests_unit_value_get_places_suite (const GValue* value);
-GType unity_tests_unit_places_suite_get_type (void);
 gpointer unity_tests_unit_launcher_suite_ref (gpointer instance);
 void unity_tests_unit_launcher_suite_unref (gpointer instance);
 GParamSpec* unity_tests_unit_param_spec_launcher_suite (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
@@ -139,6 +150,17 @@ void unity_tests_unit_value_set_launcher_suite (GValue* value, gpointer v_object
 void unity_tests_unit_value_take_launcher_suite (GValue* value, gpointer v_object);
 gpointer unity_tests_unit_value_get_launcher_suite (const GValue* value);
 GType unity_tests_unit_launcher_suite_get_type (void);
+GType unity_tests_unit_panel_indicator_object_entry_view_suite_get_type (void);
+GType unity_tests_unit_panel_indicator_object_view_suite_get_type (void);
+GType unity_tests_unit_places_place_file_model_suite_get_type (void);
+GType unity_tests_unit_places_place_suite_get_type (void);
+gpointer unity_tests_unit_places_suite_ref (gpointer instance);
+void unity_tests_unit_places_suite_unref (gpointer instance);
+GParamSpec* unity_tests_unit_param_spec_places_suite (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
+void unity_tests_unit_value_set_places_suite (GValue* value, gpointer v_object);
+void unity_tests_unit_value_take_places_suite (GValue* value, gpointer v_object);
+gpointer unity_tests_unit_value_get_places_suite (const GValue* value);
+GType unity_tests_unit_places_suite_get_type (void);
 gpointer unity_tests_unit_place_suite_ref (gpointer instance);
 void unity_tests_unit_place_suite_unref (gpointer instance);
 GParamSpec* unity_tests_unit_param_spec_place_suite (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
@@ -146,12 +168,16 @@ void unity_tests_unit_value_set_place_suite (GValue* value, gpointer v_object);
 void unity_tests_unit_value_take_place_suite (GValue* value, gpointer v_object);
 gpointer unity_tests_unit_value_get_place_suite (const GValue* value);
 GType unity_tests_unit_place_suite_get_type (void);
+UnityTestsUnitLauncherSuite* unity_tests_unit_launcher_suite_new (void);
+UnityTestsUnitLauncherSuite* unity_tests_unit_launcher_suite_construct (GType object_type);
 UnityTestsUnitPanelIndicatorObjectEntryViewSuite* unity_tests_unit_panel_indicator_object_entry_view_suite_new (void);
 UnityTestsUnitPanelIndicatorObjectEntryViewSuite* unity_tests_unit_panel_indicator_object_entry_view_suite_construct (GType object_type);
 UnityTestsUnitPanelIndicatorObjectViewSuite* unity_tests_unit_panel_indicator_object_view_suite_new (void);
 UnityTestsUnitPanelIndicatorObjectViewSuite* unity_tests_unit_panel_indicator_object_view_suite_construct (GType object_type);
-UnityTestsUnitLauncherSuite* unity_tests_unit_launcher_suite_new (void);
-UnityTestsUnitLauncherSuite* unity_tests_unit_launcher_suite_construct (GType object_type);
+UnityTestsUnitPlacesPlaceFileModelSuite* unity_tests_unit_places_place_file_model_suite_new (void);
+UnityTestsUnitPlacesPlaceFileModelSuite* unity_tests_unit_places_place_file_model_suite_construct (GType object_type);
+UnityTestsUnitPlacesPlaceSuite* unity_tests_unit_places_place_suite_new (void);
+UnityTestsUnitPlacesPlaceSuite* unity_tests_unit_places_place_suite_construct (GType object_type);
 UnityTestsUnitPlacesSuite* unity_tests_unit_places_suite_new (void);
 UnityTestsUnitPlacesSuite* unity_tests_unit_places_suite_construct (GType object_type);
 UnityTestsUnitPlaceSuite* unity_tests_unit_place_suite_new (void);
@@ -165,35 +191,45 @@ static void main_finalize (Main* obj);
 
 gint main_main (char** args, int args_length1) {
 	gint result = 0;
+	UnityTestsUnitLauncherSuite* launcher;
 	UnityTestsUnitPanelIndicatorObjectEntryViewSuite* panel_object_entry_view_suite;
 	UnityTestsUnitPanelIndicatorObjectViewSuite* panel_object_view_suite;
+	UnityTestsUnitPlacesPlaceFileModelSuite* place_file_model;
+	UnityTestsUnitPlacesPlaceSuite* places_place;
 	UnityTestsUnitPlacesSuite* places;
-	UnityTestsUnitLauncherSuite* launcher;
 	UnityTestsUnitPlaceSuite* place;
-	UnityTestsUnitPanelIndicatorObjectEntryViewSuite* _tmp0_;
-	UnityTestsUnitPanelIndicatorObjectViewSuite* _tmp1_;
-	UnityTestsUnitLauncherSuite* _tmp2_;
-	UnityTestsUnitPlacesSuite* _tmp3_;
-	UnityTestsUnitPlaceSuite* _tmp4_;
+	UnityTestsUnitLauncherSuite* _tmp0_;
+	UnityTestsUnitPanelIndicatorObjectEntryViewSuite* _tmp1_;
+	UnityTestsUnitPanelIndicatorObjectViewSuite* _tmp2_;
+	UnityTestsUnitPlacesPlaceFileModelSuite* _tmp3_;
+	UnityTestsUnitPlacesPlaceSuite* _tmp4_;
+	UnityTestsUnitPlacesSuite* _tmp5_;
+	UnityTestsUnitPlaceSuite* _tmp6_;
+	launcher = NULL;
 	panel_object_entry_view_suite = NULL;
 	panel_object_view_suite = NULL;
+	place_file_model = NULL;
+	places_place = NULL;
 	places = NULL;
-	launcher = NULL;
 	place = NULL;
 	gtk_init (&args_length1, &args);
 	ctk_init (&args_length1, &args);
 	g_test_init (&args_length1, &args, NULL);
-	panel_object_entry_view_suite = (_tmp0_ = unity_tests_unit_panel_indicator_object_entry_view_suite_new (), _g_object_unref0 (panel_object_entry_view_suite), _tmp0_);
-	panel_object_view_suite = (_tmp1_ = unity_tests_unit_panel_indicator_object_view_suite_new (), _g_object_unref0 (panel_object_view_suite), _tmp1_);
-	launcher = (_tmp2_ = unity_tests_unit_launcher_suite_new (), _unity_tests_unit_launcher_suite_unref0 (launcher), _tmp2_);
-	places = (_tmp3_ = unity_tests_unit_places_suite_new (), _unity_tests_unit_places_suite_unref0 (places), _tmp3_);
-	place = (_tmp4_ = unity_tests_unit_place_suite_new (), _unity_tests_unit_place_suite_unref0 (place), _tmp4_);
+	launcher = (_tmp0_ = unity_tests_unit_launcher_suite_new (), _unity_tests_unit_launcher_suite_unref0 (launcher), _tmp0_);
+	panel_object_entry_view_suite = (_tmp1_ = unity_tests_unit_panel_indicator_object_entry_view_suite_new (), _g_object_unref0 (panel_object_entry_view_suite), _tmp1_);
+	panel_object_view_suite = (_tmp2_ = unity_tests_unit_panel_indicator_object_view_suite_new (), _g_object_unref0 (panel_object_view_suite), _tmp2_);
+	place_file_model = (_tmp3_ = unity_tests_unit_places_place_file_model_suite_new (), _g_object_unref0 (place_file_model), _tmp3_);
+	places_place = (_tmp4_ = unity_tests_unit_places_place_suite_new (), _g_object_unref0 (places_place), _tmp4_);
+	places = (_tmp5_ = unity_tests_unit_places_suite_new (), _unity_tests_unit_places_suite_unref0 (places), _tmp5_);
+	place = (_tmp6_ = unity_tests_unit_place_suite_new (), _unity_tests_unit_place_suite_unref0 (place), _tmp6_);
 	g_test_run ();
 	result = 0;
+	_unity_tests_unit_launcher_suite_unref0 (launcher);
 	_g_object_unref0 (panel_object_entry_view_suite);
 	_g_object_unref0 (panel_object_view_suite);
+	_g_object_unref0 (place_file_model);
+	_g_object_unref0 (places_place);
 	_unity_tests_unit_places_suite_unref0 (places);
-	_unity_tests_unit_launcher_suite_unref0 (launcher);
 	_unity_tests_unit_place_suite_unref0 (place);
 	return result;
 }

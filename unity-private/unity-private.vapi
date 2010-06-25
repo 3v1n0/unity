@@ -13,6 +13,9 @@ namespace Unity {
 			public void detach_application ();
 			public override Gee.ArrayList<Unity.Launcher.ShortcutItem> get_menu_shortcut_actions ();
 			public override Gee.ArrayList<Unity.Launcher.ShortcutItem> get_menu_shortcuts ();
+			public float get_priority () throws Unity.Launcher.AppTypeError;
+			public void set_priority (float priority);
+			public void set_sticky ();
 			public string desktop_file { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
@@ -76,6 +79,7 @@ namespace Unity {
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public abstract class ScrollerChild : Ctk.Actor {
+			public Unity.Launcher.ScrollerChildController controller;
 			public Unity.Launcher.PinType pin_type;
 			public ScrollerChild ();
 			public abstract void force_rotation_jump (float degrees);
@@ -148,6 +152,10 @@ namespace Unity {
 			MENU,
 			MENU_CLOSE_WHEN_LEAVE
 		}
+		[CCode (cprefix = "UNITY_LAUNCHER_APP_TYPE_ERROR_", cheader_filename = "unity-private.h")]
+		public errordomain AppTypeError {
+			NO_DESKTOP_FILE,
+		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public static Unity.Launcher.QuicklistController? ql_controler_singleton;
 	}
@@ -160,24 +168,6 @@ namespace Unity {
 				public IndicatorBar ();
 				public Unity.Panel.Indicators.IndicatorObjectView? get_indicator_view_matching (Indicator.Object o);
 				public void set_indicator_mode (bool mode);
-			}
-			[CCode (cheader_filename = "unity-private.h")]
-			public class IndicatorEntry : Ctk.Box {
-				public IndicatorEntry (Indicator.ObjectEntry entry);
-				public void menu_key_moved (Gtk.MenuDirectionType type);
-				public void menu_shown ();
-				public void menu_vis_changed ();
-				public Indicator.ObjectEntry entry { get; construct; }
-				public Gtk.Menu menu { get; }
-				public signal void menu_moved (Gtk.MenuDirectionType type);
-			}
-			[CCode (cheader_filename = "unity-private.h")]
-			public class IndicatorItem : Ctk.Box {
-				public int position;
-				public IndicatorItem ();
-				public Indicator.Object get_object ();
-				public void set_object (Indicator.Object object);
-				public signal void menu_moved (Gtk.MenuDirectionType type);
 			}
 			[CCode (cheader_filename = "unity-private.h")]
 			public class IndicatorObjectEntryView : Ctk.Box {
@@ -226,13 +216,8 @@ namespace Unity {
 			}
 			[CCode (cheader_filename = "unity-private.h")]
 			public class MenuBar : Ctk.Box {
+				public Unity.Panel.Indicators.IndicatorObjectView indicator_object_view;
 				public MenuBar ();
-			}
-			[CCode (cheader_filename = "unity-private.h")]
-			public class View : Ctk.Box {
-				public View ();
-				public static int reorder_icons (Unity.Panel.Indicators.IndicatorItem a, Unity.Panel.Indicators.IndicatorItem b);
-				public void show_entry (Unity.Panel.Indicators.IndicatorEntry entry);
 			}
 		}
 		[CCode (cheader_filename = "unity-private.h")]
@@ -269,221 +254,164 @@ namespace Unity {
 	}
 	[CCode (cprefix = "UnityPlaces", lower_case_cprefix = "unity_places_")]
 	namespace Places {
-		[CCode (cprefix = "UnityPlacesApplication", lower_case_cprefix = "unity_places_application_")]
-		namespace Application {
-			[CCode (cheader_filename = "unity-private.h")]
-			public class ApplicationGroup : Ctk.Box {
-				public int n_items;
-				public ApplicationGroup (string group_name);
-				public void add_icon (Unity.Places.Application.ApplicationIcon app);
-				public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
-				public override void get_preferred_height (float for_width, out float minimum_height, out float natural_height);
-				public override void get_preferred_width (float for_height, out float minimum_width, out float natural_width);
-				public bool on_maximize (Clutter.Event event);
-				public bool on_minimize (Clutter.Event event);
-			}
-			[CCode (ref_function = "unity_places_application_application_icon_ref", unref_function = "unity_places_application_application_icon_unref", cheader_filename = "unity-private.h")]
-			public class ApplicationIcon {
-				public Ctk.Text label;
-				public Ctk.Image view;
-				public ApplicationIcon (int width, string name, string icon_name, string tooltip);
-			}
-			[CCode (cheader_filename = "unity-private.h")]
-			public class ApplicationView : Ctk.Box {
-				public Unity.Places.Application.ApplicationGroup lastweek_app_group;
-				public Unity.Places.Application.ApplicationGroup recent_app_group;
-				public Unity.Places.Application.ApplicationGroup yesterday_app_group;
-				public ApplicationView ();
-				public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
-			}
-		}
-		[CCode (cprefix = "UnityPlacesBar", lower_case_cprefix = "unity_places_bar_")]
-		namespace Bar {
-			[CCode (cheader_filename = "unity-private.h")]
-			public class Model : GLib.Object {
-				public string icon_name;
-				public string name;
-				public string tooltip;
-				public Model (string name, string icon_name, string tooltip);
-			}
-			[CCode (cheader_filename = "unity-private.h")]
-			public class PlaceIcon : Ctk.Image {
-				public PlaceIcon (int width, string name, string icon_name, string tooltip);
-				public PlaceIcon.from_place (int size, Unity.Places.Place place);
-				public Unity.Places.Place? place { get; set; }
-			}
-			[CCode (cheader_filename = "unity-private.h")]
-			public class View : Ctk.Box {
-				public View (Unity.Places.Model model, Unity.Shell shell);
-				public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
-				public override void map ();
-				public bool on_button_release (Clutter.Event event);
-				public override void paint ();
-				public override void unmap ();
-				public Unity.Places.Model model { get; construct; }
-				public Unity.Shell shell { get; construct; }
-			}
-		}
-		[CCode (cprefix = "UnityPlacesCairoDrawing", lower_case_cprefix = "unity_places_cairo_drawing_")]
-		namespace CairoDrawing {
-			[CCode (cheader_filename = "unity-private.h")]
-			public class EntryBackground : Ctk.Bin {
-				public int Height;
-				public int Width;
-				public Clutter.CairoTexture cairotxt;
-				public EntryBackground ();
-				public void create_search_entry_background (int W, int H);
-			}
-			[CCode (cheader_filename = "unity-private.h")]
-			public class PlacesBackground : Ctk.Bin {
-				[CCode (type_id = "UNITY_PLACES_CAIRO_DRAWING_PLACES_BACKGROUND_TYPE_TAB_RECT", cheader_filename = "unity-private.h")]
-				public struct TabRect {
-					public int left;
-					public int right;
-					public int top;
-					public int bottom;
-				}
-				public int PlaceWidth;
-				public Clutter.CairoTexture cairotxt;
-				public PlacesBackground ();
-				public void create_places_background (int WindowWidth, int WindowHeight, int TabPositionX, int TabWidth, int menu_width);
-			}
-			[CCode (cheader_filename = "unity-private.h")]
-			public class PlacesHSeparator : Ctk.Bin {
-				public int Height;
-				public int Width;
-				public Clutter.CairoTexture cairotxt;
-				public PlacesHSeparator ();
-				public void CreateSeparator (int W, int H);
-			}
-			[CCode (cheader_filename = "unity-private.h")]
-			public class PlacesVSeparator : Ctk.Bin {
-				public int Height;
-				public int Width;
-				public Clutter.CairoTexture cairotxt;
-				public PlacesVSeparator ();
-				public void CreateSeparator (int W, int H);
-			}
-			[CCode (cheader_filename = "unity-private.h")]
-			public class RectangleBox : Ctk.Bin {
-				public int Height;
-				public int Width;
-				public Clutter.CairoTexture cairotxt;
-				public RectangleBox ();
-				public void CreateRectangleBox (int W, int H);
-			}
-		}
-		[CCode (cprefix = "UnityPlacesDefault", lower_case_cprefix = "unity_places_default_")]
-		namespace Default {
-			[CCode (cheader_filename = "unity-private.h")]
-			public class ActivityWidget : Ctk.Box {
-				public ActivityWidget (int spacing, int size, string icon_name, string primary_text, string secondary_text);
-				public bool on_clicked ();
-				public bool on_enter ();
-				public bool on_leave ();
-			}
-			[CCode (cheader_filename = "unity-private.h")]
-			public class Model : GLib.Object {
-				public string icon_name;
-				public string primary_text;
-				public string secondary_text;
-				public Model (string icon_name, string primary_text, string secondary_text);
-			}
-			[CCode (cheader_filename = "unity-private.h")]
-			public class View : Ctk.IconView {
-				public View ();
-				public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
-			}
-		}
-		[CCode (cprefix = "UnityPlacesFile", lower_case_cprefix = "unity_places_file_")]
-		namespace File {
-			[CCode (cheader_filename = "unity-private.h")]
-			public class FileGroup : Ctk.Box {
-				public FileGroup (string group_name);
-				public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
-				public override void get_preferred_height (float for_width, out float minimum_height, out float natural_height);
-				public override void get_preferred_width (float for_height, out float minimum_width, out float natural_width);
-				public bool on_maximize (Clutter.Event event);
-				public bool on_minimize (Clutter.Event event);
-			}
-			[CCode (ref_function = "unity_places_file_file_icon_ref", unref_function = "unity_places_file_file_icon_unref", cheader_filename = "unity-private.h")]
-			public class FileIcon {
-				public Ctk.Text label;
-				public Ctk.Image view;
-				public FileIcon (int width, string name, string icon_name, string tooltip);
-			}
-			[CCode (cheader_filename = "unity-private.h")]
-			public class FileView : Ctk.Box {
-				public Unity.Places.File.FileGroup downloaded_file_group;
-				public Unity.Places.File.FileGroup favourite_folder_group;
-				public Unity.Places.File.FileGroup recent_file_group;
-				public FileView ();
-				public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
-			}
-		}
-		[CCode (cprefix = "UnityPlacesSearchField", lower_case_cprefix = "unity_places_search_field_")]
-		namespace SearchField {
-			[CCode (cheader_filename = "unity-private.h")]
-			public class View : Ctk.Box {
-				public View ();
-				public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
-				public override void map ();
-				public override void paint ();
-				public override void unmap ();
-			}
-		}
-		[CCode (cprefix = "UnityPlacesViews", lower_case_cprefix = "unity_places_views_")]
-		namespace Views {
-			[CCode (cheader_filename = "unity-private.h")]
-			public class ResultsView : Ctk.Box, Unity.Places.PlaceView {
-				public ResultsView ();
-			}
-		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class Controller : GLib.Object {
 			public Controller (Unity.Shell shell);
 			public Unity.Places.View get_view ();
-			public void load_remote_places ();
 			public Unity.Shell shell { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public class Model : GLib.Object {
-			public Gee.ArrayList<Unity.Places.Place> list;
-			public Model ();
-			public void add (Unity.Places.Place place);
-			public void remove (Unity.Places.Place place);
-			public signal void place_added (Unity.Places.Place place);
-			public signal void place_changed (Unity.Places.Place place);
-			public signal void place_removed (Unity.Places.Place place);
+		public class DefaultRenderer : Ctk.ScrollView, Unity.Place.Renderer {
+			public DefaultRenderer ();
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public abstract class Place : GLib.Object {
-			public Place (string name, string icon_name);
-			public abstract Clutter.Actor get_view ();
-			public bool active { get; set; }
-			public string comment { get; construct; }
-			public string icon_name { get; construct; }
-			public string name { get; construct; }
-			public signal void activated ();
+		public class DefaultRendererGroup : Ctk.Box {
+			public DefaultRendererGroup (uint group_id, string group_renderer, string display_name, string icon_hint, Dee.Model results);
+			public string display_name { get; construct; }
+			public uint group_id { get; construct; }
+			public string group_renderer { get; construct; }
+			public string icon_hint { get; construct; }
+			public Dee.Model results { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public class PlaceProxy : Unity.Places.Place {
-			public PlaceProxy (string name, string icon_name, string comment, string dbus_name, string dbus_path);
-			public override Clutter.Actor get_view ();
+		public class Place : GLib.Object {
+			public Place (string dbus_name, string dbus_path);
+			public void connect ();
+			public unowned Gee.ArrayList<Unity.Places.PlaceEntry> get_entries ();
+			public Unity.Places.PlaceEntry? get_nth_entry (int index);
+			public static Unity.Places.Place? new_from_keyfile (GLib.KeyFile file, string id = "Unknown");
 			public string dbus_name { get; construct; }
 			public string dbus_path { get; construct; }
+			public int n_entries { get; }
+			public bool online { get; set; }
+			public signal void entry_added (Unity.Places.PlaceEntry entry);
+			public signal void entry_removed (Unity.Places.PlaceEntry entry);
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class PlaceBar : Ctk.Box {
+			public PlaceBar (Unity.Shell shell, Unity.Places.PlaceModel model);
+			public Unity.Places.PlaceModel model { get; set construct; }
+			public Unity.Shell shell { get; construct; }
+			public signal void entry_view_activated (Unity.Places.PlaceEntryView view, int x);
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class PlaceBarBackground : Clutter.CairoTexture {
+			public const string BG;
+			public PlaceBarBackground (Unity.Shell shell);
+			public int entry_position { get; set; }
+			public Unity.Shell shell { get; construct; }
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class PlaceEntry : GLib.Object {
+			[CCode (type_id = "UNITY_PLACES_PLACE_ENTRY_TYPE_RENDERER_INFO", cheader_filename = "unity-private.h")]
+			public struct RendererInfo {
+				public string default_renderer;
+				public string groups_model;
+				public string results_model;
+				public GLib.HashTable<string,string> renderer_hints;
+			}
+			public string entry_groups_model_name;
+			public Gee.HashMap<string,string>? entry_renderer_hints;
+			public string entry_renderer_name;
+			public string entry_results_model_name;
+			public string global_groups_model_name;
+			public Gee.HashMap<string,string>? global_renderer_hints;
+			public string global_renderer_name;
+			public string global_results_model_name;
+			public PlaceEntry (string dbus_name, string dbus_path);
+			public void connect ();
+			public void set_active_section (uint section_id);
+			public void set_global_search (string search, GLib.HashTable<string,string> hints);
+			public void set_search (string search, GLib.HashTable<string,string> hints);
+			public void update_info (GLib.ValueArray value_array);
+			public PlaceEntry.with_info (string dbus_name, string dbus_path, string name, string icon, string description, bool show_global, bool show_entry);
+			public bool active { get; set; }
+			public string? dbus_name { get; construct; }
+			public string? dbus_path { get; construct; }
+			public string description { get; set construct; }
+			public Dee.Model? entry_groups_model { get; set; }
+			public Dee.Model? entry_results_model { get; set; }
+			public Dee.Model? global_groups_model { get; set; }
+			public Dee.Model? global_results_model { get; set; }
+			public Gee.HashMap<string,string> hints { get; set; }
+			public string icon { get; set construct; }
+			public string[] mimetypes { get; set; }
+			public string name { get; set construct; }
+			public bool online { get; set construct; }
+			public uint position { get; set; }
+			public Dee.Model? sections_model { get; set; }
+			public string sections_model_name { get; set; }
+			public bool sensitive { get; set; }
+			public bool show_entry { get; set construct; }
+			public bool show_global { get; set construct; }
+			public signal void renderer_info_changed ();
+			public signal void updated ();
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class PlaceEntryView : Ctk.Image {
+			public PlaceEntryView (Unity.Places.PlaceEntry entry);
+			public Unity.Places.PlaceEntry entry { get; construct; }
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class PlaceFileModel : Unity.Places.PlaceModel {
+			public PlaceFileModel ();
+			public PlaceFileModel.with_directory (string _directory);
+			public bool @async { get; construct; }
+			public string directory { get; construct; }
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public abstract class PlaceModel : Gee.ArrayList<Unity.Places.Place> {
+			public PlaceModel ();
+			public signal void place_added (Unity.Places.Place place);
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class PlaceSearchBar : Ctk.Box {
+			public PlaceSearchBar ();
+			public void set_active_entry_view (Unity.Places.PlaceEntry entry, int x);
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class PlaceSearchBarBackground : Ctk.Bin {
+			public const string BG;
+			public PlaceSearchBarBackground (Unity.Places.PlaceSearchEntry search_entry);
+			public bool update_background ();
+			public int entry_position { get; set; }
+			public Unity.Places.PlaceSearchEntry search_entry { get; construct; }
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class PlaceSearchEntry : Ctk.Box {
+			public Ctk.Image left_icon;
+			public Unity.ThemeImage right_icon;
+			public Ctk.Text text;
+			public PlaceSearchEntry ();
+			public signal void text_changed (string text);
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class PlaceSearchSectionsBar : Ctk.Box {
+			public PlaceSearchSectionsBar ();
+			public void set_active_entry (Unity.Places.PlaceEntry entry);
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class PlaceView : Ctk.Box {
+			public PlaceView (Unity.Places.Place place);
+			public Unity.Places.Place place { get; construct; }
+			public signal void entry_activated (Unity.Places.PlaceEntryView entry_view);
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class Tile : Ctk.Button {
+			public Tile (Dee.ModelIter iter, string uri, string? icon_hint, string? mimetype, string display_name, string? comment);
+			public string? comment { get; construct; }
+			public string display_name { get; construct; }
+			public string? icon_hint { get; construct; }
+			public Dee.ModelIter iter { get; construct; }
+			public string? mimetype { get; construct; }
+			public string uri { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class View : Ctk.Box {
-			public View (Unity.Places.Model model, Unity.Shell shell);
-			public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
-			public void set_content_view (Clutter.Actor actor);
-			public Unity.Places.Model model { get; construct; }
+			public View (Unity.Shell shell);
+			public void about_to_show ();
+			public Unity.Places.PlaceModel model { get; set; }
 			public Unity.Shell shell { get; construct; }
-		}
-		[CCode (cheader_filename = "unity-private.h")]
-		public interface PlaceView : Clutter.Actor {
-			public abstract void init_with_properties (GLib.HashTable<string,string> props);
 		}
 	}
 	[CCode (cprefix = "UnityTesting", lower_case_cprefix = "unity_testing_")]
@@ -525,6 +453,7 @@ namespace Unity {
 			public void init_test_mode ();
 			public bool on_stage_button_press (Clutter.Event src);
 			public override void show ();
+			public void show_window_picker ();
 			public bool is_popup { get; construct; }
 			public int popup_height { get; construct; }
 			public int popup_width { get; construct; }
@@ -606,5 +535,6 @@ public class MenuManager : GLib.Object {
 	public MenuManager ();
 	public static MenuManager get_default ();
 	public bool menu_is_open ();
+	public void popdown_current_menu ();
 	public void register_visible_menu (Gtk.Menu menu);
 }

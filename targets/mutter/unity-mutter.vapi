@@ -65,6 +65,18 @@ namespace Unity {
 		public signal void workspace_switch_event (Unity.Plugin plugin, GLib.List<Mutter.Window> windows, int from, int to, int direction);
 	}
 	[CCode (cheader_filename = "unity-mutter.h")]
+	public class SpacesManager : GLib.Object {
+		public SpacesManager (Unity.Plugin plugin);
+		public void set_padding (uint top, uint right, uint left, uint bottom);
+		public void show_spaces_picker ();
+		public uint bottom_padding { get; set; }
+		public uint left_padding { get; set; }
+		public uint right_padding { get; set; }
+		public bool showing { get; set; }
+		public uint spacing { get; set; }
+		public uint top_padding { get; set; }
+	}
+	[CCode (cheader_filename = "unity-mutter.h")]
 	public class WindowManagement : GLib.Object {
 		public WindowManagement (Unity.Plugin p);
 	}

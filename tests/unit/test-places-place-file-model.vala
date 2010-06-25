@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Canonical Ltd
+ * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 3 as
@@ -16,49 +16,28 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
+using Unity;
+using Unity.Testing;
+using Unity.Places;
 
-using Gee;
-
-namespace Unity.Places
+namespace Unity.Tests.Unit
 {
-  public class Model : Object
+  public class PlacesPlaceFileModelSuite : Object
   {
-    /**
-     * Contains a list of places
-     **/
+    public const string DOMAIN = "/Unit/Places/PlaceFileModel";
 
-    /* Properties */
-    public ArrayList<Place> list;
-
-    /* Signals */
-    public signal void place_added (Place place);
-    public signal void place_removed (Place place);
-    public signal void place_changed (Place place);
-
-    public Model ()
+    public PlacesPlaceFileModelSuite ()
     {
-      Object ();
+      Logging.init_fatal_handler ();
+
+      Test.add_data_func (DOMAIN + "/Allocation", test_allocation);
     }
 
-    construct
+    private void test_allocation ()
     {
-      list = new ArrayList<Place> ();
+      var model = new PlaceFileModel.with_directory (TESTDIR+"/data");
+      assert (model is PlaceFileModel);
+      assert (model.size == 2);
     }
-
-    public void add (Place place)
-    {
-      this.list.add (place);
-
-      this.place_added (place);
-    }
-
-    public void remove (Place place)
-    {
-      this.list.remove (place);
-
-      this.place_removed (place);
-    }
-
   }
 }
-

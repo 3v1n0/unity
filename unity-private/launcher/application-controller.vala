@@ -149,6 +149,9 @@ namespace Unity.Launcher
         }
     }
   }
+  public errordomain AppTypeError {
+    NO_DESKTOP_FILE
+  }
 
   public class ApplicationController : ScrollerChildController
   {
@@ -220,6 +223,38 @@ namespace Unity.Launcher
       });
     }
 
+    public void set_sticky ()
+    {
+      if (desktop_file == "" || desktop_file == null)
+        return;
+      string uid = "app-" + Path.get_basename (desktop_file);
+      var favorites = Unity.Favorites.get_default ();
+
+      favorites.set_string (uid, "type", "application");
+      favorites.set_string (uid, "desktop_file", desktop_file);
+      favorites.add_favorite (uid);
+    }
+
+    public void set_priority (float priority)
+    {
+      if (desktop_file == "" || desktop_file == null)
+        return;
+
+      string uid = "app-" + Path.get_basename (desktop_file);
+      var favorites = Unity.Favorites.get_default ();
+      favorites.set_float (uid, "priority", priority);
+    }
+
+    public float get_priority () throws AppTypeError
+    {
+      if (desktop_file == "" || desktop_file == null)
+        throw new AppTypeError.NO_DESKTOP_FILE("There is no desktop file for this app, can't get priority");
+
+      string uid = "app-" + Path.get_basename (desktop_file);
+      var favorites = Unity.Favorites.get_default ();
+      return favorites.get_float (uid, "priority");
+    }
+
     private void on_favorite_added (string uid)
     {
       //check to see if we are the favorite
@@ -242,7 +277,7 @@ namespace Unity.Launcher
           child.pin_type = PinType.UNPINNED;
           closed ();
           if (".local" in desktop_filename)
-+           FileUtils.remove (desktop_filename);
+           FileUtils.remove (desktop_filename);
         }
     }
 
@@ -313,18 +348,30 @@ namespace Unity.Launcher
       return ret_list;
     }
 
+    private static int order_app_windows (void* a, void* b)
+    {
+      if ((b as Bamf.Window).last_active () > (a as Bamf.Window).last_active ())
+        {
+          return 1;
+        }
+      else if ((b as Bamf.Window).last_active () == (a as Bamf.Window).last_active ())
+        {
+          return 0;
+        }
+
+      return -1;
+    }
+
+
     public override void activate ()
     {
       if (app is Bamf.Application)
         {
           if (app.is_running ())
             {
-              Array<uint32> xids = app.get_xids ();
-              for (int i = 0; i < xids.length; i++)
-                {
-                  uint32 xid = xids.index (i);
-                  Unity.global_shell.show_window (xid);
-                }
+              unowned List<Bamf.Window> windows = app.get_windows ();
+              windows.sort ((CompareFunc)order_app_windows);
+              Unity.global_shell.show_window (windows.nth_data (windows.length ()-1).get_xid ());
             }
         }
       else

@@ -54,6 +54,7 @@ namespace Unity.Launcher
 
     construct
     {
+      child.controller = this;
       child.button_press_event.connect (on_press_event);
       child.button_release_event.connect (on_release_event);
       child.enter_event.connect (on_enter_event);

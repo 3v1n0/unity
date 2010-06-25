@@ -79,28 +79,25 @@ panel_sources = \
   panel/panel-indicator-model.vala \
   panel/panel-indicator-object-entry-view.vala \
   panel/panel-indicator-object-view.vala \
-  panel/panel-indicators.vala \
   panel/panel-menu-manager.vala \
   panel/panel-menubar.vala \
   panel/panel-tray.vala \
   panel/panel-view.vala
 
 places_sources = \
-  places/application-place.vala \
-  places/bar-model.vala \
-  places/bar-view.vala \
-  places/cairo-drawing.vala \
-  places/default-model.vala \
-  places/default-view.vala \
-  places/file-place.vala \
   places/places-controller.vala \
-  places/places-model.vala \
-  places/places-place.vala \
-  places/places-place-proxy.vala \
+  places/places-default-renderer-group.vala \
+  places/places-default-renderer.vala \
+  places/places-place-bar.vala \
+  places/places-place-entry-view.vala \
+  places/places-place-entry.vala \
+  places/places-place-model.vala \
   places/places-place-view.vala \
-  places/places-results-view.vala \
-  places/places-view.vala \
-  places/search-field.vala
+  places/places-place.vala \
+  places/places-place-search-bar.vala \
+  places/places-place-search-entry.vala \
+  places/places-place-search-sections-bar.vala \
+  places/places-view.vala
 
 launcher_sources = \
   launcher/application-controller.vala \

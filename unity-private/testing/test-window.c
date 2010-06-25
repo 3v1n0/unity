@@ -136,7 +136,6 @@ struct _UnityTestingWindowPrivate {
 	UnityPanelView* panel;
 	UnityPlacesController* controller;
 	UnityPlacesView* places;
-	gboolean places_enabled;
 	gboolean showing_places;
 };
 
@@ -198,12 +197,14 @@ static void unity_testing_window_relayout (UnityTestingWindow* self);
 static void unity_testing_window_real_show (GtkWidget* base);
 static void unity_testing_window_on_active_window_changed (UnityTestingWindow* self, WnckWindow* previous_window);
 gboolean unity_testing_window_on_stage_button_press (UnityTestingWindow* self, ClutterEvent* src);
-static void unity_testing_window_real_show_window_picker (UnityShell* base);
+void unity_testing_window_show_window_picker (UnityTestingWindow* self);
 static void unity_testing_window_real_grab_keyboard (UnityShell* base, gboolean grab, guint32 timestamp);
 static ClutterStage* unity_testing_window_real_get_stage (UnityShell* base);
 static UnityShellMode unity_testing_window_real_get_mode (UnityShell* base);
 void unity_panel_view_set_indicator_mode (UnityPanelView* self, gboolean mode);
 static void unity_testing_window_real_show_unity (UnityShell* base);
+void unity_places_view_about_to_show (UnityPlacesView* self);
+static void unity_testing_window_real_about_to_show_places (UnityShell* base);
 gint unity_panel_view_get_indicators_width (UnityPanelView* self);
 static gint unity_testing_window_real_get_indicators_width (UnityShell* base);
 float unity_launcher_launcher_get_width (UnityLauncherLauncher* self);
@@ -223,14 +224,14 @@ static void unity_testing_window_set_popup_height (UnityTestingWindow* self, gin
 UnityTestingWorkarea* unity_testing_workarea_new (void);
 UnityTestingWorkarea* unity_testing_workarea_construct (GType object_type);
 void unity_testing_workarea_update_net_workarea (UnityTestingWorkarea* self);
+static gboolean _lambda19_ (UnityTestingWindow* self);
+static gboolean __lambda19__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
 static gboolean _lambda20_ (UnityTestingWindow* self);
 static gboolean __lambda20__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
-static gboolean _lambda21_ (UnityTestingWindow* self);
-static gboolean __lambda21__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
+static void _lambda21_ (GdkScreen* s, UnityTestingWindow* self);
+static void __lambda21__gdk_screen_size_changed (GdkScreen* _sender, gpointer self);
 static void _lambda22_ (GdkScreen* s, UnityTestingWindow* self);
-static void __lambda22__gdk_screen_size_changed (GdkScreen* _sender, gpointer self);
-static void _lambda23_ (GdkScreen* s, UnityTestingWindow* self);
-static void __lambda23__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self);
+static void __lambda22__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self);
 static gboolean _unity_testing_window_on_stage_button_press_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 UnityTestingBackground* unity_testing_background_new (void);
 UnityTestingBackground* unity_testing_background_construct (GType object_type);
@@ -289,6 +290,7 @@ static void unity_testing_window_relayout (UnityTestingWindow* self) {
 	float ql_width = 0.0F;
 	ClutterActor* _tmp0_;
 	ClutterActor* _tmp1_;
+	ClutterActor* _tmp2_;
 	g_return_if_fail (self != NULL);
 	if (self->priv->_is_popup) {
 		x = 0;
@@ -315,10 +317,10 @@ static void unity_testing_window_relayout (UnityTestingWindow* self) {
 	_g_object_unref0 (_tmp0_);
 	clutter_actor_set_position (_tmp1_ = unity_launcher_launcher_get_view (self->priv->launcher), (float) 0, (float) UNITY_PANEL_PANEL_HEIGHT);
 	_g_object_unref0 (_tmp1_);
-	if (self->priv->places_enabled) {
-		clutter_actor_set_size ((ClutterActor*) self->priv->places, (float) width, (float) height);
-		clutter_actor_set_position ((ClutterActor*) self->priv->places, (float) 0, (float) 0);
-	}
+	clutter_actor_set_clip (_tmp2_ = unity_launcher_launcher_get_view (self->priv->launcher), (float) 0, (float) 0, ql_width, (float) height);
+	_g_object_unref0 (_tmp2_);
+	clutter_actor_set_size ((ClutterActor*) self->priv->places, (float) width, (float) height);
+	clutter_actor_set_position ((ClutterActor*) self->priv->places, (float) 0, (float) 0);
 	clutter_actor_set_size ((ClutterActor*) self->priv->panel, (float) width, (float) UNITY_PANEL_PANEL_HEIGHT);
 	clutter_actor_set_position ((ClutterActor*) self->priv->panel, (float) 0, (float) 0);
 }
@@ -383,9 +385,8 @@ gboolean unity_testing_window_on_stage_button_press (UnityTestingWindow* self, C
 }
 
 
-static void unity_testing_window_real_show_window_picker (UnityShell* base) {
-	UnityTestingWindow * self;
-	self = (UnityTestingWindow*) base;
+void unity_testing_window_show_window_picker (UnityTestingWindow* self) {
+	g_return_if_fail (self != NULL);
 	unity_shell_show_unity ((UnityShell*) self);
 }
 
@@ -417,13 +418,6 @@ static UnityShellMode unity_testing_window_real_get_mode (UnityShell* base) {
 static void unity_testing_window_real_show_unity (UnityShell* base) {
 	UnityTestingWindow * self;
 	self = (UnityTestingWindow*) base;
-	if (self->priv->places_enabled != TRUE) {
-		WnckScreen* screen;
-		screen = _g_object_ref0 (wnck_screen_get_default ());
-		wnck_screen_toggle_showing_desktop (screen, !wnck_screen_get_showing_desktop (screen));
-		_g_object_unref0 (screen);
-		return;
-	}
 	if (self->priv->showing_places) {
 		self->priv->showing_places = FALSE;
 		unity_panel_view_set_indicator_mode (self->priv->panel, TRUE);
@@ -434,6 +428,13 @@ static void unity_testing_window_real_show_unity (UnityShell* base) {
 		clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 0);
 	}
 	clutter_actor_queue_redraw ((ClutterActor*) self->priv->places);
+}
+
+
+static void unity_testing_window_real_about_to_show_places (UnityShell* base) {
+	UnityTestingWindow * self;
+	self = (UnityTestingWindow*) base;
+	unity_places_view_about_to_show (self->priv->places);
 }
 
 
@@ -600,10 +601,24 @@ static void unity_testing_window_set_popup_height (UnityTestingWindow* self, gin
 }
 
 
-static gboolean _lambda20_ (UnityTestingWindow* self) {
+static gboolean _lambda19_ (UnityTestingWindow* self) {
 	gboolean result = FALSE;
 	gtk_main_quit ();
 	result = FALSE;
+	return result;
+}
+
+
+static gboolean __lambda19__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
+	gboolean result;
+	result = _lambda19_ (self);
+	return result;
+}
+
+
+static gboolean _lambda20_ (UnityTestingWindow* self) {
+	gboolean result = FALSE;
+	result = TRUE;
 	return result;
 }
 
@@ -615,17 +630,14 @@ static gboolean __lambda20__gtk_widget_delete_event (GtkWidget* _sender, GdkEven
 }
 
 
-static gboolean _lambda21_ (UnityTestingWindow* self) {
-	gboolean result = FALSE;
-	result = TRUE;
-	return result;
+static void _lambda21_ (GdkScreen* s, UnityTestingWindow* self) {
+	g_return_if_fail (s != NULL);
+	unity_testing_window_relayout (self);
 }
 
 
-static gboolean __lambda21__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
-	gboolean result;
-	result = _lambda21_ (self);
-	return result;
+static void __lambda21__gdk_screen_size_changed (GdkScreen* _sender, gpointer self) {
+	_lambda21_ (_sender, self);
 }
 
 
@@ -635,19 +647,8 @@ static void _lambda22_ (GdkScreen* s, UnityTestingWindow* self) {
 }
 
 
-static void __lambda22__gdk_screen_size_changed (GdkScreen* _sender, gpointer self) {
+static void __lambda22__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self) {
 	_lambda22_ (_sender, self);
-}
-
-
-static void _lambda23_ (GdkScreen* s, UnityTestingWindow* self) {
-	g_return_if_fail (s != NULL);
-	unity_testing_window_relayout (self);
-}
-
-
-static void __lambda23__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self) {
-	_lambda23_ (_sender, self);
 }
 
 
@@ -692,6 +693,8 @@ static GObject * unity_testing_window_constructor (GType type, guint n_construct
 		UnityLauncherLauncher* _tmp14_;
 		ClutterActor* _tmp15_;
 		ClutterActor* _tmp16_;
+		UnityPlacesController* _tmp17_;
+		UnityPlacesView* _tmp18_;
 		UnityPanelView* _tmp19_;
 		WnckScreen* _tmp20_;
 		START_FUNCTION ();
@@ -703,7 +706,7 @@ static GObject * unity_testing_window_constructor (GType type, guint n_construct
 			gtk_window_set_decorated ((GtkWindow*) self, TRUE);
 			gtk_window_set_skip_taskbar_hint ((GtkWindow*) self, FALSE);
 			gtk_window_set_skip_pager_hint ((GtkWindow*) self, FALSE);
-			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda20__gtk_widget_delete_event, self, 0);
+			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda19__gtk_widget_delete_event, self, 0);
 		} else {
 			gtk_window_set_type_hint ((GtkWindow*) self, GDK_WINDOW_TYPE_HINT_DESKTOP);
 			gtk_window_set_keep_below ((GtkWindow*) self, TRUE);
@@ -712,9 +715,9 @@ static GObject * unity_testing_window_constructor (GType type, guint n_construct
 			gtk_window_set_skip_pager_hint ((GtkWindow*) self, TRUE);
 			gtk_window_set_accept_focus ((GtkWindow*) self, FALSE);
 			g_object_set ((GtkWidget*) self, "can-focus", FALSE, NULL);
-			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda21__gtk_widget_delete_event, self, 0);
-			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "size-changed", (GCallback) __lambda22__gdk_screen_size_changed, self, 0);
-			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "monitors-changed", (GCallback) __lambda23__gdk_screen_monitors_changed, self, 0);
+			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda20__gtk_widget_delete_event, self, 0);
+			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "size-changed", (GCallback) __lambda21__gdk_screen_size_changed, self, 0);
+			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "monitors-changed", (GCallback) __lambda22__gdk_screen_monitors_changed, self, 0);
 		}
 		gtk_window_set_title ((GtkWindow*) self, "Unity");
 		gtk_window_set_icon_name ((GtkWindow*) self, "distributor-logo");
@@ -735,7 +738,6 @@ static GObject * unity_testing_window_constructor (GType type, guint n_construct
 		stage_bg = (memset (&_tmp12_, 0, sizeof (ClutterColor)), _tmp12_.red = (guint8) 0x00, _tmp12_.green = (guint8) 0x00, _tmp12_.blue = (guint8) 0x00, _tmp12_.alpha = (guint8) 0xff, _tmp12_);
 		clutter_stage_set_color (self->stage, &stage_bg);
 		g_signal_connect_object ((ClutterActor*) self->stage, "button-press-event", (GCallback) _unity_testing_window_on_stage_button_press_clutter_actor_button_press_event, self, 0);
-		self->priv->places_enabled = g_getenv ("UNITY_ENABLE_PLACES") != NULL;
 		self->priv->background = (_tmp13_ = g_object_ref_sink (unity_testing_background_new ()), _g_object_unref0 (self->priv->background), _tmp13_);
 		clutter_container_add_actor ((ClutterContainer*) self->stage, (ClutterActor*) self->priv->background);
 		clutter_actor_show ((ClutterActor*) self->priv->background);
@@ -744,15 +746,11 @@ static GObject * unity_testing_window_constructor (GType type, guint n_construct
 		_g_object_unref0 (_tmp15_);
 		clutter_actor_show (_tmp16_ = unity_launcher_launcher_get_view (self->priv->launcher));
 		_g_object_unref0 (_tmp16_);
-		if (self->priv->places_enabled) {
-			UnityPlacesController* _tmp17_;
-			UnityPlacesView* _tmp18_;
-			self->priv->controller = (_tmp17_ = unity_places_controller_new ((UnityShell*) self), _g_object_unref0 (self->priv->controller), _tmp17_);
-			self->priv->places = (_tmp18_ = unity_places_controller_get_view (self->priv->controller), _g_object_unref0 (self->priv->places), _tmp18_);
-			clutter_container_add_actor ((ClutterContainer*) self->stage, (ClutterActor*) self->priv->places);
-			clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 0);
-			self->priv->showing_places = FALSE;
-		}
+		self->priv->controller = (_tmp17_ = unity_places_controller_new ((UnityShell*) self), _g_object_unref0 (self->priv->controller), _tmp17_);
+		self->priv->places = (_tmp18_ = unity_places_controller_get_view (self->priv->controller), _g_object_unref0 (self->priv->places), _tmp18_);
+		clutter_container_add_actor ((ClutterContainer*) self->stage, (ClutterActor*) self->priv->places);
+		clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 0);
+		self->priv->showing_places = FALSE;
 		self->priv->panel = (_tmp19_ = g_object_ref_sink (unity_panel_view_new ((UnityShell*) self)), _g_object_unref0 (self->priv->panel), _tmp19_);
 		clutter_container_add_actor ((ClutterContainer*) self->stage, (ClutterActor*) self->priv->panel);
 		clutter_actor_show ((ClutterActor*) self->priv->panel);
@@ -786,11 +784,11 @@ static void unity_testing_window_class_init (UnityTestingWindowClass * klass) {
 
 static void unity_testing_window_unity_shell_interface_init (UnityShellIface * iface) {
 	unity_testing_window_unity_shell_parent_iface = g_type_interface_peek_parent (iface);
-	iface->show_window_picker = unity_testing_window_real_show_window_picker;
 	iface->grab_keyboard = unity_testing_window_real_grab_keyboard;
 	iface->get_stage = unity_testing_window_real_get_stage;
 	iface->get_mode = unity_testing_window_real_get_mode;
 	iface->show_unity = unity_testing_window_real_show_unity;
+	iface->about_to_show_places = unity_testing_window_real_about_to_show_places;
 	iface->get_indicators_width = unity_testing_window_real_get_indicators_width;
 	iface->get_launcher_width_foobar = unity_testing_window_real_get_launcher_width_foobar;
 	iface->get_panel_height_foobar = unity_testing_window_real_get_panel_height_foobar;
@@ -807,7 +805,6 @@ static void unity_testing_window_unity_shell_interface_init (UnityShellIface * i
 
 static void unity_testing_window_instance_init (UnityTestingWindow * self) {
 	self->priv = UNITY_TESTING_WINDOW_GET_PRIVATE (self);
-	self->priv->places_enabled = FALSE;
 }
 
 

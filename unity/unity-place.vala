@@ -193,8 +193,6 @@ namespace Unity.Place {
     }
   }
 
-  public delegate uint SearchHandler (Search search);
-
   /**
    * UnityPlace_EntryInfo:
    *
@@ -213,7 +211,7 @@ namespace Unity.Place {
     public _RendererInfo global_renderer_info;
   }
 
-  public class EntryInfo : GLib.Object {
+  public abstract class EntryInfo : GLib.Object {
 
     /* The _EntryInfo needs to be set before we set properties, so it's
      * paramount we do it here */
@@ -221,8 +219,6 @@ namespace Unity.Place {
     private RendererInfo _entry_renderer_info;
     private RendererInfo _global_renderer_info;
     private Dee.Model _sections_model;
-    private SearchHandler _search_handler = null;
-    private SearchHandler _global_search_handler = null;
     private bool _active = false;
     private uint _active_section = 0;
 
@@ -289,16 +285,6 @@ namespace Unity.Place {
     public uint active_section {
       get { return _active_section; }
       set { _active_section = value; }
-    }
-
-    public SearchHandler search_handler {
-      get { return _search_handler; }
-      set { _search_handler = value; }
-    }
-
-    public SearchHandler global_search_handler {
-      get { return _global_search_handler; }
-      set { _global_search_handler = value; }
     }
 
     /*
@@ -379,6 +365,14 @@ namespace Unity.Place {
     {
       return info.hints.size ();
     }
+    
+    /*
+     * Abstract API
+     */
+    
+    public async abstract uint set_global_search (Search search);
+
+    public async abstract uint set_search (Search search);
 
     /*
      * Internal API
@@ -412,11 +406,11 @@ namespace Unity.Place {
   [DBus (name = "com.canonical.Unity.PlaceEntry")]
   private interface EntryService : GLib.Object
   {
-    public abstract uint set_global_search (string search,
-                                            HashTable<string,string> hints) throws DBus.Error;
+    public async abstract uint set_global_search (string search,
+                                                  HashTable<string,string> hints) throws DBus.Error;
 
-    public abstract uint set_search (string search,
-                                     HashTable<string,string> hints) throws DBus.Error;
+    public async abstract uint set_search (string search,
+                                           HashTable<string,string> hints) throws DBus.Error;
 
     public abstract void set_active (bool is_active) throws DBus.Error;
 
@@ -620,30 +614,18 @@ namespace Unity.Place {
      * DBus API
      */
 
-    public uint set_global_search (string search,
-                                   HashTable<string,string> hints)
+    public async uint set_global_search (string search,
+                                         HashTable<string,string> hints)
     {
-      if (_entry_info.global_search_handler != null)
-        return _entry_info.global_search_handler (new Search (search, hints));
-      else
-        {
-          warning ("No global search handler installed for %s",
-                   _entry_info.dbus_path);
-          return 0;
-        }
+      uint result = yield entry_info.set_global_search (new Search (search, hints));
+      return result;
     }
 
-    public uint set_search (string search,
-                            HashTable<string,string> hints)
+    public async uint set_search (string search,
+                                  HashTable<string,string> hints)
     {
-      if (_entry_info.search_handler != null)
-        return _entry_info.search_handler (new Search (search, hints));
-      else
-        {
-          warning ("No search handler installed for %s",
-                   _entry_info.dbus_path);
-          return 0;
-        }
+      uint result = yield entry_info.set_search (new Search (search, hints));
+      return result;
     }
 
     public void set_active (bool is_active)

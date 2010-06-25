@@ -60,7 +60,7 @@ namespace Unity.Panel
           last_width = width;
           last_height = height;
 
-          Idle.add (update_background);
+          Timeout.add (0, update_background);
         }
     }
 
