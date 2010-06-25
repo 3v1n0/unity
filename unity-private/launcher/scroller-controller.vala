@@ -311,6 +311,11 @@ namespace Unity.Launcher
       if (x > view.get_width ())
         {
           // it was dropped outside of the launcher.. oh well, obliterate it.
+          if (retcont.controller is ApplicationController)
+            {
+              (retcont.controller as ApplicationController).set_sticky (false);
+              (retcont.controller as ApplicationController).close_windows ();
+            }
           if (retcont in model)
             model.remove (retcont);
 
@@ -352,5 +357,6 @@ namespace Unity.Launcher
         index += 1.0f;
       }
     }
+
   }
 }

@@ -223,16 +223,32 @@ namespace Unity.Launcher
       });
     }
 
-    public void set_sticky ()
+    public void set_sticky (bool is_sticky = true)
     {
       if (desktop_file == "" || desktop_file == null)
         return;
       string uid = "app-" + Path.get_basename (desktop_file);
       var favorites = Unity.Favorites.get_default ();
 
-      favorites.set_string (uid, "type", "application");
-      favorites.set_string (uid, "desktop_file", desktop_file);
-      favorites.add_favorite (uid);
+      if (is_sticky)
+        {
+          favorites.set_string (uid, "type", "application");
+          favorites.set_string (uid, "desktop_file", desktop_file);
+          favorites.add_favorite (uid);
+        }
+      else
+        {
+          favorites.remove_favorite (uid);
+        }
+    }
+
+    public void close_windows ()
+    {
+      if (app is Bamf.Application)
+        {
+          Array<uint32> xids = app.get_xids ();
+          Unity.global_shell.close_xids (xids);
+        }
     }
 
     public void set_priority (float priority)
