@@ -36,7 +36,14 @@ Provides: indicator-renderer,
           netbook-launcher
 Breaks: maximus (<< 0.4.14-1ubuntu2)
 Recommends: unity-place-applications,
-            unity-place-files
+            unity-place-files,
+            indicator-appmenu,
+            indicator-application
+            indicator-sound,
+            indicator-datetime,
+            indicator-messages,
+            indicator-me,
+            indicator-session,
 Description: Unity Interface for Ubuntu Netbook Edition
  Unity is a graphical interface designed for Ubuntu Netbook Edition
 
