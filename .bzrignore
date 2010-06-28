@@ -314,3 +314,6 @@ unity-private/places/places-place-search-sections-bar.c
 unity/unity-place-renderer.c
 unity-private/places/places-default-renderer-group.c
 unity-private/places/places-default-renderer.c
+targets/mutter/spaces-manager.c
+unity/unity-pixbuf-cache.c
+tests/unit/test-unity-pixbuf-cache.c
