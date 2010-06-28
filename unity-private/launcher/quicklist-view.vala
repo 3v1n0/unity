@@ -262,6 +262,7 @@ namespace Unity.Launcher
     {
       this.item_background.get_layer(0).set_enabled (false);
       this.item_background.get_layer(1).set_enabled (true);
+      this.do_queue_redraw ();
       return false;
     }
 
@@ -270,6 +271,7 @@ namespace Unity.Launcher
     {
       this.item_background.get_layer(0).set_enabled (true);
       this.item_background.get_layer(1).set_enabled (false);
+      this.do_queue_redraw ();
       return false;
     }
 
