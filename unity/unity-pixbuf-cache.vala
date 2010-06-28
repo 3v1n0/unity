@@ -56,11 +56,6 @@ namespace Unity
         }
     }
 
-    ~PixbufCache ()
-    {
-      debug ("Finalized");
-    }
-
     construct
     {
       theme = Gtk.IconTheme.get_default ();
