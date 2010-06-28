@@ -41,6 +41,8 @@ namespace Unity
 
     private bool autodispose = false;
 
+    public uint size { get { return cache.size; } }
+
     /*
      * Construction
      */
@@ -83,6 +85,21 @@ namespace Unity
         }
 
       return _pixbuf_cache;
+    }
+
+    public new void set (string icon_id, Pixbuf pixbuf, int size)
+    {
+      cache[hash_template.printf (icon_id, size)] = pixbuf;
+    }
+
+    public new Pixbuf? get (string icon_id, int size)
+    {
+      return cache[hash_template.printf (icon_id, size)];
+    }
+
+    public void clear ()
+    {
+      cache.clear ();
     }
 
     public async void set_image_from_icon_name (Ctk.Image image,

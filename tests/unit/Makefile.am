@@ -55,7 +55,8 @@ test_unit_SOURCES = \
   test-places-place.vala \
   test-places.vala \
   test-place.vala \
-  test-unit.vala
+  test-unit.vala \
+  test-unity-pixbuf-cache.vala
 
 # GTester stuff
 XML_REPORT = test-unit-results.xml

@@ -24,6 +24,8 @@ public class Main
 {
   public static int main (string[] args)
   {
+    UnityPixbufCacheSuite unity_pixbuf_cache;
+
     LauncherSuite launcher;
 
     PanelIndicatorObjectEntryViewSuite panel_object_entry_view_suite;
@@ -37,6 +39,9 @@ public class Main
     Gtk.init (ref args);
     Ctk.init (ref args);
     Test.init (ref args);
+
+    /* Libunity tests */
+    unity_pixbuf_cache = new UnityPixbufCacheSuite ();
 
     /* Launcher tests */
     launcher = new LauncherSuite ();
