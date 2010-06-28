@@ -38,7 +38,7 @@ Breaks: maximus (<< 0.4.14-1ubuntu2)
 Recommends: unity-place-applications,
             unity-place-files,
             indicator-appmenu,
-            indicator-application
+            indicator-application,
             indicator-sound,
             indicator-datetime,
             indicator-messages,
