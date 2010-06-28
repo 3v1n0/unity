@@ -85,10 +85,6 @@ namespace Unity
       return _pixbuf_cache;
     }
 
-    /* We`re all levels of async for the setting. Current I`m thinking we`ll
-     * also do the hashtable lookup async too, just to keep this completely
-     * non-blocking for the caller.
-     */
     public async void set_image_from_icon_name (Ctk.Image image,
                                                 string    icon_name,
                                                 int       size)
