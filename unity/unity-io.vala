@@ -36,7 +36,7 @@ namespace Unity.IO {
 
   /**
    * Asynchronously read a stream into memory. This method will close
-   * the input stream.
+   * the input stream when done.
    *
    * Important: The passed back data must be manually freed using g_free()
    */
@@ -132,6 +132,12 @@ namespace Unity.IO {
     return yield open_from_dirs (filename, dirs);
   }
   
+  /**
+   * Use this method instead of Environment.get_system_data_dirs()
+   * (aka g_get_system_data_dirs()) because the Vala compiler has some
+   * issues with the const-ness of the returned char**.
+   * See https://bugzilla.gnome.org/show_bug.cgi?id=622708
+   */
   private static string[] system_data_dirs = null;
   public string[] get_system_data_dirs ()
   {

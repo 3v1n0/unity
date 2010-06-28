@@ -196,8 +196,8 @@ namespace Unity.Places
       text.ellipsize = Pango.EllipsizeMode.END;
 
       get_image ().set_from_stock ("text-x-preview");
-
-      Idle.add (load_icon);
+      
+      load_icon.begin ();
     }
 
     private override void get_preferred_width (float for_height,
@@ -210,18 +210,32 @@ namespace Unity.Places
 
     private override void clicked ()
     {
+      clicked_handler.begin ();
+    }
+    
+    private async void clicked_handler ()
+    {
       debug (@"Launching $uri");
 
       if (uri.has_prefix ("application://"))
         {
           var id = uri.offset ("application://".length);
 
-          var info = new GLib.DesktopAppInfo (id);
-          if (info is GLib.DesktopAppInfo)
+          AppInfo info;
+          try {
+            var appinfos = AppInfoManager.get_instance ();
+            info = yield appinfos.lookup_async (id);
+            debug ("Foo: %s", info.get_name());
+          } catch (Error ee) {
+            warning ("Unable to read .desktop file '%s': %s", uri, ee.message);
+            return;
+          }
+          
+          if (info is AppInfo)
             {
               try {
                 info.launch (null,null);
-
+                debug ("Launched");
               } catch (Error e) {
                 warning ("Unable to launch desktop file %s: %s\n",
                          id,
@@ -239,45 +253,49 @@ namespace Unity.Places
         Gtk.show_uri (Gdk.Screen.get_default (),
                       uri,
                       0);
-       } catch (GLib.Error e) {
-         warning ("Unable to launch: %s\n", e.message);
+       } catch (GLib.Error eee) {
+         warning ("Unable to launch: %s\n", eee.message);
        }
     }
 
-    private bool load_icon ()
+    private async void load_icon ()
     {
+      Icon icon;
+      File file;
+      
       if (uri.has_prefix ("application://"))
         {
+          var appinfos = AppInfoManager.get_instance ();
           var id = uri.offset ("application://".length);
-          var info = new GLib.DesktopAppInfo (id);
-
-          if (info is GLib.DesktopAppInfo)
+          var info = yield appinfos.lookup_async (id);
+          
+          if (info is AppInfo)
             {
-              var icon = info.get_icon ();
+              icon = info.get_icon ();
               if (icon is GLib.ThemedIcon)
                 get_image ().set_from_gicon (icon);
               else if (icon is GLib.FileIcon)
                 {
-                  var file = (icon as GLib.FileIcon).get_file ();
+                  file = (icon as GLib.FileIcon).get_file ();
                   get_image ().set_from_filename (file.get_path ());
                 }
             }
+          else
+            debug ("Unable to look up: %s", uri);
         }
       else if (mimetype != null)
         {
-          var icon = GLib.g_content_type_get_icon (mimetype) as ThemedIcon;
+          icon = GLib.g_content_type_get_icon (mimetype) as ThemedIcon;
           if (icon is GLib.ThemedIcon)
             {
               get_image ().set_from_gicon (icon);
             }
           else if (icon is GLib.FileIcon)
             {
-              var file = (icon as GLib.FileIcon).get_file ();
+              file = (icon as GLib.FileIcon).get_file ();
               get_image ().set_from_filename (file.get_path ());
             }
         }
-
-      return false;
     }
   }
 }

@@ -98,7 +98,6 @@ namespace Unity {
       var appinfo = appinfo_by_id.get (id);
       if (appinfo != null)
         {
-          yield;
           return appinfo;
         }
       
