@@ -145,7 +145,11 @@ namespace Unity {
       return appinfo;
     }
     
-    
+    /* Clear all cached AppInfos */
+    public void clear ()
+    {
+      appinfo_by_id.clear ();
+    }
   
   } /* class AppInfoManager */
 

@@ -57,6 +57,8 @@ test_unit_SOURCES = \
   test-places.vala \
   test-place.vala \
   test-io.vala \
+  test-appinfo-manager.vala \
+  test-unity-pixbuf-cache.vala \
   test-unit.vala
 
 # GTester stuff

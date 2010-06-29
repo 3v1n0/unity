@@ -164,6 +164,9 @@ namespace Unity.Places
 
   public class Tile : Ctk.Button
   {
+    static const int ICON_SIZE = 48;
+    static const string DEFAULT_ICON = "text-x-preview";
+
     public unowned Dee.ModelIter iter { get; construct; }
 
     public string  display_name { get; construct; }
@@ -195,9 +198,7 @@ namespace Unity.Places
       unowned Ctk.Text text = get_text ();
       text.ellipsize = Pango.EllipsizeMode.END;
 
-      get_image ().set_from_stock ("text-x-preview");
-      
-      load_icon.begin ();
+      set_icon ();
     }
 
     private override void get_preferred_width (float for_height,
@@ -258,43 +259,25 @@ namespace Unity.Places
        }
     }
 
-    private async void load_icon ()
+    private void set_icon ()
     {
-      Icon icon;
-      File file;
-      
+      var cache = PixbufCache.get_default ();
+
       if (uri.has_prefix ("application://"))
         {
-          var appinfos = AppInfoManager.get_instance ();
-          var id = uri.offset ("application://".length);
-          var info = yield appinfos.lookup_async (id);
-          
-          if (info is AppInfo)
-            {
-              icon = info.get_icon ();
-              if (icon is GLib.ThemedIcon)
-                get_image ().set_from_gicon (icon);
-              else if (icon is GLib.FileIcon)
-                {
-                  file = (icon as GLib.FileIcon).get_file ();
-                  get_image ().set_from_filename (file.get_path ());
-                }
-            }
+          if (icon_hint != null)
+            cache.set_image_from_gicon_string (get_image (), icon_hint, ICON_SIZE);
           else
-            debug ("Unable to look up: %s", uri);
+            cache.set_image_from_icon_name (get_image (), DEFAULT_ICON, ICON_SIZE);
         }
       else if (mimetype != null)
         {
-          icon = GLib.g_content_type_get_icon (mimetype) as ThemedIcon;
-          if (icon is GLib.ThemedIcon)
-            {
-              get_image ().set_from_gicon (icon);
-            }
-          else if (icon is GLib.FileIcon)
-            {
-              file = (icon as GLib.FileIcon).get_file ();
-              get_image ().set_from_filename (file.get_path ());
-            }
+          var icon = GLib.g_content_type_get_icon (mimetype);
+          cache.set_image_from_gicon_string (get_image (), icon.to_string(), ICON_SIZE);
+        }
+      else
+        {
+          cache.set_image_from_icon_name (get_image (), DEFAULT_ICON, ICON_SIZE);
         }
     }
   }
