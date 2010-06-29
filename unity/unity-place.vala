@@ -211,7 +211,24 @@ namespace Unity.Place {
     public _RendererInfo global_renderer_info;
   }
 
-  public abstract class EntryInfo : GLib.Object {
+  /**
+   * UnityPlace_EntryInfoData:
+   *
+   * Private helper struct used for marshalling the EntryInfo data without
+   * the RenderingInfo data over the bus
+   */
+  private struct _EntryInfoData {
+  	public string   dbus_path;
+    public string   display_name;
+    public string   icon;
+    public uint     position;
+    public string[] mimetypes;
+    public bool     sensitive;
+    public string   sections_model;
+    public HashTable<string,string> hints;
+  }
+
+  public class EntryInfo : GLib.Object {
 
     /* The _EntryInfo needs to be set before we set properties, so it's
      * paramount we do it here */
@@ -286,6 +303,9 @@ namespace Unity.Place {
       get { return _active_section; }
       set { _active_section = value; }
     }
+
+    public Search active_search { get; set; }
+    public Search active_global_search { get; set; }
 
     /*
      * Constructors
@@ -365,14 +385,6 @@ namespace Unity.Place {
     {
       return info.hints.size ();
     }
-    
-    /*
-     * Abstract API
-     */
-    
-    public async abstract uint set_global_search (Search search);
-
-    public async abstract uint set_search (Search search);
 
     /*
      * Internal API
@@ -406,17 +418,21 @@ namespace Unity.Place {
   [DBus (name = "com.canonical.Unity.PlaceEntry")]
   private interface EntryService : GLib.Object
   {
-    public async abstract uint set_global_search (string search,
-                                                  HashTable<string,string> hints) throws DBus.Error;
+    public abstract void set_global_search (string search,
+                                            HashTable<string,string> hints) throws DBus.Error;
 
-    public async abstract uint set_search (string search,
-                                           HashTable<string,string> hints) throws DBus.Error;
-
+    public abstract void set_search (string search,
+                                     HashTable<string,string> hints) throws DBus.Error;
+    
     public abstract void set_active (bool is_active) throws DBus.Error;
 
     public abstract void set_active_section (uint section_id) throws DBus.Error;
 
-    public signal void renderer_info_changed (_RendererInfo renderer_info);
+    public signal void entry_renderer_info_changed (_RendererInfo renderer_info);
+    
+    public signal void global_renderer_info_changed (_RendererInfo renderer_info);
+    
+    public signal void place_entry_info_changed (_EntryInfoData entry_info_data);
   }
 
   /**
@@ -614,18 +630,16 @@ namespace Unity.Place {
      * DBus API
      */
 
-    public async uint set_global_search (string search,
-                                         HashTable<string,string> hints)
+    public void set_global_search (string search,
+                                   HashTable<string,string> hints)
     {
-      uint result = yield entry_info.set_global_search (new Search (search, hints));
-      return result;
+      this._entry_info.active_global_search = new Search (search, hints);
     }
 
-    public async uint set_search (string search,
-                                  HashTable<string,string> hints)
+    public void set_search (string search,
+                            HashTable<string,string> hints)
     {
-      uint result = yield entry_info.set_search (new Search (search, hints));
-      return result;
+      this._entry_info.active_search = new Search (search, hints);
     }
 
     public void set_active (bool is_active)
