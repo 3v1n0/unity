@@ -68,6 +68,7 @@ libunity_la_VALASOURCES = \
   theme.vala \
   unity-cairo-canvas.vala \
   unity-favorites.vala \
+  unity-flow-layout.vala \
   unity-pixbuf-cache.vala \
   unity-place-renderer.vala \
   unity-place.vala \
