@@ -36,6 +36,10 @@ namespace Unity.Tests.Unit
                           AppInfoManagerSuite.test_sync_lookup_missing);
       Test.add_data_func ("/Unit/AppInfoManager/AsyncLookupMissing",
                           AppInfoManagerSuite.test_async_lookup_missing);
+      Test.add_data_func ("/Unit/AppInfoManager/SyncLookupOk",
+                          AppInfoManagerSuite.test_sync_lookup_ok);
+      Test.add_data_func ("/Unit/AppInfoManager/AsyncLookupOk",
+                          AppInfoManagerSuite.test_async_lookup_ok);
     }
 
     /* Test that we can even get a valid ref to the manager */
@@ -71,8 +75,56 @@ namespace Unity.Tests.Unit
     {
       var manager = AppInfoManager.get_instance();
       
-      AppInfo? appinfo = yield manager.lookup_async ("_foobar.desktop");
-      assert (appinfo == null);
+      try {
+        AppInfo? appinfo = yield manager.lookup_async ("_foobar.desktop");
+        assert (appinfo == null);
+      } catch (Error e) {
+        error ("Error reading desktop file: %s", e.message);
+      }
+      
+      mainloop.quit ();
+    }
+    
+    /* Test that we can lookup something which is indeed there */
+    internal static void test_sync_lookup_ok()
+    {
+      string old_datadir = Environment.get_user_data_dir ();
+      var manager = AppInfoManager.get_instance();
+      
+      Environment.set_variable ("XDG_DATA_HOME", TESTDIR, true);
+      
+      var info = manager.lookup ("ubuntu-about.desktop");
+      assert (info is AppInfo);
+      assert ("About Ubuntu" == info.get_name ());
+      
+      /* Reset the environment like a good citizen */
+      Environment.set_variable ("XDG_DATA_HOME", old_datadir, true);
+    }
+
+    internal static void test_async_lookup_ok()
+    {
+      MainLoop mainloop = new MainLoop();
+      do_test_async_lookup_ok.begin(mainloop);
+      mainloop.run ();
+    }
+    
+    internal static async void do_test_async_lookup_ok (MainLoop mainloop)
+    {
+      string old_datadir = Environment.get_user_data_dir ();
+      var manager = AppInfoManager.get_instance();
+      
+      Environment.set_variable ("XDG_DATA_HOME", TESTDIR, true);
+      
+      try{
+        var info = yield manager.lookup_async ("ubuntu-about.desktop");
+        assert (info is AppInfo);
+        assert ("About Ubuntu" == info.get_name ());
+      } catch (Error e) {
+        error ("Error reading desktop file: %s", e.message);
+      }
+      
+      /* Reset the environment like a good citizen */
+      Environment.set_variable ("XDG_DATA_HOME", old_datadir, true);
       
       mainloop.quit ();
     }
