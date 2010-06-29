@@ -141,6 +141,11 @@ namespace Unity.Place {
     {
       return info->hints.size ();
     }
+    
+    internal _RendererInfo get_raw ()
+    {
+      return *info;
+    }
   }
 
   /**
@@ -524,6 +529,15 @@ namespace Unity.Place {
         return null;
     }
 
+    public EntryServiceImpl? get_entry_service (string dbus_path)
+    {
+      var entry = entries.lookup (dbus_path);
+      if (entry != null)
+        return entry;
+      else
+        return null;
+    }
+
     public uint num_entries ()
     {
       return entries.size ();
@@ -676,6 +690,17 @@ namespace Unity.Place {
     }
   }
 
+  /*
+   * Private helper struct used to keep track of the installed signal handlers
+   * for an entry added to a Controller
+   */
+  internal struct _EntrySignals
+  {
+    ulong place_entry_info_changed_id;
+    ulong entry_renderer_info_changed_id;
+    ulong global_renderer_info_changed_id;
+  }
+
   /**
    * UnityPlaceController:
    *
@@ -686,6 +711,7 @@ namespace Unity.Place {
     private ServiceImpl service;
     private string _dbus_path;
     private bool _exported = false;
+    private HashTable<string, _EntrySignals?> entry_signals;
 
     /*
      * Properties
@@ -707,6 +733,7 @@ namespace Unity.Place {
 
     construct {
       service = new ServiceImpl (_dbus_path);
+      entry_signals = new HashTable<string, _EntrySignals?>(str_hash, str_equal);
     }
 
     public Controller (string dbus_path)
@@ -721,6 +748,45 @@ namespace Unity.Place {
     public void add_entry (EntryInfo entry)
     {
       service.add_entry (entry);
+      
+      var signals = _EntrySignals ();
+      
+      signals.place_entry_info_changed_id = entry.notify.connect (on_entry_changed);
+      
+      /* We use a closure here because we need to capture the entry in order
+       * to look up the EntryServiceImpl */
+      signals.entry_renderer_info_changed_id = entry.entry_renderer_info.notify.connect (
+        (obj, pspec) => {
+          var renderer_info = (obj as RendererInfo);
+          var entry_service = service.get_entry_service (entry.dbus_path);
+          if (entry_service == null)
+            {
+              warning ("Entry renderer info changed for unknown entry '%s'", entry.dbus_path);
+            }
+          else
+            entry_service.entry_renderer_info_changed (renderer_info.get_raw ());
+          
+        }
+      );
+      
+      /* We use a closure here because we need to capture the entry in order
+       * to look up the EntryServiceImpl */
+      signals.global_renderer_info_changed_id = entry.global_renderer_info.notify.connect (
+        (obj, pspec) => {
+          var renderer_info = (obj as RendererInfo);
+          var entry_service = service.get_entry_service (entry.dbus_path);
+          if (entry_service == null)
+            {
+              warning ("Global renderer info changed for unknown entry '%s'", entry.dbus_path);
+            }
+          else
+            entry_service.global_renderer_info_changed (renderer_info.get_raw ());
+          
+        }
+      );
+      
+      /* Store all signal handler ids so we can remove them later */
+      entry_signals.insert (entry.dbus_path, signals);
     }
 
     public EntryInfo? get_entry (string dbus_path)
@@ -730,6 +796,30 @@ namespace Unity.Place {
 
     public void remove_entry (string dbus_path)
     {
+      /* Disconnect all signals on the entry before we remove
+       * it from the ServiceImpl */
+      var signals = entry_signals.lookup (dbus_path);
+      if (signals == null)
+        {
+          warning ("No signals connected for unknown entry '%s'",
+                   dbus_path);
+          service.remove_entry (dbus_path);
+          return;
+        }
+      
+      var entry = service.get_entry (dbus_path);
+      if (entry == null)
+        {
+          warning ("Can not disconnect signals for unknown entry '%s'",
+                   dbus_path);
+          entry_signals.remove (dbus_path);
+          return;
+        }
+      
+      entry.disconnect (signals.place_entry_info_changed_id);
+      entry.entry_renderer_info.disconnect (signals.entry_renderer_info_changed_id);
+      entry.global_renderer_info.disconnect (signals.global_renderer_info_changed_id);
+      
       service.remove_entry (dbus_path);
     }
 
@@ -771,6 +861,34 @@ namespace Unity.Place {
       _exported = false;
       notify_property("exported");
     }
+    
+    /* Callback for when an entry property changes */
+    private void on_entry_changed (GLib.Object obj, ParamSpec psec)
+    {
+      var entry = (obj as EntryInfo);
+      var entry_data = _EntryInfoData();      
+      var entry_service = service.get_entry_service (entry.dbus_path);
+      
+      if (entry_service == null)
+        {
+          warning ("Got change signal from unknown entry service '%s'",
+                   entry.dbus_path);
+          return;
+        }
+      
+      var _entry = entry.get_raw ();
+      entry_data.dbus_path = _entry.dbus_path;
+      entry_data.display_name = _entry.display_name;
+      entry_data.icon = _entry.icon;
+      entry_data.position = _entry.position;
+      entry_data.mimetypes = _entry.mimetypes;
+      entry_data.sensitive = _entry.sensitive;  
+      entry_data.sections_model = _entry.sections_model;    
+      entry_data.hints = _entry.hints;      
+    
+      entry_service.place_entry_info_changed (entry_data);
+    }
+    
   }
 
 } /* namespace */
