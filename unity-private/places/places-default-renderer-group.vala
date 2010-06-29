@@ -211,18 +211,32 @@ namespace Unity.Places
 
     private override void clicked ()
     {
+      clicked_handler.begin ();
+    }
+    
+    private async void clicked_handler ()
+    {
       debug (@"Launching $uri");
 
       if (uri.has_prefix ("application://"))
         {
           var id = uri.offset ("application://".length);
 
-          var info = new GLib.DesktopAppInfo (id);
-          if (info is GLib.DesktopAppInfo)
+          AppInfo info;
+          try {
+            var appinfos = AppInfoManager.get_instance ();
+            info = yield appinfos.lookup_async (id);
+            debug ("Foo: %s", info.get_name());
+          } catch (Error ee) {
+            warning ("Unable to read .desktop file '%s': %s", uri, ee.message);
+            return;
+          }
+          
+          if (info is AppInfo)
             {
               try {
                 info.launch (null,null);
-
+                debug ("Launched");
               } catch (Error e) {
                 warning ("Unable to launch desktop file %s: %s\n",
                          id,
@@ -240,8 +254,8 @@ namespace Unity.Places
         Gtk.show_uri (Gdk.Screen.get_default (),
                       uri,
                       0);
-       } catch (GLib.Error e) {
-         warning ("Unable to launch: %s\n", e.message);
+       } catch (GLib.Error eee) {
+         warning ("Unable to launch: %s\n", eee.message);
        }
     }
 

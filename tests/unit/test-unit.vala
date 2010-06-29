@@ -35,6 +35,8 @@ public class Main
     PlacesPlaceSuite places_place;
     PlacesSuite places;
     PlaceSuite place;
+    IOSuite io;
+    AppInfoManagerSuite appinfo_manager;
 
     Gtk.init (ref args);
     Ctk.init (ref args);
@@ -55,6 +57,10 @@ public class Main
     /* Places tests */
     places = new PlacesSuite ();
     place = new PlaceSuite ();
+    
+    /* IO utility tests */
+    io = new IOSuite ();
+    appinfo_manager = new AppInfoManagerSuite ();
 
     Test.run ();
 
