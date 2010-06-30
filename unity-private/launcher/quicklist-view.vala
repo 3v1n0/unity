@@ -475,6 +475,7 @@ namespace Unity.Launcher
       old_height = 0;
       cached_x   = 0.0f; // needed to fix LP: #525905
       cached_y   = 0.0f; // needed to fix LP: #526335
+
     }
   }
 }
