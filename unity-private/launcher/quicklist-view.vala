@@ -475,6 +475,153 @@ namespace Unity.Launcher
       old_height = 0;
       cached_x   = 0.0f; // needed to fix LP: #525905
       cached_y   = 0.0f; // needed to fix LP: #526335
+
+      // test new cairo-based texture-part drawing calls
+      int     width  = 150;
+      int     height = 25;
+      float   radius = 7.0f;
+      float   anchor_width = 15.0f;
+      float   anchor_height = 20.0f;
+      float   line_width = 1.0f;
+      float[] rgba = {1.0f, 1.0f, 1.0f, 1.0f};
+      float[] rgba_tint = {0.1f, 0.1f, 0.1f, 0.5f};
+      float[] rgba_hl = {1.0f, 1.0f, 1.0f, 0.5f};
+      float[] rgba_shadow = {0.0f, 0.0f, 0.0f, 1.0f};
+      float[] rgba_line = {1.0f, 1.0f, 1.0f, 1.0f};
+      uint    shadow_size = 5;
+
+      {
+        Cairo.Surface surf;
+
+        Unity.QuicklistRendering.Menu.outline_shadow_top (out surf,
+                                                          width,
+                                                          height,
+                                                          anchor_width,
+                                                          radius,
+                                                          shadow_size,
+                                                          rgba_shadow,
+                                                          line_width,
+                                                          rgba_line);
+        surf.write_to_png ("/tmp/outline-shadow-top.png");
+      }
+
+      {
+        Cairo.Surface surf;
+
+        Unity.QuicklistRendering.Menu.outline_shadow_dyn (out surf,
+                                                          width,
+                                                          height,
+                                                          anchor_width,
+                                                          shadow_size,
+                                                          rgba_shadow,
+                                                          line_width,
+                                                          rgba_line);
+        surf.write_to_png ("/tmp/outline-shadow-dyn.png");
+      }
+
+      {
+        Cairo.Surface surf;
+
+        Unity.QuicklistRendering.Menu.outline_shadow_anchor (out surf,
+                                                             width,
+                                                             height,
+                                                             anchor_width,
+                                                             anchor_height,
+                                                             shadow_size,
+                                                             rgba_shadow,
+                                                             line_width,
+                                                             rgba_line);
+        surf.write_to_png ("/tmp/outline-shadow-anchor.png");
+      }
+
+      {
+        Cairo.Surface surf;
+
+        Unity.QuicklistRendering.Menu.outline_shadow_bottom (out surf,
+                                                             width,
+                                                             height,
+                                                             anchor_width,
+                                                             radius,
+                                                             shadow_size,
+                                                             rgba_shadow,
+                                                             line_width,
+                                                             rgba_line);
+        surf.write_to_png ("/tmp/outline-shadow-bottom.png");
+      }
+
+      {
+        Cairo.Surface surf;
+
+        Unity.QuicklistRendering.Menu.tint_dot_hl (out surf,
+                                                   width + 20,
+                                                   3 * height,
+                                                   87.0f,
+                                                   25.0f,
+                                                   62.5f,
+                                                   rgba_tint,
+                                                   rgba_hl);
+        surf.write_to_png ("/tmp/tint-dot-highlight.png");
+      }
+
+      {
+        Cairo.Surface surf;
+
+        Unity.QuicklistRendering.Menu.top_mask (out surf,
+                                                width,
+                                                height,
+                                                radius,
+                                                anchor_width,
+                                                true,
+                                                false,
+                                                line_width,
+                                                rgba);
+        surf.write_to_png ("/tmp/top-mask.png");
+      }
+
+      {
+        Cairo.Surface surf;
+
+        Unity.QuicklistRendering.Menu.dyn_mask (out surf,
+                                                width,
+                                                height,
+                                                anchor_width,
+                                                true,
+                                                false,
+                                                line_width,
+                                                rgba);
+        surf.write_to_png ("/tmp/dyn-mask.png");
+      }
+
+      {
+        Cairo.Surface surf;
+
+        Unity.QuicklistRendering.Menu.anchor_mask (out surf,
+                                                   width,
+                                                   height,
+                                                   anchor_width,
+                                                   anchor_height,
+                                                   true,
+                                                   false,
+                                                   line_width,
+                                                   rgba);
+        surf.write_to_png ("/tmp/anchor-mask.png");
+      }
+
+      {
+        Cairo.Surface surf;
+
+        Unity.QuicklistRendering.Menu.bottom_mask (out surf,
+                                                   width,
+                                                   height,
+                                                   radius,
+                                                   anchor_width,
+                                                   true,
+                                                   false,
+                                                   line_width,
+                                                   rgba);
+        surf.write_to_png ("/tmp/bottom-mask.png");
+      }
+
     }
   }
 }

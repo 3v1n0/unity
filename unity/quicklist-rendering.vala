@@ -283,6 +283,467 @@ namespace Unity.QuicklistRendering
     }
 
     private static void
+    _setup (out Cairo.Surface surf,
+            out Cairo.Context cr,
+            bool              outline,
+            int               width,
+            int               height,
+            bool              negative)
+    {
+      // create context
+      if (outline)
+        surf = new Cairo.ImageSurface (Cairo.Format.ARGB32, width, height);
+      else
+        surf = new Cairo.ImageSurface (Cairo.Format.A8, width, height);
+
+      cr = new Cairo.Context (surf);
+
+      // clear context
+      cr.scale (1.0f, 1.0f);
+      if (outline)
+        {
+          cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.0f);
+          cr.set_operator (Cairo.Operator.CLEAR);
+        }  
+      else
+        {
+          cr.set_operator (Cairo.Operator.OVER);
+          if (negative)
+            cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.0f);
+          else
+            cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+        }
+      cr.paint ();
+    }
+
+    private static void
+    _draw (Cairo.Context cr,
+           bool          outline,
+           float         line_width,
+           float*        rgba,
+           bool          negative,
+           bool          stroke)
+    {
+      // prepare drawing
+      cr.set_operator (Cairo.Operator.SOURCE);
+
+      // actually draw the mask
+      if (outline)
+        {
+          cr.set_line_width (line_width);
+          cr.set_source_rgba (rgba[0], rgba[1], rgba[2], rgba[3]);
+        }
+      else
+        {
+          if (negative)
+            cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+          else
+            cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.0f);
+        }
+
+      // stroke or fill?
+      if (stroke)
+        cr.stroke_preserve ();
+      else
+        cr.fill_preserve ();
+    }
+
+    private static void
+    _finalize (Cairo.Context cr,
+               bool          outline,
+               float         line_width,
+               float*        rgba,
+               bool          negative,
+               bool          stroke)
+    {
+      // prepare drawing
+      cr.set_operator (Cairo.Operator.SOURCE);
+
+      // actually draw the mask
+      if (outline)
+        {
+          cr.set_line_width (line_width);
+          cr.set_source_rgba (rgba[0], rgba[1], rgba[2], rgba[3]);
+        }
+      else
+        {
+          if (negative)
+            cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+          else
+            cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.0f);
+        }
+
+      // stroke or fill?
+      if (stroke)
+        cr.stroke ();
+      else
+        cr.fill ();
+    }
+
+    private static void
+    _top_mask_path (Cairo.Context cr,
+                    float         anchor_width,
+                    int           width,
+                    int           height,
+                    float         radius,
+                    bool          outline)
+    {
+      // create path
+      cr.move_to (anchor_width + 0.5f, 0.0f);
+      cr.line_to (anchor_width + 0.5f, (double) height - radius - 0.5f);
+      cr.arc_negative (anchor_width + radius + 0.5f,
+                       (double) height - radius - 0.5f,
+                       radius,
+                       180.0f * GLib.Math.PI / 180.0f,
+                       90.0f * GLib.Math.PI / 180.0f);
+      cr.line_to ((double) width - radius - 0.5f, (double) height - 0.5f);
+      cr.arc_negative ((double) width - radius - 0.5f,
+                       (double) height - radius - 0.5f,
+                       radius,
+                       90.0f * GLib.Math.PI / 180.0f,
+                       0.0f * GLib.Math.PI / 180.0f);
+      cr.line_to ((double) width - 0.5f, 0.0f);
+      if (!outline)
+        cr.close_path ();
+    }
+
+    private static void
+    _dyn_mask_path (Cairo.Context cr,
+                    float         anchor_width,
+                    int           width,
+                    int           height,
+                    bool          outline)
+    {
+      // create path
+      cr.move_to (anchor_width + 0.5f, 0.0f);
+      cr.line_to (anchor_width + 0.5f, (double) height);
+      if (outline)
+        cr.move_to ((double) width - 0.5f, (double) height);
+      else
+        cr.line_to ((double) width - 0.5f, (double) height);
+      cr.line_to ((double) width - 0.5f, 0.0f);
+      if (!outline)
+        cr.close_path ();
+    }
+
+    private static void
+    _anchor_mask_path (Cairo.Context cr,
+                       float         anchor_width,
+                       float         anchor_height,
+                       int           width,
+                       int           height,
+                       bool          outline)
+    {
+      // create path
+      cr.move_to (anchor_width + 0.5f, 0.0f);
+      cr.line_to (anchor_width + 0.5f,
+                  ((double) height - anchor_height) / 2.0f);
+      cr.line_to (0.5f,
+                  (((double) height - anchor_height) + anchor_height) / 2.0f);
+      cr.line_to (anchor_width + 0.5f,
+                 (double) height - ((double) height - anchor_height) / 2.0f);
+      cr.line_to (anchor_width + 0.5f, (double) height);
+      if (outline)
+        cr.move_to ((double) width - 0.5f, (double) height);
+      else
+        cr.line_to ((double) width - 0.5f, (double) height);
+      cr.line_to ((double) width - 0.5f, 0.0f);
+    }
+
+    private static void
+    _bottom_mask_path (Cairo.Context cr,
+                       float         anchor_width,
+                       int           width,
+                       int           height,
+                       float         radius,
+                       bool          outline)
+    {
+      // create path
+      cr.move_to (anchor_width + 0.5f, (double) height);
+      cr.line_to (anchor_width + 0.5f, radius + 0.5f);
+      cr.arc (anchor_width + radius + 0.5f,
+              radius + 0.5f,
+              radius,
+              180.0f * GLib.Math.PI / 180.0f,
+              270.0f * GLib.Math.PI / 180.0f);
+      cr.line_to ((double) width - radius - 0.5f, 0.5f);
+      cr.arc ((double) width - radius - 0.5f,
+              radius + 0.5f,
+              radius,
+              270.0f * GLib.Math.PI / 180.0f,
+              0.0f * GLib.Math.PI / 180.0f);
+      cr.line_to ((double) width - 0.5f, (double) height);
+      if (!outline)
+        cr.close_path ();
+    }
+
+    private static void
+    _mask (Cairo.Context cr)
+    {
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.fill_preserve ();
+    }
+
+    private static void
+    _outline (Cairo.Context cr,
+              float         line_width,
+              float[]       rgba_line)
+    {
+      cr.set_operator (Cairo.Operator.SOURCE);
+      cr.set_source_rgba (rgba_line[0],
+                          rgba_line[1],
+                          rgba_line[2],
+                          rgba_line[3]);
+      cr.set_line_width (line_width);
+      cr.stroke ();
+    }
+
+    public static void
+    outline_shadow_top (out Cairo.Surface surf,
+                        int               width,
+                        int               height,
+                        float             anchor_width,
+                        float             corner_radius,
+                        uint              shadow_radius,
+                        float[]           rgba_shadow,
+                        float             line_width,
+                        float[]           rgba_line)
+    {
+      Cairo.Context cr;
+
+      _setup (out surf, out cr, true, width, height, false);
+      _top_mask_path (cr, anchor_width, width, height, corner_radius, false);
+      _draw (cr, true, line_width, rgba_shadow, false, false);
+      Ctk.surface_blur (surf, shadow_radius);
+      _mask (cr);
+      _outline (cr, line_width, rgba_line);
+    }
+
+    public static void
+    outline_shadow_dyn (out Cairo.Surface surf,
+                        int               width,
+                        int               height,
+                        float             anchor_width,
+                        uint              shadow_radius,
+                        float[]           rgba_shadow,
+                        float             line_width,
+                        float[]           rgba_line)
+    {
+      Cairo.Context cr;
+
+      _setup (out surf, out cr, true, width, height, false);
+      _dyn_mask_path (cr, anchor_width, width, height, false);
+      _draw (cr, true, line_width, rgba_shadow, false, false);
+      Ctk.surface_blur (surf, shadow_radius);
+      _mask (cr);
+      cr.new_path ();
+      _dyn_mask_path (cr, anchor_width, width, height, true);
+      _outline (cr, line_width, rgba_line);
+    }
+
+    public static void
+    outline_shadow_anchor (out Cairo.Surface surf,
+                           int               width,
+                           int               height,
+                           float             anchor_width,
+                           float             anchor_height,
+                           uint              shadow_radius,
+                           float[]           rgba_shadow,
+                           float             line_width,
+                           float[]           rgba_line)
+    {
+      Cairo.Context cr;
+
+      _setup (out surf, out cr, true, width, height, false);
+      _anchor_mask_path (cr, anchor_width, anchor_height, width, height, false);
+      _draw (cr, true, line_width, rgba_shadow, false, false);
+      Ctk.surface_blur (surf, shadow_radius);
+      _mask (cr);
+      cr.new_path ();
+      _anchor_mask_path (cr, anchor_width, anchor_height, width, height, true);
+      _outline (cr, line_width, rgba_line);
+    }
+
+    public static void
+    outline_shadow_bottom (out Cairo.Surface surf,
+                           int               width,
+                           int               height,
+                           float             anchor_width,
+                           float             corner_radius,
+                           uint              shadow_radius,
+                           float[]           rgba_shadow,
+                           float             line_width,
+                           float[]           rgba_line)
+    {
+      Cairo.Context cr;
+
+      _setup (out surf, out cr, true, width, height, false);
+      _bottom_mask_path (cr, anchor_width, width, height, corner_radius, true);
+      _draw (cr, true, line_width, rgba_shadow, false, false);
+      Ctk.surface_blur (surf, shadow_radius);
+      _mask (cr);
+      _outline (cr, line_width, rgba_line);
+    }
+
+    public static void
+    tint_dot_hl (out Cairo.Surface surf,
+                 int               width,
+                 int               height,
+                 float             hl_x,
+                 float             hl_y,
+                 float             hl_size,
+                 float[]           rgba_tint,
+                 float[]           rgba_hl)
+    {
+      Cairo.Context cr;
+      Cairo.Surface dots_surf;
+      Cairo.Context dots_cr;
+      Cairo.Pattern dots_pattern;
+      Cairo.Pattern hl_pattern;
+
+      // create normal context
+      surf = new Cairo.ImageSurface (Cairo.Format.ARGB32, width, height);
+      cr = new Cairo.Context (surf);
+
+      // create context for dot-pattern
+      dots_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32, 4, 4);
+      dots_cr = new Cairo.Context (dots_surf);
+
+      // clear normal context
+      cr.scale (1.0f, 1.0f);
+      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.0f);
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      // prepare drawing for normal context
+      cr.set_operator (Cairo.Operator.OVER);
+
+      // create path in normal context
+      cr.rectangle (0.0f, 0.0f, (double) width, (double) height);  
+
+      // fill path of normal context with tint
+      cr.set_source_rgba (rgba_tint[0],
+                          rgba_tint[1],
+                          rgba_tint[2],
+                          rgba_tint[3]);
+      cr.fill_preserve ();
+
+      // create pattern in dot-context
+      dots_cr.set_operator (Cairo.Operator.CLEAR);
+      dots_cr.paint ();
+      dots_cr.scale (1.0f, 1.0f);
+      dots_cr.set_operator (Cairo.Operator.OVER);
+      dots_cr.set_source_rgba (rgba_hl[0],
+                               rgba_hl[1],
+                               rgba_hl[2],
+                               rgba_hl[3]);
+      dots_cr.rectangle (0.0f, 0.0f, 1.0f, 1.0f);
+      dots_cr.fill ();
+      dots_cr.rectangle (2.0f, 2.0f, 1.0f, 1.0f);
+      dots_cr.fill ();
+      dots_pattern = new Cairo.Pattern.for_surface (dots_surf);
+
+      // fill path of normal context with dot-pattern
+      cr.set_operator (Cairo.Operator.OVER);
+      cr.set_source (dots_pattern);
+      dots_pattern.set_extend (Cairo.Extend.REPEAT);
+      cr.fill_preserve ();
+
+      // draw highlight
+      cr.set_operator (Cairo.Operator.OVER);
+      hl_pattern = new Cairo.Pattern.radial (hl_x,
+                                             hl_y,
+                                             0.0f,
+                                             hl_x,
+                                             hl_y,
+                                             hl_size);
+      hl_pattern.add_color_stop_rgba (0.0f,
+                                      rgba_hl[0],
+                                      rgba_hl[1],
+                                      rgba_hl[2],
+                                      rgba_hl[3]);
+      hl_pattern.add_color_stop_rgba (1.0f, 1.0f, 1.0f, 1.0f, 0.0f);
+      cr.set_source (hl_pattern);
+      cr.fill ();
+    }
+
+    public static void
+    top_mask (out Cairo.Surface surf,
+              int               width,
+              int               height,
+              float             radius,
+              float             anchor_width,
+              bool              negative,
+              bool              outline,
+              float             line_width,
+              float[]           rgba)
+    {
+      Cairo.Context cr;
+
+      _setup (out surf, out cr, outline, width, height, negative);
+      _top_mask_path (cr, anchor_width, width, height, radius, outline);
+      _finalize (cr, outline, line_width, rgba, negative, outline);
+    }
+
+    public static void
+    dyn_mask (out Cairo.Surface surf,
+              int               width,
+              int               height,
+              float             anchor_width,
+              bool              negative,
+              bool              outline,
+              float             line_width,
+              float[]           rgba)
+    {
+      Cairo.Context cr;
+
+      _setup (out surf, out cr, outline, width, height, negative);
+      _dyn_mask_path (cr, anchor_width, width, height, outline);
+      _finalize (cr, outline, line_width, rgba, negative, outline);
+    }
+
+    public static void
+    anchor_mask (out Cairo.Surface surf,
+                 int               width,
+                 int               height,
+                 float             anchor_width,
+                 float             anchor_height,
+                 bool              negative,
+                 bool              outline,
+                 float             line_width,
+                 float[]           rgba)
+    {
+      Cairo.Context cr;
+
+      _setup (out surf, out cr, outline, width, height, negative);
+      _anchor_mask_path (cr,
+                         anchor_width,
+                         anchor_height,
+                         width,
+                         height,
+                         outline);
+      _finalize (cr, outline, line_width, rgba, negative, outline);
+    }
+
+    public static void
+    bottom_mask (out Cairo.Surface surf,
+                 int               width,
+                 int               height,
+                 float             radius,
+                 float             anchor_width,
+                 bool              negative,
+                 bool              outline,
+                 float             line_width,
+                 float[]           rgba)
+    {
+      Cairo.Context cr;
+
+      _setup (out surf, out cr, outline, width, height, negative);
+      _bottom_mask_path (cr, anchor_width, width, height, radius, outline);
+      _finalize (cr, outline, line_width, rgba, negative, outline);
+    }
+
+    private static void
     _round_rect_anchor (Cairo.Context cr,
                         double        aspect,        // aspect-ratio
                         double        x,             // top-left corner
