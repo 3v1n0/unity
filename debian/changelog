@@ -1,3 +1,11 @@
+unity (0.2.12-0ubuntu3) UNRELEASED; urgency=low
+
+  * debian/control:
+    - recommend ubuntu-netbook-default-settings as the session file is there
+      and a lot of people could install unity without the session file
+
+ -- Didier Roche <didrocks@ubuntu.com>  Wed, 30 Jun 2010 13:17:18 +0200
+
 unity (0.2.12-0ubuntu2) maverick; urgency=low
 
   * debian/control, add indicators as recommends:
