@@ -80,7 +80,7 @@ namespace Unity.Places
 
       renderer = new Ctk.IconView ();
       renderer.padding = { 12.0f, 0.0f, 0.0f, 0.0f };
-      renderer.spacing = 12;
+      renderer.spacing = 24;
       pack (renderer, true, true);
       renderer.show ();
 
@@ -205,8 +205,8 @@ namespace Unity.Places
                                                out float mwidth,
                                                out float nwidth)
     {
-      mwidth = 160.0f;
-      nwidth = 160.0f;
+      mwidth = 150.0f;
+      nwidth = 150.0f;
     }
 
     private override void clicked ()
