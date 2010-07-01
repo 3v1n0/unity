@@ -867,7 +867,24 @@ namespace Unity.Launcher
     public override void pick (Clutter.Color color)
     {
       base.pick (color);
-      foreach (ScrollerChild child in model)
+      for (int index = draw_btf.size-1; index >= 0; index--)
+        {
+          ScrollerChild child = draw_btf[index];
+          if (child is LauncherChild && child.opacity > 0)
+            {
+              (child as LauncherChild).paint ();
+            }
+        }
+
+      foreach (ScrollerChild child in draw_ftb)
+        {
+          if (child is LauncherChild && child.opacity > 0)
+            {
+              (child as LauncherChild).paint ();
+            }
+        }
+
+      foreach (ScrollerChild child in child_refs)
         {
           child.paint ();
         }
