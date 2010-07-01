@@ -209,9 +209,9 @@ static GObject * unity_places_default_renderer_constructor (GType type, guint n_
 		CtkVBox* _tmp2_;
 		CtkPadding _tmp3_ = {0};
 		CtkPadding _tmp4_;
-		ctk_actor_set_padding ((CtkActor*) self, (_tmp1_ = (_tmp0_.top = 0.0f, _tmp0_.right = 0.0f, _tmp0_.bottom = UNITY_PLACES_DEFAULT_RENDERER_PADDING, _tmp0_.left = 0.0f, _tmp0_), &_tmp1_));
+		ctk_actor_set_padding ((CtkActor*) self, (_tmp1_ = (_tmp0_.top = 0.0f, _tmp0_.right = 0.0f, _tmp0_.bottom = 0.0f, _tmp0_.left = 0.0f, _tmp0_), &_tmp1_));
 		self->priv->box = (_tmp2_ = g_object_ref_sink ((CtkVBox*) ctk_vbox_new ((guint) UNITY_PLACES_DEFAULT_RENDERER_SPACING)), _g_object_unref0 (self->priv->box), _tmp2_);
-		ctk_actor_set_padding ((CtkActor*) self->priv->box, (_tmp4_ = (_tmp3_.top = 0.0f, _tmp3_.right = UNITY_PLACES_DEFAULT_RENDERER_PADDING, _tmp3_.bottom = UNITY_PLACES_DEFAULT_RENDERER_PADDING, _tmp3_.left = UNITY_PLACES_DEFAULT_RENDERER_PADDING, _tmp3_), &_tmp4_));
+		ctk_actor_set_padding ((CtkActor*) self->priv->box, (_tmp4_ = (_tmp3_.top = 0.0f, _tmp3_.right = UNITY_PLACES_DEFAULT_RENDERER_PADDING, _tmp3_.bottom = 0.0f, _tmp3_.left = UNITY_PLACES_DEFAULT_RENDERER_PADDING, _tmp3_), &_tmp4_));
 		ctk_box_set_homogeneous ((CtkBox*) self->priv->box, FALSE);
 		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->box);
 		clutter_actor_show ((ClutterActor*) self->priv->box);

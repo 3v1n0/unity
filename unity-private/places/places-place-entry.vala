@@ -332,9 +332,7 @@ namespace Unity.Places
 
     public void set_search (string search, HashTable<string, string> hints)
     {
-      uint id;
-
-      id = service.set_search (search, hints);
+      service.set_search (search, hints);
     }
 
     public void set_active_section (uint section_id)

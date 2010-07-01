@@ -141,6 +141,11 @@ namespace Unity.Place {
     {
       return info->hints.size ();
     }
+    
+    internal _RendererInfo get_raw ()
+    {
+      return *info;
+    }
   }
 
   /**
@@ -211,7 +216,24 @@ namespace Unity.Place {
     public _RendererInfo global_renderer_info;
   }
 
-  public abstract class EntryInfo : GLib.Object {
+  /**
+   * UnityPlace_EntryInfoData:
+   *
+   * Private helper struct used for marshalling the EntryInfo data without
+   * the RenderingInfo data over the bus
+   */
+  private struct _EntryInfoData {
+  	public string   dbus_path;
+    public string   display_name;
+    public string   icon;
+    public uint     position;
+    public string[] mimetypes;
+    public bool     sensitive;
+    public string   sections_model;
+    public HashTable<string,string> hints;
+  }
+
+  public class EntryInfo : GLib.Object {
 
     /* The _EntryInfo needs to be set before we set properties, so it's
      * paramount we do it here */
@@ -286,6 +308,9 @@ namespace Unity.Place {
       get { return _active_section; }
       set { _active_section = value; }
     }
+
+    public Search active_search { get; set; }
+    public Search active_global_search { get; set; }
 
     /*
      * Constructors
@@ -365,14 +390,6 @@ namespace Unity.Place {
     {
       return info.hints.size ();
     }
-    
-    /*
-     * Abstract API
-     */
-    
-    public async abstract uint set_global_search (Search search);
-
-    public async abstract uint set_search (Search search);
 
     /*
      * Internal API
@@ -406,17 +423,21 @@ namespace Unity.Place {
   [DBus (name = "com.canonical.Unity.PlaceEntry")]
   private interface EntryService : GLib.Object
   {
-    public async abstract uint set_global_search (string search,
-                                                  HashTable<string,string> hints) throws DBus.Error;
+    public abstract void set_global_search (string search,
+                                            HashTable<string,string> hints) throws DBus.Error;
 
-    public async abstract uint set_search (string search,
-                                           HashTable<string,string> hints) throws DBus.Error;
-
+    public abstract void set_search (string search,
+                                     HashTable<string,string> hints) throws DBus.Error;
+    
     public abstract void set_active (bool is_active) throws DBus.Error;
 
     public abstract void set_active_section (uint section_id) throws DBus.Error;
 
-    public signal void renderer_info_changed (_RendererInfo renderer_info);
+    public signal void entry_renderer_info_changed (_RendererInfo renderer_info);
+    
+    public signal void global_renderer_info_changed (_RendererInfo renderer_info);
+    
+    public signal void place_entry_info_changed (_EntryInfoData entry_info_data);
   }
 
   /**
@@ -504,6 +525,15 @@ namespace Unity.Place {
       var entry = entries.lookup (dbus_path);
       if (entry != null)
         return entry.entry_info;
+      else
+        return null;
+    }
+
+    public EntryServiceImpl? get_entry_service (string dbus_path)
+    {
+      var entry = entries.lookup (dbus_path);
+      if (entry != null)
+        return entry;
       else
         return null;
     }
@@ -614,18 +644,16 @@ namespace Unity.Place {
      * DBus API
      */
 
-    public async uint set_global_search (string search,
-                                         HashTable<string,string> hints)
+    public void set_global_search (string search,
+                                   HashTable<string,string> hints)
     {
-      uint result = yield entry_info.set_global_search (new Search (search, hints));
-      return result;
+      this._entry_info.active_global_search = new Search (search, hints);
     }
 
-    public async uint set_search (string search,
-                                  HashTable<string,string> hints)
+    public void set_search (string search,
+                            HashTable<string,string> hints)
     {
-      uint result = yield entry_info.set_search (new Search (search, hints));
-      return result;
+      this._entry_info.active_search = new Search (search, hints);
     }
 
     public void set_active (bool is_active)
@@ -662,6 +690,17 @@ namespace Unity.Place {
     }
   }
 
+  /*
+   * Private helper struct used to keep track of the installed signal handlers
+   * for an entry added to a Controller
+   */
+  internal struct _EntrySignals
+  {
+    ulong place_entry_info_changed_id;
+    ulong entry_renderer_info_changed_id;
+    ulong global_renderer_info_changed_id;
+  }
+
   /**
    * UnityPlaceController:
    *
@@ -672,6 +711,7 @@ namespace Unity.Place {
     private ServiceImpl service;
     private string _dbus_path;
     private bool _exported = false;
+    private HashTable<string, _EntrySignals?> entry_signals;
 
     /*
      * Properties
@@ -693,6 +733,7 @@ namespace Unity.Place {
 
     construct {
       service = new ServiceImpl (_dbus_path);
+      entry_signals = new HashTable<string, _EntrySignals?>(str_hash, str_equal);
     }
 
     public Controller (string dbus_path)
@@ -707,6 +748,45 @@ namespace Unity.Place {
     public void add_entry (EntryInfo entry)
     {
       service.add_entry (entry);
+      
+      var signals = _EntrySignals ();
+      
+      signals.place_entry_info_changed_id = entry.notify.connect (on_entry_changed);
+      
+      /* We use a closure here because we need to capture the entry in order
+       * to look up the EntryServiceImpl */
+      signals.entry_renderer_info_changed_id = entry.entry_renderer_info.notify.connect (
+        (obj, pspec) => {
+          var renderer_info = (obj as RendererInfo);
+          var entry_service = service.get_entry_service (entry.dbus_path);
+          if (entry_service == null)
+            {
+              warning ("Entry renderer info changed for unknown entry '%s'", entry.dbus_path);
+            }
+          else
+            entry_service.entry_renderer_info_changed (renderer_info.get_raw ());
+          
+        }
+      );
+      
+      /* We use a closure here because we need to capture the entry in order
+       * to look up the EntryServiceImpl */
+      signals.global_renderer_info_changed_id = entry.global_renderer_info.notify.connect (
+        (obj, pspec) => {
+          var renderer_info = (obj as RendererInfo);
+          var entry_service = service.get_entry_service (entry.dbus_path);
+          if (entry_service == null)
+            {
+              warning ("Global renderer info changed for unknown entry '%s'", entry.dbus_path);
+            }
+          else
+            entry_service.global_renderer_info_changed (renderer_info.get_raw ());
+          
+        }
+      );
+      
+      /* Store all signal handler ids so we can remove them later */
+      entry_signals.insert (entry.dbus_path, signals);
     }
 
     public EntryInfo? get_entry (string dbus_path)
@@ -716,6 +796,30 @@ namespace Unity.Place {
 
     public void remove_entry (string dbus_path)
     {
+      /* Disconnect all signals on the entry before we remove
+       * it from the ServiceImpl */
+      var signals = entry_signals.lookup (dbus_path);
+      if (signals == null)
+        {
+          warning ("No signals connected for unknown entry '%s'",
+                   dbus_path);
+          service.remove_entry (dbus_path);
+          return;
+        }
+      
+      var entry = service.get_entry (dbus_path);
+      if (entry == null)
+        {
+          warning ("Can not disconnect signals for unknown entry '%s'",
+                   dbus_path);
+          entry_signals.remove (dbus_path);
+          return;
+        }
+      
+      entry.disconnect (signals.place_entry_info_changed_id);
+      entry.entry_renderer_info.disconnect (signals.entry_renderer_info_changed_id);
+      entry.global_renderer_info.disconnect (signals.global_renderer_info_changed_id);
+      
       service.remove_entry (dbus_path);
     }
 
@@ -757,6 +861,34 @@ namespace Unity.Place {
       _exported = false;
       notify_property("exported");
     }
+    
+    /* Callback for when an entry property changes */
+    private void on_entry_changed (GLib.Object obj, ParamSpec psec)
+    {
+      var entry = (obj as EntryInfo);
+      var entry_data = _EntryInfoData();      
+      var entry_service = service.get_entry_service (entry.dbus_path);
+      
+      if (entry_service == null)
+        {
+          warning ("Got change signal from unknown entry service '%s'",
+                   entry.dbus_path);
+          return;
+        }
+      
+      var _entry = entry.get_raw ();
+      entry_data.dbus_path = _entry.dbus_path;
+      entry_data.display_name = _entry.display_name;
+      entry_data.icon = _entry.icon;
+      entry_data.position = _entry.position;
+      entry_data.mimetypes = _entry.mimetypes;
+      entry_data.sensitive = _entry.sensitive;  
+      entry_data.sections_model = _entry.sections_model;    
+      entry_data.hints = _entry.hints;      
+    
+      entry_service.place_entry_info_changed (entry_data);
+    }
+    
   }
 
 } /* namespace */

@@ -26,24 +26,9 @@
 #include <unity.h>
 #include <stdlib.h>
 #include <string.h>
-#include <gio/gio.h>
 #include <dee.h>
 #include <gobject/gvaluecollector.h>
 
-
-#define UNITY_TESTS_UNIT_TYPE_TEST_ENTRY_INFO (unity_tests_unit_test_entry_info_get_type ())
-#define UNITY_TESTS_UNIT_TEST_ENTRY_INFO(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UNIT_TYPE_TEST_ENTRY_INFO, UnityTestsUnitTestEntryInfo))
-#define UNITY_TESTS_UNIT_TEST_ENTRY_INFO_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UNIT_TYPE_TEST_ENTRY_INFO, UnityTestsUnitTestEntryInfoClass))
-#define UNITY_TESTS_UNIT_IS_TEST_ENTRY_INFO(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTS_UNIT_TYPE_TEST_ENTRY_INFO))
-#define UNITY_TESTS_UNIT_IS_TEST_ENTRY_INFO_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTS_UNIT_TYPE_TEST_ENTRY_INFO))
-#define UNITY_TESTS_UNIT_TEST_ENTRY_INFO_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTS_UNIT_TYPE_TEST_ENTRY_INFO, UnityTestsUnitTestEntryInfoClass))
-
-typedef struct _UnityTestsUnitTestEntryInfo UnityTestsUnitTestEntryInfo;
-typedef struct _UnityTestsUnitTestEntryInfoClass UnityTestsUnitTestEntryInfoClass;
-typedef struct _UnityTestsUnitTestEntryInfoPrivate UnityTestsUnitTestEntryInfoPrivate;
-#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
-typedef struct _UnityTestsUnitTestEntryInfoSetGlobalSearchData UnityTestsUnitTestEntryInfoSetGlobalSearchData;
-typedef struct _UnityTestsUnitTestEntryInfoSetSearchData UnityTestsUnitTestEntryInfoSetSearchData;
 
 #define UNITY_TESTS_UNIT_TYPE_PLACE_SUITE (unity_tests_unit_place_suite_get_type ())
 #define UNITY_TESTS_UNIT_PLACE_SUITE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UNIT_TYPE_PLACE_SUITE, UnityTestsUnitPlaceSuite))
@@ -55,35 +40,9 @@ typedef struct _UnityTestsUnitTestEntryInfoSetSearchData UnityTestsUnitTestEntry
 typedef struct _UnityTestsUnitPlaceSuite UnityTestsUnitPlaceSuite;
 typedef struct _UnityTestsUnitPlaceSuiteClass UnityTestsUnitPlaceSuiteClass;
 typedef struct _UnityTestsUnitPlaceSuitePrivate UnityTestsUnitPlaceSuitePrivate;
+#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 typedef struct _UnityTestsUnitParamSpecPlaceSuite UnityTestsUnitParamSpecPlaceSuite;
-
-struct _UnityTestsUnitTestEntryInfo {
-	UnityPlaceEntryInfo parent_instance;
-	UnityTestsUnitTestEntryInfoPrivate * priv;
-};
-
-struct _UnityTestsUnitTestEntryInfoClass {
-	UnityPlaceEntryInfoClass parent_class;
-};
-
-struct _UnityTestsUnitTestEntryInfoSetGlobalSearchData {
-	int _state_;
-	GAsyncResult* _res_;
-	GSimpleAsyncResult* _async_result;
-	UnityTestsUnitTestEntryInfo* self;
-	UnityPlaceSearch* search;
-	guint result;
-};
-
-struct _UnityTestsUnitTestEntryInfoSetSearchData {
-	int _state_;
-	GAsyncResult* _res_;
-	GSimpleAsyncResult* _async_result;
-	UnityTestsUnitTestEntryInfo* self;
-	UnityPlaceSearch* search;
-	guint result;
-};
 
 struct _UnityTestsUnitPlaceSuite {
 	GTypeInstance parent_instance;
@@ -101,23 +60,8 @@ struct _UnityTestsUnitParamSpecPlaceSuite {
 };
 
 
-static gpointer unity_tests_unit_test_entry_info_parent_class = NULL;
 static gpointer unity_tests_unit_place_suite_parent_class = NULL;
 
-GType unity_tests_unit_test_entry_info_get_type (void);
-enum  {
-	UNITY_TESTS_UNIT_TEST_ENTRY_INFO_DUMMY_PROPERTY
-};
-UnityTestsUnitTestEntryInfo* unity_tests_unit_test_entry_info_new (const char* dbus_path);
-UnityTestsUnitTestEntryInfo* unity_tests_unit_test_entry_info_construct (GType object_type, const char* dbus_path);
-static void unity_tests_unit_test_entry_info_real_set_global_search_data_free (gpointer _data);
-static void unity_tests_unit_test_entry_info_real_set_global_search (UnityPlaceEntryInfo* base, UnityPlaceSearch* search, GAsyncReadyCallback _callback_, gpointer _user_data_);
-static void unity_tests_unit_test_entry_info_set_global_search_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
-static gboolean unity_tests_unit_test_entry_info_real_set_global_search_co (UnityTestsUnitTestEntryInfoSetGlobalSearchData* data);
-static void unity_tests_unit_test_entry_info_real_set_search_data_free (gpointer _data);
-static void unity_tests_unit_test_entry_info_real_set_search (UnityPlaceEntryInfo* base, UnityPlaceSearch* search, GAsyncReadyCallback _callback_, gpointer _user_data_);
-static void unity_tests_unit_test_entry_info_set_search_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
-static gboolean unity_tests_unit_test_entry_info_real_set_search_co (UnityTestsUnitTestEntryInfoSetSearchData* data);
 gpointer unity_tests_unit_place_suite_ref (gpointer instance);
 void unity_tests_unit_place_suite_unref (gpointer instance);
 GParamSpec* unity_tests_unit_param_spec_place_suite (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
@@ -143,191 +87,6 @@ static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNoti
 static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
-
-
-UnityTestsUnitTestEntryInfo* unity_tests_unit_test_entry_info_construct (GType object_type, const char* dbus_path) {
-	UnityTestsUnitTestEntryInfo * self;
-	g_return_val_if_fail (dbus_path != NULL, NULL);
-	self = (UnityTestsUnitTestEntryInfo*) unity_place_entry_info_construct (object_type, dbus_path);
-	return self;
-}
-
-
-UnityTestsUnitTestEntryInfo* unity_tests_unit_test_entry_info_new (const char* dbus_path) {
-	return unity_tests_unit_test_entry_info_construct (UNITY_TESTS_UNIT_TYPE_TEST_ENTRY_INFO, dbus_path);
-}
-
-
-static void unity_tests_unit_test_entry_info_real_set_global_search_data_free (gpointer _data) {
-	UnityTestsUnitTestEntryInfoSetGlobalSearchData* data;
-	data = _data;
-	_g_object_unref0 (data->search);
-	g_object_unref (data->self);
-	g_slice_free (UnityTestsUnitTestEntryInfoSetGlobalSearchData, data);
-}
-
-
-static gpointer _g_object_ref0 (gpointer self) {
-	return self ? g_object_ref (self) : NULL;
-}
-
-
-static void unity_tests_unit_test_entry_info_real_set_global_search (UnityPlaceEntryInfo* base, UnityPlaceSearch* search, GAsyncReadyCallback _callback_, gpointer _user_data_) {
-	UnityTestsUnitTestEntryInfo * self;
-	UnityTestsUnitTestEntryInfoSetGlobalSearchData* _data_;
-	self = (UnityTestsUnitTestEntryInfo*) base;
-	_data_ = g_slice_new0 (UnityTestsUnitTestEntryInfoSetGlobalSearchData);
-	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, unity_tests_unit_test_entry_info_real_set_global_search);
-	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, unity_tests_unit_test_entry_info_real_set_global_search_data_free);
-	_data_->self = g_object_ref (self);
-	_data_->search = _g_object_ref0 (search);
-	unity_tests_unit_test_entry_info_real_set_global_search_co (_data_);
-}
-
-
-static guint unity_tests_unit_test_entry_info_real_set_global_search_finish (UnityPlaceEntryInfo* base, GAsyncResult* _res_) {
-	guint result;
-	UnityTestsUnitTestEntryInfoSetGlobalSearchData* _data_;
-	_data_ = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (_res_));
-	result = _data_->result;
-	return result;
-}
-
-
-static void unity_tests_unit_test_entry_info_set_global_search_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_) {
-	UnityTestsUnitTestEntryInfoSetGlobalSearchData* data;
-	data = _user_data_;
-	data->_res_ = _res_;
-	unity_tests_unit_test_entry_info_real_set_global_search_co (data);
-}
-
-
-static gboolean unity_tests_unit_test_entry_info_real_set_global_search_co (UnityTestsUnitTestEntryInfoSetGlobalSearchData* data) {
-	switch (data->_state_) {
-		case 0:
-		goto _state_0;
-		default:
-		g_assert_not_reached ();
-	}
-	_state_0:
-	{
-		data->result = (guint) 27;
-		{
-			if (data->_state_ == 0) {
-				g_simple_async_result_complete_in_idle (data->_async_result);
-			} else {
-				g_simple_async_result_complete (data->_async_result);
-			}
-			g_object_unref (data->_async_result);
-			return FALSE;
-		}
-	}
-	{
-		if (data->_state_ == 0) {
-			g_simple_async_result_complete_in_idle (data->_async_result);
-		} else {
-			g_simple_async_result_complete (data->_async_result);
-		}
-		g_object_unref (data->_async_result);
-		return FALSE;
-	}
-}
-
-
-static void unity_tests_unit_test_entry_info_real_set_search_data_free (gpointer _data) {
-	UnityTestsUnitTestEntryInfoSetSearchData* data;
-	data = _data;
-	_g_object_unref0 (data->search);
-	g_object_unref (data->self);
-	g_slice_free (UnityTestsUnitTestEntryInfoSetSearchData, data);
-}
-
-
-static void unity_tests_unit_test_entry_info_real_set_search (UnityPlaceEntryInfo* base, UnityPlaceSearch* search, GAsyncReadyCallback _callback_, gpointer _user_data_) {
-	UnityTestsUnitTestEntryInfo * self;
-	UnityTestsUnitTestEntryInfoSetSearchData* _data_;
-	self = (UnityTestsUnitTestEntryInfo*) base;
-	_data_ = g_slice_new0 (UnityTestsUnitTestEntryInfoSetSearchData);
-	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, unity_tests_unit_test_entry_info_real_set_search);
-	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, unity_tests_unit_test_entry_info_real_set_search_data_free);
-	_data_->self = g_object_ref (self);
-	_data_->search = _g_object_ref0 (search);
-	unity_tests_unit_test_entry_info_real_set_search_co (_data_);
-}
-
-
-static guint unity_tests_unit_test_entry_info_real_set_search_finish (UnityPlaceEntryInfo* base, GAsyncResult* _res_) {
-	guint result;
-	UnityTestsUnitTestEntryInfoSetSearchData* _data_;
-	_data_ = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (_res_));
-	result = _data_->result;
-	return result;
-}
-
-
-static void unity_tests_unit_test_entry_info_set_search_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_) {
-	UnityTestsUnitTestEntryInfoSetSearchData* data;
-	data = _user_data_;
-	data->_res_ = _res_;
-	unity_tests_unit_test_entry_info_real_set_search_co (data);
-}
-
-
-static gboolean unity_tests_unit_test_entry_info_real_set_search_co (UnityTestsUnitTestEntryInfoSetSearchData* data) {
-	switch (data->_state_) {
-		case 0:
-		goto _state_0;
-		default:
-		g_assert_not_reached ();
-	}
-	_state_0:
-	{
-		data->result = (guint) 68;
-		{
-			if (data->_state_ == 0) {
-				g_simple_async_result_complete_in_idle (data->_async_result);
-			} else {
-				g_simple_async_result_complete (data->_async_result);
-			}
-			g_object_unref (data->_async_result);
-			return FALSE;
-		}
-	}
-	{
-		if (data->_state_ == 0) {
-			g_simple_async_result_complete_in_idle (data->_async_result);
-		} else {
-			g_simple_async_result_complete (data->_async_result);
-		}
-		g_object_unref (data->_async_result);
-		return FALSE;
-	}
-}
-
-
-static void unity_tests_unit_test_entry_info_class_init (UnityTestsUnitTestEntryInfoClass * klass) {
-	unity_tests_unit_test_entry_info_parent_class = g_type_class_peek_parent (klass);
-	UNITY_PLACE_ENTRY_INFO_CLASS (klass)->set_global_search = unity_tests_unit_test_entry_info_real_set_global_search;
-	UNITY_PLACE_ENTRY_INFO_CLASS (klass)->set_global_search_finish = unity_tests_unit_test_entry_info_real_set_global_search_finish;
-	UNITY_PLACE_ENTRY_INFO_CLASS (klass)->set_search = unity_tests_unit_test_entry_info_real_set_search;
-	UNITY_PLACE_ENTRY_INFO_CLASS (klass)->set_search_finish = unity_tests_unit_test_entry_info_real_set_search_finish;
-}
-
-
-static void unity_tests_unit_test_entry_info_instance_init (UnityTestsUnitTestEntryInfo * self) {
-}
-
-
-GType unity_tests_unit_test_entry_info_get_type (void) {
-	static volatile gsize unity_tests_unit_test_entry_info_type_id__volatile = 0;
-	if (g_once_init_enter (&unity_tests_unit_test_entry_info_type_id__volatile)) {
-		static const GTypeInfo g_define_type_info = { sizeof (UnityTestsUnitTestEntryInfoClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_tests_unit_test_entry_info_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityTestsUnitTestEntryInfo), 0, (GInstanceInitFunc) unity_tests_unit_test_entry_info_instance_init, NULL };
-		GType unity_tests_unit_test_entry_info_type_id;
-		unity_tests_unit_test_entry_info_type_id = g_type_register_static (UNITY_PLACE_TYPE_ENTRY_INFO, "UnityTestsUnitTestEntryInfo", &g_define_type_info, 0);
-		g_once_init_leave (&unity_tests_unit_test_entry_info_type_id__volatile, unity_tests_unit_test_entry_info_type_id);
-	}
-	return unity_tests_unit_test_entry_info_type_id__volatile;
-}
 
 
 static void _unity_tests_unit_place_suite_test_empty_controller_gdata_test_func (gpointer self) {
@@ -382,7 +141,7 @@ void unity_tests_unit_place_suite_test_empty_controller (void) {
 
 void unity_tests_unit_place_suite_test_one_entry (void) {
 	char* entry_path;
-	UnityTestsUnitTestEntryInfo* entry;
+	UnityPlaceEntryInfo* entry;
 	UnityPlaceController* ctl;
 	UnityPlaceEntryInfo* _tmp0_;
 	char** _tmp2_;
@@ -397,21 +156,21 @@ void unity_tests_unit_place_suite_test_one_entry (void) {
 	UnityPlaceEntryInfo** entries;
 	UnityPlaceEntryInfo* _tmp5_;
 	entry_path = g_strdup ("/org/ayatana/unity/testplace/testentry1");
-	entry = unity_tests_unit_test_entry_info_new (entry_path);
+	entry = unity_place_entry_info_new (entry_path);
 	g_assert (UNITY_PLACE_IS_ENTRY_INFO (entry));
-	g_assert (_vala_strcmp0 (unity_place_entry_info_get_dbus_path ((UnityPlaceEntryInfo*) entry), entry_path) == 0);
+	g_assert (_vala_strcmp0 (unity_place_entry_info_get_dbus_path (entry), entry_path) == 0);
 	ctl = unity_place_controller_new ("/org/ayatana/unity/testplace");
 	g_assert (unity_place_controller_num_entries (ctl) == 0);
-	unity_place_controller_add_entry (ctl, (UnityPlaceEntryInfo*) entry);
+	unity_place_controller_add_entry (ctl, entry);
 	g_assert (unity_place_controller_num_entries (ctl) == 1);
-	g_assert ((_tmp0_ = unity_place_controller_get_entry (ctl, entry_path)) == UNITY_PLACE_ENTRY_INFO (entry));
+	g_assert ((_tmp0_ = unity_place_controller_get_entry (ctl, entry_path)) == entry);
 	_g_object_unref0 (_tmp0_);
 	entry_paths = (_tmp2_ = unity_place_controller_get_entry_paths (ctl, &_tmp1_), entry_paths_length1 = _tmp1_, _entry_paths_size_ = entry_paths_length1, _tmp2_);
 	g_assert (entry_paths_length1 == 1);
 	g_assert (_vala_strcmp0 (entry_paths[0], entry_path) == 0);
 	entries = (_tmp4_ = unity_place_controller_get_entries (ctl, &_tmp3_), entries_length1 = _tmp3_, _entries_size_ = entries_length1, _tmp4_);
 	g_assert (entries_length1 == 1);
-	g_assert (entries[0] == UNITY_PLACE_ENTRY_INFO (entry));
+	g_assert (entries[0] == entry);
 	unity_place_controller_remove_entry (ctl, entry_path);
 	g_assert (unity_place_controller_num_entries (ctl) == 0);
 	g_assert ((_tmp5_ = unity_place_controller_get_entry (ctl, entry_path)) == NULL);
@@ -427,8 +186,8 @@ void unity_tests_unit_place_suite_test_one_entry (void) {
 void unity_tests_unit_place_suite_test_two_entries (void) {
 	char* entry_path1;
 	char* entry_path2;
-	UnityTestsUnitTestEntryInfo* entry1;
-	UnityTestsUnitTestEntryInfo* entry2;
+	UnityPlaceEntryInfo* entry1;
+	UnityPlaceEntryInfo* entry2;
 	UnityPlaceController* ctl;
 	UnityPlaceEntryInfo* _tmp0_;
 	UnityPlaceEntryInfo* _tmp1_;
@@ -452,17 +211,17 @@ void unity_tests_unit_place_suite_test_two_entries (void) {
 	gint _tmp12_;
 	entry_path1 = g_strdup ("/org/ayatana/unity/testplace/testentry1");
 	entry_path2 = g_strdup ("/org/ayatana/unity/testplace/testentry2");
-	entry1 = unity_tests_unit_test_entry_info_new (entry_path1);
-	entry2 = unity_tests_unit_test_entry_info_new (entry_path2);
+	entry1 = unity_place_entry_info_new (entry_path1);
+	entry2 = unity_place_entry_info_new (entry_path2);
 	ctl = unity_place_controller_new ("/org/ayatana/unity/testplace");
 	g_assert (unity_place_controller_num_entries (ctl) == 0);
-	unity_place_controller_add_entry (ctl, (UnityPlaceEntryInfo*) entry1);
+	unity_place_controller_add_entry (ctl, entry1);
 	g_assert (unity_place_controller_num_entries (ctl) == 1);
-	unity_place_controller_add_entry (ctl, (UnityPlaceEntryInfo*) entry2);
+	unity_place_controller_add_entry (ctl, entry2);
 	g_assert (unity_place_controller_num_entries (ctl) == 2);
-	g_assert ((_tmp0_ = unity_place_controller_get_entry (ctl, entry_path1)) == UNITY_PLACE_ENTRY_INFO (entry1));
+	g_assert ((_tmp0_ = unity_place_controller_get_entry (ctl, entry_path1)) == entry1);
 	_g_object_unref0 (_tmp0_);
-	g_assert ((_tmp1_ = unity_place_controller_get_entry (ctl, entry_path2)) == UNITY_PLACE_ENTRY_INFO (entry2));
+	g_assert ((_tmp1_ = unity_place_controller_get_entry (ctl, entry_path2)) == entry2);
 	_g_object_unref0 (_tmp1_);
 	entry_paths = (_tmp3_ = unity_place_controller_get_entry_paths (ctl, &_tmp2_), entry_paths_length1 = _tmp2_, _entry_paths_size_ = entry_paths_length1, _tmp3_);
 	g_assert (entry_paths_length1 == 2);
@@ -470,17 +229,17 @@ void unity_tests_unit_place_suite_test_two_entries (void) {
 	g_assert (_vala_strcmp0 (entry_paths[1], entry_path2) == 0);
 	entries = (_tmp5_ = unity_place_controller_get_entries (ctl, &_tmp4_), entries_length1 = _tmp4_, _entries_size_ = entries_length1, _tmp5_);
 	g_assert (entries_length1 == 2);
-	g_assert (entries[0] == UNITY_PLACE_ENTRY_INFO (entry1));
-	g_assert (entries[1] == UNITY_PLACE_ENTRY_INFO (entry2));
-	unity_place_controller_add_entry (ctl, (UnityPlaceEntryInfo*) entry1);
+	g_assert (entries[0] == entry1);
+	g_assert (entries[1] == entry2);
+	unity_place_controller_add_entry (ctl, entry1);
 	g_assert (unity_place_controller_num_entries (ctl) == 2);
-	unity_place_controller_add_entry (ctl, (UnityPlaceEntryInfo*) entry2);
+	unity_place_controller_add_entry (ctl, entry2);
 	g_assert (unity_place_controller_num_entries (ctl) == 2);
 	unity_place_controller_remove_entry (ctl, entry_path1);
 	g_assert (unity_place_controller_num_entries (ctl) == 1);
 	g_assert ((_tmp6_ = unity_place_controller_get_entry (ctl, entry_path1)) == NULL);
 	_g_object_unref0 (_tmp6_);
-	g_assert ((_tmp7_ = unity_place_controller_get_entry (ctl, entry_path2)) == UNITY_PLACE_ENTRY_INFO (entry2));
+	g_assert ((_tmp7_ = unity_place_controller_get_entry (ctl, entry_path2)) == entry2);
 	_g_object_unref0 (_tmp7_);
 	unity_place_controller_remove_entry (ctl, entry_path2);
 	g_assert (unity_place_controller_num_entries (ctl) == 0);
@@ -502,18 +261,23 @@ void unity_tests_unit_place_suite_test_two_entries (void) {
 }
 
 
+static gpointer _g_object_ref0 (gpointer self) {
+	return self ? g_object_ref (self) : NULL;
+}
+
+
 void unity_tests_unit_place_suite_test_local_models (void) {
-	UnityTestsUnitTestEntryInfo* entry;
+	UnityPlaceEntryInfo* entry;
 	DeeModel* sections_model;
 	UnityPlaceRendererInfo* renderer;
 	DeeModel* groups_model;
 	DeeModel* results_model;
-	entry = unity_tests_unit_test_entry_info_new ("/foo/bar");
+	entry = unity_place_entry_info_new ("/foo/bar");
 	sections_model = (DeeModel*) ((DeeSequenceModel*) dee_sequence_model_new ((guint) 2, G_TYPE_STRING, G_TYPE_STRING, NULL));
-	unity_place_entry_info_set_sections_model ((UnityPlaceEntryInfo*) entry, sections_model);
-	g_assert (unity_place_entry_info_get_sections_model ((UnityPlaceEntryInfo*) entry) == sections_model);
+	unity_place_entry_info_set_sections_model (entry, sections_model);
+	g_assert (unity_place_entry_info_get_sections_model (entry) == sections_model);
 	g_assert (dee_model_get_n_rows (sections_model) == 0);
-	renderer = _g_object_ref0 (unity_place_entry_info_get_entry_renderer_info ((UnityPlaceEntryInfo*) entry));
+	renderer = _g_object_ref0 (unity_place_entry_info_get_entry_renderer_info (entry));
 	g_assert (UNITY_PLACE_IS_RENDERER_INFO (renderer));
 	groups_model = (DeeModel*) ((DeeSequenceModel*) dee_sequence_model_new ((guint) 3, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, NULL));
 	unity_place_renderer_info_set_groups_model (renderer, groups_model);

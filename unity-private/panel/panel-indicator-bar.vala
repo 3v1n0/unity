@@ -115,10 +115,10 @@ namespace Unity.Panel.Indicators
     
     public void set_indicator_mode (bool mode)
     {
-    	if (mode)
-    		{
-    		  indicator_bground.show ();
-    		}
+      if (mode)
+        {
+          indicator_bground.show ();
+        }
       else
         {
           indicator_bground.hide ();

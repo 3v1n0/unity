@@ -289,9 +289,9 @@ namespace Unity.Launcher
           // find the index at this position
           int model_index = view.get_model_index_at_y_pos (y);
           if (retcont in model)
-            model.move (retcont, int.max (model_index - 1, 0));
+            model.move (retcont, int.max (model_index, 0));
           else
-            model.insert (retcont, int.max (model_index - 1, 0));
+            model.insert (retcont, int.max (model_index, 0));
 
           view.do_queue_redraw ();
         }
@@ -311,8 +311,18 @@ namespace Unity.Launcher
       if (x > view.get_width ())
         {
           // it was dropped outside of the launcher.. oh well, obliterate it.
+          if (retcont.controller is ApplicationController)
+            {
+              (retcont.controller as ApplicationController).set_sticky (false);
+              (retcont.controller as ApplicationController).close_windows ();
+            }
           if (retcont in model)
             model.remove (retcont);
+
+          if (model_controller is ApplicationController)
+            {
+              (model_controller as ApplicationController).set_sticky (false);
+            }
 
           if (model_controller in childcontrollers)
             childcontrollers.remove (model_controller);
@@ -352,5 +362,6 @@ namespace Unity.Launcher
         index += 1.0f;
       }
     }
+
   }
 }

@@ -68,6 +68,7 @@ struct _UnityFavoritesClass {
 	void (*add_favorite) (UnityFavorites* self, const char* uid);
 	void (*remove_favorite) (UnityFavorites* self, const char* uid);
 	gboolean (*is_favorite) (UnityFavorites* self, const char* uid);
+	char* (*find_uid_for_desktop_file) (UnityFavorites* self, const char* desktop_file);
 	char* (*get_string) (UnityFavorites* self, const char* uid, const char* name);
 	void (*set_string) (UnityFavorites* self, const char* uid, const char* name, const char* value);
 	gint* (*get_int) (UnityFavorites* self, const char* uid, const char* name);
@@ -115,6 +116,8 @@ void unity_favorites_remove_favorite (UnityFavorites* self, const char* uid);
 static void unity_favorites_real_remove_favorite (UnityFavorites* self, const char* uid);
 gboolean unity_favorites_is_favorite (UnityFavorites* self, const char* uid);
 static gboolean unity_favorites_real_is_favorite (UnityFavorites* self, const char* uid);
+char* unity_favorites_find_uid_for_desktop_file (UnityFavorites* self, const char* desktop_file);
+static char* unity_favorites_real_find_uid_for_desktop_file (UnityFavorites* self, const char* desktop_file);
 char* unity_favorites_get_string (UnityFavorites* self, const char* uid, const char* name);
 static char* unity_favorites_real_get_string (UnityFavorites* self, const char* uid, const char* name);
 void unity_favorites_set_string (UnityFavorites* self, const char* uid, const char* name, const char* value);
@@ -138,6 +141,7 @@ enum  {
 };
 static void _g_slist_free_g_free (GSList* self);
 #define UNITY_GCONF_FAVORITES_path "/desktop/unity/launcher/favorites/"
+static char* unity_gconf_favorites_real_find_uid_for_desktop_file (UnityFavorites* base, const char* desktop_file);
 static GeeArrayList* unity_gconf_favorites_real_get_favorites (UnityFavorites* base);
 static void unity_gconf_favorites_real_add_favorite (UnityFavorites* base, const char* uid);
 static void unity_gconf_favorites_real_remove_favorite (UnityFavorites* base, const char* uid);
@@ -232,6 +236,18 @@ static gboolean unity_favorites_real_is_favorite (UnityFavorites* self, const ch
 
 gboolean unity_favorites_is_favorite (UnityFavorites* self, const char* uid) {
 	return UNITY_FAVORITES_GET_CLASS (self)->is_favorite (self, uid);
+}
+
+
+static char* unity_favorites_real_find_uid_for_desktop_file (UnityFavorites* self, const char* desktop_file) {
+	g_return_val_if_fail (self != NULL, NULL);
+	g_critical ("Type `%s' does not implement abstract method `unity_favorites_find_uid_for_desktop_file'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
+	return NULL;
+}
+
+
+char* unity_favorites_find_uid_for_desktop_file (UnityFavorites* self, const char* desktop_file) {
+	return UNITY_FAVORITES_GET_CLASS (self)->find_uid_for_desktop_file (self, desktop_file);
 }
 
 
@@ -344,6 +360,7 @@ static void unity_favorites_class_init (UnityFavoritesClass * klass) {
 	UNITY_FAVORITES_CLASS (klass)->add_favorite = unity_favorites_real_add_favorite;
 	UNITY_FAVORITES_CLASS (klass)->remove_favorite = unity_favorites_real_remove_favorite;
 	UNITY_FAVORITES_CLASS (klass)->is_favorite = unity_favorites_real_is_favorite;
+	UNITY_FAVORITES_CLASS (klass)->find_uid_for_desktop_file = unity_favorites_real_find_uid_for_desktop_file;
 	UNITY_FAVORITES_CLASS (klass)->get_string = unity_favorites_real_get_string;
 	UNITY_FAVORITES_CLASS (klass)->set_string = unity_favorites_real_set_string;
 	UNITY_FAVORITES_CLASS (klass)->get_int = unity_favorites_real_get_int;
@@ -377,6 +394,40 @@ GType unity_favorites_get_type (void) {
 static void _g_slist_free_g_free (GSList* self) {
 	g_slist_foreach (self, (GFunc) g_free, NULL);
 	g_slist_free (self);
+}
+
+
+static char* unity_gconf_favorites_real_find_uid_for_desktop_file (UnityFavorites* base, const char* desktop_file) {
+	UnityGConfFavorites * self;
+	char* result = NULL;
+	char* uid;
+	self = (UnityGConfFavorites*) base;
+	g_return_val_if_fail (desktop_file != NULL, NULL);
+	uid = g_strdup ("");
+	{
+		GSList* id_collection;
+		GSList* id_it;
+		id_collection = self->priv->fav_ids;
+		for (id_it = id_collection; id_it != NULL; id_it = id_it->next) {
+			char* id;
+			id = g_strdup ((const char*) id_it->data);
+			{
+				char* fav_desktop_file;
+				fav_desktop_file = unity_favorites_get_string ((UnityFavorites*) self, id, "desktop_file");
+				if (_vala_strcmp0 (fav_desktop_file, desktop_file) == 0) {
+					char* _tmp0_;
+					uid = (_tmp0_ = g_strdup (id), _g_free0 (uid), _tmp0_);
+					_g_free0 (id);
+					_g_free0 (fav_desktop_file);
+					break;
+				}
+				_g_free0 (id);
+				_g_free0 (fav_desktop_file);
+			}
+		}
+	}
+	result = uid;
+	return result;
 }
 
 
@@ -415,21 +466,21 @@ static void unity_gconf_favorites_real_add_favorite (UnityFavorites* base, const
 		{
 			gconf_client_set_list (self->priv->client, UNITY_GCONF_FAVORITES_path "favorites_list", GCONF_VALUE_STRING, self->priv->fav_ids, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch9_g_error;
+				goto __catch11_g_error;
 			}
 		}
-		goto __finally9;
-		__catch9_g_error:
+		goto __finally11;
+		__catch11_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("unity-favorites.vala:118: Could not set the favorites list: %s", e->message);
+				g_warning ("unity-favorites.vala:137: Could not set the favorites list: %s", e->message);
 				_g_error_free0 (e);
 			}
 		}
-		__finally9:
+		__finally11:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -437,6 +488,14 @@ static void unity_gconf_favorites_real_add_favorite (UnityFavorites* base, const
 		}
 		g_signal_emit_by_name ((UnityFavorites*) self, "favorite-added", uid);
 	}
+}
+
+
+static const char* string_to_string (const char* self) {
+	const char* result = NULL;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = self;
+	return result;
 }
 
 
@@ -475,27 +534,31 @@ static void unity_gconf_favorites_real_remove_favorite (UnityFavorites* base, co
 		{
 			gconf_client_set_list (self->priv->client, UNITY_GCONF_FAVORITES_path "favorites_list", GCONF_VALUE_STRING, self->priv->fav_ids, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch10_g_error;
+				goto __catch12_g_error;
 			}
 		}
-		goto __finally10;
-		__catch10_g_error:
+		goto __finally12;
+		__catch12_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("unity-favorites.vala:146: Could not set the favorites list: %s", e->message);
+				g_warning ("unity-favorites.vala:165: Could not set the favorites list: %s", e->message);
 				_g_error_free0 (e);
 			}
 		}
-		__finally10:
+		__finally12:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
 			return;
 		}
 		g_signal_emit_by_name ((UnityFavorites*) self, "favorite-removed", uid);
+	} else {
+		char* _tmp1_;
+		g_warning ("unity-favorites.vala:172: %s", _tmp1_ = g_strconcat ("'", string_to_string (uid), "' is not a favorite", NULL));
+		_g_free0 (_tmp1_);
 	}
 }
 
@@ -546,22 +609,22 @@ static char* unity_gconf_favorites_real_get_string (UnityFavorites* base, const 
 		char* _tmp5_;
 		_tmp4_ = (_tmp3_ = gconf_client_get_string (self->priv->client, _tmp2_ = g_strconcat (_tmp1_ = g_strconcat (_tmp0_ = g_strconcat (UNITY_GCONF_FAVORITES_path, uid, NULL), "/", NULL), name, NULL), &_inner_error_), _g_free0 (_tmp2_), _g_free0 (_tmp1_), _g_free0 (_tmp0_), _tmp3_);
 		if (_inner_error_ != NULL) {
-			goto __catch11_g_error;
+			goto __catch13_g_error;
 		}
 		return_string = (_tmp5_ = _tmp4_, _g_free0 (return_string), _tmp5_);
 	}
-	goto __finally11;
-	__catch11_g_error:
+	goto __finally13;
+	__catch13_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("unity-favorites.vala:174: GConf string lookup failed: %s", e->message);
+			g_warning ("unity-favorites.vala:197: GConf string lookup failed: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
-	__finally11:
+	__finally13:
 	if (_inner_error_ != NULL) {
 		_g_free0 (return_string);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -590,21 +653,21 @@ static void unity_gconf_favorites_real_set_string (UnityFavorites* base, const c
 		_g_free0 (_tmp1_);
 		_g_free0 (_tmp0_);
 		if (_inner_error_ != NULL) {
-			goto __catch12_g_error;
+			goto __catch14_g_error;
 		}
 	}
-	goto __finally12;
-	__catch12_g_error:
+	goto __finally14;
+	__catch14_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("unity-favorites.vala:187: GConf string setting failed: %s", e->message);
+			g_warning ("unity-favorites.vala:210: GConf string setting failed: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
-	__finally12:
+	__finally14:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -645,22 +708,22 @@ static gint* unity_gconf_favorites_real_get_int (UnityFavorites* base, const cha
 		gint* _tmp5_;
 		_tmp4_ = (_tmp3_ = gconf_client_get_int (self->priv->client, _tmp2_ = g_strconcat (_tmp1_ = g_strconcat (_tmp0_ = g_strconcat (UNITY_GCONF_FAVORITES_path, uid, NULL), "/", NULL), name, NULL), &_inner_error_), _g_free0 (_tmp2_), _g_free0 (_tmp1_), _g_free0 (_tmp0_), _tmp3_);
 		if (_inner_error_ != NULL) {
-			goto __catch13_g_error;
+			goto __catch15_g_error;
 		}
 		return_val = (_tmp5_ = __int_dup0 (&_tmp4_), _g_free0 (return_val), _tmp5_);
 	}
-	goto __finally13;
-	__catch13_g_error:
+	goto __finally15;
+	__catch15_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("unity-favorites.vala:200: GConf int lookup failed: %s", e->message);
+			g_warning ("unity-favorites.vala:223: GConf int lookup failed: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
-	__finally13:
+	__finally15:
 	if (_inner_error_ != NULL) {
 		_g_free0 (return_val);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -688,21 +751,21 @@ static void unity_gconf_favorites_real_set_int (UnityFavorites* base, const char
 		_g_free0 (_tmp1_);
 		_g_free0 (_tmp0_);
 		if (_inner_error_ != NULL) {
-			goto __catch14_g_error;
+			goto __catch16_g_error;
 		}
 	}
-	goto __finally14;
-	__catch14_g_error:
+	goto __finally16;
+	__catch16_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("unity-favorites.vala:213: GConf int setting failed: %s", e->message);
+			g_warning ("unity-favorites.vala:236: GConf int setting failed: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
-	__finally14:
+	__finally16:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -744,22 +807,22 @@ static float* unity_gconf_favorites_real_get_float (UnityFavorites* base, const 
 		float _tmp5_;
 		_tmp4_ = (_tmp3_ = gconf_client_get_float (self->priv->client, _tmp2_ = g_strconcat (_tmp1_ = g_strconcat (_tmp0_ = g_strconcat (UNITY_GCONF_FAVORITES_path, uid, NULL), "/", NULL), name, NULL), &_inner_error_), _g_free0 (_tmp2_), _g_free0 (_tmp1_), _g_free0 (_tmp0_), _tmp3_);
 		if (_inner_error_ != NULL) {
-			goto __catch15_g_error;
+			goto __catch17_g_error;
 		}
 		return_val = (_tmp6_ = __float_dup0 ((_tmp5_ = (float) _tmp4_, &_tmp5_)), _g_free0 (return_val), _tmp6_);
 	}
-	goto __finally15;
-	__catch15_g_error:
+	goto __finally17;
+	__catch17_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("unity-favorites.vala:226: GConf float lookup failed: %s", e->message);
+			g_warning ("unity-favorites.vala:249: GConf float lookup failed: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
-	__finally15:
+	__finally17:
 	if (_inner_error_ != NULL) {
 		_g_free0 (return_val);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -787,21 +850,21 @@ static void unity_gconf_favorites_real_set_float (UnityFavorites* base, const ch
 		_g_free0 (_tmp1_);
 		_g_free0 (_tmp0_);
 		if (_inner_error_ != NULL) {
-			goto __catch16_g_error;
+			goto __catch18_g_error;
 		}
 	}
-	goto __finally16;
-	__catch16_g_error:
+	goto __finally18;
+	__catch18_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("unity-favorites.vala:239: GConf float set failed: %s", e->message);
+			g_warning ("unity-favorites.vala:262: GConf float set failed: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
-	__finally16:
+	__finally18:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -842,22 +905,22 @@ static gboolean* unity_gconf_favorites_real_get_bool (UnityFavorites* base, cons
 		gboolean* _tmp5_;
 		_tmp4_ = (_tmp3_ = gconf_client_get_bool (self->priv->client, _tmp2_ = g_strconcat (_tmp1_ = g_strconcat (_tmp0_ = g_strconcat (UNITY_GCONF_FAVORITES_path, uid, NULL), "/", NULL), name, NULL), &_inner_error_), _g_free0 (_tmp2_), _g_free0 (_tmp1_), _g_free0 (_tmp0_), _tmp3_);
 		if (_inner_error_ != NULL) {
-			goto __catch17_g_error;
+			goto __catch19_g_error;
 		}
 		return_val = (_tmp5_ = __bool_dup0 (&_tmp4_), _g_free0 (return_val), _tmp5_);
 	}
-	goto __finally17;
-	__catch17_g_error:
+	goto __finally19;
+	__catch19_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("unity-favorites.vala:252: GConf bool lookup failed: %s", e->message);
+			g_warning ("unity-favorites.vala:275: GConf bool lookup failed: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
-	__finally17:
+	__finally19:
 	if (_inner_error_ != NULL) {
 		_g_free0 (return_val);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -885,21 +948,21 @@ static void unity_gconf_favorites_real_set_bool (UnityFavorites* base, const cha
 		_g_free0 (_tmp1_);
 		_g_free0 (_tmp0_);
 		if (_inner_error_ != NULL) {
-			goto __catch18_g_error;
+			goto __catch20_g_error;
 		}
 	}
-	goto __finally18;
-	__catch18_g_error:
+	goto __finally20;
+	__catch20_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("unity-favorites.vala:265: GConf bool setting failed: %s", e->message);
+			g_warning ("unity-favorites.vala:288: GConf bool setting failed: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
-	__finally18:
+	__finally20:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -1011,18 +1074,18 @@ static void unity_gconf_favorites_notify_on_favorites_list_changed (UnityGConfFa
 		GSList* _tmp1_;
 		_tmp0_ = gconf_client_get_list (self->priv->client, UNITY_GCONF_FAVORITES_path "favorites_list", GCONF_VALUE_STRING, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch19_g_error;
+			goto __catch21_g_error;
 		}
 		new_favs = (_tmp1_ = _tmp0_, __g_slist_free_g_free0 (new_favs), _tmp1_);
 	}
-	goto __finally19;
-	__catch19_g_error:
+	goto __finally21;
+	__catch21_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("unity-favorites.vala:328: Could not get favourite list from gconf %s", e->message);
+			g_warning ("unity-favorites.vala:351: Could not get favourite list from gconf %s", e->message);
 			_g_error_free0 (e);
 			__g_slist_free_g_free0 (items_added);
 			__g_slist_free_g_free0 (items_removed);
@@ -1030,7 +1093,7 @@ static void unity_gconf_favorites_notify_on_favorites_list_changed (UnityGConfFa
 			return;
 		}
 	}
-	__finally19:
+	__finally21:
 	if (_inner_error_ != NULL) {
 		__g_slist_free_g_free0 (items_added);
 		__g_slist_free_g_free0 (items_removed);
@@ -1094,27 +1157,27 @@ static void unity_gconf_favorites_on_favorite_added (UnityGConfFavorites* self, 
 		_g_free0 (_tmp1_);
 		_g_free0 (_tmp0_);
 		if (_inner_error_ != NULL) {
-			goto __catch20_g_error;
+			goto __catch22_g_error;
 		}
 		notify_id = (_tmp4_ = gconf_client_notify_add (self->priv->client, _tmp3_ = g_strconcat (_tmp2_ = g_strconcat (UNITY_GCONF_FAVORITES_path, uid, NULL), "/", NULL), _unity_gconf_favorites_notify_on_favorite_changed_gconf_client_notify_func, g_object_ref (self), g_object_unref, &_inner_error_), _g_free0 (_tmp3_), _g_free0 (_tmp2_), _tmp4_);
 		if (_inner_error_ != NULL) {
-			goto __catch20_g_error;
+			goto __catch22_g_error;
 		}
 		gee_abstract_map_set ((GeeAbstractMap*) self->priv->notify_map, uid, GUINT_TO_POINTER (notify_id));
 	}
-	goto __finally20;
-	__catch20_g_error:
+	goto __finally22;
+	__catch22_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("unity-favorites.vala:356: Unable to monitor gconf for favorite changes" \
+			g_warning ("unity-favorites.vala:379: Unable to monitor gconf for favorite changes" \
 ": %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
-	__finally20:
+	__finally22:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -1150,7 +1213,7 @@ static void unity_gconf_favorites_notify_on_favorite_changed (UnityGConfFavorite
 	if (unity_favorites_is_favorite ((UnityFavorites*) self, uid)) {
 		g_signal_emit_by_name ((UnityFavorites*) self, "favorite-changed", uid);
 	} else {
-		g_warning ("unity-favorites.vala:383: got strange uid %s: %s", uid, entry->key);
+		g_warning ("unity-favorites.vala:406: got strange uid %s: %s", uid, entry->key);
 		_g_free0 (uid);
 		return;
 	}
@@ -1206,24 +1269,24 @@ static GObject * unity_gconf_favorites_constructor (GType type, guint n_construc
 			GSList* _tmp3_;
 			_tmp2_ = gconf_client_get_list (self->priv->client, UNITY_GCONF_FAVORITES_path "favorites_list", GCONF_VALUE_STRING, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch21_g_error;
+				goto __catch23_g_error;
 			}
 			self->priv->fav_ids = (_tmp3_ = _tmp2_, __g_slist_free_g_free0 (self->priv->fav_ids), _tmp3_);
 		}
-		goto __finally21;
-		__catch21_g_error:
+		goto __finally23;
+		__catch23_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
 				GSList* _tmp4_;
-				g_warning ("unity-favorites.vala:76: Could not grab favorites from gconf %s", e->message);
+				g_warning ("unity-favorites.vala:77: Could not grab favorites from gconf %s", e->message);
 				self->priv->fav_ids = (_tmp4_ = NULL, __g_slist_free_g_free0 (self->priv->fav_ids), _tmp4_);
 				_g_error_free0 (e);
 			}
 		}
-		__finally21:
+		__finally23:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -1231,26 +1294,26 @@ static GObject * unity_gconf_favorites_constructor (GType type, guint n_construc
 		{
 			gconf_client_add_dir (self->priv->client, UNITY_GCONF_FAVORITES_path "favorites_list", GCONF_CLIENT_PRELOAD_NONE, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch22_g_error;
+				goto __catch24_g_error;
 			}
 			gconf_client_notify_add (self->priv->client, UNITY_GCONF_FAVORITES_path "favorites_list", _unity_gconf_favorites_notify_on_favorites_list_changed_gconf_client_notify_func, g_object_ref (self), g_object_unref, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch22_g_error;
+				goto __catch24_g_error;
 			}
 		}
-		goto __finally22;
-		__catch22_g_error:
+		goto __finally24;
+		__catch24_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("unity-favorites.vala:90: Unable to monitor gconf for favorites changes" \
+				g_warning ("unity-favorites.vala:91: Unable to monitor gconf for favorites changes" \
 ": %s", e->message);
 				_g_error_free0 (e);
 			}
 		}
-		__finally22:
+		__finally24:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -1263,6 +1326,7 @@ static GObject * unity_gconf_favorites_constructor (GType type, guint n_construc
 static void unity_gconf_favorites_class_init (UnityGConfFavoritesClass * klass) {
 	unity_gconf_favorites_parent_class = g_type_class_peek_parent (klass);
 	g_type_class_add_private (klass, sizeof (UnityGConfFavoritesPrivate));
+	UNITY_FAVORITES_CLASS (klass)->find_uid_for_desktop_file = unity_gconf_favorites_real_find_uid_for_desktop_file;
 	UNITY_FAVORITES_CLASS (klass)->get_favorites = unity_gconf_favorites_real_get_favorites;
 	UNITY_FAVORITES_CLASS (klass)->add_favorite = unity_gconf_favorites_real_add_favorite;
 	UNITY_FAVORITES_CLASS (klass)->remove_favorite = unity_gconf_favorites_real_remove_favorite;

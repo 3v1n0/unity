@@ -260,10 +260,10 @@ static gboolean unity_places_place_file_model_load_place_files_co (UnityPlacesPl
 	switch (data->_state_) {
 		case 0:
 		goto _state_0;
-		case 1:
-		goto _state_1;
 		case 2:
 		goto _state_2;
+		case 3:
+		goto _state_3;
 		default:
 		g_assert_not_reached ();
 	}
@@ -271,23 +271,23 @@ static gboolean unity_places_place_file_model_load_place_files_co (UnityPlacesPl
 	{
 		data->dir = g_file_new_for_path (data->self->priv->_directory);
 		{
-			data->_state_ = 1;
+			data->_state_ = 2;
 			g_file_enumerate_children_async (data->dir, G_FILE_ATTRIBUTE_STANDARD_NAME, 0, G_PRIORITY_DEFAULT, NULL, unity_places_place_file_model_load_place_files_ready, data);
 			return FALSE;
-			_state_1:
+			_state_2:
 			data->e = g_file_enumerate_children_finish (data->dir, data->_res_, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
-				goto __catch9_g_error;
+				goto __catch10_g_error;
 			}
 			while (TRUE) {
-				data->_state_ = 2;
+				data->_state_ = 3;
 				g_file_enumerator_next_files_async (data->e, 10, G_PRIORITY_DEFAULT, NULL, unity_places_place_file_model_load_place_files_ready, data);
 				return FALSE;
-				_state_2:
+				_state_3:
 				data->files = g_file_enumerator_next_files_finish (data->e, data->_res_, &data->_inner_error_);
 				if (data->_inner_error_ != NULL) {
 					_g_object_unref0 (data->e);
-					goto __catch9_g_error;
+					goto __catch10_g_error;
 				}
 				if (data->files == NULL) {
 					__g_list_free_g_object_unref0 (data->files);
@@ -318,8 +318,8 @@ static gboolean unity_places_place_file_model_load_place_files_co (UnityPlacesPl
 			}
 			_g_object_unref0 (data->e);
 		}
-		goto __finally9;
-		__catch9_g_error:
+		goto __finally10;
+		__catch10_g_error:
 		{
 			data->_error_ = data->_inner_error_;
 			data->_inner_error_ = NULL;
@@ -329,7 +329,7 @@ static gboolean unity_places_place_file_model_load_place_files_co (UnityPlacesPl
 				_g_error_free0 (data->_error_);
 			}
 		}
-		__finally9:
+		__finally10:
 		if (data->_inner_error_ != NULL) {
 			_g_object_unref0 (data->dir);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
@@ -361,7 +361,7 @@ static void unity_places_place_file_model_load_place_files_sync (UnityPlacesPlac
 		GFileInfo* info;
 		e = g_file_enumerate_children (dir, G_FILE_ATTRIBUTE_STANDARD_NAME, 0, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch10_g_error;
+			goto __catch11_g_error;
 		}
 		info = NULL;
 		while (TRUE) {
@@ -375,7 +375,7 @@ static void unity_places_place_file_model_load_place_files_sync (UnityPlacesPlac
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (e);
 				_g_object_unref0 (info);
-				goto __catch10_g_error;
+				goto __catch11_g_error;
 			}
 			if (!((info = (_tmp1_ = _tmp0_, _g_object_unref0 (info), _tmp1_)) != NULL)) {
 				break;
@@ -396,8 +396,8 @@ static void unity_places_place_file_model_load_place_files_sync (UnityPlacesPlac
 		_g_object_unref0 (e);
 		_g_object_unref0 (info);
 	}
-	goto __finally10;
-	__catch10_g_error:
+	goto __finally11;
+	__catch11_g_error:
 	{
 		GError * _error_;
 		_error_ = _inner_error_;
@@ -409,7 +409,7 @@ static void unity_places_place_file_model_load_place_files_sync (UnityPlacesPlac
 			_g_error_free0 (_error_);
 		}
 	}
-	__finally10:
+	__finally11:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (dir);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -431,14 +431,14 @@ static UnityPlacesPlace* unity_places_place_file_model_load_place (UnityPlacesPl
 	{
 		g_key_file_load_from_file (file, path, G_KEY_FILE_NONE, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch11_g_error;
+			goto __catch12_g_error;
 		}
 		result = unity_places_place_new_from_keyfile (file, path);
 		_g_key_file_free0 (file);
 		return result;
 	}
-	goto __finally11;
-	__catch11_g_error:
+	goto __finally12;
+	__catch12_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -453,7 +453,7 @@ static UnityPlacesPlace* unity_places_place_file_model_load_place (UnityPlacesPl
 			return result;
 		}
 	}
-	__finally11:
+	__finally12:
 	{
 		_g_key_file_free0 (file);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
