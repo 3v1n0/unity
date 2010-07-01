@@ -40,6 +40,7 @@ namespace Unity
     public abstract void add_favorite (string uid);
     public abstract void remove_favorite (string uid);
     public abstract bool is_favorite (string uid);
+    public abstract string find_uid_for_desktop_file (string desktop_file);
 
     public abstract string? get_string (string uid, string name);
     public abstract void set_string (string uid, string name, string value);
@@ -93,6 +94,24 @@ namespace Unity
     }
 
     /* abstract class implimentation */
+
+
+    public override string find_uid_for_desktop_file (string desktop_file)
+    {
+      /* goes through the gconf favorites and finds us a desktop file */
+      string uid = "";
+      foreach (string id in fav_ids)
+        {
+          string fav_desktop_file = get_string (id, "desktop_file");
+          if (fav_desktop_file == desktop_file)
+            {
+              uid = id;
+              break;
+            }
+        }
+
+      return uid;
+    }
 
     public override ArrayList<string> get_favorites ()
     {
@@ -150,7 +169,7 @@ namespace Unity
         }
       else
         {
-          warning (@"$uid is not a favorite");
+          warning (@"'$uid' is not a favorite");
         }
     }
 

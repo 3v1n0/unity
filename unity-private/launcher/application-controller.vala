@@ -227,8 +227,10 @@ namespace Unity.Launcher
     {
       if (desktop_file == "" || desktop_file == null)
         return;
-      string uid = "app-" + Path.get_basename (desktop_file);
+      //string uid = "app-" + Path.get_basename (desktop_file);
       var favorites = Unity.Favorites.get_default ();
+
+      string uid = favorites.find_uid_for_desktop_file (desktop_file);
 
       if (is_sticky)
         {
