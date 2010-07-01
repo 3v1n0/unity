@@ -138,6 +138,8 @@ namespace Unity.Place {
       /* Relay signals from backend service */
       service.back.connect (on_back);
       service.forward.connect (on_forward);
+      
+      update_service_state ();
     }
     
     /**
