@@ -9,13 +9,14 @@ namespace Unity {
 			public ApplicationController (string desktop_file_, Unity.Launcher.ScrollerChild child_);
 			public override void activate ();
 			public void attach_application (Bamf.Application application);
+			public void close_windows ();
 			public bool debug_is_application_attached ();
 			public void detach_application ();
 			public override Gee.ArrayList<Unity.Launcher.ShortcutItem> get_menu_shortcut_actions ();
 			public override Gee.ArrayList<Unity.Launcher.ShortcutItem> get_menu_shortcuts ();
 			public float get_priority () throws Unity.Launcher.AppTypeError;
 			public void set_priority (float priority);
-			public void set_sticky ();
+			public void set_sticky (bool is_sticky = true);
 			public string desktop_file { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]

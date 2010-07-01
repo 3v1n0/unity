@@ -29,8 +29,8 @@
 #include <float.h>
 #include <math.h>
 #include <clutter/clutter.h>
-#include <gio/gdesktopappinfo.h>
 #include <gio/gio.h>
+#include <unity.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <pango/pango.h>
@@ -61,6 +61,7 @@ typedef struct _UnityPlacesTile UnityPlacesTile;
 typedef struct _UnityPlacesTileClass UnityPlacesTileClass;
 typedef struct _UnityPlacesTilePrivate UnityPlacesTilePrivate;
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
+typedef struct _UnityPlacesTileClickedHandlerData UnityPlacesTileClickedHandlerData;
 
 struct _UnityPlacesDefaultRendererGroup {
 	CtkBox parent_instance;
@@ -100,6 +101,23 @@ struct _UnityPlacesTilePrivate {
 	char* _uri;
 	char* _mimetype;
 	char* _comment;
+};
+
+struct _UnityPlacesTileClickedHandlerData {
+	int _state_;
+	GAsyncResult* _res_;
+	GSimpleAsyncResult* _async_result;
+	UnityPlacesTile* self;
+	char* _tmp0_;
+	char* id;
+	GAppInfo* info;
+	UnityAppInfoManager* appinfos;
+	GAppInfo* _tmp1_;
+	GAppInfo* _tmp2_;
+	GError * ee;
+	GError * e;
+	GError * eee;
+	GError * _inner_error_;
 };
 
 
@@ -154,25 +172,32 @@ enum  {
 	UNITY_PLACES_TILE_MIMETYPE,
 	UNITY_PLACES_TILE_COMMENT
 };
+#define UNITY_PLACES_TILE_ICON_SIZE 48
+#define UNITY_PLACES_TILE_DEFAULT_ICON "text-x-preview"
 static void unity_places_tile_real_get_preferred_width (ClutterActor* base, float for_height, float* mwidth, float* nwidth);
-const char* unity_places_tile_get_uri (UnityPlacesTile* self);
+static void unity_places_tile_clicked_handler (UnityPlacesTile* self, GAsyncReadyCallback _callback_, gpointer _user_data_);
+static void unity_places_tile_clicked_handler_finish (UnityPlacesTile* self, GAsyncResult* _res_);
 static void unity_places_tile_real_clicked (CtkButton* base);
+static void unity_places_tile_clicked_handler_data_free (gpointer _data);
+static void unity_places_tile_clicked_handler_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
+const char* unity_places_tile_get_uri (UnityPlacesTile* self);
+static gboolean unity_places_tile_clicked_handler_co (UnityPlacesTileClickedHandlerData* data);
+const char* unity_places_tile_get_icon_hint (UnityPlacesTile* self);
 const char* unity_places_tile_get_mimetype (UnityPlacesTile* self);
-static gboolean unity_places_tile_load_icon (UnityPlacesTile* self);
+static void unity_places_tile_set_icon (UnityPlacesTile* self);
 static void unity_places_tile_set_iter (UnityPlacesTile* self, DeeModelIter* value);
 const char* unity_places_tile_get_display_name (UnityPlacesTile* self);
 static void unity_places_tile_set_display_name (UnityPlacesTile* self, const char* value);
-const char* unity_places_tile_get_icon_hint (UnityPlacesTile* self);
 static void unity_places_tile_set_icon_hint (UnityPlacesTile* self, const char* value);
 static void unity_places_tile_set_uri (UnityPlacesTile* self, const char* value);
 static void unity_places_tile_set_mimetype (UnityPlacesTile* self, const char* value);
 const char* unity_places_tile_get_comment (UnityPlacesTile* self);
 static void unity_places_tile_set_comment (UnityPlacesTile* self, const char* value);
-static gboolean _unity_places_tile_load_icon_gsource_func (gpointer self);
 static GObject * unity_places_tile_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_tile_finalize (GObject* obj);
 static void unity_places_tile_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_places_tile_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
@@ -390,15 +415,17 @@ static GObject * unity_places_default_renderer_group_constructor (GType type, gu
 		ctk_box_set_spacing ((CtkBox*) self, UNITY_PLACES_DEFAULT_RENDERER_GROUP_SPACING);
 		ctk_box_set_homogeneous ((CtkBox*) self, FALSE);
 		clutter_actor_hide ((ClutterActor*) self);
-		self->priv->title_box = (_tmp2_ = g_object_ref_sink ((CtkHBox*) ctk_hbox_new ((guint) 12)), _g_object_unref0 (self->priv->title_box), _tmp2_);
-		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->title_box, FALSE, TRUE);
+		self->priv->title_box = (_tmp2_ = g_object_ref_sink ((CtkHBox*) ctk_hbox_new ((guint) 8)), _g_object_unref0 (self->priv->title_box), _tmp2_);
+		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->title_box, FALSE, FALSE);
 		clutter_actor_show ((ClutterActor*) self->priv->title_box);
 		self->priv->icon = (_tmp3_ = g_object_ref_sink ((CtkImage*) ctk_image_new ((guint) 24)), _g_object_unref0 (self->priv->icon), _tmp3_);
+		ctk_box_pack ((CtkBox*) self->priv->title_box, (ClutterActor*) self->priv->icon, FALSE, FALSE);
 		clutter_actor_show ((ClutterActor*) self->priv->icon);
 		self->priv->text = (_tmp4_ = g_object_ref_sink ((CtkText*) ctk_text_new (self->priv->_display_name)), _g_object_unref0 (self->priv->text), _tmp4_);
 		ctk_box_pack ((CtkBox*) self->priv->title_box, (ClutterActor*) self->priv->text, TRUE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->text);
 		self->priv->expander = (_tmp5_ = g_object_ref_sink ((CtkImage*) ctk_image_new ((guint) 24)), _g_object_unref0 (self->priv->expander), _tmp5_);
+		ctk_box_pack ((CtkBox*) self->priv->title_box, (ClutterActor*) self->priv->expander, FALSE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->expander);
 		sep = g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color ((_tmp7_ = (_tmp6_.red = (guint8) 255, _tmp6_.green = (guint8) 255, _tmp6_.blue = (guint8) 255, _tmp6_.alpha = (guint8) 255, _tmp6_), &_tmp7_)));
 		clutter_actor_set_height ((ClutterActor*) sep, (float) 1);
@@ -406,6 +433,7 @@ static GObject * unity_places_default_renderer_group_constructor (GType type, gu
 		clutter_actor_show ((ClutterActor*) sep);
 		self->priv->renderer = (_tmp8_ = g_object_ref_sink ((CtkIconView*) ctk_icon_view_new ()), _g_object_unref0 (self->priv->renderer), _tmp8_);
 		ctk_actor_set_padding ((CtkActor*) self->priv->renderer, (_tmp10_ = (_tmp9_.top = 12.0f, _tmp9_.right = 0.0f, _tmp9_.bottom = 0.0f, _tmp9_.left = 0.0f, _tmp9_), &_tmp10_));
+		ctk_icon_view_set_spacing (self->priv->renderer, 24);
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->renderer, TRUE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->renderer);
 		iter = dee_model_get_first_iter (self->priv->_results);
@@ -545,8 +573,47 @@ UnityPlacesTile* unity_places_tile_new (DeeModelIter* iter, const char* uri, con
 static void unity_places_tile_real_get_preferred_width (ClutterActor* base, float for_height, float* mwidth, float* nwidth) {
 	UnityPlacesTile * self;
 	self = (UnityPlacesTile*) base;
-	*mwidth = 160.0f;
-	*nwidth = 160.0f;
+	*mwidth = 150.0f;
+	*nwidth = 150.0f;
+}
+
+
+static void unity_places_tile_real_clicked (CtkButton* base) {
+	UnityPlacesTile * self;
+	self = (UnityPlacesTile*) base;
+	unity_places_tile_clicked_handler (self, NULL, NULL);
+}
+
+
+static void unity_places_tile_clicked_handler_data_free (gpointer _data) {
+	UnityPlacesTileClickedHandlerData* data;
+	data = _data;
+	g_object_unref (data->self);
+	g_slice_free (UnityPlacesTileClickedHandlerData, data);
+}
+
+
+static void unity_places_tile_clicked_handler (UnityPlacesTile* self, GAsyncReadyCallback _callback_, gpointer _user_data_) {
+	UnityPlacesTileClickedHandlerData* _data_;
+	_data_ = g_slice_new0 (UnityPlacesTileClickedHandlerData);
+	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, unity_places_tile_clicked_handler);
+	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, unity_places_tile_clicked_handler_data_free);
+	_data_->self = g_object_ref (self);
+	unity_places_tile_clicked_handler_co (_data_);
+}
+
+
+static void unity_places_tile_clicked_handler_finish (UnityPlacesTile* self, GAsyncResult* _res_) {
+	UnityPlacesTileClickedHandlerData* _data_;
+	_data_ = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (_res_));
+}
+
+
+static void unity_places_tile_clicked_handler_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_) {
+	UnityPlacesTileClickedHandlerData* data;
+	data = _user_data_;
+	data->_res_ = _res_;
+	unity_places_tile_clicked_handler_co (data);
 }
 
 
@@ -566,131 +633,176 @@ static glong string_get_length (const char* self) {
 }
 
 
-static void unity_places_tile_real_clicked (CtkButton* base) {
-	UnityPlacesTile * self;
-	GError * _inner_error_;
-	char* _tmp0_;
-	self = (UnityPlacesTile*) base;
-	_inner_error_ = NULL;
-	g_debug ("places-default-renderer-group.vala:213: %s", _tmp0_ = g_strconcat ("Launching ", string_to_string (self->priv->_uri), NULL));
-	_g_free0 (_tmp0_);
-	if (g_str_has_prefix (self->priv->_uri, "application://")) {
-		char* id;
-		GDesktopAppInfo* info;
-		id = g_strdup (g_utf8_offset_to_pointer (self->priv->_uri, string_get_length ("application://")));
-		info = g_desktop_app_info_new (id);
-		if (G_IS_DESKTOP_APP_INFO (info)) {
+static gboolean unity_places_tile_clicked_handler_co (UnityPlacesTileClickedHandlerData* data) {
+	switch (data->_state_) {
+		case 0:
+		goto _state_0;
+		case 1:
+		goto _state_1;
+		default:
+		g_assert_not_reached ();
+	}
+	_state_0:
+	{
+		g_debug ("places-default-renderer-group.vala:219: %s", data->_tmp0_ = g_strconcat ("Launching ", string_to_string (data->self->priv->_uri), NULL));
+		_g_free0 (data->_tmp0_);
+		if (g_str_has_prefix (data->self->priv->_uri, "application://")) {
+			data->id = g_strdup (g_utf8_offset_to_pointer (data->self->priv->_uri, string_get_length ("application://")));
 			{
-				g_app_info_launch ((GAppInfo*) info, NULL, NULL, &_inner_error_);
-				if (_inner_error_ != NULL) {
+				data->appinfos = unity_app_info_manager_get_instance ();
+				data->_state_ = 1;
+				unity_app_info_manager_lookup_async (data->appinfos, data->id, unity_places_tile_clicked_handler_ready, data);
+				return FALSE;
+				_state_1:
+				data->_tmp1_ = unity_app_info_manager_lookup_finish (data->appinfos, data->_res_, &data->_inner_error_);
+				if (data->_inner_error_ != NULL) {
+					_g_object_unref0 (data->appinfos);
 					goto __catch5_g_error;
 				}
+				data->info = (data->_tmp2_ = data->_tmp1_, _g_object_unref0 (data->info), data->_tmp2_);
+				g_debug ("places-default-renderer-group.vala:229: Foo: %s", g_app_info_get_name (data->info));
+				_g_object_unref0 (data->appinfos);
 			}
 			goto __finally5;
 			__catch5_g_error:
 			{
-				GError * e;
-				e = _inner_error_;
-				_inner_error_ = NULL;
+				data->ee = data->_inner_error_;
+				data->_inner_error_ = NULL;
 				{
-					g_warning ("places-default-renderer-group.vala:226: Unable to launch desktop file " \
-"%s: %s\n", id, e->message);
-					_g_error_free0 (e);
+					g_warning ("places-default-renderer-group.vala:231: Unable to read .desktop file '" \
+"%s': %s", data->self->priv->_uri, data->ee->message);
+					_g_error_free0 (data->ee);
+					_g_free0 (data->id);
+					_g_object_unref0 (data->info);
+					{
+						if (data->_state_ == 0) {
+							g_simple_async_result_complete_in_idle (data->_async_result);
+						} else {
+							g_simple_async_result_complete (data->_async_result);
+						}
+						g_object_unref (data->_async_result);
+						return FALSE;
+					}
+					_g_error_free0 (data->ee);
 				}
 			}
 			__finally5:
-			if (_inner_error_ != NULL) {
-				_g_free0 (id);
-				_g_object_unref0 (info);
-				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-				g_clear_error (&_inner_error_);
-				return;
+			if (data->_inner_error_ != NULL) {
+				_g_free0 (data->id);
+				_g_object_unref0 (data->info);
+				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
+				g_clear_error (&data->_inner_error_);
+				return FALSE;
 			}
-		} else {
-			g_warning ("places-default-renderer-group.vala:233: %s is an invalid DesktopAppInf" \
-"o id\n", id);
+			if (G_IS_APP_INFO (data->info)) {
+				{
+					g_app_info_launch (data->info, NULL, NULL, &data->_inner_error_);
+					if (data->_inner_error_ != NULL) {
+						goto __catch6_g_error;
+					}
+					g_debug ("places-default-renderer-group.vala:239: Launched");
+				}
+				goto __finally6;
+				__catch6_g_error:
+				{
+					data->e = data->_inner_error_;
+					data->_inner_error_ = NULL;
+					{
+						g_warning ("places-default-renderer-group.vala:241: Unable to launch desktop file " \
+"%s: %s\n", data->id, data->e->message);
+						_g_error_free0 (data->e);
+					}
+				}
+				__finally6:
+				if (data->_inner_error_ != NULL) {
+					_g_free0 (data->id);
+					_g_object_unref0 (data->info);
+					g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
+					g_clear_error (&data->_inner_error_);
+					return FALSE;
+				}
+			} else {
+				g_warning ("places-default-renderer-group.vala:248: %s is an invalid DesktopAppInf" \
+"o id\n", data->id);
+			}
+			_g_free0 (data->id);
+			_g_object_unref0 (data->info);
+			{
+				if (data->_state_ == 0) {
+					g_simple_async_result_complete_in_idle (data->_async_result);
+				} else {
+					g_simple_async_result_complete (data->_async_result);
+				}
+				g_object_unref (data->_async_result);
+				return FALSE;
+			}
+			_g_free0 (data->id);
+			_g_object_unref0 (data->info);
 		}
-		_g_free0 (id);
-		_g_object_unref0 (info);
-		return;
-	}
-	{
-		gtk_show_uri (gdk_screen_get_default (), self->priv->_uri, (guint32) 0, &_inner_error_);
-		if (_inner_error_ != NULL) {
-			goto __catch6_g_error;
-		}
-	}
-	goto __finally6;
-	__catch6_g_error:
-	{
-		GError * e;
-		e = _inner_error_;
-		_inner_error_ = NULL;
 		{
-			g_warning ("places-default-renderer-group.vala:243: Unable to launch: %s\n", e->message);
-			_g_error_free0 (e);
+			gtk_show_uri (gdk_screen_get_default (), data->self->priv->_uri, (guint32) 0, &data->_inner_error_);
+			if (data->_inner_error_ != NULL) {
+				goto __catch7_g_error;
+			}
+		}
+		goto __finally7;
+		__catch7_g_error:
+		{
+			data->eee = data->_inner_error_;
+			data->_inner_error_ = NULL;
+			{
+				g_warning ("places-default-renderer-group.vala:258: Unable to launch: %s\n", data->eee->message);
+				_g_error_free0 (data->eee);
+			}
+		}
+		__finally7:
+		if (data->_inner_error_ != NULL) {
+			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
+			g_clear_error (&data->_inner_error_);
+			return FALSE;
 		}
 	}
-	__finally6:
-	if (_inner_error_ != NULL) {
-		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-		g_clear_error (&_inner_error_);
-		return;
+	{
+		if (data->_state_ == 0) {
+			g_simple_async_result_complete_in_idle (data->_async_result);
+		} else {
+			g_simple_async_result_complete (data->_async_result);
+		}
+		g_object_unref (data->_async_result);
+		return FALSE;
 	}
 }
 
 
-static gboolean unity_places_tile_load_icon (UnityPlacesTile* self) {
-	gboolean result = FALSE;
-	g_return_val_if_fail (self != NULL, FALSE);
-	if (g_str_has_prefix (self->priv->_uri, "application://")) {
-		char* id;
-		GDesktopAppInfo* info;
-		id = g_strdup (g_utf8_offset_to_pointer (self->priv->_uri, string_get_length ("application://")));
-		info = g_desktop_app_info_new (id);
-		if (G_IS_DESKTOP_APP_INFO (info)) {
-			GIcon* icon;
-			icon = _g_object_ref0 (g_app_info_get_icon ((GAppInfo*) info));
-			if (G_IS_THEMED_ICON (icon)) {
-				ctk_image_set_from_gicon (ctk_button_get_image ((CtkButton*) self), icon);
-			} else {
-				if (G_IS_FILE_ICON (icon)) {
-					GIcon* _tmp0_;
-					GFile* file;
-					char* _tmp1_;
-					file = _g_object_ref0 (g_file_icon_get_file ((_tmp0_ = icon, G_IS_FILE_ICON (_tmp0_) ? ((GFileIcon*) _tmp0_) : NULL)));
-					ctk_image_set_from_filename (ctk_button_get_image ((CtkButton*) self), _tmp1_ = g_file_get_path (file));
-					_g_free0 (_tmp1_);
-					_g_object_unref0 (file);
-				}
-			}
-			_g_object_unref0 (icon);
-		}
-		_g_free0 (id);
-		_g_object_unref0 (info);
+static void unity_places_tile_set_icon (UnityPlacesTile* self) {
+	UnityPixbufCache* cache;
+	gboolean _tmp0_ = FALSE;
+	g_return_if_fail (self != NULL);
+	cache = unity_pixbuf_cache_get_default ();
+	if (self->priv->_icon_hint != NULL) {
+		_tmp0_ = _vala_strcmp0 (self->priv->_icon_hint, "") != 0;
 	} else {
+		_tmp0_ = FALSE;
+	}
+	if (_tmp0_) {
+		unity_pixbuf_cache_set_image_from_gicon_string (cache, ctk_button_get_image ((CtkButton*) self), self->priv->_icon_hint, UNITY_PLACES_TILE_ICON_SIZE, NULL, NULL);
+	} else {
+		gboolean _tmp1_ = FALSE;
 		if (self->priv->_mimetype != NULL) {
-			GIcon* _tmp2_;
-			GThemedIcon* icon;
-			icon = _g_object_ref0 ((_tmp2_ = g_content_type_get_icon (self->priv->_mimetype), G_IS_THEMED_ICON (_tmp2_) ? ((GThemedIcon*) _tmp2_) : NULL));
-			if (G_IS_THEMED_ICON (icon)) {
-				ctk_image_set_from_gicon (ctk_button_get_image ((CtkButton*) self), (GIcon*) icon);
-			} else {
-				if (G_IS_FILE_ICON (icon)) {
-					GThemedIcon* _tmp3_;
-					GFile* file;
-					char* _tmp4_;
-					file = _g_object_ref0 (g_file_icon_get_file ((_tmp3_ = icon, G_IS_FILE_ICON (_tmp3_) ? ((GFileIcon*) _tmp3_) : NULL)));
-					ctk_image_set_from_filename (ctk_button_get_image ((CtkButton*) self), _tmp4_ = g_file_get_path (file));
-					_g_free0 (_tmp4_);
-					_g_object_unref0 (file);
-				}
-			}
+			_tmp1_ = _vala_strcmp0 (self->priv->_mimetype, "") != 0;
+		} else {
+			_tmp1_ = FALSE;
+		}
+		if (_tmp1_) {
+			GIcon* icon;
+			icon = _g_object_ref0 (g_content_type_get_icon (self->priv->_mimetype));
+			unity_pixbuf_cache_set_image_from_gicon_string (cache, ctk_button_get_image ((CtkButton*) self), g_icon_to_string (icon), UNITY_PLACES_TILE_ICON_SIZE, NULL, NULL);
 			_g_object_unref0 (icon);
+		} else {
+			unity_pixbuf_cache_set_image_from_icon_name (cache, ctk_button_get_image ((CtkButton*) self), UNITY_PLACES_TILE_DEFAULT_ICON, UNITY_PLACES_TILE_ICON_SIZE, NULL, NULL);
 		}
 	}
-	result = FALSE;
-	return result;
+	_g_object_unref0 (cache);
 }
 
 
@@ -789,13 +901,6 @@ static void unity_places_tile_set_comment (UnityPlacesTile* self, const char* va
 }
 
 
-static gboolean _unity_places_tile_load_icon_gsource_func (gpointer self) {
-	gboolean result;
-	result = unity_places_tile_load_icon (self);
-	return result;
-}
-
-
 static GObject * unity_places_tile_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -808,8 +913,7 @@ static GObject * unity_places_tile_constructor (GType type, guint n_construct_pr
 		ctk_button_set_label ((CtkButton*) self, self->priv->_display_name);
 		text = ctk_button_get_text ((CtkButton*) self);
 		clutter_text_set_ellipsize ((ClutterText*) text, PANGO_ELLIPSIZE_END);
-		ctk_image_set_from_stock (ctk_button_get_image ((CtkButton*) self), "text-x-preview");
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_places_tile_load_icon_gsource_func, g_object_ref (self), g_object_unref);
+		unity_places_tile_set_icon (self);
 	}
 	return obj;
 }
@@ -917,6 +1021,17 @@ static void unity_places_tile_set_property (GObject * object, guint property_id,
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
 	}
+}
+
+
+static int _vala_strcmp0 (const char * str1, const char * str2) {
+	if (str1 == NULL) {
+		return -(str1 != str2);
+	}
+	if (str2 == NULL) {
+		return str1 != str2;
+	}
+	return strcmp (str1, str2);
 }
 
 

@@ -86,8 +86,10 @@ am__objects_1 = libunity_la-chrome-handler.lo \
 	libunity_la-entry.lo libunity_la-icon-postprocessor.lo \
 	libunity_la-prism-handler.lo \
 	libunity_la-quicklist-rendering.lo libunity_la-shell.lo \
-	libunity_la-theme.lo libunity_la-unity-cairo-canvas.lo \
-	libunity_la-unity-favorites.lo \
+	libunity_la-theme.lo libunity_la-unity-appinfo-manager.lo \
+	libunity_la-unity-cairo-canvas.lo \
+	libunity_la-unity-favorites.lo libunity_la-unity-io.lo \
+	libunity_la-unity-pixbuf-cache.lo \
 	libunity_la-unity-place-renderer.lo libunity_la-unity-place.lo \
 	libunity_la-webapp-fetcher.lo
 am_libunity_la_OBJECTS = $(am__objects_1)
@@ -329,6 +331,8 @@ libunity_la_VALAFLAGS = \
   --pkg dee-1.0 \
   --pkg gconf-2.0 \
   --pkg gtk+-2.0 \
+  --pkg gio-2.0 \
+  --pkg gio-unix-2.0 \
   --pkg gee-1.0 \
   --pkg Bamf-0.2 \
   --pkg unique-1.0 \
@@ -348,8 +352,11 @@ libunity_la_VALASOURCES = \
   quicklist-rendering.vala \
   shell.vala \
   theme.vala \
+  unity-appinfo-manager.vala \
   unity-cairo-canvas.vala \
   unity-favorites.vala \
+  unity-io.vala \
+  unity-pixbuf-cache.vala \
   unity-place-renderer.vala \
   unity-place.vala \
   webapp-fetcher.vala
@@ -442,8 +449,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-quicklist-rendering.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-shell.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-theme.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-appinfo-manager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-cairo-canvas.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-favorites.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-io.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-pixbuf-cache.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-place-renderer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-place.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-webapp-fetcher.Plo@am__quote@
@@ -544,6 +554,14 @@ libunity_la-theme.lo: theme.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-theme.lo `test -f 'theme.c' || echo '$(srcdir)/'`theme.c
 
+libunity_la-unity-appinfo-manager.lo: unity-appinfo-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-unity-appinfo-manager.lo -MD -MP -MF $(DEPDIR)/libunity_la-unity-appinfo-manager.Tpo -c -o libunity_la-unity-appinfo-manager.lo `test -f 'unity-appinfo-manager.c' || echo '$(srcdir)/'`unity-appinfo-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_la-unity-appinfo-manager.Tpo $(DEPDIR)/libunity_la-unity-appinfo-manager.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='unity-appinfo-manager.c' object='libunity_la-unity-appinfo-manager.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-unity-appinfo-manager.lo `test -f 'unity-appinfo-manager.c' || echo '$(srcdir)/'`unity-appinfo-manager.c
+
 libunity_la-unity-cairo-canvas.lo: unity-cairo-canvas.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-unity-cairo-canvas.lo -MD -MP -MF $(DEPDIR)/libunity_la-unity-cairo-canvas.Tpo -c -o libunity_la-unity-cairo-canvas.lo `test -f 'unity-cairo-canvas.c' || echo '$(srcdir)/'`unity-cairo-canvas.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_la-unity-cairo-canvas.Tpo $(DEPDIR)/libunity_la-unity-cairo-canvas.Plo
@@ -559,6 +577,22 @@ libunity_la-unity-favorites.lo: unity-favorites.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='unity-favorites.c' object='libunity_la-unity-favorites.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-unity-favorites.lo `test -f 'unity-favorites.c' || echo '$(srcdir)/'`unity-favorites.c
+
+libunity_la-unity-io.lo: unity-io.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-unity-io.lo -MD -MP -MF $(DEPDIR)/libunity_la-unity-io.Tpo -c -o libunity_la-unity-io.lo `test -f 'unity-io.c' || echo '$(srcdir)/'`unity-io.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_la-unity-io.Tpo $(DEPDIR)/libunity_la-unity-io.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='unity-io.c' object='libunity_la-unity-io.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-unity-io.lo `test -f 'unity-io.c' || echo '$(srcdir)/'`unity-io.c
+
+libunity_la-unity-pixbuf-cache.lo: unity-pixbuf-cache.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-unity-pixbuf-cache.lo -MD -MP -MF $(DEPDIR)/libunity_la-unity-pixbuf-cache.Tpo -c -o libunity_la-unity-pixbuf-cache.lo `test -f 'unity-pixbuf-cache.c' || echo '$(srcdir)/'`unity-pixbuf-cache.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_la-unity-pixbuf-cache.Tpo $(DEPDIR)/libunity_la-unity-pixbuf-cache.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='unity-pixbuf-cache.c' object='libunity_la-unity-pixbuf-cache.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-unity-pixbuf-cache.lo `test -f 'unity-pixbuf-cache.c' || echo '$(srcdir)/'`unity-pixbuf-cache.c
 
 libunity_la-unity-place-renderer.lo: unity-place-renderer.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-unity-place-renderer.lo -MD -MP -MF $(DEPDIR)/libunity_la-unity-place-renderer.Tpo -c -o libunity_la-unity-place-renderer.lo `test -f 'unity-place-renderer.c' || echo '$(srcdir)/'`unity-place-renderer.c

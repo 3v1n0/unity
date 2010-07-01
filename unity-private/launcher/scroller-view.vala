@@ -157,22 +157,30 @@ namespace Unity.Launcher
 
     public int get_model_index_at_y_pos (float y)
     {
-      // returns the model index at the screenspace position given
 
-      float pos_x, pos_y;
-      get_position (out pos_x, out pos_y);
-      y -= pos_y;
-      int i = 0;
-      foreach (ScrollerChild child in model)
+      // trying out a different method
+      int iy = (int)y;
+      Clutter.Actor picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy);
+      if (picked_actor is ScrollerChild == false)
         {
-          float transformed_pos = child.position + padding.top;
-          if (transformed_pos > y)
-            return i;
+          // we didn't pick a scroller child. lets pick spacing above us
+          picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy - spacing);
 
-          i++;
+          if (picked_actor is ScrollerChild == false)
+            {
+              // again nothing good! lets try again but spacing below
+              picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy + spacing);
+
+              if (picked_actor is ScrollerChild == false)
+                {
+                  // couldn't pick a single actor, return 0
+                  return 0;
+                }
+            }
         }
 
-      return int.min (int.max (i, 0), model.size - 1);
+      return model.index_of (picked_actor as ScrollerChild);
+
     }
 
     /*
@@ -342,7 +350,7 @@ namespace Unity.Launcher
           scroll_position = 0;
           order_children (true);
           float child_height = model[index].get_height () / 2;
-          var new_scroll_position = -model[index].position + event.crossing.y;
+          var new_scroll_position = -model[index].position + event.crossing.y - model[index].get_height ();
 
           //reset our view so that we animate cleanly to the new view
           view_type = ScrollerViewType.CONTRACTED;
@@ -710,7 +718,7 @@ namespace Unity.Launcher
               float contracted_space = 0.0f;
               contracted_space = ((model.size - num_launchers) * (8 + spacing));
 
-              if (flat_space + contracted_space < (get_available_height () - (spacing * 2)))
+              if (flat_space + spacing + contracted_space < (get_available_height () - (spacing * 2)))
                 {
                   // everything fits in at this level, woo!
                   break;
@@ -761,7 +769,7 @@ namespace Unity.Launcher
           else
             {
               // contracted launcher
-              if (index == index_end_flat) h -= spacing;
+              if (index == index_end_flat) h -= spacing * 2;
 
               transition.position = h;
               h += 8 + spacing;
@@ -833,6 +841,12 @@ namespace Unity.Launcher
 
           child.allocate (child_box, flags);
 
+          child.remove_clip ();
+          if (child_box.y1 < 0)
+            child.set_clip (0, Math.fabsf (child_box.y1),
+                            child_box.get_width (), child_box.get_height () - child_box.y1);
+
+
           total_child_height += child_height + spacing;
         }
 
@@ -859,7 +873,24 @@ namespace Unity.Launcher
     public override void pick (Clutter.Color color)
     {
       base.pick (color);
-      foreach (ScrollerChild child in model)
+      for (int index = draw_btf.size-1; index >= 0; index--)
+        {
+          ScrollerChild child = draw_btf[index];
+          if (child is LauncherChild && child.opacity > 0)
+            {
+              (child as LauncherChild).paint ();
+            }
+        }
+
+      foreach (ScrollerChild child in draw_ftb)
+        {
+          if (child is LauncherChild && child.opacity > 0)
+            {
+              (child as LauncherChild).paint ();
+            }
+        }
+
+      foreach (ScrollerChild child in child_refs)
         {
           child.paint ();
         }

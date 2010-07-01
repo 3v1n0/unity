@@ -24,12 +24,15 @@ namespace Unity.Places
     static const string SEARCH_ICON_FILE = PKGDATADIR + "/search_icon.png";
     static const float  PADDING = 1.0f;
     static const int    LIVE_SEARCH_TIMEOUT = 300; /* Milliseconds */
+    const Clutter.Color nofocus_color = { 0xff, 0xff, 0xff, 0xbb };
+    const Clutter.Color focus_color   = { 0xff, 0xff, 0xff, 0xff };
 
     public Ctk.Image left_icon;
     public Ctk.Text  text;
     public ThemeImage right_icon;
 
     private uint live_search_timeout = 0;
+    private string _static_text = "Search";
 
     public signal void text_changed (string text);
 
@@ -48,16 +51,20 @@ namespace Unity.Places
       pack (left_icon, false, true);
       left_icon.show ();
 
-      text = new Ctk.Text ("Search");
+      text = new Ctk.Text (_static_text);
       text.reactive = true;
       text.selectable = true;
       text.editable = true;
       text.activatable = true;
       text.single_line_mode = true;
+      text.cursor_visible = false;
+      text.color = nofocus_color;
       pack (text, true, true);
       text.show ();
 
       text.text_changed.connect (on_text_changed);
+      text.key_focus_in.connect (on_key_focus_in);
+      text.key_focus_out.connect (on_key_focus_out);
 
       right_icon = new ThemeImage ("gtk-close");
       pack (right_icon, false, true);
@@ -87,6 +94,26 @@ namespace Unity.Places
 
         return false;
       });
+    }
+
+    private void on_key_focus_in ()
+    {
+      if (text.text == _static_text)
+        {
+          text.set_text ("");
+          text.cursor_visible = true;
+          text.set_selection (0, -1);
+          text.color = focus_color;
+        }
+    }
+
+    private void on_key_focus_out ()
+    {
+
+      text.cursor_visible = false;
+      text.text = _static_text;
+      text.color = nofocus_color;
+
     }
   }
 }

@@ -132,6 +132,7 @@ enum  {
 	UNITY_TESTS_UI_TEST_FAVORITES_DUMMY_PROPERTY
 };
 static GeeArrayList* unity_tests_ui_test_favorites_real_get_favorites (UnityFavorites* base);
+static char* unity_tests_ui_test_favorites_real_find_uid_for_desktop_file (UnityFavorites* base, const char* desktop_file);
 static void unity_tests_ui_test_favorites_real_add_favorite (UnityFavorites* base, const char* uid);
 static void unity_tests_ui_test_favorites_real_remove_favorite (UnityFavorites* base, const char* uid);
 static gboolean unity_tests_ui_test_favorites_real_is_favorite (UnityFavorites* base, const char* uid);
@@ -185,6 +186,16 @@ static GeeArrayList* unity_tests_ui_test_favorites_real_get_favorites (UnityFavo
 	retlist = gee_array_list_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, NULL);
 	gee_abstract_collection_add ((GeeAbstractCollection*) retlist, "app-firefox");
 	result = retlist;
+	return result;
+}
+
+
+static char* unity_tests_ui_test_favorites_real_find_uid_for_desktop_file (UnityFavorites* base, const char* desktop_file) {
+	UnityTestsUITestFavorites * self;
+	char* result = NULL;
+	self = (UnityTestsUITestFavorites*) base;
+	g_return_val_if_fail (desktop_file != NULL, NULL);
+	result = g_strdup ("app-firefox");
 	return result;
 }
 
@@ -309,6 +320,7 @@ UnityTestsUITestFavorites* unity_tests_ui_test_favorites_new (void) {
 static void unity_tests_ui_test_favorites_class_init (UnityTestsUITestFavoritesClass * klass) {
 	unity_tests_ui_test_favorites_parent_class = g_type_class_peek_parent (klass);
 	UNITY_FAVORITES_CLASS (klass)->get_favorites = unity_tests_ui_test_favorites_real_get_favorites;
+	UNITY_FAVORITES_CLASS (klass)->find_uid_for_desktop_file = unity_tests_ui_test_favorites_real_find_uid_for_desktop_file;
 	UNITY_FAVORITES_CLASS (klass)->add_favorite = unity_tests_ui_test_favorites_real_add_favorite;
 	UNITY_FAVORITES_CLASS (klass)->remove_favorite = unity_tests_ui_test_favorites_real_remove_favorite;
 	UNITY_FAVORITES_CLASS (klass)->is_favorite = unity_tests_ui_test_favorites_real_is_favorite;
