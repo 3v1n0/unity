@@ -148,6 +148,10 @@ namespace Unity
 
 					favorite_removed (uid);
         }
+      else
+        {
+          warning (@"$uid is not a favorite");
+        }
     }
 
     public override bool is_favorite (string uid)

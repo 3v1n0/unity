@@ -319,6 +319,11 @@ namespace Unity.Launcher
           if (retcont in model)
             model.remove (retcont);
 
+          if (model_controller is ApplicationController)
+            {
+              (model_controller as ApplicationController).set_sticky (false);
+            }
+
           if (model_controller in childcontrollers)
             childcontrollers.remove (model_controller);
         }
