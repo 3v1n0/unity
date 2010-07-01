@@ -168,7 +168,7 @@ namespace Unity.Launcher
           float transformed_pos = child.position + padding.top;
           if (transformed_pos > y)
             {
-              return i-1;
+              return int.min (int.max (i-1, 0), model.size - 1);
             }
 
           i++;
