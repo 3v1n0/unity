@@ -289,9 +289,9 @@ namespace Unity.Launcher
           // find the index at this position
           int model_index = view.get_model_index_at_y_pos (y);
           if (retcont in model)
-            model.move (retcont, int.max (model_index - 1, 0));
+            model.move (retcont, int.max (model_index, 0));
           else
-            model.insert (retcont, int.max (model_index - 1, 0));
+            model.insert (retcont, int.max (model_index, 0));
 
           view.do_queue_redraw ();
         }

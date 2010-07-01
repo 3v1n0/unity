@@ -167,7 +167,9 @@ namespace Unity.Launcher
         {
           float transformed_pos = child.position + padding.top;
           if (transformed_pos > y)
-            return i;
+            {
+              return i-1;
+            }
 
           i++;
         }
@@ -342,7 +344,7 @@ namespace Unity.Launcher
           scroll_position = 0;
           order_children (true);
           float child_height = model[index].get_height () / 2;
-          var new_scroll_position = -model[index].position + event.crossing.y;
+          var new_scroll_position = -model[index].position + event.crossing.y - model[index].get_height ();
 
           //reset our view so that we animate cleanly to the new view
           view_type = ScrollerViewType.CONTRACTED;
