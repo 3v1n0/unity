@@ -158,7 +158,7 @@ namespace Unity.Launcher
     public int get_model_index_at_y_pos (float y)
     {
       // returns the model index at the screenspace position given
-
+      debug ("going through model indexes");
       float pos_x, pos_y;
       get_position (out pos_x, out pos_y);
       y -= pos_y;
@@ -166,6 +166,7 @@ namespace Unity.Launcher
       foreach (ScrollerChild child in model)
         {
           float transformed_pos = child.position + padding.top;
+          debug (@"transformed_pos: $transformed_pos");
           if (transformed_pos > y)
             {
               return int.min (int.max (i-1, 0), model.size - 1);
