@@ -213,7 +213,7 @@ namespace Unity.Places
     {
       clicked_handler.begin ();
     }
-    
+
     private async void clicked_handler ()
     {
       debug (@"Launching $uri");
@@ -231,7 +231,7 @@ namespace Unity.Places
             warning ("Unable to read .desktop file '%s': %s", uri, ee.message);
             return;
           }
-          
+
           if (info is AppInfo)
             {
               try {
@@ -263,14 +263,11 @@ namespace Unity.Places
     {
       var cache = PixbufCache.get_default ();
 
-      if (uri.has_prefix ("application://"))
+      if (icon_hint != null && icon_hint != "")
         {
-          if (icon_hint != null)
-            cache.set_image_from_gicon_string (get_image (), icon_hint, ICON_SIZE);
-          else
-            cache.set_image_from_icon_name (get_image (), DEFAULT_ICON, ICON_SIZE);
+          cache.set_image_from_gicon_string (get_image (), icon_hint, ICON_SIZE);
         }
-      else if (mimetype != null)
+      else if (mimetype != null && mimetype != "")
         {
           var icon = GLib.g_content_type_get_icon (mimetype);
           cache.set_image_from_gicon_string (get_image (), icon.to_string(), ICON_SIZE);
