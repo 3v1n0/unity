@@ -73,8 +73,10 @@ libunity_la_VALASOURCES = \
   unity-favorites.vala \
   unity-io.vala \
   unity-pixbuf-cache.vala \
-  unity-place-renderer.vala \
   unity-place.vala \
+  unity-place-activation.vala \
+  unity-place-browser.vala \
+  unity-place-renderer.vala \
   webapp-fetcher.vala
 
 

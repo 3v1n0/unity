@@ -312,6 +312,18 @@ namespace Unity.Place {
     public Search active_search { get; set; }
     public Search active_global_search { get; set; }
 
+    private Browser? _browser = null;
+    public Browser? browser {
+      get { return _browser; }
+      set {
+        _browser = browser;
+        if (value != null)
+          set_hint ("UnityPlaceBrowserPath", value.dbus_path);
+        else
+          clear_hint ("UnityPlaceBrowserPath");
+      }
+    }
+
     /*
      * Constructors
      */
@@ -446,7 +458,7 @@ namespace Unity.Place {
    * Private helper class to shield of DBus details and ugly
    * internal structs used for marshalling
    */
-  private class ServiceImpl : GLib.Object, Service
+  private class ServiceImpl : GLib.Object, Service, Activation
   {
     private string _dbus_path;
     private HashTable<string,EntryServiceImpl> entries;
@@ -465,6 +477,8 @@ namespace Unity.Place {
     public bool exported {
       get { return _exported; }
     }
+    
+    public Activation? activation { get; set; default = null; }
 
     /*
      * Constructors
@@ -598,14 +612,29 @@ namespace Unity.Place {
       {
         entry.unexport ();
       }
-      // FIXME: unregister_object() depends on https://bugzilla.gnome.org/show_bug.cgi?id=620543
-      //var conn = DBus.Bus.get (DBus.BusType. SESSION);
-      //conn.unregister_object (this);
+      var conn = DBus.Bus.get (DBus.BusType. SESSION);
+      conn.unregister_object (this);
 
       _exported = false;
       notify_property("exported");
     }
-  }
+    
+    /* Default impl of the Unity.Place.Activation interface,
+     * delegates to the installed Activation impl if there is one */
+    public async bool activate (string uri)
+    {
+      if (activation == null )
+        return false;
+      
+      try {
+        bool activated = yield activation.activate (uri);
+        return activated;
+      } catch (DBus.Error e) {
+        return false;
+      }
+    }
+    
+  } /* End: ServiceImpl */
 
   /**
    * UnityPlaceEntryServiceImpl:
@@ -617,6 +646,10 @@ namespace Unity.Place {
   {
     private bool _exported = false;
     private EntryInfo _entry_info;
+    
+    /* Keep a ref to the previous browser to properly handle it leaving and
+     * entering the bus */
+    private Browser? _browser;
 
     /*
      * Properties
@@ -638,6 +671,9 @@ namespace Unity.Place {
     public EntryServiceImpl (EntryInfo entry_info)
     {
       GLib.Object(entry_info : entry_info);
+      _browser = entry_info.browser;
+      
+      entry_info.notify["browser"].connect (on_browser_changed);
     }
 
     /*
@@ -675,20 +711,61 @@ namespace Unity.Place {
       var conn = DBus.Bus.get (DBus.BusType. SESSION);
       conn.register_object (_entry_info.dbus_path, this);
 
+      if (_entry_info.browser != null)
+        {
+          debug ("Exporting browser at '%s'", _entry_info.browser.dbus_path);
+          conn.register_object (_entry_info.browser.dbus_path,
+                                _entry_info.browser);
+
+        }
+      
       _exported = true;
       notify_property("exported");
     }
 
     public void unexport () throws DBus.Error
     {
-      // FIXME: unregister_object() depends on https://bugzilla.gnome.org/show_bug.cgi?id=620543
-      //var conn = DBus.Bus.get (DBus.BusType. SESSION);
-      //conn.unregister_object (this);
+      var conn = DBus.Bus.get (DBus.BusType. SESSION);
+      conn.unregister_object (this);
+
+      if (_entry_info.browser != null)
+        {
+          debug ("Unexporting browser '%s'", _entry_info.browser.dbus_path);
+          conn.unregister_object (_entry_info.browser);
+        }
 
       _exported = false;
       notify_property("exported");
     }
-  }
+    
+    private void on_browser_changed (GLib.Object obj, ParamSpec pspec)
+    {
+      DBus.Connection conn;
+      try {
+        conn = DBus.Bus.get (DBus.BusType. SESSION);
+      } catch (DBus.Error e) {
+        warning ("Unable to connect to session bus: %s", e.message);
+        return;
+      }
+
+      /* clear previous browser if any */
+      if (_browser != null && _exported)
+        {
+          debug ("Unexporting browser '%s'", _browser.dbus_path);
+          conn.unregister_object (_browser);
+        }
+
+      _browser = entry_info.browser;
+
+      /* Export the new one if any */
+      if (_browser != null && _exported)
+        {
+          debug ("Exporting browser '%s'", _browser.dbus_path);
+          conn.register_object (_browser.dbus_path, _browser);
+        }
+    }
+    
+  } /* End: EntryServiceImpl */
 
   /*
    * Private helper struct used to keep track of the installed signal handlers
@@ -723,8 +800,17 @@ namespace Unity.Place {
       construct { _dbus_path = value; }
     }
 
+    /* Whether or not this controller exports its installed entries and
+     * activation service on the bus */
     public bool exported {
       get { return _exported; }
+    }
+    
+    /* Defer URI activation to this instance. If there is no activation set
+     * for the controller it will always decline any request for activation */
+    public Activation? activation {
+      get { return service.activation; }
+      set { service.activation = value; }
     }
 
     /*
@@ -850,7 +936,9 @@ namespace Unity.Place {
 
     public void export () throws DBus.Error
     {
+      /* Export the Place and Activation insterfaces */
       service.export ();
+      
       _exported = true;
       notify_property("exported");
     }
@@ -889,6 +977,6 @@ namespace Unity.Place {
       entry_service.place_entry_info_changed (entry_data);
     }
     
-  }
+  } /* End: Controller class */
 
 } /* namespace */
