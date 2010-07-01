@@ -62,7 +62,7 @@ namespace Unity.Places
 
       place_bar.entry_view_activated.connect (on_entry_view_activated);
 
-      content_box = new Ctk.VBox (12);
+      content_box = new Ctk.VBox (4);
       content_box.padding = {
         0.0f,
         8.0f,

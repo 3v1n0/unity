@@ -57,12 +57,12 @@ namespace Unity.Places
       homogeneous = false;
       hide ();
 
-      title_box = new Ctk.HBox (12);
-      pack (title_box, false, true);
+      title_box = new Ctk.HBox (8);
+      pack (title_box, false, false);
       title_box.show ();
 
       icon = new Ctk.Image (24);
-      //title_box.pack (icon, false, true);
+      title_box.pack (icon, false, false);
       icon.show ();
 
       text = new Ctk.Text (display_name);
@@ -70,7 +70,7 @@ namespace Unity.Places
       text.show ();
 
       expander = new Ctk.Image (24);
-      //title_box.pack (expander, false, true);
+      title_box.pack (expander, false, true);
       expander.show ();
 
       var sep = new Clutter.Rectangle.with_color ({ 255, 255, 255, 255 });
@@ -80,7 +80,7 @@ namespace Unity.Places
 
       renderer = new Ctk.IconView ();
       renderer.padding = { 12.0f, 0.0f, 0.0f, 0.0f };
-      //renderer.spacing = 30;
+      renderer.spacing = 24;
       pack (renderer, true, true);
       renderer.show ();
 
@@ -205,8 +205,8 @@ namespace Unity.Places
                                                out float mwidth,
                                                out float nwidth)
     {
-      mwidth = 160.0f;
-      nwidth = 160.0f;
+      mwidth = 150.0f;
+      nwidth = 150.0f;
     }
 
     private override void clicked ()

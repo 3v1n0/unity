@@ -17,6 +17,8 @@
  *
  */
 
+using Unity;
+
 namespace Unity.Places
 {
   public class PlaceSearchSectionsBar : Ctk.Box
@@ -50,6 +52,8 @@ namespace Unity.Places
      */
     public void set_active_entry (PlaceEntry entry)
     {
+      var children = get_children ();
+
       if (active_entry is PlaceEntry)
         {
           var old_model = active_entry.sections_model;
@@ -57,12 +61,14 @@ namespace Unity.Places
           old_model.row_changed.disconnect (on_section_changed);
           old_model.row_removed.disconnect (on_section_removed);
 
-          var children = get_children ();
-          foreach (Clutter.Actor actor in children)
-            actor.destroy ();
-
           active_section = null;
         }
+
+      foreach (Clutter.Actor actor in children)
+        {
+          (actor as Section).dirty = true;
+        }
+
 
       active_entry = entry;
       var model = active_entry.sections_model;
@@ -70,8 +76,43 @@ namespace Unity.Places
       unowned Dee.ModelIter iter = model.get_first_iter ();
       while (iter != null && !model.is_last (iter))
         {
-          on_section_added (model, iter);
+          bool updated_local_entry = false;
+
+          foreach (Clutter.Actor actor in children)
+            {
+              var s = actor as Section;
+
+              if (s.dirty)
+                {
+                  s.model = model;
+                  s.iter = iter;
+                  s.text.text = model.get_string (iter, 0);
+                  s.dirty = false;
+                  updated_local_entry = true;
+
+                  if (active_section == null)
+                    active_section = s;
+
+                  s.active = active_section == s;
+
+                  break;
+                }
+            }
+          if (!updated_local_entry)
+            {
+              on_section_added (model, iter);
+            }
+
           iter = model.next (iter);
+        }
+
+      foreach (Clutter.Actor actor in children)
+        {
+          var s = actor as Section;
+          if (s.dirty)
+            {
+              s.start_destroy ();
+            }
         }
 
       model.row_added.connect (on_section_added);
@@ -124,7 +165,7 @@ namespace Unity.Places
               active_section = get_section_for_iter (model.get_first_iter ());
               active_entry.set_active_section (0);
             }
-          section.destroy ();
+          section.start_destroy ();
         }
     }
 
@@ -153,9 +194,11 @@ namespace Unity.Places
     static const float PADDING = 4.0f;
 
     private CairoCanvas bg;
-    private Ctk.Text    text;
+    public  Ctk.Text    text;
     private Clutter.Color color;
     private Ctk.EffectGlow glow;
+
+    public bool dirty = false;
 
     public new string name {
       get { return text.text; }
@@ -190,8 +233,23 @@ namespace Unity.Places
       }
     }
 
-    public unowned Dee.Model     model { get; construct; }
-    public unowned Dee.ModelIter iter { get; construct; }
+    public unowned Dee.Model     model { get; construct set; }
+    public unowned Dee.ModelIter iter { get; construct set; }
+
+    public float destroy_factor {
+        get { return _destroy_factor; }
+        set { _destroy_factor = value; queue_relayout (); }
+    }
+
+    public float resize_factor {
+        get { return _resize_factor; }
+        set { _resize_factor = value; queue_relayout (); }
+    }
+
+    private float _destroy_factor = 1.0f;
+    private float _resize_factor = 1.0f;
+    private float _last_width = 0.0f;
+    private float _resize_width = 0.0f;
 
     public Section (Dee.Model model, Dee.ModelIter iter)
     {
@@ -222,6 +280,26 @@ namespace Unity.Places
       text.show ();
     }
 
+    public void start_destroy ()
+    {
+      (get_parent () as Clutter.Container).remove_actor (this);
+      /*
+      if (_destroy_factor != 1.0f)
+        return;
+
+      var anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD, 2000,
+                          "destroy_factor", 0.0f);
+
+      anim.completed.connect ((a) => {
+        var obj = a.get_object () as Clutter.Actor;
+
+        (obj.get_parent () as Clutter.Container).remove_actor (obj);
+      });
+
+      debug ("started_animation");
+      */
+    }
+
     private override void get_preferred_width (float     for_height,
                                                out float min_width,
                                                out float nat_width)
@@ -230,8 +308,27 @@ namespace Unity.Places
 
      base.get_preferred_width (for_height, out mw, out nw);
 
-     min_width = mw + padding.right + padding.left;
-     nat_width = nw + padding.right + padding.left;
+     min_width = (mw + padding.right + padding.left) * _destroy_factor;
+     nat_width = (nw + padding.right + padding.left) * _destroy_factor;
+
+     if (_last_width ==0.0f)
+       _last_width = nat_width;
+
+     if (_last_width != nat_width  && _resize_factor == 1.0)
+       {
+         _resize_factor = 0.0f;
+         animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100,
+                  "resize_factor", 1.0f);
+
+        _resize_width = _last_width;
+        _last_width = nat_width;
+       }
+
+     if (_resize_factor != 1.0f)
+       {
+         min_width = _resize_width + ((min_width - _resize_width) * _resize_factor);
+         nat_width = _resize_width + ((nat_width - _resize_width) * _resize_factor);
+       }
     }
 
     private void paint_bg (Cairo.Context cr, int width, int height)
