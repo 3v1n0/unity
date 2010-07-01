@@ -17,6 +17,8 @@
  *
  */
 
+using Unity;
+
 namespace Unity.Places
 {
   public class PlaceSearchSectionsBar : Ctk.Box
@@ -50,6 +52,8 @@ namespace Unity.Places
      */
     public void set_active_entry (PlaceEntry entry)
     {
+      var children = get_children ();
+
       if (active_entry is PlaceEntry)
         {
           var old_model = active_entry.sections_model;
@@ -57,9 +61,10 @@ namespace Unity.Places
           old_model.row_changed.disconnect (on_section_changed);
           old_model.row_removed.disconnect (on_section_removed);
 
-          var children = get_children ();
           foreach (Clutter.Actor actor in children)
-            actor.destroy ();
+            {
+              (actor as Section).dirty = true;
+            }
 
           active_section = null;
         }
@@ -70,8 +75,39 @@ namespace Unity.Places
       unowned Dee.ModelIter iter = model.get_first_iter ();
       while (iter != null && !model.is_last (iter))
         {
-          on_section_added (model, iter);
+          bool updated_local_entry = false;
+
+          foreach (Clutter.Actor actor in children)
+            {
+              var s = actor as Section;
+
+              if (s.dirty)
+                {
+                  s.model = model;
+                  s.iter = iter;
+                  s.text.text = model.get_string (iter, 0);
+                  s.dirty = false;
+                  updated_local_entry = true;
+
+                  if (active_section == null)
+                    active_section = s;
+
+                  s.active = active_section == s;
+
+                  break;
+                }
+            }
+          if (!updated_local_entry)
+            on_section_added (model, iter);
+
           iter = model.next (iter);
+        }
+
+      foreach (Clutter.Actor actor in children)
+        {
+          var s = actor as Section;
+          if (s.dirty)
+            remove_actor (s);
         }
 
       model.row_added.connect (on_section_added);
@@ -153,9 +189,11 @@ namespace Unity.Places
     static const float PADDING = 4.0f;
 
     private CairoCanvas bg;
-    private Ctk.Text    text;
+    public  Ctk.Text    text;
     private Clutter.Color color;
     private Ctk.EffectGlow glow;
+
+    public bool dirty = false;
 
     public new string name {
       get { return text.text; }
@@ -190,8 +228,8 @@ namespace Unity.Places
       }
     }
 
-    public unowned Dee.Model     model { get; construct; }
-    public unowned Dee.ModelIter iter { get; construct; }
+    public unowned Dee.Model     model { get; construct set; }
+    public unowned Dee.ModelIter iter { get; construct set; }
 
     public Section (Dee.Model model, Dee.ModelIter iter)
     {
