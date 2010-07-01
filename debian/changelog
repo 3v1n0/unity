@@ -1,4 +1,4 @@
-unity (0.2.14-0ubuntu1) UNRELEASED; urgency=low
+unity (0.2.14-0ubuntu1) maverick; urgency=low
 
   * New upstream release.
     - fix wrong window geometry (LP: #578545)
@@ -15,7 +15,7 @@ unity (0.2.14-0ubuntu1) UNRELEASED; urgency=low
       and a lot of people could install unity without the session file
     - build-dep on last clutk
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 01 Jul 2010 18:17:31 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 01 Jul 2010 19:08:22 +0200
 
 unity (0.2.12-0ubuntu2) maverick; urgency=low
 
