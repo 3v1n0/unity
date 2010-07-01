@@ -80,7 +80,7 @@ namespace Unity.Places
 
       renderer = new Ctk.IconView ();
       renderer.padding = { 12.0f, 0.0f, 0.0f, 0.0f };
-      //renderer.spacing = 30;
+      renderer.spacing = 12;
       pack (renderer, true, true);
       renderer.show ();
 
