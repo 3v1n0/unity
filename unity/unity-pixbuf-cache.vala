@@ -106,12 +106,17 @@ namespace Unity
                                                 string    icon_name,
                                                 int       size)
     {
+      var key = hash_template.printf (icon_name, size);
+      Pixbuf? ret = cache[key];
+
+      if (ret is Pixbuf)
+        {
+          image.set_from_pixbuf (ret);
+          return;
+        }
+
       Idle.add (set_image_from_icon_name.callback);
       yield;
-
-      var key = hash_template.printf (icon_name, size);
-
-      Pixbuf? ret = cache[key];
 
       if (ret == null)
         {
@@ -138,12 +143,17 @@ namespace Unity
                                                    string    gicon_as_string,
                                                    int       size)
     {
+      var key = hash_template.printf (gicon_as_string, size);
+      Pixbuf? ret = cache[key];
+
+      if (ret is Pixbuf)
+        {
+          image.set_from_pixbuf (ret);
+          return;
+        }
+
       Idle.add (set_image_from_gicon.callback);
       yield;
-
-      var key = hash_template.printf (gicon_as_string, size);
-
-      Pixbuf? ret = cache[key];
 
       if (ret == null)
         {
