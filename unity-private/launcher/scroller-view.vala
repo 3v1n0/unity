@@ -157,24 +157,30 @@ namespace Unity.Launcher
 
     public int get_model_index_at_y_pos (float y)
     {
-      // returns the model index at the screenspace position given
 
-      float pos_x, pos_y;
-      get_position (out pos_x, out pos_y);
-      y -= pos_y;
-      int i = 0;
-      foreach (ScrollerChild child in model)
+      // trying out a different method
+      int iy = (int)y;
+      Clutter.Actor picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy);
+      if (picked_actor is ScrollerChild == false)
         {
-          float transformed_pos = child.position + padding.top;
-          if (transformed_pos > y)
-            {
-              return i-1;
-            }
+          // we didn't pick a scroller child. lets pick spacing above us
+          picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy - spacing);
 
-          i++;
+          if (picked_actor is ScrollerChild == false)
+            {
+              // again nothing good! lets try again but spacing below
+              picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy + spacing);
+
+              if (picked_actor is ScrollerChild == false)
+                {
+                  // couldn't pick a single actor, return 0
+                  return 0;
+                }
+            }
         }
 
-      return int.min (int.max (i, 0), model.size - 1);
+      return model.index_of (picked_actor as ScrollerChild);
+
     }
 
     /*
@@ -861,7 +867,24 @@ namespace Unity.Launcher
     public override void pick (Clutter.Color color)
     {
       base.pick (color);
-      foreach (ScrollerChild child in model)
+      for (int index = draw_btf.size-1; index >= 0; index--)
+        {
+          ScrollerChild child = draw_btf[index];
+          if (child is LauncherChild && child.opacity > 0)
+            {
+              (child as LauncherChild).paint ();
+            }
+        }
+
+      foreach (ScrollerChild child in draw_ftb)
+        {
+          if (child is LauncherChild && child.opacity > 0)
+            {
+              (child as LauncherChild).paint ();
+            }
+        }
+
+      foreach (ScrollerChild child in child_refs)
         {
           child.paint ();
         }
