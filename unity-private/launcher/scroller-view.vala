@@ -718,7 +718,7 @@ namespace Unity.Launcher
               float contracted_space = 0.0f;
               contracted_space = ((model.size - num_launchers) * (8 + spacing));
 
-              if (flat_space + contracted_space < (get_available_height () - (spacing * 2)))
+              if (flat_space + spacing + contracted_space < (get_available_height () - (spacing * 2)))
                 {
                   // everything fits in at this level, woo!
                   break;
@@ -769,7 +769,7 @@ namespace Unity.Launcher
           else
             {
               // contracted launcher
-              if (index == index_end_flat) h -= spacing;
+              if (index == index_end_flat) h -= spacing * 2;
 
               transition.position = h;
               h += 8 + spacing;
