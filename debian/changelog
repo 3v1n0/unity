@@ -1,6 +1,15 @@
-unity (0.2.14-0ubuntu2) UNRELEASED; urgency=low
+unity (0.2.14-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - fix wrong window geometry (LP: #578545)
+    - fix quicklist items were unresponsive when the mouse was overing over them
+      (LP: #598561)
+    - fix can't drag and drop item to last position in launcher (LP: #595819)
+    - removes/unfavorites apps on drag out, (LP: #592744)
+    - fix contracted/expanded feature doesn't take mouse position into account
+      (LP: #595878)
+    - fix really slow to display place icons (LP: #599901)
+    - display files thumbnails (LP: #599896)
   * debian/control:
     - recommend ubuntu-netbook-default-settings as the session file is there
       and a lot of people could install unity without the session file
