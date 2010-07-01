@@ -32,6 +32,11 @@ public class TestFavorites : Unity.Favorites
       return retlist;
     }
 
+    public override string find_uid_for_desktop_file (string desktop_file)
+    {
+      return "app-firefox";
+    }
+
     public override void add_favorite (string uid)
     {
     }
