@@ -157,25 +157,30 @@ namespace Unity.Launcher
 
     public int get_model_index_at_y_pos (float y)
     {
-      // returns the model index at the screenspace position given
-      debug ("going through model indexes");
-      float pos_x, pos_y;
-      get_position (out pos_x, out pos_y);
-      y -= pos_y;
-      int i = 0;
-      foreach (ScrollerChild child in model)
-        {
-          float transformed_pos = child.position + padding.top;
-          debug (@"transformed_pos: $transformed_pos");
-          if (transformed_pos > y)
-            {
-              return int.min (int.max (i-1, 0), model.size - 1);
-            }
 
-          i++;
+      // trying out a different method
+      int iy = (int)y;
+      Clutter.Actor picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy);
+      if (picked_actor is ScrollerChild == false)
+        {
+          // we didn't pick a scroller child. lets pick spacing above us
+          picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy - spacing);
+
+          if (picked_actor is ScrollerChild == false)
+            {
+              // again nothing good! lets try again but spacing below
+              picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy + spacing);
+
+              if (picked_actor is ScrollerChild == false)
+                {
+                  // couldn't pick a single actor, return 0
+                  return 0;
+                }
+            }
         }
 
-      return int.min (int.max (i, 0), model.size - 1);
+      return model.index_of (picked_actor as ScrollerChild);
+
     }
 
     /*
