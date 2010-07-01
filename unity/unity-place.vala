@@ -316,7 +316,7 @@ namespace Unity.Place {
     public Browser? browser {
       get { return _browser; }
       set {
-        _browser = browser;
+        _browser = value;
         if (value != null)
           set_hint ("UnityPlaceBrowserPath", value.dbus_path);
         else
@@ -715,9 +715,11 @@ namespace Unity.Place {
         {
           debug ("Exporting browser at '%s'", _entry_info.browser.dbus_path);
           conn.register_object (_entry_info.browser.dbus_path,
-                                _entry_info.browser);
+                                _entry_info.browser.get_service ());
 
         }
+      else
+        debug ("No browser to export");
       
       _exported = true;
       notify_property("exported");
@@ -731,7 +733,7 @@ namespace Unity.Place {
       if (_entry_info.browser != null)
         {
           debug ("Unexporting browser '%s'", _entry_info.browser.dbus_path);
-          conn.unregister_object (_entry_info.browser);
+          conn.unregister_object (_entry_info.browser.get_service ());
         }
 
       _exported = false;
@@ -752,7 +754,7 @@ namespace Unity.Place {
       if (_browser != null && _exported)
         {
           debug ("Unexporting browser '%s'", _browser.dbus_path);
-          conn.unregister_object (_browser);
+          conn.unregister_object (_browser.get_service ());
         }
 
       _browser = entry_info.browser;
@@ -761,7 +763,7 @@ namespace Unity.Place {
       if (_browser != null && _exported)
         {
           debug ("Exporting browser '%s'", _browser.dbus_path);
-          conn.register_object (_browser.dbus_path, _browser);
+          conn.register_object (_browser.dbus_path, _browser.get_service ());
         }
     }
     

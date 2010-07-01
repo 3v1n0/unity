@@ -49,7 +49,7 @@ namespace Unity.Place {
    * Private DBus interface for managing browsing states
    */
   [DBus (name = "com.canonical.Unity.PlaceBrowser")]
-  private interface BrowserService : GLib.Object
+  internal interface BrowserService : GLib.Object
   {
     /**
      * Returns the new browsing state after the operation has been performed
@@ -194,7 +194,13 @@ namespace Unity.Place {
       service.browsing_state[BrowsingOp.FORWARD].comment =
                    forward_stack.is_empty() ? "" : forward_stack.peek().comment;
     }
-  }
+    
+    internal BrowserService get_service ()
+    {
+      return service;
+    }
+    
+  } /* End: Browser class */
   
   /* Helper class to encapsulate a generic state and a comment string */
   private class State<E>
@@ -243,7 +249,7 @@ namespace Unity.Place {
     
     public bool is_empty ()
     {
-      return size() != 0;
+      return size() == 0;
     }
   }
 
