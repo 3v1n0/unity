@@ -145,6 +145,24 @@ enum  {
 	UNITY_QUICKLIST_RENDERING_MENU_DUMMY_PROPERTY
 };
 static double _unity_quicklist_rendering_menu_align (double val);
+static void _unity_quicklist_rendering_menu_setup (cairo_surface_t** surf, cairo_t** cr, gboolean outline, gint width, gint height, gboolean negative);
+static void _unity_quicklist_rendering_menu_draw (cairo_t* cr, gboolean outline, float line_width, float* rgba, gboolean negative, gboolean stroke);
+static void _unity_quicklist_rendering_menu_finalize (cairo_t* cr, gboolean outline, float line_width, float* rgba, gboolean negative, gboolean stroke);
+static void _unity_quicklist_rendering_menu_top_mask_path (cairo_t* cr, float anchor_width, gint width, gint height, float radius, gboolean outline);
+static void _unity_quicklist_rendering_menu_dyn_mask_path (cairo_t* cr, float anchor_width, gint width, gint height, gboolean outline);
+static void _unity_quicklist_rendering_menu_anchor_mask_path (cairo_t* cr, float anchor_width, float anchor_height, gint width, gint height, gboolean outline);
+static void _unity_quicklist_rendering_menu_bottom_mask_path (cairo_t* cr, float anchor_width, gint width, gint height, float radius, gboolean outline);
+static void _unity_quicklist_rendering_menu_mask (cairo_t* cr);
+static void _unity_quicklist_rendering_menu_outline (cairo_t* cr, float line_width, float* rgba_line, int rgba_line_length1);
+void unity_quicklist_rendering_menu_outline_shadow_top (cairo_surface_t** surf, gint width, gint height, float anchor_width, float corner_radius, guint shadow_radius, float* rgba_shadow, int rgba_shadow_length1, float line_width, float* rgba_line, int rgba_line_length1);
+void unity_quicklist_rendering_menu_outline_shadow_dyn (cairo_surface_t** surf, gint width, gint height, float anchor_width, guint shadow_radius, float* rgba_shadow, int rgba_shadow_length1, float line_width, float* rgba_line, int rgba_line_length1);
+void unity_quicklist_rendering_menu_outline_shadow_anchor (cairo_surface_t** surf, gint width, gint height, float anchor_width, float anchor_height, guint shadow_radius, float* rgba_shadow, int rgba_shadow_length1, float line_width, float* rgba_line, int rgba_line_length1);
+void unity_quicklist_rendering_menu_outline_shadow_bottom (cairo_surface_t** surf, gint width, gint height, float anchor_width, float corner_radius, guint shadow_radius, float* rgba_shadow, int rgba_shadow_length1, float line_width, float* rgba_line, int rgba_line_length1);
+void unity_quicklist_rendering_menu_tint_dot_hl (cairo_surface_t** surf, gint width, gint height, float hl_x, float hl_y, float hl_size, float* rgba_tint, int rgba_tint_length1, float* rgba_hl, int rgba_hl_length1);
+void unity_quicklist_rendering_menu_top_mask (cairo_surface_t** surf, gint width, gint height, float radius, float anchor_width, gboolean negative, gboolean outline, float line_width, float* rgba, int rgba_length1);
+void unity_quicklist_rendering_menu_dyn_mask (cairo_surface_t** surf, gint width, gint height, float anchor_width, gboolean negative, gboolean outline, float line_width, float* rgba, int rgba_length1);
+void unity_quicklist_rendering_menu_anchor_mask (cairo_surface_t** surf, gint width, gint height, float anchor_width, float anchor_height, gboolean negative, gboolean outline, float line_width, float* rgba, int rgba_length1);
+void unity_quicklist_rendering_menu_bottom_mask (cairo_surface_t** surf, gint width, gint height, float radius, float anchor_width, gboolean negative, gboolean outline, float line_width, float* rgba, int rgba_length1);
 static void _unity_quicklist_rendering_menu_round_rect_anchor (cairo_t* cr, double aspect, double x, double y, double corner_radius, double width, double height, double anchor_width, double anchor_height, double anchor_x, double anchor_y);
 static void _unity_quicklist_rendering_menu_draw_mask (cairo_t* cr, gint w, gint h, float anchor_y);
 void unity_quicklist_rendering_menu_full_mask (cairo_t* cr, gint w, gint h, float anchor_y);
@@ -410,6 +428,376 @@ static double _unity_quicklist_rendering_menu_align (double val) {
 		result = val;
 		return result;
 	}
+}
+
+
+static void _unity_quicklist_rendering_menu_setup (cairo_surface_t** surf, cairo_t** cr, gboolean outline, gint width, gint height, gboolean negative) {
+	cairo_t* _tmp2_;
+	if (surf != NULL) {
+		*surf = NULL;
+	}
+	if (cr != NULL) {
+		*cr = NULL;
+	}
+	if (outline) {
+		cairo_surface_t* _tmp0_;
+		*surf = (_tmp0_ = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height), _cairo_surface_destroy0 (*surf), _tmp0_);
+	} else {
+		cairo_surface_t* _tmp1_;
+		*surf = (_tmp1_ = cairo_image_surface_create (CAIRO_FORMAT_A8, width, height), _cairo_surface_destroy0 (*surf), _tmp1_);
+	}
+	*cr = (_tmp2_ = cairo_create (*surf), _cairo_destroy0 (*cr), _tmp2_);
+	cairo_scale (*cr, (double) 1.0f, (double) 1.0f);
+	if (outline) {
+		cairo_set_source_rgba (*cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.0f);
+		cairo_set_operator (*cr, CAIRO_OPERATOR_CLEAR);
+	} else {
+		cairo_set_operator (*cr, CAIRO_OPERATOR_OVER);
+		if (negative) {
+			cairo_set_source_rgba (*cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.0f);
+		} else {
+			cairo_set_source_rgba (*cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
+		}
+	}
+	cairo_paint (*cr);
+}
+
+
+static void _unity_quicklist_rendering_menu_draw (cairo_t* cr, gboolean outline, float line_width, float* rgba, gboolean negative, gboolean stroke) {
+	g_return_if_fail (cr != NULL);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	if (outline) {
+		cairo_set_line_width (cr, (double) line_width);
+		cairo_set_source_rgba (cr, (double) rgba[0], (double) rgba[1], (double) rgba[2], (double) rgba[3]);
+	} else {
+		if (negative) {
+			cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
+		} else {
+			cairo_set_source_rgba (cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.0f);
+		}
+	}
+	if (stroke) {
+		cairo_stroke_preserve (cr);
+	} else {
+		cairo_fill_preserve (cr);
+	}
+}
+
+
+static void _unity_quicklist_rendering_menu_finalize (cairo_t* cr, gboolean outline, float line_width, float* rgba, gboolean negative, gboolean stroke) {
+	g_return_if_fail (cr != NULL);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	if (outline) {
+		cairo_set_line_width (cr, (double) line_width);
+		cairo_set_source_rgba (cr, (double) rgba[0], (double) rgba[1], (double) rgba[2], (double) rgba[3]);
+	} else {
+		if (negative) {
+			cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
+		} else {
+			cairo_set_source_rgba (cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.0f);
+		}
+	}
+	if (stroke) {
+		cairo_stroke (cr);
+	} else {
+		cairo_fill (cr);
+	}
+}
+
+
+static void _unity_quicklist_rendering_menu_top_mask_path (cairo_t* cr, float anchor_width, gint width, gint height, float radius, gboolean outline) {
+	g_return_if_fail (cr != NULL);
+	cairo_move_to (cr, (double) (anchor_width + 0.5f), (double) 0.0f);
+	cairo_line_to (cr, (double) (anchor_width + 0.5f), (((double) height) - radius) - 0.5f);
+	cairo_arc_negative (cr, (double) ((anchor_width + radius) + 0.5f), (((double) height) - radius) - 0.5f, (double) radius, (180.0f * G_PI) / 180.0f, (90.0f * G_PI) / 180.0f);
+	cairo_line_to (cr, (((double) width) - radius) - 0.5f, ((double) height) - 0.5f);
+	cairo_arc_negative (cr, (((double) width) - radius) - 0.5f, (((double) height) - radius) - 0.5f, (double) radius, (90.0f * G_PI) / 180.0f, (0.0f * G_PI) / 180.0f);
+	cairo_line_to (cr, ((double) width) - 0.5f, (double) 0.0f);
+	if (!outline) {
+		cairo_close_path (cr);
+	}
+}
+
+
+static void _unity_quicklist_rendering_menu_dyn_mask_path (cairo_t* cr, float anchor_width, gint width, gint height, gboolean outline) {
+	g_return_if_fail (cr != NULL);
+	cairo_move_to (cr, (double) (anchor_width + 0.5f), (double) 0.0f);
+	cairo_line_to (cr, (double) (anchor_width + 0.5f), (double) height);
+	if (outline) {
+		cairo_move_to (cr, ((double) width) - 0.5f, (double) height);
+	} else {
+		cairo_line_to (cr, ((double) width) - 0.5f, (double) height);
+	}
+	cairo_line_to (cr, ((double) width) - 0.5f, (double) 0.0f);
+	if (!outline) {
+		cairo_close_path (cr);
+	}
+}
+
+
+static void _unity_quicklist_rendering_menu_anchor_mask_path (cairo_t* cr, float anchor_width, float anchor_height, gint width, gint height, gboolean outline) {
+	g_return_if_fail (cr != NULL);
+	cairo_move_to (cr, (double) (anchor_width + 0.5f), (double) 0.0f);
+	cairo_line_to (cr, (double) (anchor_width + 0.5f), (((double) height) - anchor_height) / 2.0f);
+	cairo_line_to (cr, (double) 0.5f, ((((double) height) - anchor_height) + anchor_height) / 2.0f);
+	cairo_line_to (cr, (double) (anchor_width + 0.5f), ((double) height) - ((((double) height) - anchor_height) / 2.0f));
+	cairo_line_to (cr, (double) (anchor_width + 0.5f), (double) height);
+	if (outline) {
+		cairo_move_to (cr, ((double) width) - 0.5f, (double) height);
+	} else {
+		cairo_line_to (cr, ((double) width) - 0.5f, (double) height);
+	}
+	cairo_line_to (cr, ((double) width) - 0.5f, (double) 0.0f);
+}
+
+
+static void _unity_quicklist_rendering_menu_bottom_mask_path (cairo_t* cr, float anchor_width, gint width, gint height, float radius, gboolean outline) {
+	g_return_if_fail (cr != NULL);
+	cairo_move_to (cr, (double) (anchor_width + 0.5f), (double) height);
+	cairo_line_to (cr, (double) (anchor_width + 0.5f), (double) (radius + 0.5f));
+	cairo_arc (cr, (double) ((anchor_width + radius) + 0.5f), (double) (radius + 0.5f), (double) radius, (180.0f * G_PI) / 180.0f, (270.0f * G_PI) / 180.0f);
+	cairo_line_to (cr, (((double) width) - radius) - 0.5f, (double) 0.5f);
+	cairo_arc (cr, (((double) width) - radius) - 0.5f, (double) (radius + 0.5f), (double) radius, (270.0f * G_PI) / 180.0f, (0.0f * G_PI) / 180.0f);
+	cairo_line_to (cr, ((double) width) - 0.5f, (double) height);
+	if (!outline) {
+		cairo_close_path (cr);
+	}
+}
+
+
+static void _unity_quicklist_rendering_menu_mask (cairo_t* cr) {
+	g_return_if_fail (cr != NULL);
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+	cairo_fill_preserve (cr);
+}
+
+
+static void _unity_quicklist_rendering_menu_outline (cairo_t* cr, float line_width, float* rgba_line, int rgba_line_length1) {
+	g_return_if_fail (cr != NULL);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_set_source_rgba (cr, (double) rgba_line[0], (double) rgba_line[1], (double) rgba_line[2], (double) rgba_line[3]);
+	cairo_set_line_width (cr, (double) line_width);
+	cairo_stroke (cr);
+}
+
+
+void unity_quicklist_rendering_menu_outline_shadow_top (cairo_surface_t** surf, gint width, gint height, float anchor_width, float corner_radius, guint shadow_radius, float* rgba_shadow, int rgba_shadow_length1, float line_width, float* rgba_line, int rgba_line_length1) {
+	cairo_t* cr;
+	cairo_t* _tmp3_;
+	cairo_t* _tmp2_ = NULL;
+	cairo_surface_t* _tmp1_;
+	cairo_surface_t* _tmp0_ = NULL;
+	if (surf != NULL) {
+		*surf = NULL;
+	}
+	cr = NULL;
+	(_unity_quicklist_rendering_menu_setup (&_tmp0_, &_tmp2_, TRUE, width, height, FALSE), *surf = (_tmp1_ = _tmp0_, _cairo_surface_destroy0 (*surf), _tmp1_));
+	cr = (_tmp3_ = _tmp2_, _cairo_destroy0 (cr), _tmp3_);
+	_unity_quicklist_rendering_menu_top_mask_path (cr, anchor_width, width, height, corner_radius, FALSE);
+	_unity_quicklist_rendering_menu_draw (cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
+	ctk_surface_blur (*surf, shadow_radius);
+	_unity_quicklist_rendering_menu_mask (cr);
+	_unity_quicklist_rendering_menu_outline (cr, line_width, rgba_line, rgba_line_length1);
+	_cairo_destroy0 (cr);
+}
+
+
+void unity_quicklist_rendering_menu_outline_shadow_dyn (cairo_surface_t** surf, gint width, gint height, float anchor_width, guint shadow_radius, float* rgba_shadow, int rgba_shadow_length1, float line_width, float* rgba_line, int rgba_line_length1) {
+	cairo_t* cr;
+	cairo_t* _tmp3_;
+	cairo_t* _tmp2_ = NULL;
+	cairo_surface_t* _tmp1_;
+	cairo_surface_t* _tmp0_ = NULL;
+	if (surf != NULL) {
+		*surf = NULL;
+	}
+	cr = NULL;
+	(_unity_quicklist_rendering_menu_setup (&_tmp0_, &_tmp2_, TRUE, width, height, FALSE), *surf = (_tmp1_ = _tmp0_, _cairo_surface_destroy0 (*surf), _tmp1_));
+	cr = (_tmp3_ = _tmp2_, _cairo_destroy0 (cr), _tmp3_);
+	_unity_quicklist_rendering_menu_dyn_mask_path (cr, anchor_width, width, height, FALSE);
+	_unity_quicklist_rendering_menu_draw (cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
+	ctk_surface_blur (*surf, shadow_radius);
+	_unity_quicklist_rendering_menu_mask (cr);
+	cairo_new_path (cr);
+	_unity_quicklist_rendering_menu_dyn_mask_path (cr, anchor_width, width, height, TRUE);
+	_unity_quicklist_rendering_menu_outline (cr, line_width, rgba_line, rgba_line_length1);
+	_cairo_destroy0 (cr);
+}
+
+
+void unity_quicklist_rendering_menu_outline_shadow_anchor (cairo_surface_t** surf, gint width, gint height, float anchor_width, float anchor_height, guint shadow_radius, float* rgba_shadow, int rgba_shadow_length1, float line_width, float* rgba_line, int rgba_line_length1) {
+	cairo_t* cr;
+	cairo_t* _tmp3_;
+	cairo_t* _tmp2_ = NULL;
+	cairo_surface_t* _tmp1_;
+	cairo_surface_t* _tmp0_ = NULL;
+	if (surf != NULL) {
+		*surf = NULL;
+	}
+	cr = NULL;
+	(_unity_quicklist_rendering_menu_setup (&_tmp0_, &_tmp2_, TRUE, width, height, FALSE), *surf = (_tmp1_ = _tmp0_, _cairo_surface_destroy0 (*surf), _tmp1_));
+	cr = (_tmp3_ = _tmp2_, _cairo_destroy0 (cr), _tmp3_);
+	_unity_quicklist_rendering_menu_anchor_mask_path (cr, anchor_width, anchor_height, width, height, FALSE);
+	_unity_quicklist_rendering_menu_draw (cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
+	ctk_surface_blur (*surf, shadow_radius);
+	_unity_quicklist_rendering_menu_mask (cr);
+	cairo_new_path (cr);
+	_unity_quicklist_rendering_menu_anchor_mask_path (cr, anchor_width, anchor_height, width, height, TRUE);
+	_unity_quicklist_rendering_menu_outline (cr, line_width, rgba_line, rgba_line_length1);
+	_cairo_destroy0 (cr);
+}
+
+
+void unity_quicklist_rendering_menu_outline_shadow_bottom (cairo_surface_t** surf, gint width, gint height, float anchor_width, float corner_radius, guint shadow_radius, float* rgba_shadow, int rgba_shadow_length1, float line_width, float* rgba_line, int rgba_line_length1) {
+	cairo_t* cr;
+	cairo_t* _tmp3_;
+	cairo_t* _tmp2_ = NULL;
+	cairo_surface_t* _tmp1_;
+	cairo_surface_t* _tmp0_ = NULL;
+	if (surf != NULL) {
+		*surf = NULL;
+	}
+	cr = NULL;
+	(_unity_quicklist_rendering_menu_setup (&_tmp0_, &_tmp2_, TRUE, width, height, FALSE), *surf = (_tmp1_ = _tmp0_, _cairo_surface_destroy0 (*surf), _tmp1_));
+	cr = (_tmp3_ = _tmp2_, _cairo_destroy0 (cr), _tmp3_);
+	_unity_quicklist_rendering_menu_bottom_mask_path (cr, anchor_width, width, height, corner_radius, TRUE);
+	_unity_quicklist_rendering_menu_draw (cr, TRUE, line_width, rgba_shadow, FALSE, FALSE);
+	ctk_surface_blur (*surf, shadow_radius);
+	_unity_quicklist_rendering_menu_mask (cr);
+	_unity_quicklist_rendering_menu_outline (cr, line_width, rgba_line, rgba_line_length1);
+	_cairo_destroy0 (cr);
+}
+
+
+void unity_quicklist_rendering_menu_tint_dot_hl (cairo_surface_t** surf, gint width, gint height, float hl_x, float hl_y, float hl_size, float* rgba_tint, int rgba_tint_length1, float* rgba_hl, int rgba_hl_length1) {
+	cairo_t* cr;
+	cairo_surface_t* dots_surf;
+	cairo_t* dots_cr;
+	cairo_pattern_t* dots_pattern;
+	cairo_pattern_t* hl_pattern;
+	cairo_surface_t* _tmp0_;
+	cairo_t* _tmp1_;
+	cairo_surface_t* _tmp2_;
+	cairo_t* _tmp3_;
+	cairo_pattern_t* _tmp4_;
+	cairo_pattern_t* _tmp5_;
+	if (surf != NULL) {
+		*surf = NULL;
+	}
+	cr = NULL;
+	dots_surf = NULL;
+	dots_cr = NULL;
+	dots_pattern = NULL;
+	hl_pattern = NULL;
+	*surf = (_tmp0_ = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, width, height), _cairo_surface_destroy0 (*surf), _tmp0_);
+	cr = (_tmp1_ = cairo_create (*surf), _cairo_destroy0 (cr), _tmp1_);
+	dots_surf = (_tmp2_ = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 4, 4), _cairo_surface_destroy0 (dots_surf), _tmp2_);
+	dots_cr = (_tmp3_ = cairo_create (dots_surf), _cairo_destroy0 (dots_cr), _tmp3_);
+	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
+	cairo_set_source_rgba (cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.0f);
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+	cairo_paint (cr);
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	cairo_rectangle (cr, (double) 0.0f, (double) 0.0f, (double) width, (double) height);
+	cairo_set_source_rgba (cr, (double) rgba_tint[0], (double) rgba_tint[1], (double) rgba_tint[2], (double) rgba_tint[3]);
+	cairo_fill_preserve (cr);
+	cairo_set_operator (dots_cr, CAIRO_OPERATOR_CLEAR);
+	cairo_paint (dots_cr);
+	cairo_scale (dots_cr, (double) 1.0f, (double) 1.0f);
+	cairo_set_operator (dots_cr, CAIRO_OPERATOR_OVER);
+	cairo_set_source_rgba (dots_cr, (double) rgba_hl[0], (double) rgba_hl[1], (double) rgba_hl[2], (double) rgba_hl[3]);
+	cairo_rectangle (dots_cr, (double) 0.0f, (double) 0.0f, (double) 1.0f, (double) 1.0f);
+	cairo_fill (dots_cr);
+	cairo_rectangle (dots_cr, (double) 2.0f, (double) 2.0f, (double) 1.0f, (double) 1.0f);
+	cairo_fill (dots_cr);
+	dots_pattern = (_tmp4_ = cairo_pattern_create_for_surface (dots_surf), _cairo_pattern_destroy0 (dots_pattern), _tmp4_);
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	cairo_set_source (cr, dots_pattern);
+	cairo_pattern_set_extend (dots_pattern, CAIRO_EXTEND_REPEAT);
+	cairo_fill_preserve (cr);
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	hl_pattern = (_tmp5_ = cairo_pattern_create_radial ((double) hl_x, (double) hl_y, (double) 0.0f, (double) hl_x, (double) hl_y, (double) hl_size), _cairo_pattern_destroy0 (hl_pattern), _tmp5_);
+	cairo_pattern_add_color_stop_rgba (hl_pattern, (double) 0.0f, (double) rgba_hl[0], (double) rgba_hl[1], (double) rgba_hl[2], (double) rgba_hl[3]);
+	cairo_pattern_add_color_stop_rgba (hl_pattern, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.0f);
+	cairo_set_source (cr, hl_pattern);
+	cairo_fill (cr);
+	_cairo_destroy0 (cr);
+	_cairo_surface_destroy0 (dots_surf);
+	_cairo_destroy0 (dots_cr);
+	_cairo_pattern_destroy0 (dots_pattern);
+	_cairo_pattern_destroy0 (hl_pattern);
+}
+
+
+void unity_quicklist_rendering_menu_top_mask (cairo_surface_t** surf, gint width, gint height, float radius, float anchor_width, gboolean negative, gboolean outline, float line_width, float* rgba, int rgba_length1) {
+	cairo_t* cr;
+	cairo_t* _tmp3_;
+	cairo_t* _tmp2_ = NULL;
+	cairo_surface_t* _tmp1_;
+	cairo_surface_t* _tmp0_ = NULL;
+	if (surf != NULL) {
+		*surf = NULL;
+	}
+	cr = NULL;
+	(_unity_quicklist_rendering_menu_setup (&_tmp0_, &_tmp2_, outline, width, height, negative), *surf = (_tmp1_ = _tmp0_, _cairo_surface_destroy0 (*surf), _tmp1_));
+	cr = (_tmp3_ = _tmp2_, _cairo_destroy0 (cr), _tmp3_);
+	_unity_quicklist_rendering_menu_top_mask_path (cr, anchor_width, width, height, radius, outline);
+	_unity_quicklist_rendering_menu_finalize (cr, outline, line_width, rgba, negative, outline);
+	_cairo_destroy0 (cr);
+}
+
+
+void unity_quicklist_rendering_menu_dyn_mask (cairo_surface_t** surf, gint width, gint height, float anchor_width, gboolean negative, gboolean outline, float line_width, float* rgba, int rgba_length1) {
+	cairo_t* cr;
+	cairo_t* _tmp3_;
+	cairo_t* _tmp2_ = NULL;
+	cairo_surface_t* _tmp1_;
+	cairo_surface_t* _tmp0_ = NULL;
+	if (surf != NULL) {
+		*surf = NULL;
+	}
+	cr = NULL;
+	(_unity_quicklist_rendering_menu_setup (&_tmp0_, &_tmp2_, outline, width, height, negative), *surf = (_tmp1_ = _tmp0_, _cairo_surface_destroy0 (*surf), _tmp1_));
+	cr = (_tmp3_ = _tmp2_, _cairo_destroy0 (cr), _tmp3_);
+	_unity_quicklist_rendering_menu_dyn_mask_path (cr, anchor_width, width, height, outline);
+	_unity_quicklist_rendering_menu_finalize (cr, outline, line_width, rgba, negative, outline);
+	_cairo_destroy0 (cr);
+}
+
+
+void unity_quicklist_rendering_menu_anchor_mask (cairo_surface_t** surf, gint width, gint height, float anchor_width, float anchor_height, gboolean negative, gboolean outline, float line_width, float* rgba, int rgba_length1) {
+	cairo_t* cr;
+	cairo_t* _tmp3_;
+	cairo_t* _tmp2_ = NULL;
+	cairo_surface_t* _tmp1_;
+	cairo_surface_t* _tmp0_ = NULL;
+	if (surf != NULL) {
+		*surf = NULL;
+	}
+	cr = NULL;
+	(_unity_quicklist_rendering_menu_setup (&_tmp0_, &_tmp2_, outline, width, height, negative), *surf = (_tmp1_ = _tmp0_, _cairo_surface_destroy0 (*surf), _tmp1_));
+	cr = (_tmp3_ = _tmp2_, _cairo_destroy0 (cr), _tmp3_);
+	_unity_quicklist_rendering_menu_anchor_mask_path (cr, anchor_width, anchor_height, width, height, outline);
+	_unity_quicklist_rendering_menu_finalize (cr, outline, line_width, rgba, negative, outline);
+	_cairo_destroy0 (cr);
+}
+
+
+void unity_quicklist_rendering_menu_bottom_mask (cairo_surface_t** surf, gint width, gint height, float radius, float anchor_width, gboolean negative, gboolean outline, float line_width, float* rgba, int rgba_length1) {
+	cairo_t* cr;
+	cairo_t* _tmp3_;
+	cairo_t* _tmp2_ = NULL;
+	cairo_surface_t* _tmp1_;
+	cairo_surface_t* _tmp0_ = NULL;
+	if (surf != NULL) {
+		*surf = NULL;
+	}
+	cr = NULL;
+	(_unity_quicklist_rendering_menu_setup (&_tmp0_, &_tmp2_, outline, width, height, negative), *surf = (_tmp1_ = _tmp0_, _cairo_surface_destroy0 (*surf), _tmp1_));
+	cr = (_tmp3_ = _tmp2_, _cairo_destroy0 (cr), _tmp3_);
+	_unity_quicklist_rendering_menu_bottom_mask_path (cr, anchor_width, width, height, radius, outline);
+	_unity_quicklist_rendering_menu_finalize (cr, outline, line_width, rgba, negative, outline);
+	_cairo_destroy0 (cr);
 }
 
 

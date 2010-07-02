@@ -312,7 +312,8 @@ GType unity_launcher_scroller_child_get_type (void);
 UnityLauncherApplicationController* unity_launcher_application_controller_new (const char* desktop_file_, UnityLauncherScrollerChild* child_);
 UnityLauncherApplicationController* unity_launcher_application_controller_construct (GType object_type, const char* desktop_file_, UnityLauncherScrollerChild* child_);
 const char* unity_launcher_application_controller_get_desktop_file (UnityLauncherApplicationController* self);
-void unity_launcher_application_controller_set_sticky (UnityLauncherApplicationController* self);
+void unity_launcher_application_controller_set_sticky (UnityLauncherApplicationController* self, gboolean is_sticky);
+void unity_launcher_application_controller_close_windows (UnityLauncherApplicationController* self);
 void unity_launcher_application_controller_set_priority (UnityLauncherApplicationController* self, float priority);
 float unity_launcher_application_controller_get_priority (UnityLauncherApplicationController* self, GError** error);
 GType unity_launcher_pin_type_get_type (void);
@@ -390,7 +391,7 @@ static void unity_launcher_application_shortcut_real_activated (UnityLauncherSho
 		g_key_file_load_from_file (desktop_file, self->desktop_location, 0, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			_g_key_file_free0 (desktop_file);
-			goto __catch17_g_error;
+			goto __catch18_g_error;
 		}
 		g_key_file_set_string (desktop_file, "Desktop Entry", "Exec", self->exec);
 		appinfo = (GAppInfo*) g_desktop_app_info_new_from_keyfile (desktop_file);
@@ -398,7 +399,7 @@ static void unity_launcher_application_shortcut_real_activated (UnityLauncherSho
 		if (_inner_error_ != NULL) {
 			_g_key_file_free0 (desktop_file);
 			_g_object_unref0 (appinfo);
-			goto __catch17_g_error;
+			goto __catch18_g_error;
 		}
 		gdk_app_launch_context_set_screen (context, gdk_display_get_default_screen (gdk_display_get_default ()));
 		gdk_app_launch_context_set_timestamp (context, (guint32) GDK_CURRENT_TIME);
@@ -406,13 +407,13 @@ static void unity_launcher_application_shortcut_real_activated (UnityLauncherSho
 		if (_inner_error_ != NULL) {
 			_g_key_file_free0 (desktop_file);
 			_g_object_unref0 (appinfo);
-			goto __catch17_g_error;
+			goto __catch18_g_error;
 		}
 		_g_key_file_free0 (desktop_file);
 		_g_object_unref0 (appinfo);
 	}
-	goto __finally17;
-	__catch17_g_error:
+	goto __finally18;
+	__catch18_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -422,7 +423,7 @@ static void unity_launcher_application_shortcut_real_activated (UnityLauncherSho
 			_g_error_free0 (e);
 		}
 	}
-	__finally17:
+	__finally18:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (context);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -778,12 +779,10 @@ UnityLauncherApplicationController* unity_launcher_application_controller_new (c
 }
 
 
-void unity_launcher_application_controller_set_sticky (UnityLauncherApplicationController* self) {
+void unity_launcher_application_controller_set_sticky (UnityLauncherApplicationController* self, gboolean is_sticky) {
 	gboolean _tmp0_ = FALSE;
-	char* _tmp1_;
-	char* _tmp2_;
-	char* uid;
 	UnityFavorites* favorites;
+	char* uid;
 	g_return_if_fail (self != NULL);
 	if (_vala_strcmp0 (unity_launcher_application_controller_get_desktop_file (self), "") == 0) {
 		_tmp0_ = TRUE;
@@ -793,13 +792,28 @@ void unity_launcher_application_controller_set_sticky (UnityLauncherApplicationC
 	if (_tmp0_) {
 		return;
 	}
-	uid = (_tmp2_ = g_strconcat ("app-", _tmp1_ = g_path_get_basename (unity_launcher_application_controller_get_desktop_file (self)), NULL), _g_free0 (_tmp1_), _tmp2_);
 	favorites = unity_favorites_get_default ();
-	unity_favorites_set_string (favorites, uid, "type", "application");
-	unity_favorites_set_string (favorites, uid, "desktop_file", unity_launcher_application_controller_get_desktop_file (self));
-	unity_favorites_add_favorite (favorites, uid);
-	_g_free0 (uid);
+	uid = unity_favorites_find_uid_for_desktop_file (favorites, unity_launcher_application_controller_get_desktop_file (self));
+	if (is_sticky) {
+		unity_favorites_set_string (favorites, uid, "type", "application");
+		unity_favorites_set_string (favorites, uid, "desktop_file", unity_launcher_application_controller_get_desktop_file (self));
+		unity_favorites_add_favorite (favorites, uid);
+	} else {
+		unity_favorites_remove_favorite (favorites, uid);
+	}
 	_g_object_unref0 (favorites);
+	_g_free0 (uid);
+}
+
+
+void unity_launcher_application_controller_close_windows (UnityLauncherApplicationController* self) {
+	g_return_if_fail (self != NULL);
+	if (BAMF_IS_APPLICATION (self->priv->app)) {
+		GArray* xids;
+		xids = bamf_application_get_xids (self->priv->app);
+		unity_shell_close_xids (unity_global_shell, xids);
+		_g_array_free0 (xids);
+	}
 }
 
 
@@ -934,24 +948,24 @@ static GeeArrayList* unity_launcher_application_controller_real_get_menu_shortcu
 	{
 		g_key_file_load_from_file (desktop_keyfile, unity_launcher_application_controller_get_desktop_file (self), 0, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch18_g_error;
+			goto __catch19_g_error;
 		}
 	}
-	goto __finally18;
-	__catch18_g_error:
+	goto __finally19;
+	__catch19_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("application-controller.vala:298: Unable to load desktop file '%s': %s", unity_launcher_application_controller_get_desktop_file (self), e->message);
+			g_warning ("application-controller.vala:316: Unable to load desktop file '%s': %s", unity_launcher_application_controller_get_desktop_file (self), e->message);
 			result = ret_list;
 			_g_error_free0 (e);
 			_g_key_file_free0 (desktop_keyfile);
 			return result;
 		}
 	}
-	__finally18:
+	__finally19:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (ret_list);
 		_g_key_file_free0 (desktop_keyfile);
@@ -990,30 +1004,30 @@ static GeeArrayList* unity_launcher_application_controller_real_get_menu_shortcu
 						char* _tmp6_;
 						_tmp3_ = g_key_file_get_value (desktop_keyfile, groups[a], "Exec", &_inner_error_);
 						if (_inner_error_ != NULL) {
-							goto __catch19_g_error;
+							goto __catch20_g_error;
 						}
 						exec = (_tmp4_ = _tmp3_, _g_free0 (exec), _tmp4_);
 						_tmp5_ = g_key_file_get_locale_string (desktop_keyfile, groups[a], "Name", "", &_inner_error_);
 						if (_inner_error_ != NULL) {
-							goto __catch19_g_error;
+							goto __catch20_g_error;
 						}
 						name = (_tmp6_ = _tmp5_, _g_free0 (name), _tmp6_);
 					}
-					goto __finally19;
-					__catch19_g_error:
+					goto __finally20;
+					__catch20_g_error:
 					{
 						GError * e;
 						e = _inner_error_;
 						_inner_error_ = NULL;
 						{
-							g_warning ("application-controller.vala:317: %s", e->message);
+							g_warning ("application-controller.vala:335: %s", e->message);
 							_g_error_free0 (e);
 							_g_free0 (exec);
 							_g_free0 (name);
 							continue;
 						}
 					}
-					__finally19:
+					__finally20:
 					if (_inner_error_ != NULL) {
 						_g_free0 (exec);
 						_g_free0 (name);
@@ -1124,7 +1138,7 @@ static void unity_launcher_application_controller_real_activate (UnityLauncherSc
 			g_key_file_load_from_file (desktop_keyfile, unity_launcher_application_controller_get_desktop_file (self), 0, &_inner_error_);
 			if (_inner_error_ != NULL) {
 				_g_key_file_free0 (desktop_keyfile);
-				goto __catch20_g_error;
+				goto __catch21_g_error;
 			}
 			appinfo = (GAppInfo*) g_desktop_app_info_new_from_keyfile (desktop_keyfile);
 			gdk_app_launch_context_set_screen (context, gdk_display_get_default_screen (gdk_display_get_default ()));
@@ -1133,25 +1147,25 @@ static void unity_launcher_application_controller_real_activate (UnityLauncherSc
 			if (_inner_error_ != NULL) {
 				_g_key_file_free0 (desktop_keyfile);
 				_g_object_unref0 (appinfo);
-				goto __catch20_g_error;
+				goto __catch21_g_error;
 			}
 			unity_launcher_scroller_child_set_activating (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), TRUE);
 			g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 8, _unity_launcher_application_controller_on_launch_timeout_gsource_func, g_object_ref (self), g_object_unref);
 			_g_key_file_free0 (desktop_keyfile);
 			_g_object_unref0 (appinfo);
 		}
-		goto __finally20;
-		__catch20_g_error:
+		goto __finally21;
+		__catch21_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("application-controller.vala:395: %s", e->message);
+				g_warning ("application-controller.vala:413: %s", e->message);
 				_g_error_free0 (e);
 			}
 		}
-		__finally20:
+		__finally21:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (context);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -1217,13 +1231,13 @@ void unity_launcher_application_controller_attach_application (UnityLauncherAppl
 	((UnityLauncherScrollerChildController*) self)->name = (_tmp1_ = bamf_view_get_name ((BamfView*) self->priv->app), _g_free0 (((UnityLauncherScrollerChildController*) self)->name), _tmp1_);
 	if (_vala_strcmp0 (((UnityLauncherScrollerChildController*) self)->name, "") == 0) {
 		char* _tmp2_;
-		g_warning ("application-controller.vala:418: %s", _tmp2_ = g_strconcat ("Bamf returned null for app.get_name (): ", string_to_string (unity_launcher_application_controller_get_desktop_file (self)), NULL));
+		g_warning ("application-controller.vala:436: %s", _tmp2_ = g_strconcat ("Bamf returned null for app.get_name (): ", string_to_string (unity_launcher_application_controller_get_desktop_file (self)), NULL));
 		_g_free0 (_tmp2_);
 	}
 	potential_icon_name = bamf_view_get_icon ((BamfView*) self->priv->app);
 	if (_vala_strcmp0 (potential_icon_name, "") == 0) {
 		char* _tmp3_;
-		g_warning ("application-controller.vala:422: %s", _tmp3_ = g_strconcat ("Bamf returned null for app.get_icon (): ", string_to_string (unity_launcher_application_controller_get_desktop_file (self)), NULL));
+		g_warning ("application-controller.vala:440: %s", _tmp3_ = g_strconcat ("Bamf returned null for app.get_icon (): ", string_to_string (unity_launcher_application_controller_get_desktop_file (self)), NULL));
 		_g_free0 (_tmp3_);
 	} else {
 		_vala_strcmp0 (self->priv->icon_name, potential_icon_name) == 0;
@@ -1294,35 +1308,8 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 		self->priv->desktop_keyfile = (_tmp0_ = g_key_file_new (), _g_key_file_free0 (self->priv->desktop_keyfile), _tmp0_);
 		g_key_file_load_from_file (self->priv->desktop_keyfile, unity_launcher_application_controller_get_desktop_file (self), G_KEY_FILE_NONE, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch21_g_error;
-		}
-	}
-	goto __finally21;
-	__catch21_g_error:
-	{
-		GError * e;
-		e = _inner_error_;
-		_inner_error_ = NULL;
-		{
-			g_warning ("application-controller.vala:475: could not load desktop file: %s", e->message);
-			_g_error_free0 (e);
-		}
-	}
-	__finally21:
-	if (_inner_error_ != NULL) {
-		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-		g_clear_error (&_inner_error_);
-		return;
-	}
-	{
-		char* _tmp1_;
-		char* _tmp2_;
-		_tmp1_ = g_key_file_get_string (self->priv->desktop_keyfile, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_ICON, &_inner_error_);
-		if (_inner_error_ != NULL) {
 			goto __catch22_g_error;
 		}
-		self->priv->icon_name = (_tmp2_ = _tmp1_, _g_free0 (self->priv->icon_name), _tmp2_);
-		unity_launcher_application_controller_load_icon_from_icon_name (self);
 	}
 	goto __finally22;
 	__catch22_g_error:
@@ -1331,8 +1318,7 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("application-controller.vala:485: could not load icon name from desktop" \
-" file: %s", e->message);
+			g_warning ("application-controller.vala:493: could not load desktop file: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
@@ -1343,13 +1329,14 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 		return;
 	}
 	{
-		char* _tmp3_;
-		char* _tmp4_;
-		_tmp3_ = g_key_file_get_string (self->priv->desktop_keyfile, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_NAME, &_inner_error_);
+		char* _tmp1_;
+		char* _tmp2_;
+		_tmp1_ = g_key_file_get_string (self->priv->desktop_keyfile, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_ICON, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch23_g_error;
 		}
-		((UnityLauncherScrollerChildController*) self)->name = (_tmp4_ = _tmp3_, _g_free0 (((UnityLauncherScrollerChildController*) self)->name), _tmp4_);
+		self->priv->icon_name = (_tmp2_ = _tmp1_, _g_free0 (self->priv->icon_name), _tmp2_);
+		unity_launcher_application_controller_load_icon_from_icon_name (self);
 	}
 	goto __finally23;
 	__catch23_g_error:
@@ -1358,12 +1345,39 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("application-controller.vala:494: could not load name from desktop file" \
-": %s", e->message);
+			g_warning ("application-controller.vala:503: could not load icon name from desktop" \
+" file: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
 	__finally23:
+	if (_inner_error_ != NULL) {
+		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+		g_clear_error (&_inner_error_);
+		return;
+	}
+	{
+		char* _tmp3_;
+		char* _tmp4_;
+		_tmp3_ = g_key_file_get_string (self->priv->desktop_keyfile, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_NAME, &_inner_error_);
+		if (_inner_error_ != NULL) {
+			goto __catch24_g_error;
+		}
+		((UnityLauncherScrollerChildController*) self)->name = (_tmp4_ = _tmp3_, _g_free0 (((UnityLauncherScrollerChildController*) self)->name), _tmp4_);
+	}
+	goto __finally24;
+	__catch24_g_error:
+	{
+		GError * e;
+		e = _inner_error_;
+		_inner_error_ = NULL;
+		{
+			g_warning ("application-controller.vala:512: could not load name from desktop file" \
+": %s", e->message);
+			_g_error_free0 (e);
+		}
+	}
+	__finally24:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -1382,25 +1396,25 @@ static void _lambda10_ (UnityThemeFilePath* theme, const char* filepath, UnityLa
 		GdkPixbuf* _tmp1_;
 		_tmp0_ = gdk_pixbuf_new_from_file (filepath, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch24_g_error;
+			goto __catch25_g_error;
 		}
 		unity_launcher_scroller_child_set_icon (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), _tmp1_ = _tmp0_);
 		_g_object_unref0 (_tmp1_);
 	}
-	goto __finally24;
-	__catch24_g_error:
+	goto __finally25;
+	__catch25_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
 			char* _tmp2_;
-			g_warning ("application-controller.vala:533: %s", _tmp2_ = g_strconcat ("Could not load from ", string_to_string (filepath), NULL));
+			g_warning ("application-controller.vala:551: %s", _tmp2_ = g_strconcat ("Could not load from ", string_to_string (filepath), NULL));
 			_g_free0 (_tmp2_);
 			_g_error_free0 (e);
 		}
 	}
-	__finally24:
+	__finally25:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -1424,25 +1438,25 @@ static void _lambda11_ (UnityLauncherApplicationController* self) {
 		_tmp0_ = gtk_icon_theme_load_icon (default_theme, GTK_STOCK_MISSING_IMAGE, 48, 0, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (default_theme);
-			goto __catch25_g_error;
+			goto __catch26_g_error;
 		}
 		unity_launcher_scroller_child_set_icon (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), _tmp0_);
 		_g_object_unref0 (default_theme);
 	}
-	goto __finally25;
-	__catch25_g_error:
+	goto __finally26;
+	__catch26_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
 			char* _tmp1_;
-			g_warning ("application-controller.vala:545: Could not load any icon for %s", _tmp1_ = bamf_view_get_name ((BamfView*) self->priv->app));
+			g_warning ("application-controller.vala:563: Could not load any icon for %s", _tmp1_ = bamf_view_get_name ((BamfView*) self->priv->app));
 			_g_free0 (_tmp1_);
 			_g_error_free0 (e);
 		}
 	}
-	__finally25:
+	__finally26:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -1498,23 +1512,23 @@ static gboolean unity_launcher_application_controller_try_load_from_file (UnityL
 			GdkPixbuf* _tmp1_;
 			_tmp0_ = gdk_pixbuf_new_from_file_at_scale (filepath, 48, 48, TRUE, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch26_g_error;
+				goto __catch27_g_error;
 			}
 			pixbuf = (_tmp1_ = _tmp0_, _g_object_unref0 (pixbuf), _tmp1_);
 		}
-		goto __finally26;
-		__catch26_g_error:
+		goto __finally27;
+		__catch27_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("application-controller.vala:564: Unable to load image from file '%s': " \
+				g_warning ("application-controller.vala:582: Unable to load image from file '%s': " \
 "%s", filepath, e->message);
 				_g_error_free0 (e);
 			}
 		}
-		__finally26:
+		__finally27:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (pixbuf);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);

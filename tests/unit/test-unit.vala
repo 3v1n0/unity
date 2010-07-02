@@ -24,6 +24,8 @@ public class Main
 {
   public static int main (string[] args)
   {
+    UnityPixbufCacheSuite unity_pixbuf_cache;
+
     LauncherSuite launcher;
 
     PanelIndicatorObjectEntryViewSuite panel_object_entry_view_suite;
@@ -33,10 +35,15 @@ public class Main
     PlacesPlaceSuite places_place;
     PlacesSuite places;
     PlaceSuite place;
+    IOSuite io;
+    AppInfoManagerSuite appinfo_manager;
 
     Gtk.init (ref args);
     Ctk.init (ref args);
     Test.init (ref args);
+
+    /* Libunity tests */
+    unity_pixbuf_cache = new UnityPixbufCacheSuite ();
 
     /* Launcher tests */
     launcher = new LauncherSuite ();
@@ -50,6 +57,10 @@ public class Main
     /* Places tests */
     places = new PlacesSuite ();
     place = new PlaceSuite ();
+    
+    /* IO utility tests */
+    io = new IOSuite ();
+    appinfo_manager = new AppInfoManagerSuite ();
 
     Test.run ();
 

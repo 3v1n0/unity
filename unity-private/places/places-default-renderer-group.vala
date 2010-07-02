@@ -57,12 +57,12 @@ namespace Unity.Places
       homogeneous = false;
       hide ();
 
-      title_box = new Ctk.HBox (12);
-      pack (title_box, false, true);
+      title_box = new Ctk.HBox (8);
+      pack (title_box, false, false);
       title_box.show ();
 
       icon = new Ctk.Image (24);
-      //title_box.pack (icon, false, true);
+      title_box.pack (icon, false, false);
       icon.show ();
 
       text = new Ctk.Text (display_name);
@@ -70,7 +70,7 @@ namespace Unity.Places
       text.show ();
 
       expander = new Ctk.Image (24);
-      //title_box.pack (expander, false, true);
+      title_box.pack (expander, false, true);
       expander.show ();
 
       var sep = new Clutter.Rectangle.with_color ({ 255, 255, 255, 255 });
@@ -80,7 +80,7 @@ namespace Unity.Places
 
       renderer = new Ctk.IconView ();
       renderer.padding = { 12.0f, 0.0f, 0.0f, 0.0f };
-      //renderer.spacing = 30;
+      renderer.spacing = 24;
       pack (renderer, true, true);
       renderer.show ();
 
@@ -164,6 +164,9 @@ namespace Unity.Places
 
   public class Tile : Ctk.Button
   {
+    static const int ICON_SIZE = 48;
+    static const string DEFAULT_ICON = "text-x-preview";
+
     public unowned Dee.ModelIter iter { get; construct; }
 
     public string  display_name { get; construct; }
@@ -195,20 +198,23 @@ namespace Unity.Places
       unowned Ctk.Text text = get_text ();
       text.ellipsize = Pango.EllipsizeMode.END;
 
-      get_image ().set_from_stock ("text-x-preview");
-
-      Idle.add (load_icon);
+      set_icon ();
     }
 
     private override void get_preferred_width (float for_height,
                                                out float mwidth,
                                                out float nwidth)
     {
-      mwidth = 160.0f;
-      nwidth = 160.0f;
+      mwidth = 150.0f;
+      nwidth = 150.0f;
     }
 
     private override void clicked ()
+    {
+      clicked_handler.begin ();
+    }
+
+    private async void clicked_handler ()
     {
       debug (@"Launching $uri");
 
@@ -216,12 +222,21 @@ namespace Unity.Places
         {
           var id = uri.offset ("application://".length);
 
-          var info = new GLib.DesktopAppInfo (id);
-          if (info is GLib.DesktopAppInfo)
+          AppInfo info;
+          try {
+            var appinfos = AppInfoManager.get_instance ();
+            info = yield appinfos.lookup_async (id);
+            debug ("Foo: %s", info.get_name());
+          } catch (Error ee) {
+            warning ("Unable to read .desktop file '%s': %s", uri, ee.message);
+            return;
+          }
+
+          if (info is AppInfo)
             {
               try {
                 info.launch (null,null);
-
+                debug ("Launched");
               } catch (Error e) {
                 warning ("Unable to launch desktop file %s: %s\n",
                          id,
@@ -239,45 +254,28 @@ namespace Unity.Places
         Gtk.show_uri (Gdk.Screen.get_default (),
                       uri,
                       0);
-       } catch (GLib.Error e) {
-         warning ("Unable to launch: %s\n", e.message);
+       } catch (GLib.Error eee) {
+         warning ("Unable to launch: %s\n", eee.message);
        }
     }
 
-    private bool load_icon ()
+    private void set_icon ()
     {
-      if (uri.has_prefix ("application://"))
-        {
-          var id = uri.offset ("application://".length);
-          var info = new GLib.DesktopAppInfo (id);
+      var cache = PixbufCache.get_default ();
 
-          if (info is GLib.DesktopAppInfo)
-            {
-              var icon = info.get_icon ();
-              if (icon is GLib.ThemedIcon)
-                get_image ().set_from_gicon (icon);
-              else if (icon is GLib.FileIcon)
-                {
-                  var file = (icon as GLib.FileIcon).get_file ();
-                  get_image ().set_from_filename (file.get_path ());
-                }
-            }
-        }
-      else if (mimetype != null)
+      if (icon_hint != null && icon_hint != "")
         {
-          var icon = GLib.g_content_type_get_icon (mimetype) as ThemedIcon;
-          if (icon is GLib.ThemedIcon)
-            {
-              get_image ().set_from_gicon (icon);
-            }
-          else if (icon is GLib.FileIcon)
-            {
-              var file = (icon as GLib.FileIcon).get_file ();
-              get_image ().set_from_filename (file.get_path ());
-            }
+          cache.set_image_from_gicon_string (get_image (), icon_hint, ICON_SIZE);
         }
-
-      return false;
+      else if (mimetype != null && mimetype != "")
+        {
+          var icon = GLib.g_content_type_get_icon (mimetype);
+          cache.set_image_from_gicon_string (get_image (), icon.to_string(), ICON_SIZE);
+        }
+      else
+        {
+          cache.set_image_from_icon_name (get_image (), DEFAULT_ICON, ICON_SIZE);
+        }
     }
   }
 }

@@ -256,12 +256,12 @@ static void unity_launcher_launcher_child_load_textures (UnityLauncherLauncherCh
 		GdkPixbuf* _tmp3_;
 		_tmp2_ = gdk_pixbuf_new_from_file (UNITY_LAUNCHER_HONEYCOMB_MASK_FILE, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch27_g_error;
+			goto __catch28_g_error;
 		}
 		self->priv->honeycomb_mask = (_tmp3_ = _tmp2_, _g_object_unref0 (self->priv->honeycomb_mask), _tmp3_);
 	}
-	goto __finally27;
-	__catch27_g_error:
+	goto __finally28;
+	__catch28_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -271,7 +271,7 @@ static void unity_launcher_launcher_child_load_textures (UnityLauncherLauncherCh
 			_g_error_free0 (e);
 		}
 	}
-	__finally27:
+	__finally28:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);

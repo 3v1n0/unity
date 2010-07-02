@@ -85,6 +85,8 @@ enum  {
 };
 UnityPanelIndicatorsMenuBar* unity_panel_indicators_menu_bar_new (void);
 UnityPanelIndicatorsMenuBar* unity_panel_indicators_menu_bar_construct (GType object_type);
+void unity_panel_indicators_indicator_object_view_open_last_menu_entry (UnityPanelIndicatorsIndicatorObjectView* self);
+void unity_panel_indicators_indicator_object_view_open_first_menu_entry (UnityPanelIndicatorsIndicatorObjectView* self);
 static void unity_panel_indicators_menu_bar_on_menu_moved (UnityPanelIndicatorsMenuBar* self, UnityPanelIndicatorsIndicatorObjectView* object_view, GtkMenuDirectionType type);
 GType unity_panel_indicators_indicators_model_get_type (void);
 UnityPanelIndicatorsIndicatorsModel* unity_panel_indicators_indicators_model_get_default (void);
@@ -114,6 +116,12 @@ UnityPanelIndicatorsMenuBar* unity_panel_indicators_menu_bar_new (void) {
 static void unity_panel_indicators_menu_bar_on_menu_moved (UnityPanelIndicatorsMenuBar* self, UnityPanelIndicatorsIndicatorObjectView* object_view, GtkMenuDirectionType type) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (object_view != NULL);
+	if (type == GTK_MENU_DIR_PARENT) {
+		unity_panel_indicators_indicator_object_view_open_last_menu_entry (self->indicator_object_view);
+	}
+	if (type == GTK_MENU_DIR_CHILD) {
+		unity_panel_indicators_indicator_object_view_open_first_menu_entry (self->indicator_object_view);
+	}
 }
 
 

@@ -37,10 +37,12 @@ host_triplet = @host@
 noinst_PROGRAMS = test-unit$(EXEEXT)
 subdir = tests/unit
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	test-launcher.c test-panel-indicator-object-entry-view.c \
+	test-appinfo-manager.c test-io.c test-launcher.c \
+	test-panel-indicator-object-entry-view.c \
 	test-panel-indicator-object-view.c test-place.c \
 	test-places-place-file-model.c test-places-place.c \
-	test-places.c test-unit.c test_unit_vala.stamp
+	test-places.c test-unit.c test-unity-pixbuf-cache.c \
+	test_unit_vala.stamp
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 am__aclocal_m4_deps = $(top_srcdir)/m4/gettext.m4 \
 	$(top_srcdir)/m4/iconv.m4 $(top_srcdir)/m4/intlmacosx.m4 \
@@ -64,6 +66,9 @@ am_test_unit_OBJECTS = test_unit-test-launcher.$(OBJEXT) \
 	test_unit-test-places-place-file-model.$(OBJEXT) \
 	test_unit-test-places-place.$(OBJEXT) \
 	test_unit-test-places.$(OBJEXT) test_unit-test-place.$(OBJEXT) \
+	test_unit-test-io.$(OBJEXT) \
+	test_unit-test-appinfo-manager.$(OBJEXT) \
+	test_unit-test-unity-pixbuf-cache.$(OBJEXT) \
 	test_unit-test-unit.$(OBJEXT)
 test_unit_OBJECTS = $(am_test_unit_OBJECTS)
 am__DEPENDENCIES_1 =
@@ -331,6 +336,7 @@ test_unit_VALAFLAGS = \
   --vapidir=$(top_srcdir)/vapi/ \
   --vapidir=$(top_srcdir)/tests \
   --vapidir=$(top_srcdir)/tests/unit \
+  --pkg gio-2.0 \
   --pkg Bamf-0.2 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
@@ -361,6 +367,9 @@ test_unit_SOURCES = \
   test-places-place.vala \
   test-places.vala \
   test-place.vala \
+  test-io.vala \
+  test-appinfo-manager.vala \
+  test-unity-pixbuf-cache.vala \
   test-unit.vala
 
 
@@ -422,6 +431,8 @@ mostlyclean-compile:
 distclean-compile:
 	-rm -f *.tab.c
 
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-appinfo-manager.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-io.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-launcher.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-panel-indicator-object-entry-view.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-panel-indicator-object-view.Po@am__quote@
@@ -430,6 +441,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-places-place.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-places.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-unit.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-unity-pixbuf-cache.Po@am__quote@
 
 .c.o:
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(COMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<
@@ -567,6 +579,54 @@ test_unit-test-place.obj: test-place.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-place.obj `if test -f 'test-place.c'; then $(CYGPATH_W) 'test-place.c'; else $(CYGPATH_W) '$(srcdir)/test-place.c'; fi`
 
+test_unit-test-io.o: test-io.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-io.o -MD -MP -MF $(DEPDIR)/test_unit-test-io.Tpo -c -o test_unit-test-io.o `test -f 'test-io.c' || echo '$(srcdir)/'`test-io.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-io.Tpo $(DEPDIR)/test_unit-test-io.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-io.c' object='test_unit-test-io.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-io.o `test -f 'test-io.c' || echo '$(srcdir)/'`test-io.c
+
+test_unit-test-io.obj: test-io.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-io.obj -MD -MP -MF $(DEPDIR)/test_unit-test-io.Tpo -c -o test_unit-test-io.obj `if test -f 'test-io.c'; then $(CYGPATH_W) 'test-io.c'; else $(CYGPATH_W) '$(srcdir)/test-io.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-io.Tpo $(DEPDIR)/test_unit-test-io.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-io.c' object='test_unit-test-io.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-io.obj `if test -f 'test-io.c'; then $(CYGPATH_W) 'test-io.c'; else $(CYGPATH_W) '$(srcdir)/test-io.c'; fi`
+
+test_unit-test-appinfo-manager.o: test-appinfo-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-appinfo-manager.o -MD -MP -MF $(DEPDIR)/test_unit-test-appinfo-manager.Tpo -c -o test_unit-test-appinfo-manager.o `test -f 'test-appinfo-manager.c' || echo '$(srcdir)/'`test-appinfo-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-appinfo-manager.Tpo $(DEPDIR)/test_unit-test-appinfo-manager.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-appinfo-manager.c' object='test_unit-test-appinfo-manager.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-appinfo-manager.o `test -f 'test-appinfo-manager.c' || echo '$(srcdir)/'`test-appinfo-manager.c
+
+test_unit-test-appinfo-manager.obj: test-appinfo-manager.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-appinfo-manager.obj -MD -MP -MF $(DEPDIR)/test_unit-test-appinfo-manager.Tpo -c -o test_unit-test-appinfo-manager.obj `if test -f 'test-appinfo-manager.c'; then $(CYGPATH_W) 'test-appinfo-manager.c'; else $(CYGPATH_W) '$(srcdir)/test-appinfo-manager.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-appinfo-manager.Tpo $(DEPDIR)/test_unit-test-appinfo-manager.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-appinfo-manager.c' object='test_unit-test-appinfo-manager.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-appinfo-manager.obj `if test -f 'test-appinfo-manager.c'; then $(CYGPATH_W) 'test-appinfo-manager.c'; else $(CYGPATH_W) '$(srcdir)/test-appinfo-manager.c'; fi`
+
+test_unit-test-unity-pixbuf-cache.o: test-unity-pixbuf-cache.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-unity-pixbuf-cache.o -MD -MP -MF $(DEPDIR)/test_unit-test-unity-pixbuf-cache.Tpo -c -o test_unit-test-unity-pixbuf-cache.o `test -f 'test-unity-pixbuf-cache.c' || echo '$(srcdir)/'`test-unity-pixbuf-cache.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-unity-pixbuf-cache.Tpo $(DEPDIR)/test_unit-test-unity-pixbuf-cache.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-unity-pixbuf-cache.c' object='test_unit-test-unity-pixbuf-cache.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-unity-pixbuf-cache.o `test -f 'test-unity-pixbuf-cache.c' || echo '$(srcdir)/'`test-unity-pixbuf-cache.c
+
+test_unit-test-unity-pixbuf-cache.obj: test-unity-pixbuf-cache.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-unity-pixbuf-cache.obj -MD -MP -MF $(DEPDIR)/test_unit-test-unity-pixbuf-cache.Tpo -c -o test_unit-test-unity-pixbuf-cache.obj `if test -f 'test-unity-pixbuf-cache.c'; then $(CYGPATH_W) 'test-unity-pixbuf-cache.c'; else $(CYGPATH_W) '$(srcdir)/test-unity-pixbuf-cache.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-unity-pixbuf-cache.Tpo $(DEPDIR)/test_unit-test-unity-pixbuf-cache.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-unity-pixbuf-cache.c' object='test_unit-test-unity-pixbuf-cache.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-unity-pixbuf-cache.obj `if test -f 'test-unity-pixbuf-cache.c'; then $(CYGPATH_W) 'test-unity-pixbuf-cache.c'; else $(CYGPATH_W) '$(srcdir)/test-unity-pixbuf-cache.c'; fi`
+
 test_unit-test-unit.o: test-unit.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-unit.o -MD -MP -MF $(DEPDIR)/test_unit-test-unit.Tpo -c -o test_unit-test-unit.o `test -f 'test-unit.c' || echo '$(srcdir)/'`test-unit.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-unit.Tpo $(DEPDIR)/test_unit-test-unit.Po
@@ -613,6 +673,21 @@ $(srcdir)/test-places.c: $(srcdir)/test_unit_vala.stamp
 	  $(am__cd) $(srcdir) && $(MAKE) $(AM_MAKEFLAGS) test_unit_vala.stamp; \
 	fi
 $(srcdir)/test-place.c: $(srcdir)/test_unit_vala.stamp
+	@if test -f $@; then :; else \
+	  rm -f $(srcdir)/test_unit_vala.stamp; \
+	  $(am__cd) $(srcdir) && $(MAKE) $(AM_MAKEFLAGS) test_unit_vala.stamp; \
+	fi
+$(srcdir)/test-io.c: $(srcdir)/test_unit_vala.stamp
+	@if test -f $@; then :; else \
+	  rm -f $(srcdir)/test_unit_vala.stamp; \
+	  $(am__cd) $(srcdir) && $(MAKE) $(AM_MAKEFLAGS) test_unit_vala.stamp; \
+	fi
+$(srcdir)/test-appinfo-manager.c: $(srcdir)/test_unit_vala.stamp
+	@if test -f $@; then :; else \
+	  rm -f $(srcdir)/test_unit_vala.stamp; \
+	  $(am__cd) $(srcdir) && $(MAKE) $(AM_MAKEFLAGS) test_unit_vala.stamp; \
+	fi
+$(srcdir)/test-unity-pixbuf-cache.c: $(srcdir)/test_unit_vala.stamp
 	@if test -f $@; then :; else \
 	  rm -f $(srcdir)/test_unit_vala.stamp; \
 	  $(am__cd) $(srcdir) && $(MAKE) $(AM_MAKEFLAGS) test_unit_vala.stamp; \
@@ -857,6 +932,8 @@ distclean-generic:
 maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
+	-rm -f test-appinfo-manager.c
+	-rm -f test-io.c
 	-rm -f test-launcher.c
 	-rm -f test-panel-indicator-object-entry-view.c
 	-rm -f test-panel-indicator-object-view.c
@@ -865,6 +942,7 @@ maintainer-clean-generic:
 	-rm -f test-places-place.c
 	-rm -f test-places.c
 	-rm -f test-unit.c
+	-rm -f test-unity-pixbuf-cache.c
 	-rm -f test_unit_vala.stamp
 clean: clean-recursive
 

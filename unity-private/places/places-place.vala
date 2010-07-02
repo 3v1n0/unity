@@ -213,7 +213,7 @@ namespace Unity.Places
       var groups = file.get_groups ();
       foreach (string group in groups)
         {
-          if (true == false) //group.has_prefix (ENTRY_PREFIX))
+          if (group.has_prefix (ENTRY_PREFIX))
             {
               PlaceEntry? entry = load_entry_from_keyfile (file, group);
               if (entry is PlaceEntry)

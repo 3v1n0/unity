@@ -154,6 +154,17 @@ typedef struct _UnityThemeImage UnityThemeImage;
 typedef struct _UnityThemeImageClass UnityThemeImageClass;
 typedef struct _UnityThemeImagePrivate UnityThemeImagePrivate;
 
+#define UNITY_TYPE_APP_INFO_MANAGER (unity_app_info_manager_get_type ())
+#define UNITY_APP_INFO_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_APP_INFO_MANAGER, UnityAppInfoManager))
+#define UNITY_APP_INFO_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_APP_INFO_MANAGER, UnityAppInfoManagerClass))
+#define UNITY_IS_APP_INFO_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_APP_INFO_MANAGER))
+#define UNITY_IS_APP_INFO_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_APP_INFO_MANAGER))
+#define UNITY_APP_INFO_MANAGER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_APP_INFO_MANAGER, UnityAppInfoManagerClass))
+
+typedef struct _UnityAppInfoManager UnityAppInfoManager;
+typedef struct _UnityAppInfoManagerClass UnityAppInfoManagerClass;
+typedef struct _UnityAppInfoManagerPrivate UnityAppInfoManagerPrivate;
+
 #define UNITY_TYPE_CAIRO_CANVAS (unity_cairo_canvas_get_type ())
 #define UNITY_CAIRO_CANVAS(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_CAIRO_CANVAS, UnityCairoCanvas))
 #define UNITY_CAIRO_CANVAS_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_CAIRO_CANVAS, UnityCairoCanvasClass))
@@ -186,6 +197,17 @@ typedef struct _UnityFavoritesPrivate UnityFavoritesPrivate;
 typedef struct _UnityGConfFavorites UnityGConfFavorites;
 typedef struct _UnityGConfFavoritesClass UnityGConfFavoritesClass;
 typedef struct _UnityGConfFavoritesPrivate UnityGConfFavoritesPrivate;
+
+#define UNITY_TYPE_PIXBUF_CACHE (unity_pixbuf_cache_get_type ())
+#define UNITY_PIXBUF_CACHE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_PIXBUF_CACHE, UnityPixbufCache))
+#define UNITY_PIXBUF_CACHE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_PIXBUF_CACHE, UnityPixbufCacheClass))
+#define UNITY_IS_PIXBUF_CACHE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_PIXBUF_CACHE))
+#define UNITY_IS_PIXBUF_CACHE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_PIXBUF_CACHE))
+#define UNITY_PIXBUF_CACHE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_PIXBUF_CACHE, UnityPixbufCacheClass))
+
+typedef struct _UnityPixbufCache UnityPixbufCache;
+typedef struct _UnityPixbufCacheClass UnityPixbufCacheClass;
+typedef struct _UnityPixbufCachePrivate UnityPixbufCachePrivate;
 
 #define UNITY_PLACE_TYPE_RENDERER (unity_place_renderer_get_type ())
 #define UNITY_PLACE_RENDERER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_RENDERER, UnityPlaceRenderer))
@@ -395,6 +417,15 @@ struct _UnityThemeImageClass {
 	ClutterTextureClass parent_class;
 };
 
+struct _UnityAppInfoManager {
+	GObject parent_instance;
+	UnityAppInfoManagerPrivate * priv;
+};
+
+struct _UnityAppInfoManagerClass {
+	GObjectClass parent_class;
+};
+
 struct _UnityCairoCanvas {
 	CtkBin parent_instance;
 	UnityCairoCanvasPrivate * priv;
@@ -417,6 +448,7 @@ struct _UnityFavoritesClass {
 	void (*add_favorite) (UnityFavorites* self, const char* uid);
 	void (*remove_favorite) (UnityFavorites* self, const char* uid);
 	gboolean (*is_favorite) (UnityFavorites* self, const char* uid);
+	char* (*find_uid_for_desktop_file) (UnityFavorites* self, const char* desktop_file);
 	char* (*get_string) (UnityFavorites* self, const char* uid, const char* name);
 	void (*set_string) (UnityFavorites* self, const char* uid, const char* name, const char* value);
 	gint* (*get_int) (UnityFavorites* self, const char* uid, const char* name);
@@ -434,6 +466,15 @@ struct _UnityGConfFavorites {
 
 struct _UnityGConfFavoritesClass {
 	UnityFavoritesClass parent_class;
+};
+
+struct _UnityPixbufCache {
+	GObject parent_instance;
+	UnityPixbufCachePrivate * priv;
+};
+
+struct _UnityPixbufCacheClass {
+	GObjectClass parent_class;
 };
 
 struct _UnityPlaceRendererIface {
@@ -466,10 +507,6 @@ struct _UnityPlaceEntryInfo {
 
 struct _UnityPlaceEntryInfoClass {
 	GObjectClass parent_class;
-	void (*set_global_search) (UnityPlaceEntryInfo* self, UnityPlaceSearch* search, GAsyncReadyCallback _callback_, gpointer _user_data_);
-	guint (*set_global_search_finish) (UnityPlaceEntryInfo* self, GAsyncResult* _res_);
-	void (*set_search) (UnityPlaceEntryInfo* self, UnityPlaceSearch* search, GAsyncReadyCallback _callback_, gpointer _user_data_);
-	guint (*set_search_finish) (UnityPlaceEntryInfo* self, GAsyncResult* _res_);
 };
 
 struct _UnityPlaceController {
@@ -552,6 +589,15 @@ void unity_quicklist_rendering_item_selected_mask (cairo_t* cr, gint w, gint h, 
 UnityQuicklistRenderingItem* unity_quicklist_rendering_item_new (void);
 UnityQuicklistRenderingItem* unity_quicklist_rendering_item_construct (GType object_type);
 GType unity_quicklist_rendering_menu_get_type (void);
+void unity_quicklist_rendering_menu_outline_shadow_top (cairo_surface_t** surf, gint width, gint height, float anchor_width, float corner_radius, guint shadow_radius, float* rgba_shadow, int rgba_shadow_length1, float line_width, float* rgba_line, int rgba_line_length1);
+void unity_quicklist_rendering_menu_outline_shadow_dyn (cairo_surface_t** surf, gint width, gint height, float anchor_width, guint shadow_radius, float* rgba_shadow, int rgba_shadow_length1, float line_width, float* rgba_line, int rgba_line_length1);
+void unity_quicklist_rendering_menu_outline_shadow_anchor (cairo_surface_t** surf, gint width, gint height, float anchor_width, float anchor_height, guint shadow_radius, float* rgba_shadow, int rgba_shadow_length1, float line_width, float* rgba_line, int rgba_line_length1);
+void unity_quicklist_rendering_menu_outline_shadow_bottom (cairo_surface_t** surf, gint width, gint height, float anchor_width, float corner_radius, guint shadow_radius, float* rgba_shadow, int rgba_shadow_length1, float line_width, float* rgba_line, int rgba_line_length1);
+void unity_quicklist_rendering_menu_tint_dot_hl (cairo_surface_t** surf, gint width, gint height, float hl_x, float hl_y, float hl_size, float* rgba_tint, int rgba_tint_length1, float* rgba_hl, int rgba_hl_length1);
+void unity_quicklist_rendering_menu_top_mask (cairo_surface_t** surf, gint width, gint height, float radius, float anchor_width, gboolean negative, gboolean outline, float line_width, float* rgba, int rgba_length1);
+void unity_quicklist_rendering_menu_dyn_mask (cairo_surface_t** surf, gint width, gint height, float anchor_width, gboolean negative, gboolean outline, float line_width, float* rgba, int rgba_length1);
+void unity_quicklist_rendering_menu_anchor_mask (cairo_surface_t** surf, gint width, gint height, float anchor_width, float anchor_height, gboolean negative, gboolean outline, float line_width, float* rgba, int rgba_length1);
+void unity_quicklist_rendering_menu_bottom_mask (cairo_surface_t** surf, gint width, gint height, float radius, float anchor_width, gboolean negative, gboolean outline, float line_width, float* rgba, int rgba_length1);
 void unity_quicklist_rendering_menu_full_mask (cairo_t* cr, gint w, gint h, float anchor_y);
 void unity_quicklist_rendering_menu_fill_mask (cairo_t* cr, gint w, gint h, float anchor_y);
 void unity_quicklist_rendering_menu_background (cairo_t* cr, gint w, gint h, float anchor_y);
@@ -589,6 +635,12 @@ UnityThemeImage* unity_theme_image_new (const char* icon_name);
 UnityThemeImage* unity_theme_image_construct (GType object_type, const char* icon_name);
 const char* unity_theme_image_get_icon_name (UnityThemeImage* self);
 void unity_theme_image_set_icon_name (UnityThemeImage* self, const char* value);
+GType unity_app_info_manager_get_type (void);
+UnityAppInfoManager* unity_app_info_manager_get_instance (void);
+GAppInfo* unity_app_info_manager_lookup (UnityAppInfoManager* self, const char* id);
+void unity_app_info_manager_lookup_async (UnityAppInfoManager* self, const char* id, GAsyncReadyCallback _callback_, gpointer _user_data_);
+GAppInfo* unity_app_info_manager_lookup_finish (UnityAppInfoManager* self, GAsyncResult* _res_, GError** error);
+void unity_app_info_manager_clear (UnityAppInfoManager* self);
 GType unity_cairo_canvas_get_type (void);
 UnityCairoCanvas* unity_cairo_canvas_new (UnityCairoCanvasCairoCanvasPaint _func, void* _func_target);
 UnityCairoCanvas* unity_cairo_canvas_construct (GType object_type, UnityCairoCanvasCairoCanvasPaint _func, void* _func_target);
@@ -600,6 +652,7 @@ GeeArrayList* unity_favorites_get_favorites (UnityFavorites* self);
 void unity_favorites_add_favorite (UnityFavorites* self, const char* uid);
 void unity_favorites_remove_favorite (UnityFavorites* self, const char* uid);
 gboolean unity_favorites_is_favorite (UnityFavorites* self, const char* uid);
+char* unity_favorites_find_uid_for_desktop_file (UnityFavorites* self, const char* desktop_file);
 char* unity_favorites_get_string (UnityFavorites* self, const char* uid, const char* name);
 void unity_favorites_set_string (UnityFavorites* self, const char* uid, const char* name, const char* value);
 gint* unity_favorites_get_int (UnityFavorites* self, const char* uid, const char* name);
@@ -612,6 +665,27 @@ UnityFavorites* unity_favorites_construct (GType object_type);
 GType unity_gconf_favorites_get_type (void);
 UnityGConfFavorites* unity_gconf_favorites_new (void);
 UnityGConfFavorites* unity_gconf_favorites_construct (GType object_type);
+void unity_io_read_stream_async (GInputStream* input, guchar* buffer, int buffer_length1, gsize buffer_lenght, gint io_priority, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
+void unity_io_read_stream_finish (GAsyncResult* _res_, void** data, gsize* size, GError** error);
+void unity_io_open_from_dirs (const char* filename, char** dirs, int dirs_length1, GAsyncReadyCallback _callback_, gpointer _user_data_);
+GFileInputStream* unity_io_open_from_dirs_finish (GAsyncResult* _res_, GError** error);
+void unity_io_open_from_data_dirs (const char* filename, GAsyncReadyCallback _callback_, gpointer _user_data_);
+GFileInputStream* unity_io_open_from_data_dirs_finish (GAsyncResult* _res_, GError** error);
+char** unity_io_get_system_data_dirs (int* result_length1);
+GType unity_pixbuf_cache_get_type (void);
+UnityPixbufCache* unity_pixbuf_cache_new (gboolean _autodispose);
+UnityPixbufCache* unity_pixbuf_cache_construct (GType object_type, gboolean _autodispose);
+UnityPixbufCache* unity_pixbuf_cache_get_default (void);
+void unity_pixbuf_cache_set (UnityPixbufCache* self, const char* icon_id, GdkPixbuf* pixbuf, gint size);
+GdkPixbuf* unity_pixbuf_cache_get (UnityPixbufCache* self, const char* icon_id, gint size);
+void unity_pixbuf_cache_clear (UnityPixbufCache* self);
+void unity_pixbuf_cache_set_image_from_icon_name (UnityPixbufCache* self, CtkImage* image, const char* icon_name, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_);
+void unity_pixbuf_cache_set_image_from_icon_name_finish (UnityPixbufCache* self, GAsyncResult* _res_);
+void unity_pixbuf_cache_set_image_from_gicon_string (UnityPixbufCache* self, CtkImage* image, const char* gicon_as_string, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_);
+void unity_pixbuf_cache_set_image_from_gicon_string_finish (UnityPixbufCache* self, GAsyncResult* _res_);
+void unity_pixbuf_cache_set_image_from_gicon (UnityPixbufCache* self, CtkImage* image, GIcon* icon, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_);
+void unity_pixbuf_cache_set_image_from_gicon_finish (UnityPixbufCache* self, GAsyncResult* _res_);
+guint unity_pixbuf_cache_get_size (UnityPixbufCache* self);
 GType unity_place_renderer_get_type (void);
 void unity_place_renderer_set_models (UnityPlaceRenderer* self, DeeModel* groups, DeeModel* results, GeeHashMap* hints);
 GType unity_place_renderer_info_get_type (void);
@@ -636,16 +710,13 @@ void unity_place_search_clear_hint (UnityPlaceSearch* self, const char* hint);
 void unity_place_search_clear_hints (UnityPlaceSearch* self);
 guint unity_place_search_num_hints (UnityPlaceSearch* self);
 GType unity_place_entry_info_get_type (void);
+UnityPlaceEntryInfo* unity_place_entry_info_new (const char* dbus_path);
 UnityPlaceEntryInfo* unity_place_entry_info_construct (GType object_type, const char* dbus_path);
 void unity_place_entry_info_set_hint (UnityPlaceEntryInfo* self, const char* hint, const char* val);
 char* unity_place_entry_info_get_hint (UnityPlaceEntryInfo* self, const char* hint);
 void unity_place_entry_info_clear_hint (UnityPlaceEntryInfo* self, const char* hint);
 void unity_place_entry_info_clear_hints (UnityPlaceEntryInfo* self);
 guint unity_place_entry_info_num_hints (UnityPlaceEntryInfo* self);
-void unity_place_entry_info_set_global_search (UnityPlaceEntryInfo* self, UnityPlaceSearch* search, GAsyncReadyCallback _callback_, gpointer _user_data_);
-guint unity_place_entry_info_set_global_search_finish (UnityPlaceEntryInfo* self, GAsyncResult* _res_);
-void unity_place_entry_info_set_search (UnityPlaceEntryInfo* self, UnityPlaceSearch* search, GAsyncReadyCallback _callback_, gpointer _user_data_);
-guint unity_place_entry_info_set_search_finish (UnityPlaceEntryInfo* self, GAsyncResult* _res_);
 UnityPlaceRendererInfo* unity_place_entry_info_get_entry_renderer_info (UnityPlaceEntryInfo* self);
 UnityPlaceRendererInfo* unity_place_entry_info_get_global_renderer_info (UnityPlaceEntryInfo* self);
 const char* unity_place_entry_info_get_dbus_path (UnityPlaceEntryInfo* self);
@@ -666,6 +737,10 @@ gboolean unity_place_entry_info_get_active (UnityPlaceEntryInfo* self);
 void unity_place_entry_info_set_active (UnityPlaceEntryInfo* self, gboolean value);
 guint unity_place_entry_info_get_active_section (UnityPlaceEntryInfo* self);
 void unity_place_entry_info_set_active_section (UnityPlaceEntryInfo* self, guint value);
+UnityPlaceSearch* unity_place_entry_info_get_active_search (UnityPlaceEntryInfo* self);
+void unity_place_entry_info_set_active_search (UnityPlaceEntryInfo* self, UnityPlaceSearch* value);
+UnityPlaceSearch* unity_place_entry_info_get_active_global_search (UnityPlaceEntryInfo* self);
+void unity_place_entry_info_set_active_global_search (UnityPlaceEntryInfo* self, UnityPlaceSearch* value);
 GType unity_place_controller_get_type (void);
 UnityPlaceController* unity_place_controller_new (const char* dbus_path);
 UnityPlaceController* unity_place_controller_construct (GType object_type, const char* dbus_path);

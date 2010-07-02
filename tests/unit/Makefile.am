@@ -25,6 +25,7 @@ test_unit_VALAFLAGS = \
   --vapidir=$(top_srcdir)/vapi/ \
   --vapidir=$(top_srcdir)/tests \
   --vapidir=$(top_srcdir)/tests/unit \
+  --pkg gio-2.0 \
   --pkg Bamf-0.2 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
@@ -55,6 +56,9 @@ test_unit_SOURCES = \
   test-places-place.vala \
   test-places.vala \
   test-place.vala \
+  test-io.vala \
+  test-appinfo-manager.vala \
+  test-unity-pixbuf-cache.vala \
   test-unit.vala
 
 # GTester stuff

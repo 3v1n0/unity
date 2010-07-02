@@ -231,7 +231,7 @@ void unity_places_view_about_to_show (UnityPlacesView* self) {
 	ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->place_bar, FALSE, TRUE);
 	clutter_actor_show ((ClutterActor*) self->priv->place_bar);
 	g_signal_connect_object (self->priv->place_bar, "entry-view-activated", (GCallback) _unity_places_view_on_entry_view_activated_unity_places_place_bar_entry_view_activated, self, 0);
-	self->priv->content_box = (_tmp3_ = g_object_ref_sink ((CtkVBox*) ctk_vbox_new ((guint) 12)), _g_object_unref0 (self->priv->content_box), _tmp3_);
+	self->priv->content_box = (_tmp3_ = g_object_ref_sink ((CtkVBox*) ctk_vbox_new ((guint) 4)), _g_object_unref0 (self->priv->content_box), _tmp3_);
 	ctk_actor_set_padding ((CtkActor*) self->priv->content_box, (_tmp5_ = (_tmp4_.top = 0.0f, _tmp4_.right = 8.0f, _tmp4_.bottom = 0.0f, _tmp4_.left = unity_shell_get_launcher_width_foobar (self->priv->_shell) + 8.0f, _tmp4_), &_tmp5_));
 	ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->content_box, TRUE, TRUE);
 	clutter_actor_show ((ClutterActor*) self->priv->content_box);

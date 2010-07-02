@@ -42,6 +42,7 @@ typedef struct _UnityPlacesPlaceSearchEntry UnityPlacesPlaceSearchEntry;
 typedef struct _UnityPlacesPlaceSearchEntryClass UnityPlacesPlaceSearchEntryClass;
 typedef struct _UnityPlacesPlaceSearchEntryPrivate UnityPlacesPlaceSearchEntryPrivate;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+#define _g_free0(var) (var = (g_free (var), NULL))
 
 struct _UnityPlacesPlaceSearchEntry {
 	CtkBox parent_instance;
@@ -57,6 +58,7 @@ struct _UnityPlacesPlaceSearchEntryClass {
 
 struct _UnityPlacesPlaceSearchEntryPrivate {
 	guint live_search_timeout;
+	char* _static_text;
 };
 
 
@@ -76,10 +78,17 @@ static void unity_places_place_search_entry_real_get_preferred_height (ClutterAc
 static gboolean _lambda7_ (UnityPlacesPlaceSearchEntry* self);
 static gboolean __lambda7__gsource_func (gpointer self);
 static void unity_places_place_search_entry_on_text_changed (UnityPlacesPlaceSearchEntry* self);
+static void unity_places_place_search_entry_on_key_focus_in (UnityPlacesPlaceSearchEntry* self);
+static void unity_places_place_search_entry_on_key_focus_out (UnityPlacesPlaceSearchEntry* self);
 static void _unity_places_place_search_entry_on_text_changed_clutter_text_text_changed (ClutterText* _sender, gpointer self);
+static void _unity_places_place_search_entry_on_key_focus_in_clutter_actor_key_focus_in (ClutterActor* _sender, gpointer self);
+static void _unity_places_place_search_entry_on_key_focus_out_clutter_actor_key_focus_out (ClutterActor* _sender, gpointer self);
 static GObject * unity_places_place_search_entry_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_place_search_entry_finalize (GObject* obj);
+static int _vala_strcmp0 (const char * str1, const char * str2);
 
+static const ClutterColor UNITY_PLACES_PLACE_SEARCH_ENTRY_nofocus_color = {(guint8) 0xff, (guint8) 0xff, (guint8) 0xff, (guint8) 0xbb};
+static const ClutterColor UNITY_PLACES_PLACE_SEARCH_ENTRY_focus_color = {(guint8) 0xff, (guint8) 0xff, (guint8) 0xff, (guint8) 0xff};
 
 
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_construct (GType object_type) {
@@ -137,8 +146,39 @@ static void unity_places_place_search_entry_on_text_changed (UnityPlacesPlaceSea
 }
 
 
+static void unity_places_place_search_entry_on_key_focus_in (UnityPlacesPlaceSearchEntry* self) {
+	g_return_if_fail (self != NULL);
+	if (_vala_strcmp0 (clutter_text_get_text ((ClutterText*) self->text), self->priv->_static_text) == 0) {
+		ClutterColor _tmp0_;
+		clutter_text_set_text ((ClutterText*) self->text, "");
+		clutter_text_set_cursor_visible ((ClutterText*) self->text, TRUE);
+		clutter_text_set_selection ((ClutterText*) self->text, (gssize) 0, (gssize) (-1));
+		clutter_text_set_color ((ClutterText*) self->text, (_tmp0_ = UNITY_PLACES_PLACE_SEARCH_ENTRY_focus_color, &_tmp0_));
+	}
+}
+
+
+static void unity_places_place_search_entry_on_key_focus_out (UnityPlacesPlaceSearchEntry* self) {
+	ClutterColor _tmp0_;
+	g_return_if_fail (self != NULL);
+	clutter_text_set_cursor_visible ((ClutterText*) self->text, FALSE);
+	clutter_text_set_text ((ClutterText*) self->text, self->priv->_static_text);
+	clutter_text_set_color ((ClutterText*) self->text, (_tmp0_ = UNITY_PLACES_PLACE_SEARCH_ENTRY_nofocus_color, &_tmp0_));
+}
+
+
 static void _unity_places_place_search_entry_on_text_changed_clutter_text_text_changed (ClutterText* _sender, gpointer self) {
 	unity_places_place_search_entry_on_text_changed (self);
+}
+
+
+static void _unity_places_place_search_entry_on_key_focus_in_clutter_actor_key_focus_in (ClutterActor* _sender, gpointer self) {
+	unity_places_place_search_entry_on_key_focus_in (self);
+}
+
+
+static void _unity_places_place_search_entry_on_key_focus_out_clutter_actor_key_focus_out (ClutterActor* _sender, gpointer self) {
+	unity_places_place_search_entry_on_key_focus_out (self);
 }
 
 
@@ -154,21 +194,26 @@ static GObject * unity_places_place_search_entry_constructor (GType type, guint 
 		CtkPadding _tmp1_;
 		CtkImage* _tmp2_;
 		CtkText* _tmp3_;
-		UnityThemeImage* _tmp4_;
+		ClutterColor _tmp4_;
+		UnityThemeImage* _tmp5_;
 		ctk_actor_set_padding ((CtkActor*) self, (_tmp1_ = (_tmp0_.top = UNITY_PLACES_PLACE_SEARCH_ENTRY_PADDING, _tmp0_.right = UNITY_PLACES_PLACE_SEARCH_ENTRY_PADDING * 4, _tmp0_.bottom = UNITY_PLACES_PLACE_SEARCH_ENTRY_PADDING, _tmp0_.left = UNITY_PLACES_PLACE_SEARCH_ENTRY_PADDING * 4, _tmp0_), &_tmp1_));
 		self->left_icon = (_tmp2_ = g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) 18, UNITY_PLACES_PLACE_SEARCH_ENTRY_SEARCH_ICON_FILE)), _g_object_unref0 (self->left_icon), _tmp2_);
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->left_icon, FALSE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->left_icon);
-		self->text = (_tmp3_ = g_object_ref_sink ((CtkText*) ctk_text_new ("Search")), _g_object_unref0 (self->text), _tmp3_);
+		self->text = (_tmp3_ = g_object_ref_sink ((CtkText*) ctk_text_new (self->priv->_static_text)), _g_object_unref0 (self->text), _tmp3_);
 		clutter_actor_set_reactive ((ClutterActor*) self->text, TRUE);
 		clutter_text_set_selectable ((ClutterText*) self->text, TRUE);
 		clutter_text_set_editable ((ClutterText*) self->text, TRUE);
 		clutter_text_set_activatable ((ClutterText*) self->text, TRUE);
 		clutter_text_set_single_line_mode ((ClutterText*) self->text, TRUE);
+		clutter_text_set_cursor_visible ((ClutterText*) self->text, FALSE);
+		clutter_text_set_color ((ClutterText*) self->text, (_tmp4_ = UNITY_PLACES_PLACE_SEARCH_ENTRY_nofocus_color, &_tmp4_));
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->text, TRUE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->text);
 		g_signal_connect_object ((ClutterText*) self->text, "text-changed", (GCallback) _unity_places_place_search_entry_on_text_changed_clutter_text_text_changed, self, 0);
-		self->right_icon = (_tmp4_ = g_object_ref_sink (unity_theme_image_new ("gtk-close")), _g_object_unref0 (self->right_icon), _tmp4_);
+		g_signal_connect_object ((ClutterActor*) self->text, "key-focus-in", (GCallback) _unity_places_place_search_entry_on_key_focus_in_clutter_actor_key_focus_in, self, 0);
+		g_signal_connect_object ((ClutterActor*) self->text, "key-focus-out", (GCallback) _unity_places_place_search_entry_on_key_focus_out_clutter_actor_key_focus_out, self, 0);
+		self->right_icon = (_tmp5_ = g_object_ref_sink (unity_theme_image_new ("gtk-close")), _g_object_unref0 (self->right_icon), _tmp5_);
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->right_icon, FALSE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->right_icon);
 	}
@@ -189,6 +234,7 @@ static void unity_places_place_search_entry_class_init (UnityPlacesPlaceSearchEn
 static void unity_places_place_search_entry_instance_init (UnityPlacesPlaceSearchEntry * self) {
 	self->priv = UNITY_PLACES_PLACE_SEARCH_ENTRY_GET_PRIVATE (self);
 	self->priv->live_search_timeout = (guint) 0;
+	self->priv->_static_text = g_strdup ("Search");
 }
 
 
@@ -198,6 +244,7 @@ static void unity_places_place_search_entry_finalize (GObject* obj) {
 	_g_object_unref0 (self->left_icon);
 	_g_object_unref0 (self->text);
 	_g_object_unref0 (self->right_icon);
+	_g_free0 (self->priv->_static_text);
 	G_OBJECT_CLASS (unity_places_place_search_entry_parent_class)->finalize (obj);
 }
 
@@ -211,6 +258,17 @@ GType unity_places_place_search_entry_get_type (void) {
 		g_once_init_leave (&unity_places_place_search_entry_type_id__volatile, unity_places_place_search_entry_type_id);
 	}
 	return unity_places_place_search_entry_type_id__volatile;
+}
+
+
+static int _vala_strcmp0 (const char * str1, const char * str2) {
+	if (str1 == NULL) {
+		return -(str1 != str2);
+	}
+	if (str2 == NULL) {
+		return str1 != str2;
+	}
+	return strcmp (str1, str2);
 }
 
 

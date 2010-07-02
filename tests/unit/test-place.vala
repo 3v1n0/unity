@@ -23,24 +23,6 @@ using Unity.Testing;
 
 namespace Unity.Tests.Unit
 {
-  public class TestEntryInfo : EntryInfo
-  {
-    public TestEntryInfo (string dbus_path)
-    {
-      base (dbus_path);
-    }
-  
-    public override async uint set_global_search (Search search)
-    {
-      return 27;
-    }
-
-    public override async uint set_search (Search search)
-    {
-      return 68;
-    }
-  }
-
   public class PlaceSuite
   {
     public PlaceSuite ()
@@ -68,7 +50,7 @@ namespace Unity.Tests.Unit
     internal static void test_one_entry()
     {
       var entry_path = "/org/ayatana/unity/testplace/testentry1";
-      var entry = new TestEntryInfo(entry_path);
+      var entry = new EntryInfo(entry_path);
       assert (entry is EntryInfo);
       assert (entry.dbus_path == entry_path);
       
@@ -98,8 +80,8 @@ namespace Unity.Tests.Unit
     {
       var entry_path1 = "/org/ayatana/unity/testplace/testentry1";
       var entry_path2 = "/org/ayatana/unity/testplace/testentry2";
-      var entry1 = new TestEntryInfo(entry_path1);
-      var entry2 = new TestEntryInfo(entry_path2);
+      var entry1 = new EntryInfo(entry_path1);
+      var entry2 = new EntryInfo(entry_path2);
       
       var ctl = new Controller("/org/ayatana/unity/testplace");
       assert (ctl.num_entries() == 0);
@@ -152,7 +134,7 @@ namespace Unity.Tests.Unit
   
     internal static void test_local_models ()
     {
-      var entry = new TestEntryInfo("/foo/bar");
+      var entry = new EntryInfo("/foo/bar");
       Dee.Model sections_model = new Dee.SequenceModel(2,
                                                        typeof(string),
                                                        typeof(string));

@@ -262,6 +262,11 @@ namespace Unity.Launcher
     {
       this.item_background.get_layer(0).set_enabled (false);
       this.item_background.get_layer(1).set_enabled (true);
+      
+      // Ensure we are associated with a stage before queuing a draw to
+      // avoid a rather annoying (but rare) crash in clutter
+      if (this.get_stage () is Clutter.Stage)
+        this.do_queue_redraw ();
       return false;
     }
 
@@ -270,6 +275,8 @@ namespace Unity.Launcher
     {
       this.item_background.get_layer(0).set_enabled (true);
       this.item_background.get_layer(1).set_enabled (false);
+      if (this.get_stage () is Clutter.Stage)
+        this.do_queue_redraw ();
       return false;
     }
 
@@ -468,6 +475,7 @@ namespace Unity.Launcher
       old_height = 0;
       cached_x   = 0.0f; // needed to fix LP: #525905
       cached_y   = 0.0f; // needed to fix LP: #526335
+
     }
   }
 }

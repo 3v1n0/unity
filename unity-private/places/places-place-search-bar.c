@@ -497,12 +497,12 @@ static GObject * unity_places_place_search_bar_background_constructor (GType typ
 			GdkPixbuf* _tmp6_;
 			_tmp5_ = gdk_pixbuf_new_from_file (UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_BG, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch16_g_error;
+				goto __catch17_g_error;
 			}
 			self->priv->tile = (_tmp6_ = _tmp5_, _g_object_unref0 (self->priv->tile), _tmp6_);
 		}
-		goto __finally16;
-		__catch16_g_error:
+		goto __finally17;
+		__catch17_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -512,7 +512,7 @@ static GObject * unity_places_place_search_bar_background_constructor (GType typ
 				_g_error_free0 (e);
 			}
 		}
-		__finally16:
+		__finally17:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);

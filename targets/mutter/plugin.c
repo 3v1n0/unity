@@ -719,7 +719,7 @@ static void unity_plugin_relayout (UnityPlugin* self) {
 	_g_object_unref0 (_tmp1_);
 	clutter_actor_set_clip (_tmp2_ = unity_launcher_launcher_get_view (self->priv->launcher), (float) 0, (float) 0, (float) UNITY_PLUGIN_QUICKLAUNCHER_WIDTH, height - UNITY_PLUGIN_PANEL_HEIGHT);
 	_g_object_unref0 (_tmp2_);
-	utils_set_strut (GTK_WINDOW (self->priv->drag_dest), (guint32) (UNITY_PLUGIN_QUICKLAUNCHER_WIDTH - 1), (guint32) 0, (guint32) height, (guint32) UNITY_PLUGIN_PANEL_HEIGHT, (guint32) 0, (guint32) width);
+	utils_set_strut (GTK_WINDOW (self->priv->drag_dest), (guint32) UNITY_PLUGIN_QUICKLAUNCHER_WIDTH, (guint32) 0, (guint32) height, (guint32) UNITY_PLUGIN_PANEL_HEIGHT, (guint32) 0, (guint32) width);
 	clutter_actor_set_size ((ClutterActor*) self->priv->places, width, height);
 	clutter_actor_set_position ((ClutterActor*) self->priv->places, (float) 0, (float) 0);
 	clutter_actor_set_size ((ClutterActor*) self->priv->panel, width, (float) 24);

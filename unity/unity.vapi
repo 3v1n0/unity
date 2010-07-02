@@ -23,6 +23,17 @@ namespace Unity {
 		[CCode (cheader_filename = "unity.h")]
 		public static Unity.Drag.Controller? controller_singleton;
 	}
+	[CCode (cprefix = "UnityIO", lower_case_cprefix = "unity_io_")]
+	namespace IO {
+		[CCode (cheader_filename = "unity.h")]
+		public static string[] get_system_data_dirs ();
+		[CCode (cheader_filename = "unity.h")]
+		public static async GLib.FileInputStream? open_from_data_dirs (string filename) throws GLib.Error;
+		[CCode (cheader_filename = "unity.h")]
+		public static async GLib.FileInputStream? open_from_dirs (string filename, string[] dirs) throws GLib.Error;
+		[CCode (cheader_filename = "unity.h")]
+		public static async void read_stream_async (GLib.InputStream input, owned uchar[] buffer, size_t buffer_lenght, int io_priority, GLib.Cancellable? cancellable, out void* data, out size_t size) throws GLib.Error;
+	}
 	[CCode (cprefix = "UnityPlace", lower_case_cprefix = "unity_place_")]
 	namespace Place {
 		[CCode (cheader_filename = "unity.h")]
@@ -40,16 +51,16 @@ namespace Unity {
 			public bool exported { get; }
 		}
 		[CCode (cheader_filename = "unity.h")]
-		public abstract class EntryInfo : GLib.Object {
+		public class EntryInfo : GLib.Object {
 			public EntryInfo (string dbus_path);
 			public void clear_hint (string hint);
 			public void clear_hints ();
 			public string? get_hint (string hint);
 			public uint num_hints ();
-			public abstract async uint set_global_search (Unity.Place.Search search);
 			public void set_hint (string hint, string val);
-			public abstract async uint set_search (Unity.Place.Search search);
 			public bool active { get; set; }
+			public Unity.Place.Search active_global_search { get; set; }
+			public Unity.Place.Search active_search { get; set; }
 			public uint active_section { get; set; }
 			public string dbus_path { get; set construct; }
 			public string display_name { get; set construct; }
@@ -99,9 +110,18 @@ namespace Unity {
 		[CCode (cheader_filename = "unity.h")]
 		public class Menu : GLib.Object {
 			public Menu ();
+			public static void anchor_mask (out Cairo.Surface surf, int width, int height, float anchor_width, float anchor_height, bool negative, bool outline, float line_width, float[] rgba);
 			public static void background (Cairo.Context cr, int w, int h, float anchor_y);
+			public static void bottom_mask (out Cairo.Surface surf, int width, int height, float radius, float anchor_width, bool negative, bool outline, float line_width, float[] rgba);
+			public static void dyn_mask (out Cairo.Surface surf, int width, int height, float anchor_width, bool negative, bool outline, float line_width, float[] rgba);
 			public static void fill_mask (Cairo.Context cr, int w, int h, float anchor_y);
 			public static void full_mask (Cairo.Context cr, int w, int h, float anchor_y);
+			public static void outline_shadow_anchor (out Cairo.Surface surf, int width, int height, float anchor_width, float anchor_height, uint shadow_radius, float[] rgba_shadow, float line_width, float[] rgba_line);
+			public static void outline_shadow_bottom (out Cairo.Surface surf, int width, int height, float anchor_width, float corner_radius, uint shadow_radius, float[] rgba_shadow, float line_width, float[] rgba_line);
+			public static void outline_shadow_dyn (out Cairo.Surface surf, int width, int height, float anchor_width, uint shadow_radius, float[] rgba_shadow, float line_width, float[] rgba_line);
+			public static void outline_shadow_top (out Cairo.Surface surf, int width, int height, float anchor_width, float corner_radius, uint shadow_radius, float[] rgba_shadow, float line_width, float[] rgba_line);
+			public static void tint_dot_hl (out Cairo.Surface surf, int width, int height, float hl_x, float hl_y, float hl_size, float[] rgba_tint, float[] rgba_hl);
+			public static void top_mask (out Cairo.Surface surf, int width, int height, float radius, float anchor_width, bool negative, bool outline, float line_width, float[] rgba);
 		}
 		[CCode (cheader_filename = "unity.h")]
 		public class Seperator : GLib.Object {
@@ -156,6 +176,13 @@ namespace Unity {
 		public static string urlify (string uri);
 	}
 	[CCode (cheader_filename = "unity.h")]
+	public class AppInfoManager : GLib.Object {
+		public void clear ();
+		public static Unity.AppInfoManager get_instance ();
+		public GLib.AppInfo? lookup (string id);
+		public async GLib.AppInfo? lookup_async (string id) throws GLib.Error;
+	}
+	[CCode (cheader_filename = "unity.h")]
 	public class CairoCanvas : Ctk.Bin {
 		[CCode (cheader_filename = "unity.h")]
 		public delegate void CairoCanvasPaint (Cairo.Context cr, int width, int height);
@@ -172,6 +199,7 @@ namespace Unity {
 	public abstract class Favorites : GLib.Object {
 		public Favorites ();
 		public abstract void add_favorite (string uid);
+		public abstract string find_uid_for_desktop_file (string desktop_file);
 		public abstract bool? get_bool (string uid, string name);
 		public static Unity.Favorites get_default ();
 		public abstract Gee.ArrayList<string> get_favorites ();
@@ -192,6 +220,7 @@ namespace Unity {
 	public class GConfFavorites : Unity.Favorites {
 		public GConfFavorites ();
 		public override void add_favorite (string uid);
+		public override string find_uid_for_desktop_file (string desktop_file);
 		public override bool? get_bool (string uid, string name);
 		public override Gee.ArrayList<string> get_favorites ();
 		public override float? get_float (string uid, string name);
@@ -203,6 +232,18 @@ namespace Unity {
 		public override void set_float (string uid, string name, float value);
 		public override void set_int (string uid, string name, int value);
 		public override void set_string (string uid, string name, string value);
+	}
+	[CCode (cheader_filename = "unity.h")]
+	public class PixbufCache : GLib.Object {
+		public PixbufCache (bool _autodispose = false);
+		public void clear ();
+		public Gdk.Pixbuf? @get (string icon_id, int size);
+		public static Unity.PixbufCache get_default ();
+		public void @set (string icon_id, Gdk.Pixbuf pixbuf, int size);
+		public async void set_image_from_gicon (Ctk.Image image, GLib.Icon icon, int size);
+		public async void set_image_from_gicon_string (Ctk.Image image, string gicon_as_string, int size);
+		public async void set_image_from_icon_name (Ctk.Image image, string icon_name, int size);
+		public uint size { get; }
 	}
 	[CCode (cheader_filename = "unity.h")]
 	public class ThemeFilePath : GLib.Object {

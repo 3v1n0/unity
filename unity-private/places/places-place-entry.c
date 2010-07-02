@@ -156,7 +156,7 @@ static void _unity_places_place_entry_on_renderer_info_changed_dynamic_RendererI
 void _dynamic_RendererInfoChanged1_connect (gpointer obj, const char * signal_name, GCallback handler, gpointer data);
 void unity_places_place_entry_set_online (UnityPlacesPlaceEntry* self, gboolean value);
 void unity_places_place_entry_connect (UnityPlacesPlaceEntry* self);
-static guint _dynamic_set_search0 (DBusGProxy* self, const char* param1, GHashTable* param2, GError** error);
+static void _dynamic_set_search0 (DBusGProxy* self, const char* param1, GHashTable* param2, GError** error);
 void unity_places_place_entry_set_search (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints);
 static void _dynamic_set_active_section1 (DBusGProxy* self, guint param1, GError** error);
 void unity_places_place_entry_set_active_section (UnityPlacesPlaceEntry* self, guint section_id);
@@ -351,13 +351,13 @@ void unity_places_place_entry_connect (UnityPlacesPlaceEntry* self) {
 		DBusGProxy* _tmp2_;
 		_tmp0_ = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch8_g_error;
+			goto __catch9_g_error;
 		}
 		self->priv->connection = (_tmp1_ = _tmp0_, _dbus_g_connection_unref0 (self->priv->connection), _tmp1_);
 		self->priv->service = (_tmp2_ = dbus_g_proxy_new_for_name (self->priv->connection, self->priv->_dbus_name, self->priv->_dbus_path, "com.canonical.Unity.PlaceEntry"), _g_object_unref0 (self->priv->service), _tmp2_);
 	}
-	goto __finally8;
-	__catch8_g_error:
+	goto __finally9;
+	__catch9_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -370,7 +370,7 @@ void unity_places_place_entry_connect (UnityPlacesPlaceEntry* self) {
 			return;
 		}
 	}
-	__finally8:
+	__finally9:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -381,31 +381,26 @@ void unity_places_place_entry_connect (UnityPlacesPlaceEntry* self) {
 }
 
 
-static guint _dynamic_set_search0 (DBusGProxy* self, const char* param1, GHashTable* param2, GError** error) {
-	guint result;
-	dbus_g_proxy_call (self, "SetSearch", error, G_TYPE_STRING, param1, dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_STRING), param2, G_TYPE_INVALID, G_TYPE_UINT, &result, G_TYPE_INVALID);
+static void _dynamic_set_search0 (DBusGProxy* self, const char* param1, GHashTable* param2, GError** error) {
+	dbus_g_proxy_call (self, "SetSearch", error, G_TYPE_STRING, param1, dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_STRING), param2, G_TYPE_INVALID, G_TYPE_INVALID);
 	if (*error) {
-		return 0U;
+		return;
 	}
-	return result;
 }
 
 
 void unity_places_place_entry_set_search (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints) {
 	GError * _inner_error_;
-	guint id = 0U;
-	guint _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (search != NULL);
 	g_return_if_fail (hints != NULL);
 	_inner_error_ = NULL;
-	_tmp0_ = _dynamic_set_search0 (self->priv->service, search, hints, &_inner_error_);
+	_dynamic_set_search0 (self->priv->service, search, hints, &_inner_error_);
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return;
 	}
-	id = _tmp0_;
 }
 
 
