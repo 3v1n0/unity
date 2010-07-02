@@ -46,7 +46,6 @@ namespace Unity.Places
       set_background (bg);
       bg.show ();
 
-      /* Enable once clutk bug is fixed */
       glow = new Ctk.EffectGlow ();
       glow.set_color ({ 255, 255, 255, 255 });
       glow.set_factor (1.0f);
