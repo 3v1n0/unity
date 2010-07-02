@@ -654,19 +654,33 @@ namespace Unity.Launcher
             }
           else
             {
+              bool do_new_position = true;
               if (child.get_animation () is Clutter.Animation)
                 {
-                  // disable the current animation before starting a new one
-                  float current_pos = child.position;
-                  child.get_animation ().completed ();
-                  child.position = current_pos;
+                  //GLib.Value value = GLib.Value (GLib.Type.from_name ("string"));
+                  GLib.Value value = GLib.Value (G_TYPE_FLOAT);
+                  Clutter.Interval interval = child.get_animation ().get_interval ("position");
+                  interval.get_final_value (value);
+                  if (value.get_float () != transitions[index].position)
+                    {
+                      // disable the current animation before starting a new one
+                      float current_pos = child.position;
+                      child.get_animation ().completed ();
+                      child.position = current_pos;
+                    }
+                  else
+                    {
+                      do_new_position = false;
+                    }
                 }
 
               child.rotation = transitions[index].rotation;
-              child.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD,
-                             300,
-                             "position", transitions[index].position
-                             );
+
+              if (do_new_position)
+                child.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD,
+                               300,
+                               "position", transitions[index].position
+                               );
             }
         }
     }
