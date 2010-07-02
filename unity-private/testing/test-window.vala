@@ -312,6 +312,16 @@ namespace Unity.Testing
       this.places.do_queue_redraw ();
     }
 
+    public void hide_unity ()
+    {
+      if (showing_places == false)
+        {
+          showing_places = true;
+          panel.set_indicator_mode (false);
+          places.opacity = 0;
+        }
+    }
+
     public void about_to_show_places ()
     {
       places.about_to_show ();

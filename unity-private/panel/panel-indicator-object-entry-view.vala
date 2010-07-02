@@ -30,7 +30,6 @@ namespace Unity.Panel.Indicators
     private bool          menu_is_open = false;
 
     private uint32 click_time;
-    private float last_found_entry_x = 0.0f;
 
     private float last_width = 0;
     private float last_height = 0;
@@ -178,14 +177,19 @@ namespace Unity.Panel.Indicators
                                 out bool push_in)
     {
       y = (int)height;
-      x = (int)last_found_entry_x;
+
+      float xx;
+      get_transformed_position (out xx, null);
+
+      x = (int)xx;
     }
 
     public void show_menu ()
     {
       if (entry.menu is Gtk.Menu)
         {
-          last_found_entry_x = x + get_parent ().x + get_parent ().get_parent ().x;
+          global_shell.hide_unity ();
+
           MenuManager.get_default ().register_visible_menu (entry.menu);
           entry.menu.popup (null,
                             null,
@@ -193,6 +197,7 @@ namespace Unity.Panel.Indicators
                             1,
                             Clutter.get_current_event_time ());
           click_time = Clutter.get_current_event_time ();
+          menu_is_open = true;
           menu_shown ();
         }
     }
@@ -221,7 +226,8 @@ namespace Unity.Panel.Indicators
             }
           else
             {
-              last_found_entry_x = x + get_parent ().x + get_parent ().get_parent ().x;
+              global_shell.hide_unity ();
+
               MenuManager.get_default ().register_visible_menu (entry.menu);
               entry.menu.popup (null,
                                     null,
@@ -238,7 +244,9 @@ namespace Unity.Panel.Indicators
 
     public bool on_motion_event (Clutter.Event e)
     {
-      if ((entry.menu is Gtk.Menu) && MenuManager.get_default ().menu_is_open ())
+      if ((entry.menu is Gtk.Menu)
+          && MenuManager.get_default ().menu_is_open ()
+          && menu_is_open == false)
         {
           show_menu ();
           return true;

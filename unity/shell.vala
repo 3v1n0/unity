@@ -38,6 +38,7 @@ namespace Unity
     public abstract ShellMode     get_mode ();
     public abstract Clutter.Stage get_stage ();
     public abstract void          show_unity ();
+    public abstract void          hide_unity ();
     public abstract int           get_indicators_width ();
     public abstract int           get_launcher_width_foobar (); // _foobar is used to avoid a symbol-clash
     public abstract int           get_panel_height_foobar ();   // with unity/targets/mutter/main.c
