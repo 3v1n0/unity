@@ -124,8 +124,6 @@ namespace Unity.Place {
     private Stack<State<E>> forward_stack;
     
     public string dbus_path { get; private set; }
-    public E current_state { get; private set; }
-    public string current_comment { get; private set; }
     
     public signal void back (E state, string comment);
     public signal void forward (E state, string comment);

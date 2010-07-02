@@ -321,11 +321,15 @@ namespace Unity.Place {
       set {
         _browser = value;
         if (value != null)
-          set_hint ("UnityPlaceBrowserPath", value.dbus_path);
-          set_hint ("UnitySectionStyle", "breadcrumb");
+          {
+            set_hint ("UnityPlaceBrowserPath", value.dbus_path);
+            set_hint ("UnitySectionStyle", "breadcrumb");
+          }
         else
-          clear_hint ("UnityPlaceBrowserPath");
-          clear_hint ("UnitySectionStyle");
+          {
+            clear_hint ("UnityPlaceBrowserPath");
+            clear_hint ("UnitySectionStyle");
+          }
       }
     }
 
@@ -652,9 +656,12 @@ namespace Unity.Place {
     private bool _exported = false;
     private EntryInfo _entry_info;
     
+    /* Queue up change signals in order not to flood the bus on rapid changes */
+    private uint place_entry_info_changed_signal_source = 0;
+    
     /* Keep a ref to the previous browser to properly handle it leaving and
      * entering the bus */
-    private Browser? _browser;
+    private Browser? _browser = null;
 
     /*
      * Properties
@@ -770,6 +777,41 @@ namespace Unity.Place {
           debug ("Exporting browser '%s'", _browser.dbus_path);
           conn.register_object (_browser.dbus_path, _browser.get_service ());
         }
+    }
+    
+    /* Prepare emission of a PlaceEntryInfoChanged signal in next idle call,
+     * unless one is already scheduled */
+    public void queue_place_entry_info_changed_signal ()
+    {
+      if (place_entry_info_changed_signal_source == 0)
+        {
+          place_entry_info_changed_signal_source =
+                          Idle.add (emit_place_entry_info_changed_signal);
+        }
+    }
+    
+    /* Idle handler for emitting PlaceEntryInfoChanged on the bus */
+    private bool emit_place_entry_info_changed_signal ()
+    {
+      var entry_data = _EntryInfoData();
+      
+      var _entry = _entry_info.get_raw ();
+      entry_data.dbus_path = _entry.dbus_path;
+      entry_data.display_name = _entry.display_name;
+      entry_data.icon = _entry.icon;
+      entry_data.position = _entry.position;
+      entry_data.mimetypes = _entry.mimetypes;
+      entry_data.sensitive = _entry.sensitive;  
+      entry_data.sections_model = _entry.sections_model;
+      entry_data.hints = _entry.hints;
+      
+      /* Emit the signal */
+      place_entry_info_changed (entry_data);
+      
+      /* Clear the queue */
+      place_entry_info_changed_signal_source = 0;
+      
+      return false;
     }
     
   } /* End: EntryServiceImpl */
@@ -958,10 +1000,9 @@ namespace Unity.Place {
     }
     
     /* Callback for when an entry property changes */
-    private void on_entry_changed (GLib.Object obj, ParamSpec psec)
+    private void on_entry_changed (GLib.Object obj, ParamSpec pspec)
     {
       var entry = (obj as EntryInfo);
-      var entry_data = _EntryInfoData();      
       var entry_service = service.get_entry_service (entry.dbus_path);
       
       if (entry_service == null)
@@ -970,18 +1011,7 @@ namespace Unity.Place {
                    entry.dbus_path);
           return;
         }
-      
-      var _entry = entry.get_raw ();
-      entry_data.dbus_path = _entry.dbus_path;
-      entry_data.display_name = _entry.display_name;
-      entry_data.icon = _entry.icon;
-      entry_data.position = _entry.position;
-      entry_data.mimetypes = _entry.mimetypes;
-      entry_data.sensitive = _entry.sensitive;  
-      entry_data.sections_model = _entry.sections_model;    
-      entry_data.hints = _entry.hints;      
-    
-      entry_service.place_entry_info_changed (entry_data);
+      entry_service.queue_place_entry_info_changed_signal ();
     }
     
   } /* End: Controller class */
