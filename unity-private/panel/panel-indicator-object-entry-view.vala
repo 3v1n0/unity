@@ -44,6 +44,11 @@ namespace Unity.Panel.Indicators
               reactive:true);
     }
 
+    ~IndicatorObjectEntryView ()
+    {
+      bg.unparent ();
+    }
+
     construct
     {
       /* Figure out if you need a label, text or both, create the ctk
@@ -86,7 +91,7 @@ namespace Unity.Panel.Indicators
             {
               image.hide ();
             }
-            
+
           entry.image.notify["visible"].connect (() =>
             {
               if (entry.image != null)
@@ -140,7 +145,7 @@ namespace Unity.Panel.Indicators
             {
               text.text = entry.label.label;
             });
-            
+
           if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
             {
               text.show ();
@@ -149,7 +154,7 @@ namespace Unity.Panel.Indicators
             {
               text.hide ();
             }
-            
+
           entry.label.notify["visible"].connect (() =>
             {
               if (entry.label != null)
@@ -163,7 +168,7 @@ namespace Unity.Panel.Indicators
                       text.hide ();
                     }
                 }
-            });            
+            });
         }
     }
 
@@ -310,7 +315,7 @@ namespace Unity.Panel.Indicators
     {
       return (entry.menu.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0;
     }
-        
+
     private override void paint ()
     {
       bg.paint ();
