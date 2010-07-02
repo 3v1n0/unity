@@ -762,6 +762,10 @@ namespace Unity.Place {
         return;
       }
 
+      /* If nothing changed, don't do anything */
+      if (_browser == entry_info.browser)
+        return;
+
       /* clear previous browser if any */
       if (_browser != null && _exported)
         {
