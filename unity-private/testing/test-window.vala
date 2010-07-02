@@ -156,6 +156,11 @@ namespace Unity.Testing
 
       END_FUNCTION ();
     }
+    
+    public uint32 get_current_time ()
+    {
+      return Clutter.get_current_event_time ();
+    }
 
     public void init_test_mode ()
     {

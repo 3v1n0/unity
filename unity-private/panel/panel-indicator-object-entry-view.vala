@@ -175,7 +175,7 @@ namespace Unity.Panel.Indicators
       y = (int)height;
       x = (int)last_found_entry_x;
     }
-
+    
     public void show_menu ()
     {
       if (entry.menu is Gtk.Menu)
@@ -185,9 +185,10 @@ namespace Unity.Panel.Indicators
           entry.menu.popup (null,
                             null,
                             position_menu,
-                            1,
-                            Clutter.get_current_event_time ());
-          click_time = Clutter.get_current_event_time ();
+                            1,	
+                            Unity.global_shell.get_current_time ());
+          click_time = Unity.global_shell.get_current_time ();
+          menu_is_open = true;
           menu_shown ();
         }
     }
@@ -216,15 +217,7 @@ namespace Unity.Panel.Indicators
             }
           else
             {
-              last_found_entry_x = x + get_parent ().x + get_parent ().get_parent ().x;
-              MenuManager.get_default ().register_visible_menu (entry.menu);
-              entry.menu.popup (null,
-                                    null,
-                                    position_menu,
-                                    e.button.button,
-                                    e.button.time);
-              click_time = Clutter.get_current_event_time ();
-              menu_is_open = true;
+              show_menu ();
               menu_shown ();
             }
         }
@@ -248,7 +241,7 @@ namespace Unity.Panel.Indicators
           /* Show the menu and connect various signal to update the menu if
            * necessary.
            */
-          entry.menu.move_current.connect (menu_key_moved);
+          //entry.menu.move_current.connect (menu_key_moved);
           entry.menu.notify["visible"].connect (menu_vis_changed);
           bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, "opacity", 255);
         }
