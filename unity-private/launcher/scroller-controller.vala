@@ -89,8 +89,10 @@ namespace Unity.Launcher
               string desktop_file = app.get_desktop_file ();
               
               ScrollerChildController controller = null;
-              if (desktop_file != null)
-                controller = find_controller_by_desktop_file (desktop_file);
+              if (desktop_file != null && desktop_file != "")
+                {
+                  controller = find_controller_by_desktop_file (desktop_file);
+                }
 
               if (controller is ApplicationController)
                 {

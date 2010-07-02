@@ -432,9 +432,6 @@ namespace Unity.Launcher
         warning (@"Bamf returned null for app.get_name (): $desktop_file");
 
       icon_name = app.get_icon ();
-
-      warning ("icon nameAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: %s", icon_name);
-
       load_icon_from_icon_name ();
     }
 
