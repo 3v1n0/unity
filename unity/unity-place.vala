@@ -312,6 +312,9 @@ namespace Unity.Place {
     public Search active_search { get; set; }
     public Search active_global_search { get; set; }
 
+    /* The browser will automagically be exported/unexported on the bus
+     * when this property is set or unset. Setting the browser also sets the
+     * UnityPlaceBrowserPath and UnitySectionStyle hints accordingly. */
     private Browser? _browser = null;
     public Browser? browser {
       get { return _browser; }
@@ -319,8 +322,10 @@ namespace Unity.Place {
         _browser = value;
         if (value != null)
           set_hint ("UnityPlaceBrowserPath", value.dbus_path);
+          set_hint ("UnitySectionStyle", "breadcrumb");
         else
           clear_hint ("UnityPlaceBrowserPath");
+          clear_hint ("UnitySectionStyle");
       }
     }
 
