@@ -56,12 +56,19 @@ namespace Unity.Panel.Indicators
       var rect = new Clutter.Rectangle.with_color ({255, 0, 0, 0});
       pack (rect, true, true);
       rect.show ();
-     }
+    }
 
-    private void on_menu_moved (IndicatorObjectView   object_view,
-                                Gtk.MenuDirectionType type)
+    private void on_menu_moved (IndicatorObjectView object_view, Gtk.MenuDirectionType type)
     {
-      // Todo: Open left or right indicator, or circule back to the first or last indicator
+      if (type == Gtk.MenuDirectionType.PARENT)
+        {
+          indicator_object_view.open_last_menu_entry ();
+        }
+        
+      if (type == Gtk.MenuDirectionType.CHILD)
+        {
+          indicator_object_view.open_first_menu_entry ();
+        }
     }
   }
 }
