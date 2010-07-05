@@ -34,6 +34,7 @@ namespace Unity.Places
     private Ctk.Image     icon;
     private Ctk.Text      text;
     private Ctk.Image     expander;
+    private ExpandingBin  expanding_bin;
     private Ctk.IconView  renderer;
 
     public DefaultRendererGroup (uint      group_id,
@@ -60,6 +61,7 @@ namespace Unity.Places
       title_box = new Ctk.HBox (8);
       pack (title_box, false, false);
       title_box.show ();
+      title_box.reactive = true;
 
       icon = new Ctk.Image (24);
       title_box.pack (icon, false, false);
@@ -73,16 +75,26 @@ namespace Unity.Places
       title_box.pack (expander, false, true);
       expander.show ();
 
-      var sep = new Clutter.Rectangle.with_color ({ 255, 255, 255, 255 });
-      sep.set_height (1);
-      pack (sep, false, false);
-      sep.show ();
+      var rect = new Clutter.Rectangle.with_color ({ 255, 255, 255, 255 });
+      rect.height = 1;
+      pack (rect, false, false);
+      rect.show ();
+
+      expanding_bin = new ExpandingBin ();
+      pack (expanding_bin, true, true);
+      expanding_bin.bin_state = ExpandingBinState.UNEXPANDED;
+      expanding_bin.show ();
+
+      title_box.button_release_event.connect (() => {
+        expanding_bin.bin_state = (expanding_bin.bin_state == ExpandingBinState.UNEXPANDED ? ExpandingBinState.EXPANDED : ExpandingBinState.UNEXPANDED);
+      });
 
       renderer = new Ctk.IconView ();
       renderer.padding = { 12.0f, 0.0f, 0.0f, 0.0f };
       renderer.spacing = 24;
-      pack (renderer, true, true);
+      expanding_bin.add_actor (renderer);
       renderer.show ();
+      renderer.set ("auto-fade-children", true);
 
       unowned Dee.ModelIter iter = results.get_first_iter ();
       while (!results.is_last (iter))
@@ -95,6 +107,18 @@ namespace Unity.Places
 
       results.row_added.connect (on_result_added);
       results.row_removed.connect (on_result_removed);
+    }
+
+    private override void allocate (Clutter.ActorBox        box,
+                                    Clutter.AllocationFlags flags)
+    {
+      base.allocate (box, flags);
+
+      var children = renderer.get_children ();
+      var child = children.nth_data (0) as Clutter.Actor;
+      if (child is Clutter.Actor &&
+          child.height != expanding_bin.unexpanded_height)
+        expanding_bin.unexpanded_height = child.height;
     }
 
     private override void get_preferred_height (float for_width,
@@ -226,7 +250,6 @@ namespace Unity.Places
           try {
             var appinfos = AppInfoManager.get_instance ();
             info = yield appinfos.lookup_async (id);
-            debug ("Foo: %s", info.get_name());
           } catch (Error ee) {
             warning ("Unable to read .desktop file '%s': %s", uri, ee.message);
             return;
@@ -236,7 +259,6 @@ namespace Unity.Places
             {
               try {
                 info.launch (null,null);
-                debug ("Launched");
               } catch (Error e) {
                 warning ("Unable to launch desktop file %s: %s\n",
                          id,
