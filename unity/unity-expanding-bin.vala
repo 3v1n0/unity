@@ -51,8 +51,6 @@ namespace Unity
           {
             _unexpanded_height = value;
 
-            queue_relayout ();
-
             if (_state == ExpandingBinState.UNEXPANDED)
               {
                 _state = ExpandingBinState.CLOSED;

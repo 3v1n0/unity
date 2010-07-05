@@ -114,11 +114,18 @@ namespace Unity.Places
     {
       base.allocate (box, flags);
 
+      /* Update the unexpanded height if necessary */
+      /* FIXME: Can we please add some nice methods to CluTK which allow
+       * doing something like $clutk_container.get_nth_child (), and so
+       * bypass the stupid get_children stuff
+       */
       var children = renderer.get_children ();
       var child = children.nth_data (0) as Clutter.Actor;
       if (child is Clutter.Actor &&
           child.height != expanding_bin.unexpanded_height)
-        expanding_bin.unexpanded_height = child.height;
+        {
+          expanding_bin.unexpanded_height = child.height + renderer.padding.top;
+        }
     }
 
     private override void get_preferred_height (float for_width,
