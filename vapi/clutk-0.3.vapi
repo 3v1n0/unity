@@ -162,8 +162,14 @@ namespace Ctk {
 	public class IconView : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
 		[CCode (type = "ClutterActor*", has_construct_function = false)]
 		public IconView ();
+		public uint get_n_cols ();
+		public uint get_n_rows ();
 		public int get_spacing ();
 		public void set_spacing (int spacing);
+		[NoAccessorMethod]
+		public bool auto_fade_children { get; set construct; }
+		public uint n_cols { get; }
+		public uint n_rows { get; }
 		public int spacing { get; set construct; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]

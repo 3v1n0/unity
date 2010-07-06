@@ -62,6 +62,7 @@ namespace Unity
 
     private float             _size_factor = 0.0f;
     private ExpandingBinState _state = ExpandingBinState.CLOSED;
+    private ExpandingBinState _old_state = ExpandingBinState.CLOSED;
     private float             _unexpanded_height = 100.0f;
     private float             _expanded_height   = 0.0f;
     private float             _target_height     = 0.0f;
@@ -87,15 +88,15 @@ namespace Unity
     private override void allocate (Clutter.ActorBox        box,
                                     Clutter.AllocationFlags flags)
     {
-      float x = 0.0f;
-      float y = 0.0f;
-      float width = Math.floorf (box.x2 - box.x1);
-
+      float x = padding.left;
+      float y = padding.top;
+      float width = Math.floorf (box.x2 - box.x1) - padding.left - padding.right;
       Clutter.ActorBox child_box = Clutter.ActorBox ();
       child_box.x1 = x;
       child_box.x2 = x + width;
       child_box.y1 = y;
       child_box.y2 = y + last_height + ((_target_height - last_height) * _size_factor);
+
       base.allocate (box, flags);
       get_child ().allocate (child_box, flags);
 
@@ -107,6 +108,8 @@ namespace Unity
                                                 out float min_height,
                                                 out float nat_height)
     {
+      var vpadding = padding.top + padding.bottom;
+
       get_child ().get_preferred_height (last_width, null, out _expanded_height);
       if (_state == ExpandingBinState.CLOSED)
         {
@@ -114,11 +117,11 @@ namespace Unity
         }
       else if (_state == ExpandingBinState.UNEXPANDED)
         {
-          _target_height = _unexpanded_height;
+          _target_height = _unexpanded_height + vpadding;
         }
       else
         {
-          _target_height = _expanded_height;
+          _target_height = _expanded_height + vpadding;
         }
 
       min_height = last_height + ((_target_height - last_height) *_size_factor);
@@ -130,26 +133,32 @@ namespace Unity
       if (_state == new_state)
         return;
 
-      ExpandingBinState old_state = _state;
+      _old_state = _state;
       _state = new_state;
 
       _size_factor = 0.0f;
       switch (_state)
         {
         case ExpandingBinState.CLOSED:
-          animate (Clutter.AnimationMode.EASE_OUT_SINE, ANIMATION_TIME,
+          var anim = animate (Clutter.AnimationMode.EASE_OUT_SINE, ANIMATION_TIME,
                    "size_factor", 1.0f,
                    "opacity", 0);
           _target_height = 0.0f;
+
+          anim.completed.connect (() => {
+            if (_state == ExpandingBinState.CLOSED)
+              hide ();
+          });
           break;
 
         case ExpandingBinState.UNEXPANDED:
-          animate (old_state == ExpandingBinState.CLOSED ? Clutter.AnimationMode.EASE_IN_SINE
+          animate (_old_state == ExpandingBinState.CLOSED ? Clutter.AnimationMode.EASE_IN_SINE
                                                          : Clutter.AnimationMode.EASE_OUT_SINE,
                    ANIMATION_TIME,
                    "size_factor", 1.0f,
                    "opacity", 255);
           _target_height = _unexpanded_height;
+          show ();
           break;
 
         case ExpandingBinState.EXPANDED:
@@ -158,6 +167,7 @@ namespace Unity
                    "opacity", 255);
           get_child ().get_preferred_height (width, null, out _expanded_height);
           _target_height = _expanded_height;
+          show ();
           break;
 
         default:

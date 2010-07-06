@@ -157,36 +157,50 @@ namespace Unity
 
       if (ret == null)
         {
-          try {
-            unowned GLib.Icon icon = GLib.Icon.new_for_string (gicon_as_string);
-            var info = theme.lookup_by_gicon (icon, size, 0);
-            if (info != null)
-              ret = info.load_icon ();
+          if (gicon_as_string[0] == '/')
+            {
+              try {
+                ret = new Gdk.Pixbuf.from_file (gicon_as_string);
+              } catch (Error err) {
+                message (@"Unable to load $gicon_as_string as file: %s",
+                         err.message);
+              }
+            }
 
-            if (ret == null)
-              {
-                /* There is some funkiness in some programs where they install
-                 * their icon to /usr/share/icons/hicolor/apps/, but they
-                 * name the Icon= key as `foo.$extension` which breaks loading
-                 * So we can try and work around that here.
-                 */
-                if (gicon_as_string.has_suffix (".png")
-                    || gicon_as_string.has_suffix (".xpm")
-                    || gicon_as_string.has_suffix (".gir")
-                    || gicon_as_string.has_suffix (".jpg"))
+          if (ret == null)
+            {
+              try {
+                unowned GLib.Icon icon = GLib.Icon.new_for_string (gicon_as_string);
+                var info = theme.lookup_by_gicon (icon, size, 0);
+                if (info != null)
+                  ret = info.load_icon ();
+
+                if (ret == null)
                   {
-                    string real_name = gicon_as_string[0:gicon_as_string.length-4];
-                    ret = theme.load_icon (real_name, size, 0);
+                    /* There is some funkiness in some programs where they install
+                     * their icon to /usr/share/icons/hicolor/apps/, but they
+                     * name the Icon= key as `foo.$extension` which breaks loading
+                     * So we can try and work around that here.
+                     */
+                    if (gicon_as_string.has_suffix (".png")
+                        || gicon_as_string.has_suffix (".xpm")
+                        || gicon_as_string.has_suffix (".gir")
+                        || gicon_as_string.has_suffix (".jpg"))
+                      {
+                        string real_name = gicon_as_string[0:gicon_as_string.length-4];
+                        ret = theme.load_icon (real_name, size, 0);
+                      }
                   }
-              }
 
-            if (ret is Pixbuf)
-              {
-                cache[key] = ret;
+              } catch (Error e) {
+                warning (@"Unable to load icon $gicon_as_string: '%s'", e.message);
               }
-          } catch (Error e) {
-            warning (@"Unable to load icon $gicon_as_string: '%s'", e.message);
-          }
+            }
+
+          if (ret is Pixbuf)
+            {
+              cache[key] = ret;
+            }
         }
 
       if (ret is Pixbuf)
