@@ -41,9 +41,9 @@ libunity_private_la_VALAFLAGS = \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg config \
-  --pkg dbus-glib-1 \
   --pkg cogl-1.0 \
   --pkg dbus-glib-1 \
+  --pkg Dbusmenu-Glib-0.2\
   --pkg dee-1.0 \
   --pkg gconf-2.0 \
   --pkg gdk-2.0 \

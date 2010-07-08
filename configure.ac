@@ -82,7 +82,7 @@ MAINTAINER_CFLAGS=""
 MAINTAINER_VALAFLAGS=""
 AS_IF([test "x$enable_maintainer_flags" = "xyes" && test "x$GCC" = "xyes"],
       [
-        MAINTAINER_CFLAGS="-g -Werror -Wcast-align -Wno-uninitialized -Wempty-body -Wformat-security -Winit-self"
+        MAINTAINER_CFLAGS="-g -Wcast-align -Wno-uninitialized -Wempty-body -Wformat-security -Winit-self"
         MAINTAINER_VALAFLAGS="-g --save-temps"
       ]
 )
@@ -97,6 +97,7 @@ PKG_CHECK_MODULES(BASE,
                   clutter-gtk-0.10 >= 0.10
                   clutk-0.3 >= 0.3.26
                   dbus-glib-1
+                  dbusmenu-glib >= 0.3.4
                   dee-1.0 >= 0.2.0
                   glib-2.0 >= $GLIB_REQUIRED
                   gobject-2.0 >= $GLIB_REQUIRED

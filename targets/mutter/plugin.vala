@@ -196,7 +196,7 @@ namespace Unity
 
       this.wm = new WindowManagement (this);
       this.maximus = new Maximus ();
-      
+
       END_FUNCTION ();
     }
 
@@ -239,7 +239,7 @@ namespace Unity
 
       this.launcher = new Launcher.Launcher (this);
       this.launcher.get_view ().opacity = 0;
-      
+
       this.spaces_manager = new SpacesManager (this);
       this.spaces_manager.set_padding (50, 50, 125, 50);
 
@@ -318,9 +318,10 @@ namespace Unity
         {
           this.launcher.get_view ().hide ();
           this.panel.hide ();
-          var menu = Unity.Launcher.QuicklistController.get_default ();
-          if (menu.menu_is_open ())
-            menu.close_menu ();
+          var menu = Unity.Launcher.QuicklistController.get_current_menu ();
+          if (menu.is_menu_open ())
+            menu.state = Unity.Launcher.QuicklistControllerState.CLOSED;
+
           fullscreen_obstruction = true;
         }
       else

@@ -204,21 +204,25 @@ namespace Unity.Launcher
             }
         }
 
-      //connect to our quicklist signals so that we can expose and de-expose
-      // windows at the correct time
-      var controller = QuicklistController.get_default ();
-      controller.menu_state_changed.connect ((open) => {
-        if (controller.get_attached_actor () == child && app != null)
+      notify["menu"].connect (on_notify_menu);
+    }
+
+    public override QuicklistController get_menu_controller ()
+    {
+      QuicklistController new_menu = new ApplicationQuicklistController (this);
+      return new_menu;
+    }
+
+    private void on_notify_menu ()
+    {
+      menu.notify["state"].connect (() => {
+        if (menu.state == QuicklistControllerState.MENU)
           {
-            // this is a menu relating to us
-            if (open)
-              {
-                Unity.global_shell.expose_xids (app.get_xids ());
-              }
-            else
-              {
-                Unity.global_shell.stop_expose ();
-              }
+            Unity.global_shell.expose_xids (app.get_xids ());
+          }
+        else
+          {
+            Unity.global_shell.stop_expose ();
           }
       });
     }
@@ -242,6 +246,19 @@ namespace Unity.Launcher
         {
           favorites.remove_favorite (uid);
         }
+    }
+
+    public bool is_sticky ()
+    {
+      if (desktop_file == "" || desktop_file == null)
+        return false;
+
+      var favorites = Unity.Favorites.get_default ();
+      string uid = favorites.find_uid_for_desktop_file (desktop_file);
+      if (uid != null && uid != "")
+        return true;
+      else
+        return false;
     }
 
     public void close_windows ()
@@ -297,6 +314,90 @@ namespace Unity.Launcher
           if (".local" in desktop_filename)
            FileUtils.remove (desktop_filename);
         }
+    }
+
+    public override Dbusmenu.Menuitem? get_menu_actions ()
+    {
+      if (desktop_file == "" || desktop_file == null)
+        {
+          return null;
+        }
+
+
+      debug ("FINDING MENU ACTIONS!!!!!");
+
+      // find our desktop shortcuts
+      Indicator.DesktopShortcuts shortcuts = new Indicator.DesktopShortcuts (desktop_file, "Messaging Menu");
+      unowned string [] nicks = shortcuts.get_nicks ();
+
+      Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
+      root.set_root (true);
+
+      foreach (string nick in nicks)
+        {
+          string local_nick = nick.dup ();
+          debug (@"got nick: $local_nick");
+
+          unowned string name = shortcuts.nick_get_name (local_nick);
+          debug (@"got name: $name");
+          string local_name = name.dup ();
+
+          Dbusmenu.Menuitem shortcut_item = new Dbusmenu.Menuitem ();
+          shortcut_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, local_name);
+          shortcut_item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
+          shortcut_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
+          shortcut_item.item_activated.connect ((timestamp) => {
+            shortcuts.nick_exec (local_nick);
+          });
+          root.child_append (shortcut_item);
+
+        }
+      return root;
+    }
+
+
+    public override Dbusmenu.Menuitem? get_menu_navigation ()
+    {
+
+      // build a dbusmenu that represents our generic application handling items
+      Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
+      root.set_root (true);
+
+      if (desktop_file != null)
+        {
+          Dbusmenu.Menuitem pinning_item = new Dbusmenu.Menuitem ();
+          if (is_sticky ())
+            pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Remove from launcher");
+          else
+            pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Add to launcher");
+
+          pinning_item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
+          pinning_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
+          pinning_item.item_activated.connect ((timestamp) => {
+            set_sticky (!is_sticky ());
+          });
+
+          root.child_append (pinning_item);
+        }
+
+      if (app is Bamf.Application)
+        {
+          Dbusmenu.Menuitem app_item = new Dbusmenu.Menuitem ();
+          app_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Quit...");
+          app_item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
+          app_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
+
+          app_item.item_activated.connect ((timestamp) => {
+            if (app is Bamf.Application)
+              {
+                Array<uint32> xids = app.get_xids ();
+                Unity.global_shell.close_xids (xids);
+              }
+          });
+          root.child_append (app_item);
+        }
+
+        return root;
     }
 
     public override Gee.ArrayList<ShortcutItem> get_menu_shortcuts ()
