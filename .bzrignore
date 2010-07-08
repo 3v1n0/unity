@@ -321,3 +321,4 @@ tests/unit/test-appinfo-manager.c
 tests/unit/test-io.c
 unity/unity-appinfo-manager.c
 unity/unity-io.c
+unity/unity-expanding-bin.c

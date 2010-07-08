@@ -300,12 +300,14 @@ namespace Unity.Testing
         {
           this.showing_places = false;
           this.panel.set_indicator_mode (true);
+          this.background.opacity = 160;
           this.places.opacity = 255;
         }
       else
         {
           this.showing_places = true;
           this.panel.set_indicator_mode (false);
+          this.background.opacity = 255;
           this.places.opacity = 0;
         }
 
@@ -318,6 +320,7 @@ namespace Unity.Testing
         {
           showing_places = true;
           panel.set_indicator_mode (false);
+          background.opacity = 255;
           places.opacity = 0;
         }
     }
