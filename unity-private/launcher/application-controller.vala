@@ -49,12 +49,13 @@ namespace Unity.Launcher
           context.set_timestamp (Gdk.CURRENT_TIME);
 
           appinfo.launch (null, context);
+
+          global_shell.hide_unity ();
         }
       catch (Error e)
         {
           warning (e.message);
         }
-
     }
   }
 
@@ -383,6 +384,8 @@ namespace Unity.Launcher
 
     public override void activate ()
     {
+      global_shell.hide_unity ();
+
       if (app is Bamf.Application)
         {
           if (app.is_running ())

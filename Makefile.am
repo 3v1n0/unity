@@ -28,5 +28,7 @@ pkgconfig_DATA = unity.pc
 EXTRA_DIST = \
   autogen.sh \
   COPYING \
-  unity.pc.in \
-  COPYING.LGPL
+  COPYING.LGPL \
+  HACKING \
+  unity.pc.in
+

@@ -196,7 +196,7 @@ namespace Unity
 
       this.wm = new WindowManagement (this);
       this.maximus = new Maximus ();
-      
+
       END_FUNCTION ();
     }
 
@@ -239,7 +239,7 @@ namespace Unity
 
       this.launcher = new Launcher.Launcher (this);
       this.launcher.get_view ().opacity = 0;
-      
+
       this.spaces_manager = new SpacesManager (this);
       this.spaces_manager.set_padding (50, 50, 125, 50);
 
@@ -584,27 +584,38 @@ namespace Unity
       expose_manager.end_expose ();
     }
 
+    public void hide_unity ()
+    {
+      if (places_showing == false)
+        return;
+
+      places_showing = false;
+
+      var anim = dark_box.animate (Clutter.AnimationMode.EASE_IN_QUAD, 100, "opacity", 0);
+      anim.completed.connect ((an) => {
+        (an.get_object () as Clutter.Actor).destroy ();
+      });
+
+      plugin.get_normal_window_group ().animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100, "opacity", 255);
+
+      anim = places.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100,
+                      "opacity", 0);
+      anim.completed.connect ((an) => {
+        (an.get_object () as Clutter.Actor).hide ();
+        });
+
+      panel.set_indicator_mode (false);
+      ensure_input_region ();
+
+      while (Gtk.events_pending ())
+        Gtk.main_iteration ();
+    }
+
     public void show_unity ()
     {
       if (this.places_showing)
         {
-          this.places_showing = false;
-
-          var anim = dark_box.animate (Clutter.AnimationMode.EASE_IN_QUAD, 100, "opacity", 0);
-          anim.completed.connect ((an) => {
-            (an.get_object () as Clutter.Actor).destroy ();
-          });
-
-          plugin.get_normal_window_group ().animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100, "opacity", 255);
-
-          anim = places.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100,
-                          "opacity", 0);
-          anim.completed.connect ((an) => {
-            (an.get_object () as Clutter.Actor).hide ();
-            });
-
-          this.panel.set_indicator_mode (false);
-          this.ensure_input_region ();
+          hide_unity ();
         }
       else
         {

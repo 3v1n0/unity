@@ -216,7 +216,7 @@ namespace Unity.Places
 
     private async void clicked_handler ()
     {
-      debug (@"Launching $uri");
+      global_shell.hide_unity ();
 
       if (uri.has_prefix ("application://"))
         {
