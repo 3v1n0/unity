@@ -327,7 +327,7 @@ namespace Unity.Launcher
       debug ("FINDING MENU ACTIONS!!!!!");
 
       // find our desktop shortcuts
-      Indicator.DesktopShortcuts shortcuts = new Indicator.DesktopShortcuts (desktop_file, "Messaging Menu");
+      Indicator.DesktopShortcuts shortcuts = new Indicator.DesktopShortcuts (desktop_file, "Unity");
       unowned string [] nicks = shortcuts.get_nicks ();
 
       Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
