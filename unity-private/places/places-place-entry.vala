@@ -19,11 +19,59 @@
 
 namespace Unity.Places
 {
+  public interface PlaceEntry : Object
+  {
+    public abstract string name        { get; construct set; }
+    public abstract string icon        { get; construct set; }
+    public abstract string description { get; construct set; }
+
+    public abstract uint     position  { get; set; }
+    public abstract string[] mimetypes { get; set; }
+    public abstract bool     sensitive { get; set; }
+
+
+    public abstract Gee.HashMap<string, string> hints { get; set; }
+
+    public abstract bool online { get; construct set; }
+    public abstract bool active { get; set; }
+
+    public abstract Dee.Model? sections_model { get; set; }
+
+    /* Entry rendering info */
+    public abstract string     entry_renderer_name { get; set; }
+    public abstract Dee.Model? entry_groups_model  { get; set; }
+    public abstract Dee.Model? entry_results_model { get; set; }
+    public abstract Gee.HashMap<string, string>? entry_renderer_hints { get; set; }
+
+    /* Global rendering info */
+    public abstract string global_renderer_name { get; set; }
+
+    public abstract Dee.Model?  global_groups_model { set; get; }
+    public abstract Dee.Model?  global_results_model { set; get; }
+    public abstract Gee.HashMap<string, string>? global_renderer_hints { get; set; }
+
+    /* Signals */
+    public signal void updated ();
+    public signal void renderer_info_changed ();
+
+    /* Methods */
+
+    public abstract new void connect ();
+
+    public abstract void set_search (string search, HashTable<string, string> hints);
+
+    public abstract void set_active_section (uint section_id);
+
+    public abstract void set_global_search (string                    search,
+                                            HashTable<string, string> hints);
+   }
+
+
   /**
    * Represents a PlaceEntry through a .place file ("offline") and then through
    * DBus ("online").
    **/
-  public class PlaceEntry : Object
+  public class PlaceEntryDbus : Object, PlaceEntry
   {
     /* FIXME: Use what's in libunity. We only need this so vala allows us to
      * connect to the signal
@@ -103,7 +151,7 @@ namespace Unity.Places
     }
 
     /* Entry rendering info */
-    public string entry_renderer_name;
+    public string entry_renderer_name { get; set; }
 
     public string      entry_groups_model_name;
     private Dee.Model? _entry_groups_model;
@@ -143,10 +191,10 @@ namespace Unity.Places
       }
     }
 
-    public Gee.HashMap<string, string>? entry_renderer_hints;
+    public Gee.HashMap<string, string>? entry_renderer_hints { get; set; }
 
     /* Global rendering info */
-    public string global_renderer_name;
+    public string global_renderer_name { get; set; }
 
     public string      global_groups_model_name;
     private Dee.Model? _global_groups_model;
@@ -167,7 +215,7 @@ namespace Unity.Places
       }
     }
 
-    public string      global_results_model_name;
+    public string      global_results_model_name { get; set; }
     private Dee.Model? _global_results_model;
     public Dee.Model?  global_results_model {
       get {
@@ -186,7 +234,7 @@ namespace Unity.Places
       }
     }
 
-    public Gee.HashMap<string, string>? global_renderer_hints;
+    public Gee.HashMap<string, string>? global_renderer_hints { get; set; }
 
     /* Our connection to the place-entry over dbus */
     private DBus.Connection?     connection;
@@ -195,24 +243,21 @@ namespace Unity.Places
     /*
      * Signals
      */
-    public signal void updated ();
-    public signal void renderer_info_changed ();
-
     /*
      * Constructors
      */
-    public PlaceEntry (string dbus_name, string dbus_path)
+    public PlaceEntryDbus (string dbus_name, string dbus_path)
     {
       Object (dbus_name:dbus_name, dbus_path:dbus_path);
     }
 
-    public PlaceEntry.with_info (string dbus_name,
-                                 string dbus_path,
-                                 string name,
-                                 string icon,
-                                 string description,
-                                 bool   show_global,
-                                 bool   show_entry)
+    public PlaceEntryDbus.with_info (string dbus_name,
+                                     string dbus_path,
+                                     string name,
+                                     string icon,
+                                     string description,
+                                     bool   show_global,
+                                     bool   show_entry)
     {
       Object (dbus_name:dbus_name,
               dbus_path:dbus_path,

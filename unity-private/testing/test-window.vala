@@ -302,6 +302,8 @@ namespace Unity.Testing
           this.panel.set_indicator_mode (true);
           this.background.opacity = 160;
           this.places.opacity = 255;
+
+          places.shown ();
         }
       else
         {
@@ -309,6 +311,8 @@ namespace Unity.Testing
           this.panel.set_indicator_mode (false);
           this.background.opacity = 255;
           this.places.opacity = 0;
+
+          places.hidden ();
         }
 
       this.places.do_queue_redraw ();
@@ -322,6 +326,8 @@ namespace Unity.Testing
           panel.set_indicator_mode (false);
           background.opacity = 255;
           places.opacity = 0;
+
+          places.hidden ();
         }
     }
 

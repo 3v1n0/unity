@@ -80,6 +80,16 @@ namespace Unity.Places
       search_bar.show ();
     }
 
+    public void shown ()
+    {
+
+    }
+
+    public void hidden ()
+    {
+
+    }
+
     private void on_entry_view_activated (PlaceEntryView entry_view, int x)
     {
       PlaceEntry entry = entry_view.entry;
