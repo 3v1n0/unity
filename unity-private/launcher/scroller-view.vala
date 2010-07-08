@@ -841,6 +841,12 @@ namespace Unity.Launcher
 
           child.allocate (child_box, flags);
 
+          child.remove_clip ();
+          if (child_box.y1 < 0)
+            child.set_clip (0, Math.fabsf (child_box.y1),
+                            child_box.get_width (), child_box.get_height () - child_box.y1);
+
+
           total_child_height += child_height + spacing;
         }
 
