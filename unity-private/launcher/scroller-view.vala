@@ -152,6 +152,7 @@ namespace Unity.Launcher
       queue_relayout ();
       Idle.add (() => {
         order_children (true);
+        queue_relayout ();
       });
     }
 
