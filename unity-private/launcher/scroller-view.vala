@@ -175,7 +175,7 @@ namespace Unity.Launcher
               if (picked_actor is ScrollerChild == false)
                 {
                   // couldn't pick a single actor, return 0
-                  return 0;
+                  return (y < padding.top + model[0].get_height () + spacing) ? 0 : model.size -1 ;
                 }
             }
         }
