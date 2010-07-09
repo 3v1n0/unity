@@ -1,4 +1,4 @@
-/*
+  /*
  * Copyright (C) 2010 Canonical Ltd
  *
  * This program is free software: you can redistribute it and/or modify
@@ -195,8 +195,8 @@ namespace Unity.Panel.Indicators
                             null,
                             position_menu,
                             1,
-                            Clutter.get_current_event_time ());
-          click_time = Clutter.get_current_event_time ();
+                            Unity.global_shell.get_current_time ());
+          click_time = Unity.global_shell.get_current_time ();
           menu_is_open = true;
           menu_shown ();
         }
@@ -226,16 +226,7 @@ namespace Unity.Panel.Indicators
             }
           else
             {
-              global_shell.hide_unity ();
-
-              MenuManager.get_default ().register_visible_menu (entry.menu);
-              entry.menu.popup (null,
-                                    null,
-                                    position_menu,
-                                    e.button.button,
-                                    e.button.time);
-              click_time = Clutter.get_current_event_time ();
-              menu_is_open = true;
+              show_menu ();
               menu_shown ();
             }
         }
@@ -261,7 +252,7 @@ namespace Unity.Panel.Indicators
           /* Show the menu and connect various signal to update the menu if
            * necessary.
            */
-          entry.menu.move_current.connect (menu_key_moved);
+          //entry.menu.move_current.connect (menu_key_moved);
           entry.menu.notify["visible"].connect (menu_vis_changed);
           bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, "opacity", 255);
         }
