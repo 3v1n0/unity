@@ -26,16 +26,20 @@ namespace Unity {
   public static const string INDICATORDIR;
   [CCode (cname = "INDICATORICONSDIR")]
   public static const string INDICATORICONSDIR;
-  
+
   [CCode (cheader_filename = "unity-utils.h", cname = "LOGGER_START_PROCESS")]
   public static void LOGGER_START_PROCESS (string name);
-  
+
   [CCode (cheader_filename = "unity-utils.h", cname = "LOGGER_END_PROCESS")]
   public static void LOGGER_END_PROCESS (string name);
-  
+
   [CCode (cheader_filename = "unity-utils.h", cname = "START_FUNCTION")]
   public static void START_FUNCTION ();
- 
+
   [CCode (cheader_filename = "unity-utils.h", cname = "END_FUNCTION")]
   public static void END_FUNCTION ();
+
+  // I DO NOT BELIEVE I HAVE TO DO THIS! >_<
+  [CCode (cname = "G_TYPE_FLOAT")]
+  public static const GLib.Type G_TYPE_FLOAT;
 }
