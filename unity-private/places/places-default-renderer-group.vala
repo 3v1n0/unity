@@ -19,9 +19,9 @@
 
 namespace Unity.Places
 {
-  public class DefaultRendererGroup : Ctk.Box
+  public class DefaultRendererGroup : ExpandingBin
   {
-    static const float PADDING = 0.0f;
+    static const float PADDING = 24.0f;
     static const int   SPACING = 0;
 
     public uint      group_id       { get; construct; }
@@ -30,11 +30,16 @@ namespace Unity.Places
     public string    icon_hint      { get; construct; }
     public Dee.Model results        { get; construct; }
 
+    private Ctk.VBox      vbox;
     private Ctk.HBox      title_box;
     private Ctk.Image     icon;
     private Ctk.Text      text;
     private Ctk.Image     expander;
     private Ctk.IconView  renderer;
+
+    /* Some caching to speed up lookups */
+    private uint          n_results = 0;
+    private bool          dirty = false;
 
     public DefaultRendererGroup (uint      group_id,
                                  string    group_renderer,
@@ -51,17 +56,22 @@ namespace Unity.Places
 
     construct
     {
-      padding = { PADDING, PADDING, PADDING , PADDING};
-      orientation = Ctk.Orientation.VERTICAL;
-      spacing = SPACING;
-      homogeneous = false;
+      padding = { 0.0f, 0.0f, PADDING , 0.0f};
       hide ();
 
-      title_box = new Ctk.HBox (8);
-      pack (title_box, false, false);
-      title_box.show ();
+      vbox = new Ctk.VBox (SPACING);
+      vbox.spacing = SPACING;
+      vbox.homogeneous = false;
+      add_actor (vbox);
+      vbox.show ();
 
-      icon = new Ctk.Image (24);
+      title_box = new Ctk.HBox (5);
+      vbox.pack (title_box, false, false);
+      title_box.show ();
+      title_box.reactive = true;
+
+      icon = new Ctk.Image (22);
+      icon.set_from_filename (PKGDATADIR + "/favourites.png");
       title_box.pack (icon, false, false);
       icon.show ();
 
@@ -69,20 +79,53 @@ namespace Unity.Places
       title_box.pack (text, true, true);
       text.show ();
 
-      expander = new Ctk.Image (24);
+      expander = new Ctk.Image (22);
+      expander.set_from_filename (PKGDATADIR + "/maximize_up.png");
+      expander.opacity = 0;
       title_box.pack (expander, false, true);
       expander.show ();
 
-      var sep = new Clutter.Rectangle.with_color ({ 255, 255, 255, 255 });
-      sep.set_height (1);
-      pack (sep, false, false);
-      sep.show ();
+      var rect = new Clutter.Rectangle.with_color ({ 255, 255, 255, 255 });
+      rect.height = 1;
+      vbox.pack (rect, false, false);
+      rect.show ();
+
+      title_box.button_release_event.connect (() => {
+        if (n_results <= renderer.get_n_cols ())
+          return true;
+
+        if (bin_state == ExpandingBinState.UNEXPANDED)
+          {
+            bin_state = ExpandingBinState.EXPANDED;
+            expander.set_from_filename (PKGDATADIR + "/minimize_up.png");
+          }
+        else
+          {
+            bin_state = ExpandingBinState.UNEXPANDED;
+            expander.set_from_filename (PKGDATADIR + "/maximize_up.png");
+          }
+        return true;
+      });
+      title_box.motion_event.connect (() => {
+        if (dirty)
+          {
+            var children = renderer.get_children ();
+            foreach (Clutter.Actor child in children)
+              {
+                Tile tile = child as Tile;
+                tile.about_to_show ();
+              }
+              dirty = false;
+          }
+      });
 
       renderer = new Ctk.IconView ();
       renderer.padding = { 12.0f, 0.0f, 0.0f, 0.0f };
       renderer.spacing = 24;
-      pack (renderer, true, true);
+      vbox.pack (renderer, true, true);
       renderer.show ();
+      renderer.set ("auto-fade-children", true);
+      renderer.notify["n-cols"].connect (on_n_cols_changed);
 
       unowned Dee.ModelIter iter = results.get_first_iter ();
       while (!results.is_last (iter))
@@ -97,21 +140,22 @@ namespace Unity.Places
       results.row_removed.connect (on_result_removed);
     }
 
-    private override void get_preferred_height (float for_width,
-                                           out float min_height,
-                                           out float nat_height)
+    private override void allocate (Clutter.ActorBox        box,
+                                    Clutter.AllocationFlags flags)
     {
+      base.allocate (box, flags);
+
+      /* Update the unexpanded height if necessary */
+      /* FIXME: Can we please add some nice methods to CluTK which allow
+       * doing something like $clutk_container.get_nth_child (), and so
+       * bypass the stupid get_children stuff. In any case, cache the result
+       */
       var children = renderer.get_children ();
-      if (children.length () > 0)
+      var child = children.nth_data (0) as Clutter.Actor;
+      if (child is Clutter.Actor &&
+          child.height != unexpanded_height)
         {
-          base.get_preferred_height (for_width, out min_height, out nat_height);
-          show ();
-        }
-      else
-        {
-          min_height = 0;
-          nat_height = 0;
-          hide ();
+          unexpanded_height = title_box.height + 1.0f + child.height;
         }
     }
 
@@ -132,7 +176,15 @@ namespace Unity.Places
       renderer.add_actor (button);
       button.show ();
 
-      show ();
+      add_to_n_results (1);
+
+      if (bin_state == ExpandingBinState.CLOSED)
+        {
+          bin_state = ExpandingBinState.UNEXPANDED;
+          show ();
+        }
+
+      dirty = true;
     }
 
     private void on_result_removed (Dee.ModelIter iter)
@@ -148,17 +200,61 @@ namespace Unity.Places
           if (tile.iter == iter)
             {
               actor.destroy ();
+              add_to_n_results (-1);
               break;
             }
         }
 
-      if (children.length () <= 1)
-        hide ();
+      if (n_results < 1)
+        {
+          bin_state = ExpandingBinState.CLOSED;
+        }
     }
 
     private bool interesting (Dee.ModelIter iter)
     {
       return (results.get_uint (iter, 2) == group_id);
+    }
+
+    private void add_to_n_results (int i)
+    {
+      n_results += i;
+
+      if (n_results > renderer.get_n_cols ())
+        {
+          expander.animate (Clutter.AnimationMode.EASE_IN_SINE, 200,
+                            "opacity", 255);
+        }
+      else
+        {
+          expander.animate (Clutter.AnimationMode.EASE_IN_SINE, 200,
+                            "opacity", 0);
+        }
+    }
+
+    private void on_n_cols_changed ()
+    {
+      var n_cols = renderer.get_n_cols ();
+
+      if (bin_state == ExpandingBinState.UNEXPANDED)
+        {
+          var children = renderer.get_children ();
+          int i = 0;
+
+          foreach (Clutter.Actor child in children)
+            {
+              Tile tile = child as Tile;
+              if (i < n_cols)
+                {
+                  tile.about_to_show ();
+                  i++;
+                }
+              else
+                break;
+            }
+        }
+
+      add_to_n_results (0);
     }
   }
 
@@ -174,6 +270,8 @@ namespace Unity.Places
     public string  uri          { get; construct; }
     public string? mimetype     { get; construct; }
     public string? comment      { get; construct; }
+
+    private bool shown = false;
 
     public Tile (Dee.ModelIter iter,
                  string        uri,
@@ -193,11 +291,17 @@ namespace Unity.Places
 
     construct
     {
-      set_label (display_name);
-
       unowned Ctk.Text text = get_text ();
       text.ellipsize = Pango.EllipsizeMode.END;
+    }
 
+    public void about_to_show ()
+    {
+      if (shown)
+        return;
+      shown = true;
+
+      set_label (display_name);
       set_icon ();
     }
 
@@ -216,7 +320,7 @@ namespace Unity.Places
 
     private async void clicked_handler ()
     {
-      debug (@"Launching $uri");
+      global_shell.hide_unity ();
 
       if (uri.has_prefix ("application://"))
         {
@@ -226,7 +330,6 @@ namespace Unity.Places
           try {
             var appinfos = AppInfoManager.get_instance ();
             info = yield appinfos.lookup_async (id);
-            debug ("Foo: %s", info.get_name());
           } catch (Error ee) {
             warning ("Unable to read .desktop file '%s': %s", uri, ee.message);
             return;
@@ -236,7 +339,6 @@ namespace Unity.Places
             {
               try {
                 info.launch (null,null);
-                debug ("Launched");
               } catch (Error e) {
                 warning ("Unable to launch desktop file %s: %s\n",
                          id,

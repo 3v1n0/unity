@@ -31,6 +31,7 @@
 #include <clutter/clutter.h>
 #include <float.h>
 #include <math.h>
+#include <unity.h>
 #include <cairo.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
 
@@ -86,7 +87,6 @@ struct _UnityPanelIndicatorsIndicatorObjectEntryViewPrivate {
 	ClutterCairoTexture* bg;
 	gboolean menu_is_open;
 	guint32 click_time;
-	float last_found_entry_x;
 	float last_width;
 	float last_height;
 };
@@ -116,10 +116,10 @@ static gboolean unity_panel_indicators_indicator_object_entry_view_on_scroll_eve
 gboolean unity_panel_indicators_indicator_object_entry_view_on_button_press_event (UnityPanelIndicatorsIndicatorObjectEntryView* self, ClutterEvent* e);
 gboolean menu_manager_menu_is_open (MenuManager* self);
 gboolean unity_panel_indicators_indicator_object_entry_view_on_motion_event (UnityPanelIndicatorsIndicatorObjectEntryView* self, ClutterEvent* e);
-void unity_panel_indicators_indicator_object_entry_view_menu_key_moved (UnityPanelIndicatorsIndicatorObjectEntryView* self, GtkMenuDirectionType type);
-static void _unity_panel_indicators_indicator_object_entry_view_menu_key_moved_gtk_menu_shell_move_current (GtkMenuShell* _sender, GtkMenuDirectionType direction, gpointer self);
 void unity_panel_indicators_indicator_object_entry_view_menu_vis_changed (UnityPanelIndicatorsIndicatorObjectEntryView* self);
 static void _unity_panel_indicators_indicator_object_entry_view_menu_vis_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+void unity_panel_indicators_indicator_object_entry_view_menu_key_moved (UnityPanelIndicatorsIndicatorObjectEntryView* self, GtkMenuDirectionType type);
+static void _unity_panel_indicators_indicator_object_entry_view_menu_key_moved_gtk_menu_shell_move_current (GtkMenuShell* _sender, GtkMenuDirectionType direction, gpointer self);
 static gboolean unity_panel_indicators_indicator_object_entry_view_update_bg (UnityPanelIndicatorsIndicatorObjectEntryView* self);
 static gboolean _unity_panel_indicators_indicator_object_entry_view_update_bg_gsource_func (gpointer self);
 static void unity_panel_indicators_indicator_object_entry_view_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
@@ -164,10 +164,12 @@ UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_o
 
 
 static void unity_panel_indicators_indicator_object_entry_view_position_menu (UnityPanelIndicatorsIndicatorObjectEntryView* self, GtkMenu* menu, gint* x, gint* y, gboolean* push_in) {
+	float xx = 0.0F;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (menu != NULL);
 	*y = (gint) clutter_actor_get_height ((ClutterActor*) self);
-	*x = (gint) self->priv->last_found_entry_x;
+	clutter_actor_get_transformed_position ((ClutterActor*) self, &xx, NULL);
+	*x = (gint) xx;
 }
 
 
@@ -180,11 +182,12 @@ void unity_panel_indicators_indicator_object_entry_view_show_menu (UnityPanelInd
 	g_return_if_fail (self != NULL);
 	if (GTK_IS_MENU (self->priv->_entry->menu)) {
 		MenuManager* _tmp0_;
-		self->priv->last_found_entry_x = (clutter_actor_get_x ((ClutterActor*) self) + clutter_actor_get_x (clutter_actor_get_parent ((ClutterActor*) self))) + clutter_actor_get_x (clutter_actor_get_parent (clutter_actor_get_parent ((ClutterActor*) self)));
+		unity_shell_hide_unity (unity_global_shell);
 		menu_manager_register_visible_menu (_tmp0_ = menu_manager_get_default (), self->priv->_entry->menu);
 		_g_object_unref0 (_tmp0_);
-		gtk_menu_popup (self->priv->_entry->menu, NULL, NULL, _unity_panel_indicators_indicator_object_entry_view_position_menu_gtk_menu_position_func, self, (guint) 1, clutter_get_current_event_time ());
-		self->priv->click_time = clutter_get_current_event_time ();
+		gtk_menu_popup (self->priv->_entry->menu, NULL, NULL, _unity_panel_indicators_indicator_object_entry_view_position_menu_gtk_menu_position_func, self, (guint) 1, unity_shell_get_current_time (unity_global_shell));
+		self->priv->click_time = unity_shell_get_current_time (unity_global_shell);
+		self->priv->menu_is_open = TRUE;
 		unity_panel_indicators_indicator_object_entry_view_menu_shown (self);
 	}
 }
@@ -222,13 +225,7 @@ gboolean unity_panel_indicators_indicator_object_entry_view_on_button_press_even
 			result = TRUE;
 			return result;
 		} else {
-			MenuManager* _tmp0_;
-			self->priv->last_found_entry_x = (clutter_actor_get_x ((ClutterActor*) self) + clutter_actor_get_x (clutter_actor_get_parent ((ClutterActor*) self))) + clutter_actor_get_x (clutter_actor_get_parent (clutter_actor_get_parent ((ClutterActor*) self)));
-			menu_manager_register_visible_menu (_tmp0_ = menu_manager_get_default (), self->priv->_entry->menu);
-			_g_object_unref0 (_tmp0_);
-			gtk_menu_popup (self->priv->_entry->menu, NULL, NULL, _unity_panel_indicators_indicator_object_entry_view_position_menu_gtk_menu_position_func, self, (guint) (*e).button.button, (*e).button.time);
-			self->priv->click_time = clutter_get_current_event_time ();
-			self->priv->menu_is_open = TRUE;
+			unity_panel_indicators_indicator_object_entry_view_show_menu (self);
 			unity_panel_indicators_indicator_object_entry_view_menu_shown (self);
 		}
 	}
@@ -240,11 +237,17 @@ gboolean unity_panel_indicators_indicator_object_entry_view_on_button_press_even
 gboolean unity_panel_indicators_indicator_object_entry_view_on_motion_event (UnityPanelIndicatorsIndicatorObjectEntryView* self, ClutterEvent* e) {
 	gboolean result = FALSE;
 	gboolean _tmp0_ = FALSE;
+	gboolean _tmp1_ = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (GTK_IS_MENU (self->priv->_entry->menu)) {
-		MenuManager* _tmp1_;
-		_tmp0_ = menu_manager_menu_is_open (_tmp1_ = menu_manager_get_default ());
-		_g_object_unref0 (_tmp1_);
+		MenuManager* _tmp2_;
+		_tmp1_ = menu_manager_menu_is_open (_tmp2_ = menu_manager_get_default ());
+		_g_object_unref0 (_tmp2_);
+	} else {
+		_tmp1_ = FALSE;
+	}
+	if (_tmp1_) {
+		_tmp0_ = self->priv->menu_is_open == FALSE;
 	} else {
 		_tmp0_ = FALSE;
 	}
@@ -258,11 +261,6 @@ gboolean unity_panel_indicators_indicator_object_entry_view_on_motion_event (Uni
 }
 
 
-static void _unity_panel_indicators_indicator_object_entry_view_menu_key_moved_gtk_menu_shell_move_current (GtkMenuShell* _sender, GtkMenuDirectionType direction, gpointer self) {
-	unity_panel_indicators_indicator_object_entry_view_menu_key_moved (self, direction);
-}
-
-
 static void _unity_panel_indicators_indicator_object_entry_view_menu_vis_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
 	unity_panel_indicators_indicator_object_entry_view_menu_vis_changed (self);
 }
@@ -271,10 +269,14 @@ static void _unity_panel_indicators_indicator_object_entry_view_menu_vis_changed
 void unity_panel_indicators_indicator_object_entry_view_menu_shown (UnityPanelIndicatorsIndicatorObjectEntryView* self) {
 	g_return_if_fail (self != NULL);
 	if (GTK_IS_MENU (self->priv->_entry->menu)) {
-		g_signal_connect_object ((GtkMenuShell*) self->priv->_entry->menu, "move-current", (GCallback) _unity_panel_indicators_indicator_object_entry_view_menu_key_moved_gtk_menu_shell_move_current, self, 0);
 		g_signal_connect_object ((GObject*) self->priv->_entry->menu, "notify::visible", (GCallback) _unity_panel_indicators_indicator_object_entry_view_menu_vis_changed_g_object_notify, self, 0);
 		clutter_actor_animate ((ClutterActor*) self->priv->bg, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 200, "opacity", 255, NULL);
 	}
+}
+
+
+static void _unity_panel_indicators_indicator_object_entry_view_menu_key_moved_gtk_menu_shell_move_current (GtkMenuShell* _sender, GtkMenuDirectionType direction, gpointer self) {
+	unity_panel_indicators_indicator_object_entry_view_menu_key_moved (self, direction);
 }
 
 
@@ -651,7 +653,6 @@ static void unity_panel_indicators_indicator_object_entry_view_class_init (Unity
 static void unity_panel_indicators_indicator_object_entry_view_instance_init (UnityPanelIndicatorsIndicatorObjectEntryView * self) {
 	self->priv = UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_ENTRY_VIEW_GET_PRIVATE (self);
 	self->priv->menu_is_open = FALSE;
-	self->priv->last_found_entry_x = 0.0f;
 	self->priv->last_width = (float) 0;
 	self->priv->last_height = (float) 0;
 }
@@ -660,6 +661,9 @@ static void unity_panel_indicators_indicator_object_entry_view_instance_init (Un
 static void unity_panel_indicators_indicator_object_entry_view_finalize (GObject* obj) {
 	UnityPanelIndicatorsIndicatorObjectEntryView * self;
 	self = UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_ENTRY_VIEW (obj);
+	{
+		clutter_actor_unparent ((ClutterActor*) self->priv->bg);
+	}
 	_g_object_unref0 (self->priv->bg);
 	_g_object_unref0 (self->image);
 	_g_object_unref0 (self->text);

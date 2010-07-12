@@ -88,6 +88,7 @@ am__objects_1 = libunity_la-chrome-handler.lo \
 	libunity_la-quicklist-rendering.lo libunity_la-shell.lo \
 	libunity_la-theme.lo libunity_la-unity-appinfo-manager.lo \
 	libunity_la-unity-cairo-canvas.lo \
+	libunity_la-unity-expanding-bin.lo \
 	libunity_la-unity-favorites.lo libunity_la-unity-io.lo \
 	libunity_la-unity-pixbuf-cache.lo \
 	libunity_la-unity-place-renderer.lo libunity_la-unity-place.lo \
@@ -354,6 +355,7 @@ libunity_la_VALASOURCES = \
   theme.vala \
   unity-appinfo-manager.vala \
   unity-cairo-canvas.vala \
+  unity-expanding-bin.vala \
   unity-favorites.vala \
   unity-io.vala \
   unity-pixbuf-cache.vala \
@@ -451,6 +453,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-theme.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-appinfo-manager.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-cairo-canvas.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-expanding-bin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-favorites.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-io.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-pixbuf-cache.Plo@am__quote@
@@ -569,6 +572,14 @@ libunity_la-unity-cairo-canvas.lo: unity-cairo-canvas.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='unity-cairo-canvas.c' object='libunity_la-unity-cairo-canvas.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-unity-cairo-canvas.lo `test -f 'unity-cairo-canvas.c' || echo '$(srcdir)/'`unity-cairo-canvas.c
+
+libunity_la-unity-expanding-bin.lo: unity-expanding-bin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-unity-expanding-bin.lo -MD -MP -MF $(DEPDIR)/libunity_la-unity-expanding-bin.Tpo -c -o libunity_la-unity-expanding-bin.lo `test -f 'unity-expanding-bin.c' || echo '$(srcdir)/'`unity-expanding-bin.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_la-unity-expanding-bin.Tpo $(DEPDIR)/libunity_la-unity-expanding-bin.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='unity-expanding-bin.c' object='libunity_la-unity-expanding-bin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-unity-expanding-bin.lo `test -f 'unity-expanding-bin.c' || echo '$(srcdir)/'`unity-expanding-bin.c
 
 libunity_la-unity-favorites.lo: unity-favorites.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-unity-favorites.lo -MD -MP -MF $(DEPDIR)/libunity_la-unity-favorites.Tpo -c -o libunity_la-unity-favorites.lo `test -f 'unity-favorites.c' || echo '$(srcdir)/'`unity-favorites.c

@@ -82,9 +82,11 @@ typedef enum  {
 
 struct _UnityShellIface {
 	GTypeInterface parent_iface;
+	guint32 (*get_current_time) (UnityShell* self);
 	UnityShellMode (*get_mode) (UnityShell* self);
 	ClutterStage* (*get_stage) (UnityShell* self);
 	void (*show_unity) (UnityShell* self);
+	void (*hide_unity) (UnityShell* self);
 	gint (*get_indicators_width) (UnityShell* self);
 	gint (*get_launcher_width_foobar) (UnityShell* self);
 	gint (*get_panel_height_foobar) (UnityShell* self);
@@ -126,17 +128,21 @@ struct _UnityPixbufCacheSetImageFromGiconStringData {
 	gint size;
 	char* key;
 	GdkPixbuf* ret;
-	GIcon* icon;
-	GtkIconInfo* info;
 	GdkPixbuf* _tmp0_;
 	GdkPixbuf* _tmp1_;
-	gboolean _tmp2_;
-	gboolean _tmp3_;
-	gboolean _tmp4_;
+	char* _tmp2_;
+	GError * err;
+	GIcon* icon;
+	GtkIconInfo* info;
+	GdkPixbuf* _tmp3_;
+	GdkPixbuf* _tmp4_;
+	gboolean _tmp5_;
+	gboolean _tmp6_;
+	gboolean _tmp7_;
 	char* real_name;
-	GdkPixbuf* _tmp5_;
-	GdkPixbuf* _tmp6_;
-	char* _tmp7_;
+	GdkPixbuf* _tmp8_;
+	GdkPixbuf* _tmp9_;
+	char* _tmp10_;
 	GError * e;
 	GError * _inner_error_;
 };
@@ -443,6 +449,14 @@ static gboolean _unity_pixbuf_cache_set_image_from_gicon_string_co_gsource_func 
 }
 
 
+static const char* string_to_string (const char* self) {
+	const char* result = NULL;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = self;
+	return result;
+}
+
+
 static char* string_slice (const char* self, glong start, glong end) {
 	char* result = NULL;
 	glong string_length;
@@ -484,14 +498,6 @@ static glong string_get_length (const char* self) {
 }
 
 
-static const char* string_to_string (const char* self) {
-	const char* result = NULL;
-	g_return_val_if_fail (self != NULL, NULL);
-	result = self;
-	return result;
-}
-
-
 static gboolean unity_pixbuf_cache_set_image_from_gicon_string_co (UnityPixbufCacheSetImageFromGiconStringData* data) {
 	switch (data->_state_) {
 		case 0:
@@ -525,71 +531,101 @@ static gboolean unity_pixbuf_cache_set_image_from_gicon_string_co (UnityPixbufCa
 		_state_10:
 		;
 		if (data->ret == NULL) {
-			{
-				data->icon = g_icon_new_for_string (data->gicon_as_string, &data->_inner_error_);
-				if (data->_inner_error_ != NULL) {
-					goto __catch28_g_error;
-				}
-				data->info = gtk_icon_theme_lookup_by_gicon (data->self->priv->theme, data->icon, data->size, 0);
-				if (data->info != NULL) {
-					data->_tmp0_ = gtk_icon_info_load_icon (data->info, &data->_inner_error_);
+			if (g_utf8_get_char (g_utf8_offset_to_pointer (data->gicon_as_string, 0)) == '/') {
+				{
+					data->_tmp0_ = gdk_pixbuf_new_from_file (data->gicon_as_string, &data->_inner_error_);
 					if (data->_inner_error_ != NULL) {
-						_gtk_icon_info_free0 (data->info);
 						goto __catch28_g_error;
 					}
 					data->ret = (data->_tmp1_ = data->_tmp0_, _g_object_unref0 (data->ret), data->_tmp1_);
 				}
-				if (data->ret == NULL) {
-					if (g_str_has_suffix (data->gicon_as_string, ".png")) {
-						data->_tmp4_ = TRUE;
-					} else {
-						data->_tmp4_ = g_str_has_suffix (data->gicon_as_string, ".xpm");
-					}
-					if (data->_tmp4_) {
-						data->_tmp3_ = TRUE;
-					} else {
-						data->_tmp3_ = g_str_has_suffix (data->gicon_as_string, ".gir");
-					}
-					if (data->_tmp3_) {
-						data->_tmp2_ = TRUE;
-					} else {
-						data->_tmp2_ = g_str_has_suffix (data->gicon_as_string, ".jpg");
-					}
-					if (data->_tmp2_) {
-						data->real_name = string_slice (data->gicon_as_string, (glong) 0, string_get_length (data->gicon_as_string) - 4);
-						data->_tmp5_ = gtk_icon_theme_load_icon (data->self->priv->theme, data->real_name, data->size, 0, &data->_inner_error_);
-						if (data->_inner_error_ != NULL) {
-							_g_free0 (data->real_name);
-							_gtk_icon_info_free0 (data->info);
-							goto __catch28_g_error;
-						}
-						data->ret = (data->_tmp6_ = _g_object_ref0 (data->_tmp5_), _g_object_unref0 (data->ret), data->_tmp6_);
-						_g_free0 (data->real_name);
-					}
-				}
-				if (GDK_IS_PIXBUF (data->ret)) {
-					gee_abstract_map_set ((GeeAbstractMap*) data->self->priv->cache, data->key, data->ret);
-				}
-				_gtk_icon_info_free0 (data->info);
-			}
-			goto __finally28;
-			__catch28_g_error:
-			{
-				data->e = data->_inner_error_;
-				data->_inner_error_ = NULL;
+				goto __finally28;
+				__catch28_g_error:
 				{
-					g_warning (data->_tmp7_ = g_strconcat ("Unable to load icon ", string_to_string (data->gicon_as_string), ": '%s'", NULL), data->e->message);
-					_g_free0 (data->_tmp7_);
-					_g_error_free0 (data->e);
+					data->err = data->_inner_error_;
+					data->_inner_error_ = NULL;
+					{
+						g_message (data->_tmp2_ = g_strconcat ("Unable to load ", string_to_string (data->gicon_as_string), " as file: %s", NULL), data->err->message);
+						_g_free0 (data->_tmp2_);
+						_g_error_free0 (data->err);
+					}
+				}
+				__finally28:
+				if (data->_inner_error_ != NULL) {
+					_g_free0 (data->key);
+					_g_object_unref0 (data->ret);
+					g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
+					g_clear_error (&data->_inner_error_);
+					return FALSE;
 				}
 			}
-			__finally28:
-			if (data->_inner_error_ != NULL) {
-				_g_free0 (data->key);
-				_g_object_unref0 (data->ret);
-				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
-				g_clear_error (&data->_inner_error_);
-				return FALSE;
+			if (data->ret == NULL) {
+				{
+					data->icon = g_icon_new_for_string (data->gicon_as_string, &data->_inner_error_);
+					if (data->_inner_error_ != NULL) {
+						goto __catch29_g_error;
+					}
+					data->info = gtk_icon_theme_lookup_by_gicon (data->self->priv->theme, data->icon, data->size, 0);
+					if (data->info != NULL) {
+						data->_tmp3_ = gtk_icon_info_load_icon (data->info, &data->_inner_error_);
+						if (data->_inner_error_ != NULL) {
+							_gtk_icon_info_free0 (data->info);
+							goto __catch29_g_error;
+						}
+						data->ret = (data->_tmp4_ = data->_tmp3_, _g_object_unref0 (data->ret), data->_tmp4_);
+					}
+					if (data->ret == NULL) {
+						if (g_str_has_suffix (data->gicon_as_string, ".png")) {
+							data->_tmp7_ = TRUE;
+						} else {
+							data->_tmp7_ = g_str_has_suffix (data->gicon_as_string, ".xpm");
+						}
+						if (data->_tmp7_) {
+							data->_tmp6_ = TRUE;
+						} else {
+							data->_tmp6_ = g_str_has_suffix (data->gicon_as_string, ".gir");
+						}
+						if (data->_tmp6_) {
+							data->_tmp5_ = TRUE;
+						} else {
+							data->_tmp5_ = g_str_has_suffix (data->gicon_as_string, ".jpg");
+						}
+						if (data->_tmp5_) {
+							data->real_name = string_slice (data->gicon_as_string, (glong) 0, string_get_length (data->gicon_as_string) - 4);
+							data->_tmp8_ = gtk_icon_theme_load_icon (data->self->priv->theme, data->real_name, data->size, 0, &data->_inner_error_);
+							if (data->_inner_error_ != NULL) {
+								_g_free0 (data->real_name);
+								_gtk_icon_info_free0 (data->info);
+								goto __catch29_g_error;
+							}
+							data->ret = (data->_tmp9_ = _g_object_ref0 (data->_tmp8_), _g_object_unref0 (data->ret), data->_tmp9_);
+							_g_free0 (data->real_name);
+						}
+					}
+					_gtk_icon_info_free0 (data->info);
+				}
+				goto __finally29;
+				__catch29_g_error:
+				{
+					data->e = data->_inner_error_;
+					data->_inner_error_ = NULL;
+					{
+						g_warning (data->_tmp10_ = g_strconcat ("Unable to load icon ", string_to_string (data->gicon_as_string), ": '%s'", NULL), data->e->message);
+						_g_free0 (data->_tmp10_);
+						_g_error_free0 (data->e);
+					}
+				}
+				__finally29:
+				if (data->_inner_error_ != NULL) {
+					_g_free0 (data->key);
+					_g_object_unref0 (data->ret);
+					g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
+					g_clear_error (&data->_inner_error_);
+					return FALSE;
+				}
+			}
+			if (GDK_IS_PIXBUF (data->ret)) {
+				gee_abstract_map_set ((GeeAbstractMap*) data->self->priv->cache, data->key, data->ret);
 			}
 		}
 		if (GDK_IS_PIXBUF (data->ret)) {

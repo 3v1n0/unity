@@ -628,7 +628,7 @@ static GObject * unity_places_place_bar_background_constructor (GType type, guin
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("places-place-bar.vala:153: Unable to load dash background");
+				g_warning ("places-place-bar.vala:152: Unable to load dash background");
 				_g_error_free0 (e);
 			}
 		}

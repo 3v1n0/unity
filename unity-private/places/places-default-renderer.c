@@ -81,7 +81,7 @@ enum  {
 	UNITY_PLACES_DEFAULT_RENDERER_DUMMY_PROPERTY
 };
 #define UNITY_PLACES_DEFAULT_RENDERER_PADDING 12.0f
-#define UNITY_PLACES_DEFAULT_RENDERER_SPACING 12
+#define UNITY_PLACES_DEFAULT_RENDERER_SPACING 0
 UnityPlacesDefaultRenderer* unity_places_default_renderer_new (void);
 UnityPlacesDefaultRenderer* unity_places_default_renderer_construct (GType object_type);
 static void unity_places_default_renderer_on_group_added (UnityPlacesDefaultRenderer* self, DeeModel* model, DeeModelIter* iter);

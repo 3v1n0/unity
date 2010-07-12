@@ -6,7 +6,7 @@ namespace Unity {
 	namespace Launcher {
 		[CCode (cheader_filename = "unity-private.h")]
 		public class ApplicationController : Unity.Launcher.ScrollerChildController {
-			public ApplicationController (string desktop_file_, Unity.Launcher.ScrollerChild child_);
+			public ApplicationController (string? desktop_file_, Unity.Launcher.ScrollerChild child_);
 			public override void activate ();
 			public void attach_application (Bamf.Application application);
 			public void close_windows ();
@@ -17,7 +17,7 @@ namespace Unity {
 			public float get_priority () throws Unity.Launcher.AppTypeError;
 			public void set_priority (float priority);
 			public void set_sticky (bool is_sticky = true);
-			public string desktop_file { get; construct; }
+			public string desktop_file { get; set; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class ApplicationShortcut : GLib.Object, Unity.Launcher.ShortcutItem {
@@ -266,7 +266,7 @@ namespace Unity {
 			public DefaultRenderer ();
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public class DefaultRendererGroup : Ctk.Box {
+		public class DefaultRendererGroup : Unity.ExpandingBin {
 			public DefaultRendererGroup (uint group_id, string group_renderer, string display_name, string icon_hint, Dee.Model results);
 			public string display_name { get; construct; }
 			public uint group_id { get; construct; }
@@ -368,6 +368,7 @@ namespace Unity {
 		[CCode (cheader_filename = "unity-private.h")]
 		public class PlaceSearchBar : Ctk.Box {
 			public PlaceSearchBar ();
+			public void reset ();
 			public void set_active_entry_view (Unity.Places.PlaceEntry entry, int x);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
@@ -384,7 +385,8 @@ namespace Unity {
 			public Unity.ThemeImage right_icon;
 			public Ctk.Text text;
 			public PlaceSearchEntry ();
-			public signal void text_changed (string text);
+			public void reset ();
+			public signal void text_changed (string? text);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class PlaceSearchSectionsBar : Ctk.Box {
@@ -400,6 +402,7 @@ namespace Unity {
 		[CCode (cheader_filename = "unity-private.h")]
 		public class Tile : Ctk.Button {
 			public Tile (Dee.ModelIter iter, string uri, string? icon_hint, string? mimetype, string display_name, string? comment);
+			public void about_to_show ();
 			public string? comment { get; construct; }
 			public string display_name { get; construct; }
 			public string? icon_hint { get; construct; }

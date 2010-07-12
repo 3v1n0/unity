@@ -142,6 +142,8 @@ enum  {
 #define UNITY_PLACES_PLACE_SEARCH_BAR_RANDOM_TEXT_WIDTH 400
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_new (void);
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_construct (GType object_type);
+void unity_places_place_search_entry_reset (UnityPlacesPlaceSearchEntry* self);
+void unity_places_place_search_bar_reset (UnityPlacesPlaceSearchBar* self);
 gboolean unity_places_place_search_bar_background_update_background (UnityPlacesPlaceSearchBarBackground* self);
 static gboolean _unity_places_place_search_bar_background_update_background_gsource_func (gpointer self);
 static void unity_places_place_search_bar_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
@@ -190,6 +192,12 @@ UnityPlacesPlaceSearchBar* unity_places_place_search_bar_new (void) {
 }
 
 
+void unity_places_place_search_bar_reset (UnityPlacesPlaceSearchBar* self) {
+	g_return_if_fail (self != NULL);
+	unity_places_place_search_entry_reset (self->priv->entry);
+}
+
+
 static gboolean _unity_places_place_search_bar_background_update_background_gsource_func (gpointer self) {
 	gboolean result;
 	result = unity_places_place_search_bar_background_update_background (self);
@@ -230,7 +238,6 @@ static void unity_places_place_search_bar_real_get_preferred_height (ClutterActo
 
 static void unity_places_place_search_bar_on_search_text_changed (UnityPlacesPlaceSearchBar* self, const char* text) {
 	g_return_if_fail (self != NULL);
-	g_return_if_fail (text != NULL);
 	if (UNITY_PLACES_IS_PLACE_ENTRY (self->priv->active_entry)) {
 		GHashTable* hints;
 		hints = g_hash_table_new (g_str_hash, g_str_equal);
@@ -508,7 +515,7 @@ static GObject * unity_places_place_search_bar_background_constructor (GType typ
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("places-place-search-bar.vala:163: Unable to load dash background");
+				g_warning ("places-place-search-bar.vala:168: Unable to load dash background");
 				_g_error_free0 (e);
 			}
 		}

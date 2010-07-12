@@ -112,7 +112,9 @@ void menu_manager_register_visible_menu (MenuManager* self, GtkMenu* menu) {
 
 void menu_manager_popdown_current_menu (MenuManager* self) {
 	g_return_if_fail (self != NULL);
-	gtk_menu_popdown (self->priv->current_menu);
+	if (GTK_IS_MENU (self->priv->current_menu)) {
+		gtk_menu_popdown (self->priv->current_menu);
+	}
 }
 
 

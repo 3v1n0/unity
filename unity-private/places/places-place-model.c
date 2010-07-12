@@ -136,6 +136,7 @@ const char* unity_places_place_file_model_get_directory (UnityPlacesPlaceFileMod
 static void _g_list_free_g_object_unref (GList* self);
 static UnityPlacesPlace* unity_places_place_file_model_load_place (UnityPlacesPlaceFileModel* self, const char* path);
 void unity_places_place_connect (UnityPlacesPlace* self);
+gboolean unity_places_place_get_online (UnityPlacesPlace* self);
 static void unity_places_place_file_model_load_place_files (UnityPlacesPlaceFileModel* self, GAsyncReadyCallback _callback_, gpointer _user_data_);
 static void unity_places_place_file_model_load_place_files_finish (UnityPlacesPlaceFileModel* self, GAsyncResult* _res_);
 static gboolean unity_places_place_file_model_load_place_files_co (UnityPlacesPlaceFileModelLoadPlaceFilesData* data);
@@ -305,9 +306,11 @@ static gboolean unity_places_place_file_model_load_place_files_co (UnityPlacesPl
 							data->place = (data->_tmp1_ = unity_places_place_file_model_load_place (data->self, data->_tmp0_ = g_build_filename (data->self->priv->_directory, g_file_info_get_name (data->info), NULL)), _g_free0 (data->_tmp0_), data->_tmp1_);
 							if (UNITY_PLACES_IS_PLACE (data->place)) {
 								unity_places_place_connect (data->place);
-								g_object_ref ((data->_tmp2_ = data->place, G_IS_OBJECT (data->_tmp2_) ? ((GObject*) data->_tmp2_) : NULL));
-								gee_abstract_collection_add ((GeeAbstractCollection*) data->self, data->place);
-								g_signal_emit_by_name ((UnityPlacesPlaceModel*) data->self, "place-added", data->place);
+								if (unity_places_place_get_online (data->place) == TRUE) {
+									g_object_ref ((data->_tmp2_ = data->place, G_IS_OBJECT (data->_tmp2_) ? ((GObject*) data->_tmp2_) : NULL));
+									gee_abstract_collection_add ((GeeAbstractCollection*) data->self, data->place);
+									g_signal_emit_by_name ((UnityPlacesPlaceModel*) data->self, "place-added", data->place);
+								}
 							}
 							_g_object_unref0 (data->info);
 							_g_object_unref0 (data->place);

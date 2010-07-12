@@ -1,10 +1,23 @@
-unity (0.2.14-0ubuntu1~lucid1) lucid; urgency=low
+unity (0.2.16-0ubuntu1~lucid1) lucid; urgency=low
 
-  * Backport to lucid UNE ppa
-  * debian/control
-    - recommends ubuntu-netbook-unity-default-settings
+  * Backport to lucid ppa
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 02 Jul 2010 08:18:41 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 12 Jul 2010 16:24:58 +0200
+
+unity (0.2.16-0ubuntu1) maverick; urgency=low
+
+  * New upstream release.
+    - The launcher doesn't list some running softwares (LP: #601082)
+    - Design support for dynamic quicklist items (LP: #597259)
+    - In overlay mode clicking on an app icon should open/focus that appxi
+      (LP: #595130)
+    - Launcher doesnt go away when a full screen app is started (LP: #599422)
+    - Launcher grows beyond desktop bounds (LP: #600686)
+    - Can't focus indicators in places mode (LP: #598363)
+    - Extra file to distribute (LP: #598398)
+    - gtk_menu_popdown: assertion `GTK_IS_MENU (menu)' failed (LP: #599719)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 12 Jul 2010 15:51:11 +0200
 
 unity (0.2.14-0ubuntu1) maverick; urgency=low
 
@@ -24,6 +37,14 @@ unity (0.2.14-0ubuntu1) maverick; urgency=low
     - build-dep on last clutk
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 01 Jul 2010 19:08:22 +0200
+
+unity (0.2.14-0ubuntu1~lucid1) lucid; urgency=low
+
+  * Backport to lucid UNE ppa
+  * debian/control
+    - recommends ubuntu-netbook-unity-default-settings
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 02 Jul 2010 08:18:41 +0200
 
 unity (0.2.12-0ubuntu2) maverick; urgency=low
 
