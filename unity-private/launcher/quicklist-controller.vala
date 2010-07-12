@@ -140,7 +140,7 @@ namespace Unity.Launcher
           menu.remove_all ();
           string label = attached_controller.name;
 
-          var menuitem = new QuicklistMenuItem (label);
+          var menuitem = new QuicklistMenuItem.with_label (label);
           menuitem.activated.connect (() => {
             state = QuicklistControllerState.CLOSED;
           });
@@ -211,8 +211,8 @@ namespace Unity.Launcher
       string label = "UNDEFINED";
       label = dbusmenuitem.property_get (Dbusmenu.MENUITEM_PROP_LABEL);
 
-      var menuitem = new Ctk.MenuItem.with_label (label);
-      //var menuitem = new QuicklistMenuItem (label);
+      //var menuitem = new Ctk.MenuItem.with_label (label);
+      var menuitem = new QuicklistMenuItem.with_label (label);
       menuitem.reactive = true;
       menuitem.activated.connect (() => {
         dbusmenuitem.item_activated (Clutter.get_current_event_time ());

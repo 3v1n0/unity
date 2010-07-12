@@ -138,7 +138,7 @@ namespace Unity.Launcher
   }
 
   // we subclass Ctk.MenuItem here because we need to adapt it's appearance
-  public class QuicklistMenuItem : Ctk.Actor
+  public class QuicklistMenuItem : Ctk.MenuItem
   {
     Ctk.LayerActor item_background;
     int            old_width;
@@ -150,6 +150,7 @@ namespace Unity.Launcher
     {
       this.item_background.paint ();
     }
+
 
     public override void
     get_preferred_height (float     for_width,
@@ -262,7 +263,7 @@ namespace Unity.Launcher
     {
       this.item_background.get_layer(0).set_enabled (false);
       this.item_background.get_layer(1).set_enabled (true);
-      
+
       // Ensure we are associated with a stage before queuing a draw to
       // avoid a rather annoying (but rare) crash in clutter
       if (this.get_stage () is Clutter.Stage)
@@ -289,9 +290,6 @@ namespace Unity.Launcher
       old_label = this.label;
     }
 
-    public signal void activated ();
-    public string label {get; construct;}
-
     private bool _on_mouse_down (Clutter.Event event)
     {
       this.notify["label"].disconnect (this._on_label_changed);
@@ -300,11 +298,6 @@ namespace Unity.Launcher
       this.button_press_event.disconnect (this._on_mouse_down);
       this.activated ();
       return true;
-    }
-
-    public QuicklistMenuItem (string label)
-    {
-      Object (label:label);
     }
 
     ~QuicklistMenuItem ()
@@ -335,6 +328,16 @@ namespace Unity.Launcher
       old_width  = 0;
       old_height = 0;
       old_label  = "";
+    }
+
+    public QuicklistMenuItem ()
+    {
+      Object (label: "");
+    }
+
+    public QuicklistMenuItem.with_label (string label)
+    {
+      Object (label: label);
     }
   }
 
