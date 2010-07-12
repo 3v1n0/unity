@@ -1,4 +1,4 @@
-unity (0.2.16-0ubuntu1) UNRELEASED; urgency=low
+unity (0.2.16-0ubuntu1) maverick; urgency=low
 
   * New upstream release.
     - The launcher doesn't list some running softwares (LP: #601082)
@@ -11,7 +11,7 @@ unity (0.2.16-0ubuntu1) UNRELEASED; urgency=low
     - Extra file to distribute (LP: #598398)
     - gtk_menu_popdown: assertion `GTK_IS_MENU (menu)' failed (LP: #599719)
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 12 Jul 2010 14:43:13 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 12 Jul 2010 15:51:11 +0200
 
 unity (0.2.14-0ubuntu1) maverick; urgency=low
 
