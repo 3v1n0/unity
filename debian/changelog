@@ -1,6 +1,16 @@
 unity (0.2.16-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - The launcher doesn't list some running softwares (LP: #601082)
+    - Design support for dynamic quicklist items (LP: #597259)
+    - In overlay mode clicking on an app icon should open/focus that appxi
+      (LP: #595130)
+    - Launcher doesnt go away when a full screen app is started (LP: #599422)
+    - Launcher grows beyond desktop bounds (LP: #600686)
+    - SIGSEGV in _clutter_stage_has_full_redraw_queued (LP: #595454)
+    - Can't focus indicators in places mode (LP: #598363)
+    - Extra file to distribute (LP: #598398)
+    - gtk_menu_popdown: assertion `GTK_IS_MENU (menu)' failed (LP: #599719)
 
  -- Didier Roche <didrocks@ubuntu.com>  Mon, 12 Jul 2010 14:43:13 +0200
 
