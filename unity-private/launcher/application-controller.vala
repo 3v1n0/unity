@@ -322,24 +322,21 @@ namespace Unity.Launcher
         {
           return null;
         }
-
-
-      debug ("FINDING MENU ACTIONS!!!!!");
-
+        
       // find our desktop shortcuts
       Indicator.DesktopShortcuts shortcuts = new Indicator.DesktopShortcuts (desktop_file, "Unity");
       unowned string [] nicks = shortcuts.get_nicks ();
-
+  
+      if (nicks.length < 1)
+        return null; 
+        
       Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
       root.set_root (true);
 
       foreach (string nick in nicks)
         {
           string local_nick = nick.dup ();
-          debug (@"got nick: $local_nick");
-
           unowned string name = shortcuts.nick_get_name (local_nick);
-          debug (@"got name: $name");
           string local_name = name.dup ();
 
           Dbusmenu.Menuitem shortcut_item = new Dbusmenu.Menuitem ();
