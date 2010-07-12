@@ -176,6 +176,19 @@ typedef struct _UnityCairoCanvas UnityCairoCanvas;
 typedef struct _UnityCairoCanvasClass UnityCairoCanvasClass;
 typedef struct _UnityCairoCanvasPrivate UnityCairoCanvasPrivate;
 
+#define UNITY_TYPE_EXPANDING_BIN_STATE (unity_expanding_bin_state_get_type ())
+
+#define UNITY_TYPE_EXPANDING_BIN (unity_expanding_bin_get_type ())
+#define UNITY_EXPANDING_BIN(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_EXPANDING_BIN, UnityExpandingBin))
+#define UNITY_EXPANDING_BIN_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_EXPANDING_BIN, UnityExpandingBinClass))
+#define UNITY_IS_EXPANDING_BIN(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_EXPANDING_BIN))
+#define UNITY_IS_EXPANDING_BIN_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_EXPANDING_BIN))
+#define UNITY_EXPANDING_BIN_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_EXPANDING_BIN, UnityExpandingBinClass))
+
+typedef struct _UnityExpandingBin UnityExpandingBin;
+typedef struct _UnityExpandingBinClass UnityExpandingBinClass;
+typedef struct _UnityExpandingBinPrivate UnityExpandingBinPrivate;
+
 #define UNITY_TYPE_FAVORITES (unity_favorites_get_type ())
 #define UNITY_FAVORITES(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_FAVORITES, UnityFavorites))
 #define UNITY_FAVORITES_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_FAVORITES, UnityFavoritesClass))
@@ -380,9 +393,11 @@ typedef enum  {
 
 struct _UnityShellIface {
 	GTypeInterface parent_iface;
+	guint32 (*get_current_time) (UnityShell* self);
 	UnityShellMode (*get_mode) (UnityShell* self);
 	ClutterStage* (*get_stage) (UnityShell* self);
 	void (*show_unity) (UnityShell* self);
+	void (*hide_unity) (UnityShell* self);
 	gint (*get_indicators_width) (UnityShell* self);
 	gint (*get_launcher_width_foobar) (UnityShell* self);
 	gint (*get_panel_height_foobar) (UnityShell* self);
@@ -437,6 +452,21 @@ struct _UnityCairoCanvasClass {
 };
 
 typedef void (*UnityCairoCanvasCairoCanvasPaint) (cairo_t* cr, gint width, gint height, void* user_data);
+typedef enum  {
+	UNITY_EXPANDING_BIN_STATE_CLOSED,
+	UNITY_EXPANDING_BIN_STATE_UNEXPANDED,
+	UNITY_EXPANDING_BIN_STATE_EXPANDED
+} UnityExpandingBinState;
+
+struct _UnityExpandingBin {
+	CtkBin parent_instance;
+	UnityExpandingBinPrivate * priv;
+};
+
+struct _UnityExpandingBinClass {
+	CtkBinClass parent_class;
+};
+
 struct _UnityFavorites {
 	GObject parent_instance;
 	UnityFavoritesPrivate * priv;
@@ -606,9 +636,11 @@ UnityQuicklistRenderingMenu* unity_quicklist_rendering_menu_construct (GType obj
 GType unity_shell_mode_get_type (void);
 GType unity_dnd_targets_get_type (void);
 GType unity_shell_get_type (void);
+guint32 unity_shell_get_current_time (UnityShell* self);
 UnityShellMode unity_shell_get_mode (UnityShell* self);
 ClutterStage* unity_shell_get_stage (UnityShell* self);
 void unity_shell_show_unity (UnityShell* self);
+void unity_shell_hide_unity (UnityShell* self);
 gint unity_shell_get_indicators_width (UnityShell* self);
 gint unity_shell_get_launcher_width_foobar (UnityShell* self);
 gint unity_shell_get_panel_height_foobar (UnityShell* self);
@@ -645,6 +677,17 @@ GType unity_cairo_canvas_get_type (void);
 UnityCairoCanvas* unity_cairo_canvas_new (UnityCairoCanvasCairoCanvasPaint _func, void* _func_target);
 UnityCairoCanvas* unity_cairo_canvas_construct (GType object_type, UnityCairoCanvasCairoCanvasPaint _func, void* _func_target);
 void unity_cairo_canvas_update (UnityCairoCanvas* self);
+GType unity_expanding_bin_state_get_type (void);
+GType unity_expanding_bin_get_type (void);
+#define UNITY_EXPANDING_BIN_ANIMATION_TIME 200
+UnityExpandingBin* unity_expanding_bin_new (void);
+UnityExpandingBin* unity_expanding_bin_construct (GType object_type);
+float unity_expanding_bin_get_size_factor (UnityExpandingBin* self);
+void unity_expanding_bin_set_size_factor (UnityExpandingBin* self, float value);
+UnityExpandingBinState unity_expanding_bin_get_bin_state (UnityExpandingBin* self);
+void unity_expanding_bin_set_bin_state (UnityExpandingBin* self, UnityExpandingBinState value);
+float unity_expanding_bin_get_unexpanded_height (UnityExpandingBin* self);
+void unity_expanding_bin_set_unexpanded_height (UnityExpandingBin* self, float value);
 GType unity_favorites_get_type (void);
 extern UnityFavorites* unity_favorites_singleton;
 UnityFavorites* unity_favorites_get_default (void);

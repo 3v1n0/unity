@@ -764,12 +764,12 @@ struct _UnityPlacesControllerClass {
 };
 
 struct _UnityPlacesDefaultRendererGroup {
-	CtkBox parent_instance;
+	UnityExpandingBin parent_instance;
 	UnityPlacesDefaultRendererGroupPrivate * priv;
 };
 
 struct _UnityPlacesDefaultRendererGroupClass {
-	CtkBoxClass parent_class;
+	UnityExpandingBinClass parent_class;
 };
 
 struct _UnityPlacesTile {
@@ -1292,6 +1292,7 @@ DeeModel* unity_places_default_renderer_group_get_results (UnityPlacesDefaultRen
 GType unity_places_tile_get_type (void);
 UnityPlacesTile* unity_places_tile_new (DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 UnityPlacesTile* unity_places_tile_construct (GType object_type, DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
+void unity_places_tile_about_to_show (UnityPlacesTile* self);
 DeeModelIter* unity_places_tile_get_iter (UnityPlacesTile* self);
 const char* unity_places_tile_get_display_name (UnityPlacesTile* self);
 const char* unity_places_tile_get_icon_hint (UnityPlacesTile* self);
@@ -1397,6 +1398,7 @@ void unity_places_place_set_online (UnityPlacesPlace* self, gboolean value);
 GType unity_places_place_search_bar_get_type (void);
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_new (void);
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_construct (GType object_type);
+void unity_places_place_search_bar_reset (UnityPlacesPlaceSearchBar* self);
 void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearchBar* self, UnityPlacesPlaceEntry* entry, gint x);
 GType unity_places_place_search_bar_background_get_type (void);
 #define UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_BG "/usr/share/unity/dash_background.png"
@@ -1409,6 +1411,7 @@ void unity_places_place_search_bar_background_set_entry_position (UnityPlacesPla
 UnityPlacesPlaceSearchEntry* unity_places_place_search_bar_background_get_search_entry (UnityPlacesPlaceSearchBarBackground* self);
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_new (void);
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_construct (GType object_type);
+void unity_places_place_search_entry_reset (UnityPlacesPlaceSearchEntry* self);
 GType unity_places_place_search_sections_bar_get_type (void);
 UnityPlacesPlaceSearchSectionsBar* unity_places_place_search_sections_bar_new (void);
 UnityPlacesPlaceSearchSectionsBar* unity_places_place_search_sections_bar_construct (GType object_type);

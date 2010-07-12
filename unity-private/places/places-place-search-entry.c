@@ -26,6 +26,7 @@
 #include <unity.h>
 #include <stdlib.h>
 #include <string.h>
+#include <glib/gi18n-lib.h>
 #include <float.h>
 #include <math.h>
 #include <clutter/clutter.h>
@@ -71,7 +72,7 @@ enum  {
 };
 #define UNITY_PLACES_PLACE_SEARCH_ENTRY_SEARCH_ICON_FILE PKGDATADIR "/search_icon.png"
 #define UNITY_PLACES_PLACE_SEARCH_ENTRY_PADDING 1.0f
-#define UNITY_PLACES_PLACE_SEARCH_ENTRY_LIVE_SEARCH_TIMEOUT 300
+#define UNITY_PLACES_PLACE_SEARCH_ENTRY_LIVE_SEARCH_TIMEOUT 200
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_new (void);
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_construct (GType object_type);
 static void unity_places_place_search_entry_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height, float* nat_height);
@@ -80,6 +81,7 @@ static gboolean __lambda7__gsource_func (gpointer self);
 static void unity_places_place_search_entry_on_text_changed (UnityPlacesPlaceSearchEntry* self);
 static void unity_places_place_search_entry_on_key_focus_in (UnityPlacesPlaceSearchEntry* self);
 static void unity_places_place_search_entry_on_key_focus_out (UnityPlacesPlaceSearchEntry* self);
+void unity_places_place_search_entry_reset (UnityPlacesPlaceSearchEntry* self);
 static void _unity_places_place_search_entry_on_text_changed_clutter_text_text_changed (ClutterText* _sender, gpointer self);
 static void _unity_places_place_search_entry_on_key_focus_in_clutter_actor_key_focus_in (ClutterActor* _sender, gpointer self);
 static void _unity_places_place_search_entry_on_key_focus_out_clutter_actor_key_focus_out (ClutterActor* _sender, gpointer self);
@@ -123,7 +125,14 @@ static void unity_places_place_search_entry_real_get_preferred_height (ClutterAc
 
 static gboolean _lambda7_ (UnityPlacesPlaceSearchEntry* self) {
 	gboolean result = FALSE;
-	g_signal_emit_by_name (self, "text-changed", clutter_text_get_text ((ClutterText*) self->text));
+	const char* _tmp0_;
+	_tmp0_ = NULL;
+	if (_vala_strcmp0 (clutter_text_get_text ((ClutterText*) self->text), self->priv->_static_text) == 0) {
+		_tmp0_ = "";
+	} else {
+		_tmp0_ = clutter_text_get_text ((ClutterText*) self->text);
+	}
+	g_signal_emit_by_name (self, "text-changed", _tmp0_);
 	self->priv->live_search_timeout = (guint) 0;
 	result = FALSE;
 	return result;
@@ -147,14 +156,13 @@ static void unity_places_place_search_entry_on_text_changed (UnityPlacesPlaceSea
 
 
 static void unity_places_place_search_entry_on_key_focus_in (UnityPlacesPlaceSearchEntry* self) {
+	ClutterColor _tmp0_;
 	g_return_if_fail (self != NULL);
 	if (_vala_strcmp0 (clutter_text_get_text ((ClutterText*) self->text), self->priv->_static_text) == 0) {
-		ClutterColor _tmp0_;
 		clutter_text_set_text ((ClutterText*) self->text, "");
-		clutter_text_set_cursor_visible ((ClutterText*) self->text, TRUE);
-		clutter_text_set_selection ((ClutterText*) self->text, (gssize) 0, (gssize) (-1));
-		clutter_text_set_color ((ClutterText*) self->text, (_tmp0_ = UNITY_PLACES_PLACE_SEARCH_ENTRY_focus_color, &_tmp0_));
 	}
+	clutter_text_set_cursor_visible ((ClutterText*) self->text, TRUE);
+	clutter_text_set_color ((ClutterText*) self->text, (_tmp0_ = UNITY_PLACES_PLACE_SEARCH_ENTRY_focus_color, &_tmp0_));
 }
 
 
@@ -162,8 +170,16 @@ static void unity_places_place_search_entry_on_key_focus_out (UnityPlacesPlaceSe
 	ClutterColor _tmp0_;
 	g_return_if_fail (self != NULL);
 	clutter_text_set_cursor_visible ((ClutterText*) self->text, FALSE);
-	clutter_text_set_text ((ClutterText*) self->text, self->priv->_static_text);
 	clutter_text_set_color ((ClutterText*) self->text, (_tmp0_ = UNITY_PLACES_PLACE_SEARCH_ENTRY_nofocus_color, &_tmp0_));
+}
+
+
+void unity_places_place_search_entry_reset (UnityPlacesPlaceSearchEntry* self) {
+	ClutterColor _tmp0_;
+	g_return_if_fail (self != NULL);
+	clutter_text_set_cursor_visible ((ClutterText*) self->text, FALSE);
+	clutter_text_set_color ((ClutterText*) self->text, (_tmp0_ = UNITY_PLACES_PLACE_SEARCH_ENTRY_nofocus_color, &_tmp0_));
+	clutter_text_set_text ((ClutterText*) self->text, self->priv->_static_text);
 }
 
 
@@ -234,7 +250,7 @@ static void unity_places_place_search_entry_class_init (UnityPlacesPlaceSearchEn
 static void unity_places_place_search_entry_instance_init (UnityPlacesPlaceSearchEntry * self) {
 	self->priv = UNITY_PLACES_PLACE_SEARCH_ENTRY_GET_PRIVATE (self);
 	self->priv->live_search_timeout = (guint) 0;
-	self->priv->_static_text = g_strdup ("Search");
+	self->priv->_static_text = g_strdup (_ ("Search"));
 }
 
 
