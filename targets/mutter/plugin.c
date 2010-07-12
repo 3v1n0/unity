@@ -256,6 +256,7 @@ static void _unity_plugin_on_focus_window_fullscreen_changed_g_object_notify (GO
 static void unity_plugin_on_focus_window_changed (UnityPlugin* self);
 static void unity_plugin_set_fullscreen_obstruction (UnityPlugin* self, gboolean value);
 static void unity_plugin_got_screensaver_changed (UnityPlugin* self, DBusGProxy* screensaver, gboolean changed);
+static guint32 unity_plugin_real_get_current_time (UnityShell* base);
 static void unity_plugin_real_add_fullscreen_request (UnityShell* base, GObject* o);
 static gboolean unity_plugin_real_remove_fullscreen_request (UnityShell* base, GObject* o);
 static gboolean unity_plugin_get_fullscreen_obstruction (UnityPlugin* self);
@@ -277,6 +278,7 @@ static void _lambda8_ (ClutterAnimation* an, UnityPlugin* self);
 static void __lambda8__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static void _lambda9_ (ClutterAnimation* an, UnityPlugin* self);
 static void __lambda9__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
+static void unity_plugin_real_hide_unity (UnityShell* base);
 static void unity_plugin_real_show_unity (UnityShell* base);
 static void unity_plugin_real_about_to_show_places (UnityShell* base);
 static void unity_plugin_real_grab_keyboard (UnityShell* base, gboolean grab, guint32 timestamp);
@@ -630,6 +632,15 @@ static void unity_plugin_got_screensaver_changed (UnityPlugin* self, DBusGProxy*
 		clutter_actor_show ((ClutterActor*) self->priv->panel);
 		unity_plugin_set_fullscreen_obstruction (self, FALSE);
 	}
+}
+
+
+static guint32 unity_plugin_real_get_current_time (UnityShell* base) {
+	UnityPlugin * self;
+	guint32 result = 0U;
+	self = (UnityPlugin*) base;
+	result = meta_display_get_current_time (meta_screen_get_display (mutter_plugin_get_screen (unity_plugin_get_plugin (self))));
+	return result;
 }
 
 
@@ -1011,31 +1022,47 @@ static void __lambda9__clutter_animation_completed (ClutterAnimation* _sender, g
 }
 
 
+static void unity_plugin_real_hide_unity (UnityShell* base) {
+	UnityPlugin * self;
+	ClutterAnimation* anim;
+	ClutterAnimation* _tmp0_;
+	self = (UnityPlugin*) base;
+	if (self->priv->places_showing == FALSE) {
+		return;
+	}
+	self->priv->places_showing = FALSE;
+	anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->dark_box, (gulong) CLUTTER_EASE_IN_QUAD, (guint) 100, "opacity", 0, NULL));
+	g_signal_connect_object (anim, "completed", (GCallback) __lambda8__clutter_animation_completed, self, 0);
+	clutter_actor_animate (mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self)), (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 100, "opacity", 255, NULL);
+	anim = (_tmp0_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->places, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 100, "opacity", 0, NULL)), _g_object_unref0 (anim), _tmp0_);
+	g_signal_connect_object (anim, "completed", (GCallback) __lambda9__clutter_animation_completed, self, 0);
+	unity_panel_view_set_indicator_mode (self->priv->panel, FALSE);
+	unity_shell_ensure_input_region ((UnityShell*) self);
+	while (TRUE) {
+		if (!gtk_events_pending ()) {
+			break;
+		}
+		gtk_main_iteration ();
+	}
+	_g_object_unref0 (anim);
+}
+
+
 static void unity_plugin_real_show_unity (UnityShell* base) {
 	UnityPlugin * self;
 	self = (UnityPlugin*) base;
 	if (self->priv->places_showing) {
-		ClutterAnimation* anim;
-		ClutterAnimation* _tmp0_;
-		self->priv->places_showing = FALSE;
-		anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->dark_box, (gulong) CLUTTER_EASE_IN_QUAD, (guint) 100, "opacity", 0, NULL));
-		g_signal_connect_object (anim, "completed", (GCallback) __lambda8__clutter_animation_completed, self, 0);
-		clutter_actor_animate (mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self)), (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 100, "opacity", 255, NULL);
-		anim = (_tmp0_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->places, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 100, "opacity", 0, NULL)), _g_object_unref0 (anim), _tmp0_);
-		g_signal_connect_object (anim, "completed", (GCallback) __lambda9__clutter_animation_completed, self, 0);
-		unity_panel_view_set_indicator_mode (self->priv->panel, FALSE);
-		unity_shell_ensure_input_region ((UnityShell*) self);
-		_g_object_unref0 (anim);
+		unity_shell_hide_unity ((UnityShell*) self);
 	} else {
-		ClutterRectangle* _tmp3_;
-		ClutterColor _tmp2_;
-		ClutterColor _tmp1_ = {0};
-		ClutterActor* _tmp4_;
+		ClutterRectangle* _tmp2_;
+		ClutterColor _tmp1_;
+		ClutterColor _tmp0_ = {0};
+		ClutterActor* _tmp3_;
 		self->priv->places_showing = TRUE;
 		clutter_actor_show ((ClutterActor*) self->priv->places);
 		clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 0);
-		self->priv->dark_box = (_tmp3_ = g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color ((_tmp2_ = (_tmp1_.red = (guint8) 0, _tmp1_.green = (guint8) 0, _tmp1_.blue = (guint8) 0, _tmp1_.alpha = (guint8) 255, _tmp1_), &_tmp2_))), _g_object_unref0 (self->priv->dark_box), _tmp3_);
-		clutter_container_add_actor ((_tmp4_ = mutter_plugin_get_window_group (unity_plugin_get_plugin (self)), CLUTTER_IS_CONTAINER (_tmp4_) ? ((ClutterContainer*) _tmp4_) : NULL), (ClutterActor*) self->priv->dark_box);
+		self->priv->dark_box = (_tmp2_ = g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color ((_tmp1_ = (_tmp0_.red = (guint8) 0, _tmp0_.green = (guint8) 0, _tmp0_.blue = (guint8) 0, _tmp0_.alpha = (guint8) 255, _tmp0_), &_tmp1_))), _g_object_unref0 (self->priv->dark_box), _tmp2_);
+		clutter_container_add_actor ((_tmp3_ = mutter_plugin_get_window_group (unity_plugin_get_plugin (self)), CLUTTER_IS_CONTAINER (_tmp3_) ? ((ClutterContainer*) _tmp3_) : NULL), (ClutterActor*) self->priv->dark_box);
 		clutter_actor_raise ((ClutterActor*) self->priv->dark_box, mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self)));
 		clutter_actor_set_position ((ClutterActor*) self->priv->dark_box, (float) 0, (float) 0);
 		clutter_actor_set_size ((ClutterActor*) self->priv->dark_box, clutter_actor_get_width ((ClutterActor*) self->priv->stage), clutter_actor_get_height ((ClutterActor*) self->priv->stage));
@@ -1353,6 +1380,7 @@ static void unity_plugin_class_init (UnityPluginClass * klass) {
 
 static void unity_plugin_unity_shell_interface_init (UnityShellIface * iface) {
 	unity_plugin_unity_shell_parent_iface = g_type_interface_peek_parent (iface);
+	iface->get_current_time = unity_plugin_real_get_current_time;
 	iface->add_fullscreen_request = unity_plugin_real_add_fullscreen_request;
 	iface->remove_fullscreen_request = unity_plugin_real_remove_fullscreen_request;
 	iface->ensure_input_region = unity_plugin_real_ensure_input_region;
@@ -1363,6 +1391,7 @@ static void unity_plugin_unity_shell_interface_init (UnityShellIface * iface) {
 	iface->show_window = unity_plugin_real_show_window;
 	iface->get_mode = unity_plugin_real_get_mode;
 	iface->get_indicators_width = unity_plugin_real_get_indicators_width;
+	iface->hide_unity = unity_plugin_real_hide_unity;
 	iface->show_unity = unity_plugin_real_show_unity;
 	iface->about_to_show_places = unity_plugin_real_about_to_show_places;
 	iface->grab_keyboard = unity_plugin_real_grab_keyboard;

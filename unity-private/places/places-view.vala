@@ -52,7 +52,10 @@ namespace Unity.Places
     public void about_to_show ()
     {
       if (_model is PlaceFileModel)
-        return;
+        {
+          search_bar.reset ();
+          return;
+        }
 
       _model = new PlaceFileModel () as PlaceModel;
 

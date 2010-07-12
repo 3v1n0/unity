@@ -156,6 +156,11 @@ namespace Unity.Testing
 
       END_FUNCTION ();
     }
+    
+    public uint32 get_current_time ()
+    {
+      return Clutter.get_current_event_time ();
+    }
 
     public void init_test_mode ()
     {
@@ -300,16 +305,29 @@ namespace Unity.Testing
         {
           this.showing_places = false;
           this.panel.set_indicator_mode (true);
+          this.background.opacity = 160;
           this.places.opacity = 255;
         }
       else
         {
           this.showing_places = true;
           this.panel.set_indicator_mode (false);
+          this.background.opacity = 255;
           this.places.opacity = 0;
         }
 
       this.places.do_queue_redraw ();
+    }
+
+    public void hide_unity ()
+    {
+      if (showing_places == false)
+        {
+          showing_places = true;
+          panel.set_indicator_mode (false);
+          background.opacity = 255;
+          places.opacity = 0;
+        }
     }
 
     public void about_to_show_places ()

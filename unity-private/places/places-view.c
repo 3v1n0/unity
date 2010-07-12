@@ -166,6 +166,7 @@ enum  {
 UnityPlacesView* unity_places_view_new (UnityShell* shell);
 UnityPlacesView* unity_places_view_construct (GType object_type, UnityShell* shell);
 GType unity_places_place_file_model_get_type (void);
+void unity_places_place_search_bar_reset (UnityPlacesPlaceSearchBar* self);
 UnityPlacesPlaceFileModel* unity_places_place_file_model_new (void);
 UnityPlacesPlaceFileModel* unity_places_place_file_model_construct (GType object_type);
 UnityShell* unity_places_view_get_shell (UnityPlacesView* self);
@@ -224,6 +225,7 @@ void unity_places_view_about_to_show (UnityPlacesView* self) {
 	UnityPlacesPlaceSearchBar* _tmp6_;
 	g_return_if_fail (self != NULL);
 	if (UNITY_PLACES_IS_PLACE_FILE_MODEL (self->priv->_model)) {
+		unity_places_place_search_bar_reset (self->priv->search_bar);
 		return;
 	}
 	self->priv->_model = (_tmp1_ = (_tmp0_ = unity_places_place_file_model_new (), UNITY_PLACES_IS_PLACE_MODEL (_tmp0_) ? ((UnityPlacesPlaceModel*) _tmp0_) : NULL), _g_object_unref0 (self->priv->_model), _tmp1_);

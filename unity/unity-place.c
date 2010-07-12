@@ -568,10 +568,10 @@ UnityPlaceController* unity_place_controller_new (const char* dbus_path);
 UnityPlaceController* unity_place_controller_construct (GType object_type, const char* dbus_path);
 static void unity_place_controller_on_entry_changed (UnityPlaceController* self, GObject* obj, GParamSpec* psec);
 static void _unity_place_controller_on_entry_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
-static void _lambda1_ (GObject* obj, GParamSpec* pspec, Block1Data* _data1_);
-static void __lambda1__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static void _lambda2_ (GObject* obj, GParamSpec* pspec, Block1Data* _data1_);
 static void __lambda2__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _lambda3_ (GObject* obj, GParamSpec* pspec, Block1Data* _data1_);
+static void __lambda3__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static Block1Data* block1_data_ref (Block1Data* _data1_);
 static void block1_data_unref (Block1Data* _data1_);
 void unity_place_controller_add_entry (UnityPlaceController* self, UnityPlaceEntryInfo* entry);
@@ -4355,7 +4355,7 @@ void unity_place_service_impl_add_entry (UnityPlaceServiceImpl* self, UnityPlace
 			unity_place_entry_service_impl_export (entry, &_inner_error_);
 			if (_inner_error_ != NULL) {
 				if (_inner_error_->domain == DBUS_GERROR) {
-					goto __catch29_dbus_gerror;
+					goto __catch30_dbus_gerror;
 				}
 				_g_object_unref0 (entry);
 				g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -4363,8 +4363,8 @@ void unity_place_service_impl_add_entry (UnityPlaceServiceImpl* self, UnityPlace
 				return;
 			}
 		}
-		goto __finally29;
-		__catch29_dbus_gerror:
+		goto __finally30;
+		__catch30_dbus_gerror:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -4374,7 +4374,7 @@ void unity_place_service_impl_add_entry (UnityPlaceServiceImpl* self, UnityPlace
 				_g_error_free0 (e);
 			}
 		}
-		__finally29:
+		__finally30:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (entry);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -4483,7 +4483,7 @@ void unity_place_service_impl_remove_entry (UnityPlaceServiceImpl* self, const c
 			unity_place_entry_service_impl_unexport (entry, &_inner_error_);
 			if (_inner_error_ != NULL) {
 				if (_inner_error_->domain == DBUS_GERROR) {
-					goto __catch30_dbus_gerror;
+					goto __catch31_dbus_gerror;
 				}
 				_g_object_unref0 (entry);
 				g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -4491,8 +4491,8 @@ void unity_place_service_impl_remove_entry (UnityPlaceServiceImpl* self, const c
 				return;
 			}
 		}
-		goto __finally30;
-		__catch30_dbus_gerror:
+		goto __finally31;
+		__catch31_dbus_gerror:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -4502,7 +4502,7 @@ void unity_place_service_impl_remove_entry (UnityPlaceServiceImpl* self, const c
 				_g_error_free0 (e);
 			}
 		}
-		__finally30:
+		__finally31:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (entry);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -5057,7 +5057,7 @@ static void _unity_place_controller_on_entry_changed_g_object_notify (GObject* _
 }
 
 
-static void _lambda1_ (GObject* obj, GParamSpec* pspec, Block1Data* _data1_) {
+static void _lambda2_ (GObject* obj, GParamSpec* pspec, Block1Data* _data1_) {
 	UnityPlaceController * self;
 	GObject* _tmp0_;
 	UnityPlaceRendererInfo* renderer_info;
@@ -5082,12 +5082,12 @@ static void _lambda1_ (GObject* obj, GParamSpec* pspec, Block1Data* _data1_) {
 }
 
 
-static void __lambda1__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda1_ (_sender, pspec, self);
+static void __lambda2__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda2_ (_sender, pspec, self);
 }
 
 
-static void _lambda2_ (GObject* obj, GParamSpec* pspec, Block1Data* _data1_) {
+static void _lambda3_ (GObject* obj, GParamSpec* pspec, Block1Data* _data1_) {
 	UnityPlaceController * self;
 	GObject* _tmp0_;
 	UnityPlaceRendererInfo* renderer_info;
@@ -5112,8 +5112,8 @@ static void _lambda2_ (GObject* obj, GParamSpec* pspec, Block1Data* _data1_) {
 }
 
 
-static void __lambda2__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda2_ (_sender, pspec, self);
+static void __lambda3__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda3_ (_sender, pspec, self);
 }
 
 
@@ -5149,8 +5149,8 @@ void unity_place_controller_add_entry (UnityPlaceController* self, UnityPlaceEnt
 	unity_place_service_impl_add_entry (self->priv->service, _data1_->entry);
 	memset (&signals, 0, sizeof (UnityPlace_EntrySignals));
 	signals.place_entry_info_changed_id = g_signal_connect_object ((GObject*) _data1_->entry, "notify", (GCallback) _unity_place_controller_on_entry_changed_g_object_notify, self, 0);
-	signals.entry_renderer_info_changed_id = g_signal_connect_data ((GObject*) unity_place_entry_info_get_entry_renderer_info (_data1_->entry), "notify", (GCallback) __lambda1__g_object_notify, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
-	signals.global_renderer_info_changed_id = g_signal_connect_data ((GObject*) unity_place_entry_info_get_global_renderer_info (_data1_->entry), "notify", (GCallback) __lambda2__g_object_notify, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
+	signals.entry_renderer_info_changed_id = g_signal_connect_data ((GObject*) unity_place_entry_info_get_entry_renderer_info (_data1_->entry), "notify", (GCallback) __lambda2__g_object_notify, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
+	signals.global_renderer_info_changed_id = g_signal_connect_data ((GObject*) unity_place_entry_info_get_global_renderer_info (_data1_->entry), "notify", (GCallback) __lambda3__g_object_notify, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
 	g_hash_table_insert (self->priv->entry_signals, g_strdup (unity_place_entry_info_get_dbus_path (_data1_->entry)), _unity_place__entrysignals_dup0 (&signals));
 	block1_data_unref (_data1_);
 }

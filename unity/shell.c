@@ -52,9 +52,11 @@ typedef enum  {
 
 struct _UnityShellIface {
 	GTypeInterface parent_iface;
+	guint32 (*get_current_time) (UnityShell* self);
 	UnityShellMode (*get_mode) (UnityShell* self);
 	ClutterStage* (*get_stage) (UnityShell* self);
 	void (*show_unity) (UnityShell* self);
+	void (*hide_unity) (UnityShell* self);
 	gint (*get_indicators_width) (UnityShell* self);
 	gint (*get_launcher_width_foobar) (UnityShell* self);
 	gint (*get_panel_height_foobar) (UnityShell* self);
@@ -77,9 +79,11 @@ UnityShell* unity_global_shell = NULL;
 GType unity_shell_mode_get_type (void);
 GType unity_dnd_targets_get_type (void);
 GType unity_shell_get_type (void);
+guint32 unity_shell_get_current_time (UnityShell* self);
 UnityShellMode unity_shell_get_mode (UnityShell* self);
 ClutterStage* unity_shell_get_stage (UnityShell* self);
 void unity_shell_show_unity (UnityShell* self);
+void unity_shell_hide_unity (UnityShell* self);
 gint unity_shell_get_indicators_width (UnityShell* self);
 gint unity_shell_get_launcher_width_foobar (UnityShell* self);
 gint unity_shell_get_panel_height_foobar (UnityShell* self);
@@ -120,6 +124,11 @@ GType unity_dnd_targets_get_type (void) {
 }
 
 
+guint32 unity_shell_get_current_time (UnityShell* self) {
+	return UNITY_SHELL_GET_INTERFACE (self)->get_current_time (self);
+}
+
+
 UnityShellMode unity_shell_get_mode (UnityShell* self) {
 	return UNITY_SHELL_GET_INTERFACE (self)->get_mode (self);
 }
@@ -132,6 +141,11 @@ ClutterStage* unity_shell_get_stage (UnityShell* self) {
 
 void unity_shell_show_unity (UnityShell* self) {
 	UNITY_SHELL_GET_INTERFACE (self)->show_unity (self);
+}
+
+
+void unity_shell_hide_unity (UnityShell* self) {
+	UNITY_SHELL_GET_INTERFACE (self)->hide_unity (self);
 }
 
 

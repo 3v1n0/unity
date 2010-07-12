@@ -22,15 +22,15 @@
 
 #include <glib.h>
 #include <glib-object.h>
-#include <clutk/clutk.h>
+#include <unity.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dee.h>
+#include <clutk/clutk.h>
 #include <float.h>
 #include <math.h>
 #include <clutter/clutter.h>
 #include <gio/gio.h>
-#include <unity.h>
 #include <gtk/gtk.h>
 #include <gdk/gdk.h>
 #include <pango/pango.h>
@@ -64,12 +64,12 @@ typedef struct _UnityPlacesTilePrivate UnityPlacesTilePrivate;
 typedef struct _UnityPlacesTileClickedHandlerData UnityPlacesTileClickedHandlerData;
 
 struct _UnityPlacesDefaultRendererGroup {
-	CtkBox parent_instance;
+	UnityExpandingBin parent_instance;
 	UnityPlacesDefaultRendererGroupPrivate * priv;
 };
 
 struct _UnityPlacesDefaultRendererGroupClass {
-	CtkBoxClass parent_class;
+	UnityExpandingBinClass parent_class;
 };
 
 struct _UnityPlacesDefaultRendererGroupPrivate {
@@ -78,11 +78,14 @@ struct _UnityPlacesDefaultRendererGroupPrivate {
 	char* _display_name;
 	char* _icon_hint;
 	DeeModel* _results;
+	CtkVBox* vbox;
 	CtkHBox* title_box;
 	CtkImage* icon;
 	CtkText* text;
 	CtkImage* expander;
 	CtkIconView* renderer;
+	guint n_results;
+	gboolean dirty;
 };
 
 struct _UnityPlacesTile {
@@ -101,6 +104,7 @@ struct _UnityPlacesTilePrivate {
 	char* _uri;
 	char* _mimetype;
 	char* _comment;
+	gboolean shown;
 };
 
 struct _UnityPlacesTileClickedHandlerData {
@@ -108,12 +112,11 @@ struct _UnityPlacesTileClickedHandlerData {
 	GAsyncResult* _res_;
 	GSimpleAsyncResult* _async_result;
 	UnityPlacesTile* self;
-	char* _tmp0_;
 	char* id;
 	GAppInfo* info;
 	UnityAppInfoManager* appinfos;
+	GAppInfo* _tmp0_;
 	GAppInfo* _tmp1_;
-	GAppInfo* _tmp2_;
 	GError * ee;
 	GError * e;
 	GError * eee;
@@ -134,20 +137,23 @@ enum  {
 	UNITY_PLACES_DEFAULT_RENDERER_GROUP_ICON_HINT,
 	UNITY_PLACES_DEFAULT_RENDERER_GROUP_RESULTS
 };
-#define UNITY_PLACES_DEFAULT_RENDERER_GROUP_PADDING 0.0f
+#define UNITY_PLACES_DEFAULT_RENDERER_GROUP_PADDING 24.0f
 #define UNITY_PLACES_DEFAULT_RENDERER_GROUP_SPACING 0
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_new (guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_construct (GType object_type, guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
-static void unity_places_default_renderer_group_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height, float* nat_height);
+static void unity_places_default_renderer_group_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
 static gboolean unity_places_default_renderer_group_interesting (UnityPlacesDefaultRendererGroup* self, DeeModelIter* iter);
 DeeModel* unity_places_default_renderer_group_get_results (UnityPlacesDefaultRendererGroup* self);
 UnityPlacesTile* unity_places_tile_new (DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 UnityPlacesTile* unity_places_tile_construct (GType object_type, DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 GType unity_places_tile_get_type (void);
+static void unity_places_default_renderer_group_add_to_n_results (UnityPlacesDefaultRendererGroup* self, gint i);
 static void unity_places_default_renderer_group_on_result_added (UnityPlacesDefaultRendererGroup* self, DeeModelIter* iter);
 DeeModelIter* unity_places_tile_get_iter (UnityPlacesTile* self);
 static void unity_places_default_renderer_group_on_result_removed (UnityPlacesDefaultRendererGroup* self, DeeModelIter* iter);
 guint unity_places_default_renderer_group_get_group_id (UnityPlacesDefaultRendererGroup* self);
+void unity_places_tile_about_to_show (UnityPlacesTile* self);
+static void unity_places_default_renderer_group_on_n_cols_changed (UnityPlacesDefaultRendererGroup* self);
 static void unity_places_default_renderer_group_set_group_id (UnityPlacesDefaultRendererGroup* self, guint value);
 const char* unity_places_default_renderer_group_get_group_renderer (UnityPlacesDefaultRendererGroup* self);
 static void unity_places_default_renderer_group_set_group_renderer (UnityPlacesDefaultRendererGroup* self, const char* value);
@@ -156,6 +162,11 @@ static void unity_places_default_renderer_group_set_display_name (UnityPlacesDef
 const char* unity_places_default_renderer_group_get_icon_hint (UnityPlacesDefaultRendererGroup* self);
 static void unity_places_default_renderer_group_set_icon_hint (UnityPlacesDefaultRendererGroup* self, const char* value);
 static void unity_places_default_renderer_group_set_results (UnityPlacesDefaultRendererGroup* self, DeeModel* value);
+static gboolean _lambda8_ (UnityPlacesDefaultRendererGroup* self);
+static gboolean __lambda8__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _lambda9_ (UnityPlacesDefaultRendererGroup* self);
+static gboolean __lambda9__clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static void _unity_places_default_renderer_group_on_n_cols_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static void _unity_places_default_renderer_group_on_result_added_dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self);
 static void _unity_places_default_renderer_group_on_result_removed_dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self);
 static GObject * unity_places_default_renderer_group_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -174,6 +185,8 @@ enum  {
 };
 #define UNITY_PLACES_TILE_ICON_SIZE 48
 #define UNITY_PLACES_TILE_DEFAULT_ICON "text-x-preview"
+const char* unity_places_tile_get_display_name (UnityPlacesTile* self);
+static void unity_places_tile_set_icon (UnityPlacesTile* self);
 static void unity_places_tile_real_get_preferred_width (ClutterActor* base, float for_height, float* mwidth, float* nwidth);
 static void unity_places_tile_clicked_handler (UnityPlacesTile* self, GAsyncReadyCallback _callback_, gpointer _user_data_);
 static void unity_places_tile_clicked_handler_finish (UnityPlacesTile* self, GAsyncResult* _res_);
@@ -184,9 +197,7 @@ const char* unity_places_tile_get_uri (UnityPlacesTile* self);
 static gboolean unity_places_tile_clicked_handler_co (UnityPlacesTileClickedHandlerData* data);
 const char* unity_places_tile_get_icon_hint (UnityPlacesTile* self);
 const char* unity_places_tile_get_mimetype (UnityPlacesTile* self);
-static void unity_places_tile_set_icon (UnityPlacesTile* self);
 static void unity_places_tile_set_iter (UnityPlacesTile* self, DeeModelIter* value);
-const char* unity_places_tile_get_display_name (UnityPlacesTile* self);
 static void unity_places_tile_set_display_name (UnityPlacesTile* self, const char* value);
 static void unity_places_tile_set_icon_hint (UnityPlacesTile* self, const char* value);
 static void unity_places_tile_set_uri (UnityPlacesTile* self, const char* value);
@@ -217,20 +228,31 @@ UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_new (guint 
 }
 
 
-static void unity_places_default_renderer_group_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height, float* nat_height) {
+static gpointer _g_object_ref0 (gpointer self) {
+	return self ? g_object_ref (self) : NULL;
+}
+
+
+static void unity_places_default_renderer_group_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
 	UnityPlacesDefaultRendererGroup * self;
 	GList* children;
+	ClutterActor* _tmp0_;
+	ClutterActor* child;
+	gboolean _tmp1_ = FALSE;
 	self = (UnityPlacesDefaultRendererGroup*) base;
+	CLUTTER_ACTOR_CLASS (unity_places_default_renderer_group_parent_class)->allocate ((ClutterActor*) UNITY_EXPANDING_BIN (self), box, flags);
 	children = clutter_container_get_children ((ClutterContainer*) self->priv->renderer);
-	if (g_list_length (children) > 0) {
-		CLUTTER_ACTOR_CLASS (unity_places_default_renderer_group_parent_class)->get_preferred_height ((ClutterActor*) CTK_BOX (self), for_width, min_height, nat_height);
-		clutter_actor_show ((ClutterActor*) self);
+	child = _g_object_ref0 ((_tmp0_ = (ClutterActor*) g_list_nth_data (children, (guint) 0), CLUTTER_IS_ACTOR (_tmp0_) ? ((ClutterActor*) _tmp0_) : NULL));
+	if (CLUTTER_IS_ACTOR (child)) {
+		_tmp1_ = clutter_actor_get_height (child) != unity_expanding_bin_get_unexpanded_height ((UnityExpandingBin*) self);
 	} else {
-		*min_height = (float) 0;
-		*nat_height = (float) 0;
-		clutter_actor_hide ((ClutterActor*) self);
+		_tmp1_ = FALSE;
+	}
+	if (_tmp1_) {
+		unity_expanding_bin_set_unexpanded_height ((UnityExpandingBin*) self, (clutter_actor_get_height ((ClutterActor*) self->priv->title_box) + 1.0f) + clutter_actor_get_height (child));
 	}
 	_g_list_free0 (children);
+	_g_object_unref0 (child);
 }
 
 
@@ -244,13 +266,13 @@ static void unity_places_default_renderer_group_on_result_added (UnityPlacesDefa
 	button = g_object_ref_sink (unity_places_tile_new (iter, dee_model_get_string (self->priv->_results, iter, (guint) 0), dee_model_get_string (self->priv->_results, iter, (guint) 1), dee_model_get_string (self->priv->_results, iter, (guint) 3), dee_model_get_string (self->priv->_results, iter, (guint) 4), dee_model_get_string (self->priv->_results, iter, (guint) 5)));
 	clutter_container_add_actor ((ClutterContainer*) self->priv->renderer, (ClutterActor*) button);
 	clutter_actor_show ((ClutterActor*) button);
-	clutter_actor_show ((ClutterActor*) self);
+	unity_places_default_renderer_group_add_to_n_results (self, 1);
+	if (unity_expanding_bin_get_bin_state ((UnityExpandingBin*) self) == UNITY_EXPANDING_BIN_STATE_CLOSED) {
+		unity_expanding_bin_set_bin_state ((UnityExpandingBin*) self, UNITY_EXPANDING_BIN_STATE_UNEXPANDED);
+		clutter_actor_show ((ClutterActor*) self);
+	}
+	self->priv->dirty = TRUE;
 	_g_object_unref0 (button);
-}
-
-
-static gpointer _g_object_ref0 (gpointer self) {
-	return self ? g_object_ref (self) : NULL;
 }
 
 
@@ -275,6 +297,7 @@ static void unity_places_default_renderer_group_on_result_removed (UnityPlacesDe
 				tile = _g_object_ref0 ((_tmp0_ = actor, UNITY_PLACES_IS_TILE (_tmp0_) ? ((UnityPlacesTile*) _tmp0_) : NULL));
 				if (unity_places_tile_get_iter (tile) == iter) {
 					clutter_actor_destroy (actor);
+					unity_places_default_renderer_group_add_to_n_results (self, -1);
 					_g_object_unref0 (actor);
 					_g_object_unref0 (tile);
 					break;
@@ -284,8 +307,8 @@ static void unity_places_default_renderer_group_on_result_removed (UnityPlacesDe
 			}
 		}
 	}
-	if (g_list_length (children) <= 1) {
-		clutter_actor_hide ((ClutterActor*) self);
+	if (self->priv->n_results < 1) {
+		unity_expanding_bin_set_bin_state ((UnityExpandingBin*) self, UNITY_EXPANDING_BIN_STATE_CLOSED);
 	}
 	_g_list_free0 (children);
 }
@@ -297,6 +320,56 @@ static gboolean unity_places_default_renderer_group_interesting (UnityPlacesDefa
 	g_return_val_if_fail (iter != NULL, FALSE);
 	result = dee_model_get_uint (self->priv->_results, iter, (guint) 2) == self->priv->_group_id;
 	return result;
+}
+
+
+static void unity_places_default_renderer_group_add_to_n_results (UnityPlacesDefaultRendererGroup* self, gint i) {
+	g_return_if_fail (self != NULL);
+	self->priv->n_results = self->priv->n_results + ((guint) i);
+	if (self->priv->n_results > ctk_icon_view_get_n_cols (self->priv->renderer)) {
+		clutter_actor_animate ((ClutterActor*) self->priv->expander, (gulong) CLUTTER_EASE_IN_SINE, (guint) 200, "opacity", 255, NULL);
+	} else {
+		clutter_actor_animate ((ClutterActor*) self->priv->expander, (gulong) CLUTTER_EASE_IN_SINE, (guint) 200, "opacity", 0, NULL);
+	}
+}
+
+
+static void unity_places_default_renderer_group_on_n_cols_changed (UnityPlacesDefaultRendererGroup* self) {
+	guint n_cols;
+	g_return_if_fail (self != NULL);
+	n_cols = ctk_icon_view_get_n_cols (self->priv->renderer);
+	if (unity_expanding_bin_get_bin_state ((UnityExpandingBin*) self) == UNITY_EXPANDING_BIN_STATE_UNEXPANDED) {
+		GList* children;
+		gint i;
+		children = clutter_container_get_children ((ClutterContainer*) self->priv->renderer);
+		i = 0;
+		{
+			GList* child_collection;
+			GList* child_it;
+			child_collection = children;
+			for (child_it = child_collection; child_it != NULL; child_it = child_it->next) {
+				ClutterActor* child;
+				child = _g_object_ref0 ((ClutterActor*) child_it->data);
+				{
+					ClutterActor* _tmp0_;
+					UnityPlacesTile* tile;
+					tile = _g_object_ref0 ((_tmp0_ = child, UNITY_PLACES_IS_TILE (_tmp0_) ? ((UnityPlacesTile*) _tmp0_) : NULL));
+					if (i < n_cols) {
+						unity_places_tile_about_to_show (tile);
+						i++;
+					} else {
+						_g_object_unref0 (child);
+						_g_object_unref0 (tile);
+						break;
+					}
+					_g_object_unref0 (child);
+					_g_object_unref0 (tile);
+				}
+			}
+		}
+		_g_list_free0 (children);
+	}
+	unity_places_default_renderer_group_add_to_n_results (self, 0);
 }
 
 
@@ -379,6 +452,71 @@ static void unity_places_default_renderer_group_set_results (UnityPlacesDefaultR
 }
 
 
+static gboolean _lambda8_ (UnityPlacesDefaultRendererGroup* self) {
+	gboolean result = FALSE;
+	if (self->priv->n_results <= ctk_icon_view_get_n_cols (self->priv->renderer)) {
+		result = TRUE;
+		return result;
+	}
+	if (unity_expanding_bin_get_bin_state ((UnityExpandingBin*) self) == UNITY_EXPANDING_BIN_STATE_UNEXPANDED) {
+		unity_expanding_bin_set_bin_state ((UnityExpandingBin*) self, UNITY_EXPANDING_BIN_STATE_EXPANDED);
+		ctk_image_set_from_filename (self->priv->expander, PKGDATADIR "/minimize_up.png");
+	} else {
+		unity_expanding_bin_set_bin_state ((UnityExpandingBin*) self, UNITY_EXPANDING_BIN_STATE_UNEXPANDED);
+		ctk_image_set_from_filename (self->priv->expander, PKGDATADIR "/maximize_up.png");
+	}
+	result = TRUE;
+	return result;
+}
+
+
+static gboolean __lambda8__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	gboolean result;
+	result = _lambda8_ (self);
+	return result;
+}
+
+
+static gboolean _lambda9_ (UnityPlacesDefaultRendererGroup* self) {
+	gboolean result = FALSE;
+	if (self->priv->dirty) {
+		GList* children;
+		children = clutter_container_get_children ((ClutterContainer*) self->priv->renderer);
+		{
+			GList* child_collection;
+			GList* child_it;
+			child_collection = children;
+			for (child_it = child_collection; child_it != NULL; child_it = child_it->next) {
+				ClutterActor* child;
+				child = _g_object_ref0 ((ClutterActor*) child_it->data);
+				{
+					ClutterActor* _tmp0_;
+					UnityPlacesTile* tile;
+					tile = _g_object_ref0 ((_tmp0_ = child, UNITY_PLACES_IS_TILE (_tmp0_) ? ((UnityPlacesTile*) _tmp0_) : NULL));
+					unity_places_tile_about_to_show (tile);
+					_g_object_unref0 (child);
+					_g_object_unref0 (tile);
+				}
+			}
+		}
+		self->priv->dirty = FALSE;
+		_g_list_free0 (children);
+	}
+}
+
+
+static gboolean __lambda9__clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	gboolean result;
+	result = _lambda9_ (self);
+	return result;
+}
+
+
+static void _unity_places_default_renderer_group_on_n_cols_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	unity_places_default_renderer_group_on_n_cols_changed (self);
+}
+
+
 static void _unity_places_default_renderer_group_on_result_added_dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
 	unity_places_default_renderer_group_on_result_added (self, iter);
 }
@@ -399,43 +537,54 @@ static GObject * unity_places_default_renderer_group_constructor (GType type, gu
 	{
 		CtkPadding _tmp0_ = {0};
 		CtkPadding _tmp1_;
-		CtkHBox* _tmp2_;
-		CtkImage* _tmp3_;
-		CtkText* _tmp4_;
-		CtkImage* _tmp5_;
-		ClutterColor _tmp7_;
-		ClutterColor _tmp6_ = {0};
-		ClutterRectangle* sep;
-		CtkIconView* _tmp8_;
-		CtkPadding _tmp9_ = {0};
-		CtkPadding _tmp10_;
+		CtkVBox* _tmp2_;
+		CtkHBox* _tmp3_;
+		CtkImage* _tmp4_;
+		CtkText* _tmp5_;
+		CtkImage* _tmp6_;
+		ClutterColor _tmp8_;
+		ClutterColor _tmp7_ = {0};
+		ClutterRectangle* rect;
+		CtkIconView* _tmp9_;
+		CtkPadding _tmp10_ = {0};
+		CtkPadding _tmp11_;
 		DeeModelIter* iter;
-		ctk_actor_set_padding ((CtkActor*) self, (_tmp1_ = (_tmp0_.top = UNITY_PLACES_DEFAULT_RENDERER_GROUP_PADDING, _tmp0_.right = UNITY_PLACES_DEFAULT_RENDERER_GROUP_PADDING, _tmp0_.bottom = UNITY_PLACES_DEFAULT_RENDERER_GROUP_PADDING, _tmp0_.left = UNITY_PLACES_DEFAULT_RENDERER_GROUP_PADDING, _tmp0_), &_tmp1_));
-		ctk_box_set_orientation ((CtkBox*) self, (gint) CTK_ORIENTATION_VERTICAL);
-		ctk_box_set_spacing ((CtkBox*) self, UNITY_PLACES_DEFAULT_RENDERER_GROUP_SPACING);
-		ctk_box_set_homogeneous ((CtkBox*) self, FALSE);
+		ctk_actor_set_padding ((CtkActor*) self, (_tmp1_ = (_tmp0_.top = 0.0f, _tmp0_.right = 0.0f, _tmp0_.bottom = UNITY_PLACES_DEFAULT_RENDERER_GROUP_PADDING, _tmp0_.left = 0.0f, _tmp0_), &_tmp1_));
 		clutter_actor_hide ((ClutterActor*) self);
-		self->priv->title_box = (_tmp2_ = g_object_ref_sink ((CtkHBox*) ctk_hbox_new ((guint) 8)), _g_object_unref0 (self->priv->title_box), _tmp2_);
-		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->title_box, FALSE, FALSE);
+		self->priv->vbox = (_tmp2_ = g_object_ref_sink ((CtkVBox*) ctk_vbox_new ((guint) UNITY_PLACES_DEFAULT_RENDERER_GROUP_SPACING)), _g_object_unref0 (self->priv->vbox), _tmp2_);
+		ctk_box_set_spacing ((CtkBox*) self->priv->vbox, UNITY_PLACES_DEFAULT_RENDERER_GROUP_SPACING);
+		ctk_box_set_homogeneous ((CtkBox*) self->priv->vbox, FALSE);
+		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->vbox);
+		clutter_actor_show ((ClutterActor*) self->priv->vbox);
+		self->priv->title_box = (_tmp3_ = g_object_ref_sink ((CtkHBox*) ctk_hbox_new ((guint) 5)), _g_object_unref0 (self->priv->title_box), _tmp3_);
+		ctk_box_pack ((CtkBox*) self->priv->vbox, (ClutterActor*) self->priv->title_box, FALSE, FALSE);
 		clutter_actor_show ((ClutterActor*) self->priv->title_box);
-		self->priv->icon = (_tmp3_ = g_object_ref_sink ((CtkImage*) ctk_image_new ((guint) 24)), _g_object_unref0 (self->priv->icon), _tmp3_);
+		clutter_actor_set_reactive ((ClutterActor*) self->priv->title_box, TRUE);
+		self->priv->icon = (_tmp4_ = g_object_ref_sink ((CtkImage*) ctk_image_new ((guint) 22)), _g_object_unref0 (self->priv->icon), _tmp4_);
+		ctk_image_set_from_filename (self->priv->icon, PKGDATADIR "/favourites.png");
 		ctk_box_pack ((CtkBox*) self->priv->title_box, (ClutterActor*) self->priv->icon, FALSE, FALSE);
 		clutter_actor_show ((ClutterActor*) self->priv->icon);
-		self->priv->text = (_tmp4_ = g_object_ref_sink ((CtkText*) ctk_text_new (self->priv->_display_name)), _g_object_unref0 (self->priv->text), _tmp4_);
+		self->priv->text = (_tmp5_ = g_object_ref_sink ((CtkText*) ctk_text_new (self->priv->_display_name)), _g_object_unref0 (self->priv->text), _tmp5_);
 		ctk_box_pack ((CtkBox*) self->priv->title_box, (ClutterActor*) self->priv->text, TRUE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->text);
-		self->priv->expander = (_tmp5_ = g_object_ref_sink ((CtkImage*) ctk_image_new ((guint) 24)), _g_object_unref0 (self->priv->expander), _tmp5_);
+		self->priv->expander = (_tmp6_ = g_object_ref_sink ((CtkImage*) ctk_image_new ((guint) 22)), _g_object_unref0 (self->priv->expander), _tmp6_);
+		ctk_image_set_from_filename (self->priv->expander, PKGDATADIR "/maximize_up.png");
+		clutter_actor_set_opacity ((ClutterActor*) self->priv->expander, (guint8) 0);
 		ctk_box_pack ((CtkBox*) self->priv->title_box, (ClutterActor*) self->priv->expander, FALSE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->expander);
-		sep = g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color ((_tmp7_ = (_tmp6_.red = (guint8) 255, _tmp6_.green = (guint8) 255, _tmp6_.blue = (guint8) 255, _tmp6_.alpha = (guint8) 255, _tmp6_), &_tmp7_)));
-		clutter_actor_set_height ((ClutterActor*) sep, (float) 1);
-		ctk_box_pack ((CtkBox*) self, (ClutterActor*) sep, FALSE, FALSE);
-		clutter_actor_show ((ClutterActor*) sep);
-		self->priv->renderer = (_tmp8_ = g_object_ref_sink ((CtkIconView*) ctk_icon_view_new ()), _g_object_unref0 (self->priv->renderer), _tmp8_);
-		ctk_actor_set_padding ((CtkActor*) self->priv->renderer, (_tmp10_ = (_tmp9_.top = 12.0f, _tmp9_.right = 0.0f, _tmp9_.bottom = 0.0f, _tmp9_.left = 0.0f, _tmp9_), &_tmp10_));
+		rect = g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color ((_tmp8_ = (_tmp7_.red = (guint8) 255, _tmp7_.green = (guint8) 255, _tmp7_.blue = (guint8) 255, _tmp7_.alpha = (guint8) 255, _tmp7_), &_tmp8_)));
+		clutter_actor_set_height ((ClutterActor*) rect, (float) 1);
+		ctk_box_pack ((CtkBox*) self->priv->vbox, (ClutterActor*) rect, FALSE, FALSE);
+		clutter_actor_show ((ClutterActor*) rect);
+		g_signal_connect_object ((ClutterActor*) self->priv->title_box, "button-release-event", (GCallback) __lambda8__clutter_actor_button_release_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self->priv->title_box, "motion-event", (GCallback) __lambda9__clutter_actor_motion_event, self, 0);
+		self->priv->renderer = (_tmp9_ = g_object_ref_sink ((CtkIconView*) ctk_icon_view_new ()), _g_object_unref0 (self->priv->renderer), _tmp9_);
+		ctk_actor_set_padding ((CtkActor*) self->priv->renderer, (_tmp11_ = (_tmp10_.top = 12.0f, _tmp10_.right = 0.0f, _tmp10_.bottom = 0.0f, _tmp10_.left = 0.0f, _tmp10_), &_tmp11_));
 		ctk_icon_view_set_spacing (self->priv->renderer, 24);
-		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->renderer, TRUE, TRUE);
+		ctk_box_pack ((CtkBox*) self->priv->vbox, (ClutterActor*) self->priv->renderer, TRUE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->renderer);
+		g_object_set ((GObject*) self->priv->renderer, "auto-fade-children", TRUE, NULL);
+		g_signal_connect_object ((GObject*) self->priv->renderer, "notify::n-cols", (GCallback) _unity_places_default_renderer_group_on_n_cols_changed_g_object_notify, self, 0);
 		iter = dee_model_get_first_iter (self->priv->_results);
 		while (TRUE) {
 			if (!(!dee_model_is_last (self->priv->_results, iter))) {
@@ -448,7 +597,7 @@ static GObject * unity_places_default_renderer_group_constructor (GType type, gu
 		}
 		g_signal_connect_object (self->priv->_results, "row-added", (GCallback) _unity_places_default_renderer_group_on_result_added_dee_model_row_added, self, 0);
 		g_signal_connect_object (self->priv->_results, "row-removed", (GCallback) _unity_places_default_renderer_group_on_result_removed_dee_model_row_removed, self, 0);
-		_g_object_unref0 (sep);
+		_g_object_unref0 (rect);
 	}
 	return obj;
 }
@@ -457,7 +606,7 @@ static GObject * unity_places_default_renderer_group_constructor (GType type, gu
 static void unity_places_default_renderer_group_class_init (UnityPlacesDefaultRendererGroupClass * klass) {
 	unity_places_default_renderer_group_parent_class = g_type_class_peek_parent (klass);
 	g_type_class_add_private (klass, sizeof (UnityPlacesDefaultRendererGroupPrivate));
-	CLUTTER_ACTOR_CLASS (klass)->get_preferred_height = unity_places_default_renderer_group_real_get_preferred_height;
+	CLUTTER_ACTOR_CLASS (klass)->allocate = unity_places_default_renderer_group_real_allocate;
 	G_OBJECT_CLASS (klass)->get_property = unity_places_default_renderer_group_get_property;
 	G_OBJECT_CLASS (klass)->set_property = unity_places_default_renderer_group_set_property;
 	G_OBJECT_CLASS (klass)->constructor = unity_places_default_renderer_group_constructor;
@@ -472,6 +621,8 @@ static void unity_places_default_renderer_group_class_init (UnityPlacesDefaultRe
 
 static void unity_places_default_renderer_group_instance_init (UnityPlacesDefaultRendererGroup * self) {
 	self->priv = UNITY_PLACES_DEFAULT_RENDERER_GROUP_GET_PRIVATE (self);
+	self->priv->n_results = (guint) 0;
+	self->priv->dirty = FALSE;
 }
 
 
@@ -482,6 +633,7 @@ static void unity_places_default_renderer_group_finalize (GObject* obj) {
 	_g_free0 (self->priv->_display_name);
 	_g_free0 (self->priv->_icon_hint);
 	_g_object_unref0 (self->priv->_results);
+	_g_object_unref0 (self->priv->vbox);
 	_g_object_unref0 (self->priv->title_box);
 	_g_object_unref0 (self->priv->icon);
 	_g_object_unref0 (self->priv->text);
@@ -496,7 +648,7 @@ GType unity_places_default_renderer_group_get_type (void) {
 	if (g_once_init_enter (&unity_places_default_renderer_group_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (UnityPlacesDefaultRendererGroupClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_places_default_renderer_group_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityPlacesDefaultRendererGroup), 0, (GInstanceInitFunc) unity_places_default_renderer_group_instance_init, NULL };
 		GType unity_places_default_renderer_group_type_id;
-		unity_places_default_renderer_group_type_id = g_type_register_static (CTK_TYPE_BOX, "UnityPlacesDefaultRendererGroup", &g_define_type_info, 0);
+		unity_places_default_renderer_group_type_id = g_type_register_static (UNITY_TYPE_EXPANDING_BIN, "UnityPlacesDefaultRendererGroup", &g_define_type_info, 0);
 		g_once_init_leave (&unity_places_default_renderer_group_type_id__volatile, unity_places_default_renderer_group_type_id);
 	}
 	return unity_places_default_renderer_group_type_id__volatile;
@@ -570,6 +722,17 @@ UnityPlacesTile* unity_places_tile_new (DeeModelIter* iter, const char* uri, con
 }
 
 
+void unity_places_tile_about_to_show (UnityPlacesTile* self) {
+	g_return_if_fail (self != NULL);
+	if (self->priv->shown) {
+		return;
+	}
+	self->priv->shown = TRUE;
+	ctk_button_set_label ((CtkButton*) self, self->priv->_display_name);
+	unity_places_tile_set_icon (self);
+}
+
+
 static void unity_places_tile_real_get_preferred_width (ClutterActor* base, float for_height, float* mwidth, float* nwidth) {
 	UnityPlacesTile * self;
 	self = (UnityPlacesTile*) base;
@@ -617,14 +780,6 @@ static void unity_places_tile_clicked_handler_ready (GObject* source_object, GAs
 }
 
 
-static const char* string_to_string (const char* self) {
-	const char* result = NULL;
-	g_return_val_if_fail (self != NULL, NULL);
-	result = self;
-	return result;
-}
-
-
 static glong string_get_length (const char* self) {
 	glong result;
 	g_return_val_if_fail (self != NULL, 0L);
@@ -644,8 +799,7 @@ static gboolean unity_places_tile_clicked_handler_co (UnityPlacesTileClickedHand
 	}
 	_state_0:
 	{
-		g_debug ("places-default-renderer-group.vala:219: %s", data->_tmp0_ = g_strconcat ("Launching ", string_to_string (data->self->priv->_uri), NULL));
-		_g_free0 (data->_tmp0_);
+		unity_shell_hide_unity (unity_global_shell);
 		if (g_str_has_prefix (data->self->priv->_uri, "application://")) {
 			data->id = g_strdup (g_utf8_offset_to_pointer (data->self->priv->_uri, string_get_length ("application://")));
 			{
@@ -654,13 +808,12 @@ static gboolean unity_places_tile_clicked_handler_co (UnityPlacesTileClickedHand
 				unity_app_info_manager_lookup_async (data->appinfos, data->id, unity_places_tile_clicked_handler_ready, data);
 				return FALSE;
 				_state_1:
-				data->_tmp1_ = unity_app_info_manager_lookup_finish (data->appinfos, data->_res_, &data->_inner_error_);
+				data->_tmp0_ = unity_app_info_manager_lookup_finish (data->appinfos, data->_res_, &data->_inner_error_);
 				if (data->_inner_error_ != NULL) {
 					_g_object_unref0 (data->appinfos);
 					goto __catch5_g_error;
 				}
-				data->info = (data->_tmp2_ = data->_tmp1_, _g_object_unref0 (data->info), data->_tmp2_);
-				g_debug ("places-default-renderer-group.vala:229: Foo: %s", g_app_info_get_name (data->info));
+				data->info = (data->_tmp1_ = data->_tmp0_, _g_object_unref0 (data->info), data->_tmp1_);
 				_g_object_unref0 (data->appinfos);
 			}
 			goto __finally5;
@@ -669,7 +822,7 @@ static gboolean unity_places_tile_clicked_handler_co (UnityPlacesTileClickedHand
 				data->ee = data->_inner_error_;
 				data->_inner_error_ = NULL;
 				{
-					g_warning ("places-default-renderer-group.vala:231: Unable to read .desktop file '" \
+					g_warning ("places-default-renderer-group.vala:334: Unable to read .desktop file '" \
 "%s': %s", data->self->priv->_uri, data->ee->message);
 					_g_error_free0 (data->ee);
 					_g_free0 (data->id);
@@ -700,7 +853,6 @@ static gboolean unity_places_tile_clicked_handler_co (UnityPlacesTileClickedHand
 					if (data->_inner_error_ != NULL) {
 						goto __catch6_g_error;
 					}
-					g_debug ("places-default-renderer-group.vala:239: Launched");
 				}
 				goto __finally6;
 				__catch6_g_error:
@@ -708,7 +860,7 @@ static gboolean unity_places_tile_clicked_handler_co (UnityPlacesTileClickedHand
 					data->e = data->_inner_error_;
 					data->_inner_error_ = NULL;
 					{
-						g_warning ("places-default-renderer-group.vala:241: Unable to launch desktop file " \
+						g_warning ("places-default-renderer-group.vala:343: Unable to launch desktop file " \
 "%s: %s\n", data->id, data->e->message);
 						_g_error_free0 (data->e);
 					}
@@ -722,7 +874,7 @@ static gboolean unity_places_tile_clicked_handler_co (UnityPlacesTileClickedHand
 					return FALSE;
 				}
 			} else {
-				g_warning ("places-default-renderer-group.vala:248: %s is an invalid DesktopAppInf" \
+				g_warning ("places-default-renderer-group.vala:350: %s is an invalid DesktopAppInf" \
 "o id\n", data->id);
 			}
 			_g_free0 (data->id);
@@ -751,7 +903,7 @@ static gboolean unity_places_tile_clicked_handler_co (UnityPlacesTileClickedHand
 			data->eee = data->_inner_error_;
 			data->_inner_error_ = NULL;
 			{
-				g_warning ("places-default-renderer-group.vala:258: Unable to launch: %s\n", data->eee->message);
+				g_warning ("places-default-renderer-group.vala:360: Unable to launch: %s\n", data->eee->message);
 				_g_error_free0 (data->eee);
 			}
 		}
@@ -910,10 +1062,8 @@ static GObject * unity_places_tile_constructor (GType type, guint n_construct_pr
 	self = UNITY_PLACES_TILE (obj);
 	{
 		CtkText* text;
-		ctk_button_set_label ((CtkButton*) self, self->priv->_display_name);
 		text = ctk_button_get_text ((CtkButton*) self);
 		clutter_text_set_ellipsize ((ClutterText*) text, PANGO_ELLIPSIZE_END);
-		unity_places_tile_set_icon (self);
 	}
 	return obj;
 }
@@ -939,6 +1089,7 @@ static void unity_places_tile_class_init (UnityPlacesTileClass * klass) {
 
 static void unity_places_tile_instance_init (UnityPlacesTile * self) {
 	self->priv = UNITY_PLACES_TILE_GET_PRIVATE (self);
+	self->priv->shown = FALSE;
 }
 
 

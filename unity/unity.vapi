@@ -196,6 +196,14 @@ namespace Unity {
 		public string static_text { get; set construct; }
 	}
 	[CCode (cheader_filename = "unity.h")]
+	public class ExpandingBin : Ctk.Bin {
+		public const int ANIMATION_TIME;
+		public ExpandingBin ();
+		public Unity.ExpandingBinState bin_state { get; set; }
+		public float size_factor { get; set; }
+		public float unexpanded_height { get; set; }
+	}
+	[CCode (cheader_filename = "unity.h")]
 	public abstract class Favorites : GLib.Object {
 		public Favorites ();
 		public abstract void add_favorite (string uid);
@@ -281,12 +289,14 @@ namespace Unity {
 		public abstract void close_xids (GLib.Array<uint32> xids);
 		public abstract void ensure_input_region ();
 		public abstract void expose_xids (GLib.Array<uint32> xids);
+		public abstract uint32 get_current_time ();
 		public abstract int get_indicators_width ();
 		public abstract int get_launcher_width_foobar ();
 		public abstract Unity.ShellMode get_mode ();
 		public abstract int get_panel_height_foobar ();
 		public abstract Clutter.Stage get_stage ();
 		public abstract void grab_keyboard (bool grab, uint32 timestamp);
+		public abstract void hide_unity ();
 		public abstract bool remove_fullscreen_request (GLib.Object o);
 		public abstract void show_unity ();
 		public abstract void show_window (uint32 xid);
@@ -294,6 +304,12 @@ namespace Unity {
 		public abstract bool menus_swallow_events { get; }
 		public signal void indicators_changed (int width);
 		public signal void need_new_icon_cache ();
+	}
+	[CCode (cprefix = "UNITY_EXPANDING_BIN_STATE_", cheader_filename = "unity.h")]
+	public enum ExpandingBinState {
+		CLOSED,
+		UNEXPANDED,
+		EXPANDED
 	}
 	[CCode (cprefix = "UNITY_SHELL_MODE_", cheader_filename = "unity.h")]
 	public enum ShellMode {

@@ -79,6 +79,7 @@ UnityTestsUIHomeButtonSuite* unity_tests_ui_home_button_suite_construct (GType o
 static UnityShellMode unity_tests_ui_home_button_suite_real_get_mode (UnityShell* base);
 static ClutterStage* unity_tests_ui_home_button_suite_real_get_stage (UnityShell* base);
 static void unity_tests_ui_home_button_suite_real_show_unity (UnityShell* base);
+static void unity_tests_ui_home_button_suite_real_hide_unity (UnityShell* base);
 static gint unity_tests_ui_home_button_suite_real_get_indicators_width (UnityShell* base);
 static gint unity_tests_ui_home_button_suite_real_get_launcher_width_foobar (UnityShell* base);
 static gint unity_tests_ui_home_button_suite_real_get_panel_height_foobar (UnityShell* base);
@@ -91,6 +92,7 @@ static void unity_tests_ui_home_button_suite_real_close_xids (UnityShell* base, 
 static void unity_tests_ui_home_button_suite_real_show_window (UnityShell* base, guint32 xid);
 static void unity_tests_ui_home_button_suite_real_expose_xids (UnityShell* base, GArray* xids);
 static void unity_tests_ui_home_button_suite_real_stop_expose (UnityShell* base);
+static guint32 unity_tests_ui_home_button_suite_real_get_current_time (UnityShell* base);
 static void unity_tests_ui_home_button_suite_finalize (GObject* obj);
 static void unity_tests_ui_home_button_suite_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 
@@ -161,6 +163,12 @@ static void unity_tests_ui_home_button_suite_real_show_unity (UnityShell* base) 
 	UnityTestsUIHomeButtonSuite * self;
 	self = (UnityTestsUIHomeButtonSuite*) base;
 	g_flag = TRUE;
+}
+
+
+static void unity_tests_ui_home_button_suite_real_hide_unity (UnityShell* base) {
+	UnityTestsUIHomeButtonSuite * self;
+	self = (UnityTestsUIHomeButtonSuite*) base;
 }
 
 
@@ -252,6 +260,15 @@ static void unity_tests_ui_home_button_suite_real_stop_expose (UnityShell* base)
 }
 
 
+static guint32 unity_tests_ui_home_button_suite_real_get_current_time (UnityShell* base) {
+	UnityTestsUIHomeButtonSuite * self;
+	guint32 result = 0U;
+	self = (UnityTestsUIHomeButtonSuite*) base;
+	result = clutter_get_current_event_time ();
+	return result;
+}
+
+
 static gboolean unity_tests_ui_home_button_suite_real_get_menus_swallow_events (UnityShell* base) {
 	gboolean result;
 	UnityTestsUIHomeButtonSuite* self;
@@ -275,6 +292,7 @@ static void unity_tests_ui_home_button_suite_unity_shell_interface_init (UnitySh
 	iface->get_mode = unity_tests_ui_home_button_suite_real_get_mode;
 	iface->get_stage = unity_tests_ui_home_button_suite_real_get_stage;
 	iface->show_unity = unity_tests_ui_home_button_suite_real_show_unity;
+	iface->hide_unity = unity_tests_ui_home_button_suite_real_hide_unity;
 	iface->get_indicators_width = unity_tests_ui_home_button_suite_real_get_indicators_width;
 	iface->get_launcher_width_foobar = unity_tests_ui_home_button_suite_real_get_launcher_width_foobar;
 	iface->get_panel_height_foobar = unity_tests_ui_home_button_suite_real_get_panel_height_foobar;
@@ -287,6 +305,7 @@ static void unity_tests_ui_home_button_suite_unity_shell_interface_init (UnitySh
 	iface->show_window = unity_tests_ui_home_button_suite_real_show_window;
 	iface->expose_xids = unity_tests_ui_home_button_suite_real_expose_xids;
 	iface->stop_expose = unity_tests_ui_home_button_suite_real_stop_expose;
+	iface->get_current_time = unity_tests_ui_home_button_suite_real_get_current_time;
 	iface->get_menus_swallow_events = unity_tests_ui_home_button_suite_real_get_menus_swallow_events;
 }
 

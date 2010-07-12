@@ -97,9 +97,11 @@ typedef enum  {
 
 struct _UnityShellIface {
 	GTypeInterface parent_iface;
+	guint32 (*get_current_time) (UnityShell* self);
 	UnityShellMode (*get_mode) (UnityShell* self);
 	ClutterStage* (*get_stage) (UnityShell* self);
 	void (*show_unity) (UnityShell* self);
+	void (*hide_unity) (UnityShell* self);
 	gint (*get_indicators_width) (UnityShell* self);
 	gint (*get_launcher_width_foobar) (UnityShell* self);
 	gint (*get_panel_height_foobar) (UnityShell* self);
