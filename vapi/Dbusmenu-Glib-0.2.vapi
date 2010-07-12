@@ -30,7 +30,7 @@ namespace Dbusmenu {
 		public bool child_reorder (Dbusmenu.Menuitem child, uint position);
 		public Dbusmenu.Menuitem find_id (int id);
 		public void @foreach (void* func, void* data);
-		public GLib.List get_children ();
+		public unowned GLib.List get_children ();
 		public int get_id ();
 		public uint get_position (Dbusmenu.Menuitem parent);
 		public uint get_position_realized (Dbusmenu.Menuitem parent);
