@@ -7,7 +7,6 @@ unity (0.2.16-0ubuntu1) UNRELEASED; urgency=low
       (LP: #595130)
     - Launcher doesnt go away when a full screen app is started (LP: #599422)
     - Launcher grows beyond desktop bounds (LP: #600686)
-    - SIGSEGV in _clutter_stage_has_full_redraw_queued (LP: #595454)
     - Can't focus indicators in places mode (LP: #598363)
     - Extra file to distribute (LP: #598398)
     - gtk_menu_popdown: assertion `GTK_IS_MENU (menu)' failed (LP: #599719)
