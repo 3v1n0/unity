@@ -101,7 +101,7 @@ namespace Unity.Tests.Unit
 			return test_user_visible;
 		}
 
-		public override string view_type ()
+		public override unowned string view_type ()
 		{
 			return "test";
 		}
