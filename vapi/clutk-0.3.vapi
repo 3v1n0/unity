@@ -342,7 +342,7 @@ namespace Ctk {
 		public virtual signal void activated ();
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class MenuSeperator : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable {
+	public class MenuSeperator : Ctk.MenuItem, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
 		[CCode (has_construct_function = false)]
 		public MenuSeperator ();
 	}

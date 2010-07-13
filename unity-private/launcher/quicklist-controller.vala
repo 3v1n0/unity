@@ -164,7 +164,8 @@ namespace Unity.Launcher
                 foreach (Dbusmenu.Menuitem menuitem in menu_items)
                   {
                     var view_menuitem = menu_item_from_dbusmenuitem (menuitem);
-                    menu.prepend (view_menuitem, false);
+                    if (view_menuitem != null)
+                      menu.prepend (view_menuitem, false);
                   }
               }
             else
@@ -185,7 +186,8 @@ namespace Unity.Launcher
                 foreach (Dbusmenu.Menuitem menuitem in menu_items)
                   {
                     var view_menuitem = menu_item_from_dbusmenuitem (menuitem);
-                    menu.append (view_menuitem, false);
+                    if (view_menuitem != null)
+                      menu.append (view_menuitem, false);
                   }
               }
             else
@@ -206,14 +208,96 @@ namespace Unity.Launcher
       return menu;
     }
 
-    private Ctk.MenuItem menu_item_from_dbusmenuitem (Dbusmenu.Menuitem dbusmenuitem)
+    private Ctk.MenuItem? menu_item_from_dbusmenuitem (Dbusmenu.Menuitem dbusmenuitem)
     {
       string label = "UNDEFINED";
       label = dbusmenuitem.property_get (Dbusmenu.MENUITEM_PROP_LABEL);
+      string type = "label";
+      string check_type = dbusmenuitem.property_get (Dbusmenu.MENUITEM_PROP_TOGGLE_TYPE);
 
-      //var menuitem = new Ctk.MenuItem.with_label (label);
-      var menuitem = new QuicklistMenuItem.with_label (label);
-      menuitem.reactive = true;
+      if (check_type == Dbusmenu.MENUITEM_TOGGLE_CHECK)
+        {
+          type = "check";
+        }
+
+      if (check_type == Dbusmenu.MENUITEM_TOGGLE_RADIO)
+        {
+          type = "radio";
+        }
+
+      if (dbusmenuitem.property_get ("type") == Dbusmenu.CLIENT_TYPES_SEPARATOR)
+        {
+          type = "seperator";
+        }
+
+      if (dbusmenuitem.property_get (Dbusmenu.MENUITEM_PROP_ICON_NAME) != null)
+        {
+          type = "stock_image";
+        }
+
+      Ctk.MenuItem menuitem;
+
+      if (type == "label")
+        {
+          menuitem = new QuicklistMenuItem.with_label (label);
+        }
+
+      else if (type == "check" || type == "radio")
+        {
+          if (type == "check")
+            menuitem = new QuicklistCheckMenuItem.with_label (label);
+          else
+            menuitem = new QuicklistRadioMenuItem.with_label (null, label);
+
+          int checked = dbusmenuitem.property_get_int (Dbusmenu.MENUITEM_PROP_TOGGLE_STATE);
+          if (checked == Dbusmenu.MENUITEM_TOGGLE_STATE_CHECKED)
+            (menuitem as Ctk.CheckMenuItem).set_active (true);
+
+          (menuitem as Ctk.CheckMenuItem).toggled.connect (() =>
+          {
+            int is_checked = ((menuitem as Ctk.CheckMenuItem).get_active ()) ?
+                               Dbusmenu.MENUITEM_TOGGLE_STATE_CHECKED : Dbusmenu.MENUITEM_TOGGLE_STATE_UNCHECKED;
+
+            dbusmenuitem.property_set_int (Dbusmenu.MENUITEM_PROP_TOGGLE_STATE, is_checked);
+          });
+
+          dbusmenuitem.property_changed.connect ((property_name, value) => {
+            if (property_name == Dbusmenu.MENUITEM_PROP_TOGGLE_STATE)
+              {
+                int* value_weak = (int*)(value);
+                (menuitem as Ctk.CheckMenuItem).set_active (
+                  (*value_weak == Dbusmenu.MENUITEM_TOGGLE_STATE_CHECKED) ? true : false
+                 );
+              }
+          });
+        }
+
+      else if (type == "seperator")
+        {
+          menuitem = new QuicklistMenuSeperator ();
+        }
+
+      else
+        {
+          warning ("not a menu item we understand (yet)");
+          return null;
+        }
+
+      //connect to property changes*
+      dbusmenuitem.property_changed.connect ((property_name, value) => {
+        if (property_name == Dbusmenu.MENUITEM_PROP_LABEL)
+          {
+            string* value_weak = (string*)value;
+            menuitem.set_label (value_weak);
+          }
+        else if (property_name == Dbusmenu.MENUITEM_PROP_ENABLED)
+          {
+            bool* value_weak = (bool*)value;
+            menuitem.set_reactive (*value_weak);
+          }
+      });
+
+      menuitem.reactive = dbusmenuitem.property_get_bool (Dbusmenu.MENUITEM_PROP_ENABLED);
       menuitem.activated.connect (() => {
         dbusmenuitem.item_activated (Clutter.get_current_event_time ());
       });

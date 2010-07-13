@@ -58,7 +58,7 @@ namespace Dbusmenu {
 		public signal void child_moved (GLib.Object object, uint p0, uint p1);
 		public signal void child_removed (GLib.Object object);
 		public signal void item_activated (uint object);
-		public signal void property_changed (string object, void* p0);
+		public signal void property_changed (string property_name, void* value);
 		public signal void realized ();
 	}
 	[CCode (cheader_filename = "libdbusmenu-glib/client.h,libdbusmenu-glib/menuitem-proxy.h,libdbusmenu-glib/menuitem.h,libdbusmenu-glib/server.h")]
