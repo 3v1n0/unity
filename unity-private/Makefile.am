@@ -51,6 +51,7 @@ libunity_private_la_VALAFLAGS = \
   --pkg gee-1.0 \
   --pkg gio-unix-2.0 \
   --pkg gtk+-2.0 \
+  --pkg gnome-bg-2.0 \
   --pkg indicator \
   --pkg Bamf-0.2 \
   --pkg libwnck-1.0 \

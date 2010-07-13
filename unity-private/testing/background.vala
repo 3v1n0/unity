@@ -37,7 +37,7 @@ namespace Unity.Testing
       var client = GConf.Client.get_default ();
 
       /* Setup the initial properties and notifies */
-      try
+      /*try
         {
           client.add_dir (this.BG_DIR, GConf.ClientPreloadType.NONE);
         }
@@ -80,13 +80,75 @@ namespace Unity.Testing
         {
           warning ("Background: Unable to monitor background options: %s",
                    e.message);
+        }*/
+
+      Gnome.BG          gbg = new Gnome.BG ();
+      Gnome.BGColorType type;
+      Gdk.Color         primary;
+      Gdk.Color         secondary;
+
+      gbg.get_color (type, primary, secondary);
+
+      switch (type)
+        {
+          case Gnome.BGColorType.SOLID:
+          break;
+
+          case Gnome.BGColorType.H_GRADIENT:
+          break;
+
+          case Gnome.BGColorType.V_GRADIENT:
+          break;
         }
 
       /* The texture that will show the background */
-      this.bg = new Clutter.Texture ();
-      this.bg.set_load_async (true);
+      this.bg = new Clutter.CairoTexture ((uint) this.width,
+                                          (uint) this.height);
+      //Cairo.Context cr = this.bg.create ();
+
+      //this.bg.set_load_async (true);
       this.add_actor (this.bg);
       this.bg.show ();
+
+      /*if (filename == "" || filename == NULL)
+        {
+          Gnome.BG          gbg = new Gnome.BG ();
+          Gnome.BGColorType type;
+          Gdk.Color         primary;
+          Gdk.Color         secondary;
+
+          gbg.get_color (type, primary, secondary);
+
+          switch (type)
+            {
+              case Gnome.BGColorType.SOLID:
+              break;
+
+              case Gnome.BGColorType.H_GRADIENT:
+              break;
+
+              case Gnome.BGColorType.V_GRADIENT:
+              break;
+            }
+        }
+      else
+        {
+          Gnome.BG gbg = new Gnome.BG ();
+
+          public unowned Gdk.Pixmap gbg.create_pixmap (Gdk.Window window,
+                                                       this.width,
+                                                       this.height,
+                                                       true);
+          gdk_pixbuf_get_from_drawable (GdkPixbuf *dest,
+                                        GdkDrawable *src,
+                                        GdkColormap *cmap,
+                                        int src_x,
+                                        int src_y,
+                                        int dest_x,
+                                        int dest_y,
+                                        int width,
+                                        int height);  
+        }*/
 
       /* Load the texture */
       this.ensure_layout ();

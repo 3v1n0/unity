@@ -105,6 +105,7 @@ PKG_CHECK_MODULES(BASE,
                   gio-2.0 >= $GTK_REQUIRED
                   gee-1.0
                   gconf-2.0
+                  gnome-desktop-2.0
                   indicator
                   libbamf >= 0.2
                   unique-1.0
