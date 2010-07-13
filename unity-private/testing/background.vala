@@ -87,7 +87,7 @@ namespace Unity.Testing
       Gdk.Color         primary;
       Gdk.Color         secondary;
 
-      gbg.get_color (type, primary, secondary);
+      gbg.get_color (out type, out primary, out secondary);
 
       switch (type)
         {
@@ -147,7 +147,7 @@ namespace Unity.Testing
                                         int dest_x,
                                         int dest_y,
                                         int width,
-                                        int height);  
+                                        int height);
         }*/
 
       /* Load the texture */

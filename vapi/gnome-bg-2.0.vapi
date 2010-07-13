@@ -2,7 +2,7 @@
 
 [CCode (cprefix = "Gnome", lower_case_cprefix = "gnome_")]
 namespace Gnome {
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public class BG : GLib.Object {
 		[CCode (has_construct_function = false)]
 		public BG ();
@@ -11,7 +11,7 @@ namespace Gnome {
 		public unowned Gdk.Pixmap create_pixmap (Gdk.Window window, int width, int height, bool root);
 		public unowned Gdk.Pixbuf create_thumbnail (Gnome.DesktopThumbnailFactory factory, Gdk.Screen screen, int dest_width, int dest_height);
 		public void draw (Gdk.Pixbuf dest, Gdk.Screen screen, bool is_root);
-		public void get_color (Gnome.BGColorType type, Gdk.Color primary, Gdk.Color secondary);
+		public void get_color (out Gnome.BGColorType type, out Gdk.Color primary, out Gdk.Color secondary);
 		public unowned string get_filename ();
 		public bool get_image_size (Gnome.DesktopThumbnailFactory factory, int best_width, int best_height, int width, int height);
 		public static unowned Gdk.Pixmap get_pixmap_from_root (Gdk.Screen screen);
@@ -29,10 +29,10 @@ namespace Gnome {
 		public virtual signal void transitioned ();
 	}
 	[Compact]
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public class BGClass {
 	}
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public class BGCrossfade : GLib.Object {
 		[CCode (has_construct_function = false)]
 		public BGCrossfade (int width, int height);
@@ -47,7 +47,7 @@ namespace Gnome {
 		public int width { get; construct; }
 		public virtual signal void finished (GLib.Object window);
 	}
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public class DesktopThumbnailFactory : GLib.Object {
 		[CCode (has_construct_function = false)]
 		public DesktopThumbnailFactory (Gnome.DesktopThumbnailSize size);
@@ -59,7 +59,7 @@ namespace Gnome {
 		public void save_thumbnail (Gdk.Pixbuf thumbnail, string uri, ulong original_mtime);
 	}
 	[Compact]
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public class OutputInfo {
 		public double aspect;
 		public bool connected;
@@ -82,7 +82,7 @@ namespace Gnome {
 		public int y;
 	}
 	[Compact]
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public class RRConfig {
 		public bool clone;
 		public weak Gnome.OutputInfo outputs;
@@ -104,7 +104,7 @@ namespace Gnome {
 		public RRConfig.stored (Gnome.RRScreen screen) throws GLib.Error;
 	}
 	[Compact]
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public class RRCrtc {
 		public bool can_drive_output (Gnome.RROutput output);
 		public unowned Gnome.RRMode get_current_mode ();
@@ -118,7 +118,7 @@ namespace Gnome {
 		public void set_gamma (int size, uint red, uint green, uint blue);
 		public bool supports_rotation (Gnome.RRRotation rotation);
 	}
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public class RRLabeler : GLib.Object {
 		[CCode (has_construct_function = false)]
 		public RRLabeler (Gnome.RRConfig config);
@@ -126,11 +126,11 @@ namespace Gnome {
 		public void hide ();
 	}
 	[Compact]
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public class RRLabelerClass {
 	}
 	[Compact]
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public class RRMode {
 		public int get_freq ();
 		public uint get_height ();
@@ -138,7 +138,7 @@ namespace Gnome {
 		public uint get_width ();
 	}
 	[Compact]
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public class RROutput {
 		public bool can_clone (Gnome.RROutput clone);
 		public unowned string get_connector_type ();
@@ -160,7 +160,7 @@ namespace Gnome {
 		public bool supports_mode (Gnome.RRMode mode);
 	}
 	[Compact]
-	[CCode (free_function = "gnome_rr_screen_destroy", cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (free_function = "gnome_rr_screen_destroy", cheader_filename = "libgnomeui/gnome-bg.h")]
 	public class RRScreen {
 		[CCode (has_construct_function = false)]
 		public RRScreen (Gdk.Screen screen, Gnome.RRScreenChanged callback, void* data) throws GLib.Error;
@@ -177,13 +177,13 @@ namespace Gnome {
 		public void set_primary_output (Gnome.RROutput output);
 		public void set_size (int width, int height, int mm_width, int mm_height);
 	}
-	[CCode (cprefix = "GNOME_BG_COLOR_", has_type_id = false, cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cprefix = "GNOME_BG_COLOR_", has_type_id = false, cheader_filename = "libgnomeui/gnome-bg.h")]
 	public enum BGColorType {
 		SOLID,
 		H_GRADIENT,
 		V_GRADIENT
 	}
-	[CCode (cprefix = "GNOME_BG_PLACEMENT_", has_type_id = false, cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cprefix = "GNOME_BG_PLACEMENT_", has_type_id = false, cheader_filename = "libgnomeui/gnome-bg.h")]
 	public enum BGPlacement {
 		TILED,
 		ZOOMED,
@@ -192,12 +192,12 @@ namespace Gnome {
 		FILL_SCREEN,
 		SPANNED
 	}
-	[CCode (cprefix = "GNOME_DESKTOP_THUMBNAIL_SIZE_", has_type_id = false, cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cprefix = "GNOME_DESKTOP_THUMBNAIL_SIZE_", has_type_id = false, cheader_filename = "libgnomeui/gnome-bg.h")]
 	public enum DesktopThumbnailSize {
 		NORMAL,
 		LARGE
 	}
-	[CCode (cprefix = "GNOME_RR_ERROR_", has_type_id = false, cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cprefix = "GNOME_RR_ERROR_", has_type_id = false, cheader_filename = "libgnomeui/gnome-bg.h")]
 	public enum RRError {
 		UNKNOWN,
 		NO_RANDR_EXTENSION,
@@ -206,7 +206,7 @@ namespace Gnome {
 		CRTC_ASSIGNMENT,
 		NO_MATCHING_CONFIG
 	}
-	[CCode (cprefix = "GNOME_RR_", has_type_id = false, cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cprefix = "GNOME_RR_", has_type_id = false, cheader_filename = "libgnomeui/gnome-bg.h")]
 	public enum RRRotation {
 		ROTATION_0,
 		ROTATION_90,
@@ -215,28 +215,28 @@ namespace Gnome {
 		REFLECT_X,
 		REFLECT_Y
 	}
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public delegate void RRScreenChanged (Gnome.RRScreen screen);
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public const string BG_KEY_DIR;
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public const string RR_CONNECTOR_TYPE_PANEL;
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public static bool desktop_thumbnail_has_uri (Gdk.Pixbuf pixbuf, string uri);
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public static bool desktop_thumbnail_is_valid (Gdk.Pixbuf pixbuf, string uri, ulong mtime);
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public static unowned string desktop_thumbnail_md5 (string uri);
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public static unowned string desktop_thumbnail_path_for_uri (string uri, Gnome.DesktopThumbnailSize size);
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public static unowned Gdk.Pixbuf desktop_thumbnail_scale_down_pixbuf (Gdk.Pixbuf pixbuf, int dest_width, int dest_height);
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public static unowned Gnome.RRMode rr_create_clone_modes (Gnome.RRScreen screen);
-	[CCode (cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cheader_filename = "libgnomeui/gnome-bg.h")]
 	public static GLib.Quark rr_error_quark ();
-	[CCode (cname = "ubuntu_compute_virtual_size_for_configuration", cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cname = "ubuntu_compute_virtual_size_for_configuration", cheader_filename = "libgnomeui/gnome-bg.h")]
 	public static void ubuntu_compute_virtual_size_for_configuration (Gnome.RRConfig config, int ret_width, int ret_height);
-	[CCode (cname = "ubuntu_gnome_rr_config_save_desired", cheader_filename = "gnome-desktop-2.0.h")]
+	[CCode (cname = "ubuntu_gnome_rr_config_save_desired", cheader_filename = "libgnomeui/gnome-bg.h")]
 	public static bool ubuntu_gnome_rr_config_save_desired (Gnome.RRConfig configuration) throws GLib.Error;
 }
