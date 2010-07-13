@@ -85,6 +85,20 @@ namespace Ctk {
 		public virtual signal void show_context_menu (uint event_time);
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
+	public class CheckMenuItem : Ctk.MenuItem, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
+		[CCode (has_construct_function = false)]
+		public CheckMenuItem ();
+		public bool get_active ();
+		public bool get_inconsistent ();
+		public void set_active (bool is_active);
+		public void set_inconsistent (bool setting);
+		[CCode (has_construct_function = false)]
+		public CheckMenuItem.with_label (string label);
+		public bool active { get; set; }
+		public bool inconsistent { get; set; }
+		public virtual signal void toggled ();
+	}
+	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class Effect : GLib.InitiallyUnowned {
 		public unowned Clutter.Animation animate (ulong mode, uint duration, ...);
 		public unowned Clutter.Actor get_actor ();
@@ -162,8 +176,14 @@ namespace Ctk {
 	public class IconView : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
 		[CCode (type = "ClutterActor*", has_construct_function = false)]
 		public IconView ();
+		public uint get_n_cols ();
+		public uint get_n_rows ();
 		public int get_spacing ();
 		public void set_spacing (int spacing);
+		[NoAccessorMethod]
+		public bool auto_fade_children { get; set construct; }
+		public uint n_cols { get; }
+		public uint n_rows { get; }
 		public int spacing { get; set construct; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
@@ -204,6 +224,16 @@ namespace Ctk {
 		public int size { get; set; }
 		[NoAccessorMethod]
 		public string stock_id { owned get; set; }
+	}
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public class ImageMenuItem : Ctk.MenuItem, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
+		[CCode (has_construct_function = false)]
+		public ImageMenuItem ();
+		public unowned Gdk.Pixbuf get_image ();
+		public void set_image (Gdk.Pixbuf pixbuf);
+		[CCode (has_construct_function = false)]
+		public ImageMenuItem.with_label (string label);
+		public Gdk.Pixbuf image { get; set; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class Layer : GLib.Object {
@@ -315,6 +345,34 @@ namespace Ctk {
 	public class MenuSeperator : Ctk.Actor, Clutter.Scriptable, Ctk.Focusable {
 		[CCode (has_construct_function = false)]
 		public MenuSeperator ();
+	}
+	[Compact]
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public class ProjectedTextureVertex {
+		public Cogl.Color color;
+		public float q;
+		public float r;
+		public float s;
+		public float t;
+		public float w;
+		public float x;
+		public float y;
+		public float z;
+	}
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public class RadioMenuItem : Ctk.CheckMenuItem, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
+		[CCode (has_construct_function = false)]
+		public RadioMenuItem (GLib.SList group);
+		public unowned GLib.SList get_group ();
+		public void set_group (GLib.SList group);
+		[CCode (has_construct_function = false)]
+		public RadioMenuItem.with_label (GLib.SList group, string label);
+		public void* group { get; set; }
+		public virtual signal void group_changed ();
+	}
+	[Compact]
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public class RadioMenuItemClass {
 	}
 	[Compact]
 	[CCode (type_id = "CTK_TYPE_RENDER_TARGET", cheader_filename = "clutk/clutk.h")]
@@ -504,6 +562,8 @@ namespace Ctk {
 	public static void init_after ([CCode (array_length_pos = 0.9)] ref unowned string[] argv);
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static double pixel_to_em (int pixel_value);
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public static void render_projected_polygon (Ctk.ProjectedTextureVertex V, uint tex_id, int window_w, int window_h);
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static void surface_blur (Cairo.Surface surface, uint radius);
 }
