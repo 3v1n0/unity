@@ -318,18 +318,46 @@ namespace Unity.Launcher
 
     public override Dbusmenu.Menuitem? get_menu_actions ()
     {
+      // first of all, check for a menu from bamf
+/*
+      if (app is Bamf.Application)
+        {
+          GLib.List<Bamf.View> views = app.get_children ();
+          foreach (Bamf.View view in views)
+            {
+              if (view is Bamf.Indicator)
+                {
+                  string path = (view as Bamf.Indicator).get_dbus_menu_path ();
+                  string remote_address = (view as Bamf.Indicator).get_remote_address ();
+                  string remote_path = (view as Bamf.Indicator).get_remote_path ();
+
+                  debug (@"path: $path");
+                  debug (@"r_address: $remote_address");
+                  debug (@"r_path: $remote_path");
+                }
+            }
+
+            string name = "org.gnome.Rhythmbox";
+            string object = "/org/ayatana/NotificationItem/rhythmbox/Menu";
+
+            var client = new Dbusmenu.Client (name, object);
+            return client.get_root ();
+        }
+*/
+
+
       if (desktop_file == "" || desktop_file == null)
         {
           return null;
         }
-        
+
       // find our desktop shortcuts
       Indicator.DesktopShortcuts shortcuts = new Indicator.DesktopShortcuts (desktop_file, "Unity");
       unowned string [] nicks = shortcuts.get_nicks ();
-  
+
       if (nicks.length < 1)
-        return null; 
-        
+        return null;
+
       Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
       root.set_root (true);
 
