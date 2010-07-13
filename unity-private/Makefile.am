@@ -103,7 +103,12 @@ launcher_sources = \
   launcher/application-controller.vala \
   launcher/launcher.vala \
   launcher/launcher-child.vala \
+  launcher/quicklist-check-menu-item.vala \
   launcher/quicklist-controller.vala \
+  launcher/quicklist-image-menu-item.vala \
+  launcher/quicklist-menu-item.vala \
+  launcher/quicklist-radio-menu-item.vala \
+  launcher/quicklist-seperator-menu-item.vala \
   launcher/quicklist-view.vala \
   launcher/scrollerchild-controller.vala \
   launcher/scrollerchild.vala \
