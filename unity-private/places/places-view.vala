@@ -33,12 +33,14 @@ namespace Unity.Places
       set { _model = value; }
     }
 
-    private PlaceBar       place_bar;
+    private PlaceBar  place_bar;
+    private Ctk.VBox  content_box;
 
-    private Ctk.VBox       content_box;
-
+    private PlaceHomeEntry       home_entry;
     private PlaceSearchBar       search_bar;
     private Unity.Place.Renderer renderer;
+
+    private bool is_showing = false;
 
     public View (Shell shell)
     {
@@ -53,11 +55,12 @@ namespace Unity.Places
     {
       if (_model is PlaceFileModel)
         {
-          search_bar.reset ();
           return;
         }
 
       _model = new PlaceFileModel () as PlaceModel;
+
+      home_entry = new PlaceHomeEntry (shell);
 
       place_bar = new PlaceBar (shell, _model);
       pack (place_bar, false, true);
@@ -82,18 +85,20 @@ namespace Unity.Places
 
     public void shown ()
     {
+      is_showing = true;
 
+      search_bar.reset ();
+
+      on_entry_view_activated (home_entry, 0);
     }
 
     public void hidden ()
     {
-
+      is_showing = false;
     }
 
-    private void on_entry_view_activated (PlaceEntryView entry_view, int x)
+    private void on_entry_view_activated (PlaceEntry entry, int x)
     {
-      PlaceEntry entry = entry_view.entry;
-
       /* Create the correct results view */
       if (renderer is Clutter.Actor)
         {
@@ -108,7 +113,7 @@ namespace Unity.Places
 
       /* Update the search bar */
       search_bar.set_active_entry_view (entry,
-                                        x
+                                        x == 0 ? 0 : x
                                           - shell.get_launcher_width_foobar ()
                                           - 8);
     }

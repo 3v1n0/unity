@@ -29,7 +29,7 @@ namespace Unity.Places
     private Ctk.EffectGlow     glow;
     private PlaceEntryView     active_view = null;
 
-    public signal void entry_view_activated (PlaceEntryView view, int x);
+    public signal void entry_view_activated (PlaceEntry view, int x);
 
     public PlaceBar (Shell shell, PlaceModel model)
     {
@@ -69,6 +69,15 @@ namespace Unity.Places
       });
     }
 
+    public void reset ()
+    {
+      if (active_view is PlaceEntryView)
+        {
+          active_view.entry.active = false;
+          active_view = null;
+        }
+    }
+
     private override void allocate (Clutter.ActorBox        box,
                                     Clutter.AllocationFlags flags)
     {
@@ -105,7 +114,7 @@ namespace Unity.Places
 
         glow.set_invalidate_effect_cache (true);
 
-        entry_view_activated (entry_view,
+        entry_view_activated (entry_view.entry,
                               bg.entry_position + (PlaceEntryView.WIDTH/2));
     }
   }
