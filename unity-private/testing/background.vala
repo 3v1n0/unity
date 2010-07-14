@@ -21,109 +21,20 @@ namespace Unity.Testing
 {
   public class Background : Ctk.Bin
   {
-    /* Gnome Desktop background gconf keys */
-    private string BG_DIR    = "/desktop/gnome/background";
-    private string BG_FILE   = "/desktop/gnome/background/picture_filename";
-    private string BG_OPTION = "/desktop/gnome/background/picture_options";
-    private string BG_SHADING  = "/desktop/gnome/background/color_shading_type";
-    private string BG_PRIM_COL = "/desktop/gnome/background/primary_color";
-    private string BG_SEC_COL  = "/desktop/gnome/background/secondary_color";
-
-    private string filename;
-    private string option;
-
     private Clutter.CairoTexture bg;
+    private Gnome.BG             gbg;
 
     construct
     {
       START_FUNCTION ();
-      var client = GConf.Client.get_default ();
 
-      /* Setup the initial properties and notifies */
-      /*try
-        {
-          client.add_dir (this.BG_DIR, GConf.ClientPreloadType.NONE);
-        }
-      catch (GLib.Error e)
-        {
-          warning ("Background: Unable to monitor background: %s", e.message);
-        }
+      this.gbg = new Gnome.BG ();
+      this.gbg.changed.connect (this._on_changed);
+      this.gbg.transitioned.connect (this._on_transitioned);
 
-      try
-        {
-          this.filename = client.get_string (this.BG_FILE);
-        }
-      catch (Error e)
-        {
-          this.filename = "/usr/share/backgrounds/warty-final.png";
-        }
-
-      try
-        {
-          client.notify_add (this.BG_FILE, this.on_filename_changed);
-        }
-      catch (Error e)
-        {
-          warning ("Background: Unable to monitor background filename: %s",
-                   e.message);
-        }
-      try
-        {
-          this.option = client.get_string (this.BG_OPTION);
-        }
-      catch (Error e)
-        {
-          this.option = "wallpaper";
-        }
-      try
-        {
-          client.notify_add (this.BG_OPTION, this.on_option_changed);
-        }
-      catch (Error e)
-        {
-          warning ("Background: Unable to monitor background options: %s",
-                   e.message);
-        }*/
-
-      try
-        {
-          client.add_dir (this.BG_DIR, GConf.ClientPreloadType.NONE);
-        }
-      catch (GLib.Error e)
-        {
-          warning ("Background: Unable to monitor background: %s", e.message);
-        }
-
-      try
-        {
-          client.notify_add (this.BG_SHADING, this._update_gradients);
-        }
-      catch (Error e)
-        {
-          warning ("Background: Unable to monitor shading-type: %s", e.message);
-        }
-
-      try
-        {
-          client.notify_add (this.BG_PRIM_COL, this._update_gradients);
-        }
-      catch (Error e)
-        {
-          warning ("Background: Unable to monitor primary color: %s", e.message);
-        }
-
-      try
-        {
-          client.notify_add (this.BG_SEC_COL, this._update_gradients);
-        }
-      catch (Error e)
-        {
-          warning ("Background: Unable to monitor primary color: %s", e.message);
-        }
+      print ("\n---=== construct called ===---\n\n");
 
       this.bg = new Clutter.CairoTexture (1, 1);
-
-      //this.bg.set_load_async (true);
       this.add_actor (this.bg);
       this.bg.show ();
 
@@ -147,8 +58,6 @@ namespace Unity.Testing
                                         int height);
         }*/
 
-      /* Load the texture */
-      this.ensure_layout ();
       END_FUNCTION ();
     }
 
@@ -159,6 +68,8 @@ namespace Unity.Testing
       Gnome.BGColorType type;
       Gdk.Color         primary;
       Gdk.Color         secondary;
+
+      print ("_update_gradient() called\n");
 
       gbg.get_color (out type, out primary, out secondary);
 
@@ -240,46 +151,16 @@ namespace Unity.Testing
         }
     }
 
-    private void on_filename_changed (GConf.Client client,
-                                      uint         cxnid,
-                                      GConf.Entry  entry)
+    private void
+    _on_changed ()
     {
-      var new_filename = entry.get_value ().get_string ();
-
-      if (new_filename == this.filename)
-        return;
-
-      this.filename = new_filename;
-      this.ensure_layout ();
+      print ("\n_on_changed() called ===---\n\n");
     }
 
-    private void on_option_changed (GConf.Client client,
-                                     uint         cxnid,
-                                     GConf.Entry  entry)
+    private void
+    _on_transitioned ()
     {
-      var new_option = entry.get_value ().get_string ();
-
-      if (new_option == this.option)
-        return;
-
-      this.option = new_option;
-      this.ensure_layout ();
-    }
-
-    private void ensure_layout ()
-    {
-      try
-        {
-          this.bg.set_from_file (this.filename);
-        }
-      catch (Error e)
-        {
-          warning ("Background: Unable to load background file %s: %s",
-                   this.filename,
-                   e.message);
-        }
-
-      this.queue_relayout ();
+      print ("\n_on_transitioned() called ===---\n\n");
     }
   }
 }
