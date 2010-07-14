@@ -131,15 +131,19 @@ namespace Unity.Testing
 
       this.gbg.load_from_preferences (client);
 
+      // this is needed for the bg_gradient to have the correct size
+      this.allocation_changed.connect (_on_allocation_changed);
+
+      END_FUNCTION ();
+    }
+
+    private void
+    _on_allocation_changed ()
+    {
       if (this.filename != "")
         _update_image ();
       else
         _update_gradient ();
-
-      // this is needed for the bg_gradient to have the correct size
-      this.allocation_changed.connect (_update_gradient);
-
-      END_FUNCTION ();
     }
 
     private void
