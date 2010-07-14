@@ -30,7 +30,6 @@ namespace Unity.Testing
 
       this.gbg = new Gnome.BG ();
       this.gbg.changed.connect (this._on_changed);
-      this.gbg.transitioned.connect (this._on_transitioned);
 
       print ("\n---=== construct called ===---\n\n");
 
@@ -38,15 +37,10 @@ namespace Unity.Testing
       this.add_actor (this.bg);
       this.bg.show ();
 
-      /*if (filename == "" || filename == NULL)
-      else
-        {
-          Gnome.BG gbg = new Gnome.BG ();
-
-          public unowned Gdk.Pixmap gbg.create_pixmap (Gdk.Window window,
-                                                       this.width,
-                                                       this.height,
-                                                       true);
+      /*public unowned Gdk.Pixmap gbg.create_pixmap (Gdk.Window window,
+                                                     this.width,
+                                                     this.height,
+                                                     true);
           gdk_pixbuf_get_from_drawable (GdkPixbuf *dest,
                                         GdkDrawable *src,
                                         GdkColormap *cmap,
@@ -55,8 +49,7 @@ namespace Unity.Testing
                                         int dest_x,
                                         int dest_y,
                                         int width,
-                                        int height);
-        }*/
+                                        int height);*/
 
       END_FUNCTION ();
     }
@@ -64,14 +57,13 @@ namespace Unity.Testing
     private void
     _update_gradients ()
     {
-      Gnome.BG          gbg = new Gnome.BG ();
       Gnome.BGColorType type;
       Gdk.Color         primary;
       Gdk.Color         secondary;
 
-      print ("_update_gradient() called\n");
+      print ("\n---=== _update_gradient() called ===---\n\n");
 
-      gbg.get_color (out type, out primary, out secondary);
+      this.gbg.get_color (out type, out primary, out secondary);
 
       this.bg.set_surface_size ((uint) this.width, (uint) this.height);
 
@@ -154,13 +146,8 @@ namespace Unity.Testing
     private void
     _on_changed ()
     {
-      print ("\n_on_changed() called ===---\n\n");
-    }
-
-    private void
-    _on_transitioned ()
-    {
-      print ("\n_on_transitioned() called ===---\n\n");
+      print ("\n---=== _on_changed() called ===---\n\n");
+      _update_gradients ();
     }
   }
 }
