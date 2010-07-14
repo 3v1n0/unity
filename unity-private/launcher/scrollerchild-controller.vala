@@ -73,8 +73,9 @@ namespace Unity.Launcher
     public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcuts ();
     public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ();
 
-    public abstract Dbusmenu.Menuitem? get_menu_actions ();
-    public abstract Dbusmenu.Menuitem? get_menu_navigation ();
+    public delegate void menu_cb (Dbusmenu.Menuitem? menu);
+    public abstract void get_menu_actions (menu_cb callback);
+    public abstract void get_menu_navigation (menu_cb callback);
 
     public abstract void activate ();
     public abstract QuicklistController get_menu_controller ();

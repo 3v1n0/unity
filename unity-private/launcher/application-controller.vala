@@ -171,6 +171,8 @@ namespace Unity.Launcher
     private string icon_name;
     private Unity.ThemeFilePath theme_file_path;
     private Bamf.Application? app = null;
+    private Dbusmenu.Client menu_client;
+    private int menu_items_realized_counter;
 
     private bool is_favorite = false;
 
@@ -316,10 +318,9 @@ namespace Unity.Launcher
         }
     }
 
-    public override Dbusmenu.Menuitem? get_menu_actions ()
+    public override void get_menu_actions (ScrollerChildController.menu_cb callback)
     {
       // first of all, check for a menu from bamf
-/*
       if (app is Bamf.Application)
         {
           GLib.List<Bamf.View> views = app.get_children ();
@@ -331,24 +332,36 @@ namespace Unity.Launcher
                   string remote_address = (view as Bamf.Indicator).get_remote_address ();
                   string remote_path = (view as Bamf.Indicator).get_remote_path ();
 
-                  debug (@"path: $path");
-                  debug (@"r_address: $remote_address");
-                  debug (@"r_path: $remote_path");
+                  // Yes, right here, i have lambda's inside lambda's... shutup.
+                  menu_client = new Dbusmenu.Client (remote_address, path);
+                  menu_client.layout_updated.connect (() => {
+                    var menu = menu_client.get_root ();
+                    if (menu is Dbusmenu.Menuitem == false)
+                      warning (@"Didn't get a menu for path: $path - address: $remote_address");
+
+                    unowned GLib.List<Dbusmenu.Menuitem> menu_items = menu.get_children ();
+                    menu_items_realized_counter = (int)menu_items.length ();
+                    foreach (Dbusmenu.Menuitem menuitem in menu_items)
+                    {
+                      menuitem.realized.connect (() =>
+                        {
+                          menu_items_realized_counter -= 1;
+                          if (menu_items_realized_counter < 1)
+                            {
+                              callback (menu);
+                            }
+
+                        });
+                    }
+                  });
                 }
             }
-
-            string name = "org.gnome.Rhythmbox";
-            string object = "/org/ayatana/NotificationItem/rhythmbox/Menu";
-
-            var client = new Dbusmenu.Client (name, object);
-            return client.get_root ();
         }
-*/
 
 
       if (desktop_file == "" || desktop_file == null)
         {
-          return null;
+          callback (null);
         }
 
       // find our desktop shortcuts
@@ -356,7 +369,7 @@ namespace Unity.Launcher
       unowned string [] nicks = shortcuts.get_nicks ();
 
       if (nicks.length < 1)
-        return null;
+        callback (null);
 
       Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
       root.set_root (true);
@@ -377,11 +390,11 @@ namespace Unity.Launcher
           root.child_append (shortcut_item);
 
         }
-      return root;
+      callback (root);
     }
 
 
-    public override Dbusmenu.Menuitem? get_menu_navigation ()
+    public override void get_menu_navigation (ScrollerChildController.menu_cb callback)
     {
 
       // build a dbusmenu that represents our generic application handling items
@@ -422,7 +435,7 @@ namespace Unity.Launcher
           root.child_append (app_item);
         }
 
-        return root;
+        callback (root);
     }
 
     public override Gee.ArrayList<ShortcutItem> get_menu_shortcuts ()

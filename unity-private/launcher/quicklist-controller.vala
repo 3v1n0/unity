@@ -151,8 +151,8 @@ namespace Unity.Launcher
         {
 
           // grab the top menu
-          var top_menu = attached_controller.get_menu_actions ();
-          if (top_menu is Dbusmenu.Menuitem)
+          attached_controller.get_menu_actions ((top_menu) => {
+            if (top_menu is Dbusmenu.Menuitem)
             if (top_menu.get_root ())
               {
                 // add a seperator for funsies
@@ -172,28 +172,30 @@ namespace Unity.Launcher
               {
                 warning ("menu given not a root item");
               }
+          });
 
           // grab the bottom menu
-          var bottom_menu = attached_controller.get_menu_navigation ();
-          if (bottom_menu is Dbusmenu.Menuitem)
-            if (bottom_menu.get_root ())
-              {
-                // add a seperator for funsies
-                var separator = new Unity.Launcher.QuicklistMenuSeperator ();
-                menu.append (separator, false);
-                //returns a correct root menu
-                unowned GLib.List<Dbusmenu.Menuitem> menu_items = bottom_menu.get_children ();
-                foreach (Dbusmenu.Menuitem menuitem in menu_items)
-                  {
-                    var view_menuitem = menu_item_from_dbusmenuitem (menuitem);
-                    if (view_menuitem != null)
-                      menu.append (view_menuitem, false);
-                  }
-              }
-            else
-              {
-                warning ("menu given not a root item");
-              }
+          attached_controller.get_menu_navigation ((bottom_menu) => {
+            if (bottom_menu is Dbusmenu.Menuitem)
+              if (bottom_menu.get_root ())
+                {
+                  // add a seperator for funsies
+                  var separator = new Unity.Launcher.QuicklistMenuSeperator ();
+                  menu.append (separator, false);
+                  //returns a correct root menu
+                  unowned GLib.List<Dbusmenu.Menuitem> menu_items = bottom_menu.get_children ();
+                  foreach (Dbusmenu.Menuitem menuitem in menu_items)
+                    {
+                      var view_menuitem = menu_item_from_dbusmenuitem (menuitem);
+                      if (view_menuitem != null)
+                        menu.append (view_menuitem, false);
+                    }
+                }
+              else
+                {
+                  warning ("menu given not a root item");
+                }
+          });
 
           float x;
           float y;

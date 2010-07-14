@@ -68,10 +68,6 @@ namespace Unity.Launcher
       if ((old_width == w) && (old_height == h))
         return;
 
-      // before creating a new CtkLayerActor make sure we don't leak any memory
-      if (this.seperator_background is Ctk.LayerActor)
-        this.seperator_background.destroy ();
-
       this.seperator_background = new Ctk.LayerActor (w, h);
 
       Ctk.Layer layer = new Ctk.Layer (w,
