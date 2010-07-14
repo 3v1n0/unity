@@ -86,9 +86,10 @@ namespace Unity.Panel
       add_actor (theme_image);
       theme_image.show ();
 
-      button_press_event.connect (on_button_press);
-      button_release_event.connect (on_button_release);
+      //button_press_event.connect (on_button_press);
+      //button_release_event.connect (on_button_release);
       motion_event.connect (on_motion_event);
+      clicked.connect (on_clicked);
     }
 
     /* We always want to be the width of the launcher */
@@ -99,7 +100,7 @@ namespace Unity.Panel
       min_width = shell.get_launcher_width_foobar ();
       nat_width = shell.get_launcher_width_foobar ();
     }
-
+/*
     private bool on_button_press (Clutter.Event event)
     {
       return true;
@@ -107,10 +108,18 @@ namespace Unity.Panel
 
     private bool on_button_release (Clutter.Event event)
     {
+      print (@"BUTTON_RELEASE: $(event.button.button)\n");
       shell.show_unity ();
       MenuManager manager = MenuManager.get_default ();
       manager.popdown_current_menu ();
       return true;
+    }
+*/
+    private void on_clicked ()
+    {
+      shell.show_unity ();
+      MenuManager manager = MenuManager.get_default ();
+      manager.popdown_current_menu ();
     }
 
     private bool on_motion_event (Clutter.Event event)

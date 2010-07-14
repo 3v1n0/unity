@@ -87,6 +87,7 @@ namespace Unity.Places
     {
       is_showing = true;
 
+      place_bar.reset ();
       search_bar.reset ();
 
       on_entry_view_activated (home_entry, 0);

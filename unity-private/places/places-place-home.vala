@@ -65,9 +65,20 @@ namespace Unity.Places
 
     construct
     {
-      entry_renderer_name = "boo";
-
       _sections_model = new Dee.SequenceModel (2, typeof (string), typeof (string));
+      entry_renderer_name = "UnityHomeScreen";
+      entry_groups_model = new Dee.SequenceModel (3,
+                                                  typeof (string),
+                                                  typeof (string),
+                                                  typeof (string));
+      entry_results_model = new Dee.SequenceModel (6,
+                                                   typeof (string),
+                                                   typeof (string),
+                                                   typeof (uint),
+                                                   typeof (string),
+                                                   typeof (string),
+                                                   typeof (string));
+      entry_renderer_hints = new Gee.HashMap<string, string> ();
     }
 
     /*
