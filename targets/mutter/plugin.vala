@@ -330,6 +330,11 @@ namespace Unity
           fullscreen_obstruction = false;
         }
     }
+    
+    public uint32 get_current_time ()
+    {
+      return Mutter.MetaDisplay.get_current_time (Mutter.MetaScreen.get_display (plugin.get_screen ()));
+    }
 
     void check_fullscreen_obstruction ()
     {

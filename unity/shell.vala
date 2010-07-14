@@ -35,6 +35,7 @@ namespace Unity
   {
     public abstract bool          menus_swallow_events {get;}
 
+    public abstract uint32        get_current_time ();
     public abstract ShellMode     get_mode ();
     public abstract Clutter.Stage get_stage ();
     public abstract void          show_unity ();
