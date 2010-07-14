@@ -71,6 +71,7 @@ libunity_la_VALASOURCES = \
   theme.vala \
   unity-appinfo-manager.vala \
   unity-cairo-canvas.vala \
+  unity-expanding-bin.vala \
   unity-favorites.vala \
   unity-io.vala \
   unity-pixbuf-cache.vala \

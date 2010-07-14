@@ -62,6 +62,11 @@ namespace Unity.Places
       bg.show ();
     }
 
+    public void reset ()
+    {
+      entry.reset ();
+    }
+
     private override void allocate (Clutter.ActorBox        box,
                                     Clutter.AllocationFlags flags)
     {
@@ -94,7 +99,7 @@ namespace Unity.Places
       nat_height = nheight + SPACING * 3;
     }
 
-    private void on_search_text_changed (string text)
+    private void on_search_text_changed (string? text)
     {
       if (active_entry is PlaceEntry)
         {

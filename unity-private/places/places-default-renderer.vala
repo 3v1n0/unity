@@ -22,7 +22,7 @@ namespace Unity.Places
   public class DefaultRenderer : Ctk.ScrollView, Unity.Place.Renderer
   {
     static const float PADDING = 12.0f;
-    static const int   SPACING = 12;
+    static const int   SPACING = 0;
 
     private Ctk.VBox box;
     private Dee.Model groups_model;

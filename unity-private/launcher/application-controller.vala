@@ -49,12 +49,13 @@ namespace Unity.Launcher
           context.set_timestamp (Gdk.CURRENT_TIME);
 
           appinfo.launch (null, context);
+
+          global_shell.hide_unity ();
         }
       catch (Error e)
         {
           warning (e.message);
         }
-
     }
   }
 
@@ -155,18 +156,8 @@ namespace Unity.Launcher
 
   public class ApplicationController : ScrollerChildController
   {
-    private string _desktop_file;
-    public string desktop_file {
-      get
-        {
-          return _desktop_file;
-        }
-      construct
-        {
-          _desktop_file = value;
-          load_desktop_file_info ();
-        }
-    }
+    public string desktop_file { get; private set; }
+    
     private KeyFile desktop_keyfile;
     private string icon_name;
     private Unity.ThemeFilePath theme_file_path;
@@ -177,10 +168,15 @@ namespace Unity.Launcher
 
     private bool is_favorite = false;
 
-    public ApplicationController (string desktop_file_, ScrollerChild child_)
+    public ApplicationController (string? desktop_file_, ScrollerChild child_)
     {
-      Object (desktop_file: desktop_file_,
-              child: child_);
+      Object (child: child_);
+      
+      if (desktop_file_ != null)
+        {
+          desktop_file = desktop_file_;
+          load_desktop_file_info ();
+        }
     }
 
     ~ApplicationController ()
@@ -531,6 +527,8 @@ namespace Unity.Launcher
 
     public override void activate ()
     {
+      global_shell.hide_unity ();
+
       if (app is Bamf.Application)
         {
           if (app.is_running ())
@@ -571,6 +569,7 @@ namespace Unity.Launcher
     public void attach_application (Bamf.Application application)
     {
       app = application;
+      desktop_file = app.get_desktop_file ();
       child.running = app.is_running ();
       child.active = app.is_active ();
       child.activating = false;
@@ -580,15 +579,10 @@ namespace Unity.Launcher
       app.closed.connect (detach_application);
       app.urgent_changed.connect (on_app_urgant_changed);
       name = app.get_name ();
-      if (name == "")
+      if (name == null || name == "")
         warning (@"Bamf returned null for app.get_name (): $desktop_file");
 
-      string potential_icon_name = app.get_icon ();
-      if (potential_icon_name == "")
-        warning (@"Bamf returned null for app.get_icon (): $desktop_file");
-      else
-        icon_name == potential_icon_name;
-
+      icon_name = app.get_icon ();
       load_icon_from_icon_name ();
     }
 

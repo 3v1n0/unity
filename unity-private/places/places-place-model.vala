@@ -95,9 +95,12 @@ namespace Unity.Places
                 if (place is Place)
                   {
                     place.connect ();
-                    (place as GLib.Object).ref ();
-                    add (place);
-                    place_added (place);
+                    if (place.online == true)
+                      {
+                        (place as GLib.Object).ref ();
+                        add (place);
+                        place_added (place);
+                      }
                   }
               }
           }

@@ -85,6 +85,12 @@ namespace Unity.Tests.UI
       g_flag = true;
     }
 
+    public void
+    hide_unity ()
+    {
+
+    }
+
     public int
     get_indicators_width ()
     {
@@ -160,6 +166,11 @@ namespace Unity.Tests.UI
 		{
       // stub
 		}
+
+    public uint32 get_current_time ()
+    {
+      return Clutter.get_current_event_time ();
+    }
   }
 }
 

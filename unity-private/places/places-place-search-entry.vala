@@ -23,7 +23,7 @@ namespace Unity.Places
   {
     static const string SEARCH_ICON_FILE = PKGDATADIR + "/search_icon.png";
     static const float  PADDING = 1.0f;
-    static const int    LIVE_SEARCH_TIMEOUT = 300; /* Milliseconds */
+    static const int    LIVE_SEARCH_TIMEOUT = 200; /* Milliseconds */
     const Clutter.Color nofocus_color = { 0xff, 0xff, 0xff, 0xbb };
     const Clutter.Color focus_color   = { 0xff, 0xff, 0xff, 0xff };
 
@@ -32,9 +32,9 @@ namespace Unity.Places
     public ThemeImage right_icon;
 
     private uint live_search_timeout = 0;
-    private string _static_text = "Search";
+    private string _static_text = _("Search");
 
-    public signal void text_changed (string text);
+    public signal void text_changed (string? text);
 
     public PlaceSearchEntry ()
     {
@@ -89,7 +89,7 @@ namespace Unity.Places
         Source.remove (live_search_timeout);
 
       live_search_timeout = Timeout.add (LIVE_SEARCH_TIMEOUT, () => {
-        text_changed (text.text);
+        text_changed (text.text == _static_text ? "" : text.text);
         live_search_timeout = 0;
 
         return false;
@@ -99,21 +99,24 @@ namespace Unity.Places
     private void on_key_focus_in ()
     {
       if (text.text == _static_text)
-        {
           text.set_text ("");
-          text.cursor_visible = true;
-          text.set_selection (0, -1);
-          text.color = focus_color;
-        }
+
+      text.cursor_visible = true;
+      text.color = focus_color;
     }
 
     private void on_key_focus_out ()
     {
 
       text.cursor_visible = false;
-      text.text = _static_text;
       text.color = nofocus_color;
+    }
 
+    public void reset ()
+    {
+      text.cursor_visible = false;
+      text.color = nofocus_color;
+      text.text = _static_text;
     }
   }
 }
