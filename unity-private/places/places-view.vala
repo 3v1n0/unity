@@ -60,7 +60,7 @@ namespace Unity.Places
 
       _model = new PlaceFileModel () as PlaceModel;
 
-      home_entry = new PlaceHomeEntry (shell);
+      home_entry = new PlaceHomeEntry (shell, _model);
 
       place_bar = new PlaceBar (shell, _model);
       pack (place_bar, false, true);

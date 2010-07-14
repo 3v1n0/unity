@@ -322,8 +322,6 @@ namespace Unity.Testing
         }
 
       this.places.do_queue_redraw ();
-
-      print ("Places %s\n\n\n", showing_places ? "Shown" : "Hidden");
     }
 
     public void hide_unity ()

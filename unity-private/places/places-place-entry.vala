@@ -280,7 +280,10 @@ namespace Unity.Places
                              requires (value_array.n_values == 10)
     {
       /* Un-marshal the array and update our information */
-      name = value_array.get_nth (1).get_string ();
+      var n  = value_array.get_nth (1).get_string ();
+      if (n != "")
+        name = n;
+
       icon = value_array.get_nth (2).get_string ();
       position = value_array.get_nth (3).get_uint ();
 
