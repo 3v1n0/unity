@@ -148,7 +148,6 @@ namespace Unity.Launcher
 
     private bool _on_enter (Clutter.Event event)
     {
-      debug ("got enter");
       this.item_background.get_layer(0).set_enabled (false);
       this.item_background.get_layer(1).set_enabled (true);
 

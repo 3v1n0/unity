@@ -157,7 +157,7 @@ namespace Unity.Launcher
   public class ApplicationController : ScrollerChildController
   {
     public string desktop_file { get; private set; }
-    
+
     private KeyFile desktop_keyfile;
     private string icon_name;
     private Unity.ThemeFilePath theme_file_path;
@@ -171,7 +171,7 @@ namespace Unity.Launcher
     public ApplicationController (string? desktop_file_, ScrollerChild child_)
     {
       Object (child: child_);
-      
+
       if (desktop_file_ != null)
         {
           desktop_file = desktop_file_;
@@ -678,6 +678,7 @@ namespace Unity.Launcher
       Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
       theme_file_path.add_icon_theme (theme);
       theme = new Gtk.IconTheme ();
+
       theme.set_custom_theme ("unity-icon-theme");
       theme_file_path.add_icon_theme (theme);
       theme.set_custom_theme ("Web");

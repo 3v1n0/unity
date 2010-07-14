@@ -143,7 +143,6 @@ namespace Unity.Launcher
     }
 
     private bool _on_enter (Clutter.Event event)
-      requires (this is QuicklistMenuItem)
     {
       this.item_background.get_layer(0).set_enabled (false);
       this.item_background.get_layer(1).set_enabled (true);
@@ -156,7 +155,6 @@ namespace Unity.Launcher
     }
 
     private bool _on_leave (Clutter.Event event)
-      requires (this is QuicklistMenuItem)
     {
       this.item_background.get_layer(0).set_enabled (true);
       this.item_background.get_layer(1).set_enabled (false);
