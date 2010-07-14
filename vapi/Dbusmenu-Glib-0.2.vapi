@@ -35,7 +35,7 @@ namespace Dbusmenu {
 		public uint get_position (Dbusmenu.Menuitem parent);
 		public uint get_position_realized (Dbusmenu.Menuitem parent);
 		public bool get_root ();
-		public virtual void handle_event (string name, GLib.Value value, uint timestamp);
+		public virtual void handle_event (string name, GLib.Value? value, uint timestamp);
 		public GLib.HashTable properties_copy ();
 		public GLib.List properties_list ();
 		public bool property_exist (string property);

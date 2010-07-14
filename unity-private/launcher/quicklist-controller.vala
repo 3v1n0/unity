@@ -155,18 +155,21 @@ namespace Unity.Launcher
             if (top_menu is Dbusmenu.Menuitem)
             if (top_menu.get_root ())
               {
-                // add a seperator for funsies
-                var separator = new Unity.Launcher.QuicklistMenuSeperator ();
-                menu.prepend (separator, false);
-
                 //returns a correct root menu
                 unowned GLib.List<Dbusmenu.Menuitem> menu_items = top_menu.get_children ();
+                if (menu_items != null)
+                  {
+                    var separator = new Unity.Launcher.QuicklistMenuSeperator ();
+                    menu.prepend (separator, false);
+                  }
+                menu_items.reverse ();
                 foreach (Dbusmenu.Menuitem menuitem in menu_items)
                   {
                     var view_menuitem = menu_item_from_dbusmenuitem (menuitem);
                     if (view_menuitem != null)
                       menu.prepend (view_menuitem, false);
                   }
+                menu_items.reverse ();
               }
             else
               {
@@ -179,7 +182,7 @@ namespace Unity.Launcher
             if (bottom_menu is Dbusmenu.Menuitem)
               if (bottom_menu.get_root ())
                 {
-                  // add a seperator for funsies
+                  // add a separator for funsies, also because its in the spec (but mostly the fun part)
                   var separator = new Unity.Launcher.QuicklistMenuSeperator ();
                   menu.append (separator, false);
                   //returns a correct root menu
@@ -301,7 +304,9 @@ namespace Unity.Launcher
 
       menuitem.reactive = dbusmenuitem.property_get_bool (Dbusmenu.MENUITEM_PROP_ENABLED);
       menuitem.activated.connect (() => {
-        dbusmenuitem.item_activated (Clutter.get_current_event_time ());
+        debug ("item was activated...");
+        dbusmenuitem.handle_event ("clicked", null, Clutter.get_current_event_time ());
+        //dbusmenuitem.item_activated (Clutter.get_current_event_time ());
       });
 
       menuitem.activated.connect (() => {

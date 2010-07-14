@@ -172,6 +172,7 @@ namespace Unity.Launcher
     private Unity.ThemeFilePath theme_file_path;
     private Bamf.Application? app = null;
     private Dbusmenu.Client menu_client;
+    private Dbusmenu.Menuitem cached_menu;
     private int menu_items_realized_counter;
 
     private bool is_favorite = false;
@@ -320,7 +321,14 @@ namespace Unity.Launcher
 
     public override void get_menu_actions (ScrollerChildController.menu_cb callback)
     {
-      // first of all, check for a menu from bamf
+
+      // first check to see if we have a cached client, if we do, just re-use that
+      if (menu_client is Dbusmenu.Client && cached_menu is Dbusmenu.Menuitem)
+        {
+          callback (cached_menu);
+        }
+
+      // check for a menu from bamf
       if (app is Bamf.Application)
         {
           GLib.List<Bamf.View> views = app.get_children ();
@@ -336,6 +344,7 @@ namespace Unity.Launcher
                   menu_client = new Dbusmenu.Client (remote_address, path);
                   menu_client.layout_updated.connect (() => {
                     var menu = menu_client.get_root ();
+                    cached_menu = menu;
                     if (menu is Dbusmenu.Menuitem == false)
                       warning (@"Didn't get a menu for path: $path - address: $remote_address");
 
