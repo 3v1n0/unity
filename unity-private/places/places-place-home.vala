@@ -152,21 +152,14 @@ namespace Unity.Places
 
     public void set_search (string search, HashTable<string, string> hints)
     {
-      if (search == "")
-        {
-          debug ("Home Screen Buttons");
-        }
-      else
-        {
-          debug ("Global search %s", search);
+      debug ("Global search %s", search);
 
-          foreach (Gee.Map.Entry<PlaceEntry, uint> e in entry_group_map.entries)
-            {
-              PlaceEntry? entry = e.key;
+      foreach (Gee.Map.Entry<PlaceEntry, uint> e in entry_group_map.entries)
+        {
+          PlaceEntry? entry = e.key;
 
-              if (entry != null)
-                entry.set_global_search (search, hints);
-            }
+          if (entry != null)
+            entry.set_global_search (search, hints);
         }
     }
 

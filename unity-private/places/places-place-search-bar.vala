@@ -130,6 +130,8 @@ namespace Unity.Places
       active_entry = entry;
       bg.entry_position = x;
       sections.set_active_entry (entry);
+
+      this.entry.text.grab_key_focus ();
     }
   }
 
