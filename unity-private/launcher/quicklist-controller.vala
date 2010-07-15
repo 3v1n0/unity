@@ -140,6 +140,7 @@ namespace Unity.Launcher
       if (child.get_stage () is Clutter.Stage)
         {
           (child.get_stage () as Clutter.Stage).add_actor (menu);
+          (child.get_stage () as Clutter.Stage).raise_child (menu, null);
         }
       else
         {
