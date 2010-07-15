@@ -157,7 +157,7 @@ namespace Unity.Launcher
   public class ApplicationController : ScrollerChildController
   {
     public string desktop_file { get; private set; }
-    
+
     private KeyFile desktop_keyfile;
     private string icon_name;
     private Unity.ThemeFilePath theme_file_path;
@@ -168,7 +168,7 @@ namespace Unity.Launcher
     public ApplicationController (string? desktop_file_, ScrollerChild child_)
     {
       Object (child: child_);
-      
+
       if (desktop_file_ != null)
         {
           desktop_file = desktop_file_;
@@ -504,6 +504,14 @@ namespace Unity.Launcher
       catch (Error e)
         {
           warning ("could not load name from desktop file: %s", e.message);
+        }
+
+      try
+        {
+          name = desktop_keyfile.get_string (KeyFileDesktop.GROUP, "X-GNOME-FullName");
+        }
+      catch (Error e)
+        {
         }
     }
 
