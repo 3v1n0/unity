@@ -37,9 +37,13 @@ namespace Unity.Places
     private Ctk.Image     expander;
     private Ctk.IconView  renderer;
 
+    private MoreResultsButton? more_results_button;
+
     /* Some caching to speed up lookups */
     private uint          n_results = 0;
     private bool          dirty = false;
+
+    private bool          allow_expand = true;
 
     public DefaultRendererGroup (uint      group_id,
                                  string    group_renderer,
@@ -56,8 +60,11 @@ namespace Unity.Places
 
     construct
     {
-      padding = { 0.0f, 0.0f, PADDING , 0.0f};
+      padding = { 0.0f, 0.0f, PADDING, 0.0f};
       hide ();
+
+      if (group_renderer == "UnityLinkGroupRenderer")
+        allow_expand = false;
 
       vbox = new Ctk.VBox (SPACING);
       vbox.spacing = SPACING;
@@ -91,7 +98,7 @@ namespace Unity.Places
       rect.show ();
 
       title_box.button_release_event.connect (() => {
-        if (n_results <= renderer.get_n_cols ())
+        if (n_results <= renderer.get_n_cols () || allow_expand == false)
           return true;
 
         if (bin_state == ExpandingBinState.UNEXPANDED)
@@ -107,7 +114,7 @@ namespace Unity.Places
         return true;
       });
       title_box.motion_event.connect (() => {
-        if (dirty)
+        if (dirty && allow_expand)
           {
             var children = renderer.get_children ();
             foreach (Clutter.Actor child in children)
@@ -138,6 +145,16 @@ namespace Unity.Places
 
       results.row_added.connect (on_result_added);
       results.row_removed.connect (on_result_removed);
+
+      if (group_renderer == "UnityLinkGroupRenderer")
+        {
+          allow_expand = false;
+
+          more_results_button = new MoreResultsButton ();
+          more_results_button.padding = { PADDING/2, 0.0f, PADDING/2, 0.0f };
+          vbox.pack (more_results_button, false, false);
+          more_results_button.show ();
+        }
     }
 
     private override void allocate (Clutter.ActorBox        box,
@@ -155,7 +172,8 @@ namespace Unity.Places
       if (child is Clutter.Actor &&
           child.height != unexpanded_height)
         {
-          unexpanded_height = title_box.height + 1.0f + child.height;
+          var h = more_results_button != null ? more_results_button.height : 0;
+          unexpanded_height = title_box.height + 1.0f + child.height + h;
         }
     }
 
@@ -222,13 +240,25 @@ namespace Unity.Places
 
       if (n_results > renderer.get_n_cols ())
         {
-          expander.animate (Clutter.AnimationMode.EASE_IN_SINE, 200,
-                            "opacity", 255);
+          if (allow_expand)
+            {
+              expander.animate (Clutter.AnimationMode.EASE_IN_SINE, 200,
+                                "opacity", 255);
+            }
+          else if (more_results_button != null)
+            {
+              more_results_button.count = n_results - renderer.get_n_cols ();
+            }
         }
       else
         {
-          expander.animate (Clutter.AnimationMode.EASE_IN_SINE, 200,
-                            "opacity", 0);
+          expander.animate (Clutter.AnimationMode.EASE_OUT_SINE, 200,
+                                "opacity", 0);
+
+          if (more_results_button != null)
+            {
+              more_results_button.count = 0;
+            }
         }
     }
 
@@ -255,6 +285,40 @@ namespace Unity.Places
         }
 
       add_to_n_results (0);
+    }
+  }
+
+  public class MoreResultsButton : Ctk.Button
+  {
+    public uint count {
+      get { return _count; }
+      set {
+        _count = value;
+        get_text ().text = _("See %u more results").printf (_count);
+      }
+    }
+
+    private uint _count = 0;
+
+    public MoreResultsButton ()
+    {
+      Object ();
+    }
+
+    construct
+    {
+      get_image ().size = 1;
+      get_text ().text = _("See 10 more results");
+    }
+
+    private override void get_preferred_height (float for_width,
+                                                out float mheight,
+                                                out float nheight)
+    {
+      base.get_preferred_height (for_width, out mheight, out nheight);
+
+      mheight += 10.0f;
+      nheight += 10.0f;
     }
   }
 
