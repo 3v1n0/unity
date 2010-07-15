@@ -22,6 +22,7 @@ libunity_private_la_CPPFLAGS = \
   -DINDICATORICONSDIR=\""$(INDICATORICONSDIR)"\" \
   -DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\" \
   -DG_LOG_DOMAIN=\"libunity-private\" \
+  -DGNOME_DESKTOP_USE_UNSTABLE_API \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS) \
   -I$(top_srcdir)/unity/ \
@@ -51,6 +52,7 @@ libunity_private_la_VALAFLAGS = \
   --pkg gee-1.0 \
   --pkg gio-unix-2.0 \
   --pkg gtk+-2.0 \
+  --pkg gnome-bg-2.0 \
   --pkg indicator \
   --pkg Bamf-0.2 \
   --pkg libwnck-1.0 \
