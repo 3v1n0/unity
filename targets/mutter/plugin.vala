@@ -318,9 +318,10 @@ namespace Unity
         {
           this.launcher.get_view ().hide ();
           this.panel.hide ();
-          var menu = Unity.Launcher.QuicklistController.get_default ();
-          if (menu.menu_is_open ())
-            menu.close_menu ();
+          var menu = Unity.Launcher.QuicklistController.get_current_menu ();
+          if (menu.is_menu_open ())
+            menu.state = Unity.Launcher.QuicklistControllerState.CLOSED;
+
           fullscreen_obstruction = true;
         }
       else

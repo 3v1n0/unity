@@ -19,6 +19,8 @@ test_unit_LDADD = \
   $(MAINTAINER_LIBS)
 
 test_unit_VALAFLAGS = \
+	-d . \
+  --thread \
   --vapidir=$(top_srcdir)/unity \
   --vapidir=$(top_srcdir)/unity-private \
   --vapidir=$(top_srcdir)/src \
@@ -30,6 +32,7 @@ test_unit_VALAFLAGS = \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg dbus-glib-1 \
+  --pkg Dbusmenu-Glib-0.2 \
   --pkg dee-1.0 \
   --pkg gtk+-2.0 \
   --pkg gdk-2.0 \
@@ -49,6 +52,7 @@ test_unit_VALAFLAGS = \
   $(MAINTAINER_VALAFLAGS)
 
 test_unit_SOURCES = \
+  test-dbusmenu-quicklists.vala \
   test-launcher.vala \
   test-panel-indicator-object-entry-view.vala \
   test-panel-indicator-object-view.vala \

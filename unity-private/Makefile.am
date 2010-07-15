@@ -42,9 +42,9 @@ libunity_private_la_VALAFLAGS = \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg config \
-  --pkg dbus-glib-1 \
   --pkg cogl-1.0 \
   --pkg dbus-glib-1 \
+  --pkg Dbusmenu-Glib-0.2\
   --pkg dee-1.0 \
   --pkg gconf-2.0 \
   --pkg gdk-2.0 \
@@ -105,7 +105,12 @@ launcher_sources = \
   launcher/application-controller.vala \
   launcher/launcher.vala \
   launcher/launcher-child.vala \
+  launcher/quicklist-check-menu-item.vala \
   launcher/quicklist-controller.vala \
+  launcher/quicklist-image-menu-item.vala \
+  launcher/quicklist-menu-item.vala \
+  launcher/quicklist-radio-menu-item.vala \
+  launcher/quicklist-seperator-menu-item.vala \
   launcher/quicklist-view.vala \
   launcher/scrollerchild-controller.vala \
   launcher/scrollerchild.vala \
