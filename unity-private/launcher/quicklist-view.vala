@@ -275,6 +275,8 @@ namespace Unity.Launcher
 
       this.item_background.get_layer(0).set_enabled (true);
       this.item_background.get_layer(1).set_enabled (false);
+      if (this.get_stage () is Clutter.Stage)
+        this.do_queue_redraw ();
 
       this.item_background.set_parent (this);
       this.item_background.map ();
@@ -287,7 +289,10 @@ namespace Unity.Launcher
       requires (this is QuicklistMenuItem)
     {
       this.item_background.get_layer(0).set_enabled (false);
-      this.item_background.get_layer(1).set_enabled (true);      
+      this.item_background.get_layer(1).set_enabled (true);
+      if (this.get_stage () is Clutter.Stage)
+        this.do_queue_redraw ();
+
       return false;
     }
 
@@ -296,6 +301,9 @@ namespace Unity.Launcher
     {
       this.item_background.get_layer(0).set_enabled (true);
       this.item_background.get_layer(1).set_enabled (false);
+      if (this.get_stage () is Clutter.Stage)
+        this.do_queue_redraw ();
+
       return false;
     }
 
