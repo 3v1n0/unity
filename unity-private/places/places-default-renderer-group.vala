@@ -420,8 +420,11 @@ namespace Unity.Places
         return;
       shown = true;
 
-      set_label (display_name);
-      set_icon ();
+      Timeout.add (0, () => {
+        set_label (display_name);
+        set_icon ();
+        return false;
+      });
     }
 
     private override void get_preferred_width (float for_height,
