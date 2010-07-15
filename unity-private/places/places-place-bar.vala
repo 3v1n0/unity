@@ -38,6 +38,9 @@ namespace Unity.Places
               orientation:Ctk.Orientation.HORIZONTAL,
               homogeneous:false,
               spacing:0);
+
+      Testing.ObjectRegistry.get_default ().register ("UnityPlacesPlaceBar",
+                                                      this);
     }
 
     construct
@@ -75,6 +78,31 @@ namespace Unity.Places
         {
           active_view.entry.active = false;
           active_view = null;
+        }
+    }
+
+    public void active_entry_name (string name)
+    {
+      var children = get_children ();
+      foreach (Clutter.Actor p in children)
+        {
+          PlaceView view = p as PlaceView;
+          var c = view.get_children ();
+
+          bool found = false;
+          foreach (Clutter.Actor e in c)
+            {
+              PlaceEntryView v = e as PlaceEntryView;
+
+              if (v.entry.name == name)
+                {
+                  on_entry_activated (view, v);
+                  found = true;
+                  break;
+                }
+            }
+          if (found)
+            break;
         }
     }
 

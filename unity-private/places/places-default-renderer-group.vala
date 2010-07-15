@@ -151,9 +151,30 @@ namespace Unity.Places
           allow_expand = false;
 
           more_results_button = new MoreResultsButton ();
-          more_results_button.padding = { PADDING/2, 0.0f, PADDING/2, 0.0f };
+          more_results_button.padding = { PADDING/4,
+                                          PADDING/2,
+                                          PADDING/4,
+                                          PADDING/2 };
           vbox.pack (more_results_button, false, false);
           more_results_button.show ();
+
+          more_results_button.clicked.connect (() =>
+            {
+              /* FIXME:!!!
+               * This is not the way we'll end up doing this. This is a stop-gap
+               * until we have better support for signalling things through
+               * a place
+               */
+              PlaceBar place_bar = (Testing.ObjectRegistry.get_default ().lookup ("UnityPlacesPlaceBar"))[0] as PlaceBar;
+              PlaceSearchBar search_bar = (Testing.ObjectRegistry.get_default ().lookup ("UnityPlacesSearchBar"))[0] as PlaceSearchBar;
+
+              if (place_bar is PlaceBar && search_bar is PlaceSearchBar)
+                {
+                  string text = search_bar.get_search_text ();
+                  place_bar.active_entry_name (display_name);
+                  search_bar.search (text);
+                }
+            });
         }
     }
 
@@ -294,31 +315,65 @@ namespace Unity.Places
       get { return _count; }
       set {
         _count = value;
-        get_text ().text = _("See %u more results").printf (_count);
+        text.text = _("See %u more results").printf (_count);
+
+        animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
+                            "opacity", count == 0 ? 0:255);
       }
     }
 
     private uint _count = 0;
+    private Ctk.Text text;
 
     public MoreResultsButton ()
     {
-      Object ();
+      Object (orientation:Ctk.Orientation.HORIZONTAL);
     }
 
     construct
     {
-      get_image ().size = 1;
-      get_text ().text = _("See 10 more results");
+      var bg = new CairoCanvas (paint_bg);
+      set_background (bg);
+
+      text = new Ctk.Text ("");
+      add_actor (text);
+      text.show ();
     }
 
     private override void get_preferred_height (float for_width,
                                                 out float mheight,
                                                 out float nheight)
     {
-      base.get_preferred_height (for_width, out mheight, out nheight);
+      if (count == 0)
+        {
+          mheight = 0.0f;
+          nheight = 0.0f;
+        }
+      else
+        {
+          mheight = 28 + padding.top + padding.bottom;
+          nheight = mheight;
+        }
+    }
 
-      mheight += 10.0f;
-      nheight += 10.0f;
+    private void paint_bg (Cairo.Context cr, int width, int height)
+    {
+      var vpad = padding.top;
+      var hpad = padding.left;
+      float nwidth;
+      text.get_preferred_width (height, null, out nwidth);
+
+      cr.translate (0.5, 0.5);
+      cr.rectangle (0.0,
+                    vpad,
+                    hpad + nwidth + hpad,
+                    height - vpad - vpad);
+      cr.set_source_rgba (1.0, 1.0, 1.0, 0.2);
+      cr.fill_preserve ();
+
+      cr.set_line_width (1.5);
+      cr.set_source_rgba (1.0, 1.0, 1.0, 0.5);
+      cr.stroke ();
     }
   }
 
