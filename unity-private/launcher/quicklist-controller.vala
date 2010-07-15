@@ -48,6 +48,7 @@ namespace Unity.Launcher
                     warning ("old menu not destroyed when opening new menu");
                 }
 
+
               ql_controller_singleton = this;
             }
 
@@ -64,8 +65,6 @@ namespace Unity.Launcher
           _state = value;
         }
     }
-
-    public abstract Ctk.Menu? get_view ();
 
     public static unowned QuicklistController get_current_menu ()
     {
@@ -88,12 +87,18 @@ namespace Unity.Launcher
       // returns true if the given menu matches ql_controller_singleton
       return menu == ql_controller_singleton;
     }
+
+    public unowned Ctk.Menu? get_view ()
+    {
+      return menu;
+    }
+
   }
 
 
   public class ApplicationQuicklistController : QuicklistController
   {
-    public ApplicationQuicklistController (ApplicationController scroller_child)
+    public ApplicationQuicklistController (ScrollerChildController scroller_child)
     {
       Object (attached_controller: scroller_child);
     }
@@ -111,13 +116,17 @@ namespace Unity.Launcher
     private void new_menu ()
     {
       menu = new QuicklistMenu () as Ctk.Menu;
-      menu.destroy.connect (() => {
-        Unity.global_shell.remove_fullscreen_request (this);
-      });
-      menu.set_swallow_clicks (Unity.global_shell.menus_swallow_events);
+      if (Unity.global_shell is Unity.Shell)
+        {
+          menu.destroy.connect (() => {
+            Unity.global_shell.remove_fullscreen_request (this);
+          });
+          menu.set_swallow_clicks (Unity.global_shell.menus_swallow_events);
+        }
       menu.set_detect_clicks (false);
       menu.attach_to_actor (attached_controller.child as Ctk.Actor);
-      ((attached_controller).child.get_stage () as Clutter.Stage).add_actor (menu);
+
+      attach_to_stage ((attached_controller).child, (attached_controller).child);
 
       float x;
       float y;
@@ -125,9 +134,24 @@ namespace Unity.Launcher
       menu.set_position (x - (float) 22.0f, y - 1.0f);
     }
 
+    private void attach_to_stage (Clutter.Actor child, Clutter.Actor parent)
+    {
+      child.parent_set.disconnect (attach_to_stage);
+      if (child.get_stage () is Clutter.Stage)
+        {
+          (child.get_stage () as Clutter.Stage).add_actor (menu);
+        }
+      else
+        {
+          child.parent_set.connect (attach_to_stage);
+        }
+    }
+
     private void on_state_change ()
     {
-      Unity.global_shell.remove_fullscreen_request (this);
+      if (Unity.global_shell is Unity.Shell)
+        Unity.global_shell.remove_fullscreen_request (this);
+
       if (state == QuicklistControllerState.CLOSED) return;
       if (menu == null)
         {
@@ -149,9 +173,11 @@ namespace Unity.Launcher
         }
       else if (state == QuicklistControllerState.MENU)
         {
-        Unity.global_shell.add_fullscreen_request (this);
-        menu.close_on_leave = false;
-        menu.set_detect_clicks (true);
+          if (Unity.global_shell is Unity.Shell)
+            Unity.global_shell.add_fullscreen_request (this);
+
+          menu.close_on_leave = false;
+          menu.set_detect_clicks (true);
           // grab the top menu
           attached_controller.get_menu_actions ((top_menu) => {
             if (top_menu is Dbusmenu.Menuitem)
@@ -162,14 +188,14 @@ namespace Unity.Launcher
                 if (menu_items != null)
                   {
                     var separator = new Unity.Launcher.QuicklistMenuSeperator ();
-                    menu.prepend (separator, false);
+                    get_view ().prepend (separator, false);
                   }
                 menu_items.reverse ();
                 foreach (Dbusmenu.Menuitem menuitem in menu_items)
                   {
                     var view_menuitem = menu_item_from_dbusmenuitem (menuitem);
                     if (view_menuitem != null)
-                      menu.prepend (view_menuitem, false);
+                      get_view ().prepend (view_menuitem, false);
                   }
                 menu_items.reverse ();
               }
@@ -186,20 +212,23 @@ namespace Unity.Launcher
                 {
                   // add a separator for funsies, also because its in the spec (but mostly the fun part)
                   var separator = new Unity.Launcher.QuicklistMenuSeperator ();
-                  menu.append (separator, false);
+                  get_view ().append (separator, false);
                   //returns a correct root menu
                   unowned GLib.List<Dbusmenu.Menuitem> menu_items = bottom_menu.get_children ();
                   foreach (Dbusmenu.Menuitem menuitem in menu_items)
                     {
                       var view_menuitem = menu_item_from_dbusmenuitem (menuitem);
                       if (view_menuitem != null)
-                        menu.append (view_menuitem, false);
+                        {
+                          get_view ().append (view_menuitem, false);
+                        }
                     }
                 }
               else
                 {
                   warning ("menu given not a root item");
                 }
+
           });
 
           float x;
@@ -208,11 +237,6 @@ namespace Unity.Launcher
           if (x > 60-22)
             menu.set_position (x - (float) 22.0f, y - 1.0f);
         }
-    }
-
-    public override Ctk.Menu? get_view ()
-    {
-      return menu;
     }
 
     private Ctk.MenuItem? menu_item_from_dbusmenuitem (Dbusmenu.Menuitem dbusmenuitem)
@@ -290,7 +314,7 @@ namespace Unity.Launcher
           return null;
         }
 
-      //connect to property changes*
+      //connect to property changes
       dbusmenuitem.property_changed.connect ((property_name, value) => {
         if (property_name == Dbusmenu.MENUITEM_PROP_LABEL)
           {
@@ -306,9 +330,7 @@ namespace Unity.Launcher
 
       menuitem.reactive = dbusmenuitem.property_get_bool (Dbusmenu.MENUITEM_PROP_ENABLED);
       menuitem.activated.connect (() => {
-        debug ("item was activated...");
         dbusmenuitem.handle_event ("clicked", null, Clutter.get_current_event_time ());
-        //dbusmenuitem.item_activated (Clutter.get_current_event_time ());
       });
 
       menuitem.activated.connect (() => {

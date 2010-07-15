@@ -311,6 +311,7 @@ namespace Ctk {
 		public unowned Clutter.Actor get_background ();
 		public bool get_close_on_leave ();
 		public uint get_framebuffer_background ();
+    public unowned GLib.List get_items ();
 		public int get_num_items ();
 		public int get_spacing ();
 		public void prepend (Clutter.Actor item, bool is_special);
