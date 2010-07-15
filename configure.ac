@@ -97,7 +97,7 @@ PKG_CHECK_MODULES(BASE,
                   clutter-gtk-0.10 >= 0.10
                   clutk-0.3 >= 0.3.26
                   dbus-glib-1
-                  dbusmenu-glib >= 0.3.4
+                  dbusmenu-glib >= 0.3.6
                   dee-1.0 >= 0.2.0
                   glib-2.0 >= $GLIB_REQUIRED
                   gobject-2.0 >= $GLIB_REQUIRED

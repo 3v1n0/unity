@@ -60,7 +60,6 @@ namespace Unity.Testing
       if ("ndicator" in log_domain)
         return false;
 
-
       if (message == null)
         return true;
 
@@ -71,12 +70,6 @@ namespace Unity.Testing
         return false;
 
       if ("Bamf r" in message)
-        return false;
-
-      if ("Failed to fetch path" in message)
-        return false;
-
-      if ("WARNING" in log_domain)
         return false;
 
       return true;
