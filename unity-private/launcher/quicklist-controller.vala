@@ -55,7 +55,7 @@ namespace Unity.Launcher
             {
               if (menu is Ctk.Menu)
                 {
-                  menu.unparent ();
+                  menu.destroy ();
                   menu = null;
                 }
               ql_controller_singleton = null;
