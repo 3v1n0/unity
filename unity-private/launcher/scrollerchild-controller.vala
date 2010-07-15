@@ -70,9 +70,6 @@ namespace Unity.Launcher
                                 "opacity", 0xff);
     }
 
-    public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcuts ();
-    public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ();
-
     public delegate void menu_cb (Dbusmenu.Menuitem? menu);
     public abstract void get_menu_actions (menu_cb callback);
     public abstract void get_menu_navigation (menu_cb callback);
