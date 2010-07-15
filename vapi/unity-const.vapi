@@ -38,8 +38,4 @@ namespace Unity {
 
   [CCode (cheader_filename = "unity-utils.h", cname = "END_FUNCTION")]
   public static void END_FUNCTION ();
-
-  // I DO NOT BELIEVE I HAVE TO DO THIS! >_<
-  [CCode (cname = "G_TYPE_FLOAT")]
-  public static const GLib.Type G_TYPE_FLOAT;
 }
