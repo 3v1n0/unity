@@ -55,9 +55,8 @@ namespace Unity.Launcher
             {
               if (menu is Ctk.Menu)
                 {
-                  menu.destroy ();
+                  menu.unparent ();
                   menu = null;
-
                 }
               ql_controller_singleton = null;
             }
@@ -128,6 +127,7 @@ namespace Unity.Launcher
 
     private void on_state_change ()
     {
+      Unity.global_shell.remove_fullscreen_request (this);
       if (state == QuicklistControllerState.CLOSED) return;
       if (menu == null)
         {
@@ -149,7 +149,9 @@ namespace Unity.Launcher
         }
       else if (state == QuicklistControllerState.MENU)
         {
-
+        Unity.global_shell.add_fullscreen_request (this);
+        menu.close_on_leave = false;
+        menu.set_detect_clicks (true);
           // grab the top menu
           attached_controller.get_menu_actions ((top_menu) => {
             if (top_menu is Dbusmenu.Menuitem)

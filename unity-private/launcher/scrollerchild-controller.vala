@@ -170,6 +170,7 @@ namespace Unity.Launcher
       if (menu_state == ScrollerChildControllerMenuState.MENU)
         {
           menu.state = QuicklistControllerState.MENU;
+          menu_state = ScrollerChildControllerMenuState.NO_MENU;
         }
     }
 
