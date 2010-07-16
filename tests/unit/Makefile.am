@@ -19,8 +19,6 @@ test_unit_LDADD = \
   $(MAINTAINER_LIBS)
 
 test_unit_VALAFLAGS = \
-	-d . \
-  --thread \
   --vapidir=$(top_srcdir)/unity \
   --vapidir=$(top_srcdir)/unity-private \
   --vapidir=$(top_srcdir)/src \
