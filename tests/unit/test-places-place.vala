@@ -88,9 +88,9 @@ namespace Unity.Tests.Unit
       assert (place.n_entries == 3);
 
       /* Test individual entry's properties were loaded correctly */
-      PlaceEntry? e;
+      PlaceEntryDbus? e;
 
-      e = place.get_nth_entry (0);
+      e = place.get_nth_entry (0) as PlaceEntryDbus;;
       assert (e is PlaceEntry);
       assert (e.dbus_path == "/org/ayatana/Unity/Place1/Entry1");
       assert (e.name == "One");
@@ -99,7 +99,7 @@ namespace Unity.Tests.Unit
       assert (e.show_global == true);
       assert (e.show_entry == false);
 
-      e = place.get_nth_entry (1);
+      e = place.get_nth_entry (1) as PlaceEntryDbus;
       assert (e is PlaceEntry);
       assert (e.dbus_path == "/org/ayatana/Unity/Place1/Entry2");
       assert (e.name == "Two");
@@ -108,7 +108,7 @@ namespace Unity.Tests.Unit
       assert (e.show_global == false);
       assert (e.show_entry == true);
 
-      e = place.get_nth_entry (2);
+      e = place.get_nth_entry (2) as PlaceEntryDbus;
       assert (e is PlaceEntry);
       assert (e.dbus_path == "/org/ayatana/Unity/Place1/Entry3");
       assert (e.name == "Three");
