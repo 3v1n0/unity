@@ -25,13 +25,14 @@ namespace Unity.Launcher
   public class QuicklistMenuSeperator : Ctk.MenuSeperator
   {
     Ctk.LayerActor seperator_background;
-    int            old_width;
-    int            old_height;
+    int            last_width;
+    int            last_height;
 
     private override void
     paint ()
     {
-      this.seperator_background.paint ();
+      if (this.seperator_background is Ctk.LayerActor)
+        this.seperator_background.paint ();
     }
 
     public override void
@@ -56,35 +57,55 @@ namespace Unity.Launcher
     allocate (Clutter.ActorBox        box,
               Clutter.AllocationFlags flags)
     {
-      int w;
-      int h;
+      int new_width  = 0;
+      int new_height = 0;
 
       base.allocate (box, flags);
-      w = (int) (box.x2 - box.x1);
-      h = (int) (box.y2 - box.y1);
+      new_width  = (int) (box.x2 - box.x1);
+      new_height = (int) (box.y2 - box.y1);
 
       // exit early if the allocation-width/height didn't change, this is needed
       // because clutter triggers calling allocate even if nothing changed
-      if ((old_width == w) && (old_height == h))
+      if ((last_width == new_width) && (last_height == new_height))
         return;
 
-      this.seperator_background = new Ctk.LayerActor (w, h);
+      // store the new width/height
+      this.last_width  = new_width;
+      this.last_height = new_height;
 
-      Ctk.Layer layer = new Ctk.Layer (w,
-                                       h,
+      Timeout.add (0, _update_seperator_background);
+    }
+
+    private bool
+    _update_seperator_background ()
+    {
+      // before creating a new CtkLayerActor make sure we don't leak any memory
+      if (this.seperator_background is Ctk.LayerActor)
+      {
+        this.seperator_background.unparent ();
+        this.seperator_background.destroy ();
+      }
+
+      this.seperator_background = new Ctk.LayerActor (this.last_width,
+                                                      this.last_height);
+
+      Ctk.Layer layer = new Ctk.Layer (this.last_width,
+                                       this.last_height,
                                        Ctk.LayerRepeatMode.NONE,
                                        Ctk.LayerRepeatMode.NONE);
       Cairo.Surface fill_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                        w,
-                                                        h);
+                                                        this.last_width,
+                                                        this.last_height);
       Cairo.Surface image_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                         w,
-                                                         h);
+                                                         this.last_width,
+                                                         this.last_height);
       Cairo.Context fill_cr = new Cairo.Context (fill_surf);
       Cairo.Context image_cr = new Cairo.Context (image_surf);
 
       Unity.QuicklistRendering.Seperator.fill_mask (fill_cr);
-      Unity.QuicklistRendering.Seperator.image_background (image_cr, w, h);
+      Unity.QuicklistRendering.Seperator.image_background (image_cr,
+                                                           this.last_width,
+                                                           this.last_height);
 
       layer.set_mask_from_surface (fill_surf);
       layer.set_image_from_surface (image_surf);
@@ -92,12 +113,13 @@ namespace Unity.Launcher
 
       this.seperator_background.add_layer (layer);
 
-      //this.set_background (this.seperator_background);
       this.seperator_background.set_opacity (255);
 
       this.seperator_background.set_parent (this);
       this.seperator_background.map ();
       this.seperator_background.show ();
+
+      return false;
     }
 
     construct
@@ -110,8 +132,8 @@ namespace Unity.Launcher
       };
       this.set_padding (padding);
 
-      old_width  = 0;
-      old_height = 0;
+      last_width  = -1;
+      last_height = -1;
     }
   }
 }
