@@ -74,13 +74,14 @@ namespace Unity.Tests.UI
 
     private void test_automation ()
     {
+/*
       ObjectRegistry registry = ObjectRegistry.get_default ();
 
       Logging.init_fatal_handler ();
 
       QuicklistController qlcontroller = QuicklistController.get_default ();
       ScrollerModel scroller = registry.lookup ("UnityScrollerModel").get(0) as ScrollerModel;
-      
+
       gTimer = new GLib.Timer();
       int DT = 2500;
       stdout.printf("\n");
@@ -95,36 +96,36 @@ namespace Unity.Tests.UI
           Clutter.Animation? anim;
           launcher.opacity = 255;
 
-          
+
           gTimer.start ();
           anim = launcher.animate (Clutter.AnimationMode.EASE_IN_SINE, 2500, "opacity", 0);
           //anim.started.connect (on_animation_started);
           anim.completed.connect (on_animation_completed);
           dir.do_wait_for_animation (launcher);
-          
+
           float dt = (float)gTimer.elapsed ();
           float dt0 =  (float)DT/1000.0f;
           stdout.printf("Expected Duration: %2.3f, Observed Duration: %2.3f, Error: %2.3f%%\n", dt0, dt,
                         (dt - dt0)*100.0f/dt0);
-          
+
           gTimer.start ();
           anim = launcher.animate (Clutter.AnimationMode.EASE_IN_SINE, 2500, "opacity", 255);
           //anim.started.connect (on_animation_started);
           anim.completed.connect (on_animation_completed);
           dir.do_wait_for_animation (launcher);
-          
+
           dt = (float)gTimer.elapsed ();
           dt0 =  (float)DT/1000.0f;
           stdout.printf("Expected Duration: %2.3f, Observed Duration: %2.3f, Error: %2.3f%%\n", dt0, dt,
                         (dt - dt0)*100.0f/dt0);
 
-          
+
           //dir.do_wait_for_timeout (5000);
         }
-      
-      //debug ("After Animation");               
-      /* Clean up */
+
+      //debug ("After Animation");
       qlcontroller.close_menu ();
+*/
     }
   }
 }

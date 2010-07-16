@@ -87,7 +87,7 @@ namespace Unity.Launcher
           if (app.user_visible ())
             {
               string desktop_file = app.get_desktop_file ();
-              
+
               ScrollerChildController controller = null;
               if (desktop_file != null && desktop_file != "")
                 {
@@ -345,8 +345,6 @@ namespace Unity.Launcher
           if (childcontroller.child == childview)
             return childcontroller;
         }
-
-      warning (@"Could not find controller for given view: $childview");
       return null;
     }
 

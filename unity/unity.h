@@ -679,7 +679,7 @@ UnityCairoCanvas* unity_cairo_canvas_construct (GType object_type, UnityCairoCan
 void unity_cairo_canvas_update (UnityCairoCanvas* self);
 GType unity_expanding_bin_state_get_type (void);
 GType unity_expanding_bin_get_type (void);
-#define UNITY_EXPANDING_BIN_ANIMATION_TIME 200
+#define UNITY_EXPANDING_BIN_ANIMATION_TIME 500
 UnityExpandingBin* unity_expanding_bin_new (void);
 UnityExpandingBin* unity_expanding_bin_construct (GType object_type);
 float unity_expanding_bin_get_size_factor (UnityExpandingBin* self);

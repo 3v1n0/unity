@@ -98,6 +98,7 @@ am__objects_3 = libunity_private_la-places-controller.lo \
 	libunity_private_la-places-place-bar.lo \
 	libunity_private_la-places-place-entry-view.lo \
 	libunity_private_la-places-place-entry.lo \
+	libunity_private_la-places-place-home.lo \
 	libunity_private_la-places-place-model.lo \
 	libunity_private_la-places-place-view.lo \
 	libunity_private_la-places-place.lo \
@@ -108,7 +109,12 @@ am__objects_3 = libunity_private_la-places-controller.lo \
 am__objects_4 = libunity_private_la-application-controller.lo \
 	libunity_private_la-launcher.lo \
 	libunity_private_la-launcher-child.lo \
+	libunity_private_la-quicklist-check-menu-item.lo \
 	libunity_private_la-quicklist-controller.lo \
+	libunity_private_la-quicklist-image-menu-item.lo \
+	libunity_private_la-quicklist-menu-item.lo \
+	libunity_private_la-quicklist-radio-menu-item.lo \
+	libunity_private_la-quicklist-seperator-menu-item.lo \
 	libunity_private_la-quicklist-view.lo \
 	libunity_private_la-scrollerchild-controller.lo \
 	libunity_private_la-scrollerchild.lo \
@@ -338,6 +344,7 @@ libunity_private_la_CPPFLAGS = \
   -DINDICATORICONSDIR=\""$(INDICATORICONSDIR)"\" \
   -DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\" \
   -DG_LOG_DOMAIN=\"libunity-private\" \
+  -DGNOME_DESKTOP_USE_UNSTABLE_API \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS) \
   -I$(top_srcdir)/unity/ \
@@ -357,9 +364,9 @@ libunity_private_la_VALAFLAGS = \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg config \
-  --pkg dbus-glib-1 \
   --pkg cogl-1.0 \
   --pkg dbus-glib-1 \
+  --pkg Dbusmenu-Glib-0.2\
   --pkg dee-1.0 \
   --pkg gconf-2.0 \
   --pkg gdk-2.0 \
@@ -367,6 +374,7 @@ libunity_private_la_VALAFLAGS = \
   --pkg gee-1.0 \
   --pkg gio-unix-2.0 \
   --pkg gtk+-2.0 \
+  --pkg gnome-bg-2.0 \
   --pkg indicator \
   --pkg Bamf-0.2 \
   --pkg libwnck-1.0 \
@@ -408,6 +416,7 @@ places_sources = \
   places/places-place-bar.vala \
   places/places-place-entry-view.vala \
   places/places-place-entry.vala \
+  places/places-place-home.vala \
   places/places-place-model.vala \
   places/places-place-view.vala \
   places/places-place.vala \
@@ -420,7 +429,12 @@ launcher_sources = \
   launcher/application-controller.vala \
   launcher/launcher.vala \
   launcher/launcher-child.vala \
+  launcher/quicklist-check-menu-item.vala \
   launcher/quicklist-controller.vala \
+  launcher/quicklist-image-menu-item.vala \
+  launcher/quicklist-menu-item.vala \
+  launcher/quicklist-radio-menu-item.vala \
+  launcher/quicklist-seperator-menu-item.vala \
   launcher/quicklist-view.vala \
   launcher/scrollerchild-controller.vala \
   launcher/scrollerchild.vala \
@@ -548,6 +562,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-bar.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-entry-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-entry.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-home.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-model.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-search-bar.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-search-entry.Plo@am__quote@
@@ -555,7 +570,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-view.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-quicklist-check-menu-item.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-quicklist-controller.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-quicklist-image-menu-item.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-quicklist-menu-item.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-quicklist-radio-menu-item.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-quicklist-seperator-menu-item.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-quicklist-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-scroller-controller.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-scroller-model.Plo@am__quote@
@@ -761,6 +781,14 @@ libunity_private_la-places-place-entry.lo: places/places-place-entry.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-places-place-entry.lo `test -f 'places/places-place-entry.c' || echo '$(srcdir)/'`places/places-place-entry.c
 
+libunity_private_la-places-place-home.lo: places/places-place-home.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-place-home.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-place-home.Tpo -c -o libunity_private_la-places-place-home.lo `test -f 'places/places-place-home.c' || echo '$(srcdir)/'`places/places-place-home.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-places-place-home.Tpo $(DEPDIR)/libunity_private_la-places-place-home.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='places/places-place-home.c' object='libunity_private_la-places-place-home.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-places-place-home.lo `test -f 'places/places-place-home.c' || echo '$(srcdir)/'`places/places-place-home.c
+
 libunity_private_la-places-place-model.lo: places/places-place-model.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-place-model.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-place-model.Tpo -c -o libunity_private_la-places-place-model.lo `test -f 'places/places-place-model.c' || echo '$(srcdir)/'`places/places-place-model.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-places-place-model.Tpo $(DEPDIR)/libunity_private_la-places-place-model.Plo
@@ -841,6 +869,14 @@ libunity_private_la-launcher-child.lo: launcher/launcher-child.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-launcher-child.lo `test -f 'launcher/launcher-child.c' || echo '$(srcdir)/'`launcher/launcher-child.c
 
+libunity_private_la-quicklist-check-menu-item.lo: launcher/quicklist-check-menu-item.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-quicklist-check-menu-item.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-quicklist-check-menu-item.Tpo -c -o libunity_private_la-quicklist-check-menu-item.lo `test -f 'launcher/quicklist-check-menu-item.c' || echo '$(srcdir)/'`launcher/quicklist-check-menu-item.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-quicklist-check-menu-item.Tpo $(DEPDIR)/libunity_private_la-quicklist-check-menu-item.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/quicklist-check-menu-item.c' object='libunity_private_la-quicklist-check-menu-item.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-quicklist-check-menu-item.lo `test -f 'launcher/quicklist-check-menu-item.c' || echo '$(srcdir)/'`launcher/quicklist-check-menu-item.c
+
 libunity_private_la-quicklist-controller.lo: launcher/quicklist-controller.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-quicklist-controller.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-quicklist-controller.Tpo -c -o libunity_private_la-quicklist-controller.lo `test -f 'launcher/quicklist-controller.c' || echo '$(srcdir)/'`launcher/quicklist-controller.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-quicklist-controller.Tpo $(DEPDIR)/libunity_private_la-quicklist-controller.Plo
@@ -848,6 +884,38 @@ libunity_private_la-quicklist-controller.lo: launcher/quicklist-controller.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/quicklist-controller.c' object='libunity_private_la-quicklist-controller.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-quicklist-controller.lo `test -f 'launcher/quicklist-controller.c' || echo '$(srcdir)/'`launcher/quicklist-controller.c
+
+libunity_private_la-quicklist-image-menu-item.lo: launcher/quicklist-image-menu-item.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-quicklist-image-menu-item.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-quicklist-image-menu-item.Tpo -c -o libunity_private_la-quicklist-image-menu-item.lo `test -f 'launcher/quicklist-image-menu-item.c' || echo '$(srcdir)/'`launcher/quicklist-image-menu-item.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-quicklist-image-menu-item.Tpo $(DEPDIR)/libunity_private_la-quicklist-image-menu-item.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/quicklist-image-menu-item.c' object='libunity_private_la-quicklist-image-menu-item.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-quicklist-image-menu-item.lo `test -f 'launcher/quicklist-image-menu-item.c' || echo '$(srcdir)/'`launcher/quicklist-image-menu-item.c
+
+libunity_private_la-quicklist-menu-item.lo: launcher/quicklist-menu-item.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-quicklist-menu-item.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-quicklist-menu-item.Tpo -c -o libunity_private_la-quicklist-menu-item.lo `test -f 'launcher/quicklist-menu-item.c' || echo '$(srcdir)/'`launcher/quicklist-menu-item.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-quicklist-menu-item.Tpo $(DEPDIR)/libunity_private_la-quicklist-menu-item.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/quicklist-menu-item.c' object='libunity_private_la-quicklist-menu-item.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-quicklist-menu-item.lo `test -f 'launcher/quicklist-menu-item.c' || echo '$(srcdir)/'`launcher/quicklist-menu-item.c
+
+libunity_private_la-quicklist-radio-menu-item.lo: launcher/quicklist-radio-menu-item.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-quicklist-radio-menu-item.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-quicklist-radio-menu-item.Tpo -c -o libunity_private_la-quicklist-radio-menu-item.lo `test -f 'launcher/quicklist-radio-menu-item.c' || echo '$(srcdir)/'`launcher/quicklist-radio-menu-item.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-quicklist-radio-menu-item.Tpo $(DEPDIR)/libunity_private_la-quicklist-radio-menu-item.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/quicklist-radio-menu-item.c' object='libunity_private_la-quicklist-radio-menu-item.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-quicklist-radio-menu-item.lo `test -f 'launcher/quicklist-radio-menu-item.c' || echo '$(srcdir)/'`launcher/quicklist-radio-menu-item.c
+
+libunity_private_la-quicklist-seperator-menu-item.lo: launcher/quicklist-seperator-menu-item.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-quicklist-seperator-menu-item.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-quicklist-seperator-menu-item.Tpo -c -o libunity_private_la-quicklist-seperator-menu-item.lo `test -f 'launcher/quicklist-seperator-menu-item.c' || echo '$(srcdir)/'`launcher/quicklist-seperator-menu-item.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-quicklist-seperator-menu-item.Tpo $(DEPDIR)/libunity_private_la-quicklist-seperator-menu-item.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='launcher/quicklist-seperator-menu-item.c' object='libunity_private_la-quicklist-seperator-menu-item.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-quicklist-seperator-menu-item.lo `test -f 'launcher/quicklist-seperator-menu-item.c' || echo '$(srcdir)/'`launcher/quicklist-seperator-menu-item.c
 
 libunity_private_la-quicklist-view.lo: launcher/quicklist-view.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-quicklist-view.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-quicklist-view.Tpo -c -o libunity_private_la-quicklist-view.lo `test -f 'launcher/quicklist-view.c' || echo '$(srcdir)/'`launcher/quicklist-view.c

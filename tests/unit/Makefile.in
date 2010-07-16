@@ -37,8 +37,8 @@ host_triplet = @host@
 noinst_PROGRAMS = test-unit$(EXEEXT)
 subdir = tests/unit
 DIST_COMMON = $(srcdir)/Makefile.am $(srcdir)/Makefile.in \
-	test-appinfo-manager.c test-io.c test-launcher.c \
-	test-panel-indicator-object-entry-view.c \
+	test-appinfo-manager.c test-dbusmenu-quicklists.c test-io.c \
+	test-launcher.c test-panel-indicator-object-entry-view.c \
 	test-panel-indicator-object-view.c test-place.c \
 	test-places-place-file-model.c test-places-place.c \
 	test-places.c test-unit.c test-unity-pixbuf-cache.c \
@@ -60,7 +60,8 @@ CONFIG_HEADER = $(top_builddir)/config.h
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 PROGRAMS = $(noinst_PROGRAMS)
-am_test_unit_OBJECTS = test_unit-test-launcher.$(OBJEXT) \
+am_test_unit_OBJECTS = test_unit-test-dbusmenu-quicklists.$(OBJEXT) \
+	test_unit-test-launcher.$(OBJEXT) \
 	test_unit-test-panel-indicator-object-entry-view.$(OBJEXT) \
 	test_unit-test-panel-indicator-object-view.$(OBJEXT) \
 	test_unit-test-places-place-file-model.$(OBJEXT) \
@@ -341,6 +342,7 @@ test_unit_VALAFLAGS = \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg dbus-glib-1 \
+  --pkg Dbusmenu-Glib-0.2 \
   --pkg dee-1.0 \
   --pkg gtk+-2.0 \
   --pkg gdk-2.0 \
@@ -360,6 +362,7 @@ test_unit_VALAFLAGS = \
   $(MAINTAINER_VALAFLAGS)
 
 test_unit_SOURCES = \
+  test-dbusmenu-quicklists.vala \
   test-launcher.vala \
   test-panel-indicator-object-entry-view.vala \
   test-panel-indicator-object-view.vala \
@@ -432,6 +435,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-appinfo-manager.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-dbusmenu-quicklists.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-io.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-launcher.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_unit-test-panel-indicator-object-entry-view.Po@am__quote@
@@ -466,6 +470,22 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='$<' object='$@' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
+
+test_unit-test-dbusmenu-quicklists.o: test-dbusmenu-quicklists.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-dbusmenu-quicklists.o -MD -MP -MF $(DEPDIR)/test_unit-test-dbusmenu-quicklists.Tpo -c -o test_unit-test-dbusmenu-quicklists.o `test -f 'test-dbusmenu-quicklists.c' || echo '$(srcdir)/'`test-dbusmenu-quicklists.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-dbusmenu-quicklists.Tpo $(DEPDIR)/test_unit-test-dbusmenu-quicklists.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-dbusmenu-quicklists.c' object='test_unit-test-dbusmenu-quicklists.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-dbusmenu-quicklists.o `test -f 'test-dbusmenu-quicklists.c' || echo '$(srcdir)/'`test-dbusmenu-quicklists.c
+
+test_unit-test-dbusmenu-quicklists.obj: test-dbusmenu-quicklists.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-dbusmenu-quicklists.obj -MD -MP -MF $(DEPDIR)/test_unit-test-dbusmenu-quicklists.Tpo -c -o test_unit-test-dbusmenu-quicklists.obj `if test -f 'test-dbusmenu-quicklists.c'; then $(CYGPATH_W) 'test-dbusmenu-quicklists.c'; else $(CYGPATH_W) '$(srcdir)/test-dbusmenu-quicklists.c'; fi`
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/test_unit-test-dbusmenu-quicklists.Tpo $(DEPDIR)/test_unit-test-dbusmenu-quicklists.Po
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-dbusmenu-quicklists.c' object='test_unit-test-dbusmenu-quicklists.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-dbusmenu-quicklists.obj `if test -f 'test-dbusmenu-quicklists.c'; then $(CYGPATH_W) 'test-dbusmenu-quicklists.c'; else $(CYGPATH_W) '$(srcdir)/test-dbusmenu-quicklists.c'; fi`
 
 test_unit-test-launcher.o: test-launcher.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test_unit-test-launcher.o -MD -MP -MF $(DEPDIR)/test_unit-test-launcher.Tpo -c -o test_unit-test-launcher.o `test -f 'test-launcher.c' || echo '$(srcdir)/'`test-launcher.c
@@ -642,6 +662,11 @@ test_unit-test-unit.obj: test-unit.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='test-unit.c' object='test_unit-test-unit.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(test_unit_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test_unit-test-unit.obj `if test -f 'test-unit.c'; then $(CYGPATH_W) 'test-unit.c'; else $(CYGPATH_W) '$(srcdir)/test-unit.c'; fi`
+$(srcdir)/test-dbusmenu-quicklists.c: $(srcdir)/test_unit_vala.stamp
+	@if test -f $@; then :; else \
+	  rm -f $(srcdir)/test_unit_vala.stamp; \
+	  $(am__cd) $(srcdir) && $(MAKE) $(AM_MAKEFLAGS) test_unit_vala.stamp; \
+	fi
 $(srcdir)/test-launcher.c: $(srcdir)/test_unit_vala.stamp
 	@if test -f $@; then :; else \
 	  rm -f $(srcdir)/test_unit_vala.stamp; \
@@ -933,6 +958,7 @@ maintainer-clean-generic:
 	@echo "This command is intended for maintainers to use"
 	@echo "it deletes files that may require special tools to rebuild."
 	-rm -f test-appinfo-manager.c
+	-rm -f test-dbusmenu-quicklists.c
 	-rm -f test-io.c
 	-rm -f test-launcher.c
 	-rm -f test-panel-indicator-object-entry-view.c

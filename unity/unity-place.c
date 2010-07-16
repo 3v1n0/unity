@@ -100,6 +100,7 @@ typedef struct _UnityPlaceEntryInfoPrivate UnityPlaceEntryInfoPrivate;
 
 typedef struct _UnityPlaceService UnityPlaceService;
 typedef struct _UnityPlaceServiceIface UnityPlaceServiceIface;
+typedef struct _DBusObjectVTable _DBusObjectVTable;
 typedef struct _UnityPlaceServiceDBusProxy UnityPlaceServiceDBusProxy;
 typedef DBusGProxyClass UnityPlaceServiceDBusProxyClass;
 
@@ -153,7 +154,6 @@ typedef struct _UnityPlaceControllerClass UnityPlaceControllerClass;
 typedef struct _UnityPlaceControllerPrivate UnityPlaceControllerPrivate;
 typedef struct _Block1Data Block1Data;
 #define _unity_place__entrysignals_free0(var) ((var == NULL) ? NULL : (var = (unity_place__entrysignals_free (var), NULL)))
-typedef struct _DBusObjectVTable _DBusObjectVTable;
 
 struct _UnityPlace_RendererInfo {
 	char* default_renderer;
@@ -244,6 +244,10 @@ struct _UnityPlaceServiceIface {
 	UnityPlace_EntryInfo* (*get_entries) (UnityPlaceService* self, int* result_length1, GError** error);
 };
 
+struct _DBusObjectVTable {
+	void (*register_object) (DBusConnection*, const char*, void*);
+};
+
 struct _UnityPlaceServiceDBusProxy {
 	DBusGProxy parent_instance;
 	gboolean disposed;
@@ -317,10 +321,6 @@ struct _Block1Data {
 	int _ref_count_;
 	UnityPlaceController * self;
 	UnityPlaceEntryInfo* entry;
-};
-
-struct _DBusObjectVTable {
-	void (*register_object) (DBusConnection*, const char*, void*);
 };
 
 
@@ -444,8 +444,11 @@ static GObject * unity_place_entry_info_constructor (GType type, guint n_constru
 static void unity_place_entry_info_finalize (GObject* obj);
 static void unity_place_entry_info_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_place_entry_info_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+UnityPlaceService* unity_place_service_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
 GType unity_place_service_get_type (void);
 UnityPlace_EntryInfo* unity_place_service_get_entries (UnityPlaceService* self, int* result_length1, GError** error);
+static void _vala_dbus_register_object (DBusConnection* connection, const char* path, void* object);
+static void _vala_dbus_unregister_object (gpointer connection, GObject* object);
 void unity_place_service_dbus_register_object (DBusConnection* connection, const char* path, void* object);
 void _unity_place_service_dbus_unregister (DBusConnection* connection, void* _user_data_);
 DBusHandlerResult unity_place_service_dbus_message (DBusConnection* connection, DBusMessage* message, void* object);
@@ -456,7 +459,6 @@ static DBusHandlerResult _dbus_unity_place_service_get_entries (UnityPlaceServic
 static void _dbus_unity_place_service_entry_added (GObject* _sender, UnityPlace_EntryInfo* entry, DBusConnection* _connection);
 static void _dbus_unity_place_service_entry_removed (GObject* _sender, const char* entry_dbus_path, DBusConnection* _connection);
 GType unity_place_service_dbus_proxy_get_type (void);
-UnityPlaceService* unity_place_service_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
 static void _dbus_handle_unity_place_service_entry_added (UnityPlaceService* self, DBusConnection* connection, DBusMessage* message);
 static void _dbus_handle_unity_place_service_entry_removed (UnityPlaceService* self, DBusConnection* connection, DBusMessage* message);
 DBusHandlerResult unity_place_service_dbus_proxy_filter (DBusConnection* connection, DBusMessage* message, void* user_data);
@@ -467,6 +469,7 @@ static UnityPlace_EntryInfo* unity_place_service_dbus_proxy_get_entries (UnityPl
 static void unity_place_service_dbus_proxy_unity_place_service__interface_init (UnityPlaceServiceIface* iface);
 static void unity_place_service_dbus_proxy_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_place_service_dbus_proxy_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+UnityPlaceEntryService* unity_place_entry_service_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
 GType unity_place_entry_service_get_type (void);
 void unity_place_entry_service_set_global_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error);
 void unity_place_entry_service_set_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error);
@@ -485,7 +488,6 @@ static void _dbus_unity_place_entry_service_entry_renderer_info_changed (GObject
 static void _dbus_unity_place_entry_service_global_renderer_info_changed (GObject* _sender, UnityPlace_RendererInfo* renderer_info, DBusConnection* _connection);
 static void _dbus_unity_place_entry_service_place_entry_info_changed (GObject* _sender, UnityPlace_EntryInfoData* entry_info_data, DBusConnection* _connection);
 GType unity_place_entry_service_dbus_proxy_get_type (void);
-UnityPlaceEntryService* unity_place_entry_service_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
 static void _dbus_handle_unity_place_entry_service_entry_renderer_info_changed (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message);
 static void _dbus_handle_unity_place_entry_service_global_renderer_info_changed (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message);
 static void _dbus_handle_unity_place_entry_service_place_entry_info_changed (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message);
@@ -592,8 +594,6 @@ static void unity_place_controller_get_property (GObject * object, guint propert
 static void unity_place_controller_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
-static void _vala_dbus_register_object (DBusConnection* connection, const char* path, void* object);
-static void _vala_dbus_unregister_object (gpointer connection, GObject* object);
 
 static const DBusObjectPathVTable _unity_place_service_dbus_path_vtable = {_unity_place_service_dbus_unregister, unity_place_service_dbus_message};
 static const _DBusObjectVTable _unity_place_service_dbus_vtable = {unity_place_service_dbus_register_object};
@@ -1407,15 +1407,15 @@ static GObject * unity_place_entry_info_constructor (GType type, guint n_constru
 			char* _tmp9_;
 			self->priv->info.sections_model = (_tmp9_ = g_strdup (""), _g_free0 (self->priv->info.sections_model), _tmp9_);
 		}
-		self->priv->info.hints = (_tmp10_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->info.hints), _tmp10_);
+		self->priv->info.hints = (_tmp10_ = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free), _g_hash_table_unref0 (self->priv->info.hints), _tmp10_);
 		self->priv->info.entry_renderer_info.default_renderer = (_tmp11_ = g_strdup (""), _g_free0 (self->priv->info.entry_renderer_info.default_renderer), _tmp11_);
 		self->priv->info.entry_renderer_info.groups_model = (_tmp12_ = g_strdup (""), _g_free0 (self->priv->info.entry_renderer_info.groups_model), _tmp12_);
 		self->priv->info.entry_renderer_info.results_model = (_tmp13_ = g_strdup (""), _g_free0 (self->priv->info.entry_renderer_info.results_model), _tmp13_);
-		self->priv->info.entry_renderer_info.hints = (_tmp14_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->info.entry_renderer_info.hints), _tmp14_);
+		self->priv->info.entry_renderer_info.hints = (_tmp14_ = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free), _g_hash_table_unref0 (self->priv->info.entry_renderer_info.hints), _tmp14_);
 		self->priv->info.global_renderer_info.default_renderer = (_tmp15_ = g_strdup (""), _g_free0 (self->priv->info.global_renderer_info.default_renderer), _tmp15_);
 		self->priv->info.global_renderer_info.groups_model = (_tmp16_ = g_strdup (""), _g_free0 (self->priv->info.global_renderer_info.groups_model), _tmp16_);
 		self->priv->info.global_renderer_info.results_model = (_tmp17_ = g_strdup (""), _g_free0 (self->priv->info.global_renderer_info.results_model), _tmp17_);
-		self->priv->info.global_renderer_info.hints = (_tmp18_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->info.global_renderer_info.hints), _tmp18_);
+		self->priv->info.global_renderer_info.hints = (_tmp18_ = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free), _g_hash_table_unref0 (self->priv->info.global_renderer_info.hints), _tmp18_);
 		self->priv->_entry_renderer_info = (_tmp19_ = unity_place_renderer_info_new (&self->priv->info.entry_renderer_info), _g_object_unref0 (self->priv->_entry_renderer_info), _tmp19_);
 		self->priv->_global_renderer_info = (_tmp20_ = unity_place_renderer_info_new (&self->priv->info.global_renderer_info), _g_object_unref0 (self->priv->_global_renderer_info), _tmp20_);
 	}
@@ -1579,6 +1579,25 @@ static void unity_place_entry_info_set_property (GObject * object, guint propert
 
 UnityPlace_EntryInfo* unity_place_service_get_entries (UnityPlaceService* self, int* result_length1, GError** error) {
 	return UNITY_PLACE_SERVICE_GET_INTERFACE (self)->get_entries (self, result_length1, error);
+}
+
+
+static void _vala_dbus_register_object (DBusConnection* connection, const char* path, void* object) {
+	const _DBusObjectVTable * vtable;
+	vtable = g_type_get_qdata (G_TYPE_FROM_INSTANCE (object), g_quark_from_static_string ("DBusObjectVTable"));
+	if (vtable) {
+		vtable->register_object (connection, path, object);
+	} else {
+		g_warning ("Object does not implement any D-Bus interface");
+	}
+}
+
+
+static void _vala_dbus_unregister_object (gpointer connection, GObject* object) {
+	char* path;
+	path = g_object_steal_data ((GObject*) object, "dbus_object_path");
+	dbus_connection_unregister_object_path (connection, path);
+	g_free (path);
 }
 
 
@@ -4632,7 +4651,7 @@ static GObject * unity_place_service_impl_constructor (GType type, guint n_const
 	self = UNITY_PLACE_SERVICE_IMPL (obj);
 	{
 		GHashTable* _tmp295_;
-		self->priv->entries = (_tmp295_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->entries), _tmp295_);
+		self->priv->entries = (_tmp295_ = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_object_unref), _g_hash_table_unref0 (self->priv->entries), _tmp295_);
 	}
 	return obj;
 }
@@ -5387,7 +5406,7 @@ static GObject * unity_place_controller_constructor (GType type, guint n_constru
 		UnityPlaceServiceImpl* _tmp296_;
 		GHashTable* _tmp297_;
 		self->priv->service = (_tmp296_ = unity_place_service_impl_new (self->priv->_dbus_path), _g_object_unref0 (self->priv->service), _tmp296_);
-		self->priv->entry_signals = (_tmp297_ = g_hash_table_new (g_str_hash, g_str_equal), _g_hash_table_unref0 (self->priv->entry_signals), _tmp297_);
+		self->priv->entry_signals = (_tmp297_ = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, unity_place__entrysignals_free), _g_hash_table_unref0 (self->priv->entry_signals), _tmp297_);
 	}
 	return obj;
 }
@@ -5479,25 +5498,6 @@ static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNoti
 static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func) {
 	_vala_array_destroy (array, array_length, destroy_func);
 	g_free (array);
-}
-
-
-static void _vala_dbus_register_object (DBusConnection* connection, const char* path, void* object) {
-	const _DBusObjectVTable * vtable;
-	vtable = g_type_get_qdata (G_TYPE_FROM_INSTANCE (object), g_quark_from_static_string ("DBusObjectVTable"));
-	if (vtable) {
-		vtable->register_object (connection, path, object);
-	} else {
-		g_warning ("Object does not implement any D-Bus interface");
-	}
-}
-
-
-static void _vala_dbus_unregister_object (gpointer connection, GObject* object) {
-	char* path;
-	path = g_object_steal_data ((GObject*) object, "dbus_object_path");
-	dbus_connection_unregister_object_path (connection, path);
-	g_free (path);
 }
 
 
