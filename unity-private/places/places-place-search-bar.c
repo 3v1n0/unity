@@ -23,11 +23,14 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <clutk/clutk.h>
-#include <clutter/clutter.h>
-#include <float.h>
-#include <math.h>
 #include <stdlib.h>
 #include <string.h>
+#include <gee.h>
+#include <dee.h>
+#include <clutter/clutter.h>
+#include <unity.h>
+#include <float.h>
+#include <math.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
 #include <cairo.h>
 #include <gdk/gdk.h>
@@ -46,13 +49,11 @@ typedef struct _UnityPlacesPlaceSearchBarPrivate UnityPlacesPlaceSearchBarPrivat
 
 #define UNITY_PLACES_TYPE_PLACE_ENTRY (unity_places_place_entry_get_type ())
 #define UNITY_PLACES_PLACE_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY, UnityPlacesPlaceEntry))
-#define UNITY_PLACES_PLACE_ENTRY_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_ENTRY, UnityPlacesPlaceEntryClass))
 #define UNITY_PLACES_IS_PLACE_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY))
-#define UNITY_PLACES_IS_PLACE_ENTRY_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_ENTRY))
-#define UNITY_PLACES_PLACE_ENTRY_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY, UnityPlacesPlaceEntryClass))
+#define UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY, UnityPlacesPlaceEntryIface))
 
 typedef struct _UnityPlacesPlaceEntry UnityPlacesPlaceEntry;
-typedef struct _UnityPlacesPlaceEntryClass UnityPlacesPlaceEntryClass;
+typedef struct _UnityPlacesPlaceEntryIface UnityPlacesPlaceEntryIface;
 
 #define UNITY_PLACES_TYPE_PLACE_SEARCH_BAR_BACKGROUND (unity_places_place_search_bar_background_get_type ())
 #define UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR_BACKGROUND, UnityPlacesPlaceSearchBarBackground))
@@ -84,6 +85,18 @@ typedef struct _UnityPlacesPlaceSearchEntryClass UnityPlacesPlaceSearchEntryClas
 typedef struct _UnityPlacesPlaceSearchSectionsBar UnityPlacesPlaceSearchSectionsBar;
 typedef struct _UnityPlacesPlaceSearchSectionsBarClass UnityPlacesPlaceSearchSectionsBarClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+
+#define UNITY_TESTING_TYPE_OBJECT_REGISTRY (unity_testing_object_registry_get_type ())
+#define UNITY_TESTING_OBJECT_REGISTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTING_TYPE_OBJECT_REGISTRY, UnityTestingObjectRegistry))
+#define UNITY_TESTING_OBJECT_REGISTRY_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTING_TYPE_OBJECT_REGISTRY, UnityTestingObjectRegistryClass))
+#define UNITY_TESTING_IS_OBJECT_REGISTRY(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTING_TYPE_OBJECT_REGISTRY))
+#define UNITY_TESTING_IS_OBJECT_REGISTRY_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTING_TYPE_OBJECT_REGISTRY))
+#define UNITY_TESTING_OBJECT_REGISTRY_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTING_TYPE_OBJECT_REGISTRY, UnityTestingObjectRegistryClass))
+
+typedef struct _UnityTestingObjectRegistry UnityTestingObjectRegistry;
+typedef struct _UnityTestingObjectRegistryClass UnityTestingObjectRegistryClass;
+#define _unity_testing_object_registry_unref0(var) ((var == NULL) ? NULL : (var = (unity_testing_object_registry_unref (var), NULL)))
+typedef struct _UnityPlacesPlaceSearchEntryPrivate UnityPlacesPlaceSearchEntryPrivate;
 #define _g_hash_table_unref0(var) ((var == NULL) ? NULL : (var = (g_hash_table_unref (var), NULL)))
 typedef struct _UnityPlacesPlaceSearchBarBackgroundPrivate UnityPlacesPlaceSearchBarBackgroundPrivate;
 #define _cairo_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_destroy (var), NULL)))
@@ -99,11 +112,67 @@ struct _UnityPlacesPlaceSearchBarClass {
 	CtkBoxClass parent_class;
 };
 
+struct _UnityPlacesPlaceEntryIface {
+	GTypeInterface parent_iface;
+	void (*connect) (UnityPlacesPlaceEntry* self);
+	void (*set_search) (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints);
+	void (*set_active_section) (UnityPlacesPlaceEntry* self, guint section_id);
+	void (*set_global_search) (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints);
+	const char* (*get_name) (UnityPlacesPlaceEntry* self);
+	void (*set_name) (UnityPlacesPlaceEntry* self, const char* value);
+	const char* (*get_icon) (UnityPlacesPlaceEntry* self);
+	void (*set_icon) (UnityPlacesPlaceEntry* self, const char* value);
+	const char* (*get_description) (UnityPlacesPlaceEntry* self);
+	void (*set_description) (UnityPlacesPlaceEntry* self, const char* value);
+	guint (*get_position) (UnityPlacesPlaceEntry* self);
+	void (*set_position) (UnityPlacesPlaceEntry* self, guint value);
+	char** (*get_mimetypes) (UnityPlacesPlaceEntry* self, int* result_length1);
+	void (*set_mimetypes) (UnityPlacesPlaceEntry* self, char** value, int value_length1);
+	gboolean (*get_sensitive) (UnityPlacesPlaceEntry* self);
+	void (*set_sensitive) (UnityPlacesPlaceEntry* self, gboolean value);
+	GeeHashMap* (*get_hints) (UnityPlacesPlaceEntry* self);
+	void (*set_hints) (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+	gboolean (*get_online) (UnityPlacesPlaceEntry* self);
+	void (*set_online) (UnityPlacesPlaceEntry* self, gboolean value);
+	gboolean (*get_active) (UnityPlacesPlaceEntry* self);
+	void (*set_active) (UnityPlacesPlaceEntry* self, gboolean value);
+	DeeModel* (*get_sections_model) (UnityPlacesPlaceEntry* self);
+	void (*set_sections_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
+	const char* (*get_entry_renderer_name) (UnityPlacesPlaceEntry* self);
+	void (*set_entry_renderer_name) (UnityPlacesPlaceEntry* self, const char* value);
+	DeeModel* (*get_entry_groups_model) (UnityPlacesPlaceEntry* self);
+	void (*set_entry_groups_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
+	DeeModel* (*get_entry_results_model) (UnityPlacesPlaceEntry* self);
+	void (*set_entry_results_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
+	GeeHashMap* (*get_entry_renderer_hints) (UnityPlacesPlaceEntry* self);
+	void (*set_entry_renderer_hints) (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+	const char* (*get_global_renderer_name) (UnityPlacesPlaceEntry* self);
+	void (*set_global_renderer_name) (UnityPlacesPlaceEntry* self, const char* value);
+	DeeModel* (*get_global_groups_model) (UnityPlacesPlaceEntry* self);
+	void (*set_global_groups_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
+	DeeModel* (*get_global_results_model) (UnityPlacesPlaceEntry* self);
+	void (*set_global_results_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
+	GeeHashMap* (*get_global_renderer_hints) (UnityPlacesPlaceEntry* self);
+	void (*set_global_renderer_hints) (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+};
+
 struct _UnityPlacesPlaceSearchBarPrivate {
 	UnityPlacesPlaceEntry* active_entry;
 	UnityPlacesPlaceSearchBarBackground* bg;
 	UnityPlacesPlaceSearchEntry* entry;
 	UnityPlacesPlaceSearchSectionsBar* sections;
+};
+
+struct _UnityPlacesPlaceSearchEntry {
+	CtkBox parent_instance;
+	UnityPlacesPlaceSearchEntryPrivate * priv;
+	CtkImage* left_icon;
+	CtkText* text;
+	UnityThemeImage* right_icon;
+};
+
+struct _UnityPlacesPlaceSearchEntryClass {
+	CtkBoxClass parent_class;
 };
 
 struct _UnityPlacesPlaceSearchBarBackground {
@@ -140,16 +209,27 @@ enum  {
 };
 #define UNITY_PLACES_PLACE_SEARCH_BAR_SPACING 10
 #define UNITY_PLACES_PLACE_SEARCH_BAR_RANDOM_TEXT_WIDTH 400
+gpointer unity_testing_object_registry_ref (gpointer instance);
+void unity_testing_object_registry_unref (gpointer instance);
+GParamSpec* unity_testing_param_spec_object_registry (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
+void unity_testing_value_set_object_registry (GValue* value, gpointer v_object);
+void unity_testing_value_take_object_registry (GValue* value, gpointer v_object);
+gpointer unity_testing_value_get_object_registry (const GValue* value);
+GType unity_testing_object_registry_get_type (void);
+UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void);
+void unity_testing_object_registry_register (UnityTestingObjectRegistry* self, const char* name, GObject* object);
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_new (void);
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_construct (GType object_type);
 void unity_places_place_search_entry_reset (UnityPlacesPlaceSearchEntry* self);
 void unity_places_place_search_bar_reset (UnityPlacesPlaceSearchBar* self);
+static void unity_places_place_search_bar_on_search_text_changed (UnityPlacesPlaceSearchBar* self, const char* text);
+void unity_places_place_search_bar_search (UnityPlacesPlaceSearchBar* self, const char* text);
+char* unity_places_place_search_bar_get_search_text (UnityPlacesPlaceSearchBar* self);
 gboolean unity_places_place_search_bar_background_update_background (UnityPlacesPlaceSearchBarBackground* self);
 static gboolean _unity_places_place_search_bar_background_update_background_gsource_func (gpointer self);
 static void unity_places_place_search_bar_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
 static void unity_places_place_search_bar_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height, float* nat_height);
 void unity_places_place_entry_set_search (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints);
-static void unity_places_place_search_bar_on_search_text_changed (UnityPlacesPlaceSearchBar* self, const char* text);
 void unity_places_place_search_bar_background_set_entry_position (UnityPlacesPlaceSearchBarBackground* self, gint value);
 void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSearchSectionsBar* self, UnityPlacesPlaceEntry* entry);
 void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearchBar* self, UnityPlacesPlaceEntry* entry, gint x);
@@ -182,7 +262,10 @@ static void unity_places_place_search_bar_background_set_property (GObject * obj
 
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_construct (GType object_type) {
 	UnityPlacesPlaceSearchBar * self;
+	UnityTestingObjectRegistry* _tmp0_;
 	self = (UnityPlacesPlaceSearchBar*) g_object_new (object_type, "orientation", CTK_ORIENTATION_HORIZONTAL, "homogeneous", FALSE, "spacing", 8, NULL);
+	unity_testing_object_registry_register (_tmp0_ = unity_testing_object_registry_get_default (), "UnityPlacesSearchBar", (GObject*) self);
+	_unity_testing_object_registry_unref0 (_tmp0_);
 	return self;
 }
 
@@ -195,6 +278,22 @@ UnityPlacesPlaceSearchBar* unity_places_place_search_bar_new (void) {
 void unity_places_place_search_bar_reset (UnityPlacesPlaceSearchBar* self) {
 	g_return_if_fail (self != NULL);
 	unity_places_place_search_entry_reset (self->priv->entry);
+}
+
+
+void unity_places_place_search_bar_search (UnityPlacesPlaceSearchBar* self, const char* text) {
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (text != NULL);
+	clutter_text_set_text ((ClutterText*) self->priv->entry->text, text);
+	unity_places_place_search_bar_on_search_text_changed (self, text);
+}
+
+
+char* unity_places_place_search_bar_get_search_text (UnityPlacesPlaceSearchBar* self) {
+	char* result = NULL;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = g_strdup (clutter_text_get_text ((ClutterText*) self->priv->entry->text));
+	return result;
 }
 
 
@@ -240,7 +339,7 @@ static void unity_places_place_search_bar_on_search_text_changed (UnityPlacesPla
 	g_return_if_fail (self != NULL);
 	if (UNITY_PLACES_IS_PLACE_ENTRY (self->priv->active_entry)) {
 		GHashTable* hints;
-		hints = g_hash_table_new (g_str_hash, g_str_equal);
+		hints = g_hash_table_new_full (g_str_hash, g_str_equal, g_free, g_free);
 		unity_places_place_entry_set_search (self->priv->active_entry, text, hints);
 		_g_hash_table_unref0 (hints);
 	}
@@ -259,6 +358,7 @@ void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearch
 	self->priv->active_entry = (_tmp0_ = _g_object_ref0 (entry), _g_object_unref0 (self->priv->active_entry), _tmp0_);
 	unity_places_place_search_bar_background_set_entry_position (self->priv->bg, x);
 	unity_places_place_search_sections_bar_set_active_entry (self->priv->sections, entry);
+	clutter_actor_grab_key_focus ((ClutterActor*) self->priv->entry->text);
 }
 
 
@@ -515,7 +615,7 @@ static GObject * unity_places_place_search_bar_background_constructor (GType typ
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("places-place-search-bar.vala:168: Unable to load dash background");
+				g_warning ("places-place-search-bar.vala:184: Unable to load dash background");
 				_g_error_free0 (e);
 			}
 		}

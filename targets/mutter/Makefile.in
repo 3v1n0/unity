@@ -333,6 +333,7 @@ EXTRA_DIST = $(am__append_3)
 @ENABLE_MUTTER_TRUE@  --pkg clutter-gtk-0.10 \
 @ENABLE_MUTTER_TRUE@  --pkg clutk-0.3 \
 @ENABLE_MUTTER_TRUE@  --pkg dbus-glib-1 \
+@ENABLE_MUTTER_TRUE@  --pkg Dbusmenu-Glib-0.2 \
 @ENABLE_MUTTER_TRUE@  --pkg dee-1.0 \
 @ENABLE_MUTTER_TRUE@  --pkg gtk+-2.0 \
 @ENABLE_MUTTER_TRUE@  --pkg gee-1.0 \

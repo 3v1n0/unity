@@ -15,115 +15,219 @@
  *
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
+ * FIXME: wallpaper-slideshows are not yet supported by this class
  */
 
 namespace Unity.Testing
 {
   public class Background : Ctk.Bin
   {
-    /* Gnome Desktop background gconf keys */
-    private string BG_DIR    = "/desktop/gnome/background";
-    private string BG_FILE   = "/desktop/gnome/background/picture_filename";
-    private string BG_OPTION = "/desktop/gnome/background/picture_options";
+    private string BG_DIR        = "/desktop/gnome/background";
+    private string BG_PIC_OPTS   = "/desktop/gnome/background/picture_options";
+    private string BG_SHADE_TYPE = "/desktop/gnome/background/color_shading_type";
+    private string BG_PRIM_COL   = "/desktop/gnome/background/primary_color";
+    private string BG_SEC_COL    = "/desktop/gnome/background/secondary_color";
+    private string BG_FILENAME   = "/desktop/gnome/background/picture_filename";
 
+    private string DEFAULT_PIC_OPTS   = "none";
+    private string DEFAULT_SHADE_TYPE = "solid";
+    private string DEFAULT_AMBIANCE_COL = "#2C2C00001E1E"; // Ubuntu Dark Purple
+    private string DEFAULT_RADIANCE_COL = "#AEAEA7A79F9F"; // Ubuntu Grey
+    private string DEFAULT_FILENAME   = "/usr/share/backgrounds/warty-final.png";
+
+    private Clutter.CairoTexture bg_gradient;
+    private Clutter.Texture      bg_image;
+    private Gnome.BG             gbg;
+    private GConf.Client         client;
+
+    private string pic_opts;
+    private string shade_type;
+    private string prim_col;
+    private string sec_col;
     private string filename;
-    private string option;
-
-    private Clutter.Texture bg;
 
     construct
     {
       START_FUNCTION ();
-      var client = GConf.Client.get_default ();
 
-      /* Setup the initial properties and notifies */
+      this.gbg = new Gnome.BG ();
+      this.client = GConf.Client.get_default ();
+
+      /* register monitoring background-directory with gconf */
       try
         {
-          client.add_dir (this.BG_DIR, GConf.ClientPreloadType.NONE);
+          this.client.add_dir (this.BG_DIR, GConf.ClientPreloadType.NONE);
         }
       catch (GLib.Error e)
+        {
+          warning ("Background: Unable to monitor background-settings: %s",
+                   e.message);
+        }
+
+      /* load values from gconf */
+      try
+        {
+          this.pic_opts = this.client.get_string (this.BG_PIC_OPTS);
+        }
+      catch (Error e)
+        {
+          this.pic_opts = DEFAULT_PIC_OPTS;
+        }
+
+      try
+        {
+          this.shade_type = this.client.get_string (this.BG_SHADE_TYPE);
+        }
+      catch (Error e)
+        {
+          this.shade_type = DEFAULT_SHADE_TYPE;
+        }
+
+      try
+        {
+          this.prim_col = this.client.get_string (this.BG_PRIM_COL);
+        }
+      catch (Error e)
+        {
+          this.prim_col = DEFAULT_AMBIANCE_COL;
+        }
+
+      try
+        {
+          this.sec_col = this.client.get_string (this.BG_SEC_COL);
+        }
+      catch (Error e)
+        {
+          this.sec_col = DEFAULT_AMBIANCE_COL;
+        }
+
+      try
+        {
+          this.filename = this.client.get_string (this.BG_FILENAME);
+        }
+      catch (Error e)
+        {
+          this.filename = DEFAULT_FILENAME;
+        }
+
+      /* register monitor */
+      try
+       {
+          this.client.notify_add (this.BG_DIR, this._on_gconf_changed);
+        }
+      catch (Error e)
         {
           warning ("Background: Unable to monitor background: %s", e.message);
         }
 
-      try
-        {
-          this.filename = client.get_string (this.BG_FILE);
-        }
-      catch (Error e)
-        {
-          this.filename = "/usr/share/backgrounds/warty-final.png";
-        }
+      this.bg_gradient = new Clutter.CairoTexture (1, 1);
+      this.bg_gradient.name = "bg_gradient";
+      this.bg_image = new Clutter.Texture ();
+      this.bg_image.name = "bg_image";
 
-      try
-        {
-          client.notify_add (this.BG_FILE, this.on_filename_changed);
-        }
-      catch (Error e)
-        {
-          warning ("Background: Unable to monitor background filename: %s",
-                   e.message);
-        }
-      try
-        {
-          this.option = client.get_string (this.BG_OPTION);
-        }
-      catch (Error e)
-        {
-          this.option = "wallpaper";
-        }
-      try
-        {
-          client.notify_add (this.BG_OPTION, this.on_option_changed);
-        }
-      catch (Error e)
-        {
-          warning ("Background: Unable to monitor background options: %s",
-                   e.message);
-        }
+      // setting async. loading to TRUE here, requires hooking up to
+      // "allocation-changed" for the texture-image, otherwise we cannot get
+      // valid values for a texture-images base-size, which is needed to
+      // correctly handle image-placement... this sucks balls!!!
+      this.bg_image.set_load_async (true);
+      this.bg_image.load_finished.connect (_handle_image_placement);
 
-      /* The texture that will show the background */
-      this.bg = new Clutter.Texture ();
-      this.bg.set_load_async (true);
-      this.add_actor (this.bg);
-      this.bg.show ();
+      this.gbg.load_from_preferences (client);
 
-      /* Load the texture */
-      this.ensure_layout ();
+      // this is needed for the bg_gradient to have the correct size
+      this.allocation_changed.connect (_on_allocation_changed);
+
       END_FUNCTION ();
     }
 
-    private void on_filename_changed (GConf.Client client,
-                                      uint         cxnid,
-                                      GConf.Entry  entry)
+    private void
+    _handle_image_placement ()
     {
-      var new_filename = entry.get_value ().get_string ();
+      Gnome.BGPlacement placement = this.gbg.get_placement ();
 
-      if (new_filename == this.filename)
-        return;
+      switch (placement)
+        {
+          case Gnome.BGPlacement.TILED:
+            {
+              this.bg_image.set_repeat (true, true);
+              this.bg_image.set_sync_size (true);
+              this.x = 0.0f;
+              this.y = 0.0f;
+            }
+          break;
 
-      this.filename = new_filename;
-      this.ensure_layout ();
+          case Gnome.BGPlacement.ZOOMED:
+            {
+              this.bg_image.set_repeat (false, false);
+              this.bg_image.set_sync_size (false);
+              this.bg_image.set_keep_aspect_ratio (true);
+              this.x = 0.0f;
+              this.y = 0.0f;
+            }
+          break;
+
+          case Gnome.BGPlacement.CENTERED:
+            {
+              this.bg_image.set_repeat (false, false);
+              this.bg_image.set_sync_size (false);
+              this.bg_image.set_keep_aspect_ratio (false);
+              this.x = 0.0f;
+              this.y = 0.0f;
+            }
+          break;
+
+          case Gnome.BGPlacement.SCALED:
+            {
+              this.bg_image.set_keep_aspect_ratio (true);
+              this.bg_image.set_sync_size (false);
+              this.x = 0.0f;
+              this.y = 0.0f;
+            }
+          break;
+
+          case Gnome.BGPlacement.FILL_SCREEN:
+            {
+              this.bg_image.set_keep_aspect_ratio (false);
+              this.x = 0.0f;
+              this.y = 0.0f;
+            }
+          break;
+
+          case Gnome.BGPlacement.SPANNED:
+            {
+              this.bg_image.set_repeat (false, false);
+              this.bg_image.set_sync_size (true);
+              this.bg_image.set_keep_aspect_ratio (true);
+              this.x = 0.0f;
+              this.y = 0.0f;
+            }
+          break;
+        }
     }
 
-    private void on_option_changed (GConf.Client client,
-                                     uint         cxnid,
-                                     GConf.Entry  entry)
+    private void
+    _on_allocation_changed ()
     {
-      var new_option = entry.get_value ().get_string ();
-
-      if (new_option == this.option)
-        return;
-
-      this.option = new_option;
-      this.ensure_layout ();
+      if (this.filename != "")
+        _update_image ();
+      else
+        _update_gradient ();
     }
 
-    private void ensure_layout ()
+    private void
+    _update_image ()
     {
+
+      if (this.find_child_by_name ("bg_image") != this.bg_image)
+        {
+          this.remove_actor (this.bg_gradient);
+          this.add_actor (this.bg_image);
+          this.bg_image.show ();
+        }
+
       try
         {
-          this.bg.set_from_file (this.filename);
+          this.bg_image.set_from_file (this.filename);
         }
       catch (Error e)
         {
@@ -131,8 +235,190 @@ namespace Unity.Testing
                    this.filename,
                    e.message);
         }
+    }
 
-      this.queue_relayout ();
+    private void
+    _update_gradient ()
+    {
+      Gnome.BGColorType type;
+      Gdk.Color         primary;
+      Gdk.Color         secondary;
+
+      if (this.find_child_by_name ("bg_gradient") != this.bg_gradient)
+        {
+          this.remove_actor (this.bg_image);
+          this.add_actor (this.bg_gradient);
+          this.bg_gradient.show ();
+        }
+
+      this.x = 0.0f;
+      this.y = 0.0f;
+
+      this.gbg.get_color (out type, out primary, out secondary);
+
+      this.bg_gradient.set_surface_size ((uint) this.width,
+                                         (uint) this.height);
+
+      switch (type)
+        {
+          case Gnome.BGColorType.SOLID:
+            {
+
+              Cairo.Context cr = this.bg_gradient.create ();
+              cr.set_operator (Cairo.Operator.OVER);
+              cr.scale (1.0f, 1.0f);
+              cr.set_source_rgb ((double) primary.red   / (double) 0xffff,
+                                 (double) primary.green / (double) 0xffff,
+                                 (double) primary.blue  / (double) 0xffff);
+              cr.rectangle (0.0f,
+                            0.0f,
+                            (double) this.width,
+                            (double) this.height);
+              cr.fill ();
+            }
+          break;
+
+          case Gnome.BGColorType.V_GRADIENT:
+            {
+              Cairo.Context cr  = this.bg_gradient.create ();
+              Cairo.Pattern pat = new Cairo.Pattern.linear (0.0f,
+                                                            0.0f,
+                                                            0.0f,
+                                                            (double) this.height);
+              cr.set_operator (Cairo.Operator.OVER);
+              cr.scale (1.0f, 1.0f);
+              pat.add_color_stop_rgb (0.0f,
+                                      (double) primary.red   / (double) 0xffff,
+                                      (double) primary.green / (double) 0xffff,
+                                      (double) primary.blue  / (double) 0xffff);
+              pat.add_color_stop_rgb (1.0f,
+                                      (double) secondary.red   / (double) 0xffff,
+                                      (double) secondary.green / (double) 0xffff,
+                                      (double) secondary.blue  / (double) 0xffff);
+              cr.set_source (pat);
+              cr.rectangle (0.0f,
+                            0.0f,
+                            (double) this.width,
+                            (double) this.height);
+              cr.fill ();
+            }
+          break;
+
+          case Gnome.BGColorType.H_GRADIENT:
+            {
+              Cairo.Context cr  = this.bg_gradient.create ();
+              Cairo.Pattern pat = new Cairo.Pattern.linear (0.0f,
+                                                            0.0f,
+                                                            (double) this.width,
+                                                            0.0f);
+              cr.set_operator (Cairo.Operator.OVER);
+              cr.scale (1.0f, 1.0f);
+              pat.add_color_stop_rgb (0.0f,
+                                      (double) primary.red   / (double) 0xffff,
+                                      (double) primary.green / (double) 0xffff,
+                                      (double) primary.blue  / (double) 0xffff);
+              pat.add_color_stop_rgb (1.0f,
+                                      (double) secondary.red   / (double) 0xffff,
+                                      (double) secondary.green / (double) 0xffff,
+                                      (double) secondary.blue  / (double) 0xffff);
+              cr.set_source (pat);
+              cr.rectangle (0.0f,
+                            0.0f,
+                            (double) this.width,
+                            (double) this.height);
+              cr.fill ();
+            }
+          break;
+        }
+    }
+
+    private void
+    _on_gconf_changed (GConf.Client client,
+                       uint         cxnid,
+                       GConf.Entry  entry)
+    {
+      bool   needs_update = false;
+      string new_value;
+
+      this.gbg.load_from_preferences (client);
+
+      try
+        {
+          new_value = this.client.get_string (this.BG_PIC_OPTS);
+        }
+      catch (Error e)
+        {
+          new_value = DEFAULT_PIC_OPTS;
+        }
+      if (new_value != this.pic_opts)
+      {
+        this.pic_opts = new_value;
+        needs_update = true;
+      }
+
+      try
+        {
+          new_value = this.client.get_string (this.BG_SHADE_TYPE);
+        }
+      catch (Error e)
+        {
+          new_value = DEFAULT_SHADE_TYPE;
+        }
+      if (new_value != this.shade_type)
+      {
+        this.shade_type = new_value;
+        needs_update = true;
+      }
+
+      try
+        {
+          new_value = this.client.get_string (this.BG_PRIM_COL);
+        }
+      catch (Error e)
+        {
+          new_value = DEFAULT_AMBIANCE_COL;
+        }
+      if (new_value != this.prim_col)
+      {
+        this.prim_col = new_value;
+        needs_update = true;
+      }
+
+      try
+        {
+          new_value = this.client.get_string (this.BG_SEC_COL);
+        }
+      catch (Error e)
+        {
+          new_value = DEFAULT_AMBIANCE_COL;
+        }
+      if (new_value != this.sec_col)
+        {
+          this.sec_col = new_value;
+          needs_update = true;
+        }
+
+      try
+        {
+          new_value = this.client.get_string (this.BG_FILENAME);
+        }
+      catch (Error e)
+       {
+         new_value = DEFAULT_FILENAME;
+       }
+      if (new_value != this.filename)
+      {
+        this.filename = new_value;
+        needs_update = true;
+      }
+
+      if (needs_update)
+        {
+          if (this.filename != "")
+            _update_image ();
+          else
+            _update_gradient ();
+        }
     }
   }
 }

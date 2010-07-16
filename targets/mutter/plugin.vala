@@ -318,9 +318,10 @@ namespace Unity
         {
           this.launcher.get_view ().hide ();
           this.panel.hide ();
-          var menu = Unity.Launcher.QuicklistController.get_default ();
-          if (menu.menu_is_open ())
-            menu.close_menu ();
+          var menu = Unity.Launcher.QuicklistController.get_current_menu ();
+          if (menu.is_menu_open ())
+            menu.state = Unity.Launcher.QuicklistControllerState.CLOSED;
+
           fullscreen_obstruction = true;
         }
       else
@@ -330,7 +331,7 @@ namespace Unity
           fullscreen_obstruction = false;
         }
     }
-    
+
     public uint32 get_current_time ()
     {
       return Mutter.MetaDisplay.get_current_time (Mutter.MetaScreen.get_display (plugin.get_screen ()));
@@ -614,6 +615,8 @@ namespace Unity
 
       while (Gtk.events_pending ())
         Gtk.main_iteration ();
+
+      places.hidden ();
     }
 
     public void show_unity ()
@@ -650,6 +653,8 @@ namespace Unity
           plugin.get_normal_window_group ().animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100, "opacity", 0);
           places.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100,
                           "opacity", 255);
+
+          places.shown ();
         }
     }
 

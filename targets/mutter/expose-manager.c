@@ -498,14 +498,14 @@ static gboolean _lambda6_ (UnityExposeManager* self) {
 	gboolean result = FALSE;
 	UnityLauncherQuicklistController* ql_controller;
 	gboolean _tmp0_ = FALSE;
-	ql_controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
-	if (unity_launcher_quicklist_controller_menu_is_open (ql_controller)) {
+	ql_controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_current_menu ());
+	if (unity_launcher_quicklist_controller_get_state (ql_controller) == UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU) {
 		_tmp0_ = self->priv->menu_in_hover_close_state;
 	} else {
 		_tmp0_ = FALSE;
 	}
 	if (_tmp0_) {
-		ctk_menu_set_close_on_leave (ql_controller->menu, FALSE);
+		ctk_menu_set_close_on_leave (unity_launcher_quicklist_controller_get_view (ql_controller), FALSE);
 	}
 	result = FALSE;
 	_g_object_unref0 (ql_controller);
@@ -524,14 +524,14 @@ static gboolean _lambda7_ (UnityExposeManager* self) {
 	gboolean result = FALSE;
 	UnityLauncherQuicklistController* ql_controller;
 	gboolean _tmp0_ = FALSE;
-	ql_controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
-	if (unity_launcher_quicklist_controller_menu_is_open (ql_controller)) {
+	ql_controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_current_menu ());
+	if (unity_launcher_quicklist_controller_get_state (ql_controller) == UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU) {
 		_tmp0_ = self->priv->menu_in_hover_close_state;
 	} else {
 		_tmp0_ = FALSE;
 	}
 	if (_tmp0_) {
-		ctk_menu_set_close_on_leave (ql_controller->menu, TRUE);
+		ctk_menu_set_close_on_leave (unity_launcher_quicklist_controller_get_view (ql_controller), TRUE);
 	}
 	result = FALSE;
 	_g_object_unref0 (ql_controller);
@@ -561,10 +561,10 @@ void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* window
 	ClutterActor* _tmp2_;
 	GList* mutter_windows;
 	g_return_if_fail (self != NULL);
-	controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
-	if (unity_launcher_quicklist_controller_menu_is_open (controller)) {
-		g_signal_connect_object ((ClutterActor*) controller->menu, "destroy", (GCallback) _unity_expose_manager_end_expose_clutter_actor_destroy, self, 0);
-		self->priv->menu_in_hover_close_state = ctk_menu_get_close_on_leave (controller->menu);
+	controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_current_menu ());
+	if (unity_launcher_quicklist_controller_is_menu_open ()) {
+		g_signal_connect_object ((ClutterActor*) unity_launcher_quicklist_controller_get_view (controller), "destroy", (GCallback) _unity_expose_manager_end_expose_clutter_actor_destroy, self, 0);
+		self->priv->menu_in_hover_close_state = ctk_menu_get_close_on_leave (unity_launcher_quicklist_controller_get_view (controller));
 	}
 	self->priv->exposed_windows = (_tmp0_ = NULL, __g_list_free_g_object_unref0 (self->priv->exposed_windows), _tmp0_);
 	if (self->priv->expose_group != NULL) {
@@ -667,12 +667,12 @@ void unity_expose_manager_end_expose (UnityExposeManager* self) {
 	gboolean _tmp1_ = FALSE;
 	guint _tmp4_;
 	g_return_if_fail (self != NULL);
-	controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
-	if (unity_launcher_quicklist_controller_menu_is_open (controller)) {
+	controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_current_menu ());
+	if (unity_launcher_quicklist_controller_is_menu_open ()) {
 		guint _tmp0_;
 		g_signal_parse_name ("destroy", CLUTTER_TYPE_ACTOR, &_tmp0_, NULL, FALSE);
-		g_signal_handlers_disconnect_matched ((ClutterActor*) controller->menu, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_expose_manager_end_expose_clutter_actor_destroy, self);
-		unity_launcher_quicklist_controller_close_menu (controller);
+		g_signal_handlers_disconnect_matched ((ClutterActor*) unity_launcher_quicklist_controller_get_view (controller), G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_expose_manager_end_expose_clutter_actor_destroy, self);
+		unity_launcher_quicklist_controller_set_state (controller, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_CLOSED);
 	}
 	mutter_windows = mutter_plugin_get_windows (unity_plugin_get_plugin (self->priv->owner));
 	{
@@ -1166,7 +1166,7 @@ static gboolean unity_expose_manager_on_stage_captured_event (UnityExposeManager
 	float y = 0.0F;
 	ClutterActor* actor;
 	ClutterActor* menu;
-	gboolean _tmp4_ = FALSE;
+	gboolean _tmp5_ = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if ((*event).type == CLUTTER_ENTER) {
 		_tmp0_ = TRUE;
@@ -1181,38 +1181,39 @@ static gboolean unity_expose_manager_on_stage_captured_event (UnityExposeManager
 	clutter_event_get_coords (event, &x, &y);
 	actor = clutter_stage_get_actor_at_pos (self->priv->stage, CLUTTER_PICK_REACTIVE, (gint) x, (gint) y);
 	menu = NULL;
-	if (unity_launcher_quicklist_controller_menu_is_open (unity_launcher_quicklist_controller_get_default ())) {
-		menu = (ClutterActor*) unity_launcher_quicklist_controller_get_default ()->menu;
+	if (unity_launcher_quicklist_controller_is_menu_open ()) {
+		ClutterActor* _tmp1_;
+		menu = (_tmp1_ = _g_object_ref0 ((ClutterActor*) unity_launcher_quicklist_controller_get_view (unity_launcher_quicklist_controller_get_current_menu ())), _g_object_unref0 (menu), _tmp1_);
 	}
 	if (menu != NULL) {
-		gboolean _tmp1_ = FALSE;
 		gboolean _tmp2_ = FALSE;
 		gboolean _tmp3_ = FALSE;
+		gboolean _tmp4_ = FALSE;
 		if (x > clutter_actor_get_x (menu)) {
-			_tmp3_ = x < (clutter_actor_get_x (menu) + clutter_actor_get_width (menu));
+			_tmp4_ = x < (clutter_actor_get_x (menu) + clutter_actor_get_width (menu));
+		} else {
+			_tmp4_ = FALSE;
+		}
+		if (_tmp4_) {
+			_tmp3_ = y > clutter_actor_get_y (menu);
 		} else {
 			_tmp3_ = FALSE;
 		}
 		if (_tmp3_) {
-			_tmp2_ = y > clutter_actor_get_y (menu);
+			_tmp2_ = y < (clutter_actor_get_y (menu) + clutter_actor_get_height (menu));
 		} else {
 			_tmp2_ = FALSE;
 		}
 		if (_tmp2_) {
-			_tmp1_ = y < (clutter_actor_get_y (menu) + clutter_actor_get_height (menu));
-		} else {
-			_tmp1_ = FALSE;
-		}
-		if (_tmp1_) {
 			event_over_menu = TRUE;
 		}
 	}
 	if ((*event).type == CLUTTER_BUTTON_PRESS) {
-		_tmp4_ = !event_over_menu;
+		_tmp5_ = !event_over_menu;
 	} else {
-		_tmp4_ = FALSE;
+		_tmp5_ = FALSE;
 	}
-	if (_tmp4_) {
+	if (_tmp5_) {
 		unity_expose_manager_pick_window (self, event, actor);
 	}
 	if (self->priv->_coverflow) {
@@ -1221,6 +1222,7 @@ static gboolean unity_expose_manager_on_stage_captured_event (UnityExposeManager
 		unity_expose_manager_handle_event_expose (self, event, actor);
 	}
 	result = !event_over_menu;
+	_g_object_unref0 (menu);
 	return result;
 }
 

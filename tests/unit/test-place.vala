@@ -46,92 +46,92 @@ namespace Unity.Tests.Unit
       assert (ctl.num_entries() == 0);
       assert (ctl.get_entry ("no such entry") == null);
     }
-    
+
     internal static void test_one_entry()
     {
       var entry_path = "/org/ayatana/unity/testplace/testentry1";
       var entry = new EntryInfo(entry_path);
       assert (entry is EntryInfo);
       assert (entry.dbus_path == entry_path);
-      
+
       var ctl = new Controller("/org/ayatana/unity/testplace");
       assert (ctl.num_entries() == 0);
-      
+
       /* Assert that we can add one entry */
       ctl.add_entry (entry);
       assert (ctl.num_entries() == 1);
       assert (ctl.get_entry (entry_path) == entry);
-      
-      var entry_paths = ctl.get_entry_paths();      
+
+      var entry_paths = ctl.get_entry_paths();
       assert (entry_paths.length == 1);
       assert (entry_paths[0] == entry_path);
-      
+
       var entries = ctl.get_entries ();
       assert (entries.length == 1);
       assert (entries[0] == entry);
-      
+
       /* Assert that we can remove it again */
       ctl.remove_entry (entry_path);
       assert (ctl.num_entries() == 0);
       assert (ctl.get_entry (entry_path) == null);
     }
-    
+
     internal static void test_two_entries()
     {
       var entry_path1 = "/org/ayatana/unity/testplace/testentry1";
       var entry_path2 = "/org/ayatana/unity/testplace/testentry2";
       var entry1 = new EntryInfo(entry_path1);
       var entry2 = new EntryInfo(entry_path2);
-      
+
       var ctl = new Controller("/org/ayatana/unity/testplace");
       assert (ctl.num_entries() == 0);
-      
+
       ctl.add_entry (entry1);
       assert (ctl.num_entries() == 1);
-      
+
       ctl.add_entry (entry2);
       assert (ctl.num_entries() == 2);
-      
+
       assert (ctl.get_entry (entry_path1) == entry1);
       assert (ctl.get_entry (entry_path2) == entry2);
-      
+
       var entry_paths = ctl.get_entry_paths();
       assert (entry_paths.length == 2);
       assert (entry_paths[0] == entry_path1);
       assert (entry_paths[1] == entry_path2);
-      
+
       var entries = ctl.get_entries ();
       assert (entries.length == 2);
       assert (entries[0] == entry1);
       assert (entries[1] == entry2);
-      
+
       /* Assert we can't add them twice */
-      
+
       ctl.add_entry (entry1);
       assert (ctl.num_entries() == 2);
-      
+
       ctl.add_entry (entry2);
       assert (ctl.num_entries() == 2);
-      
+
       /* Assert we can remove them */
-      
+
       ctl.remove_entry (entry_path1);
       assert (ctl.num_entries() == 1);
       assert (ctl.get_entry (entry_path1) == null);
       assert (ctl.get_entry (entry_path2) == entry2);
-      
+
       ctl.remove_entry (entry_path2);
       assert (ctl.num_entries() == 0);
       assert (ctl.get_entry (entry_path1) == null);
       assert (ctl.get_entry (entry_path2) == null);
-      
+
       entry_paths = ctl.get_entry_paths();
       assert (entry_paths.length == 0);
-      
+
       entries = ctl.get_entries ();
       assert (entries.length == 0);
     }
-  
+
     internal static void test_local_models ()
     {
       var entry = new EntryInfo("/foo/bar");
@@ -141,7 +141,7 @@ namespace Unity.Tests.Unit
       entry.sections_model = sections_model;
       assert (entry.sections_model == sections_model);
       assert (sections_model.get_n_rows() == 0);
-      
+
       var renderer = entry.entry_renderer_info;
       assert (renderer is RendererInfo);
       Dee.Model groups_model = new Dee.SequenceModel(3,
@@ -163,6 +163,6 @@ namespace Unity.Tests.Unit
       assert (renderer.results_model == results_model);
       assert (results_model.get_n_rows() == 0);
     }
-    
+
   }
 }

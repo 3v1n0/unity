@@ -27,6 +27,7 @@ public class Main
     UnityPixbufCacheSuite unity_pixbuf_cache;
 
     LauncherSuite launcher;
+    QuicklistSuite quicklists;
 
     PanelIndicatorObjectEntryViewSuite panel_object_entry_view_suite;
     PanelIndicatorObjectViewSuite panel_object_view_suite;
@@ -47,6 +48,7 @@ public class Main
 
     /* Launcher tests */
     launcher = new LauncherSuite ();
+    quicklists = new QuicklistSuite ();
 
     /* Panel tests */
     panel_object_entry_view_suite = new PanelIndicatorObjectEntryViewSuite ();
@@ -57,7 +59,7 @@ public class Main
     /* Places tests */
     places = new PlacesSuite ();
     place = new PlaceSuite ();
-    
+
     /* IO utility tests */
     io = new IOSuite ();
     appinfo_manager = new AppInfoManagerSuite ();

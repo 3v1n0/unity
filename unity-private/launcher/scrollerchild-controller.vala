@@ -47,6 +47,8 @@ namespace Unity.Launcher
     protected float click_start_pos = 0.0f;
     protected int drag_sensitivity = 7;
 
+    protected QuicklistController? menu {get; set;}
+
     public ScrollerChildController (ScrollerChild child_)
     {
       Object (child: child_);
@@ -68,9 +70,12 @@ namespace Unity.Launcher
                                 "opacity", 0xff);
     }
 
-    public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcuts ();
-    public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ();
+    public delegate void menu_cb (Dbusmenu.Menuitem? menu);
+    public abstract void get_menu_actions (menu_cb callback);
+    public abstract void get_menu_navigation (menu_cb callback);
+
     public abstract void activate ();
+    public abstract QuicklistController get_menu_controller ();
 
     private bool on_leave_event (Clutter.Event event)
     {
@@ -110,11 +115,14 @@ namespace Unity.Launcher
           button_down == true &&
           event.button.time - last_press_time < 500)
         {
-          var controller = QuicklistController.get_default ();
-          if (controller.is_in_label || controller.menu_is_open ())
-          {
-            controller.close_menu ();
-          }
+          if (menu is QuicklistController)
+            {
+              if (menu.state == QuicklistControllerState.LABEL ||
+                  menu.state == QuicklistControllerState.MENU)
+              {
+                menu.state = QuicklistControllerState.CLOSED;
+              }
+            }
 
           activate ();
         }
@@ -134,49 +142,35 @@ namespace Unity.Launcher
       //no tooltips on drag
       if (Unity.Drag.Controller.get_default ().is_dragging) return;
 
-      var controller = QuicklistController.get_default ();
-      if (controller.menu_is_open () && controller.get_attached_actor () != child)
+      if (menu is QuicklistController == false)
+        {
+          menu = get_menu_controller ();
+        }
+
+      if (menu.state == QuicklistControllerState.MENU
+          && QuicklistController.is_menu_open ()
+          && QuicklistController.do_menus_match (menu))
         {
           // there is a menu open already, attach to the destroy so we can
           // re-ensure later
-          controller.menu.destroy.connect (ensure_menu_state);
+          QuicklistController.get_current_menu ().get_view ().destroy.connect (ensure_menu_state);
           return;
         }
 
       if (menu_state == ScrollerChildControllerMenuState.NO_MENU)
         {
-          if (controller.is_in_label || controller.menu_is_open ())
-            {
-              controller.close_menu ();
-            }
+          menu.state = QuicklistControllerState.CLOSED;
         }
 
       if (menu_state == ScrollerChildControllerMenuState.LABEL)
         {
-          if (!controller.menu_is_open ())
-            {
-              if(Unity.Panel.search_entry_has_focus == false)
-                controller.show_label (name, child);
-            }
+          menu.state = QuicklistControllerState.LABEL;
         }
 
       if (menu_state == ScrollerChildControllerMenuState.MENU)
         {
-          if (controller.is_in_label)
-            {
-              Gee.ArrayList<ShortcutItem> shortcuts = get_menu_shortcuts ();
-              Gee.ArrayList<ShortcutItem> actions = get_menu_shortcut_actions ();
-              if (shortcuts.size > 0 || actions.size > 0)
-                {
-                  controller.show_menu (shortcuts,
-                                        actions,
-                                        false);
-                }
-              else
-                {
-                  menu_state = ScrollerChildControllerMenuState.LABEL;
-                }
-            }
+          menu.state = QuicklistControllerState.MENU;
+          menu_state = ScrollerChildControllerMenuState.NO_MENU;
         }
     }
 
