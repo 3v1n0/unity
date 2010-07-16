@@ -170,6 +170,7 @@ namespace Unity.Launcher
             state = QuicklistControllerState.CLOSED;
           });
 
+          menuitem.reactive = false;
           menu.append (menuitem, true);
         }
       else if (state == QuicklistControllerState.MENU)
