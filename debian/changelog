@@ -7,7 +7,6 @@ unity (0.2.18-0ubuntu1) UNRELEASED; urgency=low
     - Support offline shortcuts in quicklist (LP: #595842)
     - keyboard focus in places should default to the search entry (LP: #599888)
     - fix various search issues in places (LP: #600732, #604964)
-    - Support offline shortcuts in quicklist (LP: #595842)
     - contracted/expanded feature doesn't take mouse position into account
       (LP: #595878)
     - Use X-GNOME-FullName when available for launcher hover text (LP: #594285)
@@ -15,6 +14,9 @@ unity (0.2.18-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - bump libclutk-dev build-dep to latest
     - add libdbusmenu-glib-dev, libgnome-desktop-dev and libgnomeui-dev deps
+  * add debian/patches/01_add_dbusmenu_glib_vapi.patch:
+    - not distribute yet, small fix in the vapi to make a method return an
+      unowned variable instead of an owned one
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 16 Jul 2010 12:59:57 +0200
 
