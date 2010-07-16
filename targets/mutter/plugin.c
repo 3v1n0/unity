@@ -619,9 +619,9 @@ static void unity_plugin_got_screensaver_changed (UnityPlugin* self, DBusGProxy*
 		clutter_actor_hide (_tmp0_ = unity_launcher_launcher_get_view (self->priv->launcher));
 		_g_object_unref0 (_tmp0_);
 		clutter_actor_hide ((ClutterActor*) self->priv->panel);
-		menu = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
-		if (unity_launcher_quicklist_controller_menu_is_open (menu)) {
-			unity_launcher_quicklist_controller_close_menu (menu);
+		menu = _g_object_ref0 (unity_launcher_quicklist_controller_get_current_menu ());
+		if (unity_launcher_quicklist_controller_is_menu_open ()) {
+			unity_launcher_quicklist_controller_set_state (menu, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_CLOSED);
 		}
 		unity_plugin_set_fullscreen_obstruction (self, TRUE);
 		_g_object_unref0 (menu);
@@ -1044,6 +1044,7 @@ static void unity_plugin_real_hide_unity (UnityShell* base) {
 		}
 		gtk_main_iteration ();
 	}
+	unity_places_view_hidden (self->priv->places);
 	_g_object_unref0 (anim);
 }
 
@@ -1074,6 +1075,7 @@ static void unity_plugin_real_show_unity (UnityShell* base) {
 		clutter_actor_animate ((ClutterActor*) self->priv->dark_box, (gulong) CLUTTER_EASE_IN_QUAD, (guint) 100, "opacity", 180, NULL);
 		clutter_actor_animate (mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self)), (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 100, "opacity", 0, NULL);
 		clutter_actor_animate ((ClutterActor*) self->priv->places, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 100, "opacity", 255, NULL);
+		unity_places_view_shown (self->priv->places);
 	}
 }
 
@@ -1277,7 +1279,7 @@ static void _unity_plugin_got_screensaver_changed_dynamic_ActiveChanged0_ (DBusG
 void _dynamic_ActiveChanged1_connect (gpointer obj, const char * signal_name, GCallback handler, gpointer data) {
 	dbus_g_object_register_marshaller (g_cclosure_marshal_VOID__BOOLEAN, G_TYPE_NONE, G_TYPE_BOOLEAN, G_TYPE_INVALID);
 	dbus_g_proxy_add_signal (obj, "ActiveChanged", G_TYPE_BOOLEAN, G_TYPE_INVALID);
-	dbus_g_proxy_connect_signal (obj, signal_name, handler, data, NULL);
+	dbus_g_proxy_connect_signal (obj, "ActiveChanged", handler, data, NULL);
 }
 
 

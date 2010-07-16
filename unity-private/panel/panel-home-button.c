@@ -102,16 +102,14 @@ UnityPanelHomeButton* unity_panel_home_button_construct (GType object_type, Unit
 UnityShell* unity_panel_home_button_get_shell (UnityPanelHomeButton* self);
 static void unity_panel_home_button_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
 static void unity_panel_home_button_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width, float* nat_width);
-static gboolean unity_panel_home_button_on_button_press (UnityPanelHomeButton* self, ClutterEvent* event);
 GType menu_manager_get_type (void);
 MenuManager* menu_manager_get_default (void);
 void menu_manager_popdown_current_menu (MenuManager* self);
-static gboolean unity_panel_home_button_on_button_release (UnityPanelHomeButton* self, ClutterEvent* event);
+static void unity_panel_home_button_on_clicked (UnityPanelHomeButton* self);
 static gboolean unity_panel_home_button_on_motion_event (UnityPanelHomeButton* self, ClutterEvent* event);
 static void unity_panel_home_button_set_shell (UnityPanelHomeButton* self, UnityShell* value);
-static gboolean _unity_panel_home_button_on_button_press_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
-static gboolean _unity_panel_home_button_on_button_release_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static gboolean _unity_panel_home_button_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static void _unity_panel_home_button_on_clicked_ctk_button_clicked (CtkButton* _sender, gpointer self);
 static GObject * unity_panel_home_button_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_panel_home_button_finalize (GObject* obj);
 static void unity_panel_home_button_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -175,24 +173,13 @@ static void unity_panel_home_button_real_get_preferred_width (ClutterActor* base
 }
 
 
-static gboolean unity_panel_home_button_on_button_press (UnityPanelHomeButton* self, ClutterEvent* event) {
-	gboolean result = FALSE;
-	g_return_val_if_fail (self != NULL, FALSE);
-	result = TRUE;
-	return result;
-}
-
-
-static gboolean unity_panel_home_button_on_button_release (UnityPanelHomeButton* self, ClutterEvent* event) {
-	gboolean result = FALSE;
+static void unity_panel_home_button_on_clicked (UnityPanelHomeButton* self) {
 	MenuManager* manager;
-	g_return_val_if_fail (self != NULL, FALSE);
+	g_return_if_fail (self != NULL);
 	unity_shell_show_unity (self->priv->_shell);
 	manager = menu_manager_get_default ();
 	menu_manager_popdown_current_menu (manager);
-	result = TRUE;
 	_g_object_unref0 (manager);
-	return result;
 }
 
 
@@ -226,24 +213,15 @@ static void unity_panel_home_button_set_shell (UnityPanelHomeButton* self, Unity
 }
 
 
-static gboolean _unity_panel_home_button_on_button_press_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = unity_panel_home_button_on_button_press (self, event);
-	return result;
-}
-
-
-static gboolean _unity_panel_home_button_on_button_release_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = unity_panel_home_button_on_button_release (self, event);
-	return result;
-}
-
-
 static gboolean _unity_panel_home_button_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
 	result = unity_panel_home_button_on_motion_event (self, event);
 	return result;
+}
+
+
+static void _unity_panel_home_button_on_clicked_ctk_button_clicked (CtkButton* _sender, gpointer self) {
+	unity_panel_home_button_on_clicked (self);
 }
 
 
@@ -259,9 +237,8 @@ static GObject * unity_panel_home_button_constructor (GType type, guint n_constr
 		self->theme_image = (_tmp0_ = g_object_ref_sink (unity_theme_image_new ("distributor-logo")), _g_object_unref0 (self->theme_image), _tmp0_);
 		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->theme_image);
 		clutter_actor_show ((ClutterActor*) self->theme_image);
-		g_signal_connect_object ((ClutterActor*) self, "button-press-event", (GCallback) _unity_panel_home_button_on_button_press_clutter_actor_button_press_event, self, 0);
-		g_signal_connect_object ((ClutterActor*) self, "button-release-event", (GCallback) _unity_panel_home_button_on_button_release_clutter_actor_button_release_event, self, 0);
 		g_signal_connect_object ((ClutterActor*) self, "motion-event", (GCallback) _unity_panel_home_button_on_motion_event_clutter_actor_motion_event, self, 0);
+		g_signal_connect_object ((CtkButton*) self, "clicked", (GCallback) _unity_panel_home_button_on_clicked_ctk_button_clicked, self, 0);
 	}
 	return obj;
 }

@@ -76,8 +76,8 @@ enum  {
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_new (void);
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_construct (GType object_type);
 static void unity_places_place_search_entry_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height, float* nat_height);
-static gboolean _lambda7_ (UnityPlacesPlaceSearchEntry* self);
-static gboolean __lambda7__gsource_func (gpointer self);
+static gboolean _lambda9_ (UnityPlacesPlaceSearchEntry* self);
+static gboolean __lambda9__gsource_func (gpointer self);
 static void unity_places_place_search_entry_on_text_changed (UnityPlacesPlaceSearchEntry* self);
 static void unity_places_place_search_entry_on_key_focus_in (UnityPlacesPlaceSearchEntry* self);
 static void unity_places_place_search_entry_on_key_focus_out (UnityPlacesPlaceSearchEntry* self);
@@ -123,7 +123,7 @@ static void unity_places_place_search_entry_real_get_preferred_height (ClutterAc
 }
 
 
-static gboolean _lambda7_ (UnityPlacesPlaceSearchEntry* self) {
+static gboolean _lambda9_ (UnityPlacesPlaceSearchEntry* self) {
 	gboolean result = FALSE;
 	const char* _tmp0_;
 	_tmp0_ = NULL;
@@ -139,9 +139,9 @@ static gboolean _lambda7_ (UnityPlacesPlaceSearchEntry* self) {
 }
 
 
-static gboolean __lambda7__gsource_func (gpointer self) {
+static gboolean __lambda9__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda7_ (self);
+	result = _lambda9_ (self);
 	return result;
 }
 
@@ -151,7 +151,7 @@ static void unity_places_place_search_entry_on_text_changed (UnityPlacesPlaceSea
 	if (self->priv->live_search_timeout != 0) {
 		g_source_remove (self->priv->live_search_timeout);
 	}
-	self->priv->live_search_timeout = g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) UNITY_PLACES_PLACE_SEARCH_ENTRY_LIVE_SEARCH_TIMEOUT, __lambda7__gsource_func, g_object_ref (self), g_object_unref);
+	self->priv->live_search_timeout = g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) UNITY_PLACES_PLACE_SEARCH_ENTRY_LIVE_SEARCH_TIMEOUT, __lambda9__gsource_func, g_object_ref (self), g_object_unref);
 }
 
 

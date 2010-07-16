@@ -1,3 +1,23 @@
+unity (0.2.18-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release.
+    - can't drag and drop item to last position in launcher (LP: #595819)
+    - set a solid color as background (LP: #594232)
+    - select a place by default (LP: #601020)
+    - Support offline shortcuts in quicklist (LP: #595842)
+    - keyboard focus in places should default to the search entry (LP: #599888)
+    - fix various search issues in places (LP: #600732, #604964)
+    - Support offline shortcuts in quicklist (LP: #595842)
+    - contracted/expanded feature doesn't take mouse position into account
+      (LP: #595878)
+    - Use X-GNOME-FullName when available for launcher hover text (LP: #594285)
+    - SIGSEGV in _clutter_stage_has_full_redraw_queued (LP: #594209)
+  * debian/control:
+    - bump libclutk-dev build-dep to latest
+    - add libdbusmenu-glib-dev, libgnome-desktop-dev and libgnomeui-dev deps
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 16 Jul 2010 12:59:57 +0200
+
 unity (0.2.16-0ubuntu1) maverick; urgency=low
 
   * New upstream release.

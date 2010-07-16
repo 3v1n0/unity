@@ -28,8 +28,6 @@
 #include <string.h>
 #include <unity.h>
 #include <gtk/gtk.h>
-#include <gee.h>
-#include <clutk/clutk.h>
 
 
 #define UNITY_TESTS_UI_TYPE_QUICKLIST_SUITE (unity_tests_ui_quicklist_suite_get_type ())
@@ -53,8 +51,6 @@ typedef struct _UnityTestsUIQuicklistSuitePrivate UnityTestsUIQuicklistSuitePriv
 
 typedef struct _UnityTestsUITestFavorites UnityTestsUITestFavorites;
 typedef struct _UnityTestsUITestFavoritesClass UnityTestsUITestFavoritesClass;
-#define _g_free0(var) (var = (g_free (var), NULL))
-#define _unity_testing_object_registry_unref0(var) ((var == NULL) ? NULL : (var = (unity_testing_object_registry_unref (var), NULL)))
 
 struct _UnityTestsUIQuicklistSuite {
 	GObject parent_instance;
@@ -139,36 +135,7 @@ static void unity_tests_ui_quicklist_suite_test_teardown (UnityTestsUIQuicklistS
 
 
 static void unity_tests_ui_quicklist_suite_test_controller_show_label (UnityTestsUIQuicklistSuite* self) {
-	char* img;
-	UnityTestingObjectRegistry* registry;
-	GeeArrayList* _tmp0_;
-	GObject* _tmp1_;
-	UnityLauncherScrollerModel* _tmp2_;
-	UnityLauncherScrollerModel* scroller;
-	UnityLauncherScrollerChild* _tmp3_;
-	UnityLauncherScrollerChild* first;
-	UnityLauncherQuicklistController* qlcontroller;
 	g_return_if_fail (self != NULL);
-	img = g_strdup (TESTDIR "/data/quicklist_controller_show_label.png");
-	registry = unity_testing_object_registry_get_default ();
-	unity_testing_logging_init_fatal_handler ();
-	scroller = (_tmp2_ = (_tmp1_ = (GObject*) gee_abstract_list_get ((GeeAbstractList*) (_tmp0_ = unity_testing_object_registry_lookup (registry, "UnityScrollerModel")), 0), UNITY_LAUNCHER_IS_SCROLLER_MODEL (_tmp1_) ? ((UnityLauncherScrollerModel*) _tmp1_) : NULL), _g_object_unref0 (_tmp0_), _tmp2_);
-	first = (_tmp3_ = unity_launcher_scroller_model_get (scroller, 0), UNITY_LAUNCHER_IS_SCROLLER_CHILD (_tmp3_) ? ((UnityLauncherScrollerChild*) _tmp3_) : NULL);
-	qlcontroller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
-	unity_launcher_quicklist_controller_show_label (qlcontroller, "Ubuntu Software Centre", (CtkActor*) first);
-	while (TRUE) {
-		if (!gtk_events_pending ()) {
-			break;
-		}
-		gtk_main_iteration ();
-	}
-	g_assert (utils_compare_snapshot (self->priv->stage, img, 54, 30, 200, 50, TRUE));
-	unity_launcher_quicklist_controller_close_menu (qlcontroller);
-	_g_free0 (img);
-	_unity_testing_object_registry_unref0 (registry);
-	_g_object_unref0 (scroller);
-	_g_object_unref0 (first);
-	_g_object_unref0 (qlcontroller);
 }
 
 

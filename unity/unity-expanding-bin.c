@@ -81,7 +81,7 @@ enum  {
 	UNITY_EXPANDING_BIN_BIN_STATE,
 	UNITY_EXPANDING_BIN_UNEXPANDED_HEIGHT
 };
-#define UNITY_EXPANDING_BIN_ANIMATION_TIME 200
+#define UNITY_EXPANDING_BIN_ANIMATION_TIME 500
 UnityExpandingBin* unity_expanding_bin_new (void);
 UnityExpandingBin* unity_expanding_bin_construct (GType object_type);
 static void unity_expanding_bin_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
@@ -203,7 +203,7 @@ static void _unity_expanding_bin_change_state (UnityExpandingBin* self, UnityExp
 		case UNITY_EXPANDING_BIN_STATE_CLOSED:
 		{
 			ClutterAnimation* anim;
-			anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self, (gulong) CLUTTER_EASE_OUT_SINE, (guint) UNITY_EXPANDING_BIN_ANIMATION_TIME, "size_factor", 1.0f, "opacity", 0, NULL));
+			anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) UNITY_EXPANDING_BIN_ANIMATION_TIME, "size_factor", 1.0f, "opacity", 0, NULL));
 			self->priv->_target_height = 0.0f;
 			g_signal_connect_object (anim, "completed", (GCallback) __lambda1__clutter_animation_completed, self, 0);
 			_g_object_unref0 (anim);
@@ -213,9 +213,9 @@ static void _unity_expanding_bin_change_state (UnityExpandingBin* self, UnityExp
 		{
 			ClutterAnimationMode _tmp0_ = 0;
 			if (self->priv->_old_state == UNITY_EXPANDING_BIN_STATE_CLOSED) {
-				_tmp0_ = CLUTTER_EASE_IN_SINE;
+				_tmp0_ = CLUTTER_EASE_IN_QUAD;
 			} else {
-				_tmp0_ = CLUTTER_EASE_OUT_SINE;
+				_tmp0_ = CLUTTER_EASE_OUT_QUAD;
 			}
 			clutter_actor_animate ((ClutterActor*) self, (gulong) _tmp0_, (guint) UNITY_EXPANDING_BIN_ANIMATION_TIME, "size_factor", 1.0f, "opacity", 255, NULL);
 			self->priv->_target_height = self->priv->_unexpanded_height;
@@ -224,7 +224,7 @@ static void _unity_expanding_bin_change_state (UnityExpandingBin* self, UnityExp
 		}
 		case UNITY_EXPANDING_BIN_STATE_EXPANDED:
 		{
-			clutter_actor_animate ((ClutterActor*) self, (gulong) CLUTTER_EASE_IN_SINE, (guint) UNITY_EXPANDING_BIN_ANIMATION_TIME, "size_factor", 1.0f, "opacity", 255, NULL);
+			clutter_actor_animate ((ClutterActor*) self, (gulong) CLUTTER_EASE_IN_QUAD, (guint) UNITY_EXPANDING_BIN_ANIMATION_TIME, "size_factor", 1.0f, "opacity", 255, NULL);
 			clutter_actor_get_preferred_height (ctk_bin_get_child ((CtkBin*) self), clutter_actor_get_width ((ClutterActor*) self), NULL, &self->priv->_expanded_height);
 			self->priv->_target_height = self->priv->_expanded_height;
 			clutter_actor_show ((ClutterActor*) self);

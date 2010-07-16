@@ -37,6 +37,7 @@ unity_VALAFLAGS = \
   --pkg config \
   --pkg dee-1.0 \
   --pkg dbus-glib-1 \
+  --pkg Dbusmenu-Glib-0.2 \
   --pkg gtk+-2.0 \
   --pkg gdk-2.0 \
   --pkg gee-1.0 \

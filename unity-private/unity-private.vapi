@@ -12,19 +12,18 @@ namespace Unity {
 			public void close_windows ();
 			public bool debug_is_application_attached ();
 			public void detach_application ();
-			public override Gee.ArrayList<Unity.Launcher.ShortcutItem> get_menu_shortcut_actions ();
-			public override Gee.ArrayList<Unity.Launcher.ShortcutItem> get_menu_shortcuts ();
+			public override void get_menu_actions (Unity.Launcher.ScrollerChildController.menu_cb callback);
+			public override Unity.Launcher.QuicklistController get_menu_controller ();
+			public override void get_menu_navigation (Unity.Launcher.ScrollerChildController.menu_cb callback);
 			public float get_priority () throws Unity.Launcher.AppTypeError;
+			public bool is_sticky ();
 			public void set_priority (float priority);
 			public void set_sticky (bool is_sticky = true);
 			public string desktop_file { get; set; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public class ApplicationShortcut : GLib.Object, Unity.Launcher.ShortcutItem {
-			public string desktop_location;
-			public string exec;
-			public string name;
-			public ApplicationShortcut ();
+		public class ApplicationQuicklistController : Unity.Launcher.QuicklistController {
+			public ApplicationQuicklistController (Unity.Launcher.ScrollerChildController scroller_child);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class Launcher : GLib.Object {
@@ -34,30 +33,29 @@ namespace Unity {
 			public Unity.Shell shell { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public class LauncherPinningShortcut : GLib.Object, Unity.Launcher.ShortcutItem {
-			public LauncherPinningShortcut (string _desktop_file);
-			public string desktop_file { get; construct; }
-			public string name { get; }
+		public class QuicklistCheckMenuItem : Ctk.CheckMenuItem {
+			public QuicklistCheckMenuItem ();
+			public override void get_preferred_height (float for_width, out float min_height_p, out float natural_height_p);
+			public override void get_preferred_width (float for_height, out float min_width_p, out float natural_width_p);
+			public QuicklistCheckMenuItem.with_label (string label);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public class LibLauncherShortcut : GLib.Object, Unity.Launcher.ShortcutItem {
-			public Bamf.Application app;
-			public string name;
-			public LibLauncherShortcut ();
-		}
-		[CCode (cheader_filename = "unity-private.h")]
-		public class QuicklistController : GLib.Object {
-			public bool is_in_label;
-			public bool is_in_menu;
-			public weak Ctk.Menu menu;
+		public abstract class QuicklistController : GLib.Object {
+			protected Ctk.Menu? menu;
 			public QuicklistController ();
-			public void close_menu ();
-			public Ctk.Actor get_attached_actor ();
-			public static unowned Unity.Launcher.QuicklistController get_default ();
-			public bool menu_is_open ();
-			public void show_label (string label, Ctk.Actor attached_widget);
-			public void show_menu (Gee.ArrayList<Unity.Launcher.ShortcutItem> prefix_shortcuts, Gee.ArrayList<Unity.Launcher.ShortcutItem> affix_shortcuts, bool hide_on_leave);
-			public signal void menu_state_changed (bool open);
+			public static bool do_menus_match (Unity.Launcher.QuicklistController menu);
+			public static unowned Unity.Launcher.QuicklistController get_current_menu ();
+			public unowned Ctk.Menu? get_view ();
+			public static bool is_menu_open ();
+			public Unity.Launcher.ScrollerChildController attached_controller { get; construct; }
+			public Unity.Launcher.QuicklistControllerState state { get; set; }
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class QuicklistImageMenuItem : Ctk.ImageMenuItem {
+			public QuicklistImageMenuItem ();
+			public override void get_preferred_height (float for_width, out float min_height_p, out float natural_height_p);
+			public override void get_preferred_width (float for_height, out float min_width_p, out float natural_width_p);
+			public QuicklistImageMenuItem.with_label (string label);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class QuicklistMenu : Ctk.Menu {
@@ -65,18 +63,24 @@ namespace Unity {
 			public override void paint ();
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public class QuicklistMenuItem : Ctk.Actor {
-			public QuicklistMenuItem (string label);
+		public class QuicklistMenuItem : Ctk.MenuItem {
+			public QuicklistMenuItem ();
 			public override void get_preferred_height (float for_width, out float min_height_p, out float natural_height_p);
 			public override void get_preferred_width (float for_height, out float min_width_p, out float natural_width_p);
-			public string label { get; construct; }
-			public signal void activated ();
+			public QuicklistMenuItem.with_label (string label);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class QuicklistMenuSeperator : Ctk.MenuSeperator {
 			public QuicklistMenuSeperator ();
 			public override void get_preferred_height (float for_width, out float min_height_p, out float natural_height_p);
 			public override void get_preferred_width (float for_height, out float min_width_p, out float natural_width_p);
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class QuicklistRadioMenuItem : Ctk.RadioMenuItem {
+			public QuicklistRadioMenuItem (GLib.SList? group);
+			public override void get_preferred_height (float for_width, out float min_height_p, out float natural_height_p);
+			public override void get_preferred_width (float for_height, out float min_width_p, out float natural_width_p);
+			public QuicklistRadioMenuItem.with_label (GLib.SList? group, string label);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public abstract class ScrollerChild : Ctk.Actor {
@@ -95,6 +99,8 @@ namespace Unity {
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public abstract class ScrollerChildController : GLib.Object, Unity.Drag.Model {
+			[CCode (cheader_filename = "unity-private.h")]
+			public delegate void menu_cb (Dbusmenu.Menuitem? menu);
 			protected bool button_down;
 			protected float click_start_pos;
 			protected int drag_sensitivity;
@@ -103,9 +109,11 @@ namespace Unity {
 			public string name;
 			public ScrollerChildController (Unity.Launcher.ScrollerChild child_);
 			public abstract void activate ();
-			public abstract Gee.ArrayList<Unity.Launcher.ShortcutItem> get_menu_shortcut_actions ();
-			public abstract Gee.ArrayList<Unity.Launcher.ShortcutItem> get_menu_shortcuts ();
+			public abstract void get_menu_actions (Unity.Launcher.ScrollerChildController.menu_cb callback);
+			public abstract Unity.Launcher.QuicklistController get_menu_controller ();
+			public abstract void get_menu_navigation (Unity.Launcher.ScrollerChildController.menu_cb callback);
 			public Unity.Launcher.ScrollerChild child { get; construct; }
+			protected Unity.Launcher.QuicklistController? menu { get; set; }
 			public signal void closed ();
 			public signal void request_removal ();
 		}
@@ -146,6 +154,12 @@ namespace Unity {
 			ALWAYS,
 			NEVER
 		}
+		[CCode (cprefix = "UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_", cheader_filename = "unity-private.h")]
+		public enum QuicklistControllerState {
+			LABEL,
+			MENU,
+			CLOSED
+		}
 		[CCode (cprefix = "UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_", cheader_filename = "unity-private.h")]
 		public enum ScrollerChildControllerMenuState {
 			NO_MENU,
@@ -158,7 +172,7 @@ namespace Unity {
 			NO_DESKTOP_FILE,
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public static Unity.Launcher.QuicklistController? ql_controler_singleton;
+		public static Unity.Launcher.QuicklistController? ql_controller_singleton;
 	}
 	[CCode (cprefix = "UnityPanel", lower_case_cprefix = "unity_panel_")]
 	namespace Panel {
@@ -275,6 +289,11 @@ namespace Unity {
 			public Dee.Model results { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
+		public class MoreResultsButton : Ctk.Button {
+			public MoreResultsButton ();
+			public uint count { get; set; }
+		}
+		[CCode (cheader_filename = "unity-private.h")]
 		public class Place : GLib.Object {
 			public Place (string dbus_name, string dbus_path);
 			public void connect ();
@@ -291,9 +310,11 @@ namespace Unity {
 		[CCode (cheader_filename = "unity-private.h")]
 		public class PlaceBar : Ctk.Box {
 			public PlaceBar (Unity.Shell shell, Unity.Places.PlaceModel model);
+			public void active_entry_name (string name);
+			public void reset ();
 			public Unity.Places.PlaceModel model { get; set construct; }
 			public Unity.Shell shell { get; construct; }
-			public signal void entry_view_activated (Unity.Places.PlaceEntryView view, int x);
+			public signal void entry_view_activated (Unity.Places.PlaceEntry view, int x);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class PlaceBarBackground : Clutter.CairoTexture {
@@ -303,8 +324,8 @@ namespace Unity {
 			public Unity.Shell shell { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public class PlaceEntry : GLib.Object {
-			[CCode (type_id = "UNITY_PLACES_PLACE_ENTRY_TYPE_RENDERER_INFO", cheader_filename = "unity-private.h")]
+		public class PlaceEntryDbus : GLib.Object, Unity.Places.PlaceEntry {
+			[CCode (type_id = "UNITY_PLACES_PLACE_ENTRY_DBUS_TYPE_RENDERER_INFO", cheader_filename = "unity-private.h")]
 			public struct RendererInfo {
 				public string default_renderer;
 				public string groups_model;
@@ -312,41 +333,17 @@ namespace Unity {
 				public GLib.HashTable<string,string> renderer_hints;
 			}
 			public string entry_groups_model_name;
-			public Gee.HashMap<string,string>? entry_renderer_hints;
-			public string entry_renderer_name;
 			public string entry_results_model_name;
 			public string global_groups_model_name;
-			public Gee.HashMap<string,string>? global_renderer_hints;
-			public string global_renderer_name;
-			public string global_results_model_name;
-			public PlaceEntry (string dbus_name, string dbus_path);
-			public void connect ();
-			public void set_active_section (uint section_id);
-			public void set_global_search (string search, GLib.HashTable<string,string> hints);
-			public void set_search (string search, GLib.HashTable<string,string> hints);
+			public PlaceEntryDbus (string dbus_name, string dbus_path);
 			public void update_info (GLib.ValueArray value_array);
-			public PlaceEntry.with_info (string dbus_name, string dbus_path, string name, string icon, string description, bool show_global, bool show_entry);
-			public bool active { get; set; }
+			public PlaceEntryDbus.with_info (string dbus_name, string dbus_path, string name, string icon, string description, bool show_global, bool show_entry);
 			public string? dbus_name { get; construct; }
 			public string? dbus_path { get; construct; }
-			public string description { get; set construct; }
-			public Dee.Model? entry_groups_model { get; set; }
-			public Dee.Model? entry_results_model { get; set; }
-			public Dee.Model? global_groups_model { get; set; }
-			public Dee.Model? global_results_model { get; set; }
-			public Gee.HashMap<string,string> hints { get; set; }
-			public string icon { get; set construct; }
-			public string[] mimetypes { get; set; }
-			public string name { get; set construct; }
-			public bool online { get; set construct; }
-			public uint position { get; set; }
-			public Dee.Model? sections_model { get; set; }
+			public string global_results_model_name { get; set; }
 			public string sections_model_name { get; set; }
-			public bool sensitive { get; set; }
 			public bool show_entry { get; set construct; }
 			public bool show_global { get; set construct; }
-			public signal void renderer_info_changed ();
-			public signal void updated ();
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class PlaceEntryView : Ctk.Image {
@@ -361,6 +358,12 @@ namespace Unity {
 			public string directory { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
+		public class PlaceHomeEntry : GLib.Object, Unity.Places.PlaceEntry {
+			public PlaceHomeEntry (Unity.Shell shell, Unity.Places.PlaceModel model);
+			public Unity.Places.PlaceModel place_model { get; set construct; }
+			public Unity.Shell shell { get; construct; }
+		}
+		[CCode (cheader_filename = "unity-private.h")]
 		public abstract class PlaceModel : Gee.ArrayList<Unity.Places.Place> {
 			public PlaceModel ();
 			public signal void place_added (Unity.Places.Place place);
@@ -368,7 +371,9 @@ namespace Unity {
 		[CCode (cheader_filename = "unity-private.h")]
 		public class PlaceSearchBar : Ctk.Box {
 			public PlaceSearchBar ();
+			public string get_search_text ();
 			public void reset ();
+			public void search (string text);
 			public void set_active_entry_view (Unity.Places.PlaceEntry entry, int x);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
@@ -414,8 +419,37 @@ namespace Unity {
 		public class View : Ctk.Box {
 			public View (Unity.Shell shell);
 			public void about_to_show ();
+			public void hidden ();
+			public void shown ();
 			public Unity.Places.PlaceModel model { get; set; }
 			public Unity.Shell shell { get; construct; }
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public interface PlaceEntry : GLib.Object {
+			public abstract void connect ();
+			public abstract void set_active_section (uint section_id);
+			public abstract void set_global_search (string search, GLib.HashTable<string,string> hints);
+			public abstract void set_search (string search, GLib.HashTable<string,string> hints);
+			public abstract bool active { get; set; }
+			public abstract string description { get; set construct; }
+			public abstract Dee.Model? entry_groups_model { get; set; }
+			public abstract Gee.HashMap<string,string>? entry_renderer_hints { get; set; }
+			public abstract string entry_renderer_name { get; set; }
+			public abstract Dee.Model? entry_results_model { get; set; }
+			public abstract Dee.Model? global_groups_model { get; set; }
+			public abstract Gee.HashMap<string,string>? global_renderer_hints { get; set; }
+			public abstract string global_renderer_name { get; set; }
+			public abstract Dee.Model? global_results_model { get; set; }
+			public abstract Gee.HashMap<string,string> hints { get; set; }
+			public abstract string icon { get; set construct; }
+			public abstract string[] mimetypes { get; set; }
+			public abstract string name { get; set construct; }
+			public abstract bool online { get; set construct; }
+			public abstract uint position { get; set; }
+			public abstract Dee.Model? sections_model { get; set; }
+			public abstract bool sensitive { get; set; }
+			public signal void renderer_info_changed ();
+			public signal void updated ();
 		}
 	}
 	[CCode (cprefix = "UnityTesting", lower_case_cprefix = "unity_testing_")]

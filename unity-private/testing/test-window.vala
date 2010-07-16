@@ -156,7 +156,7 @@ namespace Unity.Testing
 
       END_FUNCTION ();
     }
-    
+
     public uint32 get_current_time ()
     {
       return Clutter.get_current_event_time ();
@@ -303,17 +303,22 @@ namespace Unity.Testing
     {
       if (this.showing_places)
         {
+          /* We're already showing, so we hide */
           this.showing_places = false;
-          this.panel.set_indicator_mode (true);
-          this.background.opacity = 160;
-          this.places.opacity = 255;
+          this.panel.set_indicator_mode (false);
+          this.background.opacity = 255;
+          this.places.opacity = 0;
+
+          places.hidden ();
         }
       else
         {
           this.showing_places = true;
-          this.panel.set_indicator_mode (false);
-          this.background.opacity = 255;
-          this.places.opacity = 0;
+          this.panel.set_indicator_mode (true);
+          this.background.opacity = 160;
+          this.places.opacity = 255;
+
+          places.shown ();
         }
 
       this.places.do_queue_redraw ();
@@ -321,12 +326,16 @@ namespace Unity.Testing
 
     public void hide_unity ()
     {
-      if (showing_places == false)
+      if (showing_places == true)
         {
-          showing_places = true;
+          showing_places = false;
           panel.set_indicator_mode (false);
           background.opacity = 255;
           places.opacity = 0;
+
+          places.hidden ();
+
+          debug ("Hide unity");
         }
     }
 

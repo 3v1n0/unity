@@ -132,11 +132,11 @@ namespace Unity
 
     public void start_expose (SList<Clutter.Actor> windows)
     {
-      var controller = Launcher.QuicklistController.get_default ();
-      if (controller.menu_is_open ())
+      var controller = Launcher.QuicklistController.get_current_menu ();
+      if (controller.is_menu_open ())
         {
-          controller.menu.destroy.connect (this.end_expose);
-          this.menu_in_hover_close_state = controller.menu.get_close_on_leave ();
+          controller.get_view ().destroy.connect (this.end_expose);
+          this.menu_in_hover_close_state = controller.get_view ().get_close_on_leave ();
         }
       exposed_windows = new List<ExposeClone> ();
 
@@ -152,44 +152,46 @@ namespace Unity
 
       foreach (Clutter.Actor actor in windows)
         {
-          if (!(actor is Mutter.Window) || 
+          if (!(actor is Mutter.Window) ||
                ((actor as Mutter.Window).get_window_type () != Mutter.MetaCompWindowType.NORMAL &&
                 (actor as Mutter.Window).get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
                 (actor as Mutter.Window).get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG))
             continue;
-        
+
           ExposeClone clone = new ExposeClone (actor);
           clone.set_position (actor.x, actor.y);
           clone.set_size (actor.width, actor.height);
           exposed_windows.append (clone);
           clone.reactive = true;
-          
+
           expose_group.add_actor (clone);
-          
+
           clone.hovered_opacity = hovered_opacity;
           clone.unhovered_opacity = unhovered_opacity;
           clone.opacity = unhovered_opacity;
           clone.darken = darken;
-          
+
           clone.enter_event.connect (() => {
-                var ql_controller = Launcher.QuicklistController.get_default ();
-                if (ql_controller.menu_is_open () && this.menu_in_hover_close_state)
+                var ql_controller = Launcher.QuicklistController.get_current_menu ();
+                if (ql_controller.state == Launcher.QuicklistControllerState.MENU
+                    && this.menu_in_hover_close_state)
                   {
-                    ql_controller.menu.set_close_on_leave (false);
+                    ql_controller.get_view ().set_close_on_leave (false);
                   }
                 return false;
               });
 
           clone.leave_event.connect (() => {
-                var ql_controller = Launcher.QuicklistController.get_default ();
-                if (ql_controller.menu_is_open () && this.menu_in_hover_close_state)
+                var ql_controller = Launcher.QuicklistController.get_current_menu ();
+                if (ql_controller.state == Launcher.QuicklistControllerState.MENU
+                    && this.menu_in_hover_close_state)
                   {
-                    ql_controller.menu.set_close_on_leave (true);
+                    ql_controller.get_view ().set_close_on_leave (true);
                   }
                 return false;
               });
         }
-      
+
       unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
       foreach (Mutter.Window w in mutter_windows)
         {
@@ -214,11 +216,11 @@ namespace Unity
 
     public void end_expose ()
     {
-      var controller = Launcher.QuicklistController.get_default ();
-      if (controller.menu_is_open ())
+      var controller = Launcher.QuicklistController.get_current_menu ();
+      if (controller.is_menu_open ())
         {
-          controller.menu.destroy.disconnect (this.end_expose);
-          controller.close_menu ();
+          controller.get_view ().destroy.disconnect (this.end_expose);
+          controller.state = Launcher.QuicklistControllerState.CLOSED;
         }
 
       unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
@@ -521,9 +523,9 @@ namespace Unity
 
       unowned Clutter.Actor actor = this.stage.get_actor_at_pos (Clutter.PickMode.REACTIVE, (int) x, (int) y);
 
-      unowned Clutter.Actor? menu = null;
-      if (Unity.Launcher.QuicklistController.get_default ().menu_is_open ())
-        menu = Unity.Launcher.QuicklistController.get_default ().menu;
+      Clutter.Actor? menu = null;
+      if (Unity.Launcher.QuicklistController.get_current_menu ().is_menu_open ())
+        menu = Unity.Launcher.QuicklistController.get_current_menu ().get_view ();
       if (menu != null)
         {
           if (x > menu.x && x < menu.x + menu.width && y > menu.y && y < menu.y + menu.height)

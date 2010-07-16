@@ -32,41 +32,88 @@
 
 #define UNITY_PLACES_TYPE_PLACE_ENTRY (unity_places_place_entry_get_type ())
 #define UNITY_PLACES_PLACE_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY, UnityPlacesPlaceEntry))
-#define UNITY_PLACES_PLACE_ENTRY_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_ENTRY, UnityPlacesPlaceEntryClass))
 #define UNITY_PLACES_IS_PLACE_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY))
-#define UNITY_PLACES_IS_PLACE_ENTRY_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_ENTRY))
-#define UNITY_PLACES_PLACE_ENTRY_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY, UnityPlacesPlaceEntryClass))
+#define UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY, UnityPlacesPlaceEntryIface))
 
 typedef struct _UnityPlacesPlaceEntry UnityPlacesPlaceEntry;
-typedef struct _UnityPlacesPlaceEntryClass UnityPlacesPlaceEntryClass;
-typedef struct _UnityPlacesPlaceEntryPrivate UnityPlacesPlaceEntryPrivate;
+typedef struct _UnityPlacesPlaceEntryIface UnityPlacesPlaceEntryIface;
+
+#define UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS (unity_places_place_entry_dbus_get_type ())
+#define UNITY_PLACES_PLACE_ENTRY_DBUS(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS, UnityPlacesPlaceEntryDbus))
+#define UNITY_PLACES_PLACE_ENTRY_DBUS_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS, UnityPlacesPlaceEntryDbusClass))
+#define UNITY_PLACES_IS_PLACE_ENTRY_DBUS(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS))
+#define UNITY_PLACES_IS_PLACE_ENTRY_DBUS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS))
+#define UNITY_PLACES_PLACE_ENTRY_DBUS_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS, UnityPlacesPlaceEntryDbusClass))
+
+typedef struct _UnityPlacesPlaceEntryDbus UnityPlacesPlaceEntryDbus;
+typedef struct _UnityPlacesPlaceEntryDbusClass UnityPlacesPlaceEntryDbusClass;
+typedef struct _UnityPlacesPlaceEntryDbusPrivate UnityPlacesPlaceEntryDbusPrivate;
 #define _g_free0(var) (var = (g_free (var), NULL))
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _dbus_g_connection_unref0(var) ((var == NULL) ? NULL : (var = (dbus_g_connection_unref (var), NULL)))
 #define _g_hash_table_unref0(var) ((var == NULL) ? NULL : (var = (g_hash_table_unref (var), NULL)))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 
-#define UNITY_PLACES_PLACE_ENTRY_TYPE_RENDERER_INFO (unity_places_place_entry_renderer_info_get_type ())
-typedef struct _UnityPlacesPlaceEntryRendererInfo UnityPlacesPlaceEntryRendererInfo;
+#define UNITY_PLACES_PLACE_ENTRY_DBUS_TYPE_RENDERER_INFO (unity_places_place_entry_dbus_renderer_info_get_type ())
+typedef struct _UnityPlacesPlaceEntryDbusRendererInfo UnityPlacesPlaceEntryDbusRendererInfo;
 
-struct _UnityPlacesPlaceEntry {
-	GObject parent_instance;
-	UnityPlacesPlaceEntryPrivate * priv;
-	char* entry_renderer_name;
-	char* entry_groups_model_name;
-	char* entry_results_model_name;
-	GeeHashMap* entry_renderer_hints;
-	char* global_renderer_name;
-	char* global_groups_model_name;
-	char* global_results_model_name;
-	GeeHashMap* global_renderer_hints;
+struct _UnityPlacesPlaceEntryIface {
+	GTypeInterface parent_iface;
+	void (*connect) (UnityPlacesPlaceEntry* self);
+	void (*set_search) (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints);
+	void (*set_active_section) (UnityPlacesPlaceEntry* self, guint section_id);
+	void (*set_global_search) (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints);
+	const char* (*get_name) (UnityPlacesPlaceEntry* self);
+	void (*set_name) (UnityPlacesPlaceEntry* self, const char* value);
+	const char* (*get_icon) (UnityPlacesPlaceEntry* self);
+	void (*set_icon) (UnityPlacesPlaceEntry* self, const char* value);
+	const char* (*get_description) (UnityPlacesPlaceEntry* self);
+	void (*set_description) (UnityPlacesPlaceEntry* self, const char* value);
+	guint (*get_position) (UnityPlacesPlaceEntry* self);
+	void (*set_position) (UnityPlacesPlaceEntry* self, guint value);
+	char** (*get_mimetypes) (UnityPlacesPlaceEntry* self, int* result_length1);
+	void (*set_mimetypes) (UnityPlacesPlaceEntry* self, char** value, int value_length1);
+	gboolean (*get_sensitive) (UnityPlacesPlaceEntry* self);
+	void (*set_sensitive) (UnityPlacesPlaceEntry* self, gboolean value);
+	GeeHashMap* (*get_hints) (UnityPlacesPlaceEntry* self);
+	void (*set_hints) (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+	gboolean (*get_online) (UnityPlacesPlaceEntry* self);
+	void (*set_online) (UnityPlacesPlaceEntry* self, gboolean value);
+	gboolean (*get_active) (UnityPlacesPlaceEntry* self);
+	void (*set_active) (UnityPlacesPlaceEntry* self, gboolean value);
+	DeeModel* (*get_sections_model) (UnityPlacesPlaceEntry* self);
+	void (*set_sections_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
+	const char* (*get_entry_renderer_name) (UnityPlacesPlaceEntry* self);
+	void (*set_entry_renderer_name) (UnityPlacesPlaceEntry* self, const char* value);
+	DeeModel* (*get_entry_groups_model) (UnityPlacesPlaceEntry* self);
+	void (*set_entry_groups_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
+	DeeModel* (*get_entry_results_model) (UnityPlacesPlaceEntry* self);
+	void (*set_entry_results_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
+	GeeHashMap* (*get_entry_renderer_hints) (UnityPlacesPlaceEntry* self);
+	void (*set_entry_renderer_hints) (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+	const char* (*get_global_renderer_name) (UnityPlacesPlaceEntry* self);
+	void (*set_global_renderer_name) (UnityPlacesPlaceEntry* self, const char* value);
+	DeeModel* (*get_global_groups_model) (UnityPlacesPlaceEntry* self);
+	void (*set_global_groups_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
+	DeeModel* (*get_global_results_model) (UnityPlacesPlaceEntry* self);
+	void (*set_global_results_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
+	GeeHashMap* (*get_global_renderer_hints) (UnityPlacesPlaceEntry* self);
+	void (*set_global_renderer_hints) (UnityPlacesPlaceEntry* self, GeeHashMap* value);
 };
 
-struct _UnityPlacesPlaceEntryClass {
+struct _UnityPlacesPlaceEntryDbus {
+	GObject parent_instance;
+	UnityPlacesPlaceEntryDbusPrivate * priv;
+	char* entry_groups_model_name;
+	char* entry_results_model_name;
+	char* global_groups_model_name;
+};
+
+struct _UnityPlacesPlaceEntryDbusClass {
 	GObjectClass parent_class;
 };
 
-struct _UnityPlacesPlaceEntryPrivate {
+struct _UnityPlacesPlaceEntryDbusPrivate {
 	char* _dbus_name;
 	char* _dbus_path;
 	char* _name;
@@ -84,15 +131,20 @@ struct _UnityPlacesPlaceEntryPrivate {
 	gboolean _active;
 	char* _sections_model_name;
 	DeeModel* _sections_model;
+	char* _entry_renderer_name;
 	DeeModel* _entry_groups_model;
 	DeeModel* _entry_results_model;
+	GeeHashMap* _entry_renderer_hints;
+	char* _global_renderer_name;
 	DeeModel* _global_groups_model;
+	char* _global_results_model_name;
 	DeeModel* _global_results_model;
+	GeeHashMap* _global_renderer_hints;
 	DBusGConnection* connection;
 	DBusGProxy* service;
 };
 
-struct _UnityPlacesPlaceEntryRendererInfo {
+struct _UnityPlacesPlaceEntryDbusRendererInfo {
 	char* default_renderer;
 	char* groups_model;
 	char* results_model;
@@ -100,97 +152,118 @@ struct _UnityPlacesPlaceEntryRendererInfo {
 };
 
 
-static gpointer unity_places_place_entry_parent_class = NULL;
+static gpointer unity_places_place_entry_dbus_parent_class = NULL;
+static UnityPlacesPlaceEntryIface* unity_places_place_entry_dbus_unity_places_place_entry_parent_iface = NULL;
 
 GType unity_places_place_entry_get_type (void);
-#define UNITY_PLACES_PLACE_ENTRY_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE_ENTRY, UnityPlacesPlaceEntryPrivate))
-enum  {
-	UNITY_PLACES_PLACE_ENTRY_DUMMY_PROPERTY,
-	UNITY_PLACES_PLACE_ENTRY_DBUS_NAME,
-	UNITY_PLACES_PLACE_ENTRY_DBUS_PATH,
-	UNITY_PLACES_PLACE_ENTRY_NAME,
-	UNITY_PLACES_PLACE_ENTRY_ICON,
-	UNITY_PLACES_PLACE_ENTRY_DESCRIPTION,
-	UNITY_PLACES_PLACE_ENTRY_POSITION,
-	UNITY_PLACES_PLACE_ENTRY_MIMETYPES,
-	UNITY_PLACES_PLACE_ENTRY_SENSITIVE,
-	UNITY_PLACES_PLACE_ENTRY_HINTS,
-	UNITY_PLACES_PLACE_ENTRY_ONLINE,
-	UNITY_PLACES_PLACE_ENTRY_SHOW_GLOBAL,
-	UNITY_PLACES_PLACE_ENTRY_SHOW_ENTRY,
-	UNITY_PLACES_PLACE_ENTRY_ACTIVE,
-	UNITY_PLACES_PLACE_ENTRY_SECTIONS_MODEL_NAME,
-	UNITY_PLACES_PLACE_ENTRY_SECTIONS_MODEL,
-	UNITY_PLACES_PLACE_ENTRY_ENTRY_GROUPS_MODEL,
-	UNITY_PLACES_PLACE_ENTRY_ENTRY_RESULTS_MODEL,
-	UNITY_PLACES_PLACE_ENTRY_GLOBAL_GROUPS_MODEL,
-	UNITY_PLACES_PLACE_ENTRY_GLOBAL_RESULTS_MODEL
-};
-UnityPlacesPlaceEntry* unity_places_place_entry_new (const char* dbus_name, const char* dbus_path);
-UnityPlacesPlaceEntry* unity_places_place_entry_construct (GType object_type, const char* dbus_name, const char* dbus_path);
-UnityPlacesPlaceEntry* unity_places_place_entry_new_with_info (const char* dbus_name, const char* dbus_path, const char* name, const char* icon, const char* description, gboolean show_global, gboolean show_entry);
-UnityPlacesPlaceEntry* unity_places_place_entry_construct_with_info (GType object_type, const char* dbus_name, const char* dbus_path, const char* name, const char* icon, const char* description, gboolean show_global, gboolean show_entry);
-void unity_places_place_entry_set_name (UnityPlacesPlaceEntry* self, const char* value);
-void unity_places_place_entry_set_icon (UnityPlacesPlaceEntry* self, const char* value);
-void unity_places_place_entry_set_position (UnityPlacesPlaceEntry* self, guint value);
-void unity_places_place_entry_set_sensitive (UnityPlacesPlaceEntry* self, gboolean value);
-void unity_places_place_entry_set_sections_model_name (UnityPlacesPlaceEntry* self, const char* value);
-GeeHashMap* unity_places_place_entry_get_hints (UnityPlacesPlaceEntry* self);
-static GeeHashMap* unity_places_place_entry_map_from_hash (UnityPlacesPlaceEntry* self, GHashTable* hash);
-void unity_places_place_entry_set_hints (UnityPlacesPlaceEntry* self, GeeHashMap* value);
-void unity_places_place_entry_set_entry_groups_model (UnityPlacesPlaceEntry* self, DeeModel* value);
-void unity_places_place_entry_set_entry_results_model (UnityPlacesPlaceEntry* self, DeeModel* value);
-void unity_places_place_entry_set_global_groups_model (UnityPlacesPlaceEntry* self, DeeModel* value);
-void unity_places_place_entry_set_global_results_model (UnityPlacesPlaceEntry* self, DeeModel* value);
-void unity_places_place_entry_update_info (UnityPlacesPlaceEntry* self, GValueArray* value_array);
-gboolean unity_places_place_entry_get_online (UnityPlacesPlaceEntry* self);
-const char* unity_places_place_entry_get_dbus_name (UnityPlacesPlaceEntry* self);
-const char* unity_places_place_entry_get_dbus_path (UnityPlacesPlaceEntry* self);
-GType unity_places_place_entry_renderer_info_get_type (void);
-UnityPlacesPlaceEntryRendererInfo* unity_places_place_entry_renderer_info_dup (const UnityPlacesPlaceEntryRendererInfo* self);
-void unity_places_place_entry_renderer_info_free (UnityPlacesPlaceEntryRendererInfo* self);
-void unity_places_place_entry_renderer_info_copy (const UnityPlacesPlaceEntryRendererInfo* self, UnityPlacesPlaceEntryRendererInfo* dest);
-void unity_places_place_entry_renderer_info_destroy (UnityPlacesPlaceEntryRendererInfo* self);
-static void unity_places_place_entry_on_renderer_info_changed (UnityPlacesPlaceEntry* self, DBusGProxy* dbus_object, UnityPlacesPlaceEntryRendererInfo* info);
-static void _unity_places_place_entry_on_renderer_info_changed_dynamic_RendererInfoChanged0_ (DBusGProxy* _sender, UnityPlacesPlaceEntryRendererInfo* info, gpointer self);
-void _dynamic_RendererInfoChanged1_connect (gpointer obj, const char * signal_name, GCallback handler, gpointer data);
-void unity_places_place_entry_set_online (UnityPlacesPlaceEntry* self, gboolean value);
 void unity_places_place_entry_connect (UnityPlacesPlaceEntry* self);
-static void _dynamic_set_search0 (DBusGProxy* self, const char* param1, GHashTable* param2, GError** error);
 void unity_places_place_entry_set_search (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints);
-static void _dynamic_set_active_section1 (DBusGProxy* self, guint param1, GError** error);
 void unity_places_place_entry_set_active_section (UnityPlacesPlaceEntry* self, guint section_id);
-static void _dynamic_set_global_search2 (DBusGProxy* self, const char* param1, GHashTable* param2, GError** error);
 void unity_places_place_entry_set_global_search (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints);
-static void unity_places_place_entry_set_dbus_name (UnityPlacesPlaceEntry* self, const char* value);
-static void unity_places_place_entry_set_dbus_path (UnityPlacesPlaceEntry* self, const char* value);
 const char* unity_places_place_entry_get_name (UnityPlacesPlaceEntry* self);
+void unity_places_place_entry_set_name (UnityPlacesPlaceEntry* self, const char* value);
 const char* unity_places_place_entry_get_icon (UnityPlacesPlaceEntry* self);
+void unity_places_place_entry_set_icon (UnityPlacesPlaceEntry* self, const char* value);
 const char* unity_places_place_entry_get_description (UnityPlacesPlaceEntry* self);
 void unity_places_place_entry_set_description (UnityPlacesPlaceEntry* self, const char* value);
 guint unity_places_place_entry_get_position (UnityPlacesPlaceEntry* self);
+void unity_places_place_entry_set_position (UnityPlacesPlaceEntry* self, guint value);
 char** unity_places_place_entry_get_mimetypes (UnityPlacesPlaceEntry* self, int* result_length1);
-static char** _vala_array_dup1 (char** self, int length);
 void unity_places_place_entry_set_mimetypes (UnityPlacesPlaceEntry* self, char** value, int value_length1);
 gboolean unity_places_place_entry_get_sensitive (UnityPlacesPlaceEntry* self);
-gboolean unity_places_place_entry_get_show_global (UnityPlacesPlaceEntry* self);
-void unity_places_place_entry_set_show_global (UnityPlacesPlaceEntry* self, gboolean value);
-gboolean unity_places_place_entry_get_show_entry (UnityPlacesPlaceEntry* self);
-void unity_places_place_entry_set_show_entry (UnityPlacesPlaceEntry* self, gboolean value);
+void unity_places_place_entry_set_sensitive (UnityPlacesPlaceEntry* self, gboolean value);
+GeeHashMap* unity_places_place_entry_get_hints (UnityPlacesPlaceEntry* self);
+void unity_places_place_entry_set_hints (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+gboolean unity_places_place_entry_get_online (UnityPlacesPlaceEntry* self);
+void unity_places_place_entry_set_online (UnityPlacesPlaceEntry* self, gboolean value);
 gboolean unity_places_place_entry_get_active (UnityPlacesPlaceEntry* self);
-static void _dynamic_set_active3 (DBusGProxy* self, gboolean param1, GError** error);
 void unity_places_place_entry_set_active (UnityPlacesPlaceEntry* self, gboolean value);
-const char* unity_places_place_entry_get_sections_model_name (UnityPlacesPlaceEntry* self);
 DeeModel* unity_places_place_entry_get_sections_model (UnityPlacesPlaceEntry* self);
 void unity_places_place_entry_set_sections_model (UnityPlacesPlaceEntry* self, DeeModel* value);
+const char* unity_places_place_entry_get_entry_renderer_name (UnityPlacesPlaceEntry* self);
+void unity_places_place_entry_set_entry_renderer_name (UnityPlacesPlaceEntry* self, const char* value);
 DeeModel* unity_places_place_entry_get_entry_groups_model (UnityPlacesPlaceEntry* self);
+void unity_places_place_entry_set_entry_groups_model (UnityPlacesPlaceEntry* self, DeeModel* value);
 DeeModel* unity_places_place_entry_get_entry_results_model (UnityPlacesPlaceEntry* self);
+void unity_places_place_entry_set_entry_results_model (UnityPlacesPlaceEntry* self, DeeModel* value);
+GeeHashMap* unity_places_place_entry_get_entry_renderer_hints (UnityPlacesPlaceEntry* self);
+void unity_places_place_entry_set_entry_renderer_hints (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+const char* unity_places_place_entry_get_global_renderer_name (UnityPlacesPlaceEntry* self);
+void unity_places_place_entry_set_global_renderer_name (UnityPlacesPlaceEntry* self, const char* value);
 DeeModel* unity_places_place_entry_get_global_groups_model (UnityPlacesPlaceEntry* self);
+void unity_places_place_entry_set_global_groups_model (UnityPlacesPlaceEntry* self, DeeModel* value);
 DeeModel* unity_places_place_entry_get_global_results_model (UnityPlacesPlaceEntry* self);
-static GObject * unity_places_place_entry_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
-static void unity_places_place_entry_finalize (GObject* obj);
-static void unity_places_place_entry_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
-static void unity_places_place_entry_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+void unity_places_place_entry_set_global_results_model (UnityPlacesPlaceEntry* self, DeeModel* value);
+GeeHashMap* unity_places_place_entry_get_global_renderer_hints (UnityPlacesPlaceEntry* self);
+void unity_places_place_entry_set_global_renderer_hints (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+GType unity_places_place_entry_dbus_get_type (void);
+#define UNITY_PLACES_PLACE_ENTRY_DBUS_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS, UnityPlacesPlaceEntryDbusPrivate))
+enum  {
+	UNITY_PLACES_PLACE_ENTRY_DBUS_DUMMY_PROPERTY,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_DBUS_NAME,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_DBUS_PATH,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_NAME,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_ICON,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_DESCRIPTION,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_POSITION,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_MIMETYPES,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_SENSITIVE,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_HINTS,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_ONLINE,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_SHOW_GLOBAL,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_SHOW_ENTRY,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_ACTIVE,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_SECTIONS_MODEL_NAME,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_SECTIONS_MODEL,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_RENDERER_NAME,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_GROUPS_MODEL,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_RESULTS_MODEL,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_RENDERER_HINTS,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RENDERER_NAME,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_GROUPS_MODEL,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RESULTS_MODEL_NAME,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RESULTS_MODEL,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RENDERER_HINTS
+};
+UnityPlacesPlaceEntryDbus* unity_places_place_entry_dbus_new (const char* dbus_name, const char* dbus_path);
+UnityPlacesPlaceEntryDbus* unity_places_place_entry_dbus_construct (GType object_type, const char* dbus_name, const char* dbus_path);
+UnityPlacesPlaceEntryDbus* unity_places_place_entry_dbus_new_with_info (const char* dbus_name, const char* dbus_path, const char* name, const char* icon, const char* description, gboolean show_global, gboolean show_entry);
+UnityPlacesPlaceEntryDbus* unity_places_place_entry_dbus_construct_with_info (GType object_type, const char* dbus_name, const char* dbus_path, const char* name, const char* icon, const char* description, gboolean show_global, gboolean show_entry);
+void unity_places_place_entry_dbus_set_sections_model_name (UnityPlacesPlaceEntryDbus* self, const char* value);
+static GeeHashMap* unity_places_place_entry_dbus_map_from_hash (UnityPlacesPlaceEntryDbus* self, GHashTable* hash);
+const char* unity_places_place_entry_dbus_get_global_results_model_name (UnityPlacesPlaceEntryDbus* self);
+void unity_places_place_entry_dbus_set_global_results_model_name (UnityPlacesPlaceEntryDbus* self, const char* value);
+void unity_places_place_entry_dbus_update_info (UnityPlacesPlaceEntryDbus* self, GValueArray* value_array);
+const char* unity_places_place_entry_dbus_get_dbus_name (UnityPlacesPlaceEntryDbus* self);
+const char* unity_places_place_entry_dbus_get_dbus_path (UnityPlacesPlaceEntryDbus* self);
+GType unity_places_place_entry_dbus_renderer_info_get_type (void);
+UnityPlacesPlaceEntryDbusRendererInfo* unity_places_place_entry_dbus_renderer_info_dup (const UnityPlacesPlaceEntryDbusRendererInfo* self);
+void unity_places_place_entry_dbus_renderer_info_free (UnityPlacesPlaceEntryDbusRendererInfo* self);
+void unity_places_place_entry_dbus_renderer_info_copy (const UnityPlacesPlaceEntryDbusRendererInfo* self, UnityPlacesPlaceEntryDbusRendererInfo* dest);
+void unity_places_place_entry_dbus_renderer_info_destroy (UnityPlacesPlaceEntryDbusRendererInfo* self);
+static void unity_places_place_entry_dbus_on_renderer_info_changed (UnityPlacesPlaceEntryDbus* self, DBusGProxy* dbus_object, UnityPlacesPlaceEntryDbusRendererInfo* info);
+static void _unity_places_place_entry_dbus_on_renderer_info_changed_dynamic_RendererInfoChanged0_ (DBusGProxy* _sender, UnityPlacesPlaceEntryDbusRendererInfo* info, gpointer self);
+void _dynamic_RendererInfoChanged1_connect (gpointer obj, const char * signal_name, GCallback handler, gpointer data);
+static void unity_places_place_entry_dbus_real_connect (UnityPlacesPlaceEntry* base);
+static void _dynamic_set_search0 (DBusGProxy* self, const char* param1, GHashTable* param2, GError** error);
+static void unity_places_place_entry_dbus_real_set_search (UnityPlacesPlaceEntry* base, const char* search, GHashTable* hints);
+static void _dynamic_set_active_section1 (DBusGProxy* self, guint param1, GError** error);
+static void unity_places_place_entry_dbus_real_set_active_section (UnityPlacesPlaceEntry* base, guint section_id);
+static void _dynamic_set_global_search2 (DBusGProxy* self, const char* param1, GHashTable* param2, GError** error);
+static void unity_places_place_entry_dbus_real_set_global_search (UnityPlacesPlaceEntry* base, const char* search, GHashTable* hints);
+static void unity_places_place_entry_dbus_set_dbus_name (UnityPlacesPlaceEntryDbus* self, const char* value);
+static void unity_places_place_entry_dbus_set_dbus_path (UnityPlacesPlaceEntryDbus* self, const char* value);
+static char** _vala_array_dup1 (char** self, int length);
+gboolean unity_places_place_entry_dbus_get_show_global (UnityPlacesPlaceEntryDbus* self);
+void unity_places_place_entry_dbus_set_show_global (UnityPlacesPlaceEntryDbus* self, gboolean value);
+gboolean unity_places_place_entry_dbus_get_show_entry (UnityPlacesPlaceEntryDbus* self);
+void unity_places_place_entry_dbus_set_show_entry (UnityPlacesPlaceEntryDbus* self, gboolean value);
+static void _dynamic_set_active3 (DBusGProxy* self, gboolean param1, GError** error);
+const char* unity_places_place_entry_dbus_get_sections_model_name (UnityPlacesPlaceEntryDbus* self);
+static GObject * unity_places_place_entry_dbus_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void unity_places_place_entry_dbus_finalize (GObject* obj);
+static void unity_places_place_entry_dbus_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
+static void unity_places_place_entry_dbus_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static int _vala_strcmp0 (const char * str1, const char * str2);
@@ -198,34 +271,275 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 
 static void g_cclosure_user_marshal_VOID__BOXED (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 
-UnityPlacesPlaceEntry* unity_places_place_entry_construct (GType object_type, const char* dbus_name, const char* dbus_path) {
-	UnityPlacesPlaceEntry * self;
+void unity_places_place_entry_connect (UnityPlacesPlaceEntry* self) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->connect (self);
+}
+
+
+void unity_places_place_entry_set_search (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_search (self, search, hints);
+}
+
+
+void unity_places_place_entry_set_active_section (UnityPlacesPlaceEntry* self, guint section_id) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_active_section (self, section_id);
+}
+
+
+void unity_places_place_entry_set_global_search (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_global_search (self, search, hints);
+}
+
+
+const char* unity_places_place_entry_get_name (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_name (self);
+}
+
+
+void unity_places_place_entry_set_name (UnityPlacesPlaceEntry* self, const char* value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_name (self, value);
+}
+
+
+const char* unity_places_place_entry_get_icon (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_icon (self);
+}
+
+
+void unity_places_place_entry_set_icon (UnityPlacesPlaceEntry* self, const char* value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_icon (self, value);
+}
+
+
+const char* unity_places_place_entry_get_description (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_description (self);
+}
+
+
+void unity_places_place_entry_set_description (UnityPlacesPlaceEntry* self, const char* value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_description (self, value);
+}
+
+
+guint unity_places_place_entry_get_position (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_position (self);
+}
+
+
+void unity_places_place_entry_set_position (UnityPlacesPlaceEntry* self, guint value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_position (self, value);
+}
+
+
+char** unity_places_place_entry_get_mimetypes (UnityPlacesPlaceEntry* self, int* result_length1) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_mimetypes (self, result_length1);
+}
+
+
+void unity_places_place_entry_set_mimetypes (UnityPlacesPlaceEntry* self, char** value, int value_length1) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_mimetypes (self, value, value_length1);
+}
+
+
+gboolean unity_places_place_entry_get_sensitive (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_sensitive (self);
+}
+
+
+void unity_places_place_entry_set_sensitive (UnityPlacesPlaceEntry* self, gboolean value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_sensitive (self, value);
+}
+
+
+GeeHashMap* unity_places_place_entry_get_hints (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_hints (self);
+}
+
+
+void unity_places_place_entry_set_hints (UnityPlacesPlaceEntry* self, GeeHashMap* value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_hints (self, value);
+}
+
+
+gboolean unity_places_place_entry_get_online (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_online (self);
+}
+
+
+void unity_places_place_entry_set_online (UnityPlacesPlaceEntry* self, gboolean value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_online (self, value);
+}
+
+
+gboolean unity_places_place_entry_get_active (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_active (self);
+}
+
+
+void unity_places_place_entry_set_active (UnityPlacesPlaceEntry* self, gboolean value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_active (self, value);
+}
+
+
+DeeModel* unity_places_place_entry_get_sections_model (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_sections_model (self);
+}
+
+
+void unity_places_place_entry_set_sections_model (UnityPlacesPlaceEntry* self, DeeModel* value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_sections_model (self, value);
+}
+
+
+const char* unity_places_place_entry_get_entry_renderer_name (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_entry_renderer_name (self);
+}
+
+
+void unity_places_place_entry_set_entry_renderer_name (UnityPlacesPlaceEntry* self, const char* value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_entry_renderer_name (self, value);
+}
+
+
+DeeModel* unity_places_place_entry_get_entry_groups_model (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_entry_groups_model (self);
+}
+
+
+void unity_places_place_entry_set_entry_groups_model (UnityPlacesPlaceEntry* self, DeeModel* value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_entry_groups_model (self, value);
+}
+
+
+DeeModel* unity_places_place_entry_get_entry_results_model (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_entry_results_model (self);
+}
+
+
+void unity_places_place_entry_set_entry_results_model (UnityPlacesPlaceEntry* self, DeeModel* value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_entry_results_model (self, value);
+}
+
+
+GeeHashMap* unity_places_place_entry_get_entry_renderer_hints (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_entry_renderer_hints (self);
+}
+
+
+void unity_places_place_entry_set_entry_renderer_hints (UnityPlacesPlaceEntry* self, GeeHashMap* value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_entry_renderer_hints (self, value);
+}
+
+
+const char* unity_places_place_entry_get_global_renderer_name (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_global_renderer_name (self);
+}
+
+
+void unity_places_place_entry_set_global_renderer_name (UnityPlacesPlaceEntry* self, const char* value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_global_renderer_name (self, value);
+}
+
+
+DeeModel* unity_places_place_entry_get_global_groups_model (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_global_groups_model (self);
+}
+
+
+void unity_places_place_entry_set_global_groups_model (UnityPlacesPlaceEntry* self, DeeModel* value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_global_groups_model (self, value);
+}
+
+
+DeeModel* unity_places_place_entry_get_global_results_model (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_global_results_model (self);
+}
+
+
+void unity_places_place_entry_set_global_results_model (UnityPlacesPlaceEntry* self, DeeModel* value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_global_results_model (self, value);
+}
+
+
+GeeHashMap* unity_places_place_entry_get_global_renderer_hints (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_global_renderer_hints (self);
+}
+
+
+void unity_places_place_entry_set_global_renderer_hints (UnityPlacesPlaceEntry* self, GeeHashMap* value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_global_renderer_hints (self, value);
+}
+
+
+static void unity_places_place_entry_base_init (UnityPlacesPlaceEntryIface * iface) {
+	static gboolean initialized = FALSE;
+	if (!initialized) {
+		initialized = TRUE;
+		g_object_interface_install_property (iface, g_param_spec_string ("name", "name", "name", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
+		g_object_interface_install_property (iface, g_param_spec_string ("icon", "icon", "icon", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
+		g_object_interface_install_property (iface, g_param_spec_string ("description", "description", "description", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
+		g_object_interface_install_property (iface, g_param_spec_uint ("position", "position", "position", 0, G_MAXUINT, 0U, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_object_interface_install_property (iface, g_param_spec_boxed ("mimetypes", "mimetypes", "mimetypes", G_TYPE_STRV, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_object_interface_install_property (iface, g_param_spec_boolean ("sensitive", "sensitive", "sensitive", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_object_interface_install_property (iface, g_param_spec_object ("hints", "hints", "hints", GEE_TYPE_HASH_MAP, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_object_interface_install_property (iface, g_param_spec_boolean ("online", "online", "online", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
+		g_object_interface_install_property (iface, g_param_spec_boolean ("active", "active", "active", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_object_interface_install_property (iface, g_param_spec_object ("sections-model", "sections-model", "sections-model", DEE_TYPE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_object_interface_install_property (iface, g_param_spec_string ("entry-renderer-name", "entry-renderer-name", "entry-renderer-name", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_object_interface_install_property (iface, g_param_spec_object ("entry-groups-model", "entry-groups-model", "entry-groups-model", DEE_TYPE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_object_interface_install_property (iface, g_param_spec_object ("entry-results-model", "entry-results-model", "entry-results-model", DEE_TYPE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_object_interface_install_property (iface, g_param_spec_object ("entry-renderer-hints", "entry-renderer-hints", "entry-renderer-hints", GEE_TYPE_HASH_MAP, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_object_interface_install_property (iface, g_param_spec_string ("global-renderer-name", "global-renderer-name", "global-renderer-name", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_object_interface_install_property (iface, g_param_spec_object ("global-groups-model", "global-groups-model", "global-groups-model", DEE_TYPE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_object_interface_install_property (iface, g_param_spec_object ("global-results-model", "global-results-model", "global-results-model", DEE_TYPE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_object_interface_install_property (iface, g_param_spec_object ("global-renderer-hints", "global-renderer-hints", "global-renderer-hints", GEE_TYPE_HASH_MAP, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_signal_new ("updated", UNITY_PLACES_TYPE_PLACE_ENTRY, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+		g_signal_new ("renderer_info_changed", UNITY_PLACES_TYPE_PLACE_ENTRY, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+	}
+}
+
+
+GType unity_places_place_entry_get_type (void) {
+	static volatile gsize unity_places_place_entry_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_places_place_entry_type_id__volatile)) {
+		static const GTypeInfo g_define_type_info = { sizeof (UnityPlacesPlaceEntryIface), (GBaseInitFunc) unity_places_place_entry_base_init, (GBaseFinalizeFunc) NULL, (GClassInitFunc) NULL, (GClassFinalizeFunc) NULL, NULL, 0, 0, (GInstanceInitFunc) NULL, NULL };
+		GType unity_places_place_entry_type_id;
+		unity_places_place_entry_type_id = g_type_register_static (G_TYPE_INTERFACE, "UnityPlacesPlaceEntry", &g_define_type_info, 0);
+		g_type_interface_add_prerequisite (unity_places_place_entry_type_id, G_TYPE_OBJECT);
+		g_once_init_leave (&unity_places_place_entry_type_id__volatile, unity_places_place_entry_type_id);
+	}
+	return unity_places_place_entry_type_id__volatile;
+}
+
+
+UnityPlacesPlaceEntryDbus* unity_places_place_entry_dbus_construct (GType object_type, const char* dbus_name, const char* dbus_path) {
+	UnityPlacesPlaceEntryDbus * self;
 	g_return_val_if_fail (dbus_name != NULL, NULL);
 	g_return_val_if_fail (dbus_path != NULL, NULL);
-	self = (UnityPlacesPlaceEntry*) g_object_new (object_type, "dbus-name", dbus_name, "dbus-path", dbus_path, NULL);
+	self = (UnityPlacesPlaceEntryDbus*) g_object_new (object_type, "dbus-name", dbus_name, "dbus-path", dbus_path, NULL);
 	return self;
 }
 
 
-UnityPlacesPlaceEntry* unity_places_place_entry_new (const char* dbus_name, const char* dbus_path) {
-	return unity_places_place_entry_construct (UNITY_PLACES_TYPE_PLACE_ENTRY, dbus_name, dbus_path);
+UnityPlacesPlaceEntryDbus* unity_places_place_entry_dbus_new (const char* dbus_name, const char* dbus_path) {
+	return unity_places_place_entry_dbus_construct (UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS, dbus_name, dbus_path);
 }
 
 
-UnityPlacesPlaceEntry* unity_places_place_entry_construct_with_info (GType object_type, const char* dbus_name, const char* dbus_path, const char* name, const char* icon, const char* description, gboolean show_global, gboolean show_entry) {
-	UnityPlacesPlaceEntry * self;
+UnityPlacesPlaceEntryDbus* unity_places_place_entry_dbus_construct_with_info (GType object_type, const char* dbus_name, const char* dbus_path, const char* name, const char* icon, const char* description, gboolean show_global, gboolean show_entry) {
+	UnityPlacesPlaceEntryDbus * self;
 	g_return_val_if_fail (dbus_name != NULL, NULL);
 	g_return_val_if_fail (dbus_path != NULL, NULL);
 	g_return_val_if_fail (name != NULL, NULL);
 	g_return_val_if_fail (icon != NULL, NULL);
 	g_return_val_if_fail (description != NULL, NULL);
-	self = (UnityPlacesPlaceEntry*) g_object_new (object_type, "dbus-name", dbus_name, "dbus-path", dbus_path, "name", name, "icon", icon, "description", description, "show-global", show_global, "show-entry", show_entry, NULL);
+	self = (UnityPlacesPlaceEntryDbus*) g_object_new (object_type, "dbus-name", dbus_name, "dbus-path", dbus_path, "name", name, "icon", icon, "description", description, "show-global", show_global, "show-entry", show_entry, NULL);
 	return self;
 }
 
 
-UnityPlacesPlaceEntry* unity_places_place_entry_new_with_info (const char* dbus_name, const char* dbus_path, const char* name, const char* icon, const char* description, gboolean show_global, gboolean show_entry) {
-	return unity_places_place_entry_construct_with_info (UNITY_PLACES_TYPE_PLACE_ENTRY, dbus_name, dbus_path, name, icon, description, show_global, show_entry);
+UnityPlacesPlaceEntryDbus* unity_places_place_entry_dbus_new_with_info (const char* dbus_name, const char* dbus_path, const char* name, const char* icon, const char* description, gboolean show_global, gboolean show_entry) {
+	return unity_places_place_entry_dbus_construct_with_info (UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS, dbus_name, dbus_path, name, icon, description, show_global, show_entry);
 }
 
 
@@ -234,86 +548,88 @@ static gpointer _g_hash_table_ref0 (gpointer self) {
 }
 
 
-void unity_places_place_entry_update_info (UnityPlacesPlaceEntry* self, GValueArray* value_array) {
+void unity_places_place_entry_dbus_update_info (UnityPlacesPlaceEntryDbus* self, GValueArray* value_array) {
+	char* n;
 	GHashTable* hash;
 	GValueArray* ea;
 	GValueArray* ga;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (value_array != NULL);
 	g_return_if_fail (value_array->n_values == 10);
-	unity_places_place_entry_set_name (self, g_value_get_string (g_value_array_get_nth (value_array, (guint) 1)));
-	unity_places_place_entry_set_icon (self, g_value_get_string (g_value_array_get_nth (value_array, (guint) 2)));
-	unity_places_place_entry_set_position (self, g_value_get_uint (g_value_array_get_nth (value_array, (guint) 3)));
-	unity_places_place_entry_set_sensitive (self, g_value_get_boolean (g_value_array_get_nth (value_array, (guint) 5)));
-	unity_places_place_entry_set_sections_model_name (self, g_value_get_string (g_value_array_get_nth (value_array, (guint) 6)));
+	n = g_strdup (g_value_get_string (g_value_array_get_nth (value_array, (guint) 1)));
+	if (_vala_strcmp0 (n, "") != 0) {
+		unity_places_place_entry_set_name ((UnityPlacesPlaceEntry*) self, n);
+	}
+	unity_places_place_entry_set_icon ((UnityPlacesPlaceEntry*) self, g_value_get_string (g_value_array_get_nth (value_array, (guint) 2)));
+	unity_places_place_entry_set_position ((UnityPlacesPlaceEntry*) self, g_value_get_uint (g_value_array_get_nth (value_array, (guint) 3)));
+	unity_places_place_entry_set_sensitive ((UnityPlacesPlaceEntry*) self, g_value_get_boolean (g_value_array_get_nth (value_array, (guint) 5)));
+	unity_places_place_entry_dbus_set_sections_model_name (self, g_value_get_string (g_value_array_get_nth (value_array, (guint) 6)));
 	hash = _g_hash_table_ref0 ((GHashTable*) g_value_get_boxed (g_value_array_get_nth (value_array, (guint) 7)));
-	if (self->priv->_hints != NULL) {
+	if (unity_places_place_entry_get_hints ((UnityPlacesPlaceEntry*) self) != NULL) {
 		GeeHashMap* _tmp0_;
-		unity_places_place_entry_set_hints (self, _tmp0_ = unity_places_place_entry_map_from_hash (self, hash));
+		unity_places_place_entry_set_hints ((UnityPlacesPlaceEntry*) self, _tmp0_ = unity_places_place_entry_dbus_map_from_hash (self, hash));
 		_g_object_unref0 (_tmp0_);
 	} else {
-		unity_places_place_entry_set_hints (self, NULL);
+		unity_places_place_entry_set_hints ((UnityPlacesPlaceEntry*) self, NULL);
 	}
 	ea = (GValueArray*) g_value_get_boxed (g_value_array_get_nth (value_array, (guint) 8));
 	if (ea != NULL) {
-		char* _tmp1_;
 		char* str;
-		char* _tmp3_;
-		GHashTable* _tmp5_;
-		self->entry_renderer_name = (_tmp1_ = g_strdup (g_value_get_string (g_value_array_get_nth (ea, (guint) 0))), _g_free0 (self->entry_renderer_name), _tmp1_);
+		char* _tmp2_;
+		GHashTable* _tmp4_;
+		unity_places_place_entry_set_entry_renderer_name ((UnityPlacesPlaceEntry*) self, g_value_get_string (g_value_array_get_nth (ea, (guint) 0)));
 		str = g_strdup (g_value_get_string (g_value_array_get_nth (ea, (guint) 1)));
 		if (_vala_strcmp0 (self->entry_groups_model_name, str) != 0) {
-			char* _tmp2_;
-			self->entry_groups_model_name = (_tmp2_ = g_strdup (str), _g_free0 (self->entry_groups_model_name), _tmp2_);
-			unity_places_place_entry_set_entry_groups_model (self, NULL);
+			char* _tmp1_;
+			self->entry_groups_model_name = (_tmp1_ = g_strdup (str), _g_free0 (self->entry_groups_model_name), _tmp1_);
+			unity_places_place_entry_set_entry_groups_model ((UnityPlacesPlaceEntry*) self, NULL);
 		}
-		str = (_tmp3_ = g_strdup (g_value_get_string (g_value_array_get_nth (ea, (guint) 2))), _g_free0 (str), _tmp3_);
+		str = (_tmp2_ = g_strdup (g_value_get_string (g_value_array_get_nth (ea, (guint) 2))), _g_free0 (str), _tmp2_);
 		if (_vala_strcmp0 (self->entry_results_model_name, str) != 0) {
-			char* _tmp4_;
-			self->entry_results_model_name = (_tmp4_ = g_strdup (str), _g_free0 (self->entry_results_model_name), _tmp4_);
-			unity_places_place_entry_set_entry_results_model (self, NULL);
+			char* _tmp3_;
+			self->entry_results_model_name = (_tmp3_ = g_strdup (str), _g_free0 (self->entry_results_model_name), _tmp3_);
+			unity_places_place_entry_set_entry_results_model ((UnityPlacesPlaceEntry*) self, NULL);
 		}
-		hash = (_tmp5_ = _g_hash_table_ref0 ((GHashTable*) g_value_get_boxed (g_value_array_get_nth (ea, (guint) 3))), _g_hash_table_unref0 (hash), _tmp5_);
+		hash = (_tmp4_ = _g_hash_table_ref0 ((GHashTable*) g_value_get_boxed (g_value_array_get_nth (ea, (guint) 3))), _g_hash_table_unref0 (hash), _tmp4_);
 		if (hash != NULL) {
-			GeeHashMap* _tmp6_;
-			self->entry_renderer_hints = (_tmp6_ = unity_places_place_entry_map_from_hash (self, hash), _g_object_unref0 (self->entry_renderer_hints), _tmp6_);
+			GeeHashMap* _tmp5_;
+			unity_places_place_entry_set_entry_renderer_hints ((UnityPlacesPlaceEntry*) self, _tmp5_ = unity_places_place_entry_dbus_map_from_hash (self, hash));
+			_g_object_unref0 (_tmp5_);
 		} else {
-			GeeHashMap* _tmp7_;
-			self->entry_renderer_hints = (_tmp7_ = NULL, _g_object_unref0 (self->entry_renderer_hints), _tmp7_);
+			unity_places_place_entry_set_entry_renderer_hints ((UnityPlacesPlaceEntry*) self, NULL);
 		}
 		_g_free0 (str);
 	}
 	ga = (GValueArray*) g_value_get_boxed (g_value_array_get_nth (value_array, (guint) 9));
 	if (ga != NULL) {
-		char* _tmp8_;
 		char* str;
-		char* _tmp10_;
-		GHashTable* _tmp12_;
-		self->global_renderer_name = (_tmp8_ = g_strdup (g_value_get_string (g_value_array_get_nth (ga, (guint) 0))), _g_free0 (self->global_renderer_name), _tmp8_);
+		char* _tmp7_;
+		GHashTable* _tmp8_;
+		unity_places_place_entry_set_global_renderer_name ((UnityPlacesPlaceEntry*) self, g_value_get_string (g_value_array_get_nth (ga, (guint) 0)));
 		str = g_strdup (g_value_get_string (g_value_array_get_nth (ga, (guint) 1)));
 		if (_vala_strcmp0 (self->global_groups_model_name, str) != 0) {
-			char* _tmp9_;
-			self->global_groups_model_name = (_tmp9_ = g_strdup (str), _g_free0 (self->global_groups_model_name), _tmp9_);
-			unity_places_place_entry_set_global_groups_model (self, NULL);
+			char* _tmp6_;
+			self->global_groups_model_name = (_tmp6_ = g_strdup (str), _g_free0 (self->global_groups_model_name), _tmp6_);
+			unity_places_place_entry_set_global_groups_model ((UnityPlacesPlaceEntry*) self, NULL);
 		}
-		str = (_tmp10_ = g_strdup (g_value_get_string (g_value_array_get_nth (ga, (guint) 2))), _g_free0 (str), _tmp10_);
-		if (_vala_strcmp0 (self->global_results_model_name, str) != 0) {
-			char* _tmp11_;
-			self->global_results_model_name = (_tmp11_ = g_strdup (str), _g_free0 (self->global_results_model_name), _tmp11_);
-			unity_places_place_entry_set_global_results_model (self, NULL);
+		str = (_tmp7_ = g_strdup (g_value_get_string (g_value_array_get_nth (ga, (guint) 2))), _g_free0 (str), _tmp7_);
+		if (_vala_strcmp0 (self->priv->_global_results_model_name, str) != 0) {
+			unity_places_place_entry_dbus_set_global_results_model_name (self, str);
+			unity_places_place_entry_set_global_results_model ((UnityPlacesPlaceEntry*) self, NULL);
 		}
-		hash = (_tmp12_ = _g_hash_table_ref0 ((GHashTable*) g_value_get_boxed (g_value_array_get_nth (ga, (guint) 3))), _g_hash_table_unref0 (hash), _tmp12_);
+		hash = (_tmp8_ = _g_hash_table_ref0 ((GHashTable*) g_value_get_boxed (g_value_array_get_nth (ga, (guint) 3))), _g_hash_table_unref0 (hash), _tmp8_);
 		if (hash != NULL) {
-			GeeHashMap* _tmp13_;
-			self->global_renderer_hints = (_tmp13_ = unity_places_place_entry_map_from_hash (self, hash), _g_object_unref0 (self->global_renderer_hints), _tmp13_);
+			GeeHashMap* _tmp9_;
+			unity_places_place_entry_set_global_renderer_hints ((UnityPlacesPlaceEntry*) self, _tmp9_ = unity_places_place_entry_dbus_map_from_hash (self, hash));
+			_g_object_unref0 (_tmp9_);
 		} else {
-			GeeHashMap* _tmp14_;
-			self->global_renderer_hints = (_tmp14_ = NULL, _g_object_unref0 (self->global_renderer_hints), _tmp14_);
+			unity_places_place_entry_set_global_renderer_hints ((UnityPlacesPlaceEntry*) self, NULL);
 		}
 		_g_free0 (str);
 	}
-	g_signal_emit_by_name (self, "updated");
-	g_signal_emit_by_name (self, "renderer-info-changed");
+	g_signal_emit_by_name ((UnityPlacesPlaceEntry*) self, "updated");
+	g_signal_emit_by_name ((UnityPlacesPlaceEntry*) self, "renderer-info-changed");
+	_g_free0 (n);
 	_g_hash_table_unref0 (hash);
 }
 
@@ -326,23 +642,24 @@ static const char* string_to_string (const char* self) {
 }
 
 
-static void _unity_places_place_entry_on_renderer_info_changed_dynamic_RendererInfoChanged0_ (DBusGProxy* _sender, UnityPlacesPlaceEntryRendererInfo* info, gpointer self) {
-	unity_places_place_entry_on_renderer_info_changed (self, _sender, info);
+static void _unity_places_place_entry_dbus_on_renderer_info_changed_dynamic_RendererInfoChanged0_ (DBusGProxy* _sender, UnityPlacesPlaceEntryDbusRendererInfo* info, gpointer self) {
+	unity_places_place_entry_dbus_on_renderer_info_changed (self, _sender, info);
 }
 
 
 void _dynamic_RendererInfoChanged1_connect (gpointer obj, const char * signal_name, GCallback handler, gpointer data) {
 	dbus_g_object_register_marshaller (g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, dbus_g_type_get_struct ("GValueArray", G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_STRING), G_TYPE_INVALID), G_TYPE_INVALID);
 	dbus_g_proxy_add_signal (obj, "RendererInfoChanged", dbus_g_type_get_struct ("GValueArray", G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_STRING), G_TYPE_INVALID), G_TYPE_INVALID);
-	dbus_g_proxy_connect_signal (obj, signal_name, handler, data, NULL);
+	dbus_g_proxy_connect_signal (obj, "RendererInfoChanged", handler, data, NULL);
 }
 
 
-void unity_places_place_entry_connect (UnityPlacesPlaceEntry* self) {
+static void unity_places_place_entry_dbus_real_connect (UnityPlacesPlaceEntry* base) {
+	UnityPlacesPlaceEntryDbus * self;
 	GError * _inner_error_;
-	g_return_if_fail (self != NULL);
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	_inner_error_ = NULL;
-	if (self->priv->_online == TRUE) {
+	if (unity_places_place_entry_get_online ((UnityPlacesPlaceEntry*) self) == TRUE) {
 		return;
 	}
 	{
@@ -376,8 +693,8 @@ void unity_places_place_entry_connect (UnityPlacesPlaceEntry* self) {
 		g_clear_error (&_inner_error_);
 		return;
 	}
-	_dynamic_RendererInfoChanged1_connect (self->priv->service, "RendererInfoChanged", (GCallback) _unity_places_place_entry_on_renderer_info_changed_dynamic_RendererInfoChanged0_, self);
-	unity_places_place_entry_set_online (self, TRUE);
+	_dynamic_RendererInfoChanged1_connect (self->priv->service, "RendererInfoChanged", (GCallback) _unity_places_place_entry_dbus_on_renderer_info_changed_dynamic_RendererInfoChanged0_, self);
+	unity_places_place_entry_set_online ((UnityPlacesPlaceEntry*) self, TRUE);
 }
 
 
@@ -389,9 +706,10 @@ static void _dynamic_set_search0 (DBusGProxy* self, const char* param1, GHashTab
 }
 
 
-void unity_places_place_entry_set_search (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints) {
+static void unity_places_place_entry_dbus_real_set_search (UnityPlacesPlaceEntry* base, const char* search, GHashTable* hints) {
+	UnityPlacesPlaceEntryDbus * self;
 	GError * _inner_error_;
-	g_return_if_fail (self != NULL);
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	g_return_if_fail (search != NULL);
 	g_return_if_fail (hints != NULL);
 	_inner_error_ = NULL;
@@ -412,9 +730,10 @@ static void _dynamic_set_active_section1 (DBusGProxy* self, guint param1, GError
 }
 
 
-void unity_places_place_entry_set_active_section (UnityPlacesPlaceEntry* self, guint section_id) {
+static void unity_places_place_entry_dbus_real_set_active_section (UnityPlacesPlaceEntry* base, guint section_id) {
+	UnityPlacesPlaceEntryDbus * self;
 	GError * _inner_error_;
-	g_return_if_fail (self != NULL);
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	_inner_error_ = NULL;
 	_dynamic_set_active_section1 (self->priv->service, section_id, &_inner_error_);
 	if (_inner_error_ != NULL) {
@@ -433,9 +752,10 @@ static void _dynamic_set_global_search2 (DBusGProxy* self, const char* param1, G
 }
 
 
-void unity_places_place_entry_set_global_search (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints) {
+static void unity_places_place_entry_dbus_real_set_global_search (UnityPlacesPlaceEntry* base, const char* search, GHashTable* hints) {
+	UnityPlacesPlaceEntryDbus * self;
 	GError * _inner_error_;
-	g_return_if_fail (self != NULL);
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	g_return_if_fail (search != NULL);
 	g_return_if_fail (hints != NULL);
 	_inner_error_ = NULL;
@@ -448,48 +768,47 @@ void unity_places_place_entry_set_global_search (UnityPlacesPlaceEntry* self, co
 }
 
 
-static void unity_places_place_entry_on_renderer_info_changed (UnityPlacesPlaceEntry* self, DBusGProxy* dbus_object, UnityPlacesPlaceEntryRendererInfo* info) {
-	UnityPlacesPlaceEntryRendererInfo* i;
+static void unity_places_place_entry_dbus_on_renderer_info_changed (UnityPlacesPlaceEntryDbus* self, DBusGProxy* dbus_object, UnityPlacesPlaceEntryDbusRendererInfo* info) {
+	UnityPlacesPlaceEntryDbusRendererInfo* i;
 	GValueArray* ea;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (dbus_object != NULL);
 	i = info;
 	ea = (GValueArray*) i;
 	if (ea != NULL) {
-		char* _tmp0_;
 		char* str;
-		char* _tmp2_;
+		char* _tmp1_;
 		GHashTable* hash;
-		self->entry_renderer_name = (_tmp0_ = g_strdup (g_value_get_string (g_value_array_get_nth (ea, (guint) 0))), _g_free0 (self->entry_renderer_name), _tmp0_);
+		unity_places_place_entry_set_entry_renderer_name ((UnityPlacesPlaceEntry*) self, g_value_get_string (g_value_array_get_nth (ea, (guint) 0)));
 		str = g_strdup (g_value_get_string (g_value_array_get_nth (ea, (guint) 1)));
 		if (_vala_strcmp0 (self->entry_groups_model_name, str) != 0) {
-			char* _tmp1_;
-			self->entry_groups_model_name = (_tmp1_ = g_strdup (str), _g_free0 (self->entry_groups_model_name), _tmp1_);
-			unity_places_place_entry_set_entry_groups_model (self, NULL);
+			char* _tmp0_;
+			self->entry_groups_model_name = (_tmp0_ = g_strdup (str), _g_free0 (self->entry_groups_model_name), _tmp0_);
+			unity_places_place_entry_set_entry_groups_model ((UnityPlacesPlaceEntry*) self, NULL);
 		}
-		str = (_tmp2_ = g_strdup (g_value_get_string (g_value_array_get_nth (ea, (guint) 2))), _g_free0 (str), _tmp2_);
+		str = (_tmp1_ = g_strdup (g_value_get_string (g_value_array_get_nth (ea, (guint) 2))), _g_free0 (str), _tmp1_);
 		if (_vala_strcmp0 (self->entry_results_model_name, str) != 0) {
-			char* _tmp3_;
-			self->entry_results_model_name = (_tmp3_ = g_strdup (str), _g_free0 (self->entry_results_model_name), _tmp3_);
-			unity_places_place_entry_set_entry_results_model (self, NULL);
+			char* _tmp2_;
+			self->entry_results_model_name = (_tmp2_ = g_strdup (str), _g_free0 (self->entry_results_model_name), _tmp2_);
+			unity_places_place_entry_set_entry_results_model ((UnityPlacesPlaceEntry*) self, NULL);
 		}
 		hash = _g_hash_table_ref0 ((GHashTable*) g_value_get_boxed (g_value_array_get_nth (ea, (guint) 3)));
 		if (hash != NULL) {
-			GeeHashMap* _tmp4_;
-			self->entry_renderer_hints = (_tmp4_ = unity_places_place_entry_map_from_hash (self, hash), _g_object_unref0 (self->entry_renderer_hints), _tmp4_);
+			GeeHashMap* _tmp3_;
+			unity_places_place_entry_set_entry_renderer_hints ((UnityPlacesPlaceEntry*) self, _tmp3_ = unity_places_place_entry_dbus_map_from_hash (self, hash));
+			_g_object_unref0 (_tmp3_);
 		} else {
-			GeeHashMap* _tmp5_;
-			self->entry_renderer_hints = (_tmp5_ = NULL, _g_object_unref0 (self->entry_renderer_hints), _tmp5_);
+			unity_places_place_entry_set_entry_renderer_hints ((UnityPlacesPlaceEntry*) self, NULL);
 		}
-		g_signal_emit_by_name (self, "updated");
-		g_signal_emit_by_name (self, "renderer-info-changed");
+		g_signal_emit_by_name ((UnityPlacesPlaceEntry*) self, "updated");
+		g_signal_emit_by_name ((UnityPlacesPlaceEntry*) self, "renderer-info-changed");
 		_g_free0 (str);
 		_g_hash_table_unref0 (hash);
 	}
 }
 
 
-static GeeHashMap* unity_places_place_entry_map_from_hash (UnityPlacesPlaceEntry* self, GHashTable* hash) {
+static GeeHashMap* unity_places_place_entry_dbus_map_from_hash (UnityPlacesPlaceEntryDbus* self, GHashTable* hash) {
 	GeeHashMap* result = NULL;
 	GeeHashMap* map;
 	GHashTableIter iter = {0};
@@ -514,7 +833,7 @@ static GeeHashMap* unity_places_place_entry_map_from_hash (UnityPlacesPlaceEntry
 }
 
 
-const char* unity_places_place_entry_get_dbus_name (UnityPlacesPlaceEntry* self) {
+const char* unity_places_place_entry_dbus_get_dbus_name (UnityPlacesPlaceEntryDbus* self) {
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_dbus_name;
@@ -522,7 +841,7 @@ const char* unity_places_place_entry_get_dbus_name (UnityPlacesPlaceEntry* self)
 }
 
 
-static void unity_places_place_entry_set_dbus_name (UnityPlacesPlaceEntry* self, const char* value) {
+static void unity_places_place_entry_dbus_set_dbus_name (UnityPlacesPlaceEntryDbus* self, const char* value) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
 	self->priv->_dbus_name = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_dbus_name), _tmp0_);
@@ -530,7 +849,7 @@ static void unity_places_place_entry_set_dbus_name (UnityPlacesPlaceEntry* self,
 }
 
 
-const char* unity_places_place_entry_get_dbus_path (UnityPlacesPlaceEntry* self) {
+const char* unity_places_place_entry_dbus_get_dbus_path (UnityPlacesPlaceEntryDbus* self) {
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_dbus_path;
@@ -538,7 +857,7 @@ const char* unity_places_place_entry_get_dbus_path (UnityPlacesPlaceEntry* self)
 }
 
 
-static void unity_places_place_entry_set_dbus_path (UnityPlacesPlaceEntry* self, const char* value) {
+static void unity_places_place_entry_dbus_set_dbus_path (UnityPlacesPlaceEntryDbus* self, const char* value) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
 	self->priv->_dbus_path = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_dbus_path), _tmp0_);
@@ -546,73 +865,82 @@ static void unity_places_place_entry_set_dbus_path (UnityPlacesPlaceEntry* self,
 }
 
 
-const char* unity_places_place_entry_get_name (UnityPlacesPlaceEntry* self) {
+static const char* unity_places_place_entry_dbus_real_get_name (UnityPlacesPlaceEntry* base) {
 	const char* result;
-	g_return_val_if_fail (self != NULL, NULL);
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	result = self->priv->_name;
 	return result;
 }
 
 
-void unity_places_place_entry_set_name (UnityPlacesPlaceEntry* self, const char* value) {
+static void unity_places_place_entry_dbus_real_set_name (UnityPlacesPlaceEntry* base, const char* value) {
+	UnityPlacesPlaceEntryDbus* self;
 	char* _tmp0_;
-	g_return_if_fail (self != NULL);
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	self->priv->_name = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_name), _tmp0_);
 	g_object_notify ((GObject *) self, "name");
 }
 
 
-const char* unity_places_place_entry_get_icon (UnityPlacesPlaceEntry* self) {
+static const char* unity_places_place_entry_dbus_real_get_icon (UnityPlacesPlaceEntry* base) {
 	const char* result;
-	g_return_val_if_fail (self != NULL, NULL);
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	result = self->priv->_icon;
 	return result;
 }
 
 
-void unity_places_place_entry_set_icon (UnityPlacesPlaceEntry* self, const char* value) {
+static void unity_places_place_entry_dbus_real_set_icon (UnityPlacesPlaceEntry* base, const char* value) {
+	UnityPlacesPlaceEntryDbus* self;
 	char* _tmp0_;
-	g_return_if_fail (self != NULL);
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	self->priv->_icon = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_icon), _tmp0_);
 	g_object_notify ((GObject *) self, "icon");
 }
 
 
-const char* unity_places_place_entry_get_description (UnityPlacesPlaceEntry* self) {
+static const char* unity_places_place_entry_dbus_real_get_description (UnityPlacesPlaceEntry* base) {
 	const char* result;
-	g_return_val_if_fail (self != NULL, NULL);
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	result = self->priv->_description;
 	return result;
 }
 
 
-void unity_places_place_entry_set_description (UnityPlacesPlaceEntry* self, const char* value) {
+static void unity_places_place_entry_dbus_real_set_description (UnityPlacesPlaceEntry* base, const char* value) {
+	UnityPlacesPlaceEntryDbus* self;
 	char* _tmp0_;
-	g_return_if_fail (self != NULL);
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	self->priv->_description = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_description), _tmp0_);
 	g_object_notify ((GObject *) self, "description");
 }
 
 
-guint unity_places_place_entry_get_position (UnityPlacesPlaceEntry* self) {
+static guint unity_places_place_entry_dbus_real_get_position (UnityPlacesPlaceEntry* base) {
 	guint result;
-	g_return_val_if_fail (self != NULL, 0U);
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	result = self->priv->_position;
 	return result;
 }
 
 
-void unity_places_place_entry_set_position (UnityPlacesPlaceEntry* self, guint value) {
-	g_return_if_fail (self != NULL);
+static void unity_places_place_entry_dbus_real_set_position (UnityPlacesPlaceEntry* base, guint value) {
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	self->priv->_position = value;
 	g_object_notify ((GObject *) self, "position");
 }
 
 
-char** unity_places_place_entry_get_mimetypes (UnityPlacesPlaceEntry* self, int* result_length1) {
+static char** unity_places_place_entry_dbus_real_get_mimetypes (UnityPlacesPlaceEntry* base, int* result_length1) {
 	char** result;
+	UnityPlacesPlaceEntryDbus* self;
 	char** _tmp0_;
-	g_return_val_if_fail (self != NULL, NULL);
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	result = (_tmp0_ = self->priv->_mimetypes, *result_length1 = self->priv->_mimetypes_length1, _tmp0_);
 	return result;
 }
@@ -629,33 +957,37 @@ static char** _vala_array_dup1 (char** self, int length) {
 }
 
 
-void unity_places_place_entry_set_mimetypes (UnityPlacesPlaceEntry* self, char** value, int value_length1) {
+static void unity_places_place_entry_dbus_real_set_mimetypes (UnityPlacesPlaceEntry* base, char** value, int value_length1) {
+	UnityPlacesPlaceEntryDbus* self;
 	char** _tmp2_;
 	char** _tmp1_;
-	g_return_if_fail (self != NULL);
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	self->priv->_mimetypes = (_tmp2_ = (_tmp1_ = value, (_tmp1_ == NULL) ? ((gpointer) _tmp1_) : _vala_array_dup1 (_tmp1_, value_length1)), self->priv->_mimetypes = (_vala_array_free (self->priv->_mimetypes, self->priv->_mimetypes_length1, (GDestroyNotify) g_free), NULL), self->priv->_mimetypes_length1 = value_length1, self->priv->__mimetypes_size_ = self->priv->_mimetypes_length1, _tmp2_);
 	g_object_notify ((GObject *) self, "mimetypes");
 }
 
 
-gboolean unity_places_place_entry_get_sensitive (UnityPlacesPlaceEntry* self) {
+static gboolean unity_places_place_entry_dbus_real_get_sensitive (UnityPlacesPlaceEntry* base) {
 	gboolean result;
-	g_return_val_if_fail (self != NULL, FALSE);
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	result = self->priv->_sensitive;
 	return result;
 }
 
 
-void unity_places_place_entry_set_sensitive (UnityPlacesPlaceEntry* self, gboolean value) {
-	g_return_if_fail (self != NULL);
+static void unity_places_place_entry_dbus_real_set_sensitive (UnityPlacesPlaceEntry* base, gboolean value) {
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	self->priv->_sensitive = value;
 	g_object_notify ((GObject *) self, "sensitive");
 }
 
 
-GeeHashMap* unity_places_place_entry_get_hints (UnityPlacesPlaceEntry* self) {
+static GeeHashMap* unity_places_place_entry_dbus_real_get_hints (UnityPlacesPlaceEntry* base) {
 	GeeHashMap* result;
-	g_return_val_if_fail (self != NULL, NULL);
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	result = self->priv->_hints;
 	return result;
 }
@@ -666,30 +998,33 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-void unity_places_place_entry_set_hints (UnityPlacesPlaceEntry* self, GeeHashMap* value) {
+static void unity_places_place_entry_dbus_real_set_hints (UnityPlacesPlaceEntry* base, GeeHashMap* value) {
+	UnityPlacesPlaceEntryDbus* self;
 	GeeHashMap* _tmp0_;
-	g_return_if_fail (self != NULL);
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	self->priv->_hints = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_hints), _tmp0_);
 	g_object_notify ((GObject *) self, "hints");
 }
 
 
-gboolean unity_places_place_entry_get_online (UnityPlacesPlaceEntry* self) {
+static gboolean unity_places_place_entry_dbus_real_get_online (UnityPlacesPlaceEntry* base) {
 	gboolean result;
-	g_return_val_if_fail (self != NULL, FALSE);
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	result = self->priv->_online;
 	return result;
 }
 
 
-void unity_places_place_entry_set_online (UnityPlacesPlaceEntry* self, gboolean value) {
-	g_return_if_fail (self != NULL);
+static void unity_places_place_entry_dbus_real_set_online (UnityPlacesPlaceEntry* base, gboolean value) {
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	self->priv->_online = value;
 	g_object_notify ((GObject *) self, "online");
 }
 
 
-gboolean unity_places_place_entry_get_show_global (UnityPlacesPlaceEntry* self) {
+gboolean unity_places_place_entry_dbus_get_show_global (UnityPlacesPlaceEntryDbus* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_show_global;
@@ -697,14 +1032,14 @@ gboolean unity_places_place_entry_get_show_global (UnityPlacesPlaceEntry* self) 
 }
 
 
-void unity_places_place_entry_set_show_global (UnityPlacesPlaceEntry* self, gboolean value) {
+void unity_places_place_entry_dbus_set_show_global (UnityPlacesPlaceEntryDbus* self, gboolean value) {
 	g_return_if_fail (self != NULL);
 	self->priv->_show_global = value;
 	g_object_notify ((GObject *) self, "show-global");
 }
 
 
-gboolean unity_places_place_entry_get_show_entry (UnityPlacesPlaceEntry* self) {
+gboolean unity_places_place_entry_dbus_get_show_entry (UnityPlacesPlaceEntryDbus* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_show_entry;
@@ -712,16 +1047,17 @@ gboolean unity_places_place_entry_get_show_entry (UnityPlacesPlaceEntry* self) {
 }
 
 
-void unity_places_place_entry_set_show_entry (UnityPlacesPlaceEntry* self, gboolean value) {
+void unity_places_place_entry_dbus_set_show_entry (UnityPlacesPlaceEntryDbus* self, gboolean value) {
 	g_return_if_fail (self != NULL);
 	self->priv->_show_entry = value;
 	g_object_notify ((GObject *) self, "show-entry");
 }
 
 
-gboolean unity_places_place_entry_get_active (UnityPlacesPlaceEntry* self) {
+static gboolean unity_places_place_entry_dbus_real_get_active (UnityPlacesPlaceEntry* base) {
 	gboolean result;
-	g_return_val_if_fail (self != NULL, FALSE);
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	result = self->priv->_active;
 	return result;
 }
@@ -735,10 +1071,11 @@ static void _dynamic_set_active3 (DBusGProxy* self, gboolean param1, GError** er
 }
 
 
-void unity_places_place_entry_set_active (UnityPlacesPlaceEntry* self, gboolean value) {
+static void unity_places_place_entry_dbus_real_set_active (UnityPlacesPlaceEntry* base, gboolean value) {
 	GError * _inner_error_;
-	g_return_if_fail (self != NULL);
+	UnityPlacesPlaceEntryDbus* self;
 	_inner_error_ = NULL;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	if (self->priv->_active != value) {
 		self->priv->_active = value;
 		_dynamic_set_active3 (self->priv->service, self->priv->_active, &_inner_error_);
@@ -752,7 +1089,7 @@ void unity_places_place_entry_set_active (UnityPlacesPlaceEntry* self, gboolean 
 }
 
 
-const char* unity_places_place_entry_get_sections_model_name (UnityPlacesPlaceEntry* self) {
+const char* unity_places_place_entry_dbus_get_sections_model_name (UnityPlacesPlaceEntryDbus* self) {
 	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
 	result = self->priv->_sections_model_name;
@@ -760,7 +1097,7 @@ const char* unity_places_place_entry_get_sections_model_name (UnityPlacesPlaceEn
 }
 
 
-void unity_places_place_entry_set_sections_model_name (UnityPlacesPlaceEntry* self, const char* value) {
+void unity_places_place_entry_dbus_set_sections_model_name (UnityPlacesPlaceEntryDbus* self, const char* value) {
 	char* _tmp0_;
 	g_return_if_fail (self != NULL);
 	self->priv->_sections_model_name = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_sections_model_name), _tmp0_);
@@ -768,9 +1105,10 @@ void unity_places_place_entry_set_sections_model_name (UnityPlacesPlaceEntry* se
 }
 
 
-DeeModel* unity_places_place_entry_get_sections_model (UnityPlacesPlaceEntry* self) {
+static DeeModel* unity_places_place_entry_dbus_real_get_sections_model (UnityPlacesPlaceEntry* base) {
 	DeeModel* result;
-	g_return_val_if_fail (self != NULL, NULL);
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	if (DEE_IS_MODEL (self->priv->_sections_model) == FALSE) {
 		if (self->priv->_sections_model_name != NULL) {
 			DeeModel* _tmp0_;
@@ -784,17 +1122,37 @@ DeeModel* unity_places_place_entry_get_sections_model (UnityPlacesPlaceEntry* se
 }
 
 
-void unity_places_place_entry_set_sections_model (UnityPlacesPlaceEntry* self, DeeModel* value) {
+static void unity_places_place_entry_dbus_real_set_sections_model (UnityPlacesPlaceEntry* base, DeeModel* value) {
+	UnityPlacesPlaceEntryDbus* self;
 	DeeModel* _tmp2_;
-	g_return_if_fail (self != NULL);
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	self->priv->_sections_model = (_tmp2_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_sections_model), _tmp2_);
 	g_object_notify ((GObject *) self, "sections-model");
 }
 
 
-DeeModel* unity_places_place_entry_get_entry_groups_model (UnityPlacesPlaceEntry* self) {
+static const char* unity_places_place_entry_dbus_real_get_entry_renderer_name (UnityPlacesPlaceEntry* base) {
+	const char* result;
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
+	result = self->priv->_entry_renderer_name;
+	return result;
+}
+
+
+static void unity_places_place_entry_dbus_real_set_entry_renderer_name (UnityPlacesPlaceEntry* base, const char* value) {
+	UnityPlacesPlaceEntryDbus* self;
+	char* _tmp0_;
+	self = (UnityPlacesPlaceEntryDbus*) base;
+	self->priv->_entry_renderer_name = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_entry_renderer_name), _tmp0_);
+	g_object_notify ((GObject *) self, "entry-renderer-name");
+}
+
+
+static DeeModel* unity_places_place_entry_dbus_real_get_entry_groups_model (UnityPlacesPlaceEntry* base) {
 	DeeModel* result;
-	g_return_val_if_fail (self != NULL, NULL);
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	if (DEE_IS_MODEL (self->priv->_entry_groups_model) == FALSE) {
 		if (self->entry_groups_model_name != NULL) {
 			DeeModel* _tmp0_;
@@ -808,17 +1166,19 @@ DeeModel* unity_places_place_entry_get_entry_groups_model (UnityPlacesPlaceEntry
 }
 
 
-void unity_places_place_entry_set_entry_groups_model (UnityPlacesPlaceEntry* self, DeeModel* value) {
+static void unity_places_place_entry_dbus_real_set_entry_groups_model (UnityPlacesPlaceEntry* base, DeeModel* value) {
+	UnityPlacesPlaceEntryDbus* self;
 	DeeModel* _tmp2_;
-	g_return_if_fail (self != NULL);
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	self->priv->_entry_groups_model = (_tmp2_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_entry_groups_model), _tmp2_);
 	g_object_notify ((GObject *) self, "entry-groups-model");
 }
 
 
-DeeModel* unity_places_place_entry_get_entry_results_model (UnityPlacesPlaceEntry* self) {
+static DeeModel* unity_places_place_entry_dbus_real_get_entry_results_model (UnityPlacesPlaceEntry* base) {
 	DeeModel* result;
-	g_return_val_if_fail (self != NULL, NULL);
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	if (DEE_IS_MODEL (self->priv->_entry_results_model) == FALSE) {
 		if (self->entry_results_model_name != NULL) {
 			DeeModel* _tmp0_;
@@ -832,17 +1192,55 @@ DeeModel* unity_places_place_entry_get_entry_results_model (UnityPlacesPlaceEntr
 }
 
 
-void unity_places_place_entry_set_entry_results_model (UnityPlacesPlaceEntry* self, DeeModel* value) {
+static void unity_places_place_entry_dbus_real_set_entry_results_model (UnityPlacesPlaceEntry* base, DeeModel* value) {
+	UnityPlacesPlaceEntryDbus* self;
 	DeeModel* _tmp2_;
-	g_return_if_fail (self != NULL);
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	self->priv->_entry_results_model = (_tmp2_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_entry_results_model), _tmp2_);
 	g_object_notify ((GObject *) self, "entry-results-model");
 }
 
 
-DeeModel* unity_places_place_entry_get_global_groups_model (UnityPlacesPlaceEntry* self) {
+static GeeHashMap* unity_places_place_entry_dbus_real_get_entry_renderer_hints (UnityPlacesPlaceEntry* base) {
+	GeeHashMap* result;
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
+	result = self->priv->_entry_renderer_hints;
+	return result;
+}
+
+
+static void unity_places_place_entry_dbus_real_set_entry_renderer_hints (UnityPlacesPlaceEntry* base, GeeHashMap* value) {
+	UnityPlacesPlaceEntryDbus* self;
+	GeeHashMap* _tmp0_;
+	self = (UnityPlacesPlaceEntryDbus*) base;
+	self->priv->_entry_renderer_hints = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_entry_renderer_hints), _tmp0_);
+	g_object_notify ((GObject *) self, "entry-renderer-hints");
+}
+
+
+static const char* unity_places_place_entry_dbus_real_get_global_renderer_name (UnityPlacesPlaceEntry* base) {
+	const char* result;
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
+	result = self->priv->_global_renderer_name;
+	return result;
+}
+
+
+static void unity_places_place_entry_dbus_real_set_global_renderer_name (UnityPlacesPlaceEntry* base, const char* value) {
+	UnityPlacesPlaceEntryDbus* self;
+	char* _tmp0_;
+	self = (UnityPlacesPlaceEntryDbus*) base;
+	self->priv->_global_renderer_name = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_global_renderer_name), _tmp0_);
+	g_object_notify ((GObject *) self, "global-renderer-name");
+}
+
+
+static DeeModel* unity_places_place_entry_dbus_real_get_global_groups_model (UnityPlacesPlaceEntry* base) {
 	DeeModel* result;
-	g_return_val_if_fail (self != NULL, NULL);
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	if (DEE_IS_MODEL (self->priv->_global_groups_model) == FALSE) {
 		if (self->global_groups_model_name != NULL) {
 			DeeModel* _tmp0_;
@@ -856,22 +1254,40 @@ DeeModel* unity_places_place_entry_get_global_groups_model (UnityPlacesPlaceEntr
 }
 
 
-void unity_places_place_entry_set_global_groups_model (UnityPlacesPlaceEntry* self, DeeModel* value) {
+static void unity_places_place_entry_dbus_real_set_global_groups_model (UnityPlacesPlaceEntry* base, DeeModel* value) {
+	UnityPlacesPlaceEntryDbus* self;
 	DeeModel* _tmp2_;
-	g_return_if_fail (self != NULL);
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	self->priv->_global_groups_model = (_tmp2_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_global_groups_model), _tmp2_);
 	g_object_notify ((GObject *) self, "global-groups-model");
 }
 
 
-DeeModel* unity_places_place_entry_get_global_results_model (UnityPlacesPlaceEntry* self) {
-	DeeModel* result;
+const char* unity_places_place_entry_dbus_get_global_results_model_name (UnityPlacesPlaceEntryDbus* self) {
+	const char* result;
 	g_return_val_if_fail (self != NULL, NULL);
+	result = self->priv->_global_results_model_name;
+	return result;
+}
+
+
+void unity_places_place_entry_dbus_set_global_results_model_name (UnityPlacesPlaceEntryDbus* self, const char* value) {
+	char* _tmp0_;
+	g_return_if_fail (self != NULL);
+	self->priv->_global_results_model_name = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_global_results_model_name), _tmp0_);
+	g_object_notify ((GObject *) self, "global-results-model-name");
+}
+
+
+static DeeModel* unity_places_place_entry_dbus_real_get_global_results_model (UnityPlacesPlaceEntry* base) {
+	DeeModel* result;
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	if (DEE_IS_MODEL (self->priv->_global_results_model) == FALSE) {
-		if (self->global_results_model_name != NULL) {
+		if (self->priv->_global_results_model_name != NULL) {
 			DeeModel* _tmp0_;
 			DeeModel* _tmp1_;
-			self->priv->_global_results_model = (_tmp0_ = (DeeModel*) ((DeeSharedModel*) dee_shared_model_new_with_name (self->global_results_model_name)), _g_object_unref0 (self->priv->_global_results_model), _tmp0_);
+			self->priv->_global_results_model = (_tmp0_ = (DeeModel*) ((DeeSharedModel*) dee_shared_model_new_with_name (self->priv->_global_results_model_name)), _g_object_unref0 (self->priv->_global_results_model), _tmp0_);
 			dee_shared_model_connect ((_tmp1_ = self->priv->_global_results_model, DEE_IS_SHARED_MODEL (_tmp1_) ? ((DeeSharedModel*) _tmp1_) : NULL));
 		}
 	}
@@ -880,29 +1296,48 @@ DeeModel* unity_places_place_entry_get_global_results_model (UnityPlacesPlaceEnt
 }
 
 
-void unity_places_place_entry_set_global_results_model (UnityPlacesPlaceEntry* self, DeeModel* value) {
+static void unity_places_place_entry_dbus_real_set_global_results_model (UnityPlacesPlaceEntry* base, DeeModel* value) {
+	UnityPlacesPlaceEntryDbus* self;
 	DeeModel* _tmp2_;
-	g_return_if_fail (self != NULL);
+	self = (UnityPlacesPlaceEntryDbus*) base;
 	self->priv->_global_results_model = (_tmp2_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_global_results_model), _tmp2_);
 	g_object_notify ((GObject *) self, "global-results-model");
 }
 
 
-static GObject * unity_places_place_entry_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+static GeeHashMap* unity_places_place_entry_dbus_real_get_global_renderer_hints (UnityPlacesPlaceEntry* base) {
+	GeeHashMap* result;
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
+	result = self->priv->_global_renderer_hints;
+	return result;
+}
+
+
+static void unity_places_place_entry_dbus_real_set_global_renderer_hints (UnityPlacesPlaceEntry* base, GeeHashMap* value) {
+	UnityPlacesPlaceEntryDbus* self;
+	GeeHashMap* _tmp0_;
+	self = (UnityPlacesPlaceEntryDbus*) base;
+	self->priv->_global_renderer_hints = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_global_renderer_hints), _tmp0_);
+	g_object_notify ((GObject *) self, "global-renderer-hints");
+}
+
+
+static GObject * unity_places_place_entry_dbus_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
-	UnityPlacesPlaceEntry * self;
-	parent_class = G_OBJECT_CLASS (unity_places_place_entry_parent_class);
+	UnityPlacesPlaceEntryDbus * self;
+	parent_class = G_OBJECT_CLASS (unity_places_place_entry_dbus_parent_class);
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
-	self = UNITY_PLACES_PLACE_ENTRY (obj);
+	self = UNITY_PLACES_PLACE_ENTRY_DBUS (obj);
 	{
-		unity_places_place_entry_set_online (self, FALSE);
+		unity_places_place_entry_set_online ((UnityPlacesPlaceEntry*) self, FALSE);
 	}
 	return obj;
 }
 
 
-void unity_places_place_entry_renderer_info_copy (const UnityPlacesPlaceEntryRendererInfo* self, UnityPlacesPlaceEntryRendererInfo* dest) {
+void unity_places_place_entry_dbus_renderer_info_copy (const UnityPlacesPlaceEntryDbusRendererInfo* self, UnityPlacesPlaceEntryDbusRendererInfo* dest) {
 	dest->default_renderer = g_strdup (self->default_renderer);
 	dest->groups_model = g_strdup (self->groups_model);
 	dest->results_model = g_strdup (self->results_model);
@@ -910,7 +1345,7 @@ void unity_places_place_entry_renderer_info_copy (const UnityPlacesPlaceEntryRen
 }
 
 
-void unity_places_place_entry_renderer_info_destroy (UnityPlacesPlaceEntryRendererInfo* self) {
+void unity_places_place_entry_dbus_renderer_info_destroy (UnityPlacesPlaceEntryDbusRendererInfo* self) {
 	_g_free0 (self->default_renderer);
 	_g_free0 (self->groups_model);
 	_g_free0 (self->results_model);
@@ -918,72 +1353,120 @@ void unity_places_place_entry_renderer_info_destroy (UnityPlacesPlaceEntryRender
 }
 
 
-UnityPlacesPlaceEntryRendererInfo* unity_places_place_entry_renderer_info_dup (const UnityPlacesPlaceEntryRendererInfo* self) {
-	UnityPlacesPlaceEntryRendererInfo* dup;
-	dup = g_new0 (UnityPlacesPlaceEntryRendererInfo, 1);
-	unity_places_place_entry_renderer_info_copy (self, dup);
+UnityPlacesPlaceEntryDbusRendererInfo* unity_places_place_entry_dbus_renderer_info_dup (const UnityPlacesPlaceEntryDbusRendererInfo* self) {
+	UnityPlacesPlaceEntryDbusRendererInfo* dup;
+	dup = g_new0 (UnityPlacesPlaceEntryDbusRendererInfo, 1);
+	unity_places_place_entry_dbus_renderer_info_copy (self, dup);
 	return dup;
 }
 
 
-void unity_places_place_entry_renderer_info_free (UnityPlacesPlaceEntryRendererInfo* self) {
-	unity_places_place_entry_renderer_info_destroy (self);
+void unity_places_place_entry_dbus_renderer_info_free (UnityPlacesPlaceEntryDbusRendererInfo* self) {
+	unity_places_place_entry_dbus_renderer_info_destroy (self);
 	g_free (self);
 }
 
 
-GType unity_places_place_entry_renderer_info_get_type (void) {
-	static volatile gsize unity_places_place_entry_renderer_info_type_id__volatile = 0;
-	if (g_once_init_enter (&unity_places_place_entry_renderer_info_type_id__volatile)) {
-		GType unity_places_place_entry_renderer_info_type_id;
-		unity_places_place_entry_renderer_info_type_id = g_boxed_type_register_static ("UnityPlacesPlaceEntryRendererInfo", (GBoxedCopyFunc) unity_places_place_entry_renderer_info_dup, (GBoxedFreeFunc) unity_places_place_entry_renderer_info_free);
-		g_once_init_leave (&unity_places_place_entry_renderer_info_type_id__volatile, unity_places_place_entry_renderer_info_type_id);
+GType unity_places_place_entry_dbus_renderer_info_get_type (void) {
+	static volatile gsize unity_places_place_entry_dbus_renderer_info_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_places_place_entry_dbus_renderer_info_type_id__volatile)) {
+		GType unity_places_place_entry_dbus_renderer_info_type_id;
+		unity_places_place_entry_dbus_renderer_info_type_id = g_boxed_type_register_static ("UnityPlacesPlaceEntryDbusRendererInfo", (GBoxedCopyFunc) unity_places_place_entry_dbus_renderer_info_dup, (GBoxedFreeFunc) unity_places_place_entry_dbus_renderer_info_free);
+		g_once_init_leave (&unity_places_place_entry_dbus_renderer_info_type_id__volatile, unity_places_place_entry_dbus_renderer_info_type_id);
 	}
-	return unity_places_place_entry_renderer_info_type_id__volatile;
+	return unity_places_place_entry_dbus_renderer_info_type_id__volatile;
 }
 
 
-static void unity_places_place_entry_class_init (UnityPlacesPlaceEntryClass * klass) {
-	unity_places_place_entry_parent_class = g_type_class_peek_parent (klass);
-	g_type_class_add_private (klass, sizeof (UnityPlacesPlaceEntryPrivate));
-	G_OBJECT_CLASS (klass)->get_property = unity_places_place_entry_get_property;
-	G_OBJECT_CLASS (klass)->set_property = unity_places_place_entry_set_property;
-	G_OBJECT_CLASS (klass)->constructor = unity_places_place_entry_constructor;
-	G_OBJECT_CLASS (klass)->finalize = unity_places_place_entry_finalize;
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_NAME, g_param_spec_string ("dbus-name", "dbus-name", "dbus-name", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_PATH, g_param_spec_string ("dbus-path", "dbus-path", "dbus-path", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_NAME, g_param_spec_string ("name", "name", "name", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_ICON, g_param_spec_string ("icon", "icon", "icon", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DESCRIPTION, g_param_spec_string ("description", "description", "description", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_POSITION, g_param_spec_uint ("position", "position", "position", 0, G_MAXUINT, 0U, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_MIMETYPES, g_param_spec_boxed ("mimetypes", "mimetypes", "mimetypes", G_TYPE_STRV, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_SENSITIVE, g_param_spec_boolean ("sensitive", "sensitive", "sensitive", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_HINTS, g_param_spec_object ("hints", "hints", "hints", GEE_TYPE_HASH_MAP, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_ONLINE, g_param_spec_boolean ("online", "online", "online", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_SHOW_GLOBAL, g_param_spec_boolean ("show-global", "show-global", "show-global", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_SHOW_ENTRY, g_param_spec_boolean ("show-entry", "show-entry", "show-entry", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_ACTIVE, g_param_spec_boolean ("active", "active", "active", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_SECTIONS_MODEL_NAME, g_param_spec_string ("sections-model-name", "sections-model-name", "sections-model-name", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_SECTIONS_MODEL, g_param_spec_object ("sections-model", "sections-model", "sections-model", DEE_TYPE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_ENTRY_GROUPS_MODEL, g_param_spec_object ("entry-groups-model", "entry-groups-model", "entry-groups-model", DEE_TYPE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_ENTRY_RESULTS_MODEL, g_param_spec_object ("entry-results-model", "entry-results-model", "entry-results-model", DEE_TYPE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_GLOBAL_GROUPS_MODEL, g_param_spec_object ("global-groups-model", "global-groups-model", "global-groups-model", DEE_TYPE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_GLOBAL_RESULTS_MODEL, g_param_spec_object ("global-results-model", "global-results-model", "global-results-model", DEE_TYPE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
-	g_signal_new ("updated", UNITY_PLACES_TYPE_PLACE_ENTRY, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-	g_signal_new ("renderer_info_changed", UNITY_PLACES_TYPE_PLACE_ENTRY, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+static void unity_places_place_entry_dbus_class_init (UnityPlacesPlaceEntryDbusClass * klass) {
+	unity_places_place_entry_dbus_parent_class = g_type_class_peek_parent (klass);
+	g_type_class_add_private (klass, sizeof (UnityPlacesPlaceEntryDbusPrivate));
+	G_OBJECT_CLASS (klass)->get_property = unity_places_place_entry_dbus_get_property;
+	G_OBJECT_CLASS (klass)->set_property = unity_places_place_entry_dbus_set_property;
+	G_OBJECT_CLASS (klass)->constructor = unity_places_place_entry_dbus_constructor;
+	G_OBJECT_CLASS (klass)->finalize = unity_places_place_entry_dbus_finalize;
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_DBUS_NAME, g_param_spec_string ("dbus-name", "dbus-name", "dbus-name", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_DBUS_PATH, g_param_spec_string ("dbus-path", "dbus-path", "dbus-path", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_NAME, "name");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_ICON, "icon");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_DESCRIPTION, "description");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_POSITION, "position");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_MIMETYPES, "mimetypes");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_SENSITIVE, "sensitive");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_HINTS, "hints");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_ONLINE, "online");
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_SHOW_GLOBAL, g_param_spec_boolean ("show-global", "show-global", "show-global", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_SHOW_ENTRY, g_param_spec_boolean ("show-entry", "show-entry", "show-entry", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_ACTIVE, "active");
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_SECTIONS_MODEL_NAME, g_param_spec_string ("sections-model-name", "sections-model-name", "sections-model-name", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_SECTIONS_MODEL, "sections-model");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_RENDERER_NAME, "entry-renderer-name");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_GROUPS_MODEL, "entry-groups-model");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_RESULTS_MODEL, "entry-results-model");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_RENDERER_HINTS, "entry-renderer-hints");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RENDERER_NAME, "global-renderer-name");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_GROUPS_MODEL, "global-groups-model");
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RESULTS_MODEL_NAME, g_param_spec_string ("global-results-model-name", "global-results-model-name", "global-results-model-name", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RESULTS_MODEL, "global-results-model");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RENDERER_HINTS, "global-renderer-hints");
 }
 
 
-static void unity_places_place_entry_instance_init (UnityPlacesPlaceEntry * self) {
-	self->priv = UNITY_PLACES_PLACE_ENTRY_GET_PRIVATE (self);
+static void unity_places_place_entry_dbus_unity_places_place_entry_interface_init (UnityPlacesPlaceEntryIface * iface) {
+	unity_places_place_entry_dbus_unity_places_place_entry_parent_iface = g_type_interface_peek_parent (iface);
+	iface->connect = unity_places_place_entry_dbus_real_connect;
+	iface->set_search = unity_places_place_entry_dbus_real_set_search;
+	iface->set_active_section = unity_places_place_entry_dbus_real_set_active_section;
+	iface->set_global_search = unity_places_place_entry_dbus_real_set_global_search;
+	iface->get_name = unity_places_place_entry_dbus_real_get_name;
+	iface->set_name = unity_places_place_entry_dbus_real_set_name;
+	iface->get_icon = unity_places_place_entry_dbus_real_get_icon;
+	iface->set_icon = unity_places_place_entry_dbus_real_set_icon;
+	iface->get_description = unity_places_place_entry_dbus_real_get_description;
+	iface->set_description = unity_places_place_entry_dbus_real_set_description;
+	iface->get_position = unity_places_place_entry_dbus_real_get_position;
+	iface->set_position = unity_places_place_entry_dbus_real_set_position;
+	iface->get_mimetypes = unity_places_place_entry_dbus_real_get_mimetypes;
+	iface->set_mimetypes = unity_places_place_entry_dbus_real_set_mimetypes;
+	iface->get_sensitive = unity_places_place_entry_dbus_real_get_sensitive;
+	iface->set_sensitive = unity_places_place_entry_dbus_real_set_sensitive;
+	iface->get_hints = unity_places_place_entry_dbus_real_get_hints;
+	iface->set_hints = unity_places_place_entry_dbus_real_set_hints;
+	iface->get_online = unity_places_place_entry_dbus_real_get_online;
+	iface->set_online = unity_places_place_entry_dbus_real_set_online;
+	iface->get_active = unity_places_place_entry_dbus_real_get_active;
+	iface->set_active = unity_places_place_entry_dbus_real_set_active;
+	iface->get_sections_model = unity_places_place_entry_dbus_real_get_sections_model;
+	iface->set_sections_model = unity_places_place_entry_dbus_real_set_sections_model;
+	iface->get_entry_renderer_name = unity_places_place_entry_dbus_real_get_entry_renderer_name;
+	iface->set_entry_renderer_name = unity_places_place_entry_dbus_real_set_entry_renderer_name;
+	iface->get_entry_groups_model = unity_places_place_entry_dbus_real_get_entry_groups_model;
+	iface->set_entry_groups_model = unity_places_place_entry_dbus_real_set_entry_groups_model;
+	iface->get_entry_results_model = unity_places_place_entry_dbus_real_get_entry_results_model;
+	iface->set_entry_results_model = unity_places_place_entry_dbus_real_set_entry_results_model;
+	iface->get_entry_renderer_hints = unity_places_place_entry_dbus_real_get_entry_renderer_hints;
+	iface->set_entry_renderer_hints = unity_places_place_entry_dbus_real_set_entry_renderer_hints;
+	iface->get_global_renderer_name = unity_places_place_entry_dbus_real_get_global_renderer_name;
+	iface->set_global_renderer_name = unity_places_place_entry_dbus_real_set_global_renderer_name;
+	iface->get_global_groups_model = unity_places_place_entry_dbus_real_get_global_groups_model;
+	iface->set_global_groups_model = unity_places_place_entry_dbus_real_set_global_groups_model;
+	iface->get_global_results_model = unity_places_place_entry_dbus_real_get_global_results_model;
+	iface->set_global_results_model = unity_places_place_entry_dbus_real_set_global_results_model;
+	iface->get_global_renderer_hints = unity_places_place_entry_dbus_real_get_global_renderer_hints;
+	iface->set_global_renderer_hints = unity_places_place_entry_dbus_real_set_global_renderer_hints;
+}
+
+
+static void unity_places_place_entry_dbus_instance_init (UnityPlacesPlaceEntryDbus * self) {
+	self->priv = UNITY_PLACES_PLACE_ENTRY_DBUS_GET_PRIVATE (self);
 	self->priv->_active = FALSE;
 	self->priv->_sections_model = NULL;
 }
 
 
-static void unity_places_place_entry_finalize (GObject* obj) {
-	UnityPlacesPlaceEntry * self;
-	self = UNITY_PLACES_PLACE_ENTRY (obj);
+static void unity_places_place_entry_dbus_finalize (GObject* obj) {
+	UnityPlacesPlaceEntryDbus * self;
+	self = UNITY_PLACES_PLACE_ENTRY_DBUS (obj);
 	_g_free0 (self->priv->_dbus_name);
 	_g_free0 (self->priv->_dbus_path);
 	_g_free0 (self->priv->_name);
@@ -993,97 +1476,114 @@ static void unity_places_place_entry_finalize (GObject* obj) {
 	_g_object_unref0 (self->priv->_hints);
 	_g_free0 (self->priv->_sections_model_name);
 	_g_object_unref0 (self->priv->_sections_model);
-	_g_free0 (self->entry_renderer_name);
+	_g_free0 (self->priv->_entry_renderer_name);
 	_g_free0 (self->entry_groups_model_name);
 	_g_object_unref0 (self->priv->_entry_groups_model);
 	_g_free0 (self->entry_results_model_name);
 	_g_object_unref0 (self->priv->_entry_results_model);
-	_g_object_unref0 (self->entry_renderer_hints);
-	_g_free0 (self->global_renderer_name);
+	_g_object_unref0 (self->priv->_entry_renderer_hints);
+	_g_free0 (self->priv->_global_renderer_name);
 	_g_free0 (self->global_groups_model_name);
 	_g_object_unref0 (self->priv->_global_groups_model);
-	_g_free0 (self->global_results_model_name);
+	_g_free0 (self->priv->_global_results_model_name);
 	_g_object_unref0 (self->priv->_global_results_model);
-	_g_object_unref0 (self->global_renderer_hints);
+	_g_object_unref0 (self->priv->_global_renderer_hints);
 	_dbus_g_connection_unref0 (self->priv->connection);
 	_g_object_unref0 (self->priv->service);
-	G_OBJECT_CLASS (unity_places_place_entry_parent_class)->finalize (obj);
+	G_OBJECT_CLASS (unity_places_place_entry_dbus_parent_class)->finalize (obj);
 }
 
 
-GType unity_places_place_entry_get_type (void) {
-	static volatile gsize unity_places_place_entry_type_id__volatile = 0;
-	if (g_once_init_enter (&unity_places_place_entry_type_id__volatile)) {
-		static const GTypeInfo g_define_type_info = { sizeof (UnityPlacesPlaceEntryClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_places_place_entry_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityPlacesPlaceEntry), 0, (GInstanceInitFunc) unity_places_place_entry_instance_init, NULL };
-		GType unity_places_place_entry_type_id;
-		unity_places_place_entry_type_id = g_type_register_static (G_TYPE_OBJECT, "UnityPlacesPlaceEntry", &g_define_type_info, 0);
-		g_once_init_leave (&unity_places_place_entry_type_id__volatile, unity_places_place_entry_type_id);
+GType unity_places_place_entry_dbus_get_type (void) {
+	static volatile gsize unity_places_place_entry_dbus_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_places_place_entry_dbus_type_id__volatile)) {
+		static const GTypeInfo g_define_type_info = { sizeof (UnityPlacesPlaceEntryDbusClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_places_place_entry_dbus_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityPlacesPlaceEntryDbus), 0, (GInstanceInitFunc) unity_places_place_entry_dbus_instance_init, NULL };
+		static const GInterfaceInfo unity_places_place_entry_info = { (GInterfaceInitFunc) unity_places_place_entry_dbus_unity_places_place_entry_interface_init, (GInterfaceFinalizeFunc) NULL, NULL};
+		GType unity_places_place_entry_dbus_type_id;
+		unity_places_place_entry_dbus_type_id = g_type_register_static (G_TYPE_OBJECT, "UnityPlacesPlaceEntryDbus", &g_define_type_info, 0);
+		g_type_add_interface_static (unity_places_place_entry_dbus_type_id, UNITY_PLACES_TYPE_PLACE_ENTRY, &unity_places_place_entry_info);
+		g_once_init_leave (&unity_places_place_entry_dbus_type_id__volatile, unity_places_place_entry_dbus_type_id);
 	}
-	return unity_places_place_entry_type_id__volatile;
+	return unity_places_place_entry_dbus_type_id__volatile;
 }
 
 
-static void unity_places_place_entry_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
-	UnityPlacesPlaceEntry * self;
+static void unity_places_place_entry_dbus_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
+	UnityPlacesPlaceEntryDbus * self;
 	int length;
-	self = UNITY_PLACES_PLACE_ENTRY (object);
+	self = UNITY_PLACES_PLACE_ENTRY_DBUS (object);
 	switch (property_id) {
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_DBUS_NAME:
+		g_value_set_string (value, unity_places_place_entry_dbus_get_dbus_name (self));
+		break;
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_DBUS_PATH:
+		g_value_set_string (value, unity_places_place_entry_dbus_get_dbus_path (self));
+		break;
 		case UNITY_PLACES_PLACE_ENTRY_DBUS_NAME:
-		g_value_set_string (value, unity_places_place_entry_get_dbus_name (self));
+		g_value_set_string (value, unity_places_place_entry_get_name ((UnityPlacesPlaceEntry*) self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_DBUS_PATH:
-		g_value_set_string (value, unity_places_place_entry_get_dbus_path (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_ICON:
+		g_value_set_string (value, unity_places_place_entry_get_icon ((UnityPlacesPlaceEntry*) self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_NAME:
-		g_value_set_string (value, unity_places_place_entry_get_name (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_DESCRIPTION:
+		g_value_set_string (value, unity_places_place_entry_get_description ((UnityPlacesPlaceEntry*) self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_ICON:
-		g_value_set_string (value, unity_places_place_entry_get_icon (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_POSITION:
+		g_value_set_uint (value, unity_places_place_entry_get_position ((UnityPlacesPlaceEntry*) self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_DESCRIPTION:
-		g_value_set_string (value, unity_places_place_entry_get_description (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_MIMETYPES:
+		g_value_set_boxed (value, unity_places_place_entry_get_mimetypes ((UnityPlacesPlaceEntry*) self, &length));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_POSITION:
-		g_value_set_uint (value, unity_places_place_entry_get_position (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_SENSITIVE:
+		g_value_set_boolean (value, unity_places_place_entry_get_sensitive ((UnityPlacesPlaceEntry*) self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_MIMETYPES:
-		g_value_set_boxed (value, unity_places_place_entry_get_mimetypes (self, &length));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_HINTS:
+		g_value_set_object (value, unity_places_place_entry_get_hints ((UnityPlacesPlaceEntry*) self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_SENSITIVE:
-		g_value_set_boolean (value, unity_places_place_entry_get_sensitive (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_ONLINE:
+		g_value_set_boolean (value, unity_places_place_entry_get_online ((UnityPlacesPlaceEntry*) self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_HINTS:
-		g_value_set_object (value, unity_places_place_entry_get_hints (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_SHOW_GLOBAL:
+		g_value_set_boolean (value, unity_places_place_entry_dbus_get_show_global (self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_ONLINE:
-		g_value_set_boolean (value, unity_places_place_entry_get_online (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_SHOW_ENTRY:
+		g_value_set_boolean (value, unity_places_place_entry_dbus_get_show_entry (self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_SHOW_GLOBAL:
-		g_value_set_boolean (value, unity_places_place_entry_get_show_global (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_ACTIVE:
+		g_value_set_boolean (value, unity_places_place_entry_get_active ((UnityPlacesPlaceEntry*) self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_SHOW_ENTRY:
-		g_value_set_boolean (value, unity_places_place_entry_get_show_entry (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_SECTIONS_MODEL_NAME:
+		g_value_set_string (value, unity_places_place_entry_dbus_get_sections_model_name (self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_ACTIVE:
-		g_value_set_boolean (value, unity_places_place_entry_get_active (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_SECTIONS_MODEL:
+		g_value_set_object (value, unity_places_place_entry_get_sections_model ((UnityPlacesPlaceEntry*) self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_SECTIONS_MODEL_NAME:
-		g_value_set_string (value, unity_places_place_entry_get_sections_model_name (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_RENDERER_NAME:
+		g_value_set_string (value, unity_places_place_entry_get_entry_renderer_name ((UnityPlacesPlaceEntry*) self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_SECTIONS_MODEL:
-		g_value_set_object (value, unity_places_place_entry_get_sections_model (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_GROUPS_MODEL:
+		g_value_set_object (value, unity_places_place_entry_get_entry_groups_model ((UnityPlacesPlaceEntry*) self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_ENTRY_GROUPS_MODEL:
-		g_value_set_object (value, unity_places_place_entry_get_entry_groups_model (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_RESULTS_MODEL:
+		g_value_set_object (value, unity_places_place_entry_get_entry_results_model ((UnityPlacesPlaceEntry*) self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_ENTRY_RESULTS_MODEL:
-		g_value_set_object (value, unity_places_place_entry_get_entry_results_model (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_RENDERER_HINTS:
+		g_value_set_object (value, unity_places_place_entry_get_entry_renderer_hints ((UnityPlacesPlaceEntry*) self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_GLOBAL_GROUPS_MODEL:
-		g_value_set_object (value, unity_places_place_entry_get_global_groups_model (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RENDERER_NAME:
+		g_value_set_string (value, unity_places_place_entry_get_global_renderer_name ((UnityPlacesPlaceEntry*) self));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_GLOBAL_RESULTS_MODEL:
-		g_value_set_object (value, unity_places_place_entry_get_global_results_model (self));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_GROUPS_MODEL:
+		g_value_set_object (value, unity_places_place_entry_get_global_groups_model ((UnityPlacesPlaceEntry*) self));
+		break;
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RESULTS_MODEL_NAME:
+		g_value_set_string (value, unity_places_place_entry_dbus_get_global_results_model_name (self));
+		break;
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RESULTS_MODEL:
+		g_value_set_object (value, unity_places_place_entry_get_global_results_model ((UnityPlacesPlaceEntry*) self));
+		break;
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RENDERER_HINTS:
+		g_value_set_object (value, unity_places_place_entry_get_global_renderer_hints ((UnityPlacesPlaceEntry*) self));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -1092,68 +1592,83 @@ static void unity_places_place_entry_get_property (GObject * object, guint prope
 }
 
 
-static void unity_places_place_entry_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
-	UnityPlacesPlaceEntry * self;
+static void unity_places_place_entry_dbus_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
+	UnityPlacesPlaceEntryDbus * self;
 	gpointer boxed;
-	self = UNITY_PLACES_PLACE_ENTRY (object);
+	self = UNITY_PLACES_PLACE_ENTRY_DBUS (object);
 	switch (property_id) {
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_DBUS_NAME:
+		unity_places_place_entry_dbus_set_dbus_name (self, g_value_get_string (value));
+		break;
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_DBUS_PATH:
+		unity_places_place_entry_dbus_set_dbus_path (self, g_value_get_string (value));
+		break;
 		case UNITY_PLACES_PLACE_ENTRY_DBUS_NAME:
-		unity_places_place_entry_set_dbus_name (self, g_value_get_string (value));
+		unity_places_place_entry_set_name ((UnityPlacesPlaceEntry*) self, g_value_get_string (value));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_DBUS_PATH:
-		unity_places_place_entry_set_dbus_path (self, g_value_get_string (value));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_ICON:
+		unity_places_place_entry_set_icon ((UnityPlacesPlaceEntry*) self, g_value_get_string (value));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_NAME:
-		unity_places_place_entry_set_name (self, g_value_get_string (value));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_DESCRIPTION:
+		unity_places_place_entry_set_description ((UnityPlacesPlaceEntry*) self, g_value_get_string (value));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_ICON:
-		unity_places_place_entry_set_icon (self, g_value_get_string (value));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_POSITION:
+		unity_places_place_entry_set_position ((UnityPlacesPlaceEntry*) self, g_value_get_uint (value));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_DESCRIPTION:
-		unity_places_place_entry_set_description (self, g_value_get_string (value));
-		break;
-		case UNITY_PLACES_PLACE_ENTRY_POSITION:
-		unity_places_place_entry_set_position (self, g_value_get_uint (value));
-		break;
-		case UNITY_PLACES_PLACE_ENTRY_MIMETYPES:
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_MIMETYPES:
 		boxed = g_value_get_boxed (value);
-		unity_places_place_entry_set_mimetypes (self, boxed, g_strv_length (boxed));
+		unity_places_place_entry_set_mimetypes ((UnityPlacesPlaceEntry*) self, boxed, g_strv_length (boxed));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_SENSITIVE:
-		unity_places_place_entry_set_sensitive (self, g_value_get_boolean (value));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_SENSITIVE:
+		unity_places_place_entry_set_sensitive ((UnityPlacesPlaceEntry*) self, g_value_get_boolean (value));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_HINTS:
-		unity_places_place_entry_set_hints (self, g_value_get_object (value));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_HINTS:
+		unity_places_place_entry_set_hints ((UnityPlacesPlaceEntry*) self, g_value_get_object (value));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_ONLINE:
-		unity_places_place_entry_set_online (self, g_value_get_boolean (value));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_ONLINE:
+		unity_places_place_entry_set_online ((UnityPlacesPlaceEntry*) self, g_value_get_boolean (value));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_SHOW_GLOBAL:
-		unity_places_place_entry_set_show_global (self, g_value_get_boolean (value));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_SHOW_GLOBAL:
+		unity_places_place_entry_dbus_set_show_global (self, g_value_get_boolean (value));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_SHOW_ENTRY:
-		unity_places_place_entry_set_show_entry (self, g_value_get_boolean (value));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_SHOW_ENTRY:
+		unity_places_place_entry_dbus_set_show_entry (self, g_value_get_boolean (value));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_ACTIVE:
-		unity_places_place_entry_set_active (self, g_value_get_boolean (value));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_ACTIVE:
+		unity_places_place_entry_set_active ((UnityPlacesPlaceEntry*) self, g_value_get_boolean (value));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_SECTIONS_MODEL_NAME:
-		unity_places_place_entry_set_sections_model_name (self, g_value_get_string (value));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_SECTIONS_MODEL_NAME:
+		unity_places_place_entry_dbus_set_sections_model_name (self, g_value_get_string (value));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_SECTIONS_MODEL:
-		unity_places_place_entry_set_sections_model (self, g_value_get_object (value));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_SECTIONS_MODEL:
+		unity_places_place_entry_set_sections_model ((UnityPlacesPlaceEntry*) self, g_value_get_object (value));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_ENTRY_GROUPS_MODEL:
-		unity_places_place_entry_set_entry_groups_model (self, g_value_get_object (value));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_RENDERER_NAME:
+		unity_places_place_entry_set_entry_renderer_name ((UnityPlacesPlaceEntry*) self, g_value_get_string (value));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_ENTRY_RESULTS_MODEL:
-		unity_places_place_entry_set_entry_results_model (self, g_value_get_object (value));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_GROUPS_MODEL:
+		unity_places_place_entry_set_entry_groups_model ((UnityPlacesPlaceEntry*) self, g_value_get_object (value));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_GLOBAL_GROUPS_MODEL:
-		unity_places_place_entry_set_global_groups_model (self, g_value_get_object (value));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_RESULTS_MODEL:
+		unity_places_place_entry_set_entry_results_model ((UnityPlacesPlaceEntry*) self, g_value_get_object (value));
 		break;
-		case UNITY_PLACES_PLACE_ENTRY_GLOBAL_RESULTS_MODEL:
-		unity_places_place_entry_set_global_results_model (self, g_value_get_object (value));
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_ENTRY_RENDERER_HINTS:
+		unity_places_place_entry_set_entry_renderer_hints ((UnityPlacesPlaceEntry*) self, g_value_get_object (value));
+		break;
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RENDERER_NAME:
+		unity_places_place_entry_set_global_renderer_name ((UnityPlacesPlaceEntry*) self, g_value_get_string (value));
+		break;
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_GROUPS_MODEL:
+		unity_places_place_entry_set_global_groups_model ((UnityPlacesPlaceEntry*) self, g_value_get_object (value));
+		break;
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RESULTS_MODEL_NAME:
+		unity_places_place_entry_dbus_set_global_results_model_name (self, g_value_get_string (value));
+		break;
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RESULTS_MODEL:
+		unity_places_place_entry_set_global_results_model ((UnityPlacesPlaceEntry*) self, g_value_get_object (value));
+		break;
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_GLOBAL_RENDERER_HINTS:
+		unity_places_place_entry_set_global_renderer_hints ((UnityPlacesPlaceEntry*) self, g_value_get_object (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

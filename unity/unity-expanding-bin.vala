@@ -30,7 +30,7 @@ namespace Unity
 
   public class ExpandingBin : Ctk.Bin
   {
-    public static const int ANIMATION_TIME = 200;
+    public static const int ANIMATION_TIME = 500;
     /*
      * Properties
      */
@@ -140,7 +140,7 @@ namespace Unity
       switch (_state)
         {
         case ExpandingBinState.CLOSED:
-          var anim = animate (Clutter.AnimationMode.EASE_OUT_SINE, ANIMATION_TIME,
+          var anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD, ANIMATION_TIME,
                    "size_factor", 1.0f,
                    "opacity", 0);
           _target_height = 0.0f;
@@ -152,8 +152,8 @@ namespace Unity
           break;
 
         case ExpandingBinState.UNEXPANDED:
-          animate (_old_state == ExpandingBinState.CLOSED ? Clutter.AnimationMode.EASE_IN_SINE
-                                                         : Clutter.AnimationMode.EASE_OUT_SINE,
+          animate (_old_state == ExpandingBinState.CLOSED ? Clutter.AnimationMode.EASE_IN_QUAD
+                                                         : Clutter.AnimationMode.EASE_OUT_QUAD,
                    ANIMATION_TIME,
                    "size_factor", 1.0f,
                    "opacity", 255);
@@ -162,7 +162,7 @@ namespace Unity
           break;
 
         case ExpandingBinState.EXPANDED:
-          animate (Clutter.AnimationMode.EASE_IN_SINE, ANIMATION_TIME,
+          animate (Clutter.AnimationMode.EASE_IN_QUAD, ANIMATION_TIME,
                    "size_factor", 1.0f,
                    "opacity", 255);
           get_child ().get_preferred_height (width, null, out _expanded_height);

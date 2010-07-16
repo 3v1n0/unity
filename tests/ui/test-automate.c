@@ -27,11 +27,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gtk/gtk.h>
-#include <gee.h>
-#include <stdio.h>
-#include <clutk/clutk.h>
-#include <float.h>
-#include <math.h>
 
 
 #define UNITY_TESTS_UI_TYPE_AUTOMATION_BASIC_TEST_SUITE (unity_tests_ui_automation_basic_test_suite_get_type ())
@@ -45,9 +40,6 @@ typedef struct _UnityTestsUIAutomationBasicTestSuite UnityTestsUIAutomationBasic
 typedef struct _UnityTestsUIAutomationBasicTestSuiteClass UnityTestsUIAutomationBasicTestSuiteClass;
 typedef struct _UnityTestsUIAutomationBasicTestSuitePrivate UnityTestsUIAutomationBasicTestSuitePrivate;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
-#define _g_timer_destroy0(var) ((var == NULL) ? NULL : (var = (g_timer_destroy (var), NULL)))
-#define _unity_launcher_scroller_model_iterator_unref0(var) ((var == NULL) ? NULL : (var = (unity_launcher_scroller_model_iterator_unref (var), NULL)))
-#define _unity_testing_object_registry_unref0(var) ((var == NULL) ? NULL : (var = (unity_testing_object_registry_unref (var), NULL)))
 
 struct _UnityTestsUIAutomationBasicTestSuite {
 	GObject parent_instance;
@@ -82,7 +74,6 @@ static void unity_tests_ui_automation_basic_test_suite_test_teardown (UnityTests
 static void _unity_tests_ui_automation_basic_test_suite_test_teardown_gdata_test_func (gpointer self);
 UnityTestsUIAutomationBasicTestSuite* unity_tests_ui_automation_basic_test_suite_new (void);
 UnityTestsUIAutomationBasicTestSuite* unity_tests_ui_automation_basic_test_suite_construct (GType object_type);
-static void _on_animation_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static void unity_tests_ui_automation_basic_test_suite_finalize (GObject* obj);
 
 
@@ -141,72 +132,8 @@ static void unity_tests_ui_automation_basic_test_suite_test_teardown (UnityTests
 }
 
 
-static void _on_animation_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	on_animation_completed (_sender);
-}
-
-
 static void unity_tests_ui_automation_basic_test_suite_test_automation (UnityTestsUIAutomationBasicTestSuite* self) {
-	UnityTestingObjectRegistry* registry;
-	UnityLauncherQuicklistController* qlcontroller;
-	GeeArrayList* _tmp0_;
-	GObject* _tmp1_;
-	UnityLauncherScrollerModel* _tmp2_;
-	UnityLauncherScrollerModel* scroller;
-	GTimer* _tmp3_;
-	gint DT;
 	g_return_if_fail (self != NULL);
-	registry = unity_testing_object_registry_get_default ();
-	unity_testing_logging_init_fatal_handler ();
-	qlcontroller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
-	scroller = (_tmp2_ = (_tmp1_ = (GObject*) gee_abstract_list_get ((GeeAbstractList*) (_tmp0_ = unity_testing_object_registry_lookup (registry, "UnityScrollerModel")), 0), UNITY_LAUNCHER_IS_SCROLLER_MODEL (_tmp1_) ? ((UnityLauncherScrollerModel*) _tmp1_) : NULL), _g_object_unref0 (_tmp0_), _tmp2_);
-	gTimer = (_tmp3_ = g_timer_new (), _g_timer_destroy0 (gTimer), _tmp3_);
-	DT = 2500;
-	fprintf (stdout, "\n");
-	{
-		UnityLauncherScrollerModelIterator* _launcher_it;
-		_launcher_it = unity_launcher_scroller_model_iterator (scroller);
-		while (TRUE) {
-			UnityLauncherScrollerChild* launcher;
-			ClutterActor* _tmp4_;
-			UnityTestingDirector* dir;
-			ClutterAnimation* anim;
-			ClutterAnimation* _tmp5_;
-			float dt;
-			float dt0;
-			ClutterAnimation* _tmp6_;
-			if (!unity_launcher_scroller_model_iterator_next (_launcher_it)) {
-				break;
-			}
-			launcher = unity_launcher_scroller_model_iterator_get (_launcher_it);
-			dir = unity_testing_director_new ((_tmp4_ = clutter_actor_get_stage ((ClutterActor*) launcher), CLUTTER_IS_STAGE (_tmp4_) ? ((ClutterStage*) _tmp4_) : NULL));
-			unity_launcher_quicklist_controller_show_label (qlcontroller, "Ubuntu Software Centre", (CtkActor*) launcher);
-			anim = NULL;
-			clutter_actor_set_opacity ((ClutterActor*) launcher, (guint8) 255);
-			g_timer_start (gTimer);
-			anim = (_tmp5_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) launcher, (gulong) CLUTTER_EASE_IN_SINE, (guint) 2500, "opacity", 0, NULL)), _g_object_unref0 (anim), _tmp5_);
-			g_signal_connect (anim, "completed", (GCallback) _on_animation_completed_clutter_animation_completed, NULL);
-			unity_testing_director_do_wait_for_animation (dir, (ClutterActor*) launcher);
-			dt = (float) g_timer_elapsed (gTimer, NULL);
-			dt0 = ((float) DT) / 1000.0f;
-			fprintf (stdout, "Expected Duration: %2.3f, Observed Duration: %2.3f, Error: %2.3f%%\n", (double) dt0, (double) dt, (double) (((dt - dt0) * 100.0f) / dt0));
-			g_timer_start (gTimer);
-			anim = (_tmp6_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) launcher, (gulong) CLUTTER_EASE_IN_SINE, (guint) 2500, "opacity", 255, NULL)), _g_object_unref0 (anim), _tmp6_);
-			g_signal_connect (anim, "completed", (GCallback) _on_animation_completed_clutter_animation_completed, NULL);
-			unity_testing_director_do_wait_for_animation (dir, (ClutterActor*) launcher);
-			dt = (float) g_timer_elapsed (gTimer, NULL);
-			dt0 = ((float) DT) / 1000.0f;
-			fprintf (stdout, "Expected Duration: %2.3f, Observed Duration: %2.3f, Error: %2.3f%%\n", (double) dt0, (double) dt, (double) (((dt - dt0) * 100.0f) / dt0));
-			_g_object_unref0 (launcher);
-			_g_object_unref0 (dir);
-			_g_object_unref0 (anim);
-		}
-		_unity_launcher_scroller_model_iterator_unref0 (_launcher_it);
-	}
-	unity_launcher_quicklist_controller_close_menu (qlcontroller);
-	_unity_testing_object_registry_unref0 (registry);
-	_g_object_unref0 (qlcontroller);
-	_g_object_unref0 (scroller);
 }
 
 

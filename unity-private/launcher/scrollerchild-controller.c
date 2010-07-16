@@ -27,7 +27,10 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <unity.h>
-#include <gee.h>
+#include <libdbusmenu-glib/client.h>
+#include <libdbusmenu-glib/menuitem-proxy.h>
+#include <libdbusmenu-glib/menuitem.h>
+#include <libdbusmenu-glib/server.h>
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
@@ -49,13 +52,15 @@ typedef struct _UnityLauncherScrollerChildController UnityLauncherScrollerChildC
 typedef struct _UnityLauncherScrollerChildControllerClass UnityLauncherScrollerChildControllerClass;
 typedef struct _UnityLauncherScrollerChildControllerPrivate UnityLauncherScrollerChildControllerPrivate;
 
-#define UNITY_LAUNCHER_TYPE_SHORTCUT_ITEM (unity_launcher_shortcut_item_get_type ())
-#define UNITY_LAUNCHER_SHORTCUT_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_SHORTCUT_ITEM, UnityLauncherShortcutItem))
-#define UNITY_LAUNCHER_IS_SHORTCUT_ITEM(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_SHORTCUT_ITEM))
-#define UNITY_LAUNCHER_SHORTCUT_ITEM_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), UNITY_LAUNCHER_TYPE_SHORTCUT_ITEM, UnityLauncherShortcutItemIface))
+#define UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER (unity_launcher_quicklist_controller_get_type ())
+#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistController))
+#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistControllerClass))
+#define UNITY_LAUNCHER_IS_QUICKLIST_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER))
+#define UNITY_LAUNCHER_IS_QUICKLIST_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER))
+#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistControllerClass))
 
-typedef struct _UnityLauncherShortcutItem UnityLauncherShortcutItem;
-typedef struct _UnityLauncherShortcutItemIface UnityLauncherShortcutItemIface;
+typedef struct _UnityLauncherQuicklistController UnityLauncherQuicklistController;
+typedef struct _UnityLauncherQuicklistControllerClass UnityLauncherQuicklistControllerClass;
 
 #define UNITY_LAUNCHER_TYPE_SCROLLER_CHILD (unity_launcher_scroller_child_get_type ())
 #define UNITY_LAUNCHER_SCROLLER_CHILD(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD, UnityLauncherScrollerChild))
@@ -69,16 +74,7 @@ typedef struct _UnityLauncherScrollerChildClass UnityLauncherScrollerChildClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 
-#define UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER (unity_launcher_quicklist_controller_get_type ())
-#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistController))
-#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistControllerClass))
-#define UNITY_LAUNCHER_IS_QUICKLIST_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER))
-#define UNITY_LAUNCHER_IS_QUICKLIST_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER))
-#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistControllerClass))
-
-typedef struct _UnityLauncherQuicklistController UnityLauncherQuicklistController;
-typedef struct _UnityLauncherQuicklistControllerClass UnityLauncherQuicklistControllerClass;
-typedef struct _UnityLauncherQuicklistControllerPrivate UnityLauncherQuicklistControllerPrivate;
+#define UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER_STATE (unity_launcher_quicklist_controller_state_get_type ())
 typedef struct _UnityLauncherScrollerChildPrivate UnityLauncherScrollerChildPrivate;
 
 #define UNITY_LAUNCHER_TYPE_PIN_TYPE (unity_launcher_pin_type_get_type ())
@@ -90,12 +86,7 @@ typedef enum  {
 	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_MENU_CLOSE_WHEN_LEAVE
 } UnityLauncherScrollerChildControllerMenuState;
 
-struct _UnityLauncherShortcutItemIface {
-	GTypeInterface parent_iface;
-	char* (*get_name) (UnityLauncherShortcutItem* self);
-	void (*activated) (UnityLauncherShortcutItem* self);
-};
-
+typedef void (*UnityLauncherScrollerChildControllermenu_cb) (DbusmenuMenuitem* menu, void* user_data);
 struct _UnityLauncherScrollerChildController {
 	GObject parent_instance;
 	UnityLauncherScrollerChildControllerPrivate * priv;
@@ -109,26 +100,22 @@ struct _UnityLauncherScrollerChildController {
 
 struct _UnityLauncherScrollerChildControllerClass {
 	GObjectClass parent_class;
-	GeeArrayList* (*get_menu_shortcuts) (UnityLauncherScrollerChildController* self);
-	GeeArrayList* (*get_menu_shortcut_actions) (UnityLauncherScrollerChildController* self);
+	void (*get_menu_actions) (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
+	void (*get_menu_navigation) (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
 	void (*activate) (UnityLauncherScrollerChildController* self);
+	UnityLauncherQuicklistController* (*get_menu_controller) (UnityLauncherScrollerChildController* self);
 };
 
 struct _UnityLauncherScrollerChildControllerPrivate {
 	UnityLauncherScrollerChild* _child;
+	UnityLauncherQuicklistController* _menu;
 };
 
-struct _UnityLauncherQuicklistController {
-	GObject parent_instance;
-	UnityLauncherQuicklistControllerPrivate * priv;
-	CtkMenu* menu;
-	gboolean is_in_label;
-	gboolean is_in_menu;
-};
-
-struct _UnityLauncherQuicklistControllerClass {
-	GObjectClass parent_class;
-};
+typedef enum  {
+	UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_LABEL,
+	UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU,
+	UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_CLOSED
+} UnityLauncherQuicklistControllerState;
 
 typedef enum  {
 	UNITY_LAUNCHER_PIN_TYPE_UNPINNED,
@@ -155,35 +142,39 @@ static UnityDragModelIface* unity_launcher_scroller_child_controller_unity_drag_
 
 GType unity_launcher_scroller_child_controller_menu_state_get_type (void);
 GType unity_launcher_scroller_child_controller_get_type (void);
-GType unity_launcher_shortcut_item_get_type (void);
+GType unity_launcher_quicklist_controller_get_type (void);
 GType unity_launcher_scroller_child_get_type (void);
 #define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildControllerPrivate))
 enum  {
 	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_DUMMY_PROPERTY,
-	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CHILD
+	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CHILD,
+	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU
 };
 UnityLauncherScrollerChildController* unity_launcher_scroller_child_controller_construct (GType object_type, UnityLauncherScrollerChild* child_);
-GeeArrayList* unity_launcher_scroller_child_controller_get_menu_shortcuts (UnityLauncherScrollerChildController* self);
-static GeeArrayList* unity_launcher_scroller_child_controller_real_get_menu_shortcuts (UnityLauncherScrollerChildController* self);
-GeeArrayList* unity_launcher_scroller_child_controller_get_menu_shortcut_actions (UnityLauncherScrollerChildController* self);
-static GeeArrayList* unity_launcher_scroller_child_controller_real_get_menu_shortcut_actions (UnityLauncherScrollerChildController* self);
+void unity_launcher_scroller_child_controller_get_menu_actions (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
+static void unity_launcher_scroller_child_controller_real_get_menu_actions (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
+void unity_launcher_scroller_child_controller_get_menu_navigation (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
+static void unity_launcher_scroller_child_controller_real_get_menu_navigation (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
 void unity_launcher_scroller_child_controller_activate (UnityLauncherScrollerChildController* self);
 static void unity_launcher_scroller_child_controller_real_activate (UnityLauncherScrollerChildController* self);
+UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_get_menu_controller (UnityLauncherScrollerChildController* self);
+static UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_real_get_menu_controller (UnityLauncherScrollerChildController* self);
 static void unity_launcher_scroller_child_controller_ensure_menu_state (UnityLauncherScrollerChildController* self);
 static gboolean unity_launcher_scroller_child_controller_on_leave_event (UnityLauncherScrollerChildController* self, ClutterEvent* event);
 static gboolean unity_launcher_scroller_child_controller_on_press_event (UnityLauncherScrollerChildController* self, ClutterEvent* event);
-GType unity_launcher_quicklist_controller_get_type (void);
-UnityLauncherQuicklistController* unity_launcher_quicklist_controller_get_default (void);
-gboolean unity_launcher_quicklist_controller_menu_is_open (UnityLauncherQuicklistController* self);
-void unity_launcher_quicklist_controller_close_menu (UnityLauncherQuicklistController* self);
+UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_get_menu (UnityLauncherScrollerChildController* self);
+GType unity_launcher_quicklist_controller_state_get_type (void);
+UnityLauncherQuicklistControllerState unity_launcher_quicklist_controller_get_state (UnityLauncherQuicklistController* self);
+void unity_launcher_quicklist_controller_set_state (UnityLauncherQuicklistController* self, UnityLauncherQuicklistControllerState value);
 static gboolean unity_launcher_scroller_child_controller_on_release_event (UnityLauncherScrollerChildController* self, ClutterEvent* event);
 static gboolean unity_launcher_scroller_child_controller_on_enter_event (UnityLauncherScrollerChildController* self, ClutterEvent* event);
-CtkActor* unity_launcher_quicklist_controller_get_attached_actor (UnityLauncherQuicklistController* self);
-UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (UnityLauncherScrollerChildController* self);
+void unity_launcher_scroller_child_controller_set_menu (UnityLauncherScrollerChildController* self, UnityLauncherQuicklistController* value);
+gboolean unity_launcher_quicklist_controller_is_menu_open (void);
+gboolean unity_launcher_quicklist_controller_do_menus_match (UnityLauncherQuicklistController* menu);
+UnityLauncherQuicklistController* unity_launcher_quicklist_controller_get_current_menu (void);
+CtkMenu* unity_launcher_quicklist_controller_get_view (UnityLauncherQuicklistController* self);
 static void _unity_launcher_scroller_child_controller_ensure_menu_state_clutter_actor_destroy (ClutterActor* _sender, gpointer self);
-#define UNITY_PANEL_search_entry_has_focus FALSE
-void unity_launcher_quicklist_controller_show_label (UnityLauncherQuicklistController* self, const char* label, CtkActor* attached_widget);
-void unity_launcher_quicklist_controller_show_menu (UnityLauncherQuicklistController* self, GeeArrayList* prefix_shortcuts, GeeArrayList* affix_shortcuts, gboolean hide_on_leave);
+UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (UnityLauncherScrollerChildController* self);
 static ClutterActor* unity_launcher_scroller_child_controller_real_get_icon (UnityDragModel* base);
 static char* unity_launcher_scroller_child_controller_real_get_drag_data (UnityDragModel* base);
 static gboolean unity_launcher_scroller_child_controller_on_motion_event (UnityLauncherScrollerChildController* self, ClutterEvent* event);
@@ -222,27 +213,27 @@ UnityLauncherScrollerChildController* unity_launcher_scroller_child_controller_c
 }
 
 
-static GeeArrayList* unity_launcher_scroller_child_controller_real_get_menu_shortcuts (UnityLauncherScrollerChildController* self) {
-	g_return_val_if_fail (self != NULL, NULL);
-	g_critical ("Type `%s' does not implement abstract method `unity_launcher_scroller_child_controller_get_menu_shortcuts'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
-	return NULL;
+static void unity_launcher_scroller_child_controller_real_get_menu_actions (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target) {
+	g_return_if_fail (self != NULL);
+	g_critical ("Type `%s' does not implement abstract method `unity_launcher_scroller_child_controller_get_menu_actions'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
+	return;
 }
 
 
-GeeArrayList* unity_launcher_scroller_child_controller_get_menu_shortcuts (UnityLauncherScrollerChildController* self) {
-	return UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS (self)->get_menu_shortcuts (self);
+void unity_launcher_scroller_child_controller_get_menu_actions (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target) {
+	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS (self)->get_menu_actions (self, callback, callback_target);
 }
 
 
-static GeeArrayList* unity_launcher_scroller_child_controller_real_get_menu_shortcut_actions (UnityLauncherScrollerChildController* self) {
-	g_return_val_if_fail (self != NULL, NULL);
-	g_critical ("Type `%s' does not implement abstract method `unity_launcher_scroller_child_controller_get_menu_shortcut_actions'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
-	return NULL;
+static void unity_launcher_scroller_child_controller_real_get_menu_navigation (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target) {
+	g_return_if_fail (self != NULL);
+	g_critical ("Type `%s' does not implement abstract method `unity_launcher_scroller_child_controller_get_menu_navigation'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
+	return;
 }
 
 
-GeeArrayList* unity_launcher_scroller_child_controller_get_menu_shortcut_actions (UnityLauncherScrollerChildController* self) {
-	return UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS (self)->get_menu_shortcut_actions (self);
+void unity_launcher_scroller_child_controller_get_menu_navigation (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target) {
+	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS (self)->get_menu_navigation (self, callback, callback_target);
 }
 
 
@@ -255,6 +246,18 @@ static void unity_launcher_scroller_child_controller_real_activate (UnityLaunche
 
 void unity_launcher_scroller_child_controller_activate (UnityLauncherScrollerChildController* self) {
 	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS (self)->activate (self);
+}
+
+
+static UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_real_get_menu_controller (UnityLauncherScrollerChildController* self) {
+	g_return_val_if_fail (self != NULL, NULL);
+	g_critical ("Type `%s' does not implement abstract method `unity_launcher_scroller_child_controller_get_menu_controller'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
+	return NULL;
+}
+
+
+UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_get_menu_controller (UnityLauncherScrollerChildController* self) {
+	return UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS (self)->get_menu_controller (self);
 }
 
 
@@ -302,11 +305,6 @@ static gboolean unity_launcher_scroller_child_controller_on_press_event (UnityLa
 }
 
 
-static gpointer _g_object_ref0 (gpointer self) {
-	return self ? g_object_ref (self) : NULL;
-}
-
-
 static gboolean unity_launcher_scroller_child_controller_on_release_event (UnityLauncherScrollerChildController* self, ClutterEvent* event) {
 	gboolean result = FALSE;
 	gboolean _tmp0_ = FALSE;
@@ -323,19 +321,18 @@ static gboolean unity_launcher_scroller_child_controller_on_release_event (Unity
 		_tmp0_ = FALSE;
 	}
 	if (_tmp0_) {
-		UnityLauncherQuicklistController* controller;
-		gboolean _tmp2_ = FALSE;
-		controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
-		if (controller->is_in_label) {
-			_tmp2_ = TRUE;
-		} else {
-			_tmp2_ = unity_launcher_quicklist_controller_menu_is_open (controller);
-		}
-		if (_tmp2_) {
-			unity_launcher_quicklist_controller_close_menu (controller);
+		if (UNITY_LAUNCHER_IS_QUICKLIST_CONTROLLER (self->priv->_menu)) {
+			gboolean _tmp2_ = FALSE;
+			if (unity_launcher_quicklist_controller_get_state (self->priv->_menu) == UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_LABEL) {
+				_tmp2_ = TRUE;
+			} else {
+				_tmp2_ = unity_launcher_quicklist_controller_get_state (self->priv->_menu) == UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU;
+			}
+			if (_tmp2_) {
+				unity_launcher_quicklist_controller_set_state (self->priv->_menu, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_CLOSED);
+			}
 		}
 		unity_launcher_scroller_child_controller_activate (self);
-		_g_object_unref0 (controller);
 	}
 	self->button_down = FALSE;
 	result = FALSE;
@@ -359,65 +356,46 @@ static void _unity_launcher_scroller_child_controller_ensure_menu_state_clutter_
 
 
 static void unity_launcher_scroller_child_controller_ensure_menu_state (UnityLauncherScrollerChildController* self) {
-	UnityLauncherQuicklistController* controller;
-	gboolean _tmp0_ = FALSE;
+	gboolean _tmp1_ = FALSE;
+	gboolean _tmp2_ = FALSE;
 	g_return_if_fail (self != NULL);
 	if (unity_drag_controller_get_is_dragging (unity_drag_controller_get_default ())) {
 		return;
 	}
-	controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_default ());
-	if (unity_launcher_quicklist_controller_menu_is_open (controller)) {
-		CtkActor* _tmp1_;
-		_tmp0_ = (_tmp1_ = unity_launcher_quicklist_controller_get_attached_actor (controller)) != CTK_ACTOR (self->priv->_child);
-		_g_object_unref0 (_tmp1_);
-	} else {
-		_tmp0_ = FALSE;
+	if (UNITY_LAUNCHER_IS_QUICKLIST_CONTROLLER (self->priv->_menu) == FALSE) {
+		UnityLauncherQuicklistController* _tmp0_;
+		unity_launcher_scroller_child_controller_set_menu (self, _tmp0_ = unity_launcher_scroller_child_controller_get_menu_controller (self));
+		_g_object_unref0 (_tmp0_);
 	}
-	if (_tmp0_) {
-		g_signal_connect_object ((ClutterActor*) controller->menu, "destroy", (GCallback) _unity_launcher_scroller_child_controller_ensure_menu_state_clutter_actor_destroy, self, 0);
-		_g_object_unref0 (controller);
+	if (unity_launcher_quicklist_controller_get_state (self->priv->_menu) == UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU) {
+		_tmp2_ = unity_launcher_quicklist_controller_is_menu_open ();
+	} else {
+		_tmp2_ = FALSE;
+	}
+	if (_tmp2_) {
+		_tmp1_ = unity_launcher_quicklist_controller_do_menus_match (self->priv->_menu);
+	} else {
+		_tmp1_ = FALSE;
+	}
+	if (_tmp1_) {
+		g_signal_connect_object ((ClutterActor*) unity_launcher_quicklist_controller_get_view (unity_launcher_quicklist_controller_get_current_menu ()), "destroy", (GCallback) _unity_launcher_scroller_child_controller_ensure_menu_state_clutter_actor_destroy, self, 0);
 		return;
 	}
 	if (self->menu_state == UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_NO_MENU) {
-		gboolean _tmp2_ = FALSE;
-		if (controller->is_in_label) {
-			_tmp2_ = TRUE;
-		} else {
-			_tmp2_ = unity_launcher_quicklist_controller_menu_is_open (controller);
-		}
-		if (_tmp2_) {
-			unity_launcher_quicklist_controller_close_menu (controller);
-		}
+		unity_launcher_quicklist_controller_set_state (self->priv->_menu, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_CLOSED);
 	}
 	if (self->menu_state == UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_LABEL) {
-		if (!unity_launcher_quicklist_controller_menu_is_open (controller)) {
-			if (UNITY_PANEL_search_entry_has_focus == FALSE) {
-				unity_launcher_quicklist_controller_show_label (controller, self->name, (CtkActor*) self->priv->_child);
-			}
-		}
+		unity_launcher_quicklist_controller_set_state (self->priv->_menu, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_LABEL);
 	}
 	if (self->menu_state == UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_MENU) {
-		if (controller->is_in_label) {
-			GeeArrayList* shortcuts;
-			GeeArrayList* actions;
-			gboolean _tmp3_ = FALSE;
-			shortcuts = unity_launcher_scroller_child_controller_get_menu_shortcuts (self);
-			actions = unity_launcher_scroller_child_controller_get_menu_shortcut_actions (self);
-			if (gee_collection_get_size ((GeeCollection*) shortcuts) > 0) {
-				_tmp3_ = TRUE;
-			} else {
-				_tmp3_ = gee_collection_get_size ((GeeCollection*) actions) > 0;
-			}
-			if (_tmp3_) {
-				unity_launcher_quicklist_controller_show_menu (controller, shortcuts, actions, FALSE);
-			} else {
-				self->menu_state = UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_LABEL;
-			}
-			_g_object_unref0 (shortcuts);
-			_g_object_unref0 (actions);
-		}
+		unity_launcher_quicklist_controller_set_state (self->priv->_menu, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU);
+		self->menu_state = UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_NO_MENU;
 	}
-	_g_object_unref0 (controller);
+}
+
+
+static gpointer _g_object_ref0 (gpointer self) {
+	return self ? g_object_ref (self) : NULL;
 }
 
 
@@ -486,6 +464,22 @@ static void unity_launcher_scroller_child_controller_set_child (UnityLauncherScr
 }
 
 
+UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_get_menu (UnityLauncherScrollerChildController* self) {
+	UnityLauncherQuicklistController* result;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = self->priv->_menu;
+	return result;
+}
+
+
+void unity_launcher_scroller_child_controller_set_menu (UnityLauncherScrollerChildController* self, UnityLauncherQuicklistController* value) {
+	UnityLauncherQuicklistController* _tmp0_;
+	g_return_if_fail (self != NULL);
+	self->priv->_menu = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_menu), _tmp0_);
+	g_object_notify ((GObject *) self, "menu");
+}
+
+
 static gboolean _unity_launcher_scroller_child_controller_on_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
 	result = unity_launcher_scroller_child_controller_on_press_event (self, event);
@@ -549,14 +543,16 @@ static GObject * unity_launcher_scroller_child_controller_constructor (GType typ
 static void unity_launcher_scroller_child_controller_class_init (UnityLauncherScrollerChildControllerClass * klass) {
 	unity_launcher_scroller_child_controller_parent_class = g_type_class_peek_parent (klass);
 	g_type_class_add_private (klass, sizeof (UnityLauncherScrollerChildControllerPrivate));
-	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS (klass)->get_menu_shortcuts = unity_launcher_scroller_child_controller_real_get_menu_shortcuts;
-	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS (klass)->get_menu_shortcut_actions = unity_launcher_scroller_child_controller_real_get_menu_shortcut_actions;
+	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS (klass)->get_menu_actions = unity_launcher_scroller_child_controller_real_get_menu_actions;
+	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS (klass)->get_menu_navigation = unity_launcher_scroller_child_controller_real_get_menu_navigation;
 	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS (klass)->activate = unity_launcher_scroller_child_controller_real_activate;
+	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS (klass)->get_menu_controller = unity_launcher_scroller_child_controller_real_get_menu_controller;
 	G_OBJECT_CLASS (klass)->get_property = unity_launcher_scroller_child_controller_get_property;
 	G_OBJECT_CLASS (klass)->set_property = unity_launcher_scroller_child_controller_set_property;
 	G_OBJECT_CLASS (klass)->constructor = unity_launcher_scroller_child_controller_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_launcher_scroller_child_controller_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CHILD, g_param_spec_object ("child", "child", "child", UNITY_LAUNCHER_TYPE_SCROLLER_CHILD, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU, g_param_spec_object ("menu", "menu", "menu", UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_signal_new ("request_removal", UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 	g_signal_new ("closed", UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
@@ -584,6 +580,7 @@ static void unity_launcher_scroller_child_controller_finalize (GObject* obj) {
 	self = UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER (obj);
 	_g_object_unref0 (self->priv->_child);
 	_g_free0 (self->name);
+	_g_object_unref0 (self->priv->_menu);
 	G_OBJECT_CLASS (unity_launcher_scroller_child_controller_parent_class)->finalize (obj);
 }
 
@@ -609,6 +606,9 @@ static void unity_launcher_scroller_child_controller_get_property (GObject * obj
 		case UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CHILD:
 		g_value_set_object (value, unity_launcher_scroller_child_controller_get_child (self));
 		break;
+		case UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU:
+		g_value_set_object (value, unity_launcher_scroller_child_controller_get_menu (self));
+		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
@@ -622,6 +622,9 @@ static void unity_launcher_scroller_child_controller_set_property (GObject * obj
 	switch (property_id) {
 		case UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CHILD:
 		unity_launcher_scroller_child_controller_set_child (self, g_value_get_object (value));
+		break;
+		case UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU:
+		unity_launcher_scroller_child_controller_set_menu (self, g_value_get_object (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
