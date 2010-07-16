@@ -43,8 +43,8 @@ namespace Unity.Launcher
   public class QuicklistMenu : Ctk.Menu
   {
     Ctk.LayerActor ql_background;
-    int            old_width;
-    int            old_height;
+    int            last_width;
+    int            last_height;
     float          cached_x; // needed to fix LP: #525905
     float          cached_y; // needed to fix LP: #526335
 
@@ -68,30 +68,26 @@ namespace Unity.Launcher
       if (this.cached_x != x)
         this.set_position (this.cached_x, y);
 
-      // important run-time optimization!
-      if (!this.ql_background.is_flattened ())
-        this.ql_background.flatten ();
-
-      base.paint ();
+      if (this.ql_background is Ctk.LayerActor)
+        base.paint ();
     }
 
     private override void
     allocate (Clutter.ActorBox        box,
               Clutter.AllocationFlags flags)
     {
-      int  w;
-      int  h;
-      uint blurred_id = 0;
+      int new_width  = 0;
+      int new_height = 0;
 
-      w = (int) (box.x2 - box.x1);
-      h = (int) (box.y2 - box.y1);
+      new_width  = (int) (box.x2 - box.x1);
+      new_height = (int) (box.y2 - box.y1);
+
+      base.allocate (box, flags);
 
       // exit early if the allocation-width/height didn't change, this is needed
       // because clutter triggers calling allocate even if nothing changed
-      if ((old_width == w) && (old_height == h))
+      if ((this.last_width == new_width) && (this.last_height == new_height))
         return;
-
-      base.allocate (box, flags);
 
       // FIXME01: this is the conservative approach only updating the blurred-bg
       // texture when the allocation changed... this way we'll miss any updates
@@ -102,48 +98,63 @@ namespace Unity.Launcher
       //base.refresh_background_texture ();
 
       if (get_num_items () == 1)
-        cached_y = (float) h / 2.0f;
-
-      // do the texture-update/glReadPixels() thing here ... call it whatever
-      // you feel fits best here ctk_menu_get_framebuffer_background()
-      blurred_id = base.get_framebuffer_background ();
+        this.cached_y = (float) new_height / 2.0f;
 
       // store the new width/height
-      old_width  = w;
-      old_height = h;
+      this.last_width  = new_width;
+      this.last_height = new_height;
 
-      // before creating a new CtkLayerActor make sure we don't leak any memory
+      Timeout.add (0, _update_ql_background);
+    }
+
+    private bool
+    _update_ql_background ()
+    {
+      uint blurred_id = base.get_framebuffer_background ();
+
       if (this.ql_background is Ctk.LayerActor)
-         this.ql_background.destroy ();
-      this.ql_background = new Ctk.LayerActor (w, h);
+      {
+        this.ql_background.destroy ();
+      }
 
-      Ctk.Layer main_layer = new Ctk.Layer (w,
-                                            h,
+      this.ql_background = new Ctk.LayerActor (this.last_width,
+                                               this.last_height);
+
+      Ctk.Layer main_layer = new Ctk.Layer (this.last_width,
+                                            this.last_height,
                                             Ctk.LayerRepeatMode.NONE,
                                             Ctk.LayerRepeatMode.NONE);
-      Ctk.Layer blurred_layer = new Ctk.Layer (w,
-                                              h,
-                                              Ctk.LayerRepeatMode.NONE,
-                                              Ctk.LayerRepeatMode.NONE);
+      Ctk.Layer blurred_layer = new Ctk.Layer (this.last_width,
+                                               this.last_height,
+                                               Ctk.LayerRepeatMode.NONE,
+                                               Ctk.LayerRepeatMode.NONE);
 
       Cairo.Surface full_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                        w,
-                                                        h);
+                                                        this.last_width,
+                                                        this.last_height);
       Cairo.Surface fill_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                        w,
-                                                        h);
+                                                        this.last_width,
+                                                        this.last_height);
       Cairo.Surface main_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                        w,
-                                                        h);
+                                                        this.last_width,
+                                                        this.last_height);
 
       Cairo.Context full_cr = new Cairo.Context (full_surf);
       Cairo.Context fill_cr = new Cairo.Context (fill_surf);
       Cairo.Context main_cr = new Cairo.Context (main_surf);
 
-      Unity.QuicklistRendering.Menu.full_mask (full_cr, w, h, cached_y);
-      Unity.QuicklistRendering.Menu.fill_mask (fill_cr, w, h, cached_y);
-      Unity.QuicklistRendering.Menu.background (main_cr, w, h, cached_y);
-      //main_surf.write_to_png ("/tmp/main-surf.png");
+      Unity.QuicklistRendering.Menu.full_mask (full_cr,
+                                               this.last_width,
+                                               this.last_height,
+                                               this.cached_y);
+      Unity.QuicklistRendering.Menu.fill_mask (fill_cr,
+                                               this.last_width,
+                                               this.last_height,
+                                               this.cached_y);
+      Unity.QuicklistRendering.Menu.background (main_cr,
+                                                this.last_width,
+                                                this.last_height,
+                                                this.cached_y);
 
       main_layer.set_mask_from_surface (full_surf);
       main_layer.set_image_from_surface (main_surf);
@@ -159,6 +170,8 @@ namespace Unity.Launcher
 
       this.set_background (this.ql_background);
       this.ql_background.set_opacity (255);
+
+      return false;
     }
 
     construct
@@ -172,8 +185,8 @@ namespace Unity.Launcher
       this.set_padding (padding);
       //this.spacing = (int) Ctk.em_to_pixel (GAP);
 
-      old_width  = 0;
-      old_height = 0;
+      last_width  = -1;
+      last_height = -1;
       cached_x   = 0.0f; // needed to fix LP: #525905
       cached_y   = 0.0f; // needed to fix LP: #526335
 
