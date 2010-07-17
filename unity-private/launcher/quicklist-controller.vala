@@ -244,7 +244,7 @@ namespace Unity.Launcher
             menu.set_anchor_position ((int)x + 60, (int)y+48, 25+1);
             menu.set_expansion_size_factor (0.0f);
             var anim = menu.animate (Clutter.AnimationMode.LINEAR,
-                        500,
+                        100,
                         "expansion-size-factor", 1.0f);                 
 
           });
