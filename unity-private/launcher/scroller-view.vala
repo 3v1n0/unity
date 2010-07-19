@@ -347,11 +347,12 @@ namespace Unity.Launcher
 
           // set our state to what we will end up being so we can find the correct
           //place to be.
+          float contracted_position = model[index].position;
           var old_scroll_position = scroll_position;
           scroll_position = 0;
           order_children (true);
-          float child_height = model[index].get_height () / 2;
-          var new_scroll_position = -model[index].position + event.crossing.y - model[index].get_height ();
+
+          float new_scroll_position = -(model[index].position - contracted_position);
 
           //reset our view so that we animate cleanly to the new view
           view_type = ScrollerViewType.CONTRACTED;
