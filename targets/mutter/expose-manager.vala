@@ -48,10 +48,15 @@ namespace Unity
       unhovered_opacity = 255;
 
       this.source = source;
-      clone = new Clutter.Clone (source);
+      
+      if (source is Mutter.Window)
+        clone = new Clutter.Clone ((source as Mutter.Window).get_texture ());
+      else
+        clone = new Clutter.Clone (source);
 
       add_actor (clone);
       clone.show ();
+      clone.reactive = true;
       clone.set_position (0, 0);
 
       darken_box = new Clutter.Rectangle.with_color ({0, 0, 0, 255});
@@ -144,7 +149,7 @@ namespace Unity
         expose_group.destroy ();
       expose_group = new Clutter.Group ();
 
-      Clutter.Actor window_group = owner.plugin.get_normal_window_group ();
+      Clutter.Actor window_group = owner.plugin.get_stage ();
 
       (window_group as Clutter.Container).add_actor (expose_group);
       expose_group.raise_top ();
