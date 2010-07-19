@@ -149,7 +149,7 @@ namespace Unity
         expose_group.destroy ();
       expose_group = new Clutter.Group ();
 
-      Clutter.Actor window_group = owner.plugin.get_stage ();
+      Clutter.Actor window_group = owner.plugin.get_normal_window_group ();
 
       (window_group as Clutter.Container).add_actor (expose_group);
       expose_group.raise_top ();
@@ -221,6 +221,9 @@ namespace Unity
 
     public void end_expose ()
     {
+      if (!expose_showing)
+        return;
+      
       var controller = Launcher.QuicklistController.get_current_menu ();
       if (controller.is_menu_open ())
         {
