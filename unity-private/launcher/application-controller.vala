@@ -318,7 +318,7 @@ namespace Unity.Launcher
       if (app is Bamf.Application)
         {
           Dbusmenu.Menuitem app_item = new Dbusmenu.Menuitem ();
-          app_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Quit...");
+          app_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Quit");
           app_item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
           app_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
 
@@ -336,6 +336,8 @@ namespace Unity.Launcher
     }
 
     private static int order_app_windows (void* a, void* b)
+      requires (a is Bamf.Window)
+      requires (b is Bamf.Window)
     {
       if ((b as Bamf.Window).last_active () > (a as Bamf.Window).last_active ())
         {
