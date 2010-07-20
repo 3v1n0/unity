@@ -284,7 +284,7 @@ namespace Unity.Launcher
       Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
       root.set_root (true);
 
-      if (desktop_file != null)
+      if (desktop_file != null && desktop_file != "")
         {
           Dbusmenu.Menuitem pinning_item = new Dbusmenu.Menuitem ();
           if (is_sticky () && app is Bamf.Application)
@@ -298,8 +298,14 @@ namespace Unity.Launcher
               pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Remove from launcher");
             }
           else
-            pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Add to launcher");
-
+            {
+              if (app is Bamf.Application)
+                {
+                  pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Keep in Launcher");
+                  pinning_item.property_set (Dbusmenu.MENUITEM_PROP_TOGGLE_TYPE, Dbusmenu.MENUITEM_TOGGLE_CHECK);
+                  pinning_item.property_set_int (Dbusmenu.MENUITEM_PROP_TOGGLE_STATE, Dbusmenu.MENUITEM_TOGGLE_STATE_UNCHECKED);
+                }
+            }
           pinning_item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
           pinning_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
           pinning_item.item_activated.connect ((timestamp) => {
