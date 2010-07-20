@@ -282,8 +282,18 @@ namespace Unity.Launcher
       if (desktop_file != null)
         {
           Dbusmenu.Menuitem pinning_item = new Dbusmenu.Menuitem ();
-          if (is_sticky ())
-            pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Remove from launcher");
+          if (is_sticky () && app is Bamf.Application)
+            {
+              debug ("app is running");
+              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Keep in Launcher");
+              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_TOGGLE_TYPE, Dbusmenu.MENUITEM_TOGGLE_CHECK);
+              pinning_item.property_set_int (Dbusmenu.MENUITEM_PROP_TOGGLE_STATE, Dbusmenu.MENUITEM_TOGGLE_STATE_CHECKED);
+            }
+          else if (is_sticky ())
+            {
+              debug ("app is not running");
+              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Remove from launcher");
+            }
           else
             pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Add to launcher");
 
