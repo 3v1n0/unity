@@ -174,15 +174,17 @@ namespace Unity.Launcher
         }
     }
 
+/*
+    private get_menu_for_client (ScrollerChildController.menu_cb callback, Dbusmenu.Client client)
+    {
+
+    }
+*/
+
     public override void get_menu_actions (ScrollerChildController.menu_cb callback)
     {
 
       // first check to see if we have a cached client, if we do, just re-use that
-      if (menu_client is Dbusmenu.Client && cached_menu is Dbusmenu.Menuitem)
-        {
-          callback (cached_menu);
-        }
-
       // check for a menu from bamf
       if (app is Bamf.Application)
         {
