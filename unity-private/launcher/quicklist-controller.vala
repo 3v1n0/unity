@@ -98,7 +98,6 @@ namespace Unity.Launcher
 
   }
 
-
   public class ApplicationQuicklistController : QuicklistController
   {
     public ApplicationQuicklistController (ScrollerChildController scroller_child)

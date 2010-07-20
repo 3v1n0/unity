@@ -101,12 +101,17 @@ namespace Unity.Launcher
 
     public void set_sticky (bool is_sticky = true)
     {
+      debug (@"setting sticky app to $desktop_file");
       if (desktop_file == "" || desktop_file == null)
         return;
+
+
       //string uid = "app-" + Path.get_basename (desktop_file);
       var favorites = Unity.Favorites.get_default ();
 
       string uid = favorites.find_uid_for_desktop_file (desktop_file);
+      if (uid == "" || uid == null)
+        uid = "app-" + desktop_file;
 
       if (is_sticky)
         {
