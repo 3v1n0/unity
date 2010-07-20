@@ -254,6 +254,11 @@ namespace Unity
     g_total = g_total / uint.max (total_caught_pixels, 1);
     b_total = b_total / uint.max (total_caught_pixels, 1);
 
+    rs_total = rs_total / (width * height);
+    gs_total = gs_total / (width * height);
+    bs_total = bs_total / (width * height);
+
+
     // get a new super saturated value based on our totals
     if (total_caught_pixels <= 20)
       {
