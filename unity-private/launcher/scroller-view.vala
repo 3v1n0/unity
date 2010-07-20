@@ -660,7 +660,7 @@ namespace Unity.Launcher
               if (child.get_animation () is Clutter.Animation)
                 {
                   //GLib.Value value = GLib.Value (GLib.Type.from_name ("string"));
-                  GLib.Value value = typeof (float);
+                  GLib.Value value = Value (typeof (float));
                   Clutter.Interval interval = child.get_animation ().get_interval ("position");
                   interval.get_final_value (value);
                   if (value.get_float () != transitions[index].position)

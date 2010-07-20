@@ -491,7 +491,9 @@ namespace Unity
         }
       };
 
-      uchar opacity = self.get_paint_opacity ();
+      uchar opacity = self.get_opacity ();
+
+      //debug (@"opacity is set to $opacity");
 
       self.bg_mat.set_color4ub (opacity, opacity, opacity, opacity);
       self.bgcol_material.set_color4ub (opacity, opacity, opacity, opacity);
