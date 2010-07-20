@@ -46,7 +46,6 @@ namespace Unity {
     }
     
     private void workspace_switched (Plugin plugin,
-                                     List<Mutter.Window> windows,
                                      int from,
                                      int to,
                                      int direction) 

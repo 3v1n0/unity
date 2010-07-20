@@ -92,7 +92,6 @@ namespace Unity
     public signal void kill_switch_workspace (Plugin plugin);
 
     public signal void workspace_switch_event (Plugin plugin,
-                                               List<Mutter.Window> windows,
                                                int from,
                                                int to,
                                                int direction);
@@ -731,12 +730,11 @@ namespace Unity
       this.window_destroyed (this, window);
     }
 
-    public void switch_workspace (List<Mutter.Window> windows,
-                                  int                 from,
+    public void switch_workspace (int                 from,
                                   int                 to,
                                   int                 direction)
     {
-      this.workspace_switch_event (this, windows, from, to, direction);
+      this.workspace_switch_event (this, from, to, direction);
     }
 
     public void on_kill_window_effects (Mutter.Window window)
