@@ -69,7 +69,7 @@ namespace Unity
 
     }
   }
-
+  
   public class Plugin : Object, Shell
   {
     /* Signals */
@@ -107,6 +107,8 @@ namespace Unity
       set { _plugin = value; Idle.add (real_construct); }
     }
 
+    public ExposeManager expose_manager { get; private set; }
+
     public bool menus_swallow_events { get { return false; } }
 
     public bool expose_showing { get { return expose_manager.expose_showing; } }
@@ -121,7 +123,6 @@ namespace Unity
 
     /* Unity Components */
     private Background         background;
-    private ExposeManager      expose_manager;
     private SpacesManager      spaces_manager;
     private Launcher.Launcher  launcher;
     private Places.Controller  places_controller;
@@ -242,6 +243,8 @@ namespace Unity
 
       this.spaces_manager = new SpacesManager (this);
       this.spaces_manager.set_padding (50, 50, 125, 50);
+      
+      this.launcher.model.add (spaces_manager.button);
 
       this.expose_manager = new ExposeManager (this, launcher);
       this.expose_manager.hovered_opacity = 255;

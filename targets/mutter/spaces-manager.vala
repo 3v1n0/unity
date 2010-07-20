@@ -17,7 +17,32 @@
  *
  */
  
+using Unity.Launcher;
+ 
 namespace Unity {
+  
+  public class SpacesButtonController : ScrollerChildController
+  {
+    SpacesManager parent { get; set; }
+  
+    public SpacesButtonController (SpacesManager _parent, ScrollerChild _child)
+    {
+      Object (child: _child);
+      this.parent = _parent;
+
+      name = "Workspace Overview";
+      load_icon_from_icon_name ("workspace-switcher");
+    }
+  
+    construct
+    {
+    }
+    
+    public override void activate ()
+    {
+      parent.show_spaces_picker ();
+    }
+  }
   
   public class SpacesManager : GLib.Object
   {
@@ -25,6 +50,19 @@ namespace Unity {
     List<Clutter.Actor> clones;
     Plugin plugin;
     unowned Mutter.MetaScreen screen;
+    ScrollerChild _button;
+    SpacesButtonController controller;
+    
+    public ScrollerChild button {
+      get {
+        if (!(_button is ScrollerChild))
+          {
+            _button = new ScrollerChild ();
+            controller = new SpacesButtonController (this, _button);
+          }
+        return _button;
+      }
+    }
     
     public uint top_padding { get; set; }
     public uint right_padding { get; set; }
@@ -114,9 +152,15 @@ namespace Unity {
     
     private Clutter.Actor workspace_clone (Mutter.MetaWorkspace workspace) {
       Clutter.Group wsp;
-      unowned GLib.List<Mutter.Window> windows = plugin.plugin.get_windows ();
+      GLib.List<weak Mutter.Window> windows = (GLib.List<weak Mutter.Window>) plugin.plugin.get_windows ().copy ();
       
       wsp = new Clutter.Group ();
+      
+      List<Clutter.Actor> toplevel_windows = new List<Clutter.Actor> ();
+      
+      int active_workspace = Mutter.MetaScreen.get_active_workspace_index (plugin.plugin.get_screen ());
+
+      Clutter.Actor last = null, wspclone = null;
       
       foreach (Mutter.Window window in windows)
         {
@@ -124,7 +168,13 @@ namespace Unity {
               window.get_window_type () == Mutter.MetaCompWindowType.DESKTOP ||
               window.get_workspace () == Mutter.MetaWorkspace.index (workspace))
             {
-              Clutter.Actor clone = new Clutter.Clone (window);
+            
+              if (window.get_window_type () == Mutter.MetaCompWindowType.DOCK)
+                continue;
+            
+              ExposeClone clone = new ExposeClone (window);
+              clone.fade_on_close = false;
+              
               wsp.add_actor (clone);
           
               clone.set_size (window.width, window.height);
@@ -134,10 +184,21 @@ namespace Unity {
               
               if (window.get_window_type () == Mutter.MetaCompWindowType.DESKTOP)
                 {
+                  wspclone = clone;
                   clone.lower_bottom ();
+                }
+              else
+                {
+                  last = clone;
+                  toplevel_windows.prepend (clone);
                 }
             }
         }
+        
+      if (last != null && wspclone != null && active_workspace != Mutter.MetaWorkspace.index (workspace))
+        last.raise (wspclone);
+      
+      plugin.expose_manager.position_windows_on_grid (toplevel_windows, 50, 50, 50, 50);
       
       return wsp;
     }
@@ -169,6 +230,11 @@ namespace Unity {
                       "y", (float) yoffset,
                       "scale-x", 1.0f,
                       "scale-y", 1.0f);
+              
+              int active_workspace = Mutter.MetaScreen.get_active_workspace_index (plugin.plugin.get_screen ());
+              foreach (Clutter.Actor actor in (clone as Clutter.Group).get_children ())
+                if (actor is ExposeClone)
+                  (actor as ExposeClone).restore_window_position (active_workspace);
               
               anim.completed.connect (() => {
                 clone.destroy ();
