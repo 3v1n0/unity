@@ -88,9 +88,8 @@ namespace Unity
                                            int           height);
     public signal void window_mapped (Plugin plugin, Mutter.Window window);
     public signal void window_destroyed (Plugin plugin, Mutter.Window window);
-    public signal void window_kill_effect (Plugin        plugin,
-                                           Mutter.Window window,
-                                           ulong         events);
+    public signal void kill_window_effects (Plugin plugin, Mutter.Window window);
+    public signal void kill_switch_workspace (Plugin plugin);
 
     public signal void workspace_switch_event (Plugin plugin,
                                                List<Mutter.Window> windows,
@@ -740,9 +739,14 @@ namespace Unity
       this.workspace_switch_event (this, windows, from, to, direction);
     }
 
-    public void kill_effect (Mutter.Window window, ulong events)
+    public void on_kill_window_effects (Mutter.Window window)
     {
-      this.window_kill_effect (this, window, events);
+      this.kill_window_effects (this, window);
+    }
+    
+    public void on_kill_switch_workspace ()
+    {
+      this.kill_switch_workspace (this);
     }
 
     public int get_panel_height ()
