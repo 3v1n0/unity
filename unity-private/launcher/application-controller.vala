@@ -75,8 +75,6 @@ namespace Unity.Launcher
               break;
             }
         }
-
-      notify["menu"].connect (on_notify_menu);
     }
 
     public override QuicklistController get_menu_controller ()
@@ -85,28 +83,11 @@ namespace Unity.Launcher
       return new_menu;
     }
 
-    private void on_notify_menu ()
-    {
-      menu.notify["state"].connect (() => {
-        if (menu.state == QuicklistControllerState.MENU)
-          {
-            Unity.global_shell.expose_xids (app.get_xids ());
-          }
-        else
-          {
-            Unity.global_shell.stop_expose ();
-          }
-      });
-    }
-
     public void set_sticky (bool is_sticky = true)
     {
-      debug (@"setting sticky app to $desktop_file");
       if (desktop_file == "" || desktop_file == null)
         return;
 
-
-      //string uid = "app-" + Path.get_basename (desktop_file);
       var favorites = Unity.Favorites.get_default ();
 
       string uid = favorites.find_uid_for_desktop_file (desktop_file);
@@ -358,7 +339,12 @@ namespace Unity.Launcher
 
       if (app is Bamf.Application)
         {
-          if (app.is_running ())
+          if (app.is_active ())
+            {
+              Array<uint32> xids = app.get_xids ();
+              global_shell.expose_xids (xids);
+            }
+          else if (app.is_running ())
             {
               unowned List<Bamf.Window> windows = app.get_windows ();
               windows.sort ((CompareFunc)order_app_windows);

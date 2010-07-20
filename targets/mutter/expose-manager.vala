@@ -48,7 +48,7 @@ namespace Unity
       unhovered_opacity = 255;
 
       this.source = source;
-      
+
       if (source is Mutter.Window)
         clone = new Clutter.Clone ((source as Mutter.Window).get_texture ());
       else
@@ -117,7 +117,6 @@ namespace Unity
 
     private ExposeClone? last_selected_clone = null;
 
-    private bool menu_in_hover_close_state = false;
 
     public ExposeManager (Plugin plugin, Launcher.Launcher launcher)
     {
@@ -137,12 +136,6 @@ namespace Unity
 
     public void start_expose (SList<Clutter.Actor> windows)
     {
-      var controller = Launcher.QuicklistController.get_current_menu ();
-      if (controller.is_menu_open ())
-        {
-          controller.get_view ().destroy.connect (this.end_expose);
-          this.menu_in_hover_close_state = controller.get_view ().get_close_on_leave ();
-        }
       exposed_windows = new List<ExposeClone> ();
 
       if (expose_group != null)
@@ -175,26 +168,6 @@ namespace Unity
           clone.unhovered_opacity = unhovered_opacity;
           clone.opacity = unhovered_opacity;
           clone.darken = darken;
-
-          clone.enter_event.connect (() => {
-                var ql_controller = Launcher.QuicklistController.get_current_menu ();
-                if (ql_controller.state == Launcher.QuicklistControllerState.MENU
-                    && this.menu_in_hover_close_state)
-                  {
-                    ql_controller.get_view ().set_close_on_leave (false);
-                  }
-                return false;
-              });
-
-          clone.leave_event.connect (() => {
-                var ql_controller = Launcher.QuicklistController.get_current_menu ();
-                if (ql_controller.state == Launcher.QuicklistControllerState.MENU
-                    && this.menu_in_hover_close_state)
-                  {
-                    ql_controller.get_view ().set_close_on_leave (true);
-                  }
-                return false;
-              });
         }
 
       unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
@@ -223,13 +196,6 @@ namespace Unity
     {
       if (!expose_showing)
         return;
-      
-      var controller = Launcher.QuicklistController.get_current_menu ();
-      if (controller.is_menu_open ())
-        {
-          controller.get_view ().destroy.disconnect (this.end_expose);
-          controller.state = Launcher.QuicklistControllerState.CLOSED;
-        }
 
       unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
       foreach (Mutter.Window window in mutter_windows)
@@ -524,23 +490,13 @@ namespace Unity
       if (event.type == Clutter.EventType.ENTER || event.type == Clutter.EventType.LEAVE)
         return false;
 
-      bool event_over_menu = false;
 
       float x, y;
       event.get_coords (out x, out y);
 
       unowned Clutter.Actor actor = this.stage.get_actor_at_pos (Clutter.PickMode.REACTIVE, (int) x, (int) y);
 
-      Clutter.Actor? menu = null;
-      if (Unity.Launcher.QuicklistController.get_current_menu ().is_menu_open ())
-        menu = Unity.Launcher.QuicklistController.get_current_menu ().get_view ();
-      if (menu != null)
-        {
-          if (x > menu.x && x < menu.x + menu.width && y > menu.y && y < menu.y + menu.height)
-            event_over_menu = true;
-        }
-
-      if (event.type == Clutter.EventType.BUTTON_PRESS && !event_over_menu)
+      if (event.type == Clutter.EventType.BUTTON_PRESS)
         pick_window (event, actor);
 
       if (coverflow)
@@ -548,7 +504,7 @@ namespace Unity
       else
         handle_event_expose (event, actor);
 
-      return !event_over_menu;
+      return true;
     }
   }
 }
