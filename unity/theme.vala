@@ -99,7 +99,6 @@ namespace Unity
      * be loaded.
      */
     public string icon_name { get; construct set; }
-    public string icon_filename { get; construct set; }
 
     public Gdk.Pixbuf? icon;
 
@@ -153,7 +152,6 @@ namespace Unity
       try
         {
           this.set_from_file (filename);
-          this.icon_filename = filename;
           /*
           this.icon = new Gdk.Pixbuf.from_file (filename);
           this.size = this.icon.width;
