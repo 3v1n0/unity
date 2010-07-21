@@ -23,7 +23,7 @@ namespace Unity.Panel
   public class HomeButton : Ctk.Button
   {
     public Shell shell { get; construct; }
-    public ThemeImage theme_image;
+    public Ctk.Image theme_image;
     public Ctk.EffectGlow glow;
     public Clutter.Texture bg_normal;
     public Clutter.Texture bg_prelight;
@@ -87,7 +87,8 @@ namespace Unity.Panel
 
     construct
     {
-      theme_image = new ThemeImage ("distributor-logo");
+      theme_image = new Ctk.Image.from_filename (22, "/usr/share/icons/unity-icon-theme/places/22/distributor-logo.png");
+
       add_actor (theme_image);
       theme_image.show ();
 
@@ -100,15 +101,15 @@ namespace Unity.Panel
       glow.set_color ({ 255, 255, 255, 255 });
       glow.set_factor (0.0f);
       glow.set_margin (5);
-      add_effect (glow);
+      theme_image.add_effect (glow);
 
-      //bg_normal   = new Clutter.Texture.from_file ("./bg_normal.png");
-      //bg_prelight = new Clutter.Texture.from_file ("./bg_active.png");
-      //bg_active   = new Clutter.Texture.from_file ("./bg_active.png");
+      bg_normal   = new Clutter.Texture.from_file ("./bg_normal.png");
+      bg_prelight = new Clutter.Texture.from_file ("./bg_prelight.png");
+      bg_active   = new Clutter.Texture.from_file ("./bg_active.png");
 
-      //set_background_for_state (Ctk.ActorState.STATE_NORMAL, bg_normal);
-      //set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bg_prelight);
-      //set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bg_active);
+      set_background_for_state (Ctk.ActorState.STATE_NORMAL, bg_normal);
+      set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bg_prelight);
+      set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bg_active);
     }
 
     private void on_state_changed ()
@@ -152,6 +153,7 @@ namespace Unity.Panel
       shell.show_unity ();
       MenuManager manager = MenuManager.get_default ();
       manager.popdown_current_menu ();
+
     }
 
     private bool on_motion_event (Clutter.Event event)
