@@ -99,8 +99,11 @@ namespace Unity
      * be loaded.
      */
     public string icon_name { get; construct set; }
+    public string icon_filename { get; construct set; }
 
     public Gdk.Pixbuf? icon;
+
+    public signal void changed ();
 
     public ThemeImage (string icon_name)
     {
@@ -120,6 +123,8 @@ namespace Unity
       if (!this.try_load_icon_from_datadir ())
         if (!this.try_load_icon_from_theme ())
           this.load_missing_icon ();
+
+      changed ();
     }
 
     private bool try_load_icon_from_theme ()
@@ -148,6 +153,7 @@ namespace Unity
       try
         {
           this.set_from_file (filename);
+          this.icon_filename = filename;
           /*
           this.icon = new Gdk.Pixbuf.from_file (filename);
           this.size = this.icon.width;

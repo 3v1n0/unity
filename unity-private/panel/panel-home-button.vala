@@ -24,9 +24,7 @@ namespace Unity.Panel
   {
     public Shell shell { get; construct; }
     public ThemeImage theme_image;
-    public Clutter.CairoTexture normal_texture;
-    public Clutter.CairoTexture active_texture;
-    public Clutter.CairoTexture prelight_texture;
+    public Ctk.EffectGlow glow;
 
     public HomeButton (Shell shell)
     {
@@ -34,44 +32,6 @@ namespace Unity.Panel
 
       Unity.Testing.ObjectRegistry.get_default ().register ("PanelHomeButton",
                                                             this);
-    }
-
-    public override void
-    paint ()
-    {
-      switch (this.get_state ())
-      {
-        case Ctk.ActorState.STATE_NORMAL:
-          print ("paint() called - state: normal\n");
-          this.remove_actor (this.get_child ());
-          this.add_actor (this.normal_texture);
-          this.normal_texture.show ();
-        break;
-
-        case Ctk.ActorState.STATE_ACTIVE:
-          print ("paint() called - state: active\n");
-          this.remove_actor (this.get_child ());
-          this.add_actor (this.active_texture);
-          this.active_texture.show ();
-        break;
-
-        case Ctk.ActorState.STATE_PRELIGHT:
-          print ("paint() called - state: prelight\n");
-          this.remove_actor (this.get_child ());
-          this.add_actor (this.prelight_texture);
-          this.prelight_texture.show ();
-        break;
-
-        case Ctk.ActorState.STATE_SELECTED:
-        case Ctk.ActorState.STATE_INSENSITIVE:
-          print ("paint() called - state: selected/insensitive\n");
-        break;
-
-        default :
-        break;
-      }
-
-      base.paint ();
     }
 
     private override void allocate (Clutter.ActorBox        box,
@@ -124,57 +84,43 @@ namespace Unity.Panel
     construct
     {
       theme_image = new ThemeImage ("distributor-logo");
-      //add_actor (theme_image);
-      //theme_image.show ();
+      add_actor (theme_image);
+      theme_image.show ();
 
       motion_event.connect (on_motion_event);
       clicked.connect (on_clicked);
 
-      theme_image.load_finished.connect (on_load_finished);
+      notify["state"].connect (on_state_changed);
 
-      normal_texture = new Clutter.CairoTexture (1, 1);
-      active_texture = new Clutter.CairoTexture (1, 1);
-      prelight_texture = new Clutter.CairoTexture (1, 1);
+      glow = new Ctk.EffectGlow ();
+      glow.set_color ({ 255, 255, 255, 255 });
+      glow.set_factor (0.0f);
+      glow.set_margin (5);
+      add_effect (glow);
     }
 
-    private void
-    on_load_finished ()
+    private void on_state_changed ()
     {
-      int width;
-      int height;
-
-      theme_image.get_base_size (out width, out height);
-      normal_texture.set_surface_size ((uint) width, (uint) height);
-      active_texture.set_surface_size ((uint) width, (uint) height);
-      prelight_texture.set_surface_size ((uint) width, (uint) height);
-
+      switch (this.get_state ())
       {
-        Cairo.Context cr = normal_texture.create ();
-        cr.set_operator (Cairo.Operator.OVER);
-        cr.scale (1.0f, 1.0f);
-        cr.set_source_rgb (1.0f, 0.0f, 0.0f);
-        cr.rectangle (0.0f, 0.0f, (double) width, (double) height);
-        cr.fill ();
-      }
+        case Ctk.ActorState.STATE_NORMAL:
+          glow.set_factor (0.0f);
+          glow.set_invalidate_effect_cache (true);
+          do_queue_redraw ();
+        break;
 
-      {
-        Cairo.Context cr = active_texture.create ();
-        cr.set_operator (Cairo.Operator.OVER);
-        cr.scale (1.0f, 1.0f);
-        cr.set_source_rgb (0.0f, 1.0f, 0.0f);
-        cr.rectangle (0.0f, 0.0f, (double) width, (double) height);
-        cr.fill ();
-      }
+        case Ctk.ActorState.STATE_PRELIGHT:
+          glow.set_factor (0.8f);
+          glow.set_invalidate_effect_cache (true);
+          do_queue_redraw ();
+        break;
 
-      {
-        Cairo.Context cr = prelight_texture.create ();
-        cr.set_operator (Cairo.Operator.OVER);
-        cr.scale (1.0f, 1.0f);
-        cr.set_source_rgb (0.0f, 0.0f, 1.0f);
-        cr.rectangle (0.0f, 0.0f, (double) width, (double) height);
-        cr.fill ();
+        case Ctk.ActorState.STATE_ACTIVE:
+          glow.set_factor (1.0f);
+          glow.set_invalidate_effect_cache (true);
+          do_queue_redraw ();
+        break;
       }
-
     }
 
     /* We always want to be the width of the launcher */
