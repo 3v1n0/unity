@@ -24,6 +24,9 @@ namespace Unity.Panel
   {
     public Shell shell { get; construct; }
     public ThemeImage theme_image;
+    public Clutter.CairoTexture normal_texture;
+    public Clutter.CairoTexture active_texture;
+    public Clutter.CairoTexture prelight_texture;
 
     public HomeButton (Shell shell)
     {
@@ -31,6 +34,44 @@ namespace Unity.Panel
 
       Unity.Testing.ObjectRegistry.get_default ().register ("PanelHomeButton",
                                                             this);
+    }
+
+    public override void
+    paint ()
+    {
+      switch (this.get_state ())
+      {
+        case Ctk.ActorState.STATE_NORMAL:
+          print ("paint() called - state: normal\n");
+          this.remove_actor (this.get_child ());
+          this.add_actor (this.normal_texture);
+          this.normal_texture.show ();
+        break;
+
+        case Ctk.ActorState.STATE_ACTIVE:
+          print ("paint() called - state: active\n");
+          this.remove_actor (this.get_child ());
+          this.add_actor (this.active_texture);
+          this.active_texture.show ();
+        break;
+
+        case Ctk.ActorState.STATE_PRELIGHT:
+          print ("paint() called - state: prelight\n");
+          this.remove_actor (this.get_child ());
+          this.add_actor (this.prelight_texture);
+          this.prelight_texture.show ();
+        break;
+
+        case Ctk.ActorState.STATE_SELECTED:
+        case Ctk.ActorState.STATE_INSENSITIVE:
+          print ("paint() called - state: selected/insensitive\n");
+        break;
+
+        default :
+        break;
+      }
+
+      base.paint ();
     }
 
     private override void allocate (Clutter.ActorBox        box,
@@ -83,13 +124,57 @@ namespace Unity.Panel
     construct
     {
       theme_image = new ThemeImage ("distributor-logo");
-      add_actor (theme_image);
-      theme_image.show ();
+      //add_actor (theme_image);
+      //theme_image.show ();
 
-      //button_press_event.connect (on_button_press);
-      //button_release_event.connect (on_button_release);
       motion_event.connect (on_motion_event);
       clicked.connect (on_clicked);
+
+      theme_image.load_finished.connect (on_load_finished);
+
+      normal_texture = new Clutter.CairoTexture (1, 1);
+      active_texture = new Clutter.CairoTexture (1, 1);
+      prelight_texture = new Clutter.CairoTexture (1, 1);
+    }
+
+    private void
+    on_load_finished ()
+    {
+      int width;
+      int height;
+
+      theme_image.get_base_size (out width, out height);
+      normal_texture.set_surface_size ((uint) width, (uint) height);
+      active_texture.set_surface_size ((uint) width, (uint) height);
+      prelight_texture.set_surface_size ((uint) width, (uint) height);
+
+      {
+        Cairo.Context cr = normal_texture.create ();
+        cr.set_operator (Cairo.Operator.OVER);
+        cr.scale (1.0f, 1.0f);
+        cr.set_source_rgb (1.0f, 0.0f, 0.0f);
+        cr.rectangle (0.0f, 0.0f, (double) width, (double) height);
+        cr.fill ();
+      }
+
+      {
+        Cairo.Context cr = active_texture.create ();
+        cr.set_operator (Cairo.Operator.OVER);
+        cr.scale (1.0f, 1.0f);
+        cr.set_source_rgb (0.0f, 1.0f, 0.0f);
+        cr.rectangle (0.0f, 0.0f, (double) width, (double) height);
+        cr.fill ();
+      }
+
+      {
+        Cairo.Context cr = prelight_texture.create ();
+        cr.set_operator (Cairo.Operator.OVER);
+        cr.scale (1.0f, 1.0f);
+        cr.set_source_rgb (0.0f, 0.0f, 1.0f);
+        cr.rectangle (0.0f, 0.0f, (double) width, (double) height);
+        cr.fill ();
+      }
+
     }
 
     /* We always want to be the width of the launcher */
@@ -100,21 +185,7 @@ namespace Unity.Panel
       min_width = shell.get_launcher_width_foobar ();
       nat_width = shell.get_launcher_width_foobar ();
     }
-/*
-    private bool on_button_press (Clutter.Event event)
-    {
-      return true;
-    }
 
-    private bool on_button_release (Clutter.Event event)
-    {
-      print (@"BUTTON_RELEASE: $(event.button.button)\n");
-      shell.show_unity ();
-      MenuManager manager = MenuManager.get_default ();
-      manager.popdown_current_menu ();
-      return true;
-    }
-*/
     private void on_clicked ()
     {
       shell.show_unity ();
