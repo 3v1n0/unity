@@ -25,6 +25,9 @@ namespace Unity.Panel
     public Shell shell { get; construct; }
     public ThemeImage theme_image;
     public Ctk.EffectGlow glow;
+    public Clutter.Texture bg_normal;
+    public Clutter.Texture bg_prelight;
+    public Clutter.Texture bg_active;
 
     public HomeButton (Shell shell)
     {
@@ -45,6 +48,7 @@ namespace Unity.Panel
 
       lwidth  = (float) shell.get_launcher_width_foobar ();
       pheight = (float) shell.get_panel_height_foobar ();
+      print ("size: %3.2f, %3.2f\n", lwidth, pheight);
       theme_image.get_preferred_size (out cwidth, out cheight,
                                            out cwidth, out cheight);
 
@@ -97,6 +101,14 @@ namespace Unity.Panel
       glow.set_factor (0.0f);
       glow.set_margin (5);
       add_effect (glow);
+
+      //bg_normal   = new Clutter.Texture.from_file ("./bg_normal.png");
+      //bg_prelight = new Clutter.Texture.from_file ("./bg_active.png");
+      //bg_active   = new Clutter.Texture.from_file ("./bg_active.png");
+
+      //set_background_for_state (Ctk.ActorState.STATE_NORMAL, bg_normal);
+      //set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bg_prelight);
+      //set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bg_active);
     }
 
     private void on_state_changed ()
@@ -104,18 +116,21 @@ namespace Unity.Panel
       switch (this.get_state ())
       {
         case Ctk.ActorState.STATE_NORMAL:
+          print ("state normal, (factor: %3.2f)\n", glow.get_factor ());
           glow.set_factor (0.0f);
           glow.set_invalidate_effect_cache (true);
           do_queue_redraw ();
         break;
 
         case Ctk.ActorState.STATE_PRELIGHT:
+          print ("state prelight, (factor: %3.2f)\n", glow.get_factor ());
           glow.set_factor (0.8f);
           glow.set_invalidate_effect_cache (true);
           do_queue_redraw ();
         break;
 
         case Ctk.ActorState.STATE_ACTIVE:
+          print ("state active, (factor: %3.2f)\n", glow.get_factor ());
           glow.set_factor (1.0f);
           glow.set_invalidate_effect_cache (true);
           do_queue_redraw ();
