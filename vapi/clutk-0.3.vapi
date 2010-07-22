@@ -311,9 +311,13 @@ namespace Ctk {
 		public unowned Clutter.Actor get_background ();
 		public bool get_close_on_leave ();
 		public uint get_framebuffer_background ();
-    public unowned GLib.List get_items ();
+		public unowned GLib.List get_items ();
 		public int get_num_items ();
 		public int get_spacing ();
+		public float get_special_item_height ();
+		public int get_special_item_index ();
+		public float get_special_item_y ();
+		public bool is_expandable ();
 		public void prepend (Clutter.Actor item, bool is_special);
 		public void refresh_background_texture ();
 		public void remove_all ();
@@ -321,6 +325,7 @@ namespace Ctk {
 		public void set_close_on_leave (bool value);
 		public void set_color (Clutter.Color color);
 		public void set_detect_clicks (bool value);
+		public void set_is_expandable (bool b);
 		public void set_spacing (int spacing);
 		public void set_swallow_clicks (bool value);
 		[CCode (has_construct_function = false)]
@@ -330,6 +335,38 @@ namespace Ctk {
 		public int num_items { get; }
 		public int spacing { get; set; }
 		public virtual signal void closed ();
+	}
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public class MenuExpandable : Ctk.Menu, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
+		[CCode (has_construct_function = false)]
+		public MenuExpandable ();
+		public void compute_style_textures ();
+		public uint get_anchor_height ();
+		public uint get_anchor_size_offset ();
+		public uint get_anchor_width ();
+		public uint get_bg_fill_image_height ();
+		public uint get_bg_fill_image_id ();
+		public uint get_bg_fill_image_width ();
+		public int get_content_padding ();
+		public int get_content_padding_left_right ();
+		public uint get_corner_radius ();
+		public float get_expansion_size_factor ();
+		public uint get_padding ();
+		public uint get_transition_steps ();
+		public void set_anchor_position (float x, float y, int tooltip_y_in_menu);
+		public void set_bg_fill_image_height (uint height);
+		public void set_bg_fill_image_id (uint image_id);
+		public void set_bg_fill_image_width (uint width);
+		public void set_content_padding (int padding);
+		public void set_content_padding_left_right (int padding);
+		public void set_expansion_size_factor (float factor);
+		public void set_full_textures (Cairo.Surface surf, Cairo.Surface mask_surf);
+		public void set_padding (int padding);
+		public void set_transition_textures (int index, Cairo.Surface surf, Cairo.Surface mask_surf);
+		public uint bg_fill_image_height { get; set; }
+		public uint bg_fill_image_id { get; set; }
+		public uint bg_fill_image_width { get; set; }
+		public float expansion_size_factor { get; set; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class MenuItem : Ctk.Bin, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
@@ -347,19 +384,6 @@ namespace Ctk {
 		[CCode (has_construct_function = false)]
 		public MenuSeperator ();
 	}
-	[Compact]
-	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class ProjectedTextureVertex {
-		public Cogl.Color color;
-		public float q;
-		public float r;
-		public float s;
-		public float t;
-		public float w;
-		public float x;
-		public float y;
-		public float z;
-	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class RadioMenuItem : Ctk.CheckMenuItem, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
 		[CCode (has_construct_function = false)]
@@ -370,10 +394,6 @@ namespace Ctk {
 		public RadioMenuItem.with_label (GLib.SList group, string label);
 		public void* group { get; set; }
 		public virtual signal void group_changed ();
-	}
-	[Compact]
-	[CCode (cheader_filename = "clutk/clutk.h")]
-	public class RadioMenuItemClass {
 	}
 	[Compact]
 	[CCode (type_id = "CTK_TYPE_RENDER_TARGET", cheader_filename = "clutk/clutk.h")]
@@ -541,6 +561,16 @@ namespace Ctk {
 	public const int EFFECT_MIN_MARGIN;
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public const int EFFECT_MIN_STRENGTH;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int MENU_EXPANDABLE_ANCHOR_SIZE_OFFSET;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int MENU_EXPANDABLE_CONTENT_PADDING;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int MENU_EXPANDABLE_CONTENT_PADDING_LEFT_RIGHT;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int MENU_EXPANDABLE_PADDING;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int MENU_EXPANDABLE_TRANSITION_STEPS;
 	[CCode (cname = "CheckGLError", cheader_filename = "clutk/clutk.h")]
 	public static int CheckGLError (string glCall, string file, int line);
 	[CCode (cheader_filename = "clutk/clutk.h")]
@@ -563,8 +593,6 @@ namespace Ctk {
 	public static void init_after ([CCode (array_length_pos = 0.9)] ref unowned string[] argv);
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static double pixel_to_em (int pixel_value);
-	[CCode (cheader_filename = "clutk/clutk.h")]
-	public static void render_projected_polygon (Ctk.ProjectedTextureVertex V, uint tex_id, int window_w, int window_h);
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public static void surface_blur (Cairo.Surface surface, uint radius);
 }
