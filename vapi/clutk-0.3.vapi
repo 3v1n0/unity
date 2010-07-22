@@ -313,6 +313,10 @@ namespace Ctk {
 		public uint get_framebuffer_background ();
 		public int get_num_items ();
 		public int get_spacing ();
+		public float get_special_item_height ();
+		public int get_special_item_index ();
+		public float get_special_item_y ();
+		public bool is_expandable ();
 		public void prepend (Clutter.Actor item, bool is_special);
 		public void refresh_background_texture ();
 		public void remove_all ();
@@ -320,6 +324,7 @@ namespace Ctk {
 		public void set_close_on_leave (bool value);
 		public void set_color (Clutter.Color color);
 		public void set_detect_clicks (bool value);
+		public void set_is_expandable (bool b);
 		public void set_spacing (int spacing);
 		public void set_swallow_clicks (bool value);
 		[CCode (has_construct_function = false)]
@@ -341,16 +346,18 @@ namespace Ctk {
 		public uint get_bg_fill_image_height ();
 		public uint get_bg_fill_image_id ();
 		public uint get_bg_fill_image_width ();
-		public uint get_content_padding ();
+		public int get_content_padding ();
+		public int get_content_padding_left_right ();
 		public uint get_corner_radius ();
 		public float get_expansion_size_factor ();
 		public uint get_padding ();
 		public uint get_transition_steps ();
-		public void set_anchor_position (int x, int y, int tooltip_y_in_menu);
+		public void set_anchor_position (float x, float y, int tooltip_y_in_menu);
 		public void set_bg_fill_image_height (uint height);
 		public void set_bg_fill_image_id (uint image_id);
 		public void set_bg_fill_image_width (uint width);
 		public void set_content_padding (int padding);
+		public void set_content_padding_left_right (int padding);
 		public void set_expansion_size_factor (float factor);
 		public void set_full_textures (Cairo.Surface surf, Cairo.Surface mask_surf);
 		public void set_padding (int padding);
@@ -557,6 +564,8 @@ namespace Ctk {
 	public const int MENU_EXPANDABLE_ANCHOR_SIZE_OFFSET;
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public const int MENU_EXPANDABLE_CONTENT_PADDING;
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public const int MENU_EXPANDABLE_CONTENT_PADDING_LEFT_RIGHT;
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public const int MENU_EXPANDABLE_PADDING;
 	[CCode (cheader_filename = "clutk/clutk.h")]

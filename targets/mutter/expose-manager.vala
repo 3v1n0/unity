@@ -48,10 +48,15 @@ namespace Unity
       unhovered_opacity = 255;
 
       this.source = source;
-      clone = new Clutter.Clone (source);
+      
+      if (source is Mutter.Window)
+        clone = new Clutter.Clone ((source as Mutter.Window).get_texture ());
+      else
+        clone = new Clutter.Clone (source);
 
       add_actor (clone);
       clone.show ();
+      clone.reactive = true;
       clone.set_position (0, 0);
 
       darken_box = new Clutter.Rectangle.with_color ({0, 0, 0, 255});
@@ -216,6 +221,9 @@ namespace Unity
 
     public void end_expose ()
     {
+      if (!expose_showing)
+        return;
+      
       var controller = Launcher.QuicklistController.get_current_menu ();
       if (controller.is_menu_open ())
         {

@@ -160,6 +160,7 @@ namespace Unity.Launcher
           new_menu ();
           warning ("state change called on menu when menu does not exist");
         }
+        
       if (state == QuicklistControllerState.LABEL)
         {
           // just build a menu with a label for the name
@@ -171,13 +172,19 @@ namespace Unity.Launcher
             state = QuicklistControllerState.CLOSED;
           });
 
+          menuitem.reactive = false;
           menu.append (menuitem, true);
           
           float x, y;
-          (attached_controller.child as Ctk.Actor).get_position(out x, out y);
+          float w, h;
+          (attached_controller.child as Ctk.Actor).get_transformed_position(out x, out y);
+          w = (attached_controller.child as Ctk.Actor).get_width();
+          h = (attached_controller.child as Ctk.Actor).get_height();
           menu.compute_style_textures ();
-          menu.set_anchor_position ((int)x + 60, (int)y+48, 25);
-          menu.set_expansion_size_factor (0.0f);                  
+          menu.set_expansion_size_factor (0.0f);
+          menu.set_anchor_position (x + w, y + h/2.0f, 0);
+          //debug("Opening Label at %f %f\n", x + 60, y+48);
+          
         }
       else if (state == QuicklistControllerState.MENU)
         {
@@ -239,13 +246,17 @@ namespace Unity.Launcher
 
             float x;
             float y;
-            (attached_controller.child as Ctk.Actor).get_position(out x, out y);
+            float w;
+            float h;
+            (attached_controller.child as Ctk.Actor).get_transformed_position(out x, out y);
+            w = (attached_controller.child as Ctk.Actor).get_width();
+            h = (attached_controller.child as Ctk.Actor).get_height();
             menu.compute_style_textures ();
-            menu.set_anchor_position ((int)x + 60, (int)y+48, 25+1);
             menu.set_expansion_size_factor (0.0f);
+            menu.set_anchor_position (x + w, y + h/2.0f, 0);
             var anim = menu.animate (Clutter.AnimationMode.LINEAR,
                         100,
-                        "expansion-size-factor", 1.0f);                 
+                        "expansion-size-factor", 1.0f);
 
           });
 

@@ -5,6 +5,7 @@ EXTRA_DIST = \
   clutter-1.0.deps \
   cogl-1.0.vapi \
   config.vapi \
+  Dbusmenu-Glib-0.2.vapi \
   dee-1.0.deps \
   dee-1.0.vapi \
   indicator.deps \

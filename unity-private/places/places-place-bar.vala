@@ -29,7 +29,7 @@ namespace Unity.Places
     private Ctk.EffectGlow     glow;
     private PlaceEntryView     active_view = null;
 
-    public signal void entry_view_activated (PlaceEntryView view, int x);
+    public signal void entry_view_activated (PlaceEntry view, int x);
 
     public PlaceBar (Shell shell, PlaceModel model)
     {
@@ -38,6 +38,9 @@ namespace Unity.Places
               orientation:Ctk.Orientation.HORIZONTAL,
               homogeneous:false,
               spacing:0);
+
+      Testing.ObjectRegistry.get_default ().register ("UnityPlacesPlaceBar",
+                                                      this);
     }
 
     construct
@@ -67,6 +70,40 @@ namespace Unity.Places
 
         view.entry_activated.connect (on_entry_activated);
       });
+    }
+
+    public void reset ()
+    {
+      if (active_view is PlaceEntryView)
+        {
+          active_view.entry.active = false;
+          active_view = null;
+        }
+    }
+
+    public void active_entry_name (string name)
+    {
+      var children = get_children ();
+      foreach (Clutter.Actor p in children)
+        {
+          PlaceView view = p as PlaceView;
+          var c = view.get_children ();
+
+          bool found = false;
+          foreach (Clutter.Actor e in c)
+            {
+              PlaceEntryView v = e as PlaceEntryView;
+
+              if (v.entry.name == name)
+                {
+                  on_entry_activated (view, v);
+                  found = true;
+                  break;
+                }
+            }
+          if (found)
+            break;
+        }
     }
 
     private override void allocate (Clutter.ActorBox        box,
@@ -105,7 +142,7 @@ namespace Unity.Places
 
         glow.set_invalidate_effect_cache (true);
 
-        entry_view_activated (entry_view,
+        entry_view_activated (entry_view.entry,
                               bg.entry_position + (PlaceEntryView.WIDTH/2));
     }
   }

@@ -37,9 +37,13 @@ namespace Unity.Places
     private Ctk.Image     expander;
     private Ctk.IconView  renderer;
 
+    private MoreResultsButton? more_results_button;
+
     /* Some caching to speed up lookups */
     private uint          n_results = 0;
     private bool          dirty = false;
+
+    private bool          allow_expand = true;
 
     public DefaultRendererGroup (uint      group_id,
                                  string    group_renderer,
@@ -56,8 +60,11 @@ namespace Unity.Places
 
     construct
     {
-      padding = { 0.0f, 0.0f, PADDING , 0.0f};
+      padding = { 0.0f, 0.0f, PADDING, 0.0f};
       hide ();
+
+      if (group_renderer == "UnityLinkGroupRenderer")
+        allow_expand = false;
 
       vbox = new Ctk.VBox (SPACING);
       vbox.spacing = SPACING;
@@ -91,7 +98,7 @@ namespace Unity.Places
       rect.show ();
 
       title_box.button_release_event.connect (() => {
-        if (n_results <= renderer.get_n_cols ())
+        if (n_results <= renderer.get_n_cols () || allow_expand == false)
           return true;
 
         if (bin_state == ExpandingBinState.UNEXPANDED)
@@ -107,7 +114,7 @@ namespace Unity.Places
         return true;
       });
       title_box.motion_event.connect (() => {
-        if (dirty)
+        if (dirty && allow_expand)
           {
             var children = renderer.get_children ();
             foreach (Clutter.Actor child in children)
@@ -138,6 +145,37 @@ namespace Unity.Places
 
       results.row_added.connect (on_result_added);
       results.row_removed.connect (on_result_removed);
+
+      if (group_renderer == "UnityLinkGroupRenderer")
+        {
+          allow_expand = false;
+
+          more_results_button = new MoreResultsButton ();
+          more_results_button.padding = { PADDING/4,
+                                          PADDING/2,
+                                          PADDING/4,
+                                          PADDING/2 };
+          vbox.pack (more_results_button, false, false);
+          more_results_button.show ();
+
+          more_results_button.clicked.connect (() =>
+            {
+              /* FIXME:!!!
+               * This is not the way we'll end up doing this. This is a stop-gap
+               * until we have better support for signalling things through
+               * a place
+               */
+              PlaceBar place_bar = (Testing.ObjectRegistry.get_default ().lookup ("UnityPlacesPlaceBar"))[0] as PlaceBar;
+              PlaceSearchBar search_bar = (Testing.ObjectRegistry.get_default ().lookup ("UnityPlacesSearchBar"))[0] as PlaceSearchBar;
+
+              if (place_bar is PlaceBar && search_bar is PlaceSearchBar)
+                {
+                  string text = search_bar.get_search_text ();
+                  place_bar.active_entry_name (display_name);
+                  search_bar.search (text);
+                }
+            });
+        }
     }
 
     private override void allocate (Clutter.ActorBox        box,
@@ -155,7 +193,8 @@ namespace Unity.Places
       if (child is Clutter.Actor &&
           child.height != unexpanded_height)
         {
-          unexpanded_height = title_box.height + 1.0f + child.height;
+          var h = more_results_button != null ? more_results_button.height : 0;
+          unexpanded_height = title_box.height + 1.0f + child.height + h;
         }
     }
 
@@ -222,13 +261,25 @@ namespace Unity.Places
 
       if (n_results > renderer.get_n_cols ())
         {
-          expander.animate (Clutter.AnimationMode.EASE_IN_SINE, 200,
-                            "opacity", 255);
+          if (allow_expand)
+            {
+              expander.animate (Clutter.AnimationMode.EASE_IN_SINE, 200,
+                                "opacity", 255);
+            }
+          else if (more_results_button != null)
+            {
+              more_results_button.count = n_results - renderer.get_n_cols ();
+            }
         }
       else
         {
-          expander.animate (Clutter.AnimationMode.EASE_IN_SINE, 200,
-                            "opacity", 0);
+          expander.animate (Clutter.AnimationMode.EASE_OUT_SINE, 200,
+                                "opacity", 0);
+
+          if (more_results_button != null)
+            {
+              more_results_button.count = 0;
+            }
         }
     }
 
@@ -255,6 +306,74 @@ namespace Unity.Places
         }
 
       add_to_n_results (0);
+    }
+  }
+
+  public class MoreResultsButton : Ctk.Button
+  {
+    public uint count {
+      get { return _count; }
+      set {
+        _count = value;
+        text.text = _("See %u more results").printf (_count);
+
+        animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
+                            "opacity", count == 0 ? 0:255);
+      }
+    }
+
+    private uint _count = 0;
+    private Ctk.Text text;
+
+    public MoreResultsButton ()
+    {
+      Object (orientation:Ctk.Orientation.HORIZONTAL);
+    }
+
+    construct
+    {
+      var bg = new CairoCanvas (paint_bg);
+      set_background (bg);
+
+      text = new Ctk.Text ("");
+      add_actor (text);
+      text.show ();
+    }
+
+    private override void get_preferred_height (float for_width,
+                                                out float mheight,
+                                                out float nheight)
+    {
+      if (count == 0)
+        {
+          mheight = 0.0f;
+          nheight = 0.0f;
+        }
+      else
+        {
+          mheight = 28 + padding.top + padding.bottom;
+          nheight = mheight;
+        }
+    }
+
+    private void paint_bg (Cairo.Context cr, int width, int height)
+    {
+      var vpad = padding.top;
+      var hpad = padding.left;
+      float nwidth;
+      text.get_preferred_width (height, null, out nwidth);
+
+      cr.translate (0.5, 0.5);
+      cr.rectangle (0.0,
+                    vpad,
+                    hpad + nwidth + hpad,
+                    height - vpad - vpad);
+      cr.set_source_rgba (1.0, 1.0, 1.0, 0.2);
+      cr.fill_preserve ();
+
+      cr.set_line_width (1.5);
+      cr.set_source_rgba (1.0, 1.0, 1.0, 0.5);
+      cr.stroke ();
     }
   }
 
@@ -301,8 +420,11 @@ namespace Unity.Places
         return;
       shown = true;
 
-      set_label (display_name);
-      set_icon ();
+      Timeout.add (0, () => {
+        set_label (display_name);
+        set_icon ();
+        return false;
+      });
     }
 
     private override void get_preferred_width (float for_height,
