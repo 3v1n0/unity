@@ -37,7 +37,8 @@ namespace Unity.Launcher
   {
     public ScrollerChild child {get; construct;}
     public signal void request_removal (); //call when not needed anymore so we can unref
-    public string name = "If you can read this, file a bug!!";
+
+    public string name {get; set;}
     public bool hide {get; set;}
 
 
@@ -48,6 +49,7 @@ namespace Unity.Launcher
     protected bool button_down = false;
     protected float click_start_pos = 0.0f;
     protected int drag_sensitivity = 7;
+    private Unity.ThemeFilePath theme_file_path;
 
     protected QuicklistController? menu {get; set;}
 
@@ -58,6 +60,8 @@ namespace Unity.Launcher
 
     construct
     {
+      theme_file_path = new Unity.ThemeFilePath ();
+      name = "Bug Found, You Defeated Unity";
       child.controller = this;
       child.button_press_event.connect (on_press_event);
       child.button_release_event.connect (on_release_event);
@@ -73,11 +77,26 @@ namespace Unity.Launcher
     }
 
     public delegate void menu_cb (Dbusmenu.Menuitem? menu);
-    public abstract void get_menu_actions (menu_cb callback);
-    public abstract void get_menu_navigation (menu_cb callback);
 
-    public abstract void activate ();
-    public abstract QuicklistController get_menu_controller ();
+    public virtual void get_menu_actions (menu_cb callback)
+    {
+      callback (null);
+    }
+
+    public virtual void get_menu_navigation (menu_cb callback)
+    {
+      callback (null);
+    }
+
+    public virtual void activate ()
+    {
+      // do nothing!
+    }
+
+    public virtual QuicklistController get_menu_controller ()
+    {
+      return null;
+    }
 
     private bool on_leave_event (Clutter.Event event)
     {
@@ -206,6 +225,86 @@ namespace Unity.Launcher
             }
         }
         return false;
+    }
+
+    /* all this icon loading stuff can go when we switch from liblauncher to
+     * bamf - please ignore any icon loading bugs :-)
+     */
+    protected void load_icon_from_icon_name (string icon_name)
+    {
+      // first try to load from a path;
+      if (try_load_from_file (icon_name))
+        {
+          return;
+        }
+
+      //try to load from a path that we augment
+      if (try_load_from_file ("/usr/share/pixmaps/" + icon_name))
+        {
+          return;
+        }
+
+      theme_file_path = new Unity.ThemeFilePath ();
+
+      // add our searchable themes
+      Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
+      theme_file_path.add_icon_theme (theme);
+      theme = new Gtk.IconTheme ();
+
+      theme.set_custom_theme ("unity-icon-theme");
+      theme_file_path.add_icon_theme (theme);
+      theme.set_custom_theme ("Web");
+      theme_file_path.add_icon_theme (theme);
+
+      theme_file_path.found_icon_path.connect ((theme, filepath) => {
+        try
+          {
+            child.icon = new Gdk.Pixbuf.from_file (filepath);
+          }
+        catch (Error e)
+          {
+            warning (@"Could not load from $filepath");
+          }
+      });
+      theme_file_path.failed.connect (() => {
+        // we didn't get an icon, so just load the failcon
+        try
+          {
+            var default_theme = Gtk.IconTheme.get_default ();
+            child.icon = default_theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 48, 0);
+          }
+        catch (Error e)
+          {
+            warning (@"Could not load any icon for %s", icon_name);
+          }
+      });
+      theme_file_path.get_icon_filepath (icon_name);
+    }
+
+    private bool try_load_from_file (string filepath)
+    {
+      Gdk.Pixbuf pixbuf = null;
+      if (FileUtils.test(filepath, FileTest.IS_REGULAR))
+        {
+          try
+            {
+              pixbuf = new Gdk.Pixbuf.from_file_at_scale(filepath,
+                                                         48, 48, true);
+            }
+          catch (Error e)
+            {
+              warning ("Unable to load image from file '%s': %s",
+                       filepath,
+                       e.message);
+            }
+
+          if (pixbuf is Gdk.Pixbuf)
+            {
+              child.icon = pixbuf;
+              return true;
+            }
+        }
+      return false;
     }
   }
 }

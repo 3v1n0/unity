@@ -922,17 +922,17 @@ namespace Unity.Launcher
       for (int index = draw_btf.size-1; index >= 0; index--)
         {
           ScrollerChild child = draw_btf[index];
-          if (child is LauncherChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0)
             {
-              (child as LauncherChild).paint ();
+              (child as ScrollerChild).paint ();
             }
         }
 
       foreach (ScrollerChild child in draw_ftb)
         {
-          if (child is LauncherChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0)
             {
-              (child as LauncherChild).paint ();
+              (child as ScrollerChild).paint ();
             }
         }
 
@@ -949,17 +949,17 @@ namespace Unity.Launcher
       for (int index = draw_btf.size-1; index >= 0; index--)
         {
           ScrollerChild child = draw_btf[index];
-          if (child is LauncherChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0)
             {
-              (child as LauncherChild).paint ();
+              (child as ScrollerChild).paint ();
             }
         }
 
       foreach (ScrollerChild child in draw_ftb)
         {
-          if (child is LauncherChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0)
             {
-              (child as LauncherChild).paint ();
+              (child as ScrollerChild).paint ();
             }
         }
 

@@ -75,6 +75,7 @@ namespace Unity.Launcher
         {
           Bamf.Application app = object as Bamf.Application;
           // need to hook up to its visible changed signals
+
           string desktop_file = app.get_desktop_file ();
 
           ScrollerChildController controller = null;
@@ -89,7 +90,7 @@ namespace Unity.Launcher
             }
           else
             {
-              LauncherChild child = new LauncherChild ();
+              ScrollerChild child = new ScrollerChild ();
               controller = new ApplicationController (null, child);
               (controller as ApplicationController).attach_application (app);
               if (app.user_visible ())
@@ -170,7 +171,7 @@ namespace Unity.Launcher
           ApplicationController controller = find_controller_by_desktop_file (desktop_file);
           if (!(controller is ScrollerChildController))
             {
-              LauncherChild child = new LauncherChild ();
+              ScrollerChild child = new ScrollerChild ();
               controller = new ApplicationController (desktop_file, child);
               model.add (child);
               childcontrollers.add (controller);
@@ -195,7 +196,7 @@ namespace Unity.Launcher
       ApplicationController controller = find_controller_by_desktop_file (desktop_file);
       if (!(controller is ScrollerChildController))
         {
-          LauncherChild child = new LauncherChild ();
+          ScrollerChild child = new ScrollerChild ();
           controller = new ApplicationController (desktop_file, child);
           model.add (child);
           childcontrollers.add (controller);

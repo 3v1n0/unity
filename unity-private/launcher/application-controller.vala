@@ -33,7 +33,6 @@ namespace Unity.Launcher
 
     private KeyFile desktop_keyfile;
     private string icon_name;
-    private Unity.ThemeFilePath theme_file_path;
     private Bamf.Application? app = null;
     private Dbusmenu.Client menu_client;
     private Dbusmenu.Menuitem cached_menu;
@@ -58,7 +57,6 @@ namespace Unity.Launcher
 
     construct
     {
-      theme_file_path = new Unity.ThemeFilePath ();
       var favorites = Unity.Favorites.get_default ();
       favorites.favorite_added.connect (on_favorite_added);
       favorites.favorite_removed.connect (on_favorite_removed);
@@ -390,7 +388,7 @@ namespace Unity.Launcher
         warning (@"Bamf returned null for app.get_name (): $desktop_file");
 
       icon_name = app.get_icon ();
-      load_icon_from_icon_name ();
+      load_icon_from_icon_name (icon_name);
     }
 
     public void detach_application ()
@@ -445,7 +443,7 @@ namespace Unity.Launcher
       try
         {
           icon_name = desktop_keyfile.get_string (KeyFileDesktop.GROUP, KeyFileDesktop.KEY_ICON);
-          load_icon_from_icon_name ();
+          load_icon_from_icon_name (icon_name);
         }
       catch (Error e)
         {
@@ -468,87 +466,6 @@ namespace Unity.Launcher
       catch (Error e)
         {
         }
-    }
-
-    /* all this icon loading stuff can go when we switch from liblauncher to
-     * bamf - please ignore any icon loading bugs :-)
-     */
-    private void load_icon_from_icon_name ()
-    {
-      // first try to load from a path;
-      if (try_load_from_file (icon_name))
-        {
-          return;
-        }
-
-      //try to load from a path that we augment
-      if (try_load_from_file ("/usr/share/pixmaps/" + icon_name))
-        {
-          return;
-        }
-
-      theme_file_path = new Unity.ThemeFilePath ();
-
-      // add our searchable themes
-      Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
-      theme_file_path.add_icon_theme (theme);
-      theme = new Gtk.IconTheme ();
-
-      theme.set_custom_theme ("unity-icon-theme");
-      theme_file_path.add_icon_theme (theme);
-      theme.set_custom_theme ("Web");
-      theme_file_path.add_icon_theme (theme);
-
-      theme_file_path.found_icon_path.connect ((theme, filepath) => {
-        try
-          {
-            child.icon = new Gdk.Pixbuf.from_file (filepath);
-          }
-        catch (Error e)
-          {
-            warning (@"Could not load from $filepath");
-          }
-      });
-      theme_file_path.failed.connect (() => {
-        // we didn't get an icon, so just load the failcon
-        try
-          {
-            var default_theme = Gtk.IconTheme.get_default ();
-            child.icon = default_theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 48, 0);
-          }
-        catch (Error e)
-          {
-            warning (@"Could not load any icon for %s", app.get_name ());
-          }
-      });
-
-      theme_file_path.get_icon_filepath (icon_name);
-    }
-
-    private bool try_load_from_file (string filepath)
-    {
-      Gdk.Pixbuf pixbuf = null;
-      if (FileUtils.test(filepath, FileTest.IS_REGULAR))
-        {
-          try
-            {
-              pixbuf = new Gdk.Pixbuf.from_file_at_scale(filepath,
-                                                         48, 48, true);
-            }
-          catch (Error e)
-            {
-              warning ("Unable to load image from file '%s': %s",
-                       filepath,
-                       e.message);
-            }
-
-          if (pixbuf is Gdk.Pixbuf)
-            {
-              child.icon = pixbuf;
-              return true;
-            }
-        }
-      return false;
     }
   }
 }

@@ -25,6 +25,8 @@ namespace Unity
     private Clutter.Clone clone;
     private Clutter.Actor darken_box;
     private bool hovered;
+    
+    public bool fade_on_close { get; set; }
 
     public unowned Clutter.Actor source { get; private set; }
 
@@ -89,6 +91,33 @@ namespace Unity
       opacity = unhovered_opacity;
       darken_box.opacity = darken;
       return false;
+    }
+
+    public void restore_window_position (int active_workspace)
+    {
+      set_anchor_point_from_gravity (Clutter.Gravity.NORTH_WEST);
+      Clutter.Actor window = source;
+
+      uint8 opacity = 0;
+      if (!fade_on_close || (window is Mutter.Window && (window as Mutter.Window).showing_on_its_workspace () &&
+          (window as Mutter.Window).get_workspace () == active_workspace))
+        opacity = 255;
+
+
+      set ("scale-gravity", Clutter.Gravity.CENTER);
+      Clutter.Animation anim = animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
+                                         "scale-x", 1f,
+                                         "scale-y", 1f,
+                                         "opacity", opacity,
+                                         "x", window.x,
+                                         "y", window.y);
+
+      window.opacity = 0;
+
+      anim.completed.connect (() => {
+        destroy ();
+        window.opacity = 255;
+      });
     }
   }
 
@@ -157,6 +186,7 @@ namespace Unity
             continue;
 
           ExposeClone clone = new ExposeClone (actor);
+          clone.fade_on_close = true;
           clone.set_position (actor.x, actor.y);
           clone.set_size (actor.width, actor.height);
           exposed_windows.append (clone);
@@ -184,7 +214,7 @@ namespace Unity
       if (coverflow)
         position_windows_coverflow (exposed_windows, exposed_windows.nth_data (coverflow_index));
       else
-        position_windows_on_grid (exposed_windows);
+        position_windows_on_grid (exposed_windows, top_buffer, left_buffer, right_buffer, bottom_buffer);
 
       expose_showing = true;
 
@@ -215,8 +245,8 @@ namespace Unity
           window.reactive = true;
         }
 
-      foreach (Clutter.Actor actor in exposed_windows)
-        restore_window_position (actor);
+      foreach (ExposeClone actor in exposed_windows)
+        actor.restore_window_position (Mutter.MetaScreen.get_active_workspace_index (owner.plugin.get_screen ()));
 
       if (this.last_selected_clone is ExposeClone &&
           this.last_selected_clone.source is Mutter.Window)
@@ -321,7 +351,7 @@ namespace Unity
       return 0;
     }
 
-    void position_windows_on_grid (List<Clutter.Actor> _windows)
+    public void position_windows_on_grid (List<Clutter.Actor> _windows, int top_buffer, int left_buffer, int right_buffer, int bottom_buffer)
     {
       List<Clutter.Actor> windows = _windows.copy ();
       windows.sort ((CompareFunc) direct_comparison);
@@ -392,34 +422,6 @@ namespace Unity
         }
     }
 
-    private void restore_window_position (Clutter.Actor actor)
-    {
-      if (!(actor is ExposeClone))
-        return;
-
-      actor.set_anchor_point_from_gravity (Clutter.Gravity.NORTH_WEST);
-      Clutter.Actor window = (actor as ExposeClone).source;
-
-      uint8 opacity = 0;
-      if ((window as Mutter.Window).showing_on_its_workspace () &&
-          (window as Mutter.Window).get_workspace () == Mutter.MetaScreen.get_active_workspace_index (owner.plugin.get_screen ()))
-        opacity = 255;
-
-      actor.set ("scale-gravity", Clutter.Gravity.CENTER);
-      Clutter.Animation anim = actor.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
-                                         "scale-x", 1f,
-                                         "scale-y", 1f,
-                                         "opacity", opacity,
-                                         "x", window.x,
-                                         "y", window.y);
-
-      window.opacity = 0;
-
-      anim.completed.connect (() => {
-        actor.destroy ();
-        window.opacity = 255;
-      });
-    }
 
     void handle_event_coverflow (Clutter.Event event)
     {

@@ -141,9 +141,6 @@ namespace Unity.Tests.Unit
 
   public class TestScrollerChild : ScrollerChild
     {
-      public override void force_rotation_jump (float degrees)
-      {
-      }
     }
 
   public class LauncherSuite
