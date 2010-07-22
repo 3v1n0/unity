@@ -1,4 +1,4 @@
-unity (0.2.20-0ubuntu1) UNRELEASED; urgency=low
+unity (0.2.20-0ubuntu1) maverick; urgency=low
 
   * New upstream release.
     - Right click and selecting application doesn't launch it (LP: #592817)
@@ -13,7 +13,7 @@ unity (0.2.20-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - bump libclutk-dev to latest
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 22 Jul 2010 21:00:57 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 22 Jul 2010 21:43:19 +0200
 
 unity (0.2.18-0ubuntu1) maverick; urgency=low
 
