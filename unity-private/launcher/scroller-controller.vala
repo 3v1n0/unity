@@ -75,38 +75,34 @@ namespace Unity.Launcher
         {
           Bamf.Application app = object as Bamf.Application;
           // need to hook up to its visible changed signals
+          string desktop_file = app.get_desktop_file ();
 
-          // this is wrong as it will never re-hide a window
-          app.user_visible_changed.connect ((a, changed) => {
-            if (changed)
-              {
-                handle_bamf_view_opened (a as Object);
-              }
-          });
-
-          if (app.user_visible ())
+          ScrollerChildController controller = null;
+          if (desktop_file != null && desktop_file != "")
             {
-              string desktop_file = app.get_desktop_file ();
+              controller = find_controller_by_desktop_file (desktop_file);
+            }
 
-              ScrollerChildController controller = null;
-              if (desktop_file != null && desktop_file != "")
-                {
-                  controller = find_controller_by_desktop_file (desktop_file);
-                }
+          if (controller is ApplicationController)
+            {
+              (controller as ApplicationController).attach_application (app);
+            }
+          else
+            {
+              LauncherChild child = new LauncherChild ();
+              controller = new ApplicationController (null, child);
+              (controller as ApplicationController).attach_application (app);
+              if (app.user_visible ())
+                model.add (child);
 
-              if (controller is ApplicationController)
-                {
-                  (controller as ApplicationController).attach_application (app);
-                }
-              else
-                {
-                  LauncherChild child = new LauncherChild ();
-                  controller = new ApplicationController (null, child);
-                  (controller as ApplicationController).attach_application (app);
-                  model.add (child);
-                  childcontrollers.add (controller);
-                  controller.closed.connect (on_scroller_controller_closed);
-                }
+              childcontrollers.add (controller);
+              controller.closed.connect (on_scroller_controller_closed);
+              controller.notify["hide"].connect (() => {
+                if (controller.hide && controller.child in model)
+                  model.remove (controller.child);
+                if (!controller.hide && (controller.child in model) == false)
+                  model.add (controller.child);
+              });
             }
         }
     }

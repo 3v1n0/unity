@@ -38,6 +38,8 @@ namespace Unity.Launcher
     public ScrollerChild child {get; construct;}
     public signal void request_removal (); //call when not needed anymore so we can unref
     public string name = "If you can read this, file a bug!!";
+    public bool hide {get; set;}
+
 
     public signal void closed ();
 

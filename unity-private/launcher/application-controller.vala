@@ -390,6 +390,9 @@ namespace Unity.Launcher
       app.active_changed.connect (on_app_active_changed);
       app.closed.connect (detach_application);
       app.urgent_changed.connect (on_app_urgant_changed);
+      app.user_visible_changed.connect ((value) => {
+        hide = !value;
+      });
       name = app.get_name ();
       if (name == null || name == "")
         warning (@"Bamf returned null for app.get_name (): $desktop_file");
