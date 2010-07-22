@@ -12,8 +12,12 @@ unity (0.2.20-0ubuntu1) maverick; urgency=low
       (LP: #599718)
   * debian/control:
     - bump libclutk-dev to latest
+  * debian/patches/01_add_dbusmenu_vapi_file.patch:
+    - add missing file
+  * debian/patches/02_disable_expandable_menu.patch:
+    - disable latest changes making mutter respawning with some intel card
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 22 Jul 2010 21:43:19 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 22 Jul 2010 22:37:56 +0200
 
 unity (0.2.18-0ubuntu1) maverick; urgency=low
 

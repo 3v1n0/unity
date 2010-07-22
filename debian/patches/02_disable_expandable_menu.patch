@@ -1,0 +1,445 @@
+=== modified file 'unity-private/launcher/quicklist-controller.vala'
+--- unity-private/launcher/quicklist-controller.vala	2010-07-22 16:39:21 +0000
++++ unity-private/launcher/quicklist-controller.vala	2010-07-22 20:19:45 +0000
+@@ -29,7 +29,7 @@
+ 
+   public abstract class QuicklistController : Object
+   {
+-    protected Ctk.MenuExpandable? menu;
++    protected Ctk.Menu? menu;
+     public ScrollerChildController attached_controller {get; construct;}
+     private QuicklistControllerState _state;
+     public QuicklistControllerState state {
+@@ -57,7 +57,7 @@
+ 
+           if (value == QuicklistControllerState.CLOSED)
+             {
+-              if (menu is Ctk.MenuExpandable)
++              if (menu is Ctk.Menu)
+                 {
+                   menu.destroy ();
+                   menu = null;
+@@ -91,7 +91,7 @@
+       return menu == ql_controller_singleton;
+     }
+ 
+-    public unowned Ctk.MenuExpandable? get_view ()
++    public unowned Ctk.Menu? get_view ()
+     {
+       return menu;
+     }
+@@ -122,7 +122,7 @@
+ 
+     private void new_menu ()
+     {
+-      menu = new QuicklistMenu () as Ctk.MenuExpandable;
++      menu = new QuicklistMenu () as Ctk.Menu;
+       if (Unity.global_shell is Unity.Shell)
+         {
+           menu.destroy.connect (() => {
+@@ -135,7 +135,10 @@
+ 
+       attach_to_stage ((attached_controller).child, (attached_controller).child);
+ 
+-      menu.set_anchor_position (0, 0, 0);
++      float x;
++      float y;
++      menu.get_position (out x, out y);
++      menu.set_position (x - (float) 22.0f, y - 1.0f);
+     }
+ 
+     private void attach_to_stage (Clutter.Actor child, Clutter.Actor parent)
+@@ -163,7 +166,6 @@
+           new_menu ();
+           warning ("state change called on menu when menu does not exist");
+         }
+-        
+       if (state == QuicklistControllerState.LABEL)
+         {
+           // just build a menu with a label for the name
+@@ -177,15 +179,6 @@
+ 
+           menuitem.reactive = false;
+           menu.append (menuitem, true);
+-          
+-          float x, y;
+-          float w, h;
+-          (attached_controller.child as Ctk.Actor).get_transformed_position(out x, out y);
+-          w = (attached_controller.child as Ctk.Actor).get_width();
+-          h = (attached_controller.child as Ctk.Actor).get_height();
+-          menu.compute_style_textures ();
+-          menu.set_expansion_size_factor (0.0f);
+-          menu.set_anchor_position (x + w-6, y + h/2.0f, 0);          
+         }
+       else if (state == QuicklistControllerState.MENU)
+         {
+@@ -245,21 +238,13 @@
+                   warning ("menu given not a root item");
+                 }
+ 
+-            float x;
+-            float y;
+-            float w;
+-            float h;
+-            (attached_controller.child as Ctk.Actor).get_transformed_position(out x, out y);
+-            w = (attached_controller.child as Ctk.Actor).get_width();
+-            h = (attached_controller.child as Ctk.Actor).get_height();
+-            menu.compute_style_textures ();
+-            menu.set_expansion_size_factor (0.0f);
+-            menu.set_anchor_position (x + w-6, y + h/2.0f, 0);
+-            var anim = menu.animate (Clutter.AnimationMode.LINEAR,
+-                        100,
+-                        "expansion-size-factor", 1.0f);
+-
+           });
++
++          float x;
++          float y;
++          menu.get_position (out x, out y);
++          if (x > 60-22)
++            menu.set_position (x - (float) 22.0f, y - 1.0f);
+         }
+     }
+ 
+
+=== modified file 'unity-private/launcher/quicklist-view.vala'
+--- unity-private/launcher/quicklist-view.vala	2010-07-22 10:59:37 +0000
++++ unity-private/launcher/quicklist-view.vala	2010-07-22 20:19:45 +0000
+@@ -40,7 +40,7 @@
+   const float ANCHOR_WIDTH_ABS       = 10.0f;
+ 
+   // we call this instead of Ctk.Menu so you can alter this to look right
+-  public class QuicklistMenu : Ctk.MenuExpandable
++  public class QuicklistMenu : Ctk.Menu
+   {
+     Ctk.LayerActor ql_background;
+     int            last_width;
+@@ -51,19 +51,28 @@
+     public override void
+     paint ()
+     {
+-      base.paint ();
++      // FIXME00: this is the brute force-approach pulling the blurred-bg
++      // texture constantly... harder on the system (especially since we atm
++      // still have to do glReadPixels()) but more robust in terms of intented
++      // look as we'll have a cleanly updating blurred bg in case there's a
++      // video being displayed in a video-player, or a GL-app renders some
++      // animation or mutter does some animation stuff with the windows
++      base.refresh_background_texture ();
++
+       // needed to fix LP: #525905
+-//       float x;
+-//       float y;
+-//       this.get_position (out x, out y);
+-//       if (this.cached_x == 0.0f)
+-//         this.cached_x = x;
+-//       if (this.cached_x != x)
+-//         this.set_position (this.cached_x, y);
+-      //this.set_anchor_position((int)x, (int)y, 25);
++      float x;
++      float y;
++      this.get_position (out x, out y);
++      if (this.cached_x == 0.0f)
++        this.cached_x = x;
++      if (this.cached_x != x)
++        this.set_position (this.cached_x, y);
++
++      if (this.ql_background is Ctk.LayerActor)
++        base.paint ();
+     }
+ 
+-   private override void
++    private override void
+     allocate (Clutter.ActorBox        box,
+               Clutter.AllocationFlags flags)
+     {
+@@ -72,50 +81,109 @@
+ 
+       new_width  = (int) (box.x2 - box.x1);
+       new_height = (int) (box.y2 - box.y1);
+-    
++
++      base.allocate (box, flags);
++
+       // exit early if the allocation-width/height didn't change, this is needed
+       // because clutter triggers calling allocate even if nothing changed
+       if ((this.last_width == new_width) && (this.last_height == new_height))
+         return;
+ 
++      // FIXME01: this is the conservative approach only updating the blurred-bg
++      // texture when the allocation changed... this way we'll miss any updates
++      // of say a video-player displaying a movie behind the tooltip/quicklist
++      // or a GL-app displaying an animation or any other client app rendering
++      // a dynamic UI with screen-changes (also applies to any mutter-based
++      // animations, e.g. its expose)
++      //base.refresh_background_texture ();
++
++      if (get_num_items () == 1)
++        this.cached_y = (float) new_height / 2.0f;
++
+       // store the new width/height
+       this.last_width  = new_width;
+       this.last_height = new_height;
+ 
+-      debug ("Num Items in Menu %d \n", get_num_items ());
+-      
+-      base.allocate (box, flags);
+-      
+-//       float x;
+-//       float y;
+-//       this.get_position(out x, out y);
+-//       this.compute_style_textures ();
+-//       this.set_expansion_size_factor (0.0f);
+-//       this.set_anchor_position ((int)60 + 60, (int)100+48, 25);
+-//       
+-//       if(get_num_items () > 1)
+-//         this.animate (Clutter.AnimationMode.LINEAR,
+-//           100,
+-//           "expansion-size-factor", 1.0f);
+-            
+-            
++      Timeout.add (0, _update_ql_background);
++    }
++
++    private bool
++    _update_ql_background ()
++    {
++      uint blurred_id = base.get_framebuffer_background ();
++
++      if (this.ql_background is Ctk.LayerActor)
++      {
++        this.ql_background.destroy ();
++      }
++
++      this.ql_background = new Ctk.LayerActor (this.last_width,
++                                               this.last_height);
++
++      Ctk.Layer main_layer = new Ctk.Layer (this.last_width,
++                                            this.last_height,
++                                            Ctk.LayerRepeatMode.NONE,
++                                            Ctk.LayerRepeatMode.NONE);
++      Ctk.Layer blurred_layer = new Ctk.Layer (this.last_width,
++                                               this.last_height,
++                                               Ctk.LayerRepeatMode.NONE,
++                                               Ctk.LayerRepeatMode.NONE);
++
++      Cairo.Surface full_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
++                                                        this.last_width,
++                                                        this.last_height);
++      Cairo.Surface fill_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
++                                                        this.last_width,
++                                                        this.last_height);
++      Cairo.Surface main_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
++                                                        this.last_width,
++                                                        this.last_height);
++
++      Cairo.Context full_cr = new Cairo.Context (full_surf);
++      Cairo.Context fill_cr = new Cairo.Context (fill_surf);
++      Cairo.Context main_cr = new Cairo.Context (main_surf);
++
++      Unity.QuicklistRendering.Menu.full_mask (full_cr,
++                                               this.last_width,
++                                               this.last_height,
++                                               this.cached_y);
++      Unity.QuicklistRendering.Menu.fill_mask (fill_cr,
++                                               this.last_width,
++                                               this.last_height,
++                                               this.cached_y);
++      Unity.QuicklistRendering.Menu.background (main_cr,
++                                                this.last_width,
++                                                this.last_height,
++                                                this.cached_y);
++
++      main_layer.set_mask_from_surface (full_surf);
++      main_layer.set_image_from_surface (main_surf);
++      main_layer.set_opacity (255);
++
++      blurred_layer.set_mask_from_surface (fill_surf);
++      blurred_layer.set_image_from_id (blurred_id);
++      blurred_layer.set_opacity (255);
++
++      // order is important here... don't mess around!
++      this.ql_background.add_layer (blurred_layer);
++      this.ql_background.add_layer (main_layer);
++
++      this.set_background (this.ql_background);
++      this.ql_background.set_opacity (255);
++
++      return false;
+     }
+ 
+     construct
+     {
+-      this.set_spacing (2);
+-      this.set_content_padding (0);
+-      this.set_content_padding_left_right (4);
+-      this.set_padding (16);
+-
+-//       Ctk.Padding padding = Ctk.Padding () {
+-//         left   = (int) (Ctk.em_to_pixel (BORDER + SHADOW_SIZE) + ANCHOR_WIDTH_ABS),
+-//         right  = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE) - 1,
+-//         top    = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE),
+-//         bottom = (int) Ctk.em_to_pixel (SHADOW_SIZE) + 1
+-//       };
+-//       this.set_padding (padding);
+-//       //this.spacing = (int) Ctk.em_to_pixel (GAP);
++      Ctk.Padding padding = Ctk.Padding () {
++        left   = (int) (Ctk.em_to_pixel (BORDER + SHADOW_SIZE) + ANCHOR_WIDTH_ABS),
++        right  = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE) - 1,
++        top    = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE),
++        bottom = (int) Ctk.em_to_pixel (SHADOW_SIZE) + 1
++      };
++      this.set_padding (padding);
++      //this.spacing = (int) Ctk.em_to_pixel (GAP);
+ 
+       last_width  = -1;
+       last_height = -1;
+
+=== modified file 'unity-private/places/places-place-bar.vala'
+--- unity-private/places/places-place-bar.vala	2010-07-22 17:40:08 +0000
++++ unity-private/places/places-place-bar.vala	2010-07-22 20:30:06 +0000
+@@ -53,8 +53,7 @@
+       glow.set_color ({ 255, 255, 255, 255 });
+       glow.set_factor (1.0f);
+       glow.set_margin (5);
+-      /* FIXME: Add this back when Jay fixes the glow */
+-      /*add_effect (glow); */
++      add_effect (glow);
+ 
+       foreach (Place place in model)
+         {
+
+=== modified file 'unity-private/places/places-place-search-bar.vala'
+--- unity-private/places/places-place-search-bar.vala	2010-07-22 17:30:09 +0000
++++ unity-private/places/places-place-search-bar.vala	2010-07-22 20:30:26 +0000
+@@ -193,8 +193,7 @@
+       glow.set_color ({ 255, 255, 255, 255 });
+       glow.set_factor (1.0f);
+       glow.set_margin (5);
+-      /* FIXME: Jay will fix this */
+-      /* add_effect (glow); */
++      add_effect (glow);
+     }
+ 
+     private override void allocate (Clutter.ActorBox        box,
+
+=== modified file 'vapi/clutk-0.3.vapi'
+--- vapi/clutk-0.3.vapi	2010-07-22 10:59:37 +0000
++++ vapi/clutk-0.3.vapi	2010-07-22 20:19:45 +0000
+@@ -311,12 +311,9 @@
+ 		public unowned Clutter.Actor get_background ();
+ 		public bool get_close_on_leave ();
+ 		public uint get_framebuffer_background ();
++    public unowned GLib.List get_items ();
+ 		public int get_num_items ();
+ 		public int get_spacing ();
+-		public float get_special_item_height ();
+-		public int get_special_item_index ();
+-		public float get_special_item_y ();
+-		public bool is_expandable ();
+ 		public void prepend (Clutter.Actor item, bool is_special);
+ 		public void refresh_background_texture ();
+ 		public void remove_all ();
+@@ -324,7 +321,6 @@
+ 		public void set_close_on_leave (bool value);
+ 		public void set_color (Clutter.Color color);
+ 		public void set_detect_clicks (bool value);
+-		public void set_is_expandable (bool b);
+ 		public void set_spacing (int spacing);
+ 		public void set_swallow_clicks (bool value);
+ 		[CCode (has_construct_function = false)]
+@@ -336,38 +332,6 @@
+ 		public virtual signal void closed ();
+ 	}
+ 	[CCode (cheader_filename = "clutk/clutk.h")]
+-	public class MenuExpandable : Ctk.Menu, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
+-		[CCode (has_construct_function = false)]
+-		public MenuExpandable ();
+-		public void compute_style_textures ();
+-		public uint get_anchor_height ();
+-		public uint get_anchor_size_offset ();
+-		public uint get_anchor_width ();
+-		public uint get_bg_fill_image_height ();
+-		public uint get_bg_fill_image_id ();
+-		public uint get_bg_fill_image_width ();
+-		public int get_content_padding ();
+-		public int get_content_padding_left_right ();
+-		public uint get_corner_radius ();
+-		public float get_expansion_size_factor ();
+-		public uint get_padding ();
+-		public uint get_transition_steps ();
+-		public void set_anchor_position (float x, float y, int tooltip_y_in_menu);
+-		public void set_bg_fill_image_height (uint height);
+-		public void set_bg_fill_image_id (uint image_id);
+-		public void set_bg_fill_image_width (uint width);
+-		public void set_content_padding (int padding);
+-		public void set_content_padding_left_right (int padding);
+-		public void set_expansion_size_factor (float factor);
+-		public void set_full_textures (Cairo.Surface surf, Cairo.Surface mask_surf);
+-		public void set_padding (int padding);
+-		public void set_transition_textures (int index, Cairo.Surface surf, Cairo.Surface mask_surf);
+-		public uint bg_fill_image_height { get; set; }
+-		public uint bg_fill_image_id { get; set; }
+-		public uint bg_fill_image_width { get; set; }
+-		public float expansion_size_factor { get; set; }
+-	}
+-	[CCode (cheader_filename = "clutk/clutk.h")]
+ 	public class MenuItem : Ctk.Bin, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
+ 		[CCode (has_construct_function = false)]
+ 		public MenuItem ();
+@@ -383,6 +347,19 @@
+ 		[CCode (has_construct_function = false)]
+ 		public MenuSeperator ();
+ 	}
++	[Compact]
++	[CCode (cheader_filename = "clutk/clutk.h")]
++	public class ProjectedTextureVertex {
++		public Cogl.Color color;
++		public float q;
++		public float r;
++		public float s;
++		public float t;
++		public float w;
++		public float x;
++		public float y;
++		public float z;
++	}
+ 	[CCode (cheader_filename = "clutk/clutk.h")]
+ 	public class RadioMenuItem : Ctk.CheckMenuItem, Clutter.Scriptable, Ctk.Focusable, Clutter.Container {
+ 		[CCode (has_construct_function = false)]
+@@ -395,6 +372,10 @@
+ 		public virtual signal void group_changed ();
+ 	}
+ 	[Compact]
++	[CCode (cheader_filename = "clutk/clutk.h")]
++	public class RadioMenuItemClass {
++	}
++	[Compact]
+ 	[CCode (type_id = "CTK_TYPE_RENDER_TARGET", cheader_filename = "clutk/clutk.h")]
+ 	public class RenderTarget {
+ 		[CCode (has_construct_function = false)]
+@@ -560,16 +541,6 @@
+ 	public const int EFFECT_MIN_MARGIN;
+ 	[CCode (cheader_filename = "clutk/clutk.h")]
+ 	public const int EFFECT_MIN_STRENGTH;
+-	[CCode (cheader_filename = "clutk/clutk.h")]
+-	public const int MENU_EXPANDABLE_ANCHOR_SIZE_OFFSET;
+-	[CCode (cheader_filename = "clutk/clutk.h")]
+-	public const int MENU_EXPANDABLE_CONTENT_PADDING;
+-	[CCode (cheader_filename = "clutk/clutk.h")]
+-	public const int MENU_EXPANDABLE_CONTENT_PADDING_LEFT_RIGHT;
+-	[CCode (cheader_filename = "clutk/clutk.h")]
+-	public const int MENU_EXPANDABLE_PADDING;
+-	[CCode (cheader_filename = "clutk/clutk.h")]
+-	public const int MENU_EXPANDABLE_TRANSITION_STEPS;
+ 	[CCode (cname = "CheckGLError", cheader_filename = "clutk/clutk.h")]
+ 	public static int CheckGLError (string glCall, string file, int line);
+ 	[CCode (cheader_filename = "clutk/clutk.h")]
+@@ -593,5 +564,7 @@
+ 	[CCode (cheader_filename = "clutk/clutk.h")]
+ 	public static double pixel_to_em (int pixel_value);
+ 	[CCode (cheader_filename = "clutk/clutk.h")]
++	public static void render_projected_polygon (Ctk.ProjectedTextureVertex V, uint tex_id, int window_w, int window_h);
++	[CCode (cheader_filename = "clutk/clutk.h")]
+ 	public static void surface_blur (Cairo.Surface surface, uint radius);
+ }
