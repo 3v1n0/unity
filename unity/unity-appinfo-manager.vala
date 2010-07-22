@@ -62,8 +62,8 @@ namespace Unity {
     }
     
     /**
-     * Look up an AppInfo given its desktop id. The desktop id is the
-     * base filename of the .desktop file for the application including
+     * Look up an AppInfo given its desktop id or absolute path. The desktop id
+     * is the base filename of the .desktop file for the application including
      * the .desktop extension.
      *
      * If the AppInfo is not already cached this method will do synchronous
@@ -71,11 +71,17 @@ namespace Unity {
      */
     public AppInfo? lookup (string id)
     {
+      /* Try the cache */
       var appinfo = appinfo_by_id.get (id);
       if (appinfo != null)
         return appinfo;
-      
-      appinfo = new DesktopAppInfo (id);
+    
+      /* Look up by path or by desktop id */
+      if (id.has_prefix("/"))
+        appinfo = new DesktopAppInfo.from_filename (id);
+      else
+        appinfo = new DesktopAppInfo (id);
+
       if (appinfo != null)
         {
           appinfo_by_id.set (id, appinfo);
@@ -85,9 +91,9 @@ namespace Unity {
     }
     
     /**
-     * Look up an AppInfo given its desktop id. The desktop id is the
-     * base filename of the .desktop file for the application including
-     * the .desktop extension.
+     * Look up an AppInfo given its desktop id or absolute path.
+     * The desktop id is the base filename of the .desktop file for the
+     * application including the .desktop extension.
      *
      * If the AppInfo is not already cached this method will do asynchronous
      * IO to look it up.
@@ -97,16 +103,24 @@ namespace Unity {
       /* Check the cache */
       var appinfo = appinfo_by_id.get (id);
       if (appinfo != null)
-        {
-          return appinfo;
-        }
+        return appinfo;
       
       /* Load it async */            
       size_t data_size;
       void* data;
+      FileInputStream input;
       
-      string path = Path.build_filename ("applications", id, null);
-      FileInputStream input = yield IO.open_from_data_dirs (path);
+      /* Open from path or by desktop id */
+      if (id.has_prefix ("/"))
+        {
+          var f = File.new_for_path (id);
+          input = yield f.read_async (Priority.DEFAULT, null);
+        }
+      else
+        {
+          string path = Path.build_filename ("applications", id, null);
+          input = yield IO.open_from_data_dirs (path);
+        }
       
       if (input == null)
         return null;
