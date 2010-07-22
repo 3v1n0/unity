@@ -156,7 +156,35 @@ namespace Unity.Launcher
       });
     }
 
-    public int get_model_index_at_y_pos (float y)
+    public int get_model_index_at_y_pos_no_anim (float y, bool return_minus_if_fail=false)
+    {
+      SList<float?> positions = new SList<float?> ();
+      foreach (ScrollerChild child in model)
+        {
+          positions.append (child.position);
+          GLib.Value value = Value (typeof (float));
+          Clutter.Animation anim = child.get_animation ();
+          if (anim is Clutter.Animation)
+            {
+              Clutter.Interval interval = anim.get_interval ("position");
+              interval.get_final_value (value);
+              child.position = value.get_float ();
+            }
+        }
+
+        int value = get_model_index_at_y_pos (y, return_minus_if_fail);
+
+        unowned SList<float?> list = positions;
+        foreach (ScrollerChild child in model)
+          {
+            child.position = (float)list.data;
+            list = list.next;
+          }
+
+        return value;
+    }
+
+    public int get_model_index_at_y_pos (float y, bool return_minus_if_fail=false)
     {
 
       // trying out a different method
@@ -174,6 +202,8 @@ namespace Unity.Launcher
 
               if (picked_actor is ScrollerChild == false)
                 {
+                  if (return_minus_if_fail)
+                    return -1;
                   // couldn't pick a single actor, return 0
                   return (y < padding.top + model[0].get_height () + spacing) ? 0 : model.size -1 ;
                 }

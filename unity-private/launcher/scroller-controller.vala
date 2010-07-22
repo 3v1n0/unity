@@ -267,8 +267,17 @@ namespace Unity.Launcher
       }
     }
 
+    float last_drag_x = 0.0f;
+    float last_drag_y = 0.0f;
     private void on_unity_drag_motion (Drag.Model drag_model, float x, float y)
     {
+      if (x == last_drag_x && y == last_drag_y)
+        return;
+
+      last_drag_x = x;
+      last_drag_y = y;
+
+
       var drag_controller = Drag.Controller.get_default ();
       // check to see if the data matches any of our children
       if (!(drag_controller.get_drag_model () is ScrollerChildController))
@@ -286,13 +295,40 @@ namespace Unity.Launcher
         {
           // if the actor is not in the model, add it. because its now in there!
           // find the index at this position
-          int model_index = view.get_model_index_at_y_pos (y);
-          if (retcont in model)
-            model.move (retcont, int.max (model_index, 0));
-          else
-            model.insert (retcont, int.max (model_index, 0));
+          int model_index = view.get_model_index_at_y_pos_no_anim (y, true);
+          if (model_index < 0) return;
 
-          view.do_queue_redraw ();
+          //we have to check to see if we would still be over the index
+          //if it was done animating
+/*
+          GLib.Value value = Value (typeof (float));
+          var child = model[model_index];
+          Clutter.Animation anim = child.get_animation ();
+          if (anim is Clutter.Animation)
+            {
+              debug ("is animating");
+              Clutter.Interval interval = anim.get_interval ("position");
+              interval.get_final_value (value);
+            }
+          else
+            {
+              debug ("is not animating");
+              value.set_float (y);
+            }
+
+          debug ("%f", Math.fabsf (value.get_float () - y));
+
+          if (Math.fabsf (value.get_float () - y) < 48)
+            {
+              debug ("moving things");
+*/
+              if (retcont in model)
+                model.move (retcont, int.max (model_index, 0));
+              else
+                model.insert (retcont, int.max (model_index, 0));
+
+              view.do_queue_redraw ();
+            //}
         }
     }
 
