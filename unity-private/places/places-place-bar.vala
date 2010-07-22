@@ -80,6 +80,8 @@ namespace Unity.Places
           active_view.entry.active = false;
           active_view = null;
         }
+
+      bg.entry_position = 0;
     }
 
     public void active_entry_name (string name)
