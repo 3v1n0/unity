@@ -128,10 +128,6 @@ namespace Unity.Launcher
 
       attach_to_stage ((attached_controller).child, (attached_controller).child);
 
-//       float x;
-//       float y;
-//       menu.get_position (out x, out y);
-//       menu.set_position (x - (float) 22.0f, y - 1.0f);
       menu.set_anchor_position (0, 0, 0);
     }
 
@@ -182,9 +178,7 @@ namespace Unity.Launcher
           h = (attached_controller.child as Ctk.Actor).get_height();
           menu.compute_style_textures ();
           menu.set_expansion_size_factor (0.0f);
-          menu.set_anchor_position (x + w, y + h/2.0f, 0);
-          //debug("Opening Label at %f %f\n", x + 60, y+48);
-          
+          menu.set_anchor_position (x + 60, y + h/2.0f, 0);          
         }
       else if (state == QuicklistControllerState.MENU)
         {
@@ -253,18 +247,12 @@ namespace Unity.Launcher
             h = (attached_controller.child as Ctk.Actor).get_height();
             menu.compute_style_textures ();
             menu.set_expansion_size_factor (0.0f);
-            menu.set_anchor_position (x + w, y + h/2.0f, 0);
+            menu.set_anchor_position (x + 60, y + h/2.0f, 0);
             var anim = menu.animate (Clutter.AnimationMode.LINEAR,
                         100,
                         "expansion-size-factor", 1.0f);
 
           });
-
-//           float x;
-//           float y;
-//           menu.get_position (out x, out y);
-//           if (x > 60-22)
-//             menu.set_position (x - (float) 22.0f, y - 1.0f);
         }
     }
 
