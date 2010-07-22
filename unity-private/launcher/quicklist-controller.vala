@@ -29,7 +29,7 @@ namespace Unity.Launcher
 
   public abstract class QuicklistController : Object
   {
-    protected Ctk.Menu? menu;
+    protected Ctk.MenuExpandable? menu;
     public ScrollerChildController attached_controller {get; construct;}
     private QuicklistControllerState _state;
     public QuicklistControllerState state {
@@ -57,7 +57,7 @@ namespace Unity.Launcher
 
           if (value == QuicklistControllerState.CLOSED)
             {
-              if (menu is Ctk.Menu)
+              if (menu is Ctk.MenuExpandable)
                 {
                   menu.destroy ();
                   menu = null;
@@ -91,7 +91,7 @@ namespace Unity.Launcher
       return menu == ql_controller_singleton;
     }
 
-    public unowned Ctk.Menu? get_view ()
+    public unowned Ctk.MenuExpandable? get_view ()
     {
       return menu;
     }
@@ -122,7 +122,7 @@ namespace Unity.Launcher
 
     private void new_menu ()
     {
-      menu = new QuicklistMenu () as Ctk.Menu;
+      menu = new QuicklistMenu () as Ctk.MenuExpandable;
       if (Unity.global_shell is Unity.Shell)
         {
           menu.destroy.connect (() => {
@@ -135,10 +135,7 @@ namespace Unity.Launcher
 
       attach_to_stage ((attached_controller).child, (attached_controller).child);
 
-      float x;
-      float y;
-      menu.get_position (out x, out y);
-      menu.set_position (x - (float) 22.0f, y - 1.0f);
+      menu.set_anchor_position (0, 0, 0);
     }
 
     private void attach_to_stage (Clutter.Actor child, Clutter.Actor parent)
@@ -166,6 +163,7 @@ namespace Unity.Launcher
           new_menu ();
           warning ("state change called on menu when menu does not exist");
         }
+        
       if (state == QuicklistControllerState.LABEL)
         {
           // just build a menu with a label for the name
@@ -179,6 +177,15 @@ namespace Unity.Launcher
 
           menuitem.reactive = false;
           menu.append (menuitem, true);
+          
+          float x, y;
+          float w, h;
+          (attached_controller.child as Ctk.Actor).get_transformed_position(out x, out y);
+          w = (attached_controller.child as Ctk.Actor).get_width();
+          h = (attached_controller.child as Ctk.Actor).get_height();
+          menu.compute_style_textures ();
+          menu.set_expansion_size_factor (0.0f);
+          menu.set_anchor_position (x + w-6, y + h/2.0f, 0);          
         }
       else if (state == QuicklistControllerState.MENU)
         {
@@ -238,13 +245,21 @@ namespace Unity.Launcher
                   warning ("menu given not a root item");
                 }
 
-          });
+            float x;
+            float y;
+            float w;
+            float h;
+            (attached_controller.child as Ctk.Actor).get_transformed_position(out x, out y);
+            w = (attached_controller.child as Ctk.Actor).get_width();
+            h = (attached_controller.child as Ctk.Actor).get_height();
+            menu.compute_style_textures ();
+            menu.set_expansion_size_factor (0.0f);
+            menu.set_anchor_position (x + w-6, y + h/2.0f, 0);
+            var anim = menu.animate (Clutter.AnimationMode.LINEAR,
+                        100,
+                        "expansion-size-factor", 1.0f);
 
-          float x;
-          float y;
-          menu.get_position (out x, out y);
-          if (x > 60-22)
-            menu.set_position (x - (float) 22.0f, y - 1.0f);
+          });
         }
     }
 
