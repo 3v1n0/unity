@@ -23,11 +23,12 @@ namespace Unity.Panel
   public class HomeButton : Ctk.Button
   {
     public Shell shell { get; construct; }
-    public Ctk.Image theme_image;
-    public Ctk.EffectGlow glow;
-    public Clutter.Texture bg_normal;
-    public Clutter.Texture bg_prelight;
-    public Clutter.Texture bg_active;
+    private Ctk.Image theme_image;
+    private Ctk.EffectGlow glow;
+    private Clutter.Texture bfb_bg_normal;
+    private Clutter.Texture bfb_bg_prelight;
+    private Clutter.Texture bfb_bg_active;
+    private bool search_shown;
 
     public HomeButton (Shell shell)
     {
@@ -48,7 +49,6 @@ namespace Unity.Panel
 
       lwidth  = (float) shell.get_launcher_width_foobar ();
       pheight = (float) shell.get_panel_height_foobar ();
-      print ("size: %3.2f, %3.2f\n", lwidth, pheight);
       theme_image.get_preferred_size (out cwidth, out cheight,
                                            out cwidth, out cheight);
 
@@ -97,19 +97,54 @@ namespace Unity.Panel
 
       notify["state"].connect (on_state_changed);
 
+      width += 3.0f;
+
       glow = new Ctk.EffectGlow ();
       glow.set_color ({ 255, 255, 255, 255 });
       glow.set_factor (0.0f);
       glow.set_margin (5);
-      theme_image.add_effect (glow);
 
-      bg_normal   = new Clutter.Texture.from_file ("./bg_normal.png");
-      bg_prelight = new Clutter.Texture.from_file ("./bg_prelight.png");
-      bg_active   = new Clutter.Texture.from_file ("./bg_active.png");
+      // FIXME: the glow is currently not correctly updated when the state of
+      // the button changes thus it's disabled for the moment, in order to get
+      // the other rendering-features of the patch into trunk as they already
+      // solve giving the user a clue that the BFB/COF is a clickable button
+      //theme_image.add_effect (glow);
 
-      set_background_for_state (Ctk.ActorState.STATE_NORMAL, bg_normal);
-      set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bg_prelight);
-      set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bg_active);
+      try
+        {
+          bfb_bg_normal = new Clutter.Texture.from_file (
+                                   "/usr/share/unity/themes/bfb_bg_normal.png");
+        }
+      catch (Error e)
+        {
+          warning ("Could not load normal-state bg-texture: %s", e.message);
+        }
+
+      try
+        {
+          bfb_bg_prelight = new Clutter.Texture.from_file (
+                                 "/usr/share/unity/themes/bfb_bg_prelight.png");
+        }
+      catch (Error e)
+        {
+          warning ("Could not load prelight-state bg-texture: %s", e.message);
+        }
+
+      try
+        {
+          bfb_bg_active = new Clutter.Texture.from_file (
+                                   "/usr/share/unity/themes/bfb_bg_active.png");
+        }
+      catch (Error e)
+        {
+          warning ("Could not load active-state bg-texture: %s", e.message);
+        }
+
+      set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
+      set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
+      set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bfb_bg_active);
+
+      search_shown = false;
     }
 
     private void on_state_changed ()
@@ -117,21 +152,18 @@ namespace Unity.Panel
       switch (this.get_state ())
       {
         case Ctk.ActorState.STATE_NORMAL:
-          print ("state normal, (factor: %3.2f)\n", glow.get_factor ());
           glow.set_factor (0.0f);
           glow.set_invalidate_effect_cache (true);
           do_queue_redraw ();
         break;
 
         case Ctk.ActorState.STATE_PRELIGHT:
-          print ("state prelight, (factor: %3.2f)\n", glow.get_factor ());
           glow.set_factor (0.8f);
           glow.set_invalidate_effect_cache (true);
           do_queue_redraw ();
         break;
 
         case Ctk.ActorState.STATE_ACTIVE:
-          print ("state active, (factor: %3.2f)\n", glow.get_factor ());
           glow.set_factor (1.0f);
           glow.set_invalidate_effect_cache (true);
           do_queue_redraw ();
@@ -154,6 +186,21 @@ namespace Unity.Panel
       MenuManager manager = MenuManager.get_default ();
       manager.popdown_current_menu ();
 
+      if (search_shown)
+        {
+          set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
+          set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
+          set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bfb_bg_active);
+          search_shown = false;
+        }
+      else
+        {
+          set_background_for_state (Ctk.ActorState.STATE_NORMAL, null);
+          set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, null);
+          set_background_for_state (Ctk.ActorState.STATE_ACTIVE, null);
+          search_shown = true;
+        }
+      do_queue_redraw ();
     }
 
     private bool on_motion_event (Clutter.Event event)
@@ -164,9 +211,4 @@ namespace Unity.Panel
     }
   }
 }
-
-/*
-you probably need to add a new function to unity.shell to do that, and then
-implement in Unity.Plugin and testing/test-window.vala (for the two targets)
-*/
 
