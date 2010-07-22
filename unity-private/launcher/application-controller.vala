@@ -283,9 +283,9 @@ namespace Unity.Launcher
         {
           Dbusmenu.Menuitem pinning_item = new Dbusmenu.Menuitem ();
           if (is_sticky ())
-            pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Remove from launcher");
+            pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Remove from launcher"));
           else
-            pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Add to launcher");
+            pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Add to launcher"));
 
           pinning_item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
           pinning_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
