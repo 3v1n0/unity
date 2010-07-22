@@ -80,6 +80,11 @@ namespace Unity.Launcher
       notify["opacity"].connect (on_opacity_changed);
     }
 
+    public override Clutter.Actor get_content ()
+    {
+      return processed_icon;
+    }
+
     private void on_opacity_changed ()
     {
       //debug (@"opacity changes on launcher child, set to $(opacity)");

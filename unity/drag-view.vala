@@ -49,8 +49,7 @@ namespace Unity.Drag
       this.offset_x = offset_x;
       this.offset_y = offset_y;
 
-      this.hooked_actor = new Clutter.Texture.from_actor (actor);
-      this.hooked_actor.unparent ();
+      this.hooked_actor = new Clutter.Clone (actor);
       this.stage.add_actor (this.hooked_actor);
 
       actor.get_transformed_position (out x, out y);

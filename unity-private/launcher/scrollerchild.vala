@@ -45,6 +45,7 @@ namespace Unity.Launcher
     public bool needs_attention {get; set;}
     public bool activating {get; set;}
     public float rotation {get; set;}
+    public abstract Clutter.Actor get_content ();
     public ScrollerChildController controller; // this sucks. shouldn't be here, can't help it.
 
     public abstract void force_rotation_jump (float degrees);

@@ -180,7 +180,7 @@ namespace Unity.Launcher
     // this is for our drag handling
     public Clutter.Actor get_icon ()
     {
-      return child;
+      return child.get_content ();
     }
 
     public string get_drag_data ()
