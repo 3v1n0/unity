@@ -242,7 +242,7 @@ namespace Unity
       this.launcher.get_view ().opacity = 0;
 
       this.spaces_manager = new SpacesManager (this);
-      this.spaces_manager.set_padding (50, 50, 125, 50);
+      this.spaces_manager.set_padding (50, 50, get_launcher_width_foobar () + 50, 50);
 
       this.launcher.model.add (spaces_manager.button);
       this.launcher.model.order_changed.connect (() => {
