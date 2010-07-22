@@ -68,7 +68,7 @@ GParamSpec* unity_tests_unit_param_spec_place_suite (const gchar* name, const gc
 void unity_tests_unit_value_set_place_suite (GValue* value, gpointer v_object);
 void unity_tests_unit_value_take_place_suite (GValue* value, gpointer v_object);
 gpointer unity_tests_unit_value_get_place_suite (const GValue* value);
-GType unity_tests_unit_place_suite_get_type (void);
+GType unity_tests_unit_place_suite_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTS_UNIT_PLACE_SUITE_DUMMY_PROPERTY
 };
@@ -175,11 +175,11 @@ void unity_tests_unit_place_suite_test_one_entry (void) {
 	g_assert (unity_place_controller_num_entries (ctl) == 0);
 	g_assert ((_tmp5_ = unity_place_controller_get_entry (ctl, entry_path)) == NULL);
 	_g_object_unref0 (_tmp5_);
-	_g_free0 (entry_path);
-	_g_object_unref0 (entry);
-	_g_object_unref0 (ctl);
-	entry_paths = (_vala_array_free (entry_paths, entry_paths_length1, (GDestroyNotify) g_free), NULL);
 	entries = (_vala_array_free (entries, entries_length1, (GDestroyNotify) g_object_unref), NULL);
+	entry_paths = (_vala_array_free (entry_paths, entry_paths_length1, (GDestroyNotify) g_free), NULL);
+	_g_object_unref0 (ctl);
+	_g_object_unref0 (entry);
+	_g_free0 (entry_path);
 }
 
 
@@ -251,13 +251,13 @@ void unity_tests_unit_place_suite_test_two_entries (void) {
 	g_assert (entry_paths_length1 == 0);
 	entries = (_tmp13_ = unity_place_controller_get_entries (ctl, &_tmp12_), entries = (_vala_array_free (entries, entries_length1, (GDestroyNotify) g_object_unref), NULL), entries_length1 = _tmp12_, _entries_size_ = entries_length1, _tmp13_);
 	g_assert (entries_length1 == 0);
-	_g_free0 (entry_path1);
-	_g_free0 (entry_path2);
-	_g_object_unref0 (entry1);
-	_g_object_unref0 (entry2);
-	_g_object_unref0 (ctl);
-	entry_paths = (_vala_array_free (entry_paths, entry_paths_length1, (GDestroyNotify) g_free), NULL);
 	entries = (_vala_array_free (entries, entries_length1, (GDestroyNotify) g_object_unref), NULL);
+	entry_paths = (_vala_array_free (entry_paths, entry_paths_length1, (GDestroyNotify) g_free), NULL);
+	_g_object_unref0 (ctl);
+	_g_object_unref0 (entry2);
+	_g_object_unref0 (entry1);
+	_g_free0 (entry_path2);
+	_g_free0 (entry_path1);
 }
 
 
@@ -287,11 +287,11 @@ void unity_tests_unit_place_suite_test_local_models (void) {
 	unity_place_renderer_info_set_results_model (renderer, results_model);
 	g_assert (unity_place_renderer_info_get_results_model (renderer) == results_model);
 	g_assert (dee_model_get_n_rows (results_model) == 0);
-	_g_object_unref0 (entry);
-	_g_object_unref0 (sections_model);
-	_g_object_unref0 (renderer);
-	_g_object_unref0 (groups_model);
 	_g_object_unref0 (results_model);
+	_g_object_unref0 (groups_model);
+	_g_object_unref0 (renderer);
+	_g_object_unref0 (sections_model);
+	_g_object_unref0 (entry);
 }
 
 

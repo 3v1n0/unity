@@ -13,7 +13,9 @@ namespace Unity {
 	[CCode (cheader_filename = "unity-mutter.h")]
 	public class ExposeClone : Clutter.Group {
 		public ExposeClone (Clutter.Actor source);
+		public void restore_window_position (int active_workspace);
 		public uint8 darken { get; set; }
+		public bool fade_on_close { get; set; }
 		public uint8 hovered_opacity { get; set; }
 		public Clutter.Actor source { get; set; }
 		public uint8 unhovered_opacity { get; set; }
@@ -22,6 +24,7 @@ namespace Unity {
 	public class ExposeManager : GLib.Object {
 		public ExposeManager (Unity.Plugin plugin, Unity.Launcher.Launcher launcher);
 		public void end_expose ();
+		public void position_windows_on_grid (GLib.List<Clutter.Actor> _windows, int top_buffer, int left_buffer, int right_buffer, int bottom_buffer);
 		public void start_expose (GLib.SList<Clutter.Actor> windows);
 		public int bottom_buffer { get; set; }
 		public bool coverflow { get; set; }
@@ -43,7 +46,6 @@ namespace Unity {
 	public class Plugin : GLib.Object, Unity.Shell {
 		public Plugin ();
 		public void destroy (Mutter.Window window);
-		public void dexpose_windows ();
 		public void expose_windows (GLib.SList<Clutter.Actor> windows, int left_buffer = 250);
 		public int get_launcher_width ();
 		public int get_panel_height ();
@@ -53,6 +55,7 @@ namespace Unity {
 		public void minimize (Mutter.Window window);
 		public void switch_workspace (GLib.List<Mutter.Window> windows, int from, int to, int direction);
 		public void unmaximize (Mutter.Window window, int x, int y, int width, int height);
+		public Unity.ExposeManager expose_manager { get; set; }
 		public bool expose_showing { get; }
 		public Mutter.Plugin? plugin { get; set; }
 		public signal void restore_input_region (bool fullscreen);
@@ -65,11 +68,17 @@ namespace Unity {
 		public signal void workspace_switch_event (Unity.Plugin plugin, GLib.List<Mutter.Window> windows, int from, int to, int direction);
 	}
 	[CCode (cheader_filename = "unity-mutter.h")]
+	public class SpacesButtonController : Unity.Launcher.ScrollerChildController {
+		public SpacesButtonController (Unity.SpacesManager _parent, Unity.Launcher.ScrollerChild _child);
+		public override void activate ();
+	}
+	[CCode (cheader_filename = "unity-mutter.h")]
 	public class SpacesManager : GLib.Object {
 		public SpacesManager (Unity.Plugin plugin);
 		public void set_padding (uint top, uint right, uint left, uint bottom);
 		public void show_spaces_picker ();
 		public uint bottom_padding { get; set; }
+		public Unity.Launcher.ScrollerChild button { get; }
 		public uint left_padding { get; set; }
 		public uint right_padding { get; set; }
 		public bool showing { get; set; }

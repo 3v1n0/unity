@@ -95,7 +95,7 @@ GParamSpec* unity_tests_unit_param_spec_app_info_manager_suite (const gchar* nam
 void unity_tests_unit_value_set_app_info_manager_suite (GValue* value, gpointer v_object);
 void unity_tests_unit_value_take_app_info_manager_suite (GValue* value, gpointer v_object);
 gpointer unity_tests_unit_value_get_app_info_manager_suite (const GValue* value);
-GType unity_tests_unit_app_info_manager_suite_get_type (void);
+GType unity_tests_unit_app_info_manager_suite_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTS_UNIT_APP_INFO_MANAGER_SUITE_DUMMY_PROPERTY
 };
@@ -316,9 +316,9 @@ void unity_tests_unit_app_info_manager_suite_test_sync_lookup_ok (void) {
 	g_assert (G_IS_APP_INFO (info));
 	g_assert (_vala_strcmp0 ("About Ubuntu", g_app_info_get_name (info)) == 0);
 	g_setenv ("XDG_DATA_HOME", old_datadir, TRUE);
-	_g_free0 (old_datadir);
-	_g_object_unref0 (manager);
 	_g_object_unref0 (info);
+	_g_object_unref0 (manager);
+	_g_free0 (old_datadir);
 }
 
 
@@ -402,16 +402,16 @@ static gboolean unity_tests_unit_app_info_manager_suite_do_test_async_lookup_ok_
 		}
 		__finally6:
 		if (data->_inner_error_ != NULL) {
-			_g_free0 (data->old_datadir);
 			_g_object_unref0 (data->manager);
+			_g_free0 (data->old_datadir);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 			g_clear_error (&data->_inner_error_);
 			return FALSE;
 		}
 		g_setenv ("XDG_DATA_HOME", data->old_datadir, TRUE);
 		g_main_loop_quit (data->mainloop);
-		_g_free0 (data->old_datadir);
 		_g_object_unref0 (data->manager);
+		_g_free0 (data->old_datadir);
 	}
 	{
 		if (data->_state_ == 0) {

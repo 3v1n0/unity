@@ -1,8 +1,8 @@
-unity (0.2.18-0ubuntu1~lucid1) lucid; urgency=low
+unity (0.2.20-0ubuntu1) UNRELEASED; urgency=low
 
-  * Backport to lucid UNE ppa
+  * New upstream release.
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 16 Jul 2010 14:53:42 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 22 Jul 2010 21:00:57 +0200
 
 unity (0.2.18-0ubuntu1) maverick; urgency=low
 

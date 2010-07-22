@@ -68,8 +68,8 @@ struct _UnityApplicationPrivate {
 
 static gpointer unity_application_parent_class = NULL;
 
-GType unity_application_commands_get_type (void);
-GType unity_application_get_type (void);
+GType unity_application_commands_get_type (void) G_GNUC_CONST;
+GType unity_application_get_type (void) G_GNUC_CONST;
 #define UNITY_APPLICATION_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_APPLICATION, UnityApplicationPrivate))
 enum  {
 	UNITY_APPLICATION_DUMMY_PROPERTY,
@@ -179,9 +179,9 @@ UniqueResponse unity_application_on_message_received (UnityApplication* self, gi
 				}
 				__finally0:
 				if (_inner_error_ != NULL) {
-					_g_free0 (uri);
-					_g_free0 (icon_dirstring);
 					_g_object_unref0 (icon_directory);
+					_g_free0 (icon_dirstring);
+					_g_free0 (uri);
 					g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 					g_clear_error (&_inner_error_);
 					return 0;
@@ -197,11 +197,11 @@ UniqueResponse unity_application_on_message_received (UnityApplication* self, gi
 						if (_inner_error_->domain == G_REGEX_ERROR) {
 							goto __catch1_g_regex_error;
 						}
-						_g_free0 (uri);
-						_g_free0 (icon_dirstring);
-						_g_object_unref0 (icon_directory);
-						split_url = (_vala_array_free (split_url, split_url_length1, (GDestroyNotify) g_free), NULL);
 						_g_free0 (name);
+						split_url = (_vala_array_free (split_url, split_url_length1, (GDestroyNotify) g_free), NULL);
+						_g_object_unref0 (icon_directory);
+						_g_free0 (icon_dirstring);
+						_g_free0 (uri);
 						g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 						g_clear_error (&_inner_error_);
 						return 0;
@@ -213,11 +213,11 @@ UniqueResponse unity_application_on_message_received (UnityApplication* self, gi
 							goto __catch1_g_regex_error;
 						}
 						_g_regex_unref0 (regex);
-						_g_free0 (uri);
-						_g_free0 (icon_dirstring);
-						_g_object_unref0 (icon_directory);
-						split_url = (_vala_array_free (split_url, split_url_length1, (GDestroyNotify) g_free), NULL);
 						_g_free0 (name);
+						split_url = (_vala_array_free (split_url, split_url_length1, (GDestroyNotify) g_free), NULL);
+						_g_object_unref0 (icon_directory);
+						_g_free0 (icon_dirstring);
+						_g_free0 (uri);
 						g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 						g_clear_error (&_inner_error_);
 						return 0;
@@ -238,11 +238,11 @@ UniqueResponse unity_application_on_message_received (UnityApplication* self, gi
 				}
 				__finally1:
 				if (_inner_error_ != NULL) {
-					_g_free0 (uri);
-					_g_free0 (icon_dirstring);
-					_g_object_unref0 (icon_directory);
-					split_url = (_vala_array_free (split_url, split_url_length1, (GDestroyNotify) g_free), NULL);
 					_g_free0 (name);
+					split_url = (_vala_array_free (split_url, split_url_length1, (GDestroyNotify) g_free), NULL);
+					_g_object_unref0 (icon_directory);
+					_g_free0 (icon_dirstring);
+					_g_free0 (uri);
 					g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 					g_clear_error (&_inner_error_);
 					return 0;
@@ -255,13 +255,13 @@ UniqueResponse unity_application_on_message_received (UnityApplication* self, gi
 				_g_free0 (_tmp7_);
 				unity_webapp_webicon_fetcher_fetch_webapp_data (self->priv->webicon_fetcher);
 				unity_webapp_chromium_web_app_add_to_favorites (webapp);
-				_g_free0 (uri);
-				_g_free0 (icon_dirstring);
-				_g_object_unref0 (icon_directory);
-				split_url = (_vala_array_free (split_url, split_url_length1, (GDestroyNotify) g_free), NULL);
-				_g_free0 (name);
-				_g_free0 (hostname);
 				_g_object_unref0 (webapp);
+				_g_free0 (hostname);
+				_g_free0 (name);
+				split_url = (_vala_array_free (split_url, split_url_length1, (GDestroyNotify) g_free), NULL);
+				_g_object_unref0 (icon_directory);
+				_g_free0 (icon_dirstring);
+				_g_free0 (uri);
 			}
 			break;
 		}

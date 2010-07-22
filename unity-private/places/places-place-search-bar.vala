@@ -193,7 +193,8 @@ namespace Unity.Places
       glow.set_color ({ 255, 255, 255, 255 });
       glow.set_factor (1.0f);
       glow.set_margin (5);
-      add_effect (glow);
+      /* FIXME: Jay will fix this */
+      /* add_effect (glow); */
     }
 
     private override void allocate (Clutter.ActorBox        box,

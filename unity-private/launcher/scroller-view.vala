@@ -156,7 +156,35 @@ namespace Unity.Launcher
       });
     }
 
-    public int get_model_index_at_y_pos (float y)
+    public int get_model_index_at_y_pos_no_anim (float y, bool return_minus_if_fail=false)
+    {
+      SList<float?> positions = new SList<float?> ();
+      foreach (ScrollerChild child in model)
+        {
+          positions.append (child.position);
+          GLib.Value value = Value (typeof (float));
+          Clutter.Animation anim = child.get_animation ();
+          if (anim is Clutter.Animation)
+            {
+              Clutter.Interval interval = anim.get_interval ("position");
+              interval.get_final_value (value);
+              child.position = value.get_float ();
+            }
+        }
+
+        int value = get_model_index_at_y_pos (y, return_minus_if_fail);
+
+        unowned SList<float?> list = positions;
+        foreach (ScrollerChild child in model)
+          {
+            child.position = (float)list.data;
+            list = list.next;
+          }
+
+        return value;
+    }
+
+    public int get_model_index_at_y_pos (float y, bool return_minus_if_fail=false)
     {
 
       // trying out a different method
@@ -174,6 +202,8 @@ namespace Unity.Launcher
 
               if (picked_actor is ScrollerChild == false)
                 {
+                  if (return_minus_if_fail)
+                    return -1;
                   // couldn't pick a single actor, return 0
                   return (y < padding.top + model[0].get_height () + spacing) ? 0 : model.size -1 ;
                 }
@@ -347,11 +377,12 @@ namespace Unity.Launcher
 
           // set our state to what we will end up being so we can find the correct
           //place to be.
+          float contracted_position = model[index].position;
           var old_scroll_position = scroll_position;
           scroll_position = 0;
           order_children (true);
-          float child_height = model[index].get_height () / 2;
-          var new_scroll_position = -model[index].position + event.crossing.y - model[index].get_height ();
+
+          float new_scroll_position = -(model[index].position - contracted_position);
 
           //reset our view so that we animate cleanly to the new view
           view_type = ScrollerViewType.CONTRACTED;
@@ -659,7 +690,7 @@ namespace Unity.Launcher
               if (child.get_animation () is Clutter.Animation)
                 {
                   //GLib.Value value = GLib.Value (GLib.Type.from_name ("string"));
-                  GLib.Value value = typeof (float);
+                  GLib.Value value = Value (typeof (float));
                   Clutter.Interval interval = child.get_animation ().get_interval ("position");
                   interval.get_final_value (value);
                   if (value.get_float () != transitions[index].position)
@@ -891,17 +922,17 @@ namespace Unity.Launcher
       for (int index = draw_btf.size-1; index >= 0; index--)
         {
           ScrollerChild child = draw_btf[index];
-          if (child is LauncherChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0)
             {
-              (child as LauncherChild).paint ();
+              (child as ScrollerChild).paint ();
             }
         }
 
       foreach (ScrollerChild child in draw_ftb)
         {
-          if (child is LauncherChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0)
             {
-              (child as LauncherChild).paint ();
+              (child as ScrollerChild).paint ();
             }
         }
 
@@ -918,17 +949,17 @@ namespace Unity.Launcher
       for (int index = draw_btf.size-1; index >= 0; index--)
         {
           ScrollerChild child = draw_btf[index];
-          if (child is LauncherChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0)
             {
-              (child as LauncherChild).paint ();
+              (child as ScrollerChild).paint ();
             }
         }
 
       foreach (ScrollerChild child in draw_ftb)
         {
-          if (child is LauncherChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0)
             {
-              (child as LauncherChild).paint ();
+              (child as ScrollerChild).paint ();
             }
         }
 

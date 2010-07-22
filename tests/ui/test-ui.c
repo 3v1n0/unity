@@ -127,7 +127,7 @@ struct _ParamSpecMain {
 static gpointer unity_tests_ui_test_favorites_parent_class = NULL;
 static gpointer main_parent_class = NULL;
 
-GType unity_tests_ui_test_favorites_get_type (void);
+GType unity_tests_ui_test_favorites_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTS_UI_TEST_FAVORITES_DUMMY_PROPERTY
 };
@@ -152,14 +152,14 @@ GParamSpec* param_spec_main (const gchar* name, const gchar* nick, const gchar* 
 void value_set_main (GValue* value, gpointer v_object);
 void value_take_main (GValue* value, gpointer v_object);
 gpointer value_get_main (const GValue* value);
-GType main_get_type (void);
+GType main_get_type (void) G_GNUC_CONST;
 enum  {
 	MAIN_DUMMY_PROPERTY
 };
-GType unity_tests_ui_quicklist_suite_get_type (void);
-GType unity_tests_ui_home_button_suite_get_type (void);
-GType unity_tests_ui_automation_basic_test_suite_get_type (void);
-GType unity_tests_ui_indicator_test_suite_get_type (void);
+GType unity_tests_ui_quicklist_suite_get_type (void) G_GNUC_CONST;
+GType unity_tests_ui_home_button_suite_get_type (void) G_GNUC_CONST;
+GType unity_tests_ui_automation_basic_test_suite_get_type (void) G_GNUC_CONST;
+GType unity_tests_ui_indicator_test_suite_get_type (void) G_GNUC_CONST;
 UnityTestsUIAutomationBasicTestSuite* unity_tests_ui_automation_basic_test_suite_new (void);
 UnityTestsUIAutomationBasicTestSuite* unity_tests_ui_automation_basic_test_suite_construct (GType object_type);
 UnityTestsUIQuicklistSuite* unity_tests_ui_quicklist_suite_new (void);
@@ -399,11 +399,11 @@ gint main_main (char** args, int args_length1) {
 	g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 3, __lambda0__gsource_func, NULL, NULL);
 	gtk_main ();
 	result = 0;
-	_unity_testing_logging_unref0 (logger);
-	_g_object_unref0 (quicklist_suite);
-	_g_object_unref0 (home_button_suite);
-	_g_object_unref0 (basic_test_suite);
 	_g_object_unref0 (indicator_test_suite);
+	_g_object_unref0 (basic_test_suite);
+	_g_object_unref0 (home_button_suite);
+	_g_object_unref0 (quicklist_suite);
+	_unity_testing_logging_unref0 (logger);
 	return result;
 }
 

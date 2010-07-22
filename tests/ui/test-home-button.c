@@ -65,7 +65,7 @@ gboolean g_flag = FALSE;
 static gpointer unity_tests_ui_home_button_suite_parent_class = NULL;
 static UnityShellIface* unity_tests_ui_home_button_suite_unity_shell_parent_iface = NULL;
 
-GType unity_tests_ui_home_button_suite_get_type (void);
+GType unity_tests_ui_home_button_suite_get_type (void) G_GNUC_CONST;
 #define UNITY_TESTS_UI_HOME_BUTTON_SUITE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TESTS_UI_TYPE_HOME_BUTTON_SUITE, UnityTestsUIHomeButtonSuitePrivate))
 enum  {
 	UNITY_TESTS_UI_HOME_BUTTON_SUITE_DUMMY_PROPERTY,

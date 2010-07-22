@@ -60,7 +60,7 @@ static gint unity_maximus_default_exclude_classes_length1 = 0;
 static gint _unity_maximus_default_exclude_classes_size_ = 0;
 static gpointer unity_maximus_parent_class = NULL;
 
-GType unity_maximus_get_type (void);
+GType unity_maximus_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_MAXIMUS_DUMMY_PROPERTY
 };

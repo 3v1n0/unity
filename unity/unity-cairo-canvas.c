@@ -63,7 +63,7 @@ struct _UnityCairoCanvasPrivate {
 
 static gpointer unity_cairo_canvas_parent_class = NULL;
 
-GType unity_cairo_canvas_get_type (void);
+GType unity_cairo_canvas_get_type (void) G_GNUC_CONST;
 #define UNITY_CAIRO_CANVAS_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_CAIRO_CANVAS, UnityCairoCanvasPrivate))
 enum  {
 	UNITY_CAIRO_CANVAS_DUMMY_PROPERTY

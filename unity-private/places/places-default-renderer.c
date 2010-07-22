@@ -75,7 +75,7 @@ struct _UnityPlacesDefaultRendererPrivate {
 static gpointer unity_places_default_renderer_parent_class = NULL;
 static UnityPlaceRendererIface* unity_places_default_renderer_unity_place_renderer_parent_iface = NULL;
 
-GType unity_places_default_renderer_get_type (void);
+GType unity_places_default_renderer_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_DEFAULT_RENDERER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_DEFAULT_RENDERER, UnityPlacesDefaultRendererPrivate))
 enum  {
 	UNITY_PLACES_DEFAULT_RENDERER_DUMMY_PROPERTY
@@ -91,7 +91,7 @@ static void _unity_places_default_renderer_on_group_removed_dee_model_row_remove
 static void unity_places_default_renderer_real_set_models (UnityPlaceRenderer* base, DeeModel* groups, DeeModel* results, GeeHashMap* hints);
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_new (guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_construct (GType object_type, guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
-GType unity_places_default_renderer_group_get_type (void);
+GType unity_places_default_renderer_group_get_type (void) G_GNUC_CONST;
 static void _g_list_free_g_object_unref (GList* self);
 static GObject * unity_places_default_renderer_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_default_renderer_finalize (GObject* obj);

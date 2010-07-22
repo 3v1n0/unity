@@ -65,8 +65,8 @@ struct _UnityPlacesControllerPrivate {
 
 static gpointer unity_places_controller_parent_class = NULL;
 
-GType unity_places_controller_get_type (void);
-GType unity_places_view_get_type (void);
+GType unity_places_controller_get_type (void) G_GNUC_CONST;
+GType unity_places_view_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_CONTROLLER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_CONTROLLER, UnityPlacesControllerPrivate))
 enum  {
 	UNITY_PLACES_CONTROLLER_DUMMY_PROPERTY,

@@ -71,8 +71,8 @@ struct _UnityWindowManagementPrivate {
 extern char* unity_maximus_user_unmaximize_hint;
 static gpointer unity_window_management_parent_class = NULL;
 
-GType unity_window_management_get_type (void);
-GType unity_plugin_get_type (void);
+GType unity_window_management_get_type (void) G_GNUC_CONST;
+GType unity_plugin_get_type (void) G_GNUC_CONST;
 #define UNITY_WINDOW_MANAGEMENT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_WINDOW_MANAGEMENT, UnityWindowManagementPrivate))
 enum  {
 	UNITY_WINDOW_MANAGEMENT_DUMMY_PROPERTY
@@ -263,8 +263,8 @@ static void unity_window_management_window_minimized (UnityWindowManagement* sel
 		anim = (_tmp6_ = _g_object_ref0 (clutter_actor_animate (actor, (gulong) CLUTTER_EASE_IN_SINE, (guint) speed, "opacity", 0, NULL)), _g_object_unref0 (anim), _tmp6_);
 	}
 	g_signal_connect_object (anim, "completed", (GCallback) _unity_window_management_window_minimized_completed_clutter_animation_completed, self, 0);
-	_g_object_unref0 (anim);
 	_g_object_unref0 (actor);
+	_g_object_unref0 (anim);
 }
 
 
@@ -372,8 +372,8 @@ static void unity_window_management_window_mapped (UnityWindowManagement* self, 
 		anim = (_tmp8_ = _g_object_ref0 (clutter_actor_animate (actor, (gulong) CLUTTER_EASE_IN_SINE, (guint) speed, "opacity", 255, NULL)), _g_object_unref0 (anim), _tmp8_);
 	}
 	g_signal_connect_object (anim, "completed", (GCallback) _unity_window_management_window_mapped_completed_clutter_animation_completed, self, 0);
-	_g_object_unref0 (anim);
 	_g_object_unref0 (actor);
+	_g_object_unref0 (anim);
 }
 
 

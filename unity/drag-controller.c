@@ -123,11 +123,11 @@ UnityDragController* unity_drag_controller_singleton = NULL;
 extern UnityShell* unity_global_shell;
 static gpointer unity_drag_controller_parent_class = NULL;
 
-GType unity_drag_model_get_type (void);
+GType unity_drag_model_get_type (void) G_GNUC_CONST;
 ClutterActor* unity_drag_model_get_icon (UnityDragModel* self);
 char* unity_drag_model_get_drag_data (UnityDragModel* self);
-GType unity_drag_controller_get_type (void);
-GType unity_drag_view_get_type (void);
+GType unity_drag_controller_get_type (void) G_GNUC_CONST;
+GType unity_drag_view_get_type (void) G_GNUC_CONST;
 #define UNITY_DRAG_CONTROLLER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_DRAG_TYPE_CONTROLLER, UnityDragControllerPrivate))
 enum  {
 	UNITY_DRAG_CONTROLLER_DUMMY_PROPERTY,
@@ -145,8 +145,8 @@ static void unity_drag_controller_on_view_motion (UnityDragController* self, flo
 static void _unity_drag_controller_on_view_motion_unity_drag_view_motion (UnityDragView* _sender, float x, float y, gpointer self);
 static void unity_drag_controller_on_view_end (UnityDragController* self, float x, float y);
 static void _unity_drag_controller_on_view_end_unity_drag_view_end (UnityDragView* _sender, float x, float y, gpointer self);
-GType unity_shell_mode_get_type (void);
-GType unity_shell_get_type (void);
+GType unity_shell_mode_get_type (void) G_GNUC_CONST;
+GType unity_shell_get_type (void) G_GNUC_CONST;
 void unity_shell_add_fullscreen_request (UnityShell* self, GObject* o);
 void unity_drag_controller_start_drag (UnityDragController* self, UnityDragModel* model, float offset_x, float offset_y);
 UnityDragModel* unity_drag_controller_get_drag_model (UnityDragController* self);
@@ -260,7 +260,7 @@ static void unity_drag_controller_rehouse_orphaned_child (UnityDragController* s
 		ClutterStage* stage;
 		stage = _g_object_ref0 ((_tmp0_ = clutter_actor_get_stage (old_parent), CLUTTER_IS_STAGE (_tmp0_) ? ((ClutterStage*) _tmp0_) : NULL));
 		clutter_actor_set_parent (actor, (ClutterActor*) stage);
-		clutter_actor_set_position (actor, (float) (-10000), (float) (-10000));
+		clutter_actor_set_position (actor, (float) 20000, (float) 20000);
 		_g_object_unref0 (stage);
 	}
 	_g_object_unref0 (actor);

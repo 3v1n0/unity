@@ -74,7 +74,7 @@ struct _UnityPanelSystemTrayPrivate {
 
 static gpointer unity_panel_system_tray_parent_class = NULL;
 
-GType unity_panel_system_tray_get_type (void);
+GType unity_panel_system_tray_get_type (void) G_GNUC_CONST;
 #define UNITY_PANEL_SYSTEM_TRAY_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PANEL_TYPE_SYSTEM_TRAY, UnityPanelSystemTrayPrivate))
 enum  {
 	UNITY_PANEL_SYSTEM_TRAY_DUMMY_PROPERTY
@@ -85,7 +85,7 @@ GParamSpec* unity_testing_param_spec_object_registry (const gchar* name, const g
 void unity_testing_value_set_object_registry (GValue* value, gpointer v_object);
 void unity_testing_value_take_object_registry (GValue* value, gpointer v_object);
 gpointer unity_testing_value_get_object_registry (const GValue* value);
-GType unity_testing_object_registry_get_type (void);
+GType unity_testing_object_registry_get_type (void) G_GNUC_CONST;
 UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void);
 void unity_testing_object_registry_register (UnityTestingObjectRegistry* self, const char* name, GObject* object);
 UnityPanelSystemTray* unity_panel_system_tray_new (void);

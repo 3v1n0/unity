@@ -155,12 +155,12 @@ static gpointer unity_panel_view_parent_class = NULL;
 
 #define UNITY_PANEL_PANEL_HEIGHT 24
 #define UNITY_PANEL_search_entry_has_focus FALSE
-GType unity_panel_view_get_type (void);
-GType unity_panel_background_get_type (void);
-GType unity_panel_home_button_get_type (void);
-GType unity_panel_indicators_menu_bar_get_type (void);
-GType unity_panel_system_tray_get_type (void);
-GType unity_panel_indicators_indicator_bar_get_type (void);
+GType unity_panel_view_get_type (void) G_GNUC_CONST;
+GType unity_panel_background_get_type (void) G_GNUC_CONST;
+GType unity_panel_home_button_get_type (void) G_GNUC_CONST;
+GType unity_panel_indicators_menu_bar_get_type (void) G_GNUC_CONST;
+GType unity_panel_system_tray_get_type (void) G_GNUC_CONST;
+GType unity_panel_indicators_indicator_bar_get_type (void) G_GNUC_CONST;
 #define UNITY_PANEL_VIEW_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PANEL_TYPE_VIEW, UnityPanelViewPrivate))
 enum  {
 	UNITY_PANEL_VIEW_DUMMY_PROPERTY,
@@ -169,19 +169,19 @@ enum  {
 void unity_panel_system_tray_manage_stage (UnityPanelSystemTray* self, ClutterStage* stage);
 UnityPanelView* unity_panel_view_new (UnityShell* shell);
 UnityPanelView* unity_panel_view_construct (GType object_type, UnityShell* shell);
-GType menu_manager_get_type (void);
+GType menu_manager_get_type (void) G_GNUC_CONST;
 MenuManager* menu_manager_get_default (void);
 void menu_manager_popdown_current_menu (MenuManager* self);
 static gboolean unity_panel_view_on_button_release_event (UnityPanelView* self, ClutterEvent* e);
 gint unity_panel_view_get_indicators_width (UnityPanelView* self);
 void unity_panel_view_set_expanded (UnityPanelView* self, gboolean _expanded);
 gint unity_panel_view_get_panel_height (UnityPanelView* self);
-GType unity_panel_indicators_indicator_object_view_get_type (void);
+GType unity_panel_indicators_indicator_object_view_get_type (void) G_GNUC_CONST;
 void unity_panel_indicators_indicator_bar_set_indicator_mode (UnityPanelIndicatorsIndicatorBar* self, gboolean mode);
 void unity_panel_view_set_indicator_mode (UnityPanelView* self, gboolean mode);
 UnityShell* unity_panel_view_get_shell (UnityPanelView* self);
 static void unity_panel_view_set_shell (UnityPanelView* self, UnityShell* value);
-GType unity_panel_indicators_indicators_model_get_type (void);
+GType unity_panel_indicators_indicators_model_get_type (void) G_GNUC_CONST;
 UnityPanelIndicatorsIndicatorsModel* unity_panel_indicators_indicators_model_get_default (void);
 UnityPanelBackground* unity_panel_background_new (void);
 UnityPanelBackground* unity_panel_background_construct (GType object_type);

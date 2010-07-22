@@ -69,7 +69,7 @@ struct _UnityTestsUIQuicklistSuitePrivate {
 
 static gpointer unity_tests_ui_quicklist_suite_parent_class = NULL;
 
-GType unity_tests_ui_quicklist_suite_get_type (void);
+GType unity_tests_ui_quicklist_suite_get_type (void) G_GNUC_CONST;
 #define UNITY_TESTS_UI_QUICKLIST_SUITE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TESTS_UI_TYPE_QUICKLIST_SUITE, UnityTestsUIQuicklistSuitePrivate))
 enum  {
 	UNITY_TESTS_UI_QUICKLIST_SUITE_DUMMY_PROPERTY
@@ -77,7 +77,7 @@ enum  {
 #define UNITY_TESTS_UI_QUICKLIST_SUITE_DOMAIN "/UI/Quicklist"
 UnityTestsUITestFavorites* unity_tests_ui_test_favorites_new (void);
 UnityTestsUITestFavorites* unity_tests_ui_test_favorites_construct (GType object_type);
-GType unity_tests_ui_test_favorites_get_type (void);
+GType unity_tests_ui_test_favorites_get_type (void) G_GNUC_CONST;
 static void unity_tests_ui_quicklist_suite_test_controller_show_label (UnityTestsUIQuicklistSuite* self);
 static void _unity_tests_ui_quicklist_suite_test_controller_show_label_gdata_test_func (gpointer self);
 static void unity_tests_ui_quicklist_suite_test_teardown (UnityTestsUIQuicklistSuite* self);

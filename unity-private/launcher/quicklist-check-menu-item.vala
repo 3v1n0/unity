@@ -23,16 +23,16 @@ namespace Unity.Launcher
   public class QuicklistCheckMenuItem : Ctk.CheckMenuItem
   {
     Ctk.LayerActor item_background;
-    int            old_width;
-    int            old_height;
+    int            last_width;
+    int            last_height;
     string         old_label;
 
     private override void
     paint ()
     {
-      this.item_background.paint ();
+      if (this.item_background is Ctk.LayerActor)
+        this.item_background.paint ();
     }
-
 
     public override void
     get_preferred_height (float     for_width,
@@ -63,8 +63,29 @@ namespace Unity.Launcher
     allocate (Clutter.ActorBox        box,
               Clutter.AllocationFlags flags)
     {
-      int w;
-      int h;
+      int new_width  = 0;
+      int new_height = 0;
+
+      base.allocate (box, flags);
+
+      new_width  = (int) (box.x2 - box.x1);
+      new_height = (int) (box.y2 - box.y1);
+
+      // exit early if the allocation-width/height didn't change, this is needed
+      // because clutter triggers calling allocate even if nothing changed
+      if ((this.last_width == new_width) && (this.last_height == new_height))
+        return;
+
+      // store the new width/height
+      last_width  = new_width;
+      last_height = new_height;
+
+      Timeout.add (0, _update_item_background);
+    }
+
+    private bool
+    _update_item_background ()
+    {
       Clutter.Color white_color = Clutter.Color () {
         red   = 255,
         green = 255,
@@ -72,40 +93,31 @@ namespace Unity.Launcher
         alpha = 255
       };
 
-      base.allocate (box, flags);
-
-      w = (int) (box.x2 - box.x1);
-      h = (int) (box.y2 - box.y1);
-
-      // exit early if the allocation-width/height didn't change, this is needed
-      // because clutter triggers calling allocate even if nothing changed
-      if ((old_width == w) && (old_height == h))
-        return;
-
-      // store the new width/height
-      old_width  = w;
-      old_height = h;
-
       // before creating a new CtkLayerActor make sure we don't leak any memory
       if (this.item_background is Ctk.LayerActor)
-         this.item_background.unparent ();
-      this.item_background = new Ctk.LayerActor (w, h);
+        {
+          this.item_background.unparent ();
+          this.item_background.destroy ();
+        }
 
-      Ctk.Layer normal_layer = new Ctk.Layer (w,
-                                              h,
+      this.item_background = new Ctk.LayerActor (this.last_width,
+                                                 this.last_height);
+
+      Ctk.Layer normal_layer = new Ctk.Layer (this.last_width,
+                                              this.last_height,
                                               Ctk.LayerRepeatMode.NONE,
                                               Ctk.LayerRepeatMode.NONE);
-      Ctk.Layer selected_layer = new Ctk.Layer (w,
-                                                h,
+      Ctk.Layer selected_layer = new Ctk.Layer (this.last_width,
+                                                this.last_height,
                                                 Ctk.LayerRepeatMode.NONE,
                                                 Ctk.LayerRepeatMode.NONE);
 
       Cairo.Surface normal_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                          w,
-                                                          h);
+                                                          this.last_width,
+                                                          this.last_height);
       Cairo.Surface selected_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                            w,
-                                                            h);
+                                                            this.last_width,
+                                                            this.last_height);
 
       Cairo.Context normal_cr = new Cairo.Context (normal_surf);
       Cairo.Context selected_cr = new Cairo.Context (selected_surf);
@@ -118,13 +130,13 @@ namespace Unity.Launcher
         formatted_label = formatted_label + " ☐";
 
       Unity.QuicklistRendering.Item.normal_mask (normal_cr,
-                                                 w,
-                                                 h,
+                                                 this.last_width,
+                                                 this.last_height,
                                                  settings.gtk_font_name,
                                                  formatted_label);
       Unity.QuicklistRendering.Item.selected_mask (selected_cr,
-                                                   w,
-                                                   h,
+                                                   this.last_width,
+                                                   this.last_height,
                                                    settings.gtk_font_name,
                                                    formatted_label);
 
@@ -139,11 +151,14 @@ namespace Unity.Launcher
 
       this.item_background.get_layer(0).set_enabled (true);
       this.item_background.get_layer(1).set_enabled (false);
-      this.item_background.do_queue_redraw ();
+      if (this.get_stage () is Clutter.Stage)
+        this.item_background.do_queue_redraw ();
 
       this.item_background.set_parent (this);
       this.item_background.map ();
       this.item_background.show ();
+
+      return false;
     }
 
     private bool _on_enter (Clutter.Event event)
@@ -210,9 +225,9 @@ namespace Unity.Launcher
 
       this.reactive = true;
 
-      old_width  = 0;
-      old_height = 0;
-      old_label  = "";
+      last_width  = -1;
+      last_height = -1;
+      old_label   = "";
     }
 
     public QuicklistCheckMenuItem ()

@@ -266,6 +266,7 @@ namespace Unity {
 		public Gdk.Pixbuf? icon;
 		public ThemeImage (string icon_name);
 		public string icon_name { get; set construct; }
+		public signal void changed ();
 	}
 	[CCode (cheader_filename = "unity.h")]
 	public class UnityIcon : Ctk.Actor {

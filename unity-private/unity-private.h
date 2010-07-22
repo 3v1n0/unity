@@ -466,6 +466,16 @@ typedef struct _UnityLauncherLauncher UnityLauncherLauncher;
 typedef struct _UnityLauncherLauncherClass UnityLauncherLauncherClass;
 typedef struct _UnityLauncherLauncherPrivate UnityLauncherLauncherPrivate;
 
+#define UNITY_LAUNCHER_TYPE_SCROLLER_MODEL (unity_launcher_scroller_model_get_type ())
+#define UNITY_LAUNCHER_SCROLLER_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL, UnityLauncherScrollerModel))
+#define UNITY_LAUNCHER_SCROLLER_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL, UnityLauncherScrollerModelClass))
+#define UNITY_LAUNCHER_IS_SCROLLER_MODEL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL))
+#define UNITY_LAUNCHER_IS_SCROLLER_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL))
+#define UNITY_LAUNCHER_SCROLLER_MODEL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL, UnityLauncherScrollerModelClass))
+
+typedef struct _UnityLauncherScrollerModel UnityLauncherScrollerModel;
+typedef struct _UnityLauncherScrollerModelClass UnityLauncherScrollerModelClass;
+
 #define UNITY_LAUNCHER_TYPE_QUICKLIST_CHECK_MENU_ITEM (unity_launcher_quicklist_check_menu_item_get_type ())
 #define UNITY_LAUNCHER_QUICKLIST_CHECK_MENU_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CHECK_MENU_ITEM, UnityLauncherQuicklistCheckMenuItem))
 #define UNITY_LAUNCHER_QUICKLIST_CHECK_MENU_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_CHECK_MENU_ITEM, UnityLauncherQuicklistCheckMenuItemClass))
@@ -548,16 +558,6 @@ typedef struct _UnityLauncherQuicklistMenuPrivate UnityLauncherQuicklistMenuPriv
 
 #define UNITY_LAUNCHER_TYPE_PIN_TYPE (unity_launcher_pin_type_get_type ())
 typedef struct _UnityLauncherScrollerChildPrivate UnityLauncherScrollerChildPrivate;
-
-#define UNITY_LAUNCHER_TYPE_SCROLLER_MODEL (unity_launcher_scroller_model_get_type ())
-#define UNITY_LAUNCHER_SCROLLER_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL, UnityLauncherScrollerModel))
-#define UNITY_LAUNCHER_SCROLLER_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL, UnityLauncherScrollerModelClass))
-#define UNITY_LAUNCHER_IS_SCROLLER_MODEL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL))
-#define UNITY_LAUNCHER_IS_SCROLLER_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL))
-#define UNITY_LAUNCHER_SCROLLER_MODEL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL, UnityLauncherScrollerModelClass))
-
-typedef struct _UnityLauncherScrollerModel UnityLauncherScrollerModel;
-typedef struct _UnityLauncherScrollerModelClass UnityLauncherScrollerModelClass;
 typedef struct _UnityLauncherScrollerModelPrivate UnityLauncherScrollerModelPrivate;
 
 #define UNITY_LAUNCHER_SCROLLER_MODEL_TYPE_ITERATOR (unity_launcher_scroller_model_iterator_get_type ())
@@ -696,7 +696,6 @@ struct _UnityPanelBackgroundClass {
 struct _UnityPanelHomeButton {
 	CtkButton parent_instance;
 	UnityPanelHomeButtonPrivate * priv;
-	UnityThemeImage* theme_image;
 };
 
 struct _UnityPanelHomeButtonClass {
@@ -1044,7 +1043,6 @@ typedef enum  {
 struct _UnityLauncherScrollerChildController {
 	GObject parent_instance;
 	UnityLauncherScrollerChildControllerPrivate * priv;
-	char* name;
 	UnityLauncherScrollerChildControllerMenuState menu_state;
 	guint32 last_press_time;
 	gboolean button_down;
@@ -1102,7 +1100,7 @@ typedef enum  {
 struct _UnityLauncherQuicklistController {
 	GObject parent_instance;
 	UnityLauncherQuicklistControllerPrivate * priv;
-	CtkMenu* menu;
+	CtkMenuExpandable* menu;
 };
 
 struct _UnityLauncherQuicklistControllerClass {
@@ -1155,12 +1153,12 @@ struct _UnityLauncherQuicklistMenuSeperatorClass {
 };
 
 struct _UnityLauncherQuicklistMenu {
-	CtkMenu parent_instance;
+	CtkMenuExpandable parent_instance;
 	UnityLauncherQuicklistMenuPrivate * priv;
 };
 
 struct _UnityLauncherQuicklistMenuClass {
-	CtkMenuClass parent_class;
+	CtkMenuExpandableClass parent_class;
 };
 
 typedef enum  {
@@ -1179,7 +1177,6 @@ struct _UnityLauncherScrollerChild {
 
 struct _UnityLauncherScrollerChildClass {
 	CtkActorClass parent_class;
-	void (*force_rotation_jump) (UnityLauncherScrollerChild* self, float degrees);
 };
 
 struct _UnityLauncherScrollerModel {
@@ -1304,8 +1301,8 @@ struct _UnityTestingWorkareaClass {
 };
 
 
-GType unity_application_commands_get_type (void);
-GType unity_application_get_type (void);
+GType unity_application_commands_get_type (void) G_GNUC_CONST;
+GType unity_application_get_type (void) G_GNUC_CONST;
 UnityApplication* unity_application_new (void);
 UnityApplication* unity_application_construct (GType object_type);
 UniqueResponse unity_application_on_message_received (UnityApplication* self, gint command, UniqueMessageData* data, guint time_);
@@ -1318,36 +1315,36 @@ Window utils_get_stage_window (ClutterStage* stage);
 gboolean utils_save_snapshot (ClutterStage* stage, const char* filename, gint x, gint y, gint width, gint height);
 gboolean utils_compare_snapshot (ClutterStage* stage, const char* filename, gint x, gint y, gint width, gint height, gboolean expected);
 gboolean utils_utils_compare_images (const char* img1_path, const char* img2_path);
-GType unity_panel_background_get_type (void);
+GType unity_panel_background_get_type (void) G_GNUC_CONST;
 #define UNITY_PANEL_BACKGROUND_BG "/usr/share/unity/themes/panel_background.png"
 UnityPanelBackground* unity_panel_background_new (void);
 UnityPanelBackground* unity_panel_background_construct (GType object_type);
-GType unity_panel_home_button_get_type (void);
+GType unity_panel_home_button_get_type (void) G_GNUC_CONST;
 UnityPanelHomeButton* unity_panel_home_button_new (UnityShell* shell);
 UnityPanelHomeButton* unity_panel_home_button_construct (GType object_type, UnityShell* shell);
 UnityShell* unity_panel_home_button_get_shell (UnityPanelHomeButton* self);
-GType unity_panel_indicator_background_get_type (void);
+GType unity_panel_indicator_background_get_type (void) G_GNUC_CONST;
 #define UNITY_PANEL_INDICATOR_BACKGROUND_BG "/usr/share/unity/themes/panel_background.png"
 UnityPanelIndicatorBackground* unity_panel_indicator_background_new (void);
 UnityPanelIndicatorBackground* unity_panel_indicator_background_construct (GType object_type);
-GType unity_panel_indicators_indicator_bar_get_type (void);
+GType unity_panel_indicators_indicator_bar_get_type (void) G_GNUC_CONST;
 UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_new (void);
 UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_construct (GType object_type);
-GType unity_panel_indicators_indicator_object_view_get_type (void);
+GType unity_panel_indicators_indicator_object_view_get_type (void) G_GNUC_CONST;
 UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_bar_get_indicator_view_matching (UnityPanelIndicatorsIndicatorBar* self, IndicatorObject* o);
 void unity_panel_indicators_indicator_bar_set_indicator_mode (UnityPanelIndicatorsIndicatorBar* self, gboolean mode);
-GType unity_panel_indicators_indicators_model_get_type (void);
+GType unity_panel_indicators_indicators_model_get_type (void) G_GNUC_CONST;
 UnityPanelIndicatorsIndicatorsModel* unity_panel_indicators_indicators_model_get_default (void);
 void unity_panel_indicators_indicators_model_set_default (UnityPanelIndicatorsIndicatorsModel* model);
 GeeArrayList* unity_panel_indicators_indicators_model_get_indicators (UnityPanelIndicatorsIndicatorsModel* self);
 char* unity_panel_indicators_indicators_model_get_indicator_name (UnityPanelIndicatorsIndicatorsModel* self, IndicatorObject* o);
 UnityPanelIndicatorsIndicatorsModel* unity_panel_indicators_indicators_model_construct (GType object_type);
-GType unity_panel_indicators_indicators_file_model_get_type (void);
+GType unity_panel_indicators_indicators_file_model_get_type (void) G_GNUC_CONST;
 extern GeeHashMap* unity_panel_indicators_indicators_file_model_indicator_order;
 UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_model_new (void);
 UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_model_construct (GType object_type);
 gint unity_panel_indicators_indicators_file_model_indicator_sort_func (const char* a, const char* b);
-GType unity_panel_indicators_indicator_object_entry_view_get_type (void);
+GType unity_panel_indicators_indicator_object_entry_view_get_type (void) G_GNUC_CONST;
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_entry_view_new (IndicatorObjectEntry* _entry);
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_entry_view_construct (GType object_type, IndicatorObjectEntry* _entry);
 void unity_panel_indicators_indicator_object_entry_view_show_menu (UnityPanelIndicatorsIndicatorObjectEntryView* self);
@@ -1367,21 +1364,21 @@ gboolean unity_panel_indicators_indicator_object_view_find_entry (UnityPanelIndi
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_view_get_entry_view (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObjectEntry* entry);
 void unity_panel_indicators_indicator_object_view_remove_first_entry (UnityPanelIndicatorsIndicatorObjectView* self);
 IndicatorObject* unity_panel_indicators_indicator_object_view_get_indicator_object (UnityPanelIndicatorsIndicatorObjectView* self);
-GType menu_manager_get_type (void);
+GType menu_manager_get_type (void) G_GNUC_CONST;
 MenuManager* menu_manager_get_default (void);
 void menu_manager_register_visible_menu (MenuManager* self, GtkMenu* menu);
 void menu_manager_popdown_current_menu (MenuManager* self);
 gboolean menu_manager_menu_is_open (MenuManager* self);
 MenuManager* menu_manager_new (void);
 MenuManager* menu_manager_construct (GType object_type);
-GType unity_panel_indicators_menu_bar_get_type (void);
+GType unity_panel_indicators_menu_bar_get_type (void) G_GNUC_CONST;
 UnityPanelIndicatorsMenuBar* unity_panel_indicators_menu_bar_new (void);
 UnityPanelIndicatorsMenuBar* unity_panel_indicators_menu_bar_construct (GType object_type);
-GType unity_panel_system_tray_get_type (void);
+GType unity_panel_system_tray_get_type (void) G_GNUC_CONST;
 UnityPanelSystemTray* unity_panel_system_tray_new (void);
 UnityPanelSystemTray* unity_panel_system_tray_construct (GType object_type);
 void unity_panel_system_tray_manage_stage (UnityPanelSystemTray* self, ClutterStage* stage);
-GType unity_panel_view_get_type (void);
+GType unity_panel_view_get_type (void) G_GNUC_CONST;
 UnityPanelView* unity_panel_view_new (UnityShell* shell);
 UnityPanelView* unity_panel_view_construct (GType object_type, UnityShell* shell);
 gint unity_panel_view_get_indicators_width (UnityPanelView* self);
@@ -1389,13 +1386,13 @@ void unity_panel_view_set_expanded (UnityPanelView* self, gboolean _expanded);
 gint unity_panel_view_get_panel_height (UnityPanelView* self);
 void unity_panel_view_set_indicator_mode (UnityPanelView* self, gboolean mode);
 UnityShell* unity_panel_view_get_shell (UnityPanelView* self);
-GType unity_places_controller_get_type (void);
+GType unity_places_controller_get_type (void) G_GNUC_CONST;
 UnityPlacesController* unity_places_controller_new (UnityShell* shell);
 UnityPlacesController* unity_places_controller_construct (GType object_type, UnityShell* shell);
-GType unity_places_view_get_type (void);
+GType unity_places_view_get_type (void) G_GNUC_CONST;
 UnityPlacesView* unity_places_controller_get_view (UnityPlacesController* self);
 UnityShell* unity_places_controller_get_shell (UnityPlacesController* self);
-GType unity_places_default_renderer_group_get_type (void);
+GType unity_places_default_renderer_group_get_type (void) G_GNUC_CONST;
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_new (guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_construct (GType object_type, guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
 guint unity_places_default_renderer_group_get_group_id (UnityPlacesDefaultRendererGroup* self);
@@ -1403,12 +1400,12 @@ const char* unity_places_default_renderer_group_get_group_renderer (UnityPlacesD
 const char* unity_places_default_renderer_group_get_display_name (UnityPlacesDefaultRendererGroup* self);
 const char* unity_places_default_renderer_group_get_icon_hint (UnityPlacesDefaultRendererGroup* self);
 DeeModel* unity_places_default_renderer_group_get_results (UnityPlacesDefaultRendererGroup* self);
-GType unity_places_more_results_button_get_type (void);
+GType unity_places_more_results_button_get_type (void) G_GNUC_CONST;
 UnityPlacesMoreResultsButton* unity_places_more_results_button_new (void);
 UnityPlacesMoreResultsButton* unity_places_more_results_button_construct (GType object_type);
 guint unity_places_more_results_button_get_count (UnityPlacesMoreResultsButton* self);
 void unity_places_more_results_button_set_count (UnityPlacesMoreResultsButton* self, guint value);
-GType unity_places_tile_get_type (void);
+GType unity_places_tile_get_type (void) G_GNUC_CONST;
 UnityPlacesTile* unity_places_tile_new (DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 UnityPlacesTile* unity_places_tile_construct (GType object_type, DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 void unity_places_tile_about_to_show (UnityPlacesTile* self);
@@ -1418,11 +1415,11 @@ const char* unity_places_tile_get_icon_hint (UnityPlacesTile* self);
 const char* unity_places_tile_get_uri (UnityPlacesTile* self);
 const char* unity_places_tile_get_mimetype (UnityPlacesTile* self);
 const char* unity_places_tile_get_comment (UnityPlacesTile* self);
-GType unity_places_default_renderer_get_type (void);
+GType unity_places_default_renderer_get_type (void) G_GNUC_CONST;
 UnityPlacesDefaultRenderer* unity_places_default_renderer_new (void);
 UnityPlacesDefaultRenderer* unity_places_default_renderer_construct (GType object_type);
-GType unity_places_place_bar_get_type (void);
-GType unity_places_place_model_get_type (void);
+GType unity_places_place_bar_get_type (void) G_GNUC_CONST;
+GType unity_places_place_model_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceBar* unity_places_place_bar_new (UnityShell* shell, UnityPlacesPlaceModel* model);
 UnityPlacesPlaceBar* unity_places_place_bar_construct (GType object_type, UnityShell* shell, UnityPlacesPlaceModel* model);
 void unity_places_place_bar_reset (UnityPlacesPlaceBar* self);
@@ -1430,15 +1427,15 @@ void unity_places_place_bar_active_entry_name (UnityPlacesPlaceBar* self, const 
 UnityShell* unity_places_place_bar_get_shell (UnityPlacesPlaceBar* self);
 UnityPlacesPlaceModel* unity_places_place_bar_get_model (UnityPlacesPlaceBar* self);
 void unity_places_place_bar_set_model (UnityPlacesPlaceBar* self, UnityPlacesPlaceModel* value);
-GType unity_places_place_bar_background_get_type (void);
+GType unity_places_place_bar_background_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_BAR_BACKGROUND_BG "/usr/share/unity/dash_background.png"
 UnityPlacesPlaceBarBackground* unity_places_place_bar_background_new (UnityShell* shell);
 UnityPlacesPlaceBarBackground* unity_places_place_bar_background_construct (GType object_type, UnityShell* shell);
 UnityShell* unity_places_place_bar_background_get_shell (UnityPlacesPlaceBarBackground* self);
 gint unity_places_place_bar_background_get_entry_position (UnityPlacesPlaceBarBackground* self);
 void unity_places_place_bar_background_set_entry_position (UnityPlacesPlaceBarBackground* self, gint value);
-GType unity_places_place_entry_view_get_type (void);
-GType unity_places_place_entry_get_type (void);
+GType unity_places_place_entry_view_get_type (void) G_GNUC_CONST;
+GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceEntryView* unity_places_place_entry_view_new (UnityPlacesPlaceEntry* entry);
 UnityPlacesPlaceEntryView* unity_places_place_entry_view_construct (GType object_type, UnityPlacesPlaceEntry* entry);
 UnityPlacesPlaceEntry* unity_places_place_entry_view_get_entry (UnityPlacesPlaceEntryView* self);
@@ -1482,7 +1479,7 @@ DeeModel* unity_places_place_entry_get_global_results_model (UnityPlacesPlaceEnt
 void unity_places_place_entry_set_global_results_model (UnityPlacesPlaceEntry* self, DeeModel* value);
 GeeHashMap* unity_places_place_entry_get_global_renderer_hints (UnityPlacesPlaceEntry* self);
 void unity_places_place_entry_set_global_renderer_hints (UnityPlacesPlaceEntry* self, GeeHashMap* value);
-GType unity_places_place_entry_dbus_get_type (void);
+GType unity_places_place_entry_dbus_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceEntryDbus* unity_places_place_entry_dbus_new (const char* dbus_name, const char* dbus_path);
 UnityPlacesPlaceEntryDbus* unity_places_place_entry_dbus_construct (GType object_type, const char* dbus_name, const char* dbus_path);
 UnityPlacesPlaceEntryDbus* unity_places_place_entry_dbus_new_with_info (const char* dbus_name, const char* dbus_path, const char* name, const char* icon, const char* description, gboolean show_global, gboolean show_entry);
@@ -1498,27 +1495,27 @@ const char* unity_places_place_entry_dbus_get_sections_model_name (UnityPlacesPl
 void unity_places_place_entry_dbus_set_sections_model_name (UnityPlacesPlaceEntryDbus* self, const char* value);
 const char* unity_places_place_entry_dbus_get_global_results_model_name (UnityPlacesPlaceEntryDbus* self);
 void unity_places_place_entry_dbus_set_global_results_model_name (UnityPlacesPlaceEntryDbus* self, const char* value);
-GType unity_places_place_entry_dbus_renderer_info_get_type (void);
+GType unity_places_place_entry_dbus_renderer_info_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceEntryDbusRendererInfo* unity_places_place_entry_dbus_renderer_info_dup (const UnityPlacesPlaceEntryDbusRendererInfo* self);
 void unity_places_place_entry_dbus_renderer_info_free (UnityPlacesPlaceEntryDbusRendererInfo* self);
 void unity_places_place_entry_dbus_renderer_info_copy (const UnityPlacesPlaceEntryDbusRendererInfo* self, UnityPlacesPlaceEntryDbusRendererInfo* dest);
 void unity_places_place_entry_dbus_renderer_info_destroy (UnityPlacesPlaceEntryDbusRendererInfo* self);
-GType unity_places_place_home_entry_get_type (void);
+GType unity_places_place_home_entry_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceHomeEntry* unity_places_place_home_entry_new (UnityShell* shell, UnityPlacesPlaceModel* model);
 UnityPlacesPlaceHomeEntry* unity_places_place_home_entry_construct (GType object_type, UnityShell* shell, UnityPlacesPlaceModel* model);
 UnityShell* unity_places_place_home_entry_get_shell (UnityPlacesPlaceHomeEntry* self);
 UnityPlacesPlaceModel* unity_places_place_home_entry_get_place_model (UnityPlacesPlaceHomeEntry* self);
 void unity_places_place_home_entry_set_place_model (UnityPlacesPlaceHomeEntry* self, UnityPlacesPlaceModel* value);
 UnityPlacesPlaceModel* unity_places_place_model_construct (GType object_type);
-GType unity_places_place_file_model_get_type (void);
+GType unity_places_place_file_model_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceFileModel* unity_places_place_file_model_new (void);
 UnityPlacesPlaceFileModel* unity_places_place_file_model_construct (GType object_type);
 UnityPlacesPlaceFileModel* unity_places_place_file_model_new_with_directory (const char* _directory);
 UnityPlacesPlaceFileModel* unity_places_place_file_model_construct_with_directory (GType object_type, const char* _directory);
 const char* unity_places_place_file_model_get_directory (UnityPlacesPlaceFileModel* self);
 gboolean unity_places_place_file_model_get_async (UnityPlacesPlaceFileModel* self);
-GType unity_places_place_view_get_type (void);
-GType unity_places_place_get_type (void);
+GType unity_places_place_view_get_type (void) G_GNUC_CONST;
+GType unity_places_place_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceView* unity_places_place_view_new (UnityPlacesPlace* place);
 UnityPlacesPlaceView* unity_places_place_view_construct (GType object_type, UnityPlacesPlace* place);
 UnityPlacesPlace* unity_places_place_view_get_place (UnityPlacesPlaceView* self);
@@ -1533,16 +1530,16 @@ const char* unity_places_place_get_dbus_path (UnityPlacesPlace* self);
 gint unity_places_place_get_n_entries (UnityPlacesPlace* self);
 gboolean unity_places_place_get_online (UnityPlacesPlace* self);
 void unity_places_place_set_online (UnityPlacesPlace* self, gboolean value);
-GType unity_places_place_search_bar_get_type (void);
+GType unity_places_place_search_bar_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_new (void);
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_construct (GType object_type);
 void unity_places_place_search_bar_reset (UnityPlacesPlaceSearchBar* self);
 void unity_places_place_search_bar_search (UnityPlacesPlaceSearchBar* self, const char* text);
 char* unity_places_place_search_bar_get_search_text (UnityPlacesPlaceSearchBar* self);
 void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearchBar* self, UnityPlacesPlaceEntry* entry, gint x);
-GType unity_places_place_search_bar_background_get_type (void);
+GType unity_places_place_search_bar_background_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_BG "/usr/share/unity/dash_background.png"
-GType unity_places_place_search_entry_get_type (void);
+GType unity_places_place_search_entry_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceSearchBarBackground* unity_places_place_search_bar_background_new (UnityPlacesPlaceSearchEntry* search_entry);
 UnityPlacesPlaceSearchBarBackground* unity_places_place_search_bar_background_construct (GType object_type, UnityPlacesPlaceSearchEntry* search_entry);
 gboolean unity_places_place_search_bar_background_update_background (UnityPlacesPlaceSearchBarBackground* self);
@@ -1552,7 +1549,7 @@ UnityPlacesPlaceSearchEntry* unity_places_place_search_bar_background_get_search
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_new (void);
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_construct (GType object_type);
 void unity_places_place_search_entry_reset (UnityPlacesPlaceSearchEntry* self);
-GType unity_places_place_search_sections_bar_get_type (void);
+GType unity_places_place_search_sections_bar_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceSearchSectionsBar* unity_places_place_search_sections_bar_new (void);
 UnityPlacesPlaceSearchSectionsBar* unity_places_place_search_sections_bar_construct (GType object_type);
 void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSearchSectionsBar* self, UnityPlacesPlaceEntry* entry);
@@ -1565,11 +1562,11 @@ UnityShell* unity_places_view_get_shell (UnityPlacesView* self);
 UnityPlacesPlaceModel* unity_places_view_get_model (UnityPlacesView* self);
 void unity_places_view_set_model (UnityPlacesView* self, UnityPlacesPlaceModel* value);
 GQuark unity_launcher_app_type_error_quark (void);
-GType unity_launcher_scroller_child_controller_get_type (void);
-GType unity_launcher_quicklist_controller_get_type (void);
-GType unity_launcher_scroller_child_controller_menu_state_get_type (void);
-GType unity_launcher_application_controller_get_type (void);
-GType unity_launcher_scroller_child_get_type (void);
+GType unity_launcher_scroller_child_controller_get_type (void) G_GNUC_CONST;
+GType unity_launcher_quicklist_controller_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_child_controller_menu_state_get_type (void) G_GNUC_CONST;
+GType unity_launcher_application_controller_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_child_get_type (void) G_GNUC_CONST;
 UnityLauncherApplicationController* unity_launcher_application_controller_new (const char* desktop_file_, UnityLauncherScrollerChild* child_);
 UnityLauncherApplicationController* unity_launcher_application_controller_construct (GType object_type, const char* desktop_file_, UnityLauncherScrollerChild* child_);
 void unity_launcher_application_controller_set_sticky (UnityLauncherApplicationController* self, gboolean is_sticky);
@@ -1581,52 +1578,54 @@ void unity_launcher_application_controller_attach_application (UnityLauncherAppl
 void unity_launcher_application_controller_detach_application (UnityLauncherApplicationController* self);
 gboolean unity_launcher_application_controller_debug_is_application_attached (UnityLauncherApplicationController* self);
 const char* unity_launcher_application_controller_get_desktop_file (UnityLauncherApplicationController* self);
-GType unity_launcher_shortcut_item_get_type (void);
+GType unity_launcher_shortcut_item_get_type (void) G_GNUC_CONST;
 char* unity_launcher_shortcut_item_get_name (UnityLauncherShortcutItem* self);
 void unity_launcher_shortcut_item_activated (UnityLauncherShortcutItem* self);
-GType unity_launcher_launcher_get_type (void);
+GType unity_launcher_launcher_get_type (void) G_GNUC_CONST;
 UnityLauncherLauncher* unity_launcher_launcher_new (UnityShell* shell);
 UnityLauncherLauncher* unity_launcher_launcher_construct (GType object_type, UnityShell* shell);
 float unity_launcher_launcher_get_width (UnityLauncherLauncher* self);
 ClutterActor* unity_launcher_launcher_get_view (UnityLauncherLauncher* self);
 UnityShell* unity_launcher_launcher_get_shell (UnityLauncherLauncher* self);
-GType unity_launcher_quicklist_check_menu_item_get_type (void);
+GType unity_launcher_scroller_model_get_type (void) G_GNUC_CONST;
+UnityLauncherScrollerModel* unity_launcher_launcher_get_model (UnityLauncherLauncher* self);
+GType unity_launcher_quicklist_check_menu_item_get_type (void) G_GNUC_CONST;
 UnityLauncherQuicklistCheckMenuItem* unity_launcher_quicklist_check_menu_item_new (void);
 UnityLauncherQuicklistCheckMenuItem* unity_launcher_quicklist_check_menu_item_construct (GType object_type);
 UnityLauncherQuicklistCheckMenuItem* unity_launcher_quicklist_check_menu_item_new_with_label (const char* label);
 UnityLauncherQuicklistCheckMenuItem* unity_launcher_quicklist_check_menu_item_construct_with_label (GType object_type, const char* label);
 extern UnityLauncherQuicklistController* unity_launcher_ql_controller_singleton;
-GType unity_launcher_quicklist_controller_state_get_type (void);
+GType unity_launcher_quicklist_controller_state_get_type (void) G_GNUC_CONST;
 UnityLauncherQuicklistController* unity_launcher_quicklist_controller_get_current_menu (void);
 gboolean unity_launcher_quicklist_controller_is_menu_open (void);
 gboolean unity_launcher_quicklist_controller_do_menus_match (UnityLauncherQuicklistController* menu);
-CtkMenu* unity_launcher_quicklist_controller_get_view (UnityLauncherQuicklistController* self);
+CtkMenuExpandable* unity_launcher_quicklist_controller_get_view (UnityLauncherQuicklistController* self);
 UnityLauncherQuicklistController* unity_launcher_quicklist_controller_construct (GType object_type);
 UnityLauncherScrollerChildController* unity_launcher_quicklist_controller_get_attached_controller (UnityLauncherQuicklistController* self);
 UnityLauncherQuicklistControllerState unity_launcher_quicklist_controller_get_state (UnityLauncherQuicklistController* self);
 void unity_launcher_quicklist_controller_set_state (UnityLauncherQuicklistController* self, UnityLauncherQuicklistControllerState value);
-GType unity_launcher_application_quicklist_controller_get_type (void);
+GType unity_launcher_application_quicklist_controller_get_type (void) G_GNUC_CONST;
 UnityLauncherApplicationQuicklistController* unity_launcher_application_quicklist_controller_new (UnityLauncherScrollerChildController* scroller_child);
 UnityLauncherApplicationQuicklistController* unity_launcher_application_quicklist_controller_construct (GType object_type, UnityLauncherScrollerChildController* scroller_child);
-GType unity_launcher_quicklist_image_menu_item_get_type (void);
+GType unity_launcher_quicklist_image_menu_item_get_type (void) G_GNUC_CONST;
 UnityLauncherQuicklistImageMenuItem* unity_launcher_quicklist_image_menu_item_new (void);
 UnityLauncherQuicklistImageMenuItem* unity_launcher_quicklist_image_menu_item_construct (GType object_type);
 UnityLauncherQuicklistImageMenuItem* unity_launcher_quicklist_image_menu_item_new_with_label (const char* label);
 UnityLauncherQuicklistImageMenuItem* unity_launcher_quicklist_image_menu_item_construct_with_label (GType object_type, const char* label);
-GType unity_launcher_quicklist_menu_item_get_type (void);
+GType unity_launcher_quicklist_menu_item_get_type (void) G_GNUC_CONST;
 UnityLauncherQuicklistMenuItem* unity_launcher_quicklist_menu_item_new (void);
 UnityLauncherQuicklistMenuItem* unity_launcher_quicklist_menu_item_construct (GType object_type);
 UnityLauncherQuicklistMenuItem* unity_launcher_quicklist_menu_item_new_with_label (const char* label);
 UnityLauncherQuicklistMenuItem* unity_launcher_quicklist_menu_item_construct_with_label (GType object_type, const char* label);
-GType unity_launcher_quicklist_radio_menu_item_get_type (void);
+GType unity_launcher_quicklist_radio_menu_item_get_type (void) G_GNUC_CONST;
 UnityLauncherQuicklistRadioMenuItem* unity_launcher_quicklist_radio_menu_item_new (GSList* group);
 UnityLauncherQuicklistRadioMenuItem* unity_launcher_quicklist_radio_menu_item_construct (GType object_type, GSList* group);
 UnityLauncherQuicklistRadioMenuItem* unity_launcher_quicklist_radio_menu_item_new_with_label (GSList* group, const char* label);
 UnityLauncherQuicklistRadioMenuItem* unity_launcher_quicklist_radio_menu_item_construct_with_label (GType object_type, GSList* group, const char* label);
-GType unity_launcher_quicklist_menu_seperator_get_type (void);
+GType unity_launcher_quicklist_menu_seperator_get_type (void) G_GNUC_CONST;
 UnityLauncherQuicklistMenuSeperator* unity_launcher_quicklist_menu_seperator_new (void);
 UnityLauncherQuicklistMenuSeperator* unity_launcher_quicklist_menu_seperator_construct (GType object_type);
-GType unity_launcher_quicklist_menu_get_type (void);
+GType unity_launcher_quicklist_menu_get_type (void) G_GNUC_CONST;
 UnityLauncherQuicklistMenu* unity_launcher_quicklist_menu_new (void);
 UnityLauncherQuicklistMenu* unity_launcher_quicklist_menu_construct (GType object_type);
 UnityLauncherScrollerChildController* unity_launcher_scroller_child_controller_construct (GType object_type, UnityLauncherScrollerChild* child_);
@@ -1634,12 +1633,19 @@ void unity_launcher_scroller_child_controller_get_menu_actions (UnityLauncherScr
 void unity_launcher_scroller_child_controller_get_menu_navigation (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
 void unity_launcher_scroller_child_controller_activate (UnityLauncherScrollerChildController* self);
 UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_get_menu_controller (UnityLauncherScrollerChildController* self);
+void unity_launcher_scroller_child_controller_load_icon_from_icon_name (UnityLauncherScrollerChildController* self, const char* icon_name);
 UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (UnityLauncherScrollerChildController* self);
+const char* unity_launcher_scroller_child_controller_get_name (UnityLauncherScrollerChildController* self);
+void unity_launcher_scroller_child_controller_set_name (UnityLauncherScrollerChildController* self, const char* value);
+gboolean unity_launcher_scroller_child_controller_get_hide (UnityLauncherScrollerChildController* self);
+void unity_launcher_scroller_child_controller_set_hide (UnityLauncherScrollerChildController* self, gboolean value);
 UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_get_menu (UnityLauncherScrollerChildController* self);
 void unity_launcher_scroller_child_controller_set_menu (UnityLauncherScrollerChildController* self, UnityLauncherQuicklistController* value);
-GType unity_launcher_pin_type_get_type (void);
-void unity_launcher_scroller_child_force_rotation_jump (UnityLauncherScrollerChild* self, float degrees);
+GType unity_launcher_pin_type_get_type (void) G_GNUC_CONST;
 char* unity_launcher_scroller_child_to_string (UnityLauncherScrollerChild* self);
+ClutterActor* unity_launcher_scroller_child_get_content (UnityLauncherScrollerChild* self);
+void unity_launcher_scroller_child_force_rotation_jump (UnityLauncherScrollerChild* self, float degrees);
+UnityLauncherScrollerChild* unity_launcher_scroller_child_new (void);
 UnityLauncherScrollerChild* unity_launcher_scroller_child_construct (GType object_type);
 GdkPixbuf* unity_launcher_scroller_child_get_icon (UnityLauncherScrollerChild* self);
 void unity_launcher_scroller_child_set_icon (UnityLauncherScrollerChild* self, GdkPixbuf* value);
@@ -1655,7 +1661,6 @@ gboolean unity_launcher_scroller_child_get_activating (UnityLauncherScrollerChil
 void unity_launcher_scroller_child_set_activating (UnityLauncherScrollerChild* self, gboolean value);
 float unity_launcher_scroller_child_get_rotation (UnityLauncherScrollerChild* self);
 void unity_launcher_scroller_child_set_rotation (UnityLauncherScrollerChild* self, float value);
-GType unity_launcher_scroller_model_get_type (void);
 UnityLauncherScrollerModel* unity_launcher_scroller_model_new (void);
 UnityLauncherScrollerModel* unity_launcher_scroller_model_construct (GType object_type);
 char* unity_launcher_scroller_model_to_string (UnityLauncherScrollerModel* self);
@@ -1665,7 +1670,7 @@ GParamSpec* unity_launcher_scroller_model_param_spec_iterator (const gchar* name
 void unity_launcher_scroller_model_value_set_iterator (GValue* value, gpointer v_object);
 void unity_launcher_scroller_model_value_take_iterator (GValue* value, gpointer v_object);
 gpointer unity_launcher_scroller_model_value_get_iterator (const GValue* value);
-GType unity_launcher_scroller_model_iterator_get_type (void);
+GType unity_launcher_scroller_model_iterator_get_type (void) G_GNUC_CONST;
 UnityLauncherScrollerModelIterator* unity_launcher_scroller_model_iterator (UnityLauncherScrollerModel* self);
 gboolean unity_launcher_scroller_model_contains (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
 void unity_launcher_scroller_model_add (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
@@ -1681,7 +1686,7 @@ UnityLauncherScrollerModelIterator* unity_launcher_scroller_model_iterator_new (
 UnityLauncherScrollerModelIterator* unity_launcher_scroller_model_iterator_construct (GType object_type, GeeArrayList* arraylist);
 gboolean unity_launcher_scroller_model_iterator_next (UnityLauncherScrollerModelIterator* self);
 UnityLauncherScrollerChild* unity_launcher_scroller_model_iterator_get (UnityLauncherScrollerModelIterator* self);
-GType unity_testing_background_get_type (void);
+GType unity_testing_background_get_type (void) G_GNUC_CONST;
 UnityTestingBackground* unity_testing_background_new (void);
 UnityTestingBackground* unity_testing_background_construct (GType object_type);
 gpointer unity_testing_object_registry_ref (gpointer instance);
@@ -1690,7 +1695,7 @@ GParamSpec* unity_testing_param_spec_object_registry (const gchar* name, const g
 void unity_testing_value_set_object_registry (GValue* value, gpointer v_object);
 void unity_testing_value_take_object_registry (GValue* value, gpointer v_object);
 gpointer unity_testing_value_get_object_registry (const GValue* value);
-GType unity_testing_object_registry_get_type (void);
+GType unity_testing_object_registry_get_type (void) G_GNUC_CONST;
 UnityTestingObjectRegistry* unity_testing_object_registry_new (void);
 UnityTestingObjectRegistry* unity_testing_object_registry_construct (GType object_type);
 UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void);
@@ -1702,10 +1707,10 @@ GParamSpec* unity_param_spec_process_info (const gchar* name, const gchar* nick,
 void unity_value_set_process_info (GValue* value, gpointer v_object);
 void unity_value_take_process_info (GValue* value, gpointer v_object);
 gpointer unity_value_get_process_info (const GValue* value);
-GType unity_process_info_get_type (void);
+GType unity_process_info_get_type (void) G_GNUC_CONST;
 UnityProcessInfo* unity_process_info_new (const char* name);
 UnityProcessInfo* unity_process_info_construct (GType object_type, const char* name);
-GType unity_timeline_logger_get_type (void);
+GType unity_timeline_logger_get_type (void) G_GNUC_CONST;
 extern UnityTimelineLogger* unity_timeline_singleton;
 extern gboolean unity_is_logging;
 UnityTimelineLogger* unity_timeline_logger_get_default (void);
@@ -1714,7 +1719,7 @@ void unity_timeline_logger_end_process (UnityTimelineLogger* self, const char* n
 void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* filename);
 UnityTimelineLogger* unity_timeline_logger_new (void);
 UnityTimelineLogger* unity_timeline_logger_construct (GType object_type);
-GType unity_testing_director_get_type (void);
+GType unity_testing_director_get_type (void) G_GNUC_CONST;
 UnityTestingDirector* unity_testing_director_new (ClutterStage* stage);
 UnityTestingDirector* unity_testing_director_construct (GType object_type, ClutterStage* stage);
 void unity_testing_director_do_wait_for_animation (UnityTestingDirector* self, ClutterActor* actor);
@@ -1731,7 +1736,7 @@ GParamSpec* g_test_param_spec_log (const gchar* name, const gchar* nick, const g
 void g_test_value_set_log (GValue* value, gpointer v_object);
 void g_test_value_take_log (GValue* value, gpointer v_object);
 gpointer g_test_value_get_log (const GValue* value);
-GType g_test_log_get_type (void);
+GType g_test_log_get_type (void) G_GNUC_CONST;
 void g_test_log_set_fatal_handler (GTestLogLogFatalFunc func, void* func_target);
 GTestLog* g_test_log_new (void);
 GTestLog* g_test_log_construct (GType object_type);
@@ -1741,12 +1746,12 @@ GParamSpec* unity_testing_param_spec_logging (const gchar* name, const gchar* ni
 void unity_testing_value_set_logging (GValue* value, gpointer v_object);
 void unity_testing_value_take_logging (GValue* value, gpointer v_object);
 gpointer unity_testing_value_get_logging (const GValue* value);
-GType unity_testing_logging_get_type (void);
+GType unity_testing_logging_get_type (void) G_GNUC_CONST;
 UnityTestingLogging* unity_testing_logging_new (void);
 UnityTestingLogging* unity_testing_logging_construct (GType object_type);
 gboolean unity_testing_logging_fatal_handler (const char* log_domain, GLogLevelFlags flags, const char* message);
 void unity_testing_logging_init_fatal_handler (void);
-GType unity_testing_window_get_type (void);
+GType unity_testing_window_get_type (void) G_GNUC_CONST;
 UnityTestingWindow* unity_testing_window_new (gboolean popup, gint width, gint height);
 UnityTestingWindow* unity_testing_window_construct (GType object_type, gboolean popup, gint width, gint height);
 void unity_testing_window_init_test_mode (UnityTestingWindow* self);
@@ -1761,7 +1766,7 @@ GParamSpec* unity_testing_param_spec_workarea (const gchar* name, const gchar* n
 void unity_testing_value_set_workarea (GValue* value, gpointer v_object);
 void unity_testing_value_take_workarea (GValue* value, gpointer v_object);
 gpointer unity_testing_value_get_workarea (const GValue* value);
-GType unity_testing_workarea_get_type (void);
+GType unity_testing_workarea_get_type (void) G_GNUC_CONST;
 UnityTestingWorkarea* unity_testing_workarea_new (void);
 UnityTestingWorkarea* unity_testing_workarea_construct (GType object_type);
 void unity_testing_workarea_update_net_workarea (UnityTestingWorkarea* self);

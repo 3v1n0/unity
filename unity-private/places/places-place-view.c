@@ -130,8 +130,8 @@ struct _UnityPlacesPlaceEntryIface {
 
 static gpointer unity_places_place_view_parent_class = NULL;
 
-GType unity_places_place_view_get_type (void);
-GType unity_places_place_get_type (void);
+GType unity_places_place_view_get_type (void) G_GNUC_CONST;
+GType unity_places_place_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_VIEW_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE_VIEW, UnityPlacesPlaceViewPrivate))
 enum  {
 	UNITY_PLACES_PLACE_VIEW_DUMMY_PROPERTY,
@@ -139,11 +139,11 @@ enum  {
 };
 UnityPlacesPlaceView* unity_places_place_view_new (UnityPlacesPlace* place);
 UnityPlacesPlaceView* unity_places_place_view_construct (GType object_type, UnityPlacesPlace* place);
-GType unity_places_place_entry_view_get_type (void);
+GType unity_places_place_entry_view_get_type (void) G_GNUC_CONST;
 static gboolean unity_places_place_view_on_entry_clicked (UnityPlacesPlaceView* self, ClutterActor* view, ClutterEvent* e);
 UnityPlacesPlace* unity_places_place_view_get_place (UnityPlacesPlaceView* self);
 static void unity_places_place_view_set_place (UnityPlacesPlaceView* self, UnityPlacesPlace* value);
-GType unity_places_place_entry_get_type (void);
+GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
 GeeArrayList* unity_places_place_get_entries (UnityPlacesPlace* self);
 UnityPlacesPlaceEntryView* unity_places_place_entry_view_new (UnityPlacesPlaceEntry* entry);
 UnityPlacesPlaceEntryView* unity_places_place_entry_view_construct (GType object_type, UnityPlacesPlaceEntry* entry);
@@ -233,8 +233,8 @@ static GObject * unity_places_place_view_constructor (GType type, guint n_constr
 				clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) view);
 				clutter_actor_show ((ClutterActor*) view);
 				g_signal_connect_object ((ClutterActor*) view, "button-release-event", (GCallback) _unity_places_place_view_on_entry_clicked_clutter_actor_button_release_event, self, 0);
-				_g_object_unref0 (entry);
 				_g_object_unref0 (view);
+				_g_object_unref0 (entry);
 			}
 			_g_object_unref0 (_entry_it);
 		}

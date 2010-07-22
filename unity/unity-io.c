@@ -193,8 +193,8 @@ static gboolean unity_io_read_stream_async_co (UnityIoReadStreamAsyncData* data)
 	switch (data->_state_) {
 		case 0:
 		goto _state_0;
-		case 5:
-		goto _state_5;
+		case 6:
+		goto _state_6;
 		default:
 		g_assert_not_reached ();
 	}
@@ -202,10 +202,10 @@ static gboolean unity_io_read_stream_async_co (UnityIoReadStreamAsyncData* data)
 	{
 		data->output = (GMemoryOutputStream*) g_memory_output_stream_new (NULL, (gsize) 0, _g_realloc_grealloc_func, NULL);
 		while (TRUE) {
-			data->_state_ = 5;
+			data->_state_ = 6;
 			g_input_stream_read_async (data->input, data->buffer, data->buffer_lenght, data->io_priority, data->cancellable, unity_io_read_stream_async_ready, data);
 			return FALSE;
-			_state_5:
+			_state_6:
 			data->_tmp0_ = g_input_stream_read_finish (data->input, data->_res_, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
 				g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
@@ -341,8 +341,8 @@ static gboolean unity_io_open_from_dirs_co (UnityIoOpenFromDirsData* data) {
 	switch (data->_state_) {
 		case 0:
 		goto _state_0;
-		case 6:
-		goto _state_6;
+		case 7:
+		goto _state_7;
 		default:
 		g_assert_not_reached ();
 	}
@@ -357,18 +357,18 @@ static gboolean unity_io_open_from_dirs_co (UnityIoOpenFromDirsData* data) {
 					data->path = (data->_tmp0_ = g_build_filename (data->dir, data->filename, NULL, NULL), _g_free0 (data->path), data->_tmp0_);
 					data->datafile = (data->_tmp1_ = g_file_new_for_path (data->path), _g_object_unref0 (data->datafile), data->_tmp1_);
 					{
-						data->_state_ = 6;
+						data->_state_ = 7;
 						g_file_read_async (data->datafile, G_PRIORITY_DEFAULT, NULL, unity_io_open_from_dirs_ready, data);
 						return FALSE;
-						_state_6:
+						_state_7:
 						data->_tmp2_ = g_file_read_finish (data->datafile, data->_res_, &data->_inner_error_);
 						if (data->_inner_error_ != NULL) {
 							goto __catch25_g_error;
 						}
 						data->result = data->_tmp2_;
 						_g_free0 (data->dir);
-						_g_free0 (data->path);
 						_g_object_unref0 (data->datafile);
+						_g_free0 (data->path);
 						{
 							if (data->_state_ == 0) {
 								g_simple_async_result_complete_in_idle (data->_async_result);
@@ -390,8 +390,8 @@ static gboolean unity_io_open_from_dirs_co (UnityIoOpenFromDirsData* data) {
 								{
 									_g_error_free0 (data->ee);
 									_g_free0 (data->dir);
-									_g_free0 (data->path);
 									_g_object_unref0 (data->datafile);
+									_g_free0 (data->path);
 									goto __finally25;
 								}
 							}
@@ -403,8 +403,8 @@ static gboolean unity_io_open_from_dirs_co (UnityIoOpenFromDirsData* data) {
 						g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
 						g_error_free (data->_inner_error_);
 						_g_free0 (data->dir);
-						_g_free0 (data->path);
 						_g_object_unref0 (data->datafile);
+						_g_free0 (data->path);
 						{
 							if (data->_state_ == 0) {
 								g_simple_async_result_complete_in_idle (data->_async_result);
@@ -420,8 +420,8 @@ static gboolean unity_io_open_from_dirs_co (UnityIoOpenFromDirsData* data) {
 			}
 		}
 		data->result = NULL;
-		_g_free0 (data->path);
 		_g_object_unref0 (data->datafile);
+		_g_free0 (data->path);
 		{
 			if (data->_state_ == 0) {
 				g_simple_async_result_complete_in_idle (data->_async_result);
@@ -431,8 +431,8 @@ static gboolean unity_io_open_from_dirs_co (UnityIoOpenFromDirsData* data) {
 			g_object_unref (data->_async_result);
 			return FALSE;
 		}
-		_g_free0 (data->path);
 		_g_object_unref0 (data->datafile);
+		_g_free0 (data->path);
 	}
 	{
 		if (data->_state_ == 0) {
@@ -490,10 +490,10 @@ static gboolean unity_io_open_from_data_dirs_co (UnityIoOpenFromDataDirsData* da
 	switch (data->_state_) {
 		case 0:
 		goto _state_0;
-		case 7:
-		goto _state_7;
 		case 8:
 		goto _state_8;
+		case 9:
+		goto _state_9;
 		default:
 		g_assert_not_reached ();
 	}
@@ -502,17 +502,17 @@ static gboolean unity_io_open_from_data_dirs_co (UnityIoOpenFromDataDirsData* da
 		data->path = g_build_filename (g_get_user_data_dir (), data->filename, NULL, NULL);
 		data->f = g_file_new_for_path (data->path);
 		{
-			data->_state_ = 7;
+			data->_state_ = 8;
 			g_file_read_async (data->f, G_PRIORITY_DEFAULT, NULL, unity_io_open_from_data_dirs_ready, data);
 			return FALSE;
-			_state_7:
+			_state_8:
 			data->_tmp0_ = g_file_read_finish (data->f, data->_res_, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
 				goto __catch26_g_error;
 			}
 			data->result = data->_tmp0_;
-			_g_free0 (data->path);
 			_g_object_unref0 (data->f);
+			_g_free0 (data->path);
 			{
 				if (data->_state_ == 0) {
 					g_simple_async_result_complete_in_idle (data->_async_result);
@@ -533,8 +533,8 @@ static gboolean unity_io_open_from_data_dirs_co (UnityIoOpenFromDataDirsData* da
 					data->_inner_error_ = _g_error_copy0 (data->e);
 					{
 						_g_error_free0 (data->e);
-						_g_free0 (data->path);
 						_g_object_unref0 (data->f);
+						_g_free0 (data->path);
 						goto __finally26;
 					}
 				}
@@ -545,8 +545,8 @@ static gboolean unity_io_open_from_data_dirs_co (UnityIoOpenFromDataDirsData* da
 		if (data->_inner_error_ != NULL) {
 			g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
 			g_error_free (data->_inner_error_);
-			_g_free0 (data->path);
 			_g_object_unref0 (data->f);
+			_g_free0 (data->path);
 			{
 				if (data->_state_ == 0) {
 					g_simple_async_result_complete_in_idle (data->_async_result);
@@ -558,17 +558,17 @@ static gboolean unity_io_open_from_data_dirs_co (UnityIoOpenFromDataDirsData* da
 			}
 		}
 		data->dirs = (data->_tmp2_ = unity_io_get_system_data_dirs (&data->_tmp1_), data->dirs_length1 = data->_tmp1_, data->_dirs_size_ = data->dirs_length1, data->_tmp2_);
-		data->_state_ = 8;
+		data->_state_ = 9;
 		unity_io_open_from_dirs (data->filename, data->dirs, data->dirs_length1, unity_io_open_from_data_dirs_ready, data);
 		return FALSE;
-		_state_8:
+		_state_9:
 		data->_tmp3_ = unity_io_open_from_dirs_finish (data->_res_, &data->_inner_error_);
 		if (data->_inner_error_ != NULL) {
 			g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
 			g_error_free (data->_inner_error_);
-			_g_free0 (data->path);
-			_g_object_unref0 (data->f);
 			data->dirs = (_vala_array_free (data->dirs, data->dirs_length1, (GDestroyNotify) g_free), NULL);
+			_g_object_unref0 (data->f);
+			_g_free0 (data->path);
 			{
 				if (data->_state_ == 0) {
 					g_simple_async_result_complete_in_idle (data->_async_result);
@@ -580,9 +580,9 @@ static gboolean unity_io_open_from_data_dirs_co (UnityIoOpenFromDataDirsData* da
 			}
 		}
 		data->result = data->_tmp3_;
-		_g_free0 (data->path);
-		_g_object_unref0 (data->f);
 		data->dirs = (_vala_array_free (data->dirs, data->dirs_length1, (GDestroyNotify) g_free), NULL);
+		_g_object_unref0 (data->f);
+		_g_free0 (data->path);
 		{
 			if (data->_state_ == 0) {
 				g_simple_async_result_complete_in_idle (data->_async_result);
@@ -592,9 +592,9 @@ static gboolean unity_io_open_from_data_dirs_co (UnityIoOpenFromDataDirsData* da
 			g_object_unref (data->_async_result);
 			return FALSE;
 		}
-		_g_free0 (data->path);
-		_g_object_unref0 (data->f);
 		data->dirs = (_vala_array_free (data->dirs, data->dirs_length1, (GDestroyNotify) g_free), NULL);
+		_g_object_unref0 (data->f);
+		_g_free0 (data->path);
 	}
 	{
 		if (data->_state_ == 0) {

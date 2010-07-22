@@ -94,7 +94,7 @@ struct _UnityPanelIndicatorsIndicatorObjectEntryViewPrivate {
 
 static gpointer unity_panel_indicators_indicator_object_entry_view_parent_class = NULL;
 
-GType unity_panel_indicators_indicator_object_entry_view_get_type (void);
+GType unity_panel_indicators_indicator_object_entry_view_get_type (void) G_GNUC_CONST;
 #define UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_ENTRY_VIEW_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_ENTRY_VIEW, UnityPanelIndicatorsIndicatorObjectEntryViewPrivate))
 enum  {
 	UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_ENTRY_VIEW_DUMMY_PROPERTY,
@@ -104,13 +104,13 @@ UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_o
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_entry_view_construct (GType object_type, IndicatorObjectEntry* _entry);
 static void unity_panel_indicators_indicator_object_entry_view_position_menu (UnityPanelIndicatorsIndicatorObjectEntryView* self, GtkMenu* menu, gint* x, gint* y, gboolean* push_in);
 IndicatorObjectEntry* unity_panel_indicators_indicator_object_entry_view_get_entry (UnityPanelIndicatorsIndicatorObjectEntryView* self);
-GType menu_manager_get_type (void);
+GType menu_manager_get_type (void) G_GNUC_CONST;
 MenuManager* menu_manager_get_default (void);
 void menu_manager_register_visible_menu (MenuManager* self, GtkMenu* menu);
 static void _unity_panel_indicators_indicator_object_entry_view_position_menu_gtk_menu_position_func (GtkMenu* menu, gint* x, gint* y, gboolean* push_in, gpointer self);
 void unity_panel_indicators_indicator_object_entry_view_menu_shown (UnityPanelIndicatorsIndicatorObjectEntryView* self);
 void unity_panel_indicators_indicator_object_entry_view_show_menu (UnityPanelIndicatorsIndicatorObjectEntryView* self);
-GType unity_panel_indicators_indicator_object_view_get_type (void);
+GType unity_panel_indicators_indicator_object_view_get_type (void) G_GNUC_CONST;
 IndicatorObject* unity_panel_indicators_indicator_object_view_get_indicator_object (UnityPanelIndicatorsIndicatorObjectView* self);
 static gboolean unity_panel_indicators_indicator_object_entry_view_on_scroll_event (UnityPanelIndicatorsIndicatorObjectEntryView* self, ClutterEvent* e);
 gboolean unity_panel_indicators_indicator_object_entry_view_on_button_press_event (UnityPanelIndicatorsIndicatorObjectEntryView* self, ClutterEvent* e);
@@ -413,8 +413,8 @@ static gboolean unity_panel_indicators_indicator_object_entry_view_update_bg (Un
 	cairo_set_source (cr, pat);
 	cairo_fill (cr);
 	result = FALSE;
-	_cairo_destroy0 (cr);
 	_cairo_pattern_destroy0 (pat);
+	_cairo_destroy0 (cr);
 	return result;
 }
 

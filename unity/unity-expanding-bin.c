@@ -72,8 +72,8 @@ struct _UnityExpandingBinPrivate {
 
 static gpointer unity_expanding_bin_parent_class = NULL;
 
-GType unity_expanding_bin_state_get_type (void);
-GType unity_expanding_bin_get_type (void);
+GType unity_expanding_bin_state_get_type (void) G_GNUC_CONST;
+GType unity_expanding_bin_get_type (void) G_GNUC_CONST;
 #define UNITY_EXPANDING_BIN_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_EXPANDING_BIN, UnityExpandingBinPrivate))
 enum  {
 	UNITY_EXPANDING_BIN_DUMMY_PROPERTY,

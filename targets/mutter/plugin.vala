@@ -107,6 +107,8 @@ namespace Unity
       set { _plugin = value; Idle.add (real_construct); }
     }
 
+    public ExposeManager expose_manager { get; private set; }
+
     public bool menus_swallow_events { get { return false; } }
 
     public bool expose_showing { get { return expose_manager.expose_showing; } }
@@ -121,7 +123,6 @@ namespace Unity
 
     /* Unity Components */
     private Background         background;
-    private ExposeManager      expose_manager;
     private SpacesManager      spaces_manager;
     private Launcher.Launcher  launcher;
     private Places.Controller  places_controller;
@@ -241,7 +242,14 @@ namespace Unity
       this.launcher.get_view ().opacity = 0;
 
       this.spaces_manager = new SpacesManager (this);
-      this.spaces_manager.set_padding (50, 50, 125, 50);
+      this.spaces_manager.set_padding (50, 50, get_launcher_width_foobar () + 50, 50);
+
+      this.launcher.model.add (spaces_manager.button);
+      this.launcher.model.order_changed.connect (() => {
+        var index = launcher.model.index_of (spaces_manager.button);
+        if (index < launcher.model.size)
+          launcher.model.move (spaces_manager.button, launcher.model.size -1);
+      });
 
       this.expose_manager = new ExposeManager (this, launcher);
       this.expose_manager.hovered_opacity = 255;
@@ -308,7 +316,6 @@ namespace Unity
 
     private void on_focus_window_fullscreen_changed ()
     {
-      warning ("FOCUS WINDOW FULLSCREEN CHANGED");
       check_fullscreen_obstruction ();
     }
 
@@ -466,32 +473,6 @@ namespace Unity
     /*
      * SHELL IMPLEMENTATION
      */
-
-    /*
-    public void show_window_picker ()
-    {
-      this.show_unity ();
-          return;
-        }
-
-      if (expose_manager.expose_showing == true)
-        {
-          this.dexpose_windows ();
-          return;
-        }
-
-      GLib.SList <Clutter.Actor> windows = null;
-
-      unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
-      foreach (Mutter.Window window in mutter_windows)
-        {
-          windows.append (window as Clutter.Actor);
-        }
-
-      this.expose_windows (windows, 80);
-    }
-    */
-
     public Clutter.Stage get_stage ()
     {
       return this.stage;
@@ -539,7 +520,7 @@ namespace Unity
 
     public void stop_expose ()
     {
-      dexpose_windows ();
+      expose_manager.end_expose ();
     }
 
     public void show_window (uint32 xid)
@@ -585,10 +566,6 @@ namespace Unity
       expose_manager.start_expose (windows);
     }
 
-    public void dexpose_windows ()
-    {
-      expose_manager.end_expose ();
-    }
 
     public void hide_unity ()
     {

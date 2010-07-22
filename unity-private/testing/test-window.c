@@ -163,19 +163,19 @@ static gpointer unity_testing_window_parent_class = NULL;
 static UnityShellIface* unity_testing_window_unity_shell_parent_iface = NULL;
 static gpointer unity_testing_workarea_parent_class = NULL;
 
-GType unity_testing_window_get_type (void);
+GType unity_testing_window_get_type (void) G_GNUC_CONST;
 gpointer unity_testing_workarea_ref (gpointer instance);
 void unity_testing_workarea_unref (gpointer instance);
 GParamSpec* unity_testing_param_spec_workarea (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
 void unity_testing_value_set_workarea (GValue* value, gpointer v_object);
 void unity_testing_value_take_workarea (GValue* value, gpointer v_object);
 gpointer unity_testing_value_get_workarea (const GValue* value);
-GType unity_testing_workarea_get_type (void);
-GType unity_testing_background_get_type (void);
-GType unity_launcher_launcher_get_type (void);
-GType unity_panel_view_get_type (void);
-GType unity_places_controller_get_type (void);
-GType unity_places_view_get_type (void);
+GType unity_testing_workarea_get_type (void) G_GNUC_CONST;
+GType unity_testing_background_get_type (void) G_GNUC_CONST;
+GType unity_launcher_launcher_get_type (void) G_GNUC_CONST;
+GType unity_panel_view_get_type (void) G_GNUC_CONST;
+GType unity_places_controller_get_type (void) G_GNUC_CONST;
+GType unity_places_view_get_type (void) G_GNUC_CONST;
 #define UNITY_TESTING_WINDOW_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TESTING_TYPE_WINDOW, UnityTestingWindowPrivate))
 enum  {
 	UNITY_TESTING_WINDOW_DUMMY_PROPERTY,
@@ -228,14 +228,14 @@ static void unity_testing_window_set_popup_height (UnityTestingWindow* self, gin
 UnityTestingWorkarea* unity_testing_workarea_new (void);
 UnityTestingWorkarea* unity_testing_workarea_construct (GType object_type);
 void unity_testing_workarea_update_net_workarea (UnityTestingWorkarea* self);
-static gboolean _lambda38_ (UnityTestingWindow* self);
-static gboolean __lambda38__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
 static gboolean _lambda39_ (UnityTestingWindow* self);
 static gboolean __lambda39__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
-static void _lambda40_ (GdkScreen* s, UnityTestingWindow* self);
-static void __lambda40__gdk_screen_size_changed (GdkScreen* _sender, gpointer self);
+static gboolean _lambda40_ (UnityTestingWindow* self);
+static gboolean __lambda40__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
 static void _lambda41_ (GdkScreen* s, UnityTestingWindow* self);
-static void __lambda41__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self);
+static void __lambda41__gdk_screen_size_changed (GdkScreen* _sender, gpointer self);
+static void _lambda42_ (GdkScreen* s, UnityTestingWindow* self);
+static void __lambda42__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self);
 static gboolean _unity_testing_window_on_stage_button_press_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 UnityTestingBackground* unity_testing_background_new (void);
 UnityTestingBackground* unity_testing_background_construct (GType object_type);
@@ -632,24 +632,10 @@ static void unity_testing_window_set_popup_height (UnityTestingWindow* self, gin
 }
 
 
-static gboolean _lambda38_ (UnityTestingWindow* self) {
+static gboolean _lambda39_ (UnityTestingWindow* self) {
 	gboolean result = FALSE;
 	gtk_main_quit ();
 	result = FALSE;
-	return result;
-}
-
-
-static gboolean __lambda38__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
-	gboolean result;
-	result = _lambda38_ (self);
-	return result;
-}
-
-
-static gboolean _lambda39_ (UnityTestingWindow* self) {
-	gboolean result = FALSE;
-	result = TRUE;
 	return result;
 }
 
@@ -661,14 +647,17 @@ static gboolean __lambda39__gtk_widget_delete_event (GtkWidget* _sender, GdkEven
 }
 
 
-static void _lambda40_ (GdkScreen* s, UnityTestingWindow* self) {
-	g_return_if_fail (s != NULL);
-	unity_testing_window_relayout (self);
+static gboolean _lambda40_ (UnityTestingWindow* self) {
+	gboolean result = FALSE;
+	result = TRUE;
+	return result;
 }
 
 
-static void __lambda40__gdk_screen_size_changed (GdkScreen* _sender, gpointer self) {
-	_lambda40_ (_sender, self);
+static gboolean __lambda40__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
+	gboolean result;
+	result = _lambda40_ (self);
+	return result;
 }
 
 
@@ -678,8 +667,19 @@ static void _lambda41_ (GdkScreen* s, UnityTestingWindow* self) {
 }
 
 
-static void __lambda41__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self) {
+static void __lambda41__gdk_screen_size_changed (GdkScreen* _sender, gpointer self) {
 	_lambda41_ (_sender, self);
+}
+
+
+static void _lambda42_ (GdkScreen* s, UnityTestingWindow* self) {
+	g_return_if_fail (s != NULL);
+	unity_testing_window_relayout (self);
+}
+
+
+static void __lambda42__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self) {
+	_lambda42_ (_sender, self);
 }
 
 
@@ -737,7 +737,7 @@ static GObject * unity_testing_window_constructor (GType type, guint n_construct
 			gtk_window_set_decorated ((GtkWindow*) self, TRUE);
 			gtk_window_set_skip_taskbar_hint ((GtkWindow*) self, FALSE);
 			gtk_window_set_skip_pager_hint ((GtkWindow*) self, FALSE);
-			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda38__gtk_widget_delete_event, self, 0);
+			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda39__gtk_widget_delete_event, self, 0);
 		} else {
 			gtk_window_set_type_hint ((GtkWindow*) self, GDK_WINDOW_TYPE_HINT_DESKTOP);
 			gtk_window_set_keep_below ((GtkWindow*) self, TRUE);
@@ -746,9 +746,9 @@ static GObject * unity_testing_window_constructor (GType type, guint n_construct
 			gtk_window_set_skip_pager_hint ((GtkWindow*) self, TRUE);
 			gtk_window_set_accept_focus ((GtkWindow*) self, FALSE);
 			g_object_set ((GtkWidget*) self, "can-focus", FALSE, NULL);
-			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda39__gtk_widget_delete_event, self, 0);
-			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "size-changed", (GCallback) __lambda40__gdk_screen_size_changed, self, 0);
-			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "monitors-changed", (GCallback) __lambda41__gdk_screen_monitors_changed, self, 0);
+			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda40__gtk_widget_delete_event, self, 0);
+			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "size-changed", (GCallback) __lambda41__gdk_screen_size_changed, self, 0);
+			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "monitors-changed", (GCallback) __lambda42__gdk_screen_monitors_changed, self, 0);
 		}
 		gtk_window_set_title ((GtkWindow*) self, "Unity");
 		gtk_window_set_icon_name ((GtkWindow*) self, "distributor-logo");

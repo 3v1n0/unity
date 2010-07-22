@@ -80,13 +80,18 @@ struct _UnityAppInfoManagerLookupAsyncData {
 	GAppInfo* appinfo;
 	gsize data_size;
 	void* data;
-	char* path;
 	GFileInputStream* input;
-	guchar* _tmp0_;
+	GFile* f;
+	GFileInputStream* _tmp0_;
+	GFileInputStream* _tmp1_;
+	char* path;
+	GFileInputStream* _tmp2_;
+	GFileInputStream* _tmp3_;
+	guchar* _tmp4_;
 	GError * e;
 	GKeyFile* keyfile;
 	GError * ee;
-	GAppInfo* _tmp1_;
+	GAppInfo* _tmp5_;
 	GError * _inner_error_;
 };
 
@@ -95,7 +100,7 @@ static UnityAppInfoManager* unity_app_info_manager_singleton;
 static UnityAppInfoManager* unity_app_info_manager_singleton = NULL;
 static gpointer unity_app_info_manager_parent_class = NULL;
 
-GType unity_app_info_manager_get_type (void);
+GType unity_app_info_manager_get_type (void) G_GNUC_CONST;
 #define UNITY_APP_INFO_MANAGER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_APP_INFO_MANAGER, UnityAppInfoManagerPrivate))
 enum  {
 	UNITY_APP_INFO_MANAGER_DUMMY_PROPERTY
@@ -155,7 +160,6 @@ UnityAppInfoManager* unity_app_info_manager_get_instance (void) {
 GAppInfo* unity_app_info_manager_lookup (UnityAppInfoManager* self, const char* id) {
 	GAppInfo* result = NULL;
 	GAppInfo* appinfo;
-	GAppInfo* _tmp0_;
 	g_return_val_if_fail (self != NULL, NULL);
 	g_return_val_if_fail (id != NULL, NULL);
 	appinfo = (GAppInfo*) gee_map_get (self->priv->appinfo_by_id, id);
@@ -163,7 +167,13 @@ GAppInfo* unity_app_info_manager_lookup (UnityAppInfoManager* self, const char* 
 		result = appinfo;
 		return result;
 	}
-	appinfo = (_tmp0_ = (GAppInfo*) g_desktop_app_info_new (id), _g_object_unref0 (appinfo), _tmp0_);
+	if (g_str_has_prefix (id, "/")) {
+		GAppInfo* _tmp0_;
+		appinfo = (_tmp0_ = (GAppInfo*) g_desktop_app_info_new_from_filename (id), _g_object_unref0 (appinfo), _tmp0_);
+	} else {
+		GAppInfo* _tmp1_;
+		appinfo = (_tmp1_ = (GAppInfo*) g_desktop_app_info_new (id), _g_object_unref0 (appinfo), _tmp1_);
+	}
 	if (appinfo != NULL) {
 		gee_map_set (self->priv->appinfo_by_id, id, appinfo);
 	}
@@ -227,6 +237,8 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 		goto _state_3;
 		case 4:
 		goto _state_4;
+		case 5:
+		goto _state_5;
 		default:
 		g_assert_not_reached ();
 	}
@@ -245,32 +257,61 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 				return FALSE;
 			}
 		}
-		data->path = g_build_filename ("applications", data->id, NULL, NULL);
-		data->_state_ = 3;
-		unity_io_open_from_data_dirs (data->path, unity_app_info_manager_lookup_async_ready, data);
-		return FALSE;
-		_state_3:
-		data->input = unity_io_open_from_data_dirs_finish (data->_res_, &data->_inner_error_);
-		if (data->_inner_error_ != NULL) {
-			g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
-			g_error_free (data->_inner_error_);
-			_g_object_unref0 (data->appinfo);
-			_g_free0 (data->path);
-			{
-				if (data->_state_ == 0) {
-					g_simple_async_result_complete_in_idle (data->_async_result);
-				} else {
-					g_simple_async_result_complete (data->_async_result);
+		if (g_str_has_prefix (data->id, "/")) {
+			data->f = g_file_new_for_path (data->id);
+			data->_state_ = 3;
+			g_file_read_async (data->f, G_PRIORITY_DEFAULT, NULL, unity_app_info_manager_lookup_async_ready, data);
+			return FALSE;
+			_state_3:
+			data->_tmp0_ = g_file_read_finish (data->f, data->_res_, &data->_inner_error_);
+			if (data->_inner_error_ != NULL) {
+				g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
+				g_error_free (data->_inner_error_);
+				_g_object_unref0 (data->f);
+				_g_object_unref0 (data->input);
+				_g_object_unref0 (data->appinfo);
+				{
+					if (data->_state_ == 0) {
+						g_simple_async_result_complete_in_idle (data->_async_result);
+					} else {
+						g_simple_async_result_complete (data->_async_result);
+					}
+					g_object_unref (data->_async_result);
+					return FALSE;
 				}
-				g_object_unref (data->_async_result);
-				return FALSE;
 			}
+			data->input = (data->_tmp1_ = data->_tmp0_, _g_object_unref0 (data->input), data->_tmp1_);
+			_g_object_unref0 (data->f);
+		} else {
+			data->path = g_build_filename ("applications", data->id, NULL, NULL);
+			data->_state_ = 4;
+			unity_io_open_from_data_dirs (data->path, unity_app_info_manager_lookup_async_ready, data);
+			return FALSE;
+			_state_4:
+			data->_tmp2_ = unity_io_open_from_data_dirs_finish (data->_res_, &data->_inner_error_);
+			if (data->_inner_error_ != NULL) {
+				g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
+				g_error_free (data->_inner_error_);
+				_g_free0 (data->path);
+				_g_object_unref0 (data->input);
+				_g_object_unref0 (data->appinfo);
+				{
+					if (data->_state_ == 0) {
+						g_simple_async_result_complete_in_idle (data->_async_result);
+					} else {
+						g_simple_async_result_complete (data->_async_result);
+					}
+					g_object_unref (data->_async_result);
+					return FALSE;
+				}
+			}
+			data->input = (data->_tmp3_ = data->_tmp2_, _g_object_unref0 (data->input), data->_tmp3_);
+			_g_free0 (data->path);
 		}
 		if (data->input == NULL) {
 			data->result = NULL;
-			_g_object_unref0 (data->appinfo);
-			_g_free0 (data->path);
 			_g_object_unref0 (data->input);
+			_g_object_unref0 (data->appinfo);
 			{
 				if (data->_state_ == 0) {
 					g_simple_async_result_complete_in_idle (data->_async_result);
@@ -282,10 +323,10 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 			}
 		}
 		{
-			data->_state_ = 4;
-			unity_io_read_stream_async ((GInputStream*) data->input, (data->_tmp0_ = data->self->priv->buffer, (data->_tmp0_ == NULL) ? ((gpointer) data->_tmp0_) : _vala_array_dup1 (data->_tmp0_, data->self->priv->buffer_length1)), data->self->priv->buffer_length1, data->self->priv->buffer_size, G_PRIORITY_DEFAULT, NULL, unity_app_info_manager_lookup_async_ready, data);
+			data->_state_ = 5;
+			unity_io_read_stream_async ((GInputStream*) data->input, (data->_tmp4_ = data->self->priv->buffer, (data->_tmp4_ == NULL) ? ((gpointer) data->_tmp4_) : _vala_array_dup1 (data->_tmp4_, data->self->priv->buffer_length1)), data->self->priv->buffer_length1, data->self->priv->buffer_size, G_PRIORITY_DEFAULT, NULL, unity_app_info_manager_lookup_async_ready, data);
 			return FALSE;
-			_state_4:
+			_state_5:
 			unity_io_read_stream_finish (data->_res_, &data->data, &data->data_size, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
 				goto __catch9_g_error;
@@ -297,12 +338,11 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 			data->e = data->_inner_error_;
 			data->_inner_error_ = NULL;
 			{
-				g_warning ("unity-appinfo-manager.vala:123: Error reading '%s': %s", data->id, data->e->message);
+				g_warning ("unity-appinfo-manager.vala:137: Error reading '%s': %s", data->id, data->e->message);
 				data->result = NULL;
 				_g_error_free0 (data->e);
-				_g_object_unref0 (data->appinfo);
-				_g_free0 (data->path);
 				_g_object_unref0 (data->input);
+				_g_object_unref0 (data->appinfo);
 				{
 					if (data->_state_ == 0) {
 						g_simple_async_result_complete_in_idle (data->_async_result);
@@ -319,9 +359,8 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 		if (data->_inner_error_ != NULL) {
 			g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
 			g_error_free (data->_inner_error_);
-			_g_object_unref0 (data->appinfo);
-			_g_free0 (data->path);
 			_g_object_unref0 (data->input);
+			_g_object_unref0 (data->appinfo);
 			{
 				if (data->_state_ == 0) {
 					g_simple_async_result_complete_in_idle (data->_async_result);
@@ -345,13 +384,12 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 			data->ee = data->_inner_error_;
 			data->_inner_error_ = NULL;
 			{
-				g_warning ("unity-appinfo-manager.vala:134: Error parsing '%s': %s", data->id, data->ee->message);
+				g_warning ("unity-appinfo-manager.vala:148: Error parsing '%s': %s", data->id, data->ee->message);
 				data->result = NULL;
 				_g_error_free0 (data->ee);
-				_g_object_unref0 (data->appinfo);
-				_g_free0 (data->path);
-				_g_object_unref0 (data->input);
 				_g_key_file_free0 (data->keyfile);
+				_g_object_unref0 (data->input);
+				_g_object_unref0 (data->appinfo);
 				{
 					if (data->_state_ == 0) {
 						g_simple_async_result_complete_in_idle (data->_async_result);
@@ -368,10 +406,9 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 		if (data->_inner_error_ != NULL) {
 			g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
 			g_error_free (data->_inner_error_);
-			_g_object_unref0 (data->appinfo);
-			_g_free0 (data->path);
-			_g_object_unref0 (data->input);
 			_g_key_file_free0 (data->keyfile);
+			_g_object_unref0 (data->input);
+			_g_object_unref0 (data->appinfo);
 			{
 				if (data->_state_ == 0) {
 					g_simple_async_result_complete_in_idle (data->_async_result);
@@ -382,13 +419,12 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 				return FALSE;
 			}
 		}
-		data->appinfo = (data->_tmp1_ = (GAppInfo*) g_desktop_app_info_new_from_keyfile (data->keyfile), _g_object_unref0 (data->appinfo), data->_tmp1_);
+		data->appinfo = (data->_tmp5_ = (GAppInfo*) g_desktop_app_info_new_from_keyfile (data->keyfile), _g_object_unref0 (data->appinfo), data->_tmp5_);
 		gee_map_set (data->self->priv->appinfo_by_id, data->id, data->appinfo);
 		g_free (data->data);
 		data->result = data->appinfo;
-		_g_free0 (data->path);
-		_g_object_unref0 (data->input);
 		_g_key_file_free0 (data->keyfile);
+		_g_object_unref0 (data->input);
 		{
 			if (data->_state_ == 0) {
 				g_simple_async_result_complete_in_idle (data->_async_result);
@@ -398,10 +434,9 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 			g_object_unref (data->_async_result);
 			return FALSE;
 		}
-		_g_object_unref0 (data->appinfo);
-		_g_free0 (data->path);
-		_g_object_unref0 (data->input);
 		_g_key_file_free0 (data->keyfile);
+		_g_object_unref0 (data->input);
+		_g_object_unref0 (data->appinfo);
 	}
 	{
 		if (data->_state_ == 0) {

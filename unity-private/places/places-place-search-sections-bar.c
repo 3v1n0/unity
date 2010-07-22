@@ -153,9 +153,9 @@ struct _UnityPlacesSectionPrivate {
 static gpointer unity_places_place_search_sections_bar_parent_class = NULL;
 static gpointer unity_places_section_parent_class = NULL;
 
-GType unity_places_place_search_sections_bar_get_type (void);
-GType unity_places_place_entry_get_type (void);
-GType unity_places_section_get_type (void);
+GType unity_places_place_search_sections_bar_get_type (void) G_GNUC_CONST;
+GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
+GType unity_places_section_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE_SEARCH_SECTIONS_BAR, UnityPlacesPlaceSearchSectionsBarPrivate))
 enum  {
 	UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR_DUMMY_PROPERTY
@@ -321,12 +321,12 @@ void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSe
 							self->priv->active_section = (_tmp8_ = _g_object_ref0 (s), _g_object_unref0 (self->priv->active_section), _tmp8_);
 						}
 						unity_places_section_set_active (s, self->priv->active_section == s);
-						_g_object_unref0 (actor);
 						_g_object_unref0 (s);
+						_g_object_unref0 (actor);
 						break;
 					}
-					_g_object_unref0 (actor);
 					_g_object_unref0 (s);
+					_g_object_unref0 (actor);
 				}
 			}
 		}
@@ -349,16 +349,16 @@ void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSe
 				if (s->dirty) {
 					unity_places_section_start_destroy (s);
 				}
-				_g_object_unref0 (actor);
 				_g_object_unref0 (s);
+				_g_object_unref0 (actor);
 			}
 		}
 	}
 	g_signal_connect_object (model, "row-added", (GCallback) _unity_places_place_search_sections_bar_on_section_added_dee_model_row_added, self, 0);
 	g_signal_connect_object (model, "row-changed", (GCallback) _unity_places_place_search_sections_bar_on_section_changed_dee_model_row_changed, self, 0);
 	g_signal_connect_object (model, "row-removed", (GCallback) _unity_places_place_search_sections_bar_on_section_removed_dee_model_row_removed, self, 0);
-	_g_list_free0 (children);
 	_g_object_unref0 (model);
+	_g_list_free0 (children);
 }
 
 
@@ -417,8 +417,8 @@ static UnityPlacesSection* unity_places_place_search_sections_bar_get_section_fo
 					__g_list_free_g_object_unref0 (children);
 					return result;
 				}
-				_g_object_unref0 (child);
 				_g_object_unref0 (section);
+				_g_object_unref0 (child);
 			}
 		}
 	}

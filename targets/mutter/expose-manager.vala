@@ -25,6 +25,8 @@ namespace Unity
     private Clutter.Clone clone;
     private Clutter.Actor darken_box;
     private bool hovered;
+    
+    public bool fade_on_close { get; set; }
 
     public unowned Clutter.Actor source { get; private set; }
 
@@ -48,10 +50,15 @@ namespace Unity
       unhovered_opacity = 255;
 
       this.source = source;
-      clone = new Clutter.Clone (source);
+
+      if (source is Mutter.Window)
+        clone = new Clutter.Clone ((source as Mutter.Window).get_texture ());
+      else
+        clone = new Clutter.Clone (source);
 
       add_actor (clone);
       clone.show ();
+      clone.reactive = true;
       clone.set_position (0, 0);
 
       darken_box = new Clutter.Rectangle.with_color ({0, 0, 0, 255});
@@ -85,6 +92,33 @@ namespace Unity
       darken_box.opacity = darken;
       return false;
     }
+
+    public void restore_window_position (int active_workspace)
+    {
+      set_anchor_point_from_gravity (Clutter.Gravity.NORTH_WEST);
+      Clutter.Actor window = source;
+
+      uint8 opacity = 0;
+      if (!fade_on_close || (window is Mutter.Window && (window as Mutter.Window).showing_on_its_workspace () &&
+          (window as Mutter.Window).get_workspace () == active_workspace))
+        opacity = 255;
+
+
+      set ("scale-gravity", Clutter.Gravity.CENTER);
+      Clutter.Animation anim = animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
+                                         "scale-x", 1f,
+                                         "scale-y", 1f,
+                                         "opacity", opacity,
+                                         "x", window.x,
+                                         "y", window.y);
+
+      window.opacity = 0;
+
+      anim.completed.connect (() => {
+        destroy ();
+        window.opacity = 255;
+      });
+    }
   }
 
   public class ExposeManager : Object
@@ -112,7 +146,6 @@ namespace Unity
 
     private ExposeClone? last_selected_clone = null;
 
-    private bool menu_in_hover_close_state = false;
 
     public ExposeManager (Plugin plugin, Launcher.Launcher launcher)
     {
@@ -132,12 +165,6 @@ namespace Unity
 
     public void start_expose (SList<Clutter.Actor> windows)
     {
-      var controller = Launcher.QuicklistController.get_current_menu ();
-      if (controller.is_menu_open ())
-        {
-          controller.get_view ().destroy.connect (this.end_expose);
-          this.menu_in_hover_close_state = controller.get_view ().get_close_on_leave ();
-        }
       exposed_windows = new List<ExposeClone> ();
 
       if (expose_group != null)
@@ -159,6 +186,7 @@ namespace Unity
             continue;
 
           ExposeClone clone = new ExposeClone (actor);
+          clone.fade_on_close = true;
           clone.set_position (actor.x, actor.y);
           clone.set_size (actor.width, actor.height);
           exposed_windows.append (clone);
@@ -170,26 +198,6 @@ namespace Unity
           clone.unhovered_opacity = unhovered_opacity;
           clone.opacity = unhovered_opacity;
           clone.darken = darken;
-
-          clone.enter_event.connect (() => {
-                var ql_controller = Launcher.QuicklistController.get_current_menu ();
-                if (ql_controller.state == Launcher.QuicklistControllerState.MENU
-                    && this.menu_in_hover_close_state)
-                  {
-                    ql_controller.get_view ().set_close_on_leave (false);
-                  }
-                return false;
-              });
-
-          clone.leave_event.connect (() => {
-                var ql_controller = Launcher.QuicklistController.get_current_menu ();
-                if (ql_controller.state == Launcher.QuicklistControllerState.MENU
-                    && this.menu_in_hover_close_state)
-                  {
-                    ql_controller.get_view ().set_close_on_leave (true);
-                  }
-                return false;
-              });
         }
 
       unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
@@ -206,7 +214,7 @@ namespace Unity
       if (coverflow)
         position_windows_coverflow (exposed_windows, exposed_windows.nth_data (coverflow_index));
       else
-        position_windows_on_grid (exposed_windows);
+        position_windows_on_grid (exposed_windows, top_buffer, left_buffer, right_buffer, bottom_buffer);
 
       expose_showing = true;
 
@@ -216,12 +224,8 @@ namespace Unity
 
     public void end_expose ()
     {
-      var controller = Launcher.QuicklistController.get_current_menu ();
-      if (controller.is_menu_open ())
-        {
-          controller.get_view ().destroy.disconnect (this.end_expose);
-          controller.state = Launcher.QuicklistControllerState.CLOSED;
-        }
+      if (!expose_showing)
+        return;
 
       unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
       foreach (Mutter.Window window in mutter_windows)
@@ -241,8 +245,8 @@ namespace Unity
           window.reactive = true;
         }
 
-      foreach (Clutter.Actor actor in exposed_windows)
-        restore_window_position (actor);
+      foreach (ExposeClone actor in exposed_windows)
+        actor.restore_window_position (Mutter.MetaScreen.get_active_workspace_index (owner.plugin.get_screen ()));
 
       if (this.last_selected_clone is ExposeClone &&
           this.last_selected_clone.source is Mutter.Window)
@@ -347,7 +351,7 @@ namespace Unity
       return 0;
     }
 
-    void position_windows_on_grid (List<Clutter.Actor> _windows)
+    public void position_windows_on_grid (List<Clutter.Actor> _windows, int top_buffer, int left_buffer, int right_buffer, int bottom_buffer)
     {
       List<Clutter.Actor> windows = _windows.copy ();
       windows.sort ((CompareFunc) direct_comparison);
@@ -418,34 +422,6 @@ namespace Unity
         }
     }
 
-    private void restore_window_position (Clutter.Actor actor)
-    {
-      if (!(actor is ExposeClone))
-        return;
-
-      actor.set_anchor_point_from_gravity (Clutter.Gravity.NORTH_WEST);
-      Clutter.Actor window = (actor as ExposeClone).source;
-
-      uint8 opacity = 0;
-      if ((window as Mutter.Window).showing_on_its_workspace () &&
-          (window as Mutter.Window).get_workspace () == Mutter.MetaScreen.get_active_workspace_index (owner.plugin.get_screen ()))
-        opacity = 255;
-
-      actor.set ("scale-gravity", Clutter.Gravity.CENTER);
-      Clutter.Animation anim = actor.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
-                                         "scale-x", 1f,
-                                         "scale-y", 1f,
-                                         "opacity", opacity,
-                                         "x", window.x,
-                                         "y", window.y);
-
-      window.opacity = 0;
-
-      anim.completed.connect (() => {
-        actor.destroy ();
-        window.opacity = 255;
-      });
-    }
 
     void handle_event_coverflow (Clutter.Event event)
     {
@@ -516,23 +492,13 @@ namespace Unity
       if (event.type == Clutter.EventType.ENTER || event.type == Clutter.EventType.LEAVE)
         return false;
 
-      bool event_over_menu = false;
 
       float x, y;
       event.get_coords (out x, out y);
 
       unowned Clutter.Actor actor = this.stage.get_actor_at_pos (Clutter.PickMode.REACTIVE, (int) x, (int) y);
 
-      Clutter.Actor? menu = null;
-      if (Unity.Launcher.QuicklistController.get_current_menu ().is_menu_open ())
-        menu = Unity.Launcher.QuicklistController.get_current_menu ().get_view ();
-      if (menu != null)
-        {
-          if (x > menu.x && x < menu.x + menu.width && y > menu.y && y < menu.y + menu.height)
-            event_over_menu = true;
-        }
-
-      if (event.type == Clutter.EventType.BUTTON_PRESS && !event_over_menu)
+      if (event.type == Clutter.EventType.BUTTON_PRESS)
         pick_window (event, actor);
 
       if (coverflow)
@@ -540,7 +506,7 @@ namespace Unity
       else
         handle_event_expose (event, actor);
 
-      return !event_over_menu;
+      return true;
     }
   }
 }

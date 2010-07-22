@@ -65,7 +65,7 @@ struct _UnityPanelIndicatorBackgroundPrivate {
 
 static gpointer unity_panel_indicator_background_parent_class = NULL;
 
-GType unity_panel_indicator_background_get_type (void);
+GType unity_panel_indicator_background_get_type (void) G_GNUC_CONST;
 #define UNITY_PANEL_INDICATOR_BACKGROUND_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PANEL_TYPE_INDICATOR_BACKGROUND, UnityPanelIndicatorBackgroundPrivate))
 enum  {
 	UNITY_PANEL_INDICATOR_BACKGROUND_DUMMY_PROPERTY
@@ -186,12 +186,12 @@ static GObject * unity_panel_indicator_background_constructor (GType type, guint
 			GdkPixbuf* _tmp1_;
 			_tmp0_ = gdk_pixbuf_new_from_file (UNITY_PANEL_INDICATOR_BACKGROUND_BG, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch3_g_error;
+				goto __catch6_g_error;
 			}
 			self->priv->tile = (_tmp1_ = _tmp0_, _g_object_unref0 (self->priv->tile), _tmp1_);
 		}
-		goto __finally3;
-		__catch3_g_error:
+		goto __finally6;
+		__catch6_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -201,7 +201,7 @@ static GObject * unity_panel_indicator_background_constructor (GType type, guint
 				_g_error_free0 (e);
 			}
 		}
-		__finally3:
+		__finally6:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);

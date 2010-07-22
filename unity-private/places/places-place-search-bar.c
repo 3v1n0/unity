@@ -198,11 +198,11 @@ struct _UnityPlacesPlaceSearchBarBackgroundPrivate {
 static gpointer unity_places_place_search_bar_parent_class = NULL;
 static gpointer unity_places_place_search_bar_background_parent_class = NULL;
 
-GType unity_places_place_search_bar_get_type (void);
-GType unity_places_place_entry_get_type (void);
-GType unity_places_place_search_bar_background_get_type (void);
-GType unity_places_place_search_entry_get_type (void);
-GType unity_places_place_search_sections_bar_get_type (void);
+GType unity_places_place_search_bar_get_type (void) G_GNUC_CONST;
+GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
+GType unity_places_place_search_bar_background_get_type (void) G_GNUC_CONST;
+GType unity_places_place_search_entry_get_type (void) G_GNUC_CONST;
+GType unity_places_place_search_sections_bar_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_SEARCH_BAR_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR, UnityPlacesPlaceSearchBarPrivate))
 enum  {
 	UNITY_PLACES_PLACE_SEARCH_BAR_DUMMY_PROPERTY
@@ -215,7 +215,7 @@ GParamSpec* unity_testing_param_spec_object_registry (const gchar* name, const g
 void unity_testing_value_set_object_registry (GValue* value, gpointer v_object);
 void unity_testing_value_take_object_registry (GValue* value, gpointer v_object);
 gpointer unity_testing_value_get_object_registry (const GValue* value);
-GType unity_testing_object_registry_get_type (void);
+GType unity_testing_object_registry_get_type (void) G_GNUC_CONST;
 UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void);
 void unity_testing_object_registry_register (UnityTestingObjectRegistry* self, const char* name, GObject* object);
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_new (void);
@@ -604,12 +604,12 @@ static GObject * unity_places_place_search_bar_background_constructor (GType typ
 			GdkPixbuf* _tmp6_;
 			_tmp5_ = gdk_pixbuf_new_from_file (UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_BG, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch17_g_error;
+				goto __catch20_g_error;
 			}
 			self->priv->tile = (_tmp6_ = _tmp5_, _g_object_unref0 (self->priv->tile), _tmp6_);
 		}
-		goto __finally17;
-		__catch17_g_error:
+		goto __finally20;
+		__catch20_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -619,7 +619,7 @@ static GObject * unity_places_place_search_bar_background_constructor (GType typ
 				_g_error_free0 (e);
 			}
 		}
-		__finally17:
+		__finally20:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -631,7 +631,6 @@ static GObject * unity_places_place_search_bar_background_constructor (GType typ
 		ctk_effect_glow_set_color (self->priv->glow, (_tmp10_ = (_tmp9_.red = (guint8) 255, _tmp9_.green = (guint8) 255, _tmp9_.blue = (guint8) 255, _tmp9_.alpha = (guint8) 255, _tmp9_), &_tmp10_));
 		ctk_effect_glow_set_factor (self->priv->glow, 1.0f);
 		ctk_effect_set_margin ((CtkEffect*) self->priv->glow, 5);
-		ctk_actor_add_effect ((CtkActor*) self, (CtkEffect*) self->priv->glow);
 	}
 	return obj;
 }

@@ -33,9 +33,10 @@ namespace Unity.Launcher
   public class Launcher : Object
   {
     public Shell shell {get; construct;}
+    public ScrollerModel model { get; private set; }
+
     private ScrollerController controller;
     private ScrollerView view;
-    private ScrollerModel model;
 
     public Launcher (Shell shell)
     {

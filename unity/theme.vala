@@ -102,6 +102,8 @@ namespace Unity
 
     public Gdk.Pixbuf? icon;
 
+    public signal void changed ();
+
     public ThemeImage (string icon_name)
     {
       Object (icon_name:icon_name);
@@ -120,6 +122,8 @@ namespace Unity
       if (!this.try_load_icon_from_datadir ())
         if (!this.try_load_icon_from_theme ())
           this.load_missing_icon ();
+
+      changed ();
     }
 
     private bool try_load_icon_from_theme ()

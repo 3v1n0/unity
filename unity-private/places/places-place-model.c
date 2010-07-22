@@ -113,13 +113,13 @@ struct _UnityPlacesPlaceFileModelLoadPlaceFilesData {
 static gpointer unity_places_place_model_parent_class = NULL;
 static gpointer unity_places_place_file_model_parent_class = NULL;
 
-GType unity_places_place_model_get_type (void);
+GType unity_places_place_model_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_PLACES_PLACE_MODEL_DUMMY_PROPERTY
 };
-GType unity_places_place_get_type (void);
+GType unity_places_place_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceModel* unity_places_place_model_construct (GType object_type);
-GType unity_places_place_file_model_get_type (void);
+GType unity_places_place_file_model_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_FILE_MODEL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE_FILE_MODEL, UnityPlacesPlaceFileModelPrivate))
 enum  {
 	UNITY_PLACES_PLACE_FILE_MODEL_DUMMY_PROPERTY,
@@ -278,7 +278,7 @@ static gboolean unity_places_place_file_model_load_place_files_co (UnityPlacesPl
 			_state_2:
 			data->e = g_file_enumerate_children_finish (data->dir, data->_res_, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
-				goto __catch10_g_error;
+				goto __catch13_g_error;
 			}
 			while (TRUE) {
 				data->_state_ = 3;
@@ -288,7 +288,7 @@ static gboolean unity_places_place_file_model_load_place_files_co (UnityPlacesPl
 				data->files = g_file_enumerator_next_files_finish (data->e, data->_res_, &data->_inner_error_);
 				if (data->_inner_error_ != NULL) {
 					_g_object_unref0 (data->e);
-					goto __catch10_g_error;
+					goto __catch13_g_error;
 				}
 				if (data->files == NULL) {
 					__g_list_free_g_object_unref0 (data->files);
@@ -312,8 +312,8 @@ static gboolean unity_places_place_file_model_load_place_files_co (UnityPlacesPl
 									g_signal_emit_by_name ((UnityPlacesPlaceModel*) data->self, "place-added", data->place);
 								}
 							}
-							_g_object_unref0 (data->info);
 							_g_object_unref0 (data->place);
+							_g_object_unref0 (data->info);
 						}
 					}
 				}
@@ -321,8 +321,8 @@ static gboolean unity_places_place_file_model_load_place_files_co (UnityPlacesPl
 			}
 			_g_object_unref0 (data->e);
 		}
-		goto __finally10;
-		__catch10_g_error:
+		goto __finally13;
+		__catch13_g_error:
 		{
 			data->_error_ = data->_inner_error_;
 			data->_inner_error_ = NULL;
@@ -332,7 +332,7 @@ static gboolean unity_places_place_file_model_load_place_files_co (UnityPlacesPl
 				_g_error_free0 (data->_error_);
 			}
 		}
-		__finally10:
+		__finally13:
 		if (data->_inner_error_ != NULL) {
 			_g_object_unref0 (data->dir);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
@@ -364,7 +364,7 @@ static void unity_places_place_file_model_load_place_files_sync (UnityPlacesPlac
 		GFileInfo* info;
 		e = g_file_enumerate_children (dir, G_FILE_ATTRIBUTE_STANDARD_NAME, 0, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch11_g_error;
+			goto __catch14_g_error;
 		}
 		info = NULL;
 		while (TRUE) {
@@ -376,9 +376,9 @@ static void unity_places_place_file_model_load_place_files_sync (UnityPlacesPlac
 			UnityPlacesPlace* place;
 			_tmp0_ = g_file_enumerator_next_file (e, NULL, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				_g_object_unref0 (e);
 				_g_object_unref0 (info);
-				goto __catch11_g_error;
+				_g_object_unref0 (e);
+				goto __catch14_g_error;
 			}
 			if (!((info = (_tmp1_ = _tmp0_, _g_object_unref0 (info), _tmp1_)) != NULL)) {
 				break;
@@ -393,14 +393,14 @@ static void unity_places_place_file_model_load_place_files_sync (UnityPlacesPlac
 				gee_abstract_collection_add ((GeeAbstractCollection*) self, place);
 				g_signal_emit_by_name ((UnityPlacesPlaceModel*) self, "place-added", place);
 			}
-			_g_free0 (leaf);
 			_g_object_unref0 (place);
+			_g_free0 (leaf);
 		}
-		_g_object_unref0 (e);
 		_g_object_unref0 (info);
+		_g_object_unref0 (e);
 	}
-	goto __finally11;
-	__catch11_g_error:
+	goto __finally14;
+	__catch14_g_error:
 	{
 		GError * _error_;
 		_error_ = _inner_error_;
@@ -412,7 +412,7 @@ static void unity_places_place_file_model_load_place_files_sync (UnityPlacesPlac
 			_g_error_free0 (_error_);
 		}
 	}
-	__finally11:
+	__finally14:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (dir);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -434,14 +434,14 @@ static UnityPlacesPlace* unity_places_place_file_model_load_place (UnityPlacesPl
 	{
 		g_key_file_load_from_file (file, path, G_KEY_FILE_NONE, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch12_g_error;
+			goto __catch15_g_error;
 		}
 		result = unity_places_place_new_from_keyfile (file, path);
 		_g_key_file_free0 (file);
 		return result;
 	}
-	goto __finally12;
-	__catch12_g_error:
+	goto __finally15;
+	__catch15_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -456,7 +456,7 @@ static UnityPlacesPlace* unity_places_place_file_model_load_place (UnityPlacesPl
 			return result;
 		}
 	}
-	__finally12:
+	__finally15:
 	{
 		_g_key_file_free0 (file);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);

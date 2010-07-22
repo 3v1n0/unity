@@ -44,8 +44,8 @@ typedef struct _UnityLauncherQuicklistMenuSeperator UnityLauncherQuicklistMenuSe
 typedef struct _UnityLauncherQuicklistMenuSeperatorClass UnityLauncherQuicklistMenuSeperatorClass;
 typedef struct _UnityLauncherQuicklistMenuSeperatorPrivate UnityLauncherQuicklistMenuSeperatorPrivate;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
-#define _cairo_surface_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_surface_destroy (var), NULL)))
 #define _cairo_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_destroy (var), NULL)))
+#define _cairo_surface_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_surface_destroy (var), NULL)))
 
 struct _UnityLauncherQuicklistMenuSeperator {
 	CtkMenuSeperator parent_instance;
@@ -58,14 +58,14 @@ struct _UnityLauncherQuicklistMenuSeperatorClass {
 
 struct _UnityLauncherQuicklistMenuSeperatorPrivate {
 	CtkLayerActor* seperator_background;
-	gint old_width;
-	gint old_height;
+	gint last_width;
+	gint last_height;
 };
 
 
 static gpointer unity_launcher_quicklist_menu_seperator_parent_class = NULL;
 
-GType unity_launcher_quicklist_menu_seperator_get_type (void);
+GType unity_launcher_quicklist_menu_seperator_get_type (void) G_GNUC_CONST;
 #define UNITY_LAUNCHER_QUICKLIST_MENU_SEPERATOR_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_SEPERATOR, UnityLauncherQuicklistMenuSeperatorPrivate))
 enum  {
 	UNITY_LAUNCHER_QUICKLIST_MENU_SEPERATOR_DUMMY_PROPERTY
@@ -75,6 +75,8 @@ static void unity_launcher_quicklist_menu_seperator_real_paint (ClutterActor* ba
 static void unity_launcher_quicklist_menu_seperator_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height_p, float* natural_height_p);
 #define UNITY_LAUNCHER_MARGIN 0.5f
 static void unity_launcher_quicklist_menu_seperator_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width_p, float* natural_width_p);
+static gboolean _unity_launcher_quicklist_menu_seperator_update_seperator_background (UnityLauncherQuicklistMenuSeperator* self);
+static gboolean __unity_launcher_quicklist_menu_seperator_update_seperator_background_gsource_func (gpointer self);
 static void unity_launcher_quicklist_menu_seperator_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
 UnityLauncherQuicklistMenuSeperator* unity_launcher_quicklist_menu_seperator_new (void);
 UnityLauncherQuicklistMenuSeperator* unity_launcher_quicklist_menu_seperator_construct (GType object_type);
@@ -86,7 +88,9 @@ static void unity_launcher_quicklist_menu_seperator_finalize (GObject* obj);
 static void unity_launcher_quicklist_menu_seperator_real_paint (ClutterActor* base) {
 	UnityLauncherQuicklistMenuSeperator * self;
 	self = (UnityLauncherQuicklistMenuSeperator*) base;
-	clutter_actor_paint ((ClutterActor*) self->priv->seperator_background);
+	if (CTK_IS_LAYER_ACTOR (self->priv->seperator_background)) {
+		clutter_actor_paint ((ClutterActor*) self->priv->seperator_background);
+	}
 }
 
 
@@ -106,37 +110,59 @@ static void unity_launcher_quicklist_menu_seperator_real_get_preferred_width (Cl
 }
 
 
+static gboolean __unity_launcher_quicklist_menu_seperator_update_seperator_background_gsource_func (gpointer self) {
+	gboolean result;
+	result = _unity_launcher_quicklist_menu_seperator_update_seperator_background (self);
+	return result;
+}
+
+
 static void unity_launcher_quicklist_menu_seperator_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
 	UnityLauncherQuicklistMenuSeperator * self;
-	gint w = 0;
-	gint h = 0;
+	gint new_width;
+	gint new_height;
 	gboolean _tmp0_ = FALSE;
-	CtkLayerActor* _tmp1_;
-	CtkLayer* layer;
-	cairo_surface_t* fill_surf;
-	cairo_surface_t* image_surf;
-	cairo_t* fill_cr;
-	cairo_t* image_cr;
 	self = (UnityLauncherQuicklistMenuSeperator*) base;
+	new_width = 0;
+	new_height = 0;
 	CLUTTER_ACTOR_CLASS (unity_launcher_quicklist_menu_seperator_parent_class)->allocate ((ClutterActor*) CTK_MENU_SEPERATOR (self), box, flags);
-	w = (gint) ((*box).x2 - (*box).x1);
-	h = (gint) ((*box).y2 - (*box).y1);
-	if (self->priv->old_width == w) {
-		_tmp0_ = self->priv->old_height == h;
+	new_width = (gint) ((*box).x2 - (*box).x1);
+	new_height = (gint) ((*box).y2 - (*box).y1);
+	if (self->priv->last_width == new_width) {
+		_tmp0_ = self->priv->last_height == new_height;
 	} else {
 		_tmp0_ = FALSE;
 	}
 	if (_tmp0_) {
 		return;
 	}
-	self->priv->seperator_background = (_tmp1_ = g_object_ref_sink ((CtkLayerActor*) ctk_layer_actor_new ((guint) w, (guint) h)), _g_object_unref0 (self->priv->seperator_background), _tmp1_);
-	layer = ctk_layer_new ((guint) w, (guint) h, CTK_LAYER_REPEAT_NONE, CTK_LAYER_REPEAT_NONE);
-	fill_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
-	image_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
+	self->priv->last_width = new_width;
+	self->priv->last_height = new_height;
+	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __unity_launcher_quicklist_menu_seperator_update_seperator_background_gsource_func, g_object_ref (self), g_object_unref);
+}
+
+
+static gboolean _unity_launcher_quicklist_menu_seperator_update_seperator_background (UnityLauncherQuicklistMenuSeperator* self) {
+	gboolean result = FALSE;
+	CtkLayerActor* _tmp0_;
+	CtkLayer* layer;
+	cairo_surface_t* fill_surf;
+	cairo_surface_t* image_surf;
+	cairo_t* fill_cr;
+	cairo_t* image_cr;
+	g_return_val_if_fail (self != NULL, FALSE);
+	if (CTK_IS_LAYER_ACTOR (self->priv->seperator_background)) {
+		clutter_actor_unparent ((ClutterActor*) self->priv->seperator_background);
+		clutter_actor_destroy ((ClutterActor*) self->priv->seperator_background);
+	}
+	self->priv->seperator_background = (_tmp0_ = g_object_ref_sink ((CtkLayerActor*) ctk_layer_actor_new ((guint) self->priv->last_width, (guint) self->priv->last_height)), _g_object_unref0 (self->priv->seperator_background), _tmp0_);
+	layer = ctk_layer_new ((guint) self->priv->last_width, (guint) self->priv->last_height, CTK_LAYER_REPEAT_NONE, CTK_LAYER_REPEAT_NONE);
+	fill_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, self->priv->last_width, self->priv->last_height);
+	image_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, self->priv->last_width, self->priv->last_height);
 	fill_cr = cairo_create (fill_surf);
 	image_cr = cairo_create (image_surf);
 	unity_quicklist_rendering_seperator_fill_mask (fill_cr);
-	unity_quicklist_rendering_seperator_image_background (image_cr, w, h);
+	unity_quicklist_rendering_seperator_image_background (image_cr, self->priv->last_width, self->priv->last_height);
 	ctk_layer_set_mask_from_surface (layer, fill_surf);
 	ctk_layer_set_image_from_surface (layer, image_surf);
 	ctk_layer_set_opacity (layer, (guchar) 255);
@@ -145,11 +171,13 @@ static void unity_launcher_quicklist_menu_seperator_real_allocate (ClutterActor*
 	clutter_actor_set_parent ((ClutterActor*) self->priv->seperator_background, (ClutterActor*) self);
 	clutter_actor_map ((ClutterActor*) self->priv->seperator_background);
 	clutter_actor_show ((ClutterActor*) self->priv->seperator_background);
-	_g_object_unref0 (layer);
-	_cairo_surface_destroy0 (fill_surf);
-	_cairo_surface_destroy0 (image_surf);
-	_cairo_destroy0 (fill_cr);
+	result = FALSE;
 	_cairo_destroy0 (image_cr);
+	_cairo_destroy0 (fill_cr);
+	_cairo_surface_destroy0 (image_surf);
+	_cairo_surface_destroy0 (fill_surf);
+	_g_object_unref0 (layer);
+	return result;
 }
 
 
@@ -177,8 +205,8 @@ static GObject * unity_launcher_quicklist_menu_seperator_constructor (GType type
 		CtkPadding padding;
 		padding = (memset (&_tmp0_, 0, sizeof (CtkPadding)), _tmp0_.left = (float) ((gint) ctk_em_to_pixel ((double) UNITY_LAUNCHER_MARGIN)), _tmp0_.right = (float) ((gint) ctk_em_to_pixel ((double) UNITY_LAUNCHER_MARGIN)), _tmp0_.top = (float) ((gint) ctk_em_to_pixel ((double) UNITY_LAUNCHER_MARGIN)), _tmp0_.bottom = (float) ((gint) ctk_em_to_pixel ((double) UNITY_LAUNCHER_MARGIN)), _tmp0_);
 		ctk_actor_set_padding ((CtkActor*) self, &padding);
-		self->priv->old_width = 0;
-		self->priv->old_height = 0;
+		self->priv->last_width = -1;
+		self->priv->last_height = -1;
 	}
 	return obj;
 }

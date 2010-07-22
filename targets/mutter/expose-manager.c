@@ -23,12 +23,11 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <clutter/clutter.h>
+#include <mutter-plugins.h>
 #include <float.h>
 #include <math.h>
 #include <unity-private.h>
 #include <unity.h>
-#include <clutk/clutk.h>
-#include <mutter-plugins.h>
 
 
 #define UNITY_TYPE_EXPOSE_CLONE (unity_expose_clone_get_type ())
@@ -42,6 +41,7 @@ typedef struct _UnityExposeClone UnityExposeClone;
 typedef struct _UnityExposeCloneClass UnityExposeCloneClass;
 typedef struct _UnityExposeClonePrivate UnityExposeClonePrivate;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+typedef struct _Block1Data Block1Data;
 
 #define UNITY_TYPE_EXPOSE_MANAGER (unity_expose_manager_get_type ())
 #define UNITY_EXPOSE_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_EXPOSE_MANAGER, UnityExposeManager))
@@ -64,7 +64,6 @@ typedef struct _UnityExposeManagerPrivate UnityExposeManagerPrivate;
 typedef struct _UnityPlugin UnityPlugin;
 typedef struct _UnityPluginClass UnityPluginClass;
 #define __g_list_free_g_object_unref0(var) ((var == NULL) ? NULL : (var = (_g_list_free_g_object_unref (var), NULL)))
-typedef struct _Block1Data Block1Data;
 
 struct _UnityExposeClone {
 	ClutterGroup parent_instance;
@@ -79,10 +78,17 @@ struct _UnityExposeClonePrivate {
 	ClutterClone* clone;
 	ClutterActor* darken_box;
 	gboolean hovered;
+	gboolean _fade_on_close;
 	ClutterActor* _source;
 	guint8 _hovered_opacity;
 	guint8 _unhovered_opacity;
 	guint8 _darken;
+};
+
+struct _Block1Data {
+	int _ref_count_;
+	UnityExposeClone * self;
+	ClutterActor* window;
 };
 
 struct _UnityExposeManager {
@@ -111,24 +117,17 @@ struct _UnityExposeManagerPrivate {
 	guint8 _darken;
 	guint coverflow_index;
 	UnityExposeClone* last_selected_clone;
-	gboolean menu_in_hover_close_state;
-};
-
-struct _Block1Data {
-	int _ref_count_;
-	UnityExposeManager * self;
-	ClutterActor* window;
-	ClutterActor* actor;
 };
 
 
 static gpointer unity_expose_clone_parent_class = NULL;
 static gpointer unity_expose_manager_parent_class = NULL;
 
-GType unity_expose_clone_get_type (void);
+GType unity_expose_clone_get_type (void) G_GNUC_CONST;
 #define UNITY_EXPOSE_CLONE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_EXPOSE_CLONE, UnityExposeClonePrivate))
 enum  {
 	UNITY_EXPOSE_CLONE_DUMMY_PROPERTY,
+	UNITY_EXPOSE_CLONE_FADE_ON_CLOSE,
 	UNITY_EXPOSE_CLONE_SOURCE,
 	UNITY_EXPOSE_CLONE_HOVERED_OPACITY,
 	UNITY_EXPOSE_CLONE_UNHOVERED_OPACITY,
@@ -146,14 +145,21 @@ static gboolean unity_expose_clone_on_mouse_enter (UnityExposeClone* self, Clutt
 guint8 unity_expose_clone_get_unhovered_opacity (UnityExposeClone* self);
 static gboolean unity_expose_clone_on_mouse_leave (UnityExposeClone* self, ClutterEvent* evnt);
 ClutterActor* unity_expose_clone_get_source (UnityExposeClone* self);
+gboolean unity_expose_clone_get_fade_on_close (UnityExposeClone* self);
+static void _lambda0_ (Block1Data* _data1_);
+static void __lambda0__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
+static Block1Data* block1_data_ref (Block1Data* _data1_);
+static void block1_data_unref (Block1Data* _data1_);
+void unity_expose_clone_restore_window_position (UnityExposeClone* self, gint active_workspace);
+void unity_expose_clone_set_fade_on_close (UnityExposeClone* self, gboolean value);
 static gboolean _unity_expose_clone_on_mouse_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static gboolean _unity_expose_clone_on_mouse_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static GObject * unity_expose_clone_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_expose_clone_finalize (GObject* obj);
 static void unity_expose_clone_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_expose_clone_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
-GType unity_expose_manager_get_type (void);
-GType unity_plugin_get_type (void);
+GType unity_expose_manager_get_type (void) G_GNUC_CONST;
+GType unity_plugin_get_type (void) G_GNUC_CONST;
 #define UNITY_EXPOSE_MANAGER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_EXPOSE_MANAGER, UnityExposeManagerPrivate))
 enum  {
 	UNITY_EXPOSE_MANAGER_DUMMY_PROPERTY,
@@ -173,37 +179,27 @@ void unity_expose_manager_set_unhovered_opacity (UnityExposeManager* self, guint
 void unity_expose_manager_set_darken (UnityExposeManager* self, guint8 value);
 UnityExposeManager* unity_expose_manager_new (UnityPlugin* plugin, UnityLauncherLauncher* launcher);
 UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlugin* plugin, UnityLauncherLauncher* launcher);
-void unity_expose_manager_end_expose (UnityExposeManager* self);
-static void _unity_expose_manager_end_expose_clutter_actor_destroy (ClutterActor* _sender, gpointer self);
 MutterPlugin* unity_plugin_get_plugin (UnityPlugin* self);
 guint8 unity_expose_manager_get_hovered_opacity (UnityExposeManager* self);
 guint8 unity_expose_manager_get_unhovered_opacity (UnityExposeManager* self);
 guint8 unity_expose_manager_get_darken (UnityExposeManager* self);
-static gboolean _lambda6_ (UnityExposeManager* self);
-static gboolean __lambda6__clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
-static gboolean _lambda7_ (UnityExposeManager* self);
-static gboolean __lambda7__clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 gboolean unity_expose_manager_get_coverflow (UnityExposeManager* self);
 static void unity_expose_manager_position_windows_coverflow (UnityExposeManager* self, GList* windows, ClutterActor* active);
-static void unity_expose_manager_position_windows_on_grid (UnityExposeManager* self, GList* _windows);
+void unity_expose_manager_position_windows_on_grid (UnityExposeManager* self, GList* _windows, gint top_buffer, gint left_buffer, gint right_buffer, gint bottom_buffer);
+gint unity_expose_manager_get_top_buffer (UnityExposeManager* self);
+gint unity_expose_manager_get_left_buffer (UnityExposeManager* self);
+gint unity_expose_manager_get_right_buffer (UnityExposeManager* self);
+gint unity_expose_manager_get_bottom_buffer (UnityExposeManager* self);
 static void unity_expose_manager_set_expose_showing (UnityExposeManager* self, gboolean value);
 static gboolean unity_expose_manager_on_stage_captured_event (UnityExposeManager* self, ClutterEvent* event);
 static gboolean _unity_expose_manager_on_stage_captured_event_clutter_actor_captured_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* windows);
-static void unity_expose_manager_restore_window_position (UnityExposeManager* self, ClutterActor* actor);
-gint unity_expose_manager_get_left_buffer (UnityExposeManager* self);
-gint unity_expose_manager_get_right_buffer (UnityExposeManager* self);
+gboolean unity_expose_manager_get_expose_showing (UnityExposeManager* self);
+void unity_expose_manager_end_expose (UnityExposeManager* self);
 static gint unity_expose_manager_direct_comparison (UnityExposeManager* self, void* a, void* b);
-gint unity_expose_manager_get_top_buffer (UnityExposeManager* self);
-gint unity_expose_manager_get_bottom_buffer (UnityExposeManager* self);
-static void _lambda5_ (Block1Data* _data1_);
-static void __lambda5__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
-static Block1Data* block1_data_ref (Block1Data* _data1_);
-static void block1_data_unref (Block1Data* _data1_);
 static void unity_expose_manager_handle_event_coverflow (UnityExposeManager* self, ClutterEvent* event);
 static void unity_expose_manager_handle_event_expose (UnityExposeManager* self, ClutterEvent* event, ClutterActor* actor);
 static void unity_expose_manager_pick_window (UnityExposeManager* self, ClutterEvent* event, ClutterActor* actor);
-gboolean unity_expose_manager_get_expose_showing (UnityExposeManager* self);
 void unity_expose_manager_set_coverflow (UnityExposeManager* self, gboolean value);
 void unity_expose_manager_set_left_buffer (UnityExposeManager* self, gint value);
 void unity_expose_manager_set_right_buffer (UnityExposeManager* self, gint value);
@@ -218,21 +214,28 @@ static void unity_expose_manager_set_property (GObject * object, guint property_
 
 UnityExposeClone* unity_expose_clone_construct (GType object_type, ClutterActor* source) {
 	UnityExposeClone * self;
-	ClutterClone* _tmp0_;
-	ClutterActor* _tmp3_;
-	ClutterColor _tmp2_;
-	ClutterColor _tmp1_ = {0};
+	ClutterActor* _tmp5_;
+	ClutterColor _tmp4_;
+	ClutterColor _tmp3_ = {0};
 	g_return_val_if_fail (source != NULL, NULL);
 	self = g_object_newv (object_type, 0, NULL);
 	unity_expose_clone_set_darken (self, (guint8) 0);
 	unity_expose_clone_set_hovered_opacity (self, (guint8) 255);
 	unity_expose_clone_set_unhovered_opacity (self, (guint8) 255);
 	unity_expose_clone_set_source (self, source);
-	self->priv->clone = (_tmp0_ = g_object_ref_sink ((ClutterClone*) clutter_clone_new (source)), _g_object_unref0 (self->priv->clone), _tmp0_);
+	if (MUTTER_IS_WINDOW (source)) {
+		ClutterClone* _tmp1_;
+		ClutterActor* _tmp0_;
+		self->priv->clone = (_tmp1_ = g_object_ref_sink ((ClutterClone*) clutter_clone_new (mutter_window_get_texture ((_tmp0_ = source, MUTTER_IS_WINDOW (_tmp0_) ? ((MutterWindow*) _tmp0_) : NULL)))), _g_object_unref0 (self->priv->clone), _tmp1_);
+	} else {
+		ClutterClone* _tmp2_;
+		self->priv->clone = (_tmp2_ = g_object_ref_sink ((ClutterClone*) clutter_clone_new (source)), _g_object_unref0 (self->priv->clone), _tmp2_);
+	}
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->clone);
 	clutter_actor_show ((ClutterActor*) self->priv->clone);
+	clutter_actor_set_reactive ((ClutterActor*) self->priv->clone, TRUE);
 	clutter_actor_set_position ((ClutterActor*) self->priv->clone, (float) 0, (float) 0);
-	self->priv->darken_box = (_tmp3_ = (ClutterActor*) g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color ((_tmp2_ = (_tmp1_.red = (guint8) 0, _tmp1_.green = (guint8) 0, _tmp1_.blue = (guint8) 0, _tmp1_.alpha = (guint8) 255, _tmp1_), &_tmp2_))), _g_object_unref0 (self->priv->darken_box), _tmp3_);
+	self->priv->darken_box = (_tmp5_ = (ClutterActor*) g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color ((_tmp4_ = (_tmp3_.red = (guint8) 0, _tmp3_.green = (guint8) 0, _tmp3_.blue = (guint8) 0, _tmp3_.alpha = (guint8) 255, _tmp3_), &_tmp4_))), _g_object_unref0 (self->priv->darken_box), _tmp5_);
 	clutter_container_add_actor ((ClutterContainer*) self, self->priv->darken_box);
 	clutter_actor_raise_top (self->priv->darken_box);
 	clutter_actor_set_position (self->priv->darken_box, (float) 0, (float) 0);
@@ -266,6 +269,97 @@ static gboolean unity_expose_clone_on_mouse_leave (UnityExposeClone* self, Clutt
 	clutter_actor_set_opacity (self->priv->darken_box, unity_expose_clone_get_darken (self));
 	result = FALSE;
 	return result;
+}
+
+
+static gpointer _g_object_ref0 (gpointer self) {
+	return self ? g_object_ref (self) : NULL;
+}
+
+
+static void _lambda0_ (Block1Data* _data1_) {
+	UnityExposeClone * self;
+	self = _data1_->self;
+	clutter_actor_destroy ((ClutterActor*) self);
+	clutter_actor_set_opacity (_data1_->window, (guint8) 255);
+}
+
+
+static void __lambda0__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+	_lambda0_ (self);
+}
+
+
+static Block1Data* block1_data_ref (Block1Data* _data1_) {
+	g_atomic_int_inc (&_data1_->_ref_count_);
+	return _data1_;
+}
+
+
+static void block1_data_unref (Block1Data* _data1_) {
+	if (g_atomic_int_dec_and_test (&_data1_->_ref_count_)) {
+		_g_object_unref0 (_data1_->self);
+		_g_object_unref0 (_data1_->window);
+		g_slice_free (Block1Data, _data1_);
+	}
+}
+
+
+void unity_expose_clone_restore_window_position (UnityExposeClone* self, gint active_workspace) {
+	Block1Data* _data1_;
+	guint8 opacity;
+	gboolean _tmp0_ = FALSE;
+	ClutterAnimation* anim;
+	g_return_if_fail (self != NULL);
+	_data1_ = g_slice_new0 (Block1Data);
+	_data1_->_ref_count_ = 1;
+	_data1_->self = g_object_ref (self);
+	clutter_actor_set_anchor_point_from_gravity ((ClutterActor*) self, CLUTTER_GRAVITY_NORTH_WEST);
+	_data1_->window = _g_object_ref0 (self->priv->_source);
+	opacity = (guint8) 0;
+	if (!self->priv->_fade_on_close) {
+		_tmp0_ = TRUE;
+	} else {
+		gboolean _tmp1_ = FALSE;
+		gboolean _tmp2_ = FALSE;
+		if (MUTTER_IS_WINDOW (_data1_->window)) {
+			ClutterActor* _tmp3_;
+			_tmp2_ = mutter_window_showing_on_its_workspace ((_tmp3_ = _data1_->window, MUTTER_IS_WINDOW (_tmp3_) ? ((MutterWindow*) _tmp3_) : NULL));
+		} else {
+			_tmp2_ = FALSE;
+		}
+		if (_tmp2_) {
+			ClutterActor* _tmp4_;
+			_tmp1_ = mutter_window_get_workspace ((_tmp4_ = _data1_->window, MUTTER_IS_WINDOW (_tmp4_) ? ((MutterWindow*) _tmp4_) : NULL)) == active_workspace;
+		} else {
+			_tmp1_ = FALSE;
+		}
+		_tmp0_ = _tmp1_;
+	}
+	if (_tmp0_) {
+		opacity = (guint8) 255;
+	}
+	g_object_set ((GObject*) self, "scale-gravity", CLUTTER_GRAVITY_CENTER, NULL);
+	anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "scale-x", 1.f, "scale-y", 1.f, "opacity", opacity, "x", clutter_actor_get_x (_data1_->window), "y", clutter_actor_get_y (_data1_->window), NULL));
+	clutter_actor_set_opacity (_data1_->window, (guint8) 0);
+	g_signal_connect_data (anim, "completed", (GCallback) __lambda0__clutter_animation_completed, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
+	_g_object_unref0 (anim);
+	block1_data_unref (_data1_);
+}
+
+
+gboolean unity_expose_clone_get_fade_on_close (UnityExposeClone* self) {
+	gboolean result;
+	g_return_val_if_fail (self != NULL, FALSE);
+	result = self->priv->_fade_on_close;
+	return result;
+}
+
+
+void unity_expose_clone_set_fade_on_close (UnityExposeClone* self, gboolean value) {
+	g_return_if_fail (self != NULL);
+	self->priv->_fade_on_close = value;
+	g_object_notify ((GObject *) self, "fade-on-close");
 }
 
 
@@ -374,6 +468,7 @@ static void unity_expose_clone_class_init (UnityExposeCloneClass * klass) {
 	G_OBJECT_CLASS (klass)->set_property = unity_expose_clone_set_property;
 	G_OBJECT_CLASS (klass)->constructor = unity_expose_clone_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_expose_clone_finalize;
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_EXPOSE_CLONE_FADE_ON_CLOSE, g_param_spec_boolean ("fade-on-close", "fade-on-close", "fade-on-close", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_EXPOSE_CLONE_SOURCE, g_param_spec_object ("source", "source", "source", CLUTTER_TYPE_ACTOR, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_EXPOSE_CLONE_HOVERED_OPACITY, g_param_spec_uchar ("hovered-opacity", "hovered-opacity", "hovered-opacity", 0, G_MAXUINT8, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_EXPOSE_CLONE_UNHOVERED_OPACITY, g_param_spec_uchar ("unhovered-opacity", "unhovered-opacity", "unhovered-opacity", 0, G_MAXUINT8, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
@@ -411,6 +506,9 @@ static void unity_expose_clone_get_property (GObject * object, guint property_id
 	UnityExposeClone * self;
 	self = UNITY_EXPOSE_CLONE (object);
 	switch (property_id) {
+		case UNITY_EXPOSE_CLONE_FADE_ON_CLOSE:
+		g_value_set_boolean (value, unity_expose_clone_get_fade_on_close (self));
+		break;
 		case UNITY_EXPOSE_CLONE_SOURCE:
 		g_value_set_object (value, unity_expose_clone_get_source (self));
 		break;
@@ -434,6 +532,9 @@ static void unity_expose_clone_set_property (GObject * object, guint property_id
 	UnityExposeClone * self;
 	self = UNITY_EXPOSE_CLONE (object);
 	switch (property_id) {
+		case UNITY_EXPOSE_CLONE_FADE_ON_CLOSE:
+		unity_expose_clone_set_fade_on_close (self, g_value_get_boolean (value));
+		break;
 		case UNITY_EXPOSE_CLONE_SOURCE:
 		unity_expose_clone_set_source (self, g_value_get_object (value));
 		break;
@@ -456,11 +557,6 @@ static void unity_expose_clone_set_property (GObject * object, guint property_id
 static void _g_list_free_g_object_unref (GList* self) {
 	g_list_foreach (self, (GFunc) g_object_unref, NULL);
 	g_list_free (self);
-}
-
-
-static gpointer _g_object_ref0 (gpointer self) {
-	return self ? g_object_ref (self) : NULL;
 }
 
 
@@ -489,63 +585,6 @@ UnityExposeManager* unity_expose_manager_new (UnityPlugin* plugin, UnityLauncher
 }
 
 
-static void _unity_expose_manager_end_expose_clutter_actor_destroy (ClutterActor* _sender, gpointer self) {
-	unity_expose_manager_end_expose (self);
-}
-
-
-static gboolean _lambda6_ (UnityExposeManager* self) {
-	gboolean result = FALSE;
-	UnityLauncherQuicklistController* ql_controller;
-	gboolean _tmp0_ = FALSE;
-	ql_controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_current_menu ());
-	if (unity_launcher_quicklist_controller_get_state (ql_controller) == UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU) {
-		_tmp0_ = self->priv->menu_in_hover_close_state;
-	} else {
-		_tmp0_ = FALSE;
-	}
-	if (_tmp0_) {
-		ctk_menu_set_close_on_leave (unity_launcher_quicklist_controller_get_view (ql_controller), FALSE);
-	}
-	result = FALSE;
-	_g_object_unref0 (ql_controller);
-	return result;
-}
-
-
-static gboolean __lambda6__clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = _lambda6_ (self);
-	return result;
-}
-
-
-static gboolean _lambda7_ (UnityExposeManager* self) {
-	gboolean result = FALSE;
-	UnityLauncherQuicklistController* ql_controller;
-	gboolean _tmp0_ = FALSE;
-	ql_controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_current_menu ());
-	if (unity_launcher_quicklist_controller_get_state (ql_controller) == UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU) {
-		_tmp0_ = self->priv->menu_in_hover_close_state;
-	} else {
-		_tmp0_ = FALSE;
-	}
-	if (_tmp0_) {
-		ctk_menu_set_close_on_leave (unity_launcher_quicklist_controller_get_view (ql_controller), TRUE);
-	}
-	result = FALSE;
-	_g_object_unref0 (ql_controller);
-	return result;
-}
-
-
-static gboolean __lambda7__clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
-	gboolean result;
-	result = _lambda7_ (self);
-	return result;
-}
-
-
 static gboolean _unity_expose_manager_on_stage_captured_event_clutter_actor_captured_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
 	result = unity_expose_manager_on_stage_captured_event (self, event);
@@ -554,18 +593,12 @@ static gboolean _unity_expose_manager_on_stage_captured_event_clutter_actor_capt
 
 
 void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* windows) {
-	UnityLauncherQuicklistController* controller;
 	GList* _tmp0_;
 	ClutterGroup* _tmp1_;
 	ClutterActor* window_group;
 	ClutterActor* _tmp2_;
 	GList* mutter_windows;
 	g_return_if_fail (self != NULL);
-	controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_current_menu ());
-	if (unity_launcher_quicklist_controller_is_menu_open ()) {
-		g_signal_connect_object ((ClutterActor*) unity_launcher_quicklist_controller_get_view (controller), "destroy", (GCallback) _unity_expose_manager_end_expose_clutter_actor_destroy, self, 0);
-		self->priv->menu_in_hover_close_state = ctk_menu_get_close_on_leave (unity_launcher_quicklist_controller_get_view (controller));
-	}
 	self->priv->exposed_windows = (_tmp0_ = NULL, __g_list_free_g_object_unref0 (self->priv->exposed_windows), _tmp0_);
 	if (self->priv->expose_group != NULL) {
 		clutter_actor_destroy ((ClutterActor*) self->priv->expose_group);
@@ -610,6 +643,7 @@ void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* window
 					continue;
 				}
 				clone = g_object_ref_sink (unity_expose_clone_new (actor));
+				unity_expose_clone_set_fade_on_close (clone, TRUE);
 				clutter_actor_set_position ((ClutterActor*) clone, clutter_actor_get_x (actor), clutter_actor_get_y (actor));
 				clutter_actor_set_size ((ClutterActor*) clone, clutter_actor_get_width (actor), clutter_actor_get_height (actor));
 				self->priv->exposed_windows = g_list_append (self->priv->exposed_windows, _g_object_ref0 (clone));
@@ -619,10 +653,8 @@ void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* window
 				unity_expose_clone_set_unhovered_opacity (clone, self->priv->_unhovered_opacity);
 				clutter_actor_set_opacity ((ClutterActor*) clone, self->priv->_unhovered_opacity);
 				unity_expose_clone_set_darken (clone, self->priv->_darken);
-				g_signal_connect_object ((ClutterActor*) clone, "enter-event", (GCallback) __lambda6__clutter_actor_enter_event, self, 0);
-				g_signal_connect_object ((ClutterActor*) clone, "leave-event", (GCallback) __lambda7__clutter_actor_leave_event, self, 0);
-				_g_object_unref0 (actor);
 				_g_object_unref0 (clone);
+				_g_object_unref0 (actor);
 			}
 		}
 	}
@@ -651,28 +683,22 @@ void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* window
 	if (self->priv->_coverflow) {
 		unity_expose_manager_position_windows_coverflow (self, self->priv->exposed_windows, (ClutterActor*) ((UnityExposeClone*) g_list_nth_data (self->priv->exposed_windows, self->priv->coverflow_index)));
 	} else {
-		unity_expose_manager_position_windows_on_grid (self, self->priv->exposed_windows);
+		unity_expose_manager_position_windows_on_grid (self, self->priv->exposed_windows, self->priv->_top_buffer, self->priv->_left_buffer, self->priv->_right_buffer, self->priv->_bottom_buffer);
 	}
 	unity_expose_manager_set_expose_showing (self, TRUE);
 	unity_shell_add_fullscreen_request ((UnityShell*) self->priv->owner, (GObject*) self);
 	g_signal_connect_object ((ClutterActor*) self->priv->stage, "captured-event", (GCallback) _unity_expose_manager_on_stage_captured_event_clutter_actor_captured_event, self, 0);
-	_g_object_unref0 (controller);
 	_g_object_unref0 (window_group);
 }
 
 
 void unity_expose_manager_end_expose (UnityExposeManager* self) {
-	UnityLauncherQuicklistController* controller;
 	GList* mutter_windows;
-	gboolean _tmp1_ = FALSE;
-	guint _tmp4_;
+	gboolean _tmp0_ = FALSE;
+	guint _tmp3_;
 	g_return_if_fail (self != NULL);
-	controller = _g_object_ref0 (unity_launcher_quicklist_controller_get_current_menu ());
-	if (unity_launcher_quicklist_controller_is_menu_open ()) {
-		guint _tmp0_;
-		g_signal_parse_name ("destroy", CLUTTER_TYPE_ACTOR, &_tmp0_, NULL, FALSE);
-		g_signal_handlers_disconnect_matched ((ClutterActor*) unity_launcher_quicklist_controller_get_view (controller), G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_expose_manager_end_expose_clutter_actor_destroy, self);
-		unity_launcher_quicklist_controller_set_state (controller, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_CLOSED);
+	if (!self->priv->_expose_showing) {
+		return;
 	}
 	mutter_windows = mutter_plugin_get_windows (unity_plugin_get_plugin (self->priv->owner));
 	{
@@ -715,39 +741,38 @@ void unity_expose_manager_end_expose (UnityExposeManager* self) {
 		GList* actor_it;
 		actor_collection = self->priv->exposed_windows;
 		for (actor_it = actor_collection; actor_it != NULL; actor_it = actor_it->next) {
-			ClutterActor* actor;
-			actor = _g_object_ref0 ((ClutterActor*) ((UnityExposeClone*) actor_it->data));
+			UnityExposeClone* actor;
+			actor = _g_object_ref0 ((UnityExposeClone*) actor_it->data);
 			{
-				unity_expose_manager_restore_window_position (self, actor);
+				unity_expose_clone_restore_window_position (actor, meta_screen_get_active_workspace_index (mutter_plugin_get_screen (unity_plugin_get_plugin (self->priv->owner))));
 				_g_object_unref0 (actor);
 			}
 		}
 	}
 	if (UNITY_IS_EXPOSE_CLONE (self->priv->last_selected_clone)) {
-		_tmp1_ = MUTTER_IS_WINDOW (unity_expose_clone_get_source (self->priv->last_selected_clone));
+		_tmp0_ = MUTTER_IS_WINDOW (unity_expose_clone_get_source (self->priv->last_selected_clone));
 	} else {
-		_tmp1_ = FALSE;
+		_tmp0_ = FALSE;
 	}
-	if (_tmp1_) {
+	if (_tmp0_) {
 		UnityExposeClone* clone;
 		guint32 time_ = 0U;
-		ClutterActor* _tmp2_;
+		ClutterActor* _tmp1_;
 		MetaWindow* meta;
-		UnityExposeClone* _tmp3_;
+		UnityExposeClone* _tmp2_;
 		clone = _g_object_ref0 (self->priv->last_selected_clone);
 		clutter_actor_raise_top ((ClutterActor*) clone);
-		meta = mutter_window_get_meta_window ((_tmp2_ = unity_expose_clone_get_source (clone), MUTTER_IS_WINDOW (_tmp2_) ? ((MutterWindow*) _tmp2_) : NULL));
+		meta = mutter_window_get_meta_window ((_tmp1_ = unity_expose_clone_get_source (clone), MUTTER_IS_WINDOW (_tmp1_) ? ((MutterWindow*) _tmp1_) : NULL));
 		time_ = meta_display_get_current_time (meta_window_get_display (meta));
 		meta_workspace_activate (meta_window_get_workspace (meta), time_);
 		meta_window_activate (meta, time_);
-		self->priv->last_selected_clone = (_tmp3_ = NULL, _g_object_unref0 (self->priv->last_selected_clone), _tmp3_);
+		self->priv->last_selected_clone = (_tmp2_ = NULL, _g_object_unref0 (self->priv->last_selected_clone), _tmp2_);
 		_g_object_unref0 (clone);
 	}
 	unity_expose_manager_set_expose_showing (self, FALSE);
 	unity_shell_remove_fullscreen_request ((UnityShell*) self->priv->owner, (GObject*) self);
-	g_signal_parse_name ("captured-event", CLUTTER_TYPE_ACTOR, &_tmp4_, NULL, FALSE);
-	g_signal_handlers_disconnect_matched ((ClutterActor*) self->priv->stage, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp4_, 0, NULL, (GCallback) _unity_expose_manager_on_stage_captured_event_clutter_actor_captured_event, self);
-	_g_object_unref0 (controller);
+	g_signal_parse_name ("captured-event", CLUTTER_TYPE_ACTOR, &_tmp3_, NULL, FALSE);
+	g_signal_handlers_disconnect_matched ((ClutterActor*) self->priv->stage, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp3_, 0, NULL, (GCallback) _unity_expose_manager_on_stage_captured_event_clutter_actor_captured_event, self);
 }
 
 
@@ -858,7 +883,7 @@ static gint unity_expose_manager_direct_comparison (UnityExposeManager* self, vo
 }
 
 
-static void unity_expose_manager_position_windows_on_grid (UnityExposeManager* self, GList* _windows) {
+void unity_expose_manager_position_windows_on_grid (UnityExposeManager* self, GList* _windows, gint top_buffer, gint left_buffer, gint right_buffer, gint bottom_buffer) {
 	GList* windows;
 	gint count;
 	gint cols;
@@ -877,8 +902,8 @@ static void unity_expose_manager_position_windows_on_grid (UnityExposeManager* s
 		}
 		rows++;
 	}
-	boxWidth = (gint) (((clutter_actor_get_width ((ClutterActor*) self->priv->stage) - self->priv->_left_buffer) - self->priv->_right_buffer) / cols);
-	boxHeight = (gint) (((clutter_actor_get_height ((ClutterActor*) self->priv->stage) - self->priv->_top_buffer) - self->priv->_bottom_buffer) / rows);
+	boxWidth = (gint) (((clutter_actor_get_width ((ClutterActor*) self->priv->stage) - left_buffer) - right_buffer) / cols);
+	boxHeight = (gint) (((clutter_actor_get_height ((ClutterActor*) self->priv->stage) - top_buffer) - bottom_buffer) / rows);
 	{
 		gint row;
 		row = 0;
@@ -894,7 +919,7 @@ static void unity_expose_manager_position_windows_on_grid (UnityExposeManager* s
 					break;
 				}
 				if (row == (rows - 1)) {
-					boxWidth = (gint) (((clutter_actor_get_width ((ClutterActor*) self->priv->stage) - self->priv->_left_buffer) - self->priv->_right_buffer) / g_list_length (windows));
+					boxWidth = (gint) (((clutter_actor_get_width ((ClutterActor*) self->priv->stage) - left_buffer) - right_buffer) / g_list_length (windows));
 				}
 				{
 					gint col;
@@ -920,8 +945,8 @@ static void unity_expose_manager_position_windows_on_grid (UnityExposeManager* s
 								__g_list_free_g_object_unref0 (windows);
 								return;
 							}
-							centerX = ((boxWidth / 2) + (boxWidth * col)) + self->priv->_left_buffer;
-							centerY = ((boxHeight / 2) + (boxHeight * row)) + self->priv->_top_buffer;
+							centerX = ((boxWidth / 2) + (boxWidth * col)) + left_buffer;
+							centerY = ((boxHeight / 2) + (boxHeight * row)) + top_buffer;
 							window = NULL;
 							{
 								GList* actor_collection;
@@ -963,73 +988,6 @@ static void unity_expose_manager_position_windows_on_grid (UnityExposeManager* s
 		}
 	}
 	__g_list_free_g_object_unref0 (windows);
-}
-
-
-static void _lambda5_ (Block1Data* _data1_) {
-	UnityExposeManager * self;
-	self = _data1_->self;
-	clutter_actor_destroy (_data1_->actor);
-	clutter_actor_set_opacity (_data1_->window, (guint8) 255);
-}
-
-
-static void __lambda5__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	_lambda5_ (self);
-}
-
-
-static Block1Data* block1_data_ref (Block1Data* _data1_) {
-	++_data1_->_ref_count_;
-	return _data1_;
-}
-
-
-static void block1_data_unref (Block1Data* _data1_) {
-	if ((--_data1_->_ref_count_) == 0) {
-		_g_object_unref0 (_data1_->self);
-		_g_object_unref0 (_data1_->window);
-		_g_object_unref0 (_data1_->actor);
-		g_slice_free (Block1Data, _data1_);
-	}
-}
-
-
-static void unity_expose_manager_restore_window_position (UnityExposeManager* self, ClutterActor* actor) {
-	Block1Data* _data1_;
-	ClutterActor* _tmp0_;
-	guint8 opacity;
-	gboolean _tmp1_ = FALSE;
-	ClutterActor* _tmp2_;
-	ClutterAnimation* anim;
-	g_return_if_fail (self != NULL);
-	g_return_if_fail (actor != NULL);
-	_data1_ = g_slice_new0 (Block1Data);
-	_data1_->_ref_count_ = 1;
-	_data1_->self = g_object_ref (self);
-	_data1_->actor = _g_object_ref0 (actor);
-	if (!UNITY_IS_EXPOSE_CLONE (_data1_->actor)) {
-		block1_data_unref (_data1_);
-		return;
-	}
-	clutter_actor_set_anchor_point_from_gravity (_data1_->actor, CLUTTER_GRAVITY_NORTH_WEST);
-	_data1_->window = _g_object_ref0 (unity_expose_clone_get_source ((_tmp0_ = _data1_->actor, UNITY_IS_EXPOSE_CLONE (_tmp0_) ? ((UnityExposeClone*) _tmp0_) : NULL)));
-	opacity = (guint8) 0;
-	if (mutter_window_showing_on_its_workspace ((_tmp2_ = _data1_->window, MUTTER_IS_WINDOW (_tmp2_) ? ((MutterWindow*) _tmp2_) : NULL))) {
-		ClutterActor* _tmp3_;
-		_tmp1_ = mutter_window_get_workspace ((_tmp3_ = _data1_->window, MUTTER_IS_WINDOW (_tmp3_) ? ((MutterWindow*) _tmp3_) : NULL)) == meta_screen_get_active_workspace_index (mutter_plugin_get_screen (unity_plugin_get_plugin (self->priv->owner)));
-	} else {
-		_tmp1_ = FALSE;
-	}
-	if (_tmp1_) {
-		opacity = (guint8) 255;
-	}
-	g_object_set ((GObject*) _data1_->actor, "scale-gravity", CLUTTER_GRAVITY_CENTER, NULL);
-	anim = _g_object_ref0 (clutter_actor_animate (_data1_->actor, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "scale-x", 1.f, "scale-y", 1.f, "opacity", opacity, "x", clutter_actor_get_x (_data1_->window), "y", clutter_actor_get_y (_data1_->window), NULL));
-	clutter_actor_set_opacity (_data1_->window, (guint8) 0);
-	g_signal_connect_data (anim, "completed", (GCallback) __lambda5__clutter_animation_completed, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
-	_g_object_unref0 (anim);
-	block1_data_unref (_data1_);
 }
 
 
@@ -1161,12 +1119,9 @@ static void unity_expose_manager_pick_window (UnityExposeManager* self, ClutterE
 static gboolean unity_expose_manager_on_stage_captured_event (UnityExposeManager* self, ClutterEvent* event) {
 	gboolean result = FALSE;
 	gboolean _tmp0_ = FALSE;
-	gboolean event_over_menu;
 	float x = 0.0F;
 	float y = 0.0F;
 	ClutterActor* actor;
-	ClutterActor* menu;
-	gboolean _tmp5_ = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if ((*event).type == CLUTTER_ENTER) {
 		_tmp0_ = TRUE;
@@ -1177,43 +1132,9 @@ static gboolean unity_expose_manager_on_stage_captured_event (UnityExposeManager
 		result = FALSE;
 		return result;
 	}
-	event_over_menu = FALSE;
 	clutter_event_get_coords (event, &x, &y);
 	actor = clutter_stage_get_actor_at_pos (self->priv->stage, CLUTTER_PICK_REACTIVE, (gint) x, (gint) y);
-	menu = NULL;
-	if (unity_launcher_quicklist_controller_is_menu_open ()) {
-		ClutterActor* _tmp1_;
-		menu = (_tmp1_ = _g_object_ref0 ((ClutterActor*) unity_launcher_quicklist_controller_get_view (unity_launcher_quicklist_controller_get_current_menu ())), _g_object_unref0 (menu), _tmp1_);
-	}
-	if (menu != NULL) {
-		gboolean _tmp2_ = FALSE;
-		gboolean _tmp3_ = FALSE;
-		gboolean _tmp4_ = FALSE;
-		if (x > clutter_actor_get_x (menu)) {
-			_tmp4_ = x < (clutter_actor_get_x (menu) + clutter_actor_get_width (menu));
-		} else {
-			_tmp4_ = FALSE;
-		}
-		if (_tmp4_) {
-			_tmp3_ = y > clutter_actor_get_y (menu);
-		} else {
-			_tmp3_ = FALSE;
-		}
-		if (_tmp3_) {
-			_tmp2_ = y < (clutter_actor_get_y (menu) + clutter_actor_get_height (menu));
-		} else {
-			_tmp2_ = FALSE;
-		}
-		if (_tmp2_) {
-			event_over_menu = TRUE;
-		}
-	}
 	if ((*event).type == CLUTTER_BUTTON_PRESS) {
-		_tmp5_ = !event_over_menu;
-	} else {
-		_tmp5_ = FALSE;
-	}
-	if (_tmp5_) {
 		unity_expose_manager_pick_window (self, event, actor);
 	}
 	if (self->priv->_coverflow) {
@@ -1221,8 +1142,7 @@ static gboolean unity_expose_manager_on_stage_captured_event (UnityExposeManager
 	} else {
 		unity_expose_manager_handle_event_expose (self, event, actor);
 	}
-	result = !event_over_menu;
-	_g_object_unref0 (menu);
+	result = TRUE;
 	return result;
 }
 
@@ -1397,7 +1317,6 @@ static void unity_expose_manager_class_init (UnityExposeManagerClass * klass) {
 static void unity_expose_manager_instance_init (UnityExposeManager * self) {
 	self->priv = UNITY_EXPOSE_MANAGER_GET_PRIVATE (self);
 	self->priv->last_selected_clone = NULL;
-	self->priv->menu_in_hover_close_state = FALSE;
 }
 
 

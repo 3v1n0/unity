@@ -164,14 +164,14 @@ extern UnityShell* unity_global_shell;
 static gpointer unity_pixbuf_cache_parent_class = NULL;
 
 #define UNITY_hash_template "%s%d"
-GType unity_pixbuf_cache_get_type (void);
+GType unity_pixbuf_cache_get_type (void) G_GNUC_CONST;
 #define UNITY_PIXBUF_CACHE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_PIXBUF_CACHE, UnityPixbufCachePrivate))
 enum  {
 	UNITY_PIXBUF_CACHE_DUMMY_PROPERTY,
 	UNITY_PIXBUF_CACHE_SIZE
 };
-GType unity_shell_mode_get_type (void);
-GType unity_shell_get_type (void);
+GType unity_shell_mode_get_type (void) G_GNUC_CONST;
+GType unity_shell_get_type (void) G_GNUC_CONST;
 static void unity_pixbuf_cache_on_shell_destroyed (UnityPixbufCache* self);
 static void _unity_pixbuf_cache_on_shell_destroyed_gweak_notify (gpointer self, GObject* object);
 UnityPixbufCache* unity_pixbuf_cache_new (gboolean _autodispose);
@@ -329,8 +329,8 @@ static gboolean unity_pixbuf_cache_set_image_from_icon_name_co (UnityPixbufCache
 	switch (data->_state_) {
 		case 0:
 		goto _state_0;
-		case 9:
-		goto _state_9;
+		case 10:
+		goto _state_10;
 		default:
 		g_assert_not_reached ();
 	}
@@ -340,8 +340,8 @@ static gboolean unity_pixbuf_cache_set_image_from_icon_name_co (UnityPixbufCache
 		data->ret = (GdkPixbuf*) gee_abstract_map_get ((GeeAbstractMap*) data->self->priv->cache, data->key);
 		if (GDK_IS_PIXBUF (data->ret)) {
 			ctk_image_set_from_pixbuf (data->image, data->ret);
-			_g_free0 (data->key);
 			_g_object_unref0 (data->ret);
+			_g_free0 (data->key);
 			{
 				if (data->_state_ == 0) {
 					g_simple_async_result_complete_in_idle (data->_async_result);
@@ -353,9 +353,9 @@ static gboolean unity_pixbuf_cache_set_image_from_icon_name_co (UnityPixbufCache
 			}
 		}
 		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_pixbuf_cache_set_image_from_icon_name_co_gsource_func, data, NULL);
-		data->_state_ = 9;
+		data->_state_ = 10;
 		return FALSE;
-		_state_9:
+		_state_10:
 		;
 		if (data->ret == NULL) {
 			{
@@ -380,8 +380,8 @@ static gboolean unity_pixbuf_cache_set_image_from_icon_name_co (UnityPixbufCache
 			}
 			__finally27:
 			if (data->_inner_error_ != NULL) {
-				_g_free0 (data->key);
 				_g_object_unref0 (data->ret);
+				_g_free0 (data->key);
 				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 				g_clear_error (&data->_inner_error_);
 				return FALSE;
@@ -390,8 +390,8 @@ static gboolean unity_pixbuf_cache_set_image_from_icon_name_co (UnityPixbufCache
 		if (GDK_IS_PIXBUF (data->ret)) {
 			ctk_image_set_from_pixbuf (data->image, data->ret);
 		}
-		_g_free0 (data->key);
 		_g_object_unref0 (data->ret);
+		_g_free0 (data->key);
 	}
 	{
 		if (data->_state_ == 0) {
@@ -502,8 +502,8 @@ static gboolean unity_pixbuf_cache_set_image_from_gicon_string_co (UnityPixbufCa
 	switch (data->_state_) {
 		case 0:
 		goto _state_0;
-		case 10:
-		goto _state_10;
+		case 11:
+		goto _state_11;
 		default:
 		g_assert_not_reached ();
 	}
@@ -513,8 +513,8 @@ static gboolean unity_pixbuf_cache_set_image_from_gicon_string_co (UnityPixbufCa
 		data->ret = (GdkPixbuf*) gee_abstract_map_get ((GeeAbstractMap*) data->self->priv->cache, data->key);
 		if (GDK_IS_PIXBUF (data->ret)) {
 			ctk_image_set_from_pixbuf (data->image, data->ret);
-			_g_free0 (data->key);
 			_g_object_unref0 (data->ret);
+			_g_free0 (data->key);
 			{
 				if (data->_state_ == 0) {
 					g_simple_async_result_complete_in_idle (data->_async_result);
@@ -526,9 +526,9 @@ static gboolean unity_pixbuf_cache_set_image_from_gicon_string_co (UnityPixbufCa
 			}
 		}
 		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_pixbuf_cache_set_image_from_gicon_string_co_gsource_func, data, NULL);
-		data->_state_ = 10;
+		data->_state_ = 11;
 		return FALSE;
-		_state_10:
+		_state_11:
 		;
 		if (data->ret == NULL) {
 			if (g_utf8_get_char (g_utf8_offset_to_pointer (data->gicon_as_string, 0)) == '/') {
@@ -552,8 +552,8 @@ static gboolean unity_pixbuf_cache_set_image_from_gicon_string_co (UnityPixbufCa
 				}
 				__finally28:
 				if (data->_inner_error_ != NULL) {
-					_g_free0 (data->key);
 					_g_object_unref0 (data->ret);
+					_g_free0 (data->key);
 					g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 					g_clear_error (&data->_inner_error_);
 					return FALSE;
@@ -617,8 +617,8 @@ static gboolean unity_pixbuf_cache_set_image_from_gicon_string_co (UnityPixbufCa
 				}
 				__finally29:
 				if (data->_inner_error_ != NULL) {
-					_g_free0 (data->key);
 					_g_object_unref0 (data->ret);
+					_g_free0 (data->key);
 					g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 					g_clear_error (&data->_inner_error_);
 					return FALSE;
@@ -631,8 +631,8 @@ static gboolean unity_pixbuf_cache_set_image_from_gicon_string_co (UnityPixbufCa
 		if (GDK_IS_PIXBUF (data->ret)) {
 			ctk_image_set_from_pixbuf (data->image, data->ret);
 		}
-		_g_free0 (data->key);
 		_g_object_unref0 (data->ret);
+		_g_free0 (data->key);
 	}
 	{
 		if (data->_state_ == 0) {
@@ -687,17 +687,17 @@ static gboolean unity_pixbuf_cache_set_image_from_gicon_co (UnityPixbufCacheSetI
 	switch (data->_state_) {
 		case 0:
 		goto _state_0;
-		case 11:
-		goto _state_11;
+		case 12:
+		goto _state_12;
 		default:
 		g_assert_not_reached ();
 	}
 	_state_0:
 	{
-		data->_state_ = 11;
+		data->_state_ = 12;
 		unity_pixbuf_cache_set_image_from_gicon_string (data->self, data->image, g_icon_to_string (data->icon), data->size, unity_pixbuf_cache_set_image_from_gicon_ready, data);
 		return FALSE;
-		_state_11:
+		_state_12:
 		unity_pixbuf_cache_set_image_from_gicon_string_finish (data->self, data->_res_);
 	}
 	{

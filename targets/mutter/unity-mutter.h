@@ -50,6 +50,17 @@ typedef struct _UnityExposeManagerPrivate UnityExposeManagerPrivate;
 typedef struct _UnityPlugin UnityPlugin;
 typedef struct _UnityPluginClass UnityPluginClass;
 
+#define UNITY_TYPE_SPACES_BUTTON_CONTROLLER (unity_spaces_button_controller_get_type ())
+#define UNITY_SPACES_BUTTON_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_SPACES_BUTTON_CONTROLLER, UnitySpacesButtonController))
+#define UNITY_SPACES_BUTTON_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_SPACES_BUTTON_CONTROLLER, UnitySpacesButtonControllerClass))
+#define UNITY_IS_SPACES_BUTTON_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_SPACES_BUTTON_CONTROLLER))
+#define UNITY_IS_SPACES_BUTTON_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_SPACES_BUTTON_CONTROLLER))
+#define UNITY_SPACES_BUTTON_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_SPACES_BUTTON_CONTROLLER, UnitySpacesButtonControllerClass))
+
+typedef struct _UnitySpacesButtonController UnitySpacesButtonController;
+typedef struct _UnitySpacesButtonControllerClass UnitySpacesButtonControllerClass;
+typedef struct _UnitySpacesButtonControllerPrivate UnitySpacesButtonControllerPrivate;
+
 #define UNITY_TYPE_SPACES_MANAGER (unity_spaces_manager_get_type ())
 #define UNITY_SPACES_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_SPACES_MANAGER, UnitySpacesManager))
 #define UNITY_SPACES_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_SPACES_MANAGER, UnitySpacesManagerClass))
@@ -126,6 +137,15 @@ struct _UnityExposeManagerClass {
 	GObjectClass parent_class;
 };
 
+struct _UnitySpacesButtonController {
+	UnityLauncherScrollerChildController parent_instance;
+	UnitySpacesButtonControllerPrivate * priv;
+};
+
+struct _UnitySpacesButtonControllerClass {
+	UnityLauncherScrollerChildControllerClass parent_class;
+};
+
 struct _UnitySpacesManager {
 	GObject parent_instance;
 	UnitySpacesManagerPrivate * priv;
@@ -188,9 +208,12 @@ struct _UnityWindowManagementClass {
 };
 
 
-GType unity_expose_clone_get_type (void);
+GType unity_expose_clone_get_type (void) G_GNUC_CONST;
 UnityExposeClone* unity_expose_clone_new (ClutterActor* source);
 UnityExposeClone* unity_expose_clone_construct (GType object_type, ClutterActor* source);
+void unity_expose_clone_restore_window_position (UnityExposeClone* self, gint active_workspace);
+gboolean unity_expose_clone_get_fade_on_close (UnityExposeClone* self);
+void unity_expose_clone_set_fade_on_close (UnityExposeClone* self, gboolean value);
 ClutterActor* unity_expose_clone_get_source (UnityExposeClone* self);
 guint8 unity_expose_clone_get_hovered_opacity (UnityExposeClone* self);
 void unity_expose_clone_set_hovered_opacity (UnityExposeClone* self, guint8 value);
@@ -198,12 +221,13 @@ guint8 unity_expose_clone_get_unhovered_opacity (UnityExposeClone* self);
 void unity_expose_clone_set_unhovered_opacity (UnityExposeClone* self, guint8 value);
 guint8 unity_expose_clone_get_darken (UnityExposeClone* self);
 void unity_expose_clone_set_darken (UnityExposeClone* self, guint8 value);
-GType unity_expose_manager_get_type (void);
-GType unity_plugin_get_type (void);
+GType unity_expose_manager_get_type (void) G_GNUC_CONST;
+GType unity_plugin_get_type (void) G_GNUC_CONST;
 UnityExposeManager* unity_expose_manager_new (UnityPlugin* plugin, UnityLauncherLauncher* launcher);
 UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlugin* plugin, UnityLauncherLauncher* launcher);
 void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* windows);
 void unity_expose_manager_end_expose (UnityExposeManager* self);
+void unity_expose_manager_position_windows_on_grid (UnityExposeManager* self, GList* _windows, gint top_buffer, gint left_buffer, gint right_buffer, gint bottom_buffer);
 gboolean unity_expose_manager_get_expose_showing (UnityExposeManager* self);
 gboolean unity_expose_manager_get_coverflow (UnityExposeManager* self);
 void unity_expose_manager_set_coverflow (UnityExposeManager* self, gboolean value);
@@ -221,11 +245,15 @@ guint8 unity_expose_manager_get_unhovered_opacity (UnityExposeManager* self);
 void unity_expose_manager_set_unhovered_opacity (UnityExposeManager* self, guint8 value);
 guint8 unity_expose_manager_get_darken (UnityExposeManager* self);
 void unity_expose_manager_set_darken (UnityExposeManager* self, guint8 value);
-GType unity_spaces_manager_get_type (void);
+GType unity_spaces_button_controller_get_type (void) G_GNUC_CONST;
+GType unity_spaces_manager_get_type (void) G_GNUC_CONST;
+UnitySpacesButtonController* unity_spaces_button_controller_new (UnitySpacesManager* _parent, UnityLauncherScrollerChild* _child);
+UnitySpacesButtonController* unity_spaces_button_controller_construct (GType object_type, UnitySpacesManager* _parent, UnityLauncherScrollerChild* _child);
 UnitySpacesManager* unity_spaces_manager_new (UnityPlugin* plugin);
 UnitySpacesManager* unity_spaces_manager_construct (GType object_type, UnityPlugin* plugin);
 void unity_spaces_manager_set_padding (UnitySpacesManager* self, guint top, guint right, guint left, guint bottom);
 void unity_spaces_manager_show_spaces_picker (UnitySpacesManager* self);
+UnityLauncherScrollerChild* unity_spaces_manager_get_button (UnitySpacesManager* self);
 guint unity_spaces_manager_get_top_padding (UnitySpacesManager* self);
 void unity_spaces_manager_set_top_padding (UnitySpacesManager* self, guint value);
 guint unity_spaces_manager_get_right_padding (UnitySpacesManager* self);
@@ -237,15 +265,14 @@ void unity_spaces_manager_set_left_padding (UnitySpacesManager* self, guint valu
 guint unity_spaces_manager_get_spacing (UnitySpacesManager* self);
 void unity_spaces_manager_set_spacing (UnitySpacesManager* self, guint value);
 gboolean unity_spaces_manager_get_showing (UnitySpacesManager* self);
-GType unity_drag_dest_get_type (void);
+GType unity_drag_dest_get_type (void) G_GNUC_CONST;
 UnityDragDest* unity_drag_dest_new (void);
 UnityDragDest* unity_drag_dest_construct (GType object_type);
-GType unity_input_state_get_type (void);
-GType unity_actor_blur_get_type (void);
+GType unity_input_state_get_type (void) G_GNUC_CONST;
+GType unity_actor_blur_get_type (void) G_GNUC_CONST;
 UnityActorBlur* unity_actor_blur_new (ClutterActor* actor);
 UnityActorBlur* unity_actor_blur_construct (GType object_type, ClutterActor* actor);
 void unity_plugin_expose_windows (UnityPlugin* self, GSList* windows, gint left_buffer);
-void unity_plugin_dexpose_windows (UnityPlugin* self);
 void unity_plugin_minimize (UnityPlugin* self, MutterWindow* window);
 void unity_plugin_maximize (UnityPlugin* self, MutterWindow* window, gint x, gint y, gint width, gint height);
 void unity_plugin_unmaximize (UnityPlugin* self, MutterWindow* window, gint x, gint y, gint width, gint height);
@@ -259,13 +286,14 @@ UnityPlugin* unity_plugin_new (void);
 UnityPlugin* unity_plugin_construct (GType object_type);
 MutterPlugin* unity_plugin_get_plugin (UnityPlugin* self);
 void unity_plugin_set_plugin (UnityPlugin* self, MutterPlugin* value);
+UnityExposeManager* unity_plugin_get_expose_manager (UnityPlugin* self);
 gboolean unity_plugin_get_expose_showing (UnityPlugin* self);
-GType unity_maximus_get_type (void);
+GType unity_maximus_get_type (void) G_GNUC_CONST;
 extern char* unity_maximus_user_unmaximize_hint;
 UnityMaximus* unity_maximus_new (void);
 UnityMaximus* unity_maximus_construct (GType object_type);
 gboolean unity_maximus_process_window (UnityMaximus* self, MutterWindow* window);
-GType unity_window_management_get_type (void);
+GType unity_window_management_get_type (void) G_GNUC_CONST;
 UnityWindowManagement* unity_window_management_new (UnityPlugin* p);
 UnityWindowManagement* unity_window_management_construct (GType object_type, UnityPlugin* p);
 

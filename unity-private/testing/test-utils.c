@@ -93,7 +93,7 @@ GParamSpec* g_test_param_spec_log (const gchar* name, const gchar* nick, const g
 void g_test_value_set_log (GValue* value, gpointer v_object);
 void g_test_value_take_log (GValue* value, gpointer v_object);
 gpointer g_test_value_get_log (const GValue* value);
-GType g_test_log_get_type (void);
+GType g_test_log_get_type (void) G_GNUC_CONST;
 enum  {
 	G_TEST_LOG_DUMMY_PROPERTY
 };
@@ -107,7 +107,7 @@ GParamSpec* unity_testing_param_spec_logging (const gchar* name, const gchar* ni
 void unity_testing_value_set_logging (GValue* value, gpointer v_object);
 void unity_testing_value_take_logging (GValue* value, gpointer v_object);
 gpointer unity_testing_value_get_logging (const GValue* value);
-GType unity_testing_logging_get_type (void);
+GType unity_testing_logging_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTING_LOGGING_DUMMY_PROPERTY
 };

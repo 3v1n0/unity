@@ -50,7 +50,6 @@ namespace Unity.Drag
       this.offset_y = offset_y;
 
       this.hooked_actor = new Clutter.Clone (actor);
-      this.hooked_actor.unparent ();
       this.stage.add_actor (this.hooked_actor);
 
       actor.get_transformed_position (out x, out y);
@@ -94,6 +93,8 @@ namespace Unity.Drag
       this.hooked_actor.set_position (event.motion.x - this.offset_x,
                                       event.motion.y - this.offset_y);
       this.motion (event.motion.x, event.motion.y);
+      this.hooked_actor.set_opacity (255);
+      this.hooked_actor.show ();
       return false;
     }
 

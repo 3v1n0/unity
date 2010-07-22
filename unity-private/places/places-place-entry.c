@@ -155,7 +155,7 @@ struct _UnityPlacesPlaceEntryDbusRendererInfo {
 static gpointer unity_places_place_entry_dbus_parent_class = NULL;
 static UnityPlacesPlaceEntryIface* unity_places_place_entry_dbus_unity_places_place_entry_parent_iface = NULL;
 
-GType unity_places_place_entry_get_type (void);
+GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
 void unity_places_place_entry_connect (UnityPlacesPlaceEntry* self);
 void unity_places_place_entry_set_search (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints);
 void unity_places_place_entry_set_active_section (UnityPlacesPlaceEntry* self, guint section_id);
@@ -196,7 +196,7 @@ DeeModel* unity_places_place_entry_get_global_results_model (UnityPlacesPlaceEnt
 void unity_places_place_entry_set_global_results_model (UnityPlacesPlaceEntry* self, DeeModel* value);
 GeeHashMap* unity_places_place_entry_get_global_renderer_hints (UnityPlacesPlaceEntry* self);
 void unity_places_place_entry_set_global_renderer_hints (UnityPlacesPlaceEntry* self, GeeHashMap* value);
-GType unity_places_place_entry_dbus_get_type (void);
+GType unity_places_place_entry_dbus_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_ENTRY_DBUS_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS, UnityPlacesPlaceEntryDbusPrivate))
 enum  {
 	UNITY_PLACES_PLACE_ENTRY_DBUS_DUMMY_PROPERTY,
@@ -236,7 +236,7 @@ void unity_places_place_entry_dbus_set_global_results_model_name (UnityPlacesPla
 void unity_places_place_entry_dbus_update_info (UnityPlacesPlaceEntryDbus* self, GValueArray* value_array);
 const char* unity_places_place_entry_dbus_get_dbus_name (UnityPlacesPlaceEntryDbus* self);
 const char* unity_places_place_entry_dbus_get_dbus_path (UnityPlacesPlaceEntryDbus* self);
-GType unity_places_place_entry_dbus_renderer_info_get_type (void);
+GType unity_places_place_entry_dbus_renderer_info_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceEntryDbusRendererInfo* unity_places_place_entry_dbus_renderer_info_dup (const UnityPlacesPlaceEntryDbusRendererInfo* self);
 void unity_places_place_entry_dbus_renderer_info_free (UnityPlacesPlaceEntryDbusRendererInfo* self);
 void unity_places_place_entry_dbus_renderer_info_copy (const UnityPlacesPlaceEntryDbusRendererInfo* self, UnityPlacesPlaceEntryDbusRendererInfo* dest);
@@ -629,8 +629,8 @@ void unity_places_place_entry_dbus_update_info (UnityPlacesPlaceEntryDbus* self,
 	}
 	g_signal_emit_by_name ((UnityPlacesPlaceEntry*) self, "updated");
 	g_signal_emit_by_name ((UnityPlacesPlaceEntry*) self, "renderer-info-changed");
-	_g_free0 (n);
 	_g_hash_table_unref0 (hash);
+	_g_free0 (n);
 }
 
 
@@ -668,13 +668,13 @@ static void unity_places_place_entry_dbus_real_connect (UnityPlacesPlaceEntry* b
 		DBusGProxy* _tmp2_;
 		_tmp0_ = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch9_g_error;
+			goto __catch12_g_error;
 		}
 		self->priv->connection = (_tmp1_ = _tmp0_, _dbus_g_connection_unref0 (self->priv->connection), _tmp1_);
 		self->priv->service = (_tmp2_ = dbus_g_proxy_new_for_name (self->priv->connection, self->priv->_dbus_name, self->priv->_dbus_path, "com.canonical.Unity.PlaceEntry"), _g_object_unref0 (self->priv->service), _tmp2_);
 	}
-	goto __finally9;
-	__catch9_g_error:
+	goto __finally12;
+	__catch12_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -687,7 +687,7 @@ static void unity_places_place_entry_dbus_real_connect (UnityPlacesPlaceEntry* b
 			return;
 		}
 	}
-	__finally9:
+	__finally12:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -802,8 +802,8 @@ static void unity_places_place_entry_dbus_on_renderer_info_changed (UnityPlacesP
 		}
 		g_signal_emit_by_name ((UnityPlacesPlaceEntry*) self, "updated");
 		g_signal_emit_by_name ((UnityPlacesPlaceEntry*) self, "renderer-info-changed");
-		_g_free0 (str);
 		_g_hash_table_unref0 (hash);
+		_g_free0 (str);
 	}
 }
 

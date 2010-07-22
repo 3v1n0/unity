@@ -160,9 +160,9 @@ struct _Block1Data {
 static gpointer unity_places_place_home_entry_parent_class = NULL;
 static UnityPlacesPlaceEntryIface* unity_places_place_home_entry_unity_places_place_entry_parent_iface = NULL;
 
-GType unity_places_place_entry_get_type (void);
-GType unity_places_place_home_entry_get_type (void);
-GType unity_places_place_model_get_type (void);
+GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
+GType unity_places_place_home_entry_get_type (void) G_GNUC_CONST;
+GType unity_places_place_model_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_HOME_ENTRY_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE_HOME_ENTRY, UnityPlacesPlaceHomeEntryPrivate))
 enum  {
 	UNITY_PLACES_PLACE_HOME_ENTRY_DUMMY_PROPERTY,
@@ -189,7 +189,7 @@ enum  {
 };
 UnityPlacesPlaceHomeEntry* unity_places_place_home_entry_new (UnityShell* shell, UnityPlacesPlaceModel* model);
 UnityPlacesPlaceHomeEntry* unity_places_place_home_entry_construct (GType object_type, UnityShell* shell, UnityPlacesPlaceModel* model);
-GType unity_places_place_get_type (void);
+GType unity_places_place_get_type (void) G_GNUC_CONST;
 GeeArrayList* unity_places_place_get_entries (UnityPlacesPlace* self);
 DeeModel* unity_places_place_entry_get_entry_groups_model (UnityPlacesPlaceEntry* self);
 const char* unity_places_place_entry_get_name (UnityPlacesPlaceEntry* self);
@@ -316,8 +316,8 @@ static void _lambda8_ (DeeModelIter* it, Block1Data* _data1_) {
 		}
 		i = dee_model_next (_model, i);
 	}
-	_g_object_unref0 (_model);
 	_g_free0 (uri);
+	_g_object_unref0 (_model);
 }
 
 
@@ -327,13 +327,13 @@ static void __lambda8__dee_model_row_removed (DeeModel* _sender, DeeModelIter* i
 
 
 static Block1Data* block1_data_ref (Block1Data* _data1_) {
-	++_data1_->_ref_count_;
+	g_atomic_int_inc (&_data1_->_ref_count_);
 	return _data1_;
 }
 
 
 static void block1_data_unref (Block1Data* _data1_) {
-	if ((--_data1_->_ref_count_) == 0) {
+	if (g_atomic_int_dec_and_test (&_data1_->_ref_count_)) {
 		_g_object_unref0 (_data1_->self);
 		_g_object_unref0 (_data1_->entry);
 		g_slice_free (Block1Data, _data1_);
@@ -399,8 +399,8 @@ static void unity_places_place_home_entry_real_set_search (UnityPlacesPlaceEntry
 			if (entry != NULL) {
 				unity_places_place_entry_set_global_search (entry, search, hints);
 			}
-			_g_object_unref0 (e);
 			_g_object_unref0 (entry);
+			_g_object_unref0 (e);
 		}
 		_g_object_unref0 (_e_it);
 	}

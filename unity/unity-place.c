@@ -333,12 +333,12 @@ static gpointer unity_place_entry_service_impl_parent_class = NULL;
 static UnityPlaceEntryServiceIface* unity_place_entry_service_impl_unity_place_entry_service_parent_iface = NULL;
 static gpointer unity_place_controller_parent_class = NULL;
 
-GType unity_place__rendererinfo_get_type (void);
+GType unity_place__rendererinfo_get_type (void) G_GNUC_CONST;
 UnityPlace_RendererInfo* unity_place__rendererinfo_dup (const UnityPlace_RendererInfo* self);
 void unity_place__rendererinfo_free (UnityPlace_RendererInfo* self);
 void unity_place__rendererinfo_copy (const UnityPlace_RendererInfo* self, UnityPlace_RendererInfo* dest);
 void unity_place__rendererinfo_destroy (UnityPlace_RendererInfo* self);
-GType unity_place_renderer_info_get_type (void);
+GType unity_place_renderer_info_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACE_RENDERER_INFO_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACE_TYPE_RENDERER_INFO, UnityPlaceRendererInfoPrivate))
 enum  {
 	UNITY_PLACE_RENDERER_INFO_DUMMY_PROPERTY,
@@ -363,7 +363,7 @@ void unity_place_renderer_info_set_results_model (UnityPlaceRendererInfo* self, 
 static void unity_place_renderer_info_finalize (GObject* obj);
 static void unity_place_renderer_info_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_place_renderer_info_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
-GType unity_place_search_get_type (void);
+GType unity_place_search_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACE_SEARCH_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACE_TYPE_SEARCH, UnityPlaceSearchPrivate))
 enum  {
 	UNITY_PLACE_SEARCH_DUMMY_PROPERTY
@@ -377,19 +377,19 @@ void unity_place_search_clear_hint (UnityPlaceSearch* self, const char* hint);
 void unity_place_search_clear_hints (UnityPlaceSearch* self);
 guint unity_place_search_num_hints (UnityPlaceSearch* self);
 static void unity_place_search_finalize (GObject* obj);
-GType unity_place__entryinfo_get_type (void);
+GType unity_place__entryinfo_get_type (void) G_GNUC_CONST;
 UnityPlace_EntryInfo* unity_place__entryinfo_dup (const UnityPlace_EntryInfo* self);
 void unity_place__entryinfo_free (UnityPlace_EntryInfo* self);
 void unity_place__entryinfo_copy (const UnityPlace_EntryInfo* self, UnityPlace_EntryInfo* dest);
 void unity_place__entryinfo_destroy (UnityPlace_EntryInfo* self);
 static char** _vala_array_dup4 (char** self, int length);
-GType unity_place__entryinfodata_get_type (void);
+GType unity_place__entryinfodata_get_type (void) G_GNUC_CONST;
 UnityPlace_EntryInfoData* unity_place__entryinfodata_dup (const UnityPlace_EntryInfoData* self);
 void unity_place__entryinfodata_free (UnityPlace_EntryInfoData* self);
 void unity_place__entryinfodata_copy (const UnityPlace_EntryInfoData* self, UnityPlace_EntryInfoData* dest);
 void unity_place__entryinfodata_destroy (UnityPlace_EntryInfoData* self);
 static char** _vala_array_dup5 (char** self, int length);
-GType unity_place_entry_info_get_type (void);
+GType unity_place_entry_info_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACE_ENTRY_INFO_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACE_TYPE_ENTRY_INFO, UnityPlaceEntryInfoPrivate))
 enum  {
 	UNITY_PLACE_ENTRY_INFO_DUMMY_PROPERTY,
@@ -445,7 +445,7 @@ static void unity_place_entry_info_finalize (GObject* obj);
 static void unity_place_entry_info_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_place_entry_info_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 UnityPlaceService* unity_place_service_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
-GType unity_place_service_get_type (void);
+GType unity_place_service_get_type (void) G_GNUC_CONST;
 UnityPlace_EntryInfo* unity_place_service_get_entries (UnityPlaceService* self, int* result_length1, GError** error);
 static void _vala_dbus_register_object (DBusConnection* connection, const char* path, void* object);
 static void _vala_dbus_unregister_object (gpointer connection, GObject* object);
@@ -458,7 +458,7 @@ static void _vala_UnityPlace_EntryInfo_array_free (UnityPlace_EntryInfo* array, 
 static DBusHandlerResult _dbus_unity_place_service_get_entries (UnityPlaceService* self, DBusConnection* connection, DBusMessage* message);
 static void _dbus_unity_place_service_entry_added (GObject* _sender, UnityPlace_EntryInfo* entry, DBusConnection* _connection);
 static void _dbus_unity_place_service_entry_removed (GObject* _sender, const char* entry_dbus_path, DBusConnection* _connection);
-GType unity_place_service_dbus_proxy_get_type (void);
+GType unity_place_service_dbus_proxy_get_type (void) G_GNUC_CONST;
 static void _dbus_handle_unity_place_service_entry_added (UnityPlaceService* self, DBusConnection* connection, DBusMessage* message);
 static void _dbus_handle_unity_place_service_entry_removed (UnityPlaceService* self, DBusConnection* connection, DBusMessage* message);
 DBusHandlerResult unity_place_service_dbus_proxy_filter (DBusConnection* connection, DBusMessage* message, void* user_data);
@@ -470,7 +470,7 @@ static void unity_place_service_dbus_proxy_unity_place_service__interface_init (
 static void unity_place_service_dbus_proxy_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_place_service_dbus_proxy_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 UnityPlaceEntryService* unity_place_entry_service_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
-GType unity_place_entry_service_get_type (void);
+GType unity_place_entry_service_get_type (void) G_GNUC_CONST;
 void unity_place_entry_service_set_global_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error);
 void unity_place_entry_service_set_search (UnityPlaceEntryService* self, const char* search, GHashTable* hints, GError** error);
 void unity_place_entry_service_set_active (UnityPlaceEntryService* self, gboolean is_active, GError** error);
@@ -487,7 +487,7 @@ static DBusHandlerResult _dbus_unity_place_entry_service_set_active_section (Uni
 static void _dbus_unity_place_entry_service_entry_renderer_info_changed (GObject* _sender, UnityPlace_RendererInfo* renderer_info, DBusConnection* _connection);
 static void _dbus_unity_place_entry_service_global_renderer_info_changed (GObject* _sender, UnityPlace_RendererInfo* renderer_info, DBusConnection* _connection);
 static void _dbus_unity_place_entry_service_place_entry_info_changed (GObject* _sender, UnityPlace_EntryInfoData* entry_info_data, DBusConnection* _connection);
-GType unity_place_entry_service_dbus_proxy_get_type (void);
+GType unity_place_entry_service_dbus_proxy_get_type (void) G_GNUC_CONST;
 static void _dbus_handle_unity_place_entry_service_entry_renderer_info_changed (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message);
 static void _dbus_handle_unity_place_entry_service_global_renderer_info_changed (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message);
 static void _dbus_handle_unity_place_entry_service_place_entry_info_changed (UnityPlaceEntryService* self, DBusConnection* connection, DBusMessage* message);
@@ -502,8 +502,8 @@ static void unity_place_entry_service_dbus_proxy_set_active_section (UnityPlaceE
 static void unity_place_entry_service_dbus_proxy_unity_place_entry_service__interface_init (UnityPlaceEntryServiceIface* iface);
 static void unity_place_entry_service_dbus_proxy_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_place_entry_service_dbus_proxy_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
-GType unity_place_service_impl_get_type (void);
-GType unity_place_entry_service_impl_get_type (void);
+GType unity_place_service_impl_get_type (void) G_GNUC_CONST;
+GType unity_place_entry_service_impl_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACE_SERVICE_IMPL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACE_TYPE_SERVICE_IMPL, UnityPlaceServiceImplPrivate))
 enum  {
 	UNITY_PLACE_SERVICE_IMPL_DUMMY_PROPERTY,
@@ -556,10 +556,10 @@ static DBusHandlerResult _dbus_unity_place_entry_service_impl_introspect (UnityP
 static void unity_place_entry_service_impl_finalize (GObject* obj);
 static void unity_place_entry_service_impl_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_place_entry_service_impl_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
-GType unity_place__entrysignals_get_type (void);
+GType unity_place__entrysignals_get_type (void) G_GNUC_CONST;
 UnityPlace_EntrySignals* unity_place__entrysignals_dup (const UnityPlace_EntrySignals* self);
 void unity_place__entrysignals_free (UnityPlace_EntrySignals* self);
-GType unity_place_controller_get_type (void);
+GType unity_place_controller_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACE_CONTROLLER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACE_TYPE_CONTROLLER, UnityPlaceControllerPrivate))
 enum  {
 	UNITY_PLACE_CONTROLLER_DUMMY_PROPERTY,
@@ -5096,8 +5096,8 @@ static void _lambda2_ (GObject* obj, GParamSpec* pspec, Block1Data* _data1_) {
 		g_signal_emit_by_name ((UnityPlaceEntryService*) entry_service, "entry-renderer-info-changed", (_tmp3_ = _tmp2_ = (unity_place_renderer_info_get_raw (renderer_info, &_tmp1_), _tmp1_), &_tmp3_));
 		unity_place__rendererinfo_destroy (&_tmp2_);
 	}
-	_g_object_unref0 (renderer_info);
 	_g_object_unref0 (entry_service);
+	_g_object_unref0 (renderer_info);
 }
 
 
@@ -5126,8 +5126,8 @@ static void _lambda3_ (GObject* obj, GParamSpec* pspec, Block1Data* _data1_) {
 		g_signal_emit_by_name ((UnityPlaceEntryService*) entry_service, "global-renderer-info-changed", (_tmp3_ = _tmp2_ = (unity_place_renderer_info_get_raw (renderer_info, &_tmp1_), _tmp1_), &_tmp3_));
 		unity_place__rendererinfo_destroy (&_tmp2_);
 	}
-	_g_object_unref0 (renderer_info);
 	_g_object_unref0 (entry_service);
+	_g_object_unref0 (renderer_info);
 }
 
 
@@ -5142,13 +5142,13 @@ static gpointer _unity_place__entrysignals_dup0 (gpointer self) {
 
 
 static Block1Data* block1_data_ref (Block1Data* _data1_) {
-	++_data1_->_ref_count_;
+	g_atomic_int_inc (&_data1_->_ref_count_);
 	return _data1_;
 }
 
 
 static void block1_data_unref (Block1Data* _data1_) {
-	if ((--_data1_->_ref_count_) == 0) {
+	if (g_atomic_int_dec_and_test (&_data1_->_ref_count_)) {
 		_g_object_unref0 (_data1_->self);
 		_g_object_unref0 (_data1_->entry);
 		g_slice_free (Block1Data, _data1_);
@@ -5201,16 +5201,16 @@ void unity_place_controller_remove_entry (UnityPlaceController* self, const char
 		g_warning ("unity-place.vala:813: Can not disconnect signals for unknown entry '%s" \
 "'", dbus_path);
 		g_hash_table_remove (self->priv->entry_signals, dbus_path);
-		_unity_place__entrysignals_free0 (signals);
 		_g_object_unref0 (entry);
+		_unity_place__entrysignals_free0 (signals);
 		return;
 	}
 	g_signal_handler_disconnect ((GObject*) entry, (*signals).place_entry_info_changed_id);
 	g_signal_handler_disconnect ((GObject*) unity_place_entry_info_get_entry_renderer_info (entry), (*signals).entry_renderer_info_changed_id);
 	g_signal_handler_disconnect ((GObject*) unity_place_entry_info_get_global_renderer_info (entry), (*signals).global_renderer_info_changed_id);
 	unity_place_service_impl_remove_entry (self->priv->service, dbus_path);
-	_unity_place__entrysignals_free0 (signals);
 	_g_object_unref0 (entry);
+	_unity_place__entrysignals_free0 (signals);
 }
 
 
@@ -5270,8 +5270,8 @@ UnityPlaceEntryInfo** unity_place_controller_get_entries (UnityPlaceController* 
 	result = (_tmp5_ = _result_, *result_length1 = _result__length1, _tmp5_);
 	entry_paths = (_vala_array_free (entry_paths, entry_paths_length1, (GDestroyNotify) g_free), NULL);
 	return result;
-	_result_ = (_vala_array_free (_result_, _result__length1, (GDestroyNotify) g_object_unref), NULL);
 	entry_paths = (_vala_array_free (entry_paths, entry_paths_length1, (GDestroyNotify) g_free), NULL);
+	_result_ = (_vala_array_free (_result_, _result__length1, (GDestroyNotify) g_object_unref), NULL);
 }
 
 
@@ -5349,9 +5349,9 @@ static void unity_place_controller_on_entry_changed (UnityPlaceController* self,
 	if (entry_service == NULL) {
 		g_warning ("unity-place.vala:874: Got change signal from unknown entry service '%s" \
 "'", unity_place_entry_info_get_dbus_path (entry));
-		_g_object_unref0 (entry);
-		unity_place__entryinfodata_destroy (&entry_data);
 		_g_object_unref0 (entry_service);
+		unity_place__entryinfodata_destroy (&entry_data);
+		_g_object_unref0 (entry);
 		return;
 	}
 	_entry = (unity_place_entry_info_get_raw (entry, &_tmp1_), _tmp1_);
@@ -5364,10 +5364,10 @@ static void unity_place_controller_on_entry_changed (UnityPlaceController* self,
 	entry_data.sections_model = (_tmp7_ = g_strdup (_entry.sections_model), _g_free0 (entry_data.sections_model), _tmp7_);
 	entry_data.hints = (_tmp8_ = _g_hash_table_ref0 (_entry.hints), _g_hash_table_unref0 (entry_data.hints), _tmp8_);
 	g_signal_emit_by_name ((UnityPlaceEntryService*) entry_service, "place-entry-info-changed", &entry_data);
-	_g_object_unref0 (entry);
-	unity_place__entryinfodata_destroy (&entry_data);
-	_g_object_unref0 (entry_service);
 	unity_place__entryinfo_destroy (&_entry);
+	_g_object_unref0 (entry_service);
+	unity_place__entryinfodata_destroy (&entry_data);
+	_g_object_unref0 (entry);
 }
 
 

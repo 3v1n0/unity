@@ -31,10 +31,10 @@
 #include <libdbusmenu-glib/menuitem-proxy.h>
 #include <libdbusmenu-glib/menuitem.h>
 #include <libdbusmenu-glib/server.h>
-#include <stdlib.h>
-#include <string.h>
 #include <float.h>
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
 #include <libbamf/libbamf.h>
 #include <clutk/clutk.h>
 #include <glib/gstdio.h>
@@ -44,11 +44,10 @@
 #include <libindicator/indicator-service.h>
 #include <libindicator/indicator-service-manager.h>
 #include <libindicator/indicator-desktop-shortcuts.h>
+#include <glib/gi18n-lib.h>
 #include <gdk/gdk.h>
 #include <gio/gdesktopappinfo.h>
 #include <gio/gio.h>
-#include <gdk-pixbuf/gdk-pixdata.h>
-#include <gee.h>
 
 
 #define UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER (unity_launcher_scroller_child_controller_get_type ())
@@ -107,17 +106,15 @@ typedef struct _UnityLauncherScrollerChildClass UnityLauncherScrollerChildClass;
 
 typedef struct _UnityLauncherApplicationQuicklistController UnityLauncherApplicationQuicklistController;
 typedef struct _UnityLauncherApplicationQuicklistControllerClass UnityLauncherApplicationQuicklistControllerClass;
-
-#define UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER_STATE (unity_launcher_quicklist_controller_state_get_type ())
 #define _g_array_free0(var) ((var == NULL) ? NULL : (var = (g_array_free (var, TRUE), NULL)))
 
 #define UNITY_LAUNCHER_TYPE_PIN_TYPE (unity_launcher_pin_type_get_type ())
 typedef struct _UnityLauncherScrollerChildPrivate UnityLauncherScrollerChildPrivate;
-typedef struct _Block4Data Block4Data;
 typedef struct _Block3Data Block3Data;
+typedef struct _Block2Data Block2Data;
 #define __g_list_free_g_object_unref0(var) ((var == NULL) ? NULL : (var = (_g_list_free_g_object_unref (var), NULL)))
 typedef struct _Block5Data Block5Data;
-typedef struct _Block2Data Block2Data;
+typedef struct _Block4Data Block4Data;
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 
 typedef enum  {
@@ -135,7 +132,6 @@ typedef enum  {
 struct _UnityLauncherScrollerChildController {
 	GObject parent_instance;
 	UnityLauncherScrollerChildControllerPrivate * priv;
-	char* name;
 	UnityLauncherScrollerChildControllerMenuState menu_state;
 	guint32 last_press_time;
 	gboolean button_down;
@@ -164,19 +160,12 @@ struct _UnityLauncherApplicationControllerPrivate {
 	char* _desktop_file;
 	GKeyFile* desktop_keyfile;
 	char* icon_name;
-	UnityThemeFilePath* theme_file_path;
 	BamfApplication* app;
 	DbusmenuClient* menu_client;
 	DbusmenuMenuitem* cached_menu;
 	gint menu_items_realized_counter;
 	gboolean is_favorite;
 };
-
-typedef enum  {
-	UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_LABEL,
-	UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU,
-	UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_CLOSED
-} UnityLauncherQuicklistControllerState;
 
 typedef enum  {
 	UNITY_LAUNCHER_PIN_TYPE_UNPINNED,
@@ -194,29 +183,28 @@ struct _UnityLauncherScrollerChild {
 
 struct _UnityLauncherScrollerChildClass {
 	CtkActorClass parent_class;
-	void (*force_rotation_jump) (UnityLauncherScrollerChild* self, float degrees);
-};
-
-struct _Block4Data {
-	int _ref_count_;
-	Block3Data * _data3_;
-	DbusmenuMenuitem* menu;
 };
 
 struct _Block3Data {
 	int _ref_count_;
 	Block2Data * _data2_;
+	DbusmenuMenuitem* menu;
+};
+
+struct _Block2Data {
+	int _ref_count_;
+	Block4Data * _data4_;
 	char* path;
 	char* remote_address;
 };
 
 struct _Block5Data {
 	int _ref_count_;
-	Block2Data * _data2_;
+	Block4Data * _data4_;
 	char* local_nick;
 };
 
-struct _Block2Data {
+struct _Block4Data {
 	int _ref_count_;
 	UnityLauncherApplicationController * self;
 	IndicatorDesktopShortcuts* shortcuts;
@@ -228,10 +216,10 @@ struct _Block2Data {
 static gpointer unity_launcher_application_controller_parent_class = NULL;
 
 GQuark unity_launcher_app_type_error_quark (void);
-GType unity_launcher_scroller_child_controller_get_type (void);
-GType unity_launcher_quicklist_controller_get_type (void);
-GType unity_launcher_scroller_child_controller_menu_state_get_type (void);
-GType unity_launcher_application_controller_get_type (void);
+GType unity_launcher_scroller_child_controller_get_type (void) G_GNUC_CONST;
+GType unity_launcher_quicklist_controller_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_child_controller_menu_state_get_type (void) G_GNUC_CONST;
+GType unity_launcher_application_controller_get_type (void) G_GNUC_CONST;
 #define UNITY_LAUNCHER_APPLICATION_CONTROLLER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_APPLICATION_CONTROLLER, UnityLauncherApplicationControllerPrivate))
 enum  {
 	UNITY_LAUNCHER_APPLICATION_CONTROLLER_DUMMY_PROPERTY,
@@ -239,44 +227,38 @@ enum  {
 };
 static void unity_launcher_application_controller_set_desktop_file (UnityLauncherApplicationController* self, const char* value);
 static void unity_launcher_application_controller_load_desktop_file_info (UnityLauncherApplicationController* self);
-GType unity_launcher_scroller_child_get_type (void);
+GType unity_launcher_scroller_child_get_type (void) G_GNUC_CONST;
 UnityLauncherApplicationController* unity_launcher_application_controller_new (const char* desktop_file_, UnityLauncherScrollerChild* child_);
 UnityLauncherApplicationController* unity_launcher_application_controller_construct (GType object_type, const char* desktop_file_, UnityLauncherScrollerChild* child_);
 UnityLauncherApplicationQuicklistController* unity_launcher_application_quicklist_controller_new (UnityLauncherScrollerChildController* scroller_child);
 UnityLauncherApplicationQuicklistController* unity_launcher_application_quicklist_controller_construct (GType object_type, UnityLauncherScrollerChildController* scroller_child);
-GType unity_launcher_application_quicklist_controller_get_type (void);
+GType unity_launcher_application_quicklist_controller_get_type (void) G_GNUC_CONST;
 static UnityLauncherQuicklistController* unity_launcher_application_controller_real_get_menu_controller (UnityLauncherScrollerChildController* base);
-UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_get_menu (UnityLauncherScrollerChildController* self);
-GType unity_launcher_quicklist_controller_state_get_type (void);
-UnityLauncherQuicklistControllerState unity_launcher_quicklist_controller_get_state (UnityLauncherQuicklistController* self);
-static void _lambda26_ (UnityLauncherApplicationController* self);
-static void __lambda26__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
-static void unity_launcher_application_controller_on_notify_menu (UnityLauncherApplicationController* self);
 const char* unity_launcher_application_controller_get_desktop_file (UnityLauncherApplicationController* self);
 void unity_launcher_application_controller_set_sticky (UnityLauncherApplicationController* self, gboolean is_sticky);
 gboolean unity_launcher_application_controller_is_sticky (UnityLauncherApplicationController* self);
 void unity_launcher_application_controller_close_windows (UnityLauncherApplicationController* self);
 void unity_launcher_application_controller_set_priority (UnityLauncherApplicationController* self, float priority);
 float unity_launcher_application_controller_get_priority (UnityLauncherApplicationController* self, GError** error);
-GType unity_launcher_pin_type_get_type (void);
+GType unity_launcher_pin_type_get_type (void) G_GNUC_CONST;
 UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (UnityLauncherScrollerChildController* self);
 static void unity_launcher_application_controller_on_favorite_added (UnityLauncherApplicationController* self, const char* uid);
 static void unity_launcher_application_controller_on_favorite_removed (UnityLauncherApplicationController* self, const char* uid);
-static void _lambda28_ (Block4Data* _data4_);
+static void _lambda28_ (Block3Data* _data3_);
 static void __lambda28__dbusmenu_menuitem_realized (DbusmenuMenuitem* _sender, gpointer self);
-static Block4Data* block4_data_ref (Block4Data* _data4_);
-static void block4_data_unref (Block4Data* _data4_);
-static void _lambda27_ (Block3Data* _data3_);
-static void __lambda27__dbusmenu_client_layout_updated (DbusmenuClient* _sender, gpointer self);
 static Block3Data* block3_data_ref (Block3Data* _data3_);
 static void block3_data_unref (Block3Data* _data3_);
+static void _lambda27_ (Block2Data* _data2_);
+static void __lambda27__dbusmenu_client_layout_updated (DbusmenuClient* _sender, gpointer self);
+static Block2Data* block2_data_ref (Block2Data* _data2_);
+static void block2_data_unref (Block2Data* _data2_);
 static void _g_list_free_g_object_unref (GList* self);
 static void _lambda29_ (guint timestamp, Block5Data* _data5_);
 static void __lambda29__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
 static Block5Data* block5_data_ref (Block5Data* _data5_);
 static void block5_data_unref (Block5Data* _data5_);
-static Block2Data* block2_data_ref (Block2Data* _data2_);
-static void block2_data_unref (Block2Data* _data2_);
+static Block4Data* block4_data_ref (Block4Data* _data4_);
+static void block4_data_unref (Block4Data* _data4_);
 static void unity_launcher_application_controller_real_get_menu_actions (UnityLauncherScrollerChildController* base, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
 static void _lambda30_ (guint timestamp, UnityLauncherApplicationController* self);
 static void __lambda30__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
@@ -298,23 +280,23 @@ void unity_launcher_application_controller_detach_application (UnityLauncherAppl
 static void _unity_launcher_application_controller_detach_application_bamf_view_closed (BamfView* _sender, gpointer self);
 static void unity_launcher_application_controller_on_app_urgant_changed (UnityLauncherApplicationController* self, gboolean urgancy);
 static void _unity_launcher_application_controller_on_app_urgant_changed_bamf_view_urgent_changed (BamfView* _sender, gboolean object, gpointer self);
-static void unity_launcher_application_controller_load_icon_from_icon_name (UnityLauncherApplicationController* self);
+void unity_launcher_scroller_child_controller_set_hide (UnityLauncherScrollerChildController* self, gboolean value);
+static void _lambda32_ (gboolean value, UnityLauncherApplicationController* self);
+static void __lambda32__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self);
+void unity_launcher_scroller_child_controller_set_name (UnityLauncherScrollerChildController* self, const char* value);
+const char* unity_launcher_scroller_child_controller_get_name (UnityLauncherScrollerChildController* self);
+void unity_launcher_scroller_child_controller_load_icon_from_icon_name (UnityLauncherScrollerChildController* self, const char* icon_name);
 void unity_launcher_application_controller_attach_application (UnityLauncherApplicationController* self, BamfApplication* application);
 void unity_launcher_scroller_child_set_needs_attention (UnityLauncherScrollerChild* self, gboolean value);
 gboolean unity_launcher_application_controller_debug_is_application_attached (UnityLauncherApplicationController* self);
-static gboolean unity_launcher_application_controller_try_load_from_file (UnityLauncherApplicationController* self, const char* filepath);
-void unity_launcher_scroller_child_set_icon (UnityLauncherScrollerChild* self, GdkPixbuf* value);
-static void _lambda14_ (UnityThemeFilePath* theme, const char* filepath, UnityLauncherApplicationController* self);
-static void __lambda14__unity_theme_file_path_found_icon_path (UnityThemeFilePath* _sender, const char* filepath, gpointer self);
-static void _lambda15_ (UnityLauncherApplicationController* self);
-static void __lambda15__unity_theme_file_path_failed (UnityThemeFilePath* _sender, gpointer self);
 static void _unity_launcher_application_controller_on_favorite_added_unity_favorites_favorite_added (UnityFavorites* _sender, const char* uid, gpointer self);
 static void _unity_launcher_application_controller_on_favorite_removed_unity_favorites_favorite_removed (UnityFavorites* _sender, const char* uid, gpointer self);
-static void _unity_launcher_application_controller_on_notify_menu_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static GObject * unity_launcher_application_controller_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_launcher_application_controller_finalize (GObject* obj);
 static void unity_launcher_application_controller_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_launcher_application_controller_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
+static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static gint _vala_array_length (gpointer array);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
@@ -353,32 +335,11 @@ static UnityLauncherQuicklistController* unity_launcher_application_controller_r
 }
 
 
-static void _lambda26_ (UnityLauncherApplicationController* self) {
-	if (unity_launcher_quicklist_controller_get_state (unity_launcher_scroller_child_controller_get_menu ((UnityLauncherScrollerChildController*) self)) == UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU) {
-		GArray* _tmp0_;
-		unity_shell_expose_xids (unity_global_shell, _tmp0_ = bamf_application_get_xids (self->priv->app));
-		_g_array_free0 (_tmp0_);
-	} else {
-		unity_shell_stop_expose (unity_global_shell);
-	}
-}
-
-
-static void __lambda26__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda26_ (self);
-}
-
-
-static void unity_launcher_application_controller_on_notify_menu (UnityLauncherApplicationController* self) {
-	g_return_if_fail (self != NULL);
-	g_signal_connect_object ((GObject*) unity_launcher_scroller_child_controller_get_menu ((UnityLauncherScrollerChildController*) self), "notify::state", (GCallback) __lambda26__g_object_notify, self, 0);
-}
-
-
 void unity_launcher_application_controller_set_sticky (UnityLauncherApplicationController* self, gboolean is_sticky) {
 	gboolean _tmp0_ = FALSE;
 	UnityFavorites* favorites;
 	char* uid;
+	gboolean _tmp1_ = FALSE;
 	g_return_if_fail (self != NULL);
 	if (_vala_strcmp0 (self->priv->_desktop_file, "") == 0) {
 		_tmp0_ = TRUE;
@@ -390,6 +351,22 @@ void unity_launcher_application_controller_set_sticky (UnityLauncherApplicationC
 	}
 	favorites = unity_favorites_get_default ();
 	uid = unity_favorites_find_uid_for_desktop_file (favorites, self->priv->_desktop_file);
+	if (_vala_strcmp0 (uid, "") == 0) {
+		_tmp1_ = TRUE;
+	} else {
+		_tmp1_ = uid == NULL;
+	}
+	if (_tmp1_) {
+		char** _tmp3_;
+		gint _filepath_size_;
+		gint filepath_length1;
+		char** _tmp2_;
+		char** filepath;
+		char* _tmp4_;
+		filepath = (_tmp3_ = _tmp2_ = g_strsplit (self->priv->_desktop_file, "/", 0), filepath_length1 = _vala_array_length (_tmp2_), _filepath_size_ = filepath_length1, _tmp3_);
+		uid = (_tmp4_ = g_strconcat ("app-", filepath[filepath_length1 - 1], NULL), _g_free0 (uid), _tmp4_);
+		filepath = (_vala_array_free (filepath, filepath_length1, (GDestroyNotify) g_free), NULL);
+	}
 	if (is_sticky) {
 		unity_favorites_set_string (favorites, uid, "type", "application");
 		unity_favorites_set_string (favorites, uid, "desktop_file", self->priv->_desktop_file);
@@ -397,8 +374,8 @@ void unity_launcher_application_controller_set_sticky (UnityLauncherApplicationC
 	} else {
 		unity_favorites_remove_favorite (favorites, uid);
 	}
-	_g_object_unref0 (favorites);
 	_g_free0 (uid);
+	_g_object_unref0 (favorites);
 }
 
 
@@ -420,24 +397,24 @@ gboolean unity_launcher_application_controller_is_sticky (UnityLauncherApplicati
 	}
 	favorites = unity_favorites_get_default ();
 	uid = unity_favorites_find_uid_for_desktop_file (favorites, self->priv->_desktop_file);
-	if (uid != NULL) {
-		_tmp1_ = _vala_strcmp0 (uid, "") != 0;
+	if (uid == NULL) {
+		_tmp1_ = TRUE;
 	} else {
-		_tmp1_ = FALSE;
+		_tmp1_ = _vala_strcmp0 (uid, "") == 0;
 	}
 	if (_tmp1_) {
-		result = TRUE;
-		_g_object_unref0 (favorites);
+		result = FALSE;
 		_g_free0 (uid);
+		_g_object_unref0 (favorites);
 		return result;
 	} else {
-		result = FALSE;
-		_g_object_unref0 (favorites);
+		result = TRUE;
 		_g_free0 (uid);
+		_g_object_unref0 (favorites);
 		return result;
 	}
-	_g_object_unref0 (favorites);
 	_g_free0 (uid);
+	_g_object_unref0 (favorites);
 }
 
 
@@ -470,8 +447,8 @@ void unity_launcher_application_controller_set_priority (UnityLauncherApplicatio
 	uid = (_tmp2_ = g_strconcat ("app-", _tmp1_ = g_path_get_basename (self->priv->_desktop_file), NULL), _g_free0 (_tmp1_), _tmp2_);
 	favorites = unity_favorites_get_default ();
 	unity_favorites_set_float (favorites, uid, "priority", priority);
-	_g_free0 (uid);
 	_g_object_unref0 (favorites);
+	_g_free0 (uid);
 }
 
 
@@ -508,11 +485,11 @@ float unity_launcher_application_controller_get_priority (UnityLauncherApplicati
 	uid = (_tmp2_ = g_strconcat ("app-", _tmp1_ = g_path_get_basename (self->priv->_desktop_file), NULL), _g_free0 (_tmp1_), _tmp2_);
 	favorites = unity_favorites_get_default ();
 	result = (_tmp4_ = *(_tmp3_ = unity_favorites_get_float (favorites, uid, "priority")), _g_free0 (_tmp3_), _tmp4_);
-	_g_free0 (uid);
 	_g_object_unref0 (favorites);
+	_g_free0 (uid);
 	return result;
-	_g_free0 (uid);
 	_g_object_unref0 (favorites);
+	_g_free0 (uid);
 }
 
 
@@ -527,8 +504,8 @@ static void unity_launcher_application_controller_on_favorite_added (UnityLaunch
 		self->priv->is_favorite = TRUE;
 		unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self)->pin_type = UNITY_LAUNCHER_PIN_TYPE_PINNED;
 	}
-	_g_object_unref0 (favorites);
 	_g_free0 (desktop_filename);
+	_g_object_unref0 (favorites);
 }
 
 
@@ -556,8 +533,8 @@ static void unity_launcher_application_controller_on_favorite_removed (UnityLaun
 			g_remove (desktop_filename);
 		}
 	}
-	_g_object_unref0 (favorites);
 	_g_free0 (desktop_filename);
+	_g_object_unref0 (favorites);
 }
 
 
@@ -574,16 +551,16 @@ static const char* string_to_string (const char* self) {
 }
 
 
-static void _lambda28_ (Block4Data* _data4_) {
-	Block3Data* _data3_;
+static void _lambda28_ (Block3Data* _data3_) {
 	Block2Data* _data2_;
+	Block4Data* _data4_;
 	UnityLauncherApplicationController * self;
-	_data3_ = _data4_->_data3_;
 	_data2_ = _data3_->_data2_;
-	self = _data2_->self;
+	_data4_ = _data2_->_data4_;
+	self = _data4_->self;
 	self->priv->menu_items_realized_counter = self->priv->menu_items_realized_counter - 1;
 	if (self->priv->menu_items_realized_counter < 1) {
-		_data2_->callback (_data4_->menu, _data2_->callback_target);
+		_data4_->callback (_data3_->menu, _data4_->callback_target);
 	}
 }
 
@@ -593,40 +570,40 @@ static void __lambda28__dbusmenu_menuitem_realized (DbusmenuMenuitem* _sender, g
 }
 
 
-static Block4Data* block4_data_ref (Block4Data* _data4_) {
-	++_data4_->_ref_count_;
-	return _data4_;
+static Block3Data* block3_data_ref (Block3Data* _data3_) {
+	g_atomic_int_inc (&_data3_->_ref_count_);
+	return _data3_;
 }
 
 
-static void block4_data_unref (Block4Data* _data4_) {
-	if ((--_data4_->_ref_count_) == 0) {
-		block3_data_unref (_data4_->_data3_);
-		_g_object_unref0 (_data4_->menu);
-		g_slice_free (Block4Data, _data4_);
+static void block3_data_unref (Block3Data* _data3_) {
+	if (g_atomic_int_dec_and_test (&_data3_->_ref_count_)) {
+		block2_data_unref (_data3_->_data2_);
+		_g_object_unref0 (_data3_->menu);
+		g_slice_free (Block3Data, _data3_);
 	}
 }
 
 
-static void _lambda27_ (Block3Data* _data3_) {
-	Block2Data* _data2_;
-	UnityLauncherApplicationController * self;
+static void _lambda27_ (Block2Data* _data2_) {
 	Block4Data* _data4_;
+	UnityLauncherApplicationController * self;
+	Block3Data* _data3_;
 	DbusmenuMenuitem* _tmp0_;
 	GList* menu_items;
-	_data2_ = _data3_->_data2_;
-	self = _data2_->self;
-	_data4_ = g_slice_new0 (Block4Data);
-	_data4_->_ref_count_ = 1;
-	_data4_->_data3_ = block3_data_ref (_data3_);
-	_data4_->menu = dbusmenu_client_get_root (self->priv->menu_client);
-	self->priv->cached_menu = (_tmp0_ = _g_object_ref0 (_data4_->menu), _g_object_unref0 (self->priv->cached_menu), _tmp0_);
-	if (DBUSMENU_IS_MENUITEM (_data4_->menu) == FALSE) {
+	_data4_ = _data2_->_data4_;
+	self = _data4_->self;
+	_data3_ = g_slice_new0 (Block3Data);
+	_data3_->_ref_count_ = 1;
+	_data3_->_data2_ = block2_data_ref (_data2_);
+	_data3_->menu = dbusmenu_client_get_root (self->priv->menu_client);
+	self->priv->cached_menu = (_tmp0_ = _g_object_ref0 (_data3_->menu), _g_object_unref0 (self->priv->cached_menu), _tmp0_);
+	if (DBUSMENU_IS_MENUITEM (_data3_->menu) == FALSE) {
 		char* _tmp1_;
-		g_warning ("application-controller.vala:218: %s", _tmp1_ = g_strconcat ("Didn't get a menu for path: ", string_to_string (_data3_->path), " - address: ", string_to_string (_data3_->remote_address), NULL));
+		g_warning ("application-controller.vala:201: %s", _tmp1_ = g_strconcat ("Didn't get a menu for path: ", string_to_string (_data2_->path), " - address: ", string_to_string (_data2_->remote_address), NULL));
 		_g_free0 (_tmp1_);
 	}
-	menu_items = dbusmenu_menuitem_get_children (_data4_->menu);
+	menu_items = dbusmenu_menuitem_get_children (_data3_->menu);
 	self->priv->menu_items_realized_counter = (gint) g_list_length (menu_items);
 	{
 		GList* menuitem_collection;
@@ -636,12 +613,12 @@ static void _lambda27_ (Block3Data* _data3_) {
 			DbusmenuMenuitem* menuitem;
 			menuitem = _g_object_ref0 ((DbusmenuMenuitem*) menuitem_it->data);
 			{
-				g_signal_connect_data (menuitem, "realized", (GCallback) __lambda28__dbusmenu_menuitem_realized, block4_data_ref (_data4_), (GClosureNotify) block4_data_unref, 0);
+				g_signal_connect_data (menuitem, "realized", (GCallback) __lambda28__dbusmenu_menuitem_realized, block3_data_ref (_data3_), (GClosureNotify) block3_data_unref, 0);
 				_g_object_unref0 (menuitem);
 			}
 		}
 	}
-	block4_data_unref (_data4_);
+	block3_data_unref (_data3_);
 }
 
 
@@ -650,18 +627,18 @@ static void __lambda27__dbusmenu_client_layout_updated (DbusmenuClient* _sender,
 }
 
 
-static Block3Data* block3_data_ref (Block3Data* _data3_) {
-	++_data3_->_ref_count_;
-	return _data3_;
+static Block2Data* block2_data_ref (Block2Data* _data2_) {
+	g_atomic_int_inc (&_data2_->_ref_count_);
+	return _data2_;
 }
 
 
-static void block3_data_unref (Block3Data* _data3_) {
-	if ((--_data3_->_ref_count_) == 0) {
-		block2_data_unref (_data3_->_data2_);
-		_g_free0 (_data3_->path);
-		_g_free0 (_data3_->remote_address);
-		g_slice_free (Block3Data, _data3_);
+static void block2_data_unref (Block2Data* _data2_) {
+	if (g_atomic_int_dec_and_test (&_data2_->_ref_count_)) {
+		block4_data_unref (_data2_->_data4_);
+		_g_free0 (_data2_->remote_address);
+		_g_free0 (_data2_->path);
+		g_slice_free (Block2Data, _data2_);
 	}
 }
 
@@ -673,11 +650,11 @@ static void _g_list_free_g_object_unref (GList* self) {
 
 
 static void _lambda29_ (guint timestamp, Block5Data* _data5_) {
-	Block2Data* _data2_;
+	Block4Data* _data4_;
 	UnityLauncherApplicationController * self;
-	_data2_ = _data5_->_data2_;
-	self = _data2_->self;
-	indicator_desktop_shortcuts_nick_exec (_data2_->shortcuts, _data5_->local_nick);
+	_data4_ = _data5_->_data4_;
+	self = _data4_->self;
+	indicator_desktop_shortcuts_nick_exec (_data4_->shortcuts, _data5_->local_nick);
 }
 
 
@@ -687,60 +664,51 @@ static void __lambda29__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sen
 
 
 static Block5Data* block5_data_ref (Block5Data* _data5_) {
-	++_data5_->_ref_count_;
+	g_atomic_int_inc (&_data5_->_ref_count_);
 	return _data5_;
 }
 
 
 static void block5_data_unref (Block5Data* _data5_) {
-	if ((--_data5_->_ref_count_) == 0) {
-		block2_data_unref (_data5_->_data2_);
+	if (g_atomic_int_dec_and_test (&_data5_->_ref_count_)) {
+		block4_data_unref (_data5_->_data4_);
 		_g_free0 (_data5_->local_nick);
 		g_slice_free (Block5Data, _data5_);
 	}
 }
 
 
-static Block2Data* block2_data_ref (Block2Data* _data2_) {
-	++_data2_->_ref_count_;
-	return _data2_;
+static Block4Data* block4_data_ref (Block4Data* _data4_) {
+	g_atomic_int_inc (&_data4_->_ref_count_);
+	return _data4_;
 }
 
 
-static void block2_data_unref (Block2Data* _data2_) {
-	if ((--_data2_->_ref_count_) == 0) {
-		_g_object_unref0 (_data2_->self);
-		_g_object_unref0 (_data2_->shortcuts);
-		g_slice_free (Block2Data, _data2_);
+static void block4_data_unref (Block4Data* _data4_) {
+	if (g_atomic_int_dec_and_test (&_data4_->_ref_count_)) {
+		_g_object_unref0 (_data4_->self);
+		_g_object_unref0 (_data4_->shortcuts);
+		g_slice_free (Block4Data, _data4_);
 	}
 }
 
 
 static void unity_launcher_application_controller_real_get_menu_actions (UnityLauncherScrollerChildController* base, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target) {
 	UnityLauncherApplicationController * self;
-	Block2Data* _data2_;
-	gboolean _tmp0_ = FALSE;
-	gboolean _tmp5_ = FALSE;
-	char** _tmp7_;
+	Block4Data* _data4_;
+	gboolean _tmp4_ = FALSE;
+	char** _tmp6_;
 	gint _nicks_size_;
 	gint nicks_length1;
-	char** _tmp6_;
+	char** _tmp5_;
 	char** nicks;
 	DbusmenuMenuitem* root;
 	self = (UnityLauncherApplicationController*) base;
-	_data2_ = g_slice_new0 (Block2Data);
-	_data2_->_ref_count_ = 1;
-	_data2_->self = g_object_ref (self);
-	_data2_->callback = callback;
-	_data2_->callback_target = callback_target;
-	if (DBUSMENU_IS_CLIENT (self->priv->menu_client)) {
-		_tmp0_ = DBUSMENU_IS_MENUITEM (self->priv->cached_menu);
-	} else {
-		_tmp0_ = FALSE;
-	}
-	if (_tmp0_) {
-		_data2_->callback (self->priv->cached_menu, _data2_->callback_target);
-	}
+	_data4_ = g_slice_new0 (Block4Data);
+	_data4_->_ref_count_ = 1;
+	_data4_->self = g_object_ref (self);
+	_data4_->callback = callback;
+	_data4_->callback_target = callback_target;
 	if (BAMF_IS_APPLICATION (self->priv->app)) {
 		GList* views;
 		views = bamf_view_get_children ((BamfView*) self->priv->app);
@@ -753,22 +721,22 @@ static void unity_launcher_application_controller_real_get_menu_actions (UnityLa
 				view = _g_object_ref0 ((BamfView*) view_it->data);
 				{
 					if (BAMF_IS_INDICATOR (view)) {
-						Block3Data* _data3_;
+						Block2Data* _data2_;
+						BamfView* _tmp0_;
 						BamfView* _tmp1_;
 						BamfView* _tmp2_;
-						BamfView* _tmp3_;
 						char* remote_path;
-						DbusmenuClient* _tmp4_;
-						_data3_ = g_slice_new0 (Block3Data);
-						_data3_->_ref_count_ = 1;
-						_data3_->_data2_ = block2_data_ref (_data2_);
-						_data3_->path = g_strdup (bamf_indicator_get_dbus_menu_path ((_tmp1_ = view, BAMF_IS_INDICATOR (_tmp1_) ? ((BamfIndicator*) _tmp1_) : NULL)));
-						_data3_->remote_address = g_strdup (bamf_indicator_get_remote_address ((_tmp2_ = view, BAMF_IS_INDICATOR (_tmp2_) ? ((BamfIndicator*) _tmp2_) : NULL)));
-						remote_path = g_strdup (bamf_indicator_get_remote_path ((_tmp3_ = view, BAMF_IS_INDICATOR (_tmp3_) ? ((BamfIndicator*) _tmp3_) : NULL)));
-						self->priv->menu_client = (_tmp4_ = dbusmenu_client_new (_data3_->remote_address, _data3_->path), _g_object_unref0 (self->priv->menu_client), _tmp4_);
-						g_signal_connect_data (self->priv->menu_client, "layout-updated", (GCallback) __lambda27__dbusmenu_client_layout_updated, block3_data_ref (_data3_), (GClosureNotify) block3_data_unref, 0);
+						DbusmenuClient* _tmp3_;
+						_data2_ = g_slice_new0 (Block2Data);
+						_data2_->_ref_count_ = 1;
+						_data2_->_data4_ = block4_data_ref (_data4_);
+						_data2_->path = g_strdup (bamf_indicator_get_dbus_menu_path ((_tmp0_ = view, BAMF_IS_INDICATOR (_tmp0_) ? ((BamfIndicator*) _tmp0_) : NULL)));
+						_data2_->remote_address = g_strdup (bamf_indicator_get_remote_address ((_tmp1_ = view, BAMF_IS_INDICATOR (_tmp1_) ? ((BamfIndicator*) _tmp1_) : NULL)));
+						remote_path = g_strdup (bamf_indicator_get_remote_path ((_tmp2_ = view, BAMF_IS_INDICATOR (_tmp2_) ? ((BamfIndicator*) _tmp2_) : NULL)));
+						self->priv->menu_client = (_tmp3_ = dbusmenu_client_new (_data2_->remote_address, _data2_->path), _g_object_unref0 (self->priv->menu_client), _tmp3_);
+						g_signal_connect_data (self->priv->menu_client, "layout-updated", (GCallback) __lambda27__dbusmenu_client_layout_updated, block2_data_ref (_data2_), (GClosureNotify) block2_data_unref, 0);
 						_g_free0 (remote_path);
-						block3_data_unref (_data3_);
+						block2_data_unref (_data2_);
 					}
 					_g_object_unref0 (view);
 				}
@@ -777,17 +745,17 @@ static void unity_launcher_application_controller_real_get_menu_actions (UnityLa
 		__g_list_free_g_object_unref0 (views);
 	}
 	if (_vala_strcmp0 (self->priv->_desktop_file, "") == 0) {
-		_tmp5_ = TRUE;
+		_tmp4_ = TRUE;
 	} else {
-		_tmp5_ = self->priv->_desktop_file == NULL;
+		_tmp4_ = self->priv->_desktop_file == NULL;
 	}
-	if (_tmp5_) {
-		_data2_->callback (NULL, _data2_->callback_target);
+	if (_tmp4_) {
+		_data4_->callback (NULL, _data4_->callback_target);
 	}
-	_data2_->shortcuts = indicator_desktop_shortcuts_new (self->priv->_desktop_file, "Unity");
-	nicks = (_tmp7_ = _tmp6_ = indicator_desktop_shortcuts_get_nicks (_data2_->shortcuts), nicks_length1 = _vala_array_length (_tmp6_), _nicks_size_ = nicks_length1, _tmp7_);
+	_data4_->shortcuts = indicator_desktop_shortcuts_new (self->priv->_desktop_file, "Unity");
+	nicks = (_tmp6_ = _tmp5_ = indicator_desktop_shortcuts_get_nicks (_data4_->shortcuts), nicks_length1 = _vala_array_length (_tmp5_), _nicks_size_ = nicks_length1, _tmp6_);
 	if (nicks_length1 < 1) {
-		_data2_->callback (NULL, _data2_->callback_target);
+		_data4_->callback (NULL, _data4_->callback_target);
 	}
 	root = dbusmenu_menuitem_new ();
 	dbusmenu_menuitem_set_root (root, TRUE);
@@ -807,9 +775,9 @@ static void unity_launcher_application_controller_real_get_menu_actions (UnityLa
 				DbusmenuMenuitem* shortcut_item;
 				_data5_ = g_slice_new0 (Block5Data);
 				_data5_->_ref_count_ = 1;
-				_data5_->_data2_ = block2_data_ref (_data2_);
+				_data5_->_data4_ = block4_data_ref (_data4_);
 				_data5_->local_nick = g_strdup (nick);
-				name = indicator_desktop_shortcuts_nick_get_name (_data2_->shortcuts, _data5_->local_nick);
+				name = indicator_desktop_shortcuts_nick_get_name (_data4_->shortcuts, _data5_->local_nick);
 				local_name = g_strdup (name);
 				shortcut_item = dbusmenu_menuitem_new ();
 				dbusmenu_menuitem_property_set (shortcut_item, DBUSMENU_MENUITEM_PROP_LABEL, local_name);
@@ -817,16 +785,16 @@ static void unity_launcher_application_controller_real_get_menu_actions (UnityLa
 				dbusmenu_menuitem_property_set_bool (shortcut_item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
 				g_signal_connect_data (shortcut_item, "item-activated", (GCallback) __lambda29__dbusmenu_menuitem_item_activated, block5_data_ref (_data5_), (GClosureNotify) block5_data_unref, 0);
 				dbusmenu_menuitem_child_append (root, shortcut_item);
-				_g_free0 (nick);
-				_g_free0 (local_name);
 				_g_object_unref0 (shortcut_item);
+				_g_free0 (local_name);
+				_g_free0 (nick);
 				block5_data_unref (_data5_);
 			}
 		}
 	}
-	_data2_->callback (root, _data2_->callback_target);
+	_data4_->callback (root, _data4_->callback_target);
 	_g_object_unref0 (root);
-	block2_data_unref (_data2_);
+	block4_data_unref (_data4_);
 }
 
 
@@ -858,16 +826,32 @@ static void __lambda31__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sen
 static void unity_launcher_application_controller_real_get_menu_navigation (UnityLauncherScrollerChildController* base, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target) {
 	UnityLauncherApplicationController * self;
 	DbusmenuMenuitem* root;
+	gboolean _tmp0_ = FALSE;
 	self = (UnityLauncherApplicationController*) base;
 	root = dbusmenu_menuitem_new ();
 	dbusmenu_menuitem_set_root (root, TRUE);
 	if (self->priv->_desktop_file != NULL) {
+		_tmp0_ = _vala_strcmp0 (self->priv->_desktop_file, "") != 0;
+	} else {
+		_tmp0_ = FALSE;
+	}
+	if (_tmp0_) {
 		DbusmenuMenuitem* pinning_item;
+		gboolean _tmp1_ = FALSE;
 		pinning_item = dbusmenu_menuitem_new ();
 		if (unity_launcher_application_controller_is_sticky (self)) {
-			dbusmenu_menuitem_property_set (pinning_item, DBUSMENU_MENUITEM_PROP_LABEL, "Remove from launcher");
+			_tmp1_ = BAMF_IS_APPLICATION (self->priv->app);
 		} else {
-			dbusmenu_menuitem_property_set (pinning_item, DBUSMENU_MENUITEM_PROP_LABEL, "Add to launcher");
+			_tmp1_ = FALSE;
+		}
+		if (_tmp1_) {
+			dbusmenu_menuitem_property_set (pinning_item, DBUSMENU_MENUITEM_PROP_LABEL, _ ("Keep in Launcher"));
+			dbusmenu_menuitem_property_set (pinning_item, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE, DBUSMENU_MENUITEM_TOGGLE_CHECK);
+			dbusmenu_menuitem_property_set_int (pinning_item, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED);
+		} else {
+			if (unity_launcher_application_controller_is_sticky (self)) {
+				dbusmenu_menuitem_property_set (pinning_item, DBUSMENU_MENUITEM_PROP_LABEL, _ ("Remove from launcher"));
+			}
 		}
 		dbusmenu_menuitem_property_set_bool (pinning_item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 		dbusmenu_menuitem_property_set_bool (pinning_item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
@@ -878,7 +862,7 @@ static void unity_launcher_application_controller_real_get_menu_navigation (Unit
 	if (BAMF_IS_APPLICATION (self->priv->app)) {
 		DbusmenuMenuitem* app_item;
 		app_item = dbusmenu_menuitem_new ();
-		dbusmenu_menuitem_property_set (app_item, DBUSMENU_MENUITEM_PROP_LABEL, "Quit...");
+		dbusmenu_menuitem_property_set (app_item, DBUSMENU_MENUITEM_PROP_LABEL, _ ("Quit"));
 		dbusmenu_menuitem_property_set_bool (app_item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 		dbusmenu_menuitem_property_set_bool (app_item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
 		g_signal_connect_object (app_item, "item-activated", (GCallback) __lambda31__dbusmenu_menuitem_item_activated, self, 0);
@@ -894,6 +878,8 @@ static gint unity_launcher_application_controller_order_app_windows (void* a, vo
 	gint result = 0;
 	void* _tmp0_;
 	void* _tmp1_;
+	g_return_val_if_fail (BAMF_IS_WINDOW (a), 0);
+	g_return_val_if_fail (BAMF_IS_WINDOW (b), 0);
 	if (bamf_window_last_active ((_tmp0_ = b, BAMF_IS_WINDOW (_tmp0_) ? ((BamfWindow*) _tmp0_) : NULL)) > bamf_window_last_active ((_tmp1_ = a, BAMF_IS_WINDOW (_tmp1_) ? ((BamfWindow*) _tmp1_) : NULL))) {
 		result = 1;
 		return result;
@@ -924,11 +910,18 @@ static void unity_launcher_application_controller_real_activate (UnityLauncherSc
 	_inner_error_ = NULL;
 	unity_shell_hide_unity (unity_global_shell);
 	if (BAMF_IS_APPLICATION (self->priv->app)) {
-		if (bamf_view_is_running ((BamfView*) self->priv->app)) {
-			GList* windows;
-			windows = bamf_application_get_windows (self->priv->app);
-			windows = g_list_sort (windows, (GCompareFunc) unity_launcher_application_controller_order_app_windows);
-			unity_shell_show_window (unity_global_shell, bamf_window_get_xid ((BamfWindow*) g_list_nth_data (windows, g_list_length (windows) - 1)));
+		if (bamf_view_is_active ((BamfView*) self->priv->app)) {
+			GArray* xids;
+			xids = bamf_application_get_xids (self->priv->app);
+			unity_shell_expose_xids (unity_global_shell, xids);
+			_g_array_free0 (xids);
+		} else {
+			if (bamf_view_is_running ((BamfView*) self->priv->app)) {
+				GList* windows;
+				windows = bamf_application_get_windows (self->priv->app);
+				windows = g_list_sort (windows, (GCompareFunc) unity_launcher_application_controller_order_app_windows);
+				unity_shell_show_window (unity_global_shell, bamf_window_get_xid ((BamfWindow*) g_list_nth_data (windows, g_list_length (windows) - 1)));
+			}
 		}
 	} else {
 		GdkAppLaunchContext* context;
@@ -940,34 +933,34 @@ static void unity_launcher_application_controller_real_activate (UnityLauncherSc
 			g_key_file_load_from_file (desktop_keyfile, self->priv->_desktop_file, 0, &_inner_error_);
 			if (_inner_error_ != NULL) {
 				_g_key_file_free0 (desktop_keyfile);
-				goto __catch18_g_error;
+				goto __catch21_g_error;
 			}
 			appinfo = (GAppInfo*) g_desktop_app_info_new_from_keyfile (desktop_keyfile);
 			gdk_app_launch_context_set_screen (context, gdk_display_get_default_screen (gdk_display_get_default ()));
 			gdk_app_launch_context_set_timestamp (context, (guint32) GDK_CURRENT_TIME);
 			g_app_info_launch (appinfo, NULL, (GAppLaunchContext*) context, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				_g_key_file_free0 (desktop_keyfile);
 				_g_object_unref0 (appinfo);
-				goto __catch18_g_error;
+				_g_key_file_free0 (desktop_keyfile);
+				goto __catch21_g_error;
 			}
 			unity_launcher_scroller_child_set_activating (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), TRUE);
 			g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 8, _unity_launcher_application_controller_on_launch_timeout_gsource_func, g_object_ref (self), g_object_unref);
-			_g_key_file_free0 (desktop_keyfile);
 			_g_object_unref0 (appinfo);
+			_g_key_file_free0 (desktop_keyfile);
 		}
-		goto __finally18;
-		__catch18_g_error:
+		goto __finally21;
+		__catch21_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("application-controller.vala:365: %s", e->message);
+				g_warning ("application-controller.vala:361: %s", e->message);
 				_g_error_free0 (e);
 			}
 		}
-		__finally18:
+		__finally21:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (context);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -1008,15 +1001,27 @@ static void _unity_launcher_application_controller_on_app_urgant_changed_bamf_vi
 }
 
 
+static void _lambda32_ (gboolean value, UnityLauncherApplicationController* self) {
+	unity_launcher_scroller_child_controller_set_hide ((UnityLauncherScrollerChildController*) self, !value);
+}
+
+
+static void __lambda32__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self) {
+	_lambda32_ (object, self);
+}
+
+
 void unity_launcher_application_controller_attach_application (UnityLauncherApplicationController* self, BamfApplication* application) {
 	BamfApplication* _tmp0_;
 	char* _tmp1_;
-	gboolean _tmp2_ = FALSE;
-	char* _tmp4_;
+	char* _tmp2_;
+	gboolean _tmp3_ = FALSE;
+	char* _tmp5_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (application != NULL);
 	self->priv->app = (_tmp0_ = _g_object_ref0 (application), _g_object_unref0 (self->priv->app), _tmp0_);
-	unity_launcher_application_controller_set_desktop_file (self, bamf_application_get_desktop_file (self->priv->app));
+	unity_launcher_application_controller_set_desktop_file (self, _tmp1_ = g_strdup (bamf_application_get_desktop_file (self->priv->app)));
+	_g_free0 (_tmp1_);
 	unity_launcher_scroller_child_set_running (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), bamf_view_is_running ((BamfView*) self->priv->app));
 	unity_launcher_scroller_child_set_active (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), bamf_view_is_active ((BamfView*) self->priv->app));
 	unity_launcher_scroller_child_set_activating (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), FALSE);
@@ -1024,19 +1029,21 @@ void unity_launcher_application_controller_attach_application (UnityLauncherAppl
 	g_signal_connect_object ((BamfView*) self->priv->app, "active-changed", (GCallback) _unity_launcher_application_controller_on_app_active_changed_bamf_view_active_changed, self, 0);
 	g_signal_connect_object ((BamfView*) self->priv->app, "closed", (GCallback) _unity_launcher_application_controller_detach_application_bamf_view_closed, self, 0);
 	g_signal_connect_object ((BamfView*) self->priv->app, "urgent-changed", (GCallback) _unity_launcher_application_controller_on_app_urgant_changed_bamf_view_urgent_changed, self, 0);
-	((UnityLauncherScrollerChildController*) self)->name = (_tmp1_ = bamf_view_get_name ((BamfView*) self->priv->app), _g_free0 (((UnityLauncherScrollerChildController*) self)->name), _tmp1_);
-	if (((UnityLauncherScrollerChildController*) self)->name == NULL) {
-		_tmp2_ = TRUE;
+	g_signal_connect_object ((BamfView*) self->priv->app, "user-visible-changed", (GCallback) __lambda32__bamf_view_user_visible_changed, self, 0);
+	unity_launcher_scroller_child_controller_set_name ((UnityLauncherScrollerChildController*) self, _tmp2_ = bamf_view_get_name ((BamfView*) self->priv->app));
+	_g_free0 (_tmp2_);
+	if (unity_launcher_scroller_child_controller_get_name ((UnityLauncherScrollerChildController*) self) == NULL) {
+		_tmp3_ = TRUE;
 	} else {
-		_tmp2_ = _vala_strcmp0 (((UnityLauncherScrollerChildController*) self)->name, "") == 0;
+		_tmp3_ = _vala_strcmp0 (unity_launcher_scroller_child_controller_get_name ((UnityLauncherScrollerChildController*) self), "") == 0;
 	}
-	if (_tmp2_) {
-		char* _tmp3_;
-		g_warning ("application-controller.vala:389: %s", _tmp3_ = g_strconcat ("Bamf returned null for app.get_name (): ", string_to_string (self->priv->_desktop_file), NULL));
-		_g_free0 (_tmp3_);
+	if (_tmp3_) {
+		char* _tmp4_;
+		g_warning ("application-controller.vala:388: %s", _tmp4_ = g_strconcat ("Bamf returned null for app.get_name (): ", string_to_string (self->priv->_desktop_file), NULL));
+		_g_free0 (_tmp4_);
 	}
-	self->priv->icon_name = (_tmp4_ = bamf_view_get_icon ((BamfView*) self->priv->app), _g_free0 (self->priv->icon_name), _tmp4_);
-	unity_launcher_application_controller_load_icon_from_icon_name (self);
+	self->priv->icon_name = (_tmp5_ = bamf_view_get_icon ((BamfView*) self->priv->app), _g_free0 (self->priv->icon_name), _tmp5_);
+	unity_launcher_scroller_child_controller_load_icon_from_icon_name ((UnityLauncherScrollerChildController*) self, self->priv->icon_name);
 }
 
 
@@ -1101,21 +1108,21 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 		self->priv->desktop_keyfile = (_tmp0_ = g_key_file_new (), _g_key_file_free0 (self->priv->desktop_keyfile), _tmp0_);
 		g_key_file_load_from_file (self->priv->desktop_keyfile, self->priv->_desktop_file, G_KEY_FILE_NONE, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch19_g_error;
+			goto __catch22_g_error;
 		}
 	}
-	goto __finally19;
-	__catch19_g_error:
+	goto __finally22;
+	__catch22_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("application-controller.vala:441: could not load desktop file: %s", e->message);
+			g_warning ("application-controller.vala:440: could not load desktop file: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
-	__finally19:
+	__finally22:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -1126,24 +1133,24 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 		char* _tmp2_;
 		_tmp1_ = g_key_file_get_string (self->priv->desktop_keyfile, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_ICON, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch20_g_error;
+			goto __catch23_g_error;
 		}
 		self->priv->icon_name = (_tmp2_ = _tmp1_, _g_free0 (self->priv->icon_name), _tmp2_);
-		unity_launcher_application_controller_load_icon_from_icon_name (self);
+		unity_launcher_scroller_child_controller_load_icon_from_icon_name ((UnityLauncherScrollerChildController*) self, self->priv->icon_name);
 	}
-	goto __finally20;
-	__catch20_g_error:
+	goto __finally23;
+	__catch23_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("application-controller.vala:451: could not load icon name from desktop" \
+			g_warning ("application-controller.vala:450: could not load icon name from desktop" \
 " file: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
-	__finally20:
+	__finally23:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -1154,23 +1161,24 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 		char* _tmp4_;
 		_tmp3_ = g_key_file_get_string (self->priv->desktop_keyfile, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_NAME, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch21_g_error;
+			goto __catch24_g_error;
 		}
-		((UnityLauncherScrollerChildController*) self)->name = (_tmp4_ = _tmp3_, _g_free0 (((UnityLauncherScrollerChildController*) self)->name), _tmp4_);
+		unity_launcher_scroller_child_controller_set_name ((UnityLauncherScrollerChildController*) self, _tmp4_ = _tmp3_);
+		_g_free0 (_tmp4_);
 	}
-	goto __finally21;
-	__catch21_g_error:
+	goto __finally24;
+	__catch24_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("application-controller.vala:460: could not load name from desktop file" \
+			g_warning ("application-controller.vala:459: could not load name from desktop file" \
 ": %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
-	__finally21:
+	__finally24:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -1181,12 +1189,13 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 		char* _tmp6_;
 		_tmp5_ = g_key_file_get_string (self->priv->desktop_keyfile, G_KEY_FILE_DESKTOP_GROUP, "X-GNOME-FullName", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch22_g_error;
+			goto __catch25_g_error;
 		}
-		((UnityLauncherScrollerChildController*) self)->name = (_tmp6_ = _tmp5_, _g_free0 (((UnityLauncherScrollerChildController*) self)->name), _tmp6_);
+		unity_launcher_scroller_child_controller_set_name ((UnityLauncherScrollerChildController*) self, _tmp6_ = _tmp5_);
+		_g_free0 (_tmp6_);
 	}
-	goto __finally22;
-	__catch22_g_error:
+	goto __finally25;
+	__catch25_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -1195,174 +1204,12 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 			_g_error_free0 (e);
 		}
 	}
-	__finally22:
+	__finally25:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return;
 	}
-}
-
-
-static void _lambda14_ (UnityThemeFilePath* theme, const char* filepath, UnityLauncherApplicationController* self) {
-	GError * _inner_error_;
-	g_return_if_fail (theme != NULL);
-	g_return_if_fail (filepath != NULL);
-	_inner_error_ = NULL;
-	{
-		GdkPixbuf* _tmp0_;
-		GdkPixbuf* _tmp1_;
-		_tmp0_ = gdk_pixbuf_new_from_file (filepath, &_inner_error_);
-		if (_inner_error_ != NULL) {
-			goto __catch23_g_error;
-		}
-		unity_launcher_scroller_child_set_icon (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), _tmp1_ = _tmp0_);
-		_g_object_unref0 (_tmp1_);
-	}
-	goto __finally23;
-	__catch23_g_error:
-	{
-		GError * e;
-		e = _inner_error_;
-		_inner_error_ = NULL;
-		{
-			char* _tmp2_;
-			g_warning ("application-controller.vala:508: %s", _tmp2_ = g_strconcat ("Could not load from ", string_to_string (filepath), NULL));
-			_g_free0 (_tmp2_);
-			_g_error_free0 (e);
-		}
-	}
-	__finally23:
-	if (_inner_error_ != NULL) {
-		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-		g_clear_error (&_inner_error_);
-		return;
-	}
-}
-
-
-static void __lambda14__unity_theme_file_path_found_icon_path (UnityThemeFilePath* _sender, const char* filepath, gpointer self) {
-	_lambda14_ (_sender, filepath, self);
-}
-
-
-static void _lambda15_ (UnityLauncherApplicationController* self) {
-	GError * _inner_error_;
-	_inner_error_ = NULL;
-	{
-		GtkIconTheme* default_theme;
-		GdkPixbuf* _tmp0_;
-		default_theme = _g_object_ref0 (gtk_icon_theme_get_default ());
-		_tmp0_ = gtk_icon_theme_load_icon (default_theme, GTK_STOCK_MISSING_IMAGE, 48, 0, &_inner_error_);
-		if (_inner_error_ != NULL) {
-			_g_object_unref0 (default_theme);
-			goto __catch24_g_error;
-		}
-		unity_launcher_scroller_child_set_icon (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), _tmp0_);
-		_g_object_unref0 (default_theme);
-	}
-	goto __finally24;
-	__catch24_g_error:
-	{
-		GError * e;
-		e = _inner_error_;
-		_inner_error_ = NULL;
-		{
-			char* _tmp1_;
-			g_warning ("application-controller.vala:520: Could not load any icon for %s", _tmp1_ = bamf_view_get_name ((BamfView*) self->priv->app));
-			_g_free0 (_tmp1_);
-			_g_error_free0 (e);
-		}
-	}
-	__finally24:
-	if (_inner_error_ != NULL) {
-		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-		g_clear_error (&_inner_error_);
-		return;
-	}
-}
-
-
-static void __lambda15__unity_theme_file_path_failed (UnityThemeFilePath* _sender, gpointer self) {
-	_lambda15_ (self);
-}
-
-
-static void unity_launcher_application_controller_load_icon_from_icon_name (UnityLauncherApplicationController* self) {
-	char* _tmp0_;
-	gboolean _tmp1_;
-	UnityThemeFilePath* _tmp2_;
-	GtkIconTheme* theme;
-	GtkIconTheme* _tmp3_;
-	g_return_if_fail (self != NULL);
-	if (unity_launcher_application_controller_try_load_from_file (self, self->priv->icon_name)) {
-		return;
-	}
-	if ((_tmp1_ = unity_launcher_application_controller_try_load_from_file (self, _tmp0_ = g_strconcat ("/usr/share/pixmaps/", self->priv->icon_name, NULL)), _g_free0 (_tmp0_), _tmp1_)) {
-		return;
-	}
-	self->priv->theme_file_path = (_tmp2_ = unity_theme_file_path_new (), _g_object_unref0 (self->priv->theme_file_path), _tmp2_);
-	theme = _g_object_ref0 (gtk_icon_theme_get_default ());
-	unity_theme_file_path_add_icon_theme (self->priv->theme_file_path, theme);
-	theme = (_tmp3_ = gtk_icon_theme_new (), _g_object_unref0 (theme), _tmp3_);
-	gtk_icon_theme_set_custom_theme (theme, "unity-icon-theme");
-	unity_theme_file_path_add_icon_theme (self->priv->theme_file_path, theme);
-	gtk_icon_theme_set_custom_theme (theme, "Web");
-	unity_theme_file_path_add_icon_theme (self->priv->theme_file_path, theme);
-	g_signal_connect_object (self->priv->theme_file_path, "found-icon-path", (GCallback) __lambda14__unity_theme_file_path_found_icon_path, self, 0);
-	g_signal_connect_object (self->priv->theme_file_path, "failed", (GCallback) __lambda15__unity_theme_file_path_failed, self, 0);
-	unity_theme_file_path_get_icon_filepath (self->priv->theme_file_path, self->priv->icon_name, NULL, NULL);
-	_g_object_unref0 (theme);
-}
-
-
-static gboolean unity_launcher_application_controller_try_load_from_file (UnityLauncherApplicationController* self, const char* filepath) {
-	gboolean result = FALSE;
-	GError * _inner_error_;
-	GdkPixbuf* pixbuf;
-	g_return_val_if_fail (self != NULL, FALSE);
-	g_return_val_if_fail (filepath != NULL, FALSE);
-	_inner_error_ = NULL;
-	pixbuf = NULL;
-	if (g_file_test (filepath, G_FILE_TEST_IS_REGULAR)) {
-		{
-			GdkPixbuf* _tmp0_;
-			GdkPixbuf* _tmp1_;
-			_tmp0_ = gdk_pixbuf_new_from_file_at_scale (filepath, 48, 48, TRUE, &_inner_error_);
-			if (_inner_error_ != NULL) {
-				goto __catch25_g_error;
-			}
-			pixbuf = (_tmp1_ = _tmp0_, _g_object_unref0 (pixbuf), _tmp1_);
-		}
-		goto __finally25;
-		__catch25_g_error:
-		{
-			GError * e;
-			e = _inner_error_;
-			_inner_error_ = NULL;
-			{
-				g_warning ("application-controller.vala:539: Unable to load image from file '%s': " \
-"%s", filepath, e->message);
-				_g_error_free0 (e);
-			}
-		}
-		__finally25:
-		if (_inner_error_ != NULL) {
-			_g_object_unref0 (pixbuf);
-			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
-			g_clear_error (&_inner_error_);
-			return FALSE;
-		}
-		if (GDK_IS_PIXBUF (pixbuf)) {
-			unity_launcher_scroller_child_set_icon (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), pixbuf);
-			result = TRUE;
-			_g_object_unref0 (pixbuf);
-			return result;
-		}
-	}
-	result = FALSE;
-	_g_object_unref0 (pixbuf);
-	return result;
 }
 
 
@@ -1392,11 +1239,6 @@ static void _unity_launcher_application_controller_on_favorite_removed_unity_fav
 }
 
 
-static void _unity_launcher_application_controller_on_notify_menu_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	unity_launcher_application_controller_on_notify_menu (self);
-}
-
-
 static GObject * unity_launcher_application_controller_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -1405,38 +1247,15 @@ static GObject * unity_launcher_application_controller_constructor (GType type, 
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_LAUNCHER_APPLICATION_CONTROLLER (obj);
 	{
-		UnityThemeFilePath* _tmp0_;
 		UnityFavorites* favorites;
-		self->priv->theme_file_path = (_tmp0_ = unity_theme_file_path_new (), _g_object_unref0 (self->priv->theme_file_path), _tmp0_);
 		favorites = unity_favorites_get_default ();
 		g_signal_connect_object (favorites, "favorite-added", (GCallback) _unity_launcher_application_controller_on_favorite_added_unity_favorites_favorite_added, self, 0);
 		g_signal_connect_object (favorites, "favorite-removed", (GCallback) _unity_launcher_application_controller_on_favorite_removed_unity_favorites_favorite_removed, self, 0);
-		self->priv->is_favorite = TRUE;
+		self->priv->is_favorite = unity_launcher_application_controller_is_sticky (self);
 		unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self)->pin_type = UNITY_LAUNCHER_PIN_TYPE_UNPINNED;
-		{
-			GeeArrayList* _tmp1_;
-			GeeIterator* _tmp2_;
-			GeeIterator* _uid_it;
-			_uid_it = (_tmp2_ = gee_abstract_collection_iterator ((GeeAbstractCollection*) (_tmp1_ = unity_favorites_get_favorites (favorites))), _g_object_unref0 (_tmp1_), _tmp2_);
-			while (TRUE) {
-				char* uid;
-				char* _tmp3_;
-				gboolean _tmp4_;
-				if (!gee_iterator_next (_uid_it)) {
-					break;
-				}
-				uid = (char*) gee_iterator_get (_uid_it);
-				if ((_tmp4_ = _vala_strcmp0 (_tmp3_ = unity_favorites_get_string (favorites, uid, "desktop_file"), self->priv->_desktop_file) == 0, _g_free0 (_tmp3_), _tmp4_)) {
-					self->priv->is_favorite = TRUE;
-					unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self)->pin_type = UNITY_LAUNCHER_PIN_TYPE_PINNED;
-					_g_free0 (uid);
-					break;
-				}
-				_g_free0 (uid);
-			}
-			_g_object_unref0 (_uid_it);
+		if (unity_launcher_application_controller_is_sticky (self)) {
+			unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self)->pin_type = UNITY_LAUNCHER_PIN_TYPE_PINNED;
 		}
-		g_signal_connect_object ((GObject*) self, "notify::menu", (GCallback) _unity_launcher_application_controller_on_notify_menu_g_object_notify, self, 0);
 		_g_object_unref0 (favorites);
 	}
 	return obj;
@@ -1473,7 +1292,6 @@ static void unity_launcher_application_controller_finalize (GObject* obj) {
 	_g_free0 (self->priv->_desktop_file);
 	_g_key_file_free0 (self->priv->desktop_keyfile);
 	_g_free0 (self->priv->icon_name);
-	_g_object_unref0 (self->priv->theme_file_path);
 	_g_object_unref0 (self->priv->app);
 	_g_object_unref0 (self->priv->menu_client);
 	_g_object_unref0 (self->priv->cached_menu);
@@ -1518,6 +1336,24 @@ static void unity_launcher_application_controller_set_property (GObject * object
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
 	}
+}
+
+
+static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func) {
+	if ((array != NULL) && (destroy_func != NULL)) {
+		int i;
+		for (i = 0; i < array_length; i = i + 1) {
+			if (((gpointer*) array)[i] != NULL) {
+				destroy_func (((gpointer*) array)[i]);
+			}
+		}
+	}
+}
+
+
+static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func) {
+	_vala_array_destroy (array, array_length, destroy_func);
+	g_free (array);
 }
 
 
