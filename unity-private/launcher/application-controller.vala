@@ -75,8 +75,6 @@ namespace Unity.Launcher
               break;
             }
         }
-
-      notify["menu"].connect (on_notify_menu);
     }
 
     public override QuicklistController get_menu_controller ()
@@ -85,28 +83,16 @@ namespace Unity.Launcher
       return new_menu;
     }
 
-    private void on_notify_menu ()
-    {
-      menu.notify["state"].connect (() => {
-        if (menu.state == QuicklistControllerState.MENU)
-          {
-            Unity.global_shell.expose_xids (app.get_xids ());
-          }
-        else
-          {
-            Unity.global_shell.stop_expose ();
-          }
-      });
-    }
-
     public void set_sticky (bool is_sticky = true)
     {
       if (desktop_file == "" || desktop_file == null)
         return;
-      //string uid = "app-" + Path.get_basename (desktop_file);
+
       var favorites = Unity.Favorites.get_default ();
 
       string uid = favorites.find_uid_for_desktop_file (desktop_file);
+      if (uid == "" || uid == null)
+        uid = "app-" + desktop_file;
 
       if (is_sticky)
         {
@@ -188,15 +174,17 @@ namespace Unity.Launcher
         }
     }
 
+/*
+    private get_menu_for_client (ScrollerChildController.menu_cb callback, Dbusmenu.Client client)
+    {
+
+    }
+*/
+
     public override void get_menu_actions (ScrollerChildController.menu_cb callback)
     {
 
       // first check to see if we have a cached client, if we do, just re-use that
-      if (menu_client is Dbusmenu.Client && cached_menu is Dbusmenu.Menuitem)
-        {
-          callback (cached_menu);
-        }
-
       // check for a menu from bamf
       if (app is Bamf.Application)
         {
@@ -279,14 +267,28 @@ namespace Unity.Launcher
       Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
       root.set_root (true);
 
-      if (desktop_file != null)
+      if (desktop_file != null && desktop_file != "")
         {
           Dbusmenu.Menuitem pinning_item = new Dbusmenu.Menuitem ();
-          if (is_sticky ())
-            pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Remove from launcher");
+          if (is_sticky () && app is Bamf.Application)
+            {
+              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Keep in Launcher");
+              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_TOGGLE_TYPE, Dbusmenu.MENUITEM_TOGGLE_CHECK);
+              pinning_item.property_set_int (Dbusmenu.MENUITEM_PROP_TOGGLE_STATE, Dbusmenu.MENUITEM_TOGGLE_STATE_CHECKED);
+            }
+          else if (is_sticky ())
+            {
+              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Remove from launcher");
+            }
           else
-            pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Add to launcher");
-
+            {
+              if (app is Bamf.Application)
+                {
+                  pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Keep in Launcher");
+                  pinning_item.property_set (Dbusmenu.MENUITEM_PROP_TOGGLE_TYPE, Dbusmenu.MENUITEM_TOGGLE_CHECK);
+                  pinning_item.property_set_int (Dbusmenu.MENUITEM_PROP_TOGGLE_STATE, Dbusmenu.MENUITEM_TOGGLE_STATE_UNCHECKED);
+                }
+            }
           pinning_item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
           pinning_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
           pinning_item.item_activated.connect ((timestamp) => {
@@ -299,7 +301,7 @@ namespace Unity.Launcher
       if (app is Bamf.Application)
         {
           Dbusmenu.Menuitem app_item = new Dbusmenu.Menuitem ();
-          app_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Quit...");
+          app_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Quit");
           app_item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
           app_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
 
@@ -317,6 +319,8 @@ namespace Unity.Launcher
     }
 
     private static int order_app_windows (void* a, void* b)
+      requires (a is Bamf.Window)
+      requires (b is Bamf.Window)
     {
       if ((b as Bamf.Window).last_active () > (a as Bamf.Window).last_active ())
         {
@@ -337,7 +341,12 @@ namespace Unity.Launcher
 
       if (app is Bamf.Application)
         {
-          if (app.is_running ())
+          if (app.is_active ())
+            {
+              Array<uint32> xids = app.get_xids ();
+              global_shell.expose_xids (xids);
+            }
+          else if (app.is_running ())
             {
               unowned List<Bamf.Window> windows = app.get_windows ();
               windows.sort ((CompareFunc)order_app_windows);

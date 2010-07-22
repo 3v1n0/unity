@@ -77,6 +77,16 @@ namespace Unity.Launcher
       rotate_timeline.new_frame.connect (on_rotate_timeline_new_frame);
 
       notify["rotation"].connect (on_rotation_changed);
+      notify["opacity"].connect (on_opacity_changed);
+    }
+
+    private void on_opacity_changed ()
+    {
+      //debug (@"opacity changes on launcher child, set to $(opacity)");
+      if (processed_icon is Clutter.Actor)
+        {
+          processed_icon.set_opacity (opacity);
+        }
     }
 
     ~LauncherChild ()
