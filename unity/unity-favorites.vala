@@ -99,15 +99,12 @@ namespace Unity
     public override string find_uid_for_desktop_file (string desktop_file)
     {
       /* goes through the gconf favorites and finds us a desktop file */
-      debug (@"looking for $desktop_file");
       string uid = "";
       foreach (string id in fav_ids)
         {
           string fav_desktop_file = get_string (id, "desktop_file");
-          debug (@"reading $id found $fav_desktop_file");
           if (fav_desktop_file == desktop_file)
             {
-              debug (@"$id is what we want! WOO!");
               uid = id;
               break;
             }
