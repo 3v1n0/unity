@@ -1,6 +1,16 @@
 unity (0.2.20-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - Add some hint that the Ubuntu circle is click-able (LP: #592787)
+    - Remove unpinned launchers when quitting the app (LP: #608492)
+    - add to launcher isn't changed to remove from launcher (LP: #606266)
+    - quicklist should be hidden when drag and drop a launcher (LP: #606258)
+    - Fix reorganizing launchers (LP: #600738)
+    - Removing active application makes the application closes (LP: #598175)
+    - UnityLauncherQuicklistMenu clutter_actor_queue_relayout() warning 
+      (LP: #599718)
+  * debian/control:
+    - bump libclutk-dev to latest
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 22 Jul 2010 21:00:57 +0200
 
