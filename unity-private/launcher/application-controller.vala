@@ -269,23 +269,15 @@ namespace Unity.Launcher
           Dbusmenu.Menuitem pinning_item = new Dbusmenu.Menuitem ();
           if (is_sticky () && app is Bamf.Application)
             {
-              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Keep in Launcher");
+              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Keep in Launcher"));
               pinning_item.property_set (Dbusmenu.MENUITEM_PROP_TOGGLE_TYPE, Dbusmenu.MENUITEM_TOGGLE_CHECK);
               pinning_item.property_set_int (Dbusmenu.MENUITEM_PROP_TOGGLE_STATE, Dbusmenu.MENUITEM_TOGGLE_STATE_CHECKED);
             }
           else if (is_sticky ())
             {
-              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Remove from launcher");
+              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Remove from launcher"));
             }
-          else
-            {
-              if (app is Bamf.Application)
-                {
-                  pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Keep in Launcher");
-                  pinning_item.property_set (Dbusmenu.MENUITEM_PROP_TOGGLE_TYPE, Dbusmenu.MENUITEM_TOGGLE_CHECK);
-                  pinning_item.property_set_int (Dbusmenu.MENUITEM_PROP_TOGGLE_STATE, Dbusmenu.MENUITEM_TOGGLE_STATE_UNCHECKED);
-                }
-            }
+
           pinning_item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
           pinning_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
           pinning_item.item_activated.connect ((timestamp) => {
@@ -298,7 +290,7 @@ namespace Unity.Launcher
       if (app is Bamf.Application)
         {
           Dbusmenu.Menuitem app_item = new Dbusmenu.Menuitem ();
-          app_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Quit");
+          app_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Quit"));
           app_item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
           app_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
 
