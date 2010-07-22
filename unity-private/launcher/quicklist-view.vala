@@ -40,7 +40,7 @@ namespace Unity.Launcher
   const float ANCHOR_WIDTH_ABS       = 10.0f;
 
   // we call this instead of Ctk.Menu so you can alter this to look right
-  public class QuicklistMenu : Ctk.Menu
+  public class QuicklistMenu : Ctk.MenuExpandable
   {
     Ctk.LayerActor ql_background;
     int            last_width;
@@ -51,28 +51,19 @@ namespace Unity.Launcher
     public override void
     paint ()
     {
-      // FIXME00: this is the brute force-approach pulling the blurred-bg
-      // texture constantly... harder on the system (especially since we atm
-      // still have to do glReadPixels()) but more robust in terms of intented
-      // look as we'll have a cleanly updating blurred bg in case there's a
-      // video being displayed in a video-player, or a GL-app renders some
-      // animation or mutter does some animation stuff with the windows
-      base.refresh_background_texture ();
-
+      base.paint ();
       // needed to fix LP: #525905
-      float x;
-      float y;
-      this.get_position (out x, out y);
-      if (this.cached_x == 0.0f)
-        this.cached_x = x;
-      if (this.cached_x != x)
-        this.set_position (this.cached_x, y);
-
-      if (this.ql_background is Ctk.LayerActor)
-        base.paint ();
+//       float x;
+//       float y;
+//       this.get_position (out x, out y);
+//       if (this.cached_x == 0.0f)
+//         this.cached_x = x;
+//       if (this.cached_x != x)
+//         this.set_position (this.cached_x, y);
+      //this.set_anchor_position((int)x, (int)y, 25);
     }
 
-    private override void
+   private override void
     allocate (Clutter.ActorBox        box,
               Clutter.AllocationFlags flags)
     {
@@ -81,109 +72,50 @@ namespace Unity.Launcher
 
       new_width  = (int) (box.x2 - box.x1);
       new_height = (int) (box.y2 - box.y1);
-
-      base.allocate (box, flags);
-
+    
       // exit early if the allocation-width/height didn't change, this is needed
       // because clutter triggers calling allocate even if nothing changed
       if ((this.last_width == new_width) && (this.last_height == new_height))
         return;
 
-      // FIXME01: this is the conservative approach only updating the blurred-bg
-      // texture when the allocation changed... this way we'll miss any updates
-      // of say a video-player displaying a movie behind the tooltip/quicklist
-      // or a GL-app displaying an animation or any other client app rendering
-      // a dynamic UI with screen-changes (also applies to any mutter-based
-      // animations, e.g. its expose)
-      //base.refresh_background_texture ();
-
-      if (get_num_items () == 1)
-        this.cached_y = (float) new_height / 2.0f;
-
       // store the new width/height
       this.last_width  = new_width;
       this.last_height = new_height;
 
-      Timeout.add (0, _update_ql_background);
-    }
-
-    private bool
-    _update_ql_background ()
-    {
-      uint blurred_id = base.get_framebuffer_background ();
-
-      if (this.ql_background is Ctk.LayerActor)
-      {
-        this.ql_background.destroy ();
-      }
-
-      this.ql_background = new Ctk.LayerActor (this.last_width,
-                                               this.last_height);
-
-      Ctk.Layer main_layer = new Ctk.Layer (this.last_width,
-                                            this.last_height,
-                                            Ctk.LayerRepeatMode.NONE,
-                                            Ctk.LayerRepeatMode.NONE);
-      Ctk.Layer blurred_layer = new Ctk.Layer (this.last_width,
-                                               this.last_height,
-                                               Ctk.LayerRepeatMode.NONE,
-                                               Ctk.LayerRepeatMode.NONE);
-
-      Cairo.Surface full_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                        this.last_width,
-                                                        this.last_height);
-      Cairo.Surface fill_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                        this.last_width,
-                                                        this.last_height);
-      Cairo.Surface main_surf = new Cairo.ImageSurface (Cairo.Format.ARGB32,
-                                                        this.last_width,
-                                                        this.last_height);
-
-      Cairo.Context full_cr = new Cairo.Context (full_surf);
-      Cairo.Context fill_cr = new Cairo.Context (fill_surf);
-      Cairo.Context main_cr = new Cairo.Context (main_surf);
-
-      Unity.QuicklistRendering.Menu.full_mask (full_cr,
-                                               this.last_width,
-                                               this.last_height,
-                                               this.cached_y);
-      Unity.QuicklistRendering.Menu.fill_mask (fill_cr,
-                                               this.last_width,
-                                               this.last_height,
-                                               this.cached_y);
-      Unity.QuicklistRendering.Menu.background (main_cr,
-                                                this.last_width,
-                                                this.last_height,
-                                                this.cached_y);
-
-      main_layer.set_mask_from_surface (full_surf);
-      main_layer.set_image_from_surface (main_surf);
-      main_layer.set_opacity (255);
-
-      blurred_layer.set_mask_from_surface (fill_surf);
-      blurred_layer.set_image_from_id (blurred_id);
-      blurred_layer.set_opacity (255);
-
-      // order is important here... don't mess around!
-      this.ql_background.add_layer (blurred_layer);
-      this.ql_background.add_layer (main_layer);
-
-      this.set_background (this.ql_background);
-      this.ql_background.set_opacity (255);
-
-      return false;
+      debug ("Num Items in Menu %d \n", get_num_items ());
+      
+      base.allocate (box, flags);
+      
+//       float x;
+//       float y;
+//       this.get_position(out x, out y);
+//       this.compute_style_textures ();
+//       this.set_expansion_size_factor (0.0f);
+//       this.set_anchor_position ((int)60 + 60, (int)100+48, 25);
+//       
+//       if(get_num_items () > 1)
+//         this.animate (Clutter.AnimationMode.LINEAR,
+//           100,
+//           "expansion-size-factor", 1.0f);
+            
+            
     }
 
     construct
     {
-      Ctk.Padding padding = Ctk.Padding () {
-        left   = (int) (Ctk.em_to_pixel (BORDER + SHADOW_SIZE) + ANCHOR_WIDTH_ABS),
-        right  = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE) - 1,
-        top    = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE),
-        bottom = (int) Ctk.em_to_pixel (SHADOW_SIZE) + 1
-      };
-      this.set_padding (padding);
-      //this.spacing = (int) Ctk.em_to_pixel (GAP);
+      this.set_spacing (2);
+      this.set_content_padding (0);
+      this.set_content_padding_left_right (4);
+      this.set_padding (16);
+
+//       Ctk.Padding padding = Ctk.Padding () {
+//         left   = (int) (Ctk.em_to_pixel (BORDER + SHADOW_SIZE) + ANCHOR_WIDTH_ABS),
+//         right  = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE) - 1,
+//         top    = (int) Ctk.em_to_pixel (BORDER + SHADOW_SIZE),
+//         bottom = (int) Ctk.em_to_pixel (SHADOW_SIZE) + 1
+//       };
+//       this.set_padding (padding);
+//       //this.spacing = (int) Ctk.em_to_pixel (GAP);
 
       last_width  = -1;
       last_height = -1;
