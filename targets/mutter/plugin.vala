@@ -69,7 +69,7 @@ namespace Unity
 
     }
   }
-  
+
   public class Plugin : Object, Shell
   {
     /* Signals */
@@ -243,8 +243,13 @@ namespace Unity
 
       this.spaces_manager = new SpacesManager (this);
       this.spaces_manager.set_padding (50, 50, 125, 50);
-      
+
       this.launcher.model.add (spaces_manager.button);
+      this.launcher.model.order_changed.connect (() => {
+        var index = launcher.model.index_of (spaces_manager.button);
+        if (index < launcher.model.size)
+          launcher.model.move (spaces_manager.button, launcher.model.size -1);
+      });
 
       this.expose_manager = new ExposeManager (this, launcher);
       this.expose_manager.hovered_opacity = 255;
