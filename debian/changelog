@@ -1,6 +1,7 @@
 unity (0.2.20-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - Right click and selecting application doesn't launch it (LP: #592817)
     - Add some hint that the Ubuntu circle is click-able (LP: #592787)
     - Remove unpinned launchers when quitting the app (LP: #608492)
     - add to launcher isn't changed to remove from launcher (LP: #606266)
