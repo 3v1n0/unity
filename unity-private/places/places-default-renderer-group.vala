@@ -23,6 +23,7 @@ namespace Unity.Places
   {
     static const float PADDING = 24.0f;
     static const int   SPACING = 0;
+    static const int   OMG_FOOTEL_SUCKS_CANT_HANDLE_MANY_TEXTURES = 100;
 
     public uint      group_id       { get; construct; }
     public string    group_renderer { get; construct; }
@@ -206,6 +207,8 @@ namespace Unity.Places
       if (!interesting (iter))
         return;
 
+      if (n_results == OMG_FOOTEL_SUCKS_CANT_HANDLE_MANY_TEXTURES)
+        return;
       var button = new Tile (iter,
                              results.get_string (iter, 0),
                              results.get_string (iter, 1),
