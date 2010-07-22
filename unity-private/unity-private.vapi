@@ -30,6 +30,7 @@ namespace Unity {
 			public Launcher (Unity.Shell shell);
 			public Clutter.Actor get_view ();
 			public float get_width ();
+			public Unity.Launcher.ScrollerModel model { get; set; }
 			public Unity.Shell shell { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
@@ -41,11 +42,11 @@ namespace Unity {
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public abstract class QuicklistController : GLib.Object {
-			protected Ctk.Menu? menu;
+			protected Ctk.MenuExpandable? menu;
 			public QuicklistController ();
 			public static bool do_menus_match (Unity.Launcher.QuicklistController menu);
 			public static unowned Unity.Launcher.QuicklistController get_current_menu ();
-			public unowned Ctk.Menu? get_view ();
+			public unowned Ctk.MenuExpandable? get_view ();
 			public static bool is_menu_open ();
 			public Unity.Launcher.ScrollerChildController attached_controller { get; construct; }
 			public Unity.Launcher.QuicklistControllerState state { get; set; }
@@ -58,7 +59,7 @@ namespace Unity {
 			public QuicklistImageMenuItem.with_label (string label);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public class QuicklistMenu : Ctk.Menu {
+		public class QuicklistMenu : Ctk.MenuExpandable {
 			public QuicklistMenu ();
 			public override void paint ();
 		}
@@ -83,12 +84,20 @@ namespace Unity {
 			public QuicklistRadioMenuItem.with_label (GLib.SList? group, string label);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public abstract class ScrollerChild : Ctk.Actor {
+		public class ScrollerChild : Ctk.Actor {
 			public Unity.Launcher.ScrollerChildController controller;
 			public Unity.Launcher.PinType pin_type;
 			public ScrollerChild ();
-			public abstract void force_rotation_jump (float degrees);
+			public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
+			public void force_rotation_jump (float degrees);
+			public Clutter.Actor get_content ();
+			public override void get_preferred_height (float for_width, out float minimum_height, out float natural_height);
+			public override void get_preferred_width (float for_height, out float minimum_width, out float natural_width);
+			public override void map ();
+			public override void paint ();
+			public override void pick (Clutter.Color color);
 			public string to_string ();
+			public override void unmap ();
 			public bool activating { get; set; }
 			public bool active { get; set; }
 			public Gdk.Pixbuf icon { get; set; }
@@ -106,14 +115,16 @@ namespace Unity {
 			protected int drag_sensitivity;
 			protected uint32 last_press_time;
 			protected Unity.Launcher.ScrollerChildControllerMenuState menu_state;
-			public string name;
 			public ScrollerChildController (Unity.Launcher.ScrollerChild child_);
-			public abstract void activate ();
-			public abstract void get_menu_actions (Unity.Launcher.ScrollerChildController.menu_cb callback);
-			public abstract Unity.Launcher.QuicklistController get_menu_controller ();
-			public abstract void get_menu_navigation (Unity.Launcher.ScrollerChildController.menu_cb callback);
+			public virtual void activate ();
+			public virtual void get_menu_actions (Unity.Launcher.ScrollerChildController.menu_cb callback);
+			public virtual Unity.Launcher.QuicklistController get_menu_controller ();
+			public virtual void get_menu_navigation (Unity.Launcher.ScrollerChildController.menu_cb callback);
+			protected void load_icon_from_icon_name (string icon_name);
 			public Unity.Launcher.ScrollerChild child { get; construct; }
+			public bool hide { get; set; }
 			protected Unity.Launcher.QuicklistController? menu { get; set; }
+			public string name { get; set; }
 			public signal void closed ();
 			public signal void request_removal ();
 		}
@@ -242,7 +253,6 @@ namespace Unity {
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class HomeButton : Ctk.Button {
-			public Unity.ThemeImage theme_image;
 			public HomeButton (Unity.Shell shell);
 			public Unity.Shell shell { get; construct; }
 		}

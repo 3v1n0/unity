@@ -78,8 +78,8 @@ struct _UnityPanelIndicatorsMenuBarClass {
 
 static gpointer unity_panel_indicators_menu_bar_parent_class = NULL;
 
-GType unity_panel_indicators_menu_bar_get_type (void);
-GType unity_panel_indicators_indicator_object_view_get_type (void);
+GType unity_panel_indicators_menu_bar_get_type (void) G_GNUC_CONST;
+GType unity_panel_indicators_indicator_object_view_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_PANEL_INDICATORS_MENU_BAR_DUMMY_PROPERTY
 };
@@ -88,7 +88,7 @@ UnityPanelIndicatorsMenuBar* unity_panel_indicators_menu_bar_construct (GType ob
 void unity_panel_indicators_indicator_object_view_open_last_menu_entry (UnityPanelIndicatorsIndicatorObjectView* self);
 void unity_panel_indicators_indicator_object_view_open_first_menu_entry (UnityPanelIndicatorsIndicatorObjectView* self);
 static void unity_panel_indicators_menu_bar_on_menu_moved (UnityPanelIndicatorsMenuBar* self, UnityPanelIndicatorsIndicatorObjectView* object_view, GtkMenuDirectionType type);
-GType unity_panel_indicators_indicators_model_get_type (void);
+GType unity_panel_indicators_indicators_model_get_type (void) G_GNUC_CONST;
 UnityPanelIndicatorsIndicatorsModel* unity_panel_indicators_indicators_model_get_default (void);
 GeeArrayList* unity_panel_indicators_indicators_model_get_indicators (UnityPanelIndicatorsIndicatorsModel* self);
 char* unity_panel_indicators_indicators_model_get_indicator_name (UnityPanelIndicatorsIndicatorsModel* self, IndicatorObject* o);
@@ -162,21 +162,21 @@ static GObject * unity_panel_indicators_menu_bar_constructor (GType type, guint 
 					g_signal_connect_object (self->indicator_object_view, "menu-moved", (GCallback) _unity_panel_indicators_menu_bar_on_menu_moved_unity_panel_indicators_indicator_object_view_menu_moved, self, 0);
 					ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->indicator_object_view, FALSE, TRUE);
 					clutter_actor_show ((ClutterActor*) self->indicator_object_view);
-					_g_object_unref0 (o);
 					_g_free0 (name);
+					_g_object_unref0 (o);
 					break;
 				}
-				_g_object_unref0 (o);
 				_g_free0 (name);
+				_g_object_unref0 (o);
 			}
 			_g_object_unref0 (_o_it);
 		}
 		rect = g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color ((_tmp2_ = (_tmp1_.red = (guint8) 255, _tmp1_.green = (guint8) 0, _tmp1_.blue = (guint8) 0, _tmp1_.alpha = (guint8) 0, _tmp1_), &_tmp2_)));
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) rect, TRUE, TRUE);
 		clutter_actor_show ((ClutterActor*) rect);
-		_g_object_unref0 (model);
-		_g_object_unref0 (indicators_list);
 		_g_object_unref0 (rect);
+		_g_object_unref0 (indicators_list);
+		_g_object_unref0 (model);
 	}
 	return obj;
 }

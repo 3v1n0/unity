@@ -68,7 +68,7 @@ struct _UnityTestsUnitPanelIndicatorObjectEntryViewSuitePrivate {
 
 static gpointer unity_tests_unit_panel_indicator_object_entry_view_suite_parent_class = NULL;
 
-GType unity_tests_unit_panel_indicator_object_entry_view_suite_get_type (void);
+GType unity_tests_unit_panel_indicator_object_entry_view_suite_get_type (void) G_GNUC_CONST;
 #define UNITY_TESTS_UNIT_PANEL_INDICATOR_OBJECT_ENTRY_VIEW_SUITE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TESTS_UNIT_TYPE_PANEL_INDICATOR_OBJECT_ENTRY_VIEW_SUITE, UnityTestsUnitPanelIndicatorObjectEntryViewSuitePrivate))
 enum  {
 	UNITY_TESTS_UNIT_PANEL_INDICATOR_OBJECT_ENTRY_VIEW_SUITE_DUMMY_PROPERTY
@@ -182,8 +182,8 @@ static void unity_tests_unit_panel_indicator_object_entry_view_suite_test_image_
 	_g_object_unref0 (_tmp11_);
 	_g_object_unref0 (_tmp9_);
 	g_object_set (self->priv->image, "icon-name", "gtk-apply", NULL);
-	_g_object_unref0 (e);
 	_g_object_unref0 (p);
+	_g_object_unref0 (e);
 }
 
 

@@ -151,14 +151,14 @@ namespace Unity.Tests.Unit
       ApplicationQuicklistController menu = controller.get_menu_controller () as ApplicationQuicklistController;
       menu.state = QuicklistControllerState.LABEL;
 
-      unowned GLib.List<Ctk.MenuItem> menuitems = menu.get_view ().get_items ();
+      unowned GLib.List<Ctk.MenuItem> menuitems = null;
       assert (menuitems.length () == 1);
 
       menu.state = QuicklistControllerState.MENU;
 
       // this assert here will only work for our local dbusmenu's because they return
       // immediately. remote dbusmenu's need to be slightly more clever
-      menuitems = menu.get_view ().get_items ();
+      //menuitems = menu.get_view ().get_items ();
       assert (menuitems.length () >= 10);
 
       assert (menuitems.data is Ctk.CheckMenuItem);

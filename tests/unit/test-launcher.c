@@ -30,8 +30,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unity-private.h>
-#include <float.h>
-#include <math.h>
 #include <gobject/gvaluecollector.h>
 
 
@@ -124,7 +122,7 @@ static gpointer unity_tests_unit_test_bamf_application_parent_class = NULL;
 static gpointer unity_tests_unit_test_scroller_child_parent_class = NULL;
 static gpointer unity_tests_unit_launcher_suite_parent_class = NULL;
 
-GType unity_tests_unit_test_bamf_application_get_type (void);
+GType unity_tests_unit_test_bamf_application_get_type (void) G_GNUC_CONST;
 #define UNITY_TESTS_UNIT_TEST_BAMF_APPLICATION_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TESTS_UNIT_TYPE_TEST_BAMF_APPLICATION, UnityTestsUnitTestBamfApplicationPrivate))
 enum  {
 	UNITY_TESTS_UNIT_TEST_BAMF_APPLICATION_DUMMY_PROPERTY
@@ -145,11 +143,10 @@ gboolean unity_tests_unit_test_bamf_application_user_visible (UnityTestsUnitTest
 static const char* unity_tests_unit_test_bamf_application_real_view_type (BamfView* base);
 static GObject * unity_tests_unit_test_bamf_application_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_tests_unit_test_bamf_application_finalize (GObject* obj);
-GType unity_tests_unit_test_scroller_child_get_type (void);
+GType unity_tests_unit_test_scroller_child_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTS_UNIT_TEST_SCROLLER_CHILD_DUMMY_PROPERTY
 };
-static void unity_tests_unit_test_scroller_child_real_force_rotation_jump (UnityLauncherScrollerChild* base, float degrees);
 UnityTestsUnitTestScrollerChild* unity_tests_unit_test_scroller_child_new (void);
 UnityTestsUnitTestScrollerChild* unity_tests_unit_test_scroller_child_construct (GType object_type);
 gpointer unity_tests_unit_launcher_suite_ref (gpointer instance);
@@ -158,7 +155,7 @@ GParamSpec* unity_tests_unit_param_spec_launcher_suite (const gchar* name, const
 void unity_tests_unit_value_set_launcher_suite (GValue* value, gpointer v_object);
 void unity_tests_unit_value_take_launcher_suite (GValue* value, gpointer v_object);
 gpointer unity_tests_unit_value_get_launcher_suite (const GValue* value);
-GType unity_tests_unit_launcher_suite_get_type (void);
+GType unity_tests_unit_launcher_suite_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTS_UNIT_LAUNCHER_SUITE_DUMMY_PROPERTY
 };
@@ -242,7 +239,7 @@ GArray* unity_tests_unit_test_bamf_application_get_xids (UnityTestsUnitTestBamfA
 	GArray* result = NULL;
 	GArray* retarray;
 	g_return_val_if_fail (self != NULL, NULL);
-	retarray = g_array_new (TRUE, FALSE, (guint) sizeof (guint32));
+	retarray = g_array_new (TRUE, FALSE, (gulong) ((guint) sizeof (guint32)));
 	result = retarray;
 	return result;
 }
@@ -376,12 +373,6 @@ GType unity_tests_unit_test_bamf_application_get_type (void) {
 }
 
 
-static void unity_tests_unit_test_scroller_child_real_force_rotation_jump (UnityLauncherScrollerChild* base, float degrees) {
-	UnityTestsUnitTestScrollerChild * self;
-	self = (UnityTestsUnitTestScrollerChild*) base;
-}
-
-
 UnityTestsUnitTestScrollerChild* unity_tests_unit_test_scroller_child_construct (GType object_type) {
 	UnityTestsUnitTestScrollerChild * self;
 	self = (UnityTestsUnitTestScrollerChild*) unity_launcher_scroller_child_construct (object_type);
@@ -396,7 +387,6 @@ UnityTestsUnitTestScrollerChild* unity_tests_unit_test_scroller_child_new (void)
 
 static void unity_tests_unit_test_scroller_child_class_init (UnityTestsUnitTestScrollerChildClass * klass) {
 	unity_tests_unit_test_scroller_child_parent_class = g_type_class_peek_parent (klass);
-	UNITY_LAUNCHER_SCROLLER_CHILD_CLASS (klass)->force_rotation_jump = unity_tests_unit_test_scroller_child_real_force_rotation_jump;
 }
 
 
@@ -478,10 +468,10 @@ static void unity_tests_unit_launcher_suite_test_scroller_model (UnityTestsUnitL
 	unity_launcher_scroller_model_remove (model, child_b);
 	g_assert ((_tmp2_ = unity_launcher_scroller_model_get (model, 1)) == child_c);
 	_g_object_unref0 (_tmp2_);
-	_g_object_unref0 (model);
-	_g_object_unref0 (child_a);
-	_g_object_unref0 (child_b);
 	_g_object_unref0 (child_c);
+	_g_object_unref0 (child_b);
+	_g_object_unref0 (child_a);
+	_g_object_unref0 (model);
 }
 
 
@@ -506,10 +496,10 @@ static void unity_tests_unit_launcher_suite_test_scroller_child_controller (Unit
 	g_assert (unity_launcher_scroller_child_get_running (child) == FALSE);
 	g_assert (unity_launcher_scroller_child_get_active (child) == FALSE);
 	g_assert (unity_launcher_scroller_child_get_needs_attention (child) == FALSE);
-	g_assert (_vala_strcmp0 (((UnityLauncherScrollerChildController*) controller)->name, "Test Application") == 0);
-	_g_object_unref0 (test_app);
-	_g_object_unref0 (child);
+	g_assert (_vala_strcmp0 (unity_launcher_scroller_child_controller_get_name ((UnityLauncherScrollerChildController*) controller), "Test Application") == 0);
 	_g_object_unref0 (controller);
+	_g_object_unref0 (child);
+	_g_object_unref0 (test_app);
 }
 
 

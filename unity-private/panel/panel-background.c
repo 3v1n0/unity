@@ -65,7 +65,7 @@ struct _UnityPanelBackgroundPrivate {
 
 static gpointer unity_panel_background_parent_class = NULL;
 
-GType unity_panel_background_get_type (void);
+GType unity_panel_background_get_type (void) G_GNUC_CONST;
 #define UNITY_PANEL_BACKGROUND_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PANEL_TYPE_BACKGROUND, UnityPanelBackgroundPrivate))
 enum  {
 	UNITY_PANEL_BACKGROUND_DUMMY_PROPERTY

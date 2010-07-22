@@ -55,7 +55,7 @@ struct _UnityTestsUnitUnityPixbufCacheSuiteClass {
 
 static gpointer unity_tests_unit_unity_pixbuf_cache_suite_parent_class = NULL;
 
-GType unity_tests_unit_unity_pixbuf_cache_suite_get_type (void);
+GType unity_tests_unit_unity_pixbuf_cache_suite_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTS_UNIT_UNITY_PIXBUF_CACHE_SUITE_DUMMY_PROPERTY
 };
@@ -141,8 +141,8 @@ static void unity_tests_unit_unity_pixbuf_cache_suite_test_lookup (UnityTestsUni
 	_g_object_unref0 (_tmp3_);
 	g_assert ((_tmp4_ = unity_pixbuf_cache_get (cache, "bar", 48)) == NULL);
 	_g_object_unref0 (_tmp4_);
-	_g_object_unref0 (pixbuf);
 	_g_object_unref0 (cache);
+	_g_object_unref0 (pixbuf);
 }
 
 
@@ -183,9 +183,9 @@ static void unity_tests_unit_unity_pixbuf_cache_suite_test_setting_async (UnityT
 	g_test_trap_has_passed ();
 	g_test_trap_assert_stderr ("*Unable to load icon_name*");
 	g_assert (ctk_image_get_pixbuf (image) == pixbuf);
-	_g_object_unref0 (image);
-	_g_object_unref0 (pixbuf);
 	_g_object_unref0 (cache);
+	_g_object_unref0 (pixbuf);
+	_g_object_unref0 (image);
 }
 
 

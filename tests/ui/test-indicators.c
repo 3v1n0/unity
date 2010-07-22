@@ -132,7 +132,7 @@ static gpointer unity_tests_ui_fake_indicator_object_parent_class = NULL;
 static gpointer unity_tests_ui_fake_indicators_model_parent_class = NULL;
 static gpointer unity_tests_ui_indicator_test_suite_parent_class = NULL;
 
-GType unity_tests_ui_fake_indicator_object_get_type (void);
+GType unity_tests_ui_fake_indicator_object_get_type (void) G_GNUC_CONST;
 #define UNITY_TESTS_UI_FAKE_INDICATOR_OBJECT_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TESTS_UI_TYPE_FAKE_INDICATOR_OBJECT, UnityTestsUIFakeIndicatorObjectPrivate))
 enum  {
 	UNITY_TESTS_UI_FAKE_INDICATOR_OBJECT_DUMMY_PROPERTY,
@@ -151,7 +151,7 @@ static GObject * unity_tests_ui_fake_indicator_object_constructor (GType type, g
 static void unity_tests_ui_fake_indicator_object_finalize (GObject* obj);
 static void unity_tests_ui_fake_indicator_object_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_tests_ui_fake_indicator_object_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
-GType unity_tests_ui_fake_indicators_model_get_type (void);
+GType unity_tests_ui_fake_indicators_model_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTS_UI_FAKE_INDICATORS_MODEL_DUMMY_PROPERTY
 };
@@ -161,7 +161,7 @@ UnityTestsUIFakeIndicatorsModel* unity_tests_ui_fake_indicators_model_construct 
 static GeeArrayList* unity_tests_ui_fake_indicators_model_real_get_indicators (UnityPanelIndicatorsIndicatorsModel* base);
 static char* unity_tests_ui_fake_indicators_model_real_get_indicator_name (UnityPanelIndicatorsIndicatorsModel* base, IndicatorObject* o);
 static void unity_tests_ui_fake_indicators_model_finalize (GObject* obj);
-GType unity_tests_ui_indicator_test_suite_get_type (void);
+GType unity_tests_ui_indicator_test_suite_get_type (void) G_GNUC_CONST;
 #define UNITY_TESTS_UI_INDICATOR_TEST_SUITE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TESTS_UI_TYPE_INDICATOR_TEST_SUITE, UnityTestsUIIndicatorTestSuitePrivate))
 enum  {
 	UNITY_TESTS_UI_INDICATOR_TEST_SUITE_DUMMY_PROPERTY
@@ -537,8 +537,8 @@ UnityTestsUIIndicatorTestSuite* unity_tests_ui_indicator_test_suite_construct (G
 	unity_tests_ui_fake_indicator_object_add_entry (indicator_model->indicator_object_1, self->entry1);
 	g_test_add_data_func (UNITY_TESTS_UI_INDICATOR_TEST_SUITE_DOMAIN "/IndicatorMouseEvent", self, _unity_tests_ui_indicator_test_suite_test_indicators_mouse_event_gdata_test_func);
 	g_test_add_data_func (UNITY_TESTS_UI_INDICATOR_TEST_SUITE_DOMAIN "/IndicatorKeyboardEvent", self, _unity_tests_ui_indicator_test_suite_test_indicators_keyboard_event_gdata_test_func);
-	_g_object_unref0 (fake_indicator_model);
 	_g_object_unref0 (indicator_model);
+	_g_object_unref0 (fake_indicator_model);
 	return self;
 }
 
@@ -588,13 +588,13 @@ static void unity_tests_ui_indicator_test_suite_test_indicators_mouse_event (Uni
 	unity_testing_director_button_press (self->priv->director, (ClutterActor*) object_entry1, (guint32) 1, TRUE, 1.0f, 1.0f, FALSE);
 	g_assert (unity_panel_indicators_indicator_object_entry_view_is_open (object_entry0) == FALSE);
 	g_assert (unity_panel_indicators_indicator_object_entry_view_is_open (object_entry1) == FALSE);
-	_unity_testing_object_registry_unref0 (registry);
-	_g_object_unref0 (indicator_model);
-	_g_object_unref0 (indicator_bar);
-	_g_object_unref0 (indicator_object_view0);
-	_g_object_unref0 (indicator_object_view1);
-	_g_object_unref0 (object_entry0);
 	_g_object_unref0 (object_entry1);
+	_g_object_unref0 (object_entry0);
+	_g_object_unref0 (indicator_object_view1);
+	_g_object_unref0 (indicator_object_view0);
+	_g_object_unref0 (indicator_bar);
+	_g_object_unref0 (indicator_model);
+	_unity_testing_object_registry_unref0 (registry);
 }
 
 
@@ -637,13 +637,13 @@ static void unity_tests_ui_indicator_test_suite_test_indicators_keyboard_event (
 	g_assert (unity_panel_indicators_indicator_object_entry_view_is_open (object_entry0) == TRUE);
 	g_assert (unity_panel_indicators_indicator_object_entry_view_is_open (object_entry1) == FALSE);
 	unity_testing_director_do_wait_for_timeout (self->priv->director, (guint32) 1000);
-	_unity_testing_object_registry_unref0 (registry);
-	_g_object_unref0 (indicator_model);
-	_g_object_unref0 (indicator_bar);
-	_g_object_unref0 (indicator_object_view0);
-	_g_object_unref0 (indicator_object_view1);
-	_g_object_unref0 (object_entry0);
 	_g_object_unref0 (object_entry1);
+	_g_object_unref0 (object_entry0);
+	_g_object_unref0 (indicator_object_view1);
+	_g_object_unref0 (indicator_object_view0);
+	_g_object_unref0 (indicator_bar);
+	_g_object_unref0 (indicator_model);
+	_unity_testing_object_registry_unref0 (registry);
 }
 
 

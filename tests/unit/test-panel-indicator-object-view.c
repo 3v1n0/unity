@@ -91,7 +91,7 @@ struct _UnityTestsUnitPanelIndicatorObjectViewSuitePrivate {
 static gpointer unity_tests_unit_fake_indicator_object_parent_class = NULL;
 static gpointer unity_tests_unit_panel_indicator_object_view_suite_parent_class = NULL;
 
-GType unity_tests_unit_fake_indicator_object_get_type (void);
+GType unity_tests_unit_fake_indicator_object_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTS_UNIT_FAKE_INDICATOR_OBJECT_DUMMY_PROPERTY
 };
@@ -104,7 +104,7 @@ static GtkImage* unity_tests_unit_fake_indicator_object_real_get_image (Indicato
 static GtkMenu* unity_tests_unit_fake_indicator_object_real_get_menu (IndicatorObject* base);
 static GObject * unity_tests_unit_fake_indicator_object_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_tests_unit_fake_indicator_object_finalize (GObject* obj);
-GType unity_tests_unit_panel_indicator_object_view_suite_get_type (void);
+GType unity_tests_unit_panel_indicator_object_view_suite_get_type (void) G_GNUC_CONST;
 #define UNITY_TESTS_UNIT_PANEL_INDICATOR_OBJECT_VIEW_SUITE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TESTS_UNIT_TYPE_PANEL_INDICATOR_OBJECT_VIEW_SUITE, UnityTestsUnitPanelIndicatorObjectViewSuitePrivate))
 enum  {
 	UNITY_TESTS_UNIT_PANEL_INDICATOR_OBJECT_VIEW_SUITE_DUMMY_PROPERTY
@@ -307,8 +307,8 @@ static void unity_tests_unit_panel_indicator_object_view_suite_test_indicator_ad
 	e = g_object_ref_sink (unity_panel_indicators_indicator_object_view_new ((IndicatorObject*) fakeobject));
 	unity_tests_unit_fake_indicator_object_add_entry (fakeobject, self->priv->entry);
 	g_assert (unity_panel_indicators_indicator_object_view_find_entry (e, self->priv->entry));
-	_g_object_unref0 (fakeobject);
 	_g_object_unref0 (e);
+	_g_object_unref0 (fakeobject);
 }
 
 
@@ -325,9 +325,9 @@ static void unity_tests_unit_panel_indicator_object_view_suite_test_indicator_en
 	g_assert (unity_panel_indicators_indicator_object_entry_view_get_entry (entry_view)->label == self->priv->entry->label);
 	g_assert (unity_panel_indicators_indicator_object_entry_view_get_entry (entry_view)->image == self->priv->entry->image);
 	g_assert (unity_panel_indicators_indicator_object_entry_view_get_entry (entry_view)->menu == self->priv->entry->menu);
-	_g_object_unref0 (fakeobject);
-	_g_object_unref0 (e);
 	_g_object_unref0 (entry_view);
+	_g_object_unref0 (e);
+	_g_object_unref0 (fakeobject);
 }
 
 

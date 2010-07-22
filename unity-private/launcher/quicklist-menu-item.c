@@ -47,8 +47,8 @@ typedef struct _UnityLauncherQuicklistMenuItemClass UnityLauncherQuicklistMenuIt
 typedef struct _UnityLauncherQuicklistMenuItemPrivate UnityLauncherQuicklistMenuItemPrivate;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
-#define _cairo_surface_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_surface_destroy (var), NULL)))
 #define _cairo_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_destroy (var), NULL)))
+#define _cairo_surface_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_surface_destroy (var), NULL)))
 
 struct _UnityLauncherQuicklistMenuItem {
 	CtkMenuItem parent_instance;
@@ -61,15 +61,15 @@ struct _UnityLauncherQuicklistMenuItemClass {
 
 struct _UnityLauncherQuicklistMenuItemPrivate {
 	CtkLayerActor* item_background;
-	gint old_width;
-	gint old_height;
+	gint last_width;
+	gint last_height;
 	char* old_label;
 };
 
 
 static gpointer unity_launcher_quicklist_menu_item_parent_class = NULL;
 
-GType unity_launcher_quicklist_menu_item_get_type (void);
+GType unity_launcher_quicklist_menu_item_get_type (void) G_GNUC_CONST;
 #define UNITY_LAUNCHER_QUICKLIST_MENU_ITEM_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_QUICKLIST_MENU_ITEM, UnityLauncherQuicklistMenuItemPrivate))
 enum  {
 	UNITY_LAUNCHER_QUICKLIST_MENU_ITEM_DUMMY_PROPERTY
@@ -79,6 +79,8 @@ static void unity_launcher_quicklist_menu_item_real_paint (ClutterActor* base);
 static void unity_launcher_quicklist_menu_item_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height_p, float* natural_height_p);
 #define UNITY_LAUNCHER_MARGIN 0.5f
 static void unity_launcher_quicklist_menu_item_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width_p, float* natural_width_p);
+static gboolean _unity_launcher_quicklist_menu_item_update_item_background (UnityLauncherQuicklistMenuItem* self);
+static gboolean __unity_launcher_quicklist_menu_item_update_item_background_gsource_func (gpointer self);
 static void unity_launcher_quicklist_menu_item_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
 static gboolean _unity_launcher_quicklist_menu_item_on_enter (UnityLauncherQuicklistMenuItem* self, ClutterEvent* event);
 static gboolean _unity_launcher_quicklist_menu_item_on_leave (UnityLauncherQuicklistMenuItem* self, ClutterEvent* event);
@@ -101,7 +103,9 @@ static int _vala_strcmp0 (const char * str1, const char * str2);
 static void unity_launcher_quicklist_menu_item_real_paint (ClutterActor* base) {
 	UnityLauncherQuicklistMenuItem * self;
 	self = (UnityLauncherQuicklistMenuItem*) base;
-	clutter_actor_paint ((ClutterActor*) self->priv->item_background);
+	if (CTK_IS_LAYER_ACTOR (self->priv->item_background)) {
+		clutter_actor_paint ((ClutterActor*) self->priv->item_background);
+	}
 }
 
 
@@ -135,14 +139,43 @@ static void unity_launcher_quicklist_menu_item_real_get_preferred_width (Clutter
 }
 
 
+static gboolean __unity_launcher_quicklist_menu_item_update_item_background_gsource_func (gpointer self) {
+	gboolean result;
+	result = _unity_launcher_quicklist_menu_item_update_item_background (self);
+	return result;
+}
+
+
 static void unity_launcher_quicklist_menu_item_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
 	UnityLauncherQuicklistMenuItem * self;
-	gint w = 0;
-	gint h = 0;
+	gint new_width;
+	gint new_height;
+	gboolean _tmp0_ = FALSE;
+	self = (UnityLauncherQuicklistMenuItem*) base;
+	new_width = 0;
+	new_height = 0;
+	CLUTTER_ACTOR_CLASS (unity_launcher_quicklist_menu_item_parent_class)->allocate ((ClutterActor*) CTK_MENU_ITEM (self), box, flags);
+	new_width = (gint) ((*box).x2 - (*box).x1);
+	new_height = (gint) ((*box).y2 - (*box).y1);
+	if (self->priv->last_width == new_width) {
+		_tmp0_ = self->priv->last_height == new_height;
+	} else {
+		_tmp0_ = FALSE;
+	}
+	if (_tmp0_) {
+		return;
+	}
+	self->priv->last_width = new_width;
+	self->priv->last_height = new_height;
+	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __unity_launcher_quicklist_menu_item_update_item_background_gsource_func, g_object_ref (self), g_object_unref);
+}
+
+
+static gboolean _unity_launcher_quicklist_menu_item_update_item_background (UnityLauncherQuicklistMenuItem* self) {
+	gboolean result = FALSE;
 	ClutterColor _tmp0_ = {0};
 	ClutterColor white_color;
-	gboolean _tmp1_ = FALSE;
-	CtkLayerActor* _tmp2_;
+	CtkLayerActor* _tmp1_;
 	CtkLayer* normal_layer;
 	CtkLayer* selected_layer;
 	cairo_surface_t* normal_surf;
@@ -150,40 +183,28 @@ static void unity_launcher_quicklist_menu_item_real_allocate (ClutterActor* base
 	cairo_t* normal_cr;
 	cairo_t* selected_cr;
 	GtkSettings* settings;
-	char* _tmp4_;
-	char* _tmp3_ = NULL;
-	char* _tmp6_;
-	char* _tmp5_ = NULL;
-	self = (UnityLauncherQuicklistMenuItem*) base;
+	char* _tmp3_;
+	char* _tmp2_ = NULL;
+	char* _tmp5_;
+	char* _tmp4_ = NULL;
+	g_return_val_if_fail (self != NULL, FALSE);
 	white_color = (memset (&_tmp0_, 0, sizeof (ClutterColor)), _tmp0_.red = (guint8) 255, _tmp0_.green = (guint8) 255, _tmp0_.blue = (guint8) 255, _tmp0_.alpha = (guint8) 255, _tmp0_);
-	CLUTTER_ACTOR_CLASS (unity_launcher_quicklist_menu_item_parent_class)->allocate ((ClutterActor*) CTK_MENU_ITEM (self), box, flags);
-	w = (gint) ((*box).x2 - (*box).x1);
-	h = (gint) ((*box).y2 - (*box).y1);
-	if (self->priv->old_width == w) {
-		_tmp1_ = self->priv->old_height == h;
-	} else {
-		_tmp1_ = FALSE;
-	}
-	if (_tmp1_) {
-		return;
-	}
-	self->priv->old_width = w;
-	self->priv->old_height = h;
 	if (CTK_IS_LAYER_ACTOR (self->priv->item_background)) {
 		clutter_actor_unparent ((ClutterActor*) self->priv->item_background);
+		clutter_actor_destroy ((ClutterActor*) self->priv->item_background);
 	}
-	self->priv->item_background = (_tmp2_ = g_object_ref_sink ((CtkLayerActor*) ctk_layer_actor_new ((guint) w, (guint) h)), _g_object_unref0 (self->priv->item_background), _tmp2_);
-	normal_layer = ctk_layer_new ((guint) w, (guint) h, CTK_LAYER_REPEAT_NONE, CTK_LAYER_REPEAT_NONE);
-	selected_layer = ctk_layer_new ((guint) w, (guint) h, CTK_LAYER_REPEAT_NONE, CTK_LAYER_REPEAT_NONE);
-	normal_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
-	selected_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, w, h);
+	self->priv->item_background = (_tmp1_ = g_object_ref_sink ((CtkLayerActor*) ctk_layer_actor_new ((guint) self->priv->last_width, (guint) self->priv->last_height)), _g_object_unref0 (self->priv->item_background), _tmp1_);
+	normal_layer = ctk_layer_new ((guint) self->priv->last_width, (guint) self->priv->last_height, CTK_LAYER_REPEAT_NONE, CTK_LAYER_REPEAT_NONE);
+	selected_layer = ctk_layer_new ((guint) self->priv->last_width, (guint) self->priv->last_height, CTK_LAYER_REPEAT_NONE, CTK_LAYER_REPEAT_NONE);
+	normal_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, self->priv->last_width, self->priv->last_height);
+	selected_surf = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, self->priv->last_width, self->priv->last_height);
 	normal_cr = cairo_create (normal_surf);
 	selected_cr = cairo_create (selected_surf);
 	settings = _g_object_ref0 (gtk_settings_get_default ());
-	unity_quicklist_rendering_item_normal_mask (normal_cr, w, h, _tmp4_ = (g_object_get (settings, "gtk-font-name", &_tmp3_, NULL), _tmp3_), ctk_menu_item_get_label ((CtkMenuItem*) self));
-	_g_free0 (_tmp4_);
-	unity_quicklist_rendering_item_selected_mask (selected_cr, w, h, _tmp6_ = (g_object_get (settings, "gtk-font-name", &_tmp5_, NULL), _tmp5_), ctk_menu_item_get_label ((CtkMenuItem*) self));
-	_g_free0 (_tmp6_);
+	unity_quicklist_rendering_item_normal_mask (normal_cr, self->priv->last_width, self->priv->last_height, _tmp3_ = (g_object_get (settings, "gtk-font-name", &_tmp2_, NULL), _tmp2_), ctk_menu_item_get_label ((CtkMenuItem*) self));
+	_g_free0 (_tmp3_);
+	unity_quicklist_rendering_item_selected_mask (selected_cr, self->priv->last_width, self->priv->last_height, _tmp5_ = (g_object_get (settings, "gtk-font-name", &_tmp4_, NULL), _tmp4_), ctk_menu_item_get_label ((CtkMenuItem*) self));
+	_g_free0 (_tmp5_);
 	ctk_layer_set_mask_from_surface (normal_layer, normal_surf);
 	ctk_layer_set_color (normal_layer, &white_color);
 	ctk_layer_set_mask_from_surface (selected_layer, selected_surf);
@@ -192,23 +213,28 @@ static void unity_launcher_quicklist_menu_item_real_allocate (ClutterActor* base
 	ctk_layer_actor_add_layer (self->priv->item_background, selected_layer);
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 0), TRUE);
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 1), FALSE);
-	clutter_actor_queue_redraw ((ClutterActor*) self->priv->item_background);
+	if (CLUTTER_IS_STAGE (clutter_actor_get_stage ((ClutterActor*) self))) {
+		clutter_actor_queue_redraw ((ClutterActor*) self);
+	}
 	clutter_actor_set_parent ((ClutterActor*) self->priv->item_background, (ClutterActor*) self);
 	clutter_actor_map ((ClutterActor*) self->priv->item_background);
 	clutter_actor_show ((ClutterActor*) self->priv->item_background);
-	_g_object_unref0 (normal_layer);
-	_g_object_unref0 (selected_layer);
-	_cairo_surface_destroy0 (normal_surf);
-	_cairo_surface_destroy0 (selected_surf);
-	_cairo_destroy0 (normal_cr);
-	_cairo_destroy0 (selected_cr);
+	result = FALSE;
 	_g_object_unref0 (settings);
+	_cairo_destroy0 (selected_cr);
+	_cairo_destroy0 (normal_cr);
+	_cairo_surface_destroy0 (selected_surf);
+	_cairo_surface_destroy0 (normal_surf);
+	_g_object_unref0 (selected_layer);
+	_g_object_unref0 (normal_layer);
+	return result;
 }
 
 
 static gboolean _unity_launcher_quicklist_menu_item_on_enter (UnityLauncherQuicklistMenuItem* self, ClutterEvent* event) {
 	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
+	g_return_val_if_fail (UNITY_LAUNCHER_IS_QUICKLIST_MENU_ITEM (self), FALSE);
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 0), FALSE);
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 1), TRUE);
 	if (CLUTTER_IS_STAGE (clutter_actor_get_stage ((ClutterActor*) self))) {
@@ -222,6 +248,7 @@ static gboolean _unity_launcher_quicklist_menu_item_on_enter (UnityLauncherQuick
 static gboolean _unity_launcher_quicklist_menu_item_on_leave (UnityLauncherQuicklistMenuItem* self, ClutterEvent* event) {
 	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
+	g_return_val_if_fail (UNITY_LAUNCHER_IS_QUICKLIST_MENU_ITEM (self), FALSE);
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 0), TRUE);
 	ctk_layer_set_enabled (ctk_layer_actor_get_layer (self->priv->item_background, (guint) 1), FALSE);
 	if (CLUTTER_IS_STAGE (clutter_actor_get_stage ((ClutterActor*) self))) {
@@ -333,8 +360,8 @@ static GObject * unity_launcher_quicklist_menu_item_constructor (GType type, gui
 		g_signal_connect_object ((ClutterActor*) self, "leave-event", (GCallback) __unity_launcher_quicklist_menu_item_on_leave_clutter_actor_leave_event, self, 0);
 		g_signal_connect_object ((ClutterActor*) self, "button-press-event", (GCallback) __unity_launcher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event, self, 0);
 		clutter_actor_set_reactive ((ClutterActor*) self, TRUE);
-		self->priv->old_width = 0;
-		self->priv->old_height = 0;
+		self->priv->last_width = -1;
+		self->priv->last_height = -1;
 		self->priv->old_label = (_tmp1_ = g_strdup (""), _g_free0 (self->priv->old_label), _tmp1_);
 	}
 	return obj;

@@ -100,13 +100,13 @@ UnityFavorites* unity_favorites_singleton = NULL;
 static gpointer unity_favorites_parent_class = NULL;
 static gpointer unity_gconf_favorites_parent_class = NULL;
 
-GType unity_favorites_get_type (void);
+GType unity_favorites_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_FAVORITES_DUMMY_PROPERTY
 };
 UnityGConfFavorites* unity_gconf_favorites_new (void);
 UnityGConfFavorites* unity_gconf_favorites_construct (GType object_type);
-GType unity_gconf_favorites_get_type (void);
+GType unity_gconf_favorites_get_type (void) G_GNUC_CONST;
 UnityFavorites* unity_favorites_get_default (void);
 GeeArrayList* unity_favorites_get_favorites (UnityFavorites* self);
 static GeeArrayList* unity_favorites_real_get_favorites (UnityFavorites* self);
@@ -417,12 +417,12 @@ static char* unity_gconf_favorites_real_find_uid_for_desktop_file (UnityFavorite
 				if (_vala_strcmp0 (fav_desktop_file, desktop_file) == 0) {
 					char* _tmp0_;
 					uid = (_tmp0_ = g_strdup (id), _g_free0 (uid), _tmp0_);
-					_g_free0 (id);
 					_g_free0 (fav_desktop_file);
+					_g_free0 (id);
 					break;
 				}
-				_g_free0 (id);
 				_g_free0 (fav_desktop_file);
+				_g_free0 (id);
 			}
 		}
 	}
@@ -1012,8 +1012,8 @@ static void unity_gconf_favorites_compare_string_list (UnityGConfFavorites* self
 				} else {
 					*added = g_slist_append (*added, g_strdup (id));
 				}
-				_g_free0 (id);
 				_g_free0 (item);
+				_g_free0 (id);
 			}
 		}
 	}
@@ -1046,8 +1046,8 @@ static void unity_gconf_favorites_compare_string_list (UnityGConfFavorites* self
 				if (item == NULL) {
 					*removed = g_slist_append (*removed, g_strdup (id));
 				}
-				_g_free0 (id);
 				_g_free0 (item);
+				_g_free0 (id);
 			}
 		}
 	}
@@ -1087,17 +1087,17 @@ static void unity_gconf_favorites_notify_on_favorites_list_changed (UnityGConfFa
 		{
 			g_warning ("unity-favorites.vala:351: Could not get favourite list from gconf %s", e->message);
 			_g_error_free0 (e);
-			__g_slist_free_g_free0 (items_added);
-			__g_slist_free_g_free0 (items_removed);
 			__g_slist_free_g_free0 (new_favs);
+			__g_slist_free_g_free0 (items_removed);
+			__g_slist_free_g_free0 (items_added);
 			return;
 		}
 	}
 	__finally21:
 	if (_inner_error_ != NULL) {
-		__g_slist_free_g_free0 (items_added);
-		__g_slist_free_g_free0 (items_removed);
 		__g_slist_free_g_free0 (new_favs);
+		__g_slist_free_g_free0 (items_removed);
+		__g_slist_free_g_free0 (items_added);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return;
@@ -1130,9 +1130,9 @@ static void unity_gconf_favorites_notify_on_favorites_list_changed (UnityGConfFa
 			}
 		}
 	}
-	__g_slist_free_g_free0 (items_added);
-	__g_slist_free_g_free0 (items_removed);
 	__g_slist_free_g_free0 (new_favs);
+	__g_slist_free_g_free0 (items_removed);
+	__g_slist_free_g_free0 (items_added);
 }
 
 

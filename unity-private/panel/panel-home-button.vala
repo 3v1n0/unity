@@ -23,7 +23,12 @@ namespace Unity.Panel
   public class HomeButton : Ctk.Button
   {
     public Shell shell { get; construct; }
-    public ThemeImage theme_image;
+    private Ctk.Image theme_image;
+    private Ctk.EffectGlow glow;
+    private Clutter.Texture bfb_bg_normal;
+    private Clutter.Texture bfb_bg_prelight;
+    private Clutter.Texture bfb_bg_active;
+    private bool search_shown;
 
     public HomeButton (Shell shell)
     {
@@ -82,14 +87,88 @@ namespace Unity.Panel
 
     construct
     {
-      theme_image = new ThemeImage ("distributor-logo");
+      theme_image = new Ctk.Image.from_filename (22, "/usr/share/icons/unity-icon-theme/places/22/distributor-logo.png");
+
       add_actor (theme_image);
       theme_image.show ();
 
-      //button_press_event.connect (on_button_press);
-      //button_release_event.connect (on_button_release);
       motion_event.connect (on_motion_event);
       clicked.connect (on_clicked);
+
+      notify["state"].connect (on_state_changed);
+
+      width += 3.0f;
+
+      glow = new Ctk.EffectGlow ();
+      glow.set_color ({ 255, 255, 255, 255 });
+      glow.set_factor (0.0f);
+      glow.set_margin (5);
+
+      // FIXME: the glow is currently not correctly updated when the state of
+      // the button changes thus it's disabled for the moment, in order to get
+      // the other rendering-features of the patch into trunk as they already
+      // solve giving the user a clue that the BFB/COF is a clickable button
+      //theme_image.add_effect (glow);
+
+      try
+        {
+          bfb_bg_normal = new Clutter.Texture.from_file (
+                                   "/usr/share/unity/themes/bfb_bg_normal.png");
+        }
+      catch (Error e)
+        {
+          warning ("Could not load normal-state bg-texture: %s", e.message);
+        }
+
+      try
+        {
+          bfb_bg_prelight = new Clutter.Texture.from_file (
+                                 "/usr/share/unity/themes/bfb_bg_prelight.png");
+        }
+      catch (Error e)
+        {
+          warning ("Could not load prelight-state bg-texture: %s", e.message);
+        }
+
+      try
+        {
+          bfb_bg_active = new Clutter.Texture.from_file (
+                                   "/usr/share/unity/themes/bfb_bg_active.png");
+        }
+      catch (Error e)
+        {
+          warning ("Could not load active-state bg-texture: %s", e.message);
+        }
+
+      set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
+      set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
+      set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bfb_bg_active);
+
+      search_shown = false;
+    }
+
+    private void on_state_changed ()
+    {
+      switch (this.get_state ())
+      {
+        case Ctk.ActorState.STATE_NORMAL:
+          glow.set_factor (0.0f);
+          glow.set_invalidate_effect_cache (true);
+          do_queue_redraw ();
+        break;
+
+        case Ctk.ActorState.STATE_PRELIGHT:
+          glow.set_factor (0.8f);
+          glow.set_invalidate_effect_cache (true);
+          do_queue_redraw ();
+        break;
+
+        case Ctk.ActorState.STATE_ACTIVE:
+          glow.set_factor (1.0f);
+          glow.set_invalidate_effect_cache (true);
+          do_queue_redraw ();
+        break;
+      }
     }
 
     /* We always want to be the width of the launcher */
@@ -100,26 +179,28 @@ namespace Unity.Panel
       min_width = shell.get_launcher_width_foobar ();
       nat_width = shell.get_launcher_width_foobar ();
     }
-/*
-    private bool on_button_press (Clutter.Event event)
-    {
-      return true;
-    }
 
-    private bool on_button_release (Clutter.Event event)
-    {
-      print (@"BUTTON_RELEASE: $(event.button.button)\n");
-      shell.show_unity ();
-      MenuManager manager = MenuManager.get_default ();
-      manager.popdown_current_menu ();
-      return true;
-    }
-*/
     private void on_clicked ()
     {
       shell.show_unity ();
       MenuManager manager = MenuManager.get_default ();
       manager.popdown_current_menu ();
+
+      if (search_shown)
+        {
+          set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
+          set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
+          set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bfb_bg_active);
+          search_shown = false;
+        }
+      else
+        {
+          set_background_for_state (Ctk.ActorState.STATE_NORMAL, null);
+          set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, null);
+          set_background_for_state (Ctk.ActorState.STATE_ACTIVE, null);
+          search_shown = true;
+        }
+      do_queue_redraw ();
     }
 
     private bool on_motion_event (Clutter.Event event)
@@ -130,9 +211,4 @@ namespace Unity.Panel
     }
   }
 }
-
-/*
-you probably need to add a new function to unity.shell to do that, and then
-implement in Unity.Plugin and testing/test-window.vala (for the two targets)
-*/
 

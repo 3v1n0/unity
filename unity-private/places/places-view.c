@@ -179,11 +179,11 @@ struct _UnityPlacesPlaceEntryIface {
 
 static gpointer unity_places_view_parent_class = NULL;
 
-GType unity_places_view_get_type (void);
-GType unity_places_place_model_get_type (void);
-GType unity_places_place_bar_get_type (void);
-GType unity_places_place_home_entry_get_type (void);
-GType unity_places_place_search_bar_get_type (void);
+GType unity_places_view_get_type (void) G_GNUC_CONST;
+GType unity_places_place_model_get_type (void) G_GNUC_CONST;
+GType unity_places_place_bar_get_type (void) G_GNUC_CONST;
+GType unity_places_place_home_entry_get_type (void) G_GNUC_CONST;
+GType unity_places_place_search_bar_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_VIEW_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_VIEW, UnityPlacesViewPrivate))
 enum  {
 	UNITY_PLACES_VIEW_DUMMY_PROPERTY,
@@ -192,7 +192,7 @@ enum  {
 };
 UnityPlacesView* unity_places_view_new (UnityShell* shell);
 UnityPlacesView* unity_places_view_construct (GType object_type, UnityShell* shell);
-GType unity_places_place_file_model_get_type (void);
+GType unity_places_place_file_model_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceFileModel* unity_places_place_file_model_new (void);
 UnityPlacesPlaceFileModel* unity_places_place_file_model_construct (GType object_type);
 UnityShell* unity_places_view_get_shell (UnityPlacesView* self);
@@ -200,7 +200,7 @@ UnityPlacesPlaceHomeEntry* unity_places_place_home_entry_new (UnityShell* shell,
 UnityPlacesPlaceHomeEntry* unity_places_place_home_entry_construct (GType object_type, UnityShell* shell, UnityPlacesPlaceModel* model);
 UnityPlacesPlaceBar* unity_places_place_bar_new (UnityShell* shell, UnityPlacesPlaceModel* model);
 UnityPlacesPlaceBar* unity_places_place_bar_construct (GType object_type, UnityShell* shell, UnityPlacesPlaceModel* model);
-GType unity_places_place_entry_get_type (void);
+GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
 static void unity_places_view_on_entry_view_activated (UnityPlacesView* self, UnityPlacesPlaceEntry* entry, gint x);
 static void _unity_places_view_on_entry_view_activated_unity_places_place_bar_entry_view_activated (UnityPlacesPlaceBar* _sender, UnityPlacesPlaceEntry* view, gint x, gpointer self);
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_new (void);
@@ -218,7 +218,7 @@ GeeHashMap* unity_places_place_entry_get_entry_renderer_hints (UnityPlacesPlaceE
 void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearchBar* self, UnityPlacesPlaceEntry* entry, gint x);
 UnityPlacesDefaultRenderer* unity_places_default_renderer_new (void);
 UnityPlacesDefaultRenderer* unity_places_default_renderer_construct (GType object_type);
-GType unity_places_default_renderer_get_type (void);
+GType unity_places_default_renderer_get_type (void) G_GNUC_CONST;
 static void unity_places_view_set_shell (UnityPlacesView* self, UnityShell* value);
 UnityPlacesPlaceModel* unity_places_view_get_model (UnityPlacesView* self);
 void unity_places_view_set_model (UnityPlacesView* self, UnityPlacesPlaceModel* value);

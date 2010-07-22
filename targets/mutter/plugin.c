@@ -79,6 +79,16 @@ typedef struct _UnityPlugin UnityPlugin;
 typedef struct _UnityPluginClass UnityPluginClass;
 typedef struct _UnityPluginPrivate UnityPluginPrivate;
 
+#define UNITY_TYPE_EXPOSE_MANAGER (unity_expose_manager_get_type ())
+#define UNITY_EXPOSE_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_EXPOSE_MANAGER, UnityExposeManager))
+#define UNITY_EXPOSE_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_EXPOSE_MANAGER, UnityExposeManagerClass))
+#define UNITY_IS_EXPOSE_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_EXPOSE_MANAGER))
+#define UNITY_IS_EXPOSE_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_EXPOSE_MANAGER))
+#define UNITY_EXPOSE_MANAGER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_EXPOSE_MANAGER, UnityExposeManagerClass))
+
+typedef struct _UnityExposeManager UnityExposeManager;
+typedef struct _UnityExposeManagerClass UnityExposeManagerClass;
+
 #define UNITY_TYPE_WINDOW_MANAGEMENT (unity_window_management_get_type ())
 #define UNITY_WINDOW_MANAGEMENT(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_WINDOW_MANAGEMENT, UnityWindowManagement))
 #define UNITY_WINDOW_MANAGEMENT_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_WINDOW_MANAGEMENT, UnityWindowManagementClass))
@@ -98,16 +108,6 @@ typedef struct _UnityWindowManagementClass UnityWindowManagementClass;
 
 typedef struct _UnityMaximus UnityMaximus;
 typedef struct _UnityMaximusClass UnityMaximusClass;
-
-#define UNITY_TYPE_EXPOSE_MANAGER (unity_expose_manager_get_type ())
-#define UNITY_EXPOSE_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_EXPOSE_MANAGER, UnityExposeManager))
-#define UNITY_EXPOSE_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_EXPOSE_MANAGER, UnityExposeManagerClass))
-#define UNITY_IS_EXPOSE_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_EXPOSE_MANAGER))
-#define UNITY_IS_EXPOSE_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_EXPOSE_MANAGER))
-#define UNITY_EXPOSE_MANAGER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_EXPOSE_MANAGER, UnityExposeManagerClass))
-
-typedef struct _UnityExposeManager UnityExposeManager;
-typedef struct _UnityExposeManagerClass UnityExposeManagerClass;
 
 #define UNITY_TYPE_SPACES_MANAGER (unity_spaces_manager_get_type ())
 #define UNITY_SPACES_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_SPACES_MANAGER, UnitySpacesManager))
@@ -163,12 +163,12 @@ struct _UnityPluginClass {
 
 struct _UnityPluginPrivate {
 	MutterPlugin* _plugin;
+	UnityExposeManager* _expose_manager;
 	ClutterStage* stage;
 	UnityApplication* app;
 	UnityWindowManagement* wm;
 	UnityMaximus* maximus;
 	UnityTestingBackground* background;
-	UnityExposeManager* expose_manager;
 	UnitySpacesManager* spaces_manager;
 	UnityLauncherLauncher* launcher;
 	UnityPlacesController* places_controller;
@@ -196,15 +196,15 @@ static gpointer unity_actor_blur_parent_class = NULL;
 static gpointer unity_plugin_parent_class = NULL;
 static UnityShellIface* unity_plugin_unity_shell_parent_iface = NULL;
 
-GType unity_drag_dest_get_type (void);
+GType unity_drag_dest_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_DRAG_DEST_DUMMY_PROPERTY
 };
 UnityDragDest* unity_drag_dest_new (void);
 UnityDragDest* unity_drag_dest_construct (GType object_type);
 static GObject * unity_drag_dest_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
-GType unity_input_state_get_type (void);
-GType unity_actor_blur_get_type (void);
+GType unity_input_state_get_type (void) G_GNUC_CONST;
+GType unity_actor_blur_get_type (void) G_GNUC_CONST;
 #define UNITY_ACTOR_BLUR_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_ACTOR_BLUR, UnityActorBlurPrivate))
 enum  {
 	UNITY_ACTOR_BLUR_DUMMY_PROPERTY
@@ -213,31 +213,37 @@ UnityActorBlur* unity_actor_blur_new (ClutterActor* actor);
 UnityActorBlur* unity_actor_blur_construct (GType object_type, ClutterActor* actor);
 static GObject * unity_actor_blur_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_actor_blur_finalize (GObject* obj);
-GType unity_plugin_get_type (void);
-GType unity_window_management_get_type (void);
-GType unity_maximus_get_type (void);
-GType unity_expose_manager_get_type (void);
-GType unity_spaces_manager_get_type (void);
+GType unity_plugin_get_type (void) G_GNUC_CONST;
+GType unity_expose_manager_get_type (void) G_GNUC_CONST;
+GType unity_window_management_get_type (void) G_GNUC_CONST;
+GType unity_maximus_get_type (void) G_GNUC_CONST;
+GType unity_spaces_manager_get_type (void) G_GNUC_CONST;
 #define UNITY_PLUGIN_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_PLUGIN, UnityPluginPrivate))
 enum  {
 	UNITY_PLUGIN_DUMMY_PROPERTY,
 	UNITY_PLUGIN_PLUGIN,
+	UNITY_PLUGIN_EXPOSE_MANAGER,
 	UNITY_PLUGIN_MENUS_SWALLOW_EVENTS,
 	UNITY_PLUGIN_EXPOSE_SHOWING
 };
 #define UNITY_PLUGIN_PANEL_HEIGHT 24
 #define UNITY_PLUGIN_QUICKLAUNCHER_WIDTH 58
 MutterPlugin* unity_plugin_get_plugin (UnityPlugin* self);
-static void _lambda0_ (ClutterActor* a, UnityPlugin* self);
-static void __lambda0__clutter_container_actor_added (ClutterContainer* _sender, ClutterActor* actor, gpointer self);
 static void _lambda1_ (ClutterActor* a, UnityPlugin* self);
-static void __lambda1__clutter_container_actor_removed (ClutterContainer* _sender, ClutterActor* actor, gpointer self);
+static void __lambda1__clutter_container_actor_added (ClutterContainer* _sender, ClutterActor* actor, gpointer self);
+static void _lambda2_ (ClutterActor* a, UnityPlugin* self);
+static void __lambda2__clutter_container_actor_removed (ClutterContainer* _sender, ClutterActor* actor, gpointer self);
 UnitySpacesManager* unity_spaces_manager_new (UnityPlugin* plugin);
 UnitySpacesManager* unity_spaces_manager_construct (GType object_type, UnityPlugin* plugin);
 void unity_spaces_manager_set_padding (UnitySpacesManager* self, guint top, guint right, guint left, guint bottom);
+UnityLauncherScrollerChild* unity_spaces_manager_get_button (UnitySpacesManager* self);
+static void _lambda5_ (UnityPlugin* self);
+static void __lambda5__unity_launcher_scroller_model_order_changed (UnityLauncherScrollerModel* _sender, gpointer self);
 UnityExposeManager* unity_expose_manager_new (UnityPlugin* plugin, UnityLauncherLauncher* launcher);
 UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlugin* plugin, UnityLauncherLauncher* launcher);
+static void unity_plugin_set_expose_manager (UnityPlugin* self, UnityExposeManager* value);
 void unity_expose_manager_set_hovered_opacity (UnityExposeManager* self, guint8 value);
+UnityExposeManager* unity_plugin_get_expose_manager (UnityPlugin* self);
 void unity_expose_manager_set_unhovered_opacity (UnityExposeManager* self, guint8 value);
 void unity_expose_manager_set_darken (UnityExposeManager* self, guint8 value);
 void unity_expose_manager_set_right_buffer (UnityExposeManager* self, gint value);
@@ -247,8 +253,8 @@ void unity_expose_manager_set_top_buffer (UnityExposeManager* self, gint value);
 void unity_expose_manager_set_coverflow (UnityExposeManager* self, gboolean value);
 static void unity_plugin_relayout (UnityPlugin* self);
 static void _unity_plugin_relayout_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
-static gboolean _lambda4_ (UnityPlugin* self);
-static gboolean __lambda4__gsource_func (gpointer self);
+static gboolean _lambda6_ (UnityPlugin* self);
+static gboolean __lambda6__gsource_func (gpointer self);
 static gboolean unity_plugin_real_construct (UnityPlugin* self);
 static void unity_plugin_check_fullscreen_obstruction (UnityPlugin* self);
 static void unity_plugin_on_focus_window_fullscreen_changed (UnityPlugin* self);
@@ -266,18 +272,17 @@ static void unity_plugin_real_close_xids (UnityShell* base, GArray* xids);
 void unity_plugin_expose_windows (UnityPlugin* self, GSList* windows, gint left_buffer);
 static void _g_slist_free_g_object_unref (GSList* self);
 static void unity_plugin_real_expose_xids (UnityShell* base, GArray* xids);
-void unity_plugin_dexpose_windows (UnityPlugin* self);
+void unity_expose_manager_end_expose (UnityExposeManager* self);
 static void unity_plugin_real_stop_expose (UnityShell* base);
 static void unity_plugin_real_show_window (UnityShell* base, guint32 xid);
 static UnityShellMode unity_plugin_real_get_mode (UnityShell* base);
 static gint unity_plugin_real_get_indicators_width (UnityShell* base);
 void unity_expose_manager_set_left_buffer (UnityExposeManager* self, gint value);
 void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* windows);
-void unity_expose_manager_end_expose (UnityExposeManager* self);
+static void _lambda7_ (ClutterAnimation* an, UnityPlugin* self);
+static void __lambda7__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static void _lambda8_ (ClutterAnimation* an, UnityPlugin* self);
 static void __lambda8__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
-static void _lambda9_ (ClutterAnimation* an, UnityPlugin* self);
-static void __lambda9__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static void unity_plugin_real_hide_unity (UnityShell* base);
 static void unity_plugin_real_show_unity (UnityShell* base);
 static void unity_plugin_real_about_to_show_places (UnityShell* base);
@@ -450,25 +455,39 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static void _lambda0_ (ClutterActor* a, UnityPlugin* self) {
-	g_return_if_fail (a != NULL);
-	unity_shell_ensure_input_region ((UnityShell*) self);
-}
-
-
-static void __lambda0__clutter_container_actor_added (ClutterContainer* _sender, ClutterActor* actor, gpointer self) {
-	_lambda0_ (actor, self);
-}
-
-
 static void _lambda1_ (ClutterActor* a, UnityPlugin* self) {
 	g_return_if_fail (a != NULL);
 	unity_shell_ensure_input_region ((UnityShell*) self);
 }
 
 
-static void __lambda1__clutter_container_actor_removed (ClutterContainer* _sender, ClutterActor* actor, gpointer self) {
+static void __lambda1__clutter_container_actor_added (ClutterContainer* _sender, ClutterActor* actor, gpointer self) {
 	_lambda1_ (actor, self);
+}
+
+
+static void _lambda2_ (ClutterActor* a, UnityPlugin* self) {
+	g_return_if_fail (a != NULL);
+	unity_shell_ensure_input_region ((UnityShell*) self);
+}
+
+
+static void __lambda2__clutter_container_actor_removed (ClutterContainer* _sender, ClutterActor* actor, gpointer self) {
+	_lambda2_ (actor, self);
+}
+
+
+static void _lambda5_ (UnityPlugin* self) {
+	gint index;
+	index = unity_launcher_scroller_model_index_of (unity_launcher_launcher_get_model (self->priv->launcher), unity_spaces_manager_get_button (self->priv->spaces_manager));
+	if (index < unity_launcher_scroller_model_get_size (unity_launcher_launcher_get_model (self->priv->launcher))) {
+		unity_launcher_scroller_model_move (unity_launcher_launcher_get_model (self->priv->launcher), unity_spaces_manager_get_button (self->priv->spaces_manager), unity_launcher_scroller_model_get_size (unity_launcher_launcher_get_model (self->priv->launcher)) - 1);
+	}
+}
+
+
+static void __lambda5__unity_launcher_scroller_model_order_changed (UnityLauncherScrollerModel* _sender, gpointer self) {
+	_lambda5_ (self);
 }
 
 
@@ -477,7 +496,7 @@ static void _unity_plugin_relayout_g_object_notify (GObject* _sender, GParamSpec
 }
 
 
-static gboolean _lambda4_ (UnityPlugin* self) {
+static gboolean _lambda6_ (UnityPlugin* self) {
 	gboolean result = FALSE;
 	unity_timeline_logger_write_log (unity_timeline_logger_get_default (), boot_logging_filename);
 	result = FALSE;
@@ -485,9 +504,9 @@ static gboolean _lambda4_ (UnityPlugin* self) {
 }
 
 
-static gboolean __lambda4__gsource_func (gpointer self) {
+static gboolean __lambda6__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda4_ (self);
+	result = _lambda6_ (self);
 	return result;
 }
 
@@ -526,8 +545,8 @@ static gboolean unity_plugin_real_construct (UnityPlugin* self) {
 	START_FUNCTION ();
 	self->priv->fullscreen_requests = (_tmp0_ = gee_array_list_new (G_TYPE_OBJECT, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->priv->fullscreen_requests), _tmp0_);
 	self->priv->stage = (_tmp1_ = _g_object_ref0 (CLUTTER_STAGE (mutter_plugin_get_stage (unity_plugin_get_plugin (self)))), _g_object_unref0 (self->priv->stage), _tmp1_);
-	g_signal_connect_object ((ClutterContainer*) self->priv->stage, "actor-added", (GCallback) __lambda0__clutter_container_actor_added, self, 0);
-	g_signal_connect_object ((ClutterContainer*) self->priv->stage, "actor-removed", (GCallback) __lambda1__clutter_container_actor_removed, self, 0);
+	g_signal_connect_object ((ClutterContainer*) self->priv->stage, "actor-added", (GCallback) __lambda1__clutter_container_actor_added, self, 0);
+	g_signal_connect_object ((ClutterContainer*) self->priv->stage, "actor-removed", (GCallback) __lambda2__clutter_container_actor_removed, self, 0);
 	self->priv->drag_dest = (_tmp2_ = g_object_ref_sink (unity_drag_dest_new ()), _g_object_unref0 (self->priv->drag_dest), _tmp2_);
 	gtk_widget_show ((GtkWidget*) self->priv->drag_dest);
 	target_list = (_tmp10_ = (_tmp9_ = g_new0 (GtkTargetEntry, 6), _tmp9_[0] = (memset (&_tmp3_, 0, sizeof (GtkTargetEntry)), _tmp3_.target = "STRING", _tmp3_.flags = (guint) 0, _tmp3_.info = (guint) UNITY_DND_TARGETS_TARGET_STRING, _tmp3_), _tmp9_[1] = (memset (&_tmp4_, 0, sizeof (GtkTargetEntry)), _tmp4_.target = "text/plain", _tmp4_.flags = (guint) 0, _tmp4_.info = (guint) UNITY_DND_TARGETS_TARGET_STRING, _tmp4_), _tmp9_[2] = (memset (&_tmp5_, 0, sizeof (GtkTargetEntry)), _tmp5_.target = "text/uri-list", _tmp5_.flags = (guint) 0, _tmp5_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp5_), _tmp9_[3] = (memset (&_tmp6_, 0, sizeof (GtkTargetEntry)), _tmp6_.target = "x-url/http", _tmp6_.flags = (guint) 0, _tmp6_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp6_), _tmp9_[4] = (memset (&_tmp7_, 0, sizeof (GtkTargetEntry)), _tmp7_.target = "x-url/ftp", _tmp7_.flags = (guint) 0, _tmp7_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp7_), _tmp9_[5] = (memset (&_tmp8_, 0, sizeof (GtkTargetEntry)), _tmp8_.target = "_NETSCAPE_URL", _tmp8_.flags = (guint) 0, _tmp8_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp8_), _tmp9_), target_list_length1 = 6, _target_list_size_ = target_list_length1, _tmp10_);
@@ -541,14 +560,17 @@ static gboolean unity_plugin_real_construct (UnityPlugin* self) {
 	clutter_actor_set_opacity (_tmp13_ = unity_launcher_launcher_get_view (self->priv->launcher), (guint8) 0);
 	_g_object_unref0 (_tmp13_);
 	self->priv->spaces_manager = (_tmp14_ = unity_spaces_manager_new (self), _g_object_unref0 (self->priv->spaces_manager), _tmp14_);
-	unity_spaces_manager_set_padding (self->priv->spaces_manager, (guint) 50, (guint) 50, (guint) 125, (guint) 50);
-	self->priv->expose_manager = (_tmp15_ = unity_expose_manager_new (self, self->priv->launcher), _g_object_unref0 (self->priv->expose_manager), _tmp15_);
-	unity_expose_manager_set_hovered_opacity (self->priv->expose_manager, (guint8) 255);
-	unity_expose_manager_set_unhovered_opacity (self->priv->expose_manager, (guint8) 255);
-	unity_expose_manager_set_darken (self->priv->expose_manager, (guint8) 25);
-	unity_expose_manager_set_right_buffer (self->priv->expose_manager, 10);
-	unity_expose_manager_set_top_buffer (self->priv->expose_manager, (unity_expose_manager_set_bottom_buffer (self->priv->expose_manager, 20), unity_expose_manager_get_bottom_buffer (self->priv->expose_manager)));
-	unity_expose_manager_set_coverflow (self->priv->expose_manager, FALSE);
+	unity_spaces_manager_set_padding (self->priv->spaces_manager, (guint) 50, (guint) 50, (guint) (unity_shell_get_launcher_width_foobar ((UnityShell*) self) + 50), (guint) 50);
+	unity_launcher_scroller_model_add (unity_launcher_launcher_get_model (self->priv->launcher), unity_spaces_manager_get_button (self->priv->spaces_manager));
+	g_signal_connect_object (unity_launcher_launcher_get_model (self->priv->launcher), "order-changed", (GCallback) __lambda5__unity_launcher_scroller_model_order_changed, self, 0);
+	unity_plugin_set_expose_manager (self, _tmp15_ = unity_expose_manager_new (self, self->priv->launcher));
+	_g_object_unref0 (_tmp15_);
+	unity_expose_manager_set_hovered_opacity (self->priv->_expose_manager, (guint8) 255);
+	unity_expose_manager_set_unhovered_opacity (self->priv->_expose_manager, (guint8) 255);
+	unity_expose_manager_set_darken (self->priv->_expose_manager, (guint8) 25);
+	unity_expose_manager_set_right_buffer (self->priv->_expose_manager, 10);
+	unity_expose_manager_set_top_buffer (self->priv->_expose_manager, (unity_expose_manager_set_bottom_buffer (self->priv->_expose_manager, 20), unity_expose_manager_get_bottom_buffer (self->priv->_expose_manager)));
+	unity_expose_manager_set_coverflow (self->priv->_expose_manager, FALSE);
 	clutter_container_add_actor ((ClutterContainer*) window_group, _tmp16_ = unity_launcher_launcher_get_view (self->priv->launcher));
 	_g_object_unref0 (_tmp16_);
 	clutter_container_raise_child ((ClutterContainer*) window_group, _tmp17_ = unity_launcher_launcher_get_view (self->priv->launcher), mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self)));
@@ -574,12 +596,12 @@ static gboolean unity_plugin_real_construct (UnityPlugin* self) {
 	unity_plugin_relayout (self);
 	END_FUNCTION ();
 	if (boot_logging_filename != NULL) {
-		g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 5, __lambda4__gsource_func, g_object_ref (self), g_object_unref);
+		g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 5, __lambda6__gsource_func, g_object_ref (self), g_object_unref);
 	}
 	unity_shell_ensure_input_region ((UnityShell*) self);
 	result = FALSE;
-	target_list = (g_free (target_list), NULL);
 	_g_object_unref0 (window_group);
+	target_list = (g_free (target_list), NULL);
 	return result;
 }
 
@@ -605,7 +627,6 @@ static void unity_plugin_on_focus_window_changed (UnityPlugin* self) {
 
 static void unity_plugin_on_focus_window_fullscreen_changed (UnityPlugin* self) {
 	g_return_if_fail (self != NULL);
-	g_warning ("plugin.vala:311: FOCUS WINDOW FULLSCREEN CHANGED");
 	unity_plugin_check_fullscreen_obstruction (self);
 }
 
@@ -913,7 +934,7 @@ static void unity_plugin_real_expose_xids (UnityShell* base, GArray* xids) {
 static void unity_plugin_real_stop_expose (UnityShell* base) {
 	UnityPlugin * self;
 	self = (UnityPlugin*) base;
-	unity_plugin_dexpose_windows (self);
+	unity_expose_manager_end_expose (self->priv->_expose_manager);
 }
 
 
@@ -987,38 +1008,32 @@ static gint unity_plugin_real_get_indicators_width (UnityShell* base) {
 
 void unity_plugin_expose_windows (UnityPlugin* self, GSList* windows, gint left_buffer) {
 	g_return_if_fail (self != NULL);
-	unity_expose_manager_set_left_buffer (self->priv->expose_manager, left_buffer);
-	unity_expose_manager_start_expose (self->priv->expose_manager, windows);
+	unity_expose_manager_set_left_buffer (self->priv->_expose_manager, left_buffer);
+	unity_expose_manager_start_expose (self->priv->_expose_manager, windows);
 }
 
 
-void unity_plugin_dexpose_windows (UnityPlugin* self) {
-	g_return_if_fail (self != NULL);
-	unity_expose_manager_end_expose (self->priv->expose_manager);
-}
-
-
-static void _lambda8_ (ClutterAnimation* an, UnityPlugin* self) {
+static void _lambda7_ (ClutterAnimation* an, UnityPlugin* self) {
 	GObject* _tmp0_;
 	g_return_if_fail (an != NULL);
 	clutter_actor_destroy ((_tmp0_ = clutter_animation_get_object (an), CLUTTER_IS_ACTOR (_tmp0_) ? ((ClutterActor*) _tmp0_) : NULL));
 }
 
 
-static void __lambda8__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	_lambda8_ (_sender, self);
+static void __lambda7__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+	_lambda7_ (_sender, self);
 }
 
 
-static void _lambda9_ (ClutterAnimation* an, UnityPlugin* self) {
+static void _lambda8_ (ClutterAnimation* an, UnityPlugin* self) {
 	GObject* _tmp0_;
 	g_return_if_fail (an != NULL);
 	clutter_actor_hide ((_tmp0_ = clutter_animation_get_object (an), CLUTTER_IS_ACTOR (_tmp0_) ? ((ClutterActor*) _tmp0_) : NULL));
 }
 
 
-static void __lambda9__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	_lambda9_ (_sender, self);
+static void __lambda8__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+	_lambda8_ (_sender, self);
 }
 
 
@@ -1032,10 +1047,10 @@ static void unity_plugin_real_hide_unity (UnityShell* base) {
 	}
 	self->priv->places_showing = FALSE;
 	anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->dark_box, (gulong) CLUTTER_EASE_IN_QUAD, (guint) 100, "opacity", 0, NULL));
-	g_signal_connect_object (anim, "completed", (GCallback) __lambda8__clutter_animation_completed, self, 0);
+	g_signal_connect_object (anim, "completed", (GCallback) __lambda7__clutter_animation_completed, self, 0);
 	clutter_actor_animate (mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self)), (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 100, "opacity", 255, NULL);
 	anim = (_tmp0_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->places, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 100, "opacity", 0, NULL)), _g_object_unref0 (anim), _tmp0_);
-	g_signal_connect_object (anim, "completed", (GCallback) __lambda9__clutter_animation_completed, self, 0);
+	g_signal_connect_object (anim, "completed", (GCallback) __lambda8__clutter_animation_completed, self, 0);
 	unity_panel_view_set_indicator_mode (self->priv->panel, FALSE);
 	unity_shell_ensure_input_region ((UnityShell*) self);
 	while (TRUE) {
@@ -1239,6 +1254,22 @@ void unity_plugin_set_plugin (UnityPlugin* self, MutterPlugin* value) {
 }
 
 
+UnityExposeManager* unity_plugin_get_expose_manager (UnityPlugin* self) {
+	UnityExposeManager* result;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = self->priv->_expose_manager;
+	return result;
+}
+
+
+static void unity_plugin_set_expose_manager (UnityPlugin* self, UnityExposeManager* value) {
+	UnityExposeManager* _tmp0_;
+	g_return_if_fail (self != NULL);
+	self->priv->_expose_manager = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_expose_manager), _tmp0_);
+	g_object_notify ((GObject *) self, "expose-manager");
+}
+
+
 static gboolean unity_plugin_real_get_menus_swallow_events (UnityShell* base) {
 	gboolean result;
 	UnityPlugin* self;
@@ -1251,7 +1282,7 @@ static gboolean unity_plugin_real_get_menus_swallow_events (UnityShell* base) {
 gboolean unity_plugin_get_expose_showing (UnityPlugin* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
-	result = unity_expose_manager_get_expose_showing (self->priv->expose_manager);
+	result = unity_expose_manager_get_expose_showing (self->priv->_expose_manager);
 	return result;
 }
 
@@ -1340,7 +1371,7 @@ static GObject * unity_plugin_constructor (GType type, guint n_construct_propert
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("plugin.vala:194: %s", e->message);
+				g_warning ("plugin.vala:195: %s", e->message);
 				_g_error_free0 (e);
 			}
 		}
@@ -1367,6 +1398,7 @@ static void unity_plugin_class_init (UnityPluginClass * klass) {
 	G_OBJECT_CLASS (klass)->constructor = unity_plugin_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_plugin_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLUGIN_PLUGIN, g_param_spec_object ("plugin", "plugin", "plugin", MUTTER_TYPE_PLUGIN, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLUGIN_EXPOSE_MANAGER, g_param_spec_object ("expose-manager", "expose-manager", "expose-manager", UNITY_TYPE_EXPOSE_MANAGER, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLUGIN_MENUS_SWALLOW_EVENTS, "menus-swallow-events");
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLUGIN_EXPOSE_SHOWING, g_param_spec_boolean ("expose-showing", "expose-showing", "expose-showing", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 	g_signal_new ("window_minimized", UNITY_TYPE_PLUGIN, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2, UNITY_TYPE_PLUGIN, MUTTER_TYPE_WINDOW);
@@ -1416,12 +1448,12 @@ static void unity_plugin_finalize (GObject* obj) {
 	UnityPlugin * self;
 	self = UNITY_PLUGIN (obj);
 	_g_object_unref0 (self->priv->_plugin);
+	_g_object_unref0 (self->priv->_expose_manager);
 	_g_object_unref0 (self->priv->stage);
 	_g_object_unref0 (self->priv->app);
 	_g_object_unref0 (self->priv->wm);
 	_g_object_unref0 (self->priv->maximus);
 	_g_object_unref0 (self->priv->background);
-	_g_object_unref0 (self->priv->expose_manager);
 	_g_object_unref0 (self->priv->spaces_manager);
 	_g_object_unref0 (self->priv->launcher);
 	_g_object_unref0 (self->priv->places_controller);
@@ -1458,6 +1490,9 @@ static void unity_plugin_get_property (GObject * object, guint property_id, GVal
 		case UNITY_PLUGIN_PLUGIN:
 		g_value_set_object (value, unity_plugin_get_plugin (self));
 		break;
+		case UNITY_PLUGIN_EXPOSE_MANAGER:
+		g_value_set_object (value, unity_plugin_get_expose_manager (self));
+		break;
 		case UNITY_PLUGIN_MENUS_SWALLOW_EVENTS:
 		g_value_set_boolean (value, unity_shell_get_menus_swallow_events ((UnityShell*) self));
 		break;
@@ -1477,6 +1512,9 @@ static void unity_plugin_set_property (GObject * object, guint property_id, cons
 	switch (property_id) {
 		case UNITY_PLUGIN_PLUGIN:
 		unity_plugin_set_plugin (self, g_value_get_object (value));
+		break;
+		case UNITY_PLUGIN_EXPOSE_MANAGER:
+		unity_plugin_set_expose_manager (self, g_value_get_object (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

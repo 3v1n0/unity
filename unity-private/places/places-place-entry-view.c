@@ -111,8 +111,8 @@ struct _UnityPlacesPlaceEntryViewPrivate {
 
 static gpointer unity_places_place_entry_view_parent_class = NULL;
 
-GType unity_places_place_entry_view_get_type (void);
-GType unity_places_place_entry_get_type (void);
+GType unity_places_place_entry_view_get_type (void) G_GNUC_CONST;
+GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_ENTRY_VIEW_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE_ENTRY_VIEW, UnityPlacesPlaceEntryViewPrivate))
 enum  {
 	UNITY_PLACES_PLACE_ENTRY_VIEW_DUMMY_PROPERTY,

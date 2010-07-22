@@ -52,7 +52,7 @@ struct _UnityTestsUnitPlacesPlaceFileModelSuiteClass {
 
 static gpointer unity_tests_unit_places_place_file_model_suite_parent_class = NULL;
 
-GType unity_tests_unit_places_place_file_model_suite_get_type (void);
+GType unity_tests_unit_places_place_file_model_suite_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTS_UNIT_PLACES_PLACE_FILE_MODEL_SUITE_DUMMY_PROPERTY
 };

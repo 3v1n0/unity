@@ -56,7 +56,7 @@ static MenuManager* menu_manager__menu_manager_global;
 static MenuManager* menu_manager__menu_manager_global = NULL;
 static gpointer menu_manager_parent_class = NULL;
 
-GType menu_manager_get_type (void);
+GType menu_manager_get_type (void) G_GNUC_CONST;
 #define MENU_MANAGER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), TYPE_MENU_MANAGER, MenuManagerPrivate))
 enum  {
 	MENU_MANAGER_DUMMY_PROPERTY

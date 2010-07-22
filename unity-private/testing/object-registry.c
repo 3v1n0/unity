@@ -72,7 +72,7 @@ GParamSpec* unity_testing_param_spec_object_registry (const gchar* name, const g
 void unity_testing_value_set_object_registry (GValue* value, gpointer v_object);
 void unity_testing_value_take_object_registry (GValue* value, gpointer v_object);
 gpointer unity_testing_value_get_object_registry (const GValue* value);
-GType unity_testing_object_registry_get_type (void);
+GType unity_testing_object_registry_get_type (void) G_GNUC_CONST;
 #define UNITY_TESTING_OBJECT_REGISTRY_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TESTING_TYPE_OBJECT_REGISTRY, UnityTestingObjectRegistryPrivate))
 enum  {
 	UNITY_TESTING_OBJECT_REGISTRY_DUMMY_PROPERTY

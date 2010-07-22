@@ -87,13 +87,13 @@ extern GeeHashMap* unity_panel_indicators_indicators_file_model_indicator_order;
 GeeHashMap* unity_panel_indicators_indicators_file_model_indicator_order = NULL;
 static gpointer unity_panel_indicators_indicators_file_model_parent_class = NULL;
 
-GType unity_panel_indicators_indicators_model_get_type (void);
+GType unity_panel_indicators_indicators_model_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_PANEL_INDICATORS_INDICATORS_MODEL_DUMMY_PROPERTY
 };
 UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_model_new (void);
 UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_model_construct (GType object_type);
-GType unity_panel_indicators_indicators_file_model_get_type (void);
+GType unity_panel_indicators_indicators_file_model_get_type (void) G_GNUC_CONST;
 UnityPanelIndicatorsIndicatorsModel* unity_panel_indicators_indicators_model_get_default (void);
 void unity_panel_indicators_indicators_model_set_default (UnityPanelIndicatorsIndicatorsModel* model);
 GeeArrayList* unity_panel_indicators_indicators_model_get_indicators (UnityPanelIndicatorsIndicatorsModel* self);
@@ -282,7 +282,7 @@ UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_
 		GFileInfo* file_info;
 		e = g_file_enumerate_children (dir, G_FILE_ATTRIBUTE_STANDARD_NAME, 0, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch4_g_error;
+			goto __catch7_g_error;
 		}
 		sos = gee_array_list_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, NULL);
 		file_info = NULL;
@@ -294,10 +294,10 @@ UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_
 			gboolean _tmp8_;
 			_tmp5_ = g_file_enumerator_next_file (e, NULL, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				_g_object_unref0 (e);
-				_g_object_unref0 (sos);
 				_g_object_unref0 (file_info);
-				goto __catch4_g_error;
+				_g_object_unref0 (sos);
+				_g_object_unref0 (e);
+				goto __catch7_g_error;
 			}
 			if (!((file_info = (_tmp6_ = _tmp5_, _g_object_unref0 (file_info), _tmp6_)) != NULL)) {
 				break;
@@ -329,12 +329,12 @@ UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_
 			}
 			_g_object_unref0 (_leaf_it);
 		}
-		_g_object_unref0 (e);
-		_g_object_unref0 (sos);
 		_g_object_unref0 (file_info);
+		_g_object_unref0 (sos);
+		_g_object_unref0 (e);
 	}
-	goto __finally4;
-	__catch4_g_error:
+	goto __finally7;
+	__catch7_g_error:
 	{
 		GError * _error_;
 		_error_ = _inner_error_;
@@ -344,17 +344,17 @@ UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_
 			_g_error_free0 (_error_);
 		}
 	}
-	__finally4:
+	__finally7:
 	if (_inner_error_ != NULL) {
-		_g_free0 (skip_list);
 		_g_object_unref0 (dir);
+		_g_free0 (skip_list);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return NULL;
 	}
 	END_FUNCTION ();
-	_g_free0 (skip_list);
 	_g_object_unref0 (dir);
+	_g_free0 (skip_list);
 	return self;
 }
 

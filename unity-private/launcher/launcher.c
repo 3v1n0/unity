@@ -50,6 +50,16 @@ typedef struct _UnityLauncherLauncher UnityLauncherLauncher;
 typedef struct _UnityLauncherLauncherClass UnityLauncherLauncherClass;
 typedef struct _UnityLauncherLauncherPrivate UnityLauncherLauncherPrivate;
 
+#define UNITY_LAUNCHER_TYPE_SCROLLER_MODEL (unity_launcher_scroller_model_get_type ())
+#define UNITY_LAUNCHER_SCROLLER_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL, UnityLauncherScrollerModel))
+#define UNITY_LAUNCHER_SCROLLER_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL, UnityLauncherScrollerModelClass))
+#define UNITY_LAUNCHER_IS_SCROLLER_MODEL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL))
+#define UNITY_LAUNCHER_IS_SCROLLER_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL))
+#define UNITY_LAUNCHER_SCROLLER_MODEL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL, UnityLauncherScrollerModelClass))
+
+typedef struct _UnityLauncherScrollerModel UnityLauncherScrollerModel;
+typedef struct _UnityLauncherScrollerModelClass UnityLauncherScrollerModelClass;
+
 #define UNITY_LAUNCHER_TYPE_SCROLLER_CONTROLLER (unity_launcher_scroller_controller_get_type ())
 #define UNITY_LAUNCHER_SCROLLER_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CONTROLLER, UnityLauncherScrollerController))
 #define UNITY_LAUNCHER_SCROLLER_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_CONTROLLER, UnityLauncherScrollerControllerClass))
@@ -69,16 +79,6 @@ typedef struct _UnityLauncherScrollerControllerClass UnityLauncherScrollerContro
 
 typedef struct _UnityLauncherScrollerView UnityLauncherScrollerView;
 typedef struct _UnityLauncherScrollerViewClass UnityLauncherScrollerViewClass;
-
-#define UNITY_LAUNCHER_TYPE_SCROLLER_MODEL (unity_launcher_scroller_model_get_type ())
-#define UNITY_LAUNCHER_SCROLLER_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL, UnityLauncherScrollerModel))
-#define UNITY_LAUNCHER_SCROLLER_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL, UnityLauncherScrollerModelClass))
-#define UNITY_LAUNCHER_IS_SCROLLER_MODEL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL))
-#define UNITY_LAUNCHER_IS_SCROLLER_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL))
-#define UNITY_LAUNCHER_SCROLLER_MODEL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL, UnityLauncherScrollerModelClass))
-
-typedef struct _UnityLauncherScrollerModel UnityLauncherScrollerModel;
-typedef struct _UnityLauncherScrollerModelClass UnityLauncherScrollerModelClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
 struct _UnityLauncherShortcutItemIface {
@@ -98,9 +98,9 @@ struct _UnityLauncherLauncherClass {
 
 struct _UnityLauncherLauncherPrivate {
 	UnityShell* _shell;
+	UnityLauncherScrollerModel* _model;
 	UnityLauncherScrollerController* controller;
 	UnityLauncherScrollerView* view;
-	UnityLauncherScrollerModel* model;
 };
 
 
@@ -109,17 +109,18 @@ static gpointer unity_launcher_launcher_parent_class = NULL;
 #define UNITY_LAUNCHER_SHORT_DELAY ((guint) 400)
 #define UNITY_LAUNCHER_MEDIUM_DELAY ((guint) 800)
 #define UNITY_LAUNCHER_LONG_DELAY ((guint) 1600)
-GType unity_launcher_shortcut_item_get_type (void);
+GType unity_launcher_shortcut_item_get_type (void) G_GNUC_CONST;
 char* unity_launcher_shortcut_item_get_name (UnityLauncherShortcutItem* self);
 void unity_launcher_shortcut_item_activated (UnityLauncherShortcutItem* self);
-GType unity_launcher_launcher_get_type (void);
-GType unity_launcher_scroller_controller_get_type (void);
-GType unity_launcher_scroller_view_get_type (void);
-GType unity_launcher_scroller_model_get_type (void);
+GType unity_launcher_launcher_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_model_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_controller_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_view_get_type (void) G_GNUC_CONST;
 #define UNITY_LAUNCHER_LAUNCHER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_LAUNCHER, UnityLauncherLauncherPrivate))
 enum  {
 	UNITY_LAUNCHER_LAUNCHER_DUMMY_PROPERTY,
-	UNITY_LAUNCHER_LAUNCHER_SHELL
+	UNITY_LAUNCHER_LAUNCHER_SHELL,
+	UNITY_LAUNCHER_LAUNCHER_MODEL
 };
 UnityLauncherLauncher* unity_launcher_launcher_new (UnityShell* shell);
 UnityLauncherLauncher* unity_launcher_launcher_construct (GType object_type, UnityShell* shell);
@@ -127,6 +128,8 @@ float unity_launcher_launcher_get_width (UnityLauncherLauncher* self);
 ClutterActor* unity_launcher_launcher_get_view (UnityLauncherLauncher* self);
 UnityShell* unity_launcher_launcher_get_shell (UnityLauncherLauncher* self);
 static void unity_launcher_launcher_set_shell (UnityLauncherLauncher* self, UnityShell* value);
+UnityLauncherScrollerModel* unity_launcher_launcher_get_model (UnityLauncherLauncher* self);
+static void unity_launcher_launcher_set_model (UnityLauncherLauncher* self, UnityLauncherScrollerModel* value);
 UnityLauncherScrollerModel* unity_launcher_scroller_model_new (void);
 UnityLauncherScrollerModel* unity_launcher_scroller_model_construct (GType object_type);
 UnityLauncherScrollerView* unity_launcher_scroller_view_new (UnityLauncherScrollerModel* _model);
@@ -222,6 +225,22 @@ static void unity_launcher_launcher_set_shell (UnityLauncherLauncher* self, Unit
 }
 
 
+UnityLauncherScrollerModel* unity_launcher_launcher_get_model (UnityLauncherLauncher* self) {
+	UnityLauncherScrollerModel* result;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = self->priv->_model;
+	return result;
+}
+
+
+static void unity_launcher_launcher_set_model (UnityLauncherLauncher* self, UnityLauncherScrollerModel* value) {
+	UnityLauncherScrollerModel* _tmp0_;
+	g_return_if_fail (self != NULL);
+	self->priv->_model = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_model), _tmp0_);
+	g_object_notify ((GObject *) self, "model");
+}
+
+
 static GObject * unity_launcher_launcher_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -233,9 +252,10 @@ static GObject * unity_launcher_launcher_constructor (GType type, guint n_constr
 		UnityLauncherScrollerModel* _tmp0_;
 		UnityLauncherScrollerView* _tmp1_;
 		UnityLauncherScrollerController* _tmp2_;
-		self->priv->model = (_tmp0_ = unity_launcher_scroller_model_new (), _g_object_unref0 (self->priv->model), _tmp0_);
-		self->priv->view = (_tmp1_ = g_object_ref_sink (unity_launcher_scroller_view_new (self->priv->model)), _g_object_unref0 (self->priv->view), _tmp1_);
-		self->priv->controller = (_tmp2_ = unity_launcher_scroller_controller_new (self->priv->model, self->priv->view), _g_object_unref0 (self->priv->controller), _tmp2_);
+		unity_launcher_launcher_set_model (self, _tmp0_ = unity_launcher_scroller_model_new ());
+		_g_object_unref0 (_tmp0_);
+		self->priv->view = (_tmp1_ = g_object_ref_sink (unity_launcher_scroller_view_new (self->priv->_model)), _g_object_unref0 (self->priv->view), _tmp1_);
+		self->priv->controller = (_tmp2_ = unity_launcher_scroller_controller_new (self->priv->_model, self->priv->view), _g_object_unref0 (self->priv->controller), _tmp2_);
 	}
 	return obj;
 }
@@ -249,6 +269,7 @@ static void unity_launcher_launcher_class_init (UnityLauncherLauncherClass * kla
 	G_OBJECT_CLASS (klass)->constructor = unity_launcher_launcher_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_launcher_launcher_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_LAUNCHER_SHELL, g_param_spec_object ("shell", "shell", "shell", UNITY_TYPE_SHELL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_LAUNCHER_MODEL, g_param_spec_object ("model", "model", "model", UNITY_LAUNCHER_TYPE_SCROLLER_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 }
 
 
@@ -261,9 +282,9 @@ static void unity_launcher_launcher_finalize (GObject* obj) {
 	UnityLauncherLauncher * self;
 	self = UNITY_LAUNCHER_LAUNCHER (obj);
 	_g_object_unref0 (self->priv->_shell);
+	_g_object_unref0 (self->priv->_model);
 	_g_object_unref0 (self->priv->controller);
 	_g_object_unref0 (self->priv->view);
-	_g_object_unref0 (self->priv->model);
 	G_OBJECT_CLASS (unity_launcher_launcher_parent_class)->finalize (obj);
 }
 
@@ -287,6 +308,9 @@ static void unity_launcher_launcher_get_property (GObject * object, guint proper
 		case UNITY_LAUNCHER_LAUNCHER_SHELL:
 		g_value_set_object (value, unity_launcher_launcher_get_shell (self));
 		break;
+		case UNITY_LAUNCHER_LAUNCHER_MODEL:
+		g_value_set_object (value, unity_launcher_launcher_get_model (self));
+		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
@@ -300,6 +324,9 @@ static void unity_launcher_launcher_set_property (GObject * object, guint proper
 	switch (property_id) {
 		case UNITY_LAUNCHER_LAUNCHER_SHELL:
 		unity_launcher_launcher_set_shell (self, g_value_get_object (value));
+		break;
+		case UNITY_LAUNCHER_LAUNCHER_MODEL:
+		unity_launcher_launcher_set_model (self, g_value_get_object (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

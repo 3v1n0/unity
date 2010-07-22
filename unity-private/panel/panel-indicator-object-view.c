@@ -72,8 +72,8 @@ struct _UnityPanelIndicatorsIndicatorObjectViewPrivate {
 
 static gpointer unity_panel_indicators_indicator_object_view_parent_class = NULL;
 
-GType unity_panel_indicators_indicator_object_view_get_type (void);
-GType unity_panel_indicators_indicator_object_entry_view_get_type (void);
+GType unity_panel_indicators_indicator_object_view_get_type (void) G_GNUC_CONST;
+GType unity_panel_indicators_indicator_object_entry_view_get_type (void) G_GNUC_CONST;
 #define UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_VIEW_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_VIEW, UnityPanelIndicatorsIndicatorObjectViewPrivate))
 enum  {
 	UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_VIEW_DUMMY_PROPERTY,

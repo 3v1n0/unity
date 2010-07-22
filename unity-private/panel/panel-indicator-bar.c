@@ -103,9 +103,9 @@ struct _UnityPanelIndicatorsIndicatorBarPrivate {
 
 static gpointer unity_panel_indicators_indicator_bar_parent_class = NULL;
 
-GType unity_panel_indicators_indicator_bar_get_type (void);
-GType unity_panel_indicators_indicator_object_view_get_type (void);
-GType unity_panel_indicator_background_get_type (void);
+GType unity_panel_indicators_indicator_bar_get_type (void) G_GNUC_CONST;
+GType unity_panel_indicators_indicator_object_view_get_type (void) G_GNUC_CONST;
+GType unity_panel_indicator_background_get_type (void) G_GNUC_CONST;
 #define UNITY_PANEL_INDICATORS_INDICATOR_BAR_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PANEL_INDICATORS_TYPE_INDICATOR_BAR, UnityPanelIndicatorsIndicatorBarPrivate))
 enum  {
 	UNITY_PANEL_INDICATORS_INDICATOR_BAR_DUMMY_PROPERTY
@@ -124,12 +124,12 @@ GParamSpec* unity_testing_param_spec_object_registry (const gchar* name, const g
 void unity_testing_value_set_object_registry (GValue* value, gpointer v_object);
 void unity_testing_value_take_object_registry (GValue* value, gpointer v_object);
 gpointer unity_testing_value_get_object_registry (const GValue* value);
-GType unity_testing_object_registry_get_type (void);
+GType unity_testing_object_registry_get_type (void) G_GNUC_CONST;
 UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void);
 void unity_testing_object_registry_register (UnityTestingObjectRegistry* self, const char* name, GObject* object);
 UnityPanelIndicatorBackground* unity_panel_indicator_background_new (void);
 UnityPanelIndicatorBackground* unity_panel_indicator_background_construct (GType object_type);
-GType unity_panel_indicators_indicators_model_get_type (void);
+GType unity_panel_indicators_indicators_model_get_type (void) G_GNUC_CONST;
 UnityPanelIndicatorsIndicatorsModel* unity_panel_indicators_indicators_model_get_default (void);
 GeeArrayList* unity_panel_indicators_indicators_model_get_indicators (UnityPanelIndicatorsIndicatorsModel* self);
 char* unity_panel_indicators_indicators_model_get_indicator_name (UnityPanelIndicatorsIndicatorsModel* self, IndicatorObject* o);
@@ -272,13 +272,13 @@ static GObject * unity_panel_indicators_indicator_bar_constructor (GType type, g
 					clutter_actor_show ((ClutterActor*) indicator_object_view);
 					_g_object_unref0 (indicator_object_view);
 				}
-				_g_object_unref0 (o);
 				_g_free0 (name);
+				_g_object_unref0 (o);
 			}
 			_g_object_unref0 (_o_it);
 		}
-		_g_object_unref0 (model);
 		_g_object_unref0 (indicators_list);
+		_g_object_unref0 (model);
 	}
 	return obj;
 }

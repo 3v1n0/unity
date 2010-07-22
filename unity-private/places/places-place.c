@@ -128,8 +128,8 @@ struct _UnityPlacesPlacePrivate {
 
 static gpointer unity_places_place_parent_class = NULL;
 
-GType unity_places_place_get_type (void);
-GType unity_places_place_entry_get_type (void);
+GType unity_places_place_get_type (void) G_GNUC_CONST;
+GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlacePrivate))
 enum  {
 	UNITY_PLACES_PLACE_DUMMY_PROPERTY,
@@ -156,7 +156,7 @@ static void unity_places_place_on_service_entry_removed (UnityPlacesPlace* self,
 static void _unity_places_place_on_service_entry_removed_dynamic_EntryRemoved4_ (DBusGProxy* _sender, const char* entry_path, gpointer self);
 void _dynamic_EntryRemoved5_connect (gpointer obj, const char * signal_name, GCallback handler, gpointer data);
 static GValueArray** _dynamic_get_entries4 (DBusGProxy* self, int* result_length1, GError** error);
-GType unity_places_place_entry_dbus_get_type (void);
+GType unity_places_place_entry_dbus_get_type (void) G_GNUC_CONST;
 const char* unity_places_place_entry_dbus_get_dbus_path (UnityPlacesPlaceEntryDbus* self);
 void unity_places_place_entry_dbus_update_info (UnityPlacesPlaceEntryDbus* self, GValueArray* value_array);
 void unity_places_place_entry_connect (UnityPlacesPlaceEntry* self);
@@ -224,23 +224,23 @@ UnityPlacesPlace* unity_places_place_new_from_keyfile (GKeyFile* file, const cha
 		UnityPlacesPlace* place;
 		dbus_name = g_key_file_get_string (file, UNITY_PLACES_PLACE_PLACE_GROUP, "DBusName", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch13_g_error;
+			goto __catch16_g_error;
 		}
 		dbus_path = g_key_file_get_string (file, UNITY_PLACES_PLACE_PLACE_GROUP, "DBusObjectPath", &_inner_error_);
 		if (_inner_error_ != NULL) {
 			_g_free0 (dbus_name);
-			goto __catch13_g_error;
+			goto __catch16_g_error;
 		}
 		place = unity_places_place_new (dbus_name, dbus_path);
 		unity_places_place_load_keyfile_entries (place, file);
 		result = place;
-		_g_free0 (dbus_name);
 		_g_free0 (dbus_path);
+		_g_free0 (dbus_name);
 		_g_free0 (errmsg);
 		return result;
 	}
-	goto __finally13;
-	__catch13_g_error:
+	goto __finally16;
+	__catch16_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -253,7 +253,7 @@ UnityPlacesPlace* unity_places_place_new_from_keyfile (GKeyFile* file, const cha
 			return result;
 		}
 	}
-	__finally13:
+	__finally16:
 	{
 		_g_free0 (errmsg);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -339,13 +339,13 @@ void unity_places_place_connect (UnityPlacesPlace* self) {
 		DBusGProxy* _tmp2_;
 		_tmp0_ = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch14_g_error;
+			goto __catch17_g_error;
 		}
 		self->priv->connection = (_tmp1_ = _tmp0_, _dbus_g_connection_unref0 (self->priv->connection), _tmp1_);
 		self->priv->service = (_tmp2_ = dbus_g_proxy_new_for_name (self->priv->connection, self->priv->_dbus_name, self->priv->_dbus_path, "com.canonical.Unity.Place"), _g_object_unref0 (self->priv->service), _tmp2_);
 	}
-	goto __finally14;
-	__catch14_g_error:
+	goto __finally17;
+	__catch17_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -358,7 +358,7 @@ void unity_places_place_connect (UnityPlacesPlace* self) {
 			return;
 		}
 	}
-	__finally14:
+	__finally17:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -409,8 +409,8 @@ void unity_places_place_connect (UnityPlacesPlace* self) {
 							unity_places_place_entry_connect ((UnityPlacesPlaceEntry*) entry);
 							existing = TRUE;
 						}
-						_g_object_unref0 (e);
 						_g_object_unref0 (entry);
+						_g_object_unref0 (e);
 					}
 					_g_object_unref0 (_e_it);
 				}
@@ -454,8 +454,8 @@ void unity_places_place_connect (UnityPlacesPlace* self) {
 		_g_object_unref0 (_entry_it);
 	}
 	unity_places_place_set_online (self, TRUE);
-	entries = (_vala_array_free (entries, entries_length1, (GDestroyNotify) g_value_array_free), NULL);
 	_g_object_unref0 (old);
+	entries = (_vala_array_free (entries, entries_length1, (GDestroyNotify) g_value_array_free), NULL);
 }
 
 
@@ -498,12 +498,12 @@ static void unity_places_place_on_service_entry_removed (UnityPlacesPlace* self,
 			if (_vala_strcmp0 (unity_places_place_entry_dbus_get_dbus_path (e), entry_path) == 0) {
 				UnityPlacesPlaceEntry* _tmp2_;
 				entry = (_tmp2_ = _g_object_ref0 ((UnityPlacesPlaceEntry*) e), _g_object_unref0 (entry), _tmp2_);
-				_g_object_unref0 (ent);
 				_g_object_unref0 (e);
+				_g_object_unref0 (ent);
 				break;
 			}
-			_g_object_unref0 (ent);
 			_g_object_unref0 (e);
+			_g_object_unref0 (ent);
 		}
 		_g_object_unref0 (_ent_it);
 	}
@@ -583,7 +583,7 @@ static UnityPlacesPlaceEntry* unity_places_place_load_entry_from_keyfile (UnityP
 		char* _tmp10_;
 		_tmp0_ = g_key_file_get_string (file, group, "DBusObjectPath", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch15_g_error;
+			goto __catch18_g_error;
 		}
 		path = (_tmp1_ = _tmp0_, _g_free0 (path), _tmp1_);
 		if (path == NULL) {
@@ -601,30 +601,30 @@ static UnityPlacesPlaceEntry* unity_places_place_load_entry_from_keyfile (UnityP
 			g_warning ("places-place.vala:247: %s", _tmp4_ = g_strconcat ("Cannot load entry '", string_to_string (group), "': Does not contain valid DBusObjectPath: ", string_to_string (path), NULL));
 			_g_free0 (_tmp4_);
 			result = NULL;
-			_g_free0 (path);
-			_g_free0 (name);
-			_g_free0 (icon);
 			_g_free0 (desc);
+			_g_free0 (icon);
+			_g_free0 (name);
+			_g_free0 (path);
 			return result;
 		}
 		_tmp5_ = g_key_file_get_string (file, group, "Name", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch15_g_error;
+			goto __catch18_g_error;
 		}
 		name = (_tmp6_ = _tmp5_, _g_free0 (name), _tmp6_);
 		_tmp7_ = g_key_file_get_string (file, group, "Icon", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch15_g_error;
+			goto __catch18_g_error;
 		}
 		icon = (_tmp8_ = _tmp7_, _g_free0 (icon), _tmp8_);
 		_tmp9_ = g_key_file_get_string (file, group, "Description", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch15_g_error;
+			goto __catch18_g_error;
 		}
 		desc = (_tmp10_ = _tmp9_, _g_free0 (desc), _tmp10_);
 	}
-	goto __finally15;
-	__catch15_g_error:
+	goto __finally18;
+	__catch18_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -635,19 +635,19 @@ static UnityPlacesPlaceEntry* unity_places_place_load_entry_from_keyfile (UnityP
 			_g_free0 (_tmp11_);
 			result = NULL;
 			_g_error_free0 (e);
-			_g_free0 (path);
-			_g_free0 (name);
-			_g_free0 (icon);
 			_g_free0 (desc);
+			_g_free0 (icon);
+			_g_free0 (name);
+			_g_free0 (path);
 			return result;
 		}
 	}
-	__finally15:
+	__finally18:
 	if (_inner_error_ != NULL) {
-		_g_free0 (path);
-		_g_free0 (name);
-		_g_free0 (icon);
 		_g_free0 (desc);
+		_g_free0 (icon);
+		_g_free0 (name);
+		_g_free0 (path);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return NULL;
@@ -657,17 +657,17 @@ static UnityPlacesPlaceEntry* unity_places_place_load_entry_from_keyfile (UnityP
 		gboolean _tmp13_;
 		_tmp12_ = g_key_file_get_boolean (file, group, "ShowGlobal", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch16_g_error;
+			goto __catch19_g_error;
 		}
 		show_global = _tmp12_;
 		_tmp13_ = g_key_file_get_boolean (file, group, "ShowEntry", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch16_g_error;
+			goto __catch19_g_error;
 		}
 		show_entry = _tmp13_;
 	}
-	goto __finally16;
-	__catch16_g_error:
+	goto __finally19;
+	__catch19_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -678,21 +678,21 @@ static UnityPlacesPlaceEntry* unity_places_place_load_entry_from_keyfile (UnityP
 			_g_error_free0 (e);
 		}
 	}
-	__finally16:
+	__finally19:
 	if (_inner_error_ != NULL) {
-		_g_free0 (path);
-		_g_free0 (name);
-		_g_free0 (icon);
 		_g_free0 (desc);
+		_g_free0 (icon);
+		_g_free0 (name);
+		_g_free0 (path);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return NULL;
 	}
 	result = (UnityPlacesPlaceEntry*) unity_places_place_entry_dbus_new_with_info (self->priv->_dbus_name, path, name, icon, desc, show_global, show_entry);
-	_g_free0 (path);
-	_g_free0 (name);
-	_g_free0 (icon);
 	_g_free0 (desc);
+	_g_free0 (icon);
+	_g_free0 (name);
+	_g_free0 (path);
 	return result;
 }
 

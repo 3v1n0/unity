@@ -65,7 +65,7 @@ struct _UnityPlacesPlaceSearchEntryPrivate {
 
 static gpointer unity_places_place_search_entry_parent_class = NULL;
 
-GType unity_places_place_search_entry_get_type (void);
+GType unity_places_place_search_entry_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_SEARCH_ENTRY_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE_SEARCH_ENTRY, UnityPlacesPlaceSearchEntryPrivate))
 enum  {
 	UNITY_PLACES_PLACE_SEARCH_ENTRY_DUMMY_PROPERTY

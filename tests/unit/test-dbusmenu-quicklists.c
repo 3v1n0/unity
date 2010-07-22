@@ -47,7 +47,6 @@ typedef struct _UnityTestsUnitTestScrollerChildController UnityTestsUnitTestScro
 typedef struct _UnityTestsUnitTestScrollerChildControllerClass UnityTestsUnitTestScrollerChildControllerClass;
 typedef struct _UnityTestsUnitTestScrollerChildControllerPrivate UnityTestsUnitTestScrollerChildControllerPrivate;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
-#define _g_free0(var) (var = (g_free (var), NULL))
 
 #define UNITY_TESTS_UNIT_TYPE_QUICKLIST_SUITE (unity_tests_unit_quicklist_suite_get_type ())
 #define UNITY_TESTS_UNIT_QUICKLIST_SUITE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UNIT_TYPE_QUICKLIST_SUITE, UnityTestsUnitQuicklistSuite))
@@ -99,7 +98,7 @@ struct _UnityTestsUnitParamSpecQuicklistSuite {
 static gpointer unity_tests_unit_test_scroller_child_controller_parent_class = NULL;
 static gpointer unity_tests_unit_quicklist_suite_parent_class = NULL;
 
-GType unity_tests_unit_test_scroller_child_controller_get_type (void);
+GType unity_tests_unit_test_scroller_child_controller_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTS_UNIT_TEST_SCROLLER_CHILD_CONTROLLER_DUMMY_PROPERTY
 };
@@ -116,7 +115,7 @@ GParamSpec* unity_tests_unit_param_spec_quicklist_suite (const gchar* name, cons
 void unity_tests_unit_value_set_quicklist_suite (GValue* value, gpointer v_object);
 void unity_tests_unit_value_take_quicklist_suite (GValue* value, gpointer v_object);
 gpointer unity_tests_unit_value_get_quicklist_suite (const GValue* value);
-GType unity_tests_unit_quicklist_suite_get_type (void);
+GType unity_tests_unit_quicklist_suite_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTS_UNIT_QUICKLIST_SUITE_DUMMY_PROPERTY
 };
@@ -126,7 +125,7 @@ UnityTestsUnitQuicklistSuite* unity_tests_unit_quicklist_suite_new (void);
 UnityTestsUnitQuicklistSuite* unity_tests_unit_quicklist_suite_construct (GType object_type);
 UnityTestsUnitTestScrollerChild* unity_tests_unit_test_scroller_child_new (void);
 UnityTestsUnitTestScrollerChild* unity_tests_unit_test_scroller_child_construct (GType object_type);
-GType unity_tests_unit_test_scroller_child_get_type (void);
+GType unity_tests_unit_test_scroller_child_get_type (void) G_GNUC_CONST;
 static void unity_tests_unit_quicklist_suite_finalize (UnityTestsUnitQuicklistSuite* obj);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
@@ -196,8 +195,8 @@ static void unity_tests_unit_test_scroller_child_controller_real_get_menu_action
 	dbusmenu_menuitem_property_set_int (menuitem, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED);
 	dbusmenu_menuitem_child_append (root, menuitem);
 	callback (root, callback_target);
-	_g_object_unref0 (root);
 	_g_object_unref0 (menuitem);
+	_g_object_unref0 (root);
 }
 
 
@@ -226,8 +225,8 @@ static void unity_tests_unit_test_scroller_child_controller_real_get_menu_naviga
 	dbusmenu_menuitem_property_set_bool (menuitem, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
 	dbusmenu_menuitem_child_append (root, menuitem);
 	callback (root, callback_target);
-	_g_object_unref0 (root);
 	_g_object_unref0 (menuitem);
+	_g_object_unref0 (root);
 }
 
 
@@ -256,8 +255,7 @@ static GObject * unity_tests_unit_test_scroller_child_controller_constructor (GT
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_TESTS_UNIT_TEST_SCROLLER_CHILD_CONTROLLER (obj);
 	{
-		char* _tmp0_;
-		((UnityLauncherScrollerChildController*) self)->name = (_tmp0_ = g_strdup ("Testing"), _g_free0 (((UnityLauncherScrollerChildController*) self)->name), _tmp0_);
+		unity_launcher_scroller_child_controller_set_name ((UnityLauncherScrollerChildController*) self, "Testing");
 	}
 	return obj;
 }
@@ -323,10 +321,9 @@ static void unity_tests_unit_quicklist_suite_test_dbus_menu (UnityTestsUnitQuick
 	controller = unity_tests_unit_test_scroller_child_controller_new (child);
 	menu = (_tmp0_ = unity_launcher_scroller_child_controller_get_menu_controller ((UnityLauncherScrollerChildController*) controller), UNITY_LAUNCHER_IS_APPLICATION_QUICKLIST_CONTROLLER (_tmp0_) ? ((UnityLauncherApplicationQuicklistController*) _tmp0_) : NULL);
 	unity_launcher_quicklist_controller_set_state ((UnityLauncherQuicklistController*) menu, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_LABEL);
-	menuitems = ctk_menu_get_items (unity_launcher_quicklist_controller_get_view ((UnityLauncherQuicklistController*) menu));
+	menuitems = NULL;
 	g_assert (g_list_length (menuitems) == 1);
 	unity_launcher_quicklist_controller_set_state ((UnityLauncherQuicklistController*) menu, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU);
-	menuitems = ctk_menu_get_items (unity_launcher_quicklist_controller_get_view ((UnityLauncherQuicklistController*) menu));
 	g_assert (g_list_length (menuitems) >= 10);
 	g_assert (CTK_IS_CHECK_MENU_ITEM ((CtkMenuItem*) menuitems->data));
 	g_assert (ctk_check_menu_item_get_active ((_tmp1_ = (CtkMenuItem*) menuitems->data, CTK_IS_CHECK_MENU_ITEM (_tmp1_) ? ((CtkCheckMenuItem*) _tmp1_) : NULL)) == FALSE);
@@ -345,9 +342,9 @@ static void unity_tests_unit_quicklist_suite_test_dbus_menu (UnityTestsUnitQuick
 	g_assert (CTK_IS_RADIO_MENU_ITEM ((CtkMenuItem*) menuitems->data));
 	g_assert (ctk_check_menu_item_get_active ((CtkCheckMenuItem*) (_tmp5_ = (CtkMenuItem*) menuitems->data, CTK_IS_RADIO_MENU_ITEM (_tmp5_) ? ((CtkRadioMenuItem*) _tmp5_) : NULL)) == TRUE);
 	menuitems = menuitems->next;
-	_g_object_unref0 (child);
-	_g_object_unref0 (controller);
 	_g_object_unref0 (menu);
+	_g_object_unref0 (controller);
+	_g_object_unref0 (child);
 }
 
 

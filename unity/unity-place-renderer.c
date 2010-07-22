@@ -45,7 +45,7 @@ struct _UnityPlaceRendererIface {
 
 
 
-GType unity_place_renderer_get_type (void);
+GType unity_place_renderer_get_type (void) G_GNUC_CONST;
 void unity_place_renderer_set_models (UnityPlaceRenderer* self, DeeModel* groups, DeeModel* results, GeeHashMap* hints);
 
 

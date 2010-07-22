@@ -74,7 +74,7 @@ struct _UnityWebappPrismPrivate {
 
 static gpointer unity_webapp_prism_parent_class = NULL;
 
-GType unity_webapp_prism_get_type (void);
+GType unity_webapp_prism_get_type (void) G_GNUC_CONST;
 #define UNITY_WEBAPP_PRISM_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_WEBAPP_TYPE_PRISM, UnityWebappPrismPrivate))
 enum  {
 	UNITY_WEBAPP_PRISM_DUMMY_PROPERTY,
@@ -105,7 +105,7 @@ const char* unity_webapp_prism_get_url (UnityWebappPrism* self);
 static gboolean unity_webapp_prism_check_existance_of_app (UnityWebappPrism* self);
 const char* unity_webapp_prism_get_icon (UnityWebappPrism* self);
 static void unity_webapp_prism_build_webapp (UnityWebappPrism* self);
-GType unity_favorites_get_type (void);
+GType unity_favorites_get_type (void) G_GNUC_CONST;
 UnityFavorites* unity_favorites_get_default (void);
 static char* unity_webapp_prism_get_fav_uid (UnityWebappPrism* self);
 char* unity_webapp_urlify (const char* uri);
@@ -203,17 +203,17 @@ static void unity_webapp_prism_build_webapp (UnityWebappPrism* self) {
 		{
 			g_warning ("prism-handler.vala:114: %s", e->message);
 			_g_error_free0 (e);
-			_g_free0 (webapp_ini);
-			_g_free0 (webapp_desktop);
 			_g_object_unref0 (webapp_directory);
+			_g_free0 (webapp_desktop);
+			_g_free0 (webapp_ini);
 			return;
 		}
 	}
 	__finally3:
 	if (_inner_error_ != NULL) {
-		_g_free0 (webapp_ini);
-		_g_free0 (webapp_desktop);
 		_g_object_unref0 (webapp_directory);
+		_g_free0 (webapp_desktop);
+		_g_free0 (webapp_ini);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return;
@@ -229,12 +229,12 @@ static void unity_webapp_prism_build_webapp (UnityWebappPrism* self) {
 		data_stream = g_data_output_stream_new ((GOutputStream*) file_stream);
 		g_data_output_stream_put_string (data_stream, webapp_ini, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			_g_object_unref0 (file_stream);
 			_g_object_unref0 (data_stream);
+			_g_object_unref0 (file_stream);
 			goto __catch4_g_error;
 		}
-		_g_object_unref0 (file_stream);
 		_g_object_unref0 (data_stream);
+		_g_object_unref0 (file_stream);
 	}
 	goto __finally4;
 	__catch4_g_error:
@@ -245,19 +245,19 @@ static void unity_webapp_prism_build_webapp (UnityWebappPrism* self) {
 		{
 			g_warning ("prism-handler.vala:127: %s", e->message);
 			_g_error_free0 (e);
-			_g_free0 (webapp_ini);
-			_g_free0 (webapp_desktop);
-			_g_object_unref0 (webapp_directory);
 			_g_object_unref0 (inifile);
+			_g_object_unref0 (webapp_directory);
+			_g_free0 (webapp_desktop);
+			_g_free0 (webapp_ini);
 			return;
 		}
 	}
 	__finally4:
 	if (_inner_error_ != NULL) {
-		_g_free0 (webapp_ini);
-		_g_free0 (webapp_desktop);
-		_g_object_unref0 (webapp_directory);
 		_g_object_unref0 (inifile);
+		_g_object_unref0 (webapp_directory);
+		_g_free0 (webapp_desktop);
+		_g_free0 (webapp_ini);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return;
@@ -273,12 +273,12 @@ static void unity_webapp_prism_build_webapp (UnityWebappPrism* self) {
 		data_stream = g_data_output_stream_new ((GOutputStream*) file_stream);
 		g_data_output_stream_put_string (data_stream, webapp_desktop, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			_g_object_unref0 (file_stream);
 			_g_object_unref0 (data_stream);
+			_g_object_unref0 (file_stream);
 			goto __catch5_g_error;
 		}
-		_g_object_unref0 (file_stream);
 		_g_object_unref0 (data_stream);
+		_g_object_unref0 (file_stream);
 	}
 	goto __finally5;
 	__catch5_g_error:
@@ -289,30 +289,30 @@ static void unity_webapp_prism_build_webapp (UnityWebappPrism* self) {
 		{
 			g_warning ("prism-handler.vala:140: could not write to %s/%s.desktop", self->priv->webapp_dir, self->name);
 			_g_error_free0 (e);
-			_g_free0 (webapp_ini);
-			_g_free0 (webapp_desktop);
-			_g_object_unref0 (webapp_directory);
-			_g_object_unref0 (inifile);
 			_g_object_unref0 (desktop_file);
+			_g_object_unref0 (inifile);
+			_g_object_unref0 (webapp_directory);
+			_g_free0 (webapp_desktop);
+			_g_free0 (webapp_ini);
 			return;
 		}
 	}
 	__finally5:
 	if (_inner_error_ != NULL) {
-		_g_free0 (webapp_ini);
-		_g_free0 (webapp_desktop);
-		_g_object_unref0 (webapp_directory);
-		_g_object_unref0 (inifile);
 		_g_object_unref0 (desktop_file);
+		_g_object_unref0 (inifile);
+		_g_object_unref0 (webapp_directory);
+		_g_free0 (webapp_desktop);
+		_g_free0 (webapp_ini);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return;
 	}
-	_g_free0 (webapp_ini);
-	_g_free0 (webapp_desktop);
-	_g_object_unref0 (webapp_directory);
-	_g_object_unref0 (inifile);
 	_g_object_unref0 (desktop_file);
+	_g_object_unref0 (inifile);
+	_g_object_unref0 (webapp_directory);
+	_g_free0 (webapp_desktop);
+	_g_free0 (webapp_ini);
 }
 
 
@@ -330,8 +330,8 @@ void unity_webapp_prism_add_to_favorites (UnityWebappPrism* self) {
 	uid = unity_webapp_prism_get_fav_uid (self);
 	if (_vala_strcmp0 (uid, "") != 0) {
 		g_warning ("prism-handler.vala:152: %s is already a favorite", self->name);
-		_g_object_unref0 (favorites);
 		_g_free0 (uid);
+		_g_object_unref0 (favorites);
 		return;
 	}
 	desktop_path = (_tmp1_ = g_strconcat (self->priv->webapp_dir, _tmp0_ = g_strdup_printf ("/%s.desktop", self->name), NULL), _g_free0 (_tmp0_), _tmp1_);
@@ -341,9 +341,9 @@ void unity_webapp_prism_add_to_favorites (UnityWebappPrism* self) {
 	unity_favorites_set_string (favorites, uid, "type", "application");
 	unity_favorites_set_string (favorites, uid, "desktop_file", desktop_path);
 	unity_favorites_add_favorite (favorites, uid);
-	_g_object_unref0 (favorites);
-	_g_free0 (uid);
 	_g_free0 (desktop_path);
+	_g_free0 (uid);
+	_g_object_unref0 (favorites);
 }
 
 
@@ -373,8 +373,8 @@ static char* unity_webapp_prism_get_fav_uid (UnityWebappPrism* self) {
 			uid = (char*) gee_iterator_get (_uid_it);
 			type = unity_favorites_get_string (favorites, uid, "type");
 			if (_vala_strcmp0 (type, "application") != 0) {
-				_g_free0 (uid);
 				_g_free0 (type);
+				_g_free0 (uid);
 				continue;
 			}
 			desktop_file = unity_favorites_get_string (favorites, uid, "desktop_file");
@@ -382,16 +382,16 @@ static char* unity_webapp_prism_get_fav_uid (UnityWebappPrism* self) {
 				char* _tmp2_;
 				myuid = (_tmp2_ = g_strdup (uid), _g_free0 (myuid), _tmp2_);
 			}
-			_g_free0 (uid);
-			_g_free0 (type);
 			_g_free0 (desktop_file);
+			_g_free0 (type);
+			_g_free0 (uid);
 		}
 		_g_object_unref0 (_uid_it);
 	}
 	result = myuid;
-	_g_free0 (my_desktop_path);
-	_g_object_unref0 (favorites);
 	_g_object_unref0 (favorite_list);
+	_g_object_unref0 (favorites);
+	_g_free0 (my_desktop_path);
 	return result;
 }
 

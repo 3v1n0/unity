@@ -64,6 +64,7 @@ typedef struct _UnityLauncherScrollerChildClass UnityLauncherScrollerChildClass;
 
 typedef struct _UnityLauncherScrollerModelIterator UnityLauncherScrollerModelIterator;
 typedef struct _UnityLauncherScrollerModelIteratorClass UnityLauncherScrollerModelIteratorClass;
+#define _g_free0(var) (var = (g_free (var), NULL))
 
 #define UNITY_TESTING_TYPE_OBJECT_REGISTRY (unity_testing_object_registry_get_type ())
 #define UNITY_TESTING_OBJECT_REGISTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTING_TYPE_OBJECT_REGISTRY, UnityTestingObjectRegistry))
@@ -115,8 +116,8 @@ struct _UnityLauncherScrollerModelParamSpecIterator {
 static gpointer unity_launcher_scroller_model_iterator_parent_class = NULL;
 static gpointer unity_launcher_scroller_model_parent_class = NULL;
 
-GType unity_launcher_scroller_model_get_type (void);
-GType unity_launcher_scroller_child_get_type (void);
+GType unity_launcher_scroller_model_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_child_get_type (void) G_GNUC_CONST;
 #define UNITY_LAUNCHER_SCROLLER_MODEL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_SCROLLER_MODEL, UnityLauncherScrollerModelPrivate))
 enum  {
 	UNITY_LAUNCHER_SCROLLER_MODEL_DUMMY_PROPERTY,
@@ -133,9 +134,10 @@ GParamSpec* unity_launcher_scroller_model_param_spec_iterator (const gchar* name
 void unity_launcher_scroller_model_value_set_iterator (GValue* value, gpointer v_object);
 void unity_launcher_scroller_model_value_take_iterator (GValue* value, gpointer v_object);
 gpointer unity_launcher_scroller_model_value_get_iterator (const GValue* value);
-GType unity_launcher_scroller_model_iterator_get_type (void);
+GType unity_launcher_scroller_model_iterator_get_type (void) G_GNUC_CONST;
 UnityLauncherScrollerModelIterator* unity_launcher_scroller_model_iterator (UnityLauncherScrollerModel* self);
 gboolean unity_launcher_scroller_model_contains (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
+char* unity_launcher_scroller_child_to_string (UnityLauncherScrollerChild* self);
 void unity_launcher_scroller_model_add (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
 void unity_launcher_scroller_model_remove (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
 void unity_launcher_scroller_model_insert (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child, gint i);
@@ -151,7 +153,7 @@ GParamSpec* unity_testing_param_spec_object_registry (const gchar* name, const g
 void unity_testing_value_set_object_registry (GValue* value, gpointer v_object);
 void unity_testing_value_take_object_registry (GValue* value, gpointer v_object);
 gpointer unity_testing_value_get_object_registry (const GValue* value);
-GType unity_testing_object_registry_get_type (void);
+GType unity_testing_object_registry_get_type (void) G_GNUC_CONST;
 UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void);
 void unity_testing_object_registry_register (UnityTestingObjectRegistry* self, const char* name, GObject* object);
 static GObject * unity_launcher_scroller_model_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -205,8 +207,11 @@ gboolean unity_launcher_scroller_model_contains (UnityLauncherScrollerModel* sel
 
 
 void unity_launcher_scroller_model_add (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child) {
+	char* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (child != NULL);
+	g_warning ("scroller-model.vala:97: Add Icon: %s", _tmp0_ = unity_launcher_scroller_child_to_string (child));
+	_g_free0 (_tmp0_);
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->children, child);
 	g_signal_emit_by_name (self, "child-added", child);
 	g_signal_emit_by_name (self, "order-changed");

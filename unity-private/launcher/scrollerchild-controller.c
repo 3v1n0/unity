@@ -31,12 +31,15 @@
 #include <libdbusmenu-glib/menuitem-proxy.h>
 #include <libdbusmenu-glib/menuitem.h>
 #include <libdbusmenu-glib/server.h>
-#include <stdlib.h>
-#include <string.h>
 #include <float.h>
 #include <math.h>
 #include <clutk/clutk.h>
+#include <stdlib.h>
+#include <string.h>
 #include <clutter/clutter.h>
+#include <gtk/gtk.h>
+#include <gdk-pixbuf/gdk-pixdata.h>
+#include <glib/gstdio.h>
 
 
 #define UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER_MENU_STATE (unity_launcher_scroller_child_controller_menu_state_get_type ())
@@ -75,6 +78,8 @@ typedef struct _UnityLauncherScrollerChildClass UnityLauncherScrollerChildClass;
 #define _g_free0(var) (var = (g_free (var), NULL))
 
 #define UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER_STATE (unity_launcher_quicklist_controller_state_get_type ())
+#define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
+typedef struct _Block7Data Block7Data;
 typedef struct _UnityLauncherScrollerChildPrivate UnityLauncherScrollerChildPrivate;
 
 #define UNITY_LAUNCHER_TYPE_PIN_TYPE (unity_launcher_pin_type_get_type ())
@@ -90,7 +95,6 @@ typedef void (*UnityLauncherScrollerChildControllermenu_cb) (DbusmenuMenuitem* m
 struct _UnityLauncherScrollerChildController {
 	GObject parent_instance;
 	UnityLauncherScrollerChildControllerPrivate * priv;
-	char* name;
 	UnityLauncherScrollerChildControllerMenuState menu_state;
 	guint32 last_press_time;
 	gboolean button_down;
@@ -108,6 +112,9 @@ struct _UnityLauncherScrollerChildControllerClass {
 
 struct _UnityLauncherScrollerChildControllerPrivate {
 	UnityLauncherScrollerChild* _child;
+	char* _name;
+	gboolean _hide;
+	UnityThemeFilePath* theme_file_path;
 	UnityLauncherQuicklistController* _menu;
 };
 
@@ -116,6 +123,12 @@ typedef enum  {
 	UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU,
 	UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_CLOSED
 } UnityLauncherQuicklistControllerState;
+
+struct _Block7Data {
+	int _ref_count_;
+	UnityLauncherScrollerChildController * self;
+	char* icon_name;
+};
 
 typedef enum  {
 	UNITY_LAUNCHER_PIN_TYPE_UNPINNED,
@@ -133,21 +146,22 @@ struct _UnityLauncherScrollerChild {
 
 struct _UnityLauncherScrollerChildClass {
 	CtkActorClass parent_class;
-	void (*force_rotation_jump) (UnityLauncherScrollerChild* self, float degrees);
 };
 
 
 static gpointer unity_launcher_scroller_child_controller_parent_class = NULL;
 static UnityDragModelIface* unity_launcher_scroller_child_controller_unity_drag_model_parent_iface = NULL;
 
-GType unity_launcher_scroller_child_controller_menu_state_get_type (void);
-GType unity_launcher_scroller_child_controller_get_type (void);
-GType unity_launcher_quicklist_controller_get_type (void);
-GType unity_launcher_scroller_child_get_type (void);
+GType unity_launcher_scroller_child_controller_menu_state_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_child_controller_get_type (void) G_GNUC_CONST;
+GType unity_launcher_quicklist_controller_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_child_get_type (void) G_GNUC_CONST;
 #define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildControllerPrivate))
 enum  {
 	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_DUMMY_PROPERTY,
 	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CHILD,
+	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_NAME,
+	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_HIDE,
 	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU
 };
 UnityLauncherScrollerChildController* unity_launcher_scroller_child_controller_construct (GType object_type, UnityLauncherScrollerChild* child_);
@@ -163,7 +177,7 @@ static void unity_launcher_scroller_child_controller_ensure_menu_state (UnityLau
 static gboolean unity_launcher_scroller_child_controller_on_leave_event (UnityLauncherScrollerChildController* self, ClutterEvent* event);
 static gboolean unity_launcher_scroller_child_controller_on_press_event (UnityLauncherScrollerChildController* self, ClutterEvent* event);
 UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_get_menu (UnityLauncherScrollerChildController* self);
-GType unity_launcher_quicklist_controller_state_get_type (void);
+GType unity_launcher_quicklist_controller_state_get_type (void) G_GNUC_CONST;
 UnityLauncherQuicklistControllerState unity_launcher_quicklist_controller_get_state (UnityLauncherQuicklistController* self);
 void unity_launcher_quicklist_controller_set_state (UnityLauncherQuicklistController* self, UnityLauncherQuicklistControllerState value);
 static gboolean unity_launcher_scroller_child_controller_on_release_event (UnityLauncherScrollerChildController* self, ClutterEvent* event);
@@ -172,14 +186,28 @@ void unity_launcher_scroller_child_controller_set_menu (UnityLauncherScrollerChi
 gboolean unity_launcher_quicklist_controller_is_menu_open (void);
 gboolean unity_launcher_quicklist_controller_do_menus_match (UnityLauncherQuicklistController* menu);
 UnityLauncherQuicklistController* unity_launcher_quicklist_controller_get_current_menu (void);
-CtkMenu* unity_launcher_quicklist_controller_get_view (UnityLauncherQuicklistController* self);
+CtkMenuExpandable* unity_launcher_quicklist_controller_get_view (UnityLauncherQuicklistController* self);
 static void _unity_launcher_scroller_child_controller_ensure_menu_state_clutter_actor_destroy (ClutterActor* _sender, gpointer self);
 UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (UnityLauncherScrollerChildController* self);
+ClutterActor* unity_launcher_scroller_child_get_content (UnityLauncherScrollerChild* self);
 static ClutterActor* unity_launcher_scroller_child_controller_real_get_icon (UnityDragModel* base);
+const char* unity_launcher_scroller_child_controller_get_name (UnityLauncherScrollerChildController* self);
 static char* unity_launcher_scroller_child_controller_real_get_drag_data (UnityDragModel* base);
 static gboolean unity_launcher_scroller_child_controller_on_motion_event (UnityLauncherScrollerChildController* self, ClutterEvent* event);
+static gboolean unity_launcher_scroller_child_controller_try_load_from_file (UnityLauncherScrollerChildController* self, const char* filepath);
+void unity_launcher_scroller_child_set_icon (UnityLauncherScrollerChild* self, GdkPixbuf* value);
+static void _lambda14_ (UnityThemeFilePath* theme, const char* filepath, UnityLauncherScrollerChildController* self);
+static void __lambda14__unity_theme_file_path_found_icon_path (UnityThemeFilePath* _sender, const char* filepath, gpointer self);
+static void _lambda15_ (Block7Data* _data7_);
+static void __lambda15__unity_theme_file_path_failed (UnityThemeFilePath* _sender, gpointer self);
+static Block7Data* block7_data_ref (Block7Data* _data7_);
+static void block7_data_unref (Block7Data* _data7_);
+void unity_launcher_scroller_child_controller_load_icon_from_icon_name (UnityLauncherScrollerChildController* self, const char* icon_name);
 static void unity_launcher_scroller_child_controller_set_child (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChild* value);
-GType unity_launcher_pin_type_get_type (void);
+void unity_launcher_scroller_child_controller_set_name (UnityLauncherScrollerChildController* self, const char* value);
+gboolean unity_launcher_scroller_child_controller_get_hide (UnityLauncherScrollerChildController* self);
+void unity_launcher_scroller_child_controller_set_hide (UnityLauncherScrollerChildController* self, gboolean value);
+GType unity_launcher_pin_type_get_type (void) G_GNUC_CONST;
 static gboolean _unity_launcher_scroller_child_controller_on_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static gboolean _unity_launcher_scroller_child_controller_on_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static gboolean _unity_launcher_scroller_child_controller_on_enter_event_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
@@ -215,8 +243,7 @@ UnityLauncherScrollerChildController* unity_launcher_scroller_child_controller_c
 
 static void unity_launcher_scroller_child_controller_real_get_menu_actions (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target) {
 	g_return_if_fail (self != NULL);
-	g_critical ("Type `%s' does not implement abstract method `unity_launcher_scroller_child_controller_get_menu_actions'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
-	return;
+	callback (NULL, callback_target);
 }
 
 
@@ -227,8 +254,7 @@ void unity_launcher_scroller_child_controller_get_menu_actions (UnityLauncherScr
 
 static void unity_launcher_scroller_child_controller_real_get_menu_navigation (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target) {
 	g_return_if_fail (self != NULL);
-	g_critical ("Type `%s' does not implement abstract method `unity_launcher_scroller_child_controller_get_menu_navigation'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
-	return;
+	callback (NULL, callback_target);
 }
 
 
@@ -239,8 +265,6 @@ void unity_launcher_scroller_child_controller_get_menu_navigation (UnityLauncher
 
 static void unity_launcher_scroller_child_controller_real_activate (UnityLauncherScrollerChildController* self) {
 	g_return_if_fail (self != NULL);
-	g_critical ("Type `%s' does not implement abstract method `unity_launcher_scroller_child_controller_activate'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
-	return;
 }
 
 
@@ -250,9 +274,10 @@ void unity_launcher_scroller_child_controller_activate (UnityLauncherScrollerChi
 
 
 static UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_real_get_menu_controller (UnityLauncherScrollerChildController* self) {
+	UnityLauncherQuicklistController* result = NULL;
 	g_return_val_if_fail (self != NULL, NULL);
-	g_critical ("Type `%s' does not implement abstract method `unity_launcher_scroller_child_controller_get_menu_controller'", g_type_name (G_TYPE_FROM_INSTANCE (self)));
-	return NULL;
+	result = NULL;
+	return result;
 }
 
 
@@ -394,16 +419,11 @@ static void unity_launcher_scroller_child_controller_ensure_menu_state (UnityLau
 }
 
 
-static gpointer _g_object_ref0 (gpointer self) {
-	return self ? g_object_ref (self) : NULL;
-}
-
-
 static ClutterActor* unity_launcher_scroller_child_controller_real_get_icon (UnityDragModel* base) {
 	UnityLauncherScrollerChildController * self;
 	ClutterActor* result = NULL;
 	self = (UnityLauncherScrollerChildController*) base;
-	result = _g_object_ref0 ((ClutterActor*) self->priv->_child);
+	result = unity_launcher_scroller_child_get_content (self->priv->_child);
 	return result;
 }
 
@@ -412,8 +432,13 @@ static char* unity_launcher_scroller_child_controller_real_get_drag_data (UnityD
 	UnityLauncherScrollerChildController * self;
 	char* result = NULL;
 	self = (UnityLauncherScrollerChildController*) base;
-	result = g_strdup (self->name);
+	result = g_strdup (self->priv->_name);
 	return result;
+}
+
+
+static gpointer _g_object_ref0 (gpointer self) {
+	return self ? g_object_ref (self) : NULL;
 }
 
 
@@ -448,6 +473,200 @@ static gboolean unity_launcher_scroller_child_controller_on_motion_event (UnityL
 }
 
 
+static const char* string_to_string (const char* self) {
+	const char* result = NULL;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = self;
+	return result;
+}
+
+
+static void _lambda14_ (UnityThemeFilePath* theme, const char* filepath, UnityLauncherScrollerChildController* self) {
+	GError * _inner_error_;
+	g_return_if_fail (theme != NULL);
+	g_return_if_fail (filepath != NULL);
+	_inner_error_ = NULL;
+	{
+		GdkPixbuf* _tmp0_;
+		GdkPixbuf* _tmp1_;
+		_tmp0_ = gdk_pixbuf_new_from_file (filepath, &_inner_error_);
+		if (_inner_error_ != NULL) {
+			goto __catch26_g_error;
+		}
+		unity_launcher_scroller_child_set_icon (self->priv->_child, _tmp1_ = _tmp0_);
+		_g_object_unref0 (_tmp1_);
+	}
+	goto __finally26;
+	__catch26_g_error:
+	{
+		GError * e;
+		e = _inner_error_;
+		_inner_error_ = NULL;
+		{
+			char* _tmp2_;
+			g_warning ("scrollerchild-controller.vala:266: %s", _tmp2_ = g_strconcat ("Could not load from ", string_to_string (filepath), NULL));
+			_g_free0 (_tmp2_);
+			_g_error_free0 (e);
+		}
+	}
+	__finally26:
+	if (_inner_error_ != NULL) {
+		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+		g_clear_error (&_inner_error_);
+		return;
+	}
+}
+
+
+static void __lambda14__unity_theme_file_path_found_icon_path (UnityThemeFilePath* _sender, const char* filepath, gpointer self) {
+	_lambda14_ (_sender, filepath, self);
+}
+
+
+static void _lambda15_ (Block7Data* _data7_) {
+	UnityLauncherScrollerChildController * self;
+	GError * _inner_error_;
+	self = _data7_->self;
+	_inner_error_ = NULL;
+	{
+		GtkIconTheme* default_theme;
+		GdkPixbuf* _tmp0_;
+		default_theme = _g_object_ref0 (gtk_icon_theme_get_default ());
+		_tmp0_ = gtk_icon_theme_load_icon (default_theme, GTK_STOCK_MISSING_IMAGE, 48, 0, &_inner_error_);
+		if (_inner_error_ != NULL) {
+			_g_object_unref0 (default_theme);
+			goto __catch27_g_error;
+		}
+		unity_launcher_scroller_child_set_icon (self->priv->_child, _tmp0_);
+		_g_object_unref0 (default_theme);
+	}
+	goto __finally27;
+	__catch27_g_error:
+	{
+		GError * e;
+		e = _inner_error_;
+		_inner_error_ = NULL;
+		{
+			g_warning ("scrollerchild-controller.vala:278: Could not load any icon for %s", _data7_->icon_name);
+			_g_error_free0 (e);
+		}
+	}
+	__finally27:
+	if (_inner_error_ != NULL) {
+		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+		g_clear_error (&_inner_error_);
+		return;
+	}
+}
+
+
+static void __lambda15__unity_theme_file_path_failed (UnityThemeFilePath* _sender, gpointer self) {
+	_lambda15_ (self);
+}
+
+
+static Block7Data* block7_data_ref (Block7Data* _data7_) {
+	g_atomic_int_inc (&_data7_->_ref_count_);
+	return _data7_;
+}
+
+
+static void block7_data_unref (Block7Data* _data7_) {
+	if (g_atomic_int_dec_and_test (&_data7_->_ref_count_)) {
+		_g_object_unref0 (_data7_->self);
+		_g_free0 (_data7_->icon_name);
+		g_slice_free (Block7Data, _data7_);
+	}
+}
+
+
+void unity_launcher_scroller_child_controller_load_icon_from_icon_name (UnityLauncherScrollerChildController* self, const char* icon_name) {
+	Block7Data* _data7_;
+	char* _tmp0_;
+	gboolean _tmp1_;
+	UnityThemeFilePath* _tmp2_;
+	GtkIconTheme* theme;
+	GtkIconTheme* _tmp3_;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (icon_name != NULL);
+	_data7_ = g_slice_new0 (Block7Data);
+	_data7_->_ref_count_ = 1;
+	_data7_->self = g_object_ref (self);
+	_data7_->icon_name = g_strdup (icon_name);
+	if (unity_launcher_scroller_child_controller_try_load_from_file (self, _data7_->icon_name)) {
+		block7_data_unref (_data7_);
+		return;
+	}
+	if ((_tmp1_ = unity_launcher_scroller_child_controller_try_load_from_file (self, _tmp0_ = g_strconcat ("/usr/share/pixmaps/", _data7_->icon_name, NULL)), _g_free0 (_tmp0_), _tmp1_)) {
+		block7_data_unref (_data7_);
+		return;
+	}
+	self->priv->theme_file_path = (_tmp2_ = unity_theme_file_path_new (), _g_object_unref0 (self->priv->theme_file_path), _tmp2_);
+	theme = _g_object_ref0 (gtk_icon_theme_get_default ());
+	unity_theme_file_path_add_icon_theme (self->priv->theme_file_path, theme);
+	theme = (_tmp3_ = gtk_icon_theme_new (), _g_object_unref0 (theme), _tmp3_);
+	gtk_icon_theme_set_custom_theme (theme, "unity-icon-theme");
+	unity_theme_file_path_add_icon_theme (self->priv->theme_file_path, theme);
+	gtk_icon_theme_set_custom_theme (theme, "Web");
+	unity_theme_file_path_add_icon_theme (self->priv->theme_file_path, theme);
+	g_signal_connect_object (self->priv->theme_file_path, "found-icon-path", (GCallback) __lambda14__unity_theme_file_path_found_icon_path, self, 0);
+	g_signal_connect_data (self->priv->theme_file_path, "failed", (GCallback) __lambda15__unity_theme_file_path_failed, block7_data_ref (_data7_), (GClosureNotify) block7_data_unref, 0);
+	unity_theme_file_path_get_icon_filepath (self->priv->theme_file_path, _data7_->icon_name, NULL, NULL);
+	_g_object_unref0 (theme);
+	block7_data_unref (_data7_);
+}
+
+
+static gboolean unity_launcher_scroller_child_controller_try_load_from_file (UnityLauncherScrollerChildController* self, const char* filepath) {
+	gboolean result = FALSE;
+	GError * _inner_error_;
+	GdkPixbuf* pixbuf;
+	g_return_val_if_fail (self != NULL, FALSE);
+	g_return_val_if_fail (filepath != NULL, FALSE);
+	_inner_error_ = NULL;
+	pixbuf = NULL;
+	if (g_file_test (filepath, G_FILE_TEST_IS_REGULAR)) {
+		{
+			GdkPixbuf* _tmp0_;
+			GdkPixbuf* _tmp1_;
+			_tmp0_ = gdk_pixbuf_new_from_file_at_scale (filepath, 48, 48, TRUE, &_inner_error_);
+			if (_inner_error_ != NULL) {
+				goto __catch28_g_error;
+			}
+			pixbuf = (_tmp1_ = _tmp0_, _g_object_unref0 (pixbuf), _tmp1_);
+		}
+		goto __finally28;
+		__catch28_g_error:
+		{
+			GError * e;
+			e = _inner_error_;
+			_inner_error_ = NULL;
+			{
+				g_warning ("scrollerchild-controller.vala:296: Unable to load image from file '%s'" \
+": %s", filepath, e->message);
+				_g_error_free0 (e);
+			}
+		}
+		__finally28:
+		if (_inner_error_ != NULL) {
+			_g_object_unref0 (pixbuf);
+			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+			g_clear_error (&_inner_error_);
+			return FALSE;
+		}
+		if (GDK_IS_PIXBUF (pixbuf)) {
+			unity_launcher_scroller_child_set_icon (self->priv->_child, pixbuf);
+			result = TRUE;
+			_g_object_unref0 (pixbuf);
+			return result;
+		}
+	}
+	result = FALSE;
+	_g_object_unref0 (pixbuf);
+	return result;
+}
+
+
 UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (UnityLauncherScrollerChildController* self) {
 	UnityLauncherScrollerChild* result;
 	g_return_val_if_fail (self != NULL, NULL);
@@ -461,6 +680,37 @@ static void unity_launcher_scroller_child_controller_set_child (UnityLauncherScr
 	g_return_if_fail (self != NULL);
 	self->priv->_child = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_child), _tmp0_);
 	g_object_notify ((GObject *) self, "child");
+}
+
+
+const char* unity_launcher_scroller_child_controller_get_name (UnityLauncherScrollerChildController* self) {
+	const char* result;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = self->priv->_name;
+	return result;
+}
+
+
+void unity_launcher_scroller_child_controller_set_name (UnityLauncherScrollerChildController* self, const char* value) {
+	char* _tmp0_;
+	g_return_if_fail (self != NULL);
+	self->priv->_name = (_tmp0_ = g_strdup (value), _g_free0 (self->priv->_name), _tmp0_);
+	g_object_notify ((GObject *) self, "name");
+}
+
+
+gboolean unity_launcher_scroller_child_controller_get_hide (UnityLauncherScrollerChildController* self) {
+	gboolean result;
+	g_return_val_if_fail (self != NULL, FALSE);
+	result = self->priv->_hide;
+	return result;
+}
+
+
+void unity_launcher_scroller_child_controller_set_hide (UnityLauncherScrollerChildController* self, gboolean value) {
+	g_return_if_fail (self != NULL);
+	self->priv->_hide = value;
+	g_object_notify ((GObject *) self, "hide");
 }
 
 
@@ -523,9 +773,12 @@ static GObject * unity_launcher_scroller_child_controller_constructor (GType typ
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER (obj);
 	{
-		UnityLauncherScrollerChildController* _tmp0_;
+		UnityThemeFilePath* _tmp0_;
+		UnityLauncherScrollerChildController* _tmp1_;
 		ClutterAnimation* anim;
-		self->priv->_child->controller = (_tmp0_ = _g_object_ref0 (self), _g_object_unref0 (self->priv->_child->controller), _tmp0_);
+		self->priv->theme_file_path = (_tmp0_ = unity_theme_file_path_new (), _g_object_unref0 (self->priv->theme_file_path), _tmp0_);
+		unity_launcher_scroller_child_controller_set_name (self, "Bug Found, You Defeated Unity");
+		self->priv->_child->controller = (_tmp1_ = _g_object_ref0 (self), _g_object_unref0 (self->priv->_child->controller), _tmp1_);
 		g_signal_connect_object ((ClutterActor*) self->priv->_child, "button-press-event", (GCallback) _unity_launcher_scroller_child_controller_on_press_event_clutter_actor_button_press_event, self, 0);
 		g_signal_connect_object ((ClutterActor*) self->priv->_child, "button-release-event", (GCallback) _unity_launcher_scroller_child_controller_on_release_event_clutter_actor_button_release_event, self, 0);
 		g_signal_connect_object ((ClutterActor*) self->priv->_child, "enter-event", (GCallback) _unity_launcher_scroller_child_controller_on_enter_event_clutter_actor_enter_event, self, 0);
@@ -552,6 +805,8 @@ static void unity_launcher_scroller_child_controller_class_init (UnityLauncherSc
 	G_OBJECT_CLASS (klass)->constructor = unity_launcher_scroller_child_controller_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_launcher_scroller_child_controller_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CHILD, g_param_spec_object ("child", "child", "child", UNITY_LAUNCHER_TYPE_SCROLLER_CHILD, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_NAME, g_param_spec_string ("name", "name", "name", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_HIDE, g_param_spec_boolean ("hide", "hide", "hide", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU, g_param_spec_object ("menu", "menu", "menu", UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_signal_new ("request_removal", UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 	g_signal_new ("closed", UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
@@ -567,7 +822,6 @@ static void unity_launcher_scroller_child_controller_unity_drag_model_interface_
 
 static void unity_launcher_scroller_child_controller_instance_init (UnityLauncherScrollerChildController * self) {
 	self->priv = UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_PRIVATE (self);
-	self->name = g_strdup ("If you can read this, file a bug!!");
 	self->last_press_time = (guint32) 0;
 	self->button_down = FALSE;
 	self->click_start_pos = 0.0f;
@@ -579,7 +833,8 @@ static void unity_launcher_scroller_child_controller_finalize (GObject* obj) {
 	UnityLauncherScrollerChildController * self;
 	self = UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER (obj);
 	_g_object_unref0 (self->priv->_child);
-	_g_free0 (self->name);
+	_g_free0 (self->priv->_name);
+	_g_object_unref0 (self->priv->theme_file_path);
 	_g_object_unref0 (self->priv->_menu);
 	G_OBJECT_CLASS (unity_launcher_scroller_child_controller_parent_class)->finalize (obj);
 }
@@ -606,6 +861,12 @@ static void unity_launcher_scroller_child_controller_get_property (GObject * obj
 		case UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CHILD:
 		g_value_set_object (value, unity_launcher_scroller_child_controller_get_child (self));
 		break;
+		case UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_NAME:
+		g_value_set_string (value, unity_launcher_scroller_child_controller_get_name (self));
+		break;
+		case UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_HIDE:
+		g_value_set_boolean (value, unity_launcher_scroller_child_controller_get_hide (self));
+		break;
 		case UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU:
 		g_value_set_object (value, unity_launcher_scroller_child_controller_get_menu (self));
 		break;
@@ -622,6 +883,12 @@ static void unity_launcher_scroller_child_controller_set_property (GObject * obj
 	switch (property_id) {
 		case UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CHILD:
 		unity_launcher_scroller_child_controller_set_child (self, g_value_get_object (value));
+		break;
+		case UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_NAME:
+		unity_launcher_scroller_child_controller_set_name (self, g_value_get_string (value));
+		break;
+		case UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_HIDE:
+		unity_launcher_scroller_child_controller_set_hide (self, g_value_get_boolean (value));
 		break;
 		case UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU:
 		unity_launcher_scroller_child_controller_set_menu (self, g_value_get_object (value));

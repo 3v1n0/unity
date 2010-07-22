@@ -62,7 +62,7 @@ GParamSpec* unity_tests_unit_param_spec_places_suite (const gchar* name, const g
 void unity_tests_unit_value_set_places_suite (GValue* value, gpointer v_object);
 void unity_tests_unit_value_take_places_suite (GValue* value, gpointer v_object);
 gpointer unity_tests_unit_value_get_places_suite (const GValue* value);
-GType unity_tests_unit_places_suite_get_type (void);
+GType unity_tests_unit_places_suite_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTS_UNIT_PLACES_SUITE_DUMMY_PROPERTY
 };

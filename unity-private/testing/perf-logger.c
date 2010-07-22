@@ -105,14 +105,14 @@ GParamSpec* unity_param_spec_process_info (const gchar* name, const gchar* nick,
 void unity_value_set_process_info (GValue* value, gpointer v_object);
 void unity_value_take_process_info (GValue* value, gpointer v_object);
 gpointer unity_value_get_process_info (const GValue* value);
-GType unity_process_info_get_type (void);
+GType unity_process_info_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_PROCESS_INFO_DUMMY_PROPERTY
 };
 UnityProcessInfo* unity_process_info_new (const char* name);
 UnityProcessInfo* unity_process_info_construct (GType object_type, const char* name);
 static void unity_process_info_finalize (UnityProcessInfo* obj);
-GType unity_timeline_logger_get_type (void);
+GType unity_timeline_logger_get_type (void) G_GNUC_CONST;
 #define UNITY_TIMELINE_LOGGER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_TIMELINE_LOGGER, UnityTimelineLoggerPrivate))
 enum  {
 	UNITY_TIMELINE_LOGGER_DUMMY_PROPERTY
@@ -367,7 +367,7 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 			GFileOutputStream* _tmp1_;
 			_tmp0_ = g_file_create (log_file, G_FILE_CREATE_NONE, NULL, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch42_g_error;
+				goto __catch45_g_error;
 			}
 			file_stream = (_tmp1_ = _tmp0_, _g_object_unref0 (file_stream), _tmp1_);
 		} else {
@@ -375,7 +375,7 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 			GFileOutputStream* _tmp3_;
 			_tmp2_ = g_file_replace (log_file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch42_g_error;
+				goto __catch45_g_error;
 			}
 			file_stream = (_tmp3_ = _tmp2_, _g_object_unref0 (file_stream), _tmp3_);
 		}
@@ -395,26 +395,26 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 				outline = g_strdup_printf ("%s, %f, %f\n", info->name, info->start, info->end);
 				g_data_output_stream_put_string (output_stream, outline, NULL, &_inner_error_);
 				if (_inner_error_ != NULL) {
-					_unity_process_info_unref0 (info);
 					_g_free0 (outline);
+					_unity_process_info_unref0 (info);
 					_g_object_unref0 (_info_it);
 					_g_object_unref0 (output_stream);
-					goto __catch42_g_error;
+					goto __catch45_g_error;
 				}
-				_unity_process_info_unref0 (info);
 				_g_free0 (outline);
+				_unity_process_info_unref0 (info);
 			}
 			_g_object_unref0 (_info_it);
 		}
 		g_output_stream_close ((GOutputStream*) file_stream, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (output_stream);
-			goto __catch42_g_error;
+			goto __catch45_g_error;
 		}
 		_g_object_unref0 (output_stream);
 	}
-	goto __finally42;
-	__catch42_g_error:
+	goto __finally45;
+	__catch45_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -424,17 +424,17 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 			_g_error_free0 (e);
 		}
 	}
-	__finally42:
+	__finally45:
 	if (_inner_error_ != NULL) {
-		_g_object_unref0 (log_file);
 		_g_object_unref0 (file_stream);
+		_g_object_unref0 (log_file);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return;
 	}
 	g_debug ("perf-logger.vala:116: Done writing performance log file: %s", filename);
-	_g_object_unref0 (log_file);
 	_g_object_unref0 (file_stream);
+	_g_object_unref0 (log_file);
 }
 
 

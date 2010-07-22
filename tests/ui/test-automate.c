@@ -62,7 +62,7 @@ static gpointer unity_tests_ui_automation_basic_test_suite_parent_class = NULL;
 
 void on_animation_started (ClutterAnimation* anim);
 void on_animation_completed (ClutterAnimation* anim);
-GType unity_tests_ui_automation_basic_test_suite_get_type (void);
+GType unity_tests_ui_automation_basic_test_suite_get_type (void) G_GNUC_CONST;
 #define UNITY_TESTS_UI_AUTOMATION_BASIC_TEST_SUITE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TESTS_UI_TYPE_AUTOMATION_BASIC_TEST_SUITE, UnityTestsUIAutomationBasicTestSuitePrivate))
 enum  {
 	UNITY_TESTS_UI_AUTOMATION_BASIC_TEST_SUITE_DUMMY_PROPERTY

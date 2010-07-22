@@ -27,10 +27,10 @@
 #include <gee.h>
 #include <libbamf/libbamf.h>
 #include <unity.h>
-#include <stdlib.h>
-#include <string.h>
 #include <float.h>
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
 #include <glib/gstdio.h>
 #include <clutter/clutter.h>
 
@@ -96,16 +96,7 @@ typedef struct _UnityLauncherApplicationControllerClass UnityLauncherApplication
 
 typedef struct _UnityLauncherScrollerChild UnityLauncherScrollerChild;
 typedef struct _UnityLauncherScrollerChildClass UnityLauncherScrollerChildClass;
-
-#define UNITY_LAUNCHER_TYPE_LAUNCHER_CHILD (unity_launcher_launcher_child_get_type ())
-#define UNITY_LAUNCHER_LAUNCHER_CHILD(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_LAUNCHER_CHILD, UnityLauncherLauncherChild))
-#define UNITY_LAUNCHER_LAUNCHER_CHILD_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_LAUNCHER_CHILD, UnityLauncherLauncherChildClass))
-#define UNITY_LAUNCHER_IS_LAUNCHER_CHILD(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_LAUNCHER_CHILD))
-#define UNITY_LAUNCHER_IS_LAUNCHER_CHILD_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_LAUNCHER_CHILD))
-#define UNITY_LAUNCHER_LAUNCHER_CHILD_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_LAUNCHER_CHILD, UnityLauncherLauncherChildClass))
-
-typedef struct _UnityLauncherLauncherChild UnityLauncherLauncherChild;
-typedef struct _UnityLauncherLauncherChildClass UnityLauncherLauncherChildClass;
+typedef struct _Block8Data Block8Data;
 #define _g_free0(var) (var = (g_free (var), NULL))
 typedef struct _UnityLauncherScrollerChildPrivate UnityLauncherScrollerChildPrivate;
 
@@ -139,6 +130,14 @@ struct _UnityLauncherScrollerControllerPrivate {
 	GeeArrayList* childcontrollers;
 	BamfMatcher* matcher;
 	UnityFavorites* favorites;
+	float last_drag_x;
+	float last_drag_y;
+};
+
+struct _Block8Data {
+	int _ref_count_;
+	UnityLauncherScrollerController * self;
+	UnityLauncherScrollerChildController* controller;
 };
 
 typedef enum  {
@@ -157,7 +156,6 @@ struct _UnityLauncherScrollerChild {
 
 struct _UnityLauncherScrollerChildClass {
 	CtkActorClass parent_class;
-	void (*force_rotation_jump) (UnityLauncherScrollerChild* self, float degrees);
 };
 
 typedef enum  {
@@ -167,10 +165,10 @@ typedef enum  {
 
 static gpointer unity_launcher_scroller_controller_parent_class = NULL;
 
-GType unity_launcher_scroller_controller_get_type (void);
-GType unity_launcher_scroller_model_get_type (void);
-GType unity_launcher_scroller_view_get_type (void);
-GType unity_launcher_scroller_child_controller_get_type (void);
+GType unity_launcher_scroller_controller_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_model_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_view_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_child_controller_get_type (void) G_GNUC_CONST;
 #define UNITY_LAUNCHER_SCROLLER_CONTROLLER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_SCROLLER_CONTROLLER, UnityLauncherScrollerControllerPrivate))
 enum  {
 	UNITY_LAUNCHER_SCROLLER_CONTROLLER_DUMMY_PROPERTY,
@@ -180,25 +178,29 @@ enum  {
 #define UNITY_LAUNCHER_SCROLLER_CONTROLLER_DRAG_SAFE_ZONE ((guint) 300)
 UnityLauncherScrollerController* unity_launcher_scroller_controller_new (UnityLauncherScrollerModel* _model, UnityLauncherScrollerView* _view);
 UnityLauncherScrollerController* unity_launcher_scroller_controller_construct (GType object_type, UnityLauncherScrollerModel* _model, UnityLauncherScrollerView* _view);
-static void unity_launcher_scroller_controller_handle_bamf_view_opened (UnityLauncherScrollerController* self, GObject* object);
-static void _lambda36_ (BamfView* a, gboolean changed, UnityLauncherScrollerController* self);
-static void __lambda36__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self);
-GType unity_launcher_application_controller_get_type (void);
+GType unity_launcher_application_controller_get_type (void) G_GNUC_CONST;
 static UnityLauncherApplicationController* unity_launcher_scroller_controller_find_controller_by_desktop_file (UnityLauncherScrollerController* self, const char* desktop_file);
 void unity_launcher_application_controller_attach_application (UnityLauncherApplicationController* self, BamfApplication* application);
-UnityLauncherLauncherChild* unity_launcher_launcher_child_new (void);
-UnityLauncherLauncherChild* unity_launcher_launcher_child_construct (GType object_type);
-GType unity_launcher_scroller_child_get_type (void);
-GType unity_launcher_launcher_child_get_type (void);
+UnityLauncherScrollerChild* unity_launcher_scroller_child_new (void);
+UnityLauncherScrollerChild* unity_launcher_scroller_child_construct (GType object_type);
+GType unity_launcher_scroller_child_get_type (void) G_GNUC_CONST;
 UnityLauncherApplicationController* unity_launcher_application_controller_new (const char* desktop_file_, UnityLauncherScrollerChild* child_);
 UnityLauncherApplicationController* unity_launcher_application_controller_construct (GType object_type, const char* desktop_file_, UnityLauncherScrollerChild* child_);
 UnityLauncherScrollerModel* unity_launcher_scroller_controller_get_model (UnityLauncherScrollerController* self);
 void unity_launcher_scroller_model_add (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
 static void unity_launcher_scroller_controller_on_scroller_controller_closed (UnityLauncherScrollerController* self, UnityLauncherScrollerChildController* controller);
 static void _unity_launcher_scroller_controller_on_scroller_controller_closed_unity_launcher_scroller_child_controller_closed (UnityLauncherScrollerChildController* _sender, gpointer self);
+gboolean unity_launcher_scroller_child_controller_get_hide (UnityLauncherScrollerChildController* self);
+gboolean unity_launcher_scroller_model_contains (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
 UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (UnityLauncherScrollerChildController* self);
-GType unity_launcher_pin_type_get_type (void);
 void unity_launcher_scroller_model_remove (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
+static void _lambda37_ (Block8Data* _data8_);
+static void __lambda37__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static Block8Data* block8_data_ref (Block8Data* _data8_);
+static void block8_data_unref (Block8Data* _data8_);
+static void unity_launcher_scroller_controller_handle_bamf_view_opened (UnityLauncherScrollerController* self, GObject* object);
+gboolean unity_launcher_application_controller_is_sticky (UnityLauncherApplicationController* self);
+GType unity_launcher_pin_type_get_type (void) G_GNUC_CONST;
 GQuark unity_launcher_app_type_error_quark (void);
 float unity_launcher_application_controller_get_priority (UnityLauncherApplicationController* self, GError** error);
 static gint unity_launcher_scroller_controller_compare_prioritys (UnityLauncherScrollerChild* a, UnityLauncherScrollerChild* b);
@@ -214,8 +216,7 @@ static void unity_launcher_scroller_controller_on_unity_drag_drop (UnityLauncher
 static void _unity_launcher_scroller_controller_on_unity_drag_drop_unity_drag_controller_drag_drop (UnityDragController* _sender, UnityDragModel* model, float x, float y, gpointer self);
 UnityLauncherScrollerView* unity_launcher_scroller_controller_get_view (UnityLauncherScrollerController* self);
 static void unity_launcher_scroller_controller_on_unity_drag_start (UnityLauncherScrollerController* self, UnityDragModel* drag_model);
-gint unity_launcher_scroller_view_get_model_index_at_y_pos (UnityLauncherScrollerView* self, float y);
-gboolean unity_launcher_scroller_model_contains (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
+gint unity_launcher_scroller_view_get_model_index_at_y_pos_no_anim (UnityLauncherScrollerView* self, float y, gboolean return_minus_if_fail);
 void unity_launcher_scroller_model_move (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child, gint i);
 void unity_launcher_scroller_model_insert (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child, gint i);
 void unity_launcher_application_controller_set_sticky (UnityLauncherApplicationController* self, gboolean is_sticky);
@@ -227,7 +228,7 @@ GParamSpec* unity_launcher_scroller_model_param_spec_iterator (const gchar* name
 void unity_launcher_scroller_model_value_set_iterator (GValue* value, gpointer v_object);
 void unity_launcher_scroller_model_value_take_iterator (GValue* value, gpointer v_object);
 gpointer unity_launcher_scroller_model_value_get_iterator (const GValue* value);
-GType unity_launcher_scroller_model_iterator_get_type (void);
+GType unity_launcher_scroller_model_iterator_get_type (void) G_GNUC_CONST;
 UnityLauncherScrollerModelIterator* unity_launcher_scroller_model_iterator (UnityLauncherScrollerModel* self);
 gboolean unity_launcher_scroller_model_iterator_next (UnityLauncherScrollerModelIterator* self);
 UnityLauncherScrollerChild* unity_launcher_scroller_model_iterator_get (UnityLauncherScrollerModelIterator* self);
@@ -265,22 +266,52 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static void _lambda36_ (BamfView* a, gboolean changed, UnityLauncherScrollerController* self) {
-	g_return_if_fail (a != NULL);
-	if (changed) {
-		BamfView* _tmp0_;
-		unity_launcher_scroller_controller_handle_bamf_view_opened (self, (_tmp0_ = a, G_IS_OBJECT (_tmp0_) ? ((GObject*) _tmp0_) : NULL));
+static void _unity_launcher_scroller_controller_on_scroller_controller_closed_unity_launcher_scroller_child_controller_closed (UnityLauncherScrollerChildController* _sender, gpointer self) {
+	unity_launcher_scroller_controller_on_scroller_controller_closed (self, _sender);
+}
+
+
+static void _lambda37_ (Block8Data* _data8_) {
+	UnityLauncherScrollerController * self;
+	gboolean _tmp0_ = FALSE;
+	gboolean _tmp1_ = FALSE;
+	self = _data8_->self;
+	if (unity_launcher_scroller_child_controller_get_hide (_data8_->controller)) {
+		_tmp0_ = unity_launcher_scroller_model_contains (self->priv->_model, unity_launcher_scroller_child_controller_get_child (_data8_->controller));
+	} else {
+		_tmp0_ = FALSE;
+	}
+	if (_tmp0_) {
+		unity_launcher_scroller_model_remove (self->priv->_model, unity_launcher_scroller_child_controller_get_child (_data8_->controller));
+	}
+	if (!unity_launcher_scroller_child_controller_get_hide (_data8_->controller)) {
+		_tmp1_ = unity_launcher_scroller_model_contains (self->priv->_model, unity_launcher_scroller_child_controller_get_child (_data8_->controller)) == FALSE;
+	} else {
+		_tmp1_ = FALSE;
+	}
+	if (_tmp1_) {
+		unity_launcher_scroller_model_add (self->priv->_model, unity_launcher_scroller_child_controller_get_child (_data8_->controller));
 	}
 }
 
 
-static void __lambda36__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self) {
-	_lambda36_ (_sender, object, self);
+static void __lambda37__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda37_ (self);
 }
 
 
-static void _unity_launcher_scroller_controller_on_scroller_controller_closed_unity_launcher_scroller_child_controller_closed (UnityLauncherScrollerChildController* _sender, gpointer self) {
-	unity_launcher_scroller_controller_on_scroller_controller_closed (self, _sender);
+static Block8Data* block8_data_ref (Block8Data* _data8_) {
+	g_atomic_int_inc (&_data8_->_ref_count_);
+	return _data8_;
+}
+
+
+static void block8_data_unref (Block8Data* _data8_) {
+	if (g_atomic_int_dec_and_test (&_data8_->_ref_count_)) {
+		_g_object_unref0 (_data8_->self);
+		_g_object_unref0 (_data8_->controller);
+		g_slice_free (Block8Data, _data8_);
+	}
 }
 
 
@@ -289,44 +320,47 @@ static void unity_launcher_scroller_controller_handle_bamf_view_opened (UnityLau
 	g_return_if_fail (object != NULL);
 	g_return_if_fail (BAMF_IS_VIEW (object));
 	if (BAMF_IS_APPLICATION (object)) {
+		Block8Data* _data8_;
 		GObject* _tmp0_;
 		BamfApplication* app;
+		char* desktop_file;
+		gboolean _tmp1_ = FALSE;
+		_data8_ = g_slice_new0 (Block8Data);
+		_data8_->_ref_count_ = 1;
+		_data8_->self = g_object_ref (self);
 		app = _g_object_ref0 ((_tmp0_ = object, BAMF_IS_APPLICATION (_tmp0_) ? ((BamfApplication*) _tmp0_) : NULL));
-		g_signal_connect_object ((BamfView*) app, "user-visible-changed", (GCallback) __lambda36__bamf_view_user_visible_changed, self, 0);
-		if (bamf_view_user_visible ((BamfView*) app)) {
-			char* desktop_file;
-			UnityLauncherScrollerChildController* controller;
-			gboolean _tmp1_ = FALSE;
-			desktop_file = g_strdup (bamf_application_get_desktop_file (app));
-			controller = NULL;
-			if (desktop_file != NULL) {
-				_tmp1_ = _vala_strcmp0 (desktop_file, "") != 0;
-			} else {
-				_tmp1_ = FALSE;
-			}
-			if (_tmp1_) {
-				UnityLauncherScrollerChildController* _tmp2_;
-				controller = (_tmp2_ = (UnityLauncherScrollerChildController*) unity_launcher_scroller_controller_find_controller_by_desktop_file (self, desktop_file), _g_object_unref0 (controller), _tmp2_);
-			}
-			if (UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (controller)) {
-				UnityLauncherScrollerChildController* _tmp3_;
-				unity_launcher_application_controller_attach_application ((_tmp3_ = controller, UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (_tmp3_) ? ((UnityLauncherApplicationController*) _tmp3_) : NULL), app);
-			} else {
-				UnityLauncherLauncherChild* child;
-				UnityLauncherScrollerChildController* _tmp4_;
-				UnityLauncherScrollerChildController* _tmp5_;
-				child = g_object_ref_sink (unity_launcher_launcher_child_new ());
-				controller = (_tmp4_ = (UnityLauncherScrollerChildController*) unity_launcher_application_controller_new (NULL, (UnityLauncherScrollerChild*) child), _g_object_unref0 (controller), _tmp4_);
-				unity_launcher_application_controller_attach_application ((_tmp5_ = controller, UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (_tmp5_) ? ((UnityLauncherApplicationController*) _tmp5_) : NULL), app);
-				unity_launcher_scroller_model_add (self->priv->_model, (UnityLauncherScrollerChild*) child);
-				gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->childcontrollers, controller);
-				g_signal_connect_object (controller, "closed", (GCallback) _unity_launcher_scroller_controller_on_scroller_controller_closed_unity_launcher_scroller_child_controller_closed, self, 0);
-				_g_object_unref0 (child);
-			}
-			_g_free0 (desktop_file);
-			_g_object_unref0 (controller);
+		desktop_file = g_strdup (bamf_application_get_desktop_file (app));
+		_data8_->controller = NULL;
+		if (desktop_file != NULL) {
+			_tmp1_ = _vala_strcmp0 (desktop_file, "") != 0;
+		} else {
+			_tmp1_ = FALSE;
 		}
+		if (_tmp1_) {
+			UnityLauncherScrollerChildController* _tmp2_;
+			_data8_->controller = (_tmp2_ = (UnityLauncherScrollerChildController*) unity_launcher_scroller_controller_find_controller_by_desktop_file (self, desktop_file), _g_object_unref0 (_data8_->controller), _tmp2_);
+		}
+		if (UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (_data8_->controller)) {
+			UnityLauncherScrollerChildController* _tmp3_;
+			unity_launcher_application_controller_attach_application ((_tmp3_ = _data8_->controller, UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (_tmp3_) ? ((UnityLauncherApplicationController*) _tmp3_) : NULL), app);
+		} else {
+			UnityLauncherScrollerChild* child;
+			UnityLauncherScrollerChildController* _tmp4_;
+			UnityLauncherScrollerChildController* _tmp5_;
+			child = g_object_ref_sink (unity_launcher_scroller_child_new ());
+			_data8_->controller = (_tmp4_ = (UnityLauncherScrollerChildController*) unity_launcher_application_controller_new (NULL, child), _g_object_unref0 (_data8_->controller), _tmp4_);
+			unity_launcher_application_controller_attach_application ((_tmp5_ = _data8_->controller, UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (_tmp5_) ? ((UnityLauncherApplicationController*) _tmp5_) : NULL), app);
+			if (bamf_view_user_visible ((BamfView*) app)) {
+				unity_launcher_scroller_model_add (self->priv->_model, child);
+			}
+			gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->childcontrollers, _data8_->controller);
+			g_signal_connect_object (_data8_->controller, "closed", (GCallback) _unity_launcher_scroller_controller_on_scroller_controller_closed_unity_launcher_scroller_child_controller_closed, self, 0);
+			g_signal_connect_data ((GObject*) _data8_->controller, "notify::hide", (GCallback) __lambda37__g_object_notify, block8_data_ref (_data8_), (GClosureNotify) block8_data_unref, 0);
+			_g_object_unref0 (child);
+		}
+		_g_free0 (desktop_file);
 		_g_object_unref0 (app);
+		block8_data_unref (_data8_);
 	}
 }
 
@@ -335,7 +369,8 @@ static void unity_launcher_scroller_controller_on_scroller_controller_closed (Un
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (controller != NULL);
 	if (UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (controller)) {
-		if (unity_launcher_scroller_child_controller_get_child (controller)->pin_type == UNITY_LAUNCHER_PIN_TYPE_UNPINNED) {
+		UnityLauncherScrollerChildController* _tmp0_;
+		if (!unity_launcher_application_controller_is_sticky ((_tmp0_ = controller, UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (_tmp0_) ? ((UnityLauncherApplicationController*) _tmp0_) : NULL))) {
 			unity_launcher_scroller_model_remove (self->priv->_model, unity_launcher_scroller_child_controller_get_child (controller));
 			gee_abstract_collection_remove ((GeeAbstractCollection*) self->priv->childcontrollers, controller);
 		}
@@ -364,7 +399,7 @@ static gint unity_launcher_scroller_controller_compare_prioritys (UnityLauncherS
 			_tmp2_ = unity_launcher_application_controller_get_priority ((_tmp1_ = childcontroller, UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (_tmp1_) ? ((UnityLauncherApplicationController*) _tmp1_) : NULL), &_inner_error_);
 			if (_inner_error_ != NULL) {
 				if (_inner_error_->domain == UNITY_LAUNCHER_APP_TYPE_ERROR) {
-					goto __catch27_unity_launcher_app_type_error;
+					goto __catch30_unity_launcher_app_type_error;
 				}
 				_g_object_unref0 (childcontroller);
 				g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -374,8 +409,8 @@ static gint unity_launcher_scroller_controller_compare_prioritys (UnityLauncherS
 			prioritya = _tmp2_;
 		}
 	}
-	goto __finally27;
-	__catch27_unity_launcher_app_type_error:
+	goto __finally30;
+	__catch30_unity_launcher_app_type_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -385,7 +420,7 @@ static gint unity_launcher_scroller_controller_compare_prioritys (UnityLauncherS
 			_g_error_free0 (e);
 		}
 	}
-	__finally27:
+	__finally30:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (childcontroller);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -401,7 +436,7 @@ static gint unity_launcher_scroller_controller_compare_prioritys (UnityLauncherS
 			_tmp5_ = unity_launcher_application_controller_get_priority ((_tmp4_ = childcontroller, UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (_tmp4_) ? ((UnityLauncherApplicationController*) _tmp4_) : NULL), &_inner_error_);
 			if (_inner_error_ != NULL) {
 				if (_inner_error_->domain == UNITY_LAUNCHER_APP_TYPE_ERROR) {
-					goto __catch28_unity_launcher_app_type_error;
+					goto __catch31_unity_launcher_app_type_error;
 				}
 				_g_object_unref0 (childcontroller);
 				g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -411,8 +446,8 @@ static gint unity_launcher_scroller_controller_compare_prioritys (UnityLauncherS
 			priorityb = _tmp5_;
 		}
 	}
-	goto __finally28;
-	__catch28_unity_launcher_app_type_error:
+	goto __finally31;
+	__catch31_unity_launcher_app_type_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -422,7 +457,7 @@ static gint unity_launcher_scroller_controller_compare_prioritys (UnityLauncherS
 			_g_error_free0 (e);
 		}
 	}
-	__finally28:
+	__finally31:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (childcontroller);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -471,32 +506,32 @@ static void unity_launcher_scroller_controller_build_favorites (UnityLauncherScr
 			uid = (char*) gee_iterator_get (_uid_it);
 			type = unity_favorites_get_string (self->priv->favorites, uid, "type");
 			if (_vala_strcmp0 (type, "application") != 0) {
-				_g_free0 (uid);
 				_g_free0 (type);
+				_g_free0 (uid);
 				continue;
 			}
 			desktop_file = unity_favorites_get_string (self->priv->favorites, uid, "desktop_file");
 			if (!g_file_test (desktop_file, G_FILE_TEST_EXISTS)) {
-				_g_free0 (uid);
-				_g_free0 (type);
 				_g_free0 (desktop_file);
+				_g_free0 (type);
+				_g_free0 (uid);
 				continue;
 			}
 			controller = unity_launcher_scroller_controller_find_controller_by_desktop_file (self, desktop_file);
 			if (!UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER (controller)) {
-				UnityLauncherLauncherChild* child;
+				UnityLauncherScrollerChild* child;
 				UnityLauncherApplicationController* _tmp3_;
-				child = g_object_ref_sink (unity_launcher_launcher_child_new ());
-				controller = (_tmp3_ = unity_launcher_application_controller_new (desktop_file, (UnityLauncherScrollerChild*) child), _g_object_unref0 (controller), _tmp3_);
-				unity_launcher_scroller_model_add (self->priv->_model, (UnityLauncherScrollerChild*) child);
+				child = g_object_ref_sink (unity_launcher_scroller_child_new ());
+				controller = (_tmp3_ = unity_launcher_application_controller_new (desktop_file, child), _g_object_unref0 (controller), _tmp3_);
+				unity_launcher_scroller_model_add (self->priv->_model, child);
 				gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->childcontrollers, (UnityLauncherScrollerChildController*) controller);
 				g_signal_connect_object ((UnityLauncherScrollerChildController*) controller, "closed", (GCallback) _unity_launcher_scroller_controller_on_scroller_controller_closed_unity_launcher_scroller_child_controller_closed, self, 0);
 				_g_object_unref0 (child);
 			}
-			_g_free0 (uid);
-			_g_free0 (type);
-			_g_free0 (desktop_file);
 			_g_object_unref0 (controller);
+			_g_free0 (desktop_file);
+			_g_free0 (type);
+			_g_free0 (uid);
 		}
 		_g_object_unref0 (_uid_it);
 	}
@@ -517,17 +552,17 @@ static void unity_launcher_scroller_controller_on_favorite_added (UnityLauncherS
 	}
 	controller = unity_launcher_scroller_controller_find_controller_by_desktop_file (self, desktop_file);
 	if (!UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER (controller)) {
-		UnityLauncherLauncherChild* child;
+		UnityLauncherScrollerChild* child;
 		UnityLauncherApplicationController* _tmp0_;
-		child = g_object_ref_sink (unity_launcher_launcher_child_new ());
-		controller = (_tmp0_ = unity_launcher_application_controller_new (desktop_file, (UnityLauncherScrollerChild*) child), _g_object_unref0 (controller), _tmp0_);
-		unity_launcher_scroller_model_add (self->priv->_model, (UnityLauncherScrollerChild*) child);
+		child = g_object_ref_sink (unity_launcher_scroller_child_new ());
+		controller = (_tmp0_ = unity_launcher_application_controller_new (desktop_file, child), _g_object_unref0 (controller), _tmp0_);
+		unity_launcher_scroller_model_add (self->priv->_model, child);
 		gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->childcontrollers, (UnityLauncherScrollerChildController*) controller);
 		g_signal_connect_object ((UnityLauncherScrollerChildController*) controller, "closed", (GCallback) _unity_launcher_scroller_controller_on_scroller_controller_closed_unity_launcher_scroller_child_controller_closed, self, 0);
 		_g_object_unref0 (child);
 	}
-	_g_free0 (desktop_file);
 	_g_object_unref0 (controller);
+	_g_free0 (desktop_file);
 }
 
 
@@ -597,26 +632,42 @@ static void unity_launcher_scroller_controller_on_unity_drag_start (UnityLaunche
 
 
 static void unity_launcher_scroller_controller_on_unity_drag_motion (UnityLauncherScrollerController* self, UnityDragModel* drag_model, float x, float y) {
+	gboolean _tmp0_ = FALSE;
 	UnityDragController* drag_controller;
-	UnityDragModel* _tmp0_;
-	gboolean _tmp1_;
-	UnityLauncherScrollerChildController* _tmp3_;
-	UnityDragModel* _tmp2_;
-	UnityLauncherScrollerChild* _tmp4_;
+	UnityDragModel* _tmp1_;
+	gboolean _tmp2_;
+	UnityLauncherScrollerChildController* _tmp4_;
+	UnityDragModel* _tmp3_;
+	UnityLauncherScrollerChild* _tmp5_;
 	UnityLauncherScrollerChild* retcont;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (drag_model != NULL);
+	if (x == self->priv->last_drag_x) {
+		_tmp0_ = y == self->priv->last_drag_y;
+	} else {
+		_tmp0_ = FALSE;
+	}
+	if (_tmp0_) {
+		return;
+	}
+	self->priv->last_drag_x = x;
+	self->priv->last_drag_y = y;
 	drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
-	if ((_tmp1_ = !UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER (_tmp0_ = unity_drag_controller_get_drag_model (drag_controller)), _g_object_unref0 (_tmp0_), _tmp1_)) {
+	if ((_tmp2_ = !UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER (_tmp1_ = unity_drag_controller_get_drag_model (drag_controller)), _g_object_unref0 (_tmp1_), _tmp2_)) {
 		_g_object_unref0 (drag_controller);
 		return;
 	}
-	retcont = (_tmp4_ = _g_object_ref0 (unity_launcher_scroller_child_controller_get_child (_tmp3_ = (_tmp2_ = unity_drag_controller_get_drag_model (drag_controller), UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER (_tmp2_) ? ((UnityLauncherScrollerChildController*) _tmp2_) : NULL))), _g_object_unref0 (_tmp3_), _tmp4_);
+	retcont = (_tmp5_ = _g_object_ref0 (unity_launcher_scroller_child_controller_get_child (_tmp4_ = (_tmp3_ = unity_drag_controller_get_drag_model (drag_controller), UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER (_tmp3_) ? ((UnityLauncherScrollerChildController*) _tmp3_) : NULL))), _g_object_unref0 (_tmp4_), _tmp5_);
 	if (x > (clutter_actor_get_width ((ClutterActor*) self->priv->_view) + UNITY_LAUNCHER_SCROLLER_CONTROLLER_DRAG_SAFE_ZONE)) {
 		unity_launcher_scroller_model_remove (self->priv->_model, retcont);
 	} else {
 		gint model_index;
-		model_index = unity_launcher_scroller_view_get_model_index_at_y_pos (self->priv->_view, y);
+		model_index = unity_launcher_scroller_view_get_model_index_at_y_pos_no_anim (self->priv->_view, y, TRUE);
+		if (model_index < 0) {
+			_g_object_unref0 (retcont);
+			_g_object_unref0 (drag_controller);
+			return;
+		}
 		if (unity_launcher_scroller_model_contains (self->priv->_model, retcont)) {
 			unity_launcher_scroller_model_move (self->priv->_model, retcont, MAX (model_index, 0));
 		} else {
@@ -624,8 +675,8 @@ static void unity_launcher_scroller_controller_on_unity_drag_motion (UnityLaunch
 		}
 		clutter_actor_queue_redraw ((ClutterActor*) self->priv->_view);
 	}
-	_g_object_unref0 (drag_controller);
 	_g_object_unref0 (retcont);
+	_g_object_unref0 (drag_controller);
 }
 
 
@@ -675,9 +726,9 @@ static void unity_launcher_scroller_controller_on_unity_drag_drop (UnityLauncher
 	g_signal_handlers_disconnect_matched (drag_controller, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp7_, 0, NULL, (GCallback) _unity_launcher_scroller_controller_on_unity_drag_motion_unity_drag_controller_drag_motion, self);
 	g_signal_parse_name ("drag-drop", UNITY_DRAG_TYPE_CONTROLLER, &_tmp8_, NULL, FALSE);
 	g_signal_handlers_disconnect_matched (drag_controller, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp8_, 0, NULL, (GCallback) _unity_launcher_scroller_controller_on_unity_drag_drop_unity_drag_controller_drag_drop, self);
-	_g_object_unref0 (drag_controller);
-	_g_object_unref0 (model_controller);
 	_g_object_unref0 (retcont);
+	_g_object_unref0 (model_controller);
+	_g_object_unref0 (drag_controller);
 }
 
 
@@ -728,8 +779,8 @@ static void unity_launcher_scroller_controller_model_order_changed (UnityLaunche
 				unity_launcher_application_controller_set_priority ((_tmp0_ = childcontroller, UNITY_LAUNCHER_IS_APPLICATION_CONTROLLER (_tmp0_) ? ((UnityLauncherApplicationController*) _tmp0_) : NULL), index);
 			}
 			index = index + 1.0f;
-			_g_object_unref0 (childview);
 			_g_object_unref0 (childcontroller);
+			_g_object_unref0 (childview);
 		}
 		_unity_launcher_scroller_model_iterator_unref0 (_childview_it);
 	}
@@ -848,6 +899,8 @@ static void unity_launcher_scroller_controller_class_init (UnityLauncherScroller
 
 static void unity_launcher_scroller_controller_instance_init (UnityLauncherScrollerController * self) {
 	self->priv = UNITY_LAUNCHER_SCROLLER_CONTROLLER_GET_PRIVATE (self);
+	self->priv->last_drag_x = 0.0f;
+	self->priv->last_drag_y = 0.0f;
 }
 
 

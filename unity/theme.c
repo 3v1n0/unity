@@ -117,7 +117,7 @@ struct _UnityThemeImagePrivate {
 static gpointer unity_theme_file_path_parent_class = NULL;
 static gpointer unity_theme_image_parent_class = NULL;
 
-GType unity_theme_file_path_get_type (void);
+GType unity_theme_file_path_get_type (void) G_GNUC_CONST;
 #define UNITY_THEME_FILE_PATH_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_THEME_FILE_PATH, UnityThemeFilePathPrivate))
 enum  {
 	UNITY_THEME_FILE_PATH_DUMMY_PROPERTY
@@ -139,7 +139,7 @@ UnityThemeFilePath* unity_theme_file_path_construct (GType object_type);
 static GObject * unity_theme_file_path_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_theme_file_path_finalize (GObject* obj);
 gboolean unity_icon_name_exists_in_theme (const char* icon_name, const char* theme);
-GType unity_theme_image_get_type (void);
+GType unity_theme_image_get_type (void) G_GNUC_CONST;
 #define UNITY_THEME_IMAGE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_THEME_IMAGE, UnityThemeImagePrivate))
 enum  {
 	UNITY_THEME_IMAGE_DUMMY_PROPERTY,
@@ -483,7 +483,7 @@ static void _lambda0_ (UnityThemeFilePath* theme, const char* filepath, UnityThe
 		_inner_error_ = NULL;
 		{
 			char* _tmp0_;
-			g_warning ("theme.vala:134: %s", _tmp0_ = g_strconcat ("could not load theme image ", string_to_string (filepath), NULL));
+			g_warning ("theme.vala:138: %s", _tmp0_ = g_strconcat ("could not load theme image ", string_to_string (filepath), NULL));
 			_g_free0 (_tmp0_);
 			_g_error_free0 (e);
 		}
@@ -576,7 +576,7 @@ static gboolean unity_theme_image_try_load_icon_from_datadir (UnityThemeImage* s
 static void unity_theme_image_load_missing_icon (UnityThemeImage* self) {
 	g_return_if_fail (self != NULL);
 	;
-	g_warning ("theme.vala:186: Unable to load '%s' from Unity icon theme or Unity the" \
+	g_warning ("theme.vala:190: Unable to load '%s' from Unity icon theme or Unity the" \
 "me", self->priv->_icon_name);
 }
 
@@ -619,6 +619,7 @@ static GObject * unity_theme_image_constructor (GType type, guint n_construct_pr
 				unity_theme_image_load_missing_icon (self);
 			}
 		}
+		g_signal_emit_by_name (self, "changed");
 	}
 	return obj;
 }
@@ -632,6 +633,7 @@ static void unity_theme_image_class_init (UnityThemeImageClass * klass) {
 	G_OBJECT_CLASS (klass)->constructor = unity_theme_image_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_theme_image_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_THEME_IMAGE_ICON_NAME, g_param_spec_string ("icon-name", "icon-name", "icon-name", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
+	g_signal_new ("changed", UNITY_TYPE_THEME_IMAGE, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
 
 

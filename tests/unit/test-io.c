@@ -96,7 +96,7 @@ GParamSpec* unity_tests_unit_param_spec_io_suite (const gchar* name, const gchar
 void unity_tests_unit_value_set_io_suite (GValue* value, gpointer v_object);
 void unity_tests_unit_value_take_io_suite (GValue* value, gpointer v_object);
 gpointer unity_tests_unit_value_get_io_suite (const GValue* value);
-GType unity_tests_unit_io_suite_get_type (void);
+GType unity_tests_unit_io_suite_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTS_UNIT_IO_SUITE_DUMMY_PROPERTY
 };
@@ -218,16 +218,16 @@ static gboolean unity_tests_unit_io_suite_do_test_async_find_and_load_co (UnityT
 			_state_2:
 			unity_io_read_stream_finish (data->_res_, &data->data, &data->data_size, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
-				_g_object_unref0 (data->input);
 				data->buf = (g_free (data->buf), NULL);
+				_g_object_unref0 (data->input);
 				goto __catch4_g_error;
 			}
 			g_assert (data->data_size == 177);
 			data->sdata = g_strndup ((const char*) data->data, data->data_size);
 			g_assert (_vala_strcmp0 (data->sdata, unity_tests_unit_io_suite_TEST_DATA) == 0);
-			_g_object_unref0 (data->input);
-			data->buf = (g_free (data->buf), NULL);
 			_g_free0 (data->sdata);
+			data->buf = (g_free (data->buf), NULL);
+			_g_object_unref0 (data->input);
 		}
 		goto __finally4;
 		__catch4_g_error:

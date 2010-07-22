@@ -76,7 +76,7 @@ struct _UnityWebappChromiumWebAppPrivate {
 
 static gpointer unity_webapp_chromium_web_app_parent_class = NULL;
 
-GType unity_webapp_chromium_web_app_get_type (void);
+GType unity_webapp_chromium_web_app_get_type (void) G_GNUC_CONST;
 #define UNITY_WEBAPP_CHROMIUM_WEB_APP_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_WEBAPP_TYPE_CHROMIUM_WEB_APP, UnityWebappChromiumWebAppPrivate))
 enum  {
 	UNITY_WEBAPP_CHROMIUM_WEB_APP_DUMMY_PROPERTY,
@@ -105,7 +105,7 @@ const char* unity_webapp_chromium_web_app_get_url (UnityWebappChromiumWebApp* se
 static gboolean unity_webapp_chromium_web_app_check_existance_of_app (UnityWebappChromiumWebApp* self);
 const char* unity_webapp_chromium_web_app_get_icon (UnityWebappChromiumWebApp* self);
 static void unity_webapp_chromium_web_app_build_webapp (UnityWebappChromiumWebApp* self);
-GType unity_favorites_get_type (void);
+GType unity_favorites_get_type (void) G_GNUC_CONST;
 UnityFavorites* unity_favorites_get_default (void);
 static char* unity_webapp_chromium_web_app_get_fav_uid (UnityWebappChromiumWebApp* self);
 char* unity_webapp_urlify (const char* uri);
@@ -218,15 +218,15 @@ static void unity_webapp_chromium_web_app_build_webapp (UnityWebappChromiumWebAp
 		{
 			g_warning ("chrome-handler.vala:111: %s", e->message);
 			_g_error_free0 (e);
-			_g_free0 (webapp_desktop);
 			_g_object_unref0 (webapp_directory);
+			_g_free0 (webapp_desktop);
 			return;
 		}
 	}
 	__finally0:
 	if (_inner_error_ != NULL) {
-		_g_free0 (webapp_desktop);
 		_g_object_unref0 (webapp_directory);
+		_g_free0 (webapp_desktop);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return;
@@ -244,21 +244,21 @@ static void unity_webapp_chromium_web_app_build_webapp (UnityWebappChromiumWebAp
 		data_stream = g_data_output_stream_new ((GOutputStream*) file_stream);
 		g_data_output_stream_put_string (data_stream, webapp_desktop, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			_g_object_unref0 (file_stream);
 			_g_object_unref0 (data_stream);
+			_g_object_unref0 (file_stream);
 			goto __catch1_g_error;
 		}
 		g_output_stream_close ((GOutputStream*) data_stream, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			_g_object_unref0 (file_stream);
 			_g_object_unref0 (data_stream);
+			_g_object_unref0 (file_stream);
 			goto __catch1_g_error;
 		}
 		g_debug ("chrome-handler.vala:122: wrote to %s", _tmp6_ = g_strconcat (self->priv->webapp_dir, _tmp5_ = g_strconcat ("chromium-webapp-", string_to_string (self->name), ".desktop", NULL), NULL));
 		_g_free0 (_tmp6_);
 		_g_free0 (_tmp5_);
-		_g_object_unref0 (file_stream);
 		_g_object_unref0 (data_stream);
+		_g_object_unref0 (file_stream);
 	}
 	goto __finally1;
 	__catch1_g_error:
@@ -269,24 +269,24 @@ static void unity_webapp_chromium_web_app_build_webapp (UnityWebappChromiumWebAp
 		{
 			g_warning ("chrome-handler.vala:125: could not write to %s/%s.desktop", self->priv->webapp_dir, self->name);
 			_g_error_free0 (e);
-			_g_free0 (webapp_desktop);
-			_g_object_unref0 (webapp_directory);
 			_g_object_unref0 (desktop_file);
+			_g_object_unref0 (webapp_directory);
+			_g_free0 (webapp_desktop);
 			return;
 		}
 	}
 	__finally1:
 	if (_inner_error_ != NULL) {
-		_g_free0 (webapp_desktop);
-		_g_object_unref0 (webapp_directory);
 		_g_object_unref0 (desktop_file);
+		_g_object_unref0 (webapp_directory);
+		_g_free0 (webapp_desktop);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return;
 	}
-	_g_free0 (webapp_desktop);
-	_g_object_unref0 (webapp_directory);
 	_g_object_unref0 (desktop_file);
+	_g_object_unref0 (webapp_directory);
+	_g_free0 (webapp_desktop);
 }
 
 
@@ -304,8 +304,8 @@ void unity_webapp_chromium_web_app_add_to_favorites (UnityWebappChromiumWebApp* 
 	uid = unity_webapp_chromium_web_app_get_fav_uid (self);
 	if (_vala_strcmp0 (uid, "") != 0) {
 		g_warning ("chrome-handler.vala:137: %s is already a favorite", self->name);
-		_g_object_unref0 (favorites);
 		_g_free0 (uid);
+		_g_object_unref0 (favorites);
 		return;
 	}
 	desktop_path = (_tmp1_ = g_strconcat (self->priv->webapp_dir, _tmp0_ = g_strconcat ("chromium-webapp-", string_to_string (self->name), ".desktop", NULL), NULL), _g_free0 (_tmp0_), _tmp1_);
@@ -316,9 +316,9 @@ void unity_webapp_chromium_web_app_add_to_favorites (UnityWebappChromiumWebApp* 
 	unity_favorites_set_string (favorites, uid, "desktop_file", desktop_path);
 	unity_favorites_set_float (favorites, uid, "priority", -100000.0f);
 	unity_favorites_add_favorite (favorites, uid);
-	_g_object_unref0 (favorites);
-	_g_free0 (uid);
 	_g_free0 (desktop_path);
+	_g_free0 (uid);
+	_g_object_unref0 (favorites);
 }
 
 
@@ -348,8 +348,8 @@ static char* unity_webapp_chromium_web_app_get_fav_uid (UnityWebappChromiumWebAp
 			uid = (char*) gee_iterator_get (_uid_it);
 			type = unity_favorites_get_string (favorites, uid, "type");
 			if (_vala_strcmp0 (type, "application") != 0) {
-				_g_free0 (uid);
 				_g_free0 (type);
+				_g_free0 (uid);
 				continue;
 			}
 			desktop_file = unity_favorites_get_string (favorites, uid, "desktop_file");
@@ -357,16 +357,16 @@ static char* unity_webapp_chromium_web_app_get_fav_uid (UnityWebappChromiumWebAp
 				char* _tmp2_;
 				myuid = (_tmp2_ = g_strdup (uid), _g_free0 (myuid), _tmp2_);
 			}
-			_g_free0 (uid);
-			_g_free0 (type);
 			_g_free0 (desktop_file);
+			_g_free0 (type);
+			_g_free0 (uid);
 		}
 		_g_object_unref0 (_uid_it);
 	}
 	result = myuid;
-	_g_free0 (my_desktop_path);
-	_g_object_unref0 (favorites);
 	_g_object_unref0 (favorite_list);
+	_g_object_unref0 (favorites);
+	_g_free0 (my_desktop_path);
 	return result;
 }
 

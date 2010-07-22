@@ -96,7 +96,7 @@ struct _UnityShellIface {
 extern UnityShell* unity_global_shell;
 static gpointer unity_entry_parent_class = NULL;
 
-GType unity_entry_get_type (void);
+GType unity_entry_get_type (void) G_GNUC_CONST;
 #define UNITY_ENTRY_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_ENTRY, UnityEntryPrivate))
 enum  {
 	UNITY_ENTRY_DUMMY_PROPERTY,
@@ -105,8 +105,8 @@ enum  {
 UnityEntry* unity_entry_new (const char* static_text);
 UnityEntry* unity_entry_construct (GType object_type, const char* static_text);
 static void unity_entry_on_key_focus_in (UnityEntry* self);
-GType unity_shell_mode_get_type (void);
-GType unity_shell_get_type (void);
+GType unity_shell_mode_get_type (void) G_GNUC_CONST;
+GType unity_shell_get_type (void) G_GNUC_CONST;
 void unity_shell_grab_keyboard (UnityShell* self, gboolean grab, guint32 timestamp);
 static void unity_entry_on_key_focus_out (UnityEntry* self);
 static void unity_entry_on_activate (UnityEntry* self);
@@ -210,8 +210,8 @@ static gboolean unity_entry_on_stage_captured_event (UnityEntry* self, ClutterEv
 			g_signal_handlers_disconnect_matched ((ClutterActor*) stage, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp1_, 0, NULL, (GCallback) _unity_entry_on_stage_captured_event_clutter_actor_captured_event, self);
 			clutter_ungrab_keyboard ();
 		}
-		_g_object_unref0 (stage);
 		_g_object_unref0 (actor);
+		_g_object_unref0 (stage);
 	}
 	result = FALSE;
 	return result;

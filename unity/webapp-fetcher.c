@@ -188,7 +188,7 @@ static gpointer unity_webapp_webicon_fetcher_parent_class = NULL;
 #define tag_end_string "[^>]*/?>"
 #define hostname_string "(s)?http://(?P<hostname>.*)(/|$)"
 char* unity_webapp_urlify (const char* uri);
-GType unity_webapp_fetch_file_get_type (void);
+GType unity_webapp_fetch_file_get_type (void) G_GNUC_CONST;
 #define UNITY_WEBAPP_FETCH_FILE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_WEBAPP_TYPE_FETCH_FILE, UnityWebappFetchFilePrivate))
 enum  {
 	UNITY_WEBAPP_FETCH_FILE_DUMMY_PROPERTY,
@@ -213,7 +213,7 @@ static void unity_webapp_fetch_file_finalize (GObject* obj);
 static void unity_webapp_fetch_file_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_webapp_fetch_file_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 char* unity_webapp_get_hostname (const char* uri);
-GType unity_webapp_webicon_fetcher_get_type (void);
+GType unity_webapp_webicon_fetcher_get_type (void) G_GNUC_CONST;
 #define UNITY_WEBAPP_WEBICON_FETCHER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_WEBAPP_TYPE_WEBICON_FETCHER, UnityWebappWebiconFetcherPrivate))
 enum  {
 	UNITY_WEBAPP_WEBICON_FETCHER_DUMMY_PROPERTY,
@@ -234,8 +234,8 @@ void unity_webapp_webicon_fetcher_fetch_webapp_data (UnityWebappWebiconFetcher* 
 static GeePriorityQueue* unity_webapp_webicon_fetcher_extract_icon_from_html (UnityWebappWebiconFetcher* self, const char* html, gboolean preferred);
 static void unity_webapp_webicon_fetcher_attempt_fetch_icon (UnityWebappWebiconFetcher* self);
 const char* unity_webapp_webicon_fetcher_get_destination (UnityWebappWebiconFetcher* self);
-GType unity_shell_mode_get_type (void);
-GType unity_shell_get_type (void);
+GType unity_shell_mode_get_type (void) G_GNUC_CONST;
+GType unity_shell_get_type (void) G_GNUC_CONST;
 static gboolean _lambda6_ (UnityWebappWebiconFetcher* self);
 static gboolean __lambda6__gsource_func (gpointer self);
 static void unity_webapp_webicon_fetcher_on_fetcher_failed (UnityWebappWebiconFetcher* self);
@@ -583,8 +583,8 @@ static gboolean unity_webapp_fetch_file_read_something_async_co (UnityWebappFetc
 	switch (data->_state_) {
 		case 0:
 		goto _state_0;
-		case 12:
-		goto _state_12;
+		case 13:
+		goto _state_13;
 		default:
 		g_assert_not_reached ();
 	}
@@ -603,10 +603,10 @@ static gboolean unity_webapp_fetch_file_read_something_async_co (UnityWebappFetc
 				}
 				data->_tmp1_ = FALSE;
 				{
-					data->_state_ = 12;
+					data->_state_ = 13;
 					g_input_stream_read_async ((GInputStream*) data->self->priv->stream, data->buffer, (gsize) data->size, G_PRIORITY_DEFAULT, NULL, unity_webapp_fetch_file_read_something_async_ready, data);
 					return FALSE;
-					_state_12:
+					_state_13:
 					data->_tmp2_ = g_input_stream_read_finish ((GInputStream*) data->self->priv->stream, data->_res_, &data->_inner_error_);
 					if (data->_inner_error_ != NULL) {
 						goto __catch37_g_error;
@@ -847,9 +847,9 @@ static void unity_webapp_webicon_fetcher_set_desktop_file_icon (UnityWebappWebic
 		desktop_file = g_key_file_new ();
 		g_key_file_load_from_file (desktop_file, self->priv->_desktop_location, 0, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			_g_object_unref0 (file);
-			_g_object_unref0 (file_stream);
 			_g_key_file_free0 (desktop_file);
+			_g_object_unref0 (file_stream);
+			_g_object_unref0 (file);
 			goto __catch39_g_error;
 		}
 		g_key_file_set_string (desktop_file, "Desktop Entry", "Icon", iconname);
@@ -857,27 +857,27 @@ static void unity_webapp_webicon_fetcher_set_desktop_file_icon (UnityWebappWebic
 		data_stream = g_data_output_stream_new ((GOutputStream*) file_stream);
 		g_data_output_stream_put_string (data_stream, desktop_data, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			_g_object_unref0 (file);
-			_g_object_unref0 (file_stream);
-			_g_key_file_free0 (desktop_file);
-			_g_free0 (desktop_data);
 			_g_object_unref0 (data_stream);
+			_g_free0 (desktop_data);
+			_g_key_file_free0 (desktop_file);
+			_g_object_unref0 (file_stream);
+			_g_object_unref0 (file);
 			goto __catch39_g_error;
 		}
 		g_output_stream_close ((GOutputStream*) data_stream, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			_g_object_unref0 (file);
-			_g_object_unref0 (file_stream);
-			_g_key_file_free0 (desktop_file);
-			_g_free0 (desktop_data);
 			_g_object_unref0 (data_stream);
+			_g_free0 (desktop_data);
+			_g_key_file_free0 (desktop_file);
+			_g_object_unref0 (file_stream);
+			_g_object_unref0 (file);
 			goto __catch39_g_error;
 		}
-		_g_object_unref0 (file);
-		_g_object_unref0 (file_stream);
-		_g_key_file_free0 (desktop_file);
-		_g_free0 (desktop_data);
 		_g_object_unref0 (data_stream);
+		_g_free0 (desktop_data);
+		_g_key_file_free0 (desktop_file);
+		_g_object_unref0 (file_stream);
+		_g_object_unref0 (file);
 	}
 	goto __finally39;
 	__catch39_g_error:
@@ -1010,10 +1010,10 @@ static void unity_webapp_webicon_fetcher_on_fetcher_completed (UnityWebappWebico
 		_g_free0 (_tmp7_);
 		_g_free0 (_tmp6_);
 		unity_webapp_webicon_fetcher_attempt_fetch_icon (self);
-		_g_free0 (html);
-		_g_free0 (hostname);
-		_g_object_unref0 (primary_icons);
 		_g_object_unref0 (secondary_icons);
+		_g_object_unref0 (primary_icons);
+		_g_free0 (hostname);
+		_g_free0 (html);
 	} else {
 		if (self->priv->icon_phase) {
 			char* _tmp8_;
@@ -1035,12 +1035,12 @@ static void unity_webapp_webicon_fetcher_on_fetcher_completed (UnityWebappWebico
 				icon = _g_object_ref0 (gdk_pixbuf_loader_get_pixbuf (loader));
 				gdk_pixbuf_save (icon, self->priv->_destination, "png", &_inner_error_, NULL);
 				if (_inner_error_ != NULL) {
-					_g_object_unref0 (loader);
 					_g_object_unref0 (icon);
+					_g_object_unref0 (loader);
 					goto __catch40_g_error;
 				}
-				_g_object_unref0 (loader);
 				_g_object_unref0 (icon);
+				_g_object_unref0 (loader);
 			}
 			goto __finally40;
 			__catch40_g_error:
@@ -1183,8 +1183,8 @@ static GeePriorityQueue* unity_webapp_webicon_fetcher_extract_icon_from_html (Un
 		}
 	}
 	result = return_uris;
-	_g_match_info_free0 (matchinfo);
 	regex_array = (_vala_array_free (regex_array, regex_array_length1, (GDestroyNotify) g_regex_unref), NULL);
+	_g_match_info_free0 (matchinfo);
 	return result;
 }
 
@@ -1307,17 +1307,17 @@ static GObject * unity_webapp_webicon_fetcher_constructor (GType type, guint n_c
 			}
 			__finally41:
 			if (_inner_error_ != NULL) {
-				_g_free0 (primary_match_prefix);
-				_g_free0 (primary_match_suffix);
-				_g_free0 (secondary_match_prefix);
 				_g_free0 (secondary_match_suffix);
+				_g_free0 (secondary_match_prefix);
+				_g_free0 (primary_match_suffix);
+				_g_free0 (primary_match_prefix);
 				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 				g_clear_error (&_inner_error_);
 			}
-			_g_free0 (primary_match_prefix);
-			_g_free0 (primary_match_suffix);
-			_g_free0 (secondary_match_prefix);
 			_g_free0 (secondary_match_suffix);
+			_g_free0 (secondary_match_prefix);
+			_g_free0 (primary_match_suffix);
+			_g_free0 (primary_match_prefix);
 		}
 		self->priv->icon_uris = (_tmp12_ = (GeeList*) gee_array_list_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, NULL), _g_object_unref0 (self->priv->icon_uris), _tmp12_);
 		{

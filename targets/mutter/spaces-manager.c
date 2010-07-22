@@ -22,12 +22,24 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <unity-private.h>
 #include <clutter/clutter.h>
 #include <mutter-plugins.h>
 #include <unity.h>
 #include <float.h>
 #include <math.h>
 
+
+#define UNITY_TYPE_SPACES_BUTTON_CONTROLLER (unity_spaces_button_controller_get_type ())
+#define UNITY_SPACES_BUTTON_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_SPACES_BUTTON_CONTROLLER, UnitySpacesButtonController))
+#define UNITY_SPACES_BUTTON_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_SPACES_BUTTON_CONTROLLER, UnitySpacesButtonControllerClass))
+#define UNITY_IS_SPACES_BUTTON_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_SPACES_BUTTON_CONTROLLER))
+#define UNITY_IS_SPACES_BUTTON_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_SPACES_BUTTON_CONTROLLER))
+#define UNITY_SPACES_BUTTON_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_SPACES_BUTTON_CONTROLLER, UnitySpacesButtonControllerClass))
+
+typedef struct _UnitySpacesButtonController UnitySpacesButtonController;
+typedef struct _UnitySpacesButtonControllerClass UnitySpacesButtonControllerClass;
+typedef struct _UnitySpacesButtonControllerPrivate UnitySpacesButtonControllerPrivate;
 
 #define UNITY_TYPE_SPACES_MANAGER (unity_spaces_manager_get_type ())
 #define UNITY_SPACES_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_SPACES_MANAGER, UnitySpacesManager))
@@ -38,6 +50,7 @@
 
 typedef struct _UnitySpacesManager UnitySpacesManager;
 typedef struct _UnitySpacesManagerClass UnitySpacesManagerClass;
+#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 typedef struct _UnitySpacesManagerPrivate UnitySpacesManagerPrivate;
 
 #define UNITY_TYPE_PLUGIN (unity_plugin_get_type ())
@@ -49,10 +62,43 @@ typedef struct _UnitySpacesManagerPrivate UnitySpacesManagerPrivate;
 
 typedef struct _UnityPlugin UnityPlugin;
 typedef struct _UnityPluginClass UnityPluginClass;
-#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define __g_list_free_g_object_unref0(var) ((var == NULL) ? NULL : (var = (_g_list_free_g_object_unref (var), NULL)))
 typedef struct _Block2Data Block2Data;
+
+#define UNITY_TYPE_EXPOSE_CLONE (unity_expose_clone_get_type ())
+#define UNITY_EXPOSE_CLONE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_EXPOSE_CLONE, UnityExposeClone))
+#define UNITY_EXPOSE_CLONE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_EXPOSE_CLONE, UnityExposeCloneClass))
+#define UNITY_IS_EXPOSE_CLONE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_EXPOSE_CLONE))
+#define UNITY_IS_EXPOSE_CLONE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_EXPOSE_CLONE))
+#define UNITY_EXPOSE_CLONE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_EXPOSE_CLONE, UnityExposeCloneClass))
+
+typedef struct _UnityExposeClone UnityExposeClone;
+typedef struct _UnityExposeCloneClass UnityExposeCloneClass;
+
+#define UNITY_TYPE_EXPOSE_MANAGER (unity_expose_manager_get_type ())
+#define UNITY_EXPOSE_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_EXPOSE_MANAGER, UnityExposeManager))
+#define UNITY_EXPOSE_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_EXPOSE_MANAGER, UnityExposeManagerClass))
+#define UNITY_IS_EXPOSE_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_EXPOSE_MANAGER))
+#define UNITY_IS_EXPOSE_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_EXPOSE_MANAGER))
+#define UNITY_EXPOSE_MANAGER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_EXPOSE_MANAGER, UnityExposeManagerClass))
+
+typedef struct _UnityExposeManager UnityExposeManager;
+typedef struct _UnityExposeManagerClass UnityExposeManagerClass;
+#define _g_list_free0(var) ((var == NULL) ? NULL : (var = (g_list_free (var), NULL)))
 typedef struct _Block3Data Block3Data;
+
+struct _UnitySpacesButtonController {
+	UnityLauncherScrollerChildController parent_instance;
+	UnitySpacesButtonControllerPrivate * priv;
+};
+
+struct _UnitySpacesButtonControllerClass {
+	UnityLauncherScrollerChildControllerClass parent_class;
+};
+
+struct _UnitySpacesButtonControllerPrivate {
+	UnitySpacesManager* _parent;
+};
 
 struct _UnitySpacesManager {
 	GObject parent_instance;
@@ -68,6 +114,8 @@ struct _UnitySpacesManagerPrivate {
 	GList* clones;
 	UnityPlugin* plugin;
 	MetaScreen* screen;
+	UnityLauncherScrollerChild* _button;
+	UnitySpacesButtonController* controller;
 	guint _top_padding;
 	guint _right_padding;
 	guint _bottom_padding;
@@ -89,13 +137,30 @@ struct _Block3Data {
 };
 
 
+static gpointer unity_spaces_button_controller_parent_class = NULL;
 static gpointer unity_spaces_manager_parent_class = NULL;
 
-GType unity_spaces_manager_get_type (void);
-GType unity_plugin_get_type (void);
+GType unity_spaces_button_controller_get_type (void) G_GNUC_CONST;
+GType unity_spaces_manager_get_type (void) G_GNUC_CONST;
+#define UNITY_SPACES_BUTTON_CONTROLLER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_SPACES_BUTTON_CONTROLLER, UnitySpacesButtonControllerPrivate))
+enum  {
+	UNITY_SPACES_BUTTON_CONTROLLER_DUMMY_PROPERTY
+};
+static void unity_spaces_button_controller_set_parent (UnitySpacesButtonController* self, UnitySpacesManager* value);
+UnitySpacesButtonController* unity_spaces_button_controller_new (UnitySpacesManager* _parent, UnityLauncherScrollerChild* _child);
+UnitySpacesButtonController* unity_spaces_button_controller_construct (GType object_type, UnitySpacesManager* _parent, UnityLauncherScrollerChild* _child);
+static UnitySpacesManager* unity_spaces_button_controller_get_parent (UnitySpacesButtonController* self);
+void unity_spaces_manager_show_spaces_picker (UnitySpacesManager* self);
+static void unity_spaces_button_controller_real_activate (UnityLauncherScrollerChildController* base);
+static GObject * unity_spaces_button_controller_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void unity_spaces_button_controller_finalize (GObject* obj);
+static void unity_spaces_button_controller_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
+static void unity_spaces_button_controller_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+GType unity_plugin_get_type (void) G_GNUC_CONST;
 #define UNITY_SPACES_MANAGER_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TYPE_SPACES_MANAGER, UnitySpacesManagerPrivate))
 enum  {
 	UNITY_SPACES_MANAGER_DUMMY_PROPERTY,
+	UNITY_SPACES_MANAGER_BUTTON,
 	UNITY_SPACES_MANAGER_TOP_PADDING,
 	UNITY_SPACES_MANAGER_RIGHT_PADDING,
 	UNITY_SPACES_MANAGER_BOTTOM_PADDING,
@@ -118,21 +183,29 @@ gboolean unity_spaces_manager_get_showing (UnitySpacesManager* self);
 static void unity_spaces_manager_set_showing (UnitySpacesManager* self, gboolean value);
 static ClutterActor* unity_spaces_manager_workspace_clone (UnitySpacesManager* self, MetaWorkspace* workspace);
 static void unity_spaces_manager_select_workspace (UnitySpacesManager* self, MetaWorkspace* workspace);
-static gboolean _lambda2_ (Block2Data* _data2_);
-static gboolean __lambda2__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _lambda3_ (Block2Data* _data2_);
+static gboolean __lambda3__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static Block2Data* block2_data_ref (Block2Data* _data2_);
 static void block2_data_unref (Block2Data* _data2_);
 static void unity_spaces_manager_layout_workspaces (UnitySpacesManager* self, GList* clones, MetaScreen* screen);
-void unity_spaces_manager_show_spaces_picker (UnitySpacesManager* self);
 static void unity_spaces_manager_unlayout_workspaces (UnitySpacesManager* self, GList* clones, MetaScreen* screen, gint focus);
-static void _lambda3_ (Block3Data* _data3_);
-static void __lambda3__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
+UnityExposeClone* unity_expose_clone_new (ClutterActor* source);
+UnityExposeClone* unity_expose_clone_construct (GType object_type, ClutterActor* source);
+GType unity_expose_clone_get_type (void) G_GNUC_CONST;
+void unity_expose_clone_set_fade_on_close (UnityExposeClone* self, gboolean value);
+GType unity_expose_manager_get_type (void) G_GNUC_CONST;
+UnityExposeManager* unity_plugin_get_expose_manager (UnityPlugin* self);
+void unity_expose_manager_position_windows_on_grid (UnityExposeManager* self, GList* _windows, gint top_buffer, gint left_buffer, gint right_buffer, gint bottom_buffer);
+void unity_expose_clone_restore_window_position (UnityExposeClone* self, gint active_workspace);
+static void _lambda4_ (Block3Data* _data3_);
+static void __lambda4__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static Block3Data* block3_data_ref (Block3Data* _data3_);
 static void block3_data_unref (Block3Data* _data3_);
 guint unity_spaces_manager_get_left_padding (UnitySpacesManager* self);
 guint unity_spaces_manager_get_right_padding (UnitySpacesManager* self);
 guint unity_spaces_manager_get_spacing (UnitySpacesManager* self);
 guint unity_spaces_manager_get_top_padding (UnitySpacesManager* self);
+UnityLauncherScrollerChild* unity_spaces_manager_get_button (UnitySpacesManager* self);
 guint unity_spaces_manager_get_bottom_padding (UnitySpacesManager* self);
 void unity_spaces_manager_set_spacing (UnitySpacesManager* self, guint value);
 static GObject * unity_spaces_manager_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -142,14 +215,124 @@ static void unity_spaces_manager_set_property (GObject * object, guint property_
 
 
 
-static void _g_list_free_g_object_unref (GList* self) {
-	g_list_foreach (self, (GFunc) g_object_unref, NULL);
-	g_list_free (self);
+UnitySpacesButtonController* unity_spaces_button_controller_construct (GType object_type, UnitySpacesManager* _parent, UnityLauncherScrollerChild* _child) {
+	UnitySpacesButtonController * self;
+	g_return_val_if_fail (_parent != NULL, NULL);
+	g_return_val_if_fail (_child != NULL, NULL);
+	self = (UnitySpacesButtonController*) g_object_new (object_type, "child", _child, NULL);
+	unity_spaces_button_controller_set_parent (self, _parent);
+	unity_launcher_scroller_child_controller_set_name ((UnityLauncherScrollerChildController*) self, "Workspace Overview");
+	unity_launcher_scroller_child_controller_load_icon_from_icon_name ((UnityLauncherScrollerChildController*) self, "workspace-switcher");
+	return self;
+}
+
+
+UnitySpacesButtonController* unity_spaces_button_controller_new (UnitySpacesManager* _parent, UnityLauncherScrollerChild* _child) {
+	return unity_spaces_button_controller_construct (UNITY_TYPE_SPACES_BUTTON_CONTROLLER, _parent, _child);
+}
+
+
+static void unity_spaces_button_controller_real_activate (UnityLauncherScrollerChildController* base) {
+	UnitySpacesButtonController * self;
+	self = (UnitySpacesButtonController*) base;
+	unity_spaces_manager_show_spaces_picker (self->priv->_parent);
+}
+
+
+static UnitySpacesManager* unity_spaces_button_controller_get_parent (UnitySpacesButtonController* self) {
+	UnitySpacesManager* result;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = self->priv->_parent;
+	return result;
 }
 
 
 static gpointer _g_object_ref0 (gpointer self) {
 	return self ? g_object_ref (self) : NULL;
+}
+
+
+static void unity_spaces_button_controller_set_parent (UnitySpacesButtonController* self, UnitySpacesManager* value) {
+	UnitySpacesManager* _tmp0_;
+	g_return_if_fail (self != NULL);
+	self->priv->_parent = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_parent), _tmp0_);
+}
+
+
+static GObject * unity_spaces_button_controller_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+	GObject * obj;
+	GObjectClass * parent_class;
+	UnitySpacesButtonController * self;
+	parent_class = G_OBJECT_CLASS (unity_spaces_button_controller_parent_class);
+	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
+	self = UNITY_SPACES_BUTTON_CONTROLLER (obj);
+	{
+	}
+	return obj;
+}
+
+
+static void unity_spaces_button_controller_class_init (UnitySpacesButtonControllerClass * klass) {
+	unity_spaces_button_controller_parent_class = g_type_class_peek_parent (klass);
+	g_type_class_add_private (klass, sizeof (UnitySpacesButtonControllerPrivate));
+	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS (klass)->activate = unity_spaces_button_controller_real_activate;
+	G_OBJECT_CLASS (klass)->get_property = unity_spaces_button_controller_get_property;
+	G_OBJECT_CLASS (klass)->set_property = unity_spaces_button_controller_set_property;
+	G_OBJECT_CLASS (klass)->constructor = unity_spaces_button_controller_constructor;
+	G_OBJECT_CLASS (klass)->finalize = unity_spaces_button_controller_finalize;
+}
+
+
+static void unity_spaces_button_controller_instance_init (UnitySpacesButtonController * self) {
+	self->priv = UNITY_SPACES_BUTTON_CONTROLLER_GET_PRIVATE (self);
+}
+
+
+static void unity_spaces_button_controller_finalize (GObject* obj) {
+	UnitySpacesButtonController * self;
+	self = UNITY_SPACES_BUTTON_CONTROLLER (obj);
+	_g_object_unref0 (self->priv->_parent);
+	G_OBJECT_CLASS (unity_spaces_button_controller_parent_class)->finalize (obj);
+}
+
+
+GType unity_spaces_button_controller_get_type (void) {
+	static volatile gsize unity_spaces_button_controller_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_spaces_button_controller_type_id__volatile)) {
+		static const GTypeInfo g_define_type_info = { sizeof (UnitySpacesButtonControllerClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_spaces_button_controller_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnitySpacesButtonController), 0, (GInstanceInitFunc) unity_spaces_button_controller_instance_init, NULL };
+		GType unity_spaces_button_controller_type_id;
+		unity_spaces_button_controller_type_id = g_type_register_static (UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, "UnitySpacesButtonController", &g_define_type_info, 0);
+		g_once_init_leave (&unity_spaces_button_controller_type_id__volatile, unity_spaces_button_controller_type_id);
+	}
+	return unity_spaces_button_controller_type_id__volatile;
+}
+
+
+static void unity_spaces_button_controller_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
+	UnitySpacesButtonController * self;
+	self = UNITY_SPACES_BUTTON_CONTROLLER (object);
+	switch (property_id) {
+		default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+		break;
+	}
+}
+
+
+static void unity_spaces_button_controller_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
+	UnitySpacesButtonController * self;
+	self = UNITY_SPACES_BUTTON_CONTROLLER (object);
+	switch (property_id) {
+		default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+		break;
+	}
+}
+
+
+static void _g_list_free_g_object_unref (GList* self) {
+	g_list_foreach (self, (GFunc) g_object_unref, NULL);
+	g_list_free (self);
 }
 
 
@@ -190,7 +373,7 @@ void unity_spaces_manager_set_padding (UnitySpacesManager* self, guint top, guin
 }
 
 
-static gboolean _lambda2_ (Block2Data* _data2_) {
+static gboolean _lambda3_ (Block2Data* _data2_) {
 	UnitySpacesManager * self;
 	gboolean result = FALSE;
 	self = _data2_->self;
@@ -200,21 +383,21 @@ static gboolean _lambda2_ (Block2Data* _data2_) {
 }
 
 
-static gboolean __lambda2__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean __lambda3__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
-	result = _lambda2_ (self);
+	result = _lambda3_ (self);
 	return result;
 }
 
 
 static Block2Data* block2_data_ref (Block2Data* _data2_) {
-	++_data2_->_ref_count_;
+	g_atomic_int_inc (&_data2_->_ref_count_);
 	return _data2_;
 }
 
 
 static void block2_data_unref (Block2Data* _data2_) {
-	if ((--_data2_->_ref_count_) == 0) {
+	if (g_atomic_int_dec_and_test (&_data2_->_ref_count_)) {
 		_g_object_unref0 (_data2_->self);
 		g_slice_free (Block2Data, _data2_);
 	}
@@ -267,7 +450,7 @@ void unity_spaces_manager_show_spaces_picker (UnitySpacesManager* self) {
 				clutter_actor_raise_top (clone);
 				clutter_actor_show (clone);
 				_data2_->cpy = workspace;
-				g_signal_connect_data (clone, "button-release-event", (GCallback) __lambda2__clutter_actor_button_release_event, block2_data_ref (_data2_), (GClosureNotify) block2_data_unref, 0);
+				g_signal_connect_data (clone, "button-release-event", (GCallback) __lambda3__clutter_actor_button_release_event, block2_data_ref (_data2_), (GClosureNotify) block2_data_unref, 0);
 				_g_object_unref0 (clone);
 				block2_data_unref (_data2_);
 			}
@@ -311,11 +494,21 @@ static ClutterActor* unity_spaces_manager_workspace_clone (UnitySpacesManager* s
 	ClutterGroup* wsp;
 	GList* windows;
 	ClutterGroup* _tmp0_;
+	GList* toplevel_windows;
+	gint active_workspace;
+	ClutterActor* last;
+	ClutterActor* wspclone;
+	gboolean _tmp5_ = FALSE;
+	gboolean _tmp6_ = FALSE;
 	g_return_val_if_fail (self != NULL, NULL);
 	g_return_val_if_fail (workspace != NULL, NULL);
 	wsp = NULL;
-	windows = mutter_plugin_get_windows (unity_plugin_get_plugin (self->priv->plugin));
+	windows = (GList*) g_list_copy (mutter_plugin_get_windows (unity_plugin_get_plugin (self->priv->plugin)));
 	wsp = (_tmp0_ = g_object_ref_sink ((ClutterGroup*) clutter_group_new ()), _g_object_unref0 (wsp), _tmp0_);
+	toplevel_windows = NULL;
+	active_workspace = meta_screen_get_active_workspace_index (mutter_plugin_get_screen (unity_plugin_get_plugin (self->priv->plugin)));
+	last = NULL;
+	wspclone = NULL;
 	{
 		GList* window_collection;
 		GList* window_it;
@@ -337,14 +530,25 @@ static ClutterActor* unity_spaces_manager_workspace_clone (UnitySpacesManager* s
 					_tmp1_ = mutter_window_get_workspace (window) == meta_workspace_index (workspace);
 				}
 				if (_tmp1_) {
-					ClutterActor* clone;
-					clone = (ClutterActor*) g_object_ref_sink ((ClutterClone*) clutter_clone_new ((ClutterActor*) window));
-					clutter_container_add_actor ((ClutterContainer*) wsp, clone);
-					clutter_actor_set_size (clone, clutter_actor_get_width ((ClutterActor*) window), clutter_actor_get_height ((ClutterActor*) window));
-					clutter_actor_set_position (clone, clutter_actor_get_x ((ClutterActor*) window), clutter_actor_get_y ((ClutterActor*) window));
-					clutter_actor_show (clone);
+					UnityExposeClone* clone;
+					if (mutter_window_get_window_type (window) == META_COMP_WINDOW_DOCK) {
+						_g_object_unref0 (window);
+						continue;
+					}
+					clone = g_object_ref_sink (unity_expose_clone_new ((ClutterActor*) window));
+					unity_expose_clone_set_fade_on_close (clone, FALSE);
+					clutter_container_add_actor ((ClutterContainer*) wsp, (ClutterActor*) clone);
+					clutter_actor_set_size ((ClutterActor*) clone, clutter_actor_get_width ((ClutterActor*) window), clutter_actor_get_height ((ClutterActor*) window));
+					clutter_actor_set_position ((ClutterActor*) clone, clutter_actor_get_x ((ClutterActor*) window), clutter_actor_get_y ((ClutterActor*) window));
+					clutter_actor_show ((ClutterActor*) clone);
 					if (mutter_window_get_window_type (window) == META_COMP_WINDOW_DESKTOP) {
-						clutter_actor_lower_bottom (clone);
+						ClutterActor* _tmp3_;
+						wspclone = (_tmp3_ = _g_object_ref0 ((ClutterActor*) clone), _g_object_unref0 (wspclone), _tmp3_);
+						clutter_actor_lower_bottom ((ClutterActor*) clone);
+					} else {
+						ClutterActor* _tmp4_;
+						last = (_tmp4_ = _g_object_ref0 ((ClutterActor*) clone), _g_object_unref0 (last), _tmp4_);
+						toplevel_windows = g_list_prepend (toplevel_windows, _g_object_ref0 ((ClutterActor*) clone));
 					}
 					_g_object_unref0 (clone);
 				}
@@ -352,12 +556,30 @@ static ClutterActor* unity_spaces_manager_workspace_clone (UnitySpacesManager* s
 			}
 		}
 	}
+	if (last != NULL) {
+		_tmp6_ = wspclone != NULL;
+	} else {
+		_tmp6_ = FALSE;
+	}
+	if (_tmp6_) {
+		_tmp5_ = active_workspace != meta_workspace_index (workspace);
+	} else {
+		_tmp5_ = FALSE;
+	}
+	if (_tmp5_) {
+		clutter_actor_raise (last, wspclone);
+	}
+	unity_expose_manager_position_windows_on_grid (unity_plugin_get_expose_manager (self->priv->plugin), toplevel_windows, 50, 50, 50, 50);
 	result = (ClutterActor*) wsp;
+	_g_object_unref0 (wspclone);
+	_g_object_unref0 (last);
+	__g_list_free_g_object_unref0 (toplevel_windows);
+	_g_list_free0 (windows);
 	return result;
 }
 
 
-static void _lambda3_ (Block3Data* _data3_) {
+static void _lambda4_ (Block3Data* _data3_) {
 	UnitySpacesManager * self;
 	GList* windows;
 	self = _data3_->self;
@@ -385,19 +607,19 @@ static void _lambda3_ (Block3Data* _data3_) {
 }
 
 
-static void __lambda3__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	_lambda3_ (self);
+static void __lambda4__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+	_lambda4_ (self);
 }
 
 
 static Block3Data* block3_data_ref (Block3Data* _data3_) {
-	++_data3_->_ref_count_;
+	g_atomic_int_inc (&_data3_->_ref_count_);
 	return _data3_;
 }
 
 
 static void block3_data_unref (Block3Data* _data3_) {
-	if ((--_data3_->_ref_count_) == 0) {
+	if (g_atomic_int_dec_and_test (&_data3_->_ref_count_)) {
 		_g_object_unref0 (_data3_->self);
 		_g_object_unref0 (_data3_->clone);
 		g_slice_free (Block3Data, _data3_);
@@ -444,6 +666,7 @@ static void unity_spaces_manager_unlayout_workspaces (UnitySpacesManager* self, 
 							gint xoffset;
 							gint yoffset;
 							ClutterAnimation* anim;
+							gint active_workspace;
 							_data3_ = g_slice_new0 (Block3Data);
 							_data3_->_ref_count_ = 1;
 							_data3_->self = g_object_ref (self);
@@ -458,10 +681,29 @@ static void unity_spaces_manager_unlayout_workspaces (UnitySpacesManager* self, 
 							index = (y * width) + x;
 							xoffset = (x - (focus % width)) * rect.width;
 							yoffset = (y - (focus / width)) * rect.height;
-							g_warning ("spaces-manager.vala:163: %i %i", xoffset, yoffset);
+							g_warning ("spaces-manager.vala:224: %i %i", xoffset, yoffset);
 							_data3_->clone = _g_object_ref0 (CLUTTER_ACTOR ((ClutterActor*) g_list_nth_data (clones, (guint) index)));
 							anim = _g_object_ref0 (clutter_actor_animate (_data3_->clone, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "x", (float) xoffset, "y", (float) yoffset, "scale-x", 1.0f, "scale-y", 1.0f, NULL));
-							g_signal_connect_data (anim, "completed", (GCallback) __lambda3__clutter_animation_completed, block3_data_ref (_data3_), (GClosureNotify) block3_data_unref, 0);
+							active_workspace = meta_screen_get_active_workspace_index (mutter_plugin_get_screen (unity_plugin_get_plugin (self->priv->plugin)));
+							{
+								ClutterActor* _tmp3_;
+								GList* actor_collection;
+								GList* actor_it;
+								actor_collection = clutter_container_get_children ((ClutterContainer*) (_tmp3_ = _data3_->clone, CLUTTER_IS_GROUP (_tmp3_) ? ((ClutterGroup*) _tmp3_) : NULL));
+								for (actor_it = actor_collection; actor_it != NULL; actor_it = actor_it->next) {
+									ClutterActor* actor;
+									actor = _g_object_ref0 ((ClutterActor*) actor_it->data);
+									{
+										if (UNITY_IS_EXPOSE_CLONE (actor)) {
+											ClutterActor* _tmp4_;
+											unity_expose_clone_restore_window_position ((_tmp4_ = actor, UNITY_IS_EXPOSE_CLONE (_tmp4_) ? ((UnityExposeClone*) _tmp4_) : NULL), active_workspace);
+										}
+										_g_object_unref0 (actor);
+									}
+								}
+								_g_list_free0 (actor_collection);
+							}
+							g_signal_connect_data (anim, "completed", (GCallback) __lambda4__clutter_animation_completed, block3_data_ref (_data3_), (GClosureNotify) block3_data_unref, 0);
 							_g_object_unref0 (anim);
 							block3_data_unref (_data3_);
 						}
@@ -541,6 +783,20 @@ static void unity_spaces_manager_layout_workspaces (UnitySpacesManager* self, GL
 			}
 		}
 	}
+}
+
+
+UnityLauncherScrollerChild* unity_spaces_manager_get_button (UnitySpacesManager* self) {
+	UnityLauncherScrollerChild* result;
+	g_return_val_if_fail (self != NULL, NULL);
+	if (!UNITY_LAUNCHER_IS_SCROLLER_CHILD (self->priv->_button)) {
+		UnityLauncherScrollerChild* _tmp0_;
+		UnitySpacesButtonController* _tmp1_;
+		self->priv->_button = (_tmp0_ = g_object_ref_sink (unity_launcher_scroller_child_new ()), _g_object_unref0 (self->priv->_button), _tmp0_);
+		self->priv->controller = (_tmp1_ = unity_spaces_button_controller_new (self, self->priv->_button), _g_object_unref0 (self->priv->controller), _tmp1_);
+	}
+	result = self->priv->_button;
+	return result;
 }
 
 
@@ -656,6 +912,7 @@ static void unity_spaces_manager_class_init (UnitySpacesManagerClass * klass) {
 	G_OBJECT_CLASS (klass)->set_property = unity_spaces_manager_set_property;
 	G_OBJECT_CLASS (klass)->constructor = unity_spaces_manager_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_spaces_manager_finalize;
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_SPACES_MANAGER_BUTTON, g_param_spec_object ("button", "button", "button", UNITY_LAUNCHER_TYPE_SCROLLER_CHILD, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_SPACES_MANAGER_TOP_PADDING, g_param_spec_uint ("top-padding", "top-padding", "top-padding", 0, G_MAXUINT, 0U, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_SPACES_MANAGER_RIGHT_PADDING, g_param_spec_uint ("right-padding", "right-padding", "right-padding", 0, G_MAXUINT, 0U, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_SPACES_MANAGER_BOTTOM_PADDING, g_param_spec_uint ("bottom-padding", "bottom-padding", "bottom-padding", 0, G_MAXUINT, 0U, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
@@ -676,6 +933,8 @@ static void unity_spaces_manager_finalize (GObject* obj) {
 	_g_object_unref0 (self->priv->background);
 	__g_list_free_g_object_unref0 (self->priv->clones);
 	_g_object_unref0 (self->priv->plugin);
+	_g_object_unref0 (self->priv->_button);
+	_g_object_unref0 (self->priv->controller);
 	G_OBJECT_CLASS (unity_spaces_manager_parent_class)->finalize (obj);
 }
 
@@ -696,6 +955,9 @@ static void unity_spaces_manager_get_property (GObject * object, guint property_
 	UnitySpacesManager * self;
 	self = UNITY_SPACES_MANAGER (object);
 	switch (property_id) {
+		case UNITY_SPACES_MANAGER_BUTTON:
+		g_value_set_object (value, unity_spaces_manager_get_button (self));
+		break;
 		case UNITY_SPACES_MANAGER_TOP_PADDING:
 		g_value_set_uint (value, unity_spaces_manager_get_top_padding (self));
 		break;

@@ -76,9 +76,9 @@ struct _UnityShellIface {
 extern UnityShell* unity_global_shell;
 UnityShell* unity_global_shell = NULL;
 
-GType unity_shell_mode_get_type (void);
-GType unity_dnd_targets_get_type (void);
-GType unity_shell_get_type (void);
+GType unity_shell_mode_get_type (void) G_GNUC_CONST;
+GType unity_dnd_targets_get_type (void) G_GNUC_CONST;
+GType unity_shell_get_type (void) G_GNUC_CONST;
 guint32 unity_shell_get_current_time (UnityShell* self);
 UnityShellMode unity_shell_get_mode (UnityShell* self);
 ClutterStage* unity_shell_get_stage (UnityShell* self);

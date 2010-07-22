@@ -58,7 +58,7 @@ struct _UnityDragViewPrivate {
 
 static gpointer unity_drag_view_parent_class = NULL;
 
-GType unity_drag_view_get_type (void);
+GType unity_drag_view_get_type (void) G_GNUC_CONST;
 #define UNITY_DRAG_VIEW_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_DRAG_TYPE_VIEW, UnityDragViewPrivate))
 enum  {
 	UNITY_DRAG_VIEW_DUMMY_PROPERTY,
@@ -118,7 +118,6 @@ void unity_drag_view_hook_actor_to_cursor (UnityDragView* self, ClutterActor* ac
 	self->priv->offset_x = offset_x;
 	self->priv->offset_y = offset_y;
 	self->priv->hooked_actor = (_tmp0_ = (ClutterActor*) g_object_ref_sink ((ClutterClone*) clutter_clone_new (actor)), _g_object_unref0 (self->priv->hooked_actor), _tmp0_);
-	clutter_actor_unparent (self->priv->hooked_actor);
 	clutter_container_add_actor ((ClutterContainer*) self->priv->_stage, self->priv->hooked_actor);
 	clutter_actor_get_transformed_position (actor, &x, &y);
 	clutter_actor_set_position (self->priv->hooked_actor, x, y);
@@ -180,6 +179,8 @@ static gboolean unity_drag_view_on_motion_event (UnityDragView* self, ClutterEve
 	}
 	clutter_actor_set_position (self->priv->hooked_actor, (*event).motion.x - self->priv->offset_x, (*event).motion.y - self->priv->offset_y);
 	g_signal_emit_by_name (self, "motion", (*event).motion.x, (*event).motion.y);
+	clutter_actor_set_opacity (self->priv->hooked_actor, (guint8) 255);
+	clutter_actor_show (self->priv->hooked_actor);
 	result = FALSE;
 	return result;
 }

@@ -90,7 +90,7 @@ GParamSpec* param_spec_main (const gchar* name, const gchar* nick, const gchar* 
 void value_set_main (GValue* value, gpointer v_object);
 void value_take_main (GValue* value, gpointer v_object);
 gpointer value_get_main (const GValue* value);
-GType main_get_type (void);
+GType main_get_type (void) G_GNUC_CONST;
 enum  {
 	MAIN_DUMMY_PROPERTY
 };
@@ -150,8 +150,8 @@ gint main_main (char** args, int args_length1) {
 				goto __catch0_g_option_error;
 			}
 			_g_option_context_free0 (opt_context);
-			_g_object_unref0 (app);
 			_g_object_unref0 (window);
+			_g_object_unref0 (app);
 			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
 			return 0;
@@ -170,15 +170,15 @@ gint main_main (char** args, int args_length1) {
 " line options", args[0]);
 			result = 1;
 			_g_error_free0 (e);
-			_g_object_unref0 (app);
 			_g_object_unref0 (window);
+			_g_object_unref0 (app);
 			return result;
 		}
 	}
 	__finally0:
 	if (_inner_error_ != NULL) {
-		_g_object_unref0 (app);
 		_g_object_unref0 (window);
+		_g_object_unref0 (app);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return 0;
@@ -186,8 +186,8 @@ gint main_main (char** args, int args_length1) {
 	if (show_version) {
 		g_print ("\nUnity %s\n", VERSION);
 		result = 0;
-		_g_object_unref0 (app);
 		_g_object_unref0 (window);
+		_g_object_unref0 (app);
 		return result;
 	}
 	boot_logging_filename = (_tmp0_ = g_strdup (g_getenv ("UNITY_BOOTLOG_FILENAME")), _g_free0 (boot_logging_filename), _tmp0_);
@@ -238,9 +238,9 @@ gint main_main (char** args, int args_length1) {
 			_tmp4_ = 1;
 		}
 		result = _tmp4_;
-		_g_object_unref0 (app);
-		_g_object_unref0 (window);
 		_g_free0 (disable_unique);
+		_g_object_unref0 (window);
+		_g_object_unref0 (app);
 		return result;
 	}
 	cur_tray_envvar = g_strdup (g_getenv ("UNITY_DISABLE_TRAY"));
@@ -257,10 +257,10 @@ gint main_main (char** args, int args_length1) {
 	gtk_main ();
 	g_setenv ("UNITY_DISABLE_TRAY", cur_tray_envvar, TRUE);
 	result = 0;
-	_g_object_unref0 (app);
-	_g_object_unref0 (window);
-	_g_free0 (disable_unique);
 	_g_free0 (cur_tray_envvar);
+	_g_free0 (disable_unique);
+	_g_object_unref0 (window);
+	_g_object_unref0 (app);
 	return result;
 }
 

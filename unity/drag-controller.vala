@@ -63,10 +63,12 @@ namespace Unity.Drag
 
     public void start_drag (Unity.Drag.Model model, float offset_x, float offset_y)
     {
+
       if (!(this.view is View)) {
         this.view = new View (model.get_icon ().get_stage () as Clutter.Stage);
       }
       this.view.hook_actor_to_cursor (model.get_icon (), offset_x, offset_y);
+
       model.get_icon ().parent_set.connect (rehouse_orphaned_child);
       this.model = model;
       this.drag_start (model);
@@ -88,7 +90,7 @@ namespace Unity.Drag
           // no parent. so set stage
           Clutter.Stage stage = old_parent.get_stage () as Clutter.Stage;
           actor.set_parent (stage);
-          actor.set_position (-10000, -10000);
+          actor.set_position (20000, 20000);
         }
     }
 

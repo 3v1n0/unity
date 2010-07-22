@@ -53,7 +53,7 @@ struct _UnityTestsUnitPlacesPlaceSuiteClass {
 
 static gpointer unity_tests_unit_places_place_suite_parent_class = NULL;
 
-GType unity_tests_unit_places_place_suite_get_type (void);
+GType unity_tests_unit_places_place_suite_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTS_UNIT_PLACES_PLACE_SUITE_DUMMY_PROPERTY
 };
@@ -164,8 +164,8 @@ static void unity_tests_unit_places_place_suite_test_simple_placefile (UnityTest
 	g_assert (_vala_strcmp0 (unity_places_place_get_dbus_name (place), "org.ayatana.Unity.Place0") == 0);
 	g_assert (_vala_strcmp0 (unity_places_place_get_dbus_path (place), "/org/ayatana/Unity/Place0") == 0);
 	g_assert (unity_places_place_get_n_entries (place) == 0);
-	_g_key_file_free0 (file);
 	_g_object_unref0 (place);
+	_g_key_file_free0 (file);
 }
 
 
@@ -238,9 +238,9 @@ static void unity_tests_unit_places_place_suite_test_advanced_place_file (UnityT
 	g_assert (_vala_strcmp0 (unity_places_place_entry_get_description ((UnityPlacesPlaceEntry*) e), "Three Description") == 0);
 	g_assert (unity_places_place_entry_dbus_get_show_global (e) == FALSE);
 	g_assert (unity_places_place_entry_dbus_get_show_entry (e) == FALSE);
-	_g_key_file_free0 (file);
-	_g_object_unref0 (place);
 	_g_object_unref0 (e);
+	_g_object_unref0 (place);
+	_g_key_file_free0 (file);
 }
 
 
