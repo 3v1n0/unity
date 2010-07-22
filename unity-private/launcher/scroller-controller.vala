@@ -115,7 +115,7 @@ namespace Unity.Launcher
     {
       if (controller is ApplicationController)
         {
-          if (controller.child.pin_type == PinType.UNPINNED)
+          if (!(controller as ApplicationController).is_sticky ())
             {
               model.remove (controller.child);
               childcontrollers.remove (controller);

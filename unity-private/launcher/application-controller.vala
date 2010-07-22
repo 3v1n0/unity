@@ -63,18 +63,12 @@ namespace Unity.Launcher
       favorites.favorite_added.connect (on_favorite_added);
       favorites.favorite_removed.connect (on_favorite_removed);
 
-      // we need to figure out if we are a favorite
-      is_favorite = true;
+      // we need to figure out if we are a favoritem
+
+      is_favorite = is_sticky ();
       child.pin_type = PinType.UNPINNED;
-      foreach (string uid in favorites.get_favorites ())
-        {
-          if (favorites.get_string (uid, "desktop_file") == desktop_file)
-            {
-              is_favorite = true;
-              child.pin_type = PinType.PINNED;
-              break;
-            }
-        }
+      if (is_sticky ())
+        child.pin_type = PinType.PINNED;
     }
 
     public override QuicklistController get_menu_controller ()
@@ -92,7 +86,10 @@ namespace Unity.Launcher
 
       string uid = favorites.find_uid_for_desktop_file (desktop_file);
       if (uid == "" || uid == null)
-        uid = "app-" + desktop_file;
+        {
+          var filepath = desktop_file.split ("/");
+          uid = "app-" + filepath[filepath.length - 1];
+        }
 
       if (is_sticky)
         {
@@ -113,10 +110,10 @@ namespace Unity.Launcher
 
       var favorites = Unity.Favorites.get_default ();
       string uid = favorites.find_uid_for_desktop_file (desktop_file);
-      if (uid != null && uid != "")
-        return true;
-      else
+      if (uid == null || uid == "")
         return false;
+      else
+        return true;
     }
 
     public void close_windows ()
@@ -384,7 +381,7 @@ namespace Unity.Launcher
     public void attach_application (Bamf.Application application)
     {
       app = application;
-      desktop_file = app.get_desktop_file ();
+      desktop_file = app.get_desktop_file ().dup ();
       child.running = app.is_running ();
       child.active = app.is_active ();
       child.activating = false;
