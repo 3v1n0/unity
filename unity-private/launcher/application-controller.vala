@@ -299,7 +299,7 @@ namespace Unity.Launcher
       if (app is Bamf.Application)
         {
           Dbusmenu.Menuitem app_item = new Dbusmenu.Menuitem ();
-          app_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Quit...");
+          app_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Quit"));
           app_item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
           app_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
 
