@@ -68,7 +68,7 @@ namespace Unity.Launcher
                 position,
                 opacity);
     }
-    
+
     private UnityIcon processed_icon;
     private ThemeImage active_indicator;
     private ThemeImage running_indicator;
@@ -150,6 +150,11 @@ namespace Unity.Launcher
         on_running_changed ();
         on_active_changed ();
         on_rotation_changed ();
+    }
+
+    public Clutter.Actor get_content ()
+    {
+      return processed_icon;
     }
 
     /* alpha helpers */

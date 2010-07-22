@@ -37,7 +37,10 @@ namespace Unity.Launcher
   {
     public ScrollerChild child {get; construct;}
     public signal void request_removal (); //call when not needed anymore so we can unref
-    public string name { get; set; }
+
+    public string name {get; set;}
+    public bool hide {get; set;}
+
 
     public signal void closed ();
 
@@ -74,12 +77,12 @@ namespace Unity.Launcher
     }
 
     public delegate void menu_cb (Dbusmenu.Menuitem? menu);
-    
+
     public virtual void get_menu_actions (menu_cb callback)
     {
       callback (null);
     }
-    
+
     public virtual void get_menu_navigation (menu_cb callback)
     {
       callback (null);
@@ -89,7 +92,7 @@ namespace Unity.Launcher
     {
       // do nothing!
     }
-    
+
     public virtual QuicklistController get_menu_controller ()
     {
       return null;
@@ -158,6 +161,7 @@ namespace Unity.Launcher
     private void ensure_menu_state ()
     {
       //no tooltips on drag
+
       if (Unity.Drag.Controller.get_default ().is_dragging) return;
 
       if (menu is QuicklistController == false)
@@ -195,7 +199,7 @@ namespace Unity.Launcher
     // this is for our drag handling
     public Clutter.Actor get_icon ()
     {
-      return child;
+      return child.get_content ();
     }
 
     public string get_drag_data ()
@@ -222,7 +226,7 @@ namespace Unity.Launcher
         }
         return false;
     }
-    
+
     /* all this icon loading stuff can go when we switch from liblauncher to
      * bamf - please ignore any icon loading bugs :-)
      */

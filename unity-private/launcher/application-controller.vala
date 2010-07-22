@@ -61,20 +61,12 @@ namespace Unity.Launcher
       favorites.favorite_added.connect (on_favorite_added);
       favorites.favorite_removed.connect (on_favorite_removed);
 
-      // we need to figure out if we are a favorite
-      is_favorite = true;
-      child.pin_type = PinType.UNPINNED;
-      foreach (string uid in favorites.get_favorites ())
-        {
-          if (favorites.get_string (uid, "desktop_file") == desktop_file)
-            {
-              is_favorite = true;
-              child.pin_type = PinType.PINNED;
-              break;
-            }
-        }
+      // we need to figure out if we are a favoritem
 
-      notify["menu"].connect (on_notify_menu);
+      is_favorite = is_sticky ();
+      child.pin_type = PinType.UNPINNED;
+      if (is_sticky ())
+        child.pin_type = PinType.PINNED;
     }
 
     public override QuicklistController get_menu_controller ()
@@ -83,28 +75,19 @@ namespace Unity.Launcher
       return new_menu;
     }
 
-    private void on_notify_menu ()
-    {
-      menu.notify["state"].connect (() => {
-        if (menu.state == QuicklistControllerState.MENU)
-          {
-            Unity.global_shell.expose_xids (app.get_xids ());
-          }
-        else
-          {
-            Unity.global_shell.stop_expose ();
-          }
-      });
-    }
-
     public void set_sticky (bool is_sticky = true)
     {
       if (desktop_file == "" || desktop_file == null)
         return;
-      //string uid = "app-" + Path.get_basename (desktop_file);
+
       var favorites = Unity.Favorites.get_default ();
 
       string uid = favorites.find_uid_for_desktop_file (desktop_file);
+      if (uid == "" || uid == null)
+        {
+          var filepath = desktop_file.split ("/");
+          uid = "app-" + filepath[filepath.length - 1];
+        }
 
       if (is_sticky)
         {
@@ -125,10 +108,10 @@ namespace Unity.Launcher
 
       var favorites = Unity.Favorites.get_default ();
       string uid = favorites.find_uid_for_desktop_file (desktop_file);
-      if (uid != null && uid != "")
-        return true;
-      else
+      if (uid == null || uid == "")
         return false;
+      else
+        return true;
     }
 
     public void close_windows ()
@@ -186,15 +169,17 @@ namespace Unity.Launcher
         }
     }
 
+/*
+    private get_menu_for_client (ScrollerChildController.menu_cb callback, Dbusmenu.Client client)
+    {
+
+    }
+*/
+
     public override void get_menu_actions (ScrollerChildController.menu_cb callback)
     {
 
       // first check to see if we have a cached client, if we do, just re-use that
-      if (menu_client is Dbusmenu.Client && cached_menu is Dbusmenu.Menuitem)
-        {
-          callback (cached_menu);
-        }
-
       // check for a menu from bamf
       if (app is Bamf.Application)
         {
@@ -277,13 +262,19 @@ namespace Unity.Launcher
       Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
       root.set_root (true);
 
-      if (desktop_file != null)
+      if (desktop_file != null && desktop_file != "")
         {
           Dbusmenu.Menuitem pinning_item = new Dbusmenu.Menuitem ();
-          if (is_sticky ())
-            pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Remove from launcher"));
-          else
-            pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Add to launcher"));
+          if (is_sticky () && app is Bamf.Application)
+            {
+              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Keep in Launcher"));
+              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_TOGGLE_TYPE, Dbusmenu.MENUITEM_TOGGLE_CHECK);
+              pinning_item.property_set_int (Dbusmenu.MENUITEM_PROP_TOGGLE_STATE, Dbusmenu.MENUITEM_TOGGLE_STATE_CHECKED);
+            }
+          else if (is_sticky ())
+            {
+              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Remove from launcher"));
+            }
 
           pinning_item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
           pinning_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
@@ -315,6 +306,8 @@ namespace Unity.Launcher
     }
 
     private static int order_app_windows (void* a, void* b)
+      requires (a is Bamf.Window)
+      requires (b is Bamf.Window)
     {
       if ((b as Bamf.Window).last_active () > (a as Bamf.Window).last_active ())
         {
@@ -335,7 +328,12 @@ namespace Unity.Launcher
 
       if (app is Bamf.Application)
         {
-          if (app.is_running ())
+          if (app.is_active ())
+            {
+              Array<uint32> xids = app.get_xids ();
+              global_shell.expose_xids (xids);
+            }
+          else if (app.is_running ())
             {
               unowned List<Bamf.Window> windows = app.get_windows ();
               windows.sort ((CompareFunc)order_app_windows);
@@ -373,7 +371,7 @@ namespace Unity.Launcher
     public void attach_application (Bamf.Application application)
     {
       app = application;
-      desktop_file = app.get_desktop_file ();
+      desktop_file = app.get_desktop_file ().dup ();
       child.running = app.is_running ();
       child.active = app.is_active ();
       child.activating = false;
@@ -382,6 +380,9 @@ namespace Unity.Launcher
       app.active_changed.connect (on_app_active_changed);
       app.closed.connect (detach_application);
       app.urgent_changed.connect (on_app_urgant_changed);
+      app.user_visible_changed.connect ((value) => {
+        hide = !value;
+      });
       name = app.get_name ();
       if (name == null || name == "")
         warning (@"Bamf returned null for app.get_name (): $desktop_file");

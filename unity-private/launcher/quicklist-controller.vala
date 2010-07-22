@@ -36,6 +36,9 @@ namespace Unity.Launcher
       get { return _state; }
       set
         {
+          var drag_controller = Unity.Drag.Controller.get_default ();
+          if (drag_controller.is_dragging) value = QuicklistControllerState.CLOSED;
+
           if (value == QuicklistControllerState.LABEL ||
               value == QuicklistControllerState.MENU)
             {
@@ -95,7 +98,6 @@ namespace Unity.Launcher
 
   }
 
-
   public class ApplicationQuicklistController : QuicklistController
   {
     public ApplicationQuicklistController (ScrollerChildController scroller_child)
@@ -111,6 +113,11 @@ namespace Unity.Launcher
       new_menu ();
       notify["state"].connect (on_state_change);
       state = QuicklistControllerState.LABEL;
+
+      var drag_controller = Unity.Drag.Controller.get_default ();
+      drag_controller.drag_start.connect (() => {
+        state = QuicklistControllerState.CLOSED;
+      });
     }
 
     private void new_menu ()
