@@ -53,8 +53,7 @@ namespace Unity.Places
       glow.set_color ({ 255, 255, 255, 255 });
       glow.set_factor (1.0f);
       glow.set_margin (5);
-      /* FIXME: Add this back when Jay fixes the glow */
-      /*add_effect (glow); */
+      add_effect (glow);
 
       foreach (Place place in model)
         {
