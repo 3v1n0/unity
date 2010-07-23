@@ -131,7 +131,10 @@ namespace Unity.Launcher
       button_release_event.connect (on_button_release_event);
       motion_event.connect (on_motion_event);
       enter_event.connect (on_enter_event);
-      leave_event.connect (on_leave_event);
+
+      parent_set.connect (() => {
+          get_stage ().motion_event.connect (on_stage_motion);
+      });
 
       // set a timeline for our fling animation
       fling_timeline = new Clutter.Timeline (1000);
@@ -367,8 +370,6 @@ namespace Unity.Launcher
       if (view_type == ScrollerViewType.EXPANDED) return false;
       view_type = ScrollerViewType.EXPANDED;
 
-      Unity.global_shell.add_fullscreen_request (this);
-
       // we need to set a new scroll position
       // get the index of the icon we are hovering over
       if (get_total_children_height () > get_available_height ())
@@ -401,15 +402,15 @@ namespace Unity.Launcher
       return false;
     }
 
-    private bool on_leave_event (Clutter.Event event)
+    private bool on_stage_motion (Clutter.Event event)
     {
       if (view_type == ScrollerViewType.CONTRACTED) return false;
-      if (event.crossing.x < get_width ()-1) return false;
-
-      Unity.global_shell.remove_fullscreen_request (this);
-
-      // need to store the focused item
-      focused_launcher = get_model_index_at_y_pos (event.crossing.y);
+      if (event.crossing.x < get_width ()) return false;
+       foreach (ScrollerChild child in model)
+        {
+          if (child.active)
+            focused_launcher = model.index_of (child);
+        }
 
       view_type = ScrollerViewType.CONTRACTED;
       order_children (false);
