@@ -370,8 +370,6 @@ namespace Unity.Launcher
       if (view_type == ScrollerViewType.EXPANDED) return false;
       view_type = ScrollerViewType.EXPANDED;
 
-      //Unity.global_shell.add_fullscreen_request (this);
-
       // we need to set a new scroll position
       // get the index of the icon we are hovering over
       if (get_total_children_height () > get_available_height ())
