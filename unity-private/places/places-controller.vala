@@ -37,22 +37,39 @@ namespace Unity.Places
     public Controller (Shell shell)
     {
       Object (shell:shell);
+
+      Testing.ObjectRegistry.get_default ().register ("UnityPlacesController", this);
     }
 
     construct
     {
-      view = new View (shell);
-
       model = new PlaceFileModel () as PlaceModel;
       model.place_added.connect ((place) => {
         foreach (PlaceEntry e in place.get_entries ())
           on_entry_added (e);
       });
+
+      view = new View (shell, model);
     }
 
     public View get_view ()
     {
       return view;
+    }
+
+    public void activate_entry (string entry_name)
+    {
+      foreach (Place place in model)
+        {
+          foreach (PlaceEntry entry in place.get_entries ())
+            {
+              if (entry.name == entry_name)
+                {
+                  view.on_entry_view_activated (entry, 0);
+                  break;
+                }
+            }
+        }
     }
 
     private void on_entry_added (PlaceEntry entry)

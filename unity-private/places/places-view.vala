@@ -23,15 +23,10 @@ namespace Unity.Places
 {
   public class View : Ctk.Box
   {
-    private PlaceModel _model = null;
-
     /* Properties */
     public Shell shell { get; construct; }
 
-    public PlaceModel model {
-      get { return _model; }
-      set { _model = value; }
-    }
+    public PlaceModel model { get; construct; }
 
     private Ctk.VBox  content_box;
 
@@ -42,9 +37,9 @@ namespace Unity.Places
 
     private bool is_showing = false;
 
-    public View (Shell shell)
+    public View (Shell shell, PlaceModel model)
     {
-      Object (shell:shell, orientation:Ctk.Orientation.VERTICAL);
+      Object (shell:shell, orientation:Ctk.Orientation.VERTICAL, model:model);
     }
 
     construct
@@ -54,14 +49,12 @@ namespace Unity.Places
 
     public void about_to_show ()
     {
-      if (_model is PlaceFileModel)
+      if (home_entry is PlaceHomeEntry)
         {
           return;
         }
 
-      _model = new PlaceFileModel () as PlaceModel;
-
-      home_entry = new PlaceHomeEntry (shell, _model);
+      home_entry = new PlaceHomeEntry (shell, model);
 
       content_box = new Ctk.VBox (4);
       content_box.padding = {
