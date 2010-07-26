@@ -936,7 +936,7 @@ namespace Clutter {
 		public abstract void lower (Clutter.Actor actor, Clutter.Actor sibling);
 		public void lower_child (Clutter.Actor actor, Clutter.Actor sibling);
 		public abstract void raise (Clutter.Actor actor, Clutter.Actor sibling);
-		public void raise_child (Clutter.Actor actor, Clutter.Actor sibling);
+		public void raise_child (Clutter.Actor actor, Clutter.Actor? sibling);
 		public abstract void remove (Clutter.Actor actor);
 		public void remove_actor (Clutter.Actor actor);
 		public abstract void sort_depth_order ();

@@ -93,7 +93,7 @@ namespace Unity.Launcher
       // do nothing!
     }
 
-    public virtual QuicklistController get_menu_controller ()
+    public virtual QuicklistController? get_menu_controller ()
     {
       return null;
     }

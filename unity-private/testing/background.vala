@@ -32,7 +32,6 @@ namespace Unity.Testing
     private string DEFAULT_PIC_OPTS   = "none";
     private string DEFAULT_SHADE_TYPE = "solid";
     private string DEFAULT_AMBIANCE_COL = "#2C2C00001E1E"; // Ubuntu Dark Purple
-    private string DEFAULT_RADIANCE_COL = "#AEAEA7A79F9F"; // Ubuntu Grey
     private string DEFAULT_FILENAME   = "/usr/share/backgrounds/warty-final.png";
 
     private Clutter.CairoTexture bg_gradient;

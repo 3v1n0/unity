@@ -81,7 +81,6 @@ namespace Unity.Launcher
     // animations
     private Clutter.Animation active_indicator_anim;
     private Clutter.Animation running_indicator_anim;
-    private Clutter.Animation rotate_anim;
     private Clutter.Timeline  wiggle_timeline;
     private Clutter.Timeline  glow_timeline;
     private Clutter.Timeline  rotate_timeline;

@@ -28,6 +28,8 @@ namespace Unity.Places
      * keeping it up-to-date
      **/
     public  Shell shell { get; construct; }
+    public  PlaceModel model { get; set; }
+
     private View view;
 
     public Controller (Shell shell)
@@ -38,6 +40,12 @@ namespace Unity.Places
     construct
     {
       view = new View (shell);
+
+      model = new PlaceFileModel () as PlaceModel;
+      model.place_added.connect ((place) => {
+
+        message (@"Place added: $(place.dbus_name)");
+      });
     }
 
     public View get_view ()

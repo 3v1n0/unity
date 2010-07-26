@@ -255,9 +255,9 @@ namespace Unity.Launcher
             menu.compute_style_textures ();
             menu.set_expansion_size_factor (0.0f);
             menu.set_anchor_position (x + w-6, y + h/2.0f, 0);
-            var anim = menu.animate (Clutter.AnimationMode.LINEAR,
-                        100,
-                        "expansion-size-factor", 1.0f);
+            menu.animate (Clutter.AnimationMode.LINEAR,
+                         100,
+                          "expansion-size-factor", 1.0f);
 
           });
         }
