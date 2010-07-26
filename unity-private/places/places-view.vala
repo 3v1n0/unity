@@ -38,6 +38,7 @@ namespace Unity.Places
     private PlaceHomeEntry       home_entry;
     private PlaceSearchBar       search_bar;
     private Unity.Place.Renderer renderer;
+    private unowned PlaceEntry?  active_entry = null;
 
     private bool is_showing = false;
 
@@ -64,7 +65,7 @@ namespace Unity.Places
 
       content_box = new Ctk.VBox (4);
       content_box.padding = {
-        0.0f,
+        26.0f,
         8.0f,
         0.0f,
         shell.get_launcher_width_foobar () + 8.0f
@@ -89,6 +90,12 @@ namespace Unity.Places
     public void hidden ()
     {
       is_showing = false;
+
+      if (active_entry is PlaceEntry)
+        {
+          active_entry.active = false;
+        }
+      active_entry = null;
     }
 
     public void on_entry_view_activated (PlaceEntry entry, int x)
@@ -98,6 +105,14 @@ namespace Unity.Places
         {
           renderer.destroy ();
         }
+
+      if (active_entry is PlaceEntry)
+        {
+          active_entry.active = false;
+        }
+      active_entry = entry;
+      entry.active = true;
+
       renderer = lookup_renderer (entry.entry_renderer_name);
       content_box.pack (renderer, true, true);
       renderer.set_models (entry.entry_groups_model,

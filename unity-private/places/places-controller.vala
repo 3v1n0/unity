@@ -67,11 +67,11 @@ namespace Unity.Places
 
     private void on_entry_clicked (PlaceEntryScrollerChildController cont)
     {
-     view.on_entry_view_activated (cont.entry, 0);
      if (view.opacity == 0)
       {
         shell.show_unity ();
       }
+     view.on_entry_view_activated (cont.entry, 0);
     }
   }
 }
