@@ -18,6 +18,8 @@
  */
 
 using Gee;
+using Unity.Launcher;
+using Unity.Testing;
 
 namespace Unity.Places
 {
@@ -43,14 +45,22 @@ namespace Unity.Places
 
       model = new PlaceFileModel () as PlaceModel;
       model.place_added.connect ((place) => {
-
-        message (@"Place added: $(place.dbus_name)");
+        foreach (PlaceEntry e in place.get_entries ())
+          on_entry_added (e);
       });
     }
 
     public View get_view ()
     {
       return view;
+    }
+
+    private void on_entry_added (PlaceEntry entry)
+    {
+      ScrollerModel s = ObjectRegistry.get_default ().lookup ("UnityScrollerModel")[0] as ScrollerModel;
+
+      var child = new PlaceEntryScrollerChildController (entry);
+      s.add (child.child);
     }
   }
 }
