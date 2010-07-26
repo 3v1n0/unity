@@ -48,6 +48,7 @@ namespace Unity.Places
 
     construct
     {
+      about_to_show ();
     }
 
     public void about_to_show ()
