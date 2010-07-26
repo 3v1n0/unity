@@ -33,7 +33,6 @@ namespace Unity.Places
       set { _model = value; }
     }
 
-    private PlaceBar  place_bar;
     private Ctk.VBox  content_box;
 
     private PlaceHomeEntry       home_entry;
@@ -62,12 +61,6 @@ namespace Unity.Places
 
       home_entry = new PlaceHomeEntry (shell, _model);
 
-      place_bar = new PlaceBar (shell, _model);
-      pack (place_bar, false, true);
-      place_bar.show ();
-
-      place_bar.entry_view_activated.connect (on_entry_view_activated);
-
       content_box = new Ctk.VBox (4);
       content_box.padding = {
         0.0f,
@@ -87,7 +80,6 @@ namespace Unity.Places
     {
       is_showing = true;
 
-      place_bar.reset ();
       search_bar.reset ();
 
       on_entry_view_activated (home_entry, 0);
@@ -98,7 +90,7 @@ namespace Unity.Places
       is_showing = false;
     }
 
-    private void on_entry_view_activated (PlaceEntry entry, int x)
+    public void on_entry_view_activated (PlaceEntry entry, int x)
     {
       /* Create the correct results view */
       if (renderer is Clutter.Actor)
@@ -113,10 +105,7 @@ namespace Unity.Places
       renderer.show ();
 
       /* Update the search bar */
-      search_bar.set_active_entry_view (entry,
-                                        x == 0 ? 0 : x
-                                          - shell.get_launcher_width_foobar ()
-                                          - 8);
+      search_bar.set_active_entry_view (entry, 0);
     }
 
     private Unity.Place.Renderer lookup_renderer (string renderer)

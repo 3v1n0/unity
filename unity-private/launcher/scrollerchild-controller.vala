@@ -167,6 +167,9 @@ namespace Unity.Launcher
       if (menu is QuicklistController == false)
         {
           menu = get_menu_controller ();
+
+          if (menu is QuicklistController == false)
+            return;
         }
 
       if (menu.state == QuicklistControllerState.MENU

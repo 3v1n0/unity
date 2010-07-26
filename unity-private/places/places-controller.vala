@@ -61,6 +61,17 @@ namespace Unity.Places
 
       var child = new PlaceEntryScrollerChildController (entry);
       s.add (child.child);
+
+      child.clicked.connect (on_entry_clicked);
+    }
+
+    private void on_entry_clicked (PlaceEntryScrollerChildController cont)
+    {
+     view.on_entry_view_activated (cont.entry, 0);
+     if (view.opacity == 0)
+      {
+        shell.show_unity ();
+      }
     }
   }
 }
