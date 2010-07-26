@@ -92,6 +92,9 @@ namespace Unity.Launcher
     private Gee.ArrayList<ScrollerChild> draw_ftb;
     private Gee.ArrayList<ScrollerChild> draw_btf;
 
+    /* Key binding bools */
+    private Clutter.BindingPool key_bindings;
+
     /*
      * Refrence holders
      */
@@ -134,6 +137,11 @@ namespace Unity.Launcher
 
       parent_set.connect (() => {
           get_stage ().motion_event.connect (on_stage_motion);
+
+          get_stage ().key_press_event.connect (() => {
+            debug ("Got a key press event! OMG!");
+          });
+          (get_stage () as Clutter.Stage).set_key_focus (null);
       });
 
       // set a timeline for our fling animation
