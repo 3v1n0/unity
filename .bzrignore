@@ -323,3 +323,10 @@ unity/unity-appinfo-manager.c
 unity/unity-io.c
 unity/unity-expanding-bin.c
 unity-private/places/places-place-home.c
+tests/unit/test-dbusmenu-quicklists.c
+unity-private/launcher/quicklist-check-menu-item.c
+unity-private/launcher/quicklist-image-menu-item.c
+unity-private/launcher/quicklist-menu-item.c
+unity-private/launcher/quicklist-radio-menu-item.c
+unity-private/launcher/quicklist-seperator-menu-item.c
+unity-private/places/places-place-entry-scroller-child.c
