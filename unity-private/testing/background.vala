@@ -208,10 +208,14 @@ namespace Unity.Testing
     private void
     _on_allocation_changed ()
     {
-      if (this.filename != "")
-        _update_image ();
-      else
-        _update_gradient ();
+      Timeout.add (0, () => {
+        if (this.filename != "")
+          _update_image ();
+        else
+          _update_gradient ();
+
+          return false;
+      });
     }
 
     private void
@@ -220,7 +224,11 @@ namespace Unity.Testing
 
       if (this.find_child_by_name ("bg_image") != this.bg_image)
         {
-          this.remove_actor (this.bg_gradient);
+          if (this.bg_gradient is Clutter.Actor &&
+              this.bg_gradient.get_parent () == this)
+            {
+              this.remove_actor (this.bg_gradient);
+            }
           this.add_actor (this.bg_image);
           this.bg_image.show ();
         }
@@ -246,7 +254,11 @@ namespace Unity.Testing
 
       if (this.find_child_by_name ("bg_gradient") != this.bg_gradient)
         {
-          this.remove_actor (this.bg_image);
+          if (this.bg_image is Clutter.Actor &&
+              this.bg_image.get_parent () == this)
+            {
+              this.remove_actor (this.bg_image);
+            }
           this.add_actor (this.bg_gradient);
           this.bg_gradient.show ();
         }

@@ -170,8 +170,11 @@ namespace Unity.Launcher
           if (anim is Clutter.Animation)
             {
               Clutter.Interval interval = anim.get_interval ("position");
-              interval.get_final_value (value);
-              child.position = value.get_float ();
+              if (interval is Clutter.Interval)
+                {
+                  interval.get_final_value (value);
+                  child.position = value.get_float ();
+                }
             }
         }
 
@@ -693,7 +696,8 @@ namespace Unity.Launcher
                   //GLib.Value value = GLib.Value (GLib.Type.from_name ("string"));
                   GLib.Value value = Value (typeof (float));
                   Clutter.Interval interval = child.get_animation ().get_interval ("position");
-                  interval.get_final_value (value);
+                  if (interval is Clutter.Interval)
+                    interval.get_final_value (value);
                   if (value.get_float () != transitions[index].position)
                     {
                       // disable the current animation before starting a new one
