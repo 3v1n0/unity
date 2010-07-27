@@ -374,7 +374,7 @@ namespace Unity.Launcher
           Gdk.Pixbuf scaled_buf;
           int max_size = 48;
           if (!Unity.pixbuf_is_tile (icon))
-            max_size = 40;
+            max_size = 32;
 
           if (icon.get_width () > max_size || icon.get_height () > max_size)
             {

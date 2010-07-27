@@ -115,6 +115,12 @@ namespace Unity.Panel
           system_tray.hide ();
           indicator_bar.set_indicator_mode (mode);
           reactive = false;
+          
+          var glow = new Ctk.EffectGlow ();
+          glow.set_color ({ 255, 255, 255, 150 });
+          glow.set_factor (1.0f);
+          glow.set_margin (5);
+          indicator_bar.add_effect (glow);
         }
       else
         {
@@ -124,6 +130,8 @@ namespace Unity.Panel
           system_tray.show ();
           indicator_bar.set_indicator_mode (mode);
           reactive = true;
+
+          indicator_bar.remove_all_effects ();
       }
     }
   }

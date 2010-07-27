@@ -23,6 +23,7 @@ namespace Unity.Places
 {
   public class View : Ctk.Box
   {
+    public static const float PADDING = 8.0f;
     /* Properties */
     public Shell shell { get; construct; }
 
@@ -58,10 +59,10 @@ namespace Unity.Places
 
       content_box = new Ctk.VBox (4);
       content_box.padding = {
-        26.0f,
-        8.0f,
+        PADDING * 2.5f,
+        PADDING,
         0.0f,
-        shell.get_launcher_width_foobar () + 8.0f
+        PADDING
       };
       pack (content_box, true, true);
       content_box.show ();

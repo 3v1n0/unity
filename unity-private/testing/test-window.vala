@@ -218,11 +218,11 @@ namespace Unity.Testing
       this.launcher.get_view ().set_clip (0, 0,
                                           ql_width, height);
 
-      this.places.set_size (width, height);
-      this.places.set_position (0, 0);
+      this.places.set_size (width-ql_width, height);
+      this.places.set_position (ql_width, 0);
 
-       this.panel.set_size (width, Unity.Panel.PANEL_HEIGHT);
-       this.panel.set_position (0, 0);
+      this.panel.set_size (width, Unity.Panel.PANEL_HEIGHT);
+      this.panel.set_position (0, 0);
     }
 
     public override void show ()

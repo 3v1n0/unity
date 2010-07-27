@@ -23,7 +23,6 @@ namespace Unity.Panel.Indicators
   public class IndicatorBar : Ctk.Box
   {
     private Gee.ArrayList<Indicators.IndicatorObjectView> indicator_array;
-    IndicatorBackground   indicator_bground;
         
     public IndicatorBar ()
     {
@@ -35,10 +34,6 @@ namespace Unity.Panel.Indicators
     construct
     {
       Unity.Testing.ObjectRegistry.get_default ().register ("IndicatorBar", this);
-      
-      indicator_bground = new IndicatorBackground ();
-      set_background (indicator_bground);
-      indicator_bground.hide ();
       
       indicator_array = new Gee.ArrayList<Indicators.IndicatorObjectView> ();
 
@@ -115,14 +110,6 @@ namespace Unity.Panel.Indicators
     
     public void set_indicator_mode (bool mode)
     {
-      if (mode)
-        {
-          indicator_bground.show ();
-        }
-      else
-        {
-          indicator_bground.hide ();
-        }
     }
   }
 }

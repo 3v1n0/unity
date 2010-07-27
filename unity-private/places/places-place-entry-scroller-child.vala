@@ -51,7 +51,8 @@ namespace Unity.Places
     public override QuicklistController? get_menu_controller ()
     {
       /*FIXME: Setting the menu stops the activate handler from being called.*/
-      return null;
+      return new ApplicationQuicklistController (this);
+      //return null;
     }
   }
 }
