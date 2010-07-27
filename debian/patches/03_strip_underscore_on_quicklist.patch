@@ -1,0 +1,159 @@
+=== modified file 'unity-private/launcher/quicklist-check-menu-item.vala'
+--- unity-private/launcher/quicklist-check-menu-item.vala	2010-07-16 12:36:32 +0000
++++ unity-private/launcher/quicklist-check-menu-item.vala	2010-07-22 19:32:14 +0000
+@@ -123,11 +123,12 @@
+       Cairo.Context selected_cr = new Cairo.Context (selected_surf);
+       Gtk.Settings settings = Gtk.Settings.get_default ();
+ 
+-      string formatted_label = label;
++      string formatted_label = Utils.strip_characters (label, "", "_", "_");
++
+       if (active)
+-        formatted_label = formatted_label + " ☑";
++        formatted_label = "☑ " + formatted_label;
+       else
+-        formatted_label = formatted_label + " ☐";
++        formatted_label = "☐ " + formatted_label;
+ 
+       Unity.QuicklistRendering.Item.normal_mask (normal_cr,
+                                                  this.last_width,
+
+=== modified file 'unity-private/launcher/quicklist-image-menu-item.vala'
+--- unity-private/launcher/quicklist-image-menu-item.vala	2010-07-16 12:36:32 +0000
++++ unity-private/launcher/quicklist-image-menu-item.vala	2010-07-22 19:32:14 +0000
+@@ -124,16 +124,18 @@
+       Cairo.Context selected_cr = new Cairo.Context (selected_surf);
+       Gtk.Settings settings = Gtk.Settings.get_default ();
+ 
++      string formatted_label = Utils.strip_characters (label, "", "_", "_");
++
+       Unity.QuicklistRendering.Item.normal_mask (normal_cr,
+                                                  this.last_width,
+                                                  this.last_height,
+                                                  settings.gtk_font_name,
+-                                                 this.label);
++                                                 formatted_label);
+       Unity.QuicklistRendering.Item.selected_mask (selected_cr,
+                                                    this.last_width,
+                                                    this.last_height,
+                                                    settings.gtk_font_name,
+-                                                   this.label);
++                                                   formatted_label);
+ 
+       normal_layer.set_mask_from_surface (normal_surf);
+       normal_layer.set_color (white_color);
+
+=== modified file 'unity-private/launcher/quicklist-menu-item.vala'
+--- unity-private/launcher/quicklist-menu-item.vala	2010-07-16 12:36:32 +0000
++++ unity-private/launcher/quicklist-menu-item.vala	2010-07-22 19:32:14 +0000
+@@ -125,16 +125,18 @@
+       Cairo.Context selected_cr = new Cairo.Context (selected_surf);
+       Gtk.Settings settings = Gtk.Settings.get_default ();
+ 
++      string formatted_label = Utils.strip_characters (label, "", "_", "_");
++
+       Unity.QuicklistRendering.Item.normal_mask (normal_cr,
+                                                  this.last_width,
+                                                  this.last_height,
+                                                  settings.gtk_font_name,
+-                                                 this.label);
++                                                 formatted_label);
+       Unity.QuicklistRendering.Item.selected_mask (selected_cr,
+                                                    this.last_width,
+                                                    this.last_height,
+                                                    settings.gtk_font_name,
+-                                                   this.label);
++                                                   formatted_label);
+ 
+       normal_layer.set_mask_from_surface (normal_surf);
+       normal_layer.set_color (white_color);
+
+=== modified file 'unity-private/launcher/quicklist-radio-menu-item.vala'
+--- unity-private/launcher/quicklist-radio-menu-item.vala	2010-07-16 12:36:32 +0000
++++ unity-private/launcher/quicklist-radio-menu-item.vala	2010-07-22 19:32:14 +0000
+@@ -123,11 +123,12 @@
+       Cairo.Context selected_cr = new Cairo.Context (selected_surf);
+       Gtk.Settings settings = Gtk.Settings.get_default ();
+ 
+-      string formatted_label = label;
++      string formatted_label = Utils.strip_characters (label, "", "_", "_");
++
+       if (active)
+-        formatted_label = formatted_label + " ◉";
++        formatted_label =  "◉ " + formatted_label;
+       else
+-        formatted_label = formatted_label + " ○";
++        formatted_label =  "○ " + formatted_label;
+ 
+       Unity.QuicklistRendering.Item.normal_mask (normal_cr,
+                                                  this.last_width,
+
+=== modified file 'unity-private/utils.vala'
+--- unity-private/utils.vala	2010-07-09 09:25:25 +0000
++++ unity-private/utils.vala	2010-07-22 19:32:14 +0000
+@@ -19,6 +19,64 @@
+ 
+ namespace Utils
+ {
++  string strip_characters (string text,
++                           string replace_text,
++                           string match_regex,
++                           string replace_regex)
++  {
++    string         ret = "";
++    bool           matching = false;
++    GLib.MatchInfo info;
++
++    {
++      GLib.Regex regex = null;
++
++      try
++        {
++          regex = new GLib.Regex (match_regex,
++                                  GLib.RegexCompileFlags.DOTALL |
++                                  GLib.RegexCompileFlags.OPTIMIZE,
++                                  0);
++        }
++      catch (GLib.RegexError e)
++        {
++          warning ("Creating regular-expression failed: \"%s\"\n", e.message);
++        }
++
++      matching = regex.match (text, 0, out info);
++    }
++
++    if (matching)
++      {
++        GLib.Regex regex = null;
++
++        try
++          {
++            regex = new GLib.Regex (replace_regex,
++                                    GLib.RegexCompileFlags.DOTALL |
++                                    GLib.RegexCompileFlags.OPTIMIZE,
++                                    0);
++          }
++        catch (GLib.RegexError e)
++          {
++            warning ("Creating regular-expression failed: \"%s\"\n", e.message);
++          }
++
++        try
++          {
++            ret = regex.replace (text, -1, 0, replace_text, 0);
++          }
++        catch (GLib.RegexError e)
++          {
++            warning ("Replacing text failed: \"%s\"\n", e.message);
++          }
++      }
++    else
++      ret = text;
++
++    return ret;
++  }
++
+   [CCode (lower_case_prefix = "utils_")]
+   public extern void set_strut (Gtk.Window *window,
+                                   uint32    strut_size,
+

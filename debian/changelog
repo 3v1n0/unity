@@ -1,3 +1,12 @@
+unity (0.2.20-0ubuntu2) UNRELEASED; urgency=low
+
+  * Misc fixes from git
+    - debian/patches/03_strip_underscore_on_quicklist.patch
+    - debian/patches/04_fix_scroller_focus_issue.patch
+    - debian/patches/05_fix_ws_switching.patch
+
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 27 Jul 2010 10:18:07 +0200
+
 unity (0.2.20-0ubuntu1) maverick; urgency=low
 
   * New upstream release.
