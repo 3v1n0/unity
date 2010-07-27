@@ -131,7 +131,10 @@ namespace Unity.Launcher
       button_release_event.connect (on_button_release_event);
       motion_event.connect (on_motion_event);
       enter_event.connect (on_enter_event);
-      leave_event.connect (on_leave_event);
+
+      parent_set.connect (() => {
+          get_stage ().motion_event.connect (on_stage_motion);
+      });
 
       // set a timeline for our fling animation
       fling_timeline = new Clutter.Timeline (1000);
@@ -152,10 +155,39 @@ namespace Unity.Launcher
       queue_relayout ();
       Idle.add (() => {
         order_children (true);
+        queue_relayout ();
       });
     }
 
-    public int get_model_index_at_y_pos (float y)
+    public int get_model_index_at_y_pos_no_anim (float y, bool return_minus_if_fail=false)
+    {
+      SList<float?> positions = new SList<float?> ();
+      foreach (ScrollerChild child in model)
+        {
+          positions.append (child.position);
+          GLib.Value value = Value (typeof (float));
+          Clutter.Animation anim = child.get_animation ();
+          if (anim is Clutter.Animation)
+            {
+              Clutter.Interval interval = anim.get_interval ("position");
+              interval.get_final_value (value);
+              child.position = value.get_float ();
+            }
+        }
+
+        int value = get_model_index_at_y_pos (y, return_minus_if_fail);
+
+        unowned SList<float?> list = positions;
+        foreach (ScrollerChild child in model)
+          {
+            child.position = (float)list.data;
+            list = list.next;
+          }
+
+        return value;
+    }
+
+    public int get_model_index_at_y_pos (float y, bool return_minus_if_fail=false)
     {
 
       // trying out a different method
@@ -173,8 +205,10 @@ namespace Unity.Launcher
 
               if (picked_actor is ScrollerChild == false)
                 {
+                  if (return_minus_if_fail)
+                    return -1;
                   // couldn't pick a single actor, return 0
-                  return 0;
+                  return (y < padding.top + model[0].get_height () + spacing) ? 0 : model.size -1 ;
                 }
             }
         }
@@ -336,8 +370,6 @@ namespace Unity.Launcher
       if (view_type == ScrollerViewType.EXPANDED) return false;
       view_type = ScrollerViewType.EXPANDED;
 
-      Unity.global_shell.add_fullscreen_request (this);
-
       // we need to set a new scroll position
       // get the index of the icon we are hovering over
       if (get_total_children_height () > get_available_height ())
@@ -346,11 +378,12 @@ namespace Unity.Launcher
 
           // set our state to what we will end up being so we can find the correct
           //place to be.
+          float contracted_position = model[index].position;
           var old_scroll_position = scroll_position;
           scroll_position = 0;
           order_children (true);
-          float child_height = model[index].get_height () / 2;
-          var new_scroll_position = -model[index].position + event.crossing.y - model[index].get_height ();
+
+          float new_scroll_position = -(model[index].position - contracted_position);
 
           //reset our view so that we animate cleanly to the new view
           view_type = ScrollerViewType.CONTRACTED;
@@ -369,15 +402,15 @@ namespace Unity.Launcher
       return false;
     }
 
-    private bool on_leave_event (Clutter.Event event)
+    private bool on_stage_motion (Clutter.Event event)
     {
       if (view_type == ScrollerViewType.CONTRACTED) return false;
-      if (event.crossing.x < get_width ()-1) return false;
-
-      Unity.global_shell.remove_fullscreen_request (this);
-
-      // need to store the focused item
-      focused_launcher = get_model_index_at_y_pos (event.crossing.y);
+      if (event.crossing.x < get_width ()) return false;
+       foreach (ScrollerChild child in model)
+        {
+          if (child.active)
+            focused_launcher = model.index_of (child);
+        }
 
       view_type = ScrollerViewType.CONTRACTED;
       order_children (false);
@@ -654,19 +687,33 @@ namespace Unity.Launcher
             }
           else
             {
+              bool do_new_position = true;
               if (child.get_animation () is Clutter.Animation)
                 {
-                  // disable the current animation before starting a new one
-                  float current_pos = child.position;
-                  child.get_animation ().completed ();
-                  child.position = current_pos;
+                  //GLib.Value value = GLib.Value (GLib.Type.from_name ("string"));
+                  GLib.Value value = Value (typeof (float));
+                  Clutter.Interval interval = child.get_animation ().get_interval ("position");
+                  interval.get_final_value (value);
+                  if (value.get_float () != transitions[index].position)
+                    {
+                      // disable the current animation before starting a new one
+                      float current_pos = child.position;
+                      child.get_animation ().completed ();
+                      child.position = current_pos;
+                    }
+                  else
+                    {
+                      do_new_position = false;
+                    }
                 }
 
               child.rotation = transitions[index].rotation;
-              child.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD,
-                             300,
-                             "position", transitions[index].position
-                             );
+
+              if (do_new_position)
+                child.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD,
+                               300,
+                               "position", transitions[index].position
+                               );
             }
         }
     }
@@ -876,17 +923,17 @@ namespace Unity.Launcher
       for (int index = draw_btf.size-1; index >= 0; index--)
         {
           ScrollerChild child = draw_btf[index];
-          if (child is LauncherChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0)
             {
-              (child as LauncherChild).paint ();
+              (child as ScrollerChild).paint ();
             }
         }
 
       foreach (ScrollerChild child in draw_ftb)
         {
-          if (child is LauncherChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0)
             {
-              (child as LauncherChild).paint ();
+              (child as ScrollerChild).paint ();
             }
         }
 
@@ -903,17 +950,17 @@ namespace Unity.Launcher
       for (int index = draw_btf.size-1; index >= 0; index--)
         {
           ScrollerChild child = draw_btf[index];
-          if (child is LauncherChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0)
             {
-              (child as LauncherChild).paint ();
+              (child as ScrollerChild).paint ();
             }
         }
 
       foreach (ScrollerChild child in draw_ftb)
         {
-          if (child is LauncherChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0)
             {
-              (child as LauncherChild).paint ();
+              (child as ScrollerChild).paint ();
             }
         }
 

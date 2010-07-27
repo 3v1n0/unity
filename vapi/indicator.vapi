@@ -2,11 +2,12 @@
 
 [CCode (cprefix = "Indicator", lower_case_cprefix = "indicator_")]
 namespace Indicator {
-	[CCode (cheader_filename = "gtk/gtk.h,libindicator/indicator.h,libindicator/indicator-object.h,libindicator/indicator-service.h,libindicator/indicator-service-manager.h")]
+	[CCode (cheader_filename = "gtk/gtk.h,libindicator/indicator.h,libindicator/indicator-object.h,libindicator/indicator-service.h,libindicator/indicator-service-manager.h,libindicator/indicator-desktop-shortcuts.h")]
 	public class DesktopShortcuts : GLib.Object {
 		[CCode (has_construct_function = false)]
 		public DesktopShortcuts (string file, string identity);
-		public unowned string get_nicks ();
+    [CCode (array_length = false, array_null_terminated = true)]
+		public unowned string[] get_nicks ();
 		public bool nick_exec (string nick);
 		public unowned string nick_get_name (string nick);
 		public string desktop_file { construct; }

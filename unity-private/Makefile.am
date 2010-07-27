@@ -22,6 +22,7 @@ libunity_private_la_CPPFLAGS = \
   -DINDICATORICONSDIR=\""$(INDICATORICONSDIR)"\" \
   -DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\" \
   -DG_LOG_DOMAIN=\"libunity-private\" \
+  -DGNOME_DESKTOP_USE_UNSTABLE_API \
   $(BASE_CFLAGS) \
   $(MAINTAINER_CFLAGS) \
   -I$(top_srcdir)/unity/ \
@@ -41,9 +42,9 @@ libunity_private_la_VALAFLAGS = \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
   --pkg config \
-  --pkg dbus-glib-1 \
   --pkg cogl-1.0 \
   --pkg dbus-glib-1 \
+  --pkg Dbusmenu-Glib-0.2\
   --pkg dee-1.0 \
   --pkg gconf-2.0 \
   --pkg gdk-2.0 \
@@ -51,6 +52,7 @@ libunity_private_la_VALAFLAGS = \
   --pkg gee-1.0 \
   --pkg gio-unix-2.0 \
   --pkg gtk+-2.0 \
+  --pkg gnome-bg-2.0 \
   --pkg indicator \
   --pkg Bamf-0.2 \
   --pkg libwnck-1.0 \
@@ -91,6 +93,7 @@ places_sources = \
   places/places-place-bar.vala \
   places/places-place-entry-view.vala \
   places/places-place-entry.vala \
+  places/places-place-home.vala \
   places/places-place-model.vala \
   places/places-place-view.vala \
   places/places-place.vala \
@@ -102,8 +105,12 @@ places_sources = \
 launcher_sources = \
   launcher/application-controller.vala \
   launcher/launcher.vala \
-  launcher/launcher-child.vala \
+  launcher/quicklist-check-menu-item.vala \
   launcher/quicklist-controller.vala \
+  launcher/quicklist-image-menu-item.vala \
+  launcher/quicklist-menu-item.vala \
+  launcher/quicklist-radio-menu-item.vala \
+  launcher/quicklist-seperator-menu-item.vala \
   launcher/quicklist-view.vala \
   launcher/scrollerchild-controller.vala \
   launcher/scrollerchild.vala \

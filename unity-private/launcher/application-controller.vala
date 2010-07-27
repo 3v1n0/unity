@@ -23,161 +23,32 @@
 
 namespace Unity.Launcher
 {
-
-  public class ApplicationShortcut : Object, ShortcutItem
-  {
-    public string exec;
-    public string name;
-    public string desktop_location;
-
-    public string get_name ()
-    {
-      return name;
-    }
-
-    public void activated ()
-    {
-      Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
-      try
-        {
-          var desktop_file = new KeyFile ();
-          desktop_file.load_from_file (this.desktop_location, 0);
-          desktop_file.set_string ("Desktop Entry", "Exec", exec);
-          AppInfo appinfo = new DesktopAppInfo.from_keyfile (desktop_file);
-          appinfo.create_from_commandline (this.exec, this.name, 0);
-          context.set_screen (Gdk.Display.get_default ().get_default_screen ());
-          context.set_timestamp (Gdk.CURRENT_TIME);
-
-          appinfo.launch (null, context);
-        }
-      catch (Error e)
-        {
-          warning (e.message);
-        }
-
-    }
-  }
-
-  /* these are the custom shortcuts for the application controller. i may
-   * move these into the ScrollerChildController base class with more abstract
-   * stuff but want to wait for bamf frist (clean out liblauncher cruft
-   */
-  public class LibLauncherShortcut : Object, ShortcutItem
-  {
-    public Bamf.Application app;
-    public string name;
-
-    public string get_name ()
-    {
-      return _("Quit");
-    }
-
-    public void activated ()
-    {
-      Array<uint32> xids = app.get_xids ();
-      Unity.global_shell.close_xids (xids);
-    }
-  }
-
-  /* this does nothing at the moment, waiting for Launcher.Favorites
-   * to impliment it (no use in doing it here as we don't get a notification in
-   * liblauncher about if an applications state as a favourite has changed
-   */
-  public class LauncherPinningShortcut : Object, ShortcutItem
-  {
-    public string desktop_file {get; construct;}
-    public string name {
-      get {
-        if (is_sticky ())
-          {
-            return _("Remove from Launcher");
-          }
-        else
-          {
-            return _("Keep In Launcher");
-          }
-      }
-    }
-
-    private string? cached_uid = null;
-
-    private bool is_sticky ()
-    {
-      var favorites = Unity.Favorites.get_default ();
-      foreach (string uid in favorites.get_favorites ())
-        {
-          if (favorites.get_string (uid, "desktop_file") == desktop_file)
-            {
-              cached_uid = uid;
-              return true;
-            }
-        }
-      return false;
-    }
-
-    public LauncherPinningShortcut (string _desktop_file)
-    {
-      Object (desktop_file: _desktop_file);
-    }
-
-    construct
-    {
-    }
-
-    public string get_name ()
-    {
-      return name;
-    }
-
-    public void activated ()
-    {
-      var favorites = Unity.Favorites.get_default ();
-      if (!is_sticky ())
-        {
-          if (cached_uid == null)
-            {
-              //generate a new uid
-              cached_uid = "app-" + Path.get_basename (desktop_file);
-            }
-          favorites.set_string (cached_uid, "type", "application");
-          favorites.set_string (cached_uid, "desktop_file", desktop_file);
-          favorites.add_favorite (cached_uid);
-        }
-      else
-        {
-          favorites.remove_favorite (cached_uid);
-        }
-    }
-  }
   public errordomain AppTypeError {
     NO_DESKTOP_FILE
   }
 
   public class ApplicationController : ScrollerChildController
   {
-    private string _desktop_file;
-    public string desktop_file {
-      get
-        {
-          return _desktop_file;
-        }
-      construct
-        {
-          _desktop_file = value;
-          load_desktop_file_info ();
-        }
-    }
+    public string desktop_file { get; private set; }
+
     private KeyFile desktop_keyfile;
     private string icon_name;
-    private Unity.ThemeFilePath theme_file_path;
     private Bamf.Application? app = null;
+    private Dbusmenu.Client menu_client;
+    private Dbusmenu.Menuitem cached_menu;
+    private int menu_items_realized_counter;
 
     private bool is_favorite = false;
 
-    public ApplicationController (string desktop_file_, ScrollerChild child_)
+    public ApplicationController (string? desktop_file_, ScrollerChild child_)
     {
-      Object (desktop_file: desktop_file_,
-              child: child_);
+      Object (child: child_);
+
+      if (desktop_file_ != null)
+        {
+          desktop_file = desktop_file_;
+          load_desktop_file_info ();
+        }
     }
 
     ~ApplicationController ()
@@ -186,51 +57,37 @@ namespace Unity.Launcher
 
     construct
     {
-      theme_file_path = new Unity.ThemeFilePath ();
       var favorites = Unity.Favorites.get_default ();
       favorites.favorite_added.connect (on_favorite_added);
       favorites.favorite_removed.connect (on_favorite_removed);
 
-      // we need to figure out if we are a favorite
-      is_favorite = true;
-      child.pin_type = PinType.UNPINNED;
-      foreach (string uid in favorites.get_favorites ())
-        {
-          if (favorites.get_string (uid, "desktop_file") == desktop_file)
-            {
-              is_favorite = true;
-              child.pin_type = PinType.PINNED;
-              break;
-            }
-        }
+      // we need to figure out if we are a favoritem
 
-      //connect to our quicklist signals so that we can expose and de-expose
-      // windows at the correct time
-      var controller = QuicklistController.get_default ();
-      controller.menu_state_changed.connect ((open) => {
-        if (controller.get_attached_actor () == child && app != null)
-          {
-            // this is a menu relating to us
-            if (open)
-              {
-                Unity.global_shell.expose_xids (app.get_xids ());
-              }
-            else
-              {
-                Unity.global_shell.stop_expose ();
-              }
-          }
-      });
+      is_favorite = is_sticky ();
+      child.pin_type = PinType.UNPINNED;
+      if (is_sticky ())
+        child.pin_type = PinType.PINNED;
+    }
+
+    public override QuicklistController get_menu_controller ()
+    {
+      QuicklistController new_menu = new ApplicationQuicklistController (this);
+      return new_menu;
     }
 
     public void set_sticky (bool is_sticky = true)
     {
       if (desktop_file == "" || desktop_file == null)
         return;
-      //string uid = "app-" + Path.get_basename (desktop_file);
+
       var favorites = Unity.Favorites.get_default ();
 
       string uid = favorites.find_uid_for_desktop_file (desktop_file);
+      if (uid == "" || uid == null)
+        {
+          var filepath = desktop_file.split ("/");
+          uid = "app-" + filepath[filepath.length - 1];
+        }
 
       if (is_sticky)
         {
@@ -242,6 +99,19 @@ namespace Unity.Launcher
         {
           favorites.remove_favorite (uid);
         }
+    }
+
+    public bool is_sticky ()
+    {
+      if (desktop_file == "" || desktop_file == null)
+        return false;
+
+      var favorites = Unity.Favorites.get_default ();
+      string uid = favorites.find_uid_for_desktop_file (desktop_file);
+      if (uid == null || uid == "")
+        return false;
+      else
+        return true;
     }
 
     public void close_windows ()
@@ -299,74 +169,145 @@ namespace Unity.Launcher
         }
     }
 
-    public override Gee.ArrayList<ShortcutItem> get_menu_shortcuts ()
+/*
+    private get_menu_for_client (ScrollerChildController.menu_cb callback, Dbusmenu.Client client)
     {
-      // get the desktop file
-      Gee.ArrayList<ShortcutItem> ret_list = new Gee.ArrayList<ShortcutItem> ();
-      if (desktop_file == null)
-        return ret_list;
 
-      var desktop_keyfile = new KeyFile ();
-      try
+    }
+*/
+
+    public override void get_menu_actions (ScrollerChildController.menu_cb callback)
+    {
+
+      // first check to see if we have a cached client, if we do, just re-use that
+      // check for a menu from bamf
+      if (app is Bamf.Application)
         {
-          desktop_keyfile.load_from_file (desktop_file, 0);
-        }
-      catch (Error e)
-        {
-          warning ("Unable to load desktop file '%s': %s",
-                   desktop_file,
-                   e.message);
-          return ret_list;
+          GLib.List<Bamf.View> views = app.get_children ();
+          foreach (Bamf.View view in views)
+            {
+              if (view is Bamf.Indicator)
+                {
+                  string path = (view as Bamf.Indicator).get_dbus_menu_path ();
+                  string remote_address = (view as Bamf.Indicator).get_remote_address ();
+                  string remote_path = (view as Bamf.Indicator).get_remote_path ();
+
+                  // Yes, right here, i have lambda's inside lambda's... shutup.
+                  menu_client = new Dbusmenu.Client (remote_address, path);
+                  menu_client.layout_updated.connect (() => {
+                    var menu = menu_client.get_root ();
+                    cached_menu = menu;
+                    if (menu is Dbusmenu.Menuitem == false)
+                      warning (@"Didn't get a menu for path: $path - address: $remote_address");
+
+                    unowned GLib.List<Dbusmenu.Menuitem> menu_items = menu.get_children ();
+                    menu_items_realized_counter = (int)menu_items.length ();
+                    foreach (Dbusmenu.Menuitem menuitem in menu_items)
+                    {
+                      menuitem.realized.connect (() =>
+                        {
+                          menu_items_realized_counter -= 1;
+                          if (menu_items_realized_counter < 1)
+                            {
+                              callback (menu);
+                            }
+
+                        });
+                    }
+                  });
+                }
+            }
         }
 
-      var groups = desktop_keyfile.get_groups ();
-      for (int a = 0; a < groups.length; a++)
-      {
-        if ("QuickList Entry" in groups[a])
-          {
-            string exec = "";
-            string name = "";
-            try
-              {
-                exec = desktop_keyfile.get_value (groups[a], "Exec");
-                name = desktop_keyfile.get_locale_string  (groups[a], "Name", "");
-              } catch (Error e)
-              {
-                warning (e.message);
-                continue;
-              }
-              var shortcut = new ApplicationShortcut ();
-              shortcut.exec = exec;
-              shortcut.name = name;
-              shortcut.desktop_location = desktop_file;
-              ret_list.add (shortcut);
-          }
-      }
-      return ret_list;
+
+      if (desktop_file == "" || desktop_file == null)
+        {
+          callback (null);
+        }
+
+      // find our desktop shortcuts
+      Indicator.DesktopShortcuts shortcuts = new Indicator.DesktopShortcuts (desktop_file, "Unity");
+      unowned string [] nicks = shortcuts.get_nicks ();
+
+      if (nicks.length < 1)
+        callback (null);
+
+      Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
+      root.set_root (true);
+
+      foreach (string nick in nicks)
+        {
+          string local_nick = nick.dup ();
+          unowned string name = shortcuts.nick_get_name (local_nick);
+          string local_name = name.dup ();
+
+          Dbusmenu.Menuitem shortcut_item = new Dbusmenu.Menuitem ();
+          shortcut_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, local_name);
+          shortcut_item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
+          shortcut_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
+          shortcut_item.item_activated.connect ((timestamp) => {
+            shortcuts.nick_exec (local_nick);
+          });
+          root.child_append (shortcut_item);
+
+        }
+      callback (root);
     }
 
-    public override Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ()
+
+    public override void get_menu_navigation (ScrollerChildController.menu_cb callback)
     {
-      Gee.ArrayList<ShortcutItem> ret_list = new Gee.ArrayList<ShortcutItem> ();
-      if (desktop_file != null)
+
+      // build a dbusmenu that represents our generic application handling items
+      Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
+      root.set_root (true);
+
+      if (desktop_file != null && desktop_file != "")
         {
-          var pin_entry = new LauncherPinningShortcut (desktop_file);
-          ret_list.add (pin_entry);
+          Dbusmenu.Menuitem pinning_item = new Dbusmenu.Menuitem ();
+          if (is_sticky () && app is Bamf.Application)
+            {
+              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Keep in Launcher"));
+              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_TOGGLE_TYPE, Dbusmenu.MENUITEM_TOGGLE_CHECK);
+              pinning_item.property_set_int (Dbusmenu.MENUITEM_PROP_TOGGLE_STATE, Dbusmenu.MENUITEM_TOGGLE_STATE_CHECKED);
+            }
+          else if (is_sticky ())
+            {
+              pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Remove from launcher"));
+            }
+
+          pinning_item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
+          pinning_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
+          pinning_item.item_activated.connect ((timestamp) => {
+            set_sticky (!is_sticky ());
+          });
+
+          root.child_append (pinning_item);
         }
 
       if (app is Bamf.Application)
         {
-          if (app.is_running ()) {
-            var open_entry = new LibLauncherShortcut ();
-            open_entry.app = app;
-            ret_list.add (open_entry);
-          }
+          Dbusmenu.Menuitem app_item = new Dbusmenu.Menuitem ();
+          app_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Quit"));
+          app_item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
+          app_item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
+
+          app_item.item_activated.connect ((timestamp) => {
+            if (app is Bamf.Application)
+              {
+                Array<uint32> xids = app.get_xids ();
+                Unity.global_shell.close_xids (xids);
+              }
+          });
+          root.child_append (app_item);
         }
 
-      return ret_list;
+        callback (root);
     }
 
     private static int order_app_windows (void* a, void* b)
+      requires (a is Bamf.Window)
+      requires (b is Bamf.Window)
     {
       if ((b as Bamf.Window).last_active () > (a as Bamf.Window).last_active ())
         {
@@ -383,9 +324,16 @@ namespace Unity.Launcher
 
     public override void activate ()
     {
+      global_shell.hide_unity ();
+
       if (app is Bamf.Application)
         {
-          if (app.is_running ())
+          if (app.is_active ())
+            {
+              Array<uint32> xids = app.get_xids ();
+              global_shell.expose_xids (xids);
+            }
+          else if (app.is_running ())
             {
               unowned List<Bamf.Window> windows = app.get_windows ();
               windows.sort ((CompareFunc)order_app_windows);
@@ -423,6 +371,7 @@ namespace Unity.Launcher
     public void attach_application (Bamf.Application application)
     {
       app = application;
+      desktop_file = app.get_desktop_file ().dup ();
       child.running = app.is_running ();
       child.active = app.is_active ();
       child.activating = false;
@@ -431,17 +380,15 @@ namespace Unity.Launcher
       app.active_changed.connect (on_app_active_changed);
       app.closed.connect (detach_application);
       app.urgent_changed.connect (on_app_urgant_changed);
+      app.user_visible_changed.connect ((value) => {
+        hide = !value;
+      });
       name = app.get_name ();
-      if (name == "")
+      if (name == null || name == "")
         warning (@"Bamf returned null for app.get_name (): $desktop_file");
 
-      string potential_icon_name = app.get_icon ();
-      if (potential_icon_name == "")
-        warning (@"Bamf returned null for app.get_icon (): $desktop_file");
-      else
-        icon_name == potential_icon_name;
-
-      load_icon_from_icon_name ();
+      icon_name = app.get_icon ();
+      load_icon_from_icon_name (icon_name);
     }
 
     public void detach_application ()
@@ -496,7 +443,7 @@ namespace Unity.Launcher
       try
         {
           icon_name = desktop_keyfile.get_string (KeyFileDesktop.GROUP, KeyFileDesktop.KEY_ICON);
-          load_icon_from_icon_name ();
+          load_icon_from_icon_name (icon_name);
         }
       catch (Error e)
         {
@@ -511,86 +458,14 @@ namespace Unity.Launcher
         {
           warning ("could not load name from desktop file: %s", e.message);
         }
-    }
 
-    /* all this icon loading stuff can go when we switch from liblauncher to
-     * bamf - please ignore any icon loading bugs :-)
-     */
-    private void load_icon_from_icon_name ()
-    {
-      // first try to load from a path;
-      if (try_load_from_file (icon_name))
+      try
         {
-          return;
+          name = desktop_keyfile.get_string (KeyFileDesktop.GROUP, "X-GNOME-FullName");
         }
-
-      //try to load from a path that we augment
-      if (try_load_from_file ("/usr/share/pixmaps/" + icon_name))
+      catch (Error e)
         {
-          return;
         }
-
-      theme_file_path = new Unity.ThemeFilePath ();
-
-      // add our searchable themes
-      Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
-      theme_file_path.add_icon_theme (theme);
-      theme = new Gtk.IconTheme ();
-      theme.set_custom_theme ("unity-icon-theme");
-      theme_file_path.add_icon_theme (theme);
-      theme.set_custom_theme ("Web");
-      theme_file_path.add_icon_theme (theme);
-
-      theme_file_path.found_icon_path.connect ((theme, filepath) => {
-        try
-          {
-            child.icon = new Gdk.Pixbuf.from_file (filepath);
-          }
-        catch (Error e)
-          {
-            warning (@"Could not load from $filepath");
-          }
-      });
-      theme_file_path.failed.connect (() => {
-        // we didn't get an icon, so just load the failcon
-        try
-          {
-            var default_theme = Gtk.IconTheme.get_default ();
-            child.icon = default_theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 48, 0);
-          }
-        catch (Error e)
-          {
-            warning (@"Could not load any icon for %s", app.get_name ());
-          }
-      });
-
-      theme_file_path.get_icon_filepath (icon_name);
-    }
-
-    private bool try_load_from_file (string filepath)
-    {
-      Gdk.Pixbuf pixbuf = null;
-      if (FileUtils.test(filepath, FileTest.IS_REGULAR))
-        {
-          try
-            {
-              pixbuf = new Gdk.Pixbuf.from_file_at_scale(filepath,
-                                                         48, 48, true);
-            }
-          catch (Error e)
-            {
-              warning ("Unable to load image from file '%s': %s",
-                       filepath,
-                       e.message);
-            }
-
-          if (pixbuf is Gdk.Pixbuf)
-            {
-              child.icon = pixbuf;
-              return true;
-            }
-        }
-      return false;
     }
   }
 }

@@ -26,16 +26,16 @@ namespace Unity {
   public static const string INDICATORDIR;
   [CCode (cname = "INDICATORICONSDIR")]
   public static const string INDICATORICONSDIR;
-  
+
   [CCode (cheader_filename = "unity-utils.h", cname = "LOGGER_START_PROCESS")]
   public static void LOGGER_START_PROCESS (string name);
-  
+
   [CCode (cheader_filename = "unity-utils.h", cname = "LOGGER_END_PROCESS")]
   public static void LOGGER_END_PROCESS (string name);
-  
+
   [CCode (cheader_filename = "unity-utils.h", cname = "START_FUNCTION")]
   public static void START_FUNCTION ();
- 
+
   [CCode (cheader_filename = "unity-utils.h", cname = "END_FUNCTION")]
   public static void END_FUNCTION ();
 }

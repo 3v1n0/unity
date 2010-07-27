@@ -5,6 +5,7 @@ EXTRA_DIST = \
   clutter-1.0.deps \
   cogl-1.0.vapi \
   config.vapi \
+  Dbusmenu-Glib-0.2.vapi \
   dee-1.0.deps \
   dee-1.0.vapi \
   indicator.deps \
@@ -14,4 +15,5 @@ EXTRA_DIST = \
   mutter-2.28.vapi \
   mutter-2.28.deps \
   unity-const.vapi \
-  unity-misc.vapi
+  unity-misc.vapi \
+  gnome-bg-2.0.vapi

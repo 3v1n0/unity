@@ -37,7 +37,10 @@ namespace Unity.Launcher
   {
     public ScrollerChild child {get; construct;}
     public signal void request_removal (); //call when not needed anymore so we can unref
-    public string name = "If you can read this, file a bug!!";
+
+    public string name {get; set;}
+    public bool hide {get; set;}
+
 
     public signal void closed ();
 
@@ -46,6 +49,9 @@ namespace Unity.Launcher
     protected bool button_down = false;
     protected float click_start_pos = 0.0f;
     protected int drag_sensitivity = 7;
+    private Unity.ThemeFilePath theme_file_path;
+
+    protected QuicklistController? menu {get; set;}
 
     public ScrollerChildController (ScrollerChild child_)
     {
@@ -54,6 +60,8 @@ namespace Unity.Launcher
 
     construct
     {
+      theme_file_path = new Unity.ThemeFilePath ();
+      name = "Bug Found, You Defeated Unity";
       child.controller = this;
       child.button_press_event.connect (on_press_event);
       child.button_release_event.connect (on_release_event);
@@ -68,9 +76,27 @@ namespace Unity.Launcher
                                 "opacity", 0xff);
     }
 
-    public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcuts ();
-    public abstract Gee.ArrayList<ShortcutItem> get_menu_shortcut_actions ();
-    public abstract void activate ();
+    public delegate void menu_cb (Dbusmenu.Menuitem? menu);
+
+    public virtual void get_menu_actions (menu_cb callback)
+    {
+      callback (null);
+    }
+
+    public virtual void get_menu_navigation (menu_cb callback)
+    {
+      callback (null);
+    }
+
+    public virtual void activate ()
+    {
+      // do nothing!
+    }
+
+    public virtual QuicklistController get_menu_controller ()
+    {
+      return null;
+    }
 
     private bool on_leave_event (Clutter.Event event)
     {
@@ -110,11 +136,14 @@ namespace Unity.Launcher
           button_down == true &&
           event.button.time - last_press_time < 500)
         {
-          var controller = QuicklistController.get_default ();
-          if (controller.is_in_label || controller.menu_is_open ())
-          {
-            controller.close_menu ();
-          }
+          if (menu is QuicklistController)
+            {
+              if (menu.state == QuicklistControllerState.LABEL ||
+                  menu.state == QuicklistControllerState.MENU)
+              {
+                menu.state = QuicklistControllerState.CLOSED;
+              }
+            }
 
           activate ();
         }
@@ -132,58 +161,45 @@ namespace Unity.Launcher
     private void ensure_menu_state ()
     {
       //no tooltips on drag
+
       if (Unity.Drag.Controller.get_default ().is_dragging) return;
 
-      var controller = QuicklistController.get_default ();
-      if (controller.menu_is_open () && controller.get_attached_actor () != child)
+      if (menu is QuicklistController == false)
+        {
+          menu = get_menu_controller ();
+        }
+
+      if (menu.state == QuicklistControllerState.MENU
+          && QuicklistController.is_menu_open ()
+          && QuicklistController.do_menus_match (menu))
         {
           // there is a menu open already, attach to the destroy so we can
           // re-ensure later
-          controller.menu.destroy.connect (ensure_menu_state);
+          QuicklistController.get_current_menu ().get_view ().destroy.connect (ensure_menu_state);
           return;
         }
 
       if (menu_state == ScrollerChildControllerMenuState.NO_MENU)
         {
-          if (controller.is_in_label || controller.menu_is_open ())
-            {
-              controller.close_menu ();
-            }
+          menu.state = QuicklistControllerState.CLOSED;
         }
 
       if (menu_state == ScrollerChildControllerMenuState.LABEL)
         {
-          if (!controller.menu_is_open ())
-            {
-              if(Unity.Panel.search_entry_has_focus == false)
-                controller.show_label (name, child);
-            }
+          menu.state = QuicklistControllerState.LABEL;
         }
 
       if (menu_state == ScrollerChildControllerMenuState.MENU)
         {
-          if (controller.is_in_label)
-            {
-              Gee.ArrayList<ShortcutItem> shortcuts = get_menu_shortcuts ();
-              Gee.ArrayList<ShortcutItem> actions = get_menu_shortcut_actions ();
-              if (shortcuts.size > 0 || actions.size > 0)
-                {
-                  controller.show_menu (shortcuts,
-                                        actions,
-                                        false);
-                }
-              else
-                {
-                  menu_state = ScrollerChildControllerMenuState.LABEL;
-                }
-            }
+          menu.state = QuicklistControllerState.MENU;
+          menu_state = ScrollerChildControllerMenuState.NO_MENU;
         }
     }
 
     // this is for our drag handling
     public Clutter.Actor get_icon ()
     {
-      return child;
+      return child.get_content ();
     }
 
     public string get_drag_data ()
@@ -209,6 +225,86 @@ namespace Unity.Launcher
             }
         }
         return false;
+    }
+
+    /* all this icon loading stuff can go when we switch from liblauncher to
+     * bamf - please ignore any icon loading bugs :-)
+     */
+    protected void load_icon_from_icon_name (string icon_name)
+    {
+      // first try to load from a path;
+      if (try_load_from_file (icon_name))
+        {
+          return;
+        }
+
+      //try to load from a path that we augment
+      if (try_load_from_file ("/usr/share/pixmaps/" + icon_name))
+        {
+          return;
+        }
+
+      theme_file_path = new Unity.ThemeFilePath ();
+
+      // add our searchable themes
+      Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
+      theme_file_path.add_icon_theme (theme);
+      theme = new Gtk.IconTheme ();
+
+      theme.set_custom_theme ("unity-icon-theme");
+      theme_file_path.add_icon_theme (theme);
+      theme.set_custom_theme ("Web");
+      theme_file_path.add_icon_theme (theme);
+
+      theme_file_path.found_icon_path.connect ((theme, filepath) => {
+        try
+          {
+            child.icon = new Gdk.Pixbuf.from_file (filepath);
+          }
+        catch (Error e)
+          {
+            warning (@"Could not load from $filepath");
+          }
+      });
+      theme_file_path.failed.connect (() => {
+        // we didn't get an icon, so just load the failcon
+        try
+          {
+            var default_theme = Gtk.IconTheme.get_default ();
+            child.icon = default_theme.load_icon(Gtk.STOCK_MISSING_IMAGE, 48, 0);
+          }
+        catch (Error e)
+          {
+            warning (@"Could not load any icon for %s", icon_name);
+          }
+      });
+      theme_file_path.get_icon_filepath (icon_name);
+    }
+
+    private bool try_load_from_file (string filepath)
+    {
+      Gdk.Pixbuf pixbuf = null;
+      if (FileUtils.test(filepath, FileTest.IS_REGULAR))
+        {
+          try
+            {
+              pixbuf = new Gdk.Pixbuf.from_file_at_scale(filepath,
+                                                         48, 48, true);
+            }
+          catch (Error e)
+            {
+              warning ("Unable to load image from file '%s': %s",
+                       filepath,
+                       e.message);
+            }
+
+          if (pixbuf is Gdk.Pixbuf)
+            {
+              child.icon = pixbuf;
+              return true;
+            }
+        }
+      return false;
     }
   }
 }

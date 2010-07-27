@@ -33,7 +33,9 @@ public class MenuManager : Object
 
   public void register_visible_menu (Gtk.Menu menu)
   {
-    if (current_menu is Gtk.Menu && (current_menu.visible == true) && (current_menu != menu))
+    if (current_menu is Gtk.Menu
+        && (current_menu.visible == true)
+        && (current_menu != menu))
       current_menu.popdown ();
 
     current_menu = menu;
@@ -41,7 +43,8 @@ public class MenuManager : Object
 
   public void popdown_current_menu ()
   {
-    current_menu.popdown ();
+    if (current_menu is Gtk.Menu)
+      current_menu.popdown ();
   }
 
   public bool menu_is_open ()

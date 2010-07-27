@@ -19,14 +19,72 @@
 
 namespace Utils
 {
+  string strip_characters (string text,
+                           string replace_text,
+                           string match_regex,
+                           string replace_regex)
+  {
+    string         ret = "";
+    bool           matching = false;
+    GLib.MatchInfo info;
+
+    {
+      GLib.Regex regex = null;
+
+      try
+        {
+          regex = new GLib.Regex (match_regex,
+                                  GLib.RegexCompileFlags.DOTALL |
+                                  GLib.RegexCompileFlags.OPTIMIZE,
+                                  0);
+        }
+      catch (GLib.RegexError e)
+        {
+          warning ("Creating regular-expression failed: \"%s\"\n", e.message);
+        }
+
+      matching = regex.match (text, 0, out info);
+    }
+
+    if (matching)
+      {
+        GLib.Regex regex = null;
+
+        try
+          {
+            regex = new GLib.Regex (replace_regex,
+                                    GLib.RegexCompileFlags.DOTALL |
+                                    GLib.RegexCompileFlags.OPTIMIZE,
+                                    0);
+          }
+        catch (GLib.RegexError e)
+          {
+            warning ("Creating regular-expression failed: \"%s\"\n", e.message);
+          }
+
+        try
+          {
+            ret = regex.replace (text, -1, 0, replace_text, 0);
+          }
+        catch (GLib.RegexError e)
+          {
+            warning ("Replacing text failed: \"%s\"\n", e.message);
+          }
+      }
+    else
+      ret = text;
+
+    return ret;
+  }
+
   [CCode (lower_case_prefix = "utils_")]
   public extern void set_strut (Gtk.Window *window,
-                                  uint32      strut_size,
-                                  uint32      strut_start,
-                                  uint32      strut_end,
-                                  uint32      top_size,
-                                  uint32      top_start,
-                                  uint32      top_end);
+                                  uint32    strut_size,
+                                  uint32    strut_start,
+                                  uint32    strut_end,
+                                  uint32    top_size,
+                                  uint32    top_start,
+                                  uint32    top_end);
 
   [CCode (lower_case_prefix = "utils_")]
   public extern void register_object_on_dbus (DBus.Connection conn,

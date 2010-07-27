@@ -37,6 +37,9 @@ namespace Unity.Places
       Object (orientation:Ctk.Orientation.HORIZONTAL,
               homogeneous:false,
               spacing:8);
+
+      Testing.ObjectRegistry.get_default ().register ("UnityPlacesSearchBar",
+                                                      this);
     }
 
     construct
@@ -60,6 +63,22 @@ namespace Unity.Places
       bg = new PlaceSearchBarBackground (entry);
       set_background (bg);
       bg.show ();
+    }
+
+    public void reset ()
+    {
+      entry.reset ();
+    }
+
+    public void search (string text)
+    {
+      entry.text.text = text;
+      on_search_text_changed (text);
+    }
+
+    public string get_search_text ()
+    {
+      return entry.text.text;
     }
 
     private override void allocate (Clutter.ActorBox        box,
@@ -94,7 +113,7 @@ namespace Unity.Places
       nat_height = nheight + SPACING * 3;
     }
 
-    private void on_search_text_changed (string text)
+    private void on_search_text_changed (string? text)
     {
       if (active_entry is PlaceEntry)
         {
@@ -111,6 +130,8 @@ namespace Unity.Places
       active_entry = entry;
       bg.entry_position = x;
       sections.set_active_entry (entry);
+
+      this.entry.text.grab_key_focus ();
     }
   }
 

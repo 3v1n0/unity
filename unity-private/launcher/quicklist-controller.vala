@@ -19,134 +19,356 @@
  */
 namespace Unity.Launcher
 {
-  public static QuicklistController? ql_controler_singleton;
+  public static QuicklistController? ql_controller_singleton;
 
-  public class QuicklistController : Object
+  public enum QuicklistControllerState {
+    LABEL,
+    MENU,
+    CLOSED
+  }
+
+  public abstract class QuicklistController : Object
   {
+    protected Ctk.MenuExpandable? menu;
+    public ScrollerChildController attached_controller {get; construct;}
+    private QuicklistControllerState _state;
+    public QuicklistControllerState state {
+      get { return _state; }
+      set
+        {
+          var drag_controller = Unity.Drag.Controller.get_default ();
+          if (drag_controller.is_dragging) value = QuicklistControllerState.CLOSED;
 
-    public static unowned QuicklistController get_default ()
-    {
-      if (Unity.Launcher.ql_controler_singleton == null) {
-        Unity.Launcher.ql_controler_singleton= new QuicklistController ();
-      }
-      return Unity.Launcher.ql_controler_singleton;
+          if (value == QuicklistControllerState.LABEL ||
+              value == QuicklistControllerState.MENU)
+            {
+              // check our singleton for a previous menu
+              if (ql_controller_singleton != this && ql_controller_singleton != null)
+                {
+                  var tmp_qlc = ql_controller_singleton; //ref the controller
+                  tmp_qlc.state = QuicklistControllerState.CLOSED;
+                  if (tmp_qlc.get_view () != null)
+                    warning ("old menu not destroyed when opening new menu");
+                }
+
+
+              ql_controller_singleton = this;
+            }
+
+          if (value == QuicklistControllerState.CLOSED)
+            {
+              if (menu is Ctk.MenuExpandable)
+                {
+                  menu.destroy ();
+                  menu = null;
+                }
+              ql_controller_singleton = null;
+            }
+
+          _state = value;
+        }
     }
 
-    public weak Ctk.Menu menu;
-    public bool is_in_label = false;
-    public bool is_in_menu = false;
-
-    public signal void menu_state_changed (bool open);
-
-    public QuicklistController ()
+    public static unowned QuicklistController get_current_menu ()
     {
-      Unity.Testing.ObjectRegistry.get_default ().register ("QuicklistController",
-                                                            this);
+      // returns the current controller, thou does not own this!
+      return ql_controller_singleton;
+    }
+
+
+    public static bool is_menu_open ()
+    {
+      // returns true if a menu is open
+      if (ql_controller_singleton is QuicklistController)
+        return ql_controller_singleton.state == QuicklistControllerState.MENU;
+
+      return false;
+    }
+
+    public static bool do_menus_match (QuicklistController menu)
+    {
+      // returns true if the given menu matches ql_controller_singleton
+      return menu == ql_controller_singleton;
+    }
+
+    public unowned Ctk.MenuExpandable? get_view ()
+    {
+      return menu;
+    }
+
+  }
+
+  public class ApplicationQuicklistController : QuicklistController
+  {
+    public ApplicationQuicklistController (ScrollerChildController scroller_child)
+    {
+      Object (attached_controller: scroller_child);
     }
 
     construct
     {
-      var drag_controller = Drag.Controller.get_default ();
-      drag_controller.drag_start.connect (this.on_unity_drag_start);
-    }
+      Unity.Testing.ObjectRegistry.get_default ().register ("QuicklistController",
+                                                            this);
 
-    private void on_unity_drag_start (Drag.Model model)
-    {
-      if (this.menu_is_open ())
-        this.menu.destroy ();
-    }
+      new_menu ();
+      notify["state"].connect (on_state_change);
+      state = QuicklistControllerState.LABEL;
 
-    public void show_label (string label, Ctk.Actor attached_widget)
-    {
-      if (this.menu_is_open ())
-        this.menu.destroy ();
-
-      var menu = new QuicklistMenu () as Ctk.Menu;
-      menu.destroy.connect (() => {
-        if (is_in_menu)
-          menu_state_changed (false);
+      var drag_controller = Unity.Drag.Controller.get_default ();
+      drag_controller.drag_start.connect (() => {
+        state = QuicklistControllerState.CLOSED;
       });
-      this.menu = menu;
-      this.menu.destroy.connect (() => {
+    }
+
+    private void new_menu ()
+    {
+      menu = new QuicklistMenu () as Ctk.MenuExpandable;
+      if (Unity.global_shell is Unity.Shell)
+        {
+          menu.destroy.connect (() => {
+            Unity.global_shell.remove_fullscreen_request (this);
+          });
+          menu.set_swallow_clicks (Unity.global_shell.menus_swallow_events);
+        }
+      menu.set_detect_clicks (false);
+      menu.attach_to_actor (attached_controller.child as Ctk.Actor);
+
+      attach_to_stage ((attached_controller).child, (attached_controller).child);
+
+      menu.set_anchor_position (0, 0, 0);
+    }
+
+    private void attach_to_stage (Clutter.Actor child, Clutter.Actor parent)
+    {
+      child.parent_set.disconnect (attach_to_stage);
+      if (child.get_stage () is Clutter.Stage)
+        {
+          (child.get_stage () as Clutter.Stage).add_actor (menu);
+          (child.get_stage () as Clutter.Stage).raise_child (menu, null);
+        }
+      else
+        {
+          child.parent_set.connect (attach_to_stage);
+        }
+    }
+
+    private void on_state_change ()
+    {
+      if (Unity.global_shell is Unity.Shell)
         Unity.global_shell.remove_fullscreen_request (this);
+
+      if (state == QuicklistControllerState.CLOSED) return;
+      if (menu == null)
+        {
+          new_menu ();
+          warning ("state change called on menu when menu does not exist");
+        }
+        
+      if (state == QuicklistControllerState.LABEL)
+        {
+          // just build a menu with a label for the name
+          menu.remove_all ();
+          string label = attached_controller.name;
+
+          var menuitem = new QuicklistMenuItem.with_label (label);
+          menuitem.activated.connect (() => {
+            state = QuicklistControllerState.CLOSED;
+          });
+
+          menuitem.reactive = false;
+          menu.append (menuitem, true);
+          
+          float x, y;
+          float w, h;
+          (attached_controller.child as Ctk.Actor).get_transformed_position(out x, out y);
+          w = (attached_controller.child as Ctk.Actor).get_width();
+          h = (attached_controller.child as Ctk.Actor).get_height();
+          menu.compute_style_textures ();
+          menu.set_expansion_size_factor (0.0f);
+          menu.set_anchor_position (x + w-6, y + h/2.0f, 0);          
+        }
+      else if (state == QuicklistControllerState.MENU)
+        {
+          if (Unity.global_shell is Unity.Shell)
+            Unity.global_shell.add_fullscreen_request (this);
+
+          menu.close_on_leave = false;
+          menu.set_detect_clicks (true);
+          // grab the top menu
+          attached_controller.get_menu_actions ((top_menu) => {
+            if (top_menu is Dbusmenu.Menuitem)
+            if (top_menu.get_root ())
+              {
+                //returns a correct root menu
+                unowned GLib.List<Dbusmenu.Menuitem> menu_items = top_menu.get_children ();
+                if (menu_items != null)
+                  {
+                    var separator = new Unity.Launcher.QuicklistMenuSeperator ();
+                    get_view ().prepend (separator, false);
+                  }
+                menu_items.reverse ();
+                foreach (Dbusmenu.Menuitem menuitem in menu_items)
+                  {
+                    var view_menuitem = menu_item_from_dbusmenuitem (menuitem);
+                    if (view_menuitem != null)
+                      get_view ().prepend (view_menuitem, false);
+                  }
+                menu_items.reverse ();
+              }
+            else
+              {
+                warning ("menu given not a root item");
+              }
+          });
+
+          // grab the bottom menu
+          attached_controller.get_menu_navigation ((bottom_menu) => {
+            if (bottom_menu is Dbusmenu.Menuitem)
+              if (bottom_menu.get_root ())
+                {
+                  // add a separator for funsies, also because its in the spec (but mostly the fun part)
+                  var separator = new Unity.Launcher.QuicklistMenuSeperator ();
+                  get_view ().append (separator, false);
+                  //returns a correct root menu
+                  unowned GLib.List<Dbusmenu.Menuitem> menu_items = bottom_menu.get_children ();
+                  foreach (Dbusmenu.Menuitem menuitem in menu_items)
+                    {
+                      var view_menuitem = menu_item_from_dbusmenuitem (menuitem);
+                      if (view_menuitem != null)
+                        {
+                          get_view ().append (view_menuitem, false);
+                        }
+                    }
+                }
+              else
+                {
+                  warning ("menu given not a root item");
+                }
+
+            float x;
+            float y;
+            float w;
+            float h;
+            (attached_controller.child as Ctk.Actor).get_transformed_position(out x, out y);
+            w = (attached_controller.child as Ctk.Actor).get_width();
+            h = (attached_controller.child as Ctk.Actor).get_height();
+            menu.compute_style_textures ();
+            menu.set_expansion_size_factor (0.0f);
+            menu.set_anchor_position (x + w-6, y + h/2.0f, 0);
+            var anim = menu.animate (Clutter.AnimationMode.LINEAR,
+                        100,
+                        "expansion-size-factor", 1.0f);
+
+          });
+        }
+    }
+
+    private Ctk.MenuItem? menu_item_from_dbusmenuitem (Dbusmenu.Menuitem dbusmenuitem)
+    {
+      string label = "UNDEFINED";
+      label = dbusmenuitem.property_get (Dbusmenu.MENUITEM_PROP_LABEL);
+      string type = "label";
+      string check_type = dbusmenuitem.property_get (Dbusmenu.MENUITEM_PROP_TOGGLE_TYPE);
+
+      if (check_type == Dbusmenu.MENUITEM_TOGGLE_CHECK)
+        {
+          type = "check";
+        }
+
+      if (check_type == Dbusmenu.MENUITEM_TOGGLE_RADIO)
+        {
+          type = "radio";
+        }
+
+      if (dbusmenuitem.property_get ("type") == Dbusmenu.CLIENT_TYPES_SEPARATOR)
+        {
+          type = "seperator";
+        }
+
+      if (dbusmenuitem.property_get (Dbusmenu.MENUITEM_PROP_ICON_NAME) != null)
+        {
+          type = "stock_image";
+        }
+
+      Ctk.MenuItem menuitem;
+
+      if (type == "label")
+        {
+          menuitem = new QuicklistMenuItem.with_label (label);
+        }
+
+      else if (type == "check" || type == "radio")
+        {
+          if (type == "check")
+            menuitem = new QuicklistCheckMenuItem.with_label (label);
+          else
+            menuitem = new QuicklistRadioMenuItem.with_label (null, label);
+
+          int checked = dbusmenuitem.property_get_int (Dbusmenu.MENUITEM_PROP_TOGGLE_STATE);
+          if (checked == Dbusmenu.MENUITEM_TOGGLE_STATE_CHECKED)
+            (menuitem as Ctk.CheckMenuItem).set_active (true);
+
+          (menuitem as Ctk.CheckMenuItem).toggled.connect (() =>
+          {
+            int is_checked = ((menuitem as Ctk.CheckMenuItem).get_active ()) ?
+                               Dbusmenu.MENUITEM_TOGGLE_STATE_CHECKED : Dbusmenu.MENUITEM_TOGGLE_STATE_UNCHECKED;
+
+            dbusmenuitem.property_set_int (Dbusmenu.MENUITEM_PROP_TOGGLE_STATE, is_checked);
+          });
+
+          dbusmenuitem.property_changed.connect ((property_name, value) => {
+            if (property_name == Dbusmenu.MENUITEM_PROP_TOGGLE_STATE)
+              {
+                int* value_weak = (int*)(value);
+                (menuitem as Ctk.CheckMenuItem).set_active (
+                  (*value_weak == Dbusmenu.MENUITEM_TOGGLE_STATE_CHECKED) ? true : false
+                 );
+              }
+          });
+        }
+
+      else if (type == "seperator")
+        {
+          menuitem = new QuicklistMenuSeperator ();
+        }
+
+      else
+        {
+          warning ("not a menu item we understand (yet)");
+          return null;
+        }
+
+      //connect to property changes
+      dbusmenuitem.property_changed.connect ((property_name, value) => {
+        if (property_name == Dbusmenu.MENUITEM_PROP_LABEL)
+          {
+            string* value_weak = (string*)value;
+            menuitem.set_label (value_weak);
+          }
+        else if (property_name == Dbusmenu.MENUITEM_PROP_ENABLED)
+          {
+            bool* value_weak = (bool*)value;
+            menuitem.set_reactive (*value_weak);
+          }
       });
-      this.menu.set_swallow_clicks (Unity.global_shell.menus_swallow_events);
-      this.menu.set_detect_clicks (false);
 
-      //make label
-      var menuitem = new QuicklistMenuItem (label);
-      menuitem.activated.connect (this.close_menu);
-      menuitem.reactive = true;
-      this.menu.append (menuitem, true);
-      this.menu.attach_to_actor (attached_widget);
-      (attached_widget.get_stage () as Clutter.Stage).add_actor (this.menu);
+      menuitem.reactive = dbusmenuitem.property_get_bool (Dbusmenu.MENUITEM_PROP_ENABLED);
+      menuitem.activated.connect (() => {
+        dbusmenuitem.handle_event ("clicked", null, Clutter.get_current_event_time ());
+      });
 
-      float x;
-      float y;
-      this.menu.get_position (out x, out y);
-      this.menu.set_position (x - (float) 22.0f, y - 1.0f);
-      this.is_in_label = true;
+      menuitem.activated.connect (() => {
+        Idle.add (() => {
+          state = QuicklistControllerState.CLOSED;
+          return false;
+        });
+      });
+
+      // add more menu item types here (check, radio, image) as views are made
+      // right now we can just represent all menuitems as labels
+
+      return menuitem as Ctk.MenuItem;
     }
 
-    private Gee.ArrayList<ShortcutItem> prefix_cache;
-    private Gee.ArrayList<ShortcutItem> affix_cache;
-
-    public void show_menu (Gee.ArrayList<ShortcutItem> prefix_shortcuts,
-                           Gee.ArrayList<ShortcutItem> affix_shortcuts,
-                           bool hide_on_leave)
-    {
-      this.prefix_cache = prefix_shortcuts;
-      this.affix_cache = affix_shortcuts;
-
-      this.is_in_label = false;
-      Unity.global_shell.add_fullscreen_request (this);
-      this.menu.close_on_leave = hide_on_leave;
-      foreach (ShortcutItem shortcut in prefix_shortcuts)
-        {
-          var label = shortcut.get_name ();
-          var menuitem = new QuicklistMenuItem (label);
-          this.menu.prepend (menuitem, false);
-          menuitem.activated.connect (shortcut.activated);
-          menuitem.activated.connect (this.close_menu);
-        }
-
-      /* Only add the separator if there are shortcuts beneath  */
-      if (affix_shortcuts.size > 0)
-        {
-          Unity.Launcher.QuicklistMenuSeperator separator = new Unity.Launcher.QuicklistMenuSeperator ();
-          this.menu.append (separator, false);
-        }
-
-      foreach (ShortcutItem shortcut in affix_shortcuts)
-        {
-          var label = shortcut.get_name ();
-          var menuitem = new QuicklistMenuItem (label);
-          this.menu.append (menuitem, false);
-          menuitem.activated.connect (shortcut.activated);
-          menuitem.activated.connect (this.close_menu);
-        }
-      this.menu.set_detect_clicks (true);
-      menu_state_changed (true);
-    }
-
-    public void close_menu ()
-    {
-      if (this.menu is Ctk.Menu)
-        {
-          this.menu.destroy ();
-        }
-      this.is_in_label = false;
-      this.is_in_menu = false;
-    }
-
-    public bool menu_is_open ()
-    {
-      return this.menu is Ctk.Menu;
-    }
-
-    public Ctk.Actor get_attached_actor ()
-    {
-      return this.menu.get_attached_actor ();
-    }
   }
 }

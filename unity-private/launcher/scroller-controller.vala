@@ -74,40 +74,36 @@ namespace Unity.Launcher
       if (object is Bamf.Application)
         {
           Bamf.Application app = object as Bamf.Application;
-          //need to hook up to its visible changed signals
-          if (app.get_desktop_file () == "")
-          {
-            debug ("no desktop file for this app");
-            return;
-          }
+          // need to hook up to its visible changed signals
 
-          app.user_visible_changed.connect ((a, changed) => {
-            if (changed)
-              {
-                handle_bamf_view_opened (a as Object);
-              }
-          });
+          string desktop_file = app.get_desktop_file ();
 
-          if (app.user_visible ())
+          ScrollerChildController controller = null;
+          if (desktop_file != null && desktop_file != "")
             {
-              string desktop_file = app.get_desktop_file ();
-              if (desktop_file != null)
-                {
-                  var controller = find_controller_by_desktop_file (desktop_file);
-                  if (controller is ApplicationController)
-                    {
-                      controller.attach_application (app);
-                    }
-                  else
-                    {
-                      LauncherChild child = new LauncherChild ();
-                      controller = new ApplicationController (desktop_file, child);
-                      controller.attach_application (app);
-                      model.add (child);
-                      childcontrollers.add (controller);
-                      controller.closed.connect (on_scroller_controller_closed);
-                    }
-                }
+              controller = find_controller_by_desktop_file (desktop_file);
+            }
+
+          if (controller is ApplicationController)
+            {
+              (controller as ApplicationController).attach_application (app);
+            }
+          else
+            {
+              ScrollerChild child = new ScrollerChild ();
+              controller = new ApplicationController (null, child);
+              (controller as ApplicationController).attach_application (app);
+              if (app.user_visible ())
+                model.add (child);
+
+              childcontrollers.add (controller);
+              controller.closed.connect (on_scroller_controller_closed);
+              controller.notify["hide"].connect (() => {
+                if (controller.hide && controller.child in model)
+                  model.remove (controller.child);
+                if (!controller.hide && (controller.child in model) == false)
+                  model.add (controller.child);
+              });
             }
         }
     }
@@ -116,7 +112,7 @@ namespace Unity.Launcher
     {
       if (controller is ApplicationController)
         {
-          if (controller.child.pin_type == PinType.UNPINNED)
+          if (!(controller as ApplicationController).is_sticky ())
             {
               model.remove (controller.child);
               childcontrollers.remove (controller);
@@ -175,7 +171,7 @@ namespace Unity.Launcher
           ApplicationController controller = find_controller_by_desktop_file (desktop_file);
           if (!(controller is ScrollerChildController))
             {
-              LauncherChild child = new LauncherChild ();
+              ScrollerChild child = new ScrollerChild ();
               controller = new ApplicationController (desktop_file, child);
               model.add (child);
               childcontrollers.add (controller);
@@ -200,7 +196,7 @@ namespace Unity.Launcher
       ApplicationController controller = find_controller_by_desktop_file (desktop_file);
       if (!(controller is ScrollerChildController))
         {
-          LauncherChild child = new LauncherChild ();
+          ScrollerChild child = new ScrollerChild ();
           controller = new ApplicationController (desktop_file, child);
           model.add (child);
           childcontrollers.add (controller);
@@ -268,8 +264,17 @@ namespace Unity.Launcher
       }
     }
 
+    float last_drag_x = 0.0f;
+    float last_drag_y = 0.0f;
     private void on_unity_drag_motion (Drag.Model drag_model, float x, float y)
     {
+      if (x == last_drag_x && y == last_drag_y)
+        return;
+
+      last_drag_x = x;
+      last_drag_y = y;
+
+
       var drag_controller = Drag.Controller.get_default ();
       // check to see if the data matches any of our children
       if (!(drag_controller.get_drag_model () is ScrollerChildController))
@@ -287,13 +292,40 @@ namespace Unity.Launcher
         {
           // if the actor is not in the model, add it. because its now in there!
           // find the index at this position
-          int model_index = view.get_model_index_at_y_pos (y);
-          if (retcont in model)
-            model.move (retcont, int.max (model_index, 0));
-          else
-            model.insert (retcont, int.max (model_index, 0));
+          int model_index = view.get_model_index_at_y_pos_no_anim (y, true);
+          if (model_index < 0) return;
 
-          view.do_queue_redraw ();
+          //we have to check to see if we would still be over the index
+          //if it was done animating
+/*
+          GLib.Value value = Value (typeof (float));
+          var child = model[model_index];
+          Clutter.Animation anim = child.get_animation ();
+          if (anim is Clutter.Animation)
+            {
+              debug ("is animating");
+              Clutter.Interval interval = anim.get_interval ("position");
+              interval.get_final_value (value);
+            }
+          else
+            {
+              debug ("is not animating");
+              value.set_float (y);
+            }
+
+          debug ("%f", Math.fabsf (value.get_float () - y));
+
+          if (Math.fabsf (value.get_float () - y) < 48)
+            {
+              debug ("moving things");
+*/
+              if (retcont in model)
+                model.move (retcont, int.max (model_index, 0));
+              else
+                model.insert (retcont, int.max (model_index, 0));
+
+              view.do_queue_redraw ();
+            //}
         }
     }
 
@@ -346,8 +378,6 @@ namespace Unity.Launcher
           if (childcontroller.child == childview)
             return childcontroller;
         }
-
-      warning (@"Could not find controller for given view: $childview");
       return null;
     }
 

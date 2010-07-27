@@ -135,8 +135,9 @@ namespace Unity.Places
           var path = array.get_nth (0).get_string ();
           bool existing = false;
 
-          foreach (PlaceEntry entry in entries_array)
+          foreach (PlaceEntry e in entries_array)
             {
+              var entry = e as PlaceEntryDbus;
               if (entry.dbus_path == path)
                 {
                   entry.update_info (array);
@@ -176,7 +177,7 @@ namespace Unity.Places
     {
       debug ("EntryAdded %s", info.get_nth (0).get_string ());
       /* This is a new entry */
-      var entry = new PlaceEntry (dbus_name,
+      var entry = new PlaceEntryDbus (dbus_name,
                                   info.get_nth (0).get_string ());
       entry.update_info (info);
       entries_array.add (entry);
@@ -190,8 +191,9 @@ namespace Unity.Places
       debug (@"EntryRemoved: $entry_path");
       PlaceEntry? entry = null;
 
-      foreach (PlaceEntry e in entries_array)
+      foreach (PlaceEntry ent in entries_array)
         {
+          var e = ent as PlaceEntryDbus;
           if (e.dbus_path == entry_path)
             {
               entry = e;
@@ -262,13 +264,13 @@ namespace Unity.Places
           show_entry = true;
       }
 
-      return new PlaceEntry.with_info (dbus_name,
-                                       path,
-                                       name,
-                                       icon,
-                                       desc,
-                                       show_global,
-                                       show_entry);
+      return new PlaceEntryDbus.with_info (dbus_name,
+                                           path,
+                                           name,
+                                           icon,
+                                           desc,
+                                           show_global,
+                                           show_entry);
     }
   }
 }

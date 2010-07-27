@@ -44,6 +44,7 @@ libunity_la_VALAFLAGS = \
   --pkg clutter-1.0 \
   --pkg clutk-0.3 \
   --pkg dbus-glib-1 \
+  --pkg Dbusmenu-Glib-0.2 \
   --pkg dee-1.0 \
   --pkg gconf-2.0 \
   --pkg gtk+-2.0 \
@@ -70,6 +71,7 @@ libunity_la_VALASOURCES = \
   theme.vala \
   unity-appinfo-manager.vala \
   unity-cairo-canvas.vala \
+  unity-expanding-bin.vala \
   unity-favorites.vala \
   unity-io.vala \
   unity-pixbuf-cache.vala \
