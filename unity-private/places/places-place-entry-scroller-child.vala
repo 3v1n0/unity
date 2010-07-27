@@ -41,6 +41,22 @@ namespace Unity.Places
       entry.notify["active"].connect (() => {
         child.active = entry.active;
       });
+
+      child.motion_event.connect (get_sections);
+    }
+
+    private bool get_sections ()
+    {
+      Dee.Model sections;
+      
+      /* We do this so the sections model actually populates with something
+       * before we show it
+       */
+      sections = entry.sections_model;
+
+      child.motion_event.disconnect (get_sections);
+
+      return false;
     }
     
     public override void activate ()
