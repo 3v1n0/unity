@@ -49,6 +49,12 @@ namespace Unity.Places
           on_entry_added (e);
       });
 
+      ScrollerModel s = ObjectRegistry.get_default ().lookup ("UnityScrollerModel")[0] as ScrollerModel;
+
+      /* Add the Trash launcher icon */
+      var child = new TrashController ();
+      s.add (child.child);
+
       view = new View (shell, model);
     }
 
