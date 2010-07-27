@@ -81,5 +81,9 @@ namespace Unity.Places
       callback (root);
     }
 
+    public override bool can_drag ()
+    {
+      return false;
+    }
   }
 }

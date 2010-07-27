@@ -30,7 +30,10 @@ namespace Unity.Places
 
     public TrashController ()
     {
-      Object (child:new ScrollerChild ());
+      var child = new ScrollerChild ();
+      child.pin_type = PinType.ALWAYS;
+
+      Object (child:child);
     }
 
     construct
@@ -44,13 +47,15 @@ namespace Unity.Places
       } catch (Error e) {
         warning (@"Unable to monitor trash: $(e.message)");
       }
-      
-      debug ("HELLO");
     }
     
     public override void activate ()
     {
-      debug ("TRASH CLICKED");
+      try {
+        Gtk.show_uri (null, "trash://", Clutter.get_current_event_time ());
+      } catch (Error e) {
+        warning (@"Unable to show Trash: $(e.message)");
+      }
     }
 
     public override QuicklistController? get_menu_controller ()
@@ -173,6 +178,11 @@ namespace Unity.Places
         warning (@"Unable to read place files from directory '$(dir.get_basename ())': %s",
                  error.message);
       }
+    }
+
+    public override bool can_drag ()
+    {
+      return false;
     }
   }
 }
