@@ -120,7 +120,22 @@ namespace Unity.Places
           root.child_append (item);
 
           item.item_activated.connect (() => {
-            recursively_delete_contents (trash_dir);
+            var dialog = new Gtk.MessageDialog (null,
+                                                0,
+                                                Gtk.MessageType.WARNING,
+                                                Gtk.ButtonsType.CANCEL,
+                                                _("Empty everything from the Deleted items folder?"));
+            dialog.format_secondary_text (_("If you choose to empty the Deleted Items folder, all items in it will be permanently lost. Please note that you can also delete them separately."));
+            dialog.add_button (_("Empty Deleted Items"), Gtk.ResponseType.OK);
+
+            dialog.response.connect ((response_id) => {
+              if (response_id == Gtk.ResponseType.OK)
+                recursively_delete_contents.begin (trash_dir);
+
+              dialog.destroy ();
+            });
+            
+            dialog.show ();
           });
         }
 
