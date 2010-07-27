@@ -31,8 +31,8 @@ namespace Unity.Places
 
     private Ctk.VBox  content_box;
 
-    private PlaceHomeEntry       home_entry;
-    private PlaceSearchBar       search_bar;
+    public  PlaceHomeEntry       home_entry;
+    public  PlaceSearchBar       search_bar;
     private Unity.Place.Renderer renderer;
     private unowned PlaceEntry?  active_entry = null;
 
@@ -92,7 +92,7 @@ namespace Unity.Places
       active_entry = null;
     }
 
-    public void on_entry_view_activated (PlaceEntry entry, int x)
+    public void on_entry_view_activated (PlaceEntry entry, uint section_id)
     {
       /* Create the correct results view */
       if (renderer is Clutter.Actor)
@@ -115,7 +115,7 @@ namespace Unity.Places
       renderer.show ();
 
       /* Update the search bar */
-      search_bar.set_active_entry_view (entry, 0);
+      search_bar.set_active_entry_view (entry, 0, section_id);
     }
 
     private Unity.Place.Renderer lookup_renderer (string renderer)

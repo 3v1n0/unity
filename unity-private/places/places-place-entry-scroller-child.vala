@@ -26,7 +26,7 @@ namespace Unity.Places
   {
     public PlaceEntry entry { get; construct; }
 
-    public signal void clicked ();
+    public signal void clicked (uint section_id);
 
     public PlaceEntryScrollerChildController (PlaceEntry entry)
     {
@@ -45,14 +45,41 @@ namespace Unity.Places
     
     public override void activate ()
     {
-      clicked ();
+      clicked (0);
     }
 
     public override QuicklistController? get_menu_controller ()
     {
-      /*FIXME: Setting the menu stops the activate handler from being called.*/
       return new ApplicationQuicklistController (this);
-      //return null;
     }
+
+    public override void get_menu_actions (ScrollerChildController.menu_cb callback)
+    {
+      Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
+      root.set_root (true);
+
+      Dee.Model             sections = entry.sections_model;
+      unowned Dee.ModelIter iter = sections.get_first_iter ();
+     
+      while (iter != null && !sections.is_last (iter))
+        {
+          var name = sections.get_string (iter, 0);
+          var item = new Dbusmenu.Menuitem ();
+
+          item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, name);
+          item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
+          item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
+          item.property_set_int ("section-id", sections.get_position (iter));
+          item.item_activated.connect ((timestamp) => {
+            clicked (item.property_get_int ("section-id"));
+          });
+          root.child_append (item);
+         
+          iter = sections.next (iter);
+        }
+
+      callback (root);
+    }
+
   }
 }

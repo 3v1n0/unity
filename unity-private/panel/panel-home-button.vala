@@ -164,6 +164,7 @@ namespace Unity.Panel
         break;
 
         case Ctk.ActorState.STATE_ACTIVE:
+        case Ctk.ActorState.STATE_SELECTED:
           glow.set_factor (1.0f);
           glow.set_invalidate_effect_cache (true);
           do_queue_redraw ();

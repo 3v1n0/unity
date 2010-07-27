@@ -82,13 +82,14 @@ namespace Unity.Places
       child.clicked.connect (on_entry_clicked);
     }
 
-    private void on_entry_clicked (PlaceEntryScrollerChildController cont)
+    private void on_entry_clicked (PlaceEntryScrollerChildController cont,
+                                   uint                              section_id)
     {
      if (view.opacity == 0)
       {
         shell.show_unity ();
       }
-     view.on_entry_view_activated (cont.entry, 0);
+     view.on_entry_view_activated (cont.entry, section_id);
     }
   }
 }
