@@ -68,7 +68,7 @@ namespace Unity.Launcher
      */
     private bool button_down = false;
     private float total_child_height = 0.0f;
-    private ScrollerPhase current_phase = ScrollerPhase.NONE;
+    private ScrollerPhase current_phase = ScrollerPhase.SETTLING;
     private uint last_motion_event_time = 0;
     private ScrollerViewType view_type = ScrollerViewType.CONTRACTED;
     /*
