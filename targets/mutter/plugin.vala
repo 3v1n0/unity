@@ -108,6 +108,7 @@ namespace Unity
     }
 
     public ExposeManager expose_manager { get; private set; }
+    public Background    background     { get; private set; }
 
     public bool menus_swallow_events { get { return false; } }
 
@@ -122,7 +123,6 @@ namespace Unity
     private Maximus          maximus;
 
     /* Unity Components */
-    private Background         background;
     private SpacesManager      spaces_manager;
     private Launcher.Launcher  launcher;
     private Places.Controller  places_controller;
@@ -509,7 +509,7 @@ namespace Unity
             }
         }
 
-      expose_windows (windows);
+      expose_windows (windows,  get_launcher_width_foobar () + 10);
     }
 
     public void stop_expose ()
@@ -554,7 +554,7 @@ namespace Unity
     }
 
     public void expose_windows (GLib.SList<Clutter.Actor> windows,
-                                int left_buffer = 250)
+                                int left_buffer = 75)
     {
       expose_manager.left_buffer = left_buffer;
       expose_manager.start_expose (windows);
