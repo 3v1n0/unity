@@ -48,6 +48,7 @@ namespace Unity.Places
 
     private DBus.Connection?     connection;
     private dynamic DBus.Object? service;
+    private dynamic DBus.Object? activation_service;
 
     private ArrayList<PlaceEntry> entries_array;
 
@@ -172,6 +173,7 @@ namespace Unity.Places
                 {
                   entry.update_info (array);
                   entry.connect ();
+                  entry.parent = this;
                   existing = true;
                 }
             }
@@ -199,6 +201,18 @@ namespace Unity.Places
         }
 
       online = true;
+    }
+
+    public bool activate (string uri)
+    {
+      if (activation_service == null)
+        {
+            activation_service = connection.get_object (dbus_name,
+                                                        dbus_path,
+                                                        "com.canonical.Unity.Activation");
+        }
+
+      return activation_service.activate (uri);
     }
 
     /* Private Methods */

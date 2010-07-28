@@ -47,6 +47,8 @@ namespace Unity.Places
 
     private bool          allow_expand = true;
 
+    public signal void activated (string uri, string mimetype);
+
     public DefaultRendererGroup (uint      group_id,
                                  string    group_renderer,
                                  string    display_name,
@@ -229,6 +231,8 @@ namespace Unity.Places
       if (bin_state == ExpandingBinState.EXPANDED)
         button.about_to_show ();
 
+      button.activated.connect ((u, m) => { activated (u, m); });
+
       add_to_n_results (1);
 
       if (bin_state == ExpandingBinState.CLOSED)
@@ -406,6 +410,8 @@ namespace Unity.Places
 
     private bool shown = false;
 
+    public signal void activated (string uri, string mimetype);
+
     public Tile (Dee.ModelIter iter,
                  string        uri,
                  string?       icon_hint,
@@ -451,52 +457,10 @@ namespace Unity.Places
 
     private override void clicked ()
     {
-      clicked_handler.begin ();
+      activated (uri, mimetype);
+      //clicked_handler.begin ();
     }
-
-    private async void clicked_handler ()
-    {
-      global_shell.hide_unity ();
-
-      if (uri.has_prefix ("application://"))
-        {
-          var id = uri.offset ("application://".length);
-
-          AppInfo info;
-          try {
-            var appinfos = AppInfoManager.get_instance ();
-            info = yield appinfos.lookup_async (id);
-          } catch (Error ee) {
-            warning ("Unable to read .desktop file '%s': %s", uri, ee.message);
-            return;
-          }
-
-          if (info is AppInfo)
-            {
-              try {
-                info.launch (null,null);
-              } catch (Error e) {
-                warning ("Unable to launch desktop file %s: %s\n",
-                         id,
-                         e.message);
-              }
-            }
-          else
-            {
-              warning ("%s is an invalid DesktopAppInfo id\n", id);
-            }
-          return;
-        }
-
-      try {
-        Gtk.show_uri (Gdk.Screen.get_default (),
-                      uri,
-                      0);
-       } catch (GLib.Error eee) {
-         warning ("Unable to launch: %s\n", eee.message);
-       }
-    }
-
+    
     private void set_icon ()
     {
       var cache = PixbufCache.get_default ();

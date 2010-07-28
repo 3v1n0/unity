@@ -56,6 +56,8 @@ namespace Unity.Places
                                             "__you_cant_see_me__",
                                             "gtk-apply",
                                             results);
+
+      group.activated.connect ((u, m) => { activated (u, m); } );
       box.pack (group, false, true);
     }
   }

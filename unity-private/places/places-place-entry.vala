@@ -50,6 +50,8 @@ namespace Unity.Places
     public abstract Dee.Model?  global_results_model { set; get; }
     public abstract Gee.HashMap<string, string>? global_renderer_hints { get; set; }
 
+    public abstract unowned Place? parent { get; construct set; }
+
     /* Signals */
     public signal void updated ();
     public signal void renderer_info_changed ();
@@ -112,6 +114,8 @@ namespace Unity.Places
     public bool     sensitive { get; set; }
 
     public Gee.HashMap<string, string> hints { get; set; }
+
+    public unowned Place? parent { get; construct set; }
 
     /* Whether the Entry is available on the bus, this is only when we want to
      * do optimisations for startup (showing the entries before actually
