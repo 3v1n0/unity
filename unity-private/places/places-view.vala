@@ -120,6 +120,7 @@ namespace Unity.Places
 
     private Unity.Place.Renderer lookup_renderer (string renderer)
     {
+      debug (@"NEW RENDERER: $renderer");
       return new DefaultRenderer ();
     }
   }
