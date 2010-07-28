@@ -331,3 +331,6 @@ unity-private/launcher/quicklist-radio-menu-item.c
 unity-private/launcher/quicklist-seperator-menu-item.c
 unity-private/places/places-place-entry-scroller-child.c
 unity-private/places/places-trash-controller.c
+unity/unity-place-browser.c
+unity-private/places/places-folder-browser-renderer.c
+unity/unity-place-activation.c
