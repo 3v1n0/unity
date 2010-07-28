@@ -130,7 +130,8 @@ namespace Unity.Places
                            entry.entry_results_model,
                            entry.entry_renderer_hints);
       renderer.show ();
-     
+
+      search_bar.set_active_entry_view (entry, 0, 0);
     }
 
     private Unity.Place.Renderer lookup_renderer (PlaceEntry entry)

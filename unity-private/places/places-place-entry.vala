@@ -149,7 +149,8 @@ namespace Unity.Places
     private Dee.Model? _sections_model = null;
     public Dee.Model?  sections_model {
       get {
-        if (_sections_model is Dee.Model == false)
+        if (_sections_model is Dee.Model == false ||
+            (_sections_model as Dee.SharedModel).get_swarm_name () != sections_model_name)
           {
             if (sections_model_name != null)
               {
