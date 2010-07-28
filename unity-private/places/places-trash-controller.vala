@@ -176,7 +176,7 @@ namespace Unity.Places
                   yield recursively_delete_contents (child);
 
                 try {
-                  child.delete ();
+                  child.delete (null);
                 } catch (Error error_) {
                   warning (@"Unable to delete file '$(child.get_basename ()): $(error_.message)");
                 }
