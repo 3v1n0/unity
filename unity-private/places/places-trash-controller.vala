@@ -124,6 +124,11 @@ namespace Unity.Places
           root.child_append (item);
 
           item.item_activated.connect (() => {
+
+          /* FIXME: Popping up this dialog inside mutter doesn't work, so we
+           * need to figure out something else for this action. Right now,
+           * we'll at least honor the click and empty the trash
+
             var dialog = new Gtk.MessageDialog (null,
                                                 0,
                                                 Gtk.MessageType.WARNING,
@@ -140,6 +145,11 @@ namespace Unity.Places
             });
             
             dialog.show ();
+
+            return false;
+          */
+
+            recursively_delete_contents.begin (trash_dir);
           });
         }
 

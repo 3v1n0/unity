@@ -188,7 +188,7 @@ namespace Unity
         {
           this.screensaver_conn = DBus.Bus.get (DBus.BusType.SESSION);
           this.screensaver = this.screensaver_conn.get_object ("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
-          this.screensaver.ActiveChanged += got_screensaver_changed;
+          this.screensaver.ActiveChanged.connect (got_screensaver_changed);
         }
       catch (Error e)
         {
@@ -401,8 +401,8 @@ namespace Unity
                        this.QUICKLAUNCHER_WIDTH, 0, (uint32)height,
                        PANEL_HEIGHT, 0, (uint32)width);
 
-      this.places.set_size (width, height);
-      this.places.set_position (0, 0);
+      this.places.set_size (width - this.QUICKLAUNCHER_WIDTH, height);
+      this.places.set_position (this.QUICKLAUNCHER_WIDTH, 0);
 
       this.panel.set_size (width, 24);
       this.panel.set_position (0, 0);
