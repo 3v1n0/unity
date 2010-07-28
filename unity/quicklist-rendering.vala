@@ -87,6 +87,229 @@ namespace Unity.QuicklistRendering
     }
   }
 
+  public class RadioItem : GLib.Object
+  {
+    private static void
+    _round_rect (Cairo.Context cr,
+                 double        aspect,        // aspect-ratio
+                 double        x,             // top-left corner
+                 double        y,             // top-left corner
+                 double        corner_radius, // "size" of the corners
+                 double        width,         // width of the rectangle
+                 double        height)        // height of the rectangle
+    {
+      double radius = corner_radius / aspect;
+
+      // top-left, right of the corner
+      cr.move_to (x + radius, y);
+
+      // top-right, left of the corner
+      cr.line_to (x + width - radius, y);
+
+      // top-right, below the corner
+      cr.arc (x + width - radius,
+              y + radius,
+              radius,
+              -90.0f * GLib.Math.PI / 180.0f,
+              0.0f * GLib.Math.PI / 180.0f);
+
+      // bottom-right, above the corner
+      cr.line_to (x + width, y + height - radius);
+
+      // bottom-right, left of the corner
+      cr.arc (x + width - radius,
+              y + height - radius,
+              radius,
+              0.0f * GLib.Math.PI / 180.0f,
+              90.0f * GLib.Math.PI / 180.0f);
+
+      // bottom-left, right of the corner
+      cr.line_to (x + radius, y + height);
+
+      // bottom-left, above the corner
+      cr.arc (x + radius,
+              y + height - radius,
+              radius,
+              90.0f * GLib.Math.PI / 180.0f,
+              180.0f * GLib.Math.PI / 180.0f);
+
+      // top-left, right of the corner
+      cr.arc (x + radius,
+              y + radius,
+              radius,
+              180.0f * GLib.Math.PI / 180.0f,
+              270.0f * GLib.Math.PI / 180.0f);
+    }
+
+    public static void
+    get_text_extents (string  font,
+                      string  text,
+                      out int width,
+                      out int height)
+    {
+      Cairo.Surface surface = new Cairo.ImageSurface (Cairo.Format.A1, 1, 1);
+      Cairo.Context cr = new Cairo.Context (surface);
+      Pango.Layout layout = Pango.cairo_create_layout (cr);
+      Gtk.Settings settings = Gtk.Settings.get_default ();
+      Pango.FontDescription desc = Pango.FontDescription.from_string (font);
+      desc.set_weight (Pango.Weight.NORMAL);
+      layout.set_font_description (desc);
+      layout.set_wrap (Pango.WrapMode.WORD_CHAR);
+      layout.set_ellipsize (Pango.EllipsizeMode.END);
+      layout.set_text (text, -1);
+      Pango.Context pango_context = layout.get_context ();
+      Gdk.Screen screen = Gdk.Screen.get_default ();
+      Pango.cairo_context_set_font_options (pango_context,
+                                            screen.get_font_options ());
+      Pango.cairo_context_set_resolution (pango_context,
+                                          (float) settings.gtk_xft_dpi /
+                                          (float) Pango.SCALE);
+      layout.context_changed ();
+      Pango.Rectangle log_rect;
+      layout.get_extents (null, out log_rect);
+      width  = log_rect.width / Pango.SCALE;
+      height = log_rect.height / Pango.SCALE;
+    }
+
+    public static void
+    normal_mask (Cairo.Context cr,
+                 int           w,
+                 int           h,
+                 string        font,
+                 string        text,
+                 bool          enabled)
+    {
+      // clear context
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      // setup correct filled-drawing
+      cr.set_operator (Cairo.Operator.SOURCE);
+      cr.scale (1.0f, 1.0f);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+
+      double x  = Ctk.em_to_pixel (MARGIN);
+      double y  = (double) h / 2.0f;
+      double r1 = 10.0f;
+      double r2 = 12.5f;
+
+      // draw radio button
+      if (enabled)
+        {
+          cr.arc (x, y, r1, 0.0f, 360.0f);
+          cr.fill ();
+          cr.arc (x, y, r2, 0.0f, 360.0f);
+          cr.stroke ();
+        }
+      else
+       {
+          cr.arc (x, y, r2, 0.0f, 360.0f);
+          cr.stroke ();
+       }
+
+      // draw text
+      Pango.Layout layout = Pango.cairo_create_layout (cr);
+      Gtk.Settings settings = Gtk.Settings.get_default ();
+      Pango.FontDescription desc = Pango.FontDescription.from_string (font);
+      desc.set_weight (Pango.Weight.NORMAL);
+      layout.set_font_description (desc);
+      layout.set_wrap (Pango.WrapMode.WORD_CHAR);
+      layout.set_ellipsize (Pango.EllipsizeMode.END);
+      layout.set_text (text, -1);
+      Pango.Context pango_context = layout.get_context ();
+      Gdk.Screen screen = Gdk.Screen.get_default ();
+      Pango.cairo_context_set_font_options (pango_context,
+                                            screen.get_font_options ());
+      Pango.cairo_context_set_resolution (pango_context,
+                                          (float) settings.gtk_xft_dpi /
+                                          (float) Pango.SCALE);
+      layout.context_changed ();
+
+      int text_width;
+      int text_height;
+      get_text_extents (font, text, out text_width, out text_height);
+      cr.move_to (30.0f + Ctk.em_to_pixel (MARGIN),
+                  (float) (h - text_height) / 2.0f);
+
+      Pango.cairo_show_layout (cr, layout);
+    }
+
+    public static void
+    selected_mask (Cairo.Context cr,
+                   int           w,
+                   int           h,
+                   string        font,
+                   string        text,
+                   bool          enabled)
+    {
+      // clear context
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      // setup correct filled-drawing
+      cr.set_operator (Cairo.Operator.SOURCE);
+      cr.scale (1.0f, 1.0f);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+
+      // draw rounded rectangle
+      _round_rect (cr,
+                   1.0f,
+                   0.5f,
+                   0.5f,
+                   ITEM_CORNER_RADIUS_ABS,
+                   w - 1.0f,
+                   h - 1.0f);
+      cr.fill ();
+
+      double x  = Ctk.em_to_pixel (MARGIN);
+      double y  = (double) h / 2.0f;
+      double r1 = 10.0f;
+      double r2 = 12.5f;
+
+      // draw radio button
+      if (enabled)
+        {
+          cr.arc (x, y, r1, 0.0f, 360.0f);
+          cr.fill ();
+          cr.arc (x, y, r2, 0.0f, 360.0f);
+          cr.stroke ();
+        }
+      else
+       {
+          cr.arc (x, y, r2, 0.0f, 360.0f);
+          cr.stroke ();
+       }
+
+      // draw text
+      Pango.Layout layout = Pango.cairo_create_layout (cr);
+      Gtk.Settings settings = Gtk.Settings.get_default ();
+      Pango.FontDescription desc = Pango.FontDescription.from_string (font);
+      desc.set_weight (Pango.Weight.NORMAL);
+      layout.set_font_description (desc);
+      layout.set_wrap (Pango.WrapMode.WORD_CHAR);
+      layout.set_ellipsize (Pango.EllipsizeMode.END);
+      layout.set_text (text, -1);
+
+      Pango.Context pango_context = layout.get_context ();
+      Gdk.Screen screen = Gdk.Screen.get_default ();
+      Pango.cairo_context_set_font_options (pango_context,
+                                            screen.get_font_options ());
+      Pango.cairo_context_set_resolution (pango_context,
+                                          (float) settings.gtk_xft_dpi /
+                                          (float) Pango.SCALE);
+      layout.context_changed ();
+
+      int text_width;
+      int text_height;
+      get_text_extents (font, text, out text_width, out text_height);
+      cr.move_to (30.0f + Ctk.em_to_pixel (MARGIN),
+                  (float) (h - text_height) / 2.0f);
+
+      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.0f);
+      Pango.cairo_show_layout (cr, layout);
+    }
+  }
+
   public class Item : GLib.Object
   {
     private static void

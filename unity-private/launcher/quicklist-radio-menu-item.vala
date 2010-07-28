@@ -125,7 +125,7 @@ namespace Unity.Launcher
 
       string formatted_label = Utils.strip_characters (label, "", "_", "_");
 
-      if (active)
+      /*if (active)
         formatted_label =  "◉ " + formatted_label;
       else
         formatted_label =  "○ " + formatted_label;
@@ -139,7 +139,20 @@ namespace Unity.Launcher
                                                    this.last_width,
                                                    this.last_height,
                                                    settings.gtk_font_name,
-                                                   formatted_label);
+                                                   formatted_label);*/
+
+      Unity.QuicklistRendering.RadioItem.normal_mask (normal_cr,
+                                                      this.last_width,
+                                                      this.last_height,
+                                                      settings.gtk_font_name,
+                                                      formatted_label,
+                                                      active);
+      Unity.QuicklistRendering.RadioItem.selected_mask (selected_cr,
+                                                        this.last_width,
+                                                        this.last_height,
+                                                        settings.gtk_font_name,
+                                                        formatted_label,
+                                                        active);
 
       normal_layer.set_mask_from_surface (normal_surf);
       normal_layer.set_color (white_color);
