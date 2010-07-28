@@ -21,6 +21,12 @@ using Unity;
 
 namespace Unity.Places
 {
+  public enum SectionStyle
+  {
+    BUTTONS,
+    BREADCRUMB
+  }
+
   public class PlaceSearchSectionsBar : Ctk.Box
   {
     static const int SPACING = 10;
@@ -148,7 +154,7 @@ namespace Unity.Places
 
     private Section? get_section_for_iter (Dee.ModelIter iter)
     {
-      GLib.List<Clutter.Actor> children = get_children ();
+      var children = get_children ();
       foreach (Clutter.Actor child in children)
         {
           Section section = child as Section;

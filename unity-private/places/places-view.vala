@@ -103,11 +103,13 @@ namespace Unity.Places
       if (active_entry is PlaceEntry)
         {
           active_entry.active = false;
+          active_entry.renderer_info_changed.disconnect (on_entry_renderer_info_changed);
         }
       active_entry = entry;
       entry.active = true;
+      entry.renderer_info_changed.connect (on_entry_renderer_info_changed);
 
-      renderer = lookup_renderer (entry.entry_renderer_name);
+      renderer = lookup_renderer (entry);
       content_box.pack (renderer, true, true);
       renderer.set_models (entry.entry_groups_model,
                            entry.entry_results_model,
@@ -118,10 +120,43 @@ namespace Unity.Places
       search_bar.set_active_entry_view (entry, 0, section_id);
     }
 
-    private Unity.Place.Renderer lookup_renderer (string renderer)
+    public void on_entry_renderer_info_changed (PlaceEntry entry)
     {
-      debug (@"NEW RENDERER: $renderer");
-      return new DefaultRenderer ();
+      renderer.destroy ();
+
+      renderer = lookup_renderer (entry);
+      content_box.pack (renderer, true, true);
+      renderer.set_models (entry.entry_groups_model,
+                           entry.entry_results_model,
+                           entry.entry_renderer_hints);
+      renderer.show ();
+     
+    }
+
+    private Unity.Place.Renderer lookup_renderer (PlaceEntry entry)
+    {
+      string?      browser_path = null;
+      SectionStyle style = SectionStyle.BUTTONS;
+
+      /* FIXME: This is meant to be all automated, it's just we havent got
+       * there just yet
+       */
+      if (entry.hints != null)
+        {
+          foreach (Gee.Map.Entry<string,string> e in entry.hints)
+            {
+              if (e.key == "UnityPlaceBrowserPath")
+                browser_path = e.value;
+              else if (e.key == "UnitySectionStyle")
+                if (e.value == "breadcrumb")
+                  style = SectionStyle.BREADCRUMB;
+            }
+        }
+
+      if (browser_path != null)
+        return new FolderBrowserRenderer ();
+      else
+        return new DefaultRenderer ();
     }
   }
 }

@@ -36,6 +36,7 @@ namespace Unity.Places
     private Ctk.Image     icon;
     private Ctk.Text      text;
     private Ctk.Image     expander;
+    private Clutter.Actor sep;
     private Ctk.IconView  renderer;
 
     private MoreResultsButton? more_results_button;
@@ -93,10 +94,10 @@ namespace Unity.Places
       title_box.pack (expander, false, true);
       expander.show ();
 
-      var rect = new Clutter.Rectangle.with_color ({ 255, 255, 255, 255 });
-      rect.height = 1;
-      vbox.pack (rect, false, false);
-      rect.show ();
+      sep = new Clutter.Rectangle.with_color ({ 255, 255, 255, 255 });
+      sep.height = 1;
+      vbox.pack (sep, false, false);
+      sep.show ();
 
       title_box.button_release_event.connect (() => {
         if (n_results <= renderer.get_n_cols () || allow_expand == false)
@@ -135,18 +136,6 @@ namespace Unity.Places
       renderer.set ("auto-fade-children", true);
       renderer.notify["n-cols"].connect (on_n_cols_changed);
 
-      unowned Dee.ModelIter iter = results.get_first_iter ();
-      while (!results.is_last (iter))
-        {
-          if (interesting (iter))
-            on_result_added (iter);
-
-          iter = results.next (iter);
-        }
-
-      results.row_added.connect (on_result_added);
-      results.row_removed.connect (on_result_removed);
-
       if (group_renderer == "UnityLinkGroupRenderer")
         {
           allow_expand = false;
@@ -177,6 +166,25 @@ namespace Unity.Places
                 }
             });
         }
+      else if (group_renderer == "UnityFolderGroupRenderer")
+        {
+          title_box.hide ();
+          sep.hide ();
+          bin_state = ExpandingBinState.EXPANDED;
+        }
+
+      unowned Dee.ModelIter iter = results.get_first_iter ();
+      while (!results.is_last (iter))
+        {
+          if (interesting (iter))
+            on_result_added (iter);
+
+          iter = results.next (iter);
+        }
+
+      results.row_added.connect (on_result_added);
+      results.row_removed.connect (on_result_removed);
+
     }
 
     private override void allocate (Clutter.ActorBox        box,
@@ -217,6 +225,9 @@ namespace Unity.Places
                              results.get_string (iter, 5));
       renderer.add_actor (button);
       button.show ();
+
+      if (bin_state == ExpandingBinState.EXPANDED)
+        button.about_to_show ();
 
       add_to_n_results (1);
 
