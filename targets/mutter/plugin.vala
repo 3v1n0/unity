@@ -260,8 +260,9 @@ namespace Unity
 
       this.expose_manager.coverflow = false;
 
-      window_group.add_actor (this.launcher.get_view ());
-      window_group.raise_child (this.launcher.get_view (),
+      window_group.add_actor (this.launcher.get_container ());
+      (this.launcher.get_container () as Ctk.Bin).add_actor (this.launcher.get_view ());
+      window_group.raise_child (this.launcher.get_container (),
                                 this.plugin.get_normal_window_group ());
       this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 400,
                                   "opacity", 255);
@@ -271,7 +272,7 @@ namespace Unity
 
       window_group.add_actor (this.places);
       window_group.raise_child (this.places,
-                                this.launcher.get_view ());
+                                this.launcher.get_container ());
       this.places.opacity = 0;
       this.places.reactive = false;
       this.places.hide ();
@@ -280,7 +281,7 @@ namespace Unity
       this.panel = new Panel.View (this);
       window_group.add_actor (this.panel);
       window_group.raise_child (this.panel,
-                                this.launcher.get_view ());
+                                this.launcher.get_container ());
       this.panel.show ();
 
       this.stage.notify["width"].connect (this.relayout);
@@ -323,7 +324,7 @@ namespace Unity
     {
       if (changed)
         {
-          this.launcher.get_view ().hide ();
+          this.launcher.get_container ().hide ();
           this.panel.hide ();
           var menu = Unity.Launcher.QuicklistController.get_current_menu ();
           if (menu.is_menu_open ())
@@ -333,7 +334,7 @@ namespace Unity
         }
       else
         {
-          this.launcher.get_view ().show ();
+          this.launcher.get_container ().show ();
           this.panel.show ();
           fullscreen_obstruction = false;
         }
