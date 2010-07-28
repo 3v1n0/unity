@@ -142,7 +142,7 @@ namespace Unity.Panel
 
       set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
       set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
-      set_background_for_state (Ctk.ActorState.STATE_SELECTED, bfb_bg_active);
+      set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bfb_bg_active);
 
       search_shown = false;
     }
@@ -164,7 +164,6 @@ namespace Unity.Panel
         break;
 
         case Ctk.ActorState.STATE_ACTIVE:
-        case Ctk.ActorState.STATE_SELECTED:
           glow.set_factor (1.0f);
           glow.set_invalidate_effect_cache (true);
           do_queue_redraw ();
