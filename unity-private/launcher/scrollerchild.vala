@@ -50,6 +50,13 @@ namespace Unity.Launcher
 
   public class ScrollerChild : Ctk.Actor
   {
+    public enum GroupType {
+      APPLICATION,
+      PLACE,
+      DEVICE,
+      SYSTEM
+    }
+
     public Gdk.Pixbuf icon {get; set;}
     public PinType pin_type;
     public float position {get; set;}
@@ -59,6 +66,8 @@ namespace Unity.Launcher
     public bool activating {get; set;}
     public float rotation {get; set;}
     public ScrollerChildController controller; // this sucks. shouldn't be here, can't help it.
+
+    public GroupType group_type { get; construct set; }
 
     public string to_string ()
     {
@@ -89,6 +98,11 @@ namespace Unity.Launcher
     private AnimState rotate_state;
 
     private float old_rotate_value = 0.0f;
+
+    public ScrollerChild ()
+    {
+      Object (group_type:GroupType.APPLICATION);
+    }
 
     construct
     {

@@ -187,12 +187,15 @@ namespace Unity.Launcher
             list = list.next;
           }
 
+        ScrollerChild child = (Drag.Controller.get_default ().get_drag_model () as ScrollerChildController).child;
+
+        value = model.clamp (child, value);
+
         return value;
     }
 
     public int get_model_index_at_y_pos (float y, bool return_minus_if_fail=false)
     {
-
       // trying out a different method
       int iy = (int)y;
       Clutter.Actor picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy);

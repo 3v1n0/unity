@@ -42,6 +42,7 @@ namespace Unity.Places
         child.active = entry.active;
       });
 
+      child.group_type = ScrollerChild.GroupType.PLACE;
       child.motion_event.connect (get_sections);
     }
 
@@ -99,7 +100,7 @@ namespace Unity.Places
 
     public override bool can_drag ()
     {
-      return false;
+      return true;
     }
   }
 }

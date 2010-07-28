@@ -30,10 +30,7 @@ namespace Unity.Places
 
     public TrashController ()
     {
-      var child = new ScrollerChild ();
-      child.pin_type = PinType.ALWAYS;
-
-      Object (child:child);
+      Object (child:new ScrollerChild ());
     }
 
     construct
@@ -47,6 +44,8 @@ namespace Unity.Places
       } catch (Error e) {
         warning (@"Unable to monitor trash: $(e.message)");
       }
+
+      child.group_type = ScrollerChild.GroupType.SYSTEM;
     }
     
     public override void activate ()
@@ -182,7 +181,7 @@ namespace Unity.Places
 
     public override bool can_drag ()
     {
-      return false;
+      return true;
     }
   }
 }
