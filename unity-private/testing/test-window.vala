@@ -296,7 +296,7 @@ namespace Unity.Testing
 
     public ShellMode get_mode ()
     {
-      return ShellMode.UNDERLAY;
+      return showing_places ? ShellMode.DASH : ShellMode.MINIMIZED;
     }
 
     public void show_unity ()
@@ -321,6 +321,8 @@ namespace Unity.Testing
           places.shown ();
         }
 
+      mode_changed (showing_places ? ShellMode.DASH : ShellMode.MINIMIZED);
+
       this.places.do_queue_redraw ();
     }
 
@@ -335,7 +337,7 @@ namespace Unity.Testing
 
           places.hidden ();
 
-          debug ("Hide unity");
+          mode_changed (ShellMode.MINIMIZED);
         }
     }
 

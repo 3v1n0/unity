@@ -21,8 +21,9 @@
 namespace Unity
 {
   public enum ShellMode {
-    UNDERLAY,
-    OVERLAY
+    MINIMIZED,
+    DASH,
+    EXPOSE
   }
   public enum dnd_targets {
     TARGET_INT32,
@@ -55,8 +56,9 @@ namespace Unity
     public abstract void          expose_xids (Array<uint32> xids);
     public abstract void          stop_expose ();
 
-    public signal   void need_new_icon_cache ();
-    public signal   void indicators_changed (int width);
+    public signal   void          need_new_icon_cache ();
+    public signal   void          indicators_changed (int width);
+    public signal   void          mode_changed (ShellMode mode);
   }
 
   public Shell? global_shell; // our global shell

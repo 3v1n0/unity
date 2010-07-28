@@ -545,7 +545,7 @@ namespace Unity
 
     public ShellMode get_mode ()
     {
-      return ShellMode.UNDERLAY;
+      return places_showing ? ShellMode.DASH : ShellMode.MINIMIZED;
     }
 
     public int get_indicators_width ()
@@ -588,6 +588,8 @@ namespace Unity
         Gtk.main_iteration ();
 
       places.hidden ();
+
+      mode_changed (ShellMode.MINIMIZED);
     }
 
     public void show_unity ()
@@ -626,6 +628,8 @@ namespace Unity
                           "opacity", 255);
 
           places.shown ();
+
+          mode_changed (ShellMode.DASH);
         }
     }
 
