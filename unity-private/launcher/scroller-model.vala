@@ -99,6 +99,7 @@ namespace Unity.Launcher
 
     public void add (ScrollerChild child)
     {
+<<<<<<< TREE
       switch (child.group_type)
         {
         case ScrollerChild.GroupType.APPLICATION:

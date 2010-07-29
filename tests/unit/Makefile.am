@@ -29,6 +29,7 @@ test_unit_VALAFLAGS = \
   --pkg Bamf-0.2 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
+  --pkg config \
   --pkg dbus-glib-1 \
   --pkg Dbusmenu-Glib-0.2 \
   --pkg dee-1.0 \
