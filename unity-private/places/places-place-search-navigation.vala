@@ -36,6 +36,8 @@ namespace Unity.Places
 
     private Ctk.EffectGlow glow;
 
+    private dynamic DBus.Object service;
+
     public PlaceSearchNavigation ()
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
@@ -54,10 +56,28 @@ namespace Unity.Places
       };*/
 
       back = new CairoCanvas (draw_back_arrow);
+      back.reactive = true;
+      back.button_release_event.connect (() => {
+        if (service != null && back_sensitive)
+          {
+            ValueArray[] a = service.go_back ();
+            refresh_state (a);
+          }
+
+        return true;
+      });
       pack (back, true, true);
       back.show ();
 
       forward = new CairoCanvas (draw_forward_arrow);
+      forward.button_release_event.connect (() => {
+        if (service != null && forward_sensitive)
+          {
+            ValueArray[] a = service.go_back ();
+            refresh_state (a);
+          }
+        return true;
+      });
       pack (forward, true, true);
       forward.show ();
 
@@ -70,6 +90,9 @@ namespace Unity.Places
 
     public void set_active_entry (PlaceEntry entry)
     {
+      active_entry = null;
+      service = null;
+
       if (entry.hints == null)
         {
           /* FIXME: Erm, I'm assuming we are meant to support _something_ */
@@ -82,8 +105,20 @@ namespace Unity.Places
 
           if (path != null)
             {
-              back_sensitive = true;
-              forward_sensitive = true;
+              try {
+                var connection = DBus.Bus.get (DBus.BusType.SESSION);
+                service = connection.get_object (entry.parent.dbus_name,
+                                                 path,
+                                                 "com.canonical.Unity.PlaceBrowser");
+                ValueArray[] entries = service.get_state ();
+                refresh_state (entries);
+
+              } catch (Error e) {
+                warning (@"Unable to connect to $path: %s",
+                         e.message);
+                back_sensitive = false;
+                forward_sensitive = false;
+              }
             }
           else
             {
@@ -96,6 +131,17 @@ namespace Unity.Places
       forward.update ();
       queue_relayout ();
       glow.set_invalidate_effect_cache (true);
+    }
+
+    private void refresh_state (ValueArray[] entries)
+    {
+      unowned ValueArray array;
+
+      array = entries[0];
+      back_sensitive = array.get_nth (0).get_boolean ();
+
+      array = entries[1];
+      forward_sensitive = array.get_nth (0).get_boolean ();
     }
 
     private override void get_preferred_width (float for_height,
