@@ -71,6 +71,11 @@ AC_DEFINE_UNQUOTED(LOCALE_DIR, "${PREFIX}/${DATADIRNAME}/locale",[Locale directo
 AC_DEFINE_UNQUOTED(DATADIR, "${PREFIX}/${DATADIRNAME}",[Data directory])
 AC_DEFINE_UNQUOTED(PREFIXDIR, "${PREFIX}",[Prefix directory])
 
+
+PWD=`pwd`
+AC_DEFINE_UNQUOTED(TESTUIDIR, "${PWD}/tests/ui", [Test UI directory])
+AC_DEFINE_UNQUOTED(TESTUNITDIR, "${PWD}/tests/unit", [Test unit directory])
+
 dnl Use strict compiler flags only on development releases
 m4_define([maintainer_flags_default],
           [m4_if(m4_eval(unity_micro % 2), [1], [yes], [no])])
@@ -159,6 +164,9 @@ INDICATORICONSDIR=`$PKG_CONFIG --variable=iconsdir indicator`
 
 AC_SUBST(INDICATORDIR)
 AC_SUBST(INDICATORICONSDIR)
+
+AC_DEFINE_UNQUOTED(INDICATORDIR, "${INDICATORDIR}",[Indicators directory])
+AC_DEFINE_UNQUOTED(INDICATORICONSDIR, "${INDICATORICONSDIR}",[Indicator icons directory])
 
 dnl Create the Makefiles
 AC_CONFIG_FILES([
