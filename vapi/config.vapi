@@ -26,4 +26,9 @@ namespace Config
   public const string GETTEXT_PACKAGE;
   public const string LOCALE_DIR;
   public const string VERSION;
+  public const string INDICATORDIR;
+  public const string INDICATORICONSDIR;
+
+  public const string TESTUIDIR;
+  public const string TESTUNITDIR;
 }

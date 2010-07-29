@@ -24,9 +24,9 @@
 
 namespace Unity.Launcher
 {
-  const string HONEYCOMB_MASK_FILE = Unity.PKGDATADIR
+  const string HONEYCOMB_MASK_FILE = Config.PKGDATADIR
     + "/honeycomb-mask.png";
-  const string MENU_BG_FILE = Unity.PKGDATADIR
+  const string MENU_BG_FILE = Config.PKGDATADIR
     + "/tight_check_4px.png";
 
   const float WIGGLE_SIZE = 5; // how many degree's to wiggle on either side.

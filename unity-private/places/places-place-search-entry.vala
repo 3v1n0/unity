@@ -21,7 +21,7 @@ namespace Unity.Places
 {
   public class PlaceSearchEntry : Ctk.Box
   {
-    static const string SEARCH_ICON_FILE = PKGDATADIR + "/search_icon.png";
+    static const string SEARCH_ICON_FILE = Config.PKGDATADIR + "/search_icon.png";
     static const float  PADDING = 1.0f;
     static const int    LIVE_SEARCH_TIMEOUT = 200; /* Milliseconds */
     const Clutter.Color nofocus_color = { 0xff, 0xff, 0xff, 0xbb };

@@ -90,10 +90,10 @@ namespace Unity.Panel.Indicators
         }
 
       /* We need to look for icons in an specific location */
-      Gtk.IconTheme.get_default ().append_search_path (INDICATORICONSDIR);
+      Gtk.IconTheme.get_default ().append_search_path (Config.INDICATORICONSDIR);
 
       /* Start loading 'em in. .so are located in  INDICATORDIR*/
-      var dir = File.new_for_path (INDICATORDIR);
+      var dir = File.new_for_path (Config.INDICATORDIR);
       try
         {
           var e = dir.enumerate_children (FILE_ATTRIBUTE_STANDARD_NAME, 0,null);
@@ -118,7 +118,7 @@ namespace Unity.Panel.Indicators
           sos.sort ((CompareFunc)indicator_sort_func);
 
           foreach (string leaf in sos)
-            this.load_indicator (INDICATORDIR + leaf, leaf);
+            this.load_indicator (Config.INDICATORDIR + leaf, leaf);
         }
       catch (Error error)
         {

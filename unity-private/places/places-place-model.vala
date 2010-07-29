@@ -46,7 +46,7 @@ namespace Unity.Places
     /* Constructors */
     public PlaceFileModel ()
     {
-      Object (directory:PKGDATADIR + "/places", async:true);
+      Object (directory:Config.PKGDATADIR + "/places", async:true);
     }
 
     /* Allows loading places files from a non-install directory */
