@@ -130,6 +130,8 @@ namespace Ctk {
 	public class EffectCache : Ctk.Effect {
 		[CCode (type = "CtkEffect*", has_construct_function = false)]
 		public EffectCache ();
+		public void invalidate_texture_cache ();
+		public void update_texture_cache ();
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class EffectContext : GLib.Object {
