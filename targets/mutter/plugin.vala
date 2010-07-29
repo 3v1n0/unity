@@ -398,10 +398,10 @@ namespace Unity
       this.background.set_size (width, height);
       this.background.set_position (0, 0);
 
-      this.launcher.get_view ().set_size (this.QUICKLAUNCHER_WIDTH,
+      this.launcher.get_container ().set_size (this.QUICKLAUNCHER_WIDTH,
                                    (height-this.PANEL_HEIGHT));
-      this.launcher.get_view ().set_position (0, this.PANEL_HEIGHT);
-      this.launcher.get_view ().set_clip (0, 0,
+      this.launcher.get_container ().set_position (0, this.PANEL_HEIGHT);
+      this.launcher.get_container ().set_clip (0, 0,
                                    this.QUICKLAUNCHER_WIDTH,
                                    height-this.PANEL_HEIGHT);
       Utils.set_strut ((Gtk.Window)this.drag_dest,
