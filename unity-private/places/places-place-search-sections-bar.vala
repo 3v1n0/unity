@@ -32,6 +32,18 @@ namespace Unity.Places
     static const int SPACING = 10;
 
     /* Properties */
+    public SectionStyle _style = SectionStyle.BUTTONS;
+    public SectionStyle style {
+      get { return _style; }
+      set {
+        if (_style != value)
+          {
+            _style = value;
+            do_queue_redraw ();
+          }
+      }
+    }
+
     private PlaceEntry? active_entry = null;
     private Section?    active_section = null;
 
@@ -79,6 +91,16 @@ namespace Unity.Places
 
           active_section = null;
         }
+
+      if (entry.hints != null)
+        {
+          if (entry.hints["UnitySectionStyle"] == "breadcrumb")
+            style = SectionStyle.BREADCRUMB;
+          else
+            style = SectionStyle.BUTTONS;
+        }
+      else
+        style = SectionStyle.BUTTONS;
 
       foreach (Clutter.Actor actor in children)
         {
@@ -144,7 +166,7 @@ namespace Unity.Places
 
       section.button_press_event.connect (on_section_clicked);
 
-      if (active_section == null)
+      if (active_section == null && _style == SectionStyle.BUTTONS)
         {
           active_section = section;
           section.active = true;
@@ -369,27 +391,34 @@ namespace Unity.Places
       height -= 1;
       var radius = 10;
 
-      cr.line_to  (x, y + radius);
-      cr.curve_to (x, y,
-                   x, y,
-                   x + radius, y);
-      cr.line_to  (width - radius, y);
-      cr.curve_to (width, y,
-                   width, y,
-                   width, y + radius);
-      cr.line_to  (width, height - radius);
-      cr.curve_to (width, height,
-                   width, height,
-                   width - radius, height);
-      cr.line_to  (x + radius, height);
-      cr.curve_to (x, height,
-                   x, height,
-                   x, height - radius);
-      cr.close_path ();
+      if ((get_parent () as PlaceSearchSectionsBar).style == SectionStyle.BUTTONS)
+        {
+          cr.line_to  (x, y + radius);
+          cr.curve_to (x, y,
+                       x, y,
+                       x + radius, y);
+          cr.line_to  (width - radius, y);
+          cr.curve_to (width, y,
+                       width, y,
+                       width, y + radius);
+          cr.line_to  (width, height - radius);
+          cr.curve_to (width, height,
+                       width, height,
+                       width - radius, height);
+          cr.line_to  (x + radius, height);
+          cr.curve_to (x, height,
+                       x, height,
+                       x, height - radius);
+          cr.close_path ();
 
-      cr.set_source_rgba (1.0, 1.0, 1.0, 1.0);
-      cr.fill_preserve ();
-      cr.stroke ();
+          cr.set_source_rgba (1.0, 1.0, 1.0, 1.0);
+          cr.fill_preserve ();
+          cr.stroke ();
+        }
+      else
+        {
+
+        }
     }
   }
 }

@@ -431,7 +431,7 @@ namespace Unity.Places
     construct
     {
       unowned Ctk.Text text = get_text ();
-      text.ellipsize = Pango.EllipsizeMode.END;
+      text.ellipsize = Pango.EllipsizeMode.MIDDLE;
     }
 
     public void about_to_show ()
@@ -458,7 +458,6 @@ namespace Unity.Places
     private override void clicked ()
     {
       activated (uri, mimetype);
-      //clicked_handler.begin ();
     }
     
     private void set_icon ()

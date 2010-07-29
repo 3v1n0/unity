@@ -97,13 +97,17 @@ namespace Unity.Places
       if (active_entry is PlaceEntry)
         {
           active_entry.active = false;
-          active_entry.renderer_info_changed.disconnect (on_entry_renderer_info_changed);
+
+          if (active_entry != home_entry)
+            active_entry.renderer_info_changed.disconnect (on_entry_renderer_info_changed);
         }
       active_entry = entry;
       entry.active = true;
 
       update_views (entry, section_id);
-      entry.renderer_info_changed.connect (on_entry_renderer_info_changed);
+
+      if (active_entry != home_entry)
+        entry.renderer_info_changed.connect (on_entry_renderer_info_changed);
     }
 
     private void update_views (PlaceEntry entry, uint section_id=0)
@@ -135,7 +139,6 @@ namespace Unity.Places
     private Unity.Place.Renderer lookup_renderer (PlaceEntry entry)
     {
       string?      browser_path = null;
-      SectionStyle style = SectionStyle.BUTTONS;
 
       /* FIXME: This is meant to be all automated, it's just we havent got
        * there just yet
@@ -146,9 +149,6 @@ namespace Unity.Places
             {
               if (e.key == "UnityPlaceBrowserPath")
                 browser_path = e.value;
-              else if (e.key == "UnitySectionStyle")
-                if (e.value == "breadcrumb")
-                  style = SectionStyle.BREADCRUMB;
             }
         }
 
@@ -178,7 +178,6 @@ namespace Unity.Places
           if (active_entry.parent.activate (uri))
             return;        
         }
-
       activate_normal.begin (uri);
     }
 
