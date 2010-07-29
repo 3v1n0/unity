@@ -84,7 +84,8 @@ panel_sources = \
   panel/panel-menu-manager.vala \
   panel/panel-menubar.vala \
   panel/panel-tray.vala \
-  panel/panel-view.vala
+  panel/panel-view.vala \
+  panel/panel-window-buttons.vala
 
 places_sources = \
   places/places-controller.vala \
