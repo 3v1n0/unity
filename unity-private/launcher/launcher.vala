@@ -25,9 +25,11 @@ namespace Unity.Launcher
 
   public class LauncherContainer : Ctk.Bin
   {
+    public Ctk.EffectCache cache;
     public LauncherContainer ()
     {
-
+      this.cache = new Ctk.EffectCache ();
+      this.add_effect (this.cache);
     }
   }
   
@@ -46,9 +48,8 @@ namespace Unity.Launcher
     private ScrollerController controller;
     private ScrollerView view;
 
-    private Ctk.EffectCache cache;
     private LauncherContainer launcher_container;
-    
+
     public Launcher (Shell shell)
     {
       Object (shell: shell);
@@ -57,12 +58,9 @@ namespace Unity.Launcher
     construct
     {
       model = new ScrollerModel ();
-      view = new ScrollerView (model);
       
-      this.cache = new Ctk.EffectCache ();
       this.launcher_container = new LauncherContainer ();
-      this.launcher_container.add_effect (this.cache);
-      this.launcher_container.show();
+      view = new ScrollerView (model, this.launcher_container.cache);
       
       controller = new ScrollerController (model, view);
     }
@@ -81,6 +79,11 @@ namespace Unity.Launcher
     {
       return this.launcher_container as Clutter.Actor;
     }
-    
+
+    public Ctk.EffectCache get_actor_cache ()
+    {
+      return this.launcher_container.cache;
+    }
+
   }
 }

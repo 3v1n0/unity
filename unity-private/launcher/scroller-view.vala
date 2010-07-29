@@ -49,6 +49,7 @@ namespace Unity.Launcher
   {
     // please don't reference this outside of this view, its only public for construct
     public ScrollerModel model {get; construct;}
+    public Ctk.EffectCache cache {get; construct;}
 
     /* our scroller constants */
     public int spacing = 6;
@@ -97,9 +98,9 @@ namespace Unity.Launcher
      */
     private Gee.ArrayList<ScrollerChild> child_refs; // we sometimes need to hold a reference to a child
 
-    public ScrollerView (ScrollerModel _model)
+    public ScrollerView (ScrollerModel _model, Ctk.EffectCache _cache)
     {
-      Object (model:_model);
+      Object (model:_model, cache:_cache);
     }
 
     construct
