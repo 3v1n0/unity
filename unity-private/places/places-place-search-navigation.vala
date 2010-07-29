@@ -68,6 +68,36 @@ namespace Unity.Places
       add_effect (glow);
     }
 
+    public void set_active_entry (PlaceEntry entry)
+    {
+      if (entry.hints == null)
+        {
+          /* FIXME: Erm, I'm assuming we are meant to support _something_ */
+          back_sensitive = false;
+          forward_sensitive = false;
+        }
+      else
+        {
+          var path = entry.hints["UnityPlaceBrowserPath"];
+
+          if (path != null)
+            {
+              back_sensitive = true;
+              forward_sensitive = true;
+            }
+          else
+            {
+              back_sensitive = false;
+              forward_sensitive = false;
+            }
+        }
+
+      back.update ();
+      forward.update ();
+      queue_relayout ();
+      glow.set_invalidate_effect_cache (true);
+    }
+
     private override void get_preferred_width (float for_height,
                                                out float mwidth,
                                                out float nwidth)

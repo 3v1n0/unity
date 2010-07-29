@@ -138,6 +138,7 @@ namespace Unity.Places
       if (section != 0)
         sections.set_active_section (section);
 
+      navigation.set_active_entry (entry);
       this.entry.text.grab_key_focus ();
     }
   }
