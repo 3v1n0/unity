@@ -35,7 +35,7 @@ namespace Unity.Tests.Unit
 
     private void test_allocation ()
     {
-      var model = new PlaceFileModel.with_directory (TESTDIR+"/data");
+      var model = new PlaceFileModel.with_directory (Config.TESTUNITDIR+"/data");
       assert (model is PlaceFileModel);
       assert (model.size == 2);
     }
