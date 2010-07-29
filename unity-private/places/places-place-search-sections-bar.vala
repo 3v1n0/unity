@@ -47,6 +47,8 @@ namespace Unity.Places
     private PlaceEntry? active_entry = null;
     private Section?    active_section = null;
 
+    private unowned Dee.Model? sections_model = null;
+
     public PlaceSearchSectionsBar ()
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
@@ -82,6 +84,12 @@ namespace Unity.Places
     {
       var children = get_children ();
 
+      if (entry == active_entry)
+        {
+          if (sections_model == entry.sections_model)
+            return;
+        }
+
       if (active_entry is PlaceEntry)
         {
           var old_model = active_entry.sections_model;
@@ -110,6 +118,7 @@ namespace Unity.Places
 
       active_entry = entry;
       var model = active_entry.sections_model;
+      sections_model = model;
 
       unowned Dee.ModelIter iter = model.get_first_iter ();
       while (iter != null && !model.is_last (iter))
