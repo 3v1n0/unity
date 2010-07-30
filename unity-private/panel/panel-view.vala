@@ -25,6 +25,8 @@ namespace Unity.Panel
 
   public class View : Ctk.Box
   {
+    public Ctk.EffectCache cache;
+
     public bool expanded = true;
     public Shell shell { get; construct;}
 
@@ -75,6 +77,11 @@ namespace Unity.Panel
       indicator_bar.show ();
 
       button_release_event.connect (on_button_release_event);
+
+      cache = new Ctk.EffectCache ();
+      indicator_bar.add_effect (cache);
+      cache.update_texture_cache ();
+      indicator_bar.queue_redraw.connect (() => { cache.update_texture_cache (); });
 
       END_FUNCTION ();
     }
