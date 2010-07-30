@@ -279,6 +279,19 @@ namespace Unity.Testing
      * SHELL IMPLEMENTATION
      */
 
+    public void get_window_details (uint32   xid,
+                                    out bool allows_resize,
+                                    out bool is_maximised)
+    {
+      allows_resize = true;
+      debug ("This target does not support getting window details");
+    }
+
+    public void do_window_action (uint32 xid, WindowAction action)
+    {
+      debug ("This target does not support window actions");
+    }
+
     public void show_window_picker ()
     {
       this.show_unity ();

@@ -32,6 +32,13 @@ namespace Unity
     TARGET_OTHER
   }
 
+  public enum WindowAction {
+    CLOSE,
+    MINIMIZE,
+    MAXIMIZE,
+    UNMAXIMIZE
+  }
+
   public interface Shell : Object
   {
     public abstract bool          menus_swallow_events {get;}
@@ -56,9 +63,16 @@ namespace Unity
     public abstract void          expose_xids (Array<uint32> xids);
     public abstract void          stop_expose ();
 
+    public abstract void          get_window_details (uint32   xid,
+                                                      out bool allows_resize,
+                                                      out bool is_maximised);
+    public abstract void          do_window_action (uint32       xid,
+                                                    WindowAction action);
+
     public signal   void          need_new_icon_cache ();
     public signal   void          indicators_changed (int width);
     public signal   void          mode_changed (ShellMode mode);
+    public signal   void          active_window_state_changed ();
   }
 
   public Shell? global_shell; // our global shell

@@ -21,11 +21,15 @@ namespace Unity.Panel
 {
   public class WindowButtons : Ctk.Box
   {
+    private Ctk.Text     appname;
     private WindowButton close;
-    private WindowButton minimise;
-    private WindowButton maximise;
+    private WindowButton minimize;
+    private WindowButton maximize;
+    private WindowButton unmaximize;
 
     private unowned Bamf.Matcher matcher;
+
+    private uint32 last_xid = 0;
 
     public WindowButtons ()
     {
@@ -36,20 +40,52 @@ namespace Unity.Panel
 
     construct
     {
+      appname = new Ctk.Text (" ");
+      appname.use_markup = true;
+      appname.max_length = 9;
+      pack (appname, true, true);
+
       close = new WindowButton ("close.png");
       pack (close, false, false);
-      close.show ();
+      close.clicked.connect (() => {
+        if (last_xid > 0)
+          global_shell.do_window_action (last_xid, WindowAction.CLOSE);
+      });
 
-      minimise = new WindowButton ("minimize.png");
-      pack (minimise, false, false);
-      minimise.show ();
+      minimize = new WindowButton ("minimize.png");
+      pack (minimize, false, false);
+      minimize.clicked.connect (() => {
+        if (last_xid > 0)
+          global_shell.do_window_action (last_xid, WindowAction.MINIMIZE);
+      });
 
-      maximise = new WindowButton ("maximize.png");
-      pack (maximise, false, false);
-      maximise.show ();
+      maximize = new WindowButton ("maximize.png");
+      pack (maximize, false, false);
+      maximize.clicked.connect (() => {
+        if (last_xid > 0)
+          global_shell.do_window_action (last_xid, WindowAction.MAXIMIZE);
+      });
 
+      unmaximize = new WindowButton ("unmaximize.png");
+      pack (unmaximize, false, false);
+      unmaximize.clicked.connect (() => {
+        if (last_xid > 0)
+          global_shell.do_window_action (last_xid, WindowAction.UNMAXIMIZE);
+      });
+      
+      /* Grab matcher that gives us state */
       matcher = Bamf.Matcher.get_default ();
       matcher.active_window_changed.connect (on_active_window_changed);
+
+      /* Shell will let us know when something changes with the active window */
+      global_shell.active_window_state_changed.connect (() => {
+        Timeout.add (0, () => {
+          Bamf.Window? win = matcher.get_active_window ();
+          on_active_window_changed (null, win as GLib.Object);
+
+          return false;
+        });
+      });
     }
 
     private void on_active_window_changed (GLib.Object? object,
@@ -60,8 +96,45 @@ namespace Unity.Panel
 
       if (new_view is Bamf.Window)
         {
+          Bamf.Window win = new_view as Bamf.Window;
+          bool allows_resize = false;
+          bool is_maximized  = false;
+
+          global_shell.get_window_details (win.get_xid (),
+                                           out allows_resize,
+                                           out is_maximized);
+
+          if (is_maximized)
+            {
+              appname.hide ();
+              close.show ();
+              minimize.show ();
+              maximize.hide ();
+              unmaximize.show ();
+            }
+          else
+            {
+              appname.show ();
+              close.hide ();
+              minimize.hide ();
+              maximize.hide ();
+              unmaximize.hide ();
+            }
+
+          last_xid = win.get_xid ();
+
           string name = new_view.get_name ();
+          appname.set_markup ("<b>" + name + "</b>");
           debug ("Active window changed: %s", name);
+        }
+      else
+        {
+          appname.hide ();
+          close.hide ();
+          minimize.hide ();
+          maximize.hide ();
+          unmaximize.hide ();
+          last_xid = 0;
         }
     }
 
