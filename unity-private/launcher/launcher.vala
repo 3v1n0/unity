@@ -67,8 +67,8 @@ namespace Unity.Launcher
       controller = new ScrollerController (model, view);
 
       view.queue_redraw.connect (() => {
-        launcher_container.cache.update_texture_cache ();
-        debug ("UPDATE");
+        if (view.fling_timeline.is_playing () == false)
+          launcher_container.cache.update_texture_cache ();
       });
     }
 
