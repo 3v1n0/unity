@@ -167,7 +167,7 @@ namespace Unity
 
     private bool try_load_icon_from_datadir ()
     {
-      if (!this.try_load_icon_from_dir (PKGDATADIR))
+      if (!this.try_load_icon_from_dir (Config.PKGDATADIR))
         if (!this.try_load_icon_from_dir ("/usr/share/unity/themes"))
           if (!this.try_load_icon_from_dir ("/usr/share/unity/themes/launcher"))
             return false;
