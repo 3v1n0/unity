@@ -94,7 +94,6 @@ namespace Unity.Launcher
 
     public void add (ScrollerChild child)
     {
-      warning ("Add Icon: %s", child.to_string ());
       children.add (child);
       child_added (child);
       order_changed ();

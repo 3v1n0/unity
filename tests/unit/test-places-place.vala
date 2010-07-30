@@ -50,7 +50,7 @@ namespace Unity.Tests.Unit
     {
       var file = new KeyFile ();
       try {
-        file.load_from_file (TESTDIR + "/data/place0.place",
+        file.load_from_file (Config.TESTUNITDIR + "/data/place0.place",
                              KeyFileFlags.NONE);
       } catch (Error e) {
           error ("Unable to load test place: %s", e.message);
@@ -71,7 +71,7 @@ namespace Unity.Tests.Unit
     {
       var file = new KeyFile ();
       try {
-        file.load_from_file (TESTDIR + "/data/place1.place",
+        file.load_from_file (Config.TESTUNITDIR + "/data/place1.place",
                              KeyFileFlags.NONE);
       } catch (Error error) {
           warning ("Unable to load test place: %s", error.message);
@@ -122,7 +122,7 @@ namespace Unity.Tests.Unit
     {
       var file = new KeyFile ();
       try {
-        file.load_from_file (TESTDIR + "/data/place0.badplace",
+        file.load_from_file (Config.TESTUNITDIR + "/data/place0.badplace",
                              KeyFileFlags.NONE);
       } catch (Error error) {
           warning ("Unable to load test place: %s", error.message);
@@ -142,7 +142,7 @@ namespace Unity.Tests.Unit
     {
       var file = new KeyFile ();
       try {
-        file.load_from_file (TESTDIR + "/data/place1.badplace",
+        file.load_from_file (Config.TESTUNITDIR + "/data/place1.badplace",
                              KeyFileFlags.NONE);
       } catch (Error error) {
           warning ("Unable to load test place: %s", error.message);
