@@ -74,9 +74,13 @@ namespace Unity.Launcher
     /*
      * scrolling variables
      */
-    private bool is_scrolling = false; //set to true when the user is phsically scrolling
+    private bool is_scrolling; //set to true when the user is physically scrolling
     private float scroll_position = 0.0f;
     private float settle_position = 0.0f; // when we calculate the settle position for animation, we store it here
+
+    public bool is_autoscrolling {get; set;} //set to true when the mouse is at the top/bottom
+    private bool autoscroll_anim_active = false;
+    private int autoscroll_direction = 0;
 
     private Clutter.Timeline fling_timeline;
 
@@ -131,11 +135,11 @@ namespace Unity.Launcher
       button_release_event.connect (on_button_release_event);
       motion_event.connect (on_motion_event);
       enter_event.connect (on_enter_event);
-
       parent_set.connect (() => {
           get_stage ().motion_event.connect (on_stage_motion);
       });
-
+      notify["is-autoscrolling"].connect (on_auto_scrolling_state_change);
+      Unity.Drag.Controller.get_default ().drag_motion.connect (on_drag_motion_event);
       // set a timeline for our fling animation
       fling_timeline = new Clutter.Timeline (1000);
       fling_timeline.loop = true;
@@ -232,9 +236,15 @@ namespace Unity.Launcher
     }
 
     // will move the scroller by the given pixels
-    private void move_scroll_position (float pixels)
+    private void move_scroll_position (float pixels, bool check_bounds=false)
     {
       scroll_position += pixels;
+
+      if (check_bounds)
+        {
+          scroll_position = Math.fminf (scroll_position, 0);
+          scroll_position = Math.fmaxf (scroll_position, - (get_total_children_height () - get_available_height ()));
+        }
       order_children (true);
       queue_relayout ();
     }
@@ -300,6 +310,21 @@ namespace Unity.Launcher
     {
       order_children (false);
       queue_relayout ();
+    }
+
+    private void on_auto_scrolling_state_change ()
+    {
+      if (autoscroll_anim_active == false && is_autoscrolling)
+      {
+        Timeout.add (33, () => {
+          float speed = 12.0f - autoscroll_mouse_pos_cache;
+          speed /= 12.0f;
+          speed *= autoscroll_direction;
+          move_scroll_position (speed, true);
+          autoscroll_anim_active = is_autoscrolling;
+          return is_autoscrolling;
+        });
+      }
     }
 
     /*
@@ -406,7 +431,8 @@ namespace Unity.Launcher
     {
       if (view_type == ScrollerViewType.CONTRACTED) return false;
       if (event.crossing.x < get_width ()) return false;
-       foreach (ScrollerChild child in model)
+
+      foreach (ScrollerChild child in model)
         {
           if (child.active)
             focused_launcher = model.index_of (child);
@@ -415,18 +441,57 @@ namespace Unity.Launcher
       view_type = ScrollerViewType.CONTRACTED;
       order_children (false);
       queue_relayout ();
+      is_autoscrolling = false;
       return false;
+    }
+
+    float autoscroll_mouse_pos_cache = 0.0f;
+    private bool on_autoscroll_motion_check (float y)
+    {
+      if (get_total_children_height () < get_available_height ())
+        {
+          is_autoscrolling = false;
+        }
+      else
+        {
+          //check for autoscroll events
+          float pos_x, pos_y;
+          get_transformed_position (out pos_x, out pos_y);
+          float transformed_y = y - pos_y;
+
+          autoscroll_mouse_pos_cache = transformed_y;
+          if (transformed_y > (get_height ()/2))
+            {
+              autoscroll_direction = -1;
+              autoscroll_mouse_pos_cache -= get_height ();
+            }
+          else
+            {
+              autoscroll_direction = 1;
+            }
+          if (transformed_y < 12 || transformed_y > (get_height () - 12))
+            is_autoscrolling = true;
+          else
+            is_autoscrolling = false;
+        }
+      return false;
+    }
+
+    private void on_drag_motion_event (Unity.Drag.Model model, float x, float y)
+    {
+      on_autoscroll_motion_check (y);
     }
 
     private bool on_motion_event (Clutter.Event event)
     {
+      on_autoscroll_motion_check (event.motion.y);
+
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging)
       {
         // we are dragging from somewhere else, ignore motion events
         return false;
       }
-
       last_motion_event_time = event.motion.time;
 
       if (button_down && is_scrolling == false && view_type != ScrollerViewType.CONTRACTED)
