@@ -23,13 +23,14 @@ namespace Unity.Panel
   static const int PANEL_HEIGHT = 24;
   static const bool search_entry_has_focus = false;
 
-  public class View : Ctk.Box
+  public class View : Ctk.Bin
   {
     public Ctk.EffectCache cache;
 
     public bool expanded = true;
     public Shell shell { get; construct;}
 
+    Ctk.HBox              hbox;
     Background            bground;
     HomeButton            home_button;
     MenuBar               menu_bar;
@@ -39,10 +40,7 @@ namespace Unity.Panel
     public View (Shell shell)
     {
       Object (shell:shell,
-              reactive:true,
-              orientation:Ctk.Orientation.HORIZONTAL,
-              homogeneous:false,
-              spacing:0);
+              reactive:true);
       system_tray.manage_stage (shell.get_stage ());
     }
 
@@ -53,6 +51,11 @@ namespace Unity.Panel
       /* Initialize the models */
       Indicators.IndicatorsModel.get_default();
 
+      hbox = new Ctk.HBox (0);
+      hbox.homogeneous = false;
+      add_actor (hbox);
+      hbox.show ();
+
       /* Create the background and become it's parent */
       //rect = new ThemeImage ("panel_background");
       bground = new Background ();
@@ -61,27 +64,27 @@ namespace Unity.Panel
 
       /* Create the views and add them to the box */
       home_button = new HomeButton (shell);
-      pack (home_button, false, true);
+      hbox.pack (home_button, false, true);
       home_button.show ();
 
       menu_bar = new MenuBar ();
-      pack (menu_bar, true, true);
+      hbox.pack (menu_bar, true, true);
       menu_bar.show ();
 
       system_tray = new SystemTray ();
-      pack (system_tray, false, true);
+      hbox.pack (system_tray, false, true);
       system_tray.show ();
 
       indicator_bar = new IndicatorBar ();
-      pack (indicator_bar, false, true);
+      hbox.pack (indicator_bar, false, true);
       indicator_bar.show ();
 
       button_release_event.connect (on_button_release_event);
 
       cache = new Ctk.EffectCache ();
-      indicator_bar.add_effect (cache);
+      add_effect (cache);
       cache.update_texture_cache ();
-      indicator_bar.queue_redraw.connect (() => { cache.update_texture_cache (); });
+      hbox.queue_redraw.connect (() => { cache.update_texture_cache (); });
 
       END_FUNCTION ();
     }
