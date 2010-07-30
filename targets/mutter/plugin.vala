@@ -746,11 +746,13 @@ namespace Unity
                           int           width,
                           int           height)
     {
+      /*FIXME: This doesn't work in Mutter
       if (window.get_data<string> (UNDECORATED_HINT) == null)
         {
           uint32 xid = (uint32)window.get_x_window ();
           Utils.window_set_decorations (xid, 0);
         }
+        */
 
       this.window_maximized (this, window, x, y, width, height);
 
@@ -763,11 +765,13 @@ namespace Unity
                             int           width,
                             int           height)
     {
+      /* FIXME: This doesn't work in Mutter
       if (window.get_data<string> (UNDECORATED_HINT) == null)
         {
           uint32 xid = (uint32)window.get_x_window ();
           Utils.window_set_decorations (xid, 1);
-        }     
+        }
+      */
 
       this.window_unmaximized (this, window, x, y, width, height);
 
@@ -776,10 +780,11 @@ namespace Unity
 
     public void map (Mutter.Window window)
     {
+      /* FIXME: This doesn't work in Mutter
       uint32 xid = (uint32)window.get_x_window ();
       if (Utils.window_is_decorated (xid) == false)
         window.set_data (UNDECORATED_HINT, "%s".printf ("true"));
-
+      */
       this.maximus.process_window (window);
       this.window_mapped (this, window);
 
