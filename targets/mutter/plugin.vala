@@ -372,13 +372,13 @@ namespace Unity
       (focus.get_meta_window () as GLib.Object).get ("fullscreen", ref fullscreen);
       if (fullscreen)
         {
-          this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
+          this.launcher.get_container ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
           fullscreen_obstruction = true;
         }
       else
         {
-          this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
+          this.launcher.get_container ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
           fullscreen_obstruction = false;
         }
