@@ -55,6 +55,8 @@ namespace Unity
     public abstract void          expose_xids (Array<uint32> xids);
     public abstract void          stop_expose ();
 
+    public abstract bool          super_key_active {get; set;}
+
     public signal   void need_new_icon_cache ();
     public signal   void indicators_changed (int width);
   }

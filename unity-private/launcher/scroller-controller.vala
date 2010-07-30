@@ -25,6 +25,7 @@ namespace Unity.Launcher
     public ScrollerModel model {get; construct;}
     public ScrollerView view {get; construct;}
     private Gee.ArrayList<ScrollerChildController> childcontrollers;
+    private Gee.LinkedList<GtkHotkey.Info> hotkeys;
 
     /* constants */
     private const uint DRAG_SAFE_ZONE = 300;
@@ -66,6 +67,106 @@ namespace Unity.Launcher
       // hook up to the drag controller
       var drag_controller = Drag.Controller.get_default ();
       drag_controller.drag_start.connect (on_unity_drag_start);
+
+      Unity.global_shell.notify["super-key-active"].connect (on_super_key_active);
+      hotkeys = new Gee.LinkedList<GtkHotkey.Info> ();
+
+      GtkHotkey.Info hotkey_info = new GtkHotkey.Info ("unity", "unity-super-1",
+                                                       "<Super>1", null);
+      hotkeys.add (hotkey_info);
+
+      hotkey_info = new GtkHotkey.Info ("unity", "unity-super-2",
+                                        "<Super>2", null);
+      hotkeys.add (hotkey_info);
+
+      hotkey_info = new GtkHotkey.Info ("unity", "unity-super-3",
+                                        "<Super>3", null);
+      hotkeys.add (hotkey_info);
+
+      hotkey_info = new GtkHotkey.Info ("unity", "unity-super-4",
+                                        "<Super>4", null);
+      hotkeys.add (hotkey_info);
+
+      hotkey_info = new GtkHotkey.Info ("unity", "unity-super-5",
+                                        "<Super>5", null);
+      hotkeys.add (hotkey_info);
+
+      hotkey_info = new GtkHotkey.Info ("unity", "unity-super-6",
+                                        "<Super>6", null);
+      hotkeys.add (hotkey_info);
+
+      hotkey_info = new GtkHotkey.Info ("unity", "unity-super-7",
+                                        "<Super>7", null);
+      hotkeys.add (hotkey_info);
+
+      hotkey_info = new GtkHotkey.Info ("unity", "unity-super-8",
+                                        "<Super>8", null);
+      hotkeys.add (hotkey_info);
+
+      hotkey_info = new GtkHotkey.Info ("unity", "unity-super-9",
+                                        "<Super>9", null);
+      hotkeys.add (hotkey_info);
+
+      hotkey_info = new GtkHotkey.Info ("unity", "unity-super-0",                                                       "<Super>0", null);
+      hotkeys.add (hotkey_info);
+      foreach (GtkHotkey.Info info in hotkeys)
+        {
+          try
+            {
+              info.bind ();
+              info.activated.connect (on_hotkey_activated);
+            }
+          catch (Error e)
+            {
+              warning ("could not bind hotkeys, $(e.message)");
+            }
+        }
+    }
+
+    private void on_hotkey_activated (GtkHotkey.Info info, uint timestamp)
+    {
+      debug ("Hotkey activated");
+      if (!Unity.global_shell.super_key_active) return;
+
+      int index = 0;
+      if ("2" in info.key_id)
+        index = 1;
+      else if ("3" in info.key_id)
+        index = 2;
+      else if ("4" in info.key_id)
+        index = 3;
+      else if ("5" in info.key_id)
+        index = 4;
+      else if ("6" in info.key_id)
+        index = 5;
+      else if ("7" in info.key_id)
+        index = 6;
+      else if ("8" in info.key_id)
+        index = 7;
+      else if ("9" in info.key_id)
+        index = 8;
+      else if ("0" in info.key_id)
+        index = 9;
+
+      index = int.min (index, model.size - 1);
+      if (index < 0) return;
+
+      debug (@"activating index $index");
+      Unity.global_shell.super_key_active = false;
+
+      var childcontroller = get_controller_for_view (model[index]);
+      childcontroller.activate ();
+    }
+
+    private void on_super_key_active ()
+    {
+      if (Unity.global_shell.super_key_active)
+        Timeout.add (300, () => {
+          view.enable_keyboard_selection_mode (Unity.global_shell.super_key_active);
+          return false;
+        });
+      else
+        view.enable_keyboard_selection_mode (false);
     }
 
     private void handle_bamf_view_opened (Object object)

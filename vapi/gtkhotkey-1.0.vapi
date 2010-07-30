@@ -2,10 +2,10 @@
 
 [CCode (cprefix = "GtkHotkey", lower_case_cprefix = "gtk_hotkey_")]
 namespace GtkHotkey {
-	[CCode (cheader_filename = "gtkhotkey-1.0.h")]
+	[CCode (cheader_filename = "gtkhotkey.h")]
 	public class Info : GLib.Object {
 		[CCode (has_construct_function = false)]
-		public Info (string app_id, string key_id, string signature, GLib.AppInfo app_info);
+		public Info (string app_id, string key_id, string signature, GLib.AppInfo? app_info);
 		public bool bind () throws GLib.Error;
 		[CCode (cname = "gtk_hotkey_info_activated")]
 		public void do_activated (uint event_time);
@@ -27,10 +27,10 @@ namespace GtkHotkey {
 		public string signature { get; construct; }
 		public virtual signal void activated (uint p0);
 	}
-	[CCode (cheader_filename = "gtkhotkey-1.0.h")]
+	[CCode (cheader_filename = "gtkhotkey.h")]
 	public class KeyFileRegistry : GtkHotkey.Registry {
 	}
-	[CCode (cheader_filename = "gtkhotkey-1.0.h")]
+	[CCode (cheader_filename = "gtkhotkey.h")]
 	public class Listener : GLib.Object {
 		public virtual bool bind_hotkey (GtkHotkey.Info hotkey) throws GLib.Error;
 		[CCode (cname = "gtk_hotkey_listener_activated")]
@@ -40,7 +40,7 @@ namespace GtkHotkey {
 		public virtual bool unbind_hotkey (GtkHotkey.Info hotkey) throws GLib.Error;
 		public virtual signal void activated (GtkHotkey.Info p0, uint p1);
 	}
-	[CCode (cheader_filename = "gtkhotkey-1.0.h")]
+	[CCode (cheader_filename = "gtkhotkey.h")]
 	public class Registry : GLib.Object {
 		public virtual bool delete_hotkey (string app_id, string key_id) throws GLib.Error;
 		[CCode (cname = "gtk_hotkey_registry_hotkey_deleted")]
@@ -57,7 +57,7 @@ namespace GtkHotkey {
 		public virtual signal void hotkey_deleted (GLib.Object info);
 		public virtual signal void hotkey_stored (GLib.Object info);
 	}
-	[CCode (cheader_filename = "gtkhotkey-1.0.h")]
+	[CCode (cheader_filename = "gtkhotkey.h")]
 	public class X11Listener : GtkHotkey.Listener {
 	}
 	[CCode (cprefix = "GTK_HOTKEY_LISTENER_ERROR_", has_type_id = false, cheader_filename = "gtkhotkey-1.0.h")]

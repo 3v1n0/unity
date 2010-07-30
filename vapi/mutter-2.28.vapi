@@ -130,6 +130,9 @@ namespace Mutter {
 		public static void set_input_focus_window (Mutter.MetaDisplay display, Mutter.MetaWindow window, bool focus_frame, uint32 timestamp);
 		[CCode (cname = "meta_display_xwindow_is_a_no_focus_window")]
 		public static bool xwindow_is_a_no_focus_window (Mutter.MetaDisplay display, X.Window xwindow);
+		
+		public signal void overlay_key ();
+		public signal void overlay_key_down ();
 	}
 	[Compact]
 	[CCode (cheader_filename = "mutter-plugins.h")]

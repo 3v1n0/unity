@@ -111,6 +111,12 @@ namespace Unity
 
     public bool menus_swallow_events { get { return false; } }
 
+    private bool _super_key_active = false;
+    public bool super_key_active {
+      get { return _super_key_active; }
+      set { _super_key_active = value; }
+    }
+
     public bool expose_showing { get { return expose_manager.expose_showing; } }
 
     private static const int PANEL_HEIGHT        =  24;
@@ -232,6 +238,18 @@ namespace Unity
       Ctk.dnd_init ((Gtk.Widget)this.drag_dest, target_list);
 
       Clutter.Group window_group = (Clutter.Group) this.plugin.get_window_group ();
+
+      /* we need to hook into the super key bound by mutter for g-shell.
+         don't ask me why mutter binds things for g-shell explictly...
+         */
+      Mutter.MetaDisplay display = Mutter.MetaScreen.get_display (plugin.get_screen ());
+      display.overlay_key_down.connect (() => {
+          super_key_active = true;
+      });
+
+      display.overlay_key.connect (() => {
+          super_key_active = false;
+      });
 
       this.background = new Background ();
       this.stage.add_actor (background);

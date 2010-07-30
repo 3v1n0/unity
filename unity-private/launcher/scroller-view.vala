@@ -71,6 +71,8 @@ namespace Unity.Launcher
     private ScrollerPhase current_phase = ScrollerPhase.NONE;
     private uint last_motion_event_time = 0;
     private ScrollerViewType view_type = ScrollerViewType.CONTRACTED;
+    private float last_known_pointer_x = 0.0f;
+
     /*
      * scrolling variables
      */
@@ -92,8 +94,17 @@ namespace Unity.Launcher
     private Gee.ArrayList<ScrollerChild> draw_ftb;
     private Gee.ArrayList<ScrollerChild> draw_btf;
 
-    /* Key binding bools */
-    private Clutter.BindingPool key_bindings;
+    /* Key binding indicators */
+    private Clutter.Text keyboard_indicator_1;
+    private Clutter.Text keyboard_indicator_2;
+    private Clutter.Text keyboard_indicator_3;
+    private Clutter.Text keyboard_indicator_4;
+    private Clutter.Text keyboard_indicator_5;
+    private Clutter.Text keyboard_indicator_6;
+    private Clutter.Text keyboard_indicator_7;
+    private Clutter.Text keyboard_indicator_8;
+    private Clutter.Text keyboard_indicator_9;
+    private Clutter.Text keyboard_indicator_0;
 
     /*
      * Refrence holders
@@ -136,13 +147,10 @@ namespace Unity.Launcher
       enter_event.connect (on_enter_event);
 
       parent_set.connect (() => {
+          debug ("connecting to stage");
           get_stage ().motion_event.connect (on_stage_motion);
-
-          get_stage ().key_press_event.connect (() => {
-            debug ("Got a key press event! OMG!");
-          });
-          (get_stage () as Clutter.Stage).set_key_focus (null);
       });
+
 
       // set a timeline for our fling animation
       fling_timeline = new Clutter.Timeline (1000);
@@ -165,6 +173,64 @@ namespace Unity.Launcher
         order_children (true);
         queue_relayout ();
       });
+    }
+
+    private float last_scroll_position = 0.0f;
+    public void enable_keyboard_selection_mode (bool choice)
+    {
+      if (choice)
+        last_scroll_position = scroll_position;
+
+      uint8 new_opacity = (choice) ? 0xff : 0x00;
+      keyboard_indicator_1.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      keyboard_indicator_2.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      keyboard_indicator_3.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      keyboard_indicator_4.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      keyboard_indicator_5.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      keyboard_indicator_6.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      keyboard_indicator_7.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      keyboard_indicator_8.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      keyboard_indicator_9.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      keyboard_indicator_0.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+
+      if (!choice)
+        {
+          if (view_type != ScrollerViewType.CONTRACTED &&
+              last_known_pointer_x >= get_width ())
+            {
+              foreach (ScrollerChild child in model)
+              {
+                if (child.active)
+                  focused_launcher = model.index_of (child);
+              }
+
+              view_type = ScrollerViewType.CONTRACTED;
+              order_children (false);
+              queue_relayout ();
+            }
+          else if (last_known_pointer_x < get_width ())
+            {
+              move_scroll_position (last_scroll_position - scroll_position);
+            }
+        }
+      else
+        {
+          view_type = ScrollerViewType.EXPANDED;
+          scroll_position = 0;
+          order_children (true);
+        }
+
+
     }
 
     public int get_model_index_at_y_pos_no_anim (float y, bool return_minus_if_fail=false)
@@ -237,6 +303,44 @@ namespace Unity.Launcher
       top_shadow = new ThemeImage ("overflow_top");
       top_shadow.set_repeat (true, false);
       top_shadow.set_parent (this);
+
+      var color = Clutter.Color () {
+        red = 0xff,
+        green = 0xff,
+        blue = 0xff,
+        alpha = 0xff
+      };
+
+      keyboard_indicator_1 = new Clutter.Text.full ("Mono Bold 24px", "1", color);
+      keyboard_indicator_1.set_parent (this);
+      keyboard_indicator_1.opacity = 0x00;
+      keyboard_indicator_2 = new Clutter.Text.full ("Mono Bold 24px", "2", color);
+      keyboard_indicator_2.set_parent (this);
+      keyboard_indicator_2.opacity = 0x00;
+      keyboard_indicator_3 = new Clutter.Text.full ("Mono Bold 24px", "3", color);
+      keyboard_indicator_3.set_parent (this);
+      keyboard_indicator_3.opacity = 0x00;
+      keyboard_indicator_4 = new Clutter.Text.full ("Mono Bold 24px", "4", color);
+      keyboard_indicator_4.set_parent (this);
+      keyboard_indicator_4.opacity = 0x00;
+      keyboard_indicator_5 = new Clutter.Text.full ("Mono Bold 24px", "5", color);
+      keyboard_indicator_5.set_parent (this);
+      keyboard_indicator_5.opacity = 0x00;
+      keyboard_indicator_6 = new Clutter.Text.full ("Mono Bold 24px", "6", color);
+      keyboard_indicator_6.set_parent (this);
+      keyboard_indicator_6.opacity = 0x00;
+      keyboard_indicator_7 = new Clutter.Text.full ("Mono Bold 24px", "7", color);
+      keyboard_indicator_7.set_parent (this);
+      keyboard_indicator_7.opacity = 0x00;
+      keyboard_indicator_8 = new Clutter.Text.full ("Mono Bold 24px", "8", color);
+      keyboard_indicator_8.set_parent (this);
+      keyboard_indicator_8.opacity = 0x00;
+      keyboard_indicator_9 = new Clutter.Text.full ("Mono Bold 24px", "9", color);
+      keyboard_indicator_9.set_parent (this);
+      keyboard_indicator_9.opacity = 0x00;
+      keyboard_indicator_0 = new Clutter.Text.full ("Mono Bold 24px", "0", color);
+      keyboard_indicator_0.set_parent (this);
+      keyboard_indicator_0.opacity = 0x00;
     }
 
     // will move the scroller by the given pixels
@@ -412,6 +516,8 @@ namespace Unity.Launcher
 
     private bool on_stage_motion (Clutter.Event event)
     {
+      debug ("got a motion event");
+      last_known_pointer_x = event.crossing.x;
       if (view_type == ScrollerViewType.CONTRACTED) return false;
       if (event.crossing.x < get_width ()) return false;
        foreach (ScrollerChild child in model)
@@ -878,6 +984,7 @@ namespace Unity.Launcher
       float available_width = box.get_width () - padding.right;
 
       total_child_height = 0.0f;
+      uint index = 0;
 
       foreach (ScrollerChild child in model)
         {
@@ -903,7 +1010,33 @@ namespace Unity.Launcher
 
 
           total_child_height += child_height + spacing;
+
+          if (index >= 0 && index <= 9)
+          {
+            Clutter.Actor? keyboard_indicator = null;
+            if (index == 0) keyboard_indicator = keyboard_indicator_1;
+            else if (index == 1) keyboard_indicator = keyboard_indicator_2;
+            else if (index == 2) keyboard_indicator = keyboard_indicator_3;
+            else if (index == 3) keyboard_indicator = keyboard_indicator_4;
+            else if (index == 4) keyboard_indicator = keyboard_indicator_5;
+            else if (index == 5) keyboard_indicator = keyboard_indicator_6;
+            else if (index == 6) keyboard_indicator = keyboard_indicator_7;
+            else if (index == 7) keyboard_indicator = keyboard_indicator_8;
+            else if (index == 8) keyboard_indicator = keyboard_indicator_9;
+            else if (index == 9) keyboard_indicator = keyboard_indicator_0;
+
+            if (keyboard_indicator is Clutter.Actor)
+              {
+                child_box.x1 = box.get_width () - padding.right - keyboard_indicator.get_width ();
+                child_box.x2 = child_box.x1 + keyboard_indicator.get_width ();
+                child_box.y1 = child.position + padding.top + child_height - keyboard_indicator.get_height ();
+                child_box.y2 = child_box.y1 + keyboard_indicator.get_height ();
+                keyboard_indicator.allocate (child_box, flags);
+              }
+
+          index += 1;
         }
+      }
 
       child_box.x1 = 0;
       child_box.x2 = box.get_width ();
@@ -977,6 +1110,16 @@ namespace Unity.Launcher
           child.paint ();
         }
 
+      keyboard_indicator_1.paint ();
+      keyboard_indicator_2.paint ();
+      keyboard_indicator_3.paint ();
+      keyboard_indicator_4.paint ();
+      keyboard_indicator_5.paint ();
+      keyboard_indicator_6.paint ();
+      keyboard_indicator_7.paint ();
+      keyboard_indicator_8.paint ();
+      keyboard_indicator_9.paint ();
+      keyboard_indicator_0.paint ();
       top_shadow.paint ();
     }
 
@@ -985,10 +1128,22 @@ namespace Unity.Launcher
       base.map ();
       bgtex.map ();
       top_shadow.map ();
+      keyboard_indicator_1.map ();
+      keyboard_indicator_2.map ();
+      keyboard_indicator_3.map ();
+      keyboard_indicator_4.map ();
+      keyboard_indicator_5.map ();
+      keyboard_indicator_6.map ();
+      keyboard_indicator_7.map ();
+      keyboard_indicator_8.map ();
+      keyboard_indicator_9.map ();
+      keyboard_indicator_0.map ();
+
       foreach (ScrollerChild child in model)
         {
           child.map ();
         }
+
     }
 
     public override void unmap ()
@@ -996,6 +1151,16 @@ namespace Unity.Launcher
       base.unmap ();
       bgtex.map ();
       top_shadow.map ();
+      keyboard_indicator_1.unmap ();
+      keyboard_indicator_2.unmap ();
+      keyboard_indicator_3.unmap ();
+      keyboard_indicator_4.unmap ();
+      keyboard_indicator_5.unmap ();
+      keyboard_indicator_6.unmap ();
+      keyboard_indicator_7.unmap ();
+      keyboard_indicator_8.unmap ();
+      keyboard_indicator_9.unmap ();
+      keyboard_indicator_0.unmap ();
       foreach (ScrollerChild child in model)
         {
           child.unmap ();
