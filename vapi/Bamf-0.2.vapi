@@ -87,6 +87,7 @@ namespace Bamf {
 	[CCode (cheader_filename = "libbamf/libbamf.h")]
 	public class View : GLib.Object {
 		public weak GLib.Object parent;
+    public unowned GLib.Object get_parent ();
 		public Bamf.ViewPrivate priv;
 		public virtual GLib.List get_children ();
 		public virtual string get_icon ();

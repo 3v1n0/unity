@@ -21,6 +21,7 @@ namespace Unity.Panel
 {
   public class WindowButtons : Ctk.Box
   {
+    private static const string FORMAT = "<b>%s</b>";
     private Ctk.Text     appname;
     private WindowButton close;
     private WindowButton minimize;
@@ -28,6 +29,7 @@ namespace Unity.Panel
     private WindowButton unmaximize;
 
     private unowned Bamf.Matcher matcher;
+    private AppInfoManager       appinfo;
 
     private uint32 last_xid = 0;
 
@@ -72,6 +74,9 @@ namespace Unity.Panel
         if (last_xid > 0)
           global_shell.do_window_action (last_xid, WindowAction.UNMAXIMIZE);
       });
+
+      /* Grab AppInfoManager for the desktop file lookups */
+      appinfo = AppInfoManager.get_instance ();
       
       /* Grab matcher that gives us state */
       matcher = Bamf.Matcher.get_default ();
@@ -91,7 +96,6 @@ namespace Unity.Panel
     private void on_active_window_changed (GLib.Object? object,
                                            GLib.Object? object1)
     {
-      Bamf.View? old_view = object as Bamf.View;
       Bamf.View? new_view = object1 as Bamf.View;
 
       if (new_view is Bamf.Window)
@@ -122,10 +126,24 @@ namespace Unity.Panel
             }
 
           last_xid = win.get_xid ();
+       
+          Bamf.Application? app = matcher.get_active_application ();
+          if (app is Bamf.Application)
+            {
+              /* We lookup sync because we know that the launcher has already
+               * done it
+               */
 
-          string name = new_view.get_name ();
-          appname.set_markup ("<b>" + name + "</b>");
-          debug ("Active window changed: %s", name);
+              AppInfo? info = appinfo.lookup (app.get_desktop_file ());
+              if (info != null)
+                appname.set_markup (FORMAT.printf (info.get_display_name ()));
+              else
+                appname.set_markup (FORMAT.printf (win.get_name ()));
+            }
+          else
+            {
+              appname.set_markup (FORMAT.printf (win.get_name ()));
+            }
         }
       else
         {

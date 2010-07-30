@@ -116,6 +116,7 @@ namespace Unity
 
     private static const int PANEL_HEIGHT        =  24;
     private static const int QUICKLAUNCHER_WIDTH = 58;
+    private static const string UNDECORATED_HINT = "UNDECORATED_HINT";
 
     private Clutter.Stage    stage;
     private Application      app;
@@ -745,6 +746,16 @@ namespace Unity
                           int           width,
                           int           height)
     {
+      if (window.get_data<string> (UNDECORATED_HINT) == null)
+        {
+          uint32 xid = (uint32)window.get_x_window ();
+
+          Idle.add (() => {
+            Utils.window_set_decorations (xid, 0);
+            return false;
+            });
+        }
+
       this.window_maximized (this, window, x, y, width, height);
 
       active_window_state_changed ();
@@ -756,6 +767,16 @@ namespace Unity
                             int           width,
                             int           height)
     {
+      if (window.get_data<string> (UNDECORATED_HINT) == null)
+        {
+          uint32 xid = (uint32)window.get_x_window ();
+
+          Idle.add (() => {
+            Utils.window_set_decorations (xid, 1);
+            return false;
+            });
+        }     
+
       this.window_unmaximized (this, window, x, y, width, height);
 
       active_window_state_changed ();
@@ -763,6 +784,15 @@ namespace Unity
 
     public void map (Mutter.Window window)
     {
+      uint32 xid = (uint32)window.get_x_window ();
+      Idle.add (() => {
+        if (Utils.window_is_decorated (xid) == false)
+          {
+            window.set_data (UNDECORATED_HINT, "%s".printf ("true"));
+          }
+        return false;
+      });
+
       this.maximus.process_window (window);
       this.window_mapped (this, window);
 
