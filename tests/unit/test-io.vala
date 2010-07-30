@@ -52,7 +52,7 @@ Icon=test_desktop_icon.png
     internal static async void do_test_async_find_and_load (MainLoop mainloop)
     {
       string[] dirs = new string[1];
-      dirs[0] = Path.build_filename (TESTDIR, "data", null
+      dirs[0] = Path.build_filename (Config.TESTUNITDIR, "data", null
       );
       try
         {

@@ -30,6 +30,8 @@ namespace Unity.Launcher
     {
       this.cache = new Ctk.EffectCache ();
       this.add_effect (this.cache);
+
+      this.cache.update_texture_cache ();
     }
   }
   
@@ -63,6 +65,11 @@ namespace Unity.Launcher
       view = new ScrollerView (model, this.launcher_container.cache);
       
       controller = new ScrollerController (model, view);
+
+      view.queue_redraw.connect (() => {
+        launcher_container.cache.update_texture_cache ();
+        debug ("UPDATE");
+      });
     }
 
     public new float get_width ()
