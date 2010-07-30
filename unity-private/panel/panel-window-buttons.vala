@@ -85,7 +85,7 @@ namespace Unity.Panel
       /* Shell will let us know when something changes with the active window */
       global_shell.active_window_state_changed.connect (() => {
         Timeout.add (0, () => {
-          Bamf.Window? win = matcher.get_active_window ();
+          unowned Bamf.Window? win = matcher.get_active_window ();
           on_active_window_changed (null, win as GLib.Object);
 
           return false;
@@ -96,11 +96,11 @@ namespace Unity.Panel
     private void on_active_window_changed (GLib.Object? object,
                                            GLib.Object? object1)
     {
-      Bamf.View? new_view = object1 as Bamf.View;
+      unowned Bamf.View? new_view = object1 as Bamf.View;
 
       if (new_view is Bamf.Window)
         {
-          Bamf.Window win = new_view as Bamf.Window;
+          unowned Bamf.Window win = new_view as Bamf.Window;
           bool allows_resize = false;
           bool is_maximized  = false;
 
@@ -127,7 +127,7 @@ namespace Unity.Panel
 
           last_xid = win.get_xid ();
        
-          Bamf.Application? app = matcher.get_active_application ();
+          unowned Bamf.Application? app = matcher.get_active_application ();
           if (app is Bamf.Application)
             {
               /* We lookup sync because we know that the launcher has already
