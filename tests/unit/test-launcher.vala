@@ -186,11 +186,11 @@ namespace Unity.Tests.Unit
 		{
 			TestBamfApplication test_app = new TestBamfApplication ();
 			ScrollerChild child = new TestScrollerChild ();
-			ApplicationController controller = new ApplicationController (TESTDIR + "/data/test_desktop_file.desktop", child);
+			ApplicationController controller = new ApplicationController (Config.TESTUNITDIR + "/data/test_desktop_file.desktop", child);
 
 			test_app.name = "Test Application-New";
-			test_app.desktop_file = TESTDIR + "/data/test_desktop_file.desktop";
-			test_app.icon = TESTDIR + "/data/test_desktop_icon.png";
+			test_app.desktop_file = Config.TESTUNITDIR + "/data/test_desktop_file.desktop";
+			test_app.icon = Config.TESTUNITDIR + "/data/test_desktop_icon.png";
 			test_app.test_is_active = true;
 			test_app.test_is_urgent = false;
 			test_app.test_user_visible = true;

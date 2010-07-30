@@ -79,7 +79,7 @@ namespace Unity.Places
       title_box.reactive = true;
 
       icon = new Ctk.Image (22);
-      icon.set_from_filename (PKGDATADIR + "/favourites.png");
+      icon.set_from_filename (Config.PKGDATADIR + "/favourites.png");
       title_box.pack (icon, false, false);
       icon.show ();
 
@@ -88,7 +88,7 @@ namespace Unity.Places
       text.show ();
 
       expander = new Ctk.Image (22);
-      expander.set_from_filename (PKGDATADIR + "/maximize_up.png");
+      expander.set_from_filename (Config.PKGDATADIR + "/maximize_up.png");
       expander.opacity = 0;
       title_box.pack (expander, false, true);
       expander.show ();
@@ -105,12 +105,12 @@ namespace Unity.Places
         if (bin_state == ExpandingBinState.UNEXPANDED)
           {
             bin_state = ExpandingBinState.EXPANDED;
-            expander.set_from_filename (PKGDATADIR + "/minimize_up.png");
+            expander.set_from_filename (Config.PKGDATADIR + "/minimize_up.png");
           }
         else
           {
             bin_state = ExpandingBinState.UNEXPANDED;
-            expander.set_from_filename (PKGDATADIR + "/maximize_up.png");
+            expander.set_from_filename (Config.PKGDATADIR + "/maximize_up.png");
           }
         return true;
       });
