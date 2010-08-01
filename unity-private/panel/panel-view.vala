@@ -30,6 +30,7 @@ namespace Unity.Panel
 
     Background            bground;
     HomeButton            home_button;
+    WindowButtons         window_buttons;
     MenuBar               menu_bar;
     SystemTray            system_tray;
     IndicatorBar          indicator_bar;
@@ -61,6 +62,10 @@ namespace Unity.Panel
       home_button = new HomeButton (shell);
       pack (home_button, false, true);
       home_button.show ();
+
+      window_buttons = new WindowButtons ();
+      pack (window_buttons, false, true);
+      window_buttons.show ();
 
       menu_bar = new MenuBar ();
       pack (menu_bar, true, true);
@@ -111,9 +116,9 @@ namespace Unity.Panel
         {
          if (menu_bar.indicator_object_view is Clutter.Actor)
             menu_bar.indicator_object_view.hide ();
+          window_buttons.hide ();
           bground.hide ();
           system_tray.hide ();
-          indicator_bar.set_indicator_mode (mode);
           reactive = false;
           
           var glow = new Ctk.EffectGlow ();
@@ -126,9 +131,9 @@ namespace Unity.Panel
         {
           if (menu_bar.indicator_object_view is Clutter.Actor)
             menu_bar.indicator_object_view.show ();
+          window_buttons.show ();
           bground.show ();
           system_tray.show ();
-          indicator_bar.set_indicator_mode (mode);
           reactive = true;
 
           indicator_bar.remove_all_effects ();

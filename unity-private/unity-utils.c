@@ -39,6 +39,132 @@
 gboolean utils_compare_images (const gchar *img1_path,
                                const gchar *img2_path);
 
+/* Taken from Maximus (lp:maximus) */
+
+/* <TAKEN FROM GDK> */
+typedef struct {
+    unsigned long flags;
+    unsigned long functions;
+    unsigned long decorations;
+    long input_mode;
+    unsigned long status;
+} MotifWmHints, MwmHints;
+
+#define MWM_HINTS_FUNCTIONS     (1L << 0)
+#define MWM_HINTS_DECORATIONS   (1L << 1)
+#define _XA_MOTIF_WM_HINTS		"_MOTIF_WM_HINTS"
+
+gboolean
+utils_window_is_decorated (guint32 xid)
+{
+  GdkDisplay *display = gdk_display_get_default();
+  Atom hints_atom = None;
+  guchar *data = NULL;
+  MotifWmHints *hints = NULL;
+  Atom type = None;
+  gint format;
+  gulong nitems;
+  gulong bytes_after;
+  gboolean retval;
+ 
+  hints_atom = gdk_x11_get_xatom_by_name_for_display (display, 
+                                                      _XA_MOTIF_WM_HINTS);
+
+  XGetWindowProperty (GDK_DISPLAY_XDISPLAY (display), 
+                      xid,
+		                  hints_atom, 0, sizeof (MotifWmHints)/sizeof (long),
+		                  False, AnyPropertyType, &type, &format, &nitems,
+		                  &bytes_after, &data);
+  
+  if (type == None || !data) return TRUE;
+  
+  hints = (MotifWmHints *)data; 
+  
+  retval = hints->decorations;
+  
+  if (data)
+    XFree (data);
+
+  return retval;
+}
+
+static void
+gdk_window_set_mwm_hints (guint32        xid,
+                          MotifWmHints *new_hints)
+{
+  GdkDisplay *display = gdk_display_get_default();
+  Atom hints_atom = None;
+  guchar *data = NULL;
+  MotifWmHints *hints = NULL;
+  Atom type = None;
+  gint format;
+  gulong nitems;
+  gulong bytes_after;
+
+  g_return_if_fail (GDK_IS_DISPLAY (display));
+
+  g_debug ("gdk_window_set_mwm_hints: %lld %d\n", xid, new_hints->decorations);
+  
+  hints_atom = gdk_x11_get_xatom_by_name_for_display (display, 
+                                                      _XA_MOTIF_WM_HINTS);
+
+  XGetWindowProperty (GDK_DISPLAY_XDISPLAY (display), 
+                      xid,
+		                  hints_atom, 0, sizeof (MotifWmHints)/sizeof (long),
+		                  False, AnyPropertyType, &type, &format, &nitems,
+		                  &bytes_after, &data);
+  
+  if (type != hints_atom || !data)
+    hints = new_hints;
+  else
+  {
+    hints = (MotifWmHints *)data;
+	
+    if (new_hints->flags & MWM_HINTS_FUNCTIONS)
+    {
+      hints->flags |= MWM_HINTS_FUNCTIONS;
+      hints->functions = new_hints->functions;  
+    }
+    if (new_hints->flags & MWM_HINTS_DECORATIONS)
+    {
+      hints->flags |= MWM_HINTS_DECORATIONS;
+      hints->decorations = new_hints->decorations;
+    }
+  }
+  
+  gdk_error_trap_push ();
+  XChangeProperty (GDK_DISPLAY_XDISPLAY (display), 
+                   xid,
+                   hints_atom, hints_atom, 32, PropModeReplace,
+                   (guchar *)hints, sizeof (MotifWmHints)/sizeof (long));
+  gdk_flush ();
+  if (gdk_error_trap_pop ())
+    {
+      g_debug ("ERROR:");
+    }
+  
+  if (data)
+    XFree (data);
+}
+
+void
+utils_window_set_decorations (guint32          xid,
+			                        GdkWMDecoration decorations)
+{
+  MotifWmHints *hints;
+    
+  /* initialize to zero to avoid writing uninitialized data to socket */
+  hints = g_slice_new0 (MotifWmHints);
+  hints->flags = MWM_HINTS_DECORATIONS;
+  hints->decorations = decorations;
+ 
+  gdk_window_set_mwm_hints (xid, hints);
+
+  g_slice_free (MotifWmHints, hints);
+}
+
+/* </ Taken from Maximus >*/
+
 /* Taken from AWN (lp:awn) */
 
 enum {

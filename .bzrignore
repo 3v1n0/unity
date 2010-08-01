@@ -324,6 +324,10 @@ unity/unity-io.c
 unity/unity-expanding-bin.c
 unity-private/places/places-place-home.c
 tests/unit/test-dbusmenu-quicklists.c
+unity/unity-place-activation.c
+unity/unity-place-browser.c
+unity/unity-theme-file-path.c
+unity/unity-theme-file-path.vala
 unity-private/launcher/quicklist-check-menu-item.c
 unity-private/launcher/quicklist-image-menu-item.c
 unity-private/launcher/quicklist-menu-item.c
@@ -331,7 +335,9 @@ unity-private/launcher/quicklist-radio-menu-item.c
 unity-private/launcher/quicklist-seperator-menu-item.c
 unity-private/places/places-place-entry-scroller-child.c
 unity-private/places/places-trash-controller.c
+unity/unity-place-activation.c
 unity/unity-place-browser.c
 unity-private/places/places-folder-browser-renderer.c
 unity/unity-place-activation.c
 unity-private/places/places-place-search-navigation.c
+unity-private/panel/panel-window-buttons.c
