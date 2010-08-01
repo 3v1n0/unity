@@ -46,6 +46,7 @@ namespace Unity.Places
 
     private PlaceEntry? active_entry = null;
     private Section?    active_section = null;
+    private CairoCanvas bg;
 
     private unowned Dee.Model? sections_model = null;
 
@@ -65,6 +66,9 @@ namespace Unity.Places
         SPACING * 1.0f,
         SPACING * 1.0f
       };*/
+
+      bg = new CairoCanvas (paint_bg);
+      set_background (bg);
     }
 
     /*
@@ -238,6 +242,65 @@ namespace Unity.Places
       on_section_clicked_real (section);
 
       return true;
+    }
+
+    private void paint_bg (Cairo.Context cr, int width, int height)
+    {
+      if (_style != SectionStyle.BREADCRUMB)
+        return;
+
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      cr.set_operator (Cairo.Operator.OVER);
+      cr.translate (0.5, 0.5);
+      cr.set_line_width (1.0);
+
+      var x = 0;
+      var y = 0;
+      width -= 1;
+      height -= 1;
+      var radius = 5;
+
+      cr.line_to  (x, y + radius);
+      cr.curve_to (x, y,
+                   x, y,
+                   x + radius, y);
+      cr.line_to  (width - radius, y);
+      cr.curve_to (width, y,
+                   width, y,
+                   width, y + radius);
+      cr.line_to  (width, height - radius);
+      cr.curve_to (width, height,
+                   width, height,
+                   width - radius, height);
+      cr.line_to  (x + radius, height);
+      cr.curve_to (x, height,
+                   x, height,
+                   x, height - radius);
+      cr.close_path ();
+
+      cr.set_source_rgba (1.0, 1.0, 1.0, 0.5);
+      cr.fill_preserve ();
+      cr.stroke ();
+
+      var chevron = 5;
+      var point = x;
+      var children = get_children ();
+      foreach (Clutter.Actor child in children)
+        {
+          point += (int)(child.width) + SPACING/2;
+
+          if (point < width - chevron - SPACING)
+            {
+              cr.move_to (point - chevron, y);
+              cr.line_to (point + chevron, y + height/2);
+              cr.line_to (point - chevron, y + height);
+              cr.set_source_rgba (1.0, 1.0, 1.0, 0.8);
+              cr.stroke ();
+            }
+          point += SPACING/2;
+        }
     }
   }
 
