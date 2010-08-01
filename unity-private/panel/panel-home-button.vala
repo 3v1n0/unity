@@ -38,53 +38,6 @@ namespace Unity.Panel
                                                             this);
     }
 
-    private override void allocate (Clutter.ActorBox        box,
-                                    Clutter.AllocationFlags flags)
-    {
-      float       cwidth;
-      float       cheight;
-      float       lwidth;
-      float       pheight;
-      Ctk.Padding pad = { 0 };
-
-      lwidth  = (float) shell.get_launcher_width_foobar ();
-      pheight = (float) shell.get_panel_height_foobar ();
-      theme_image.get_preferred_size (out cwidth, out cheight,
-                                           out cwidth, out cheight);
-
-      /* adapt icon-width to launcher-width with padding */
-      if (lwidth - cwidth <= 0.0f)
-        {
-          /* icon is wider or as wide as launcher */
-          pad.left   = 0.0f;
-          pad.right  = pad.left;
-        }
-      else
-        {
-          /* icon is narrower than launcher */
-          pad.left   = (box.x2 - box.x1 - cwidth) / 2.0f;
-          pad.right  = pad.left;
-        }
-
-      /* adapt icon-height to panel-height with padding */
-      if (pheight - cheight <= 0.0f)
-        {
-          /* icon higher or as high as launcher */
-          pad.top    = 0.0f;
-          pad.bottom = pad.top;
-        }
-      else
-        {
-          /* icon is smaller than launcher */
-          pad.top    = (box.y2 - box.y1 - cheight) / 2.0f;
-          pad.bottom = pad.top;
-        }
-
-      padding = pad;
-
-      base.allocate (box, flags);
-    }
-
     construct
     {
       theme_image = new Ctk.Image.from_filename (22, "/usr/share/icons/unity-icon-theme/places/22/distributor-logo.png");
@@ -94,6 +47,8 @@ namespace Unity.Panel
 
       motion_event.connect (on_motion_event);
       clicked.connect (on_clicked);
+
+      shell.mode_changed.connect (on_mode_changed);
 
       notify["state"].connect (on_state_changed);
 
@@ -147,6 +102,53 @@ namespace Unity.Panel
       search_shown = false;
     }
 
+    private override void allocate (Clutter.ActorBox        box,
+                                    Clutter.AllocationFlags flags)
+    {
+      float       cwidth;
+      float       cheight;
+      float       lwidth;
+      float       pheight;
+      Ctk.Padding pad = { 0 };
+
+      lwidth  = (float) shell.get_launcher_width_foobar ();
+      pheight = (float) shell.get_panel_height_foobar ();
+      theme_image.get_preferred_size (out cwidth, out cheight,
+                                           out cwidth, out cheight);
+
+      /* adapt icon-width to launcher-width with padding */
+      if (lwidth - cwidth <= 0.0f)
+        {
+          /* icon is wider or as wide as launcher */
+          pad.left   = 0.0f;
+          pad.right  = pad.left;
+        }
+      else
+        {
+          /* icon is narrower than launcher */
+          pad.left   = (box.x2 - box.x1 - cwidth) / 2.0f;
+          pad.right  = pad.left;
+        }
+
+      /* adapt icon-height to panel-height with padding */
+      if (pheight - cheight <= 0.0f)
+        {
+          /* icon higher or as high as launcher */
+          pad.top    = 0.0f;
+          pad.bottom = pad.top;
+        }
+      else
+        {
+          /* icon is smaller than launcher */
+          pad.top    = (box.y2 - box.y1 - cheight) / 2.0f;
+          pad.bottom = pad.top;
+        }
+
+      padding = pad;
+
+      base.allocate (box, flags);
+    }
+
     private void on_state_changed ()
     {
       switch (this.get_state ())
@@ -180,13 +182,9 @@ namespace Unity.Panel
       nat_width = shell.get_launcher_width_foobar ();
     }
 
-    private void on_clicked ()
+    private void on_mode_changed (ShellMode mode)
     {
-      shell.show_unity ();
-      MenuManager manager = MenuManager.get_default ();
-      manager.popdown_current_menu ();
-
-      if (search_shown)
+      if (mode == ShellMode.MINIMIZED)
         {
           set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
           set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
@@ -200,7 +198,19 @@ namespace Unity.Panel
           set_background_for_state (Ctk.ActorState.STATE_ACTIVE, null);
           search_shown = true;
         }
+
+      debug ("MODE_CHANGED");
+
       do_queue_redraw ();
+    }
+
+    private void on_clicked ()
+    {
+      shell.show_unity ();
+      MenuManager manager = MenuManager.get_default ();
+      manager.popdown_current_menu ();
+
+      on_mode_changed (shell.get_mode ());
     }
 
     private bool on_motion_event (Clutter.Event event)

@@ -125,11 +125,13 @@ namespace Unity.Places
     /*
      * Public Methods
      */
-    public void set_active_entry_view (PlaceEntry entry, int x)
+    public void set_active_entry_view (PlaceEntry entry, int x, uint section=0)
     {
       active_entry = entry;
       bg.entry_position = x;
       sections.set_active_entry (entry);
+      if (section != 0)
+        sections.set_active_section (section);
 
       this.entry.text.grab_key_focus ();
     }
@@ -225,7 +227,7 @@ namespace Unity.Places
       cr.paint ();
 
       cr.set_operator (Cairo.Operator.OVER);
-      cr.set_line_width (1.5);
+      cr.set_line_width (1.0);
       cr.set_source_rgba (1.0, 1.0, 1.0, 0.0);
 
       cr.translate (0.5, 0.5);

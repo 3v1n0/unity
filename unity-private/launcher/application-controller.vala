@@ -69,7 +69,7 @@ namespace Unity.Launcher
         child.pin_type = PinType.PINNED;
     }
 
-    public override QuicklistController get_menu_controller ()
+    public override QuicklistController? get_menu_controller ()
     {
       QuicklistController new_menu = new ApplicationQuicklistController (this);
       return new_menu;
@@ -190,7 +190,6 @@ namespace Unity.Launcher
                 {
                   string path = (view as Bamf.Indicator).get_dbus_menu_path ();
                   string remote_address = (view as Bamf.Indicator).get_remote_address ();
-                  string remote_path = (view as Bamf.Indicator).get_remote_path ();
 
                   // Yes, right here, i have lambda's inside lambda's... shutup.
                   menu_client = new Dbusmenu.Client (remote_address, path);

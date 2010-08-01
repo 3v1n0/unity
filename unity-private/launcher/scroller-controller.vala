@@ -283,7 +283,10 @@ namespace Unity.Launcher
       }
       ScrollerChild retcont = (drag_controller.get_drag_model () as ScrollerChildController).child;
 
-      if (x > view.get_width () + DRAG_SAFE_ZONE)
+        
+      if (x > view.get_width () + DRAG_SAFE_ZONE &&
+          retcont.group_type != ScrollerChild.GroupType.PLACE &&
+          retcont.group_type != ScrollerChild.GroupType.SYSTEM)
         {
           // we need to remove this child from the model, its been dragged out
           model.remove (retcont);
@@ -340,7 +343,12 @@ namespace Unity.Launcher
       ScrollerChildController model_controller = drag_controller.get_drag_model () as ScrollerChildController;
       ScrollerChild retcont = model_controller.child;
 
-      if (x > view.get_width ())
+      if (retcont.group_type == ScrollerChild.GroupType.PLACE ||
+          retcont.group_type == ScrollerChild.GroupType.SYSTEM)
+        {
+          ; /* Do nothing */
+        }
+      else if (x > view.get_width ())
         {
           // it was dropped outside of the launcher.. oh well, obliterate it.
           if (retcont.controller is ApplicationController)

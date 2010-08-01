@@ -166,13 +166,13 @@ namespace Unity.Places
                * until we have better support for signalling things through
                * a place
                */
-              PlaceBar place_bar = (Testing.ObjectRegistry.get_default ().lookup ("UnityPlacesPlaceBar"))[0] as PlaceBar;
+              Controller cont = Testing.ObjectRegistry.get_default ().lookup ("UnityPlacesController")[0] as Controller;
               PlaceSearchBar search_bar = (Testing.ObjectRegistry.get_default ().lookup ("UnityPlacesSearchBar"))[0] as PlaceSearchBar;
 
-              if (place_bar is PlaceBar && search_bar is PlaceSearchBar)
+              if (cont is Controller && search_bar is PlaceSearchBar)
                 {
                   string text = search_bar.get_search_text ();
-                  place_bar.active_entry_name (display_name);
+                  cont.activate_entry (display_name);
                   search_bar.search (text);
                 }
             });

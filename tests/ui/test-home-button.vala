@@ -70,7 +70,7 @@ namespace Unity.Tests.UI
     public ShellMode
     get_mode ()
     {
-      return ShellMode.UNDERLAY;
+      return ShellMode.MINIMIZED;
     }
 
     public Clutter.Stage

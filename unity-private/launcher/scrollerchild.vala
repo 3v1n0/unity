@@ -50,6 +50,13 @@ namespace Unity.Launcher
 
   public class ScrollerChild : Ctk.Actor
   {
+    public enum GroupType {
+      APPLICATION,
+      PLACE,
+      DEVICE,
+      SYSTEM
+    }
+
     public Gdk.Pixbuf icon {get; set;}
     public PinType pin_type;
     public float position {get; set;}
@@ -59,6 +66,8 @@ namespace Unity.Launcher
     public bool activating {get; set;}
     public float rotation {get; set;}
     public ScrollerChildController controller; // this sucks. shouldn't be here, can't help it.
+
+    public GroupType group_type { get; construct set; }
 
     public string to_string ()
     {
@@ -81,7 +90,6 @@ namespace Unity.Launcher
     // animations
     private Clutter.Animation active_indicator_anim;
     private Clutter.Animation running_indicator_anim;
-    private Clutter.Animation rotate_anim;
     private Clutter.Timeline  wiggle_timeline;
     private Clutter.Timeline  glow_timeline;
     private Clutter.Timeline  rotate_timeline;
@@ -90,6 +98,11 @@ namespace Unity.Launcher
     private AnimState rotate_state;
 
     private float old_rotate_value = 0.0f;
+
+    public ScrollerChild ()
+    {
+      Object (group_type:GroupType.APPLICATION);
+    }
 
     construct
     {
@@ -375,7 +388,7 @@ namespace Unity.Launcher
           Gdk.Pixbuf scaled_buf;
           int max_size = 48;
           if (!Unity.pixbuf_is_tile (icon))
-            max_size = 40;
+            max_size = 32;
 
           if (icon.get_width () > max_size || icon.get_height () > max_size)
             {

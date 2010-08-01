@@ -188,7 +188,7 @@ namespace Unity
         {
           this.screensaver_conn = DBus.Bus.get (DBus.BusType.SESSION);
           this.screensaver = this.screensaver_conn.get_object ("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
-          this.screensaver.ActiveChanged += got_screensaver_changed;
+          this.screensaver.ActiveChanged.connect (got_screensaver_changed);
         }
       catch (Error e)
         {
@@ -243,13 +243,7 @@ namespace Unity
 
       this.spaces_manager = new SpacesManager (this);
       this.spaces_manager.set_padding (50, 50, get_launcher_width_foobar () + 50, 50);
-
       this.launcher.model.add (spaces_manager.button);
-      this.launcher.model.order_changed.connect (() => {
-        var index = launcher.model.index_of (spaces_manager.button);
-        if (index < launcher.model.size)
-          launcher.model.move (spaces_manager.button, launcher.model.size -1);
-      });
 
       this.expose_manager = new ExposeManager (this, launcher);
       this.expose_manager.hovered_opacity = 255;
@@ -407,8 +401,8 @@ namespace Unity
                        this.QUICKLAUNCHER_WIDTH, 0, (uint32)height,
                        PANEL_HEIGHT, 0, (uint32)width);
 
-      this.places.set_size (width, height);
-      this.places.set_position (0, 0);
+      this.places.set_size (width - this.QUICKLAUNCHER_WIDTH, height);
+      this.places.set_position (this.QUICKLAUNCHER_WIDTH, 0);
 
       this.panel.set_size (width, 24);
       this.panel.set_position (0, 0);
@@ -551,7 +545,7 @@ namespace Unity
 
     public ShellMode get_mode ()
     {
-      return ShellMode.UNDERLAY;
+      return places_showing ? ShellMode.DASH : ShellMode.MINIMIZED;
     }
 
     public int get_indicators_width ()
@@ -594,6 +588,8 @@ namespace Unity
         Gtk.main_iteration ();
 
       places.hidden ();
+
+      mode_changed (ShellMode.MINIMIZED);
     }
 
     public void show_unity ()
@@ -632,6 +628,8 @@ namespace Unity
                           "opacity", 255);
 
           places.shown ();
+
+          mode_changed (ShellMode.DASH);
         }
     }
 

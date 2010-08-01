@@ -18,8 +18,8 @@ namespace Ctk {
 		public void recurse_get_stored_allocation_box (out Clutter.ActorBox box);
 		public void remove_all_effects ();
 		public void remove_effect (Ctk.Effect effect);
-		public void set_background (Clutter.Actor bg);
-		public void set_background_for_state (Ctk.ActorState state, Clutter.Actor bg);
+		public void set_background (Clutter.Actor? bg);
+		public void set_background_for_state (Ctk.ActorState state, Clutter.Actor? bg);
 		public void set_damaged (bool damaged);
 		public static void set_default_direction (Gtk.TextDirection dir);
 		public void set_effects_painting (bool painting);

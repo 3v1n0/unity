@@ -68,7 +68,7 @@ namespace Unity.Launcher
      */
     private bool button_down = false;
     private float total_child_height = 0.0f;
-    private ScrollerPhase current_phase = ScrollerPhase.NONE;
+    private ScrollerPhase current_phase = ScrollerPhase.SETTLING;
     private uint last_motion_event_time = 0;
     private ScrollerViewType view_type = ScrollerViewType.CONTRACTED;
     /*
@@ -174,8 +174,11 @@ namespace Unity.Launcher
           if (anim is Clutter.Animation)
             {
               Clutter.Interval interval = anim.get_interval ("position");
-              interval.get_final_value (value);
-              child.position = value.get_float ();
+              if (interval is Clutter.Interval)
+                {
+                  interval.get_final_value (value);
+                  child.position = value.get_float ();
+                }
             }
         }
 
@@ -188,12 +191,15 @@ namespace Unity.Launcher
             list = list.next;
           }
 
+        ScrollerChild child = (Drag.Controller.get_default ().get_drag_model () as ScrollerChildController).child;
+
+        value = model.clamp (child, value);
+
         return value;
     }
 
     public int get_model_index_at_y_pos (float y, bool return_minus_if_fail=false)
     {
-
       // trying out a different method
       int iy = (int)y;
       Clutter.Actor picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy);
@@ -758,7 +764,8 @@ namespace Unity.Launcher
                   //GLib.Value value = GLib.Value (GLib.Type.from_name ("string"));
                   GLib.Value value = Value (typeof (float));
                   Clutter.Interval interval = child.get_animation ().get_interval ("position");
-                  interval.get_final_value (value);
+                  if (interval is Clutter.Interval)
+                    interval.get_final_value (value);
                   if (value.get_float () != transitions[index].position)
                     {
                       // disable the current animation before starting a new one

@@ -36,6 +36,7 @@ namespace Unity {
   
     construct
     {
+      child.group_type = ScrollerChild.GroupType.PLACE;
     }
     
     public override void activate ()

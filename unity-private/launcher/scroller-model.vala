@@ -40,6 +40,11 @@ namespace Unity.Launcher
     public signal void child_removed (ScrollerChild child);
     public signal void order_changed (); // called when the order of items changes
 
+    public int n_app_icons = 0;
+    public int n_place_icons = 0;
+    public int n_device_icons = 0;
+    public int n_system_icons = 0;
+
     public ScrollerModel ()
     {
     }
@@ -94,14 +99,60 @@ namespace Unity.Launcher
 
     public void add (ScrollerChild child)
     {
-      children.add (child);
-      child_added (child);
+      switch (child.group_type)
+        {
+        case ScrollerChild.GroupType.APPLICATION:
+          insert (child, size - n_place_icons - n_device_icons - n_system_icons);
+          n_app_icons++;
+          break;
+
+        case ScrollerChild.GroupType.PLACE:
+          insert (child, size - n_device_icons - n_system_icons);
+          n_place_icons++;
+          break;
+
+        case ScrollerChild.GroupType.DEVICE:
+          insert (child, size - n_system_icons);
+          n_device_icons++;
+          break;
+
+        case ScrollerChild.GroupType.SYSTEM:
+        default:
+          children.add (child);
+          child_added (child);
+          n_system_icons++;
+          break;
+        }
+
       order_changed ();
     }
 
     public void remove (ScrollerChild child)
     {
       var tempchild = child;
+
+      switch (child.group_type)
+        {
+        case ScrollerChild.GroupType.APPLICATION:
+          n_app_icons--;
+          break;
+
+        case ScrollerChild.GroupType.PLACE:
+          n_place_icons--;
+          break;
+
+        case ScrollerChild.GroupType.DEVICE:
+          n_device_icons--;
+          break;
+
+        case ScrollerChild.GroupType.SYSTEM:
+          n_system_icons--;
+          break;
+
+        default:
+          break;
+        }
+
       children.remove (child);
       child_removed (tempchild);
       order_changed ();
@@ -150,6 +201,33 @@ namespace Unity.Launcher
       children[i] = item;
     }
 
-  }
+    public int clamp (ScrollerChild child, int value)
+    {
+      int ret = value;
 
+      switch (child.group_type)
+        {
+        case ScrollerChild.GroupType.APPLICATION:
+          ret = value.clamp (0,
+                             size - n_place_icons - n_device_icons - n_system_icons - 1);
+          break;
+
+        case ScrollerChild.GroupType.PLACE:
+          ret = value.clamp (n_app_icons, n_app_icons + n_place_icons - 1);
+          break;
+
+        case ScrollerChild.GroupType.DEVICE:
+          ret = value.clamp (n_app_icons + n_place_icons,
+                             n_app_icons + n_place_icons + n_device_icons -1);
+          break;
+
+        case ScrollerChild.GroupType.SYSTEM:
+        default:
+          ret = value.clamp (size - n_system_icons, size -1);
+          break;
+        }
+
+      return ret;
+    }
+  }
 }

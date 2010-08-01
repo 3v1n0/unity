@@ -218,11 +218,11 @@ namespace Unity.Testing
       this.launcher.get_view ().set_clip (0, 0,
                                           ql_width, height);
 
-      this.places.set_size (width, height);
-      this.places.set_position (0, 0);
+      this.places.set_size (width-ql_width, height);
+      this.places.set_position (ql_width, 0);
 
-       this.panel.set_size (width, Unity.Panel.PANEL_HEIGHT);
-       this.panel.set_position (0, 0);
+      this.panel.set_size (width, Unity.Panel.PANEL_HEIGHT);
+      this.panel.set_position (0, 0);
     }
 
     public override void show ()
@@ -296,7 +296,7 @@ namespace Unity.Testing
 
     public ShellMode get_mode ()
     {
-      return ShellMode.UNDERLAY;
+      return showing_places ? ShellMode.DASH : ShellMode.MINIMIZED;
     }
 
     public void show_unity ()
@@ -321,6 +321,8 @@ namespace Unity.Testing
           places.shown ();
         }
 
+      mode_changed (showing_places ? ShellMode.DASH : ShellMode.MINIMIZED);
+
       this.places.do_queue_redraw ();
     }
 
@@ -335,7 +337,7 @@ namespace Unity.Testing
 
           places.hidden ();
 
-          debug ("Hide unity");
+          mode_changed (ShellMode.MINIMIZED);
         }
     }
 

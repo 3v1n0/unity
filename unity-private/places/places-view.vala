@@ -23,57 +23,46 @@ namespace Unity.Places
 {
   public class View : Ctk.Box
   {
-    private PlaceModel _model = null;
-
+    public static const float PADDING = 8.0f;
     /* Properties */
     public Shell shell { get; construct; }
 
-    public PlaceModel model {
-      get { return _model; }
-      set { _model = value; }
-    }
+    public PlaceModel model { get; construct; }
 
-    private PlaceBar  place_bar;
     private Ctk.VBox  content_box;
 
-    private PlaceHomeEntry       home_entry;
-    private PlaceSearchBar       search_bar;
+    public  PlaceHomeEntry       home_entry;
+    public  PlaceSearchBar       search_bar;
     private Unity.Place.Renderer renderer;
+    private unowned PlaceEntry?  active_entry = null;
 
     private bool is_showing = false;
 
-    public View (Shell shell)
+    public View (Shell shell, PlaceModel model)
     {
-      Object (shell:shell, orientation:Ctk.Orientation.VERTICAL);
+      Object (shell:shell, orientation:Ctk.Orientation.VERTICAL, model:model);
     }
 
     construct
     {
+      about_to_show ();
     }
 
     public void about_to_show ()
     {
-      if (_model is PlaceFileModel)
+      if (home_entry is PlaceHomeEntry)
         {
           return;
         }
 
-      _model = new PlaceFileModel () as PlaceModel;
-
-      home_entry = new PlaceHomeEntry (shell, _model);
-
-      place_bar = new PlaceBar (shell, _model);
-      pack (place_bar, false, true);
-      place_bar.show ();
-
-      place_bar.entry_view_activated.connect (on_entry_view_activated);
+      home_entry = new PlaceHomeEntry (shell, model);
 
       content_box = new Ctk.VBox (4);
       content_box.padding = {
+        PADDING * 2.5f,
+        PADDING,
         0.0f,
-        8.0f,
-        0.0f,
-        shell.get_launcher_width_foobar () + 8.0f
+        PADDING
       };
       pack (content_box, true, true);
       content_box.show ();
@@ -87,7 +76,6 @@ namespace Unity.Places
     {
       is_showing = true;
 
-      place_bar.reset ();
       search_bar.reset ();
 
       on_entry_view_activated (home_entry, 0);
@@ -96,15 +84,29 @@ namespace Unity.Places
     public void hidden ()
     {
       is_showing = false;
+
+      if (active_entry is PlaceEntry)
+        {
+          active_entry.active = false;
+        }
+      active_entry = null;
     }
 
-    private void on_entry_view_activated (PlaceEntry entry, int x)
+    public void on_entry_view_activated (PlaceEntry entry, uint section_id)
     {
       /* Create the correct results view */
       if (renderer is Clutter.Actor)
         {
           renderer.destroy ();
         }
+
+      if (active_entry is PlaceEntry)
+        {
+          active_entry.active = false;
+        }
+      active_entry = entry;
+      entry.active = true;
+
       renderer = lookup_renderer (entry.entry_renderer_name);
       content_box.pack (renderer, true, true);
       renderer.set_models (entry.entry_groups_model,
@@ -113,10 +115,7 @@ namespace Unity.Places
       renderer.show ();
 
       /* Update the search bar */
-      search_bar.set_active_entry_view (entry,
-                                        x == 0 ? 0 : x
-                                          - shell.get_launcher_width_foobar ()
-                                          - 8);
+      search_bar.set_active_entry_view (entry, 0, section_id);
     }
 
     private Unity.Place.Renderer lookup_renderer (string renderer)

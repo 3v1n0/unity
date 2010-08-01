@@ -333,3 +333,6 @@ unity-private/launcher/quicklist-image-menu-item.c
 unity-private/launcher/quicklist-menu-item.c
 unity-private/launcher/quicklist-radio-menu-item.c
 unity-private/launcher/quicklist-seperator-menu-item.c
+unity-private/places/places-place-entry-scroller-child.c
+unity-private/places/places-trash-controller.c
+
