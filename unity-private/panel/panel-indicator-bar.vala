@@ -107,9 +107,5 @@ namespace Unity.Panel.Indicators
         }
       return null;
     }
-    
-    public void set_indicator_mode (bool mode)
-    {
-    }
   }
 }

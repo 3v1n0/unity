@@ -113,7 +113,6 @@ namespace Unity.Panel
             menu_bar.indicator_object_view.hide ();
           bground.hide ();
           system_tray.hide ();
-          indicator_bar.set_indicator_mode (mode);
           reactive = false;
           
           var glow = new Ctk.EffectGlow ();
@@ -128,7 +127,6 @@ namespace Unity.Panel
             menu_bar.indicator_object_view.show ();
           bground.show ();
           system_tray.show ();
-          indicator_bar.set_indicator_mode (mode);
           reactive = true;
 
           indicator_bar.remove_all_effects ();
