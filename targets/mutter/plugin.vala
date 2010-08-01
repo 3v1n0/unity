@@ -116,6 +116,7 @@ namespace Unity
 
     private static const int PANEL_HEIGHT        =  24;
     private static const int QUICKLAUNCHER_WIDTH = 58;
+    private static const string UNDECORATED_HINT = "UNDECORATED_HINT";
 
     private Clutter.Stage    stage;
     private Application      app;
@@ -664,6 +665,73 @@ namespace Unity
       return (Environment.get_variable (name) != null);
     }
 
+    private unowned Mutter.MetaWindow? get_window_for_xid (uint32 xid)
+    {
+      unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
+      foreach (Mutter.Window window in mutter_windows)
+        {
+          uint32 wxid = (uint32) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
+          if (wxid == xid)
+            {
+              unowned Mutter.MetaWindow win = window.get_meta_window ();
+              return win;
+            }
+        }
+
+      return null;
+    }
+
+    public void get_window_details (uint32   xid,
+                                    out bool allows_resize,
+                                    out bool is_maximised)
+    {
+      unowned Mutter.MetaWindow? win = get_window_for_xid (xid);
+
+      if (win != null)
+        {
+          allows_resize = Mutter.MetaWindow.allows_resize (win);
+          is_maximised = (Mutter.MetaWindow.is_maximized (win) ||
+                          Mutter.MetaWindow.is_maximized_horizontally (win) ||
+                          Mutter.MetaWindow.is_maximized_vertically (win));
+
+        }
+    }
+
+    public void do_window_action (uint32 xid, WindowAction action)
+    {
+      unowned Mutter.MetaWindow? win = get_window_for_xid (xid);
+
+      if (win != null)
+        {
+          switch (action)
+            {
+            case WindowAction.CLOSE:
+              Mutter.MetaWindow.delete (win, get_current_time ());
+              break;
+
+            case WindowAction.MINIMIZE:
+              Mutter.MetaWindow.minimize (win);
+              break;
+
+            case WindowAction.MAXIMIZE:
+              Mutter.MetaWindow.maximize (win,
+                                          Mutter.MetaMaximizeFlags.HORIZONTAL |
+                                          Mutter.MetaMaximizeFlags.VERTICAL);
+              break;
+
+            case WindowAction.UNMAXIMIZE:
+              Mutter.MetaWindow.unmaximize (win,
+                                            Mutter.MetaMaximizeFlags.HORIZONTAL |
+                                            Mutter.MetaMaximizeFlags.VERTICAL);
+              break;
+
+            default:
+              warning (@"Window action type $action not supported");
+              break;
+            }
+        }
+    }
+
     /*
      * MUTTER PLUGIN HOOKS
      */
@@ -678,7 +746,17 @@ namespace Unity
                           int           width,
                           int           height)
     {
+      /*FIXME: This doesn't work in Mutter
+      if (window.get_data<string> (UNDECORATED_HINT) == null)
+        {
+          uint32 xid = (uint32)window.get_x_window ();
+          Utils.window_set_decorations (xid, 0);
+        }
+        */
+
       this.window_maximized (this, window, x, y, width, height);
+
+      active_window_state_changed ();
     }
 
     public void unmaximize (Mutter.Window window,
@@ -687,11 +765,26 @@ namespace Unity
                             int           width,
                             int           height)
     {
+      /* FIXME: This doesn't work in Mutter
+      if (window.get_data<string> (UNDECORATED_HINT) == null)
+        {
+          uint32 xid = (uint32)window.get_x_window ();
+          Utils.window_set_decorations (xid, 1);
+        }
+      */
+
       this.window_unmaximized (this, window, x, y, width, height);
+
+      active_window_state_changed ();
     }
 
     public void map (Mutter.Window window)
     {
+      /* FIXME: This doesn't work in Mutter
+      uint32 xid = (uint32)window.get_x_window ();
+      if (Utils.window_is_decorated (xid) == false)
+        window.set_data (UNDECORATED_HINT, "%s".printf ("true"));
+      */
       this.maximus.process_window (window);
       this.window_mapped (this, window);
 

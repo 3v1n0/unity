@@ -111,7 +111,14 @@ namespace Utils
                                        int           height,
                                        bool          expected=true);
 
+
   [CCode (lower_case_prefix = "utils_")]
   public extern bool utils_compare_images (string img1_path,
                                            string img2_path);
+
+  [CCode (lower_case_prefix = "utils_")]
+  public extern bool window_is_decorated (uint32 xid);
+
+  [CCode (lower_case_prefix = "utils_")]
+  public extern void window_set_decorations (uint32 xid, uint decorations);
 }
