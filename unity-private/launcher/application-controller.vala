@@ -69,10 +69,18 @@ namespace Unity.Launcher
         child.pin_type = PinType.PINNED;
     }
 
-    public override QuicklistController get_menu_controller ()
+    public override QuicklistController? get_menu_controller ()
     {
       QuicklistController new_menu = new ApplicationQuicklistController (this);
       return new_menu;
+    }
+
+    public new void closed ()
+    {
+      if (!is_sticky () && (app is Bamf.Application) == false)
+        {
+          request_removal ();
+        }
     }
 
     public void set_sticky (bool is_sticky = true)
@@ -169,13 +177,6 @@ namespace Unity.Launcher
         }
     }
 
-/*
-    private get_menu_for_client (ScrollerChildController.menu_cb callback, Dbusmenu.Client client)
-    {
-
-    }
-*/
-
     public override void get_menu_actions (ScrollerChildController.menu_cb callback)
     {
 
@@ -190,7 +191,6 @@ namespace Unity.Launcher
                 {
                   string path = (view as Bamf.Indicator).get_dbus_menu_path ();
                   string remote_address = (view as Bamf.Indicator).get_remote_address ();
-                  string remote_path = (view as Bamf.Indicator).get_remote_path ();
 
                   // Yes, right here, i have lambda's inside lambda's... shutup.
                   menu_client = new Dbusmenu.Client (remote_address, path);
@@ -265,13 +265,20 @@ namespace Unity.Launcher
       if (desktop_file != null && desktop_file != "")
         {
           Dbusmenu.Menuitem pinning_item = new Dbusmenu.Menuitem ();
-          if (is_sticky () && app is Bamf.Application)
+          if (app is Bamf.Application)
             {
               pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Keep in Launcher"));
               pinning_item.property_set (Dbusmenu.MENUITEM_PROP_TOGGLE_TYPE, Dbusmenu.MENUITEM_TOGGLE_CHECK);
-              pinning_item.property_set_int (Dbusmenu.MENUITEM_PROP_TOGGLE_STATE, Dbusmenu.MENUITEM_TOGGLE_STATE_CHECKED);
+              if (is_sticky ())
+                {
+                  pinning_item.property_set_int (Dbusmenu.MENUITEM_PROP_TOGGLE_STATE, Dbusmenu.MENUITEM_TOGGLE_STATE_CHECKED);
+                }
+              else
+                {
+                  pinning_item.property_set_int (Dbusmenu.MENUITEM_PROP_TOGGLE_STATE, Dbusmenu.MENUITEM_TOGGLE_STATE_UNCHECKED);
+                }
             }
-          else if (is_sticky ())
+          else
             {
               pinning_item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Remove from launcher"));
             }

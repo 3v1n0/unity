@@ -29,6 +29,7 @@ test_unit_VALAFLAGS = \
   --pkg Bamf-0.2 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
+  --pkg config \
   --pkg dbus-glib-1 \
   --pkg Dbusmenu-Glib-0.2 \
   --pkg dee-1.0 \
@@ -58,6 +59,7 @@ test_unit_SOURCES = \
   test-places-place.vala \
   test-places.vala \
   test-place.vala \
+  test-place-browser.vala \
   test-io.vala \
   test-appinfo-manager.vala \
   test-unity-pixbuf-cache.vala \

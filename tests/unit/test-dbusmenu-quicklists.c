@@ -322,8 +322,9 @@ static void unity_tests_unit_quicklist_suite_test_dbus_menu (UnityTestsUnitQuick
 	menu = (_tmp0_ = unity_launcher_scroller_child_controller_get_menu_controller ((UnityLauncherScrollerChildController*) controller), UNITY_LAUNCHER_IS_APPLICATION_QUICKLIST_CONTROLLER (_tmp0_) ? ((UnityLauncherApplicationQuicklistController*) _tmp0_) : NULL);
 	unity_launcher_quicklist_controller_set_state ((UnityLauncherQuicklistController*) menu, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_LABEL);
 	menuitems = NULL;
-	g_assert (g_list_length (menuitems) == 1);
+	g_assert (g_list_length (menuitems) == 0);
 	unity_launcher_quicklist_controller_set_state ((UnityLauncherQuicklistController*) menu, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU);
+	menuitems = ctk_menu_get_items ((CtkMenu*) unity_launcher_quicklist_controller_get_view ((UnityLauncherQuicklistController*) menu));
 	g_assert (g_list_length (menuitems) >= 10);
 	g_assert (CTK_IS_CHECK_MENU_ITEM ((CtkMenuItem*) menuitems->data));
 	g_assert (ctk_check_menu_item_get_active ((_tmp1_ = (CtkMenuItem*) menuitems->data, CTK_IS_CHECK_MENU_ITEM (_tmp1_) ? ((CtkCheckMenuItem*) _tmp1_) : NULL)) == FALSE);

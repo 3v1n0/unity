@@ -37,6 +37,16 @@
 typedef struct _UnityPlacesPlaceEntry UnityPlacesPlaceEntry;
 typedef struct _UnityPlacesPlaceEntryIface UnityPlacesPlaceEntryIface;
 
+#define UNITY_PLACES_TYPE_PLACE (unity_places_place_get_type ())
+#define UNITY_PLACES_PLACE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlace))
+#define UNITY_PLACES_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
+#define UNITY_PLACES_IS_PLACE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE))
+#define UNITY_PLACES_IS_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE))
+#define UNITY_PLACES_PLACE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
+
+typedef struct _UnityPlacesPlace UnityPlacesPlace;
+typedef struct _UnityPlacesPlaceClass UnityPlacesPlaceClass;
+
 #define UNITY_PLACES_TYPE_PLACE_HOME_ENTRY (unity_places_place_home_entry_get_type ())
 #define UNITY_PLACES_PLACE_HOME_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_HOME_ENTRY, UnityPlacesPlaceHomeEntry))
 #define UNITY_PLACES_PLACE_HOME_ENTRY_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_HOME_ENTRY, UnityPlacesPlaceHomeEntryClass))
@@ -59,17 +69,7 @@ typedef struct _UnityPlacesPlaceModel UnityPlacesPlaceModel;
 typedef struct _UnityPlacesPlaceModelClass UnityPlacesPlaceModelClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
-
-#define UNITY_PLACES_TYPE_PLACE (unity_places_place_get_type ())
-#define UNITY_PLACES_PLACE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlace))
-#define UNITY_PLACES_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
-#define UNITY_PLACES_IS_PLACE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE))
-#define UNITY_PLACES_IS_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE))
-#define UNITY_PLACES_PLACE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
-
-typedef struct _UnityPlacesPlace UnityPlacesPlace;
-typedef struct _UnityPlacesPlaceClass UnityPlacesPlaceClass;
-typedef struct _Block1Data Block1Data;
+typedef struct _Block2Data Block2Data;
 
 struct _UnityPlacesPlaceEntryIface {
 	GTypeInterface parent_iface;
@@ -113,6 +113,8 @@ struct _UnityPlacesPlaceEntryIface {
 	void (*set_global_results_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
 	GeeHashMap* (*get_global_renderer_hints) (UnityPlacesPlaceEntry* self);
 	void (*set_global_renderer_hints) (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+	UnityPlacesPlace* (*get_parent) (UnityPlacesPlaceEntry* self);
+	void (*set_parent) (UnityPlacesPlaceEntry* self, UnityPlacesPlace* value);
 };
 
 struct _UnityPlacesPlaceHomeEntry {
@@ -135,6 +137,7 @@ struct _UnityPlacesPlaceHomeEntryPrivate {
 	gint __mimetypes_size_;
 	gboolean _sensitive;
 	GeeHashMap* _hints;
+	UnityPlacesPlace* _parent;
 	gboolean _online;
 	gboolean _active;
 	DeeModel* _sections_model;
@@ -150,7 +153,7 @@ struct _UnityPlacesPlaceHomeEntryPrivate {
 	GeeHashMap* entry_group_map;
 };
 
-struct _Block1Data {
+struct _Block2Data {
 	int _ref_count_;
 	UnityPlacesPlaceHomeEntry * self;
 	UnityPlacesPlaceEntry* entry;
@@ -160,6 +163,7 @@ struct _Block1Data {
 static gpointer unity_places_place_home_entry_parent_class = NULL;
 static UnityPlacesPlaceEntryIface* unity_places_place_home_entry_unity_places_place_entry_parent_iface = NULL;
 
+GType unity_places_place_get_type (void) G_GNUC_CONST;
 GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
 GType unity_places_place_home_entry_get_type (void) G_GNUC_CONST;
 GType unity_places_place_model_get_type (void) G_GNUC_CONST;
@@ -174,6 +178,7 @@ enum  {
 	UNITY_PLACES_PLACE_HOME_ENTRY_MIMETYPES,
 	UNITY_PLACES_PLACE_HOME_ENTRY_SENSITIVE,
 	UNITY_PLACES_PLACE_HOME_ENTRY_HINTS,
+	UNITY_PLACES_PLACE_HOME_ENTRY_PARENT,
 	UNITY_PLACES_PLACE_HOME_ENTRY_ONLINE,
 	UNITY_PLACES_PLACE_HOME_ENTRY_ACTIVE,
 	UNITY_PLACES_PLACE_HOME_ENTRY_SECTIONS_MODEL,
@@ -189,19 +194,18 @@ enum  {
 };
 UnityPlacesPlaceHomeEntry* unity_places_place_home_entry_new (UnityShell* shell, UnityPlacesPlaceModel* model);
 UnityPlacesPlaceHomeEntry* unity_places_place_home_entry_construct (GType object_type, UnityShell* shell, UnityPlacesPlaceModel* model);
-GType unity_places_place_get_type (void) G_GNUC_CONST;
 GeeArrayList* unity_places_place_get_entries (UnityPlacesPlace* self);
 DeeModel* unity_places_place_entry_get_entry_groups_model (UnityPlacesPlaceEntry* self);
 const char* unity_places_place_entry_get_name (UnityPlacesPlaceEntry* self);
 const char* unity_places_place_entry_get_icon (UnityPlacesPlaceEntry* self);
 DeeModel* unity_places_place_entry_get_global_results_model (UnityPlacesPlaceEntry* self);
 DeeModel* unity_places_place_entry_get_entry_results_model (UnityPlacesPlaceEntry* self);
-static void _lambda7_ (DeeModelIter* it, Block1Data* _data1_);
-static void __lambda7__dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self);
-static void _lambda8_ (DeeModelIter* it, Block1Data* _data1_);
-static void __lambda8__dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self);
-static Block1Data* block1_data_ref (Block1Data* _data1_);
-static void block1_data_unref (Block1Data* _data1_);
+static void _lambda16_ (DeeModelIter* it, Block2Data* _data2_);
+static void __lambda16__dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self);
+static void _lambda17_ (DeeModelIter* it, Block2Data* _data2_);
+static void __lambda17__dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self);
+static Block2Data* block2_data_ref (Block2Data* _data2_);
+static void block2_data_unref (Block2Data* _data2_);
 static void unity_places_place_home_entry_on_place_added (UnityPlacesPlaceHomeEntry* self, UnityPlacesPlace* place);
 void unity_places_place_entry_set_online (UnityPlacesPlaceEntry* self, gboolean value);
 static void unity_places_place_home_entry_real_connect (UnityPlacesPlaceEntry* base);
@@ -211,7 +215,7 @@ static void unity_places_place_home_entry_real_set_active_section (UnityPlacesPl
 static void unity_places_place_home_entry_real_set_global_search (UnityPlacesPlaceEntry* base, const char* search, GHashTable* hints);
 UnityShell* unity_places_place_home_entry_get_shell (UnityPlacesPlaceHomeEntry* self);
 static void unity_places_place_home_entry_set_shell (UnityPlacesPlaceHomeEntry* self, UnityShell* value);
-static char** _vala_array_dup2 (char** self, int length);
+static char** _vala_array_dup3 (char** self, int length);
 UnityPlacesPlaceModel* unity_places_place_home_entry_get_place_model (UnityPlacesPlaceHomeEntry* self);
 void unity_places_place_home_entry_set_place_model (UnityPlacesPlaceHomeEntry* self, UnityPlacesPlaceModel* value);
 void unity_places_place_entry_set_entry_renderer_name (UnityPlacesPlaceEntry* self, const char* value);
@@ -226,6 +230,7 @@ guint unity_places_place_entry_get_position (UnityPlacesPlaceEntry* self);
 char** unity_places_place_entry_get_mimetypes (UnityPlacesPlaceEntry* self, int* result_length1);
 gboolean unity_places_place_entry_get_sensitive (UnityPlacesPlaceEntry* self);
 GeeHashMap* unity_places_place_entry_get_hints (UnityPlacesPlaceEntry* self);
+UnityPlacesPlace* unity_places_place_entry_get_parent (UnityPlacesPlaceEntry* self);
 gboolean unity_places_place_entry_get_online (UnityPlacesPlaceEntry* self);
 gboolean unity_places_place_entry_get_active (UnityPlacesPlaceEntry* self);
 DeeModel* unity_places_place_entry_get_sections_model (UnityPlacesPlaceEntry* self);
@@ -242,6 +247,7 @@ void unity_places_place_entry_set_position (UnityPlacesPlaceEntry* self, guint v
 void unity_places_place_entry_set_mimetypes (UnityPlacesPlaceEntry* self, char** value, int value_length1);
 void unity_places_place_entry_set_sensitive (UnityPlacesPlaceEntry* self, gboolean value);
 void unity_places_place_entry_set_hints (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+void unity_places_place_entry_set_parent (UnityPlacesPlaceEntry* self, UnityPlacesPlace* value);
 void unity_places_place_entry_set_active (UnityPlacesPlaceEntry* self, gboolean value);
 void unity_places_place_entry_set_sections_model (UnityPlacesPlaceEntry* self, DeeModel* value);
 void unity_places_place_entry_set_global_renderer_name (UnityPlacesPlaceEntry* self, const char* value);
@@ -274,30 +280,30 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static void _lambda7_ (DeeModelIter* it, Block1Data* _data1_) {
+static void _lambda16_ (DeeModelIter* it, Block2Data* _data2_) {
 	UnityPlacesPlaceHomeEntry * self;
 	DeeModel* _model;
-	self = _data1_->self;
+	self = _data2_->self;
 	g_return_if_fail (it != NULL);
-	_model = _g_object_ref0 (unity_places_place_entry_get_global_results_model (_data1_->entry));
-	dee_model_append (unity_places_place_entry_get_entry_results_model ((UnityPlacesPlaceEntry*) self), 0, dee_model_get_string (_model, it, (guint) 0), 1, dee_model_get_string (_model, it, (guint) 1), 2, GPOINTER_TO_UINT (gee_abstract_map_get ((GeeAbstractMap*) self->priv->entry_group_map, _data1_->entry)), 3, dee_model_get_string (_model, it, (guint) 3), 4, dee_model_get_string (_model, it, (guint) 4), 5, dee_model_get_string (_model, it, (guint) 5), -1, NULL);
+	_model = _g_object_ref0 (unity_places_place_entry_get_global_results_model (_data2_->entry));
+	dee_model_append (unity_places_place_entry_get_entry_results_model ((UnityPlacesPlaceEntry*) self), 0, dee_model_get_string (_model, it, (guint) 0), 1, dee_model_get_string (_model, it, (guint) 1), 2, GPOINTER_TO_UINT (gee_abstract_map_get ((GeeAbstractMap*) self->priv->entry_group_map, _data2_->entry)), 3, dee_model_get_string (_model, it, (guint) 3), 4, dee_model_get_string (_model, it, (guint) 4), 5, dee_model_get_string (_model, it, (guint) 5), -1, NULL);
 	_g_object_unref0 (_model);
 }
 
 
-static void __lambda7__dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
-	_lambda7_ (iter, self);
+static void __lambda16__dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
+	_lambda16_ (iter, self);
 }
 
 
-static void _lambda8_ (DeeModelIter* it, Block1Data* _data1_) {
+static void _lambda17_ (DeeModelIter* it, Block2Data* _data2_) {
 	UnityPlacesPlaceHomeEntry * self;
 	DeeModel* _model;
 	char* uri;
 	DeeModelIter* i;
-	self = _data1_->self;
+	self = _data2_->self;
 	g_return_if_fail (it != NULL);
-	_model = _g_object_ref0 (unity_places_place_entry_get_global_results_model (_data1_->entry));
+	_model = _g_object_ref0 (unity_places_place_entry_get_global_results_model (_data2_->entry));
 	uri = g_strdup (dee_model_get_string (_model, it, (guint) 0));
 	i = dee_model_get_first_iter (unity_places_place_entry_get_entry_results_model ((UnityPlacesPlaceEntry*) self));
 	while (TRUE) {
@@ -321,22 +327,22 @@ static void _lambda8_ (DeeModelIter* it, Block1Data* _data1_) {
 }
 
 
-static void __lambda8__dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
-	_lambda8_ (iter, self);
+static void __lambda17__dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
+	_lambda17_ (iter, self);
 }
 
 
-static Block1Data* block1_data_ref (Block1Data* _data1_) {
-	g_atomic_int_inc (&_data1_->_ref_count_);
-	return _data1_;
+static Block2Data* block2_data_ref (Block2Data* _data2_) {
+	g_atomic_int_inc (&_data2_->_ref_count_);
+	return _data2_;
 }
 
 
-static void block1_data_unref (Block1Data* _data1_) {
-	if (g_atomic_int_dec_and_test (&_data1_->_ref_count_)) {
-		_g_object_unref0 (_data1_->self);
-		_g_object_unref0 (_data1_->entry);
-		g_slice_free (Block1Data, _data1_);
+static void block2_data_unref (Block2Data* _data2_) {
+	if (g_atomic_int_dec_and_test (&_data2_->_ref_count_)) {
+		_g_object_unref0 (_data2_->self);
+		_g_object_unref0 (_data2_->entry);
+		g_slice_free (Block2Data, _data2_);
 	}
 }
 
@@ -348,22 +354,22 @@ static void unity_places_place_home_entry_on_place_added (UnityPlacesPlaceHomeEn
 		GeeIterator* _entry_it;
 		_entry_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) unity_places_place_get_entries (place));
 		while (TRUE) {
-			Block1Data* _data1_;
+			Block2Data* _data2_;
 			DeeModelIter* iter;
-			_data1_ = g_slice_new0 (Block1Data);
-			_data1_->_ref_count_ = 1;
-			_data1_->self = g_object_ref (self);
+			_data2_ = g_slice_new0 (Block2Data);
+			_data2_->_ref_count_ = 1;
+			_data2_->self = g_object_ref (self);
 			if (!gee_iterator_next (_entry_it)) {
-				block1_data_unref (_data1_);
+				block2_data_unref (_data2_);
 				break;
 			}
-			_data1_->entry = (UnityPlacesPlaceEntry*) gee_iterator_get (_entry_it);
+			_data2_->entry = (UnityPlacesPlaceEntry*) gee_iterator_get (_entry_it);
 			iter = NULL;
-			iter = dee_model_append (unity_places_place_entry_get_entry_groups_model ((UnityPlacesPlaceEntry*) self), 0, "UnityLinkGroupRenderer", 1, unity_places_place_entry_get_name (_data1_->entry), 2, unity_places_place_entry_get_icon (_data1_->entry), -1, NULL);
-			gee_abstract_map_set ((GeeAbstractMap*) self->priv->entry_group_map, _data1_->entry, GUINT_TO_POINTER ((guint) dee_model_get_position (unity_places_place_entry_get_entry_groups_model ((UnityPlacesPlaceEntry*) self), iter)));
-			g_signal_connect_data (unity_places_place_entry_get_global_results_model (_data1_->entry), "row-added", (GCallback) __lambda7__dee_model_row_added, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
-			g_signal_connect_data (unity_places_place_entry_get_global_results_model (_data1_->entry), "row-removed", (GCallback) __lambda8__dee_model_row_removed, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
-			block1_data_unref (_data1_);
+			iter = dee_model_append (unity_places_place_entry_get_entry_groups_model ((UnityPlacesPlaceEntry*) self), 0, "UnityLinkGroupRenderer", 1, unity_places_place_entry_get_name (_data2_->entry), 2, unity_places_place_entry_get_icon (_data2_->entry), -1, NULL);
+			gee_abstract_map_set ((GeeAbstractMap*) self->priv->entry_group_map, _data2_->entry, GUINT_TO_POINTER ((guint) dee_model_get_position (unity_places_place_entry_get_entry_groups_model ((UnityPlacesPlaceEntry*) self), iter)));
+			g_signal_connect_data (unity_places_place_entry_get_global_results_model (_data2_->entry), "row-added", (GCallback) __lambda16__dee_model_row_added, block2_data_ref (_data2_), (GClosureNotify) block2_data_unref, 0);
+			g_signal_connect_data (unity_places_place_entry_get_global_results_model (_data2_->entry), "row-removed", (GCallback) __lambda17__dee_model_row_removed, block2_data_ref (_data2_), (GClosureNotify) block2_data_unref, 0);
+			block2_data_unref (_data2_);
 		}
 		_g_object_unref0 (_entry_it);
 	}
@@ -382,7 +388,7 @@ static void unity_places_place_home_entry_real_set_search (UnityPlacesPlaceEntry
 	self = (UnityPlacesPlaceHomeEntry*) base;
 	g_return_if_fail (search != NULL);
 	g_return_if_fail (hints != NULL);
-	g_debug ("places-place-home.vala:155: Global search %s", search);
+	g_debug ("places-place-home.vala:156: Global search %s", search);
 	{
 		GeeSet* _tmp0_;
 		GeeIterator* _tmp1_;
@@ -518,7 +524,7 @@ static char** unity_places_place_home_entry_real_get_mimetypes (UnityPlacesPlace
 }
 
 
-static char** _vala_array_dup2 (char** self, int length) {
+static char** _vala_array_dup3 (char** self, int length) {
 	char** result;
 	int i;
 	result = g_new0 (char*, length + 1);
@@ -534,7 +540,7 @@ static void unity_places_place_home_entry_real_set_mimetypes (UnityPlacesPlaceEn
 	char** _tmp2_;
 	char** _tmp1_;
 	self = (UnityPlacesPlaceHomeEntry*) base;
-	self->priv->_mimetypes = (_tmp2_ = (_tmp1_ = value, (_tmp1_ == NULL) ? ((gpointer) _tmp1_) : _vala_array_dup2 (_tmp1_, value_length1)), self->priv->_mimetypes = (_vala_array_free (self->priv->_mimetypes, self->priv->_mimetypes_length1, (GDestroyNotify) g_free), NULL), self->priv->_mimetypes_length1 = value_length1, self->priv->__mimetypes_size_ = self->priv->_mimetypes_length1, _tmp2_);
+	self->priv->_mimetypes = (_tmp2_ = (_tmp1_ = value, (_tmp1_ == NULL) ? ((gpointer) _tmp1_) : _vala_array_dup3 (_tmp1_, value_length1)), self->priv->_mimetypes = (_vala_array_free (self->priv->_mimetypes, self->priv->_mimetypes_length1, (GDestroyNotify) g_free), NULL), self->priv->_mimetypes_length1 = value_length1, self->priv->__mimetypes_size_ = self->priv->_mimetypes_length1, _tmp2_);
 	g_object_notify ((GObject *) self, "mimetypes");
 }
 
@@ -571,6 +577,23 @@ static void unity_places_place_home_entry_real_set_hints (UnityPlacesPlaceEntry*
 	self = (UnityPlacesPlaceHomeEntry*) base;
 	self->priv->_hints = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_hints), _tmp0_);
 	g_object_notify ((GObject *) self, "hints");
+}
+
+
+static UnityPlacesPlace* unity_places_place_home_entry_real_get_parent (UnityPlacesPlaceEntry* base) {
+	UnityPlacesPlace* result;
+	UnityPlacesPlaceHomeEntry* self;
+	self = (UnityPlacesPlaceHomeEntry*) base;
+	result = self->priv->_parent;
+	return result;
+}
+
+
+static void unity_places_place_home_entry_real_set_parent (UnityPlacesPlaceEntry* base, UnityPlacesPlace* value) {
+	UnityPlacesPlaceHomeEntry* self;
+	self = (UnityPlacesPlaceHomeEntry*) base;
+	self->priv->_parent = value;
+	g_object_notify ((GObject *) self, "parent");
 }
 
 
@@ -848,6 +871,7 @@ static void unity_places_place_home_entry_class_init (UnityPlacesPlaceHomeEntryC
 	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_HOME_ENTRY_MIMETYPES, "mimetypes");
 	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_HOME_ENTRY_SENSITIVE, "sensitive");
 	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_HOME_ENTRY_HINTS, "hints");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_HOME_ENTRY_PARENT, "parent");
 	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_HOME_ENTRY_ONLINE, "online");
 	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_HOME_ENTRY_ACTIVE, "active");
 	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_HOME_ENTRY_SECTIONS_MODEL, "sections-model");
@@ -883,6 +907,8 @@ static void unity_places_place_home_entry_unity_places_place_entry_interface_ini
 	iface->set_sensitive = unity_places_place_home_entry_real_set_sensitive;
 	iface->get_hints = unity_places_place_home_entry_real_get_hints;
 	iface->set_hints = unity_places_place_home_entry_real_set_hints;
+	iface->get_parent = unity_places_place_home_entry_real_get_parent;
+	iface->set_parent = unity_places_place_home_entry_real_set_parent;
 	iface->get_online = unity_places_place_home_entry_real_get_online;
 	iface->set_online = unity_places_place_home_entry_real_set_online;
 	iface->get_active = unity_places_place_home_entry_real_get_active;
@@ -980,6 +1006,9 @@ static void unity_places_place_home_entry_get_property (GObject * object, guint 
 		case UNITY_PLACES_PLACE_HOME_ENTRY_HINTS:
 		g_value_set_object (value, unity_places_place_entry_get_hints ((UnityPlacesPlaceEntry*) self));
 		break;
+		case UNITY_PLACES_PLACE_HOME_ENTRY_PARENT:
+		g_value_set_object (value, unity_places_place_entry_get_parent ((UnityPlacesPlaceEntry*) self));
+		break;
 		case UNITY_PLACES_PLACE_HOME_ENTRY_ONLINE:
 		g_value_set_boolean (value, unity_places_place_entry_get_online ((UnityPlacesPlaceEntry*) self));
 		break;
@@ -1052,6 +1081,9 @@ static void unity_places_place_home_entry_set_property (GObject * object, guint 
 		break;
 		case UNITY_PLACES_PLACE_HOME_ENTRY_HINTS:
 		unity_places_place_entry_set_hints ((UnityPlacesPlaceEntry*) self, g_value_get_object (value));
+		break;
+		case UNITY_PLACES_PLACE_HOME_ENTRY_PARENT:
+		unity_places_place_entry_set_parent ((UnityPlacesPlaceEntry*) self, g_value_get_object (value));
 		break;
 		case UNITY_PLACES_PLACE_HOME_ENTRY_ONLINE:
 		unity_places_place_entry_set_online ((UnityPlacesPlaceEntry*) self, g_value_get_boolean (value));

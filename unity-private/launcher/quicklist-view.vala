@@ -42,7 +42,6 @@ namespace Unity.Launcher
   // we call this instead of Ctk.Menu so you can alter this to look right
   public class QuicklistMenu : Ctk.MenuExpandable
   {
-    Ctk.LayerActor ql_background;
     int            last_width;
     int            last_height;
     float          cached_x; // needed to fix LP: #525905

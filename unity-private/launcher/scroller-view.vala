@@ -49,6 +49,7 @@ namespace Unity.Launcher
   {
     // please don't reference this outside of this view, its only public for construct
     public ScrollerModel model {get; construct;}
+    public Ctk.EffectCache cache {get; construct;}
 
     /* our scroller constants */
     public int spacing = 6;
@@ -68,17 +69,21 @@ namespace Unity.Launcher
      */
     private bool button_down = false;
     private float total_child_height = 0.0f;
-    private ScrollerPhase current_phase = ScrollerPhase.NONE;
+    private ScrollerPhase current_phase = ScrollerPhase.SETTLING;
     private uint last_motion_event_time = 0;
     private ScrollerViewType view_type = ScrollerViewType.CONTRACTED;
     /*
      * scrolling variables
      */
-    private bool is_scrolling = false; //set to true when the user is phsically scrolling
+    private bool is_scrolling; //set to true when the user is physically scrolling
     private float scroll_position = 0.0f;
     private float settle_position = 0.0f; // when we calculate the settle position for animation, we store it here
 
-    private Clutter.Timeline fling_timeline;
+    public bool is_autoscrolling {get; set;} //set to true when the mouse is at the top/bottom
+    private bool autoscroll_anim_active = false;
+    private int autoscroll_direction = 0;
+
+    public Clutter.Timeline fling_timeline;
 
     private float previous_y_position = 0.0f; // the last known y position of the pointer
     private uint previous_y_time = 0; // the time (ms) that previous_y_position was set
@@ -97,9 +102,9 @@ namespace Unity.Launcher
      */
     private Gee.ArrayList<ScrollerChild> child_refs; // we sometimes need to hold a reference to a child
 
-    public ScrollerView (ScrollerModel _model)
+    public ScrollerView (ScrollerModel _model, Ctk.EffectCache _cache)
     {
-      Object (model:_model);
+      Object (model:_model, cache:_cache);
     }
 
     construct
@@ -131,12 +136,24 @@ namespace Unity.Launcher
       button_release_event.connect (on_button_release_event);
       motion_event.connect (on_motion_event);
       enter_event.connect (on_enter_event);
-      leave_event.connect (on_leave_event);
-
+      parent_set.connect (() => {
+          get_stage ().motion_event.connect (on_stage_motion);
+      });
+      notify["is-autoscrolling"].connect (on_auto_scrolling_state_change);
+      Unity.Drag.Controller.get_default ().drag_motion.connect (on_drag_motion_event);
       // set a timeline for our fling animation
       fling_timeline = new Clutter.Timeline (1000);
       fling_timeline.loop = true;
       fling_timeline.new_frame.connect (this.on_scroller_frame);
+      fling_timeline.started.connect (() => {
+        cache.invalidate_texture_cache ();
+      });
+      fling_timeline.completed.connect (() => {
+        Timeout.add (0, () => {
+        cache.update_texture_cache ();
+        return false;
+        });
+      });
 
       //on drag start we need to disengage our own drag attempts
       var drag_controller = Drag.Controller.get_default ();
@@ -167,8 +184,11 @@ namespace Unity.Launcher
           if (anim is Clutter.Animation)
             {
               Clutter.Interval interval = anim.get_interval ("position");
-              interval.get_final_value (value);
-              child.position = value.get_float ();
+              if (interval is Clutter.Interval)
+                {
+                  interval.get_final_value (value);
+                  child.position = value.get_float ();
+                }
             }
         }
 
@@ -181,12 +201,15 @@ namespace Unity.Launcher
             list = list.next;
           }
 
+        ScrollerChild child = (Drag.Controller.get_default ().get_drag_model () as ScrollerChildController).child;
+
+        value = model.clamp (child, value);
+
         return value;
     }
 
     public int get_model_index_at_y_pos (float y, bool return_minus_if_fail=false)
     {
-
       // trying out a different method
       int iy = (int)y;
       Clutter.Actor picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy);
@@ -229,9 +252,15 @@ namespace Unity.Launcher
     }
 
     // will move the scroller by the given pixels
-    private void move_scroll_position (float pixels)
+    private void move_scroll_position (float pixels, bool check_bounds=false)
     {
       scroll_position += pixels;
+
+      if (check_bounds)
+        {
+          scroll_position = Math.fminf (scroll_position, 0);
+          scroll_position = Math.fmaxf (scroll_position, - (get_total_children_height () - get_available_height ()));
+        }
       order_children (true);
       queue_relayout ();
     }
@@ -297,6 +326,21 @@ namespace Unity.Launcher
     {
       order_children (false);
       queue_relayout ();
+    }
+
+    private void on_auto_scrolling_state_change ()
+    {
+      if (autoscroll_anim_active == false && is_autoscrolling)
+      {
+        Timeout.add (33, () => {
+          float speed = 12.0f - autoscroll_mouse_pos_cache;
+          speed /= 12.0f;
+          speed *= autoscroll_direction;
+          move_scroll_position (speed, true);
+          autoscroll_anim_active = is_autoscrolling;
+          return is_autoscrolling;
+        });
+      }
     }
 
     /*
@@ -367,8 +411,6 @@ namespace Unity.Launcher
       if (view_type == ScrollerViewType.EXPANDED) return false;
       view_type = ScrollerViewType.EXPANDED;
 
-      Unity.global_shell.add_fullscreen_request (this);
-
       // we need to set a new scroll position
       // get the index of the icon we are hovering over
       if (get_total_children_height () > get_available_height ())
@@ -401,31 +443,71 @@ namespace Unity.Launcher
       return false;
     }
 
-    private bool on_leave_event (Clutter.Event event)
+    private bool on_stage_motion (Clutter.Event event)
     {
       if (view_type == ScrollerViewType.CONTRACTED) return false;
-      if (event.crossing.x < get_width ()-1) return false;
+      if (event.crossing.x < get_width ()) return false;
 
-      Unity.global_shell.remove_fullscreen_request (this);
-
-      // need to store the focused item
-      focused_launcher = get_model_index_at_y_pos (event.crossing.y);
+      foreach (ScrollerChild child in model)
+        {
+          if (child.active)
+            focused_launcher = model.index_of (child);
+        }
 
       view_type = ScrollerViewType.CONTRACTED;
       order_children (false);
       queue_relayout ();
+      is_autoscrolling = false;
       return false;
+    }
+
+    float autoscroll_mouse_pos_cache = 0.0f;
+    private bool on_autoscroll_motion_check (float y)
+    {
+      if (get_total_children_height () < get_available_height ())
+        {
+          is_autoscrolling = false;
+        }
+      else
+        {
+          //check for autoscroll events
+          float pos_x, pos_y;
+          get_transformed_position (out pos_x, out pos_y);
+          float transformed_y = y - pos_y;
+
+          autoscroll_mouse_pos_cache = transformed_y;
+          if (transformed_y > (get_height ()/2))
+            {
+              autoscroll_direction = -1;
+              autoscroll_mouse_pos_cache -= get_height ();
+            }
+          else
+            {
+              autoscroll_direction = 1;
+            }
+          if (transformed_y < 12 || transformed_y > (get_height () - 12))
+            is_autoscrolling = true;
+          else
+            is_autoscrolling = false;
+        }
+      return false;
+    }
+
+    private void on_drag_motion_event (Unity.Drag.Model model, float x, float y)
+    {
+      on_autoscroll_motion_check (y);
     }
 
     private bool on_motion_event (Clutter.Event event)
     {
+      on_autoscroll_motion_check (event.motion.y);
+
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging)
       {
         // we are dragging from somewhere else, ignore motion events
         return false;
       }
-
       last_motion_event_time = event.motion.time;
 
       if (button_down && is_scrolling == false && view_type != ScrollerViewType.CONTRACTED)
@@ -515,6 +597,11 @@ namespace Unity.Launcher
               assert_not_reached ();
           }
         }
+
+      if (current_phase == ScrollerPhase.NONE)
+        cache.update_texture_cache ();
+      else
+        cache.invalidate_texture_cache ();
 
       stored_delta = delta;
     }
@@ -692,7 +779,8 @@ namespace Unity.Launcher
                   //GLib.Value value = GLib.Value (GLib.Type.from_name ("string"));
                   GLib.Value value = Value (typeof (float));
                   Clutter.Interval interval = child.get_animation ().get_interval ("position");
-                  interval.get_final_value (value);
+                  if (interval is Clutter.Interval)
+                    interval.get_final_value (value);
                   if (value.get_float () != transitions[index].position)
                     {
                       // disable the current animation before starting a new one

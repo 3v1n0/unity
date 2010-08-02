@@ -72,7 +72,6 @@ struct _UnityTestingBackgroundPrivate {
 	char* DEFAULT_PIC_OPTS;
 	char* DEFAULT_SHADE_TYPE;
 	char* DEFAULT_AMBIANCE_COL;
-	char* DEFAULT_RADIANCE_COL;
 	char* DEFAULT_FILENAME;
 	ClutterCairoTexture* bg_gradient;
 	ClutterTexture* bg_image;
@@ -96,6 +95,8 @@ enum  {
 static void _unity_testing_background_handle_image_placement (UnityTestingBackground* self);
 static void _unity_testing_background_update_image (UnityTestingBackground* self);
 static void _unity_testing_background_update_gradient (UnityTestingBackground* self);
+static gboolean _lambda64_ (UnityTestingBackground* self);
+static gboolean __lambda64__gsource_func (gpointer self);
 static void _unity_testing_background_on_allocation_changed (UnityTestingBackground* self);
 static void _unity_testing_background_on_gconf_changed (UnityTestingBackground* self, GConfClient* client, guint cxnid, GConfEntry* entry);
 UnityTestingBackground* unity_testing_background_new (void);
@@ -180,13 +181,28 @@ static void _unity_testing_background_handle_image_placement (UnityTestingBackgr
 }
 
 
-static void _unity_testing_background_on_allocation_changed (UnityTestingBackground* self) {
-	g_return_if_fail (self != NULL);
+static gboolean _lambda64_ (UnityTestingBackground* self) {
+	gboolean result = FALSE;
 	if (_vala_strcmp0 (self->priv->filename, "") != 0) {
 		_unity_testing_background_update_image (self);
 	} else {
 		_unity_testing_background_update_gradient (self);
 	}
+	result = FALSE;
+	return result;
+}
+
+
+static gboolean __lambda64__gsource_func (gpointer self) {
+	gboolean result;
+	result = _lambda64_ (self);
+	return result;
+}
+
+
+static void _unity_testing_background_on_allocation_changed (UnityTestingBackground* self) {
+	g_return_if_fail (self != NULL);
+	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda64__gsource_func, g_object_ref (self), g_object_unref);
 }
 
 
@@ -195,28 +211,36 @@ static void _unity_testing_background_update_image (UnityTestingBackground* self
 	g_return_if_fail (self != NULL);
 	_inner_error_ = NULL;
 	if (clutter_container_find_child_by_name ((ClutterContainer*) self, "bg_image") != CLUTTER_ACTOR (self->priv->bg_image)) {
-		clutter_container_remove_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->bg_gradient);
+		gboolean _tmp0_ = FALSE;
+		if (CLUTTER_IS_ACTOR (self->priv->bg_gradient)) {
+			_tmp0_ = clutter_actor_get_parent ((ClutterActor*) self->priv->bg_gradient) == CLUTTER_ACTOR (self);
+		} else {
+			_tmp0_ = FALSE;
+		}
+		if (_tmp0_) {
+			clutter_container_remove_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->bg_gradient);
+		}
 		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->bg_image);
 		clutter_actor_show ((ClutterActor*) self->priv->bg_image);
 	}
 	{
 		clutter_texture_set_from_file (self->priv->bg_image, self->priv->filename, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch32_g_error;
+			goto __catch46_g_error;
 		}
 	}
-	goto __finally32;
-	__catch32_g_error:
+	goto __finally46;
+	__catch46_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("background.vala:234: Background: Unable to load background file %s: %s", self->priv->filename, e->message);
+			g_warning ("background.vala:241: Background: Unable to load background file %s: %s", self->priv->filename, e->message);
 			_g_error_free0 (e);
 		}
 	}
-	__finally32:
+	__finally46:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -231,7 +255,15 @@ static void _unity_testing_background_update_gradient (UnityTestingBackground* s
 	GdkColor secondary = {0};
 	g_return_if_fail (self != NULL);
 	if (clutter_container_find_child_by_name ((ClutterContainer*) self, "bg_gradient") != CLUTTER_ACTOR (self->priv->bg_gradient)) {
-		clutter_container_remove_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->bg_image);
+		gboolean _tmp0_ = FALSE;
+		if (CLUTTER_IS_ACTOR (self->priv->bg_image)) {
+			_tmp0_ = clutter_actor_get_parent ((ClutterActor*) self->priv->bg_image) == CLUTTER_ACTOR (self);
+		} else {
+			_tmp0_ = FALSE;
+		}
+		if (_tmp0_) {
+			clutter_container_remove_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->bg_image);
+		}
 		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->bg_gradient);
 		clutter_actor_show ((ClutterActor*) self->priv->bg_gradient);
 	}
@@ -312,12 +344,12 @@ static void _unity_testing_background_on_gconf_changed (UnityTestingBackground* 
 		char* _tmp1_;
 		_tmp0_ = gconf_client_get_string (self->priv->client, self->priv->BG_PIC_OPTS, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch33_g_error;
+			goto __catch47_g_error;
 		}
 		new_value = (_tmp1_ = _tmp0_, _g_free0 (new_value), _tmp1_);
 	}
-	goto __finally33;
-	__catch33_g_error:
+	goto __finally47;
+	__catch47_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -328,7 +360,7 @@ static void _unity_testing_background_on_gconf_changed (UnityTestingBackground* 
 			_g_error_free0 (e);
 		}
 	}
-	__finally33:
+	__finally47:
 	if (_inner_error_ != NULL) {
 		_g_free0 (new_value);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -345,12 +377,12 @@ static void _unity_testing_background_on_gconf_changed (UnityTestingBackground* 
 		char* _tmp5_;
 		_tmp4_ = gconf_client_get_string (self->priv->client, self->priv->BG_SHADE_TYPE, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch34_g_error;
+			goto __catch48_g_error;
 		}
 		new_value = (_tmp5_ = _tmp4_, _g_free0 (new_value), _tmp5_);
 	}
-	goto __finally34;
-	__catch34_g_error:
+	goto __finally48;
+	__catch48_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -361,7 +393,7 @@ static void _unity_testing_background_on_gconf_changed (UnityTestingBackground* 
 			_g_error_free0 (e);
 		}
 	}
-	__finally34:
+	__finally48:
 	if (_inner_error_ != NULL) {
 		_g_free0 (new_value);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -378,12 +410,12 @@ static void _unity_testing_background_on_gconf_changed (UnityTestingBackground* 
 		char* _tmp9_;
 		_tmp8_ = gconf_client_get_string (self->priv->client, self->priv->BG_PRIM_COL, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch35_g_error;
+			goto __catch49_g_error;
 		}
 		new_value = (_tmp9_ = _tmp8_, _g_free0 (new_value), _tmp9_);
 	}
-	goto __finally35;
-	__catch35_g_error:
+	goto __finally49;
+	__catch49_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -394,7 +426,7 @@ static void _unity_testing_background_on_gconf_changed (UnityTestingBackground* 
 			_g_error_free0 (e);
 		}
 	}
-	__finally35:
+	__finally49:
 	if (_inner_error_ != NULL) {
 		_g_free0 (new_value);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -411,12 +443,12 @@ static void _unity_testing_background_on_gconf_changed (UnityTestingBackground* 
 		char* _tmp13_;
 		_tmp12_ = gconf_client_get_string (self->priv->client, self->priv->BG_SEC_COL, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch36_g_error;
+			goto __catch50_g_error;
 		}
 		new_value = (_tmp13_ = _tmp12_, _g_free0 (new_value), _tmp13_);
 	}
-	goto __finally36;
-	__catch36_g_error:
+	goto __finally50;
+	__catch50_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -427,7 +459,7 @@ static void _unity_testing_background_on_gconf_changed (UnityTestingBackground* 
 			_g_error_free0 (e);
 		}
 	}
-	__finally36:
+	__finally50:
 	if (_inner_error_ != NULL) {
 		_g_free0 (new_value);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -444,12 +476,12 @@ static void _unity_testing_background_on_gconf_changed (UnityTestingBackground* 
 		char* _tmp17_;
 		_tmp16_ = gconf_client_get_string (self->priv->client, self->priv->BG_FILENAME, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch37_g_error;
+			goto __catch51_g_error;
 		}
 		new_value = (_tmp17_ = _tmp16_, _g_free0 (new_value), _tmp17_);
 	}
-	goto __finally37;
-	__catch37_g_error:
+	goto __finally51;
+	__catch51_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -460,7 +492,7 @@ static void _unity_testing_background_on_gconf_changed (UnityTestingBackground* 
 			_g_error_free0 (e);
 		}
 	}
-	__finally37:
+	__finally51:
 	if (_inner_error_ != NULL) {
 		_g_free0 (new_value);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -535,22 +567,22 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 		{
 			gconf_client_add_dir (self->priv->client, self->priv->BG_DIR, GCONF_CLIENT_PRELOAD_NONE, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch38_g_error;
+				goto __catch52_g_error;
 			}
 		}
-		goto __finally38;
-		__catch38_g_error:
+		goto __finally52;
+		__catch52_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("background.vala:63: Background: Unable to monitor background-settings:" \
+				g_warning ("background.vala:62: Background: Unable to monitor background-settings:" \
 " %s", e->message);
 				_g_error_free0 (e);
 			}
 		}
-		__finally38:
+		__finally52:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -560,12 +592,12 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 			char* _tmp3_;
 			_tmp2_ = gconf_client_get_string (self->priv->client, self->priv->BG_PIC_OPTS, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch39_g_error;
+				goto __catch53_g_error;
 			}
 			self->priv->pic_opts = (_tmp3_ = _tmp2_, _g_free0 (self->priv->pic_opts), _tmp3_);
 		}
-		goto __finally39;
-		__catch39_g_error:
+		goto __finally53;
+		__catch53_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -576,7 +608,7 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 				_g_error_free0 (e);
 			}
 		}
-		__finally39:
+		__finally53:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -586,12 +618,12 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 			char* _tmp6_;
 			_tmp5_ = gconf_client_get_string (self->priv->client, self->priv->BG_SHADE_TYPE, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch40_g_error;
+				goto __catch54_g_error;
 			}
 			self->priv->shade_type = (_tmp6_ = _tmp5_, _g_free0 (self->priv->shade_type), _tmp6_);
 		}
-		goto __finally40;
-		__catch40_g_error:
+		goto __finally54;
+		__catch54_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -602,7 +634,7 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 				_g_error_free0 (e);
 			}
 		}
-		__finally40:
+		__finally54:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -612,12 +644,12 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 			char* _tmp9_;
 			_tmp8_ = gconf_client_get_string (self->priv->client, self->priv->BG_PRIM_COL, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch41_g_error;
+				goto __catch55_g_error;
 			}
 			self->priv->prim_col = (_tmp9_ = _tmp8_, _g_free0 (self->priv->prim_col), _tmp9_);
 		}
-		goto __finally41;
-		__catch41_g_error:
+		goto __finally55;
+		__catch55_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -628,7 +660,7 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 				_g_error_free0 (e);
 			}
 		}
-		__finally41:
+		__finally55:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -638,12 +670,12 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 			char* _tmp12_;
 			_tmp11_ = gconf_client_get_string (self->priv->client, self->priv->BG_SEC_COL, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch42_g_error;
+				goto __catch56_g_error;
 			}
 			self->priv->sec_col = (_tmp12_ = _tmp11_, _g_free0 (self->priv->sec_col), _tmp12_);
 		}
-		goto __finally42;
-		__catch42_g_error:
+		goto __finally56;
+		__catch56_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -654,7 +686,7 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 				_g_error_free0 (e);
 			}
 		}
-		__finally42:
+		__finally56:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -664,12 +696,12 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 			char* _tmp15_;
 			_tmp14_ = gconf_client_get_string (self->priv->client, self->priv->BG_FILENAME, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch43_g_error;
+				goto __catch57_g_error;
 			}
 			self->priv->filename = (_tmp15_ = _tmp14_, _g_free0 (self->priv->filename), _tmp15_);
 		}
-		goto __finally43;
-		__catch43_g_error:
+		goto __finally57;
+		__catch57_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -680,7 +712,7 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 				_g_error_free0 (e);
 			}
 		}
-		__finally43:
+		__finally57:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -688,21 +720,21 @@ static GObject * unity_testing_background_constructor (GType type, guint n_const
 		{
 			gconf_client_notify_add (self->priv->client, self->priv->BG_DIR, __unity_testing_background_on_gconf_changed_gconf_client_notify_func, g_object_ref (self), g_object_unref, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch44_g_error;
+				goto __catch58_g_error;
 			}
 		}
-		goto __finally44;
-		__catch44_g_error:
+		goto __finally58;
+		__catch58_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("background.vala:120: Background: Unable to monitor background: %s", e->message);
+				g_warning ("background.vala:119: Background: Unable to monitor background: %s", e->message);
 				_g_error_free0 (e);
 			}
 		}
-		__finally44:
+		__finally58:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -740,7 +772,6 @@ static void unity_testing_background_instance_init (UnityTestingBackground * sel
 	self->priv->DEFAULT_PIC_OPTS = g_strdup ("none");
 	self->priv->DEFAULT_SHADE_TYPE = g_strdup ("solid");
 	self->priv->DEFAULT_AMBIANCE_COL = g_strdup ("#2C2C00001E1E");
-	self->priv->DEFAULT_RADIANCE_COL = g_strdup ("#AEAEA7A79F9F");
 	self->priv->DEFAULT_FILENAME = g_strdup ("/usr/share/backgrounds/warty-final.png");
 }
 
@@ -757,7 +788,6 @@ static void unity_testing_background_finalize (GObject* obj) {
 	_g_free0 (self->priv->DEFAULT_PIC_OPTS);
 	_g_free0 (self->priv->DEFAULT_SHADE_TYPE);
 	_g_free0 (self->priv->DEFAULT_AMBIANCE_COL);
-	_g_free0 (self->priv->DEFAULT_RADIANCE_COL);
 	_g_free0 (self->priv->DEFAULT_FILENAME);
 	_g_object_unref0 (self->priv->bg_gradient);
 	_g_object_unref0 (self->priv->bg_image);

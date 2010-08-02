@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unity-private.h>
+#include <config.h>
 
 
 #define UNITY_TESTS_UNIT_TYPE_PLACES_PLACE_SUITE (unity_tests_unit_places_place_suite_get_type ())
@@ -136,7 +137,7 @@ static void unity_tests_unit_places_place_suite_test_simple_placefile (UnityTest
 	_inner_error_ = NULL;
 	file = g_key_file_new ();
 	{
-		g_key_file_load_from_file (file, TESTDIR "/data/place0.place", G_KEY_FILE_NONE, &_inner_error_);
+		g_key_file_load_from_file (file, TESTUNITDIR "/data/place0.place", G_KEY_FILE_NONE, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch0_g_error;
 		}
@@ -184,7 +185,7 @@ static void unity_tests_unit_places_place_suite_test_advanced_place_file (UnityT
 	_inner_error_ = NULL;
 	file = g_key_file_new ();
 	{
-		g_key_file_load_from_file (file, TESTDIR "/data/place1.place", G_KEY_FILE_NONE, &_inner_error_);
+		g_key_file_load_from_file (file, TESTUNITDIR "/data/place1.place", G_KEY_FILE_NONE, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch1_g_error;
 		}
@@ -251,7 +252,7 @@ static void unity_tests_unit_places_place_suite_test_bad_simple_place_file (Unit
 	_inner_error_ = NULL;
 	file = g_key_file_new ();
 	{
-		g_key_file_load_from_file (file, TESTDIR "/data/place0.badplace", G_KEY_FILE_NONE, &_inner_error_);
+		g_key_file_load_from_file (file, TESTUNITDIR "/data/place0.badplace", G_KEY_FILE_NONE, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch2_g_error;
 		}
@@ -294,7 +295,7 @@ static void unity_tests_unit_places_place_suite_test_bad_advanced_place_file (Un
 	_inner_error_ = NULL;
 	file = g_key_file_new ();
 	{
-		g_key_file_load_from_file (file, TESTDIR "/data/place1.badplace", G_KEY_FILE_NONE, &_inner_error_);
+		g_key_file_load_from_file (file, TESTUNITDIR "/data/place1.badplace", G_KEY_FILE_NONE, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch3_g_error;
 		}

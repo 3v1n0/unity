@@ -40,7 +40,6 @@
 typedef struct _UnityLauncherQuicklistMenu UnityLauncherQuicklistMenu;
 typedef struct _UnityLauncherQuicklistMenuClass UnityLauncherQuicklistMenuClass;
 typedef struct _UnityLauncherQuicklistMenuPrivate UnityLauncherQuicklistMenuPrivate;
-#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
 struct _UnityLauncherQuicklistMenu {
 	CtkMenuExpandable parent_instance;
@@ -52,7 +51,6 @@ struct _UnityLauncherQuicklistMenuClass {
 };
 
 struct _UnityLauncherQuicklistMenuPrivate {
-	CtkLayerActor* ql_background;
 	gint last_width;
 	gint last_height;
 	float cached_x;
@@ -120,7 +118,7 @@ static void unity_launcher_quicklist_menu_real_allocate (ClutterActor* base, con
 	}
 	self->priv->last_width = new_width;
 	self->priv->last_height = new_height;
-	g_debug ("quicklist-view.vala:85: Num Items in Menu %d \n", ctk_menu_get_num_items ((CtkMenu*) self));
+	g_debug ("quicklist-view.vala:84: Num Items in Menu %d \n", ctk_menu_get_num_items ((CtkMenu*) self));
 	CLUTTER_ACTOR_CLASS (unity_launcher_quicklist_menu_parent_class)->allocate ((ClutterActor*) CTK_MENU_EXPANDABLE (self), box, flags);
 }
 
@@ -176,7 +174,6 @@ static void unity_launcher_quicklist_menu_instance_init (UnityLauncherQuicklistM
 static void unity_launcher_quicklist_menu_finalize (GObject* obj) {
 	UnityLauncherQuicklistMenu * self;
 	self = UNITY_LAUNCHER_QUICKLIST_MENU (obj);
-	_g_object_unref0 (self->priv->ql_background);
 	G_OBJECT_CLASS (unity_launcher_quicklist_menu_parent_class)->finalize (obj);
 }
 

@@ -38,6 +38,70 @@ namespace Unity.Panel
                                                             this);
     }
 
+    construct
+    {
+      theme_image = new Ctk.Image.from_filename (22, "/usr/share/icons/unity-icon-theme/places/22/distributor-logo.png");
+
+      add_actor (theme_image);
+      theme_image.show ();
+
+      motion_event.connect (on_motion_event);
+      clicked.connect (on_clicked);
+
+      shell.mode_changed.connect (on_mode_changed);
+
+      notify["state"].connect (on_state_changed);
+
+      width += 3.0f;
+
+      glow = new Ctk.EffectGlow ();
+      glow.set_color ({ 255, 255, 255, 255 });
+      glow.set_factor (0.0f);
+      glow.set_margin (5);
+
+      // FIXME: the glow is currently not correctly updated when the state of
+      // the button changes thus it's disabled for the moment, in order to get
+      // the other rendering-features of the patch into trunk as they already
+      // solve giving the user a clue that the BFB/COF is a clickable button
+      //theme_image.add_effect (glow);
+
+      try
+        {
+          bfb_bg_normal = new Clutter.Texture.from_file (
+                                   "/usr/share/unity/themes/bfb_bg_normal.png");
+        }
+      catch (Error e)
+        {
+          warning ("Could not load normal-state bg-texture: %s", e.message);
+        }
+
+      try
+        {
+          bfb_bg_prelight = new Clutter.Texture.from_file (
+                                 "/usr/share/unity/themes/bfb_bg_prelight.png");
+        }
+      catch (Error e)
+        {
+          warning ("Could not load prelight-state bg-texture: %s", e.message);
+        }
+
+      try
+        {
+          bfb_bg_active = new Clutter.Texture.from_file (
+                                   "/usr/share/unity/themes/bfb_bg_active.png");
+        }
+      catch (Error e)
+        {
+          warning ("Could not load active-state bg-texture: %s", e.message);
+        }
+
+      //set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
+      //set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
+      set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bfb_bg_active);
+
+      search_shown = false;
+    }
+
     private override void allocate (Clutter.ActorBox        box,
                                     Clutter.AllocationFlags flags)
     {
@@ -85,68 +149,6 @@ namespace Unity.Panel
       base.allocate (box, flags);
     }
 
-    construct
-    {
-      theme_image = new Ctk.Image.from_filename (22, "/usr/share/icons/unity-icon-theme/places/22/distributor-logo.png");
-
-      add_actor (theme_image);
-      theme_image.show ();
-
-      motion_event.connect (on_motion_event);
-      clicked.connect (on_clicked);
-
-      notify["state"].connect (on_state_changed);
-
-      width += 3.0f;
-
-      glow = new Ctk.EffectGlow ();
-      glow.set_color ({ 255, 255, 255, 255 });
-      glow.set_factor (0.0f);
-      glow.set_margin (5);
-
-      // FIXME: the glow is currently not correctly updated when the state of
-      // the button changes thus it's disabled for the moment, in order to get
-      // the other rendering-features of the patch into trunk as they already
-      // solve giving the user a clue that the BFB/COF is a clickable button
-      //theme_image.add_effect (glow);
-
-      try
-        {
-          bfb_bg_normal = new Clutter.Texture.from_file (
-                                   "/usr/share/unity/themes/bfb_bg_normal.png");
-        }
-      catch (Error e)
-        {
-          warning ("Could not load normal-state bg-texture: %s", e.message);
-        }
-
-      try
-        {
-          bfb_bg_prelight = new Clutter.Texture.from_file (
-                                 "/usr/share/unity/themes/bfb_bg_prelight.png");
-        }
-      catch (Error e)
-        {
-          warning ("Could not load prelight-state bg-texture: %s", e.message);
-        }
-
-      try
-        {
-          bfb_bg_active = new Clutter.Texture.from_file (
-                                   "/usr/share/unity/themes/bfb_bg_active.png");
-        }
-      catch (Error e)
-        {
-          warning ("Could not load active-state bg-texture: %s", e.message);
-        }
-
-      set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
-      set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
-      set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bfb_bg_active);
-
-      search_shown = false;
-    }
-
     private void on_state_changed ()
     {
       switch (this.get_state ())
@@ -180,16 +182,12 @@ namespace Unity.Panel
       nat_width = shell.get_launcher_width_foobar ();
     }
 
-    private void on_clicked ()
+    private void on_mode_changed (ShellMode mode)
     {
-      shell.show_unity ();
-      MenuManager manager = MenuManager.get_default ();
-      manager.popdown_current_menu ();
-
-      if (search_shown)
+      if (mode == ShellMode.MINIMIZED)
         {
-          set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
-          set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
+          //set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
+          //set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
           set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bfb_bg_active);
           search_shown = false;
         }
@@ -200,7 +198,17 @@ namespace Unity.Panel
           set_background_for_state (Ctk.ActorState.STATE_ACTIVE, null);
           search_shown = true;
         }
+
       do_queue_redraw ();
+    }
+
+    private void on_clicked ()
+    {
+      shell.show_unity ();
+      MenuManager manager = MenuManager.get_default ();
+      manager.popdown_current_menu ();
+
+      on_mode_changed (shell.get_mode ());
     }
 
     private bool on_motion_event (Clutter.Event event)

@@ -252,6 +252,7 @@ UnitySpacesButtonController* unity_spaces_button_controller_construct (GType obj
 UnitySpacesManager* unity_spaces_manager_new (UnityPlugin* plugin);
 UnitySpacesManager* unity_spaces_manager_construct (GType object_type, UnityPlugin* plugin);
 void unity_spaces_manager_set_padding (UnitySpacesManager* self, guint top, guint right, guint left, guint bottom);
+void unity_spaces_manager_hide_spaces_picker (UnitySpacesManager* self);
 void unity_spaces_manager_show_spaces_picker (UnitySpacesManager* self);
 UnityLauncherScrollerChild* unity_spaces_manager_get_button (UnitySpacesManager* self);
 guint unity_spaces_manager_get_top_padding (UnitySpacesManager* self);
@@ -287,6 +288,7 @@ UnityPlugin* unity_plugin_construct (GType object_type);
 MutterPlugin* unity_plugin_get_plugin (UnityPlugin* self);
 void unity_plugin_set_plugin (UnityPlugin* self, MutterPlugin* value);
 UnityExposeManager* unity_plugin_get_expose_manager (UnityPlugin* self);
+UnityTestingBackground* unity_plugin_get_background (UnityPlugin* self);
 gboolean unity_plugin_get_expose_showing (UnityPlugin* self);
 GType unity_maximus_get_type (void) G_GNUC_CONST;
 extern char* unity_maximus_user_unmaximize_hint;

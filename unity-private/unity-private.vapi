@@ -10,10 +10,11 @@ namespace Unity {
 			public override void activate ();
 			public void attach_application (Bamf.Application application);
 			public void close_windows ();
+			public void closed ();
 			public bool debug_is_application_attached ();
 			public void detach_application ();
 			public override void get_menu_actions (Unity.Launcher.ScrollerChildController.menu_cb callback);
-			public override Unity.Launcher.QuicklistController get_menu_controller ();
+			public override Unity.Launcher.QuicklistController? get_menu_controller ();
 			public override void get_menu_navigation (Unity.Launcher.ScrollerChildController.menu_cb callback);
 			public float get_priority () throws Unity.Launcher.AppTypeError;
 			public bool is_sticky ();
@@ -28,10 +29,17 @@ namespace Unity {
 		[CCode (cheader_filename = "unity-private.h")]
 		public class Launcher : GLib.Object {
 			public Launcher (Unity.Shell shell);
+			public Ctk.EffectCache get_actor_cache ();
+			public Clutter.Actor get_container ();
 			public Clutter.Actor get_view ();
 			public float get_width ();
 			public Unity.Launcher.ScrollerModel model { get; set; }
 			public Unity.Shell shell { get; construct; }
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class LauncherContainer : Ctk.Bin {
+			public Ctk.EffectCache cache;
+			public LauncherContainer ();
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class QuicklistCheckMenuItem : Ctk.CheckMenuItem {
@@ -85,6 +93,13 @@ namespace Unity {
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class ScrollerChild : Ctk.Actor {
+			[CCode (cprefix = "UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_", cheader_filename = "unity-private.h")]
+			public enum GroupType {
+				APPLICATION,
+				PLACE,
+				DEVICE,
+				SYSTEM
+			}
 			public Unity.Launcher.ScrollerChildController controller;
 			public Unity.Launcher.PinType pin_type;
 			public ScrollerChild ();
@@ -100,6 +115,7 @@ namespace Unity {
 			public override void unmap ();
 			public bool activating { get; set; }
 			public bool active { get; set; }
+			public Unity.Launcher.ScrollerChild.GroupType group_type { get; set construct; }
 			public Gdk.Pixbuf icon { get; set; }
 			public bool needs_attention { get; set; }
 			public float position { get; set; }
@@ -117,15 +133,16 @@ namespace Unity {
 			protected Unity.Launcher.ScrollerChildControllerMenuState menu_state;
 			public ScrollerChildController (Unity.Launcher.ScrollerChild child_);
 			public virtual void activate ();
+			public virtual bool can_drag ();
+			public void closed ();
 			public virtual void get_menu_actions (Unity.Launcher.ScrollerChildController.menu_cb callback);
-			public virtual Unity.Launcher.QuicklistController get_menu_controller ();
+			public virtual Unity.Launcher.QuicklistController? get_menu_controller ();
 			public virtual void get_menu_navigation (Unity.Launcher.ScrollerChildController.menu_cb callback);
 			protected void load_icon_from_icon_name (string icon_name);
 			public Unity.Launcher.ScrollerChild child { get; construct; }
 			public bool hide { get; set; }
 			protected Unity.Launcher.QuicklistController? menu { get; set; }
 			public string name { get; set; }
-			public signal void closed ();
 			public signal void request_removal ();
 		}
 		[CCode (cheader_filename = "unity-private.h")]
@@ -136,8 +153,13 @@ namespace Unity {
 				public Unity.Launcher.ScrollerChild @get ();
 				public bool next ();
 			}
+			public int n_app_icons;
+			public int n_device_icons;
+			public int n_place_icons;
+			public int n_system_icons;
 			public ScrollerModel ();
 			public void add (Unity.Launcher.ScrollerChild child);
+			public int clamp (Unity.Launcher.ScrollerChild child, int value);
 			public bool contains (Unity.Launcher.ScrollerChild child);
 			public Unity.Launcher.ScrollerChild @get (int i);
 			public int index_of (Unity.Launcher.ScrollerChild child);
@@ -193,7 +215,6 @@ namespace Unity {
 			public class IndicatorBar : Ctk.Box {
 				public IndicatorBar ();
 				public Unity.Panel.Indicators.IndicatorObjectView? get_indicator_view_matching (Indicator.Object o);
-				public void set_indicator_mode (bool mode);
 			}
 			[CCode (cheader_filename = "unity-private.h")]
 			public class IndicatorObjectEntryView : Ctk.Box {
@@ -267,7 +288,8 @@ namespace Unity {
 			public void manage_stage (Clutter.Stage stage);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public class View : Ctk.Box {
+		public class View : Ctk.Bin {
+			public Ctk.EffectCache cache;
 			public bool expanded;
 			public View (Unity.Shell shell);
 			public int get_indicators_width ();
@@ -276,13 +298,26 @@ namespace Unity {
 			public void set_indicator_mode (bool mode);
 			public Unity.Shell shell { get; construct; }
 		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class WindowButton : Ctk.Button {
+			public Clutter.Actor bg;
+			public const string AMBIANCE;
+			public WindowButton (string filename);
+			public string filename { get; construct; }
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class WindowButtons : Ctk.Box {
+			public WindowButtons ();
+		}
 	}
 	[CCode (cprefix = "UnityPlaces", lower_case_cprefix = "unity_places_")]
 	namespace Places {
 		[CCode (cheader_filename = "unity-private.h")]
 		public class Controller : GLib.Object {
 			public Controller (Unity.Shell shell);
+			public void activate_entry (string entry_name);
 			public Unity.Places.View get_view ();
+			public Unity.Places.PlaceModel model { get; set; }
 			public Unity.Shell shell { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
@@ -297,6 +332,11 @@ namespace Unity {
 			public string group_renderer { get; construct; }
 			public string icon_hint { get; construct; }
 			public Dee.Model results { get; construct; }
+			public signal void activated (string uri, string mimetype);
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class FolderBrowserRenderer : Ctk.ScrollView, Unity.Place.Renderer {
+			public FolderBrowserRenderer ();
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class MoreResultsButton : Ctk.Button {
@@ -305,7 +345,10 @@ namespace Unity {
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class Place : GLib.Object {
+			public GLib.Regex? mime_regex;
+			public GLib.Regex? uri_regex;
 			public Place (string dbus_name, string dbus_path);
+			public bool activate (string uri);
 			public void connect ();
 			public unowned Gee.ArrayList<Unity.Places.PlaceEntry> get_entries ();
 			public Unity.Places.PlaceEntry? get_nth_entry (int index);
@@ -335,6 +378,17 @@ namespace Unity {
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class PlaceEntryDbus : GLib.Object, Unity.Places.PlaceEntry {
+			[CCode (type_id = "UNITY_PLACES_PLACE_ENTRY_DBUS_TYPE_PLACE_ENTRY_INFO", cheader_filename = "unity-private.h")]
+			public struct PlaceEntryInfo {
+				public string dbus_path;
+				public string name;
+				public string icon;
+				public uint position;
+				public string[] mimetype;
+				public bool sensitive;
+				public string sections_model;
+				public GLib.HashTable<string,string> hints;
+			}
 			[CCode (type_id = "UNITY_PLACES_PLACE_ENTRY_DBUS_TYPE_RENDERER_INFO", cheader_filename = "unity-private.h")]
 			public struct RendererInfo {
 				public string default_renderer;
@@ -354,6 +408,16 @@ namespace Unity {
 			public string sections_model_name { get; set; }
 			public bool show_entry { get; set construct; }
 			public bool show_global { get; set construct; }
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class PlaceEntryScrollerChildController : Unity.Launcher.ScrollerChildController {
+			public PlaceEntryScrollerChildController (Unity.Places.PlaceEntry entry);
+			public override void activate ();
+			public override bool can_drag ();
+			public override void get_menu_actions (Unity.Launcher.ScrollerChildController.menu_cb callback);
+			public override Unity.Launcher.QuicklistController? get_menu_controller ();
+			public Unity.Places.PlaceEntry entry { get; construct; }
+			public signal void clicked (uint section_id);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class PlaceEntryView : Ctk.Image {
@@ -384,14 +448,15 @@ namespace Unity {
 			public string get_search_text ();
 			public void reset ();
 			public void search (string text);
-			public void set_active_entry_view (Unity.Places.PlaceEntry entry, int x);
+			public void set_active_entry_view (Unity.Places.PlaceEntry entry, int x, uint section = 0);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class PlaceSearchBarBackground : Ctk.Bin {
 			public const string BG;
-			public PlaceSearchBarBackground (Unity.Places.PlaceSearchEntry search_entry);
+			public PlaceSearchBarBackground (Unity.Places.PlaceSearchNavigation nav, Unity.Places.PlaceSearchEntry search_entry);
 			public bool update_background ();
 			public int entry_position { get; set; }
+			public Unity.Places.PlaceSearchNavigation navigation { get; construct; }
 			public Unity.Places.PlaceSearchEntry search_entry { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
@@ -404,9 +469,17 @@ namespace Unity {
 			public signal void text_changed (string? text);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
+		public class PlaceSearchNavigation : Ctk.Box {
+			public PlaceSearchNavigation ();
+			public void set_active_entry (Unity.Places.PlaceEntry entry);
+		}
+		[CCode (cheader_filename = "unity-private.h")]
 		public class PlaceSearchSectionsBar : Ctk.Box {
+			public Unity.Places.SectionStyle _style;
 			public PlaceSearchSectionsBar ();
 			public void set_active_entry (Unity.Places.PlaceEntry entry);
+			public void set_active_section (uint section_id);
+			public Unity.Places.SectionStyle style { get; set; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class PlaceView : Ctk.Box {
@@ -424,14 +497,29 @@ namespace Unity {
 			public Dee.ModelIter iter { get; construct; }
 			public string? mimetype { get; construct; }
 			public string uri { get; construct; }
+			public signal void activated (string uri, string mimetype);
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class TrashController : Unity.Launcher.ScrollerChildController {
+			public const string ICON;
+			public TrashController ();
+			public override void activate ();
+			public override bool can_drag ();
+			public override void get_menu_actions (Unity.Launcher.ScrollerChildController.menu_cb callback);
+			public override Unity.Launcher.QuicklistController? get_menu_controller ();
+			public override void get_menu_navigation (Unity.Launcher.ScrollerChildController.menu_cb callback);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class View : Ctk.Box {
-			public View (Unity.Shell shell);
+			public Unity.Places.PlaceHomeEntry home_entry;
+			public Unity.Places.PlaceSearchBar search_bar;
+			public const float PADDING;
+			public View (Unity.Shell shell, Unity.Places.PlaceModel model);
 			public void about_to_show ();
 			public void hidden ();
+			public void on_entry_view_activated (Unity.Places.PlaceEntry entry, uint section_id);
 			public void shown ();
-			public Unity.Places.PlaceModel model { get; set; }
+			public Unity.Places.PlaceModel model { get; construct; }
 			public Unity.Shell shell { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
@@ -455,11 +543,17 @@ namespace Unity {
 			public abstract string[] mimetypes { get; set; }
 			public abstract string name { get; set construct; }
 			public abstract bool online { get; set construct; }
+			public abstract Unity.Places.Place? parent { get; set construct; }
 			public abstract uint position { get; set; }
 			public abstract Dee.Model? sections_model { get; set; }
 			public abstract bool sensitive { get; set; }
 			public signal void renderer_info_changed ();
 			public signal void updated ();
+		}
+		[CCode (cprefix = "UNITY_PLACES_SECTION_STYLE_", cheader_filename = "unity-private.h")]
+		public enum SectionStyle {
+			BUTTONS,
+			BREADCRUMB
 		}
 	}
 	[CCode (cprefix = "UnityTesting", lower_case_cprefix = "unity_testing_")]
@@ -564,6 +658,10 @@ namespace Utils {
 	public static void set_strut (Gtk.Window* window, uint32 strut_size, uint32 strut_start, uint32 strut_end, uint32 top_size, uint32 top_start, uint32 top_end);
 	[CCode (cheader_filename = "unity-private.h")]
 	public static bool utils_compare_images (string img1_path, string img2_path);
+	[CCode (cheader_filename = "unity-private.h")]
+	public static bool window_is_decorated (uint32 xid);
+	[CCode (cheader_filename = "unity-private.h")]
+	public static void window_set_decorations (uint32 xid, uint decorations);
 }
 [CCode (cprefix = "G", lower_case_cprefix = "g_")]
 namespace G {

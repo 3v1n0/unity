@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <gio/gio.h>
+#include <config.h>
 #include <unity.h>
 #include <gobject/gvaluecollector.h>
 
@@ -200,7 +201,7 @@ static gboolean unity_tests_unit_io_suite_do_test_async_find_and_load_co (UnityT
 	_state_0:
 	{
 		data->dirs = (data->_tmp0_ = g_new0 (char*, 1 + 1), data->dirs_length1 = 1, data->_dirs_size_ = data->dirs_length1, data->_tmp0_);
-		data->dirs[0] = (data->_tmp1_ = g_build_filename (TESTDIR, "data", NULL, NULL), _g_free0 (data->dirs[0]), data->_tmp1_);
+		data->dirs[0] = (data->_tmp1_ = g_build_filename (TESTUNITDIR, "data", NULL, NULL), _g_free0 (data->dirs[0]), data->_tmp1_);
 		{
 			data->_state_ = 1;
 			unity_io_open_from_dirs ("test_desktop_file.desktop", data->dirs, data->dirs_length1, unity_tests_unit_io_suite_do_test_async_find_and_load_ready, data);

@@ -36,6 +36,7 @@ namespace Unity.Places
     private Ctk.Image     icon;
     private Ctk.Text      text;
     private Ctk.Image     expander;
+    private Clutter.Actor sep;
     private Ctk.IconView  renderer;
 
     private MoreResultsButton? more_results_button;
@@ -45,6 +46,8 @@ namespace Unity.Places
     private bool          dirty = false;
 
     private bool          allow_expand = true;
+
+    public signal void activated (string uri, string mimetype);
 
     public DefaultRendererGroup (uint      group_id,
                                  string    group_renderer,
@@ -66,6 +69,8 @@ namespace Unity.Places
 
       if (group_renderer == "UnityLinkGroupRenderer")
         allow_expand = false;
+      else if (group_renderer == "UnityFolderGroupRenderer")
+        bin_state = ExpandingBinState.EXPANDED;
 
       vbox = new Ctk.VBox (SPACING);
       vbox.spacing = SPACING;
@@ -79,7 +84,7 @@ namespace Unity.Places
       title_box.reactive = true;
 
       icon = new Ctk.Image (22);
-      icon.set_from_filename (PKGDATADIR + "/favourites.png");
+      icon.set_from_filename (Config.PKGDATADIR + "/favourites.png");
       title_box.pack (icon, false, false);
       icon.show ();
 
@@ -88,15 +93,15 @@ namespace Unity.Places
       text.show ();
 
       expander = new Ctk.Image (22);
-      expander.set_from_filename (PKGDATADIR + "/maximize_up.png");
+      expander.set_from_filename (Config.PKGDATADIR + "/maximize_up.png");
       expander.opacity = 0;
       title_box.pack (expander, false, true);
       expander.show ();
 
-      var rect = new Clutter.Rectangle.with_color ({ 255, 255, 255, 255 });
-      rect.height = 1;
-      vbox.pack (rect, false, false);
-      rect.show ();
+      sep = new Clutter.Rectangle.with_color ({ 255, 255, 255, 255 });
+      sep.height = 1;
+      vbox.pack (sep, false, false);
+      sep.show ();
 
       title_box.button_release_event.connect (() => {
         if (n_results <= renderer.get_n_cols () || allow_expand == false)
@@ -105,12 +110,12 @@ namespace Unity.Places
         if (bin_state == ExpandingBinState.UNEXPANDED)
           {
             bin_state = ExpandingBinState.EXPANDED;
-            expander.set_from_filename (PKGDATADIR + "/minimize_up.png");
+            expander.set_from_filename (Config.PKGDATADIR + "/minimize_up.png");
           }
         else
           {
             bin_state = ExpandingBinState.UNEXPANDED;
-            expander.set_from_filename (PKGDATADIR + "/maximize_up.png");
+            expander.set_from_filename (Config.PKGDATADIR + "/maximize_up.png");
           }
         return true;
       });
@@ -135,18 +140,6 @@ namespace Unity.Places
       renderer.set ("auto-fade-children", true);
       renderer.notify["n-cols"].connect (on_n_cols_changed);
 
-      unowned Dee.ModelIter iter = results.get_first_iter ();
-      while (!results.is_last (iter))
-        {
-          if (interesting (iter))
-            on_result_added (iter);
-
-          iter = results.next (iter);
-        }
-
-      results.row_added.connect (on_result_added);
-      results.row_removed.connect (on_result_removed);
-
       if (group_renderer == "UnityLinkGroupRenderer")
         {
           allow_expand = false;
@@ -166,17 +159,36 @@ namespace Unity.Places
                * until we have better support for signalling things through
                * a place
                */
-              PlaceBar place_bar = (Testing.ObjectRegistry.get_default ().lookup ("UnityPlacesPlaceBar"))[0] as PlaceBar;
+              Controller cont = Testing.ObjectRegistry.get_default ().lookup ("UnityPlacesController")[0] as Controller;
               PlaceSearchBar search_bar = (Testing.ObjectRegistry.get_default ().lookup ("UnityPlacesSearchBar"))[0] as PlaceSearchBar;
 
-              if (place_bar is PlaceBar && search_bar is PlaceSearchBar)
+              if (cont is Controller && search_bar is PlaceSearchBar)
                 {
                   string text = search_bar.get_search_text ();
-                  place_bar.active_entry_name (display_name);
+                  cont.activate_entry (display_name);
                   search_bar.search (text);
                 }
             });
         }
+      else if (group_renderer == "UnityFolderGroupRenderer")
+        {
+          title_box.hide ();
+          sep.hide ();
+          bin_state = ExpandingBinState.EXPANDED;
+        }
+
+      unowned Dee.ModelIter iter = results.get_first_iter ();
+      while (!results.is_last (iter))
+        {
+          if (interesting (iter))
+            on_result_added (iter);
+
+          iter = results.next (iter);
+        }
+
+      results.row_added.connect (on_result_added);
+      results.row_removed.connect (on_result_removed);
+
     }
 
     private override void allocate (Clutter.ActorBox        box,
@@ -218,11 +230,21 @@ namespace Unity.Places
       renderer.add_actor (button);
       button.show ();
 
+      if (bin_state == ExpandingBinState.EXPANDED)
+        {
+          button.about_to_show ();
+        }
+
+      button.activated.connect ((u, m) => { activated (u, m); });
+
       add_to_n_results (1);
 
       if (bin_state == ExpandingBinState.CLOSED)
         {
-          bin_state = ExpandingBinState.UNEXPANDED;
+          if (group_renderer == "UnityFolderGroupRenderer")
+            bin_state = ExpandingBinState.EXPANDED;
+          else
+            bin_state = ExpandingBinState.UNEXPANDED;
           show ();
         }
 
@@ -231,7 +253,7 @@ namespace Unity.Places
 
     private void on_result_removed (Dee.ModelIter iter)
     {
-      if (!interesting (iter))
+     if (!interesting (iter))
         return;
 
       var children = renderer.get_children ();
@@ -305,6 +327,16 @@ namespace Unity.Places
                 }
               else
                 break;
+            }
+        }
+      else
+        {
+          var children = renderer.get_children ();
+   
+          foreach (Clutter.Actor child in children)
+            {
+              Tile tile = child as Tile;
+              tile.about_to_show ();
             }
         }
 
@@ -395,6 +427,8 @@ namespace Unity.Places
 
     private bool shown = false;
 
+    public signal void activated (string uri, string mimetype);
+
     public Tile (Dee.ModelIter iter,
                  string        uri,
                  string?       icon_hint,
@@ -414,7 +448,7 @@ namespace Unity.Places
     construct
     {
       unowned Ctk.Text text = get_text ();
-      text.ellipsize = Pango.EllipsizeMode.END;
+      text.ellipsize = Pango.EllipsizeMode.MIDDLE;
     }
 
     public void about_to_show ()
@@ -440,52 +474,9 @@ namespace Unity.Places
 
     private override void clicked ()
     {
-      clicked_handler.begin ();
+      activated (uri, mimetype);
     }
-
-    private async void clicked_handler ()
-    {
-      global_shell.hide_unity ();
-
-      if (uri.has_prefix ("application://"))
-        {
-          var id = uri.offset ("application://".length);
-
-          AppInfo info;
-          try {
-            var appinfos = AppInfoManager.get_instance ();
-            info = yield appinfos.lookup_async (id);
-          } catch (Error ee) {
-            warning ("Unable to read .desktop file '%s': %s", uri, ee.message);
-            return;
-          }
-
-          if (info is AppInfo)
-            {
-              try {
-                info.launch (null,null);
-              } catch (Error e) {
-                warning ("Unable to launch desktop file %s: %s\n",
-                         id,
-                         e.message);
-              }
-            }
-          else
-            {
-              warning ("%s is an invalid DesktopAppInfo id\n", id);
-            }
-          return;
-        }
-
-      try {
-        Gtk.show_uri (Gdk.Screen.get_default (),
-                      uri,
-                      0);
-       } catch (GLib.Error eee) {
-         warning ("Unable to launch: %s\n", eee.message);
-       }
-    }
-
+    
     private void set_icon ()
     {
       var cache = PixbufCache.get_default ();

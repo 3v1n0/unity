@@ -23,6 +23,25 @@ namespace Unity.Launcher
   const uint MEDIUM_DELAY = 800;
   const uint LONG_DELAY = 1600;
 
+  public class LauncherContainer : Ctk.Bin
+  {
+    public Ctk.EffectCache cache;
+    public LauncherContainer ()
+    {
+      Object ();
+
+      this.cache = new Ctk.EffectCache ();
+      this.add_effect (this.cache);
+
+      this.cache.update_texture_cache ();
+    }
+
+    construct
+    {
+
+    }
+  }
+  
   public interface ShortcutItem : GLib.Object
   {
     public abstract string get_name ();
@@ -38,6 +57,8 @@ namespace Unity.Launcher
     private ScrollerController controller;
     private ScrollerView view;
 
+    private LauncherContainer launcher_container;
+
     public Launcher (Shell shell)
     {
       Object (shell: shell);
@@ -46,8 +67,16 @@ namespace Unity.Launcher
     construct
     {
       model = new ScrollerModel ();
-      view = new ScrollerView (model);
+      
+      this.launcher_container = new LauncherContainer ();
+      view = new ScrollerView (model, this.launcher_container.cache);
+      
       controller = new ScrollerController (model, view);
+
+      view.queue_redraw.connect (() => {
+        if (view.fling_timeline.is_playing () == false)
+          launcher_container.cache.update_texture_cache ();
+      });
     }
 
     public new float get_width ()
@@ -59,5 +88,16 @@ namespace Unity.Launcher
     {
       return view as Clutter.Actor;
     }
+    
+    public Clutter.Actor get_container ()
+    {
+      return this.launcher_container as Clutter.Actor;
+    }
+
+    public Ctk.EffectCache get_actor_cache ()
+    {
+      return this.launcher_container.cache;
+    }
+
   }
 }

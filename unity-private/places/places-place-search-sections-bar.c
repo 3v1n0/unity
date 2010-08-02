@@ -27,12 +27,14 @@
 #include <string.h>
 #include <gee.h>
 #include <dee.h>
-#include <clutter/clutter.h>
 #include <unity.h>
+#include <clutter/clutter.h>
+#include <cairo.h>
 #include <float.h>
 #include <math.h>
-#include <cairo.h>
 
+
+#define UNITY_PLACES_TYPE_SECTION_STYLE (unity_places_section_style_get_type ())
 
 #define UNITY_PLACES_TYPE_PLACE_SEARCH_SECTIONS_BAR (unity_places_place_search_sections_bar_get_type ())
 #define UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_SECTIONS_BAR, UnityPlacesPlaceSearchSectionsBar))
@@ -53,6 +55,16 @@ typedef struct _UnityPlacesPlaceSearchSectionsBarPrivate UnityPlacesPlaceSearchS
 typedef struct _UnityPlacesPlaceEntry UnityPlacesPlaceEntry;
 typedef struct _UnityPlacesPlaceEntryIface UnityPlacesPlaceEntryIface;
 
+#define UNITY_PLACES_TYPE_PLACE (unity_places_place_get_type ())
+#define UNITY_PLACES_PLACE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlace))
+#define UNITY_PLACES_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
+#define UNITY_PLACES_IS_PLACE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE))
+#define UNITY_PLACES_IS_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE))
+#define UNITY_PLACES_PLACE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
+
+typedef struct _UnityPlacesPlace UnityPlacesPlace;
+typedef struct _UnityPlacesPlaceClass UnityPlacesPlaceClass;
+
 #define UNITY_PLACES_TYPE_SECTION (unity_places_section_get_type ())
 #define UNITY_PLACES_SECTION(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_SECTION, UnityPlacesSection))
 #define UNITY_PLACES_SECTION_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_SECTION, UnityPlacesSectionClass))
@@ -63,13 +75,19 @@ typedef struct _UnityPlacesPlaceEntryIface UnityPlacesPlaceEntryIface;
 typedef struct _UnityPlacesSection UnityPlacesSection;
 typedef struct _UnityPlacesSectionClass UnityPlacesSectionClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
-typedef struct _UnityPlacesSectionPrivate UnityPlacesSectionPrivate;
 #define _g_list_free0(var) ((var == NULL) ? NULL : (var = (g_list_free (var), NULL)))
-#define __g_list_free_g_object_unref0(var) ((var == NULL) ? NULL : (var = (_g_list_free_g_object_unref (var), NULL)))
+#define _g_free0(var) (var = (g_free (var), NULL))
+typedef struct _UnityPlacesSectionPrivate UnityPlacesSectionPrivate;
+
+typedef enum  {
+	UNITY_PLACES_SECTION_STYLE_BUTTONS,
+	UNITY_PLACES_SECTION_STYLE_BREADCRUMB
+} UnityPlacesSectionStyle;
 
 struct _UnityPlacesPlaceSearchSectionsBar {
 	CtkBox parent_instance;
 	UnityPlacesPlaceSearchSectionsBarPrivate * priv;
+	UnityPlacesSectionStyle _style;
 };
 
 struct _UnityPlacesPlaceSearchSectionsBarClass {
@@ -118,11 +136,15 @@ struct _UnityPlacesPlaceEntryIface {
 	void (*set_global_results_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
 	GeeHashMap* (*get_global_renderer_hints) (UnityPlacesPlaceEntry* self);
 	void (*set_global_renderer_hints) (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+	UnityPlacesPlace* (*get_parent) (UnityPlacesPlaceEntry* self);
+	void (*set_parent) (UnityPlacesPlaceEntry* self, UnityPlacesPlace* value);
 };
 
 struct _UnityPlacesPlaceSearchSectionsBarPrivate {
 	UnityPlacesPlaceEntry* active_entry;
 	UnityPlacesSection* active_section;
+	UnityCairoCanvas* bg;
+	DeeModel* sections_model;
 };
 
 struct _UnityPlacesSection {
@@ -153,16 +175,21 @@ struct _UnityPlacesSectionPrivate {
 static gpointer unity_places_place_search_sections_bar_parent_class = NULL;
 static gpointer unity_places_section_parent_class = NULL;
 
+GType unity_places_section_style_get_type (void) G_GNUC_CONST;
 GType unity_places_place_search_sections_bar_get_type (void) G_GNUC_CONST;
+GType unity_places_place_get_type (void) G_GNUC_CONST;
 GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
 GType unity_places_section_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE_SEARCH_SECTIONS_BAR, UnityPlacesPlaceSearchSectionsBarPrivate))
 enum  {
-	UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR_DUMMY_PROPERTY
+	UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR_DUMMY_PROPERTY,
+	UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR_STYLE
 };
 #define UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR_SPACING 10
 UnityPlacesPlaceSearchSectionsBar* unity_places_place_search_sections_bar_new (void);
 UnityPlacesPlaceSearchSectionsBar* unity_places_place_search_sections_bar_construct (GType object_type);
+static void unity_places_place_search_sections_bar_on_section_clicked_real (UnityPlacesPlaceSearchSectionsBar* self, UnityPlacesSection* section);
+void unity_places_place_search_sections_bar_set_active_section (UnityPlacesPlaceSearchSectionsBar* self, guint section_id);
 DeeModel* unity_places_place_entry_get_sections_model (UnityPlacesPlaceEntry* self);
 static void unity_places_place_search_sections_bar_on_section_added (UnityPlacesPlaceSearchSectionsBar* self, DeeModel* model, DeeModelIter* iter);
 static void _unity_places_place_search_sections_bar_on_section_added_dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self);
@@ -170,22 +197,29 @@ static void unity_places_place_search_sections_bar_on_section_changed (UnityPlac
 static void _unity_places_place_search_sections_bar_on_section_changed_dee_model_row_changed (DeeModel* _sender, DeeModelIter* iter, gpointer self);
 static void unity_places_place_search_sections_bar_on_section_removed (UnityPlacesPlaceSearchSectionsBar* self, DeeModel* model, DeeModelIter* iter);
 static void _unity_places_place_search_sections_bar_on_section_removed_dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self);
+GeeHashMap* unity_places_place_entry_get_hints (UnityPlacesPlaceEntry* self);
+void unity_places_place_search_sections_bar_set_style (UnityPlacesPlaceSearchSectionsBar* self, UnityPlacesSectionStyle value);
 void unity_places_section_set_model (UnityPlacesSection* self, DeeModel* value);
 void unity_places_section_set_iter (UnityPlacesSection* self, DeeModelIter* value);
 void unity_places_section_set_active (UnityPlacesSection* self, gboolean value);
 void unity_places_section_start_destroy (UnityPlacesSection* self);
 void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSearchSectionsBar* self, UnityPlacesPlaceEntry* entry);
+DeeModel* unity_places_section_get_model (UnityPlacesSection* self);
+DeeModelIter* unity_places_section_get_iter (UnityPlacesSection* self);
+static gint unity_places_place_search_sections_bar_sort_sections (UnityPlacesSection* asec, UnityPlacesSection* bsec);
 UnityPlacesSection* unity_places_section_new (DeeModel* model, DeeModelIter* iter);
 UnityPlacesSection* unity_places_section_construct (GType object_type, DeeModel* model, DeeModelIter* iter);
 static gboolean unity_places_place_search_sections_bar_on_section_clicked (UnityPlacesPlaceSearchSectionsBar* self, ClutterActor* actor, ClutterEvent* e);
 static gboolean _unity_places_place_search_sections_bar_on_section_clicked_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 void unity_places_place_entry_set_active_section (UnityPlacesPlaceEntry* self, guint section_id);
-DeeModelIter* unity_places_section_get_iter (UnityPlacesSection* self);
-static void _g_list_free_g_object_unref (GList* self);
 static UnityPlacesSection* unity_places_place_search_sections_bar_get_section_for_iter (UnityPlacesPlaceSearchSectionsBar* self, DeeModelIter* iter);
-DeeModel* unity_places_section_get_model (UnityPlacesSection* self);
+static void unity_places_place_search_sections_bar_paint_bg (UnityPlacesPlaceSearchSectionsBar* self, cairo_t* cr, gint width, gint height);
+UnityPlacesSectionStyle unity_places_place_search_sections_bar_get_style (UnityPlacesPlaceSearchSectionsBar* self);
+static void _unity_places_place_search_sections_bar_paint_bg_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
 static GObject * unity_places_place_search_sections_bar_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_place_search_sections_bar_finalize (GObject* obj);
+static void unity_places_place_search_sections_bar_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
+static void unity_places_place_search_sections_bar_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 #define UNITY_PLACES_SECTION_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_SECTION, UnityPlacesSectionPrivate))
 enum  {
 	UNITY_PLACES_SECTION_DUMMY_PROPERTY,
@@ -211,7 +245,20 @@ static GObject * unity_places_section_constructor (GType type, guint n_construct
 static void unity_places_section_finalize (GObject* obj);
 static void unity_places_section_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_places_section_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+static int _vala_strcmp0 (const char * str1, const char * str2);
 
+
+
+GType unity_places_section_style_get_type (void) {
+	static volatile gsize unity_places_section_style_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_places_section_style_type_id__volatile)) {
+		static const GEnumValue values[] = {{UNITY_PLACES_SECTION_STYLE_BUTTONS, "UNITY_PLACES_SECTION_STYLE_BUTTONS", "buttons"}, {UNITY_PLACES_SECTION_STYLE_BREADCRUMB, "UNITY_PLACES_SECTION_STYLE_BREADCRUMB", "breadcrumb"}, {0, NULL, NULL}};
+		GType unity_places_section_style_type_id;
+		unity_places_section_style_type_id = g_enum_register_static ("UnityPlacesSectionStyle", values);
+		g_once_init_leave (&unity_places_section_style_type_id__volatile, unity_places_section_style_type_id);
+	}
+	return unity_places_section_style_type_id__volatile;
+}
 
 
 UnityPlacesPlaceSearchSectionsBar* unity_places_place_search_sections_bar_construct (GType object_type) {
@@ -223,6 +270,20 @@ UnityPlacesPlaceSearchSectionsBar* unity_places_place_search_sections_bar_constr
 
 UnityPlacesPlaceSearchSectionsBar* unity_places_place_search_sections_bar_new (void) {
 	return unity_places_place_search_sections_bar_construct (UNITY_PLACES_TYPE_PLACE_SEARCH_SECTIONS_BAR);
+}
+
+
+void unity_places_place_search_sections_bar_set_active_section (UnityPlacesPlaceSearchSectionsBar* self, guint section_id) {
+	GList* list;
+	ClutterActor* _tmp0_;
+	UnityPlacesSection* section;
+	g_return_if_fail (self != NULL);
+	list = clutter_container_get_children ((ClutterContainer*) self);
+	section = (_tmp0_ = (ClutterActor*) g_list_nth_data (list, section_id), UNITY_PLACES_IS_SECTION (_tmp0_) ? ((UnityPlacesSection*) _tmp0_) : NULL);
+	if (UNITY_PLACES_IS_SECTION (section)) {
+		unity_places_place_search_sections_bar_on_section_clicked_real (self, section);
+	}
+	_g_list_free0 (list);
 }
 
 
@@ -248,12 +309,18 @@ static void _unity_places_place_search_sections_bar_on_section_removed_dee_model
 
 void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSearchSectionsBar* self, UnityPlacesPlaceEntry* entry) {
 	GList* children;
-	UnityPlacesPlaceEntry* _tmp5_;
+	UnityPlacesPlaceEntry* _tmp7_;
 	DeeModel* model;
 	DeeModelIter* iter;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (entry != NULL);
 	children = clutter_container_get_children ((ClutterContainer*) self);
+	if (entry == self->priv->active_entry) {
+		if (self->priv->sections_model == unity_places_place_entry_get_sections_model (entry)) {
+			_g_list_free0 (children);
+			return;
+		}
+	}
 	if (UNITY_PLACES_IS_PLACE_ENTRY (self->priv->active_entry)) {
 		DeeModel* old_model;
 		guint _tmp0_;
@@ -270,6 +337,17 @@ void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSe
 		self->priv->active_section = (_tmp3_ = NULL, _g_object_unref0 (self->priv->active_section), _tmp3_);
 		_g_object_unref0 (old_model);
 	}
+	if (unity_places_place_entry_get_hints (entry) != NULL) {
+		char* _tmp4_;
+		gboolean _tmp5_;
+		if ((_tmp5_ = _vala_strcmp0 (_tmp4_ = (char*) gee_abstract_map_get ((GeeAbstractMap*) unity_places_place_entry_get_hints (entry), "UnitySectionStyle"), "breadcrumb") == 0, _g_free0 (_tmp4_), _tmp5_)) {
+			unity_places_place_search_sections_bar_set_style (self, UNITY_PLACES_SECTION_STYLE_BREADCRUMB);
+		} else {
+			unity_places_place_search_sections_bar_set_style (self, UNITY_PLACES_SECTION_STYLE_BUTTONS);
+		}
+	} else {
+		unity_places_place_search_sections_bar_set_style (self, UNITY_PLACES_SECTION_STYLE_BUTTONS);
+	}
 	{
 		GList* actor_collection;
 		GList* actor_it;
@@ -278,24 +356,25 @@ void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSe
 			ClutterActor* actor;
 			actor = _g_object_ref0 ((ClutterActor*) actor_it->data);
 			{
-				ClutterActor* _tmp4_;
-				(_tmp4_ = actor, UNITY_PLACES_IS_SECTION (_tmp4_) ? ((UnityPlacesSection*) _tmp4_) : NULL)->dirty = TRUE;
+				ClutterActor* _tmp6_;
+				(_tmp6_ = actor, UNITY_PLACES_IS_SECTION (_tmp6_) ? ((UnityPlacesSection*) _tmp6_) : NULL)->dirty = TRUE;
 				_g_object_unref0 (actor);
 			}
 		}
 	}
-	self->priv->active_entry = (_tmp5_ = _g_object_ref0 (entry), _g_object_unref0 (self->priv->active_entry), _tmp5_);
+	self->priv->active_entry = (_tmp7_ = _g_object_ref0 (entry), _g_object_unref0 (self->priv->active_entry), _tmp7_);
 	model = _g_object_ref0 (unity_places_place_entry_get_sections_model (self->priv->active_entry));
+	self->priv->sections_model = model;
 	iter = dee_model_get_first_iter (model);
 	while (TRUE) {
-		gboolean _tmp6_ = FALSE;
+		gboolean _tmp8_ = FALSE;
 		gboolean updated_local_entry;
 		if (iter != NULL) {
-			_tmp6_ = !dee_model_is_last (model, iter);
+			_tmp8_ = !dee_model_is_last (model, iter);
 		} else {
-			_tmp6_ = FALSE;
+			_tmp8_ = FALSE;
 		}
-		if (!_tmp6_) {
+		if (!_tmp8_) {
 			break;
 		}
 		updated_local_entry = FALSE;
@@ -307,9 +386,9 @@ void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSe
 				ClutterActor* actor;
 				actor = _g_object_ref0 ((ClutterActor*) actor_it->data);
 				{
-					ClutterActor* _tmp7_;
+					ClutterActor* _tmp9_;
 					UnityPlacesSection* s;
-					s = _g_object_ref0 ((_tmp7_ = actor, UNITY_PLACES_IS_SECTION (_tmp7_) ? ((UnityPlacesSection*) _tmp7_) : NULL));
+					s = _g_object_ref0 ((_tmp9_ = actor, UNITY_PLACES_IS_SECTION (_tmp9_) ? ((UnityPlacesSection*) _tmp9_) : NULL));
 					if (s->dirty) {
 						unity_places_section_set_model (s, model);
 						unity_places_section_set_iter (s, iter);
@@ -317,8 +396,8 @@ void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSe
 						s->dirty = FALSE;
 						updated_local_entry = TRUE;
 						if (self->priv->active_section == NULL) {
-							UnityPlacesSection* _tmp8_;
-							self->priv->active_section = (_tmp8_ = _g_object_ref0 (s), _g_object_unref0 (self->priv->active_section), _tmp8_);
+							UnityPlacesSection* _tmp10_;
+							self->priv->active_section = (_tmp10_ = _g_object_ref0 (s), _g_object_unref0 (self->priv->active_section), _tmp10_);
 						}
 						unity_places_section_set_active (s, self->priv->active_section == s);
 						_g_object_unref0 (s);
@@ -343,9 +422,9 @@ void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSe
 			ClutterActor* actor;
 			actor = _g_object_ref0 ((ClutterActor*) actor_it->data);
 			{
-				ClutterActor* _tmp9_;
+				ClutterActor* _tmp11_;
 				UnityPlacesSection* s;
-				s = _g_object_ref0 ((_tmp9_ = actor, UNITY_PLACES_IS_SECTION (_tmp9_) ? ((UnityPlacesSection*) _tmp9_) : NULL));
+				s = _g_object_ref0 ((_tmp11_ = actor, UNITY_PLACES_IS_SECTION (_tmp11_) ? ((UnityPlacesSection*) _tmp11_) : NULL));
 				if (s->dirty) {
 					unity_places_section_start_destroy (s);
 				}
@@ -362,6 +441,15 @@ void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSe
 }
 
 
+static gint unity_places_place_search_sections_bar_sort_sections (UnityPlacesSection* asec, UnityPlacesSection* bsec) {
+	gint result = 0;
+	g_return_val_if_fail (asec != NULL, 0);
+	g_return_val_if_fail (bsec != NULL, 0);
+	result = dee_model_get_position (unity_places_section_get_model (asec), unity_places_section_get_iter (asec)) - dee_model_get_position (unity_places_section_get_model (bsec), unity_places_section_get_iter (bsec));
+	return result;
+}
+
+
 static gboolean _unity_places_place_search_sections_bar_on_section_clicked_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
 	result = unity_places_place_search_sections_bar_on_section_clicked (self, _sender, event);
@@ -371,6 +459,7 @@ static gboolean _unity_places_place_search_sections_bar_on_section_clicked_clutt
 
 static void unity_places_place_search_sections_bar_on_section_added (UnityPlacesPlaceSearchSectionsBar* self, DeeModel* model, DeeModelIter* iter) {
 	UnityPlacesSection* section;
+	gboolean _tmp0_ = FALSE;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (model != NULL);
 	g_return_if_fail (iter != NULL);
@@ -379,18 +468,18 @@ static void unity_places_place_search_sections_bar_on_section_added (UnityPlaces
 	clutter_actor_show ((ClutterActor*) section);
 	g_signal_connect_object ((ClutterActor*) section, "button-press-event", (GCallback) _unity_places_place_search_sections_bar_on_section_clicked_clutter_actor_button_press_event, self, 0);
 	if (self->priv->active_section == NULL) {
-		UnityPlacesSection* _tmp0_;
-		self->priv->active_section = (_tmp0_ = _g_object_ref0 (section), _g_object_unref0 (self->priv->active_section), _tmp0_);
+		_tmp0_ = self->_style == UNITY_PLACES_SECTION_STYLE_BUTTONS;
+	} else {
+		_tmp0_ = FALSE;
+	}
+	if (_tmp0_) {
+		UnityPlacesSection* _tmp1_;
+		self->priv->active_section = (_tmp1_ = _g_object_ref0 (section), _g_object_unref0 (self->priv->active_section), _tmp1_);
 		unity_places_section_set_active (section, TRUE);
 		unity_places_place_entry_set_active_section (self->priv->active_entry, (guint) 0);
 	}
+	ctk_box_sort_children ((CtkBox*) self, (GCompareFunc) unity_places_place_search_sections_bar_sort_sections);
 	_g_object_unref0 (section);
-}
-
-
-static void _g_list_free_g_object_unref (GList* self) {
-	g_list_foreach (self, (GFunc) g_object_unref, NULL);
-	g_list_free (self);
 }
 
 
@@ -414,7 +503,7 @@ static UnityPlacesSection* unity_places_place_search_sections_bar_get_section_fo
 				if (unity_places_section_get_iter (section) == iter) {
 					result = section;
 					_g_object_unref0 (child);
-					__g_list_free_g_object_unref0 (children);
+					_g_list_free0 (children);
 					return result;
 				}
 				_g_object_unref0 (section);
@@ -423,7 +512,7 @@ static UnityPlacesSection* unity_places_place_search_sections_bar_get_section_fo
 		}
 	}
 	result = NULL;
-	__g_list_free_g_object_unref0 (children);
+	_g_list_free0 (children);
 	return result;
 }
 
@@ -442,9 +531,15 @@ static void unity_places_place_search_sections_bar_on_section_removed (UnityPlac
 	g_return_if_fail (iter != NULL);
 	section = unity_places_place_search_sections_bar_get_section_for_iter (self, iter);
 	if (UNITY_PLACES_IS_SECTION (section)) {
+		gboolean _tmp0_ = FALSE;
 		if (section == self->priv->active_section) {
-			UnityPlacesSection* _tmp0_;
-			self->priv->active_section = (_tmp0_ = unity_places_place_search_sections_bar_get_section_for_iter (self, dee_model_get_first_iter (model)), _g_object_unref0 (self->priv->active_section), _tmp0_);
+			_tmp0_ = self->_style == UNITY_PLACES_SECTION_STYLE_BUTTONS;
+		} else {
+			_tmp0_ = FALSE;
+		}
+		if (_tmp0_) {
+			UnityPlacesSection* _tmp1_;
+			self->priv->active_section = (_tmp1_ = unity_places_place_search_sections_bar_get_section_for_iter (self, dee_model_get_first_iter (model)), _g_object_unref0 (self->priv->active_section), _tmp1_);
 			unity_places_place_entry_set_active_section (self->priv->active_entry, (guint) 0);
 		}
 		unity_places_section_start_destroy (section);
@@ -453,12 +548,23 @@ static void unity_places_place_search_sections_bar_on_section_removed (UnityPlac
 }
 
 
+static void unity_places_place_search_sections_bar_on_section_clicked_real (UnityPlacesPlaceSearchSectionsBar* self, UnityPlacesSection* section) {
+	UnityPlacesSection* _tmp0_;
+	gint pos;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (section != NULL);
+	unity_places_section_set_active (self->priv->active_section, FALSE);
+	self->priv->active_section = (_tmp0_ = _g_object_ref0 (section), _g_object_unref0 (self->priv->active_section), _tmp0_);
+	unity_places_section_set_active (self->priv->active_section, TRUE);
+	pos = dee_model_get_position (unity_places_section_get_model (self->priv->active_section), unity_places_section_get_iter (self->priv->active_section));
+	unity_places_place_entry_set_active_section (self->priv->active_entry, (guint) pos);
+}
+
+
 static gboolean unity_places_place_search_sections_bar_on_section_clicked (UnityPlacesPlaceSearchSectionsBar* self, ClutterActor* actor, ClutterEvent* e) {
 	gboolean result = FALSE;
 	ClutterActor* _tmp0_;
 	UnityPlacesSection* section;
-	UnityPlacesSection* _tmp1_;
-	gint pos;
 	g_return_val_if_fail (self != NULL, FALSE);
 	g_return_val_if_fail (actor != NULL, FALSE);
 	section = _g_object_ref0 ((_tmp0_ = actor, UNITY_PLACES_IS_SECTION (_tmp0_) ? ((UnityPlacesSection*) _tmp0_) : NULL));
@@ -472,14 +578,95 @@ static gboolean unity_places_place_search_sections_bar_on_section_clicked (Unity
 		_g_object_unref0 (section);
 		return result;
 	}
-	unity_places_section_set_active (self->priv->active_section, FALSE);
-	self->priv->active_section = (_tmp1_ = _g_object_ref0 (section), _g_object_unref0 (self->priv->active_section), _tmp1_);
-	unity_places_section_set_active (self->priv->active_section, TRUE);
-	pos = dee_model_get_position (unity_places_section_get_model (self->priv->active_section), unity_places_section_get_iter (self->priv->active_section));
-	unity_places_place_entry_set_active_section (self->priv->active_entry, (guint) pos);
+	unity_places_place_search_sections_bar_on_section_clicked_real (self, section);
 	result = TRUE;
 	_g_object_unref0 (section);
 	return result;
+}
+
+
+static void unity_places_place_search_sections_bar_paint_bg (UnityPlacesPlaceSearchSectionsBar* self, cairo_t* cr, gint width, gint height) {
+	gint x;
+	gint y;
+	gint radius;
+	gint chevron;
+	gint point;
+	GList* children;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (cr != NULL);
+	if (self->_style != UNITY_PLACES_SECTION_STYLE_BREADCRUMB) {
+		return;
+	}
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+	cairo_paint (cr);
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	cairo_translate (cr, 0.5, 0.5);
+	cairo_set_line_width (cr, 1.0);
+	x = 0;
+	y = 0;
+	width = width - 1;
+	height = height - 1;
+	radius = 5;
+	cairo_line_to (cr, (double) x, (double) (y + radius));
+	cairo_curve_to (cr, (double) x, (double) y, (double) x, (double) y, (double) (x + radius), (double) y);
+	cairo_line_to (cr, (double) (width - radius), (double) y);
+	cairo_curve_to (cr, (double) width, (double) y, (double) width, (double) y, (double) width, (double) (y + radius));
+	cairo_line_to (cr, (double) width, (double) (height - radius));
+	cairo_curve_to (cr, (double) width, (double) height, (double) width, (double) height, (double) (width - radius), (double) height);
+	cairo_line_to (cr, (double) (x + radius), (double) height);
+	cairo_curve_to (cr, (double) x, (double) height, (double) x, (double) height, (double) x, (double) (height - radius));
+	cairo_close_path (cr);
+	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.5);
+	cairo_fill_preserve (cr);
+	cairo_stroke (cr);
+	chevron = 5;
+	point = x;
+	children = clutter_container_get_children ((ClutterContainer*) self);
+	{
+		GList* child_collection;
+		GList* child_it;
+		child_collection = children;
+		for (child_it = child_collection; child_it != NULL; child_it = child_it->next) {
+			ClutterActor* child;
+			child = _g_object_ref0 ((ClutterActor*) child_it->data);
+			{
+				point = point + (((gint) clutter_actor_get_width (child)) + (UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR_SPACING / 2));
+				if (point < ((width - chevron) - UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR_SPACING)) {
+					cairo_move_to (cr, (double) (point - chevron), (double) y);
+					cairo_line_to (cr, (double) (point + chevron), (double) (y + (height / 2)));
+					cairo_line_to (cr, (double) (point - chevron), (double) (y + height));
+					cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.8);
+					cairo_stroke (cr);
+				}
+				point = point + (UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR_SPACING / 2);
+				_g_object_unref0 (child);
+			}
+		}
+	}
+	_g_list_free0 (children);
+}
+
+
+UnityPlacesSectionStyle unity_places_place_search_sections_bar_get_style (UnityPlacesPlaceSearchSectionsBar* self) {
+	UnityPlacesSectionStyle result;
+	g_return_val_if_fail (self != NULL, 0);
+	result = self->_style;
+	return result;
+}
+
+
+void unity_places_place_search_sections_bar_set_style (UnityPlacesPlaceSearchSectionsBar* self, UnityPlacesSectionStyle value) {
+	g_return_if_fail (self != NULL);
+	if (self->_style != value) {
+		self->_style = value;
+		clutter_actor_queue_redraw ((ClutterActor*) self);
+	}
+	g_object_notify ((GObject *) self, "style");
+}
+
+
+static void _unity_places_place_search_sections_bar_paint_bg_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self) {
+	unity_places_place_search_sections_bar_paint_bg (self, cr, width, height);
 }
 
 
@@ -491,6 +678,9 @@ static GObject * unity_places_place_search_sections_bar_constructor (GType type,
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR (obj);
 	{
+		UnityCairoCanvas* _tmp0_;
+		self->priv->bg = (_tmp0_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_place_search_sections_bar_paint_bg_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->bg), _tmp0_);
+		ctk_actor_set_background ((CtkActor*) self, (ClutterActor*) self->priv->bg);
 	}
 	return obj;
 }
@@ -499,15 +689,20 @@ static GObject * unity_places_place_search_sections_bar_constructor (GType type,
 static void unity_places_place_search_sections_bar_class_init (UnityPlacesPlaceSearchSectionsBarClass * klass) {
 	unity_places_place_search_sections_bar_parent_class = g_type_class_peek_parent (klass);
 	g_type_class_add_private (klass, sizeof (UnityPlacesPlaceSearchSectionsBarPrivate));
+	G_OBJECT_CLASS (klass)->get_property = unity_places_place_search_sections_bar_get_property;
+	G_OBJECT_CLASS (klass)->set_property = unity_places_place_search_sections_bar_set_property;
 	G_OBJECT_CLASS (klass)->constructor = unity_places_place_search_sections_bar_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_places_place_search_sections_bar_finalize;
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR_STYLE, g_param_spec_enum ("style", "style", "style", UNITY_PLACES_TYPE_SECTION_STYLE, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 
 static void unity_places_place_search_sections_bar_instance_init (UnityPlacesPlaceSearchSectionsBar * self) {
 	self->priv = UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR_GET_PRIVATE (self);
+	self->_style = UNITY_PLACES_SECTION_STYLE_BUTTONS;
 	self->priv->active_entry = NULL;
 	self->priv->active_section = NULL;
+	self->priv->sections_model = NULL;
 }
 
 
@@ -516,6 +711,7 @@ static void unity_places_place_search_sections_bar_finalize (GObject* obj) {
 	self = UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR (obj);
 	_g_object_unref0 (self->priv->active_entry);
 	_g_object_unref0 (self->priv->active_section);
+	_g_object_unref0 (self->priv->bg);
 	G_OBJECT_CLASS (unity_places_place_search_sections_bar_parent_class)->finalize (obj);
 }
 
@@ -529,6 +725,34 @@ GType unity_places_place_search_sections_bar_get_type (void) {
 		g_once_init_leave (&unity_places_place_search_sections_bar_type_id__volatile, unity_places_place_search_sections_bar_type_id);
 	}
 	return unity_places_place_search_sections_bar_type_id__volatile;
+}
+
+
+static void unity_places_place_search_sections_bar_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
+	UnityPlacesPlaceSearchSectionsBar * self;
+	self = UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR (object);
+	switch (property_id) {
+		case UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR_STYLE:
+		g_value_set_enum (value, unity_places_place_search_sections_bar_get_style (self));
+		break;
+		default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+		break;
+	}
+}
+
+
+static void unity_places_place_search_sections_bar_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
+	UnityPlacesPlaceSearchSectionsBar * self;
+	self = UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR (object);
+	switch (property_id) {
+		case UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR_STYLE:
+		unity_places_place_search_sections_bar_set_style (self, g_value_get_enum (value));
+		break;
+		default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+		break;
+	}
 }
 
 
@@ -591,6 +815,7 @@ static void unity_places_section_paint_bg (UnityPlacesSection* self, cairo_t* cr
 	gint x;
 	gint y;
 	gint radius;
+	ClutterActor* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (cr != NULL);
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
@@ -604,18 +829,21 @@ static void unity_places_section_paint_bg (UnityPlacesSection* self, cairo_t* cr
 	width = width - 1;
 	height = height - 1;
 	radius = 10;
-	cairo_line_to (cr, (double) x, (double) (y + radius));
-	cairo_curve_to (cr, (double) x, (double) y, (double) x, (double) y, (double) (x + radius), (double) y);
-	cairo_line_to (cr, (double) (width - radius), (double) y);
-	cairo_curve_to (cr, (double) width, (double) y, (double) width, (double) y, (double) width, (double) (y + radius));
-	cairo_line_to (cr, (double) width, (double) (height - radius));
-	cairo_curve_to (cr, (double) width, (double) height, (double) width, (double) height, (double) (width - radius), (double) height);
-	cairo_line_to (cr, (double) (x + radius), (double) height);
-	cairo_curve_to (cr, (double) x, (double) height, (double) x, (double) height, (double) x, (double) (height - radius));
-	cairo_close_path (cr);
-	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
-	cairo_fill_preserve (cr);
-	cairo_stroke (cr);
+	if (unity_places_place_search_sections_bar_get_style ((_tmp0_ = clutter_actor_get_parent ((ClutterActor*) self), UNITY_PLACES_IS_PLACE_SEARCH_SECTIONS_BAR (_tmp0_) ? ((UnityPlacesPlaceSearchSectionsBar*) _tmp0_) : NULL)) == UNITY_PLACES_SECTION_STYLE_BUTTONS) {
+		cairo_line_to (cr, (double) x, (double) (y + radius));
+		cairo_curve_to (cr, (double) x, (double) y, (double) x, (double) y, (double) (x + radius), (double) y);
+		cairo_line_to (cr, (double) (width - radius), (double) y);
+		cairo_curve_to (cr, (double) width, (double) y, (double) width, (double) y, (double) width, (double) (y + radius));
+		cairo_line_to (cr, (double) width, (double) (height - radius));
+		cairo_curve_to (cr, (double) width, (double) height, (double) width, (double) height, (double) (width - radius), (double) height);
+		cairo_line_to (cr, (double) (x + radius), (double) height);
+		cairo_curve_to (cr, (double) x, (double) height, (double) x, (double) height, (double) x, (double) (height - radius));
+		cairo_close_path (cr);
+		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+		cairo_fill_preserve (cr);
+		cairo_stroke (cr);
+	} else {
+	}
 }
 
 
@@ -741,24 +969,24 @@ static GObject * unity_places_section_constructor (GType type, guint n_construct
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_PLACES_SECTION (obj);
 	{
-		CtkPadding _tmp0_ = {0};
-		CtkPadding _tmp1_;
-		UnityCairoCanvas* _tmp2_;
-		CtkEffectGlow* _tmp3_;
-		ClutterColor _tmp5_;
-		ClutterColor _tmp4_ = {0};
-		CtkText* _tmp6_;
+		CtkPadding _tmp1_ = {0};
+		CtkPadding _tmp2_;
+		UnityCairoCanvas* _tmp3_;
+		CtkEffectGlow* _tmp4_;
+		ClutterColor _tmp6_;
+		ClutterColor _tmp5_ = {0};
+		CtkText* _tmp7_;
 		self->priv->color.alpha = (guint8) 255;
-		ctk_actor_set_padding ((CtkActor*) self, (_tmp1_ = (_tmp0_.top = UNITY_PLACES_SECTION_PADDING, _tmp0_.right = UNITY_PLACES_SECTION_PADDING, _tmp0_.bottom = UNITY_PLACES_SECTION_PADDING, _tmp0_.left = UNITY_PLACES_SECTION_PADDING, _tmp0_), &_tmp1_));
-		self->priv->bg = (_tmp2_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_section_paint_bg_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->bg), _tmp2_);
+		ctk_actor_set_padding ((CtkActor*) self, (_tmp2_ = (_tmp1_.top = UNITY_PLACES_SECTION_PADDING, _tmp1_.right = UNITY_PLACES_SECTION_PADDING, _tmp1_.bottom = UNITY_PLACES_SECTION_PADDING, _tmp1_.left = UNITY_PLACES_SECTION_PADDING, _tmp1_), &_tmp2_));
+		self->priv->bg = (_tmp3_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_section_paint_bg_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->bg), _tmp3_);
 		ctk_actor_set_background ((CtkActor*) self, (ClutterActor*) self->priv->bg);
 		clutter_actor_set_opacity ((ClutterActor*) self->priv->bg->texture, (guint8) 0);
 		clutter_actor_show ((ClutterActor*) self->priv->bg);
-		self->priv->glow = (_tmp3_ = g_object_ref_sink ((CtkEffectGlow*) ctk_effect_glow_new ()), _g_object_unref0 (self->priv->glow), _tmp3_);
-		ctk_effect_glow_set_color (self->priv->glow, (_tmp5_ = (_tmp4_.red = (guint8) 255, _tmp4_.green = (guint8) 255, _tmp4_.blue = (guint8) 255, _tmp4_.alpha = (guint8) 255, _tmp4_), &_tmp5_));
+		self->priv->glow = (_tmp4_ = g_object_ref_sink ((CtkEffectGlow*) ctk_effect_glow_new ()), _g_object_unref0 (self->priv->glow), _tmp4_);
+		ctk_effect_glow_set_color (self->priv->glow, (_tmp6_ = (_tmp5_.red = (guint8) 255, _tmp5_.green = (guint8) 255, _tmp5_.blue = (guint8) 255, _tmp5_.alpha = (guint8) 255, _tmp5_), &_tmp6_));
 		ctk_effect_glow_set_factor (self->priv->glow, 1.0f);
 		ctk_effect_set_margin ((CtkEffect*) self->priv->glow, 5);
-		self->text = (_tmp6_ = g_object_ref_sink ((CtkText*) ctk_text_new (dee_model_get_string (self->priv->_model, self->priv->_iter, (guint) 0))), _g_object_unref0 (self->text), _tmp6_);
+		self->text = (_tmp7_ = g_object_ref_sink ((CtkText*) ctk_text_new (dee_model_get_string (self->priv->_model, self->priv->_iter, (guint) 0))), _g_object_unref0 (self->text), _tmp7_);
 		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->text);
 		clutter_actor_show ((ClutterActor*) self->text);
 	}
@@ -871,6 +1099,17 @@ static void unity_places_section_set_property (GObject * object, guint property_
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
 	}
+}
+
+
+static int _vala_strcmp0 (const char * str1, const char * str2) {
+	if (str1 == NULL) {
+		return -(str1 != str2);
+	}
+	if (str2 == NULL) {
+		return str1 != str2;
+	}
+	return strcmp (str1, str2);
 }
 
 

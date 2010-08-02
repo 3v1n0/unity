@@ -97,6 +97,16 @@ typedef struct _UnityTestingObjectRegistryClass UnityTestingObjectRegistryClass;
 typedef struct _UnityPlacesPlaceEntry UnityPlacesPlaceEntry;
 typedef struct _UnityPlacesPlaceEntryIface UnityPlacesPlaceEntryIface;
 
+#define UNITY_PLACES_TYPE_PLACE (unity_places_place_get_type ())
+#define UNITY_PLACES_PLACE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlace))
+#define UNITY_PLACES_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
+#define UNITY_PLACES_IS_PLACE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE))
+#define UNITY_PLACES_IS_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE))
+#define UNITY_PLACES_PLACE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
+
+typedef struct _UnityPlacesPlace UnityPlacesPlace;
+typedef struct _UnityPlacesPlaceClass UnityPlacesPlaceClass;
+
 #define UNITY_PLACES_TYPE_PLACE_VIEW (unity_places_place_view_get_type ())
 #define UNITY_PLACES_PLACE_VIEW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_VIEW, UnityPlacesPlaceView))
 #define UNITY_PLACES_PLACE_VIEW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_VIEW, UnityPlacesPlaceViewClass))
@@ -107,16 +117,6 @@ typedef struct _UnityPlacesPlaceEntryIface UnityPlacesPlaceEntryIface;
 typedef struct _UnityPlacesPlaceView UnityPlacesPlaceView;
 typedef struct _UnityPlacesPlaceViewClass UnityPlacesPlaceViewClass;
 #define _g_list_free0(var) ((var == NULL) ? NULL : (var = (g_list_free (var), NULL)))
-
-#define UNITY_PLACES_TYPE_PLACE (unity_places_place_get_type ())
-#define UNITY_PLACES_PLACE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlace))
-#define UNITY_PLACES_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
-#define UNITY_PLACES_IS_PLACE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE))
-#define UNITY_PLACES_IS_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE))
-#define UNITY_PLACES_PLACE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
-
-typedef struct _UnityPlacesPlace UnityPlacesPlace;
-typedef struct _UnityPlacesPlaceClass UnityPlacesPlaceClass;
 typedef struct _UnityPlacesPlaceBarBackgroundPrivate UnityPlacesPlaceBarBackgroundPrivate;
 #define _cairo_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_destroy (var), NULL)))
 #define _cairo_pattern_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_pattern_destroy (var), NULL)))
@@ -181,6 +181,8 @@ struct _UnityPlacesPlaceEntryIface {
 	void (*set_global_results_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
 	GeeHashMap* (*get_global_renderer_hints) (UnityPlacesPlaceEntry* self);
 	void (*set_global_renderer_hints) (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+	UnityPlacesPlace* (*get_parent) (UnityPlacesPlaceEntry* self);
+	void (*set_parent) (UnityPlacesPlaceEntry* self, UnityPlacesPlace* value);
 };
 
 struct _UnityPlacesPlaceBarBackground {
@@ -225,6 +227,7 @@ UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void);
 void unity_testing_object_registry_register (UnityTestingObjectRegistry* self, const char* name, GObject* object);
 UnityPlacesPlaceBar* unity_places_place_bar_new (UnityShell* shell, UnityPlacesPlaceModel* model);
 UnityPlacesPlaceBar* unity_places_place_bar_construct (GType object_type, UnityShell* shell, UnityPlacesPlaceModel* model);
+GType unity_places_place_get_type (void) G_GNUC_CONST;
 GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
 void unity_places_place_entry_set_active (UnityPlacesPlaceEntry* self, gboolean value);
 UnityPlacesPlaceEntry* unity_places_place_entry_view_get_entry (UnityPlacesPlaceEntryView* self);
@@ -244,12 +247,11 @@ UnityPlacesPlaceModel* unity_places_place_bar_get_model (UnityPlacesPlaceBar* se
 void unity_places_place_bar_set_model (UnityPlacesPlaceBar* self, UnityPlacesPlaceModel* value);
 UnityPlacesPlaceBarBackground* unity_places_place_bar_background_new (UnityShell* shell);
 UnityPlacesPlaceBarBackground* unity_places_place_bar_background_construct (GType object_type, UnityShell* shell);
-GType unity_places_place_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceView* unity_places_place_view_new (UnityPlacesPlace* place);
 UnityPlacesPlaceView* unity_places_place_view_construct (GType object_type, UnityPlacesPlace* place);
 static void _unity_places_place_bar_on_entry_activated_unity_places_place_view_entry_activated (UnityPlacesPlaceView* _sender, UnityPlacesPlaceEntryView* entry_view, gpointer self);
-static void _lambda6_ (UnityPlacesPlace* p, UnityPlacesPlaceBar* self);
-static void __lambda6__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self);
+static void _lambda46_ (UnityPlacesPlace* p, UnityPlacesPlaceBar* self);
+static void __lambda46__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self);
 static GObject * unity_places_place_bar_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_place_bar_finalize (GObject* obj);
 static void unity_places_place_bar_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -441,7 +443,7 @@ static void _unity_places_place_bar_on_entry_activated_unity_places_place_view_e
 }
 
 
-static void _lambda6_ (UnityPlacesPlace* p, UnityPlacesPlaceBar* self) {
+static void _lambda46_ (UnityPlacesPlace* p, UnityPlacesPlaceBar* self) {
 	UnityPlacesPlaceView* view;
 	g_return_if_fail (p != NULL);
 	view = g_object_ref_sink (unity_places_place_view_new (p));
@@ -452,8 +454,8 @@ static void _lambda6_ (UnityPlacesPlace* p, UnityPlacesPlaceBar* self) {
 }
 
 
-static void __lambda6__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self) {
-	_lambda6_ (place, self);
+static void __lambda46__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self) {
+	_lambda46_ (place, self);
 }
 
 
@@ -476,6 +478,7 @@ static GObject * unity_places_place_bar_constructor (GType type, guint n_constru
 		ctk_effect_glow_set_color (self->priv->glow, (_tmp3_ = (_tmp2_.red = (guint8) 255, _tmp2_.green = (guint8) 255, _tmp2_.blue = (guint8) 255, _tmp2_.alpha = (guint8) 255, _tmp2_), &_tmp3_));
 		ctk_effect_glow_set_factor (self->priv->glow, 1.0f);
 		ctk_effect_set_margin ((CtkEffect*) self->priv->glow, 5);
+		ctk_actor_add_effect ((CtkActor*) self, (CtkEffect*) self->priv->glow);
 		{
 			GeeIterator* _place_it;
 			_place_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) self->priv->_model);
@@ -495,7 +498,7 @@ static GObject * unity_places_place_bar_constructor (GType type, guint n_constru
 			}
 			_g_object_unref0 (_place_it);
 		}
-		g_signal_connect_object (self->priv->_model, "place-added", (GCallback) __lambda6__unity_places_place_model_place_added, self, 0);
+		g_signal_connect_object (self->priv->_model, "place-added", (GCallback) __lambda46__unity_places_place_model_place_added, self, 0);
 	}
 	return obj;
 }
@@ -757,22 +760,22 @@ static GObject * unity_places_place_bar_background_constructor (GType type, guin
 			GdkPixbuf* _tmp5_;
 			_tmp4_ = gdk_pixbuf_new_from_file (UNITY_PLACES_PLACE_BAR_BACKGROUND_BG, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch11_g_error;
+				goto __catch12_g_error;
 			}
 			self->priv->tile = (_tmp5_ = _tmp4_, _g_object_unref0 (self->priv->tile), _tmp5_);
 		}
-		goto __finally11;
-		__catch11_g_error:
+		goto __finally12;
+		__catch12_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("places-place-bar.vala:192: Unable to load dash background");
+				g_warning ("places-place-bar.vala:191: Unable to load dash background");
 				_g_error_free0 (e);
 			}
 		}
-		__finally11:
+		__finally12:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);

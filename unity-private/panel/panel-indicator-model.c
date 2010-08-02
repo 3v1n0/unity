@@ -29,6 +29,7 @@
 #include <string.h>
 #include <unity-utils.h>
 #include <gtk/gtk.h>
+#include <config.h>
 #include <gio/gio.h>
 
 
@@ -282,7 +283,7 @@ UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_
 		GFileInfo* file_info;
 		e = g_file_enumerate_children (dir, G_FILE_ATTRIBUTE_STANDARD_NAME, 0, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch7_g_error;
+			goto __catch10_g_error;
 		}
 		sos = gee_array_list_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, NULL);
 		file_info = NULL;
@@ -297,7 +298,7 @@ UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_
 				_g_object_unref0 (file_info);
 				_g_object_unref0 (sos);
 				_g_object_unref0 (e);
-				goto __catch7_g_error;
+				goto __catch10_g_error;
 			}
 			if (!((file_info = (_tmp6_ = _tmp5_, _g_object_unref0 (file_info), _tmp6_)) != NULL)) {
 				break;
@@ -333,8 +334,8 @@ UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_
 		_g_object_unref0 (sos);
 		_g_object_unref0 (e);
 	}
-	goto __finally7;
-	__catch7_g_error:
+	goto __finally10;
+	__catch10_g_error:
 	{
 		GError * _error_;
 		_error_ = _inner_error_;
@@ -344,7 +345,7 @@ UnityPanelIndicatorsIndicatorsFileModel* unity_panel_indicators_indicators_file_
 			_g_error_free0 (_error_);
 		}
 	}
-	__finally7:
+	__finally10:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (dir);
 		_g_free0 (skip_list);

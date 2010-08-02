@@ -123,11 +123,12 @@ namespace Unity.Launcher
       Cairo.Context selected_cr = new Cairo.Context (selected_surf);
       Gtk.Settings settings = Gtk.Settings.get_default ();
 
-      string formatted_label = label;
+      string formatted_label = Utils.strip_characters (label, "", "_", "_");
+
       if (active)
-        formatted_label = formatted_label + " ◉";
+        formatted_label =  "◉ " + formatted_label;
       else
-        formatted_label = formatted_label + " ○";
+        formatted_label =  "○ " + formatted_label;
 
       Unity.QuicklistRendering.Item.normal_mask (normal_cr,
                                                  this.last_width,

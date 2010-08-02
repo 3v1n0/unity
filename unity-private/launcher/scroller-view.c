@@ -26,8 +26,8 @@
 #include <float.h>
 #include <math.h>
 #include <clutk/clutk.h>
-#include <unity.h>
 #include <clutter/clutter.h>
+#include <unity.h>
 #include <gee.h>
 #include <string.h>
 #include <stdlib.h>
@@ -92,8 +92,18 @@ typedef struct _UnityLauncherScrollerChildClass UnityLauncherScrollerChildClass;
 typedef struct _UnityLauncherScrollerModelIterator UnityLauncherScrollerModelIterator;
 typedef struct _UnityLauncherScrollerModelIteratorClass UnityLauncherScrollerModelIteratorClass;
 #define _unity_launcher_scroller_model_iterator_unref0(var) ((var == NULL) ? NULL : (var = (unity_launcher_scroller_model_iterator_unref (var), NULL)))
+
+#define UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER (unity_launcher_scroller_child_controller_get_type ())
+#define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildController))
+#define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildControllerClass))
+#define UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER))
+#define UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER))
+#define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildControllerClass))
+
+typedef struct _UnityLauncherScrollerChildController UnityLauncherScrollerChildController;
+typedef struct _UnityLauncherScrollerChildControllerClass UnityLauncherScrollerChildControllerClass;
 #define __g_slist_free_g_free0(var) ((var == NULL) ? NULL : (var = (_g_slist_free_g_free (var), NULL)))
-typedef struct _Block9Data Block9Data;
+typedef struct _Block10Data Block10Data;
 
 #define TYPE_MENU_MANAGER (menu_manager_get_type ())
 #define MENU_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), TYPE_MENU_MANAGER, MenuManager))
@@ -155,6 +165,7 @@ struct _UnityLauncherScrollerView {
 	gint drag_sensitivity;
 	float friction;
 	gboolean is_animating;
+	ClutterTimeline* fling_timeline;
 };
 
 struct _UnityLauncherScrollerViewClass {
@@ -163,6 +174,7 @@ struct _UnityLauncherScrollerViewClass {
 
 struct _UnityLauncherScrollerViewPrivate {
 	UnityLauncherScrollerModel* _model;
+	CtkEffectCache* _cache;
 	UnityThemeImage* bgtex;
 	UnityThemeImage* top_shadow;
 	gboolean button_down;
@@ -173,7 +185,9 @@ struct _UnityLauncherScrollerViewPrivate {
 	gboolean is_scrolling;
 	float scroll_position;
 	float settle_position;
-	ClutterTimeline* fling_timeline;
+	gboolean _is_autoscrolling;
+	gboolean autoscroll_anim_active;
+	gint autoscroll_direction;
 	float previous_y_position;
 	guint previous_y_time;
 	guint stored_delta;
@@ -183,9 +197,10 @@ struct _UnityLauncherScrollerViewPrivate {
 	GeeArrayList* draw_ftb;
 	GeeArrayList* draw_btf;
 	GeeArrayList* child_refs;
+	float autoscroll_mouse_pos_cache;
 };
 
-struct _Block9Data {
+struct _Block10Data {
 	int _ref_count_;
 	UnityLauncherScrollerView * self;
 	UnityLauncherScrollerChild* child;
@@ -216,10 +231,12 @@ GType unity_launcher_scroller_child_get_type (void) G_GNUC_CONST;
 #define UNITY_LAUNCHER_SCROLLER_VIEW_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_SCROLLER_VIEW, UnityLauncherScrollerViewPrivate))
 enum  {
 	UNITY_LAUNCHER_SCROLLER_VIEW_DUMMY_PROPERTY,
-	UNITY_LAUNCHER_SCROLLER_VIEW_MODEL
+	UNITY_LAUNCHER_SCROLLER_VIEW_MODEL,
+	UNITY_LAUNCHER_SCROLLER_VIEW_CACHE,
+	UNITY_LAUNCHER_SCROLLER_VIEW_IS_AUTOSCROLLING
 };
-UnityLauncherScrollerView* unity_launcher_scroller_view_new (UnityLauncherScrollerModel* _model);
-UnityLauncherScrollerView* unity_launcher_scroller_view_construct (GType object_type, UnityLauncherScrollerModel* _model);
+UnityLauncherScrollerView* unity_launcher_scroller_view_new (UnityLauncherScrollerModel* _model, CtkEffectCache* _cache);
+UnityLauncherScrollerView* unity_launcher_scroller_view_construct (GType object_type, UnityLauncherScrollerModel* _model, CtkEffectCache* _cache);
 UnityLauncherScrollerModel* unity_launcher_scroller_view_get_model (UnityLauncherScrollerView* self);
 gpointer unity_launcher_scroller_model_iterator_ref (gpointer instance);
 void unity_launcher_scroller_model_iterator_unref (gpointer instance);
@@ -235,25 +252,34 @@ float unity_launcher_scroller_child_get_position (UnityLauncherScrollerChild* se
 static float* _float_dup (float* self);
 void unity_launcher_scroller_child_set_position (UnityLauncherScrollerChild* self, float value);
 gint unity_launcher_scroller_view_get_model_index_at_y_pos (UnityLauncherScrollerView* self, float y, gboolean return_minus_if_fail);
+GType unity_launcher_scroller_child_controller_get_type (void) G_GNUC_CONST;
+UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (UnityLauncherScrollerChildController* self);
+gint unity_launcher_scroller_model_clamp (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child, gint value);
 static void _g_slist_free_g_free (GSList* self);
 gint unity_launcher_scroller_view_get_model_index_at_y_pos_no_anim (UnityLauncherScrollerView* self, float y, gboolean return_minus_if_fail);
 UnityLauncherScrollerChild* unity_launcher_scroller_model_get (UnityLauncherScrollerModel* self, gint i);
 gint unity_launcher_scroller_model_get_size (UnityLauncherScrollerModel* self);
 gint unity_launcher_scroller_model_index_of (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
 static void unity_launcher_scroller_view_load_textures (UnityLauncherScrollerView* self);
+static float unity_launcher_scroller_view_get_total_children_height (UnityLauncherScrollerView* self);
+static float unity_launcher_scroller_view_get_available_height (UnityLauncherScrollerView* self);
 static void unity_launcher_scroller_view_order_children (UnityLauncherScrollerView* self, gboolean immediate);
-static void unity_launcher_scroller_view_move_scroll_position (UnityLauncherScrollerView* self, float pixels);
+static void unity_launcher_scroller_view_move_scroll_position (UnityLauncherScrollerView* self, float pixels, gboolean check_bounds);
 static void unity_launcher_scroller_view_disable_animations_on_children (UnityLauncherScrollerView* self, ClutterEvent* event);
-static void _lambda33_ (UnityLauncherScrollerView* self);
-static void __lambda33__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _lambda53_ (UnityLauncherScrollerView* self);
+static void __lambda53__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static void unity_launcher_scroller_view_model_child_added (UnityLauncherScrollerView* self, UnityLauncherScrollerChild* child);
 #define UNITY_LAUNCHER_SHORT_DELAY ((guint) 400)
-static void _lambda34_ (Block9Data* _data9_);
-static void __lambda34__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
-static Block9Data* block9_data_ref (Block9Data* _data9_);
-static void block9_data_unref (Block9Data* _data9_);
+static void _lambda54_ (Block10Data* _data10_);
+static void __lambda54__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
+static Block10Data* block10_data_ref (Block10Data* _data10_);
+static void block10_data_unref (Block10Data* _data10_);
 static void unity_launcher_scroller_view_model_child_removed (UnityLauncherScrollerView* self, UnityLauncherScrollerChild* child);
 static void unity_launcher_scroller_view_model_order_changed (UnityLauncherScrollerView* self);
+gboolean unity_launcher_scroller_view_get_is_autoscrolling (UnityLauncherScrollerView* self);
+static gboolean _lambda55_ (UnityLauncherScrollerView* self);
+static gboolean __lambda55__gsource_func (gpointer self);
+static void unity_launcher_scroller_view_on_auto_scrolling_state_change (UnityLauncherScrollerView* self);
 static gboolean unity_launcher_scroller_view_on_button_release_event (UnityLauncherScrollerView* self, ClutterEvent* event);
 static gboolean _unity_launcher_scroller_view_on_button_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static gboolean unity_launcher_scroller_view_on_button_press_event (UnityLauncherScrollerView* self, ClutterEvent* event);
@@ -263,13 +289,16 @@ static float unity_launcher_scroller_view_get_aligned_settle_position (UnityLaun
 GType menu_manager_get_type (void) G_GNUC_CONST;
 MenuManager* menu_manager_get_default (void);
 void menu_manager_popdown_current_menu (MenuManager* self);
-static float unity_launcher_scroller_view_get_total_children_height (UnityLauncherScrollerView* self);
-static float unity_launcher_scroller_view_get_available_height (UnityLauncherScrollerView* self);
 static gboolean unity_launcher_scroller_view_on_enter_event (UnityLauncherScrollerView* self, ClutterEvent* event);
-static gboolean unity_launcher_scroller_view_on_leave_event (UnityLauncherScrollerView* self, ClutterEvent* event);
+gboolean unity_launcher_scroller_child_get_active (UnityLauncherScrollerChild* self);
+void unity_launcher_scroller_view_set_is_autoscrolling (UnityLauncherScrollerView* self, gboolean value);
+static gboolean unity_launcher_scroller_view_on_stage_motion (UnityLauncherScrollerView* self, ClutterEvent* event);
+static gboolean unity_launcher_scroller_view_on_autoscroll_motion_check (UnityLauncherScrollerView* self, float y);
+static void unity_launcher_scroller_view_on_drag_motion_event (UnityLauncherScrollerView* self, UnityDragModel* model, float x, float y);
 static void unity_launcher_scroller_view_do_anim_settle (UnityLauncherScrollerView* self, ClutterTimeline* timeline, gint msecs);
 static void unity_launcher_scroller_view_do_anim_fling (UnityLauncherScrollerView* self, ClutterTimeline* timeline, gint msecs);
 static void unity_launcher_scroller_view_do_anim_bounce (UnityLauncherScrollerView* self, ClutterTimeline* timeline, gint msecs);
+CtkEffectCache* unity_launcher_scroller_view_get_cache (UnityLauncherScrollerView* self);
 static void unity_launcher_scroller_view_on_scroller_frame (UnityLauncherScrollerView* self, ClutterTimeline* timeline, gint msecs);
 static void unity_launcher_scroller_view_real_get_preferred_width (ClutterActor* base, float for_height, float* minimum_width, float* natural_width);
 static void unity_launcher_scroller_view_real_get_preferred_height (ClutterActor* base, float for_width, float* minimum_height, float* natural_height);
@@ -283,6 +312,7 @@ static void unity_launcher_scroller_view_real_paint (ClutterActor* base);
 static void unity_launcher_scroller_view_real_map (ClutterActor* base);
 static void unity_launcher_scroller_view_real_unmap (ClutterActor* base);
 static void unity_launcher_scroller_view_set_model (UnityLauncherScrollerView* self, UnityLauncherScrollerModel* value);
+static void unity_launcher_scroller_view_set_cache (UnityLauncherScrollerView* self, CtkEffectCache* value);
 gpointer unity_testing_object_registry_ref (gpointer instance);
 void unity_testing_object_registry_unref (gpointer instance);
 GParamSpec* unity_testing_param_spec_object_registry (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
@@ -297,12 +327,22 @@ static void _unity_launcher_scroller_view_model_child_removed_unity_launcher_scr
 static void _unity_launcher_scroller_view_model_order_changed_unity_launcher_scroller_model_order_changed (UnityLauncherScrollerModel* _sender, gpointer self);
 static gboolean _unity_launcher_scroller_view_on_button_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static gboolean _unity_launcher_scroller_view_on_enter_event_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
-static gboolean _unity_launcher_scroller_view_on_leave_event_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _unity_launcher_scroller_view_on_stage_motion_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static void _lambda56_ (UnityLauncherScrollerView* self);
+static void __lambda56__clutter_actor_parent_set (ClutterActor* _sender, ClutterActor* old_parent, gpointer self);
+static void _unity_launcher_scroller_view_on_auto_scrolling_state_change_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _unity_launcher_scroller_view_on_drag_motion_event_unity_drag_controller_drag_motion (UnityDragController* _sender, UnityDragModel* model, float x, float y, gpointer self);
 static void _unity_launcher_scroller_view_on_scroller_frame_clutter_timeline_new_frame (ClutterTimeline* _sender, gint msecs, gpointer self);
-static void _lambda35_ (UnityLauncherScrollerView* self);
-static void __lambda35__unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self);
-static gboolean _lambda36_ (UnityLauncherScrollerView* self);
-static gboolean __lambda36__gsource_func (gpointer self);
+static void _lambda57_ (UnityLauncherScrollerView* self);
+static void __lambda57__clutter_timeline_started (ClutterTimeline* _sender, gpointer self);
+static gboolean _lambda59_ (UnityLauncherScrollerView* self);
+static gboolean __lambda59__gsource_func (gpointer self);
+static void _lambda58_ (UnityLauncherScrollerView* self);
+static void __lambda58__clutter_timeline_completed (ClutterTimeline* _sender, gpointer self);
+static void _lambda60_ (UnityLauncherScrollerView* self);
+static void __lambda60__unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self);
+static gboolean _lambda61_ (UnityLauncherScrollerView* self);
+static gboolean __lambda61__gsource_func (gpointer self);
 static GObject * unity_launcher_scroller_view_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_launcher_scroller_view_finalize (GObject* obj);
 static void unity_launcher_scroller_view_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -505,16 +545,17 @@ void unity_launcher_child_transition_unref (gpointer instance) {
 }
 
 
-UnityLauncherScrollerView* unity_launcher_scroller_view_construct (GType object_type, UnityLauncherScrollerModel* _model) {
+UnityLauncherScrollerView* unity_launcher_scroller_view_construct (GType object_type, UnityLauncherScrollerModel* _model, CtkEffectCache* _cache) {
 	UnityLauncherScrollerView * self;
 	g_return_val_if_fail (_model != NULL, NULL);
-	self = (UnityLauncherScrollerView*) g_object_new (object_type, "model", _model, NULL);
+	g_return_val_if_fail (_cache != NULL, NULL);
+	self = (UnityLauncherScrollerView*) g_object_new (object_type, "model", _model, "cache", _cache, NULL);
 	return self;
 }
 
 
-UnityLauncherScrollerView* unity_launcher_scroller_view_new (UnityLauncherScrollerModel* _model) {
-	return unity_launcher_scroller_view_construct (UNITY_LAUNCHER_TYPE_SCROLLER_VIEW, _model);
+UnityLauncherScrollerView* unity_launcher_scroller_view_new (UnityLauncherScrollerModel* _model, CtkEffectCache* _cache) {
+	return unity_launcher_scroller_view_construct (UNITY_LAUNCHER_TYPE_SCROLLER_VIEW, _model, _cache);
 }
 
 
@@ -547,6 +588,10 @@ gint unity_launcher_scroller_view_get_model_index_at_y_pos_no_anim (UnityLaunche
 	GSList* positions;
 	gint value;
 	GSList* list;
+	UnityLauncherScrollerChildController* _tmp2_;
+	UnityDragModel* _tmp1_;
+	UnityLauncherScrollerChild* _tmp3_;
+	UnityLauncherScrollerChild* child;
 	g_return_val_if_fail (self != NULL, 0);
 	positions = NULL;
 	{
@@ -567,8 +612,10 @@ gint unity_launcher_scroller_view_get_model_index_at_y_pos_no_anim (UnityLaunche
 			if (CLUTTER_IS_ANIMATION (anim)) {
 				ClutterInterval* interval;
 				interval = _g_object_ref0 (clutter_animation_get_interval (anim, "position"));
-				clutter_interval_get_final_value (interval, &value);
-				unity_launcher_scroller_child_set_position (child, g_value_get_float (&value));
+				if (CLUTTER_IS_INTERVAL (interval)) {
+					clutter_interval_get_final_value (interval, &value);
+					unity_launcher_scroller_child_set_position (child, g_value_get_float (&value));
+				}
 				_g_object_unref0 (interval);
 			}
 			_g_object_unref0 (anim);
@@ -594,7 +641,10 @@ gint unity_launcher_scroller_view_get_model_index_at_y_pos_no_anim (UnityLaunche
 		}
 		_unity_launcher_scroller_model_iterator_unref0 (_child_it);
 	}
+	child = (_tmp3_ = _g_object_ref0 (unity_launcher_scroller_child_controller_get_child (_tmp2_ = (_tmp1_ = unity_drag_controller_get_drag_model (unity_drag_controller_get_default ()), UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER (_tmp1_) ? ((UnityLauncherScrollerChildController*) _tmp1_) : NULL))), _g_object_unref0 (_tmp2_), _tmp3_);
+	value = unity_launcher_scroller_model_clamp (self->priv->_model, child, value);
 	result = value;
+	_g_object_unref0 (child);
 	__g_slist_free_g_free0 (positions);
 	return result;
 }
@@ -658,9 +708,13 @@ static void unity_launcher_scroller_view_load_textures (UnityLauncherScrollerVie
 }
 
 
-static void unity_launcher_scroller_view_move_scroll_position (UnityLauncherScrollerView* self, float pixels) {
+static void unity_launcher_scroller_view_move_scroll_position (UnityLauncherScrollerView* self, float pixels, gboolean check_bounds) {
 	g_return_if_fail (self != NULL);
 	self->priv->scroll_position = self->priv->scroll_position + pixels;
+	if (check_bounds) {
+		self->priv->scroll_position = fminf (self->priv->scroll_position, (float) 0);
+		self->priv->scroll_position = fmaxf (self->priv->scroll_position, -(unity_launcher_scroller_view_get_total_children_height (self) - unity_launcher_scroller_view_get_available_height (self)));
+	}
 	unity_launcher_scroller_view_order_children (self, TRUE);
 	clutter_actor_queue_relayout ((ClutterActor*) self);
 }
@@ -697,13 +751,13 @@ static void unity_launcher_scroller_view_disable_animations_on_children (UnityLa
 }
 
 
-static void _lambda33_ (UnityLauncherScrollerView* self) {
+static void _lambda53_ (UnityLauncherScrollerView* self) {
 	clutter_actor_queue_relayout ((ClutterActor*) self);
 }
 
 
-static void __lambda33__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda33_ (self);
+static void __lambda53__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda53_ (self);
 }
 
 
@@ -718,54 +772,54 @@ static void unity_launcher_scroller_view_model_child_added (UnityLauncherScrolle
 		unity_launcher_scroller_view_order_children (self, FALSE);
 	}
 	clutter_actor_queue_relayout ((ClutterActor*) self);
-	g_signal_connect_object ((GObject*) child, "notify::position", (GCallback) __lambda33__g_object_notify, self, 0);
+	g_signal_connect_object ((GObject*) child, "notify::position", (GCallback) __lambda53__g_object_notify, self, 0);
 }
 
 
-static void _lambda34_ (Block9Data* _data9_) {
+static void _lambda54_ (Block10Data* _data10_) {
 	UnityLauncherScrollerView * self;
-	self = _data9_->self;
-	clutter_actor_unparent ((ClutterActor*) _data9_->child);
-	gee_abstract_collection_remove ((GeeAbstractCollection*) self->priv->child_refs, _data9_->child);
+	self = _data10_->self;
+	clutter_actor_unparent ((ClutterActor*) _data10_->child);
+	gee_abstract_collection_remove ((GeeAbstractCollection*) self->priv->child_refs, _data10_->child);
 }
 
 
-static void __lambda34__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	_lambda34_ (self);
+static void __lambda54__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+	_lambda54_ (self);
 }
 
 
-static Block9Data* block9_data_ref (Block9Data* _data9_) {
-	g_atomic_int_inc (&_data9_->_ref_count_);
-	return _data9_;
+static Block10Data* block10_data_ref (Block10Data* _data10_) {
+	g_atomic_int_inc (&_data10_->_ref_count_);
+	return _data10_;
 }
 
 
-static void block9_data_unref (Block9Data* _data9_) {
-	if (g_atomic_int_dec_and_test (&_data9_->_ref_count_)) {
-		_g_object_unref0 (_data9_->self);
-		_g_object_unref0 (_data9_->child);
-		g_slice_free (Block9Data, _data9_);
+static void block10_data_unref (Block10Data* _data10_) {
+	if (g_atomic_int_dec_and_test (&_data10_->_ref_count_)) {
+		_g_object_unref0 (_data10_->self);
+		_g_object_unref0 (_data10_->child);
+		g_slice_free (Block10Data, _data10_);
 	}
 }
 
 
 static void unity_launcher_scroller_view_model_child_removed (UnityLauncherScrollerView* self, UnityLauncherScrollerChild* child) {
-	Block9Data* _data9_;
+	Block10Data* _data10_;
 	ClutterAnimation* anim;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (child != NULL);
-	_data9_ = g_slice_new0 (Block9Data);
-	_data9_->_ref_count_ = 1;
-	_data9_->self = g_object_ref (self);
-	_data9_->child = _g_object_ref0 (child);
-	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->child_refs, _data9_->child);
-	anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) _data9_->child, (gulong) CLUTTER_EASE_OUT_QUAD, UNITY_LAUNCHER_SHORT_DELAY, "opacity", 0, NULL));
-	g_signal_connect_data (anim, "completed", (GCallback) __lambda34__clutter_animation_completed, block9_data_ref (_data9_), (GClosureNotify) block9_data_unref, 0);
+	_data10_ = g_slice_new0 (Block10Data);
+	_data10_->_ref_count_ = 1;
+	_data10_->self = g_object_ref (self);
+	_data10_->child = _g_object_ref0 (child);
+	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->child_refs, _data10_->child);
+	anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) _data10_->child, (gulong) CLUTTER_EASE_OUT_QUAD, UNITY_LAUNCHER_SHORT_DELAY, "opacity", 0, NULL));
+	g_signal_connect_data (anim, "completed", (GCallback) __lambda54__clutter_animation_completed, block10_data_ref (_data10_), (GClosureNotify) block10_data_unref, 0);
 	unity_launcher_scroller_view_order_children (self, FALSE);
 	clutter_actor_queue_relayout ((ClutterActor*) self);
 	_g_object_unref0 (anim);
-	block9_data_unref (_data9_);
+	block10_data_unref (_data10_);
 }
 
 
@@ -773,6 +827,40 @@ static void unity_launcher_scroller_view_model_order_changed (UnityLauncherScrol
 	g_return_if_fail (self != NULL);
 	unity_launcher_scroller_view_order_children (self, FALSE);
 	clutter_actor_queue_relayout ((ClutterActor*) self);
+}
+
+
+static gboolean _lambda55_ (UnityLauncherScrollerView* self) {
+	gboolean result = FALSE;
+	float speed;
+	speed = 12.0f - self->priv->autoscroll_mouse_pos_cache;
+	speed = speed / 12.0f;
+	speed = speed * ((float) self->priv->autoscroll_direction);
+	unity_launcher_scroller_view_move_scroll_position (self, speed, TRUE);
+	self->priv->autoscroll_anim_active = self->priv->_is_autoscrolling;
+	result = self->priv->_is_autoscrolling;
+	return result;
+}
+
+
+static gboolean __lambda55__gsource_func (gpointer self) {
+	gboolean result;
+	result = _lambda55_ (self);
+	return result;
+}
+
+
+static void unity_launcher_scroller_view_on_auto_scrolling_state_change (UnityLauncherScrollerView* self) {
+	gboolean _tmp0_ = FALSE;
+	g_return_if_fail (self != NULL);
+	if (self->priv->autoscroll_anim_active == FALSE) {
+		_tmp0_ = self->priv->_is_autoscrolling;
+	} else {
+		_tmp0_ = FALSE;
+	}
+	if (_tmp0_) {
+		g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 33, __lambda55__gsource_func, g_object_ref (self), g_object_unref);
+	}
 }
 
 
@@ -845,7 +933,7 @@ static gboolean unity_launcher_scroller_view_on_button_release_event (UnityLaunc
 			}
 			_unity_launcher_scroller_model_iterator_unref0 (_child_it);
 		}
-		clutter_timeline_start (self->priv->fling_timeline);
+		clutter_timeline_start (self->fling_timeline);
 	}
 	manager = menu_manager_get_default ();
 	menu_manager_popdown_current_menu (manager);
@@ -863,7 +951,6 @@ static gboolean unity_launcher_scroller_view_on_enter_event (UnityLauncherScroll
 		return result;
 	}
 	self->priv->view_type = UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_EXPANDED;
-	unity_shell_add_fullscreen_request (unity_global_shell, (GObject*) self);
 	if (unity_launcher_scroller_view_get_total_children_height (self) > unity_launcher_scroller_view_get_available_height (self)) {
 		gint index;
 		UnityLauncherScrollerChild* _tmp0_;
@@ -892,24 +979,81 @@ static gboolean unity_launcher_scroller_view_on_enter_event (UnityLauncherScroll
 }
 
 
-static gboolean unity_launcher_scroller_view_on_leave_event (UnityLauncherScrollerView* self, ClutterEvent* event) {
+static gboolean unity_launcher_scroller_view_on_stage_motion (UnityLauncherScrollerView* self, ClutterEvent* event) {
 	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	if (self->priv->view_type == UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_CONTRACTED) {
 		result = FALSE;
 		return result;
 	}
-	if ((*event).crossing.x < (clutter_actor_get_width ((ClutterActor*) self) - 1)) {
+	if ((*event).crossing.x < clutter_actor_get_width ((ClutterActor*) self)) {
 		result = FALSE;
 		return result;
 	}
-	unity_shell_remove_fullscreen_request (unity_global_shell, (GObject*) self);
-	self->priv->focused_launcher = unity_launcher_scroller_view_get_model_index_at_y_pos (self, (*event).crossing.y, FALSE);
+	{
+		UnityLauncherScrollerModelIterator* _child_it;
+		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+		while (TRUE) {
+			UnityLauncherScrollerChild* child;
+			if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+				break;
+			}
+			child = unity_launcher_scroller_model_iterator_get (_child_it);
+			if (unity_launcher_scroller_child_get_active (child)) {
+				self->priv->focused_launcher = unity_launcher_scroller_model_index_of (self->priv->_model, child);
+			}
+			_g_object_unref0 (child);
+		}
+		_unity_launcher_scroller_model_iterator_unref0 (_child_it);
+	}
 	self->priv->view_type = UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_CONTRACTED;
 	unity_launcher_scroller_view_order_children (self, FALSE);
 	clutter_actor_queue_relayout ((ClutterActor*) self);
+	unity_launcher_scroller_view_set_is_autoscrolling (self, FALSE);
 	result = FALSE;
 	return result;
+}
+
+
+static gboolean unity_launcher_scroller_view_on_autoscroll_motion_check (UnityLauncherScrollerView* self, float y) {
+	gboolean result = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	if (unity_launcher_scroller_view_get_total_children_height (self) < unity_launcher_scroller_view_get_available_height (self)) {
+		unity_launcher_scroller_view_set_is_autoscrolling (self, FALSE);
+	} else {
+		float pos_x = 0.0F;
+		float pos_y = 0.0F;
+		float transformed_y;
+		gboolean _tmp0_ = FALSE;
+		clutter_actor_get_transformed_position ((ClutterActor*) self, &pos_x, &pos_y);
+		transformed_y = y - pos_y;
+		self->priv->autoscroll_mouse_pos_cache = transformed_y;
+		if (transformed_y > (clutter_actor_get_height ((ClutterActor*) self) / 2)) {
+			self->priv->autoscroll_direction = -1;
+			self->priv->autoscroll_mouse_pos_cache = self->priv->autoscroll_mouse_pos_cache - clutter_actor_get_height ((ClutterActor*) self);
+		} else {
+			self->priv->autoscroll_direction = 1;
+		}
+		if (transformed_y < 12) {
+			_tmp0_ = TRUE;
+		} else {
+			_tmp0_ = transformed_y > (clutter_actor_get_height ((ClutterActor*) self) - 12);
+		}
+		if (_tmp0_) {
+			unity_launcher_scroller_view_set_is_autoscrolling (self, TRUE);
+		} else {
+			unity_launcher_scroller_view_set_is_autoscrolling (self, FALSE);
+		}
+	}
+	result = FALSE;
+	return result;
+}
+
+
+static void unity_launcher_scroller_view_on_drag_motion_event (UnityLauncherScrollerView* self, UnityDragModel* model, float x, float y) {
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (model != NULL);
+	unity_launcher_scroller_view_on_autoscroll_motion_check (self, y);
 }
 
 
@@ -919,6 +1063,7 @@ static gboolean unity_launcher_scroller_view_on_motion_event (UnityLauncherScrol
 	gboolean _tmp0_ = FALSE;
 	gboolean _tmp1_ = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
+	unity_launcher_scroller_view_on_autoscroll_motion_check (self, (*event).motion.y);
 	drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
 	if (unity_drag_controller_get_is_dragging (drag_controller)) {
 		result = FALSE;
@@ -955,7 +1100,7 @@ static gboolean unity_launcher_scroller_view_on_motion_event (UnityLauncherScrol
 		self->priv->scroll_speed = pixel_diff / (time_diff / 1000.0f);
 		self->priv->previous_y_position = (*event).motion.y;
 		self->priv->previous_y_time = (guint) (*event).motion.time;
-		unity_launcher_scroller_view_move_scroll_position (self, pixel_diff);
+		unity_launcher_scroller_view_move_scroll_position (self, pixel_diff, FALSE);
 		result = TRUE;
 		_g_object_unref0 (drag_controller);
 		return result;
@@ -1025,6 +1170,11 @@ static void unity_launcher_scroller_view_on_scroller_frame (UnityLauncherScrolle
 			}
 		}
 	}
+	if (self->priv->current_phase == UNITY_LAUNCHER_SCROLLER_PHASE_NONE) {
+		ctk_effect_cache_update_texture_cache (self->priv->_cache);
+	} else {
+		ctk_effect_cache_invalidate_texture_cache (self->priv->_cache);
+	}
 	self->priv->stored_delta = delta;
 }
 
@@ -1034,7 +1184,7 @@ static void unity_launcher_scroller_view_do_anim_settle (UnityLauncherScrollerVi
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (timeline != NULL);
 	distance = self->priv->settle_position - self->priv->scroll_position;
-	unity_launcher_scroller_view_move_scroll_position (self, distance * 0.2f);
+	unity_launcher_scroller_view_move_scroll_position (self, distance * 0.2f, FALSE);
 	if (fabs ((double) distance) < 1) {
 		self->priv->current_phase = UNITY_LAUNCHER_SCROLLER_PHASE_NONE;
 	}
@@ -1050,7 +1200,7 @@ static void unity_launcher_scroller_view_do_anim_fling (UnityLauncherScrollerVie
 	g_return_if_fail (timeline != NULL);
 	self->priv->scroll_speed = self->priv->scroll_speed * self->friction;
 	scroll_move_amount = self->priv->scroll_speed / 60.0f;
-	unity_launcher_scroller_view_move_scroll_position (self, scroll_move_amount);
+	unity_launcher_scroller_view_move_scroll_position (self, scroll_move_amount, FALSE);
 	if (scroll_move_amount <= (-1.0)) {
 		_tmp1_ = (-self->priv->scroll_position) > (self->priv->total_child_height - clutter_actor_get_height ((ClutterActor*) self));
 	} else {
@@ -1096,7 +1246,7 @@ static void unity_launcher_scroller_view_do_anim_bounce (UnityLauncherScrollerVi
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (timeline != NULL);
 	self->priv->scroll_speed = self->priv->scroll_speed * 0.5f;
-	unity_launcher_scroller_view_move_scroll_position (self, self->priv->scroll_speed / 60.0f);
+	unity_launcher_scroller_view_move_scroll_position (self, self->priv->scroll_speed / 60.0f, FALSE);
 	self->priv->settle_position = -unity_launcher_scroller_view_get_aligned_settle_position (self);
 	self->priv->current_phase = UNITY_LAUNCHER_SCROLLER_PHASE_SETTLING;
 }
@@ -1266,7 +1416,9 @@ static void unity_launcher_scroller_view_order_children (UnityLauncherScrollerVi
 						gboolean _tmp7_;
 						g_value_init (&value, G_TYPE_FLOAT);
 						interval = _g_object_ref0 (clutter_animation_get_interval (clutter_actor_get_animation ((ClutterActor*) child), "position"));
-						clutter_interval_get_final_value (interval, &value);
+						if (CLUTTER_IS_INTERVAL (interval)) {
+							clutter_interval_get_final_value (interval, &value);
+						}
 						if ((_tmp7_ = g_value_get_float (&value) != (_tmp6_ = (UnityLauncherChildTransition*) gee_abstract_list_get ((GeeAbstractList*) transitions, index))->position, _unity_launcher_child_transition_unref0 (_tmp6_), _tmp7_)) {
 							float current_pos;
 							current_pos = unity_launcher_scroller_child_get_position (child);
@@ -1780,6 +1932,37 @@ static void unity_launcher_scroller_view_set_model (UnityLauncherScrollerView* s
 }
 
 
+CtkEffectCache* unity_launcher_scroller_view_get_cache (UnityLauncherScrollerView* self) {
+	CtkEffectCache* result;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = self->priv->_cache;
+	return result;
+}
+
+
+static void unity_launcher_scroller_view_set_cache (UnityLauncherScrollerView* self, CtkEffectCache* value) {
+	CtkEffectCache* _tmp0_;
+	g_return_if_fail (self != NULL);
+	self->priv->_cache = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_cache), _tmp0_);
+	g_object_notify ((GObject *) self, "cache");
+}
+
+
+gboolean unity_launcher_scroller_view_get_is_autoscrolling (UnityLauncherScrollerView* self) {
+	gboolean result;
+	g_return_val_if_fail (self != NULL, FALSE);
+	result = self->priv->_is_autoscrolling;
+	return result;
+}
+
+
+void unity_launcher_scroller_view_set_is_autoscrolling (UnityLauncherScrollerView* self, gboolean value) {
+	g_return_if_fail (self != NULL);
+	self->priv->_is_autoscrolling = value;
+	g_object_notify ((GObject *) self, "is-autoscrolling");
+}
+
+
 static void _unity_launcher_scroller_view_model_child_added_unity_launcher_scroller_model_child_added (UnityLauncherScrollerModel* _sender, UnityLauncherScrollerChild* child, gpointer self) {
 	unity_launcher_scroller_view_model_child_added (self, child);
 }
@@ -1809,10 +1992,30 @@ static gboolean _unity_launcher_scroller_view_on_enter_event_clutter_actor_enter
 }
 
 
-static gboolean _unity_launcher_scroller_view_on_leave_event_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean _unity_launcher_scroller_view_on_stage_motion_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
-	result = unity_launcher_scroller_view_on_leave_event (self, event);
+	result = unity_launcher_scroller_view_on_stage_motion (self, event);
 	return result;
+}
+
+
+static void _lambda56_ (UnityLauncherScrollerView* self) {
+	g_signal_connect_object (clutter_actor_get_stage ((ClutterActor*) self), "motion-event", (GCallback) _unity_launcher_scroller_view_on_stage_motion_clutter_actor_motion_event, self, 0);
+}
+
+
+static void __lambda56__clutter_actor_parent_set (ClutterActor* _sender, ClutterActor* old_parent, gpointer self) {
+	_lambda56_ (self);
+}
+
+
+static void _unity_launcher_scroller_view_on_auto_scrolling_state_change_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	unity_launcher_scroller_view_on_auto_scrolling_state_change (self);
+}
+
+
+static void _unity_launcher_scroller_view_on_drag_motion_event_unity_drag_controller_drag_motion (UnityDragController* _sender, UnityDragModel* model, float x, float y, gpointer self) {
+	unity_launcher_scroller_view_on_drag_motion_event (self, model, x, y);
 }
 
 
@@ -1821,27 +2024,62 @@ static void _unity_launcher_scroller_view_on_scroller_frame_clutter_timeline_new
 }
 
 
-static void _lambda35_ (UnityLauncherScrollerView* self) {
+static void _lambda57_ (UnityLauncherScrollerView* self) {
+	ctk_effect_cache_invalidate_texture_cache (self->priv->_cache);
+}
+
+
+static void __lambda57__clutter_timeline_started (ClutterTimeline* _sender, gpointer self) {
+	_lambda57_ (self);
+}
+
+
+static gboolean _lambda59_ (UnityLauncherScrollerView* self) {
+	gboolean result = FALSE;
+	ctk_effect_cache_update_texture_cache (self->priv->_cache);
+	result = FALSE;
+	return result;
+}
+
+
+static gboolean __lambda59__gsource_func (gpointer self) {
+	gboolean result;
+	result = _lambda59_ (self);
+	return result;
+}
+
+
+static void _lambda58_ (UnityLauncherScrollerView* self) {
+	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda59__gsource_func, g_object_ref (self), g_object_unref);
+}
+
+
+static void __lambda58__clutter_timeline_completed (ClutterTimeline* _sender, gpointer self) {
+	_lambda58_ (self);
+}
+
+
+static void _lambda60_ (UnityLauncherScrollerView* self) {
 	self->priv->is_scrolling = FALSE;
 	self->priv->button_down = FALSE;
 }
 
 
-static void __lambda35__unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self) {
-	_lambda35_ (self);
+static void __lambda60__unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self) {
+	_lambda60_ (self);
 }
 
 
-static gboolean _lambda36_ (UnityLauncherScrollerView* self) {
+static gboolean _lambda61_ (UnityLauncherScrollerView* self) {
 	gboolean result = FALSE;
 	unity_launcher_scroller_view_order_children (self, TRUE);
 	clutter_actor_queue_relayout ((ClutterActor*) self);
 }
 
 
-static gboolean __lambda36__gsource_func (gpointer self) {
+static gboolean __lambda61__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda36_ (self);
+	result = _lambda61_ (self);
 	return result;
 }
 
@@ -1890,17 +2128,21 @@ static GObject * unity_launcher_scroller_view_constructor (GType type, guint n_c
 		g_signal_connect_object ((ClutterActor*) self, "button-release-event", (GCallback) _unity_launcher_scroller_view_on_button_release_event_clutter_actor_button_release_event, self, 0);
 		g_signal_connect_object ((ClutterActor*) self, "motion-event", (GCallback) _unity_launcher_scroller_view_on_motion_event_clutter_actor_motion_event, self, 0);
 		g_signal_connect_object ((ClutterActor*) self, "enter-event", (GCallback) _unity_launcher_scroller_view_on_enter_event_clutter_actor_enter_event, self, 0);
-		g_signal_connect_object ((ClutterActor*) self, "leave-event", (GCallback) _unity_launcher_scroller_view_on_leave_event_clutter_actor_leave_event, self, 0);
-		self->priv->fling_timeline = (_tmp2_ = clutter_timeline_new ((guint) 1000), _g_object_unref0 (self->priv->fling_timeline), _tmp2_);
-		clutter_timeline_set_loop (self->priv->fling_timeline, TRUE);
-		g_signal_connect_object (self->priv->fling_timeline, "new-frame", (GCallback) _unity_launcher_scroller_view_on_scroller_frame_clutter_timeline_new_frame, self, 0);
+		g_signal_connect_object ((ClutterActor*) self, "parent-set", (GCallback) __lambda56__clutter_actor_parent_set, self, 0);
+		g_signal_connect_object ((GObject*) self, "notify::is-autoscrolling", (GCallback) _unity_launcher_scroller_view_on_auto_scrolling_state_change_g_object_notify, self, 0);
+		g_signal_connect_object (unity_drag_controller_get_default (), "drag-motion", (GCallback) _unity_launcher_scroller_view_on_drag_motion_event_unity_drag_controller_drag_motion, self, 0);
+		self->fling_timeline = (_tmp2_ = clutter_timeline_new ((guint) 1000), _g_object_unref0 (self->fling_timeline), _tmp2_);
+		clutter_timeline_set_loop (self->fling_timeline, TRUE);
+		g_signal_connect_object (self->fling_timeline, "new-frame", (GCallback) _unity_launcher_scroller_view_on_scroller_frame_clutter_timeline_new_frame, self, 0);
+		g_signal_connect_object (self->fling_timeline, "started", (GCallback) __lambda57__clutter_timeline_started, self, 0);
+		g_signal_connect_object (self->fling_timeline, "completed", (GCallback) __lambda58__clutter_timeline_completed, self, 0);
 		drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
-		g_signal_connect_object (drag_controller, "drag-start", (GCallback) __lambda35__unity_drag_controller_drag_start, self, 0);
+		g_signal_connect_object (drag_controller, "drag-start", (GCallback) __lambda60__unity_drag_controller_drag_start, self, 0);
 		clutter_actor_set_reactive ((ClutterActor*) self, TRUE);
 		self->priv->child_refs = (_tmp3_ = gee_array_list_new (UNITY_LAUNCHER_TYPE_SCROLLER_CHILD, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->priv->child_refs), _tmp3_);
 		unity_launcher_scroller_view_order_children (self, TRUE);
 		clutter_actor_queue_relayout ((ClutterActor*) self);
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda36__gsource_func, g_object_ref (self), g_object_unref);
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda61__gsource_func, g_object_ref (self), g_object_unref);
 		_g_object_unref0 (drag_controller);
 	}
 	return obj;
@@ -1922,6 +2164,8 @@ static void unity_launcher_scroller_view_class_init (UnityLauncherScrollerViewCl
 	G_OBJECT_CLASS (klass)->constructor = unity_launcher_scroller_view_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_launcher_scroller_view_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_VIEW_MODEL, g_param_spec_object ("model", "model", "model", UNITY_LAUNCHER_TYPE_SCROLLER_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_VIEW_CACHE, g_param_spec_object ("cache", "cache", "cache", CTK_TYPE_EFFECT_CACHE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_VIEW_IS_AUTOSCROLLING, g_param_spec_boolean ("is-autoscrolling", "is-autoscrolling", "is-autoscrolling", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 
@@ -1933,18 +2177,20 @@ static void unity_launcher_scroller_view_instance_init (UnityLauncherScrollerVie
 	self->is_animating = FALSE;
 	self->priv->button_down = FALSE;
 	self->priv->total_child_height = 0.0f;
-	self->priv->current_phase = UNITY_LAUNCHER_SCROLLER_PHASE_NONE;
+	self->priv->current_phase = UNITY_LAUNCHER_SCROLLER_PHASE_SETTLING;
 	self->priv->last_motion_event_time = (guint) 0;
 	self->priv->view_type = UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_CONTRACTED;
-	self->priv->is_scrolling = FALSE;
 	self->priv->scroll_position = 0.0f;
 	self->priv->settle_position = 0.0f;
+	self->priv->autoscroll_anim_active = FALSE;
+	self->priv->autoscroll_direction = 0;
 	self->priv->previous_y_position = 0.0f;
 	self->priv->previous_y_time = (guint) 0;
 	self->priv->stored_delta = (guint) 0;
 	self->priv->scroll_speed = 0.0f;
 	self->priv->contract_icon_degrees = 30.0f;
 	self->priv->focused_launcher = 0;
+	self->priv->autoscroll_mouse_pos_cache = 0.0f;
 }
 
 
@@ -1952,9 +2198,10 @@ static void unity_launcher_scroller_view_finalize (GObject* obj) {
 	UnityLauncherScrollerView * self;
 	self = UNITY_LAUNCHER_SCROLLER_VIEW (obj);
 	_g_object_unref0 (self->priv->_model);
+	_g_object_unref0 (self->priv->_cache);
 	_g_object_unref0 (self->priv->bgtex);
 	_g_object_unref0 (self->priv->top_shadow);
-	_g_object_unref0 (self->priv->fling_timeline);
+	_g_object_unref0 (self->fling_timeline);
 	_g_object_unref0 (self->priv->draw_ftb);
 	_g_object_unref0 (self->priv->draw_btf);
 	_g_object_unref0 (self->priv->child_refs);
@@ -1981,6 +2228,12 @@ static void unity_launcher_scroller_view_get_property (GObject * object, guint p
 		case UNITY_LAUNCHER_SCROLLER_VIEW_MODEL:
 		g_value_set_object (value, unity_launcher_scroller_view_get_model (self));
 		break;
+		case UNITY_LAUNCHER_SCROLLER_VIEW_CACHE:
+		g_value_set_object (value, unity_launcher_scroller_view_get_cache (self));
+		break;
+		case UNITY_LAUNCHER_SCROLLER_VIEW_IS_AUTOSCROLLING:
+		g_value_set_boolean (value, unity_launcher_scroller_view_get_is_autoscrolling (self));
+		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
@@ -1994,6 +2247,12 @@ static void unity_launcher_scroller_view_set_property (GObject * object, guint p
 	switch (property_id) {
 		case UNITY_LAUNCHER_SCROLLER_VIEW_MODEL:
 		unity_launcher_scroller_view_set_model (self, g_value_get_object (value));
+		break;
+		case UNITY_LAUNCHER_SCROLLER_VIEW_CACHE:
+		unity_launcher_scroller_view_set_cache (self, g_value_get_object (value));
+		break;
+		case UNITY_LAUNCHER_SCROLLER_VIEW_IS_AUTOSCROLLING:
+		unity_launcher_scroller_view_set_is_autoscrolling (self, g_value_get_boolean (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

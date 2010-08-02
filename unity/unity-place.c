@@ -46,6 +46,7 @@
 #include <dbus/dbus-glib-lowlevel.h>
 #include <dbus/dbus-glib.h>
 #include <dbus/dbus.h>
+#include <gio/gio.h>
 
 
 #define UNITY_PLACE_TYPE__RENDERERINFO (unity_place__rendererinfo_get_type ())
@@ -93,6 +94,16 @@ typedef struct _UnityPlaceEntryInfo UnityPlaceEntryInfo;
 typedef struct _UnityPlaceEntryInfoClass UnityPlaceEntryInfoClass;
 typedef struct _UnityPlaceEntryInfoPrivate UnityPlaceEntryInfoPrivate;
 
+#define UNITY_PLACE_TYPE_BROWSER (unity_place_browser_get_type ())
+#define UNITY_PLACE_BROWSER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_BROWSER, UnityPlaceBrowser))
+#define UNITY_PLACE_BROWSER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACE_TYPE_BROWSER, UnityPlaceBrowserClass))
+#define UNITY_PLACE_IS_BROWSER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACE_TYPE_BROWSER))
+#define UNITY_PLACE_IS_BROWSER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACE_TYPE_BROWSER))
+#define UNITY_PLACE_BROWSER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACE_TYPE_BROWSER, UnityPlaceBrowserClass))
+
+typedef struct _UnityPlaceBrowser UnityPlaceBrowser;
+typedef struct _UnityPlaceBrowserClass UnityPlaceBrowserClass;
+
 #define UNITY_PLACE_TYPE_SERVICE (unity_place_service_get_type ())
 #define UNITY_PLACE_SERVICE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_SERVICE, UnityPlaceService))
 #define UNITY_PLACE_IS_SERVICE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACE_TYPE_SERVICE))
@@ -113,6 +124,14 @@ typedef struct _UnityPlaceEntryService UnityPlaceEntryService;
 typedef struct _UnityPlaceEntryServiceIface UnityPlaceEntryServiceIface;
 typedef struct _UnityPlaceEntryServiceDBusProxy UnityPlaceEntryServiceDBusProxy;
 typedef DBusGProxyClass UnityPlaceEntryServiceDBusProxyClass;
+
+#define UNITY_PLACE_TYPE_ACTIVATION (unity_place_activation_get_type ())
+#define UNITY_PLACE_ACTIVATION(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_ACTIVATION, UnityPlaceActivation))
+#define UNITY_PLACE_IS_ACTIVATION(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACE_TYPE_ACTIVATION))
+#define UNITY_PLACE_ACTIVATION_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), UNITY_PLACE_TYPE_ACTIVATION, UnityPlaceActivationIface))
+
+typedef struct _UnityPlaceActivation UnityPlaceActivation;
+typedef struct _UnityPlaceActivationIface UnityPlaceActivationIface;
 
 #define UNITY_PLACE_TYPE_SERVICE_IMPL (unity_place_service_impl_get_type ())
 #define UNITY_PLACE_SERVICE_IMPL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_SERVICE_IMPL, UnityPlaceServiceImpl))
@@ -137,7 +156,19 @@ typedef struct _UnityPlaceEntryServiceImplClass UnityPlaceEntryServiceImplClass;
 #define _g_list_free0(var) ((var == NULL) ? NULL : (var = (g_list_free (var), NULL)))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 #define _dbus_g_connection_unref0(var) ((var == NULL) ? NULL : (var = (dbus_g_connection_unref (var), NULL)))
+typedef struct _UnityPlaceServiceImplActivateData UnityPlaceServiceImplActivateData;
 typedef struct _UnityPlaceEntryServiceImplPrivate UnityPlaceEntryServiceImplPrivate;
+
+#define UNITY_PLACE_TYPE_BROWSER_SERVICE (unity_place_browser_service_get_type ())
+#define UNITY_PLACE_BROWSER_SERVICE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_BROWSER_SERVICE, UnityPlaceBrowserService))
+#define UNITY_PLACE_IS_BROWSER_SERVICE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACE_TYPE_BROWSER_SERVICE))
+#define UNITY_PLACE_BROWSER_SERVICE_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), UNITY_PLACE_TYPE_BROWSER_SERVICE, UnityPlaceBrowserServiceIface))
+
+typedef struct _UnityPlaceBrowserService UnityPlaceBrowserService;
+typedef struct _UnityPlaceBrowserServiceIface UnityPlaceBrowserServiceIface;
+
+#define UNITY_PLACE_TYPE__BROWSINGSTATE (unity_place__browsingstate_get_type ())
+typedef struct _UnityPlace_BrowsingState UnityPlace_BrowsingState;
 
 #define UNITY_PLACE_TYPE__ENTRYSIGNALS (unity_place__entrysignals_get_type ())
 typedef struct _UnityPlace_EntrySignals UnityPlace_EntrySignals;
@@ -237,6 +268,7 @@ struct _UnityPlaceEntryInfoPrivate {
 	guint _active_section;
 	UnityPlaceSearch* _active_search;
 	UnityPlaceSearch* _active_global_search;
+	UnityPlaceBrowser* _browser;
 };
 
 struct _UnityPlaceServiceIface {
@@ -266,6 +298,12 @@ struct _UnityPlaceEntryServiceDBusProxy {
 	gboolean disposed;
 };
 
+struct _UnityPlaceActivationIface {
+	GTypeInterface parent_iface;
+	void (*activate) (UnityPlaceActivation* self, const char* uri, GAsyncReadyCallback _callback_, gpointer _user_data_);
+	gboolean (*activate_finish) (UnityPlaceActivation* self, GAsyncResult* _res_, GError** error);
+};
+
 struct _UnityPlaceServiceImpl {
 	GObject parent_instance;
 	UnityPlaceServiceImplPrivate * priv;
@@ -279,6 +317,19 @@ struct _UnityPlaceServiceImplPrivate {
 	char* _dbus_path;
 	GHashTable* entries;
 	gboolean _exported;
+	UnityPlaceActivation* _activation;
+};
+
+struct _UnityPlaceServiceImplActivateData {
+	int _state_;
+	GAsyncResult* _res_;
+	GSimpleAsyncResult* _async_result;
+	UnityPlaceServiceImpl* self;
+	char* uri;
+	gboolean result;
+	gboolean activated;
+	GError * e;
+	GError * _inner_error_;
 };
 
 struct _UnityPlaceEntryServiceImpl {
@@ -293,6 +344,20 @@ struct _UnityPlaceEntryServiceImplClass {
 struct _UnityPlaceEntryServiceImplPrivate {
 	gboolean _exported;
 	UnityPlaceEntryInfo* _entry_info;
+	guint place_entry_info_changed_signal_source;
+	UnityPlaceBrowser* _browser;
+};
+
+struct _UnityPlace_BrowsingState {
+	gboolean sensitive;
+	char* comment;
+};
+
+struct _UnityPlaceBrowserServiceIface {
+	GTypeInterface parent_iface;
+	UnityPlace_BrowsingState* (*go_back) (UnityPlaceBrowserService* self, int* result_length1, GError** error);
+	UnityPlace_BrowsingState* (*go_forward) (UnityPlaceBrowserService* self, int* result_length1, GError** error);
+	UnityPlace_BrowsingState* (*get_state) (UnityPlaceBrowserService* self, int* result_length1, GError** error);
 };
 
 struct _UnityPlace_EntrySignals {
@@ -329,6 +394,7 @@ static gpointer unity_place_search_parent_class = NULL;
 static gpointer unity_place_entry_info_parent_class = NULL;
 static gpointer unity_place_service_impl_parent_class = NULL;
 static UnityPlaceServiceIface* unity_place_service_impl_unity_place_service_parent_iface = NULL;
+static UnityPlaceActivationIface* unity_place_service_impl_unity_place_activation_parent_iface = NULL;
 static gpointer unity_place_entry_service_impl_parent_class = NULL;
 static UnityPlaceEntryServiceIface* unity_place_entry_service_impl_unity_place_entry_service_parent_iface = NULL;
 static gpointer unity_place_controller_parent_class = NULL;
@@ -390,6 +456,7 @@ void unity_place__entryinfodata_copy (const UnityPlace_EntryInfoData* self, Unit
 void unity_place__entryinfodata_destroy (UnityPlace_EntryInfoData* self);
 static char** _vala_array_dup5 (char** self, int length);
 GType unity_place_entry_info_get_type (void) G_GNUC_CONST;
+GType unity_place_browser_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACE_ENTRY_INFO_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACE_TYPE_ENTRY_INFO, UnityPlaceEntryInfoPrivate))
 enum  {
 	UNITY_PLACE_ENTRY_INFO_DUMMY_PROPERTY,
@@ -405,7 +472,8 @@ enum  {
 	UNITY_PLACE_ENTRY_INFO_ACTIVE,
 	UNITY_PLACE_ENTRY_INFO_ACTIVE_SECTION,
 	UNITY_PLACE_ENTRY_INFO_ACTIVE_SEARCH,
-	UNITY_PLACE_ENTRY_INFO_ACTIVE_GLOBAL_SEARCH
+	UNITY_PLACE_ENTRY_INFO_ACTIVE_GLOBAL_SEARCH,
+	UNITY_PLACE_ENTRY_INFO_BROWSER
 };
 UnityPlaceEntryInfo* unity_place_entry_info_new (const char* dbus_path);
 UnityPlaceEntryInfo* unity_place_entry_info_construct (GType object_type, const char* dbus_path);
@@ -440,6 +508,9 @@ UnityPlaceSearch* unity_place_entry_info_get_active_search (UnityPlaceEntryInfo*
 void unity_place_entry_info_set_active_search (UnityPlaceEntryInfo* self, UnityPlaceSearch* value);
 UnityPlaceSearch* unity_place_entry_info_get_active_global_search (UnityPlaceEntryInfo* self);
 void unity_place_entry_info_set_active_global_search (UnityPlaceEntryInfo* self, UnityPlaceSearch* value);
+UnityPlaceBrowser* unity_place_entry_info_get_browser (UnityPlaceEntryInfo* self);
+const char* unity_place_browser_get_dbus_path (UnityPlaceBrowser* self);
+void unity_place_entry_info_set_browser (UnityPlaceEntryInfo* self, UnityPlaceBrowser* value);
 static GObject * unity_place_entry_info_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_place_entry_info_finalize (GObject* obj);
 static void unity_place_entry_info_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -502,13 +573,16 @@ static void unity_place_entry_service_dbus_proxy_set_active_section (UnityPlaceE
 static void unity_place_entry_service_dbus_proxy_unity_place_entry_service__interface_init (UnityPlaceEntryServiceIface* iface);
 static void unity_place_entry_service_dbus_proxy_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_place_entry_service_dbus_proxy_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+UnityPlaceActivation* unity_place_activation_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
+GType unity_place_activation_get_type (void) G_GNUC_CONST;
 GType unity_place_service_impl_get_type (void) G_GNUC_CONST;
 GType unity_place_entry_service_impl_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACE_SERVICE_IMPL_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACE_TYPE_SERVICE_IMPL, UnityPlaceServiceImplPrivate))
 enum  {
 	UNITY_PLACE_SERVICE_IMPL_DUMMY_PROPERTY,
 	UNITY_PLACE_SERVICE_IMPL_DBUS_PATH,
-	UNITY_PLACE_SERVICE_IMPL_EXPORTED
+	UNITY_PLACE_SERVICE_IMPL_EXPORTED,
+	UNITY_PLACE_SERVICE_IMPL_ACTIVATION
 };
 UnityPlaceServiceImpl* unity_place_service_impl_new (const char* dbus_path);
 UnityPlaceServiceImpl* unity_place_service_impl_construct (GType object_type, const char* dbus_path);
@@ -526,9 +600,17 @@ void unity_place_entry_service_impl_unexport (UnityPlaceEntryServiceImpl* self, 
 void unity_place_service_impl_remove_entry (UnityPlaceServiceImpl* self, const char* dbus_path);
 void unity_place_service_impl_export (UnityPlaceServiceImpl* self, GError** error);
 void unity_place_service_impl_unexport (UnityPlaceServiceImpl* self, GError** error);
+static void unity_place_service_impl_real_activate_data_free (gpointer _data);
+static void unity_place_service_impl_real_activate (UnityPlaceActivation* base, const char* uri, GAsyncReadyCallback _callback_, gpointer _user_data_);
+static void unity_place_service_impl_activate_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
+UnityPlaceActivation* unity_place_service_impl_get_activation (UnityPlaceServiceImpl* self);
+void unity_place_activation_activate (UnityPlaceActivation* self, const char* uri, GAsyncReadyCallback _callback_, gpointer _user_data_);
+gboolean unity_place_activation_activate_finish (UnityPlaceActivation* self, GAsyncResult* _res_, GError** error);
+static gboolean unity_place_service_impl_real_activate_co (UnityPlaceServiceImplActivateData* data);
 const char* unity_place_service_impl_get_dbus_path (UnityPlaceServiceImpl* self);
 static void unity_place_service_impl_set_dbus_path (UnityPlaceServiceImpl* self, const char* value);
 gboolean unity_place_service_impl_get_exported (UnityPlaceServiceImpl* self);
+void unity_place_service_impl_set_activation (UnityPlaceServiceImpl* self, UnityPlaceActivation* value);
 static GObject * unity_place_service_impl_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 void unity_place_service_impl_dbus_register_object (DBusConnection* connection, const char* path, void* object);
 void _unity_place_service_impl_dbus_unregister (DBusConnection* connection, void* _user_data_);
@@ -543,10 +625,24 @@ enum  {
 	UNITY_PLACE_ENTRY_SERVICE_IMPL_ENTRY_INFO,
 	UNITY_PLACE_ENTRY_SERVICE_IMPL_EXPORTED
 };
+static void unity_place_entry_service_impl_on_browser_changed (UnityPlaceEntryServiceImpl* self, GObject* obj, GParamSpec* pspec);
+static void _unity_place_entry_service_impl_on_browser_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static void unity_place_entry_service_impl_real_set_global_search (UnityPlaceEntryService* base, const char* search, GHashTable* hints, GError** error);
 static void unity_place_entry_service_impl_real_set_search (UnityPlaceEntryService* base, const char* search, GHashTable* hints, GError** error);
 static void unity_place_entry_service_impl_real_set_active (UnityPlaceEntryService* base, gboolean is_active, GError** error);
 static void unity_place_entry_service_impl_real_set_active_section (UnityPlaceEntryService* base, guint section_id, GError** error);
+UnityPlaceBrowserService* unity_place_browser_service_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
+GType unity_place__browsingstate_get_type (void) G_GNUC_CONST;
+UnityPlace_BrowsingState* unity_place__browsingstate_dup (const UnityPlace_BrowsingState* self);
+void unity_place__browsingstate_free (UnityPlace_BrowsingState* self);
+void unity_place__browsingstate_copy (const UnityPlace_BrowsingState* self, UnityPlace_BrowsingState* dest);
+void unity_place__browsingstate_destroy (UnityPlace_BrowsingState* self);
+GType unity_place_browser_service_get_type (void) G_GNUC_CONST;
+UnityPlaceBrowserService* unity_place_browser_get_service (UnityPlaceBrowser* self);
+static gboolean unity_place_entry_service_impl_emit_place_entry_info_changed_signal (UnityPlaceEntryServiceImpl* self);
+static gboolean _unity_place_entry_service_impl_emit_place_entry_info_changed_signal_gsource_func (gpointer self);
+void unity_place_entry_service_impl_queue_place_entry_info_changed_signal (UnityPlaceEntryServiceImpl* self);
+static char** _vala_array_dup7 (char** self, int length);
 static void unity_place_entry_service_impl_set_entry_info (UnityPlaceEntryServiceImpl* self, UnityPlaceEntryInfo* value);
 gboolean unity_place_entry_service_impl_get_exported (UnityPlaceEntryServiceImpl* self);
 void unity_place_entry_service_impl_dbus_register_object (DBusConnection* connection, const char* path, void* object);
@@ -564,11 +660,12 @@ GType unity_place_controller_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_PLACE_CONTROLLER_DUMMY_PROPERTY,
 	UNITY_PLACE_CONTROLLER_DBUS_PATH,
-	UNITY_PLACE_CONTROLLER_EXPORTED
+	UNITY_PLACE_CONTROLLER_EXPORTED,
+	UNITY_PLACE_CONTROLLER_ACTIVATION
 };
 UnityPlaceController* unity_place_controller_new (const char* dbus_path);
 UnityPlaceController* unity_place_controller_construct (GType object_type, const char* dbus_path);
-static void unity_place_controller_on_entry_changed (UnityPlaceController* self, GObject* obj, GParamSpec* psec);
+static void unity_place_controller_on_entry_changed (UnityPlaceController* self, GObject* obj, GParamSpec* pspec);
 static void _unity_place_controller_on_entry_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static void _lambda2_ (GObject* obj, GParamSpec* pspec, Block1Data* _data1_);
 static void __lambda2__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
@@ -584,10 +681,11 @@ char** unity_place_controller_get_entry_paths (UnityPlaceController* self, int* 
 UnityPlaceEntryInfo** unity_place_controller_get_entries (UnityPlaceController* self, int* result_length1);
 void unity_place_controller_export (UnityPlaceController* self, GError** error);
 void unity_place_controller_unexport (UnityPlaceController* self, GError** error);
-static char** _vala_array_dup7 (char** self, int length);
 const char* unity_place_controller_get_dbus_path (UnityPlaceController* self);
 static void unity_place_controller_set_dbus_path (UnityPlaceController* self, const char* value);
 gboolean unity_place_controller_get_exported (UnityPlaceController* self);
+UnityPlaceActivation* unity_place_controller_get_activation (UnityPlaceController* self);
+void unity_place_controller_set_activation (UnityPlaceController* self, UnityPlaceActivation* value);
 static GObject * unity_place_controller_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_place_controller_finalize (GObject* obj);
 static void unity_place_controller_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -1364,6 +1462,29 @@ void unity_place_entry_info_set_active_global_search (UnityPlaceEntryInfo* self,
 }
 
 
+UnityPlaceBrowser* unity_place_entry_info_get_browser (UnityPlaceEntryInfo* self) {
+	UnityPlaceBrowser* result;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = self->priv->_browser;
+	return result;
+}
+
+
+void unity_place_entry_info_set_browser (UnityPlaceEntryInfo* self, UnityPlaceBrowser* value) {
+	UnityPlaceBrowser* _tmp0_;
+	g_return_if_fail (self != NULL);
+	self->priv->_browser = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_browser), _tmp0_);
+	if (value != NULL) {
+		unity_place_entry_info_set_hint (self, "UnityPlaceBrowserPath", unity_place_browser_get_dbus_path (value));
+		unity_place_entry_info_set_hint (self, "UnitySectionStyle", "breadcrumb");
+	} else {
+		unity_place_entry_info_clear_hint (self, "UnityPlaceBrowserPath");
+		unity_place_entry_info_clear_hint (self, "UnitySectionStyle");
+	}
+	g_object_notify ((GObject *) self, "browser");
+}
+
+
 static GObject * unity_place_entry_info_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -1385,7 +1506,7 @@ static GObject * unity_place_entry_info_constructor (GType type, guint n_constru
 		UnityPlaceRendererInfo* _tmp20_;
 		if (self->priv->info.dbus_path == NULL) {
 			char* _tmp5_;
-			g_critical ("unity-place.vala:322: No DBus path set for EntryInfo.\n" \
+			g_critical ("unity-place.vala:343: No DBus path set for EntryInfo.\n" \
 "'dbus-path' property in the UnityPlaceEntryInfo constructor");
 			self->priv->info.dbus_path = (_tmp5_ = g_strdup (""), _g_free0 (self->priv->info.dbus_path), _tmp5_);
 		}
@@ -1443,6 +1564,7 @@ static void unity_place_entry_info_class_init (UnityPlaceEntryInfoClass * klass)
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACE_ENTRY_INFO_ACTIVE_SECTION, g_param_spec_uint ("active-section", "active-section", "active-section", 0, G_MAXUINT, 0U, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACE_ENTRY_INFO_ACTIVE_SEARCH, g_param_spec_object ("active-search", "active-search", "active-search", UNITY_PLACE_TYPE_SEARCH, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACE_ENTRY_INFO_ACTIVE_GLOBAL_SEARCH, g_param_spec_object ("active-global-search", "active-global-search", "active-global-search", UNITY_PLACE_TYPE_SEARCH, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACE_ENTRY_INFO_BROWSER, g_param_spec_object ("browser", "browser", "browser", UNITY_PLACE_TYPE_BROWSER, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 
@@ -1452,6 +1574,7 @@ static void unity_place_entry_info_instance_init (UnityPlaceEntryInfo * self) {
 	self->priv->info = (memset (&_tmp4_, 0, sizeof (UnityPlace_EntryInfo)), _tmp4_);
 	self->priv->_active = FALSE;
 	self->priv->_active_section = (guint) 0;
+	self->priv->_browser = NULL;
 }
 
 
@@ -1464,6 +1587,7 @@ static void unity_place_entry_info_finalize (GObject* obj) {
 	_g_object_unref0 (self->priv->_sections_model);
 	_g_object_unref0 (self->priv->_active_search);
 	_g_object_unref0 (self->priv->_active_global_search);
+	_g_object_unref0 (self->priv->_browser);
 	G_OBJECT_CLASS (unity_place_entry_info_parent_class)->finalize (obj);
 }
 
@@ -1524,6 +1648,9 @@ static void unity_place_entry_info_get_property (GObject * object, guint propert
 		case UNITY_PLACE_ENTRY_INFO_ACTIVE_GLOBAL_SEARCH:
 		g_value_set_object (value, unity_place_entry_info_get_active_global_search (self));
 		break;
+		case UNITY_PLACE_ENTRY_INFO_BROWSER:
+		g_value_set_object (value, unity_place_entry_info_get_browser (self));
+		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
@@ -1569,6 +1696,9 @@ static void unity_place_entry_info_set_property (GObject * object, guint propert
 		break;
 		case UNITY_PLACE_ENTRY_INFO_ACTIVE_GLOBAL_SEARCH:
 		unity_place_entry_info_set_active_global_search (self, g_value_get_object (value));
+		break;
+		case UNITY_PLACE_ENTRY_INFO_BROWSER:
+		unity_place_entry_info_set_browser (self, g_value_get_object (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -4389,7 +4519,7 @@ void unity_place_service_impl_add_entry (UnityPlaceServiceImpl* self, UnityPlace
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_critical ("unity-place.vala:516: Failed to export place entry '%s': %s", unity_place_entry_info_get_dbus_path (entry_info), e->message);
+				g_critical ("unity-place.vala:539: Failed to export place entry '%s': %s", unity_place_entry_info_get_dbus_path (entry_info), e->message);
 				_g_error_free0 (e);
 			}
 		}
@@ -4517,7 +4647,7 @@ void unity_place_service_impl_remove_entry (UnityPlaceServiceImpl* self, const c
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_critical ("unity-place.vala:573: Failed to unexport place entry '%s': %s", unity_place_entry_info_get_dbus_path (unity_place_entry_service_impl_get_entry_info (entry)), e->message);
+				g_critical ("unity-place.vala:596: Failed to unexport place entry '%s': %s", unity_place_entry_info_get_dbus_path (unity_place_entry_service_impl_get_entry_info (entry)), e->message);
 				_g_error_free0 (e);
 			}
 		}
@@ -4586,6 +4716,7 @@ void unity_place_service_impl_export (UnityPlaceServiceImpl* self, GError** erro
 
 void unity_place_service_impl_unexport (UnityPlaceServiceImpl* self, GError** error) {
 	GError * _inner_error_;
+	DBusGConnection* conn;
 	g_return_if_fail (self != NULL);
 	_inner_error_ = NULL;
 	{
@@ -4613,8 +4744,147 @@ void unity_place_service_impl_unexport (UnityPlaceServiceImpl* self, GError** er
 		}
 		_g_list_free0 (entry_collection);
 	}
+	conn = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
+	if (_inner_error_ != NULL) {
+		if (_inner_error_->domain == DBUS_GERROR) {
+			g_propagate_error (error, _inner_error_);
+			return;
+		} else {
+			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+			g_clear_error (&_inner_error_);
+			return;
+		}
+	}
+	dbus_g_connection_unregister_g_object (conn, (GObject*) self);
 	self->priv->_exported = FALSE;
 	g_object_notify ((GObject*) self, "exported");
+	_dbus_g_connection_unref0 (conn);
+}
+
+
+static void unity_place_service_impl_real_activate_data_free (gpointer _data) {
+	UnityPlaceServiceImplActivateData* data;
+	data = _data;
+	_g_free0 (data->uri);
+	g_object_unref (data->self);
+	g_slice_free (UnityPlaceServiceImplActivateData, data);
+}
+
+
+static void unity_place_service_impl_real_activate (UnityPlaceActivation* base, const char* uri, GAsyncReadyCallback _callback_, gpointer _user_data_) {
+	UnityPlaceServiceImpl * self;
+	UnityPlaceServiceImplActivateData* _data_;
+	self = (UnityPlaceServiceImpl*) base;
+	_data_ = g_slice_new0 (UnityPlaceServiceImplActivateData);
+	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, unity_place_service_impl_real_activate);
+	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, unity_place_service_impl_real_activate_data_free);
+	_data_->self = g_object_ref (self);
+	_data_->uri = g_strdup (uri);
+	unity_place_service_impl_real_activate_co (_data_);
+}
+
+
+static gboolean unity_place_service_impl_real_activate_finish (UnityPlaceActivation* base, GAsyncResult* _res_, GError** error) {
+	gboolean result;
+	UnityPlaceServiceImplActivateData* _data_;
+	_data_ = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (_res_));
+	result = _data_->result;
+	return result;
+}
+
+
+static void unity_place_service_impl_activate_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_) {
+	UnityPlaceServiceImplActivateData* data;
+	data = _user_data_;
+	data->_res_ = _res_;
+	unity_place_service_impl_real_activate_co (data);
+}
+
+
+static gboolean unity_place_service_impl_real_activate_co (UnityPlaceServiceImplActivateData* data) {
+	switch (data->_state_) {
+		case 0:
+		goto _state_0;
+		case 13:
+		goto _state_13;
+		default:
+		g_assert_not_reached ();
+	}
+	_state_0:
+	{
+		if (data->self->priv->_activation == NULL) {
+			data->result = FALSE;
+			{
+				if (data->_state_ == 0) {
+					g_simple_async_result_complete_in_idle (data->_async_result);
+				} else {
+					g_simple_async_result_complete (data->_async_result);
+				}
+				g_object_unref (data->_async_result);
+				return FALSE;
+			}
+		}
+		{
+			data->_state_ = 13;
+			unity_place_activation_activate (data->self->priv->_activation, data->uri, unity_place_service_impl_activate_ready, data);
+			return FALSE;
+			_state_13:
+			data->activated = unity_place_activation_activate_finish (data->self->priv->_activation, data->_res_, &data->_inner_error_);
+			if (data->_inner_error_ != NULL) {
+				if (data->_inner_error_->domain == DBUS_GERROR) {
+					goto __catch32_dbus_gerror;
+				}
+				g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
+				g_clear_error (&data->_inner_error_);
+				return FALSE;
+			}
+			data->result = data->activated;
+			{
+				if (data->_state_ == 0) {
+					g_simple_async_result_complete_in_idle (data->_async_result);
+				} else {
+					g_simple_async_result_complete (data->_async_result);
+				}
+				g_object_unref (data->_async_result);
+				return FALSE;
+			}
+		}
+		goto __finally32;
+		__catch32_dbus_gerror:
+		{
+			data->e = data->_inner_error_;
+			data->_inner_error_ = NULL;
+			{
+				data->result = FALSE;
+				_g_error_free0 (data->e);
+				{
+					if (data->_state_ == 0) {
+						g_simple_async_result_complete_in_idle (data->_async_result);
+					} else {
+						g_simple_async_result_complete (data->_async_result);
+					}
+					g_object_unref (data->_async_result);
+					return FALSE;
+				}
+				_g_error_free0 (data->e);
+			}
+		}
+		__finally32:
+		{
+			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
+			g_clear_error (&data->_inner_error_);
+			return FALSE;
+		}
+	}
+	{
+		if (data->_state_ == 0) {
+			g_simple_async_result_complete_in_idle (data->_async_result);
+		} else {
+			g_simple_async_result_complete (data->_async_result);
+		}
+		g_object_unref (data->_async_result);
+		return FALSE;
+	}
 }
 
 
@@ -4639,6 +4909,22 @@ gboolean unity_place_service_impl_get_exported (UnityPlaceServiceImpl* self) {
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_exported;
 	return result;
+}
+
+
+UnityPlaceActivation* unity_place_service_impl_get_activation (UnityPlaceServiceImpl* self) {
+	UnityPlaceActivation* result;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = self->priv->_activation;
+	return result;
+}
+
+
+void unity_place_service_impl_set_activation (UnityPlaceServiceImpl* self, UnityPlaceActivation* value) {
+	UnityPlaceActivation* _tmp0_;
+	g_return_if_fail (self != NULL);
+	self->priv->_activation = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_activation), _tmp0_);
+	g_object_notify ((GObject *) self, "activation");
 }
 
 
@@ -4670,7 +4956,7 @@ static DBusHandlerResult _dbus_unity_place_service_impl_introspect (UnityPlaceSe
 	reply = dbus_message_new_method_return (message);
 	dbus_message_iter_init_append (reply, &iter);
 	xml_data = g_string_new ("<!DOCTYPE node PUBLIC \"-//freedesktop//DTD D-BUS Object Introspection 1.0//EN\" \"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd\">\n");
-	g_string_append (xml_data, "<node>\n<interface name=\"org.freedesktop.DBus.Introspectable\">\n  <method name=\"Introspect\">\n    <arg name=\"data\" direction=\"out\" type=\"s\"/>\n  </method>\n</interface>\n<interface name=\"org.freedesktop.DBus.Properties\">\n  <method name=\"Get\">\n    <arg name=\"interface\" direction=\"in\" type=\"s\"/>\n    <arg name=\"propname\" direction=\"in\" type=\"s\"/>\n    <arg name=\"value\" direction=\"out\" type=\"v\"/>\n  </method>\n  <method name=\"Set\">\n    <arg name=\"interface\" direction=\"in\" type=\"s\"/>\n    <arg name=\"propname\" direction=\"in\" type=\"s\"/>\n    <arg name=\"value\" direction=\"in\" type=\"v\"/>\n  </method>\n  <method name=\"GetAll\">\n    <arg name=\"interface\" direction=\"in\" type=\"s\"/>\n    <arg name=\"props\" direction=\"out\" type=\"a{sv}\"/>\n  </method>\n</interface>\n<interface name=\"com.canonical.Unity.Place\">\n  <method name=\"GetEntries\">\n    <arg name=\"result\" type=\"a(sssuasbsa{ss}(sssa{ss})(sssa{ss}))\" direction=\"out\"/>\n  </method>\n  <signal name=\"EntryAdded\">\n    <arg name=\"entry\" type=\"(sssuasbsa{ss}(sssa{ss})(sssa{ss}))\"/>\n  </signal>\n  <signal name=\"EntryRemoved\">\n    <arg name=\"entry_dbus_path\" type=\"s\"/>\n  </signal>\n</interface>\n");
+	g_string_append (xml_data, "<node>\n<interface name=\"org.freedesktop.DBus.Introspectable\">\n  <method name=\"Introspect\">\n    <arg name=\"data\" direction=\"out\" type=\"s\"/>\n  </method>\n</interface>\n<interface name=\"org.freedesktop.DBus.Properties\">\n  <method name=\"Get\">\n    <arg name=\"interface\" direction=\"in\" type=\"s\"/>\n    <arg name=\"propname\" direction=\"in\" type=\"s\"/>\n    <arg name=\"value\" direction=\"out\" type=\"v\"/>\n  </method>\n  <method name=\"Set\">\n    <arg name=\"interface\" direction=\"in\" type=\"s\"/>\n    <arg name=\"propname\" direction=\"in\" type=\"s\"/>\n    <arg name=\"value\" direction=\"in\" type=\"v\"/>\n  </method>\n  <method name=\"GetAll\">\n    <arg name=\"interface\" direction=\"in\" type=\"s\"/>\n    <arg name=\"props\" direction=\"out\" type=\"a{sv}\"/>\n  </method>\n</interface>\n<interface name=\"com.canonical.Unity.Place\">\n  <method name=\"GetEntries\">\n    <arg name=\"result\" type=\"a(sssuasbsa{ss}(sssa{ss})(sssa{ss}))\" direction=\"out\"/>\n  </method>\n  <signal name=\"EntryAdded\">\n    <arg name=\"entry\" type=\"(sssuasbsa{ss}(sssa{ss})(sssa{ss}))\"/>\n  </signal>\n  <signal name=\"EntryRemoved\">\n    <arg name=\"entry_dbus_path\" type=\"s\"/>\n  </signal>\n</interface>\n<interface name=\"com.canonical.Unity.Activation\">\n  <method name=\"Activate\">\n    <arg name=\"uri\" type=\"s\" direction=\"in\"/>\n    <arg name=\"result\" type=\"b\" direction=\"out\"/>\n  </method>\n</interface>\n");
 	dbus_connection_list_registered (connection, g_object_get_data ((GObject *) self, "dbus_object_path"), &children);
 	for (i = 0; children[i]; i++) {
 		g_string_append_printf (xml_data, "<node name=\"%s\"/>\n", children[i]);
@@ -4699,6 +4985,8 @@ DBusHandlerResult unity_place_service_impl_dbus_message (DBusConnection* connect
 		return result;
 	} else if (unity_place_service_dbus_message (connection, message, object) == DBUS_HANDLER_RESULT_HANDLED) {
 		return DBUS_HANDLER_RESULT_HANDLED;
+	} else if (unity_place_activation_dbus_message (connection, message, object) == DBUS_HANDLER_RESULT_HANDLED) {
+		return DBUS_HANDLER_RESULT_HANDLED;
 	} else {
 		return DBUS_HANDLER_RESULT_NOT_YET_HANDLED;
 	}
@@ -4712,6 +5000,7 @@ void unity_place_service_impl_dbus_register_object (DBusConnection* connection, 
 		g_object_weak_ref (object, _vala_dbus_unregister_object, connection);
 	}
 	unity_place_service_dbus_register_object (connection, path, object);
+	unity_place_activation_dbus_register_object (connection, path, object);
 }
 
 
@@ -4724,6 +5013,7 @@ static void unity_place_service_impl_class_init (UnityPlaceServiceImplClass * kl
 	G_OBJECT_CLASS (klass)->finalize = unity_place_service_impl_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACE_SERVICE_IMPL_DBUS_PATH, g_param_spec_string ("dbus-path", "dbus-path", "dbus-path", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACE_SERVICE_IMPL_EXPORTED, g_param_spec_boolean ("exported", "exported", "exported", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACE_SERVICE_IMPL_ACTIVATION, g_param_spec_object ("activation", "activation", "activation", UNITY_PLACE_TYPE_ACTIVATION, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_type_set_qdata (UNITY_PLACE_TYPE_SERVICE_IMPL, g_quark_from_static_string ("DBusObjectVTable"), (void*) (&_unity_place_service_impl_dbus_vtable));
 }
 
@@ -4734,8 +5024,16 @@ static void unity_place_service_impl_unity_place_service_interface_init (UnityPl
 }
 
 
+static void unity_place_service_impl_unity_place_activation_interface_init (UnityPlaceActivationIface * iface) {
+	unity_place_service_impl_unity_place_activation_parent_iface = g_type_interface_peek_parent (iface);
+	iface->activate = unity_place_service_impl_real_activate;
+	iface->activate_finish = unity_place_service_impl_real_activate_finish;
+}
+
+
 static void unity_place_service_impl_instance_init (UnityPlaceServiceImpl * self) {
 	self->priv = UNITY_PLACE_SERVICE_IMPL_GET_PRIVATE (self);
+	self->priv->_activation = NULL;
 }
 
 
@@ -4744,6 +5042,7 @@ static void unity_place_service_impl_finalize (GObject* obj) {
 	self = UNITY_PLACE_SERVICE_IMPL (obj);
 	_g_free0 (self->priv->_dbus_path);
 	_g_hash_table_unref0 (self->priv->entries);
+	_g_object_unref0 (self->priv->_activation);
 	G_OBJECT_CLASS (unity_place_service_impl_parent_class)->finalize (obj);
 }
 
@@ -4753,9 +5052,11 @@ GType unity_place_service_impl_get_type (void) {
 	if (g_once_init_enter (&unity_place_service_impl_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (UnityPlaceServiceImplClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_place_service_impl_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityPlaceServiceImpl), 0, (GInstanceInitFunc) unity_place_service_impl_instance_init, NULL };
 		static const GInterfaceInfo unity_place_service_info = { (GInterfaceInitFunc) unity_place_service_impl_unity_place_service_interface_init, (GInterfaceFinalizeFunc) NULL, NULL};
+		static const GInterfaceInfo unity_place_activation_info = { (GInterfaceInitFunc) unity_place_service_impl_unity_place_activation_interface_init, (GInterfaceFinalizeFunc) NULL, NULL};
 		GType unity_place_service_impl_type_id;
 		unity_place_service_impl_type_id = g_type_register_static (G_TYPE_OBJECT, "UnityPlaceServiceImpl", &g_define_type_info, 0);
 		g_type_add_interface_static (unity_place_service_impl_type_id, UNITY_PLACE_TYPE_SERVICE, &unity_place_service_info);
+		g_type_add_interface_static (unity_place_service_impl_type_id, UNITY_PLACE_TYPE_ACTIVATION, &unity_place_activation_info);
 		g_once_init_leave (&unity_place_service_impl_type_id__volatile, unity_place_service_impl_type_id);
 	}
 	return unity_place_service_impl_type_id__volatile;
@@ -4772,6 +5073,9 @@ static void unity_place_service_impl_get_property (GObject * object, guint prope
 		case UNITY_PLACE_SERVICE_IMPL_EXPORTED:
 		g_value_set_boolean (value, unity_place_service_impl_get_exported (self));
 		break;
+		case UNITY_PLACE_SERVICE_IMPL_ACTIVATION:
+		g_value_set_object (value, unity_place_service_impl_get_activation (self));
+		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
@@ -4786,6 +5090,9 @@ static void unity_place_service_impl_set_property (GObject * object, guint prope
 		case UNITY_PLACE_SERVICE_IMPL_DBUS_PATH:
 		unity_place_service_impl_set_dbus_path (self, g_value_get_string (value));
 		break;
+		case UNITY_PLACE_SERVICE_IMPL_ACTIVATION:
+		unity_place_service_impl_set_activation (self, g_value_get_object (value));
+		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
@@ -4793,10 +5100,18 @@ static void unity_place_service_impl_set_property (GObject * object, guint prope
 }
 
 
+static void _unity_place_entry_service_impl_on_browser_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	unity_place_entry_service_impl_on_browser_changed (self, _sender, pspec);
+}
+
+
 UnityPlaceEntryServiceImpl* unity_place_entry_service_impl_construct (GType object_type, UnityPlaceEntryInfo* entry_info) {
 	UnityPlaceEntryServiceImpl * self;
+	UnityPlaceBrowser* _tmp0_;
 	g_return_val_if_fail (entry_info != NULL, NULL);
 	self = (UnityPlaceEntryServiceImpl*) g_object_new (object_type, "entry-info", entry_info, NULL);
+	self->priv->_browser = (_tmp0_ = _g_object_ref0 (unity_place_entry_info_get_browser (entry_info)), _g_object_unref0 (self->priv->_browser), _tmp0_);
+	g_signal_connect_object ((GObject*) entry_info, "notify::browser", (GCallback) _unity_place_entry_service_impl_on_browser_changed_g_object_notify, self, 0);
 	return self;
 }
 
@@ -4859,6 +5174,14 @@ void unity_place_entry_service_impl_export (UnityPlaceEntryServiceImpl* self, GE
 		}
 	}
 	_vala_dbus_register_object (dbus_g_connection_get_connection (conn), unity_place_entry_info_get_dbus_path (self->priv->_entry_info), (GObject*) self);
+	if (unity_place_entry_info_get_browser (self->priv->_entry_info) != NULL) {
+		UnityPlaceBrowserService* _tmp0_;
+		g_debug ("unity-place.vala:728: Exporting browser at '%s'", unity_place_browser_get_dbus_path (unity_place_entry_info_get_browser (self->priv->_entry_info)));
+		_vala_dbus_register_object (dbus_g_connection_get_connection (conn), unity_place_browser_get_dbus_path (unity_place_entry_info_get_browser (self->priv->_entry_info)), (GObject*) (_tmp0_ = unity_place_browser_get_service (unity_place_entry_info_get_browser (self->priv->_entry_info))));
+		_g_object_unref0 (_tmp0_);
+	} else {
+		g_debug ("unity-place.vala:734: No browser to export");
+	}
 	self->priv->_exported = TRUE;
 	g_object_notify ((GObject*) self, "exported");
 	_dbus_g_connection_unref0 (conn);
@@ -4866,9 +5189,166 @@ void unity_place_entry_service_impl_export (UnityPlaceEntryServiceImpl* self, GE
 
 
 void unity_place_entry_service_impl_unexport (UnityPlaceEntryServiceImpl* self, GError** error) {
+	GError * _inner_error_;
+	DBusGConnection* conn;
 	g_return_if_fail (self != NULL);
+	_inner_error_ = NULL;
+	conn = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
+	if (_inner_error_ != NULL) {
+		if (_inner_error_->domain == DBUS_GERROR) {
+			g_propagate_error (error, _inner_error_);
+			return;
+		} else {
+			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+			g_clear_error (&_inner_error_);
+			return;
+		}
+	}
+	dbus_g_connection_unregister_g_object (conn, (GObject*) self);
+	if (unity_place_entry_info_get_browser (self->priv->_entry_info) != NULL) {
+		UnityPlaceBrowserService* _tmp0_;
+		g_debug ("unity-place.vala:747: Unexporting browser '%s'", unity_place_browser_get_dbus_path (unity_place_entry_info_get_browser (self->priv->_entry_info)));
+		dbus_g_connection_unregister_g_object (conn, (GObject*) (_tmp0_ = unity_place_browser_get_service (unity_place_entry_info_get_browser (self->priv->_entry_info))));
+		_g_object_unref0 (_tmp0_);
+	}
 	self->priv->_exported = FALSE;
 	g_object_notify ((GObject*) self, "exported");
+	_dbus_g_connection_unref0 (conn);
+}
+
+
+static void unity_place_entry_service_impl_on_browser_changed (UnityPlaceEntryServiceImpl* self, GObject* obj, GParamSpec* pspec) {
+	GError * _inner_error_;
+	DBusGConnection* conn;
+	gboolean _tmp2_ = FALSE;
+	UnityPlaceBrowser* _tmp4_;
+	gboolean _tmp5_ = FALSE;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (obj != NULL);
+	g_return_if_fail (pspec != NULL);
+	_inner_error_ = NULL;
+	conn = NULL;
+	{
+		DBusGConnection* _tmp0_;
+		DBusGConnection* _tmp1_;
+		_tmp0_ = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
+		if (_inner_error_ != NULL) {
+			if (_inner_error_->domain == DBUS_GERROR) {
+				goto __catch33_dbus_gerror;
+			}
+			_dbus_g_connection_unref0 (conn);
+			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+			g_clear_error (&_inner_error_);
+			return;
+		}
+		conn = (_tmp1_ = _tmp0_, _dbus_g_connection_unref0 (conn), _tmp1_);
+	}
+	goto __finally33;
+	__catch33_dbus_gerror:
+	{
+		GError * e;
+		e = _inner_error_;
+		_inner_error_ = NULL;
+		{
+			g_warning ("unity-place.vala:761: Unable to connect to session bus: %s", e->message);
+			_g_error_free0 (e);
+			_dbus_g_connection_unref0 (conn);
+			return;
+		}
+	}
+	__finally33:
+	if (_inner_error_ != NULL) {
+		_dbus_g_connection_unref0 (conn);
+		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+		g_clear_error (&_inner_error_);
+		return;
+	}
+	if (self->priv->_browser == unity_place_entry_info_get_browser (unity_place_entry_service_impl_get_entry_info (self))) {
+		_dbus_g_connection_unref0 (conn);
+		return;
+	}
+	if (self->priv->_browser != NULL) {
+		_tmp2_ = self->priv->_exported;
+	} else {
+		_tmp2_ = FALSE;
+	}
+	if (_tmp2_) {
+		UnityPlaceBrowserService* _tmp3_;
+		g_debug ("unity-place.vala:772: Unexporting browser '%s'", unity_place_browser_get_dbus_path (self->priv->_browser));
+		dbus_g_connection_unregister_g_object (conn, (GObject*) (_tmp3_ = unity_place_browser_get_service (self->priv->_browser)));
+		_g_object_unref0 (_tmp3_);
+	}
+	self->priv->_browser = (_tmp4_ = _g_object_ref0 (unity_place_entry_info_get_browser (unity_place_entry_service_impl_get_entry_info (self))), _g_object_unref0 (self->priv->_browser), _tmp4_);
+	if (self->priv->_browser != NULL) {
+		_tmp5_ = self->priv->_exported;
+	} else {
+		_tmp5_ = FALSE;
+	}
+	if (_tmp5_) {
+		UnityPlaceBrowserService* _tmp6_;
+		g_debug ("unity-place.vala:781: Exporting browser '%s'", unity_place_browser_get_dbus_path (self->priv->_browser));
+		_vala_dbus_register_object (dbus_g_connection_get_connection (conn), unity_place_browser_get_dbus_path (self->priv->_browser), (GObject*) (_tmp6_ = unity_place_browser_get_service (self->priv->_browser)));
+		_g_object_unref0 (_tmp6_);
+	}
+	_dbus_g_connection_unref0 (conn);
+}
+
+
+static gboolean _unity_place_entry_service_impl_emit_place_entry_info_changed_signal_gsource_func (gpointer self) {
+	gboolean result;
+	result = unity_place_entry_service_impl_emit_place_entry_info_changed_signal (self);
+	return result;
+}
+
+
+void unity_place_entry_service_impl_queue_place_entry_info_changed_signal (UnityPlaceEntryServiceImpl* self) {
+	g_return_if_fail (self != NULL);
+	if (self->priv->place_entry_info_changed_signal_source == 0) {
+		self->priv->place_entry_info_changed_signal_source = g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_place_entry_service_impl_emit_place_entry_info_changed_signal_gsource_func, g_object_ref (self), g_object_unref);
+	}
+}
+
+
+static char** _vala_array_dup7 (char** self, int length) {
+	char** result;
+	int i;
+	result = g_new0 (char*, length + 1);
+	for (i = 0; i < length; i++) {
+		result[i] = g_strdup (self[i]);
+	}
+	return result;
+}
+
+
+static gboolean unity_place_entry_service_impl_emit_place_entry_info_changed_signal (UnityPlaceEntryServiceImpl* self) {
+	gboolean result = FALSE;
+	UnityPlace_EntryInfoData entry_data = {0};
+	UnityPlace_EntryInfo _tmp0_ = {0};
+	UnityPlace_EntryInfo _entry;
+	char* _tmp1_;
+	char* _tmp2_;
+	char* _tmp3_;
+	char** _tmp5_;
+	char** _tmp4_;
+	char* _tmp6_;
+	GHashTable* _tmp7_;
+	g_return_val_if_fail (self != NULL, FALSE);
+	memset (&entry_data, 0, sizeof (UnityPlace_EntryInfoData));
+	_entry = (unity_place_entry_info_get_raw (self->priv->_entry_info, &_tmp0_), _tmp0_);
+	entry_data.dbus_path = (_tmp1_ = g_strdup (_entry.dbus_path), _g_free0 (entry_data.dbus_path), _tmp1_);
+	entry_data.display_name = (_tmp2_ = g_strdup (_entry.display_name), _g_free0 (entry_data.display_name), _tmp2_);
+	entry_data.icon = (_tmp3_ = g_strdup (_entry.icon), _g_free0 (entry_data.icon), _tmp3_);
+	entry_data.position = _entry.position;
+	entry_data.mimetypes = (_tmp5_ = (_tmp4_ = _entry.mimetypes, (_tmp4_ == NULL) ? ((gpointer) _tmp4_) : _vala_array_dup7 (_tmp4_, _entry.mimetypes_length1)), entry_data.mimetypes = (_vala_array_free (entry_data.mimetypes, entry_data.mimetypes_length1, (GDestroyNotify) g_free), NULL), entry_data.mimetypes_length1 = _entry.mimetypes_length1, entry_data._mimetypes_size_ = entry_data.mimetypes_length1, _tmp5_);
+	entry_data.sensitive = _entry.sensitive;
+	entry_data.sections_model = (_tmp6_ = g_strdup (_entry.sections_model), _g_free0 (entry_data.sections_model), _tmp6_);
+	entry_data.hints = (_tmp7_ = _g_hash_table_ref0 (_entry.hints), _g_hash_table_unref0 (entry_data.hints), _tmp7_);
+	g_signal_emit_by_name ((UnityPlaceEntryService*) self, "place-entry-info-changed", &entry_data);
+	self->priv->place_entry_info_changed_signal_source = (guint) 0;
+	result = FALSE;
+	unity_place__entryinfo_destroy (&_entry);
+	unity_place__entryinfodata_destroy (&entry_data);
+	return result;
 }
 
 
@@ -4978,6 +5458,8 @@ static void unity_place_entry_service_impl_unity_place_entry_service_interface_i
 static void unity_place_entry_service_impl_instance_init (UnityPlaceEntryServiceImpl * self) {
 	self->priv = UNITY_PLACE_ENTRY_SERVICE_IMPL_GET_PRIVATE (self);
 	self->priv->_exported = FALSE;
+	self->priv->place_entry_info_changed_signal_source = (guint) 0;
+	self->priv->_browser = NULL;
 }
 
 
@@ -4985,6 +5467,7 @@ static void unity_place_entry_service_impl_finalize (GObject* obj) {
 	UnityPlaceEntryServiceImpl * self;
 	self = UNITY_PLACE_ENTRY_SERVICE_IMPL (obj);
 	_g_object_unref0 (self->priv->_entry_info);
+	_g_object_unref0 (self->priv->_browser);
 	G_OBJECT_CLASS (unity_place_entry_service_impl_parent_class)->finalize (obj);
 }
 
@@ -5087,7 +5570,7 @@ static void _lambda2_ (GObject* obj, GParamSpec* pspec, Block1Data* _data1_) {
 	renderer_info = _g_object_ref0 ((_tmp0_ = obj, UNITY_PLACE_IS_RENDERER_INFO (_tmp0_) ? ((UnityPlaceRendererInfo*) _tmp0_) : NULL));
 	entry_service = unity_place_service_impl_get_entry_service (self->priv->service, unity_place_entry_info_get_dbus_path (_data1_->entry));
 	if (entry_service == NULL) {
-		g_warning ("unity-place.vala:764: Entry renderer info changed for unknown entry '%" \
+		g_warning ("unity-place.vala:903: Entry renderer info changed for unknown entry '%" \
 "s'", unity_place_entry_info_get_dbus_path (_data1_->entry));
 	} else {
 		UnityPlace_RendererInfo _tmp3_;
@@ -5117,7 +5600,7 @@ static void _lambda3_ (GObject* obj, GParamSpec* pspec, Block1Data* _data1_) {
 	renderer_info = _g_object_ref0 ((_tmp0_ = obj, UNITY_PLACE_IS_RENDERER_INFO (_tmp0_) ? ((UnityPlaceRendererInfo*) _tmp0_) : NULL));
 	entry_service = unity_place_service_impl_get_entry_service (self->priv->service, unity_place_entry_info_get_dbus_path (_data1_->entry));
 	if (entry_service == NULL) {
-		g_warning ("unity-place.vala:780: Global renderer info changed for unknown entry '" \
+		g_warning ("unity-place.vala:919: Global renderer info changed for unknown entry '" \
 "%s'", unity_place_entry_info_get_dbus_path (_data1_->entry));
 	} else {
 		UnityPlace_RendererInfo _tmp3_;
@@ -5191,14 +5674,14 @@ void unity_place_controller_remove_entry (UnityPlaceController* self, const char
 	g_return_if_fail (dbus_path != NULL);
 	signals = _unity_place__entrysignals_dup0 ((UnityPlace_EntrySignals*) g_hash_table_lookup (self->priv->entry_signals, dbus_path));
 	if (signals == NULL) {
-		g_warning ("unity-place.vala:804: No signals connected for unknown entry '%s'", dbus_path);
+		g_warning ("unity-place.vala:943: No signals connected for unknown entry '%s'", dbus_path);
 		unity_place_service_impl_remove_entry (self->priv->service, dbus_path);
 		_unity_place__entrysignals_free0 (signals);
 		return;
 	}
 	entry = unity_place_service_impl_get_entry (self->priv->service, dbus_path);
 	if (entry == NULL) {
-		g_warning ("unity-place.vala:813: Can not disconnect signals for unknown entry '%s" \
+		g_warning ("unity-place.vala:952: Can not disconnect signals for unknown entry '%s" \
 "'", dbus_path);
 		g_hash_table_remove (self->priv->entry_signals, dbus_path);
 		_g_object_unref0 (entry);
@@ -5315,58 +5798,24 @@ void unity_place_controller_unexport (UnityPlaceController* self, GError** error
 }
 
 
-static char** _vala_array_dup7 (char** self, int length) {
-	char** result;
-	int i;
-	result = g_new0 (char*, length + 1);
-	for (i = 0; i < length; i++) {
-		result[i] = g_strdup (self[i]);
-	}
-	return result;
-}
-
-
-static void unity_place_controller_on_entry_changed (UnityPlaceController* self, GObject* obj, GParamSpec* psec) {
+static void unity_place_controller_on_entry_changed (UnityPlaceController* self, GObject* obj, GParamSpec* pspec) {
 	GObject* _tmp0_;
 	UnityPlaceEntryInfo* entry;
-	UnityPlace_EntryInfoData entry_data = {0};
 	UnityPlaceEntryServiceImpl* entry_service;
-	UnityPlace_EntryInfo _tmp1_ = {0};
-	UnityPlace_EntryInfo _entry;
-	char* _tmp2_;
-	char* _tmp3_;
-	char* _tmp4_;
-	char** _tmp6_;
-	char** _tmp5_;
-	char* _tmp7_;
-	GHashTable* _tmp8_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (obj != NULL);
-	g_return_if_fail (psec != NULL);
+	g_return_if_fail (pspec != NULL);
 	entry = _g_object_ref0 ((_tmp0_ = obj, UNITY_PLACE_IS_ENTRY_INFO (_tmp0_) ? ((UnityPlaceEntryInfo*) _tmp0_) : NULL));
-	memset (&entry_data, 0, sizeof (UnityPlace_EntryInfoData));
 	entry_service = unity_place_service_impl_get_entry_service (self->priv->service, unity_place_entry_info_get_dbus_path (entry));
 	if (entry_service == NULL) {
-		g_warning ("unity-place.vala:874: Got change signal from unknown entry service '%s" \
-"'", unity_place_entry_info_get_dbus_path (entry));
+		g_warning ("unity-place.vala:1014: Got change signal from unknown entry service '%" \
+"s'", unity_place_entry_info_get_dbus_path (entry));
 		_g_object_unref0 (entry_service);
-		unity_place__entryinfodata_destroy (&entry_data);
 		_g_object_unref0 (entry);
 		return;
 	}
-	_entry = (unity_place_entry_info_get_raw (entry, &_tmp1_), _tmp1_);
-	entry_data.dbus_path = (_tmp2_ = g_strdup (_entry.dbus_path), _g_free0 (entry_data.dbus_path), _tmp2_);
-	entry_data.display_name = (_tmp3_ = g_strdup (_entry.display_name), _g_free0 (entry_data.display_name), _tmp3_);
-	entry_data.icon = (_tmp4_ = g_strdup (_entry.icon), _g_free0 (entry_data.icon), _tmp4_);
-	entry_data.position = _entry.position;
-	entry_data.mimetypes = (_tmp6_ = (_tmp5_ = _entry.mimetypes, (_tmp5_ == NULL) ? ((gpointer) _tmp5_) : _vala_array_dup7 (_tmp5_, _entry.mimetypes_length1)), entry_data.mimetypes = (_vala_array_free (entry_data.mimetypes, entry_data.mimetypes_length1, (GDestroyNotify) g_free), NULL), entry_data.mimetypes_length1 = _entry.mimetypes_length1, entry_data._mimetypes_size_ = entry_data.mimetypes_length1, _tmp6_);
-	entry_data.sensitive = _entry.sensitive;
-	entry_data.sections_model = (_tmp7_ = g_strdup (_entry.sections_model), _g_free0 (entry_data.sections_model), _tmp7_);
-	entry_data.hints = (_tmp8_ = _g_hash_table_ref0 (_entry.hints), _g_hash_table_unref0 (entry_data.hints), _tmp8_);
-	g_signal_emit_by_name ((UnityPlaceEntryService*) entry_service, "place-entry-info-changed", &entry_data);
-	unity_place__entryinfo_destroy (&_entry);
+	unity_place_entry_service_impl_queue_place_entry_info_changed_signal (entry_service);
 	_g_object_unref0 (entry_service);
-	unity_place__entryinfodata_destroy (&entry_data);
 	_g_object_unref0 (entry);
 }
 
@@ -5392,6 +5841,21 @@ gboolean unity_place_controller_get_exported (UnityPlaceController* self) {
 	g_return_val_if_fail (self != NULL, FALSE);
 	result = self->priv->_exported;
 	return result;
+}
+
+
+UnityPlaceActivation* unity_place_controller_get_activation (UnityPlaceController* self) {
+	UnityPlaceActivation* result;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = unity_place_service_impl_get_activation (self->priv->service);
+	return result;
+}
+
+
+void unity_place_controller_set_activation (UnityPlaceController* self, UnityPlaceActivation* value) {
+	g_return_if_fail (self != NULL);
+	unity_place_service_impl_set_activation (self->priv->service, value);
+	g_object_notify ((GObject *) self, "activation");
 }
 
 
@@ -5421,6 +5885,7 @@ static void unity_place_controller_class_init (UnityPlaceControllerClass * klass
 	G_OBJECT_CLASS (klass)->finalize = unity_place_controller_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACE_CONTROLLER_DBUS_PATH, g_param_spec_string ("dbus-path", "dbus-path", "dbus-path", NULL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACE_CONTROLLER_EXPORTED, g_param_spec_boolean ("exported", "exported", "exported", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACE_CONTROLLER_ACTIVATION, g_param_spec_object ("activation", "activation", "activation", UNITY_PLACE_TYPE_ACTIVATION, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 
@@ -5462,6 +5927,9 @@ static void unity_place_controller_get_property (GObject * object, guint propert
 		case UNITY_PLACE_CONTROLLER_EXPORTED:
 		g_value_set_boolean (value, unity_place_controller_get_exported (self));
 		break;
+		case UNITY_PLACE_CONTROLLER_ACTIVATION:
+		g_value_set_object (value, unity_place_controller_get_activation (self));
+		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
@@ -5475,6 +5943,9 @@ static void unity_place_controller_set_property (GObject * object, guint propert
 	switch (property_id) {
 		case UNITY_PLACE_CONTROLLER_DBUS_PATH:
 		unity_place_controller_set_dbus_path (self, g_value_get_string (value));
+		break;
+		case UNITY_PLACE_CONTROLLER_ACTIVATION:
+		unity_place_controller_set_activation (self, g_value_get_object (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

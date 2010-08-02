@@ -30,6 +30,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unity-private.h>
+#include <config.h>
 #include <gobject/gvaluecollector.h>
 
 
@@ -485,10 +486,10 @@ static void unity_tests_unit_launcher_suite_test_scroller_child_controller (Unit
 	g_return_if_fail (self != NULL);
 	test_app = unity_tests_unit_test_bamf_application_new ();
 	child = (UnityLauncherScrollerChild*) g_object_ref_sink (unity_tests_unit_test_scroller_child_new ());
-	controller = unity_launcher_application_controller_new (TESTDIR "/data/test_desktop_file.desktop", child);
+	controller = unity_launcher_application_controller_new (TESTUNITDIR "/data/test_desktop_file.desktop", child);
 	test_app->name = (_tmp0_ = g_strdup ("Test Application-New"), _g_free0 (test_app->name), _tmp0_);
-	test_app->desktop_file = (_tmp1_ = g_strdup (TESTDIR "/data/test_desktop_file.desktop"), _g_free0 (test_app->desktop_file), _tmp1_);
-	test_app->icon = (_tmp2_ = g_strdup (TESTDIR "/data/test_desktop_icon.png"), _g_free0 (test_app->icon), _tmp2_);
+	test_app->desktop_file = (_tmp1_ = g_strdup (TESTUNITDIR "/data/test_desktop_file.desktop"), _g_free0 (test_app->desktop_file), _tmp1_);
+	test_app->icon = (_tmp2_ = g_strdup (TESTUNITDIR "/data/test_desktop_icon.png"), _g_free0 (test_app->icon), _tmp2_);
 	test_app->test_is_active = TRUE;
 	test_app->test_is_urgent = FALSE;
 	test_app->test_user_visible = TRUE;

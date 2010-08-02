@@ -109,6 +109,7 @@ UnityShell* unity_panel_home_button_get_shell (UnityPanelHomeButton* self);
 static void unity_panel_home_button_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
 static void unity_panel_home_button_on_state_changed (UnityPanelHomeButton* self);
 static void unity_panel_home_button_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width, float* nat_width);
+static void unity_panel_home_button_on_mode_changed (UnityPanelHomeButton* self, UnityShellMode mode);
 GType menu_manager_get_type (void) G_GNUC_CONST;
 MenuManager* menu_manager_get_default (void);
 void menu_manager_popdown_current_menu (MenuManager* self);
@@ -117,6 +118,7 @@ static gboolean unity_panel_home_button_on_motion_event (UnityPanelHomeButton* s
 static void unity_panel_home_button_set_shell (UnityPanelHomeButton* self, UnityShell* value);
 static gboolean _unity_panel_home_button_on_motion_event_clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static void _unity_panel_home_button_on_clicked_ctk_button_clicked (CtkButton* _sender, gpointer self);
+static void _unity_panel_home_button_on_mode_changed_unity_shell_mode_changed (UnityShell* _sender, UnityShellMode mode, gpointer self);
 static void _unity_panel_home_button_on_state_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static GObject * unity_panel_home_button_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_panel_home_button_finalize (GObject* obj);
@@ -209,15 +211,9 @@ static void unity_panel_home_button_real_get_preferred_width (ClutterActor* base
 }
 
 
-static void unity_panel_home_button_on_clicked (UnityPanelHomeButton* self) {
-	MenuManager* manager;
+static void unity_panel_home_button_on_mode_changed (UnityPanelHomeButton* self, UnityShellMode mode) {
 	g_return_if_fail (self != NULL);
-	unity_shell_show_unity (self->priv->_shell);
-	manager = menu_manager_get_default ();
-	menu_manager_popdown_current_menu (manager);
-	if (self->priv->search_shown) {
-		ctk_actor_set_background_for_state ((CtkActor*) self, CTK_STATE_NORMAL, (ClutterActor*) self->priv->bfb_bg_normal);
-		ctk_actor_set_background_for_state ((CtkActor*) self, CTK_STATE_PRELIGHT, (ClutterActor*) self->priv->bfb_bg_prelight);
+	if (mode == UNITY_SHELL_MODE_MINIMIZED) {
 		ctk_actor_set_background_for_state ((CtkActor*) self, CTK_STATE_ACTIVE, (ClutterActor*) self->priv->bfb_bg_active);
 		self->priv->search_shown = FALSE;
 	} else {
@@ -227,6 +223,16 @@ static void unity_panel_home_button_on_clicked (UnityPanelHomeButton* self) {
 		self->priv->search_shown = TRUE;
 	}
 	clutter_actor_queue_redraw ((ClutterActor*) self);
+}
+
+
+static void unity_panel_home_button_on_clicked (UnityPanelHomeButton* self) {
+	MenuManager* manager;
+	g_return_if_fail (self != NULL);
+	unity_shell_show_unity (self->priv->_shell);
+	manager = menu_manager_get_default ();
+	menu_manager_popdown_current_menu (manager);
+	unity_panel_home_button_on_mode_changed (self, unity_shell_get_mode (self->priv->_shell));
 	_g_object_unref0 (manager);
 }
 
@@ -273,6 +279,11 @@ static void _unity_panel_home_button_on_clicked_ctk_button_clicked (CtkButton* _
 }
 
 
+static void _unity_panel_home_button_on_mode_changed_unity_shell_mode_changed (UnityShell* _sender, UnityShellMode mode, gpointer self) {
+	unity_panel_home_button_on_mode_changed (self, mode);
+}
+
+
 static void _unity_panel_home_button_on_state_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
 	unity_panel_home_button_on_state_changed (self);
 }
@@ -297,6 +308,7 @@ static GObject * unity_panel_home_button_constructor (GType type, guint n_constr
 		clutter_actor_show ((ClutterActor*) self->priv->theme_image);
 		g_signal_connect_object ((ClutterActor*) self, "motion-event", (GCallback) _unity_panel_home_button_on_motion_event_clutter_actor_motion_event, self, 0);
 		g_signal_connect_object ((CtkButton*) self, "clicked", (GCallback) _unity_panel_home_button_on_clicked_ctk_button_clicked, self, 0);
+		g_signal_connect_object (self->priv->_shell, "mode-changed", (GCallback) _unity_panel_home_button_on_mode_changed_unity_shell_mode_changed, self, 0);
 		g_signal_connect_object ((GObject*) self, "notify::state", (GCallback) _unity_panel_home_button_on_state_changed_g_object_notify, self, 0);
 		clutter_actor_set_width ((ClutterActor*) self, clutter_actor_get_width ((ClutterActor*) self) + 3.0f);
 		self->priv->glow = (_tmp1_ = g_object_ref_sink ((CtkEffectGlow*) ctk_effect_glow_new ()), _g_object_unref0 (self->priv->glow), _tmp1_);
@@ -308,22 +320,22 @@ static GObject * unity_panel_home_button_constructor (GType type, guint n_constr
 			ClutterTexture* _tmp5_;
 			_tmp4_ = g_object_ref_sink ((ClutterTexture*) clutter_texture_new_from_file ("/usr/share/unity/themes/bfb_bg_normal.png", &_inner_error_));
 			if (_inner_error_ != NULL) {
-				goto __catch3_g_error;
+				goto __catch6_g_error;
 			}
 			self->priv->bfb_bg_normal = (_tmp5_ = g_object_ref_sink (_tmp4_), _g_object_unref0 (self->priv->bfb_bg_normal), _tmp5_);
 		}
-		goto __finally3;
-		__catch3_g_error:
+		goto __finally6;
+		__catch6_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("panel-home-button.vala:120: Could not load normal-state bg-texture: %s", e->message);
+				g_warning ("panel-home-button.vala:75: Could not load normal-state bg-texture: %s", e->message);
 				_g_error_free0 (e);
 			}
 		}
-		__finally3:
+		__finally6:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -333,23 +345,23 @@ static GObject * unity_panel_home_button_constructor (GType type, guint n_constr
 			ClutterTexture* _tmp7_;
 			_tmp6_ = g_object_ref_sink ((ClutterTexture*) clutter_texture_new_from_file ("/usr/share/unity/themes/bfb_bg_prelight.png", &_inner_error_));
 			if (_inner_error_ != NULL) {
-				goto __catch4_g_error;
+				goto __catch7_g_error;
 			}
 			self->priv->bfb_bg_prelight = (_tmp7_ = g_object_ref_sink (_tmp6_), _g_object_unref0 (self->priv->bfb_bg_prelight), _tmp7_);
 		}
-		goto __finally4;
-		__catch4_g_error:
+		goto __finally7;
+		__catch7_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("panel-home-button.vala:130: Could not load prelight-state bg-texture: " \
-"%s", e->message);
+				g_warning ("panel-home-button.vala:85: Could not load prelight-state bg-texture: %" \
+"s", e->message);
 				_g_error_free0 (e);
 			}
 		}
-		__finally4:
+		__finally7:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -359,28 +371,26 @@ static GObject * unity_panel_home_button_constructor (GType type, guint n_constr
 			ClutterTexture* _tmp9_;
 			_tmp8_ = g_object_ref_sink ((ClutterTexture*) clutter_texture_new_from_file ("/usr/share/unity/themes/bfb_bg_active.png", &_inner_error_));
 			if (_inner_error_ != NULL) {
-				goto __catch5_g_error;
+				goto __catch8_g_error;
 			}
 			self->priv->bfb_bg_active = (_tmp9_ = g_object_ref_sink (_tmp8_), _g_object_unref0 (self->priv->bfb_bg_active), _tmp9_);
 		}
-		goto __finally5;
-		__catch5_g_error:
+		goto __finally8;
+		__catch8_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("panel-home-button.vala:140: Could not load active-state bg-texture: %s", e->message);
+				g_warning ("panel-home-button.vala:95: Could not load active-state bg-texture: %s", e->message);
 				_g_error_free0 (e);
 			}
 		}
-		__finally5:
+		__finally8:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
 		}
-		ctk_actor_set_background_for_state ((CtkActor*) self, CTK_STATE_NORMAL, (ClutterActor*) self->priv->bfb_bg_normal);
-		ctk_actor_set_background_for_state ((CtkActor*) self, CTK_STATE_PRELIGHT, (ClutterActor*) self->priv->bfb_bg_prelight);
 		ctk_actor_set_background_for_state ((CtkActor*) self, CTK_STATE_ACTIVE, (ClutterActor*) self->priv->bfb_bg_active);
 		self->priv->search_shown = FALSE;
 	}

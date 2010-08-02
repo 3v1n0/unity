@@ -25,6 +25,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unity-private.h>
+#include <config.h>
 #include <gee.h>
 
 
@@ -86,7 +87,7 @@ UnityTestsUnitPlacesPlaceFileModelSuite* unity_tests_unit_places_place_file_mode
 static void unity_tests_unit_places_place_file_model_suite_test_allocation (UnityTestsUnitPlacesPlaceFileModelSuite* self) {
 	UnityPlacesPlaceFileModel* model;
 	g_return_if_fail (self != NULL);
-	model = unity_places_place_file_model_new_with_directory (TESTDIR "/data");
+	model = unity_places_place_file_model_new_with_directory (TESTUNITDIR "/data");
 	g_assert (UNITY_PLACES_IS_PLACE_FILE_MODEL (model));
 	g_assert (gee_collection_get_size ((GeeCollection*) model) == 2);
 	_g_object_unref0 (model);

@@ -27,6 +27,7 @@
 #include <gio/gio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <config.h>
 #include <gobject/gvaluecollector.h>
 
 
@@ -311,7 +312,7 @@ void unity_tests_unit_app_info_manager_suite_test_sync_lookup_ok (void) {
 	GAppInfo* info;
 	old_datadir = g_strdup (g_get_user_data_dir ());
 	manager = unity_app_info_manager_get_instance ();
-	g_setenv ("XDG_DATA_HOME", TESTDIR, TRUE);
+	g_setenv ("XDG_DATA_HOME", TESTUNITDIR, TRUE);
 	info = unity_app_info_manager_lookup (manager, "ubuntu-about.desktop");
 	g_assert (G_IS_APP_INFO (info));
 	g_assert (_vala_strcmp0 ("About Ubuntu", g_app_info_get_name (info)) == 0);
@@ -376,7 +377,7 @@ static gboolean unity_tests_unit_app_info_manager_suite_do_test_async_lookup_ok_
 	{
 		data->old_datadir = g_strdup (g_get_user_data_dir ());
 		data->manager = unity_app_info_manager_get_instance ();
-		g_setenv ("XDG_DATA_HOME", TESTDIR, TRUE);
+		g_setenv ("XDG_DATA_HOME", TESTUNITDIR, TRUE);
 		{
 			data->_state_ = 4;
 			unity_app_info_manager_lookup_async (data->manager, "ubuntu-about.desktop", unity_tests_unit_app_info_manager_suite_do_test_async_lookup_ok_ready, data);

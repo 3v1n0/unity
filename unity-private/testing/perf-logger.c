@@ -367,7 +367,7 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 			GFileOutputStream* _tmp1_;
 			_tmp0_ = g_file_create (log_file, G_FILE_CREATE_NONE, NULL, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch45_g_error;
+				goto __catch59_g_error;
 			}
 			file_stream = (_tmp1_ = _tmp0_, _g_object_unref0 (file_stream), _tmp1_);
 		} else {
@@ -375,7 +375,7 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 			GFileOutputStream* _tmp3_;
 			_tmp2_ = g_file_replace (log_file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch45_g_error;
+				goto __catch59_g_error;
 			}
 			file_stream = (_tmp3_ = _tmp2_, _g_object_unref0 (file_stream), _tmp3_);
 		}
@@ -399,7 +399,7 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 					_unity_process_info_unref0 (info);
 					_g_object_unref0 (_info_it);
 					_g_object_unref0 (output_stream);
-					goto __catch45_g_error;
+					goto __catch59_g_error;
 				}
 				_g_free0 (outline);
 				_unity_process_info_unref0 (info);
@@ -409,12 +409,12 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 		g_output_stream_close ((GOutputStream*) file_stream, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (output_stream);
-			goto __catch45_g_error;
+			goto __catch59_g_error;
 		}
 		_g_object_unref0 (output_stream);
 	}
-	goto __finally45;
-	__catch45_g_error:
+	goto __finally59;
+	__catch59_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -424,7 +424,7 @@ void unity_timeline_logger_write_log (UnityTimelineLogger* self, const char* fil
 			_g_error_free0 (e);
 		}
 	}
-	__finally45:
+	__finally59:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (file_stream);
 		_g_object_unref0 (log_file);
