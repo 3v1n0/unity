@@ -1,6 +1,14 @@
 unity (0.2.22-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - Add support for window control buttons on the panel (LP: #610014)
+    - Create a files group model for downloads (LP: #610370)
+    - Fix odd representation of (partially) off-screen windows (LP: #594221)
+    - Fix selected category doesn't match the displayed one after a place
+      switch (LP: #604949)
+    - Move places shortcuts to the launcher (LP: #610015)
+    - Fix wrong arrow location in place views (LP: #604800)
+    - Launcher icons no more folded when launcher first starts (LP: #601107)
   * debian/control:
     - bump clutk build-dep
   * debian/patches/02_disable_expandable_menu.patch,
