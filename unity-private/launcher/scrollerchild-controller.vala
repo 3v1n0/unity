@@ -41,9 +41,6 @@ namespace Unity.Launcher
     public string name {get; set;}
     public bool hide {get; set;}
 
-
-    public signal void closed ();
-
     protected ScrollerChildControllerMenuState menu_state;
     protected uint32 last_press_time = 0;
     protected bool button_down = false;
@@ -74,6 +71,10 @@ namespace Unity.Launcher
       var anim = child.animate (Clutter.AnimationMode.EASE_IN_QUAD,
                                 SHORT_DELAY,
                                 "opacity", 0xff);
+    }
+
+    public void closed ()
+    {
     }
 
     public delegate void menu_cb (Dbusmenu.Menuitem? menu);
