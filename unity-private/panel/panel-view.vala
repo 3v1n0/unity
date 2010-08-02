@@ -69,7 +69,7 @@ namespace Unity.Panel
       home_button.show ();
 
       window_buttons = new WindowButtons ();
-      pack (window_buttons, false, true);
+      hbox.pack (window_buttons, false, true);
       window_buttons.show ();
 
       menu_bar = new MenuBar ();
@@ -124,18 +124,27 @@ namespace Unity.Panel
     {
       if (mode)
         {
+          Timeout.add (0, () => {
+            cache.invalidate_texture_cache ();
+            do_queue_redraw ();
+            return false;
+          });
+
          if (menu_bar.indicator_object_view is Clutter.Actor)
             menu_bar.indicator_object_view.hide ();
           window_buttons.hide ();
           bground.hide ();
           system_tray.hide ();
           reactive = false;
-          
+          /*
           var glow = new Ctk.EffectGlow ();
           glow.set_color ({ 255, 255, 255, 150 });
           glow.set_factor (1.0f);
           glow.set_margin (5);
           indicator_bar.add_effect (glow);
+          */
+
+          do_queue_redraw ();
         }
       else
         {
@@ -147,7 +156,12 @@ namespace Unity.Panel
           reactive = true;
 
           indicator_bar.remove_all_effects ();
-      }
+
+          Timeout.add (0, () => {
+            cache.update_texture_cache ();
+            do_queue_redraw ();
+            return false;
+          });      }
     }
   }
 }

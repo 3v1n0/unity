@@ -83,7 +83,7 @@ namespace Unity.Launcher
     private bool autoscroll_anim_active = false;
     private int autoscroll_direction = 0;
 
-    private Clutter.Timeline fling_timeline;
+    public Clutter.Timeline fling_timeline;
 
     private float previous_y_position = 0.0f; // the last known y position of the pointer
     private uint previous_y_time = 0; // the time (ms) that previous_y_position was set
