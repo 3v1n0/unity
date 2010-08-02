@@ -173,22 +173,6 @@ namespace Unity.Places
 
     private static int sort_sections (Section asec, Section bsec)
     {
-      string op;
-
-      var ret = asec.model.get_position (asec.iter) - bsec.model.get_position (bsec.iter);
-
-      if (ret == 0)
-        op = "=";
-      else if (ret > 0)
-        op = ">";
-      else
-        op = "<";
-
-      print ("%s %s %s\n",
-             asec.model.get_string (asec.iter, 0),
-             op,
-             bsec.model.get_string (bsec.iter, 0));
-      
       return asec.model.get_position (asec.iter) - 
              bsec.model.get_position (bsec.iter);
     }
