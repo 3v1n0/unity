@@ -75,6 +75,14 @@ namespace Unity.Launcher
       return new_menu;
     }
 
+    public new void closed ()
+    {
+      if (!is_sticky () && (app is Bamf.Application) == false)
+        {
+          request_removal ();
+        }
+    }
+
     public void set_sticky (bool is_sticky = true)
     {
       if (desktop_file == "" || desktop_file == null)
@@ -168,13 +176,6 @@ namespace Unity.Launcher
            FileUtils.remove (desktop_filename);
         }
     }
-
-/*
-    private get_menu_for_client (ScrollerChildController.menu_cb callback, Dbusmenu.Client client)
-    {
-
-    }
-*/
 
     public override void get_menu_actions (ScrollerChildController.menu_cb callback)
     {
