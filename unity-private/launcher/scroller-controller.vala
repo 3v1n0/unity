@@ -97,7 +97,7 @@ namespace Unity.Launcher
                 model.add (child);
 
               childcontrollers.add (controller);
-              controller.closed.connect (on_scroller_controller_closed);
+              controller.request_removal.connect (on_scroller_controller_closed);
               controller.notify["hide"].connect (() => {
                 if (controller.hide && controller.child in model)
                   model.remove (controller.child);
@@ -175,7 +175,7 @@ namespace Unity.Launcher
               controller = new ApplicationController (desktop_file, child);
               model.add (child);
               childcontrollers.add (controller);
-              controller.closed.connect (on_scroller_controller_closed);
+              controller.request_removal.connect (on_scroller_controller_closed);
             }
         }
 
@@ -200,36 +200,10 @@ namespace Unity.Launcher
           controller = new ApplicationController (desktop_file, child);
           model.add (child);
           childcontrollers.add (controller);
-          controller.closed.connect (on_scroller_controller_closed);
+          controller.request_removal.connect (on_scroller_controller_closed);
         }
     }
 
-    /*
-    public void on_favorite_removed (string uid)
-    {
-    }
-
-    public bool desktop_file_is_favorite (string desktop_file)
-    {
-      var favorites = Unity.Favorites.get_default ();
-
-      Gee.ArrayList<string> favorite_list = favorites.get_favorites();
-      foreach (string uid in favorite_list)
-        {
-          var type = favorites.get_string(uid, "type");
-          if (type != "application")
-              continue;
-
-          string fav_desktop_file = favorites.get_string(uid, "desktop_file");
-          if (desktop_file == fav_desktop_file)
-            {
-              return true;
-            }
-        }
-
-      return false;
-    }
-    */
     private ApplicationController? find_controller_by_desktop_file (string desktop_file)
     {
       foreach (ScrollerChildController controller in childcontrollers)
@@ -283,7 +257,7 @@ namespace Unity.Launcher
       }
       ScrollerChild retcont = (drag_controller.get_drag_model () as ScrollerChildController).child;
 
-        
+
       if (x > view.get_width () + DRAG_SAFE_ZONE &&
           retcont.group_type != ScrollerChild.GroupType.PLACE &&
           retcont.group_type != ScrollerChild.GroupType.SYSTEM)
@@ -338,6 +312,7 @@ namespace Unity.Launcher
       // check to see if the data matches any of our children
       if (!(drag_controller.get_drag_model () is ScrollerChildController))
       {
+        view.cache.update_texture_cache ();
         return;
       }
       ScrollerChildController model_controller = drag_controller.get_drag_model () as ScrollerChildController;
@@ -377,6 +352,8 @@ namespace Unity.Launcher
       // disconnect our drag controller signals
       drag_controller.drag_motion.disconnect (this.on_unity_drag_motion);
       drag_controller.drag_drop.disconnect (this.on_unity_drag_drop);
+
+      view.cache.update_texture_cache ();
     }
 
     private ScrollerChildController? get_controller_for_view (ScrollerChild childview)

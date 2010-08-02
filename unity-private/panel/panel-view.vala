@@ -23,11 +23,14 @@ namespace Unity.Panel
   static const int PANEL_HEIGHT = 24;
   static const bool search_entry_has_focus = false;
 
-  public class View : Ctk.Box
+  public class View : Ctk.Bin
   {
+    public Ctk.EffectCache cache;
+
     public bool expanded = true;
     public Shell shell { get; construct;}
 
+    Ctk.HBox              hbox;
     Background            bground;
     HomeButton            home_button;
     WindowButtons         window_buttons;
@@ -38,10 +41,7 @@ namespace Unity.Panel
     public View (Shell shell)
     {
       Object (shell:shell,
-              reactive:true,
-              orientation:Ctk.Orientation.HORIZONTAL,
-              homogeneous:false,
-              spacing:0);
+              reactive:true);
       system_tray.manage_stage (shell.get_stage ());
     }
 
@@ -52,6 +52,11 @@ namespace Unity.Panel
       /* Initialize the models */
       Indicators.IndicatorsModel.get_default();
 
+      hbox = new Ctk.HBox (0);
+      hbox.homogeneous = false;
+      add_actor (hbox);
+      hbox.show ();
+
       /* Create the background and become it's parent */
       //rect = new ThemeImage ("panel_background");
       bground = new Background ();
@@ -60,26 +65,34 @@ namespace Unity.Panel
 
       /* Create the views and add them to the box */
       home_button = new HomeButton (shell);
-      pack (home_button, false, true);
+      hbox.pack (home_button, false, true);
       home_button.show ();
 
       window_buttons = new WindowButtons ();
-      pack (window_buttons, false, true);
+      hbox.pack (window_buttons, false, true);
       window_buttons.show ();
 
       menu_bar = new MenuBar ();
-      pack (menu_bar, true, true);
+      hbox.pack (menu_bar, true, true);
       menu_bar.show ();
 
       system_tray = new SystemTray ();
-      pack (system_tray, false, true);
+      hbox.pack (system_tray, false, true);
       system_tray.show ();
 
       indicator_bar = new IndicatorBar ();
-      pack (indicator_bar, false, true);
+      hbox.pack (indicator_bar, false, true);
       indicator_bar.show ();
 
       button_release_event.connect (on_button_release_event);
+
+      cache = new Ctk.EffectCache ();
+      add_effect (cache);
+      cache.update_texture_cache ();
+      hbox.queue_redraw.connect (() => {
+      if (reactive == true)
+        cache.update_texture_cache ();
+      });
 
       END_FUNCTION ();
     }
@@ -114,18 +127,27 @@ namespace Unity.Panel
     {
       if (mode)
         {
+          Timeout.add (0, () => {
+            cache.invalidate_texture_cache ();
+            do_queue_redraw ();
+            return false;
+          });
+
          if (menu_bar.indicator_object_view is Clutter.Actor)
             menu_bar.indicator_object_view.hide ();
           window_buttons.hide ();
           bground.hide ();
           system_tray.hide ();
           reactive = false;
-          
+          /*
           var glow = new Ctk.EffectGlow ();
           glow.set_color ({ 255, 255, 255, 150 });
           glow.set_factor (1.0f);
           glow.set_margin (5);
           indicator_bar.add_effect (glow);
+          */
+
+          do_queue_redraw ();
         }
       else
         {
@@ -137,7 +159,12 @@ namespace Unity.Panel
           reactive = true;
 
           indicator_bar.remove_all_effects ();
-      }
+
+          Timeout.add (0, () => {
+            cache.update_texture_cache ();
+            do_queue_redraw ();
+            return false;
+          });      }
     }
   }
 }
