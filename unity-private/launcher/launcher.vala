@@ -28,10 +28,17 @@ namespace Unity.Launcher
     public Ctk.EffectCache cache;
     public LauncherContainer ()
     {
+      Object ();
+
       this.cache = new Ctk.EffectCache ();
       this.add_effect (this.cache);
 
       this.cache.update_texture_cache ();
+    }
+
+    construct
+    {
+
     }
   }
   

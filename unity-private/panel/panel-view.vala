@@ -89,7 +89,10 @@ namespace Unity.Panel
       cache = new Ctk.EffectCache ();
       add_effect (cache);
       cache.update_texture_cache ();
-      hbox.queue_redraw.connect (() => { cache.update_texture_cache (); });
+      hbox.queue_redraw.connect (() => {
+      if (reactive == true)
+        cache.update_texture_cache ();
+      });
 
       END_FUNCTION ();
     }

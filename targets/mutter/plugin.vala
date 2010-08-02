@@ -365,17 +365,27 @@ namespace Unity
         return;
 
       (focus.get_meta_window () as GLib.Object).get ("fullscreen", ref fullscreen);
+      (this.launcher.get_container () as Launcher.LauncherContainer).cache.invalidate_texture_cache ();
+
+      Clutter.Animation? anim;
       if (fullscreen)
         {
-          this.launcher.get_container ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
+          anim = this.launcher.get_container ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
           fullscreen_obstruction = true;
         }
       else
         {
-          this.launcher.get_container ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
+          anim = this.launcher.get_container ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
           this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
           fullscreen_obstruction = false;
+        }
+
+      if (anim is Clutter.Animation)
+        {
+          anim.completed.connect (()=> {
+            (this.launcher.get_container () as Launcher.LauncherContainer).cache.update_texture_cache ();
+          });
         }
     }
 
