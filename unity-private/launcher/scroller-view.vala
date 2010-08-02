@@ -49,6 +49,7 @@ namespace Unity.Launcher
   {
     // please don't reference this outside of this view, its only public for construct
     public ScrollerModel model {get; construct;}
+    public Ctk.EffectCache cache {get; construct;}
 
     /* our scroller constants */
     public int spacing = 6;
@@ -82,7 +83,7 @@ namespace Unity.Launcher
     private bool autoscroll_anim_active = false;
     private int autoscroll_direction = 0;
 
-    private Clutter.Timeline fling_timeline;
+    public Clutter.Timeline fling_timeline;
 
     private float previous_y_position = 0.0f; // the last known y position of the pointer
     private uint previous_y_time = 0; // the time (ms) that previous_y_position was set
@@ -101,9 +102,9 @@ namespace Unity.Launcher
      */
     private Gee.ArrayList<ScrollerChild> child_refs; // we sometimes need to hold a reference to a child
 
-    public ScrollerView (ScrollerModel _model)
+    public ScrollerView (ScrollerModel _model, Ctk.EffectCache _cache)
     {
-      Object (model:_model);
+      Object (model:_model, cache:_cache);
     }
 
     construct
@@ -144,6 +145,15 @@ namespace Unity.Launcher
       fling_timeline = new Clutter.Timeline (1000);
       fling_timeline.loop = true;
       fling_timeline.new_frame.connect (this.on_scroller_frame);
+      fling_timeline.started.connect (() => {
+        cache.invalidate_texture_cache ();
+      });
+      fling_timeline.completed.connect (() => {
+        Timeout.add (0, () => {
+        cache.update_texture_cache ();
+        return false;
+        });
+      });
 
       //on drag start we need to disengage our own drag attempts
       var drag_controller = Drag.Controller.get_default ();
@@ -587,6 +597,11 @@ namespace Unity.Launcher
               assert_not_reached ();
           }
         }
+
+      if (current_phase == ScrollerPhase.NONE)
+        cache.update_texture_cache ();
+      else
+        cache.invalidate_texture_cache ();
 
       stored_delta = delta;
     }

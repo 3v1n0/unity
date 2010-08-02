@@ -312,6 +312,7 @@ namespace Unity.Launcher
       // check to see if the data matches any of our children
       if (!(drag_controller.get_drag_model () is ScrollerChildController))
       {
+        view.cache.update_texture_cache ();
         return;
       }
       ScrollerChildController model_controller = drag_controller.get_drag_model () as ScrollerChildController;
@@ -351,6 +352,8 @@ namespace Unity.Launcher
       // disconnect our drag controller signals
       drag_controller.drag_motion.disconnect (this.on_unity_drag_motion);
       drag_controller.drag_drop.disconnect (this.on_unity_drag_drop);
+
+      view.cache.update_texture_cache ();
     }
 
     private ScrollerChildController? get_controller_for_view (ScrollerChild childview)

@@ -130,8 +130,9 @@ namespace Unity.Testing
       this.background.show ();
 
       this.launcher = new Launcher.Launcher (this);
-      this.stage.add_actor (this.launcher.get_view ());
-      this.launcher.get_view ().show ();
+      this.stage.add_actor (this.launcher.get_container ());
+      (this.launcher.get_container () as Ctk.Bin).add_actor (this.launcher.get_view ());
+      this.launcher.get_container ().show ();
 
       this.controller = new Places.Controller (this);
       this.places = this.controller.get_view ();
@@ -211,11 +212,11 @@ namespace Unity.Testing
       this.background.set_position (0, 0);
       this.background.set_size (width, height);
 
-      this.launcher.get_view ().set_size (ql_width,
+      this.launcher.get_container ().set_size (ql_width,
                                           height - Unity.Panel.PANEL_HEIGHT);
-      this.launcher.get_view ().set_position (0, Unity.Panel.PANEL_HEIGHT);
+      this.launcher.get_container ().set_position (0, Unity.Panel.PANEL_HEIGHT);
 
-      this.launcher.get_view ().set_clip (0, 0,
+      this.launcher.get_container ().set_clip (0, 0,
                                           ql_width, height);
 
       this.places.set_size (width-ql_width, height);

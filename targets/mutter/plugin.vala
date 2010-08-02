@@ -255,8 +255,9 @@ namespace Unity
 
       this.expose_manager.coverflow = false;
 
-      window_group.add_actor (this.launcher.get_view ());
-      window_group.raise_child (this.launcher.get_view (),
+      window_group.add_actor (this.launcher.get_container ());
+      (this.launcher.get_container () as Ctk.Bin).add_actor (this.launcher.get_view ());
+      window_group.raise_child (this.launcher.get_container (),
                                 this.plugin.get_normal_window_group ());
       this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 400,
                                   "opacity", 255);
@@ -266,7 +267,7 @@ namespace Unity
 
       window_group.add_actor (this.places);
       window_group.raise_child (this.places,
-                                this.launcher.get_view ());
+                                this.launcher.get_container ());
       this.places.opacity = 0;
       this.places.reactive = false;
       this.places.hide ();
@@ -275,7 +276,7 @@ namespace Unity
       this.panel = new Panel.View (this);
       window_group.add_actor (this.panel);
       window_group.raise_child (this.panel,
-                                this.launcher.get_view ());
+                                this.launcher.get_container ());
       this.panel.show ();
 
       this.stage.notify["width"].connect (this.relayout);
@@ -318,7 +319,7 @@ namespace Unity
     {
       if (changed)
         {
-          this.launcher.get_view ().hide ();
+          this.launcher.get_container ().hide ();
           this.panel.hide ();
           var menu = Unity.Launcher.QuicklistController.get_current_menu ();
           if (menu.is_menu_open ())
@@ -328,7 +329,7 @@ namespace Unity
         }
       else
         {
-          this.launcher.get_view ().show ();
+          this.launcher.get_container ().show ();
           this.panel.show ();
           fullscreen_obstruction = false;
         }
@@ -364,17 +365,34 @@ namespace Unity
         return;
 
       (focus.get_meta_window () as GLib.Object).get ("fullscreen", ref fullscreen);
+      (this.launcher.get_container () as Launcher.LauncherContainer).cache.invalidate_texture_cache ();
+      this.panel.cache.invalidate_texture_cache ();
+
+      Clutter.Animation? anim;
+      Clutter.Animation? panim;
       if (fullscreen)
         {
-          this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
-          this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
+          anim = this.launcher.get_container ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
+          panim = this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
           fullscreen_obstruction = true;
         }
       else
         {
-          this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
-          this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
+          anim = this.launcher.get_container ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
+          panim = this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
           fullscreen_obstruction = false;
+        }
+
+      if (anim is Clutter.Animation)
+        {
+          anim.completed.connect (()=> {
+            (this.launcher.get_container () as Launcher.LauncherContainer).cache.update_texture_cache ();
+          });
+        }
+
+      if (panim is Clutter.Animation)
+        {
+          panim.completed.connect (() => { this.panel.cache.update_texture_cache (); });
         }
     }
 
@@ -392,10 +410,10 @@ namespace Unity
       this.background.set_size (width, height);
       this.background.set_position (0, 0);
 
-      this.launcher.get_view ().set_size (this.QUICKLAUNCHER_WIDTH,
+      this.launcher.get_container ().set_size (this.QUICKLAUNCHER_WIDTH,
                                    (height-this.PANEL_HEIGHT));
-      this.launcher.get_view ().set_position (0, this.PANEL_HEIGHT);
-      this.launcher.get_view ().set_clip (0, 0,
+      this.launcher.get_container ().set_position (0, this.PANEL_HEIGHT);
+      this.launcher.get_container ().set_clip (0, 0,
                                    this.QUICKLAUNCHER_WIDTH,
                                    height-this.PANEL_HEIGHT);
       Utils.set_strut ((Gtk.Window)this.drag_dest,
