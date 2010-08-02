@@ -127,6 +127,13 @@ namespace Ctk {
 		public float factor { get; set; }
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
+	public class EffectCache : Ctk.Effect {
+		[CCode (type = "CtkEffect*", has_construct_function = false)]
+		public EffectCache ();
+		public void invalidate_texture_cache ();
+		public void update_texture_cache ();
+	}
+	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class EffectContext : GLib.Object {
 		public static unowned Ctk.EffectContext get_default_for_actor (Clutter.Actor actor);
 		public static unowned Ctk.EffectContext get_default_for_stage (Clutter.Stage stage);

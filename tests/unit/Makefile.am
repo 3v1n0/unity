@@ -59,6 +59,7 @@ test_unit_SOURCES = \
   test-places-place.vala \
   test-places.vala \
   test-place.vala \
+  test-place-browser.vala \
   test-io.vala \
   test-appinfo-manager.vala \
   test-unity-pixbuf-cache.vala \

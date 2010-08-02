@@ -1,6 +1,6 @@
 m4_define([unity_major], [0])
 m4_define([unity_minor], [2])
-m4_define([unity_micro], [21])
+m4_define([unity_micro], [23])
 
 m4_define([unity_api],
           [unity_major.unity_minor])
@@ -100,7 +100,7 @@ GTK_REQUIRED=2.18
 PKG_CHECK_MODULES(BASE,
                   clutter-1.0 >= 1.0
                   clutter-gtk-0.10 >= 0.10
-                  clutk-0.3 >= 0.3.26
+                  clutk-0.3 >= 0.3.45
                   dbus-glib-1
                   dbusmenu-glib >= 0.3.6
                   dee-1.0 >= 0.2.0

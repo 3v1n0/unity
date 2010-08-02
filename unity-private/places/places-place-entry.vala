@@ -50,6 +50,8 @@ namespace Unity.Places
     public abstract Dee.Model?  global_results_model { set; get; }
     public abstract Gee.HashMap<string, string>? global_renderer_hints { get; set; }
 
+    public abstract unowned Place? parent { get; construct set; }
+
     /* Signals */
     public signal void updated ();
     public signal void renderer_info_changed ();
@@ -84,6 +86,20 @@ namespace Unity.Places
       HashTable<string, string> renderer_hints;
     }
 
+    public struct PlaceEntryInfo
+    {
+      string   dbus_path;
+      string   name;
+      string   icon;
+      uint     position;
+      string[] mimetype;
+      bool     sensitive;
+      string   sections_model;
+      HashTable<string, string> hints;
+      //RendererInfo entry_renderer_info;
+      //RendererInfo global_renderer_info;
+    }
+
     /*
      * Properties
      */
@@ -98,6 +114,8 @@ namespace Unity.Places
     public bool     sensitive { get; set; }
 
     public Gee.HashMap<string, string> hints { get; set; }
+
+    public unowned Place? parent { get; construct set; }
 
     /* Whether the Entry is available on the bus, this is only when we want to
      * do optimisations for startup (showing the entries before actually
@@ -135,7 +153,8 @@ namespace Unity.Places
     private Dee.Model? _sections_model = null;
     public Dee.Model?  sections_model {
       get {
-        if (_sections_model is Dee.Model == false)
+        if (_sections_model is Dee.Model == false ||
+            (_sections_model as Dee.SharedModel).get_swarm_name () != sections_model_name)
           {
             if (sections_model_name != null)
               {
@@ -277,7 +296,6 @@ namespace Unity.Places
      * Public Methods
      */
     public void update_info (GLib.ValueArray value_array)
-                             requires (value_array.n_values == 10)
     {
       /* Un-marshal the array and update our information */
       var n  = value_array.get_nth (1).get_string ();
@@ -293,10 +311,15 @@ namespace Unity.Places
       sections_model_name = value_array.get_nth (6).get_string ();
 
       HashTable<string, string> hash = (HashTable<string, string>)(value_array.get_nth (7).get_boxed ());
-      if (hints != null)
-        hints = map_from_hash (hash);
+      if (hash != null)
+        {
+          hints = map_from_hash (hash);
+        }
       else
         hints = null;
+
+      if (value_array.n_values != 10)
+        return;
 
       /* Unmarshal the Entry RenderInfo */
       unowned ValueArray ea = (ValueArray)(value_array.get_nth (8).get_boxed ());
@@ -374,6 +397,7 @@ namespace Unity.Places
       }
 
       service.RendererInfoChanged.connect (on_renderer_info_changed);
+      service.PlaceEntryInfoChanged.connect (on_place_entry_info_changed);
 
       online = true;
     }
@@ -397,6 +421,17 @@ namespace Unity.Places
     /*
      * Private Methods
      */
+
+    private void on_place_entry_info_changed (dynamic DBus.Object dbus_object,
+                                              PlaceEntryInfo      info)
+    {
+      PlaceEntryInfo *i = &info;
+      unowned ValueArray pei = (ValueArray)i;
+
+      update_info (pei);
+
+      renderer_info_changed ();
+    }
 
     private void on_renderer_info_changed (dynamic DBus.Object dbus_object,
                                            RendererInfo        info)
@@ -441,8 +476,8 @@ namespace Unity.Places
       unowned void* key, val;
       while (iter.next (out key, out val))
         {
-          unowned string k = (string)key;
-          unowned string v = (string)val;
+          string k = (string)key;
+          string v = (string)val;
 
           map[k] = v;
         }

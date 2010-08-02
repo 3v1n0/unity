@@ -29,6 +29,7 @@ namespace Unity.Places
 
     private PlaceSearchBarBackground bg;
 
+    private PlaceSearchNavigation  navigation;
     private PlaceSearchEntry       entry;
     private PlaceSearchSectionsBar sections;
 
@@ -36,7 +37,7 @@ namespace Unity.Places
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
               homogeneous:false,
-              spacing:8);
+              spacing:16);
 
       Testing.ObjectRegistry.get_default ().register ("UnityPlacesSearchBar",
                                                       this);
@@ -51,8 +52,12 @@ namespace Unity.Places
         SPACING * 1.0f
       };
 
+      navigation = new PlaceSearchNavigation ();
+      pack (navigation, false, true);
+      navigation.show ();
+
       entry = new PlaceSearchEntry ();
-      pack (entry, true, true);
+      pack (entry, false, true);
       entry.show ();
       entry.text_changed.connect (on_search_text_changed);
 
@@ -60,7 +65,7 @@ namespace Unity.Places
       pack (sections, false, true);
       entry.show ();
 
-      bg = new PlaceSearchBarBackground (entry);
+      bg = new PlaceSearchBarBackground (navigation, entry);
       set_background (bg);
       bg.show ();
     }
@@ -133,6 +138,7 @@ namespace Unity.Places
       if (section != 0)
         sections.set_active_section (section);
 
+      navigation.set_active_entry (entry);
       this.entry.text.grab_key_focus ();
     }
   }
@@ -165,11 +171,13 @@ namespace Unity.Places
     private Clutter.CairoTexture texture;
     private Ctk.EffectGlow       glow;
 
+    public PlaceSearchNavigation navigation { get; construct; }
     public PlaceSearchEntry search_entry { get; construct; }
 
-    public PlaceSearchBarBackground (PlaceSearchEntry search_entry)
+    public PlaceSearchBarBackground (PlaceSearchNavigation nav,
+                                     PlaceSearchEntry search_entry)
     {
-      Object (search_entry:search_entry);
+      Object (navigation:nav, search_entry:search_entry);
     }
 
     construct
@@ -237,8 +245,9 @@ namespace Unity.Places
       var y = PlaceSearchBar.SPACING;
       var width = last_width -2;
       var height = last_height - 2;
-      var radius = 10;
+      var radius = 7;
 
+      /* Text background */
       cr.move_to  (x, y + radius);
       cr.curve_to (x, y,
                    x, y,
@@ -281,6 +290,40 @@ namespace Unity.Places
       cr.reset_clip ();
       cr.set_source_rgba (1.0, 1.0, 1.0, 0.6);
       cr.stroke ();
+
+      /* Add the arrow surround */
+      x = (int)navigation.x;
+      y = (int)navigation.y - 1;
+      width = x + (int)navigation.width;
+      height = y + (int)navigation.height;
+
+      cr.move_to  (x, y + radius);
+      cr.curve_to (x, y,
+                   x, y,
+                   x + radius, y);
+      cr.line_to  (width - radius, y);
+      cr.curve_to (width, y,
+                   width, y,
+                   width, y + radius);
+      cr.line_to  (width, height - radius);
+      cr.curve_to (width, height,
+                   width, height,
+                   width - radius, height);
+      cr.line_to  (x + radius, height);
+      cr.curve_to (x, height,
+                   x, height,
+                   x, height - radius);
+      cr.close_path ();
+
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.05f);
+      cr.fill_preserve ();
+
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.6f);
+      cr.stroke ();
+
+      /* Arrow separator */
+      cr.rectangle (x + ((width-x)/2), y+1, 1, height - y - 1);
+      cr.fill ();
 
       /* Cut out the search entry */
       cr.set_operator (Cairo.Operator.CLEAR);
