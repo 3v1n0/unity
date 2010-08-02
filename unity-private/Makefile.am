@@ -84,13 +84,15 @@ panel_sources = \
   panel/panel-menu-manager.vala \
   panel/panel-menubar.vala \
   panel/panel-tray.vala \
-  panel/panel-view.vala
+  panel/panel-view.vala \
+  panel/panel-window-buttons.vala
 
 places_sources = \
   places/places-controller.vala \
   places/places-default-renderer-group.vala \
   places/places-default-renderer.vala \
   places/places-place-bar.vala \
+  places/places-place-entry-scroller-child.vala \
   places/places-place-entry-view.vala \
   places/places-place-entry.vala \
   places/places-place-home.vala \
@@ -100,6 +102,7 @@ places_sources = \
   places/places-place-search-bar.vala \
   places/places-place-search-entry.vala \
   places/places-place-search-sections-bar.vala \
+  places/places-trash-controller.vala \
   places/places-view.vala
 
 launcher_sources = \

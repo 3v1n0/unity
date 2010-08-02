@@ -130,7 +130,7 @@ namespace Unity.Tests.Unit
     {
     }
 
-    public override QuicklistController get_menu_controller ()
+    public override QuicklistController? get_menu_controller ()
     {
       QuicklistController new_menu = new ApplicationQuicklistController (this);
       return new_menu;

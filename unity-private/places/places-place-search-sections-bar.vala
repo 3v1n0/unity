@@ -50,6 +50,16 @@ namespace Unity.Places
     /*
      * Public Methods
      */
+    public void set_active_section (uint section_id)
+    {
+      var list = get_children ();
+
+      unowned Section? section = list.nth_data<unowned Clutter.Actor>(section_id) as Section;
+
+      if (section is Section)
+        on_section_clicked_real (section);
+    }
+
     public void set_active_entry (PlaceEntry entry)
     {
       var children = get_children ();
@@ -151,7 +161,6 @@ namespace Unity.Places
 
     private void on_section_changed (Dee.Model model, Dee.ModelIter iter)
     {
-
     }
 
     private void on_section_removed (Dee.Model model, Dee.ModelIter iter)
@@ -169,6 +178,16 @@ namespace Unity.Places
         }
     }
 
+    private void on_section_clicked_real (Section section)
+    {
+      active_section.active = false;
+      active_section = section;
+      active_section.active = true;
+      var pos = active_section.model.get_position (active_section.iter);
+      active_entry.set_active_section (pos);
+
+    }
+
     private bool on_section_clicked (Clutter.Actor actor, Clutter.Event e)
     {
       Section section = actor as Section;
@@ -179,11 +198,7 @@ namespace Unity.Places
       if (e.button.button != 1)
         return false;
 
-      active_section.active = false;
-      active_section = section;
-      active_section.active = true;
-      var pos = active_section.model.get_position (active_section.iter);
-      active_entry.set_active_section (pos);
+      on_section_clicked_real (section);
 
       return true;
     }

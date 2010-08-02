@@ -219,11 +219,11 @@ namespace Unity.Testing
       this.launcher.get_container ().set_clip (0, 0,
                                           ql_width, height);
 
-      this.places.set_size (width, height);
-      this.places.set_position (0, 0);
+      this.places.set_size (width-ql_width, height);
+      this.places.set_position (ql_width, 0);
 
-       this.panel.set_size (width, Unity.Panel.PANEL_HEIGHT);
-       this.panel.set_position (0, 0);
+      this.panel.set_size (width, Unity.Panel.PANEL_HEIGHT);
+      this.panel.set_position (0, 0);
     }
 
     public override void show ()
@@ -280,6 +280,19 @@ namespace Unity.Testing
      * SHELL IMPLEMENTATION
      */
 
+    public void get_window_details (uint32   xid,
+                                    out bool allows_resize,
+                                    out bool is_maximised)
+    {
+      allows_resize = true;
+      debug ("This target does not support getting window details");
+    }
+
+    public void do_window_action (uint32 xid, WindowAction action)
+    {
+      debug ("This target does not support window actions");
+    }
+
     public void show_window_picker ()
     {
       this.show_unity ();
@@ -297,7 +310,7 @@ namespace Unity.Testing
 
     public ShellMode get_mode ()
     {
-      return ShellMode.UNDERLAY;
+      return showing_places ? ShellMode.DASH : ShellMode.MINIMIZED;
     }
 
     public void show_unity ()
@@ -322,6 +335,8 @@ namespace Unity.Testing
           places.shown ();
         }
 
+      mode_changed (showing_places ? ShellMode.DASH : ShellMode.MINIMIZED);
+
       this.places.do_queue_redraw ();
     }
 
@@ -336,7 +351,7 @@ namespace Unity.Testing
 
           places.hidden ();
 
-          debug ("Hide unity");
+          mode_changed (ShellMode.MINIMIZED);
         }
     }
 

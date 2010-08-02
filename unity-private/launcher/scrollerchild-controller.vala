@@ -93,9 +93,14 @@ namespace Unity.Launcher
       // do nothing!
     }
 
-    public virtual QuicklistController get_menu_controller ()
+    public virtual QuicklistController? get_menu_controller ()
     {
       return null;
+    }
+
+    public virtual bool can_drag ()
+    {
+      return true;
     }
 
     private bool on_leave_event (Clutter.Event event)
@@ -167,6 +172,9 @@ namespace Unity.Launcher
       if (menu is QuicklistController == false)
         {
           menu = get_menu_controller ();
+
+          if (menu is QuicklistController == false)
+            return;
         }
 
       if (menu.state == QuicklistControllerState.MENU
@@ -210,7 +218,7 @@ namespace Unity.Launcher
     private bool on_motion_event (Clutter.Event event)
     {
       var drag_controller = Unity.Drag.Controller.get_default ();
-      if (button_down && drag_controller.is_dragging == false)
+      if (button_down && drag_controller.is_dragging == false && can_drag ())
         {
           float diff = Math.fabsf (event.motion.x - click_start_pos);
           if (diff > drag_sensitivity)
