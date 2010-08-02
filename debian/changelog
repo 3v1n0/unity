@@ -1,4 +1,4 @@
-unity (0.2.22-0ubuntu1) UNRELEASED; urgency=low
+unity (0.2.22-0ubuntu1) maverick; urgency=low
 
   * New upstream release.
     - Add support for window control buttons on the panel (LP: #610014)
@@ -19,7 +19,7 @@ unity (0.2.22-0ubuntu1) UNRELEASED; urgency=low
   * debian/patches/02_i18n_launcher.patch:
     - from trunk, support use localized apps name (LP: #612494)
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 02 Aug 2010 13:59:28 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 02 Aug 2010 15:55:16 +0200
 
 unity (0.2.20-0ubuntu2) maverick; urgency=low
 
