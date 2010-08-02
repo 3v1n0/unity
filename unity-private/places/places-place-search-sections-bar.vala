@@ -171,6 +171,28 @@ namespace Unity.Places
       model.row_removed.connect (on_section_removed);
     }
 
+    private static int sort_sections (Section asec, Section bsec)
+    {
+      string op;
+
+      var ret = asec.model.get_position (asec.iter) - bsec.model.get_position (bsec.iter);
+
+      if (ret == 0)
+        op = "=";
+      else if (ret > 0)
+        op = ">";
+      else
+        op = "<";
+
+      print ("%s %s %s\n",
+             asec.model.get_string (asec.iter, 0),
+             op,
+             bsec.model.get_string (bsec.iter, 0));
+      
+      return asec.model.get_position (asec.iter) - 
+             bsec.model.get_position (bsec.iter);
+    }
+
     private void on_section_added (Dee.Model model, Dee.ModelIter iter)
     {
       var section = new Section (model, iter);
@@ -185,6 +207,8 @@ namespace Unity.Places
           section.active = true;
           active_entry.set_active_section (0);
         }
+  
+      sort_children ((CompareFunc)sort_sections);
     }
 
     private Section? get_section_for_iter (Dee.ModelIter iter)
