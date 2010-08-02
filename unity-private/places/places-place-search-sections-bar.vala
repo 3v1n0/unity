@@ -218,7 +218,7 @@ namespace Unity.Places
 
       if (section is Section)
         {
-          if (section == active_section)
+          if (section == active_section && _style == SectionStyle.BUTTONS)
             {
               active_section = get_section_for_iter (model.get_first_iter ());
               active_entry.set_active_section (0);
