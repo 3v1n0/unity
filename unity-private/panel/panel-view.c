@@ -59,6 +59,16 @@ typedef struct _UnityPanelBackgroundClass UnityPanelBackgroundClass;
 typedef struct _UnityPanelHomeButton UnityPanelHomeButton;
 typedef struct _UnityPanelHomeButtonClass UnityPanelHomeButtonClass;
 
+#define UNITY_PANEL_TYPE_WINDOW_BUTTONS (unity_panel_window_buttons_get_type ())
+#define UNITY_PANEL_WINDOW_BUTTONS(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_TYPE_WINDOW_BUTTONS, UnityPanelWindowButtons))
+#define UNITY_PANEL_WINDOW_BUTTONS_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PANEL_TYPE_WINDOW_BUTTONS, UnityPanelWindowButtonsClass))
+#define UNITY_PANEL_IS_WINDOW_BUTTONS(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PANEL_TYPE_WINDOW_BUTTONS))
+#define UNITY_PANEL_IS_WINDOW_BUTTONS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PANEL_TYPE_WINDOW_BUTTONS))
+#define UNITY_PANEL_WINDOW_BUTTONS_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PANEL_TYPE_WINDOW_BUTTONS, UnityPanelWindowButtonsClass))
+
+typedef struct _UnityPanelWindowButtons UnityPanelWindowButtons;
+typedef struct _UnityPanelWindowButtonsClass UnityPanelWindowButtonsClass;
+
 #define UNITY_PANEL_INDICATORS_TYPE_MENU_BAR (unity_panel_indicators_menu_bar_get_type ())
 #define UNITY_PANEL_INDICATORS_MENU_BAR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_INDICATORS_TYPE_MENU_BAR, UnityPanelIndicatorsMenuBar))
 #define UNITY_PANEL_INDICATORS_MENU_BAR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PANEL_INDICATORS_TYPE_MENU_BAR, UnityPanelIndicatorsMenuBarClass))
@@ -122,19 +132,22 @@ typedef struct _UnityPanelIndicatorsIndicatorsModel UnityPanelIndicatorsIndicato
 typedef struct _UnityPanelIndicatorsIndicatorsModelClass UnityPanelIndicatorsIndicatorsModelClass;
 
 struct _UnityPanelView {
-	CtkBox parent_instance;
+	CtkBin parent_instance;
 	UnityPanelViewPrivate * priv;
+	CtkEffectCache* cache;
 	gboolean expanded;
 };
 
 struct _UnityPanelViewClass {
-	CtkBoxClass parent_class;
+	CtkBinClass parent_class;
 };
 
 struct _UnityPanelViewPrivate {
 	UnityShell* _shell;
+	CtkHBox* hbox;
 	UnityPanelBackground* bground;
 	UnityPanelHomeButton* home_button;
+	UnityPanelWindowButtons* window_buttons;
 	UnityPanelIndicatorsMenuBar* menu_bar;
 	UnityPanelSystemTray* system_tray;
 	UnityPanelIndicatorsIndicatorBar* indicator_bar;
@@ -158,6 +171,7 @@ static gpointer unity_panel_view_parent_class = NULL;
 GType unity_panel_view_get_type (void) G_GNUC_CONST;
 GType unity_panel_background_get_type (void) G_GNUC_CONST;
 GType unity_panel_home_button_get_type (void) G_GNUC_CONST;
+GType unity_panel_window_buttons_get_type (void) G_GNUC_CONST;
 GType unity_panel_indicators_menu_bar_get_type (void) G_GNUC_CONST;
 GType unity_panel_system_tray_get_type (void) G_GNUC_CONST;
 GType unity_panel_indicators_indicator_bar_get_type (void) G_GNUC_CONST;
@@ -176,8 +190,11 @@ static gboolean unity_panel_view_on_button_release_event (UnityPanelView* self, 
 gint unity_panel_view_get_indicators_width (UnityPanelView* self);
 void unity_panel_view_set_expanded (UnityPanelView* self, gboolean _expanded);
 gint unity_panel_view_get_panel_height (UnityPanelView* self);
+static gboolean _lambda13_ (UnityPanelView* self);
+static gboolean __lambda13__gsource_func (gpointer self);
 GType unity_panel_indicators_indicator_object_view_get_type (void) G_GNUC_CONST;
-void unity_panel_indicators_indicator_bar_set_indicator_mode (UnityPanelIndicatorsIndicatorBar* self, gboolean mode);
+static gboolean _lambda14_ (UnityPanelView* self);
+static gboolean __lambda14__gsource_func (gpointer self);
 void unity_panel_view_set_indicator_mode (UnityPanelView* self, gboolean mode);
 UnityShell* unity_panel_view_get_shell (UnityPanelView* self);
 static void unity_panel_view_set_shell (UnityPanelView* self, UnityShell* value);
@@ -187,6 +204,8 @@ UnityPanelBackground* unity_panel_background_new (void);
 UnityPanelBackground* unity_panel_background_construct (GType object_type);
 UnityPanelHomeButton* unity_panel_home_button_new (UnityShell* shell);
 UnityPanelHomeButton* unity_panel_home_button_construct (GType object_type, UnityShell* shell);
+UnityPanelWindowButtons* unity_panel_window_buttons_new (void);
+UnityPanelWindowButtons* unity_panel_window_buttons_construct (GType object_type);
 UnityPanelIndicatorsMenuBar* unity_panel_indicators_menu_bar_new (void);
 UnityPanelIndicatorsMenuBar* unity_panel_indicators_menu_bar_construct (GType object_type);
 UnityPanelSystemTray* unity_panel_system_tray_new (void);
@@ -194,6 +213,8 @@ UnityPanelSystemTray* unity_panel_system_tray_construct (GType object_type);
 UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_new (void);
 UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_construct (GType object_type);
 static gboolean _unity_panel_view_on_button_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static void _lambda15_ (UnityPanelView* self);
+static void __lambda15__clutter_actor_queue_redraw (ClutterActor* _sender, ClutterActor* origin, gpointer self);
 static GObject * unity_panel_view_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_panel_view_finalize (GObject* obj);
 static void unity_panel_view_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -205,7 +226,7 @@ UnityPanelView* unity_panel_view_construct (GType object_type, UnityShell* shell
 	UnityPanelView * self;
 	ClutterStage* _tmp0_;
 	g_return_val_if_fail (shell != NULL, NULL);
-	self = (UnityPanelView*) g_object_new (object_type, "shell", shell, "reactive", TRUE, "orientation", CTK_ORIENTATION_HORIZONTAL, "homogeneous", FALSE, "spacing", 0, NULL);
+	self = (UnityPanelView*) g_object_new (object_type, "shell", shell, "reactive", TRUE, NULL);
 	unity_panel_system_tray_manage_stage (self->priv->system_tray, _tmp0_ = unity_shell_get_stage (shell));
 	_g_object_unref0 (_tmp0_);
 	return self;
@@ -251,24 +272,60 @@ gint unity_panel_view_get_panel_height (UnityPanelView* self) {
 }
 
 
+static gboolean _lambda13_ (UnityPanelView* self) {
+	gboolean result = FALSE;
+	ctk_effect_cache_invalidate_texture_cache (self->cache);
+	clutter_actor_queue_redraw ((ClutterActor*) self);
+	result = FALSE;
+	return result;
+}
+
+
+static gboolean __lambda13__gsource_func (gpointer self) {
+	gboolean result;
+	result = _lambda13_ (self);
+	return result;
+}
+
+
+static gboolean _lambda14_ (UnityPanelView* self) {
+	gboolean result = FALSE;
+	ctk_effect_cache_update_texture_cache (self->cache);
+	clutter_actor_queue_redraw ((ClutterActor*) self);
+	result = FALSE;
+	return result;
+}
+
+
+static gboolean __lambda14__gsource_func (gpointer self) {
+	gboolean result;
+	result = _lambda14_ (self);
+	return result;
+}
+
+
 void unity_panel_view_set_indicator_mode (UnityPanelView* self, gboolean mode) {
 	g_return_if_fail (self != NULL);
 	if (mode) {
+		g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda13__gsource_func, g_object_ref (self), g_object_unref);
 		if (CLUTTER_IS_ACTOR (self->priv->menu_bar->indicator_object_view)) {
 			clutter_actor_hide ((ClutterActor*) self->priv->menu_bar->indicator_object_view);
 		}
+		clutter_actor_hide ((ClutterActor*) self->priv->window_buttons);
 		clutter_actor_hide ((ClutterActor*) self->priv->bground);
 		clutter_actor_hide ((ClutterActor*) self->priv->system_tray);
-		unity_panel_indicators_indicator_bar_set_indicator_mode (self->priv->indicator_bar, mode);
 		clutter_actor_set_reactive ((ClutterActor*) self, FALSE);
+		clutter_actor_queue_redraw ((ClutterActor*) self);
 	} else {
 		if (CLUTTER_IS_ACTOR (self->priv->menu_bar->indicator_object_view)) {
 			clutter_actor_show ((ClutterActor*) self->priv->menu_bar->indicator_object_view);
 		}
+		clutter_actor_show ((ClutterActor*) self->priv->window_buttons);
 		clutter_actor_show ((ClutterActor*) self->priv->bground);
 		clutter_actor_show ((ClutterActor*) self->priv->system_tray);
-		unity_panel_indicators_indicator_bar_set_indicator_mode (self->priv->indicator_bar, mode);
 		clutter_actor_set_reactive ((ClutterActor*) self, TRUE);
+		ctk_actor_remove_all_effects ((CtkActor*) self->priv->indicator_bar);
+		g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda14__gsource_func, g_object_ref (self), g_object_unref);
 	}
 }
 
@@ -301,6 +358,18 @@ static gboolean _unity_panel_view_on_button_release_event_clutter_actor_button_r
 }
 
 
+static void _lambda15_ (UnityPanelView* self) {
+	if (clutter_actor_get_reactive ((ClutterActor*) self) == TRUE) {
+		ctk_effect_cache_update_texture_cache (self->cache);
+	}
+}
+
+
+static void __lambda15__clutter_actor_queue_redraw (ClutterActor* _sender, ClutterActor* origin, gpointer self) {
+	_lambda15_ (self);
+}
+
+
 static GObject * unity_panel_view_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -310,30 +379,44 @@ static GObject * unity_panel_view_constructor (GType type, guint n_construct_pro
 	self = UNITY_PANEL_VIEW (obj);
 	{
 		UnityPanelIndicatorsIndicatorsModel* _tmp0_;
-		UnityPanelBackground* _tmp1_;
-		UnityPanelHomeButton* _tmp2_;
-		UnityPanelIndicatorsMenuBar* _tmp3_;
-		UnityPanelSystemTray* _tmp4_;
-		UnityPanelIndicatorsIndicatorBar* _tmp5_;
+		CtkHBox* _tmp1_;
+		UnityPanelBackground* _tmp2_;
+		UnityPanelHomeButton* _tmp3_;
+		UnityPanelWindowButtons* _tmp4_;
+		UnityPanelIndicatorsMenuBar* _tmp5_;
+		UnityPanelSystemTray* _tmp6_;
+		UnityPanelIndicatorsIndicatorBar* _tmp7_;
+		CtkEffectCache* _tmp8_;
 		START_FUNCTION ();
 		_tmp0_ = unity_panel_indicators_indicators_model_get_default ();
 		_g_object_unref0 (_tmp0_);
-		self->priv->bground = (_tmp1_ = g_object_ref_sink (unity_panel_background_new ()), _g_object_unref0 (self->priv->bground), _tmp1_);
+		self->priv->hbox = (_tmp1_ = g_object_ref_sink ((CtkHBox*) ctk_hbox_new ((guint) 0)), _g_object_unref0 (self->priv->hbox), _tmp1_);
+		ctk_box_set_homogeneous ((CtkBox*) self->priv->hbox, FALSE);
+		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->hbox);
+		clutter_actor_show ((ClutterActor*) self->priv->hbox);
+		self->priv->bground = (_tmp2_ = g_object_ref_sink (unity_panel_background_new ()), _g_object_unref0 (self->priv->bground), _tmp2_);
 		ctk_actor_set_background ((CtkActor*) self, (ClutterActor*) self->priv->bground);
 		clutter_actor_show ((ClutterActor*) self->priv->bground);
-		self->priv->home_button = (_tmp2_ = g_object_ref_sink (unity_panel_home_button_new (self->priv->_shell)), _g_object_unref0 (self->priv->home_button), _tmp2_);
-		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->home_button, FALSE, TRUE);
+		self->priv->home_button = (_tmp3_ = g_object_ref_sink (unity_panel_home_button_new (self->priv->_shell)), _g_object_unref0 (self->priv->home_button), _tmp3_);
+		ctk_box_pack ((CtkBox*) self->priv->hbox, (ClutterActor*) self->priv->home_button, FALSE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->home_button);
-		self->priv->menu_bar = (_tmp3_ = g_object_ref_sink (unity_panel_indicators_menu_bar_new ()), _g_object_unref0 (self->priv->menu_bar), _tmp3_);
-		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->menu_bar, TRUE, TRUE);
+		self->priv->window_buttons = (_tmp4_ = g_object_ref_sink (unity_panel_window_buttons_new ()), _g_object_unref0 (self->priv->window_buttons), _tmp4_);
+		ctk_box_pack ((CtkBox*) self->priv->hbox, (ClutterActor*) self->priv->window_buttons, FALSE, TRUE);
+		clutter_actor_show ((ClutterActor*) self->priv->window_buttons);
+		self->priv->menu_bar = (_tmp5_ = g_object_ref_sink (unity_panel_indicators_menu_bar_new ()), _g_object_unref0 (self->priv->menu_bar), _tmp5_);
+		ctk_box_pack ((CtkBox*) self->priv->hbox, (ClutterActor*) self->priv->menu_bar, TRUE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->menu_bar);
-		self->priv->system_tray = (_tmp4_ = g_object_ref_sink (unity_panel_system_tray_new ()), _g_object_unref0 (self->priv->system_tray), _tmp4_);
-		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->system_tray, FALSE, TRUE);
+		self->priv->system_tray = (_tmp6_ = g_object_ref_sink (unity_panel_system_tray_new ()), _g_object_unref0 (self->priv->system_tray), _tmp6_);
+		ctk_box_pack ((CtkBox*) self->priv->hbox, (ClutterActor*) self->priv->system_tray, FALSE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->system_tray);
-		self->priv->indicator_bar = (_tmp5_ = g_object_ref_sink (unity_panel_indicators_indicator_bar_new ()), _g_object_unref0 (self->priv->indicator_bar), _tmp5_);
-		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->indicator_bar, FALSE, TRUE);
+		self->priv->indicator_bar = (_tmp7_ = g_object_ref_sink (unity_panel_indicators_indicator_bar_new ()), _g_object_unref0 (self->priv->indicator_bar), _tmp7_);
+		ctk_box_pack ((CtkBox*) self->priv->hbox, (ClutterActor*) self->priv->indicator_bar, FALSE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->indicator_bar);
 		g_signal_connect_object ((ClutterActor*) self, "button-release-event", (GCallback) _unity_panel_view_on_button_release_event_clutter_actor_button_release_event, self, 0);
+		self->cache = (_tmp8_ = g_object_ref_sink ((CtkEffectCache*) ctk_effect_cache_new ()), _g_object_unref0 (self->cache), _tmp8_);
+		ctk_actor_add_effect ((CtkActor*) self, (CtkEffect*) self->cache);
+		ctk_effect_cache_update_texture_cache (self->cache);
+		g_signal_connect_object ((ClutterActor*) self->priv->hbox, "queue-redraw", (GCallback) __lambda15__clutter_actor_queue_redraw, self, 0);
 		END_FUNCTION ();
 	}
 	return obj;
@@ -360,9 +443,12 @@ static void unity_panel_view_instance_init (UnityPanelView * self) {
 static void unity_panel_view_finalize (GObject* obj) {
 	UnityPanelView * self;
 	self = UNITY_PANEL_VIEW (obj);
+	_g_object_unref0 (self->cache);
 	_g_object_unref0 (self->priv->_shell);
+	_g_object_unref0 (self->priv->hbox);
 	_g_object_unref0 (self->priv->bground);
 	_g_object_unref0 (self->priv->home_button);
+	_g_object_unref0 (self->priv->window_buttons);
 	_g_object_unref0 (self->priv->menu_bar);
 	_g_object_unref0 (self->priv->system_tray);
 	_g_object_unref0 (self->priv->indicator_bar);
@@ -375,7 +461,7 @@ GType unity_panel_view_get_type (void) {
 	if (g_once_init_enter (&unity_panel_view_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (UnityPanelViewClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_panel_view_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityPanelView), 0, (GInstanceInitFunc) unity_panel_view_instance_init, NULL };
 		GType unity_panel_view_type_id;
-		unity_panel_view_type_id = g_type_register_static (CTK_TYPE_BOX, "UnityPanelView", &g_define_type_info, 0);
+		unity_panel_view_type_id = g_type_register_static (CTK_TYPE_BIN, "UnityPanelView", &g_define_type_info, 0);
 		g_once_init_leave (&unity_panel_view_type_id__volatile, unity_panel_view_type_id);
 	}
 	return unity_panel_view_type_id__volatile;

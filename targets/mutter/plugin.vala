@@ -108,6 +108,7 @@ namespace Unity
     }
 
     public ExposeManager expose_manager { get; private set; }
+    public Background    background     { get; private set; }
 
     public bool menus_swallow_events { get { return false; } }
 
@@ -115,6 +116,7 @@ namespace Unity
 
     private static const int PANEL_HEIGHT        =  24;
     private static const int QUICKLAUNCHER_WIDTH = 58;
+    private static const string UNDECORATED_HINT = "UNDECORATED_HINT";
 
     private Clutter.Stage    stage;
     private Application      app;
@@ -122,7 +124,6 @@ namespace Unity
     private Maximus          maximus;
 
     /* Unity Components */
-    private Background         background;
     private SpacesManager      spaces_manager;
     private Launcher.Launcher  launcher;
     private Places.Controller  places_controller;
@@ -188,7 +189,7 @@ namespace Unity
         {
           this.screensaver_conn = DBus.Bus.get (DBus.BusType.SESSION);
           this.screensaver = this.screensaver_conn.get_object ("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
-          this.screensaver.ActiveChanged += got_screensaver_changed;
+          this.screensaver.ActiveChanged.connect (got_screensaver_changed);
         }
       catch (Error e)
         {
@@ -243,13 +244,7 @@ namespace Unity
 
       this.spaces_manager = new SpacesManager (this);
       this.spaces_manager.set_padding (50, 50, get_launcher_width_foobar () + 50, 50);
-
       this.launcher.model.add (spaces_manager.button);
-      this.launcher.model.order_changed.connect (() => {
-        var index = launcher.model.index_of (spaces_manager.button);
-        if (index < launcher.model.size)
-          launcher.model.move (spaces_manager.button, launcher.model.size -1);
-      });
 
       this.expose_manager = new ExposeManager (this, launcher);
       this.expose_manager.hovered_opacity = 255;
@@ -260,8 +255,9 @@ namespace Unity
 
       this.expose_manager.coverflow = false;
 
-      window_group.add_actor (this.launcher.get_view ());
-      window_group.raise_child (this.launcher.get_view (),
+      window_group.add_actor (this.launcher.get_container ());
+      (this.launcher.get_container () as Ctk.Bin).add_actor (this.launcher.get_view ());
+      window_group.raise_child (this.launcher.get_container (),
                                 this.plugin.get_normal_window_group ());
       this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 400,
                                   "opacity", 255);
@@ -271,7 +267,7 @@ namespace Unity
 
       window_group.add_actor (this.places);
       window_group.raise_child (this.places,
-                                this.launcher.get_view ());
+                                this.launcher.get_container ());
       this.places.opacity = 0;
       this.places.reactive = false;
       this.places.hide ();
@@ -280,7 +276,7 @@ namespace Unity
       this.panel = new Panel.View (this);
       window_group.add_actor (this.panel);
       window_group.raise_child (this.panel,
-                                this.launcher.get_view ());
+                                this.launcher.get_container ());
       this.panel.show ();
 
       this.stage.notify["width"].connect (this.relayout);
@@ -323,7 +319,7 @@ namespace Unity
     {
       if (changed)
         {
-          this.launcher.get_view ().hide ();
+          this.launcher.get_container ().hide ();
           this.panel.hide ();
           var menu = Unity.Launcher.QuicklistController.get_current_menu ();
           if (menu.is_menu_open ())
@@ -333,7 +329,7 @@ namespace Unity
         }
       else
         {
-          this.launcher.get_view ().show ();
+          this.launcher.get_container ().show ();
           this.panel.show ();
           fullscreen_obstruction = false;
         }
@@ -369,17 +365,34 @@ namespace Unity
         return;
 
       (focus.get_meta_window () as GLib.Object).get ("fullscreen", ref fullscreen);
+      (this.launcher.get_container () as Launcher.LauncherContainer).cache.invalidate_texture_cache ();
+      this.panel.cache.invalidate_texture_cache ();
+
+      Clutter.Animation? anim;
+      Clutter.Animation? panim;
       if (fullscreen)
         {
-          this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
-          this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
+          anim = this.launcher.get_container ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
+          panim = this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
           fullscreen_obstruction = true;
         }
       else
         {
-          this.launcher.get_view ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
-          this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
+          anim = this.launcher.get_container ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
+          panim = this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
           fullscreen_obstruction = false;
+        }
+
+      if (anim is Clutter.Animation)
+        {
+          anim.completed.connect (()=> {
+            (this.launcher.get_container () as Launcher.LauncherContainer).cache.update_texture_cache ();
+          });
+        }
+
+      if (panim is Clutter.Animation)
+        {
+          panim.completed.connect (() => { this.panel.cache.update_texture_cache (); });
         }
     }
 
@@ -397,18 +410,18 @@ namespace Unity
       this.background.set_size (width, height);
       this.background.set_position (0, 0);
 
-      this.launcher.get_view ().set_size (this.QUICKLAUNCHER_WIDTH,
+      this.launcher.get_container ().set_size (this.QUICKLAUNCHER_WIDTH,
                                    (height-this.PANEL_HEIGHT));
-      this.launcher.get_view ().set_position (0, this.PANEL_HEIGHT);
-      this.launcher.get_view ().set_clip (0, 0,
+      this.launcher.get_container ().set_position (0, this.PANEL_HEIGHT);
+      this.launcher.get_container ().set_clip (0, 0,
                                    this.QUICKLAUNCHER_WIDTH,
                                    height-this.PANEL_HEIGHT);
       Utils.set_strut ((Gtk.Window)this.drag_dest,
                        this.QUICKLAUNCHER_WIDTH, 0, (uint32)height,
                        PANEL_HEIGHT, 0, (uint32)width);
 
-      this.places.set_size (width, height);
-      this.places.set_position (0, 0);
+      this.places.set_size (width - this.QUICKLAUNCHER_WIDTH, height);
+      this.places.set_position (this.QUICKLAUNCHER_WIDTH, 0);
 
       this.panel.set_size (width, 24);
       this.panel.set_position (0, 0);
@@ -515,7 +528,7 @@ namespace Unity
             }
         }
 
-      expose_windows (windows);
+      expose_windows (windows,  get_launcher_width_foobar () + 10);
     }
 
     public void stop_expose ()
@@ -551,7 +564,7 @@ namespace Unity
 
     public ShellMode get_mode ()
     {
-      return ShellMode.UNDERLAY;
+      return places_showing ? ShellMode.DASH : ShellMode.MINIMIZED;
     }
 
     public int get_indicators_width ()
@@ -560,7 +573,7 @@ namespace Unity
     }
 
     public void expose_windows (GLib.SList<Clutter.Actor> windows,
-                                int left_buffer = 250)
+                                int left_buffer = 75)
     {
       expose_manager.left_buffer = left_buffer;
       expose_manager.start_expose (windows);
@@ -594,6 +607,8 @@ namespace Unity
         Gtk.main_iteration ();
 
       places.hidden ();
+
+      mode_changed (ShellMode.MINIMIZED);
     }
 
     public void show_unity ()
@@ -632,6 +647,8 @@ namespace Unity
                           "opacity", 255);
 
           places.shown ();
+
+          mode_changed (ShellMode.DASH);
         }
     }
 
@@ -666,6 +683,73 @@ namespace Unity
       return (Environment.get_variable (name) != null);
     }
 
+    private unowned Mutter.MetaWindow? get_window_for_xid (uint32 xid)
+    {
+      unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
+      foreach (Mutter.Window window in mutter_windows)
+        {
+          uint32 wxid = (uint32) Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
+          if (wxid == xid)
+            {
+              unowned Mutter.MetaWindow win = window.get_meta_window ();
+              return win;
+            }
+        }
+
+      return null;
+    }
+
+    public void get_window_details (uint32   xid,
+                                    out bool allows_resize,
+                                    out bool is_maximised)
+    {
+      unowned Mutter.MetaWindow? win = get_window_for_xid (xid);
+
+      if (win != null)
+        {
+          allows_resize = Mutter.MetaWindow.allows_resize (win);
+          is_maximised = (Mutter.MetaWindow.is_maximized (win) ||
+                          Mutter.MetaWindow.is_maximized_horizontally (win) ||
+                          Mutter.MetaWindow.is_maximized_vertically (win));
+
+        }
+    }
+
+    public void do_window_action (uint32 xid, WindowAction action)
+    {
+      unowned Mutter.MetaWindow? win = get_window_for_xid (xid);
+
+      if (win != null)
+        {
+          switch (action)
+            {
+            case WindowAction.CLOSE:
+              Mutter.MetaWindow.delete (win, get_current_time ());
+              break;
+
+            case WindowAction.MINIMIZE:
+              Mutter.MetaWindow.minimize (win);
+              break;
+
+            case WindowAction.MAXIMIZE:
+              Mutter.MetaWindow.maximize (win,
+                                          Mutter.MetaMaximizeFlags.HORIZONTAL |
+                                          Mutter.MetaMaximizeFlags.VERTICAL);
+              break;
+
+            case WindowAction.UNMAXIMIZE:
+              Mutter.MetaWindow.unmaximize (win,
+                                            Mutter.MetaMaximizeFlags.HORIZONTAL |
+                                            Mutter.MetaMaximizeFlags.VERTICAL);
+              break;
+
+            default:
+              warning (@"Window action type $action not supported");
+              break;
+            }
+        }
+    }
+
     /*
      * MUTTER PLUGIN HOOKS
      */
@@ -680,7 +764,17 @@ namespace Unity
                           int           width,
                           int           height)
     {
+      /*FIXME: This doesn't work in Mutter
+      if (window.get_data<string> (UNDECORATED_HINT) == null)
+        {
+          uint32 xid = (uint32)window.get_x_window ();
+          Utils.window_set_decorations (xid, 0);
+        }
+        */
+
       this.window_maximized (this, window, x, y, width, height);
+
+      active_window_state_changed ();
     }
 
     public void unmaximize (Mutter.Window window,
@@ -689,11 +783,26 @@ namespace Unity
                             int           width,
                             int           height)
     {
+      /* FIXME: This doesn't work in Mutter
+      if (window.get_data<string> (UNDECORATED_HINT) == null)
+        {
+          uint32 xid = (uint32)window.get_x_window ();
+          Utils.window_set_decorations (xid, 1);
+        }
+      */
+
       this.window_unmaximized (this, window, x, y, width, height);
+
+      active_window_state_changed ();
     }
 
     public void map (Mutter.Window window)
     {
+      /* FIXME: This doesn't work in Mutter
+      uint32 xid = (uint32)window.get_x_window ();
+      if (Utils.window_is_decorated (xid) == false)
+        window.set_data (UNDECORATED_HINT, "%s".printf ("true"));
+      */
       this.maximus.process_window (window);
       this.window_mapped (this, window);
 

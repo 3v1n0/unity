@@ -79,7 +79,7 @@ typedef struct _UnityLauncherScrollerChildClass UnityLauncherScrollerChildClass;
 
 #define UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER_STATE (unity_launcher_quicklist_controller_state_get_type ())
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
-typedef struct _Block7Data Block7Data;
+typedef struct _Block8Data Block8Data;
 typedef struct _UnityLauncherScrollerChildPrivate UnityLauncherScrollerChildPrivate;
 
 #define UNITY_LAUNCHER_TYPE_PIN_TYPE (unity_launcher_pin_type_get_type ())
@@ -108,6 +108,7 @@ struct _UnityLauncherScrollerChildControllerClass {
 	void (*get_menu_navigation) (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
 	void (*activate) (UnityLauncherScrollerChildController* self);
 	UnityLauncherQuicklistController* (*get_menu_controller) (UnityLauncherScrollerChildController* self);
+	gboolean (*can_drag) (UnityLauncherScrollerChildController* self);
 };
 
 struct _UnityLauncherScrollerChildControllerPrivate {
@@ -124,7 +125,7 @@ typedef enum  {
 	UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_CLOSED
 } UnityLauncherQuicklistControllerState;
 
-struct _Block7Data {
+struct _Block8Data {
 	int _ref_count_;
 	UnityLauncherScrollerChildController * self;
 	char* icon_name;
@@ -165,6 +166,7 @@ enum  {
 	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU
 };
 UnityLauncherScrollerChildController* unity_launcher_scroller_child_controller_construct (GType object_type, UnityLauncherScrollerChild* child_);
+void unity_launcher_scroller_child_controller_closed (UnityLauncherScrollerChildController* self);
 void unity_launcher_scroller_child_controller_get_menu_actions (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
 static void unity_launcher_scroller_child_controller_real_get_menu_actions (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
 void unity_launcher_scroller_child_controller_get_menu_navigation (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
@@ -173,6 +175,8 @@ void unity_launcher_scroller_child_controller_activate (UnityLauncherScrollerChi
 static void unity_launcher_scroller_child_controller_real_activate (UnityLauncherScrollerChildController* self);
 UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_get_menu_controller (UnityLauncherScrollerChildController* self);
 static UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_real_get_menu_controller (UnityLauncherScrollerChildController* self);
+gboolean unity_launcher_scroller_child_controller_can_drag (UnityLauncherScrollerChildController* self);
+static gboolean unity_launcher_scroller_child_controller_real_can_drag (UnityLauncherScrollerChildController* self);
 static void unity_launcher_scroller_child_controller_ensure_menu_state (UnityLauncherScrollerChildController* self);
 static gboolean unity_launcher_scroller_child_controller_on_leave_event (UnityLauncherScrollerChildController* self, ClutterEvent* event);
 static gboolean unity_launcher_scroller_child_controller_on_press_event (UnityLauncherScrollerChildController* self, ClutterEvent* event);
@@ -196,12 +200,12 @@ static char* unity_launcher_scroller_child_controller_real_get_drag_data (UnityD
 static gboolean unity_launcher_scroller_child_controller_on_motion_event (UnityLauncherScrollerChildController* self, ClutterEvent* event);
 static gboolean unity_launcher_scroller_child_controller_try_load_from_file (UnityLauncherScrollerChildController* self, const char* filepath);
 void unity_launcher_scroller_child_set_icon (UnityLauncherScrollerChild* self, GdkPixbuf* value);
-static void _lambda14_ (UnityThemeFilePath* theme, const char* filepath, UnityLauncherScrollerChildController* self);
-static void __lambda14__unity_theme_file_path_found_icon_path (UnityThemeFilePath* _sender, const char* filepath, gpointer self);
-static void _lambda15_ (Block7Data* _data7_);
-static void __lambda15__unity_theme_file_path_failed (UnityThemeFilePath* _sender, gpointer self);
-static Block7Data* block7_data_ref (Block7Data* _data7_);
-static void block7_data_unref (Block7Data* _data7_);
+static void _lambda28_ (UnityThemeFilePath* theme, const char* filepath, UnityLauncherScrollerChildController* self);
+static void __lambda28__unity_theme_file_path_found_icon_path (UnityThemeFilePath* _sender, const char* filepath, gpointer self);
+static void _lambda29_ (Block8Data* _data8_);
+static void __lambda29__unity_theme_file_path_failed (UnityThemeFilePath* _sender, gpointer self);
+static Block8Data* block8_data_ref (Block8Data* _data8_);
+static void block8_data_unref (Block8Data* _data8_);
 void unity_launcher_scroller_child_controller_load_icon_from_icon_name (UnityLauncherScrollerChildController* self, const char* icon_name);
 static void unity_launcher_scroller_child_controller_set_child (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChild* value);
 void unity_launcher_scroller_child_controller_set_name (UnityLauncherScrollerChildController* self, const char* value);
@@ -238,6 +242,11 @@ UnityLauncherScrollerChildController* unity_launcher_scroller_child_controller_c
 	g_return_val_if_fail (child_ != NULL, NULL);
 	self = (UnityLauncherScrollerChildController*) g_object_new (object_type, "child", child_, NULL);
 	return self;
+}
+
+
+void unity_launcher_scroller_child_controller_closed (UnityLauncherScrollerChildController* self) {
+	g_return_if_fail (self != NULL);
 }
 
 
@@ -283,6 +292,19 @@ static UnityLauncherQuicklistController* unity_launcher_scroller_child_controlle
 
 UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_get_menu_controller (UnityLauncherScrollerChildController* self) {
 	return UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS (self)->get_menu_controller (self);
+}
+
+
+static gboolean unity_launcher_scroller_child_controller_real_can_drag (UnityLauncherScrollerChildController* self) {
+	gboolean result = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	result = TRUE;
+	return result;
+}
+
+
+gboolean unity_launcher_scroller_child_controller_can_drag (UnityLauncherScrollerChildController* self) {
+	return UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS (self)->can_drag (self);
 }
 
 
@@ -391,6 +413,9 @@ static void unity_launcher_scroller_child_controller_ensure_menu_state (UnityLau
 		UnityLauncherQuicklistController* _tmp0_;
 		unity_launcher_scroller_child_controller_set_menu (self, _tmp0_ = unity_launcher_scroller_child_controller_get_menu_controller (self));
 		_g_object_unref0 (_tmp0_);
+		if (UNITY_LAUNCHER_IS_QUICKLIST_CONTROLLER (self->priv->_menu) == FALSE) {
+			return;
+		}
 	}
 	if (unity_launcher_quicklist_controller_get_state (self->priv->_menu) == UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU) {
 		_tmp2_ = unity_launcher_quicklist_controller_is_menu_open ();
@@ -446,10 +471,16 @@ static gboolean unity_launcher_scroller_child_controller_on_motion_event (UnityL
 	gboolean result = FALSE;
 	UnityDragController* drag_controller;
 	gboolean _tmp0_ = FALSE;
+	gboolean _tmp1_ = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
 	if (self->button_down) {
-		_tmp0_ = unity_drag_controller_get_is_dragging (drag_controller) == FALSE;
+		_tmp1_ = unity_drag_controller_get_is_dragging (drag_controller) == FALSE;
+	} else {
+		_tmp1_ = FALSE;
+	}
+	if (_tmp1_) {
+		_tmp0_ = unity_launcher_scroller_child_controller_can_drag (self);
 	} else {
 		_tmp0_ = FALSE;
 	}
@@ -481,7 +512,7 @@ static const char* string_to_string (const char* self) {
 }
 
 
-static void _lambda14_ (UnityThemeFilePath* theme, const char* filepath, UnityLauncherScrollerChildController* self) {
+static void _lambda28_ (UnityThemeFilePath* theme, const char* filepath, UnityLauncherScrollerChildController* self) {
 	GError * _inner_error_;
 	g_return_if_fail (theme != NULL);
 	g_return_if_fail (filepath != NULL);
@@ -491,25 +522,25 @@ static void _lambda14_ (UnityThemeFilePath* theme, const char* filepath, UnityLa
 		GdkPixbuf* _tmp1_;
 		_tmp0_ = gdk_pixbuf_new_from_file (filepath, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch26_g_error;
+			goto __catch40_g_error;
 		}
 		unity_launcher_scroller_child_set_icon (self->priv->_child, _tmp1_ = _tmp0_);
 		_g_object_unref0 (_tmp1_);
 	}
-	goto __finally26;
-	__catch26_g_error:
+	goto __finally40;
+	__catch40_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
 			char* _tmp2_;
-			g_warning ("scrollerchild-controller.vala:266: %s", _tmp2_ = g_strconcat ("Could not load from ", string_to_string (filepath), NULL));
+			g_warning ("scrollerchild-controller.vala:275: %s", _tmp2_ = g_strconcat ("Could not load from ", string_to_string (filepath), NULL));
 			_g_free0 (_tmp2_);
 			_g_error_free0 (e);
 		}
 	}
-	__finally26:
+	__finally40:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -518,15 +549,15 @@ static void _lambda14_ (UnityThemeFilePath* theme, const char* filepath, UnityLa
 }
 
 
-static void __lambda14__unity_theme_file_path_found_icon_path (UnityThemeFilePath* _sender, const char* filepath, gpointer self) {
-	_lambda14_ (_sender, filepath, self);
+static void __lambda28__unity_theme_file_path_found_icon_path (UnityThemeFilePath* _sender, const char* filepath, gpointer self) {
+	_lambda28_ (_sender, filepath, self);
 }
 
 
-static void _lambda15_ (Block7Data* _data7_) {
+static void _lambda29_ (Block8Data* _data8_) {
 	UnityLauncherScrollerChildController * self;
 	GError * _inner_error_;
-	self = _data7_->self;
+	self = _data8_->self;
 	_inner_error_ = NULL;
 	{
 		GtkIconTheme* default_theme;
@@ -535,23 +566,23 @@ static void _lambda15_ (Block7Data* _data7_) {
 		_tmp0_ = gtk_icon_theme_load_icon (default_theme, GTK_STOCK_MISSING_IMAGE, 48, 0, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (default_theme);
-			goto __catch27_g_error;
+			goto __catch41_g_error;
 		}
 		unity_launcher_scroller_child_set_icon (self->priv->_child, _tmp0_);
 		_g_object_unref0 (default_theme);
 	}
-	goto __finally27;
-	__catch27_g_error:
+	goto __finally41;
+	__catch41_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("scrollerchild-controller.vala:278: Could not load any icon for %s", _data7_->icon_name);
+			g_warning ("scrollerchild-controller.vala:287: Could not load any icon for %s", _data8_->icon_name);
 			_g_error_free0 (e);
 		}
 	}
-	__finally27:
+	__finally41:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -560,28 +591,28 @@ static void _lambda15_ (Block7Data* _data7_) {
 }
 
 
-static void __lambda15__unity_theme_file_path_failed (UnityThemeFilePath* _sender, gpointer self) {
-	_lambda15_ (self);
+static void __lambda29__unity_theme_file_path_failed (UnityThemeFilePath* _sender, gpointer self) {
+	_lambda29_ (self);
 }
 
 
-static Block7Data* block7_data_ref (Block7Data* _data7_) {
-	g_atomic_int_inc (&_data7_->_ref_count_);
-	return _data7_;
+static Block8Data* block8_data_ref (Block8Data* _data8_) {
+	g_atomic_int_inc (&_data8_->_ref_count_);
+	return _data8_;
 }
 
 
-static void block7_data_unref (Block7Data* _data7_) {
-	if (g_atomic_int_dec_and_test (&_data7_->_ref_count_)) {
-		_g_object_unref0 (_data7_->self);
-		_g_free0 (_data7_->icon_name);
-		g_slice_free (Block7Data, _data7_);
+static void block8_data_unref (Block8Data* _data8_) {
+	if (g_atomic_int_dec_and_test (&_data8_->_ref_count_)) {
+		_g_object_unref0 (_data8_->self);
+		_g_free0 (_data8_->icon_name);
+		g_slice_free (Block8Data, _data8_);
 	}
 }
 
 
 void unity_launcher_scroller_child_controller_load_icon_from_icon_name (UnityLauncherScrollerChildController* self, const char* icon_name) {
-	Block7Data* _data7_;
+	Block8Data* _data8_;
 	char* _tmp0_;
 	gboolean _tmp1_;
 	UnityThemeFilePath* _tmp2_;
@@ -589,16 +620,16 @@ void unity_launcher_scroller_child_controller_load_icon_from_icon_name (UnityLau
 	GtkIconTheme* _tmp3_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (icon_name != NULL);
-	_data7_ = g_slice_new0 (Block7Data);
-	_data7_->_ref_count_ = 1;
-	_data7_->self = g_object_ref (self);
-	_data7_->icon_name = g_strdup (icon_name);
-	if (unity_launcher_scroller_child_controller_try_load_from_file (self, _data7_->icon_name)) {
-		block7_data_unref (_data7_);
+	_data8_ = g_slice_new0 (Block8Data);
+	_data8_->_ref_count_ = 1;
+	_data8_->self = g_object_ref (self);
+	_data8_->icon_name = g_strdup (icon_name);
+	if (unity_launcher_scroller_child_controller_try_load_from_file (self, _data8_->icon_name)) {
+		block8_data_unref (_data8_);
 		return;
 	}
-	if ((_tmp1_ = unity_launcher_scroller_child_controller_try_load_from_file (self, _tmp0_ = g_strconcat ("/usr/share/pixmaps/", _data7_->icon_name, NULL)), _g_free0 (_tmp0_), _tmp1_)) {
-		block7_data_unref (_data7_);
+	if ((_tmp1_ = unity_launcher_scroller_child_controller_try_load_from_file (self, _tmp0_ = g_strconcat ("/usr/share/pixmaps/", _data8_->icon_name, NULL)), _g_free0 (_tmp0_), _tmp1_)) {
+		block8_data_unref (_data8_);
 		return;
 	}
 	self->priv->theme_file_path = (_tmp2_ = unity_theme_file_path_new (), _g_object_unref0 (self->priv->theme_file_path), _tmp2_);
@@ -609,11 +640,11 @@ void unity_launcher_scroller_child_controller_load_icon_from_icon_name (UnityLau
 	unity_theme_file_path_add_icon_theme (self->priv->theme_file_path, theme);
 	gtk_icon_theme_set_custom_theme (theme, "Web");
 	unity_theme_file_path_add_icon_theme (self->priv->theme_file_path, theme);
-	g_signal_connect_object (self->priv->theme_file_path, "found-icon-path", (GCallback) __lambda14__unity_theme_file_path_found_icon_path, self, 0);
-	g_signal_connect_data (self->priv->theme_file_path, "failed", (GCallback) __lambda15__unity_theme_file_path_failed, block7_data_ref (_data7_), (GClosureNotify) block7_data_unref, 0);
-	unity_theme_file_path_get_icon_filepath (self->priv->theme_file_path, _data7_->icon_name, NULL, NULL);
+	g_signal_connect_object (self->priv->theme_file_path, "found-icon-path", (GCallback) __lambda28__unity_theme_file_path_found_icon_path, self, 0);
+	g_signal_connect_data (self->priv->theme_file_path, "failed", (GCallback) __lambda29__unity_theme_file_path_failed, block8_data_ref (_data8_), (GClosureNotify) block8_data_unref, 0);
+	unity_theme_file_path_get_icon_filepath (self->priv->theme_file_path, _data8_->icon_name, NULL, NULL);
 	_g_object_unref0 (theme);
-	block7_data_unref (_data7_);
+	block8_data_unref (_data8_);
 }
 
 
@@ -631,23 +662,23 @@ static gboolean unity_launcher_scroller_child_controller_try_load_from_file (Uni
 			GdkPixbuf* _tmp1_;
 			_tmp0_ = gdk_pixbuf_new_from_file_at_scale (filepath, 48, 48, TRUE, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch28_g_error;
+				goto __catch42_g_error;
 			}
 			pixbuf = (_tmp1_ = _tmp0_, _g_object_unref0 (pixbuf), _tmp1_);
 		}
-		goto __finally28;
-		__catch28_g_error:
+		goto __finally42;
+		__catch42_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("scrollerchild-controller.vala:296: Unable to load image from file '%s'" \
+				g_warning ("scrollerchild-controller.vala:305: Unable to load image from file '%s'" \
 ": %s", filepath, e->message);
 				_g_error_free0 (e);
 			}
 		}
-		__finally28:
+		__finally42:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (pixbuf);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -800,6 +831,7 @@ static void unity_launcher_scroller_child_controller_class_init (UnityLauncherSc
 	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS (klass)->get_menu_navigation = unity_launcher_scroller_child_controller_real_get_menu_navigation;
 	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS (klass)->activate = unity_launcher_scroller_child_controller_real_activate;
 	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS (klass)->get_menu_controller = unity_launcher_scroller_child_controller_real_get_menu_controller;
+	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS (klass)->can_drag = unity_launcher_scroller_child_controller_real_can_drag;
 	G_OBJECT_CLASS (klass)->get_property = unity_launcher_scroller_child_controller_get_property;
 	G_OBJECT_CLASS (klass)->set_property = unity_launcher_scroller_child_controller_set_property;
 	G_OBJECT_CLASS (klass)->constructor = unity_launcher_scroller_child_controller_constructor;
@@ -809,7 +841,6 @@ static void unity_launcher_scroller_child_controller_class_init (UnityLauncherSc
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_HIDE, g_param_spec_boolean ("hide", "hide", "hide", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU, g_param_spec_object ("menu", "menu", "menu", UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_signal_new ("request_removal", UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
-	g_signal_new ("closed", UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
 
 

@@ -91,11 +91,14 @@ am__objects_2 = libunity_private_la-panel-background.lo \
 	libunity_private_la-panel-menu-manager.lo \
 	libunity_private_la-panel-menubar.lo \
 	libunity_private_la-panel-tray.lo \
-	libunity_private_la-panel-view.lo
+	libunity_private_la-panel-view.lo \
+	libunity_private_la-panel-window-buttons.lo
 am__objects_3 = libunity_private_la-places-controller.lo \
 	libunity_private_la-places-default-renderer-group.lo \
 	libunity_private_la-places-default-renderer.lo \
+	libunity_private_la-places-folder-browser-renderer.lo \
 	libunity_private_la-places-place-bar.lo \
+	libunity_private_la-places-place-entry-scroller-child.lo \
 	libunity_private_la-places-place-entry-view.lo \
 	libunity_private_la-places-place-entry.lo \
 	libunity_private_la-places-place-home.lo \
@@ -104,7 +107,9 @@ am__objects_3 = libunity_private_la-places-controller.lo \
 	libunity_private_la-places-place.lo \
 	libunity_private_la-places-place-search-bar.lo \
 	libunity_private_la-places-place-search-entry.lo \
+	libunity_private_la-places-place-search-navigation.lo \
 	libunity_private_la-places-place-search-sections-bar.lo \
+	libunity_private_la-places-trash-controller.lo \
 	libunity_private_la-places-view.lo
 am__objects_4 = libunity_private_la-application-controller.lo \
 	libunity_private_la-launcher.lo \
@@ -406,13 +411,16 @@ panel_sources = \
   panel/panel-menu-manager.vala \
   panel/panel-menubar.vala \
   panel/panel-tray.vala \
-  panel/panel-view.vala
+  panel/panel-view.vala \
+  panel/panel-window-buttons.vala
 
 places_sources = \
   places/places-controller.vala \
   places/places-default-renderer-group.vala \
   places/places-default-renderer.vala \
+  places/places-folder-browser-renderer.vala \
   places/places-place-bar.vala \
+  places/places-place-entry-scroller-child.vala \
   places/places-place-entry-view.vala \
   places/places-place-entry.vala \
   places/places-place-home.vala \
@@ -421,7 +429,9 @@ places_sources = \
   places/places-place.vala \
   places/places-place-search-bar.vala \
   places/places-place-search-entry.vala \
+  places/places-place-search-navigation.vala \
   places/places-place-search-sections-bar.vala \
+  places/places-trash-controller.vala \
   places/places-view.vala
 
 launcher_sources = \
@@ -552,20 +562,25 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-menubar.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-tray.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-view.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-window-buttons.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-perf-logger.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-controller.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-default-renderer-group.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-default-renderer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-folder-browser-renderer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-bar.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-entry-scroller-child.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-entry-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-entry.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-home.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-model.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-search-bar.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-search-entry.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-search-navigation.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-search-sections-bar.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-trash-controller.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-quicklist-check-menu-item.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-quicklist-controller.Plo@am__quote@
@@ -730,6 +745,14 @@ libunity_private_la-panel-view.lo: panel/panel-view.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-panel-view.lo `test -f 'panel/panel-view.c' || echo '$(srcdir)/'`panel/panel-view.c
 
+libunity_private_la-panel-window-buttons.lo: panel/panel-window-buttons.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-panel-window-buttons.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-panel-window-buttons.Tpo -c -o libunity_private_la-panel-window-buttons.lo `test -f 'panel/panel-window-buttons.c' || echo '$(srcdir)/'`panel/panel-window-buttons.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-panel-window-buttons.Tpo $(DEPDIR)/libunity_private_la-panel-window-buttons.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='panel/panel-window-buttons.c' object='libunity_private_la-panel-window-buttons.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-panel-window-buttons.lo `test -f 'panel/panel-window-buttons.c' || echo '$(srcdir)/'`panel/panel-window-buttons.c
+
 libunity_private_la-places-controller.lo: places/places-controller.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-controller.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-controller.Tpo -c -o libunity_private_la-places-controller.lo `test -f 'places/places-controller.c' || echo '$(srcdir)/'`places/places-controller.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-places-controller.Tpo $(DEPDIR)/libunity_private_la-places-controller.Plo
@@ -754,6 +777,14 @@ libunity_private_la-places-default-renderer.lo: places/places-default-renderer.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-places-default-renderer.lo `test -f 'places/places-default-renderer.c' || echo '$(srcdir)/'`places/places-default-renderer.c
 
+libunity_private_la-places-folder-browser-renderer.lo: places/places-folder-browser-renderer.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-folder-browser-renderer.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-folder-browser-renderer.Tpo -c -o libunity_private_la-places-folder-browser-renderer.lo `test -f 'places/places-folder-browser-renderer.c' || echo '$(srcdir)/'`places/places-folder-browser-renderer.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-places-folder-browser-renderer.Tpo $(DEPDIR)/libunity_private_la-places-folder-browser-renderer.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='places/places-folder-browser-renderer.c' object='libunity_private_la-places-folder-browser-renderer.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-places-folder-browser-renderer.lo `test -f 'places/places-folder-browser-renderer.c' || echo '$(srcdir)/'`places/places-folder-browser-renderer.c
+
 libunity_private_la-places-place-bar.lo: places/places-place-bar.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-place-bar.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-place-bar.Tpo -c -o libunity_private_la-places-place-bar.lo `test -f 'places/places-place-bar.c' || echo '$(srcdir)/'`places/places-place-bar.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-places-place-bar.Tpo $(DEPDIR)/libunity_private_la-places-place-bar.Plo
@@ -761,6 +792,14 @@ libunity_private_la-places-place-bar.lo: places/places-place-bar.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='places/places-place-bar.c' object='libunity_private_la-places-place-bar.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-places-place-bar.lo `test -f 'places/places-place-bar.c' || echo '$(srcdir)/'`places/places-place-bar.c
+
+libunity_private_la-places-place-entry-scroller-child.lo: places/places-place-entry-scroller-child.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-place-entry-scroller-child.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-place-entry-scroller-child.Tpo -c -o libunity_private_la-places-place-entry-scroller-child.lo `test -f 'places/places-place-entry-scroller-child.c' || echo '$(srcdir)/'`places/places-place-entry-scroller-child.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-places-place-entry-scroller-child.Tpo $(DEPDIR)/libunity_private_la-places-place-entry-scroller-child.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='places/places-place-entry-scroller-child.c' object='libunity_private_la-places-place-entry-scroller-child.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-places-place-entry-scroller-child.lo `test -f 'places/places-place-entry-scroller-child.c' || echo '$(srcdir)/'`places/places-place-entry-scroller-child.c
 
 libunity_private_la-places-place-entry-view.lo: places/places-place-entry-view.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-place-entry-view.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-place-entry-view.Tpo -c -o libunity_private_la-places-place-entry-view.lo `test -f 'places/places-place-entry-view.c' || echo '$(srcdir)/'`places/places-place-entry-view.c
@@ -826,6 +865,14 @@ libunity_private_la-places-place-search-entry.lo: places/places-place-search-ent
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-places-place-search-entry.lo `test -f 'places/places-place-search-entry.c' || echo '$(srcdir)/'`places/places-place-search-entry.c
 
+libunity_private_la-places-place-search-navigation.lo: places/places-place-search-navigation.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-place-search-navigation.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-place-search-navigation.Tpo -c -o libunity_private_la-places-place-search-navigation.lo `test -f 'places/places-place-search-navigation.c' || echo '$(srcdir)/'`places/places-place-search-navigation.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-places-place-search-navigation.Tpo $(DEPDIR)/libunity_private_la-places-place-search-navigation.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='places/places-place-search-navigation.c' object='libunity_private_la-places-place-search-navigation.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-places-place-search-navigation.lo `test -f 'places/places-place-search-navigation.c' || echo '$(srcdir)/'`places/places-place-search-navigation.c
+
 libunity_private_la-places-place-search-sections-bar.lo: places/places-place-search-sections-bar.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-place-search-sections-bar.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-place-search-sections-bar.Tpo -c -o libunity_private_la-places-place-search-sections-bar.lo `test -f 'places/places-place-search-sections-bar.c' || echo '$(srcdir)/'`places/places-place-search-sections-bar.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-places-place-search-sections-bar.Tpo $(DEPDIR)/libunity_private_la-places-place-search-sections-bar.Plo
@@ -833,6 +880,14 @@ libunity_private_la-places-place-search-sections-bar.lo: places/places-place-sea
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='places/places-place-search-sections-bar.c' object='libunity_private_la-places-place-search-sections-bar.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-places-place-search-sections-bar.lo `test -f 'places/places-place-search-sections-bar.c' || echo '$(srcdir)/'`places/places-place-search-sections-bar.c
+
+libunity_private_la-places-trash-controller.lo: places/places-trash-controller.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-trash-controller.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-trash-controller.Tpo -c -o libunity_private_la-places-trash-controller.lo `test -f 'places/places-trash-controller.c' || echo '$(srcdir)/'`places/places-trash-controller.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-places-trash-controller.Tpo $(DEPDIR)/libunity_private_la-places-trash-controller.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='places/places-trash-controller.c' object='libunity_private_la-places-trash-controller.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-places-trash-controller.lo `test -f 'places/places-trash-controller.c' || echo '$(srcdir)/'`places/places-trash-controller.c
 
 libunity_private_la-places-view.lo: places/places-view.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-view.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-view.Tpo -c -o libunity_private_la-places-view.lo `test -f 'places/places-view.c' || echo '$(srcdir)/'`places/places-view.c

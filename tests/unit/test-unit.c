@@ -130,6 +130,16 @@ typedef struct _UnityTestsUnitPlacesSuiteClass UnityTestsUnitPlacesSuiteClass;
 typedef struct _UnityTestsUnitPlaceSuite UnityTestsUnitPlaceSuite;
 typedef struct _UnityTestsUnitPlaceSuiteClass UnityTestsUnitPlaceSuiteClass;
 
+#define UNITY_TESTS_UNIT_TYPE_PLACE_BROWSER_SUITE (unity_tests_unit_place_browser_suite_get_type ())
+#define UNITY_TESTS_UNIT_PLACE_BROWSER_SUITE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UNIT_TYPE_PLACE_BROWSER_SUITE, UnityTestsUnitPlaceBrowserSuite))
+#define UNITY_TESTS_UNIT_PLACE_BROWSER_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UNIT_TYPE_PLACE_BROWSER_SUITE, UnityTestsUnitPlaceBrowserSuiteClass))
+#define UNITY_TESTS_UNIT_IS_PLACE_BROWSER_SUITE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTS_UNIT_TYPE_PLACE_BROWSER_SUITE))
+#define UNITY_TESTS_UNIT_IS_PLACE_BROWSER_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTS_UNIT_TYPE_PLACE_BROWSER_SUITE))
+#define UNITY_TESTS_UNIT_PLACE_BROWSER_SUITE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTS_UNIT_TYPE_PLACE_BROWSER_SUITE, UnityTestsUnitPlaceBrowserSuiteClass))
+
+typedef struct _UnityTestsUnitPlaceBrowserSuite UnityTestsUnitPlaceBrowserSuite;
+typedef struct _UnityTestsUnitPlaceBrowserSuiteClass UnityTestsUnitPlaceBrowserSuiteClass;
+
 #define UNITY_TESTS_UNIT_TYPE_IO_SUITE (unity_tests_unit_io_suite_get_type ())
 #define UNITY_TESTS_UNIT_IO_SUITE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTS_UNIT_TYPE_IO_SUITE, UnityTestsUnitIOSuite))
 #define UNITY_TESTS_UNIT_IO_SUITE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTS_UNIT_TYPE_IO_SUITE, UnityTestsUnitIOSuiteClass))
@@ -154,6 +164,7 @@ typedef struct _UnityTestsUnitAppInfoManagerSuiteClass UnityTestsUnitAppInfoMana
 #define _unity_tests_unit_quicklist_suite_unref0(var) ((var == NULL) ? NULL : (var = (unity_tests_unit_quicklist_suite_unref (var), NULL)))
 #define _unity_tests_unit_places_suite_unref0(var) ((var == NULL) ? NULL : (var = (unity_tests_unit_places_suite_unref (var), NULL)))
 #define _unity_tests_unit_place_suite_unref0(var) ((var == NULL) ? NULL : (var = (unity_tests_unit_place_suite_unref (var), NULL)))
+#define _unity_tests_unit_place_browser_suite_unref0(var) ((var == NULL) ? NULL : (var = (unity_tests_unit_place_browser_suite_unref (var), NULL)))
 #define _unity_tests_unit_io_suite_unref0(var) ((var == NULL) ? NULL : (var = (unity_tests_unit_io_suite_unref (var), NULL)))
 #define _unity_tests_unit_app_info_manager_suite_unref0(var) ((var == NULL) ? NULL : (var = (unity_tests_unit_app_info_manager_suite_unref (var), NULL)))
 typedef struct _ParamSpecMain ParamSpecMain;
@@ -219,6 +230,13 @@ void unity_tests_unit_value_set_place_suite (GValue* value, gpointer v_object);
 void unity_tests_unit_value_take_place_suite (GValue* value, gpointer v_object);
 gpointer unity_tests_unit_value_get_place_suite (const GValue* value);
 GType unity_tests_unit_place_suite_get_type (void) G_GNUC_CONST;
+gpointer unity_tests_unit_place_browser_suite_ref (gpointer instance);
+void unity_tests_unit_place_browser_suite_unref (gpointer instance);
+GParamSpec* unity_tests_unit_param_spec_place_browser_suite (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
+void unity_tests_unit_value_set_place_browser_suite (GValue* value, gpointer v_object);
+void unity_tests_unit_value_take_place_browser_suite (GValue* value, gpointer v_object);
+gpointer unity_tests_unit_value_get_place_browser_suite (const GValue* value);
+GType unity_tests_unit_place_browser_suite_get_type (void) G_GNUC_CONST;
 gpointer unity_tests_unit_io_suite_ref (gpointer instance);
 void unity_tests_unit_io_suite_unref (gpointer instance);
 GParamSpec* unity_tests_unit_param_spec_io_suite (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
@@ -251,6 +269,8 @@ UnityTestsUnitPlacesSuite* unity_tests_unit_places_suite_new (void);
 UnityTestsUnitPlacesSuite* unity_tests_unit_places_suite_construct (GType object_type);
 UnityTestsUnitPlaceSuite* unity_tests_unit_place_suite_new (void);
 UnityTestsUnitPlaceSuite* unity_tests_unit_place_suite_construct (GType object_type);
+UnityTestsUnitPlaceBrowserSuite* unity_tests_unit_place_browser_suite_new (void);
+UnityTestsUnitPlaceBrowserSuite* unity_tests_unit_place_browser_suite_construct (GType object_type);
 UnityTestsUnitIOSuite* unity_tests_unit_io_suite_new (void);
 UnityTestsUnitIOSuite* unity_tests_unit_io_suite_construct (GType object_type);
 UnityTestsUnitAppInfoManagerSuite* unity_tests_unit_app_info_manager_suite_new (void);
@@ -273,6 +293,7 @@ gint main_main (char** args, int args_length1) {
 	UnityTestsUnitPlacesPlaceSuite* places_place;
 	UnityTestsUnitPlacesSuite* places;
 	UnityTestsUnitPlaceSuite* place;
+	UnityTestsUnitPlaceBrowserSuite* place_browser;
 	UnityTestsUnitIOSuite* io;
 	UnityTestsUnitAppInfoManagerSuite* appinfo_manager;
 	UnityTestsUnitUnityPixbufCacheSuite* _tmp0_;
@@ -284,8 +305,9 @@ gint main_main (char** args, int args_length1) {
 	UnityTestsUnitPlacesPlaceSuite* _tmp6_;
 	UnityTestsUnitPlacesSuite* _tmp7_;
 	UnityTestsUnitPlaceSuite* _tmp8_;
-	UnityTestsUnitIOSuite* _tmp9_;
-	UnityTestsUnitAppInfoManagerSuite* _tmp10_;
+	UnityTestsUnitPlaceBrowserSuite* _tmp9_;
+	UnityTestsUnitIOSuite* _tmp10_;
+	UnityTestsUnitAppInfoManagerSuite* _tmp11_;
 	unity_pixbuf_cache = NULL;
 	launcher = NULL;
 	quicklists = NULL;
@@ -295,6 +317,7 @@ gint main_main (char** args, int args_length1) {
 	places_place = NULL;
 	places = NULL;
 	place = NULL;
+	place_browser = NULL;
 	io = NULL;
 	appinfo_manager = NULL;
 	gtk_init (&args_length1, &args);
@@ -309,12 +332,14 @@ gint main_main (char** args, int args_length1) {
 	places_place = (_tmp6_ = unity_tests_unit_places_place_suite_new (), _g_object_unref0 (places_place), _tmp6_);
 	places = (_tmp7_ = unity_tests_unit_places_suite_new (), _unity_tests_unit_places_suite_unref0 (places), _tmp7_);
 	place = (_tmp8_ = unity_tests_unit_place_suite_new (), _unity_tests_unit_place_suite_unref0 (place), _tmp8_);
-	io = (_tmp9_ = unity_tests_unit_io_suite_new (), _unity_tests_unit_io_suite_unref0 (io), _tmp9_);
-	appinfo_manager = (_tmp10_ = unity_tests_unit_app_info_manager_suite_new (), _unity_tests_unit_app_info_manager_suite_unref0 (appinfo_manager), _tmp10_);
+	place_browser = (_tmp9_ = unity_tests_unit_place_browser_suite_new (), _unity_tests_unit_place_browser_suite_unref0 (place_browser), _tmp9_);
+	io = (_tmp10_ = unity_tests_unit_io_suite_new (), _unity_tests_unit_io_suite_unref0 (io), _tmp10_);
+	appinfo_manager = (_tmp11_ = unity_tests_unit_app_info_manager_suite_new (), _unity_tests_unit_app_info_manager_suite_unref0 (appinfo_manager), _tmp11_);
 	g_test_run ();
 	result = 0;
 	_unity_tests_unit_app_info_manager_suite_unref0 (appinfo_manager);
 	_unity_tests_unit_io_suite_unref0 (io);
+	_unity_tests_unit_place_browser_suite_unref0 (place_browser);
 	_unity_tests_unit_place_suite_unref0 (place);
 	_unity_tests_unit_places_suite_unref0 (places);
 	_g_object_unref0 (places_place);

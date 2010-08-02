@@ -69,6 +69,8 @@ typedef struct _UnityShellIface UnityShellIface;
 
 #define UNITY_TYPE_SHELL_MODE (unity_shell_mode_get_type ())
 
+#define UNITY_TYPE_WINDOW_ACTION (unity_window_action_get_type ())
+
 struct _UnityDragModelIface {
 	GTypeInterface parent_iface;
 	ClutterActor* (*get_icon) (UnityDragModel* self);
@@ -91,9 +93,17 @@ struct _UnityDragControllerPrivate {
 };
 
 typedef enum  {
-	UNITY_SHELL_MODE_UNDERLAY,
-	UNITY_SHELL_MODE_OVERLAY
+	UNITY_SHELL_MODE_MINIMIZED,
+	UNITY_SHELL_MODE_DASH,
+	UNITY_SHELL_MODE_EXPOSE
 } UnityShellMode;
+
+typedef enum  {
+	UNITY_WINDOW_ACTION_CLOSE,
+	UNITY_WINDOW_ACTION_MINIMIZE,
+	UNITY_WINDOW_ACTION_MAXIMIZE,
+	UNITY_WINDOW_ACTION_UNMAXIMIZE
+} UnityWindowAction;
 
 struct _UnityShellIface {
 	GTypeInterface parent_iface;
@@ -114,6 +124,8 @@ struct _UnityShellIface {
 	void (*show_window) (UnityShell* self, guint32 xid);
 	void (*expose_xids) (UnityShell* self, GArray* xids);
 	void (*stop_expose) (UnityShell* self);
+	void (*get_window_details) (UnityShell* self, guint32 xid, gboolean* allows_resize, gboolean* is_maximised);
+	void (*do_window_action) (UnityShell* self, guint32 xid, UnityWindowAction action);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
 };
 
@@ -146,6 +158,7 @@ static void _unity_drag_controller_on_view_motion_unity_drag_view_motion (UnityD
 static void unity_drag_controller_on_view_end (UnityDragController* self, float x, float y);
 static void _unity_drag_controller_on_view_end_unity_drag_view_end (UnityDragView* _sender, float x, float y, gpointer self);
 GType unity_shell_mode_get_type (void) G_GNUC_CONST;
+GType unity_window_action_get_type (void) G_GNUC_CONST;
 GType unity_shell_get_type (void) G_GNUC_CONST;
 void unity_shell_add_fullscreen_request (UnityShell* self, GObject* o);
 void unity_drag_controller_start_drag (UnityDragController* self, UnityDragModel* model, float offset_x, float offset_y);

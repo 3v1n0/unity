@@ -35,8 +35,8 @@ namespace Bamf {
 		public weak GLib.Object parent;
 		public Bamf.MatcherPrivate priv;
 		public bool application_is_running (string application);
-		public Bamf.Application get_active_application ();
-		public Bamf.Window get_active_window ();
+		public unowned Bamf.Application get_active_application ();
+		public unowned Bamf.Window get_active_window ();
 		public Bamf.Application get_application_for_xid (uint32 xid);
 		public GLib.List<weak uint32> get_applications ();
 		public static unowned Bamf.Matcher get_default ();
@@ -87,6 +87,7 @@ namespace Bamf {
 	[CCode (cheader_filename = "libbamf/libbamf.h")]
 	public class View : GLib.Object {
 		public weak GLib.Object parent;
+    public unowned GLib.Object get_parent ();
 		public Bamf.ViewPrivate priv;
 		public virtual GLib.List get_children ();
 		public virtual string get_icon ();

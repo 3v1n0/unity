@@ -92,6 +92,8 @@ static void unity_places_default_renderer_real_set_models (UnityPlaceRenderer* b
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_new (guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_construct (GType object_type, guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
 GType unity_places_default_renderer_group_get_type (void) G_GNUC_CONST;
+static void _lambda27_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self);
+static void __lambda27__unity_places_default_renderer_group_activated (UnityPlacesDefaultRendererGroup* _sender, const char* uri, const char* mimetype, gpointer self);
 static void _g_list_free_g_object_unref (GList* self);
 static GObject * unity_places_default_renderer_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_default_renderer_finalize (GObject* obj);
@@ -149,12 +151,25 @@ static void unity_places_default_renderer_real_set_models (UnityPlaceRenderer* b
 }
 
 
+static void _lambda27_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self) {
+	g_return_if_fail (u != NULL);
+	g_return_if_fail (m != NULL);
+	g_signal_emit_by_name ((UnityPlaceRenderer*) self, "activated", u, m);
+}
+
+
+static void __lambda27__unity_places_default_renderer_group_activated (UnityPlacesDefaultRendererGroup* _sender, const char* uri, const char* mimetype, gpointer self) {
+	_lambda27_ (uri, mimetype, self);
+}
+
+
 static void unity_places_default_renderer_on_group_added (UnityPlacesDefaultRenderer* self, DeeModel* model, DeeModelIter* iter) {
 	UnityPlacesDefaultRendererGroup* group;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (model != NULL);
 	g_return_if_fail (iter != NULL);
 	group = g_object_ref_sink (unity_places_default_renderer_group_new ((guint) dee_model_get_position (model, iter), dee_model_get_string (model, iter, (guint) 0), dee_model_get_string (model, iter, (guint) 1), dee_model_get_string (model, iter, (guint) 2), self->priv->results_model));
+	g_signal_connect_object (group, "activated", (GCallback) __lambda27__unity_places_default_renderer_group_activated, self, 0);
 	g_object_set_data_full ((GObject*) group, "model-iter", iter, NULL);
 	ctk_box_pack ((CtkBox*) self->priv->box, (ClutterActor*) group, FALSE, TRUE);
 	_g_object_unref0 (group);

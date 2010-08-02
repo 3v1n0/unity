@@ -38,6 +38,16 @@
 typedef struct _UnityPlacesPlaceEntry UnityPlacesPlaceEntry;
 typedef struct _UnityPlacesPlaceEntryIface UnityPlacesPlaceEntryIface;
 
+#define UNITY_PLACES_TYPE_PLACE (unity_places_place_get_type ())
+#define UNITY_PLACES_PLACE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlace))
+#define UNITY_PLACES_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
+#define UNITY_PLACES_IS_PLACE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE))
+#define UNITY_PLACES_IS_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE))
+#define UNITY_PLACES_PLACE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
+
+typedef struct _UnityPlacesPlace UnityPlacesPlace;
+typedef struct _UnityPlacesPlaceClass UnityPlacesPlaceClass;
+
 #define UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS (unity_places_place_entry_dbus_get_type ())
 #define UNITY_PLACES_PLACE_ENTRY_DBUS(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS, UnityPlacesPlaceEntryDbus))
 #define UNITY_PLACES_PLACE_ENTRY_DBUS_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS, UnityPlacesPlaceEntryDbusClass))
@@ -56,6 +66,9 @@ typedef struct _UnityPlacesPlaceEntryDbusPrivate UnityPlacesPlaceEntryDbusPrivat
 
 #define UNITY_PLACES_PLACE_ENTRY_DBUS_TYPE_RENDERER_INFO (unity_places_place_entry_dbus_renderer_info_get_type ())
 typedef struct _UnityPlacesPlaceEntryDbusRendererInfo UnityPlacesPlaceEntryDbusRendererInfo;
+
+#define UNITY_PLACES_PLACE_ENTRY_DBUS_TYPE_PLACE_ENTRY_INFO (unity_places_place_entry_dbus_place_entry_info_get_type ())
+typedef struct _UnityPlacesPlaceEntryDbusPlaceEntryInfo UnityPlacesPlaceEntryDbusPlaceEntryInfo;
 
 struct _UnityPlacesPlaceEntryIface {
 	GTypeInterface parent_iface;
@@ -99,6 +112,8 @@ struct _UnityPlacesPlaceEntryIface {
 	void (*set_global_results_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
 	GeeHashMap* (*get_global_renderer_hints) (UnityPlacesPlaceEntry* self);
 	void (*set_global_renderer_hints) (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+	UnityPlacesPlace* (*get_parent) (UnityPlacesPlaceEntry* self);
+	void (*set_parent) (UnityPlacesPlaceEntry* self, UnityPlacesPlace* value);
 };
 
 struct _UnityPlacesPlaceEntryDbus {
@@ -125,6 +140,7 @@ struct _UnityPlacesPlaceEntryDbusPrivate {
 	gint __mimetypes_size_;
 	gboolean _sensitive;
 	GeeHashMap* _hints;
+	UnityPlacesPlace* _parent;
 	gboolean _online;
 	gboolean _show_global;
 	gboolean _show_entry;
@@ -151,10 +167,23 @@ struct _UnityPlacesPlaceEntryDbusRendererInfo {
 	GHashTable* renderer_hints;
 };
 
+struct _UnityPlacesPlaceEntryDbusPlaceEntryInfo {
+	char* dbus_path;
+	char* name;
+	char* icon;
+	guint position;
+	char** mimetype;
+	gint mimetype_length1;
+	gboolean sensitive;
+	char* sections_model;
+	GHashTable* hints;
+};
+
 
 static gpointer unity_places_place_entry_dbus_parent_class = NULL;
 static UnityPlacesPlaceEntryIface* unity_places_place_entry_dbus_unity_places_place_entry_parent_iface = NULL;
 
+GType unity_places_place_get_type (void) G_GNUC_CONST;
 GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
 void unity_places_place_entry_connect (UnityPlacesPlaceEntry* self);
 void unity_places_place_entry_set_search (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints);
@@ -196,6 +225,8 @@ DeeModel* unity_places_place_entry_get_global_results_model (UnityPlacesPlaceEnt
 void unity_places_place_entry_set_global_results_model (UnityPlacesPlaceEntry* self, DeeModel* value);
 GeeHashMap* unity_places_place_entry_get_global_renderer_hints (UnityPlacesPlaceEntry* self);
 void unity_places_place_entry_set_global_renderer_hints (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+UnityPlacesPlace* unity_places_place_entry_get_parent (UnityPlacesPlaceEntry* self);
+void unity_places_place_entry_set_parent (UnityPlacesPlaceEntry* self, UnityPlacesPlace* value);
 GType unity_places_place_entry_dbus_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_ENTRY_DBUS_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS, UnityPlacesPlaceEntryDbusPrivate))
 enum  {
@@ -209,6 +240,7 @@ enum  {
 	UNITY_PLACES_PLACE_ENTRY_DBUS_MIMETYPES,
 	UNITY_PLACES_PLACE_ENTRY_DBUS_SENSITIVE,
 	UNITY_PLACES_PLACE_ENTRY_DBUS_HINTS,
+	UNITY_PLACES_PLACE_ENTRY_DBUS_PARENT,
 	UNITY_PLACES_PLACE_ENTRY_DBUS_ONLINE,
 	UNITY_PLACES_PLACE_ENTRY_DBUS_SHOW_GLOBAL,
 	UNITY_PLACES_PLACE_ENTRY_DBUS_SHOW_ENTRY,
@@ -244,6 +276,14 @@ void unity_places_place_entry_dbus_renderer_info_destroy (UnityPlacesPlaceEntryD
 static void unity_places_place_entry_dbus_on_renderer_info_changed (UnityPlacesPlaceEntryDbus* self, DBusGProxy* dbus_object, UnityPlacesPlaceEntryDbusRendererInfo* info);
 static void _unity_places_place_entry_dbus_on_renderer_info_changed_dynamic_RendererInfoChanged0_ (DBusGProxy* _sender, UnityPlacesPlaceEntryDbusRendererInfo* info, gpointer self);
 void _dynamic_RendererInfoChanged1_connect (gpointer obj, const char * signal_name, GCallback handler, gpointer data);
+GType unity_places_place_entry_dbus_place_entry_info_get_type (void) G_GNUC_CONST;
+UnityPlacesPlaceEntryDbusPlaceEntryInfo* unity_places_place_entry_dbus_place_entry_info_dup (const UnityPlacesPlaceEntryDbusPlaceEntryInfo* self);
+void unity_places_place_entry_dbus_place_entry_info_free (UnityPlacesPlaceEntryDbusPlaceEntryInfo* self);
+void unity_places_place_entry_dbus_place_entry_info_copy (const UnityPlacesPlaceEntryDbusPlaceEntryInfo* self, UnityPlacesPlaceEntryDbusPlaceEntryInfo* dest);
+void unity_places_place_entry_dbus_place_entry_info_destroy (UnityPlacesPlaceEntryDbusPlaceEntryInfo* self);
+static void unity_places_place_entry_dbus_on_place_entry_info_changed (UnityPlacesPlaceEntryDbus* self, DBusGProxy* dbus_object, UnityPlacesPlaceEntryDbusPlaceEntryInfo* info);
+static void _unity_places_place_entry_dbus_on_place_entry_info_changed_dynamic_PlaceEntryInfoChanged2_ (DBusGProxy* _sender, UnityPlacesPlaceEntryDbusPlaceEntryInfo* info, gpointer self);
+void _dynamic_PlaceEntryInfoChanged3_connect (gpointer obj, const char * signal_name, GCallback handler, gpointer data);
 static void unity_places_place_entry_dbus_real_connect (UnityPlacesPlaceEntry* base);
 static void _dynamic_set_search0 (DBusGProxy* self, const char* param1, GHashTable* param2, GError** error);
 static void unity_places_place_entry_dbus_real_set_search (UnityPlacesPlaceEntry* base, const char* search, GHashTable* hints);
@@ -261,6 +301,7 @@ void unity_places_place_entry_dbus_set_show_entry (UnityPlacesPlaceEntryDbus* se
 static void _dynamic_set_active3 (DBusGProxy* self, gboolean param1, GError** error);
 const char* unity_places_place_entry_dbus_get_sections_model_name (UnityPlacesPlaceEntryDbus* self);
 static GObject * unity_places_place_entry_dbus_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static char** _vala_array_dup2 (char** self, int length);
 static void unity_places_place_entry_dbus_finalize (GObject* obj);
 static void unity_places_place_entry_dbus_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_places_place_entry_dbus_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
@@ -471,6 +512,16 @@ void unity_places_place_entry_set_global_renderer_hints (UnityPlacesPlaceEntry* 
 }
 
 
+UnityPlacesPlace* unity_places_place_entry_get_parent (UnityPlacesPlaceEntry* self) {
+	return UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->get_parent (self);
+}
+
+
+void unity_places_place_entry_set_parent (UnityPlacesPlaceEntry* self, UnityPlacesPlace* value) {
+	UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE (self)->set_parent (self, value);
+}
+
+
 static void unity_places_place_entry_base_init (UnityPlacesPlaceEntryIface * iface) {
 	static gboolean initialized = FALSE;
 	if (!initialized) {
@@ -493,6 +544,7 @@ static void unity_places_place_entry_base_init (UnityPlacesPlaceEntryIface * ifa
 		g_object_interface_install_property (iface, g_param_spec_object ("global-groups-model", "global-groups-model", "global-groups-model", DEE_TYPE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 		g_object_interface_install_property (iface, g_param_spec_object ("global-results-model", "global-results-model", "global-results-model", DEE_TYPE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 		g_object_interface_install_property (iface, g_param_spec_object ("global-renderer-hints", "global-renderer-hints", "global-renderer-hints", GEE_TYPE_HASH_MAP, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+		g_object_interface_install_property (iface, g_param_spec_object ("parent", "parent", "parent", UNITY_PLACES_TYPE_PLACE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
 		g_signal_new ("updated", UNITY_PLACES_TYPE_PLACE_ENTRY, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 		g_signal_new ("renderer_info_changed", UNITY_PLACES_TYPE_PLACE_ENTRY, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 	}
@@ -555,7 +607,6 @@ void unity_places_place_entry_dbus_update_info (UnityPlacesPlaceEntryDbus* self,
 	GValueArray* ga;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (value_array != NULL);
-	g_return_if_fail (value_array->n_values == 10);
 	n = g_strdup (g_value_get_string (g_value_array_get_nth (value_array, (guint) 1)));
 	if (_vala_strcmp0 (n, "") != 0) {
 		unity_places_place_entry_set_name ((UnityPlacesPlaceEntry*) self, n);
@@ -565,12 +616,17 @@ void unity_places_place_entry_dbus_update_info (UnityPlacesPlaceEntryDbus* self,
 	unity_places_place_entry_set_sensitive ((UnityPlacesPlaceEntry*) self, g_value_get_boolean (g_value_array_get_nth (value_array, (guint) 5)));
 	unity_places_place_entry_dbus_set_sections_model_name (self, g_value_get_string (g_value_array_get_nth (value_array, (guint) 6)));
 	hash = _g_hash_table_ref0 ((GHashTable*) g_value_get_boxed (g_value_array_get_nth (value_array, (guint) 7)));
-	if (unity_places_place_entry_get_hints ((UnityPlacesPlaceEntry*) self) != NULL) {
+	if (hash != NULL) {
 		GeeHashMap* _tmp0_;
 		unity_places_place_entry_set_hints ((UnityPlacesPlaceEntry*) self, _tmp0_ = unity_places_place_entry_dbus_map_from_hash (self, hash));
 		_g_object_unref0 (_tmp0_);
 	} else {
 		unity_places_place_entry_set_hints ((UnityPlacesPlaceEntry*) self, NULL);
+	}
+	if (value_array->n_values != 10) {
+		_g_hash_table_unref0 (hash);
+		_g_free0 (n);
+		return;
 	}
 	ea = (GValueArray*) g_value_get_boxed (g_value_array_get_nth (value_array, (guint) 8));
 	if (ea != NULL) {
@@ -654,6 +710,18 @@ void _dynamic_RendererInfoChanged1_connect (gpointer obj, const char * signal_na
 }
 
 
+static void _unity_places_place_entry_dbus_on_place_entry_info_changed_dynamic_PlaceEntryInfoChanged2_ (DBusGProxy* _sender, UnityPlacesPlaceEntryDbusPlaceEntryInfo* info, gpointer self) {
+	unity_places_place_entry_dbus_on_place_entry_info_changed (self, _sender, info);
+}
+
+
+void _dynamic_PlaceEntryInfoChanged3_connect (gpointer obj, const char * signal_name, GCallback handler, gpointer data) {
+	dbus_g_object_register_marshaller (g_cclosure_user_marshal_VOID__BOXED, G_TYPE_NONE, dbus_g_type_get_struct ("GValueArray", G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRV, G_TYPE_BOOLEAN, G_TYPE_STRING, dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_STRING), G_TYPE_INVALID), G_TYPE_INVALID);
+	dbus_g_proxy_add_signal (obj, "PlaceEntryInfoChanged", dbus_g_type_get_struct ("GValueArray", G_TYPE_STRING, G_TYPE_STRING, G_TYPE_STRING, G_TYPE_UINT, G_TYPE_STRV, G_TYPE_BOOLEAN, G_TYPE_STRING, dbus_g_type_get_map ("GHashTable", G_TYPE_STRING, G_TYPE_STRING), G_TYPE_INVALID), G_TYPE_INVALID);
+	dbus_g_proxy_connect_signal (obj, "PlaceEntryInfoChanged", handler, data, NULL);
+}
+
+
 static void unity_places_place_entry_dbus_real_connect (UnityPlacesPlaceEntry* base) {
 	UnityPlacesPlaceEntryDbus * self;
 	GError * _inner_error_;
@@ -668,13 +736,13 @@ static void unity_places_place_entry_dbus_real_connect (UnityPlacesPlaceEntry* b
 		DBusGProxy* _tmp2_;
 		_tmp0_ = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch12_g_error;
+			goto __catch13_g_error;
 		}
 		self->priv->connection = (_tmp1_ = _tmp0_, _dbus_g_connection_unref0 (self->priv->connection), _tmp1_);
 		self->priv->service = (_tmp2_ = dbus_g_proxy_new_for_name (self->priv->connection, self->priv->_dbus_name, self->priv->_dbus_path, "com.canonical.Unity.PlaceEntry"), _g_object_unref0 (self->priv->service), _tmp2_);
 	}
-	goto __finally12;
-	__catch12_g_error:
+	goto __finally13;
+	__catch13_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -687,13 +755,14 @@ static void unity_places_place_entry_dbus_real_connect (UnityPlacesPlaceEntry* b
 			return;
 		}
 	}
-	__finally12:
+	__finally13:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
 		return;
 	}
 	_dynamic_RendererInfoChanged1_connect (self->priv->service, "RendererInfoChanged", (GCallback) _unity_places_place_entry_dbus_on_renderer_info_changed_dynamic_RendererInfoChanged0_, self);
+	_dynamic_PlaceEntryInfoChanged3_connect (self->priv->service, "PlaceEntryInfoChanged", (GCallback) _unity_places_place_entry_dbus_on_place_entry_info_changed_dynamic_PlaceEntryInfoChanged2_, self);
 	unity_places_place_entry_set_online ((UnityPlacesPlaceEntry*) self, TRUE);
 }
 
@@ -768,6 +837,18 @@ static void unity_places_place_entry_dbus_real_set_global_search (UnityPlacesPla
 }
 
 
+static void unity_places_place_entry_dbus_on_place_entry_info_changed (UnityPlacesPlaceEntryDbus* self, DBusGProxy* dbus_object, UnityPlacesPlaceEntryDbusPlaceEntryInfo* info) {
+	UnityPlacesPlaceEntryDbusPlaceEntryInfo* i;
+	GValueArray* pei;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (dbus_object != NULL);
+	i = info;
+	pei = (GValueArray*) i;
+	unity_places_place_entry_dbus_update_info (self, pei);
+	g_signal_emit_by_name ((UnityPlacesPlaceEntry*) self, "renderer-info-changed");
+}
+
+
 static void unity_places_place_entry_dbus_on_renderer_info_changed (UnityPlacesPlaceEntryDbus* self, DBusGProxy* dbus_object, UnityPlacesPlaceEntryDbusRendererInfo* info) {
 	UnityPlacesPlaceEntryDbusRendererInfo* i;
 	GValueArray* ea;
@@ -819,14 +900,16 @@ static GeeHashMap* unity_places_place_entry_dbus_map_from_hash (UnityPlacesPlace
 	map = gee_hash_map_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, NULL, NULL, NULL);
 	g_hash_table_iter_init (&iter, hash);
 	while (TRUE) {
-		const char* k;
-		const char* v;
+		char* k;
+		char* v;
 		if (!g_hash_table_iter_next (&iter, &key, &val)) {
 			break;
 		}
-		k = (const char*) key;
-		v = (const char*) val;
+		k = g_strdup ((const char*) key);
+		v = g_strdup ((const char*) val);
 		gee_abstract_map_set ((GeeAbstractMap*) map, k, v);
+		_g_free0 (v);
+		_g_free0 (k);
 	}
 	result = map;
 	return result;
@@ -1007,6 +1090,23 @@ static void unity_places_place_entry_dbus_real_set_hints (UnityPlacesPlaceEntry*
 }
 
 
+static UnityPlacesPlace* unity_places_place_entry_dbus_real_get_parent (UnityPlacesPlaceEntry* base) {
+	UnityPlacesPlace* result;
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
+	result = self->priv->_parent;
+	return result;
+}
+
+
+static void unity_places_place_entry_dbus_real_set_parent (UnityPlacesPlaceEntry* base, UnityPlacesPlace* value) {
+	UnityPlacesPlaceEntryDbus* self;
+	self = (UnityPlacesPlaceEntryDbus*) base;
+	self->priv->_parent = value;
+	g_object_notify ((GObject *) self, "parent");
+}
+
+
 static gboolean unity_places_place_entry_dbus_real_get_online (UnityPlacesPlaceEntry* base) {
 	gboolean result;
 	UnityPlacesPlaceEntryDbus* self;
@@ -1108,13 +1208,20 @@ void unity_places_place_entry_dbus_set_sections_model_name (UnityPlacesPlaceEntr
 static DeeModel* unity_places_place_entry_dbus_real_get_sections_model (UnityPlacesPlaceEntry* base) {
 	DeeModel* result;
 	UnityPlacesPlaceEntryDbus* self;
+	gboolean _tmp0_ = FALSE;
 	self = (UnityPlacesPlaceEntryDbus*) base;
 	if (DEE_IS_MODEL (self->priv->_sections_model) == FALSE) {
+		_tmp0_ = TRUE;
+	} else {
+		DeeModel* _tmp1_;
+		_tmp0_ = _vala_strcmp0 (dee_shared_model_get_swarm_name ((_tmp1_ = self->priv->_sections_model, DEE_IS_SHARED_MODEL (_tmp1_) ? ((DeeSharedModel*) _tmp1_) : NULL)), self->priv->_sections_model_name) != 0;
+	}
+	if (_tmp0_) {
 		if (self->priv->_sections_model_name != NULL) {
-			DeeModel* _tmp0_;
-			DeeModel* _tmp1_;
-			self->priv->_sections_model = (_tmp0_ = (DeeModel*) ((DeeSharedModel*) dee_shared_model_new_with_name (self->priv->_sections_model_name)), _g_object_unref0 (self->priv->_sections_model), _tmp0_);
-			dee_shared_model_connect ((_tmp1_ = self->priv->_sections_model, DEE_IS_SHARED_MODEL (_tmp1_) ? ((DeeSharedModel*) _tmp1_) : NULL));
+			DeeModel* _tmp2_;
+			DeeModel* _tmp3_;
+			self->priv->_sections_model = (_tmp2_ = (DeeModel*) ((DeeSharedModel*) dee_shared_model_new_with_name (self->priv->_sections_model_name)), _g_object_unref0 (self->priv->_sections_model), _tmp2_);
+			dee_shared_model_connect ((_tmp3_ = self->priv->_sections_model, DEE_IS_SHARED_MODEL (_tmp3_) ? ((DeeSharedModel*) _tmp3_) : NULL));
 		}
 	}
 	result = self->priv->_sections_model;
@@ -1124,9 +1231,9 @@ static DeeModel* unity_places_place_entry_dbus_real_get_sections_model (UnityPla
 
 static void unity_places_place_entry_dbus_real_set_sections_model (UnityPlacesPlaceEntry* base, DeeModel* value) {
 	UnityPlacesPlaceEntryDbus* self;
-	DeeModel* _tmp2_;
+	DeeModel* _tmp4_;
 	self = (UnityPlacesPlaceEntryDbus*) base;
-	self->priv->_sections_model = (_tmp2_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_sections_model), _tmp2_);
+	self->priv->_sections_model = (_tmp4_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_sections_model), _tmp4_);
 	g_object_notify ((GObject *) self, "sections-model");
 }
 
@@ -1378,6 +1485,66 @@ GType unity_places_place_entry_dbus_renderer_info_get_type (void) {
 }
 
 
+static char** _vala_array_dup2 (char** self, int length) {
+	char** result;
+	int i;
+	result = g_new0 (char*, length + 1);
+	for (i = 0; i < length; i++) {
+		result[i] = g_strdup (self[i]);
+	}
+	return result;
+}
+
+
+void unity_places_place_entry_dbus_place_entry_info_copy (const UnityPlacesPlaceEntryDbusPlaceEntryInfo* self, UnityPlacesPlaceEntryDbusPlaceEntryInfo* dest) {
+	char** _tmp0_;
+	dest->dbus_path = g_strdup (self->dbus_path);
+	dest->name = g_strdup (self->name);
+	dest->icon = g_strdup (self->icon);
+	dest->position = self->position;
+	dest->mimetype = (_tmp0_ = self->mimetype, (_tmp0_ == NULL) ? ((gpointer) _tmp0_) : _vala_array_dup2 (_tmp0_, (*self).mimetype_length1));
+	dest->mimetype_length1 = self->mimetype_length1;
+	dest->sensitive = self->sensitive;
+	dest->sections_model = g_strdup (self->sections_model);
+	dest->hints = _g_hash_table_ref0 (self->hints);
+}
+
+
+void unity_places_place_entry_dbus_place_entry_info_destroy (UnityPlacesPlaceEntryDbusPlaceEntryInfo* self) {
+	_g_free0 (self->dbus_path);
+	_g_free0 (self->name);
+	_g_free0 (self->icon);
+	self->mimetype = (_vala_array_free (self->mimetype, (*self).mimetype_length1, (GDestroyNotify) g_free), NULL);
+	_g_free0 (self->sections_model);
+	_g_hash_table_unref0 (self->hints);
+}
+
+
+UnityPlacesPlaceEntryDbusPlaceEntryInfo* unity_places_place_entry_dbus_place_entry_info_dup (const UnityPlacesPlaceEntryDbusPlaceEntryInfo* self) {
+	UnityPlacesPlaceEntryDbusPlaceEntryInfo* dup;
+	dup = g_new0 (UnityPlacesPlaceEntryDbusPlaceEntryInfo, 1);
+	unity_places_place_entry_dbus_place_entry_info_copy (self, dup);
+	return dup;
+}
+
+
+void unity_places_place_entry_dbus_place_entry_info_free (UnityPlacesPlaceEntryDbusPlaceEntryInfo* self) {
+	unity_places_place_entry_dbus_place_entry_info_destroy (self);
+	g_free (self);
+}
+
+
+GType unity_places_place_entry_dbus_place_entry_info_get_type (void) {
+	static volatile gsize unity_places_place_entry_dbus_place_entry_info_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_places_place_entry_dbus_place_entry_info_type_id__volatile)) {
+		GType unity_places_place_entry_dbus_place_entry_info_type_id;
+		unity_places_place_entry_dbus_place_entry_info_type_id = g_boxed_type_register_static ("UnityPlacesPlaceEntryDbusPlaceEntryInfo", (GBoxedCopyFunc) unity_places_place_entry_dbus_place_entry_info_dup, (GBoxedFreeFunc) unity_places_place_entry_dbus_place_entry_info_free);
+		g_once_init_leave (&unity_places_place_entry_dbus_place_entry_info_type_id__volatile, unity_places_place_entry_dbus_place_entry_info_type_id);
+	}
+	return unity_places_place_entry_dbus_place_entry_info_type_id__volatile;
+}
+
+
 static void unity_places_place_entry_dbus_class_init (UnityPlacesPlaceEntryDbusClass * klass) {
 	unity_places_place_entry_dbus_parent_class = g_type_class_peek_parent (klass);
 	g_type_class_add_private (klass, sizeof (UnityPlacesPlaceEntryDbusPrivate));
@@ -1394,6 +1561,7 @@ static void unity_places_place_entry_dbus_class_init (UnityPlacesPlaceEntryDbusC
 	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_MIMETYPES, "mimetypes");
 	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_SENSITIVE, "sensitive");
 	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_HINTS, "hints");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_PARENT, "parent");
 	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_ONLINE, "online");
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_SHOW_GLOBAL, g_param_spec_boolean ("show-global", "show-global", "show-global", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_ENTRY_DBUS_SHOW_ENTRY, g_param_spec_boolean ("show-entry", "show-entry", "show-entry", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
@@ -1432,6 +1600,8 @@ static void unity_places_place_entry_dbus_unity_places_place_entry_interface_ini
 	iface->set_sensitive = unity_places_place_entry_dbus_real_set_sensitive;
 	iface->get_hints = unity_places_place_entry_dbus_real_get_hints;
 	iface->set_hints = unity_places_place_entry_dbus_real_set_hints;
+	iface->get_parent = unity_places_place_entry_dbus_real_get_parent;
+	iface->set_parent = unity_places_place_entry_dbus_real_set_parent;
 	iface->get_online = unity_places_place_entry_dbus_real_get_online;
 	iface->set_online = unity_places_place_entry_dbus_real_set_online;
 	iface->get_active = unity_places_place_entry_dbus_real_get_active;
@@ -1540,6 +1710,9 @@ static void unity_places_place_entry_dbus_get_property (GObject * object, guint 
 		case UNITY_PLACES_PLACE_ENTRY_DBUS_HINTS:
 		g_value_set_object (value, unity_places_place_entry_get_hints ((UnityPlacesPlaceEntry*) self));
 		break;
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_PARENT:
+		g_value_set_object (value, unity_places_place_entry_get_parent ((UnityPlacesPlaceEntry*) self));
+		break;
 		case UNITY_PLACES_PLACE_ENTRY_DBUS_ONLINE:
 		g_value_set_boolean (value, unity_places_place_entry_get_online ((UnityPlacesPlaceEntry*) self));
 		break;
@@ -1624,6 +1797,9 @@ static void unity_places_place_entry_dbus_set_property (GObject * object, guint 
 		break;
 		case UNITY_PLACES_PLACE_ENTRY_DBUS_HINTS:
 		unity_places_place_entry_set_hints ((UnityPlacesPlaceEntry*) self, g_value_get_object (value));
+		break;
+		case UNITY_PLACES_PLACE_ENTRY_DBUS_PARENT:
+		unity_places_place_entry_set_parent ((UnityPlacesPlaceEntry*) self, g_value_get_object (value));
 		break;
 		case UNITY_PLACES_PLACE_ENTRY_DBUS_ONLINE:
 		unity_places_place_entry_set_online ((UnityPlacesPlaceEntry*) self, g_value_get_boolean (value));

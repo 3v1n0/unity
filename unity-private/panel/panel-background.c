@@ -172,12 +172,12 @@ static GObject * unity_panel_background_constructor (GType type, guint n_constru
 			GdkPixbuf* _tmp1_;
 			_tmp0_ = gdk_pixbuf_new_from_file (UNITY_PANEL_BACKGROUND_BG, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch2_g_error;
+				goto __catch5_g_error;
 			}
 			self->priv->tile = (_tmp1_ = _tmp0_, _g_object_unref0 (self->priv->tile), _tmp1_);
 		}
-		goto __finally2;
-		__catch2_g_error:
+		goto __finally5;
+		__catch5_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -187,7 +187,7 @@ static GObject * unity_panel_background_constructor (GType type, guint n_constru
 				_g_error_free0 (e);
 			}
 		}
-		__finally2:
+		__finally5:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);

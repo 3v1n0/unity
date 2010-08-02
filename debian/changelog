@@ -1,3 +1,16 @@
+unity (0.2.22-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release.
+  * debian/control:
+    - bump clutk build-dep
+  * debian/patches/02_disable_expandable_menu.patch,
+    debian/patches/03_strip_underscore_on_quicklist.patch,
+    debian/patches/04_fix_scroller_focus_issue.patch,
+    debian/patches/05_fix_ws_switching.patch:
+    - removed
+
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 02 Aug 2010 13:59:28 +0200
+
 unity (0.2.20-0ubuntu2) maverick; urgency=low
 
   * Misc fixes from git

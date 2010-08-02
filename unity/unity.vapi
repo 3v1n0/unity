@@ -37,6 +37,17 @@ namespace Unity {
 	[CCode (cprefix = "UnityPlace", lower_case_cprefix = "unity_place_")]
 	namespace Place {
 		[CCode (cheader_filename = "unity.h")]
+		public class Browser<E> : GLib.Object {
+			public Browser (string dbus_path);
+			public void clear ();
+			public void go_back ();
+			public void go_forward ();
+			public void record_state (E state, string comment);
+			public string dbus_path { get; set; }
+			public signal void back (E state, string comment);
+			public signal void forward (E state, string comment);
+		}
+		[CCode (cheader_filename = "unity.h")]
 		public class Controller : GLib.Object {
 			public Controller (string dbus_path);
 			public void add_entry (Unity.Place.EntryInfo entry);
@@ -47,6 +58,7 @@ namespace Unity {
 			public uint num_entries ();
 			public void remove_entry (string dbus_path);
 			public void unexport () throws DBus.Error;
+			public Unity.Place.Activation? activation { get; set; }
 			public string dbus_path { get; construct; }
 			public bool exported { get; }
 		}
@@ -62,6 +74,7 @@ namespace Unity {
 			public Unity.Place.Search active_global_search { get; set; }
 			public Unity.Place.Search active_search { get; set; }
 			public uint active_section { get; set; }
+			public Unity.Place.Browser? browser { get; set; }
 			public string dbus_path { get; set construct; }
 			public string display_name { get; set construct; }
 			public Unity.Place.RendererInfo entry_renderer_info { get; }
@@ -93,9 +106,25 @@ namespace Unity {
 			public uint num_hints ();
 			public void set_hint (string hint, string val);
 		}
+		[CCode (ref_function = "unity_place_stack_ref", unref_function = "unity_place_stack_unref", cheader_filename = "unity.h")]
+		public class Stack<E> {
+			public Stack ();
+			public void clear ();
+			public bool is_empty ();
+			public E peek ();
+			public E pop ();
+			public Unity.Place.Stack<E> push (E element);
+			public int size ();
+		}
+		[CCode (cheader_filename = "unity.h")]
+		[DBus (name = "com.canonical.Unity.Activation")]
+		public interface Activation : GLib.Object {
+			public abstract async bool activate (string uri) throws DBus.Error;
+		}
 		[CCode (cheader_filename = "unity.h")]
 		public interface Renderer : Ctk.Actor {
 			public abstract void set_models (Dee.Model groups, Dee.Model results, Gee.HashMap<string,string> hints);
+			public signal void activated (string uri, string mimetype);
 		}
 	}
 	[CCode (cprefix = "UnityQuicklistRendering", lower_case_cprefix = "unity_quicklist_rendering_")]
@@ -288,6 +317,7 @@ namespace Unity {
 		public abstract void about_to_show_places ();
 		public abstract void add_fullscreen_request (GLib.Object o);
 		public abstract void close_xids (GLib.Array<uint32> xids);
+		public abstract void do_window_action (uint32 xid, Unity.WindowAction action);
 		public abstract void ensure_input_region ();
 		public abstract void expose_xids (GLib.Array<uint32> xids);
 		public abstract uint32 get_current_time ();
@@ -296,6 +326,7 @@ namespace Unity {
 		public abstract Unity.ShellMode get_mode ();
 		public abstract int get_panel_height_foobar ();
 		public abstract Clutter.Stage get_stage ();
+		public abstract void get_window_details (uint32 xid, out bool allows_resize, out bool is_maximised);
 		public abstract void grab_keyboard (bool grab, uint32 timestamp);
 		public abstract void hide_unity ();
 		public abstract bool remove_fullscreen_request (GLib.Object o);
@@ -303,7 +334,9 @@ namespace Unity {
 		public abstract void show_window (uint32 xid);
 		public abstract void stop_expose ();
 		public abstract bool menus_swallow_events { get; }
+		public signal void active_window_state_changed ();
 		public signal void indicators_changed (int width);
+		public signal void mode_changed (Unity.ShellMode mode);
 		public signal void need_new_icon_cache ();
 	}
 	[CCode (cprefix = "UNITY_EXPANDING_BIN_STATE_", cheader_filename = "unity.h")]
@@ -314,8 +347,16 @@ namespace Unity {
 	}
 	[CCode (cprefix = "UNITY_SHELL_MODE_", cheader_filename = "unity.h")]
 	public enum ShellMode {
-		UNDERLAY,
-		OVERLAY
+		MINIMIZED,
+		DASH,
+		EXPOSE
+	}
+	[CCode (cprefix = "UNITY_WINDOW_ACTION_", cheader_filename = "unity.h")]
+	public enum WindowAction {
+		CLOSE,
+		MINIMIZE,
+		MAXIMIZE,
+		UNMAXIMIZE
 	}
 	[CCode (cprefix = "UNITY_DND_TARGETS_", cheader_filename = "unity.h")]
 	public enum dnd_targets {

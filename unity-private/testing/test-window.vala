@@ -130,8 +130,9 @@ namespace Unity.Testing
       this.background.show ();
 
       this.launcher = new Launcher.Launcher (this);
-      this.stage.add_actor (this.launcher.get_view ());
-      this.launcher.get_view ().show ();
+      this.stage.add_actor (this.launcher.get_container ());
+      (this.launcher.get_container () as Ctk.Bin).add_actor (this.launcher.get_view ());
+      this.launcher.get_container ().show ();
 
       this.controller = new Places.Controller (this);
       this.places = this.controller.get_view ();
@@ -211,18 +212,18 @@ namespace Unity.Testing
       this.background.set_position (0, 0);
       this.background.set_size (width, height);
 
-      this.launcher.get_view ().set_size (ql_width,
+      this.launcher.get_container ().set_size (ql_width,
                                           height - Unity.Panel.PANEL_HEIGHT);
-      this.launcher.get_view ().set_position (0, Unity.Panel.PANEL_HEIGHT);
+      this.launcher.get_container ().set_position (0, Unity.Panel.PANEL_HEIGHT);
 
-      this.launcher.get_view ().set_clip (0, 0,
+      this.launcher.get_container ().set_clip (0, 0,
                                           ql_width, height);
 
-      this.places.set_size (width, height);
-      this.places.set_position (0, 0);
+      this.places.set_size (width-ql_width, height);
+      this.places.set_position (ql_width, 0);
 
-       this.panel.set_size (width, Unity.Panel.PANEL_HEIGHT);
-       this.panel.set_position (0, 0);
+      this.panel.set_size (width, Unity.Panel.PANEL_HEIGHT);
+      this.panel.set_position (0, 0);
     }
 
     public override void show ()
@@ -279,6 +280,19 @@ namespace Unity.Testing
      * SHELL IMPLEMENTATION
      */
 
+    public void get_window_details (uint32   xid,
+                                    out bool allows_resize,
+                                    out bool is_maximised)
+    {
+      allows_resize = true;
+      debug ("This target does not support getting window details");
+    }
+
+    public void do_window_action (uint32 xid, WindowAction action)
+    {
+      debug ("This target does not support window actions");
+    }
+
     public void show_window_picker ()
     {
       this.show_unity ();
@@ -296,7 +310,7 @@ namespace Unity.Testing
 
     public ShellMode get_mode ()
     {
-      return ShellMode.UNDERLAY;
+      return showing_places ? ShellMode.DASH : ShellMode.MINIMIZED;
     }
 
     public void show_unity ()
@@ -321,6 +335,8 @@ namespace Unity.Testing
           places.shown ();
         }
 
+      mode_changed (showing_places ? ShellMode.DASH : ShellMode.MINIMIZED);
+
       this.places.do_queue_redraw ();
     }
 
@@ -335,7 +351,7 @@ namespace Unity.Testing
 
           places.hidden ();
 
-          debug ("Hide unity");
+          mode_changed (ShellMode.MINIMIZED);
         }
     }
 

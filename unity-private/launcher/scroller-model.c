@@ -64,7 +64,8 @@ typedef struct _UnityLauncherScrollerChildClass UnityLauncherScrollerChildClass;
 
 typedef struct _UnityLauncherScrollerModelIterator UnityLauncherScrollerModelIterator;
 typedef struct _UnityLauncherScrollerModelIteratorClass UnityLauncherScrollerModelIteratorClass;
-#define _g_free0(var) (var = (g_free (var), NULL))
+
+#define UNITY_LAUNCHER_SCROLLER_CHILD_TYPE_GROUP_TYPE (unity_launcher_scroller_child_group_type_get_type ())
 
 #define UNITY_TESTING_TYPE_OBJECT_REGISTRY (unity_testing_object_registry_get_type ())
 #define UNITY_TESTING_OBJECT_REGISTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTING_TYPE_OBJECT_REGISTRY, UnityTestingObjectRegistry))
@@ -82,6 +83,10 @@ typedef struct _UnityLauncherScrollerModelParamSpecIterator UnityLauncherScrolle
 struct _UnityLauncherScrollerModel {
 	GObject parent_instance;
 	UnityLauncherScrollerModelPrivate * priv;
+	gint n_app_icons;
+	gint n_place_icons;
+	gint n_device_icons;
+	gint n_system_icons;
 };
 
 struct _UnityLauncherScrollerModelClass {
@@ -91,6 +96,13 @@ struct _UnityLauncherScrollerModelClass {
 struct _UnityLauncherScrollerModelPrivate {
 	GeeArrayList* children;
 };
+
+typedef enum  {
+	UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_APPLICATION,
+	UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_PLACE,
+	UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_DEVICE,
+	UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_SYSTEM
+} UnityLauncherScrollerChildGroupType;
 
 struct _UnityLauncherScrollerModelIterator {
 	GTypeInstance parent_instance;
@@ -137,16 +149,18 @@ gpointer unity_launcher_scroller_model_value_get_iterator (const GValue* value);
 GType unity_launcher_scroller_model_iterator_get_type (void) G_GNUC_CONST;
 UnityLauncherScrollerModelIterator* unity_launcher_scroller_model_iterator (UnityLauncherScrollerModel* self);
 gboolean unity_launcher_scroller_model_contains (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
-char* unity_launcher_scroller_child_to_string (UnityLauncherScrollerChild* self);
+GType unity_launcher_scroller_child_group_type_get_type (void) G_GNUC_CONST;
+UnityLauncherScrollerChildGroupType unity_launcher_scroller_child_get_group_type (UnityLauncherScrollerChild* self);
+void unity_launcher_scroller_model_insert (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child, gint i);
+gint unity_launcher_scroller_model_get_size (UnityLauncherScrollerModel* self);
 void unity_launcher_scroller_model_add (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
 void unity_launcher_scroller_model_remove (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
-void unity_launcher_scroller_model_insert (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child, gint i);
 void unity_launcher_scroller_model_move (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child, gint i);
 gint unity_launcher_scroller_model_index_of (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
 void unity_launcher_scroller_model_sort (UnityLauncherScrollerModel* self, GCompareFunc compare);
 UnityLauncherScrollerChild* unity_launcher_scroller_model_get (UnityLauncherScrollerModel* self, gint i);
 void unity_launcher_scroller_model_set (UnityLauncherScrollerModel* self, gint i, UnityLauncherScrollerChild* item);
-gint unity_launcher_scroller_model_get_size (UnityLauncherScrollerModel* self);
+gint unity_launcher_scroller_model_clamp (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child, gint value);
 gpointer unity_testing_object_registry_ref (gpointer instance);
 void unity_testing_object_registry_unref (gpointer instance);
 GParamSpec* unity_testing_param_spec_object_registry (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
@@ -207,13 +221,35 @@ gboolean unity_launcher_scroller_model_contains (UnityLauncherScrollerModel* sel
 
 
 void unity_launcher_scroller_model_add (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child) {
-	char* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (child != NULL);
-	g_warning ("scroller-model.vala:97: Add Icon: %s", _tmp0_ = unity_launcher_scroller_child_to_string (child));
-	_g_free0 (_tmp0_);
-	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->children, child);
-	g_signal_emit_by_name (self, "child-added", child);
+	switch (unity_launcher_scroller_child_get_group_type (child)) {
+		case UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_APPLICATION:
+		{
+			unity_launcher_scroller_model_insert (self, child, ((unity_launcher_scroller_model_get_size (self) - self->n_place_icons) - self->n_device_icons) - self->n_system_icons);
+			self->n_app_icons++;
+			break;
+		}
+		case UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_PLACE:
+		{
+			unity_launcher_scroller_model_insert (self, child, (unity_launcher_scroller_model_get_size (self) - self->n_device_icons) - self->n_system_icons);
+			self->n_place_icons++;
+			break;
+		}
+		case UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_DEVICE:
+		{
+			unity_launcher_scroller_model_insert (self, child, unity_launcher_scroller_model_get_size (self) - self->n_system_icons);
+			self->n_device_icons++;
+			break;
+		}
+		default:
+		{
+			gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->children, child);
+			g_signal_emit_by_name (self, "child-added", child);
+			self->n_system_icons++;
+			break;
+		}
+	}
 	g_signal_emit_by_name (self, "order-changed");
 }
 
@@ -228,6 +264,32 @@ void unity_launcher_scroller_model_remove (UnityLauncherScrollerModel* self, Uni
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (child != NULL);
 	tempchild = _g_object_ref0 (child);
+	switch (unity_launcher_scroller_child_get_group_type (child)) {
+		case UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_APPLICATION:
+		{
+			self->n_app_icons--;
+			break;
+		}
+		case UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_PLACE:
+		{
+			self->n_place_icons--;
+			break;
+		}
+		case UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_DEVICE:
+		{
+			self->n_device_icons--;
+			break;
+		}
+		case UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_SYSTEM:
+		{
+			self->n_system_icons--;
+			break;
+		}
+		default:
+		{
+			break;
+		}
+	}
 	gee_abstract_collection_remove ((GeeAbstractCollection*) self->priv->children, child);
 	g_signal_emit_by_name (self, "child-removed", tempchild);
 	g_signal_emit_by_name (self, "order-changed");
@@ -289,6 +351,39 @@ void unity_launcher_scroller_model_set (UnityLauncherScrollerModel* self, gint i
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (item != NULL);
 	gee_abstract_list_set ((GeeAbstractList*) self->priv->children, i, item);
+}
+
+
+gint unity_launcher_scroller_model_clamp (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child, gint value) {
+	gint result = 0;
+	gint ret;
+	g_return_val_if_fail (self != NULL, 0);
+	g_return_val_if_fail (child != NULL, 0);
+	ret = value;
+	switch (unity_launcher_scroller_child_get_group_type (child)) {
+		case UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_APPLICATION:
+		{
+			ret = CLAMP (value, 0, (((unity_launcher_scroller_model_get_size (self) - self->n_place_icons) - self->n_device_icons) - self->n_system_icons) - 1);
+			break;
+		}
+		case UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_PLACE:
+		{
+			ret = CLAMP (value, self->n_app_icons, (self->n_app_icons + self->n_place_icons) - 1);
+			break;
+		}
+		case UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_DEVICE:
+		{
+			ret = CLAMP (value, self->n_app_icons + self->n_place_icons, ((self->n_app_icons + self->n_place_icons) + self->n_device_icons) - 1);
+			break;
+		}
+		default:
+		{
+			ret = CLAMP (value, unity_launcher_scroller_model_get_size (self) - self->n_system_icons, unity_launcher_scroller_model_get_size (self) - 1);
+			break;
+		}
+	}
+	result = ret;
+	return result;
 }
 
 
@@ -532,6 +627,10 @@ static void unity_launcher_scroller_model_class_init (UnityLauncherScrollerModel
 
 static void unity_launcher_scroller_model_instance_init (UnityLauncherScrollerModel * self) {
 	self->priv = UNITY_LAUNCHER_SCROLLER_MODEL_GET_PRIVATE (self);
+	self->n_app_icons = 0;
+	self->n_place_icons = 0;
+	self->n_device_icons = 0;
+	self->n_system_icons = 0;
 }
 
 

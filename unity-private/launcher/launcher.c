@@ -22,14 +22,26 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <clutk/clutk.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unity.h>
-#include <clutk/clutk.h>
 #include <float.h>
 #include <math.h>
 #include <clutter/clutter.h>
 
+
+#define UNITY_LAUNCHER_TYPE_LAUNCHER_CONTAINER (unity_launcher_launcher_container_get_type ())
+#define UNITY_LAUNCHER_LAUNCHER_CONTAINER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_LAUNCHER_CONTAINER, UnityLauncherLauncherContainer))
+#define UNITY_LAUNCHER_LAUNCHER_CONTAINER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_LAUNCHER_CONTAINER, UnityLauncherLauncherContainerClass))
+#define UNITY_LAUNCHER_IS_LAUNCHER_CONTAINER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_LAUNCHER_CONTAINER))
+#define UNITY_LAUNCHER_IS_LAUNCHER_CONTAINER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_LAUNCHER_CONTAINER))
+#define UNITY_LAUNCHER_LAUNCHER_CONTAINER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_LAUNCHER_CONTAINER, UnityLauncherLauncherContainerClass))
+
+typedef struct _UnityLauncherLauncherContainer UnityLauncherLauncherContainer;
+typedef struct _UnityLauncherLauncherContainerClass UnityLauncherLauncherContainerClass;
+typedef struct _UnityLauncherLauncherContainerPrivate UnityLauncherLauncherContainerPrivate;
+#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
 #define UNITY_LAUNCHER_TYPE_SHORTCUT_ITEM (unity_launcher_shortcut_item_get_type ())
 #define UNITY_LAUNCHER_SHORTCUT_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_SHORTCUT_ITEM, UnityLauncherShortcutItem))
@@ -79,7 +91,17 @@ typedef struct _UnityLauncherScrollerControllerClass UnityLauncherScrollerContro
 
 typedef struct _UnityLauncherScrollerView UnityLauncherScrollerView;
 typedef struct _UnityLauncherScrollerViewClass UnityLauncherScrollerViewClass;
-#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+typedef struct _UnityLauncherScrollerViewPrivate UnityLauncherScrollerViewPrivate;
+
+struct _UnityLauncherLauncherContainer {
+	CtkBin parent_instance;
+	UnityLauncherLauncherContainerPrivate * priv;
+	CtkEffectCache* cache;
+};
+
+struct _UnityLauncherLauncherContainerClass {
+	CtkBinClass parent_class;
+};
 
 struct _UnityLauncherShortcutItemIface {
 	GTypeInterface parent_iface;
@@ -101,14 +123,38 @@ struct _UnityLauncherLauncherPrivate {
 	UnityLauncherScrollerModel* _model;
 	UnityLauncherScrollerController* controller;
 	UnityLauncherScrollerView* view;
+	UnityLauncherLauncherContainer* launcher_container;
+};
+
+struct _UnityLauncherScrollerView {
+	CtkActor parent_instance;
+	UnityLauncherScrollerViewPrivate * priv;
+	gint spacing;
+	gint drag_sensitivity;
+	float friction;
+	gboolean is_animating;
+	ClutterTimeline* fling_timeline;
+};
+
+struct _UnityLauncherScrollerViewClass {
+	CtkActorClass parent_class;
 };
 
 
+static gpointer unity_launcher_launcher_container_parent_class = NULL;
 static gpointer unity_launcher_launcher_parent_class = NULL;
 
 #define UNITY_LAUNCHER_SHORT_DELAY ((guint) 400)
 #define UNITY_LAUNCHER_MEDIUM_DELAY ((guint) 800)
 #define UNITY_LAUNCHER_LONG_DELAY ((guint) 1600)
+GType unity_launcher_launcher_container_get_type (void) G_GNUC_CONST;
+enum  {
+	UNITY_LAUNCHER_LAUNCHER_CONTAINER_DUMMY_PROPERTY
+};
+UnityLauncherLauncherContainer* unity_launcher_launcher_container_new (void);
+UnityLauncherLauncherContainer* unity_launcher_launcher_container_construct (GType object_type);
+static GObject * unity_launcher_launcher_container_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
+static void unity_launcher_launcher_container_finalize (GObject* obj);
 GType unity_launcher_shortcut_item_get_type (void) G_GNUC_CONST;
 char* unity_launcher_shortcut_item_get_name (UnityLauncherShortcutItem* self);
 void unity_launcher_shortcut_item_activated (UnityLauncherShortcutItem* self);
@@ -126,21 +172,85 @@ UnityLauncherLauncher* unity_launcher_launcher_new (UnityShell* shell);
 UnityLauncherLauncher* unity_launcher_launcher_construct (GType object_type, UnityShell* shell);
 float unity_launcher_launcher_get_width (UnityLauncherLauncher* self);
 ClutterActor* unity_launcher_launcher_get_view (UnityLauncherLauncher* self);
+ClutterActor* unity_launcher_launcher_get_container (UnityLauncherLauncher* self);
+CtkEffectCache* unity_launcher_launcher_get_actor_cache (UnityLauncherLauncher* self);
 UnityShell* unity_launcher_launcher_get_shell (UnityLauncherLauncher* self);
 static void unity_launcher_launcher_set_shell (UnityLauncherLauncher* self, UnityShell* value);
 UnityLauncherScrollerModel* unity_launcher_launcher_get_model (UnityLauncherLauncher* self);
 static void unity_launcher_launcher_set_model (UnityLauncherLauncher* self, UnityLauncherScrollerModel* value);
 UnityLauncherScrollerModel* unity_launcher_scroller_model_new (void);
 UnityLauncherScrollerModel* unity_launcher_scroller_model_construct (GType object_type);
-UnityLauncherScrollerView* unity_launcher_scroller_view_new (UnityLauncherScrollerModel* _model);
-UnityLauncherScrollerView* unity_launcher_scroller_view_construct (GType object_type, UnityLauncherScrollerModel* _model);
+UnityLauncherScrollerView* unity_launcher_scroller_view_new (UnityLauncherScrollerModel* _model, CtkEffectCache* _cache);
+UnityLauncherScrollerView* unity_launcher_scroller_view_construct (GType object_type, UnityLauncherScrollerModel* _model, CtkEffectCache* _cache);
 UnityLauncherScrollerController* unity_launcher_scroller_controller_new (UnityLauncherScrollerModel* _model, UnityLauncherScrollerView* _view);
 UnityLauncherScrollerController* unity_launcher_scroller_controller_construct (GType object_type, UnityLauncherScrollerModel* _model, UnityLauncherScrollerView* _view);
+static void _lambda63_ (UnityLauncherLauncher* self);
+static void __lambda63__clutter_actor_queue_redraw (ClutterActor* _sender, ClutterActor* origin, gpointer self);
 static GObject * unity_launcher_launcher_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_launcher_launcher_finalize (GObject* obj);
 static void unity_launcher_launcher_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_launcher_launcher_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 
+
+
+UnityLauncherLauncherContainer* unity_launcher_launcher_container_construct (GType object_type) {
+	UnityLauncherLauncherContainer * self;
+	CtkEffectCache* _tmp0_;
+	self = (UnityLauncherLauncherContainer*) g_object_new (object_type, NULL);
+	self->cache = (_tmp0_ = g_object_ref_sink ((CtkEffectCache*) ctk_effect_cache_new ()), _g_object_unref0 (self->cache), _tmp0_);
+	ctk_actor_add_effect ((CtkActor*) self, (CtkEffect*) self->cache);
+	ctk_effect_cache_update_texture_cache (self->cache);
+	return self;
+}
+
+
+UnityLauncherLauncherContainer* unity_launcher_launcher_container_new (void) {
+	return unity_launcher_launcher_container_construct (UNITY_LAUNCHER_TYPE_LAUNCHER_CONTAINER);
+}
+
+
+static GObject * unity_launcher_launcher_container_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
+	GObject * obj;
+	GObjectClass * parent_class;
+	UnityLauncherLauncherContainer * self;
+	parent_class = G_OBJECT_CLASS (unity_launcher_launcher_container_parent_class);
+	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
+	self = UNITY_LAUNCHER_LAUNCHER_CONTAINER (obj);
+	{
+	}
+	return obj;
+}
+
+
+static void unity_launcher_launcher_container_class_init (UnityLauncherLauncherContainerClass * klass) {
+	unity_launcher_launcher_container_parent_class = g_type_class_peek_parent (klass);
+	G_OBJECT_CLASS (klass)->constructor = unity_launcher_launcher_container_constructor;
+	G_OBJECT_CLASS (klass)->finalize = unity_launcher_launcher_container_finalize;
+}
+
+
+static void unity_launcher_launcher_container_instance_init (UnityLauncherLauncherContainer * self) {
+}
+
+
+static void unity_launcher_launcher_container_finalize (GObject* obj) {
+	UnityLauncherLauncherContainer * self;
+	self = UNITY_LAUNCHER_LAUNCHER_CONTAINER (obj);
+	_g_object_unref0 (self->cache);
+	G_OBJECT_CLASS (unity_launcher_launcher_container_parent_class)->finalize (obj);
+}
+
+
+GType unity_launcher_launcher_container_get_type (void) {
+	static volatile gsize unity_launcher_launcher_container_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_launcher_launcher_container_type_id__volatile)) {
+		static const GTypeInfo g_define_type_info = { sizeof (UnityLauncherLauncherContainerClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_launcher_launcher_container_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityLauncherLauncherContainer), 0, (GInstanceInitFunc) unity_launcher_launcher_container_instance_init, NULL };
+		GType unity_launcher_launcher_container_type_id;
+		unity_launcher_launcher_container_type_id = g_type_register_static (CTK_TYPE_BIN, "UnityLauncherLauncherContainer", &g_define_type_info, 0);
+		g_once_init_leave (&unity_launcher_launcher_container_type_id__volatile, unity_launcher_launcher_container_type_id);
+	}
+	return unity_launcher_launcher_container_type_id__volatile;
+}
 
 
 char* unity_launcher_shortcut_item_get_name (UnityLauncherShortcutItem* self) {
@@ -209,6 +319,23 @@ ClutterActor* unity_launcher_launcher_get_view (UnityLauncherLauncher* self) {
 }
 
 
+ClutterActor* unity_launcher_launcher_get_container (UnityLauncherLauncher* self) {
+	ClutterActor* result = NULL;
+	UnityLauncherLauncherContainer* _tmp0_;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = _g_object_ref0 ((_tmp0_ = self->priv->launcher_container, CLUTTER_IS_ACTOR (_tmp0_) ? ((ClutterActor*) _tmp0_) : NULL));
+	return result;
+}
+
+
+CtkEffectCache* unity_launcher_launcher_get_actor_cache (UnityLauncherLauncher* self) {
+	CtkEffectCache* result = NULL;
+	g_return_val_if_fail (self != NULL, NULL);
+	result = _g_object_ref0 (self->priv->launcher_container->cache);
+	return result;
+}
+
+
 UnityShell* unity_launcher_launcher_get_shell (UnityLauncherLauncher* self) {
 	UnityShell* result;
 	g_return_val_if_fail (self != NULL, NULL);
@@ -241,6 +368,18 @@ static void unity_launcher_launcher_set_model (UnityLauncherLauncher* self, Unit
 }
 
 
+static void _lambda63_ (UnityLauncherLauncher* self) {
+	if (clutter_timeline_is_playing (self->priv->view->fling_timeline) == FALSE) {
+		ctk_effect_cache_update_texture_cache (self->priv->launcher_container->cache);
+	}
+}
+
+
+static void __lambda63__clutter_actor_queue_redraw (ClutterActor* _sender, ClutterActor* origin, gpointer self) {
+	_lambda63_ (self);
+}
+
+
 static GObject * unity_launcher_launcher_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -250,12 +389,15 @@ static GObject * unity_launcher_launcher_constructor (GType type, guint n_constr
 	self = UNITY_LAUNCHER_LAUNCHER (obj);
 	{
 		UnityLauncherScrollerModel* _tmp0_;
-		UnityLauncherScrollerView* _tmp1_;
-		UnityLauncherScrollerController* _tmp2_;
+		UnityLauncherLauncherContainer* _tmp1_;
+		UnityLauncherScrollerView* _tmp2_;
+		UnityLauncherScrollerController* _tmp3_;
 		unity_launcher_launcher_set_model (self, _tmp0_ = unity_launcher_scroller_model_new ());
 		_g_object_unref0 (_tmp0_);
-		self->priv->view = (_tmp1_ = g_object_ref_sink (unity_launcher_scroller_view_new (self->priv->_model)), _g_object_unref0 (self->priv->view), _tmp1_);
-		self->priv->controller = (_tmp2_ = unity_launcher_scroller_controller_new (self->priv->_model, self->priv->view), _g_object_unref0 (self->priv->controller), _tmp2_);
+		self->priv->launcher_container = (_tmp1_ = g_object_ref_sink (unity_launcher_launcher_container_new ()), _g_object_unref0 (self->priv->launcher_container), _tmp1_);
+		self->priv->view = (_tmp2_ = g_object_ref_sink (unity_launcher_scroller_view_new (self->priv->_model, self->priv->launcher_container->cache)), _g_object_unref0 (self->priv->view), _tmp2_);
+		self->priv->controller = (_tmp3_ = unity_launcher_scroller_controller_new (self->priv->_model, self->priv->view), _g_object_unref0 (self->priv->controller), _tmp3_);
+		g_signal_connect_object ((ClutterActor*) self->priv->view, "queue-redraw", (GCallback) __lambda63__clutter_actor_queue_redraw, self, 0);
 	}
 	return obj;
 }
@@ -285,6 +427,7 @@ static void unity_launcher_launcher_finalize (GObject* obj) {
 	_g_object_unref0 (self->priv->_model);
 	_g_object_unref0 (self->priv->controller);
 	_g_object_unref0 (self->priv->view);
+	_g_object_unref0 (self->priv->launcher_container);
 	G_OBJECT_CLASS (unity_launcher_launcher_parent_class)->finalize (obj);
 }
 

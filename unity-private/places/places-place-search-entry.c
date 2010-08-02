@@ -27,6 +27,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <glib/gi18n-lib.h>
+#include <config.h>
 #include <float.h>
 #include <math.h>
 #include <clutter/clutter.h>
@@ -76,8 +77,9 @@ enum  {
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_new (void);
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_construct (GType object_type);
 static void unity_places_place_search_entry_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height, float* nat_height);
-static gboolean _lambda9_ (UnityPlacesPlaceSearchEntry* self);
-static gboolean __lambda9__gsource_func (gpointer self);
+static void unity_places_place_search_entry_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width, float* nat_width);
+static gboolean _lambda20_ (UnityPlacesPlaceSearchEntry* self);
+static gboolean __lambda20__gsource_func (gpointer self);
 static void unity_places_place_search_entry_on_text_changed (UnityPlacesPlaceSearchEntry* self);
 static void unity_places_place_search_entry_on_key_focus_in (UnityPlacesPlaceSearchEntry* self);
 static void unity_places_place_search_entry_on_key_focus_out (UnityPlacesPlaceSearchEntry* self);
@@ -112,10 +114,10 @@ static void unity_places_place_search_entry_real_get_preferred_height (ClutterAc
 	float _tmp0_ = 0.0F;
 	self = (UnityPlacesPlaceSearchEntry*) base;
 	clutter_actor_get_preferred_height ((ClutterActor*) self->text, (float) 400, &mheight, &nheight);
-	if (mheight > 22.0f) {
+	if (mheight > 20.0f) {
 		_tmp0_ = mheight;
 	} else {
-		_tmp0_ = 22.0f;
+		_tmp0_ = 20.0f;
 	}
 	*min_height = _tmp0_;
 	*min_height = (*min_height) + (UNITY_PLACES_PLACE_SEARCH_ENTRY_PADDING * 2);
@@ -123,7 +125,15 @@ static void unity_places_place_search_entry_real_get_preferred_height (ClutterAc
 }
 
 
-static gboolean _lambda9_ (UnityPlacesPlaceSearchEntry* self) {
+static void unity_places_place_search_entry_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width, float* nat_width) {
+	UnityPlacesPlaceSearchEntry * self;
+	self = (UnityPlacesPlaceSearchEntry*) base;
+	*min_width = 270.0f;
+	*nat_width = 270.0f;
+}
+
+
+static gboolean _lambda20_ (UnityPlacesPlaceSearchEntry* self) {
 	gboolean result = FALSE;
 	const char* _tmp0_;
 	_tmp0_ = NULL;
@@ -139,9 +149,9 @@ static gboolean _lambda9_ (UnityPlacesPlaceSearchEntry* self) {
 }
 
 
-static gboolean __lambda9__gsource_func (gpointer self) {
+static gboolean __lambda20__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda9_ (self);
+	result = _lambda20_ (self);
 	return result;
 }
 
@@ -151,7 +161,7 @@ static void unity_places_place_search_entry_on_text_changed (UnityPlacesPlaceSea
 	if (self->priv->live_search_timeout != 0) {
 		g_source_remove (self->priv->live_search_timeout);
 	}
-	self->priv->live_search_timeout = g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) UNITY_PLACES_PLACE_SEARCH_ENTRY_LIVE_SEARCH_TIMEOUT, __lambda9__gsource_func, g_object_ref (self), g_object_unref);
+	self->priv->live_search_timeout = g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) UNITY_PLACES_PLACE_SEARCH_ENTRY_LIVE_SEARCH_TIMEOUT, __lambda20__gsource_func, g_object_ref (self), g_object_unref);
 }
 
 
@@ -241,6 +251,7 @@ static void unity_places_place_search_entry_class_init (UnityPlacesPlaceSearchEn
 	unity_places_place_search_entry_parent_class = g_type_class_peek_parent (klass);
 	g_type_class_add_private (klass, sizeof (UnityPlacesPlaceSearchEntryPrivate));
 	CLUTTER_ACTOR_CLASS (klass)->get_preferred_height = unity_places_place_search_entry_real_get_preferred_height;
+	CLUTTER_ACTOR_CLASS (klass)->get_preferred_width = unity_places_place_search_entry_real_get_preferred_width;
 	G_OBJECT_CLASS (klass)->constructor = unity_places_place_search_entry_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_places_place_search_entry_finalize;
 	g_signal_new ("text_changed", UNITY_PLACES_TYPE_PLACE_SEARCH_ENTRY, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__STRING, G_TYPE_NONE, 1, G_TYPE_STRING);

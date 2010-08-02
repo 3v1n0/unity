@@ -124,6 +124,8 @@ typedef struct _UnityQuicklistRenderingMenuPrivate UnityQuicklistRenderingMenuPr
 
 #define UNITY_TYPE_DND_TARGETS (unity_dnd_targets_get_type ())
 
+#define UNITY_TYPE_WINDOW_ACTION (unity_window_action_get_type ())
+
 #define UNITY_TYPE_SHELL (unity_shell_get_type ())
 #define UNITY_SHELL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_SHELL, UnityShell))
 #define UNITY_IS_SHELL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_SHELL))
@@ -222,14 +224,6 @@ typedef struct _UnityPixbufCache UnityPixbufCache;
 typedef struct _UnityPixbufCacheClass UnityPixbufCacheClass;
 typedef struct _UnityPixbufCachePrivate UnityPixbufCachePrivate;
 
-#define UNITY_PLACE_TYPE_RENDERER (unity_place_renderer_get_type ())
-#define UNITY_PLACE_RENDERER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_RENDERER, UnityPlaceRenderer))
-#define UNITY_PLACE_IS_RENDERER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACE_TYPE_RENDERER))
-#define UNITY_PLACE_RENDERER_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), UNITY_PLACE_TYPE_RENDERER, UnityPlaceRendererIface))
-
-typedef struct _UnityPlaceRenderer UnityPlaceRenderer;
-typedef struct _UnityPlaceRendererIface UnityPlaceRendererIface;
-
 #define UNITY_PLACE_TYPE_RENDERER_INFO (unity_place_renderer_info_get_type ())
 #define UNITY_PLACE_RENDERER_INFO(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_RENDERER_INFO, UnityPlaceRendererInfo))
 #define UNITY_PLACE_RENDERER_INFO_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACE_TYPE_RENDERER_INFO, UnityPlaceRendererInfoClass))
@@ -263,6 +257,16 @@ typedef struct _UnityPlaceEntryInfo UnityPlaceEntryInfo;
 typedef struct _UnityPlaceEntryInfoClass UnityPlaceEntryInfoClass;
 typedef struct _UnityPlaceEntryInfoPrivate UnityPlaceEntryInfoPrivate;
 
+#define UNITY_PLACE_TYPE_BROWSER (unity_place_browser_get_type ())
+#define UNITY_PLACE_BROWSER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_BROWSER, UnityPlaceBrowser))
+#define UNITY_PLACE_BROWSER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACE_TYPE_BROWSER, UnityPlaceBrowserClass))
+#define UNITY_PLACE_IS_BROWSER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACE_TYPE_BROWSER))
+#define UNITY_PLACE_IS_BROWSER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACE_TYPE_BROWSER))
+#define UNITY_PLACE_BROWSER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACE_TYPE_BROWSER, UnityPlaceBrowserClass))
+
+typedef struct _UnityPlaceBrowser UnityPlaceBrowser;
+typedef struct _UnityPlaceBrowserClass UnityPlaceBrowserClass;
+
 #define UNITY_PLACE_TYPE_CONTROLLER (unity_place_controller_get_type ())
 #define UNITY_PLACE_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_CONTROLLER, UnityPlaceController))
 #define UNITY_PLACE_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACE_TYPE_CONTROLLER, UnityPlaceControllerClass))
@@ -273,6 +277,34 @@ typedef struct _UnityPlaceEntryInfoPrivate UnityPlaceEntryInfoPrivate;
 typedef struct _UnityPlaceController UnityPlaceController;
 typedef struct _UnityPlaceControllerClass UnityPlaceControllerClass;
 typedef struct _UnityPlaceControllerPrivate UnityPlaceControllerPrivate;
+
+#define UNITY_PLACE_TYPE_ACTIVATION (unity_place_activation_get_type ())
+#define UNITY_PLACE_ACTIVATION(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_ACTIVATION, UnityPlaceActivation))
+#define UNITY_PLACE_IS_ACTIVATION(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACE_TYPE_ACTIVATION))
+#define UNITY_PLACE_ACTIVATION_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), UNITY_PLACE_TYPE_ACTIVATION, UnityPlaceActivationIface))
+
+typedef struct _UnityPlaceActivation UnityPlaceActivation;
+typedef struct _UnityPlaceActivationIface UnityPlaceActivationIface;
+typedef struct _UnityPlaceBrowserPrivate UnityPlaceBrowserPrivate;
+
+#define UNITY_PLACE_TYPE_STACK (unity_place_stack_get_type ())
+#define UNITY_PLACE_STACK(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_STACK, UnityPlaceStack))
+#define UNITY_PLACE_STACK_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACE_TYPE_STACK, UnityPlaceStackClass))
+#define UNITY_PLACE_IS_STACK(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACE_TYPE_STACK))
+#define UNITY_PLACE_IS_STACK_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACE_TYPE_STACK))
+#define UNITY_PLACE_STACK_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACE_TYPE_STACK, UnityPlaceStackClass))
+
+typedef struct _UnityPlaceStack UnityPlaceStack;
+typedef struct _UnityPlaceStackClass UnityPlaceStackClass;
+typedef struct _UnityPlaceStackPrivate UnityPlaceStackPrivate;
+
+#define UNITY_PLACE_TYPE_RENDERER (unity_place_renderer_get_type ())
+#define UNITY_PLACE_RENDERER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACE_TYPE_RENDERER, UnityPlaceRenderer))
+#define UNITY_PLACE_IS_RENDERER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACE_TYPE_RENDERER))
+#define UNITY_PLACE_RENDERER_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), UNITY_PLACE_TYPE_RENDERER, UnityPlaceRendererIface))
+
+typedef struct _UnityPlaceRenderer UnityPlaceRenderer;
+typedef struct _UnityPlaceRendererIface UnityPlaceRendererIface;
 
 #define UNITY_WEBAPP_TYPE_FETCH_FILE (unity_webapp_fetch_file_get_type ())
 #define UNITY_WEBAPP_FETCH_FILE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_WEBAPP_TYPE_FETCH_FILE, UnityWebappFetchFile))
@@ -380,8 +412,9 @@ struct _UnityQuicklistRenderingMenuClass {
 };
 
 typedef enum  {
-	UNITY_SHELL_MODE_UNDERLAY,
-	UNITY_SHELL_MODE_OVERLAY
+	UNITY_SHELL_MODE_MINIMIZED,
+	UNITY_SHELL_MODE_DASH,
+	UNITY_SHELL_MODE_EXPOSE
 } UnityShellMode;
 
 typedef enum  {
@@ -390,6 +423,13 @@ typedef enum  {
 	UNITY_DND_TARGETS_TARGET_URL,
 	UNITY_DND_TARGETS_TARGET_OTHER
 } Unitydnd_targets;
+
+typedef enum  {
+	UNITY_WINDOW_ACTION_CLOSE,
+	UNITY_WINDOW_ACTION_MINIMIZE,
+	UNITY_WINDOW_ACTION_MAXIMIZE,
+	UNITY_WINDOW_ACTION_UNMAXIMIZE
+} UnityWindowAction;
 
 struct _UnityShellIface {
 	GTypeInterface parent_iface;
@@ -410,6 +450,8 @@ struct _UnityShellIface {
 	void (*show_window) (UnityShell* self, guint32 xid);
 	void (*expose_xids) (UnityShell* self, GArray* xids);
 	void (*stop_expose) (UnityShell* self);
+	void (*get_window_details) (UnityShell* self, guint32 xid, gboolean* allows_resize, gboolean* is_maximised);
+	void (*do_window_action) (UnityShell* self, guint32 xid, UnityWindowAction action);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
 };
 
@@ -507,11 +549,6 @@ struct _UnityPixbufCacheClass {
 	GObjectClass parent_class;
 };
 
-struct _UnityPlaceRendererIface {
-	GTypeInterface parent_iface;
-	void (*set_models) (UnityPlaceRenderer* self, DeeModel* groups, DeeModel* results, GeeHashMap* hints);
-};
-
 struct _UnityPlaceRendererInfo {
 	GObject parent_instance;
 	UnityPlaceRendererInfoPrivate * priv;
@@ -546,6 +583,37 @@ struct _UnityPlaceController {
 
 struct _UnityPlaceControllerClass {
 	GObjectClass parent_class;
+};
+
+struct _UnityPlaceActivationIface {
+	GTypeInterface parent_iface;
+	void (*activate) (UnityPlaceActivation* self, const char* uri, GAsyncReadyCallback _callback_, gpointer _user_data_);
+	gboolean (*activate_finish) (UnityPlaceActivation* self, GAsyncResult* _res_, GError** error);
+};
+
+struct _UnityPlaceBrowser {
+	GObject parent_instance;
+	UnityPlaceBrowserPrivate * priv;
+};
+
+struct _UnityPlaceBrowserClass {
+	GObjectClass parent_class;
+};
+
+struct _UnityPlaceStack {
+	GTypeInstance parent_instance;
+	volatile int ref_count;
+	UnityPlaceStackPrivate * priv;
+};
+
+struct _UnityPlaceStackClass {
+	GTypeClass parent_class;
+	void (*finalize) (UnityPlaceStack *self);
+};
+
+struct _UnityPlaceRendererIface {
+	GTypeInterface parent_iface;
+	void (*set_models) (UnityPlaceRenderer* self, DeeModel* groups, DeeModel* results, GeeHashMap* hints);
 };
 
 struct _UnityWebappFetchFile {
@@ -635,6 +703,7 @@ UnityQuicklistRenderingMenu* unity_quicklist_rendering_menu_new (void);
 UnityQuicklistRenderingMenu* unity_quicklist_rendering_menu_construct (GType object_type);
 GType unity_shell_mode_get_type (void) G_GNUC_CONST;
 GType unity_dnd_targets_get_type (void) G_GNUC_CONST;
+GType unity_window_action_get_type (void) G_GNUC_CONST;
 GType unity_shell_get_type (void) G_GNUC_CONST;
 guint32 unity_shell_get_current_time (UnityShell* self);
 UnityShellMode unity_shell_get_mode (UnityShell* self);
@@ -653,6 +722,8 @@ void unity_shell_close_xids (UnityShell* self, GArray* xids);
 void unity_shell_show_window (UnityShell* self, guint32 xid);
 void unity_shell_expose_xids (UnityShell* self, GArray* xids);
 void unity_shell_stop_expose (UnityShell* self);
+void unity_shell_get_window_details (UnityShell* self, guint32 xid, gboolean* allows_resize, gboolean* is_maximised);
+void unity_shell_do_window_action (UnityShell* self, guint32 xid, UnityWindowAction action);
 gboolean unity_shell_get_menus_swallow_events (UnityShell* self);
 extern UnityShell* unity_global_shell;
 GType unity_theme_file_path_get_type (void) G_GNUC_CONST;
@@ -729,8 +800,6 @@ void unity_pixbuf_cache_set_image_from_gicon_string_finish (UnityPixbufCache* se
 void unity_pixbuf_cache_set_image_from_gicon (UnityPixbufCache* self, CtkImage* image, GIcon* icon, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void unity_pixbuf_cache_set_image_from_gicon_finish (UnityPixbufCache* self, GAsyncResult* _res_);
 guint unity_pixbuf_cache_get_size (UnityPixbufCache* self);
-GType unity_place_renderer_get_type (void) G_GNUC_CONST;
-void unity_place_renderer_set_models (UnityPlaceRenderer* self, DeeModel* groups, DeeModel* results, GeeHashMap* hints);
 GType unity_place_renderer_info_get_type (void) G_GNUC_CONST;
 void unity_place_renderer_info_set_hint (UnityPlaceRendererInfo* self, const char* hint, const char* val);
 char* unity_place_renderer_info_get_hint (UnityPlaceRendererInfo* self, const char* hint);
@@ -784,6 +853,9 @@ UnityPlaceSearch* unity_place_entry_info_get_active_search (UnityPlaceEntryInfo*
 void unity_place_entry_info_set_active_search (UnityPlaceEntryInfo* self, UnityPlaceSearch* value);
 UnityPlaceSearch* unity_place_entry_info_get_active_global_search (UnityPlaceEntryInfo* self);
 void unity_place_entry_info_set_active_global_search (UnityPlaceEntryInfo* self, UnityPlaceSearch* value);
+GType unity_place_browser_get_type (void) G_GNUC_CONST;
+UnityPlaceBrowser* unity_place_entry_info_get_browser (UnityPlaceEntryInfo* self);
+void unity_place_entry_info_set_browser (UnityPlaceEntryInfo* self, UnityPlaceBrowser* value);
 GType unity_place_controller_get_type (void) G_GNUC_CONST;
 UnityPlaceController* unity_place_controller_new (const char* dbus_path);
 UnityPlaceController* unity_place_controller_construct (GType object_type, const char* dbus_path);
@@ -797,6 +869,36 @@ void unity_place_controller_export (UnityPlaceController* self, GError** error);
 void unity_place_controller_unexport (UnityPlaceController* self, GError** error);
 const char* unity_place_controller_get_dbus_path (UnityPlaceController* self);
 gboolean unity_place_controller_get_exported (UnityPlaceController* self);
+UnityPlaceActivation* unity_place_activation_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
+GType unity_place_activation_get_type (void) G_GNUC_CONST;
+UnityPlaceActivation* unity_place_controller_get_activation (UnityPlaceController* self);
+void unity_place_controller_set_activation (UnityPlaceController* self, UnityPlaceActivation* value);
+void unity_place_activation_activate (UnityPlaceActivation* self, const char* uri, GAsyncReadyCallback _callback_, gpointer _user_data_);
+gboolean unity_place_activation_activate_finish (UnityPlaceActivation* self, GAsyncResult* _res_, GError** error);
+UnityPlaceBrowser* unity_place_browser_new (GType e_type, GBoxedCopyFunc e_dup_func, GDestroyNotify e_destroy_func, const char* dbus_path);
+UnityPlaceBrowser* unity_place_browser_construct (GType object_type, GType e_type, GBoxedCopyFunc e_dup_func, GDestroyNotify e_destroy_func, const char* dbus_path);
+void unity_place_browser_record_state (UnityPlaceBrowser* self, gconstpointer state, const char* comment);
+void unity_place_browser_clear (UnityPlaceBrowser* self);
+void unity_place_browser_go_back (UnityPlaceBrowser* self);
+void unity_place_browser_go_forward (UnityPlaceBrowser* self);
+const char* unity_place_browser_get_dbus_path (UnityPlaceBrowser* self);
+gpointer unity_place_stack_ref (gpointer instance);
+void unity_place_stack_unref (gpointer instance);
+GParamSpec* unity_place_param_spec_stack (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
+void unity_place_value_set_stack (GValue* value, gpointer v_object);
+void unity_place_value_take_stack (GValue* value, gpointer v_object);
+gpointer unity_place_value_get_stack (const GValue* value);
+GType unity_place_stack_get_type (void) G_GNUC_CONST;
+UnityPlaceStack* unity_place_stack_new (GType e_type, GBoxedCopyFunc e_dup_func, GDestroyNotify e_destroy_func);
+UnityPlaceStack* unity_place_stack_construct (GType object_type, GType e_type, GBoxedCopyFunc e_dup_func, GDestroyNotify e_destroy_func);
+UnityPlaceStack* unity_place_stack_push (UnityPlaceStack* self, gconstpointer element);
+gpointer unity_place_stack_pop (UnityPlaceStack* self);
+gpointer unity_place_stack_peek (UnityPlaceStack* self);
+gint unity_place_stack_size (UnityPlaceStack* self);
+void unity_place_stack_clear (UnityPlaceStack* self);
+gboolean unity_place_stack_is_empty (UnityPlaceStack* self);
+GType unity_place_renderer_get_type (void) G_GNUC_CONST;
+void unity_place_renderer_set_models (UnityPlaceRenderer* self, DeeModel* groups, DeeModel* results, GeeHashMap* hints);
 char* unity_webapp_urlify (const char* uri);
 GType unity_webapp_fetch_file_get_type (void) G_GNUC_CONST;
 UnityWebappFetchFile* unity_webapp_fetch_file_new (const char* uri);

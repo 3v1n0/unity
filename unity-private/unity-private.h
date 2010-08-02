@@ -183,6 +183,28 @@ typedef struct _UnityPanelView UnityPanelView;
 typedef struct _UnityPanelViewClass UnityPanelViewClass;
 typedef struct _UnityPanelViewPrivate UnityPanelViewPrivate;
 
+#define UNITY_PANEL_TYPE_WINDOW_BUTTONS (unity_panel_window_buttons_get_type ())
+#define UNITY_PANEL_WINDOW_BUTTONS(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_TYPE_WINDOW_BUTTONS, UnityPanelWindowButtons))
+#define UNITY_PANEL_WINDOW_BUTTONS_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PANEL_TYPE_WINDOW_BUTTONS, UnityPanelWindowButtonsClass))
+#define UNITY_PANEL_IS_WINDOW_BUTTONS(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PANEL_TYPE_WINDOW_BUTTONS))
+#define UNITY_PANEL_IS_WINDOW_BUTTONS_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PANEL_TYPE_WINDOW_BUTTONS))
+#define UNITY_PANEL_WINDOW_BUTTONS_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PANEL_TYPE_WINDOW_BUTTONS, UnityPanelWindowButtonsClass))
+
+typedef struct _UnityPanelWindowButtons UnityPanelWindowButtons;
+typedef struct _UnityPanelWindowButtonsClass UnityPanelWindowButtonsClass;
+typedef struct _UnityPanelWindowButtonsPrivate UnityPanelWindowButtonsPrivate;
+
+#define UNITY_PANEL_TYPE_WINDOW_BUTTON (unity_panel_window_button_get_type ())
+#define UNITY_PANEL_WINDOW_BUTTON(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PANEL_TYPE_WINDOW_BUTTON, UnityPanelWindowButton))
+#define UNITY_PANEL_WINDOW_BUTTON_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PANEL_TYPE_WINDOW_BUTTON, UnityPanelWindowButtonClass))
+#define UNITY_PANEL_IS_WINDOW_BUTTON(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PANEL_TYPE_WINDOW_BUTTON))
+#define UNITY_PANEL_IS_WINDOW_BUTTON_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PANEL_TYPE_WINDOW_BUTTON))
+#define UNITY_PANEL_WINDOW_BUTTON_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PANEL_TYPE_WINDOW_BUTTON, UnityPanelWindowButtonClass))
+
+typedef struct _UnityPanelWindowButton UnityPanelWindowButton;
+typedef struct _UnityPanelWindowButtonClass UnityPanelWindowButtonClass;
+typedef struct _UnityPanelWindowButtonPrivate UnityPanelWindowButtonPrivate;
+
 #define UNITY_PLACES_TYPE_CONTROLLER (unity_places_controller_get_type ())
 #define UNITY_PLACES_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_CONTROLLER, UnityPlacesController))
 #define UNITY_PLACES_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_CONTROLLER, UnityPlacesControllerClass))
@@ -203,6 +225,16 @@ typedef struct _UnityPlacesControllerPrivate UnityPlacesControllerPrivate;
 
 typedef struct _UnityPlacesView UnityPlacesView;
 typedef struct _UnityPlacesViewClass UnityPlacesViewClass;
+
+#define UNITY_PLACES_TYPE_PLACE_MODEL (unity_places_place_model_get_type ())
+#define UNITY_PLACES_PLACE_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_MODEL, UnityPlacesPlaceModel))
+#define UNITY_PLACES_PLACE_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_MODEL, UnityPlacesPlaceModelClass))
+#define UNITY_PLACES_IS_PLACE_MODEL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_MODEL))
+#define UNITY_PLACES_IS_PLACE_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_MODEL))
+#define UNITY_PLACES_PLACE_MODEL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_MODEL, UnityPlacesPlaceModelClass))
+
+typedef struct _UnityPlacesPlaceModel UnityPlacesPlaceModel;
+typedef struct _UnityPlacesPlaceModelClass UnityPlacesPlaceModelClass;
 
 #define UNITY_PLACES_TYPE_DEFAULT_RENDERER_GROUP (unity_places_default_renderer_group_get_type ())
 #define UNITY_PLACES_DEFAULT_RENDERER_GROUP(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_DEFAULT_RENDERER_GROUP, UnityPlacesDefaultRendererGroup))
@@ -248,6 +280,17 @@ typedef struct _UnityPlacesDefaultRenderer UnityPlacesDefaultRenderer;
 typedef struct _UnityPlacesDefaultRendererClass UnityPlacesDefaultRendererClass;
 typedef struct _UnityPlacesDefaultRendererPrivate UnityPlacesDefaultRendererPrivate;
 
+#define UNITY_PLACES_TYPE_FOLDER_BROWSER_RENDERER (unity_places_folder_browser_renderer_get_type ())
+#define UNITY_PLACES_FOLDER_BROWSER_RENDERER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_FOLDER_BROWSER_RENDERER, UnityPlacesFolderBrowserRenderer))
+#define UNITY_PLACES_FOLDER_BROWSER_RENDERER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_FOLDER_BROWSER_RENDERER, UnityPlacesFolderBrowserRendererClass))
+#define UNITY_PLACES_IS_FOLDER_BROWSER_RENDERER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_FOLDER_BROWSER_RENDERER))
+#define UNITY_PLACES_IS_FOLDER_BROWSER_RENDERER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_FOLDER_BROWSER_RENDERER))
+#define UNITY_PLACES_FOLDER_BROWSER_RENDERER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_FOLDER_BROWSER_RENDERER, UnityPlacesFolderBrowserRendererClass))
+
+typedef struct _UnityPlacesFolderBrowserRenderer UnityPlacesFolderBrowserRenderer;
+typedef struct _UnityPlacesFolderBrowserRendererClass UnityPlacesFolderBrowserRendererClass;
+typedef struct _UnityPlacesFolderBrowserRendererPrivate UnityPlacesFolderBrowserRendererPrivate;
+
 #define UNITY_PLACES_TYPE_PLACE_BAR (unity_places_place_bar_get_type ())
 #define UNITY_PLACES_PLACE_BAR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_BAR, UnityPlacesPlaceBar))
 #define UNITY_PLACES_PLACE_BAR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_BAR, UnityPlacesPlaceBarClass))
@@ -258,16 +301,6 @@ typedef struct _UnityPlacesDefaultRendererPrivate UnityPlacesDefaultRendererPriv
 typedef struct _UnityPlacesPlaceBar UnityPlacesPlaceBar;
 typedef struct _UnityPlacesPlaceBarClass UnityPlacesPlaceBarClass;
 typedef struct _UnityPlacesPlaceBarPrivate UnityPlacesPlaceBarPrivate;
-
-#define UNITY_PLACES_TYPE_PLACE_MODEL (unity_places_place_model_get_type ())
-#define UNITY_PLACES_PLACE_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_MODEL, UnityPlacesPlaceModel))
-#define UNITY_PLACES_PLACE_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_MODEL, UnityPlacesPlaceModelClass))
-#define UNITY_PLACES_IS_PLACE_MODEL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_MODEL))
-#define UNITY_PLACES_IS_PLACE_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_MODEL))
-#define UNITY_PLACES_PLACE_MODEL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_MODEL, UnityPlacesPlaceModelClass))
-
-typedef struct _UnityPlacesPlaceModel UnityPlacesPlaceModel;
-typedef struct _UnityPlacesPlaceModelClass UnityPlacesPlaceModelClass;
 
 #define UNITY_PLACES_TYPE_PLACE_BAR_BACKGROUND (unity_places_place_bar_background_get_type ())
 #define UNITY_PLACES_PLACE_BAR_BACKGROUND(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_BAR_BACKGROUND, UnityPlacesPlaceBarBackground))
@@ -280,6 +313,58 @@ typedef struct _UnityPlacesPlaceBarBackground UnityPlacesPlaceBarBackground;
 typedef struct _UnityPlacesPlaceBarBackgroundClass UnityPlacesPlaceBarBackgroundClass;
 typedef struct _UnityPlacesPlaceBarBackgroundPrivate UnityPlacesPlaceBarBackgroundPrivate;
 
+#define UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER (unity_launcher_scroller_child_controller_get_type ())
+#define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildController))
+#define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildControllerClass))
+#define UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER))
+#define UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER))
+#define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildControllerClass))
+
+typedef struct _UnityLauncherScrollerChildController UnityLauncherScrollerChildController;
+typedef struct _UnityLauncherScrollerChildControllerClass UnityLauncherScrollerChildControllerClass;
+typedef struct _UnityLauncherScrollerChildControllerPrivate UnityLauncherScrollerChildControllerPrivate;
+
+#define UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER (unity_launcher_quicklist_controller_get_type ())
+#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistController))
+#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistControllerClass))
+#define UNITY_LAUNCHER_IS_QUICKLIST_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER))
+#define UNITY_LAUNCHER_IS_QUICKLIST_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER))
+#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistControllerClass))
+
+typedef struct _UnityLauncherQuicklistController UnityLauncherQuicklistController;
+typedef struct _UnityLauncherQuicklistControllerClass UnityLauncherQuicklistControllerClass;
+
+#define UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER_MENU_STATE (unity_launcher_scroller_child_controller_menu_state_get_type ())
+
+#define UNITY_PLACES_TYPE_PLACE_ENTRY_SCROLLER_CHILD_CONTROLLER (unity_places_place_entry_scroller_child_controller_get_type ())
+#define UNITY_PLACES_PLACE_ENTRY_SCROLLER_CHILD_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY_SCROLLER_CHILD_CONTROLLER, UnityPlacesPlaceEntryScrollerChildController))
+#define UNITY_PLACES_PLACE_ENTRY_SCROLLER_CHILD_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_ENTRY_SCROLLER_CHILD_CONTROLLER, UnityPlacesPlaceEntryScrollerChildControllerClass))
+#define UNITY_PLACES_IS_PLACE_ENTRY_SCROLLER_CHILD_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY_SCROLLER_CHILD_CONTROLLER))
+#define UNITY_PLACES_IS_PLACE_ENTRY_SCROLLER_CHILD_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_ENTRY_SCROLLER_CHILD_CONTROLLER))
+#define UNITY_PLACES_PLACE_ENTRY_SCROLLER_CHILD_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY_SCROLLER_CHILD_CONTROLLER, UnityPlacesPlaceEntryScrollerChildControllerClass))
+
+typedef struct _UnityPlacesPlaceEntryScrollerChildController UnityPlacesPlaceEntryScrollerChildController;
+typedef struct _UnityPlacesPlaceEntryScrollerChildControllerClass UnityPlacesPlaceEntryScrollerChildControllerClass;
+typedef struct _UnityPlacesPlaceEntryScrollerChildControllerPrivate UnityPlacesPlaceEntryScrollerChildControllerPrivate;
+
+#define UNITY_PLACES_TYPE_PLACE_ENTRY (unity_places_place_entry_get_type ())
+#define UNITY_PLACES_PLACE_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY, UnityPlacesPlaceEntry))
+#define UNITY_PLACES_IS_PLACE_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY))
+#define UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY, UnityPlacesPlaceEntryIface))
+
+typedef struct _UnityPlacesPlaceEntry UnityPlacesPlaceEntry;
+typedef struct _UnityPlacesPlaceEntryIface UnityPlacesPlaceEntryIface;
+
+#define UNITY_PLACES_TYPE_PLACE (unity_places_place_get_type ())
+#define UNITY_PLACES_PLACE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlace))
+#define UNITY_PLACES_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
+#define UNITY_PLACES_IS_PLACE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE))
+#define UNITY_PLACES_IS_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE))
+#define UNITY_PLACES_PLACE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
+
+typedef struct _UnityPlacesPlace UnityPlacesPlace;
+typedef struct _UnityPlacesPlaceClass UnityPlacesPlaceClass;
+
 #define UNITY_PLACES_TYPE_PLACE_ENTRY_VIEW (unity_places_place_entry_view_get_type ())
 #define UNITY_PLACES_PLACE_ENTRY_VIEW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY_VIEW, UnityPlacesPlaceEntryView))
 #define UNITY_PLACES_PLACE_ENTRY_VIEW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_ENTRY_VIEW, UnityPlacesPlaceEntryViewClass))
@@ -290,14 +375,6 @@ typedef struct _UnityPlacesPlaceBarBackgroundPrivate UnityPlacesPlaceBarBackgrou
 typedef struct _UnityPlacesPlaceEntryView UnityPlacesPlaceEntryView;
 typedef struct _UnityPlacesPlaceEntryViewClass UnityPlacesPlaceEntryViewClass;
 typedef struct _UnityPlacesPlaceEntryViewPrivate UnityPlacesPlaceEntryViewPrivate;
-
-#define UNITY_PLACES_TYPE_PLACE_ENTRY (unity_places_place_entry_get_type ())
-#define UNITY_PLACES_PLACE_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY, UnityPlacesPlaceEntry))
-#define UNITY_PLACES_IS_PLACE_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY))
-#define UNITY_PLACES_PLACE_ENTRY_GET_INTERFACE(obj) (G_TYPE_INSTANCE_GET_INTERFACE ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY, UnityPlacesPlaceEntryIface))
-
-typedef struct _UnityPlacesPlaceEntry UnityPlacesPlaceEntry;
-typedef struct _UnityPlacesPlaceEntryIface UnityPlacesPlaceEntryIface;
 
 #define UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS (unity_places_place_entry_dbus_get_type ())
 #define UNITY_PLACES_PLACE_ENTRY_DBUS(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY_DBUS, UnityPlacesPlaceEntryDbus))
@@ -312,6 +389,9 @@ typedef struct _UnityPlacesPlaceEntryDbusPrivate UnityPlacesPlaceEntryDbusPrivat
 
 #define UNITY_PLACES_PLACE_ENTRY_DBUS_TYPE_RENDERER_INFO (unity_places_place_entry_dbus_renderer_info_get_type ())
 typedef struct _UnityPlacesPlaceEntryDbusRendererInfo UnityPlacesPlaceEntryDbusRendererInfo;
+
+#define UNITY_PLACES_PLACE_ENTRY_DBUS_TYPE_PLACE_ENTRY_INFO (unity_places_place_entry_dbus_place_entry_info_get_type ())
+typedef struct _UnityPlacesPlaceEntryDbusPlaceEntryInfo UnityPlacesPlaceEntryDbusPlaceEntryInfo;
 
 #define UNITY_PLACES_TYPE_PLACE_HOME_ENTRY (unity_places_place_home_entry_get_type ())
 #define UNITY_PLACES_PLACE_HOME_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_HOME_ENTRY, UnityPlacesPlaceHomeEntry))
@@ -346,16 +426,6 @@ typedef struct _UnityPlacesPlaceFileModelPrivate UnityPlacesPlaceFileModelPrivat
 typedef struct _UnityPlacesPlaceView UnityPlacesPlaceView;
 typedef struct _UnityPlacesPlaceViewClass UnityPlacesPlaceViewClass;
 typedef struct _UnityPlacesPlaceViewPrivate UnityPlacesPlaceViewPrivate;
-
-#define UNITY_PLACES_TYPE_PLACE (unity_places_place_get_type ())
-#define UNITY_PLACES_PLACE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlace))
-#define UNITY_PLACES_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
-#define UNITY_PLACES_IS_PLACE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE))
-#define UNITY_PLACES_IS_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE))
-#define UNITY_PLACES_PLACE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
-
-typedef struct _UnityPlacesPlace UnityPlacesPlace;
-typedef struct _UnityPlacesPlaceClass UnityPlacesPlaceClass;
 typedef struct _UnityPlacesPlacePrivate UnityPlacesPlacePrivate;
 
 #define UNITY_PLACES_TYPE_PLACE_SEARCH_BAR (unity_places_place_search_bar_get_type ())
@@ -380,6 +450,16 @@ typedef struct _UnityPlacesPlaceSearchBarBackground UnityPlacesPlaceSearchBarBac
 typedef struct _UnityPlacesPlaceSearchBarBackgroundClass UnityPlacesPlaceSearchBarBackgroundClass;
 typedef struct _UnityPlacesPlaceSearchBarBackgroundPrivate UnityPlacesPlaceSearchBarBackgroundPrivate;
 
+#define UNITY_PLACES_TYPE_PLACE_SEARCH_NAVIGATION (unity_places_place_search_navigation_get_type ())
+#define UNITY_PLACES_PLACE_SEARCH_NAVIGATION(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_NAVIGATION, UnityPlacesPlaceSearchNavigation))
+#define UNITY_PLACES_PLACE_SEARCH_NAVIGATION_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_SEARCH_NAVIGATION, UnityPlacesPlaceSearchNavigationClass))
+#define UNITY_PLACES_IS_PLACE_SEARCH_NAVIGATION(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_NAVIGATION))
+#define UNITY_PLACES_IS_PLACE_SEARCH_NAVIGATION_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_SEARCH_NAVIGATION))
+#define UNITY_PLACES_PLACE_SEARCH_NAVIGATION_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_NAVIGATION, UnityPlacesPlaceSearchNavigationClass))
+
+typedef struct _UnityPlacesPlaceSearchNavigation UnityPlacesPlaceSearchNavigation;
+typedef struct _UnityPlacesPlaceSearchNavigationClass UnityPlacesPlaceSearchNavigationClass;
+
 #define UNITY_PLACES_TYPE_PLACE_SEARCH_ENTRY (unity_places_place_search_entry_get_type ())
 #define UNITY_PLACES_PLACE_SEARCH_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_ENTRY, UnityPlacesPlaceSearchEntry))
 #define UNITY_PLACES_PLACE_SEARCH_ENTRY_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_SEARCH_ENTRY, UnityPlacesPlaceSearchEntryClass))
@@ -390,6 +470,9 @@ typedef struct _UnityPlacesPlaceSearchBarBackgroundPrivate UnityPlacesPlaceSearc
 typedef struct _UnityPlacesPlaceSearchEntry UnityPlacesPlaceSearchEntry;
 typedef struct _UnityPlacesPlaceSearchEntryClass UnityPlacesPlaceSearchEntryClass;
 typedef struct _UnityPlacesPlaceSearchEntryPrivate UnityPlacesPlaceSearchEntryPrivate;
+typedef struct _UnityPlacesPlaceSearchNavigationPrivate UnityPlacesPlaceSearchNavigationPrivate;
+
+#define UNITY_PLACES_TYPE_SECTION_STYLE (unity_places_section_style_get_type ())
 
 #define UNITY_PLACES_TYPE_PLACE_SEARCH_SECTIONS_BAR (unity_places_place_search_sections_bar_get_type ())
 #define UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_SECTIONS_BAR, UnityPlacesPlaceSearchSectionsBar))
@@ -401,30 +484,18 @@ typedef struct _UnityPlacesPlaceSearchEntryPrivate UnityPlacesPlaceSearchEntryPr
 typedef struct _UnityPlacesPlaceSearchSectionsBar UnityPlacesPlaceSearchSectionsBar;
 typedef struct _UnityPlacesPlaceSearchSectionsBarClass UnityPlacesPlaceSearchSectionsBarClass;
 typedef struct _UnityPlacesPlaceSearchSectionsBarPrivate UnityPlacesPlaceSearchSectionsBarPrivate;
+
+#define UNITY_PLACES_TYPE_TRASH_CONTROLLER (unity_places_trash_controller_get_type ())
+#define UNITY_PLACES_TRASH_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_TRASH_CONTROLLER, UnityPlacesTrashController))
+#define UNITY_PLACES_TRASH_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_TRASH_CONTROLLER, UnityPlacesTrashControllerClass))
+#define UNITY_PLACES_IS_TRASH_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_TRASH_CONTROLLER))
+#define UNITY_PLACES_IS_TRASH_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_TRASH_CONTROLLER))
+#define UNITY_PLACES_TRASH_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_TRASH_CONTROLLER, UnityPlacesTrashControllerClass))
+
+typedef struct _UnityPlacesTrashController UnityPlacesTrashController;
+typedef struct _UnityPlacesTrashControllerClass UnityPlacesTrashControllerClass;
+typedef struct _UnityPlacesTrashControllerPrivate UnityPlacesTrashControllerPrivate;
 typedef struct _UnityPlacesViewPrivate UnityPlacesViewPrivate;
-
-#define UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER (unity_launcher_scroller_child_controller_get_type ())
-#define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildController))
-#define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildControllerClass))
-#define UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER))
-#define UNITY_LAUNCHER_IS_SCROLLER_CHILD_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER))
-#define UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER, UnityLauncherScrollerChildControllerClass))
-
-typedef struct _UnityLauncherScrollerChildController UnityLauncherScrollerChildController;
-typedef struct _UnityLauncherScrollerChildControllerClass UnityLauncherScrollerChildControllerClass;
-typedef struct _UnityLauncherScrollerChildControllerPrivate UnityLauncherScrollerChildControllerPrivate;
-
-#define UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER (unity_launcher_quicklist_controller_get_type ())
-#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistController))
-#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistControllerClass))
-#define UNITY_LAUNCHER_IS_QUICKLIST_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER))
-#define UNITY_LAUNCHER_IS_QUICKLIST_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER))
-#define UNITY_LAUNCHER_QUICKLIST_CONTROLLER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_QUICKLIST_CONTROLLER, UnityLauncherQuicklistControllerClass))
-
-typedef struct _UnityLauncherQuicklistController UnityLauncherQuicklistController;
-typedef struct _UnityLauncherQuicklistControllerClass UnityLauncherQuicklistControllerClass;
-
-#define UNITY_LAUNCHER_TYPE_SCROLLER_CHILD_CONTROLLER_MENU_STATE (unity_launcher_scroller_child_controller_menu_state_get_type ())
 
 #define UNITY_LAUNCHER_TYPE_APPLICATION_CONTROLLER (unity_launcher_application_controller_get_type ())
 #define UNITY_LAUNCHER_APPLICATION_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_APPLICATION_CONTROLLER, UnityLauncherApplicationController))
@@ -446,6 +517,17 @@ typedef struct _UnityLauncherApplicationControllerPrivate UnityLauncherApplicati
 
 typedef struct _UnityLauncherScrollerChild UnityLauncherScrollerChild;
 typedef struct _UnityLauncherScrollerChildClass UnityLauncherScrollerChildClass;
+
+#define UNITY_LAUNCHER_TYPE_LAUNCHER_CONTAINER (unity_launcher_launcher_container_get_type ())
+#define UNITY_LAUNCHER_LAUNCHER_CONTAINER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_LAUNCHER_CONTAINER, UnityLauncherLauncherContainer))
+#define UNITY_LAUNCHER_LAUNCHER_CONTAINER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_LAUNCHER_TYPE_LAUNCHER_CONTAINER, UnityLauncherLauncherContainerClass))
+#define UNITY_LAUNCHER_IS_LAUNCHER_CONTAINER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_LAUNCHER_TYPE_LAUNCHER_CONTAINER))
+#define UNITY_LAUNCHER_IS_LAUNCHER_CONTAINER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_LAUNCHER_TYPE_LAUNCHER_CONTAINER))
+#define UNITY_LAUNCHER_LAUNCHER_CONTAINER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_LAUNCHER_TYPE_LAUNCHER_CONTAINER, UnityLauncherLauncherContainerClass))
+
+typedef struct _UnityLauncherLauncherContainer UnityLauncherLauncherContainer;
+typedef struct _UnityLauncherLauncherContainerClass UnityLauncherLauncherContainerClass;
+typedef struct _UnityLauncherLauncherContainerPrivate UnityLauncherLauncherContainerPrivate;
 
 #define UNITY_LAUNCHER_TYPE_SHORTCUT_ITEM (unity_launcher_shortcut_item_get_type ())
 #define UNITY_LAUNCHER_SHORTCUT_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_LAUNCHER_TYPE_SHORTCUT_ITEM, UnityLauncherShortcutItem))
@@ -558,6 +640,8 @@ typedef struct _UnityLauncherQuicklistMenuPrivate UnityLauncherQuicklistMenuPriv
 
 #define UNITY_LAUNCHER_TYPE_PIN_TYPE (unity_launcher_pin_type_get_type ())
 typedef struct _UnityLauncherScrollerChildPrivate UnityLauncherScrollerChildPrivate;
+
+#define UNITY_LAUNCHER_SCROLLER_CHILD_TYPE_GROUP_TYPE (unity_launcher_scroller_child_group_type_get_type ())
 typedef struct _UnityLauncherScrollerModelPrivate UnityLauncherScrollerModelPrivate;
 
 #define UNITY_LAUNCHER_SCROLLER_MODEL_TYPE_ITERATOR (unity_launcher_scroller_model_iterator_get_type ())
@@ -791,13 +875,33 @@ struct _UnityPanelSystemTrayClass {
 };
 
 struct _UnityPanelView {
-	CtkBox parent_instance;
+	CtkBin parent_instance;
 	UnityPanelViewPrivate * priv;
+	CtkEffectCache* cache;
 	gboolean expanded;
 };
 
 struct _UnityPanelViewClass {
+	CtkBinClass parent_class;
+};
+
+struct _UnityPanelWindowButtons {
+	CtkBox parent_instance;
+	UnityPanelWindowButtonsPrivate * priv;
+};
+
+struct _UnityPanelWindowButtonsClass {
 	CtkBoxClass parent_class;
+};
+
+struct _UnityPanelWindowButton {
+	CtkButton parent_instance;
+	UnityPanelWindowButtonPrivate * priv;
+	ClutterActor* bg;
+};
+
+struct _UnityPanelWindowButtonClass {
+	CtkButtonClass parent_class;
 };
 
 struct _UnityPlacesController {
@@ -845,6 +949,15 @@ struct _UnityPlacesDefaultRendererClass {
 	CtkScrollViewClass parent_class;
 };
 
+struct _UnityPlacesFolderBrowserRenderer {
+	CtkScrollView parent_instance;
+	UnityPlacesFolderBrowserRendererPrivate * priv;
+};
+
+struct _UnityPlacesFolderBrowserRendererClass {
+	CtkScrollViewClass parent_class;
+};
+
 struct _UnityPlacesPlaceBar {
 	CtkBox parent_instance;
 	UnityPlacesPlaceBarPrivate * priv;
@@ -863,13 +976,40 @@ struct _UnityPlacesPlaceBarBackgroundClass {
 	ClutterCairoTextureClass parent_class;
 };
 
-struct _UnityPlacesPlaceEntryView {
-	CtkImage parent_instance;
-	UnityPlacesPlaceEntryViewPrivate * priv;
+typedef void (*UnityLauncherScrollerChildControllermenu_cb) (DbusmenuMenuitem* menu, void* user_data);
+typedef enum  {
+	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_NO_MENU,
+	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_LABEL,
+	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_MENU,
+	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_MENU_CLOSE_WHEN_LEAVE
+} UnityLauncherScrollerChildControllerMenuState;
+
+struct _UnityLauncherScrollerChildController {
+	GObject parent_instance;
+	UnityLauncherScrollerChildControllerPrivate * priv;
+	UnityLauncherScrollerChildControllerMenuState menu_state;
+	guint32 last_press_time;
+	gboolean button_down;
+	float click_start_pos;
+	gint drag_sensitivity;
 };
 
-struct _UnityPlacesPlaceEntryViewClass {
-	CtkImageClass parent_class;
+struct _UnityLauncherScrollerChildControllerClass {
+	GObjectClass parent_class;
+	void (*get_menu_actions) (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
+	void (*get_menu_navigation) (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
+	void (*activate) (UnityLauncherScrollerChildController* self);
+	UnityLauncherQuicklistController* (*get_menu_controller) (UnityLauncherScrollerChildController* self);
+	gboolean (*can_drag) (UnityLauncherScrollerChildController* self);
+};
+
+struct _UnityPlacesPlaceEntryScrollerChildController {
+	UnityLauncherScrollerChildController parent_instance;
+	UnityPlacesPlaceEntryScrollerChildControllerPrivate * priv;
+};
+
+struct _UnityPlacesPlaceEntryScrollerChildControllerClass {
+	UnityLauncherScrollerChildControllerClass parent_class;
 };
 
 struct _UnityPlacesPlaceEntryIface {
@@ -914,6 +1054,17 @@ struct _UnityPlacesPlaceEntryIface {
 	void (*set_global_results_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
 	GeeHashMap* (*get_global_renderer_hints) (UnityPlacesPlaceEntry* self);
 	void (*set_global_renderer_hints) (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+	UnityPlacesPlace* (*get_parent) (UnityPlacesPlaceEntry* self);
+	void (*set_parent) (UnityPlacesPlaceEntry* self, UnityPlacesPlace* value);
+};
+
+struct _UnityPlacesPlaceEntryView {
+	CtkImage parent_instance;
+	UnityPlacesPlaceEntryViewPrivate * priv;
+};
+
+struct _UnityPlacesPlaceEntryViewClass {
+	CtkImageClass parent_class;
 };
 
 struct _UnityPlacesPlaceEntryDbus {
@@ -933,6 +1084,18 @@ struct _UnityPlacesPlaceEntryDbusRendererInfo {
 	char* groups_model;
 	char* results_model;
 	GHashTable* renderer_hints;
+};
+
+struct _UnityPlacesPlaceEntryDbusPlaceEntryInfo {
+	char* dbus_path;
+	char* name;
+	char* icon;
+	guint position;
+	char** mimetype;
+	gint mimetype_length1;
+	gboolean sensitive;
+	char* sections_model;
+	GHashTable* hints;
 };
 
 struct _UnityPlacesPlaceHomeEntry {
@@ -974,6 +1137,8 @@ struct _UnityPlacesPlaceViewClass {
 struct _UnityPlacesPlace {
 	GObject parent_instance;
 	UnityPlacesPlacePrivate * priv;
+	GRegex* uri_regex;
+	GRegex* mime_regex;
 };
 
 struct _UnityPlacesPlaceClass {
@@ -1010,18 +1175,44 @@ struct _UnityPlacesPlaceSearchEntryClass {
 	CtkBoxClass parent_class;
 };
 
+struct _UnityPlacesPlaceSearchNavigation {
+	CtkBox parent_instance;
+	UnityPlacesPlaceSearchNavigationPrivate * priv;
+};
+
+struct _UnityPlacesPlaceSearchNavigationClass {
+	CtkBoxClass parent_class;
+};
+
+typedef enum  {
+	UNITY_PLACES_SECTION_STYLE_BUTTONS,
+	UNITY_PLACES_SECTION_STYLE_BREADCRUMB
+} UnityPlacesSectionStyle;
+
 struct _UnityPlacesPlaceSearchSectionsBar {
 	CtkBox parent_instance;
 	UnityPlacesPlaceSearchSectionsBarPrivate * priv;
+	UnityPlacesSectionStyle _style;
 };
 
 struct _UnityPlacesPlaceSearchSectionsBarClass {
 	CtkBoxClass parent_class;
 };
 
+struct _UnityPlacesTrashController {
+	UnityLauncherScrollerChildController parent_instance;
+	UnityPlacesTrashControllerPrivate * priv;
+};
+
+struct _UnityPlacesTrashControllerClass {
+	UnityLauncherScrollerChildControllerClass parent_class;
+};
+
 struct _UnityPlacesView {
 	CtkBox parent_instance;
 	UnityPlacesViewPrivate * priv;
+	UnityPlacesPlaceHomeEntry* home_entry;
+	UnityPlacesPlaceSearchBar* search_bar;
 };
 
 struct _UnityPlacesViewClass {
@@ -1032,32 +1223,6 @@ typedef enum  {
 	UNITY_LAUNCHER_APP_TYPE_ERROR_NO_DESKTOP_FILE
 } UnityLauncherAppTypeError;
 #define UNITY_LAUNCHER_APP_TYPE_ERROR unity_launcher_app_type_error_quark ()
-typedef void (*UnityLauncherScrollerChildControllermenu_cb) (DbusmenuMenuitem* menu, void* user_data);
-typedef enum  {
-	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_NO_MENU,
-	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_LABEL,
-	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_MENU,
-	UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_MENU_CLOSE_WHEN_LEAVE
-} UnityLauncherScrollerChildControllerMenuState;
-
-struct _UnityLauncherScrollerChildController {
-	GObject parent_instance;
-	UnityLauncherScrollerChildControllerPrivate * priv;
-	UnityLauncherScrollerChildControllerMenuState menu_state;
-	guint32 last_press_time;
-	gboolean button_down;
-	float click_start_pos;
-	gint drag_sensitivity;
-};
-
-struct _UnityLauncherScrollerChildControllerClass {
-	GObjectClass parent_class;
-	void (*get_menu_actions) (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
-	void (*get_menu_navigation) (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
-	void (*activate) (UnityLauncherScrollerChildController* self);
-	UnityLauncherQuicklistController* (*get_menu_controller) (UnityLauncherScrollerChildController* self);
-};
-
 struct _UnityLauncherApplicationController {
 	UnityLauncherScrollerChildController parent_instance;
 	UnityLauncherApplicationControllerPrivate * priv;
@@ -1065,6 +1230,16 @@ struct _UnityLauncherApplicationController {
 
 struct _UnityLauncherApplicationControllerClass {
 	UnityLauncherScrollerChildControllerClass parent_class;
+};
+
+struct _UnityLauncherLauncherContainer {
+	CtkBin parent_instance;
+	UnityLauncherLauncherContainerPrivate * priv;
+	CtkEffectCache* cache;
+};
+
+struct _UnityLauncherLauncherContainerClass {
+	CtkBinClass parent_class;
 };
 
 struct _UnityLauncherShortcutItemIface {
@@ -1179,9 +1354,20 @@ struct _UnityLauncherScrollerChildClass {
 	CtkActorClass parent_class;
 };
 
+typedef enum  {
+	UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_APPLICATION,
+	UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_PLACE,
+	UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_DEVICE,
+	UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_SYSTEM
+} UnityLauncherScrollerChildGroupType;
+
 struct _UnityLauncherScrollerModel {
 	GObject parent_instance;
 	UnityLauncherScrollerModelPrivate * priv;
+	gint n_app_icons;
+	gint n_place_icons;
+	gint n_device_icons;
+	gint n_system_icons;
 };
 
 struct _UnityLauncherScrollerModelClass {
@@ -1315,6 +1501,8 @@ Window utils_get_stage_window (ClutterStage* stage);
 gboolean utils_save_snapshot (ClutterStage* stage, const char* filename, gint x, gint y, gint width, gint height);
 gboolean utils_compare_snapshot (ClutterStage* stage, const char* filename, gint x, gint y, gint width, gint height, gboolean expected);
 gboolean utils_utils_compare_images (const char* img1_path, const char* img2_path);
+gboolean utils_window_is_decorated (guint32 xid);
+void utils_window_set_decorations (guint32 xid, guint decorations);
 GType unity_panel_background_get_type (void) G_GNUC_CONST;
 #define UNITY_PANEL_BACKGROUND_BG "/usr/share/unity/themes/panel_background.png"
 UnityPanelBackground* unity_panel_background_new (void);
@@ -1332,7 +1520,6 @@ UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_new (void
 UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_construct (GType object_type);
 GType unity_panel_indicators_indicator_object_view_get_type (void) G_GNUC_CONST;
 UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_bar_get_indicator_view_matching (UnityPanelIndicatorsIndicatorBar* self, IndicatorObject* o);
-void unity_panel_indicators_indicator_bar_set_indicator_mode (UnityPanelIndicatorsIndicatorBar* self, gboolean mode);
 GType unity_panel_indicators_indicators_model_get_type (void) G_GNUC_CONST;
 UnityPanelIndicatorsIndicatorsModel* unity_panel_indicators_indicators_model_get_default (void);
 void unity_panel_indicators_indicators_model_set_default (UnityPanelIndicatorsIndicatorsModel* model);
@@ -1386,12 +1573,24 @@ void unity_panel_view_set_expanded (UnityPanelView* self, gboolean _expanded);
 gint unity_panel_view_get_panel_height (UnityPanelView* self);
 void unity_panel_view_set_indicator_mode (UnityPanelView* self, gboolean mode);
 UnityShell* unity_panel_view_get_shell (UnityPanelView* self);
+GType unity_panel_window_buttons_get_type (void) G_GNUC_CONST;
+UnityPanelWindowButtons* unity_panel_window_buttons_new (void);
+UnityPanelWindowButtons* unity_panel_window_buttons_construct (GType object_type);
+GType unity_panel_window_button_get_type (void) G_GNUC_CONST;
+#define UNITY_PANEL_WINDOW_BUTTON_AMBIANCE "/usr/share/themes/Ambiance/metacity-1"
+UnityPanelWindowButton* unity_panel_window_button_new (const char* filename);
+UnityPanelWindowButton* unity_panel_window_button_construct (GType object_type, const char* filename);
+const char* unity_panel_window_button_get_filename (UnityPanelWindowButton* self);
 GType unity_places_controller_get_type (void) G_GNUC_CONST;
 UnityPlacesController* unity_places_controller_new (UnityShell* shell);
 UnityPlacesController* unity_places_controller_construct (GType object_type, UnityShell* shell);
 GType unity_places_view_get_type (void) G_GNUC_CONST;
 UnityPlacesView* unity_places_controller_get_view (UnityPlacesController* self);
+void unity_places_controller_activate_entry (UnityPlacesController* self, const char* entry_name);
 UnityShell* unity_places_controller_get_shell (UnityPlacesController* self);
+GType unity_places_place_model_get_type (void) G_GNUC_CONST;
+UnityPlacesPlaceModel* unity_places_controller_get_model (UnityPlacesController* self);
+void unity_places_controller_set_model (UnityPlacesController* self, UnityPlacesPlaceModel* value);
 GType unity_places_default_renderer_group_get_type (void) G_GNUC_CONST;
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_new (guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_construct (GType object_type, guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
@@ -1418,8 +1617,10 @@ const char* unity_places_tile_get_comment (UnityPlacesTile* self);
 GType unity_places_default_renderer_get_type (void) G_GNUC_CONST;
 UnityPlacesDefaultRenderer* unity_places_default_renderer_new (void);
 UnityPlacesDefaultRenderer* unity_places_default_renderer_construct (GType object_type);
+GType unity_places_folder_browser_renderer_get_type (void) G_GNUC_CONST;
+UnityPlacesFolderBrowserRenderer* unity_places_folder_browser_renderer_new (void);
+UnityPlacesFolderBrowserRenderer* unity_places_folder_browser_renderer_construct (GType object_type);
 GType unity_places_place_bar_get_type (void) G_GNUC_CONST;
-GType unity_places_place_model_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceBar* unity_places_place_bar_new (UnityShell* shell, UnityPlacesPlaceModel* model);
 UnityPlacesPlaceBar* unity_places_place_bar_construct (GType object_type, UnityShell* shell, UnityPlacesPlaceModel* model);
 void unity_places_place_bar_reset (UnityPlacesPlaceBar* self);
@@ -1434,8 +1635,16 @@ UnityPlacesPlaceBarBackground* unity_places_place_bar_background_construct (GTyp
 UnityShell* unity_places_place_bar_background_get_shell (UnityPlacesPlaceBarBackground* self);
 gint unity_places_place_bar_background_get_entry_position (UnityPlacesPlaceBarBackground* self);
 void unity_places_place_bar_background_set_entry_position (UnityPlacesPlaceBarBackground* self, gint value);
-GType unity_places_place_entry_view_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_child_controller_get_type (void) G_GNUC_CONST;
+GType unity_launcher_quicklist_controller_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_child_controller_menu_state_get_type (void) G_GNUC_CONST;
+GType unity_places_place_entry_scroller_child_controller_get_type (void) G_GNUC_CONST;
+GType unity_places_place_get_type (void) G_GNUC_CONST;
 GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
+UnityPlacesPlaceEntryScrollerChildController* unity_places_place_entry_scroller_child_controller_new (UnityPlacesPlaceEntry* entry);
+UnityPlacesPlaceEntryScrollerChildController* unity_places_place_entry_scroller_child_controller_construct (GType object_type, UnityPlacesPlaceEntry* entry);
+UnityPlacesPlaceEntry* unity_places_place_entry_scroller_child_controller_get_entry (UnityPlacesPlaceEntryScrollerChildController* self);
+GType unity_places_place_entry_view_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceEntryView* unity_places_place_entry_view_new (UnityPlacesPlaceEntry* entry);
 UnityPlacesPlaceEntryView* unity_places_place_entry_view_construct (GType object_type, UnityPlacesPlaceEntry* entry);
 UnityPlacesPlaceEntry* unity_places_place_entry_view_get_entry (UnityPlacesPlaceEntryView* self);
@@ -1479,6 +1688,8 @@ DeeModel* unity_places_place_entry_get_global_results_model (UnityPlacesPlaceEnt
 void unity_places_place_entry_set_global_results_model (UnityPlacesPlaceEntry* self, DeeModel* value);
 GeeHashMap* unity_places_place_entry_get_global_renderer_hints (UnityPlacesPlaceEntry* self);
 void unity_places_place_entry_set_global_renderer_hints (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+UnityPlacesPlace* unity_places_place_entry_get_parent (UnityPlacesPlaceEntry* self);
+void unity_places_place_entry_set_parent (UnityPlacesPlaceEntry* self, UnityPlacesPlace* value);
 GType unity_places_place_entry_dbus_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceEntryDbus* unity_places_place_entry_dbus_new (const char* dbus_name, const char* dbus_path);
 UnityPlacesPlaceEntryDbus* unity_places_place_entry_dbus_construct (GType object_type, const char* dbus_name, const char* dbus_path);
@@ -1500,6 +1711,11 @@ UnityPlacesPlaceEntryDbusRendererInfo* unity_places_place_entry_dbus_renderer_in
 void unity_places_place_entry_dbus_renderer_info_free (UnityPlacesPlaceEntryDbusRendererInfo* self);
 void unity_places_place_entry_dbus_renderer_info_copy (const UnityPlacesPlaceEntryDbusRendererInfo* self, UnityPlacesPlaceEntryDbusRendererInfo* dest);
 void unity_places_place_entry_dbus_renderer_info_destroy (UnityPlacesPlaceEntryDbusRendererInfo* self);
+GType unity_places_place_entry_dbus_place_entry_info_get_type (void) G_GNUC_CONST;
+UnityPlacesPlaceEntryDbusPlaceEntryInfo* unity_places_place_entry_dbus_place_entry_info_dup (const UnityPlacesPlaceEntryDbusPlaceEntryInfo* self);
+void unity_places_place_entry_dbus_place_entry_info_free (UnityPlacesPlaceEntryDbusPlaceEntryInfo* self);
+void unity_places_place_entry_dbus_place_entry_info_copy (const UnityPlacesPlaceEntryDbusPlaceEntryInfo* self, UnityPlacesPlaceEntryDbusPlaceEntryInfo* dest);
+void unity_places_place_entry_dbus_place_entry_info_destroy (UnityPlacesPlaceEntryDbusPlaceEntryInfo* self);
 GType unity_places_place_home_entry_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceHomeEntry* unity_places_place_home_entry_new (UnityShell* shell, UnityPlacesPlaceModel* model);
 UnityPlacesPlaceHomeEntry* unity_places_place_home_entry_construct (GType object_type, UnityShell* shell, UnityPlacesPlaceModel* model);
@@ -1515,7 +1731,6 @@ UnityPlacesPlaceFileModel* unity_places_place_file_model_construct_with_director
 const char* unity_places_place_file_model_get_directory (UnityPlacesPlaceFileModel* self);
 gboolean unity_places_place_file_model_get_async (UnityPlacesPlaceFileModel* self);
 GType unity_places_place_view_get_type (void) G_GNUC_CONST;
-GType unity_places_place_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceView* unity_places_place_view_new (UnityPlacesPlace* place);
 UnityPlacesPlaceView* unity_places_place_view_construct (GType object_type, UnityPlacesPlace* place);
 UnityPlacesPlace* unity_places_place_view_get_place (UnityPlacesPlaceView* self);
@@ -1525,6 +1740,7 @@ UnityPlacesPlace* unity_places_place_new_from_keyfile (GKeyFile* file, const cha
 GeeArrayList* unity_places_place_get_entries (UnityPlacesPlace* self);
 UnityPlacesPlaceEntry* unity_places_place_get_nth_entry (UnityPlacesPlace* self, gint index);
 void unity_places_place_connect (UnityPlacesPlace* self);
+gboolean unity_places_place_activate (UnityPlacesPlace* self, const char* uri);
 const char* unity_places_place_get_dbus_name (UnityPlacesPlace* self);
 const char* unity_places_place_get_dbus_path (UnityPlacesPlace* self);
 gint unity_places_place_get_n_entries (UnityPlacesPlace* self);
@@ -1536,39 +1752,51 @@ UnityPlacesPlaceSearchBar* unity_places_place_search_bar_construct (GType object
 void unity_places_place_search_bar_reset (UnityPlacesPlaceSearchBar* self);
 void unity_places_place_search_bar_search (UnityPlacesPlaceSearchBar* self, const char* text);
 char* unity_places_place_search_bar_get_search_text (UnityPlacesPlaceSearchBar* self);
-void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearchBar* self, UnityPlacesPlaceEntry* entry, gint x);
+void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearchBar* self, UnityPlacesPlaceEntry* entry, gint x, guint section);
 GType unity_places_place_search_bar_background_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_BG "/usr/share/unity/dash_background.png"
+GType unity_places_place_search_navigation_get_type (void) G_GNUC_CONST;
 GType unity_places_place_search_entry_get_type (void) G_GNUC_CONST;
-UnityPlacesPlaceSearchBarBackground* unity_places_place_search_bar_background_new (UnityPlacesPlaceSearchEntry* search_entry);
-UnityPlacesPlaceSearchBarBackground* unity_places_place_search_bar_background_construct (GType object_type, UnityPlacesPlaceSearchEntry* search_entry);
+UnityPlacesPlaceSearchBarBackground* unity_places_place_search_bar_background_new (UnityPlacesPlaceSearchNavigation* nav, UnityPlacesPlaceSearchEntry* search_entry);
+UnityPlacesPlaceSearchBarBackground* unity_places_place_search_bar_background_construct (GType object_type, UnityPlacesPlaceSearchNavigation* nav, UnityPlacesPlaceSearchEntry* search_entry);
 gboolean unity_places_place_search_bar_background_update_background (UnityPlacesPlaceSearchBarBackground* self);
 gint unity_places_place_search_bar_background_get_entry_position (UnityPlacesPlaceSearchBarBackground* self);
 void unity_places_place_search_bar_background_set_entry_position (UnityPlacesPlaceSearchBarBackground* self, gint value);
+UnityPlacesPlaceSearchNavigation* unity_places_place_search_bar_background_get_navigation (UnityPlacesPlaceSearchBarBackground* self);
 UnityPlacesPlaceSearchEntry* unity_places_place_search_bar_background_get_search_entry (UnityPlacesPlaceSearchBarBackground* self);
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_new (void);
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_construct (GType object_type);
 void unity_places_place_search_entry_reset (UnityPlacesPlaceSearchEntry* self);
+UnityPlacesPlaceSearchNavigation* unity_places_place_search_navigation_new (void);
+UnityPlacesPlaceSearchNavigation* unity_places_place_search_navigation_construct (GType object_type);
+void unity_places_place_search_navigation_set_active_entry (UnityPlacesPlaceSearchNavigation* self, UnityPlacesPlaceEntry* entry);
+GType unity_places_section_style_get_type (void) G_GNUC_CONST;
 GType unity_places_place_search_sections_bar_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceSearchSectionsBar* unity_places_place_search_sections_bar_new (void);
 UnityPlacesPlaceSearchSectionsBar* unity_places_place_search_sections_bar_construct (GType object_type);
+void unity_places_place_search_sections_bar_set_active_section (UnityPlacesPlaceSearchSectionsBar* self, guint section_id);
 void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSearchSectionsBar* self, UnityPlacesPlaceEntry* entry);
-UnityPlacesView* unity_places_view_new (UnityShell* shell);
-UnityPlacesView* unity_places_view_construct (GType object_type, UnityShell* shell);
+UnityPlacesSectionStyle unity_places_place_search_sections_bar_get_style (UnityPlacesPlaceSearchSectionsBar* self);
+void unity_places_place_search_sections_bar_set_style (UnityPlacesPlaceSearchSectionsBar* self, UnityPlacesSectionStyle value);
+GType unity_places_trash_controller_get_type (void) G_GNUC_CONST;
+#define UNITY_PLACES_TRASH_CONTROLLER_ICON "/usr/share/unity/trash.png"
+UnityPlacesTrashController* unity_places_trash_controller_new (void);
+UnityPlacesTrashController* unity_places_trash_controller_construct (GType object_type);
+#define UNITY_PLACES_VIEW_PADDING 8.0f
+UnityPlacesView* unity_places_view_new (UnityShell* shell, UnityPlacesPlaceModel* model);
+UnityPlacesView* unity_places_view_construct (GType object_type, UnityShell* shell, UnityPlacesPlaceModel* model);
 void unity_places_view_about_to_show (UnityPlacesView* self);
 void unity_places_view_shown (UnityPlacesView* self);
 void unity_places_view_hidden (UnityPlacesView* self);
+void unity_places_view_on_entry_view_activated (UnityPlacesView* self, UnityPlacesPlaceEntry* entry, guint section_id);
 UnityShell* unity_places_view_get_shell (UnityPlacesView* self);
 UnityPlacesPlaceModel* unity_places_view_get_model (UnityPlacesView* self);
-void unity_places_view_set_model (UnityPlacesView* self, UnityPlacesPlaceModel* value);
 GQuark unity_launcher_app_type_error_quark (void);
-GType unity_launcher_scroller_child_controller_get_type (void) G_GNUC_CONST;
-GType unity_launcher_quicklist_controller_get_type (void) G_GNUC_CONST;
-GType unity_launcher_scroller_child_controller_menu_state_get_type (void) G_GNUC_CONST;
 GType unity_launcher_application_controller_get_type (void) G_GNUC_CONST;
 GType unity_launcher_scroller_child_get_type (void) G_GNUC_CONST;
 UnityLauncherApplicationController* unity_launcher_application_controller_new (const char* desktop_file_, UnityLauncherScrollerChild* child_);
 UnityLauncherApplicationController* unity_launcher_application_controller_construct (GType object_type, const char* desktop_file_, UnityLauncherScrollerChild* child_);
+void unity_launcher_application_controller_closed (UnityLauncherApplicationController* self);
 void unity_launcher_application_controller_set_sticky (UnityLauncherApplicationController* self, gboolean is_sticky);
 gboolean unity_launcher_application_controller_is_sticky (UnityLauncherApplicationController* self);
 void unity_launcher_application_controller_close_windows (UnityLauncherApplicationController* self);
@@ -1578,6 +1806,9 @@ void unity_launcher_application_controller_attach_application (UnityLauncherAppl
 void unity_launcher_application_controller_detach_application (UnityLauncherApplicationController* self);
 gboolean unity_launcher_application_controller_debug_is_application_attached (UnityLauncherApplicationController* self);
 const char* unity_launcher_application_controller_get_desktop_file (UnityLauncherApplicationController* self);
+GType unity_launcher_launcher_container_get_type (void) G_GNUC_CONST;
+UnityLauncherLauncherContainer* unity_launcher_launcher_container_new (void);
+UnityLauncherLauncherContainer* unity_launcher_launcher_container_construct (GType object_type);
 GType unity_launcher_shortcut_item_get_type (void) G_GNUC_CONST;
 char* unity_launcher_shortcut_item_get_name (UnityLauncherShortcutItem* self);
 void unity_launcher_shortcut_item_activated (UnityLauncherShortcutItem* self);
@@ -1586,6 +1817,8 @@ UnityLauncherLauncher* unity_launcher_launcher_new (UnityShell* shell);
 UnityLauncherLauncher* unity_launcher_launcher_construct (GType object_type, UnityShell* shell);
 float unity_launcher_launcher_get_width (UnityLauncherLauncher* self);
 ClutterActor* unity_launcher_launcher_get_view (UnityLauncherLauncher* self);
+ClutterActor* unity_launcher_launcher_get_container (UnityLauncherLauncher* self);
+CtkEffectCache* unity_launcher_launcher_get_actor_cache (UnityLauncherLauncher* self);
 UnityShell* unity_launcher_launcher_get_shell (UnityLauncherLauncher* self);
 GType unity_launcher_scroller_model_get_type (void) G_GNUC_CONST;
 UnityLauncherScrollerModel* unity_launcher_launcher_get_model (UnityLauncherLauncher* self);
@@ -1629,10 +1862,12 @@ GType unity_launcher_quicklist_menu_get_type (void) G_GNUC_CONST;
 UnityLauncherQuicklistMenu* unity_launcher_quicklist_menu_new (void);
 UnityLauncherQuicklistMenu* unity_launcher_quicklist_menu_construct (GType object_type);
 UnityLauncherScrollerChildController* unity_launcher_scroller_child_controller_construct (GType object_type, UnityLauncherScrollerChild* child_);
+void unity_launcher_scroller_child_controller_closed (UnityLauncherScrollerChildController* self);
 void unity_launcher_scroller_child_controller_get_menu_actions (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
 void unity_launcher_scroller_child_controller_get_menu_navigation (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
 void unity_launcher_scroller_child_controller_activate (UnityLauncherScrollerChildController* self);
 UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_get_menu_controller (UnityLauncherScrollerChildController* self);
+gboolean unity_launcher_scroller_child_controller_can_drag (UnityLauncherScrollerChildController* self);
 void unity_launcher_scroller_child_controller_load_icon_from_icon_name (UnityLauncherScrollerChildController* self, const char* icon_name);
 UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (UnityLauncherScrollerChildController* self);
 const char* unity_launcher_scroller_child_controller_get_name (UnityLauncherScrollerChildController* self);
@@ -1642,11 +1877,12 @@ void unity_launcher_scroller_child_controller_set_hide (UnityLauncherScrollerChi
 UnityLauncherQuicklistController* unity_launcher_scroller_child_controller_get_menu (UnityLauncherScrollerChildController* self);
 void unity_launcher_scroller_child_controller_set_menu (UnityLauncherScrollerChildController* self, UnityLauncherQuicklistController* value);
 GType unity_launcher_pin_type_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_child_group_type_get_type (void) G_GNUC_CONST;
 char* unity_launcher_scroller_child_to_string (UnityLauncherScrollerChild* self);
-ClutterActor* unity_launcher_scroller_child_get_content (UnityLauncherScrollerChild* self);
-void unity_launcher_scroller_child_force_rotation_jump (UnityLauncherScrollerChild* self, float degrees);
 UnityLauncherScrollerChild* unity_launcher_scroller_child_new (void);
 UnityLauncherScrollerChild* unity_launcher_scroller_child_construct (GType object_type);
+ClutterActor* unity_launcher_scroller_child_get_content (UnityLauncherScrollerChild* self);
+void unity_launcher_scroller_child_force_rotation_jump (UnityLauncherScrollerChild* self, float degrees);
 GdkPixbuf* unity_launcher_scroller_child_get_icon (UnityLauncherScrollerChild* self);
 void unity_launcher_scroller_child_set_icon (UnityLauncherScrollerChild* self, GdkPixbuf* value);
 float unity_launcher_scroller_child_get_position (UnityLauncherScrollerChild* self);
@@ -1661,6 +1897,8 @@ gboolean unity_launcher_scroller_child_get_activating (UnityLauncherScrollerChil
 void unity_launcher_scroller_child_set_activating (UnityLauncherScrollerChild* self, gboolean value);
 float unity_launcher_scroller_child_get_rotation (UnityLauncherScrollerChild* self);
 void unity_launcher_scroller_child_set_rotation (UnityLauncherScrollerChild* self, float value);
+UnityLauncherScrollerChildGroupType unity_launcher_scroller_child_get_group_type (UnityLauncherScrollerChild* self);
+void unity_launcher_scroller_child_set_group_type (UnityLauncherScrollerChild* self, UnityLauncherScrollerChildGroupType value);
 UnityLauncherScrollerModel* unity_launcher_scroller_model_new (void);
 UnityLauncherScrollerModel* unity_launcher_scroller_model_construct (GType object_type);
 char* unity_launcher_scroller_model_to_string (UnityLauncherScrollerModel* self);
@@ -1681,6 +1919,7 @@ gint unity_launcher_scroller_model_index_of (UnityLauncherScrollerModel* self, U
 void unity_launcher_scroller_model_sort (UnityLauncherScrollerModel* self, GCompareFunc compare);
 UnityLauncherScrollerChild* unity_launcher_scroller_model_get (UnityLauncherScrollerModel* self, gint i);
 void unity_launcher_scroller_model_set (UnityLauncherScrollerModel* self, gint i, UnityLauncherScrollerChild* item);
+gint unity_launcher_scroller_model_clamp (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child, gint value);
 gint unity_launcher_scroller_model_get_size (UnityLauncherScrollerModel* self);
 UnityLauncherScrollerModelIterator* unity_launcher_scroller_model_iterator_new (GeeArrayList* arraylist);
 UnityLauncherScrollerModelIterator* unity_launcher_scroller_model_iterator_construct (GType object_type, GeeArrayList* arraylist);

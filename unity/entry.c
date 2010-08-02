@@ -50,6 +50,8 @@ typedef struct _UnityShell UnityShell;
 typedef struct _UnityShellIface UnityShellIface;
 
 #define UNITY_TYPE_SHELL_MODE (unity_shell_mode_get_type ())
+
+#define UNITY_TYPE_WINDOW_ACTION (unity_window_action_get_type ())
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
 struct _UnityEntry {
@@ -66,9 +68,17 @@ struct _UnityEntryPrivate {
 };
 
 typedef enum  {
-	UNITY_SHELL_MODE_UNDERLAY,
-	UNITY_SHELL_MODE_OVERLAY
+	UNITY_SHELL_MODE_MINIMIZED,
+	UNITY_SHELL_MODE_DASH,
+	UNITY_SHELL_MODE_EXPOSE
 } UnityShellMode;
+
+typedef enum  {
+	UNITY_WINDOW_ACTION_CLOSE,
+	UNITY_WINDOW_ACTION_MINIMIZE,
+	UNITY_WINDOW_ACTION_MAXIMIZE,
+	UNITY_WINDOW_ACTION_UNMAXIMIZE
+} UnityWindowAction;
 
 struct _UnityShellIface {
 	GTypeInterface parent_iface;
@@ -89,6 +99,8 @@ struct _UnityShellIface {
 	void (*show_window) (UnityShell* self, guint32 xid);
 	void (*expose_xids) (UnityShell* self, GArray* xids);
 	void (*stop_expose) (UnityShell* self);
+	void (*get_window_details) (UnityShell* self, guint32 xid, gboolean* allows_resize, gboolean* is_maximised);
+	void (*do_window_action) (UnityShell* self, guint32 xid, UnityWindowAction action);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
 };
 
@@ -106,6 +118,7 @@ UnityEntry* unity_entry_new (const char* static_text);
 UnityEntry* unity_entry_construct (GType object_type, const char* static_text);
 static void unity_entry_on_key_focus_in (UnityEntry* self);
 GType unity_shell_mode_get_type (void) G_GNUC_CONST;
+GType unity_window_action_get_type (void) G_GNUC_CONST;
 GType unity_shell_get_type (void) G_GNUC_CONST;
 void unity_shell_grab_keyboard (UnityShell* self, gboolean grab, guint32 timestamp);
 static void unity_entry_on_key_focus_out (UnityEntry* self);

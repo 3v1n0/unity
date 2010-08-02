@@ -30,6 +30,8 @@
 
 #define UNITY_TYPE_DND_TARGETS (unity_dnd_targets_get_type ())
 
+#define UNITY_TYPE_WINDOW_ACTION (unity_window_action_get_type ())
+
 #define UNITY_TYPE_SHELL (unity_shell_get_type ())
 #define UNITY_SHELL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_SHELL, UnityShell))
 #define UNITY_IS_SHELL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_SHELL))
@@ -39,8 +41,9 @@ typedef struct _UnityShell UnityShell;
 typedef struct _UnityShellIface UnityShellIface;
 
 typedef enum  {
-	UNITY_SHELL_MODE_UNDERLAY,
-	UNITY_SHELL_MODE_OVERLAY
+	UNITY_SHELL_MODE_MINIMIZED,
+	UNITY_SHELL_MODE_DASH,
+	UNITY_SHELL_MODE_EXPOSE
 } UnityShellMode;
 
 typedef enum  {
@@ -49,6 +52,13 @@ typedef enum  {
 	UNITY_DND_TARGETS_TARGET_URL,
 	UNITY_DND_TARGETS_TARGET_OTHER
 } Unitydnd_targets;
+
+typedef enum  {
+	UNITY_WINDOW_ACTION_CLOSE,
+	UNITY_WINDOW_ACTION_MINIMIZE,
+	UNITY_WINDOW_ACTION_MAXIMIZE,
+	UNITY_WINDOW_ACTION_UNMAXIMIZE
+} UnityWindowAction;
 
 struct _UnityShellIface {
 	GTypeInterface parent_iface;
@@ -69,6 +79,8 @@ struct _UnityShellIface {
 	void (*show_window) (UnityShell* self, guint32 xid);
 	void (*expose_xids) (UnityShell* self, GArray* xids);
 	void (*stop_expose) (UnityShell* self);
+	void (*get_window_details) (UnityShell* self, guint32 xid, gboolean* allows_resize, gboolean* is_maximised);
+	void (*do_window_action) (UnityShell* self, guint32 xid, UnityWindowAction action);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
 };
 
@@ -78,6 +90,7 @@ UnityShell* unity_global_shell = NULL;
 
 GType unity_shell_mode_get_type (void) G_GNUC_CONST;
 GType unity_dnd_targets_get_type (void) G_GNUC_CONST;
+GType unity_window_action_get_type (void) G_GNUC_CONST;
 GType unity_shell_get_type (void) G_GNUC_CONST;
 guint32 unity_shell_get_current_time (UnityShell* self);
 UnityShellMode unity_shell_get_mode (UnityShell* self);
@@ -96,6 +109,8 @@ void unity_shell_close_xids (UnityShell* self, GArray* xids);
 void unity_shell_show_window (UnityShell* self, guint32 xid);
 void unity_shell_expose_xids (UnityShell* self, GArray* xids);
 void unity_shell_stop_expose (UnityShell* self);
+void unity_shell_get_window_details (UnityShell* self, guint32 xid, gboolean* allows_resize, gboolean* is_maximised);
+void unity_shell_do_window_action (UnityShell* self, guint32 xid, UnityWindowAction action);
 gboolean unity_shell_get_menus_swallow_events (UnityShell* self);
 
 
@@ -103,7 +118,7 @@ gboolean unity_shell_get_menus_swallow_events (UnityShell* self);
 GType unity_shell_mode_get_type (void) {
 	static volatile gsize unity_shell_mode_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_shell_mode_type_id__volatile)) {
-		static const GEnumValue values[] = {{UNITY_SHELL_MODE_UNDERLAY, "UNITY_SHELL_MODE_UNDERLAY", "underlay"}, {UNITY_SHELL_MODE_OVERLAY, "UNITY_SHELL_MODE_OVERLAY", "overlay"}, {0, NULL, NULL}};
+		static const GEnumValue values[] = {{UNITY_SHELL_MODE_MINIMIZED, "UNITY_SHELL_MODE_MINIMIZED", "minimized"}, {UNITY_SHELL_MODE_DASH, "UNITY_SHELL_MODE_DASH", "dash"}, {UNITY_SHELL_MODE_EXPOSE, "UNITY_SHELL_MODE_EXPOSE", "expose"}, {0, NULL, NULL}};
 		GType unity_shell_mode_type_id;
 		unity_shell_mode_type_id = g_enum_register_static ("UnityShellMode", values);
 		g_once_init_leave (&unity_shell_mode_type_id__volatile, unity_shell_mode_type_id);
@@ -121,6 +136,18 @@ GType unity_dnd_targets_get_type (void) {
 		g_once_init_leave (&unity_dnd_targets_type_id__volatile, unity_dnd_targets_type_id);
 	}
 	return unity_dnd_targets_type_id__volatile;
+}
+
+
+GType unity_window_action_get_type (void) {
+	static volatile gsize unity_window_action_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_window_action_type_id__volatile)) {
+		static const GEnumValue values[] = {{UNITY_WINDOW_ACTION_CLOSE, "UNITY_WINDOW_ACTION_CLOSE", "close"}, {UNITY_WINDOW_ACTION_MINIMIZE, "UNITY_WINDOW_ACTION_MINIMIZE", "minimize"}, {UNITY_WINDOW_ACTION_MAXIMIZE, "UNITY_WINDOW_ACTION_MAXIMIZE", "maximize"}, {UNITY_WINDOW_ACTION_UNMAXIMIZE, "UNITY_WINDOW_ACTION_UNMAXIMIZE", "unmaximize"}, {0, NULL, NULL}};
+		GType unity_window_action_type_id;
+		unity_window_action_type_id = g_enum_register_static ("UnityWindowAction", values);
+		g_once_init_leave (&unity_window_action_type_id__volatile, unity_window_action_type_id);
+	}
+	return unity_window_action_type_id__volatile;
 }
 
 
@@ -209,6 +236,16 @@ void unity_shell_stop_expose (UnityShell* self) {
 }
 
 
+void unity_shell_get_window_details (UnityShell* self, guint32 xid, gboolean* allows_resize, gboolean* is_maximised) {
+	UNITY_SHELL_GET_INTERFACE (self)->get_window_details (self, xid, allows_resize, is_maximised);
+}
+
+
+void unity_shell_do_window_action (UnityShell* self, guint32 xid, UnityWindowAction action) {
+	UNITY_SHELL_GET_INTERFACE (self)->do_window_action (self, xid, action);
+}
+
+
 gboolean unity_shell_get_menus_swallow_events (UnityShell* self) {
 	return UNITY_SHELL_GET_INTERFACE (self)->get_menus_swallow_events (self);
 }
@@ -221,6 +258,8 @@ static void unity_shell_base_init (UnityShellIface * iface) {
 		g_object_interface_install_property (iface, g_param_spec_boolean ("menus-swallow-events", "menus-swallow-events", "menus-swallow-events", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 		g_signal_new ("need_new_icon_cache", UNITY_TYPE_SHELL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 		g_signal_new ("indicators_changed", UNITY_TYPE_SHELL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
+		g_signal_new ("mode_changed", UNITY_TYPE_SHELL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__ENUM, G_TYPE_NONE, 1, UNITY_TYPE_SHELL_MODE);
+		g_signal_new ("active_window_state_changed", UNITY_TYPE_SHELL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 	}
 }
 

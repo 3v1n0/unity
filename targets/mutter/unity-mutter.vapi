@@ -46,7 +46,7 @@ namespace Unity {
 	public class Plugin : GLib.Object, Unity.Shell {
 		public Plugin ();
 		public void destroy (Mutter.Window window);
-		public void expose_windows (GLib.SList<Clutter.Actor> windows, int left_buffer = 250);
+		public void expose_windows (GLib.SList<Clutter.Actor> windows, int left_buffer = 75);
 		public int get_launcher_width ();
 		public int get_panel_height ();
 		public void kill_effect (Mutter.Window window, ulong events);
@@ -55,6 +55,7 @@ namespace Unity {
 		public void minimize (Mutter.Window window);
 		public void switch_workspace (GLib.List<Mutter.Window> windows, int from, int to, int direction);
 		public void unmaximize (Mutter.Window window, int x, int y, int width, int height);
+		public Unity.Testing.Background background { get; set; }
 		public Unity.ExposeManager expose_manager { get; set; }
 		public bool expose_showing { get; }
 		public Mutter.Plugin? plugin { get; set; }
@@ -75,6 +76,7 @@ namespace Unity {
 	[CCode (cheader_filename = "unity-mutter.h")]
 	public class SpacesManager : GLib.Object {
 		public SpacesManager (Unity.Plugin plugin);
+		public void hide_spaces_picker ();
 		public void set_padding (uint top, uint right, uint left, uint bottom);
 		public void show_spaces_picker ();
 		public uint bottom_padding { get; set; }

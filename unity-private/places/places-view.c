@@ -24,12 +24,17 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <clutk/clutk.h>
-#include <gee.h>
 #include <unity.h>
-#include <clutter/clutter.h>
+#include <gee.h>
 #include <stdlib.h>
 #include <string.h>
 #include <dee.h>
+#include <float.h>
+#include <math.h>
+#include <clutter/clutter.h>
+#include <gio/gio.h>
+#include <gtk/gtk.h>
+#include <gdk/gdk.h>
 
 
 #define UNITY_PLACES_TYPE_VIEW (unity_places_view_get_type ())
@@ -42,26 +47,6 @@
 typedef struct _UnityPlacesView UnityPlacesView;
 typedef struct _UnityPlacesViewClass UnityPlacesViewClass;
 typedef struct _UnityPlacesViewPrivate UnityPlacesViewPrivate;
-
-#define UNITY_PLACES_TYPE_PLACE_MODEL (unity_places_place_model_get_type ())
-#define UNITY_PLACES_PLACE_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_MODEL, UnityPlacesPlaceModel))
-#define UNITY_PLACES_PLACE_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_MODEL, UnityPlacesPlaceModelClass))
-#define UNITY_PLACES_IS_PLACE_MODEL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_MODEL))
-#define UNITY_PLACES_IS_PLACE_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_MODEL))
-#define UNITY_PLACES_PLACE_MODEL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_MODEL, UnityPlacesPlaceModelClass))
-
-typedef struct _UnityPlacesPlaceModel UnityPlacesPlaceModel;
-typedef struct _UnityPlacesPlaceModelClass UnityPlacesPlaceModelClass;
-
-#define UNITY_PLACES_TYPE_PLACE_BAR (unity_places_place_bar_get_type ())
-#define UNITY_PLACES_PLACE_BAR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_BAR, UnityPlacesPlaceBar))
-#define UNITY_PLACES_PLACE_BAR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_BAR, UnityPlacesPlaceBarClass))
-#define UNITY_PLACES_IS_PLACE_BAR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_BAR))
-#define UNITY_PLACES_IS_PLACE_BAR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_BAR))
-#define UNITY_PLACES_PLACE_BAR_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_BAR, UnityPlacesPlaceBarClass))
-
-typedef struct _UnityPlacesPlaceBar UnityPlacesPlaceBar;
-typedef struct _UnityPlacesPlaceBarClass UnityPlacesPlaceBarClass;
 
 #define UNITY_PLACES_TYPE_PLACE_HOME_ENTRY (unity_places_place_home_entry_get_type ())
 #define UNITY_PLACES_PLACE_HOME_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_HOME_ENTRY, UnityPlacesPlaceHomeEntry))
@@ -82,17 +67,16 @@ typedef struct _UnityPlacesPlaceHomeEntryClass UnityPlacesPlaceHomeEntryClass;
 
 typedef struct _UnityPlacesPlaceSearchBar UnityPlacesPlaceSearchBar;
 typedef struct _UnityPlacesPlaceSearchBarClass UnityPlacesPlaceSearchBarClass;
-#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
-#define UNITY_PLACES_TYPE_PLACE_FILE_MODEL (unity_places_place_file_model_get_type ())
-#define UNITY_PLACES_PLACE_FILE_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_FILE_MODEL, UnityPlacesPlaceFileModel))
-#define UNITY_PLACES_PLACE_FILE_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_FILE_MODEL, UnityPlacesPlaceFileModelClass))
-#define UNITY_PLACES_IS_PLACE_FILE_MODEL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_FILE_MODEL))
-#define UNITY_PLACES_IS_PLACE_FILE_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_FILE_MODEL))
-#define UNITY_PLACES_PLACE_FILE_MODEL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_FILE_MODEL, UnityPlacesPlaceFileModelClass))
+#define UNITY_PLACES_TYPE_PLACE_MODEL (unity_places_place_model_get_type ())
+#define UNITY_PLACES_PLACE_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_MODEL, UnityPlacesPlaceModel))
+#define UNITY_PLACES_PLACE_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_MODEL, UnityPlacesPlaceModelClass))
+#define UNITY_PLACES_IS_PLACE_MODEL(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_MODEL))
+#define UNITY_PLACES_IS_PLACE_MODEL_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_MODEL))
+#define UNITY_PLACES_PLACE_MODEL_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_MODEL, UnityPlacesPlaceModelClass))
 
-typedef struct _UnityPlacesPlaceFileModel UnityPlacesPlaceFileModel;
-typedef struct _UnityPlacesPlaceFileModelClass UnityPlacesPlaceFileModelClass;
+typedef struct _UnityPlacesPlaceModel UnityPlacesPlaceModel;
+typedef struct _UnityPlacesPlaceModelClass UnityPlacesPlaceModelClass;
 
 #define UNITY_PLACES_TYPE_PLACE_ENTRY (unity_places_place_entry_get_type ())
 #define UNITY_PLACES_PLACE_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY, UnityPlacesPlaceEntry))
@@ -101,6 +85,28 @@ typedef struct _UnityPlacesPlaceFileModelClass UnityPlacesPlaceFileModelClass;
 
 typedef struct _UnityPlacesPlaceEntry UnityPlacesPlaceEntry;
 typedef struct _UnityPlacesPlaceEntryIface UnityPlacesPlaceEntryIface;
+
+#define UNITY_PLACES_TYPE_PLACE (unity_places_place_get_type ())
+#define UNITY_PLACES_PLACE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlace))
+#define UNITY_PLACES_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
+#define UNITY_PLACES_IS_PLACE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE))
+#define UNITY_PLACES_IS_PLACE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE))
+#define UNITY_PLACES_PLACE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE, UnityPlacesPlaceClass))
+
+typedef struct _UnityPlacesPlace UnityPlacesPlace;
+typedef struct _UnityPlacesPlaceClass UnityPlacesPlaceClass;
+#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+#define _g_free0(var) (var = (g_free (var), NULL))
+
+#define UNITY_PLACES_TYPE_FOLDER_BROWSER_RENDERER (unity_places_folder_browser_renderer_get_type ())
+#define UNITY_PLACES_FOLDER_BROWSER_RENDERER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_FOLDER_BROWSER_RENDERER, UnityPlacesFolderBrowserRenderer))
+#define UNITY_PLACES_FOLDER_BROWSER_RENDERER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_FOLDER_BROWSER_RENDERER, UnityPlacesFolderBrowserRendererClass))
+#define UNITY_PLACES_IS_FOLDER_BROWSER_RENDERER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_FOLDER_BROWSER_RENDERER))
+#define UNITY_PLACES_IS_FOLDER_BROWSER_RENDERER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_FOLDER_BROWSER_RENDERER))
+#define UNITY_PLACES_FOLDER_BROWSER_RENDERER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_FOLDER_BROWSER_RENDERER, UnityPlacesFolderBrowserRendererClass))
+
+typedef struct _UnityPlacesFolderBrowserRenderer UnityPlacesFolderBrowserRenderer;
+typedef struct _UnityPlacesFolderBrowserRendererClass UnityPlacesFolderBrowserRendererClass;
 
 #define UNITY_PLACES_TYPE_DEFAULT_RENDERER (unity_places_default_renderer_get_type ())
 #define UNITY_PLACES_DEFAULT_RENDERER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_DEFAULT_RENDERER, UnityPlacesDefaultRenderer))
@@ -111,25 +117,19 @@ typedef struct _UnityPlacesPlaceEntryIface UnityPlacesPlaceEntryIface;
 
 typedef struct _UnityPlacesDefaultRenderer UnityPlacesDefaultRenderer;
 typedef struct _UnityPlacesDefaultRendererClass UnityPlacesDefaultRendererClass;
+typedef struct _UnityPlacesPlacePrivate UnityPlacesPlacePrivate;
+#define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
+typedef struct _UnityPlacesViewActivateNormalData UnityPlacesViewActivateNormalData;
 
 struct _UnityPlacesView {
 	CtkBox parent_instance;
 	UnityPlacesViewPrivate * priv;
+	UnityPlacesPlaceHomeEntry* home_entry;
+	UnityPlacesPlaceSearchBar* search_bar;
 };
 
 struct _UnityPlacesViewClass {
 	CtkBoxClass parent_class;
-};
-
-struct _UnityPlacesViewPrivate {
-	UnityPlacesPlaceModel* _model;
-	UnityShell* _shell;
-	UnityPlacesPlaceBar* place_bar;
-	CtkVBox* content_box;
-	UnityPlacesPlaceHomeEntry* home_entry;
-	UnityPlacesPlaceSearchBar* search_bar;
-	UnityPlaceRenderer* renderer;
-	gboolean is_showing;
 };
 
 struct _UnityPlacesPlaceEntryIface {
@@ -174,150 +174,465 @@ struct _UnityPlacesPlaceEntryIface {
 	void (*set_global_results_model) (UnityPlacesPlaceEntry* self, DeeModel* value);
 	GeeHashMap* (*get_global_renderer_hints) (UnityPlacesPlaceEntry* self);
 	void (*set_global_renderer_hints) (UnityPlacesPlaceEntry* self, GeeHashMap* value);
+	UnityPlacesPlace* (*get_parent) (UnityPlacesPlaceEntry* self);
+	void (*set_parent) (UnityPlacesPlaceEntry* self, UnityPlacesPlace* value);
+};
+
+struct _UnityPlacesViewPrivate {
+	UnityShell* _shell;
+	UnityPlacesPlaceModel* _model;
+	CtkVBox* content_box;
+	UnityPlaceRenderer* renderer;
+	UnityPlacesPlaceEntry* active_entry;
+	gboolean is_showing;
+};
+
+struct _UnityPlacesPlace {
+	GObject parent_instance;
+	UnityPlacesPlacePrivate * priv;
+	GRegex* uri_regex;
+	GRegex* mime_regex;
+};
+
+struct _UnityPlacesPlaceClass {
+	GObjectClass parent_class;
+};
+
+struct _UnityPlacesViewActivateNormalData {
+	int _state_;
+	GAsyncResult* _res_;
+	GSimpleAsyncResult* _async_result;
+	UnityPlacesView* self;
+	char* uri;
+	char* id;
+	GAppInfo* info;
+	UnityAppInfoManager* appinfos;
+	GAppInfo* _tmp0_;
+	GAppInfo* _tmp1_;
+	GError * ee;
+	GError * e;
+	GError * eee;
+	GError * _inner_error_;
 };
 
 
 static gpointer unity_places_view_parent_class = NULL;
 
 GType unity_places_view_get_type (void) G_GNUC_CONST;
-GType unity_places_place_model_get_type (void) G_GNUC_CONST;
-GType unity_places_place_bar_get_type (void) G_GNUC_CONST;
 GType unity_places_place_home_entry_get_type (void) G_GNUC_CONST;
 GType unity_places_place_search_bar_get_type (void) G_GNUC_CONST;
+GType unity_places_place_model_get_type (void) G_GNUC_CONST;
+GType unity_places_place_get_type (void) G_GNUC_CONST;
+GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_VIEW_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_VIEW, UnityPlacesViewPrivate))
 enum  {
 	UNITY_PLACES_VIEW_DUMMY_PROPERTY,
 	UNITY_PLACES_VIEW_SHELL,
 	UNITY_PLACES_VIEW_MODEL
 };
-UnityPlacesView* unity_places_view_new (UnityShell* shell);
-UnityPlacesView* unity_places_view_construct (GType object_type, UnityShell* shell);
-GType unity_places_place_file_model_get_type (void) G_GNUC_CONST;
-UnityPlacesPlaceFileModel* unity_places_place_file_model_new (void);
-UnityPlacesPlaceFileModel* unity_places_place_file_model_construct (GType object_type);
+#define UNITY_PLACES_VIEW_PADDING 8.0f
+UnityPlacesView* unity_places_view_new (UnityShell* shell, UnityPlacesPlaceModel* model);
+UnityPlacesView* unity_places_view_construct (GType object_type, UnityShell* shell, UnityPlacesPlaceModel* model);
 UnityShell* unity_places_view_get_shell (UnityPlacesView* self);
+UnityPlacesPlaceModel* unity_places_view_get_model (UnityPlacesView* self);
 UnityPlacesPlaceHomeEntry* unity_places_place_home_entry_new (UnityShell* shell, UnityPlacesPlaceModel* model);
 UnityPlacesPlaceHomeEntry* unity_places_place_home_entry_construct (GType object_type, UnityShell* shell, UnityPlacesPlaceModel* model);
-UnityPlacesPlaceBar* unity_places_place_bar_new (UnityShell* shell, UnityPlacesPlaceModel* model);
-UnityPlacesPlaceBar* unity_places_place_bar_construct (GType object_type, UnityShell* shell, UnityPlacesPlaceModel* model);
-GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
-static void unity_places_view_on_entry_view_activated (UnityPlacesView* self, UnityPlacesPlaceEntry* entry, gint x);
-static void _unity_places_view_on_entry_view_activated_unity_places_place_bar_entry_view_activated (UnityPlacesPlaceBar* _sender, UnityPlacesPlaceEntry* view, gint x, gpointer self);
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_new (void);
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_construct (GType object_type);
 void unity_places_view_about_to_show (UnityPlacesView* self);
-void unity_places_place_bar_reset (UnityPlacesPlaceBar* self);
 void unity_places_place_search_bar_reset (UnityPlacesPlaceSearchBar* self);
+void unity_places_view_on_entry_view_activated (UnityPlacesView* self, UnityPlacesPlaceEntry* entry, guint section_id);
 void unity_places_view_shown (UnityPlacesView* self);
+void unity_places_place_entry_set_active (UnityPlacesPlaceEntry* self, gboolean value);
 void unity_places_view_hidden (UnityPlacesView* self);
-static UnityPlaceRenderer* unity_places_view_lookup_renderer (UnityPlacesView* self, const char* renderer);
-const char* unity_places_place_entry_get_entry_renderer_name (UnityPlacesPlaceEntry* self);
+static void unity_places_view_on_entry_renderer_info_changed (UnityPlacesView* self, UnityPlacesPlaceEntry* entry);
+static void _unity_places_view_on_entry_renderer_info_changed_unity_places_place_entry_renderer_info_changed (UnityPlacesPlaceEntry* _sender, gpointer self);
+static void unity_places_view_update_views (UnityPlacesView* self, UnityPlacesPlaceEntry* entry, guint section_id);
+static UnityPlaceRenderer* unity_places_view_lookup_renderer (UnityPlacesView* self, UnityPlacesPlaceEntry* entry);
 DeeModel* unity_places_place_entry_get_entry_groups_model (UnityPlacesPlaceEntry* self);
 DeeModel* unity_places_place_entry_get_entry_results_model (UnityPlacesPlaceEntry* self);
 GeeHashMap* unity_places_place_entry_get_entry_renderer_hints (UnityPlacesPlaceEntry* self);
-void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearchBar* self, UnityPlacesPlaceEntry* entry, gint x);
+static void unity_places_view_on_result_activated (UnityPlacesView* self, const char* uri, const char* mimetype);
+static void _unity_places_view_on_result_activated_unity_place_renderer_activated (UnityPlaceRenderer* _sender, const char* uri, const char* mimetype, gpointer self);
+void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearchBar* self, UnityPlacesPlaceEntry* entry, gint x, guint section);
+GeeHashMap* unity_places_place_entry_get_hints (UnityPlacesPlaceEntry* self);
+UnityPlacesFolderBrowserRenderer* unity_places_folder_browser_renderer_new (void);
+UnityPlacesFolderBrowserRenderer* unity_places_folder_browser_renderer_construct (GType object_type);
+GType unity_places_folder_browser_renderer_get_type (void) G_GNUC_CONST;
 UnityPlacesDefaultRenderer* unity_places_default_renderer_new (void);
 UnityPlacesDefaultRenderer* unity_places_default_renderer_construct (GType object_type);
 GType unity_places_default_renderer_get_type (void) G_GNUC_CONST;
+UnityPlacesPlace* unity_places_place_entry_get_parent (UnityPlacesPlaceEntry* self);
+gboolean unity_places_place_activate (UnityPlacesPlace* self, const char* uri);
+static void unity_places_view_activate_normal (UnityPlacesView* self, const char* uri, GAsyncReadyCallback _callback_, gpointer _user_data_);
+static void unity_places_view_activate_normal_finish (UnityPlacesView* self, GAsyncResult* _res_);
+static void unity_places_view_activate_normal_data_free (gpointer _data);
+static void unity_places_view_activate_normal_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
+static gboolean unity_places_view_activate_normal_co (UnityPlacesViewActivateNormalData* data);
 static void unity_places_view_set_shell (UnityPlacesView* self, UnityShell* value);
-UnityPlacesPlaceModel* unity_places_view_get_model (UnityPlacesView* self);
-void unity_places_view_set_model (UnityPlacesView* self, UnityPlacesPlaceModel* value);
+static void unity_places_view_set_model (UnityPlacesView* self, UnityPlacesPlaceModel* value);
 static GObject * unity_places_view_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_view_finalize (GObject* obj);
 static void unity_places_view_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_places_view_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
 
-UnityPlacesView* unity_places_view_construct (GType object_type, UnityShell* shell) {
+UnityPlacesView* unity_places_view_construct (GType object_type, UnityShell* shell, UnityPlacesPlaceModel* model) {
 	UnityPlacesView * self;
 	g_return_val_if_fail (shell != NULL, NULL);
-	self = (UnityPlacesView*) g_object_new (object_type, "shell", shell, "orientation", CTK_ORIENTATION_VERTICAL, NULL);
+	g_return_val_if_fail (model != NULL, NULL);
+	self = (UnityPlacesView*) g_object_new (object_type, "shell", shell, "orientation", CTK_ORIENTATION_VERTICAL, "model", model, NULL);
 	return self;
 }
 
 
-UnityPlacesView* unity_places_view_new (UnityShell* shell) {
-	return unity_places_view_construct (UNITY_PLACES_TYPE_VIEW, shell);
-}
-
-
-static void _unity_places_view_on_entry_view_activated_unity_places_place_bar_entry_view_activated (UnityPlacesPlaceBar* _sender, UnityPlacesPlaceEntry* view, gint x, gpointer self) {
-	unity_places_view_on_entry_view_activated (self, view, x);
+UnityPlacesView* unity_places_view_new (UnityShell* shell, UnityPlacesPlaceModel* model) {
+	return unity_places_view_construct (UNITY_PLACES_TYPE_VIEW, shell, model);
 }
 
 
 void unity_places_view_about_to_show (UnityPlacesView* self) {
-	UnityPlacesPlaceModel* _tmp1_;
-	UnityPlacesPlaceFileModel* _tmp0_;
-	UnityPlacesPlaceHomeEntry* _tmp2_;
-	UnityPlacesPlaceBar* _tmp3_;
-	CtkVBox* _tmp4_;
-	CtkPadding _tmp5_ = {0};
-	CtkPadding _tmp6_;
-	UnityPlacesPlaceSearchBar* _tmp7_;
+	UnityPlacesPlaceHomeEntry* _tmp0_;
+	CtkVBox* _tmp1_;
+	CtkPadding _tmp2_ = {0};
+	CtkPadding _tmp3_;
+	UnityPlacesPlaceSearchBar* _tmp4_;
 	g_return_if_fail (self != NULL);
-	if (UNITY_PLACES_IS_PLACE_FILE_MODEL (self->priv->_model)) {
+	if (UNITY_PLACES_IS_PLACE_HOME_ENTRY (self->home_entry)) {
 		return;
 	}
-	self->priv->_model = (_tmp1_ = (_tmp0_ = unity_places_place_file_model_new (), UNITY_PLACES_IS_PLACE_MODEL (_tmp0_) ? ((UnityPlacesPlaceModel*) _tmp0_) : NULL), _g_object_unref0 (self->priv->_model), _tmp1_);
-	self->priv->home_entry = (_tmp2_ = unity_places_place_home_entry_new (self->priv->_shell, self->priv->_model), _g_object_unref0 (self->priv->home_entry), _tmp2_);
-	self->priv->place_bar = (_tmp3_ = g_object_ref_sink (unity_places_place_bar_new (self->priv->_shell, self->priv->_model)), _g_object_unref0 (self->priv->place_bar), _tmp3_);
-	ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->place_bar, FALSE, TRUE);
-	clutter_actor_show ((ClutterActor*) self->priv->place_bar);
-	g_signal_connect_object (self->priv->place_bar, "entry-view-activated", (GCallback) _unity_places_view_on_entry_view_activated_unity_places_place_bar_entry_view_activated, self, 0);
-	self->priv->content_box = (_tmp4_ = g_object_ref_sink ((CtkVBox*) ctk_vbox_new ((guint) 4)), _g_object_unref0 (self->priv->content_box), _tmp4_);
-	ctk_actor_set_padding ((CtkActor*) self->priv->content_box, (_tmp6_ = (_tmp5_.top = 0.0f, _tmp5_.right = 8.0f, _tmp5_.bottom = 0.0f, _tmp5_.left = unity_shell_get_launcher_width_foobar (self->priv->_shell) + 8.0f, _tmp5_), &_tmp6_));
+	self->home_entry = (_tmp0_ = unity_places_place_home_entry_new (self->priv->_shell, self->priv->_model), _g_object_unref0 (self->home_entry), _tmp0_);
+	self->priv->content_box = (_tmp1_ = g_object_ref_sink ((CtkVBox*) ctk_vbox_new ((guint) 4)), _g_object_unref0 (self->priv->content_box), _tmp1_);
+	ctk_actor_set_padding ((CtkActor*) self->priv->content_box, (_tmp3_ = (_tmp2_.top = UNITY_PLACES_VIEW_PADDING * 2.5f, _tmp2_.right = UNITY_PLACES_VIEW_PADDING, _tmp2_.bottom = 0.0f, _tmp2_.left = UNITY_PLACES_VIEW_PADDING, _tmp2_), &_tmp3_));
 	ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->content_box, TRUE, TRUE);
 	clutter_actor_show ((ClutterActor*) self->priv->content_box);
-	self->priv->search_bar = (_tmp7_ = g_object_ref_sink (unity_places_place_search_bar_new ()), _g_object_unref0 (self->priv->search_bar), _tmp7_);
-	ctk_box_pack ((CtkBox*) self->priv->content_box, (ClutterActor*) self->priv->search_bar, FALSE, TRUE);
-	clutter_actor_show ((ClutterActor*) self->priv->search_bar);
+	self->search_bar = (_tmp4_ = g_object_ref_sink (unity_places_place_search_bar_new ()), _g_object_unref0 (self->search_bar), _tmp4_);
+	ctk_box_pack ((CtkBox*) self->priv->content_box, (ClutterActor*) self->search_bar, FALSE, TRUE);
+	clutter_actor_show ((ClutterActor*) self->search_bar);
 }
 
 
 void unity_places_view_shown (UnityPlacesView* self) {
 	g_return_if_fail (self != NULL);
 	self->priv->is_showing = TRUE;
-	unity_places_place_bar_reset (self->priv->place_bar);
-	unity_places_place_search_bar_reset (self->priv->search_bar);
-	unity_places_view_on_entry_view_activated (self, (UnityPlacesPlaceEntry*) self->priv->home_entry, 0);
+	unity_places_place_search_bar_reset (self->search_bar);
+	unity_places_view_on_entry_view_activated (self, (UnityPlacesPlaceEntry*) self->home_entry, (guint) 0);
 }
 
 
 void unity_places_view_hidden (UnityPlacesView* self) {
 	g_return_if_fail (self != NULL);
 	self->priv->is_showing = FALSE;
+	if (UNITY_PLACES_IS_PLACE_ENTRY (self->priv->active_entry)) {
+		unity_places_place_entry_set_active (self->priv->active_entry, FALSE);
+	}
+	self->priv->active_entry = NULL;
 }
 
 
-static void unity_places_view_on_entry_view_activated (UnityPlacesView* self, UnityPlacesPlaceEntry* entry, gint x) {
+static void _unity_places_view_on_entry_renderer_info_changed_unity_places_place_entry_renderer_info_changed (UnityPlacesPlaceEntry* _sender, gpointer self) {
+	unity_places_view_on_entry_renderer_info_changed (self, _sender);
+}
+
+
+void unity_places_view_on_entry_view_activated (UnityPlacesView* self, UnityPlacesPlaceEntry* entry, guint section_id) {
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (entry != NULL);
+	if (UNITY_PLACES_IS_PLACE_ENTRY (self->priv->active_entry)) {
+		unity_places_place_entry_set_active (self->priv->active_entry, FALSE);
+		if (self->priv->active_entry != self->home_entry) {
+			guint _tmp0_;
+			g_signal_parse_name ("renderer-info-changed", UNITY_PLACES_TYPE_PLACE_ENTRY, &_tmp0_, NULL, FALSE);
+			g_signal_handlers_disconnect_matched (self->priv->active_entry, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_places_view_on_entry_renderer_info_changed_unity_places_place_entry_renderer_info_changed, self);
+		}
+	}
+	self->priv->active_entry = entry;
+	unity_places_place_entry_set_active (entry, TRUE);
+	unity_places_view_update_views (self, entry, section_id);
+	if (self->priv->active_entry != self->home_entry) {
+		g_signal_connect_object (entry, "renderer-info-changed", (GCallback) _unity_places_view_on_entry_renderer_info_changed_unity_places_place_entry_renderer_info_changed, self, 0);
+	}
+}
+
+
+static void _unity_places_view_on_result_activated_unity_place_renderer_activated (UnityPlaceRenderer* _sender, const char* uri, const char* mimetype, gpointer self) {
+	unity_places_view_on_result_activated (self, uri, mimetype);
+}
+
+
+static void unity_places_view_update_views (UnityPlacesView* self, UnityPlacesPlaceEntry* entry, guint section_id) {
 	UnityPlaceRenderer* _tmp0_;
-	gint _tmp1_ = 0;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (entry != NULL);
 	if (CLUTTER_IS_ACTOR (self->priv->renderer)) {
 		clutter_actor_destroy ((ClutterActor*) self->priv->renderer);
 	}
-	self->priv->renderer = (_tmp0_ = unity_places_view_lookup_renderer (self, unity_places_place_entry_get_entry_renderer_name (entry)), _g_object_unref0 (self->priv->renderer), _tmp0_);
+	clutter_actor_destroy ((ClutterActor*) self->priv->renderer);
+	self->priv->renderer = (_tmp0_ = unity_places_view_lookup_renderer (self, entry), _g_object_unref0 (self->priv->renderer), _tmp0_);
 	ctk_box_pack ((CtkBox*) self->priv->content_box, (ClutterActor*) self->priv->renderer, TRUE, TRUE);
 	unity_place_renderer_set_models (self->priv->renderer, unity_places_place_entry_get_entry_groups_model (entry), unity_places_place_entry_get_entry_results_model (entry), unity_places_place_entry_get_entry_renderer_hints (entry));
 	clutter_actor_show ((ClutterActor*) self->priv->renderer);
-	if (x == 0) {
-		_tmp1_ = 0;
-	} else {
-		_tmp1_ = (x - unity_shell_get_launcher_width_foobar (self->priv->_shell)) - 8;
-	}
-	unity_places_place_search_bar_set_active_entry_view (self->priv->search_bar, entry, _tmp1_);
+	g_signal_connect_object (self->priv->renderer, "activated", (GCallback) _unity_places_view_on_result_activated_unity_place_renderer_activated, self, 0);
+	unity_places_place_search_bar_set_active_entry_view (self->search_bar, entry, 0, section_id);
 }
 
 
-static UnityPlaceRenderer* unity_places_view_lookup_renderer (UnityPlacesView* self, const char* renderer) {
+static void unity_places_view_on_entry_renderer_info_changed (UnityPlacesView* self, UnityPlacesPlaceEntry* entry) {
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (entry != NULL);
+	unity_places_view_update_views (self, entry, 0);
+}
+
+
+static UnityPlaceRenderer* unity_places_view_lookup_renderer (UnityPlacesView* self, UnityPlacesPlaceEntry* entry) {
 	UnityPlaceRenderer* result = NULL;
+	char* browser_path;
 	g_return_val_if_fail (self != NULL, NULL);
-	g_return_val_if_fail (renderer != NULL, NULL);
-	result = (UnityPlaceRenderer*) g_object_ref_sink (unity_places_default_renderer_new ());
+	g_return_val_if_fail (entry != NULL, NULL);
+	browser_path = NULL;
+	if (unity_places_place_entry_get_hints (entry) != NULL) {
+		{
+			GeeIterator* _e_it;
+			_e_it = gee_iterable_iterator ((GeeIterable*) unity_places_place_entry_get_hints (entry));
+			while (TRUE) {
+				GeeMapEntry* e;
+				if (!gee_iterator_next (_e_it)) {
+					break;
+				}
+				e = (GeeMapEntry*) gee_iterator_get (_e_it);
+				if (_vala_strcmp0 ((const char*) gee_map_entry_get_key (e), "UnityPlaceBrowserPath") == 0) {
+					char* _tmp0_;
+					browser_path = (_tmp0_ = g_strdup ((const char*) gee_map_entry_get_value (e)), _g_free0 (browser_path), _tmp0_);
+				}
+				_g_object_unref0 (e);
+			}
+			_g_object_unref0 (_e_it);
+		}
+	}
+	if (browser_path != NULL) {
+		result = (UnityPlaceRenderer*) g_object_ref_sink (unity_places_folder_browser_renderer_new ());
+		_g_free0 (browser_path);
+		return result;
+	} else {
+		result = (UnityPlaceRenderer*) g_object_ref_sink (unity_places_default_renderer_new ());
+		_g_free0 (browser_path);
+		return result;
+	}
+	_g_free0 (browser_path);
+}
+
+
+static void unity_places_view_on_result_activated (UnityPlacesView* self, const char* uri, const char* mimetype) {
+	gboolean check_with_service;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (uri != NULL);
+	g_return_if_fail (mimetype != NULL);
+	check_with_service = FALSE;
+	if (UNITY_PLACES_IS_PLACE (unity_places_place_entry_get_parent (self->priv->active_entry))) {
+		gboolean _tmp0_ = FALSE;
+		gboolean _tmp1_ = FALSE;
+		if (unity_places_place_entry_get_parent (self->priv->active_entry)->uri_regex != NULL) {
+			_tmp0_ = g_regex_match (unity_places_place_entry_get_parent (self->priv->active_entry)->uri_regex, uri, 0, NULL);
+		} else {
+			_tmp0_ = FALSE;
+		}
+		if (_tmp0_) {
+			check_with_service = TRUE;
+		}
+		if (unity_places_place_entry_get_parent (self->priv->active_entry)->mime_regex != NULL) {
+			_tmp1_ = g_regex_match (unity_places_place_entry_get_parent (self->priv->active_entry)->mime_regex, mimetype, 0, NULL);
+		} else {
+			_tmp1_ = FALSE;
+		}
+		if (_tmp1_) {
+			check_with_service = TRUE;
+		}
+	}
+	if (check_with_service) {
+		if (unity_places_place_activate (unity_places_place_entry_get_parent (self->priv->active_entry), uri)) {
+			return;
+		}
+	}
+	unity_places_view_activate_normal (self, uri, NULL, NULL);
+}
+
+
+static void unity_places_view_activate_normal_data_free (gpointer _data) {
+	UnityPlacesViewActivateNormalData* data;
+	data = _data;
+	_g_free0 (data->uri);
+	g_object_unref (data->self);
+	g_slice_free (UnityPlacesViewActivateNormalData, data);
+}
+
+
+static void unity_places_view_activate_normal (UnityPlacesView* self, const char* uri, GAsyncReadyCallback _callback_, gpointer _user_data_) {
+	UnityPlacesViewActivateNormalData* _data_;
+	_data_ = g_slice_new0 (UnityPlacesViewActivateNormalData);
+	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, unity_places_view_activate_normal);
+	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, unity_places_view_activate_normal_data_free);
+	_data_->self = g_object_ref (self);
+	_data_->uri = g_strdup (uri);
+	unity_places_view_activate_normal_co (_data_);
+}
+
+
+static void unity_places_view_activate_normal_finish (UnityPlacesView* self, GAsyncResult* _res_) {
+	UnityPlacesViewActivateNormalData* _data_;
+	_data_ = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (_res_));
+}
+
+
+static void unity_places_view_activate_normal_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_) {
+	UnityPlacesViewActivateNormalData* data;
+	data = _user_data_;
+	data->_res_ = _res_;
+	unity_places_view_activate_normal_co (data);
+}
+
+
+static glong string_get_length (const char* self) {
+	glong result;
+	g_return_val_if_fail (self != NULL, 0L);
+	result = g_utf8_strlen (self, -1);
 	return result;
+}
+
+
+static gboolean unity_places_view_activate_normal_co (UnityPlacesViewActivateNormalData* data) {
+	switch (data->_state_) {
+		case 0:
+		goto _state_0;
+		case 6:
+		goto _state_6;
+		default:
+		g_assert_not_reached ();
+	}
+	_state_0:
+	{
+		unity_shell_hide_unity (unity_global_shell);
+		if (g_str_has_prefix (data->uri, "application://")) {
+			data->id = g_strdup (g_utf8_offset_to_pointer (data->uri, string_get_length ("application://")));
+			{
+				data->appinfos = unity_app_info_manager_get_instance ();
+				data->_state_ = 6;
+				unity_app_info_manager_lookup_async (data->appinfos, data->id, unity_places_view_activate_normal_ready, data);
+				return FALSE;
+				_state_6:
+				data->_tmp0_ = unity_app_info_manager_lookup_finish (data->appinfos, data->_res_, &data->_inner_error_);
+				if (data->_inner_error_ != NULL) {
+					_g_object_unref0 (data->appinfos);
+					goto __catch32_g_error;
+				}
+				data->info = (data->_tmp1_ = data->_tmp0_, _g_object_unref0 (data->info), data->_tmp1_);
+				_g_object_unref0 (data->appinfos);
+			}
+			goto __finally32;
+			__catch32_g_error:
+			{
+				data->ee = data->_inner_error_;
+				data->_inner_error_ = NULL;
+				{
+					g_warning ("places-view.vala:197: Unable to read .desktop file '%s': %s", data->uri, data->ee->message);
+					_g_error_free0 (data->ee);
+					_g_object_unref0 (data->info);
+					_g_free0 (data->id);
+					{
+						if (data->_state_ == 0) {
+							g_simple_async_result_complete_in_idle (data->_async_result);
+						} else {
+							g_simple_async_result_complete (data->_async_result);
+						}
+						g_object_unref (data->_async_result);
+						return FALSE;
+					}
+					_g_error_free0 (data->ee);
+				}
+			}
+			__finally32:
+			if (data->_inner_error_ != NULL) {
+				_g_object_unref0 (data->info);
+				_g_free0 (data->id);
+				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
+				g_clear_error (&data->_inner_error_);
+				return FALSE;
+			}
+			if (G_IS_APP_INFO (data->info)) {
+				{
+					g_app_info_launch (data->info, NULL, NULL, &data->_inner_error_);
+					if (data->_inner_error_ != NULL) {
+						goto __catch33_g_error;
+					}
+				}
+				goto __finally33;
+				__catch33_g_error:
+				{
+					data->e = data->_inner_error_;
+					data->_inner_error_ = NULL;
+					{
+						g_warning ("places-view.vala:206: Unable to launch desktop file %s: %s\n", data->id, data->e->message);
+						_g_error_free0 (data->e);
+					}
+				}
+				__finally33:
+				if (data->_inner_error_ != NULL) {
+					_g_object_unref0 (data->info);
+					_g_free0 (data->id);
+					g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
+					g_clear_error (&data->_inner_error_);
+					return FALSE;
+				}
+			} else {
+				g_warning ("places-view.vala:213: %s is an invalid DesktopAppInfo id\n", data->id);
+			}
+			_g_object_unref0 (data->info);
+			_g_free0 (data->id);
+			{
+				if (data->_state_ == 0) {
+					g_simple_async_result_complete_in_idle (data->_async_result);
+				} else {
+					g_simple_async_result_complete (data->_async_result);
+				}
+				g_object_unref (data->_async_result);
+				return FALSE;
+			}
+			_g_object_unref0 (data->info);
+			_g_free0 (data->id);
+		}
+		{
+			gtk_show_uri (gdk_screen_get_default (), data->uri, (guint32) 0, &data->_inner_error_);
+			if (data->_inner_error_ != NULL) {
+				goto __catch34_g_error;
+			}
+		}
+		goto __finally34;
+		__catch34_g_error:
+		{
+			data->eee = data->_inner_error_;
+			data->_inner_error_ = NULL;
+			{
+				g_warning ("places-view.vala:223: Unable to launch: %s\n", data->eee->message);
+				_g_error_free0 (data->eee);
+			}
+		}
+		__finally34:
+		if (data->_inner_error_ != NULL) {
+			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
+			g_clear_error (&data->_inner_error_);
+			return FALSE;
+		}
+	}
+	{
+		if (data->_state_ == 0) {
+			g_simple_async_result_complete_in_idle (data->_async_result);
+		} else {
+			g_simple_async_result_complete (data->_async_result);
+		}
+		g_object_unref (data->_async_result);
+		return FALSE;
+	}
 }
 
 
@@ -350,7 +665,7 @@ UnityPlacesPlaceModel* unity_places_view_get_model (UnityPlacesView* self) {
 }
 
 
-void unity_places_view_set_model (UnityPlacesView* self, UnityPlacesPlaceModel* value) {
+static void unity_places_view_set_model (UnityPlacesView* self, UnityPlacesPlaceModel* value) {
 	UnityPlacesPlaceModel* _tmp0_;
 	g_return_if_fail (self != NULL);
 	self->priv->_model = (_tmp0_ = _g_object_ref0 (value), _g_object_unref0 (self->priv->_model), _tmp0_);
@@ -366,6 +681,7 @@ static GObject * unity_places_view_constructor (GType type, guint n_construct_pr
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_PLACES_VIEW (obj);
 	{
+		unity_places_view_about_to_show (self);
 	}
 	return obj;
 }
@@ -379,13 +695,13 @@ static void unity_places_view_class_init (UnityPlacesViewClass * klass) {
 	G_OBJECT_CLASS (klass)->constructor = unity_places_view_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_places_view_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_VIEW_SHELL, g_param_spec_object ("shell", "shell", "shell", UNITY_TYPE_SHELL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
-	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_VIEW_MODEL, g_param_spec_object ("model", "model", "model", UNITY_PLACES_TYPE_PLACE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_VIEW_MODEL, g_param_spec_object ("model", "model", "model", UNITY_PLACES_TYPE_PLACE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
 
 
 static void unity_places_view_instance_init (UnityPlacesView * self) {
 	self->priv = UNITY_PLACES_VIEW_GET_PRIVATE (self);
-	self->priv->_model = NULL;
+	self->priv->active_entry = NULL;
 	self->priv->is_showing = FALSE;
 }
 
@@ -393,12 +709,11 @@ static void unity_places_view_instance_init (UnityPlacesView * self) {
 static void unity_places_view_finalize (GObject* obj) {
 	UnityPlacesView * self;
 	self = UNITY_PLACES_VIEW (obj);
-	_g_object_unref0 (self->priv->_model);
 	_g_object_unref0 (self->priv->_shell);
-	_g_object_unref0 (self->priv->place_bar);
+	_g_object_unref0 (self->priv->_model);
 	_g_object_unref0 (self->priv->content_box);
-	_g_object_unref0 (self->priv->home_entry);
-	_g_object_unref0 (self->priv->search_bar);
+	_g_object_unref0 (self->home_entry);
+	_g_object_unref0 (self->search_bar);
 	_g_object_unref0 (self->priv->renderer);
 	G_OBJECT_CLASS (unity_places_view_parent_class)->finalize (obj);
 }
@@ -447,6 +762,17 @@ static void unity_places_view_set_property (GObject * object, guint property_id,
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
 	}
+}
+
+
+static int _vala_strcmp0 (const char * str1, const char * str2) {
+	if (str1 == NULL) {
+		return -(str1 != str2);
+	}
+	if (str2 == NULL) {
+		return str1 != str2;
+	}
+	return strcmp (str1, str2);
 }
 
 

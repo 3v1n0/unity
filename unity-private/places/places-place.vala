@@ -30,6 +30,7 @@ namespace Unity.Places
   {
     const string PLACE_GROUP = "Place";
     const string ENTRY_PREFIX = "Entry:";
+    const string ACTIVATION_GROUP = "Activation";
 
     /* Properties */
     public string dbus_name { get; construct; }
@@ -47,8 +48,13 @@ namespace Unity.Places
 
     private DBus.Connection?     connection;
     private dynamic DBus.Object? service;
+    private dynamic DBus.Object? activation_service;
 
     private ArrayList<PlaceEntry> entries_array;
+
+    /* Activate API stuff */
+    public Regex? uri_regex;
+    public Regex? mime_regex;
 
     /* Signals */
     public signal void entry_added   (PlaceEntry entry);
@@ -83,6 +89,31 @@ namespace Unity.Places
 
         var place = new Place (dbus_name, dbus_path);
         place.load_keyfile_entries (file);
+
+        /* Activation hooks */
+        try {
+          var uri_match = file.get_string (ACTIVATION_GROUP, "URIPattern");
+          if (uri_match != null && uri_match != "")
+            {
+              try {
+                place.uri_regex = new Regex (uri_match);
+              } catch (Error e) {
+                warning (@"Unable to compile regex pattern $uri_match: $(e.message)");
+              }
+            }
+
+          var mime_match = file.get_string (ACTIVATION_GROUP, "MimetypePattern");
+          if (mime_match != null && mime_match != "")
+            {
+              try {
+                place.mime_regex = new Regex (mime_match);
+              } catch (Error e) {
+                warning (@"Unable to compile regex pattern $mime_match: $(e.message)");
+              }
+            }
+        } catch (Error e) {
+          //fail silently, not all places will have activation hooks
+        }
 
         return place;
 
@@ -142,6 +173,7 @@ namespace Unity.Places
                 {
                   entry.update_info (array);
                   entry.connect ();
+                  entry.parent = this;
                   existing = true;
                 }
             }
@@ -169,6 +201,18 @@ namespace Unity.Places
         }
 
       online = true;
+    }
+
+    public bool activate (string uri)
+    {
+      if (activation_service == null)
+        {
+            activation_service = connection.get_object (dbus_name,
+                                                        dbus_path,
+                                                        "com.canonical.Unity.Activation");
+        }
+
+      return activation_service.activate (uri);
     }
 
     /* Private Methods */

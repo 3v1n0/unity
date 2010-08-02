@@ -21,7 +21,7 @@ namespace Unity.Places
 {
   public class PlaceSearchEntry : Ctk.Box
   {
-    static const string SEARCH_ICON_FILE = PKGDATADIR + "/search_icon.png";
+    static const string SEARCH_ICON_FILE = Config.PKGDATADIR + "/search_icon.png";
     static const float  PADDING = 1.0f;
     static const int    LIVE_SEARCH_TIMEOUT = 200; /* Milliseconds */
     const Clutter.Color nofocus_color = { 0xff, 0xff, 0xff, 0xbb };
@@ -78,9 +78,18 @@ namespace Unity.Places
       float mheight, nheight;
       text.get_preferred_height (400, out mheight, out nheight);
 
-      min_height = mheight > 22.0f ? mheight : 22.0f;
+      min_height = mheight > 20.0f ? mheight : 20.0f;
       min_height += PADDING * 2;
       nat_height = min_height;
+    }
+
+    private override void get_preferred_width (float     for_height,
+                                               out float min_width,
+                                               out float nat_width)
+    {
+      /* FIXME: Make these dependant on size of screen & font */
+      min_width = 270.0f;
+      nat_width = 270.0f;
     }
 
     private void on_text_changed ()

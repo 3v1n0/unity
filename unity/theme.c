@@ -31,6 +31,7 @@
 #include <glib/gstdio.h>
 #include <clutter/clutter.h>
 #include <gdk-pixbuf/gdk-pixdata.h>
+#include <config.h>
 
 
 #define UNITY_TYPE_THEME_FILE_PATH (unity_theme_file_path_get_type ())

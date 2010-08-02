@@ -81,6 +81,7 @@ static void unity_launcher_quicklist_image_menu_item_real_get_preferred_width (C
 static gboolean _unity_launcher_quicklist_image_menu_item_update_item_background (UnityLauncherQuicklistImageMenuItem* self);
 static gboolean __unity_launcher_quicklist_image_menu_item_update_item_background_gsource_func (gpointer self);
 static void unity_launcher_quicklist_image_menu_item_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
+char* utils_strip_characters (const char* text, const char* replace_text, const char* match_regex, const char* replace_regex);
 static gboolean _unity_launcher_quicklist_image_menu_item_on_enter (UnityLauncherQuicklistImageMenuItem* self, ClutterEvent* event);
 static gboolean _unity_launcher_quicklist_image_menu_item_on_leave (UnityLauncherQuicklistImageMenuItem* self, ClutterEvent* event);
 static void _unity_launcher_quicklist_image_menu_item_on_label_changed (UnityLauncherQuicklistImageMenuItem* self);
@@ -182,6 +183,7 @@ static gboolean _unity_launcher_quicklist_image_menu_item_update_item_background
 	cairo_t* normal_cr;
 	cairo_t* selected_cr;
 	GtkSettings* settings;
+	char* formatted_label;
 	char* _tmp3_;
 	char* _tmp2_ = NULL;
 	char* _tmp5_;
@@ -200,9 +202,10 @@ static gboolean _unity_launcher_quicklist_image_menu_item_update_item_background
 	normal_cr = cairo_create (normal_surf);
 	selected_cr = cairo_create (selected_surf);
 	settings = _g_object_ref0 (gtk_settings_get_default ());
-	unity_quicklist_rendering_item_normal_mask (normal_cr, self->priv->last_width, self->priv->last_height, _tmp3_ = (g_object_get (settings, "gtk-font-name", &_tmp2_, NULL), _tmp2_), ctk_menu_item_get_label ((CtkMenuItem*) self));
+	formatted_label = utils_strip_characters (ctk_menu_item_get_label ((CtkMenuItem*) self), "", "_", "_");
+	unity_quicklist_rendering_item_normal_mask (normal_cr, self->priv->last_width, self->priv->last_height, _tmp3_ = (g_object_get (settings, "gtk-font-name", &_tmp2_, NULL), _tmp2_), formatted_label);
 	_g_free0 (_tmp3_);
-	unity_quicklist_rendering_item_selected_mask (selected_cr, self->priv->last_width, self->priv->last_height, _tmp5_ = (g_object_get (settings, "gtk-font-name", &_tmp4_, NULL), _tmp4_), ctk_menu_item_get_label ((CtkMenuItem*) self));
+	unity_quicklist_rendering_item_selected_mask (selected_cr, self->priv->last_width, self->priv->last_height, _tmp5_ = (g_object_get (settings, "gtk-font-name", &_tmp4_, NULL), _tmp4_), formatted_label);
 	_g_free0 (_tmp5_);
 	ctk_layer_set_mask_from_surface (normal_layer, normal_surf);
 	ctk_layer_set_color (normal_layer, &white_color);
@@ -219,6 +222,7 @@ static gboolean _unity_launcher_quicklist_image_menu_item_update_item_background
 	clutter_actor_map ((ClutterActor*) self->priv->item_background);
 	clutter_actor_show ((ClutterActor*) self->priv->item_background);
 	result = FALSE;
+	_g_free0 (formatted_label);
 	_g_object_unref0 (settings);
 	_cairo_destroy0 (selected_cr);
 	_cairo_destroy0 (normal_cr);

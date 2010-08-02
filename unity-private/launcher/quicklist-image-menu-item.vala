@@ -124,16 +124,18 @@ namespace Unity.Launcher
       Cairo.Context selected_cr = new Cairo.Context (selected_surf);
       Gtk.Settings settings = Gtk.Settings.get_default ();
 
+      string formatted_label = Utils.strip_characters (label, "", "_", "_");
+
       Unity.QuicklistRendering.Item.normal_mask (normal_cr,
                                                  this.last_width,
                                                  this.last_height,
                                                  settings.gtk_font_name,
-                                                 this.label);
+                                                 formatted_label);
       Unity.QuicklistRendering.Item.selected_mask (selected_cr,
                                                    this.last_width,
                                                    this.last_height,
                                                    settings.gtk_font_name,
-                                                   this.label);
+                                                   formatted_label);
 
       normal_layer.set_mask_from_surface (normal_surf);
       normal_layer.set_color (white_color);

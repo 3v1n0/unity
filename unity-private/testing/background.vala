@@ -32,7 +32,6 @@ namespace Unity.Testing
     private string DEFAULT_PIC_OPTS   = "none";
     private string DEFAULT_SHADE_TYPE = "solid";
     private string DEFAULT_AMBIANCE_COL = "#2C2C00001E1E"; // Ubuntu Dark Purple
-    private string DEFAULT_RADIANCE_COL = "#AEAEA7A79F9F"; // Ubuntu Grey
     private string DEFAULT_FILENAME   = "/usr/share/backgrounds/warty-final.png";
 
     private Clutter.CairoTexture bg_gradient;
@@ -208,10 +207,14 @@ namespace Unity.Testing
     private void
     _on_allocation_changed ()
     {
-      if (this.filename != "")
-        _update_image ();
-      else
-        _update_gradient ();
+      Timeout.add (0, () => {
+        if (this.filename != "")
+          _update_image ();
+        else
+          _update_gradient ();
+
+          return false;
+      });
     }
 
     private void
@@ -220,7 +223,11 @@ namespace Unity.Testing
 
       if (this.find_child_by_name ("bg_image") != this.bg_image)
         {
-          this.remove_actor (this.bg_gradient);
+          if (this.bg_gradient is Clutter.Actor &&
+              this.bg_gradient.get_parent () == this)
+            {
+              this.remove_actor (this.bg_gradient);
+            }
           this.add_actor (this.bg_image);
           this.bg_image.show ();
         }
@@ -246,7 +253,11 @@ namespace Unity.Testing
 
       if (this.find_child_by_name ("bg_gradient") != this.bg_gradient)
         {
-          this.remove_actor (this.bg_image);
+          if (this.bg_image is Clutter.Actor &&
+              this.bg_image.get_parent () == this)
+            {
+              this.remove_actor (this.bg_image);
+            }
           this.add_actor (this.bg_gradient);
           this.bg_gradient.show ();
         }

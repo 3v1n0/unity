@@ -41,9 +41,6 @@ namespace Unity.Launcher
     public string name {get; set;}
     public bool hide {get; set;}
 
-
-    public signal void closed ();
-
     protected ScrollerChildControllerMenuState menu_state;
     protected uint32 last_press_time = 0;
     protected bool button_down = false;
@@ -76,6 +73,10 @@ namespace Unity.Launcher
                                 "opacity", 0xff);
     }
 
+    public void closed ()
+    {
+    }
+
     public delegate void menu_cb (Dbusmenu.Menuitem? menu);
 
     public virtual void get_menu_actions (menu_cb callback)
@@ -93,9 +94,14 @@ namespace Unity.Launcher
       // do nothing!
     }
 
-    public virtual QuicklistController get_menu_controller ()
+    public virtual QuicklistController? get_menu_controller ()
     {
       return null;
+    }
+
+    public virtual bool can_drag ()
+    {
+      return true;
     }
 
     private bool on_leave_event (Clutter.Event event)
@@ -167,6 +173,9 @@ namespace Unity.Launcher
       if (menu is QuicklistController == false)
         {
           menu = get_menu_controller ();
+
+          if (menu is QuicklistController == false)
+            return;
         }
 
       if (menu.state == QuicklistControllerState.MENU
@@ -210,7 +219,7 @@ namespace Unity.Launcher
     private bool on_motion_event (Clutter.Event event)
     {
       var drag_controller = Unity.Drag.Controller.get_default ();
-      if (button_down && drag_controller.is_dragging == false)
+      if (button_down && drag_controller.is_dragging == false && can_drag ())
         {
           float diff = Math.fabsf (event.motion.x - click_start_pos);
           if (diff > drag_sensitivity)

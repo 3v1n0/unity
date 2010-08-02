@@ -76,6 +76,8 @@ static void unity_tests_ui_home_button_suite_test_click_home_button (UnityTestsU
 static void _unity_tests_ui_home_button_suite_test_click_home_button_gdata_test_func (gpointer self);
 UnityTestsUIHomeButtonSuite* unity_tests_ui_home_button_suite_new (void);
 UnityTestsUIHomeButtonSuite* unity_tests_ui_home_button_suite_construct (GType object_type);
+static void unity_tests_ui_home_button_suite_real_get_window_details (UnityShell* base, guint32 xid, gboolean* a, gboolean* b);
+static void unity_tests_ui_home_button_suite_real_do_window_action (UnityShell* base, guint32 xid, UnityWindowAction action);
 static UnityShellMode unity_tests_ui_home_button_suite_real_get_mode (UnityShell* base);
 static ClutterStage* unity_tests_ui_home_button_suite_real_get_stage (UnityShell* base);
 static void unity_tests_ui_home_button_suite_real_show_unity (UnityShell* base);
@@ -141,11 +143,23 @@ static void unity_tests_ui_home_button_suite_test_click_home_button (UnityTestsU
 }
 
 
+static void unity_tests_ui_home_button_suite_real_get_window_details (UnityShell* base, guint32 xid, gboolean* a, gboolean* b) {
+	UnityTestsUIHomeButtonSuite * self;
+	self = (UnityTestsUIHomeButtonSuite*) base;
+}
+
+
+static void unity_tests_ui_home_button_suite_real_do_window_action (UnityShell* base, guint32 xid, UnityWindowAction action) {
+	UnityTestsUIHomeButtonSuite * self;
+	self = (UnityTestsUIHomeButtonSuite*) base;
+}
+
+
 static UnityShellMode unity_tests_ui_home_button_suite_real_get_mode (UnityShell* base) {
 	UnityTestsUIHomeButtonSuite * self;
 	UnityShellMode result = 0;
 	self = (UnityTestsUIHomeButtonSuite*) base;
-	result = UNITY_SHELL_MODE_UNDERLAY;
+	result = UNITY_SHELL_MODE_MINIMIZED;
 	return result;
 }
 
@@ -289,6 +303,8 @@ static void unity_tests_ui_home_button_suite_class_init (UnityTestsUIHomeButtonS
 
 static void unity_tests_ui_home_button_suite_unity_shell_interface_init (UnityShellIface * iface) {
 	unity_tests_ui_home_button_suite_unity_shell_parent_iface = g_type_interface_peek_parent (iface);
+	iface->get_window_details = unity_tests_ui_home_button_suite_real_get_window_details;
+	iface->do_window_action = unity_tests_ui_home_button_suite_real_do_window_action;
 	iface->get_mode = unity_tests_ui_home_button_suite_real_get_mode;
 	iface->get_stage = unity_tests_ui_home_button_suite_real_get_stage;
 	iface->show_unity = unity_tests_ui_home_button_suite_real_show_unity;

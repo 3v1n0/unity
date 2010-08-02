@@ -81,6 +81,7 @@ static void unity_launcher_quicklist_radio_menu_item_real_get_preferred_width (C
 static gboolean _unity_launcher_quicklist_radio_menu_item_update_item_background (UnityLauncherQuicklistRadioMenuItem* self);
 static gboolean __unity_launcher_quicklist_radio_menu_item_update_item_background_gsource_func (gpointer self);
 static void unity_launcher_quicklist_radio_menu_item_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
+char* utils_strip_characters (const char* text, const char* replace_text, const char* match_regex, const char* replace_regex);
 static gboolean _unity_launcher_quicklist_radio_menu_item_on_enter (UnityLauncherQuicklistRadioMenuItem* self, ClutterEvent* event);
 static gboolean _unity_launcher_quicklist_radio_menu_item_on_leave (UnityLauncherQuicklistRadioMenuItem* self, ClutterEvent* event);
 static void _unity_launcher_quicklist_radio_menu_item_on_label_changed (UnityLauncherQuicklistRadioMenuItem* self);
@@ -203,13 +204,13 @@ static gboolean _unity_launcher_quicklist_radio_menu_item_update_item_background
 	normal_cr = cairo_create (normal_surf);
 	selected_cr = cairo_create (selected_surf);
 	settings = _g_object_ref0 (gtk_settings_get_default ());
-	formatted_label = g_strdup (ctk_menu_item_get_label ((CtkMenuItem*) self));
+	formatted_label = utils_strip_characters (ctk_menu_item_get_label ((CtkMenuItem*) self), "", "_", "_");
 	if (ctk_check_menu_item_get_active ((CtkCheckMenuItem*) self)) {
 		char* _tmp2_;
-		formatted_label = (_tmp2_ = g_strconcat (formatted_label, " ◉", NULL), _g_free0 (formatted_label), _tmp2_);
+		formatted_label = (_tmp2_ = g_strconcat ("◉ ", formatted_label, NULL), _g_free0 (formatted_label), _tmp2_);
 	} else {
 		char* _tmp3_;
-		formatted_label = (_tmp3_ = g_strconcat (formatted_label, " ○", NULL), _g_free0 (formatted_label), _tmp3_);
+		formatted_label = (_tmp3_ = g_strconcat ("○ ", formatted_label, NULL), _g_free0 (formatted_label), _tmp3_);
 	}
 	unity_quicklist_rendering_item_normal_mask (normal_cr, self->priv->last_width, self->priv->last_height, _tmp5_ = (g_object_get (settings, "gtk-font-name", &_tmp4_, NULL), _tmp4_), formatted_label);
 	_g_free0 (_tmp5_);

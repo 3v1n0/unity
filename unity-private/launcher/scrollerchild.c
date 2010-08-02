@@ -26,6 +26,7 @@
 
 #include <glib.h>
 #include <glib-object.h>
+#include <config.h>
 #include <stdlib.h>
 #include <string.h>
 #include <float.h>
@@ -61,6 +62,8 @@ typedef struct _UnityLauncherScrollerChildPrivate UnityLauncherScrollerChildPriv
 
 typedef struct _UnityLauncherScrollerChildController UnityLauncherScrollerChildController;
 typedef struct _UnityLauncherScrollerChildControllerClass UnityLauncherScrollerChildControllerClass;
+
+#define UNITY_LAUNCHER_SCROLLER_CHILD_TYPE_GROUP_TYPE (unity_launcher_scroller_child_group_type_get_type ())
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 
@@ -89,6 +92,13 @@ struct _UnityLauncherScrollerChildClass {
 	CtkActorClass parent_class;
 };
 
+typedef enum  {
+	UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_APPLICATION,
+	UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_PLACE,
+	UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_DEVICE,
+	UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_SYSTEM
+} UnityLauncherScrollerChildGroupType;
+
 struct _UnityLauncherScrollerChildPrivate {
 	GdkPixbuf* _icon;
 	float _position;
@@ -97,6 +107,7 @@ struct _UnityLauncherScrollerChildPrivate {
 	gboolean _needs_attention;
 	gboolean _activating;
 	float _rotation;
+	UnityLauncherScrollerChildGroupType _group_type;
 	UnityUnityIcon* processed_icon;
 	UnityThemeImage* active_indicator;
 	UnityThemeImage* running_indicator;
@@ -105,7 +116,6 @@ struct _UnityLauncherScrollerChildPrivate {
 	CtkEffectGlow* effect_icon_glow;
 	ClutterAnimation* active_indicator_anim;
 	ClutterAnimation* running_indicator_anim;
-	ClutterAnimation* rotate_anim;
 	ClutterTimeline* wiggle_timeline;
 	ClutterTimeline* glow_timeline;
 	ClutterTimeline* rotate_timeline;
@@ -130,6 +140,7 @@ GType unity_launcher_anim_state_get_type (void) G_GNUC_CONST;
 GType unity_launcher_pin_type_get_type (void) G_GNUC_CONST;
 GType unity_launcher_scroller_child_get_type (void) G_GNUC_CONST;
 GType unity_launcher_scroller_child_controller_get_type (void) G_GNUC_CONST;
+GType unity_launcher_scroller_child_group_type_get_type (void) G_GNUC_CONST;
 #define UNITY_LAUNCHER_SCROLLER_CHILD_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_LAUNCHER_TYPE_SCROLLER_CHILD, UnityLauncherScrollerChildPrivate))
 enum  {
 	UNITY_LAUNCHER_SCROLLER_CHILD_DUMMY_PROPERTY,
@@ -139,12 +150,15 @@ enum  {
 	UNITY_LAUNCHER_SCROLLER_CHILD_ACTIVE,
 	UNITY_LAUNCHER_SCROLLER_CHILD_NEEDS_ATTENTION,
 	UNITY_LAUNCHER_SCROLLER_CHILD_ACTIVATING,
-	UNITY_LAUNCHER_SCROLLER_CHILD_ROTATION
+	UNITY_LAUNCHER_SCROLLER_CHILD_ROTATION,
+	UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE
 };
 gboolean unity_launcher_scroller_child_get_running (UnityLauncherScrollerChild* self);
 gboolean unity_launcher_scroller_child_get_active (UnityLauncherScrollerChild* self);
 float unity_launcher_scroller_child_get_position (UnityLauncherScrollerChild* self);
 char* unity_launcher_scroller_child_to_string (UnityLauncherScrollerChild* self);
+UnityLauncherScrollerChild* unity_launcher_scroller_child_new (void);
+UnityLauncherScrollerChild* unity_launcher_scroller_child_construct (GType object_type);
 static void unity_launcher_scroller_child_on_icon_changed (UnityLauncherScrollerChild* self);
 static void _unity_launcher_scroller_child_on_icon_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static void unity_launcher_scroller_child_on_running_changed (UnityLauncherScrollerChild* self);
@@ -187,14 +201,14 @@ static void unity_launcher_scroller_child_real_pick (ClutterActor* base, const C
 static void unity_launcher_scroller_child_real_paint (ClutterActor* base);
 static void unity_launcher_scroller_child_real_map (ClutterActor* base);
 static void unity_launcher_scroller_child_real_unmap (ClutterActor* base);
-UnityLauncherScrollerChild* unity_launcher_scroller_child_new (void);
-UnityLauncherScrollerChild* unity_launcher_scroller_child_construct (GType object_type);
 void unity_launcher_scroller_child_set_icon (UnityLauncherScrollerChild* self, GdkPixbuf* value);
 void unity_launcher_scroller_child_set_position (UnityLauncherScrollerChild* self, float value);
 void unity_launcher_scroller_child_set_running (UnityLauncherScrollerChild* self, gboolean value);
 void unity_launcher_scroller_child_set_active (UnityLauncherScrollerChild* self, gboolean value);
 void unity_launcher_scroller_child_set_needs_attention (UnityLauncherScrollerChild* self, gboolean value);
 void unity_launcher_scroller_child_set_activating (UnityLauncherScrollerChild* self, gboolean value);
+UnityLauncherScrollerChildGroupType unity_launcher_scroller_child_get_group_type (UnityLauncherScrollerChild* self);
+void unity_launcher_scroller_child_set_group_type (UnityLauncherScrollerChild* self, UnityLauncherScrollerChildGroupType value);
 static void _unity_launcher_scroller_child_on_glow_timeline_new_frame_clutter_timeline_new_frame (ClutterTimeline* _sender, gint msecs, gpointer self);
 static void _unity_launcher_scroller_child_on_wiggle_timeline_new_frame_clutter_timeline_new_frame (ClutterTimeline* _sender, gint msecs, gpointer self);
 static void _unity_launcher_scroller_child_on_rotate_timeline_new_frame_clutter_timeline_new_frame (ClutterTimeline* _sender, gint msecs, gpointer self);
@@ -230,6 +244,18 @@ GType unity_launcher_pin_type_get_type (void) {
 }
 
 
+GType unity_launcher_scroller_child_group_type_get_type (void) {
+	static volatile gsize unity_launcher_scroller_child_group_type_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_launcher_scroller_child_group_type_type_id__volatile)) {
+		static const GEnumValue values[] = {{UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_APPLICATION, "UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_APPLICATION", "application"}, {UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_PLACE, "UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_PLACE", "place"}, {UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_DEVICE, "UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_DEVICE", "device"}, {UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_SYSTEM, "UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_SYSTEM", "system"}, {0, NULL, NULL}};
+		GType unity_launcher_scroller_child_group_type_type_id;
+		unity_launcher_scroller_child_group_type_type_id = g_enum_register_static ("UnityLauncherScrollerChildGroupType", values);
+		g_once_init_leave (&unity_launcher_scroller_child_group_type_type_id__volatile, unity_launcher_scroller_child_group_type_type_id);
+	}
+	return unity_launcher_scroller_child_group_type_type_id__volatile;
+}
+
+
 char* unity_launcher_scroller_child_to_string (UnityLauncherScrollerChild* self) {
 	char* result = NULL;
 	const char* _tmp0_;
@@ -249,6 +275,18 @@ char* unity_launcher_scroller_child_to_string (UnityLauncherScrollerChild* self)
 	}
 	result = g_strdup_printf ("A scroller child; running: %s, active: %s, position: %f, opacity %f", _tmp0_, _tmp1_, (double) self->priv->_position, (double) clutter_actor_get_opacity ((ClutterActor*) self));
 	return result;
+}
+
+
+UnityLauncherScrollerChild* unity_launcher_scroller_child_construct (GType object_type) {
+	UnityLauncherScrollerChild * self;
+	self = (UnityLauncherScrollerChild*) g_object_new (object_type, "group-type", UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_APPLICATION, NULL);
+	return self;
+}
+
+
+UnityLauncherScrollerChild* unity_launcher_scroller_child_new (void) {
+	return unity_launcher_scroller_child_construct (UNITY_LAUNCHER_TYPE_SCROLLER_CHILD);
 }
 
 
@@ -295,22 +333,22 @@ static void unity_launcher_scroller_child_load_textures (UnityLauncherScrollerCh
 		GdkPixbuf* _tmp3_;
 		_tmp2_ = gdk_pixbuf_new_from_file (UNITY_LAUNCHER_HONEYCOMB_MASK_FILE, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch29_g_error;
+			goto __catch43_g_error;
 		}
 		self->priv->honeycomb_mask = (_tmp3_ = _tmp2_, _g_object_unref0 (self->priv->honeycomb_mask), _tmp3_);
 	}
-	goto __finally29;
-	__catch29_g_error:
+	goto __finally43;
+	__catch43_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("scrollerchild.vala:134: Unable to load asset %s: %s", UNITY_LAUNCHER_HONEYCOMB_MASK_FILE, e->message);
+			g_warning ("scrollerchild.vala:147: Unable to load asset %s: %s", UNITY_LAUNCHER_HONEYCOMB_MASK_FILE, e->message);
 			_g_error_free0 (e);
 		}
 	}
-	__finally29:
+	__finally43:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -597,7 +635,7 @@ static void unity_launcher_scroller_child_on_icon_changed (UnityLauncherScroller
 		scaled_buf = NULL;
 		max_size = 48;
 		if (!unity_pixbuf_is_tile (self->priv->_icon)) {
-			max_size = 40;
+			max_size = 32;
 		}
 		if (gdk_pixbuf_get_width (self->priv->_icon) > max_size) {
 			_tmp0_ = TRUE;
@@ -848,18 +886,6 @@ static void unity_launcher_scroller_child_real_unmap (ClutterActor* base) {
 }
 
 
-UnityLauncherScrollerChild* unity_launcher_scroller_child_construct (GType object_type) {
-	UnityLauncherScrollerChild * self;
-	self = g_object_newv (object_type, 0, NULL);
-	return self;
-}
-
-
-UnityLauncherScrollerChild* unity_launcher_scroller_child_new (void) {
-	return unity_launcher_scroller_child_construct (UNITY_LAUNCHER_TYPE_SCROLLER_CHILD);
-}
-
-
 GdkPixbuf* unity_launcher_scroller_child_get_icon (UnityLauncherScrollerChild* self) {
 	GdkPixbuf* result;
 	g_return_val_if_fail (self != NULL, NULL);
@@ -966,6 +992,21 @@ void unity_launcher_scroller_child_set_rotation (UnityLauncherScrollerChild* sel
 }
 
 
+UnityLauncherScrollerChildGroupType unity_launcher_scroller_child_get_group_type (UnityLauncherScrollerChild* self) {
+	UnityLauncherScrollerChildGroupType result;
+	g_return_val_if_fail (self != NULL, 0);
+	result = self->priv->_group_type;
+	return result;
+}
+
+
+void unity_launcher_scroller_child_set_group_type (UnityLauncherScrollerChild* self, UnityLauncherScrollerChildGroupType value) {
+	g_return_if_fail (self != NULL);
+	self->priv->_group_type = value;
+	g_object_notify ((GObject *) self, "group-type");
+}
+
+
 static void _unity_launcher_scroller_child_on_glow_timeline_new_frame_clutter_timeline_new_frame (ClutterTimeline* _sender, gint msecs, gpointer self) {
 	unity_launcher_scroller_child_on_glow_timeline_new_frame (self);
 }
@@ -1032,6 +1073,7 @@ static void unity_launcher_scroller_child_class_init (UnityLauncherScrollerChild
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_NEEDS_ATTENTION, g_param_spec_boolean ("needs-attention", "needs-attention", "needs-attention", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_ACTIVATING, g_param_spec_boolean ("activating", "activating", "activating", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_ROTATION, g_param_spec_float ("rotation", "rotation", "rotation", -G_MAXFLOAT, G_MAXFLOAT, 0.0F, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE, g_param_spec_enum ("group-type", "group-type", "group-type", UNITY_LAUNCHER_SCROLLER_CHILD_TYPE_GROUP_TYPE, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT));
 }
 
 
@@ -1060,7 +1102,6 @@ static void unity_launcher_scroller_child_finalize (GObject* obj) {
 	_g_object_unref0 (self->priv->effect_icon_glow);
 	_g_object_unref0 (self->priv->active_indicator_anim);
 	_g_object_unref0 (self->priv->running_indicator_anim);
-	_g_object_unref0 (self->priv->rotate_anim);
 	_g_object_unref0 (self->priv->wiggle_timeline);
 	_g_object_unref0 (self->priv->glow_timeline);
 	_g_object_unref0 (self->priv->rotate_timeline);
@@ -1105,6 +1146,9 @@ static void unity_launcher_scroller_child_get_property (GObject * object, guint 
 		case UNITY_LAUNCHER_SCROLLER_CHILD_ROTATION:
 		g_value_set_float (value, unity_launcher_scroller_child_get_rotation (self));
 		break;
+		case UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE:
+		g_value_set_enum (value, unity_launcher_scroller_child_get_group_type (self));
+		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
@@ -1136,6 +1180,9 @@ static void unity_launcher_scroller_child_set_property (GObject * object, guint 
 		break;
 		case UNITY_LAUNCHER_SCROLLER_CHILD_ROTATION:
 		unity_launcher_scroller_child_set_rotation (self, g_value_get_float (value));
+		break;
+		case UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE:
+		unity_launcher_scroller_child_set_group_type (self, g_value_get_enum (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
