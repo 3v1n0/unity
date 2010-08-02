@@ -366,18 +366,20 @@ namespace Unity
 
       (focus.get_meta_window () as GLib.Object).get ("fullscreen", ref fullscreen);
       (this.launcher.get_container () as Launcher.LauncherContainer).cache.invalidate_texture_cache ();
+      this.panel.cache.invalidate_texture_cache ();
 
       Clutter.Animation? anim;
+      Clutter.Animation? panim;
       if (fullscreen)
         {
           anim = this.launcher.get_container ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", -100f);
-          this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
+          panim = this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 0);
           fullscreen_obstruction = true;
         }
       else
         {
           anim = this.launcher.get_container ().animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "x", 0f);
-          this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
+          panim = this.panel.animate (Clutter.AnimationMode.EASE_IN_SINE, 200, "opacity", 255);
           fullscreen_obstruction = false;
         }
 
@@ -386,6 +388,11 @@ namespace Unity
           anim.completed.connect (()=> {
             (this.launcher.get_container () as Launcher.LauncherContainer).cache.update_texture_cache ();
           });
+        }
+
+      if (panim is Clutter.Animation)
+        {
+          panim.completed.connect (() => { this.panel.cache.update_texture_cache (); });
         }
     }
 
