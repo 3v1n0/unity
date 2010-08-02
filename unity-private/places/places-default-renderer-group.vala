@@ -69,6 +69,8 @@ namespace Unity.Places
 
       if (group_renderer == "UnityLinkGroupRenderer")
         allow_expand = false;
+      else if (group_renderer == "UnityFolderGroupRenderer")
+        bin_state = ExpandingBinState.EXPANDED;
 
       vbox = new Ctk.VBox (SPACING);
       vbox.spacing = SPACING;
@@ -229,7 +231,9 @@ namespace Unity.Places
       button.show ();
 
       if (bin_state == ExpandingBinState.EXPANDED)
-        button.about_to_show ();
+        {
+          button.about_to_show ();
+        }
 
       button.activated.connect ((u, m) => { activated (u, m); });
 
@@ -237,7 +241,10 @@ namespace Unity.Places
 
       if (bin_state == ExpandingBinState.CLOSED)
         {
-          bin_state = ExpandingBinState.UNEXPANDED;
+          if (group_renderer == "UnityFolderGroupRenderer")
+            bin_state = ExpandingBinState.EXPANDED;
+          else
+            bin_state = ExpandingBinState.UNEXPANDED;
           show ();
         }
 
@@ -246,7 +253,7 @@ namespace Unity.Places
 
     private void on_result_removed (Dee.ModelIter iter)
     {
-      if (!interesting (iter))
+     if (!interesting (iter))
         return;
 
       var children = renderer.get_children ();
@@ -320,6 +327,16 @@ namespace Unity.Places
                 }
               else
                 break;
+            }
+        }
+      else
+        {
+          var children = renderer.get_children ();
+   
+          foreach (Clutter.Actor child in children)
+            {
+              Tile tile = child as Tile;
+              tile.about_to_show ();
             }
         }
 
