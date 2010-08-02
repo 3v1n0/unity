@@ -36,6 +36,7 @@ namespace Unity.Places
 
     public Gee.HashMap<string, string> hints { get; set; }
 
+    public unowned Place? parent { get; construct set; }
     public bool online { get; construct set; }
     public bool active { get; set; }
 

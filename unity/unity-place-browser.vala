@@ -122,6 +122,8 @@ namespace Unity.Place {
     private BrowserServiceImpl service;
     private Stack<State<E>> back_stack;
     private Stack<State<E>> forward_stack;
+   
+   	private State<E> current_state = null;
     
     public string dbus_path { get; private set; }
     
@@ -136,8 +138,8 @@ namespace Unity.Place {
       forward_stack = new Stack<State<E>> ();
       
       /* Relay signals from backend service */
-      service.back.connect (on_back);
-      service.forward.connect (on_forward);
+      service.back.connect (go_back);
+      service.forward.connect (go_forward);
       
       update_service_state ();
     }
@@ -148,10 +150,15 @@ namespace Unity.Place {
      */
     public void record_state (E state, string comment)
     {
+      if (current_state != null)
+        {
+          back_stack.push (current_state);
+        }
+    
       var s = new State<E>();
       s.state = state;
-      s.comment = comment;      
-      back_stack.push (s);
+      s.comment = comment;
+      current_state = s;
       update_service_state ();
     }
     
@@ -159,25 +166,29 @@ namespace Unity.Place {
     {
       back_stack.clear ();
       forward_stack.clear ();
+      current_state = null;
     }
     
-    private void on_back ()
+    public void go_back ()
     {
       var state = back_stack.pop();
       if (state != null)
         {
-          forward_stack.push (state);
+          if (current_state != null)
+            forward_stack.push (current_state);
+          current_state = state;          
           update_service_state ();
           this.back (state.state, state.comment);
         }
     }
     
-    private void on_forward ()
+    public void go_forward ()
     {
       var state = forward_stack.pop();
       if (state != null)
         {
-          back_stack.push (state);
+          if (current_state != null)
+            back_stack.push (current_state);
           update_service_state ();
           this.forward (state.state, state.comment);
         }
@@ -213,7 +224,7 @@ namespace Unity.Place {
   /**
    * Private shim class to have a propor stack api
    */
-  private class Stack<E>
+  public class Stack<E>
   {
     private LinkedList<E> list;
     

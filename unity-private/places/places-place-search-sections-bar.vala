@@ -21,13 +21,34 @@ using Unity;
 
 namespace Unity.Places
 {
+  public enum SectionStyle
+  {
+    BUTTONS,
+    BREADCRUMB
+  }
+
   public class PlaceSearchSectionsBar : Ctk.Box
   {
     static const int SPACING = 10;
 
     /* Properties */
+    public SectionStyle _style = SectionStyle.BUTTONS;
+    public SectionStyle style {
+      get { return _style; }
+      set {
+        if (_style != value)
+          {
+            _style = value;
+            do_queue_redraw ();
+          }
+      }
+    }
+
     private PlaceEntry? active_entry = null;
     private Section?    active_section = null;
+    private CairoCanvas bg;
+
+    private unowned Dee.Model? sections_model = null;
 
     public PlaceSearchSectionsBar ()
     {
@@ -45,6 +66,9 @@ namespace Unity.Places
         SPACING * 1.0f,
         SPACING * 1.0f
       };*/
+
+      bg = new CairoCanvas (paint_bg);
+      set_background (bg);
     }
 
     /*
@@ -64,6 +88,12 @@ namespace Unity.Places
     {
       var children = get_children ();
 
+      if (entry == active_entry)
+        {
+          if (sections_model == entry.sections_model)
+            return;
+        }
+
       if (active_entry is PlaceEntry)
         {
           var old_model = active_entry.sections_model;
@@ -74,6 +104,16 @@ namespace Unity.Places
           active_section = null;
         }
 
+      if (entry.hints != null)
+        {
+          if (entry.hints["UnitySectionStyle"] == "breadcrumb")
+            style = SectionStyle.BREADCRUMB;
+          else
+            style = SectionStyle.BUTTONS;
+        }
+      else
+        style = SectionStyle.BUTTONS;
+
       foreach (Clutter.Actor actor in children)
         {
           (actor as Section).dirty = true;
@@ -82,6 +122,7 @@ namespace Unity.Places
 
       active_entry = entry;
       var model = active_entry.sections_model;
+      sections_model = model;
 
       unowned Dee.ModelIter iter = model.get_first_iter ();
       while (iter != null && !model.is_last (iter))
@@ -130,6 +171,12 @@ namespace Unity.Places
       model.row_removed.connect (on_section_removed);
     }
 
+    private static int sort_sections (Section asec, Section bsec)
+    {
+      return asec.model.get_position (asec.iter) - 
+             bsec.model.get_position (bsec.iter);
+    }
+
     private void on_section_added (Dee.Model model, Dee.ModelIter iter)
     {
       var section = new Section (model, iter);
@@ -138,17 +185,19 @@ namespace Unity.Places
 
       section.button_press_event.connect (on_section_clicked);
 
-      if (active_section == null)
+      if (active_section == null && _style == SectionStyle.BUTTONS)
         {
           active_section = section;
           section.active = true;
           active_entry.set_active_section (0);
         }
+  
+      sort_children ((CompareFunc)sort_sections);
     }
 
     private Section? get_section_for_iter (Dee.ModelIter iter)
     {
-      GLib.List<Clutter.Actor> children = get_children ();
+      var children = get_children ();
       foreach (Clutter.Actor child in children)
         {
           Section section = child as Section;
@@ -169,7 +218,7 @@ namespace Unity.Places
 
       if (section is Section)
         {
-          if (section == active_section)
+          if (section == active_section && _style == SectionStyle.BUTTONS)
             {
               active_section = get_section_for_iter (model.get_first_iter ());
               active_entry.set_active_section (0);
@@ -201,6 +250,65 @@ namespace Unity.Places
       on_section_clicked_real (section);
 
       return true;
+    }
+
+    private void paint_bg (Cairo.Context cr, int width, int height)
+    {
+      if (_style != SectionStyle.BREADCRUMB)
+        return;
+
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      cr.set_operator (Cairo.Operator.OVER);
+      cr.translate (0.5, 0.5);
+      cr.set_line_width (1.0);
+
+      var x = 0;
+      var y = 0;
+      width -= 1;
+      height -= 1;
+      var radius = 5;
+
+      cr.line_to  (x, y + radius);
+      cr.curve_to (x, y,
+                   x, y,
+                   x + radius, y);
+      cr.line_to  (width - radius, y);
+      cr.curve_to (width, y,
+                   width, y,
+                   width, y + radius);
+      cr.line_to  (width, height - radius);
+      cr.curve_to (width, height,
+                   width, height,
+                   width - radius, height);
+      cr.line_to  (x + radius, height);
+      cr.curve_to (x, height,
+                   x, height,
+                   x, height - radius);
+      cr.close_path ();
+
+      cr.set_source_rgba (1.0, 1.0, 1.0, 0.5);
+      cr.fill_preserve ();
+      cr.stroke ();
+
+      var chevron = 5;
+      var point = x;
+      var children = get_children ();
+      foreach (Clutter.Actor child in children)
+        {
+          point += (int)(child.width) + SPACING/2;
+
+          if (point < width - chevron - SPACING)
+            {
+              cr.move_to (point - chevron, y);
+              cr.line_to (point + chevron, y + height/2);
+              cr.line_to (point - chevron, y + height);
+              cr.set_source_rgba (1.0, 1.0, 1.0, 0.8);
+              cr.stroke ();
+            }
+          point += SPACING/2;
+        }
     }
   }
 
@@ -363,27 +471,34 @@ namespace Unity.Places
       height -= 1;
       var radius = 10;
 
-      cr.line_to  (x, y + radius);
-      cr.curve_to (x, y,
-                   x, y,
-                   x + radius, y);
-      cr.line_to  (width - radius, y);
-      cr.curve_to (width, y,
-                   width, y,
-                   width, y + radius);
-      cr.line_to  (width, height - radius);
-      cr.curve_to (width, height,
-                   width, height,
-                   width - radius, height);
-      cr.line_to  (x + radius, height);
-      cr.curve_to (x, height,
-                   x, height,
-                   x, height - radius);
-      cr.close_path ();
+      if ((get_parent () as PlaceSearchSectionsBar).style == SectionStyle.BUTTONS)
+        {
+          cr.line_to  (x, y + radius);
+          cr.curve_to (x, y,
+                       x, y,
+                       x + radius, y);
+          cr.line_to  (width - radius, y);
+          cr.curve_to (width, y,
+                       width, y,
+                       width, y + radius);
+          cr.line_to  (width, height - radius);
+          cr.curve_to (width, height,
+                       width, height,
+                       width - radius, height);
+          cr.line_to  (x + radius, height);
+          cr.curve_to (x, height,
+                       x, height,
+                       x, height - radius);
+          cr.close_path ();
 
-      cr.set_source_rgba (1.0, 1.0, 1.0, 1.0);
-      cr.fill_preserve ();
-      cr.stroke ();
+          cr.set_source_rgba (1.0, 1.0, 1.0, 1.0);
+          cr.fill_preserve ();
+          cr.stroke ();
+        }
+      else
+        {
+
+        }
     }
   }
 }
