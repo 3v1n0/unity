@@ -88,11 +88,11 @@ namespace Unity {
     }
     
     private void workspace_switched (Plugin plugin,
-                                     List<Mutter.Window> windows,
                                      int from,
                                      int to,
-                                     int direction) {
-      this.plugin.plugin.effect_completed (windows.nth_data (0), Mutter.PLUGIN_SWITCH_WORKSPACE);
+                                     int direction) 
+    {
+      this.plugin.plugin.switch_workspace_completed ();
     }
     
     public void set_padding (uint top, uint right, uint left, uint bottom) {

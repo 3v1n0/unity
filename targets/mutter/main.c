@@ -82,13 +82,14 @@ static void unity_mutter_map        (MutterPlugin   *self,
 static void unity_mutter_destroy    (MutterPlugin   *self,
                                      MutterWindow   *window);
 static void unity_mutter_switch_workspace (MutterPlugin *self,
-                                           const GList **windows,
                                            gint          from,
                                            gint          to,
                                            MetaMotionDirection direction);
-static void unity_mutter_kill_effect (MutterPlugin  *self,
-                                      MutterWindow  *window,
-                                      gulong         events);
+static void unity_mutter_kill_window_effects (MutterPlugin  *self,
+                                              MutterWindow  *window);
+                                             
+static void unity_mutter_kill_switch_workspace (MutterPlugin *self);
+                                             
 static gboolean unity_mutter_xevent_filter (MutterPlugin *self,
                                       XEvent      *event);
 
@@ -110,7 +111,8 @@ unity_mutter_class_init (UnityMutterClass *klass)
   mut_class->map              = unity_mutter_map;
   mut_class->destroy          = unity_mutter_destroy;
   mut_class->switch_workspace = unity_mutter_switch_workspace;
-  mut_class->kill_effect      = unity_mutter_kill_effect;
+  mut_class->kill_window_effects      = unity_mutter_kill_window_effects;
+  mut_class->kill_switch_workspace    = unity_mutter_kill_switch_workspace;
   mut_class->xevent_filter    = unity_mutter_xevent_filter;
   mut_class->plugin_info      = unity_mutter_plugin_info;
 }
@@ -237,31 +239,24 @@ unity_mutter_destroy (MutterPlugin   *self,
 
 static void
 unity_mutter_switch_workspace (MutterPlugin *self,
-                               const GList **windows,
                                gint          from,
                                gint          to,
                                MetaMotionDirection direction)
 {
-  /* Hacky mc Hack Hack due to vala not letting us deal with this const */
-  const GList *w = *windows;
-
-  GList *copy = NULL;
-  const GList *l;
-  for (l = w; l; l = l->next)
-    {
-      copy = g_list_prepend (copy, l->data);
-    }
-  copy = g_list_reverse (copy);
-  unity_plugin_switch_workspace (UNITY_MUTTER(self)->plugin, copy, from, to, direction);
-  g_list_free (copy);
+  unity_plugin_switch_workspace (UNITY_MUTTER(self)->plugin, from, to, direction);
 }
 
 static void
-unity_mutter_kill_effect (MutterPlugin  *self,
-                          MutterWindow  *window,
-                          gulong         events)
+unity_mutter_kill_window_effects (MutterPlugin  *self,
+                                  MutterWindow  *window)
 {
-  unity_plugin_kill_effect (UNITY_MUTTER (self)->plugin, window, events);
+  unity_plugin_on_kill_window_effects (UNITY_MUTTER (self)->plugin, window);
+}
+
+static void
+unity_mutter_kill_switch_workspace (MutterPlugin *self)
+{
+  unity_plugin_on_kill_switch_workspace (UNITY_MUTTER (self)->plugin);
 }
 
 static gboolean
