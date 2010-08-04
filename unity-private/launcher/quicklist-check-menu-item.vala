@@ -51,10 +51,10 @@ namespace Unity.Launcher
       int width;
       int height;
       Gtk.Settings settings = Gtk.Settings.get_default ();
-      Unity.QuicklistRendering.Item.get_text_extents (settings.gtk_font_name,
-                                                      this.label + " ☐",
-                                                      out width,
-                                                      out height);
+      Unity.QuicklistRendering.get_text_extents (settings.gtk_font_name,
+                                                 this.label,
+                                                 out width,
+                                                 out height);
       min_width_p = (float) width + (float) Ctk.em_to_pixel (2 * MARGIN);
       natural_width_p = min_width_p;
     }
@@ -125,21 +125,20 @@ namespace Unity.Launcher
 
       string formatted_label = Utils.strip_characters (label, "", "_", "_");
 
-      if (active)
-        formatted_label = "☑ " + formatted_label;
-      else
-        formatted_label = "☐ " + formatted_label;
-
-      Unity.QuicklistRendering.Item.normal_mask (normal_cr,
-                                                 this.last_width,
-                                                 this.last_height,
-                                                 settings.gtk_font_name,
-                                                 formatted_label);
-      Unity.QuicklistRendering.Item.selected_mask (selected_cr,
-                                                   this.last_width,
-                                                   this.last_height,
-                                                   settings.gtk_font_name,
-                                                   formatted_label);
+      //Unity.QuicklistRendering.RadioItem.normal_mask (normal_cr,
+      Unity.QuicklistRendering.CheckmarkItem.normal_mask (normal_cr,
+                                                          this.last_width,
+                                                          this.last_height,
+                                                          settings.gtk_font_name,
+                                                          formatted_label,
+                                                          active);
+      //Unity.QuicklistRendering.RadioItem.selected_mask (selected_cr,
+      Unity.QuicklistRendering.CheckmarkItem.selected_mask (selected_cr,
+                                                            this.last_width,
+                                                            this.last_height,
+                                                            settings.gtk_font_name,
+                                                            formatted_label,
+                                                            active);
 
       normal_layer.set_mask_from_surface (normal_surf);
       normal_layer.set_color (white_color);
