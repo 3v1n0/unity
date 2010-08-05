@@ -380,16 +380,19 @@ namespace Unity.QuicklistRendering
       if (enabled)
         {
           cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
-          cr.arc (x, y, r1, 0.0f, 360.0f);
+          cr.arc (x, y, r1, 0.0f * (GLib.Math.PI / 180.0f),
+                            360.0f * (GLib.Math.PI / 180.0f));
           cr.fill ();
           cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.65f);
-          cr.arc (x, y, r2, 0.0f, 360.0f);
+          cr.arc (x, y, r2, 0.0f * (GLib.Math.PI / 180.0f),
+                            360.0f * (GLib.Math.PI / 180.0f));
           cr.stroke ();
         }
       else
         {
           cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.65f);
-          cr.arc (x, y, r2, 0.0f, 360.0f);
+          cr.arc (x, y, r2, 0.0f * (GLib.Math.PI / 180.0f),
+                            360.0f * (GLib.Math.PI / 180.0f));
           cr.stroke ();
         }
 
@@ -459,14 +462,17 @@ namespace Unity.QuicklistRendering
       // draw radio button
       if (enabled)
         {
-          cr.arc (x, y, r1, 0.0f, 360.0f);
+          cr.arc (x, y, r1, 0.0f * (GLib.Math.PI / 180.0f),
+                            360.0f * (GLib.Math.PI / 180.0f));
           cr.fill ();
-          cr.arc (x, y, r2, 0.0f, 360.0f);
+          cr.arc (x, y, r2, 0.0f * (GLib.Math.PI / 180.0f),
+                            360.0f * (GLib.Math.PI / 180.0f));
           cr.stroke ();
         }
       else
        {
-          cr.arc (x, y, r2, 0.0f, 360.0f);
+          cr.arc (x, y, r2, 0.0f * (GLib.Math.PI / 180.0f),
+                            360.0f * (GLib.Math.PI / 180.0f));
           cr.stroke ();
        }
 
