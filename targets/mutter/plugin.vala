@@ -509,6 +509,7 @@ namespace Unity
 
     public void expose_xids (Array<uint32> xids)
     {
+      spaces_manager.hide_spaces_picker ();
       SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
       for (int i = 0; i < xids.length; i++)
         {
@@ -827,7 +828,7 @@ namespace Unity
     {
       this.kill_window_effects (this, window);
     }
-    
+
     public void on_kill_switch_workspace ()
     {
       this.kill_switch_workspace (this);
