@@ -36,6 +36,7 @@ public class Main
     PlacesPlaceSuite places_place;
     PlacesSuite places;
     PlaceSuite place;
+    PlaceBrowserSuite place_browser;
     IOSuite io;
     AppInfoManagerSuite appinfo_manager;
 
@@ -59,6 +60,7 @@ public class Main
     /* Places tests */
     places = new PlacesSuite ();
     place = new PlaceSuite ();
+    place_browser = new PlaceBrowserSuite ();
 
     /* IO utility tests */
     io = new IOSuite ();

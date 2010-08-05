@@ -67,10 +67,20 @@ namespace Unity.Tests.UI
     //
     public bool menus_swallow_events { get { return true; } }
 
+    public void get_window_details (uint32 xid, out bool a, out bool b)
+    {
+
+    }
+
+    public void do_window_action (uint32 xid, WindowAction action)
+    {
+
+    }
+
     public ShellMode
     get_mode ()
     {
-      return ShellMode.UNDERLAY;
+      return ShellMode.MINIMIZED;
     }
 
     public Clutter.Stage

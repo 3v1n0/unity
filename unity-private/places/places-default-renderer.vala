@@ -72,6 +72,7 @@ namespace Unity.Places
                                             model.get_string (iter, 1),
                                             model.get_string (iter, 2),
                                             results_model);
+      group.activated.connect ((u, m) => { activated (u, m); } );
       group.set_data<unowned Dee.ModelIter> ("model-iter", iter);
       box.pack (group, false, true);
     }

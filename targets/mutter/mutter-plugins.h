@@ -16,7 +16,6 @@
 #include <mutter-plugin.h>
 #include <mutter-window.h>
 #include <prefs.h>
-#include <preview-widget.h>
 #include <screen.h>
 #include <theme.h>
 #include <theme-parser.h>
