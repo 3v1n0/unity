@@ -1,10 +1,11 @@
 unity (0.2.24-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream release.
   * debian/libunity0.symbols:
     - add symbol file
   * debian/control:
     - build-dep on libmutter-dev 2.31.5
-  * New upstream release.
+    - bump Standards-Version to latest
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 06 Aug 2010 15:27:36 +0200
 

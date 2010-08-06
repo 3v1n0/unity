@@ -24,7 +24,7 @@ Build-Depends: cdbs,
                libindicator-dev (>= 0.3.1),
                libunity-misc-dev (>= 0.1.0),
                libmutter-dev (>= 2.31.5),
-Standards-Version: 3.8.4
+Standards-Version: 3.9.1
 Homepage: https://launchpad.net/unity
 
 Package: unity
