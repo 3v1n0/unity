@@ -279,8 +279,9 @@ void unity_plugin_maximize (UnityPlugin* self, MutterWindow* window, gint x, gin
 void unity_plugin_unmaximize (UnityPlugin* self, MutterWindow* window, gint x, gint y, gint width, gint height);
 void unity_plugin_map (UnityPlugin* self, MutterWindow* window);
 void unity_plugin_destroy (UnityPlugin* self, MutterWindow* window);
-void unity_plugin_switch_workspace (UnityPlugin* self, GList* windows, gint from, gint to, gint direction);
-void unity_plugin_kill_effect (UnityPlugin* self, MutterWindow* window, gulong events);
+void unity_plugin_switch_workspace (UnityPlugin* self, gint from, gint to, gint direction);
+void unity_plugin_on_kill_window_effects (UnityPlugin* self, MutterWindow* window);
+void unity_plugin_on_kill_switch_workspace (UnityPlugin* self);
 gint unity_plugin_get_panel_height (UnityPlugin* self);
 gint unity_plugin_get_launcher_width (UnityPlugin* self);
 UnityPlugin* unity_plugin_new (void);

@@ -275,6 +275,7 @@ static gboolean unity_plugin_get_fullscreen_obstruction (UnityPlugin* self);
 static void unity_plugin_real_ensure_input_region (UnityShell* base);
 static ClutterStage* unity_plugin_real_get_stage (UnityShell* base);
 static void unity_plugin_real_close_xids (UnityShell* base, GArray* xids);
+void unity_spaces_manager_hide_spaces_picker (UnitySpacesManager* self);
 void unity_plugin_expose_windows (UnityPlugin* self, GSList* windows, gint left_buffer);
 static void _g_slist_free_g_object_unref (GSList* self);
 static void unity_plugin_real_expose_xids (UnityShell* base, GArray* xids);
@@ -304,8 +305,9 @@ gboolean unity_maximus_process_window (UnityMaximus* self, MutterWindow* window)
 static void _unity_plugin_on_focus_window_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 void unity_plugin_map (UnityPlugin* self, MutterWindow* window);
 void unity_plugin_destroy (UnityPlugin* self, MutterWindow* window);
-void unity_plugin_switch_workspace (UnityPlugin* self, GList* windows, gint from, gint to, gint direction);
-void unity_plugin_kill_effect (UnityPlugin* self, MutterWindow* window, gulong events);
+void unity_plugin_switch_workspace (UnityPlugin* self, gint from, gint to, gint direction);
+void unity_plugin_on_kill_window_effects (UnityPlugin* self, MutterWindow* window);
+void unity_plugin_on_kill_switch_workspace (UnityPlugin* self);
 gint unity_plugin_get_panel_height (UnityPlugin* self);
 gint unity_plugin_get_launcher_width (UnityPlugin* self);
 static gint unity_plugin_real_get_panel_height_foobar (UnityShell* base);
@@ -332,8 +334,7 @@ static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify 
 
 static void g_cclosure_user_marshal_VOID__OBJECT_OBJECT (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 static void g_cclosure_user_marshal_VOID__OBJECT_OBJECT_INT_INT_INT_INT (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
-static void g_cclosure_user_marshal_VOID__OBJECT_OBJECT_ULONG (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
-static void g_cclosure_user_marshal_VOID__OBJECT_POINTER_INT_INT_INT (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
+static void g_cclosure_user_marshal_VOID__OBJECT_INT_INT_INT (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
 
 UnityDragDest* unity_drag_dest_construct (GType object_type) {
 	UnityDragDest * self;
@@ -930,6 +931,7 @@ static void unity_plugin_real_expose_xids (UnityShell* base, GArray* xids) {
 	GSList* windows;
 	self = (UnityPlugin*) base;
 	g_return_if_fail (xids != NULL);
+	unity_spaces_manager_hide_spaces_picker (self->priv->spaces_manager);
 	windows = NULL;
 	{
 		gint i;
@@ -1265,7 +1267,7 @@ static void unity_plugin_real_do_window_action (UnityShell* base, guint32 xid, U
 			{
 				char* _tmp1_;
 				GEnumValue* _tmp0_;
-				g_warning ("plugin.vala:747: %s", _tmp1_ = g_strconcat ("Window action type ", (_tmp0_ = g_enum_get_value (g_type_class_ref (UNITY_TYPE_WINDOW_ACTION), (int) action), (_tmp0_ != NULL) ? _tmp0_->value_name : NULL), " not supported", NULL));
+				g_warning ("plugin.vala:746: %s", _tmp1_ = g_strconcat ("Window action type ", (_tmp0_ = g_enum_get_value (g_type_class_ref (UNITY_TYPE_WINDOW_ACTION), (int) action), (_tmp0_ != NULL) ? _tmp0_->value_name : NULL), " not supported", NULL));
 				_g_free0 (_tmp1_);
 				break;
 			}
@@ -1321,16 +1323,22 @@ void unity_plugin_destroy (UnityPlugin* self, MutterWindow* window) {
 }
 
 
-void unity_plugin_switch_workspace (UnityPlugin* self, GList* windows, gint from, gint to, gint direction) {
+void unity_plugin_switch_workspace (UnityPlugin* self, gint from, gint to, gint direction) {
 	g_return_if_fail (self != NULL);
-	g_signal_emit_by_name (self, "workspace-switch-event", self, windows, from, to, direction);
+	g_signal_emit_by_name (self, "workspace-switch-event", self, from, to, direction);
 }
 
 
-void unity_plugin_kill_effect (UnityPlugin* self, MutterWindow* window, gulong events) {
+void unity_plugin_on_kill_window_effects (UnityPlugin* self, MutterWindow* window) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (window != NULL);
-	g_signal_emit_by_name (self, "window-kill-effect", self, window, events);
+	g_signal_emit_by_name (self, "kill-window-effects", self, window);
+}
+
+
+void unity_plugin_on_kill_switch_workspace (UnityPlugin* self) {
+	g_return_if_fail (self != NULL);
+	g_signal_emit_by_name (self, "kill-switch-workspace", self);
 }
 
 
@@ -1537,7 +1545,7 @@ static GObject * unity_plugin_constructor (GType type, guint n_construct_propert
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("plugin.vala:196: %s", e->message);
+				g_warning ("plugin.vala:194: %s", e->message);
 				_g_error_free0 (e);
 			}
 		}
@@ -1573,8 +1581,9 @@ static void unity_plugin_class_init (UnityPluginClass * klass) {
 	g_signal_new ("window_unmaximized", UNITY_TYPE_PLUGIN, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_OBJECT_INT_INT_INT_INT, G_TYPE_NONE, 6, UNITY_TYPE_PLUGIN, MUTTER_TYPE_WINDOW, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
 	g_signal_new ("window_mapped", UNITY_TYPE_PLUGIN, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2, UNITY_TYPE_PLUGIN, MUTTER_TYPE_WINDOW);
 	g_signal_new ("window_destroyed", UNITY_TYPE_PLUGIN, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2, UNITY_TYPE_PLUGIN, MUTTER_TYPE_WINDOW);
-	g_signal_new ("window_kill_effect", UNITY_TYPE_PLUGIN, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_OBJECT_ULONG, G_TYPE_NONE, 3, UNITY_TYPE_PLUGIN, MUTTER_TYPE_WINDOW, G_TYPE_ULONG);
-	g_signal_new ("workspace_switch_event", UNITY_TYPE_PLUGIN, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_POINTER_INT_INT_INT, G_TYPE_NONE, 5, UNITY_TYPE_PLUGIN, G_TYPE_POINTER, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
+	g_signal_new ("kill_window_effects", UNITY_TYPE_PLUGIN, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2, UNITY_TYPE_PLUGIN, MUTTER_TYPE_WINDOW);
+	g_signal_new ("kill_switch_workspace", UNITY_TYPE_PLUGIN, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__OBJECT, G_TYPE_NONE, 1, UNITY_TYPE_PLUGIN);
+	g_signal_new ("workspace_switch_event", UNITY_TYPE_PLUGIN, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_INT_INT_INT, G_TYPE_NONE, 4, UNITY_TYPE_PLUGIN, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
 	g_signal_new ("restore_input_region", UNITY_TYPE_PLUGIN, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__BOOLEAN, G_TYPE_NONE, 1, G_TYPE_BOOLEAN);
 }
 
@@ -1755,13 +1764,13 @@ static void g_cclosure_user_marshal_VOID__OBJECT_OBJECT_INT_INT_INT_INT (GClosur
 }
 
 
-static void g_cclosure_user_marshal_VOID__OBJECT_OBJECT_ULONG (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
-	typedef void (*GMarshalFunc_VOID__OBJECT_OBJECT_ULONG) (gpointer data1, gpointer arg_1, gpointer arg_2, gulong arg_3, gpointer data2);
-	register GMarshalFunc_VOID__OBJECT_OBJECT_ULONG callback;
+static void g_cclosure_user_marshal_VOID__OBJECT_INT_INT_INT (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
+	typedef void (*GMarshalFunc_VOID__OBJECT_INT_INT_INT) (gpointer data1, gpointer arg_1, gint arg_2, gint arg_3, gint arg_4, gpointer data2);
+	register GMarshalFunc_VOID__OBJECT_INT_INT_INT callback;
 	register GCClosure * cc;
 	register gpointer data1, data2;
 	cc = (GCClosure *) closure;
-	g_return_if_fail (n_param_values == 4);
+	g_return_if_fail (n_param_values == 5);
 	if (G_CCLOSURE_SWAP_DATA (closure)) {
 		data1 = closure->data;
 		data2 = param_values->data[0].v_pointer;
@@ -1769,27 +1778,8 @@ static void g_cclosure_user_marshal_VOID__OBJECT_OBJECT_ULONG (GClosure * closur
 		data1 = param_values->data[0].v_pointer;
 		data2 = closure->data;
 	}
-	callback = (GMarshalFunc_VOID__OBJECT_OBJECT_ULONG) (marshal_data ? marshal_data : cc->callback);
-	callback (data1, g_value_get_object (param_values + 1), g_value_get_object (param_values + 2), g_value_get_ulong (param_values + 3), data2);
-}
-
-
-static void g_cclosure_user_marshal_VOID__OBJECT_POINTER_INT_INT_INT (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
-	typedef void (*GMarshalFunc_VOID__OBJECT_POINTER_INT_INT_INT) (gpointer data1, gpointer arg_1, gpointer arg_2, gint arg_3, gint arg_4, gint arg_5, gpointer data2);
-	register GMarshalFunc_VOID__OBJECT_POINTER_INT_INT_INT callback;
-	register GCClosure * cc;
-	register gpointer data1, data2;
-	cc = (GCClosure *) closure;
-	g_return_if_fail (n_param_values == 6);
-	if (G_CCLOSURE_SWAP_DATA (closure)) {
-		data1 = closure->data;
-		data2 = param_values->data[0].v_pointer;
-	} else {
-		data1 = param_values->data[0].v_pointer;
-		data2 = closure->data;
-	}
-	callback = (GMarshalFunc_VOID__OBJECT_POINTER_INT_INT_INT) (marshal_data ? marshal_data : cc->callback);
-	callback (data1, g_value_get_object (param_values + 1), g_value_get_pointer (param_values + 2), g_value_get_int (param_values + 3), g_value_get_int (param_values + 4), g_value_get_int (param_values + 5), data2);
+	callback = (GMarshalFunc_VOID__OBJECT_INT_INT_INT) (marshal_data ? marshal_data : cc->callback);
+	callback (data1, g_value_get_object (param_values + 1), g_value_get_int (param_values + 2), g_value_get_int (param_values + 3), g_value_get_int (param_values + 4), data2);
 }
 
 

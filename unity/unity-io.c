@@ -189,6 +189,12 @@ static void* _g_realloc_grealloc_func (void* data, gsize size) {
 }
 
 
+/**
+   * Asynchronously read a stream into memory. This method will close
+   * the input stream when done.
+   *
+   * Important: The passed back data must be manually freed using g_free()
+   */
 static gboolean unity_io_read_stream_async_co (UnityIoReadStreamAsyncData* data) {
 	switch (data->_state_) {
 		case 0:
@@ -337,6 +343,12 @@ static gpointer _g_error_copy0 (gpointer self) {
 }
 
 
+/**
+   * Asynchronously looks for a file with base name 'filename' in all the
+   * directories defined in 'dirs' and returns a file input stream for it.
+   *
+   * If the file can not be found this method returns null.
+   */
 static gboolean unity_io_open_from_dirs_co (UnityIoOpenFromDirsData* data) {
 	switch (data->_state_) {
 		case 0:
@@ -486,6 +498,10 @@ static void unity_io_open_from_data_dirs_ready (GObject* source_object, GAsyncRe
 }
 
 
+/**
+   * Like open_from_dirs() but scans first the user data dir and then
+   * the system data dirs as defined by the XDG_DATA_DIRS environment variable.
+   */
 static gboolean unity_io_open_from_data_dirs_co (UnityIoOpenFromDataDirsData* data) {
 	switch (data->_state_) {
 		case 0:

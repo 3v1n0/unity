@@ -131,7 +131,7 @@ static void unity_launcher_quicklist_image_menu_item_real_get_preferred_width (C
 	char* _tmp0_ = NULL;
 	self = (UnityLauncherQuicklistImageMenuItem*) base;
 	settings = _g_object_ref0 (gtk_settings_get_default ());
-	unity_quicklist_rendering_item_get_text_extents (_tmp1_ = (g_object_get (settings, "gtk-font-name", &_tmp0_, NULL), _tmp0_), ctk_menu_item_get_label ((CtkMenuItem*) self), &width, &height);
+	unity_quicklist_rendering_get_text_extents (_tmp1_ = (g_object_get (settings, "gtk-font-name", &_tmp0_, NULL), _tmp0_), ctk_menu_item_get_label ((CtkMenuItem*) self), &width, &height);
 	_g_free0 (_tmp1_);
 	*min_width_p = ((float) width) + ((float) ctk_em_to_pixel ((double) (2 * UNITY_LAUNCHER_MARGIN)));
 	*natural_width_p = *min_width_p;

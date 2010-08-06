@@ -130,9 +130,14 @@ namespace Unity {
 	[CCode (cprefix = "UnityQuicklistRendering", lower_case_cprefix = "unity_quicklist_rendering_")]
 	namespace QuicklistRendering {
 		[CCode (cheader_filename = "unity.h")]
+		public class CheckmarkItem : GLib.Object {
+			public CheckmarkItem ();
+			public static void normal_mask (Cairo.Context cr, int w, int h, string font, string text, bool enabled);
+			public static void selected_mask (Cairo.Context cr, int w, int h, string font, string text, bool enabled);
+		}
+		[CCode (cheader_filename = "unity.h")]
 		public class Item : GLib.Object {
 			public Item ();
-			public static void get_text_extents (string font, string text, out int width, out int height);
 			public static void normal_mask (Cairo.Context cr, int w, int h, string font, string text);
 			public static void selected_mask (Cairo.Context cr, int w, int h, string font, string text);
 		}
@@ -153,11 +158,19 @@ namespace Unity {
 			public static void top_mask (out Cairo.Surface surf, int width, int height, float radius, float anchor_width, bool negative, bool outline, float line_width, float[] rgba);
 		}
 		[CCode (cheader_filename = "unity.h")]
+		public class RadioItem : GLib.Object {
+			public RadioItem ();
+			public static void normal_mask (Cairo.Context cr, int w, int h, string font, string text, bool enabled);
+			public static void selected_mask (Cairo.Context cr, int w, int h, string font, string text, bool enabled);
+		}
+		[CCode (cheader_filename = "unity.h")]
 		public class Seperator : GLib.Object {
 			public Seperator ();
 			public static void fill_mask (Cairo.Context cr);
 			public static void image_background (Cairo.Context cr, int w, int h);
 		}
+		[CCode (cheader_filename = "unity.h")]
+		public static void get_text_extents (string font, string text, out int width, out int height);
 	}
 	[CCode (cprefix = "UnityWebapp", lower_case_cprefix = "unity_webapp_")]
 	namespace Webapp {

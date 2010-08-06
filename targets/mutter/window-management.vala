@@ -34,7 +34,7 @@ namespace Unity
       this.plugin.window_unmaximized.connect (this.window_unmaximized);
       this.plugin.window_mapped.connect (this.window_mapped);
       this.plugin.window_destroyed.connect (this.window_destroyed);
-      this.plugin.window_kill_effect.connect (this.window_kill_effect);
+      this.plugin.kill_window_effects.connect (this.kill_window_effects);
     }
 
     construct
@@ -64,7 +64,7 @@ namespace Unity
        */
       window.set_data (Maximus.user_unmaximize_hint, null);
 
-      plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAXIMIZE);
+      plugin.plugin.maximize_completed (window);
     }
 
     private void window_unmaximized (Plugin        plugin,
@@ -82,7 +82,7 @@ namespace Unity
       int i = 1;
       window.set_data (Maximus.user_unmaximize_hint, i.to_pointer ());
 
-      plugin.plugin.effect_completed (window, Mutter.PLUGIN_UNMAXIMIZE);
+      plugin.plugin.unmaximize_completed (window);
     }
 
     private void window_minimized (Plugin plugin, Mutter.Window window)
@@ -95,7 +95,7 @@ namespace Unity
           type != Mutter.MetaWindowType.MENU
           )
         {
-          this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MINIMIZE);
+          this.plugin.plugin.minimize_completed (window);
           return;
         }
 
@@ -132,7 +132,7 @@ namespace Unity
         return;
 
       window.hide ();
-      this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MINIMIZE);
+      this.plugin.plugin.minimize_completed (window);
     }
 
     private bool force_activate ()
@@ -159,7 +159,7 @@ namespace Unity
           type != Mutter.MetaWindowType.MENU
           )
         {
-          this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAP);
+          this.plugin.plugin.map_completed (window);
           return;
         }
 
@@ -209,7 +209,7 @@ namespace Unity
         return;
 
       (window as Clutter.Actor).opacity = 255;
-      this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_MAP);
+      this.plugin.plugin.map_completed (window);
     }
 
     private void window_destroyed (Plugin plugin, Mutter.Window window)
@@ -222,7 +222,7 @@ namespace Unity
           type != Mutter.MetaWindowType.MENU
           )
         {
-          this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_DESTROY);
+          this.plugin.plugin.destroy_completed (window);
           return;
         }
 
@@ -240,12 +240,11 @@ namespace Unity
     {
       unowned Mutter.Window window = (Mutter.Window)anim.get_object ();
 
-      this.plugin.plugin.effect_completed (window, Mutter.PLUGIN_DESTROY);
+      this.plugin.plugin.destroy_completed (window);
     }
 
-    private void window_kill_effect (Plugin        plugin,
-                                     Mutter.Window window,
-                                     ulong         events)
+    private void kill_window_effects (Plugin        plugin,
+                                      Mutter.Window window)
     {
      /* var anim = window.get_animation ();
 

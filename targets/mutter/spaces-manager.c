@@ -147,9 +147,11 @@ enum  {
 	UNITY_SPACES_BUTTON_CONTROLLER_DUMMY_PROPERTY
 };
 static void unity_spaces_button_controller_set_parent (UnitySpacesButtonController* self, UnitySpacesManager* value);
+static UnitySpacesManager* unity_spaces_button_controller_get_parent (UnitySpacesButtonController* self);
+static void unity_spaces_button_controller_on_notify_showing (UnitySpacesButtonController* self);
+static void _unity_spaces_button_controller_on_notify_showing_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 UnitySpacesButtonController* unity_spaces_button_controller_new (UnitySpacesManager* _parent, UnityLauncherScrollerChild* _child);
 UnitySpacesButtonController* unity_spaces_button_controller_construct (GType object_type, UnitySpacesManager* _parent, UnityLauncherScrollerChild* _child);
-static UnitySpacesManager* unity_spaces_button_controller_get_parent (UnitySpacesButtonController* self);
 gboolean unity_spaces_manager_get_showing (UnitySpacesManager* self);
 void unity_spaces_manager_hide_spaces_picker (UnitySpacesManager* self);
 void unity_spaces_manager_show_spaces_picker (UnitySpacesManager* self);
@@ -171,8 +173,8 @@ enum  {
 	UNITY_SPACES_MANAGER_SHOWING
 };
 static void _g_list_free_g_object_unref (GList* self);
-static void unity_spaces_manager_workspace_switched (UnitySpacesManager* self, UnityPlugin* plugin, GList* windows, gint from, gint to, gint direction);
-static void _unity_spaces_manager_workspace_switched_unity_plugin_workspace_switch_event (UnityPlugin* _sender, UnityPlugin* plugin, GList* windows, gint from, gint to, gint direction, gpointer self);
+static void unity_spaces_manager_workspace_switched (UnitySpacesManager* self, UnityPlugin* plugin, gint from, gint to, gint direction);
+static void _unity_spaces_manager_workspace_switched_unity_plugin_workspace_switch_event (UnityPlugin* _sender, UnityPlugin* plugin, gint from, gint to, gint direction, gpointer self);
 UnitySpacesManager* unity_spaces_manager_new (UnityPlugin* plugin);
 UnitySpacesManager* unity_spaces_manager_construct (GType object_type, UnityPlugin* plugin);
 MutterPlugin* unity_plugin_get_plugin (UnityPlugin* self);
@@ -217,12 +219,18 @@ static void unity_spaces_manager_set_property (GObject * object, guint property_
 
 
 
+static void _unity_spaces_button_controller_on_notify_showing_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	unity_spaces_button_controller_on_notify_showing (self);
+}
+
+
 UnitySpacesButtonController* unity_spaces_button_controller_construct (GType object_type, UnitySpacesManager* _parent, UnityLauncherScrollerChild* _child) {
 	UnitySpacesButtonController * self;
 	g_return_val_if_fail (_parent != NULL, NULL);
 	g_return_val_if_fail (_child != NULL, NULL);
 	self = (UnitySpacesButtonController*) g_object_new (object_type, "child", _child, NULL);
 	unity_spaces_button_controller_set_parent (self, _parent);
+	g_signal_connect_object ((GObject*) self->priv->_parent, "notify::showing", (GCallback) _unity_spaces_button_controller_on_notify_showing_g_object_notify, self, 0);
 	unity_launcher_scroller_child_controller_set_name ((UnityLauncherScrollerChildController*) self, "Workspace Overview");
 	unity_launcher_scroller_child_controller_load_icon_from_icon_name ((UnityLauncherScrollerChildController*) self, "workspace-switcher");
 	return self;
@@ -231,6 +239,12 @@ UnitySpacesButtonController* unity_spaces_button_controller_construct (GType obj
 
 UnitySpacesButtonController* unity_spaces_button_controller_new (UnitySpacesManager* _parent, UnityLauncherScrollerChild* _child) {
 	return unity_spaces_button_controller_construct (UNITY_TYPE_SPACES_BUTTON_CONTROLLER, _parent, _child);
+}
+
+
+static void unity_spaces_button_controller_on_notify_showing (UnitySpacesButtonController* self) {
+	g_return_if_fail (self != NULL);
+	unity_launcher_scroller_child_set_active (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), unity_spaces_manager_get_showing (self->priv->_parent));
 }
 
 
@@ -343,8 +357,8 @@ static void _g_list_free_g_object_unref (GList* self) {
 }
 
 
-static void _unity_spaces_manager_workspace_switched_unity_plugin_workspace_switch_event (UnityPlugin* _sender, UnityPlugin* plugin, GList* windows, gint from, gint to, gint direction, gpointer self) {
-	unity_spaces_manager_workspace_switched (self, plugin, windows, from, to, direction);
+static void _unity_spaces_manager_workspace_switched_unity_plugin_workspace_switch_event (UnityPlugin* _sender, UnityPlugin* plugin, gint from, gint to, gint direction, gpointer self) {
+	unity_spaces_manager_workspace_switched (self, plugin, from, to, direction);
 }
 
 
@@ -364,10 +378,10 @@ UnitySpacesManager* unity_spaces_manager_new (UnityPlugin* plugin) {
 }
 
 
-static void unity_spaces_manager_workspace_switched (UnitySpacesManager* self, UnityPlugin* plugin, GList* windows, gint from, gint to, gint direction) {
+static void unity_spaces_manager_workspace_switched (UnitySpacesManager* self, UnityPlugin* plugin, gint from, gint to, gint direction) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (plugin != NULL);
-	mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), (MutterWindow*) g_list_nth_data (windows, (guint) 0), (guint) MUTTER_PLUGIN_SWITCH_WORKSPACE);
+	mutter_plugin_switch_workspace_completed (unity_plugin_get_plugin (self->priv->plugin));
 }
 
 
@@ -689,7 +703,6 @@ static void unity_spaces_manager_unlayout_workspaces (UnitySpacesManager* self, 
 							index = (y * width) + x;
 							xoffset = (x - (focus % width)) * rect.width;
 							yoffset = (y - (focus / width)) * rect.height;
-							g_warning ("spaces-manager.vala:235: %i %i", xoffset, yoffset);
 							_data3_->clone = _g_object_ref0 (CLUTTER_ACTOR ((ClutterActor*) g_list_nth_data (clones, (guint) index)));
 							anim = _g_object_ref0 (clutter_actor_animate (_data3_->clone, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "x", (float) xoffset, "y", (float) yoffset, "scale-x", 1.0f, "scale-y", 1.0f, NULL));
 							active_workspace = meta_screen_get_active_workspace_index (mutter_plugin_get_screen (unity_plugin_get_plugin (self->priv->plugin)));

@@ -250,8 +250,8 @@ UnityPlacesPlaceBarBackground* unity_places_place_bar_background_construct (GTyp
 UnityPlacesPlaceView* unity_places_place_view_new (UnityPlacesPlace* place);
 UnityPlacesPlaceView* unity_places_place_view_construct (GType object_type, UnityPlacesPlace* place);
 static void _unity_places_place_bar_on_entry_activated_unity_places_place_view_entry_activated (UnityPlacesPlaceView* _sender, UnityPlacesPlaceEntryView* entry_view, gpointer self);
-static void _lambda46_ (UnityPlacesPlace* p, UnityPlacesPlaceBar* self);
-static void __lambda46__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self);
+static void _lambda47_ (UnityPlacesPlace* p, UnityPlacesPlaceBar* self);
+static void __lambda47__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self);
 static GObject * unity_places_place_bar_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_place_bar_finalize (GObject* obj);
 static void unity_places_place_bar_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -443,7 +443,7 @@ static void _unity_places_place_bar_on_entry_activated_unity_places_place_view_e
 }
 
 
-static void _lambda46_ (UnityPlacesPlace* p, UnityPlacesPlaceBar* self) {
+static void _lambda47_ (UnityPlacesPlace* p, UnityPlacesPlaceBar* self) {
 	UnityPlacesPlaceView* view;
 	g_return_if_fail (p != NULL);
 	view = g_object_ref_sink (unity_places_place_view_new (p));
@@ -454,8 +454,8 @@ static void _lambda46_ (UnityPlacesPlace* p, UnityPlacesPlaceBar* self) {
 }
 
 
-static void __lambda46__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self) {
-	_lambda46_ (place, self);
+static void __lambda47__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self) {
+	_lambda47_ (place, self);
 }
 
 
@@ -498,7 +498,7 @@ static GObject * unity_places_place_bar_constructor (GType type, guint n_constru
 			}
 			_g_object_unref0 (_place_it);
 		}
-		g_signal_connect_object (self->priv->_model, "place-added", (GCallback) __lambda46__unity_places_place_model_place_added, self, 0);
+		g_signal_connect_object (self->priv->_model, "place-added", (GCallback) __lambda47__unity_places_place_model_place_added, self, 0);
 	}
 	return obj;
 }

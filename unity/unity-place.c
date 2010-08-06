@@ -910,6 +910,13 @@ static void unity_place_renderer_info_finalize (GObject* obj) {
 }
 
 
+/**
+   * SECTION:unity-place-renderer-info
+   * @short_description: Encapsulates all place entry metadata the Unity shell needs in order to render this model
+   * @include: unity.h
+   *
+   *
+   */
 GType unity_place_renderer_info_get_type (void) {
 	static volatile gsize unity_place_renderer_info_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_place_renderer_info_type_id__volatile)) {
@@ -1047,6 +1054,9 @@ static void unity_place_search_finalize (GObject* obj) {
 }
 
 
+/**
+   *
+   */
 GType unity_place_search_get_type (void) {
 	static volatile gsize unity_place_search_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_place_search_type_id__volatile)) {
@@ -2250,6 +2260,11 @@ static void unity_place_service_base_init (UnityPlaceServiceIface * iface) {
 }
 
 
+/**
+   * UnityPlaceService:
+   *
+   * DBus interface exported by a place daemon
+   */
 GType unity_place_service_get_type (void) {
 	static volatile gsize unity_place_service_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_place_service_type_id__volatile)) {
@@ -3679,6 +3694,11 @@ static void unity_place_entry_service_base_init (UnityPlaceEntryServiceIface * i
 }
 
 
+/**
+   * UnityPlaceEntryService:
+   *
+   * DBus interface for a given place entry exported by a place daemon
+   */
 GType unity_place_entry_service_get_type (void) {
 	static volatile gsize unity_place_entry_service_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_place_entry_service_type_id__volatile)) {
@@ -5047,6 +5067,12 @@ static void unity_place_service_impl_finalize (GObject* obj) {
 }
 
 
+/**
+   * UnityPlaceServiceImpl:
+   *
+   * Private helper class to shield of DBus details and ugly
+   * internal structs used for marshalling
+   */
 GType unity_place_service_impl_get_type (void) {
 	static volatile gsize unity_place_service_impl_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_place_service_impl_type_id__volatile)) {
@@ -5472,6 +5498,12 @@ static void unity_place_entry_service_impl_finalize (GObject* obj) {
 }
 
 
+/**
+   * UnityPlaceEntryServiceImpl:
+   *
+   * Private helper class to shield of DBus details and ugly
+   * internal structs used for marshalling
+   */
 GType unity_place_entry_service_impl_get_type (void) {
 	static volatile gsize unity_place_entry_service_impl_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_place_entry_service_impl_type_id__volatile)) {
@@ -5905,6 +5937,11 @@ static void unity_place_controller_finalize (GObject* obj) {
 }
 
 
+/**
+   * UnityPlaceController:
+   *
+   * Main handle for controlling the place entries managed by a place daemon
+   */
 GType unity_place_controller_get_type (void) {
 	static volatile gsize unity_place_controller_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_place_controller_type_id__volatile)) {

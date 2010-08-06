@@ -322,6 +322,9 @@ void unity_webapp_chromium_web_app_add_to_favorites (UnityWebappChromiumWebApp* 
 }
 
 
+/**
+     * gets the favorite uid for this desktop file
+     */
 static char* unity_webapp_chromium_web_app_get_fav_uid (UnityWebappChromiumWebApp* self) {
 	char* result = NULL;
 	char* myuid;

@@ -87,8 +87,8 @@ static void unity_window_management_window_mapped (UnityWindowManagement* self, 
 static void _unity_window_management_window_mapped_unity_plugin_window_mapped (UnityPlugin* _sender, UnityPlugin* plugin, MutterWindow* window, gpointer self);
 static void unity_window_management_window_destroyed (UnityWindowManagement* self, UnityPlugin* plugin, MutterWindow* window);
 static void _unity_window_management_window_destroyed_unity_plugin_window_destroyed (UnityPlugin* _sender, UnityPlugin* plugin, MutterWindow* window, gpointer self);
-static void unity_window_management_window_kill_effect (UnityWindowManagement* self, UnityPlugin* plugin, MutterWindow* window, gulong events);
-static void _unity_window_management_window_kill_effect_unity_plugin_window_kill_effect (UnityPlugin* _sender, UnityPlugin* plugin, MutterWindow* window, gulong events, gpointer self);
+static void unity_window_management_kill_window_effects (UnityWindowManagement* self, UnityPlugin* plugin, MutterWindow* window);
+static void _unity_window_management_kill_window_effects_unity_plugin_kill_window_effects (UnityPlugin* _sender, UnityPlugin* plugin, MutterWindow* window, gpointer self);
 UnityWindowManagement* unity_window_management_new (UnityPlugin* p);
 UnityWindowManagement* unity_window_management_construct (GType object_type, UnityPlugin* p);
 static gint unity_window_management_get_animation_speed (UnityWindowManagement* self, MutterWindow* window);
@@ -136,8 +136,8 @@ static void _unity_window_management_window_destroyed_unity_plugin_window_destro
 }
 
 
-static void _unity_window_management_window_kill_effect_unity_plugin_window_kill_effect (UnityPlugin* _sender, UnityPlugin* plugin, MutterWindow* window, gulong events, gpointer self) {
-	unity_window_management_window_kill_effect (self, plugin, window, events);
+static void _unity_window_management_kill_window_effects_unity_plugin_kill_window_effects (UnityPlugin* _sender, UnityPlugin* plugin, MutterWindow* window, gpointer self) {
+	unity_window_management_kill_window_effects (self, plugin, window);
 }
 
 
@@ -152,7 +152,7 @@ UnityWindowManagement* unity_window_management_construct (GType object_type, Uni
 	g_signal_connect_object (self->priv->plugin, "window-unmaximized", (GCallback) _unity_window_management_window_unmaximized_unity_plugin_window_unmaximized, self, 0);
 	g_signal_connect_object (self->priv->plugin, "window-mapped", (GCallback) _unity_window_management_window_mapped_unity_plugin_window_mapped, self, 0);
 	g_signal_connect_object (self->priv->plugin, "window-destroyed", (GCallback) _unity_window_management_window_destroyed_unity_plugin_window_destroyed, self, 0);
-	g_signal_connect_object (self->priv->plugin, "window-kill-effect", (GCallback) _unity_window_management_window_kill_effect_unity_plugin_window_kill_effect, self, 0);
+	g_signal_connect_object (self->priv->plugin, "kill-window-effects", (GCallback) _unity_window_management_kill_window_effects_unity_plugin_kill_window_effects, self, 0);
 	return self;
 }
 
@@ -194,7 +194,7 @@ static void unity_window_management_window_maximized (UnityWindowManagement* sel
 	g_return_if_fail (plugin != NULL);
 	g_return_if_fail (window != NULL);
 	g_object_set_data_full ((GObject*) window, unity_maximus_user_unmaximize_hint, NULL, NULL);
-	mutter_plugin_effect_completed (unity_plugin_get_plugin (plugin), window, (guint) MUTTER_PLUGIN_MAXIMIZE);
+	mutter_plugin_maximize_completed (unity_plugin_get_plugin (plugin), window);
 }
 
 
@@ -205,7 +205,7 @@ static void unity_window_management_window_unmaximized (UnityWindowManagement* s
 	g_return_if_fail (window != NULL);
 	i = 1;
 	g_object_set_data_full ((GObject*) window, unity_maximus_user_unmaximize_hint, GINT_TO_POINTER (i), NULL);
-	mutter_plugin_effect_completed (unity_plugin_get_plugin (plugin), window, (guint) MUTTER_PLUGIN_UNMAXIMIZE);
+	mutter_plugin_unmaximize_completed (unity_plugin_get_plugin (plugin), window);
 }
 
 
@@ -245,7 +245,7 @@ static void unity_window_management_window_minimized (UnityWindowManagement* sel
 		_tmp0_ = FALSE;
 	}
 	if (_tmp0_) {
-		mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_MINIMIZE);
+		mutter_plugin_minimize_completed (unity_plugin_get_plugin (self->priv->plugin), window);
 		return;
 	}
 	rect = (_tmp3_.height = 0, _tmp3_.width = 0, _tmp3_.x = 0, _tmp3_.y = 0, _tmp3_);
@@ -278,7 +278,7 @@ static void unity_window_management_window_minimized_completed (UnityWindowManag
 		return;
 	}
 	clutter_actor_hide ((ClutterActor*) window);
-	mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_MINIMIZE);
+	mutter_plugin_minimize_completed (unity_plugin_get_plugin (self->priv->plugin), window);
 }
 
 
@@ -341,7 +341,7 @@ static void unity_window_management_window_mapped (UnityWindowManagement* self, 
 		_tmp0_ = FALSE;
 	}
 	if (_tmp0_) {
-		mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_MAP);
+		mutter_plugin_map_completed (unity_plugin_get_plugin (self->priv->plugin), window);
 		return;
 	}
 	if (type == META_WINDOW_NORMAL) {
@@ -388,7 +388,7 @@ static void unity_window_management_window_mapped_completed (UnityWindowManageme
 		return;
 	}
 	clutter_actor_set_opacity ((_tmp1_ = window, CLUTTER_IS_ACTOR (_tmp1_) ? ((ClutterActor*) _tmp1_) : NULL), (guint8) 255);
-	mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_MAP);
+	mutter_plugin_map_completed (unity_plugin_get_plugin (self->priv->plugin), window);
 }
 
 
@@ -425,7 +425,7 @@ static void unity_window_management_window_destroyed (UnityWindowManagement* sel
 		_tmp0_ = FALSE;
 	}
 	if (_tmp0_) {
-		mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_DESTROY);
+		mutter_plugin_destroy_completed (unity_plugin_get_plugin (self->priv->plugin), window);
 		return;
 	}
 	anim = NULL;
@@ -441,11 +441,11 @@ static void unity_window_management_window_destroyed_completed (UnityWindowManag
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (anim != NULL);
 	window = MUTTER_WINDOW (clutter_animation_get_object (anim));
-	mutter_plugin_effect_completed (unity_plugin_get_plugin (self->priv->plugin), window, (guint) MUTTER_PLUGIN_DESTROY);
+	mutter_plugin_destroy_completed (unity_plugin_get_plugin (self->priv->plugin), window);
 }
 
 
-static void unity_window_management_window_kill_effect (UnityWindowManagement* self, UnityPlugin* plugin, MutterWindow* window, gulong events) {
+static void unity_window_management_kill_window_effects (UnityWindowManagement* self, UnityPlugin* plugin, MutterWindow* window) {
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (plugin != NULL);
 	g_return_if_fail (window != NULL);

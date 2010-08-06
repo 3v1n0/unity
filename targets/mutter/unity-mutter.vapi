@@ -49,24 +49,26 @@ namespace Unity {
 		public void expose_windows (GLib.SList<Clutter.Actor> windows, int left_buffer = 75);
 		public int get_launcher_width ();
 		public int get_panel_height ();
-		public void kill_effect (Mutter.Window window, ulong events);
 		public void map (Mutter.Window window);
 		public void maximize (Mutter.Window window, int x, int y, int width, int height);
 		public void minimize (Mutter.Window window);
-		public void switch_workspace (GLib.List<Mutter.Window> windows, int from, int to, int direction);
+		public void on_kill_switch_workspace ();
+		public void on_kill_window_effects (Mutter.Window window);
+		public void switch_workspace (int from, int to, int direction);
 		public void unmaximize (Mutter.Window window, int x, int y, int width, int height);
 		public Unity.Testing.Background background { get; set; }
 		public Unity.ExposeManager expose_manager { get; set; }
 		public bool expose_showing { get; }
 		public Mutter.Plugin? plugin { get; set; }
+		public signal void kill_switch_workspace (Unity.Plugin plugin);
+		public signal void kill_window_effects (Unity.Plugin plugin, Mutter.Window window);
 		public signal void restore_input_region (bool fullscreen);
 		public signal void window_destroyed (Unity.Plugin plugin, Mutter.Window window);
-		public signal void window_kill_effect (Unity.Plugin plugin, Mutter.Window window, ulong events);
 		public signal void window_mapped (Unity.Plugin plugin, Mutter.Window window);
 		public signal void window_maximized (Unity.Plugin plugin, Mutter.Window window, int x, int y, int width, int height);
 		public signal void window_minimized (Unity.Plugin plugin, Mutter.Window window);
 		public signal void window_unmaximized (Unity.Plugin plugin, Mutter.Window window, int x, int y, int width, int height);
-		public signal void workspace_switch_event (Unity.Plugin plugin, GLib.List<Mutter.Window> windows, int from, int to, int direction);
+		public signal void workspace_switch_event (Unity.Plugin plugin, int from, int to, int direction);
 	}
 	[CCode (cheader_filename = "unity-mutter.h")]
 	public class SpacesButtonController : Unity.Launcher.ScrollerChildController {

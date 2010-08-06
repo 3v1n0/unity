@@ -246,26 +246,26 @@ GType unity_launcher_pin_type_get_type (void) G_GNUC_CONST;
 UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (UnityLauncherScrollerChildController* self);
 static void unity_launcher_application_controller_on_favorite_added (UnityLauncherApplicationController* self, const char* uid);
 static void unity_launcher_application_controller_on_favorite_removed (UnityLauncherApplicationController* self, const char* uid);
-static void _lambda48_ (Block4Data* _data4_);
-static void __lambda48__dbusmenu_menuitem_realized (DbusmenuMenuitem* _sender, gpointer self);
+static void _lambda49_ (Block4Data* _data4_);
+static void __lambda49__dbusmenu_menuitem_realized (DbusmenuMenuitem* _sender, gpointer self);
 static Block4Data* block4_data_ref (Block4Data* _data4_);
 static void block4_data_unref (Block4Data* _data4_);
-static void _lambda47_ (Block3Data* _data3_);
-static void __lambda47__dbusmenu_client_layout_updated (DbusmenuClient* _sender, gpointer self);
+static void _lambda48_ (Block3Data* _data3_);
+static void __lambda48__dbusmenu_client_layout_updated (DbusmenuClient* _sender, gpointer self);
 static Block3Data* block3_data_ref (Block3Data* _data3_);
 static void block3_data_unref (Block3Data* _data3_);
 static void _g_list_free_g_object_unref (GList* self);
-static void _lambda49_ (guint timestamp, Block6Data* _data6_);
-static void __lambda49__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
+static void _lambda50_ (guint timestamp, Block6Data* _data6_);
+static void __lambda50__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
 static Block6Data* block6_data_ref (Block6Data* _data6_);
 static void block6_data_unref (Block6Data* _data6_);
 static Block5Data* block5_data_ref (Block5Data* _data5_);
 static void block5_data_unref (Block5Data* _data5_);
 static void unity_launcher_application_controller_real_get_menu_actions (UnityLauncherScrollerChildController* base, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
-static void _lambda50_ (guint timestamp, UnityLauncherApplicationController* self);
-static void __lambda50__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
 static void _lambda51_ (guint timestamp, UnityLauncherApplicationController* self);
 static void __lambda51__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
+static void _lambda52_ (guint timestamp, UnityLauncherApplicationController* self);
+static void __lambda52__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
 static void unity_launcher_application_controller_real_get_menu_navigation (UnityLauncherScrollerChildController* base, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
 static gint unity_launcher_application_controller_order_app_windows (void* a, void* b);
 void unity_launcher_scroller_child_set_activating (UnityLauncherScrollerChild* self, gboolean value);
@@ -283,8 +283,8 @@ static void _unity_launcher_application_controller_detach_application_bamf_view_
 static void unity_launcher_application_controller_on_app_urgant_changed (UnityLauncherApplicationController* self, gboolean urgancy);
 static void _unity_launcher_application_controller_on_app_urgant_changed_bamf_view_urgent_changed (BamfView* _sender, gboolean object, gpointer self);
 void unity_launcher_scroller_child_controller_set_hide (UnityLauncherScrollerChildController* self, gboolean value);
-static void _lambda52_ (gboolean value, UnityLauncherApplicationController* self);
-static void __lambda52__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self);
+static void _lambda53_ (gboolean value, UnityLauncherApplicationController* self);
+static void __lambda53__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self);
 void unity_launcher_scroller_child_controller_set_name (UnityLauncherScrollerChildController* self, const char* value);
 const char* unity_launcher_scroller_child_controller_get_name (UnityLauncherScrollerChildController* self);
 void unity_launcher_scroller_child_controller_load_icon_from_icon_name (UnityLauncherScrollerChildController* self, const char* icon_name);
@@ -567,7 +567,7 @@ static const char* string_to_string (const char* self) {
 }
 
 
-static void _lambda48_ (Block4Data* _data4_) {
+static void _lambda49_ (Block4Data* _data4_) {
 	Block3Data* _data3_;
 	Block5Data* _data5_;
 	UnityLauncherApplicationController * self;
@@ -581,8 +581,8 @@ static void _lambda48_ (Block4Data* _data4_) {
 }
 
 
-static void __lambda48__dbusmenu_menuitem_realized (DbusmenuMenuitem* _sender, gpointer self) {
-	_lambda48_ (self);
+static void __lambda49__dbusmenu_menuitem_realized (DbusmenuMenuitem* _sender, gpointer self) {
+	_lambda49_ (self);
 }
 
 
@@ -601,7 +601,7 @@ static void block4_data_unref (Block4Data* _data4_) {
 }
 
 
-static void _lambda47_ (Block3Data* _data3_) {
+static void _lambda48_ (Block3Data* _data3_) {
 	Block5Data* _data5_;
 	UnityLauncherApplicationController * self;
 	Block4Data* _data4_;
@@ -629,7 +629,7 @@ static void _lambda47_ (Block3Data* _data3_) {
 			DbusmenuMenuitem* menuitem;
 			menuitem = _g_object_ref0 ((DbusmenuMenuitem*) menuitem_it->data);
 			{
-				g_signal_connect_data (menuitem, "realized", (GCallback) __lambda48__dbusmenu_menuitem_realized, block4_data_ref (_data4_), (GClosureNotify) block4_data_unref, 0);
+				g_signal_connect_data (menuitem, "realized", (GCallback) __lambda49__dbusmenu_menuitem_realized, block4_data_ref (_data4_), (GClosureNotify) block4_data_unref, 0);
 				_g_object_unref0 (menuitem);
 			}
 		}
@@ -638,8 +638,8 @@ static void _lambda47_ (Block3Data* _data3_) {
 }
 
 
-static void __lambda47__dbusmenu_client_layout_updated (DbusmenuClient* _sender, gpointer self) {
-	_lambda47_ (self);
+static void __lambda48__dbusmenu_client_layout_updated (DbusmenuClient* _sender, gpointer self) {
+	_lambda48_ (self);
 }
 
 
@@ -665,7 +665,7 @@ static void _g_list_free_g_object_unref (GList* self) {
 }
 
 
-static void _lambda49_ (guint timestamp, Block6Data* _data6_) {
+static void _lambda50_ (guint timestamp, Block6Data* _data6_) {
 	Block5Data* _data5_;
 	UnityLauncherApplicationController * self;
 	_data5_ = _data6_->_data5_;
@@ -674,8 +674,8 @@ static void _lambda49_ (guint timestamp, Block6Data* _data6_) {
 }
 
 
-static void __lambda49__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
-	_lambda49_ (object, self);
+static void __lambda50__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
+	_lambda50_ (object, self);
 }
 
 
@@ -747,7 +747,7 @@ static void unity_launcher_application_controller_real_get_menu_actions (UnityLa
 						_data3_->path = g_strdup (bamf_indicator_get_dbus_menu_path ((_tmp0_ = view, BAMF_IS_INDICATOR (_tmp0_) ? ((BamfIndicator*) _tmp0_) : NULL)));
 						_data3_->remote_address = g_strdup (bamf_indicator_get_remote_address ((_tmp1_ = view, BAMF_IS_INDICATOR (_tmp1_) ? ((BamfIndicator*) _tmp1_) : NULL)));
 						self->priv->menu_client = (_tmp2_ = dbusmenu_client_new (_data3_->remote_address, _data3_->path), _g_object_unref0 (self->priv->menu_client), _tmp2_);
-						g_signal_connect_data (self->priv->menu_client, "layout-updated", (GCallback) __lambda47__dbusmenu_client_layout_updated, block3_data_ref (_data3_), (GClosureNotify) block3_data_unref, 0);
+						g_signal_connect_data (self->priv->menu_client, "layout-updated", (GCallback) __lambda48__dbusmenu_client_layout_updated, block3_data_ref (_data3_), (GClosureNotify) block3_data_unref, 0);
 						block3_data_unref (_data3_);
 					}
 					_g_object_unref0 (view);
@@ -795,7 +795,7 @@ static void unity_launcher_application_controller_real_get_menu_actions (UnityLa
 				dbusmenu_menuitem_property_set (shortcut_item, DBUSMENU_MENUITEM_PROP_LABEL, local_name);
 				dbusmenu_menuitem_property_set_bool (shortcut_item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 				dbusmenu_menuitem_property_set_bool (shortcut_item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
-				g_signal_connect_data (shortcut_item, "item-activated", (GCallback) __lambda49__dbusmenu_menuitem_item_activated, block6_data_ref (_data6_), (GClosureNotify) block6_data_unref, 0);
+				g_signal_connect_data (shortcut_item, "item-activated", (GCallback) __lambda50__dbusmenu_menuitem_item_activated, block6_data_ref (_data6_), (GClosureNotify) block6_data_unref, 0);
 				dbusmenu_menuitem_child_append (root, shortcut_item);
 				_g_object_unref0 (shortcut_item);
 				_g_free0 (local_name);
@@ -810,17 +810,17 @@ static void unity_launcher_application_controller_real_get_menu_actions (UnityLa
 }
 
 
-static void _lambda50_ (guint timestamp, UnityLauncherApplicationController* self) {
+static void _lambda51_ (guint timestamp, UnityLauncherApplicationController* self) {
 	unity_launcher_application_controller_set_sticky (self, !unity_launcher_application_controller_is_sticky (self));
 }
 
 
-static void __lambda50__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
-	_lambda50_ (object, self);
+static void __lambda51__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
+	_lambda51_ (object, self);
 }
 
 
-static void _lambda51_ (guint timestamp, UnityLauncherApplicationController* self) {
+static void _lambda52_ (guint timestamp, UnityLauncherApplicationController* self) {
 	if (BAMF_IS_APPLICATION (self->priv->app)) {
 		GArray* xids;
 		xids = bamf_application_get_xids (self->priv->app);
@@ -830,8 +830,8 @@ static void _lambda51_ (guint timestamp, UnityLauncherApplicationController* sel
 }
 
 
-static void __lambda51__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
-	_lambda51_ (object, self);
+static void __lambda52__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
+	_lambda52_ (object, self);
 }
 
 
@@ -863,7 +863,7 @@ static void unity_launcher_application_controller_real_get_menu_navigation (Unit
 		}
 		dbusmenu_menuitem_property_set_bool (pinning_item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 		dbusmenu_menuitem_property_set_bool (pinning_item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
-		g_signal_connect_object (pinning_item, "item-activated", (GCallback) __lambda50__dbusmenu_menuitem_item_activated, self, 0);
+		g_signal_connect_object (pinning_item, "item-activated", (GCallback) __lambda51__dbusmenu_menuitem_item_activated, self, 0);
 		dbusmenu_menuitem_child_append (root, pinning_item);
 		_g_object_unref0 (pinning_item);
 	}
@@ -873,7 +873,7 @@ static void unity_launcher_application_controller_real_get_menu_navigation (Unit
 		dbusmenu_menuitem_property_set (app_item, DBUSMENU_MENUITEM_PROP_LABEL, _ ("Quit"));
 		dbusmenu_menuitem_property_set_bool (app_item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 		dbusmenu_menuitem_property_set_bool (app_item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
-		g_signal_connect_object (app_item, "item-activated", (GCallback) __lambda51__dbusmenu_menuitem_item_activated, self, 0);
+		g_signal_connect_object (app_item, "item-activated", (GCallback) __lambda52__dbusmenu_menuitem_item_activated, self, 0);
 		dbusmenu_menuitem_child_append (root, app_item);
 		_g_object_unref0 (app_item);
 	}
@@ -1009,13 +1009,13 @@ static void _unity_launcher_application_controller_on_app_urgant_changed_bamf_vi
 }
 
 
-static void _lambda52_ (gboolean value, UnityLauncherApplicationController* self) {
+static void _lambda53_ (gboolean value, UnityLauncherApplicationController* self) {
 	unity_launcher_scroller_child_controller_set_hide ((UnityLauncherScrollerChildController*) self, !value);
 }
 
 
-static void __lambda52__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self) {
-	_lambda52_ (object, self);
+static void __lambda53__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self) {
+	_lambda53_ (object, self);
 }
 
 
@@ -1037,7 +1037,7 @@ void unity_launcher_application_controller_attach_application (UnityLauncherAppl
 	g_signal_connect_object ((BamfView*) self->priv->app, "active-changed", (GCallback) _unity_launcher_application_controller_on_app_active_changed_bamf_view_active_changed, self, 0);
 	g_signal_connect_object ((BamfView*) self->priv->app, "closed", (GCallback) _unity_launcher_application_controller_detach_application_bamf_view_closed, self, 0);
 	g_signal_connect_object ((BamfView*) self->priv->app, "urgent-changed", (GCallback) _unity_launcher_application_controller_on_app_urgant_changed_bamf_view_urgent_changed, self, 0);
-	g_signal_connect_object ((BamfView*) self->priv->app, "user-visible-changed", (GCallback) __lambda52__bamf_view_user_visible_changed, self, 0);
+	g_signal_connect_object ((BamfView*) self->priv->app, "user-visible-changed", (GCallback) __lambda53__bamf_view_user_visible_changed, self, 0);
 	unity_launcher_scroller_child_controller_set_name ((UnityLauncherScrollerChildController*) self, _tmp2_ = bamf_view_get_name ((BamfView*) self->priv->app));
 	_g_free0 (_tmp2_);
 	if (unity_launcher_scroller_child_controller_get_name ((UnityLauncherScrollerChildController*) self) == NULL) {
@@ -1167,7 +1167,7 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 	{
 		char* _tmp3_;
 		char* _tmp4_;
-		_tmp3_ = g_key_file_get_string (self->priv->desktop_keyfile, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_NAME, &_inner_error_);
+		_tmp3_ = g_key_file_get_locale_string (self->priv->desktop_keyfile, G_KEY_FILE_DESKTOP_GROUP, G_KEY_FILE_DESKTOP_KEY_NAME, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch38_g_error;
 		}
@@ -1195,7 +1195,7 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 	{
 		char* _tmp5_;
 		char* _tmp6_;
-		_tmp5_ = g_key_file_get_string (self->priv->desktop_keyfile, G_KEY_FILE_DESKTOP_GROUP, "X-GNOME-FullName", &_inner_error_);
+		_tmp5_ = g_key_file_get_locale_string (self->priv->desktop_keyfile, G_KEY_FILE_DESKTOP_GROUP, "X-GNOME-FullName", NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch39_g_error;
 		}

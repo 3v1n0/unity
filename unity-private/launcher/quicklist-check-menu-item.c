@@ -127,15 +127,13 @@ static void unity_launcher_quicklist_check_menu_item_real_get_preferred_width (C
 	gint width = 0;
 	gint height = 0;
 	GtkSettings* settings;
-	char* _tmp2_;
 	char* _tmp1_;
 	char* _tmp0_ = NULL;
 	self = (UnityLauncherQuicklistCheckMenuItem*) base;
 	settings = _g_object_ref0 (gtk_settings_get_default ());
-	unity_quicklist_rendering_item_get_text_extents (_tmp1_ = (g_object_get (settings, "gtk-font-name", &_tmp0_, NULL), _tmp0_), _tmp2_ = g_strconcat (ctk_menu_item_get_label ((CtkMenuItem*) self), " ☐", NULL), &width, &height);
-	_g_free0 (_tmp2_);
+	unity_quicklist_rendering_get_text_extents (_tmp1_ = (g_object_get (settings, "gtk-font-name", &_tmp0_, NULL), _tmp0_), ctk_menu_item_get_label ((CtkMenuItem*) self), &width, &height);
 	_g_free0 (_tmp1_);
-	*min_width_p = ((float) width) + ((float) ctk_em_to_pixel ((double) (2 * UNITY_LAUNCHER_MARGIN)));
+	*min_width_p = (((float) width) + ((float) ctk_em_to_pixel ((double) (2 * UNITY_LAUNCHER_MARGIN)))) + 30.0f;
 	*natural_width_p = *min_width_p;
 	_g_object_unref0 (settings);
 }
@@ -186,10 +184,10 @@ static gboolean _unity_launcher_quicklist_check_menu_item_update_item_background
 	cairo_t* selected_cr;
 	GtkSettings* settings;
 	char* formatted_label;
+	char* _tmp3_;
+	char* _tmp2_ = NULL;
 	char* _tmp5_;
 	char* _tmp4_ = NULL;
-	char* _tmp7_;
-	char* _tmp6_ = NULL;
 	g_return_val_if_fail (self != NULL, FALSE);
 	white_color = (memset (&_tmp0_, 0, sizeof (ClutterColor)), _tmp0_.red = (guint8) 255, _tmp0_.green = (guint8) 255, _tmp0_.blue = (guint8) 255, _tmp0_.alpha = (guint8) 255, _tmp0_);
 	if (CTK_IS_LAYER_ACTOR (self->priv->item_background)) {
@@ -205,17 +203,10 @@ static gboolean _unity_launcher_quicklist_check_menu_item_update_item_background
 	selected_cr = cairo_create (selected_surf);
 	settings = _g_object_ref0 (gtk_settings_get_default ());
 	formatted_label = utils_strip_characters (ctk_menu_item_get_label ((CtkMenuItem*) self), "", "_", "_");
-	if (ctk_check_menu_item_get_active ((CtkCheckMenuItem*) self)) {
-		char* _tmp2_;
-		formatted_label = (_tmp2_ = g_strconcat ("☑ ", formatted_label, NULL), _g_free0 (formatted_label), _tmp2_);
-	} else {
-		char* _tmp3_;
-		formatted_label = (_tmp3_ = g_strconcat ("☐ ", formatted_label, NULL), _g_free0 (formatted_label), _tmp3_);
-	}
-	unity_quicklist_rendering_item_normal_mask (normal_cr, self->priv->last_width, self->priv->last_height, _tmp5_ = (g_object_get (settings, "gtk-font-name", &_tmp4_, NULL), _tmp4_), formatted_label);
+	unity_quicklist_rendering_checkmark_item_normal_mask (normal_cr, self->priv->last_width, self->priv->last_height, _tmp3_ = (g_object_get (settings, "gtk-font-name", &_tmp2_, NULL), _tmp2_), formatted_label, ctk_check_menu_item_get_active ((CtkCheckMenuItem*) self));
+	_g_free0 (_tmp3_);
+	unity_quicklist_rendering_checkmark_item_selected_mask (selected_cr, self->priv->last_width, self->priv->last_height, _tmp5_ = (g_object_get (settings, "gtk-font-name", &_tmp4_, NULL), _tmp4_), formatted_label, ctk_check_menu_item_get_active ((CtkCheckMenuItem*) self));
 	_g_free0 (_tmp5_);
-	unity_quicklist_rendering_item_selected_mask (selected_cr, self->priv->last_width, self->priv->last_height, _tmp7_ = (g_object_get (settings, "gtk-font-name", &_tmp6_, NULL), _tmp6_), formatted_label);
-	_g_free0 (_tmp7_);
 	ctk_layer_set_mask_from_surface (normal_layer, normal_surf);
 	ctk_layer_set_color (normal_layer, &white_color);
 	ctk_layer_set_mask_from_surface (selected_layer, selected_surf);

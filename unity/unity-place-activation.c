@@ -385,6 +385,13 @@ static void unity_place_activation_base_init (UnityPlaceActivationIface * iface)
 }
 
 
+/**
+   * UnityPlaceActivation:
+   *
+   * Interface for async launching of URIs. Instances implementing
+   * this interface can be registered with a Unity.Place.Controller by
+   * calling set_activation (activation) on the controller object.
+   */
 GType unity_place_activation_get_type (void) {
 	static volatile gsize unity_place_activation_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_place_activation_type_id__volatile)) {

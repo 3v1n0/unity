@@ -88,12 +88,10 @@ namespace Unity
                                            int           height);
     public signal void window_mapped (Plugin plugin, Mutter.Window window);
     public signal void window_destroyed (Plugin plugin, Mutter.Window window);
-    public signal void window_kill_effect (Plugin        plugin,
-                                           Mutter.Window window,
-                                           ulong         events);
+    public signal void kill_window_effects (Plugin plugin, Mutter.Window window);
+    public signal void kill_switch_workspace (Plugin plugin);
 
     public signal void workspace_switch_event (Plugin plugin,
-                                               List<Mutter.Window> windows,
                                                int from,
                                                int to,
                                                int direction);
@@ -511,6 +509,7 @@ namespace Unity
 
     public void expose_xids (Array<uint32> xids)
     {
+      spaces_manager.hide_spaces_picker ();
       SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
       for (int i = 0; i < xids.length; i++)
         {
@@ -818,17 +817,21 @@ namespace Unity
       this.window_destroyed (this, window);
     }
 
-    public void switch_workspace (List<Mutter.Window> windows,
-                                  int                 from,
+    public void switch_workspace (int                 from,
                                   int                 to,
                                   int                 direction)
     {
-      this.workspace_switch_event (this, windows, from, to, direction);
+      this.workspace_switch_event (this, from, to, direction);
     }
 
-    public void kill_effect (Mutter.Window window, ulong events)
+    public void on_kill_window_effects (Mutter.Window window)
     {
-      this.window_kill_effect (this, window, events);
+      this.kill_window_effects (this, window);
+    }
+
+    public void on_kill_switch_workspace ()
+    {
+      this.kill_switch_workspace (this);
     }
 
     public int get_panel_height ()

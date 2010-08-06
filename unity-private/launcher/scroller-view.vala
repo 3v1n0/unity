@@ -47,6 +47,7 @@ namespace Unity.Launcher
 
   class ScrollerView : Ctk.Actor
   {
+    private bool disable_child_events = false;
     // please don't reference this outside of this view, its only public for construct
     public ScrollerModel model {get; construct;}
     public Ctk.EffectCache cache {get; construct;}
@@ -109,6 +110,10 @@ namespace Unity.Launcher
 
     construct
     {
+      motion_event.connect (passthrough_motion_event);
+      button_press_event.connect (passthrough_button_press_event);
+      button_release_event.connect (passthrough_button_release_event);
+
       Unity.Testing.ObjectRegistry.get_default ().register ("LauncherScrollerView", this);
       var mypadding = this.padding;
 
@@ -136,9 +141,7 @@ namespace Unity.Launcher
       button_release_event.connect (on_button_release_event);
       motion_event.connect (on_motion_event);
       enter_event.connect (on_enter_event);
-      parent_set.connect (() => {
-          get_stage ().motion_event.connect (on_stage_motion);
-      });
+      leave_event.connect (on_leave_event);
       notify["is-autoscrolling"].connect (on_auto_scrolling_state_change);
       Unity.Drag.Controller.get_default ().drag_motion.connect (on_drag_motion_event);
       // set a timeline for our fling animation
@@ -162,6 +165,13 @@ namespace Unity.Launcher
         button_down = false;
       });
 
+      drag_controller.drag_drop.connect (() => {
+        foreach (Clutter.Actor child in model)
+          {
+            child.set_reactive (false);
+          }
+      });
+
       set_reactive (true);
 
       child_refs = new Gee.ArrayList <ScrollerChild> ();
@@ -171,6 +181,132 @@ namespace Unity.Launcher
         order_children (true);
         queue_relayout ();
       });
+
+    }
+
+    /* hoo-boy this sucks. because of mutter and clutter issues, i have to set
+     * all my children to be non reactive. then i need to go through and
+     * send events to the correct children myself, by-passing clutter
+     * all this so i can accurately know if a mouse-leave event on the launcher
+     * is real... sheesh
+     */
+    private Clutter.Actor? last_picked_actor = null;
+    private Clutter.Actor? handle_event (Clutter.Event event)
+    {
+      if (disable_child_events)
+        return null;
+
+      if ((last_picked_actor is Clutter.Actor) == false)
+        last_picked_actor = null;
+
+
+      foreach (Clutter.Actor actor in model)
+        {
+          actor.set_reactive (true);
+        }
+
+
+      float x, y;
+      event.get_coords (out x, out y);
+      Clutter.Actor picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, (int)x, (int)y);
+
+
+      foreach (Clutter.Actor actor in model)
+        {
+          actor.set_reactive (false);
+        }
+
+
+      if (picked_actor is Clutter.Actor)
+        {
+          // we now have a picked actor, figure out what event to send it
+          if (last_picked_actor != picked_actor)
+            {
+              Clutter.Event crossing_event =  { 0 };
+              crossing_event.type = Clutter.EventType.LEAVE;
+              crossing_event.crossing.x = x;
+              crossing_event.crossing.y = y;
+              crossing_event.crossing.stage = get_stage () as Clutter.Stage;
+              crossing_event.crossing.flags = Clutter.EventFlags.FLAG_SYNTHETIC;
+
+              if (last_picked_actor is Clutter.Actor)
+                last_picked_actor.do_event (crossing_event, false);
+
+              crossing_event.type = Clutter.EventType.ENTER;
+              picked_actor.do_event (crossing_event, false);
+            }
+        }
+      else if (last_picked_actor is Clutter.Actor)
+        {
+          // if picked_actor is null, then we want to send a leave event on the
+          // previous actor
+          Clutter.Event crossing_event =  { 0 };
+          crossing_event.type = Clutter.EventType.LEAVE;
+          crossing_event.crossing.x = x;
+          crossing_event.crossing.y = y;
+          crossing_event.crossing.stage = get_stage () as Clutter.Stage;
+          crossing_event.crossing.flags = Clutter.EventFlags.FLAG_SYNTHETIC;
+
+          last_picked_actor.do_event (crossing_event, false);
+        }
+
+      last_picked_actor = picked_actor;
+      return picked_actor;
+    }
+
+    private bool passthrough_motion_event (Clutter.Event event)
+    {
+      var drag_controller = Drag.Controller.get_default ();
+      if (drag_controller.is_dragging) return false;
+      enter_event.disconnect (on_enter_event);
+      leave_event.disconnect (on_leave_event);
+      motion_event.disconnect (on_motion_event);
+      motion_event.disconnect (passthrough_motion_event);
+      Clutter.Actor picked_actor = handle_event (event);
+
+      if (picked_actor is Clutter.Actor)
+          picked_actor.do_event (event, false);
+
+      enter_event.connect (on_enter_event);
+      leave_event.connect (on_leave_event);
+      motion_event.connect (on_motion_event);
+      motion_event.connect (passthrough_motion_event);
+      return false;
+    }
+
+    private bool passthrough_button_press_event (Clutter.Event event)
+    {
+      var drag_controller = Drag.Controller.get_default ();
+      if (drag_controller.is_dragging) return false;
+
+      enter_event.disconnect (on_enter_event);
+      leave_event.disconnect (on_leave_event);
+      button_press_event.disconnect (passthrough_button_press_event);
+      Clutter.Actor picked_actor = handle_event (event);
+      if (picked_actor is Clutter.Actor)
+        picked_actor.do_event (event, false);
+
+      enter_event.connect (on_enter_event);
+      leave_event.connect (on_leave_event);
+      button_press_event.connect (passthrough_button_press_event);
+      return false;
+    }
+
+    private bool passthrough_button_release_event (Clutter.Event event)
+    {
+      var drag_controller = Drag.Controller.get_default ();
+      if (drag_controller.is_dragging) return false;
+      enter_event.disconnect (on_enter_event);
+      leave_event.disconnect (on_leave_event);
+      button_release_event.disconnect (passthrough_button_release_event);
+      Clutter.Actor picked_actor = handle_event (event);
+      if (picked_actor is Clutter.Actor)
+        picked_actor.do_event (event, false);
+
+      enter_event.connect (on_enter_event);
+      leave_event.connect (on_leave_event);
+      button_release_event.connect (passthrough_button_release_event);
+      return false;
     }
 
     public int get_model_index_at_y_pos_no_anim (float y, bool return_minus_if_fail=false)
@@ -212,7 +348,14 @@ namespace Unity.Launcher
     {
       // trying out a different method
       int iy = (int)y;
+      foreach (Clutter.Actor actor in model)
+        {
+          actor.set_reactive (true);
+        }
+
       Clutter.Actor picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy);
+      int ret_val = -200;
+
       if (picked_actor is ScrollerChild == false)
         {
           // we didn't pick a scroller child. lets pick spacing above us
@@ -226,15 +369,22 @@ namespace Unity.Launcher
               if (picked_actor is ScrollerChild == false)
                 {
                   if (return_minus_if_fail)
-                    return -1;
+                    ret_val = -1;
                   // couldn't pick a single actor, return 0
-                  return (y < padding.top + model[0].get_height () + spacing) ? 0 : model.size -1 ;
+                  ret_val =  (y < padding.top + model[0].get_height () + spacing) ? 0 : model.size -1 ;
                 }
             }
         }
 
-      return model.index_of (picked_actor as ScrollerChild);
+      if (ret_val < -1)
+        ret_val = model.index_of (picked_actor as ScrollerChild);
 
+      foreach (Clutter.Actor actor in model)
+        {
+          actor.set_reactive (false);
+        }
+
+      return ret_val;
     }
 
     /*
@@ -270,6 +420,8 @@ namespace Unity.Launcher
      */
     private void disable_animations_on_children (Clutter.Event event)
     {
+      disable_child_events = true;
+
       Clutter.Event e = { 0 };
       e.type = Clutter.EventType.LEAVE;
       e.crossing.time = event.motion.time;
@@ -286,6 +438,7 @@ namespace Unity.Launcher
               child.do_event (e, false);
             }
         }
+
     }
 
     /*
@@ -305,6 +458,8 @@ namespace Unity.Launcher
       child.notify["position"].connect (() => {
         queue_relayout ();
       });
+
+      child.set_reactive (false);
     }
 
     private void model_child_removed (ScrollerChild child)
@@ -361,19 +516,17 @@ namespace Unity.Launcher
 
       this.get_stage ().button_release_event.connect (this.on_button_release_event);
 
-      return true;
+      return false;
     }
 
     private bool on_button_release_event (Clutter.Event event)
     {
-
       if (event.button.button != 1)
         {
           // not a left click
           return false;
         }
 
-      //Clutter.ungrab_pointer ();
       button_down = false;
       this.get_stage ().button_release_event.disconnect (this.on_button_release_event);
       Unity.global_shell.remove_fullscreen_request (this);
@@ -393,17 +546,14 @@ namespace Unity.Launcher
               current_phase = ScrollerPhase.FLUNG;
             }
 
-          foreach (ScrollerChild child in model)
-            {
-              child.set_reactive (false);
-            }
+          disable_child_events = true;
           fling_timeline.start ();
         }
 
       MenuManager manager = MenuManager.get_default ();
       manager.popdown_current_menu ();
 
-      return true;
+      return false;
     }
 
     private bool on_enter_event (Clutter.Event event)
@@ -443,10 +593,9 @@ namespace Unity.Launcher
       return false;
     }
 
-    private bool on_stage_motion (Clutter.Event event)
+    private bool on_leave_event (Clutter.Event event)
     {
       if (view_type == ScrollerViewType.CONTRACTED) return false;
-      if (event.crossing.x < get_width ()) return false;
 
       foreach (ScrollerChild child in model)
         {
@@ -458,6 +607,9 @@ namespace Unity.Launcher
       order_children (false);
       queue_relayout ();
       is_autoscrolling = false;
+
+      if (last_picked_actor is Clutter.Actor)
+         last_picked_actor.do_event (event, false);
       return false;
     }
 
@@ -585,13 +737,12 @@ namespace Unity.Launcher
               do_anim_bounce (timeline, msecs);
               break;
             case (ScrollerPhase.NONE):
-              timeline.stop ();
-              scroll_speed = 0.0f;
-              is_animating = false;
-              foreach (ScrollerChild child in model)
-                {
-                  child.set_reactive (true);
-                }
+              {
+                timeline.stop ();
+                scroll_speed = 0.0f;
+                is_animating = false;
+                disable_child_events = false;
+              }
               break;
             default:
               assert_not_reached ();

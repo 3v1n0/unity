@@ -146,6 +146,9 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
+/**
+     * Get a ref to the singleton AppInfoManager
+     */
 UnityAppInfoManager* unity_app_info_manager_get_instance (void) {
 	UnityAppInfoManager* result = NULL;
 	if (unity_app_info_manager_singleton == NULL) {
@@ -157,6 +160,14 @@ UnityAppInfoManager* unity_app_info_manager_get_instance (void) {
 }
 
 
+/**
+     * Look up an AppInfo given its desktop id or absolute path. The desktop id
+     * is the base filename of the .desktop file for the application including
+     * the .desktop extension.
+     *
+     * If the AppInfo is not already cached this method will do synchronous
+     * IO to look it up.
+     */
 GAppInfo* unity_app_info_manager_lookup (UnityAppInfoManager* self, const char* id) {
 	GAppInfo* result = NULL;
 	GAppInfo* appinfo;
@@ -229,6 +240,14 @@ static guchar* _vala_array_dup1 (guchar* self, int length) {
 }
 
 
+/**
+     * Look up an AppInfo given its desktop id or absolute path.
+     * The desktop id is the base filename of the .desktop file for the
+     * application including the .desktop extension.
+     *
+     * If the AppInfo is not already cached this method will do asynchronous
+     * IO to look it up.
+     */
 static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLookupAsyncData* data) {
 	switch (data->_state_) {
 		case 0:
@@ -477,6 +496,11 @@ static void unity_app_info_manager_finalize (GObject* obj) {
 }
 
 
+/**
+   * A singleton class that caches GLib.AppInfo objects.
+   * Singletons are evil, yes, but this on slightly less
+   * so because the exposed API is immutable
+   */
 GType unity_app_info_manager_get_type (void) {
 	static volatile gsize unity_app_info_manager_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_app_info_manager_type_id__volatile)) {
