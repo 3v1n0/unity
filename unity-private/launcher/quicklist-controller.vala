@@ -163,7 +163,7 @@ namespace Unity.Launcher
           new_menu ();
           warning ("state change called on menu when menu does not exist");
         }
-        
+
       if (state == QuicklistControllerState.LABEL)
         {
           // just build a menu with a label for the name
@@ -177,7 +177,7 @@ namespace Unity.Launcher
 
           menuitem.reactive = false;
           menu.append (menuitem, true);
-          
+
           float x, y;
           float w, h;
           (attached_controller.child as Ctk.Actor).get_transformed_position(out x, out y);
@@ -185,7 +185,7 @@ namespace Unity.Launcher
           h = (attached_controller.child as Ctk.Actor).get_height();
           menu.compute_style_textures ();
           menu.set_expansion_size_factor (0.0f);
-          menu.set_anchor_position (x + w-6, y + h/2.0f, 0);          
+          menu.set_anchor_position (x + w-6, y + h/2.0f, 0);
         }
       else if (state == QuicklistControllerState.MENU)
         {
@@ -334,7 +334,8 @@ namespace Unity.Launcher
 
       else
         {
-          warning ("not a menu item we understand (yet)");
+          warning ("not a menu item we understand, %s",
+                   dbusmenuitem.property_get ("type"));
           return null;
         }
 

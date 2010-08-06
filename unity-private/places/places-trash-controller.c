@@ -191,12 +191,12 @@ UnityLauncherApplicationQuicklistController* unity_launcher_application_quicklis
 GType unity_launcher_application_quicklist_controller_get_type (void) G_GNUC_CONST;
 static UnityLauncherQuicklistController* unity_places_trash_controller_real_get_menu_controller (UnityLauncherScrollerChildController* base);
 static void unity_places_trash_controller_real_get_menu_actions (UnityLauncherScrollerChildController* base, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
-static void _lambda44_ (UnityPlacesTrashController* self);
-static void __lambda44__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
-static void unity_places_trash_controller_recursively_delete_contents (UnityPlacesTrashController* self, GFile* dir, GAsyncReadyCallback _callback_, gpointer _user_data_);
-static void unity_places_trash_controller_recursively_delete_contents_finish (UnityPlacesTrashController* self, GAsyncResult* _res_);
 static void _lambda45_ (UnityPlacesTrashController* self);
 static void __lambda45__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
+static void unity_places_trash_controller_recursively_delete_contents (UnityPlacesTrashController* self, GFile* dir, GAsyncReadyCallback _callback_, gpointer _user_data_);
+static void unity_places_trash_controller_recursively_delete_contents_finish (UnityPlacesTrashController* self, GAsyncResult* _res_);
+static void _lambda46_ (UnityPlacesTrashController* self);
+static void __lambda46__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
 static void unity_places_trash_controller_real_get_menu_navigation (UnityLauncherScrollerChildController* base, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
 static void unity_places_trash_controller_recursively_delete_contents_data_free (gpointer _data);
 static void unity_places_trash_controller_recursively_delete_contents_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
@@ -350,7 +350,7 @@ static void unity_places_trash_controller_real_get_menu_actions (UnityLauncherSc
 }
 
 
-static void _lambda44_ (UnityPlacesTrashController* self) {
+static void _lambda45_ (UnityPlacesTrashController* self) {
 	GError * _inner_error_;
 	_inner_error_ = NULL;
 	{
@@ -381,18 +381,18 @@ static void _lambda44_ (UnityPlacesTrashController* self) {
 }
 
 
-static void __lambda44__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
-	_lambda44_ (self);
+static void __lambda45__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
+	_lambda45_ (self);
 }
 
 
-static void _lambda45_ (UnityPlacesTrashController* self) {
+static void _lambda46_ (UnityPlacesTrashController* self) {
 	unity_places_trash_controller_recursively_delete_contents (self, self->priv->trash_dir, NULL, NULL);
 }
 
 
-static void __lambda45__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
-	_lambda45_ (self);
+static void __lambda46__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
+	_lambda46_ (self);
 }
 
 
@@ -410,7 +410,7 @@ static void unity_places_trash_controller_real_get_menu_navigation (UnityLaunche
 	dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 	dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
 	dbusmenu_menuitem_child_append (root, item);
-	g_signal_connect_object (item, "item-activated", (GCallback) __lambda44__dbusmenu_menuitem_item_activated, self, 0);
+	g_signal_connect_object (item, "item-activated", (GCallback) __lambda45__dbusmenu_menuitem_item_activated, self, 0);
 	if (self->priv->n_items != 0) {
 		DbusmenuMenuitem* _tmp1_;
 		item = (_tmp1_ = dbusmenu_menuitem_new (), _g_object_unref0 (item), _tmp1_);
@@ -418,7 +418,7 @@ static void unity_places_trash_controller_real_get_menu_navigation (UnityLaunche
 		dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 		dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
 		dbusmenu_menuitem_child_append (root, item);
-		g_signal_connect_object (item, "item-activated", (GCallback) __lambda45__dbusmenu_menuitem_item_activated, self, 0);
+		g_signal_connect_object (item, "item-activated", (GCallback) __lambda46__dbusmenu_menuitem_item_activated, self, 0);
 	}
 	callback (root, callback_target);
 	_g_object_unref0 (item);

@@ -459,7 +459,7 @@ namespace Unity.Launcher
 
       try
         {
-          name = desktop_keyfile.get_string (KeyFileDesktop.GROUP, KeyFileDesktop.KEY_NAME);
+          name = desktop_keyfile.get_locale_string (KeyFileDesktop.GROUP, KeyFileDesktop.KEY_NAME);
         }
       catch (Error e)
         {
@@ -468,7 +468,7 @@ namespace Unity.Launcher
 
       try
         {
-          name = desktop_keyfile.get_string (KeyFileDesktop.GROUP, "X-GNOME-FullName");
+          name = desktop_keyfile.get_locale_string (KeyFileDesktop.GROUP, "X-GNOME-FullName");
         }
       catch (Error e)
         {

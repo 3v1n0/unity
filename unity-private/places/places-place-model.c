@@ -170,6 +170,12 @@ static void unity_places_place_model_instance_init (UnityPlacesPlaceModel * self
 }
 
 
+/**
+   * PlaceModel:
+   *
+   * Contains the loaded Place objects. Abstract class so views can be
+   * tested with fake model
+   **/
 GType unity_places_place_model_get_type (void) {
 	static volatile gsize unity_places_place_model_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_places_place_model_type_id__volatile)) {
@@ -542,6 +548,12 @@ static void unity_places_place_file_model_finalize (GObject* obj) {
 }
 
 
+/**
+   * PlaceFileModel:
+   *
+   * Reads in .place files and creates the offline model, ready for representing
+   * to the user without actually initing any of the places
+   **/
 GType unity_places_place_file_model_get_type (void) {
 	static volatile gsize unity_places_place_file_model_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_places_place_file_model_type_id__volatile)) {

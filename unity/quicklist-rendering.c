@@ -34,6 +34,10 @@
 #include <string.h>
 #include <clutk/clutk.h>
 
+#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+#define _pango_font_description_free0(var) ((var == NULL) ? NULL : (var = (pango_font_description_free (var), NULL)))
+#define _cairo_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_destroy (var), NULL)))
+#define _cairo_surface_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_surface_destroy (var), NULL)))
 
 #define UNITY_QUICKLIST_RENDERING_TYPE_SEPERATOR (unity_quicklist_rendering_seperator_get_type ())
 #define UNITY_QUICKLIST_RENDERING_SEPERATOR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLIST_RENDERING_TYPE_SEPERATOR, UnityQuicklistRenderingSeperator))
@@ -46,6 +50,28 @@ typedef struct _UnityQuicklistRenderingSeperator UnityQuicklistRenderingSeperato
 typedef struct _UnityQuicklistRenderingSeperatorClass UnityQuicklistRenderingSeperatorClass;
 typedef struct _UnityQuicklistRenderingSeperatorPrivate UnityQuicklistRenderingSeperatorPrivate;
 
+#define UNITY_QUICKLIST_RENDERING_TYPE_CHECKMARK_ITEM (unity_quicklist_rendering_checkmark_item_get_type ())
+#define UNITY_QUICKLIST_RENDERING_CHECKMARK_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLIST_RENDERING_TYPE_CHECKMARK_ITEM, UnityQuicklistRenderingCheckmarkItem))
+#define UNITY_QUICKLIST_RENDERING_CHECKMARK_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLIST_RENDERING_TYPE_CHECKMARK_ITEM, UnityQuicklistRenderingCheckmarkItemClass))
+#define UNITY_QUICKLIST_RENDERING_IS_CHECKMARK_ITEM(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLIST_RENDERING_TYPE_CHECKMARK_ITEM))
+#define UNITY_QUICKLIST_RENDERING_IS_CHECKMARK_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLIST_RENDERING_TYPE_CHECKMARK_ITEM))
+#define UNITY_QUICKLIST_RENDERING_CHECKMARK_ITEM_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLIST_RENDERING_TYPE_CHECKMARK_ITEM, UnityQuicklistRenderingCheckmarkItemClass))
+
+typedef struct _UnityQuicklistRenderingCheckmarkItem UnityQuicklistRenderingCheckmarkItem;
+typedef struct _UnityQuicklistRenderingCheckmarkItemClass UnityQuicklistRenderingCheckmarkItemClass;
+typedef struct _UnityQuicklistRenderingCheckmarkItemPrivate UnityQuicklistRenderingCheckmarkItemPrivate;
+
+#define UNITY_QUICKLIST_RENDERING_TYPE_RADIO_ITEM (unity_quicklist_rendering_radio_item_get_type ())
+#define UNITY_QUICKLIST_RENDERING_RADIO_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLIST_RENDERING_TYPE_RADIO_ITEM, UnityQuicklistRenderingRadioItem))
+#define UNITY_QUICKLIST_RENDERING_RADIO_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLIST_RENDERING_TYPE_RADIO_ITEM, UnityQuicklistRenderingRadioItemClass))
+#define UNITY_QUICKLIST_RENDERING_IS_RADIO_ITEM(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLIST_RENDERING_TYPE_RADIO_ITEM))
+#define UNITY_QUICKLIST_RENDERING_IS_RADIO_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLIST_RENDERING_TYPE_RADIO_ITEM))
+#define UNITY_QUICKLIST_RENDERING_RADIO_ITEM_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLIST_RENDERING_TYPE_RADIO_ITEM, UnityQuicklistRenderingRadioItemClass))
+
+typedef struct _UnityQuicklistRenderingRadioItem UnityQuicklistRenderingRadioItem;
+typedef struct _UnityQuicklistRenderingRadioItemClass UnityQuicklistRenderingRadioItemClass;
+typedef struct _UnityQuicklistRenderingRadioItemPrivate UnityQuicklistRenderingRadioItemPrivate;
+
 #define UNITY_QUICKLIST_RENDERING_TYPE_ITEM (unity_quicklist_rendering_item_get_type ())
 #define UNITY_QUICKLIST_RENDERING_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLIST_RENDERING_TYPE_ITEM, UnityQuicklistRenderingItem))
 #define UNITY_QUICKLIST_RENDERING_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLIST_RENDERING_TYPE_ITEM, UnityQuicklistRenderingItemClass))
@@ -56,10 +82,6 @@ typedef struct _UnityQuicklistRenderingSeperatorPrivate UnityQuicklistRenderingS
 typedef struct _UnityQuicklistRenderingItem UnityQuicklistRenderingItem;
 typedef struct _UnityQuicklistRenderingItemClass UnityQuicklistRenderingItemClass;
 typedef struct _UnityQuicklistRenderingItemPrivate UnityQuicklistRenderingItemPrivate;
-#define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
-#define _pango_font_description_free0(var) ((var == NULL) ? NULL : (var = (pango_font_description_free (var), NULL)))
-#define _cairo_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_destroy (var), NULL)))
-#define _cairo_surface_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_surface_destroy (var), NULL)))
 
 #define UNITY_QUICKLIST_RENDERING_TYPE_MENU (unity_quicklist_rendering_menu_get_type ())
 #define UNITY_QUICKLIST_RENDERING_MENU(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLIST_RENDERING_TYPE_MENU, UnityQuicklistRenderingMenu))
@@ -79,6 +101,24 @@ struct _UnityQuicklistRenderingSeperator {
 };
 
 struct _UnityQuicklistRenderingSeperatorClass {
+	GObjectClass parent_class;
+};
+
+struct _UnityQuicklistRenderingCheckmarkItem {
+	GObject parent_instance;
+	UnityQuicklistRenderingCheckmarkItemPrivate * priv;
+};
+
+struct _UnityQuicklistRenderingCheckmarkItemClass {
+	GObjectClass parent_class;
+};
+
+struct _UnityQuicklistRenderingRadioItem {
+	GObject parent_instance;
+	UnityQuicklistRenderingRadioItemPrivate * priv;
+};
+
+struct _UnityQuicklistRenderingRadioItemClass {
 	GObjectClass parent_class;
 };
 
@@ -102,6 +142,8 @@ struct _UnityQuicklistRenderingMenuClass {
 
 
 static gpointer unity_quicklist_rendering_seperator_parent_class = NULL;
+static gpointer unity_quicklist_rendering_checkmark_item_parent_class = NULL;
+static gpointer unity_quicklist_rendering_radio_item_parent_class = NULL;
 static gpointer unity_quicklist_rendering_item_parent_class = NULL;
 static gpointer unity_quicklist_rendering_menu_parent_class = NULL;
 
@@ -122,6 +164,9 @@ static gpointer unity_quicklist_rendering_menu_parent_class = NULL;
 #define UNITY_QUICKLIST_RENDERING_ANCHOR_HEIGHT_ABS 18.0f
 #define UNITY_QUICKLIST_RENDERING_ANCHOR_WIDTH 0.75f
 #define UNITY_QUICKLIST_RENDERING_ANCHOR_WIDTH_ABS 10.0f
+double _unity_quicklist_rendering_align (double val);
+void unity_quicklist_rendering_get_text_extents (const char* font, const char* text, gint* width, gint* height);
+void _unity_quicklist_rendering_round_rect (cairo_t* cr, double aspect, double x, double y, double corner_radius, double width, double height);
 GType unity_quicklist_rendering_seperator_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_QUICKLIST_RENDERING_SEPERATOR_DUMMY_PROPERTY
@@ -130,12 +175,26 @@ void unity_quicklist_rendering_seperator_fill_mask (cairo_t* cr);
 void unity_quicklist_rendering_seperator_image_background (cairo_t* cr, gint w, gint h);
 UnityQuicklistRenderingSeperator* unity_quicklist_rendering_seperator_new (void);
 UnityQuicklistRenderingSeperator* unity_quicklist_rendering_seperator_construct (GType object_type);
+GType unity_quicklist_rendering_checkmark_item_get_type (void) G_GNUC_CONST;
+enum  {
+	UNITY_QUICKLIST_RENDERING_CHECKMARK_ITEM_DUMMY_PROPERTY
+};
+void unity_quicklist_rendering_checkmark_item_normal_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text, gboolean enabled);
+void unity_quicklist_rendering_checkmark_item_selected_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text, gboolean enabled);
+UnityQuicklistRenderingCheckmarkItem* unity_quicklist_rendering_checkmark_item_new (void);
+UnityQuicklistRenderingCheckmarkItem* unity_quicklist_rendering_checkmark_item_construct (GType object_type);
+GType unity_quicklist_rendering_radio_item_get_type (void) G_GNUC_CONST;
+enum  {
+	UNITY_QUICKLIST_RENDERING_RADIO_ITEM_DUMMY_PROPERTY
+};
+void unity_quicklist_rendering_radio_item_normal_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text, gboolean enabled);
+void unity_quicklist_rendering_radio_item_selected_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text, gboolean enabled);
+UnityQuicklistRenderingRadioItem* unity_quicklist_rendering_radio_item_new (void);
+UnityQuicklistRenderingRadioItem* unity_quicklist_rendering_radio_item_construct (GType object_type);
 GType unity_quicklist_rendering_item_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_QUICKLIST_RENDERING_ITEM_DUMMY_PROPERTY
 };
-static void _unity_quicklist_rendering_item_round_rect (cairo_t* cr, double aspect, double x, double y, double corner_radius, double width, double height);
-void unity_quicklist_rendering_item_get_text_extents (const char* font, const char* text, gint* width, gint* height);
 void unity_quicklist_rendering_item_normal_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text);
 void unity_quicklist_rendering_item_selected_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text);
 UnityQuicklistRenderingItem* unity_quicklist_rendering_item_new (void);
@@ -144,7 +203,6 @@ GType unity_quicklist_rendering_menu_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_QUICKLIST_RENDERING_MENU_DUMMY_PROPERTY
 };
-static double _unity_quicklist_rendering_menu_align (double val);
 static void _unity_quicklist_rendering_menu_setup (cairo_surface_t** surf, cairo_t** cr, gboolean outline, gint width, gint height, gboolean negative);
 static void _unity_quicklist_rendering_menu_draw (cairo_t* cr, gboolean outline, float line_width, float* rgba, gboolean negative, gboolean stroke);
 static void _unity_quicklist_rendering_menu_finalize (cairo_t* cr, gboolean outline, float line_width, float* rgba, gboolean negative, gboolean stroke);
@@ -171,6 +229,80 @@ void unity_quicklist_rendering_menu_background (cairo_t* cr, gint w, gint h, flo
 UnityQuicklistRenderingMenu* unity_quicklist_rendering_menu_new (void);
 UnityQuicklistRenderingMenu* unity_quicklist_rendering_menu_construct (GType object_type);
 
+
+
+double _unity_quicklist_rendering_align (double val) {
+	double result = 0.0;
+	double fract;
+	fract = val - ((gint) val);
+	if (fract != 0.5f) {
+		result = (double) (((gint) val) + 0.5f);
+		return result;
+	} else {
+		result = val;
+		return result;
+	}
+}
+
+
+static gpointer _g_object_ref0 (gpointer self) {
+	return self ? g_object_ref (self) : NULL;
+}
+
+
+void unity_quicklist_rendering_get_text_extents (const char* font, const char* text, gint* width, gint* height) {
+	cairo_surface_t* surface;
+	cairo_t* cr;
+	PangoLayout* layout;
+	GtkSettings* settings;
+	PangoFontDescription* desc;
+	PangoContext* pango_context;
+	GdkScreen* screen;
+	gint _tmp0_;
+	PangoRectangle log_rect = {0};
+	g_return_if_fail (font != NULL);
+	g_return_if_fail (text != NULL);
+	surface = cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
+	cr = cairo_create (surface);
+	layout = pango_cairo_create_layout (cr);
+	settings = _g_object_ref0 (gtk_settings_get_default ());
+	desc = pango_font_description_from_string (font);
+	pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
+	pango_layout_set_font_description (layout, desc);
+	pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
+	pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
+	pango_layout_set_text (layout, text, -1);
+	pango_context = _g_object_ref0 (pango_layout_get_context (layout));
+	screen = _g_object_ref0 (gdk_screen_get_default ());
+	pango_cairo_context_set_font_options (pango_context, gdk_screen_get_font_options (screen));
+	pango_cairo_context_set_resolution (pango_context, (double) (((float) (g_object_get (settings, "gtk-xft-dpi", &_tmp0_, NULL), _tmp0_)) / ((float) PANGO_SCALE)));
+	pango_layout_context_changed (layout);
+	pango_layout_get_extents (layout, NULL, &log_rect);
+	*width = log_rect.width / PANGO_SCALE;
+	*height = log_rect.height / PANGO_SCALE;
+	_g_object_unref0 (screen);
+	_g_object_unref0 (pango_context);
+	_pango_font_description_free0 (desc);
+	_g_object_unref0 (settings);
+	_g_object_unref0 (layout);
+	_cairo_destroy0 (cr);
+	_cairo_surface_destroy0 (surface);
+}
+
+
+void _unity_quicklist_rendering_round_rect (cairo_t* cr, double aspect, double x, double y, double corner_radius, double width, double height) {
+	double radius;
+	g_return_if_fail (cr != NULL);
+	radius = corner_radius / aspect;
+	cairo_move_to (cr, x + radius, y);
+	cairo_line_to (cr, (x + width) - radius, y);
+	cairo_arc (cr, (x + width) - radius, y + radius, radius, ((-90.0f) * G_PI) / 180.0f, (0.0f * G_PI) / 180.0f);
+	cairo_line_to (cr, x + width, (y + height) - radius);
+	cairo_arc (cr, (x + width) - radius, (y + height) - radius, radius, (0.0f * G_PI) / 180.0f, (90.0f * G_PI) / 180.0f);
+	cairo_line_to (cr, x + radius, y + height);
+	cairo_arc (cr, x + radius, (y + height) - radius, radius, (90.0f * G_PI) / 180.0f, (180.0f * G_PI) / 180.0f);
+	cairo_arc (cr, x + radius, y + radius, radius, (180.0f * G_PI) / 180.0f, (270.0f * G_PI) / 180.0f);
+}
 
 
 void unity_quicklist_rendering_seperator_fill_mask (cairo_t* cr) {
@@ -239,40 +371,45 @@ GType unity_quicklist_rendering_seperator_get_type (void) {
 }
 
 
-static void _unity_quicklist_rendering_item_round_rect (cairo_t* cr, double aspect, double x, double y, double corner_radius, double width, double height) {
-	double radius;
-	g_return_if_fail (cr != NULL);
-	radius = corner_radius / aspect;
-	cairo_move_to (cr, x + radius, y);
-	cairo_line_to (cr, (x + width) - radius, y);
-	cairo_arc (cr, (x + width) - radius, y + radius, radius, ((-90.0f) * G_PI) / 180.0f, (0.0f * G_PI) / 180.0f);
-	cairo_line_to (cr, x + width, (y + height) - radius);
-	cairo_arc (cr, (x + width) - radius, (y + height) - radius, radius, (0.0f * G_PI) / 180.0f, (90.0f * G_PI) / 180.0f);
-	cairo_line_to (cr, x + radius, y + height);
-	cairo_arc (cr, x + radius, (y + height) - radius, radius, (90.0f * G_PI) / 180.0f, (180.0f * G_PI) / 180.0f);
-	cairo_arc (cr, x + radius, y + radius, radius, (180.0f * G_PI) / 180.0f, (270.0f * G_PI) / 180.0f);
-}
-
-
-static gpointer _g_object_ref0 (gpointer self) {
-	return self ? g_object_ref (self) : NULL;
-}
-
-
-void unity_quicklist_rendering_item_get_text_extents (const char* font, const char* text, gint* width, gint* height) {
-	cairo_surface_t* surface;
-	cairo_t* cr;
+void unity_quicklist_rendering_checkmark_item_normal_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text, gboolean enabled) {
 	PangoLayout* layout;
 	GtkSettings* settings;
 	PangoFontDescription* desc;
 	PangoContext* pango_context;
 	GdkScreen* screen;
 	gint _tmp0_;
-	PangoRectangle log_rect = {0};
+	gint text_width = 0;
+	gint text_height = 0;
+	g_return_if_fail (cr != NULL);
 	g_return_if_fail (font != NULL);
 	g_return_if_fail (text != NULL);
-	surface = cairo_image_surface_create (CAIRO_FORMAT_A1, 1, 1);
-	cr = cairo_create (surface);
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+	cairo_paint (cr);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
+	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
+	cairo_set_line_width (cr, (double) 1.0f);
+	cairo_save (cr);
+	cairo_translate (cr, _unity_quicklist_rendering_align ((double) ((30.0f - 16.0f) / 2.0f)), _unity_quicklist_rendering_align ((((double) h) - 16.0f) / 2.0f));
+	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.65f);
+	_unity_quicklist_rendering_round_rect (cr, (double) 1.0f, (double) 0.0f, (double) 0.0f, (double) 3.0f, (double) 16.0f, (double) 16.0f);
+	cairo_stroke (cr);
+	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
+	if (enabled) {
+		cairo_translate (cr, (double) 3.0f, (double) 1.0f);
+		cairo_move_to (cr, (double) 0.0f, (double) 6.0f);
+		cairo_line_to (cr, (double) 0.0f, (double) 8.0f);
+		cairo_line_to (cr, (double) 4.0f, (double) 12.0f);
+		cairo_line_to (cr, (double) 6.0f, (double) 12.0f);
+		cairo_line_to (cr, (double) 15.0f, (double) 1.0f);
+		cairo_line_to (cr, (double) 15.0f, (double) 0.0f);
+		cairo_line_to (cr, (double) 14.0f, (double) 0.0f);
+		cairo_line_to (cr, (double) 5.0f, (double) 9.0f);
+		cairo_line_to (cr, (double) 1.0f, (double) 5.0f);
+		cairo_close_path (cr);
+		cairo_fill (cr);
+	}
+	cairo_restore (cr);
 	layout = pango_cairo_create_layout (cr);
 	settings = _g_object_ref0 (gtk_settings_get_default ());
 	desc = pango_font_description_from_string (font);
@@ -286,16 +423,267 @@ void unity_quicklist_rendering_item_get_text_extents (const char* font, const ch
 	pango_cairo_context_set_font_options (pango_context, gdk_screen_get_font_options (screen));
 	pango_cairo_context_set_resolution (pango_context, (double) (((float) (g_object_get (settings, "gtk-xft-dpi", &_tmp0_, NULL), _tmp0_)) / ((float) PANGO_SCALE)));
 	pango_layout_context_changed (layout);
-	pango_layout_get_extents (layout, NULL, &log_rect);
-	*width = log_rect.width / PANGO_SCALE;
-	*height = log_rect.height / PANGO_SCALE;
+	unity_quicklist_rendering_get_text_extents (font, text, &text_width, &text_height);
+	cairo_move_to (cr, 30.0f + ctk_em_to_pixel ((double) UNITY_QUICKLIST_RENDERING_MARGIN), (double) (((float) (h - text_height)) / 2.0f));
+	pango_cairo_show_layout (cr, layout);
 	_g_object_unref0 (screen);
 	_g_object_unref0 (pango_context);
 	_pango_font_description_free0 (desc);
 	_g_object_unref0 (settings);
 	_g_object_unref0 (layout);
-	_cairo_destroy0 (cr);
-	_cairo_surface_destroy0 (surface);
+}
+
+
+void unity_quicklist_rendering_checkmark_item_selected_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text, gboolean enabled) {
+	PangoLayout* layout;
+	GtkSettings* settings;
+	PangoFontDescription* desc;
+	PangoContext* pango_context;
+	GdkScreen* screen;
+	gint _tmp0_;
+	gint text_width = 0;
+	gint text_height = 0;
+	g_return_if_fail (cr != NULL);
+	g_return_if_fail (font != NULL);
+	g_return_if_fail (text != NULL);
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+	cairo_paint (cr);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
+	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
+	cairo_set_line_width (cr, (double) 1.0f);
+	_unity_quicklist_rendering_round_rect (cr, (double) 1.0f, (double) 0.5f, (double) 0.5f, (double) UNITY_QUICKLIST_RENDERING_ITEM_CORNER_RADIUS_ABS, (double) (w - 1.0f), (double) (h - 1.0f));
+	cairo_fill (cr);
+	cairo_set_source_rgba (cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.0f);
+	cairo_save (cr);
+	cairo_translate (cr, _unity_quicklist_rendering_align ((double) ((30.0f - 16.0f) / 2.0f)), _unity_quicklist_rendering_align ((((double) h) - 16.0f) / 2.0f));
+	_unity_quicklist_rendering_round_rect (cr, (double) 1.0f, (double) 0.0f, (double) 0.0f, (double) 3.0f, (double) 16.0f, (double) 16.0f);
+	cairo_stroke (cr);
+	if (enabled) {
+		cairo_translate (cr, (double) 3.0f, (double) 1.0f);
+		cairo_move_to (cr, (double) 0.0f, (double) 6.0f);
+		cairo_line_to (cr, (double) 0.0f, (double) 8.0f);
+		cairo_line_to (cr, (double) 4.0f, (double) 12.0f);
+		cairo_line_to (cr, (double) 6.0f, (double) 12.0f);
+		cairo_line_to (cr, (double) 15.0f, (double) 1.0f);
+		cairo_line_to (cr, (double) 15.0f, (double) 0.0f);
+		cairo_line_to (cr, (double) 14.0f, (double) 0.0f);
+		cairo_line_to (cr, (double) 5.0f, (double) 9.0f);
+		cairo_line_to (cr, (double) 1.0f, (double) 5.0f);
+		cairo_close_path (cr);
+		cairo_fill (cr);
+	}
+	cairo_restore (cr);
+	layout = pango_cairo_create_layout (cr);
+	settings = _g_object_ref0 (gtk_settings_get_default ());
+	desc = pango_font_description_from_string (font);
+	pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
+	pango_layout_set_font_description (layout, desc);
+	pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
+	pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
+	pango_layout_set_text (layout, text, -1);
+	pango_context = _g_object_ref0 (pango_layout_get_context (layout));
+	screen = _g_object_ref0 (gdk_screen_get_default ());
+	pango_cairo_context_set_font_options (pango_context, gdk_screen_get_font_options (screen));
+	pango_cairo_context_set_resolution (pango_context, (double) (((float) (g_object_get (settings, "gtk-xft-dpi", &_tmp0_, NULL), _tmp0_)) / ((float) PANGO_SCALE)));
+	pango_layout_context_changed (layout);
+	unity_quicklist_rendering_get_text_extents (font, text, &text_width, &text_height);
+	cairo_move_to (cr, 30.0f + ctk_em_to_pixel ((double) UNITY_QUICKLIST_RENDERING_MARGIN), (double) (((float) (h - text_height)) / 2.0f));
+	pango_cairo_show_layout (cr, layout);
+	_g_object_unref0 (screen);
+	_g_object_unref0 (pango_context);
+	_pango_font_description_free0 (desc);
+	_g_object_unref0 (settings);
+	_g_object_unref0 (layout);
+}
+
+
+UnityQuicklistRenderingCheckmarkItem* unity_quicklist_rendering_checkmark_item_construct (GType object_type) {
+	UnityQuicklistRenderingCheckmarkItem * self;
+	self = (UnityQuicklistRenderingCheckmarkItem*) g_object_new (object_type, NULL);
+	return self;
+}
+
+
+UnityQuicklistRenderingCheckmarkItem* unity_quicklist_rendering_checkmark_item_new (void) {
+	return unity_quicklist_rendering_checkmark_item_construct (UNITY_QUICKLIST_RENDERING_TYPE_CHECKMARK_ITEM);
+}
+
+
+static void unity_quicklist_rendering_checkmark_item_class_init (UnityQuicklistRenderingCheckmarkItemClass * klass) {
+	unity_quicklist_rendering_checkmark_item_parent_class = g_type_class_peek_parent (klass);
+}
+
+
+static void unity_quicklist_rendering_checkmark_item_instance_init (UnityQuicklistRenderingCheckmarkItem * self) {
+}
+
+
+GType unity_quicklist_rendering_checkmark_item_get_type (void) {
+	static volatile gsize unity_quicklist_rendering_checkmark_item_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_quicklist_rendering_checkmark_item_type_id__volatile)) {
+		static const GTypeInfo g_define_type_info = { sizeof (UnityQuicklistRenderingCheckmarkItemClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_quicklist_rendering_checkmark_item_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityQuicklistRenderingCheckmarkItem), 0, (GInstanceInitFunc) unity_quicklist_rendering_checkmark_item_instance_init, NULL };
+		GType unity_quicklist_rendering_checkmark_item_type_id;
+		unity_quicklist_rendering_checkmark_item_type_id = g_type_register_static (G_TYPE_OBJECT, "UnityQuicklistRenderingCheckmarkItem", &g_define_type_info, 0);
+		g_once_init_leave (&unity_quicklist_rendering_checkmark_item_type_id__volatile, unity_quicklist_rendering_checkmark_item_type_id);
+	}
+	return unity_quicklist_rendering_checkmark_item_type_id__volatile;
+}
+
+
+void unity_quicklist_rendering_radio_item_normal_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text, gboolean enabled) {
+	double x;
+	double y;
+	double r1;
+	double r2;
+	PangoLayout* layout;
+	GtkSettings* settings;
+	PangoFontDescription* desc;
+	PangoContext* pango_context;
+	GdkScreen* screen;
+	gint _tmp0_;
+	gint text_width = 0;
+	gint text_height = 0;
+	g_return_if_fail (cr != NULL);
+	g_return_if_fail (font != NULL);
+	g_return_if_fail (text != NULL);
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+	cairo_paint (cr);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
+	cairo_set_line_width (cr, (double) 1.0f);
+	x = _unity_quicklist_rendering_align ((double) 15.0f);
+	y = _unity_quicklist_rendering_align (((double) h) / 2.0f);
+	r1 = (double) 3.5f;
+	r2 = (double) 8.5f;
+	if (enabled) {
+		cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
+		cairo_arc (cr, x, y, r1, 0.0f * (G_PI / 180.0f), 360.0f * (G_PI / 180.0f));
+		cairo_fill (cr);
+		cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.65f);
+		cairo_arc (cr, x, y, r2, 0.0f * (G_PI / 180.0f), 360.0f * (G_PI / 180.0f));
+		cairo_stroke (cr);
+	} else {
+		cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.65f);
+		cairo_arc (cr, x, y, r2, 0.0f * (G_PI / 180.0f), 360.0f * (G_PI / 180.0f));
+		cairo_stroke (cr);
+	}
+	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
+	layout = pango_cairo_create_layout (cr);
+	settings = _g_object_ref0 (gtk_settings_get_default ());
+	desc = pango_font_description_from_string (font);
+	pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
+	pango_layout_set_font_description (layout, desc);
+	pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
+	pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
+	pango_layout_set_text (layout, text, -1);
+	pango_context = _g_object_ref0 (pango_layout_get_context (layout));
+	screen = _g_object_ref0 (gdk_screen_get_default ());
+	pango_cairo_context_set_font_options (pango_context, gdk_screen_get_font_options (screen));
+	pango_cairo_context_set_resolution (pango_context, (double) (((float) (g_object_get (settings, "gtk-xft-dpi", &_tmp0_, NULL), _tmp0_)) / ((float) PANGO_SCALE)));
+	pango_layout_context_changed (layout);
+	unity_quicklist_rendering_get_text_extents (font, text, &text_width, &text_height);
+	cairo_move_to (cr, 30.0f + ctk_em_to_pixel ((double) UNITY_QUICKLIST_RENDERING_MARGIN), (double) (((float) (h - text_height)) / 2.0f));
+	pango_cairo_show_layout (cr, layout);
+	_g_object_unref0 (screen);
+	_g_object_unref0 (pango_context);
+	_pango_font_description_free0 (desc);
+	_g_object_unref0 (settings);
+	_g_object_unref0 (layout);
+}
+
+
+void unity_quicklist_rendering_radio_item_selected_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text, gboolean enabled) {
+	double x;
+	double y;
+	double r1;
+	double r2;
+	PangoLayout* layout;
+	GtkSettings* settings;
+	PangoFontDescription* desc;
+	PangoContext* pango_context;
+	GdkScreen* screen;
+	gint _tmp0_;
+	gint text_width = 0;
+	gint text_height = 0;
+	g_return_if_fail (cr != NULL);
+	g_return_if_fail (font != NULL);
+	g_return_if_fail (text != NULL);
+	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+	cairo_paint (cr);
+	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
+	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
+	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
+	_unity_quicklist_rendering_round_rect (cr, (double) 1.0f, (double) 0.5f, (double) 0.5f, (double) UNITY_QUICKLIST_RENDERING_ITEM_CORNER_RADIUS_ABS, (double) (w - 1.0f), (double) (h - 1.0f));
+	cairo_fill (cr);
+	x = _unity_quicklist_rendering_align ((double) 15.0f);
+	y = _unity_quicklist_rendering_align (((double) h) / 2.0f);
+	r1 = (double) 3.5f;
+	r2 = (double) 8.5f;
+	cairo_set_source_rgba (cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.0f);
+	if (enabled) {
+		cairo_arc (cr, x, y, r1, 0.0f * (G_PI / 180.0f), 360.0f * (G_PI / 180.0f));
+		cairo_fill (cr);
+		cairo_arc (cr, x, y, r2, 0.0f * (G_PI / 180.0f), 360.0f * (G_PI / 180.0f));
+		cairo_stroke (cr);
+	} else {
+		cairo_arc (cr, x, y, r2, 0.0f * (G_PI / 180.0f), 360.0f * (G_PI / 180.0f));
+		cairo_stroke (cr);
+	}
+	layout = pango_cairo_create_layout (cr);
+	settings = _g_object_ref0 (gtk_settings_get_default ());
+	desc = pango_font_description_from_string (font);
+	pango_font_description_set_weight (desc, PANGO_WEIGHT_NORMAL);
+	pango_layout_set_font_description (layout, desc);
+	pango_layout_set_wrap (layout, PANGO_WRAP_WORD_CHAR);
+	pango_layout_set_ellipsize (layout, PANGO_ELLIPSIZE_END);
+	pango_layout_set_text (layout, text, -1);
+	pango_context = _g_object_ref0 (pango_layout_get_context (layout));
+	screen = _g_object_ref0 (gdk_screen_get_default ());
+	pango_cairo_context_set_font_options (pango_context, gdk_screen_get_font_options (screen));
+	pango_cairo_context_set_resolution (pango_context, (double) (((float) (g_object_get (settings, "gtk-xft-dpi", &_tmp0_, NULL), _tmp0_)) / ((float) PANGO_SCALE)));
+	pango_layout_context_changed (layout);
+	unity_quicklist_rendering_get_text_extents (font, text, &text_width, &text_height);
+	cairo_move_to (cr, 30.0f + ctk_em_to_pixel ((double) UNITY_QUICKLIST_RENDERING_MARGIN), (double) (((float) (h - text_height)) / 2.0f));
+	pango_cairo_show_layout (cr, layout);
+	_g_object_unref0 (screen);
+	_g_object_unref0 (pango_context);
+	_pango_font_description_free0 (desc);
+	_g_object_unref0 (settings);
+	_g_object_unref0 (layout);
+}
+
+
+UnityQuicklistRenderingRadioItem* unity_quicklist_rendering_radio_item_construct (GType object_type) {
+	UnityQuicklistRenderingRadioItem * self;
+	self = (UnityQuicklistRenderingRadioItem*) g_object_new (object_type, NULL);
+	return self;
+}
+
+
+UnityQuicklistRenderingRadioItem* unity_quicklist_rendering_radio_item_new (void) {
+	return unity_quicklist_rendering_radio_item_construct (UNITY_QUICKLIST_RENDERING_TYPE_RADIO_ITEM);
+}
+
+
+static void unity_quicklist_rendering_radio_item_class_init (UnityQuicklistRenderingRadioItemClass * klass) {
+	unity_quicklist_rendering_radio_item_parent_class = g_type_class_peek_parent (klass);
+}
+
+
+static void unity_quicklist_rendering_radio_item_instance_init (UnityQuicklistRenderingRadioItem * self) {
+}
+
+
+GType unity_quicklist_rendering_radio_item_get_type (void) {
+	static volatile gsize unity_quicklist_rendering_radio_item_type_id__volatile = 0;
+	if (g_once_init_enter (&unity_quicklist_rendering_radio_item_type_id__volatile)) {
+		static const GTypeInfo g_define_type_info = { sizeof (UnityQuicklistRenderingRadioItemClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_quicklist_rendering_radio_item_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityQuicklistRenderingRadioItem), 0, (GInstanceInitFunc) unity_quicklist_rendering_radio_item_instance_init, NULL };
+		GType unity_quicklist_rendering_radio_item_type_id;
+		unity_quicklist_rendering_radio_item_type_id = g_type_register_static (G_TYPE_OBJECT, "UnityQuicklistRenderingRadioItem", &g_define_type_info, 0);
+		g_once_init_leave (&unity_quicklist_rendering_radio_item_type_id__volatile, unity_quicklist_rendering_radio_item_type_id);
+	}
+	return unity_quicklist_rendering_radio_item_type_id__volatile;
 }
 
 
@@ -329,7 +717,7 @@ void unity_quicklist_rendering_item_normal_mask (cairo_t* cr, gint w, gint h, co
 	pango_cairo_context_set_font_options (pango_context, gdk_screen_get_font_options (screen));
 	pango_cairo_context_set_resolution (pango_context, (double) (((float) (g_object_get (settings, "gtk-xft-dpi", &_tmp0_, NULL), _tmp0_)) / ((float) PANGO_SCALE)));
 	pango_layout_context_changed (layout);
-	unity_quicklist_rendering_item_get_text_extents (font, text, &text_width, &text_height);
+	unity_quicklist_rendering_get_text_extents (font, text, &text_width, &text_height);
 	cairo_move_to (cr, ctk_em_to_pixel ((double) UNITY_QUICKLIST_RENDERING_MARGIN), (double) (((float) (h - text_height)) / 2.0f));
 	pango_cairo_show_layout (cr, layout);
 	_g_object_unref0 (screen);
@@ -357,7 +745,7 @@ void unity_quicklist_rendering_item_selected_mask (cairo_t* cr, gint w, gint h, 
 	cairo_set_operator (cr, CAIRO_OPERATOR_SOURCE);
 	cairo_scale (cr, (double) 1.0f, (double) 1.0f);
 	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
-	_unity_quicklist_rendering_item_round_rect (cr, (double) 1.0f, (double) 0.5f, (double) 0.5f, (double) UNITY_QUICKLIST_RENDERING_ITEM_CORNER_RADIUS_ABS, (double) (w - 1.0f), (double) (h - 1.0f));
+	_unity_quicklist_rendering_round_rect (cr, (double) 1.0f, (double) 0.5f, (double) 0.5f, (double) UNITY_QUICKLIST_RENDERING_ITEM_CORNER_RADIUS_ABS, (double) (w - 1.0f), (double) (h - 1.0f));
 	cairo_fill (cr);
 	layout = pango_cairo_create_layout (cr);
 	settings = _g_object_ref0 (gtk_settings_get_default ());
@@ -372,7 +760,7 @@ void unity_quicklist_rendering_item_selected_mask (cairo_t* cr, gint w, gint h, 
 	pango_cairo_context_set_font_options (pango_context, gdk_screen_get_font_options (screen));
 	pango_cairo_context_set_resolution (pango_context, (double) (((float) (g_object_get (settings, "gtk-xft-dpi", &_tmp0_, NULL), _tmp0_)) / ((float) PANGO_SCALE)));
 	pango_layout_context_changed (layout);
-	unity_quicklist_rendering_item_get_text_extents (font, text, &text_width, &text_height);
+	unity_quicklist_rendering_get_text_extents (font, text, &text_width, &text_height);
 	cairo_move_to (cr, ctk_em_to_pixel ((double) UNITY_QUICKLIST_RENDERING_MARGIN), (double) (((float) (h - text_height)) / 2.0f));
 	cairo_set_source_rgba (cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.0f);
 	pango_cairo_show_layout (cr, layout);
@@ -414,20 +802,6 @@ GType unity_quicklist_rendering_item_get_type (void) {
 		g_once_init_leave (&unity_quicklist_rendering_item_type_id__volatile, unity_quicklist_rendering_item_type_id);
 	}
 	return unity_quicklist_rendering_item_type_id__volatile;
-}
-
-
-static double _unity_quicklist_rendering_menu_align (double val) {
-	double result = 0.0;
-	double fract;
-	fract = val - ((gint) val);
-	if (fract != 0.5f) {
-		result = (double) (((gint) val) + 0.5f);
-		return result;
-	} else {
-		result = val;
-		return result;
-	}
 }
 
 
@@ -888,14 +1262,14 @@ static void _unity_quicklist_rendering_menu_round_rect_anchor (cairo_t* cr, doub
 	double* q3;
 	g_return_if_fail (cr != NULL);
 	radius = corner_radius / aspect;
-	a = _unity_quicklist_rendering_menu_align (x);
-	b = _unity_quicklist_rendering_menu_align (x + radius);
-	c = _unity_quicklist_rendering_menu_align (x + width);
-	d = _unity_quicklist_rendering_menu_align ((x + width) - radius);
-	e = _unity_quicklist_rendering_menu_align (y);
-	f = _unity_quicklist_rendering_menu_align (y + radius);
-	g = _unity_quicklist_rendering_menu_align (y + height);
-	h = _unity_quicklist_rendering_menu_align ((y + height) - radius);
+	a = _unity_quicklist_rendering_align (x);
+	b = _unity_quicklist_rendering_align (x + radius);
+	c = _unity_quicklist_rendering_align (x + width);
+	d = _unity_quicklist_rendering_align ((x + width) - radius);
+	e = _unity_quicklist_rendering_align (y);
+	f = _unity_quicklist_rendering_align (y + radius);
+	g = _unity_quicklist_rendering_align (y + height);
+	h = _unity_quicklist_rendering_align ((y + height) - radius);
 	p0 = (_tmp1_ = (_tmp0_ = g_new0 (double, 2), _tmp0_[0] = b, _tmp0_[1] = e, _tmp0_), p0_length1 = 2, _p0_size_ = p0_length1, _tmp1_);
 	p1 = (_tmp3_ = (_tmp2_ = g_new0 (double, 2), _tmp2_[0] = d, _tmp2_[1] = e, _tmp2_), p1_length1 = 2, _p1_size_ = p1_length1, _tmp3_);
 	p2 = (_tmp5_ = (_tmp4_ = g_new0 (double, 2), _tmp4_[0] = c, _tmp4_[1] = f, _tmp4_), p2_length1 = 2, _p2_size_ = p2_length1, _tmp5_);
@@ -903,9 +1277,9 @@ static void _unity_quicklist_rendering_menu_round_rect_anchor (cairo_t* cr, doub
 	p4 = (_tmp9_ = (_tmp8_ = g_new0 (double, 2), _tmp8_[0] = d, _tmp8_[1] = g, _tmp8_), p4_length1 = 2, _p4_size_ = p4_length1, _tmp9_);
 	p5 = (_tmp11_ = (_tmp10_ = g_new0 (double, 2), _tmp10_[0] = b, _tmp10_[1] = g, _tmp10_), p5_length1 = 2, _p5_size_ = p5_length1, _tmp11_);
 	p6 = (_tmp13_ = (_tmp12_ = g_new0 (double, 2), _tmp12_[0] = a, _tmp12_[1] = h, _tmp12_), p6_length1 = 2, _p6_size_ = p6_length1, _tmp13_);
-	p7 = (_tmp15_ = (_tmp14_ = g_new0 (double, 2), _tmp14_[0] = _unity_quicklist_rendering_menu_align (anchor_x + anchor_width), _tmp14_[1] = _unity_quicklist_rendering_menu_align (anchor_y + (anchor_height / 2.0f)), _tmp14_), p7_length1 = 2, _p7_size_ = p7_length1, _tmp15_);
-	p8 = (_tmp17_ = (_tmp16_ = g_new0 (double, 2), _tmp16_[0] = _unity_quicklist_rendering_menu_align (anchor_x), _tmp16_[1] = _unity_quicklist_rendering_menu_align (anchor_y), _tmp16_), p8_length1 = 2, _p8_size_ = p8_length1, _tmp17_);
-	p9 = (_tmp19_ = (_tmp18_ = g_new0 (double, 2), _tmp18_[0] = _unity_quicklist_rendering_menu_align (anchor_x + anchor_width), _tmp18_[1] = _unity_quicklist_rendering_menu_align (anchor_y - (anchor_height / 2.0f)), _tmp18_), p9_length1 = 2, _p9_size_ = p9_length1, _tmp19_);
+	p7 = (_tmp15_ = (_tmp14_ = g_new0 (double, 2), _tmp14_[0] = _unity_quicklist_rendering_align (anchor_x + anchor_width), _tmp14_[1] = _unity_quicklist_rendering_align (anchor_y + (anchor_height / 2.0f)), _tmp14_), p7_length1 = 2, _p7_size_ = p7_length1, _tmp15_);
+	p8 = (_tmp17_ = (_tmp16_ = g_new0 (double, 2), _tmp16_[0] = _unity_quicklist_rendering_align (anchor_x), _tmp16_[1] = _unity_quicklist_rendering_align (anchor_y), _tmp16_), p8_length1 = 2, _p8_size_ = p8_length1, _tmp17_);
+	p9 = (_tmp19_ = (_tmp18_ = g_new0 (double, 2), _tmp18_[0] = _unity_quicklist_rendering_align (anchor_x + anchor_width), _tmp18_[1] = _unity_quicklist_rendering_align (anchor_y - (anchor_height / 2.0f)), _tmp18_), p9_length1 = 2, _p9_size_ = p9_length1, _tmp19_);
 	p10 = (_tmp21_ = (_tmp20_ = g_new0 (double, 2), _tmp20_[0] = a, _tmp20_[1] = f, _tmp20_), p10_length1 = 2, _p10_size_ = p10_length1, _tmp21_);
 	q0 = (_tmp23_ = (_tmp22_ = g_new0 (double, 2), _tmp22_[0] = a, _tmp22_[1] = e, _tmp22_), q0_length1 = 2, _q0_size_ = q0_length1, _tmp23_);
 	q1 = (_tmp25_ = (_tmp24_ = g_new0 (double, 2), _tmp24_[0] = c, _tmp24_[1] = e, _tmp24_), q1_length1 = 2, _q1_size_ = q1_length1, _tmp25_);

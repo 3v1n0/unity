@@ -203,8 +203,8 @@ gboolean unity_launcher_scroller_child_controller_get_hide (UnityLauncherScrolle
 gboolean unity_launcher_scroller_model_contains (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
 UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (UnityLauncherScrollerChildController* self);
 void unity_launcher_scroller_model_remove (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
-static void _lambda62_ (Block9Data* _data9_);
-static void __lambda62__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _lambda63_ (Block9Data* _data9_);
+static void __lambda63__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static Block9Data* block9_data_ref (Block9Data* _data9_);
 static void block9_data_unref (Block9Data* _data9_);
 static void unity_launcher_scroller_controller_handle_bamf_view_opened (UnityLauncherScrollerController* self, GObject* object);
@@ -283,7 +283,7 @@ static void _unity_launcher_scroller_controller_on_scroller_controller_closed_un
 }
 
 
-static void _lambda62_ (Block9Data* _data9_) {
+static void _lambda63_ (Block9Data* _data9_) {
 	UnityLauncherScrollerController * self;
 	gboolean _tmp0_ = FALSE;
 	gboolean _tmp1_ = FALSE;
@@ -307,8 +307,8 @@ static void _lambda62_ (Block9Data* _data9_) {
 }
 
 
-static void __lambda62__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda62_ (self);
+static void __lambda63__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda63_ (self);
 }
 
 
@@ -367,7 +367,7 @@ static void unity_launcher_scroller_controller_handle_bamf_view_opened (UnityLau
 			}
 			gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->childcontrollers, _data9_->controller);
 			g_signal_connect_object (_data9_->controller, "request-removal", (GCallback) _unity_launcher_scroller_controller_on_scroller_controller_closed_unity_launcher_scroller_child_controller_request_removal, self, 0);
-			g_signal_connect_data ((GObject*) _data9_->controller, "notify::hide", (GCallback) __lambda62__g_object_notify, block9_data_ref (_data9_), (GClosureNotify) block9_data_unref, 0);
+			g_signal_connect_data ((GObject*) _data9_->controller, "notify::hide", (GCallback) __lambda63__g_object_notify, block9_data_ref (_data9_), (GClosureNotify) block9_data_unref, 0);
 			_g_object_unref0 (child);
 		}
 		_g_free0 (desktop_file);

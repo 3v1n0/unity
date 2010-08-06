@@ -386,16 +386,25 @@ GType unity_place_browsing_op_get_type (void) {
 }
 
 
+/**
+     * Returns the new browsing state after the operation has been performed
+     */
 UnityPlace_BrowsingState* unity_place_browser_service_go_back (UnityPlaceBrowserService* self, int* result_length1, GError** error) {
 	return UNITY_PLACE_BROWSER_SERVICE_GET_INTERFACE (self)->go_back (self, result_length1, error);
 }
 
 
+/**
+     * Returns the new browsing state after the operation has been performed
+     */
 UnityPlace_BrowsingState* unity_place_browser_service_go_forward (UnityPlaceBrowserService* self, int* result_length1, GError** error) {
 	return UNITY_PLACE_BROWSER_SERVICE_GET_INTERFACE (self)->go_forward (self, result_length1, error);
 }
 
 
+/**
+     * Returns the current browsing state
+     */
 UnityPlace_BrowsingState* unity_place_browser_service_get_state (UnityPlaceBrowserService* self, int* result_length1, GError** error) {
 	return UNITY_PLACE_BROWSER_SERVICE_GET_INTERFACE (self)->get_state (self, result_length1, error);
 }
@@ -991,6 +1000,9 @@ static void unity_place_browser_service_base_init (UnityPlaceBrowserServiceIface
 }
 
 
+/**
+   * Private DBus interface for managing browsing states
+   */
 GType unity_place_browser_service_get_type (void) {
 	static volatile gsize unity_place_browser_service_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_place_browser_service_type_id__volatile)) {
@@ -1742,6 +1754,9 @@ static void unity_place_browser_service_impl_finalize (GObject* obj) {
 }
 
 
+/**
+   * Helper class to shield away the ugly DBus wire format
+   */
 GType unity_place_browser_service_impl_get_type (void) {
 	static volatile gsize unity_place_browser_service_impl_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_place_browser_service_impl_type_id__volatile)) {
@@ -1825,6 +1840,10 @@ static gpointer _unity_place_state_ref0 (gpointer self) {
 }
 
 
+/**
+     * Use this method to track a state (and associated comment) in
+     * the back/forward stacks
+     */
 void unity_place_browser_record_state (UnityPlaceBrowser* self, gconstpointer state, const char* comment) {
 	UnityPlaceState* s;
 	gpointer _tmp2_;
@@ -1991,6 +2010,21 @@ static void unity_place_browser_finalize (GObject* obj) {
 }
 
 
+/**
+   * Manages the browsing state of a place entry. The browsing state is stored
+   * as a generic type so this class can address a range of browsing contexts.
+   *
+   * You can monitor for back/forward navigation by listening to the
+   * appropriate signals on the browser instance. When navigating into a
+   * new state you should record the state in the Browser object by calling
+   * browser.record_state(). Note that you should not record the state when
+   * changing state because of back/forward signals. This is done automatically
+   * by the browser instance.
+   *
+   * To actually expose this browsing mechanism for a place entry
+   * set the 'browser' property of the EntryInfo instance to this and when
+   * browsing is disabled entry_info.browser = null;.
+   */
 GType unity_place_browser_get_type (void) {
 	static volatile gsize unity_place_browser_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_place_browser_type_id__volatile)) {
@@ -2419,6 +2453,9 @@ static void unity_place_stack_finalize (UnityPlaceStack* obj) {
 }
 
 
+/**
+   * Private shim class to have a propor stack api
+   */
 GType unity_place_stack_get_type (void) {
 	static volatile gsize unity_place_stack_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_place_stack_type_id__volatile)) {

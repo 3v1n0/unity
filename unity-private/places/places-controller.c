@@ -263,8 +263,8 @@ void unity_places_controller_set_model (UnityPlacesController* self, UnityPlaces
 UnityPlacesPlaceFileModel* unity_places_place_file_model_new (void);
 UnityPlacesPlaceFileModel* unity_places_place_file_model_construct (GType object_type);
 GType unity_places_place_file_model_get_type (void) G_GNUC_CONST;
-static void _lambda43_ (UnityPlacesPlace* place, UnityPlacesController* self);
-static void __lambda43__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self);
+static void _lambda44_ (UnityPlacesPlace* place, UnityPlacesController* self);
+static void __lambda44__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self);
 UnityPlacesTrashController* unity_places_trash_controller_new (void);
 UnityPlacesTrashController* unity_places_trash_controller_construct (GType object_type);
 GType unity_places_trash_controller_get_type (void) G_GNUC_CONST;
@@ -409,7 +409,7 @@ void unity_places_controller_set_model (UnityPlacesController* self, UnityPlaces
 }
 
 
-static void _lambda43_ (UnityPlacesPlace* place, UnityPlacesController* self) {
+static void _lambda44_ (UnityPlacesPlace* place, UnityPlacesController* self) {
 	g_return_if_fail (place != NULL);
 	{
 		GeeIterator* _e_it;
@@ -428,8 +428,8 @@ static void _lambda43_ (UnityPlacesPlace* place, UnityPlacesController* self) {
 }
 
 
-static void __lambda43__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self) {
-	_lambda43_ (place, self);
+static void __lambda44__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self) {
+	_lambda44_ (place, self);
 }
 
 
@@ -452,7 +452,7 @@ static GObject * unity_places_controller_constructor (GType type, guint n_constr
 		UnityPlacesView* _tmp6_;
 		unity_places_controller_set_model (self, _tmp1_ = (_tmp0_ = unity_places_place_file_model_new (), UNITY_PLACES_IS_PLACE_MODEL (_tmp0_) ? ((UnityPlacesPlaceModel*) _tmp0_) : NULL));
 		_g_object_unref0 (_tmp1_);
-		g_signal_connect_object (self->priv->_model, "place-added", (GCallback) __lambda43__unity_places_place_model_place_added, self, 0);
+		g_signal_connect_object (self->priv->_model, "place-added", (GCallback) __lambda44__unity_places_place_model_place_added, self, 0);
 		s = (_tmp5_ = (_tmp4_ = (GObject*) gee_abstract_list_get ((GeeAbstractList*) (_tmp3_ = unity_testing_object_registry_lookup (_tmp2_ = unity_testing_object_registry_get_default (), "UnityScrollerModel")), 0), UNITY_LAUNCHER_IS_SCROLLER_MODEL (_tmp4_) ? ((UnityLauncherScrollerModel*) _tmp4_) : NULL), _g_object_unref0 (_tmp3_), _unity_testing_object_registry_unref0 (_tmp2_), _tmp5_);
 		child = unity_places_trash_controller_new ();
 		unity_launcher_scroller_model_add (s, unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) child));
@@ -471,6 +471,10 @@ static void unity_places_controller_class_init (UnityPlacesControllerClass * kla
 	G_OBJECT_CLASS (klass)->set_property = unity_places_controller_set_property;
 	G_OBJECT_CLASS (klass)->constructor = unity_places_controller_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_places_controller_finalize;
+	/**
+	     * This class takes care of reading in the places, creating the view and
+	     * keeping it up-to-date
+	     **/
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_CONTROLLER_SHELL, g_param_spec_object ("shell", "shell", "shell", UNITY_TYPE_SHELL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_CONTROLLER_MODEL, g_param_spec_object ("model", "model", "model", UNITY_PLACES_TYPE_PLACE_MODEL, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 }

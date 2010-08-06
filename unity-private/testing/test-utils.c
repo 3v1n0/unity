@@ -372,6 +372,10 @@ static gboolean _unity_testing_logging_fatal_handler_gtest_log_log_fatal_func (c
 }
 
 
+/**
+     * init_fatal_handler:
+     * Makes sure that known warnings don't make our testing fail
+     **/
 void unity_testing_logging_init_fatal_handler (void) {
 	g_test_log_set_fatal_handler (_unity_testing_logging_fatal_handler_gtest_log_log_fatal_func, NULL);
 }

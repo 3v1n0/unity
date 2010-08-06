@@ -1,11 +1,12 @@
-unity (0.2.22-0ubuntu2) UNRELEASED; urgency=low
+unity (0.2.24-0ubuntu1) UNRELEASED; urgency=low
 
   * debian/libunity0.symbols:
     - add symbol file
   * debian/control:
     - build-dep on libmutter-dev 2.31.5
+  * New upstream release.
 
- -- Didier Roche <didrocks@ubuntu.com>  Wed, 04 Aug 2010 16:59:40 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 06 Aug 2010 15:27:36 +0200
 
 unity (0.2.22-0ubuntu1) maverick; urgency=low
 

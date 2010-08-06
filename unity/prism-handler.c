@@ -347,6 +347,9 @@ void unity_webapp_prism_add_to_favorites (UnityWebappPrism* self) {
 }
 
 
+/**
+     * gets the favorite uid for this desktop file
+     */
 static char* unity_webapp_prism_get_fav_uid (UnityWebappPrism* self) {
 	char* result = NULL;
 	char* myuid;

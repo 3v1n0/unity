@@ -98,6 +98,28 @@ typedef struct _UnityQuicklistRenderingSeperator UnityQuicklistRenderingSeperato
 typedef struct _UnityQuicklistRenderingSeperatorClass UnityQuicklistRenderingSeperatorClass;
 typedef struct _UnityQuicklistRenderingSeperatorPrivate UnityQuicklistRenderingSeperatorPrivate;
 
+#define UNITY_QUICKLIST_RENDERING_TYPE_CHECKMARK_ITEM (unity_quicklist_rendering_checkmark_item_get_type ())
+#define UNITY_QUICKLIST_RENDERING_CHECKMARK_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLIST_RENDERING_TYPE_CHECKMARK_ITEM, UnityQuicklistRenderingCheckmarkItem))
+#define UNITY_QUICKLIST_RENDERING_CHECKMARK_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLIST_RENDERING_TYPE_CHECKMARK_ITEM, UnityQuicklistRenderingCheckmarkItemClass))
+#define UNITY_QUICKLIST_RENDERING_IS_CHECKMARK_ITEM(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLIST_RENDERING_TYPE_CHECKMARK_ITEM))
+#define UNITY_QUICKLIST_RENDERING_IS_CHECKMARK_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLIST_RENDERING_TYPE_CHECKMARK_ITEM))
+#define UNITY_QUICKLIST_RENDERING_CHECKMARK_ITEM_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLIST_RENDERING_TYPE_CHECKMARK_ITEM, UnityQuicklistRenderingCheckmarkItemClass))
+
+typedef struct _UnityQuicklistRenderingCheckmarkItem UnityQuicklistRenderingCheckmarkItem;
+typedef struct _UnityQuicklistRenderingCheckmarkItemClass UnityQuicklistRenderingCheckmarkItemClass;
+typedef struct _UnityQuicklistRenderingCheckmarkItemPrivate UnityQuicklistRenderingCheckmarkItemPrivate;
+
+#define UNITY_QUICKLIST_RENDERING_TYPE_RADIO_ITEM (unity_quicklist_rendering_radio_item_get_type ())
+#define UNITY_QUICKLIST_RENDERING_RADIO_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLIST_RENDERING_TYPE_RADIO_ITEM, UnityQuicklistRenderingRadioItem))
+#define UNITY_QUICKLIST_RENDERING_RADIO_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLIST_RENDERING_TYPE_RADIO_ITEM, UnityQuicklistRenderingRadioItemClass))
+#define UNITY_QUICKLIST_RENDERING_IS_RADIO_ITEM(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_QUICKLIST_RENDERING_TYPE_RADIO_ITEM))
+#define UNITY_QUICKLIST_RENDERING_IS_RADIO_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_QUICKLIST_RENDERING_TYPE_RADIO_ITEM))
+#define UNITY_QUICKLIST_RENDERING_RADIO_ITEM_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_QUICKLIST_RENDERING_TYPE_RADIO_ITEM, UnityQuicklistRenderingRadioItemClass))
+
+typedef struct _UnityQuicklistRenderingRadioItem UnityQuicklistRenderingRadioItem;
+typedef struct _UnityQuicklistRenderingRadioItemClass UnityQuicklistRenderingRadioItemClass;
+typedef struct _UnityQuicklistRenderingRadioItemPrivate UnityQuicklistRenderingRadioItemPrivate;
+
 #define UNITY_QUICKLIST_RENDERING_TYPE_ITEM (unity_quicklist_rendering_item_get_type ())
 #define UNITY_QUICKLIST_RENDERING_ITEM(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_QUICKLIST_RENDERING_TYPE_ITEM, UnityQuicklistRenderingItem))
 #define UNITY_QUICKLIST_RENDERING_ITEM_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_QUICKLIST_RENDERING_TYPE_ITEM, UnityQuicklistRenderingItemClass))
@@ -393,6 +415,24 @@ struct _UnityQuicklistRenderingSeperatorClass {
 	GObjectClass parent_class;
 };
 
+struct _UnityQuicklistRenderingCheckmarkItem {
+	GObject parent_instance;
+	UnityQuicklistRenderingCheckmarkItemPrivate * priv;
+};
+
+struct _UnityQuicklistRenderingCheckmarkItemClass {
+	GObjectClass parent_class;
+};
+
+struct _UnityQuicklistRenderingRadioItem {
+	GObject parent_instance;
+	UnityQuicklistRenderingRadioItemPrivate * priv;
+};
+
+struct _UnityQuicklistRenderingRadioItemClass {
+	GObjectClass parent_class;
+};
+
 struct _UnityQuicklistRenderingItem {
 	GObject parent_instance;
 	UnityQuicklistRenderingItemPrivate * priv;
@@ -675,13 +715,23 @@ char* unity_webapp_prism_desktop_file_path (UnityWebappPrism* self);
 void unity_webapp_prism_add_to_favorites (UnityWebappPrism* self);
 const char* unity_webapp_prism_get_url (UnityWebappPrism* self);
 const char* unity_webapp_prism_get_icon (UnityWebappPrism* self);
+void unity_quicklist_rendering_get_text_extents (const char* font, const char* text, gint* width, gint* height);
 GType unity_quicklist_rendering_seperator_get_type (void) G_GNUC_CONST;
 void unity_quicklist_rendering_seperator_fill_mask (cairo_t* cr);
 void unity_quicklist_rendering_seperator_image_background (cairo_t* cr, gint w, gint h);
 UnityQuicklistRenderingSeperator* unity_quicklist_rendering_seperator_new (void);
 UnityQuicklistRenderingSeperator* unity_quicklist_rendering_seperator_construct (GType object_type);
+GType unity_quicklist_rendering_checkmark_item_get_type (void) G_GNUC_CONST;
+void unity_quicklist_rendering_checkmark_item_normal_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text, gboolean enabled);
+void unity_quicklist_rendering_checkmark_item_selected_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text, gboolean enabled);
+UnityQuicklistRenderingCheckmarkItem* unity_quicklist_rendering_checkmark_item_new (void);
+UnityQuicklistRenderingCheckmarkItem* unity_quicklist_rendering_checkmark_item_construct (GType object_type);
+GType unity_quicklist_rendering_radio_item_get_type (void) G_GNUC_CONST;
+void unity_quicklist_rendering_radio_item_normal_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text, gboolean enabled);
+void unity_quicklist_rendering_radio_item_selected_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text, gboolean enabled);
+UnityQuicklistRenderingRadioItem* unity_quicklist_rendering_radio_item_new (void);
+UnityQuicklistRenderingRadioItem* unity_quicklist_rendering_radio_item_construct (GType object_type);
 GType unity_quicklist_rendering_item_get_type (void) G_GNUC_CONST;
-void unity_quicklist_rendering_item_get_text_extents (const char* font, const char* text, gint* width, gint* height);
 void unity_quicklist_rendering_item_normal_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text);
 void unity_quicklist_rendering_item_selected_mask (cairo_t* cr, gint w, gint h, const char* font, const char* text);
 UnityQuicklistRenderingItem* unity_quicklist_rendering_item_new (void);

@@ -950,6 +950,10 @@ static void unity_places_place_finalize (GObject* obj) {
 }
 
 
+/**
+   * Represents a Place through a .place file ("offline") and then through
+   * DBus ("online").
+   **/
 GType unity_places_place_get_type (void) {
 	static volatile gsize unity_places_place_type_id__volatile = 0;
 	if (g_once_init_enter (&unity_places_place_type_id__volatile)) {
