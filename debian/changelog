@@ -1,6 +1,11 @@
 unity (0.2.24-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - makes sure to load translations from .desktop files (LP: #612494)
+    - get launcher events working correctly
+    - better spaces interactions
+    - new custom rendering for radiobutton- and checkmark-items in quicklist
+      (LP: #607251)
   * debian/libunity0.symbols:
     - update symbol file
   * debian/control:
