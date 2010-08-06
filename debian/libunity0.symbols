@@ -569,6 +569,8 @@ libunity.so.0 libunity0 #MINVER#
  _unity_place_entry_service_impl_dbus_unregister@Base 0.2.22
  _unity_place_service_dbus_unregister@Base 0.2.22
  _unity_place_service_impl_dbus_unregister@Base 0.2.22
+ _unity_quicklist_rendering_align@Base 0.2.24
+ _unity_quicklist_rendering_round_rect@Base 0.2.24
  unity__pixbuf_cache@Base 0.2.22
  unity_app_info_manager_clear@Base 0.2.22
  unity_app_info_manager_get_instance@Base 0.2.22
@@ -863,8 +865,13 @@ libunity.so.0 libunity0 #MINVER#
  unity_place_value_set_state@Base 0.2.22
  unity_place_value_take_stack@Base 0.2.22
  unity_place_value_take_state@Base 0.2.22
+ unity_quicklist_rendering_checkmark_item_construct@Base 0.2.24
+ unity_quicklist_rendering_checkmark_item_get_type@Base 0.2.24
+ unity_quicklist_rendering_checkmark_item_new@Base 0.2.24
+ unity_quicklist_rendering_checkmark_item_normal_mask@Base 0.2.24
+ unity_quicklist_rendering_checkmark_item_selected_mask@Base 0.2.24
+ unity_quicklist_rendering_get_text_extents@Base 0.2.24
  unity_quicklist_rendering_item_construct@Base 0.2.22
- unity_quicklist_rendering_item_get_text_extents@Base 0.2.22
  unity_quicklist_rendering_item_get_type@Base 0.2.22
  unity_quicklist_rendering_item_new@Base 0.2.22
  unity_quicklist_rendering_item_normal_mask@Base 0.2.22
@@ -884,6 +891,11 @@ libunity.so.0 libunity0 #MINVER#
  unity_quicklist_rendering_menu_outline_shadow_top@Base 0.2.22
  unity_quicklist_rendering_menu_tint_dot_hl@Base 0.2.22
  unity_quicklist_rendering_menu_top_mask@Base 0.2.22
+ unity_quicklist_rendering_radio_item_construct@Base 0.2.24
+ unity_quicklist_rendering_radio_item_get_type@Base 0.2.24
+ unity_quicklist_rendering_radio_item_new@Base 0.2.24
+ unity_quicklist_rendering_radio_item_normal_mask@Base 0.2.24
+ unity_quicklist_rendering_radio_item_selected_mask@Base 0.2.24
  unity_quicklist_rendering_seperator_construct@Base 0.2.22
  unity_quicklist_rendering_seperator_fill_mask@Base 0.2.22
  unity_quicklist_rendering_seperator_get_type@Base 0.2.22
