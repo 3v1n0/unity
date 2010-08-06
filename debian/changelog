@@ -1,4 +1,4 @@
-unity (0.2.24-0ubuntu1) UNRELEASED; urgency=low
+unity (0.2.24-0ubuntu1) maverick; urgency=low
 
   * New upstream release.
     - makes sure to load translations from .desktop files (LP: #612494)
@@ -14,7 +14,7 @@ unity (0.2.24-0ubuntu1) UNRELEASED; urgency=low
   * debian/patches/01_add_dbusmenu_glib_vapi.patch, 02_i18n_launcher.patch:
     - removed
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 06 Aug 2010 15:27:36 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 06 Aug 2010 16:17:12 +0200
 
 unity (0.2.22-0ubuntu1) maverick; urgency=low
 
