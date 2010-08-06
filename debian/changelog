@@ -6,6 +6,8 @@ unity (0.2.24-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - build-dep on libmutter-dev 2.31.5
     - bump Standards-Version to latest
+  * debian/patches/01_add_dbusmenu_glib_vapi.patch, 02_i18n_launcher.patch:
+    - removed
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 06 Aug 2010 15:27:36 +0200
 
