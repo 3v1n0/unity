@@ -27,6 +27,8 @@
 
 #include <glib.h>
 
+#include <grail-types.h>
+
 #include "gesture.h"
 
 #define XCB_DISPATCHER_TIMEOUT 500
@@ -94,9 +96,147 @@ unity_gesture_xcb_dispatcher_glue_finish ()
 }
 
 void
-unity_gesture_xcb_dispatcher_glue_main_iteration ()
+unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
 {
   g_debug ("%s", G_STRFUNC);
+  const xcb_query_extension_reply_t *extension_info;
+  xcb_connection_t *connection = source->connection;
+  
+	extension_info = xcb_get_extension_data(connection, &xcb_gesture_id);
+
+  if (source->event != NULL)
+    {
+      xcb_generic_event_t *event;
+      xcb_gesture_notify_event_t *gesture_event;
+      float *properties;
+      int i;
+
+      event = source->event;
+      if (!event) {
+        fprintf(stderr,
+          "Warning: I/O error while waiting for event\n");
+        return;
+      }
+
+      if (event->response_type != GenericEvent) {
+        fprintf(stderr,
+          "Warning: Received non-generic event type: "
+          "%d\n", event->response_type);
+        return;
+      }
+
+      gesture_event = (xcb_gesture_notify_event_t *)event;
+
+      if (gesture_event->extension != extension_info->major_opcode) {
+        fprintf(stderr,
+          "Warning: Received non-gesture extension "
+          "event: %d\n", gesture_event->extension);
+        return;
+      }
+
+                  if (gesture_event->event_type != XCB_GESTURE_NOTIFY) {
+        fprintf(stderr,
+          "Warning: Received unrecognized gesture event "
+          "type: %d\n", gesture_event->event_type);
+        return;
+      }
+
+      printf("Gesture ID:\t\t%hu\n", gesture_event->gesture_id);
+
+      printf("\tGesture Type:\t%d: ", gesture_event->gesture_type);
+      switch (gesture_event->gesture_type) {
+        case GRAIL_TYPE_POINTER:
+          printf("Pointer (Reserved)\n");
+          break;
+        case GRAIL_TYPE_PAN:
+          printf("Pan (Two-Finger Pan)\n");
+          break;
+        case GRAIL_TYPE_PINCH:
+          printf("Pinch (Two-Finger Pinch)\n");
+          break;
+        case GRAIL_TYPE_ROTATE:
+          printf("Rotate (Two-Finger Rotate)\n");
+          break;
+        case GRAIL_TYPE_COMBO2:
+          printf("Combo-2 (Two-Finger Combination)\n");
+          break;
+        case GRAIL_TYPE_SWIPE:
+          printf("Swipe (Three-Finger Pan)\n");
+          break;
+        case GRAIL_TYPE_SCALE:
+          printf("Scale (Three-Finger Pinch)\n");
+          break;
+        case GRAIL_TYPE_TURN:
+          printf("Turn (Three-Finger Rotate)\n");
+          break;
+        case GRAIL_TYPE_COMBO3:
+          printf("Combo-3 (Three-Finger Combination)\n");
+          break;
+        case GRAIL_TYPE_BRUSH:
+          printf("Brush (Four-Finger Pan)\n");
+          break;
+        case GRAIL_TYPE_PICK:
+          printf("Pick (Four-Finger Pinch)\n");
+          break;
+        case GRAIL_TYPE_WHIRL:
+          printf("Whirl (Four-Finger Rotate)\n");
+          break;
+        case GRAIL_TYPE_COMBO4:
+          printf("Combo-4 (Four-Finger Combination)\n");
+          break;
+        case GRAIL_TYPE_HAND:
+          printf("Hand (Five-Finger Pan)\n");
+          break;
+        case GRAIL_TYPE_GRAB:
+          printf("Grab (Five-Finger Pinch)\n");
+          break;
+        case GRAIL_TYPE_REVOLVE:
+          printf("Revolve (Five-Finger Rotate)\n");
+          break;
+        case GRAIL_TYPE_COMBO5:
+          printf("Combo-5 (Five-Finger Combination)\n");
+          break;
+        case GRAIL_TYPE_TAP1:
+          printf("Tap-1 (One-Finger Tap)\n");
+          break;
+        case GRAIL_TYPE_TAP2:
+          printf("Tap-2 (Two-Finger Tap)\n");
+          break;
+        case GRAIL_TYPE_TAP3:
+          printf("Tap-3 (Three-Finger Tap)\n");
+          break;
+        case GRAIL_TYPE_TAP4:
+          printf("Tap-4 (Four-Finger Tap)\n");
+          break;
+        case GRAIL_TYPE_TAP5:
+          printf("Tap-5 (Five-Finger Tap)\n");
+          break;
+        default:
+          printf("Unknown\n");
+          break;
+      }
+
+      printf("\tDevice ID:\t%hu\n", gesture_event->device_id);
+      printf("\tTimestamp:\t%u\n", gesture_event->time);
+
+      printf("\tRoot Window:\t0x%x: (root window)\n",
+             gesture_event->root);
+
+      printf("\tEvent Window:\t0x%x: ", gesture_event->event);
+      printf("\tChild Window:\t0x%x: ", gesture_event->child);
+      printf("\tFocus X:\t%f\n", gesture_event->focus_x);
+      printf("\tFocus Y:\t%f\n", gesture_event->focus_y);
+      printf("\tStatus:\t\t%hu\n", gesture_event->status);
+      printf("\tNum Props:\t%hu\n", gesture_event->num_props);
+
+      properties = (float *)(gesture_event + 1);
+
+      for (i = 0; i < gesture_event->num_props; i++) {
+        printf("\t\tProperty %u:\t%f\n", i, properties[i]);
+      }
+
+      printf("\n");
+    } 
 }
 
 static gboolean
@@ -125,7 +265,7 @@ source_dispatch(GSource     *source,
                 GSourceFunc  callback,
                 gpointer     user_data)
 {
-  unity_gesture_xcb_dispatcher_glue_main_iteration ();
+  unity_gesture_xcb_dispatcher_glue_main_iteration ((XCBSource*)source);
   return TRUE;
 }
 
