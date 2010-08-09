@@ -35,6 +35,10 @@ typedef struct
 {
   GSource source;
 
+
+  xcb_connection_t    *connection;
+  xcb_generic_event_t *event;
+
 } XCBSource;
 
 static gboolean source_prepare (GSource     *source, gint *timeout);
@@ -79,6 +83,7 @@ unity_gesture_xcb_dispatcher_glue_init ()
     }
 
   source = (XCBSource*)g_source_new (&XCBFuncs, sizeof(XCBSource));
+  source->connection = connection;
   g_source_attach (&source->source, NULL);
 }
 
@@ -91,20 +96,28 @@ unity_gesture_xcb_dispatcher_glue_finish ()
 void
 unity_gesture_xcb_dispatcher_glue_main_iteration ()
 {
-  //g_debug ("%s", G_STRFUNC);
+  g_debug ("%s", G_STRFUNC);
 }
 
 static gboolean
 source_prepare (GSource     *source, gint *timeout)
 {
+  XCBSource *s = (XCBSource *)source;
+  //const xcb_query_extension_reply_t *extention_info;
+
   *timeout = XCB_DISPATCHER_TIMEOUT;
-  return TRUE;
+
+  //extension_info = xcb_get_extension_data (s->connection, &xcb_gesture_id);
+
+  s->event = xcb_poll_for_event (s->connection);
+  
+  return s->event == NULL ? FALSE : TRUE;
 }
 
 static gboolean
 source_check   (GSource     *source)
 {
-  return TRUE;
+  return ((XCBSource*)source)->event == NULL ? FALSE : TRUE;
 }
 
 static gboolean
