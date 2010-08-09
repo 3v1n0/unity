@@ -91,7 +91,7 @@ namespace Unity.Launcher
     private uint stored_delta = 0;
     private float scroll_speed = 0.0f; // the current speed (pixels/per second) that we are scrolling
 
-    private float contract_icon_degrees = 30.0f;
+    private float contract_icon_degrees = 50.0f;
     private int focused_launcher = 0;
 
     /* helps out with draw order */
@@ -1056,18 +1056,36 @@ namespace Unity.Launcher
               // contracted launcher
               if (index == index_end_flat) h -= spacing * 2;
 
-              transition.position = h;
-              h += 8 + spacing;
               if (num_children_handled < index_start_flat)
                 {
-                  transition.rotation = -contract_icon_degrees;
+                  if (num_children_handled == index_start_flat - 1)
+                    {
+                      transition.rotation = -(contract_icon_degrees / 2.0f);
+                      h += spacing;
+                    }
+                  else
+                    {
+                      transition.rotation = -contract_icon_degrees;
+                    }
+                  transition.position = h;
                   draw_ftb.add (child);
                 }
               else
                 {
-                  transition.rotation = contract_icon_degrees;
+                  transition.position = h;
+                  if (index == index_end_flat)
+                    {
+                      transition.rotation = contract_icon_degrees / 2.0f;
+                      h += spacing;
+                    }
+                  else
+                    {
+                      transition.rotation = contract_icon_degrees;
+                    }
                   draw_btf.add (child);
                 }
+
+              h += 8 + spacing;
               num_children_handled++;
 
               if (index +1 == index_start_flat) h += 30;
