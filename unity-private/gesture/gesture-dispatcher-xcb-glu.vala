@@ -17,18 +17,14 @@
  *
  */
 
-namespace Unity.Gesture
+namespace Unity.Gesture.XCBDispatcherGlue
 {
-  public class XCBDispatcher : Dispatcher
-  {
-    public XCBDispatcher ()
-    {
-      XCBDispatcherGlue.init ();
-    }
+  //[CCode (lower_case_prefix = "gesture_dispatcher_xcb_glue_")]
+  public extern void init ();
 
-    ~XCBDispatcher ()
-    {
-      XCBDispatcherGlue.finish ();
-    }
-  }
+  //[CCode (lower_case_prefix = "gesture_dispatcher_xcb_glue_")]
+  public extern void finish ();
+
+  //[CCode (lower_case_prefix = "gesture_dispatcher_xcb_glue_")]
+  public extern void main_iteration ();
 }

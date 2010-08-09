@@ -125,7 +125,8 @@ launcher_sources = \
 
 gesture_sources = \
   gesture/gesture-dispatcher.vala \
-  gesture/gesture-dispatcher-xcb.vala
+  gesture/gesture-dispatcher-xcb.vala \
+  gesture/gesture-dispatcher-xcb-glu.vala
 
 testing_sources = \
   testing/background.vala \
@@ -144,6 +145,9 @@ libunity_private_la_VALASOURCES = \
   $(testing_sources)
 
 libunity_private_la_SOURCES = \
+  gesture/gesture.c \
+  gesture/gesture.h \
+  gesture/gesture-dispatcher-xcb-glue.c \
   unity-utils.c \
   unity-utils.h \
   $(libunity_private_la_VALASOURCES:.vala=.c)
