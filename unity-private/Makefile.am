@@ -123,6 +123,10 @@ launcher_sources = \
   launcher/scroller-model.vala \
   launcher/scroller-view.vala
 
+gesture_sources = \
+  gesture/gesture-dispatcher.vala \
+  gesture/gesture-dispatcher-xcb.vala
+
 testing_sources = \
   testing/background.vala \
   testing/object-registry.vala \
@@ -132,6 +136,7 @@ testing_sources = \
   testing/test-window.vala
 
 libunity_private_la_VALASOURCES = \
+  $(gesture_sources) \
   $(private_sources) \
   $(panel_sources) \
   $(places_sources) \
