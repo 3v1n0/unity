@@ -91,7 +91,7 @@ namespace Unity.Launcher
     private uint stored_delta = 0;
     private float scroll_speed = 0.0f; // the current speed (pixels/per second) that we are scrolling
 
-    private float contract_icon_degrees = 50.0f;
+    private float contract_icon_degrees = 60.0f;
     private int focused_launcher = 0;
 
     /* helps out with draw order */
@@ -1037,10 +1037,9 @@ namespace Unity.Launcher
         {
           ScrollerChild child = model[index];
           var transition = new ChildTransition ();
+          child.get_preferred_height (get_width (), out min_height, out nat_height);
           if (index >= index_start_flat && index < index_end_flat)
             {
-
-              child.get_preferred_height (get_width (), out min_height, out nat_height);
               transition.position = h;
               h += nat_height + spacing;
               num_children_handled++;
@@ -1054,13 +1053,13 @@ namespace Unity.Launcher
           else
             {
               // contracted launcher
-              if (index == index_end_flat) h -= spacing * 2;
+              if (index == index_end_flat) h -= nat_height * 0.3333f - spacing;//spacing * 2;
 
               if (num_children_handled < index_start_flat)
                 {
                   if (num_children_handled == index_start_flat - 1)
                     {
-                      transition.rotation = -(contract_icon_degrees / 2.0f);
+                      transition.rotation = -(contract_icon_degrees / 3.0f);
                       h += spacing;
                     }
                   else
@@ -1075,7 +1074,7 @@ namespace Unity.Launcher
                   transition.position = h;
                   if (index == index_end_flat)
                     {
-                      transition.rotation = contract_icon_degrees / 2.0f;
+                      transition.rotation = contract_icon_degrees / 3.0f;
                       h += spacing;
                     }
                   else

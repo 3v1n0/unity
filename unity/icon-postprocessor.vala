@@ -399,13 +399,13 @@ namespace Unity
 
       Cogl.Matrix modelview = Cogl.Matrix.identity (); //model view matrix
       Cogl.Matrix projection = Cogl.Matrix.identity (); // projection matrix
-      projection.perspective (60.0f, 1.0f, 0.1f, 100.0f);
-      modelview.translate (0.0f, 0.0f, -44.0f - Math.fabsf (self.rotation / 360.0f) * 100);
+      projection.perspective (45.0f, 1.0f, 0.1f, 100.0f);
+      modelview.translate (0.0f, 0.0f, -59.5f - Math.fabsf (self.rotation / 360.0f) * 100);
       modelview.rotate (self.rotation, 1.0f, 0.0f, 0.0f);
 
       Cogl.Matrix viewmatrix = Cogl.Matrix.multiply (projection, modelview);
 
-      float base_z = -20.0f;
+      float base_z = -((Math.fabsf (self.rotation) / 90.0f) * 15.0f);
 
       p1_x = -25.0f; p1_y = -25.0f;
       p2_x =  25.0f; p2_y = -25.0f;
@@ -433,14 +433,14 @@ namespace Unity
       p4_x = (50 * (p4_x + 1) / 2);
       p4_y =  48 + (50 * (p4_y - 1) / 2);
 
-      if (Math.fabsf (self.rotation) <= 3.0)
+      if (Math.fabsf (self.rotation) <= 1.0)
         {
           // floor all the values. we don't floor when its rotated because then
           // we lose subpixel accuracy and things look like a 1991 video game
-          p1_x = Math.floorf (p1_x); p1_y = Math.floorf (p1_y);
-          p2_x = Math.floorf (p2_x); p2_y = Math.floorf (p2_y);
+          p1_x = Math.ceilf (p1_x); p1_y = Math.ceilf (p1_y);
+          p2_x = Math.floorf (p2_x); p2_y = Math.ceilf (p2_y);
           p3_x = Math.floorf (p3_x); p3_y = Math.floorf (p3_y);
-          p4_x = Math.floorf (p4_x); p4_y = Math.floorf (p4_y);
+          p4_x = Math.ceilf (p4_x); p4_y = Math.floorf (p4_y);
         }
 
       Cogl.TextureVertex[4] points = {
@@ -551,14 +551,14 @@ namespace Unity
           p4_x = xpad + (base_width * (p4_x + 1) / 2);
           p4_y = (48 - ypad) + (base_height * (p4_y - 1) / 2);
 
-          if (Math.fabsf (self.rotation) <= 3.0)
+          if (Math.fabsf (self.rotation) <= 1.0)
             {
               // floor all the values. we don't floor when its rotated because then
               // we lose subpixel accuracy and things look like a 1991 video game
-              p1_x = Math.floorf (p1_x); p1_y = Math.floorf (p1_y);
-              p2_x = Math.floorf (p2_x); p2_y = Math.floorf (p2_y);
+              p1_x = Math.ceilf (p1_x); p1_y = Math.ceilf (p1_y);
+              p2_x = Math.floorf (p2_x); p2_y = Math.ceilf (p2_y);
               p3_x = Math.floorf (p3_x); p3_y = Math.floorf (p3_y);
-              p4_x = Math.floorf (p4_x); p4_y = Math.floorf (p4_y);
+              p4_x = Math.ceilf (p4_x); p4_y = Math.floorf (p4_y);
             }
 
           Cogl.TextureVertex[4] icon_points = {
