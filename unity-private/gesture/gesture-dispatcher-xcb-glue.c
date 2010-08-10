@@ -163,73 +163,11 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
       printf("\tGesture Type:\t%d: ", gesture_event->gesture_type);
       */
       switch (gesture_event->gesture_type) {
-        case GRAIL_TYPE_POINTER:
-          printf("Pointer (Reserved)\n");
-          break;
-        case GRAIL_TYPE_PAN:
-          printf("Pan (Two-Finger Pan)\n");
-          break;
-        case GRAIL_TYPE_PINCH:
-          printf("Pinch (Two-Finger Pinch)\n");
-          break;
-        case GRAIL_TYPE_ROTATE:
-          printf("Rotate (Two-Finger Rotate)\n");
-          break;
-        case GRAIL_TYPE_COMBO2:
-          printf("Combo-2 (Two-Finger Combination)\n");
-          break;
-        case GRAIL_TYPE_SWIPE:
-          printf("Swipe (Three-Finger Pan)\n");
-          break;
-        case GRAIL_TYPE_SCALE:
-          printf("Scale (Three-Finger Pinch)\n");
-          break;
-        case GRAIL_TYPE_TURN:
-          printf("Turn (Three-Finger Rotate)\n");
-          break;
-        case GRAIL_TYPE_COMBO3:
-          printf("Combo-3 (Three-Finger Combination)\n");
-          break;
-        case GRAIL_TYPE_BRUSH:
-          printf("Brush (Four-Finger Pan)\n");
-          break;
-        case GRAIL_TYPE_PICK:
-          printf("Pick (Four-Finger Pinch)\n");
-          break;
-        case GRAIL_TYPE_WHIRL:
-          printf("Whirl (Four-Finger Rotate)\n");
-          break;
-        case GRAIL_TYPE_COMBO4:
-          printf("Combo-4 (Four-Finger Combination)\n");
-          break;
-        case GRAIL_TYPE_HAND:
-          printf("Hand (Five-Finger Pan)\n");
-          break;
-        case GRAIL_TYPE_GRAB:
-          printf("Grab (Five-Finger Pinch)\n");
-          break;
-        case GRAIL_TYPE_REVOLVE:
-          printf("Revolve (Five-Finger Rotate)\n");
-          break;
-        case GRAIL_TYPE_COMBO5:
-          printf("Combo-5 (Five-Finger Combination)\n");
-          break;
-        case GRAIL_TYPE_TAP1:
-          printf("Tap-1 (One-Finger Tap)\n");
-         break;
-        case GRAIL_TYPE_TAP2:
-          printf("Tap-2 (Two-Finger Tap)\n");
-          break;
         case GRAIL_TYPE_TAP3:
-          printf("Tap-3 (Three-Finger Tap)\n");
-          break;
         case GRAIL_TYPE_TAP4:
           dispatch_event->type = UNITY_GESTURE_TYPE_TAP;
+          dispatch_event->tap_event->fingers = gesture_event->gesture_type == GRAIL_TYPE_TAP3 ? 3 : 4;
           dispatch_event->tap_event->duration = properties[0];
-          break;
-        case GRAIL_TYPE_TAP5:
-          printf("Tap-5 (Five-Finger Tap)\n");
-          break;
         default:
           printf("Unknown\n");
           break;

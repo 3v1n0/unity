@@ -73,6 +73,7 @@ namespace Unity.Gesture
       switch (type)
         {
         case Type.TAP:
+          ret += "\tFingers    : %u\n".printf (tap_event.fingers);
           ret += "\tDuration   : %u\n".printf (tap_event.duration);
           break;
         default:
@@ -111,6 +112,7 @@ namespace Unity.Gesture
 
   public class TapEvent
   {
+    public int32 fingers;
     public int32 duration;
   }
 }
