@@ -85,7 +85,12 @@ unity_gesture_xcb_dispatcher_glue_init (GObject *object)
   connection = xcb_connect (NULL, NULL);
 
   mask = calloc (1, sizeof(grail_mask_t) * mask_len);
+
+  /* Taps */
+  grail_mask_set (mask, GRAIL_TYPE_TAP3);
   grail_mask_set (mask, GRAIL_TYPE_TAP4);
+
+  /* Gropes */
   grail_mask_set (mask, GRAIL_TYPE_PICK);
 
   if (set_mask (connection, 0, 0, mask_len, (uint32_t*)mask))
@@ -129,50 +134,50 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
       dispatch_event->type = UNITY_GESTURE_TYPE_NONE;
 
       event = source->event;
-      if (!event) {
-        fprintf(stderr,
-          "Warning: I/O error while waiting for event\n");
-        return;
-      }
+      if (!event)
+        { 
+          fprintf (stderr, "Warning: I/O error while waiting for event\n");
+          return;
+        }
 
-      if (event->response_type != GenericEvent) {
-        fprintf(stderr,
-          "Warning: Received non-generic event type: "
-          "%d\n", event->response_type);
-        return;
-      }
+      if (event->response_type != GenericEvent)
+        {
+          fprintf (stderr, "Warning: Received non-generic event type: "
+                   "%d\n", event->response_type);
+          return;
+        }
 
       gesture_event = (xcb_gesture_notify_event_t *)event;
       properties = (float *)(gesture_event + 1);
       
-      if (gesture_event->extension != extension_info->major_opcode) {
-        fprintf(stderr,
-          "Warning: Received non-gesture extension "
-          "event: %d\n", gesture_event->extension);
-        return;
-      }
+      if (gesture_event->extension != extension_info->major_opcode)
+        {
+          fprintf (stderr, "Warning: Received non-gesture extension "
+                   "event: %d\n", gesture_event->extension);
+          return;
+        }
 
-                  if (gesture_event->event_type != XCB_GESTURE_NOTIFY) {
-        fprintf(stderr,
-          "Warning: Received unrecognized gesture event "
-          "type: %d\n", gesture_event->event_type);
-        return;
-      }
-      /*
-      printf("Gesture ID:\t\t%hu\n", gesture_event->gesture_id);
+      if (gesture_event->event_type != XCB_GESTURE_NOTIFY)
+        {
+          fprintf (stderr, "Warning: Received unrecognized gesture event "
+                   "type: %d\n", gesture_event->event_type);
+          return;
+        }
 
-      printf("\tGesture Type:\t%d: ", gesture_event->gesture_type);
-      */
-      switch (gesture_event->gesture_type) {
+      switch (gesture_event->gesture_type)
+        {
         case GRAIL_TYPE_TAP3:
         case GRAIL_TYPE_TAP4:
           dispatch_event->type = UNITY_GESTURE_TYPE_TAP;
-          dispatch_event->tap_event->fingers = gesture_event->gesture_type == GRAIL_TYPE_TAP3 ? 3 : 4;
+          dispatch_event->tap_event->fingers =
+                        gesture_event->gesture_type == GRAIL_TYPE_TAP3 ? 3 : 4;
           dispatch_event->tap_event->duration = properties[0];
+        
         default:
-          printf("Unknown\n");
+          g_warning ("Unknown Gesture Event Type %d\n",
+                     gesture_event->gesture_type);
           break;
-      }
+        }
 
       if (dispatch_event->type != UNITY_GESTURE_TYPE_NONE)
         {
