@@ -126,7 +126,8 @@ launcher_sources = \
 gesture_sources = \
   gesture/gesture-dispatcher.vala \
   gesture/gesture-dispatcher-xcb.vala \
-  gesture/gesture-dispatcher-xcb-glu.vala
+  gesture/gesture-dispatcher-xcb-glu.vala \
+  gesture/gesture-event.vala
 
 testing_sources = \
   testing/background.vala \

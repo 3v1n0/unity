@@ -19,16 +19,33 @@
 
 namespace Unity.Gesture
 {
-  public class XCBDispatcher : Dispatcher
+  enum Type
   {
-    public XCBDispatcher ()
-    {
-      XCBDispatcherGlue.init (this as GLib.Object);
-    }
+    POINTER,
+    PAN,
+    PINCH,
+    ROTATE,
+    COMBO2,
 
-    ~XCBDispatcher ()
-    {
-      XCBDispatcherGlue.finish ();
-    }
+    SWIPE,
+    SCALE,
+    TURN,
+    COMBO3,
+
+    BRUSH,
+    PICK,
+    WHIRL,
+    COMBO4,
+
+    HAND,
+    GRAB,
+    REVOLVE,
+    COMBO5,
+
+    TAP1,
+    TAP2,
+    TAP3,
+    TAP4,
+    TAP5
   }
 }

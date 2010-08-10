@@ -341,3 +341,8 @@ unity-private/places/places-folder-browser-renderer.c
 unity/unity-place-activation.c
 unity-private/places/places-place-search-navigation.c
 unity-private/panel/panel-window-buttons.c
+tests/unit/test-place-browser.c
+unity-private/gesture/gesture-dispatcher-xcb-glu.c
+unity-private/gesture/gesture-dispatcher-xcb.c
+unity-private/gesture/gesture-dispatcher.c
+unity-private/gesture/gesture-event.c

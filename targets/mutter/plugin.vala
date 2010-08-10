@@ -154,6 +154,8 @@ namespace Unity
     private DBus.Connection screensaver_conn;
     private dynamic DBus.Object screensaver;
 
+    public Gesture.Dispatcher gesture_dispatcher;
+
     construct
     {
       Unity.global_shell = this;
@@ -291,8 +293,27 @@ namespace Unity
           });
         }
 
+      gesture_dispatcher = new Gesture.XCBDispatcher ();
+      
+      gesture_dispatcher.tap.connect (() => {
+        debug ("1");
+        SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
+        debug ("2");
+        unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
+        debug ("3");
+        foreach (Mutter.Window w in mutter_windows)
+          {
+            debug ("append");
+            windows.append (w);
+          }
+          debug ("4");
+        expose_windows (windows,  get_launcher_width_foobar () + 10);
+        debug ("5");
+      });
+
       this.ensure_input_region ();
       return false;
+      
     }
 
     private void on_focus_window_changed ()

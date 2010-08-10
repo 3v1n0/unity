@@ -26,12 +26,13 @@
 #include <X11/X.h>
 
 #include <glib.h>
+#include <glib-object.h>
 
-#include <grail-types.h>
+#include <grail.h>
 
 #include "gesture.h"
 
-#define XCB_DISPATCHER_TIMEOUT 500
+#define XCB_DISPATCHER_TIMEOUT 100
 
 typedef struct
 {
@@ -40,6 +41,8 @@ typedef struct
 
   xcb_connection_t    *connection;
   xcb_generic_event_t *event;
+
+  GObject *dispatcher;
 
 } XCBSource;
 
@@ -66,19 +69,20 @@ static GSourceFuncs XCBFuncs = {
 };
 
 void
-unity_gesture_xcb_dispatcher_glue_init ()
+unity_gesture_xcb_dispatcher_glue_init (GObject *object)
 {
   g_debug ("%s", G_STRFUNC);
   xcb_connection_t *connection;
   XCBSource        *source;
   uint16_t          mask_len = 1;
-  uint32_t         *mask;
+  grail_mask_t     *mask;
 
   connection = xcb_connect (NULL, NULL);
 
-  mask = malloc(sizeof(uint32_t) * mask_len);
-  *mask = 0xeeee;
-  if (set_mask (connection, 0, 0, mask_len, mask))
+  mask = calloc(1, sizeof(grail_mask_t) * mask_len);
+  grail_mask_set(mask, GRAIL_TYPE_TAP4);
+
+  if (set_mask (connection, 0, 0, mask_len, (uint32_t*)mask))
     {
       g_warning ("Unable to initialize gesture dispatcher xcb");
       return;
@@ -86,6 +90,7 @@ unity_gesture_xcb_dispatcher_glue_init ()
 
   source = (XCBSource*)g_source_new (&XCBFuncs, sizeof(XCBSource));
   source->connection = connection;
+  source->dispatcher = object;
   g_source_attach (&source->source, NULL);
 }
 
@@ -234,6 +239,15 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
       for (i = 0; i < gesture_event->num_props; i++) {
         printf("\t\tProperty %u:\t%f\n", i, properties[i]);
       }
+
+      if (gesture_event->gesture_type == GRAIL_TYPE_TAP4)
+        {
+          g_signal_emit_by_name (source->dispatcher,
+                                        "tap",
+                                        4,
+                                        properties[0],
+                                        gesture_event->time);
+        }
 
       printf("\n");
     } 
