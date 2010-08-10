@@ -33,10 +33,26 @@
 
 #include "../unity-private.h"
 
+static void gesture_callback (void            *cookie,
+                              GeisGestureType  gesture_type,
+                              GeisGestureId    gesture_id,
+                              GeisSize         attr_count,
+                              GeisGestureAttr *attrs);
+static gboolean io_callback (GIOChannel   *source,
+                             GIOCondition  condition,
+                             gpointer      data);
+
 static GObject           *dispatcher    = NULL;
 static UnityGestureEvent *gesture_event = NULL;
-static GeisInstance      *instance      = NULL;
+static GeisInstance       instance;
 
+static GeisGestureFuncs gesture_funcs = {
+  gesture_callback,
+  gesture_callback,
+  gesture_callback,
+  gesture_callback,
+  gesture_callback
+};
 
 /*
  * Public Functions
@@ -44,7 +60,49 @@ static GeisInstance      *instance      = NULL;
 void
 unity_gesture_geis_dispatcher_glue_init (GObject *object)
 {
-  g_debug ("%s", G_STRFUNC);
+  GeisStatus status;
+  GeisXcbWinInfo xcb_win_info = {
+    .display_name = NULL,
+    .screenp = NULL,
+    .window_id = gdk_x11_get_default_root_xwindow (),
+  };
+  GeisWinInfo win_info = {
+    GEIS_XCB_FULL_WINDOW,
+    &xcb_win_info
+  };
+  
+  status = geis_init (&win_info, &instance);
+  if (status != GEIS_STATUS_SUCCESS)
+    {
+      g_warning ("Error in geis_init");
+      return;
+    }
+
+  status = geis_configuration_supported (instance, GEIS_CONFIG_UNIX_FD);
+  if (status != GEIS_STATUS_SUCCESS)
+    {
+      g_warning ("Geis does not support Unix fd");
+      return;
+    }
+
+  int fd = -1;
+  status = geis_configuration_get_value (instance, GEIS_CONFIG_UNIX_FD, &fd);
+  if (status != GEIS_STATUS_SUCCESS)
+    {
+      g_warning ("Unable to retrieve Geis td");
+      return;
+    }
+
+  status = geis_subscribe (instance,
+                           GEIS_ALL_INPUT_DEVICES,
+                           GEIS_ALL_GESTURES,
+                           &gesture_funcs,
+                           NULL);
+  if (status != GEIS_STATUS_SUCCESS)
+    {
+      g_warning ("Unable to subscribe to gestures");
+      return;
+    }
 
   dispatcher = object;
   gesture_event = unity_gesture_event_new ();
@@ -52,9 +110,11 @@ unity_gesture_geis_dispatcher_glue_init (GObject *object)
   gesture_event->pinch_event = unity_gesture_pinch_event_new ();
   gesture_event->tap_event = unity_gesture_tap_event_new ();
 
-  GeisSize size;
-
-  size = 0;
+  GIOChannel *iochannel = g_io_channel_unix_new (fd);
+  g_io_add_watch (iochannel,
+                  G_IO_IN,
+                  io_callback,
+                  NULL);
 }
 
 void
@@ -66,6 +126,27 @@ unity_gesture_geis_dispatcher_glue_finish ()
 /*
  * Private Functions
  */
+
+static void
+gesture_callback (void            *cookie,
+                  GeisGestureType  gesture_type,
+                  GeisGestureId    gesture_id,
+                  GeisSize         attr_count,
+                  GeisGestureAttr *attrs)
+{
+  g_debug ("Event");
+}
+
+static gboolean
+io_callback (GIOChannel   *source,
+             GIOCondition  condition,
+             gpointer      data)
+{
+  geis_event_dispatch (instance);
+
+  return TRUE;
+}
+
 #if 0
 void
 unity_gesture_geis_dispatcher_glue_main_iteration (XCBSource *source)
