@@ -346,3 +346,5 @@ unity-private/gesture/gesture-dispatcher-xcb-glu.c
 unity-private/gesture/gesture-dispatcher-xcb.c
 unity-private/gesture/gesture-dispatcher.c
 unity-private/gesture/gesture-event.c
+unity-private/gesture/gesture-dispatcher-geis-glu.c
+unity-private/gesture/gesture-dispatcher-geis.c
