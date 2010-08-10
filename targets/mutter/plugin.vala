@@ -751,7 +751,8 @@ namespace Unity
 
     private void on_gesture_received (Gesture.Event event)
     {
-      if (event.type == Gesture.Type.TAP)
+      if (event.type == Gesture.Type.TAP &&
+          expose_manager.expose_showing == false)
         {
           if (event.fingers == 3)
             {
@@ -759,10 +760,12 @@ namespace Unity
             }
           else if (event.fingers == 4)
             {
-              debug ("Show Dash");
+              show_unity ();
             }
+          print (@"$event");
         }
-      else if (event.type == Gesture.Type.PINCH)
+      else if (event.type == Gesture.Type.PINCH &&
+               places_showing == false)
         {
           if (event.fingers == 3)
             {

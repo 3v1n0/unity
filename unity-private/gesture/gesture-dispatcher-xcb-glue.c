@@ -180,7 +180,7 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
           dispatch_event->fingers =
                         gesture_event->gesture_type == GRAIL_TYPE_TAP3 ? 3 : 4;
           dispatch_event->tap_event->duration = properties[0];
-        
+          break;
         default:
           g_warning ("Unknown Gesture Event Type %d\n",
                      gesture_event->gesture_type);
