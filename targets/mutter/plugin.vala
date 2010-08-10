@@ -127,7 +127,6 @@ namespace Unity
     private Places.Controller  places_controller;
     private Places.View        places;
     private Panel.View         panel;
-    private ActorBlur          actor_blur;
     private Clutter.Rectangle  dark_box;
     private unowned Mutter.MetaWindow?  focus_window = null;
     private unowned Mutter.MetaDisplay? display = null;
@@ -294,23 +293,8 @@ namespace Unity
         }
 
       gesture_dispatcher = new Gesture.XCBDispatcher ();
+      gesture_dispatcher.gesture.connect (on_gesture_received);
       
-      gesture_dispatcher.tap.connect (() => {
-        debug ("1");
-        SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
-        debug ("2");
-        unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
-        debug ("3");
-        foreach (Mutter.Window w in mutter_windows)
-          {
-            debug ("append");
-            windows.append (w);
-          }
-          debug ("4");
-        expose_windows (windows,  get_launcher_width_foobar () + 10);
-        debug ("5");
-      });
-
       this.ensure_input_region ();
       return false;
       
@@ -698,11 +682,6 @@ namespace Unity
       this.grab_enabled = grab;
     }
 
-    private bool envvar_is_enabled (string name)
-    {
-      return (Environment.get_variable (name) != null);
-    }
-
     private unowned Mutter.MetaWindow? get_window_for_xid (uint32 xid)
     {
       unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
@@ -766,6 +745,45 @@ namespace Unity
             default:
               warning (@"Window action type $action not supported");
               break;
+            }
+        }
+    }
+
+    private void on_gesture_received (Gesture.Event event)
+    {
+      if (event.type == Gesture.Type.TAP)
+        {
+          if (event.fingers == 3)
+            {
+              debug ("Move Window");
+            }
+          else if (event.fingers == 4)
+            {
+              debug ("Show Dash");
+            }
+        }
+      else if (event.type == Gesture.Type.PINCH)
+        {
+          if (event.fingers == 3)
+            {
+              debug ("Resize Window");
+            }
+          else if (event.fingers == 4 && event.state == Gesture.State.BEGAN)
+            {
+              if (expose_manager.expose_showing)
+                {
+                  expose_manager.end_expose ();
+                }
+              else
+                {
+                  SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
+                  unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
+                  foreach (Mutter.Window w in mutter_windows)
+                    {
+                      windows.append (w);
+                    }
+                  expose_windows (windows,  get_launcher_width_foobar () + 10);
+                }
             }
         }
     }
@@ -876,6 +894,5 @@ namespace Unity
     {
       return this.get_launcher_width ();
     }
-
   }
 }

@@ -59,7 +59,6 @@ namespace Unity {
     Clutter.Actor background;
     List<Clutter.Actor> clones;
     Plugin plugin;
-    unowned Mutter.MetaScreen screen;
     ScrollerChild _button;
     SpacesButtonController controller;
 
@@ -180,8 +179,6 @@ namespace Unity {
       wsp = new Clutter.Group ();
 
       List<Clutter.Actor> toplevel_windows = new List<Clutter.Actor> ();
-
-      int active_workspace = Mutter.MetaScreen.get_active_workspace_index (plugin.plugin.get_screen ());
 
       foreach (Mutter.Window window in windows)
         {
