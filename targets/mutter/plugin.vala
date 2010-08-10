@@ -757,12 +757,12 @@ namespace Unity
           if (event.fingers == 3)
             {
               debug ("Move Window");
+              print (@"$event");
             }
           else if (event.fingers == 4)
             {
               show_unity ();
             }
-          print (@"$event");
         }
       else if (event.type == Gesture.Type.PINCH &&
                places_showing == false)
@@ -788,6 +788,10 @@ namespace Unity
                   expose_windows (windows,  get_launcher_width_foobar () + 10);
                 }
             }
+        }
+      else if (event.type == Gesture.Type.PAN)
+        {
+          print (@"$event");
         }
     }
 

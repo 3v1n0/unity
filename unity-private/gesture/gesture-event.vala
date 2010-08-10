@@ -54,6 +54,7 @@ namespace Unity.Gesture
     public Window event_window;
     public Window child_window;
 
+    public PanEvent   pan_event;
     public PinchEvent pinch_event;
     public TapEvent   tap_event;
 
@@ -115,6 +116,11 @@ namespace Unity.Gesture
       else
         return "Unknown";
     }
+  }
+
+  public class PanEvent
+  {
+    public float delta;
   }
 
   public class PinchEvent

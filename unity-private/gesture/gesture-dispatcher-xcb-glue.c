@@ -86,13 +86,17 @@ unity_gesture_xcb_dispatcher_glue_init (GObject *object)
 
   mask = calloc (1, sizeof(grail_mask_t) * mask_len);
 
-  /* Taps */
+  /* Fiddle */
   grail_mask_set (mask, GRAIL_TYPE_TAP3);
   grail_mask_set (mask, GRAIL_TYPE_TAP4);
 
   /* Gropes */
   grail_mask_set (mask, GRAIL_TYPE_SCALE);
   grail_mask_set (mask, GRAIL_TYPE_PICK);
+
+  /* Pots and */
+  grail_mask_set (mask, GRAIL_TYPE_SWIPE);
+  grail_mask_set (mask, GRAIL_TYPE_BRUSH);
 
   if (set_mask (connection, 0, 0, mask_len, (uint32_t*)mask))
     {
@@ -104,6 +108,7 @@ unity_gesture_xcb_dispatcher_glue_init (GObject *object)
   source->connection = connection;
   source->dispatcher = object;
   source->gesture_event = unity_gesture_event_new ();
+  source->gesture_event->pan_event = unity_gesture_pan_event_new ();
   source->gesture_event->pinch_event = unity_gesture_pinch_event_new ();
   source->gesture_event->tap_event = unity_gesture_tap_event_new ();
 
@@ -168,6 +173,11 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
 
       switch (gesture_event->gesture_type)
         {
+        case GRAIL_TYPE_SWIPE:
+        case GRAIL_TYPE_BRUSH:
+          dispatch_event->type = UNITY_GESTURE_TYPE_PAN;
+          dispatch_event->fingers = gesture_event->gesture_type == GRAIL_TYPE_SWIPE ? 3 : 4;
+          break;
         case GRAIL_TYPE_SCALE:
         case GRAIL_TYPE_PICK:
           dispatch_event->type = UNITY_GESTURE_TYPE_PINCH;
