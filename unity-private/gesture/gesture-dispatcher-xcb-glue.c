@@ -32,6 +32,8 @@
 
 #include "gesture.h"
 
+#include "../unity-private.h"
+
 #define XCB_DISPATCHER_TIMEOUT 100
 
 typedef struct
@@ -43,6 +45,8 @@ typedef struct
   xcb_generic_event_t *event;
 
   GObject *dispatcher;
+
+  UnityGestureEvent    *gesture_event;
 
 } XCBSource;
 
@@ -79,8 +83,9 @@ unity_gesture_xcb_dispatcher_glue_init (GObject *object)
 
   connection = xcb_connect (NULL, NULL);
 
-  mask = calloc(1, sizeof(grail_mask_t) * mask_len);
-  grail_mask_set(mask, GRAIL_TYPE_TAP4);
+  mask = calloc (1, sizeof(grail_mask_t) * mask_len);
+  grail_mask_set (mask, GRAIL_TYPE_TAP4);
+  grail_mask_set (mask, GRAIL_TYPE_PICK);
 
   if (set_mask (connection, 0, 0, mask_len, (uint32_t*)mask))
     {
@@ -91,6 +96,9 @@ unity_gesture_xcb_dispatcher_glue_init (GObject *object)
   source = (XCBSource*)g_source_new (&XCBFuncs, sizeof(XCBSource));
   source->connection = connection;
   source->dispatcher = object;
+  source->gesture_event = unity_gesture_event_new ();
+  source->gesture_event->tap_event = unity_gesture_tap_event_new ();
+
   g_source_attach (&source->source, NULL);
 }
 
@@ -115,6 +123,9 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
       xcb_gesture_notify_event_t *gesture_event;
       float *properties;
       int i;
+      UnityGestureEvent    *dispatch_event = source->gesture_event;
+
+      dispatch_event->type = UNITY_GESTURE_TYPE_NONE;
 
       event = source->event;
       if (!event) {
@@ -131,7 +142,8 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
       }
 
       gesture_event = (xcb_gesture_notify_event_t *)event;
-
+      properties = (float *)(gesture_event + 1);
+      
       if (gesture_event->extension != extension_info->major_opcode) {
         fprintf(stderr,
           "Warning: Received non-gesture extension "
@@ -145,10 +157,11 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
           "type: %d\n", gesture_event->event_type);
         return;
       }
-
+      /*
       printf("Gesture ID:\t\t%hu\n", gesture_event->gesture_id);
 
       printf("\tGesture Type:\t%d: ", gesture_event->gesture_type);
+      */
       switch (gesture_event->gesture_type) {
         case GRAIL_TYPE_POINTER:
           printf("Pointer (Reserved)\n");
@@ -203,7 +216,7 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
           break;
         case GRAIL_TYPE_TAP1:
           printf("Tap-1 (One-Finger Tap)\n");
-          break;
+         break;
         case GRAIL_TYPE_TAP2:
           printf("Tap-2 (Two-Finger Tap)\n");
           break;
@@ -211,7 +224,8 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
           printf("Tap-3 (Three-Finger Tap)\n");
           break;
         case GRAIL_TYPE_TAP4:
-          printf("Tap-4 (Four-Finger Tap)\n");
+          dispatch_event->type = UNITY_GESTURE_TYPE_TAP;
+          dispatch_event->tap_event->duration = properties[0];
           break;
         case GRAIL_TYPE_TAP5:
           printf("Tap-5 (Five-Finger Tap)\n");
@@ -221,20 +235,37 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
           break;
       }
 
+      if (dispatch_event->type != UNITY_GESTURE_TYPE_NONE)
+        {
+          dispatch_event->device_id = gesture_event->device_id;
+          dispatch_event->gesture_id = gesture_event->gesture_id;
+          dispatch_event->timestamp = gesture_event->time;
+          dispatch_event->state = gesture_event->status;
+          dispatch_event->x = (gint32)gesture_event->focus_x;
+          dispatch_event->y = (gint32)gesture_event->focus_y;
+          dispatch_event->root_window = gesture_event->root;
+          dispatch_event->event_window = gesture_event->event;
+          dispatch_event->child_window = gesture_event->child;
+
+          g_signal_emit_by_name (source->dispatcher,
+                                 "gesture",
+                                 dispatch_event);
+       }
+
+      /*
       printf("\tDevice ID:\t%hu\n", gesture_event->device_id);
       printf("\tTimestamp:\t%u\n", gesture_event->time);
 
-      printf("\tRoot Window:\t0x%x: (root window)\n",
+      printf("\tRoot Window:\t0x%x\n: (root window)\n",
              gesture_event->root);
 
-      printf("\tEvent Window:\t0x%x: ", gesture_event->event);
-      printf("\tChild Window:\t0x%x: ", gesture_event->child);
+      printf("\tEvent Window:\t0x%x\n: ", gesture_event->event);
+      printf("\tChild Window:\t0x%x\n: ", gesture_event->child);
       printf("\tFocus X:\t%f\n", gesture_event->focus_x);
       printf("\tFocus Y:\t%f\n", gesture_event->focus_y);
       printf("\tStatus:\t\t%hu\n", gesture_event->status);
       printf("\tNum Props:\t%hu\n", gesture_event->num_props);
-
-      properties = (float *)(gesture_event + 1);
+     
 
       for (i = 0; i < gesture_event->num_props; i++) {
         printf("\t\tProperty %u:\t%f\n", i, properties[i]);
@@ -250,6 +281,7 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
         }
 
       printf("\n");
+      */
     } 
 }
 

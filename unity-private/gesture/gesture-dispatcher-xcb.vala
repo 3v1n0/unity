@@ -24,6 +24,10 @@ namespace Unity.Gesture
     public XCBDispatcher ()
     {
       XCBDispatcherGlue.init (this as GLib.Object);
+
+      gesture.connect ((e) => {
+        print (@"\n$e\n");
+      });
     }
 
     ~XCBDispatcher ()

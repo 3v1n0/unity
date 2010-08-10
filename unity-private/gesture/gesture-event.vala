@@ -17,35 +17,100 @@
  *
  */
 
+using X;
+
 namespace Unity.Gesture
 {
-  enum Type
+  public enum Type
   {
-    POINTER,
+    NONE,
     PAN,
     PINCH,
     ROTATE,
-    COMBO2,
+    TAP
+  }
 
-    SWIPE,
-    SCALE,
-    TURN,
-    COMBO3,
+  public enum State
+  {
+    BEGAN,
+    CONTINUED,
+    ENDED
+  }
+  
+  public class Event
+  {
+    public Type   type;
 
-    BRUSH,
-    PICK,
-    WHIRL,
-    COMBO4,
+    public uint32 device_id;
+    public uint32 gesture_id;
+    public uint32 timestamp;
+    public State  state;
 
-    HAND,
-    GRAB,
-    REVOLVE,
-    COMBO5,
+    public uint32 x;
+    public uint32 y;
 
-    TAP1,
-    TAP2,
-    TAP3,
-    TAP4,
-    TAP5
+    public Window root_window;
+    public Window event_window;
+    public Window child_window;
+
+    public TapEvent tap_event;
+
+    public string to_string ()
+    {
+      string ret = "";
+
+      ret += type_to_string (type) + " Gesture\n";
+      ret += "\tDevice ID  : %u\n".printf (device_id);
+      ret += "\tGesture ID : %u\n".printf (gesture_id);
+      ret += "\tTimestamp  : %u\n".printf (timestamp);
+      ret += "\tState      : " + state_to_string (state) + "\n";
+      ret += "\tX Root     : %u\n".printf (x);
+      ret += "\tY Root     : %u\n".printf (y);
+      ret += "\tRootWin    : %u\n".printf ((uint32)root_window);
+      ret += "\tEventWin   : %u\n".printf ((uint32)event_window);
+      ret += "\tChildWin   : %u\n".printf ((uint32)child_window);
+
+      switch (type)
+        {
+        case Type.TAP:
+          ret += "\tDuration   : %u\n".printf (tap_event.duration);
+          break;
+        default:
+          break;
+        }
+
+      return ret;
+    }
+
+    public static string type_to_string (Type type)
+    {
+      if (type == Type.PAN)
+        return "Pan";
+      else if (type == Type.PINCH)
+        return "Pinch";
+      else if (type == Type.ROTATE)
+        return "Rotate";
+      else if (type == Type.TAP)
+        return "Tap";
+      else
+        return "Unknown";
+    }
+
+    public static string state_to_string (State state)
+    {
+      if (state == State.BEGAN)
+        return "Began";
+      else if (state == State.CONTINUED)
+        return "Continued";
+      else if (state == State.ENDED)
+        return "Ended";
+      else
+        return "Unknown";
+    }
+  }
+
+  public class TapEvent
+  {
+    public int32 duration;
   }
 }

@@ -19,12 +19,6 @@
 
 namespace Unity.Gesture.XCBDispatcherGlue
 {
-  //[CCode (lower_case_prefix = "gesture_dispatcher_xcb_glue_")]
   public extern void init (GLib.Object obj);
-
-  //[CCode (lower_case_prefix = "gesture_dispatcher_xcb_glue_")]
   public extern void finish ();
-
-  //[CCode (lower_case_prefix = "gesture_dispatcher_xcb_glue_")]
-  public extern void main_iteration ();
 }
