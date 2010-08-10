@@ -14,6 +14,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
+ *             Chase Douglas <chase.douglas@canonical.com>
  *
  */
 
