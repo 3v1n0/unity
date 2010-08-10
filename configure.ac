@@ -110,6 +110,7 @@ PKG_CHECK_MODULES(BASE,
                   gdk-x11-2.0 >= $GTK_REQUIRED
                   gio-2.0 >= $GTK_REQUIRED
                   gee-1.0
+                  libgeis
                   gconf-2.0
                   gnome-desktop-2.0
                   indicator

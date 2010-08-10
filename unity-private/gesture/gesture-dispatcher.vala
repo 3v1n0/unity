@@ -22,9 +22,5 @@ namespace Unity.Gesture
   public abstract class Dispatcher : GLib.Object
   {
     public signal void gesture (Gesture.Event event);
-
-    public signal void tap (int n_fingers, 
-                            uint32 duration,
-                            uint32 timestamp);
   }
 }

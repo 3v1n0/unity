@@ -125,6 +125,8 @@ launcher_sources = \
 
 gesture_sources = \
   gesture/gesture-dispatcher.vala \
+  gesture/gesture-dispatcher-geis.vala \
+  gesture/gesture-dispatcher-geis-glu.vala \
   gesture/gesture-dispatcher-xcb.vala \
   gesture/gesture-dispatcher-xcb-glu.vala \
   gesture/gesture-event.vala
@@ -148,6 +150,7 @@ libunity_private_la_VALASOURCES = \
 libunity_private_la_SOURCES = \
   gesture/gesture.c \
   gesture/gesture.h \
+  gesture/gesture-dispatcher-geis-glue.c \
   gesture/gesture-dispatcher-xcb-glue.c \
   unity-utils.c \
   unity-utils.h \
