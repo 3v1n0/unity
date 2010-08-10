@@ -45,6 +45,7 @@ namespace Unity.Gesture
     public uint32 gesture_id;
     public uint32 timestamp;
     public State  state;
+    public int32  fingers;
 
     public uint32 x;
     public uint32 y;
@@ -53,7 +54,8 @@ namespace Unity.Gesture
     public Window event_window;
     public Window child_window;
 
-    public TapEvent tap_event;
+    public PinchEvent pinch_event;
+    public TapEvent   tap_event;
 
     public string to_string ()
     {
@@ -64,6 +66,7 @@ namespace Unity.Gesture
       ret += "\tGesture ID : %u\n".printf (gesture_id);
       ret += "\tTimestamp  : %u\n".printf (timestamp);
       ret += "\tState      : " + state_to_string (state) + "\n";
+      ret += "\tFingers    : %u\n".printf (fingers);
       ret += "\tX Root     : %u\n".printf (x);
       ret += "\tY Root     : %u\n".printf (y);
       ret += "\tRootWin    : %u\n".printf ((uint32)root_window);
@@ -72,10 +75,14 @@ namespace Unity.Gesture
 
       switch (type)
         {
+        case Type.PINCH:
+          ret += "\tDelta      : %f\n".printf (pinch_event.delta);
+          break;
+
         case Type.TAP:
-          ret += "\tFingers    : %u\n".printf (tap_event.fingers);
           ret += "\tDuration   : %u\n".printf (tap_event.duration);
           break;
+        
         default:
           break;
         }
@@ -110,9 +117,13 @@ namespace Unity.Gesture
     }
   }
 
+  public class PinchEvent
+  {
+    public float delta;
+  }
+
   public class TapEvent
   {
-    public int32 fingers;
     public int32 duration;
   }
 }

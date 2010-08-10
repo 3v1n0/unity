@@ -91,6 +91,7 @@ unity_gesture_xcb_dispatcher_glue_init (GObject *object)
   grail_mask_set (mask, GRAIL_TYPE_TAP4);
 
   /* Gropes */
+  grail_mask_set (mask, GRAIL_TYPE_SCALE);
   grail_mask_set (mask, GRAIL_TYPE_PICK);
 
   if (set_mask (connection, 0, 0, mask_len, (uint32_t*)mask))
@@ -103,6 +104,7 @@ unity_gesture_xcb_dispatcher_glue_init (GObject *object)
   source->connection = connection;
   source->dispatcher = object;
   source->gesture_event = unity_gesture_event_new ();
+  source->gesture_event->pinch_event = unity_gesture_pinch_event_new ();
   source->gesture_event->tap_event = unity_gesture_tap_event_new ();
 
   g_source_attach (&source->source, NULL);
@@ -166,10 +168,16 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
 
       switch (gesture_event->gesture_type)
         {
+        case GRAIL_TYPE_SCALE:
+        case GRAIL_TYPE_PICK:
+          dispatch_event->type = UNITY_GESTURE_TYPE_PINCH;
+          dispatch_event->fingers = gesture_event->gesture_type == GRAIL_TYPE_SCALE ? 3 : 4;
+          dispatch_event->pinch_event->delta = properties[0];
+          break;
         case GRAIL_TYPE_TAP3:
         case GRAIL_TYPE_TAP4:
           dispatch_event->type = UNITY_GESTURE_TYPE_TAP;
-          dispatch_event->tap_event->fingers =
+          dispatch_event->fingers =
                         gesture_event->gesture_type == GRAIL_TYPE_TAP3 ? 3 : 4;
           dispatch_event->tap_event->duration = properties[0];
         
@@ -208,24 +216,13 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
       printf("\tFocus X:\t%f\n", gesture_event->focus_x);
       printf("\tFocus Y:\t%f\n", gesture_event->focus_y);
       printf("\tStatus:\t\t%hu\n", gesture_event->status);
+      */
       printf("\tNum Props:\t%hu\n", gesture_event->num_props);
      
-
+    
       for (i = 0; i < gesture_event->num_props; i++) {
         printf("\t\tProperty %u:\t%f\n", i, properties[i]);
       }
-
-      if (gesture_event->gesture_type == GRAIL_TYPE_TAP4)
-        {
-          g_signal_emit_by_name (source->dispatcher,
-                                        "tap",
-                                        4,
-                                        properties[0],
-                                        gesture_event->time);
-        }
-
-      printf("\n");
-      */
     } 
 }
 
