@@ -47,8 +47,8 @@ namespace Unity.Gesture
     public State  state;
     public int32  fingers;
 
-    public uint32 x;
-    public uint32 y;
+    public float root_x;
+    public float root_y;
 
     public Window root_window;
     public Window event_window;
@@ -68,20 +68,36 @@ namespace Unity.Gesture
       ret += "\tTimestamp  : %u\n".printf (timestamp);
       ret += "\tState      : " + state_to_string (state) + "\n";
       ret += "\tFingers    : %u\n".printf (fingers);
-      ret += "\tX Root     : %u\n".printf (x);
-      ret += "\tY Root     : %u\n".printf (y);
+      ret += "\tX Root     : %f\n".printf (root_x);
+      ret += "\tY Root     : %f\n".printf (root_y);
       ret += "\tRootWin    : %u\n".printf ((uint32)root_window);
       ret += "\tEventWin   : %u\n".printf ((uint32)event_window);
       ret += "\tChildWin   : %u\n".printf ((uint32)child_window);
 
       switch (type)
         {
+        case Type.PAN:
+          ret += "\tDeltaX     : %f\n".printf (pan_event.delta_x);
+          ret += "\tDeltaY     : %f\n".printf (pan_event.delta_y);
+          ret += "\tVelocityX  : %f\n".printf (pan_event.velocity_x);
+          ret += "\tVelocityY  : %f\n".printf (pan_event.velocity_y);
+          ret += "\tX2         : %f\n".printf (pan_event.x2);
+          ret += "\tY2         : %f\n".printf (pan_event.y2);
+          break;
         case Type.PINCH:
-          ret += "\tDelta      : %f\n".printf (pinch_event.delta);
+          ret += "\tRadiusDelta: %f\n".printf (pinch_event.radius_delta);
+          ret += "\tRadiusVeloc: %f\n".printf (pinch_event.radius_velocity);
+          ret += "\tRadius     : %f\n".printf (pinch_event.radius);
+          ret += "\tBoundingX1 : %f\n".printf (pinch_event.bounding_box_x1);
+          ret += "\tBoundingY1 : %f\n".printf (pinch_event.bounding_box_y1);
+          ret += "\tBoundingX2 : %f\n".printf (pinch_event.bounding_box_x2);
+          ret += "\tBoundingY2 : %f\n".printf (pinch_event.bounding_box_y2);
           break;
 
         case Type.TAP:
-          ret += "\tDuration   : %u\n".printf (tap_event.duration);
+          ret += "\tDuration   : %f\n".printf (tap_event.duration); 
+          ret += "\tX2         : %f\n".printf (tap_event.x2);
+          ret += "\tY2         : %f\n".printf (tap_event.y2);
           break;
         
         default:
@@ -120,16 +136,29 @@ namespace Unity.Gesture
 
   public class PanEvent
   {
-    public float delta;
+    public float delta_x;
+    public float delta_y;
+    public float velocity_x;
+    public float velocity_y;
+    public float x2;
+    public float y2;
   }
 
   public class PinchEvent
   {
-    public float delta;
+    public float radius_delta;
+    public float radius_velocity;
+    public float radius;
+    public float bounding_box_x1;
+    public float bounding_box_y1;
+    public float bounding_box_x2;
+    public float bounding_box_y2;
   }
 
   public class TapEvent
   {
-    public int32 duration;
+    public float duration;
+    public float x2;
+    public float y2;
   }
 }
