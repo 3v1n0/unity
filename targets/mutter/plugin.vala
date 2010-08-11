@@ -910,14 +910,33 @@ namespace Unity
                 }
               else if (event.state == Gesture.State.CONTINUED)
                 {
-                  if (start_pan_window is Mutter.Window)
+                  if (start_pan_window is Mutter.Window == false)
+                    return;
+
+                  unowned Mutter.MetaWindow win = start_pan_window.get_meta_window ();
+                  if (!Mutter.MetaWindow.is_maximized (win))
                     {
-                      start_pan_window.x += Math.floorf (event.pan_event.delta_x);
-                      start_pan_window.y += Math.floorf (event.pan_event.delta_y);
-                     /* 
-                      unowned Mutter.MetaWindow win = start_pan_window.get_meta_window ();
-                      unowned Mutter.MetaRectangle rect = Mutter.MetaWindow.get_rect (win);
-                      print ("%d %d\n", rect.x, rect.y); */
+                      if (start_pan_window.y == PANEL_HEIGHT
+                          && event.pan_event.delta_y < 0.0f)
+                        {
+                          Mutter.MetaWindow.maximize (win,
+                                                      Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
+                        }
+                      else
+                        {
+                          start_pan_window.x += Math.floorf (event.pan_event.delta_x);
+                          start_pan_window.y += Math.floorf (event.pan_event.delta_y);
+                          start_pan_window.x = float.max (start_pan_window.x, QUICKLAUNCHER_WIDTH);
+                          start_pan_window.y = float.max (start_pan_window.y, PANEL_HEIGHT);
+                        }
+                    }
+                  else
+                    {
+                      if (event.pan_event.delta_y >= 0.0f)
+                        {
+                          Mutter.MetaWindow.unmaximize (win,
+                                                        Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
+                        }
                     }
                 }
               else if (event.state == Gesture.State.ENDED)
