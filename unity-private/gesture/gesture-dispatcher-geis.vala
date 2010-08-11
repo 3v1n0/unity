@@ -24,6 +24,8 @@ namespace Unity.Gesture
     public GeisDispatcher ()
     {
       GeisDispatcherGlue.init (this as GLib.Object);
+
+      gesture.connect ((e) => { print (@"$e"); });
     }
 
     ~GeisDispatcher ()
