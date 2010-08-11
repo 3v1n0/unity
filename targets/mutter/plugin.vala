@@ -771,27 +771,142 @@ namespace Unity
             {
               debug ("Resize Window");
             }
-          else if (event.fingers == 4 && event.state == Gesture.State.BEGAN)
+          else if (event.fingers == 4)
             {
-              if (expose_manager.expose_showing)
+              if (event.state == Gesture.State.BEGAN)
                 {
-                  expose_manager.end_expose ();
-                }
-              else
-                {
-                  SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
-                  unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
-                  foreach (Mutter.Window w in mutter_windows)
+                  if (expose_manager.expose_showing)
                     {
-                      windows.append (w);
+                      expose_manager.end_expose ();
                     }
-                  expose_windows (windows,  get_launcher_width_foobar () + 10);
+                  else
+                    {
+                      SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
+                      unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
+                      foreach (Mutter.Window w in mutter_windows)
+                        {
+                          windows.append (w);
+                        }
+                      expose_windows (windows,  get_launcher_width_foobar () + 10);
+                    }
+
+                  foreach (ExposeClone clone in expose_manager.exposed_windows)
+                    {
+                      clone.get_animation ().get_timeline ().pause ();
+                    }
+                }
+              else if (event.state == Gesture.State.CONTINUED)
+                {
+                  foreach (ExposeClone clone in expose_manager.exposed_windows)
+                    {
+                      /*
+                      int I_JUST_PULLED_THIS_FROM_MY_FOO = 5;
+                      var tl = clone.get_animation ().get_timeline ();
+
+                      tl.advance (tl.get_elapsed_time ()
+                                  + I_JUST_PULLED_THIS_FROM_MY_FOO);
+                      */
+                      
+                      Value v = Value (typeof (float));
+                      var interval = clone.get_animation ().get_interval ("x");
+                      interval.get_final_value (v);
+                      var fx = v.get_float ();
+                      clone.x += fx > clone.x ? 1 : -1;
+
+                      /*
+                      if (fx > clone.x)
+                        clone.x = clone.x + 1;//float.min (clone.x + 2, fx);
+                      else
+                        clone.x = clone.x -1;//float.max (clone.x - 2, fx);
+                      */
+
+                      interval = clone.get_animation ().get_interval ("y");
+                      interval.get_final_value (v);
+                      var fy = v.get_float ();
+                      clone.y += fy > clone.y ? 1 : -1;
+
+                      /*
+                      if (fy > clone.y)
+                        clone.y = clone.y + 1;//float.min (clone.y + 2, fy);
+                      else
+                        clone.y = clone.y - 1;//float.max (clone.y - 2, fy);
+                      */
+                      print (@"$(clone.x) $(clone.y)\n");
+                      
+
+                      double scalex; double scaley;
+                      clone.get_scale (out scalex, out scaley);
+                      interval = clone.get_animation ().get_interval ("scale-x");
+                      interval.get_final_value (v);
+                      var sx = v.get_double ();
+                      scalex += sx > scalex ? 0.01f : -0.01f;
+                      /*
+                      if (sx > scalex)
+                        sx = double.min (scalex + (sx-scalex)*0.01f, sx);
+                      else
+                        sx = double.max (scalex + (scalex-sx)*-0.01f, sx);
+*/
+                      interval = clone.get_animation ().get_interval ("scale-y");
+                      interval.get_final_value (v);
+                      var sy = v.get_double ();
+                      scaley += sy > scaley ? 0.01f : - 0.01f;
+                      /*
+                      if (sy > scaley)
+                        sy = double.min (scaley + (sy-scaley)*0.01f, sy);
+                      else
+                        sy = double.max (scaley + (scaley-sy)*-0.01f, sy);
+  */                    
+                      clone.set_scale (scalex, scaley);
+
+/*                      int i = 99;
+                      while (Gtk.events_pending ())
+                        {
+                          Gtk.main_iteration ();
+                          i++;
+                        }
+                        */
+                    }
+
+                 }
+              else if (event.state == Gesture.State.ENDED)
+                {
+                  foreach (ExposeClone clone in expose_manager.exposed_windows)
+                    {
+                      var anim = clone.get_animation ();
+                      
+                      Value v = Value (typeof (float));
+                      
+                      var interval = anim.get_interval ("x");
+                      v.set_float (clone.x);
+                      interval.set_initial_value (v);
+
+                      interval = anim.get_interval ("y");
+                      v.set_float (clone.y);
+                      interval.set_initial_value (v);
+
+                      v = Value (typeof (double));
+                      double scalex, scaley;
+                      clone.get_scale (out scalex, out scaley);
+
+                      interval = anim.get_interval ("scale-x");
+                      v.set_double (scalex);
+                      interval.set_initial_value (v);
+
+                      interval = anim.get_interval ("scale-y");
+                      v.set_double (scaley);
+                      interval.set_initial_value (v);
+
+                      clone.get_animation ().get_timeline ().start ();
+                      clone.queue_relayout ();
+
+                      print ("FINISHED\n");
+                    }
                 }
             }
         }
       else if (event.type == Gesture.Type.PAN)
         {
-          print (@"$event");
+          //print (@"$event");
         }
     }
 

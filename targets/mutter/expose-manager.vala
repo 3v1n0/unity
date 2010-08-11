@@ -123,7 +123,8 @@ namespace Unity
 
   public class ExposeManager : Object
   {
-    private List<ExposeClone> exposed_windows;
+    public List<ExposeClone> exposed_windows;
+
     private Clutter.Group expose_group;
     private Plugin owner;
     private Clutter.Stage stage;

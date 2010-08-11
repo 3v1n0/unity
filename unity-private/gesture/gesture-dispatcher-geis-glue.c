@@ -125,10 +125,12 @@ unity_gesture_geis_dispatcher_glue_init (GObject *object)
   dispatch_event->tap_event = unity_gesture_tap_event_new ();
 
   GIOChannel *iochannel = g_io_channel_unix_new (fd);
-  g_io_add_watch (iochannel,
-                  G_IO_IN,
-                  io_callback,
-                  NULL);
+  g_io_add_watch_full (iochannel,
+                       G_PRIORITY_HIGH,
+                       G_IO_IN,
+                       io_callback,
+                       NULL,
+                       NULL);
 }
 
 void
