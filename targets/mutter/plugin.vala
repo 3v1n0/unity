@@ -155,6 +155,7 @@ namespace Unity
 
     public Gesture.Dispatcher gesture_dispatcher;
     private float start_pinch_radius = 0.0f;
+    private unowned Mutter.Window? start_pan_window = null;
 
     construct
     {
@@ -890,7 +891,48 @@ namespace Unity
         }
       else if (event.type == Gesture.Type.PAN)
         {
-          //print (@"$event");
+          if (event.fingers == 3)
+            {
+              if (event.state == Gesture.State.BEGAN)
+                {
+                  start_pan_window = null;
+
+                  var actor = stage.get_actor_at_pos (Clutter.PickMode.ALL,
+                                                      (int)event.root_x,
+                                                      (int)event.root_y);
+                  if (actor is Mutter.Window == false)
+                    actor = actor.get_parent ();
+
+                  if (actor is Mutter.Window)
+                    {
+                      start_pan_window = actor as Mutter.Window;
+                    }
+                }
+              else if (event.state == Gesture.State.CONTINUED)
+                {
+                  if (start_pan_window is Mutter.Window)
+                    {
+                      start_pan_window.x += Math.floorf (event.pan_event.delta_x);
+                      start_pan_window.y += Math.floorf (event.pan_event.delta_y);
+                     /* 
+                      unowned Mutter.MetaWindow win = start_pan_window.get_meta_window ();
+                      unowned Mutter.MetaRectangle rect = Mutter.MetaWindow.get_rect (win);
+                      print ("%d %d\n", rect.x, rect.y); */
+                    }
+                }
+              else if (event.state == Gesture.State.ENDED)
+                {
+                  if (start_pan_window is Mutter.Window)
+                    {
+                      X.Window win = start_pan_window.get_x_window ();
+
+                      unowned Gdk.Window w = Gdk.Window.foreign_new ((Gdk.NativeWindow)win);
+
+                      if (w is Gdk.Window)
+                        w.move ((int)start_pan_window.x, (int)start_pan_window.y);
+                    }
+                }
+            }
         }
     }
 
