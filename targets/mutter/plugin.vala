@@ -154,6 +154,7 @@ namespace Unity
     private dynamic DBus.Object screensaver;
 
     public Gesture.Dispatcher gesture_dispatcher;
+    private float start_pinch_radius = 0.0f;
 
     construct
     {
@@ -794,79 +795,64 @@ namespace Unity
                     {
                       clone.get_animation ().get_timeline ().pause ();
                     }
+
+                  start_pinch_radius = event.pinch_event.radius_delta;
                 }
               else if (event.state == Gesture.State.CONTINUED)
                 {
                   foreach (ExposeClone clone in expose_manager.exposed_windows)
                     {
-                      /*
                       int I_JUST_PULLED_THIS_FROM_MY_FOO = 5;
-                      var tl = clone.get_animation ().get_timeline ();
 
+                      if (event.pinch_event.radius_delta >= 0)
+                        {
+                          if (start_pinch_radius < 0)
+                            {
+                              /* We're moving backward */
+                              I_JUST_PULLED_THIS_FROM_MY_FOO *= -1;
+                            }
+                        }
+                      else
+                        {
+                          if (start_pinch_radius >= 0)
+                            {
+                              /* We're moving backward */
+                              I_JUST_PULLED_THIS_FROM_MY_FOO *= -1;
+                            }
+                        }
+
+                      var tl = clone.get_animation ().get_timeline ();
                       tl.advance (tl.get_elapsed_time ()
                                   + I_JUST_PULLED_THIS_FROM_MY_FOO);
-                      */
+                     
+                      float factor = (float)tl.get_elapsed_time () /
+                                     (float)tl.get_duration ();
                       
                       Value v = Value (typeof (float));
+                      
                       var interval = clone.get_animation ().get_interval ("x");
-                      interval.get_final_value (v);
-                      var fx = v.get_float ();
-                      clone.x += fx > clone.x ? 1 : -1;
-
-                      /*
-                      if (fx > clone.x)
-                        clone.x = clone.x + 1;//float.min (clone.x + 2, fx);
-                      else
-                        clone.x = clone.x -1;//float.max (clone.x - 2, fx);
-                      */
+                      interval.compute_value (factor, v);
+                      clone.x = v.get_float ();
 
                       interval = clone.get_animation ().get_interval ("y");
-                      interval.get_final_value (v);
-                      var fy = v.get_float ();
-                      clone.y += fy > clone.y ? 1 : -1;
+                      interval.compute_value (factor, v);
+                      clone.y = v.get_float ();
 
-                      /*
-                      if (fy > clone.y)
-                        clone.y = clone.y + 1;//float.min (clone.y + 2, fy);
-                      else
-                        clone.y = clone.y - 1;//float.max (clone.y - 2, fy);
-                      */
-                      print (@"$(clone.x) $(clone.y)\n");
-                      
-
-                      double scalex; double scaley;
+                      double scalex, scaley;
                       clone.get_scale (out scalex, out scaley);
+
+                      v = Value (typeof (double));
+
                       interval = clone.get_animation ().get_interval ("scale-x");
-                      interval.get_final_value (v);
-                      var sx = v.get_double ();
-                      scalex += sx > scalex ? 0.01f : -0.01f;
-                      /*
-                      if (sx > scalex)
-                        sx = double.min (scalex + (sx-scalex)*0.01f, sx);
-                      else
-                        sx = double.max (scalex + (scalex-sx)*-0.01f, sx);
-*/
+                      interval.compute_value (factor, v);
+                      scalex = v.get_double ();
+
                       interval = clone.get_animation ().get_interval ("scale-y");
-                      interval.get_final_value (v);
-                      var sy = v.get_double ();
-                      scaley += sy > scaley ? 0.01f : - 0.01f;
-                      /*
-                      if (sy > scaley)
-                        sy = double.min (scaley + (sy-scaley)*0.01f, sy);
-                      else
-                        sy = double.max (scaley + (scaley-sy)*-0.01f, sy);
-  */                    
+                      interval.compute_value (factor, v);
+                      scaley = v.get_double ();
+
                       clone.set_scale (scalex, scaley);
-
-/*                      int i = 99;
-                      while (Gtk.events_pending ())
-                        {
-                          Gtk.main_iteration ();
-                          i++;
-                        }
-                        */
                     }
-
                  }
               else if (event.state == Gesture.State.ENDED)
                 {
@@ -898,8 +884,6 @@ namespace Unity
 
                       clone.get_animation ().get_timeline ().start ();
                       clone.queue_relayout ();
-
-                      print ("FINISHED\n");
                     }
                 }
             }
