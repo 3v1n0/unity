@@ -726,7 +726,6 @@ namespace Unity.Launcher
 
     private bool on_leave_event (Clutter.Event event)
     {
-      debug ("got a motion event");
       last_known_pointer_x = event.crossing.x;
       if (view_type == ScrollerViewType.CONTRACTED) return false;
 

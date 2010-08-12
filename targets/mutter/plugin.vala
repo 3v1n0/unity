@@ -162,6 +162,7 @@ namespace Unity
 
     construct
     {
+      fullscreen_requests = new Gee.ArrayList<Object> ();
       Unity.global_shell = this;
       Unity.TimelineLogger.get_default(); // just inits the timer for logging
       // attempt to get a boot logging filename
@@ -210,10 +211,6 @@ namespace Unity
     {
       START_FUNCTION ();
 
-      Mutter.MetaScreen.ungrab_all_keys (plugin.get_screen (), Clutter.get_current_event_time ());
-
-      fullscreen_requests = new Gee.ArrayList<Object> ();
-
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
       this.stage.actor_added.connect   ((a) => { ensure_input_region (); });
       this.stage.actor_removed.connect ((a) => { ensure_input_region (); });
@@ -250,6 +247,14 @@ namespace Unity
 
       display.overlay_key.connect (() => {
           super_key_active = false;
+      });
+
+      display.overlay_key_with_modifier.connect ((keysym) => {
+        super_key_modifier_release (keysym);
+      });
+
+      display.overlay_key_with_modifier_down.connect ((keysym) => {
+        super_key_modifier_press (keysym);
       });
 
       this.background = new Background ();
@@ -311,8 +316,6 @@ namespace Unity
           });
         }
 
-
-      Mutter.MetaScreen.grab_all_keys (plugin.get_screen (), Clutter.get_current_event_time ());
       this.ensure_input_region ();
       return false;
     }
