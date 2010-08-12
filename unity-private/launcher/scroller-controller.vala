@@ -84,15 +84,23 @@ namespace Unity.Launcher
       childcontroller.activate ();
     }
 
+    uint super_key_source = 0;
     private void on_super_key_active ()
     {
-      if (Unity.global_shell.super_key_active)
-        Timeout.add (300, () => {
+      if (Unity.global_shell.super_key_active && super_key_source == 0)
+        super_key_source = Timeout.add (300, () => {
           view.enable_keyboard_selection_mode (Unity.global_shell.super_key_active);
           return false;
         });
       else
-        view.enable_keyboard_selection_mode (false);
+        {
+          if (super_key_source != 0)
+            {
+              Source.remove (super_key_source);
+              super_key_source = 0;
+            }
+          view.enable_keyboard_selection_mode (false);
+        }
     }
 
     private void handle_bamf_view_opened (Object object)

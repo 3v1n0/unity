@@ -380,12 +380,12 @@ namespace Unity.Launcher
               foreach (ScrollerChild child in model)
               {
                 if (child.active)
-                  focused_launcher = model.index_of (child);
+                  {
+                    focused_launcher = model.index_of (child);
+                    break;
+                  }
               }
-
-              view_type = ScrollerViewType.CONTRACTED;
-              order_children (false);
-              queue_relayout ();
+              contract_launcher ();
             }
           else if (last_known_pointer_x < get_width ())
             {
@@ -394,9 +394,7 @@ namespace Unity.Launcher
         }
       else
         {
-          view_type = ScrollerViewType.EXPANDED;
-          scroll_position = 0;
-          order_children (true);
+          expand_launcher ();
         }
 
 
