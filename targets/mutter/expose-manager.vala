@@ -25,6 +25,10 @@ namespace Unity
     private Clutter.Clone clone;
     private Clutter.Actor darken_box;
     private bool hovered;
+    private bool dragging;
+    private float drag_start_x;
+    private float drag_start_y;
+    private bool drag_moved;
     
     public bool fade_on_close { get; set; }
 
@@ -42,12 +46,15 @@ namespace Unity
           darken_box.opacity = darken;
       }
     }
+    
+    public bool enable_dnd { get; set; }
 
     public ExposeClone (Clutter.Actor source)
     {
       darken = 0;
       hovered_opacity = 255;
       unhovered_opacity = 255;
+      enable_dnd = false;
 
       this.source = source;
 
@@ -75,6 +82,70 @@ namespace Unity
     {
       this.enter_event.connect (this.on_mouse_enter);
       this.leave_event.connect (this.on_mouse_leave);
+      this.button_press_event.connect (this.on_button_press);
+    }
+    
+    private bool on_button_press (Clutter.Event evnt)
+    {
+      if (!enable_dnd)
+        return false;
+      
+      start_drag (evnt);      
+      return true;
+    }
+    
+    private void start_drag (Clutter.Event evnt)
+    {
+      dragging = true;
+      this.get_stage ().captured_event.connect (on_stage_captured_event);
+      
+      float x, y;
+      float out_x = 0, out_y = 0;
+      
+      evnt.get_coords (out x, out y);
+      get_parent ().transform_stage_point (x, y, out out_x, out out_y);
+      
+      drag_start_x = out_x - width / 2;
+      drag_start_y = out_y - height / 2;
+      
+      drag_moved = false;
+    }
+    
+    private void end_drag ()
+    {
+      dragging = false;
+      this.get_stage ().captured_event.disconnect (on_stage_captured_event);
+    }
+    
+    private bool on_stage_captured_event (Clutter.Event event)
+    {
+      if (!dragging)
+        {
+          end_drag ();
+          return false;
+        }
+        
+      if (event.type == Clutter.EventType.MOTION)
+        {
+          float out_x = 0, out_y = 0;
+          get_parent ().transform_stage_point (event.motion.x, event.motion.y, out out_x, out out_y);
+          
+          out_x -= width / 2;
+          out_y -= height / 2;
+          
+          if (Math.fabs (out_x - drag_start_x) > 15 || Math.fabs (out_y - drag_start_y) > 15 || drag_moved)
+            {
+              drag_moved = true;
+              set_position (out_x, out_y);
+            }
+        }
+      else if (event.type == Clutter.EventType.BUTTON_RELEASE)
+        {
+          end_drag ();
+          return drag_moved;
+        }
+
+      return true;
     }
 
     private bool on_mouse_enter (Clutter.Event evnt)
@@ -171,7 +242,7 @@ namespace Unity
         expose_group.destroy ();
       expose_group = new Clutter.Group ();
 
-      Clutter.Actor window_group = owner.plugin.get_normal_window_group ();
+      Clutter.Actor window_group = owner.plugin.get_window_group ();
 
       (window_group as Clutter.Container).add_actor (expose_group);
       expose_group.raise_top ();

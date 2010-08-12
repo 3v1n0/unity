@@ -203,6 +203,7 @@ namespace Unity {
               clone.fade_on_close = false;
               clone.reactive = true;
               clone.darken = 25;
+              clone.enable_dnd = false;
 
               wsp.add_actor (clone);
               toplevel_windows.prepend (clone);
