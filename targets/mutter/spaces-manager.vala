@@ -143,9 +143,13 @@ namespace Unity {
           clone.reactive = true;
           clone.raise_top ();
           clone.show ();
+          clone.opacity = 200;
+          
 
           unowned Mutter.MetaWorkspace cpy = workspace;
           clone.button_release_event.connect (() => { select_workspace (cpy); return true; });
+          clone.enter_event.connect (() => { clone.opacity = 255; return true; });
+          clone.leave_event.connect (() => { clone.opacity = 200; return true; });
         }
 
       layout_workspaces (clones, screen);
@@ -197,12 +201,27 @@ namespace Unity {
 
               ExposeClone clone = new ExposeClone (window);
               clone.fade_on_close = false;
+              clone.reactive = true;
+              clone.darken = 25;
 
               wsp.add_actor (clone);
               toplevel_windows.prepend (clone);
 
               clone.set_size (window.width, window.height);
               clone.set_position (window.x, window.y);
+              
+              clone.button_release_event.connect (() => {
+                uint32 time_;
+
+                clone.raise_top ();
+                unowned Mutter.MetaWindow meta = (clone.source as Mutter.Window).get_meta_window ();
+
+                time_ = Mutter.MetaDisplay.get_current_time (Mutter.MetaWindow.get_display (meta));
+                Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace (meta), time_);
+                Mutter.MetaWindow.activate (meta, time_);
+
+                return false;
+              });
 
               clone.show ();
             }
