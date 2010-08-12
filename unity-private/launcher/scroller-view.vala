@@ -766,7 +766,9 @@ namespace Unity.Launcher
 
     private bool do_queue_contract_launcher ()
     {
-      queue_contract_launcher = Timeout.add (250, on_queue_contract_launcher);
+      //FIXME - causes segfaults. insanity ensues.
+      //queue_contract_launcher = Timeout.add (250, on_queue_contract_launcher);
+      contract_launcher ();
       return false;
     }
 
