@@ -25,7 +25,6 @@ namespace Unity.Launcher
     public ScrollerModel model {get; construct;}
     public ScrollerView view {get; construct;}
     private Gee.ArrayList<ScrollerChildController> childcontrollers;
-    private Gee.LinkedList<GtkHotkey.Info> hotkeys;
 
     /* constants */
     private const uint DRAG_SAFE_ZONE = 300;
