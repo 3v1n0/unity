@@ -91,7 +91,8 @@ namespace Unity.Launcher
     private uint stored_delta = 0;
     private float scroll_speed = 0.0f; // the current speed (pixels/per second) that we are scrolling
 
-    private float contract_icon_degrees = 60.0f;
+    private float contract_icon_degrees = 70.0f;
+    private float contract_icon_partial_degrees = 30.0f;
     private int focused_launcher = 0;
 
     /* helps out with draw order */
@@ -258,6 +259,7 @@ namespace Unity.Launcher
     {
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
+      if (is_scrolling) return false;
       enter_event.disconnect (on_enter_event);
       leave_event.disconnect (on_leave_event);
       motion_event.disconnect (on_motion_event);
@@ -278,6 +280,7 @@ namespace Unity.Launcher
     {
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
+      if (is_scrolling) return false;
 
       enter_event.disconnect (on_enter_event);
       leave_event.disconnect (on_leave_event);
@@ -296,6 +299,8 @@ namespace Unity.Launcher
     {
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
+      if (is_scrolling) return false;
+
       enter_event.disconnect (on_enter_event);
       leave_event.disconnect (on_leave_event);
       button_release_event.disconnect (passthrough_button_release_event);
@@ -441,6 +446,58 @@ namespace Unity.Launcher
 
     }
 
+    private void expand_launcher (float absolute_y)
+    {
+      if (view_type == ScrollerViewType.EXPANDED) return;
+      view_type = ScrollerViewType.EXPANDED;
+
+      // we need to set a new scroll position
+      // get the index of the icon we are hovering over
+      if (get_total_children_height () > get_available_height ())
+        {
+          int index = get_model_index_at_y_pos (absolute_y);
+
+          // set our state to what we will end up being so we can find the correct
+          //place to be.
+          float contracted_position = model[index].position;
+          var old_scroll_position = scroll_position;
+          scroll_position = 0;
+          order_children (true);
+
+          float new_scroll_position = -(model[index].position - contracted_position);
+
+          //reset our view so that we animate cleanly to the new view
+          view_type = ScrollerViewType.CONTRACTED;
+          scroll_position = old_scroll_position;
+          order_children (true);
+
+          // and finally animate to the new view
+          view_type = ScrollerViewType.EXPANDED;
+
+          scroll_position = new_scroll_position;
+          order_children (false); // have to order twice, boo
+
+          queue_relayout ();
+        }
+    }
+
+
+    private void contract_launcher ()
+    {
+      if (view_type == ScrollerViewType.CONTRACTED) return;
+
+      foreach (ScrollerChild child in model)
+        {
+          if (child.active)
+            focused_launcher = model.index_of (child);
+        }
+
+      view_type = ScrollerViewType.CONTRACTED;
+      order_children (false);
+      queue_relayout ();
+      is_autoscrolling = false;
+    }
+
     /*
      * model signal connections
      */
@@ -556,60 +613,38 @@ namespace Unity.Launcher
       return false;
     }
 
+
+    bool queue_contract_launcher = false;
     private bool on_enter_event (Clutter.Event event)
     {
-      if (view_type == ScrollerViewType.EXPANDED) return false;
-      view_type = ScrollerViewType.EXPANDED;
+      if (queue_contract_launcher)
+        queue_contract_launcher = false;
 
-      // we need to set a new scroll position
-      // get the index of the icon we are hovering over
-      if (get_total_children_height () > get_available_height ())
-        {
-          int index = get_model_index_at_y_pos (event.crossing.y);
+      expand_launcher (event.crossing.y);
+      return false;
+    }
 
-          // set our state to what we will end up being so we can find the correct
-          //place to be.
-          float contracted_position = model[index].position;
-          var old_scroll_position = scroll_position;
-          scroll_position = 0;
-          order_children (true);
+    private bool on_queue_contract_launcher ()
+    {
+      if (queue_contract_launcher)
+        contract_launcher ();
+      queue_contract_launcher = false;
+      return false;
+    }
 
-          float new_scroll_position = -(model[index].position - contracted_position);
-
-          //reset our view so that we animate cleanly to the new view
-          view_type = ScrollerViewType.CONTRACTED;
-          scroll_position = old_scroll_position;
-          order_children (true);
-
-          // and finally animate to the new view
-          view_type = ScrollerViewType.EXPANDED;
-
-          scroll_position = new_scroll_position;
-          order_children (false); // have to order twice, boo
-
-          queue_relayout ();
-        }
-
+    private bool do_queue_contract_launcher ()
+    {
+      queue_contract_launcher = true;
+      Timeout.add (250, on_queue_contract_launcher);
       return false;
     }
 
     private bool on_leave_event (Clutter.Event event)
     {
-      if (view_type == ScrollerViewType.CONTRACTED) return false;
-
-      foreach (ScrollerChild child in model)
-        {
-          if (child.active)
-            focused_launcher = model.index_of (child);
-        }
-
-      view_type = ScrollerViewType.CONTRACTED;
-      order_children (false);
-      queue_relayout ();
-      is_autoscrolling = false;
+      Idle.add (do_queue_contract_launcher);
 
       if (last_picked_actor is Clutter.Actor)
-         last_picked_actor.do_event (event, false);
+        last_picked_actor.do_event (event, false);
       return false;
     }
 
@@ -1059,7 +1094,7 @@ namespace Unity.Launcher
                 {
                   if (num_children_handled == index_start_flat - 1)
                     {
-                      transition.rotation = -(contract_icon_degrees / 3.0f);
+                      transition.rotation = -contract_icon_partial_degrees;
                       h += spacing;
                     }
                   else
@@ -1074,7 +1109,7 @@ namespace Unity.Launcher
                   transition.position = h;
                   if (index == index_end_flat)
                     {
-                      transition.rotation = contract_icon_degrees / 3.0f;
+                      transition.rotation = contract_icon_partial_degrees;
                       h += spacing;
                     }
                   else
