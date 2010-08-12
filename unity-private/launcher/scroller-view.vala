@@ -614,11 +614,14 @@ namespace Unity.Launcher
     }
 
 
-    bool queue_contract_launcher = false;
+    uint queue_contract_launcher = 0;
     private bool on_enter_event (Clutter.Event event)
     {
-      if (queue_contract_launcher)
-        queue_contract_launcher = false;
+      if (queue_contract_launcher != 0)
+        {
+          Source.remove (queue_contract_launcher);
+          queue_contract_launcher = 0;
+        }
 
       expand_launcher (event.crossing.y);
       return false;
@@ -626,22 +629,22 @@ namespace Unity.Launcher
 
     private bool on_queue_contract_launcher ()
     {
-      if (queue_contract_launcher)
+      if (queue_contract_launcher != 0)
         contract_launcher ();
-      queue_contract_launcher = false;
+      queue_contract_launcher = 0;
       return false;
     }
 
     private bool do_queue_contract_launcher ()
     {
-      queue_contract_launcher = true;
-      Timeout.add (250, on_queue_contract_launcher);
+      queue_contract_launcher = Timeout.add (250, on_queue_contract_launcher);
       return false;
     }
 
     private bool on_leave_event (Clutter.Event event)
     {
-      Idle.add (do_queue_contract_launcher);
+      if (is_scrolling) return false;
+      do_queue_contract_launcher ();
 
       if (last_picked_actor is Clutter.Actor)
         last_picked_actor.do_event (event, false);
