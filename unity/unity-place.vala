@@ -1015,6 +1015,13 @@ namespace Unity.Place {
                    entry.dbus_path);
           return;
         }
+      
+      /* Don't emit signals on the bus when the search changes.
+       * The search is purely a local property */
+      if ("active-search" == pspec.get_name () ||
+          "active-global-search" == pspec.get_name ())
+        return;
+      
       entry_service.queue_place_entry_info_changed_signal ();
     }
     

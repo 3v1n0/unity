@@ -21,14 +21,22 @@
 namespace Unity
 {
   public enum ShellMode {
-    UNDERLAY,
-    OVERLAY
+    MINIMIZED,
+    DASH,
+    EXPOSE
   }
   public enum dnd_targets {
     TARGET_INT32,
     TARGET_STRING,
     TARGET_URL,
     TARGET_OTHER
+  }
+
+  public enum WindowAction {
+    CLOSE,
+    MINIMIZE,
+    MAXIMIZE,
+    UNMAXIMIZE
   }
 
   public interface Shell : Object
@@ -56,9 +64,16 @@ namespace Unity
     public abstract void          stop_expose ();
 
     public abstract bool          super_key_active {get; set;}
+    public abstract void          get_window_details (uint32   xid,
+                                                      out bool allows_resize,
+                                                      out bool is_maximised);
+    public abstract void          do_window_action (uint32       xid,
+                                                    WindowAction action);
 
-    public signal   void need_new_icon_cache ();
-    public signal   void indicators_changed (int width);
+    public signal   void          need_new_icon_cache ();
+    public signal   void          indicators_changed (int width);
+    public signal   void          mode_changed (ShellMode mode);
+    public signal   void          active_window_state_changed ();
   }
 
   public Shell? global_shell; // our global shell

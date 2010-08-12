@@ -18,8 +18,8 @@ namespace Ctk {
 		public void recurse_get_stored_allocation_box (out Clutter.ActorBox box);
 		public void remove_all_effects ();
 		public void remove_effect (Ctk.Effect effect);
-		public void set_background (Clutter.Actor bg);
-		public void set_background_for_state (Ctk.ActorState state, Clutter.Actor bg);
+		public void set_background (Clutter.Actor? bg);
+		public void set_background_for_state (Ctk.ActorState state, Clutter.Actor? bg);
 		public void set_damaged (bool damaged);
 		public static void set_default_direction (Gtk.TextDirection dir);
 		public void set_effects_painting (bool painting);
@@ -125,6 +125,13 @@ namespace Ctk {
 		public float get_factor ();
 		public void set_factor (float factor);
 		public float factor { get; set; }
+	}
+	[CCode (cheader_filename = "clutk/clutk.h")]
+	public class EffectCache : Ctk.Effect {
+		[CCode (type = "CtkEffect*", has_construct_function = false)]
+		public EffectCache ();
+		public void invalidate_texture_cache ();
+		public void update_texture_cache ();
 	}
 	[CCode (cheader_filename = "clutk/clutk.h")]
 	public class EffectContext : GLib.Object {

@@ -826,7 +826,12 @@ namespace Mutter {
 		public bool begin_modal (X.Window grab_window, uint cursor, Mutter.MetaModalOptions options, uint32 timestamp);
 		public bool debug_mode ();
 		public bool disabled ();
-		public void effect_completed (Mutter.Window actor, uint event);
+		public void map_completed (Mutter.Window actor);
+		public void minimize_completed (Mutter.Window actor);
+		public void maximize_completed (Mutter.Window actor);
+		public void unmaximize_completed (Mutter.Window actor);
+		public void destroy_completed (Mutter.Window actor);
+		public void switch_workspace_completed ();
 		public void end_modal (uint32 timestamp);
 		public ulong features ();
 		public unowned Clutter.Actor get_above_window_group ();

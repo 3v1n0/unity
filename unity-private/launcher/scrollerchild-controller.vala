@@ -41,9 +41,6 @@ namespace Unity.Launcher
     public string name {get; set;}
     public bool hide {get; set;}
 
-
-    public signal void closed ();
-
     protected ScrollerChildControllerMenuState menu_state;
     protected uint32 last_press_time = 0;
     protected bool button_down = false;
@@ -69,11 +66,14 @@ namespace Unity.Launcher
       child.leave_event.connect (on_leave_event);
       child.motion_event.connect (on_motion_event);
 
-      child.set_reactive (true);
       child.opacity = 0;
       var anim = child.animate (Clutter.AnimationMode.EASE_IN_QUAD,
                                 SHORT_DELAY,
                                 "opacity", 0xff);
+    }
+
+    public void closed ()
+    {
     }
 
     public delegate void menu_cb (Dbusmenu.Menuitem? menu);
@@ -93,9 +93,14 @@ namespace Unity.Launcher
       // do nothing!
     }
 
-    public virtual QuicklistController get_menu_controller ()
+    public virtual QuicklistController? get_menu_controller ()
     {
       return null;
+    }
+
+    public virtual bool can_drag ()
+    {
+      return true;
     }
 
     private bool on_leave_event (Clutter.Event event)
@@ -161,12 +166,14 @@ namespace Unity.Launcher
     private void ensure_menu_state ()
     {
       //no tooltips on drag
-
       if (Unity.Drag.Controller.get_default ().is_dragging) return;
 
       if (menu is QuicklistController == false)
         {
           menu = get_menu_controller ();
+
+          if (menu is QuicklistController == false)
+            return;
         }
 
       if (menu.state == QuicklistControllerState.MENU
@@ -191,8 +198,13 @@ namespace Unity.Launcher
 
       if (menu_state == ScrollerChildControllerMenuState.MENU)
         {
-          menu.state = QuicklistControllerState.MENU;
-          menu_state = ScrollerChildControllerMenuState.NO_MENU;
+          Idle.add (() =>
+            {
+              debug ("setting menu to menu");
+              menu.state = QuicklistControllerState.MENU;
+              menu_state = ScrollerChildControllerMenuState.NO_MENU;
+              return false;
+            });
         }
     }
 
@@ -210,7 +222,7 @@ namespace Unity.Launcher
     private bool on_motion_event (Clutter.Event event)
     {
       var drag_controller = Unity.Drag.Controller.get_default ();
-      if (button_down && drag_controller.is_dragging == false)
+      if (button_down && drag_controller.is_dragging == false && can_drag ())
         {
           float diff = Math.fabsf (event.motion.x - click_start_pos);
           if (diff > drag_sensitivity)
@@ -220,6 +232,7 @@ namespace Unity.Launcher
               drag_controller.start_drag (this,
                                           event.button.x - x,
                                           event.button.y - y);
+              child.set_reactive (true);
               button_down = false;
               return true;
             }
@@ -227,9 +240,6 @@ namespace Unity.Launcher
         return false;
     }
 
-    /* all this icon loading stuff can go when we switch from liblauncher to
-     * bamf - please ignore any icon loading bugs :-)
-     */
     protected void load_icon_from_icon_name (string icon_name)
     {
       // first try to load from a path;

@@ -29,5 +29,7 @@ namespace Unity.Place
     public abstract void set_models (Dee.Model                   groups,
                                      Dee.Model                   results,
                                      Gee.HashMap<string, string> hints);
+
+    public signal void activated (string uri, string mimetype);
   }
 }
