@@ -766,9 +766,7 @@ namespace Unity.Launcher
 
     private bool do_queue_contract_launcher ()
     {
-      //FIXME - causes segfaults. insanity ensues.
-      //queue_contract_launcher = Timeout.add (250, on_queue_contract_launcher);
-      contract_launcher ();
+      queue_contract_launcher = Timeout.add (250, on_queue_contract_launcher);
       return false;
     }
 
@@ -778,8 +776,12 @@ namespace Unity.Launcher
       if (is_scrolling) return false;
       do_queue_contract_launcher ();
 
-      if (last_picked_actor is Clutter.Actor)
-        last_picked_actor.do_event (event, false);
+      if (last_picked_actor is Clutter.Actor &&
+          last_picked_actor != this)
+        {
+          last_picked_actor.do_event (event, false);
+          last_picked_actor = null;
+        }
       return false;
     }
 
