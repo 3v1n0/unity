@@ -155,7 +155,7 @@ print_attr(GeisGestureAttr *attr)
       fprintf(stdout, "%f (float)\n", attr->float_val);
       break;
     case GEIS_ATTR_TYPE_INTEGER:
-      fprintf(stdout, "%d (int)\n", attr->integer_val);
+      fprintf(stdout, "%d (int)\n", (int)attr->integer_val);
       break;
     case GEIS_ATTR_TYPE_STRING:
       fprintf(stdout, "\"%s\" (string)\n", attr->string_val);
@@ -174,16 +174,16 @@ gesture_to_event (GeisGestureType  gesture_type,
 {
   switch (gesture_type)
     {
-    case GRAIL_TYPE_DRAG3:
-    case GRAIL_TYPE_DRAG4:
+    case GRAIL_TYPE_EDRAG:
+    case GRAIL_TYPE_MDRAG:
       dispatch_event->type = UNITY_GESTURE_TYPE_PAN;
-      dispatch_event->fingers = gesture_type == GRAIL_TYPE_DRAG3 ? 3 : 4;
+      dispatch_event->fingers = gesture_type == GRAIL_TYPE_EDRAG ? 3 : 4;
       break;
 
-    case GRAIL_TYPE_PINCH3:
-    case GRAIL_TYPE_PINCH4:
+    case GRAIL_TYPE_EPINCH:
+    case GRAIL_TYPE_MPINCH:
       dispatch_event->type = UNITY_GESTURE_TYPE_PINCH;
-      dispatch_event->fingers = gesture_type == GRAIL_TYPE_PINCH3 ? 3 : 4;
+      dispatch_event->fingers = gesture_type == GRAIL_TYPE_EPINCH ? 3 : 4;
       break;
 
     case GRAIL_TYPE_TAP3:

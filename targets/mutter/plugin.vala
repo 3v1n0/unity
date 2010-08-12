@@ -156,6 +156,7 @@ namespace Unity
     public Gesture.Dispatcher gesture_dispatcher;
     private float start_pinch_radius = 0.0f;
     private unowned Mutter.Window? start_pan_window = null;
+    private unowned Clutter.Rectangle? start_frame_rect = null;
 
     construct
     {
@@ -906,6 +907,12 @@ namespace Unity
                   if (actor is Mutter.Window)
                     {
                       start_pan_window = actor as Mutter.Window;
+
+                      if (start_pan_window.get_window_type () != Mutter.MetaCompWindowType.NORMAL &&
+                          start_pan_window.get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
+                          start_pan_window.get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG &&
+                          start_pan_window.get_window_type () != Mutter.MetaCompWindowType.UTILITY)
+                        start_pan_window = null;
                     }
                 }
               else if (event.state == Gesture.State.CONTINUED)
@@ -919,8 +926,29 @@ namespace Unity
                       if (start_pan_window.y == PANEL_HEIGHT
                           && event.pan_event.delta_y < 0.0f)
                         {
-                          Mutter.MetaWindow.maximize (win,
-                                                      Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
+
+                          if (start_frame_rect is Clutter.Rectangle == false)
+                            {
+                              Clutter.Rectangle frame = new Clutter.Rectangle.with_color ({ 0, 0, 0, 10 });
+                              frame.border_color = { 255, 255, 255, 255 };
+                              frame.border_width = 3;
+
+                              stage.add_actor (frame);
+                              frame.set_size (start_pan_window.width,
+                                              start_pan_window.height);
+                              frame.set_position (start_pan_window.x,
+                                                  start_pan_window.y);
+                              frame.show ();
+
+                              frame.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                             150,
+                                             "x", (float)QUICKLAUNCHER_WIDTH,
+                                             "y", (float)PANEL_HEIGHT,
+                                             "width", stage.width - QUICKLAUNCHER_WIDTH,
+                                             "height", stage.height - PANEL_HEIGHT);
+
+                              start_frame_rect = frame;
+                            }
                         }
                       else
                         {
@@ -928,6 +956,26 @@ namespace Unity
                           start_pan_window.y += Math.floorf (event.pan_event.delta_y);
                           start_pan_window.x = float.max (start_pan_window.x, QUICKLAUNCHER_WIDTH);
                           start_pan_window.y = float.max (start_pan_window.y, PANEL_HEIGHT);
+
+                          if (start_frame_rect is Clutter.Rectangle)
+                            {
+                              if (start_frame_rect.opacity == 0)
+                                {
+                                  stage.remove_actor (start_frame_rect);
+                                  start_frame_rect = null;
+                                }
+                              else if (start_pan_window.y > PANEL_HEIGHT + 5 &&
+                                (start_frame_rect.get_animation () is Clutter.Animation == false))
+                                {
+                                  start_frame_rect.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                                                            150,
+                                                            "x", start_pan_window.x,
+                                                            "y", start_pan_window.y,
+                                                            "width", start_pan_window.width,
+                                                            "height", start_pan_window.height,
+                                                            "opacity", 0);
+                                }
+                            }
                         }
                     }
                   else
@@ -943,13 +991,34 @@ namespace Unity
                 {
                   if (start_pan_window is Mutter.Window)
                     {
-                      X.Window win = start_pan_window.get_x_window ();
+                      unowned Mutter.MetaWindow win = start_pan_window.get_meta_window ();
+                      if (start_pan_window.y == PANEL_HEIGHT)
+                        {
+                          if (event.pan_event.delta_y < 0.0f)
+                            Mutter.MetaWindow.maximize (win,
+                                                        Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
 
-                      unowned Gdk.Window w = Gdk.Window.foreign_new ((Gdk.NativeWindow)win);
+                        }
+                      else
+                        {
+                          X.Window xwin = start_pan_window.get_x_window ();
 
-                      if (w is Gdk.Window)
-                        w.move ((int)start_pan_window.x, (int)start_pan_window.y);
+                          unowned Gdk.Window w = Gdk.Window.foreign_new ((Gdk.NativeWindow)xwin);
+
+                          if (w is Gdk.Window)
+                            {
+                              Gdk.error_trap_push ();
+                              w.move ((int)start_pan_window.x, (int)start_pan_window.y);
+                              Gdk.flush ();
+                              Gdk.error_trap_pop ();
+                            }
+
+                        }
                     }
+                    if (start_frame_rect is Clutter.Rectangle)
+                      stage.remove_actor (start_frame_rect);
+                    
+                    print (@"$event\n");
                 }
             }
         }
