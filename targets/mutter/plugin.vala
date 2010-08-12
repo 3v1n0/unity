@@ -157,6 +157,7 @@ namespace Unity
     private float start_pinch_radius = 0.0f;
     private unowned Mutter.Window? start_pan_window = null;
     private unowned Clutter.Rectangle? start_frame_rect = null;
+    private float last_pan_x_root = 0.0f;
 
     construct
     {
@@ -920,13 +921,14 @@ namespace Unity
                   if (start_pan_window is Mutter.Window == false)
                     return;
 
+                  last_pan_x_root = event.root_x;
+
                   unowned Mutter.MetaWindow win = start_pan_window.get_meta_window ();
                   if (!Mutter.MetaWindow.is_maximized (win))
                     {
                       if (start_pan_window.y == PANEL_HEIGHT
                           && event.pan_event.delta_y < 0.0f)
                         {
-
                           if (start_frame_rect is Clutter.Rectangle == false)
                             {
                               Clutter.Rectangle frame = new Clutter.Rectangle.with_color ({ 0, 0, 0, 10 });
@@ -950,14 +952,66 @@ namespace Unity
                               start_frame_rect = frame;
                             }
                         }
-                      else
+                     else
                         {
                           start_pan_window.x += Math.floorf (event.pan_event.delta_x);
                           start_pan_window.y += Math.floorf (event.pan_event.delta_y);
                           start_pan_window.x = float.max (start_pan_window.x, QUICKLAUNCHER_WIDTH);
                           start_pan_window.y = float.max (start_pan_window.y, PANEL_HEIGHT);
 
-                          if (start_frame_rect is Clutter.Rectangle)
+
+                              //if ((start_pan_window.x + start_pan_window.width) >= stage.width && (start_pan_window.x + start_pan_window.width) <= (stage.width + 5.0))
+                          if (event.root_x > stage.width - 160) /* FIXME: Need the box */
+                            {
+                              if (start_frame_rect is Clutter.Rectangle == false)
+                                {
+                                  Clutter.Rectangle frame = new Clutter.Rectangle.with_color ({ 0, 0, 0, 10 });
+                                  frame.border_color = { 255, 255, 255, 255 };
+                                  frame.border_width = 3;
+
+                                  stage.add_actor (frame);
+                                  frame.set_size (start_pan_window.width,
+                                                  start_pan_window.height);
+                                  frame.set_position (start_pan_window.x,
+                                                      start_pan_window.y);
+                                  frame.show ();
+
+                                  frame.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                                 150,
+                                                 "x", (float)((stage.width - QUICKLAUNCHER_WIDTH)/2.0f) + QUICKLAUNCHER_WIDTH,
+                                                 "y", (float)PANEL_HEIGHT,
+                                                 "width", (stage.width - QUICKLAUNCHER_WIDTH)/2.0f,
+                                                 "height", stage.height - PANEL_HEIGHT);
+
+                                  start_frame_rect = frame;
+                                }
+                            }
+                          else if (event.root_x < QUICKLAUNCHER_WIDTH + 160) /* FIXME: Need the box */
+                            {
+                              if (start_frame_rect is Clutter.Rectangle == false)
+                                {
+                                  Clutter.Rectangle frame = new Clutter.Rectangle.with_color ({ 0, 0, 0, 10 });
+                                  frame.border_color = { 255, 255, 255, 255 };
+                                  frame.border_width = 3;
+
+                                  stage.add_actor (frame);
+                                  frame.set_size (start_pan_window.width,
+                                                  start_pan_window.height);
+                                  frame.set_position (start_pan_window.x,
+                                                      start_pan_window.y);
+                                  frame.show ();
+
+                                  frame.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                                 150,
+                                                 "x", (float)QUICKLAUNCHER_WIDTH,
+                                                 "y", (float)PANEL_HEIGHT,
+                                                 "width", (stage.width - QUICKLAUNCHER_WIDTH)/2.0f,
+                                                 "height", stage.height - PANEL_HEIGHT);
+
+                                  start_frame_rect = frame;
+                                }
+                            }
+                          else if (start_frame_rect is Clutter.Rectangle)
                             {
                               if (start_frame_rect.opacity == 0)
                                 {
@@ -992,6 +1046,14 @@ namespace Unity
                   if (start_pan_window is Mutter.Window)
                     {
                       unowned Mutter.MetaWindow win = start_pan_window.get_meta_window ();
+                      float nx = 0;
+                      float ny = 0;
+                      float nwidth = 0;
+                      float nheight = 0;
+                      bool  move_resize = false;
+
+                      print (@"$event\n");
+
                       if (start_pan_window.y == PANEL_HEIGHT)
                         {
                           if (event.pan_event.delta_y < 0.0f)
@@ -999,26 +1061,72 @@ namespace Unity
                                                         Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
 
                         }
+                      else if (last_pan_x_root >= stage.width - 160)
+                        {
+                          nx = (float)QUICKLAUNCHER_WIDTH + (stage.width-QUICKLAUNCHER_WIDTH)/2.0f;
+                          ny = (float)PANEL_HEIGHT;
+                          nwidth = (stage.width - QUICKLAUNCHER_WIDTH)/2.0f;
+                          nheight = stage.height - PANEL_HEIGHT;
+
+                          move_resize = true;
+
+                          debug ("RIGH RESIZE : %f %f %f %f", nx, ny, nwidth, nheight);
+                        }
+                      else if (last_pan_x_root <= QUICKLAUNCHER_WIDTH + 160)
+                        {
+                          nx = (float)QUICKLAUNCHER_WIDTH;
+                          ny = (float)PANEL_HEIGHT;
+                          nwidth = (stage.width - QUICKLAUNCHER_WIDTH)/2.0f;
+                          nheight = stage.height - PANEL_HEIGHT;
+
+                          move_resize = true;
+
+                          debug ("LEFT RESIZE : %f %f %f %f", nx, ny, nwidth, nheight);
+                        }
                       else
                         {
-                          X.Window xwin = start_pan_window.get_x_window ();
+                          nx = start_pan_window.x;
+                          ny = start_pan_window.y;
+                          nwidth = start_pan_window.width;
+                          nheight = start_pan_window.height;
 
-                          unowned Gdk.Window w = Gdk.Window.foreign_new ((Gdk.NativeWindow)xwin);
+                          move_resize = true;
+                          debug ("MOVE RESIZE : %f %f %f %f", nx, ny, nwidth, nheight); 
+                        }
 
-                          if (w is Gdk.Window)
+                      //debug ("REQUEST: %f %f %f %f", x, y, width, height);
+
+                      X.Window xwin = start_pan_window.get_x_window ();
+                      unowned Gdk.Window w = Gdk.Window.foreign_new ((Gdk.NativeWindow)xwin);
+                      if (w is Gdk.Window && move_resize)
+                        {
+                          /*
+                             Gdk.error_trap_push ();
+ 
+                          if (move_resize && width > 0.0f && height > 0.0f)
                             {
-                              Gdk.error_trap_push ();
-                              w.move ((int)start_pan_window.x, (int)start_pan_window.y);
-                              Gdk.flush ();
-                              Gdk.error_trap_pop ();
+                              //w.resize ((int)width, (int)height);
+                              //start_pan_window.width = width;
+                              //start_pan_window.height = height;
                             }
-
+                          if (move_resize)
+                            {
+                              //w.move ((int)x, (int)y);
+                              //start_pan_window.x = x;
+                              //start_pan_window.y = y;
+                            }
+*/
+                          Mutter.MetaWindow.move_resize (win, false, (int)nx, (int)ny, (int)nwidth, (int)nheight);
+                          debug ("RESIZE : %f %f %f %f", nx, ny, nwidth, nheight);
+                          //Gdk.flush ();
+                          //Gdk.error_trap_pop ();
                         }
                     }
+
                     if (start_frame_rect is Clutter.Rectangle)
                       stage.remove_actor (start_frame_rect);
                     
-                    print (@"$event\n");
+                    //print (@"$event\n");
                 }
             }
         }

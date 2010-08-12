@@ -784,6 +784,8 @@ namespace Mutter {
 		public static void unmaximize (Mutter.MetaWindow window, Mutter.MetaMaximizeFlags directions);
 		[CCode (cname = "meta_window_unminimize")]
 		public static void unminimize (Mutter.MetaWindow window);
+    [CCode (cname = "meta_window_move_resize")]
+    public static void move_resize (Mutter.MetaWindow windiow, bool user_op, int root_x, int root_y, int width, int height);
 	}
 	[Compact]
 	[CCode (cheader_filename = "mutter-plugins.h")]
