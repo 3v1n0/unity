@@ -334,7 +334,8 @@ namespace Unity.Launcher
 
       else
         {
-          warning ("not a menu item we understand, %s", dbusmenuitem.property_get ("type"));
+          warning ("not a menu item we understand, %s",
+                   dbusmenuitem.property_get ("type"));
           return null;
         }
 
