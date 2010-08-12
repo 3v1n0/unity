@@ -107,7 +107,6 @@ PKG_CHECK_MODULES(BASE,
                   glib-2.0 >= $GLIB_REQUIRED
                   gobject-2.0 >= $GLIB_REQUIRED
                   gtk+-2.0 >= $GTK_REQUIRED
-                  gtkhotkey-1.0 >= 0.2.1
                   gdk-x11-2.0 >= $GTK_REQUIRED
                   gio-2.0 >= $GTK_REQUIRED
                   gee-1.0
