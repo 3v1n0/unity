@@ -184,24 +184,43 @@ namespace Unity.Launcher
       uint8 new_opacity = (choice) ? 0xff : 0x00;
       keyboard_indicator_1.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
                                     "opacity", new_opacity);
+      if (model.size < 2) new_opacity = 0x00;
+
       keyboard_indicator_2.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
                                     "opacity", new_opacity);
+      if (model.size < 3) new_opacity = 0x00;
+
       keyboard_indicator_3.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
                                     "opacity", new_opacity);
+      if (model.size < 4) new_opacity = 0x00;
+
       keyboard_indicator_4.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
                                     "opacity", new_opacity);
+      if (model.size < 5) new_opacity = 0x00;
+
       keyboard_indicator_5.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
                                     "opacity", new_opacity);
+      if (model.size < 6) new_opacity = 0x00;
+
       keyboard_indicator_6.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
                                     "opacity", new_opacity);
+      if (model.size < 7) new_opacity = 0x00;
+
       keyboard_indicator_7.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
                                     "opacity", new_opacity);
+      if (model.size < 8) new_opacity = 0x00;
+
       keyboard_indicator_8.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
                                     "opacity", new_opacity);
+      if (model.size < 9) new_opacity = 0x00;
+
       keyboard_indicator_9.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
                                     "opacity", new_opacity);
+      if (model.size < 10) new_opacity = 0x00;
+
       keyboard_indicator_0.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
                                     "opacity", new_opacity);
+
 
       if (!choice)
         {

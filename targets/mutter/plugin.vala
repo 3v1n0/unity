@@ -211,6 +211,8 @@ namespace Unity
     {
       START_FUNCTION ();
 
+      Mutter.MetaScreen.ungrab_all_keys (plugin.get_screen (), Clutter.get_current_event_time ());
+
       fullscreen_requests = new Gee.ArrayList<Object> ();
 
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
@@ -315,6 +317,8 @@ namespace Unity
           });
         }
 
+
+      Mutter.MetaScreen.grab_all_keys (plugin.get_screen (), Clutter.get_current_event_time ());
       this.ensure_input_region ();
       return false;
     }
