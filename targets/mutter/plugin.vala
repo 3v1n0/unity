@@ -1069,8 +1069,6 @@ namespace Unity
                           nheight = stage.height - PANEL_HEIGHT;
 
                           move_resize = true;
-
-                          debug ("RIGH RESIZE : %f %f %f %f", nx, ny, nwidth, nheight);
                         }
                       else if (last_pan_x_root <= QUICKLAUNCHER_WIDTH + 160)
                         {
@@ -1080,8 +1078,6 @@ namespace Unity
                           nheight = stage.height - PANEL_HEIGHT;
 
                           move_resize = true;
-
-                          debug ("LEFT RESIZE : %f %f %f %f", nx, ny, nwidth, nheight);
                         }
                       else
                         {
@@ -1091,42 +1087,18 @@ namespace Unity
                           nheight = start_pan_window.height;
 
                           move_resize = true;
-                          debug ("MOVE RESIZE : %f %f %f %f", nx, ny, nwidth, nheight); 
                         }
-
-                      //debug ("REQUEST: %f %f %f %f", x, y, width, height);
 
                       X.Window xwin = start_pan_window.get_x_window ();
                       unowned Gdk.Window w = Gdk.Window.foreign_new ((Gdk.NativeWindow)xwin);
                       if (w is Gdk.Window && move_resize)
                         {
-                          /*
-                             Gdk.error_trap_push ();
- 
-                          if (move_resize && width > 0.0f && height > 0.0f)
-                            {
-                              //w.resize ((int)width, (int)height);
-                              //start_pan_window.width = width;
-                              //start_pan_window.height = height;
-                            }
-                          if (move_resize)
-                            {
-                              //w.move ((int)x, (int)y);
-                              //start_pan_window.x = x;
-                              //start_pan_window.y = y;
-                            }
-*/
                           Mutter.MetaWindow.move_resize (win, false, (int)nx, (int)ny, (int)nwidth, (int)nheight);
-                          debug ("RESIZE : %f %f %f %f", nx, ny, nwidth, nheight);
-                          //Gdk.flush ();
-                          //Gdk.error_trap_pop ();
                         }
                     }
 
                     if (start_frame_rect is Clutter.Rectangle)
                       stage.remove_actor (start_frame_rect);
-                    
-                    //print (@"$event\n");
                 }
             }
         }
