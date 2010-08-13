@@ -183,6 +183,7 @@ struct _UnityLauncherScrollerViewPrivate {
 	UnityLauncherScrollerPhase current_phase;
 	guint last_motion_event_time;
 	UnityLauncherScrollerViewType view_type;
+	float last_known_pointer_x;
 	gboolean is_scrolling;
 	float scroll_position;
 	float settle_position;
@@ -194,11 +195,24 @@ struct _UnityLauncherScrollerViewPrivate {
 	guint stored_delta;
 	float scroll_speed;
 	float contract_icon_degrees;
+	float contract_icon_partial_degrees;
 	gint focused_launcher;
 	GeeArrayList* draw_ftb;
 	GeeArrayList* draw_btf;
+	ClutterText* keyboard_indicator_1;
+	ClutterText* keyboard_indicator_2;
+	ClutterText* keyboard_indicator_3;
+	ClutterText* keyboard_indicator_4;
+	ClutterText* keyboard_indicator_5;
+	ClutterText* keyboard_indicator_6;
+	ClutterText* keyboard_indicator_7;
+	ClutterText* keyboard_indicator_8;
+	ClutterText* keyboard_indicator_9;
+	ClutterText* keyboard_indicator_0;
 	GeeArrayList* child_refs;
 	ClutterActor* last_picked_actor;
+	float last_scroll_position;
+	guint queue_contract_launcher;
 	float autoscroll_mouse_pos_cache;
 };
 
@@ -263,6 +277,13 @@ static gboolean unity_launcher_scroller_view_passthrough_button_press_event (Uni
 static gboolean _unity_launcher_scroller_view_passthrough_button_press_event_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static gboolean unity_launcher_scroller_view_passthrough_button_release_event (UnityLauncherScrollerView* self, ClutterEvent* event);
 static gboolean _unity_launcher_scroller_view_passthrough_button_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+gint unity_launcher_scroller_model_get_size (UnityLauncherScrollerModel* self);
+gboolean unity_launcher_scroller_child_get_active (UnityLauncherScrollerChild* self);
+gint unity_launcher_scroller_model_index_of (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
+static void unity_launcher_scroller_view_contract_launcher (UnityLauncherScrollerView* self);
+static void unity_launcher_scroller_view_move_scroll_position (UnityLauncherScrollerView* self, float pixels, gboolean check_bounds);
+static void unity_launcher_scroller_view_expand_launcher (UnityLauncherScrollerView* self, float absolute_y);
+void unity_launcher_scroller_view_enable_keyboard_selection_mode (UnityLauncherScrollerView* self, gboolean choice);
 float unity_launcher_scroller_child_get_position (UnityLauncherScrollerChild* self);
 static float* _float_dup (float* self);
 void unity_launcher_scroller_child_set_position (UnityLauncherScrollerChild* self, float value);
@@ -273,14 +294,12 @@ gint unity_launcher_scroller_model_clamp (UnityLauncherScrollerModel* self, Unit
 static void _g_slist_free_g_free (GSList* self);
 gint unity_launcher_scroller_view_get_model_index_at_y_pos_no_anim (UnityLauncherScrollerView* self, float y, gboolean return_minus_if_fail);
 UnityLauncherScrollerChild* unity_launcher_scroller_model_get (UnityLauncherScrollerModel* self, gint i);
-gint unity_launcher_scroller_model_get_size (UnityLauncherScrollerModel* self);
-gint unity_launcher_scroller_model_index_of (UnityLauncherScrollerModel* self, UnityLauncherScrollerChild* child);
 static void unity_launcher_scroller_view_load_textures (UnityLauncherScrollerView* self);
 static float unity_launcher_scroller_view_get_total_children_height (UnityLauncherScrollerView* self);
 static float unity_launcher_scroller_view_get_available_height (UnityLauncherScrollerView* self);
 static void unity_launcher_scroller_view_order_children (UnityLauncherScrollerView* self, gboolean immediate);
-static void unity_launcher_scroller_view_move_scroll_position (UnityLauncherScrollerView* self, float pixels, gboolean check_bounds);
 static void unity_launcher_scroller_view_disable_animations_on_children (UnityLauncherScrollerView* self, ClutterEvent* event);
+void unity_launcher_scroller_view_set_is_autoscrolling (UnityLauncherScrollerView* self, gboolean value);
 static void _lambda54_ (UnityLauncherScrollerView* self);
 static void __lambda54__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static void unity_launcher_scroller_view_model_child_added (UnityLauncherScrollerView* self, UnityLauncherScrollerChild* child);
@@ -302,8 +321,9 @@ static float unity_launcher_scroller_view_get_aligned_settle_position (UnityLaun
 GType menu_manager_get_type (void) G_GNUC_CONST;
 MenuManager* menu_manager_get_default (void);
 void menu_manager_popdown_current_menu (MenuManager* self);
-gboolean unity_launcher_scroller_child_get_active (UnityLauncherScrollerChild* self);
-void unity_launcher_scroller_view_set_is_autoscrolling (UnityLauncherScrollerView* self, gboolean value);
+static gboolean unity_launcher_scroller_view_on_queue_contract_launcher (UnityLauncherScrollerView* self);
+static gboolean _unity_launcher_scroller_view_on_queue_contract_launcher_gsource_func (gpointer self);
+static gboolean unity_launcher_scroller_view_do_queue_contract_launcher (UnityLauncherScrollerView* self);
 static gboolean unity_launcher_scroller_view_on_autoscroll_motion_check (UnityLauncherScrollerView* self, float y);
 static void unity_launcher_scroller_view_on_drag_motion_event (UnityLauncherScrollerView* self, UnityDragModel* model, float x, float y);
 static void unity_launcher_scroller_view_do_anim_settle (UnityLauncherScrollerView* self, ClutterTimeline* timeline, gint msecs);
@@ -699,6 +719,11 @@ static gboolean unity_launcher_scroller_view_passthrough_motion_event (UnityLaun
 		_g_object_unref0 (drag_controller);
 		return result;
 	}
+	if (self->priv->is_scrolling) {
+		result = FALSE;
+		_g_object_unref0 (drag_controller);
+		return result;
+	}
 	g_signal_parse_name ("enter-event", CLUTTER_TYPE_ACTOR, &_tmp0_, NULL, FALSE);
 	g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_launcher_scroller_view_on_enter_event_clutter_actor_enter_event, self);
 	g_signal_parse_name ("leave-event", CLUTTER_TYPE_ACTOR, &_tmp1_, NULL, FALSE);
@@ -739,6 +764,11 @@ static gboolean unity_launcher_scroller_view_passthrough_button_press_event (Uni
 	g_return_val_if_fail (self != NULL, FALSE);
 	drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
 	if (unity_drag_controller_get_is_dragging (drag_controller)) {
+		result = FALSE;
+		_g_object_unref0 (drag_controller);
+		return result;
+	}
+	if (self->priv->is_scrolling) {
 		result = FALSE;
 		_g_object_unref0 (drag_controller);
 		return result;
@@ -784,6 +814,11 @@ static gboolean unity_launcher_scroller_view_passthrough_button_release_event (U
 		_g_object_unref0 (drag_controller);
 		return result;
 	}
+	if (self->priv->is_scrolling) {
+		result = FALSE;
+		_g_object_unref0 (drag_controller);
+		return result;
+	}
 	g_signal_parse_name ("enter-event", CLUTTER_TYPE_ACTOR, &_tmp0_, NULL, FALSE);
 	g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_launcher_scroller_view_on_enter_event_clutter_actor_enter_event, self);
 	g_signal_parse_name ("leave-event", CLUTTER_TYPE_ACTOR, &_tmp1_, NULL, FALSE);
@@ -801,6 +836,94 @@ static gboolean unity_launcher_scroller_view_passthrough_button_release_event (U
 	_g_object_unref0 (picked_actor);
 	_g_object_unref0 (drag_controller);
 	return result;
+}
+
+
+void unity_launcher_scroller_view_enable_keyboard_selection_mode (UnityLauncherScrollerView* self, gboolean choice) {
+	gint _tmp0_ = 0;
+	guint8 new_opacity;
+	g_return_if_fail (self != NULL);
+	if (choice) {
+		self->priv->last_scroll_position = self->priv->scroll_position;
+	}
+	if (choice) {
+		_tmp0_ = 0xff;
+	} else {
+		_tmp0_ = 0x00;
+	}
+	new_opacity = (guint8) _tmp0_;
+	clutter_actor_animate ((ClutterActor*) self->priv->keyboard_indicator_1, (gulong) CLUTTER_EASE_OUT_SINE, (guint) 150, "opacity", new_opacity, NULL);
+	if (unity_launcher_scroller_model_get_size (self->priv->_model) < 2) {
+		new_opacity = (guint8) 0x00;
+	}
+	clutter_actor_animate ((ClutterActor*) self->priv->keyboard_indicator_2, (gulong) CLUTTER_EASE_OUT_SINE, (guint) 150, "opacity", new_opacity, NULL);
+	if (unity_launcher_scroller_model_get_size (self->priv->_model) < 3) {
+		new_opacity = (guint8) 0x00;
+	}
+	clutter_actor_animate ((ClutterActor*) self->priv->keyboard_indicator_3, (gulong) CLUTTER_EASE_OUT_SINE, (guint) 150, "opacity", new_opacity, NULL);
+	if (unity_launcher_scroller_model_get_size (self->priv->_model) < 4) {
+		new_opacity = (guint8) 0x00;
+	}
+	clutter_actor_animate ((ClutterActor*) self->priv->keyboard_indicator_4, (gulong) CLUTTER_EASE_OUT_SINE, (guint) 150, "opacity", new_opacity, NULL);
+	if (unity_launcher_scroller_model_get_size (self->priv->_model) < 5) {
+		new_opacity = (guint8) 0x00;
+	}
+	clutter_actor_animate ((ClutterActor*) self->priv->keyboard_indicator_5, (gulong) CLUTTER_EASE_OUT_SINE, (guint) 150, "opacity", new_opacity, NULL);
+	if (unity_launcher_scroller_model_get_size (self->priv->_model) < 6) {
+		new_opacity = (guint8) 0x00;
+	}
+	clutter_actor_animate ((ClutterActor*) self->priv->keyboard_indicator_6, (gulong) CLUTTER_EASE_OUT_SINE, (guint) 150, "opacity", new_opacity, NULL);
+	if (unity_launcher_scroller_model_get_size (self->priv->_model) < 7) {
+		new_opacity = (guint8) 0x00;
+	}
+	clutter_actor_animate ((ClutterActor*) self->priv->keyboard_indicator_7, (gulong) CLUTTER_EASE_OUT_SINE, (guint) 150, "opacity", new_opacity, NULL);
+	if (unity_launcher_scroller_model_get_size (self->priv->_model) < 8) {
+		new_opacity = (guint8) 0x00;
+	}
+	clutter_actor_animate ((ClutterActor*) self->priv->keyboard_indicator_8, (gulong) CLUTTER_EASE_OUT_SINE, (guint) 150, "opacity", new_opacity, NULL);
+	if (unity_launcher_scroller_model_get_size (self->priv->_model) < 9) {
+		new_opacity = (guint8) 0x00;
+	}
+	clutter_actor_animate ((ClutterActor*) self->priv->keyboard_indicator_9, (gulong) CLUTTER_EASE_OUT_SINE, (guint) 150, "opacity", new_opacity, NULL);
+	if (unity_launcher_scroller_model_get_size (self->priv->_model) < 10) {
+		new_opacity = (guint8) 0x00;
+	}
+	clutter_actor_animate ((ClutterActor*) self->priv->keyboard_indicator_0, (gulong) CLUTTER_EASE_OUT_SINE, (guint) 150, "opacity", new_opacity, NULL);
+	if (!choice) {
+		gboolean _tmp1_ = FALSE;
+		if (self->priv->view_type != UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_CONTRACTED) {
+			_tmp1_ = self->priv->last_known_pointer_x >= clutter_actor_get_width ((ClutterActor*) self);
+		} else {
+			_tmp1_ = FALSE;
+		}
+		if (_tmp1_) {
+			{
+				UnityLauncherScrollerModelIterator* _child_it;
+				_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+				while (TRUE) {
+					UnityLauncherScrollerChild* child;
+					if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+						break;
+					}
+					child = unity_launcher_scroller_model_iterator_get (_child_it);
+					if (unity_launcher_scroller_child_get_active (child)) {
+						self->priv->focused_launcher = unity_launcher_scroller_model_index_of (self->priv->_model, child);
+						_g_object_unref0 (child);
+						break;
+					}
+					_g_object_unref0 (child);
+				}
+				_unity_launcher_scroller_model_iterator_unref0 (_child_it);
+			}
+			unity_launcher_scroller_view_contract_launcher (self);
+		} else {
+			if (self->priv->last_known_pointer_x < clutter_actor_get_width ((ClutterActor*) self)) {
+				unity_launcher_scroller_view_move_scroll_position (self, self->priv->last_scroll_position - self->priv->scroll_position, FALSE);
+			}
+		}
+	} else {
+		unity_launcher_scroller_view_expand_launcher (self, (float) 0);
+	}
 }
 
 
@@ -966,6 +1089,18 @@ gint unity_launcher_scroller_view_get_model_index_at_y_pos (UnityLauncherScrolle
 static void unity_launcher_scroller_view_load_textures (UnityLauncherScrollerView* self) {
 	UnityThemeImage* _tmp0_;
 	UnityThemeImage* _tmp1_;
+	ClutterColor _tmp2_ = {0};
+	ClutterColor color;
+	ClutterText* _tmp3_;
+	ClutterText* _tmp4_;
+	ClutterText* _tmp5_;
+	ClutterText* _tmp6_;
+	ClutterText* _tmp7_;
+	ClutterText* _tmp8_;
+	ClutterText* _tmp9_;
+	ClutterText* _tmp10_;
+	ClutterText* _tmp11_;
+	ClutterText* _tmp12_;
 	g_return_if_fail (self != NULL);
 	self->priv->bgtex = (_tmp0_ = g_object_ref_sink (unity_theme_image_new ("launcher_background_middle")), _g_object_unref0 (self->priv->bgtex), _tmp0_);
 	clutter_texture_set_repeat ((ClutterTexture*) self->priv->bgtex, TRUE, TRUE);
@@ -973,6 +1108,37 @@ static void unity_launcher_scroller_view_load_textures (UnityLauncherScrollerVie
 	self->priv->top_shadow = (_tmp1_ = g_object_ref_sink (unity_theme_image_new ("overflow_top")), _g_object_unref0 (self->priv->top_shadow), _tmp1_);
 	clutter_texture_set_repeat ((ClutterTexture*) self->priv->top_shadow, TRUE, FALSE);
 	clutter_actor_set_parent ((ClutterActor*) self->priv->top_shadow, (ClutterActor*) self);
+	color = (memset (&_tmp2_, 0, sizeof (ClutterColor)), _tmp2_.red = (guint8) 0xff, _tmp2_.green = (guint8) 0xff, _tmp2_.blue = (guint8) 0xff, _tmp2_.alpha = (guint8) 0xff, _tmp2_);
+	self->priv->keyboard_indicator_1 = (_tmp3_ = g_object_ref_sink ((ClutterText*) clutter_text_new_full ("Mono Bold 24px", "1", &color)), _g_object_unref0 (self->priv->keyboard_indicator_1), _tmp3_);
+	clutter_actor_set_parent ((ClutterActor*) self->priv->keyboard_indicator_1, (ClutterActor*) self);
+	clutter_actor_set_opacity ((ClutterActor*) self->priv->keyboard_indicator_1, (guint8) 0x00);
+	self->priv->keyboard_indicator_2 = (_tmp4_ = g_object_ref_sink ((ClutterText*) clutter_text_new_full ("Mono Bold 24px", "2", &color)), _g_object_unref0 (self->priv->keyboard_indicator_2), _tmp4_);
+	clutter_actor_set_parent ((ClutterActor*) self->priv->keyboard_indicator_2, (ClutterActor*) self);
+	clutter_actor_set_opacity ((ClutterActor*) self->priv->keyboard_indicator_2, (guint8) 0x00);
+	self->priv->keyboard_indicator_3 = (_tmp5_ = g_object_ref_sink ((ClutterText*) clutter_text_new_full ("Mono Bold 24px", "3", &color)), _g_object_unref0 (self->priv->keyboard_indicator_3), _tmp5_);
+	clutter_actor_set_parent ((ClutterActor*) self->priv->keyboard_indicator_3, (ClutterActor*) self);
+	clutter_actor_set_opacity ((ClutterActor*) self->priv->keyboard_indicator_3, (guint8) 0x00);
+	self->priv->keyboard_indicator_4 = (_tmp6_ = g_object_ref_sink ((ClutterText*) clutter_text_new_full ("Mono Bold 24px", "4", &color)), _g_object_unref0 (self->priv->keyboard_indicator_4), _tmp6_);
+	clutter_actor_set_parent ((ClutterActor*) self->priv->keyboard_indicator_4, (ClutterActor*) self);
+	clutter_actor_set_opacity ((ClutterActor*) self->priv->keyboard_indicator_4, (guint8) 0x00);
+	self->priv->keyboard_indicator_5 = (_tmp7_ = g_object_ref_sink ((ClutterText*) clutter_text_new_full ("Mono Bold 24px", "5", &color)), _g_object_unref0 (self->priv->keyboard_indicator_5), _tmp7_);
+	clutter_actor_set_parent ((ClutterActor*) self->priv->keyboard_indicator_5, (ClutterActor*) self);
+	clutter_actor_set_opacity ((ClutterActor*) self->priv->keyboard_indicator_5, (guint8) 0x00);
+	self->priv->keyboard_indicator_6 = (_tmp8_ = g_object_ref_sink ((ClutterText*) clutter_text_new_full ("Mono Bold 24px", "6", &color)), _g_object_unref0 (self->priv->keyboard_indicator_6), _tmp8_);
+	clutter_actor_set_parent ((ClutterActor*) self->priv->keyboard_indicator_6, (ClutterActor*) self);
+	clutter_actor_set_opacity ((ClutterActor*) self->priv->keyboard_indicator_6, (guint8) 0x00);
+	self->priv->keyboard_indicator_7 = (_tmp9_ = g_object_ref_sink ((ClutterText*) clutter_text_new_full ("Mono Bold 24px", "7", &color)), _g_object_unref0 (self->priv->keyboard_indicator_7), _tmp9_);
+	clutter_actor_set_parent ((ClutterActor*) self->priv->keyboard_indicator_7, (ClutterActor*) self);
+	clutter_actor_set_opacity ((ClutterActor*) self->priv->keyboard_indicator_7, (guint8) 0x00);
+	self->priv->keyboard_indicator_8 = (_tmp10_ = g_object_ref_sink ((ClutterText*) clutter_text_new_full ("Mono Bold 24px", "8", &color)), _g_object_unref0 (self->priv->keyboard_indicator_8), _tmp10_);
+	clutter_actor_set_parent ((ClutterActor*) self->priv->keyboard_indicator_8, (ClutterActor*) self);
+	clutter_actor_set_opacity ((ClutterActor*) self->priv->keyboard_indicator_8, (guint8) 0x00);
+	self->priv->keyboard_indicator_9 = (_tmp11_ = g_object_ref_sink ((ClutterText*) clutter_text_new_full ("Mono Bold 24px", "9", &color)), _g_object_unref0 (self->priv->keyboard_indicator_9), _tmp11_);
+	clutter_actor_set_parent ((ClutterActor*) self->priv->keyboard_indicator_9, (ClutterActor*) self);
+	clutter_actor_set_opacity ((ClutterActor*) self->priv->keyboard_indicator_9, (guint8) 0x00);
+	self->priv->keyboard_indicator_0 = (_tmp12_ = g_object_ref_sink ((ClutterText*) clutter_text_new_full ("Mono Bold 24px", "0", &color)), _g_object_unref0 (self->priv->keyboard_indicator_0), _tmp12_);
+	clutter_actor_set_parent ((ClutterActor*) self->priv->keyboard_indicator_0, (ClutterActor*) self);
+	clutter_actor_set_opacity ((ClutterActor*) self->priv->keyboard_indicator_0, (guint8) 0x00);
 }
 
 
@@ -1017,6 +1183,66 @@ static void unity_launcher_scroller_view_disable_animations_on_children (UnityLa
 		}
 		_unity_launcher_scroller_model_iterator_unref0 (_child_it);
 	}
+}
+
+
+static void unity_launcher_scroller_view_expand_launcher (UnityLauncherScrollerView* self, float absolute_y) {
+	g_return_if_fail (self != NULL);
+	if (self->priv->view_type == UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_EXPANDED) {
+		return;
+	}
+	self->priv->view_type = UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_EXPANDED;
+	if (unity_launcher_scroller_view_get_total_children_height (self) > unity_launcher_scroller_view_get_available_height (self)) {
+		gint index;
+		UnityLauncherScrollerChild* _tmp0_;
+		float _tmp1_;
+		float contracted_position;
+		float old_scroll_position;
+		UnityLauncherScrollerChild* _tmp2_;
+		float _tmp3_;
+		float new_scroll_position;
+		index = unity_launcher_scroller_view_get_model_index_at_y_pos (self, absolute_y, FALSE);
+		contracted_position = (_tmp1_ = unity_launcher_scroller_child_get_position (_tmp0_ = unity_launcher_scroller_model_get (self->priv->_model, index)), _g_object_unref0 (_tmp0_), _tmp1_);
+		old_scroll_position = self->priv->scroll_position;
+		self->priv->scroll_position = (float) 0;
+		unity_launcher_scroller_view_order_children (self, TRUE);
+		new_scroll_position = (_tmp3_ = -(unity_launcher_scroller_child_get_position (_tmp2_ = unity_launcher_scroller_model_get (self->priv->_model, index)) - contracted_position), _g_object_unref0 (_tmp2_), _tmp3_);
+		self->priv->view_type = UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_CONTRACTED;
+		self->priv->scroll_position = old_scroll_position;
+		unity_launcher_scroller_view_order_children (self, TRUE);
+		self->priv->view_type = UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_EXPANDED;
+		self->priv->scroll_position = new_scroll_position;
+		unity_launcher_scroller_view_order_children (self, FALSE);
+		clutter_actor_queue_relayout ((ClutterActor*) self);
+	}
+}
+
+
+static void unity_launcher_scroller_view_contract_launcher (UnityLauncherScrollerView* self) {
+	g_return_if_fail (self != NULL);
+	if (self->priv->view_type == UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_CONTRACTED) {
+		return;
+	}
+	{
+		UnityLauncherScrollerModelIterator* _child_it;
+		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
+		while (TRUE) {
+			UnityLauncherScrollerChild* child;
+			if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
+				break;
+			}
+			child = unity_launcher_scroller_model_iterator_get (_child_it);
+			if (unity_launcher_scroller_child_get_active (child)) {
+				self->priv->focused_launcher = unity_launcher_scroller_model_index_of (self->priv->_model, child);
+			}
+			_g_object_unref0 (child);
+		}
+		_unity_launcher_scroller_model_iterator_unref0 (_child_it);
+	}
+	self->priv->view_type = UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_CONTRACTED;
+	unity_launcher_scroller_view_order_children (self, FALSE);
+	clutter_actor_queue_relayout ((ClutterActor*) self);
+	unity_launcher_scroller_view_set_is_autoscrolling (self, FALSE);
 }
 
 
@@ -1196,34 +1422,39 @@ static gboolean unity_launcher_scroller_view_on_button_release_event (UnityLaunc
 static gboolean unity_launcher_scroller_view_on_enter_event (UnityLauncherScrollerView* self, ClutterEvent* event) {
 	gboolean result = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
-	if (self->priv->view_type == UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_EXPANDED) {
-		result = FALSE;
-		return result;
+	if (self->priv->queue_contract_launcher != 0) {
+		g_source_remove (self->priv->queue_contract_launcher);
+		self->priv->queue_contract_launcher = (guint) 0;
 	}
-	self->priv->view_type = UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_EXPANDED;
-	if (unity_launcher_scroller_view_get_total_children_height (self) > unity_launcher_scroller_view_get_available_height (self)) {
-		gint index;
-		UnityLauncherScrollerChild* _tmp0_;
-		float _tmp1_;
-		float contracted_position;
-		float old_scroll_position;
-		UnityLauncherScrollerChild* _tmp2_;
-		float _tmp3_;
-		float new_scroll_position;
-		index = unity_launcher_scroller_view_get_model_index_at_y_pos (self, (*event).crossing.y, FALSE);
-		contracted_position = (_tmp1_ = unity_launcher_scroller_child_get_position (_tmp0_ = unity_launcher_scroller_model_get (self->priv->_model, index)), _g_object_unref0 (_tmp0_), _tmp1_);
-		old_scroll_position = self->priv->scroll_position;
-		self->priv->scroll_position = (float) 0;
-		unity_launcher_scroller_view_order_children (self, TRUE);
-		new_scroll_position = (_tmp3_ = -(unity_launcher_scroller_child_get_position (_tmp2_ = unity_launcher_scroller_model_get (self->priv->_model, index)) - contracted_position), _g_object_unref0 (_tmp2_), _tmp3_);
-		self->priv->view_type = UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_CONTRACTED;
-		self->priv->scroll_position = old_scroll_position;
-		unity_launcher_scroller_view_order_children (self, TRUE);
-		self->priv->view_type = UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_EXPANDED;
-		self->priv->scroll_position = new_scroll_position;
-		unity_launcher_scroller_view_order_children (self, FALSE);
-		clutter_actor_queue_relayout ((ClutterActor*) self);
+	unity_launcher_scroller_view_expand_launcher (self, (*event).crossing.y);
+	result = FALSE;
+	return result;
+}
+
+
+static gboolean unity_launcher_scroller_view_on_queue_contract_launcher (UnityLauncherScrollerView* self) {
+	gboolean result = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	if (self->priv->queue_contract_launcher != 0) {
+		unity_launcher_scroller_view_contract_launcher (self);
 	}
+	self->priv->queue_contract_launcher = (guint) 0;
+	result = FALSE;
+	return result;
+}
+
+
+static gboolean _unity_launcher_scroller_view_on_queue_contract_launcher_gsource_func (gpointer self) {
+	gboolean result;
+	result = unity_launcher_scroller_view_on_queue_contract_launcher (self);
+	return result;
+}
+
+
+static gboolean unity_launcher_scroller_view_do_queue_contract_launcher (UnityLauncherScrollerView* self) {
+	gboolean result = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	self->priv->queue_contract_launcher = g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 250, _unity_launcher_scroller_view_on_queue_contract_launcher_gsource_func, g_object_ref (self), g_object_unref);
 	result = FALSE;
 	return result;
 }
@@ -1231,33 +1462,23 @@ static gboolean unity_launcher_scroller_view_on_enter_event (UnityLauncherScroll
 
 static gboolean unity_launcher_scroller_view_on_leave_event (UnityLauncherScrollerView* self, ClutterEvent* event) {
 	gboolean result = FALSE;
+	gboolean _tmp0_ = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
-	if (self->priv->view_type == UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_CONTRACTED) {
+	self->priv->last_known_pointer_x = (float) 200;
+	if (self->priv->is_scrolling) {
 		result = FALSE;
 		return result;
 	}
-	{
-		UnityLauncherScrollerModelIterator* _child_it;
-		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
-		while (TRUE) {
-			UnityLauncherScrollerChild* child;
-			if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
-				break;
-			}
-			child = unity_launcher_scroller_model_iterator_get (_child_it);
-			if (unity_launcher_scroller_child_get_active (child)) {
-				self->priv->focused_launcher = unity_launcher_scroller_model_index_of (self->priv->_model, child);
-			}
-			_g_object_unref0 (child);
-		}
-		_unity_launcher_scroller_model_iterator_unref0 (_child_it);
-	}
-	self->priv->view_type = UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_CONTRACTED;
-	unity_launcher_scroller_view_order_children (self, FALSE);
-	clutter_actor_queue_relayout ((ClutterActor*) self);
-	unity_launcher_scroller_view_set_is_autoscrolling (self, FALSE);
+	unity_launcher_scroller_view_do_queue_contract_launcher (self);
 	if (CLUTTER_IS_ACTOR (self->priv->last_picked_actor)) {
+		_tmp0_ = self->priv->last_picked_actor != CLUTTER_ACTOR (self);
+	} else {
+		_tmp0_ = FALSE;
+	}
+	if (_tmp0_) {
+		ClutterActor* _tmp1_;
 		clutter_actor_event (self->priv->last_picked_actor, event, FALSE);
+		self->priv->last_picked_actor = (_tmp1_ = NULL, _g_object_unref0 (self->priv->last_picked_actor), _tmp1_);
 	}
 	result = FALSE;
 	return result;
@@ -1809,13 +2030,13 @@ static GeeArrayList* unity_launcher_scroller_view_order_children_contracted (Uni
 				}
 				child = unity_launcher_scroller_model_get (self->priv->_model, index);
 				transition = unity_launcher_child_transition_new ();
+				clutter_actor_get_preferred_height ((ClutterActor*) child, clutter_actor_get_width ((ClutterActor*) self), &min_height, &nat_height);
 				if (index >= index_start_flat) {
 					_tmp4_ = index < index_end_flat;
 				} else {
 					_tmp4_ = FALSE;
 				}
 				if (_tmp4_) {
-					clutter_actor_get_preferred_height ((ClutterActor*) child, clutter_actor_get_width ((ClutterActor*) self), &min_height, &nat_height);
 					transition->position = h;
 					h = h + (nat_height + self->spacing);
 					num_children_handled++;
@@ -1827,17 +2048,28 @@ static GeeArrayList* unity_launcher_scroller_view_order_children_contracted (Uni
 					}
 				} else {
 					if (index == index_end_flat) {
-						h = h - ((float) (self->spacing * 2));
+						h = h - ((nat_height * 0.3333f) - self->spacing);
 					}
-					transition->position = h;
-					h = h + ((float) (8 + self->spacing));
 					if (num_children_handled < index_start_flat) {
-						transition->rotation = -self->priv->contract_icon_degrees;
+						if (num_children_handled == (index_start_flat - 1)) {
+							transition->rotation = -self->priv->contract_icon_partial_degrees;
+							h = h + ((float) self->spacing);
+						} else {
+							transition->rotation = -self->priv->contract_icon_degrees;
+						}
+						transition->position = h;
 						gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->draw_ftb, child);
 					} else {
-						transition->rotation = self->priv->contract_icon_degrees;
+						transition->position = h;
+						if (index == index_end_flat) {
+							transition->rotation = self->priv->contract_icon_partial_degrees;
+							h = h + ((float) self->spacing);
+						} else {
+							transition->rotation = self->priv->contract_icon_degrees;
+						}
 						gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->draw_btf, child);
 					}
+					h = h + ((float) (8 + self->spacing));
 					num_children_handled++;
 					if ((index + 1) == index_start_flat) {
 						h = h + ((float) 30);
@@ -1902,6 +2134,7 @@ static void unity_launcher_scroller_view_real_allocate (ClutterActor* base, cons
 	float available_height;
 	CtkPadding _tmp2_ = {0};
 	float available_width;
+	guint index;
 	gint bg_height = 0;
 	gint bg_width = 0;
 	float bg_offset;
@@ -1912,6 +2145,7 @@ static void unity_launcher_scroller_view_real_allocate (ClutterActor* base, cons
 	available_height = clutter_actor_box_get_height (box) - (ctk_actor_get_padding ((CtkActor*) self, &_tmp1_), _tmp1_.bottom);
 	available_width = clutter_actor_box_get_width (box) - (ctk_actor_get_padding ((CtkActor*) self, &_tmp2_), _tmp2_.right);
 	self->priv->total_child_height = 0.0f;
+	index = (guint) 0;
 	{
 		UnityLauncherScrollerModelIterator* _child_it;
 		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
@@ -1923,6 +2157,7 @@ static void unity_launcher_scroller_view_real_allocate (ClutterActor* base, cons
 			float min = 0.0F;
 			CtkPadding _tmp3_ = {0};
 			CtkPadding _tmp4_ = {0};
+			gboolean _tmp5_ = FALSE;
 			if (!unity_launcher_scroller_model_iterator_next (_child_it)) {
 				break;
 			}
@@ -1941,6 +2176,75 @@ static void unity_launcher_scroller_view_real_allocate (ClutterActor* base, cons
 				clutter_actor_set_clip ((ClutterActor*) child, (float) 0, fabsf (child_box.y1), clutter_actor_box_get_width (&child_box), clutter_actor_box_get_height (&child_box) - child_box.y1);
 			}
 			self->priv->total_child_height = self->priv->total_child_height + (child_height + self->spacing);
+			if (index >= 0) {
+				_tmp5_ = index <= 9;
+			} else {
+				_tmp5_ = FALSE;
+			}
+			if (_tmp5_) {
+				ClutterActor* keyboard_indicator;
+				keyboard_indicator = NULL;
+				if (index == 0) {
+					ClutterActor* _tmp6_;
+					keyboard_indicator = (_tmp6_ = _g_object_ref0 ((ClutterActor*) self->priv->keyboard_indicator_1), _g_object_unref0 (keyboard_indicator), _tmp6_);
+				} else {
+					if (index == 1) {
+						ClutterActor* _tmp7_;
+						keyboard_indicator = (_tmp7_ = _g_object_ref0 ((ClutterActor*) self->priv->keyboard_indicator_2), _g_object_unref0 (keyboard_indicator), _tmp7_);
+					} else {
+						if (index == 2) {
+							ClutterActor* _tmp8_;
+							keyboard_indicator = (_tmp8_ = _g_object_ref0 ((ClutterActor*) self->priv->keyboard_indicator_3), _g_object_unref0 (keyboard_indicator), _tmp8_);
+						} else {
+							if (index == 3) {
+								ClutterActor* _tmp9_;
+								keyboard_indicator = (_tmp9_ = _g_object_ref0 ((ClutterActor*) self->priv->keyboard_indicator_4), _g_object_unref0 (keyboard_indicator), _tmp9_);
+							} else {
+								if (index == 4) {
+									ClutterActor* _tmp10_;
+									keyboard_indicator = (_tmp10_ = _g_object_ref0 ((ClutterActor*) self->priv->keyboard_indicator_5), _g_object_unref0 (keyboard_indicator), _tmp10_);
+								} else {
+									if (index == 5) {
+										ClutterActor* _tmp11_;
+										keyboard_indicator = (_tmp11_ = _g_object_ref0 ((ClutterActor*) self->priv->keyboard_indicator_6), _g_object_unref0 (keyboard_indicator), _tmp11_);
+									} else {
+										if (index == 6) {
+											ClutterActor* _tmp12_;
+											keyboard_indicator = (_tmp12_ = _g_object_ref0 ((ClutterActor*) self->priv->keyboard_indicator_7), _g_object_unref0 (keyboard_indicator), _tmp12_);
+										} else {
+											if (index == 7) {
+												ClutterActor* _tmp13_;
+												keyboard_indicator = (_tmp13_ = _g_object_ref0 ((ClutterActor*) self->priv->keyboard_indicator_8), _g_object_unref0 (keyboard_indicator), _tmp13_);
+											} else {
+												if (index == 8) {
+													ClutterActor* _tmp14_;
+													keyboard_indicator = (_tmp14_ = _g_object_ref0 ((ClutterActor*) self->priv->keyboard_indicator_9), _g_object_unref0 (keyboard_indicator), _tmp14_);
+												} else {
+													if (index == 9) {
+														ClutterActor* _tmp15_;
+														keyboard_indicator = (_tmp15_ = _g_object_ref0 ((ClutterActor*) self->priv->keyboard_indicator_0), _g_object_unref0 (keyboard_indicator), _tmp15_);
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+				if (CLUTTER_IS_ACTOR (keyboard_indicator)) {
+					CtkPadding _tmp16_ = {0};
+					CtkPadding _tmp17_ = {0};
+					child_box.x1 = (clutter_actor_box_get_width (box) - (ctk_actor_get_padding ((CtkActor*) self, &_tmp16_), _tmp16_.right)) - clutter_actor_get_width (keyboard_indicator);
+					child_box.x2 = child_box.x1 + clutter_actor_get_width (keyboard_indicator);
+					child_box.y1 = ((unity_launcher_scroller_child_get_position (child) + (ctk_actor_get_padding ((CtkActor*) self, &_tmp17_), _tmp17_.top)) + child_height) - clutter_actor_get_height (keyboard_indicator);
+					child_box.y2 = child_box.y1 + clutter_actor_get_height (keyboard_indicator);
+					clutter_actor_allocate (keyboard_indicator, &child_box, flags);
+				}
+				index = index + ((guint) 1);
+				_g_object_unref0 (keyboard_indicator);
+			}
 			_g_object_unref0 (child);
 		}
 		_unity_launcher_scroller_model_iterator_unref0 (_child_it);
@@ -2104,6 +2408,16 @@ static void unity_launcher_scroller_view_real_paint (ClutterActor* base) {
 		}
 		_g_object_unref0 (_child_it);
 	}
+	clutter_actor_paint ((ClutterActor*) self->priv->keyboard_indicator_1);
+	clutter_actor_paint ((ClutterActor*) self->priv->keyboard_indicator_2);
+	clutter_actor_paint ((ClutterActor*) self->priv->keyboard_indicator_3);
+	clutter_actor_paint ((ClutterActor*) self->priv->keyboard_indicator_4);
+	clutter_actor_paint ((ClutterActor*) self->priv->keyboard_indicator_5);
+	clutter_actor_paint ((ClutterActor*) self->priv->keyboard_indicator_6);
+	clutter_actor_paint ((ClutterActor*) self->priv->keyboard_indicator_7);
+	clutter_actor_paint ((ClutterActor*) self->priv->keyboard_indicator_8);
+	clutter_actor_paint ((ClutterActor*) self->priv->keyboard_indicator_9);
+	clutter_actor_paint ((ClutterActor*) self->priv->keyboard_indicator_0);
 	clutter_actor_paint ((ClutterActor*) self->priv->top_shadow);
 }
 
@@ -2114,6 +2428,16 @@ static void unity_launcher_scroller_view_real_map (ClutterActor* base) {
 	CLUTTER_ACTOR_CLASS (unity_launcher_scroller_view_parent_class)->map ((ClutterActor*) CTK_ACTOR (self));
 	clutter_actor_map ((ClutterActor*) self->priv->bgtex);
 	clutter_actor_map ((ClutterActor*) self->priv->top_shadow);
+	clutter_actor_map ((ClutterActor*) self->priv->keyboard_indicator_1);
+	clutter_actor_map ((ClutterActor*) self->priv->keyboard_indicator_2);
+	clutter_actor_map ((ClutterActor*) self->priv->keyboard_indicator_3);
+	clutter_actor_map ((ClutterActor*) self->priv->keyboard_indicator_4);
+	clutter_actor_map ((ClutterActor*) self->priv->keyboard_indicator_5);
+	clutter_actor_map ((ClutterActor*) self->priv->keyboard_indicator_6);
+	clutter_actor_map ((ClutterActor*) self->priv->keyboard_indicator_7);
+	clutter_actor_map ((ClutterActor*) self->priv->keyboard_indicator_8);
+	clutter_actor_map ((ClutterActor*) self->priv->keyboard_indicator_9);
+	clutter_actor_map ((ClutterActor*) self->priv->keyboard_indicator_0);
 	{
 		UnityLauncherScrollerModelIterator* _child_it;
 		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
@@ -2137,6 +2461,16 @@ static void unity_launcher_scroller_view_real_unmap (ClutterActor* base) {
 	CLUTTER_ACTOR_CLASS (unity_launcher_scroller_view_parent_class)->unmap ((ClutterActor*) CTK_ACTOR (self));
 	clutter_actor_map ((ClutterActor*) self->priv->bgtex);
 	clutter_actor_map ((ClutterActor*) self->priv->top_shadow);
+	clutter_actor_unmap ((ClutterActor*) self->priv->keyboard_indicator_1);
+	clutter_actor_unmap ((ClutterActor*) self->priv->keyboard_indicator_2);
+	clutter_actor_unmap ((ClutterActor*) self->priv->keyboard_indicator_3);
+	clutter_actor_unmap ((ClutterActor*) self->priv->keyboard_indicator_4);
+	clutter_actor_unmap ((ClutterActor*) self->priv->keyboard_indicator_5);
+	clutter_actor_unmap ((ClutterActor*) self->priv->keyboard_indicator_6);
+	clutter_actor_unmap ((ClutterActor*) self->priv->keyboard_indicator_7);
+	clutter_actor_unmap ((ClutterActor*) self->priv->keyboard_indicator_8);
+	clutter_actor_unmap ((ClutterActor*) self->priv->keyboard_indicator_9);
+	clutter_actor_unmap ((ClutterActor*) self->priv->keyboard_indicator_0);
 	{
 		UnityLauncherScrollerModelIterator* _child_it;
 		_child_it = unity_launcher_scroller_model_iterator (self->priv->_model);
@@ -2422,6 +2756,7 @@ static void unity_launcher_scroller_view_instance_init (UnityLauncherScrollerVie
 	self->priv->current_phase = UNITY_LAUNCHER_SCROLLER_PHASE_SETTLING;
 	self->priv->last_motion_event_time = (guint) 0;
 	self->priv->view_type = UNITY_LAUNCHER_SCROLLER_VIEW_TYPE_CONTRACTED;
+	self->priv->last_known_pointer_x = 0.0f;
 	self->priv->scroll_position = 0.0f;
 	self->priv->settle_position = 0.0f;
 	self->priv->autoscroll_anim_active = FALSE;
@@ -2430,9 +2765,12 @@ static void unity_launcher_scroller_view_instance_init (UnityLauncherScrollerVie
 	self->priv->previous_y_time = (guint) 0;
 	self->priv->stored_delta = (guint) 0;
 	self->priv->scroll_speed = 0.0f;
-	self->priv->contract_icon_degrees = 30.0f;
+	self->priv->contract_icon_degrees = 70.0f;
+	self->priv->contract_icon_partial_degrees = 30.0f;
 	self->priv->focused_launcher = 0;
 	self->priv->last_picked_actor = NULL;
+	self->priv->last_scroll_position = 0.0f;
+	self->priv->queue_contract_launcher = (guint) 0;
 	self->priv->autoscroll_mouse_pos_cache = 0.0f;
 }
 
@@ -2447,6 +2785,16 @@ static void unity_launcher_scroller_view_finalize (GObject* obj) {
 	_g_object_unref0 (self->fling_timeline);
 	_g_object_unref0 (self->priv->draw_ftb);
 	_g_object_unref0 (self->priv->draw_btf);
+	_g_object_unref0 (self->priv->keyboard_indicator_1);
+	_g_object_unref0 (self->priv->keyboard_indicator_2);
+	_g_object_unref0 (self->priv->keyboard_indicator_3);
+	_g_object_unref0 (self->priv->keyboard_indicator_4);
+	_g_object_unref0 (self->priv->keyboard_indicator_5);
+	_g_object_unref0 (self->priv->keyboard_indicator_6);
+	_g_object_unref0 (self->priv->keyboard_indicator_7);
+	_g_object_unref0 (self->priv->keyboard_indicator_8);
+	_g_object_unref0 (self->priv->keyboard_indicator_9);
+	_g_object_unref0 (self->priv->keyboard_indicator_0);
 	_g_object_unref0 (self->priv->child_refs);
 	_g_object_unref0 (self->priv->last_picked_actor);
 	G_OBJECT_CLASS (unity_launcher_scroller_view_parent_class)->finalize (obj);

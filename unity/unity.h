@@ -493,6 +493,8 @@ struct _UnityShellIface {
 	void (*get_window_details) (UnityShell* self, guint32 xid, gboolean* allows_resize, gboolean* is_maximised);
 	void (*do_window_action) (UnityShell* self, guint32 xid, UnityWindowAction action);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
+	gboolean (*get_super_key_active) (UnityShell* self);
+	void (*set_super_key_active) (UnityShell* self, gboolean value);
 };
 
 struct _UnityThemeFilePath {
@@ -775,6 +777,8 @@ void unity_shell_stop_expose (UnityShell* self);
 void unity_shell_get_window_details (UnityShell* self, guint32 xid, gboolean* allows_resize, gboolean* is_maximised);
 void unity_shell_do_window_action (UnityShell* self, guint32 xid, UnityWindowAction action);
 gboolean unity_shell_get_menus_swallow_events (UnityShell* self);
+gboolean unity_shell_get_super_key_active (UnityShell* self);
+void unity_shell_set_super_key_active (UnityShell* self, gboolean value);
 extern UnityShell* unity_global_shell;
 GType unity_theme_file_path_get_type (void) G_GNUC_CONST;
 void unity_theme_file_path_add_icon_theme (UnityThemeFilePath* self, GtkIconTheme* theme);

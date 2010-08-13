@@ -23,9 +23,9 @@
 #include <glib.h>
 #include <glib-object.h>
 #include <clutter/clutter.h>
-#include <mutter-plugins.h>
 #include <float.h>
 #include <math.h>
+#include <mutter-plugins.h>
 #include <unity-private.h>
 #include <unity.h>
 
@@ -78,11 +78,16 @@ struct _UnityExposeClonePrivate {
 	ClutterClone* clone;
 	ClutterActor* darken_box;
 	gboolean hovered;
+	gboolean dragging;
+	float drag_start_x;
+	float drag_start_y;
+	gboolean drag_moved;
 	gboolean _fade_on_close;
 	ClutterActor* _source;
 	guint8 _hovered_opacity;
 	guint8 _unhovered_opacity;
 	guint8 _darken;
+	gboolean _enable_dnd;
 };
 
 struct _Block1Data {
@@ -131,15 +136,23 @@ enum  {
 	UNITY_EXPOSE_CLONE_SOURCE,
 	UNITY_EXPOSE_CLONE_HOVERED_OPACITY,
 	UNITY_EXPOSE_CLONE_UNHOVERED_OPACITY,
-	UNITY_EXPOSE_CLONE_DARKEN
+	UNITY_EXPOSE_CLONE_DARKEN,
+	UNITY_EXPOSE_CLONE_ENABLE_DND
 };
 void unity_expose_clone_set_darken (UnityExposeClone* self, guint8 value);
 void unity_expose_clone_set_hovered_opacity (UnityExposeClone* self, guint8 value);
 void unity_expose_clone_set_unhovered_opacity (UnityExposeClone* self, guint8 value);
+void unity_expose_clone_set_enable_dnd (UnityExposeClone* self, gboolean value);
 static void unity_expose_clone_set_source (UnityExposeClone* self, ClutterActor* value);
 guint8 unity_expose_clone_get_darken (UnityExposeClone* self);
 UnityExposeClone* unity_expose_clone_new (ClutterActor* source);
 UnityExposeClone* unity_expose_clone_construct (GType object_type, ClutterActor* source);
+gboolean unity_expose_clone_get_enable_dnd (UnityExposeClone* self);
+static void unity_expose_clone_start_drag (UnityExposeClone* self, ClutterEvent* evnt);
+static gboolean unity_expose_clone_on_button_press (UnityExposeClone* self, ClutterEvent* evnt);
+static gboolean unity_expose_clone_on_stage_captured_event (UnityExposeClone* self, ClutterEvent* event);
+static gboolean _unity_expose_clone_on_stage_captured_event_clutter_actor_captured_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static void unity_expose_clone_end_drag (UnityExposeClone* self);
 guint8 unity_expose_clone_get_hovered_opacity (UnityExposeClone* self);
 static gboolean unity_expose_clone_on_mouse_enter (UnityExposeClone* self, ClutterEvent* evnt);
 guint8 unity_expose_clone_get_unhovered_opacity (UnityExposeClone* self);
@@ -154,6 +167,7 @@ void unity_expose_clone_restore_window_position (UnityExposeClone* self, gint ac
 void unity_expose_clone_set_fade_on_close (UnityExposeClone* self, gboolean value);
 static gboolean _unity_expose_clone_on_mouse_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static gboolean _unity_expose_clone_on_mouse_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _unity_expose_clone_on_button_press_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static GObject * unity_expose_clone_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_expose_clone_finalize (GObject* obj);
 static void unity_expose_clone_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -222,6 +236,7 @@ UnityExposeClone* unity_expose_clone_construct (GType object_type, ClutterActor*
 	unity_expose_clone_set_darken (self, (guint8) 0);
 	unity_expose_clone_set_hovered_opacity (self, (guint8) 255);
 	unity_expose_clone_set_unhovered_opacity (self, (guint8) 255);
+	unity_expose_clone_set_enable_dnd (self, FALSE);
 	unity_expose_clone_set_source (self, source);
 	if (MUTTER_IS_WINDOW (source)) {
 		ClutterClone* _tmp1_;
@@ -247,6 +262,97 @@ UnityExposeClone* unity_expose_clone_construct (GType object_type, ClutterActor*
 
 UnityExposeClone* unity_expose_clone_new (ClutterActor* source) {
 	return unity_expose_clone_construct (UNITY_TYPE_EXPOSE_CLONE, source);
+}
+
+
+static gboolean unity_expose_clone_on_button_press (UnityExposeClone* self, ClutterEvent* evnt) {
+	gboolean result = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	if (!self->priv->_enable_dnd) {
+		result = FALSE;
+		return result;
+	}
+	unity_expose_clone_start_drag (self, evnt);
+	result = TRUE;
+	return result;
+}
+
+
+static gboolean _unity_expose_clone_on_stage_captured_event_clutter_actor_captured_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	gboolean result;
+	result = unity_expose_clone_on_stage_captured_event (self, event);
+	return result;
+}
+
+
+static void unity_expose_clone_start_drag (UnityExposeClone* self, ClutterEvent* evnt) {
+	float x = 0.0F;
+	float y = 0.0F;
+	float out_x;
+	float out_y;
+	g_return_if_fail (self != NULL);
+	self->priv->dragging = TRUE;
+	g_signal_connect_object (clutter_actor_get_stage ((ClutterActor*) self), "captured-event", (GCallback) _unity_expose_clone_on_stage_captured_event_clutter_actor_captured_event, self, 0);
+	out_x = (float) 0;
+	out_y = (float) 0;
+	clutter_event_get_coords (evnt, &x, &y);
+	clutter_actor_transform_stage_point (clutter_actor_get_parent ((ClutterActor*) self), x, y, &out_x, &out_y);
+	self->priv->drag_start_x = out_x - (clutter_actor_get_width ((ClutterActor*) self) / 2);
+	self->priv->drag_start_y = out_y - (clutter_actor_get_height ((ClutterActor*) self) / 2);
+	self->priv->drag_moved = FALSE;
+}
+
+
+static void unity_expose_clone_end_drag (UnityExposeClone* self) {
+	guint _tmp0_;
+	g_return_if_fail (self != NULL);
+	self->priv->dragging = FALSE;
+	g_signal_parse_name ("captured-event", CLUTTER_TYPE_ACTOR, &_tmp0_, NULL, FALSE);
+	g_signal_handlers_disconnect_matched (clutter_actor_get_stage ((ClutterActor*) self), G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp0_, 0, NULL, (GCallback) _unity_expose_clone_on_stage_captured_event_clutter_actor_captured_event, self);
+}
+
+
+static gboolean unity_expose_clone_on_stage_captured_event (UnityExposeClone* self, ClutterEvent* event) {
+	gboolean result = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	if (!self->priv->dragging) {
+		unity_expose_clone_end_drag (self);
+		result = FALSE;
+		return result;
+	}
+	if ((*event).type == CLUTTER_MOTION) {
+		float out_x;
+		float out_y;
+		gboolean _tmp0_ = FALSE;
+		gboolean _tmp1_ = FALSE;
+		out_x = (float) 0;
+		out_y = (float) 0;
+		clutter_actor_transform_stage_point (clutter_actor_get_parent ((ClutterActor*) self), (*event).motion.x, (*event).motion.y, &out_x, &out_y);
+		out_x = out_x - (clutter_actor_get_width ((ClutterActor*) self) / 2);
+		out_y = out_y - (clutter_actor_get_height ((ClutterActor*) self) / 2);
+		if (fabs ((double) (out_x - self->priv->drag_start_x)) > 15) {
+			_tmp1_ = TRUE;
+		} else {
+			_tmp1_ = fabs ((double) (out_y - self->priv->drag_start_y)) > 15;
+		}
+		if (_tmp1_) {
+			_tmp0_ = TRUE;
+		} else {
+			_tmp0_ = self->priv->drag_moved;
+		}
+		if (_tmp0_) {
+			self->priv->drag_moved = TRUE;
+			clutter_actor_set_position ((ClutterActor*) self, out_x, out_y);
+		}
+	} else {
+		if ((*event).type == CLUTTER_BUTTON_RELEASE) {
+			unity_expose_clone_end_drag (self);
+			result = self->priv->drag_moved;
+			return result;
+		}
+	}
+	result = TRUE;
+	return result;
 }
 
 
@@ -432,6 +538,21 @@ void unity_expose_clone_set_darken (UnityExposeClone* self, guint8 value) {
 }
 
 
+gboolean unity_expose_clone_get_enable_dnd (UnityExposeClone* self) {
+	gboolean result;
+	g_return_val_if_fail (self != NULL, FALSE);
+	result = self->priv->_enable_dnd;
+	return result;
+}
+
+
+void unity_expose_clone_set_enable_dnd (UnityExposeClone* self, gboolean value) {
+	g_return_if_fail (self != NULL);
+	self->priv->_enable_dnd = value;
+	g_object_notify ((GObject *) self, "enable-dnd");
+}
+
+
 static gboolean _unity_expose_clone_on_mouse_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
 	result = unity_expose_clone_on_mouse_enter (self, event);
@@ -446,6 +567,13 @@ static gboolean _unity_expose_clone_on_mouse_leave_clutter_actor_leave_event (Cl
 }
 
 
+static gboolean _unity_expose_clone_on_button_press_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	gboolean result;
+	result = unity_expose_clone_on_button_press (self, event);
+	return result;
+}
+
+
 static GObject * unity_expose_clone_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -456,6 +584,7 @@ static GObject * unity_expose_clone_constructor (GType type, guint n_construct_p
 	{
 		g_signal_connect_object ((ClutterActor*) self, "enter-event", (GCallback) _unity_expose_clone_on_mouse_enter_clutter_actor_enter_event, self, 0);
 		g_signal_connect_object ((ClutterActor*) self, "leave-event", (GCallback) _unity_expose_clone_on_mouse_leave_clutter_actor_leave_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self, "button-press-event", (GCallback) _unity_expose_clone_on_button_press_clutter_actor_button_press_event, self, 0);
 	}
 	return obj;
 }
@@ -473,6 +602,7 @@ static void unity_expose_clone_class_init (UnityExposeCloneClass * klass) {
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_EXPOSE_CLONE_HOVERED_OPACITY, g_param_spec_uchar ("hovered-opacity", "hovered-opacity", "hovered-opacity", 0, G_MAXUINT8, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_EXPOSE_CLONE_UNHOVERED_OPACITY, g_param_spec_uchar ("unhovered-opacity", "unhovered-opacity", "unhovered-opacity", 0, G_MAXUINT8, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_EXPOSE_CLONE_DARKEN, g_param_spec_uchar ("darken", "darken", "darken", 0, G_MAXUINT8, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_EXPOSE_CLONE_ENABLE_DND, g_param_spec_boolean ("enable-dnd", "enable-dnd", "enable-dnd", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 
@@ -521,6 +651,9 @@ static void unity_expose_clone_get_property (GObject * object, guint property_id
 		case UNITY_EXPOSE_CLONE_DARKEN:
 		g_value_set_uchar (value, unity_expose_clone_get_darken (self));
 		break;
+		case UNITY_EXPOSE_CLONE_ENABLE_DND:
+		g_value_set_boolean (value, unity_expose_clone_get_enable_dnd (self));
+		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
@@ -546,6 +679,9 @@ static void unity_expose_clone_set_property (GObject * object, guint property_id
 		break;
 		case UNITY_EXPOSE_CLONE_DARKEN:
 		unity_expose_clone_set_darken (self, g_value_get_uchar (value));
+		break;
+		case UNITY_EXPOSE_CLONE_ENABLE_DND:
+		unity_expose_clone_set_enable_dnd (self, g_value_get_boolean (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
@@ -604,7 +740,7 @@ void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* window
 		clutter_actor_destroy ((ClutterActor*) self->priv->expose_group);
 	}
 	self->priv->expose_group = (_tmp1_ = g_object_ref_sink ((ClutterGroup*) clutter_group_new ()), _g_object_unref0 (self->priv->expose_group), _tmp1_);
-	window_group = _g_object_ref0 (mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self->priv->owner)));
+	window_group = _g_object_ref0 (mutter_plugin_get_window_group (unity_plugin_get_plugin (self->priv->owner)));
 	clutter_container_add_actor ((_tmp2_ = window_group, CLUTTER_IS_CONTAINER (_tmp2_) ? ((ClutterContainer*) _tmp2_) : NULL), (ClutterActor*) self->priv->expose_group);
 	clutter_actor_raise_top ((ClutterActor*) self->priv->expose_group);
 	clutter_actor_show ((ClutterActor*) self->priv->expose_group);

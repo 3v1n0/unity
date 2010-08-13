@@ -82,6 +82,8 @@ struct _UnityShellIface {
 	void (*get_window_details) (UnityShell* self, guint32 xid, gboolean* allows_resize, gboolean* is_maximised);
 	void (*do_window_action) (UnityShell* self, guint32 xid, UnityWindowAction action);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
+	gboolean (*get_super_key_active) (UnityShell* self);
+	void (*set_super_key_active) (UnityShell* self, gboolean value);
 };
 
 
@@ -112,6 +114,8 @@ void unity_shell_stop_expose (UnityShell* self);
 void unity_shell_get_window_details (UnityShell* self, guint32 xid, gboolean* allows_resize, gboolean* is_maximised);
 void unity_shell_do_window_action (UnityShell* self, guint32 xid, UnityWindowAction action);
 gboolean unity_shell_get_menus_swallow_events (UnityShell* self);
+gboolean unity_shell_get_super_key_active (UnityShell* self);
+void unity_shell_set_super_key_active (UnityShell* self, gboolean value);
 
 
 
@@ -251,15 +255,28 @@ gboolean unity_shell_get_menus_swallow_events (UnityShell* self) {
 }
 
 
+gboolean unity_shell_get_super_key_active (UnityShell* self) {
+	return UNITY_SHELL_GET_INTERFACE (self)->get_super_key_active (self);
+}
+
+
+void unity_shell_set_super_key_active (UnityShell* self, gboolean value) {
+	UNITY_SHELL_GET_INTERFACE (self)->set_super_key_active (self, value);
+}
+
+
 static void unity_shell_base_init (UnityShellIface * iface) {
 	static gboolean initialized = FALSE;
 	if (!initialized) {
 		initialized = TRUE;
 		g_object_interface_install_property (iface, g_param_spec_boolean ("menus-swallow-events", "menus-swallow-events", "menus-swallow-events", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
+		g_object_interface_install_property (iface, g_param_spec_boolean ("super-key-active", "super-key-active", "super-key-active", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 		g_signal_new ("need_new_icon_cache", UNITY_TYPE_SHELL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 		g_signal_new ("indicators_changed", UNITY_TYPE_SHELL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__INT, G_TYPE_NONE, 1, G_TYPE_INT);
 		g_signal_new ("mode_changed", UNITY_TYPE_SHELL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__ENUM, G_TYPE_NONE, 1, UNITY_TYPE_SHELL_MODE);
 		g_signal_new ("active_window_state_changed", UNITY_TYPE_SHELL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
+		g_signal_new ("super_key_modifier_release", UNITY_TYPE_SHELL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
+		g_signal_new ("super_key_modifier_press", UNITY_TYPE_SHELL, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__UINT, G_TYPE_NONE, 1, G_TYPE_UINT);
 	}
 }
 

@@ -176,6 +176,8 @@ struct _UnityShellIface {
 	void (*get_window_details) (UnityShell* self, guint32 xid, gboolean* allows_resize, gboolean* is_maximised);
 	void (*do_window_action) (UnityShell* self, guint32 xid, UnityWindowAction action);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
+	gboolean (*get_super_key_active) (UnityShell* self);
+	void (*set_super_key_active) (UnityShell* self, gboolean value);
 };
 
 
@@ -281,7 +283,7 @@ char* unity_webapp_urlify (const char* uri) {
 		regex = g_regex_new ("^[ \\\\]+|[ \\\\]+$", 0, 0, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch34_g_regex_error;
+				goto __catch37_g_regex_error;
 			}
 			_g_free0 (return_string);
 			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -292,7 +294,7 @@ char* unity_webapp_urlify (const char* uri) {
 		if (_inner_error_ != NULL) {
 			_g_regex_unref0 (regex);
 			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch34_g_regex_error;
+				goto __catch37_g_regex_error;
 			}
 			_g_regex_unref0 (regex);
 			_g_free0 (return_string);
@@ -303,8 +305,8 @@ char* unity_webapp_urlify (const char* uri) {
 		return_string = (_tmp1_ = _tmp0_, _g_free0 (return_string), _tmp1_);
 		_g_regex_unref0 (regex);
 	}
-	goto __finally34;
-	__catch34_g_regex_error:
+	goto __finally37;
+	__catch37_g_regex_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -314,7 +316,7 @@ char* unity_webapp_urlify (const char* uri) {
 			_g_error_free0 (e);
 		}
 	}
-	__finally34:
+	__finally37:
 	if (_inner_error_ != NULL) {
 		_g_free0 (return_string);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -328,7 +330,7 @@ char* unity_webapp_urlify (const char* uri) {
 		regex = g_regex_new ("^.*?://", 0, 0, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch35_g_regex_error;
+				goto __catch38_g_regex_error;
 			}
 			_g_free0 (return_string);
 			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -339,7 +341,7 @@ char* unity_webapp_urlify (const char* uri) {
 		if (_inner_error_ != NULL) {
 			_g_regex_unref0 (regex);
 			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch35_g_regex_error;
+				goto __catch38_g_regex_error;
 			}
 			_g_regex_unref0 (regex);
 			_g_free0 (return_string);
@@ -350,8 +352,8 @@ char* unity_webapp_urlify (const char* uri) {
 		return_string = (_tmp3_ = _tmp2_, _g_free0 (return_string), _tmp3_);
 		_g_regex_unref0 (regex);
 	}
-	goto __finally35;
-	__catch35_g_regex_error:
+	goto __finally38;
+	__catch38_g_regex_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -361,7 +363,7 @@ char* unity_webapp_urlify (const char* uri) {
 			_g_error_free0 (e);
 		}
 	}
-	__finally35:
+	__finally38:
 	if (_inner_error_ != NULL) {
 		_g_free0 (return_string);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -375,7 +377,7 @@ char* unity_webapp_urlify (const char* uri) {
 		regex = g_regex_new ("(\\s|/)", 0, 0, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch36_g_regex_error;
+				goto __catch39_g_regex_error;
 			}
 			_g_free0 (return_string);
 			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -386,7 +388,7 @@ char* unity_webapp_urlify (const char* uri) {
 		if (_inner_error_ != NULL) {
 			_g_regex_unref0 (regex);
 			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch36_g_regex_error;
+				goto __catch39_g_regex_error;
 			}
 			_g_regex_unref0 (regex);
 			_g_free0 (return_string);
@@ -397,8 +399,8 @@ char* unity_webapp_urlify (const char* uri) {
 		return_string = (_tmp5_ = _tmp4_, _g_free0 (return_string), _tmp5_);
 		_g_regex_unref0 (regex);
 	}
-	goto __finally36;
-	__catch36_g_regex_error:
+	goto __finally39;
+	__catch39_g_regex_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -408,7 +410,7 @@ char* unity_webapp_urlify (const char* uri) {
 			_g_error_free0 (e);
 		}
 	}
-	__finally36:
+	__finally39:
 	if (_inner_error_ != NULL) {
 		_g_free0 (return_string);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -422,7 +424,7 @@ char* unity_webapp_urlify (const char* uri) {
 		regex = g_regex_new ("[^([:alnum:]|\\.|_)]+", 0, 0, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch37_g_regex_error;
+				goto __catch40_g_regex_error;
 			}
 			_g_free0 (return_string);
 			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -433,7 +435,7 @@ char* unity_webapp_urlify (const char* uri) {
 		if (_inner_error_ != NULL) {
 			_g_regex_unref0 (regex);
 			if (_inner_error_->domain == G_REGEX_ERROR) {
-				goto __catch37_g_regex_error;
+				goto __catch40_g_regex_error;
 			}
 			_g_regex_unref0 (regex);
 			_g_free0 (return_string);
@@ -444,8 +446,8 @@ char* unity_webapp_urlify (const char* uri) {
 		return_string = (_tmp7_ = _tmp6_, _g_free0 (return_string), _tmp7_);
 		_g_regex_unref0 (regex);
 	}
-	goto __finally37;
-	__catch37_g_regex_error:
+	goto __finally40;
+	__catch40_g_regex_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -455,7 +457,7 @@ char* unity_webapp_urlify (const char* uri) {
 			_g_error_free0 (e);
 		}
 	}
-	__finally37:
+	__finally40:
 	if (_inner_error_ != NULL) {
 		_g_free0 (return_string);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -524,14 +526,14 @@ static gboolean unity_webapp_fetch_file_fetch_data_co (UnityWebappFetchFileFetch
 		{
 			data->_tmp0_ = g_file_read (data->self->priv->file, NULL, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
-				goto __catch38_g_error;
+				goto __catch41_g_error;
 			}
 			data->self->priv->stream = (data->_tmp2_ = g_data_input_stream_new ((GInputStream*) (data->_tmp1_ = data->_tmp0_)), _g_object_unref0 (data->self->priv->stream), data->_tmp2_);
 			_g_object_unref0 (data->_tmp1_);
 			g_data_input_stream_set_byte_order (data->self->priv->stream, G_DATA_STREAM_BYTE_ORDER_LITTLE_ENDIAN);
 		}
-		goto __finally38;
-		__catch38_g_error:
+		goto __finally41;
+		__catch41_g_error:
 		{
 			data->e = data->_inner_error_;
 			data->_inner_error_ = NULL;
@@ -540,7 +542,7 @@ static gboolean unity_webapp_fetch_file_fetch_data_co (UnityWebappFetchFileFetch
 				_g_error_free0 (data->e);
 			}
 		}
-		__finally38:
+		__finally41:
 		if (data->_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 			g_clear_error (&data->_inner_error_);
@@ -622,7 +624,7 @@ static gboolean unity_webapp_fetch_file_read_something_async_co (UnityWebappFetc
 					_state_14:
 					data->_tmp2_ = g_input_stream_read_finish ((GInputStream*) data->self->priv->stream, data->_res_, &data->_inner_error_);
 					if (data->_inner_error_ != NULL) {
-						goto __catch39_g_error;
+						goto __catch42_g_error;
 					}
 					data->bufsize = data->_tmp2_;
 					if (data->bufsize < 1) {
@@ -637,8 +639,8 @@ static gboolean unity_webapp_fetch_file_read_something_async_co (UnityWebappFetc
 						g_byte_array_append (data->self->priv->data, data->buffer, data->buffer_length1);
 					}
 				}
-				goto __finally39;
-				__catch39_g_error:
+				goto __finally42;
+				__catch42_g_error:
 				{
 					data->e = data->_inner_error_;
 					data->_inner_error_ = NULL;
@@ -647,7 +649,7 @@ static gboolean unity_webapp_fetch_file_read_something_async_co (UnityWebappFetc
 						_g_error_free0 (data->e);
 					}
 				}
-				__finally39:
+				__finally42:
 				if (data->_inner_error_ != NULL) {
 					data->buffer = (g_free (data->buffer), NULL);
 					g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
@@ -790,12 +792,12 @@ char* unity_webapp_get_hostname (const char* uri) {
 			GRegex* _tmp1_;
 			_tmp0_ = g_regex_new (hostname_string, G_REGEX_UNGREEDY, 0, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch40_g_error;
+				goto __catch43_g_error;
 			}
 			unity_webapp_hostname_match = (_tmp1_ = _tmp0_, _g_regex_unref0 (unity_webapp_hostname_match), _tmp1_);
 		}
-		goto __finally40;
-		__catch40_g_error:
+		goto __finally43;
+		__catch43_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -805,7 +807,7 @@ char* unity_webapp_get_hostname (const char* uri) {
 				_g_error_free0 (e);
 			}
 		}
-		__finally40:
+		__finally43:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
@@ -855,7 +857,7 @@ static void unity_webapp_webicon_fetcher_set_desktop_file_icon (UnityWebappWebic
 		file_stream = g_file_replace (file, NULL, FALSE, G_FILE_CREATE_NONE, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (file);
-			goto __catch41_g_error;
+			goto __catch44_g_error;
 		}
 		desktop_file = g_key_file_new ();
 		g_key_file_load_from_file (desktop_file, self->priv->_desktop_location, 0, &_inner_error_);
@@ -863,7 +865,7 @@ static void unity_webapp_webicon_fetcher_set_desktop_file_icon (UnityWebappWebic
 			_g_key_file_free0 (desktop_file);
 			_g_object_unref0 (file_stream);
 			_g_object_unref0 (file);
-			goto __catch41_g_error;
+			goto __catch44_g_error;
 		}
 		g_key_file_set_string (desktop_file, "Desktop Entry", "Icon", iconname);
 		desktop_data = g_key_file_to_data (desktop_file, NULL, NULL);
@@ -875,7 +877,7 @@ static void unity_webapp_webicon_fetcher_set_desktop_file_icon (UnityWebappWebic
 			_g_key_file_free0 (desktop_file);
 			_g_object_unref0 (file_stream);
 			_g_object_unref0 (file);
-			goto __catch41_g_error;
+			goto __catch44_g_error;
 		}
 		g_output_stream_close ((GOutputStream*) data_stream, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
@@ -884,7 +886,7 @@ static void unity_webapp_webicon_fetcher_set_desktop_file_icon (UnityWebappWebic
 			_g_key_file_free0 (desktop_file);
 			_g_object_unref0 (file_stream);
 			_g_object_unref0 (file);
-			goto __catch41_g_error;
+			goto __catch44_g_error;
 		}
 		_g_object_unref0 (data_stream);
 		_g_free0 (desktop_data);
@@ -892,8 +894,8 @@ static void unity_webapp_webicon_fetcher_set_desktop_file_icon (UnityWebappWebic
 		_g_object_unref0 (file_stream);
 		_g_object_unref0 (file);
 	}
-	goto __finally41;
-	__catch41_g_error:
+	goto __finally44;
+	__catch44_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -903,7 +905,7 @@ static void unity_webapp_webicon_fetcher_set_desktop_file_icon (UnityWebappWebic
 			_g_error_free0 (e);
 		}
 	}
-	__finally41:
+	__finally44:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -1038,25 +1040,25 @@ static void unity_webapp_webicon_fetcher_on_fetcher_completed (UnityWebappWebico
 				gdk_pixbuf_loader_write (loader, data->data, (gsize) data->len, &_inner_error_);
 				if (_inner_error_ != NULL) {
 					_g_object_unref0 (loader);
-					goto __catch42_g_error;
+					goto __catch45_g_error;
 				}
 				gdk_pixbuf_loader_close (loader, &_inner_error_);
 				if (_inner_error_ != NULL) {
 					_g_object_unref0 (loader);
-					goto __catch42_g_error;
+					goto __catch45_g_error;
 				}
 				icon = _g_object_ref0 (gdk_pixbuf_loader_get_pixbuf (loader));
 				gdk_pixbuf_save (icon, self->priv->_destination, "png", &_inner_error_, NULL);
 				if (_inner_error_ != NULL) {
 					_g_object_unref0 (icon);
 					_g_object_unref0 (loader);
-					goto __catch42_g_error;
+					goto __catch45_g_error;
 				}
 				_g_object_unref0 (icon);
 				_g_object_unref0 (loader);
 			}
-			goto __finally42;
-			__catch42_g_error:
+			goto __finally45;
+			__catch45_g_error:
 			{
 				GError * e;
 				e = _inner_error_;
@@ -1067,7 +1069,7 @@ static void unity_webapp_webicon_fetcher_on_fetcher_completed (UnityWebappWebico
 					return;
 				}
 			}
-			__finally42:
+			__finally45:
 			if (_inner_error_ != NULL) {
 				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 				g_clear_error (&_inner_error_);
@@ -1283,32 +1285,32 @@ static GObject * unity_webapp_webicon_fetcher_constructor (GType type, guint n_c
 				GRegex* _tmp11_;
 				_tmp2_ = g_regex_new (primary_match_prefix, G_REGEX_UNGREEDY, 0, &_inner_error_);
 				if (_inner_error_ != NULL) {
-					goto __catch43_g_error;
+					goto __catch46_g_error;
 				}
 				unity_webapp_primary_match_prefix = (_tmp3_ = _tmp2_, _g_regex_unref0 (unity_webapp_primary_match_prefix), _tmp3_);
 				_tmp4_ = g_regex_new (primary_match_suffix, G_REGEX_UNGREEDY, 0, &_inner_error_);
 				if (_inner_error_ != NULL) {
-					goto __catch43_g_error;
+					goto __catch46_g_error;
 				}
 				unity_webapp_primary_match_suffix = (_tmp5_ = _tmp4_, _g_regex_unref0 (unity_webapp_primary_match_suffix), _tmp5_);
 				_tmp6_ = g_regex_new (secondary_match_prefix, G_REGEX_UNGREEDY, 0, &_inner_error_);
 				if (_inner_error_ != NULL) {
-					goto __catch43_g_error;
+					goto __catch46_g_error;
 				}
 				unity_webapp_secondary_match_prefix = (_tmp7_ = _tmp6_, _g_regex_unref0 (unity_webapp_secondary_match_prefix), _tmp7_);
 				_tmp8_ = g_regex_new (secondary_match_suffix, G_REGEX_UNGREEDY, 0, &_inner_error_);
 				if (_inner_error_ != NULL) {
-					goto __catch43_g_error;
+					goto __catch46_g_error;
 				}
 				unity_webapp_secondary_match_suffix = (_tmp9_ = _tmp8_, _g_regex_unref0 (unity_webapp_secondary_match_suffix), _tmp9_);
 				_tmp10_ = g_regex_new (hostname_string, G_REGEX_UNGREEDY, 0, &_inner_error_);
 				if (_inner_error_ != NULL) {
-					goto __catch43_g_error;
+					goto __catch46_g_error;
 				}
 				unity_webapp_hostname_match = (_tmp11_ = _tmp10_, _g_regex_unref0 (unity_webapp_hostname_match), _tmp11_);
 			}
-			goto __finally43;
-			__catch43_g_error:
+			goto __finally46;
+			__catch46_g_error:
 			{
 				GError * e;
 				e = _inner_error_;
@@ -1318,7 +1320,7 @@ static GObject * unity_webapp_webicon_fetcher_constructor (GType type, guint n_c
 					_g_error_free0 (e);
 				}
 			}
-			__finally43:
+			__finally46:
 			if (_inner_error_ != NULL) {
 				_g_free0 (secondary_match_suffix);
 				_g_free0 (secondary_match_prefix);
@@ -1341,12 +1343,12 @@ static GObject * unity_webapp_webicon_fetcher_constructor (GType type, guint n_c
 			_g_object_unref0 (_tmp13_);
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (make_file);
-				goto __catch44_g_error;
+				goto __catch47_g_error;
 			}
 			_g_object_unref0 (make_file);
 		}
-		goto __finally44;
-		__catch44_g_error:
+		goto __finally47;
+		__catch47_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -1355,7 +1357,7 @@ static GObject * unity_webapp_webicon_fetcher_constructor (GType type, guint n_c
 				_g_error_free0 (e);
 			}
 		}
-		__finally44:
+		__finally47:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);

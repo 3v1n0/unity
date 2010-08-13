@@ -57,6 +57,7 @@ struct _UnityTestsUIHomeButtonSuitePrivate {
 	ClutterStage* stage;
 	UnityTestingDirector* director;
 	UnityPanelHomeButton* home_button;
+	gboolean _super_key_active;
 };
 
 
@@ -69,6 +70,7 @@ GType unity_tests_ui_home_button_suite_get_type (void) G_GNUC_CONST;
 #define UNITY_TESTS_UI_HOME_BUTTON_SUITE_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_TESTS_UI_TYPE_HOME_BUTTON_SUITE, UnityTestsUIHomeButtonSuitePrivate))
 enum  {
 	UNITY_TESTS_UI_HOME_BUTTON_SUITE_DUMMY_PROPERTY,
+	UNITY_TESTS_UI_HOME_BUTTON_SUITE_SUPER_KEY_ACTIVE,
 	UNITY_TESTS_UI_HOME_BUTTON_SUITE_MENUS_SWALLOW_EVENTS
 };
 #define UNITY_TESTS_UI_HOME_BUTTON_SUITE_DOMAIN "/UI/HomeButton"
@@ -97,6 +99,7 @@ static void unity_tests_ui_home_button_suite_real_stop_expose (UnityShell* base)
 static guint32 unity_tests_ui_home_button_suite_real_get_current_time (UnityShell* base);
 static void unity_tests_ui_home_button_suite_finalize (GObject* obj);
 static void unity_tests_ui_home_button_suite_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
+static void unity_tests_ui_home_button_suite_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 
 
 
@@ -283,6 +286,23 @@ static guint32 unity_tests_ui_home_button_suite_real_get_current_time (UnityShel
 }
 
 
+static gboolean unity_tests_ui_home_button_suite_real_get_super_key_active (UnityShell* base) {
+	gboolean result;
+	UnityTestsUIHomeButtonSuite* self;
+	self = (UnityTestsUIHomeButtonSuite*) base;
+	result = self->priv->_super_key_active;
+	return result;
+}
+
+
+static void unity_tests_ui_home_button_suite_real_set_super_key_active (UnityShell* base, gboolean value) {
+	UnityTestsUIHomeButtonSuite* self;
+	self = (UnityTestsUIHomeButtonSuite*) base;
+	self->priv->_super_key_active = value;
+	g_object_notify ((GObject *) self, "super-key-active");
+}
+
+
 static gboolean unity_tests_ui_home_button_suite_real_get_menus_swallow_events (UnityShell* base) {
 	gboolean result;
 	UnityTestsUIHomeButtonSuite* self;
@@ -296,7 +316,9 @@ static void unity_tests_ui_home_button_suite_class_init (UnityTestsUIHomeButtonS
 	unity_tests_ui_home_button_suite_parent_class = g_type_class_peek_parent (klass);
 	g_type_class_add_private (klass, sizeof (UnityTestsUIHomeButtonSuitePrivate));
 	G_OBJECT_CLASS (klass)->get_property = unity_tests_ui_home_button_suite_get_property;
+	G_OBJECT_CLASS (klass)->set_property = unity_tests_ui_home_button_suite_set_property;
 	G_OBJECT_CLASS (klass)->finalize = unity_tests_ui_home_button_suite_finalize;
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_TESTS_UI_HOME_BUTTON_SUITE_SUPER_KEY_ACTIVE, "super-key-active");
 	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_TESTS_UI_HOME_BUTTON_SUITE_MENUS_SWALLOW_EVENTS, "menus-swallow-events");
 }
 
@@ -322,6 +344,8 @@ static void unity_tests_ui_home_button_suite_unity_shell_interface_init (UnitySh
 	iface->expose_xids = unity_tests_ui_home_button_suite_real_expose_xids;
 	iface->stop_expose = unity_tests_ui_home_button_suite_real_stop_expose;
 	iface->get_current_time = unity_tests_ui_home_button_suite_real_get_current_time;
+	iface->get_super_key_active = unity_tests_ui_home_button_suite_real_get_super_key_active;
+	iface->set_super_key_active = unity_tests_ui_home_button_suite_real_set_super_key_active;
 	iface->get_menus_swallow_events = unity_tests_ui_home_button_suite_real_get_menus_swallow_events;
 }
 
@@ -360,8 +384,25 @@ static void unity_tests_ui_home_button_suite_get_property (GObject * object, gui
 	UnityTestsUIHomeButtonSuite * self;
 	self = UNITY_TESTS_UI_HOME_BUTTON_SUITE (object);
 	switch (property_id) {
+		case UNITY_TESTS_UI_HOME_BUTTON_SUITE_SUPER_KEY_ACTIVE:
+		g_value_set_boolean (value, unity_shell_get_super_key_active ((UnityShell*) self));
+		break;
 		case UNITY_TESTS_UI_HOME_BUTTON_SUITE_MENUS_SWALLOW_EVENTS:
 		g_value_set_boolean (value, unity_shell_get_menus_swallow_events ((UnityShell*) self));
+		break;
+		default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+		break;
+	}
+}
+
+
+static void unity_tests_ui_home_button_suite_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
+	UnityTestsUIHomeButtonSuite * self;
+	self = UNITY_TESTS_UI_HOME_BUTTON_SUITE (object);
+	switch (property_id) {
+		case UNITY_TESTS_UI_HOME_BUTTON_SUITE_SUPER_KEY_ACTIVE:
+		unity_shell_set_super_key_active ((UnityShell*) self, g_value_get_boolean (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);

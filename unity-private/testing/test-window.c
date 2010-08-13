@@ -125,6 +125,7 @@ struct _UnityTestingWindowClass {
 };
 
 struct _UnityTestingWindowPrivate {
+	gboolean _super_key_active;
 	gboolean _is_popup;
 	gint _popup_width;
 	gint _popup_height;
@@ -180,6 +181,7 @@ GType unity_places_view_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_TESTING_WINDOW_DUMMY_PROPERTY,
 	UNITY_TESTING_WINDOW_MENUS_SWALLOW_EVENTS,
+	UNITY_TESTING_WINDOW_SUPER_KEY_ACTIVE,
 	UNITY_TESTING_WINDOW_IS_POPUP,
 	UNITY_TESTING_WINDOW_POPUP_WIDTH,
 	UNITY_TESTING_WINDOW_POPUP_HEIGHT
@@ -230,14 +232,14 @@ static void unity_testing_window_set_popup_height (UnityTestingWindow* self, gin
 UnityTestingWorkarea* unity_testing_workarea_new (void);
 UnityTestingWorkarea* unity_testing_workarea_construct (GType object_type);
 void unity_testing_workarea_update_net_workarea (UnityTestingWorkarea* self);
-static gboolean _lambda67_ (UnityTestingWindow* self);
-static gboolean __lambda67__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
 static gboolean _lambda68_ (UnityTestingWindow* self);
 static gboolean __lambda68__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
-static void _lambda69_ (GdkScreen* s, UnityTestingWindow* self);
-static void __lambda69__gdk_screen_size_changed (GdkScreen* _sender, gpointer self);
+static gboolean _lambda69_ (UnityTestingWindow* self);
+static gboolean __lambda69__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
 static void _lambda70_ (GdkScreen* s, UnityTestingWindow* self);
-static void __lambda70__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self);
+static void __lambda70__gdk_screen_size_changed (GdkScreen* _sender, gpointer self);
+static void _lambda71_ (GdkScreen* s, UnityTestingWindow* self);
+static void __lambda71__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self);
 static gboolean _unity_testing_window_on_stage_button_press_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 UnityTestingBackground* unity_testing_background_new (void);
 UnityTestingBackground* unity_testing_background_construct (GType object_type);
@@ -405,7 +407,7 @@ static void unity_testing_window_real_get_window_details (UnityShell* base, guin
 	UnityTestingWindow * self;
 	self = (UnityTestingWindow*) base;
 	*allows_resize = TRUE;
-	g_debug ("test-window.vala:288: This target does not support getting window deta" \
+	g_debug ("test-window.vala:289: This target does not support getting window deta" \
 "ils");
 }
 
@@ -413,7 +415,7 @@ static void unity_testing_window_real_get_window_details (UnityShell* base, guin
 static void unity_testing_window_real_do_window_action (UnityShell* base, guint32 xid, UnityWindowAction action) {
 	UnityTestingWindow * self;
 	self = (UnityTestingWindow*) base;
-	g_debug ("test-window.vala:293: This target does not support window actions");
+	g_debug ("test-window.vala:294: This target does not support window actions");
 }
 
 
@@ -619,6 +621,23 @@ static gboolean unity_testing_window_real_get_menus_swallow_events (UnityShell* 
 }
 
 
+static gboolean unity_testing_window_real_get_super_key_active (UnityShell* base) {
+	gboolean result;
+	UnityTestingWindow* self;
+	self = (UnityTestingWindow*) base;
+	result = self->priv->_super_key_active;
+	return result;
+}
+
+
+static void unity_testing_window_real_set_super_key_active (UnityShell* base, gboolean value) {
+	UnityTestingWindow* self;
+	self = (UnityTestingWindow*) base;
+	self->priv->_super_key_active = value;
+	g_object_notify ((GObject *) self, "super-key-active");
+}
+
+
 gboolean unity_testing_window_get_is_popup (UnityTestingWindow* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
@@ -664,24 +683,10 @@ static void unity_testing_window_set_popup_height (UnityTestingWindow* self, gin
 }
 
 
-static gboolean _lambda67_ (UnityTestingWindow* self) {
+static gboolean _lambda68_ (UnityTestingWindow* self) {
 	gboolean result = FALSE;
 	gtk_main_quit ();
 	result = FALSE;
-	return result;
-}
-
-
-static gboolean __lambda67__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
-	gboolean result;
-	result = _lambda67_ (self);
-	return result;
-}
-
-
-static gboolean _lambda68_ (UnityTestingWindow* self) {
-	gboolean result = FALSE;
-	result = TRUE;
 	return result;
 }
 
@@ -693,14 +698,17 @@ static gboolean __lambda68__gtk_widget_delete_event (GtkWidget* _sender, GdkEven
 }
 
 
-static void _lambda69_ (GdkScreen* s, UnityTestingWindow* self) {
-	g_return_if_fail (s != NULL);
-	unity_testing_window_relayout (self);
+static gboolean _lambda69_ (UnityTestingWindow* self) {
+	gboolean result = FALSE;
+	result = TRUE;
+	return result;
 }
 
 
-static void __lambda69__gdk_screen_size_changed (GdkScreen* _sender, gpointer self) {
-	_lambda69_ (_sender, self);
+static gboolean __lambda69__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
+	gboolean result;
+	result = _lambda69_ (self);
+	return result;
 }
 
 
@@ -710,8 +718,19 @@ static void _lambda70_ (GdkScreen* s, UnityTestingWindow* self) {
 }
 
 
-static void __lambda70__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self) {
+static void __lambda70__gdk_screen_size_changed (GdkScreen* _sender, gpointer self) {
 	_lambda70_ (_sender, self);
+}
+
+
+static void _lambda71_ (GdkScreen* s, UnityTestingWindow* self) {
+	g_return_if_fail (s != NULL);
+	unity_testing_window_relayout (self);
+}
+
+
+static void __lambda71__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self) {
+	_lambda71_ (_sender, self);
 }
 
 
@@ -772,7 +791,7 @@ static GObject * unity_testing_window_constructor (GType type, guint n_construct
 			gtk_window_set_decorated ((GtkWindow*) self, TRUE);
 			gtk_window_set_skip_taskbar_hint ((GtkWindow*) self, FALSE);
 			gtk_window_set_skip_pager_hint ((GtkWindow*) self, FALSE);
-			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda67__gtk_widget_delete_event, self, 0);
+			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda68__gtk_widget_delete_event, self, 0);
 		} else {
 			gtk_window_set_type_hint ((GtkWindow*) self, GDK_WINDOW_TYPE_HINT_DESKTOP);
 			gtk_window_set_keep_below ((GtkWindow*) self, TRUE);
@@ -781,9 +800,9 @@ static GObject * unity_testing_window_constructor (GType type, guint n_construct
 			gtk_window_set_skip_pager_hint ((GtkWindow*) self, TRUE);
 			gtk_window_set_accept_focus ((GtkWindow*) self, FALSE);
 			g_object_set ((GtkWidget*) self, "can-focus", FALSE, NULL);
-			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda68__gtk_widget_delete_event, self, 0);
-			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "size-changed", (GCallback) __lambda69__gdk_screen_size_changed, self, 0);
-			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "monitors-changed", (GCallback) __lambda70__gdk_screen_monitors_changed, self, 0);
+			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda69__gtk_widget_delete_event, self, 0);
+			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "size-changed", (GCallback) __lambda70__gdk_screen_size_changed, self, 0);
+			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "monitors-changed", (GCallback) __lambda71__gdk_screen_monitors_changed, self, 0);
 		}
 		gtk_window_set_title ((GtkWindow*) self, "Unity");
 		gtk_window_set_icon_name ((GtkWindow*) self, "distributor-logo");
@@ -845,6 +864,7 @@ static void unity_testing_window_class_init (UnityTestingWindowClass * klass) {
 	G_OBJECT_CLASS (klass)->constructor = unity_testing_window_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_testing_window_finalize;
 	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_TESTING_WINDOW_MENUS_SWALLOW_EVENTS, "menus-swallow-events");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_TESTING_WINDOW_SUPER_KEY_ACTIVE, "super-key-active");
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_TESTING_WINDOW_IS_POPUP, g_param_spec_boolean ("is-popup", "is-popup", "is-popup", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_TESTING_WINDOW_POPUP_WIDTH, g_param_spec_int ("popup-width", "popup-width", "popup-width", G_MININT, G_MAXINT, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_TESTING_WINDOW_POPUP_HEIGHT, g_param_spec_int ("popup-height", "popup-height", "popup-height", G_MININT, G_MAXINT, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
@@ -873,6 +893,8 @@ static void unity_testing_window_unity_shell_interface_init (UnityShellIface * i
 	iface->stop_expose = unity_testing_window_real_stop_expose;
 	iface->show_window = unity_testing_window_real_show_window;
 	iface->get_menus_swallow_events = unity_testing_window_real_get_menus_swallow_events;
+	iface->get_super_key_active = unity_testing_window_real_get_super_key_active;
+	iface->set_super_key_active = unity_testing_window_real_set_super_key_active;
 }
 
 
@@ -918,6 +940,9 @@ static void unity_testing_window_get_property (GObject * object, guint property_
 		case UNITY_TESTING_WINDOW_MENUS_SWALLOW_EVENTS:
 		g_value_set_boolean (value, unity_shell_get_menus_swallow_events ((UnityShell*) self));
 		break;
+		case UNITY_TESTING_WINDOW_SUPER_KEY_ACTIVE:
+		g_value_set_boolean (value, unity_shell_get_super_key_active ((UnityShell*) self));
+		break;
 		case UNITY_TESTING_WINDOW_IS_POPUP:
 		g_value_set_boolean (value, unity_testing_window_get_is_popup (self));
 		break;
@@ -938,6 +963,9 @@ static void unity_testing_window_set_property (GObject * object, guint property_
 	UnityTestingWindow * self;
 	self = UNITY_TESTING_WINDOW (object);
 	switch (property_id) {
+		case UNITY_TESTING_WINDOW_SUPER_KEY_ACTIVE:
+		unity_shell_set_super_key_active ((UnityShell*) self, g_value_get_boolean (value));
+		break;
 		case UNITY_TESTING_WINDOW_IS_POPUP:
 		unity_testing_window_set_is_popup (self, g_value_get_boolean (value));
 		break;

@@ -118,7 +118,6 @@ static void unity_launcher_quicklist_menu_real_allocate (ClutterActor* base, con
 	}
 	self->priv->last_width = new_width;
 	self->priv->last_height = new_height;
-	g_debug ("quicklist-view.vala:84: Num Items in Menu %d \n", ctk_menu_get_num_items ((CtkMenu*) self));
 	CLUTTER_ACTOR_CLASS (unity_launcher_quicklist_menu_parent_class)->allocate ((ClutterActor*) CTK_MENU_EXPANDABLE (self), box, flags);
 }
 

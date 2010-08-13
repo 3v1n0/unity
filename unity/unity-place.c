@@ -692,6 +692,7 @@ static void unity_place_controller_get_property (GObject * object, guint propert
 static void unity_place_controller_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
+static int _vala_strcmp0 (const char * str1, const char * str2);
 
 static const DBusObjectPathVTable _unity_place_service_dbus_path_vtable = {_unity_place_service_dbus_unregister, unity_place_service_dbus_message};
 static const _DBusObjectVTable _unity_place_service_dbus_vtable = {unity_place_service_dbus_register_object};
@@ -4524,7 +4525,7 @@ void unity_place_service_impl_add_entry (UnityPlaceServiceImpl* self, UnityPlace
 			unity_place_entry_service_impl_export (entry, &_inner_error_);
 			if (_inner_error_ != NULL) {
 				if (_inner_error_->domain == DBUS_GERROR) {
-					goto __catch30_dbus_gerror;
+					goto __catch33_dbus_gerror;
 				}
 				_g_object_unref0 (entry);
 				g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -4532,8 +4533,8 @@ void unity_place_service_impl_add_entry (UnityPlaceServiceImpl* self, UnityPlace
 				return;
 			}
 		}
-		goto __finally30;
-		__catch30_dbus_gerror:
+		goto __finally33;
+		__catch33_dbus_gerror:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -4543,7 +4544,7 @@ void unity_place_service_impl_add_entry (UnityPlaceServiceImpl* self, UnityPlace
 				_g_error_free0 (e);
 			}
 		}
-		__finally30:
+		__finally33:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (entry);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -4652,7 +4653,7 @@ void unity_place_service_impl_remove_entry (UnityPlaceServiceImpl* self, const c
 			unity_place_entry_service_impl_unexport (entry, &_inner_error_);
 			if (_inner_error_ != NULL) {
 				if (_inner_error_->domain == DBUS_GERROR) {
-					goto __catch31_dbus_gerror;
+					goto __catch34_dbus_gerror;
 				}
 				_g_object_unref0 (entry);
 				g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -4660,8 +4661,8 @@ void unity_place_service_impl_remove_entry (UnityPlaceServiceImpl* self, const c
 				return;
 			}
 		}
-		goto __finally31;
-		__catch31_dbus_gerror:
+		goto __finally34;
+		__catch34_dbus_gerror:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -4671,7 +4672,7 @@ void unity_place_service_impl_remove_entry (UnityPlaceServiceImpl* self, const c
 				_g_error_free0 (e);
 			}
 		}
-		__finally31:
+		__finally34:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (entry);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -4852,7 +4853,7 @@ static gboolean unity_place_service_impl_real_activate_co (UnityPlaceServiceImpl
 			data->activated = unity_place_activation_activate_finish (data->self->priv->_activation, data->_res_, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
 				if (data->_inner_error_->domain == DBUS_GERROR) {
-					goto __catch32_dbus_gerror;
+					goto __catch35_dbus_gerror;
 				}
 				g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 				g_clear_error (&data->_inner_error_);
@@ -4869,8 +4870,8 @@ static gboolean unity_place_service_impl_real_activate_co (UnityPlaceServiceImpl
 				return FALSE;
 			}
 		}
-		goto __finally32;
-		__catch32_dbus_gerror:
+		goto __finally35;
+		__catch35_dbus_gerror:
 		{
 			data->e = data->_inner_error_;
 			data->_inner_error_ = NULL;
@@ -4889,7 +4890,7 @@ static gboolean unity_place_service_impl_real_activate_co (UnityPlaceServiceImpl
 				_g_error_free0 (data->e);
 			}
 		}
-		__finally32:
+		__finally35:
 		{
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 			g_clear_error (&data->_inner_error_);
@@ -5260,7 +5261,7 @@ static void unity_place_entry_service_impl_on_browser_changed (UnityPlaceEntrySe
 		_tmp0_ = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == DBUS_GERROR) {
-				goto __catch33_dbus_gerror;
+				goto __catch36_dbus_gerror;
 			}
 			_dbus_g_connection_unref0 (conn);
 			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -5269,8 +5270,8 @@ static void unity_place_entry_service_impl_on_browser_changed (UnityPlaceEntrySe
 		}
 		conn = (_tmp1_ = _tmp0_, _dbus_g_connection_unref0 (conn), _tmp1_);
 	}
-	goto __finally33;
-	__catch33_dbus_gerror:
+	goto __finally36;
+	__catch36_dbus_gerror:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -5282,7 +5283,7 @@ static void unity_place_entry_service_impl_on_browser_changed (UnityPlaceEntrySe
 			return;
 		}
 	}
-	__finally33:
+	__finally36:
 	if (_inner_error_ != NULL) {
 		_dbus_g_connection_unref0 (conn);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -5834,6 +5835,7 @@ static void unity_place_controller_on_entry_changed (UnityPlaceController* self,
 	GObject* _tmp0_;
 	UnityPlaceEntryInfo* entry;
 	UnityPlaceEntryServiceImpl* entry_service;
+	gboolean _tmp1_ = FALSE;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (obj != NULL);
 	g_return_if_fail (pspec != NULL);
@@ -5842,6 +5844,16 @@ static void unity_place_controller_on_entry_changed (UnityPlaceController* self,
 	if (entry_service == NULL) {
 		g_warning ("unity-place.vala:1014: Got change signal from unknown entry service '%" \
 "s'", unity_place_entry_info_get_dbus_path (entry));
+		_g_object_unref0 (entry_service);
+		_g_object_unref0 (entry);
+		return;
+	}
+	if (_vala_strcmp0 ("active-search", g_param_spec_get_name (pspec)) == 0) {
+		_tmp1_ = TRUE;
+	} else {
+		_tmp1_ = _vala_strcmp0 ("active-global-search", g_param_spec_get_name (pspec)) == 0;
+	}
+	if (_tmp1_) {
 		_g_object_unref0 (entry_service);
 		_g_object_unref0 (entry);
 		return;
@@ -6006,6 +6018,17 @@ static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNoti
 static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func) {
 	_vala_array_destroy (array, array_length, destroy_func);
 	g_free (array);
+}
+
+
+static int _vala_strcmp0 (const char * str1, const char * str2) {
+	if (str1 == NULL) {
+		return -(str1 != str2);
+	}
+	if (str2 == NULL) {
+		return str1 != str2;
+	}
+	return strcmp (str1, str2);
 }
 
 

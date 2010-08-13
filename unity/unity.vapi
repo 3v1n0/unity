@@ -223,6 +223,7 @@ namespace Unity {
 		public static Unity.AppInfoManager get_instance ();
 		public GLib.AppInfo? lookup (string id);
 		public async GLib.AppInfo? lookup_async (string id) throws GLib.Error;
+		public signal void changed (string id, GLib.AppInfo? new_appinfo);
 	}
 	[CCode (cheader_filename = "unity.h")]
 	public class CairoCanvas : Ctk.Bin {
@@ -347,10 +348,13 @@ namespace Unity {
 		public abstract void show_window (uint32 xid);
 		public abstract void stop_expose ();
 		public abstract bool menus_swallow_events { get; }
+		public abstract bool super_key_active { get; set; }
 		public signal void active_window_state_changed ();
 		public signal void indicators_changed (int width);
 		public signal void mode_changed (Unity.ShellMode mode);
 		public signal void need_new_icon_cache ();
+		public signal void super_key_modifier_press (uint keysym);
+		public signal void super_key_modifier_release (uint keysym);
 	}
 	[CCode (cprefix = "UNITY_EXPANDING_BIN_STATE_", cheader_filename = "unity.h")]
 	public enum ExpandingBinState {

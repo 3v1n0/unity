@@ -74,6 +74,7 @@ typedef struct _Block2Data Block2Data;
 
 typedef struct _UnityExposeClone UnityExposeClone;
 typedef struct _UnityExposeCloneClass UnityExposeCloneClass;
+typedef struct _Block3Data Block3Data;
 
 #define UNITY_TYPE_EXPOSE_MANAGER (unity_expose_manager_get_type ())
 #define UNITY_EXPOSE_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_EXPOSE_MANAGER, UnityExposeManager))
@@ -85,7 +86,7 @@ typedef struct _UnityExposeCloneClass UnityExposeCloneClass;
 typedef struct _UnityExposeManager UnityExposeManager;
 typedef struct _UnityExposeManagerClass UnityExposeManagerClass;
 #define _g_list_free0(var) ((var == NULL) ? NULL : (var = (g_list_free (var), NULL)))
-typedef struct _Block3Data Block3Data;
+typedef struct _Block4Data Block4Data;
 
 struct _UnitySpacesButtonController {
 	UnityLauncherScrollerChildController parent_instance;
@@ -127,10 +128,17 @@ struct _UnitySpacesManagerPrivate {
 struct _Block2Data {
 	int _ref_count_;
 	UnitySpacesManager * self;
+	ClutterActor* clone;
 	MetaWorkspace* cpy;
 };
 
 struct _Block3Data {
+	int _ref_count_;
+	UnitySpacesManager * self;
+	UnityExposeClone* clone;
+};
+
+struct _Block4Data {
 	int _ref_count_;
 	UnitySpacesManager * self;
 	ClutterActor* clone;
@@ -186,8 +194,12 @@ void unity_spaces_manager_set_padding (UnitySpacesManager* self, guint top, guin
 static void unity_spaces_manager_select_workspace (UnitySpacesManager* self, MetaWorkspace* workspace);
 static void unity_spaces_manager_set_showing (UnitySpacesManager* self, gboolean value);
 static ClutterActor* unity_spaces_manager_workspace_clone (UnitySpacesManager* self, MetaWorkspace* workspace);
-static gboolean _lambda4_ (Block2Data* _data2_);
-static gboolean __lambda4__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _lambda9_ (Block2Data* _data2_);
+static gboolean __lambda9__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _lambda10_ (Block2Data* _data2_);
+static gboolean __lambda10__clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _lambda11_ (Block2Data* _data2_);
+static gboolean __lambda11__clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static Block2Data* block2_data_ref (Block2Data* _data2_);
 static void block2_data_unref (Block2Data* _data2_);
 static void unity_spaces_manager_layout_workspaces (UnitySpacesManager* self, GList* clones, MetaScreen* screen);
@@ -196,15 +208,22 @@ UnityExposeClone* unity_expose_clone_new (ClutterActor* source);
 UnityExposeClone* unity_expose_clone_construct (GType object_type, ClutterActor* source);
 GType unity_expose_clone_get_type (void) G_GNUC_CONST;
 void unity_expose_clone_set_fade_on_close (UnityExposeClone* self, gboolean value);
+void unity_expose_clone_set_darken (UnityExposeClone* self, guint8 value);
+void unity_expose_clone_set_enable_dnd (UnityExposeClone* self, gboolean value);
+ClutterActor* unity_expose_clone_get_source (UnityExposeClone* self);
+static gboolean _lambda8_ (Block3Data* _data3_);
+static gboolean __lambda8__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static Block3Data* block3_data_ref (Block3Data* _data3_);
+static void block3_data_unref (Block3Data* _data3_);
 UnityTestingBackground* unity_plugin_get_background (UnityPlugin* self);
 GType unity_expose_manager_get_type (void) G_GNUC_CONST;
 UnityExposeManager* unity_plugin_get_expose_manager (UnityPlugin* self);
 void unity_expose_manager_position_windows_on_grid (UnityExposeManager* self, GList* _windows, gint top_buffer, gint left_buffer, gint right_buffer, gint bottom_buffer);
 void unity_expose_clone_restore_window_position (UnityExposeClone* self, gint active_workspace);
-static void _lambda3_ (Block3Data* _data3_);
-static void __lambda3__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
-static Block3Data* block3_data_ref (Block3Data* _data3_);
-static void block3_data_unref (Block3Data* _data3_);
+static void _lambda7_ (Block4Data* _data4_);
+static void __lambda7__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
+static Block4Data* block4_data_ref (Block4Data* _data4_);
+static void block4_data_unref (Block4Data* _data4_);
 guint unity_spaces_manager_get_left_padding (UnitySpacesManager* self);
 guint unity_spaces_manager_get_right_padding (UnitySpacesManager* self);
 guint unity_spaces_manager_get_spacing (UnitySpacesManager* self);
@@ -400,7 +419,7 @@ void unity_spaces_manager_hide_spaces_picker (UnitySpacesManager* self) {
 }
 
 
-static gboolean _lambda4_ (Block2Data* _data2_) {
+static gboolean _lambda9_ (Block2Data* _data2_) {
 	UnitySpacesManager * self;
 	gboolean result = FALSE;
 	self = _data2_->self;
@@ -410,9 +429,43 @@ static gboolean _lambda4_ (Block2Data* _data2_) {
 }
 
 
-static gboolean __lambda4__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean __lambda9__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
-	result = _lambda4_ (self);
+	result = _lambda9_ (self);
+	return result;
+}
+
+
+static gboolean _lambda10_ (Block2Data* _data2_) {
+	UnitySpacesManager * self;
+	gboolean result = FALSE;
+	self = _data2_->self;
+	clutter_actor_set_opacity (_data2_->clone, (guint8) 255);
+	result = TRUE;
+	return result;
+}
+
+
+static gboolean __lambda10__clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	gboolean result;
+	result = _lambda10_ (self);
+	return result;
+}
+
+
+static gboolean _lambda11_ (Block2Data* _data2_) {
+	UnitySpacesManager * self;
+	gboolean result = FALSE;
+	self = _data2_->self;
+	clutter_actor_set_opacity (_data2_->clone, (guint8) 200);
+	result = TRUE;
+	return result;
+}
+
+
+static gboolean __lambda11__clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	gboolean result;
+	result = _lambda11_ (self);
 	return result;
 }
 
@@ -426,6 +479,7 @@ static Block2Data* block2_data_ref (Block2Data* _data2_) {
 static void block2_data_unref (Block2Data* _data2_) {
 	if (g_atomic_int_dec_and_test (&_data2_->_ref_count_)) {
 		_g_object_unref0 (_data2_->self);
+		_g_object_unref0 (_data2_->clone);
 		g_slice_free (Block2Data, _data2_);
 	}
 }
@@ -469,19 +523,20 @@ void unity_spaces_manager_show_spaces_picker (UnitySpacesManager* self) {
 			workspace = (MetaWorkspace*) workspace_it->data;
 			{
 				Block2Data* _data2_;
-				ClutterActor* clone;
 				_data2_ = g_slice_new0 (Block2Data);
 				_data2_->_ref_count_ = 1;
 				_data2_->self = g_object_ref (self);
-				clone = unity_spaces_manager_workspace_clone (self, workspace);
-				self->priv->clones = g_list_append (self->priv->clones, _g_object_ref0 (clone));
-				clutter_container_add_actor (window_group, clone);
-				clutter_actor_set_reactive (clone, TRUE);
-				clutter_actor_raise_top (clone);
-				clutter_actor_show (clone);
+				_data2_->clone = unity_spaces_manager_workspace_clone (self, workspace);
+				self->priv->clones = g_list_append (self->priv->clones, _g_object_ref0 (_data2_->clone));
+				clutter_container_add_actor (window_group, _data2_->clone);
+				clutter_actor_set_reactive (_data2_->clone, TRUE);
+				clutter_actor_raise_top (_data2_->clone);
+				clutter_actor_show (_data2_->clone);
+				clutter_actor_set_opacity (_data2_->clone, (guint8) 200);
 				_data2_->cpy = workspace;
-				g_signal_connect_data (clone, "button-release-event", (GCallback) __lambda4__clutter_actor_button_release_event, block2_data_ref (_data2_), (GClosureNotify) block2_data_unref, 0);
-				_g_object_unref0 (clone);
+				g_signal_connect_data (_data2_->clone, "button-release-event", (GCallback) __lambda9__clutter_actor_button_release_event, block2_data_ref (_data2_), (GClosureNotify) block2_data_unref, 0);
+				g_signal_connect_data (_data2_->clone, "enter-event", (GCallback) __lambda10__clutter_actor_enter_event, block2_data_ref (_data2_), (GClosureNotify) block2_data_unref, 0);
+				g_signal_connect_data (_data2_->clone, "leave-event", (GCallback) __lambda11__clutter_actor_leave_event, block2_data_ref (_data2_), (GClosureNotify) block2_data_unref, 0);
 				block2_data_unref (_data2_);
 			}
 		}
@@ -521,6 +576,45 @@ static void unity_spaces_manager_select_workspace (UnitySpacesManager* self, Met
 }
 
 
+static gboolean _lambda8_ (Block3Data* _data3_) {
+	UnitySpacesManager * self;
+	gboolean result = FALSE;
+	guint32 time_ = 0U;
+	ClutterActor* _tmp0_;
+	MetaWindow* meta;
+	self = _data3_->self;
+	clutter_actor_raise_top ((ClutterActor*) _data3_->clone);
+	meta = mutter_window_get_meta_window ((_tmp0_ = unity_expose_clone_get_source (_data3_->clone), MUTTER_IS_WINDOW (_tmp0_) ? ((MutterWindow*) _tmp0_) : NULL));
+	time_ = meta_display_get_current_time (meta_window_get_display (meta));
+	meta_workspace_activate (meta_window_get_workspace (meta), time_);
+	meta_window_activate (meta, time_);
+	result = FALSE;
+	return result;
+}
+
+
+static gboolean __lambda8__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	gboolean result;
+	result = _lambda8_ (self);
+	return result;
+}
+
+
+static Block3Data* block3_data_ref (Block3Data* _data3_) {
+	g_atomic_int_inc (&_data3_->_ref_count_);
+	return _data3_;
+}
+
+
+static void block3_data_unref (Block3Data* _data3_) {
+	if (g_atomic_int_dec_and_test (&_data3_->_ref_count_)) {
+		_g_object_unref0 (_data3_->self);
+		_g_object_unref0 (_data3_->clone);
+		g_slice_free (Block3Data, _data3_);
+	}
+}
+
+
 static ClutterActor* unity_spaces_manager_workspace_clone (UnitySpacesManager* self, MetaWorkspace* workspace) {
 	ClutterActor* result = NULL;
 	ClutterGroup* wsp;
@@ -552,10 +646,13 @@ static ClutterActor* unity_spaces_manager_workspace_clone (UnitySpacesManager* s
 					_tmp1_ = mutter_window_get_workspace (window) == meta_workspace_index (workspace);
 				}
 				if (_tmp1_) {
+					Block3Data* _data3_;
 					gboolean _tmp2_ = FALSE;
 					gboolean _tmp3_ = FALSE;
 					gboolean _tmp4_ = FALSE;
-					UnityExposeClone* clone;
+					_data3_ = g_slice_new0 (Block3Data);
+					_data3_->_ref_count_ = 1;
+					_data3_->self = g_object_ref (self);
 					if (mutter_window_get_window_type (window) == META_COMP_WINDOW_NORMAL) {
 						_tmp4_ = TRUE;
 					} else {
@@ -572,17 +669,22 @@ static ClutterActor* unity_spaces_manager_workspace_clone (UnitySpacesManager* s
 						_tmp2_ = mutter_window_get_window_type (window) == META_COMP_WINDOW_UTILITY;
 					}
 					if (!_tmp2_) {
+						block3_data_unref (_data3_);
 						_g_object_unref0 (window);
 						continue;
 					}
-					clone = g_object_ref_sink (unity_expose_clone_new ((ClutterActor*) window));
-					unity_expose_clone_set_fade_on_close (clone, FALSE);
-					clutter_container_add_actor ((ClutterContainer*) wsp, (ClutterActor*) clone);
-					toplevel_windows = g_list_prepend (toplevel_windows, _g_object_ref0 ((ClutterActor*) clone));
-					clutter_actor_set_size ((ClutterActor*) clone, clutter_actor_get_width ((ClutterActor*) window), clutter_actor_get_height ((ClutterActor*) window));
-					clutter_actor_set_position ((ClutterActor*) clone, clutter_actor_get_x ((ClutterActor*) window), clutter_actor_get_y ((ClutterActor*) window));
-					clutter_actor_show ((ClutterActor*) clone);
-					_g_object_unref0 (clone);
+					_data3_->clone = g_object_ref_sink (unity_expose_clone_new ((ClutterActor*) window));
+					unity_expose_clone_set_fade_on_close (_data3_->clone, FALSE);
+					clutter_actor_set_reactive ((ClutterActor*) _data3_->clone, TRUE);
+					unity_expose_clone_set_darken (_data3_->clone, (guint8) 25);
+					unity_expose_clone_set_enable_dnd (_data3_->clone, FALSE);
+					clutter_container_add_actor ((ClutterContainer*) wsp, (ClutterActor*) _data3_->clone);
+					toplevel_windows = g_list_prepend (toplevel_windows, _g_object_ref0 ((ClutterActor*) _data3_->clone));
+					clutter_actor_set_size ((ClutterActor*) _data3_->clone, clutter_actor_get_width ((ClutterActor*) window), clutter_actor_get_height ((ClutterActor*) window));
+					clutter_actor_set_position ((ClutterActor*) _data3_->clone, clutter_actor_get_x ((ClutterActor*) window), clutter_actor_get_y ((ClutterActor*) window));
+					g_signal_connect_data ((ClutterActor*) _data3_->clone, "button-release-event", (GCallback) __lambda8__clutter_actor_button_release_event, block3_data_ref (_data3_), (GClosureNotify) block3_data_unref, 0);
+					clutter_actor_show ((ClutterActor*) _data3_->clone);
+					block3_data_unref (_data3_);
 				}
 				_g_object_unref0 (window);
 			}
@@ -601,11 +703,11 @@ static ClutterActor* unity_spaces_manager_workspace_clone (UnitySpacesManager* s
 }
 
 
-static void _lambda3_ (Block3Data* _data3_) {
+static void _lambda7_ (Block4Data* _data4_) {
 	UnitySpacesManager * self;
 	GList* windows;
-	self = _data3_->self;
-	clutter_actor_destroy (_data3_->clone);
+	self = _data4_->self;
+	clutter_actor_destroy (_data4_->clone);
 	if (self->priv->background != NULL) {
 		ClutterActor* _tmp0_;
 		clutter_actor_destroy (self->priv->background);
@@ -629,22 +731,22 @@ static void _lambda3_ (Block3Data* _data3_) {
 }
 
 
-static void __lambda3__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	_lambda3_ (self);
+static void __lambda7__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+	_lambda7_ (self);
 }
 
 
-static Block3Data* block3_data_ref (Block3Data* _data3_) {
-	g_atomic_int_inc (&_data3_->_ref_count_);
-	return _data3_;
+static Block4Data* block4_data_ref (Block4Data* _data4_) {
+	g_atomic_int_inc (&_data4_->_ref_count_);
+	return _data4_;
 }
 
 
-static void block3_data_unref (Block3Data* _data3_) {
-	if (g_atomic_int_dec_and_test (&_data3_->_ref_count_)) {
-		_g_object_unref0 (_data3_->self);
-		_g_object_unref0 (_data3_->clone);
-		g_slice_free (Block3Data, _data3_);
+static void block4_data_unref (Block4Data* _data4_) {
+	if (g_atomic_int_dec_and_test (&_data4_->_ref_count_)) {
+		_g_object_unref0 (_data4_->self);
+		_g_object_unref0 (_data4_->clone);
+		g_slice_free (Block4Data, _data4_);
 	}
 }
 
@@ -683,34 +785,34 @@ static void unity_spaces_manager_unlayout_workspaces (UnitySpacesManager* self, 
 						gboolean _tmp2_;
 						_tmp2_ = TRUE;
 						while (TRUE) {
-							Block3Data* _data3_;
+							Block4Data* _data4_;
 							gint index;
 							gint xoffset;
 							gint yoffset;
 							ClutterAnimation* anim;
 							gint active_workspace;
-							_data3_ = g_slice_new0 (Block3Data);
-							_data3_->_ref_count_ = 1;
-							_data3_->self = g_object_ref (self);
+							_data4_ = g_slice_new0 (Block4Data);
+							_data4_->_ref_count_ = 1;
+							_data4_->self = g_object_ref (self);
 							if (!_tmp2_) {
 								x++;
 							}
 							_tmp2_ = FALSE;
 							if (!(x < width)) {
-								block3_data_unref (_data3_);
+								block4_data_unref (_data4_);
 								break;
 							}
 							index = (y * width) + x;
 							xoffset = (x - (focus % width)) * rect.width;
 							yoffset = (y - (focus / width)) * rect.height;
-							_data3_->clone = _g_object_ref0 (CLUTTER_ACTOR ((ClutterActor*) g_list_nth_data (clones, (guint) index)));
-							anim = _g_object_ref0 (clutter_actor_animate (_data3_->clone, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "x", (float) xoffset, "y", (float) yoffset, "scale-x", 1.0f, "scale-y", 1.0f, NULL));
+							_data4_->clone = _g_object_ref0 (CLUTTER_ACTOR ((ClutterActor*) g_list_nth_data (clones, (guint) index)));
+							anim = _g_object_ref0 (clutter_actor_animate (_data4_->clone, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "x", (float) xoffset, "y", (float) yoffset, "scale-x", 1.0f, "scale-y", 1.0f, NULL));
 							active_workspace = meta_screen_get_active_workspace_index (mutter_plugin_get_screen (unity_plugin_get_plugin (self->priv->plugin)));
 							{
 								ClutterActor* _tmp3_;
 								GList* actor_collection;
 								GList* actor_it;
-								actor_collection = clutter_container_get_children ((ClutterContainer*) (_tmp3_ = _data3_->clone, CLUTTER_IS_GROUP (_tmp3_) ? ((ClutterGroup*) _tmp3_) : NULL));
+								actor_collection = clutter_container_get_children ((ClutterContainer*) (_tmp3_ = _data4_->clone, CLUTTER_IS_GROUP (_tmp3_) ? ((ClutterGroup*) _tmp3_) : NULL));
 								for (actor_it = actor_collection; actor_it != NULL; actor_it = actor_it->next) {
 									ClutterActor* actor;
 									actor = _g_object_ref0 ((ClutterActor*) actor_it->data);
@@ -724,9 +826,9 @@ static void unity_spaces_manager_unlayout_workspaces (UnitySpacesManager* self, 
 								}
 								_g_list_free0 (actor_collection);
 							}
-							g_signal_connect_data (anim, "completed", (GCallback) __lambda3__clutter_animation_completed, block3_data_ref (_data3_), (GClosureNotify) block3_data_unref, 0);
+							g_signal_connect_data (anim, "completed", (GCallback) __lambda7__clutter_animation_completed, block4_data_ref (_data4_), (GClosureNotify) block4_data_unref, 0);
 							_g_object_unref0 (anim);
-							block3_data_unref (_data3_);
+							block4_data_unref (_data4_);
 						}
 					}
 				}

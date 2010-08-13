@@ -603,6 +603,7 @@ void unity_unity_icon_paint_real (ClutterActor* actor) {
 	CoglMatrix modelview = {0};
 	CoglMatrix projection = {0};
 	CoglMatrix viewmatrix = {0};
+	float base_z;
 	CoglTextureVertex* _tmp10_;
 	gint _points_size_;
 	gint points_length1;
@@ -623,10 +624,11 @@ void unity_unity_icon_paint_real (ClutterActor* actor) {
 	ctk_actor_get_stored_allocation ((CtkActor*) _self_, &box);
 	cogl_matrix_init_identity (&modelview);
 	cogl_matrix_init_identity (&projection);
-	cogl_matrix_perspective (&projection, 60.0f, 1.0f, 0.1f, 100.0f);
-	cogl_matrix_translate (&modelview, 0.0f, 0.0f, (-44.0f) - (fabsf (_self_->rotation / 360.0f) * 100));
+	cogl_matrix_perspective (&projection, 45.0f, 1.0f, 0.1f, 100.0f);
+	cogl_matrix_translate (&modelview, 0.0f, 0.0f, (-59.5f) - (fabsf (_self_->rotation / 360.0f) * 100));
 	cogl_matrix_rotate (&modelview, _self_->rotation, 1.0f, 0.0f, 0.0f);
 	cogl_matrix_multiply (&viewmatrix, &projection, &modelview);
+	base_z = -((fabsf (_self_->rotation) / 90.0f) * 15.0f);
 	p1_x = -25.0f;
 	p1_y = -25.0f;
 	p2_x = 25.0f;
@@ -635,27 +637,27 @@ void unity_unity_icon_paint_real (ClutterActor* actor) {
 	p3_y = 25.0f;
 	p4_x = -25.0f;
 	p4_y = 25.0f;
-	z = 0.0f;
+	z = base_z;
 	w = 1.0f;
 	cogl_matrix_transform_point (&viewmatrix, &p1_x, &p1_y, &z, &w);
 	p1_x = p1_x / w;
 	p1_y = p1_y / w;
-	z = 0.0f;
+	z = base_z;
 	w = 1.0f;
 	cogl_matrix_transform_point (&viewmatrix, &p2_x, &p2_y, &z, &w);
 	p2_x = p2_x / w;
 	p2_y = p2_y / w;
-	z = 0.0f;
+	z = base_z;
 	w = 1.0f;
 	cogl_matrix_transform_point (&viewmatrix, &p3_x, &p3_y, &z, &w);
 	p3_x = p3_x / w;
 	p3_y = p3_y / w;
-	z = 0.0f;
+	z = base_z;
 	w = 1.0f;
 	cogl_matrix_transform_point (&viewmatrix, &p4_x, &p4_y, &z, &w);
 	p4_x = p4_x / w;
 	p4_y = p4_y / w;
-	z = 0.0f;
+	z = base_z;
 	w = 1.0f;
 	p1_x = (50 * (p1_x + 1)) / 2;
 	p1_y = 48 + ((50 * (p1_y - 1)) / 2);
@@ -665,14 +667,14 @@ void unity_unity_icon_paint_real (ClutterActor* actor) {
 	p3_y = 48 + ((50 * (p3_y - 1)) / 2);
 	p4_x = (50 * (p4_x + 1)) / 2;
 	p4_y = 48 + ((50 * (p4_y - 1)) / 2);
-	if (fabsf (_self_->rotation) <= 3.0) {
-		p1_x = floorf (p1_x);
-		p1_y = floorf (p1_y);
+	if (fabsf (_self_->rotation) <= 1.0) {
+		p1_x = ceilf (p1_x);
+		p1_y = ceilf (p1_y);
 		p2_x = floorf (p2_x);
-		p2_y = floorf (p2_y);
+		p2_y = ceilf (p2_y);
 		p3_x = floorf (p3_x);
 		p3_y = floorf (p3_y);
-		p4_x = floorf (p4_x);
+		p4_x = ceilf (p4_x);
 		p4_y = floorf (p4_y);
 	}
 	points = (_tmp10_ = (_tmp9_ = g_new0 (CoglTextureVertex, 4), _tmp9_[0] = (memset (&_tmp2_, 0, sizeof (CoglTextureVertex)), _tmp2_.x = p1_x, _tmp2_.y = p1_y, _tmp2_.z = 0.0f, _tmp2_.tx = 0.0f, _tmp2_.ty = 0.0f, _tmp2_.color = (memset (&_tmp1_, 0, sizeof (CoglColor)), _tmp1_.red = (guchar) 0xff, _tmp1_.green = (guchar) 0xff, _tmp1_.blue = (guchar) 0xff, _tmp1_.alpha = (guchar) 0xff, _tmp1_), _tmp2_), _tmp9_[1] = (memset (&_tmp4_, 0, sizeof (CoglTextureVertex)), _tmp4_.x = p2_x, _tmp4_.y = p2_y, _tmp4_.z = 0.0f, _tmp4_.tx = 1.0f, _tmp4_.ty = 0.0f, _tmp4_.color = (memset (&_tmp3_, 0, sizeof (CoglColor)), _tmp3_.red = (guchar) 0xff, _tmp3_.green = (guchar) 0xff, _tmp3_.blue = (guchar) 0xff, _tmp3_.alpha = (guchar) 0xff, _tmp3_), _tmp4_), _tmp9_[2] = (memset (&_tmp6_, 0, sizeof (CoglTextureVertex)), _tmp6_.x = p3_x, _tmp6_.y = p3_y, _tmp6_.z = 0.0f, _tmp6_.tx = 1.0f, _tmp6_.ty = 1.0f, _tmp6_.color = (memset (&_tmp5_, 0, sizeof (CoglColor)), _tmp5_.red = (guchar) 0xff, _tmp5_.green = (guchar) 0xff, _tmp5_.blue = (guchar) 0xff, _tmp5_.alpha = (guchar) 0xff, _tmp5_), _tmp6_), _tmp9_[3] = (memset (&_tmp8_, 0, sizeof (CoglTextureVertex)), _tmp8_.x = p4_x, _tmp8_.y = p4_y, _tmp8_.z = 0.0f, _tmp8_.tx = 0.0f, _tmp8_.ty = 1.0f, _tmp8_.color = (memset (&_tmp7_, 0, sizeof (CoglColor)), _tmp7_.red = (guchar) 0xff, _tmp7_.green = (guchar) 0xff, _tmp7_.blue = (guchar) 0xff, _tmp7_.alpha = (guchar) 0xff, _tmp7_), _tmp8_), _tmp9_), points_length1 = 4, _points_size_ = points_length1, _tmp10_);
@@ -719,27 +721,27 @@ void unity_unity_icon_paint_real (ClutterActor* actor) {
 		p3_y = 25.0f;
 		p4_x = -25.0f;
 		p4_y = 25.0f;
-		z = 0.0f;
+		z = base_z;
 		w = 1.0f;
 		cogl_matrix_transform_point (&viewmatrix, &p1_x, &p1_y, &z, &w);
 		p1_x = p1_x / w;
 		p1_y = p1_y / w;
-		z = 0.0f;
+		z = base_z;
 		w = 1.0f;
 		cogl_matrix_transform_point (&viewmatrix, &p2_x, &p2_y, &z, &w);
 		p2_x = p2_x / w;
 		p2_y = p2_y / w;
-		z = 0.0f;
+		z = base_z;
 		w = 1.0f;
 		cogl_matrix_transform_point (&viewmatrix, &p3_x, &p3_y, &z, &w);
 		p3_x = p3_x / w;
 		p3_y = p3_y / w;
-		z = 0.0f;
+		z = base_z;
 		w = 1.0f;
 		cogl_matrix_transform_point (&viewmatrix, &p4_x, &p4_y, &z, &w);
 		p4_x = p4_x / w;
 		p4_y = p4_y / w;
-		z = 0.0f;
+		z = base_z;
 		w = 1.0f;
 		p1_x = xpad + ((base_width * (p1_x + 1)) / 2);
 		p1_y = (48 - ypad) + ((base_height * (p1_y - 1)) / 2);
@@ -749,14 +751,14 @@ void unity_unity_icon_paint_real (ClutterActor* actor) {
 		p3_y = (48 - ypad) + ((base_height * (p3_y - 1)) / 2);
 		p4_x = xpad + ((base_width * (p4_x + 1)) / 2);
 		p4_y = (48 - ypad) + ((base_height * (p4_y - 1)) / 2);
-		if (fabsf (_self_->rotation) <= 3.0) {
-			p1_x = floorf (p1_x);
-			p1_y = floorf (p1_y);
+		if (fabsf (_self_->rotation) <= 1.0) {
+			p1_x = ceilf (p1_x);
+			p1_y = ceilf (p1_y);
 			p2_x = floorf (p2_x);
-			p2_y = floorf (p2_y);
+			p2_y = ceilf (p2_y);
 			p3_x = floorf (p3_x);
 			p3_y = floorf (p3_y);
-			p4_x = floorf (p4_x);
+			p4_x = ceilf (p4_x);
 			p4_y = floorf (p4_y);
 		}
 		icon_points = (_tmp20_ = (_tmp19_ = g_new0 (CoglTextureVertex, 4), _tmp19_[0] = (memset (&_tmp12_, 0, sizeof (CoglTextureVertex)), _tmp12_.x = p1_x, _tmp12_.y = p1_y, _tmp12_.z = 0.0f, _tmp12_.tx = 0.0f, _tmp12_.ty = 0.0f, _tmp12_.color = (memset (&_tmp11_, 0, sizeof (CoglColor)), _tmp11_.red = (guchar) 0xff, _tmp11_.green = (guchar) 0xff, _tmp11_.blue = (guchar) 0xff, _tmp11_.alpha = (guchar) 0xff, _tmp11_), _tmp12_), _tmp19_[1] = (memset (&_tmp14_, 0, sizeof (CoglTextureVertex)), _tmp14_.x = p2_x, _tmp14_.y = p2_y, _tmp14_.z = 0.0f, _tmp14_.tx = 1.0f, _tmp14_.ty = 0.0f, _tmp14_.color = (memset (&_tmp13_, 0, sizeof (CoglColor)), _tmp13_.red = (guchar) 0xff, _tmp13_.green = (guchar) 0xff, _tmp13_.blue = (guchar) 0xff, _tmp13_.alpha = (guchar) 0xff, _tmp13_), _tmp14_), _tmp19_[2] = (memset (&_tmp16_, 0, sizeof (CoglTextureVertex)), _tmp16_.x = p3_x, _tmp16_.y = p3_y, _tmp16_.z = 0.0f, _tmp16_.tx = 1.0f, _tmp16_.ty = 1.0f, _tmp16_.color = (memset (&_tmp15_, 0, sizeof (CoglColor)), _tmp15_.red = (guchar) 0xff, _tmp15_.green = (guchar) 0xff, _tmp15_.blue = (guchar) 0xff, _tmp15_.alpha = (guchar) 0xff, _tmp15_), _tmp16_), _tmp19_[3] = (memset (&_tmp18_, 0, sizeof (CoglTextureVertex)), _tmp18_.x = p4_x, _tmp18_.y = p4_y, _tmp18_.z = 0.0f, _tmp18_.tx = 0.0f, _tmp18_.ty = 1.0f, _tmp18_.color = (memset (&_tmp17_, 0, sizeof (CoglColor)), _tmp17_.red = (guchar) 0xff, _tmp17_.green = (guchar) 0xff, _tmp17_.blue = (guchar) 0xff, _tmp17_.alpha = (guchar) 0xff, _tmp17_), _tmp18_), _tmp19_), icon_points_length1 = 4, _icon_points_size_ = icon_points_length1, _tmp20_);
