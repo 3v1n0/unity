@@ -10,7 +10,7 @@ unity (0.2.26-0ubuntu1) UNRELEASED; urgency=low
     - Update the applications model when changes are detected (LP: #610382)
     - Implement Applications Place Software Center integration (LP: #608179)
     - Files Place home screen should have a Recent group (LP: #607815)
-  * debian/patches/01_show_gicons:
+  * debian/patches/01_show_gicons.patch:
     - adapt with latest libindicator change
   * update debian/libunity0.symbols
 
