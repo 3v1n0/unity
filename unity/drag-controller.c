@@ -127,6 +127,8 @@ struct _UnityShellIface {
 	void (*get_window_details) (UnityShell* self, guint32 xid, gboolean* allows_resize, gboolean* is_maximised);
 	void (*do_window_action) (UnityShell* self, guint32 xid, UnityWindowAction action);
 	gboolean (*get_menus_swallow_events) (UnityShell* self);
+	gboolean (*get_super_key_active) (UnityShell* self);
+	void (*set_super_key_active) (UnityShell* self, gboolean value);
 };
 
 

@@ -15,6 +15,7 @@ namespace Unity {
 		public ExposeClone (Clutter.Actor source);
 		public void restore_window_position (int active_workspace);
 		public uint8 darken { get; set; }
+		public bool enable_dnd { get; set; }
 		public bool fade_on_close { get; set; }
 		public uint8 hovered_opacity { get; set; }
 		public Clutter.Actor source { get; set; }

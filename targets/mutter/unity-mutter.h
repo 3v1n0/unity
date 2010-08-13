@@ -221,6 +221,8 @@ guint8 unity_expose_clone_get_unhovered_opacity (UnityExposeClone* self);
 void unity_expose_clone_set_unhovered_opacity (UnityExposeClone* self, guint8 value);
 guint8 unity_expose_clone_get_darken (UnityExposeClone* self);
 void unity_expose_clone_set_darken (UnityExposeClone* self, guint8 value);
+gboolean unity_expose_clone_get_enable_dnd (UnityExposeClone* self);
+void unity_expose_clone_set_enable_dnd (UnityExposeClone* self, gboolean value);
 GType unity_expose_manager_get_type (void) G_GNUC_CONST;
 GType unity_plugin_get_type (void) G_GNUC_CONST;
 UnityExposeManager* unity_expose_manager_new (UnityPlugin* plugin, UnityLauncherLauncher* launcher);

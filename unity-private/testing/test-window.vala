@@ -26,6 +26,7 @@ namespace Unity.Testing
   public class Window : Gtk.Window, Shell
   {
     public bool menus_swallow_events { get { return true; } }
+    public bool super_key_active {get; set;}
     public bool is_popup     { get; construct; }
     public int  popup_width  { get; construct; }
     public int  popup_height { get; construct; }

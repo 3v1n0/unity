@@ -64,6 +64,7 @@ struct _UnityAppInfoManagerClass {
 
 struct _UnityAppInfoManagerPrivate {
 	GeeMap* appinfo_by_id;
+	GeeMap* monitors;
 	guchar* buffer;
 	gint buffer_length1;
 	gint _buffer_size_;
@@ -77,13 +78,16 @@ struct _UnityAppInfoManagerLookupAsyncData {
 	UnityAppInfoManager* self;
 	char* id;
 	GAppInfo* result;
-	GAppInfo* appinfo;
 	gsize data_size;
 	void* data;
 	GFileInputStream* input;
 	GFile* f;
 	GFileInputStream* _tmp0_;
 	GFileInputStream* _tmp1_;
+	GFile* dir;
+	char* dir_uri;
+	GFileMonitor* monitor;
+	GError * ioe;
 	char* path;
 	GFileInputStream* _tmp2_;
 	GFileInputStream* _tmp3_;
@@ -91,7 +95,7 @@ struct _UnityAppInfoManagerLookupAsyncData {
 	GError * e;
 	GKeyFile* keyfile;
 	GError * ee;
-	GAppInfo* _tmp5_;
+	GDesktopAppInfo* appinfo;
 	GError * _inner_error_;
 };
 
@@ -105,6 +109,9 @@ GType unity_app_info_manager_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_APP_INFO_MANAGER_DUMMY_PROPERTY
 };
+char** unity_io_get_system_data_dirs (int* result_length1);
+static void unity_app_info_manager_on_dir_changed (UnityAppInfoManager* self, GFileMonitor* mon, GFile* file, GFile* other_file, GFileMonitorEvent e);
+static void _unity_app_info_manager_on_dir_changed_g_file_monitor_changed (GFileMonitor* _sender, GFile* file, GFile* other_file, GFileMonitorEvent event_type, gpointer self);
 static UnityAppInfoManager* unity_app_info_manager_new (void);
 static UnityAppInfoManager* unity_app_info_manager_construct (GType object_type);
 UnityAppInfoManager* unity_app_info_manager_get_instance (void);
@@ -121,17 +128,93 @@ GAppInfo* unity_app_info_manager_lookup_finish (UnityAppInfoManager* self, GAsyn
 static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLookupAsyncData* data);
 void unity_app_info_manager_clear (UnityAppInfoManager* self);
 static void unity_app_info_manager_finalize (GObject* obj);
+static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
+static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
 
+
+static void g_cclosure_user_marshal_VOID__STRING_OBJECT (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data);
+
+static void _unity_app_info_manager_on_dir_changed_g_file_monitor_changed (GFileMonitor* _sender, GFile* file, GFile* other_file, GFileMonitorEvent event_type, gpointer self) {
+	unity_app_info_manager_on_dir_changed (self, _sender, file, other_file, event_type);
+}
 
 
 static UnityAppInfoManager* unity_app_info_manager_construct (GType object_type) {
+	GError * _inner_error_;
 	UnityAppInfoManager * self;
 	GeeMap* _tmp0_;
 	guchar* _tmp1_;
+	GeeMap* _tmp2_;
+	_inner_error_ = NULL;
 	self = (UnityAppInfoManager*) g_object_new (object_type, NULL);
 	self->priv->appinfo_by_id = (_tmp0_ = (GeeMap*) gee_hash_map_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, G_TYPE_APP_INFO, (GBoxedCopyFunc) g_object_ref, g_object_unref, g_str_hash, g_str_equal, NULL), _g_object_unref0 (self->priv->appinfo_by_id), _tmp0_);
 	self->priv->buffer_size = (gsize) 1024;
 	self->priv->buffer = (_tmp1_ = g_new0 (guchar, self->priv->buffer_size), self->priv->buffer = (g_free (self->priv->buffer), NULL), self->priv->buffer_length1 = self->priv->buffer_size, self->priv->_buffer_size_ = self->priv->buffer_length1, _tmp1_);
+	self->priv->monitors = (_tmp2_ = (GeeMap*) gee_hash_map_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, G_TYPE_APP_INFO, (GBoxedCopyFunc) g_object_ref, g_object_unref, g_str_hash, g_str_equal, NULL), _g_object_unref0 (self->priv->monitors), _tmp2_);
+	{
+		gint _tmp3_;
+		char** path_collection;
+		int path_collection_length1;
+		int path_it;
+		path_collection = unity_io_get_system_data_dirs (&_tmp3_);
+		path_collection_length1 = _tmp3_;
+		for (path_it = 0; path_it < _tmp3_; path_it = path_it + 1) {
+			char* path;
+			path = g_strdup (path_collection[path_it]);
+			{
+				char* _tmp4_;
+				GFile* _tmp5_;
+				GFile* dir;
+				dir = (_tmp5_ = g_file_new_for_path (_tmp4_ = g_build_filename (path, "applications", NULL)), _g_free0 (_tmp4_), _tmp5_);
+				{
+					GFileMonitor* monitor;
+					char* _tmp6_;
+					monitor = g_file_monitor_directory (dir, G_FILE_MONITOR_NONE, NULL, &_inner_error_);
+					if (_inner_error_ != NULL) {
+						if (_inner_error_->domain == G_IO_ERROR) {
+							goto __catch9_g_io_error;
+						}
+						_g_object_unref0 (dir);
+						_g_free0 (path);
+						path_collection = (_vala_array_free (path_collection, path_collection_length1, (GDestroyNotify) g_free), NULL);
+						g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+						g_clear_error (&_inner_error_);
+						return NULL;
+					}
+					g_signal_connect_object (monitor, "changed", (GCallback) _unity_app_info_manager_on_dir_changed_g_file_monitor_changed, self, 0);
+					gee_map_set (self->priv->monitors, _tmp6_ = g_file_get_uri (dir), monitor);
+					_g_free0 (_tmp6_);
+					_g_object_unref0 (monitor);
+				}
+				goto __finally9;
+				__catch9_g_io_error:
+				{
+					GError * e;
+					e = _inner_error_;
+					_inner_error_ = NULL;
+					{
+						char* _tmp7_;
+						g_warning ("unity-appinfo-manager.vala:66: Error setting up directory monitor on '" \
+"%s': %s", _tmp7_ = g_file_get_uri (dir), e->message);
+						_g_free0 (_tmp7_);
+						_g_error_free0 (e);
+					}
+				}
+				__finally9:
+				if (_inner_error_ != NULL) {
+					_g_object_unref0 (dir);
+					_g_free0 (path);
+					path_collection = (_vala_array_free (path_collection, path_collection_length1, (GDestroyNotify) g_free), NULL);
+					g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+					g_clear_error (&_inner_error_);
+					return NULL;
+				}
+				_g_object_unref0 (dir);
+				_g_free0 (path);
+			}
+		}
+		path_collection = (_vala_array_free (path_collection, path_collection_length1, (GDestroyNotify) g_free), NULL);
+	}
 	return self;
 }
 
@@ -160,6 +243,34 @@ UnityAppInfoManager* unity_app_info_manager_get_instance (void) {
 }
 
 
+static void unity_app_info_manager_on_dir_changed (UnityAppInfoManager* self, GFileMonitor* mon, GFile* file, GFile* other_file, GFileMonitorEvent e) {
+	char* desktop_id;
+	char* path;
+	GAppInfo* appinfo;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (mon != NULL);
+	g_return_if_fail (file != NULL);
+	desktop_id = g_file_get_basename (file);
+	path = g_file_get_path (file);
+	appinfo = NULL;
+	if (gee_map_has_key (self->priv->appinfo_by_id, desktop_id)) {
+		GAppInfo* _tmp0_;
+		gee_map_unset (self->priv->appinfo_by_id, desktop_id, NULL);
+		appinfo = (_tmp0_ = unity_app_info_manager_lookup (self, desktop_id), _g_object_unref0 (appinfo), _tmp0_);
+		g_signal_emit_by_name (self, "changed", desktop_id, appinfo);
+	}
+	if (gee_map_has_key (self->priv->appinfo_by_id, path)) {
+		GAppInfo* _tmp1_;
+		gee_map_unset (self->priv->appinfo_by_id, path, NULL);
+		appinfo = (_tmp1_ = unity_app_info_manager_lookup (self, path), _g_object_unref0 (appinfo), _tmp1_);
+		g_signal_emit_by_name (self, "changed", path, appinfo);
+	}
+	_g_object_unref0 (appinfo);
+	_g_free0 (path);
+	_g_free0 (desktop_id);
+}
+
+
 /**
      * Look up an AppInfo given its desktop id or absolute path. The desktop id
      * is the base filename of the .desktop file for the application including
@@ -170,24 +281,74 @@ UnityAppInfoManager* unity_app_info_manager_get_instance (void) {
      */
 GAppInfo* unity_app_info_manager_lookup (UnityAppInfoManager* self, const char* id) {
 	GAppInfo* result = NULL;
+	GError * _inner_error_;
 	GAppInfo* appinfo;
 	g_return_val_if_fail (self != NULL, NULL);
 	g_return_val_if_fail (id != NULL, NULL);
-	appinfo = (GAppInfo*) gee_map_get (self->priv->appinfo_by_id, id);
-	if (appinfo != NULL) {
-		result = appinfo;
+	_inner_error_ = NULL;
+	if (gee_map_has_key (self->priv->appinfo_by_id, id)) {
+		result = (GAppInfo*) gee_map_get (self->priv->appinfo_by_id, id);
 		return result;
 	}
+	appinfo = NULL;
 	if (g_str_has_prefix (id, "/")) {
 		GAppInfo* _tmp0_;
+		GFile* _tmp1_;
+		GFile* _tmp2_;
+		GFile* dir;
+		char* dir_uri;
 		appinfo = (_tmp0_ = (GAppInfo*) g_desktop_app_info_new_from_filename (id), _g_object_unref0 (appinfo), _tmp0_);
+		dir = (_tmp2_ = g_file_get_parent (_tmp1_ = g_file_new_for_path (id)), _g_object_unref0 (_tmp1_), _tmp2_);
+		dir_uri = g_file_get_uri (dir);
+		if (!gee_map_has_key (self->priv->monitors, dir_uri)) {
+			{
+				GFileMonitor* monitor;
+				monitor = g_file_monitor_directory (dir, G_FILE_MONITOR_NONE, NULL, &_inner_error_);
+				if (_inner_error_ != NULL) {
+					if (_inner_error_->domain == G_IO_ERROR) {
+						goto __catch10_g_io_error;
+					}
+					_g_free0 (dir_uri);
+					_g_object_unref0 (dir);
+					_g_object_unref0 (appinfo);
+					g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+					g_clear_error (&_inner_error_);
+					return NULL;
+				}
+				g_signal_connect_object (monitor, "changed", (GCallback) _unity_app_info_manager_on_dir_changed_g_file_monitor_changed, self, 0);
+				gee_map_set (self->priv->monitors, dir_uri, monitor);
+				g_debug ("unity-appinfo-manager.vala:140: Monitoring extra app directory: %s", dir_uri);
+				_g_object_unref0 (monitor);
+			}
+			goto __finally10;
+			__catch10_g_io_error:
+			{
+				GError * ioe;
+				ioe = _inner_error_;
+				_inner_error_ = NULL;
+				{
+					g_warning ("unity-appinfo-manager.vala:142: Error setting up extra app directory m" \
+"onitor on '%s': %s", dir_uri, ioe->message);
+					_g_error_free0 (ioe);
+				}
+			}
+			__finally10:
+			if (_inner_error_ != NULL) {
+				_g_free0 (dir_uri);
+				_g_object_unref0 (dir);
+				_g_object_unref0 (appinfo);
+				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
+				g_clear_error (&_inner_error_);
+				return NULL;
+			}
+		}
+		_g_free0 (dir_uri);
+		_g_object_unref0 (dir);
 	} else {
-		GAppInfo* _tmp1_;
-		appinfo = (_tmp1_ = (GAppInfo*) g_desktop_app_info_new (id), _g_object_unref0 (appinfo), _tmp1_);
+		GAppInfo* _tmp3_;
+		appinfo = (_tmp3_ = (GAppInfo*) g_desktop_app_info_new (id), _g_object_unref0 (appinfo), _tmp3_);
 	}
-	if (appinfo != NULL) {
-		gee_map_set (self->priv->appinfo_by_id, id, appinfo);
-	}
+	gee_map_set (self->priv->appinfo_by_id, id, appinfo);
 	result = appinfo;
 	return result;
 }
@@ -263,9 +424,8 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 	}
 	_state_0:
 	{
-		data->appinfo = (GAppInfo*) gee_map_get (data->self->priv->appinfo_by_id, data->id);
-		if (data->appinfo != NULL) {
-			data->result = data->appinfo;
+		if (gee_map_has_key (data->self->priv->appinfo_by_id, data->id)) {
+			data->result = (GAppInfo*) gee_map_get (data->self->priv->appinfo_by_id, data->id);
 			{
 				if (data->_state_ == 0) {
 					g_simple_async_result_complete_in_idle (data->_async_result);
@@ -288,7 +448,6 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 				g_error_free (data->_inner_error_);
 				_g_object_unref0 (data->f);
 				_g_object_unref0 (data->input);
-				_g_object_unref0 (data->appinfo);
 				{
 					if (data->_state_ == 0) {
 						g_simple_async_result_complete_in_idle (data->_async_result);
@@ -300,6 +459,60 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 				}
 			}
 			data->input = (data->_tmp1_ = data->_tmp0_, _g_object_unref0 (data->input), data->_tmp1_);
+			data->dir = g_file_get_parent (data->f);
+			data->dir_uri = g_file_get_uri (data->dir);
+			if (!gee_map_has_key (data->self->priv->monitors, data->dir_uri)) {
+				{
+					data->monitor = g_file_monitor_directory (data->dir, G_FILE_MONITOR_NONE, NULL, &data->_inner_error_);
+					if (data->_inner_error_ != NULL) {
+						if (data->_inner_error_->domain == G_IO_ERROR) {
+							goto __catch11_g_io_error;
+						}
+						_g_free0 (data->dir_uri);
+						_g_object_unref0 (data->dir);
+						_g_object_unref0 (data->f);
+						_g_object_unref0 (data->input);
+						g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
+						g_clear_error (&data->_inner_error_);
+						return FALSE;
+					}
+					g_signal_connect_object (data->monitor, "changed", (GCallback) _unity_app_info_manager_on_dir_changed_g_file_monitor_changed, data->self, 0);
+					gee_map_set (data->self->priv->monitors, data->dir_uri, data->monitor);
+					g_debug ("unity-appinfo-manager.vala:190: Monitoring extra app directory: %s", data->dir_uri);
+					_g_object_unref0 (data->monitor);
+				}
+				goto __finally11;
+				__catch11_g_io_error:
+				{
+					data->ioe = data->_inner_error_;
+					data->_inner_error_ = NULL;
+					{
+						g_warning ("unity-appinfo-manager.vala:192: Error setting up extra app directory m" \
+"onitor on '%s': %s", data->dir_uri, data->ioe->message);
+						_g_error_free0 (data->ioe);
+					}
+				}
+				__finally11:
+				if (data->_inner_error_ != NULL) {
+					g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
+					g_error_free (data->_inner_error_);
+					_g_free0 (data->dir_uri);
+					_g_object_unref0 (data->dir);
+					_g_object_unref0 (data->f);
+					_g_object_unref0 (data->input);
+					{
+						if (data->_state_ == 0) {
+							g_simple_async_result_complete_in_idle (data->_async_result);
+						} else {
+							g_simple_async_result_complete (data->_async_result);
+						}
+						g_object_unref (data->_async_result);
+						return FALSE;
+					}
+				}
+			}
+			_g_free0 (data->dir_uri);
+			_g_object_unref0 (data->dir);
 			_g_object_unref0 (data->f);
 		} else {
 			data->path = g_build_filename ("applications", data->id, NULL, NULL);
@@ -313,7 +526,6 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 				g_error_free (data->_inner_error_);
 				_g_free0 (data->path);
 				_g_object_unref0 (data->input);
-				_g_object_unref0 (data->appinfo);
 				{
 					if (data->_state_ == 0) {
 						g_simple_async_result_complete_in_idle (data->_async_result);
@@ -328,9 +540,9 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 			_g_free0 (data->path);
 		}
 		if (data->input == NULL) {
+			gee_map_set (data->self->priv->appinfo_by_id, data->id, NULL);
 			data->result = NULL;
 			_g_object_unref0 (data->input);
-			_g_object_unref0 (data->appinfo);
 			{
 				if (data->_state_ == 0) {
 					g_simple_async_result_complete_in_idle (data->_async_result);
@@ -348,20 +560,19 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 			_state_5:
 			unity_io_read_stream_finish (data->_res_, &data->data, &data->data_size, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
-				goto __catch9_g_error;
+				goto __catch12_g_error;
 			}
 		}
-		goto __finally9;
-		__catch9_g_error:
+		goto __finally12;
+		__catch12_g_error:
 		{
 			data->e = data->_inner_error_;
 			data->_inner_error_ = NULL;
 			{
-				g_warning ("unity-appinfo-manager.vala:137: Error reading '%s': %s", data->id, data->e->message);
+				g_warning ("unity-appinfo-manager.vala:220: Error reading '%s': %s", data->id, data->e->message);
 				data->result = NULL;
 				_g_error_free0 (data->e);
 				_g_object_unref0 (data->input);
-				_g_object_unref0 (data->appinfo);
 				{
 					if (data->_state_ == 0) {
 						g_simple_async_result_complete_in_idle (data->_async_result);
@@ -374,12 +585,11 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 				_g_error_free0 (data->e);
 			}
 		}
-		__finally9:
+		__finally12:
 		if (data->_inner_error_ != NULL) {
 			g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
 			g_error_free (data->_inner_error_);
 			_g_object_unref0 (data->input);
-			_g_object_unref0 (data->appinfo);
 			{
 				if (data->_state_ == 0) {
 					g_simple_async_result_complete_in_idle (data->_async_result);
@@ -394,21 +604,20 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 		{
 			g_key_file_load_from_data (data->keyfile, (const char*) data->data, data->data_size, G_KEY_FILE_NONE, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
-				goto __catch10_g_error;
+				goto __catch13_g_error;
 			}
 		}
-		goto __finally10;
-		__catch10_g_error:
+		goto __finally13;
+		__catch13_g_error:
 		{
 			data->ee = data->_inner_error_;
 			data->_inner_error_ = NULL;
 			{
-				g_warning ("unity-appinfo-manager.vala:148: Error parsing '%s': %s", data->id, data->ee->message);
+				g_warning ("unity-appinfo-manager.vala:231: Error parsing '%s': %s", data->id, data->ee->message);
 				data->result = NULL;
 				_g_error_free0 (data->ee);
 				_g_key_file_free0 (data->keyfile);
 				_g_object_unref0 (data->input);
-				_g_object_unref0 (data->appinfo);
 				{
 					if (data->_state_ == 0) {
 						g_simple_async_result_complete_in_idle (data->_async_result);
@@ -421,13 +630,12 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 				_g_error_free0 (data->ee);
 			}
 		}
-		__finally10:
+		__finally13:
 		if (data->_inner_error_ != NULL) {
 			g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
 			g_error_free (data->_inner_error_);
 			_g_key_file_free0 (data->keyfile);
 			_g_object_unref0 (data->input);
-			_g_object_unref0 (data->appinfo);
 			{
 				if (data->_state_ == 0) {
 					g_simple_async_result_complete_in_idle (data->_async_result);
@@ -438,10 +646,10 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 				return FALSE;
 			}
 		}
-		data->appinfo = (data->_tmp5_ = (GAppInfo*) g_desktop_app_info_new_from_keyfile (data->keyfile), _g_object_unref0 (data->appinfo), data->_tmp5_);
-		gee_map_set (data->self->priv->appinfo_by_id, data->id, data->appinfo);
+		data->appinfo = g_desktop_app_info_new_from_keyfile (data->keyfile);
+		gee_map_set (data->self->priv->appinfo_by_id, data->id, (GAppInfo*) data->appinfo);
 		g_free (data->data);
-		data->result = data->appinfo;
+		data->result = (GAppInfo*) data->appinfo;
 		_g_key_file_free0 (data->keyfile);
 		_g_object_unref0 (data->input);
 		{
@@ -453,9 +661,9 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 			g_object_unref (data->_async_result);
 			return FALSE;
 		}
+		_g_object_unref0 (data->appinfo);
 		_g_key_file_free0 (data->keyfile);
 		_g_object_unref0 (data->input);
-		_g_object_unref0 (data->appinfo);
 	}
 	{
 		if (data->_state_ == 0) {
@@ -479,6 +687,11 @@ static void unity_app_info_manager_class_init (UnityAppInfoManagerClass * klass)
 	unity_app_info_manager_parent_class = g_type_class_peek_parent (klass);
 	g_type_class_add_private (klass, sizeof (UnityAppInfoManagerPrivate));
 	G_OBJECT_CLASS (klass)->finalize = unity_app_info_manager_finalize;
+	/**
+	     * Emitted whenever an AppInfo in any of the monitored paths change.
+	     * Note that @new_appinfo may be null in case it has been removed.
+	     */
+	g_signal_new ("changed", UNITY_TYPE_APP_INFO_MANAGER, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__STRING_OBJECT, G_TYPE_NONE, 2, G_TYPE_STRING, G_TYPE_APP_INFO);
 }
 
 
@@ -491,6 +704,7 @@ static void unity_app_info_manager_finalize (GObject* obj) {
 	UnityAppInfoManager * self;
 	self = UNITY_APP_INFO_MANAGER (obj);
 	_g_object_unref0 (self->priv->appinfo_by_id);
+	_g_object_unref0 (self->priv->monitors);
 	self->priv->buffer = (g_free (self->priv->buffer), NULL);
 	G_OBJECT_CLASS (unity_app_info_manager_parent_class)->finalize (obj);
 }
@@ -499,7 +713,10 @@ static void unity_app_info_manager_finalize (GObject* obj) {
 /**
    * A singleton class that caches GLib.AppInfo objects.
    * Singletons are evil, yes, but this on slightly less
-   * so because the exposed API is immutable
+   * so because the exposed API is immutable.
+   *
+   * To detect when any of the managed AppInfo objects changes, appears,
+   * or goes away listen for the 'changed' signal.
    */
 GType unity_app_info_manager_get_type (void) {
 	static volatile gsize unity_app_info_manager_type_id__volatile = 0;
@@ -512,6 +729,43 @@ GType unity_app_info_manager_get_type (void) {
 	return unity_app_info_manager_type_id__volatile;
 }
 
+
+static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func) {
+	if ((array != NULL) && (destroy_func != NULL)) {
+		int i;
+		for (i = 0; i < array_length; i = i + 1) {
+			if (((gpointer*) array)[i] != NULL) {
+				destroy_func (((gpointer*) array)[i]);
+			}
+		}
+	}
+}
+
+
+static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func) {
+	_vala_array_destroy (array, array_length, destroy_func);
+	g_free (array);
+}
+
+
+
+static void g_cclosure_user_marshal_VOID__STRING_OBJECT (GClosure * closure, GValue * return_value, guint n_param_values, const GValue * param_values, gpointer invocation_hint, gpointer marshal_data) {
+	typedef void (*GMarshalFunc_VOID__STRING_OBJECT) (gpointer data1, const char* arg_1, gpointer arg_2, gpointer data2);
+	register GMarshalFunc_VOID__STRING_OBJECT callback;
+	register GCClosure * cc;
+	register gpointer data1, data2;
+	cc = (GCClosure *) closure;
+	g_return_if_fail (n_param_values == 3);
+	if (G_CCLOSURE_SWAP_DATA (closure)) {
+		data1 = closure->data;
+		data2 = param_values->data[0].v_pointer;
+	} else {
+		data1 = param_values->data[0].v_pointer;
+		data2 = closure->data;
+	}
+	callback = (GMarshalFunc_VOID__STRING_OBJECT) (marshal_data ? marshal_data : cc->callback);
+	callback (data1, g_value_get_string (param_values + 1), g_value_get_object (param_values + 2), data2);
+}
 
 
 

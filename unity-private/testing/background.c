@@ -95,8 +95,8 @@ enum  {
 static void _unity_testing_background_handle_image_placement (UnityTestingBackground* self);
 static void _unity_testing_background_update_image (UnityTestingBackground* self);
 static void _unity_testing_background_update_gradient (UnityTestingBackground* self);
-static gboolean _lambda65_ (UnityTestingBackground* self);
-static gboolean __lambda65__gsource_func (gpointer self);
+static gboolean _lambda66_ (UnityTestingBackground* self);
+static gboolean __lambda66__gsource_func (gpointer self);
 static void _unity_testing_background_on_allocation_changed (UnityTestingBackground* self);
 static void _unity_testing_background_on_gconf_changed (UnityTestingBackground* self, GConfClient* client, guint cxnid, GConfEntry* entry);
 UnityTestingBackground* unity_testing_background_new (void);
@@ -181,7 +181,7 @@ static void _unity_testing_background_handle_image_placement (UnityTestingBackgr
 }
 
 
-static gboolean _lambda65_ (UnityTestingBackground* self) {
+static gboolean _lambda66_ (UnityTestingBackground* self) {
 	gboolean result = FALSE;
 	if (_vala_strcmp0 (self->priv->filename, "") != 0) {
 		_unity_testing_background_update_image (self);
@@ -193,16 +193,16 @@ static gboolean _lambda65_ (UnityTestingBackground* self) {
 }
 
 
-static gboolean __lambda65__gsource_func (gpointer self) {
+static gboolean __lambda66__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda65_ (self);
+	result = _lambda66_ (self);
 	return result;
 }
 
 
 static void _unity_testing_background_on_allocation_changed (UnityTestingBackground* self) {
 	g_return_if_fail (self != NULL);
-	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda65__gsource_func, g_object_ref (self), g_object_unref);
+	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda66__gsource_func, g_object_ref (self), g_object_unref);
 }
 
 

@@ -375,7 +375,7 @@ static gboolean unity_io_open_from_dirs_co (UnityIoOpenFromDirsData* data) {
 						_state_7:
 						data->_tmp2_ = g_file_read_finish (data->datafile, data->_res_, &data->_inner_error_);
 						if (data->_inner_error_ != NULL) {
-							goto __catch25_g_error;
+							goto __catch28_g_error;
 						}
 						data->result = data->_tmp2_;
 						_g_free0 (data->dir);
@@ -391,8 +391,8 @@ static gboolean unity_io_open_from_dirs_co (UnityIoOpenFromDirsData* data) {
 							return FALSE;
 						}
 					}
-					goto __finally25;
-					__catch25_g_error:
+					goto __finally28;
+					__catch28_g_error:
 					{
 						data->ee = data->_inner_error_;
 						data->_inner_error_ = NULL;
@@ -404,13 +404,13 @@ static gboolean unity_io_open_from_dirs_co (UnityIoOpenFromDirsData* data) {
 									_g_free0 (data->dir);
 									_g_object_unref0 (data->datafile);
 									_g_free0 (data->path);
-									goto __finally25;
+									goto __finally28;
 								}
 							}
 							_g_error_free0 (data->ee);
 						}
 					}
-					__finally25:
+					__finally28:
 					if (data->_inner_error_ != NULL) {
 						g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
 						g_error_free (data->_inner_error_);
@@ -524,7 +524,7 @@ static gboolean unity_io_open_from_data_dirs_co (UnityIoOpenFromDataDirsData* da
 			_state_8:
 			data->_tmp0_ = g_file_read_finish (data->f, data->_res_, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
-				goto __catch26_g_error;
+				goto __catch29_g_error;
 			}
 			data->result = data->_tmp0_;
 			_g_object_unref0 (data->f);
@@ -539,8 +539,8 @@ static gboolean unity_io_open_from_data_dirs_co (UnityIoOpenFromDataDirsData* da
 				return FALSE;
 			}
 		}
-		goto __finally26;
-		__catch26_g_error:
+		goto __finally29;
+		__catch29_g_error:
 		{
 			data->e = data->_inner_error_;
 			data->_inner_error_ = NULL;
@@ -551,13 +551,13 @@ static gboolean unity_io_open_from_data_dirs_co (UnityIoOpenFromDataDirsData* da
 						_g_error_free0 (data->e);
 						_g_object_unref0 (data->f);
 						_g_free0 (data->path);
-						goto __finally26;
+						goto __finally29;
 					}
 				}
 				_g_error_free0 (data->e);
 			}
 		}
-		__finally26:
+		__finally29:
 		if (data->_inner_error_ != NULL) {
 			g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
 			g_error_free (data->_inner_error_);

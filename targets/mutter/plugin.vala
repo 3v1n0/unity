@@ -110,6 +110,12 @@ namespace Unity
 
     public bool menus_swallow_events { get { return false; } }
 
+    private bool _super_key_active = false;
+    public bool super_key_active {
+      get { return _super_key_active; }
+      set { _super_key_active = value; }
+    }
+
     public bool expose_showing { get { return expose_manager.expose_showing; } }
 
     private static const int PANEL_HEIGHT        =  24;
@@ -156,6 +162,7 @@ namespace Unity
 
     construct
     {
+      fullscreen_requests = new Gee.ArrayList<Object> ();
       Unity.global_shell = this;
       Unity.TimelineLogger.get_default(); // just inits the timer for logging
       // attempt to get a boot logging filename
@@ -204,8 +211,6 @@ namespace Unity
     {
       START_FUNCTION ();
 
-      fullscreen_requests = new Gee.ArrayList<Object> ();
-
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
       this.stage.actor_added.connect   ((a) => { ensure_input_region (); });
       this.stage.actor_removed.connect ((a) => { ensure_input_region (); });
@@ -231,6 +236,26 @@ namespace Unity
       Ctk.dnd_init ((Gtk.Widget)this.drag_dest, target_list);
 
       Clutter.Group window_group = (Clutter.Group) this.plugin.get_window_group ();
+
+      /* we need to hook into the super key bound by mutter for g-shell.
+         don't ask me why mutter binds things for g-shell explictly...
+         */
+      Mutter.MetaDisplay display = Mutter.MetaScreen.get_display (plugin.get_screen ());
+      display.overlay_key_down.connect (() => {
+          super_key_active = true;
+      });
+
+      display.overlay_key.connect (() => {
+          super_key_active = false;
+      });
+
+      display.overlay_key_with_modifier.connect ((keysym) => {
+        super_key_modifier_release (keysym);
+      });
+
+      display.overlay_key_with_modifier_down.connect ((keysym) => {
+        super_key_modifier_press (keysym);
+      });
 
       this.background = new Background ();
       this.stage.add_actor (background);

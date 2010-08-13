@@ -165,6 +165,7 @@ struct _UnityPluginPrivate {
 	MutterPlugin* _plugin;
 	UnityExposeManager* _expose_manager;
 	UnityTestingBackground* _background;
+	gboolean _super_key_active;
 	ClutterStage* stage;
 	UnityApplication* app;
 	UnityWindowManagement* wm;
@@ -225,6 +226,7 @@ enum  {
 	UNITY_PLUGIN_EXPOSE_MANAGER,
 	UNITY_PLUGIN_BACKGROUND,
 	UNITY_PLUGIN_MENUS_SWALLOW_EVENTS,
+	UNITY_PLUGIN_SUPER_KEY_ACTIVE,
 	UNITY_PLUGIN_EXPOSE_SHOWING
 };
 #define UNITY_PLUGIN_PANEL_HEIGHT 24
@@ -235,6 +237,14 @@ static void _lambda1_ (ClutterActor* a, UnityPlugin* self);
 static void __lambda1__clutter_container_actor_added (ClutterContainer* _sender, ClutterActor* actor, gpointer self);
 static void _lambda2_ (ClutterActor* a, UnityPlugin* self);
 static void __lambda2__clutter_container_actor_removed (ClutterContainer* _sender, ClutterActor* actor, gpointer self);
+static void _lambda3_ (UnityPlugin* self);
+static void __lambda3__mutter_meta_display_overlay_key_down (MetaDisplay* _sender, gpointer self);
+static void _lambda4_ (UnityPlugin* self);
+static void __lambda4__mutter_meta_display_overlay_key (MetaDisplay* _sender, gpointer self);
+static void _lambda5_ (guint keysym, UnityPlugin* self);
+static void __lambda5__mutter_meta_display_overlay_key_with_modifier (MetaDisplay* _sender, guint keysym, gpointer self);
+static void _lambda6_ (guint keysym, UnityPlugin* self);
+static void __lambda6__mutter_meta_display_overlay_key_with_modifier_down (MetaDisplay* _sender, guint keysym, gpointer self);
 static void unity_plugin_set_background (UnityPlugin* self, UnityTestingBackground* value);
 UnityTestingBackground* unity_plugin_get_background (UnityPlugin* self);
 UnitySpacesManager* unity_spaces_manager_new (UnityPlugin* plugin);
@@ -255,8 +265,8 @@ void unity_expose_manager_set_top_buffer (UnityExposeManager* self, gint value);
 void unity_expose_manager_set_coverflow (UnityExposeManager* self, gboolean value);
 static void unity_plugin_relayout (UnityPlugin* self);
 static void _unity_plugin_relayout_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
-static gboolean _lambda5_ (UnityPlugin* self);
-static gboolean __lambda5__gsource_func (gpointer self);
+static gboolean _lambda12_ (UnityPlugin* self);
+static gboolean __lambda12__gsource_func (gpointer self);
 static gboolean unity_plugin_real_construct (UnityPlugin* self);
 static void unity_plugin_check_fullscreen_obstruction (UnityPlugin* self);
 static void unity_plugin_on_focus_window_fullscreen_changed (UnityPlugin* self);
@@ -265,10 +275,10 @@ static void unity_plugin_on_focus_window_changed (UnityPlugin* self);
 static void unity_plugin_set_fullscreen_obstruction (UnityPlugin* self, gboolean value);
 static void unity_plugin_got_screensaver_changed (UnityPlugin* self, DBusGProxy* screensaver, gboolean changed);
 static guint32 unity_plugin_real_get_current_time (UnityShell* base);
-static void _lambda6_ (UnityPlugin* self);
-static void __lambda6__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
-static void _lambda7_ (UnityPlugin* self);
-static void __lambda7__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
+static void _lambda13_ (UnityPlugin* self);
+static void __lambda13__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
+static void _lambda14_ (UnityPlugin* self);
+static void __lambda14__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static void unity_plugin_real_add_fullscreen_request (UnityShell* base, GObject* o);
 static gboolean unity_plugin_real_remove_fullscreen_request (UnityShell* base, GObject* o);
 static gboolean unity_plugin_get_fullscreen_obstruction (UnityPlugin* self);
@@ -286,10 +296,10 @@ static UnityShellMode unity_plugin_real_get_mode (UnityShell* base);
 static gint unity_plugin_real_get_indicators_width (UnityShell* base);
 void unity_expose_manager_set_left_buffer (UnityExposeManager* self, gint value);
 void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* windows);
-static void _lambda8_ (ClutterAnimation* an, UnityPlugin* self);
-static void __lambda8__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
-static void _lambda9_ (ClutterAnimation* an, UnityPlugin* self);
-static void __lambda9__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
+static void _lambda15_ (ClutterAnimation* an, UnityPlugin* self);
+static void __lambda15__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
+static void _lambda16_ (ClutterAnimation* an, UnityPlugin* self);
+static void __lambda16__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static void unity_plugin_real_hide_unity (UnityShell* base);
 static void unity_plugin_real_show_unity (UnityShell* base);
 static void unity_plugin_real_about_to_show_places (UnityShell* base);
@@ -487,12 +497,52 @@ static void __lambda2__clutter_container_actor_removed (ClutterContainer* _sende
 }
 
 
+static void _lambda3_ (UnityPlugin* self) {
+	unity_shell_set_super_key_active ((UnityShell*) self, TRUE);
+}
+
+
+static void __lambda3__mutter_meta_display_overlay_key_down (MetaDisplay* _sender, gpointer self) {
+	_lambda3_ (self);
+}
+
+
+static void _lambda4_ (UnityPlugin* self) {
+	unity_shell_set_super_key_active ((UnityShell*) self, FALSE);
+}
+
+
+static void __lambda4__mutter_meta_display_overlay_key (MetaDisplay* _sender, gpointer self) {
+	_lambda4_ (self);
+}
+
+
+static void _lambda5_ (guint keysym, UnityPlugin* self) {
+	g_signal_emit_by_name ((UnityShell*) self, "super-key-modifier-release", keysym);
+}
+
+
+static void __lambda5__mutter_meta_display_overlay_key_with_modifier (MetaDisplay* _sender, guint keysym, gpointer self) {
+	_lambda5_ (keysym, self);
+}
+
+
+static void _lambda6_ (guint keysym, UnityPlugin* self) {
+	g_signal_emit_by_name ((UnityShell*) self, "super-key-modifier-press", keysym);
+}
+
+
+static void __lambda6__mutter_meta_display_overlay_key_with_modifier_down (MetaDisplay* _sender, guint keysym, gpointer self) {
+	_lambda6_ (keysym, self);
+}
+
+
 static void _unity_plugin_relayout_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
 	unity_plugin_relayout (self);
 }
 
 
-static gboolean _lambda5_ (UnityPlugin* self) {
+static gboolean _lambda12_ (UnityPlugin* self) {
 	gboolean result = FALSE;
 	unity_timeline_logger_write_log (unity_timeline_logger_get_default (), boot_logging_filename);
 	result = FALSE;
@@ -500,108 +550,113 @@ static gboolean _lambda5_ (UnityPlugin* self) {
 }
 
 
-static gboolean __lambda5__gsource_func (gpointer self) {
+static gboolean __lambda12__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda5_ (self);
+	result = _lambda12_ (self);
 	return result;
 }
 
 
 static gboolean unity_plugin_real_construct (UnityPlugin* self) {
 	gboolean result = FALSE;
-	GeeArrayList* _tmp0_;
-	ClutterStage* _tmp1_;
-	UnityDragDest* _tmp2_;
-	GtkTargetEntry* _tmp10_;
+	ClutterStage* _tmp0_;
+	UnityDragDest* _tmp1_;
+	GtkTargetEntry* _tmp9_;
 	gint _target_list_size_;
 	gint target_list_length1;
-	GtkTargetEntry* _tmp9_ = NULL;
+	GtkTargetEntry* _tmp8_ = NULL;
+	GtkTargetEntry _tmp2_ = {0};
 	GtkTargetEntry _tmp3_ = {0};
 	GtkTargetEntry _tmp4_ = {0};
 	GtkTargetEntry _tmp5_ = {0};
 	GtkTargetEntry _tmp6_ = {0};
 	GtkTargetEntry _tmp7_ = {0};
-	GtkTargetEntry _tmp8_ = {0};
 	GtkTargetEntry* target_list;
 	ClutterGroup* window_group;
-	UnityTestingBackground* _tmp11_;
-	UnityLauncherLauncher* _tmp12_;
-	ClutterActor* _tmp13_;
-	UnitySpacesManager* _tmp14_;
-	UnityExposeManager* _tmp15_;
+	MetaDisplay* display;
+	UnityTestingBackground* _tmp10_;
+	UnityLauncherLauncher* _tmp11_;
+	ClutterActor* _tmp12_;
+	UnitySpacesManager* _tmp13_;
+	UnityExposeManager* _tmp14_;
+	ClutterActor* _tmp15_;
+	ClutterActor* _tmp18_;
+	CtkBin* _tmp17_;
 	ClutterActor* _tmp16_;
 	ClutterActor* _tmp19_;
-	CtkBin* _tmp18_;
-	ClutterActor* _tmp17_;
 	ClutterActor* _tmp20_;
-	ClutterActor* _tmp21_;
-	UnityPlacesController* _tmp22_;
-	UnityPlacesView* _tmp23_;
-	ClutterActor* _tmp24_;
-	UnityPanelView* _tmp25_;
-	ClutterActor* _tmp26_;
+	UnityPlacesController* _tmp21_;
+	UnityPlacesView* _tmp22_;
+	ClutterActor* _tmp23_;
+	UnityPanelView* _tmp24_;
+	ClutterActor* _tmp25_;
 	g_return_val_if_fail (self != NULL, FALSE);
 	START_FUNCTION ();
-	self->priv->fullscreen_requests = (_tmp0_ = gee_array_list_new (G_TYPE_OBJECT, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->priv->fullscreen_requests), _tmp0_);
-	self->priv->stage = (_tmp1_ = _g_object_ref0 (CLUTTER_STAGE (mutter_plugin_get_stage (unity_plugin_get_plugin (self)))), _g_object_unref0 (self->priv->stage), _tmp1_);
+	self->priv->stage = (_tmp0_ = _g_object_ref0 (CLUTTER_STAGE (mutter_plugin_get_stage (unity_plugin_get_plugin (self)))), _g_object_unref0 (self->priv->stage), _tmp0_);
 	g_signal_connect_object ((ClutterContainer*) self->priv->stage, "actor-added", (GCallback) __lambda1__clutter_container_actor_added, self, 0);
 	g_signal_connect_object ((ClutterContainer*) self->priv->stage, "actor-removed", (GCallback) __lambda2__clutter_container_actor_removed, self, 0);
-	self->priv->drag_dest = (_tmp2_ = g_object_ref_sink (unity_drag_dest_new ()), _g_object_unref0 (self->priv->drag_dest), _tmp2_);
+	self->priv->drag_dest = (_tmp1_ = g_object_ref_sink (unity_drag_dest_new ()), _g_object_unref0 (self->priv->drag_dest), _tmp1_);
 	gtk_widget_show ((GtkWidget*) self->priv->drag_dest);
-	target_list = (_tmp10_ = (_tmp9_ = g_new0 (GtkTargetEntry, 6), _tmp9_[0] = (memset (&_tmp3_, 0, sizeof (GtkTargetEntry)), _tmp3_.target = "STRING", _tmp3_.flags = (guint) 0, _tmp3_.info = (guint) UNITY_DND_TARGETS_TARGET_STRING, _tmp3_), _tmp9_[1] = (memset (&_tmp4_, 0, sizeof (GtkTargetEntry)), _tmp4_.target = "text/plain", _tmp4_.flags = (guint) 0, _tmp4_.info = (guint) UNITY_DND_TARGETS_TARGET_STRING, _tmp4_), _tmp9_[2] = (memset (&_tmp5_, 0, sizeof (GtkTargetEntry)), _tmp5_.target = "text/uri-list", _tmp5_.flags = (guint) 0, _tmp5_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp5_), _tmp9_[3] = (memset (&_tmp6_, 0, sizeof (GtkTargetEntry)), _tmp6_.target = "x-url/http", _tmp6_.flags = (guint) 0, _tmp6_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp6_), _tmp9_[4] = (memset (&_tmp7_, 0, sizeof (GtkTargetEntry)), _tmp7_.target = "x-url/ftp", _tmp7_.flags = (guint) 0, _tmp7_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp7_), _tmp9_[5] = (memset (&_tmp8_, 0, sizeof (GtkTargetEntry)), _tmp8_.target = "_NETSCAPE_URL", _tmp8_.flags = (guint) 0, _tmp8_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp8_), _tmp9_), target_list_length1 = 6, _target_list_size_ = target_list_length1, _tmp10_);
+	target_list = (_tmp9_ = (_tmp8_ = g_new0 (GtkTargetEntry, 6), _tmp8_[0] = (memset (&_tmp2_, 0, sizeof (GtkTargetEntry)), _tmp2_.target = "STRING", _tmp2_.flags = (guint) 0, _tmp2_.info = (guint) UNITY_DND_TARGETS_TARGET_STRING, _tmp2_), _tmp8_[1] = (memset (&_tmp3_, 0, sizeof (GtkTargetEntry)), _tmp3_.target = "text/plain", _tmp3_.flags = (guint) 0, _tmp3_.info = (guint) UNITY_DND_TARGETS_TARGET_STRING, _tmp3_), _tmp8_[2] = (memset (&_tmp4_, 0, sizeof (GtkTargetEntry)), _tmp4_.target = "text/uri-list", _tmp4_.flags = (guint) 0, _tmp4_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp4_), _tmp8_[3] = (memset (&_tmp5_, 0, sizeof (GtkTargetEntry)), _tmp5_.target = "x-url/http", _tmp5_.flags = (guint) 0, _tmp5_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp5_), _tmp8_[4] = (memset (&_tmp6_, 0, sizeof (GtkTargetEntry)), _tmp6_.target = "x-url/ftp", _tmp6_.flags = (guint) 0, _tmp6_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp6_), _tmp8_[5] = (memset (&_tmp7_, 0, sizeof (GtkTargetEntry)), _tmp7_.target = "_NETSCAPE_URL", _tmp7_.flags = (guint) 0, _tmp7_.info = (guint) UNITY_DND_TARGETS_TARGET_URL, _tmp7_), _tmp8_), target_list_length1 = 6, _target_list_size_ = target_list_length1, _tmp9_);
 	ctk_dnd_init (GTK_WIDGET (self->priv->drag_dest), target_list, target_list_length1);
 	window_group = _g_object_ref0 (CLUTTER_GROUP (mutter_plugin_get_window_group (unity_plugin_get_plugin (self))));
-	unity_plugin_set_background (self, _tmp11_ = g_object_ref_sink (unity_testing_background_new ()));
-	_g_object_unref0 (_tmp11_);
+	display = _g_object_ref0 (meta_screen_get_display (mutter_plugin_get_screen (unity_plugin_get_plugin (self))));
+	g_signal_connect_object (display, "overlay-key-down", (GCallback) __lambda3__mutter_meta_display_overlay_key_down, self, 0);
+	g_signal_connect_object (display, "overlay-key", (GCallback) __lambda4__mutter_meta_display_overlay_key, self, 0);
+	g_signal_connect_object (display, "overlay-key-with-modifier", (GCallback) __lambda5__mutter_meta_display_overlay_key_with_modifier, self, 0);
+	g_signal_connect_object (display, "overlay-key-with-modifier-down", (GCallback) __lambda6__mutter_meta_display_overlay_key_with_modifier_down, self, 0);
+	unity_plugin_set_background (self, _tmp10_ = g_object_ref_sink (unity_testing_background_new ()));
+	_g_object_unref0 (_tmp10_);
 	clutter_container_add_actor ((ClutterContainer*) self->priv->stage, (ClutterActor*) self->priv->_background);
 	clutter_actor_lower_bottom ((ClutterActor*) self->priv->_background);
 	clutter_actor_show ((ClutterActor*) self->priv->_background);
-	self->priv->launcher = (_tmp12_ = unity_launcher_launcher_new ((UnityShell*) self), _g_object_unref0 (self->priv->launcher), _tmp12_);
-	clutter_actor_set_opacity (_tmp13_ = unity_launcher_launcher_get_view (self->priv->launcher), (guint8) 0);
-	_g_object_unref0 (_tmp13_);
-	self->priv->spaces_manager = (_tmp14_ = unity_spaces_manager_new (self), _g_object_unref0 (self->priv->spaces_manager), _tmp14_);
+	self->priv->launcher = (_tmp11_ = unity_launcher_launcher_new ((UnityShell*) self), _g_object_unref0 (self->priv->launcher), _tmp11_);
+	clutter_actor_set_opacity (_tmp12_ = unity_launcher_launcher_get_view (self->priv->launcher), (guint8) 0);
+	_g_object_unref0 (_tmp12_);
+	self->priv->spaces_manager = (_tmp13_ = unity_spaces_manager_new (self), _g_object_unref0 (self->priv->spaces_manager), _tmp13_);
 	unity_spaces_manager_set_padding (self->priv->spaces_manager, (guint) 50, (guint) 50, (guint) (unity_shell_get_launcher_width_foobar ((UnityShell*) self) + 50), (guint) 50);
 	unity_launcher_scroller_model_add (unity_launcher_launcher_get_model (self->priv->launcher), unity_spaces_manager_get_button (self->priv->spaces_manager));
-	unity_plugin_set_expose_manager (self, _tmp15_ = unity_expose_manager_new (self, self->priv->launcher));
-	_g_object_unref0 (_tmp15_);
+	unity_plugin_set_expose_manager (self, _tmp14_ = unity_expose_manager_new (self, self->priv->launcher));
+	_g_object_unref0 (_tmp14_);
 	unity_expose_manager_set_hovered_opacity (self->priv->_expose_manager, (guint8) 255);
 	unity_expose_manager_set_unhovered_opacity (self->priv->_expose_manager, (guint8) 255);
 	unity_expose_manager_set_darken (self->priv->_expose_manager, (guint8) 25);
 	unity_expose_manager_set_right_buffer (self->priv->_expose_manager, 10);
 	unity_expose_manager_set_top_buffer (self->priv->_expose_manager, (unity_expose_manager_set_bottom_buffer (self->priv->_expose_manager, 20), unity_expose_manager_get_bottom_buffer (self->priv->_expose_manager)));
 	unity_expose_manager_set_coverflow (self->priv->_expose_manager, FALSE);
-	clutter_container_add_actor ((ClutterContainer*) window_group, _tmp16_ = unity_launcher_launcher_get_container (self->priv->launcher));
-	_g_object_unref0 (_tmp16_);
-	clutter_container_add_actor ((ClutterContainer*) (_tmp18_ = (_tmp17_ = unity_launcher_launcher_get_container (self->priv->launcher), CTK_IS_BIN (_tmp17_) ? ((CtkBin*) _tmp17_) : NULL)), _tmp19_ = unity_launcher_launcher_get_view (self->priv->launcher));
-	_g_object_unref0 (_tmp19_);
+	clutter_container_add_actor ((ClutterContainer*) window_group, _tmp15_ = unity_launcher_launcher_get_container (self->priv->launcher));
+	_g_object_unref0 (_tmp15_);
+	clutter_container_add_actor ((ClutterContainer*) (_tmp17_ = (_tmp16_ = unity_launcher_launcher_get_container (self->priv->launcher), CTK_IS_BIN (_tmp16_) ? ((CtkBin*) _tmp16_) : NULL)), _tmp18_ = unity_launcher_launcher_get_view (self->priv->launcher));
 	_g_object_unref0 (_tmp18_);
-	clutter_container_raise_child ((ClutterContainer*) window_group, _tmp20_ = unity_launcher_launcher_get_container (self->priv->launcher), mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self)));
+	_g_object_unref0 (_tmp17_);
+	clutter_container_raise_child ((ClutterContainer*) window_group, _tmp19_ = unity_launcher_launcher_get_container (self->priv->launcher), mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self)));
+	_g_object_unref0 (_tmp19_);
+	clutter_actor_animate (_tmp20_ = unity_launcher_launcher_get_view (self->priv->launcher), (gulong) CLUTTER_EASE_IN_SINE, (guint) 400, "opacity", 255, NULL);
 	_g_object_unref0 (_tmp20_);
-	clutter_actor_animate (_tmp21_ = unity_launcher_launcher_get_view (self->priv->launcher), (gulong) CLUTTER_EASE_IN_SINE, (guint) 400, "opacity", 255, NULL);
-	_g_object_unref0 (_tmp21_);
-	self->priv->places_controller = (_tmp22_ = unity_places_controller_new ((UnityShell*) self), _g_object_unref0 (self->priv->places_controller), _tmp22_);
-	self->priv->places = (_tmp23_ = unity_places_controller_get_view (self->priv->places_controller), _g_object_unref0 (self->priv->places), _tmp23_);
+	self->priv->places_controller = (_tmp21_ = unity_places_controller_new ((UnityShell*) self), _g_object_unref0 (self->priv->places_controller), _tmp21_);
+	self->priv->places = (_tmp22_ = unity_places_controller_get_view (self->priv->places_controller), _g_object_unref0 (self->priv->places), _tmp22_);
 	clutter_container_add_actor ((ClutterContainer*) window_group, (ClutterActor*) self->priv->places);
-	clutter_container_raise_child ((ClutterContainer*) window_group, (ClutterActor*) self->priv->places, _tmp24_ = unity_launcher_launcher_get_container (self->priv->launcher));
-	_g_object_unref0 (_tmp24_);
+	clutter_container_raise_child ((ClutterContainer*) window_group, (ClutterActor*) self->priv->places, _tmp23_ = unity_launcher_launcher_get_container (self->priv->launcher));
+	_g_object_unref0 (_tmp23_);
 	clutter_actor_set_opacity ((ClutterActor*) self->priv->places, (guint8) 0);
 	clutter_actor_set_reactive ((ClutterActor*) self->priv->places, FALSE);
 	clutter_actor_hide ((ClutterActor*) self->priv->places);
 	self->priv->places_showing = FALSE;
-	self->priv->panel = (_tmp25_ = g_object_ref_sink (unity_panel_view_new ((UnityShell*) self)), _g_object_unref0 (self->priv->panel), _tmp25_);
+	self->priv->panel = (_tmp24_ = g_object_ref_sink (unity_panel_view_new ((UnityShell*) self)), _g_object_unref0 (self->priv->panel), _tmp24_);
 	clutter_container_add_actor ((ClutterContainer*) window_group, (ClutterActor*) self->priv->panel);
-	clutter_container_raise_child ((ClutterContainer*) window_group, (ClutterActor*) self->priv->panel, _tmp26_ = unity_launcher_launcher_get_container (self->priv->launcher));
-	_g_object_unref0 (_tmp26_);
+	clutter_container_raise_child ((ClutterContainer*) window_group, (ClutterActor*) self->priv->panel, _tmp25_ = unity_launcher_launcher_get_container (self->priv->launcher));
+	_g_object_unref0 (_tmp25_);
 	clutter_actor_show ((ClutterActor*) self->priv->panel);
 	g_signal_connect_object ((GObject*) self->priv->stage, "notify::width", (GCallback) _unity_plugin_relayout_g_object_notify, self, 0);
 	g_signal_connect_object ((GObject*) self->priv->stage, "notify::height", (GCallback) _unity_plugin_relayout_g_object_notify, self, 0);
 	unity_plugin_relayout (self);
 	END_FUNCTION ();
 	if (boot_logging_filename != NULL) {
-		g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 5, __lambda5__gsource_func, g_object_ref (self), g_object_unref);
+		g_timeout_add_seconds_full (G_PRIORITY_DEFAULT, (guint) 5, __lambda12__gsource_func, g_object_ref (self), g_object_unref);
 	}
 	unity_shell_ensure_input_region ((UnityShell*) self);
 	result = FALSE;
+	_g_object_unref0 (display);
 	_g_object_unref0 (window_group);
 	target_list = (g_free (target_list), NULL);
 	return result;
@@ -667,7 +722,7 @@ static guint32 unity_plugin_real_get_current_time (UnityShell* base) {
 }
 
 
-static void _lambda6_ (UnityPlugin* self) {
+static void _lambda13_ (UnityPlugin* self) {
 	UnityLauncherLauncherContainer* _tmp1_;
 	ClutterActor* _tmp0_;
 	ctk_effect_cache_update_texture_cache ((_tmp1_ = (_tmp0_ = unity_launcher_launcher_get_container (self->priv->launcher), UNITY_LAUNCHER_IS_LAUNCHER_CONTAINER (_tmp0_) ? ((UnityLauncherLauncherContainer*) _tmp0_) : NULL))->cache);
@@ -675,18 +730,18 @@ static void _lambda6_ (UnityPlugin* self) {
 }
 
 
-static void __lambda6__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	_lambda6_ (self);
+static void __lambda13__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+	_lambda13_ (self);
 }
 
 
-static void _lambda7_ (UnityPlugin* self) {
+static void _lambda14_ (UnityPlugin* self) {
 	ctk_effect_cache_update_texture_cache (self->priv->panel->cache);
 }
 
 
-static void __lambda7__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	_lambda7_ (self);
+static void __lambda14__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+	_lambda14_ (self);
 }
 
 
@@ -767,10 +822,10 @@ static void unity_plugin_check_fullscreen_obstruction (UnityPlugin* self) {
 		unity_plugin_set_fullscreen_obstruction (self, FALSE);
 	}
 	if (CLUTTER_IS_ANIMATION (anim)) {
-		g_signal_connect_object (anim, "completed", (GCallback) __lambda6__clutter_animation_completed, self, 0);
+		g_signal_connect_object (anim, "completed", (GCallback) __lambda13__clutter_animation_completed, self, 0);
 	}
 	if (CLUTTER_IS_ANIMATION (panim)) {
-		g_signal_connect_object (panim, "completed", (GCallback) __lambda7__clutter_animation_completed, self, 0);
+		g_signal_connect_object (panim, "completed", (GCallback) __lambda14__clutter_animation_completed, self, 0);
 	}
 	_g_object_unref0 (panim);
 	_g_object_unref0 (anim);
@@ -1066,27 +1121,27 @@ void unity_plugin_expose_windows (UnityPlugin* self, GSList* windows, gint left_
 }
 
 
-static void _lambda8_ (ClutterAnimation* an, UnityPlugin* self) {
+static void _lambda15_ (ClutterAnimation* an, UnityPlugin* self) {
 	GObject* _tmp0_;
 	g_return_if_fail (an != NULL);
 	clutter_actor_destroy ((_tmp0_ = clutter_animation_get_object (an), CLUTTER_IS_ACTOR (_tmp0_) ? ((ClutterActor*) _tmp0_) : NULL));
 }
 
 
-static void __lambda8__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	_lambda8_ (_sender, self);
+static void __lambda15__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+	_lambda15_ (_sender, self);
 }
 
 
-static void _lambda9_ (ClutterAnimation* an, UnityPlugin* self) {
+static void _lambda16_ (ClutterAnimation* an, UnityPlugin* self) {
 	GObject* _tmp0_;
 	g_return_if_fail (an != NULL);
 	clutter_actor_hide ((_tmp0_ = clutter_animation_get_object (an), CLUTTER_IS_ACTOR (_tmp0_) ? ((ClutterActor*) _tmp0_) : NULL));
 }
 
 
-static void __lambda9__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	_lambda9_ (_sender, self);
+static void __lambda16__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+	_lambda16_ (_sender, self);
 }
 
 
@@ -1100,10 +1155,10 @@ static void unity_plugin_real_hide_unity (UnityShell* base) {
 	}
 	self->priv->places_showing = FALSE;
 	anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->dark_box, (gulong) CLUTTER_EASE_IN_QUAD, (guint) 100, "opacity", 0, NULL));
-	g_signal_connect_object (anim, "completed", (GCallback) __lambda8__clutter_animation_completed, self, 0);
+	g_signal_connect_object (anim, "completed", (GCallback) __lambda15__clutter_animation_completed, self, 0);
 	clutter_actor_animate (mutter_plugin_get_normal_window_group (unity_plugin_get_plugin (self)), (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 100, "opacity", 255, NULL);
 	anim = (_tmp0_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->places, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 100, "opacity", 0, NULL)), _g_object_unref0 (anim), _tmp0_);
-	g_signal_connect_object (anim, "completed", (GCallback) __lambda9__clutter_animation_completed, self, 0);
+	g_signal_connect_object (anim, "completed", (GCallback) __lambda16__clutter_animation_completed, self, 0);
 	unity_panel_view_set_indicator_mode (self->priv->panel, FALSE);
 	unity_shell_ensure_input_region ((UnityShell*) self);
 	while (TRUE) {
@@ -1267,7 +1322,7 @@ static void unity_plugin_real_do_window_action (UnityShell* base, guint32 xid, U
 			{
 				char* _tmp1_;
 				GEnumValue* _tmp0_;
-				g_warning ("plugin.vala:746: %s", _tmp1_ = g_strconcat ("Window action type ", (_tmp0_ = g_enum_get_value (g_type_class_ref (UNITY_TYPE_WINDOW_ACTION), (int) action), (_tmp0_ != NULL) ? _tmp0_->value_name : NULL), " not supported", NULL));
+				g_warning ("plugin.vala:771: %s", _tmp1_ = g_strconcat ("Window action type ", (_tmp0_ = g_enum_get_value (g_type_class_ref (UNITY_TYPE_WINDOW_ACTION), (int) action), (_tmp0_ != NULL) ? _tmp0_->value_name : NULL), " not supported", NULL));
 				_g_free0 (_tmp1_);
 				break;
 			}
@@ -1453,6 +1508,23 @@ static gboolean unity_plugin_real_get_menus_swallow_events (UnityShell* base) {
 }
 
 
+static gboolean unity_plugin_real_get_super_key_active (UnityShell* base) {
+	gboolean result;
+	UnityPlugin* self;
+	self = (UnityPlugin*) base;
+	result = self->priv->_super_key_active;
+	return result;
+}
+
+
+static void unity_plugin_real_set_super_key_active (UnityShell* base, gboolean value) {
+	UnityPlugin* self;
+	self = (UnityPlugin*) base;
+	self->priv->_super_key_active = value;
+	g_object_notify ((GObject *) self, "super-key-active");
+}
+
+
 gboolean unity_plugin_get_expose_showing (UnityPlugin* self) {
 	gboolean result;
 	g_return_val_if_fail (self != NULL, FALSE);
@@ -1498,44 +1570,46 @@ static GObject * unity_plugin_constructor (GType type, guint n_construct_propert
 	self = UNITY_PLUGIN (obj);
 	_inner_error_ = NULL;
 	{
-		UnityShell* _tmp0_;
-		char* _tmp1_;
-		char** _tmp3_;
+		GeeArrayList* _tmp0_;
+		UnityShell* _tmp1_;
+		char* _tmp2_;
+		char** _tmp4_;
 		gint _args_size_;
 		gint args_length1;
-		char** _tmp2_ = NULL;
+		char** _tmp3_ = NULL;
 		char** args;
-		UnityApplication* _tmp4_;
-		UnityWindowManagement* _tmp8_;
-		UnityMaximus* _tmp9_;
-		unity_global_shell = (_tmp0_ = _g_object_ref0 ((UnityShell*) self), _g_object_unref0 (unity_global_shell), _tmp0_);
+		UnityApplication* _tmp5_;
+		UnityWindowManagement* _tmp9_;
+		UnityMaximus* _tmp10_;
+		self->priv->fullscreen_requests = (_tmp0_ = gee_array_list_new (G_TYPE_OBJECT, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->priv->fullscreen_requests), _tmp0_);
+		unity_global_shell = (_tmp1_ = _g_object_ref0 ((UnityShell*) self), _g_object_unref0 (unity_global_shell), _tmp1_);
 		unity_timeline_logger_get_default ();
-		boot_logging_filename = (_tmp1_ = g_strdup (g_getenv ("UNITY_BOOTLOG_FILENAME")), _g_free0 (boot_logging_filename), _tmp1_);
+		boot_logging_filename = (_tmp2_ = g_strdup (g_getenv ("UNITY_BOOTLOG_FILENAME")), _g_free0 (boot_logging_filename), _tmp2_);
 		if (boot_logging_filename != NULL) {
 			unity_is_logging = TRUE;
 		} else {
 			unity_is_logging = FALSE;
 		}
 		START_FUNCTION ();
-		args = (_tmp3_ = (_tmp2_ = g_new0 (char*, 1 + 1), _tmp2_[0] = g_strdup ("mutter"), _tmp2_), args_length1 = 1, _args_size_ = args_length1, _tmp3_);
+		args = (_tmp4_ = (_tmp3_ = g_new0 (char*, 1 + 1), _tmp3_[0] = g_strdup ("mutter"), _tmp3_), args_length1 = 1, _args_size_ = args_length1, _tmp4_);
 		LOGGER_START_PROCESS ("ctk_init");
 		ctk_init_after (&args_length1, &args);
 		LOGGER_END_PROCESS ("ctk_init");
 		g_object_set (gtk_settings_get_default (), "gtk-icon-theme-name", "ubuntu-mono-dark", NULL);
 		LOGGER_START_PROCESS ("unity_application_constructor");
-		self->priv->app = (_tmp4_ = unity_application_new (), _g_object_unref0 (self->priv->app), _tmp4_);
+		self->priv->app = (_tmp5_ = unity_application_new (), _g_object_unref0 (self->priv->app), _tmp5_);
 		unity_application_set_shell (self->priv->app, (UnityShell*) self);
 		LOGGER_END_PROCESS ("unity_application_constructor");
 		{
-			DBusGConnection* _tmp5_;
 			DBusGConnection* _tmp6_;
-			DBusGProxy* _tmp7_;
-			_tmp5_ = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
+			DBusGConnection* _tmp7_;
+			DBusGProxy* _tmp8_;
+			_tmp6_ = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
 			if (_inner_error_ != NULL) {
 				goto __catch0_g_error;
 			}
-			self->priv->screensaver_conn = (_tmp6_ = _tmp5_, _dbus_g_connection_unref0 (self->priv->screensaver_conn), _tmp6_);
-			self->priv->screensaver = (_tmp7_ = dbus_g_proxy_new_for_name (self->priv->screensaver_conn, "org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver"), _g_object_unref0 (self->priv->screensaver), _tmp7_);
+			self->priv->screensaver_conn = (_tmp7_ = _tmp6_, _dbus_g_connection_unref0 (self->priv->screensaver_conn), _tmp7_);
+			self->priv->screensaver = (_tmp8_ = dbus_g_proxy_new_for_name (self->priv->screensaver_conn, "org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver"), _g_object_unref0 (self->priv->screensaver), _tmp8_);
 			_dynamic_ActiveChanged1_connect (self->priv->screensaver, "ActiveChanged", (GCallback) _unity_plugin_got_screensaver_changed_dynamic_ActiveChanged0_, self);
 		}
 		goto __finally0;
@@ -1545,7 +1619,7 @@ static GObject * unity_plugin_constructor (GType type, guint n_construct_propert
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("plugin.vala:194: %s", e->message);
+				g_warning ("plugin.vala:201: %s", e->message);
 				_g_error_free0 (e);
 			}
 		}
@@ -1555,8 +1629,8 @@ static GObject * unity_plugin_constructor (GType type, guint n_construct_propert
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);
 		}
-		self->priv->wm = (_tmp8_ = unity_window_management_new (self), _g_object_unref0 (self->priv->wm), _tmp8_);
-		self->priv->maximus = (_tmp9_ = unity_maximus_new (), _g_object_unref0 (self->priv->maximus), _tmp9_);
+		self->priv->wm = (_tmp9_ = unity_window_management_new (self), _g_object_unref0 (self->priv->wm), _tmp9_);
+		self->priv->maximus = (_tmp10_ = unity_maximus_new (), _g_object_unref0 (self->priv->maximus), _tmp10_);
 		END_FUNCTION ();
 		args = (_vala_array_free (args, args_length1, (GDestroyNotify) g_free), NULL);
 	}
@@ -1575,6 +1649,7 @@ static void unity_plugin_class_init (UnityPluginClass * klass) {
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLUGIN_EXPOSE_MANAGER, g_param_spec_object ("expose-manager", "expose-manager", "expose-manager", UNITY_TYPE_EXPOSE_MANAGER, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLUGIN_BACKGROUND, g_param_spec_object ("background", "background", "background", UNITY_TESTING_TYPE_BACKGROUND, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLUGIN_MENUS_SWALLOW_EVENTS, "menus-swallow-events");
+	g_object_class_override_property (G_OBJECT_CLASS (klass), UNITY_PLUGIN_SUPER_KEY_ACTIVE, "super-key-active");
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLUGIN_EXPOSE_SHOWING, g_param_spec_boolean ("expose-showing", "expose-showing", "expose-showing", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE));
 	g_signal_new ("window_minimized", UNITY_TYPE_PLUGIN, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_OBJECT, G_TYPE_NONE, 2, UNITY_TYPE_PLUGIN, MUTTER_TYPE_WINDOW);
 	g_signal_new ("window_maximized", UNITY_TYPE_PLUGIN, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_user_marshal_VOID__OBJECT_OBJECT_INT_INT_INT_INT, G_TYPE_NONE, 6, UNITY_TYPE_PLUGIN, MUTTER_TYPE_WINDOW, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT, G_TYPE_INT);
@@ -1610,11 +1685,14 @@ static void unity_plugin_unity_shell_interface_init (UnityShellIface * iface) {
 	iface->get_panel_height_foobar = unity_plugin_real_get_panel_height_foobar;
 	iface->get_launcher_width_foobar = unity_plugin_real_get_launcher_width_foobar;
 	iface->get_menus_swallow_events = unity_plugin_real_get_menus_swallow_events;
+	iface->get_super_key_active = unity_plugin_real_get_super_key_active;
+	iface->set_super_key_active = unity_plugin_real_set_super_key_active;
 }
 
 
 static void unity_plugin_instance_init (UnityPlugin * self) {
 	self->priv = UNITY_PLUGIN_GET_PRIVATE (self);
+	self->priv->_super_key_active = FALSE;
 	self->priv->focus_window = NULL;
 	self->priv->display = NULL;
 	self->priv->last_input_state = UNITY_INPUT_STATE_NONE;
@@ -1677,6 +1755,9 @@ static void unity_plugin_get_property (GObject * object, guint property_id, GVal
 		case UNITY_PLUGIN_MENUS_SWALLOW_EVENTS:
 		g_value_set_boolean (value, unity_shell_get_menus_swallow_events ((UnityShell*) self));
 		break;
+		case UNITY_PLUGIN_SUPER_KEY_ACTIVE:
+		g_value_set_boolean (value, unity_shell_get_super_key_active ((UnityShell*) self));
+		break;
 		case UNITY_PLUGIN_EXPOSE_SHOWING:
 		g_value_set_boolean (value, unity_plugin_get_expose_showing (self));
 		break;
@@ -1699,6 +1780,9 @@ static void unity_plugin_set_property (GObject * object, guint property_id, cons
 		break;
 		case UNITY_PLUGIN_BACKGROUND:
 		unity_plugin_set_background (self, g_value_get_object (value));
+		break;
+		case UNITY_PLUGIN_SUPER_KEY_ACTIVE:
+		unity_shell_set_super_key_active ((UnityShell*) self, g_value_get_boolean (value));
 		break;
 		default:
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
