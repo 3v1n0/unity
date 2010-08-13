@@ -1,3 +1,10 @@
+unity (0.2.24-0ubuntu2) UNRELEASED; urgency=low
+
+  * debian/patches/01_show_gicons:
+    - adapt with latest libindicator change
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 13 Aug 2010 13:02:06 +0200
+
 unity (0.2.24-0ubuntu1) maverick; urgency=low
 
   * New upstream release.
