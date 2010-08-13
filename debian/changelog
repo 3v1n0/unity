@@ -1,8 +1,18 @@
 unity (0.2.26-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+    - Fix mutter grabbing the [Super] key and breaks the shorcuts
+      overlay (LP: #612992)
+    - Fix flattened icons move when expansion is triggered by a mouse over a
+      flattened launcher item (LP: #600977)
+    - Holding down super should reveal a list of keyboard shortcuts
+      (LP: #610366)
+    - Update the applications model when changes are detected (LP: #610382)
+    - Implement Applications Place Software Center integration (LP: #608179)
+    - Files Place home screen should have a Recent group (LP: #607815)
   * debian/patches/01_show_gicons:
     - adapt with latest libindicator change
+  * update debian/libunity0.symbols
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 13 Aug 2010 13:04:11 +0200
 

@@ -177,6 +177,7 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_launcher_scroller_model_value_take_iterator@Base 0.2.22
  unity_launcher_scroller_phase_get_type@Base 0.2.22
  unity_launcher_scroller_view_construct@Base 0.2.22
+ unity_launcher_scroller_view_enable_keyboard_selection_mode@Base 0.2.26
  unity_launcher_scroller_view_get_cache@Base 0.2.22
  unity_launcher_scroller_view_get_is_autoscrolling@Base 0.2.22
  unity_launcher_scroller_view_get_model@Base 0.2.22
@@ -915,12 +916,14 @@ libunity.so.0 libunity0 #MINVER#
  unity_shell_get_mode@Base 0.2.22
  unity_shell_get_panel_height_foobar@Base 0.2.22
  unity_shell_get_stage@Base 0.2.22
+ unity_shell_get_super_key_active@Base 0.2.26
  unity_shell_get_type@Base 0.2.22
  unity_shell_get_window_details@Base 0.2.22
  unity_shell_grab_keyboard@Base 0.2.22
  unity_shell_hide_unity@Base 0.2.22
  unity_shell_mode_get_type@Base 0.2.22
  unity_shell_remove_fullscreen_request@Base 0.2.22
+ unity_shell_set_super_key_active@Base 0.2.26
  unity_shell_show_unity@Base 0.2.22
  unity_shell_show_window@Base 0.2.22
  unity_shell_stop_expose@Base 0.2.22
