@@ -1,20 +1,32 @@
 === modified file 'unity-private/panel/panel-indicator-object-entry-view.vala'
 --- unity-private/panel/panel-indicator-object-entry-view.vala 2010-07-08 13:48:39 +0000
-+++ unity-private/panel/panel-indicator-object-entry-view.vala 2010-08-13 10:51:07 +0000
-@@ -125,6 +125,15 @@
++++ unity-private/panel/panel-indicator-object-entry-view.vala 2010-08-13 11:42:20 +0000
+@@ -82,6 +82,12 @@
+               image.size = entry.image.pixbuf.width;
+             }
+ 
++          if (entry.image.gicon is GLib.Icon)
++            {
++              image.gicon = entry.image.gicon;
++              image.size = 22;
++            }
++
+           if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
+             {
+               image.show ();
+@@ -125,6 +131,15 @@
              }
          });
  
 +      entry.image.notify["gicon"].connect (() =>
 +        {
 +          if (image.gicon is GLib.Icon)
-+          {
++            {
 +            image.gicon = entry.image.gicon;
 +            image.size = 22;
-+          }
++            }
 +        });
 +
        unowned Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
        theme.changed.connect (() =>
          {
-
