@@ -216,10 +216,15 @@ namespace Unity.Launcher
 
     public void force_rotation_jump (float degrees)
     {
+      if (processed_icon.get_animation () is Clutter.Animation)
+        processed_icon.get_animation ().completed ();
+
       processed_icon.rotation = degrees;
       rotation = degrees;
+/*
       rotate_state = AnimState.STOPPED;
       rotate_timeline.stop ();
+*/
       do_queue_redraw ();
     }
 
@@ -455,18 +460,12 @@ namespace Unity.Launcher
     {
       old_rotate_value = processed_icon.rotation;
 
-      if (rotate_timeline is Clutter.Timeline == false)
-        return;
+      if (processed_icon.get_animation () is Clutter.Animation)
+        processed_icon.get_animation ().completed ();
 
-      if (rotate_timeline.is_playing ())
-        {
-          rotate_timeline.stop ();
-          processed_icon.rotation = old_rotate_value;
-        }
-
-      rotate_timeline.set_duration (300);
-      rotate_state = AnimState.RISING;
-      rotate_timeline.start ();
+      processed_icon.rotation = old_rotate_value;
+      processed_icon.animate (Clutter.AnimationMode.EASE_OUT_QUINT, 300,
+                              "rotation", rotation);
     }
 
     private void on_activating_changed ()

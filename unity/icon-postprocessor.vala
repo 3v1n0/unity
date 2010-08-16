@@ -296,7 +296,7 @@ namespace Unity
     private Cogl.Material icon_material;
     private Cogl.Material bgcol_material;
 
-    public float rotation = 0.0f;
+    public float rotation {get; set;}
 
 
     public UnityIcon (Clutter.Texture? icon, Clutter.Texture? bg_tex)
@@ -347,6 +347,7 @@ namespace Unity
         tex = (Cogl.Texture)(unity_icon_fg_layer.get_cogl_texture ());
         mat.set_layer (0, tex);
         fg_mat = mat;
+        notify["rotation"].connect (() => { do_queue_redraw (); });
     }
 
     public override void get_preferred_width (float for_height,

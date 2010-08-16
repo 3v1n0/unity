@@ -1120,7 +1120,7 @@ namespace Unity.Launcher
               child.rotation = transitions[index].rotation;
 
               if (do_new_position)
-                child.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD,
+                child.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
                                300,
                                "position", transitions[index].position
                                );
@@ -1136,6 +1136,8 @@ namespace Unity.Launcher
       float min_height, nat_height;
       if (!(draw_ftb is Gee.ArrayList))
         draw_ftb = new Gee.ArrayList<ScrollerChild> ();
+
+      if (!(draw_ftb is Gee.ArrayList))
         draw_btf = new Gee.ArrayList<ScrollerChild> ();
 
       foreach (ScrollerChild child in model)
