@@ -92,10 +92,8 @@ namespace Unity.Launcher
     private Clutter.Animation running_indicator_anim;
     private Clutter.Timeline  wiggle_timeline;
     private Clutter.Timeline  glow_timeline;
-    private Clutter.Timeline  rotate_timeline;
     private AnimState glow_state;
     private AnimState wiggle_state;
-    private AnimState rotate_state;
 
     private float old_rotate_value = 0.0f;
 
@@ -112,11 +110,9 @@ namespace Unity.Launcher
       //icon glow
       glow_timeline = new Clutter.Timeline (1);
       wiggle_timeline = new Clutter.Timeline (1);
-      rotate_timeline = new Clutter.Timeline (1);
 
       glow_timeline.new_frame.connect (on_glow_timeline_new_frame);
       wiggle_timeline.new_frame.connect (on_wiggle_timeline_new_frame);
-      rotate_timeline.new_frame.connect (on_rotate_timeline_new_frame);
 
       notify["rotation"].connect (on_rotation_changed);
     }
@@ -184,36 +180,6 @@ namespace Unity.Launcher
     }
     /* animation callbacks */
 
-    private void on_rotate_timeline_new_frame ()
-    {
-      float progress = (float)rotate_timeline.get_progress ();
-      switch (rotate_state)
-        {
-          case AnimState.RISING:
-            rotate_anim_rising (progress);
-            break;
-
-          case AnimState.STOPPED:
-            rotate_timeline.stop ();
-            break;
-        }
-      processed_icon.do_queue_redraw ();
-    }
-
-    private void rotate_anim_rising (float progress)
-    {
-      progress = get_ease_out_sine (progress);
-      var diff = rotation - old_rotate_value;
-      float rotate_val = old_rotate_value + (progress * diff);
-
-      processed_icon.rotation = rotate_val;
-      if (progress >= 1.0)
-        {
-          rotate_state = AnimState.STOPPED;
-          rotate_timeline.stop ();
-        }
-    }
-
     public void force_rotation_jump (float degrees)
     {
       if (processed_icon.get_animation () is Clutter.Animation)
@@ -221,10 +187,6 @@ namespace Unity.Launcher
 
       processed_icon.rotation = degrees;
       rotation = degrees;
-/*
-      rotate_state = AnimState.STOPPED;
-      rotate_timeline.stop ();
-*/
       do_queue_redraw ();
     }
 

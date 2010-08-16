@@ -1147,8 +1147,8 @@ namespace Unity.Launcher
         transition.position = h + scroll_position;
         transition.rotation = 0.0f;
         ret_transitions.add (transition);
-        if (!(child in draw_ftb || child in draw_ftb))
-          draw_ftb.add (child);
+        //if (!(child in draw_ftb || child in draw_ftb))
+          //draw_ftb.add (child);
         h += nat_height + spacing;
       }
       return ret_transitions;
