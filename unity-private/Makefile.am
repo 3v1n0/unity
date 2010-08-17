@@ -105,7 +105,9 @@ places_sources = \
   places/places-place-search-navigation.vala \
   places/places-place-search-sections-bar.vala \
   places/places-trash-controller.vala \
-  places/places-view.vala
+  places/places-view.vala \
+  places/places-volume-controller.vala \
+  places/places-volume-child-controller.vala
 
 launcher_sources = \
   launcher/application-controller.vala \

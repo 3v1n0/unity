@@ -29,8 +29,9 @@ namespace Unity.Places
      * This class takes care of reading in the places, creating the view and
      * keeping it up-to-date
      **/
-    public  Shell shell { get; construct; }
-    public  PlaceModel model { get; set; }
+    public Shell shell { get; construct; }
+    public PlaceModel model { get; set; }
+    public VolumeController volumes { get; set; } 
 
     private View view;
 
@@ -48,6 +49,8 @@ namespace Unity.Places
         foreach (PlaceEntry e in place.get_entries ())
           on_entry_added (e);
       });
+
+      volumes = new VolumeController ();
 
       ScrollerModel s = ObjectRegistry.get_default ().lookup ("UnityScrollerModel")[0] as ScrollerModel;
 
