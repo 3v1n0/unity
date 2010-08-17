@@ -24,6 +24,7 @@ namespace Unity
   {
     private Clutter.Clone clone;
     private Clutter.Actor darken_box;
+    private Clutter.Actor original_parent;
     private bool hovered;
     private bool dragging;
     private float drag_start_x;
@@ -33,6 +34,8 @@ namespace Unity
     public bool fade_on_close { get; set; }
 
     public unowned Clutter.Actor source { get; private set; }
+    
+    public signal void drag_dropped (Clutter.Actor onto);
 
     public uint8 hovered_opacity { get; set; }
     public uint8 unhovered_opacity { get; set; }
@@ -98,50 +101,68 @@ namespace Unity
     {
       dragging = true;
       this.get_stage ().captured_event.connect (on_stage_captured_event);
+      original_parent = get_parent ();
       
       float x, y;
-      float out_x = 0, out_y = 0;
-      
       evnt.get_coords (out x, out y);
-      get_parent ().transform_stage_point (x, y, out out_x, out out_y);
       
-      drag_start_x = out_x - width / 2;
-      drag_start_y = out_y - height / 2;
+      drag_start_x = x;
+      drag_start_y = y;
       
       drag_moved = false;
     }
     
-    private void end_drag ()
+    private void end_drag (int x, int y)
     {
       dragging = false;
       this.get_stage ().captured_event.disconnect (on_stage_captured_event);
+
+      if (!drag_moved)
+        return;
+      
+      reparent (original_parent);
+
+      reactive = false;
+      Clutter.Actor target = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, x, y);
+      reactive = true;
+      
+      drag_dropped (target);
     }
     
     private bool on_stage_captured_event (Clutter.Event event)
     {
+      float x, y;
+      event.get_coords (out x, out y);
+    
       if (!dragging)
         {
-          end_drag ();
+          end_drag ((int) x, (int) y);
           return false;
         }
         
       if (event.type == Clutter.EventType.MOTION)
         {
-          float out_x = 0, out_y = 0;
-          get_parent ().transform_stage_point (event.motion.x, event.motion.y, out out_x, out out_y);
-          
-          out_x -= width / 2;
-          out_y -= height / 2;
-          
-          if (Math.fabs (out_x - drag_start_x) > 15 || Math.fabs (out_y - drag_start_y) > 15 || drag_moved)
+          if (Math.fabs (event.motion.x - drag_start_x) > 30 || Math.fabs (event.motion.x - drag_start_y) > 30 || drag_moved)
             {
-              drag_moved = true;
-              set_position (out_x, out_y);
+              if (!drag_moved)
+                {
+                  float width, height;
+                  
+                  get_transformed_size (out width, out height);
+                
+                  reparent (get_stage ());
+                  
+                  this.set_scale (width / this.width, height / this.height);
+                  
+                  raise_top ();
+                  drag_moved = true;
+                }
+              set_position (event.motion.x - width / 2, event.motion.y - height / 2);
             }
         }
       else if (event.type == Clutter.EventType.BUTTON_RELEASE)
         {
-          end_drag ();
+          end_drag ((int) x, (int) y);
           return drag_moved;
         }
 
