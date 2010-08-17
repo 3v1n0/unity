@@ -69,25 +69,45 @@ namespace Unity.Places
       this.unref ();
     }
 
+    private void open_volume ()
+    {
+      Mount? mount = volume.get_mount ();
+
+      if (mount is Mount)
+        {
+          var loc = mount.get_root ();
+          try {
+            AppInfo.launch_default_for_uri (loc.get_uri (), null);
+          } catch (Error err) {
+            warning ("Cannot open volume '$(volume.get_name ())': $(err.message)");
+          }
+        }
+      else
+        {
+          if (volume.can_mount () == false)
+            {
+              warning (@"Cannot open volume '$(volume.get_name ())': Cannot be mounted");
+              return;
+            }
+          try {
+            volume.mount.begin (0, null, null);
+
+            mount = volume.get_mount ();
+            if (mount is Mount)
+              AppInfo.launch_default_for_uri (mount.get_root ().get_uri (), null);
+            else
+              warning (@"Cannot open volume '$(volume.get_name ())': Unable to mount");
+          } catch (Error e) {
+            warning (@"Cannot open volume '$(volume.get_name ())': $(e.message)");
+          }
+
+        }
+    }
+
     /* Overides */
     public override void activate ()
     {
-      try {
-        Mount? mount = volume.get_mount ();
-        if (mount is Mount)
-          {
-            Gtk.show_uri (null,
-                          mount.get_root ().get_uri (),
-                          Clutter.get_current_event_time ());
-          }
-        else
-          {
-            debug ("No mount point");
-          }
-
-      } catch (Error e) {
-        warning (@"Unable to show Trash: $(e.message)");
-      }
+      open_volume ();
     }
 
     public override QuicklistController? get_menu_controller ()
@@ -99,7 +119,16 @@ namespace Unity.Places
     {
       Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
       root.set_root (true);
-     
+      
+      Dbusmenu.Menuitem item;
+
+      item = new Dbusmenu.Menuitem ();
+      item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Open"));
+      item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
+      item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
+      item.item_activated.connect (open_volume);
+      root.child_append (item);
+
       callback (root);
     }
 
@@ -108,20 +137,19 @@ namespace Unity.Places
       Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
       root.set_root (true);
 
-      Dbusmenu.Menuitem item;
 
-      item = new Dbusmenu.Menuitem ();
-      item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Open");
-      item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
-      item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
-      root.child_append (item);
-      item.item_activated.connect (() => {
-        try {
-          Gtk.show_uri (null, "trash://", Clutter.get_current_event_time ());
-        } catch (Error e) {
-          warning (@"Unable to show Trash: $(e.message)");
+      var mount = volume.get_mount ();
+      if (mount is Mount && mount.can_eject ())
+        {
+          Dbusmenu.Menuitem item;
+
+          item = new Dbusmenu.Menuitem ();
+          item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Eject"));
+          item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
+          item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
+          root.child_append (item);
+          item.item_activated.connect (open_volume);
         }
-      });
 
       callback (root);
     }
