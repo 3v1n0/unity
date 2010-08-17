@@ -108,6 +108,10 @@ namespace Unity.Places
 
     private void eject_volume ()
     {
+      /*
+       * Because there are bugs in making this work through the vala 0.9.5 and
+       * I don't have time to debug them.
+       */
        Utils.volume_eject (volume);
     }
 
