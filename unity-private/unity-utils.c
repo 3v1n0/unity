@@ -103,7 +103,7 @@ gdk_window_set_mwm_hints (guint32        xid,
 
   g_return_if_fail (GDK_IS_DISPLAY (display));
 
-  g_debug ("gdk_window_set_mwm_hints: %lld %d\n", xid, new_hints->decorations);
+  g_debug ("gdk_window_set_mwm_hints: %u %lu\n", xid, new_hints->decorations);
   
   hints_atom = gdk_x11_get_xatom_by_name_for_display (display, 
                                                       _XA_MOTIF_WM_HINTS);
@@ -419,4 +419,21 @@ indicator_object_entry_free (IndicatorObjectEntry *entry)
     g_free (entry);
 
   entry = NULL;
+}
+
+
+static void
+on_volume_ejected (GVolume          *volume,
+                   GAsyncResult     *res)
+{
+  g_volume_eject_with_operation_finish (volume, res, NULL);
+}
+
+void
+utils_volume_eject (GVolume *volume)
+{
+  g_return_if_fail (G_IS_VOLUME (volume));
+
+  g_volume_eject_with_operation (volume, 0, NULL, NULL,
+                                 (GAsyncReadyCallback)on_volume_ejected, NULL);
 }

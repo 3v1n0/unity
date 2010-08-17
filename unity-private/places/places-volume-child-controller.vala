@@ -72,6 +72,7 @@ namespace Unity.Places
     private void open_volume ()
     {
       Mount? mount = volume.get_mount ();
+      string error_msg = @"Cannot open volume '$(volume.get_name ())': ";
 
       if (mount is Mount)
         {
@@ -79,14 +80,14 @@ namespace Unity.Places
           try {
             AppInfo.launch_default_for_uri (loc.get_uri (), null);
           } catch (Error err) {
-            warning ("Cannot open volume '$(volume.get_name ())': $(err.message)");
+            warning (error_msg + err.message);
           }
         }
       else
         {
           if (volume.can_mount () == false)
             {
-              warning (@"Cannot open volume '$(volume.get_name ())': Cannot be mounted");
+              warning (error_msg + "Cannot be mounted");
               return;
             }
           try {
@@ -96,12 +97,18 @@ namespace Unity.Places
             if (mount is Mount)
               AppInfo.launch_default_for_uri (mount.get_root ().get_uri (), null);
             else
-              warning (@"Cannot open volume '$(volume.get_name ())': Unable to mount");
+              warning (error_msg + "Unable to mount");
+
           } catch (Error e) {
-            warning (@"Cannot open volume '$(volume.get_name ())': $(e.message)");
+            warning (error_msg +  e.message);
           }
 
         }
+    }
+
+    private void eject_volume ()
+    {
+       Utils.volume_eject (volume);
     }
 
     /* Overides */
@@ -137,9 +144,7 @@ namespace Unity.Places
       Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
       root.set_root (true);
 
-
-      var mount = volume.get_mount ();
-      if (mount is Mount && mount.can_eject ())
+      if (volume.get_mount () != null)
         {
           Dbusmenu.Menuitem item;
 
@@ -148,7 +153,7 @@ namespace Unity.Places
           item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
           item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
           root.child_append (item);
-          item.item_activated.connect (open_volume);
+          item.item_activated.connect (eject_volume);
         }
 
       callback (root);
