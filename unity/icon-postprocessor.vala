@@ -297,7 +297,8 @@ namespace Unity
     private Cogl.Material bgcol_material;
 
     public float rotation {get; set;}
-
+    public float stored_height = 0;
+    public float stored_ymod = 0;
 
     public UnityIcon (Clutter.Texture? icon, Clutter.Texture? bg_tex)
     {
@@ -347,7 +348,8 @@ namespace Unity
         tex = (Cogl.Texture)(unity_icon_fg_layer.get_cogl_texture ());
         mat.set_layer (0, tex);
         fg_mat = mat;
-        notify["rotation"].connect (() => { do_queue_redraw (); });
+        notify["rotation"].connect (() => { queue_relayout (); });
+        stored_height = 48;
     }
 
     public override void get_preferred_width (float for_height,
@@ -378,8 +380,8 @@ namespace Unity
       set_effects_painting (true);
       var mat = new Cogl.Material ();
       mat.set_color4ub (color.red, color.green, color.blue, color.alpha);
-      Cogl.rectangle (0, 0, 48, 48);
-      base.pick (color);
+      Cogl.rectangle (0, stored_ymod, 1, 1);//stored_height);
+      //base.pick (color);
       set_effects_painting (false);
     }
 
@@ -443,6 +445,13 @@ namespace Unity
           p3_x = Math.floorf (p3_x); p3_y = Math.floorf (p3_y);
           p4_x = Math.ceilf (p4_x); p4_y = Math.floorf (p4_y);
         }
+
+      self.stored_height = p3_y - p1_y;
+      self.stored_ymod = (50 - self.stored_height) / 2.0f;
+      p1_y += self.stored_ymod;
+      p2_y += self.stored_ymod;
+      p3_y += self.stored_ymod;
+      p4_y += self.stored_ymod;
 
       Cogl.TextureVertex[4] points = {
         Cogl.TextureVertex () {
@@ -561,6 +570,11 @@ namespace Unity
               p3_x = Math.floorf (p3_x); p3_y = Math.floorf (p3_y);
               p4_x = Math.ceilf (p4_x); p4_y = Math.floorf (p4_y);
             }
+
+          p1_y += self.stored_ymod;
+          p2_y += self.stored_ymod;
+          p3_y += self.stored_ymod;
+          p4_y += self.stored_ymod;
 
           Cogl.TextureVertex[4] icon_points = {
             Cogl.TextureVertex () {
