@@ -106,8 +106,7 @@ namespace Unity.Places
 
       update_views (entry, section_id);
 
-      if (active_entry != home_entry)
-        entry.renderer_info_changed.connect (on_entry_renderer_info_changed);
+      entry.renderer_info_changed.connect (on_entry_renderer_info_changed);
     }
 
     private void update_views (PlaceEntry entry, uint section_id=0)
