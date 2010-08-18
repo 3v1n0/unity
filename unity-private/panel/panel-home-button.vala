@@ -95,8 +95,8 @@ namespace Unity.Panel
           warning ("Could not load active-state bg-texture: %s", e.message);
         }
 
-      //set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
-      //set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
+      set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
+      set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
       set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bfb_bg_active);
 
       search_shown = false;
@@ -186,8 +186,8 @@ namespace Unity.Panel
     {
       if (mode == ShellMode.MINIMIZED)
         {
-          //set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
-          //set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
+          set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
+          set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
           set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bfb_bg_active);
           search_shown = false;
         }
