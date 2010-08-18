@@ -344,3 +344,4 @@ unity-private/panel/panel-window-buttons.c
 unity-private/places/places-volume-controller.c
 unity-private/places/places-volume-child-controller.c
 tests/unit/test-place-browser.c
+unity-private/places/places-place-home-renderer.c

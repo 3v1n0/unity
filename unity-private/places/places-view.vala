@@ -154,6 +154,8 @@ namespace Unity.Places
 
       if (browser_path != null)
         return new FolderBrowserRenderer ();
+      else if (entry.entry_renderer_name == "UnityHomeScreen")
+        return new HomeRenderer ();
       else
         return new DefaultRenderer ();
     }
