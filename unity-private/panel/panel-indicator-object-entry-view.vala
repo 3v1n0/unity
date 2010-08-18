@@ -82,6 +82,12 @@ namespace Unity.Panel.Indicators
               image.size = entry.image.pixbuf.width;
             }
 
+          if (entry.image.gicon is GLib.Icon)
+            {
+              image.gicon = entry.image.gicon;
+              image.size = 22;
+            }
+
           if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
             {
               image.show ();
@@ -122,6 +128,15 @@ namespace Unity.Panel.Indicators
             {
               image.stock_id = entry.image.icon_name;
               image.size = 22;
+            }
+        });
+
+      entry.image.notify["gicon"].connect (() =>
+        {
+          if (image.gicon is GLib.Icon)
+            {
+            image.gicon = entry.image.gicon;
+            image.size = 22;
             }
         });
 
