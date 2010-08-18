@@ -330,6 +330,8 @@ namespace Unity {
       background_clone.show ();
       
       wsp.grid ();
+      
+      wsp.set_size (background_clone.width, background_clone.height);
 
       return wsp;
     }
