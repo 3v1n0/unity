@@ -83,6 +83,13 @@ namespace Unity.Panel
           return false;
         });
       });
+
+      Idle.add (() => {
+        unowned Bamf.Window? win = matcher.get_active_window ();
+        on_active_window_changed (null, win as GLib.Object);
+
+        return false;
+      });
     }
 
     private void on_active_window_changed (GLib.Object? object,
@@ -206,27 +213,6 @@ namespace Unity.Panel
       } catch (Error e) {
         warning (@"Unable to load window button theme: You need Ambiance installed: $(e.message)");
       }
-
-      /*
-      notify["state"].connect (() => {
-
-        switch (state)
-          {
-          case Ctk.ActorState.STATE_NORMAL:
-            bg.opacity = 255;
-            break;
-
-          case Ctk.ActorState.STATE_PRELIGHT:
-            bg.opacity = 120;
-            break;
-
-          case Ctk.ActorState.STATE_ACTIVE:
-          default:
-            bg.opacity = 50;
-            break;
-          }
-      });
-      */
     }
 
     private override void get_preferred_width (float     for_height,
