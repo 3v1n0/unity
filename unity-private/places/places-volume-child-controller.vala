@@ -54,6 +54,8 @@ namespace Unity.Places
         }
       load_icon_from_icon_name (icon_name);
 
+      debug ("ICON NAME: %s", icon_name);
+
       child.group_type = ScrollerChild.GroupType.DEVICE;
       child.drag_removed.connect (eject_volume);
 
@@ -113,7 +115,6 @@ namespace Unity.Places
        * Because there are bugs in making this work through the vala 0.9.5 and
        * I don't have time to debug them.
        */
-      debug ("DRAG_REMOVED");
       Utils.volume_eject (volume);
     }
 
