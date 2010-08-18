@@ -31,7 +31,7 @@ namespace Unity {
       this.parent = _parent;
       parent.notify["showing"].connect (on_notify_showing);
 
-      name = "Workspace Overview";
+      name = _("Workspaces");
       load_icon_from_icon_name ("workspace-switcher");
     }
 
@@ -52,6 +52,26 @@ namespace Unity {
       else
         parent.show_spaces_picker ();
     }
+    public override QuicklistController? get_menu_controller ()
+    {
+      return new ApplicationQuicklistController (this);
+    }
+
+    public override void get_menu_actions (ScrollerChildController.menu_cb callback)
+    {
+      callback (null);
+    }
+
+    public override void get_menu_navigation (ScrollerChildController.menu_cb callback)
+    {
+      callback (null);
+    }
+
+    public override bool can_drag ()
+    {
+      return true;
+    }
+
   }
   
   public class WorkspaceClone : Clutter.Group
@@ -109,7 +129,6 @@ namespace Unity {
     Clutter.Actor background;
     List<Clutter.Actor> clones;
     Plugin plugin;
-    unowned Mutter.MetaScreen screen;
     ScrollerChild _button;
     SpacesButtonController controller;
 
@@ -248,8 +267,6 @@ namespace Unity {
 
       windows = plugin.plugin.get_windows ();
       wsp = new WorkspaceClone (workspace, plugin);
-
-      int active_workspace = Mutter.MetaScreen.get_active_workspace_index (plugin.plugin.get_screen ());
 
       foreach (Mutter.Window window in windows)
         {

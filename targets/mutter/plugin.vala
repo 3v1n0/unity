@@ -133,7 +133,6 @@ namespace Unity
     private Places.Controller  places_controller;
     private Places.View        places;
     private Panel.View         panel;
-    private ActorBlur          actor_blur;
     private Clutter.Rectangle  dark_box;
     private unowned Mutter.MetaWindow?  focus_window = null;
     private unowned Mutter.MetaDisplay? display = null;
@@ -700,11 +699,6 @@ namespace Unity
         }
 
       this.grab_enabled = grab;
-    }
-
-    private bool envvar_is_enabled (string name)
-    {
-      return (Environment.get_variable (name) != null);
     }
 
     private unowned Mutter.MetaWindow? get_window_for_xid (uint32 xid)
