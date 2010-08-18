@@ -209,10 +209,14 @@ namespace Unity {
           
           clone.enter_event.connect (() => { 
             clone.opacity = 255;
+            clone.raise_top ();
             return true; 
           });
           
-          clone.leave_event.connect (() => { clone.opacity = 200; return true; });
+          clone.leave_event.connect (() => { 
+            clone.opacity = 200; 
+            return true; 
+          });
         }
 
       window_group.add_actor (selector_group);
