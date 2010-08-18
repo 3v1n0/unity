@@ -70,6 +70,8 @@ namespace Unity
       else
         clone = new Clutter.Clone (source);
 
+      source.destroy.connect (on_source_destroyed);
+
       add_actor (clone);
       clone.show ();
       clone.reactive = true;
@@ -90,6 +92,11 @@ namespace Unity
       this.enter_event.connect (this.on_mouse_enter);
       this.leave_event.connect (this.on_mouse_leave);
       this.button_press_event.connect (this.on_button_press);
+    }
+
+    private void on_source_destroyed ()
+    {
+      destroy ();
     }
     
     private bool on_button_press (Clutter.Event evnt)
@@ -293,6 +300,8 @@ namespace Unity
 
           expose_group.add_actor (clone);
 
+          clone.destroy.connect (on_clone_destroyed);
+
           clone.hovered_opacity = hovered_opacity;
           clone.unhovered_opacity = unhovered_opacity;
           clone.opacity = unhovered_opacity;
@@ -319,6 +328,12 @@ namespace Unity
 
       owner.add_fullscreen_request (this);
       stage.captured_event.connect (on_stage_captured_event);
+    }
+
+    private void on_clone_destroyed ()
+    {
+      if (expose_group.get_children ().length () <= 1)
+        end_expose ();
     }
 
     public void end_expose ()
