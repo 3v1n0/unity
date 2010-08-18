@@ -188,6 +188,8 @@ namespace Unity {
       showing = true;
       plugin.add_fullscreen_request (this);
 
+      global_shell.get_stage ().captured_event.connect (on_stage_capture_event);
+
       if (background is Clutter.Actor)
         background.destroy ();
         
@@ -245,6 +247,21 @@ namespace Unity {
             (w as Clutter.Actor).opacity = 0;
         }
     }
+
+    private bool on_stage_capture_event (Clutter.Event event)
+    {
+      if (event.type == Clutter.EventType.BUTTON_PRESS)
+        {
+          if (event.button.y <= global_shell.get_panel_height_foobar ())
+            {
+              select_workspace (null);
+            }
+        }
+
+      debug ("EVENT");
+
+      return false;
+    }
     
     private void select_workspace (Mutter.MetaWorkspace? workspace) {
       if (workspace == null)
@@ -259,6 +276,8 @@ namespace Unity {
       Mutter.MetaWorkspace.activate (workspace, time_);
       plugin.remove_fullscreen_request (this);
       showing = false;
+
+      global_shell.get_stage ().captured_event.disconnect (on_stage_capture_event);
     }
     
     private Clutter.Actor workspace_clone (Mutter.MetaWorkspace workspace) {
