@@ -270,22 +270,34 @@ namespace Unity {
               clone.enable_dnd = true;
               
               clone.drag_dropped.connect ((t) => {
+                WorkspaceClone new_parent = clone.pre_drag_parent as WorkspaceClone;
+                
                 while (!(t is Clutter.Stage))
                   {
                     if (t is WorkspaceClone)
                       {
-                        clone.reparent (t);
-                        clone.set_scale (0, 0);
-                        clone.set_position (0, 0);
-                        Mutter.MetaWindow.change_workspace_by_index ((clone.source as Mutter.Window).get_meta_window (), 
-                                                                     Mutter.MetaWorkspace.index ((t as WorkspaceClone).workspace),
-                                                                     true,
-                                                                     plugin.get_current_time ());
+                        new_parent = t as WorkspaceClone;
                         break;
                       }
-                    
                     t = t.get_parent ();
                   }
+             
+                float x, y;
+                        
+                clone.move_anchor_point_from_gravity (Clutter.Gravity.CENTER);
+                new_parent.transform_stage_point (clone.x, clone.y, out x, out y);
+                        
+                clone.set_scale (clone.pre_drag_scale_x, clone.pre_drag_scale_y);
+                clone.set_position (x, y);
+                        
+                clone.move_anchor_point_from_gravity (Clutter.Gravity.NORTH_WEST);
+
+                clone.reparent (new_parent);
+                        
+                Mutter.MetaWindow.change_workspace_by_index ((clone.source as Mutter.Window).get_meta_window (), 
+                                                             Mutter.MetaWorkspace.index (new_parent.workspace),
+                                                             true,
+                                                             plugin.get_current_time ());
               });
 
               wsp.add_actor (clone);

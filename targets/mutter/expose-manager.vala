@@ -31,6 +31,10 @@ namespace Unity
     private float drag_start_y;
     private bool drag_moved;
     
+    public Clutter.Actor pre_drag_parent { get { return original_parent; } }
+    public float pre_drag_scale_x { get; private set; }
+    public float pre_drag_scale_y { get; private set; }
+    
     public bool fade_on_close { get; set; }
 
     public unowned Clutter.Actor source { get; private set; }
@@ -104,10 +108,15 @@ namespace Unity
       original_parent = get_parent ();
       
       float x, y;
+      double scale_x, scale_y;
       evnt.get_coords (out x, out y);
+      get_scale (out scale_x, out scale_y);
       
       drag_start_x = x;
       drag_start_y = y;
+      
+      pre_drag_scale_x = (float) scale_x;
+      pre_drag_scale_y = (float) scale_y;
       
       drag_moved = false;
     }
@@ -120,11 +129,9 @@ namespace Unity
       if (!drag_moved)
         return;
       
-      reparent (original_parent);
-
-      reactive = false;
+      hide ();
       Clutter.Actor target = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, x, y);
-      reactive = true;
+      show ();
       
       drag_dropped (target);
     }
@@ -142,7 +149,7 @@ namespace Unity
         
       if (event.type == Clutter.EventType.MOTION)
         {
-          if (Math.fabs (event.motion.x - drag_start_x) > 30 || Math.fabs (event.motion.x - drag_start_y) > 30 || drag_moved)
+          if (Math.fabs (event.motion.x - drag_start_x) > 30 || Math.fabs (event.motion.y - drag_start_y) > 30 || drag_moved)
             {
               if (!drag_moved)
                 {
