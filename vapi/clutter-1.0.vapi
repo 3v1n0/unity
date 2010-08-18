@@ -5654,6 +5654,8 @@ namespace Clutter {
 	[CCode (cheader_filename = "clutter/clutter.h")]
 	public static bool get_motion_events_enabled ();
 	[CCode (cheader_filename = "clutter/clutter.h")]
+	public static bool get_gl_picking_enabled ();
+	[CCode (cheader_filename = "clutter/clutter.h")]
 	public static GLib.OptionGroup get_option_group ();
 	[CCode (cheader_filename = "clutter/clutter.h")]
 	public static GLib.OptionGroup get_option_group_without_init ();
@@ -5697,6 +5699,8 @@ namespace Clutter {
 	public static void set_font_flags (Clutter.FontFlags flags);
 	[CCode (cheader_filename = "clutter/clutter.h")]
 	public static void set_motion_events_enabled (bool enable);
+	[CCode (cheader_filename = "clutter/clutter.h")]
+	public static void set_gl_picking_enabled (bool enable);
 	[CCode (cheader_filename = "clutter/clutter.h")]
 	public static uint threads_add_frame_source (uint fps, GLib.SourceFunc func, void* data);
 	[CCode (cheader_filename = "clutter/clutter.h")]

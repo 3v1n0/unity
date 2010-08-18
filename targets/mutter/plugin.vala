@@ -210,6 +210,8 @@ namespace Unity
     private bool real_construct ()
     {
       START_FUNCTION ();
+      
+      Clutter.set_gl_picking_enabled (false);
 
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
       this.stage.actor_added.connect   ((a) => { ensure_input_region (); });
