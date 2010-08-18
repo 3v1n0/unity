@@ -546,7 +546,7 @@ namespace Unity.Launcher
 
     public override void pick (Clutter.Color color)
     {
-      processed_icon.paint ();//base.pick (color);
+      base.pick (color);
     }
 
     public override void paint ()

@@ -490,8 +490,10 @@ namespace Unity.Launcher
 
       cr.fill ();
 
+      //x = (extents.width - real_extents.width) / 2.0;
+      y = 0;//(extents.height - real_extents.height) / 2.0;
       cr.set_source_rgba (1, 1, 1, 1);
-      cr.move_to (x + 5 - 1, y+5+extents.height);
+      cr.move_to (x + 5 - (real_extents.width * 0.5), y+5+extents.height);
       cr.show_text (text);
     }
 
@@ -518,13 +520,24 @@ namespace Unity.Launcher
       //!!FIXME!! these are positioned wrong, needs to know the absolute
       // size of the resulting cario surface before creating it =\
       int index = 1;
+      // indicator size find out activate!
+      int key_indicator_w, key_indicator_h;
+      Gtk.Settings settings = Gtk.Settings.get_default ();
+
+      Unity.QuicklistRendering.get_text_extents (settings.gtk_font_name, "2",
+                                                 out key_indicator_w, out key_indicator_h);
+
+      key_indicator_w += 10;
+      key_indicator_h += 10;
+
       for (; index <= 10; index++)
         {
-          var keyboard_indicator = new Clutter.CairoTexture (32, 1);
+          var keyboard_indicator = new Clutter.CairoTexture (key_indicator_w, key_indicator_h);
           keyboard_indicator.set_parent (this);
           keyboard_indicator.opacity = 0x00;
-          keyboard_indicator.set_surface_size (32, 32);
-          keyboard_indicator.set_size (32, 32);
+
+          keyboard_indicator.set_surface_size (key_indicator_w, key_indicator_h);
+          keyboard_indicator.set_size (key_indicator_w, key_indicator_h);
           keyboard_indicator.clear ();
             {
               Cairo.Context cr = keyboard_indicator.create ();
@@ -1332,14 +1345,16 @@ namespace Unity.Launcher
 
           if (index >= 0 && index <= 9)
           {
-            Clutter.Actor? keyboard_indicator = null;
+            Clutter.CairoTexture? keyboard_indicator = null;
             keyboard_indicator = keyboard_indicators[(int)index];
 
             if (keyboard_indicator is Clutter.Actor)
               {
-                child_box.x1 = box.get_width () - padding.right - keyboard_indicator.get_width ();
+                uint surface_width, surface_height;
+                keyboard_indicator.get_surface_size (out surface_width, out surface_height);
+                child_box.x1 = box.get_width () - padding.right - surface_width - 6;
                 child_box.x2 = child_box.x1 + keyboard_indicator.get_width ();
-                child_box.y1 = child.position + padding.top + (child_height*0.5f);
+                child_box.y1 = child.position + padding.top + ((child_box.get_height ()*0.5f) - (surface_height*0.5f));
                 child_box.y2 = child_box.y1 + keyboard_indicator.get_height ();
                 keyboard_indicator.allocate (child_box, flags);
               }

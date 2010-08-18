@@ -379,9 +379,9 @@ namespace Unity
     {
       set_effects_painting (true);
       var mat = new Cogl.Material ();
-      mat.set_color4ub (color.red, color.green, color.blue, color.alpha);
-      Cogl.rectangle (0, stored_ymod, 1, 1);//stored_height);
-      //base.pick (color);
+      //mat.set_color4ub (color.red, color.green, color.blue, color.alpha);
+      //Cogl.rectangle (0, stored_ymod, 1, 1);//stored_height);
+      base.pick (color);
       set_effects_painting (false);
     }
 
@@ -448,10 +448,12 @@ namespace Unity
 
       self.stored_height = p3_y - p1_y;
       self.stored_ymod = (50 - self.stored_height) / 2.0f;
+/*
       p1_y += self.stored_ymod;
       p2_y += self.stored_ymod;
       p3_y += self.stored_ymod;
       p4_y += self.stored_ymod;
+*/
 
       Cogl.TextureVertex[4] points = {
         Cogl.TextureVertex () {
@@ -571,10 +573,12 @@ namespace Unity
               p4_x = Math.ceilf (p4_x); p4_y = Math.floorf (p4_y);
             }
 
+/*
           p1_y += self.stored_ymod;
           p2_y += self.stored_ymod;
           p3_y += self.stored_ymod;
           p4_y += self.stored_ymod;
+*/
 
           Cogl.TextureVertex[4] icon_points = {
             Cogl.TextureVertex () {
