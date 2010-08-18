@@ -25,7 +25,6 @@ namespace Unity.Panel
     private Ctk.Text     appname;
     private WindowButton close;
     private WindowButton minimize;
-    private WindowButton maximize;
     private WindowButton unmaximize;
 
     private unowned Bamf.Matcher matcher;
@@ -59,13 +58,6 @@ namespace Unity.Panel
       minimize.clicked.connect (() => {
         if (last_xid > 0)
           global_shell.do_window_action (last_xid, WindowAction.MINIMIZE);
-      });
-
-      maximize = new WindowButton ("maximize.png");
-      pack (maximize, false, false);
-      maximize.clicked.connect (() => {
-        if (last_xid > 0)
-          global_shell.do_window_action (last_xid, WindowAction.MAXIMIZE);
       });
 
       unmaximize = new WindowButton ("unmaximize.png");
@@ -113,7 +105,6 @@ namespace Unity.Panel
               appname.hide ();
               close.show ();
               minimize.show ();
-              maximize.hide ();
               unmaximize.show ();
             }
           else
@@ -121,7 +112,6 @@ namespace Unity.Panel
               appname.show ();
               close.hide ();
               minimize.hide ();
-              maximize.hide ();
               unmaximize.hide ();
             }
 
@@ -150,7 +140,6 @@ namespace Unity.Panel
           appname.hide ();
           close.hide ();
           minimize.hide ();
-          maximize.hide ();
           unmaximize.hide ();
           last_xid = 0;
         }

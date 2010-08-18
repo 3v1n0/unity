@@ -812,18 +812,27 @@ namespace Unity
     {
       unowned Mutter.MetaWindow win = window.get_meta_window ();
 
-      Idle.add (() => {
-      if (Utils.window_is_decorated (Mutter.MetaWindow.get_xwindow (win)) == false)
-        window.set_data (UNDECORATED_HINT, "%s".printf ("true"));
-      else
+      if (window.get_window_type () == Mutter.MetaCompWindowType.NORMAL)
         {
-          if (Mutter.MetaWindow.is_maximized (win))
-            {
-              Utils.window_set_decorations (Mutter.MetaWindow.get_xwindow (win), 0);
-            }
+          Idle.add (() => {
+            if (win is Object)
+              {
+                if (Utils.window_is_decorated (Mutter.MetaWindow.get_xwindow (win)) == false)
+                  {
+                    window.set_data (UNDECORATED_HINT, "%s".printf ("true"));
+                  }
+                else
+                  {
+                    if (Mutter.MetaWindow.is_maximized (win))
+                      {
+                        Utils.window_set_decorations (Mutter.MetaWindow.get_xwindow (win), 0);
+                      }
+                  }
+              }
+            
+            return false;
+          });
         }
-       return false;
-      });
 
       this.maximus.process_window (window);
       this.window_mapped (this, window);
