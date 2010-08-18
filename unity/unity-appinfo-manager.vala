@@ -179,8 +179,7 @@ namespace Unity {
             
             categories_by_id.set (id, cats);
           } catch (KeyFileError e) {
-            warning ("Error extracting XDG category info from '%s': %s",
-                     id, e.message);
+            /* Unknown key or group. This app has no XDG Catories */
           }          
         }
       else
