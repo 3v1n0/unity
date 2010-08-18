@@ -121,4 +121,7 @@ namespace Utils
 
   [CCode (lower_case_prefix = "utils_")]
   public extern void window_set_decorations (uint32 xid, uint decorations);
+
+  [CCode (lower_case_prefix = "utils_")]
+  public extern void volume_eject (GLib.Volume volume);
 }

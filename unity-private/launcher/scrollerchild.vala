@@ -99,6 +99,8 @@ namespace Unity.Launcher
 
     private float old_rotate_value = 0.0f;
 
+    public signal void drag_removed ();
+
     public ScrollerChild ()
     {
       Object (group_type:GroupType.APPLICATION);
