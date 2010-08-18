@@ -252,7 +252,8 @@ namespace Unity {
     {
       if (event.type == Clutter.EventType.BUTTON_PRESS)
         {
-          if (event.button.y <= global_shell.get_panel_height_foobar ())
+          if (event.button.y <= global_shell.get_panel_height_foobar () ||
+              event.button.x <= global_shell.get_launcher_width_foobar ())
             {
               select_workspace (null);
             }
