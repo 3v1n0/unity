@@ -55,7 +55,9 @@ namespace Unity.Launcher
                                                  this.label,
                                                  out width,
                                                  out height);
-      min_width_p = (float) width + (float) Ctk.em_to_pixel (2 * MARGIN) + 30.0f;
+      min_width_p = (float) width +
+                    (float) Ctk.em_to_pixel (2 * MARGIN) +
+                    ITEM_INDENT_ABS;
       natural_width_p = min_width_p;
     }
 
@@ -125,15 +127,15 @@ namespace Unity.Launcher
 
       string formatted_label = Utils.strip_characters (label, "", "_", "_");
 
-      //Unity.QuicklistRendering.RadioItem.normal_mask (normal_cr,
-      Unity.QuicklistRendering.CheckmarkItem.normal_mask (normal_cr,
+      Unity.QuicklistRendering.RadioItem.normal_mask (normal_cr,
+      //Unity.QuicklistRendering.CheckmarkItem.normal_mask (normal_cr,
                                                           this.last_width,
                                                           this.last_height,
                                                           settings.gtk_font_name,
                                                           formatted_label,
                                                           active);
-      //Unity.QuicklistRendering.RadioItem.selected_mask (selected_cr,
-      Unity.QuicklistRendering.CheckmarkItem.selected_mask (selected_cr,
+      Unity.QuicklistRendering.RadioItem.selected_mask (selected_cr,
+      //Unity.QuicklistRendering.CheckmarkItem.selected_mask (selected_cr,
                                                             this.last_width,
                                                             this.last_height,
                                                             settings.gtk_font_name,

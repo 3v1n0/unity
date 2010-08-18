@@ -35,6 +35,7 @@ namespace Unity.QuicklistRendering
   const float ITEM_HEIGHT            = 2.0f;
   const float ITEM_CORNER_RADIUS     = 0.3f;
   const float ITEM_CORNER_RADIUS_ABS = 4.0f;
+  const float ITEM_INDENT_ABS        = 20.0f;
   const float ANCHOR_HEIGHT          = 1.5f;
   const float ANCHOR_HEIGHT_ABS      = 18.0f;
   const float ANCHOR_WIDTH           = 0.75f;
@@ -202,17 +203,8 @@ namespace Unity.QuicklistRendering
 
       // draw checkmark
       cr.save ();
-      cr.translate (_align ((30.0f - 16.0f) / 2.0f),
-                    _align (((double) h - 16.0f) / 2.0f));
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.65f);
-      _round_rect (cr,
-                   1.0f,   // aspect
-                   0.0f,   // top-left corner
-                   0.0f,   // top-left corner
-                   3.0f,   // "size" of the corners
-                   16.0f,  // width of the rectangle
-                   16.0f); // height of the rectangle
-      cr.stroke ();
+      cr.translate (_align ((ITEM_INDENT_ABS - 16.0f) / 2.0f),
+                    _align (((double) h - 16.0f)/ 2.0f));
 
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
 
@@ -255,7 +247,7 @@ namespace Unity.QuicklistRendering
       int text_width;
       int text_height;
       get_text_extents (font, text, out text_width, out text_height);
-      cr.move_to (30.0f + Ctk.em_to_pixel (MARGIN),
+      cr.move_to (ITEM_INDENT_ABS + Ctk.em_to_pixel (MARGIN),
                   (float) (h - text_height) / 2.0f);
 
       Pango.cairo_show_layout (cr, layout);
@@ -293,17 +285,8 @@ namespace Unity.QuicklistRendering
 
       // draw checkmark
       cr.save ();
-      cr.translate (_align ((30.0f - 16.0f) / 2.0f),
+      cr.translate (_align ((ITEM_INDENT_ABS - 16.0f) / 2.0f),
                     _align (((double) h - 16.0f) / 2.0f));
-
-      _round_rect (cr,
-                   1.0f,   // aspect
-                   0.0f,   // top-left corner
-                   0.0f,   // top-left corner
-                   3.0f,   // "size" of the corners
-                   16.0f,  // width of the rectangle
-                   16.0f); // height of the rectangle
-      cr.stroke ();
 
       if (enabled)
         {
@@ -344,7 +327,7 @@ namespace Unity.QuicklistRendering
       int text_width;
       int text_height;
       get_text_extents (font, text, out text_width, out text_height);
-      cr.move_to (30.0f + Ctk.em_to_pixel (MARGIN),
+      cr.move_to (ITEM_INDENT_ABS + Ctk.em_to_pixel (MARGIN),
                   (float) (h - text_height) / 2.0f);
 
       Pango.cairo_show_layout (cr, layout);
@@ -371,7 +354,7 @@ namespace Unity.QuicklistRendering
       cr.scale (1.0f, 1.0f);
       cr.set_line_width (1.0f);
 
-      double x  = _align (15.0f);
+      double x  = _align (ITEM_INDENT_ABS / 2.0f);
       double y  = _align ((double) h / 2.0f);
       double r1 = 3.5f;
       double r2 = 8.5f;
@@ -383,17 +366,6 @@ namespace Unity.QuicklistRendering
           cr.arc (x, y, r1, 0.0f * (GLib.Math.PI / 180.0f),
                             360.0f * (GLib.Math.PI / 180.0f));
           cr.fill ();
-          cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.65f);
-          cr.arc (x, y, r2, 0.0f * (GLib.Math.PI / 180.0f),
-                            360.0f * (GLib.Math.PI / 180.0f));
-          cr.stroke ();
-        }
-      else
-        {
-          cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.65f);
-          cr.arc (x, y, r2, 0.0f * (GLib.Math.PI / 180.0f),
-                            360.0f * (GLib.Math.PI / 180.0f));
-          cr.stroke ();
         }
 
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
@@ -419,7 +391,7 @@ namespace Unity.QuicklistRendering
       int text_width;
       int text_height;
       get_text_extents (font, text, out text_width, out text_height);
-      cr.move_to (30.0f + Ctk.em_to_pixel (MARGIN),
+      cr.move_to (ITEM_INDENT_ABS + Ctk.em_to_pixel (MARGIN),
                   (float) (h - text_height) / 2.0f);
 
       Pango.cairo_show_layout (cr, layout);
@@ -452,7 +424,7 @@ namespace Unity.QuicklistRendering
                    h - 1.0f);
       cr.fill ();
 
-      double x  = _align (15.0f);
+      double x  = _align (ITEM_INDENT_ABS / 2.0f);
       double y  = _align ((double) h / 2.0f);
       double r1 = 3.5f;
       double r2 = 8.5f;
@@ -465,16 +437,7 @@ namespace Unity.QuicklistRendering
           cr.arc (x, y, r1, 0.0f * (GLib.Math.PI / 180.0f),
                             360.0f * (GLib.Math.PI / 180.0f));
           cr.fill ();
-          cr.arc (x, y, r2, 0.0f * (GLib.Math.PI / 180.0f),
-                            360.0f * (GLib.Math.PI / 180.0f));
-          cr.stroke ();
         }
-      else
-       {
-          cr.arc (x, y, r2, 0.0f * (GLib.Math.PI / 180.0f),
-                            360.0f * (GLib.Math.PI / 180.0f));
-          cr.stroke ();
-       }
 
       // draw text
       Pango.Layout layout = Pango.cairo_create_layout (cr);
@@ -498,7 +461,7 @@ namespace Unity.QuicklistRendering
       int text_width;
       int text_height;
       get_text_extents (font, text, out text_width, out text_height);
-      cr.move_to (30.0f + Ctk.em_to_pixel (MARGIN),
+      cr.move_to (ITEM_INDENT_ABS + Ctk.em_to_pixel (MARGIN),
                   (float) (h - text_height) / 2.0f);
 
       Pango.cairo_show_layout (cr, layout);
@@ -543,7 +506,7 @@ namespace Unity.QuicklistRendering
       int text_width;
       int text_height;
       get_text_extents (font, text, out text_width, out text_height);
-      cr.move_to (Ctk.em_to_pixel (MARGIN),
+      cr.move_to (ITEM_INDENT_ABS + Ctk.em_to_pixel (MARGIN),
                   (float) (h - text_height) / 2.0f);
 
       Pango.cairo_show_layout (cr, layout);
@@ -597,7 +560,7 @@ namespace Unity.QuicklistRendering
       int text_width;
       int text_height;
       get_text_extents (font, text, out text_width, out text_height);
-      cr.move_to (Ctk.em_to_pixel (MARGIN),
+      cr.move_to (ITEM_INDENT_ABS + Ctk.em_to_pixel (MARGIN),
                   (float) (h - text_height) / 2.0f);
 
       cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.0f);
