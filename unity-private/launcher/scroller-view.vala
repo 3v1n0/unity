@@ -73,6 +73,8 @@ namespace Unity.Launcher
     private ScrollerPhase current_phase = ScrollerPhase.SETTLING;
     private uint last_motion_event_time = 0;
     private ScrollerViewType view_type = ScrollerViewType.CONTRACTED;
+    private float last_known_pointer_x = 0.0f;
+
     /*
      * scrolling variables
      */
@@ -91,12 +93,25 @@ namespace Unity.Launcher
     private uint stored_delta = 0;
     private float scroll_speed = 0.0f; // the current speed (pixels/per second) that we are scrolling
 
-    private float contract_icon_degrees = 30.0f;
+    private float contract_icon_degrees = 70.0f;
+    private float contract_icon_partial_degrees = 30.0f;
     private int focused_launcher = 0;
 
     /* helps out with draw order */
     private Gee.ArrayList<ScrollerChild> draw_ftb;
     private Gee.ArrayList<ScrollerChild> draw_btf;
+
+    /* Key binding indicators */
+    private Clutter.Text keyboard_indicator_1;
+    private Clutter.Text keyboard_indicator_2;
+    private Clutter.Text keyboard_indicator_3;
+    private Clutter.Text keyboard_indicator_4;
+    private Clutter.Text keyboard_indicator_5;
+    private Clutter.Text keyboard_indicator_6;
+    private Clutter.Text keyboard_indicator_7;
+    private Clutter.Text keyboard_indicator_8;
+    private Clutter.Text keyboard_indicator_9;
+    private Clutter.Text keyboard_indicator_0;
 
     /*
      * Refrence holders
@@ -141,9 +156,11 @@ namespace Unity.Launcher
       button_release_event.connect (on_button_release_event);
       motion_event.connect (on_motion_event);
       enter_event.connect (on_enter_event);
+
       leave_event.connect (on_leave_event);
       notify["is-autoscrolling"].connect (on_auto_scrolling_state_change);
       Unity.Drag.Controller.get_default ().drag_motion.connect (on_drag_motion_event);
+
       // set a timeline for our fling animation
       fling_timeline = new Clutter.Timeline (1000);
       fling_timeline.loop = true;
@@ -258,6 +275,7 @@ namespace Unity.Launcher
     {
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
+      if (is_scrolling) return false;
       enter_event.disconnect (on_enter_event);
       leave_event.disconnect (on_leave_event);
       motion_event.disconnect (on_motion_event);
@@ -278,6 +296,7 @@ namespace Unity.Launcher
     {
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
+      if (is_scrolling) return false;
 
       enter_event.disconnect (on_enter_event);
       leave_event.disconnect (on_leave_event);
@@ -296,6 +315,8 @@ namespace Unity.Launcher
     {
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
+      if (is_scrolling) return false;
+
       enter_event.disconnect (on_enter_event);
       leave_event.disconnect (on_leave_event);
       button_release_event.disconnect (passthrough_button_release_event);
@@ -307,6 +328,81 @@ namespace Unity.Launcher
       leave_event.connect (on_leave_event);
       button_release_event.connect (passthrough_button_release_event);
       return false;
+    }
+
+    private float last_scroll_position = 0.0f;
+    public void enable_keyboard_selection_mode (bool choice)
+    {
+      if (choice)
+        last_scroll_position = scroll_position;
+
+      uint8 new_opacity = (choice) ? 0xff : 0x00;
+      keyboard_indicator_1.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      if (model.size < 2) new_opacity = 0x00;
+
+      keyboard_indicator_2.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      if (model.size < 3) new_opacity = 0x00;
+
+      keyboard_indicator_3.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      if (model.size < 4) new_opacity = 0x00;
+
+      keyboard_indicator_4.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      if (model.size < 5) new_opacity = 0x00;
+
+      keyboard_indicator_5.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      if (model.size < 6) new_opacity = 0x00;
+
+      keyboard_indicator_6.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      if (model.size < 7) new_opacity = 0x00;
+
+      keyboard_indicator_7.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      if (model.size < 8) new_opacity = 0x00;
+
+      keyboard_indicator_8.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      if (model.size < 9) new_opacity = 0x00;
+
+      keyboard_indicator_9.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+      if (model.size < 10) new_opacity = 0x00;
+
+      keyboard_indicator_0.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                                    "opacity", new_opacity);
+
+
+      if (!choice)
+        {
+          if (view_type != ScrollerViewType.CONTRACTED &&
+              last_known_pointer_x >= get_width ())
+            {
+              foreach (ScrollerChild child in model)
+              {
+                if (child.active)
+                  {
+                    focused_launcher = model.index_of (child);
+                    break;
+                  }
+              }
+              contract_launcher ();
+            }
+          else if (last_known_pointer_x < get_width ())
+            {
+              move_scroll_position (last_scroll_position - scroll_position);
+            }
+        }
+      else
+        {
+          expand_launcher (0);
+        }
+
+
     }
 
     public int get_model_index_at_y_pos_no_anim (float y, bool return_minus_if_fail=false)
@@ -399,6 +495,44 @@ namespace Unity.Launcher
       top_shadow = new ThemeImage ("overflow_top");
       top_shadow.set_repeat (true, false);
       top_shadow.set_parent (this);
+
+      var color = Clutter.Color () {
+        red = 0xff,
+        green = 0xff,
+        blue = 0xff,
+        alpha = 0xff
+      };
+
+      keyboard_indicator_1 = new Clutter.Text.full ("Mono Bold 24px", "1", color);
+      keyboard_indicator_1.set_parent (this);
+      keyboard_indicator_1.opacity = 0x00;
+      keyboard_indicator_2 = new Clutter.Text.full ("Mono Bold 24px", "2", color);
+      keyboard_indicator_2.set_parent (this);
+      keyboard_indicator_2.opacity = 0x00;
+      keyboard_indicator_3 = new Clutter.Text.full ("Mono Bold 24px", "3", color);
+      keyboard_indicator_3.set_parent (this);
+      keyboard_indicator_3.opacity = 0x00;
+      keyboard_indicator_4 = new Clutter.Text.full ("Mono Bold 24px", "4", color);
+      keyboard_indicator_4.set_parent (this);
+      keyboard_indicator_4.opacity = 0x00;
+      keyboard_indicator_5 = new Clutter.Text.full ("Mono Bold 24px", "5", color);
+      keyboard_indicator_5.set_parent (this);
+      keyboard_indicator_5.opacity = 0x00;
+      keyboard_indicator_6 = new Clutter.Text.full ("Mono Bold 24px", "6", color);
+      keyboard_indicator_6.set_parent (this);
+      keyboard_indicator_6.opacity = 0x00;
+      keyboard_indicator_7 = new Clutter.Text.full ("Mono Bold 24px", "7", color);
+      keyboard_indicator_7.set_parent (this);
+      keyboard_indicator_7.opacity = 0x00;
+      keyboard_indicator_8 = new Clutter.Text.full ("Mono Bold 24px", "8", color);
+      keyboard_indicator_8.set_parent (this);
+      keyboard_indicator_8.opacity = 0x00;
+      keyboard_indicator_9 = new Clutter.Text.full ("Mono Bold 24px", "9", color);
+      keyboard_indicator_9.set_parent (this);
+      keyboard_indicator_9.opacity = 0x00;
+      keyboard_indicator_0 = new Clutter.Text.full ("Mono Bold 24px", "0", color);
+      keyboard_indicator_0.set_parent (this);
+      keyboard_indicator_0.opacity = 0x00;
     }
 
     // will move the scroller by the given pixels
@@ -439,6 +573,58 @@ namespace Unity.Launcher
             }
         }
 
+    }
+
+    private void expand_launcher (float absolute_y)
+    {
+      if (view_type == ScrollerViewType.EXPANDED) return;
+      view_type = ScrollerViewType.EXPANDED;
+
+      // we need to set a new scroll position
+      // get the index of the icon we are hovering over
+      if (get_total_children_height () > get_available_height ())
+        {
+          int index = get_model_index_at_y_pos (absolute_y);
+
+          // set our state to what we will end up being so we can find the correct
+          //place to be.
+          float contracted_position = model[index].position;
+          var old_scroll_position = scroll_position;
+          scroll_position = 0;
+          order_children (true);
+
+          float new_scroll_position = -(model[index].position - contracted_position);
+
+          //reset our view so that we animate cleanly to the new view
+          view_type = ScrollerViewType.CONTRACTED;
+          scroll_position = old_scroll_position;
+          order_children (true);
+
+          // and finally animate to the new view
+          view_type = ScrollerViewType.EXPANDED;
+
+          scroll_position = new_scroll_position;
+          order_children (false); // have to order twice, boo
+
+          queue_relayout ();
+        }
+    }
+
+
+    private void contract_launcher ()
+    {
+      if (view_type == ScrollerViewType.CONTRACTED) return;
+
+      foreach (ScrollerChild child in model)
+        {
+          if (child.active)
+            focused_launcher = model.index_of (child);
+        }
+
+      view_type = ScrollerViewType.CONTRACTED;
+      order_children (false);
+      queue_relayout ();
+      is_autoscrolling = false;
     }
 
     /*
@@ -556,60 +742,46 @@ namespace Unity.Launcher
       return false;
     }
 
+
+    uint queue_contract_launcher = 0;
     private bool on_enter_event (Clutter.Event event)
     {
-      if (view_type == ScrollerViewType.EXPANDED) return false;
-      view_type = ScrollerViewType.EXPANDED;
-
-      // we need to set a new scroll position
-      // get the index of the icon we are hovering over
-      if (get_total_children_height () > get_available_height ())
+      if (queue_contract_launcher != 0)
         {
-          int index = get_model_index_at_y_pos (event.crossing.y);
-
-          // set our state to what we will end up being so we can find the correct
-          //place to be.
-          float contracted_position = model[index].position;
-          var old_scroll_position = scroll_position;
-          scroll_position = 0;
-          order_children (true);
-
-          float new_scroll_position = -(model[index].position - contracted_position);
-
-          //reset our view so that we animate cleanly to the new view
-          view_type = ScrollerViewType.CONTRACTED;
-          scroll_position = old_scroll_position;
-          order_children (true);
-
-          // and finally animate to the new view
-          view_type = ScrollerViewType.EXPANDED;
-
-          scroll_position = new_scroll_position;
-          order_children (false); // have to order twice, boo
-
-          queue_relayout ();
+          Source.remove (queue_contract_launcher);
+          queue_contract_launcher = 0;
         }
 
+      expand_launcher (event.crossing.y);
+      return false;
+    }
+
+    private bool on_queue_contract_launcher ()
+    {
+      if (queue_contract_launcher != 0)
+        contract_launcher ();
+      queue_contract_launcher = 0;
+      return false;
+    }
+
+    private bool do_queue_contract_launcher ()
+    {
+      queue_contract_launcher = Timeout.add (250, on_queue_contract_launcher);
       return false;
     }
 
     private bool on_leave_event (Clutter.Event event)
     {
-      if (view_type == ScrollerViewType.CONTRACTED) return false;
+      last_known_pointer_x = 200;
+      if (is_scrolling) return false;
+      do_queue_contract_launcher ();
 
-      foreach (ScrollerChild child in model)
+      if (last_picked_actor is Clutter.Actor &&
+          last_picked_actor != this)
         {
-          if (child.active)
-            focused_launcher = model.index_of (child);
+          last_picked_actor.do_event (event, false);
+          last_picked_actor = null;
         }
-
-      view_type = ScrollerViewType.CONTRACTED;
-      order_children (false);
-      queue_relayout ();
-      is_autoscrolling = false;
-
-      if (last_picked_actor is Clutter.Actor)
-         last_picked_actor.do_event (event, false);
       return false;
     }
 
@@ -1037,10 +1209,9 @@ namespace Unity.Launcher
         {
           ScrollerChild child = model[index];
           var transition = new ChildTransition ();
+          child.get_preferred_height (get_width (), out min_height, out nat_height);
           if (index >= index_start_flat && index < index_end_flat)
             {
-
-              child.get_preferred_height (get_width (), out min_height, out nat_height);
               transition.position = h;
               h += nat_height + spacing;
               num_children_handled++;
@@ -1054,20 +1225,38 @@ namespace Unity.Launcher
           else
             {
               // contracted launcher
-              if (index == index_end_flat) h -= spacing * 2;
+              if (index == index_end_flat) h -= nat_height * 0.3333f - spacing;//spacing * 2;
 
-              transition.position = h;
-              h += 8 + spacing;
               if (num_children_handled < index_start_flat)
                 {
-                  transition.rotation = -contract_icon_degrees;
+                  if (num_children_handled == index_start_flat - 1)
+                    {
+                      transition.rotation = -contract_icon_partial_degrees;
+                      h += spacing;
+                    }
+                  else
+                    {
+                      transition.rotation = -contract_icon_degrees;
+                    }
+                  transition.position = h;
                   draw_ftb.add (child);
                 }
               else
                 {
-                  transition.rotation = contract_icon_degrees;
+                  transition.position = h;
+                  if (index == index_end_flat)
+                    {
+                      transition.rotation = contract_icon_partial_degrees;
+                      h += spacing;
+                    }
+                  else
+                    {
+                      transition.rotation = contract_icon_degrees;
+                    }
                   draw_btf.add (child);
                 }
+
+              h += 8 + spacing;
               num_children_handled++;
 
               if (index +1 == index_start_flat) h += 30;
@@ -1108,6 +1297,7 @@ namespace Unity.Launcher
       float available_width = box.get_width () - padding.right;
 
       total_child_height = 0.0f;
+      uint index = 0;
 
       foreach (ScrollerChild child in model)
         {
@@ -1133,7 +1323,33 @@ namespace Unity.Launcher
 
 
           total_child_height += child_height + spacing;
+
+          if (index >= 0 && index <= 9)
+          {
+            Clutter.Actor? keyboard_indicator = null;
+            if (index == 0) keyboard_indicator = keyboard_indicator_1;
+            else if (index == 1) keyboard_indicator = keyboard_indicator_2;
+            else if (index == 2) keyboard_indicator = keyboard_indicator_3;
+            else if (index == 3) keyboard_indicator = keyboard_indicator_4;
+            else if (index == 4) keyboard_indicator = keyboard_indicator_5;
+            else if (index == 5) keyboard_indicator = keyboard_indicator_6;
+            else if (index == 6) keyboard_indicator = keyboard_indicator_7;
+            else if (index == 7) keyboard_indicator = keyboard_indicator_8;
+            else if (index == 8) keyboard_indicator = keyboard_indicator_9;
+            else if (index == 9) keyboard_indicator = keyboard_indicator_0;
+
+            if (keyboard_indicator is Clutter.Actor)
+              {
+                child_box.x1 = box.get_width () - padding.right - keyboard_indicator.get_width ();
+                child_box.x2 = child_box.x1 + keyboard_indicator.get_width ();
+                child_box.y1 = child.position + padding.top + child_height - keyboard_indicator.get_height ();
+                child_box.y2 = child_box.y1 + keyboard_indicator.get_height ();
+                keyboard_indicator.allocate (child_box, flags);
+              }
+
+          index += 1;
         }
+      }
 
       child_box.x1 = 0;
       child_box.x2 = box.get_width ();
@@ -1207,6 +1423,16 @@ namespace Unity.Launcher
           child.paint ();
         }
 
+      keyboard_indicator_1.paint ();
+      keyboard_indicator_2.paint ();
+      keyboard_indicator_3.paint ();
+      keyboard_indicator_4.paint ();
+      keyboard_indicator_5.paint ();
+      keyboard_indicator_6.paint ();
+      keyboard_indicator_7.paint ();
+      keyboard_indicator_8.paint ();
+      keyboard_indicator_9.paint ();
+      keyboard_indicator_0.paint ();
       top_shadow.paint ();
     }
 
@@ -1215,10 +1441,22 @@ namespace Unity.Launcher
       base.map ();
       bgtex.map ();
       top_shadow.map ();
+      keyboard_indicator_1.map ();
+      keyboard_indicator_2.map ();
+      keyboard_indicator_3.map ();
+      keyboard_indicator_4.map ();
+      keyboard_indicator_5.map ();
+      keyboard_indicator_6.map ();
+      keyboard_indicator_7.map ();
+      keyboard_indicator_8.map ();
+      keyboard_indicator_9.map ();
+      keyboard_indicator_0.map ();
+
       foreach (ScrollerChild child in model)
         {
           child.map ();
         }
+
     }
 
     public override void unmap ()
@@ -1226,6 +1464,16 @@ namespace Unity.Launcher
       base.unmap ();
       bgtex.map ();
       top_shadow.map ();
+      keyboard_indicator_1.unmap ();
+      keyboard_indicator_2.unmap ();
+      keyboard_indicator_3.unmap ();
+      keyboard_indicator_4.unmap ();
+      keyboard_indicator_5.unmap ();
+      keyboard_indicator_6.unmap ();
+      keyboard_indicator_7.unmap ();
+      keyboard_indicator_8.unmap ();
+      keyboard_indicator_9.unmap ();
+      keyboard_indicator_0.unmap ();
       foreach (ScrollerChild child in model)
         {
           child.unmap ();
