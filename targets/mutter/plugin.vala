@@ -817,7 +817,7 @@ namespace Unity
           Idle.add (() => {
             if (win is Object)
               {
-                if (Utils.window_is_decorated (Mutter.MetaWindow.get_xwindow (win)) == false)
+                if (Utils.window_is_decorated (Mutter.MetaWindow.get_xwindow (win)) == false && Mutter.MetaWindow.is_maximized (win) == false)
                   {
                     window.set_data (UNDECORATED_HINT, "%s".printf ("true"));
                   }
