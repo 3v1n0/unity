@@ -258,8 +258,6 @@ namespace Unity {
             }
         }
 
-      debug ("EVENT");
-
       return false;
     }
     
