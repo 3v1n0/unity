@@ -66,7 +66,7 @@ namespace Unity.Places
       return view;
     }
 
-    public void activate_entry (string entry_name)
+    public void activate_entry (string entry_name, int section_id = 0)
     {
       foreach (Place place in model)
         {
@@ -74,8 +74,28 @@ namespace Unity.Places
             {
               if (entry.name == entry_name)
                 {
-                  view.on_entry_view_activated (entry, 0);
+                  view.on_entry_view_activated (entry, section_id);
                   break;
+                }
+            }
+        }
+    }
+
+    public void activate_entry_by_dbus_path (string entry_path,
+                                             int section_id = 0)
+    {
+      foreach (Place place in model)
+        {
+          foreach (PlaceEntry ent in place.get_entries ())
+            {
+              if (ent is PlaceEntryDbus)
+                {
+                  unowned PlaceEntryDbus entry = ent as PlaceEntryDbus;
+                  if (entry.dbus_path == entry_path)
+                    {
+                      view.on_entry_view_activated (entry, section_id);
+                      break;
+                    }
                 }
             }
         }

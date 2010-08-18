@@ -22,6 +22,8 @@ namespace Unity.Places
   public class HomeRenderer : Ctk.Bin, Unity.Place.Renderer
   {
     static const int   SPACING = 60;
+    static const string FILES_PLACE = "/com/canonical/unity/filesplace/files";
+    static const string APPS_PLACE = "/com/canonical/unity/applicationsplace/applications";
 
     private Gtk.IconTheme? theme = null;
     private Ctk.IconView icon_view;
@@ -60,26 +62,44 @@ namespace Unity.Places
       icon = new HomeButton (_("Music"), filename_for_icon ("music"), "");
       icon_view.add_actor (icon);
       icon.show ();
+      icon.clicked.connect (() => {
+        activate_place (APPS_PLACE, 4);
+      });
 
       icon = new HomeButton (_("Photos & Videos"), filename_for_icon ("photos"), "");
       icon_view.add_actor (icon);
       icon.show ();
+      icon.clicked.connect (() => {
+        activate_place (APPS_PLACE, 4);
+      });
 
       icon = new HomeButton (_("Games"), filename_for_icon ("games"), "");
       icon_view.add_actor (icon);
       icon.show ();
-
+      icon.clicked.connect (() => {
+        activate_place (APPS_PLACE, 2);
+      });
+      
       icon = new HomeButton (_("Email & Chat"), filename_for_icon ("email_and_chat"), "");
       icon_view.add_actor (icon);
       icon.show ();
+      icon.clicked.connect (() => {
+        activate_place (APPS_PLACE, 3);
+      });
 
       icon = new HomeButton (_("Office"), filename_for_icon ("work"), "");
       icon_view.add_actor (icon);
       icon.show ();
+      icon.clicked.connect (() => {
+        activate_place (APPS_PLACE, 5);
+      });
 
       icon = new HomeButton (_("Files & Folders"), filename_for_icon ("work"), "");
       icon_view.add_actor (icon);
       icon.show ();
+      icon.clicked.connect (() => {
+        activate_place (FILES_PLACE, 0);
+      });
 
       icon = new HomeButton (_("Get New Apps"), filename_for_icon ("softwarecentre"), "");
       icon_view.add_actor (icon);
@@ -90,7 +110,6 @@ namespace Unity.Places
         } catch (Error e) {
           warning (@"Unable to start software centre: $(e.message)");
         }
-        
         global_shell.hide_unity ();
 
       });
@@ -107,6 +126,21 @@ namespace Unity.Places
     /*
      * Private Methods
      */
+    private void activate_place (string place_path, int section_id)
+    {
+      /* FIXME:!!!
+       * This is not the way we'll end up doing this. This is a stop-gap
+       * until we have better support for signalling things through
+       * a place
+       */
+      Controller cont = Testing.ObjectRegistry.get_default ().lookup ("UnityPlacesController")[0] as Controller;
+      
+      if (cont is Controller)
+        {
+          cont.activate_entry_by_dbus_path (place_path, section_id);
+        }
+    }
+
     private override void allocate (Clutter.ActorBox        box,
                                     Clutter.AllocationFlags flags)
     {
@@ -128,8 +162,6 @@ namespace Unity.Places
       child_box.x2 = box.x2 - box.x1;
       child_box.y1 = top;
       child_box.y2 = box.y2 - box.y1;
-
-      debug ("%f %f %f %f", child_box.x1, child_box.x2, child_box.y1, child_box.y2);
 
       icon_view.allocate (child_box, flags);
     }
