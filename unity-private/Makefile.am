@@ -38,6 +38,7 @@ libunity_private_la_VALAFLAGS = \
   --library unity-private \
   --vapidir=$(top_srcdir)/vapi/ \
   --vapidir=$(top_srcdir)/unity/ \
+  --pkg Bamf-0.2 \
   --pkg clutk-0.3 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
@@ -54,8 +55,8 @@ libunity_private_la_VALAFLAGS = \
   --pkg gtk+-2.0 \
   --pkg gnome-bg-2.0 \
   --pkg indicator \
-  --pkg Bamf-0.2 \
   --pkg libwnck-1.0 \
+  --pkg pango \
   --pkg unity \
   --pkg unity-const \
   --pkg unity-misc \

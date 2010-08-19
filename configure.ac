@@ -115,6 +115,7 @@ PKG_CHECK_MODULES(BASE,
                   indicator
                   libbamf >= 0.2
                   libgnomeui-2.0
+                  pango >= 1.6.0
                   unique-1.0
                   unity-misc
                   x11)
