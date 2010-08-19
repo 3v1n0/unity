@@ -57,7 +57,9 @@ namespace Unity.Launcher
                                                  this.label,
                                                  out width,
                                                  out height);
-      min_width_p = (float) width + (float) Ctk.em_to_pixel (2 * MARGIN);
+      min_width_p = (float) width +
+                    (float) Ctk.em_to_pixel (2 * MARGIN) +
+                    2 * ITEM_INDENT_ABS;
       natural_width_p = min_width_p;
     }
 

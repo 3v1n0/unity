@@ -1,3 +1,28 @@
+unity (0.2.28-0ubuntu1) UNRELEASED; urgency=low
+
+  * New upstream release fixing those bugs:
+    - Files Place empty search view is not implemented (lp: #607764)
+    - poor battery performance in Unity (lp: #599425)
+    - When launching an app, grids glow around its icon (lp: #610250)
+    - Add some sort of hint that the Ubuntu circle is click-able (lp :#592787)
+    - the buttons to display extra items are not updated correctly (lp: #604958)
+    - launcher bubbles flickers a lot when places with scrollbars are displayed
+      (lp: #599911)
+    - white square displayed next to indicators crashing unity (lp: #601014)
+    - Display removable media (USB device, etc.) on the launcher (lp: #619695)
+    - Add support for DND between workspaces (lp: #594160)
+    - indicators dont get focus in workspace switch mode (lp: #612323)
+    - Workspace switch cleanups (lp: #594163)
+    - workspace switcher should have a title on hover (lp: #614926)
+  * debian/control:
+    - build-depends on libpango1.0-dev
+  * debian/libunity0.symbols:
+    - new version update
+  * debian/patches/01_show_gicons.patch:
+    - the change is in the new version
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 19 Aug 2010 18:02:13 +0200
+
 unity (0.2.26-0ubuntu1) maverick; urgency=low
 
   * New upstream release.

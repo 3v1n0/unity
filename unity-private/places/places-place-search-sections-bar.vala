@@ -235,6 +235,7 @@ namespace Unity.Places
       var pos = active_section.model.get_position (active_section.iter);
       active_entry.set_active_section (pos);
 
+      bg.update ();
     }
 
     private bool on_section_clicked (Clutter.Actor actor, Clutter.Event e)
@@ -254,9 +255,6 @@ namespace Unity.Places
 
     private void paint_bg (Cairo.Context cr, int width, int height)
     {
-      if (_style != SectionStyle.BREADCRUMB)
-        return;
-
       cr.set_operator (Cairo.Operator.CLEAR);
       cr.paint ();
 
@@ -269,45 +267,85 @@ namespace Unity.Places
       width -= 1;
       height -= 1;
       var radius = 5;
-
-      cr.line_to  (x, y + radius);
-      cr.curve_to (x, y,
-                   x, y,
-                   x + radius, y);
-      cr.line_to  (width - radius, y);
-      cr.curve_to (width, y,
-                   width, y,
-                   width, y + radius);
-      cr.line_to  (width, height - radius);
-      cr.curve_to (width, height,
-                   width, height,
-                   width - radius, height);
-      cr.line_to  (x + radius, height);
-      cr.curve_to (x, height,
-                   x, height,
-                   x, height - radius);
-      cr.close_path ();
-
-      cr.set_source_rgba (1.0, 1.0, 1.0, 0.5);
-      cr.fill_preserve ();
-      cr.stroke ();
-
-      var chevron = 5;
       var point = x;
-      var children = get_children ();
-      foreach (Clutter.Actor child in children)
-        {
-          point += (int)(child.width) + SPACING/2;
 
-          if (point < width - chevron - SPACING)
+      if (_style != SectionStyle.BREADCRUMB)
+        {
+          var children = get_children ();
+          unowned Section? last_sec = null;
+
+          point -= SPACING/2;
+
+          foreach (Clutter.Actor child in children)
             {
-              cr.move_to (point - chevron, y);
-              cr.line_to (point + chevron, y + height/2);
-              cr.line_to (point - chevron, y + height);
-              cr.set_source_rgba (1.0, 1.0, 1.0, 0.8);
-              cr.stroke ();
+              unowned Section sec = child as Section;
+
+              if (point < width - SPACING
+                  && (last_sec == null || last_sec.active == false)
+                  && sec.active != true)
+                {
+                  cr.rectangle (point, y, 0.5, height);
+                  var pat = new Cairo.Pattern.linear (x, y, x, y + height);
+                  pat.add_color_stop_rgba (0.0, 0.0, 0.0, 0.0, 0.0);  
+                  pat.add_color_stop_rgba (0.5, 0.0, 0.0, 0.0, 0.5);
+                  pat.add_color_stop_rgba (1.0, 0.0, 0.0, 0.0, 0.0);
+                  cr.set_source (pat);
+                  cr.fill ();
+
+                  cr.rectangle (point+1, y, 0.5, height);
+                  pat = new Cairo.Pattern.linear (x, y, x, y + height);
+                  pat.add_color_stop_rgba (0.0, 1.0, 1.0, 1.0, 0.0);  
+                  pat.add_color_stop_rgba (0.5, 1.0, 1.0, 1.0, 0.5);
+                  pat.add_color_stop_rgba (1.0, 1.0, 1.0, 1.0, 0.0);
+                  cr.set_source (pat);
+                  cr.fill ();
+                }
+
+              point += (int)(child.width) + SPACING;
+              last_sec = sec;
             }
-          point += SPACING/2;
+        }
+      else
+        {
+          cr.line_to  (x, y + radius);
+          cr.curve_to (x, y,
+                       x, y,
+                       x + radius, y);
+          cr.line_to  (width - radius, y);
+          cr.curve_to (width, y,
+                       width, y,
+                       width, y + radius);
+          cr.line_to  (width, height - radius);
+          cr.curve_to (width, height,
+                       width, height,
+                       width - radius, height);
+          cr.line_to  (x + radius, height);
+          cr.curve_to (x, height,
+                       x, height,
+                       x, height - radius);
+          cr.close_path ();
+
+          cr.set_source_rgba (1.0, 1.0, 1.0, 0.5);
+          cr.fill_preserve ();
+          cr.stroke ();
+
+          var chevron = 5;
+          var children = get_children ();
+          point = x;
+          foreach (Clutter.Actor child in children)
+            {
+              point += (int)(child.width) + SPACING/2;
+
+              if (point < width - chevron - SPACING)
+                {
+                  cr.move_to (point - chevron, y);
+                  cr.line_to (point + chevron, y + height/2);
+                  cr.line_to (point - chevron, y + height);
+                  cr.set_source_rgba (1.0, 1.0, 1.0, 1.0);
+                  cr.stroke ();
+                }
+              point += SPACING/2;
+            }
         }
     }
   }
@@ -345,7 +383,7 @@ namespace Unity.Places
 
             if (_active)
               {
-                color = { 152, 74, 131, 255 };
+                color = { 50, 50, 50, 255 };
                 mode = Clutter.AnimationMode.EASE_IN_QUAD;
                 opacity = 255;
               }
@@ -406,21 +444,6 @@ namespace Unity.Places
     public void start_destroy ()
     {
       (get_parent () as Clutter.Container).remove_actor (this);
-      /*
-      if (_destroy_factor != 1.0f)
-        return;
-
-      var anim = animate (Clutter.AnimationMode.EASE_OUT_QUAD, 2000,
-                          "destroy_factor", 0.0f);
-
-      anim.completed.connect ((a) => {
-        var obj = a.get_object () as Clutter.Actor;
-
-        (obj.get_parent () as Clutter.Container).remove_actor (obj);
-      });
-
-      debug ("started_animation");
-      */
     }
 
     private override void get_preferred_width (float     for_height,

@@ -38,6 +38,7 @@ libunity_private_la_VALAFLAGS = \
   --library unity-private \
   --vapidir=$(top_srcdir)/vapi/ \
   --vapidir=$(top_srcdir)/unity/ \
+  --pkg Bamf-0.2 \
   --pkg clutk-0.3 \
   --pkg clutter-1.0 \
   --pkg clutter-gtk-0.10 \
@@ -54,8 +55,8 @@ libunity_private_la_VALAFLAGS = \
   --pkg gtk+-2.0 \
   --pkg gnome-bg-2.0 \
   --pkg indicator \
-  --pkg Bamf-0.2 \
   --pkg libwnck-1.0 \
+  --pkg pango \
   --pkg unity \
   --pkg unity-const \
   --pkg unity-misc \
@@ -97,6 +98,7 @@ places_sources = \
   places/places-place-entry-view.vala \
   places/places-place-entry.vala \
   places/places-place-home.vala \
+  places/places-place-home-renderer.vala \
   places/places-place-model.vala \
   places/places-place-view.vala \
   places/places-place.vala \
@@ -105,7 +107,9 @@ places_sources = \
   places/places-place-search-navigation.vala \
   places/places-place-search-sections-bar.vala \
   places/places-trash-controller.vala \
-  places/places-view.vala
+  places/places-view.vala \
+  places/places-volume-controller.vala \
+  places/places-volume-child-controller.vala
 
 launcher_sources = \
   launcher/application-controller.vala \

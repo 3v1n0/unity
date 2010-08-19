@@ -263,13 +263,16 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_panel_window_buttons_new@Base 0.2.22
  unity_param_spec_process_info@Base 0.2.22
  unity_places_controller_activate_entry@Base 0.2.22
+ unity_places_controller_activate_entry_by_dbus_path@Base 0.2.28
  unity_places_controller_construct@Base 0.2.22
  unity_places_controller_get_model@Base 0.2.22
  unity_places_controller_get_shell@Base 0.2.22
  unity_places_controller_get_type@Base 0.2.22
  unity_places_controller_get_view@Base 0.2.22
+ unity_places_controller_get_volumes@Base 0.2.28
  unity_places_controller_new@Base 0.2.22
  unity_places_controller_set_model@Base 0.2.22
+ unity_places_controller_set_volumes@Base 0.2.28
  unity_places_default_renderer_construct@Base 0.2.22
  unity_places_default_renderer_get_type@Base 0.2.22
  unity_places_default_renderer_group_construct@Base 0.2.22
@@ -281,9 +284,38 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_default_renderer_group_get_type@Base 0.2.22
  unity_places_default_renderer_group_new@Base 0.2.22
  unity_places_default_renderer_new@Base 0.2.22
+ unity_places_emptry_section_group_construct@Base 0.2.28
+ unity_places_emptry_section_group_get_group_id@Base 0.2.28
+ unity_places_emptry_section_group_get_results@Base 0.2.28
+ unity_places_emptry_section_group_get_type@Base 0.2.28
+ unity_places_emptry_section_group_new@Base 0.2.28
+ unity_places_emptry_section_group_set_group_id@Base 0.2.28
+ unity_places_emptry_section_group_set_results@Base 0.2.28
+ unity_places_empty_search_group_construct@Base 0.2.28
+ unity_places_empty_search_group_get_group_id@Base 0.2.28
+ unity_places_empty_search_group_get_results@Base 0.2.28
+ unity_places_empty_search_group_get_type@Base 0.2.28
+ unity_places_empty_search_group_new@Base 0.2.28
+ unity_places_empty_search_group_set_group_id@Base 0.2.28
+ unity_places_empty_search_group_set_results@Base 0.2.28
+ unity_places_expander_construct@Base 0.2.28
+ unity_places_expander_get_expanding_state@Base 0.2.28
+ unity_places_expander_get_type@Base 0.2.28
+ unity_places_expander_new@Base 0.2.28
+ unity_places_expander_set_expanding_state@Base 0.2.28
+ unity_places_expander_state_get_type@Base 0.2.28
  unity_places_folder_browser_renderer_construct@Base 0.2.22
  unity_places_folder_browser_renderer_get_type@Base 0.2.22
  unity_places_folder_browser_renderer_new@Base 0.2.22
+ unity_places_home_button_construct@Base 0.2.28
+ unity_places_home_button_get_exec@Base 0.2.28
+ unity_places_home_button_get_icon@Base 0.2.28
+ unity_places_home_button_get_name@Base 0.2.28
+ unity_places_home_button_get_type@Base 0.2.28
+ unity_places_home_button_new@Base 0.2.28
+ unity_places_home_renderer_construct@Base 0.2.28
+ unity_places_home_renderer_get_type@Base 0.2.28
+ unity_places_home_renderer_new@Base 0.2.28
  unity_places_more_results_button_construct@Base 0.2.22
  unity_places_more_results_button_get_count@Base 0.2.22
  unity_places_more_results_button_get_type@Base 0.2.22
@@ -481,6 +513,13 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_view_new@Base 0.2.22
  unity_places_view_on_entry_view_activated@Base 0.2.22
  unity_places_view_shown@Base 0.2.22
+ unity_places_volume_child_controller_construct@Base 0.2.28
+ unity_places_volume_child_controller_get_type@Base 0.2.28
+ unity_places_volume_child_controller_get_volume@Base 0.2.28
+ unity_places_volume_child_controller_new@Base 0.2.28
+ unity_places_volume_controller_construct@Base 0.2.28
+ unity_places_volume_controller_get_type@Base 0.2.28
+ unity_places_volume_controller_new@Base 0.2.28
  unity_process_info_construct@Base 0.2.22
  unity_process_info_get_type@Base 0.2.22
  unity_process_info_new@Base 0.2.22
@@ -560,6 +599,7 @@ libunity-private.so.0 libunity0 #MINVER#
  utils_save_snapshot@Base 0.2.22
  utils_set_strut@Base 0.2.22
  utils_strip_characters@Base 0.2.22
+ utils_volume_eject@Base 0.2.28
  utils_window_is_decorated@Base 0.2.22
  utils_window_set_decorations@Base 0.2.22
 libunity.so.0 libunity0 #MINVER#
@@ -574,6 +614,7 @@ libunity.so.0 libunity0 #MINVER#
  _unity_quicklist_rendering_round_rect@Base 0.2.24
  unity__pixbuf_cache@Base 0.2.22
  unity_app_info_manager_clear@Base 0.2.22
+ unity_app_info_manager_get_categories@Base 0.2.28
  unity_app_info_manager_get_instance@Base 0.2.22
  unity_app_info_manager_get_type@Base 0.2.22
  unity_app_info_manager_lookup@Base 0.2.22
@@ -927,6 +968,12 @@ libunity.so.0 libunity0 #MINVER#
  unity_shell_show_unity@Base 0.2.22
  unity_shell_show_window@Base 0.2.22
  unity_shell_stop_expose@Base 0.2.22
+ unity_stripe_texture_construct@Base 0.2.28
+ unity_stripe_texture_get_radius@Base 0.2.28
+ unity_stripe_texture_get_type@Base 0.2.28
+ unity_stripe_texture_new@Base 0.2.28
+ unity_stripe_texture_rounded_outline@Base 0.2.28
+ unity_stripe_texture_set_radius@Base 0.2.28
  unity_theme_file_path_add_icon_theme@Base 0.2.22
  unity_theme_file_path_construct@Base 0.2.22
  unity_theme_file_path_get_icon_filepath@Base 0.2.22
@@ -943,10 +990,12 @@ libunity.so.0 libunity0 #MINVER#
  unity_unity_icon_fg_layer@Base 0.2.22
  unity_unity_icon_get_bg_color@Base 0.2.22
  unity_unity_icon_get_icon@Base 0.2.22
+ unity_unity_icon_get_rotation@Base 0.2.28
  unity_unity_icon_get_type@Base 0.2.22
  unity_unity_icon_mk_layer@Base 0.2.22
  unity_unity_icon_new@Base 0.2.22
  unity_unity_icon_paint_real@Base 0.2.22
+ unity_unity_icon_set_rotation@Base 0.2.28
  unity_webapp_chromium_web_app_add_to_favorites@Base 0.2.22
  unity_webapp_chromium_web_app_construct@Base 0.2.22
  unity_webapp_chromium_web_app_desktop_file_path@Base 0.2.22
