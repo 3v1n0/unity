@@ -32,11 +32,12 @@ namespace Unity.Places
     public Dee.Model results        { get; construct; }
 
     private Ctk.VBox      vbox;
+    private Ctk.Button    title_button;
     private Ctk.HBox      title_box;
     private Ctk.Image     icon;
     private Ctk.Text      text;
-    private Ctk.Image     expander;
-    private Clutter.Actor sep;
+    private Expander      expander;
+    private Ctk.Button    sep;
     private Ctk.IconView  renderer;
 
     private MoreResultsButton? more_results_button;
@@ -77,11 +78,32 @@ namespace Unity.Places
       vbox.homogeneous = false;
       add_actor (vbox);
       vbox.show ();
+  
+      title_button = new Ctk.Button (Ctk.Orientation.HORIZONTAL);
+      title_button.padding = { 4.0f, 6.0f, 4.0f, 6.0f };
+      vbox.pack (title_button, false, false);
+      title_button.show ();
+      var title_bg = new StripeTexture (null);
+      title_button.set_background_for_state (Ctk.ActorState.STATE_PRELIGHT,
+                                             title_bg);
+      title_button.notify["state"].connect (() => {
+        if (title_button.state == Ctk.ActorState.STATE_PRELIGHT)
+          sep.opacity = 0;
+        else
+          sep.opacity = 255;
 
+        unowned GLib.SList<unowned Ctk.Effect> effects = title_button.get_effects ();
+        foreach (unowned Ctk.Effect effect in effects)
+          effect.set_invalidate_effect_cache (true);
+      });
+      var glow = new Ctk.EffectGlow ();
+      glow.set_factor (1.0f);
+      glow.set_margin (3);
+      title_button.add_effect (glow);
+      
       title_box = new Ctk.HBox (5);
-      vbox.pack (title_box, false, false);
+      title_button.add_actor (title_box);
       title_box.show ();
-      title_box.reactive = true;
 
       icon = new Ctk.Image (22);
       icon.set_from_filename (Config.PKGDATADIR + "/favourites.png");
@@ -89,37 +111,42 @@ namespace Unity.Places
       icon.show ();
 
       text = new Ctk.Text (display_name);
-      title_box.pack (text, true, true);
+      text.set_markup ("<big>" + display_name + "</big>");
+      title_box.pack (text, false, false);
       text.show ();
 
-      expander = new Ctk.Image (22);
-      expander.set_from_filename (Config.PKGDATADIR + "/maximize_up.png");
+      expander = new Expander ();
       expander.opacity = 0;
       title_box.pack (expander, false, true);
       expander.show ();
 
-      sep = new Clutter.Rectangle.with_color ({ 255, 255, 255, 255 });
-      sep.height = 1;
+      sep = new Ctk.Button (Ctk.Orientation.HORIZONTAL);
+      var rect = new Clutter.Rectangle.with_color ({ 255, 255, 255, 100 });
+      sep.add_actor (rect);
+      rect.height = 1.0f;
       vbox.pack (sep, false, false);
       sep.show ();
+      glow = new Ctk.EffectGlow ();
+      glow.set_factor (1.0f);
+      glow.set_margin (5);
+      sep.add_effect (glow);
 
-      title_box.button_release_event.connect (() => {
+      title_button.clicked.connect (() => {
         if (n_results <= renderer.get_n_cols () || allow_expand == false)
-          return true;
+          return;
 
         if (bin_state == ExpandingBinState.UNEXPANDED)
           {
             bin_state = ExpandingBinState.EXPANDED;
-            expander.set_from_filename (Config.PKGDATADIR + "/minimize_up.png");
+            expander.expanding_state = Expander.State.EXPANDED;
           }
         else
           {
             bin_state = ExpandingBinState.UNEXPANDED;
-            expander.set_from_filename (Config.PKGDATADIR + "/maximize_up.png");
+            expander.expanding_state = Expander.State.UNEXPANDED;
           }
-        return true;
       });
-      title_box.motion_event.connect (() => {
+      title_button.motion_event.connect (() => {
         if (dirty && allow_expand)
           {
             var children = renderer.get_children ();
@@ -130,6 +157,8 @@ namespace Unity.Places
               }
               dirty = false;
           }
+
+        return false;
       });
 
       renderer = new Ctk.IconView ();
@@ -172,7 +201,7 @@ namespace Unity.Places
         }
       else if (group_renderer == "UnityFolderGroupRenderer")
         {
-          title_box.hide ();
+          title_button.hide ();
           sep.hide ();
           bin_state = ExpandingBinState.EXPANDED;
         }
@@ -207,7 +236,7 @@ namespace Unity.Places
           child.height != unexpanded_height)
         {
           var h = more_results_button != null ? more_results_button.height : 0;
-          unexpanded_height = title_box.height + 1.0f + child.height + h;
+          unexpanded_height = title_button.height + 1.0f + child.height + h;
         }
     }
 
@@ -341,6 +370,104 @@ namespace Unity.Places
         }
 
       add_to_n_results (0);
+    }
+  }
+
+  public class Expander : Ctk.Bin
+  {
+    public enum State
+    {
+      EXPANDED,
+      UNEXPANDED
+    }
+
+    private float arrow_size = 12.0f;
+    private float arrow_quart = 3.0f;
+
+    private CairoCanvas arrow;
+
+    public State expanding_state {
+      get { return _state; }
+      set {
+        if (_state != value)
+          {
+            _state = value;
+            arrow.update ();
+          }
+      }
+    }
+
+    private State _state = State.UNEXPANDED;
+
+    public Expander ()
+    {
+      Object ();
+    }
+
+    construct
+    {
+      arrow = new CairoCanvas (paint_arrow);
+      add_actor (arrow);
+      arrow.show ();
+    }
+
+    private override void allocate (Clutter.ActorBox box,
+                                    Clutter.AllocationFlags flags)
+    {
+      Clutter.ActorBox child_box = Clutter.ActorBox ();
+
+      base.allocate (box, flags);
+
+      child_box.x1 = ((box.x2 - box.x1)/2.0f) - arrow_quart *2;
+      child_box.x2 = child_box.x1 + arrow_size;
+      child_box.y1 = ((box.y2 - box.y1)/2.0f) - arrow_quart *2;
+      child_box.y2 = child_box.y1 + arrow_size;
+
+      arrow.allocate (child_box, flags);
+    }
+
+    private override void get_preferred_height (float for_width,
+                                           out float mheight,
+                                           out float nheight)
+    {
+      mheight = arrow_size;
+      nheight = arrow_size;
+    }
+
+    private override void get_preferred_width (float for_height,
+                                          out float mwidth,
+                                          out float nwidth)
+    {
+      mwidth = arrow_size;
+      nwidth = arrow_size;
+    }
+
+    private void paint_arrow (Cairo.Context cr, int width, int height)
+    {
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      cr.set_operator (Cairo.Operator.OVER);
+      cr.set_line_width (1.0f);
+      cr.translate (-0.5, -0.5);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+
+      if (_state == State.UNEXPANDED)
+        {
+          cr.move_to (arrow_quart, arrow_quart);
+          cr.line_to (arrow_size - arrow_quart, arrow_size/2.0f);
+          cr.line_to (arrow_quart, arrow_size - arrow_quart);
+          cr.close_path ();
+        }
+      else
+        {
+          cr.move_to (arrow_quart, arrow_quart);
+          cr.line_to (arrow_size - arrow_quart, arrow_quart);
+          cr.line_to (arrow_size /2.0f, arrow_size - arrow_quart);
+          cr.close_path ();
+        }
+
+      cr.fill ();
     }
   }
 

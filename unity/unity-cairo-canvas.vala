@@ -38,7 +38,7 @@ namespace Unity
     private int last_width = 0;
     private int last_height = 0;
 
-    private CairoCanvasPaint paint_func;
+    public CairoCanvasPaint paint_func;
 
     public CairoCanvas (CairoCanvasPaint _func)
     {
