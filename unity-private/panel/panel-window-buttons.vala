@@ -140,7 +140,11 @@ namespace Unity.Panel
 
               AppInfo? info = appinfo.lookup (app.get_desktop_file ());
               if (info != null)
-                appname.set_markup (FORMAT.printf (info.get_display_name ()));
+                {
+                  string display_name = info.get_display_name ();
+                  display_name = display_name.split (" ")[0];
+                  appname.set_markup (FORMAT.printf (display_name));
+                }
               else
                 appname.set_markup (FORMAT.printf (win.get_name ()));
             }
