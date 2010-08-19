@@ -71,12 +71,14 @@ namespace Unity.Places
 
       if (renderer == "UnityEmptySearchRenderer")
         {
-          var group = new EmptrySectionGroup (model.get_position (iter),
-                                              results_model);
-          box.pack (group, false, true);
         }
       else if (renderer == "UnityEmptySectionRenderer")
         {
+          var group = new EmptrySectionGroup (model.get_position (iter),
+                                              results_model);
+          box.pack (group, false, true);
+
+          debug ("HELLO");
         }
       else
         {
@@ -125,7 +127,10 @@ namespace Unity.Places
       bin_state = ExpandingBinState.CLOSED;
       unexpanded_height = 0.0f;
 
+      padding = { 100.0f, 0.0f, 0.0f, 0.0f };
+
       text = new Ctk.Text ("");
+      text.set_alignment (Pango.Alignment.CENTER);
 
       add_actor (text);
       text.show ();
@@ -145,8 +150,6 @@ namespace Unity.Places
 
       string mes = results.get_string (iter, 4);
       text.set_markup ("<big>" + mes + "</big>");
-
-      debug ("RESULT_ADDED");
     }
 
     private void on_result_removed (Dee.ModelIter iter)
@@ -155,8 +158,6 @@ namespace Unity.Places
         return;
 
       bin_state = ExpandingBinState.CLOSED;
-
-      debug ("RESULT_REMOVED");
     }
 
     private bool interesting (Dee.ModelIter iter)
