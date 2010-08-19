@@ -494,7 +494,7 @@ namespace Unity.Places
 
     construct
     {
-      var bg = new CairoCanvas (paint_bg);
+      var bg = new StripeTexture (paint_bg);
       set_background (bg);
 
       text = new Ctk.Text ("");
@@ -525,17 +525,10 @@ namespace Unity.Places
       float nwidth;
       text.get_preferred_width (height, null, out nwidth);
 
-      cr.translate (0.5, 0.5);
       cr.rectangle (0.0,
                     vpad,
                     hpad + nwidth + hpad,
                     height - vpad - vpad);
-      cr.set_source_rgba (1.0, 1.0, 1.0, 0.2);
-      cr.fill_preserve ();
-
-      cr.set_line_width (1.5);
-      cr.set_source_rgba (1.0, 1.0, 1.0, 0.5);
-      cr.stroke ();
     }
   }
 
