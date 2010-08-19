@@ -22,7 +22,6 @@ namespace Unity
   public class WindowManagement : Object
   {
     private Plugin plugin;
-    private int switch_signals_to_send;
 
     private unowned Mutter.Window last_mapped;
 

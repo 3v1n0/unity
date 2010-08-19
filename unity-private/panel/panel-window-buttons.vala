@@ -25,7 +25,6 @@ namespace Unity.Panel
     private Ctk.Text     appname;
     private WindowButton close;
     private WindowButton minimize;
-    private WindowButton maximize;
     private WindowButton unmaximize;
 
     private unowned Bamf.Matcher matcher;
@@ -47,28 +46,21 @@ namespace Unity.Panel
       appname.max_length = 9;
       pack (appname, true, true);
 
-      close = new WindowButton ("close.png");
+      close = new WindowButton ("close");
       pack (close, false, false);
       close.clicked.connect (() => {
         if (last_xid > 0)
           global_shell.do_window_action (last_xid, WindowAction.CLOSE);
       });
 
-      minimize = new WindowButton ("minimize.png");
+      minimize = new WindowButton ("minimize");
       pack (minimize, false, false);
       minimize.clicked.connect (() => {
         if (last_xid > 0)
           global_shell.do_window_action (last_xid, WindowAction.MINIMIZE);
       });
 
-      maximize = new WindowButton ("maximize.png");
-      pack (maximize, false, false);
-      maximize.clicked.connect (() => {
-        if (last_xid > 0)
-          global_shell.do_window_action (last_xid, WindowAction.MAXIMIZE);
-      });
-
-      unmaximize = new WindowButton ("unmaximize.png");
+      unmaximize = new WindowButton ("unmaximize");
       pack (unmaximize, false, false);
       unmaximize.clicked.connect (() => {
         if (last_xid > 0)
@@ -90,6 +82,13 @@ namespace Unity.Panel
 
           return false;
         });
+      });
+
+      Idle.add (() => {
+        unowned Bamf.Window? win = matcher.get_active_window ();
+        on_active_window_changed (null, win as GLib.Object);
+
+        return false;
       });
     }
 
@@ -113,7 +112,6 @@ namespace Unity.Panel
               appname.hide ();
               close.show ();
               minimize.show ();
-              maximize.hide ();
               unmaximize.show ();
             }
           else
@@ -121,7 +119,6 @@ namespace Unity.Panel
               appname.show ();
               close.hide ();
               minimize.hide ();
-              maximize.hide ();
               unmaximize.hide ();
             }
 
@@ -150,7 +147,6 @@ namespace Unity.Panel
           appname.hide ();
           close.hide ();
           minimize.hide ();
-          maximize.hide ();
           unmaximize.hide ();
           last_xid = 0;
         }
@@ -168,9 +164,14 @@ namespace Unity.Panel
   public class WindowButton : Ctk.Button
   {
     public static const string AMBIANCE = "/usr/share/themes/Ambiance/metacity-1";
+    public static const string AMBIANCE_BETA = "/usr/share/themes/Ambiance-maverick-beta/metacity-1";
 
     public string filename { get; construct; }
     public Clutter.Actor bg;
+
+    private bool using_beta = false;
+    private int  icon_size = 18;
+    private string directory = AMBIANCE;
 
     public WindowButton (string filename)
     {
@@ -179,40 +180,46 @@ namespace Unity.Panel
 
     construct
     {
+      if (using_beta = FileUtils.test (AMBIANCE_BETA, FileTest.EXISTS))
+        {
+          icon_size = 19;
+          directory = AMBIANCE_BETA;
+        }
       try {
+        bg = new Ctk.Image.from_filename (icon_size,
+                                          directory +
+                                          "/" +
+                                          filename +
+                                          ".png");
+        set_background_for_state (Ctk.ActorState.STATE_NORMAL, bg);
+        bg.show ();
 
-        bg = new Ctk.Image.from_filename (20, AMBIANCE + "/" + filename);
-        add_actor (bg);
+        bg = new Ctk.Image.from_filename (icon_size,
+                                          directory +
+                                          "/" +
+                                          filename + 
+                                          "_focused_prelight.png");
+        set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bg);
+        bg.show ();
+
+        bg = new Ctk.Image.from_filename (icon_size,
+                                          directory +
+                                          "/" +
+                                          filename + 
+                                          "_focused_pressed.png");
+        set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bg);
         bg.show ();
 
       } catch (Error e) {
         warning (@"Unable to load window button theme: You need Ambiance installed: $(e.message)");
       }
-
-      notify["state"].connect (() => {
-        switch (state)
-          {
-          case Ctk.ActorState.STATE_NORMAL:
-            bg.opacity = 255;
-            break;
-
-          case Ctk.ActorState.STATE_PRELIGHT:
-            bg.opacity = 120;
-            break;
-
-          case Ctk.ActorState.STATE_ACTIVE:
-          default:
-            bg.opacity = 50;
-            break;
-          }
-      });
     }
 
     private override void get_preferred_width (float     for_height,
                                                out float min_width,
                                                out float nat_width)
     {
-      min_width = 20.0f;
+      min_width = icon_size;
       nat_width = min_width;
     }
 
@@ -220,7 +227,7 @@ namespace Unity.Panel
                                                 out float min_height,
                                                 out float nat_height)
     {
-      min_height = 18.0f;
+      min_height = icon_size;
       nat_height = min_height;
     }
   }

@@ -55,7 +55,7 @@ typedef struct {
 #define _XA_MOTIF_WM_HINTS		"_MOTIF_WM_HINTS"
 
 gboolean
-utils_window_is_decorated (guint32 xid)
+utils_window_is_decorated (Window xid)
 {
   GdkDisplay *display = gdk_display_get_default();
   Atom hints_atom = None;
@@ -76,20 +76,23 @@ utils_window_is_decorated (guint32 xid)
 		                  False, AnyPropertyType, &type, &format, &nitems,
 		                  &bytes_after, &data);
   
-  if (type == None || !data) return TRUE;
+  if (type == None || !data)
+    {
+      return TRUE;
+    }
   
   hints = (MotifWmHints *)data; 
   
   retval = hints->decorations;
-  
+ 
   if (data)
     XFree (data);
 
-  return retval;
+  return retval == 1;
 }
 
 static void
-gdk_window_set_mwm_hints (guint32        xid,
+gdk_window_set_mwm_hints (Window        xid,
                           MotifWmHints *new_hints)
 {
   GdkDisplay *display = gdk_display_get_default();
@@ -103,7 +106,7 @@ gdk_window_set_mwm_hints (guint32        xid,
 
   g_return_if_fail (GDK_IS_DISPLAY (display));
 
-  g_debug ("gdk_window_set_mwm_hints: %u %lu\n", xid, new_hints->decorations);
+  g_debug ("gdk_window_set_mwm_hints: %lu %lu\n", xid, new_hints->decorations);
   
   hints_atom = gdk_x11_get_xatom_by_name_for_display (display, 
                                                       _XA_MOTIF_WM_HINTS);
@@ -148,7 +151,7 @@ gdk_window_set_mwm_hints (guint32        xid,
 }
 
 void
-utils_window_set_decorations (guint32          xid,
+utils_window_set_decorations (Window          xid,
 			                        GdkWMDecoration decorations)
 {
   MotifWmHints *hints;

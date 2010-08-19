@@ -133,7 +133,6 @@ namespace Unity
     private Places.Controller  places_controller;
     private Places.View        places;
     private Panel.View         panel;
-    private ActorBlur          actor_blur;
     private Clutter.Rectangle  dark_box;
     private unowned Mutter.MetaWindow?  focus_window = null;
     private unowned Mutter.MetaDisplay? display = null;
@@ -704,11 +703,6 @@ namespace Unity
       this.grab_enabled = grab;
     }
 
-    private bool envvar_is_enabled (string name)
-    {
-      return (Environment.get_variable (name) != null);
-    }
-
     private unowned Mutter.MetaWindow? get_window_for_xid (uint32 xid)
     {
       unowned GLib.List<Mutter.Window> mutter_windows = this.plugin.get_windows ();
@@ -790,13 +784,10 @@ namespace Unity
                           int           width,
                           int           height)
     {
-      /*FIXME: This doesn't work in Mutter
       if (window.get_data<string> (UNDECORATED_HINT) == null)
         {
-          uint32 xid = (uint32)window.get_x_window ();
-          Utils.window_set_decorations (xid, 0);
+          Utils.window_set_decorations (Mutter.MetaWindow.get_xwindow (window.get_meta_window ()), 0);
         }
-        */
 
       this.window_maximized (this, window, x, y, width, height);
 
@@ -809,13 +800,10 @@ namespace Unity
                             int           width,
                             int           height)
     {
-      /* FIXME: This doesn't work in Mutter
       if (window.get_data<string> (UNDECORATED_HINT) == null)
         {
-          uint32 xid = (uint32)window.get_x_window ();
-          Utils.window_set_decorations (xid, 1);
+          Utils.window_set_decorations (Mutter.MetaWindow.get_xwindow (window.get_meta_window ()), 1);
         }
-      */
 
       this.window_unmaximized (this, window, x, y, width, height);
 
@@ -824,11 +812,30 @@ namespace Unity
 
     public void map (Mutter.Window window)
     {
-      /* FIXME: This doesn't work in Mutter
-      uint32 xid = (uint32)window.get_x_window ();
-      if (Utils.window_is_decorated (xid) == false)
-        window.set_data (UNDECORATED_HINT, "%s".printf ("true"));
-      */
+      unowned Mutter.MetaWindow win = window.get_meta_window ();
+
+      if (window.get_window_type () == Mutter.MetaCompWindowType.NORMAL)
+        {
+          Idle.add (() => {
+            if (win is Object)
+              {
+                if (Utils.window_is_decorated (Mutter.MetaWindow.get_xwindow (win)) == false && Mutter.MetaWindow.is_maximized (win) == false)
+                  {
+                    window.set_data (UNDECORATED_HINT, "%s".printf ("true"));
+                  }
+                else
+                  {
+                    if (Mutter.MetaWindow.is_maximized (win))
+                      {
+                        Utils.window_set_decorations (Mutter.MetaWindow.get_xwindow (win), 0);
+                      }
+                  }
+              }
+            
+            return false;
+          });
+        }
+
       this.maximus.process_window (window);
       this.window_mapped (this, window);
 

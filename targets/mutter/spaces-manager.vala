@@ -31,7 +31,7 @@ namespace Unity {
       this.parent = _parent;
       parent.notify["showing"].connect (on_notify_showing);
 
-      name = "Workspace Overview";
+      name = _("Workspaces");
       load_icon_from_icon_name ("workspace-switcher");
     }
 
@@ -52,6 +52,26 @@ namespace Unity {
       else
         parent.show_spaces_picker ();
     }
+    public override QuicklistController? get_menu_controller ()
+    {
+      return new ApplicationQuicklistController (this);
+    }
+
+    public override void get_menu_actions (ScrollerChildController.menu_cb callback)
+    {
+      callback (null);
+    }
+
+    public override void get_menu_navigation (ScrollerChildController.menu_cb callback)
+    {
+      callback (null);
+    }
+
+    public override bool can_drag ()
+    {
+      return true;
+    }
+
   }
   
   public class WorkspaceClone : Clutter.Group
@@ -109,7 +129,6 @@ namespace Unity {
     Clutter.Actor background;
     List<Clutter.Actor> clones;
     Plugin plugin;
-    unowned Mutter.MetaScreen screen;
     ScrollerChild _button;
     SpacesButtonController controller;
 
@@ -168,6 +187,8 @@ namespace Unity {
 
       showing = true;
       plugin.add_fullscreen_request (this);
+
+      global_shell.get_stage ().captured_event.connect (on_stage_capture_event);
 
       if (background is Clutter.Actor)
         background.destroy ();
@@ -230,6 +251,20 @@ namespace Unity {
             (w as Clutter.Actor).opacity = 0;
         }
     }
+
+    private bool on_stage_capture_event (Clutter.Event event)
+    {
+      if (event.type == Clutter.EventType.BUTTON_PRESS)
+        {
+          if (event.button.y <= global_shell.get_panel_height_foobar () ||
+              event.button.x <= global_shell.get_launcher_width_foobar ())
+            {
+              select_workspace (null);
+            }
+        }
+
+      return false;
+    }
     
     private void select_workspace (Mutter.MetaWorkspace? workspace) {
       if (workspace == null)
@@ -244,6 +279,8 @@ namespace Unity {
       Mutter.MetaWorkspace.activate (workspace, time_);
       plugin.remove_fullscreen_request (this);
       showing = false;
+
+      global_shell.get_stage ().captured_event.disconnect (on_stage_capture_event);
     }
     
     private Clutter.Actor workspace_clone (Mutter.MetaWorkspace workspace) {
@@ -252,8 +289,6 @@ namespace Unity {
 
       windows = plugin.plugin.get_windows ();
       wsp = new WorkspaceClone (workspace, plugin);
-
-      int active_workspace = Mutter.MetaScreen.get_active_workspace_index (plugin.plugin.get_screen ());
 
       foreach (Mutter.Window window in windows)
         {
