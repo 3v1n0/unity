@@ -131,6 +131,8 @@ namespace Unity
     private void end_drag (int x, int y)
     {
       dragging = false;
+      clone.reactive = true;
+      reactive = true;
       this.get_stage ().captured_event.disconnect (on_stage_captured_event);
 
       if (!drag_moved)
@@ -141,6 +143,8 @@ namespace Unity
       show ();
       
       drag_dropped (target);
+      
+      on_mouse_leave (null);
     }
     
     private bool on_stage_captured_event (Clutter.Event event)
@@ -170,6 +174,8 @@ namespace Unity
                   
                   raise_top ();
                   drag_moved = true;
+                  reactive = false;
+                  clone.reactive = false;
                 }
               set_position (event.motion.x - width / 2, event.motion.y - height / 2);
             }
@@ -180,7 +186,7 @@ namespace Unity
           return drag_moved;
         }
 
-      return true;
+      return false;
     }
 
     private bool on_mouse_enter (Clutter.Event evnt)
@@ -191,7 +197,7 @@ namespace Unity
       return false;
     }
 
-    private bool on_mouse_leave (Clutter.Event evnt)
+    private bool on_mouse_leave (Clutter.Event? evnt)
     {
       hovered = false;
       opacity = unhovered_opacity;
