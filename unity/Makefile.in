@@ -94,6 +94,7 @@ am__objects_1 = libunity_la-chrome-handler.lo \
 	libunity_la-unity-place-activation.lo \
 	libunity_la-unity-place-browser.lo \
 	libunity_la-unity-place-renderer.lo \
+	libunity_la-unity-stripe-texture.lo \
 	libunity_la-webapp-fetcher.lo
 am_libunity_la_OBJECTS = $(am__objects_1)
 libunity_la_OBJECTS = $(am_libunity_la_OBJECTS)
@@ -366,6 +367,7 @@ libunity_la_VALASOURCES = \
   unity-place-activation.vala \
   unity-place-browser.vala \
   unity-place-renderer.vala \
+  unity-stripe-texture.vala \
   webapp-fetcher.vala
 
 libunity_la_APIFILES = \
@@ -466,6 +468,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-place-browser.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-place-renderer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-place.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-stripe-texture.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-webapp-fetcher.Plo@am__quote@
 
 .c.o:
@@ -643,6 +646,14 @@ libunity_la-unity-place-renderer.lo: unity-place-renderer.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='unity-place-renderer.c' object='libunity_la-unity-place-renderer.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-unity-place-renderer.lo `test -f 'unity-place-renderer.c' || echo '$(srcdir)/'`unity-place-renderer.c
+
+libunity_la-unity-stripe-texture.lo: unity-stripe-texture.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-unity-stripe-texture.lo -MD -MP -MF $(DEPDIR)/libunity_la-unity-stripe-texture.Tpo -c -o libunity_la-unity-stripe-texture.lo `test -f 'unity-stripe-texture.c' || echo '$(srcdir)/'`unity-stripe-texture.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_la-unity-stripe-texture.Tpo $(DEPDIR)/libunity_la-unity-stripe-texture.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='unity-stripe-texture.c' object='libunity_la-unity-stripe-texture.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-unity-stripe-texture.lo `test -f 'unity-stripe-texture.c' || echo '$(srcdir)/'`unity-stripe-texture.c
 
 libunity_la-webapp-fetcher.lo: webapp-fetcher.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-webapp-fetcher.lo -MD -MP -MF $(DEPDIR)/libunity_la-webapp-fetcher.Tpo -c -o libunity_la-webapp-fetcher.lo `test -f 'webapp-fetcher.c' || echo '$(srcdir)/'`webapp-fetcher.c

@@ -79,6 +79,7 @@ libunity_la_VALASOURCES = \
   unity-place-activation.vala \
   unity-place-browser.vala \
   unity-place-renderer.vala \
+  unity-stripe-texture.vala \
   webapp-fetcher.vala
 
 

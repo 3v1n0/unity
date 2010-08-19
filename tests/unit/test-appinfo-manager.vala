@@ -91,11 +91,19 @@ namespace Unity.Tests.Unit
       string old_datadir = Environment.get_user_data_dir ();
       var manager = AppInfoManager.get_instance();
       
-      Environment.set_variable ("XDG_DATA_HOME", Config.TESTUNITDIR, true);
+      Environment.set_variable ("XDG_DATA_HOME", Config.TESTUNITDIR+"/data", true);
+      debug ("XDG %s", Config.TESTUNITDIR+"/data");
       
       var info = manager.lookup ("ubuntu-about.desktop");
+      assert (info != null);
       assert (info is AppInfo);
       assert ("About Ubuntu" == info.get_name ());
+      
+      Gee.List<string> categories = manager.get_categories ("ubuntu-about.desktop");
+      assert (categories != null);
+      assert (categories[0] == "GNOME");
+      assert (categories[1] == "Application");
+      assert (categories[2] == "Core");
       
       /* Reset the environment like a good citizen */
       Environment.set_variable ("XDG_DATA_HOME", old_datadir, true);
@@ -113,7 +121,7 @@ namespace Unity.Tests.Unit
       string old_datadir = Environment.get_user_data_dir ();
       var manager = AppInfoManager.get_instance();
       
-      Environment.set_variable ("XDG_DATA_HOME", Config.TESTUNITDIR, true);
+      Environment.set_variable ("XDG_DATA_HOME", Config.TESTUNITDIR+"/data", true);      
       
       try{
         var info = yield manager.lookup_async ("ubuntu-about.desktop");
@@ -122,6 +130,12 @@ namespace Unity.Tests.Unit
       } catch (Error e) {
         error ("Error reading desktop file: %s", e.message);
       }
+      
+      Gee.List<string> categories = manager.get_categories ("ubuntu-about.desktop");
+      assert (categories != null);
+      assert (categories[0] == "GNOME");
+      assert (categories[1] == "Application");
+      assert (categories[2] == "Core");
       
       /* Reset the environment like a good citizen */
       Environment.set_variable ("XDG_DATA_HOME", old_datadir, true);

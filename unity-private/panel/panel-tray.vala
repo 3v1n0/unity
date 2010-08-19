@@ -57,7 +57,19 @@ namespace Unity.Panel
       string? disable_tray = Environment.get_variable ("UNITY_DISABLE_TRAY");
 
       if (disable_tray == null)
-        this.manager.manage_stage (this.stage);
+        {
+          Gdk.error_trap_push ();
+          
+          this.manager.manage_stage (this.stage);
+          Gdk.flush ();
+
+          int err = 0;
+          if ((err = Gdk.error_trap_pop ()) != 0)
+            {
+              warning ("Unable to connect to the system tray: Error code: %d",
+                       err);
+            }
+        }
 
       return false;
     }

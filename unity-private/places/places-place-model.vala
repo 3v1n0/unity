@@ -25,7 +25,7 @@ namespace Unity.Places
    * Contains the loaded Place objects. Abstract class so views can be
    * tested with fake model
    **/
-  public abstract class PlaceModel : Gee.ArrayList<Place>
+  public abstract class PlaceModel : Gee.ArrayList<unowned Place>
   {
     public signal void place_added (Place place);
   }

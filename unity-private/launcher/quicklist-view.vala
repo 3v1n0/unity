@@ -34,6 +34,7 @@ namespace Unity.Launcher
   const float ITEM_HEIGHT            = 2.0f;
   const float ITEM_CORNER_RADIUS     = 0.3f;
   const float ITEM_CORNER_RADIUS_ABS = 4.0f;
+  const float ITEM_INDENT_ABS        = 20.0f;
   const float ANCHOR_HEIGHT          = 1.5f;
   const float ANCHOR_HEIGHT_ABS      = 18.0f;
   const float ANCHOR_WIDTH           = 0.75f;
