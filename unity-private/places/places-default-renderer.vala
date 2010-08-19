@@ -71,14 +71,16 @@ namespace Unity.Places
 
       if (renderer == "UnityEmptySearchRenderer")
         {
+          var group = new EmptrySectionGroup (model.get_position (iter),
+                                              results_model);
+          box.pack (group, false, true);
+
         }
       else if (renderer == "UnityEmptySectionRenderer")
         {
           var group = new EmptrySectionGroup (model.get_position (iter),
                                               results_model);
           box.pack (group, false, true);
-
-          debug ("HELLO");
         }
       else
         {
