@@ -21,7 +21,7 @@ namespace Unity.Places
 {
   public class PlaceSearchBar : Ctk.Box
   {
-    static const int SPACING = 10;
+    static const int SPACING = 12;
     static const int RANDOM_TEXT_WIDTH = 400;
 
     /* Properties */
