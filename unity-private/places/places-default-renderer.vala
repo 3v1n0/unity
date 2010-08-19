@@ -71,9 +71,10 @@ namespace Unity.Places
 
       if (renderer == "UnityEmptySearchRenderer")
         {
-          var group = new EmptrySectionGroup (model.get_position (iter),
-                                              results_model);
+          var group = new EmptySearchGroup (model.get_position (iter),
+                                            results_model);
           box.pack (group, false, true);
+          group.activated.connect ((u, m) => { activated (u, m); } );
 
         }
       else if (renderer == "UnityEmptySectionRenderer")
@@ -109,6 +110,90 @@ namespace Unity.Places
         }
     }
   }
+
+  public class EmptySearchGroup : ExpandingBin
+  {
+    public uint   group_id { get; construct set; }
+
+    public Dee.Model results { get; construct set; }
+
+    public signal void activated (string uri, string mimetype);
+
+    private Ctk.VBox box;
+
+    public EmptySearchGroup (uint group_id, Dee.Model results)
+    {
+      Object (group_id:group_id, results:results);
+    }
+
+    construct
+    {
+      bin_state = ExpandingBinState.CLOSED;
+      unexpanded_height = 0.0f;
+
+      var hbox = new Ctk.HBox (0);
+      add_actor (hbox);
+      hbox.show ();
+
+      box = new Ctk.VBox (12);
+      hbox.pack (box, false, false);
+      box.show ();
+
+      results.row_added.connect (on_result_added);
+      results.row_removed.connect (on_result_removed);
+
+      opacity = 0;
+    }
+
+    private void on_result_added (Dee.ModelIter iter)
+    {
+      if (!interesting (iter))
+        return;
+      
+      bin_state = ExpandingBinState.EXPANDED;
+
+      string mes = results.get_string (iter, 4);
+
+      var button = new Ctk.Button (Ctk.Orientation.HORIZONTAL);
+      button.padding = { 12.0f, 12.0f, 12.0f, 12.0f };
+      var text = new Ctk.Text ("");
+      text.set_markup ("<big>" + mes + "</big>");
+      button.add_actor (text);
+
+      box.pack (button, false, false);
+
+      if (box.get_children ().length () >= 2)
+        {
+          var bg = new StripeTexture (null);
+          button.set_background (bg);
+
+          string uri = results.get_string (iter, 0);
+          string mimetype = results.get_string (iter, 3);
+
+          button.clicked.connect (() => { activated (uri, mimetype); });
+        }
+    }
+
+    private void on_result_removed (Dee.ModelIter iter)
+    {
+      if (!interesting (iter))
+        return;
+
+      var children = box.get_children ();
+      foreach (Clutter.Actor child in children)
+        {
+          box.remove_actor (child);
+        }
+
+      bin_state = ExpandingBinState.CLOSED;
+    }
+
+    private bool interesting (Dee.ModelIter iter)
+    {
+      return (results.get_uint (iter, 2) == group_id);
+    }
+  }
+
 
   public class EmptrySectionGroup : ExpandingBin
   {
