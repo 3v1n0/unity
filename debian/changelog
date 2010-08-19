@@ -15,7 +15,7 @@ unity (0.2.28-0ubuntu1) UNRELEASED; urgency=low
     - Workspace switch cleanups (lp: #594163)
     - workspace switcher should have a title on hover (lp: #614926)
   * debian/control:
-    - build-depends on libpango1.0-dev
+    - build-depends on libpango1.0-dev to match the configure
   * debian/libunity0.symbols:
     - new version update
   * debian/patches/01_show_gicons.patch:
