@@ -99,7 +99,7 @@ namespace Unity.Places
       var glow = new Ctk.EffectGlow ();
       glow.set_factor (1.0f);
       glow.set_margin (3);
-      title_button.add_effect (glow);
+      //title_button.add_effect (glow);
       
       title_box = new Ctk.HBox (5);
       title_button.add_actor (title_box);
@@ -129,7 +129,7 @@ namespace Unity.Places
       glow = new Ctk.EffectGlow ();
       glow.set_factor (1.0f);
       glow.set_margin (5);
-      sep.add_effect (glow);
+      //sep.add_effect (glow);
 
       title_button.clicked.connect (() => {
         if (n_results <= renderer.get_n_cols () || allow_expand == false)
