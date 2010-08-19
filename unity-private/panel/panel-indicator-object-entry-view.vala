@@ -153,11 +153,12 @@ namespace Unity.Panel.Indicators
           text.color = { 233, 216, 200, 255 };
           add_actor (text);
 
-          text.text = entry.label.label;
+          /* FIXME: What about the __ case? Well, should that me in a menu? */
+          text.text = entry.label.label.replace ("_", "");
 
           entry.label.notify["label"].connect (() =>
             {
-              text.text = entry.label.label;
+              text.text = entry.label.label.replace ("_", "");
             });
 
           if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)

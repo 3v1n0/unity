@@ -97,6 +97,13 @@ namespace Unity.Panel
     {
       unowned Bamf.View? new_view = object1 as Bamf.View;
 
+      appname.set_markup ("");
+      appname.hide ();
+      close.hide ();
+      minimize.hide ();
+      unmaximize.hide ();
+      last_xid = 0;
+      
       if (new_view is Bamf.Window)
         {
           unowned Bamf.Window win = new_view as Bamf.Window;
@@ -133,7 +140,11 @@ namespace Unity.Panel
 
               AppInfo? info = appinfo.lookup (app.get_desktop_file ());
               if (info != null)
-                appname.set_markup (FORMAT.printf (info.get_display_name ()));
+                {
+                  string display_name = info.get_display_name ();
+                  display_name = display_name.split (" ")[0];
+                  appname.set_markup (FORMAT.printf (display_name));
+                }
               else
                 appname.set_markup (FORMAT.printf (win.get_name ()));
             }
@@ -141,14 +152,6 @@ namespace Unity.Panel
             {
               appname.set_markup (FORMAT.printf (win.get_name ()));
             }
-        }
-      else
-        {
-          appname.hide ();
-          close.hide ();
-          minimize.hide ();
-          unmaximize.hide ();
-          last_xid = 0;
         }
     }
 

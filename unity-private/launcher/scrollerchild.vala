@@ -450,7 +450,6 @@ namespace Unity.Launcher
             blue = 255,
             alpha = 255
           };
-          effect_icon_glow.set_background_texture (honeycomb_mask);
           effect_icon_glow.set_color (c);
           effect_icon_glow.set_opacity (1.0f);
           processed_icon.add_effect (effect_icon_glow);

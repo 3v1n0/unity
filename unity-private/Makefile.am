@@ -98,6 +98,7 @@ places_sources = \
   places/places-place-entry-view.vala \
   places/places-place-entry.vala \
   places/places-place-home.vala \
+  places/places-place-home-renderer.vala \
   places/places-place-model.vala \
   places/places-place-view.vala \
   places/places-place.vala \
