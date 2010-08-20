@@ -842,6 +842,7 @@ namespace Unity.Place {
     private string _dbus_path;
     private bool _exported = false;
     private HashTable<string, _EntrySignals?> entry_signals;
+    private Gee.Set<string> ignore_remote_notify_props;
 
     /*
      * Properties
@@ -873,6 +874,12 @@ namespace Unity.Place {
     construct {
       service = new ServiceImpl (_dbus_path);
       entry_signals = new HashTable<string, _EntrySignals?>(str_hash, str_equal);
+      
+      ignore_remote_notify_props = new Gee.HashSet<string> ();
+      ignore_remote_notify_props.add ("active-search");
+      ignore_remote_notify_props.add ("active-global-search");
+      ignore_remote_notify_props.add ("active");
+      ignore_remote_notify_props.add ("active-section");
     }
 
     public Controller (string dbus_path)
@@ -1016,10 +1023,8 @@ namespace Unity.Place {
           return;
         }
       
-      /* Don't emit signals on the bus when the search changes.
-       * The search is purely a local property */
-      if ("active-search" == pspec.get_name () ||
-          "active-global-search" == pspec.get_name ())
+      /* Don't emit signals on the bus that are strictly local metadata */
+      if (pspec.get_name () in ignore_remote_notify_props)
         return;
       
       entry_service.queue_place_entry_info_changed_signal ();
