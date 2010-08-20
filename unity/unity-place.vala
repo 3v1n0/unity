@@ -172,6 +172,11 @@ namespace Unity.Place {
       return search;
     }
 
+    public List<unowned string> get_hints ()
+    {
+      return hints.get_keys ();
+    }
+
     public void set_hint (string hint, string val)
     {
       hints.insert (hint, val);
@@ -195,6 +200,27 @@ namespace Unity.Place {
     public uint num_hints ()
     {
       return hints.size ();
+    }
+    
+    /* Returns true if search strings and all hints match */
+    public bool equals (Search? other)
+    {
+      if (other == null)
+        return false;
+        
+      if (get_search_string() != other.get_search_string ())
+        return false;
+      
+      if (num_hints () != other.num_hints())
+        return false;
+        
+      foreach (var hint in get_hints ())
+      {
+        if (other.get_hint (hint) != get_hint (hint))
+          return false;
+      }
+      
+      return true;
     }
   }
 
@@ -695,13 +721,19 @@ namespace Unity.Place {
     public void set_global_search (string search,
                                    HashTable<string,string> hints)
     {
-      this._entry_info.active_global_search = new Search (search, hints);
+      var s = new Search (search, hints);
+      
+      if (!s.equals (this._entry_info.active_global_search))
+        this._entry_info.active_global_search = s;
     }
 
     public void set_search (string search,
                             HashTable<string,string> hints)
     {
-      this._entry_info.active_search = new Search (search, hints);
+      var s = new Search (search, hints);
+      
+      if (!s.equals (this._entry_info.active_search))
+        this._entry_info.active_search = s;
     }
 
     public void set_active (bool is_active)
