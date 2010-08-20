@@ -1,3 +1,9 @@
+unity (0.2.28-0ubuntu2) UNRELEASED; urgency=low
+
+  * Backported change to fix a bug where some launcher icons are not there
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Fri, 20 Aug 2010 15:26:44 +0200
+
 unity (0.2.28-0ubuntu1) maverick; urgency=low
 
   * New upstream release fixing those bugs:

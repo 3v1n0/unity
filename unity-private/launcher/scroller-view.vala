@@ -1430,6 +1430,18 @@ namespace Unity.Launcher
             }
         }
 
+      foreach (ScrollerChild child in model)
+        {
+          if ((child in draw_ftb) || (child in draw_btf))
+            continue;
+
+          if (child is ScrollerChild && child.opacity > 0)
+            {
+              (child as ScrollerChild).paint ();
+            }
+        }
+
+
       foreach (ScrollerChild child in child_refs)
         {
           child.paint ();
