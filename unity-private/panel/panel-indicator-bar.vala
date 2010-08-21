@@ -44,7 +44,7 @@ namespace Unity.Panel.Indicators
         {
           var name = model.get_indicator_name (o);
 
-          if (name != "libappmenu.so")
+          if (name != "libappmenu.so" || true == true)
             {
               IndicatorObjectView indicator_object_view = new IndicatorObjectView (o);
               indicator_object_view.menu_moved.connect (this.on_menu_moved);

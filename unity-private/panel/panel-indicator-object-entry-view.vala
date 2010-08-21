@@ -268,7 +268,7 @@ namespace Unity.Panel.Indicators
           /* Show the menu and connect various signal to update the menu if
            * necessary.
            */
-          //entry.menu.move_current.connect (menu_key_moved);
+          entry.menu.move_current.connect (menu_key_moved);
           entry.menu.notify["visible"].connect (menu_vis_changed);
           bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, "opacity", 255);
         }
@@ -292,6 +292,15 @@ namespace Unity.Panel.Indicators
       if (type != Gtk.MenuDirectionType.PARENT &&
           type != Gtk.MenuDirectionType.CHILD)
         return;
+
+      /* If there is a submenu, we shouldn't do anything */
+      var wid = entry.menu.get_active ();
+      var item = wid as Gtk.MenuItem;
+      if (item.get_submenu () != null &&
+          type == Gtk.MenuDirectionType.CHILD)
+        {
+          return;
+        }
 
       menu_moved (type);
     }
