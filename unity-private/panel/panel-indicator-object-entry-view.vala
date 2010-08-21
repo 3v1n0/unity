@@ -270,7 +270,7 @@ namespace Unity.Panel.Indicators
            */
           entry.menu.move_current.connect (menu_key_moved);
           entry.menu.notify["visible"].connect (menu_vis_changed);
-          bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, "opacity", 255);
+          bg.opacity = 255;
         }
     }
 
@@ -280,7 +280,7 @@ namespace Unity.Panel.Indicators
       if (vis == false)
         {
           /* The menu isn't visible anymore. Disconnect some signals. */
-          bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200, "opacity", 0);
+          bg.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100, "opacity", 0);
           entry.menu.move_current.disconnect (menu_key_moved);
           entry.menu.notify["visible"].disconnect (menu_vis_changed);
           menu_is_open = false;
@@ -396,8 +396,8 @@ namespace Unity.Panel.Indicators
       cr.line_to (1, height);
 
       var pat = new Cairo.Pattern.linear (1, 0, 1, height);
-      pat.add_color_stop_rgba (0.0, 0.8509f, 0.8196f, 0.7294f, 1.0f);
-      pat.add_color_stop_rgba (1.0, 0.7019f, 0.6509f, 0.5137f, 1.0f);
+      pat.add_color_stop_rgba (0.0, 248/255.0f, 134/255.0f, 87/255.0f, 1.0f);
+      pat.add_color_stop_rgba (1.0, 236/255.0f, 113/255.0f, 63/255.0f, 1.0f);
       cr.set_source (pat);
       cr.fill ();
 
