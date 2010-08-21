@@ -28,11 +28,16 @@ namespace Unity.Places
     const Clutter.Color focus_color   = { 0xff, 0xff, 0xff, 0xff };
 
     public Ctk.Image left_icon;
+    public Ctk.Text  hint_text;
     public Ctk.Text  text;
     public ThemeImage right_icon;
 
     private uint live_search_timeout = 0;
-    private string _static_text = _("Search");
+
+    /* i18n: This is meant to be used like Search $PLACES_NAME, so eg.
+     * 'Search Applications'
+     */
+    private string _static_text = _("Search %s");
 
     public signal void text_changed (string? text);
 
@@ -51,14 +56,24 @@ namespace Unity.Places
       pack (left_icon, false, true);
       left_icon.show ();
 
-      text = new Ctk.Text (_static_text);
+      hint_text = new Ctk.Text (_static_text.printf (""));
+      hint_text.reactive = false;
+      hint_text.selectable = false;
+      hint_text.editable = false;
+      hint_text.activatable = false;
+      hint_text.single_line_mode = true;
+      hint_text.cursor_visible = false;
+      hint_text.color = nofocus_color;
+      hint_text.set_parent (this);
+
+      text = new Ctk.Text ("");
       text.reactive = true;
       text.selectable = true;
       text.editable = true;
       text.activatable = true;
       text.single_line_mode = true;
       text.cursor_visible = false;
-      text.color = nofocus_color;
+      text.color = focus_color;
       pack (text, true, true);
       text.show ();
 
@@ -103,6 +118,37 @@ namespace Unity.Places
 
         return false;
       });
+    }
+
+    private override void allocate (Clutter.ActorBox box,
+                                    Clutter.AllocationFlags flags)
+    {
+      base.allocate (box, flags);
+
+      Clutter.ActorBox child_box = Clutter.ActorBox ();
+      child_box.x1 = text.x + 8;
+      child_box.x2 = text.x + text.width;
+      child_box.y1 = text.y;
+      child_box.y2 = text.y + text.height;
+      hint_text.allocate (child_box, flags);
+    }
+
+    private override void paint ()
+    {
+      hint_text.paint ();
+      base.paint ();
+    }
+
+    private override void map ()
+    {
+      base.map ();
+      hint_text.map ();
+    }
+
+    private override void unmap ()
+    {
+      base.unmap ();
+      hint_text.unmap ();
     }
 
     private void on_key_focus_in ()
