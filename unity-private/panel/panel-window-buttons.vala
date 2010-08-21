@@ -32,6 +32,8 @@ namespace Unity.Panel
 
     private uint32 last_xid = 0;
 
+    private unowned Bamf.View _last_view = null;
+
     public WindowButtons ()
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
@@ -103,6 +105,14 @@ namespace Unity.Panel
       minimize.hide ();
       unmaximize.hide ();
       last_xid = 0;
+
+      if (object is Bamf.View)
+        {
+          if (object == _last_view)
+            {
+              object.weak_unref (on_last_view_destroyed);
+            }
+        }
       
       if (new_view is Bamf.Window)
         {
@@ -152,6 +162,26 @@ namespace Unity.Panel
             {
               appname.set_markup (FORMAT.printf (win.get_name ()));
             }
+
+          _last_view = new_view;
+          _last_view.weak_ref (on_last_view_destroyed);
+        }
+      else
+        {
+          _last_view = null;
+        }
+    }
+
+    private void on_last_view_destroyed (Object object)
+    {
+      if (object == _last_view)
+        {
+          _last_view = null;
+          appname.set_markup ("");
+          appname.hide ();
+          close.hide ();
+          minimize.hide ();
+          unmaximize.hide ();
         }
     }
 
