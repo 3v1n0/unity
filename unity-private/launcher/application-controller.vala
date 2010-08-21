@@ -318,14 +318,14 @@ namespace Unity.Launcher
     {
       if ((b as Bamf.Window).last_active () > (a as Bamf.Window).last_active ())
         {
-          return 1;
+          return -1;
         }
       else if ((b as Bamf.Window).last_active () == (a as Bamf.Window).last_active ())
         {
           return 0;
         }
 
-      return -1;
+      return 1;
     }
 
 
