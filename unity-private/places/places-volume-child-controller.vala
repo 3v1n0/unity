@@ -54,8 +54,6 @@ namespace Unity.Places
         }
       load_icon_from_icon_name (icon_name);
 
-      debug ("ICON NAME: %s", icon_name);
-
       child.group_type = ScrollerChild.GroupType.DEVICE;
       child.drag_removed.connect (eject_volume);
 

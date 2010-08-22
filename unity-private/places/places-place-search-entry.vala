@@ -109,11 +109,14 @@ namespace Unity.Places
 
     private void on_text_changed ()
     {
+      hint_text.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100,
+                         "opacity", text.text == "" ? 255 : 0);
+
       if (live_search_timeout != 0)
         Source.remove (live_search_timeout);
 
       live_search_timeout = Timeout.add (LIVE_SEARCH_TIMEOUT, () => {
-        text_changed (text.text == _static_text ? "" : text.text);
+        text_changed (text.text);
         live_search_timeout = 0;
 
         return false;
@@ -153,26 +156,28 @@ namespace Unity.Places
 
     private void on_key_focus_in ()
     {
-      if (text.text == _static_text)
-          text.set_text ("");
-
       text.cursor_visible = true;
-      text.color = focus_color;
     }
 
     private void on_key_focus_out ()
     {
-
       text.cursor_visible = false;
-      text.color = nofocus_color;
     }
 
     public void reset ()
     {
       text.cursor_visible = false;
-      text.color = nofocus_color;
-      text.text = _static_text;
+      text.text = "";
+    }
+
+    public void set_active_entry (PlaceEntry entry)
+    {
+      string name = "";
+
+      if (entry is PlaceHomeEntry == false)
+        name = entry.name;
+
+      hint_text.text = _static_text.printf (name);
     }
   }
 }
-

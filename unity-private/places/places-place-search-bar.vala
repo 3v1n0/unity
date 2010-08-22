@@ -144,6 +144,7 @@ namespace Unity.Places
         }
 
       navigation.set_active_entry (entry);
+      this.entry.set_active_entry (entry);
       this.entry.text.grab_key_focus ();
     }
   }
