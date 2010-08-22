@@ -22,8 +22,11 @@ namespace Unity.Places
   public class PlaceSearchEntry : Ctk.Box
   {
     static const string SEARCH_ICON_FILE = Config.PKGDATADIR + "/search_icon.png";
+    static const int SPACING = 3;
     static const float  PADDING = 1.0f;
     static const int    LIVE_SEARCH_TIMEOUT = 200; /* Milliseconds */
+    static const int    CURSOR_BLINK_TIMEOUT = 1000; /* Milliseconds */
+
     const Clutter.Color nofocus_color = { 0xff, 0xff, 0xff, 0xbb };
     const Clutter.Color focus_color   = { 0xff, 0xff, 0xff, 0xff };
 
@@ -31,6 +34,26 @@ namespace Unity.Places
     public Ctk.Text  hint_text;
     public Ctk.Text  text;
     public ThemeImage right_icon;
+
+    private bool upward = true;
+    private float _cursor_opacity = 0.0f;
+    public float cursor_opacity {
+      get { return _cursor_opacity; }
+      set {
+        if (_cursor_opacity != value)
+          {
+            _cursor_opacity = value;
+
+            var factor = upward ? _cursor_opacity : 1.0f - _cursor_opacity;
+            text.cursor_color = { 255, 255, 255, (uint8)(255 * factor) };
+
+            if (upward && _cursor_opacity == 1.0f)
+              upward = false;
+            else if (upward == false && _cursor_opacity == 1.0f)
+              upward = true;
+          }
+      }
+    }
 
     private uint live_search_timeout = 0;
 
@@ -45,7 +68,7 @@ namespace Unity.Places
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
               homogeneous:false,
-              spacing:6);
+              spacing:0);
     }
 
     construct
@@ -65,7 +88,7 @@ namespace Unity.Places
       hint_text.cursor_visible = false;
       hint_text.color = nofocus_color;
       hint_text.set_parent (this);
-
+      
       text = new Ctk.Text ("");
       text.reactive = true;
       text.selectable = true;
@@ -129,7 +152,7 @@ namespace Unity.Places
       base.allocate (box, flags);
 
       Clutter.ActorBox child_box = Clutter.ActorBox ();
-      child_box.x1 = text.x + 8;
+      child_box.x1 = text.x + SPACING*2;
       child_box.x2 = text.x + text.width;
       child_box.y1 = text.y;
       child_box.y2 = text.y + text.height;
@@ -156,11 +179,20 @@ namespace Unity.Places
 
     private void on_key_focus_in ()
     {
+      text.cursor_color = { 255, 255, 255, 0 };
+      _cursor_opacity = 0.0f;
+      var anim = animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD,
+                          CURSOR_BLINK_TIMEOUT,
+                          "cursor-opacity", 1.0);
+      anim.loop = true;
+
       text.cursor_visible = true;
     }
 
     private void on_key_focus_out ()
     {
+      get_animation ().loop = false;
+      get_animation ().completed ();
       text.cursor_visible = false;
     }
 
@@ -177,7 +209,9 @@ namespace Unity.Places
       if (entry is PlaceHomeEntry == false)
         name = entry.name;
 
-      hint_text.text = _static_text.printf (name);
+      hint_text.set_markup ("<i>" +
+                            Markup.escape_text (_static_text.printf (name)) +
+                            "</i>");
     }
   }
 }
