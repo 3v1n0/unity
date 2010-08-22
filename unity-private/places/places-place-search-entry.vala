@@ -26,6 +26,7 @@ namespace Unity.Places
     static const float  PADDING = 1.0f;
     static const int    LIVE_SEARCH_TIMEOUT = 200; /* Milliseconds */
     static const int    CURSOR_BLINK_TIMEOUT = 1000; /* Milliseconds */
+    static const float  CLEAR_SIZE = 18.0f;
 
     const Clutter.Color nofocus_color = { 0xff, 0xff, 0xff, 0xbb };
     const Clutter.Color focus_color   = { 0xff, 0xff, 0xff, 0xff };
@@ -33,7 +34,7 @@ namespace Unity.Places
     public Ctk.Image left_icon;
     public Ctk.Text  hint_text;
     public Ctk.Text  text;
-    public ThemeImage right_icon;
+    public CairoCanvas right_icon;
 
     private bool upward = true;
     private float _cursor_opacity = 0.0f;
@@ -104,9 +105,15 @@ namespace Unity.Places
       text.key_focus_in.connect (on_key_focus_in);
       text.key_focus_out.connect (on_key_focus_out);
 
-      right_icon = new ThemeImage ("gtk-close");
+      right_icon = new CairoCanvas (paint_right_icon);
       pack (right_icon, false, true);
       right_icon.show ();
+      right_icon.reactive = true;
+      right_icon.button_release_event.connect (() => {
+        text.text = "";
+        text_changed ("");
+        return true;
+      });
     }
 
     private override void get_preferred_height (float     for_width,
@@ -157,6 +164,12 @@ namespace Unity.Places
       child_box.y1 = text.y;
       child_box.y2 = text.y + text.height;
       hint_text.allocate (child_box, flags);
+
+      child_box.x1 = box.x2 - box.x1 - CLEAR_SIZE;
+      child_box.x2 = child_box.x1 + CLEAR_SIZE;
+      child_box.y1 = ((box.y2 - box.y1)/2.0f) - (CLEAR_SIZE/2.0f);
+      child_box.y2 = child_box.y1 + CLEAR_SIZE;
+      right_icon.allocate (child_box, flags);
     }
 
     private override void paint ()
@@ -212,6 +225,27 @@ namespace Unity.Places
       hint_text.set_markup ("<i>" +
                             Markup.escape_text (_static_text.printf (name)) +
                             "</i>");
+    }
+
+    private void paint_right_icon (Cairo.Context cr, int width, int height)
+    {
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      cr.set_operator (Cairo.Operator.OVER);
+      cr.set_line_width (3.0);
+      cr.set_source_rgba (1.0, 1.0, 1.0, 1.0);
+
+      /* Make a X */
+      var padding = 5;
+
+      cr.move_to (padding, padding);
+      cr.line_to (width - padding, height - padding);
+
+      cr.move_to (width - padding, padding);
+      cr.line_to (padding, height - padding);
+
+      cr.stroke ();
     }
   }
 }
