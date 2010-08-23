@@ -401,6 +401,20 @@ namespace Unity.Places
                                          dbus_path,
                                          "com.canonical.Unity.PlaceEntry");
 
+        /* FIXME: Kill vala.
+         * The reason we need both objects is because the former cannot 
+         * marshall the struct within a struct of PlaceEntryInfoChanged signal
+         * but it can to async methods.
+         * The dynamic 'service' object can do the signals (though it returns
+         * a ValueArray, but not the async stuff. 
+         *
+         * So basically we need both right now and every new place kills a
+         * thousand kittens.
+         */
+        service = connection.get_object (dbus_name,
+                                         dbus_path,
+                                         "com.canonical.Unity.PlaceEntry");
+
       } catch (Error e) {
         warning (@"Unable to connect to $dbus_path on $dbus_name: %s",
                  e.message);
