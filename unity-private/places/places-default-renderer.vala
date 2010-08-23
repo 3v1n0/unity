@@ -24,6 +24,10 @@ namespace Unity.Places
     static const float PADDING = 12.0f;
     static const int   SPACING = 0;
 
+    private LayeredBin bin;
+    private EmptySearchGroup search_empty;
+    private EmptySectionGroup section_empty;
+
     private Ctk.VBox box;
     private Dee.Model groups_model;
     private Dee.Model results_model;
@@ -36,10 +40,15 @@ namespace Unity.Places
     construct
     {
       padding = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+      bin = new LayeredBin ();
+      add_actor (bin);
+      bin.show ();
+
       box = new Ctk.VBox (SPACING);
       box.padding = { 0.0f, PADDING, 0.0f, PADDING};
       box.homogeneous = false;
-      add_actor (box);
+      bin.add_actor (box);
       box.show ();
     }
 
@@ -65,23 +74,60 @@ namespace Unity.Places
       groups_model.row_removed.connect (on_group_removed);
     }
 
+    private void update_views ()
+    {
+      int search_empty_opacity = 0;
+      int section_empty_opacity = 0;
+      int groups_box_opacity = 255;
+
+      if (search_empty.active)
+        {
+          search_empty_opacity = 255;
+          section_empty_opacity = 0;
+          groups_box_opacity = 0;
+        }
+      else if (section_empty.active)
+        {
+          search_empty_opacity = 0;
+          section_empty_opacity = 255;
+          groups_box_opacity = 0;
+        }
+      
+      search_empty.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                            300,
+                            "opacity", search_empty_opacity);
+      section_empty.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                            300,
+                            "opacity", section_empty_opacity);
+      box.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                            300,
+                            "opacity", groups_box_opacity);
+
+    }
+
     private void on_group_added (Dee.Model model, Dee.ModelIter iter)
     {
       string renderer = model.get_string (iter, 0);
 
       if (renderer == "UnityEmptySearchRenderer")
         {
-          var group = new EmptySearchGroup (model.get_position (iter),
+          search_empty = new EmptySearchGroup (model.get_position (iter),
                                             results_model);
-          box.pack (group, false, true);
-          group.activated.connect ((u, m) => { activated (u, m); } );
+          search_empty.opacity = 0;
+          bin.add_actor (search_empty);
+          
+          search_empty.activated.connect ((u, m) => { activated (u, m); } );
+          search_empty.notify["active"].connect (update_views);
 
         }
       else if (renderer == "UnityEmptySectionRenderer")
         {
-          var group = new EmptrySectionGroup (model.get_position (iter),
+          section_empty = new EmptySectionGroup (model.get_position (iter),
                                               results_model);
-          box.pack (group, false, true);
+          section_empty.opacity = 0;
+          bin.add_actor (section_empty);
+
+          section_empty.notify["active"].connect (update_views);
         }
       else
         {
@@ -111,7 +157,7 @@ namespace Unity.Places
     }
   }
 
-  public class EmptySearchGroup : ExpandingBin
+  public class EmptySearchGroup : Ctk.Bin
   {
     public uint   group_id { get; construct set; }
 
@@ -119,18 +165,17 @@ namespace Unity.Places
 
     public signal void activated (string uri, string mimetype);
 
+    public bool active { get; construct set;}
+
     private Ctk.VBox box;
 
     public EmptySearchGroup (uint group_id, Dee.Model results)
     {
-      Object (group_id:group_id, results:results);
+      Object (group_id:group_id, results:results, active:false);
     }
 
     construct
     {
-      bin_state = ExpandingBinState.CLOSED;
-      unexpanded_height = 0.0f;
-
       var hbox = new Ctk.HBox (0);
       add_actor (hbox);
       hbox.show ();
@@ -150,8 +195,6 @@ namespace Unity.Places
       if (!interesting (iter))
         return;
       
-      bin_state = ExpandingBinState.EXPANDED;
-
       string mes = results.get_string (iter, 4);
 
       var button = new Ctk.Button (Ctk.Orientation.HORIZONTAL);
@@ -172,6 +215,8 @@ namespace Unity.Places
 
           button.clicked.connect (() => { activated (uri, mimetype); });
         }
+
+      active = true;
     }
 
     private void on_result_removed (Dee.ModelIter iter)
@@ -179,13 +224,13 @@ namespace Unity.Places
       if (!interesting (iter))
         return;
 
+      active = false;
+      
       var children = box.get_children ();
       foreach (Clutter.Actor child in children)
         {
           box.remove_actor (child);
         }
-
-      bin_state = ExpandingBinState.CLOSED;
     }
 
     private bool interesting (Dee.ModelIter iter)
@@ -195,7 +240,7 @@ namespace Unity.Places
   }
 
 
-  public class EmptrySectionGroup : ExpandingBin
+  public class EmptySectionGroup : Ctk.Bin
   {
     public uint   group_id { get; construct set; }
 
@@ -203,17 +248,15 @@ namespace Unity.Places
     public Dee.Model results { get; construct set; }
 
     public signal void activated (string uri, string mimetype);
+    public bool active { get; construct set; }
 
-    public EmptrySectionGroup (uint group_id, Dee.Model results)
+    public EmptySectionGroup (uint group_id, Dee.Model results)
     {
-      Object (group_id:group_id, results:results);
+      Object (group_id:group_id, results:results, active:false);
     }
 
     construct
     {
-      bin_state = ExpandingBinState.CLOSED;
-      unexpanded_height = 0.0f;
-
       padding = { 100.0f, 0.0f, 0.0f, 0.0f };
 
       text = new Ctk.Text ("");
@@ -233,10 +276,10 @@ namespace Unity.Places
       if (!interesting (iter))
         return;
       
-      bin_state = ExpandingBinState.EXPANDED;
-
       string mes = results.get_string (iter, 4);
       text.set_markup ("<big>" + mes + "</big>");
+
+      active = true;
     }
 
     private void on_result_removed (Dee.ModelIter iter)
@@ -244,7 +287,7 @@ namespace Unity.Places
       if (!interesting (iter))
         return;
 
-      bin_state = ExpandingBinState.CLOSED;
+      active = false;
     }
 
     private bool interesting (Dee.ModelIter iter)
