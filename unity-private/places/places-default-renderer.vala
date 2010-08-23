@@ -19,7 +19,7 @@
 
 namespace Unity.Places
 {
-  public class DefaultRenderer : Ctk.ScrollView, Unity.Place.Renderer
+  public class DefaultRenderer : LayeredBin, Unity.Place.Renderer
   {
     static const float PADDING = 12.0f;
     static const int   SPACING = 0;
@@ -28,6 +28,7 @@ namespace Unity.Places
     private EmptySearchGroup search_empty;
     private EmptySectionGroup section_empty;
 
+    private Ctk.ScrollView scroll;
     private Ctk.VBox box;
     private Dee.Model groups_model;
     private Dee.Model results_model;
@@ -41,14 +42,14 @@ namespace Unity.Places
     {
       padding = { 0.0f, 0.0f, 0.0f, 0.0f };
 
-      bin = new LayeredBin ();
-      add_actor (bin);
-      bin.show ();
+      scroll = new Ctk.ScrollView ();
+      add_actor (scroll);
+      scroll.show ();
 
       box = new Ctk.VBox (SPACING);
       box.padding = { 0.0f, PADDING, 0.0f, PADDING};
       box.homogeneous = false;
-      bin.add_actor (box);
+      scroll.add_actor (box);
       box.show ();
     }
 
@@ -99,7 +100,7 @@ namespace Unity.Places
       section_empty.animate (Clutter.AnimationMode.EASE_IN_QUAD,
                             300,
                             "opacity", section_empty_opacity);
-      box.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+      scroll.animate (Clutter.AnimationMode.EASE_IN_QUAD,
                             300,
                             "opacity", groups_box_opacity);
 
@@ -114,7 +115,7 @@ namespace Unity.Places
           search_empty = new EmptySearchGroup (model.get_position (iter),
                                             results_model);
           search_empty.opacity = 0;
-          bin.add_actor (search_empty);
+          add_actor (search_empty);
           
           search_empty.activated.connect ((u, m) => { activated (u, m); } );
           search_empty.notify["active"].connect (update_views);
@@ -125,7 +126,7 @@ namespace Unity.Places
           section_empty = new EmptySectionGroup (model.get_position (iter),
                                               results_model);
           section_empty.opacity = 0;
-          bin.add_actor (section_empty);
+          add_actor (section_empty);
 
           section_empty.notify["active"].connect (update_views);
         }
@@ -257,10 +258,7 @@ namespace Unity.Places
 
     construct
     {
-      padding = { 100.0f, 0.0f, 0.0f, 0.0f };
-
       text = new Ctk.Text ("");
-      text.set_alignment (Pango.Alignment.CENTER);
 
       add_actor (text);
       text.show ();
@@ -269,6 +267,27 @@ namespace Unity.Places
       results.row_removed.connect (on_result_removed);
 
       opacity = 0;
+
+      var bg = new CairoCanvas (paint_bg);
+      set_background (bg);
+      bg.show ();
+    }
+
+    private override void allocate (Clutter.ActorBox box,
+                                    Clutter.AllocationFlags flags)
+    {
+      base.allocate (box, flags);
+
+      Clutter.ActorBox child_box = Clutter.ActorBox ();
+      float twidth;
+      float theight;
+      text.get_preferred_size (out twidth, out theight, null, null);
+
+      child_box.x1 = ((box.x2 - box.x1)/2.0f) - (twidth/2.0f);
+      child_box.x2 = child_box.x1 + twidth;
+      child_box.y1 = ((box.y2 - box.y1)/2.0f) - (theight/2.0f);
+      child_box.y2 = child_box.y1 + theight;
+      text.allocate (child_box, flags);
     }
 
     private void on_result_added (Dee.ModelIter iter)
@@ -290,9 +309,61 @@ namespace Unity.Places
       active = false;
     }
 
+    private override void get_preferred_height (float for_width,
+                                       out float mheight,
+                                       out float nheight)
+    {
+      mheight = 2000;
+      nheight = 2000;
+    }
+
     private bool interesting (Dee.ModelIter iter)
     {
       return (results.get_uint (iter, 2) == group_id);
+    }
+
+    private void paint_bg (Cairo.Context cr, int width, int height)
+    {
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      cr.set_operator (Cairo.Operator.OVER);
+      cr.translate (0.5, 0.5);
+      cr.set_line_width (1.5);
+
+      var radius = 7;
+      float twidth, theight;
+      text.get_preferred_size (out twidth, out theight, null, null);
+
+      var padding = 35;
+      var x = (width/2) - ((int)twidth/2) - padding;
+      var y = (height/2) - ((int)theight/2) - padding;
+      var w = (int)twidth + (padding * 2);
+      var h = (int)theight + (padding *2);
+
+      cr.move_to (x, y + radius);
+      cr.curve_to (x, y,
+                   x, y,
+                   x + radius, y);
+      cr.line_to (x + w - radius, y);
+      cr.curve_to (x + w, y,
+                   x + w, y,
+                   x + w, y + radius);
+      cr.line_to (x + w, y + h - radius);
+      cr.curve_to (x + w, y + h,
+                   x + w, y + h,
+                   x + w - radius, y + h);
+      cr.line_to (x + radius, y + h);
+      cr.curve_to (x, y + h,
+                   x, y + h,
+                   x, y + h - radius);
+      cr.close_path ();
+
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.4f);
+      cr.fill_preserve ();
+
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.8f);
+      cr.stroke ();
     }
   }
 }
