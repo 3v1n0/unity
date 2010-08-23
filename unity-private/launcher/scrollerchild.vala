@@ -65,6 +65,7 @@ namespace Unity.Launcher
     public bool needs_attention {get; set;}
     public bool activating {get; set;}
     public float rotation {get; set;}
+    public bool do_not_render = false;
     public ScrollerChildController controller; // this sucks. shouldn't be here, can't help it.
 
     public GroupType group_type { get; construct set; }

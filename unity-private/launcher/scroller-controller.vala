@@ -269,6 +269,8 @@ namespace Unity.Launcher
       {
         ScrollerChild child = (drag_controller.get_drag_model () as ScrollerChildController).child;
         child.opacity = 0;
+        child.do_not_render = true;
+        view.drag_indicator_active = true;
         view.do_queue_redraw ();
       }
     }
@@ -299,6 +301,7 @@ namespace Unity.Launcher
         {
           // we need to remove this child from the model, its been dragged out
           model.remove (retcont);
+          view.drag_indicator_active = false;
         }
       else
         {
@@ -336,6 +339,7 @@ namespace Unity.Launcher
               else
                 model.insert (retcont, int.max (model_index, 0));
 
+              view.drag_indicator_index = model_index;
               view.do_queue_redraw ();
             //}
         }
@@ -350,6 +354,7 @@ namespace Unity.Launcher
         view.cache.update_texture_cache ();
         return;
       }
+      view.drag_indicator_active = false;
       ScrollerChildController model_controller = drag_controller.get_drag_model () as ScrollerChildController;
       ScrollerChild retcont = model_controller.child;
 
@@ -384,6 +389,7 @@ namespace Unity.Launcher
         }
       // if it was dropped inside of the launcher, its allready been added
       retcont.opacity = 255;
+      retcont.do_not_render = false;
       // disconnect our drag controller signals
       drag_controller.drag_motion.disconnect (this.on_unity_drag_motion);
       drag_controller.drag_drop.disconnect (this.on_unity_drag_drop);
