@@ -1,6 +1,6 @@
 m4_define([unity_major], [0])
 m4_define([unity_minor], [2])
-m4_define([unity_micro], [27])
+m4_define([unity_micro], [28])
 
 m4_define([unity_api],
           [unity_major.unity_minor])
@@ -115,6 +115,7 @@ PKG_CHECK_MODULES(BASE,
                   indicator
                   libbamf >= 0.2
                   libgnomeui-2.0
+                  pango >= 1.6.0
                   unique-1.0
                   unity-misc
                   x11)

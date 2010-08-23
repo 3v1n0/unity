@@ -153,14 +153,30 @@ namespace Unity.Places
 
     public void set_search (string search, HashTable<string, string> hints)
     {
-      debug ("Global search %s", search);
+      var old_renderer = entry_renderer_name;
 
-      foreach (Gee.Map.Entry<PlaceEntry, uint> e in entry_group_map.entries)
+      if (search == "" || search == null)
         {
-          PlaceEntry? entry = e.key;
+          entry_renderer_name = "UnityHomeScreen";
+        }
+      else
+        {
+          entry_renderer_name = "UnityDefaultRenderer";
 
-          if (entry != null)
-            entry.set_global_search (search, hints);
+          foreach (Gee.Map.Entry<PlaceEntry, uint> e in entry_group_map.entries)
+            {
+              PlaceEntry? entry = e.key;
+
+              if (entry != null)
+                entry.set_global_search (search, hints);
+            }
+        }
+      
+      debug (@"$entry_renderer_name, $search");
+      if (old_renderer != entry_renderer_name)
+        {
+          updated ();
+          renderer_info_changed ();
         }
     }
 

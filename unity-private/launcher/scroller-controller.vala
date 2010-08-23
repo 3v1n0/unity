@@ -357,7 +357,7 @@ namespace Unity.Launcher
       view.drag_indicator_active = false;
       ScrollerChildController model_controller = drag_controller.get_drag_model () as ScrollerChildController;
       ScrollerChild retcont = model_controller.child;
-
+      
       if (retcont.group_type == ScrollerChild.GroupType.PLACE ||
           retcont.group_type == ScrollerChild.GroupType.SYSTEM)
         {
@@ -371,9 +371,12 @@ namespace Unity.Launcher
               (retcont.controller as ApplicationController).set_sticky (false);
               (retcont.controller as ApplicationController).close_windows ();
             }
-          if (retcont in model)
-            model.remove (retcont);
-
+          if (retcont in model ||
+              retcont.group_type == ScrollerChild.GroupType.DEVICE)
+            {
+              retcont.drag_removed ();
+              model.remove (retcont);
+            }
           if (model_controller is ApplicationController)
             {
               (model_controller as ApplicationController).set_sticky (false);

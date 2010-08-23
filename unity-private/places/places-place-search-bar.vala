@@ -21,7 +21,7 @@ namespace Unity.Places
 {
   public class PlaceSearchBar : Ctk.Box
   {
-    static const int SPACING = 10;
+    static const int SPACING = 12;
     static const int RANDOM_TEXT_WIDTH = 400;
 
     /* Properties */
@@ -136,7 +136,12 @@ namespace Unity.Places
       bg.entry_position = x;
       sections.set_active_entry (entry);
       if (section != 0)
-        sections.set_active_section (section);
+        {
+          Idle.add (() => {
+            sections.set_active_section (section);
+            return false;
+          });
+        }
 
       navigation.set_active_entry (entry);
       this.entry.text.grab_key_focus ();

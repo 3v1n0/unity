@@ -82,6 +82,12 @@ namespace Unity.Panel.Indicators
               image.size = entry.image.pixbuf.width;
             }
 
+          if (entry.image.gicon is GLib.Icon)
+            {
+              image.gicon = entry.image.gicon;
+              image.size = 22;
+            }
+
           if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
             {
               image.show ();
@@ -125,6 +131,15 @@ namespace Unity.Panel.Indicators
             }
         });
 
+      entry.image.notify["gicon"].connect (() =>
+        {
+          if (image.gicon is GLib.Icon)
+            {
+            image.gicon = entry.image.gicon;
+            image.size = 22;
+            }
+        });
+
       unowned Gtk.IconTheme theme = Gtk.IconTheme.get_default ();
       theme.changed.connect (() =>
         {
@@ -138,11 +153,12 @@ namespace Unity.Panel.Indicators
           text.color = { 233, 216, 200, 255 };
           add_actor (text);
 
-          text.text = entry.label.label;
+          /* FIXME: What about the __ case? Well, should that me in a menu? */
+          text.text = entry.label.label.replace ("_", "");
 
           entry.label.notify["label"].connect (() =>
             {
-              text.text = entry.label.label;
+              text.text = entry.label.label.replace ("_", "");
             });
 
           if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)

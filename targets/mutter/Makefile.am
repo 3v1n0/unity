@@ -22,6 +22,7 @@ libunity_mutter_la_CPPFLAGS = \
   -I$(top_srcdir)/unity \
   -I$(top_srcdir)/unity-private \
   -I$(top_srcdir)/src \
+  -DGETTEXT_PACKAGE=\"$(GETTEXT_PACKAGE)\" \
   $(BASE_CFLAGS) \
   $(MUTTER_CFLAGS) \
   $(MAINTAINER_CFLAGS)

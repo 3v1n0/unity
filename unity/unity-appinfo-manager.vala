@@ -44,12 +44,14 @@ namespace Unity {
     
     private Map<string,AppInfo?> appinfo_by_id; /* id or path -> AppInfo */
     private Map<string,FileMonitor> monitors; /* parent uri -> monitor */
+    private Map<string, Gee.List<string>> categories_by_id; /* desktop id or path -> xdg cats */
     private uchar[] buffer;
     private size_t buffer_size;
     
     private AppInfoManager ()
     {
       appinfo_by_id = new HashMap<string,AppInfo?> (GLib.str_hash, GLib.str_equal);
+      categories_by_id = new HashMap<string,Gee.List<string>> (GLib.str_hash, GLib.str_equal);
       buffer_size = 1024;
       buffer = new uchar[buffer_size];
       
@@ -125,10 +127,17 @@ namespace Unity {
         return appinfo_by_id.get (id);
     
       /* Look up by path or by desktop id */
-      AppInfo appinfo;
+      AppInfo? appinfo;
+      KeyFile? keyfile = new KeyFile ();
       if (id.has_prefix("/"))
         {
-          appinfo = new DesktopAppInfo.from_filename (id);
+          try {
+            keyfile.load_from_file (id, KeyFileFlags.NONE);
+          } catch (Error e) {
+            keyfile = null;
+            if (!(e is IOError.NOT_FOUND || e is KeyFileError.NOT_FOUND))
+              warning ("Error loading '%s': %s", id, e.message);            
+          }
           var dir = File.new_for_path (id).get_parent ();
           var dir_uri = dir.get_uri ();
           if (!monitors.has_key (dir_uri))
@@ -145,13 +154,61 @@ namespace Unity {
             }
         }
       else
-        appinfo = new DesktopAppInfo (id);
+        {
+          string path = Path.build_filename ("applications", id, null);
+          string full_path;
+          try {
+            keyfile.load_from_data_dirs (path, out full_path, KeyFileFlags.NONE);
+          } catch (Error e) {
+            keyfile = null;
+            if (!(e is IOError.NOT_FOUND || e is KeyFileError.NOT_FOUND))
+                warning ("Error loading '%s': %s", id, e.message);
+          }
+        }
+      
+      /* If keyfile is null we had an error loading it */
+      if (keyfile != null)
+        {
+          appinfo = new DesktopAppInfo.from_keyfile (keyfile);
+          try {
+            string[] categories = keyfile.get_string_list ("Desktop Entry",
+                                                           "Categories");
+            var cats = new Gee.ArrayList<string>();
+            foreach (var cat in categories)
+              cats.add (cat);
+            
+            categories_by_id.set (id, cats);
+          } catch (KeyFileError e) {
+            /* Unknown key or group. This app has no XDG Catories */
+          }          
+        }
+      else
+        appinfo = null;      
 
       /* If we don't find the file, we also cache that fact since we'll store
        * a null AppInfo in that case */
       appinfo_by_id.set (id, appinfo);
       
       return appinfo;
+    }
+    
+    /**
+     * Look up XDG categories for for desktop id or file path @id.
+     * Returns null if id is not found.
+     * This method will do sync IO if the desktop file for @id is not
+     * already cached. So if you are living in an async world you must first
+     * do an async call to lookup_async(id) before calling this method, in which
+     * case no sync io will be done.
+     */
+    public Gee.List<string>? get_categories (string id)
+    {
+      /* Make sure we have loaded the relevant .desktop file: */
+      AppInfo? appinfo = lookup (id);
+      
+      if (appinfo == null)
+        return null;
+
+      return categories_by_id.get (id);
     }
     
     /**

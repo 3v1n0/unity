@@ -106,16 +106,7 @@ namespace Unity.Launcher
     private Gee.ArrayList<ScrollerChild> draw_btf;
 
     /* Key binding indicators */
-    private Clutter.Text keyboard_indicator_1;
-    private Clutter.Text keyboard_indicator_2;
-    private Clutter.Text keyboard_indicator_3;
-    private Clutter.Text keyboard_indicator_4;
-    private Clutter.Text keyboard_indicator_5;
-    private Clutter.Text keyboard_indicator_6;
-    private Clutter.Text keyboard_indicator_7;
-    private Clutter.Text keyboard_indicator_8;
-    private Clutter.Text keyboard_indicator_9;
-    private Clutter.Text keyboard_indicator_0;
+    private Gee.ArrayList<Clutter.CairoTexture> keyboard_indicators;
 
     /* Drag indicator */
     private Clutter.Rectangle drag_indicator;
@@ -146,6 +137,7 @@ namespace Unity.Launcher
 
       this.padding = mypadding;
 
+      keyboard_indicators = new Gee.ArrayList <Clutter.CairoTexture> ();
       load_textures ();
       Clutter.Color color = Clutter.Color () {
         red = 0xff,
@@ -395,44 +387,15 @@ namespace Unity.Launcher
         last_scroll_position = scroll_position;
 
       uint8 new_opacity = (choice) ? 0xff : 0x00;
-      keyboard_indicator_1.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
-                                    "opacity", new_opacity);
-      if (model.size < 2) new_opacity = 0x00;
 
-      keyboard_indicator_2.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
-                                    "opacity", new_opacity);
-      if (model.size < 3) new_opacity = 0x00;
-
-      keyboard_indicator_3.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
-                                    "opacity", new_opacity);
-      if (model.size < 4) new_opacity = 0x00;
-
-      keyboard_indicator_4.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
-                                    "opacity", new_opacity);
-      if (model.size < 5) new_opacity = 0x00;
-
-      keyboard_indicator_5.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
-                                    "opacity", new_opacity);
-      if (model.size < 6) new_opacity = 0x00;
-
-      keyboard_indicator_6.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
-                                    "opacity", new_opacity);
-      if (model.size < 7) new_opacity = 0x00;
-
-      keyboard_indicator_7.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
-                                    "opacity", new_opacity);
-      if (model.size < 8) new_opacity = 0x00;
-
-      keyboard_indicator_8.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
-                                    "opacity", new_opacity);
-      if (model.size < 9) new_opacity = 0x00;
-
-      keyboard_indicator_9.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
-                                    "opacity", new_opacity);
-      if (model.size < 10) new_opacity = 0x00;
-
-      keyboard_indicator_0.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
-                                    "opacity", new_opacity);
+      int index = 1;
+      foreach (Clutter.CairoTexture kb_ind in keyboard_indicators)
+        {
+          kb_ind.animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                          "opacity", new_opacity);
+          if (model.size <= index) new_opacity = 0x00;
+          index++;
+        }
 
 
       if (!choice)
@@ -541,6 +504,57 @@ namespace Unity.Launcher
       return ret_val;
     }
 
+    private void draw_keyboard_indicator_cairo (Cairo.Context cr, string text)
+    {
+      double x = 0;
+      double y = 0;
+      double w = 10;
+      double h = 10;
+      double r = Ctk.em_to_pixel (1);
+
+      Gtk.Settings settings = Gtk.Settings.get_default ();
+      Pango.FontDescription desc = Pango.FontDescription.from_string (settings.gtk_font_name);
+
+      cr.select_font_face (desc.get_family (),
+                           Cairo.FontSlant.NORMAL,
+                           Cairo.FontWeight.NORMAL);
+      double size;
+      size = Ctk.em_to_pixel (1) * 0.9;
+      cr.set_font_size (size);
+
+
+      Cairo.TextExtents extents = Cairo.TextExtents ();
+      cr.text_extents ("2", out extents);
+
+      Cairo.TextExtents real_extents = Cairo.TextExtents ();
+      cr.text_extents (text, out extents);
+
+      double w_diff = extents.width - real_extents.width;
+      double h_diff = extents.height - real_extents.height;
+
+      w += extents.width;
+      h += extents.height;
+      cr.set_source_rgba (0.07, 0.07, 0.07, 0.8);
+
+      cr.move_to(x+r,y);                      // Move to A
+      cr.line_to(x+w-r,y);                    // Straight line to B
+      cr.curve_to(x+w,y,x+w,y,x+w,y+r);       // Curve to C, Control points are both at Q
+      cr.line_to(x+w,y+h-r);                  // Move to D
+      cr.curve_to(x+w,y+h,x+w,y+h,x+w-r,y+h); // Curve to E
+      cr.line_to(x+r,y+h);                    // Line to F
+      cr.curve_to(x,y+h,x,y+h,x,y+h-r);       // Curve to G
+      cr.line_to(x,y+r);                      // Line to H
+      cr.curve_to(x,y,x,y,x+r,y);             // Curve to
+
+      cr.fill ();
+
+      //x = (extents.width - real_extents.width) / 2.0;
+      y = 0;//(extents.height - real_extents.height) / 2.0;
+      cr.set_source_rgba (1, 1, 1, 1);
+      cr.move_to (x + 5 - (real_extents.width * 0.5), y+5+extents.height);
+      cr.show_text (text);
+    }
+
     /*
      * private methods
      */
@@ -561,36 +575,39 @@ namespace Unity.Launcher
         alpha = 0xff
       };
 
-      keyboard_indicator_1 = new Clutter.Text.full ("Mono Bold 24px", "1", color);
-      keyboard_indicator_1.set_parent (this);
-      keyboard_indicator_1.opacity = 0x00;
-      keyboard_indicator_2 = new Clutter.Text.full ("Mono Bold 24px", "2", color);
-      keyboard_indicator_2.set_parent (this);
-      keyboard_indicator_2.opacity = 0x00;
-      keyboard_indicator_3 = new Clutter.Text.full ("Mono Bold 24px", "3", color);
-      keyboard_indicator_3.set_parent (this);
-      keyboard_indicator_3.opacity = 0x00;
-      keyboard_indicator_4 = new Clutter.Text.full ("Mono Bold 24px", "4", color);
-      keyboard_indicator_4.set_parent (this);
-      keyboard_indicator_4.opacity = 0x00;
-      keyboard_indicator_5 = new Clutter.Text.full ("Mono Bold 24px", "5", color);
-      keyboard_indicator_5.set_parent (this);
-      keyboard_indicator_5.opacity = 0x00;
-      keyboard_indicator_6 = new Clutter.Text.full ("Mono Bold 24px", "6", color);
-      keyboard_indicator_6.set_parent (this);
-      keyboard_indicator_6.opacity = 0x00;
-      keyboard_indicator_7 = new Clutter.Text.full ("Mono Bold 24px", "7", color);
-      keyboard_indicator_7.set_parent (this);
-      keyboard_indicator_7.opacity = 0x00;
-      keyboard_indicator_8 = new Clutter.Text.full ("Mono Bold 24px", "8", color);
-      keyboard_indicator_8.set_parent (this);
-      keyboard_indicator_8.opacity = 0x00;
-      keyboard_indicator_9 = new Clutter.Text.full ("Mono Bold 24px", "9", color);
-      keyboard_indicator_9.set_parent (this);
-      keyboard_indicator_9.opacity = 0x00;
-      keyboard_indicator_0 = new Clutter.Text.full ("Mono Bold 24px", "0", color);
-      keyboard_indicator_0.set_parent (this);
-      keyboard_indicator_0.opacity = 0x00;
+      //!!FIXME!! these are positioned wrong, needs to know the absolute
+      // size of the resulting cario surface before creating it =\
+      int index = 1;
+      // indicator size find out activate!
+      int key_indicator_w, key_indicator_h;
+      Gtk.Settings settings = Gtk.Settings.get_default ();
+
+      Unity.QuicklistRendering.get_text_extents (settings.gtk_font_name, "2",
+                                                 out key_indicator_w, out key_indicator_h);
+
+      key_indicator_w += 10;
+      key_indicator_h += 10;
+
+      for (; index <= 10; index++)
+        {
+          var keyboard_indicator = new Clutter.CairoTexture (key_indicator_w, key_indicator_h);
+          keyboard_indicator.set_parent (this);
+          keyboard_indicator.opacity = 0x00;
+
+          keyboard_indicator.set_surface_size (key_indicator_w, key_indicator_h);
+          keyboard_indicator.set_size (key_indicator_w, key_indicator_h);
+          keyboard_indicator.clear ();
+            {
+              Cairo.Context cr = keyboard_indicator.create ();
+
+              string ind_str = index.to_string ();
+              if (index == 10)
+                ind_str = "0";
+
+              draw_keyboard_indicator_cairo (cr, ind_str);
+            }
+          keyboard_indicators.add (keyboard_indicator);
+        }
     }
 
     // will move the scroller by the given pixels
@@ -1181,7 +1198,7 @@ namespace Unity.Launcher
           child.rotation = rotation;
 
           if (do_new_position)
-            child.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD, 300,
+            child.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 300,
                            "position", position);
         }
     }
@@ -1193,6 +1210,8 @@ namespace Unity.Launcher
       float min_height, nat_height;
       if (!(draw_ftb is Gee.ArrayList))
         draw_ftb = new Gee.ArrayList<ScrollerChild> ();
+
+      if (!(draw_ftb is Gee.ArrayList))
         draw_btf = new Gee.ArrayList<ScrollerChild> ();
 
       int index = 0;
@@ -1205,8 +1224,8 @@ namespace Unity.Launcher
         child.get_preferred_height (get_width (), out min_height, out nat_height);
         change_child_position_rotation (child, h + scroll_position, 0.0f, immediate);
 
-        if (!(child in draw_ftb || child in draw_ftb))
-          draw_ftb.add (child);
+        //if (!(child in draw_ftb || child in draw_ftb))
+        //  draw_ftb.add (child);
         h += nat_height + spacing;
       }
     }
@@ -1402,23 +1421,16 @@ namespace Unity.Launcher
 
           if (index >= 0 && index <= 9)
           {
-            Clutter.Actor? keyboard_indicator = null;
-            if (index == 0) keyboard_indicator = keyboard_indicator_1;
-            else if (index == 1) keyboard_indicator = keyboard_indicator_2;
-            else if (index == 2) keyboard_indicator = keyboard_indicator_3;
-            else if (index == 3) keyboard_indicator = keyboard_indicator_4;
-            else if (index == 4) keyboard_indicator = keyboard_indicator_5;
-            else if (index == 5) keyboard_indicator = keyboard_indicator_6;
-            else if (index == 6) keyboard_indicator = keyboard_indicator_7;
-            else if (index == 7) keyboard_indicator = keyboard_indicator_8;
-            else if (index == 8) keyboard_indicator = keyboard_indicator_9;
-            else if (index == 9) keyboard_indicator = keyboard_indicator_0;
+            Clutter.CairoTexture? keyboard_indicator = null;
+            keyboard_indicator = keyboard_indicators[(int)index];
 
             if (keyboard_indicator is Clutter.Actor)
               {
-                child_box.x1 = box.get_width () - padding.right - keyboard_indicator.get_width ();
+                uint surface_width, surface_height;
+                keyboard_indicator.get_surface_size (out surface_width, out surface_height);
+                child_box.x1 = box.get_width () - padding.right - surface_width - 6;
                 child_box.x2 = child_box.x1 + keyboard_indicator.get_width ();
-                child_box.y1 = child.position + padding.top + child_height - keyboard_indicator.get_height ();
+                child_box.y1 = child.position + padding.top + ((child_box.get_height ()*0.5f) - (surface_height*0.5f));
                 child_box.y2 = child_box.y1 + keyboard_indicator.get_height ();
                 keyboard_indicator.allocate (child_box, flags);
               }
@@ -1495,23 +1507,30 @@ namespace Unity.Launcher
             }
         }
 
+      foreach (ScrollerChild child in model)
+        {
+          if ((child in draw_ftb) || (child in draw_btf))
+            continue;
+
+          if (child is ScrollerChild && child.opacity > 0)
+            {
+              (child as ScrollerChild).paint ();
+            }
+        }
+
+
       foreach (ScrollerChild child in child_refs)
         {
           if (child.do_not_render) continue;
           child.paint ();
         }
 
-      keyboard_indicator_1.paint ();
-      keyboard_indicator_2.paint ();
-      keyboard_indicator_3.paint ();
-      keyboard_indicator_4.paint ();
-      keyboard_indicator_5.paint ();
-      keyboard_indicator_6.paint ();
-      keyboard_indicator_7.paint ();
-      keyboard_indicator_8.paint ();
-      keyboard_indicator_9.paint ();
-      keyboard_indicator_0.paint ();
       drag_indicator.paint ();
+      foreach (Clutter.CairoTexture kb_ind in keyboard_indicators)
+        {
+          kb_ind.paint ();
+        }
+
       top_shadow.paint ();
     }
 
@@ -1520,17 +1539,13 @@ namespace Unity.Launcher
       base.map ();
       bgtex.map ();
       top_shadow.map ();
-      keyboard_indicator_1.map ();
-      keyboard_indicator_2.map ();
-      keyboard_indicator_3.map ();
-      keyboard_indicator_4.map ();
-      keyboard_indicator_5.map ();
-      keyboard_indicator_6.map ();
-      keyboard_indicator_7.map ();
-      keyboard_indicator_8.map ();
-      keyboard_indicator_9.map ();
-      keyboard_indicator_0.map ();
+
       drag_indicator.map ();
+
+      foreach (Clutter.CairoTexture kb_ind in keyboard_indicators)
+        {
+          kb_ind.map ();
+        }
 
       foreach (ScrollerChild child in model)
         {
@@ -1544,17 +1559,14 @@ namespace Unity.Launcher
       base.unmap ();
       bgtex.map ();
       top_shadow.map ();
-      keyboard_indicator_1.unmap ();
-      keyboard_indicator_2.unmap ();
-      keyboard_indicator_3.unmap ();
-      keyboard_indicator_4.unmap ();
-      keyboard_indicator_5.unmap ();
-      keyboard_indicator_6.unmap ();
-      keyboard_indicator_7.unmap ();
-      keyboard_indicator_8.unmap ();
-      keyboard_indicator_9.unmap ();
-      keyboard_indicator_0.unmap ();
+
       drag_indicator.unmap ();
+
+      foreach (Clutter.CairoTexture kb_ind in keyboard_indicators)
+        {
+          kb_ind.paint ();
+        }
+
 
       foreach (ScrollerChild child in model)
         {
