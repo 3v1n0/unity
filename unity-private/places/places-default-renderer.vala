@@ -24,7 +24,6 @@ namespace Unity.Places
     static const float PADDING = 12.0f;
     static const int   SPACING = 0;
 
-    private LayeredBin bin;
     private EmptySearchGroup search_empty;
     private EmptySectionGroup section_empty;
 
