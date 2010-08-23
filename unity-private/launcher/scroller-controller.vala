@@ -338,9 +338,11 @@ namespace Unity.Launcher
                 model.move (retcont, int.max (model_index, 0));
               else
                 model.insert (retcont, int.max (model_index, 0));
-
-              view.drag_indicator_index = model_index;
-              view.do_queue_redraw ();
+              if (model_index != view.drag_indicator_index)
+                {
+                  view.drag_indicator_index = model_index;
+                  view.do_queue_redraw ();
+                }
             //}
         }
     }
@@ -357,7 +359,7 @@ namespace Unity.Launcher
       view.drag_indicator_active = false;
       ScrollerChildController model_controller = drag_controller.get_drag_model () as ScrollerChildController;
       ScrollerChild retcont = model_controller.child;
-      
+
       if (retcont.group_type == ScrollerChild.GroupType.PLACE ||
           retcont.group_type == ScrollerChild.GroupType.SYSTEM)
         {
