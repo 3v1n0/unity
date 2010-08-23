@@ -37,7 +37,7 @@ namespace Unity.Places
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
               homogeneous:false,
-              spacing:16);
+              spacing:20);
 
       Testing.ObjectRegistry.get_default ().register ("UnityPlacesSearchBar",
                                                       this);
