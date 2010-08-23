@@ -251,6 +251,8 @@ namespace Unity.Places
     public signal void activated (string uri, string mimetype);
     public bool active { get; construct set; }
 
+    private unowned Ctk.EffectGlow glow;
+
     public EmptySectionGroup (uint group_id, Dee.Model results)
     {
       Object (group_id:group_id, results:results, active:false);
@@ -271,6 +273,12 @@ namespace Unity.Places
       var bg = new CairoCanvas (paint_bg);
       set_background (bg);
       bg.show ();
+
+      var glow = new Ctk.EffectGlow ();
+      this.glow = glow;
+      glow.set_factor (1.0f);
+      glow.set_margin (0);
+      add_effect (glow);
     }
 
     private override void allocate (Clutter.ActorBox box,
@@ -299,6 +307,8 @@ namespace Unity.Places
       text.set_markup ("<big>" + mes + "</big>");
 
       active = true;
+
+      glow.set_invalidate_effect_cache (true);
     }
 
     private void on_result_removed (Dee.ModelIter iter)
@@ -359,11 +369,28 @@ namespace Unity.Places
                    x, y + h - radius);
       cr.close_path ();
 
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.4f);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.1f);
       cr.fill_preserve ();
 
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.8f);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.5f);
       cr.stroke ();
+
+      cr.rectangle (x, y, w/4, h);
+      var pat = new Cairo.Pattern.radial (x, y + h, 0.0f,
+                                          x, y + h, w/4.0f);
+      pat.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.2f);
+      pat.add_color_stop_rgba (0.8f, 1.0f, 1.0f, 1.0f, 0.0f);
+      cr.set_source (pat);
+      cr.fill_preserve ();
+
+      var factor = w/4;
+      cr.rectangle (x + (factor * 2), y, factor *2, h);
+      pat = new Cairo.Pattern.radial (x + w - factor, y, 0.0f,
+                                      x + w - factor, y, factor);
+      pat.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.2f);
+      pat.add_color_stop_rgba (0.8f, 1.0f, 1.0f, 1.0f, 0.0f);
+      cr.set_source (pat);
+      cr.fill_preserve ();
     }
   }
 }
