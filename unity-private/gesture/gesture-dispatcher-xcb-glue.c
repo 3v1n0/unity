@@ -177,6 +177,7 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
         case GRAIL_TYPE_MDRAG:
           dispatch_event->type = UNITY_GESTURE_TYPE_PAN;
           dispatch_event->fingers = gesture_event->gesture_type == GRAIL_TYPE_EDRAG ? 3 : 4;
+
           break;
         case GRAIL_TYPE_EPINCH:
         case GRAIL_TYPE_MPINCH:
@@ -212,37 +213,48 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
                                  dispatch_event);
        }
 
-      /*
-      printf("\tDevice ID:\t%hu\n", gesture_event->device_id);
-      printf("\tTimestamp:\t%u\n", gesture_event->time);
+      /* Load in properties */
+      if (dispatch_event->type == UNITY_GESTURE_TYPE_PAN &&
+          gesture_event->num_props >= 6)
+        {
+          UnityGesturePanEvent *ev = dispatch_event->pan_event;
+          ev->delta_x = properties[GRAIL_PROP_DRAG_DX];
+          ev->delta_y = properties[GRAIL_PROP_DRAG_DY];
+          ev->velocity_x = properties[GRAIL_PROP_DRAG_VX];
+          ev->velocity_y = properties[GRAIL_PROP_DRAG_VY];
+          ev->x2 = properties[GRAIL_PROP_DRAG_X];
+          ev->y2 = properties[GRAIL_PROP_DRAG_Y];
+        }
+      else if (dispatch_event->type == UNITY_GESTURE_TYPE_PINCH &&
+               gesture_event->num_props >= 7)
+        {
+          UnityGesturePinchEvent *ev = dispatch_event->pinch_event;
+          ev->radius_delta = properties[GRAIL_PROP_PINCH_DR];
+          ev->radius_velocity = properties[GRAIL_PROP_PINCH_VR];
+          ev->radius = properties[GRAIL_PROP_PINCH_R];
+          ev->bounding_box_x1 = properties[GRAIL_PROP_PINCH_X1];
+          ev->bounding_box_y1 = properties[GRAIL_PROP_PINCH_Y1];
+          ev->bounding_box_x2 = properties[GRAIL_PROP_PINCH_X2];
+          ev->bounding_box_y2 = properties[GRAIL_PROP_PINCH_Y2];
 
-      printf("\tRoot Window:\t0x%x\n: (root window)\n",
-             gesture_event->root);
-
-      printf("\tEvent Window:\t0x%x\n: ", gesture_event->event);
-      printf("\tChild Window:\t0x%x\n: ", gesture_event->child);
-      printf("\tFocus X:\t%f\n", gesture_event->focus_x);
-      printf("\tFocus Y:\t%f\n", gesture_event->focus_y);
-      printf("\tStatus:\t\t%hu\n", gesture_event->status);
-      */
-      printf("\tNum Props:\t%hu\n", gesture_event->num_props);
-     
-    
-      for (i = 0; i < gesture_event->num_props; i++) {
-        printf("\t\tProperty %u:\t%f\n", i, properties[i]);
-      }
-    } 
+        }
+      else if (dispatch_event->type == UNITY_GESTURE_TYPE_TAP &&
+               gesture_event->num_props >= 3)
+        {
+          UnityGestureTapEvent *ev = dispatch_event->tap_event;
+          ev->duration = properties[GRAIL_PROP_TAP_DT];
+          ev->x2 = properties[GRAIL_PROP_TAP_X];
+          ev->y2 = properties[GRAIL_PROP_TAP_Y];
+        }
+   }
 }
 
 static gboolean
 source_prepare (GSource     *source, gint *timeout)
 {
   XCBSource *s = (XCBSource *)source;
-  //const xcb_query_extension_reply_t *extention_info;
 
   *timeout = XCB_DISPATCHER_TIMEOUT;
-
-  //extension_info = xcb_get_extension_data (s->connection, &xcb_gesture_id);
 
   s->event = xcb_poll_for_event (s->connection);
   
