@@ -27,6 +27,7 @@ namespace Unity.Places
     static const int    LIVE_SEARCH_TIMEOUT = 200; /* Milliseconds */
     static const int    CURSOR_BLINK_TIMEOUT = 1000; /* Milliseconds */
     static const float  CLEAR_SIZE = 18.0f;
+    static const uint   MAX_CURSOR_BLINK = 30;
 
     const Clutter.Color nofocus_color = { 0xff, 0xff, 0xff, 0xbb };
     const Clutter.Color focus_color   = { 0xff, 0xff, 0xff, 0xff };
@@ -35,6 +36,8 @@ namespace Unity.Places
     public Ctk.Text  hint_text;
     public Ctk.Text  text;
     public CairoCanvas right_icon;
+
+    private uint _cursor_blink_count = 0;
 
     private bool upward = true;
     private float _cursor_opacity = 0.0f;
@@ -49,9 +52,25 @@ namespace Unity.Places
             text.cursor_color = { 255, 255, 255, (uint8)(255 * factor) };
 
             if (upward && _cursor_opacity == 1.0f)
-              upward = false;
+              {
+                upward = false;
+
+                _cursor_blink_count++;
+              }
             else if (upward == false && _cursor_opacity == 1.0f)
-              upward = true;
+              {
+                upward = true;
+                _cursor_blink_count++;
+              }
+
+            if (_cursor_blink_count == MAX_CURSOR_BLINK)
+              {
+                get_animation ().loop = false;
+                get_animation ().completed ();
+                _cursor_blink_count = 0;
+                text.cursor_color = { 255, 255, 255, 255 };
+                _cursor_opacity = 0.0f;
+              }
           }
       }
     }
@@ -141,6 +160,16 @@ namespace Unity.Places
     {
       hint_text.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 100,
                          "opacity", text.text == "" ? 255 : 0);
+
+      if (text.cursor_visible == true && _cursor_blink_count == 0)
+        {
+          /* Restart the animation */
+          var anim = animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD,
+                              CURSOR_BLINK_TIMEOUT,
+                              "cursor-opacity", 1.0);
+          anim.loop = true;
+        }
+      _cursor_blink_count = 0;
 
       if (live_search_timeout != 0)
         Source.remove (live_search_timeout);
