@@ -86,6 +86,10 @@ namespace Unity.Panel.Indicators
 
     private void on_menu_moved (IndicatorObjectEntryView object_entry_view, Gtk.MenuDirectionType type)
     {
+      if (type != Gtk.MenuDirectionType.PARENT &&
+          type != Gtk.MenuDirectionType.CHILD)
+        return;
+
       int pos = this.indicator_entry_array.index_of (object_entry_view);
       if (pos == -1)
         return;
