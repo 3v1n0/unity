@@ -496,8 +496,12 @@ namespace Unity.Launcher
         processed_icon.get_animation ().completed ();
 
       processed_icon.rotation = old_rotate_value;
-      processed_icon.animate (Clutter.AnimationMode.EASE_OUT_QUINT, 300,
-                              "rotation", rotation);
+      if (rotation <= 1.0 && rotation >= 0.0)
+        processed_icon.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD, 300,
+                                "rotation", rotation);
+      else
+        processed_icon.animate (Clutter.AnimationMode.EASE_OUT_QUINT, 300,
+                                "rotation", rotation);
     }
 
     private void on_activating_changed ()

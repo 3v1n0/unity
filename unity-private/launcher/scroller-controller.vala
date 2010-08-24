@@ -271,6 +271,7 @@ namespace Unity.Launcher
         child.opacity = 0;
         child.do_not_render = true;
         view.drag_indicator_active = true;
+        view.drag_indicator_space = true;
         view.do_queue_redraw ();
       }
     }
@@ -285,7 +286,6 @@ namespace Unity.Launcher
       last_drag_x = x;
       last_drag_y = y;
 
-
       var drag_controller = Drag.Controller.get_default ();
       // check to see if the data matches any of our children
       if (!(drag_controller.get_drag_model () is ScrollerChildController))
@@ -293,7 +293,6 @@ namespace Unity.Launcher
         return;
       }
       ScrollerChild retcont = (drag_controller.get_drag_model () as ScrollerChildController).child;
-
 
       if (x > view.get_width () + DRAG_SAFE_ZONE &&
           retcont.group_type != ScrollerChild.GroupType.PLACE &&
@@ -321,6 +320,20 @@ namespace Unity.Launcher
                 }
             }
 
+          if (x < view.get_width ())
+            {
+              if (view.drag_indicator_space != true)
+                view.drag_indicator_space = true;
+            }
+          else if (x > view.get_width () && x < view.get_width () + DRAG_SAFE_ZONE)
+            {
+              if (view.drag_indicator_space != false)
+                view.drag_indicator_space = false;
+
+              if (view.drag_indicator_active != true)
+                view.drag_indicator_active = true;
+            }
+
           // if the actor is not in the model, add it. because its now in there!
           // find the index at this position
           int model_index = view.get_model_index_at_y_pos_no_anim (y, true);
@@ -332,6 +345,7 @@ namespace Unity.Launcher
             model.move (retcont, int.max (model_index, 0));
           else
             model.insert (retcont, int.max (model_index, 0));
+
           if (model_index != view.drag_indicator_index)
             {
               view.drag_indicator_index = model_index;

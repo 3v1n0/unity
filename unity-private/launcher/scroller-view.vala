@@ -53,9 +53,9 @@ namespace Unity.Launcher
     public Ctk.EffectCache cache {get; construct;}
 
     public bool drag_indicator_active {get; set;}
+    public bool drag_indicator_space {get; set;}
     public int drag_indicator_index {get; set;}
     public float drag_indicator_opacity {get; set;}
-
     private float drag_indicator_position = 0.0f;
 
 
@@ -148,6 +148,7 @@ namespace Unity.Launcher
 
       notify["drag-indicator-active"].connect (on_drag_indicator_active_change);
       notify["drag-indicator-index"].connect (on_drag_indicator_index_change);
+      notify["drag-indicator-space"].connect (on_drag_indicator_space_change);
 
       model.child_added.connect (model_child_added);
       model.child_removed.connect (model_child_removed);
@@ -224,6 +225,8 @@ namespace Unity.Launcher
         order_children (true);
         queue_relayout ();
       });
+
+      drag_indicator_space = false;
 
     }
 
@@ -356,20 +359,35 @@ namespace Unity.Launcher
       return false;
     }
 
-    private void on_drag_indicator_active_change ()
+    private void on_drag_indicator_space_change ()
     {
       if (drag_indicator_active)
+        {
+          if (drag_indicator_space)
+            {
+              animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                       "drag-indicator-opacity", 0.0f);
+              order_children (false);
+              return;
+            }
+          else
+            {
+              animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                       "drag-indicator-opacity", 1.0f);
+              order_children (false);
+            }
+        }
+      else
         {
           animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
                    "drag-indicator-opacity", 1.0f);
           order_children (false);
         }
-      else
-        {
-          animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
-                  "drag-indicator-opacity", 0.0f);
-          order_children (false);
-        }
+    }
+
+    private void on_drag_indicator_active_change ()
+    {
+      on_drag_indicator_space_change ();
     }
 
     private void on_drag_indicator_index_change ()
@@ -462,6 +480,29 @@ namespace Unity.Launcher
 
     public int get_model_index_at_y_pos (float y, bool return_minus_if_fail=false)
     {
+      if (view_type == ScrollerViewType.CONTRACTED)
+        return get_model_index_at_y_pos_pick (y, return_minus_if_fail);
+      else
+        return get_model_index_at_y_pos_logic (y, return_minus_if_fail);
+    }
+
+    private int get_model_index_at_y_pos_logic (float y, bool return_minus_if_fail=false)
+    {
+      foreach (ScrollerChild child in model)
+        {
+          if (child.position + padding.top + child.get_height () > y)
+            return model.index_of (child as ScrollerChild);
+        }
+
+      if (return_minus_if_fail)
+        return -1;
+
+      return (y < padding.top + model[0].get_height () + spacing) ? 0 : model.size -1;
+
+    }
+
+    private int get_model_index_at_y_pos_pick(float y, bool return_minus_if_fail=false)
+    {
       // trying out a different method
       int iy = (int)y;
       foreach (ScrollerChild actor in model)
@@ -475,13 +516,13 @@ namespace Unity.Launcher
 
       if (picked_actor is ScrollerChild == false)
         {
-          // we didn't pick a scroller child. lets pick spacing above us
-          picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy - spacing*2);
+          // we didn't pick a scroller child. lets pick below us
+          picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy - 24);
 
           if (picked_actor is ScrollerChild == false)
             {
-              // again nothing good! lets try again but spacing below
-              picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy + spacing*2);
+              // again nothing good! lets try again above us
+              picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy + 24);
               if (picked_actor is ScrollerChild == false)
                 {
                   if (return_minus_if_fail)
@@ -1160,6 +1201,7 @@ namespace Unity.Launcher
                 assert_not_reached ();
             }
         }
+      queue_relayout ();
     }
 
     private void change_child_position_rotation (ScrollerChild child,
@@ -1197,8 +1239,14 @@ namespace Unity.Launcher
           child.rotation = rotation;
 
           if (do_new_position)
-            child.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 300,
-                           "position", position);
+            {
+              if (view_type == ScrollerViewType.CONTRACTED)
+                child.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD, 300,
+                               "position", position);
+              else
+                child.animate (Clutter.AnimationMode.EASE_OUT_QUINT, 300,
+                               "position", position);
+            }
         }
     }
 
@@ -1216,16 +1264,26 @@ namespace Unity.Launcher
       int index = 0;
       foreach (ScrollerChild child in model)
       {
+
         if (index == drag_indicator_index && drag_indicator_active)
-            h += 2 + spacing;
+          {
+            if (drag_indicator_space)
+              {
+                child.get_preferred_height (get_width (), out min_height, out nat_height);
+                h += nat_height + spacing;
+              }
+            else
+              {
+                h += 2 + spacing;
+              }
+          }
+        else
+          {
+            child.get_preferred_height (get_width (), out min_height, out nat_height);
+            change_child_position_rotation (child, h + scroll_position, 0.0f, immediate);
 
-        if (child.do_not_render) continue;
-        child.get_preferred_height (get_width (), out min_height, out nat_height);
-        change_child_position_rotation (child, h + scroll_position, 0.0f, immediate);
-
-        //if (!(child in draw_ftb || child in draw_ftb))
-        //  draw_ftb.add (child);
-        h += nat_height + spacing;
+            h += nat_height + spacing;
+          }
         index += 1;
       }
     }
@@ -1379,6 +1437,9 @@ namespace Unity.Launcher
       total_child_height = 0.0f;
       int index = 0;
 
+      if (drag_indicator_active)
+        drag_indicator_position = model[drag_indicator_index].position + padding.top;
+
       foreach (ScrollerChild child in model)
         {
 
@@ -1398,14 +1459,6 @@ namespace Unity.Launcher
           if (!child.do_not_render) ;
             child.allocate (child_box, flags);
 
-          if (index == drag_indicator_index && drag_indicator_active)
-            {
-              float c_pos = 0.0f + padding.top;
-              if (index > 0)
-                  c_pos = model[index-1].position + padding.top + child_box.get_height () + spacing;
-
-              drag_indicator_position = c_pos;
-            }
           child.remove_clip ();
           if (child_box.y1 < 0)
             child.set_clip (0, Math.fabsf (child_box.y1),
@@ -1485,6 +1538,19 @@ namespace Unity.Launcher
     public override void paint ()
     {
       bgtex.paint ();
+
+      if (drag_indicator_active)
+        {
+          //debug (@"drawing at $drag_indicator_position with $drag_indicator_opacity opacity");
+          Cogl.set_source_color4f (1.0f, 1.0f, 1.0f,
+                                   drag_indicator_opacity);
+
+          Cogl.rectangle (0, drag_indicator_position,
+                          get_width (),
+                          drag_indicator_position + 2);
+
+        }
+
       for (int index = draw_btf.size-1; index >= 0; index--)
         {
           ScrollerChild child = draw_btf[index];
@@ -1523,19 +1589,6 @@ namespace Unity.Launcher
       foreach (Clutter.CairoTexture kb_ind in keyboard_indicators)
         {
           kb_ind.paint ();
-        }
-
-
-      if (drag_indicator_active)
-        {
-          //debug (@"drawing at $drag_indicator_position with $drag_indicator_opacity opacity");
-          Cogl.set_source_color4f (1.0f, 1.0f, 1.0f,
-                                   1.0f);//drag_indicator_opacity);
-
-          Cogl.rectangle (0, drag_indicator_position,
-                          get_width (),
-                          drag_indicator_position + 2);
-
         }
 
       top_shadow.paint ();
