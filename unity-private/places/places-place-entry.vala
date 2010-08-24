@@ -68,6 +68,15 @@ namespace Unity.Places
                                             HashTable<string, string> hints);
    }
 
+  [DBus (name = "com.canonical.Unity.PlaceEntry")]
+  public interface PlaceEntryRemote : Object
+  {
+    public abstract async void set_global_search (string search_string,
+                                            HashTable<string, string>hints) throws DBus.Error;
+    public abstract async void set_active_section (uint32 section) throws DBus.Error;
+    public abstract async void set_search (string search, HashTable<string, string>hints) throws DBus.Error;
+    public abstract async void set_active (bool is_active) throws DBus.Error;
+  }
 
   /**
    * Represents a PlaceEntry through a .place file ("offline") and then through
@@ -139,7 +148,7 @@ namespace Unity.Places
         if (_active != value)
           {
             _active = value;
-            service.set_active (_active);
+            remote.set_active.begin (_active);
           }
       }
     }
@@ -258,6 +267,7 @@ namespace Unity.Places
     /* Our connection to the place-entry over dbus */
     private DBus.Connection?     connection;
     private dynamic DBus.Object? service;
+    private PlaceEntryRemote remote;
 
     /*
      * Signals
@@ -387,9 +397,24 @@ namespace Unity.Places
       /* Grab the entry off DBus */
       try {
         connection = DBus.Bus.get (DBus.BusType.SESSION);
+        remote = (PlaceEntryRemote) connection.get_object (dbus_name,
+                                         dbus_path,
+                                         "com.canonical.Unity.PlaceEntry");
+
+        /* FIXME: Kill vala.
+         * The reason we need both objects is because the former cannot 
+         * marshall the struct within a struct of PlaceEntryInfoChanged signal
+         * but it can to async methods.
+         * The dynamic 'service' object can do the signals (though it returns
+         * a ValueArray, but not the async stuff. 
+         *
+         * So basically we need both right now and every new place kills a
+         * thousand kittens.
+         */
         service = connection.get_object (dbus_name,
                                          dbus_path,
                                          "com.canonical.Unity.PlaceEntry");
+
       } catch (Error e) {
         warning (@"Unable to connect to $dbus_path on $dbus_name: %s",
                  e.message);
@@ -404,18 +429,18 @@ namespace Unity.Places
 
     public void set_search (string search, HashTable<string, string> hints)
     {
-      service.set_search (search, hints);
+      remote.set_search.begin (search, hints);
     }
 
     public void set_active_section (uint section_id)
     {
-      service.set_active_section (section_id);
+      remote.set_active_section.begin (section_id);
     }
 
     public void set_global_search (string                    search,
                                    HashTable<string, string> hints)
     {
-      service.set_global_search (search, hints);
+      remote.set_global_search.begin (search, hints);
     }
 
     /*
