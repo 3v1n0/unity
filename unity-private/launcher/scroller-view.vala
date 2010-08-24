@@ -193,6 +193,8 @@ namespace Unity.Launcher
         is_scrolling = false;
         Clutter.ungrab_pointer ();
         get_stage ().motion_event.disconnect (on_motion_event);
+        current_phase = ScrollerPhase.FLUNG;
+        fling_timeline.start ();
 
         animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
                  "drag-indicator-opacity", 1.0f);
@@ -1467,14 +1469,6 @@ namespace Unity.Launcher
 
           if (!child.do_not_render) ;
             child.allocate (child_box, flags);
-
-/*
-          child.remove_clip ();
-          if (child_box.y1 < 0)
-            child.set_clip (0, Math.fabsf (child_box.y1),
-                            child_box.get_width (), child_box.get_height () - child_box.y1);
-*/
-
 
           total_child_height += child_height + spacing;
 

@@ -227,8 +227,11 @@ namespace Unity.Launcher
       if (button_down && drag_controller.is_dragging == false && can_drag ())
         {
           float diff = Math.fabsf (event.motion.x - click_start_pos_x);
-          child.grabbed_push = Math.powf (diff, 0.5f);
-          child.queue_relayout ();
+          if (event.motion.x - click_start_pos_x > 0)
+            {
+              child.grabbed_push = Math.powf (diff, 0.5f);
+              child.queue_relayout ();
+            }
           if (diff > drag_sensitivity)
             {
               child.grabbed_push = 0;
