@@ -156,8 +156,8 @@ namespace Unity.Testing
         {
           this.wnck_screen.active_window_changed.connect (this.on_active_window_changed);
         }
-      
-      gesture_dispatcher = new Gesture.GeisDispatcher ();
+
+      gesture_dispatcher = new Gesture.XCBDispatcher ();
 
       END_FUNCTION ();
     }

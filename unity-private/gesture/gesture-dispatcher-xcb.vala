@@ -17,8 +17,20 @@
  *
  */
 
-namespace Unity.Gesture.GeisDispatcherGlue
+namespace Unity.Gesture
 {
-  public extern void init (GLib.Object obj);
-  public extern void finish ();
+  public class XCBDispatcher : Dispatcher
+  {
+    public XCBDispatcher ()
+    {
+      XCBDispatcherGlue.init (this as GLib.Object);
+
+      gesture.connect ((g) => { print (@"$g"); });
+    }
+
+    ~XCBDispatcher ()
+    {
+      XCBDispatcherGlue.finish ();
+    }
+  }
 }

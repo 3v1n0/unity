@@ -323,7 +323,7 @@ namespace Unity
           });
         }
 
-      gesture_dispatcher = new Gesture.GeisDispatcher ();
+      gesture_dispatcher = new Gesture.XCBDispatcher ();
       gesture_dispatcher.gesture.connect (on_gesture_received);
       
       this.ensure_input_region ();
