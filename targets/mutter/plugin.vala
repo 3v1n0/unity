@@ -175,6 +175,7 @@ namespace Unity
     private unowned Mutter.Window? start_pan_window = null;
     private unowned Clutter.Rectangle? start_frame_rect = null;
     private float last_pan_x_root = 0.0f;
+    private float last_pan_maximised_x_root = 0.0f;
 
     construct
     {
@@ -1053,10 +1054,24 @@ namespace Unity
                                              "height", stage.height - PANEL_HEIGHT);
 
                               start_frame_rect = frame;
+
+                              last_pan_maximised_x_root = event.root_x;
+                            }
+
+                          print ("EVENT X: %f\n", event.root_x);
+                          if (event.root_x < last_pan_maximised_x_root - 30.0f)
+                            {
+                              debug ("LEFT MAXIMISE");
+                            }
+                          else if (event.root_x > last_pan_maximised_x_root + 30.0f)
+                            {
+                              debug ("RIGHT MAXIMISE");
                             }
                         }
                      else
                         {
+                          last_pan_maximised_x_root = 0.0f;
+
                           start_pan_window.x += Math.floorf (event.pan_event.delta_x);
                           start_pan_window.y += Math.floorf (event.pan_event.delta_y);
                           start_pan_window.x = float.max (start_pan_window.x, QUICKLAUNCHER_WIDTH);
