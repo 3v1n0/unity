@@ -829,21 +829,37 @@ namespace Unity
                   if (actor is Mutter.Window)
                     {
                       unowned Mutter.MetaWindow win = (actor as Mutter.Window).get_meta_window ();
+                      bool fullscreen = false;
+
+                      (win as Object).get ("fullscreen", out fullscreen);
 
                       if (event.pinch_event.radius_delta >= 0.0f)
                         {
-                          /* Maximize */
-                          Mutter.MetaWindow.maximize (win,
-                                               Mutter.MetaMaximizeFlags.HORIZONTAL |
-                                               Mutter.MetaMaximizeFlags.VERTICAL);
+                          if (Mutter.MetaWindow.is_maximized (win))
+                            {
+                              /* Fullscreen */
+                              Mutter.MetaWindow.make_fullscreen (win);
+                            }
+                          else
+                            {
+                              /* Maximize */
+                              Mutter.MetaWindow.maximize (win,
+                                                          Mutter.MetaMaximizeFlags.HORIZONTAL |
+                                                          Mutter.MetaMaximizeFlags.VERTICAL);
+                            }
   
                         }
                       else
                         {
-                          /* Minimize */
-                          if (Mutter.MetaWindow.is_maximized (win))
-                               Mutter.MetaWindow.unmaximize (win,
+                          if (fullscreen)
+                           {
+                             Mutter.MetaWindow.unmake_fullscreen (win);
+                           }
+                         else if (Mutter.MetaWindow.is_maximized (win))
+                           {
+                             Mutter.MetaWindow.unmaximize (win,
                                                              Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
+                           }
                         }
                     }
                  }
