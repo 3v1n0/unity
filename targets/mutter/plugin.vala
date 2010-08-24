@@ -166,10 +166,10 @@ namespace Unity
     /* Pinch info */
     private float start_pinch_radius = 0.0f;
     private unowned Mutter.Window? resize_window = null;
-    private float   resize_last_x1 = 0.0f;
+    /*private float   resize_last_x1 = 0.0f;
     private float   resize_last_y1 = 0.0f;
     private float   resize_last_x2 = 0.0f;
-    private float   resize_last_y2 = 0.0f;
+    private float   resize_last_y2 = 0.0f;*/
 
     /* Pan info */
     private unowned Mutter.Window? start_pan_window = null;
@@ -818,6 +818,38 @@ namespace Unity
         {
           if (event.fingers == 3)
             {
+              if (event.state == Gesture.State.ENDED)
+                {
+                  var actor = stage.get_actor_at_pos (Clutter.PickMode.ALL,
+                                                      (int)event.root_x,
+                                                      (int)event.root_y);
+                  if (actor is Mutter.Window == false)
+                    actor = actor.get_parent ();
+
+                  if (actor is Mutter.Window)
+                    {
+                      unowned Mutter.MetaWindow win = (actor as Mutter.Window).get_meta_window ();
+
+                      if (event.pinch_event.radius_delta >= 0.0f)
+                        {
+                          /* Maximize */
+                          Mutter.MetaWindow.maximize (win,
+                                               Mutter.MetaMaximizeFlags.HORIZONTAL |
+                                               Mutter.MetaMaximizeFlags.VERTICAL);
+  
+                        }
+                      else
+                        {
+                          /* Minimize */
+                          if (Mutter.MetaWindow.is_maximized (win))
+                               Mutter.MetaWindow.unmaximize (win,
+                                                             Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
+                        }
+                    }
+                 }
+
+              /* FIXME: This can't work with the current information we are getting */
+              /*
               debug ("Resize Window");
               if (true == true)
                 return;
@@ -862,13 +894,13 @@ namespace Unity
                   nwidth += (resize_last_x2 - event.pinch_event.bounding_box_x2) * event.pinch_event.radius_delta;
                   nheight += (resize_last_y2 - event.pinch_event.bounding_box_y2) * event.pinch_event.radius_delta;
 
-/*                  Mutter.MetaWindow.move_resize (resize_window.get_meta_window (),
+                  Mutter.MetaWindow.move_resize (resize_window.get_meta_window (),
                                                  false,
                                                  (int)nx,
                                                  (int)ny,
                                                  (int)nwidth,
                                                  (int)nheight);
-                                                 */
+                                                 
  
                   resize_last_x1 = event.pinch_event.bounding_box_x1;
                   resize_last_y1 = event.pinch_event.bounding_box_y1;
@@ -883,6 +915,7 @@ namespace Unity
                   resize_window = null;
                 }
               print (@"$event\n");
+              */
             }
           else if (event.fingers == 4)
             {
@@ -1053,20 +1086,14 @@ namespace Unity
                                                   start_pan_window.y);
                               frame.show ();
 
-                              frame.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
-                                             150,
-                                             "x", (float)QUICKLAUNCHER_WIDTH,
-                                             "y", (float)PANEL_HEIGHT,
-                                             "width", stage.width - QUICKLAUNCHER_WIDTH,
-                                             "height", stage.height - PANEL_HEIGHT);
-
-                              start_frame_rect = frame;
+                             start_frame_rect = frame;
 
                               last_pan_maximised_x_root = event.root_x;
                             }
 
                           maximize_type = MaximizeType.FULL;
-                          if (event.root_x < last_pan_maximised_x_root - 30.0f)
+                          var MAX_DELTA = 50.0f;
+                          if (event.root_x < last_pan_maximised_x_root - MAX_DELTA)
                             {
                               maximize_type = MaximizeType.LEFT;
                               start_frame_rect.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
@@ -1077,7 +1104,7 @@ namespace Unity
                                                         "height", stage.height - PANEL_HEIGHT);
 
                             }
-                          else if (event.root_x > last_pan_maximised_x_root + 30.0f)
+                          else if (event.root_x > last_pan_maximised_x_root + MAX_DELTA)
                             {
                               maximize_type = MaximizeType.RIGHT;
                               start_frame_rect.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
@@ -1087,6 +1114,16 @@ namespace Unity
                                                         "width", (stage.width - QUICKLAUNCHER_WIDTH)/2.0f,
                                                         "height", stage.height - PANEL_HEIGHT);
                             }
+                          else
+                            {
+                              start_frame_rect.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                                        150,
+                                                        "x", (float)QUICKLAUNCHER_WIDTH,
+                                                        "y", (float)PANEL_HEIGHT,
+                                                        "width", stage.width - QUICKLAUNCHER_WIDTH,
+                                                        "height", stage.height - PANEL_HEIGHT);
+
+                             }
                         }
                      else
                         {
