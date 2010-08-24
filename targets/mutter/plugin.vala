@@ -176,7 +176,14 @@ namespace Unity
     private unowned Clutter.Rectangle? start_frame_rect = null;
     private float last_pan_x_root = 0.0f;
     private float last_pan_maximised_x_root = 0.0f;
-
+    private enum MaximizeType {
+      NONE,
+      FULL,
+      LEFT,
+      RIGHT
+    }
+    private MaximizeType maximize_type = MaximizeType.NONE;
+      
     construct
     {
       fullscreen_requests = new Gee.ArrayList<Object> ();
@@ -1058,14 +1065,27 @@ namespace Unity
                               last_pan_maximised_x_root = event.root_x;
                             }
 
-                          print ("EVENT X: %f %f\n", event.root_x, last_pan_maximised_x_root);
+                          maximize_type = MaximizeType.FULL;
                           if (event.root_x < last_pan_maximised_x_root - 30.0f)
                             {
-                              debug ("LEFT MAXIMISE");
+                              maximize_type = MaximizeType.LEFT;
+                              start_frame_rect.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                                        150,
+                                                        "x", (float)QUICKLAUNCHER_WIDTH,
+                                                        "y", (float)PANEL_HEIGHT,
+                                                        "width", (stage.width - QUICKLAUNCHER_WIDTH)/2.0f,
+                                                        "height", stage.height - PANEL_HEIGHT);
+
                             }
                           else if (event.root_x > last_pan_maximised_x_root + 30.0f)
                             {
-                              debug ("RIGHT MAXIMISE");
+                              maximize_type = MaximizeType.RIGHT;
+                              start_frame_rect.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                                        150,
+                                                        "x", (float)((stage.width - QUICKLAUNCHER_WIDTH)/2.0f) + QUICKLAUNCHER_WIDTH,
+                                                        "y", (float)PANEL_HEIGHT,
+                                                        "width", (stage.width - QUICKLAUNCHER_WIDTH)/2.0f,
+                                                        "height", stage.height - PANEL_HEIGHT);
                             }
                         }
                      else
@@ -1075,58 +1095,7 @@ namespace Unity
                           start_pan_window.x = float.max (start_pan_window.x, QUICKLAUNCHER_WIDTH);
                           start_pan_window.y = float.max (start_pan_window.y, PANEL_HEIGHT);
 
-
-                          if (event.root_x > stage.width - 160) /* FIXME: Need the box */
-                            {
-                              if (start_frame_rect is Clutter.Rectangle == false)
-                                {
-                                  Clutter.Rectangle frame = new Clutter.Rectangle.with_color ({ 0, 0, 0, 10 });
-                                  frame.border_color = { 255, 255, 255, 255 };
-                                  frame.border_width = 3;
-
-                                  stage.add_actor (frame);
-                                  frame.set_size (start_pan_window.width,
-                                                  start_pan_window.height);
-                                  frame.set_position (start_pan_window.x,
-                                                      start_pan_window.y);
-                                  frame.show ();
-
-                                  frame.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
-                                                 150,
-                                                 "x", (float)((stage.width - QUICKLAUNCHER_WIDTH)/2.0f) + QUICKLAUNCHER_WIDTH,
-                                                 "y", (float)PANEL_HEIGHT,
-                                                 "width", (stage.width - QUICKLAUNCHER_WIDTH)/2.0f,
-                                                 "height", stage.height - PANEL_HEIGHT);
-
-                                  start_frame_rect = frame;
-                                }
-                            }
-                          else if (event.root_x < QUICKLAUNCHER_WIDTH + 160) /* FIXME: Need the box */
-                            {
-                              if (start_frame_rect is Clutter.Rectangle == false)
-                                {
-                                  Clutter.Rectangle frame = new Clutter.Rectangle.with_color ({ 0, 0, 0, 10 });
-                                  frame.border_color = { 255, 255, 255, 255 };
-                                  frame.border_width = 3;
-
-                                  stage.add_actor (frame);
-                                  frame.set_size (start_pan_window.width,
-                                                  start_pan_window.height);
-                                  frame.set_position (start_pan_window.x,
-                                                      start_pan_window.y);
-                                  frame.show ();
-
-                                  frame.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
-                                                 150,
-                                                 "x", (float)QUICKLAUNCHER_WIDTH,
-                                                 "y", (float)PANEL_HEIGHT,
-                                                 "width", (stage.width - QUICKLAUNCHER_WIDTH)/2.0f,
-                                                 "height", stage.height - PANEL_HEIGHT);
-
-                                  start_frame_rect = frame;
-                                }
-                            }
-                          else if (start_frame_rect is Clutter.Rectangle)
+                          if (start_frame_rect is Clutter.Rectangle)
                             {
                               if (start_frame_rect.opacity == 0)
                                 {
@@ -1167,30 +1136,32 @@ namespace Unity
                       float nheight = 0;
                       bool  move_resize = false;
 
-                      if (start_pan_window.y == PANEL_HEIGHT)
+                      if (start_pan_window.y == PANEL_HEIGHT && event.pan_event.delta_y < 0.0f)
                         {
-                          if (event.pan_event.delta_y < 0.0f)
-                            Mutter.MetaWindow.maximize (win,
-                                                        Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
+                          if (maximize_type == MaximizeType.FULL)
+                            {
+                            
+                              Mutter.MetaWindow.maximize (win,
+                                                          Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
+                            }
+                          else if (maximize_type == MaximizeType.RIGHT)
+                            {
+                              nx = (float)QUICKLAUNCHER_WIDTH + (stage.width-QUICKLAUNCHER_WIDTH)/2.0f;
+                              ny = (float)PANEL_HEIGHT;
+                              nwidth = (stage.width - QUICKLAUNCHER_WIDTH)/2.0f;
+                              nheight = stage.height - PANEL_HEIGHT;
 
-                        }
-                      else if (last_pan_x_root >= stage.width - 160)
-                        {
-                          nx = (float)QUICKLAUNCHER_WIDTH + (stage.width-QUICKLAUNCHER_WIDTH)/2.0f;
-                          ny = (float)PANEL_HEIGHT;
-                          nwidth = (stage.width - QUICKLAUNCHER_WIDTH)/2.0f;
-                          nheight = stage.height - PANEL_HEIGHT;
+                              move_resize = true;
+                            }
+                          else if (maximize_type == MaximizeType.LEFT)
+                            {
+                              nx = (float)QUICKLAUNCHER_WIDTH;
+                              ny = (float)PANEL_HEIGHT;
+                              nwidth = (stage.width - QUICKLAUNCHER_WIDTH)/2.0f;
+                              nheight = stage.height - PANEL_HEIGHT;
 
-                          move_resize = true;
-                        }
-                      else if (last_pan_x_root <= QUICKLAUNCHER_WIDTH + 160)
-                        {
-                          nx = (float)QUICKLAUNCHER_WIDTH;
-                          ny = (float)PANEL_HEIGHT;
-                          nwidth = (stage.width - QUICKLAUNCHER_WIDTH)/2.0f;
-                          nheight = stage.height - PANEL_HEIGHT;
-
-                          move_resize = true;
+                              move_resize = true;
+                            }
                         }
                       else
                         {
