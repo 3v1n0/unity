@@ -19,11 +19,15 @@
 
 namespace Unity.Places
 {
-  public class DefaultRenderer : Ctk.ScrollView, Unity.Place.Renderer
+  public class DefaultRenderer : LayeredBin, Unity.Place.Renderer
   {
     static const float PADDING = 12.0f;
     static const int   SPACING = 0;
 
+    private EmptySearchGroup search_empty;
+    private EmptySectionGroup section_empty;
+
+    private Ctk.ScrollView scroll;
     private Ctk.VBox box;
     private Dee.Model groups_model;
     private Dee.Model results_model;
@@ -36,10 +40,15 @@ namespace Unity.Places
     construct
     {
       padding = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+      scroll = new Ctk.ScrollView ();
+      add_actor (scroll);
+      scroll.show ();
+
       box = new Ctk.VBox (SPACING);
       box.padding = { 0.0f, PADDING, 0.0f, PADDING};
       box.homogeneous = false;
-      add_actor (box);
+      scroll.add_actor (box);
       box.show ();
     }
 
@@ -65,23 +74,60 @@ namespace Unity.Places
       groups_model.row_removed.connect (on_group_removed);
     }
 
+    private void update_views ()
+    {
+      int search_empty_opacity = 0;
+      int section_empty_opacity = 0;
+      int groups_box_opacity = 255;
+
+      if (search_empty.active)
+        {
+          search_empty_opacity = 255;
+          section_empty_opacity = 0;
+          groups_box_opacity = 0;
+        }
+      else if (section_empty.active)
+        {
+          search_empty_opacity = 0;
+          section_empty_opacity = 255;
+          groups_box_opacity = 0;
+        }
+      
+      search_empty.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                            300,
+                            "opacity", search_empty_opacity);
+      section_empty.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                            300,
+                            "opacity", section_empty_opacity);
+      scroll.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                            300,
+                            "opacity", groups_box_opacity);
+
+    }
+
     private void on_group_added (Dee.Model model, Dee.ModelIter iter)
     {
       string renderer = model.get_string (iter, 0);
 
       if (renderer == "UnityEmptySearchRenderer")
         {
-          var group = new EmptySearchGroup (model.get_position (iter),
+          search_empty = new EmptySearchGroup (model.get_position (iter),
                                             results_model);
-          box.pack (group, false, true);
-          group.activated.connect ((u, m) => { activated (u, m); } );
+          search_empty.opacity = 0;
+          add_actor (search_empty);
+          
+          search_empty.activated.connect ((u, m) => { activated (u, m); } );
+          search_empty.notify["active"].connect (update_views);
 
         }
       else if (renderer == "UnityEmptySectionRenderer")
         {
-          var group = new EmptrySectionGroup (model.get_position (iter),
+          section_empty = new EmptySectionGroup (model.get_position (iter),
                                               results_model);
-          box.pack (group, false, true);
+          section_empty.opacity = 0;
+          add_actor (section_empty);
+
+          section_empty.notify["active"].connect (update_views);
         }
       else
         {
@@ -111,7 +157,7 @@ namespace Unity.Places
     }
   }
 
-  public class EmptySearchGroup : ExpandingBin
+  public class EmptySearchGroup : Ctk.Bin
   {
     public uint   group_id { get; construct set; }
 
@@ -119,18 +165,17 @@ namespace Unity.Places
 
     public signal void activated (string uri, string mimetype);
 
+    public bool active { get; construct set;}
+
     private Ctk.VBox box;
 
     public EmptySearchGroup (uint group_id, Dee.Model results)
     {
-      Object (group_id:group_id, results:results);
+      Object (group_id:group_id, results:results, active:false);
     }
 
     construct
     {
-      bin_state = ExpandingBinState.CLOSED;
-      unexpanded_height = 0.0f;
-
       var hbox = new Ctk.HBox (0);
       add_actor (hbox);
       hbox.show ();
@@ -150,8 +195,6 @@ namespace Unity.Places
       if (!interesting (iter))
         return;
       
-      bin_state = ExpandingBinState.EXPANDED;
-
       string mes = results.get_string (iter, 4);
 
       var button = new Ctk.Button (Ctk.Orientation.HORIZONTAL);
@@ -172,6 +215,8 @@ namespace Unity.Places
 
           button.clicked.connect (() => { activated (uri, mimetype); });
         }
+
+      active = true;
     }
 
     private void on_result_removed (Dee.ModelIter iter)
@@ -179,13 +224,13 @@ namespace Unity.Places
       if (!interesting (iter))
         return;
 
+      active = false;
+      
       var children = box.get_children ();
       foreach (Clutter.Actor child in children)
         {
           box.remove_actor (child);
         }
-
-      bin_state = ExpandingBinState.CLOSED;
     }
 
     private bool interesting (Dee.ModelIter iter)
@@ -195,7 +240,7 @@ namespace Unity.Places
   }
 
 
-  public class EmptrySectionGroup : ExpandingBin
+  public class EmptySectionGroup : Ctk.Bin
   {
     public uint   group_id { get; construct set; }
 
@@ -203,21 +248,19 @@ namespace Unity.Places
     public Dee.Model results { get; construct set; }
 
     public signal void activated (string uri, string mimetype);
+    public bool active { get; construct set; }
 
-    public EmptrySectionGroup (uint group_id, Dee.Model results)
+    private unowned Ctk.EffectGlow glow;
+    private unowned CairoCanvas bg;
+
+    public EmptySectionGroup (uint group_id, Dee.Model results)
     {
-      Object (group_id:group_id, results:results);
+      Object (group_id:group_id, results:results, active:false);
     }
 
     construct
     {
-      bin_state = ExpandingBinState.CLOSED;
-      unexpanded_height = 0.0f;
-
-      padding = { 100.0f, 0.0f, 0.0f, 0.0f };
-
       text = new Ctk.Text ("");
-      text.set_alignment (Pango.Alignment.CENTER);
 
       add_actor (text);
       text.show ();
@@ -226,6 +269,34 @@ namespace Unity.Places
       results.row_removed.connect (on_result_removed);
 
       opacity = 0;
+
+      var bg = new CairoCanvas (paint_bg);
+      this.bg = bg;
+      set_background (bg);
+      bg.show ();
+
+      var glow = new Ctk.EffectGlow ();
+      this.glow = glow;
+      glow.set_factor (1.0f);
+      glow.set_margin (0);
+      add_effect (glow);
+    }
+
+    private override void allocate (Clutter.ActorBox box,
+                                    Clutter.AllocationFlags flags)
+    {
+      base.allocate (box, flags);
+
+      Clutter.ActorBox child_box = Clutter.ActorBox ();
+      float twidth;
+      float theight;
+      text.get_preferred_size (out twidth, out theight, null, null);
+
+      child_box.x1 = ((box.x2 - box.x1)/2.0f) - (twidth/2.0f);
+      child_box.x2 = child_box.x1 + twidth;
+      child_box.y1 = ((box.y2 - box.y1)/2.0f) - (theight/2.0f);
+      child_box.y2 = child_box.y1 + theight;
+      text.allocate (child_box, flags);
     }
 
     private void on_result_added (Dee.ModelIter iter)
@@ -233,10 +304,13 @@ namespace Unity.Places
       if (!interesting (iter))
         return;
       
-      bin_state = ExpandingBinState.EXPANDED;
-
       string mes = results.get_string (iter, 4);
       text.set_markup ("<big>" + mes + "</big>");
+
+      active = true;
+
+      glow.set_invalidate_effect_cache (true);
+      bg.update ();
     }
 
     private void on_result_removed (Dee.ModelIter iter)
@@ -244,12 +318,81 @@ namespace Unity.Places
       if (!interesting (iter))
         return;
 
-      bin_state = ExpandingBinState.CLOSED;
+      active = false;
+    }
+
+    private override void get_preferred_height (float for_width,
+                                       out float mheight,
+                                       out float nheight)
+    {
+      mheight = 2000;
+      nheight = 2000;
     }
 
     private bool interesting (Dee.ModelIter iter)
     {
       return (results.get_uint (iter, 2) == group_id);
+    }
+
+    private void paint_bg (Cairo.Context cr, int width, int height)
+    {
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      cr.set_operator (Cairo.Operator.OVER);
+      cr.translate (0.5, 0.5);
+      cr.set_line_width (1.5);
+
+      var radius = 7;
+      float twidth, theight;
+      text.get_preferred_size (out twidth, out theight, null, null);
+
+      var padding = 35;
+      var x = (width/2) - ((int)twidth/2) - padding;
+      var y = (height/2) - ((int)theight/2) - padding;
+      var w = (int)twidth + (padding * 2);
+      var h = (int)theight + (padding *2);
+
+      cr.move_to (x, y + radius);
+      cr.curve_to (x, y,
+                   x, y,
+                   x + radius, y);
+      cr.line_to (x + w - radius, y);
+      cr.curve_to (x + w, y,
+                   x + w, y,
+                   x + w, y + radius);
+      cr.line_to (x + w, y + h - radius);
+      cr.curve_to (x + w, y + h,
+                   x + w, y + h,
+                   x + w - radius, y + h);
+      cr.line_to (x + radius, y + h);
+      cr.curve_to (x, y + h,
+                   x, y + h,
+                   x, y + h - radius);
+      cr.close_path ();
+
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.1f);
+      cr.fill_preserve ();
+
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.5f);
+      cr.stroke ();
+
+      cr.rectangle (x, y, w/4, h);
+      var pat = new Cairo.Pattern.radial (x, y + h, 0.0f,
+                                          x, y + h, w/4.0f);
+      pat.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.2f);
+      pat.add_color_stop_rgba (0.8f, 1.0f, 1.0f, 1.0f, 0.0f);
+      cr.set_source (pat);
+      cr.fill_preserve ();
+
+      var factor = w/4;
+      cr.rectangle (x + (factor * 2), y, factor *2, h);
+      pat = new Cairo.Pattern.radial (x + w - factor, y, 0.0f,
+                                      x + w - factor, y, factor);
+      pat.add_color_stop_rgba (0.0f, 1.0f, 1.0f, 1.0f, 0.2f);
+      pat.add_color_stop_rgba (0.8f, 1.0f, 1.0f, 1.0f, 0.0f);
+      cr.set_source (pat);
+      cr.fill_preserve ();
     }
   }
 }

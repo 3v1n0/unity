@@ -174,10 +174,6 @@ namespace Unity.Places
           allow_expand = false;
 
           more_results_button = new MoreResultsButton ();
-          more_results_button.padding = { PADDING/4,
-                                          PADDING/2,
-                                          PADDING/4,
-                                          PADDING/2 };
           vbox.pack (more_results_button, false, false);
           more_results_button.show ();
 
@@ -471,66 +467,159 @@ namespace Unity.Places
     }
   }
 
-  public class MoreResultsButton : Ctk.Button
-  {
-    public uint count {
-      get { return _count; }
-      set {
-        _count = value;
-        text.text = _("See %u more results").printf (_count);
+   public class MoreResultsButton : Ctk.Button
+   {
+     public uint count {
+       get { return _count; }
+       set {
+         _count = value;
+         text.text = _("See %u more results").printf (_count);
 
-        animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
-                            "opacity", count == 0 ? 0:255);
-      }
-    }
+         animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
+                             "opacity", count == 0 ? 0:255);
 
-    private uint _count = 0;
-    private Ctk.Text text;
+         if (count > 0 && glow is Ctk.EffectGlow == false)
+           {
+             glow = new Ctk.EffectGlow ();
+             glow.set_factor (1.0f);
+             glow.set_margin (0);
+             bg.add_effect (glow);
+           }
+         else if (count < 1 && glow is Ctk.EffectGlow)
+           {
+             bg.remove_effect (glow);
+             glow = null;
+           }
+       }
+     }
 
-    public MoreResultsButton ()
-    {
-      Object (orientation:Ctk.Orientation.HORIZONTAL);
-    }
+     private uint _count = 0;
+     private Ctk.Text text;
 
-    construct
-    {
-      var bg = new StripeTexture (paint_bg);
-      set_background (bg);
+     private CairoCanvas bg;
+     private Ctk.EffectGlow? glow = null;
 
-      text = new Ctk.Text ("");
-      add_actor (text);
-      text.show ();
-    }
+     public MoreResultsButton ()
+     {
+       Object (orientation:Ctk.Orientation.HORIZONTAL);
+     }
 
-    private override void get_preferred_height (float for_width,
-                                                out float mheight,
-                                                out float nheight)
-    {
-      if (count == 0)
-        {
-          mheight = 0.0f;
-          nheight = 0.0f;
-        }
-      else
-        {
-          mheight = 28 + padding.top + padding.bottom;
-          nheight = mheight;
-        }
-    }
+     construct
+     {
+       var box = new Ctk.VBox (0);
+       box.padding = { 4, 8, 4, 8 };
+       add_actor (box);
+       box.show ();
 
-    private void paint_bg (Cairo.Context cr, int width, int height)
-    {
-      var vpad = padding.top;
-      var hpad = padding.left;
-      float nwidth;
-      text.get_preferred_width (height, null, out nwidth);
+       bg = new CairoCanvas (paint_bg);
+       set_background (bg);
+       bg.show ();
+ 
+       text = new Ctk.Text ("");
+       add_actor (text);
+       box.add_actor (text);
+       text.show ();
 
-      cr.rectangle (0.0,
-                    vpad,
-                    hpad + nwidth + hpad,
-                    height - vpad - vpad);
-    }
-  }
+       notify["state"].connect (() => {
+         if (state == Ctk.ActorState.STATE_NORMAL ||
+             state == Ctk.ActorState.STATE_PRELIGHT)
+           text.color = { 255, 255, 255, 255 };
+         else
+           text.color = { 50, 50, 50, 200 };
+
+         bg.update ();
+
+         if (glow is Ctk.EffectGlow)
+           glow.set_invalidate_effect_cache (true);
+       });
+     }
+ 
+     private override void get_preferred_height (float for_width,
+                                                 out float mheight,
+                                                 out float nheight)
+     {
+       if (_count == 0)
+         {
+           mheight = 0.0f;
+           nheight = 0.0f;
+         }
+       else
+         {
+           base.get_preferred_height (for_width, out mheight, out nheight);
+         }
+     }
+ 
+     private void paint_bg (Cairo.Context cr, int width, int height)
+     {
+       var padding = 1;
+       var x = padding;
+       var y = padding;
+       var radius = 7;
+       var arrow = 25;
+
+       float nwidth;
+       text.get_preferred_width (height, null, out nwidth);
+       nwidth += 8;
+ 
+       cr.set_operator (Cairo.Operator.CLEAR);
+       cr.paint ();
+
+       cr.set_operator (Cairo.Operator.OVER);
+       cr.set_line_width (1.0);
+       cr.translate (0.5, 0.5);
+
+       height -= padding * 2;;
+
+       cr.move_to (x, y + radius);
+       cr.curve_to (x, y,
+                    x, y,
+                    x + radius, y);
+       cr.line_to (x + nwidth, y);
+       cr.line_to (x + nwidth + arrow, (height+padding*2)/2);
+       cr.line_to (x + nwidth, height);
+       cr.line_to (x + radius, height);
+       cr.curve_to (x, height,
+                    x, height,
+                    x, height - radius);
+       cr.close_path ();
+
+       if (state == Ctk.ActorState.STATE_NORMAL)
+         {
+           cr.set_source_rgba (1.0, 1.0, 1.0, 0.0);
+         }
+       else if (state == Ctk.ActorState.STATE_PRELIGHT)
+         {
+            var pattern = new Cairo.Surface.similar (cr.get_target (),
+                                                 Cairo.Content.COLOR_ALPHA,
+                                                 4, 4);
+            var context = new Cairo.Context (pattern);
+            
+            context.set_operator (Cairo.Operator.CLEAR);
+            context.paint ();
+
+            context.set_line_width (0.2);
+            context.set_operator (Cairo.Operator.OVER);
+            context.set_source_rgba (1.0, 1.0, 1.0, 0.65);
+
+            context.move_to (0, 0);
+            context.line_to (4, 4);
+
+            context.stroke ();
+
+            var pat = new Cairo.Pattern.for_surface (pattern);
+            pat.set_extend (Cairo.Extend.REPEAT);
+            cr.set_source (pat);
+         }
+       else
+         {
+           cr.set_source_rgba (1.0, 1.0, 1.0, 1.0);
+         }
+       cr.fill_preserve ();
+
+       cr.set_source_rgba (1.0, 1.0, 1.0, 1.0);
+       cr.stroke ();
+     }
+   }
 
   public class Tile : Ctk.Button
   {

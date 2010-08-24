@@ -29,7 +29,8 @@ namespace Unity.Places
 
     public PlaceModel model { get; construct; }
 
-    private Ctk.VBox  content_box;
+    private Ctk.VBox   content_box;
+    private LayeredBin layered_bin;
 
     public  PlaceHomeEntry       home_entry;
     public  PlaceSearchBar       search_bar;
@@ -70,6 +71,10 @@ namespace Unity.Places
       search_bar = new PlaceSearchBar ();
       content_box.pack (search_bar, false, true);
       search_bar.show ();
+
+      layered_bin = new LayeredBin ();
+      content_box.pack (layered_bin, true, true);
+      layered_bin.show ();
     }
 
     public void shown ()
@@ -114,13 +119,20 @@ namespace Unity.Places
       /* Create the correct results view */
       if (renderer is Clutter.Actor)
         {
-          renderer.destroy ();
+          var anim = renderer.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                       300,
+                                       "opacity", 0);
+          anim.completed.connect ((a)=> {
+            (a.get_object () as Clutter.Actor).destroy ();
+            });
         }
 
-      renderer.destroy ();
-
       renderer = lookup_renderer (entry);
-      content_box.pack (renderer, true, true);
+      layered_bin.add_actor (renderer);
+      renderer.opacity = 0;
+      renderer.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 300,
+                        "opacity", 255);
+
       renderer.set_models (entry.entry_groups_model,
                            entry.entry_results_model,
                            entry.entry_renderer_hints);

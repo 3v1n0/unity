@@ -37,7 +37,7 @@ namespace Unity.Places
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
               homogeneous:false,
-              spacing:16);
+              spacing:20);
 
       Testing.ObjectRegistry.get_default ().register ("UnityPlacesSearchBar",
                                                       this);
@@ -144,6 +144,7 @@ namespace Unity.Places
         }
 
       navigation.set_active_entry (entry);
+      this.entry.set_active_entry (entry);
       this.entry.text.grab_key_focus ();
     }
   }

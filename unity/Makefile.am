@@ -74,6 +74,7 @@ libunity_la_VALASOURCES = \
   unity-expanding-bin.vala \
   unity-favorites.vala \
   unity-io.vala \
+  unity-layered-bin.vala \
   unity-pixbuf-cache.vala \
   unity-place.vala \
   unity-place-activation.vala \

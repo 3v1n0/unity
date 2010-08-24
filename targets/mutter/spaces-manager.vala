@@ -47,7 +47,7 @@ namespace Unity {
 
     public override void activate ()
     {
-      if (parent.showing)
+      if (parent.showing == true)
         parent.hide_spaces_picker ();
       else
         parent.show_spaces_picker ();
@@ -189,6 +189,7 @@ namespace Unity {
       plugin.add_fullscreen_request (this);
 
       global_shell.get_stage ().captured_event.connect (on_stage_capture_event);
+      global_shell.hide_unity ();
 
       if (background is Clutter.Actor)
         background.destroy ();
@@ -254,12 +255,18 @@ namespace Unity {
 
     private bool on_stage_capture_event (Clutter.Event event)
     {
-      if (event.type == Clutter.EventType.BUTTON_PRESS)
+      if (event.type == Clutter.EventType.BUTTON_RELEASE)
         {
           if (event.button.y <= global_shell.get_panel_height_foobar () ||
               event.button.x <= global_shell.get_launcher_width_foobar ())
             {
-              select_workspace (null);
+              float x, y, w, h;
+              button.get_transformed_position (out x, out y);
+              button.get_transformed_size (out w, out h);
+
+              if ((event.button.x < x || event.button.x > x + w) &&
+                  (event.button.y < y || event.button.y > y + h))
+                select_workspace (null);
             }
         }
 

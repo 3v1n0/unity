@@ -352,4 +352,4 @@ unity-private/gesture/gesture-dispatcher-geis-glu.c
 unity-private/gesture/gesture-dispatcher-geis.c
 unity-private/places/places-place-home-renderer.c
 unity/unity-stripe-texture.c
-
+unity/unity-layered-bin.c

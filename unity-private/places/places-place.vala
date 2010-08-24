@@ -159,46 +159,54 @@ namespace Unity.Places
       service.EntryRemoved.connect (on_service_entry_removed);
 
       /* Make sure our entries are up-to-date */
-      ValueArray[] entries = service.get_entries ();
-      for (int i = 0; i < entries.length; i++)
-        {
-          unowned ValueArray array = entries[i];
-          var path = array.get_nth (0).get_string ();
-          bool existing = false;
-
-          foreach (PlaceEntry e in entries_array)
-            {
-              var entry = e as PlaceEntryDbus;
-              if (entry.dbus_path == path)
-                {
-                  entry.update_info (array);
-                  entry.connect ();
-                  entry.parent = this;
-                  existing = true;
-                }
-            }
-
-          if (existing == false)
-            {
-              on_service_entry_added (service, array);
-            }
-        }
-
-      /* Now remove those that couldn't connect or did not exist in the live
-       * place
+      /* FIXME: In a world without Vala this would be async, however due to
+       * it's troubles with marshalling complex types (which I concede cannot
+       * be easy), we need to do a poor-mans async and call it in an idle
+       * instead.
        */
-      /* FIXME: Make this cleaner */
-      ArrayList<PlaceEntry> old = new ArrayList<PlaceEntry> ();
-      foreach (PlaceEntry entry in entries_array)
-        {
-          if (entry.online == false)
-            old.add (entry);
-        }
-      foreach (PlaceEntry entry in old)
-        {
-          entry_removed (entry);
-          entries_array.remove (entry);
-        }
+      Idle.add (() => {
+        ValueArray[] entries = service.get_entries ();
+        for (int i = 0; i < entries.length; i++)
+          {
+            unowned ValueArray array = entries[i];
+            var path = array.get_nth (0).get_string ();
+            bool existing = false;
+
+            foreach (PlaceEntry e in entries_array)
+              {
+                var entry = e as PlaceEntryDbus;
+                if (entry.dbus_path == path)
+                  {
+                    entry.update_info (array);
+                    entry.connect ();
+                    entry.parent = this;
+                    existing = true;
+                  }
+              }
+
+            if (existing == false)
+              {
+                on_service_entry_added (service, array);
+              }
+          }
+
+        /* Now remove those that couldn't connect or did not exist in the live
+         * place
+         */
+        /* FIXME: Make this cleaner */
+        ArrayList<PlaceEntry> old = new ArrayList<PlaceEntry> ();
+        foreach (PlaceEntry entry in entries_array)
+          {
+            if (entry.online == false)
+              old.add (entry);
+          }
+        foreach (PlaceEntry entry in old)
+          {
+            entry_removed (entry);
+            entries_array.remove (entry);
+          }
+        return false;
+      });
 
       online = true;
     }
