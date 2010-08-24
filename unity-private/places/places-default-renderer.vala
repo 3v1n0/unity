@@ -251,6 +251,7 @@ namespace Unity.Places
     public bool active { get; construct set; }
 
     private unowned Ctk.EffectGlow glow;
+    private unowned CairoCanvas bg;
 
     public EmptySectionGroup (uint group_id, Dee.Model results)
     {
@@ -270,6 +271,7 @@ namespace Unity.Places
       opacity = 0;
 
       var bg = new CairoCanvas (paint_bg);
+      this.bg = bg;
       set_background (bg);
       bg.show ();
 
@@ -308,6 +310,7 @@ namespace Unity.Places
       active = true;
 
       glow.set_invalidate_effect_cache (true);
+      bg.update ();
     }
 
     private void on_result_removed (Dee.ModelIter iter)
