@@ -811,6 +811,8 @@ namespace Unity
           if (event.fingers == 3)
             {
               debug ("Resize Window");
+              if (true == true)
+                return;
 
               if (event.state == Gesture.State.BEGAN)
                 {
@@ -842,24 +844,23 @@ namespace Unity
                          resize_last_x2 - event.pinch_event.bounding_box_x2,
                          resize_last_y2 - event.pinch_event.bounding_box_y2);
 
-                  return;
-
                   var nx = resize_window.x;
                   var ny = resize_window.y;
                   var nwidth = resize_window.width;
                   var nheight = resize_window.height;
 
-                  nx += resize_last_x1 - event.pinch_event.bounding_box_x1;
-                  ny += resize_last_y1 - event.pinch_event.bounding_box_y1;
-                  nwidth += resize_last_x2 - event.pinch_event.bounding_box_x2;
-                  nheight += resize_last_y2 - event.pinch_event.bounding_box_y2;
+                  nx += (resize_last_x1 - event.pinch_event.bounding_box_x1) * event.pinch_event.radius_delta;
+                  ny += (resize_last_y1 - event.pinch_event.bounding_box_y1) * event.pinch_event.radius_delta;
+                  nwidth += (resize_last_x2 - event.pinch_event.bounding_box_x2) * event.pinch_event.radius_delta;
+                  nheight += (resize_last_y2 - event.pinch_event.bounding_box_y2) * event.pinch_event.radius_delta;
 
-                  Mutter.MetaWindow.move_resize (resize_window.get_meta_window (),
+/*                  Mutter.MetaWindow.move_resize (resize_window.get_meta_window (),
                                                  false,
                                                  (int)nx,
                                                  (int)ny,
                                                  (int)nwidth,
                                                  (int)nheight);
+                                                 */
  
                   resize_last_x1 = event.pinch_event.bounding_box_x1;
                   resize_last_y1 = event.pinch_event.bounding_box_y1;
@@ -870,8 +871,10 @@ namespace Unity
                 {
                   if (resize_window is Mutter.Window == false)
                     return;
+
+                  resize_window = null;
                 }
-              //print (@"$event\n");
+              print (@"$event\n");
             }
           else if (event.fingers == 4)
             {
@@ -991,6 +994,8 @@ namespace Unity
         }
       else if (event.type == Gesture.Type.PAN)
         {
+          if (resize_window is Mutter.Window)
+            return;
           if (event.fingers == 3)
             {
               if (event.state == Gesture.State.BEGAN)
@@ -1058,7 +1063,6 @@ namespace Unity
                           start_pan_window.y = float.max (start_pan_window.y, PANEL_HEIGHT);
 
 
-                              //if ((start_pan_window.x + start_pan_window.width) >= stage.width && (start_pan_window.x + start_pan_window.width) <= (stage.width + 5.0))
                           if (event.root_x > stage.width - 160) /* FIXME: Need the box */
                             {
                               if (start_frame_rect is Clutter.Rectangle == false)
@@ -1184,8 +1188,8 @@ namespace Unity
                            */
                           nx = start_pan_window.x + 1.0f;
                           ny = start_pan_window.y + 27.0f; /* Kittens are dying */
-                          nwidth = start_pan_window.width;
-                          nheight = start_pan_window.height - 24.0f;
+                          nwidth = start_pan_window.width - 2.0f;
+                          nheight = start_pan_window.height - 32.0f;
                           move_resize = true;
                         }
 
