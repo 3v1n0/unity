@@ -477,6 +477,19 @@ namespace Unity.Places
 
          animate (Clutter.AnimationMode.EASE_OUT_QUAD, 200,
                              "opacity", count == 0 ? 0:255);
+
+         if (count > 0 && glow is Ctk.EffectGlow == false)
+           {
+             glow = new Ctk.EffectGlow ();
+             glow.set_factor (1.0f);
+             glow.set_margin (0);
+             bg.add_effect (glow);
+           }
+         else if (count < 1 && glow is Ctk.EffectGlow)
+           {
+             bg.remove_effect (glow);
+             glow = null;
+           }
        }
      }
 
@@ -529,24 +542,10 @@ namespace Unity.Places
          {
            mheight = 0.0f;
            nheight = 0.0f;
-
-           if (glow is Ctk.EffectGlow)
-             {
-               bg.remove_effect (glow);
-               glow = null;
-             }
          }
        else
          {
            base.get_preferred_height (for_width, out mheight, out nheight);
-
-           if (glow is Ctk.EffectGlow == false)
-             {
-               glow = new Ctk.EffectGlow ();
-               glow.set_factor (1.0f);
-               glow.set_margin (0);
-               bg.add_effect (glow);
-             }
          }
      }
  
