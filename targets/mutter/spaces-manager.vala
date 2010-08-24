@@ -295,7 +295,6 @@ namespace Unity {
       unowned GLib.List<Mutter.Window> windows;
 
       windows = plugin.plugin.get_windows ();
-      List<Clutter.Actor> toplevel_windows = new List<Clutter.Actor> ();
       wsp = new WorkspaceClone (workspace, plugin);
 
       foreach (Mutter.Window window in windows)

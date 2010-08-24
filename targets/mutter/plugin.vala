@@ -46,6 +46,7 @@ namespace Unity
     ZERO,
   }
 
+  /*
   public class ActorBlur : Ctk.Bin
   {
     private Clutter.Clone clone;
@@ -70,6 +71,7 @@ namespace Unity
     }
   }
 
+  */
   public class Plugin : Object, Shell
   {
     /* Signals */
@@ -160,7 +162,16 @@ namespace Unity
     private dynamic DBus.Object screensaver;
 
     public Gesture.Dispatcher gesture_dispatcher;
+
+    /* Pinch info */
     private float start_pinch_radius = 0.0f;
+    private unowned Mutter.Window? resize_window = null;
+    private float   resize_last_x1 = 0.0f;
+    private float   resize_last_y1 = 0.0f;
+    private float   resize_last_x2 = 0.0f;
+    private float   resize_last_y2 = 0.0f;
+
+    /* Pan info */
     private unowned Mutter.Window? start_pan_window = null;
     private unowned Clutter.Rectangle? start_frame_rect = null;
     private float last_pan_x_root = 0.0f;
@@ -787,8 +798,7 @@ namespace Unity
         {
           if (event.fingers == 3)
             {
-              debug ("Move Window");
-              print (@"$event");
+              ;
             }
           else if (event.fingers == 4)
             {
@@ -801,6 +811,65 @@ namespace Unity
           if (event.fingers == 3)
             {
               debug ("Resize Window");
+
+              if (event.state == Gesture.State.BEGAN)
+                {
+                  resize_window = null;
+
+                  var actor = stage.get_actor_at_pos (Clutter.PickMode.ALL,
+                                                      (int)event.root_x,
+                                                      (int)event.root_y);
+                  if (actor is Mutter.Window == false)
+                    actor = actor.get_parent ();
+
+                  if (actor is Mutter.Window)
+                    {
+                      resize_window = actor as Mutter.Window;
+                      resize_last_x1 = event.pinch_event.bounding_box_x1;
+                      resize_last_y1 = event.pinch_event.bounding_box_y1;
+                      resize_last_x2 = event.pinch_event.bounding_box_x2;
+                      resize_last_y2 = event.pinch_event.bounding_box_y2;
+                    }
+                }
+              else if (event.state == Gesture.State.CONTINUED)
+                {
+                  if (resize_window is Mutter.Window == false)
+                    return;
+
+                  print ("RESIZE: %f %f %f %f\n",
+                         resize_last_x1 - event.pinch_event.bounding_box_x1,
+                         resize_last_y1 - event.pinch_event.bounding_box_y1,
+                         resize_last_x2 - event.pinch_event.bounding_box_x2,
+                         resize_last_y2 - event.pinch_event.bounding_box_y2);
+
+                  var nx = resize_window.x;
+                  var ny = resize_window.y;
+                  var nwidth = resize_window.width;
+                  var nheight = resize_window.height;
+
+                  nx += resize_last_x1 - event.pinch_event.bounding_box_x1;
+                  ny += resize_last_y1 - event.pinch_event.bounding_box_y1;
+                  nwidth += resize_last_x2 - event.pinch_event.bounding_box_x2;
+                  nheight += resize_last_y2 - event.pinch_event.bounding_box_y2;
+
+                  Mutter.MetaWindow.move_resize (resize_window.get_meta_window (),
+                                                 false,
+                                                 (int)nx,
+                                                 (int)ny,
+                                                 (int)nwidth,
+                                                 (int)nheight);
+ 
+                  resize_last_x1 = event.pinch_event.bounding_box_x1;
+                  resize_last_y1 = event.pinch_event.bounding_box_y1;
+                  resize_last_x2 = event.pinch_event.bounding_box_x2;
+                  resize_last_y2 = event.pinch_event.bounding_box_y2;
+                }
+              else if (event.state == Gesture.State.ENDED)
+                {
+                  if (resize_window is Mutter.Window == false)
+                    return;
+                }
+              //print (@"$event\n");
             }
           else if (event.fingers == 4)
             {
@@ -1079,7 +1148,7 @@ namespace Unity
                       float nheight = 0;
                       bool  move_resize = false;
 
-                      print (@"$event\n");
+                      //print (@"$event\n");
 
                       if (start_pan_window.y == PANEL_HEIGHT)
                         {

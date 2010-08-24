@@ -124,7 +124,6 @@ unity_gesture_xcb_dispatcher_glue_finish ()
 void
 unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
 {
-  g_debug ("%s", G_STRFUNC);
   const xcb_query_extension_reply_t *extension_info;
   xcb_connection_t *connection = source->connection;
   
