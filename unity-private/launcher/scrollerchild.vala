@@ -74,6 +74,8 @@ namespace Unity.Launcher
     public GroupType group_type { get; construct set; }
     public bool is_dragging_state { get; set; }
 
+    public float grabbed_push = 0.0f;
+
     public string to_string ()
     {
       return "A scroller child; running: %s, active: %s, position: %f, opacity %f".printf (
@@ -600,7 +602,7 @@ namespace Unity.Launcher
       //allocate the icon
       processed_icon.get_preferred_width (48, out width, out n_width);
       processed_icon.get_preferred_height (48, out height, out n_height);
-      child_box.x1 = (box.get_width () - width) / 2.0f;
+      child_box.x1 = grabbed_push + (box.get_width () - width) / 2.0f;
       child_box.y1 = y;
       child_box.x2 = child_box.x1 + 48;
       child_box.y2 = child_box.y1 + height;

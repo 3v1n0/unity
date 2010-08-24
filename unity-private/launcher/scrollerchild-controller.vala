@@ -44,8 +44,9 @@ namespace Unity.Launcher
     protected ScrollerChildControllerMenuState menu_state;
     protected uint32 last_press_time = 0;
     protected bool button_down = false;
-    protected float click_start_pos = 0.0f;
-    protected int drag_sensitivity = 7;
+    protected float click_start_pos_x = 0.0f;
+    protected float click_start_pos_y = 0.0f;
+    protected int drag_sensitivity = 60;
     private Unity.ThemeFilePath theme_file_path;
 
     protected QuicklistController? menu {get; set;}
@@ -123,7 +124,8 @@ namespace Unity.Launcher
             {
               last_press_time = event.button.time;
               button_down = true;
-              click_start_pos = event.button.x;
+              click_start_pos_x = event.button.x;
+              click_start_pos_y = event.button.y;
             } break;
           case 3:
             {
@@ -224,13 +226,17 @@ namespace Unity.Launcher
       var drag_controller = Unity.Drag.Controller.get_default ();
       if (button_down && drag_controller.is_dragging == false && can_drag ())
         {
-          float diff = Math.fabsf (event.motion.x - click_start_pos);
+          float diff = Math.fabsf (event.motion.x - click_start_pos_x);
+          child.grabbed_push = Math.powf (diff, 0.5f);
+          child.queue_relayout ();
           if (diff > drag_sensitivity)
             {
+              child.grabbed_push = 0;
+              child.queue_relayout ();
               float x, y;
               child.get_transformed_position (out x, out y);
               drag_controller.start_drag (this,
-                                          event.button.x - x,
+                                          click_start_pos_x - x,
                                           event.button.y - y);
               child.set_reactive (true);
               button_down = false;

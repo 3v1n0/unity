@@ -190,6 +190,10 @@ namespace Unity.Launcher
       drag_controller.drag_start.connect (() => {
         is_scrolling = false;
         button_down = false;
+        is_scrolling = false;
+        Clutter.ungrab_pointer ();
+        get_stage ().motion_event.disconnect (on_motion_event);
+
         animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
                  "drag-indicator-opacity", 1.0f);
       });
@@ -237,7 +241,7 @@ namespace Unity.Launcher
      * is real... sheesh
      */
     private Clutter.Actor? last_picked_actor = null;
-    private Clutter.Actor? handle_event (Clutter.Event event)
+    private Clutter.Actor? handle_event (Clutter.Event event, bool assume_on_launcher=false)
     {
       if (disable_child_events)
         return null;
@@ -254,6 +258,9 @@ namespace Unity.Launcher
 
       float x, y;
       event.get_coords (out x, out y);
+      if (assume_on_launcher)
+        x = 25;
+
       Clutter.Actor picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, (int)x, (int)y);
 
 
@@ -304,12 +311,15 @@ namespace Unity.Launcher
     {
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
-      if (is_scrolling) return false;
       enter_event.disconnect (on_enter_event);
       leave_event.disconnect (on_leave_event);
       motion_event.disconnect (on_motion_event);
       motion_event.disconnect (passthrough_motion_event);
-      Clutter.Actor picked_actor = handle_event (event);
+      if (is_scrolling)
+        {
+          get_stage ().motion_event.disconnect (on_motion_event);
+        }
+      Clutter.Actor picked_actor = handle_event (event, is_scrolling);
 
       if (picked_actor is Clutter.Actor)
           picked_actor.do_event (event, false);
@@ -318,6 +328,10 @@ namespace Unity.Launcher
       leave_event.connect (on_leave_event);
       motion_event.connect (on_motion_event);
       motion_event.connect (passthrough_motion_event);
+      if (is_scrolling)
+        {
+          get_stage ().motion_event.connect (on_motion_event);
+        }
       return false;
     }
 
@@ -325,7 +339,6 @@ namespace Unity.Launcher
     {
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
-      if (is_scrolling) return false;
 
       enter_event.disconnect (on_enter_event);
       leave_event.disconnect (on_leave_event);
@@ -344,7 +357,6 @@ namespace Unity.Launcher
     {
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
-      if (is_scrolling) return false;
 
       enter_event.disconnect (on_enter_event);
       leave_event.disconnect (on_leave_event);
@@ -615,8 +627,6 @@ namespace Unity.Launcher
         alpha = 0xff
       };
 
-      //!!FIXME!! these are positioned wrong, needs to know the absolute
-      // size of the resulting cario surface before creating it =\
       int index = 1;
       // indicator size find out activate!
       int key_indicator_w, key_indicator_h;
@@ -941,6 +951,7 @@ namespace Unity.Launcher
 
     private bool on_motion_event (Clutter.Event event)
     {
+
       on_autoscroll_motion_check (event.motion.y);
 
       var drag_controller = Drag.Controller.get_default ();
@@ -957,25 +968,23 @@ namespace Unity.Launcher
            * monitor how far away we have dragged from the original click, once
            * we get far enough away we can start scrolling.
            */
-          var diff = event.motion.y - previous_y_position;
-          if (Math.fabsf (diff) > drag_sensitivity)
-            {
-              is_scrolling = true;
-              Unity.global_shell.add_fullscreen_request (this);
-              Clutter.grab_pointer (this);
-              get_stage ().motion_event.connect (on_motion_event);
-            }
+          //var diff = event.motion.y - previous_y_position;
+          is_scrolling = true;
+          Unity.global_shell.add_fullscreen_request (this);
+          Clutter.grab_pointer (this);
+          get_stage ().motion_event.connect (on_motion_event);
         }
 
       if (is_scrolling)
         {
           /* Disable any animations on the children */
-          disable_animations_on_children (event);
+          //disable_animations_on_children (event);
 
           /* we need to compare the event y position from this event to the
            * previous event. once we have that we can compute a velocity based
            * on how long it was since the previous event
            */
+          passthrough_motion_event (event);
 
           float pixel_diff = event.motion.y - previous_y_position;
           uint time_diff = event.motion.time - previous_y_time;
@@ -1452,17 +1461,19 @@ namespace Unity.Launcher
           child_height = Math.fmaxf (min, Math.fminf (natural, available_height));
 
           child_box.x1 = current_width;
-          child_box.x2 = box.get_width () - padding.right;
+          child_box.x2 = child_box.x1 + child_width;//box.get_width () - padding.right;
           child_box.y1 = child.position + padding.top;
           child_box.y2 = child_box.y1 + child_height;
 
           if (!child.do_not_render) ;
             child.allocate (child_box, flags);
 
+/*
           child.remove_clip ();
           if (child_box.y1 < 0)
             child.set_clip (0, Math.fabsf (child_box.y1),
                             child_box.get_width (), child_box.get_height () - child_box.y1);
+*/
 
 
           total_child_height += child_height + spacing;
