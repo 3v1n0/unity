@@ -110,6 +110,12 @@ namespace Unity
 
     public bool menus_swallow_events { get { return false; } }
 
+    private bool _super_key_active = false;
+    public bool super_key_active {
+      get { return _super_key_active; }
+      set { _super_key_active = value; }
+    }
+
     public bool expose_showing { get { return expose_manager.expose_showing; } }
 
     private static const int PANEL_HEIGHT        =  24;
@@ -161,6 +167,7 @@ namespace Unity
 
     construct
     {
+      fullscreen_requests = new Gee.ArrayList<Object> ();
       Unity.global_shell = this;
       Unity.TimelineLogger.get_default(); // just inits the timer for logging
       // attempt to get a boot logging filename
@@ -208,8 +215,8 @@ namespace Unity
     private bool real_construct ()
     {
       START_FUNCTION ();
-
-      fullscreen_requests = new Gee.ArrayList<Object> ();
+      
+      Clutter.set_gl_picking_enabled (false);
 
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
       this.stage.actor_added.connect   ((a) => { ensure_input_region (); });
@@ -236,6 +243,26 @@ namespace Unity
       Ctk.dnd_init ((Gtk.Widget)this.drag_dest, target_list);
 
       Clutter.Group window_group = (Clutter.Group) this.plugin.get_window_group ();
+
+      /* we need to hook into the super key bound by mutter for g-shell.
+         don't ask me why mutter binds things for g-shell explictly...
+         */
+      Mutter.MetaDisplay display = Mutter.MetaScreen.get_display (plugin.get_screen ());
+      display.overlay_key_down.connect (() => {
+          super_key_active = true;
+      });
+
+      display.overlay_key.connect (() => {
+          super_key_active = false;
+      });
+
+      display.overlay_key_with_modifier.connect ((keysym) => {
+        super_key_modifier_release (keysym);
+      });
+
+      display.overlay_key_with_modifier_down.connect ((keysym) => {
+        super_key_modifier_press (keysym);
+      });
 
       this.background = new Background ();
       this.stage.add_actor (background);
@@ -1118,13 +1145,10 @@ namespace Unity
                           int           width,
                           int           height)
     {
-      /*FIXME: This doesn't work in Mutter
       if (window.get_data<string> (UNDECORATED_HINT) == null)
         {
-          uint32 xid = (uint32)window.get_x_window ();
-          Utils.window_set_decorations (xid, 0);
+          Utils.window_set_decorations (Mutter.MetaWindow.get_xwindow (window.get_meta_window ()), 0);
         }
-        */
 
       this.window_maximized (this, window, x, y, width, height);
 
@@ -1137,13 +1161,10 @@ namespace Unity
                             int           width,
                             int           height)
     {
-      /* FIXME: This doesn't work in Mutter
       if (window.get_data<string> (UNDECORATED_HINT) == null)
         {
-          uint32 xid = (uint32)window.get_x_window ();
-          Utils.window_set_decorations (xid, 1);
+          Utils.window_set_decorations (Mutter.MetaWindow.get_xwindow (window.get_meta_window ()), 1);
         }
-      */
 
       this.window_unmaximized (this, window, x, y, width, height);
 
@@ -1152,11 +1173,30 @@ namespace Unity
 
     public void map (Mutter.Window window)
     {
-      /* FIXME: This doesn't work in Mutter
-      uint32 xid = (uint32)window.get_x_window ();
-      if (Utils.window_is_decorated (xid) == false)
-        window.set_data (UNDECORATED_HINT, "%s".printf ("true"));
-      */
+      unowned Mutter.MetaWindow win = window.get_meta_window ();
+
+      if (window.get_window_type () == Mutter.MetaCompWindowType.NORMAL)
+        {
+          Idle.add (() => {
+            if (win is Object)
+              {
+                if (Utils.window_is_decorated (Mutter.MetaWindow.get_xwindow (win)) == false && Mutter.MetaWindow.is_maximized (win) == false)
+                  {
+                    window.set_data (UNDECORATED_HINT, "%s".printf ("true"));
+                  }
+                else
+                  {
+                    if (Mutter.MetaWindow.is_maximized (win))
+                      {
+                        Utils.window_set_decorations (Mutter.MetaWindow.get_xwindow (win), 0);
+                      }
+                  }
+              }
+            
+            return false;
+          });
+        }
+
       this.maximus.process_window (window);
       this.window_mapped (this, window);
 

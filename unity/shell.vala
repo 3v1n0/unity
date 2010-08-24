@@ -63,6 +63,7 @@ namespace Unity
     public abstract void          expose_xids (Array<uint32> xids);
     public abstract void          stop_expose ();
 
+    public abstract bool          super_key_active {get; set;}
     public abstract void          get_window_details (uint32   xid,
                                                       out bool allows_resize,
                                                       out bool is_maximised);
@@ -73,6 +74,9 @@ namespace Unity
     public signal   void          indicators_changed (int width);
     public signal   void          mode_changed (ShellMode mode);
     public signal   void          active_window_state_changed ();
+    public signal   void          super_key_modifier_release (uint keysym);
+    public signal   void          super_key_modifier_press (uint keysym);
+
   }
 
   public Shell? global_shell; // our global shell

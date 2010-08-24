@@ -296,8 +296,9 @@ namespace Unity
     private Cogl.Material icon_material;
     private Cogl.Material bgcol_material;
 
-    public float rotation = 0.0f;
-
+    public float rotation {get; set;}
+    public float stored_height = 0;
+    public float stored_ymod = 0;
 
     public UnityIcon (Clutter.Texture? icon, Clutter.Texture? bg_tex)
     {
@@ -347,6 +348,8 @@ namespace Unity
         tex = (Cogl.Texture)(unity_icon_fg_layer.get_cogl_texture ());
         mat.set_layer (0, tex);
         fg_mat = mat;
+        notify["rotation"].connect (() => { queue_relayout (); });
+        stored_height = 48;
     }
 
     public override void get_preferred_width (float for_height,
@@ -376,8 +379,8 @@ namespace Unity
     {
       set_effects_painting (true);
       var mat = new Cogl.Material ();
-      mat.set_color4ub (color.red, color.green, color.blue, color.alpha);
-      Cogl.rectangle (0, 0, 48, 48);
+      //mat.set_color4ub (color.red, color.green, color.blue, color.alpha);
+      //Cogl.rectangle (0, stored_ymod, 1, 1);//stored_height);
       base.pick (color);
       set_effects_painting (false);
     }
@@ -399,23 +402,25 @@ namespace Unity
 
       Cogl.Matrix modelview = Cogl.Matrix.identity (); //model view matrix
       Cogl.Matrix projection = Cogl.Matrix.identity (); // projection matrix
-      projection.perspective (60.0f, 1.0f, 0.1f, 100.0f);
-      modelview.translate (0.0f, 0.0f, -44.0f - Math.fabsf (self.rotation / 360.0f) * 100);
+      projection.perspective (45.0f, 1.0f, 0.1f, 100.0f);
+      modelview.translate (0.0f, 0.0f, -59.5f - Math.fabsf (self.rotation / 360.0f) * 100);
       modelview.rotate (self.rotation, 1.0f, 0.0f, 0.0f);
 
       Cogl.Matrix viewmatrix = Cogl.Matrix.multiply (projection, modelview);
+
+      float base_z = -((Math.fabsf (self.rotation) / 90.0f) * 15.0f);
 
       p1_x = -25.0f; p1_y = -25.0f;
       p2_x =  25.0f; p2_y = -25.0f;
       p3_x =  25.0f; p3_y =  25.0f;
       p4_x = -25.0f; p4_y =  25.0f;
-      z = 0.0f;
+      z = base_z;
       w = 1.0f;
 
-      viewmatrix.transform_point (out p1_x, out p1_y, out z, out w); p1_x /= w; p1_y /= w; z = 0.0f; w = 1.0f;
-      viewmatrix.transform_point (out p2_x, out p2_y, out z, out w); p2_x /= w; p2_y /= w; z = 0.0f; w = 1.0f;
-      viewmatrix.transform_point (out p3_x, out p3_y, out z, out w); p3_x /= w; p3_y /= w; z = 0.0f; w = 1.0f;
-      viewmatrix.transform_point (out p4_x, out p4_y, out z, out w); p4_x /= w; p4_y /= w; z = 0.0f; w = 1.0f;
+      viewmatrix.transform_point (out p1_x, out p1_y, out z, out w); p1_x /= w; p1_y /= w; z = base_z; w = 1.0f;
+      viewmatrix.transform_point (out p2_x, out p2_y, out z, out w); p2_x /= w; p2_y /= w; z = base_z; w = 1.0f;
+      viewmatrix.transform_point (out p3_x, out p3_y, out z, out w); p3_x /= w; p3_y /= w; z = base_z; w = 1.0f;
+      viewmatrix.transform_point (out p4_x, out p4_y, out z, out w); p4_x /= w; p4_y /= w; z = base_z; w = 1.0f;
 
 
       //transform into screen co-ordinates
@@ -431,15 +436,24 @@ namespace Unity
       p4_x = (50 * (p4_x + 1) / 2);
       p4_y =  48 + (50 * (p4_y - 1) / 2);
 
-      if (Math.fabsf (self.rotation) <= 3.0)
+      if (Math.fabsf (self.rotation) <= 1.0)
         {
           // floor all the values. we don't floor when its rotated because then
           // we lose subpixel accuracy and things look like a 1991 video game
-          p1_x = Math.floorf (p1_x); p1_y = Math.floorf (p1_y);
-          p2_x = Math.floorf (p2_x); p2_y = Math.floorf (p2_y);
+          p1_x = Math.ceilf (p1_x); p1_y = Math.ceilf (p1_y);
+          p2_x = Math.floorf (p2_x); p2_y = Math.ceilf (p2_y);
           p3_x = Math.floorf (p3_x); p3_y = Math.floorf (p3_y);
-          p4_x = Math.floorf (p4_x); p4_y = Math.floorf (p4_y);
+          p4_x = Math.ceilf (p4_x); p4_y = Math.floorf (p4_y);
         }
+
+      self.stored_height = p3_y - p1_y;
+      self.stored_ymod = (50 - self.stored_height) / 2.0f;
+/*
+      p1_y += self.stored_ymod;
+      p2_y += self.stored_ymod;
+      p3_y += self.stored_ymod;
+      p4_y += self.stored_ymod;
+*/
 
       Cogl.TextureVertex[4] points = {
         Cogl.TextureVertex () {
@@ -528,13 +542,13 @@ namespace Unity
           p2_x =  25.0f; p2_y = -25.0f;
           p3_x =  25.0f; p3_y =  25.0f;
           p4_x = -25.0f; p4_y =  25.0f;
-          z = 0.0f;
+          z = base_z;
           w = 1.0f;
 
-          viewmatrix.transform_point (out p1_x, out p1_y, out z, out w); p1_x /= w; p1_y /= w; z = 0.0f; w = 1.0f;
-          viewmatrix.transform_point (out p2_x, out p2_y, out z, out w); p2_x /= w; p2_y /= w; z = 0.0f; w = 1.0f;
-          viewmatrix.transform_point (out p3_x, out p3_y, out z, out w); p3_x /= w; p3_y /= w; z = 0.0f; w = 1.0f;
-          viewmatrix.transform_point (out p4_x, out p4_y, out z, out w); p4_x /= w; p4_y /= w; z = 0.0f; w = 1.0f;
+          viewmatrix.transform_point (out p1_x, out p1_y, out z, out w); p1_x /= w; p1_y /= w; z = base_z; w = 1.0f;
+          viewmatrix.transform_point (out p2_x, out p2_y, out z, out w); p2_x /= w; p2_y /= w; z = base_z; w = 1.0f;
+          viewmatrix.transform_point (out p3_x, out p3_y, out z, out w); p3_x /= w; p3_y /= w; z = base_z; w = 1.0f;
+          viewmatrix.transform_point (out p4_x, out p4_y, out z, out w); p4_x /= w; p4_y /= w; z = base_z; w = 1.0f;
 
           //transform into screen co-ordinates
           p1_x = xpad + (base_width * (p1_x + 1) / 2);
@@ -549,15 +563,22 @@ namespace Unity
           p4_x = xpad + (base_width * (p4_x + 1) / 2);
           p4_y = (48 - ypad) + (base_height * (p4_y - 1) / 2);
 
-          if (Math.fabsf (self.rotation) <= 3.0)
+          if (Math.fabsf (self.rotation) <= 1.0)
             {
               // floor all the values. we don't floor when its rotated because then
               // we lose subpixel accuracy and things look like a 1991 video game
-              p1_x = Math.floorf (p1_x); p1_y = Math.floorf (p1_y);
-              p2_x = Math.floorf (p2_x); p2_y = Math.floorf (p2_y);
+              p1_x = Math.ceilf (p1_x); p1_y = Math.ceilf (p1_y);
+              p2_x = Math.floorf (p2_x); p2_y = Math.ceilf (p2_y);
               p3_x = Math.floorf (p3_x); p3_y = Math.floorf (p3_y);
-              p4_x = Math.floorf (p4_x); p4_y = Math.floorf (p4_y);
+              p4_x = Math.ceilf (p4_x); p4_y = Math.floorf (p4_y);
             }
+
+/*
+          p1_y += self.stored_ymod;
+          p2_y += self.stored_ymod;
+          p3_y += self.stored_ymod;
+          p4_y += self.stored_ymod;
+*/
 
           Cogl.TextureVertex[4] icon_points = {
             Cogl.TextureVertex () {

@@ -66,6 +66,41 @@ namespace Unity.Launcher
       // hook up to the drag controller
       var drag_controller = Drag.Controller.get_default ();
       drag_controller.drag_start.connect (on_unity_drag_start);
+
+      Unity.global_shell.notify["super-key-active"].connect (on_super_key_active);
+      Unity.global_shell.super_key_modifier_release.connect (on_super_key_modifier_release);
+    }
+
+    private void on_super_key_modifier_release (uint keycode)
+    {
+      if (!Unity.global_shell.super_key_active) return;
+      int index = (int)keycode - 10;
+      index = int.min (index, model.size - 1);
+      if (index < 0 || index > 9) return;
+
+      Unity.global_shell.super_key_active = false;
+
+      var childcontroller = get_controller_for_view (model[index]);
+      childcontroller.activate ();
+    }
+
+    uint super_key_source = 0;
+    private void on_super_key_active ()
+    {
+      if (Unity.global_shell.super_key_active && super_key_source == 0)
+        super_key_source = Timeout.add (300, () => {
+          view.enable_keyboard_selection_mode (Unity.global_shell.super_key_active);
+          return false;
+        });
+      else
+        {
+          if (super_key_source != 0)
+            {
+              Source.remove (super_key_source);
+              super_key_source = 0;
+            }
+          view.enable_keyboard_selection_mode (false);
+        }
     }
 
     private void handle_bamf_view_opened (Object object)
@@ -317,7 +352,7 @@ namespace Unity.Launcher
       }
       ScrollerChildController model_controller = drag_controller.get_drag_model () as ScrollerChildController;
       ScrollerChild retcont = model_controller.child;
-
+      
       if (retcont.group_type == ScrollerChild.GroupType.PLACE ||
           retcont.group_type == ScrollerChild.GroupType.SYSTEM)
         {
@@ -331,9 +366,12 @@ namespace Unity.Launcher
               (retcont.controller as ApplicationController).set_sticky (false);
               (retcont.controller as ApplicationController).close_windows ();
             }
-          if (retcont in model)
-            model.remove (retcont);
-
+          if (retcont in model ||
+              retcont.group_type == ScrollerChild.GroupType.DEVICE)
+            {
+              retcont.drag_removed ();
+              model.remove (retcont);
+            }
           if (model_controller is ApplicationController)
             {
               (model_controller as ApplicationController).set_sticky (false);

@@ -34,6 +34,7 @@ namespace Unity.Tests.UI
     Clutter.Stage?         stage;
     Unity.Testing.Director director;
     Unity.Panel.HomeButton home_button;
+    public bool          super_key_active {get; set;}
 
     public HomeButtonSuite ()
     {

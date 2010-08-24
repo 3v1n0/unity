@@ -34,6 +34,7 @@ namespace Unity.Launcher
   const float ITEM_HEIGHT            = 2.0f;
   const float ITEM_CORNER_RADIUS     = 0.3f;
   const float ITEM_CORNER_RADIUS_ABS = 4.0f;
+  const float ITEM_INDENT_ABS        = 20.0f;
   const float ANCHOR_HEIGHT          = 1.5f;
   const float ANCHOR_HEIGHT_ABS      = 18.0f;
   const float ANCHOR_WIDTH           = 0.75f;
@@ -71,7 +72,7 @@ namespace Unity.Launcher
 
       new_width  = (int) (box.x2 - box.x1);
       new_height = (int) (box.y2 - box.y1);
-    
+
       // exit early if the allocation-width/height didn't change, this is needed
       // because clutter triggers calling allocate even if nothing changed
       if ((this.last_width == new_width) && (this.last_height == new_height))
@@ -81,23 +82,23 @@ namespace Unity.Launcher
       this.last_width  = new_width;
       this.last_height = new_height;
 
-      debug ("Num Items in Menu %d \n", get_num_items ());
-      
+      //debug ("Num Items in Menu %d \n", get_num_items ());
+
       base.allocate (box, flags);
-      
+
 //       float x;
 //       float y;
 //       this.get_position(out x, out y);
 //       this.compute_style_textures ();
 //       this.set_expansion_size_factor (0.0f);
 //       this.set_anchor_position ((int)60 + 60, (int)100+48, 25);
-//       
+//
 //       if(get_num_items () > 1)
 //         this.animate (Clutter.AnimationMode.LINEAR,
 //           100,
 //           "expansion-size-factor", 1.0f);
-            
-            
+
+
     }
 
     construct

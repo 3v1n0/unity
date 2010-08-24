@@ -117,8 +117,11 @@ namespace Utils
                                            string img2_path);
 
   [CCode (lower_case_prefix = "utils_")]
-  public extern bool window_is_decorated (uint32 xid);
+  public extern bool window_is_decorated (X.Window window);
 
   [CCode (lower_case_prefix = "utils_")]
-  public extern void window_set_decorations (uint32 xid, uint decorations);
+  public extern void window_set_decorations (X.Window window, uint decorations);
+
+  [CCode (lower_case_prefix = "utils_")]
+  public extern void volume_eject (GLib.Volume volume);
 }
