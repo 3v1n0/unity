@@ -842,6 +842,8 @@ namespace Unity
                          resize_last_x2 - event.pinch_event.bounding_box_x2,
                          resize_last_y2 - event.pinch_event.bounding_box_y2);
 
+                  return;
+
                   var nx = resize_window.x;
                   var ny = resize_window.y;
                   var nwidth = resize_window.width;
@@ -1148,8 +1150,6 @@ namespace Unity
                       float nheight = 0;
                       bool  move_resize = false;
 
-                      //print (@"$event\n");
-
                       if (start_pan_window.y == PANEL_HEIGHT)
                         {
                           if (event.pan_event.delta_y < 0.0f)
@@ -1177,11 +1177,15 @@ namespace Unity
                         }
                       else
                         {
-                          nx = start_pan_window.x;
-                          ny = start_pan_window.y;
+                          /* FIXME: We need to somehow convince Mutter to tell
+                           * us the size of the frame. 27 = top + bottom frame
+                           * 1 = left frame
+                           * 24 = size of top frame
+                           */
+                          nx = start_pan_window.x + 1.0f;
+                          ny = start_pan_window.y + 27.0f; /* Kittens are dying */
                           nwidth = start_pan_window.width;
-                          nheight = start_pan_window.height;
-
+                          nheight = start_pan_window.height - 24.0f;
                           move_resize = true;
                         }
 

@@ -791,6 +791,8 @@ namespace Mutter {
 		public static void unminimize (Mutter.MetaWindow window);
     [CCode (cname = "meta_window_move_resize")]
     public static void move_resize (Mutter.MetaWindow windiow, bool user_op, int root_x, int root_y, int width, int height);
+    [CCode (cname = "meta_window_get_geometry")]
+    public static void get_geometry (Mutter.MetaWindow windiow, out int x, out int y, out int width, out int height);
 	}
 	[Compact]
 	[CCode (cheader_filename = "mutter-plugins.h")]
