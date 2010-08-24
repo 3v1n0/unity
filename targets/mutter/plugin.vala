@@ -1058,7 +1058,7 @@ namespace Unity
                               last_pan_maximised_x_root = event.root_x;
                             }
 
-                          print ("EVENT X: %f\n", event.root_x);
+                          print ("EVENT X: %f %f\n", event.root_x, last_pan_maximised_x_root);
                           if (event.root_x < last_pan_maximised_x_root - 30.0f)
                             {
                               debug ("LEFT MAXIMISE");
@@ -1070,8 +1070,6 @@ namespace Unity
                         }
                      else
                         {
-                          last_pan_maximised_x_root = 0.0f;
-
                           start_pan_window.x += Math.floorf (event.pan_event.delta_x);
                           start_pan_window.y += Math.floorf (event.pan_event.delta_y);
                           start_pan_window.x = float.max (start_pan_window.x, QUICKLAUNCHER_WIDTH);
