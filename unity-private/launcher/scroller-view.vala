@@ -193,14 +193,26 @@ namespace Unity.Launcher
                  "drag-indicator-opacity", 1.0f);
       });
 
-      drag_controller.drag_drop.connect (() => {
+      drag_controller.drag_drop.connect ((drag_model, x, y) => {
         foreach (Clutter.Actor child in model)
           {
             child.set_reactive (false);
           }
-          if (last_known_pointer_x > get_width ()) contract_launcher ();
+          if (x > get_width ()) contract_launcher ();
+          else
+            {
+              Idle.add (() => {
+                order_children (false);
+              });
+            }
           animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
                    "drag-indicator-opacity", 0.0f);
+      });
+
+      drag_controller.drag_motion.connect ((model, x, y) => {
+        last_known_pointer_x = x;
+        if (x > 200 + get_width ()) contract_launcher ();
+        else expand_launcher (y);
       });
 
       set_reactive (true);
@@ -346,7 +358,6 @@ namespace Unity.Launcher
 
     private void on_drag_indicator_active_change ()
     {
-      debug ("active change");
       if (drag_indicator_active)
         {
           animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
@@ -363,7 +374,7 @@ namespace Unity.Launcher
 
     private void on_drag_indicator_index_change ()
     {
-      debug (@"index changed $drag_indicator_index");
+      //debug (@"index changed $drag_indicator_index");
       order_children (false);
       queue_relayout ();
     }
@@ -473,7 +484,6 @@ namespace Unity.Launcher
               picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy + spacing*2);
               if (picked_actor is ScrollerChild == false)
                 {
-                  debug (@"didn't pick scroller child for pos $iy - fallbacking");
                   if (return_minus_if_fail)
                     ret_val = -1;
                   // couldn't pick a single actor, return 0

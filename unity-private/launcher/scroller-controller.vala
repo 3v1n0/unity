@@ -27,7 +27,7 @@ namespace Unity.Launcher
     private Gee.ArrayList<ScrollerChildController> childcontrollers;
 
     /* constants */
-    private const uint DRAG_SAFE_ZONE = 300;
+    private const uint DRAG_SAFE_ZONE = 200;
 
     private Bamf.Matcher matcher;
 
@@ -302,9 +302,25 @@ namespace Unity.Launcher
           // we need to remove this child from the model, its been dragged out
           model.remove (retcont);
           view.drag_indicator_active = false;
+          if (retcont is ScrollerChild)
+            {
+              if (retcont.enable_close_state == false);
+                {
+                  retcont.enable_close_state = true;
+                }
+            }
         }
       else
         {
+          if (retcont is ScrollerChild)
+            {
+
+              if (retcont.enable_close_state == true)
+                {
+                  retcont.enable_close_state = false;
+                }
+            }
+
           // if the actor is not in the model, add it. because its now in there!
           // find the index at this position
           int model_index = view.get_model_index_at_y_pos_no_anim (y, true);
@@ -312,38 +328,15 @@ namespace Unity.Launcher
 
           //we have to check to see if we would still be over the index
           //if it was done animating
-/*
-          GLib.Value value = Value (typeof (float));
-          var child = model[model_index];
-          Clutter.Animation anim = child.get_animation ();
-          if (anim is Clutter.Animation)
-            {
-              debug ("is animating");
-              Clutter.Interval interval = anim.get_interval ("position");
-              interval.get_final_value (value);
-            }
+          if (retcont in model)
+            model.move (retcont, int.max (model_index, 0));
           else
+            model.insert (retcont, int.max (model_index, 0));
+          if (model_index != view.drag_indicator_index)
             {
-              debug ("is not animating");
-              value.set_float (y);
+              view.drag_indicator_index = model_index;
+              view.do_queue_redraw ();
             }
-
-          debug ("%f", Math.fabsf (value.get_float () - y));
-
-          if (Math.fabsf (value.get_float () - y) < 48)
-            {
-              debug ("moving things");
-*/
-              if (retcont in model)
-                model.move (retcont, int.max (model_index, 0));
-              else
-                model.insert (retcont, int.max (model_index, 0));
-              if (model_index != view.drag_indicator_index)
-                {
-                  view.drag_indicator_index = model_index;
-                  view.do_queue_redraw ();
-                }
-            //}
         }
     }
 
@@ -365,7 +358,7 @@ namespace Unity.Launcher
         {
           ; /* Do nothing */
         }
-      else if (x > view.get_width ())
+      else if (x > view.get_width () + DRAG_SAFE_ZONE)
         {
           // it was dropped outside of the launcher.. oh well, obliterate it.
           if (retcont.controller is ApplicationController)
