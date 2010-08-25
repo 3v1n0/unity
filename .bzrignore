@@ -347,3 +347,4 @@ tests/unit/test-place-browser.c
 unity-private/places/places-place-home-renderer.c
 unity/unity-stripe-texture.c
 unity/unity-layered-bin.c
+unity-private/places/places-default-renderer-tiles.c

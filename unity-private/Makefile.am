@@ -91,6 +91,7 @@ panel_sources = \
 places_sources = \
   places/places-controller.vala \
   places/places-default-renderer-group.vala \
+  places/places-default-renderer-tiles.vala \
   places/places-default-renderer.vala \
   places/places-folder-browser-renderer.vala \
   places/places-place-bar.vala \
