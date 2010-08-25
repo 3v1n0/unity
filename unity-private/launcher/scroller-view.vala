@@ -80,6 +80,7 @@ namespace Unity.Launcher
     private ScrollerPhase current_phase = ScrollerPhase.SETTLING;
     private uint last_motion_event_time = 0;
     private ScrollerViewType view_type = ScrollerViewType.CONTRACTED;
+    private bool do_logic_pick = true;
     private float last_known_pointer_x = 0.0f;
 
     /*
@@ -494,7 +495,7 @@ namespace Unity.Launcher
 
     public int get_model_index_at_y_pos (float y, bool return_minus_if_fail=false)
     {
-      if (view_type == ScrollerViewType.CONTRACTED)
+      if (!do_logic_pick)
         return get_model_index_at_y_pos_pick (y, return_minus_if_fail);
       else
         return get_model_index_at_y_pos_logic (y, return_minus_if_fail);
@@ -711,6 +712,7 @@ namespace Unity.Launcher
       // get the index of the icon we are hovering over
       if (get_total_children_height () > get_available_height ())
         {
+          do_logic_pick = false;
           int index = get_model_index_at_y_pos (absolute_y);
 
           // set our state to what we will end up being so we can find the correct
@@ -734,6 +736,7 @@ namespace Unity.Launcher
           order_children (false); // have to order twice, boo
 
           queue_relayout ();
+          do_logic_pick = true;
         }
     }
 
@@ -823,6 +826,10 @@ namespace Unity.Launcher
         }
 
       //Clutter.grab_pointer (this);
+      if (is_scrolling)
+        {
+          passthrough_button_press_event (event);
+        }
       button_down = true;
       previous_y_position = event.button.y;
       previous_y_time = event.button.time;
@@ -846,6 +853,7 @@ namespace Unity.Launcher
 
       if (is_scrolling)
         {
+          passthrough_button_release_event (event);
           is_scrolling = false;
           Clutter.ungrab_pointer ();
           get_stage ().motion_event.disconnect (on_motion_event);

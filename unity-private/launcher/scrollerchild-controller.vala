@@ -139,6 +139,7 @@ namespace Unity.Launcher
 
     private bool on_release_event (Clutter.Event event)
     {
+      child.grabbed_push = 0;
       if (event.button.button == 1 &&
           button_down == true &&
           event.button.time - last_press_time < 500)
