@@ -370,9 +370,7 @@ namespace Unity.Launcher
           Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
           try
             {
-              var desktop_keyfile = new KeyFile ();
-              desktop_keyfile.load_from_file (desktop_file, 0);
-              AppInfo appinfo = new DesktopAppInfo.from_keyfile (desktop_keyfile);
+              var appinfo = new DesktopAppInfo.from_filename (desktop_file);
               context.set_screen (Gdk.Display.get_default ().get_default_screen ());
               context.set_timestamp (Gdk.CURRENT_TIME);
 
