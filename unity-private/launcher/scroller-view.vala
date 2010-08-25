@@ -346,7 +346,7 @@ namespace Unity.Launcher
       enter_event.disconnect (on_enter_event);
       leave_event.disconnect (on_leave_event);
       button_press_event.disconnect (passthrough_button_press_event);
-      Clutter.Actor picked_actor = handle_event (event);
+      Clutter.Actor picked_actor = handle_event (event, is_scrolling);
       if (picked_actor is Clutter.Actor)
         picked_actor.do_event (event, false);
 
@@ -364,7 +364,7 @@ namespace Unity.Launcher
       enter_event.disconnect (on_enter_event);
       leave_event.disconnect (on_leave_event);
       button_release_event.disconnect (passthrough_button_release_event);
-      Clutter.Actor picked_actor = handle_event (event);
+      Clutter.Actor picked_actor = handle_event (event, is_scrolling);
       if (picked_actor is Clutter.Actor)
         picked_actor.do_event (event, false);
 
