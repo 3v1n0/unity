@@ -36,6 +36,88 @@ namespace Unity.Places
     public abstract void about_to_show ();
   }
 
+  public class FileInfoTile : Tile
+  {
+    static const int ICON_SIZE = 64;
+
+    private bool shown = false;
+
+    public FileInfoTile (Dee.ModelIter iter,
+                         string        uri,
+                         string?       icon_hint,
+                         string?       mimetype,
+                         string        display_name,
+                         string?       comment)
+    {
+      Object (orientation:Ctk.Orientation.HORIZONTAL,
+              iter:iter,
+              display_name:display_name,
+              icon_hint:icon_hint,
+              uri:uri,
+              mimetype:mimetype,
+              comment:comment);
+    }
+
+    construct
+    {
+      unowned Ctk.Text text = get_text ();
+      text.ellipsize = Pango.EllipsizeMode.MIDDLE;
+    }
+
+    public override void about_to_show ()
+    {
+      if (shown)
+        return;
+      shown = true;
+
+      Timeout.add (0, () => {
+        set_label (display_name);
+        set_icon ();
+        return false;
+      });
+    }
+
+    private override void get_preferred_width (float for_height,
+                                               out float mwidth,
+                                               out float nwidth)
+    {
+      mwidth = 160.0f;
+      nwidth = 160.0f;
+    }
+
+    private override void clicked ()
+    {
+      activated (uri, mimetype);
+    }
+    
+    private void set_icon ()
+    {
+      get_image ().size = ICON_SIZE;
+      var cache = PixbufCache.get_default ();
+
+      if (icon_hint != null && icon_hint != "")
+        {
+          cache.set_image_from_gicon_string (get_image (),
+                                             icon_hint,
+                                             ICON_SIZE);
+        }
+      else if (mimetype != null && mimetype != "")
+        {
+          var icon = GLib.g_content_type_get_icon (mimetype);
+          cache.set_image_from_gicon_string (get_image (),
+                                             icon.to_string(),
+                                             ICON_SIZE);
+        }
+      else
+        {
+          cache.set_image_from_icon_name (get_image (),
+                                          Tile.DEFAULT_ICON,
+                                          ICON_SIZE);
+        }
+    }
+
+  }
+
   public class ShowcaseTile : Tile
   {
     static const int ICON_SIZE = 64;

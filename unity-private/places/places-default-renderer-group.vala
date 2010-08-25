@@ -271,7 +271,17 @@ namespace Unity.Places
       
       Tile button;
       
-      if (group_renderer == "UnityShowcaseRenderer")
+
+      if (group_renderer == "UnityFileInfoRenderer")
+        {
+          button = new FileInfoTile (iter,
+                                     results.get_string (iter, 0),
+                                     results.get_string (iter, 1),
+                                     results.get_string (iter, 3),
+                                     results.get_string (iter, 4),
+                                     results.get_string (iter, 5));
+        }
+      else if (group_renderer == "UnityShowcaseRenderer")
         {
           button = new ShowcaseTile (iter,
                                      results.get_string (iter, 0),
