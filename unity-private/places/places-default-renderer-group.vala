@@ -21,7 +21,7 @@ namespace Unity.Places
 {
   public class DefaultRendererGroup : ExpandingBin
   {
-    static const float PADDING = 24.0f;
+    static const float PADDING = 48.0f;
     static const int   SPACING = 0;
     static const int   OMG_FOOTEL_SUCKS_CANT_HANDLE_MANY_TEXTURES = 100;
 
@@ -268,12 +268,27 @@ namespace Unity.Places
 
       if (n_results == OMG_FOOTEL_SUCKS_CANT_HANDLE_MANY_TEXTURES)
         return;
-      var button = new DefaultTile (iter,
+      
+      Tile button;
+      
+      if (group_renderer == "UnityShowcaseRenderer")
+        {
+          button = new ShowcaseTile (iter,
+                                     results.get_string (iter, 0),
+                                     results.get_string (iter, 1),
+                                     results.get_string (iter, 3),
+                                     results.get_string (iter, 4),
+                                     results.get_string (iter, 5));
+        }
+      else
+        {
+          button = new DefaultTile (iter,
                                     results.get_string (iter, 0),
                                     results.get_string (iter, 1),
                                     results.get_string (iter, 3),
                                     results.get_string (iter, 4),
                                     results.get_string (iter, 5));
+        }
       renderer.add_actor (button);
       button.show ();
 

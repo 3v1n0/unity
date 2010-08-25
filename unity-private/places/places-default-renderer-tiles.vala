@@ -21,6 +21,8 @@ namespace Unity.Places
 {
   public abstract class Tile : Ctk.Button
   {
+    static const string DEFAULT_ICON = "text-x-preview";
+
     public unowned Dee.ModelIter iter { get; construct; }
 
     public string  display_name { get; construct; }
@@ -34,18 +36,92 @@ namespace Unity.Places
     public abstract void about_to_show ();
   }
 
+  public class ShowcaseTile : Tile
+  {
+    static const int ICON_SIZE = 64;
+
+    private bool shown = false;
+
+    public ShowcaseTile (Dee.ModelIter iter,
+                         string        uri,
+                         string?       icon_hint,
+                         string?       mimetype,
+                         string        display_name,
+                         string?       comment)
+    {
+      Object (orientation:Ctk.Orientation.VERTICAL,
+              iter:iter,
+              display_name:display_name,
+              icon_hint:icon_hint,
+              uri:uri,
+              mimetype:mimetype,
+              comment:comment);
+    }
+
+    construct
+    {
+      unowned Ctk.Text text = get_text ();
+      text.ellipsize = Pango.EllipsizeMode.MIDDLE;
+    }
+
+    public override void about_to_show ()
+    {
+      if (shown)
+        return;
+      shown = true;
+
+      Timeout.add (0, () => {
+        set_label (display_name);
+        set_icon ();
+        return false;
+      });
+    }
+
+    private override void get_preferred_width (float for_height,
+                                               out float mwidth,
+                                               out float nwidth)
+    {
+      mwidth = 160.0f;
+      nwidth = 160.0f;
+    }
+
+    private override void clicked ()
+    {
+      activated (uri, mimetype);
+    }
+    
+    private void set_icon ()
+    {
+
+      get_image ().size = ICON_SIZE;
+      var cache = PixbufCache.get_default ();
+
+      if (icon_hint != null && icon_hint != "")
+        {
+          cache.set_image_from_gicon_string (get_image (),
+                                             icon_hint,
+                                             ICON_SIZE);
+        }
+      else if (mimetype != null && mimetype != "")
+        {
+          var icon = GLib.g_content_type_get_icon (mimetype);
+          cache.set_image_from_gicon_string (get_image (),
+                                             icon.to_string(),
+                                             ICON_SIZE);
+        }
+      else
+        {
+          cache.set_image_from_icon_name (get_image (),
+                                          Tile.DEFAULT_ICON,
+                                          ICON_SIZE);
+        }
+    }
+
+  }
+
   public class DefaultTile : Tile
   {
     static const int ICON_SIZE = 48;
-    static const string DEFAULT_ICON = "text-x-preview";
-/*
-    public unowned Dee.ModelIter iter { get; construct; }
-
-    public string  display_name { get; construct; }
-    public string? icon_hint    { get; construct; }
-    public string  uri          { get; construct; }
-    public string? mimetype     { get; construct; }
-    public string? comment      { get; construct; }*/
 
     private bool shown = false;
 
@@ -88,8 +164,8 @@ namespace Unity.Places
                                                out float mwidth,
                                                out float nwidth)
     {
-      mwidth = 150.0f;
-      nwidth = 150.0f;
+      mwidth = 160.0f;
+      nwidth = 160.0f;
     }
 
     private override void clicked ()
@@ -103,16 +179,22 @@ namespace Unity.Places
 
       if (icon_hint != null && icon_hint != "")
         {
-          cache.set_image_from_gicon_string (get_image (), icon_hint, ICON_SIZE);
+          cache.set_image_from_gicon_string (get_image (),
+                                             icon_hint,
+                                             ICON_SIZE);
         }
       else if (mimetype != null && mimetype != "")
         {
           var icon = GLib.g_content_type_get_icon (mimetype);
-          cache.set_image_from_gicon_string (get_image (), icon.to_string(), ICON_SIZE);
+          cache.set_image_from_gicon_string (get_image (),
+                                             icon.to_string(),
+                                             ICON_SIZE);
         }
       else
         {
-          cache.set_image_from_icon_name (get_image (), DEFAULT_ICON, ICON_SIZE);
+          cache.set_image_from_icon_name (get_image (),
+                                          Tile.DEFAULT_ICON,
+                                          ICON_SIZE);
         }
     }
   }
