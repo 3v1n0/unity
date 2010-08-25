@@ -89,6 +89,7 @@ panel_sources = \
   panel/panel-window-buttons.vala
 
 places_sources = \
+  places/places-button.vala \
   places/places-controller.vala \
   places/places-default-renderer-group.vala \
   places/places-default-renderer-tiles.vala \

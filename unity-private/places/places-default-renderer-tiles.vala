@@ -19,7 +19,7 @@
 
 namespace Unity.Places
 {
-  public abstract class Tile : Ctk.Button
+  public abstract class Tile : Button
   {
     static const string DEFAULT_ICON = "text-x-preview";
 
@@ -38,9 +38,10 @@ namespace Unity.Places
 
   public class FileInfoTile : Tile
   {
-    static const int   ICON_WIDTH  = 48;
+    static const int   ICON_WIDTH = 56;
     static const int   ICON_HEIGHT = 48;
     static const float LINE_PADDING = 1.0f;
+    static const float HPADDING = 4.0f;
     static const float VPADDING = 4.0f;
 
     private bool shown = false;
@@ -103,6 +104,23 @@ namespace Unity.Places
       time.ellipsize = Pango.EllipsizeMode.MIDDLE;
       time.set_parent (this);
       time.show ();
+
+      notify["state"].connect (() => {
+
+        if (state == Ctk.ActorState.STATE_NORMAL ||
+            state == Ctk.ActorState.STATE_PRELIGHT)
+          {
+            leaf.color = { 255, 255, 255, 255 };
+            folder.color = { 255, 255, 255, 150 };
+            time.color = { 255, 255, 255, 255 };
+          }
+        else
+          {
+            leaf.color = { 50, 50, 50, 200 };
+            folder.color = { 50, 50, 50, 100 };
+            time.color = { 50, 50, 50, 200 };
+          }
+      });
 
       Timeout.add (0, () => {
 
@@ -276,6 +294,7 @@ namespace Unity.Places
   public class ShowcaseTile : Tile
   {
     static const int ICON_SIZE = 64;
+    static const float PADDING = 4.0f;
 
     private bool shown = false;
 
@@ -297,6 +316,8 @@ namespace Unity.Places
 
     construct
     {
+      padding = { PADDING, PADDING, PADDING, PADDING };
+
       unowned Ctk.Text text = get_text ();
       text.ellipsize = Pango.EllipsizeMode.MIDDLE;
     }
@@ -359,6 +380,7 @@ namespace Unity.Places
   public class DefaultTile : Tile
   {
     static const int ICON_SIZE = 48;
+    static const float PADDING = 4.0f;
 
     private bool shown = false;
 
@@ -380,6 +402,7 @@ namespace Unity.Places
 
     construct
     {
+      padding = { PADDING, PADDING, PADDING, PADDING };
       unowned Ctk.Text text = get_text ();
       text.ellipsize = Pango.EllipsizeMode.MIDDLE;
     }

@@ -496,7 +496,7 @@ namespace Unity.Places
 
       if ((get_parent () as PlaceSearchSectionsBar).style == SectionStyle.BUTTONS)
         {
-          cr.line_to  (x, y + radius);
+          cr.move_to  (x, y + radius);
           cr.curve_to (x, y,
                        x, y,
                        x + radius, y);
