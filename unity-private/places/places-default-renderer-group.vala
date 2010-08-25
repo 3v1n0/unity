@@ -21,7 +21,7 @@ namespace Unity.Places
 {
   public class DefaultRendererGroup : ExpandingBin
   {
-    static const float PADDING = 48.0f;
+    static const float PADDING = 54.0f;
     static const int   SPACING = 0;
     static const int   OMG_FOOTEL_SUCKS_CANT_HANDLE_MANY_TEXTURES = 100;
 
@@ -87,7 +87,7 @@ namespace Unity.Places
 
     construct
     {
-      padding = { 0.0f, 0.0f, PADDING, 0.0f};
+      padding = { 0.0f, 0.0f, 0.0f, 0.0f};
       hide ();
 
       if (group_renderer == "UnityLinkGroupRenderer")
@@ -143,7 +143,7 @@ namespace Unity.Places
       expander.show ();
 
       sep = new Ctk.Button (Ctk.Orientation.HORIZONTAL);
-      var rect = new Clutter.Rectangle.with_color ({ 255, 255, 255, 100 });
+      var rect = new Clutter.Rectangle.with_color ({ 255, 255, 255, 70 });
       sep.add_actor (rect);
       rect.height = 1.0f;
       vbox.pack (sep, false, false);
@@ -217,7 +217,15 @@ namespace Unity.Places
                 }
             });
         }
-      else if (group_renderer == "UnityFolderGroupRenderer")
+      else
+        {
+          var pad = new Clutter.Rectangle.with_color ({ 255, 255, 255, 0 });
+          vbox.pack (pad, false, false);
+          pad.height = PADDING;
+          pad.show ();
+        }
+
+      if (group_renderer == "UnityFolderGroupRenderer")
         {
           title_button.hide ();
           sep.hide ();
@@ -254,7 +262,7 @@ namespace Unity.Places
           child.height != unexpanded_height)
         {
           var h = more_results_button != null ? more_results_button.height : 0;
-          unexpanded_height = title_button.height + 1.0f + child.height + h;
+          unexpanded_height = title_button.height + 1.0f + child.height + h + PADDING;
         }
     }
 

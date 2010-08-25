@@ -21,7 +21,7 @@ namespace Unity.Places
 {
   public class DefaultRenderer : LayeredBin, Unity.Place.Renderer
   {
-    static const float TOP_PADDING = 20.0f;
+    static const float TOP_PADDING = 32.0f;
     static const float PADDING = 12.0f;
     static const int   SPACING = 0;
 
@@ -42,14 +42,14 @@ namespace Unity.Places
 
     construct
     {
-      padding = { 0.0f, 0.0f, 0.0f, 0.0f };
+      padding = { TOP_PADDING, 0.0f, 0.0f, 0.0f };
 
       scroll = new Ctk.ScrollView ();
       add_actor (scroll);
       scroll.show ();
 
       box = new Ctk.VBox (SPACING);
-      box.padding = { TOP_PADDING, PADDING, 0.0f, PADDING};
+      box.padding = { 0.0f, PADDING, 0.0f, PADDING};
       box.homogeneous = false;
       scroll.add_actor (box);
       box.show ();
