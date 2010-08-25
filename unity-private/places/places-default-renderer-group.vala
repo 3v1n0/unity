@@ -31,6 +31,28 @@ namespace Unity.Places
     public string    icon_hint      { get; construct; }
     public Dee.Model results        { get; construct; }
 
+    private bool _always_expanded = false;
+    public  bool always_expanded {
+      get { return _always_expanded; }
+      set {
+        if (_always_expanded != value)
+          {
+            _always_expanded = value;
+
+            if (_always_expanded == true)
+              {
+                var children = renderer.get_children ();
+                foreach (Clutter.Actor child in children)
+                  {
+                    Tile tile = child as Tile;
+                    tile.about_to_show ();
+                  }
+                title_button.activate ();
+              }
+          }
+      }
+    }
+
     private Ctk.VBox      vbox;
     private Ctk.Button    title_button;
     private Ctk.HBox      title_box;
@@ -255,7 +277,7 @@ namespace Unity.Places
       renderer.add_actor (button);
       button.show ();
 
-      if (bin_state == ExpandingBinState.EXPANDED)
+      if (bin_state == ExpandingBinState.EXPANDED || _always_expanded)
         {
           button.about_to_show ();
         }
@@ -266,7 +288,7 @@ namespace Unity.Places
 
       if (bin_state == ExpandingBinState.CLOSED)
         {
-          if (group_renderer == "UnityFolderGroupRenderer")
+          if (group_renderer == "UnityFolderGroupRenderer" || _always_expanded)
             bin_state = ExpandingBinState.EXPANDED;
           else
             bin_state = ExpandingBinState.UNEXPANDED;

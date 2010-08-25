@@ -32,6 +32,8 @@ namespace Unity.Places
     private Dee.Model groups_model;
     private Dee.Model results_model;
 
+    private string[] expanded = null;
+
     public DefaultRenderer ()
     {
       Object ();
@@ -61,7 +63,11 @@ namespace Unity.Places
     {
       groups_model = groups;
       results_model = results;
-
+      
+      var expandable = hints["ExpandedGroups"];
+      if (expandable != null && expandable != "")
+        expanded = expandable.split (" ");
+        
       unowned Dee.ModelIter iter = groups.get_first_iter ();
       while (!groups.is_last (iter))
         {
@@ -139,6 +145,14 @@ namespace Unity.Places
           group.activated.connect ((u, m) => { activated (u, m); } );
           group.set_data<unowned Dee.ModelIter> ("model-iter", iter);
           box.pack (group, false, true);
+
+          foreach (string id in expanded)
+            {
+              if (model.get_position (iter) == id.to_int ())
+                {
+                  group.always_expanded = true;
+                }
+            }
         }
     }
 
