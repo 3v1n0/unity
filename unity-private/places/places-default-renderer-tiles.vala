@@ -40,7 +40,7 @@ namespace Unity.Places
   {
     static const int   ICON_WIDTH = 56;
     static const int   ICON_HEIGHT = 48;
-    static const float LINE_PADDING = 1.0f;
+    static const float LINE_PADDING = 0.0f;
     static const float HPADDING = 4.0f;
     static const float VPADDING = 4.0f;
 
@@ -48,6 +48,7 @@ namespace Unity.Places
 
     private Ctk.Image icon;
     private Ctk.Text  leaf;
+    private Ctk.Button folder_button;
     private Ctk.Text  folder;
     private Ctk.Text  time;
 
@@ -94,10 +95,15 @@ namespace Unity.Places
       leaf.set_parent (this);
       leaf.show ();
 
+      folder_button = new Button ();
+      folder_button.set_parent (this);
+      folder_button.show ();
+      folder_button.padding = { 1.0f, 0.0f, 0.0f, 0.0f };
+
       folder = new Ctk.Text ("");
       folder.ellipsize = Pango.EllipsizeMode.MIDDLE;
-      folder.set_parent (this);
-      folder.color = { 255, 255, 255, 150 };
+      folder_button.add_actor (folder);
+      folder.color = { 255, 255, 255, 100 };
       folder.show ();
 
       time = new Ctk.Text (uri == comment ? "" : comment);
@@ -111,7 +117,7 @@ namespace Unity.Places
             state == Ctk.ActorState.STATE_PRELIGHT)
           {
             leaf.color = { 255, 255, 255, 255 };
-            folder.color = { 255, 255, 255, 150 };
+            folder.color = { 255, 255, 255, 100 };
             time.color = { 255, 255, 255, 255 };
           }
         else
@@ -132,7 +138,17 @@ namespace Unity.Places
           {
             var parent = file.get_parent ();
             if (parent is File) 
-              folder.text = parent.get_basename ();              
+              {
+                folder.text = parent.get_basename ();
+                folder_button.clicked.connect (() => {
+                  try {
+                    AppInfo.launch_default_for_uri (parent.get_uri (), null);
+                    global_shell.hide_unity ();
+                  } catch (Error e) {
+                    warning (@"Unable to launch parent folder: $(e.message)");
+                  }
+                });
+              }
             else
               folder.text = "";
           }
@@ -211,7 +227,7 @@ namespace Unity.Places
       y+= LINE_PADDING + mh;
       child_box.y1 = y;
       child_box.y2 = y + mh;
-      folder.allocate (child_box, flags);
+      folder_button.allocate (child_box, flags);
 
       y+=LINE_PADDING + mh;
       child_box.y1 = y;
@@ -248,7 +264,7 @@ namespace Unity.Places
         {
           icon.paint ();
           leaf.paint ();
-          folder.paint ();
+          folder_button.paint ();
           time.paint ();
         }
     }
@@ -261,7 +277,7 @@ namespace Unity.Places
         {
           icon.paint ();
           leaf.paint ();
-          folder.paint ();
+          folder_button.paint ();
           time.paint ();
         }
     }
@@ -273,7 +289,7 @@ namespace Unity.Places
         {
           icon.map ();
           leaf.map ();
-          folder.map ();
+          folder_button.map ();
           time.map ();
         }
     }
@@ -284,7 +300,7 @@ namespace Unity.Places
         {
           icon.unmap ();
           leaf.unmap ();
-          folder.unmap ();
+          folder_button.unmap ();
           time.unmap ();
         }
       base.unmap ();
