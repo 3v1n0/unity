@@ -204,13 +204,11 @@ namespace Unity.Places
                 }
             });
         }
-      else
-        {
-          var pad = new Clutter.Rectangle.with_color ({ 255, 255, 255, 0 });
-          vbox.pack (pad, false, false);
-          pad.height = PADDING;
-          pad.show ();
-        }
+
+      var pad = new Ctk.Button (Ctk.Orientation.HORIZONTAL);
+      pad.get_image ().size = (int)PADDING;
+      vbox.pack (pad, false, false);
+      pad.show ();
 
       if (group_renderer == "UnityFolderGroupRenderer")
         {
@@ -247,7 +245,7 @@ namespace Unity.Places
       if (child is Clutter.Actor &&
           child.height != unexpanded_height)
         {
-          var h = more_results_button != null ? more_results_button.height : 0;
+          var h = more_results_button != null && more_results_button.opacity != 0 ? PADDING : 0;
           unexpanded_height = title_button.height + 1.0f + child.height + h + PADDING;
         }
     }
@@ -531,6 +529,8 @@ namespace Unity.Places
              bg.remove_effect (glow);
              glow = null;
            }
+
+         queue_relayout ();
        }
      }
 
