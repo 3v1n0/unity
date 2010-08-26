@@ -66,7 +66,6 @@ namespace Unity.Launcher
       child.enter_event.connect (on_enter_event);
       child.leave_event.connect (on_leave_event);
       child.motion_event.connect (on_motion_event);
-
       child.opacity = 0;
       var anim = child.animate (Clutter.AnimationMode.EASE_IN_QUAD,
                                 SHORT_DELAY,
