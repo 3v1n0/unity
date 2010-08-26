@@ -49,6 +49,7 @@ namespace Unity.Places
 
       cr.set_operator (Cairo.Operator.OVER);
       cr.set_source_rgba (1.0f, 0.0f, 0.0f, 1.0f);
+      cr.paint ();
     }
 
     private void
@@ -61,6 +62,7 @@ namespace Unity.Places
 
       cr.set_operator (Cairo.Operator.OVER);
       cr.set_source_rgba (0.0f, 1.0f, 0.0f, 1.0f);
+      cr.paint ();
     }
 
     construct
@@ -74,6 +76,8 @@ namespace Unity.Places
       scroll.set_scroll_bar (trough, slider);
       add_actor (scroll);
       scroll.show ();
+      trough.show ();
+      slider.show ();
 
       box = new Ctk.VBox (SPACING);
       box.padding = { 0.0f, PADDING, 0.0f, PADDING};
