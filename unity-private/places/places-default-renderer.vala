@@ -61,8 +61,39 @@ namespace Unity.Places
       cr.paint ();
 
       cr.set_operator (Cairo.Operator.OVER);
-      cr.set_source_rgba (0.0f, 1.0f, 0.0f, 1.0f);
+      
+      if (this.scroll.get_state () == Ctk.ActorState.STATE_NORMAL)
+        cr.set_source_rgba (0.0f, 1.0f, 0.0f, 1.0f);
+
+      if (this.scroll.get_state () == Ctk.ActorState.STATE_PRELIGHT)
+        cr.set_source_rgba (0.5f, 1.0f, 0.5f, 1.0f);
+
+      if (this.scroll.get_state () == Ctk.ActorState.STATE_ACTIVE)
+        cr.set_source_rgba (0.75f, 1.0f, 0.75f, 1.0f);
+      
       cr.paint ();
+    }
+
+    private void
+    on_scroll_state_changed ()
+    {
+      switch (this.scroll.get_state ())
+      {
+        case Ctk.ActorState.STATE_NORMAL:
+          print ("normal/off\n");
+          scroll.do_queue_redraw ();
+        break;
+
+        case Ctk.ActorState.STATE_PRELIGHT:
+          print ("prelight/over\n");
+          scroll.do_queue_redraw ();
+        break;
+
+        case Ctk.ActorState.STATE_ACTIVE:
+          print ("active/down\n");
+          scroll.do_queue_redraw ();
+        break;
+      }
     }
 
     construct
@@ -78,6 +109,8 @@ namespace Unity.Places
       scroll.show ();
       trough.show ();
       slider.show ();
+
+      notify["state"].connect (on_state_changed);
 
       box = new Ctk.VBox (SPACING);
       box.padding = { 0.0f, PADDING, 0.0f, PADDING};
