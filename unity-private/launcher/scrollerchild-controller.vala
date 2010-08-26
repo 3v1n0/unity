@@ -237,6 +237,12 @@ namespace Unity.Launcher
     private bool on_motion_event (Clutter.Event event)
     {
       var drag_controller = Unity.Drag.Controller.get_default ();
+      if (!Unity.Launcher.disable_quicklists)
+        {
+          button_down = false;
+          return false;
+        }
+
       if (button_down && drag_controller.is_dragging == false && can_drag ())
         {
           menu_state = ScrollerChildControllerMenuState.NO_MENU;

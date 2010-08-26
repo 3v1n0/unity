@@ -1086,15 +1086,12 @@ namespace Unity.Launcher
           delta -= 16;
           switch (current_phase) {
             case (ScrollerPhase.SETTLING):
-              debug ("settling");
               do_anim_settle (timeline, msecs);
               break;
             case (ScrollerPhase.FLUNG):
-              debug ("flung");
               do_anim_fling (timeline, msecs);
               break;
             case (ScrollerPhase.BOUNCE):
-              debug ("bouncing");
               do_anim_bounce (timeline, msecs);
               break;
             case (ScrollerPhase.NONE):
@@ -1135,37 +1132,16 @@ namespace Unity.Launcher
 
       // we devide by 60 because get 60 ticks a second
       float scroll_move_amount = scroll_speed / 60.0f;
-      move_scroll_position (scroll_move_amount);
+      move_scroll_position (scroll_move_amount, true);
 
       //after a fling, we have to figure out if we want to change our
       // scroller phase or not
-
-/*
-      if(scroll_move_amount <= -1.0 && -scroll_position > total_child_height - height ||
-         scroll_move_amount >=  1.0 && scroll_position > 0)
-        {
-          current_phase = ScrollerPhase.BOUNCE;
-        }
-*/
 
 
       if (Math.fabsf (scroll_move_amount) < 1.0)
         {
           current_phase = ScrollerPhase.NONE;
         }
-/*
-      if (Math.fabsf (scroll_move_amount) < 1.0 &&
-          (scroll_position > 0 || -scroll_position > total_child_height - height))
-        {
-          settle_position = get_aligned_settle_position ();
-          debug (@"settling to: $settle_position");
-          current_phase = ScrollerPhase.SETTLING;
-        }
-      else if (Math.fabsf (scroll_move_amount) < 1.0)
-        {
-          current_phase = ScrollerPhase.NONE;
-        }
-*/
     }
 
     private void do_anim_bounce (Clutter.Timeline timeline, int msecs)
