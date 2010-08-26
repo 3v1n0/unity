@@ -27,21 +27,51 @@ namespace Unity.Places
     private EmptySearchGroup search_empty;
     private EmptySectionGroup section_empty;
 
-    private Ctk.ScrollView scroll;
-    private Ctk.VBox box;
-    private Dee.Model groups_model;
-    private Dee.Model results_model;
+    private Ctk.ScrollView    scroll;
+    private Unity.CairoCanvas trough;
+    private Unity.CairoCanvas slider;
+    private Ctk.VBox          box;
+    private Dee.Model         groups_model;
+    private Dee.Model         results_model;
 
     public DefaultRenderer ()
     {
       Object ();
     }
 
+    private void
+    trough_paint (Cairo.Context cr,
+                  int           width,
+                  int           height)
+    {
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      cr.set_operator (Cairo.Operator.OVER);
+      cr.set_source_rgba (1.0f, 0.0f, 0.0f, 1.0f);
+    }
+
+    private void
+    slider_paint (Cairo.Context cr,
+                  int           width,
+                  int           height)
+    {
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      cr.set_operator (Cairo.Operator.OVER);
+      cr.set_source_rgba (0.0f, 1.0f, 0.0f, 1.0f);
+    }
+
     construct
     {
       padding = { 0.0f, 0.0f, 0.0f, 0.0f };
 
+      trough = new Unity.CairoCanvas (trough_paint);
+      slider = new Unity.CairoCanvas (slider_paint);
+
       scroll = new Ctk.ScrollView ();
+      scroll.set_scroll_bar (trough, slider);
       add_actor (scroll);
       scroll.show ();
 
