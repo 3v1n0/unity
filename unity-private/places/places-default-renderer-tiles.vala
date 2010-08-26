@@ -143,8 +143,8 @@ namespace Unity.Places
                 folder.text = parent.get_basename ();
                 folder_button.clicked.connect (() => {
                   try {
-                    AppInfo.launch_default_for_uri (parent.get_uri (), null);
-                    global_shell.hide_unity ();
+                    activated (parent.get_uri (), "inode/directory");
+
                   } catch (Error e) {
                     warning (@"Unable to launch parent folder: $(e.message)");
                   }
