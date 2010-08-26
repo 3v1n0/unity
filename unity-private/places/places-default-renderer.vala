@@ -213,7 +213,7 @@ namespace Unity.Places
       var button = new Ctk.Button (Ctk.Orientation.HORIZONTAL);
       button.padding = { 12.0f, 12.0f, 12.0f, 12.0f };
       var text = new Ctk.Text ("");
-      text.set_markup ("<big>" + mes + "</big>");
+      text.set_markup ("<big>" + Markup.escape_text (mes) + "</big>");
       button.add_actor (text);
 
       box.pack (button, false, false);
@@ -318,8 +318,8 @@ namespace Unity.Places
         return;
       
       string mes = results.get_string (iter, 4);
-      text.set_markup ("<big>" + mes + "</big>");
-
+      text.set_markup ("<big>" + Markup.escape_text (mes) + "</big>");
+      
       active = true;
 
       glow.set_invalidate_effect_cache (true);

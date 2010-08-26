@@ -131,7 +131,7 @@ namespace Unity.Places
       icon.show ();
 
       text = new Ctk.Text (display_name);
-      text.set_markup ("<big>" + display_name + "</big>");
+      text.set_markup ("<big>" + Markup.escape_text (display_name) + "</big>");
       title_box.pack (text, false, false);
       text.show ();
 
@@ -557,7 +557,6 @@ namespace Unity.Places
        bg.show ();
  
        text = new Ctk.Text ("");
-       add_actor (text);
        box.add_actor (text);
        text.show ();
 

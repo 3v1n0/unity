@@ -56,6 +56,8 @@ namespace Unity.Places
           return;
         }
 
+      debug ("PLACE_VIEW_CONSTRUCT");
+
       home_entry = new PlaceHomeEntry (shell, model);
 
       content_box = new Ctk.VBox (4);
@@ -123,7 +125,7 @@ namespace Unity.Places
                                        300,
                                        "opacity", 0);
           anim.completed.connect ((a)=> {
-            (a.get_object () as Clutter.Actor).destroy ();
+              (a.get_object () as Clutter.Actor).destroy ();
             });
         }
 
