@@ -29,10 +29,10 @@ namespace Unity.Launcher
   const string MENU_BG_FILE = Config.PKGDATADIR
     + "/tight_check_4px.png";
 
-  const float WIGGLE_SIZE = 5; // how many degree's to wiggle on either side.
-  const int WIGGLE_FREQUENCY = 5; // x times a second
-  const int WIGGLE_RUN_LENGTH = 5000; // 5 seconds of wiggle
-  const int WIGGLE_PAUSE_LENGTH = 20; // followed by 20 seconds of no wiggle
+  const float WIGGLE_SIZE = 15; // how many degree's to wiggle on either side.
+  const int WIGGLE_FREQUENCY = 4; // x times a second
+  const int WIGGLE_RUN_LENGTH = 1000; // 1 second of wiggle
+  const int WIGGLE_PAUSE_LENGTH = 5; // followed by 5 seconds of no wiggle
 
   private enum AnimState {
     RISING,
@@ -88,6 +88,7 @@ namespace Unity.Launcher
     private UnityIcon processed_icon;
     private ThemeImage close_symbol;
     private ThemeImage active_indicator;
+    private ThemeImage running_indicator_notify;
     private ThemeImage running_indicator;
     private Gdk.Pixbuf honeycomb_mask;
 
@@ -102,6 +103,7 @@ namespace Unity.Launcher
     private Clutter.Timeline  glow_timeline;
     private AnimState glow_state;
     private AnimState wiggle_state;
+    private uint num_wiggles = 0;
 
     private float old_rotate_value = 0.0f;
 
@@ -138,13 +140,16 @@ namespace Unity.Launcher
     {
       active_indicator = new ThemeImage ("application-selected");
       running_indicator = new ThemeImage ("application-running");
+      running_indicator_notify = new ThemeImage ("application-running-notify");
       close_symbol = new ThemeImage ("close_symbol");
 
       active_indicator.set_parent (this);
+      running_indicator_notify.set_parent (this);
       running_indicator.set_parent (this);
       close_symbol.set_parent (this);
 
       active_indicator.set_opacity (0);
+      running_indicator_notify.set_opacity (0);
       running_indicator.set_opacity (0);
       close_symbol.set_opacity (0);
 
@@ -205,6 +210,9 @@ namespace Unity.Launcher
           active_indicator_anim = active_indicator.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE,
                                                               SHORT_DELAY,
                                                               "opacity", 0x00);
+          running_indicator_notify.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                                            150,
+                                            "opacity", 0x00);
         }
       else
         {
@@ -392,8 +400,9 @@ namespace Unity.Launcher
 
     private bool check_continue_wiggle ()
     {
-      if (needs_attention)
+      if (needs_attention && num_wiggles > 0)
         {
+          num_wiggles -= 1;
           wiggle_timeline.set_duration (500 / WIGGLE_FREQUENCY);
           wiggle_state = AnimState.RISING;
           wiggle_timeline.start ();
@@ -479,7 +488,15 @@ namespace Unity.Launcher
     {
       uint target_opacity = 0;
       if (active)
-        target_opacity = 255;
+        {
+          target_opacity = 255;
+          running_indicator_notify.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                                            150,
+                                            "opacity", 0x00);
+          running_indicator.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                                     150,
+                                     "opacity", 0xff);
+        }
 
       if (active_indicator_anim is Clutter.Animation)
         active_indicator_anim.completed ();
@@ -539,14 +556,29 @@ namespace Unity.Launcher
     {
       if (needs_attention && wiggle_timeline.is_playing () == false)
         {
+          num_wiggles = 2;
+          running_indicator_notify.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                                            150,
+                                            "opacity", 0xff);
+          running_indicator.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                                     150,
+                                     "opacity", 0x00);
           //start wiggling
+
           wiggle_timeline.set_duration (500 / WIGGLE_FREQUENCY);
           wiggle_state = AnimState.RISING;
           wiggle_timeline.start ();
+
         }
       else if (needs_attention == false && wiggle_timeline.is_playing ())
         {
           //stop wiggling
+          running_indicator_notify.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                                  150,
+                                  "opacity", 0x00);
+          running_indicator.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                                     150,
+                                     "opacity", 0xff);
           wiggle_timeline.stop ();
           wiggle_timeline.set_duration (500 / WIGGLE_FREQUENCY);
           wiggle_state = AnimState.FALLING;
@@ -597,12 +629,12 @@ namespace Unity.Launcher
       child_box.x2 = child_box.x1 + width;
       child_box.y2 = child_box.y1 + height;
       running_indicator.allocate (child_box, flags);
+      running_indicator_notify.allocate (child_box, flags);
       x += child_box.get_width ();
 
       //allocate the icon
       processed_icon.get_preferred_width (48, out width, out n_width);
       processed_icon.get_preferred_height (48, out height, out n_height);
-      if (grabbed_push > 0) debug (@"grabbed_push $grabbed_push");
       child_box.x1 = grabbed_push + (box.get_width () - width) / 2.0f;
       child_box.y1 = y;
       child_box.x2 = child_box.x1 + 48;
@@ -617,6 +649,7 @@ namespace Unity.Launcher
       child_box.x2 = child_box.x1 + width;
       child_box.y2 = child_box.y1 + height;
       active_indicator.allocate (child_box, flags);
+
 
       close_symbol.get_preferred_width (48, out n_width, out width);
       close_symbol.get_preferred_height (48, out n_height, out height);
@@ -636,6 +669,7 @@ namespace Unity.Launcher
     public override void paint ()
     {
       active_indicator.paint ();
+      running_indicator_notify.paint ();
       running_indicator.paint ();
 
       processed_icon.paint ();
@@ -648,6 +682,7 @@ namespace Unity.Launcher
       close_symbol.map ();
       running_indicator.map ();
       active_indicator.map ();
+      running_indicator_notify.map ();
       processed_icon.map ();
     }
 
@@ -657,6 +692,7 @@ namespace Unity.Launcher
       close_symbol.map ();
       running_indicator.unmap ();
       active_indicator.unmap ();
+      running_indicator_notify.unmap ();
       processed_icon.unmap ();
     }
   }
