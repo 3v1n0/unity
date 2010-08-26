@@ -117,6 +117,7 @@ namespace Unity
       get { return _super_key_active; }
       set { _super_key_active = value; }
     }
+    public bool is_starting {get; set;}
 
     public bool expose_showing { get { return expose_manager.expose_showing; } }
 
@@ -186,6 +187,7 @@ namespace Unity
       
     construct
     {
+      is_starting = true;
       fullscreen_requests = new Gee.ArrayList<Object> ();
       Unity.global_shell = this;
       Unity.TimelineLogger.get_default(); // just inits the timer for logging
@@ -234,7 +236,7 @@ namespace Unity
     private bool real_construct ()
     {
       START_FUNCTION ();
-      
+
       Clutter.set_gl_picking_enabled (false);
 
       this.stage = (Clutter.Stage)this.plugin.get_stage ();
@@ -346,6 +348,7 @@ namespace Unity
       gesture_dispatcher.gesture.connect (on_gesture_received);
       
       this.ensure_input_region ();
+      GLib.Idle.add (() => { is_starting = false; return false; });
       return false;
       
     }
@@ -1324,7 +1327,7 @@ namespace Unity
                       }
                   }
               }
-            
+
             return false;
           });
         }

@@ -27,6 +27,7 @@ namespace Unity.Testing
   {
     public bool menus_swallow_events { get { return true; } }
     public bool super_key_active {get; set;}
+    public bool is_starting {get; set;}
     public bool is_popup     { get; construct; }
     public int  popup_width  { get; construct; }
     public int  popup_height { get; construct; }
@@ -54,6 +55,7 @@ namespace Unity.Testing
 
     construct
     {
+      is_starting = true;
       START_FUNCTION ();
       Unity.global_shell = this;
       this.workarea_size = new Workarea ();
@@ -159,6 +161,7 @@ namespace Unity.Testing
 
       gesture_dispatcher = new Gesture.XCBDispatcher ();
 
+      GLib.Idle.add (() => { is_starting = false; return false;});
       END_FUNCTION ();
     }
 

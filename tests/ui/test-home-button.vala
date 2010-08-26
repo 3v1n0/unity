@@ -35,6 +35,7 @@ namespace Unity.Tests.UI
     Unity.Testing.Director director;
     Unity.Panel.HomeButton home_button;
     public bool          super_key_active {get; set;}
+    public bool is_starting {get; set;}
 
     public HomeButtonSuite ()
     {
