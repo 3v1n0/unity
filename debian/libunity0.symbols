@@ -3,6 +3,8 @@ libunity-private.so.0 libunity0 #MINVER#
  _dynamic_EntryRemoved7_connect@Base 0.2.22
  _dynamic_PlaceEntryInfoChanged3_connect@Base 0.2.22
  _dynamic_RendererInfoChanged1_connect@Base 0.2.22
+ _unity_places_place_browser_remote_dbus_unregister@Base 0.2.30
+ _unity_places_place_entry_remote_dbus_unregister@Base 0.2.30
  g_test_log_construct@Base 0.2.22
  g_test_log_get_type@Base 0.2.22
  g_test_log_new@Base 0.2.22
@@ -28,6 +30,55 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_application_new@Base 0.2.22
  unity_application_on_message_received@Base 0.2.22
  unity_application_set_shell@Base 0.2.22
+ unity_gesture_dispatcher_construct@Base 0.2.30
+ unity_gesture_dispatcher_get_type@Base 0.2.30
+ unity_gesture_event_construct@Base 0.2.30
+ unity_gesture_event_get_type@Base 0.2.30
+ unity_gesture_event_new@Base 0.2.30
+ unity_gesture_event_ref@Base 0.2.30
+ unity_gesture_event_state_to_string@Base 0.2.30
+ unity_gesture_event_to_string@Base 0.2.30
+ unity_gesture_event_type_to_string@Base 0.2.30
+ unity_gesture_event_unref@Base 0.2.30
+ unity_gesture_pan_event_construct@Base 0.2.30
+ unity_gesture_pan_event_get_type@Base 0.2.30
+ unity_gesture_pan_event_new@Base 0.2.30
+ unity_gesture_pan_event_ref@Base 0.2.30
+ unity_gesture_pan_event_unref@Base 0.2.30
+ unity_gesture_param_spec_event@Base 0.2.30
+ unity_gesture_param_spec_pan_event@Base 0.2.30
+ unity_gesture_param_spec_pinch_event@Base 0.2.30
+ unity_gesture_param_spec_tap_event@Base 0.2.30
+ unity_gesture_pinch_event_construct@Base 0.2.30
+ unity_gesture_pinch_event_get_type@Base 0.2.30
+ unity_gesture_pinch_event_new@Base 0.2.30
+ unity_gesture_pinch_event_ref@Base 0.2.30
+ unity_gesture_pinch_event_unref@Base 0.2.30
+ unity_gesture_state_get_type@Base 0.2.30
+ unity_gesture_tap_event_construct@Base 0.2.30
+ unity_gesture_tap_event_get_type@Base 0.2.30
+ unity_gesture_tap_event_new@Base 0.2.30
+ unity_gesture_tap_event_ref@Base 0.2.30
+ unity_gesture_tap_event_unref@Base 0.2.30
+ unity_gesture_type_get_type@Base 0.2.30
+ unity_gesture_value_get_event@Base 0.2.30
+ unity_gesture_value_get_pan_event@Base 0.2.30
+ unity_gesture_value_get_pinch_event@Base 0.2.30
+ unity_gesture_value_get_tap_event@Base 0.2.30
+ unity_gesture_value_set_event@Base 0.2.30
+ unity_gesture_value_set_pan_event@Base 0.2.30
+ unity_gesture_value_set_pinch_event@Base 0.2.30
+ unity_gesture_value_set_tap_event@Base 0.2.30
+ unity_gesture_value_take_event@Base 0.2.30
+ unity_gesture_value_take_pan_event@Base 0.2.30
+ unity_gesture_value_take_pinch_event@Base 0.2.30
+ unity_gesture_value_take_tap_event@Base 0.2.30
+ unity_gesture_xcb_dispatcher_construct@Base 0.2.30
+ unity_gesture_xcb_dispatcher_get_type@Base 0.2.30
+ unity_gesture_xcb_dispatcher_glue_finish@Base 0.2.30
+ unity_gesture_xcb_dispatcher_glue_init@Base 0.2.30
+ unity_gesture_xcb_dispatcher_glue_main_iteration@Base 0.2.30
+ unity_gesture_xcb_dispatcher_new@Base 0.2.30
  unity_is_logging@Base 0.2.22
  unity_launcher_anim_state_get_type@Base 0.2.22
  unity_launcher_app_type_error_quark@Base 0.2.22
@@ -52,6 +103,7 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_launcher_child_transition_new@Base 0.2.22
  unity_launcher_child_transition_ref@Base 0.2.22
  unity_launcher_child_transition_unref@Base 0.2.22
+ unity_launcher_disable_quicklists@Base 0.2.30
  unity_launcher_launcher_construct@Base 0.2.22
  unity_launcher_launcher_container_construct@Base 0.2.22
  unity_launcher_launcher_container_get_type@Base 0.2.22
@@ -125,8 +177,10 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_launcher_scroller_child_get_activating@Base 0.2.22
  unity_launcher_scroller_child_get_active@Base 0.2.22
  unity_launcher_scroller_child_get_content@Base 0.2.22
+ unity_launcher_scroller_child_get_enable_close_state@Base 0.2.30
  unity_launcher_scroller_child_get_group_type@Base 0.2.22
  unity_launcher_scroller_child_get_icon@Base 0.2.22
+ unity_launcher_scroller_child_get_is_dragging_state@Base 0.2.30
  unity_launcher_scroller_child_get_needs_attention@Base 0.2.22
  unity_launcher_scroller_child_get_position@Base 0.2.22
  unity_launcher_scroller_child_get_rotation@Base 0.2.22
@@ -136,8 +190,10 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_launcher_scroller_child_new@Base 0.2.22
  unity_launcher_scroller_child_set_activating@Base 0.2.22
  unity_launcher_scroller_child_set_active@Base 0.2.22
+ unity_launcher_scroller_child_set_enable_close_state@Base 0.2.30
  unity_launcher_scroller_child_set_group_type@Base 0.2.22
  unity_launcher_scroller_child_set_icon@Base 0.2.22
+ unity_launcher_scroller_child_set_is_dragging_state@Base 0.2.30
  unity_launcher_scroller_child_set_needs_attention@Base 0.2.22
  unity_launcher_scroller_child_set_position@Base 0.2.22
  unity_launcher_scroller_child_set_rotation@Base 0.2.22
@@ -179,12 +235,20 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_launcher_scroller_view_construct@Base 0.2.22
  unity_launcher_scroller_view_enable_keyboard_selection_mode@Base 0.2.26
  unity_launcher_scroller_view_get_cache@Base 0.2.22
+ unity_launcher_scroller_view_get_drag_indicator_active@Base 0.2.30
+ unity_launcher_scroller_view_get_drag_indicator_index@Base 0.2.30
+ unity_launcher_scroller_view_get_drag_indicator_opacity@Base 0.2.30
+ unity_launcher_scroller_view_get_drag_indicator_space@Base 0.2.30
  unity_launcher_scroller_view_get_is_autoscrolling@Base 0.2.22
  unity_launcher_scroller_view_get_model@Base 0.2.22
  unity_launcher_scroller_view_get_model_index_at_y_pos@Base 0.2.22
  unity_launcher_scroller_view_get_model_index_at_y_pos_no_anim@Base 0.2.22
  unity_launcher_scroller_view_get_type@Base 0.2.22
  unity_launcher_scroller_view_new@Base 0.2.22
+ unity_launcher_scroller_view_set_drag_indicator_active@Base 0.2.30
+ unity_launcher_scroller_view_set_drag_indicator_index@Base 0.2.30
+ unity_launcher_scroller_view_set_drag_indicator_opacity@Base 0.2.30
+ unity_launcher_scroller_view_set_drag_indicator_space@Base 0.2.30
  unity_launcher_scroller_view_set_is_autoscrolling@Base 0.2.22
  unity_launcher_scroller_view_type_get_type@Base 0.2.22
  unity_launcher_shortcut_item_activated@Base 0.2.22
@@ -262,6 +326,7 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_panel_window_buttons_get_type@Base 0.2.22
  unity_panel_window_buttons_new@Base 0.2.22
  unity_param_spec_process_info@Base 0.2.22
+ unity_places_activation_status_get_type@Base 0.2.30
  unity_places_controller_activate_entry@Base 0.2.22
  unity_places_controller_activate_entry_by_dbus_path@Base 0.2.28
  unity_places_controller_construct@Base 0.2.22
@@ -284,20 +349,24 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_default_renderer_group_get_type@Base 0.2.22
  unity_places_default_renderer_group_new@Base 0.2.22
  unity_places_default_renderer_new@Base 0.2.22
- unity_places_emptry_section_group_construct@Base 0.2.28
- unity_places_emptry_section_group_get_group_id@Base 0.2.28
- unity_places_emptry_section_group_get_results@Base 0.2.28
- unity_places_emptry_section_group_get_type@Base 0.2.28
- unity_places_emptry_section_group_new@Base 0.2.28
- unity_places_emptry_section_group_set_group_id@Base 0.2.28
- unity_places_emptry_section_group_set_results@Base 0.2.28
  unity_places_empty_search_group_construct@Base 0.2.28
+ unity_places_empty_search_group_get_active@Base 0.2.30
  unity_places_empty_search_group_get_group_id@Base 0.2.28
  unity_places_empty_search_group_get_results@Base 0.2.28
  unity_places_empty_search_group_get_type@Base 0.2.28
  unity_places_empty_search_group_new@Base 0.2.28
+ unity_places_empty_search_group_set_active@Base 0.2.30
  unity_places_empty_search_group_set_group_id@Base 0.2.28
  unity_places_empty_search_group_set_results@Base 0.2.28
+ unity_places_empty_section_group_construct@Base 0.2.30
+ unity_places_empty_section_group_get_active@Base 0.2.30
+ unity_places_empty_section_group_get_group_id@Base 0.2.30
+ unity_places_empty_section_group_get_results@Base 0.2.30
+ unity_places_empty_section_group_get_type@Base 0.2.30
+ unity_places_empty_section_group_new@Base 0.2.30
+ unity_places_empty_section_group_set_active@Base 0.2.30
+ unity_places_empty_section_group_set_group_id@Base 0.2.30
+ unity_places_empty_section_group_set_results@Base 0.2.30
  unity_places_expander_construct@Base 0.2.28
  unity_places_expander_get_expanding_state@Base 0.2.28
  unity_places_expander_get_type@Base 0.2.28
@@ -336,6 +405,23 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_place_bar_new@Base 0.2.22
  unity_places_place_bar_reset@Base 0.2.22
  unity_places_place_bar_set_model@Base 0.2.22
+ unity_places_place_browser_remote_dbus_message@Base 0.2.30
+ unity_places_place_browser_remote_dbus_proxy_filter@Base 0.2.30
+ unity_places_place_browser_remote_dbus_proxy_get_type@Base 0.2.30
+ unity_places_place_browser_remote_dbus_proxy_new@Base 0.2.30
+ unity_places_place_browser_remote_dbus_register_object@Base 0.2.30
+ unity_places_place_browser_remote_get_state@Base 0.2.30
+ unity_places_place_browser_remote_get_state_finish@Base 0.2.30
+ unity_places_place_browser_remote_get_type@Base 0.2.30
+ unity_places_place_browser_remote_go_back@Base 0.2.30
+ unity_places_place_browser_remote_go_back_finish@Base 0.2.30
+ unity_places_place_browser_remote_go_forward@Base 0.2.30
+ unity_places_place_browser_remote_go_forward_finish@Base 0.2.30
+ unity_places_place_browser_remote_state_copy@Base 0.2.30
+ unity_places_place_browser_remote_state_destroy@Base 0.2.30
+ unity_places_place_browser_remote_state_dup@Base 0.2.30
+ unity_places_place_browser_remote_state_free@Base 0.2.30
+ unity_places_place_browser_remote_state_get_type@Base 0.2.30
  unity_places_place_connect@Base 0.2.22
  unity_places_place_construct@Base 0.2.22
  unity_places_place_entry_connect@Base 0.2.22
@@ -385,6 +471,20 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_place_entry_get_sections_model@Base 0.2.22
  unity_places_place_entry_get_sensitive@Base 0.2.22
  unity_places_place_entry_get_type@Base 0.2.22
+ unity_places_place_entry_remote_dbus_message@Base 0.2.30
+ unity_places_place_entry_remote_dbus_proxy_filter@Base 0.2.30
+ unity_places_place_entry_remote_dbus_proxy_get_type@Base 0.2.30
+ unity_places_place_entry_remote_dbus_proxy_new@Base 0.2.30
+ unity_places_place_entry_remote_dbus_register_object@Base 0.2.30
+ unity_places_place_entry_remote_get_type@Base 0.2.30
+ unity_places_place_entry_remote_set_active@Base 0.2.30
+ unity_places_place_entry_remote_set_active_finish@Base 0.2.30
+ unity_places_place_entry_remote_set_active_section@Base 0.2.30
+ unity_places_place_entry_remote_set_active_section_finish@Base 0.2.30
+ unity_places_place_entry_remote_set_global_search@Base 0.2.30
+ unity_places_place_entry_remote_set_global_search_finish@Base 0.2.30
+ unity_places_place_entry_remote_set_search@Base 0.2.30
+ unity_places_place_entry_remote_set_search_finish@Base 0.2.30
  unity_places_place_entry_scroller_child_controller_construct@Base 0.2.22
  unity_places_place_entry_scroller_child_controller_get_entry@Base 0.2.22
  unity_places_place_entry_scroller_child_controller_get_type@Base 0.2.22
@@ -455,9 +555,12 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_place_search_bar_search@Base 0.2.22
  unity_places_place_search_bar_set_active_entry_view@Base 0.2.22
  unity_places_place_search_entry_construct@Base 0.2.22
+ unity_places_place_search_entry_get_cursor_opacity@Base 0.2.30
  unity_places_place_search_entry_get_type@Base 0.2.22
  unity_places_place_search_entry_new@Base 0.2.22
  unity_places_place_search_entry_reset@Base 0.2.22
+ unity_places_place_search_entry_set_active_entry@Base 0.2.30
+ unity_places_place_search_entry_set_cursor_opacity@Base 0.2.30
  unity_places_place_search_navigation_construct@Base 0.2.22
  unity_places_place_search_navigation_get_type@Base 0.2.22
  unity_places_place_search_navigation_new@Base 0.2.22
@@ -602,6 +705,24 @@ libunity-private.so.0 libunity0 #MINVER#
  utils_volume_eject@Base 0.2.28
  utils_window_is_decorated@Base 0.2.22
  utils_window_set_decorations@Base 0.2.22
+ xcb_gesture_event_mask_end@Base 0.2.30
+ xcb_gesture_event_mask_mask_data@Base 0.2.30
+ xcb_gesture_event_mask_mask_data_end@Base 0.2.30
+ xcb_gesture_event_mask_mask_data_length@Base 0.2.30
+ xcb_gesture_event_mask_next@Base 0.2.30
+ xcb_gesture_float32_end@Base 0.2.30
+ xcb_gesture_float32_next@Base 0.2.30
+ xcb_gesture_get_selected_events@Base 0.2.30
+ xcb_gesture_get_selected_events_masks_iterator@Base 0.2.30
+ xcb_gesture_get_selected_events_masks_length@Base 0.2.30
+ xcb_gesture_get_selected_events_reply@Base 0.2.30
+ xcb_gesture_get_selected_events_unchecked@Base 0.2.30
+ xcb_gesture_id@Base 0.2.30
+ xcb_gesture_query_version@Base 0.2.30
+ xcb_gesture_query_version_reply@Base 0.2.30
+ xcb_gesture_query_version_unchecked@Base 0.2.30
+ xcb_gesture_select_events@Base 0.2.30
+ xcb_gesture_select_events_checked@Base 0.2.30
 libunity.so.0 libunity0 #MINVER#
  _unity_place_activation_dbus_unregister@Base 0.2.22
  _unity_place_browser_service_dbus_unregister@Base 0.2.22
@@ -690,6 +811,10 @@ libunity.so.0 libunity0 #MINVER#
  unity_io_read_stream_finish@Base 0.2.22
  unity_io_system_data_dirs@Base 0.2.22
  unity_io_system_data_dirs_length1@Base 0.2.22
+ unity_layered_bin_construct@Base 0.2.30
+ unity_layered_bin_get_children@Base 0.2.30
+ unity_layered_bin_get_type@Base 0.2.30
+ unity_layered_bin_new@Base 0.2.30
  unity_pixbuf_cache_clear@Base 0.2.22
  unity_pixbuf_cache_construct@Base 0.2.22
  unity_pixbuf_cache_get@Base 0.2.22
@@ -737,6 +862,7 @@ libunity.so.0 libunity0 #MINVER#
  unity_place_activation_dbus_proxy_new@Base 0.2.22
  unity_place_activation_dbus_register_object@Base 0.2.22
  unity_place_activation_get_type@Base 0.2.22
+ unity_place_activation_status_get_type@Base 0.2.30
  unity_place_browser_clear@Base 0.2.22
  unity_place_browser_construct@Base 0.2.22
  unity_place_browser_get_dbus_path@Base 0.2.22
@@ -855,7 +981,9 @@ libunity.so.0 libunity0 #MINVER#
  unity_place_search_clear_hint@Base 0.2.22
  unity_place_search_clear_hints@Base 0.2.22
  unity_place_search_construct@Base 0.2.22
+ unity_place_search_equals@Base 0.2.30
  unity_place_search_get_hint@Base 0.2.22
+ unity_place_search_get_hints@Base 0.2.30
  unity_place_search_get_search_string@Base 0.2.22
  unity_place_search_get_type@Base 0.2.22
  unity_place_search_new@Base 0.2.22
@@ -952,6 +1080,7 @@ libunity.so.0 libunity0 #MINVER#
  unity_shell_expose_xids@Base 0.2.22
  unity_shell_get_current_time@Base 0.2.22
  unity_shell_get_indicators_width@Base 0.2.22
+ unity_shell_get_is_starting@Base 0.2.30
  unity_shell_get_launcher_width_foobar@Base 0.2.22
  unity_shell_get_menus_swallow_events@Base 0.2.22
  unity_shell_get_mode@Base 0.2.22
@@ -964,6 +1093,7 @@ libunity.so.0 libunity0 #MINVER#
  unity_shell_hide_unity@Base 0.2.22
  unity_shell_mode_get_type@Base 0.2.22
  unity_shell_remove_fullscreen_request@Base 0.2.22
+ unity_shell_set_is_starting@Base 0.2.30
  unity_shell_set_super_key_active@Base 0.2.26
  unity_shell_show_unity@Base 0.2.22
  unity_shell_show_window@Base 0.2.22

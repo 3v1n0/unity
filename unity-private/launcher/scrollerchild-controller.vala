@@ -44,8 +44,9 @@ namespace Unity.Launcher
     protected ScrollerChildControllerMenuState menu_state;
     protected uint32 last_press_time = 0;
     protected bool button_down = false;
-    protected float click_start_pos = 0.0f;
-    protected int drag_sensitivity = 7;
+    protected float click_start_pos_x = 0.0f;
+    protected float click_start_pos_y = 0.0f;
+    protected int drag_sensitivity = 60;
     private Unity.ThemeFilePath theme_file_path;
 
     protected QuicklistController? menu {get; set;}
@@ -65,7 +66,6 @@ namespace Unity.Launcher
       child.enter_event.connect (on_enter_event);
       child.leave_event.connect (on_leave_event);
       child.motion_event.connect (on_motion_event);
-
       child.opacity = 0;
       var anim = child.animate (Clutter.AnimationMode.EASE_IN_QUAD,
                                 SHORT_DELAY,
@@ -114,7 +114,7 @@ namespace Unity.Launcher
       ensure_menu_state ();
       return false;
     }
-
+    private bool no_activate = false;
     private bool on_press_event (Clutter.Event event)
     {
       switch (event.button.button)
@@ -123,7 +123,9 @@ namespace Unity.Launcher
             {
               last_press_time = event.button.time;
               button_down = true;
-              click_start_pos = event.button.x;
+              no_activate = false;
+              click_start_pos_x = event.button.x;
+              click_start_pos_y = event.button.y;
             } break;
           case 3:
             {
@@ -137,9 +139,11 @@ namespace Unity.Launcher
 
     private bool on_release_event (Clutter.Event event)
     {
+      child.grabbed_push = 0;
       if (event.button.button == 1 &&
           button_down == true &&
-          event.button.time - last_press_time < 500)
+          event.button.time - last_press_time < 500 &&
+          no_activate == false)
         {
           if (menu is QuicklistController)
             {
@@ -152,6 +156,12 @@ namespace Unity.Launcher
 
           activate ();
         }
+      else
+        {
+          menu.state = QuicklistControllerState.LABEL;
+          ensure_menu_state ();
+        }
+
       button_down = false;
       return false;
     }
@@ -174,6 +184,11 @@ namespace Unity.Launcher
 
           if (menu is QuicklistController == false)
             return;
+        }
+      if (Unity.Launcher.disable_quicklists)
+        {
+          menu.state = QuicklistControllerState.CLOSED;
+          return;
         }
 
       if (menu.state == QuicklistControllerState.MENU
@@ -200,7 +215,6 @@ namespace Unity.Launcher
         {
           Idle.add (() =>
             {
-              debug ("setting menu to menu");
               menu.state = QuicklistControllerState.MENU;
               menu_state = ScrollerChildControllerMenuState.NO_MENU;
               return false;
@@ -222,15 +236,36 @@ namespace Unity.Launcher
     private bool on_motion_event (Clutter.Event event)
     {
       var drag_controller = Unity.Drag.Controller.get_default ();
+      if (!Unity.Launcher.disable_quicklists)
+        {
+          button_down = false;
+          return false;
+        }
+
       if (button_down && drag_controller.is_dragging == false && can_drag ())
         {
-          float diff = Math.fabsf (event.motion.x - click_start_pos);
+          menu_state = ScrollerChildControllerMenuState.NO_MENU;
+          ensure_menu_state ();
+          float diff = Math.fabsf (event.motion.x - click_start_pos_x);
+          float diff_y = Math.fabsf (event.motion.y - click_start_pos_y);
+          if (diff_y > 5)
+            {
+              no_activate = true;
+            }
+
+          if (event.motion.x - click_start_pos_x > 0)
+            {
+              child.grabbed_push = Math.powf (diff, 0.5f);
+              child.queue_relayout ();
+            }
           if (diff > drag_sensitivity)
             {
+              child.grabbed_push = 0;
+              child.queue_relayout ();
               float x, y;
               child.get_transformed_position (out x, out y);
               drag_controller.start_drag (this,
-                                          event.button.x - x,
+                                          click_start_pos_x - x,
                                           event.button.y - y);
               child.set_reactive (true);
               button_down = false;

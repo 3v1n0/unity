@@ -16,10 +16,10 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
- 
+
 using Unity.Launcher;
 using Unity.Testing;
- 
+
 namespace Unity.Places
 {
   public class VolumeController : Object
@@ -42,7 +42,7 @@ namespace Unity.Places
           on_volume_added_real (volume);
 
           /* Because get_volumes () returns a list of ref'd volumes */
-          volume.unref ();
+          //volume.unref ();
         }
     }
 
@@ -53,9 +53,9 @@ namespace Unity.Places
           debug ("VOLUME_ADDED: %s", volume.get_name ());
 
           var child = new VolumeChildController (volume);
-          
+
           ScrollerModel s;
-          
+
           s = ObjectRegistry.get_default ().lookup ("UnityScrollerModel")[0] as ScrollerModel;
           s.add (child.child);
 

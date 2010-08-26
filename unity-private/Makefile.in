@@ -79,9 +79,13 @@ LTLIBRARIES = $(lib_LTLIBRARIES)
 am__DEPENDENCIES_1 =
 libunity_private_la_DEPENDENCIES = $(am__DEPENDENCIES_1) \
 	$(top_builddir)/unity/libunity.la
-am__objects_1 = libunity_private_la-application.lo \
+am__objects_1 = libunity_private_la-gesture-dispatcher.lo \
+	libunity_private_la-gesture-dispatcher-xcb.lo \
+	libunity_private_la-gesture-dispatcher-xcb-glu.lo \
+	libunity_private_la-gesture-event.lo
+am__objects_2 = libunity_private_la-application.lo \
 	libunity_private_la-unity.lo libunity_private_la-utils.lo
-am__objects_2 = libunity_private_la-panel-background.lo \
+am__objects_3 = libunity_private_la-panel-background.lo \
 	libunity_private_la-panel-home-button.lo \
 	libunity_private_la-panel-indicator-background.lo \
 	libunity_private_la-panel-indicator-bar.lo \
@@ -93,7 +97,7 @@ am__objects_2 = libunity_private_la-panel-background.lo \
 	libunity_private_la-panel-tray.lo \
 	libunity_private_la-panel-view.lo \
 	libunity_private_la-panel-window-buttons.lo
-am__objects_3 = libunity_private_la-places-controller.lo \
+am__objects_4 = libunity_private_la-places-controller.lo \
 	libunity_private_la-places-default-renderer-group.lo \
 	libunity_private_la-places-default-renderer.lo \
 	libunity_private_la-places-folder-browser-renderer.lo \
@@ -114,7 +118,7 @@ am__objects_3 = libunity_private_la-places-controller.lo \
 	libunity_private_la-places-view.lo \
 	libunity_private_la-places-volume-controller.lo \
 	libunity_private_la-places-volume-child-controller.lo
-am__objects_4 = libunity_private_la-application-controller.lo \
+am__objects_5 = libunity_private_la-application-controller.lo \
 	libunity_private_la-launcher.lo \
 	libunity_private_la-quicklist-check-menu-item.lo \
 	libunity_private_la-quicklist-controller.lo \
@@ -128,16 +132,17 @@ am__objects_4 = libunity_private_la-application-controller.lo \
 	libunity_private_la-scroller-controller.lo \
 	libunity_private_la-scroller-model.lo \
 	libunity_private_la-scroller-view.lo
-am__objects_5 = libunity_private_la-background.lo \
+am__objects_6 = libunity_private_la-background.lo \
 	libunity_private_la-object-registry.lo \
 	libunity_private_la-perf-logger.lo \
 	libunity_private_la-test-director.lo \
 	libunity_private_la-test-utils.lo \
 	libunity_private_la-test-window.lo
-am__objects_6 = $(am__objects_1) $(am__objects_2) $(am__objects_3) \
-	$(am__objects_4) $(am__objects_5)
-am_libunity_private_la_OBJECTS = libunity_private_la-unity-utils.lo \
-	$(am__objects_6)
+am__objects_7 = $(am__objects_1) $(am__objects_2) $(am__objects_3) \
+	$(am__objects_4) $(am__objects_5) $(am__objects_6)
+am_libunity_private_la_OBJECTS = libunity_private_la-gesture.lo \
+	libunity_private_la-gesture-dispatcher-xcb-glue.lo \
+	libunity_private_la-unity-utils.lo $(am__objects_7)
 libunity_private_la_OBJECTS = $(am_libunity_private_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
@@ -457,6 +462,12 @@ launcher_sources = \
   launcher/scroller-model.vala \
   launcher/scroller-view.vala
 
+gesture_sources = \
+  gesture/gesture-dispatcher.vala \
+  gesture/gesture-dispatcher-xcb.vala \
+  gesture/gesture-dispatcher-xcb-glu.vala \
+  gesture/gesture-event.vala
+
 testing_sources = \
   testing/background.vala \
   testing/object-registry.vala \
@@ -466,6 +477,7 @@ testing_sources = \
   testing/test-window.vala
 
 libunity_private_la_VALASOURCES = \
+  $(gesture_sources) \
   $(private_sources) \
   $(panel_sources) \
   $(places_sources) \
@@ -473,6 +485,9 @@ libunity_private_la_VALASOURCES = \
   $(testing_sources)
 
 libunity_private_la_SOURCES = \
+  gesture/gesture.c \
+  gesture/gesture.h \
+  gesture/gesture-dispatcher-xcb-glue.c \
   unity-utils.c \
   unity-utils.h \
   $(libunity_private_la_VALASOURCES:.vala=.c)
@@ -556,6 +571,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-application-controller.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-application.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-background.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-gesture-dispatcher-xcb-glu.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-gesture-dispatcher-xcb-glue.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-gesture-dispatcher-xcb.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-gesture-dispatcher.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-gesture-event.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-gesture.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-launcher.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-object-registry.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-background.Plo@am__quote@
@@ -635,6 +656,22 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
+libunity_private_la-gesture.lo: gesture/gesture.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-gesture.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-gesture.Tpo -c -o libunity_private_la-gesture.lo `test -f 'gesture/gesture.c' || echo '$(srcdir)/'`gesture/gesture.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-gesture.Tpo $(DEPDIR)/libunity_private_la-gesture.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gesture/gesture.c' object='libunity_private_la-gesture.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-gesture.lo `test -f 'gesture/gesture.c' || echo '$(srcdir)/'`gesture/gesture.c
+
+libunity_private_la-gesture-dispatcher-xcb-glue.lo: gesture/gesture-dispatcher-xcb-glue.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-gesture-dispatcher-xcb-glue.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-gesture-dispatcher-xcb-glue.Tpo -c -o libunity_private_la-gesture-dispatcher-xcb-glue.lo `test -f 'gesture/gesture-dispatcher-xcb-glue.c' || echo '$(srcdir)/'`gesture/gesture-dispatcher-xcb-glue.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-gesture-dispatcher-xcb-glue.Tpo $(DEPDIR)/libunity_private_la-gesture-dispatcher-xcb-glue.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gesture/gesture-dispatcher-xcb-glue.c' object='libunity_private_la-gesture-dispatcher-xcb-glue.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-gesture-dispatcher-xcb-glue.lo `test -f 'gesture/gesture-dispatcher-xcb-glue.c' || echo '$(srcdir)/'`gesture/gesture-dispatcher-xcb-glue.c
+
 libunity_private_la-unity-utils.lo: unity-utils.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-unity-utils.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-unity-utils.Tpo -c -o libunity_private_la-unity-utils.lo `test -f 'unity-utils.c' || echo '$(srcdir)/'`unity-utils.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-unity-utils.Tpo $(DEPDIR)/libunity_private_la-unity-utils.Plo
@@ -642,6 +679,38 @@ libunity_private_la-unity-utils.lo: unity-utils.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='unity-utils.c' object='libunity_private_la-unity-utils.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-unity-utils.lo `test -f 'unity-utils.c' || echo '$(srcdir)/'`unity-utils.c
+
+libunity_private_la-gesture-dispatcher.lo: gesture/gesture-dispatcher.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-gesture-dispatcher.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-gesture-dispatcher.Tpo -c -o libunity_private_la-gesture-dispatcher.lo `test -f 'gesture/gesture-dispatcher.c' || echo '$(srcdir)/'`gesture/gesture-dispatcher.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-gesture-dispatcher.Tpo $(DEPDIR)/libunity_private_la-gesture-dispatcher.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gesture/gesture-dispatcher.c' object='libunity_private_la-gesture-dispatcher.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-gesture-dispatcher.lo `test -f 'gesture/gesture-dispatcher.c' || echo '$(srcdir)/'`gesture/gesture-dispatcher.c
+
+libunity_private_la-gesture-dispatcher-xcb.lo: gesture/gesture-dispatcher-xcb.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-gesture-dispatcher-xcb.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-gesture-dispatcher-xcb.Tpo -c -o libunity_private_la-gesture-dispatcher-xcb.lo `test -f 'gesture/gesture-dispatcher-xcb.c' || echo '$(srcdir)/'`gesture/gesture-dispatcher-xcb.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-gesture-dispatcher-xcb.Tpo $(DEPDIR)/libunity_private_la-gesture-dispatcher-xcb.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gesture/gesture-dispatcher-xcb.c' object='libunity_private_la-gesture-dispatcher-xcb.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-gesture-dispatcher-xcb.lo `test -f 'gesture/gesture-dispatcher-xcb.c' || echo '$(srcdir)/'`gesture/gesture-dispatcher-xcb.c
+
+libunity_private_la-gesture-dispatcher-xcb-glu.lo: gesture/gesture-dispatcher-xcb-glu.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-gesture-dispatcher-xcb-glu.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-gesture-dispatcher-xcb-glu.Tpo -c -o libunity_private_la-gesture-dispatcher-xcb-glu.lo `test -f 'gesture/gesture-dispatcher-xcb-glu.c' || echo '$(srcdir)/'`gesture/gesture-dispatcher-xcb-glu.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-gesture-dispatcher-xcb-glu.Tpo $(DEPDIR)/libunity_private_la-gesture-dispatcher-xcb-glu.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gesture/gesture-dispatcher-xcb-glu.c' object='libunity_private_la-gesture-dispatcher-xcb-glu.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-gesture-dispatcher-xcb-glu.lo `test -f 'gesture/gesture-dispatcher-xcb-glu.c' || echo '$(srcdir)/'`gesture/gesture-dispatcher-xcb-glu.c
+
+libunity_private_la-gesture-event.lo: gesture/gesture-event.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-gesture-event.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-gesture-event.Tpo -c -o libunity_private_la-gesture-event.lo `test -f 'gesture/gesture-event.c' || echo '$(srcdir)/'`gesture/gesture-event.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-gesture-event.Tpo $(DEPDIR)/libunity_private_la-gesture-event.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='gesture/gesture-event.c' object='libunity_private_la-gesture-event.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-gesture-event.lo `test -f 'gesture/gesture-event.c' || echo '$(srcdir)/'`gesture/gesture-event.c
 
 libunity_private_la-application.lo: application.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-application.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-application.Tpo -c -o libunity_private_la-application.lo `test -f 'application.c' || echo '$(srcdir)/'`application.c

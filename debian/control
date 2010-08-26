@@ -25,6 +25,8 @@ Build-Depends: cdbs,
                libindicator-dev (>= 0.3.1),
                libunity-misc-dev (>= 0.1.0),
                libmutter-dev (>= 2.31.5),
+               libutouch-grail-dev,
+               libxcb-icccm1-dev,
 Standards-Version: 3.9.1
 Homepage: https://launchpad.net/unity
 

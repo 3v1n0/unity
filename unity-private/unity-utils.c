@@ -66,15 +66,23 @@ utils_window_is_decorated (Window xid)
   gulong nitems;
   gulong bytes_after;
   gboolean retval;
+  gint ret = 0;
  
   hints_atom = gdk_x11_get_xatom_by_name_for_display (display, 
                                                       _XA_MOTIF_WM_HINTS);
 
+  gdk_error_trap_push ();
   XGetWindowProperty (GDK_DISPLAY_XDISPLAY (display), 
                       xid,
 		                  hints_atom, 0, sizeof (MotifWmHints)/sizeof (long),
 		                  False, AnyPropertyType, &type, &format, &nitems,
 		                  &bytes_after, &data);
+  gdk_flush ();
+  if ((ret = gdk_error_trap_pop ()))
+    {
+      g_warning ("Unable to determine if window '%lu' is decorated: %d",
+                 xid, ret);
+    }
   
   if (type == None || !data)
     {

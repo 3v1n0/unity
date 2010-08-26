@@ -21,6 +21,20 @@ using Unity;
 
 namespace Unity.Places
 {
+  [DBus (name = "com.canonical.Unity.PlaceBrowser")]
+  public interface PlaceBrowserRemote : Object
+  {
+    public struct State
+    {
+      bool sensitive;
+      string tooltip;
+    }
+
+    public abstract async State[] get_state () throws DBus.Error;
+    public abstract async State[] go_back () throws DBus.Error;
+    public abstract async State[] go_forward () throws DBus.Error;
+  }
+
   public class PlaceSearchNavigation : Ctk.Box
   {
     static const int SPACING = 1;
@@ -36,7 +50,7 @@ namespace Unity.Places
 
     private Ctk.EffectGlow glow;
 
-    private dynamic DBus.Object service;
+    private PlaceBrowserRemote remote;
 
     public PlaceSearchNavigation ()
     {
@@ -47,21 +61,12 @@ namespace Unity.Places
 
     construct
     {
-      /*
-      padding = {
-        SPACING * 2.0f,
-        SPACING * 1.0f,
-        SPACING * 1.0f,
-        SPACING * 1.0f
-      };*/
-
       back = new CairoCanvas (draw_back_arrow);
       back.reactive = true;
       back.button_release_event.connect (() => {
-        if (service != null && back_sensitive)
+        if (remote != null && back_sensitive)
           {
-            ValueArray[] a = service.go_back ();
-            refresh_state (a);
+            go_back.begin ();
           }
 
         return true;
@@ -71,10 +76,9 @@ namespace Unity.Places
 
       forward = new CairoCanvas (draw_forward_arrow);
       forward.button_release_event.connect (() => {
-        if (service != null && forward_sensitive)
+        if (remote != null && forward_sensitive)
           {
-            ValueArray[] a = service.go_back ();
-            refresh_state (a);
+            go_forward.begin ();
           }
         return true;
       });
@@ -91,7 +95,7 @@ namespace Unity.Places
     public void set_active_entry (PlaceEntry entry)
     {
       active_entry = null;
-      service = null;
+      remote = null;
 
       if (entry.hints == null)
         {
@@ -107,11 +111,10 @@ namespace Unity.Places
             {
               try {
                 var connection = DBus.Bus.get (DBus.BusType.SESSION);
-                service = connection.get_object (entry.parent.dbus_name,
+                remote = (PlaceBrowserRemote)connection.get_object (entry.parent.dbus_name,
                                                  path,
                                                  "com.canonical.Unity.PlaceBrowser");
-                ValueArray[] entries = service.get_state ();
-                refresh_state (entries);
+                refresh_states.begin ();
 
               } catch (Error e) {
                 warning (@"Unable to connect to $path: %s",
@@ -133,15 +136,37 @@ namespace Unity.Places
       glow.set_invalidate_effect_cache (true);
     }
 
-    private void refresh_state (ValueArray[] entries)
+    private async void refresh_states ()
     {
-      unowned ValueArray array;
+      try {
+        var states = yield remote.get_state ();
+        back_sensitive = states[0].sensitive;
+        forward_sensitive = states[1].sensitive;
+      } catch (DBus.Error e) {
+        warning (@"Unable to refresh browser navigation state: $(e.message)");
+      }
+    } 
 
-      array = entries[0];
-      back_sensitive = array.get_nth (0).get_boolean ();
+    private async void go_forward ()
+    {
+      try {
+        var states = yield remote.go_forward ();
+        back_sensitive = states[0].sensitive;
+        forward_sensitive = states[1].sensitive;
+      } catch (DBus.Error e) {
+        warning (@"Unable to go forward in browser view: $(e.message)");
+      }
+    }
 
-      array = entries[1];
-      forward_sensitive = array.get_nth (0).get_boolean ();
+    private async void go_back ()
+    {
+      try {       
+        var states = yield remote.go_back ();
+        back_sensitive = states[0].sensitive;
+        forward_sensitive = states[1].sensitive;
+      } catch (DBus.Error e) {
+        warning (@"Unable to go back in browser view: $(e.message)");
+      }
     }
 
     private override void get_preferred_width (float for_height,

@@ -1,3 +1,25 @@
+unity (0.2.30-0ubuntu1) maverick; urgency=low
+
+  * New upstream release fixing those issues:
+    - clicking on an app window in workspace switcher does not get it to focus
+      (lp: #612327)
+    - App name stays in panel after exit (lp: #613087)
+    - Bright line at the bottom of the launcher bar (lp: #613084)
+    - additional round corner when clicking on application places item
+      (lp: #612542)
+    - removing active application in the launcher make unity crashes
+      (lp: #612535)
+    - Intermittent loss of all input (lp: #607519)
+    - Wallpaper picture-options are not all taken into account (lp: #605788)
+    - Add some sort of hint that the Ubuntu circle is click-able (lp: #592787)
+    - doesn't render appmenu accelerators correctly (lp: #601011)
+    - should highlight the selected items (lp: #600946)
+    - Files Place displays mimetype icons for file items when 
+      thumbnails are available (lp: #599896)
+  * debian/control: build-depends on libxcb-icccm1-dev and libutouch-grail-dev
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 26 Aug 2010 18:08:47 +0200
+
 unity (0.2.28-0ubuntu2) maverick; urgency=low
 
   * Backported change to fix a bug where some launcher icons are not there

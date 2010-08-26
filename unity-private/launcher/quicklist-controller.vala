@@ -20,6 +20,7 @@
 namespace Unity.Launcher
 {
   public static QuicklistController? ql_controller_singleton;
+  public static bool disable_quicklists = false;
 
   public enum QuicklistControllerState {
     LABEL,
