@@ -38,10 +38,24 @@ namespace Unity.Place {
   public interface Activation : GLib.Object
   {
     /**
-     * Returns true if the URI has been activated, false if activation should
-     * be delegated to other activation services.
+     * Returns 0 if the URI has not been activated, 1 if it has been
+     * activated and the dash should not hide, and 2 if the URI has
+     * been activated and the dash should hide.
+     *
+     * You can use the ActivationStatus enumeration to have type safe
+     * return values.
      */
-    public async abstract bool activate (string uri) throws DBus.Error;
+    public async abstract uint32 activate (string uri) throws DBus.Error;
+  }
+  
+  /**
+   * Enumeration of return values for Activation.activate().
+   */
+  public enum ActivationStatus
+  {
+    NOT_ACTIVATED,
+    ACTIVATED_SHOW_DASH,
+    ACTIVATED_HIDE_DASH
   }
 
 } /* namespace */

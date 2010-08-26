@@ -27,23 +27,116 @@ namespace Unity.Places
     private EmptySearchGroup search_empty;
     private EmptySectionGroup section_empty;
 
-    private Ctk.ScrollView scroll;
-    private Ctk.VBox box;
-    private Dee.Model groups_model;
-    private Dee.Model results_model;
+    private Ctk.ScrollView    scroll;
+    private Unity.CairoCanvas trough;
+    private Unity.CairoCanvas slider;
+    private Ctk.VBox          box;
+    private Dee.Model         groups_model;
+    private Dee.Model         results_model;
 
     public DefaultRenderer ()
     {
       Object ();
     }
 
+    private static double
+    _align (double val)
+    {
+      double fract = val - (int) val;
+
+      if (fract != 0.5f)
+        return (double) ((int) val + 0.5f);
+      else
+        return val;
+    }
+
+    private void
+    trough_paint (Cairo.Context cr,
+                  int           width,
+                  int           height)
+    {
+      double radius = (double) width / 2.0f;
+
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      cr.set_line_width (1.0f);
+      cr.set_operator (Cairo.Operator.OVER);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.25f);
+
+      cr.move_to (0.5f, radius - 0.5f);
+      cr.arc (radius, radius,
+              radius - 0.5f,
+              180.0f * GLib.Math.PI / 180.0f,
+              0.0f * GLib.Math.PI / 180.0f);
+      cr.line_to ((double) width - 0.5f, (double) height - radius - 0.5f);
+      cr.arc (radius, (double) height - radius - 0.5f,
+              radius - 0.5f,
+              0.0f * GLib.Math.PI / 180.0f,
+              180.0f * GLib.Math.PI / 180.0f);
+      cr.close_path ();
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.1f);
+      cr.fill_preserve ();
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.35f);
+      cr.stroke ();
+    }
+
+    private void
+    slider_paint (Cairo.Context cr,
+                  int           width,
+                  int           height)
+    {
+      double radius = (double) width / 2.0f;
+      double half = (double) width / 2.0f;
+      double half_height = (double) height / 2.0f;
+
+      cr.set_operator (Cairo.Operator.CLEAR);
+      cr.paint ();
+
+      cr.set_line_width (1.0f);
+      cr.set_operator (Cairo.Operator.OVER);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.75f);      
+
+      cr.move_to (0.5f, radius - 0.5f);
+      cr.arc (radius, radius,
+              radius - 0.5f,
+              180.0f * GLib.Math.PI / 180.0f,
+              0.0f * GLib.Math.PI / 180.0f);
+      cr.line_to ((double) width - 0.5f, (double) height - radius - 0.5f);
+      cr.arc (radius, (double) height - radius - 0.5f,
+              radius - 0.5f,
+              0.0f * GLib.Math.PI / 180.0f,
+              180.0f * GLib.Math.PI / 180.0f);
+      cr.close_path ();
+      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.15f);
+      cr.fill_preserve ();
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.5f);
+      cr.stroke ();
+
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.75f);
+      cr.move_to (_align (1.0f), _align (half_height - 2.0f));
+      cr.line_to (_align ((double) width - 2.0f), _align (half_height - 2.0f));
+      cr.move_to (_align (1.0f), _align (half_height));
+      cr.line_to (_align ((double) width - 2.0f), _align (half_height));
+      cr.move_to (_align (1.0f), _align (half_height + 2.0f));
+      cr.line_to (_align ((double) width - 2.0f), _align (half_height + 2.0f));
+      cr.stroke ();
+    }
+
     construct
     {
       padding = { 0.0f, 0.0f, 0.0f, 0.0f };
 
+      trough = new Unity.CairoCanvas (trough_paint);
+      slider = new Unity.CairoCanvas (slider_paint);
+
       scroll = new Ctk.ScrollView ();
+      scroll.set_scroll_bar (trough, slider);
+      //slider.reactive = true;
       add_actor (scroll);
       scroll.show ();
+      trough.show ();
+      slider.show ();
 
       box = new Ctk.VBox (SPACING);
       box.padding = { 0.0f, PADDING, 0.0f, PADDING};

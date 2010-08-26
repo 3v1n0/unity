@@ -34,8 +34,7 @@ namespace Unity.Testing
     private string DEFAULT_AMBIANCE_COL = "#2C2C00001E1E"; // Ubuntu Dark Purple
     private string DEFAULT_FILENAME   = "/usr/share/backgrounds/warty-final.png";
 
-    private Clutter.CairoTexture bg_gradient;
-    private Clutter.Texture      bg_image;
+    private Clutter.CairoTexture bg_texture;
     private Gnome.BG             gbg;
     private GConf.Client         client;
 
@@ -124,129 +123,24 @@ namespace Unity.Testing
           warning ("Background: Unable to monitor background: %s", e.message);
         }
 
-      this.bg_gradient = new Clutter.CairoTexture (1, 1);
-      this.bg_gradient.name = "bg_gradient";
-      this.bg_image = new Clutter.Texture ();
-      this.bg_image.name = "bg_image";
-
-      // setting async. loading to TRUE here, requires hooking up to
-      // "allocation-changed" for the texture-image, otherwise we cannot get
-      // valid values for a texture-images base-size, which is needed to
-      // correctly handle image-placement... this sucks balls!!!
-      this.bg_image.set_load_async (true);
-      this.bg_image.load_finished.connect (_handle_image_placement);
+      this.bg_texture = new Clutter.CairoTexture (1, 1);
+      this.bg_texture.name = "bg_texture";
 
       this.gbg.load_from_preferences (client);
 
-      // this is needed for the bg_gradient to have the correct size
+      // this is needed for the bg_texture to have the correct size
       this.allocation_changed.connect (_on_allocation_changed);
 
       END_FUNCTION ();
     }
 
     private void
-    _handle_image_placement ()
-    {
-      Gnome.BGPlacement placement = this.gbg.get_placement ();
-
-      switch (placement)
-        {
-          case Gnome.BGPlacement.TILED:
-            {
-              this.bg_image.set_repeat (true, true);
-              this.bg_image.set_sync_size (true);
-              this.x = 0.0f;
-              this.y = 0.0f;
-            }
-          break;
-
-          case Gnome.BGPlacement.ZOOMED:
-            {
-              this.bg_image.set_repeat (false, false);
-              this.bg_image.set_sync_size (false);
-              this.bg_image.set_keep_aspect_ratio (true);
-              this.x = 0.0f;
-              this.y = 0.0f;
-            }
-          break;
-
-          case Gnome.BGPlacement.CENTERED:
-            {
-              this.bg_image.set_repeat (false, false);
-              this.bg_image.set_sync_size (false);
-              this.bg_image.set_keep_aspect_ratio (false);
-              this.x = 0.0f;
-              this.y = 0.0f;
-            }
-          break;
-
-          case Gnome.BGPlacement.SCALED:
-            {
-              this.bg_image.set_keep_aspect_ratio (true);
-              this.bg_image.set_sync_size (false);
-              this.x = 0.0f;
-              this.y = 0.0f;
-            }
-          break;
-
-          case Gnome.BGPlacement.FILL_SCREEN:
-            {
-              this.bg_image.set_keep_aspect_ratio (false);
-              this.x = 0.0f;
-              this.y = 0.0f;
-            }
-          break;
-
-          case Gnome.BGPlacement.SPANNED:
-            {
-              this.bg_image.set_repeat (false, false);
-              this.bg_image.set_sync_size (true);
-              this.bg_image.set_keep_aspect_ratio (true);
-              this.x = 0.0f;
-              this.y = 0.0f;
-            }
-          break;
-        }
-    }
-
-    private void
     _on_allocation_changed ()
     {
       Timeout.add (0, () => {
-        if (this.filename != "")
-          _update_image ();
-        else
-          _update_gradient ();
-
-          return false;
+        _update_gradient ();
+        return false;
       });
-    }
-
-    private void
-    _update_image ()
-    {
-
-      if (this.find_child_by_name ("bg_image") != this.bg_image)
-        {
-          if (this.bg_gradient is Clutter.Actor &&
-              this.bg_gradient.get_parent () == this)
-            {
-              this.remove_actor (this.bg_gradient);
-            }
-          this.add_actor (this.bg_image);
-          this.bg_image.show ();
-        }
-
-      try
-        {
-          this.bg_image.set_from_file (this.filename);
-        }
-      catch (Error e)
-        {
-          warning ("Background: Unable to load background file %s: %s",
-                   this.filename,
-                   e.message);
-        }
     }
 
     private void
@@ -256,15 +150,10 @@ namespace Unity.Testing
       Gdk.Color         primary;
       Gdk.Color         secondary;
 
-      if (this.find_child_by_name ("bg_gradient") != this.bg_gradient)
+      if (this.find_child_by_name ("bg_texture") != this.bg_texture)
         {
-          if (this.bg_image is Clutter.Actor &&
-              this.bg_image.get_parent () == this)
-            {
-              this.remove_actor (this.bg_image);
-            }
-          this.add_actor (this.bg_gradient);
-          this.bg_gradient.show ();
+          this.add_actor (this.bg_texture);
+          this.bg_texture.show ();
         }
 
       this.x = 0.0f;
@@ -272,80 +161,26 @@ namespace Unity.Testing
 
       this.gbg.get_color (out type, out primary, out secondary);
 
-      this.bg_gradient.set_surface_size ((uint) this.width,
+      this.bg_texture.set_surface_size ((uint) this.width,
                                          (uint) this.height);
 
-      switch (type)
+      {
+        Gdk.Pixbuf pixbuf = new Gdk.Pixbuf (Gdk.Colorspace.RGB,
+                                            false,
+                                            8,
+                                            (int) this.width,
+                                            (int) this.height);
+
+        // the Gdk.Screen is not really used (because of passing false), it is
+        // just passed to silence the vala-compiler
+        this.gbg.draw (pixbuf, Gdk.Screen.get_default (), false);
+
         {
-          case Gnome.BGColorType.SOLID:
-            {
-
-              Cairo.Context cr = this.bg_gradient.create ();
-              cr.set_operator (Cairo.Operator.OVER);
-              cr.scale (1.0f, 1.0f);
-              cr.set_source_rgb ((double) primary.red   / (double) 0xffff,
-                                 (double) primary.green / (double) 0xffff,
-                                 (double) primary.blue  / (double) 0xffff);
-              cr.rectangle (0.0f,
-                            0.0f,
-                            (double) this.width,
-                            (double) this.height);
-              cr.fill ();
-            }
-          break;
-
-          case Gnome.BGColorType.V_GRADIENT:
-            {
-              Cairo.Context cr  = this.bg_gradient.create ();
-              Cairo.Pattern pat = new Cairo.Pattern.linear (0.0f,
-                                                            0.0f,
-                                                            0.0f,
-                                                            (double) this.height);
-              cr.set_operator (Cairo.Operator.OVER);
-              cr.scale (1.0f, 1.0f);
-              pat.add_color_stop_rgb (0.0f,
-                                      (double) primary.red   / (double) 0xffff,
-                                      (double) primary.green / (double) 0xffff,
-                                      (double) primary.blue  / (double) 0xffff);
-              pat.add_color_stop_rgb (1.0f,
-                                      (double) secondary.red   / (double) 0xffff,
-                                      (double) secondary.green / (double) 0xffff,
-                                      (double) secondary.blue  / (double) 0xffff);
-              cr.set_source (pat);
-              cr.rectangle (0.0f,
-                            0.0f,
-                            (double) this.width,
-                            (double) this.height);
-              cr.fill ();
-            }
-          break;
-
-          case Gnome.BGColorType.H_GRADIENT:
-            {
-              Cairo.Context cr  = this.bg_gradient.create ();
-              Cairo.Pattern pat = new Cairo.Pattern.linear (0.0f,
-                                                            0.0f,
-                                                            (double) this.width,
-                                                            0.0f);
-              cr.set_operator (Cairo.Operator.OVER);
-              cr.scale (1.0f, 1.0f);
-              pat.add_color_stop_rgb (0.0f,
-                                      (double) primary.red   / (double) 0xffff,
-                                      (double) primary.green / (double) 0xffff,
-                                      (double) primary.blue  / (double) 0xffff);
-              pat.add_color_stop_rgb (1.0f,
-                                      (double) secondary.red   / (double) 0xffff,
-                                      (double) secondary.green / (double) 0xffff,
-                                      (double) secondary.blue  / (double) 0xffff);
-              cr.set_source (pat);
-              cr.rectangle (0.0f,
-                            0.0f,
-                            (double) this.width,
-                            (double) this.height);
-              cr.fill ();
-            }
-          break;
+          Cairo.Context cr = this.bg_texture.create ();
+          Gdk.cairo_set_source_pixbuf (cr, pixbuf, 0.0f, 0.0f);
+          cr.paint ();
         }
+      }
     }
 
     private void
@@ -430,10 +265,7 @@ namespace Unity.Testing
 
       if (needs_update)
         {
-          if (this.filename != "")
-            _update_image ();
-          else
-            _update_gradient ();
+          _update_gradient ();
         }
     }
   }

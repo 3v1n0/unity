@@ -656,16 +656,16 @@ namespace Unity.Place {
     
     /* Default impl of the Unity.Place.Activation interface,
      * delegates to the installed Activation impl if there is one */
-    public async bool activate (string uri)
+    public async uint32 activate (string uri)
     {
       if (activation == null )
-        return false;
+        return ActivationStatus.NOT_ACTIVATED;
       
       try {
-        bool activated = yield activation.activate (uri);
+        uint32 activated = yield activation.activate (uri);
         return activated;
       } catch (DBus.Error e) {
-        return false;
+        return ActivationStatus.NOT_ACTIVATED;
       }
     }
     
