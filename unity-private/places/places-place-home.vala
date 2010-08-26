@@ -111,40 +111,17 @@ namespace Unity.Places
 
           entry_group_map[entry] = entry_groups_model.get_position (iter);
 
-          entry.global_results_model.row_added.connect ((it) => {
-            var _model = entry.global_results_model;
-
-            entry_results_model.append (0, _model.get_string (it, 0),
-                                        1, _model.get_string (it, 1),
-                                        2, entry_group_map[entry],
-                                        3, _model.get_string (it, 3),
-                                        4, _model.get_string (it, 4),
-                                        5, _model.get_string (it, 5),
-                                        -1);
-
-          });
-
-          entry.global_results_model.row_removed.connect ((it) => {
-            var _model = entry.global_results_model;
-
-            string uri = _model.get_string (it, 0);
-
-            unowned Dee.ModelIter i = entry_results_model.get_first_iter ();
-            while (i != null && !entry_results_model.is_last (i))
-              {
-                if (entry_results_model.get_string (i, 0) == uri)
-                 {
-                   entry_results_model.remove (i);
-                   break;
-                 }
-
-                i = _model.next (i);
-              }
-          });
-
           entry.updated.connect (() => {
             entry.global_results_model.row_added.connect ((it) => {
               var _model = entry.global_results_model;
+
+              unowned Dee.ModelIter i = entry.entry_groups_model.get_iter_at_row (_model.get_uint (it, 2));
+
+              if (entry.entry_groups_model.get_string (i, 0)
+                  == "UnityEmptySearchRenderer")  
+                {
+                  return;
+                }
 
               entry_results_model.append (0, _model.get_string (it, 0),
                                           1, _model.get_string (it, 1),
@@ -195,7 +172,7 @@ namespace Unity.Places
         }
       else
         {
-          entry_renderer_name = "UnityDefaultRenderer";
+          entry_renderer_name = "UnityHomeResultsRenderer";
 
           foreach (Gee.Map.Entry<PlaceEntry, uint> e in entry_group_map.entries)
             {
