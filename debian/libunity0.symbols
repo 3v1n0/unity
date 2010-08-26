@@ -327,6 +327,16 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_panel_window_buttons_new@Base 0.2.22
  unity_param_spec_process_info@Base 0.2.22
  unity_places_activation_status_get_type@Base 0.2.30
+ unity_places_button_construct@Base 0.2.32
+ unity_places_button_get_normal_state@Base 0.2.32
+ unity_places_button_get_prelight_state@Base 0.2.32
+ unity_places_button_get_type@Base 0.2.32
+ unity_places_button_new@Base 0.2.32
+ unity_places_button_normal_state_get_type@Base 0.2.32
+ unity_places_button_prelight_state_get_type@Base 0.2.32
+ unity_places_button_rounded_rect@Base 0.2.32
+ unity_places_button_set_normal_state@Base 0.2.32
+ unity_places_button_set_prelight_state@Base 0.2.32
  unity_places_controller_activate_entry@Base 0.2.22
  unity_places_controller_activate_entry_by_dbus_path@Base 0.2.28
  unity_places_controller_construct@Base 0.2.22
@@ -341,6 +351,7 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_default_renderer_construct@Base 0.2.22
  unity_places_default_renderer_get_type@Base 0.2.22
  unity_places_default_renderer_group_construct@Base 0.2.22
+ unity_places_default_renderer_group_get_always_expanded@Base 0.2.32
  unity_places_default_renderer_group_get_display_name@Base 0.2.22
  unity_places_default_renderer_group_get_group_id@Base 0.2.22
  unity_places_default_renderer_group_get_group_renderer@Base 0.2.22
@@ -348,7 +359,11 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_default_renderer_group_get_results@Base 0.2.22
  unity_places_default_renderer_group_get_type@Base 0.2.22
  unity_places_default_renderer_group_new@Base 0.2.22
+ unity_places_default_renderer_group_set_always_expanded@Base 0.2.32
  unity_places_default_renderer_new@Base 0.2.22
+ unity_places_default_tile_construct@Base 0.2.32
+ unity_places_default_tile_get_type@Base 0.2.32
+ unity_places_default_tile_new@Base 0.2.32
  unity_places_empty_search_group_construct@Base 0.2.28
  unity_places_empty_search_group_get_active@Base 0.2.30
  unity_places_empty_search_group_get_group_id@Base 0.2.28
@@ -373,6 +388,9 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_expander_new@Base 0.2.28
  unity_places_expander_set_expanding_state@Base 0.2.28
  unity_places_expander_state_get_type@Base 0.2.28
+ unity_places_file_info_tile_construct@Base 0.2.32
+ unity_places_file_info_tile_get_type@Base 0.2.32
+ unity_places_file_info_tile_new@Base 0.2.32
  unity_places_folder_browser_renderer_construct@Base 0.2.22
  unity_places_folder_browser_renderer_get_type@Base 0.2.22
  unity_places_folder_browser_renderer_new@Base 0.2.22
@@ -594,6 +612,9 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_section_set_resize_factor@Base 0.2.22
  unity_places_section_start_destroy@Base 0.2.22
  unity_places_section_style_get_type@Base 0.2.22
+ unity_places_showcase_tile_construct@Base 0.2.32
+ unity_places_showcase_tile_get_type@Base 0.2.32
+ unity_places_showcase_tile_new@Base 0.2.32
  unity_places_tile_about_to_show@Base 0.2.22
  unity_places_tile_construct@Base 0.2.22
  unity_places_tile_get_comment@Base 0.2.22
@@ -603,7 +624,6 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_tile_get_mimetype@Base 0.2.22
  unity_places_tile_get_type@Base 0.2.22
  unity_places_tile_get_uri@Base 0.2.22
- unity_places_tile_new@Base 0.2.22
  unity_places_trash_controller_construct@Base 0.2.22
  unity_places_trash_controller_get_type@Base 0.2.22
  unity_places_trash_controller_new@Base 0.2.22

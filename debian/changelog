@@ -1,8 +1,9 @@
-unity (0.2.32-0ubuntu1) UNRELEASED; urgency=low
+unity (0.2.32-0ubuntu1) maverick; urgency=low
 
   * New upstream release.
+  * debian/libunity0.symbols: new version update
 
- -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 26 Aug 2010 20:05:56 +0200
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 26 Aug 2010 20:07:01 +0200
 
 unity (0.2.30-0ubuntu1) maverick; urgency=low
 
