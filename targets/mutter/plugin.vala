@@ -46,6 +46,7 @@ namespace Unity
     ZERO,
   }
 
+  /*
   public class ActorBlur : Ctk.Bin
   {
     private Clutter.Clone clone;
@@ -70,6 +71,7 @@ namespace Unity
     }
   }
 
+  */
   public class Plugin : Object, Shell
   {
     /* Signals */
@@ -159,6 +161,29 @@ namespace Unity
     private DBus.Connection screensaver_conn;
     private dynamic DBus.Object screensaver;
 
+    public Gesture.Dispatcher gesture_dispatcher;
+
+    /* Pinch info */
+    private float start_pinch_radius = 0.0f;
+    private unowned Mutter.Window? resize_window = null;
+    /*private float   resize_last_x1 = 0.0f;
+    private float   resize_last_y1 = 0.0f;
+    private float   resize_last_x2 = 0.0f;
+    private float   resize_last_y2 = 0.0f;*/
+
+    /* Pan info */
+    private unowned Mutter.Window? start_pan_window = null;
+    private unowned Clutter.Rectangle? start_frame_rect = null;
+    private float last_pan_x_root = 0.0f;
+    private float last_pan_maximised_x_root = 0.0f;
+    private enum MaximizeType {
+      NONE,
+      FULL,
+      LEFT,
+      RIGHT
+    }
+    private MaximizeType maximize_type = MaximizeType.NONE;
+      
     construct
     {
       fullscreen_requests = new Gee.ArrayList<Object> ();
@@ -317,8 +342,12 @@ namespace Unity
           });
         }
 
+      gesture_dispatcher = new Gesture.XCBDispatcher ();
+      gesture_dispatcher.gesture.connect (on_gesture_received);
+      
       this.ensure_input_region ();
       return false;
+      
     }
 
     private void on_focus_window_changed ()
@@ -770,6 +799,470 @@ namespace Unity
         }
     }
 
+    private void on_gesture_received (Gesture.Event event)
+    {
+      if (event.type == Gesture.Type.TAP &&
+          expose_manager.expose_showing == false)
+        {
+          if (event.fingers == 3)
+            {
+              ;
+            }
+          else if (event.fingers == 4)
+            {
+              show_unity ();
+            }
+        }
+      else if (event.type == Gesture.Type.PINCH &&
+               places_showing == false)
+        {
+          if (event.fingers == 3)
+            {
+              if (event.state == Gesture.State.ENDED)
+                {
+                  var actor = stage.get_actor_at_pos (Clutter.PickMode.ALL,
+                                                      (int)event.root_x,
+                                                      (int)event.root_y);
+                  
+                  while (!(actor is Mutter.Window) && actor != null && actor != stage)
+                    actor = actor.get_parent ();
+
+                  if (actor is Mutter.Window)
+                    {
+                      unowned Mutter.MetaWindow win = (actor as Mutter.Window).get_meta_window ();
+                      bool fullscreen = false;
+
+                      (win as Object).get ("fullscreen", out fullscreen);
+
+                      if (event.pinch_event.radius_delta >= 0.0f)
+                        {
+                          if (Mutter.MetaWindow.is_maximized (win))
+                            {
+                              /* Fullscreen */
+                              Mutter.MetaWindow.make_fullscreen (win);
+                            }
+                          else
+                            {
+                              /* Maximize */
+                              Mutter.MetaWindow.maximize (win,
+                                                          Mutter.MetaMaximizeFlags.HORIZONTAL |
+                                                          Mutter.MetaMaximizeFlags.VERTICAL);
+                            }
+  
+                        }
+                      else
+                        {
+                          if (fullscreen)
+                           {
+                             Mutter.MetaWindow.unmake_fullscreen (win);
+                           }
+                         else if (Mutter.MetaWindow.is_maximized (win))
+                           {
+                             Mutter.MetaWindow.unmaximize (win,
+                                                             Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
+                           }
+                        }
+                    }
+                 }
+
+              /* FIXME: This can't work with the current information we are getting */
+              /*
+              debug ("Resize Window");
+              if (true == true)
+                return;
+
+              if (event.state == Gesture.State.BEGAN)
+                {
+                  resize_window = null;
+
+                  var actor = stage.get_actor_at_pos (Clutter.PickMode.ALL,
+                                                      (int)event.root_x,
+                                                      (int)event.root_y);
+                  if (actor is Mutter.Window == false)
+                    actor = actor.get_parent ();
+
+                  if (actor is Mutter.Window)
+                    {
+                      resize_window = actor as Mutter.Window;
+                      resize_last_x1 = event.pinch_event.bounding_box_x1;
+                      resize_last_y1 = event.pinch_event.bounding_box_y1;
+                      resize_last_x2 = event.pinch_event.bounding_box_x2;
+                      resize_last_y2 = event.pinch_event.bounding_box_y2;
+                    }
+                }
+              else if (event.state == Gesture.State.CONTINUED)
+                {
+                  if (resize_window is Mutter.Window == false)
+                    return;
+
+                  print ("RESIZE: %f %f %f %f\n",
+                         resize_last_x1 - event.pinch_event.bounding_box_x1,
+                         resize_last_y1 - event.pinch_event.bounding_box_y1,
+                         resize_last_x2 - event.pinch_event.bounding_box_x2,
+                         resize_last_y2 - event.pinch_event.bounding_box_y2);
+
+                  var nx = resize_window.x;
+                  var ny = resize_window.y;
+                  var nwidth = resize_window.width;
+                  var nheight = resize_window.height;
+
+                  nx += (resize_last_x1 - event.pinch_event.bounding_box_x1) * event.pinch_event.radius_delta;
+                  ny += (resize_last_y1 - event.pinch_event.bounding_box_y1) * event.pinch_event.radius_delta;
+                  nwidth += (resize_last_x2 - event.pinch_event.bounding_box_x2) * event.pinch_event.radius_delta;
+                  nheight += (resize_last_y2 - event.pinch_event.bounding_box_y2) * event.pinch_event.radius_delta;
+
+                  Mutter.MetaWindow.move_resize (resize_window.get_meta_window (),
+                                                 false,
+                                                 (int)nx,
+                                                 (int)ny,
+                                                 (int)nwidth,
+                                                 (int)nheight);
+                                                 
+ 
+                  resize_last_x1 = event.pinch_event.bounding_box_x1;
+                  resize_last_y1 = event.pinch_event.bounding_box_y1;
+                  resize_last_x2 = event.pinch_event.bounding_box_x2;
+                  resize_last_y2 = event.pinch_event.bounding_box_y2;
+                }
+              else if (event.state == Gesture.State.ENDED)
+                {
+                  if (resize_window is Mutter.Window == false)
+                    return;
+
+                  resize_window = null;
+                }
+              print (@"$event\n");
+              */
+            }
+          else if (event.fingers == 4)
+            {
+              if (event.state == Gesture.State.BEGAN)
+                {
+                  if (expose_manager.expose_showing)
+                    {
+                      expose_manager.end_expose ();
+                    }
+                  else
+                    {
+                      SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
+                      unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
+                      foreach (Mutter.Window w in mutter_windows)
+                        {
+                          windows.append (w);
+                        }
+                      expose_windows (windows,  get_launcher_width_foobar () + 10);
+                    }
+
+                  foreach (ExposeClone clone in expose_manager.exposed_windows)
+                    {
+                      clone.get_animation ().get_timeline ().pause ();
+                    }
+
+                  start_pinch_radius = event.pinch_event.radius_delta;
+                }
+              else if (event.state == Gesture.State.CONTINUED)
+                {
+                  foreach (ExposeClone clone in expose_manager.exposed_windows)
+                    {
+                      int I_JUST_PULLED_THIS_FROM_MY_FOO = 5;
+
+                      if (event.pinch_event.radius_delta >= 0)
+                        {
+                          if (start_pinch_radius < 0)
+                            {
+                              /* We're moving backward */
+                              I_JUST_PULLED_THIS_FROM_MY_FOO *= -1;
+                            }
+                        }
+                      else
+                        {
+                          if (start_pinch_radius >= 0)
+                            {
+                              /* We're moving backward */
+                              I_JUST_PULLED_THIS_FROM_MY_FOO *= -1;
+                            }
+                        }
+
+                      var tl = clone.get_animation ().get_timeline ();
+                      tl.advance (tl.get_elapsed_time ()
+                                  + I_JUST_PULLED_THIS_FROM_MY_FOO);
+                     
+                      float factor = (float)tl.get_elapsed_time () /
+                                     (float)tl.get_duration ();
+                      
+                      Value v = Value (typeof (float));
+                      
+                      var interval = clone.get_animation ().get_interval ("x");
+                      interval.compute_value (factor, v);
+                      clone.x = v.get_float ();
+
+                      interval = clone.get_animation ().get_interval ("y");
+                      interval.compute_value (factor, v);
+                      clone.y = v.get_float ();
+
+                      double scalex, scaley;
+                      clone.get_scale (out scalex, out scaley);
+
+                      v = Value (typeof (double));
+
+                      interval = clone.get_animation ().get_interval ("scale-x");
+                      interval.compute_value (factor, v);
+                      scalex = v.get_double ();
+
+                      interval = clone.get_animation ().get_interval ("scale-y");
+                      interval.compute_value (factor, v);
+                      scaley = v.get_double ();
+
+                      clone.set_scale (scalex, scaley);
+                    }
+                 }
+              else if (event.state == Gesture.State.ENDED)
+                {
+                  foreach (ExposeClone clone in expose_manager.exposed_windows)
+                    {
+                      var anim = clone.get_animation ();
+                      
+                      Value v = Value (typeof (float));
+                      
+                      var interval = anim.get_interval ("x");
+                      v.set_float (clone.x);
+                      interval.set_initial_value (v);
+
+                      interval = anim.get_interval ("y");
+                      v.set_float (clone.y);
+                      interval.set_initial_value (v);
+
+                      v = Value (typeof (double));
+                      double scalex, scaley;
+                      clone.get_scale (out scalex, out scaley);
+
+                      interval = anim.get_interval ("scale-x");
+                      v.set_double (scalex);
+                      interval.set_initial_value (v);
+
+                      interval = anim.get_interval ("scale-y");
+                      v.set_double (scaley);
+                      interval.set_initial_value (v);
+
+                      clone.get_animation ().get_timeline ().start ();
+                      clone.queue_relayout ();
+                    }
+                }
+            }
+        }
+      else if (event.type == Gesture.Type.PAN)
+        {
+          if (resize_window is Mutter.Window)
+            return;
+          if (event.fingers == 3)
+            {
+              if (event.state == Gesture.State.BEGAN)
+                {
+                  start_pan_window = null;
+
+                  var actor = stage.get_actor_at_pos (Clutter.PickMode.ALL,
+                                                      (int)event.root_x,
+                                                      (int)event.root_y);
+                  if (actor is Mutter.Window == false)
+                    actor = actor.get_parent ();
+
+                  if (actor is Mutter.Window)
+                    {
+                      start_pan_window = actor as Mutter.Window;
+
+                      if (start_pan_window.get_window_type () != Mutter.MetaCompWindowType.NORMAL &&
+                          start_pan_window.get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
+                          start_pan_window.get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG &&
+                          start_pan_window.get_window_type () != Mutter.MetaCompWindowType.UTILITY)
+                        start_pan_window = null;
+                    }
+                }
+              else if (event.state == Gesture.State.CONTINUED)
+                {
+                  if (start_pan_window is Mutter.Window == false)
+                    return;
+
+                  last_pan_x_root = event.root_x;
+
+                  unowned Mutter.MetaWindow win = start_pan_window.get_meta_window ();
+                  bool fullscreen = false;
+                  win.get ("fullscreen", out fullscreen);
+
+                  if (!Mutter.MetaWindow.is_maximized (win) && fullscreen == false)
+                    {
+                      if (start_pan_window.y == PANEL_HEIGHT
+                          && event.pan_event.delta_y < 0.0f)
+                        {
+                          if (start_frame_rect is Clutter.Rectangle == false)
+                            {
+                              Clutter.Rectangle frame = new Clutter.Rectangle.with_color ({ 0, 0, 0, 10 });
+                              frame.border_color = { 255, 255, 255, 255 };
+                              frame.border_width = 3;
+
+                              stage.add_actor (frame);
+                              frame.set_size (start_pan_window.width,
+                                              start_pan_window.height);
+                              frame.set_position (start_pan_window.x,
+                                                  start_pan_window.y);
+                              frame.show ();
+
+                             start_frame_rect = frame;
+
+                              last_pan_maximised_x_root = event.root_x;
+                            }
+
+                          maximize_type = MaximizeType.FULL;
+                          var MAX_DELTA = 50.0f;
+                          if (event.root_x < last_pan_maximised_x_root - MAX_DELTA)
+                            {
+                              maximize_type = MaximizeType.LEFT;
+                              start_frame_rect.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                                        150,
+                                                        "x", (float)QUICKLAUNCHER_WIDTH,
+                                                        "y", (float)PANEL_HEIGHT,
+                                                        "width", (stage.width - QUICKLAUNCHER_WIDTH)/2.0f,
+                                                        "height", stage.height - PANEL_HEIGHT);
+
+                            }
+                          else if (event.root_x > last_pan_maximised_x_root + MAX_DELTA)
+                            {
+                              maximize_type = MaximizeType.RIGHT;
+                              start_frame_rect.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                                        150,
+                                                        "x", (float)((stage.width - QUICKLAUNCHER_WIDTH)/2.0f) + QUICKLAUNCHER_WIDTH,
+                                                        "y", (float)PANEL_HEIGHT,
+                                                        "width", (stage.width - QUICKLAUNCHER_WIDTH)/2.0f,
+                                                        "height", stage.height - PANEL_HEIGHT);
+                            }
+                          else
+                            {
+                              start_frame_rect.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                                        150,
+                                                        "x", (float)QUICKLAUNCHER_WIDTH,
+                                                        "y", (float)PANEL_HEIGHT,
+                                                        "width", stage.width - QUICKLAUNCHER_WIDTH,
+                                                        "height", stage.height - PANEL_HEIGHT);
+
+                             }
+                        }
+                     else
+                        {
+                          start_pan_window.x += Math.floorf (event.pan_event.delta_x + 0.5f);
+                          start_pan_window.y += Math.floorf (event.pan_event.delta_y + 0.5f);
+                          start_pan_window.x = float.max (start_pan_window.x, QUICKLAUNCHER_WIDTH);
+                          start_pan_window.y = float.max (start_pan_window.y, PANEL_HEIGHT);
+
+                          if (start_frame_rect is Clutter.Rectangle)
+                            {
+                              if (start_frame_rect.opacity == 0)
+                                {
+                                  stage.remove_actor (start_frame_rect);
+                                  start_frame_rect = null;
+                                }
+                              else if (start_pan_window.y > PANEL_HEIGHT + 5 &&
+                                (start_frame_rect.get_animation () is Clutter.Animation == false))
+                                {
+                                  start_frame_rect.animate (Clutter.AnimationMode.EASE_IN_QUAD,
+                                                            150,
+                                                            "x", start_pan_window.x,
+                                                            "y", start_pan_window.y,
+                                                            "width", start_pan_window.width,
+                                                            "height", start_pan_window.height,
+                                                            "opacity", 0);
+                                }
+                            }
+                        }
+                    }
+                  else
+                    {
+                      if (event.pan_event.delta_y >= 0.0f && fullscreen == false)
+                        {
+                          Mutter.MetaWindow.unmaximize (win,
+                                                        Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
+                        }
+                    }
+                }
+              else if (event.state == Gesture.State.ENDED)
+                {
+                  if (start_pan_window is Mutter.Window)
+                    {
+                      unowned Mutter.MetaWindow win = start_pan_window.get_meta_window ();
+                      float nx = 0;
+                      float ny = 0;
+                      float nwidth = 0;
+                      float nheight = 0;
+                      bool  move_resize = false;
+                      bool fullscreen = false;
+                      win.get ("fullscreen", out fullscreen);
+
+                      int wx, wy, ww, wh;
+                      Mutter.MetaWindow.get_geometry (win, out wx, out wy, out ww, out wh);
+                      Mutter.MetaRectangle rect = Mutter.MetaRectangle ();
+                      Mutter.MetaWindow.get_outer_rect (win, rect);
+
+                      if (Mutter.MetaWindow.is_maximized (win) || fullscreen)
+                        {
+                        }
+                      else if (start_pan_window.y == PANEL_HEIGHT && event.pan_event.delta_y < 0.0f)
+                        {
+                          if (maximize_type == MaximizeType.FULL)
+                            {
+                            
+                              Mutter.MetaWindow.maximize (win,
+                                                          Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
+                            }
+                          else if (maximize_type == MaximizeType.RIGHT)
+                            {
+                              nx = (float)QUICKLAUNCHER_WIDTH + (stage.width-QUICKLAUNCHER_WIDTH)/2.0f;
+                              ny = (float)PANEL_HEIGHT;
+                              nwidth = (stage.width - QUICKLAUNCHER_WIDTH)/2.0f;
+                              nheight = stage.height - PANEL_HEIGHT;
+
+                              move_resize = true;
+                            }
+                          else if (maximize_type == MaximizeType.LEFT)
+                            {
+                              nx = (float)QUICKLAUNCHER_WIDTH;
+                              ny = (float)PANEL_HEIGHT;
+                              nwidth = (stage.width - QUICKLAUNCHER_WIDTH)/2.0f;
+                              nheight = stage.height - PANEL_HEIGHT;
+
+                              move_resize = true;
+                            }
+                        }
+                      else
+                        {
+                          /* FIXME: We need to somehow convince Mutter to tell
+                           * us the size of the frame. 27 = top + bottom frame
+                           * 1 = left frame
+                           * 24 = size of top frame
+                           */
+                          nx = start_pan_window.x;
+                          ny = start_pan_window.y; /* Kittens are dying */
+                          nwidth = start_pan_window.width;
+                          nheight = start_pan_window.height;
+                          move_resize = true;
+
+                          print ("%d %d %d %d\n",wx, wy, rect.x, rect.y);
+                        }
+
+                      X.Window xwin = start_pan_window.get_x_window ();
+                      unowned Gdk.Window w = Gdk.Window.foreign_new ((Gdk.NativeWindow)xwin);
+                      if (w is Gdk.Window && move_resize)
+                        {
+                          Mutter.MetaWindow.move_resize (win, false, ((int)nx),
+                                                         ((int)ny),
+                                                         (int)nwidth, (int)nheight);
+                        }
+                    }
+
+                    if (start_frame_rect is Clutter.Rectangle)
+                      stage.remove_actor (start_frame_rect);
+                }
+            }
+        }
+    }
+
     /*
      * MUTTER PLUGIN HOOKS
      */
@@ -889,6 +1382,5 @@ namespace Unity
     {
       return this.get_launcher_width ();
     }
-
   }
 }

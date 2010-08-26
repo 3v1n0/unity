@@ -44,6 +44,11 @@ namespace Unity.Testing
     private string sec_col;
     private string filename;
 
+    public Background ()
+    {
+      Object ();
+    }
+
     construct
     {
       START_FUNCTION ();

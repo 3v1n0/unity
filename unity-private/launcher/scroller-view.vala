@@ -586,9 +586,6 @@ namespace Unity.Launcher
       Cairo.TextExtents real_extents = Cairo.TextExtents ();
       cr.text_extents (text, out extents);
 
-      double w_diff = extents.width - real_extents.width;
-      double h_diff = extents.height - real_extents.height;
-
       w += extents.width;
       h += extents.height;
       cr.set_source_rgba (0.07, 0.07, 0.07, 0.8);

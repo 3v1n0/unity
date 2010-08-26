@@ -127,6 +127,13 @@ launcher_sources = \
   launcher/scroller-model.vala \
   launcher/scroller-view.vala
 
+gesture_sources = \
+  gesture/gesture-dispatcher.vala \
+  gesture/gesture-dispatcher-xcb.vala \
+  gesture/gesture-dispatcher-xcb-glu.vala \
+  gesture/gesture-event.vala
+
+
 testing_sources = \
   testing/background.vala \
   testing/object-registry.vala \
@@ -136,6 +143,7 @@ testing_sources = \
   testing/test-window.vala
 
 libunity_private_la_VALASOURCES = \
+  $(gesture_sources) \
   $(private_sources) \
   $(panel_sources) \
   $(places_sources) \
@@ -143,6 +151,9 @@ libunity_private_la_VALASOURCES = \
   $(testing_sources)
 
 libunity_private_la_SOURCES = \
+  gesture/gesture.c \
+  gesture/gesture.h \
+  gesture/gesture-dispatcher-xcb-glue.c \
   unity-utils.c \
   unity-utils.h \
   $(libunity_private_la_VALASOURCES:.vala=.c)

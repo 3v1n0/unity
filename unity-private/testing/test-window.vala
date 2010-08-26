@@ -43,6 +43,7 @@ namespace Unity.Testing
     private Panel.View          panel;
     private Places.Controller   controller;
     private Unity.Places.View   places;
+    private Gesture.Dispatcher  gesture_dispatcher;
 
     private bool showing_places;
 
@@ -155,6 +156,8 @@ namespace Unity.Testing
         {
           this.wnck_screen.active_window_changed.connect (this.on_active_window_changed);
         }
+
+      gesture_dispatcher = new Gesture.XCBDispatcher ();
 
       END_FUNCTION ();
     }
