@@ -1,8 +1,8 @@
-unity (0.2.32-0ubuntu2) UNRELEASED; urgency=low
+unity (0.2.32-0ubuntu2) maverick; urgency=low
 
   * debian/control: clean the build-depends on libvala it's not required
 
- -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 26 Aug 2010 22:39:28 +0200
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 26 Aug 2010 22:41:53 +0200
 
 unity (0.2.32-0ubuntu1) maverick; urgency=low
 
