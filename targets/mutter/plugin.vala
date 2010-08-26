@@ -823,7 +823,8 @@ namespace Unity
                   var actor = stage.get_actor_at_pos (Clutter.PickMode.ALL,
                                                       (int)event.root_x,
                                                       (int)event.root_y);
-                  if (actor is Mutter.Window == false)
+                  
+                  while (!(actor is Mutter.Window) && actor != null && actor != stage)
                     actor = actor.get_parent ();
 
                   if (actor is Mutter.Window)
