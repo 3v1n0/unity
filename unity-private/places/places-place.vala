@@ -159,63 +159,142 @@ namespace Unity.Places
       service.EntryRemoved.connect (on_service_entry_removed);
 
       /* Make sure our entries are up-to-date */
-      ValueArray[] entries = service.get_entries ();
-      for (int i = 0; i < entries.length; i++)
-        {
-          unowned ValueArray array = entries[i];
-          var path = array.get_nth (0).get_string ();
-          bool existing = false;
-
-          foreach (PlaceEntry e in entries_array)
-            {
-              var entry = e as PlaceEntryDbus;
-              if (entry.dbus_path == path)
-                {
-                  entry.update_info (array);
-                  entry.connect ();
-                  entry.parent = this;
-                  existing = true;
-                }
-            }
-
-          if (existing == false)
-            {
-              on_service_entry_added (service, array);
-            }
-        }
-
-      /* Now remove those that couldn't connect or did not exist in the live
-       * place
+      /* FIXME: In a world without Vala this would be async, however due to
+       * it's troubles with marshalling complex types (which I concede cannot
+       * be easy), we need to do a poor-mans async and call it in an idle
+       * instead.
        */
-      /* FIXME: Make this cleaner */
-      ArrayList<PlaceEntry> old = new ArrayList<PlaceEntry> ();
-      foreach (PlaceEntry entry in entries_array)
-        {
-          if (entry.online == false)
-            old.add (entry);
-        }
-      foreach (PlaceEntry entry in old)
-        {
-          entry_removed (entry);
-          entries_array.remove (entry);
-        }
+      Idle.add (() => {
+        ValueArray[] entries = service.get_entries ();
+        for (int i = 0; i < entries.length; i++)
+          {
+            unowned ValueArray array = entries[i];
+            var path = array.get_nth (0).get_string ();
+            bool existing = false;
+
+            foreach (PlaceEntry e in entries_array)
+              {
+                var entry = e as PlaceEntryDbus;
+                if (entry.dbus_path == path)
+                  {
+                    entry.update_info (array);
+                    entry.connect ();
+                    entry.parent = this;
+                    existing = true;
+                  }
+              }
+
+            if (existing == false)
+              {
+                on_service_entry_added (service, array);
+              }
+          }
+
+        /* Now remove those that couldn't connect or did not exist in the live
+         * place
+         */
+        /* FIXME: Make this cleaner */
+        ArrayList<PlaceEntry> old = new ArrayList<PlaceEntry> ();
+        foreach (PlaceEntry entry in entries_array)
+          {
+            if (entry.online == false)
+              old.add (entry);
+          }
+        foreach (PlaceEntry entry in old)
+          {
+            entry_removed (entry);
+            entries_array.remove (entry);
+          }
+        return false;
+      });
 
       online = true;
     }
 
-    public bool activate (string uri)
+    /* Dispatch an activation request to the place daemon,
+     * if it has any registered handlers */
+    public ActivationStatus activate (string uri, string mimetype)
     {
+      bool remote_activation = false;
+    
+      if (uri_regex != null && uri_regex.match (uri))
+        remote_activation = true;
+      else if (mime_regex != null && mime_regex.match (mimetype))
+        remote_activation = true;
+      
+      if (!remote_activation)
+        {
+          activate_fallback.begin (uri);
+          return ActivationStatus.ACTIVATED_FALLBACK;
+        }
+      
       if (activation_service == null)
         {
             activation_service = connection.get_object (dbus_name,
                                                         dbus_path,
                                                         "com.canonical.Unity.Activation");
         }
-
-      return activation_service.activate (uri);
+      
+      // FIXME: This should be async
+      uint32 result = activation_service.activate (uri);
+      
+      switch (result)
+      {
+        case 0:
+          activate_fallback.begin (uri);
+          return ActivationStatus.ACTIVATED_FALLBACK;
+        case 1:
+          return ActivationStatus.ACTIVATED_SHOW_DASH;
+        case 2:
+          return ActivationStatus.ACTIVATED_HIDE_DASH;
+        default:
+          warning ("Illegal response from com.canonical.Unity.Activation.Activate: %u", result);
+          return ActivationStatus.NOT_ACTIVATED;
+      }
     }
 
     /* Private Methods */
+    private async void activate_fallback (string uri)
+    {
+      if (uri.has_prefix ("application://"))
+        {
+          var id = uri.offset ("application://".length);
+
+          AppInfo info;
+          try {
+            var appinfos = AppInfoManager.get_instance ();
+            info = yield appinfos.lookup_async (id);
+          } catch (Error ee) {
+            warning ("Unable to read .desktop file '%s': %s", uri, ee.message);
+            return;
+          }
+
+          if (info is AppInfo)
+            {
+              try {
+                info.launch (null,null);
+              } catch (Error e) {
+                warning ("Unable to launch desktop file %s: %s\n",
+                         id,
+                         e.message);
+              }
+            }
+          else
+            {
+              warning ("%s is an invalid DesktopAppInfo id\n", id);
+            }
+          return;
+        }
+
+      try {
+        Gtk.show_uri (Gdk.Screen.get_default (),
+                      uri,
+                      0);
+       } catch (GLib.Error eee) {
+         warning ("Unable to launch: %s\n", eee.message);
+       }
+    }
+    
     private void on_service_entry_added (dynamic DBus.Object   dbus_object,
                                          ValueArray            info)
     {
@@ -316,6 +395,19 @@ namespace Unity.Places
                                            show_global,
                                            show_entry);
     }
+  }
+  
+  /**
+   * Return values for Unity.Places.Place.activate().
+   * NOTE: These values do *not* coincide with the dbus wire
+   *       values fo com.canonical.Unity.Activation.Activate()
+   */
+  public enum ActivationStatus
+  {
+    NOT_ACTIVATED,       /* Redrum! Something bad happened */
+    ACTIVATED_FALLBACK,  /* No remote activation, local fallback */
+    ACTIVATED_SHOW_DASH, /* Remote activation. Keep showing the dash */
+    ACTIVATED_HIDE_DASH  /* Remote activation. Hide the dash */
   }
 }
 

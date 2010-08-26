@@ -29,7 +29,8 @@ namespace Unity.Places
 
   public class PlaceSearchSectionsBar : Ctk.Box
   {
-    static const int SPACING = 10;
+    static const float PADDING = 0.0f;
+    static const int   SPACING = 10;
 
     /* Properties */
     public SectionStyle _style = SectionStyle.BUTTONS;
@@ -59,13 +60,12 @@ namespace Unity.Places
 
     construct
     {
-      /*
       padding = {
-        SPACING * 2.0f,
-        SPACING * 1.0f,
-        SPACING * 1.0f,
-        SPACING * 1.0f
-      };*/
+        0.0f,
+        PADDING,
+        0.0f,
+        PADDING
+      };
 
       bg = new CairoCanvas (paint_bg);
       set_background (bg);
@@ -267,7 +267,7 @@ namespace Unity.Places
       width -= 1;
       height -= 1;
       var radius = 5;
-      var point = x;
+      var point = x - 1;
 
       if (_style != SectionStyle.BREADCRUMB)
         {

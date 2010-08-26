@@ -316,16 +316,34 @@ namespace Unity.Launcher
       requires (a is Bamf.Window)
       requires (b is Bamf.Window)
     {
-      if ((b as Bamf.Window).last_active () > (a as Bamf.Window).last_active ())
+      unowned Bamf.Window awin = a as Bamf.Window;
+      unowned Bamf.Window bwin = b as Bamf.Window;
+      bool aurgent = awin.is_urgent ();
+      bool burgent = bwin.is_urgent ();
+
+      /* Urgent overrides time */
+      if (aurgent && !burgent)
         {
           return 1;
         }
-      else if ((b as Bamf.Window).last_active () == (a as Bamf.Window).last_active ())
+      else if (!aurgent && burgent)
+        {
+          return -1;
+        }
+      else if (awin.last_active () > bwin.last_active ())
+        {
+          /* Positive when a > b */
+          return 1;
+        }
+      else if (awin.last_active () < bwin.last_active ())
+        {
+          /* Negative when a < b */
+          return -1;
+        }
+      else
         {
           return 0;
         }
-
-      return -1;
     }
 
 
@@ -352,9 +370,7 @@ namespace Unity.Launcher
           Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
           try
             {
-              var desktop_keyfile = new KeyFile ();
-              desktop_keyfile.load_from_file (desktop_file, 0);
-              AppInfo appinfo = new DesktopAppInfo.from_keyfile (desktop_keyfile);
+              var appinfo = new DesktopAppInfo.from_filename (desktop_file);
               context.set_screen (Gdk.Display.get_default ().get_default_screen ());
               context.set_timestamp (Gdk.CURRENT_TIME);
 

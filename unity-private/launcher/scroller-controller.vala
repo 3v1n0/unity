@@ -27,7 +27,7 @@ namespace Unity.Launcher
     private Gee.ArrayList<ScrollerChildController> childcontrollers;
 
     /* constants */
-    private const uint DRAG_SAFE_ZONE = 300;
+    private const uint DRAG_SAFE_ZONE = 200;
 
     private Bamf.Matcher matcher;
 
@@ -269,6 +269,9 @@ namespace Unity.Launcher
       {
         ScrollerChild child = (drag_controller.get_drag_model () as ScrollerChildController).child;
         child.opacity = 0;
+        child.do_not_render = true;
+        view.drag_indicator_active = true;
+        view.drag_indicator_space = true;
         view.do_queue_redraw ();
       }
     }
@@ -283,7 +286,6 @@ namespace Unity.Launcher
       last_drag_x = x;
       last_drag_y = y;
 
-
       var drag_controller = Drag.Controller.get_default ();
       // check to see if the data matches any of our children
       if (!(drag_controller.get_drag_model () is ScrollerChildController))
@@ -292,16 +294,46 @@ namespace Unity.Launcher
       }
       ScrollerChild retcont = (drag_controller.get_drag_model () as ScrollerChildController).child;
 
-
       if (x > view.get_width () + DRAG_SAFE_ZONE &&
           retcont.group_type != ScrollerChild.GroupType.PLACE &&
           retcont.group_type != ScrollerChild.GroupType.SYSTEM)
         {
           // we need to remove this child from the model, its been dragged out
           model.remove (retcont);
+          view.drag_indicator_active = false;
+          if (retcont is ScrollerChild)
+            {
+              if (retcont.enable_close_state == false);
+                {
+                  retcont.enable_close_state = true;
+                }
+            }
         }
       else
         {
+          if (retcont is ScrollerChild)
+            {
+
+              if (retcont.enable_close_state == true)
+                {
+                  retcont.enable_close_state = false;
+                }
+            }
+
+          if (x < view.get_width ())
+            {
+              if (view.drag_indicator_space != true)
+                view.drag_indicator_space = true;
+            }
+          else if (x > view.get_width () && x < view.get_width () + DRAG_SAFE_ZONE)
+            {
+              if (view.drag_indicator_space != false)
+                view.drag_indicator_space = false;
+
+              if (view.drag_indicator_active != true)
+                view.drag_indicator_active = true;
+            }
+
           // if the actor is not in the model, add it. because its now in there!
           // find the index at this position
           int model_index = view.get_model_index_at_y_pos_no_anim (y, true);
@@ -309,35 +341,16 @@ namespace Unity.Launcher
 
           //we have to check to see if we would still be over the index
           //if it was done animating
-/*
-          GLib.Value value = Value (typeof (float));
-          var child = model[model_index];
-          Clutter.Animation anim = child.get_animation ();
-          if (anim is Clutter.Animation)
-            {
-              debug ("is animating");
-              Clutter.Interval interval = anim.get_interval ("position");
-              interval.get_final_value (value);
-            }
+          if (retcont in model)
+            model.move (retcont, int.max (model_index, 0));
           else
+            model.insert (retcont, int.max (model_index, 0));
+
+          if (model_index != view.drag_indicator_index)
             {
-              debug ("is not animating");
-              value.set_float (y);
-            }
-
-          debug ("%f", Math.fabsf (value.get_float () - y));
-
-          if (Math.fabsf (value.get_float () - y) < 48)
-            {
-              debug ("moving things");
-*/
-              if (retcont in model)
-                model.move (retcont, int.max (model_index, 0));
-              else
-                model.insert (retcont, int.max (model_index, 0));
-
+              view.drag_indicator_index = model_index;
               view.do_queue_redraw ();
-            //}
+            }
         }
     }
 
@@ -350,15 +363,16 @@ namespace Unity.Launcher
         view.cache.update_texture_cache ();
         return;
       }
+      view.drag_indicator_active = false;
       ScrollerChildController model_controller = drag_controller.get_drag_model () as ScrollerChildController;
       ScrollerChild retcont = model_controller.child;
-      
+
       if (retcont.group_type == ScrollerChild.GroupType.PLACE ||
           retcont.group_type == ScrollerChild.GroupType.SYSTEM)
         {
           ; /* Do nothing */
         }
-      else if (x > view.get_width ())
+      else if (x > view.get_width () + DRAG_SAFE_ZONE)
         {
           // it was dropped outside of the launcher.. oh well, obliterate it.
           if (retcont.controller is ApplicationController)
@@ -387,6 +401,7 @@ namespace Unity.Launcher
         }
       // if it was dropped inside of the launcher, its allready been added
       retcont.opacity = 255;
+      retcont.do_not_render = false;
       // disconnect our drag controller signals
       drag_controller.drag_motion.disconnect (this.on_unity_drag_motion);
       drag_controller.drag_drop.disconnect (this.on_unity_drag_drop);

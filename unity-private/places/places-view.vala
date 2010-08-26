@@ -29,7 +29,8 @@ namespace Unity.Places
 
     public PlaceModel model { get; construct; }
 
-    private Ctk.VBox  content_box;
+    private Ctk.VBox   content_box;
+    private LayeredBin layered_bin;
 
     public  PlaceHomeEntry       home_entry;
     public  PlaceSearchBar       search_bar;
@@ -70,6 +71,10 @@ namespace Unity.Places
       search_bar = new PlaceSearchBar ();
       content_box.pack (search_bar, false, true);
       search_bar.show ();
+
+      layered_bin = new LayeredBin ();
+      content_box.pack (layered_bin, true, true);
+      layered_bin.show ();
     }
 
     public void shown ()
@@ -114,13 +119,20 @@ namespace Unity.Places
       /* Create the correct results view */
       if (renderer is Clutter.Actor)
         {
-          renderer.destroy ();
+          var anim = renderer.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                       300,
+                                       "opacity", 0);
+          anim.completed.connect ((a)=> {
+            (a.get_object () as Clutter.Actor).destroy ();
+            });
         }
 
-      renderer.destroy ();
-
       renderer = lookup_renderer (entry);
-      content_box.pack (renderer, true, true);
+      layered_bin.add_actor (renderer);
+      renderer.opacity = 0;
+      renderer.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 300,
+                        "opacity", 255);
+
       renderer.set_models (entry.entry_groups_model,
                            entry.entry_results_model,
                            entry.entry_renderer_hints);
@@ -161,68 +173,21 @@ namespace Unity.Places
 
     private void on_result_activated (string uri, string mimetype)
     {
-      bool check_with_service = false;
-
-      if (active_entry.parent is Place)
-        {
-          if (active_entry.parent.uri_regex != null &&
-              active_entry.parent.uri_regex.match (uri))
-            check_with_service = true;
-
-          if (active_entry.parent.mime_regex != null &&
-              active_entry.parent.mime_regex.match (mimetype))
-            check_with_service = true;
-        }
-
-      if (check_with_service)
-        {
-          if (active_entry.parent.activate (uri))
-            return;        
-        }
-      activate_normal.begin (uri);
-    }
-
-    private async void activate_normal (string uri)
-    {
-      global_shell.hide_unity ();
-
-      if (uri.has_prefix ("application://"))
-        {
-          var id = uri.offset ("application://".length);
-
-          AppInfo info;
-          try {
-            var appinfos = AppInfoManager.get_instance ();
-            info = yield appinfos.lookup_async (id);
-          } catch (Error ee) {
-            warning ("Unable to read .desktop file '%s': %s", uri, ee.message);
-            return;
-          }
-
-          if (info is AppInfo)
-            {
-              try {
-                info.launch (null,null);
-              } catch (Error e) {
-                warning ("Unable to launch desktop file %s: %s\n",
-                         id,
-                         e.message);
-              }
-            }
-          else
-            {
-              warning ("%s is an invalid DesktopAppInfo id\n", id);
-            }
-          return;
-        }
-
-      try {
-        Gtk.show_uri (Gdk.Screen.get_default (),
-                      uri,
-                      0);
-       } catch (GLib.Error eee) {
-         warning ("Unable to launch: %s\n", eee.message);
-       }
+      ActivationStatus result = active_entry.parent.activate (uri, mimetype);
+      
+      switch (result)
+      {
+        case ActivationStatus.ACTIVATED_SHOW_DASH:
+          break;
+        case ActivationStatus.NOT_ACTIVATED:
+        case ActivationStatus.ACTIVATED_HIDE_DASH:          
+        case ActivationStatus.ACTIVATED_FALLBACK:
+          global_shell.hide_unity ();
+          break;
+        default:
+          warning ("Unexpected activation status: %u", result);
+          break;
+      }
     }
   }
 }

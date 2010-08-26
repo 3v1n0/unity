@@ -90,6 +90,7 @@ am__objects_1 = libunity_la-chrome-handler.lo \
 	libunity_la-unity-cairo-canvas.lo \
 	libunity_la-unity-expanding-bin.lo \
 	libunity_la-unity-favorites.lo libunity_la-unity-io.lo \
+	libunity_la-unity-layered-bin.lo \
 	libunity_la-unity-pixbuf-cache.lo libunity_la-unity-place.lo \
 	libunity_la-unity-place-activation.lo \
 	libunity_la-unity-place-browser.lo \
@@ -362,6 +363,7 @@ libunity_la_VALASOURCES = \
   unity-expanding-bin.vala \
   unity-favorites.vala \
   unity-io.vala \
+  unity-layered-bin.vala \
   unity-pixbuf-cache.vala \
   unity-place.vala \
   unity-place-activation.vala \
@@ -463,6 +465,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-expanding-bin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-favorites.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-io.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-layered-bin.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-pixbuf-cache.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-place-activation.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_la-unity-place-browser.Plo@am__quote@
@@ -606,6 +609,14 @@ libunity_la-unity-io.lo: unity-io.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='unity-io.c' object='libunity_la-unity-io.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-unity-io.lo `test -f 'unity-io.c' || echo '$(srcdir)/'`unity-io.c
+
+libunity_la-unity-layered-bin.lo: unity-layered-bin.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-unity-layered-bin.lo -MD -MP -MF $(DEPDIR)/libunity_la-unity-layered-bin.Tpo -c -o libunity_la-unity-layered-bin.lo `test -f 'unity-layered-bin.c' || echo '$(srcdir)/'`unity-layered-bin.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_la-unity-layered-bin.Tpo $(DEPDIR)/libunity_la-unity-layered-bin.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='unity-layered-bin.c' object='libunity_la-unity-layered-bin.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_la-unity-layered-bin.lo `test -f 'unity-layered-bin.c' || echo '$(srcdir)/'`unity-layered-bin.c
 
 libunity_la-unity-pixbuf-cache.lo: unity-pixbuf-cache.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_la-unity-pixbuf-cache.lo -MD -MP -MF $(DEPDIR)/libunity_la-unity-pixbuf-cache.Tpo -c -o libunity_la-unity-pixbuf-cache.lo `test -f 'unity-pixbuf-cache.c' || echo '$(srcdir)/'`unity-pixbuf-cache.c
