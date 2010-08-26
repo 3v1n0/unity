@@ -118,7 +118,7 @@ typedef struct _UnityTestingObjectRegistryClass UnityTestingObjectRegistryClass;
 #define _unity_testing_object_registry_unref0(var) ((var == NULL) ? NULL : (var = (unity_testing_object_registry_unref (var), NULL)))
 typedef struct _UnityPlacesPlaceSearchEntryPrivate UnityPlacesPlaceSearchEntryPrivate;
 #define _g_hash_table_unref0(var) ((var == NULL) ? NULL : (var = (g_hash_table_unref (var), NULL)))
-typedef struct _Block4Data Block4Data;
+typedef struct _Block5Data Block5Data;
 typedef struct _UnityPlacesPlaceSearchBarBackgroundPrivate UnityPlacesPlaceSearchBarBackgroundPrivate;
 #define _cairo_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_destroy (var), NULL)))
 #define _cairo_pattern_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_pattern_destroy (var), NULL)))
@@ -200,7 +200,7 @@ struct _UnityPlacesPlaceSearchEntryClass {
 	CtkBoxClass parent_class;
 };
 
-struct _Block4Data {
+struct _Block5Data {
 	int _ref_count_;
 	UnityPlacesPlaceSearchBar * self;
 	guint section;
@@ -241,7 +241,7 @@ GType unity_places_place_search_sections_bar_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_PLACES_PLACE_SEARCH_BAR_DUMMY_PROPERTY
 };
-#define UNITY_PLACES_PLACE_SEARCH_BAR_SPACING 12
+#define UNITY_PLACES_PLACE_SEARCH_BAR_SPACING 8
 #define UNITY_PLACES_PLACE_SEARCH_BAR_RANDOM_TEXT_WIDTH 400
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_new (void);
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_construct (GType object_type);
@@ -267,13 +267,13 @@ void unity_places_place_entry_set_search (UnityPlacesPlaceEntry* self, const cha
 void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearchBar* self, UnityPlacesPlaceEntry* entry, gint x, guint section);
 void unity_places_place_search_bar_background_set_entry_position (UnityPlacesPlaceSearchBarBackground* self, gint value);
 void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSearchSectionsBar* self, UnityPlacesPlaceEntry* entry);
-static gboolean _lambda37_ (Block4Data* _data4_);
+static gboolean _lambda40_ (Block5Data* _data5_);
 void unity_places_place_search_sections_bar_set_active_section (UnityPlacesPlaceSearchSectionsBar* self, guint section_id);
-static gboolean __lambda37__gsource_func (gpointer self);
+static gboolean __lambda40__gsource_func (gpointer self);
 void unity_places_place_search_navigation_set_active_entry (UnityPlacesPlaceSearchNavigation* self, UnityPlacesPlaceEntry* entry);
 void unity_places_place_search_entry_set_active_entry (UnityPlacesPlaceSearchEntry* self, UnityPlacesPlaceEntry* entry);
-static Block4Data* block4_data_ref (Block4Data* _data4_);
-static void block4_data_unref (Block4Data* _data4_);
+static Block5Data* block5_data_ref (Block5Data* _data5_);
+static void block5_data_unref (Block5Data* _data5_);
 UnityPlacesPlaceSearchNavigation* unity_places_place_search_navigation_new (void);
 UnityPlacesPlaceSearchNavigation* unity_places_place_search_navigation_construct (GType object_type);
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_new (void);
@@ -397,56 +397,56 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static gboolean _lambda37_ (Block4Data* _data4_) {
+static gboolean _lambda40_ (Block5Data* _data5_) {
 	UnityPlacesPlaceSearchBar * self;
 	gboolean result = FALSE;
-	self = _data4_->self;
-	unity_places_place_search_sections_bar_set_active_section (self->priv->sections, _data4_->section);
+	self = _data5_->self;
+	unity_places_place_search_sections_bar_set_active_section (self->priv->sections, _data5_->section);
 	result = FALSE;
 	return result;
 }
 
 
-static gboolean __lambda37__gsource_func (gpointer self) {
+static gboolean __lambda40__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda37_ (self);
+	result = _lambda40_ (self);
 	return result;
 }
 
 
-static Block4Data* block4_data_ref (Block4Data* _data4_) {
-	g_atomic_int_inc (&_data4_->_ref_count_);
-	return _data4_;
+static Block5Data* block5_data_ref (Block5Data* _data5_) {
+	g_atomic_int_inc (&_data5_->_ref_count_);
+	return _data5_;
 }
 
 
-static void block4_data_unref (Block4Data* _data4_) {
-	if (g_atomic_int_dec_and_test (&_data4_->_ref_count_)) {
-		_g_object_unref0 (_data4_->self);
-		g_slice_free (Block4Data, _data4_);
+static void block5_data_unref (Block5Data* _data5_) {
+	if (g_atomic_int_dec_and_test (&_data5_->_ref_count_)) {
+		_g_object_unref0 (_data5_->self);
+		g_slice_free (Block5Data, _data5_);
 	}
 }
 
 
 void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearchBar* self, UnityPlacesPlaceEntry* entry, gint x, guint section) {
-	Block4Data* _data4_;
+	Block5Data* _data5_;
 	UnityPlacesPlaceEntry* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (entry != NULL);
-	_data4_ = g_slice_new0 (Block4Data);
-	_data4_->_ref_count_ = 1;
-	_data4_->self = g_object_ref (self);
-	_data4_->section = section;
+	_data5_ = g_slice_new0 (Block5Data);
+	_data5_->_ref_count_ = 1;
+	_data5_->self = g_object_ref (self);
+	_data5_->section = section;
 	self->priv->active_entry = (_tmp0_ = _g_object_ref0 (entry), _g_object_unref0 (self->priv->active_entry), _tmp0_);
 	unity_places_place_search_bar_background_set_entry_position (self->priv->bg, x);
 	unity_places_place_search_sections_bar_set_active_entry (self->priv->sections, entry);
-	if (_data4_->section != 0) {
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda37__gsource_func, block4_data_ref (_data4_), block4_data_unref);
+	if (_data5_->section != 0) {
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda40__gsource_func, block5_data_ref (_data5_), block5_data_unref);
 	}
 	unity_places_place_search_navigation_set_active_entry (self->priv->navigation, entry);
 	unity_places_place_search_entry_set_active_entry (self->priv->entry, entry);
 	clutter_actor_grab_key_focus ((ClutterActor*) self->priv->entry->text);
-	block4_data_unref (_data4_);
+	block5_data_unref (_data5_);
 }
 
 
@@ -733,12 +733,12 @@ static GObject * unity_places_place_search_bar_background_constructor (GType typ
 			GdkPixbuf* _tmp1_;
 			_tmp0_ = gdk_pixbuf_new_from_file (UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_BG, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch30_g_error;
+				goto __catch31_g_error;
 			}
 			self->priv->tile = (_tmp1_ = _tmp0_, _g_object_unref0 (self->priv->tile), _tmp1_);
 		}
-		goto __finally30;
-		__catch30_g_error:
+		goto __finally31;
+		__catch31_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -748,7 +748,7 @@ static GObject * unity_places_place_search_bar_background_constructor (GType typ
 				_g_error_free0 (e);
 			}
 		}
-		__finally30:
+		__finally31:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);

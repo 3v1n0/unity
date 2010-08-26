@@ -21,7 +21,7 @@ namespace Unity.Places
 {
   public class DefaultRendererGroup : ExpandingBin
   {
-    static const float PADDING = 24.0f;
+    static const float PADDING = 52.0f;
     static const int   SPACING = 0;
     static const int   OMG_FOOTEL_SUCKS_CANT_HANDLE_MANY_TEXTURES = 100;
 
@@ -31,13 +31,34 @@ namespace Unity.Places
     public string    icon_hint      { get; construct; }
     public Dee.Model results        { get; construct; }
 
+    private bool _always_expanded = false;
+    public  bool always_expanded {
+      get { return _always_expanded; }
+      set {
+        if (_always_expanded != value)
+          {
+            _always_expanded = value;
+
+            if (_always_expanded == true)
+              {
+                var children = renderer.get_children ();
+                foreach (Clutter.Actor child in children)
+                  {
+                    Tile tile = child as Tile;
+                    tile.about_to_show ();
+                  }
+                title_button.activate ();
+              }
+          }
+      }
+    }
+
     private Ctk.VBox      vbox;
-    private Ctk.Button    title_button;
+    private Button        title_button;
     private Ctk.HBox      title_box;
     private Ctk.Image     icon;
     private Ctk.Text      text;
     private Expander      expander;
-    private Ctk.Button    sep;
     private Ctk.IconView  renderer;
 
     private MoreResultsButton? more_results_button;
@@ -47,6 +68,8 @@ namespace Unity.Places
     private bool          dirty = false;
 
     private bool          allow_expand = true;
+
+    private bool last_result_timeout = false;
 
     public signal void activated (string uri, string mimetype);
 
@@ -65,7 +88,7 @@ namespace Unity.Places
 
     construct
     {
-      padding = { 0.0f, 0.0f, PADDING, 0.0f};
+      padding = { 0.0f, 0.0f, 0.0f, 0.0f};
       hide ();
 
       if (group_renderer == "UnityLinkGroupRenderer")
@@ -79,18 +102,17 @@ namespace Unity.Places
       add_actor (vbox);
       vbox.show ();
   
-      title_button = new Ctk.Button (Ctk.Orientation.HORIZONTAL);
+      title_button = new Button ();
+      title_button.normal_state = Button.NormalState.UNDERLINE;
+      title_button.orientation = Ctk.Orientation.HORIZONTAL;
       title_button.padding = { 4.0f, 6.0f, 4.0f, 6.0f };
       vbox.pack (title_button, false, false);
       title_button.show ();
-      var title_bg = new StripeTexture (null);
-      title_button.set_background_for_state (Ctk.ActorState.STATE_PRELIGHT,
-                                             title_bg);
       title_button.notify["state"].connect (() => {
-        if (title_button.state == Ctk.ActorState.STATE_PRELIGHT)
-          sep.opacity = 0;
+        if (title_button.state == Ctk.ActorState.STATE_ACTIVE)
+          text.color = { 50, 50, 50, 200 };
         else
-          sep.opacity = 255;
+          text.color = { 255, 255, 255, 255 };
 
         unowned GLib.SList<unowned Ctk.Effect> effects = title_button.get_effects ();
         foreach (unowned Ctk.Effect effect in effects)
@@ -111,7 +133,7 @@ namespace Unity.Places
       icon.show ();
 
       text = new Ctk.Text (display_name);
-      text.set_markup ("<big>" + display_name + "</big>");
+      text.set_markup ("<big>" + Markup.escape_text (display_name) + "</big>");
       title_box.pack (text, false, false);
       text.show ();
 
@@ -119,17 +141,6 @@ namespace Unity.Places
       expander.opacity = 0;
       title_box.pack (expander, false, true);
       expander.show ();
-
-      sep = new Ctk.Button (Ctk.Orientation.HORIZONTAL);
-      var rect = new Clutter.Rectangle.with_color ({ 255, 255, 255, 100 });
-      sep.add_actor (rect);
-      rect.height = 1.0f;
-      vbox.pack (sep, false, false);
-      sep.show ();
-      glow = new Ctk.EffectGlow ();
-      glow.set_factor (1.0f);
-      glow.set_margin (5);
-      //sep.add_effect (glow);
 
       title_button.clicked.connect (() => {
         if (n_results <= renderer.get_n_cols () || allow_expand == false)
@@ -195,10 +206,15 @@ namespace Unity.Places
                 }
             });
         }
-      else if (group_renderer == "UnityFolderGroupRenderer")
+
+      var pad = new Ctk.Button (Ctk.Orientation.HORIZONTAL);
+      pad.get_image ().size = (int)PADDING;
+      vbox.pack (pad, false, false);
+      pad.show ();
+
+      if (group_renderer == "UnityFolderGroupRenderer")
         {
           title_button.hide ();
-          sep.hide ();
           bin_state = ExpandingBinState.EXPANDED;
         }
 
@@ -231,8 +247,8 @@ namespace Unity.Places
       if (child is Clutter.Actor &&
           child.height != unexpanded_height)
         {
-          var h = more_results_button != null ? more_results_button.height : 0;
-          unexpanded_height = title_button.height + 1.0f + child.height + h;
+          var h = more_results_button != null && more_results_button.opacity != 0 ? PADDING : 0;
+          unexpanded_height = title_button.height + 1.0f + child.height + h + PADDING;
         }
     }
 
@@ -246,16 +262,41 @@ namespace Unity.Places
 
       if (n_results == OMG_FOOTEL_SUCKS_CANT_HANDLE_MANY_TEXTURES)
         return;
-      var button = new Tile (iter,
-                             results.get_string (iter, 0),
-                             results.get_string (iter, 1),
-                             results.get_string (iter, 3),
-                             results.get_string (iter, 4),
-                             results.get_string (iter, 5));
+      
+      Tile button;
+      
+
+      if (group_renderer == "UnityFileInfoRenderer")
+        {
+          button = new FileInfoTile (iter,
+                                     results.get_string (iter, 0),
+                                     results.get_string (iter, 1),
+                                     results.get_string (iter, 3),
+                                     results.get_string (iter, 4),
+                                     results.get_string (iter, 5));
+        }
+      else if (group_renderer == "UnityShowcaseRenderer")
+        {
+          button = new ShowcaseTile (iter,
+                                     results.get_string (iter, 0),
+                                     results.get_string (iter, 1),
+                                     results.get_string (iter, 3),
+                                     results.get_string (iter, 4),
+                                     results.get_string (iter, 5));
+        }
+      else
+        {
+          button = new DefaultTile (iter,
+                                    results.get_string (iter, 0),
+                                    results.get_string (iter, 1),
+                                    results.get_string (iter, 3),
+                                    results.get_string (iter, 4),
+                                    results.get_string (iter, 5));
+        }
       renderer.add_actor (button);
       button.show ();
 
-      if (bin_state == ExpandingBinState.EXPANDED)
+      if (bin_state == ExpandingBinState.EXPANDED || _always_expanded)
         {
           button.about_to_show ();
         }
@@ -266,7 +307,7 @@ namespace Unity.Places
 
       if (bin_state == ExpandingBinState.CLOSED)
         {
-          if (group_renderer == "UnityFolderGroupRenderer")
+          if (group_renderer == "UnityFolderGroupRenderer" || _always_expanded)
             bin_state = ExpandingBinState.EXPANDED;
           else
             bin_state = ExpandingBinState.UNEXPANDED;
@@ -294,9 +335,15 @@ namespace Unity.Places
             }
         }
 
-      if (n_results < 1)
+      if (n_results < 1 && last_result_timeout == false)
         {
-          bin_state = ExpandingBinState.CLOSED;
+          Timeout.add (100, () => {
+            if (n_results < 1)
+              bin_state = ExpandingBinState.CLOSED;
+            last_result_timeout = false;
+            return false;
+          });
+          last_result_timeout = true;
         }
     }
 
@@ -490,6 +537,8 @@ namespace Unity.Places
              bg.remove_effect (glow);
              glow = null;
            }
+
+         queue_relayout ();
        }
      }
 
@@ -516,7 +565,6 @@ namespace Unity.Places
        bg.show ();
  
        text = new Ctk.Text ("");
-       add_actor (text);
        box.add_actor (text);
        text.show ();
 
@@ -620,90 +668,5 @@ namespace Unity.Places
        cr.stroke ();
      }
    }
-
-  public class Tile : Ctk.Button
-  {
-    static const int ICON_SIZE = 48;
-    static const string DEFAULT_ICON = "text-x-preview";
-
-    public unowned Dee.ModelIter iter { get; construct; }
-
-    public string  display_name { get; construct; }
-    public string? icon_hint    { get; construct; }
-    public string  uri          { get; construct; }
-    public string? mimetype     { get; construct; }
-    public string? comment      { get; construct; }
-
-    private bool shown = false;
-
-    public signal void activated (string uri, string mimetype);
-
-    public Tile (Dee.ModelIter iter,
-                 string        uri,
-                 string?       icon_hint,
-                 string?       mimetype,
-                 string        display_name,
-                 string?       comment)
-    {
-      Object (orientation:Ctk.Orientation.VERTICAL,
-              iter:iter,
-              display_name:display_name,
-              icon_hint:icon_hint,
-              uri:uri,
-              mimetype:mimetype,
-              comment:comment);
-    }
-
-    construct
-    {
-      unowned Ctk.Text text = get_text ();
-      text.ellipsize = Pango.EllipsizeMode.MIDDLE;
-    }
-
-    public void about_to_show ()
-    {
-      if (shown)
-        return;
-      shown = true;
-
-      Timeout.add (0, () => {
-        set_label (display_name);
-        set_icon ();
-        return false;
-      });
-    }
-
-    private override void get_preferred_width (float for_height,
-                                               out float mwidth,
-                                               out float nwidth)
-    {
-      mwidth = 150.0f;
-      nwidth = 150.0f;
-    }
-
-    private override void clicked ()
-    {
-      activated (uri, mimetype);
-    }
-    
-    private void set_icon ()
-    {
-      var cache = PixbufCache.get_default ();
-
-      if (icon_hint != null && icon_hint != "")
-        {
-          cache.set_image_from_gicon_string (get_image (), icon_hint, ICON_SIZE);
-        }
-      else if (mimetype != null && mimetype != "")
-        {
-          var icon = GLib.g_content_type_get_icon (mimetype);
-          cache.set_image_from_gicon_string (get_image (), icon.to_string(), ICON_SIZE);
-        }
-      else
-        {
-          cache.set_image_from_icon_name (get_image (), DEFAULT_ICON, ICON_SIZE);
-        }
-    }
-  }
 }
 

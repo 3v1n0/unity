@@ -86,8 +86,8 @@ static void unity_places_folder_browser_renderer_real_set_models (UnityPlaceRend
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_new (guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_construct (GType object_type, guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
 GType unity_places_default_renderer_group_get_type (void) G_GNUC_CONST;
-static void _lambda46_ (const char* u, const char* m, UnityPlacesFolderBrowserRenderer* self);
-static void __lambda46__unity_places_default_renderer_group_activated (UnityPlacesDefaultRendererGroup* _sender, const char* uri, const char* mimetype, gpointer self);
+static void _lambda54_ (const char* u, const char* m, UnityPlacesFolderBrowserRenderer* self);
+static void __lambda54__unity_places_default_renderer_group_activated (UnityPlacesDefaultRendererGroup* _sender, const char* uri, const char* mimetype, gpointer self);
 static GObject * unity_places_folder_browser_renderer_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_folder_browser_renderer_finalize (GObject* obj);
 
@@ -110,15 +110,15 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static void _lambda46_ (const char* u, const char* m, UnityPlacesFolderBrowserRenderer* self) {
+static void _lambda54_ (const char* u, const char* m, UnityPlacesFolderBrowserRenderer* self) {
 	g_return_if_fail (u != NULL);
 	g_return_if_fail (m != NULL);
 	g_signal_emit_by_name ((UnityPlaceRenderer*) self, "activated", u, m);
 }
 
 
-static void __lambda46__unity_places_default_renderer_group_activated (UnityPlacesDefaultRendererGroup* _sender, const char* uri, const char* mimetype, gpointer self) {
-	_lambda46_ (uri, mimetype, self);
+static void __lambda54__unity_places_default_renderer_group_activated (UnityPlacesDefaultRendererGroup* _sender, const char* uri, const char* mimetype, gpointer self) {
+	_lambda54_ (uri, mimetype, self);
 }
 
 
@@ -132,7 +132,7 @@ static void unity_places_folder_browser_renderer_real_set_models (UnityPlaceRend
 	g_return_if_fail (hints != NULL);
 	self->priv->results_model = (_tmp0_ = _g_object_ref0 (results), _g_object_unref0 (self->priv->results_model), _tmp0_);
 	group = g_object_ref_sink (unity_places_default_renderer_group_new ((guint) 0, "UnityFolderGroupRenderer", "__you_cant_see_me__", "gtk-apply", results));
-	g_signal_connect_object (group, "activated", (GCallback) __lambda46__unity_places_default_renderer_group_activated, self, 0);
+	g_signal_connect_object (group, "activated", (GCallback) __lambda54__unity_places_default_renderer_group_activated, self, 0);
 	ctk_box_pack ((CtkBox*) self->priv->box, (ClutterActor*) group, FALSE, TRUE);
 	_g_object_unref0 (group);
 }

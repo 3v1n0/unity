@@ -136,6 +136,7 @@ static void unity_expanding_bin_real_allocate (ClutterActor* base, const Clutter
 	CtkPadding _tmp3_ = {0};
 	float width;
 	ClutterActorBox child_box = {0};
+	CtkPadding _tmp4_ = {0};
 	self = (UnityExpandingBin*) base;
 	x = (ctk_actor_get_padding ((CtkActor*) self, &_tmp0_), _tmp0_.left);
 	y = (ctk_actor_get_padding ((CtkActor*) self, &_tmp1_), _tmp1_.top);
@@ -144,7 +145,10 @@ static void unity_expanding_bin_real_allocate (ClutterActor* base, const Clutter
 	child_box.x1 = x;
 	child_box.x2 = x + width;
 	child_box.y1 = y;
-	child_box.y2 = (y + self->priv->last_height) + ((self->priv->_target_height - self->priv->last_height) * self->priv->_size_factor);
+	child_box.y2 = (y + self->priv->last_height) + (((self->priv->_target_height - self->priv->last_height) + (ctk_actor_get_padding ((CtkActor*) self, &_tmp4_), _tmp4_.bottom)) * self->priv->_size_factor);
+	if (child_box.y2 < 0.0f) {
+		child_box.y2 = 0.0f;
+	}
 	CLUTTER_ACTOR_CLASS (unity_expanding_bin_parent_class)->allocate ((ClutterActor*) CTK_BIN (self), box, flags);
 	clutter_actor_allocate (ctk_bin_get_child ((CtkBin*) self), &child_box, flags);
 	self->priv->last_height = child_box.y2 - child_box.y1;
@@ -232,7 +236,7 @@ static void _unity_expanding_bin_change_state (UnityExpandingBin* self, UnityExp
 		}
 		default:
 		{
-			g_warning ("unity-expanding-bin.vala:174: ExpandingBinState %d not supported", (gint) self->priv->_state);
+			g_warning ("unity-expanding-bin.vala:177: ExpandingBinState %d not supported", (gint) self->priv->_state);
 			break;
 		}
 	}

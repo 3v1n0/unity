@@ -175,7 +175,7 @@ static void unity_stripe_texture_paint_bg (UnityStripeTexture* self, cairo_t* cr
 		cairo_paint (context);
 		cairo_set_line_width (context, 0.3);
 		cairo_set_operator (context, CAIRO_OPERATOR_OVER);
-		cairo_set_source_rgba (context, 1.0, 1.0, 1.0, 0.65);
+		cairo_set_source_rgba (context, 1.0, 1.0, 1.0, 0.85);
 		cairo_move_to (context, (double) 0, (double) 0);
 		cairo_line_to (context, (double) 4, (double) 4);
 		cairo_stroke (context);

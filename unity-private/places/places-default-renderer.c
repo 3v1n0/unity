@@ -25,12 +25,12 @@
 #include <unity.h>
 #include <clutk/clutk.h>
 #include <dee.h>
+#include <stdlib.h>
+#include <string.h>
 #include <float.h>
 #include <math.h>
 #include <cairo.h>
 #include <gee.h>
-#include <stdlib.h>
-#include <string.h>
 #include <clutter/clutter.h>
 
 
@@ -65,6 +65,7 @@ typedef struct _UnityPlacesEmptySearchGroupClass UnityPlacesEmptySearchGroupClas
 typedef struct _UnityPlacesEmptySectionGroup UnityPlacesEmptySectionGroup;
 typedef struct _UnityPlacesEmptySectionGroupClass UnityPlacesEmptySectionGroupClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+#define _g_free0(var) (var = (g_free (var), NULL))
 
 #define UNITY_PLACES_TYPE_DEFAULT_RENDERER_GROUP (unity_places_default_renderer_group_get_type ())
 #define UNITY_PLACES_DEFAULT_RENDERER_GROUP(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_DEFAULT_RENDERER_GROUP, UnityPlacesDefaultRendererGroup))
@@ -75,11 +76,10 @@ typedef struct _UnityPlacesEmptySectionGroupClass UnityPlacesEmptySectionGroupCl
 
 typedef struct _UnityPlacesDefaultRendererGroup UnityPlacesDefaultRendererGroup;
 typedef struct _UnityPlacesDefaultRendererGroupClass UnityPlacesDefaultRendererGroupClass;
-#define _g_free0(var) (var = (g_free (var), NULL))
 #define __g_list_free_g_object_unref0(var) ((var == NULL) ? NULL : (var = (_g_list_free_g_object_unref (var), NULL)))
 typedef struct _UnityPlacesEmptySearchGroupPrivate UnityPlacesEmptySearchGroupPrivate;
 #define _g_list_free0(var) ((var == NULL) ? NULL : (var = (g_list_free (var), NULL)))
-typedef struct _Block1Data Block1Data;
+typedef struct _Block2Data Block2Data;
 typedef struct _UnityPlacesEmptySectionGroupPrivate UnityPlacesEmptySectionGroupPrivate;
 #define _cairo_pattern_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_pattern_destroy (var), NULL)))
 
@@ -101,6 +101,9 @@ struct _UnityPlacesDefaultRendererPrivate {
 	CtkVBox* box;
 	DeeModel* groups_model;
 	DeeModel* results_model;
+	char** expanded;
+	gint expanded_length1;
+	gint _expanded_size_;
 };
 
 struct _UnityPlacesEmptySearchGroup {
@@ -119,7 +122,7 @@ struct _UnityPlacesEmptySearchGroupPrivate {
 	CtkVBox* box;
 };
 
-struct _Block1Data {
+struct _Block2Data {
 	int _ref_count_;
 	UnityPlacesEmptySearchGroup * self;
 	char* uri;
@@ -157,6 +160,7 @@ GType unity_places_empty_section_group_get_type (void) G_GNUC_CONST;
 enum  {
 	UNITY_PLACES_DEFAULT_RENDERER_DUMMY_PROPERTY
 };
+#define UNITY_PLACES_DEFAULT_RENDERER_TOP_PADDING 22.0f
 #define UNITY_PLACES_DEFAULT_RENDERER_PADDING 12.0f
 #define UNITY_PLACES_DEFAULT_RENDERER_SPACING 0
 UnityPlacesDefaultRenderer* unity_places_default_renderer_new (void);
@@ -174,16 +178,17 @@ gboolean unity_places_empty_search_group_get_active (UnityPlacesEmptySearchGroup
 gboolean unity_places_empty_section_group_get_active (UnityPlacesEmptySectionGroup* self);
 UnityPlacesEmptySearchGroup* unity_places_empty_search_group_new (guint group_id, DeeModel* results);
 UnityPlacesEmptySearchGroup* unity_places_empty_search_group_construct (GType object_type, guint group_id, DeeModel* results);
-static void _lambda56_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self);
-static void __lambda56__unity_places_empty_search_group_activated (UnityPlacesEmptySearchGroup* _sender, const char* uri, const char* mimetype, gpointer self);
+static void _lambda64_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self);
+static void __lambda64__unity_places_empty_search_group_activated (UnityPlacesEmptySearchGroup* _sender, const char* uri, const char* mimetype, gpointer self);
 static void _unity_places_default_renderer_update_views_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 UnityPlacesEmptySectionGroup* unity_places_empty_section_group_new (guint group_id, DeeModel* results);
 UnityPlacesEmptySectionGroup* unity_places_empty_section_group_construct (GType object_type, guint group_id, DeeModel* results);
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_new (guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_construct (GType object_type, guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
 GType unity_places_default_renderer_group_get_type (void) G_GNUC_CONST;
-static void _lambda57_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self);
-static void __lambda57__unity_places_default_renderer_group_activated (UnityPlacesDefaultRendererGroup* _sender, const char* uri, const char* mimetype, gpointer self);
+static void _lambda65_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self);
+static void __lambda65__unity_places_default_renderer_group_activated (UnityPlacesDefaultRendererGroup* _sender, const char* uri, const char* mimetype, gpointer self);
+void unity_places_default_renderer_group_set_always_expanded (UnityPlacesDefaultRendererGroup* self, gboolean value);
 static void _g_list_free_g_object_unref (GList* self);
 static void _unity_places_default_renderer_trough_paint_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
 static void _unity_places_default_renderer_slider_paint_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
@@ -199,10 +204,10 @@ enum  {
 static void unity_places_empty_search_group_on_result_added (UnityPlacesEmptySearchGroup* self, DeeModelIter* iter);
 static gboolean unity_places_empty_search_group_interesting (UnityPlacesEmptySearchGroup* self, DeeModelIter* iter);
 DeeModel* unity_places_empty_search_group_get_results (UnityPlacesEmptySearchGroup* self);
-static void _lambda55_ (Block1Data* _data1_);
-static void __lambda55__ctk_button_clicked (CtkButton* _sender, gpointer self);
-static Block1Data* block1_data_ref (Block1Data* _data1_);
-static void block1_data_unref (Block1Data* _data1_);
+static void _lambda63_ (Block2Data* _data2_);
+static void __lambda63__ctk_button_clicked (CtkButton* _sender, gpointer self);
+static Block2Data* block2_data_ref (Block2Data* _data2_);
+static void block2_data_unref (Block2Data* _data2_);
 void unity_places_empty_search_group_set_active (UnityPlacesEmptySearchGroup* self, gboolean value);
 static void unity_places_empty_search_group_on_result_removed (UnityPlacesEmptySearchGroup* self, DeeModelIter* iter);
 guint unity_places_empty_search_group_get_group_id (UnityPlacesEmptySearchGroup* self);
@@ -239,6 +244,9 @@ static GObject * unity_places_empty_section_group_constructor (GType type, guint
 static void unity_places_empty_section_group_finalize (GObject* obj);
 static void unity_places_empty_section_group_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_places_empty_section_group_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
+static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
+static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
+static gint _vala_array_length (gpointer array);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
 
@@ -345,6 +353,8 @@ static void unity_places_default_renderer_real_set_models (UnityPlaceRenderer* b
 	UnityPlacesDefaultRenderer * self;
 	DeeModel* _tmp0_;
 	DeeModel* _tmp1_;
+	char* expandable;
+	gboolean _tmp2_ = FALSE;
 	DeeModelIter* iter;
 	self = (UnityPlacesDefaultRenderer*) base;
 	g_return_if_fail (groups != NULL);
@@ -352,6 +362,17 @@ static void unity_places_default_renderer_real_set_models (UnityPlaceRenderer* b
 	g_return_if_fail (hints != NULL);
 	self->priv->groups_model = (_tmp0_ = _g_object_ref0 (groups), _g_object_unref0 (self->priv->groups_model), _tmp0_);
 	self->priv->results_model = (_tmp1_ = _g_object_ref0 (results), _g_object_unref0 (self->priv->results_model), _tmp1_);
+	expandable = (char*) gee_abstract_map_get ((GeeAbstractMap*) hints, "ExpandedGroups");
+	if (expandable != NULL) {
+		_tmp2_ = _vala_strcmp0 (expandable, "") != 0;
+	} else {
+		_tmp2_ = FALSE;
+	}
+	if (_tmp2_) {
+		char** _tmp3_;
+		char** _tmp4_;
+		self->priv->expanded = (_tmp4_ = _tmp3_ = g_strsplit (expandable, " ", 0), self->priv->expanded = (_vala_array_free (self->priv->expanded, self->priv->expanded_length1, (GDestroyNotify) g_free), NULL), self->priv->expanded_length1 = _vala_array_length (_tmp3_), self->priv->_expanded_size_ = self->priv->expanded_length1, _tmp4_);
+	}
 	iter = dee_model_get_first_iter (groups);
 	while (TRUE) {
 		if (!(!dee_model_is_last (groups, iter))) {
@@ -362,6 +383,7 @@ static void unity_places_default_renderer_real_set_models (UnityPlaceRenderer* b
 	}
 	g_signal_connect_object (self->priv->groups_model, "row-added", (GCallback) _unity_places_default_renderer_on_group_added_dee_model_row_added, self, 0);
 	g_signal_connect_object (self->priv->groups_model, "row-removed", (GCallback) _unity_places_default_renderer_on_group_removed_dee_model_row_removed, self, 0);
+	_g_free0 (expandable);
 }
 
 
@@ -390,15 +412,15 @@ static void unity_places_default_renderer_update_views (UnityPlacesDefaultRender
 }
 
 
-static void _lambda56_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self) {
+static void _lambda64_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self) {
 	g_return_if_fail (u != NULL);
 	g_return_if_fail (m != NULL);
 	g_signal_emit_by_name ((UnityPlaceRenderer*) self, "activated", u, m);
 }
 
 
-static void __lambda56__unity_places_empty_search_group_activated (UnityPlacesEmptySearchGroup* _sender, const char* uri, const char* mimetype, gpointer self) {
-	_lambda56_ (uri, mimetype, self);
+static void __lambda64__unity_places_empty_search_group_activated (UnityPlacesEmptySearchGroup* _sender, const char* uri, const char* mimetype, gpointer self) {
+	_lambda64_ (uri, mimetype, self);
 }
 
 
@@ -407,15 +429,15 @@ static void _unity_places_default_renderer_update_views_g_object_notify (GObject
 }
 
 
-static void _lambda57_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self) {
+static void _lambda65_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self) {
 	g_return_if_fail (u != NULL);
 	g_return_if_fail (m != NULL);
 	g_signal_emit_by_name ((UnityPlaceRenderer*) self, "activated", u, m);
 }
 
 
-static void __lambda57__unity_places_default_renderer_group_activated (UnityPlacesDefaultRendererGroup* _sender, const char* uri, const char* mimetype, gpointer self) {
-	_lambda57_ (uri, mimetype, self);
+static void __lambda65__unity_places_default_renderer_group_activated (UnityPlacesDefaultRendererGroup* _sender, const char* uri, const char* mimetype, gpointer self) {
+	_lambda65_ (uri, mimetype, self);
 }
 
 
@@ -430,7 +452,7 @@ static void unity_places_default_renderer_on_group_added (UnityPlacesDefaultRend
 		self->priv->search_empty = (_tmp0_ = g_object_ref_sink (unity_places_empty_search_group_new ((guint) dee_model_get_position (model, iter), self->priv->results_model)), _g_object_unref0 (self->priv->search_empty), _tmp0_);
 		clutter_actor_set_opacity ((ClutterActor*) self->priv->search_empty, (guint8) 0);
 		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->search_empty);
-		g_signal_connect_object (self->priv->search_empty, "activated", (GCallback) __lambda56__unity_places_empty_search_group_activated, self, 0);
+		g_signal_connect_object (self->priv->search_empty, "activated", (GCallback) __lambda64__unity_places_empty_search_group_activated, self, 0);
 		g_signal_connect_object ((GObject*) self->priv->search_empty, "notify::active", (GCallback) _unity_places_default_renderer_update_views_g_object_notify, self, 0);
 	} else {
 		if (_vala_strcmp0 (renderer, "UnityEmptySectionRenderer") == 0) {
@@ -442,9 +464,26 @@ static void unity_places_default_renderer_on_group_added (UnityPlacesDefaultRend
 		} else {
 			UnityPlacesDefaultRendererGroup* group;
 			group = g_object_ref_sink (unity_places_default_renderer_group_new ((guint) dee_model_get_position (model, iter), dee_model_get_string (model, iter, (guint) 0), dee_model_get_string (model, iter, (guint) 1), dee_model_get_string (model, iter, (guint) 2), self->priv->results_model));
-			g_signal_connect_object (group, "activated", (GCallback) __lambda57__unity_places_default_renderer_group_activated, self, 0);
+			g_signal_connect_object (group, "activated", (GCallback) __lambda65__unity_places_default_renderer_group_activated, self, 0);
 			g_object_set_data_full ((GObject*) group, "model-iter", iter, NULL);
 			ctk_box_pack ((CtkBox*) self->priv->box, (ClutterActor*) group, FALSE, TRUE);
+			{
+				char** id_collection;
+				int id_collection_length1;
+				int id_it;
+				id_collection = self->priv->expanded;
+				id_collection_length1 = self->priv->expanded_length1;
+				for (id_it = 0; id_it < self->priv->expanded_length1; id_it = id_it + 1) {
+					char* id;
+					id = g_strdup (id_collection[id_it]);
+					{
+						if (dee_model_get_position (model, iter) == atoi (id)) {
+							unity_places_default_renderer_group_set_always_expanded (group, TRUE);
+						}
+						_g_free0 (id);
+					}
+				}
+			}
 			_g_object_unref0 (group);
 		}
 	}
@@ -511,9 +550,7 @@ static GObject * unity_places_default_renderer_constructor (GType type, guint n_
 		UnityCairoCanvas* _tmp3_;
 		CtkScrollView* _tmp4_;
 		CtkVBox* _tmp5_;
-		CtkPadding _tmp6_ = {0};
-		CtkPadding _tmp7_;
-		ctk_actor_set_padding ((CtkActor*) self, (_tmp1_ = (_tmp0_.top = 0.0f, _tmp0_.right = 0.0f, _tmp0_.bottom = 0.0f, _tmp0_.left = 0.0f, _tmp0_), &_tmp1_));
+		ctk_actor_set_padding ((CtkActor*) self, (_tmp1_ = (_tmp0_.top = UNITY_PLACES_DEFAULT_RENDERER_PADDING, _tmp0_.right = 0.0f, _tmp0_.bottom = 0.0f, _tmp0_.left = 0.0f, _tmp0_), &_tmp1_));
 		self->priv->trough = (_tmp2_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_default_renderer_trough_paint_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->trough), _tmp2_);
 		self->priv->slider = (_tmp3_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_default_renderer_slider_paint_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->slider), _tmp3_);
 		self->priv->scroll = (_tmp4_ = g_object_ref_sink ((CtkScrollView*) ctk_scroll_view_new ()), _g_object_unref0 (self->priv->scroll), _tmp4_);
@@ -523,7 +560,6 @@ static GObject * unity_places_default_renderer_constructor (GType type, guint n_
 		clutter_actor_show ((ClutterActor*) self->priv->trough);
 		clutter_actor_show ((ClutterActor*) self->priv->slider);
 		self->priv->box = (_tmp5_ = g_object_ref_sink ((CtkVBox*) ctk_vbox_new ((guint) UNITY_PLACES_DEFAULT_RENDERER_SPACING)), _g_object_unref0 (self->priv->box), _tmp5_);
-		ctk_actor_set_padding ((CtkActor*) self->priv->box, (_tmp7_ = (_tmp6_.top = 0.0f, _tmp6_.right = UNITY_PLACES_DEFAULT_RENDERER_PADDING, _tmp6_.bottom = 0.0f, _tmp6_.left = UNITY_PLACES_DEFAULT_RENDERER_PADDING, _tmp6_), &_tmp7_));
 		ctk_box_set_homogeneous ((CtkBox*) self->priv->box, FALSE);
 		clutter_container_add_actor ((ClutterContainer*) self->priv->scroll, (ClutterActor*) self->priv->box);
 		clutter_actor_show ((ClutterActor*) self->priv->box);
@@ -548,6 +584,7 @@ static void unity_places_default_renderer_unity_place_renderer_interface_init (U
 
 static void unity_places_default_renderer_instance_init (UnityPlacesDefaultRenderer * self) {
 	self->priv = UNITY_PLACES_DEFAULT_RENDERER_GET_PRIVATE (self);
+	self->priv->expanded = NULL;
 }
 
 
@@ -562,6 +599,7 @@ static void unity_places_default_renderer_finalize (GObject* obj) {
 	_g_object_unref0 (self->priv->box);
 	_g_object_unref0 (self->priv->groups_model);
 	_g_object_unref0 (self->priv->results_model);
+	self->priv->expanded = (_vala_array_free (self->priv->expanded, self->priv->expanded_length1, (GDestroyNotify) g_free), NULL);
 	G_OBJECT_CLASS (unity_places_default_renderer_parent_class)->finalize (obj);
 }
 
@@ -593,30 +631,30 @@ UnityPlacesEmptySearchGroup* unity_places_empty_search_group_new (guint group_id
 }
 
 
-static void _lambda55_ (Block1Data* _data1_) {
+static void _lambda63_ (Block2Data* _data2_) {
 	UnityPlacesEmptySearchGroup * self;
-	self = _data1_->self;
-	g_signal_emit_by_name (self, "activated", _data1_->uri, _data1_->mimetype);
+	self = _data2_->self;
+	g_signal_emit_by_name (self, "activated", _data2_->uri, _data2_->mimetype);
 }
 
 
-static void __lambda55__ctk_button_clicked (CtkButton* _sender, gpointer self) {
-	_lambda55_ (self);
+static void __lambda63__ctk_button_clicked (CtkButton* _sender, gpointer self) {
+	_lambda63_ (self);
 }
 
 
-static Block1Data* block1_data_ref (Block1Data* _data1_) {
-	g_atomic_int_inc (&_data1_->_ref_count_);
-	return _data1_;
+static Block2Data* block2_data_ref (Block2Data* _data2_) {
+	g_atomic_int_inc (&_data2_->_ref_count_);
+	return _data2_;
 }
 
 
-static void block1_data_unref (Block1Data* _data1_) {
-	if (g_atomic_int_dec_and_test (&_data1_->_ref_count_)) {
-		_g_object_unref0 (_data1_->self);
-		_g_free0 (_data1_->mimetype);
-		_g_free0 (_data1_->uri);
-		g_slice_free (Block1Data, _data1_);
+static void block2_data_unref (Block2Data* _data2_) {
+	if (g_atomic_int_dec_and_test (&_data2_->_ref_count_)) {
+		_g_object_unref0 (_data2_->self);
+		_g_free0 (_data2_->mimetype);
+		_g_free0 (_data2_->uri);
+		g_slice_free (Block2Data, _data2_);
 	}
 }
 
@@ -629,8 +667,9 @@ static void unity_places_empty_search_group_on_result_added (UnityPlacesEmptySea
 	CtkText* text;
 	char* _tmp2_;
 	char* _tmp3_;
-	GList* _tmp4_;
-	gboolean _tmp5_;
+	char* _tmp4_;
+	GList* _tmp5_;
+	gboolean _tmp6_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (iter != NULL);
 	if (!unity_places_empty_search_group_interesting (self, iter)) {
@@ -640,24 +679,25 @@ static void unity_places_empty_search_group_on_result_added (UnityPlacesEmptySea
 	button = g_object_ref_sink ((CtkButton*) ctk_button_new (CTK_ORIENTATION_HORIZONTAL));
 	ctk_actor_set_padding ((CtkActor*) button, (_tmp1_ = (_tmp0_.top = 12.0f, _tmp0_.right = 12.0f, _tmp0_.bottom = 12.0f, _tmp0_.left = 12.0f, _tmp0_), &_tmp1_));
 	text = g_object_ref_sink ((CtkText*) ctk_text_new (""));
-	clutter_text_set_markup ((ClutterText*) text, _tmp3_ = g_strconcat (_tmp2_ = g_strconcat ("<big>", mes, NULL), "</big>", NULL));
+	clutter_text_set_markup ((ClutterText*) text, _tmp4_ = g_strconcat (_tmp3_ = g_strconcat ("<big>", _tmp2_ = g_markup_escape_text (mes, -1), NULL), "</big>", NULL));
+	_g_free0 (_tmp4_);
 	_g_free0 (_tmp3_);
 	_g_free0 (_tmp2_);
 	clutter_container_add_actor ((ClutterContainer*) button, (ClutterActor*) text);
 	ctk_box_pack ((CtkBox*) self->priv->box, (ClutterActor*) button, FALSE, FALSE);
-	if ((_tmp5_ = g_list_length (_tmp4_ = clutter_container_get_children ((ClutterContainer*) self->priv->box)) >= 2, _g_list_free0 (_tmp4_), _tmp5_)) {
-		Block1Data* _data1_;
+	if ((_tmp6_ = g_list_length (_tmp5_ = clutter_container_get_children ((ClutterContainer*) self->priv->box)) >= 2, _g_list_free0 (_tmp5_), _tmp6_)) {
+		Block2Data* _data2_;
 		UnityStripeTexture* bg;
-		_data1_ = g_slice_new0 (Block1Data);
-		_data1_->_ref_count_ = 1;
-		_data1_->self = g_object_ref (self);
+		_data2_ = g_slice_new0 (Block2Data);
+		_data2_->_ref_count_ = 1;
+		_data2_->self = g_object_ref (self);
 		bg = g_object_ref_sink (unity_stripe_texture_new (NULL, NULL));
 		ctk_actor_set_background ((CtkActor*) button, (ClutterActor*) bg);
-		_data1_->uri = g_strdup (dee_model_get_string (self->priv->_results, iter, (guint) 0));
-		_data1_->mimetype = g_strdup (dee_model_get_string (self->priv->_results, iter, (guint) 3));
-		g_signal_connect_data (button, "clicked", (GCallback) __lambda55__ctk_button_clicked, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
+		_data2_->uri = g_strdup (dee_model_get_string (self->priv->_results, iter, (guint) 0));
+		_data2_->mimetype = g_strdup (dee_model_get_string (self->priv->_results, iter, (guint) 3));
+		g_signal_connect_data (button, "clicked", (GCallback) __lambda63__ctk_button_clicked, block2_data_ref (_data2_), (GClosureNotify) block2_data_unref, 0);
 		_g_object_unref0 (bg);
-		block1_data_unref (_data1_);
+		block2_data_unref (_data2_);
 	}
 	unity_places_empty_search_group_set_active (self, TRUE);
 	_g_object_unref0 (text);
@@ -896,13 +936,15 @@ static void unity_places_empty_section_group_on_result_added (UnityPlacesEmptySe
 	char* mes;
 	char* _tmp0_;
 	char* _tmp1_;
+	char* _tmp2_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (iter != NULL);
 	if (!unity_places_empty_section_group_interesting (self, iter)) {
 		return;
 	}
 	mes = g_strdup (dee_model_get_string (self->priv->_results, iter, (guint) 4));
-	clutter_text_set_markup ((ClutterText*) self->priv->text, _tmp1_ = g_strconcat (_tmp0_ = g_strconcat ("<big>", mes, NULL), "</big>", NULL));
+	clutter_text_set_markup ((ClutterText*) self->priv->text, _tmp2_ = g_strconcat (_tmp1_ = g_strconcat ("<big>", _tmp0_ = g_markup_escape_text (mes, -1), NULL), "</big>", NULL));
+	_g_free0 (_tmp2_);
 	_g_free0 (_tmp1_);
 	_g_free0 (_tmp0_);
 	unity_places_empty_section_group_set_active (self, TRUE);
@@ -1168,6 +1210,36 @@ static void unity_places_empty_section_group_set_property (GObject * object, gui
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
 	}
+}
+
+
+static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func) {
+	if ((array != NULL) && (destroy_func != NULL)) {
+		int i;
+		for (i = 0; i < array_length; i = i + 1) {
+			if (((gpointer*) array)[i] != NULL) {
+				destroy_func (((gpointer*) array)[i]);
+			}
+		}
+	}
+}
+
+
+static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func) {
+	_vala_array_destroy (array, array_length, destroy_func);
+	g_free (array);
+}
+
+
+static gint _vala_array_length (gpointer array) {
+	int length;
+	length = 0;
+	if (array) {
+		while (((gpointer*) array)[length]) {
+			length++;
+		}
+	}
+	return length;
 }
 
 

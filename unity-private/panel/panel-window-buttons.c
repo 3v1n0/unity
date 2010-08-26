@@ -217,26 +217,32 @@ static void unity_panel_window_buttons_on_active_window_changed (UnityPanelWindo
 				gint _tmp3__length1;
 				char* _tmp4_;
 				char* _tmp5_;
+				char* _tmp6_;
 				display_name = g_strdup (g_app_info_get_display_name (info));
 				display_name = (_tmp4_ = g_strdup ((_tmp3_ = _tmp2_ = g_strsplit (display_name, " ", 0), _tmp3__length1 = _vala_array_length (_tmp2_), _tmp3_)[0]), _g_free0 (display_name), _tmp4_);
 				_tmp3_ = (_vala_array_free (_tmp3_, _tmp3__length1, (GDestroyNotify) g_free), NULL);
-				clutter_text_set_markup ((ClutterText*) self->priv->appname, _tmp5_ = g_strdup_printf (UNITY_PANEL_WINDOW_BUTTONS_FORMAT, display_name));
+				clutter_text_set_markup ((ClutterText*) self->priv->appname, _tmp6_ = g_strdup_printf (UNITY_PANEL_WINDOW_BUTTONS_FORMAT, _tmp5_ = g_markup_escape_text (display_name, -1)));
+				_g_free0 (_tmp6_);
 				_g_free0 (_tmp5_);
 				_g_free0 (display_name);
 			} else {
-				char* _tmp6_;
 				char* _tmp7_;
-				clutter_text_set_markup ((ClutterText*) self->priv->appname, _tmp7_ = g_strdup_printf (UNITY_PANEL_WINDOW_BUTTONS_FORMAT, _tmp6_ = bamf_view_get_name ((BamfView*) win)));
+				char* _tmp8_;
+				char* _tmp9_;
+				clutter_text_set_markup ((ClutterText*) self->priv->appname, _tmp9_ = g_strdup_printf (UNITY_PANEL_WINDOW_BUTTONS_FORMAT, _tmp8_ = g_markup_escape_text (_tmp7_ = bamf_view_get_name ((BamfView*) win), -1)));
+				_g_free0 (_tmp9_);
+				_g_free0 (_tmp8_);
 				_g_free0 (_tmp7_);
-				_g_free0 (_tmp6_);
 			}
 			_g_object_unref0 (info);
 		} else {
-			char* _tmp8_;
-			char* _tmp9_;
-			clutter_text_set_markup ((ClutterText*) self->priv->appname, _tmp9_ = g_strdup_printf (UNITY_PANEL_WINDOW_BUTTONS_FORMAT, _tmp8_ = bamf_view_get_name ((BamfView*) win)));
-			_g_free0 (_tmp9_);
-			_g_free0 (_tmp8_);
+			char* _tmp10_;
+			char* _tmp11_;
+			char* _tmp12_;
+			clutter_text_set_markup ((ClutterText*) self->priv->appname, _tmp12_ = g_strdup_printf (UNITY_PANEL_WINDOW_BUTTONS_FORMAT, _tmp11_ = g_markup_escape_text (_tmp10_ = bamf_view_get_name ((BamfView*) win), -1)));
+			_g_free0 (_tmp12_);
+			_g_free0 (_tmp11_);
+			_g_free0 (_tmp10_);
 		}
 		self->priv->_last_view = new_view;
 		g_object_weak_ref ((GObject*) self->priv->_last_view, _unity_panel_window_buttons_on_last_view_destroyed_gweak_notify, self);

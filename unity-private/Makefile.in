@@ -97,8 +97,10 @@ am__objects_3 = libunity_private_la-panel-background.lo \
 	libunity_private_la-panel-tray.lo \
 	libunity_private_la-panel-view.lo \
 	libunity_private_la-panel-window-buttons.lo
-am__objects_4 = libunity_private_la-places-controller.lo \
+am__objects_4 = libunity_private_la-places-button.lo \
+	libunity_private_la-places-controller.lo \
 	libunity_private_la-places-default-renderer-group.lo \
+	libunity_private_la-places-default-renderer-tiles.lo \
 	libunity_private_la-places-default-renderer.lo \
 	libunity_private_la-places-folder-browser-renderer.lo \
 	libunity_private_la-places-place-bar.lo \
@@ -424,8 +426,10 @@ panel_sources = \
   panel/panel-window-buttons.vala
 
 places_sources = \
+  places/places-button.vala \
   places/places-controller.vala \
   places/places-default-renderer-group.vala \
+  places/places-default-renderer-tiles.vala \
   places/places-default-renderer.vala \
   places/places-folder-browser-renderer.vala \
   places/places-place-bar.vala \
@@ -592,8 +596,10 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-view.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-window-buttons.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-perf-logger.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-button.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-controller.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-default-renderer-group.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-default-renderer-tiles.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-default-renderer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-folder-browser-renderer.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-bar.Plo@am__quote@
@@ -832,6 +838,14 @@ libunity_private_la-panel-window-buttons.lo: panel/panel-window-buttons.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-panel-window-buttons.lo `test -f 'panel/panel-window-buttons.c' || echo '$(srcdir)/'`panel/panel-window-buttons.c
 
+libunity_private_la-places-button.lo: places/places-button.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-button.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-button.Tpo -c -o libunity_private_la-places-button.lo `test -f 'places/places-button.c' || echo '$(srcdir)/'`places/places-button.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-places-button.Tpo $(DEPDIR)/libunity_private_la-places-button.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='places/places-button.c' object='libunity_private_la-places-button.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-places-button.lo `test -f 'places/places-button.c' || echo '$(srcdir)/'`places/places-button.c
+
 libunity_private_la-places-controller.lo: places/places-controller.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-controller.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-controller.Tpo -c -o libunity_private_la-places-controller.lo `test -f 'places/places-controller.c' || echo '$(srcdir)/'`places/places-controller.c
 @am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-places-controller.Tpo $(DEPDIR)/libunity_private_la-places-controller.Plo
@@ -847,6 +861,14 @@ libunity_private_la-places-default-renderer-group.lo: places/places-default-rend
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='places/places-default-renderer-group.c' object='libunity_private_la-places-default-renderer-group.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-places-default-renderer-group.lo `test -f 'places/places-default-renderer-group.c' || echo '$(srcdir)/'`places/places-default-renderer-group.c
+
+libunity_private_la-places-default-renderer-tiles.lo: places/places-default-renderer-tiles.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-default-renderer-tiles.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-default-renderer-tiles.Tpo -c -o libunity_private_la-places-default-renderer-tiles.lo `test -f 'places/places-default-renderer-tiles.c' || echo '$(srcdir)/'`places/places-default-renderer-tiles.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-places-default-renderer-tiles.Tpo $(DEPDIR)/libunity_private_la-places-default-renderer-tiles.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='places/places-default-renderer-tiles.c' object='libunity_private_la-places-default-renderer-tiles.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-places-default-renderer-tiles.lo `test -f 'places/places-default-renderer-tiles.c' || echo '$(srcdir)/'`places/places-default-renderer-tiles.c
 
 libunity_private_la-places-default-renderer.lo: places/places-default-renderer.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-default-renderer.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-default-renderer.Tpo -c -o libunity_private_la-places-default-renderer.lo `test -f 'places/places-default-renderer.c' || echo '$(srcdir)/'`places/places-default-renderer.c

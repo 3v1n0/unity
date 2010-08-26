@@ -194,7 +194,7 @@ void _dynamic_EntryAdded5_connect (gpointer obj, const char * signal_name, GCall
 static void unity_places_place_on_service_entry_removed (UnityPlacesPlace* self, DBusGProxy* dbus_object, const char* entry_path);
 static void _unity_places_place_on_service_entry_removed_dynamic_EntryRemoved6_ (DBusGProxy* _sender, const char* entry_path, gpointer self);
 void _dynamic_EntryRemoved7_connect (gpointer obj, const char * signal_name, GCallback handler, gpointer data);
-static gboolean _lambda16_ (UnityPlacesPlace* self);
+static gboolean _lambda17_ (UnityPlacesPlace* self);
 static GValueArray** _dynamic_get_entries0 (DBusGProxy* self, int* result_length1, GError** error);
 GType unity_places_place_entry_dbus_get_type (void) G_GNUC_CONST;
 const char* unity_places_place_entry_dbus_get_dbus_path (UnityPlacesPlaceEntryDbus* self);
@@ -202,7 +202,7 @@ void unity_places_place_entry_dbus_update_info (UnityPlacesPlaceEntryDbus* self,
 void unity_places_place_entry_connect (UnityPlacesPlaceEntry* self);
 void unity_places_place_entry_set_parent (UnityPlacesPlaceEntry* self, UnityPlacesPlace* value);
 gboolean unity_places_place_entry_get_online (UnityPlacesPlaceEntry* self);
-static gboolean __lambda16__gsource_func (gpointer self);
+static gboolean __lambda17__gsource_func (gpointer self);
 void unity_places_place_set_online (UnityPlacesPlace* self, gboolean value);
 GType unity_places_activation_status_get_type (void) G_GNUC_CONST;
 UnityPlacesActivationStatus unity_places_place_activate (UnityPlacesPlace* self, const char* uri, const char* mimetype);
@@ -272,12 +272,12 @@ UnityPlacesPlace* unity_places_place_new_from_keyfile (GKeyFile* file, const cha
 		UnityPlacesPlace* place;
 		dbus_name = g_key_file_get_string (file, UNITY_PLACES_PLACE_PLACE_GROUP, "DBusName", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch20_g_error;
+			goto __catch21_g_error;
 		}
 		dbus_path = g_key_file_get_string (file, UNITY_PLACES_PLACE_PLACE_GROUP, "DBusObjectPath", &_inner_error_);
 		if (_inner_error_ != NULL) {
 			_g_free0 (dbus_name);
-			goto __catch20_g_error;
+			goto __catch21_g_error;
 		}
 		place = unity_places_place_new (dbus_name, dbus_path);
 		unity_places_place_load_keyfile_entries (place, file);
@@ -288,7 +288,7 @@ UnityPlacesPlace* unity_places_place_new_from_keyfile (GKeyFile* file, const cha
 			gboolean _tmp4_ = FALSE;
 			uri_match = g_key_file_get_string (file, UNITY_PLACES_PLACE_ACTIVATION_GROUP, "URIPattern", &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch21_g_error;
+				goto __catch22_g_error;
 			}
 			if (uri_match != NULL) {
 				_tmp0_ = _vala_strcmp0 (uri_match, "") != 0;
@@ -301,12 +301,12 @@ UnityPlacesPlace* unity_places_place_new_from_keyfile (GKeyFile* file, const cha
 					GRegex* _tmp2_;
 					_tmp1_ = g_regex_new (uri_match, 0, 0, &_inner_error_);
 					if (_inner_error_ != NULL) {
-						goto __catch22_g_error;
+						goto __catch23_g_error;
 					}
 					place->uri_regex = (_tmp2_ = _tmp1_, _g_regex_unref0 (place->uri_regex), _tmp2_);
 				}
-				goto __finally22;
-				__catch22_g_error:
+				goto __finally23;
+				__catch23_g_error:
 				{
 					GError * e;
 					e = _inner_error_;
@@ -318,16 +318,16 @@ UnityPlacesPlace* unity_places_place_new_from_keyfile (GKeyFile* file, const cha
 						_g_error_free0 (e);
 					}
 				}
-				__finally22:
+				__finally23:
 				if (_inner_error_ != NULL) {
 					_g_free0 (uri_match);
-					goto __catch21_g_error;
+					goto __catch22_g_error;
 				}
 			}
 			mime_match = g_key_file_get_string (file, UNITY_PLACES_PLACE_ACTIVATION_GROUP, "MimetypePattern", &_inner_error_);
 			if (_inner_error_ != NULL) {
 				_g_free0 (uri_match);
-				goto __catch21_g_error;
+				goto __catch22_g_error;
 			}
 			if (mime_match != NULL) {
 				_tmp4_ = _vala_strcmp0 (mime_match, "") != 0;
@@ -340,12 +340,12 @@ UnityPlacesPlace* unity_places_place_new_from_keyfile (GKeyFile* file, const cha
 					GRegex* _tmp6_;
 					_tmp5_ = g_regex_new (mime_match, 0, 0, &_inner_error_);
 					if (_inner_error_ != NULL) {
-						goto __catch23_g_error;
+						goto __catch24_g_error;
 					}
 					place->mime_regex = (_tmp6_ = _tmp5_, _g_regex_unref0 (place->mime_regex), _tmp6_);
 				}
-				goto __finally23;
-				__catch23_g_error:
+				goto __finally24;
+				__catch24_g_error:
 				{
 					GError * e;
 					e = _inner_error_;
@@ -357,18 +357,18 @@ UnityPlacesPlace* unity_places_place_new_from_keyfile (GKeyFile* file, const cha
 						_g_error_free0 (e);
 					}
 				}
-				__finally23:
+				__finally24:
 				if (_inner_error_ != NULL) {
 					_g_free0 (mime_match);
 					_g_free0 (uri_match);
-					goto __catch21_g_error;
+					goto __catch22_g_error;
 				}
 			}
 			_g_free0 (mime_match);
 			_g_free0 (uri_match);
 		}
-		goto __finally21;
-		__catch21_g_error:
+		goto __finally22;
+		__catch22_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -377,12 +377,12 @@ UnityPlacesPlace* unity_places_place_new_from_keyfile (GKeyFile* file, const cha
 				_g_error_free0 (e);
 			}
 		}
-		__finally21:
+		__finally22:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (place);
 			_g_free0 (dbus_path);
 			_g_free0 (dbus_name);
-			goto __catch20_g_error;
+			goto __catch21_g_error;
 		}
 		result = place;
 		_g_free0 (dbus_path);
@@ -390,8 +390,8 @@ UnityPlacesPlace* unity_places_place_new_from_keyfile (GKeyFile* file, const cha
 		_g_free0 (errmsg);
 		return result;
 	}
-	goto __finally20;
-	__catch20_g_error:
+	goto __finally21;
+	__catch21_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -404,7 +404,7 @@ UnityPlacesPlace* unity_places_place_new_from_keyfile (GKeyFile* file, const cha
 			return result;
 		}
 	}
-	__finally20:
+	__finally21:
 	{
 		_g_free0 (errmsg);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -471,7 +471,7 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static gboolean _lambda16_ (UnityPlacesPlace* self) {
+static gboolean _lambda17_ (UnityPlacesPlace* self) {
 	gboolean result = FALSE;
 	gint entries_length1;
 	gint _entries_size_;
@@ -575,9 +575,9 @@ static gboolean _lambda16_ (UnityPlacesPlace* self) {
 }
 
 
-static gboolean __lambda16__gsource_func (gpointer self) {
+static gboolean __lambda17__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda16_ (self);
+	result = _lambda17_ (self);
 	return result;
 }
 
@@ -594,13 +594,13 @@ void unity_places_place_connect (UnityPlacesPlace* self) {
 		DBusGProxy* _tmp2_;
 		_tmp0_ = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch24_g_error;
+			goto __catch25_g_error;
 		}
 		self->priv->connection = (_tmp1_ = _tmp0_, _dbus_g_connection_unref0 (self->priv->connection), _tmp1_);
 		self->priv->service = (_tmp2_ = dbus_g_proxy_new_for_name (self->priv->connection, self->priv->_dbus_name, self->priv->_dbus_path, "com.canonical.Unity.Place"), _g_object_unref0 (self->priv->service), _tmp2_);
 	}
-	goto __finally24;
-	__catch24_g_error:
+	goto __finally25;
+	__catch25_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -613,7 +613,7 @@ void unity_places_place_connect (UnityPlacesPlace* self) {
 			return;
 		}
 	}
-	__finally24:
+	__finally25:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -621,7 +621,7 @@ void unity_places_place_connect (UnityPlacesPlace* self) {
 	}
 	_dynamic_EntryAdded5_connect (self->priv->service, "EntryAdded", (GCallback) _unity_places_place_on_service_entry_added_dynamic_EntryAdded4_, self);
 	_dynamic_EntryRemoved7_connect (self->priv->service, "EntryRemoved", (GCallback) _unity_places_place_on_service_entry_removed_dynamic_EntryRemoved6_, self);
-	g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda16__gsource_func, g_object_ref (self), g_object_unref);
+	g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda17__gsource_func, g_object_ref (self), g_object_unref);
 	unity_places_place_set_online (self, TRUE);
 }
 
@@ -770,13 +770,13 @@ static gboolean unity_places_place_activate_fallback_co (UnityPlacesPlaceActivat
 			data->_tmp0_ = unity_app_info_manager_lookup_finish (data->appinfos, data->_res_, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
 				_g_object_unref0 (data->appinfos);
-				goto __catch25_g_error;
+				goto __catch26_g_error;
 			}
 			data->info = (data->_tmp1_ = data->_tmp0_, _g_object_unref0 (data->info), data->_tmp1_);
 			_g_object_unref0 (data->appinfos);
 		}
-		goto __finally25;
-		__catch25_g_error:
+		goto __finally26;
+		__catch26_g_error:
 		{
 			data->ee = data->_inner_error_;
 			data->_inner_error_ = NULL;
@@ -797,7 +797,7 @@ static gboolean unity_places_place_activate_fallback_co (UnityPlacesPlaceActivat
 				_g_error_free0 (data->ee);
 			}
 		}
-		__finally25:
+		__finally26:
 		if (data->_inner_error_ != NULL) {
 			_g_object_unref0 (data->info);
 			_g_free0 (data->id);
@@ -809,11 +809,11 @@ static gboolean unity_places_place_activate_fallback_co (UnityPlacesPlaceActivat
 			{
 				g_app_info_launch (data->info, NULL, NULL, &data->_inner_error_);
 				if (data->_inner_error_ != NULL) {
-					goto __catch26_g_error;
+					goto __catch27_g_error;
 				}
 			}
-			goto __finally26;
-			__catch26_g_error:
+			goto __finally27;
+			__catch27_g_error:
 			{
 				data->e = data->_inner_error_;
 				data->_inner_error_ = NULL;
@@ -822,7 +822,7 @@ static gboolean unity_places_place_activate_fallback_co (UnityPlacesPlaceActivat
 					_g_error_free0 (data->e);
 				}
 			}
-			__finally26:
+			__finally27:
 			if (data->_inner_error_ != NULL) {
 				_g_object_unref0 (data->info);
 				_g_free0 (data->id);
@@ -850,11 +850,11 @@ static gboolean unity_places_place_activate_fallback_co (UnityPlacesPlaceActivat
 	{
 		gtk_show_uri (gdk_screen_get_default (), data->uri, (guint32) 0, &data->_inner_error_);
 		if (data->_inner_error_ != NULL) {
-			goto __catch27_g_error;
+			goto __catch28_g_error;
 		}
 	}
-	goto __finally27;
-	__catch27_g_error:
+	goto __finally28;
+	__catch28_g_error:
 	{
 		data->eee = data->_inner_error_;
 		data->_inner_error_ = NULL;
@@ -863,7 +863,7 @@ static gboolean unity_places_place_activate_fallback_co (UnityPlacesPlaceActivat
 			_g_error_free0 (data->eee);
 		}
 	}
-	__finally27:
+	__finally28:
 	if (data->_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 		g_clear_error (&data->_inner_error_);
@@ -1004,7 +1004,7 @@ static UnityPlacesPlaceEntry* unity_places_place_load_entry_from_keyfile (UnityP
 		char* _tmp10_;
 		_tmp0_ = g_key_file_get_string (file, group, "DBusObjectPath", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch28_g_error;
+			goto __catch29_g_error;
 		}
 		path = (_tmp1_ = _tmp0_, _g_free0 (path), _tmp1_);
 		if (path == NULL) {
@@ -1030,22 +1030,22 @@ static UnityPlacesPlaceEntry* unity_places_place_load_entry_from_keyfile (UnityP
 		}
 		_tmp5_ = g_key_file_get_string (file, group, "Name", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch28_g_error;
+			goto __catch29_g_error;
 		}
 		name = (_tmp6_ = _tmp5_, _g_free0 (name), _tmp6_);
 		_tmp7_ = g_key_file_get_string (file, group, "Icon", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch28_g_error;
+			goto __catch29_g_error;
 		}
 		icon = (_tmp8_ = _tmp7_, _g_free0 (icon), _tmp8_);
 		_tmp9_ = g_key_file_get_string (file, group, "Description", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch28_g_error;
+			goto __catch29_g_error;
 		}
 		desc = (_tmp10_ = _tmp9_, _g_free0 (desc), _tmp10_);
 	}
-	goto __finally28;
-	__catch28_g_error:
+	goto __finally29;
+	__catch29_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -1063,7 +1063,7 @@ static UnityPlacesPlaceEntry* unity_places_place_load_entry_from_keyfile (UnityP
 			return result;
 		}
 	}
-	__finally28:
+	__finally29:
 	if (_inner_error_ != NULL) {
 		_g_free0 (desc);
 		_g_free0 (icon);
@@ -1078,17 +1078,17 @@ static UnityPlacesPlaceEntry* unity_places_place_load_entry_from_keyfile (UnityP
 		gboolean _tmp13_;
 		_tmp12_ = g_key_file_get_boolean (file, group, "ShowGlobal", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch29_g_error;
+			goto __catch30_g_error;
 		}
 		show_global = _tmp12_;
 		_tmp13_ = g_key_file_get_boolean (file, group, "ShowEntry", &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch29_g_error;
+			goto __catch30_g_error;
 		}
 		show_entry = _tmp13_;
 	}
-	goto __finally29;
-	__catch29_g_error:
+	goto __finally30;
+	__catch30_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -1099,7 +1099,7 @@ static UnityPlacesPlaceEntry* unity_places_place_load_entry_from_keyfile (UnityP
 			_g_error_free0 (e);
 		}
 	}
-	__finally29:
+	__finally30:
 	if (_inner_error_ != NULL) {
 		_g_free0 (desc);
 		_g_free0 (icon);

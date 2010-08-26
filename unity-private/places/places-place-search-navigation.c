@@ -324,11 +324,11 @@ static void unity_places_place_search_navigation_real_get_preferred_width (Clutt
 static void unity_places_place_search_navigation_draw_back_arrow (UnityPlacesPlaceSearchNavigation* self, cairo_t* cr, gint width, gint height);
 static void unity_places_place_search_navigation_draw_forward_arrow (UnityPlacesPlaceSearchNavigation* self, cairo_t* cr, gint width, gint height);
 static void _unity_places_place_search_navigation_draw_back_arrow_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
-static gboolean _lambda33_ (UnityPlacesPlaceSearchNavigation* self);
-static gboolean __lambda33__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _lambda35_ (UnityPlacesPlaceSearchNavigation* self);
+static gboolean __lambda35__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static void _unity_places_place_search_navigation_draw_forward_arrow_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
-static gboolean _lambda34_ (UnityPlacesPlaceSearchNavigation* self);
-static gboolean __lambda34__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _lambda36_ (UnityPlacesPlaceSearchNavigation* self);
+static gboolean __lambda36__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static GObject * unity_places_place_search_navigation_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_place_search_navigation_finalize (GObject* obj);
 
@@ -1670,14 +1670,14 @@ void unity_places_place_search_navigation_set_active_entry (UnityPlacesPlaceSear
 				UnityPlacesPlaceBrowserRemote* _tmp2_;
 				connection = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
 				if (_inner_error_ != NULL) {
-					goto __catch31_g_error;
+					goto __catch32_g_error;
 				}
 				self->priv->remote = (_tmp2_ = unity_places_place_browser_remote_dbus_proxy_new (connection, unity_places_place_get_dbus_name (unity_places_place_entry_get_parent (entry)), path), _g_object_unref0 (self->priv->remote), _tmp2_);
 				unity_places_place_search_navigation_refresh_states (self, NULL, NULL);
 				_dbus_g_connection_unref0 (connection);
 			}
-			goto __finally31;
-			__catch31_g_error:
+			goto __finally32;
+			__catch32_g_error:
 			{
 				GError * e;
 				e = _inner_error_;
@@ -1691,7 +1691,7 @@ void unity_places_place_search_navigation_set_active_entry (UnityPlacesPlaceSear
 					_g_error_free0 (e);
 				}
 			}
-			__finally31:
+			__finally32:
 			if (_inner_error_ != NULL) {
 				_g_free0 (path);
 				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -1761,7 +1761,7 @@ static gboolean unity_places_place_search_navigation_refresh_states_co (UnityPla
 		data->states = (data->_tmp1_ = unity_places_place_browser_remote_get_state_finish (data->self->priv->remote, data->_res_, &data->_tmp0_, &data->_inner_error_), data->states_length1 = data->_tmp0_, data->_states_size_ = data->states_length1, data->_tmp1_);
 		if (data->_inner_error_ != NULL) {
 			if (data->_inner_error_->domain == DBUS_GERROR) {
-				goto __catch32_dbus_gerror;
+				goto __catch33_dbus_gerror;
 			}
 			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 			g_clear_error (&data->_inner_error_);
@@ -1771,8 +1771,8 @@ static gboolean unity_places_place_search_navigation_refresh_states_co (UnityPla
 		data->self->priv->forward_sensitive = data->states[1].sensitive;
 		data->states = (_vala_UnityPlacesPlaceBrowserRemoteState_array_free (data->states, data->states_length1), NULL);
 	}
-	goto __finally32;
-	__catch32_dbus_gerror:
+	goto __finally33;
+	__catch33_dbus_gerror:
 	{
 		data->e = data->_inner_error_;
 		data->_inner_error_ = NULL;
@@ -1782,7 +1782,7 @@ static gboolean unity_places_place_search_navigation_refresh_states_co (UnityPla
 			_g_error_free0 (data->e);
 		}
 	}
-	__finally32:
+	__finally33:
 	if (data->_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 		g_clear_error (&data->_inner_error_);
@@ -1850,7 +1850,7 @@ static gboolean unity_places_place_search_navigation_go_forward_co (UnityPlacesP
 		data->states = (data->_tmp1_ = unity_places_place_browser_remote_go_forward_finish (data->self->priv->remote, data->_res_, &data->_tmp0_, &data->_inner_error_), data->states_length1 = data->_tmp0_, data->_states_size_ = data->states_length1, data->_tmp1_);
 		if (data->_inner_error_ != NULL) {
 			if (data->_inner_error_->domain == DBUS_GERROR) {
-				goto __catch33_dbus_gerror;
+				goto __catch34_dbus_gerror;
 			}
 			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 			g_clear_error (&data->_inner_error_);
@@ -1860,8 +1860,8 @@ static gboolean unity_places_place_search_navigation_go_forward_co (UnityPlacesP
 		data->self->priv->forward_sensitive = data->states[1].sensitive;
 		data->states = (_vala_UnityPlacesPlaceBrowserRemoteState_array_free (data->states, data->states_length1), NULL);
 	}
-	goto __finally33;
-	__catch33_dbus_gerror:
+	goto __finally34;
+	__catch34_dbus_gerror:
 	{
 		data->e = data->_inner_error_;
 		data->_inner_error_ = NULL;
@@ -1871,7 +1871,7 @@ static gboolean unity_places_place_search_navigation_go_forward_co (UnityPlacesP
 			_g_error_free0 (data->e);
 		}
 	}
-	__finally33:
+	__finally34:
 	if (data->_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 		g_clear_error (&data->_inner_error_);
@@ -1939,7 +1939,7 @@ static gboolean unity_places_place_search_navigation_go_back_co (UnityPlacesPlac
 		data->states = (data->_tmp1_ = unity_places_place_browser_remote_go_back_finish (data->self->priv->remote, data->_res_, &data->_tmp0_, &data->_inner_error_), data->states_length1 = data->_tmp0_, data->_states_size_ = data->states_length1, data->_tmp1_);
 		if (data->_inner_error_ != NULL) {
 			if (data->_inner_error_->domain == DBUS_GERROR) {
-				goto __catch34_dbus_gerror;
+				goto __catch35_dbus_gerror;
 			}
 			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 			g_clear_error (&data->_inner_error_);
@@ -1949,8 +1949,8 @@ static gboolean unity_places_place_search_navigation_go_back_co (UnityPlacesPlac
 		data->self->priv->forward_sensitive = data->states[1].sensitive;
 		data->states = (_vala_UnityPlacesPlaceBrowserRemoteState_array_free (data->states, data->states_length1), NULL);
 	}
-	goto __finally34;
-	__catch34_dbus_gerror:
+	goto __finally35;
+	__catch35_dbus_gerror:
 	{
 		data->e = data->_inner_error_;
 		data->_inner_error_ = NULL;
@@ -1960,7 +1960,7 @@ static gboolean unity_places_place_search_navigation_go_back_co (UnityPlacesPlac
 			_g_error_free0 (data->e);
 		}
 	}
-	__finally34:
+	__finally35:
 	if (data->_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 		g_clear_error (&data->_inner_error_);
@@ -2037,7 +2037,7 @@ static void _unity_places_place_search_navigation_draw_back_arrow_unity_cairo_ca
 }
 
 
-static gboolean _lambda33_ (UnityPlacesPlaceSearchNavigation* self) {
+static gboolean _lambda35_ (UnityPlacesPlaceSearchNavigation* self) {
 	gboolean result = FALSE;
 	gboolean _tmp0_ = FALSE;
 	if (self->priv->remote != NULL) {
@@ -2053,9 +2053,9 @@ static gboolean _lambda33_ (UnityPlacesPlaceSearchNavigation* self) {
 }
 
 
-static gboolean __lambda33__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean __lambda35__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
-	result = _lambda33_ (self);
+	result = _lambda35_ (self);
 	return result;
 }
 
@@ -2065,7 +2065,7 @@ static void _unity_places_place_search_navigation_draw_forward_arrow_unity_cairo
 }
 
 
-static gboolean _lambda34_ (UnityPlacesPlaceSearchNavigation* self) {
+static gboolean _lambda36_ (UnityPlacesPlaceSearchNavigation* self) {
 	gboolean result = FALSE;
 	gboolean _tmp0_ = FALSE;
 	if (self->priv->remote != NULL) {
@@ -2081,9 +2081,9 @@ static gboolean _lambda34_ (UnityPlacesPlaceSearchNavigation* self) {
 }
 
 
-static gboolean __lambda34__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean __lambda36__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
-	result = _lambda34_ (self);
+	result = _lambda36_ (self);
 	return result;
 }
 
@@ -2103,11 +2103,11 @@ static GObject * unity_places_place_search_navigation_constructor (GType type, g
 		ClutterColor _tmp4_;
 		self->priv->back = (_tmp0_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_place_search_navigation_draw_back_arrow_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->back), _tmp0_);
 		clutter_actor_set_reactive ((ClutterActor*) self->priv->back, TRUE);
-		g_signal_connect_object ((ClutterActor*) self->priv->back, "button-release-event", (GCallback) __lambda33__clutter_actor_button_release_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self->priv->back, "button-release-event", (GCallback) __lambda35__clutter_actor_button_release_event, self, 0);
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->back, TRUE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->back);
 		self->priv->forward = (_tmp1_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_place_search_navigation_draw_forward_arrow_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->forward), _tmp1_);
-		g_signal_connect_object ((ClutterActor*) self->priv->forward, "button-release-event", (GCallback) __lambda34__clutter_actor_button_release_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self->priv->forward, "button-release-event", (GCallback) __lambda36__clutter_actor_button_release_event, self, 0);
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->forward, TRUE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->forward);
 		self->priv->glow = (_tmp2_ = g_object_ref_sink ((CtkEffectGlow*) ctk_effect_glow_new ()), _g_object_unref0 (self->priv->glow), _tmp2_);

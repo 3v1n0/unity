@@ -404,6 +404,27 @@ namespace Unity {
 	[CCode (cprefix = "UnityPlaces", lower_case_cprefix = "unity_places_")]
 	namespace Places {
 		[CCode (cheader_filename = "unity-private.h")]
+		public class Button : Ctk.Button {
+			[CCode (cprefix = "UNITY_PLACES_BUTTON_NORMAL_STATE_", cheader_filename = "unity-private.h")]
+			public enum NormalState {
+				NONE,
+				UNDERLINE
+			}
+			[CCode (cprefix = "UNITY_PLACES_BUTTON_PRELIGHT_STATE_", cheader_filename = "unity-private.h")]
+			public enum PrelightState {
+				NONE,
+				STRIPED,
+				UNDERLINE
+			}
+			[CCode (cheader_filename = "unity-private.h")]
+			public delegate void ButtonOutlineFunc (Cairo.Context cr, int width, int height);
+			public Unity.Places.Button.ButtonOutlineFunc outline_func;
+			public Button ();
+			public void rounded_rect (Cairo.Context cr, int width, int height);
+			public Unity.Places.Button.NormalState normal_state { get; set; }
+			public Unity.Places.Button.PrelightState prelight_state { get; set; }
+		}
+		[CCode (cheader_filename = "unity-private.h")]
 		public class Controller : GLib.Object {
 			public Controller (Unity.Shell shell);
 			public void activate_entry (string entry_name, int section_id = 0);
@@ -420,12 +441,18 @@ namespace Unity {
 		[CCode (cheader_filename = "unity-private.h")]
 		public class DefaultRendererGroup : Unity.ExpandingBin {
 			public DefaultRendererGroup (uint group_id, string group_renderer, string display_name, string icon_hint, Dee.Model results);
+			public bool always_expanded { get; set; }
 			public string display_name { get; construct; }
 			public uint group_id { get; construct; }
 			public string group_renderer { get; construct; }
 			public string icon_hint { get; construct; }
 			public Dee.Model results { get; construct; }
 			public signal void activated (string uri, string mimetype);
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class DefaultTile : Unity.Places.Tile {
+			public DefaultTile (Dee.ModelIter iter, string uri, string? icon_hint, string? mimetype, string display_name, string? comment);
+			public override void about_to_show ();
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class EmptySearchGroup : Ctk.Bin {
@@ -452,6 +479,11 @@ namespace Unity {
 			}
 			public Expander ();
 			public Unity.Places.Expander.State expanding_state { get; set; }
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class FileInfoTile : Unity.Places.Tile {
+			public FileInfoTile (Dee.ModelIter iter, string uri, string? icon_hint, string? mimetype, string display_name, string? comment);
+			public override void about_to_show ();
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class FolderBrowserRenderer : Ctk.ScrollView, Unity.Place.Renderer {
@@ -621,9 +653,14 @@ namespace Unity {
 			public signal void entry_activated (Unity.Places.PlaceEntryView entry_view);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public class Tile : Ctk.Button {
-			public Tile (Dee.ModelIter iter, string uri, string? icon_hint, string? mimetype, string display_name, string? comment);
-			public void about_to_show ();
+		public class ShowcaseTile : Unity.Places.Tile {
+			public ShowcaseTile (Dee.ModelIter iter, string uri, string? icon_hint, string? mimetype, string display_name, string? comment);
+			public override void about_to_show ();
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public abstract class Tile : Unity.Places.Button {
+			public Tile ();
+			public abstract void about_to_show ();
 			public string? comment { get; construct; }
 			public string display_name { get; construct; }
 			public string? icon_hint { get; construct; }

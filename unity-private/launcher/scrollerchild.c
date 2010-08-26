@@ -373,12 +373,12 @@ static void unity_launcher_scroller_child_load_textures (UnityLauncherScrollerCh
 		GdkPixbuf* _tmp5_;
 		_tmp4_ = gdk_pixbuf_new_from_file (UNITY_LAUNCHER_HONEYCOMB_MASK_FILE, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch51_g_error;
+			goto __catch52_g_error;
 		}
 		self->priv->honeycomb_mask = (_tmp5_ = _tmp4_, _g_object_unref0 (self->priv->honeycomb_mask), _tmp5_);
 	}
-	goto __finally51;
-	__catch51_g_error:
+	goto __finally52;
+	__catch52_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -388,7 +388,7 @@ static void unity_launcher_scroller_child_load_textures (UnityLauncherScrollerCh
 			_g_error_free0 (e);
 		}
 	}
-	__finally51:
+	__finally52:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);

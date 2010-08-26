@@ -131,7 +131,7 @@ typedef struct _UnityLauncherQuicklistCheckMenuItemClass UnityLauncherQuicklistC
 
 typedef struct _UnityLauncherQuicklistRadioMenuItem UnityLauncherQuicklistRadioMenuItem;
 typedef struct _UnityLauncherQuicklistRadioMenuItemClass UnityLauncherQuicklistRadioMenuItemClass;
-typedef struct _Block9Data Block9Data;
+typedef struct _Block10Data Block10Data;
 
 #define UNITY_TESTING_TYPE_OBJECT_REGISTRY (unity_testing_object_registry_get_type ())
 #define UNITY_TESTING_OBJECT_REGISTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTING_TYPE_OBJECT_REGISTRY, UnityTestingObjectRegistry))
@@ -175,7 +175,7 @@ struct _UnityLauncherApplicationQuicklistControllerClass {
 };
 
 typedef void (*UnityLauncherScrollerChildControllermenu_cb) (DbusmenuMenuitem* menu, void* user_data);
-struct _Block9Data {
+struct _Block10Data {
 	int _ref_count_;
 	UnityLauncherApplicationQuicklistController * self;
 	CtkMenuItem* menuitem;
@@ -221,8 +221,8 @@ static void unity_launcher_application_quicklist_controller_new_menu (UnityLaunc
 UnityLauncherQuicklistMenu* unity_launcher_quicklist_menu_new (void);
 UnityLauncherQuicklistMenu* unity_launcher_quicklist_menu_construct (GType object_type);
 GType unity_launcher_quicklist_menu_get_type (void) G_GNUC_CONST;
-static void _lambda20_ (UnityLauncherApplicationQuicklistController* self);
-static void __lambda20__clutter_actor_destroy (ClutterActor* _sender, gpointer self);
+static void _lambda21_ (UnityLauncherApplicationQuicklistController* self);
+static void __lambda21__clutter_actor_destroy (ClutterActor* _sender, gpointer self);
 GType unity_launcher_scroller_child_get_type (void) G_GNUC_CONST;
 UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (UnityLauncherScrollerChildController* self);
 static void unity_launcher_application_quicklist_controller_attach_to_stage (UnityLauncherApplicationQuicklistController* self, ClutterActor* child, ClutterActor* parent);
@@ -232,38 +232,38 @@ const char* unity_launcher_scroller_child_controller_get_name (UnityLauncherScro
 UnityLauncherQuicklistMenuItem* unity_launcher_quicklist_menu_item_new_with_label (const char* label);
 UnityLauncherQuicklistMenuItem* unity_launcher_quicklist_menu_item_construct_with_label (GType object_type, const char* label);
 GType unity_launcher_quicklist_menu_item_get_type (void) G_GNUC_CONST;
-static void _lambda21_ (UnityLauncherApplicationQuicklistController* self);
-static void __lambda21__ctk_menu_item_activated (CtkMenuItem* _sender, gpointer self);
+static void _lambda22_ (UnityLauncherApplicationQuicklistController* self);
+static void __lambda22__ctk_menu_item_activated (CtkMenuItem* _sender, gpointer self);
 void unity_launcher_scroller_child_controller_get_menu_actions (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
-static void _lambda22_ (DbusmenuMenuitem* top_menu, UnityLauncherApplicationQuicklistController* self);
+static void _lambda23_ (DbusmenuMenuitem* top_menu, UnityLauncherApplicationQuicklistController* self);
 UnityLauncherQuicklistMenuSeperator* unity_launcher_quicklist_menu_seperator_new (void);
 UnityLauncherQuicklistMenuSeperator* unity_launcher_quicklist_menu_seperator_construct (GType object_type);
 GType unity_launcher_quicklist_menu_seperator_get_type (void) G_GNUC_CONST;
 static CtkMenuItem* unity_launcher_application_quicklist_controller_menu_item_from_dbusmenuitem (UnityLauncherApplicationQuicklistController* self, DbusmenuMenuitem* dbusmenuitem);
-static void __lambda22__unitylauncherscrollerchildcontrollermenu_cb (DbusmenuMenuitem* menu, gpointer self);
+static void __lambda23__unitylauncherscrollerchildcontrollermenu_cb (DbusmenuMenuitem* menu, gpointer self);
 void unity_launcher_scroller_child_controller_get_menu_navigation (UnityLauncherScrollerChildController* self, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
-static void _lambda29_ (DbusmenuMenuitem* bottom_menu, UnityLauncherApplicationQuicklistController* self);
-static void __lambda29__unitylauncherscrollerchildcontrollermenu_cb (DbusmenuMenuitem* menu, gpointer self);
+static void _lambda30_ (DbusmenuMenuitem* bottom_menu, UnityLauncherApplicationQuicklistController* self);
+static void __lambda30__unitylauncherscrollerchildcontrollermenu_cb (DbusmenuMenuitem* menu, gpointer self);
 UnityLauncherQuicklistCheckMenuItem* unity_launcher_quicklist_check_menu_item_new_with_label (const char* label);
 UnityLauncherQuicklistCheckMenuItem* unity_launcher_quicklist_check_menu_item_construct_with_label (GType object_type, const char* label);
 GType unity_launcher_quicklist_check_menu_item_get_type (void) G_GNUC_CONST;
 UnityLauncherQuicklistRadioMenuItem* unity_launcher_quicklist_radio_menu_item_new_with_label (GSList* group, const char* label);
 UnityLauncherQuicklistRadioMenuItem* unity_launcher_quicklist_radio_menu_item_construct_with_label (GType object_type, GSList* group, const char* label);
 GType unity_launcher_quicklist_radio_menu_item_get_type (void) G_GNUC_CONST;
-static void _lambda23_ (Block9Data* _data9_);
-static void __lambda23__ctk_check_menu_item_toggled (CtkCheckMenuItem* _sender, gpointer self);
-static void _lambda24_ (const char* property_name, void* value, Block9Data* _data9_);
-static void __lambda24__dbusmenu_menuitem_property_changed (DbusmenuMenuitem* _sender, const char* property_name, void* value, gpointer self);
-static void _lambda25_ (const char* property_name, void* value, Block9Data* _data9_);
+static void _lambda24_ (Block10Data* _data10_);
+static void __lambda24__ctk_check_menu_item_toggled (CtkCheckMenuItem* _sender, gpointer self);
+static void _lambda25_ (const char* property_name, void* value, Block10Data* _data10_);
 static void __lambda25__dbusmenu_menuitem_property_changed (DbusmenuMenuitem* _sender, const char* property_name, void* value, gpointer self);
-static void _lambda26_ (Block9Data* _data9_);
-static void __lambda26__ctk_menu_item_activated (CtkMenuItem* _sender, gpointer self);
-static void _lambda27_ (UnityLauncherApplicationQuicklistController* self);
-static gboolean _lambda28_ (UnityLauncherApplicationQuicklistController* self);
-static gboolean __lambda28__gsource_func (gpointer self);
+static void _lambda26_ (const char* property_name, void* value, Block10Data* _data10_);
+static void __lambda26__dbusmenu_menuitem_property_changed (DbusmenuMenuitem* _sender, const char* property_name, void* value, gpointer self);
+static void _lambda27_ (Block10Data* _data10_);
 static void __lambda27__ctk_menu_item_activated (CtkMenuItem* _sender, gpointer self);
-static Block9Data* block9_data_ref (Block9Data* _data9_);
-static void block9_data_unref (Block9Data* _data9_);
+static void _lambda28_ (UnityLauncherApplicationQuicklistController* self);
+static gboolean _lambda29_ (UnityLauncherApplicationQuicklistController* self);
+static gboolean __lambda29__gsource_func (gpointer self);
+static void __lambda28__ctk_menu_item_activated (CtkMenuItem* _sender, gpointer self);
+static Block10Data* block10_data_ref (Block10Data* _data10_);
+static void block10_data_unref (Block10Data* _data10_);
 gpointer unity_testing_object_registry_ref (gpointer instance);
 void unity_testing_object_registry_unref (gpointer instance);
 GParamSpec* unity_testing_param_spec_object_registry (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
@@ -274,8 +274,8 @@ GType unity_testing_object_registry_get_type (void) G_GNUC_CONST;
 UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void);
 void unity_testing_object_registry_register (UnityTestingObjectRegistry* self, const char* name, GObject* object);
 static void _unity_launcher_application_quicklist_controller_on_state_change_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
-static void _lambda30_ (UnityLauncherApplicationQuicklistController* self);
-static void __lambda30__unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self);
+static void _lambda31_ (UnityLauncherApplicationQuicklistController* self);
+static void __lambda31__unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self);
 static GObject * unity_launcher_application_quicklist_controller_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
@@ -495,13 +495,13 @@ UnityLauncherApplicationQuicklistController* unity_launcher_application_quicklis
 }
 
 
-static void _lambda20_ (UnityLauncherApplicationQuicklistController* self) {
+static void _lambda21_ (UnityLauncherApplicationQuicklistController* self) {
 	unity_shell_remove_fullscreen_request (unity_global_shell, (GObject*) self);
 }
 
 
-static void __lambda20__clutter_actor_destroy (ClutterActor* _sender, gpointer self) {
-	_lambda20_ (self);
+static void __lambda21__clutter_actor_destroy (ClutterActor* _sender, gpointer self) {
+	_lambda21_ (self);
 }
 
 
@@ -512,7 +512,7 @@ static void unity_launcher_application_quicklist_controller_new_menu (UnityLaunc
 	g_return_if_fail (self != NULL);
 	((UnityLauncherQuicklistController*) self)->menu = (_tmp1_ = (_tmp0_ = g_object_ref_sink (unity_launcher_quicklist_menu_new ()), CTK_IS_MENU_EXPANDABLE (_tmp0_) ? ((CtkMenuExpandable*) _tmp0_) : NULL), _g_object_unref0 (((UnityLauncherQuicklistController*) self)->menu), _tmp1_);
 	if (UNITY_IS_SHELL (unity_global_shell)) {
-		g_signal_connect_object ((ClutterActor*) ((UnityLauncherQuicklistController*) self)->menu, "destroy", (GCallback) __lambda20__clutter_actor_destroy, self, 0);
+		g_signal_connect_object ((ClutterActor*) ((UnityLauncherQuicklistController*) self)->menu, "destroy", (GCallback) __lambda21__clutter_actor_destroy, self, 0);
 		ctk_menu_set_swallow_clicks ((CtkMenu*) ((UnityLauncherQuicklistController*) self)->menu, unity_shell_get_menus_swallow_events (unity_global_shell));
 	}
 	ctk_menu_set_detect_clicks ((CtkMenu*) ((UnityLauncherQuicklistController*) self)->menu, FALSE);
@@ -545,17 +545,17 @@ static void unity_launcher_application_quicklist_controller_attach_to_stage (Uni
 }
 
 
-static void _lambda21_ (UnityLauncherApplicationQuicklistController* self) {
+static void _lambda22_ (UnityLauncherApplicationQuicklistController* self) {
 	unity_launcher_quicklist_controller_set_state ((UnityLauncherQuicklistController*) self, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_CLOSED);
 }
 
 
-static void __lambda21__ctk_menu_item_activated (CtkMenuItem* _sender, gpointer self) {
-	_lambda21_ (self);
+static void __lambda22__ctk_menu_item_activated (CtkMenuItem* _sender, gpointer self) {
+	_lambda22_ (self);
 }
 
 
-static void _lambda22_ (DbusmenuMenuitem* top_menu, UnityLauncherApplicationQuicklistController* self) {
+static void _lambda23_ (DbusmenuMenuitem* top_menu, UnityLauncherApplicationQuicklistController* self) {
 	if (DBUSMENU_IS_MENUITEM (top_menu)) {
 		if (dbusmenu_menuitem_get_root (top_menu)) {
 			GList* menu_items;
@@ -593,12 +593,12 @@ static void _lambda22_ (DbusmenuMenuitem* top_menu, UnityLauncherApplicationQuic
 }
 
 
-static void __lambda22__unitylauncherscrollerchildcontrollermenu_cb (DbusmenuMenuitem* menu, gpointer self) {
-	_lambda22_ (menu, self);
+static void __lambda23__unitylauncherscrollerchildcontrollermenu_cb (DbusmenuMenuitem* menu, gpointer self) {
+	_lambda23_ (menu, self);
 }
 
 
-static void _lambda29_ (DbusmenuMenuitem* bottom_menu, UnityLauncherApplicationQuicklistController* self) {
+static void _lambda30_ (DbusmenuMenuitem* bottom_menu, UnityLauncherApplicationQuicklistController* self) {
 	float x = 0.0F;
 	float y = 0.0F;
 	float w = 0.0F;
@@ -646,8 +646,8 @@ static void _lambda29_ (DbusmenuMenuitem* bottom_menu, UnityLauncherApplicationQ
 }
 
 
-static void __lambda29__unitylauncherscrollerchildcontrollermenu_cb (DbusmenuMenuitem* menu, gpointer self) {
-	_lambda29_ (menu, self);
+static void __lambda30__unitylauncherscrollerchildcontrollermenu_cb (DbusmenuMenuitem* menu, gpointer self) {
+	_lambda30_ (menu, self);
 }
 
 
@@ -677,7 +677,7 @@ static void unity_launcher_application_quicklist_controller_on_state_change (Uni
 		ctk_menu_remove_all ((CtkMenu*) ((UnityLauncherQuicklistController*) self)->menu);
 		label = g_strdup (unity_launcher_scroller_child_controller_get_name (unity_launcher_quicklist_controller_get_attached_controller ((UnityLauncherQuicklistController*) self)));
 		menuitem = g_object_ref_sink (unity_launcher_quicklist_menu_item_new_with_label (label));
-		g_signal_connect_object ((CtkMenuItem*) menuitem, "activated", (GCallback) __lambda21__ctk_menu_item_activated, self, 0);
+		g_signal_connect_object ((CtkMenuItem*) menuitem, "activated", (GCallback) __lambda22__ctk_menu_item_activated, self, 0);
 		clutter_actor_set_reactive ((ClutterActor*) menuitem, FALSE);
 		ctk_menu_append ((CtkMenu*) ((UnityLauncherQuicklistController*) self)->menu, (ClutterActor*) menuitem, TRUE);
 		clutter_actor_get_transformed_position ((ClutterActor*) (_tmp0_ = unity_launcher_scroller_child_controller_get_child (unity_launcher_quicklist_controller_get_attached_controller ((UnityLauncherQuicklistController*) self)), CTK_IS_ACTOR (_tmp0_) ? ((CtkActor*) _tmp0_) : NULL), &x, &y);
@@ -695,37 +695,37 @@ static void unity_launcher_application_quicklist_controller_on_state_change (Uni
 			}
 			ctk_menu_set_close_on_leave ((CtkMenu*) ((UnityLauncherQuicklistController*) self)->menu, FALSE);
 			ctk_menu_set_detect_clicks ((CtkMenu*) ((UnityLauncherQuicklistController*) self)->menu, TRUE);
-			unity_launcher_scroller_child_controller_get_menu_actions (unity_launcher_quicklist_controller_get_attached_controller ((UnityLauncherQuicklistController*) self), __lambda22__unitylauncherscrollerchildcontrollermenu_cb, self);
-			unity_launcher_scroller_child_controller_get_menu_navigation (unity_launcher_quicklist_controller_get_attached_controller ((UnityLauncherQuicklistController*) self), __lambda29__unitylauncherscrollerchildcontrollermenu_cb, self);
+			unity_launcher_scroller_child_controller_get_menu_actions (unity_launcher_quicklist_controller_get_attached_controller ((UnityLauncherQuicklistController*) self), __lambda23__unitylauncherscrollerchildcontrollermenu_cb, self);
+			unity_launcher_scroller_child_controller_get_menu_navigation (unity_launcher_quicklist_controller_get_attached_controller ((UnityLauncherQuicklistController*) self), __lambda30__unitylauncherscrollerchildcontrollermenu_cb, self);
 		}
 	}
 }
 
 
-static void _lambda23_ (Block9Data* _data9_) {
+static void _lambda24_ (Block10Data* _data10_) {
 	UnityLauncherApplicationQuicklistController * self;
 	gint _tmp0_ = 0;
 	CtkMenuItem* _tmp1_;
 	gint is_checked;
-	self = _data9_->self;
-	if (ctk_check_menu_item_get_active ((_tmp1_ = _data9_->menuitem, CTK_IS_CHECK_MENU_ITEM (_tmp1_) ? ((CtkCheckMenuItem*) _tmp1_) : NULL))) {
+	self = _data10_->self;
+	if (ctk_check_menu_item_get_active ((_tmp1_ = _data10_->menuitem, CTK_IS_CHECK_MENU_ITEM (_tmp1_) ? ((CtkCheckMenuItem*) _tmp1_) : NULL))) {
 		_tmp0_ = DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED;
 	} else {
 		_tmp0_ = DBUSMENU_MENUITEM_TOGGLE_STATE_UNCHECKED;
 	}
 	is_checked = _tmp0_;
-	dbusmenu_menuitem_property_set_int (_data9_->dbusmenuitem, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, is_checked);
+	dbusmenu_menuitem_property_set_int (_data10_->dbusmenuitem, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE, is_checked);
 }
 
 
-static void __lambda23__ctk_check_menu_item_toggled (CtkCheckMenuItem* _sender, gpointer self) {
-	_lambda23_ (self);
+static void __lambda24__ctk_check_menu_item_toggled (CtkCheckMenuItem* _sender, gpointer self) {
+	_lambda24_ (self);
 }
 
 
-static void _lambda24_ (const char* property_name, void* value, Block9Data* _data9_) {
+static void _lambda25_ (const char* property_name, void* value, Block10Data* _data10_) {
 	UnityLauncherApplicationQuicklistController * self;
-	self = _data9_->self;
+	self = _data10_->self;
 	g_return_if_fail (property_name != NULL);
 	if (_vala_strcmp0 (property_name, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE) == 0) {
 		gint* value_weak;
@@ -737,30 +737,7 @@ static void _lambda24_ (const char* property_name, void* value, Block9Data* _dat
 		} else {
 			_tmp0_ = FALSE;
 		}
-		ctk_check_menu_item_set_active ((_tmp1_ = _data9_->menuitem, CTK_IS_CHECK_MENU_ITEM (_tmp1_) ? ((CtkCheckMenuItem*) _tmp1_) : NULL), _tmp0_);
-	}
-}
-
-
-static void __lambda24__dbusmenu_menuitem_property_changed (DbusmenuMenuitem* _sender, const char* property_name, void* value, gpointer self) {
-	_lambda24_ (property_name, value, self);
-}
-
-
-static void _lambda25_ (const char* property_name, void* value, Block9Data* _data9_) {
-	UnityLauncherApplicationQuicklistController * self;
-	self = _data9_->self;
-	g_return_if_fail (property_name != NULL);
-	if (_vala_strcmp0 (property_name, DBUSMENU_MENUITEM_PROP_LABEL) == 0) {
-		const char* value_weak;
-		value_weak = (const char*) value;
-		ctk_menu_item_set_label (_data9_->menuitem, value_weak);
-	} else {
-		if (_vala_strcmp0 (property_name, DBUSMENU_MENUITEM_PROP_ENABLED) == 0) {
-			gboolean* value_weak;
-			value_weak = (gboolean*) value;
-			clutter_actor_set_reactive ((ClutterActor*) _data9_->menuitem, *value_weak);
-		}
+		ctk_check_menu_item_set_active ((_tmp1_ = _data10_->menuitem, CTK_IS_CHECK_MENU_ITEM (_tmp1_) ? ((CtkCheckMenuItem*) _tmp1_) : NULL), _tmp0_);
 	}
 }
 
@@ -770,35 +747,33 @@ static void __lambda25__dbusmenu_menuitem_property_changed (DbusmenuMenuitem* _s
 }
 
 
-static void _lambda26_ (Block9Data* _data9_) {
+static void _lambda26_ (const char* property_name, void* value, Block10Data* _data10_) {
 	UnityLauncherApplicationQuicklistController * self;
-	self = _data9_->self;
-	dbusmenu_menuitem_handle_event (_data9_->dbusmenuitem, "clicked", NULL, (guint) clutter_get_current_event_time ());
+	self = _data10_->self;
+	g_return_if_fail (property_name != NULL);
+	if (_vala_strcmp0 (property_name, DBUSMENU_MENUITEM_PROP_LABEL) == 0) {
+		const char* value_weak;
+		value_weak = (const char*) value;
+		ctk_menu_item_set_label (_data10_->menuitem, value_weak);
+	} else {
+		if (_vala_strcmp0 (property_name, DBUSMENU_MENUITEM_PROP_ENABLED) == 0) {
+			gboolean* value_weak;
+			value_weak = (gboolean*) value;
+			clutter_actor_set_reactive ((ClutterActor*) _data10_->menuitem, *value_weak);
+		}
+	}
 }
 
 
-static void __lambda26__ctk_menu_item_activated (CtkMenuItem* _sender, gpointer self) {
-	_lambda26_ (self);
+static void __lambda26__dbusmenu_menuitem_property_changed (DbusmenuMenuitem* _sender, const char* property_name, void* value, gpointer self) {
+	_lambda26_ (property_name, value, self);
 }
 
 
-static gboolean _lambda28_ (UnityLauncherApplicationQuicklistController* self) {
-	gboolean result = FALSE;
-	unity_launcher_quicklist_controller_set_state ((UnityLauncherQuicklistController*) self, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_CLOSED);
-	result = FALSE;
-	return result;
-}
-
-
-static gboolean __lambda28__gsource_func (gpointer self) {
-	gboolean result;
-	result = _lambda28_ (self);
-	return result;
-}
-
-
-static void _lambda27_ (UnityLauncherApplicationQuicklistController* self) {
-	g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda28__gsource_func, g_object_ref (self), g_object_unref);
+static void _lambda27_ (Block10Data* _data10_) {
+	UnityLauncherApplicationQuicklistController * self;
+	self = _data10_->self;
+	dbusmenu_menuitem_handle_event (_data10_->dbusmenuitem, "clicked", NULL, (guint) clutter_get_current_event_time ());
 }
 
 
@@ -807,25 +782,50 @@ static void __lambda27__ctk_menu_item_activated (CtkMenuItem* _sender, gpointer 
 }
 
 
-static Block9Data* block9_data_ref (Block9Data* _data9_) {
-	g_atomic_int_inc (&_data9_->_ref_count_);
-	return _data9_;
+static gboolean _lambda29_ (UnityLauncherApplicationQuicklistController* self) {
+	gboolean result = FALSE;
+	unity_launcher_quicklist_controller_set_state ((UnityLauncherQuicklistController*) self, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_CLOSED);
+	result = FALSE;
+	return result;
 }
 
 
-static void block9_data_unref (Block9Data* _data9_) {
-	if (g_atomic_int_dec_and_test (&_data9_->_ref_count_)) {
-		_g_object_unref0 (_data9_->self);
-		_g_object_unref0 (_data9_->menuitem);
-		_g_object_unref0 (_data9_->dbusmenuitem);
-		g_slice_free (Block9Data, _data9_);
+static gboolean __lambda29__gsource_func (gpointer self) {
+	gboolean result;
+	result = _lambda29_ (self);
+	return result;
+}
+
+
+static void _lambda28_ (UnityLauncherApplicationQuicklistController* self) {
+	g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda29__gsource_func, g_object_ref (self), g_object_unref);
+}
+
+
+static void __lambda28__ctk_menu_item_activated (CtkMenuItem* _sender, gpointer self) {
+	_lambda28_ (self);
+}
+
+
+static Block10Data* block10_data_ref (Block10Data* _data10_) {
+	g_atomic_int_inc (&_data10_->_ref_count_);
+	return _data10_;
+}
+
+
+static void block10_data_unref (Block10Data* _data10_) {
+	if (g_atomic_int_dec_and_test (&_data10_->_ref_count_)) {
+		_g_object_unref0 (_data10_->self);
+		_g_object_unref0 (_data10_->menuitem);
+		_g_object_unref0 (_data10_->dbusmenuitem);
+		g_slice_free (Block10Data, _data10_);
 	}
 }
 
 
 static CtkMenuItem* unity_launcher_application_quicklist_controller_menu_item_from_dbusmenuitem (UnityLauncherApplicationQuicklistController* self, DbusmenuMenuitem* dbusmenuitem) {
 	CtkMenuItem* result = NULL;
-	Block9Data* _data9_;
+	Block10Data* _data10_;
 	char* label;
 	char* _tmp0_;
 	char* type;
@@ -833,14 +833,14 @@ static CtkMenuItem* unity_launcher_application_quicklist_controller_menu_item_fr
 	CtkMenuItem* _tmp12_;
 	g_return_val_if_fail (self != NULL, NULL);
 	g_return_val_if_fail (dbusmenuitem != NULL, NULL);
-	_data9_ = g_slice_new0 (Block9Data);
-	_data9_->_ref_count_ = 1;
-	_data9_->self = g_object_ref (self);
-	_data9_->dbusmenuitem = _g_object_ref0 (dbusmenuitem);
+	_data10_ = g_slice_new0 (Block10Data);
+	_data10_->_ref_count_ = 1;
+	_data10_->self = g_object_ref (self);
+	_data10_->dbusmenuitem = _g_object_ref0 (dbusmenuitem);
 	label = g_strdup ("UNDEFINED");
-	label = (_tmp0_ = g_strdup (dbusmenu_menuitem_property_get (_data9_->dbusmenuitem, DBUSMENU_MENUITEM_PROP_LABEL)), _g_free0 (label), _tmp0_);
+	label = (_tmp0_ = g_strdup (dbusmenu_menuitem_property_get (_data10_->dbusmenuitem, DBUSMENU_MENUITEM_PROP_LABEL)), _g_free0 (label), _tmp0_);
 	type = g_strdup ("label");
-	check_type = g_strdup (dbusmenu_menuitem_property_get (_data9_->dbusmenuitem, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE));
+	check_type = g_strdup (dbusmenu_menuitem_property_get (_data10_->dbusmenuitem, DBUSMENU_MENUITEM_PROP_TOGGLE_TYPE));
 	if (_vala_strcmp0 (check_type, DBUSMENU_MENUITEM_TOGGLE_CHECK) == 0) {
 		char* _tmp1_;
 		type = (_tmp1_ = g_strdup ("check"), _g_free0 (type), _tmp1_);
@@ -849,17 +849,17 @@ static CtkMenuItem* unity_launcher_application_quicklist_controller_menu_item_fr
 		char* _tmp2_;
 		type = (_tmp2_ = g_strdup ("radio"), _g_free0 (type), _tmp2_);
 	}
-	if (_vala_strcmp0 (dbusmenu_menuitem_property_get (_data9_->dbusmenuitem, "type"), DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0) {
+	if (_vala_strcmp0 (dbusmenu_menuitem_property_get (_data10_->dbusmenuitem, "type"), DBUSMENU_CLIENT_TYPES_SEPARATOR) == 0) {
 		char* _tmp3_;
 		type = (_tmp3_ = g_strdup ("seperator"), _g_free0 (type), _tmp3_);
 	}
-	if (dbusmenu_menuitem_property_get (_data9_->dbusmenuitem, DBUSMENU_MENUITEM_PROP_ICON_NAME) != NULL) {
+	if (dbusmenu_menuitem_property_get (_data10_->dbusmenuitem, DBUSMENU_MENUITEM_PROP_ICON_NAME) != NULL) {
 		char* _tmp4_;
 		type = (_tmp4_ = g_strdup ("stock_image"), _g_free0 (type), _tmp4_);
 	}
 	if (_vala_strcmp0 (type, "label") == 0) {
 		CtkMenuItem* _tmp5_;
-		_data9_->menuitem = (_tmp5_ = (CtkMenuItem*) g_object_ref_sink (unity_launcher_quicklist_menu_item_new_with_label (label)), _g_object_unref0 (_data9_->menuitem), _tmp5_);
+		_data10_->menuitem = (_tmp5_ = (CtkMenuItem*) g_object_ref_sink (unity_launcher_quicklist_menu_item_new_with_label (label)), _g_object_unref0 (_data10_->menuitem), _tmp5_);
 	} else {
 		gboolean _tmp6_ = FALSE;
 		if (_vala_strcmp0 (type, "check") == 0) {
@@ -872,47 +872,47 @@ static CtkMenuItem* unity_launcher_application_quicklist_controller_menu_item_fr
 			CtkMenuItem* _tmp10_;
 			if (_vala_strcmp0 (type, "check") == 0) {
 				CtkMenuItem* _tmp7_;
-				_data9_->menuitem = (_tmp7_ = (CtkMenuItem*) g_object_ref_sink (unity_launcher_quicklist_check_menu_item_new_with_label (label)), _g_object_unref0 (_data9_->menuitem), _tmp7_);
+				_data10_->menuitem = (_tmp7_ = (CtkMenuItem*) g_object_ref_sink (unity_launcher_quicklist_check_menu_item_new_with_label (label)), _g_object_unref0 (_data10_->menuitem), _tmp7_);
 			} else {
 				CtkMenuItem* _tmp8_;
-				_data9_->menuitem = (_tmp8_ = (CtkMenuItem*) g_object_ref_sink (unity_launcher_quicklist_radio_menu_item_new_with_label (NULL, label)), _g_object_unref0 (_data9_->menuitem), _tmp8_);
+				_data10_->menuitem = (_tmp8_ = (CtkMenuItem*) g_object_ref_sink (unity_launcher_quicklist_radio_menu_item_new_with_label (NULL, label)), _g_object_unref0 (_data10_->menuitem), _tmp8_);
 			}
-			checked = dbusmenu_menuitem_property_get_int (_data9_->dbusmenuitem, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE);
+			checked = dbusmenu_menuitem_property_get_int (_data10_->dbusmenuitem, DBUSMENU_MENUITEM_PROP_TOGGLE_STATE);
 			if (checked == DBUSMENU_MENUITEM_TOGGLE_STATE_CHECKED) {
 				CtkMenuItem* _tmp9_;
-				ctk_check_menu_item_set_active ((_tmp9_ = _data9_->menuitem, CTK_IS_CHECK_MENU_ITEM (_tmp9_) ? ((CtkCheckMenuItem*) _tmp9_) : NULL), TRUE);
+				ctk_check_menu_item_set_active ((_tmp9_ = _data10_->menuitem, CTK_IS_CHECK_MENU_ITEM (_tmp9_) ? ((CtkCheckMenuItem*) _tmp9_) : NULL), TRUE);
 			}
-			g_signal_connect_data ((_tmp10_ = _data9_->menuitem, CTK_IS_CHECK_MENU_ITEM (_tmp10_) ? ((CtkCheckMenuItem*) _tmp10_) : NULL), "toggled", (GCallback) __lambda23__ctk_check_menu_item_toggled, block9_data_ref (_data9_), (GClosureNotify) block9_data_unref, 0);
-			g_signal_connect_data (_data9_->dbusmenuitem, "property-changed", (GCallback) __lambda24__dbusmenu_menuitem_property_changed, block9_data_ref (_data9_), (GClosureNotify) block9_data_unref, 0);
+			g_signal_connect_data ((_tmp10_ = _data10_->menuitem, CTK_IS_CHECK_MENU_ITEM (_tmp10_) ? ((CtkCheckMenuItem*) _tmp10_) : NULL), "toggled", (GCallback) __lambda24__ctk_check_menu_item_toggled, block10_data_ref (_data10_), (GClosureNotify) block10_data_unref, 0);
+			g_signal_connect_data (_data10_->dbusmenuitem, "property-changed", (GCallback) __lambda25__dbusmenu_menuitem_property_changed, block10_data_ref (_data10_), (GClosureNotify) block10_data_unref, 0);
 		} else {
 			if (_vala_strcmp0 (type, "seperator") == 0) {
 				CtkMenuItem* _tmp11_;
-				_data9_->menuitem = (_tmp11_ = (CtkMenuItem*) g_object_ref_sink (unity_launcher_quicklist_menu_seperator_new ()), _g_object_unref0 (_data9_->menuitem), _tmp11_);
+				_data10_->menuitem = (_tmp11_ = (CtkMenuItem*) g_object_ref_sink (unity_launcher_quicklist_menu_seperator_new ()), _g_object_unref0 (_data10_->menuitem), _tmp11_);
 			} else {
-				g_warning ("quicklist-controller.vala:338: not a menu item we understand, %s", dbusmenu_menuitem_property_get (_data9_->dbusmenuitem, "type"));
+				g_warning ("quicklist-controller.vala:338: not a menu item we understand, %s", dbusmenu_menuitem_property_get (_data10_->dbusmenuitem, "type"));
 				result = NULL;
 				_g_free0 (check_type);
 				_g_free0 (type);
 				_g_free0 (label);
-				block9_data_unref (_data9_);
+				block10_data_unref (_data10_);
 				return result;
 			}
 		}
 	}
-	g_signal_connect_data (_data9_->dbusmenuitem, "property-changed", (GCallback) __lambda25__dbusmenu_menuitem_property_changed, block9_data_ref (_data9_), (GClosureNotify) block9_data_unref, 0);
-	clutter_actor_set_reactive ((ClutterActor*) _data9_->menuitem, dbusmenu_menuitem_property_get_bool (_data9_->dbusmenuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
-	g_signal_connect_data (_data9_->menuitem, "activated", (GCallback) __lambda26__ctk_menu_item_activated, block9_data_ref (_data9_), (GClosureNotify) block9_data_unref, 0);
-	g_signal_connect_object (_data9_->menuitem, "activated", (GCallback) __lambda27__ctk_menu_item_activated, self, 0);
-	result = _g_object_ref0 ((_tmp12_ = _data9_->menuitem, CTK_IS_MENU_ITEM (_tmp12_) ? ((CtkMenuItem*) _tmp12_) : NULL));
+	g_signal_connect_data (_data10_->dbusmenuitem, "property-changed", (GCallback) __lambda26__dbusmenu_menuitem_property_changed, block10_data_ref (_data10_), (GClosureNotify) block10_data_unref, 0);
+	clutter_actor_set_reactive ((ClutterActor*) _data10_->menuitem, dbusmenu_menuitem_property_get_bool (_data10_->dbusmenuitem, DBUSMENU_MENUITEM_PROP_ENABLED));
+	g_signal_connect_data (_data10_->menuitem, "activated", (GCallback) __lambda27__ctk_menu_item_activated, block10_data_ref (_data10_), (GClosureNotify) block10_data_unref, 0);
+	g_signal_connect_object (_data10_->menuitem, "activated", (GCallback) __lambda28__ctk_menu_item_activated, self, 0);
+	result = _g_object_ref0 ((_tmp12_ = _data10_->menuitem, CTK_IS_MENU_ITEM (_tmp12_) ? ((CtkMenuItem*) _tmp12_) : NULL));
 	_g_free0 (check_type);
 	_g_free0 (type);
 	_g_free0 (label);
-	block9_data_unref (_data9_);
+	block10_data_unref (_data10_);
 	return result;
 	_g_free0 (check_type);
 	_g_free0 (type);
 	_g_free0 (label);
-	block9_data_unref (_data9_);
+	block10_data_unref (_data10_);
 }
 
 
@@ -921,13 +921,13 @@ static void _unity_launcher_application_quicklist_controller_on_state_change_g_o
 }
 
 
-static void _lambda30_ (UnityLauncherApplicationQuicklistController* self) {
+static void _lambda31_ (UnityLauncherApplicationQuicklistController* self) {
 	unity_launcher_quicklist_controller_set_state ((UnityLauncherQuicklistController*) self, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_CLOSED);
 }
 
 
-static void __lambda30__unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self) {
-	_lambda30_ (self);
+static void __lambda31__unity_drag_controller_drag_start (UnityDragController* _sender, UnityDragModel* model, gpointer self) {
+	_lambda31_ (self);
 }
 
 
@@ -947,7 +947,7 @@ static GObject * unity_launcher_application_quicklist_controller_constructor (GT
 		g_signal_connect_object ((GObject*) self, "notify::state", (GCallback) _unity_launcher_application_quicklist_controller_on_state_change_g_object_notify, self, 0);
 		unity_launcher_quicklist_controller_set_state ((UnityLauncherQuicklistController*) self, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_LABEL);
 		drag_controller = _g_object_ref0 (unity_drag_controller_get_default ());
-		g_signal_connect_object (drag_controller, "drag-start", (GCallback) __lambda30__unity_drag_controller_drag_start, self, 0);
+		g_signal_connect_object (drag_controller, "drag-start", (GCallback) __lambda31__unity_drag_controller_drag_start, self, 0);
 		_g_object_unref0 (drag_controller);
 	}
 	return obj;

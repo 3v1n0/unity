@@ -2324,14 +2324,14 @@ static void unity_places_place_entry_dbus_real_connect (UnityPlacesPlaceEntry* b
 		DBusGProxy* _tmp3_;
 		_tmp0_ = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch14_g_error;
+			goto __catch15_g_error;
 		}
 		self->priv->connection = (_tmp1_ = _tmp0_, _dbus_g_connection_unref0 (self->priv->connection), _tmp1_);
 		self->priv->remote = (_tmp2_ = unity_places_place_entry_remote_dbus_proxy_new (self->priv->connection, self->priv->_dbus_name, self->priv->_dbus_path), _g_object_unref0 (self->priv->remote), _tmp2_);
 		self->priv->service = (_tmp3_ = dbus_g_proxy_new_for_name (self->priv->connection, self->priv->_dbus_name, self->priv->_dbus_path, "com.canonical.Unity.PlaceEntry"), _g_object_unref0 (self->priv->service), _tmp3_);
 	}
-	goto __finally14;
-	__catch14_g_error:
+	goto __finally15;
+	__catch15_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -2344,7 +2344,7 @@ static void unity_places_place_entry_dbus_real_connect (UnityPlacesPlaceEntry* b
 			return;
 		}
 	}
-	__finally14:
+	__finally15:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
