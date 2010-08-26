@@ -211,19 +211,90 @@ namespace Unity.Places
       online = true;
     }
 
-    public bool activate (string uri)
+    /* Dispatch an activation request to the place daemon,
+     * if it has any registered handlers */
+    public ActivationStatus activate (string uri, string mimetype)
     {
+      bool remote_activation = false;
+    
+      if (uri_regex != null && uri_regex.match (uri))
+        remote_activation = true;
+      else if (mime_regex != null && mime_regex.match (mimetype))
+        remote_activation = true;
+      
+      if (!remote_activation)
+        {
+          activate_fallback.begin (uri);
+          return ActivationStatus.ACTIVATED_FALLBACK;
+        }
+      
       if (activation_service == null)
         {
             activation_service = connection.get_object (dbus_name,
                                                         dbus_path,
                                                         "com.canonical.Unity.Activation");
         }
-
-      return activation_service.activate (uri);
+      
+      // FIXME: This should be async
+      uint32 result = activation_service.activate (uri);
+      
+      switch (result)
+      {
+        case 0:
+          activate_fallback.begin (uri);
+          return ActivationStatus.ACTIVATED_FALLBACK;
+        case 1:
+          return ActivationStatus.ACTIVATED_SHOW_DASH;
+        case 2:
+          return ActivationStatus.ACTIVATED_HIDE_DASH;
+        default:
+          warning ("Illegal response from com.canonical.Unity.Activation.Activate: %u", result);
+          return ActivationStatus.NOT_ACTIVATED;
+      }
     }
 
     /* Private Methods */
+    private async void activate_fallback (string uri)
+    {
+      if (uri.has_prefix ("application://"))
+        {
+          var id = uri.offset ("application://".length);
+
+          AppInfo info;
+          try {
+            var appinfos = AppInfoManager.get_instance ();
+            info = yield appinfos.lookup_async (id);
+          } catch (Error ee) {
+            warning ("Unable to read .desktop file '%s': %s", uri, ee.message);
+            return;
+          }
+
+          if (info is AppInfo)
+            {
+              try {
+                info.launch (null,null);
+              } catch (Error e) {
+                warning ("Unable to launch desktop file %s: %s\n",
+                         id,
+                         e.message);
+              }
+            }
+          else
+            {
+              warning ("%s is an invalid DesktopAppInfo id\n", id);
+            }
+          return;
+        }
+
+      try {
+        Gtk.show_uri (Gdk.Screen.get_default (),
+                      uri,
+                      0);
+       } catch (GLib.Error eee) {
+         warning ("Unable to launch: %s\n", eee.message);
+       }
+    }
+    
     private void on_service_entry_added (dynamic DBus.Object   dbus_object,
                                          ValueArray            info)
     {
@@ -324,6 +395,19 @@ namespace Unity.Places
                                            show_global,
                                            show_entry);
     }
+  }
+  
+  /**
+   * Return values for Unity.Places.Place.activate().
+   * NOTE: These values do *not* coincide with the dbus wire
+   *       values fo com.canonical.Unity.Activation.Activate()
+   */
+  public enum ActivationStatus
+  {
+    NOT_ACTIVATED,       /* Redrum! Something bad happened */
+    ACTIVATED_FALLBACK,  /* No remote activation, local fallback */
+    ACTIVATED_SHOW_DASH, /* Remote activation. Keep showing the dash */
+    ACTIVATED_HIDE_DASH  /* Remote activation. Hide the dash */
   }
 }
 

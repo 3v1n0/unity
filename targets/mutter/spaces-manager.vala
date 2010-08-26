@@ -360,6 +360,8 @@ namespace Unity {
                 time_ = Mutter.MetaDisplay.get_current_time (Mutter.MetaWindow.get_display (meta));
                 Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace (meta), time_);
                 Mutter.MetaWindow.activate (meta, time_);
+                
+                GLib.Timeout.add (250, () => { Mutter.MetaWindow.activate (meta, time_); return false; });
 
                 return false;
               });

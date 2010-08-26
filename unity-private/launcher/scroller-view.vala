@@ -52,6 +52,13 @@ namespace Unity.Launcher
     public ScrollerModel model {get; construct;}
     public Ctk.EffectCache cache {get; construct;}
 
+    public bool drag_indicator_active {get; set;}
+    public bool drag_indicator_space {get; set;}
+    public int drag_indicator_index {get; set;}
+    public float drag_indicator_opacity {get; set;}
+    private float drag_indicator_position = 0.0f;
+
+
     /* our scroller constants */
     public int spacing = 6;
     public int drag_sensitivity = 7;
@@ -73,6 +80,7 @@ namespace Unity.Launcher
     private ScrollerPhase current_phase = ScrollerPhase.SETTLING;
     private uint last_motion_event_time = 0;
     private ScrollerViewType view_type = ScrollerViewType.CONTRACTED;
+    private bool do_logic_pick = true;
     private float last_known_pointer_x = 0.0f;
 
     /*
@@ -132,6 +140,17 @@ namespace Unity.Launcher
 
       keyboard_indicators = new Gee.ArrayList <Clutter.CairoTexture> ();
       load_textures ();
+      Clutter.Color color = Clutter.Color () {
+        red = 0xff,
+        green = 0xff,
+        blue = 0xff,
+        alpha = 0xff
+      };
+
+      notify["drag-indicator-active"].connect (on_drag_indicator_active_change);
+      notify["drag-indicator-index"].connect (on_drag_indicator_index_change);
+      notify["drag-indicator-space"].connect (on_drag_indicator_space_change);
+
       model.child_added.connect (model_child_added);
       model.child_removed.connect (model_child_removed);
       model.order_changed.connect (model_order_changed);
@@ -148,6 +167,7 @@ namespace Unity.Launcher
       button_release_event.connect (on_button_release_event);
       motion_event.connect (on_motion_event);
       enter_event.connect (on_enter_event);
+      scroll_event.connect (on_scroll_event);
 
       leave_event.connect (on_leave_event);
       notify["is-autoscrolling"].connect (on_auto_scrolling_state_change);
@@ -172,13 +192,37 @@ namespace Unity.Launcher
       drag_controller.drag_start.connect (() => {
         is_scrolling = false;
         button_down = false;
+        Unity.Launcher.disable_quicklists = true;
+        Clutter.ungrab_pointer ();
+        get_stage ().motion_event.disconnect (on_motion_event);
+        current_phase = ScrollerPhase.FLUNG;
+        fling_timeline.start ();
+
+        animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                 "drag-indicator-opacity", 1.0f);
       });
 
-      drag_controller.drag_drop.connect (() => {
+      drag_controller.drag_drop.connect ((drag_model, x, y) => {
+        Unity.Launcher.disable_quicklists = false;
         foreach (Clutter.Actor child in model)
           {
             child.set_reactive (false);
           }
+          if (x > get_width ()) contract_launcher ();
+          else
+            {
+              Idle.add (() => {
+                order_children (false);
+              });
+            }
+          animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                   "drag-indicator-opacity", 0.0f);
+      });
+
+      drag_controller.drag_motion.connect ((model, x, y) => {
+        last_known_pointer_x = x;
+        if (x > 200 + get_width ()) contract_launcher ();
+        else expand_launcher (y);
       });
 
       set_reactive (true);
@@ -191,6 +235,8 @@ namespace Unity.Launcher
         queue_relayout ();
       });
 
+      drag_indicator_space = false;
+
     }
 
     /* hoo-boy this sucks. because of mutter and clutter issues, i have to set
@@ -200,7 +246,7 @@ namespace Unity.Launcher
      * is real... sheesh
      */
     private Clutter.Actor? last_picked_actor = null;
-    private Clutter.Actor? handle_event (Clutter.Event event)
+    private Clutter.Actor? handle_event (Clutter.Event event, bool assume_on_launcher=false)
     {
       if (disable_child_events)
         return null;
@@ -217,6 +263,9 @@ namespace Unity.Launcher
 
       float x, y;
       event.get_coords (out x, out y);
+      if (assume_on_launcher)
+        x = 25;
+
       Clutter.Actor picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, (int)x, (int)y);
 
 
@@ -267,12 +316,15 @@ namespace Unity.Launcher
     {
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
-      if (is_scrolling) return false;
       enter_event.disconnect (on_enter_event);
       leave_event.disconnect (on_leave_event);
       motion_event.disconnect (on_motion_event);
       motion_event.disconnect (passthrough_motion_event);
-      Clutter.Actor picked_actor = handle_event (event);
+      if (is_scrolling)
+        {
+          get_stage ().motion_event.disconnect (on_motion_event);
+        }
+      Clutter.Actor picked_actor = handle_event (event, is_scrolling);
 
       if (picked_actor is Clutter.Actor)
           picked_actor.do_event (event, false);
@@ -281,6 +333,10 @@ namespace Unity.Launcher
       leave_event.connect (on_leave_event);
       motion_event.connect (on_motion_event);
       motion_event.connect (passthrough_motion_event);
+      if (is_scrolling)
+        {
+          get_stage ().motion_event.connect (on_motion_event);
+        }
       return false;
     }
 
@@ -288,12 +344,11 @@ namespace Unity.Launcher
     {
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
-      if (is_scrolling) return false;
 
       enter_event.disconnect (on_enter_event);
       leave_event.disconnect (on_leave_event);
       button_press_event.disconnect (passthrough_button_press_event);
-      Clutter.Actor picked_actor = handle_event (event);
+      Clutter.Actor picked_actor = handle_event (event, is_scrolling);
       if (picked_actor is Clutter.Actor)
         picked_actor.do_event (event, false);
 
@@ -307,12 +362,11 @@ namespace Unity.Launcher
     {
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
-      if (is_scrolling) return false;
 
       enter_event.disconnect (on_enter_event);
       leave_event.disconnect (on_leave_event);
       button_release_event.disconnect (passthrough_button_release_event);
-      Clutter.Actor picked_actor = handle_event (event);
+      Clutter.Actor picked_actor = handle_event (event, is_scrolling);
       if (picked_actor is Clutter.Actor)
         picked_actor.do_event (event, false);
 
@@ -320,6 +374,44 @@ namespace Unity.Launcher
       leave_event.connect (on_leave_event);
       button_release_event.connect (passthrough_button_release_event);
       return false;
+    }
+
+    private void on_drag_indicator_space_change ()
+    {
+      if (drag_indicator_active)
+        {
+          if (drag_indicator_space)
+            {
+              animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                       "drag-indicator-opacity", 0.0f);
+              order_children (false);
+              return;
+            }
+          else
+            {
+              animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                       "drag-indicator-opacity", 1.0f);
+              order_children (false);
+            }
+        }
+      else
+        {
+          animate (Clutter.AnimationMode.EASE_OUT_SINE, 150,
+                   "drag-indicator-opacity", 1.0f);
+          order_children (false);
+        }
+    }
+
+    private void on_drag_indicator_active_change ()
+    {
+      on_drag_indicator_space_change ();
+    }
+
+    private void on_drag_indicator_index_change ()
+    {
+      //debug (@"index changed $drag_indicator_index");
+      order_children (false);
+      queue_relayout ();
     }
 
     private float last_scroll_position = 0.0f;
@@ -398,18 +490,42 @@ namespace Unity.Launcher
 
         ScrollerChild child = (Drag.Controller.get_default ().get_drag_model () as ScrollerChildController).child;
 
-        value = model.clamp (child, value);
+        //value = model.clamp (child, value);
 
         return value;
     }
 
     public int get_model_index_at_y_pos (float y, bool return_minus_if_fail=false)
     {
+      if (!do_logic_pick)
+        return get_model_index_at_y_pos_pick (y, return_minus_if_fail);
+      else
+        return get_model_index_at_y_pos_logic (y, return_minus_if_fail);
+    }
+
+    private int get_model_index_at_y_pos_logic (float y, bool return_minus_if_fail=false)
+    {
+      foreach (ScrollerChild child in model)
+        {
+          if (child.position + padding.top + child.get_height () > y)
+            return model.index_of (child as ScrollerChild);
+        }
+
+      if (return_minus_if_fail)
+        return -1;
+
+      return (y < padding.top + model[0].get_height () + spacing) ? 0 : model.size -1;
+
+    }
+
+    private int get_model_index_at_y_pos_pick(float y, bool return_minus_if_fail=false)
+    {
       // trying out a different method
       int iy = (int)y;
-      foreach (Clutter.Actor actor in model)
+      foreach (ScrollerChild actor in model)
         {
-          actor.set_reactive (true);
+          if (!actor.do_not_render)
+            actor.set_reactive (true);
         }
 
       Clutter.Actor picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy);
@@ -417,14 +533,13 @@ namespace Unity.Launcher
 
       if (picked_actor is ScrollerChild == false)
         {
-          // we didn't pick a scroller child. lets pick spacing above us
-          picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy - spacing);
+          // we didn't pick a scroller child. lets pick below us
+          picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy - 24);
 
           if (picked_actor is ScrollerChild == false)
             {
-              // again nothing good! lets try again but spacing below
-              picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy + spacing);
-
+              // again nothing good! lets try again above us
+              picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, 25, iy + 24);
               if (picked_actor is ScrollerChild == false)
                 {
                   if (return_minus_if_fail)
@@ -471,9 +586,6 @@ namespace Unity.Launcher
       Cairo.TextExtents real_extents = Cairo.TextExtents ();
       cr.text_extents (text, out extents);
 
-      double w_diff = extents.width - real_extents.width;
-      double h_diff = extents.height - real_extents.height;
-
       w += extents.width;
       h += extents.height;
       cr.set_source_rgba (0.07, 0.07, 0.07, 0.8);
@@ -517,8 +629,6 @@ namespace Unity.Launcher
         alpha = 0xff
       };
 
-      //!!FIXME!! these are positioned wrong, needs to know the absolute
-      // size of the resulting cario surface before creating it =\
       int index = 1;
       // indicator size find out activate!
       int key_indicator_w, key_indicator_h;
@@ -553,17 +663,32 @@ namespace Unity.Launcher
     }
 
     // will move the scroller by the given pixels
-    private void move_scroll_position (float pixels, bool check_bounds=false)
+    private void move_scroll_position (float pixels, bool check_bounds=false, float limit = 160.0f)
     {
       scroll_position += pixels;
-
+      float old_scroll_position = scroll_position;
       if (check_bounds)
         {
           scroll_position = Math.fminf (scroll_position, 0);
           scroll_position = Math.fmaxf (scroll_position, - (get_total_children_height () - get_available_height ()));
         }
+      else if (scroll_position > 0)
+        {
+          float new_scroll_position = scroll_position;
+          new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, new_scroll_position));
+          scroll_position = new_scroll_position;
+        }
+      else if (scroll_position < -(get_total_children_height () - get_available_height ()))
+        {
+          float diff = scroll_position + (get_total_children_height () - get_available_height ());
+          float new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, Math.fabsf (diff)));
+          new_scroll_position = -(get_total_children_height () - get_available_height ()) - new_scroll_position;
+          scroll_position = new_scroll_position;
+        }
       order_children (true);
       queue_relayout ();
+
+      scroll_position = old_scroll_position;
     }
 
     /* disables animations and events on children so that they don't
@@ -601,6 +726,7 @@ namespace Unity.Launcher
       // get the index of the icon we are hovering over
       if (get_total_children_height () > get_available_height ())
         {
+          do_logic_pick = false;
           int index = get_model_index_at_y_pos (absolute_y);
 
           // set our state to what we will end up being so we can find the correct
@@ -624,6 +750,7 @@ namespace Unity.Launcher
           order_children (false); // have to order twice, boo
 
           queue_relayout ();
+          do_logic_pick = true;
         }
     }
 
@@ -713,6 +840,10 @@ namespace Unity.Launcher
         }
 
       //Clutter.grab_pointer (this);
+      if (is_scrolling)
+        {
+          passthrough_button_press_event (event);
+        }
       button_down = true;
       previous_y_position = event.button.y;
       previous_y_time = event.button.time;
@@ -736,13 +867,22 @@ namespace Unity.Launcher
 
       if (is_scrolling)
         {
+          //passthrough_button_release_event (event);
+          foreach (ScrollerChild child in model)
+            {
+              child.grabbed_push = 0;
+            }
           is_scrolling = false;
+          Unity.Launcher.disable_quicklists = false;
           Clutter.ungrab_pointer ();
           get_stage ().motion_event.disconnect (on_motion_event);
-          if ((event.button.time - last_motion_event_time) > 120)
+          if (scroll_position > 0 || scroll_position < -(get_total_children_height () - get_available_height ()))
             {
               current_phase = ScrollerPhase.SETTLING;
-              settle_position = get_aligned_settle_position ();
+              if (scroll_position > 0)
+                settle_position = 0;
+              else
+                settle_position = -(get_total_children_height () - get_available_height ());
             }
           else
             {
@@ -776,7 +916,10 @@ namespace Unity.Launcher
     private bool on_queue_contract_launcher ()
     {
       if (queue_contract_launcher != 0)
-        contract_launcher ();
+        {
+          current_phase = ScrollerPhase.NONE;
+          contract_launcher ();
+        }
       queue_contract_launcher = 0;
       return false;
     }
@@ -790,6 +933,8 @@ namespace Unity.Launcher
     private bool on_leave_event (Clutter.Event event)
     {
       last_known_pointer_x = 200;
+      var drag_controller = Drag.Controller.get_default ();
+      if (drag_controller.is_dragging) return false;
       if (is_scrolling) return false;
       do_queue_contract_launcher ();
 
@@ -857,25 +1002,24 @@ namespace Unity.Launcher
            * monitor how far away we have dragged from the original click, once
            * we get far enough away we can start scrolling.
            */
-          var diff = event.motion.y - previous_y_position;
-          if (Math.fabsf (diff) > drag_sensitivity)
-            {
-              is_scrolling = true;
-              Unity.global_shell.add_fullscreen_request (this);
-              Clutter.grab_pointer (this);
-              get_stage ().motion_event.connect (on_motion_event);
-            }
+          //var diff = event.motion.y - previous_y_position;
+          is_scrolling = true;
+          Unity.Launcher.disable_quicklists = true;
+          Unity.global_shell.add_fullscreen_request (this);
+          Clutter.grab_pointer (this);
+          get_stage ().motion_event.connect (on_motion_event);
         }
 
       if (is_scrolling)
         {
           /* Disable any animations on the children */
-          disable_animations_on_children (event);
+          //disable_animations_on_children (event);
 
           /* we need to compare the event y position from this event to the
            * previous event. once we have that we can compute a velocity based
            * on how long it was since the previous event
            */
+          passthrough_motion_event (event);
 
           float pixel_diff = event.motion.y - previous_y_position;
           uint time_diff = event.motion.time - previous_y_time;
@@ -888,6 +1032,26 @@ namespace Unity.Launcher
           move_scroll_position (pixel_diff);
 
           return true;
+        }
+
+      return false;
+    }
+
+    private bool on_scroll_event (Clutter.Event event)
+    {
+      // got a mouse wheel scroll
+      float modifier = 0.0f;
+      if (event.scroll.direction == Clutter.ScrollDirection.UP)
+        modifier = 1.0f;
+      else if (event.scroll.direction == Clutter.ScrollDirection.DOWN)
+        modifier = -1.0f;
+
+      if (modifier != 0.0f)
+        {
+          float speed = ((48 + spacing) * 3) * 6.0f;
+          scroll_speed += speed * modifier;
+          current_phase = ScrollerPhase.FLUNG;
+          fling_timeline.start ();
         }
 
       return false;
@@ -915,6 +1079,9 @@ namespace Unity.Launcher
         {
           is_animating = true;
           delta -= 16;
+          if (fling_timeout_source != 0 && current_phase != ScrollerPhase.NONE)
+            Source.remove (fling_timeout_source);
+
           switch (current_phase) {
             case (ScrollerPhase.SETTLING):
               do_anim_settle (timeline, msecs);
@@ -957,32 +1124,32 @@ namespace Unity.Launcher
 
     }
 
+    uint fling_timeout_source = 0;
     private void do_anim_fling (Clutter.Timeline timeline, int msecs)
     {
       scroll_speed *= friction; // slow our speed
 
       // we devide by 60 because get 60 ticks a second
       float scroll_move_amount = scroll_speed / 60.0f;
-      move_scroll_position (scroll_move_amount);
+      move_scroll_position (scroll_move_amount, false, 60.0f);
 
       //after a fling, we have to figure out if we want to change our
       // scroller phase or not
 
-      if(scroll_move_amount <= -1.0 && -scroll_position > total_child_height - height ||
-         scroll_move_amount >=  1.0 && scroll_position > 0)
-        {
-          current_phase = ScrollerPhase.BOUNCE;
-        }
 
-      if (Math.fabsf (scroll_move_amount) < 1.0 &&
-          (scroll_position > 0 || -scroll_position > total_child_height - height))
-        {
-          settle_position = get_aligned_settle_position ();
-          current_phase = ScrollerPhase.SETTLING;
-        }
-      else if (Math.fabsf (scroll_move_amount) < 1.0)
+      if (Math.fabsf (scroll_move_amount) < 1.0)
         {
           current_phase = ScrollerPhase.NONE;
+          fling_timeout_source = GLib.Timeout.add (300, () =>
+            {
+              current_phase = ScrollerPhase.SETTLING;
+              if (scroll_position > 0)
+                settle_position = 0;
+              else
+                settle_position = -(get_total_children_height () - get_available_height ());
+              fling_timeline.start ();
+              return false;
+            });
         }
     }
 
@@ -1081,74 +1248,78 @@ namespace Unity.Launcher
 
     private void order_children (bool immediate)
     {
-      Gee.ArrayList<ChildTransition> transitions;
       if (get_total_children_height () < get_available_height ())
         {
-          transitions = order_children_expanded ();
+          order_children_expanded (immediate);
         }
       else
         {
           switch (view_type)
             {
               case ScrollerViewType.CONTRACTED:
-                transitions = order_children_contracted ();
+                order_children_contracted (immediate);
                 break;
 
               case ScrollerViewType.EXPANDED:
-                transitions = order_children_expanded ();
+                order_children_expanded (immediate);
                 break;
 
               default:
                 assert_not_reached ();
             }
         }
+      queue_relayout ();
+    }
 
-      for (int index = 0; index < model.size; index++)
+    private void change_child_position_rotation (ScrollerChild child,
+                                                 float position, float rotation,
+                                                 bool immediate = false)
+    {
+      if (immediate || global_shell.is_starting)
         {
-          var child = model[index];
-          if (immediate)
+          child.position = position;
+          child.force_rotation_jump (rotation);
+        }
+      else
+        {
+          bool do_new_position = true;
+          if (child.get_animation () is Clutter.Animation)
             {
-              child.position = transitions[index].position;
-              child.force_rotation_jump (transitions[index].rotation);
-            }
-          else
-            {
-              bool do_new_position = true;
-              if (child.get_animation () is Clutter.Animation)
+              //GLib.Value value = GLib.Value (GLib.Type.from_name ("string"));
+              GLib.Value value = Value (typeof (float));
+              Clutter.Interval interval = child.get_animation ().get_interval ("position");
+              if (interval is Clutter.Interval)
+                interval.get_final_value (value);
+              if (value.get_float () != position)
                 {
-                  //GLib.Value value = GLib.Value (GLib.Type.from_name ("string"));
-                  GLib.Value value = Value (typeof (float));
-                  Clutter.Interval interval = child.get_animation ().get_interval ("position");
-                  if (interval is Clutter.Interval)
-                    interval.get_final_value (value);
-                  if (value.get_float () != transitions[index].position)
-                    {
-                      // disable the current animation before starting a new one
-                      float current_pos = child.position;
-                      child.get_animation ().completed ();
-                      child.position = current_pos;
-                    }
-                  else
-                    {
-                      do_new_position = false;
-                    }
+                  // disable the current animation before starting a new one
+                  float current_pos = child.position;
+                  child.get_animation ().completed ();
+                  child.position = current_pos;
                 }
+              else
+                {
+                  do_new_position = false;
+                }
+            }
 
-              child.rotation = transitions[index].rotation;
+          child.rotation = rotation;
 
-              if (do_new_position)
-                child.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
-                               300,
-                               "position", transitions[index].position
-                               );
+          if (do_new_position)
+            {
+              if (view_type == ScrollerViewType.CONTRACTED)
+                child.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD, 300,
+                               "position", position);
+              else
+                child.animate (Clutter.AnimationMode.EASE_OUT_QUINT, 300,
+                               "position", position);
             }
         }
     }
 
-    private Gee.ArrayList<ChildTransition> order_children_expanded ()
+    private void order_children_expanded (bool immediate = false)
     {
       // figures out the position of each child based on its order in the model
-      Gee.ArrayList<ChildTransition> ret_transitions = new Gee.ArrayList<ChildTransition> ();
       float h = 0.0f;
       float min_height, nat_height;
       if (!(draw_ftb is Gee.ArrayList))
@@ -1157,28 +1328,43 @@ namespace Unity.Launcher
       if (!(draw_ftb is Gee.ArrayList))
         draw_btf = new Gee.ArrayList<ScrollerChild> ();
 
+      int index = 0;
       foreach (ScrollerChild child in model)
       {
-        child.get_preferred_height (get_width (), out min_height, out nat_height);
-        var transition = new ChildTransition ();
-        transition.position = h + scroll_position;
-        transition.rotation = 0.0f;
-        ret_transitions.add (transition);
-        //if (!(child in draw_ftb || child in draw_ftb))
-          //draw_ftb.add (child);
-        h += nat_height + spacing;
+
+        if (index == drag_indicator_index && drag_indicator_active)
+          {
+            if (drag_indicator_space)
+              {
+                child.get_preferred_height (get_width (), out min_height, out nat_height);
+                h += nat_height + spacing;
+              }
+            else
+              {
+                h += 2 + spacing;
+              }
+          }
+        else
+          {
+            child.get_preferred_height (get_width (), out min_height, out nat_height);
+            change_child_position_rotation (child, h + scroll_position, 0.0f, immediate);
+
+            h += nat_height + spacing;
+          }
+        index += 1;
       }
-      return ret_transitions;
     }
 
-    private Gee.ArrayList<ChildTransition> order_children_contracted ()
+    private void order_children_contracted (bool immediate = false)
     {
-      Gee.ArrayList<ChildTransition> ret_transitions = new Gee.ArrayList<ChildTransition> ();
       float h = 0.0f;
       float min_height, nat_height;
       int num_launchers = 0;
       //get the total size of the children in a flat state
       float total_child_height = get_total_children_height ();
+      int actual_model_size = model.size;
+      foreach (ScrollerChild child in model)
+        if (child.do_not_render) actual_model_size -= 1;
 
       if (total_child_height > get_available_height ())
         {
@@ -1192,7 +1378,8 @@ namespace Unity.Launcher
               //check to see if we can fit everything in
               float flat_space = num_launchers * (48.0f + spacing);
               float contracted_space = 0.0f;
-              contracted_space = ((model.size - num_launchers) * (8 + spacing));
+
+              contracted_space = ((actual_model_size - num_launchers) * (8 + spacing));
 
               if (flat_space + spacing + contracted_space < (get_available_height () - (spacing * 2)))
                 {
@@ -1205,20 +1392,20 @@ namespace Unity.Launcher
         }
       else
         {
-          num_launchers = model.size;
+          num_launchers = actual_model_size;
         }
 
       int num_children_handled = 0;
       int index_start_flat, index_end_flat = 0;
 
-      if (focused_launcher < model.size - (num_launchers -(num_launchers / 2)))
+      if (focused_launcher < actual_model_size - (num_launchers -(num_launchers / 2)))
         {
           index_start_flat = int.max (0, focused_launcher - (num_launchers / 2));
           index_end_flat = index_start_flat + num_launchers;
         }
       else
         {
-          index_end_flat = model.size;
+          index_end_flat = actual_model_size;
           index_start_flat = index_end_flat - num_launchers;
         }
       draw_ftb = new Gee.ArrayList<ScrollerChild> ();
@@ -1227,14 +1414,12 @@ namespace Unity.Launcher
       for (int index = 0; index < model.size; index++)
         {
           ScrollerChild child = model[index];
-          var transition = new ChildTransition ();
           child.get_preferred_height (get_width (), out min_height, out nat_height);
           if (index >= index_start_flat && index < index_end_flat)
             {
-              transition.position = h;
+              change_child_position_rotation (child, h, 0.0f, immediate);
               h += nat_height + spacing;
               num_children_handled++;
-              transition.rotation = 0.0f;
 
               if (index == index_start_flat)
                 draw_ftb.add (child);
@@ -1245,45 +1430,44 @@ namespace Unity.Launcher
             {
               // contracted launcher
               if (index == index_end_flat) h -= nat_height * 0.3333f - spacing;//spacing * 2;
-
+              float rotation = 0.0f;
+              float position = 0.0f;
               if (num_children_handled < index_start_flat)
                 {
                   if (num_children_handled == index_start_flat - 1)
                     {
-                      transition.rotation = -contract_icon_partial_degrees;
+                      rotation = -contract_icon_partial_degrees;
                       h += spacing;
                     }
                   else
                     {
-                      transition.rotation = -contract_icon_degrees;
+                      rotation = -contract_icon_degrees;
                     }
-                  transition.position = h;
+                  position = h;
                   draw_ftb.add (child);
                 }
               else
                 {
-                  transition.position = h;
+                  position = h;
                   if (index == index_end_flat)
                     {
-                      transition.rotation = contract_icon_partial_degrees;
+                      rotation = contract_icon_partial_degrees;
                       h += spacing;
                     }
                   else
                     {
-                      transition.rotation = contract_icon_degrees;
+                      rotation = contract_icon_degrees;
                     }
                   draw_btf.add (child);
                 }
 
+              change_child_position_rotation (child, position, rotation, immediate);
               h += 8 + spacing;
               num_children_handled++;
 
               if (index +1 == index_start_flat) h += 30;
             }
-          ret_transitions.add (transition);
         }
-
-      return ret_transitions;
     }
 
 
@@ -1293,6 +1477,7 @@ namespace Unity.Launcher
       float min_height, nat_height;
       foreach (ScrollerChild child in model)
         {
+          if (child.do_not_render) continue;
           child.get_preferred_height (get_width (), out min_height, out nat_height);
           h += nat_height + spacing;
         }
@@ -1311,15 +1496,20 @@ namespace Unity.Launcher
     {
       base.allocate (box, flags);
       Clutter.ActorBox child_box = Clutter.ActorBox ();
+      Clutter.ActorBox temp_child_box = Clutter.ActorBox ();
       float current_width = padding.left;
       float available_height = box.get_height () - padding.bottom;
       float available_width = box.get_width () - padding.right;
 
       total_child_height = 0.0f;
-      uint index = 0;
+      int index = 0;
+
+      if (drag_indicator_active)
+        drag_indicator_position = model[drag_indicator_index].position + padding.top;
 
       foreach (ScrollerChild child in model)
         {
+
           float child_height, child_width, natural, min;
 
           child.get_preferred_width (available_height, out min, out natural);
@@ -1329,17 +1519,12 @@ namespace Unity.Launcher
           child_height = Math.fmaxf (min, Math.fminf (natural, available_height));
 
           child_box.x1 = current_width;
-          child_box.x2 = box.get_width () - padding.right;
+          child_box.x2 = child_box.x1 + child_width;//box.get_width () - padding.right;
           child_box.y1 = child.position + padding.top;
           child_box.y2 = child_box.y1 + child_height;
 
-          child.allocate (child_box, flags);
-
-          child.remove_clip ();
-          if (child_box.y1 < 0)
-            child.set_clip (0, Math.fabsf (child_box.y1),
-                            child_box.get_width (), child_box.get_height () - child_box.y1);
-
+          if (!child.do_not_render) ;
+            child.allocate (child_box, flags);
 
           total_child_height += child_height + spacing;
 
@@ -1389,7 +1574,7 @@ namespace Unity.Launcher
       for (int index = draw_btf.size-1; index >= 0; index--)
         {
           ScrollerChild child = draw_btf[index];
-          if (child is ScrollerChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0 && !child.do_not_render)
             {
               (child as ScrollerChild).paint ();
             }
@@ -1397,7 +1582,7 @@ namespace Unity.Launcher
 
       foreach (ScrollerChild child in draw_ftb)
         {
-          if (child is ScrollerChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0 && !child.do_not_render)
             {
               (child as ScrollerChild).paint ();
             }
@@ -1405,6 +1590,7 @@ namespace Unity.Launcher
 
       foreach (ScrollerChild child in child_refs)
         {
+          if (child.do_not_render) continue;
           child.paint ();
         }
     }
@@ -1413,10 +1599,23 @@ namespace Unity.Launcher
     public override void paint ()
     {
       bgtex.paint ();
+
+      if (drag_indicator_active)
+        {
+          //debug (@"drawing at $drag_indicator_position with $drag_indicator_opacity opacity");
+          Cogl.set_source_color4f (1.0f, 1.0f, 1.0f,
+                                   drag_indicator_opacity);
+
+          Cogl.rectangle (0, drag_indicator_position,
+                          get_width (),
+                          drag_indicator_position + 2);
+
+        }
+
       for (int index = draw_btf.size-1; index >= 0; index--)
         {
           ScrollerChild child = draw_btf[index];
-          if (child is ScrollerChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0 && !child.do_not_render)
             {
               (child as ScrollerChild).paint ();
             }
@@ -1424,7 +1623,7 @@ namespace Unity.Launcher
 
       foreach (ScrollerChild child in draw_ftb)
         {
-          if (child is ScrollerChild && child.opacity > 0)
+          if (child is ScrollerChild && child.opacity > 0 && !child.do_not_render)
             {
               (child as ScrollerChild).paint ();
             }
@@ -1444,6 +1643,7 @@ namespace Unity.Launcher
 
       foreach (ScrollerChild child in child_refs)
         {
+          if (child.do_not_render) continue;
           child.paint ();
         }
 
@@ -1460,6 +1660,7 @@ namespace Unity.Launcher
       base.map ();
       bgtex.map ();
       top_shadow.map ();
+
       foreach (Clutter.CairoTexture kb_ind in keyboard_indicators)
         {
           kb_ind.map ();
@@ -1477,6 +1678,7 @@ namespace Unity.Launcher
       base.unmap ();
       bgtex.map ();
       top_shadow.map ();
+
       foreach (Clutter.CairoTexture kb_ind in keyboard_indicators)
         {
           kb_ind.paint ();
