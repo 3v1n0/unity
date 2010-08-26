@@ -388,7 +388,9 @@ namespace Unity {
       uint length = clones.length ();
 
       int width  = (int) Math.ceil  (Math.sqrt ((double) length));
-      int height = (int) Math.floor (Math.sqrt ((double) length));
+      int height = 1;
+      while (width * height < length)
+        height++;
 
       Mutter.MetaRectangle rect = {0, 0, 0, 0};
       Mutter.MetaScreen.get_monitor_geometry (screen, 0, rect);
@@ -433,7 +435,9 @@ namespace Unity {
       uint length = clones.length ();
 
       int width  = (int) Math.ceil  (Math.sqrt ((double) length));
-      int height = (int) Math.floor (Math.sqrt ((double) length));
+      int height = 1;
+      while (width * height < length)
+        height++;
 
       Mutter.MetaRectangle rect = {0, 0, 0, 0};
       Mutter.MetaScreen.get_monitor_geometry (screen, 0, rect);

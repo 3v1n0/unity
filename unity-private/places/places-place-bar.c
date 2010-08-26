@@ -250,8 +250,8 @@ UnityPlacesPlaceBarBackground* unity_places_place_bar_background_construct (GTyp
 UnityPlacesPlaceView* unity_places_place_view_new (UnityPlacesPlace* place);
 UnityPlacesPlaceView* unity_places_place_view_construct (GType object_type, UnityPlacesPlace* place);
 static void _unity_places_place_bar_on_entry_activated_unity_places_place_view_entry_activated (UnityPlacesPlaceView* _sender, UnityPlacesPlaceEntryView* entry_view, gpointer self);
-static void _lambda63_ (UnityPlacesPlace* p, UnityPlacesPlaceBar* self);
-static void __lambda63__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self);
+static void _lambda71_ (UnityPlacesPlace* p, UnityPlacesPlaceBar* self);
+static void __lambda71__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self);
 static GObject * unity_places_place_bar_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_place_bar_finalize (GObject* obj);
 static void unity_places_place_bar_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -443,7 +443,7 @@ static void _unity_places_place_bar_on_entry_activated_unity_places_place_view_e
 }
 
 
-static void _lambda63_ (UnityPlacesPlace* p, UnityPlacesPlaceBar* self) {
+static void _lambda71_ (UnityPlacesPlace* p, UnityPlacesPlaceBar* self) {
 	UnityPlacesPlaceView* view;
 	g_return_if_fail (p != NULL);
 	view = g_object_ref_sink (unity_places_place_view_new (p));
@@ -454,8 +454,8 @@ static void _lambda63_ (UnityPlacesPlace* p, UnityPlacesPlaceBar* self) {
 }
 
 
-static void __lambda63__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self) {
-	_lambda63_ (place, self);
+static void __lambda71__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self) {
+	_lambda71_ (place, self);
 }
 
 
@@ -498,7 +498,7 @@ static GObject * unity_places_place_bar_constructor (GType type, guint n_constru
 			}
 			_g_object_unref0 (_place_it);
 		}
-		g_signal_connect_object (self->priv->_model, "place-added", (GCallback) __lambda63__unity_places_place_model_place_added, self, 0);
+		g_signal_connect_object (self->priv->_model, "place-added", (GCallback) __lambda71__unity_places_place_model_place_added, self, 0);
 	}
 	return obj;
 }
@@ -760,12 +760,12 @@ static GObject * unity_places_place_bar_background_constructor (GType type, guin
 			GdkPixbuf* _tmp1_;
 			_tmp0_ = gdk_pixbuf_new_from_file (UNITY_PLACES_PLACE_BAR_BACKGROUND_BG, &_inner_error_);
 			if (_inner_error_ != NULL) {
-				goto __catch13_g_error;
+				goto __catch14_g_error;
 			}
 			self->priv->tile = (_tmp1_ = _tmp0_, _g_object_unref0 (self->priv->tile), _tmp1_);
 		}
-		goto __finally13;
-		__catch13_g_error:
+		goto __finally14;
+		__catch14_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -775,7 +775,7 @@ static GObject * unity_places_place_bar_background_constructor (GType type, guin
 				_g_error_free0 (e);
 			}
 		}
-		__finally13:
+		__finally14:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);

@@ -79,6 +79,8 @@ typedef struct _UnityPlacesSectionClass UnityPlacesSectionClass;
 #define _g_free0(var) (var = (g_free (var), NULL))
 typedef struct _UnityPlacesSectionPrivate UnityPlacesSectionPrivate;
 #define _cairo_pattern_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_pattern_destroy (var), NULL)))
+#define _cairo_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_destroy (var), NULL)))
+#define _cairo_surface_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_surface_destroy (var), NULL)))
 
 typedef enum  {
 	UNITY_PLACES_SECTION_STYLE_BUTTONS,
@@ -212,7 +214,7 @@ DeeModelIter* unity_places_section_get_iter (UnityPlacesSection* self);
 UnityPlacesSection* unity_places_section_new (DeeModel* model, DeeModelIter* iter);
 UnityPlacesSection* unity_places_section_construct (GType object_type, DeeModel* model, DeeModelIter* iter);
 static gboolean unity_places_place_search_sections_bar_on_section_clicked (UnityPlacesPlaceSearchSectionsBar* self, ClutterActor* actor, ClutterEvent* e);
-static gboolean _unity_places_place_search_sections_bar_on_section_clicked_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _unity_places_place_search_sections_bar_on_section_clicked_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 void unity_places_place_entry_set_active_section (UnityPlacesPlaceEntry* self, guint section_id);
 static UnityPlacesSection* unity_places_place_search_sections_bar_get_section_for_iter (UnityPlacesPlaceSearchSectionsBar* self, DeeModelIter* iter);
 static void unity_places_place_search_sections_bar_paint_bg (UnityPlacesPlaceSearchSectionsBar* self, cairo_t* cr, gint width, gint height);
@@ -235,6 +237,10 @@ enum  {
 };
 #define UNITY_PLACES_SECTION_PADDING 4.0f
 static void unity_places_section_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width, float* nat_width);
+static gboolean unity_places_section_real_enter_event (ClutterActor* base, ClutterEvent* e);
+static gboolean unity_places_section_real_leave_event (ClutterActor* base, ClutterEvent* e);
+static gboolean unity_places_section_real_button_press_event (ClutterActor* base, ClutterEvent* e);
+static gboolean unity_places_section_real_button_release_event (ClutterActor* base, ClutterEvent* e);
 static void unity_places_section_paint_bg (UnityPlacesSection* self, cairo_t* cr, gint width, gint height);
 const char* unity_places_section_get_name (UnityPlacesSection* self);
 void unity_places_section_set_name (UnityPlacesSection* self, const char* value);
@@ -243,6 +249,8 @@ void unity_places_section_set_destroy_factor (UnityPlacesSection* self, float va
 float unity_places_section_get_resize_factor (UnityPlacesSection* self);
 void unity_places_section_set_resize_factor (UnityPlacesSection* self, float value);
 static void _unity_places_section_paint_bg_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
+static void _lambda39_ (UnityPlacesSection* self);
+static void __lambda39__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static GObject * unity_places_section_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_section_finalize (GObject* obj);
 static void unity_places_section_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -452,7 +460,7 @@ static gint unity_places_place_search_sections_bar_sort_sections (UnityPlacesSec
 }
 
 
-static gboolean _unity_places_place_search_sections_bar_on_section_clicked_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean _unity_places_place_search_sections_bar_on_section_clicked_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
 	result = unity_places_place_search_sections_bar_on_section_clicked (self, _sender, event);
 	return result;
@@ -468,7 +476,7 @@ static void unity_places_place_search_sections_bar_on_section_added (UnityPlaces
 	section = g_object_ref_sink (unity_places_section_new (model, iter));
 	ctk_box_pack ((CtkBox*) self, (ClutterActor*) section, FALSE, TRUE);
 	clutter_actor_show ((ClutterActor*) section);
-	g_signal_connect_object ((ClutterActor*) section, "button-press-event", (GCallback) _unity_places_place_search_sections_bar_on_section_clicked_clutter_actor_button_press_event, self, 0);
+	g_signal_connect_object ((ClutterActor*) section, "button-release-event", (GCallback) _unity_places_place_search_sections_bar_on_section_clicked_clutter_actor_button_release_event, self, 0);
 	if (self->priv->active_section == NULL) {
 		_tmp0_ = self->_style == UNITY_PLACES_SECTION_STYLE_BUTTONS;
 	} else {
@@ -878,6 +886,50 @@ static void unity_places_section_real_get_preferred_width (ClutterActor* base, f
 }
 
 
+static gboolean unity_places_section_real_enter_event (ClutterActor* base, ClutterEvent* e) {
+	UnityPlacesSection * self;
+	gboolean result = FALSE;
+	self = (UnityPlacesSection*) base;
+	ctk_actor_set_state ((CtkActor*) self, CTK_STATE_PRELIGHT);
+	unity_cairo_canvas_update (self->priv->bg);
+	result = TRUE;
+	return result;
+}
+
+
+static gboolean unity_places_section_real_leave_event (ClutterActor* base, ClutterEvent* e) {
+	UnityPlacesSection * self;
+	gboolean result = FALSE;
+	self = (UnityPlacesSection*) base;
+	ctk_actor_set_state ((CtkActor*) self, CTK_STATE_NORMAL);
+	unity_cairo_canvas_update (self->priv->bg);
+	result = TRUE;
+	return result;
+}
+
+
+static gboolean unity_places_section_real_button_press_event (ClutterActor* base, ClutterEvent* e) {
+	UnityPlacesSection * self;
+	gboolean result = FALSE;
+	self = (UnityPlacesSection*) base;
+	ctk_actor_set_state ((CtkActor*) self, CTK_STATE_SELECTED);
+	unity_cairo_canvas_update (self->priv->bg);
+	result = FALSE;
+	return result;
+}
+
+
+static gboolean unity_places_section_real_button_release_event (ClutterActor* base, ClutterEvent* e) {
+	UnityPlacesSection * self;
+	gboolean result = FALSE;
+	self = (UnityPlacesSection*) base;
+	ctk_actor_set_state ((CtkActor*) self, CTK_STATE_PRELIGHT);
+	unity_cairo_canvas_update (self->priv->bg);
+	result = FALSE;
+	return result;
+}
+
+
 static void unity_places_section_paint_bg (UnityPlacesSection* self, cairo_t* cr, gint width, gint height) {
 	gint x;
 	gint y;
@@ -897,7 +949,9 @@ static void unity_places_section_paint_bg (UnityPlacesSection* self, cairo_t* cr
 	height = height - 1;
 	radius = 10;
 	if (unity_places_place_search_sections_bar_get_style ((_tmp0_ = clutter_actor_get_parent ((ClutterActor*) self), UNITY_PLACES_IS_PLACE_SEARCH_SECTIONS_BAR (_tmp0_) ? ((UnityPlacesPlaceSearchSectionsBar*) _tmp0_) : NULL)) == UNITY_PLACES_SECTION_STYLE_BUTTONS) {
-		cairo_line_to (cr, (double) x, (double) (y + radius));
+		gboolean _tmp1_ = FALSE;
+		double _tmp2_ = 0.0;
+		cairo_move_to (cr, (double) x, (double) (y + radius));
 		cairo_curve_to (cr, (double) x, (double) y, (double) x, (double) y, (double) (x + radius), (double) y);
 		cairo_line_to (cr, (double) (width - radius), (double) y);
 		cairo_curve_to (cr, (double) width, (double) y, (double) width, (double) y, (double) width, (double) (y + radius));
@@ -906,8 +960,45 @@ static void unity_places_section_paint_bg (UnityPlacesSection* self, cairo_t* cr
 		cairo_line_to (cr, (double) (x + radius), (double) height);
 		cairo_curve_to (cr, (double) x, (double) height, (double) x, (double) height, (double) x, (double) (height - radius));
 		cairo_close_path (cr);
-		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+		if (unity_places_section_get_active (self)) {
+			_tmp1_ = TRUE;
+		} else {
+			_tmp1_ = ctk_actor_get_state ((CtkActor*) self) == CTK_STATE_SELECTED;
+		}
+		if (_tmp1_) {
+			cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+		} else {
+			if (ctk_actor_get_state ((CtkActor*) self) == CTK_STATE_PRELIGHT) {
+				cairo_surface_t* pattern;
+				cairo_t* context;
+				cairo_pattern_t* pat;
+				pattern = cairo_surface_create_similar (cairo_get_target (cr), CAIRO_CONTENT_COLOR_ALPHA, 4, 4);
+				context = cairo_create (pattern);
+				cairo_set_operator (context, CAIRO_OPERATOR_CLEAR);
+				cairo_paint (context);
+				cairo_set_line_width (context, 0.2);
+				cairo_set_operator (context, CAIRO_OPERATOR_OVER);
+				cairo_set_source_rgba (context, 1.0, 1.0, 1.0, 0.85);
+				cairo_move_to (context, (double) 0, (double) 0);
+				cairo_line_to (context, (double) 4, (double) 4);
+				cairo_stroke (context);
+				pat = cairo_pattern_create_for_surface (pattern);
+				cairo_pattern_set_extend (pat, CAIRO_EXTEND_REPEAT);
+				cairo_set_source (cr, pat);
+				_cairo_pattern_destroy0 (pat);
+				_cairo_destroy0 (context);
+				_cairo_surface_destroy0 (pattern);
+			} else {
+				cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.0);
+			}
+		}
 		cairo_fill_preserve (cr);
+		if (ctk_actor_get_state ((CtkActor*) self) == CTK_STATE_NORMAL) {
+			_tmp2_ = 0.0;
+		} else {
+			_tmp2_ = 0.5;
+		}
+		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, _tmp2_);
 		cairo_stroke (cr);
 	} else {
 	}
@@ -941,22 +1032,18 @@ gboolean unity_places_section_get_active (UnityPlacesSection* self) {
 void unity_places_section_set_active (UnityPlacesSection* self, gboolean value) {
 	g_return_if_fail (self != NULL);
 	if (self->priv->_active != value) {
-		ClutterAnimationMode mode;
-		gint opacity;
-		ClutterColor _tmp0_ = {0};
 		self->priv->_active = value;
-		mode = CLUTTER_EASE_OUT_QUAD;
-		opacity = 0;
-		self->priv->color = (_tmp0_.red = (guint8) 255, _tmp0_.green = (guint8) 255, _tmp0_.blue = (guint8) 255, _tmp0_.alpha = (guint8) 255, _tmp0_);
 		if (self->priv->_active) {
-			ClutterColor _tmp1_ = {0};
-			self->priv->color = (_tmp1_.red = (guint8) 50, _tmp1_.green = (guint8) 50, _tmp1_.blue = (guint8) 50, _tmp1_.alpha = (guint8) 255, _tmp1_);
-			mode = CLUTTER_EASE_IN_QUAD;
-			opacity = 255;
+			ClutterColor _tmp0_ = {0};
+			ClutterColor _tmp1_;
+			clutter_text_set_color ((ClutterText*) self->text, (_tmp1_ = (_tmp0_.red = (guint8) 50, _tmp0_.green = (guint8) 50, _tmp0_.blue = (guint8) 50, _tmp0_.alpha = (guint8) 255, _tmp0_), &_tmp1_));
+		} else {
+			ClutterColor _tmp2_ = {0};
+			ClutterColor _tmp3_;
+			clutter_text_set_color ((ClutterText*) self->text, (_tmp3_ = (_tmp2_.red = (guint8) 255, _tmp2_.green = (guint8) 255, _tmp2_.blue = (guint8) 255, _tmp2_.alpha = (guint8) 255, _tmp2_), &_tmp3_));
 		}
-		clutter_text_set_color ((ClutterText*) self->text, &self->priv->color);
-		clutter_actor_animate ((ClutterActor*) self->priv->bg->texture, (gulong) mode, (guint) 100, "opacity", opacity, NULL);
 	}
+	unity_cairo_canvas_update (self->priv->bg);
 	g_object_notify ((GObject *) self, "active");
 }
 
@@ -1028,6 +1115,27 @@ static void _unity_places_section_paint_bg_unity_cairo_canvas_cairo_canvas_paint
 }
 
 
+static void _lambda39_ (UnityPlacesSection* self) {
+	if (unity_places_section_get_active (self)) {
+		return;
+	}
+	if (ctk_actor_get_state ((CtkActor*) self) == CTK_STATE_SELECTED) {
+		ClutterColor _tmp0_ = {0};
+		ClutterColor _tmp1_;
+		clutter_text_set_color ((ClutterText*) self->text, (_tmp1_ = (_tmp0_.red = (guint8) 50, _tmp0_.green = (guint8) 50, _tmp0_.blue = (guint8) 50, _tmp0_.alpha = (guint8) 200, _tmp0_), &_tmp1_));
+	} else {
+		ClutterColor _tmp2_ = {0};
+		ClutterColor _tmp3_;
+		clutter_text_set_color ((ClutterText*) self->text, (_tmp3_ = (_tmp2_.red = (guint8) 255, _tmp2_.green = (guint8) 255, _tmp2_.blue = (guint8) 255, _tmp2_.alpha = (guint8) 255, _tmp2_), &_tmp3_));
+	}
+}
+
+
+static void __lambda39__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda39_ (self);
+}
+
+
 static GObject * unity_places_section_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -1047,7 +1155,6 @@ static GObject * unity_places_section_constructor (GType type, guint n_construct
 		ctk_actor_set_padding ((CtkActor*) self, (_tmp1_ = (_tmp0_.top = UNITY_PLACES_SECTION_PADDING, _tmp0_.right = UNITY_PLACES_SECTION_PADDING, _tmp0_.bottom = UNITY_PLACES_SECTION_PADDING, _tmp0_.left = UNITY_PLACES_SECTION_PADDING, _tmp0_), &_tmp1_));
 		self->priv->bg = (_tmp2_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_section_paint_bg_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->bg), _tmp2_);
 		ctk_actor_set_background ((CtkActor*) self, (ClutterActor*) self->priv->bg);
-		clutter_actor_set_opacity ((ClutterActor*) self->priv->bg->texture, (guint8) 0);
 		clutter_actor_show ((ClutterActor*) self->priv->bg);
 		self->priv->glow = (_tmp3_ = g_object_ref_sink ((CtkEffectGlow*) ctk_effect_glow_new ()), _g_object_unref0 (self->priv->glow), _tmp3_);
 		ctk_effect_glow_set_color (self->priv->glow, (_tmp5_ = (_tmp4_.red = (guint8) 255, _tmp4_.green = (guint8) 255, _tmp4_.blue = (guint8) 255, _tmp4_.alpha = (guint8) 255, _tmp4_), &_tmp5_));
@@ -1056,6 +1163,7 @@ static GObject * unity_places_section_constructor (GType type, guint n_construct
 		self->text = (_tmp6_ = g_object_ref_sink ((CtkText*) ctk_text_new (dee_model_get_string (self->priv->_model, self->priv->_iter, (guint) 0))), _g_object_unref0 (self->text), _tmp6_);
 		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->text);
 		clutter_actor_show ((ClutterActor*) self->text);
+		g_signal_connect_object ((GObject*) self, "notify::state", (GCallback) __lambda39__g_object_notify, self, 0);
 	}
 	return obj;
 }
@@ -1065,6 +1173,10 @@ static void unity_places_section_class_init (UnityPlacesSectionClass * klass) {
 	unity_places_section_parent_class = g_type_class_peek_parent (klass);
 	g_type_class_add_private (klass, sizeof (UnityPlacesSectionPrivate));
 	CLUTTER_ACTOR_CLASS (klass)->get_preferred_width = unity_places_section_real_get_preferred_width;
+	CLUTTER_ACTOR_CLASS (klass)->enter_event = unity_places_section_real_enter_event;
+	CLUTTER_ACTOR_CLASS (klass)->leave_event = unity_places_section_real_leave_event;
+	CLUTTER_ACTOR_CLASS (klass)->button_press_event = unity_places_section_real_button_press_event;
+	CLUTTER_ACTOR_CLASS (klass)->button_release_event = unity_places_section_real_button_release_event;
 	G_OBJECT_CLASS (klass)->get_property = unity_places_section_get_property;
 	G_OBJECT_CLASS (klass)->set_property = unity_places_section_set_property;
 	G_OBJECT_CLASS (klass)->constructor = unity_places_section_constructor;

@@ -153,14 +153,14 @@ namespace Unity.Panel
                 {
                   string display_name = info.get_display_name ();
                   display_name = display_name.split (" ")[0];
-                  appname.set_markup (FORMAT.printf (display_name));
+                  appname.set_markup (FORMAT.printf (Markup.escape_text (display_name)));
                 }
               else
-                appname.set_markup (FORMAT.printf (win.get_name ()));
+                appname.set_markup (FORMAT.printf (Markup.escape_text (win.get_name ())));
             }
           else
             {
-              appname.set_markup (FORMAT.printf (win.get_name ()));
+              appname.set_markup (FORMAT.printf (Markup.escape_text (win.get_name ())));
             }
 
           _last_view = new_view;

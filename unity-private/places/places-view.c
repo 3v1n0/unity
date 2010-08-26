@@ -234,8 +234,8 @@ void unity_places_place_entry_set_active (UnityPlacesPlaceEntry* self, gboolean 
 static void unity_places_view_on_entry_renderer_info_changed (UnityPlacesView* self, UnityPlacesPlaceEntry* entry);
 static void _unity_places_view_on_entry_renderer_info_changed_unity_places_place_entry_renderer_info_changed (UnityPlacesPlaceEntry* _sender, gpointer self);
 static void unity_places_view_update_views (UnityPlacesView* self, UnityPlacesPlaceEntry* entry, guint section_id);
-static void _lambda38_ (ClutterAnimation* a, UnityPlacesView* self);
-static void __lambda38__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
+static void _lambda41_ (ClutterAnimation* a, UnityPlacesView* self);
+static void __lambda41__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static UnityPlaceRenderer* unity_places_view_lookup_renderer (UnityPlacesView* self, UnityPlacesPlaceEntry* entry);
 DeeModel* unity_places_place_entry_get_entry_groups_model (UnityPlacesPlaceEntry* self);
 DeeModel* unity_places_place_entry_get_entry_results_model (UnityPlacesPlaceEntry* self);
@@ -352,15 +352,15 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static void _lambda38_ (ClutterAnimation* a, UnityPlacesView* self) {
+static void _lambda41_ (ClutterAnimation* a, UnityPlacesView* self) {
 	GObject* _tmp0_;
 	g_return_if_fail (a != NULL);
 	clutter_actor_destroy ((_tmp0_ = clutter_animation_get_object (a), CLUTTER_IS_ACTOR (_tmp0_) ? ((ClutterActor*) _tmp0_) : NULL));
 }
 
 
-static void __lambda38__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	_lambda38_ (_sender, self);
+static void __lambda41__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+	_lambda41_ (_sender, self);
 }
 
 
@@ -376,7 +376,7 @@ static void unity_places_view_update_views (UnityPlacesView* self, UnityPlacesPl
 	if (CLUTTER_IS_ACTOR (self->priv->renderer)) {
 		ClutterAnimation* anim;
 		anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->renderer, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 300, "opacity", 0, NULL));
-		g_signal_connect_object (anim, "completed", (GCallback) __lambda38__clutter_animation_completed, self, 0);
+		g_signal_connect_object (anim, "completed", (GCallback) __lambda41__clutter_animation_completed, self, 0);
 		_g_object_unref0 (anim);
 	}
 	self->priv->renderer = (_tmp0_ = unity_places_view_lookup_renderer (self, entry), _g_object_unref0 (self->priv->renderer), _tmp0_);

@@ -27,6 +27,7 @@
 #include <libindicator/indicator.h>
 #include <libindicator/indicator-service.h>
 #include <libindicator/indicator-service-manager.h>
+#include <cairo.h>
 #include <dee.h>
 #include <libdbusmenu-glib/client.h>
 #include <libdbusmenu-glib/menuitem-proxy.h>
@@ -276,6 +277,21 @@ typedef struct _UnityPanelWindowButton UnityPanelWindowButton;
 typedef struct _UnityPanelWindowButtonClass UnityPanelWindowButtonClass;
 typedef struct _UnityPanelWindowButtonPrivate UnityPanelWindowButtonPrivate;
 
+#define UNITY_PLACES_TYPE_BUTTON (unity_places_button_get_type ())
+#define UNITY_PLACES_BUTTON(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_BUTTON, UnityPlacesButton))
+#define UNITY_PLACES_BUTTON_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_BUTTON, UnityPlacesButtonClass))
+#define UNITY_PLACES_IS_BUTTON(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_BUTTON))
+#define UNITY_PLACES_IS_BUTTON_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_BUTTON))
+#define UNITY_PLACES_BUTTON_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_BUTTON, UnityPlacesButtonClass))
+
+typedef struct _UnityPlacesButton UnityPlacesButton;
+typedef struct _UnityPlacesButtonClass UnityPlacesButtonClass;
+typedef struct _UnityPlacesButtonPrivate UnityPlacesButtonPrivate;
+
+#define UNITY_PLACES_BUTTON_TYPE_NORMAL_STATE (unity_places_button_normal_state_get_type ())
+
+#define UNITY_PLACES_BUTTON_TYPE_PRELIGHT_STATE (unity_places_button_prelight_state_get_type ())
+
 #define UNITY_PLACES_TYPE_CONTROLLER (unity_places_controller_get_type ())
 #define UNITY_PLACES_CONTROLLER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_CONTROLLER, UnityPlacesController))
 #define UNITY_PLACES_CONTROLLER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_CONTROLLER, UnityPlacesControllerClass))
@@ -362,6 +378,39 @@ typedef struct _UnityPlacesMoreResultsButtonPrivate UnityPlacesMoreResultsButton
 typedef struct _UnityPlacesTile UnityPlacesTile;
 typedef struct _UnityPlacesTileClass UnityPlacesTileClass;
 typedef struct _UnityPlacesTilePrivate UnityPlacesTilePrivate;
+
+#define UNITY_PLACES_TYPE_FILE_INFO_TILE (unity_places_file_info_tile_get_type ())
+#define UNITY_PLACES_FILE_INFO_TILE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_FILE_INFO_TILE, UnityPlacesFileInfoTile))
+#define UNITY_PLACES_FILE_INFO_TILE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_FILE_INFO_TILE, UnityPlacesFileInfoTileClass))
+#define UNITY_PLACES_IS_FILE_INFO_TILE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_FILE_INFO_TILE))
+#define UNITY_PLACES_IS_FILE_INFO_TILE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_FILE_INFO_TILE))
+#define UNITY_PLACES_FILE_INFO_TILE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_FILE_INFO_TILE, UnityPlacesFileInfoTileClass))
+
+typedef struct _UnityPlacesFileInfoTile UnityPlacesFileInfoTile;
+typedef struct _UnityPlacesFileInfoTileClass UnityPlacesFileInfoTileClass;
+typedef struct _UnityPlacesFileInfoTilePrivate UnityPlacesFileInfoTilePrivate;
+
+#define UNITY_PLACES_TYPE_SHOWCASE_TILE (unity_places_showcase_tile_get_type ())
+#define UNITY_PLACES_SHOWCASE_TILE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_SHOWCASE_TILE, UnityPlacesShowcaseTile))
+#define UNITY_PLACES_SHOWCASE_TILE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_SHOWCASE_TILE, UnityPlacesShowcaseTileClass))
+#define UNITY_PLACES_IS_SHOWCASE_TILE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_SHOWCASE_TILE))
+#define UNITY_PLACES_IS_SHOWCASE_TILE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_SHOWCASE_TILE))
+#define UNITY_PLACES_SHOWCASE_TILE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_SHOWCASE_TILE, UnityPlacesShowcaseTileClass))
+
+typedef struct _UnityPlacesShowcaseTile UnityPlacesShowcaseTile;
+typedef struct _UnityPlacesShowcaseTileClass UnityPlacesShowcaseTileClass;
+typedef struct _UnityPlacesShowcaseTilePrivate UnityPlacesShowcaseTilePrivate;
+
+#define UNITY_PLACES_TYPE_DEFAULT_TILE (unity_places_default_tile_get_type ())
+#define UNITY_PLACES_DEFAULT_TILE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_DEFAULT_TILE, UnityPlacesDefaultTile))
+#define UNITY_PLACES_DEFAULT_TILE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_DEFAULT_TILE, UnityPlacesDefaultTileClass))
+#define UNITY_PLACES_IS_DEFAULT_TILE(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_DEFAULT_TILE))
+#define UNITY_PLACES_IS_DEFAULT_TILE_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_DEFAULT_TILE))
+#define UNITY_PLACES_DEFAULT_TILE_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_DEFAULT_TILE, UnityPlacesDefaultTileClass))
+
+typedef struct _UnityPlacesDefaultTile UnityPlacesDefaultTile;
+typedef struct _UnityPlacesDefaultTileClass UnityPlacesDefaultTileClass;
+typedef struct _UnityPlacesDefaultTilePrivate UnityPlacesDefaultTilePrivate;
 
 #define UNITY_PLACES_TYPE_DEFAULT_RENDERER (unity_places_default_renderer_get_type ())
 #define UNITY_PLACES_DEFAULT_RENDERER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_DEFAULT_RENDERER, UnityPlacesDefaultRenderer))
@@ -1181,6 +1230,30 @@ struct _UnityPanelWindowButtonClass {
 	CtkButtonClass parent_class;
 };
 
+typedef void (*UnityPlacesButtonButtonOutlineFunc) (cairo_t* cr, gint width, gint height, void* user_data);
+struct _UnityPlacesButton {
+	CtkButton parent_instance;
+	UnityPlacesButtonPrivate * priv;
+	UnityPlacesButtonButtonOutlineFunc outline_func;
+	gpointer outline_func_target;
+	GDestroyNotify outline_func_target_destroy_notify;
+};
+
+struct _UnityPlacesButtonClass {
+	CtkButtonClass parent_class;
+};
+
+typedef enum  {
+	UNITY_PLACES_BUTTON_NORMAL_STATE_NONE,
+	UNITY_PLACES_BUTTON_NORMAL_STATE_UNDERLINE
+} UnityPlacesButtonNormalState;
+
+typedef enum  {
+	UNITY_PLACES_BUTTON_PRELIGHT_STATE_NONE,
+	UNITY_PLACES_BUTTON_PRELIGHT_STATE_STRIPED,
+	UNITY_PLACES_BUTTON_PRELIGHT_STATE_UNDERLINE
+} UnityPlacesButtonPrelightState;
+
 struct _UnityPlacesController {
 	GObject parent_instance;
 	UnityPlacesControllerPrivate * priv;
@@ -1223,12 +1296,40 @@ struct _UnityPlacesMoreResultsButtonClass {
 };
 
 struct _UnityPlacesTile {
-	CtkButton parent_instance;
+	UnityPlacesButton parent_instance;
 	UnityPlacesTilePrivate * priv;
 };
 
 struct _UnityPlacesTileClass {
-	CtkButtonClass parent_class;
+	UnityPlacesButtonClass parent_class;
+	void (*about_to_show) (UnityPlacesTile* self);
+};
+
+struct _UnityPlacesFileInfoTile {
+	UnityPlacesTile parent_instance;
+	UnityPlacesFileInfoTilePrivate * priv;
+};
+
+struct _UnityPlacesFileInfoTileClass {
+	UnityPlacesTileClass parent_class;
+};
+
+struct _UnityPlacesShowcaseTile {
+	UnityPlacesTile parent_instance;
+	UnityPlacesShowcaseTilePrivate * priv;
+};
+
+struct _UnityPlacesShowcaseTileClass {
+	UnityPlacesTileClass parent_class;
+};
+
+struct _UnityPlacesDefaultTile {
+	UnityPlacesTile parent_instance;
+	UnityPlacesDefaultTilePrivate * priv;
+};
+
+struct _UnityPlacesDefaultTileClass {
+	UnityPlacesTileClass parent_class;
 };
 
 struct _UnityPlacesDefaultRenderer {
@@ -2014,6 +2115,16 @@ GType unity_panel_window_button_get_type (void) G_GNUC_CONST;
 UnityPanelWindowButton* unity_panel_window_button_new (const char* filename);
 UnityPanelWindowButton* unity_panel_window_button_construct (GType object_type, const char* filename);
 const char* unity_panel_window_button_get_filename (UnityPanelWindowButton* self);
+GType unity_places_button_get_type (void) G_GNUC_CONST;
+GType unity_places_button_normal_state_get_type (void) G_GNUC_CONST;
+GType unity_places_button_prelight_state_get_type (void) G_GNUC_CONST;
+UnityPlacesButton* unity_places_button_new (void);
+UnityPlacesButton* unity_places_button_construct (GType object_type);
+void unity_places_button_rounded_rect (UnityPlacesButton* self, cairo_t* cr, gint width, gint height);
+UnityPlacesButtonNormalState unity_places_button_get_normal_state (UnityPlacesButton* self);
+void unity_places_button_set_normal_state (UnityPlacesButton* self, UnityPlacesButtonNormalState value);
+UnityPlacesButtonPrelightState unity_places_button_get_prelight_state (UnityPlacesButton* self);
+void unity_places_button_set_prelight_state (UnityPlacesButton* self, UnityPlacesButtonPrelightState value);
 GType unity_places_controller_get_type (void) G_GNUC_CONST;
 UnityPlacesController* unity_places_controller_new (UnityShell* shell);
 UnityPlacesController* unity_places_controller_construct (GType object_type, UnityShell* shell);
@@ -2036,6 +2147,8 @@ const char* unity_places_default_renderer_group_get_group_renderer (UnityPlacesD
 const char* unity_places_default_renderer_group_get_display_name (UnityPlacesDefaultRendererGroup* self);
 const char* unity_places_default_renderer_group_get_icon_hint (UnityPlacesDefaultRendererGroup* self);
 DeeModel* unity_places_default_renderer_group_get_results (UnityPlacesDefaultRendererGroup* self);
+gboolean unity_places_default_renderer_group_get_always_expanded (UnityPlacesDefaultRendererGroup* self);
+void unity_places_default_renderer_group_set_always_expanded (UnityPlacesDefaultRendererGroup* self, gboolean value);
 GType unity_places_expander_get_type (void) G_GNUC_CONST;
 GType unity_places_expander_state_get_type (void) G_GNUC_CONST;
 UnityPlacesExpander* unity_places_expander_new (void);
@@ -2048,15 +2161,23 @@ UnityPlacesMoreResultsButton* unity_places_more_results_button_construct (GType 
 guint unity_places_more_results_button_get_count (UnityPlacesMoreResultsButton* self);
 void unity_places_more_results_button_set_count (UnityPlacesMoreResultsButton* self, guint value);
 GType unity_places_tile_get_type (void) G_GNUC_CONST;
-UnityPlacesTile* unity_places_tile_new (DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
-UnityPlacesTile* unity_places_tile_construct (GType object_type, DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 void unity_places_tile_about_to_show (UnityPlacesTile* self);
+UnityPlacesTile* unity_places_tile_construct (GType object_type);
 DeeModelIter* unity_places_tile_get_iter (UnityPlacesTile* self);
 const char* unity_places_tile_get_display_name (UnityPlacesTile* self);
 const char* unity_places_tile_get_icon_hint (UnityPlacesTile* self);
 const char* unity_places_tile_get_uri (UnityPlacesTile* self);
 const char* unity_places_tile_get_mimetype (UnityPlacesTile* self);
 const char* unity_places_tile_get_comment (UnityPlacesTile* self);
+GType unity_places_file_info_tile_get_type (void) G_GNUC_CONST;
+UnityPlacesFileInfoTile* unity_places_file_info_tile_new (DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
+UnityPlacesFileInfoTile* unity_places_file_info_tile_construct (GType object_type, DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
+GType unity_places_showcase_tile_get_type (void) G_GNUC_CONST;
+UnityPlacesShowcaseTile* unity_places_showcase_tile_new (DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
+UnityPlacesShowcaseTile* unity_places_showcase_tile_construct (GType object_type, DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
+GType unity_places_default_tile_get_type (void) G_GNUC_CONST;
+UnityPlacesDefaultTile* unity_places_default_tile_new (DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
+UnityPlacesDefaultTile* unity_places_default_tile_construct (GType object_type, DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 GType unity_places_default_renderer_get_type (void) G_GNUC_CONST;
 UnityPlacesDefaultRenderer* unity_places_default_renderer_new (void);
 UnityPlacesDefaultRenderer* unity_places_default_renderer_construct (GType object_type);

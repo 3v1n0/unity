@@ -291,8 +291,8 @@ void unity_places_controller_set_volumes (UnityPlacesController* self, UnityPlac
 UnityPlacesPlaceFileModel* unity_places_place_file_model_new (void);
 UnityPlacesPlaceFileModel* unity_places_place_file_model_construct (GType object_type);
 GType unity_places_place_file_model_get_type (void) G_GNUC_CONST;
-static void _lambda60_ (UnityPlacesPlace* place, UnityPlacesController* self);
-static void __lambda60__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self);
+static void _lambda68_ (UnityPlacesPlace* place, UnityPlacesController* self);
+static void __lambda68__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self);
 UnityPlacesVolumeController* unity_places_volume_controller_new (void);
 UnityPlacesVolumeController* unity_places_volume_controller_construct (GType object_type);
 UnityPlacesTrashController* unity_places_trash_controller_new (void);
@@ -497,7 +497,7 @@ void unity_places_controller_set_volumes (UnityPlacesController* self, UnityPlac
 }
 
 
-static void _lambda60_ (UnityPlacesPlace* place, UnityPlacesController* self) {
+static void _lambda68_ (UnityPlacesPlace* place, UnityPlacesController* self) {
 	g_return_if_fail (place != NULL);
 	{
 		GeeIterator* _e_it;
@@ -516,8 +516,8 @@ static void _lambda60_ (UnityPlacesPlace* place, UnityPlacesController* self) {
 }
 
 
-static void __lambda60__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self) {
-	_lambda60_ (place, self);
+static void __lambda68__unity_places_place_model_place_added (UnityPlacesPlaceModel* _sender, UnityPlacesPlace* place, gpointer self) {
+	_lambda68_ (place, self);
 }
 
 
@@ -541,7 +541,7 @@ static GObject * unity_places_controller_constructor (GType type, guint n_constr
 		UnityPlacesView* _tmp7_;
 		unity_places_controller_set_model (self, _tmp1_ = (_tmp0_ = unity_places_place_file_model_new (), UNITY_PLACES_IS_PLACE_MODEL (_tmp0_) ? ((UnityPlacesPlaceModel*) _tmp0_) : NULL));
 		_g_object_unref0 (_tmp1_);
-		g_signal_connect_object (self->priv->_model, "place-added", (GCallback) __lambda60__unity_places_place_model_place_added, self, 0);
+		g_signal_connect_object (self->priv->_model, "place-added", (GCallback) __lambda68__unity_places_place_model_place_added, self, 0);
 		unity_places_controller_set_volumes (self, _tmp2_ = unity_places_volume_controller_new ());
 		_g_object_unref0 (_tmp2_);
 		s = (_tmp6_ = (_tmp5_ = (GObject*) gee_abstract_list_get ((GeeAbstractList*) (_tmp4_ = unity_testing_object_registry_lookup (_tmp3_ = unity_testing_object_registry_get_default (), "UnityScrollerModel")), 0), UNITY_LAUNCHER_IS_SCROLLER_MODEL (_tmp5_) ? ((UnityLauncherScrollerModel*) _tmp5_) : NULL), _g_object_unref0 (_tmp4_), _unity_testing_object_registry_unref0 (_tmp3_), _tmp6_);

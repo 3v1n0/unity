@@ -183,7 +183,7 @@ namespace Unity.Places
       pack (section, false, true);
       section.show ();
 
-      section.button_press_event.connect (on_section_clicked);
+      section.button_release_event.connect (on_section_clicked);
 
       if (active_section == null && _style == SectionStyle.BUTTONS)
         {
@@ -377,20 +377,14 @@ namespace Unity.Places
           {
             _active = value;
 
-            Clutter.AnimationMode mode = Clutter.AnimationMode.EASE_OUT_QUAD;
-            int opacity = 0;
-            color = { 255, 255, 255, 255 };
-
             if (_active)
-              {
-                color = { 50, 50, 50, 255 };
-                mode = Clutter.AnimationMode.EASE_IN_QUAD;
-                opacity = 255;
-              }
+              text.color = { 50, 50, 50, 255 };
+            else
+              text.color= { 255, 255, 255, 255 };
 
-            text.color = color;
-            bg.texture.animate (mode, 100, "opacity", opacity);
           }
+
+        bg.update ();
       }
     }
 
@@ -427,7 +421,6 @@ namespace Unity.Places
 
       bg = new CairoCanvas (paint_bg);
       set_background (bg);
-      bg.texture.opacity = 0;
       bg.show ();
 
       glow = new Ctk.EffectGlow ();
@@ -439,6 +432,16 @@ namespace Unity.Places
       text = new Ctk.Text (model.get_string (iter, 0));
       add_actor (text);
       text.show ();
+
+      notify["state"].connect (() => {
+        if (active)
+          return;
+
+        if (state == Ctk.ActorState.STATE_SELECTED)
+          text.color = { 50, 50, 50, 200 };
+        else
+          text.color = { 255, 255, 255, 255 };
+      });
     }
 
     public void start_destroy ()
@@ -477,6 +480,34 @@ namespace Unity.Places
        }
     }
 
+    private override bool enter_event (Clutter.Event e)
+    {
+      state = Ctk.ActorState.STATE_PRELIGHT;
+      bg.update ();
+      return true;
+    }
+
+    private override bool leave_event (Clutter.Event e)
+    {
+      state = Ctk.ActorState.STATE_NORMAL;
+      bg.update ();
+      return true;
+    }
+
+    private override bool button_press_event (Clutter.Event e)
+    {
+      state = Ctk.ActorState.STATE_SELECTED;
+      bg.update ();
+      return false;
+    }
+
+    private override bool button_release_event (Clutter.Event e)
+    {
+      state = Ctk.ActorState.STATE_PRELIGHT;
+      bg.update ();
+      return false;
+    }
+
     private void paint_bg (Cairo.Context cr, int width, int height)
     {
       cr.set_operator (Cairo.Operator.CLEAR);
@@ -496,7 +527,7 @@ namespace Unity.Places
 
       if ((get_parent () as PlaceSearchSectionsBar).style == SectionStyle.BUTTONS)
         {
-          cr.line_to  (x, y + radius);
+          cr.move_to  (x, y + radius);
           cr.curve_to (x, y,
                        x, y,
                        x + radius, y);
@@ -514,9 +545,43 @@ namespace Unity.Places
                        x, height - radius);
           cr.close_path ();
 
-          cr.set_source_rgba (1.0, 1.0, 1.0, 1.0);
+          if (active || state == Ctk.ActorState.STATE_SELECTED)
+            {
+              cr.set_source_rgba (1.0, 1.0, 1.0, 1.0);
+            }
+          else if (state == Ctk.ActorState.STATE_PRELIGHT)
+            {
+              var pattern = new Cairo.Surface.similar (cr.get_target (),
+                                                   Cairo.Content.COLOR_ALPHA,
+                                                   4, 4);
+              var context = new Cairo.Context (pattern);
+              
+              context.set_operator (Cairo.Operator.CLEAR);
+              context.paint ();
+
+              context.set_line_width (0.2);
+              context.set_operator (Cairo.Operator.OVER);
+              context.set_source_rgba (1.0, 1.0, 1.0, 0.85);
+
+              context.move_to (0, 0);
+              context.line_to (4, 4);
+
+              context.stroke ();
+
+              var pat = new Cairo.Pattern.for_surface (pattern);
+              pat.set_extend (Cairo.Extend.REPEAT);
+              cr.set_source (pat);
+            }
+          else
+            {
+              cr.set_source_rgba (1.0, 1.0, 1.0, 0.0);
+            }
+
           cr.fill_preserve ();
-          cr.stroke ();
+
+          cr.set_source_rgba (1.0, 1.0, 1.0,
+                              state == Ctk.ActorState.STATE_NORMAL ? 0.0 : 0.5);
+          cr.stroke ();            
         }
       else
         {

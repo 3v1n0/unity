@@ -284,11 +284,11 @@ static void unity_places_volume_child_controller_open_volume (UnityPlacesVolumeC
 			g_app_info_launch_default_for_uri (_tmp0_ = g_file_get_uri (loc), NULL, &_inner_error_);
 			_g_free0 (_tmp0_);
 			if (_inner_error_ != NULL) {
-				goto __catch41_g_error;
+				goto __catch42_g_error;
 			}
 		}
-		goto __finally41;
-		__catch41_g_error:
+		goto __finally42;
+		__catch42_g_error:
 		{
 			GError * err;
 			err = _inner_error_;
@@ -300,7 +300,7 @@ static void unity_places_volume_child_controller_open_volume (UnityPlacesVolumeC
 				_g_error_free0 (err);
 			}
 		}
-		__finally41:
+		__finally42:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (loc);
 			_g_free0 (error_msg);
@@ -328,7 +328,7 @@ static void unity_places_volume_child_controller_open_volume (UnityPlacesVolumeC
 				g_app_info_launch_default_for_uri (_tmp4_ = g_file_get_uri (g_mount_get_root (mount)), NULL, &_inner_error_);
 				_g_free0 (_tmp4_);
 				if (_inner_error_ != NULL) {
-					goto __catch42_g_error;
+					goto __catch43_g_error;
 				}
 			} else {
 				char* _tmp5_;
@@ -336,8 +336,8 @@ static void unity_places_volume_child_controller_open_volume (UnityPlacesVolumeC
 				_g_free0 (_tmp5_);
 			}
 		}
-		goto __finally42;
-		__catch42_g_error:
+		goto __finally43;
+		__catch43_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -349,7 +349,7 @@ static void unity_places_volume_child_controller_open_volume (UnityPlacesVolumeC
 				_g_error_free0 (e);
 			}
 		}
-		__finally42:
+		__finally43:
 		if (_inner_error_ != NULL) {
 			_g_free0 (error_msg);
 			_g_object_unref0 (mount);

@@ -1197,7 +1197,13 @@ static void unity_spaces_manager_unlayout_workspaces (UnitySpacesManager* self, 
 	g_return_if_fail (screen != NULL);
 	length = g_list_length (clones);
 	width = (gint) ceil (sqrt ((double) length));
-	height = (gint) floor (sqrt ((double) length));
+	height = 1;
+	while (TRUE) {
+		if (!((width * height) < length)) {
+			break;
+		}
+		height++;
+	}
 	rect = (_tmp0_.height = 0, _tmp0_.width = 0, _tmp0_.x = 0, _tmp0_.y = 0, _tmp0_);
 	meta_screen_get_monitor_geometry (screen, 0, &rect);
 	{
@@ -1272,7 +1278,13 @@ static void unity_spaces_manager_layout_workspaces (UnitySpacesManager* self, GL
 	g_return_if_fail (screen != NULL);
 	length = g_list_length (clones);
 	width = (gint) ceil (sqrt ((double) length));
-	height = (gint) floor (sqrt ((double) length));
+	height = 1;
+	while (TRUE) {
+		if (!((width * height) < length)) {
+			break;
+		}
+		height++;
+	}
 	rect = (_tmp0_.height = 0, _tmp0_.width = 0, _tmp0_.x = 0, _tmp0_.y = 0, _tmp0_);
 	meta_screen_get_monitor_geometry (screen, 0, &rect);
 	active = meta_screen_get_active_workspace_index (screen);

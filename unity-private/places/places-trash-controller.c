@@ -193,12 +193,12 @@ UnityLauncherApplicationQuicklistController* unity_launcher_application_quicklis
 GType unity_launcher_application_quicklist_controller_get_type (void) G_GNUC_CONST;
 static void unity_places_trash_controller_real_get_menu_actions (UnityLauncherScrollerChildController* base, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
 static void unity_places_trash_controller_real_get_menu_navigation (UnityLauncherScrollerChildController* base, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
-static void _lambda61_ (UnityPlacesTrashController* self);
-static void __lambda61__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
-static void _lambda62_ (UnityPlacesTrashController* self);
+static void _lambda69_ (UnityPlacesTrashController* self);
+static void __lambda69__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
+static void _lambda70_ (UnityPlacesTrashController* self);
 static void unity_places_trash_controller_recursively_delete_contents (UnityPlacesTrashController* self, GFile* dir, GAsyncReadyCallback _callback_, gpointer _user_data_);
 static void unity_places_trash_controller_recursively_delete_contents_finish (UnityPlacesTrashController* self, GAsyncResult* _res_);
-static void __lambda62__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
+static void __lambda70__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
 static void unity_places_trash_controller_recursively_delete_contents_data_free (gpointer _data);
 static void unity_places_trash_controller_recursively_delete_contents_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 static gboolean unity_places_trash_controller_recursively_delete_contents_co (UnityPlacesTrashControllerRecursivelyDeleteContentsData* data);
@@ -243,11 +243,11 @@ static void unity_places_trash_controller_real_activate (UnityLauncherScrollerCh
 	{
 		gtk_show_uri (NULL, "trash://", clutter_get_current_event_time (), &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch35_g_error;
+			goto __catch36_g_error;
 		}
 	}
-	goto __finally35;
-	__catch35_g_error:
+	goto __finally36;
+	__catch36_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -259,7 +259,7 @@ static void unity_places_trash_controller_real_activate (UnityLauncherScrollerCh
 			_g_error_free0 (e);
 		}
 	}
-	__finally35:
+	__finally36:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -290,7 +290,7 @@ static void unity_places_trash_controller_real_get_menu_actions (UnityLauncherSc
 		GFileInfo* info;
 		e = g_file_enumerate_children (self->priv->trash_dir, G_FILE_ATTRIBUTE_STANDARD_NAME, 0, NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch36_g_error;
+			goto __catch37_g_error;
 		}
 		info = NULL;
 		while (TRUE) {
@@ -300,7 +300,7 @@ static void unity_places_trash_controller_real_get_menu_actions (UnityLauncherSc
 			if (_inner_error_ != NULL) {
 				_g_object_unref0 (info);
 				_g_object_unref0 (e);
-				goto __catch36_g_error;
+				goto __catch37_g_error;
 			}
 			if (!((info = (_tmp1_ = _tmp0_, _g_object_unref0 (info), _tmp1_)) != NULL)) {
 				break;
@@ -310,8 +310,8 @@ static void unity_places_trash_controller_real_get_menu_actions (UnityLauncherSc
 		_g_object_unref0 (info);
 		_g_object_unref0 (e);
 	}
-	goto __finally36;
-	__catch36_g_error:
+	goto __finally37;
+	__catch37_g_error:
 	{
 		GError * _error_;
 		_error_ = _inner_error_;
@@ -321,7 +321,7 @@ static void unity_places_trash_controller_real_get_menu_actions (UnityLauncherSc
 			_g_error_free0 (_error_);
 		}
 	}
-	__finally36:
+	__finally37:
 	if (_inner_error_ != NULL) {
 		_g_object_unref0 (root);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -349,16 +349,16 @@ static void unity_places_trash_controller_real_get_menu_actions (UnityLauncherSc
 }
 
 
-static void _lambda61_ (UnityPlacesTrashController* self) {
+static void _lambda69_ (UnityPlacesTrashController* self) {
 	GError * _inner_error_ = NULL;
 	{
 		gtk_show_uri (NULL, "trash://", clutter_get_current_event_time (), &_inner_error_);
 		if (_inner_error_ != NULL) {
-			goto __catch37_g_error;
+			goto __catch38_g_error;
 		}
 	}
-	goto __finally37;
-	__catch37_g_error:
+	goto __finally38;
+	__catch38_g_error:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -370,7 +370,7 @@ static void _lambda61_ (UnityPlacesTrashController* self) {
 			_g_error_free0 (e);
 		}
 	}
-	__finally37:
+	__finally38:
 	if (_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 		g_clear_error (&_inner_error_);
@@ -379,18 +379,18 @@ static void _lambda61_ (UnityPlacesTrashController* self) {
 }
 
 
-static void __lambda61__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
-	_lambda61_ (self);
+static void __lambda69__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
+	_lambda69_ (self);
 }
 
 
-static void _lambda62_ (UnityPlacesTrashController* self) {
+static void _lambda70_ (UnityPlacesTrashController* self) {
 	unity_places_trash_controller_recursively_delete_contents (self, self->priv->trash_dir, NULL, NULL);
 }
 
 
-static void __lambda62__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
-	_lambda62_ (self);
+static void __lambda70__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
+	_lambda70_ (self);
 }
 
 
@@ -408,7 +408,7 @@ static void unity_places_trash_controller_real_get_menu_navigation (UnityLaunche
 	dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 	dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
 	dbusmenu_menuitem_child_append (root, item);
-	g_signal_connect_object (item, "item-activated", (GCallback) __lambda61__dbusmenu_menuitem_item_activated, self, 0);
+	g_signal_connect_object (item, "item-activated", (GCallback) __lambda69__dbusmenu_menuitem_item_activated, self, 0);
 	if (self->priv->n_items != 0) {
 		DbusmenuMenuitem* _tmp1_;
 		item = (_tmp1_ = dbusmenu_menuitem_new (), _g_object_unref0 (item), _tmp1_);
@@ -416,7 +416,7 @@ static void unity_places_trash_controller_real_get_menu_navigation (UnityLaunche
 		dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 		dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
 		dbusmenu_menuitem_child_append (root, item);
-		g_signal_connect_object (item, "item-activated", (GCallback) __lambda62__dbusmenu_menuitem_item_activated, self, 0);
+		g_signal_connect_object (item, "item-activated", (GCallback) __lambda70__dbusmenu_menuitem_item_activated, self, 0);
 	}
 	callback (root, callback_target);
 	_g_object_unref0 (item);
@@ -490,7 +490,7 @@ static gboolean unity_places_trash_controller_recursively_delete_contents_co (Un
 		_state_7:
 		data->e = g_file_enumerate_children_finish (data->dir, data->_res_, &data->_inner_error_);
 		if (data->_inner_error_ != NULL) {
-			goto __catch38_g_error;
+			goto __catch39_g_error;
 		}
 		while (TRUE) {
 			data->_state_ = 8;
@@ -500,7 +500,7 @@ static gboolean unity_places_trash_controller_recursively_delete_contents_co (Un
 			data->files = g_file_enumerator_next_files_finish (data->e, data->_res_, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
 				_g_object_unref0 (data->e);
-				goto __catch38_g_error;
+				goto __catch39_g_error;
 			}
 			if (data->files == NULL) {
 				__g_list_free_g_object_unref0 (data->files);
@@ -522,11 +522,11 @@ static gboolean unity_places_trash_controller_recursively_delete_contents_co (Un
 						{
 							g_file_delete (data->child, NULL, &data->_inner_error_);
 							if (data->_inner_error_ != NULL) {
-								goto __catch39_g_error;
+								goto __catch40_g_error;
 							}
 						}
-						goto __finally39;
-						__catch39_g_error:
+						goto __finally40;
+						__catch40_g_error:
 						{
 							data->error_ = data->_inner_error_;
 							data->_inner_error_ = NULL;
@@ -537,13 +537,13 @@ static gboolean unity_places_trash_controller_recursively_delete_contents_co (Un
 								_g_error_free0 (data->error_);
 							}
 						}
-						__finally39:
+						__finally40:
 						if (data->_inner_error_ != NULL) {
 							_g_object_unref0 (data->child);
 							_g_object_unref0 (data->info);
 							__g_list_free_g_object_unref0 (data->files);
 							_g_object_unref0 (data->e);
-							goto __catch38_g_error;
+							goto __catch39_g_error;
 						}
 						_g_object_unref0 (data->child);
 						_g_object_unref0 (data->info);
@@ -554,8 +554,8 @@ static gboolean unity_places_trash_controller_recursively_delete_contents_co (Un
 		}
 		_g_object_unref0 (data->e);
 	}
-	goto __finally38;
-	__catch38_g_error:
+	goto __finally39;
+	__catch39_g_error:
 	{
 		data->_error_ = data->_inner_error_;
 		data->_inner_error_ = NULL;
@@ -566,7 +566,7 @@ static gboolean unity_places_trash_controller_recursively_delete_contents_co (Un
 			_g_error_free0 (data->_error_);
 		}
 	}
-	__finally38:
+	__finally39:
 	if (data->_inner_error_ != NULL) {
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 		g_clear_error (&data->_inner_error_);
@@ -609,8 +609,8 @@ static GObject * unity_places_trash_controller_constructor (GType type, guint n_
 			GFile* _tmp0_;
 			self->priv->trash_dir = (_tmp0_ = g_file_new_for_uri ("trash://"), _g_object_unref0 (self->priv->trash_dir), _tmp0_);
 		}
-		goto __finally40;
-		__catch40_g_error:
+		goto __finally41;
+		__catch41_g_error:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -622,7 +622,7 @@ static GObject * unity_places_trash_controller_constructor (GType type, guint n_
 				_g_error_free0 (e);
 			}
 		}
-		__finally40:
+		__finally41:
 		if (_inner_error_ != NULL) {
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
 			g_clear_error (&_inner_error_);

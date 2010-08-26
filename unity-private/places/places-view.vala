@@ -123,7 +123,7 @@ namespace Unity.Places
                                        300,
                                        "opacity", 0);
           anim.completed.connect ((a)=> {
-            (a.get_object () as Clutter.Actor).destroy ();
+              (a.get_object () as Clutter.Actor).destroy ();
             });
         }
 
