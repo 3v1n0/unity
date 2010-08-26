@@ -48,7 +48,7 @@ namespace Unity.Places
 
     private Ctk.Image icon;
     private Ctk.Text  leaf;
-    private Ctk.Button folder_button;
+    private Button    folder_button;
     private Ctk.Text  folder;
     private Ctk.Text  time;
 
@@ -96,6 +96,7 @@ namespace Unity.Places
       leaf.show ();
 
       folder_button = new Button ();
+      folder_button.prelight_state = PrelightState.UNDERLINE;
       folder_button.set_parent (this);
       folder_button.show ();
       folder_button.padding = { 1.0f, 0.0f, 0.0f, 0.0f };
@@ -224,12 +225,19 @@ namespace Unity.Places
       child_box.y2 = y + mh;
       leaf.allocate (child_box, flags);
 
+      float mw;
+      folder_button.get_preferred_width (mh, null, out mw);
+      mw = Math.fminf (mw, box.x2 - ICON_WIDTH - icon_text_pad);
       y+= LINE_PADDING + mh;
+      child_box.x2 = child_box.x1 + mw;
       child_box.y1 = y;
       child_box.y2 = y + mh;
       folder_button.allocate (child_box, flags);
 
-      y+=LINE_PADDING + mh;
+      time.get_preferred_width (mh, null, out mw);
+      mw = Math.fminf (mw, box.x2 - ICON_WIDTH - icon_text_pad);
+      y+= LINE_PADDING + mh;
+      child_box.x2 = child_box.x1 + mw;
       child_box.y1 = y;
       child_box.y2 = y + mh;
       time.allocate (child_box, flags);

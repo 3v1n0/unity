@@ -28,6 +28,13 @@ namespace Unity.Places
       UNDERLINE
     }
 
+    public enum PrelightState
+    {
+      NONE,
+      STRIPED,
+      UNDERLINE
+    }
+
     public delegate void ButtonOutlineFunc (Cairo.Context cr,
                                             int width,
                                             int height);
@@ -46,6 +53,17 @@ namespace Unity.Places
       }
     }
 
+    private PrelightState _prelight_state = PrelightState.NONE;
+    public  PrelightState prelight_state {
+      get { return _prelight_state; }
+      set {
+        if (_prelight_state != value)
+          {
+            _prelight_state = value;
+            bg.update ();
+          }
+      }
+    }
     private CairoCanvas     bg;
     private Ctk.EffectGlow? glow;
 
@@ -111,6 +129,7 @@ namespace Unity.Places
 
     private void paint_bg (Cairo.Context cr, int width, int height)
     {
+      var x = 1;
 
       cr.set_operator (Cairo.Operator.CLEAR);
       cr.paint ();
@@ -128,6 +147,15 @@ namespace Unity.Places
               cr.set_source_rgba (1.0, 1.0, 1.0, 0.3);
               cr.stroke ();
             }
+          return;
+        }
+      else if (state == Ctk.ActorState.STATE_PRELIGHT &&
+               _prelight_state == PrelightState.UNDERLINE)
+        {
+          cr.move_to (x, height - 1);
+          cr.line_to (x + width, height - 1);
+          cr.set_source_rgba (1.0, 1.0, 1.0, 0.3);
+          cr.stroke ();
           return;
         }
 
