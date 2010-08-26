@@ -69,6 +69,8 @@ namespace Unity.Places
 
     private bool          allow_expand = true;
 
+    private bool last_result_timeout = false;
+
     public signal void activated (string uri, string mimetype);
 
     public DefaultRendererGroup (uint      group_id,
@@ -333,9 +335,15 @@ namespace Unity.Places
             }
         }
 
-      if (n_results < 1)
+      if (n_results < 1 && last_result_timeout == false)
         {
-          bin_state = ExpandingBinState.CLOSED;
+          Timeout.add (100, () => {
+            if (n_results < 1)
+              bin_state = ExpandingBinState.CLOSED;
+            last_result_timeout = false;
+            return false;
+          });
+          last_result_timeout = true;
         }
     }
 
