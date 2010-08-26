@@ -1278,7 +1278,7 @@ namespace Unity.Launcher
                                                  float position, float rotation,
                                                  bool immediate = false)
     {
-      if (immediate)
+      if (immediate || global_shell.is_starting)
         {
           child.position = position;
           child.force_rotation_jump (rotation);

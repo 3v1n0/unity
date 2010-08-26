@@ -69,6 +69,8 @@ namespace Unity
                                                       out bool is_maximised);
     public abstract void          do_window_action (uint32       xid,
                                                     WindowAction action);
+    public abstract bool          is_starting {get; set;}
+
 
     public signal   void          need_new_icon_cache ();
     public signal   void          indicators_changed (int width);
@@ -76,7 +78,6 @@ namespace Unity
     public signal   void          active_window_state_changed ();
     public signal   void          super_key_modifier_release (uint keysym);
     public signal   void          super_key_modifier_press (uint keysym);
-
   }
 
   public Shell? global_shell; // our global shell
