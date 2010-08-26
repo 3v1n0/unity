@@ -191,7 +191,7 @@ namespace Unity.Launcher
       drag_controller.drag_start.connect (() => {
         is_scrolling = false;
         button_down = false;
-        is_scrolling = false;
+        Unity.Launcher.disable_quicklists = true;
         Clutter.ungrab_pointer ();
         get_stage ().motion_event.disconnect (on_motion_event);
         current_phase = ScrollerPhase.FLUNG;
@@ -202,6 +202,7 @@ namespace Unity.Launcher
       });
 
       drag_controller.drag_drop.connect ((drag_model, x, y) => {
+        Unity.Launcher.disable_quicklists = false;
         foreach (Clutter.Actor child in model)
           {
             child.set_reactive (false);
@@ -667,14 +668,31 @@ namespace Unity.Launcher
     private void move_scroll_position (float pixels, bool check_bounds=false)
     {
       scroll_position += pixels;
-
+      float old_scroll_position = scroll_position;
       if (check_bounds)
         {
           scroll_position = Math.fminf (scroll_position, 0);
           scroll_position = Math.fmaxf (scroll_position, - (get_total_children_height () - get_available_height ()));
         }
+      else if (scroll_position > 0)
+        {
+          float limit = 160.0f;
+          float new_scroll_position = scroll_position;
+          new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, new_scroll_position));
+          scroll_position = new_scroll_position;
+        }
+      else if (scroll_position < -(get_total_children_height () - get_available_height ()))
+        {
+          float limit = 160.0f;
+          float diff = scroll_position + (get_total_children_height () - get_available_height ());
+          float new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, Math.fabsf (diff)));
+          new_scroll_position = -(get_total_children_height () - get_available_height ()) - new_scroll_position;
+          scroll_position = new_scroll_position;
+        }
       order_children (true);
       queue_relayout ();
+
+      scroll_position = old_scroll_position;
     }
 
     /* disables animations and events on children so that they don't
@@ -853,14 +871,22 @@ namespace Unity.Launcher
 
       if (is_scrolling)
         {
-          passthrough_button_release_event (event);
+          //passthrough_button_release_event (event);
+          foreach (ScrollerChild child in model)
+            {
+              child.grabbed_push = 0;
+            }
           is_scrolling = false;
+          Unity.Launcher.disable_quicklists = false;
           Clutter.ungrab_pointer ();
           get_stage ().motion_event.disconnect (on_motion_event);
-          if ((event.button.time - last_motion_event_time) > 120)
+          if (scroll_position > 0 || scroll_position < -(get_total_children_height () - get_available_height ()))
             {
               current_phase = ScrollerPhase.SETTLING;
-              settle_position = get_aligned_settle_position ();
+              if (scroll_position > 0)
+                settle_position = 0;
+              else
+                settle_position = -(get_total_children_height () - get_available_height ());
             }
           else
             {
@@ -894,7 +920,10 @@ namespace Unity.Launcher
     private bool on_queue_contract_launcher ()
     {
       if (queue_contract_launcher != 0)
-        contract_launcher ();
+        {
+          current_phase = ScrollerPhase.NONE;
+          contract_launcher ();
+        }
       queue_contract_launcher = 0;
       return false;
     }
@@ -961,7 +990,6 @@ namespace Unity.Launcher
 
     private bool on_motion_event (Clutter.Event event)
     {
-
       on_autoscroll_motion_check (event.motion.y);
 
       var drag_controller = Drag.Controller.get_default ();
@@ -980,6 +1008,7 @@ namespace Unity.Launcher
            */
           //var diff = event.motion.y - previous_y_position;
           is_scrolling = true;
+          Unity.Launcher.disable_quicklists = true;
           Unity.global_shell.add_fullscreen_request (this);
           Clutter.grab_pointer (this);
           get_stage ().motion_event.connect (on_motion_event);
@@ -1003,8 +1032,29 @@ namespace Unity.Launcher
           previous_y_position = event.motion.y;
           previous_y_time = event.motion.time;
 
-          // move the scroller by how far we dragged
-          move_scroll_position (pixel_diff);
+
+/*
+          if (scroll_position > 0)
+            {
+              float limit = 160.0f * 8;
+              //float new_scroll_position = limit * ( 1 - Math.powf((limit-1)/limit, scroll_position) );
+              float new_scroll_position = (scroll_position + pixel_diff);// * 0.95f;
+              new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, new_scroll_position));
+              float diff = Math.fmaxf (new_scroll_position - scroll_position, 0);
+              move_scroll_position (diff);
+            }
+          else if (scroll_position < -(get_total_children_height () - get_available_height ()))
+            {
+
+            }
+          else
+            {
+*/
+               // move the scroller by how far we dragged
+              move_scroll_position (pixel_diff);
+/*
+            }
+*/
 
           return true;
         }
@@ -1036,12 +1086,15 @@ namespace Unity.Launcher
           delta -= 16;
           switch (current_phase) {
             case (ScrollerPhase.SETTLING):
+              debug ("settling");
               do_anim_settle (timeline, msecs);
               break;
             case (ScrollerPhase.FLUNG):
+              debug ("flung");
               do_anim_fling (timeline, msecs);
               break;
             case (ScrollerPhase.BOUNCE):
+              debug ("bouncing");
               do_anim_bounce (timeline, msecs);
               break;
             case (ScrollerPhase.NONE):
@@ -1087,22 +1140,32 @@ namespace Unity.Launcher
       //after a fling, we have to figure out if we want to change our
       // scroller phase or not
 
+/*
       if(scroll_move_amount <= -1.0 && -scroll_position > total_child_height - height ||
          scroll_move_amount >=  1.0 && scroll_position > 0)
         {
           current_phase = ScrollerPhase.BOUNCE;
         }
+*/
 
+
+      if (Math.fabsf (scroll_move_amount) < 1.0)
+        {
+          current_phase = ScrollerPhase.NONE;
+        }
+/*
       if (Math.fabsf (scroll_move_amount) < 1.0 &&
           (scroll_position > 0 || -scroll_position > total_child_height - height))
         {
           settle_position = get_aligned_settle_position ();
+          debug (@"settling to: $settle_position");
           current_phase = ScrollerPhase.SETTLING;
         }
       else if (Math.fabsf (scroll_move_amount) < 1.0)
         {
           current_phase = ScrollerPhase.NONE;
         }
+*/
     }
 
     private void do_anim_bounce (Clutter.Timeline timeline, int msecs)

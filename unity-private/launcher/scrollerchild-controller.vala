@@ -115,7 +115,7 @@ namespace Unity.Launcher
       ensure_menu_state ();
       return false;
     }
-
+    private bool no_activate = false;
     private bool on_press_event (Clutter.Event event)
     {
       switch (event.button.button)
@@ -124,6 +124,7 @@ namespace Unity.Launcher
             {
               last_press_time = event.button.time;
               button_down = true;
+              no_activate = false;
               click_start_pos_x = event.button.x;
               click_start_pos_y = event.button.y;
             } break;
@@ -142,7 +143,8 @@ namespace Unity.Launcher
       child.grabbed_push = 0;
       if (event.button.button == 1 &&
           button_down == true &&
-          event.button.time - last_press_time < 500)
+          event.button.time - last_press_time < 500 &&
+          no_activate == false)
         {
           if (menu is QuicklistController)
             {
@@ -155,6 +157,12 @@ namespace Unity.Launcher
 
           activate ();
         }
+      else
+        {
+          menu.state = QuicklistControllerState.LABEL;
+          ensure_menu_state ();
+        }
+
       button_down = false;
       return false;
     }
@@ -177,6 +185,11 @@ namespace Unity.Launcher
 
           if (menu is QuicklistController == false)
             return;
+        }
+      if (Unity.Launcher.disable_quicklists)
+        {
+          menu.state = QuicklistControllerState.CLOSED;
+          return;
         }
 
       if (menu.state == QuicklistControllerState.MENU
@@ -203,7 +216,6 @@ namespace Unity.Launcher
         {
           Idle.add (() =>
             {
-              debug ("setting menu to menu");
               menu.state = QuicklistControllerState.MENU;
               menu_state = ScrollerChildControllerMenuState.NO_MENU;
               return false;
@@ -227,7 +239,15 @@ namespace Unity.Launcher
       var drag_controller = Unity.Drag.Controller.get_default ();
       if (button_down && drag_controller.is_dragging == false && can_drag ())
         {
+          menu_state = ScrollerChildControllerMenuState.NO_MENU;
+          ensure_menu_state ();
           float diff = Math.fabsf (event.motion.x - click_start_pos_x);
+          float diff_y = Math.fabsf (event.motion.y - click_start_pos_y);
+          if (diff_y > 5)
+            {
+              no_activate = true;
+            }
+
           if (event.motion.x - click_start_pos_x > 0)
             {
               child.grabbed_push = Math.powf (diff, 0.5f);
