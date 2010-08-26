@@ -1084,7 +1084,10 @@ namespace Unity
                   last_pan_x_root = event.root_x;
 
                   unowned Mutter.MetaWindow win = start_pan_window.get_meta_window ();
-                  if (!Mutter.MetaWindow.is_maximized (win))
+                  bool fullscreen = false;
+                  win.get ("fullscreen", out fullscreen);
+
+                  if (!Mutter.MetaWindow.is_maximized (win) && fullscreen == false)
                     {
                       if (start_pan_window.y == PANEL_HEIGHT
                           && event.pan_event.delta_y < 0.0f)
@@ -1171,7 +1174,7 @@ namespace Unity
                     }
                   else
                     {
-                      if (event.pan_event.delta_y >= 0.0f)
+                      if (event.pan_event.delta_y >= 0.0f && fullscreen == false)
                         {
                           Mutter.MetaWindow.unmaximize (win,
                                                         Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
@@ -1188,8 +1191,18 @@ namespace Unity
                       float nwidth = 0;
                       float nheight = 0;
                       bool  move_resize = false;
+                      bool fullscreen = false;
+                      win.get ("fullscreen", out fullscreen);
 
-                      if (start_pan_window.y == PANEL_HEIGHT && event.pan_event.delta_y < 0.0f)
+                      int wx, wy, ww, wh;
+                      Mutter.MetaWindow.get_geometry (win, out wx, out wy, out ww, out wh);
+                      Mutter.MetaRectangle rect = Mutter.MetaRectangle ();
+                      Mutter.MetaWindow.get_outer_rect (win, rect);
+
+                      if (Mutter.MetaWindow.is_maximized (win) || fullscreen)
+                        {
+                        }
+                      else if (start_pan_window.y == PANEL_HEIGHT && event.pan_event.delta_y < 0.0f)
                         {
                           if (maximize_type == MaximizeType.FULL)
                             {
@@ -1223,18 +1236,22 @@ namespace Unity
                            * 1 = left frame
                            * 24 = size of top frame
                            */
-                          nx = start_pan_window.x + 1.0f;
-                          ny = start_pan_window.y + 27.0f; /* Kittens are dying */
-                          nwidth = start_pan_window.width - 2.0f;
-                          nheight = start_pan_window.height - 32.0f;
+                          nx = start_pan_window.x;
+                          ny = start_pan_window.y; /* Kittens are dying */
+                          nwidth = start_pan_window.width;
+                          nheight = start_pan_window.height;
                           move_resize = true;
+
+                          print ("%d %d %d %d\n",wx, wy, rect.x, rect.y);
                         }
 
                       X.Window xwin = start_pan_window.get_x_window ();
                       unowned Gdk.Window w = Gdk.Window.foreign_new ((Gdk.NativeWindow)xwin);
                       if (w is Gdk.Window && move_resize)
                         {
-                          Mutter.MetaWindow.move_resize (win, false, (int)nx, (int)ny, (int)nwidth, (int)nheight);
+                          Mutter.MetaWindow.move_resize (win, false, ((int)nx),
+                                                         ((int)ny),
+                                                         (int)nwidth, (int)nheight);
                         }
                     }
 
