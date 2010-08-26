@@ -167,6 +167,7 @@ namespace Unity.Launcher
       button_release_event.connect (on_button_release_event);
       motion_event.connect (on_motion_event);
       enter_event.connect (on_enter_event);
+      scroll_event.connect (on_scroll_event);
 
       leave_event.connect (on_leave_event);
       notify["is-autoscrolling"].connect (on_auto_scrolling_state_change);
@@ -191,7 +192,7 @@ namespace Unity.Launcher
       drag_controller.drag_start.connect (() => {
         is_scrolling = false;
         button_down = false;
-        is_scrolling = false;
+        Unity.Launcher.disable_quicklists = true;
         Clutter.ungrab_pointer ();
         get_stage ().motion_event.disconnect (on_motion_event);
         current_phase = ScrollerPhase.FLUNG;
@@ -202,6 +203,7 @@ namespace Unity.Launcher
       });
 
       drag_controller.drag_drop.connect ((drag_model, x, y) => {
+        Unity.Launcher.disable_quicklists = false;
         foreach (Clutter.Actor child in model)
           {
             child.set_reactive (false);
@@ -664,17 +666,32 @@ namespace Unity.Launcher
     }
 
     // will move the scroller by the given pixels
-    private void move_scroll_position (float pixels, bool check_bounds=false)
+    private void move_scroll_position (float pixels, bool check_bounds=false, float limit = 160.0f)
     {
       scroll_position += pixels;
-
+      float old_scroll_position = scroll_position;
       if (check_bounds)
         {
           scroll_position = Math.fminf (scroll_position, 0);
           scroll_position = Math.fmaxf (scroll_position, - (get_total_children_height () - get_available_height ()));
         }
+      else if (scroll_position > 0)
+        {
+          float new_scroll_position = scroll_position;
+          new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, new_scroll_position));
+          scroll_position = new_scroll_position;
+        }
+      else if (scroll_position < -(get_total_children_height () - get_available_height ()))
+        {
+          float diff = scroll_position + (get_total_children_height () - get_available_height ());
+          float new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, Math.fabsf (diff)));
+          new_scroll_position = -(get_total_children_height () - get_available_height ()) - new_scroll_position;
+          scroll_position = new_scroll_position;
+        }
       order_children (true);
       queue_relayout ();
+
+      scroll_position = old_scroll_position;
     }
 
     /* disables animations and events on children so that they don't
@@ -853,14 +870,22 @@ namespace Unity.Launcher
 
       if (is_scrolling)
         {
-          passthrough_button_release_event (event);
+          //passthrough_button_release_event (event);
+          foreach (ScrollerChild child in model)
+            {
+              child.grabbed_push = 0;
+            }
           is_scrolling = false;
+          Unity.Launcher.disable_quicklists = false;
           Clutter.ungrab_pointer ();
           get_stage ().motion_event.disconnect (on_motion_event);
-          if ((event.button.time - last_motion_event_time) > 120)
+          if (scroll_position > 0 || scroll_position < -(get_total_children_height () - get_available_height ()))
             {
               current_phase = ScrollerPhase.SETTLING;
-              settle_position = get_aligned_settle_position ();
+              if (scroll_position > 0)
+                settle_position = 0;
+              else
+                settle_position = -(get_total_children_height () - get_available_height ());
             }
           else
             {
@@ -894,7 +919,10 @@ namespace Unity.Launcher
     private bool on_queue_contract_launcher ()
     {
       if (queue_contract_launcher != 0)
-        contract_launcher ();
+        {
+          current_phase = ScrollerPhase.NONE;
+          contract_launcher ();
+        }
       queue_contract_launcher = 0;
       return false;
     }
@@ -961,7 +989,6 @@ namespace Unity.Launcher
 
     private bool on_motion_event (Clutter.Event event)
     {
-
       on_autoscroll_motion_check (event.motion.y);
 
       var drag_controller = Drag.Controller.get_default ();
@@ -980,6 +1007,7 @@ namespace Unity.Launcher
            */
           //var diff = event.motion.y - previous_y_position;
           is_scrolling = true;
+          Unity.Launcher.disable_quicklists = true;
           Unity.global_shell.add_fullscreen_request (this);
           Clutter.grab_pointer (this);
           get_stage ().motion_event.connect (on_motion_event);
@@ -1012,6 +1040,26 @@ namespace Unity.Launcher
       return false;
     }
 
+    private bool on_scroll_event (Clutter.Event event)
+    {
+      // got a mouse wheel scroll
+      float modifier = 0.0f;
+      if (event.scroll.direction == Clutter.ScrollDirection.UP)
+        modifier = 1.0f;
+      else if (event.scroll.direction == Clutter.ScrollDirection.DOWN)
+        modifier = -1.0f;
+
+      if (modifier != 0.0f)
+        {
+          float speed = ((48 + spacing) * 3) * 6.0f;
+          scroll_speed += speed * modifier;
+          current_phase = ScrollerPhase.FLUNG;
+          fling_timeline.start ();
+        }
+
+      return false;
+    }
+
     /*
      * Methods to handle our scroller animation, generally todo with the scrolling
      */
@@ -1034,6 +1082,9 @@ namespace Unity.Launcher
         {
           is_animating = true;
           delta -= 16;
+          if (fling_timeout_source != 0 && current_phase != ScrollerPhase.NONE)
+            Source.remove (fling_timeout_source);
+
           switch (current_phase) {
             case (ScrollerPhase.SETTLING):
               do_anim_settle (timeline, msecs);
@@ -1076,32 +1127,32 @@ namespace Unity.Launcher
 
     }
 
+    uint fling_timeout_source = 0;
     private void do_anim_fling (Clutter.Timeline timeline, int msecs)
     {
       scroll_speed *= friction; // slow our speed
 
       // we devide by 60 because get 60 ticks a second
       float scroll_move_amount = scroll_speed / 60.0f;
-      move_scroll_position (scroll_move_amount);
+      move_scroll_position (scroll_move_amount, false, 60.0f);
 
       //after a fling, we have to figure out if we want to change our
       // scroller phase or not
 
-      if(scroll_move_amount <= -1.0 && -scroll_position > total_child_height - height ||
-         scroll_move_amount >=  1.0 && scroll_position > 0)
-        {
-          current_phase = ScrollerPhase.BOUNCE;
-        }
 
-      if (Math.fabsf (scroll_move_amount) < 1.0 &&
-          (scroll_position > 0 || -scroll_position > total_child_height - height))
-        {
-          settle_position = get_aligned_settle_position ();
-          current_phase = ScrollerPhase.SETTLING;
-        }
-      else if (Math.fabsf (scroll_move_amount) < 1.0)
+      if (Math.fabsf (scroll_move_amount) < 1.0)
         {
           current_phase = ScrollerPhase.NONE;
+          fling_timeout_source = GLib.Timeout.add (300, () =>
+            {
+              current_phase = ScrollerPhase.SETTLING;
+              if (scroll_position > 0)
+                settle_position = 0;
+              else
+                settle_position = -(get_total_children_height () - get_available_height ());
+              fling_timeline.start ();
+              return false;
+            });
         }
     }
 
