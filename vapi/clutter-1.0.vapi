@@ -149,8 +149,11 @@ namespace Clutter {
 		public Clutter.Gravity rotation_center_z_gravity { get; set; }
 		public float scale_center_x { get; set; }
 		public float scale_center_y { get; set; }
+    [NoAccessorMethod]
 		public Clutter.Gravity scale_gravity { get; set; }
+    [NoAccessorMethod]
 		public double scale_x { get; set; }
+    [NoAccessorMethod]
 		public double scale_y { get; set; }
 		public bool show_on_set_parent { get; set; }
 		public bool visible { get; set; }

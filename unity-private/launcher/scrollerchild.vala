@@ -65,9 +65,16 @@ namespace Unity.Launcher
     public bool needs_attention {get; set;}
     public bool activating {get; set;}
     public float rotation {get; set;}
+    public bool do_not_render = false;
+
+    public bool enable_close_state {get; set;}
+
     public ScrollerChildController controller; // this sucks. shouldn't be here, can't help it.
 
     public GroupType group_type { get; construct set; }
+    public bool is_dragging_state { get; set; }
+
+    public float grabbed_push = 0.0f;
 
     public string to_string ()
     {
@@ -79,6 +86,7 @@ namespace Unity.Launcher
     }
 
     private UnityIcon processed_icon;
+    private ThemeImage close_symbol;
     private ThemeImage active_indicator;
     private ThemeImage running_indicator;
     private Gdk.Pixbuf honeycomb_mask;
@@ -130,11 +138,19 @@ namespace Unity.Launcher
     {
       active_indicator = new ThemeImage ("application-selected");
       running_indicator = new ThemeImage ("application-running");
+      close_symbol = new ThemeImage ("close_symbol");
 
       active_indicator.set_parent (this);
       running_indicator.set_parent (this);
+      close_symbol.set_parent (this);
+
       active_indicator.set_opacity (0);
       running_indicator.set_opacity (0);
+      close_symbol.set_opacity (0);
+
+      close_symbol.scale_gravity = Clutter.Gravity.CENTER;
+      close_symbol.scale_x = 0.0;
+      close_symbol.scale_y = 0.0;
 
       try
         {
@@ -156,6 +172,9 @@ namespace Unity.Launcher
         notify["active"].connect (on_active_changed);
         notify["activating"].connect (on_activating_changed);
         notify["needs-attention"].connect (on_needs_attention_changed);
+        notify["is-dragging-state"].connect (on_dragging_state_changed);
+        Drag.Controller.get_default ().drag_drop.connect (on_drag_drop);
+        notify["enable-close-state"].connect (on_enable_close_state_changed);
 
         // just trigger some notifications now to set inital state
         on_running_changed ();
@@ -165,8 +184,56 @@ namespace Unity.Launcher
 
     public Clutter.Actor get_content ()
     {
-      return processed_icon;
+      is_dragging_state = true;
+      return this;
     }
+
+    private void on_drag_drop (Unity.Drag.Model model, float x, float y)
+    {
+      if (is_dragging_state)
+        is_dragging_state = false;
+    }
+
+    private void on_dragging_state_changed ()
+    {
+      if (is_dragging_state)
+        {
+          running_indicator_anim = running_indicator.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE,
+                                                              SHORT_DELAY,
+                                                              "opacity", 0x00);
+
+          active_indicator_anim = active_indicator.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE,
+                                                              SHORT_DELAY,
+                                                              "opacity", 0x00);
+        }
+      else
+        {
+          on_running_changed ();
+          on_active_changed ();
+        }
+    }
+
+  private bool previous_close_state = false;
+  private void on_enable_close_state_changed ()
+  {
+    if (enable_close_state == true && previous_close_state == false)
+      {
+        close_symbol.animate (Clutter.AnimationMode.EASE_OUT_CUBIC,
+                              300,
+                              "opacity", 0xff,
+                              "scale-x", 1.0,
+                              "scale-y", 1.0);
+      }
+    else if (enable_close_state == false && previous_close_state == true)
+      {
+        close_symbol.animate (Clutter.AnimationMode.EASE_OUT_CUBIC,
+                              300,
+                              "opacity", 0x00,
+                              "scale-x", 0.0,
+                              "scale-y", 0.0);
+      }
+    previous_close_state = enable_close_state;
+  }
 
     /* alpha helpers */
     private static float get_ease_out_sine (float alpha)
@@ -184,6 +251,7 @@ namespace Unity.Launcher
 
     public void force_rotation_jump (float degrees)
     {
+      if (is_dragging_state) return;
       if (processed_icon.get_animation () is Clutter.Animation)
         processed_icon.get_animation ().completed ();
 
@@ -422,14 +490,20 @@ namespace Unity.Launcher
 
     private void on_rotation_changed ()
     {
+      if (is_dragging_state) return;
+
       old_rotate_value = processed_icon.rotation;
 
       if (processed_icon.get_animation () is Clutter.Animation)
         processed_icon.get_animation ().completed ();
 
       processed_icon.rotation = old_rotate_value;
-      processed_icon.animate (Clutter.AnimationMode.EASE_OUT_QUINT, 300,
-                              "rotation", rotation);
+      if (rotation <= 1.0 && rotation >= 0.0)
+        processed_icon.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD, 300,
+                                "rotation", rotation);
+      else
+        processed_icon.animate (Clutter.AnimationMode.EASE_OUT_QUINT, 300,
+                                "rotation", rotation);
     }
 
     private void on_activating_changed ()
@@ -528,7 +602,7 @@ namespace Unity.Launcher
       //allocate the icon
       processed_icon.get_preferred_width (48, out width, out n_width);
       processed_icon.get_preferred_height (48, out height, out n_height);
-      child_box.x1 = (box.get_width () - width) / 2.0f;
+      child_box.x1 = grabbed_push + (box.get_width () - width) / 2.0f;
       child_box.y1 = y;
       child_box.x2 = child_box.x1 + 48;
       child_box.y2 = child_box.y1 + height;
@@ -543,6 +617,14 @@ namespace Unity.Launcher
       child_box.y2 = child_box.y1 + height;
       active_indicator.allocate (child_box, flags);
 
+      close_symbol.get_preferred_width (48, out n_width, out width);
+      close_symbol.get_preferred_height (48, out n_height, out height);
+      child_box.x1 = -(width  / 2.0f) + 5;
+      child_box.y1 = -(height / 2.0f);
+      child_box.x2 =  (width  / 2.0f) + 5;
+      child_box.y2 =  (height / 2.0f);
+      close_symbol.allocate (child_box, flags);
+
     }
 
     public override void pick (Clutter.Color color)
@@ -556,11 +638,13 @@ namespace Unity.Launcher
       running_indicator.paint ();
 
       processed_icon.paint ();
+      close_symbol.paint ();
     }
 
     public override void map ()
     {
       base.map ();
+      close_symbol.map ();
       running_indicator.map ();
       active_indicator.map ();
       processed_icon.map ();
@@ -569,6 +653,7 @@ namespace Unity.Launcher
     public override void unmap ()
     {
       base.unmap ();
+      close_symbol.map ();
       running_indicator.unmap ();
       active_indicator.unmap ();
       processed_icon.unmap ();
