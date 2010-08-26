@@ -21,7 +21,7 @@ namespace Unity.Places
 {
   public class DefaultRendererGroup : ExpandingBin
   {
-    static const float PADDING = 54.0f;
+    static const float PADDING = 52.0f;
     static const int   SPACING = 0;
     static const int   OMG_FOOTEL_SUCKS_CANT_HANDLE_MANY_TEXTURES = 100;
 
