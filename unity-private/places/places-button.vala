@@ -121,7 +121,7 @@ namespace Unity.Places
 
           context.set_line_width (0.2);
           context.set_operator (Cairo.Operator.OVER);
-          context.set_source_rgba (1.0, 1.0, 1.0, 0.65);
+          context.set_source_rgba (1.0, 1.0, 1.0, 0.85);
 
           context.move_to (0, 0);
           context.line_to (4, 4);
