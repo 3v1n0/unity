@@ -21,6 +21,7 @@ namespace Unity.Places
 {
   public class DefaultRenderer : LayeredBin, Unity.Place.Renderer
   {
+    static const float TOP_PADDING = 22.0f;
     static const float PADDING = 12.0f;
     static const int   SPACING = 0;
 
@@ -33,6 +34,8 @@ namespace Unity.Places
     private Ctk.VBox          box;
     private Dee.Model         groups_model;
     private Dee.Model         results_model;
+
+    private string[] expanded = null;
 
     public DefaultRenderer ()
     {
@@ -125,7 +128,7 @@ namespace Unity.Places
 
     construct
     {
-      padding = { 0.0f, 0.0f, 0.0f, 0.0f };
+      padding = { PADDING, 0.0f, 0.0f, 0.0f };
 
       trough = new Unity.CairoCanvas (trough_paint);
       slider = new Unity.CairoCanvas (slider_paint);
@@ -139,7 +142,6 @@ namespace Unity.Places
       slider.show ();
 
       box = new Ctk.VBox (SPACING);
-      box.padding = { 0.0f, PADDING, 0.0f, PADDING};
       box.homogeneous = false;
       scroll.add_actor (box);
       box.show ();
@@ -154,7 +156,11 @@ namespace Unity.Places
     {
       groups_model = groups;
       results_model = results;
-
+      
+      var expandable = hints["ExpandedGroups"];
+      if (expandable != null && expandable != "")
+        expanded = expandable.split (" ");
+        
       unowned Dee.ModelIter iter = groups.get_first_iter ();
       while (!groups.is_last (iter))
         {
@@ -232,6 +238,14 @@ namespace Unity.Places
           group.activated.connect ((u, m) => { activated (u, m); } );
           group.set_data<unowned Dee.ModelIter> ("model-iter", iter);
           box.pack (group, false, true);
+
+          foreach (string id in expanded)
+            {
+              if (model.get_position (iter) == id.to_int ())
+                {
+                  group.always_expanded = true;
+                }
+            }
         }
     }
 
@@ -293,7 +307,7 @@ namespace Unity.Places
       var button = new Ctk.Button (Ctk.Orientation.HORIZONTAL);
       button.padding = { 12.0f, 12.0f, 12.0f, 12.0f };
       var text = new Ctk.Text ("");
-      text.set_markup ("<big>" + mes + "</big>");
+      text.set_markup ("<big>" + Markup.escape_text (mes) + "</big>");
       button.add_actor (text);
 
       box.pack (button, false, false);
@@ -398,8 +412,8 @@ namespace Unity.Places
         return;
       
       string mes = results.get_string (iter, 4);
-      text.set_markup ("<big>" + mes + "</big>");
-
+      text.set_markup ("<big>" + Markup.escape_text (mes) + "</big>");
+      
       active = true;
 
       glow.set_invalidate_effect_cache (true);

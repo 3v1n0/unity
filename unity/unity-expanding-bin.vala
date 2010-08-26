@@ -95,7 +95,10 @@ namespace Unity
       child_box.x1 = x;
       child_box.x2 = x + width;
       child_box.y1 = y;
-      child_box.y2 = y + last_height + ((_target_height - last_height) * _size_factor);
+      child_box.y2 = y + last_height + ((_target_height - last_height + padding.bottom) * _size_factor);
+
+      if (child_box.y2 < 0.0f)
+        child_box.y2 = 0.0f;
 
       base.allocate (box, flags);
       get_child ().allocate (child_box, flags);

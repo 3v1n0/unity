@@ -353,3 +353,5 @@ unity-private/gesture/gesture-dispatcher-geis.c
 unity-private/places/places-place-home-renderer.c
 unity/unity-stripe-texture.c
 unity/unity-layered-bin.c
+unity-private/places/places-default-renderer-tiles.c
+unity-private/places/places-button.c
