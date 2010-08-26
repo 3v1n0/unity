@@ -221,8 +221,8 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
           ev->delta_y = properties[GRAIL_PROP_DRAG_DY];
           ev->velocity_x = properties[GRAIL_PROP_DRAG_VX];
           ev->velocity_y = properties[GRAIL_PROP_DRAG_VY];
-          ev->x2 = properties[GRAIL_PROP_DRAG_X];
-          ev->y2 = properties[GRAIL_PROP_DRAG_Y];
+          ev->x = properties[GRAIL_PROP_DRAG_X];
+          ev->y = properties[GRAIL_PROP_DRAG_Y];
         }
       else if (dispatch_event->type == UNITY_GESTURE_TYPE_PINCH &&
                gesture_event->num_props >= 7)

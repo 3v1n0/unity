@@ -81,8 +81,8 @@ namespace Unity.Gesture
           ret += "\tDeltaY     : %f\n".printf (pan_event.delta_y);
           ret += "\tVelocityX  : %f\n".printf (pan_event.velocity_x);
           ret += "\tVelocityY  : %f\n".printf (pan_event.velocity_y);
-          ret += "\tX2         : %f\n".printf (pan_event.x2);
-          ret += "\tY2         : %f\n".printf (pan_event.y2);
+          ret += "\tX          : %f\n".printf (pan_event.x);
+          ret += "\tY          : %f\n".printf (pan_event.y);
           break;
         case Type.PINCH:
           ret += "\tRadiusDelta: %f\n".printf (pinch_event.radius_delta);
@@ -140,8 +140,8 @@ namespace Unity.Gesture
     public float delta_y;
     public float velocity_x;
     public float velocity_y;
-    public float x2;
-    public float y2;
+    public float x;
+    public float y;
   }
 
   public class PinchEvent
