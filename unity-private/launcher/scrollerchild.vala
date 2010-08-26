@@ -602,7 +602,6 @@ namespace Unity.Launcher
       //allocate the icon
       processed_icon.get_preferred_width (48, out width, out n_width);
       processed_icon.get_preferred_height (48, out height, out n_height);
-      if (grabbed_push > 0) debug (@"grabbed_push $grabbed_push");
       child_box.x1 = grabbed_push + (box.get_width () - width) / 2.0f;
       child_box.y1 = y;
       child_box.x2 = child_box.x1 + 48;
