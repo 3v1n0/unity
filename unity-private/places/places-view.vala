@@ -56,8 +56,6 @@ namespace Unity.Places
           return;
         }
 
-      debug ("PLACE_VIEW_CONSTRUCT");
-
       home_entry = new PlaceHomeEntry (shell, model);
 
       content_box = new Ctk.VBox (4);
