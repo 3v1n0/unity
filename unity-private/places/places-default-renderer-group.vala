@@ -54,12 +54,11 @@ namespace Unity.Places
     }
 
     private Ctk.VBox      vbox;
-    private Ctk.Button    title_button;
+    private Button        title_button;
     private Ctk.HBox      title_box;
     private Ctk.Image     icon;
     private Ctk.Text      text;
     private Expander      expander;
-    private Ctk.Button    sep;
     private Ctk.IconView  renderer;
 
     private MoreResultsButton? more_results_button;
@@ -101,18 +100,17 @@ namespace Unity.Places
       add_actor (vbox);
       vbox.show ();
   
-      title_button = new Ctk.Button (Ctk.Orientation.HORIZONTAL);
+      title_button = new Button ();
+      title_button.normal_state = Button.NormalState.UNDERLINE;
+      title_button.orientation = Ctk.Orientation.HORIZONTAL;
       title_button.padding = { 4.0f, 6.0f, 4.0f, 6.0f };
       vbox.pack (title_button, false, false);
       title_button.show ();
-      var title_bg = new StripeTexture (null);
-      title_button.set_background_for_state (Ctk.ActorState.STATE_PRELIGHT,
-                                             title_bg);
       title_button.notify["state"].connect (() => {
-        if (title_button.state == Ctk.ActorState.STATE_PRELIGHT)
-          sep.opacity = 0;
+        if (title_button.state == Ctk.ActorState.STATE_ACTIVE)
+          text.color = { 50, 50, 50, 200 };
         else
-          sep.opacity = 255;
+          text.color = { 255, 255, 255, 255 };
 
         unowned GLib.SList<unowned Ctk.Effect> effects = title_button.get_effects ();
         foreach (unowned Ctk.Effect effect in effects)
@@ -141,17 +139,6 @@ namespace Unity.Places
       expander.opacity = 0;
       title_box.pack (expander, false, true);
       expander.show ();
-
-      sep = new Ctk.Button (Ctk.Orientation.HORIZONTAL);
-      var rect = new Clutter.Rectangle.with_color ({ 255, 255, 255, 70 });
-      sep.add_actor (rect);
-      rect.height = 1.0f;
-      vbox.pack (sep, false, false);
-      sep.show ();
-      glow = new Ctk.EffectGlow ();
-      glow.set_factor (1.0f);
-      glow.set_margin (5);
-      //sep.add_effect (glow);
 
       title_button.clicked.connect (() => {
         if (n_results <= renderer.get_n_cols () || allow_expand == false)
@@ -228,7 +215,6 @@ namespace Unity.Places
       if (group_renderer == "UnityFolderGroupRenderer")
         {
           title_button.hide ();
-          sep.hide ();
           bin_state = ExpandingBinState.EXPANDED;
         }
 

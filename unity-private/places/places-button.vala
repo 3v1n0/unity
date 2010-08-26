@@ -22,13 +22,32 @@ namespace Unity.Places
 {
   public class Button : Ctk.Button
   {
+    public enum NormalState
+    {
+      NONE,
+      UNDERLINE
+    }
+
     public delegate void ButtonOutlineFunc (Cairo.Context cr,
                                             int width,
                                             int height);
-    private CairoCanvas     bg;
-    private Ctk.EffectGlow? glow;
 
     public ButtonOutlineFunc outline_func;
+
+    private NormalState _normal_state = NormalState.NONE;
+    public  NormalState normal_state {
+      get { return _normal_state; }
+      set {
+        if (_normal_state != value)
+          {
+            _normal_state = value;
+            bg.update ();
+          }
+      }
+    }
+
+    private CairoCanvas     bg;
+    private Ctk.EffectGlow? glow;
 
     public Button ()
     {
@@ -96,12 +115,21 @@ namespace Unity.Places
       cr.set_operator (Cairo.Operator.CLEAR);
       cr.paint ();
 
-      if (state == Ctk.ActorState.STATE_NORMAL)
-        return;
-
       cr.set_operator (Cairo.Operator.OVER);
       cr.set_line_width (1.5);
       cr.translate (0.5, 0.5);
+
+      if (state == Ctk.ActorState.STATE_NORMAL)
+        {
+          if (_normal_state == NormalState.UNDERLINE)
+            {
+              cr.move_to (x, height - 1);
+              cr.line_to (x + width, height - 1);
+              cr.set_source_rgba (1.0, 1.0, 1.0, 0.3);
+              cr.stroke ();
+            }
+          return;
+        }
 
       outline_func (cr, width, height);
 
