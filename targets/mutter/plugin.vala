@@ -1143,8 +1143,8 @@ namespace Unity
                         }
                      else
                         {
-                          start_pan_window.x += Math.floorf (event.pan_event.delta_x);
-                          start_pan_window.y += Math.floorf (event.pan_event.delta_y);
+                          start_pan_window.x += Math.floorf (event.pan_event.delta_x + 0.5f);
+                          start_pan_window.y += Math.floorf (event.pan_event.delta_y + 0.5f);
                           start_pan_window.x = float.max (start_pan_window.x, QUICKLAUNCHER_WIDTH);
                           start_pan_window.y = float.max (start_pan_window.y, PANEL_HEIGHT);
 
