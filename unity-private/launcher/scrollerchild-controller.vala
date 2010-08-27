@@ -216,7 +216,7 @@ namespace Unity.Launcher
           Idle.add (() =>
             {
               menu.state = QuicklistControllerState.MENU;
-              menu_state = ScrollerChildControllerMenuState.NO_MENU;
+              //menu_state = ScrollerChildControllerMenuState.NO_MENU;
               return false;
             });
         }
