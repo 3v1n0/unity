@@ -150,23 +150,19 @@ namespace Unity.Places
               180.0f * GLib.Math.PI / 180.0f);
       cr.close_path ();
 
-      /*if (slider_state == SLIDER_STATE_NORMAL)
+      if (slider_state == SLIDER_STATE_NORMAL)
         {
-          print ("normal state\n");
           cr.set_source_rgba (1.0f, 0.0f, 0.0f, 0.15f);
         }
       if (slider_state == SLIDER_STATE_PRELIGHT)
         {
-          print ("prelight state\n");
           cr.set_source_rgba (0.0f, 1.0f, 0.0f, 0.15f);
         }
       if (slider_state == SLIDER_STATE_ACTIVE)
         {
-          print ("active state\n");
           cr.set_source_rgba (0.0f, 0.0f, 1.0f, 0.15f);
-        }*/
+        }
 
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.125f);
       cr.fill_preserve ();
 
       // draw striped pattern
@@ -207,8 +203,7 @@ namespace Unity.Places
     on_slider_enter (Clutter.Event event)
     {
       slider_state = SLIDER_STATE_PRELIGHT;
-      slider.do_queue_redraw ();
-      scroll.do_queue_redraw ();
+      slider.update ();
       return false;
     }
 
@@ -216,8 +211,7 @@ namespace Unity.Places
     on_slider_leave (Clutter.Event event)
     {
       slider_state = SLIDER_STATE_NORMAL;
-      slider.do_queue_redraw ();
-      scroll.do_queue_redraw ();
+      slider.update ();
       return false;
     }
 
@@ -225,8 +219,7 @@ namespace Unity.Places
     on_slider_button_press (Clutter.Event event)
     {
       slider_state = SLIDER_STATE_ACTIVE;
-      slider.do_queue_redraw ();
-      scroll.do_queue_redraw ();
+      slider.update ();
       return false;
     }
 
@@ -234,8 +227,7 @@ namespace Unity.Places
     on_slider_button_release (Clutter.Event event)
     {
       slider_state = SLIDER_STATE_PRELIGHT;
-      slider.do_queue_redraw ();
-      scroll.do_queue_redraw ();
+      slider.update ();
       return false;
     }
 
