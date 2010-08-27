@@ -877,6 +877,7 @@ namespace Unity.Launcher
       button_down = false;
       this.get_stage ().button_release_event.disconnect (this.on_button_release_event);
       Unity.global_shell.remove_fullscreen_request (this);
+      Clutter.ungrab_pointer ();
 
       if (is_scrolling)
         {
@@ -960,7 +961,7 @@ namespace Unity.Launcher
     float autoscroll_mouse_pos_cache = 0.0f;
     private bool on_autoscroll_motion_check (float y)
     {
-      if (get_total_children_height () < get_available_height ())
+      if (get_total_children_height () < get_available_height () || is_scrolling)
         {
           is_autoscrolling = false;
         }
