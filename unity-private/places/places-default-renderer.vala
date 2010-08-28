@@ -35,6 +35,7 @@ namespace Unity.Places
     private Unity.CairoCanvas trough;
     private Unity.CairoCanvas slider;
     private int               slider_state;
+    private bool              button_pressed;
     private Ctk.VBox          box;
     private Dee.Model         groups_model;
     private Dee.Model         results_model;
@@ -152,40 +153,35 @@ namespace Unity.Places
 
       if (slider_state == SLIDER_STATE_NORMAL)
         {
-          cr.set_source_rgba (1.0f, 0.0f, 0.0f, 0.15f);
+          cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.15f);
         }
       if (slider_state == SLIDER_STATE_PRELIGHT)
         {
-          cr.set_source_rgba (0.0f, 1.0f, 0.0f, 0.15f);
+          cr_stripes.set_operator (Cairo.Operator.CLEAR);
+          cr_stripes.paint ();
+          cr_stripes.scale (1.0f, 1.0f);
+          cr_stripes.set_operator (Cairo.Operator.OVER);
+          cr_stripes.set_source_rgba (1.0f, 1.0f, 1.0f, 0.25f);
+          cr_stripes.rectangle (0.0f, 0.0f, 1.0f, 1.0f);
+          cr_stripes.fill ();
+          cr_stripes.rectangle (1.0f, 1.0f, 1.0f, 1.0f);
+          cr_stripes.fill ();
+          cr_stripes.rectangle (2.0f, 2.0f, 1.0f, 1.0f);
+          cr_stripes.fill ();
+          cr_stripes.rectangle (3.0f, 3.0f, 1.0f, 1.0f);
+          cr_stripes.fill ();
+
+          stripe_pattern = new Cairo.Pattern.for_surface (stripes);
+          cr.set_operator (Cairo.Operator.OVER);
+          cr.set_source (stripe_pattern);
+          stripe_pattern.set_extend (Cairo.Extend.REPEAT);
         }
       if (slider_state == SLIDER_STATE_ACTIVE)
         {
-          cr.set_source_rgba (0.0f, 0.0f, 1.0f, 0.15f);
+          cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
         }
 
       cr.fill_preserve ();
-
-      // draw striped pattern
-      cr_stripes.set_operator (Cairo.Operator.CLEAR);
-      cr_stripes.paint ();
-      cr_stripes.scale (1.0f, 1.0f);
-      cr_stripes.set_operator (Cairo.Operator.OVER);
-      cr_stripes.set_source_rgba (1.0f, 1.0f, 1.0f, 0.25f);
-      cr_stripes.rectangle (0.0f, 0.0f, 1.0f, 1.0f);
-      cr_stripes.fill ();
-      cr_stripes.rectangle (1.0f, 1.0f, 1.0f, 1.0f);
-      cr_stripes.fill ();
-      cr_stripes.rectangle (2.0f, 2.0f, 1.0f, 1.0f);
-      cr_stripes.fill ();
-      cr_stripes.rectangle (3.0f, 3.0f, 1.0f, 1.0f);
-      cr_stripes.fill ();
-
-      stripe_pattern = new Cairo.Pattern.for_surface (stripes);
-      cr.set_operator (Cairo.Operator.OVER);
-      cr.set_source (stripe_pattern);
-      stripe_pattern.set_extend (Cairo.Extend.REPEAT);
-      cr.fill_preserve ();
-
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.5f);
       cr.stroke ();
 
@@ -196,6 +192,17 @@ namespace Unity.Places
       cr.line_to (_align ((double) width - 2.0f), _align (half_height));
       cr.move_to (_align (1.0f), _align (half_height + 2.0f));
       cr.line_to (_align ((double) width - 2.0f), _align (half_height + 2.0f));
+
+      if (slider_state == SLIDER_STATE_NORMAL ||
+          slider_state == SLIDER_STATE_PRELIGHT)
+        {
+          cr.set_operator (Cairo.Operator.OVER);
+        }
+      if (slider_state == SLIDER_STATE_ACTIVE)
+        {
+          cr.set_operator (Cairo.Operator.CLEAR);
+        }
+
       cr.stroke ();
     }
 
@@ -210,14 +217,18 @@ namespace Unity.Places
     private bool
     on_slider_leave (Clutter.Event event)
     {
-      slider_state = SLIDER_STATE_NORMAL;
-      slider.update ();
+      if (!button_pressed)
+        {
+          slider_state = SLIDER_STATE_NORMAL;
+          slider.update ();
+        }
       return false;
     }
 
     private bool
     on_slider_button_press (Clutter.Event event)
     {
+      button_pressed = true;
       slider_state = SLIDER_STATE_ACTIVE;
       slider.update ();
       return false;
@@ -226,6 +237,7 @@ namespace Unity.Places
     private bool
     on_slider_button_release (Clutter.Event event)
     {
+      button_pressed = false;
       slider_state = SLIDER_STATE_PRELIGHT;
       slider.update ();
       return false;
@@ -242,6 +254,7 @@ namespace Unity.Places
       slider.button_press_event.connect (on_slider_button_press);
       slider.button_release_event.connect (on_slider_button_release);
       slider_state = SLIDER_STATE_NORMAL;
+      button_pressed = false;
 
       scroll = new Ctk.ScrollView ();
       scroll.set_scroll_bar (trough, slider);
