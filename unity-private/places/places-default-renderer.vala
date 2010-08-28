@@ -36,6 +36,7 @@ namespace Unity.Places
     private Unity.CairoCanvas slider;
     private int               slider_state;
     private bool              button_pressed;
+    private Ctk.EffectGlow    slider_glow;
     private Ctk.VBox          box;
     private Dee.Model         groups_model;
     private Dee.Model         results_model;
@@ -211,6 +212,7 @@ namespace Unity.Places
     {
       slider_state = SLIDER_STATE_PRELIGHT;
       slider.update ();
+      slider_glow.set_invalidate_effect_cache (true);
       return false;
     }
 
@@ -221,6 +223,7 @@ namespace Unity.Places
         {
           slider_state = SLIDER_STATE_NORMAL;
           slider.update ();
+          slider_glow.set_invalidate_effect_cache (true);
         }
       return false;
     }
@@ -231,6 +234,7 @@ namespace Unity.Places
       button_pressed = true;
       slider_state = SLIDER_STATE_ACTIVE;
       slider.update ();
+      slider_glow.set_invalidate_effect_cache (true);
       return false;
     }
 
@@ -240,12 +244,18 @@ namespace Unity.Places
       button_pressed = false;
       slider_state = SLIDER_STATE_PRELIGHT;
       slider.update ();
+      slider_glow.set_invalidate_effect_cache (true);
       return false;
     }
 
     construct
     {
       padding = { PADDING, 0.0f, 0.0f, 0.0f };
+
+      slider_glow = new Ctk.EffectGlow ();
+      slider_glow.set_color ({ 255, 255, 255, 255 });
+      slider_glow.set_factor (1.0f);
+      slider_glow.set_margin (5);
 
       trough = new Unity.CairoCanvas (trough_paint);
       slider = new Unity.CairoCanvas (slider_paint);
@@ -255,6 +265,7 @@ namespace Unity.Places
       slider.button_release_event.connect (on_slider_button_release);
       slider_state = SLIDER_STATE_NORMAL;
       button_pressed = false;
+      slider.add_effect (slider_glow);
 
       scroll = new Ctk.ScrollView ();
       scroll.set_scroll_bar (trough, slider);
