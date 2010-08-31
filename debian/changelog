@@ -1,4 +1,4 @@
-unity (0.2.32-0ubuntu3) UNRELEASED; urgency=low
+unity (0.2.32-0ubuntu3) maverick; urgency=low
 
   * Backport Gord's changes to fix scrolling and click issues in the 
     launcher and Neil's changes for the recent artwork changes
