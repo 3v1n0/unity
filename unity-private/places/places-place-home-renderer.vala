@@ -94,7 +94,7 @@ namespace Unity.Places
         activate_place (APPS_PLACE, 5);
       });
 
-      icon = new HomeButton (_("Files & Folders"), filename_for_icon ("work"), "");
+      icon = new HomeButton (_("Files & Folders"), filename_for_icon ("filesandfolders"), "");
       icon_view.add_actor (icon);
       icon.show ();
       icon.clicked.connect (() => {
@@ -168,28 +168,8 @@ namespace Unity.Places
 
     private string filename_for_icon (string icon)
     {
-      if (theme == null)
-        {
-          theme = new Gtk.IconTheme ();
-          theme.set_custom_theme ("unity-icon-theme");
-        }
-
-      string icon_file = "";
-      if (theme.has_icon (icon))
-        {
-          var info = theme.lookup_icon (icon, 128, 0);
-          if (info != null)
-            {
-              var filename = info.get_filename ();
-              if (FileUtils.test(filename, FileTest.IS_REGULAR))
-                {
-                  icon_file = filename;
-                }
-            }
-
-        }
-
-      return icon_file;
+      /* FIXME: We'll autoget this from the theme before release */
+      return "/usr/share/icons/unity-icon-theme/apps/128/" + icon + ".svg";
     }
   }
 

@@ -24,7 +24,7 @@ namespace Unity.Places
 {
   public class VolumeChildController : ScrollerChildController
   {
-    public static const string ICON = "/usr/share/unity/trash.png";
+    public static const string ICON = "/usr/share/unity/devices.png";
 
     public Volume volume { get; construct; }
 
@@ -37,22 +37,7 @@ namespace Unity.Places
     construct
     {
       name = volume.get_name ();
-      
-      var icon = volume.get_icon ();
-      var icon_name = "";
-      if (icon is ThemedIcon)
-        {
-          icon_name = (icon as ThemedIcon).get_names ()[0];
-        }
-      else if (icon is FileIcon)
-        {
-          icon_name = (icon as FileIcon).get_file ().get_path ();
-        }
-      else
-        {
-          icon_name = ICON;
-        }
-      load_icon_from_icon_name (icon_name);
+      load_icon_from_icon_name (ICON);
 
       child.group_type = ScrollerChild.GroupType.DEVICE;
       child.drag_removed.connect (eject_volume);
