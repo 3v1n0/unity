@@ -1,3 +1,13 @@
+unity (0.2.32-0ubuntu3) UNRELEASED; urgency=low
+
+  * Backport Gord's changes to fix scrolling and click issues in the 
+    launcher and Neil's changes for the recent artwork changes
+  * debian/source:
+    - use format 3
+    - list binaries that changed in the backport
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Tue, 31 Aug 2010 16:39:52 +0200
+
 unity (0.2.32-0ubuntu2) maverick; urgency=low
 
   * debian/control: clean the build-depends on libvala it's not required
