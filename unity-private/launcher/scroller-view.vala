@@ -267,7 +267,7 @@ namespace Unity.Launcher
       if (assume_on_launcher)
         x = 25;
 
-      Clutter.Actor picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.ALL, (int)x, (int)y);
+      Clutter.Actor picked_actor = (get_stage () as Clutter.Stage).get_actor_at_pos (Clutter.PickMode.REACTIVE, (int)x, (int)y);
 
 
       foreach (Clutter.Actor actor in model)
