@@ -145,6 +145,7 @@ namespace Unity.Launcher
 
     private void on_scroller_controller_closed (ScrollerChildController controller)
     {
+      debug ("\n\n\n\n\n\n\non_scroller_controller_closed called");
       if (controller is ApplicationController)
         {
           if (!(controller as ApplicationController).is_sticky ())
