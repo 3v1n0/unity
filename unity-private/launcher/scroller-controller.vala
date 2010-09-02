@@ -126,6 +126,7 @@ namespace Unity.Launcher
           else
             {
               ScrollerChild child = new ScrollerChild ();
+              child.group_type = ScrollerChild.GroupType.APPLICATION;
               controller = new ApplicationController (null, child);
               (controller as ApplicationController).attach_application (app);
               if (app.user_visible ())
