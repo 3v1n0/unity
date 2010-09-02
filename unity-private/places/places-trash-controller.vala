@@ -16,9 +16,9 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
- 
+
 using Unity.Launcher;
- 
+
 namespace Unity.Places
 {
   public class TrashController : ScrollerChildController
@@ -47,7 +47,7 @@ namespace Unity.Places
 
       child.group_type = ScrollerChild.GroupType.SYSTEM;
     }
-    
+
     public override void activate ()
     {
       try {
@@ -83,7 +83,7 @@ namespace Unity.Places
         {
           Dbusmenu.Menuitem item;
           /* i18n: This is the number of items in the Trash folder */
-          string label = _("%d items");
+          string label = ngettext("%d item", "%d items", n_items);
 
           item = new Dbusmenu.Menuitem ();
           item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, label.printf (n_items));
@@ -91,7 +91,7 @@ namespace Unity.Places
           item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
           root.child_append (item);
         }
-     
+
       callback (root);
     }
 
@@ -143,7 +143,7 @@ namespace Unity.Places
 
               dialog.destroy ();
             });
-            
+
             dialog.show ();
 
             return false;
