@@ -128,6 +128,7 @@ namespace Unity.Places
       cr.close_path ();    }
 
     private void paint_bg (Cairo.Context cr, int width, int height)
+      requires (this is Button)
     {
       var x = 1;
 
