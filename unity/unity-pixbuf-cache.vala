@@ -25,14 +25,21 @@ namespace Unity
 {
   public class PixbufCacheTask
   {
-    public string  filename;
+    public string  data;
     public unowned Ctk.Image image;
     public int     size;
     public string  key;
+    public PixbufRequestType type;
 
     public PixbufCacheTask ()
     {
     }
+  }
+
+  public enum PixbufRequestType
+  {
+    ICON_NAME,
+    GICON_STRING
   }
 
   /* This is what we use for lookups, namely the id of the icon and it's size.
@@ -57,6 +64,8 @@ namespace Unity
 
     private PriorityQueue<PixbufCacheTask> queue;
 
+    private uint queue_timeout = 0;
+
     /*
      * Construction
      */
@@ -70,11 +79,6 @@ namespace Unity
           if (global_shell is Unity.Shell)
             global_shell.weak_ref (on_shell_destroyed);
         }
-
-        Timeout.add (30, () => {
-          load_iteration ();
-        return true;
-      });
     }
 
     construct
@@ -93,23 +97,6 @@ namespace Unity
         }
       else
         this.unref ();
-    }
-
-    private void load_iteration ()
-    {
-      int i = 0;
-
-      while (queue.size > 0 && i < 10)
-        {
-          var task = queue.poll ();
-
-          if (task.image is Ctk.Image)
-            {
-              load_from_file_async.begin (task.image, task.filename, task.size, task.key);
-            }
-
-          i++;
-        }
     }
 
     /*
@@ -140,6 +127,31 @@ namespace Unity
       cache.clear ();
     }
 
+    public bool load_iteration ()
+    {
+      int i = 0;
+
+      while (queue.size > 0 && i < 10)
+        {
+          var task = queue.poll ();
+
+          if (task.image is Ctk.Image)
+            {
+              if (task.type == PixbufRequestType.ICON_NAME)
+                set_image_from_icon_name_real (task.image, task.data, task.size);
+              else if (task.type == PixbufRequestType.GICON_STRING)
+                set_image_from_gicon_string_real (task.image, task.data, task.size);
+            }
+
+          i++;
+        }
+
+      if (queue.size == 0)
+        queue_timeout = 0;
+
+      return queue.size != 0;
+    }
+
     public async void set_image_from_icon_name (Ctk.Image image,
                                                 string    icon_name,
                                                 int       size)
@@ -153,9 +165,34 @@ namespace Unity
           return;
         }
 
-      Idle.add (set_image_from_icon_name.callback);
-      yield;
+      var task = new PixbufCacheTask ();
+      task.data = icon_name;
+      task.image = image;
+      task.size = size;
+      task.type = PixbufRequestType.ICON_NAME;
 
+      queue.add (task);
+
+      if (queue_timeout == 0)
+        queue_timeout = Idle.add (load_iteration);
+    }
+
+    public async void set_image_from_icon_name_real (Ctk.Image image,
+                                                string    icon_name,
+                                                int       size)
+    {
+      var key = hash_template.printf (icon_name, size);
+      Pixbuf? ret = cache[key];
+
+      if (ret is Pixbuf)
+        {
+          image.set_from_pixbuf (ret);
+          return;
+        }
+
+      Idle.add (set_image_from_icon_name_real.callback);
+      yield;
+      
       if (ret == null)
         {
           try {
@@ -183,6 +220,31 @@ namespace Unity
     }
 
     public async void set_image_from_gicon_string (Ctk.Image image,
+                                                   string data,
+                                                   int    size)
+    {
+      var key = hash_template.printf (data, size);
+      Pixbuf? ret = cache[key];
+
+      if (ret is Pixbuf)
+        {
+          image.set_from_pixbuf (ret);
+          return;
+        }
+
+      var task = new PixbufCacheTask ();
+      task.image = image;
+      task.data = data;
+      task.size = size;
+      task.type = PixbufRequestType.GICON_STRING;
+
+      queue.add (task);
+
+      if (queue_timeout == 0)
+        queue_timeout = Idle.add (load_iteration);
+    }
+
+    public async void set_image_from_gicon_string_real (Ctk.Image image,
                                                    string    gicon_as_string,
                                                    int       size)
     {
@@ -195,7 +257,7 @@ namespace Unity
           return;
         }
 
-      Idle.add (set_image_from_gicon.callback);
+      Idle.add (set_image_from_gicon_string_real.callback);
       yield;
 
       if (ret == null)
@@ -265,21 +327,12 @@ namespace Unity
                                             GLib.Icon icon,
                                             int       size)
     {
-      yield set_image_from_gicon_string (image, icon.to_string (), size);
+      set_image_from_gicon_string (image, icon.to_string (), size);
     }
 
     public async Gdk.Pixbuf? load_from_filepath (string filename, int size, Ctk.Image? image=null, string key)
     {
-      var task = new PixbufCacheTask ();
-      task.filename = filename;
-      task.size = size;
-      task.image = image;
-      task.key = key;
-
-      queue.add (task);
-
-      return null;
-      /*
+      
       if (filename != null)
         {
           File datafile = File.new_for_path (filename);
@@ -311,9 +364,9 @@ namespace Unity
         }
 
       return null;
-      */
     }
 
+    /*
     private async void load_from_file_async (Ctk.Image i,
                                              string f,
                                              int    s,
@@ -356,6 +409,7 @@ namespace Unity
             }
         }
     }
+    */
 
     /*
      * Private Methods
