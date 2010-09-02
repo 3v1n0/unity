@@ -59,7 +59,7 @@ namespace Unity.Places
     private Ctk.Image     icon;
     private Ctk.Text      text;
     private Expander      expander;
-    private Ctk.IconView  renderer;
+    private unowned Ctk.IconView  renderer;
 
     private MoreResultsButton? more_results_button;
 
@@ -172,7 +172,8 @@ namespace Unity.Places
         return false;
       });
 
-      renderer = new Ctk.IconView ();
+      var rend = new Ctk.IconView ();
+      renderer = rend;
       renderer.padding = { 12.0f, 0.0f, 0.0f, 0.0f };
       renderer.spacing = 24;
       vbox.pack (renderer, true, true);
@@ -295,6 +296,7 @@ namespace Unity.Places
         }
       renderer.add_actor (button);
       button.show ();
+      button.unref (); /* Because Vala sucks and holds references when it shouldn't*/;
 
       if (bin_state == ExpandingBinState.EXPANDED || _always_expanded)
         {
@@ -329,7 +331,7 @@ namespace Unity.Places
 
           if (tile.iter == iter)
             {
-              actor.destroy ();
+              renderer.remove_actor (tile);
               add_to_n_results (-1);
               break;
             }

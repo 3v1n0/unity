@@ -48,6 +48,11 @@ namespace Unity.Places
       Object ();
     }
 
+    ~DefaultRenderer ()
+    {
+      debug ("Finalize");
+    }
+
     private static double
     _align (double val)
     {

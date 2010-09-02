@@ -91,6 +91,11 @@ namespace Unity.Places
               spacing:0);
     }
 
+    ~PlaceSearchEntry ()
+    {
+      hint_text.unparent ();
+    }
+
     construct
     {
       padding = { PADDING, PADDING * 4, PADDING , PADDING * 4};
