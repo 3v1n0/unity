@@ -38,7 +38,7 @@ namespace Unity.Launcher
     private Dbusmenu.Menuitem cached_menu;
     private int menu_items_realized_counter;
 
-    private bool is_favorite = false;
+    public bool is_favorite = false;
 
     public ApplicationController (string? desktop_file_, ScrollerChild child_)
     {
@@ -404,6 +404,7 @@ namespace Unity.Launcher
       app.closed.connect (detach_application);
       app.urgent_changed.connect (on_app_urgant_changed);
       app.user_visible_changed.connect ((value) => {
+        debug (@"app is user visible? $value");
         hide = !value;
       });
       name = app.get_name ();
