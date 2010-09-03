@@ -15,7 +15,6 @@ DEB_DBG_PACKAGE_libunity0 = unity-dbg
 DEB_DH_GENCONTROL_ARGS_netbook-launcher = -- -v2:$(DEB_VERSION)
 
 common-binary-post-install-arch::
-	cp debian/*.png debian/unity/usr/share/unity
 	find debian/tmp/usr/lib -name \*.la -exec rm {} \;
 	find debian/tmp/usr/lib -name \*.a -exec rm {} \;
 
