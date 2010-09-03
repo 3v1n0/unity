@@ -1,3 +1,11 @@
+unity (0.2.32-0ubuntu5) UNRELEASED; urgency=low
+
+  * remove debian/source/:
+    - revert to previous format, seems to confuse daily build and we don't have
+      anymore bin patch
+
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 03 Sep 2010 15:08:52 +0200
+
 unity (0.2.32-0ubuntu4) maverick; urgency=low
 
   * Backport a fix for new tiles being unresponsive (lp: #623953)
