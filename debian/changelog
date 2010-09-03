@@ -8,6 +8,8 @@ unity (0.2.34-0ubuntu1) UNRELEASED; urgency=low
     debian/files.png
   * debian/rules:
     - remove copying debian/*png
+  * debian/libunity0.symbols:
+    - refreshed
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 03 Sep 2010 16:29:14 +0200
 

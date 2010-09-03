@@ -624,6 +624,13 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_tile_get_mimetype@Base 0.2.22
  unity_places_tile_get_type@Base 0.2.22
  unity_places_tile_get_uri@Base 0.2.22
+ unity_places_tile_set_comment@Base 0.2.34
+ unity_places_tile_set_display_name@Base 0.2.34
+ unity_places_tile_set_icon_hint@Base 0.2.34
+ unity_places_tile_set_iter@Base 0.2.34
+ unity_places_tile_set_mimetype@Base 0.2.34
+ unity_places_tile_set_uri@Base 0.2.34
+ unity_places_tile_update_details@Base 0.2.34
  unity_places_trash_controller_construct@Base 0.2.22
  unity_places_trash_controller_get_type@Base 0.2.22
  unity_places_trash_controller_new@Base 0.2.22
@@ -835,22 +842,36 @@ libunity.so.0 libunity0 #MINVER#
  unity_layered_bin_get_children@Base 0.2.30
  unity_layered_bin_get_type@Base 0.2.30
  unity_layered_bin_new@Base 0.2.30
+ unity_param_spec_pixbuf_cache_task@Base 0.2.34
  unity_pixbuf_cache_clear@Base 0.2.22
  unity_pixbuf_cache_construct@Base 0.2.22
  unity_pixbuf_cache_get@Base 0.2.22
  unity_pixbuf_cache_get_default@Base 0.2.22
  unity_pixbuf_cache_get_size@Base 0.2.22
  unity_pixbuf_cache_get_type@Base 0.2.22
+ unity_pixbuf_cache_load_from_filepath@Base 0.2.34
+ unity_pixbuf_cache_load_from_filepath_finish@Base 0.2.34
+ unity_pixbuf_cache_load_iteration@Base 0.2.34
  unity_pixbuf_cache_new@Base 0.2.22
  unity_pixbuf_cache_set@Base 0.2.22
  unity_pixbuf_cache_set_image_from_gicon@Base 0.2.22
  unity_pixbuf_cache_set_image_from_gicon_finish@Base 0.2.22
  unity_pixbuf_cache_set_image_from_gicon_string@Base 0.2.22
  unity_pixbuf_cache_set_image_from_gicon_string_finish@Base 0.2.22
+ unity_pixbuf_cache_set_image_from_gicon_string_real@Base 0.2.34
+ unity_pixbuf_cache_set_image_from_gicon_string_real_finish@Base 0.2.34
  unity_pixbuf_cache_set_image_from_icon_name@Base 0.2.22
  unity_pixbuf_cache_set_image_from_icon_name_finish@Base 0.2.22
+ unity_pixbuf_cache_set_image_from_icon_name_real@Base 0.2.34
+ unity_pixbuf_cache_set_image_from_icon_name_real_finish@Base 0.2.34
+ unity_pixbuf_cache_task_construct@Base 0.2.34
+ unity_pixbuf_cache_task_get_type@Base 0.2.34
+ unity_pixbuf_cache_task_new@Base 0.2.34
+ unity_pixbuf_cache_task_ref@Base 0.2.34
+ unity_pixbuf_cache_task_unref@Base 0.2.34
  unity_pixbuf_check_threshold@Base 0.2.22
  unity_pixbuf_is_tile@Base 0.2.22
+ unity_pixbuf_request_type_get_type@Base 0.2.34
  unity_place__browsingstate_copy@Base 0.2.22
  unity_place__browsingstate_destroy@Base 0.2.22
  unity_place__browsingstate_dup@Base 0.2.22
@@ -1146,6 +1167,9 @@ libunity.so.0 libunity0 #MINVER#
  unity_unity_icon_new@Base 0.2.22
  unity_unity_icon_paint_real@Base 0.2.22
  unity_unity_icon_set_rotation@Base 0.2.28
+ unity_value_get_pixbuf_cache_task@Base 0.2.34
+ unity_value_set_pixbuf_cache_task@Base 0.2.34
+ unity_value_take_pixbuf_cache_task@Base 0.2.34
  unity_webapp_chromium_web_app_add_to_favorites@Base 0.2.22
  unity_webapp_chromium_web_app_construct@Base 0.2.22
  unity_webapp_chromium_web_app_desktop_file_path@Base 0.2.22
