@@ -50,7 +50,6 @@ namespace Unity.Places
 
     ~DefaultRenderer ()
     {
-      debug ("Finalize");
     }
 
     private static double
