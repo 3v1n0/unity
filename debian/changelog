@@ -1,6 +1,10 @@
 unity (0.2.34-0ubuntu1) UNRELEASED; urgency=low
 
-  * New upstream release.
+  * New upstream release:
+    - Use gettext plural form (LP: #625199)
+    - Fix newly pinned app is removed from the launcher on closing that app but
+      works fine afterward (LP: #614329)
+    - Fix Memory leak in places (LP: #628588)
   * remove debian/source/:
     - revert to previous format, seems to confuse daily build and we don't have
       anymore bin patch
