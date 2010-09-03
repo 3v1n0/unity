@@ -1,3 +1,9 @@
+unity (0.2.32-0ubuntu4) UNRELEASED; urgency=low
+
+  * Backport a fix for new tiles being unresponsive (lp: #623953)
+
+ -- Sebastien Bacher <seb128@ubuntu.com>  Thu, 02 Sep 2010 11:20:34 +0200
+
 unity (0.2.32-0ubuntu3) maverick; urgency=low
 
   * Backport Gord's changes to fix scrolling and click issues in the 
