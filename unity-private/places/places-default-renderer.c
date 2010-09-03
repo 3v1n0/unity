@@ -30,8 +30,8 @@
 #include <float.h>
 #include <math.h>
 #include <cairo.h>
-#include <gee.h>
 #include <clutter/clutter.h>
+#include <gee.h>
 
 
 #define UNITY_PLACES_TYPE_DEFAULT_RENDERER (unity_places_default_renderer_get_type ())
@@ -65,6 +65,9 @@ typedef struct _UnityPlacesEmptySearchGroupClass UnityPlacesEmptySearchGroupClas
 typedef struct _UnityPlacesEmptySectionGroup UnityPlacesEmptySectionGroup;
 typedef struct _UnityPlacesEmptySectionGroupClass UnityPlacesEmptySectionGroupClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+#define _cairo_pattern_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_pattern_destroy (var), NULL)))
+#define _cairo_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_destroy (var), NULL)))
+#define _cairo_surface_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_surface_destroy (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 
 #define UNITY_PLACES_TYPE_DEFAULT_RENDERER_GROUP (unity_places_default_renderer_group_get_type ())
@@ -81,7 +84,6 @@ typedef struct _UnityPlacesEmptySearchGroupPrivate UnityPlacesEmptySearchGroupPr
 #define _g_list_free0(var) ((var == NULL) ? NULL : (var = (g_list_free (var), NULL)))
 typedef struct _Block2Data Block2Data;
 typedef struct _UnityPlacesEmptySectionGroupPrivate UnityPlacesEmptySectionGroupPrivate;
-#define _cairo_pattern_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_pattern_destroy (var), NULL)))
 
 struct _UnityPlacesDefaultRenderer {
 	UnityLayeredBin parent_instance;
@@ -98,6 +100,9 @@ struct _UnityPlacesDefaultRendererPrivate {
 	CtkScrollView* scroll;
 	UnityCairoCanvas* trough;
 	UnityCairoCanvas* slider;
+	gint slider_state;
+	gboolean button_pressed;
+	CtkEffectGlow* slider_glow;
 	CtkVBox* box;
 	DeeModel* groups_model;
 	DeeModel* results_model;
@@ -163,11 +168,18 @@ enum  {
 #define UNITY_PLACES_DEFAULT_RENDERER_TOP_PADDING 22.0f
 #define UNITY_PLACES_DEFAULT_RENDERER_PADDING 12.0f
 #define UNITY_PLACES_DEFAULT_RENDERER_SPACING 0
+#define UNITY_PLACES_DEFAULT_RENDERER_SLIDER_STATE_NORMAL 0
+#define UNITY_PLACES_DEFAULT_RENDERER_SLIDER_STATE_PRELIGHT 1
+#define UNITY_PLACES_DEFAULT_RENDERER_SLIDER_STATE_ACTIVE 2
 UnityPlacesDefaultRenderer* unity_places_default_renderer_new (void);
 UnityPlacesDefaultRenderer* unity_places_default_renderer_construct (GType object_type);
 static double _unity_places_default_renderer_align (double val);
 static void unity_places_default_renderer_trough_paint (UnityPlacesDefaultRenderer* self, cairo_t* cr, gint width, gint height);
 static void unity_places_default_renderer_slider_paint (UnityPlacesDefaultRenderer* self, cairo_t* cr, gint width, gint height);
+static gboolean unity_places_default_renderer_on_slider_enter (UnityPlacesDefaultRenderer* self, ClutterEvent* event);
+static gboolean unity_places_default_renderer_on_slider_leave (UnityPlacesDefaultRenderer* self, ClutterEvent* event);
+static gboolean unity_places_default_renderer_on_slider_button_press (UnityPlacesDefaultRenderer* self, ClutterEvent* event);
+static gboolean unity_places_default_renderer_on_slider_button_release (UnityPlacesDefaultRenderer* self, ClutterEvent* event);
 static void unity_places_default_renderer_real_set_models (UnityPlaceRenderer* base, DeeModel* groups, DeeModel* results, GeeHashMap* hints);
 static void unity_places_default_renderer_on_group_added (UnityPlacesDefaultRenderer* self, DeeModel* model, DeeModelIter* iter);
 static void _unity_places_default_renderer_on_group_added_dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self);
@@ -178,20 +190,24 @@ gboolean unity_places_empty_search_group_get_active (UnityPlacesEmptySearchGroup
 gboolean unity_places_empty_section_group_get_active (UnityPlacesEmptySectionGroup* self);
 UnityPlacesEmptySearchGroup* unity_places_empty_search_group_new (guint group_id, DeeModel* results);
 UnityPlacesEmptySearchGroup* unity_places_empty_search_group_construct (GType object_type, guint group_id, DeeModel* results);
-static void _lambda64_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self);
-static void __lambda64__unity_places_empty_search_group_activated (UnityPlacesEmptySearchGroup* _sender, const char* uri, const char* mimetype, gpointer self);
+static void _lambda65_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self);
+static void __lambda65__unity_places_empty_search_group_activated (UnityPlacesEmptySearchGroup* _sender, const char* uri, const char* mimetype, gpointer self);
 static void _unity_places_default_renderer_update_views_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 UnityPlacesEmptySectionGroup* unity_places_empty_section_group_new (guint group_id, DeeModel* results);
 UnityPlacesEmptySectionGroup* unity_places_empty_section_group_construct (GType object_type, guint group_id, DeeModel* results);
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_new (guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
 UnityPlacesDefaultRendererGroup* unity_places_default_renderer_group_construct (GType object_type, guint group_id, const char* group_renderer, const char* display_name, const char* icon_hint, DeeModel* results);
 GType unity_places_default_renderer_group_get_type (void) G_GNUC_CONST;
-static void _lambda65_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self);
-static void __lambda65__unity_places_default_renderer_group_activated (UnityPlacesDefaultRendererGroup* _sender, const char* uri, const char* mimetype, gpointer self);
+static void _lambda66_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self);
+static void __lambda66__unity_places_default_renderer_group_activated (UnityPlacesDefaultRendererGroup* _sender, const char* uri, const char* mimetype, gpointer self);
 void unity_places_default_renderer_group_set_always_expanded (UnityPlacesDefaultRendererGroup* self, gboolean value);
 static void _g_list_free_g_object_unref (GList* self);
 static void _unity_places_default_renderer_trough_paint_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
 static void _unity_places_default_renderer_slider_paint_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
+static gboolean _unity_places_default_renderer_on_slider_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _unity_places_default_renderer_on_slider_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _unity_places_default_renderer_on_slider_button_press_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _unity_places_default_renderer_on_slider_button_release_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static GObject * unity_places_default_renderer_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_default_renderer_finalize (GObject* obj);
 #define UNITY_PLACES_EMPTY_SEARCH_GROUP_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_EMPTY_SEARCH_GROUP, UnityPlacesEmptySearchGroupPrivate))
@@ -204,8 +220,8 @@ enum  {
 static void unity_places_empty_search_group_on_result_added (UnityPlacesEmptySearchGroup* self, DeeModelIter* iter);
 static gboolean unity_places_empty_search_group_interesting (UnityPlacesEmptySearchGroup* self, DeeModelIter* iter);
 DeeModel* unity_places_empty_search_group_get_results (UnityPlacesEmptySearchGroup* self);
-static void _lambda63_ (Block2Data* _data2_);
-static void __lambda63__ctk_button_clicked (CtkButton* _sender, gpointer self);
+static void _lambda64_ (Block2Data* _data2_);
+static void __lambda64__ctk_button_clicked (CtkButton* _sender, gpointer self);
 static Block2Data* block2_data_ref (Block2Data* _data2_);
 static void block2_data_unref (Block2Data* _data2_);
 void unity_places_empty_search_group_set_active (UnityPlacesEmptySearchGroup* self, gboolean value);
@@ -279,9 +295,16 @@ static double _unity_places_default_renderer_align (double val) {
 
 
 static void unity_places_default_renderer_trough_paint (UnityPlacesDefaultRenderer* self, cairo_t* cr, gint width, gint height) {
+	cairo_surface_t* dots;
+	cairo_t* cr_dots;
+	cairo_pattern_t* dot_pattern;
 	double radius;
+	cairo_pattern_t* _tmp0_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (cr != NULL);
+	dots = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 4, 4);
+	cr_dots = cairo_create (dots);
+	dot_pattern = NULL;
 	radius = ((double) width) / 2.0f;
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
 	cairo_paint (cr);
@@ -294,18 +317,49 @@ static void unity_places_default_renderer_trough_paint (UnityPlacesDefaultRender
 	cairo_arc (cr, radius, (((double) height) - radius) - 0.5f, radius - 0.5f, (0.0f * G_PI) / 180.0f, (180.0f * G_PI) / 180.0f);
 	cairo_close_path (cr);
 	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.1f);
+	cairo_set_operator (cr_dots, CAIRO_OPERATOR_CLEAR);
+	cairo_paint (cr_dots);
+	cairo_scale (cr_dots, (double) 1.0f, (double) 1.0f);
+	cairo_set_operator (cr_dots, CAIRO_OPERATOR_OVER);
+	cairo_set_source_rgba (cr_dots, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.025f);
+	cairo_rectangle (cr_dots, (double) 0.0f, (double) 0.0f, (double) 1.0f, (double) 1.0f);
+	cairo_fill (cr_dots);
+	cairo_rectangle (cr_dots, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
+	cairo_fill (cr_dots);
+	cairo_rectangle (cr_dots, (double) 2.0f, (double) 0.0f, (double) 1.0f, (double) 1.0f);
+	cairo_fill (cr_dots);
+	cairo_rectangle (cr_dots, (double) 0.0f, (double) 2.0f, (double) 1.0f, (double) 1.0f);
+	cairo_fill (cr_dots);
+	cairo_rectangle (cr_dots, (double) 2.0f, (double) 2.0f, (double) 1.0f, (double) 1.0f);
+	cairo_fill (cr_dots);
+	cairo_rectangle (cr_dots, (double) 3.0f, (double) 3.0f, (double) 1.0f, (double) 1.0f);
+	cairo_fill (cr_dots);
+	dot_pattern = (_tmp0_ = cairo_pattern_create_for_surface (dots), _cairo_pattern_destroy0 (dot_pattern), _tmp0_);
+	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	cairo_set_source (cr, dot_pattern);
+	cairo_pattern_set_extend (dot_pattern, CAIRO_EXTEND_REPEAT);
 	cairo_fill_preserve (cr);
 	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.35f);
 	cairo_stroke (cr);
+	_cairo_pattern_destroy0 (dot_pattern);
+	_cairo_destroy0 (cr_dots);
+	_cairo_surface_destroy0 (dots);
 }
 
 
 static void unity_places_default_renderer_slider_paint (UnityPlacesDefaultRenderer* self, cairo_t* cr, gint width, gint height) {
+	cairo_surface_t* stripes;
+	cairo_t* cr_stripes;
+	cairo_pattern_t* stripe_pattern;
 	double radius;
 	double half;
 	double half_height;
+	gboolean _tmp1_ = FALSE;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (cr != NULL);
+	stripes = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, 4, 4);
+	cr_stripes = cairo_create (stripes);
+	stripe_pattern = NULL;
 	radius = ((double) width) / 2.0f;
 	half = ((double) width) / 2.0f;
 	half_height = ((double) height) / 2.0f;
@@ -319,7 +373,34 @@ static void unity_places_default_renderer_slider_paint (UnityPlacesDefaultRender
 	cairo_line_to (cr, ((double) width) - 0.5f, (((double) height) - radius) - 0.5f);
 	cairo_arc (cr, radius, (((double) height) - radius) - 0.5f, radius - 0.5f, (0.0f * G_PI) / 180.0f, (180.0f * G_PI) / 180.0f);
 	cairo_close_path (cr);
-	cairo_set_source_rgba (cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.15f);
+	if (self->priv->slider_state == UNITY_PLACES_DEFAULT_RENDERER_SLIDER_STATE_NORMAL) {
+		cairo_set_source_rgba (cr, (double) 0.0f, (double) 0.0f, (double) 0.0f, (double) 0.15f);
+	} else {
+		if (self->priv->slider_state == UNITY_PLACES_DEFAULT_RENDERER_SLIDER_STATE_PRELIGHT) {
+			cairo_pattern_t* _tmp0_;
+			cairo_set_operator (cr_stripes, CAIRO_OPERATOR_CLEAR);
+			cairo_paint (cr_stripes);
+			cairo_scale (cr_stripes, (double) 1.0f, (double) 1.0f);
+			cairo_set_operator (cr_stripes, CAIRO_OPERATOR_OVER);
+			cairo_set_source_rgba (cr_stripes, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.25f);
+			cairo_rectangle (cr_stripes, (double) 0.0f, (double) 0.0f, (double) 1.0f, (double) 1.0f);
+			cairo_fill (cr_stripes);
+			cairo_rectangle (cr_stripes, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
+			cairo_fill (cr_stripes);
+			cairo_rectangle (cr_stripes, (double) 2.0f, (double) 2.0f, (double) 1.0f, (double) 1.0f);
+			cairo_fill (cr_stripes);
+			cairo_rectangle (cr_stripes, (double) 3.0f, (double) 3.0f, (double) 1.0f, (double) 1.0f);
+			cairo_fill (cr_stripes);
+			stripe_pattern = (_tmp0_ = cairo_pattern_create_for_surface (stripes), _cairo_pattern_destroy0 (stripe_pattern), _tmp0_);
+			cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+			cairo_set_source (cr, stripe_pattern);
+			cairo_pattern_set_extend (stripe_pattern, CAIRO_EXTEND_REPEAT);
+		} else {
+			if (self->priv->slider_state == UNITY_PLACES_DEFAULT_RENDERER_SLIDER_STATE_ACTIVE) {
+				cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 1.0f);
+			}
+		}
+	}
 	cairo_fill_preserve (cr);
 	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.5f);
 	cairo_stroke (cr);
@@ -330,7 +411,70 @@ static void unity_places_default_renderer_slider_paint (UnityPlacesDefaultRender
 	cairo_line_to (cr, _unity_places_default_renderer_align (((double) width) - 2.0f), _unity_places_default_renderer_align (half_height));
 	cairo_move_to (cr, _unity_places_default_renderer_align ((double) 1.0f), _unity_places_default_renderer_align (half_height + 2.0f));
 	cairo_line_to (cr, _unity_places_default_renderer_align (((double) width) - 2.0f), _unity_places_default_renderer_align (half_height + 2.0f));
+	if (self->priv->slider_state == UNITY_PLACES_DEFAULT_RENDERER_SLIDER_STATE_NORMAL) {
+		_tmp1_ = TRUE;
+	} else {
+		_tmp1_ = self->priv->slider_state == UNITY_PLACES_DEFAULT_RENDERER_SLIDER_STATE_PRELIGHT;
+	}
+	if (_tmp1_) {
+		cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	} else {
+		if (self->priv->slider_state == UNITY_PLACES_DEFAULT_RENDERER_SLIDER_STATE_ACTIVE) {
+			cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
+		}
+	}
 	cairo_stroke (cr);
+	_cairo_pattern_destroy0 (stripe_pattern);
+	_cairo_destroy0 (cr_stripes);
+	_cairo_surface_destroy0 (stripes);
+}
+
+
+static gboolean unity_places_default_renderer_on_slider_enter (UnityPlacesDefaultRenderer* self, ClutterEvent* event) {
+	gboolean result = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	self->priv->slider_state = UNITY_PLACES_DEFAULT_RENDERER_SLIDER_STATE_PRELIGHT;
+	unity_cairo_canvas_update (self->priv->slider);
+	ctk_effect_set_invalidate_effect_cache ((CtkEffect*) self->priv->slider_glow, TRUE);
+	result = FALSE;
+	return result;
+}
+
+
+static gboolean unity_places_default_renderer_on_slider_leave (UnityPlacesDefaultRenderer* self, ClutterEvent* event) {
+	gboolean result = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	if (!self->priv->button_pressed) {
+		self->priv->slider_state = UNITY_PLACES_DEFAULT_RENDERER_SLIDER_STATE_NORMAL;
+		unity_cairo_canvas_update (self->priv->slider);
+		ctk_effect_set_invalidate_effect_cache ((CtkEffect*) self->priv->slider_glow, TRUE);
+	}
+	result = FALSE;
+	return result;
+}
+
+
+static gboolean unity_places_default_renderer_on_slider_button_press (UnityPlacesDefaultRenderer* self, ClutterEvent* event) {
+	gboolean result = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	self->priv->button_pressed = TRUE;
+	self->priv->slider_state = UNITY_PLACES_DEFAULT_RENDERER_SLIDER_STATE_ACTIVE;
+	unity_cairo_canvas_update (self->priv->slider);
+	ctk_effect_set_invalidate_effect_cache ((CtkEffect*) self->priv->slider_glow, TRUE);
+	result = FALSE;
+	return result;
+}
+
+
+static gboolean unity_places_default_renderer_on_slider_button_release (UnityPlacesDefaultRenderer* self, ClutterEvent* event) {
+	gboolean result = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	self->priv->button_pressed = FALSE;
+	self->priv->slider_state = UNITY_PLACES_DEFAULT_RENDERER_SLIDER_STATE_PRELIGHT;
+	unity_cairo_canvas_update (self->priv->slider);
+	ctk_effect_set_invalidate_effect_cache ((CtkEffect*) self->priv->slider_glow, TRUE);
+	result = FALSE;
+	return result;
 }
 
 
@@ -412,15 +556,15 @@ static void unity_places_default_renderer_update_views (UnityPlacesDefaultRender
 }
 
 
-static void _lambda64_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self) {
+static void _lambda65_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self) {
 	g_return_if_fail (u != NULL);
 	g_return_if_fail (m != NULL);
 	g_signal_emit_by_name ((UnityPlaceRenderer*) self, "activated", u, m);
 }
 
 
-static void __lambda64__unity_places_empty_search_group_activated (UnityPlacesEmptySearchGroup* _sender, const char* uri, const char* mimetype, gpointer self) {
-	_lambda64_ (uri, mimetype, self);
+static void __lambda65__unity_places_empty_search_group_activated (UnityPlacesEmptySearchGroup* _sender, const char* uri, const char* mimetype, gpointer self) {
+	_lambda65_ (uri, mimetype, self);
 }
 
 
@@ -429,15 +573,15 @@ static void _unity_places_default_renderer_update_views_g_object_notify (GObject
 }
 
 
-static void _lambda65_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self) {
+static void _lambda66_ (const char* u, const char* m, UnityPlacesDefaultRenderer* self) {
 	g_return_if_fail (u != NULL);
 	g_return_if_fail (m != NULL);
 	g_signal_emit_by_name ((UnityPlaceRenderer*) self, "activated", u, m);
 }
 
 
-static void __lambda65__unity_places_default_renderer_group_activated (UnityPlacesDefaultRendererGroup* _sender, const char* uri, const char* mimetype, gpointer self) {
-	_lambda65_ (uri, mimetype, self);
+static void __lambda66__unity_places_default_renderer_group_activated (UnityPlacesDefaultRendererGroup* _sender, const char* uri, const char* mimetype, gpointer self) {
+	_lambda66_ (uri, mimetype, self);
 }
 
 
@@ -452,7 +596,7 @@ static void unity_places_default_renderer_on_group_added (UnityPlacesDefaultRend
 		self->priv->search_empty = (_tmp0_ = g_object_ref_sink (unity_places_empty_search_group_new ((guint) dee_model_get_position (model, iter), self->priv->results_model)), _g_object_unref0 (self->priv->search_empty), _tmp0_);
 		clutter_actor_set_opacity ((ClutterActor*) self->priv->search_empty, (guint8) 0);
 		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->search_empty);
-		g_signal_connect_object (self->priv->search_empty, "activated", (GCallback) __lambda64__unity_places_empty_search_group_activated, self, 0);
+		g_signal_connect_object (self->priv->search_empty, "activated", (GCallback) __lambda65__unity_places_empty_search_group_activated, self, 0);
 		g_signal_connect_object ((GObject*) self->priv->search_empty, "notify::active", (GCallback) _unity_places_default_renderer_update_views_g_object_notify, self, 0);
 	} else {
 		if (_vala_strcmp0 (renderer, "UnityEmptySectionRenderer") == 0) {
@@ -464,7 +608,7 @@ static void unity_places_default_renderer_on_group_added (UnityPlacesDefaultRend
 		} else {
 			UnityPlacesDefaultRendererGroup* group;
 			group = g_object_ref_sink (unity_places_default_renderer_group_new ((guint) dee_model_get_position (model, iter), dee_model_get_string (model, iter, (guint) 0), dee_model_get_string (model, iter, (guint) 1), dee_model_get_string (model, iter, (guint) 2), self->priv->results_model));
-			g_signal_connect_object (group, "activated", (GCallback) __lambda65__unity_places_default_renderer_group_activated, self, 0);
+			g_signal_connect_object (group, "activated", (GCallback) __lambda66__unity_places_default_renderer_group_activated, self, 0);
 			g_object_set_data_full ((GObject*) group, "model-iter", iter, NULL);
 			ctk_box_pack ((CtkBox*) self->priv->box, (ClutterActor*) group, FALSE, TRUE);
 			{
@@ -536,6 +680,34 @@ static void _unity_places_default_renderer_slider_paint_unity_cairo_canvas_cairo
 }
 
 
+static gboolean _unity_places_default_renderer_on_slider_enter_clutter_actor_enter_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	gboolean result;
+	result = unity_places_default_renderer_on_slider_enter (self, event);
+	return result;
+}
+
+
+static gboolean _unity_places_default_renderer_on_slider_leave_clutter_actor_leave_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	gboolean result;
+	result = unity_places_default_renderer_on_slider_leave (self, event);
+	return result;
+}
+
+
+static gboolean _unity_places_default_renderer_on_slider_button_press_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	gboolean result;
+	result = unity_places_default_renderer_on_slider_button_press (self, event);
+	return result;
+}
+
+
+static gboolean _unity_places_default_renderer_on_slider_button_release_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+	gboolean result;
+	result = unity_places_default_renderer_on_slider_button_release (self, event);
+	return result;
+}
+
+
 static GObject * unity_places_default_renderer_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -546,20 +718,34 @@ static GObject * unity_places_default_renderer_constructor (GType type, guint n_
 	{
 		CtkPadding _tmp0_ = {0};
 		CtkPadding _tmp1_;
-		UnityCairoCanvas* _tmp2_;
-		UnityCairoCanvas* _tmp3_;
-		CtkScrollView* _tmp4_;
-		CtkVBox* _tmp5_;
+		CtkEffectGlow* _tmp2_;
+		ClutterColor _tmp3_ = {0};
+		ClutterColor _tmp4_;
+		UnityCairoCanvas* _tmp5_;
+		UnityCairoCanvas* _tmp6_;
+		CtkScrollView* _tmp7_;
+		CtkVBox* _tmp8_;
 		ctk_actor_set_padding ((CtkActor*) self, (_tmp1_ = (_tmp0_.top = UNITY_PLACES_DEFAULT_RENDERER_PADDING, _tmp0_.right = 0.0f, _tmp0_.bottom = 0.0f, _tmp0_.left = 0.0f, _tmp0_), &_tmp1_));
-		self->priv->trough = (_tmp2_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_default_renderer_trough_paint_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->trough), _tmp2_);
-		self->priv->slider = (_tmp3_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_default_renderer_slider_paint_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->slider), _tmp3_);
-		self->priv->scroll = (_tmp4_ = g_object_ref_sink ((CtkScrollView*) ctk_scroll_view_new ()), _g_object_unref0 (self->priv->scroll), _tmp4_);
+		self->priv->slider_glow = (_tmp2_ = g_object_ref_sink ((CtkEffectGlow*) ctk_effect_glow_new ()), _g_object_unref0 (self->priv->slider_glow), _tmp2_);
+		ctk_effect_glow_set_color (self->priv->slider_glow, (_tmp4_ = (_tmp3_.red = (guint8) 255, _tmp3_.green = (guint8) 255, _tmp3_.blue = (guint8) 255, _tmp3_.alpha = (guint8) 255, _tmp3_), &_tmp4_));
+		ctk_effect_glow_set_factor (self->priv->slider_glow, 1.0f);
+		ctk_effect_set_margin ((CtkEffect*) self->priv->slider_glow, 5);
+		self->priv->trough = (_tmp5_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_default_renderer_trough_paint_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->trough), _tmp5_);
+		self->priv->slider = (_tmp6_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_default_renderer_slider_paint_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->slider), _tmp6_);
+		g_signal_connect_object ((ClutterActor*) self->priv->slider, "enter-event", (GCallback) _unity_places_default_renderer_on_slider_enter_clutter_actor_enter_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self->priv->slider, "leave-event", (GCallback) _unity_places_default_renderer_on_slider_leave_clutter_actor_leave_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self->priv->slider, "button-press-event", (GCallback) _unity_places_default_renderer_on_slider_button_press_clutter_actor_button_press_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self->priv->slider, "button-release-event", (GCallback) _unity_places_default_renderer_on_slider_button_release_clutter_actor_button_release_event, self, 0);
+		self->priv->slider_state = UNITY_PLACES_DEFAULT_RENDERER_SLIDER_STATE_NORMAL;
+		self->priv->button_pressed = FALSE;
+		ctk_actor_add_effect ((CtkActor*) self->priv->slider, (CtkEffect*) self->priv->slider_glow);
+		self->priv->scroll = (_tmp7_ = g_object_ref_sink ((CtkScrollView*) ctk_scroll_view_new ()), _g_object_unref0 (self->priv->scroll), _tmp7_);
 		ctk_scroll_view_set_scroll_bar (self->priv->scroll, (ClutterActor*) self->priv->trough, (ClutterActor*) self->priv->slider);
 		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->scroll);
 		clutter_actor_show ((ClutterActor*) self->priv->scroll);
 		clutter_actor_show ((ClutterActor*) self->priv->trough);
 		clutter_actor_show ((ClutterActor*) self->priv->slider);
-		self->priv->box = (_tmp5_ = g_object_ref_sink ((CtkVBox*) ctk_vbox_new ((guint) UNITY_PLACES_DEFAULT_RENDERER_SPACING)), _g_object_unref0 (self->priv->box), _tmp5_);
+		self->priv->box = (_tmp8_ = g_object_ref_sink ((CtkVBox*) ctk_vbox_new ((guint) UNITY_PLACES_DEFAULT_RENDERER_SPACING)), _g_object_unref0 (self->priv->box), _tmp8_);
 		ctk_box_set_homogeneous ((CtkBox*) self->priv->box, FALSE);
 		clutter_container_add_actor ((ClutterContainer*) self->priv->scroll, (ClutterActor*) self->priv->box);
 		clutter_actor_show ((ClutterActor*) self->priv->box);
@@ -591,11 +777,14 @@ static void unity_places_default_renderer_instance_init (UnityPlacesDefaultRende
 static void unity_places_default_renderer_finalize (GObject* obj) {
 	UnityPlacesDefaultRenderer * self;
 	self = UNITY_PLACES_DEFAULT_RENDERER (obj);
+	{
+	}
 	_g_object_unref0 (self->priv->search_empty);
 	_g_object_unref0 (self->priv->section_empty);
 	_g_object_unref0 (self->priv->scroll);
 	_g_object_unref0 (self->priv->trough);
 	_g_object_unref0 (self->priv->slider);
+	_g_object_unref0 (self->priv->slider_glow);
 	_g_object_unref0 (self->priv->box);
 	_g_object_unref0 (self->priv->groups_model);
 	_g_object_unref0 (self->priv->results_model);
@@ -631,15 +820,15 @@ UnityPlacesEmptySearchGroup* unity_places_empty_search_group_new (guint group_id
 }
 
 
-static void _lambda63_ (Block2Data* _data2_) {
+static void _lambda64_ (Block2Data* _data2_) {
 	UnityPlacesEmptySearchGroup * self;
 	self = _data2_->self;
 	g_signal_emit_by_name (self, "activated", _data2_->uri, _data2_->mimetype);
 }
 
 
-static void __lambda63__ctk_button_clicked (CtkButton* _sender, gpointer self) {
-	_lambda63_ (self);
+static void __lambda64__ctk_button_clicked (CtkButton* _sender, gpointer self) {
+	_lambda64_ (self);
 }
 
 
@@ -695,7 +884,7 @@ static void unity_places_empty_search_group_on_result_added (UnityPlacesEmptySea
 		ctk_actor_set_background ((CtkActor*) button, (ClutterActor*) bg);
 		_data2_->uri = g_strdup (dee_model_get_string (self->priv->_results, iter, (guint) 0));
 		_data2_->mimetype = g_strdup (dee_model_get_string (self->priv->_results, iter, (guint) 3));
-		g_signal_connect_data (button, "clicked", (GCallback) __lambda63__ctk_button_clicked, block2_data_ref (_data2_), (GClosureNotify) block2_data_unref, 0);
+		g_signal_connect_data (button, "clicked", (GCallback) __lambda64__ctk_button_clicked, block2_data_ref (_data2_), (GClosureNotify) block2_data_unref, 0);
 		_g_object_unref0 (bg);
 		block2_data_unref (_data2_);
 	}

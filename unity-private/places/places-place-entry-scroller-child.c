@@ -244,8 +244,8 @@ UnityLauncherApplicationQuicklistController* unity_launcher_application_quicklis
 UnityLauncherApplicationQuicklistController* unity_launcher_application_quicklist_controller_construct (GType object_type, UnityLauncherScrollerChildController* scroller_child);
 GType unity_launcher_application_quicklist_controller_get_type (void) G_GNUC_CONST;
 static void unity_places_place_entry_scroller_child_controller_real_get_menu_actions (UnityLauncherScrollerChildController* base, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
-static void _lambda66_ (guint timestamp, Block3Data* _data3_);
-static void __lambda66__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
+static void _lambda67_ (guint timestamp, Block3Data* _data3_);
+static void __lambda67__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
 static Block3Data* block3_data_ref (Block3Data* _data3_);
 static void block3_data_unref (Block3Data* _data3_);
 static gboolean unity_places_place_entry_scroller_child_controller_real_can_drag (UnityLauncherScrollerChildController* base);
@@ -254,10 +254,10 @@ const char* unity_places_place_entry_get_name (UnityPlacesPlaceEntry* self);
 void unity_launcher_scroller_child_controller_set_name (UnityLauncherScrollerChildController* self, const char* value);
 void unity_launcher_scroller_child_controller_load_icon_from_icon_name (UnityLauncherScrollerChildController* self, const char* icon_name);
 const char* unity_places_place_entry_get_icon (UnityPlacesPlaceEntry* self);
-static void _lambda67_ (UnityPlacesPlaceEntryScrollerChildController* self);
+static void _lambda68_ (UnityPlacesPlaceEntryScrollerChildController* self);
 gboolean unity_places_place_entry_get_active (UnityPlacesPlaceEntry* self);
 void unity_launcher_scroller_child_set_active (UnityLauncherScrollerChild* self, gboolean value);
-static void __lambda67__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void __lambda68__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 GType unity_launcher_scroller_child_group_type_get_type (void) G_GNUC_CONST;
 void unity_launcher_scroller_child_set_group_type (UnityLauncherScrollerChild* self, UnityLauncherScrollerChildGroupType value);
 static GObject * unity_places_place_entry_scroller_child_controller_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -326,15 +326,15 @@ static UnityLauncherQuicklistController* unity_places_place_entry_scroller_child
 }
 
 
-static void _lambda66_ (guint timestamp, Block3Data* _data3_) {
+static void _lambda67_ (guint timestamp, Block3Data* _data3_) {
 	UnityPlacesPlaceEntryScrollerChildController * self;
 	self = _data3_->self;
 	g_signal_emit_by_name (self, "clicked", (guint) dbusmenu_menuitem_property_get_int (_data3_->item, "section-id"));
 }
 
 
-static void __lambda66__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
-	_lambda66_ (object, self);
+static void __lambda67__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
+	_lambda67_ (object, self);
 }
 
 
@@ -385,7 +385,7 @@ static void unity_places_place_entry_scroller_child_controller_real_get_menu_act
 		dbusmenu_menuitem_property_set_bool (_data3_->item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 		dbusmenu_menuitem_property_set_bool (_data3_->item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
 		dbusmenu_menuitem_property_set_int (_data3_->item, "section-id", dee_model_get_position (sections, iter));
-		g_signal_connect_data (_data3_->item, "item-activated", (GCallback) __lambda66__dbusmenu_menuitem_item_activated, block3_data_ref (_data3_), (GClosureNotify) block3_data_unref, 0);
+		g_signal_connect_data (_data3_->item, "item-activated", (GCallback) __lambda67__dbusmenu_menuitem_item_activated, block3_data_ref (_data3_), (GClosureNotify) block3_data_unref, 0);
 		dbusmenu_menuitem_child_append (root, _data3_->item);
 		iter = dee_model_next (sections, iter);
 		_g_free0 (name);
@@ -422,13 +422,13 @@ static void unity_places_place_entry_scroller_child_controller_set_entry (UnityP
 }
 
 
-static void _lambda67_ (UnityPlacesPlaceEntryScrollerChildController* self) {
+static void _lambda68_ (UnityPlacesPlaceEntryScrollerChildController* self) {
 	unity_launcher_scroller_child_set_active (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), unity_places_place_entry_get_active (self->priv->_entry));
 }
 
 
-static void __lambda67__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda67_ (self);
+static void __lambda68__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda68_ (self);
 }
 
 
@@ -442,7 +442,7 @@ static GObject * unity_places_place_entry_scroller_child_controller_constructor 
 	{
 		unity_launcher_scroller_child_controller_set_name ((UnityLauncherScrollerChildController*) self, unity_places_place_entry_get_name (self->priv->_entry));
 		unity_launcher_scroller_child_controller_load_icon_from_icon_name ((UnityLauncherScrollerChildController*) self, unity_places_place_entry_get_icon (self->priv->_entry));
-		g_signal_connect_object ((GObject*) self->priv->_entry, "notify::active", (GCallback) __lambda67__g_object_notify, self, 0);
+		g_signal_connect_object ((GObject*) self->priv->_entry, "notify::active", (GCallback) __lambda68__g_object_notify, self, 0);
 		unity_launcher_scroller_child_set_group_type (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_PLACE);
 		g_signal_connect_object ((ClutterActor*) unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), "motion-event", (GCallback) _unity_places_place_entry_scroller_child_controller_get_sections_clutter_actor_motion_event, self, 0);
 	}

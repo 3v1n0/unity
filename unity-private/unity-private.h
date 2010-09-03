@@ -1303,6 +1303,7 @@ struct _UnityPlacesTile {
 struct _UnityPlacesTileClass {
 	UnityPlacesButtonClass parent_class;
 	void (*about_to_show) (UnityPlacesTile* self);
+	void (*update_details) (UnityPlacesTile* self, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 };
 
 struct _UnityPlacesFileInfoTile {
@@ -1708,6 +1709,7 @@ typedef enum  {
 struct _UnityLauncherApplicationController {
 	UnityLauncherScrollerChildController parent_instance;
 	UnityLauncherApplicationControllerPrivate * priv;
+	gboolean is_favorite;
 };
 
 struct _UnityLauncherApplicationControllerClass {
@@ -2162,13 +2164,20 @@ guint unity_places_more_results_button_get_count (UnityPlacesMoreResultsButton* 
 void unity_places_more_results_button_set_count (UnityPlacesMoreResultsButton* self, guint value);
 GType unity_places_tile_get_type (void) G_GNUC_CONST;
 void unity_places_tile_about_to_show (UnityPlacesTile* self);
+void unity_places_tile_update_details (UnityPlacesTile* self, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 UnityPlacesTile* unity_places_tile_construct (GType object_type);
 DeeModelIter* unity_places_tile_get_iter (UnityPlacesTile* self);
+void unity_places_tile_set_iter (UnityPlacesTile* self, DeeModelIter* value);
 const char* unity_places_tile_get_display_name (UnityPlacesTile* self);
+void unity_places_tile_set_display_name (UnityPlacesTile* self, const char* value);
 const char* unity_places_tile_get_icon_hint (UnityPlacesTile* self);
+void unity_places_tile_set_icon_hint (UnityPlacesTile* self, const char* value);
 const char* unity_places_tile_get_uri (UnityPlacesTile* self);
+void unity_places_tile_set_uri (UnityPlacesTile* self, const char* value);
 const char* unity_places_tile_get_mimetype (UnityPlacesTile* self);
+void unity_places_tile_set_mimetype (UnityPlacesTile* self, const char* value);
 const char* unity_places_tile_get_comment (UnityPlacesTile* self);
+void unity_places_tile_set_comment (UnityPlacesTile* self, const char* value);
 GType unity_places_file_info_tile_get_type (void) G_GNUC_CONST;
 UnityPlacesFileInfoTile* unity_places_file_info_tile_new (DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 UnityPlacesFileInfoTile* unity_places_file_info_tile_construct (GType object_type, DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
@@ -2412,7 +2421,7 @@ UnityPlacesPlaceModel* unity_places_view_get_model (UnityPlacesView* self);
 UnityPlacesVolumeController* unity_places_volume_controller_new (void);
 UnityPlacesVolumeController* unity_places_volume_controller_construct (GType object_type);
 GType unity_places_volume_child_controller_get_type (void) G_GNUC_CONST;
-#define UNITY_PLACES_VOLUME_CHILD_CONTROLLER_ICON "/usr/share/unity/trash.png"
+#define UNITY_PLACES_VOLUME_CHILD_CONTROLLER_ICON "/usr/share/unity/devices.png"
 UnityPlacesVolumeChildController* unity_places_volume_child_controller_new (GVolume* volume);
 UnityPlacesVolumeChildController* unity_places_volume_child_controller_construct (GType object_type, GVolume* volume);
 GVolume* unity_places_volume_child_controller_get_volume (UnityPlacesVolumeChildController* self);

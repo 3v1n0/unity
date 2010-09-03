@@ -1,5 +1,6 @@
-unity (0.2.32-0ubuntu5) UNRELEASED; urgency=low
+unity (0.2.34-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream release.
   * remove debian/source/:
     - revert to previous format, seems to confuse daily build and we don't have
       anymore bin patch
@@ -8,7 +9,7 @@ unity (0.2.32-0ubuntu5) UNRELEASED; urgency=low
   * debian/rules:
     - remove copying debian/*png
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 03 Sep 2010 15:08:52 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 03 Sep 2010 16:29:14 +0200
 
 unity (0.2.32-0ubuntu4) maverick; urgency=low
 

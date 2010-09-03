@@ -246,6 +246,19 @@ typedef struct _UnityLayeredBin UnityLayeredBin;
 typedef struct _UnityLayeredBinClass UnityLayeredBinClass;
 typedef struct _UnityLayeredBinPrivate UnityLayeredBinPrivate;
 
+#define UNITY_TYPE_PIXBUF_CACHE_TASK (unity_pixbuf_cache_task_get_type ())
+#define UNITY_PIXBUF_CACHE_TASK(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_PIXBUF_CACHE_TASK, UnityPixbufCacheTask))
+#define UNITY_PIXBUF_CACHE_TASK_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_PIXBUF_CACHE_TASK, UnityPixbufCacheTaskClass))
+#define UNITY_IS_PIXBUF_CACHE_TASK(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_PIXBUF_CACHE_TASK))
+#define UNITY_IS_PIXBUF_CACHE_TASK_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_PIXBUF_CACHE_TASK))
+#define UNITY_PIXBUF_CACHE_TASK_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_PIXBUF_CACHE_TASK, UnityPixbufCacheTaskClass))
+
+typedef struct _UnityPixbufCacheTask UnityPixbufCacheTask;
+typedef struct _UnityPixbufCacheTaskClass UnityPixbufCacheTaskClass;
+typedef struct _UnityPixbufCacheTaskPrivate UnityPixbufCacheTaskPrivate;
+
+#define UNITY_TYPE_PIXBUF_REQUEST_TYPE (unity_pixbuf_request_type_get_type ())
+
 #define UNITY_TYPE_PIXBUF_CACHE (unity_pixbuf_cache_get_type ())
 #define UNITY_PIXBUF_CACHE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_PIXBUF_CACHE, UnityPixbufCache))
 #define UNITY_PIXBUF_CACHE_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_PIXBUF_CACHE, UnityPixbufCacheClass))
@@ -621,6 +634,27 @@ struct _UnityLayeredBinClass {
 	CtkActorClass parent_class;
 };
 
+typedef enum  {
+	UNITY_PIXBUF_REQUEST_TYPE_ICON_NAME,
+	UNITY_PIXBUF_REQUEST_TYPE_GICON_STRING
+} UnityPixbufRequestType;
+
+struct _UnityPixbufCacheTask {
+	GTypeInstance parent_instance;
+	volatile int ref_count;
+	UnityPixbufCacheTaskPrivate * priv;
+	char* data;
+	CtkImage* image;
+	gint size;
+	char* key;
+	UnityPixbufRequestType type;
+};
+
+struct _UnityPixbufCacheTaskClass {
+	GTypeClass parent_class;
+	void (*finalize) (UnityPixbufCacheTask *self);
+};
+
 struct _UnityPixbufCache {
 	GObject parent_instance;
 	UnityPixbufCachePrivate * priv;
@@ -907,6 +941,16 @@ GType unity_layered_bin_get_type (void) G_GNUC_CONST;
 UnityLayeredBin* unity_layered_bin_new (void);
 UnityLayeredBin* unity_layered_bin_construct (GType object_type);
 GList* unity_layered_bin_get_children (UnityLayeredBin* self);
+gpointer unity_pixbuf_cache_task_ref (gpointer instance);
+void unity_pixbuf_cache_task_unref (gpointer instance);
+GParamSpec* unity_param_spec_pixbuf_cache_task (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
+void unity_value_set_pixbuf_cache_task (GValue* value, gpointer v_object);
+void unity_value_take_pixbuf_cache_task (GValue* value, gpointer v_object);
+gpointer unity_value_get_pixbuf_cache_task (const GValue* value);
+GType unity_pixbuf_cache_task_get_type (void) G_GNUC_CONST;
+GType unity_pixbuf_request_type_get_type (void) G_GNUC_CONST;
+UnityPixbufCacheTask* unity_pixbuf_cache_task_new (void);
+UnityPixbufCacheTask* unity_pixbuf_cache_task_construct (GType object_type);
 GType unity_pixbuf_cache_get_type (void) G_GNUC_CONST;
 UnityPixbufCache* unity_pixbuf_cache_new (gboolean _autodispose);
 UnityPixbufCache* unity_pixbuf_cache_construct (GType object_type, gboolean _autodispose);
@@ -914,12 +958,19 @@ UnityPixbufCache* unity_pixbuf_cache_get_default (void);
 void unity_pixbuf_cache_set (UnityPixbufCache* self, const char* icon_id, GdkPixbuf* pixbuf, gint size);
 GdkPixbuf* unity_pixbuf_cache_get (UnityPixbufCache* self, const char* icon_id, gint size);
 void unity_pixbuf_cache_clear (UnityPixbufCache* self);
+gboolean unity_pixbuf_cache_load_iteration (UnityPixbufCache* self);
 void unity_pixbuf_cache_set_image_from_icon_name (UnityPixbufCache* self, CtkImage* image, const char* icon_name, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void unity_pixbuf_cache_set_image_from_icon_name_finish (UnityPixbufCache* self, GAsyncResult* _res_);
-void unity_pixbuf_cache_set_image_from_gicon_string (UnityPixbufCache* self, CtkImage* image, const char* gicon_as_string, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_);
+void unity_pixbuf_cache_set_image_from_icon_name_real (UnityPixbufCache* self, CtkImage* image, const char* icon_name, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_);
+void unity_pixbuf_cache_set_image_from_icon_name_real_finish (UnityPixbufCache* self, GAsyncResult* _res_);
+void unity_pixbuf_cache_set_image_from_gicon_string (UnityPixbufCache* self, CtkImage* image, const char* data, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void unity_pixbuf_cache_set_image_from_gicon_string_finish (UnityPixbufCache* self, GAsyncResult* _res_);
+void unity_pixbuf_cache_set_image_from_gicon_string_real (UnityPixbufCache* self, CtkImage* image, const char* gicon_as_string, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_);
+void unity_pixbuf_cache_set_image_from_gicon_string_real_finish (UnityPixbufCache* self, GAsyncResult* _res_);
 void unity_pixbuf_cache_set_image_from_gicon (UnityPixbufCache* self, CtkImage* image, GIcon* icon, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void unity_pixbuf_cache_set_image_from_gicon_finish (UnityPixbufCache* self, GAsyncResult* _res_);
+void unity_pixbuf_cache_load_from_filepath (UnityPixbufCache* self, const char* filename, gint size, CtkImage* image, const char* key, GAsyncReadyCallback _callback_, gpointer _user_data_);
+GdkPixbuf* unity_pixbuf_cache_load_from_filepath_finish (UnityPixbufCache* self, GAsyncResult* _res_);
 guint unity_pixbuf_cache_get_size (UnityPixbufCache* self);
 GType unity_place_renderer_info_get_type (void) G_GNUC_CONST;
 void unity_place_renderer_info_set_hint (UnityPlaceRendererInfo* self, const char* hint, const char* val);

@@ -407,6 +407,9 @@ static void unity_launcher_quicklist_menu_item_finalize (GObject* obj) {
 		g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp5_, 0, NULL, (GCallback) __unity_launcher_quicklist_menu_item_on_leave_clutter_actor_leave_event, self);
 		g_signal_parse_name ("button-press-event", CLUTTER_TYPE_ACTOR, &_tmp6_, NULL, FALSE);
 		g_signal_handlers_disconnect_matched ((ClutterActor*) self, G_SIGNAL_MATCH_ID | G_SIGNAL_MATCH_FUNC | G_SIGNAL_MATCH_DATA, _tmp6_, 0, NULL, (GCallback) __unity_launcher_quicklist_menu_item_on_mouse_down_clutter_actor_button_press_event, self);
+		if (CLUTTER_IS_ACTOR (self->priv->item_background)) {
+			clutter_actor_unparent ((ClutterActor*) self->priv->item_background);
+		}
 	}
 	_g_object_unref0 (self->priv->item_background);
 	_g_free0 (self->priv->old_label);

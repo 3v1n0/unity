@@ -39,6 +39,14 @@ namespace Unity
       Object ();
     }
 
+    ~LayeredBin ()
+    {
+      foreach (Clutter.Actor child in _children)
+        child.unparent ();
+
+      _children = null;
+    }
+
     construct
     {
 

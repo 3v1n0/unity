@@ -363,42 +363,38 @@ static gboolean unity_launcher_scroller_child_controller_on_press_event (UnityLa
 
 static gboolean unity_launcher_scroller_child_controller_on_release_event (UnityLauncherScrollerChildController* self, ClutterEvent* event) {
 	gboolean result = FALSE;
-	gboolean _tmp0_ = FALSE;
-	gboolean _tmp1_ = FALSE;
-	gboolean _tmp2_ = FALSE;
 	g_return_val_if_fail (self != NULL, FALSE);
 	self->priv->_child->grabbed_push = (float) 0;
 	if ((*event).button.button == 1) {
-		_tmp2_ = self->button_down == TRUE;
-	} else {
-		_tmp2_ = FALSE;
-	}
-	if (_tmp2_) {
-		_tmp1_ = ((*event).button.time - self->last_press_time) < 500;
-	} else {
-		_tmp1_ = FALSE;
-	}
-	if (_tmp1_) {
-		_tmp0_ = self->priv->no_activate == FALSE;
-	} else {
-		_tmp0_ = FALSE;
-	}
-	if (_tmp0_) {
-		if (UNITY_LAUNCHER_IS_QUICKLIST_CONTROLLER (self->priv->_menu)) {
-			gboolean _tmp3_ = FALSE;
-			if (unity_launcher_quicklist_controller_get_state (self->priv->_menu) == UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_LABEL) {
-				_tmp3_ = TRUE;
-			} else {
-				_tmp3_ = unity_launcher_quicklist_controller_get_state (self->priv->_menu) == UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU;
-			}
-			if (_tmp3_) {
-				unity_launcher_quicklist_controller_set_state (self->priv->_menu, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_CLOSED);
-			}
+		gboolean _tmp0_ = FALSE;
+		gboolean _tmp1_ = FALSE;
+		if (self->button_down == TRUE) {
+			_tmp1_ = ((*event).button.time - self->last_press_time) < 500;
+		} else {
+			_tmp1_ = FALSE;
 		}
-		unity_launcher_scroller_child_controller_activate (self);
-	} else {
-		unity_launcher_quicklist_controller_set_state (self->priv->_menu, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_LABEL);
-		unity_launcher_scroller_child_controller_ensure_menu_state (self);
+		if (_tmp1_) {
+			_tmp0_ = self->priv->no_activate == FALSE;
+		} else {
+			_tmp0_ = FALSE;
+		}
+		if (_tmp0_) {
+			if (UNITY_LAUNCHER_IS_QUICKLIST_CONTROLLER (self->priv->_menu)) {
+				gboolean _tmp2_ = FALSE;
+				if (unity_launcher_quicklist_controller_get_state (self->priv->_menu) == UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_LABEL) {
+					_tmp2_ = TRUE;
+				} else {
+					_tmp2_ = unity_launcher_quicklist_controller_get_state (self->priv->_menu) == UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU;
+				}
+				if (_tmp2_) {
+					unity_launcher_quicklist_controller_set_state (self->priv->_menu, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_CLOSED);
+				}
+			}
+			unity_launcher_scroller_child_controller_activate (self);
+		} else {
+			unity_launcher_quicklist_controller_set_state (self->priv->_menu, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_LABEL);
+			unity_launcher_scroller_child_controller_ensure_menu_state (self);
+		}
 	}
 	self->button_down = FALSE;
 	result = FALSE;
@@ -423,8 +419,9 @@ static void _unity_launcher_scroller_child_controller_ensure_menu_state_clutter_
 
 static gboolean _lambda18_ (UnityLauncherScrollerChildController* self) {
 	gboolean result = FALSE;
-	unity_launcher_quicklist_controller_set_state (self->priv->_menu, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU);
-	self->menu_state = UNITY_LAUNCHER_SCROLLER_CHILD_CONTROLLER_MENU_STATE_NO_MENU;
+	if (unity_launcher_quicklist_controller_get_state (self->priv->_menu) != UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU) {
+		unity_launcher_quicklist_controller_set_state (self->priv->_menu, UNITY_LAUNCHER_QUICKLIST_CONTROLLER_STATE_MENU);
+	}
 	result = FALSE;
 	return result;
 }
@@ -592,7 +589,7 @@ static void _lambda19_ (UnityThemeFilePath* theme, const char* filepath, UnityLa
 		_inner_error_ = NULL;
 		{
 			char* _tmp2_;
-			g_warning ("scrollerchild-controller.vala:311: %s", _tmp2_ = g_strconcat ("Could not load from ", string_to_string (filepath), NULL));
+			g_warning ("scrollerchild-controller.vala:316: %s", _tmp2_ = g_strconcat ("Could not load from ", string_to_string (filepath), NULL));
 			_g_free0 (_tmp2_);
 			_g_error_free0 (e);
 		}
@@ -634,7 +631,7 @@ static void _lambda20_ (Block11Data* _data11_) {
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("scrollerchild-controller.vala:323: Could not load any icon for %s", _data11_->icon_name);
+			g_warning ("scrollerchild-controller.vala:328: Could not load any icon for %s", _data11_->icon_name);
 			_g_error_free0 (e);
 		}
 	}
@@ -728,7 +725,7 @@ static gboolean unity_launcher_scroller_child_controller_try_load_from_file (Uni
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("scrollerchild-controller.vala:341: Unable to load image from file '%s'" \
+				g_warning ("scrollerchild-controller.vala:346: Unable to load image from file '%s'" \
 ": %s", filepath, e->message);
 				_g_error_free0 (e);
 			}

@@ -38,7 +38,7 @@ namespace Unity.Launcher
     private Dbusmenu.Menuitem cached_menu;
     private int menu_items_realized_counter;
 
-    private bool is_favorite = false;
+    public bool is_favorite = false;
 
     public ApplicationController (string? desktop_file_, ScrollerChild child_)
     {

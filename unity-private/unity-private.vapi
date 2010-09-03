@@ -88,6 +88,7 @@ namespace Unity {
 	namespace Launcher {
 		[CCode (cheader_filename = "unity-private.h")]
 		public class ApplicationController : Unity.Launcher.ScrollerChildController {
+			public bool is_favorite;
 			public ApplicationController (string? desktop_file_, Unity.Launcher.ScrollerChild child_);
 			public override void activate ();
 			public void attach_application (Bamf.Application application);
@@ -453,6 +454,7 @@ namespace Unity {
 		public class DefaultTile : Unity.Places.Tile {
 			public DefaultTile (Dee.ModelIter iter, string uri, string? icon_hint, string? mimetype, string display_name, string? comment);
 			public override void about_to_show ();
+			public override void update_details (string uri, string? icon_hint, string? mimetype, string display_name, string? comment);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class EmptySearchGroup : Ctk.Bin {
@@ -484,6 +486,7 @@ namespace Unity {
 		public class FileInfoTile : Unity.Places.Tile {
 			public FileInfoTile (Dee.ModelIter iter, string uri, string? icon_hint, string? mimetype, string display_name, string? comment);
 			public override void about_to_show ();
+			public override void update_details (string uri, string? icon_hint, string? mimetype, string display_name, string? comment);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class FolderBrowserRenderer : Ctk.ScrollView, Unity.Place.Renderer {
@@ -656,17 +659,19 @@ namespace Unity {
 		public class ShowcaseTile : Unity.Places.Tile {
 			public ShowcaseTile (Dee.ModelIter iter, string uri, string? icon_hint, string? mimetype, string display_name, string? comment);
 			public override void about_to_show ();
+			public override void update_details (string uri, string? icon_hint, string? mimetype, string display_name, string? comment);
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public abstract class Tile : Unity.Places.Button {
 			public Tile ();
 			public abstract void about_to_show ();
-			public string? comment { get; construct; }
-			public string display_name { get; construct; }
-			public string? icon_hint { get; construct; }
-			public Dee.ModelIter iter { get; construct; }
-			public string? mimetype { get; construct; }
-			public string uri { get; construct; }
+			public abstract void update_details (string uri, string? icon_hint, string? mimetype, string display_name, string? comment);
+			public string? comment { get; set construct; }
+			public string display_name { get; set construct; }
+			public string? icon_hint { get; set construct; }
+			public Dee.ModelIter iter { get; set construct; }
+			public string? mimetype { get; set construct; }
+			public string uri { get; set construct; }
 			public signal void activated (string uri, string mimetype);
 		}
 		[CCode (cheader_filename = "unity-private.h")]

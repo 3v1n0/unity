@@ -377,10 +377,12 @@ static void unity_places_view_update_views (UnityPlacesView* self, UnityPlacesPl
 		ClutterAnimation* anim;
 		anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->renderer, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 300, "opacity", 0, NULL));
 		g_signal_connect_object (anim, "completed", (GCallback) __lambda41__clutter_animation_completed, self, 0);
+		clutter_container_remove_actor ((ClutterContainer*) self->priv->layered_bin, (ClutterActor*) self->priv->renderer);
 		_g_object_unref0 (anim);
 	}
 	self->priv->renderer = (_tmp0_ = unity_places_view_lookup_renderer (self, entry), _g_object_unref0 (self->priv->renderer), _tmp0_);
 	clutter_container_add_actor ((ClutterContainer*) self->priv->layered_bin, (ClutterActor*) self->priv->renderer);
+	g_object_unref ((GObject*) self->priv->renderer);
 	clutter_actor_set_opacity ((ClutterActor*) self->priv->renderer, (guint8) 0);
 	clutter_actor_animate ((ClutterActor*) self->priv->renderer, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 300, "opacity", 255, NULL);
 	unity_place_renderer_set_models (self->priv->renderer, unity_places_place_entry_get_entry_groups_model (entry), unity_places_place_entry_get_entry_results_model (entry), unity_places_place_entry_get_entry_renderer_hints (entry));
@@ -461,7 +463,7 @@ static void unity_places_view_on_result_activated (UnityPlacesView* self, const 
 		}
 		default:
 		{
-			g_warning ("places-view.vala:188: Unexpected activation status: %u", (guint) _result_);
+			g_warning ("places-view.vala:191: Unexpected activation status: %u", (guint) _result_);
 			break;
 		}
 	}

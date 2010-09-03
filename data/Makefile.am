@@ -4,6 +4,7 @@ dist_default_DATA = \
   applications.png \
   bfb.png \
   dash_background.png \
+  devices.png \
   favourites.png \
   files.png \
   gradient.png \

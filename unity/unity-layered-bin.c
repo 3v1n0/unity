@@ -430,6 +430,23 @@ static void unity_layered_bin_instance_init (UnityLayeredBin * self) {
 static void unity_layered_bin_finalize (GObject* obj) {
 	UnityLayeredBin * self;
 	self = UNITY_LAYERED_BIN (obj);
+	{
+		GList* _tmp0_;
+		{
+			GList* child_collection;
+			GList* child_it;
+			child_collection = self->priv->_children;
+			for (child_it = child_collection; child_it != NULL; child_it = child_it->next) {
+				ClutterActor* child;
+				child = _g_object_ref0 ((ClutterActor*) child_it->data);
+				{
+					clutter_actor_unparent (child);
+					_g_object_unref0 (child);
+				}
+			}
+		}
+		self->priv->_children = (_tmp0_ = NULL, __g_list_free_g_object_unref0 (self->priv->_children), _tmp0_);
+	}
 	__g_list_free_g_object_unref0 (self->priv->_children);
 	G_OBJECT_CLASS (unity_layered_bin_parent_class)->finalize (obj);
 }
