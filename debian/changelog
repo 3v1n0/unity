@@ -1,4 +1,4 @@
-unity (0.2.32-0ubuntu4) UNRELEASED; urgency=low
+unity (0.2.32-0ubuntu4) maverick; urgency=low
 
   * Backport a fix for new tiles being unresponsive (lp: #623953)
 
