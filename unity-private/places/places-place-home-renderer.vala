@@ -33,6 +33,11 @@ namespace Unity.Places
       Object ();
     }
 
+    ~HomeRenderer ()
+    {
+
+    }
+
     construct
     {
       padding = { 0.0f, 0.0f, 0.0f, 0.0f };

@@ -149,6 +149,8 @@ namespace Unity.Launcher
       this.item_background.add_layer (normal_layer);
       this.item_background.add_layer (selected_layer);
 
+      debug ("\n\n\n %u %u\n\n\n\n", normal_layer.ref_count, selected_layer.ref_count);
+
       this.item_background.get_layer(0).set_enabled (true);
       this.item_background.get_layer(1).set_enabled (false);
       if (this.get_stage () is Clutter.Stage)
@@ -218,6 +220,9 @@ namespace Unity.Launcher
       this.enter_event.disconnect (this._on_enter);
       this.leave_event.disconnect (this._on_leave);
       this.button_press_event.disconnect (this._on_mouse_down);
+
+      if (this.item_background is Clutter.Actor)
+        this.item_background.unparent ();
     }
 
     construct

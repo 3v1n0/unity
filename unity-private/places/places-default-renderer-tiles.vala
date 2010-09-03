@@ -21,6 +21,10 @@ namespace Unity.Places
 {
   public abstract class Tile : Button
   {
+    ~Tile ()
+    {
+    }
+
     static const string DEFAULT_ICON = "text-x-preview";
 
     public unowned Dee.ModelIter iter { get; construct; }
@@ -66,6 +70,14 @@ namespace Unity.Places
               uri:uri,
               mimetype:mimetype,
               comment:comment);
+    }
+
+    ~FileInfoTile ()
+    {
+      icon.unparent ();
+      leaf.unparent ();
+      folder_button.unparent ();
+      time.unparent ();
     }
 
     construct

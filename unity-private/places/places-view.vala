@@ -119,16 +119,19 @@ namespace Unity.Places
       /* Create the correct results view */
       if (renderer is Clutter.Actor)
         {
+          
           var anim = renderer.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
                                        300,
                                        "opacity", 0);
           anim.completed.connect ((a)=> {
               (a.get_object () as Clutter.Actor).destroy ();
             });
+          layered_bin.remove_actor (renderer);
         }
 
       renderer = lookup_renderer (entry);
       layered_bin.add_actor (renderer);
+      renderer.unref (); /* Because lookup_renderer returns it unfloating */
       renderer.opacity = 0;
       renderer.animate (Clutter.AnimationMode.EASE_OUT_QUAD, 300,
                         "opacity", 255);
