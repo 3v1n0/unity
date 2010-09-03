@@ -27,17 +27,22 @@ namespace Unity.Places
 
     static const string DEFAULT_ICON = "text-x-preview";
 
-    public unowned Dee.ModelIter iter { get; construct; }
+    public unowned Dee.ModelIter iter { get; construct set; }
 
-    public string  display_name { get; construct; }
-    public string? icon_hint    { get; construct; }
-    public string  uri          { get; construct; }
-    public string? mimetype     { get; construct; }
-    public string? comment      { get; construct; }
+    public string  display_name { get; construct set; }
+    public string? icon_hint    { get; construct set; }
+    public string  uri          { get; construct set; }
+    public string? mimetype     { get; construct set; }
+    public string? comment      { get; construct set; }
 
     public signal void activated (string uri, string mimetype);
 
     public abstract void about_to_show ();
+    public abstract void update_details (string        uri,
+                                         string?       icon_hint,
+                                         string?       mimetype,
+                                         string        display_name,
+                                         string?       comment);
   }
 
   public class FileInfoTile : Tile
@@ -92,6 +97,24 @@ namespace Unity.Places
       nwidth = 210.0f;
     }
 
+    public override void update_details (string        uri,
+                                         string?       icon_hint,
+                                         string?       mimetype,
+                                         string        display_name,
+                                         string?       comment)
+    {
+      this.display_name = display_name;
+      this.icon_hint = icon_hint;
+      this.uri = uri;
+      this.mimetype = mimetype;
+      this.comment = comment;
+
+      if (shown == false)
+        return;
+
+      update_details_real ();
+    }
+
     public override void about_to_show ()
     {
       if (shown)
@@ -141,38 +164,40 @@ namespace Unity.Places
           }
       });
 
-      Timeout.add (0, () => {
-
-        leaf.text = display_name;
-
-        /* Set the parent directory */
-        var file = File.new_for_uri (uri);
-        if (file is File)
-          {
-            var parent = file.get_parent ();
-            if (parent is File) 
-              {
-                folder.text = parent.get_basename ();
-                folder_button.clicked.connect (() => {
-                  try {
-                    activated (parent.get_uri (), "inode/directory");
-
-                  } catch (Error e) {
-                    warning (@"Unable to launch parent folder: $(e.message)");
-                  }
-                });
-              }
-            else
-              folder.text = "";
-          }
-        else
-          folder.text = "";
-
-        set_icon ();
-        return false;
-      });
-
+      Timeout.add (0, update_details_real);
       queue_relayout ();
+    }
+
+    private bool update_details_real ()
+    {
+      leaf.text = display_name;
+
+      /* Set the parent directory */
+      var file = File.new_for_uri (uri);
+      if (file is File)
+        {
+          var parent = file.get_parent ();
+          if (parent is File) 
+            {
+              folder.text = parent.get_basename ();
+              folder_button.clicked.connect (() => {
+                try {
+                  activated (parent.get_uri (), "inode/directory");
+
+                } catch (Error e) {
+                  warning (@"Unable to launch parent folder: $(e.message)");
+                }
+              });
+            }
+          else
+            folder.text = "";
+        }
+      else
+        folder.text = "";
+
+      set_icon ();
+      
+      return false;
     }
 
     private override void clicked ()
@@ -371,6 +396,25 @@ namespace Unity.Places
       });
     }
 
+    public override void update_details (string        uri,
+                                         string?       icon_hint,
+                                         string?       mimetype,
+                                         string        display_name,
+                                         string?       comment)
+    {
+      this.display_name = display_name;
+      this.icon_hint = icon_hint;
+      this.uri = uri;
+      this.mimetype = mimetype;
+      this.comment = comment;
+
+      if (shown == false)
+        return;
+
+      set_label (display_name);
+      set_icon ();
+    }
+
     private override void get_preferred_width (float for_height,
                                                out float mwidth,
                                                out float nwidth)
@@ -456,7 +500,24 @@ namespace Unity.Places
       });
     }
 
-    private override void get_preferred_width (float for_height,
+    public override void update_details (string        uri,
+                                         string?       icon_hint,
+                                         string?       mimetype,
+                                         string        display_name,
+                                         string?       comment)
+    {
+      this.display_name = display_name;
+      this.icon_hint = icon_hint;
+      this.uri = uri;
+      this.mimetype = mimetype;
+      this.comment = comment;
+
+      if (shown == false)
+        return;
+
+      set_label (display_name);
+      set_icon ();
+    }    private override void get_preferred_width (float for_height,
                                                out float mwidth,
                                                out float nwidth)
     {
