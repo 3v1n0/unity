@@ -59,7 +59,7 @@ namespace Unity.Places
     private Ctk.Image     icon;
     private Ctk.Text      text;
     private Expander      expander;
-    private Ctk.IconView  renderer;
+    private unowned Ctk.IconView  renderer;
 
     private MoreResultsButton? more_results_button;
 
@@ -72,6 +72,9 @@ namespace Unity.Places
     private bool last_result_timeout = false;
 
     public signal void activated (string uri, string mimetype);
+
+    private GLib.List<Tile?> cleanup_tiles = new GLib.List<Tile?> ();
+    private uint cleanup_operation = 0;
 
     public DefaultRendererGroup (uint      group_id,
                                  string    group_renderer,
@@ -172,7 +175,8 @@ namespace Unity.Places
         return false;
       });
 
-      renderer = new Ctk.IconView ();
+      var rend = new Ctk.IconView ();
+      renderer = rend;
       renderer.padding = { 12.0f, 0.0f, 0.0f, 0.0f };
       renderer.spacing = 24;
       vbox.pack (renderer, true, true);
@@ -265,8 +269,18 @@ namespace Unity.Places
       
       Tile button;
       
-
-      if (group_renderer == "UnityFileInfoRenderer")
+      if (cleanup_tiles.length () > 0)
+        {
+          button = cleanup_tiles.nth_data (0);
+          button.update_details (results.get_string (iter, 0),
+                         results.get_string (iter, 1),
+                         results.get_string (iter, 3),
+                         results.get_string (iter, 4),
+                         results.get_string (iter, 5));
+          button.iter = iter;
+          cleanup_tiles.remove (button);
+        }
+      else if (group_renderer == "UnityFileInfoRenderer")
         {
           button = new FileInfoTile (iter,
                                      results.get_string (iter, 0),
@@ -274,6 +288,11 @@ namespace Unity.Places
                                      results.get_string (iter, 3),
                                      results.get_string (iter, 4),
                                      results.get_string (iter, 5));
+
+          renderer.add_actor (button);
+          button.show ();
+          button.unref (); /* Because Vala sucks and holds references when it shouldn't*/;
+          button.activated.connect ((u, m) => { activated (u, m); });
         }
       else if (group_renderer == "UnityShowcaseRenderer")
         {
@@ -283,6 +302,11 @@ namespace Unity.Places
                                      results.get_string (iter, 3),
                                      results.get_string (iter, 4),
                                      results.get_string (iter, 5));
+          renderer.add_actor (button);
+          button.show ();
+          button.unref (); /* Because Vala sucks and holds references when it shouldn't*/;
+
+          button.activated.connect ((u, m) => { activated (u, m); });
         }
       else
         {
@@ -292,16 +316,17 @@ namespace Unity.Places
                                     results.get_string (iter, 3),
                                     results.get_string (iter, 4),
                                     results.get_string (iter, 5));
+          renderer.add_actor (button);
+          button.show ();
+          button.unref (); /* Because Vala sucks and holds references when it shouldn't*/;
+
+          button.activated.connect ((u, m) => { activated (u, m); });
         }
-      renderer.add_actor (button);
-      button.show ();
 
       if (bin_state == ExpandingBinState.EXPANDED || _always_expanded)
         {
           button.about_to_show ();
         }
-
-      button.activated.connect ((u, m) => { activated (u, m); });
 
       add_to_n_results (1);
 
@@ -317,6 +342,20 @@ namespace Unity.Places
       dirty = true;
     }
 
+    private bool cleanup_operation_callback ()
+    {
+      foreach (Tile? tile in cleanup_tiles)
+        {
+          renderer.remove_actor (tile);
+        }
+
+      cleanup_tiles = null;
+      cleanup_tiles = new GLib.List<Tile?> ();
+
+      cleanup_operation = 0;
+      return false;
+    }
+
     private void on_result_removed (Dee.ModelIter iter)
     {
      if (!interesting (iter))
@@ -329,7 +368,10 @@ namespace Unity.Places
 
           if (tile.iter == iter)
             {
-              actor.destroy ();
+              cleanup_tiles.append (tile);
+              if (cleanup_operation == 0)
+                cleanup_operation = Timeout.add (200, cleanup_operation_callback);
+
               add_to_n_results (-1);
               break;
             }
@@ -378,6 +420,9 @@ namespace Unity.Places
               more_results_button.count = 0;
             }
         }
+
+      if (n_results == 1)
+        PixbufCache.get_default ().load_iteration ();
     }
 
     private void on_n_cols_changed ()

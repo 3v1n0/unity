@@ -24,13 +24,19 @@ namespace Unity.Places
     static const float TOP_PADDING = 22.0f;
     static const float PADDING = 12.0f;
     static const int   SPACING = 0;
-
+    static const int   SLIDER_STATE_NORMAL   = 0;
+    static const int   SLIDER_STATE_PRELIGHT = 1;
+    static const int   SLIDER_STATE_ACTIVE   = 2;
+    
     private EmptySearchGroup search_empty;
     private EmptySectionGroup section_empty;
 
     private Ctk.ScrollView    scroll;
     private Unity.CairoCanvas trough;
     private Unity.CairoCanvas slider;
+    private int               slider_state;
+    private bool              button_pressed;
+    private Ctk.EffectGlow    slider_glow;
     private Ctk.VBox          box;
     private Dee.Model         groups_model;
     private Dee.Model         results_model;
@@ -40,6 +46,10 @@ namespace Unity.Places
     public DefaultRenderer ()
     {
       Object ();
+    }
+
+    ~DefaultRenderer ()
+    {
     }
 
     private static double
@@ -58,7 +68,12 @@ namespace Unity.Places
                   int           width,
                   int           height)
     {
-      double radius = (double) width / 2.0f;
+      Cairo.Surface dots    = new Cairo.ImageSurface (Cairo.Format.ARGB32,
+                                                      4,
+                                                      4);
+      Cairo.Context cr_dots = new Cairo.Context (dots);
+      Cairo.Pattern dot_pattern;
+      double        radius  = (double) width / 2.0f;
 
       cr.set_operator (Cairo.Operator.CLEAR);
       cr.paint ();
@@ -79,6 +94,30 @@ namespace Unity.Places
               180.0f * GLib.Math.PI / 180.0f);
       cr.close_path ();
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.1f);
+
+      // draw dotted pattern
+      cr_dots.set_operator (Cairo.Operator.CLEAR);
+      cr_dots.paint ();
+      cr_dots.scale (1.0f, 1.0f);
+      cr_dots.set_operator (Cairo.Operator.OVER);
+      cr_dots.set_source_rgba (1.0f, 1.0f, 1.0f, 0.025f);
+      cr_dots.rectangle (0.0f, 0.0f, 1.0f, 1.0f);
+      cr_dots.fill ();
+      cr_dots.rectangle (1.0f, 1.0f, 1.0f, 1.0f);
+      cr_dots.fill ();
+      cr_dots.rectangle (2.0f, 0.0f, 1.0f, 1.0f);
+      cr_dots.fill ();
+      cr_dots.rectangle (0.0f, 2.0f, 1.0f, 1.0f);
+      cr_dots.fill ();
+      cr_dots.rectangle (2.0f, 2.0f, 1.0f, 1.0f);
+      cr_dots.fill ();
+      cr_dots.rectangle (3.0f, 3.0f, 1.0f, 1.0f);
+      cr_dots.fill ();
+
+      dot_pattern = new Cairo.Pattern.for_surface (dots);
+      cr.set_operator (Cairo.Operator.OVER);
+      cr.set_source (dot_pattern);
+      dot_pattern.set_extend (Cairo.Extend.REPEAT);
       cr.fill_preserve ();
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.35f);
       cr.stroke ();
@@ -89,9 +128,14 @@ namespace Unity.Places
                   int           width,
                   int           height)
     {
-      double radius = (double) width / 2.0f;
-      double half = (double) width / 2.0f;
-      double half_height = (double) height / 2.0f;
+      Cairo.Surface stripes     = new Cairo.ImageSurface (Cairo.Format.ARGB32,
+                                                          4,
+                                                          4);
+      Cairo.Context cr_stripes  = new Cairo.Context (stripes);
+      Cairo.Pattern stripe_pattern;
+      double        radius      = (double) width / 2.0f;
+      double        half        = (double) width / 2.0f;
+      double        half_height = (double) height / 2.0f;
 
       cr.set_operator (Cairo.Operator.CLEAR);
       cr.paint ();
@@ -111,7 +155,37 @@ namespace Unity.Places
               0.0f * GLib.Math.PI / 180.0f,
               180.0f * GLib.Math.PI / 180.0f);
       cr.close_path ();
-      cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.15f);
+
+      if (slider_state == SLIDER_STATE_NORMAL)
+        {
+          cr.set_source_rgba (0.0f, 0.0f, 0.0f, 0.15f);
+        }
+      else if (slider_state == SLIDER_STATE_PRELIGHT)
+        {
+          cr_stripes.set_operator (Cairo.Operator.CLEAR);
+          cr_stripes.paint ();
+          cr_stripes.scale (1.0f, 1.0f);
+          cr_stripes.set_operator (Cairo.Operator.OVER);
+          cr_stripes.set_source_rgba (1.0f, 1.0f, 1.0f, 0.25f);
+          cr_stripes.rectangle (0.0f, 0.0f, 1.0f, 1.0f);
+          cr_stripes.fill ();
+          cr_stripes.rectangle (1.0f, 1.0f, 1.0f, 1.0f);
+          cr_stripes.fill ();
+          cr_stripes.rectangle (2.0f, 2.0f, 1.0f, 1.0f);
+          cr_stripes.fill ();
+          cr_stripes.rectangle (3.0f, 3.0f, 1.0f, 1.0f);
+          cr_stripes.fill ();
+
+          stripe_pattern = new Cairo.Pattern.for_surface (stripes);
+          cr.set_operator (Cairo.Operator.OVER);
+          cr.set_source (stripe_pattern);
+          stripe_pattern.set_extend (Cairo.Extend.REPEAT);
+        }
+      else if (slider_state == SLIDER_STATE_ACTIVE)
+        {
+          cr.set_source_rgba (1.0f, 1.0f, 1.0f, 1.0f);
+        }
+
       cr.fill_preserve ();
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.5f);
       cr.stroke ();
@@ -123,19 +197,82 @@ namespace Unity.Places
       cr.line_to (_align ((double) width - 2.0f), _align (half_height));
       cr.move_to (_align (1.0f), _align (half_height + 2.0f));
       cr.line_to (_align ((double) width - 2.0f), _align (half_height + 2.0f));
+
+      if (slider_state == SLIDER_STATE_NORMAL ||
+          slider_state == SLIDER_STATE_PRELIGHT)
+        {
+          cr.set_operator (Cairo.Operator.OVER);
+        }
+      else if (slider_state == SLIDER_STATE_ACTIVE)
+        {
+          cr.set_operator (Cairo.Operator.CLEAR);
+        }
+
       cr.stroke ();
+    }
+
+    private bool
+    on_slider_enter (Clutter.Event event)
+    {
+      slider_state = SLIDER_STATE_PRELIGHT;
+      slider.update ();
+      slider_glow.set_invalidate_effect_cache (true);
+      return false;
+    }
+
+    private bool
+    on_slider_leave (Clutter.Event event)
+    {
+      if (!button_pressed)
+        {
+          slider_state = SLIDER_STATE_NORMAL;
+          slider.update ();
+          slider_glow.set_invalidate_effect_cache (true);
+        }
+      return false;
+    }
+
+    private bool
+    on_slider_button_press (Clutter.Event event)
+    {
+      button_pressed = true;
+      slider_state = SLIDER_STATE_ACTIVE;
+      slider.update ();
+      slider_glow.set_invalidate_effect_cache (true);
+      return false;
+    }
+
+    private bool
+    on_slider_button_release (Clutter.Event event)
+    {
+      button_pressed = false;
+      slider_state = SLIDER_STATE_PRELIGHT;
+      slider.update ();
+      slider_glow.set_invalidate_effect_cache (true);
+      return false;
     }
 
     construct
     {
       padding = { PADDING, 0.0f, 0.0f, 0.0f };
 
+      slider_glow = new Ctk.EffectGlow ();
+      slider_glow.set_color ({ 255, 255, 255, 255 });
+      slider_glow.set_factor (1.0f);
+      slider_glow.set_margin (5);
+
       trough = new Unity.CairoCanvas (trough_paint);
       slider = new Unity.CairoCanvas (slider_paint);
+      slider.enter_event.connect (on_slider_enter);
+      slider.leave_event.connect (on_slider_leave);
+      slider.button_press_event.connect (on_slider_button_press);
+      slider.button_release_event.connect (on_slider_button_release);
+      slider_state = SLIDER_STATE_NORMAL;
+      button_pressed = false;
+      slider.add_effect (slider_glow);
 
       scroll = new Ctk.ScrollView ();
       scroll.set_scroll_bar (trough, slider);
-      //slider.reactive = true;
       add_actor (scroll);
       scroll.show ();
       trough.show ();

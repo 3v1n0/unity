@@ -460,13 +460,13 @@ UnityPlace_EntryInfo* unity_place__entryinfo_dup (const UnityPlace_EntryInfo* se
 void unity_place__entryinfo_free (UnityPlace_EntryInfo* self);
 void unity_place__entryinfo_copy (const UnityPlace_EntryInfo* self, UnityPlace_EntryInfo* dest);
 void unity_place__entryinfo_destroy (UnityPlace_EntryInfo* self);
-static char** _vala_array_dup4 (char** self, int length);
+static char** _vala_array_dup5 (char** self, int length);
 GType unity_place__entryinfodata_get_type (void) G_GNUC_CONST;
 UnityPlace_EntryInfoData* unity_place__entryinfodata_dup (const UnityPlace_EntryInfoData* self);
 void unity_place__entryinfodata_free (UnityPlace_EntryInfoData* self);
 void unity_place__entryinfodata_copy (const UnityPlace_EntryInfoData* self, UnityPlace_EntryInfoData* dest);
 void unity_place__entryinfodata_destroy (UnityPlace_EntryInfoData* self);
-static char** _vala_array_dup5 (char** self, int length);
+static char** _vala_array_dup6 (char** self, int length);
 GType unity_place_entry_info_get_type (void) G_GNUC_CONST;
 GType unity_place_browser_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACE_ENTRY_INFO_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACE_TYPE_ENTRY_INFO, UnityPlaceEntryInfoPrivate))
@@ -507,7 +507,7 @@ guint unity_place_entry_info_get_position (UnityPlaceEntryInfo* self);
 void unity_place_entry_info_set_position (UnityPlaceEntryInfo* self, guint value);
 char** unity_place_entry_info_get_mimetypes (UnityPlaceEntryInfo* self, int* result_length1);
 void unity_place_entry_info_set_mimetypes (UnityPlaceEntryInfo* self, char** value, int value_length1);
-static char** _vala_array_dup6 (char** self, int length);
+static char** _vala_array_dup7 (char** self, int length);
 gboolean unity_place_entry_info_get_sensitive (UnityPlaceEntryInfo* self);
 void unity_place_entry_info_set_sensitive (UnityPlaceEntryInfo* self, gboolean value);
 DeeModel* unity_place_entry_info_get_sections_model (UnityPlaceEntryInfo* self);
@@ -655,7 +655,7 @@ UnityPlaceBrowserService* unity_place_browser_get_service (UnityPlaceBrowser* se
 void unity_place_entry_service_impl_queue_place_entry_info_changed_signal (UnityPlaceEntryServiceImpl* self);
 static gboolean unity_place_entry_service_impl_emit_place_entry_info_changed_signal (UnityPlaceEntryServiceImpl* self);
 static gboolean _unity_place_entry_service_impl_emit_place_entry_info_changed_signal_gsource_func (gpointer self);
-static char** _vala_array_dup7 (char** self, int length);
+static char** _vala_array_dup8 (char** self, int length);
 static void unity_place_entry_service_impl_set_entry_info (UnityPlaceEntryServiceImpl* self, UnityPlaceEntryInfo* value);
 gboolean unity_place_entry_service_impl_get_exported (UnityPlaceEntryServiceImpl* self);
 void unity_place_entry_service_impl_dbus_register_object (DBusConnection* connection, const char* path, void* object);
@@ -1134,7 +1134,7 @@ GType unity_place_search_get_type (void) {
 }
 
 
-static char** _vala_array_dup4 (char** self, int length) {
+static char** _vala_array_dup5 (char** self, int length) {
 	char** result;
 	int i;
 	result = g_new0 (char*, length + 1);
@@ -1153,7 +1153,7 @@ void unity_place__entryinfo_copy (const UnityPlace_EntryInfo* self, UnityPlace_E
 	dest->display_name = g_strdup (self->display_name);
 	dest->icon = g_strdup (self->icon);
 	dest->position = self->position;
-	dest->mimetypes = (_tmp0_ = self->mimetypes, (_tmp0_ == NULL) ? ((gpointer) _tmp0_) : _vala_array_dup4 (_tmp0_, (*self).mimetypes_length1));
+	dest->mimetypes = (_tmp0_ = self->mimetypes, (_tmp0_ == NULL) ? ((gpointer) _tmp0_) : _vala_array_dup5 (_tmp0_, (*self).mimetypes_length1));
 	dest->mimetypes_length1 = self->mimetypes_length1;
 	dest->sensitive = self->sensitive;
 	dest->sections_model = g_strdup (self->sections_model);
@@ -1200,7 +1200,7 @@ GType unity_place__entryinfo_get_type (void) {
 }
 
 
-static char** _vala_array_dup5 (char** self, int length) {
+static char** _vala_array_dup6 (char** self, int length) {
 	char** result;
 	int i;
 	result = g_new0 (char*, length + 1);
@@ -1217,7 +1217,7 @@ void unity_place__entryinfodata_copy (const UnityPlace_EntryInfoData* self, Unit
 	dest->display_name = g_strdup (self->display_name);
 	dest->icon = g_strdup (self->icon);
 	dest->position = self->position;
-	dest->mimetypes = (_tmp0_ = self->mimetypes, (_tmp0_ == NULL) ? ((gpointer) _tmp0_) : _vala_array_dup5 (_tmp0_, (*self).mimetypes_length1));
+	dest->mimetypes = (_tmp0_ = self->mimetypes, (_tmp0_ == NULL) ? ((gpointer) _tmp0_) : _vala_array_dup6 (_tmp0_, (*self).mimetypes_length1));
 	dest->mimetypes_length1 = self->mimetypes_length1;
 	dest->sensitive = self->sensitive;
 	dest->sections_model = g_strdup (self->sections_model);
@@ -1413,7 +1413,7 @@ char** unity_place_entry_info_get_mimetypes (UnityPlaceEntryInfo* self, int* res
 }
 
 
-static char** _vala_array_dup6 (char** self, int length) {
+static char** _vala_array_dup7 (char** self, int length) {
 	char** result;
 	int i;
 	result = g_new0 (char*, length + 1);
@@ -1428,7 +1428,7 @@ void unity_place_entry_info_set_mimetypes (UnityPlaceEntryInfo* self, char** val
 	char** _tmp0_;
 	char** _tmp1_;
 	g_return_if_fail (self != NULL);
-	self->priv->info.mimetypes = (_tmp1_ = (_tmp0_ = value, (_tmp0_ == NULL) ? ((gpointer) _tmp0_) : _vala_array_dup6 (_tmp0_, value_length1)), self->priv->info.mimetypes = (_vala_array_free (self->priv->info.mimetypes, self->priv->info.mimetypes_length1, (GDestroyNotify) g_free), NULL), self->priv->info.mimetypes_length1 = value_length1, self->priv->info._mimetypes_size_ = self->priv->info.mimetypes_length1, _tmp1_);
+	self->priv->info.mimetypes = (_tmp1_ = (_tmp0_ = value, (_tmp0_ == NULL) ? ((gpointer) _tmp0_) : _vala_array_dup7 (_tmp0_, value_length1)), self->priv->info.mimetypes = (_vala_array_free (self->priv->info.mimetypes, self->priv->info.mimetypes_length1, (GDestroyNotify) g_free), NULL), self->priv->info.mimetypes_length1 = value_length1, self->priv->info._mimetypes_size_ = self->priv->info.mimetypes_length1, _tmp1_);
 	g_object_notify ((GObject *) self, "mimetypes");
 }
 
@@ -4588,7 +4588,7 @@ void unity_place_service_impl_add_entry (UnityPlaceServiceImpl* self, UnityPlace
 			unity_place_entry_service_impl_export (entry, &_inner_error_);
 			if (_inner_error_ != NULL) {
 				if (_inner_error_->domain == DBUS_GERROR) {
-					goto __catch36_dbus_gerror;
+					goto __catch37_dbus_gerror;
 				}
 				_g_object_unref0 (entry);
 				g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -4596,8 +4596,8 @@ void unity_place_service_impl_add_entry (UnityPlaceServiceImpl* self, UnityPlace
 				return;
 			}
 		}
-		goto __finally36;
-		__catch36_dbus_gerror:
+		goto __finally37;
+		__catch37_dbus_gerror:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -4607,7 +4607,7 @@ void unity_place_service_impl_add_entry (UnityPlaceServiceImpl* self, UnityPlace
 				_g_error_free0 (e);
 			}
 		}
-		__finally36:
+		__finally37:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (entry);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -4715,7 +4715,7 @@ void unity_place_service_impl_remove_entry (UnityPlaceServiceImpl* self, const c
 			unity_place_entry_service_impl_unexport (entry, &_inner_error_);
 			if (_inner_error_ != NULL) {
 				if (_inner_error_->domain == DBUS_GERROR) {
-					goto __catch37_dbus_gerror;
+					goto __catch38_dbus_gerror;
 				}
 				_g_object_unref0 (entry);
 				g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -4723,8 +4723,8 @@ void unity_place_service_impl_remove_entry (UnityPlaceServiceImpl* self, const c
 				return;
 			}
 		}
-		goto __finally37;
-		__catch37_dbus_gerror:
+		goto __finally38;
+		__catch38_dbus_gerror:
 		{
 			GError * e;
 			e = _inner_error_;
@@ -4734,7 +4734,7 @@ void unity_place_service_impl_remove_entry (UnityPlaceServiceImpl* self, const c
 				_g_error_free0 (e);
 			}
 		}
-		__finally37:
+		__finally38:
 		if (_inner_error_ != NULL) {
 			_g_object_unref0 (entry);
 			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -4888,8 +4888,8 @@ static gboolean unity_place_service_impl_real_activate_co (UnityPlaceServiceImpl
 		goto _state_0;
 		default:
 		g_assert_not_reached ();
-		case 13:
-		goto _state_13;
+		case 18:
+		goto _state_18;
 	}
 	_state_0:
 	if (data->self->priv->_activation == NULL) {
@@ -4905,14 +4905,14 @@ static gboolean unity_place_service_impl_real_activate_co (UnityPlaceServiceImpl
 		}
 	}
 	{
-		data->_state_ = 13;
+		data->_state_ = 18;
 		unity_place_activation_activate (data->self->priv->_activation, data->uri, unity_place_service_impl_activate_ready, data);
 		return FALSE;
-		_state_13:
+		_state_18:
 		data->activated = unity_place_activation_activate_finish (data->self->priv->_activation, data->_res_, &data->_inner_error_);
 		if (data->_inner_error_ != NULL) {
 			if (data->_inner_error_->domain == DBUS_GERROR) {
-				goto __catch38_dbus_gerror;
+				goto __catch39_dbus_gerror;
 			}
 			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 			g_clear_error (&data->_inner_error_);
@@ -4929,8 +4929,8 @@ static gboolean unity_place_service_impl_real_activate_co (UnityPlaceServiceImpl
 			return FALSE;
 		}
 	}
-	goto __finally38;
-	__catch38_dbus_gerror:
+	goto __finally39;
+	__catch39_dbus_gerror:
 	{
 		data->e = data->_inner_error_;
 		data->_inner_error_ = NULL;
@@ -4949,7 +4949,7 @@ static gboolean unity_place_service_impl_real_activate_co (UnityPlaceServiceImpl
 			_g_error_free0 (data->e);
 		}
 	}
-	__finally38:
+	__finally39:
 	{
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
 		g_clear_error (&data->_inner_error_);
@@ -5322,7 +5322,7 @@ static void unity_place_entry_service_impl_on_browser_changed (UnityPlaceEntrySe
 		_tmp0_ = dbus_g_bus_get (DBUS_BUS_SESSION, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			if (_inner_error_->domain == DBUS_GERROR) {
-				goto __catch39_dbus_gerror;
+				goto __catch40_dbus_gerror;
 			}
 			_dbus_g_connection_unref0 (conn);
 			g_critical ("file %s: line %d: unexpected error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -5331,8 +5331,8 @@ static void unity_place_entry_service_impl_on_browser_changed (UnityPlaceEntrySe
 		}
 		conn = (_tmp1_ = _tmp0_, _dbus_g_connection_unref0 (conn), _tmp1_);
 	}
-	goto __finally39;
-	__catch39_dbus_gerror:
+	goto __finally40;
+	__catch40_dbus_gerror:
 	{
 		GError * e;
 		e = _inner_error_;
@@ -5344,7 +5344,7 @@ static void unity_place_entry_service_impl_on_browser_changed (UnityPlaceEntrySe
 			return;
 		}
 	}
-	__finally39:
+	__finally40:
 	if (_inner_error_ != NULL) {
 		_dbus_g_connection_unref0 (conn);
 		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, _inner_error_->message, g_quark_to_string (_inner_error_->domain), _inner_error_->code);
@@ -5397,7 +5397,7 @@ void unity_place_entry_service_impl_queue_place_entry_info_changed_signal (Unity
 }
 
 
-static char** _vala_array_dup7 (char** self, int length) {
+static char** _vala_array_dup8 (char** self, int length) {
 	char** result;
 	int i;
 	result = g_new0 (char*, length + 1);
@@ -5427,7 +5427,7 @@ static gboolean unity_place_entry_service_impl_emit_place_entry_info_changed_sig
 	entry_data.display_name = (_tmp2_ = g_strdup (_entry.display_name), _g_free0 (entry_data.display_name), _tmp2_);
 	entry_data.icon = (_tmp3_ = g_strdup (_entry.icon), _g_free0 (entry_data.icon), _tmp3_);
 	entry_data.position = _entry.position;
-	entry_data.mimetypes = (_tmp5_ = (_tmp4_ = _entry.mimetypes, (_tmp4_ == NULL) ? ((gpointer) _tmp4_) : _vala_array_dup7 (_tmp4_, _entry.mimetypes_length1)), entry_data.mimetypes = (_vala_array_free (entry_data.mimetypes, entry_data.mimetypes_length1, (GDestroyNotify) g_free), NULL), entry_data.mimetypes_length1 = _entry.mimetypes_length1, entry_data._mimetypes_size_ = entry_data.mimetypes_length1, _tmp5_);
+	entry_data.mimetypes = (_tmp5_ = (_tmp4_ = _entry.mimetypes, (_tmp4_ == NULL) ? ((gpointer) _tmp4_) : _vala_array_dup8 (_tmp4_, _entry.mimetypes_length1)), entry_data.mimetypes = (_vala_array_free (entry_data.mimetypes, entry_data.mimetypes_length1, (GDestroyNotify) g_free), NULL), entry_data.mimetypes_length1 = _entry.mimetypes_length1, entry_data._mimetypes_size_ = entry_data.mimetypes_length1, _tmp5_);
 	entry_data.sensitive = _entry.sensitive;
 	entry_data.sections_model = (_tmp6_ = g_strdup (_entry.sections_model), _g_free0 (entry_data.sections_model), _tmp6_);
 	entry_data.hints = (_tmp7_ = _g_hash_table_ref0 (_entry.hints), _g_hash_table_unref0 (entry_data.hints), _tmp7_);

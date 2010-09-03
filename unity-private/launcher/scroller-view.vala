@@ -82,6 +82,7 @@ namespace Unity.Launcher
     private ScrollerViewType view_type = ScrollerViewType.CONTRACTED;
     private bool do_logic_pick = true;
     private float last_known_pointer_x = 0.0f;
+    private bool can_scroll = false;
 
     /*
      * scrolling variables
@@ -409,7 +410,6 @@ namespace Unity.Launcher
 
     private void on_drag_indicator_index_change ()
     {
-      //debug (@"index changed $drag_indicator_index");
       order_children (false);
       queue_relayout ();
     }
@@ -678,7 +678,15 @@ namespace Unity.Launcher
           new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, new_scroll_position));
           scroll_position = new_scroll_position;
         }
-      else if (scroll_position < -(get_total_children_height () - get_available_height ()))
+      else if (get_total_children_height () < get_available_height () &&
+               scroll_position < 0)
+        {
+          float new_scroll_position = -scroll_position;
+          new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, new_scroll_position));
+          scroll_position = -new_scroll_position;
+        }
+      else if (get_total_children_height () >= get_available_height () &&
+               scroll_position < -(get_total_children_height () - get_available_height ()))
         {
           float diff = scroll_position + (get_total_children_height () - get_available_height ());
           float new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, Math.fabsf (diff)));
@@ -845,6 +853,11 @@ namespace Unity.Launcher
           passthrough_button_press_event (event);
         }
       button_down = true;
+      if (get_model_index_at_y_pos (event.button.y, true) < 0)
+        can_scroll = false;
+      else
+        can_scroll = true;
+
       previous_y_position = event.button.y;
       previous_y_time = event.button.time;
 
@@ -864,6 +877,7 @@ namespace Unity.Launcher
       button_down = false;
       this.get_stage ().button_release_event.disconnect (this.on_button_release_event);
       Unity.global_shell.remove_fullscreen_request (this);
+      Clutter.ungrab_pointer ();
 
       if (is_scrolling)
         {
@@ -879,10 +893,7 @@ namespace Unity.Launcher
           if (scroll_position > 0 || scroll_position < -(get_total_children_height () - get_available_height ()))
             {
               current_phase = ScrollerPhase.SETTLING;
-              if (scroll_position > 0)
-                settle_position = 0;
-              else
-                settle_position = -(get_total_children_height () - get_available_height ());
+              settle_position = get_aligned_settle_position ();
             }
           else
             {
@@ -950,7 +961,7 @@ namespace Unity.Launcher
     float autoscroll_mouse_pos_cache = 0.0f;
     private bool on_autoscroll_motion_check (float y)
     {
-      if (get_total_children_height () < get_available_height ())
+      if (get_total_children_height () < get_available_height () || is_scrolling)
         {
           is_autoscrolling = false;
         }
@@ -996,7 +1007,9 @@ namespace Unity.Launcher
       }
       last_motion_event_time = event.motion.time;
 
-      if (button_down && is_scrolling == false && view_type != ScrollerViewType.CONTRACTED)
+      if (button_down && is_scrolling == false &&
+          view_type != ScrollerViewType.CONTRACTED &&
+          can_scroll)
         {
           /* we have a left button down, but we aren't dragging yet, we need to
            * monitor how far away we have dragged from the original click, once
@@ -1143,10 +1156,7 @@ namespace Unity.Launcher
           fling_timeout_source = GLib.Timeout.add (300, () =>
             {
               current_phase = ScrollerPhase.SETTLING;
-              if (scroll_position > 0)
-                settle_position = 0;
-              else
-                settle_position = -(get_total_children_height () - get_available_height ());
+              settle_position = get_aligned_settle_position ();
               fling_timeline.start ();
               return false;
             });
@@ -1175,10 +1185,14 @@ namespace Unity.Launcher
           // we always position on the first child
           final_position = 0;
         }
+      else if (get_total_children_height () < get_available_height ())
+        {
+          final_position = 0;
+        }
       else if (-scroll_position > total_child_height - height - padding.top - padding.bottom)
         {
           // position on the final child
-          final_position = total_child_height - height + padding.bottom;
+          final_position = -(get_total_children_height () - get_available_height ());
         }
 
       return final_position;
@@ -1571,16 +1585,7 @@ namespace Unity.Launcher
     public override void pick (Clutter.Color color)
     {
       base.pick (color);
-      for (int index = draw_btf.size-1; index >= 0; index--)
-        {
-          ScrollerChild child = draw_btf[index];
-          if (child is ScrollerChild && child.opacity > 0 && !child.do_not_render)
-            {
-              (child as ScrollerChild).paint ();
-            }
-        }
-
-      foreach (ScrollerChild child in draw_ftb)
+      foreach (ScrollerChild child in model)
         {
           if (child is ScrollerChild && child.opacity > 0 && !child.do_not_render)
             {
@@ -1602,7 +1607,6 @@ namespace Unity.Launcher
 
       if (drag_indicator_active)
         {
-          //debug (@"drawing at $drag_indicator_position with $drag_indicator_opacity opacity");
           Cogl.set_source_color4f (1.0f, 1.0f, 1.0f,
                                    drag_indicator_opacity);
 

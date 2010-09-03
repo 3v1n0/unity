@@ -577,6 +577,9 @@ static void unity_places_place_search_entry_instance_init (UnityPlacesPlaceSearc
 static void unity_places_place_search_entry_finalize (GObject* obj) {
 	UnityPlacesPlaceSearchEntry * self;
 	self = UNITY_PLACES_PLACE_SEARCH_ENTRY (obj);
+	{
+		clutter_actor_unparent ((ClutterActor*) self->hint_text);
+	}
 	_g_object_unref0 (self->left_icon);
 	_g_object_unref0 (self->hint_text);
 	_g_object_unref0 (self->text);

@@ -177,7 +177,7 @@ enum  {
 	UNITY_PLACES_VOLUME_CHILD_CONTROLLER_DUMMY_PROPERTY,
 	UNITY_PLACES_VOLUME_CHILD_CONTROLLER_VOLUME
 };
-#define UNITY_PLACES_VOLUME_CHILD_CONTROLLER_ICON "/usr/share/unity/trash.png"
+#define UNITY_PLACES_VOLUME_CHILD_CONTROLLER_ICON "/usr/share/unity/devices.png"
 UnityPlacesVolumeChildController* unity_places_volume_child_controller_new (GVolume* volume);
 UnityPlacesVolumeChildController* unity_places_volume_child_controller_construct (GType object_type, GVolume* volume);
 UnityLauncherScrollerChild* unity_launcher_scroller_child_new (void);
@@ -295,7 +295,7 @@ static void unity_places_volume_child_controller_open_volume (UnityPlacesVolumeC
 			_inner_error_ = NULL;
 			{
 				char* _tmp1_;
-				g_warning ("places-volume-child-controller.vala:84: %s", _tmp1_ = g_strconcat (error_msg, err->message, NULL));
+				g_warning ("places-volume-child-controller.vala:69: %s", _tmp1_ = g_strconcat (error_msg, err->message, NULL));
 				_g_free0 (_tmp1_);
 				_g_error_free0 (err);
 			}
@@ -313,7 +313,7 @@ static void unity_places_volume_child_controller_open_volume (UnityPlacesVolumeC
 	} else {
 		if (g_volume_can_mount (self->priv->_volume) == FALSE) {
 			char* _tmp2_;
-			g_warning ("places-volume-child-controller.vala:91: %s", _tmp2_ = g_strconcat (error_msg, "Cannot be mounted", NULL));
+			g_warning ("places-volume-child-controller.vala:76: %s", _tmp2_ = g_strconcat (error_msg, "Cannot be mounted", NULL));
 			_g_free0 (_tmp2_);
 			_g_free0 (error_msg);
 			_g_object_unref0 (mount);
@@ -332,7 +332,7 @@ static void unity_places_volume_child_controller_open_volume (UnityPlacesVolumeC
 				}
 			} else {
 				char* _tmp5_;
-				g_warning ("places-volume-child-controller.vala:101: %s", _tmp5_ = g_strconcat (error_msg, "Unable to mount", NULL));
+				g_warning ("places-volume-child-controller.vala:86: %s", _tmp5_ = g_strconcat (error_msg, "Unable to mount", NULL));
 				_g_free0 (_tmp5_);
 			}
 		}
@@ -344,7 +344,7 @@ static void unity_places_volume_child_controller_open_volume (UnityPlacesVolumeC
 			_inner_error_ = NULL;
 			{
 				char* _tmp6_;
-				g_warning ("places-volume-child-controller.vala:104: %s", _tmp6_ = g_strconcat (error_msg, e->message, NULL));
+				g_warning ("places-volume-child-controller.vala:89: %s", _tmp6_ = g_strconcat (error_msg, e->message, NULL));
 				_g_free0 (_tmp6_);
 				_g_error_free0 (e);
 			}
@@ -482,31 +482,11 @@ static GObject * unity_places_volume_child_controller_constructor (GType type, g
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_PLACES_VOLUME_CHILD_CONTROLLER (obj);
 	{
-		GIcon* icon;
-		char* icon_name;
 		unity_launcher_scroller_child_controller_set_name ((UnityLauncherScrollerChildController*) self, g_volume_get_name (self->priv->_volume));
-		icon = _g_object_ref0 (g_volume_get_icon (self->priv->_volume));
-		icon_name = g_strdup ("");
-		if (G_IS_THEMED_ICON (icon)) {
-			GIcon* _tmp0_;
-			char* _tmp1_;
-			icon_name = (_tmp1_ = g_strdup (g_themed_icon_get_names ((_tmp0_ = icon, G_IS_THEMED_ICON (_tmp0_) ? ((GThemedIcon*) _tmp0_) : NULL))[0]), _g_free0 (icon_name), _tmp1_);
-		} else {
-			if (G_IS_FILE_ICON (icon)) {
-				GIcon* _tmp2_;
-				char* _tmp3_;
-				icon_name = (_tmp3_ = g_file_get_path (g_file_icon_get_file ((_tmp2_ = icon, G_IS_FILE_ICON (_tmp2_) ? ((GFileIcon*) _tmp2_) : NULL))), _g_free0 (icon_name), _tmp3_);
-			} else {
-				char* _tmp4_;
-				icon_name = (_tmp4_ = g_strdup (UNITY_PLACES_VOLUME_CHILD_CONTROLLER_ICON), _g_free0 (icon_name), _tmp4_);
-			}
-		}
-		unity_launcher_scroller_child_controller_load_icon_from_icon_name ((UnityLauncherScrollerChildController*) self, icon_name);
+		unity_launcher_scroller_child_controller_load_icon_from_icon_name ((UnityLauncherScrollerChildController*) self, UNITY_PLACES_VOLUME_CHILD_CONTROLLER_ICON);
 		unity_launcher_scroller_child_set_group_type (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), UNITY_LAUNCHER_SCROLLER_CHILD_GROUP_TYPE_DEVICE);
 		g_signal_connect_object (unity_launcher_scroller_child_controller_get_child ((UnityLauncherScrollerChildController*) self), "drag-removed", (GCallback) _unity_places_volume_child_controller_eject_volume_unity_launcher_scroller_child_drag_removed, self, 0);
 		g_signal_connect_object (self->priv->_volume, "removed", (GCallback) _unity_places_volume_child_controller_on_volume_removed_g_volume_removed, self, 0);
-		_g_free0 (icon_name);
-		_g_object_unref0 (icon);
 	}
 	return obj;
 }

@@ -176,6 +176,7 @@ static void unity_places_button_paint_bg (UnityPlacesButton* self, cairo_t* cr, 
 	gint x;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (cr != NULL);
+	g_return_if_fail (UNITY_PLACES_IS_BUTTON (self));
 	x = 1;
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
 	cairo_paint (cr);

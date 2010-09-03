@@ -140,26 +140,28 @@ namespace Unity.Launcher
     private bool on_release_event (Clutter.Event event)
     {
       child.grabbed_push = 0;
-      if (event.button.button == 1 &&
-          button_down == true &&
-          event.button.time - last_press_time < 500 &&
-          no_activate == false)
+      if (event.button.button == 1)
         {
-          if (menu is QuicklistController)
+          if (button_down == true &&
+              event.button.time - last_press_time < 500 &&
+              no_activate == false)
             {
-              if (menu.state == QuicklistControllerState.LABEL ||
-                  menu.state == QuicklistControllerState.MENU)
-              {
-                menu.state = QuicklistControllerState.CLOSED;
-              }
-            }
+              if (menu is QuicklistController)
+                {
+                  if (menu.state == QuicklistControllerState.LABEL ||
+                      menu.state == QuicklistControllerState.MENU)
+                  {
+                    menu.state = QuicklistControllerState.CLOSED;
+                  }
+                }
 
-          activate ();
-        }
-      else
-        {
-          menu.state = QuicklistControllerState.LABEL;
-          ensure_menu_state ();
+              activate ();
+            }
+          else
+            {
+              menu.state = QuicklistControllerState.LABEL;
+              ensure_menu_state ();
+            }
         }
 
       button_down = false;
@@ -215,8 +217,11 @@ namespace Unity.Launcher
         {
           Idle.add (() =>
             {
-              menu.state = QuicklistControllerState.MENU;
-              menu_state = ScrollerChildControllerMenuState.NO_MENU;
+              if (menu.state != QuicklistControllerState.MENU)
+                {
+                  menu.state = QuicklistControllerState.MENU;
+                }
+              //menu_state = ScrollerChildControllerMenuState.NO_MENU;
               return false;
             });
         }

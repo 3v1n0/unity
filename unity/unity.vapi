@@ -305,11 +305,24 @@ namespace Unity {
 		public void clear ();
 		public Gdk.Pixbuf? @get (string icon_id, int size);
 		public static Unity.PixbufCache get_default ();
+		public async Gdk.Pixbuf? load_from_filepath (string filename, int size, Ctk.Image? image = null, string key);
+		public bool load_iteration ();
 		public void @set (string icon_id, Gdk.Pixbuf pixbuf, int size);
 		public async void set_image_from_gicon (Ctk.Image image, GLib.Icon icon, int size);
-		public async void set_image_from_gicon_string (Ctk.Image image, string gicon_as_string, int size);
+		public async void set_image_from_gicon_string (Ctk.Image image, string data, int size);
+		public async void set_image_from_gicon_string_real (Ctk.Image image, string gicon_as_string, int size);
 		public async void set_image_from_icon_name (Ctk.Image image, string icon_name, int size);
+		public async void set_image_from_icon_name_real (Ctk.Image image, string icon_name, int size);
 		public uint size { get; }
+	}
+	[CCode (ref_function = "unity_pixbuf_cache_task_ref", unref_function = "unity_pixbuf_cache_task_unref", cheader_filename = "unity.h")]
+	public class PixbufCacheTask {
+		public string data;
+		public weak Ctk.Image image;
+		public string key;
+		public int size;
+		public Unity.PixbufRequestType type;
+		public PixbufCacheTask ();
 	}
 	[CCode (cheader_filename = "unity.h")]
 	public class StripeTexture : Unity.CairoCanvas {
@@ -388,6 +401,11 @@ namespace Unity {
 		CLOSED,
 		UNEXPANDED,
 		EXPANDED
+	}
+	[CCode (cprefix = "UNITY_PIXBUF_REQUEST_TYPE_", cheader_filename = "unity.h")]
+	public enum PixbufRequestType {
+		ICON_NAME,
+		GICON_STRING
 	}
 	[CCode (cprefix = "UNITY_SHELL_MODE_", cheader_filename = "unity.h")]
 	public enum ShellMode {

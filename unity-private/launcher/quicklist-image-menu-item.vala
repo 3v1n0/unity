@@ -206,6 +206,9 @@ namespace Unity.Launcher
       this.enter_event.disconnect (this._on_enter);
       this.leave_event.disconnect (this._on_leave);
       this.button_press_event.disconnect (this._on_mouse_down);
+
+      if (this.item_background is Clutter.Actor)
+        this.item_background.unparent ();
     }
 
     construct

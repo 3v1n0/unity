@@ -23,6 +23,25 @@ using GLib;
 
 namespace Unity
 {
+  public class PixbufCacheTask
+  {
+    public string  data;
+    public unowned Ctk.Image image;
+    public int     size;
+    public string  key;
+    public PixbufRequestType type;
+
+    public PixbufCacheTask ()
+    {
+    }
+  }
+
+  public enum PixbufRequestType
+  {
+    ICON_NAME,
+    GICON_STRING
+  }
+
   /* This is what we use for lookups, namely the id of the icon and it's size.
    * Currently this means we just use one HashMap for all the pixbufs, it
    * might be useful to have one HashMap per size in the future...
@@ -43,6 +62,10 @@ namespace Unity
 
     public uint size { get { return cache.size; } }
 
+    private PriorityQueue<PixbufCacheTask> queue;
+
+    private uint queue_timeout = 0;
+
     /*
      * Construction
      */
@@ -60,6 +83,8 @@ namespace Unity
 
     construct
     {
+      queue = new PriorityQueue<PixbufCacheTask> ();
+
       theme = Gtk.IconTheme.get_default ();
       cache = new HashMap<string, Gdk.Pixbuf> ();
     }
@@ -102,6 +127,31 @@ namespace Unity
       cache.clear ();
     }
 
+    public bool load_iteration ()
+    {
+      int i = 0;
+
+      while (queue.size > 0 && i < 10)
+        {
+          var task = queue.poll ();
+
+          if (task.image is Ctk.Image)
+            {
+              if (task.type == PixbufRequestType.ICON_NAME)
+                set_image_from_icon_name_real (task.image, task.data, task.size);
+              else if (task.type == PixbufRequestType.GICON_STRING)
+                set_image_from_gicon_string_real (task.image, task.data, task.size);
+            }
+
+          i++;
+        }
+
+      if (queue.size == 0)
+        queue_timeout = 0;
+
+      return queue.size != 0;
+    }
+
     public async void set_image_from_icon_name (Ctk.Image image,
                                                 string    icon_name,
                                                 int       size)
@@ -115,13 +165,43 @@ namespace Unity
           return;
         }
 
-      Idle.add (set_image_from_icon_name.callback);
-      yield;
+      var task = new PixbufCacheTask ();
+      task.data = icon_name;
+      task.image = image;
+      task.size = size;
+      task.type = PixbufRequestType.ICON_NAME;
 
+      queue.add (task);
+
+      if (queue_timeout == 0)
+        queue_timeout = Idle.add (load_iteration);
+    }
+
+    public async void set_image_from_icon_name_real (Ctk.Image image,
+                                                string    icon_name,
+                                                int       size)
+    {
+      var key = hash_template.printf (icon_name, size);
+      Pixbuf? ret = cache[key];
+
+      if (ret is Pixbuf)
+        {
+          image.set_from_pixbuf (ret);
+          return;
+        }
+
+      Idle.add (set_image_from_icon_name_real.callback);
+      yield;
+      
       if (ret == null)
         {
           try {
-            ret = theme.load_icon (icon_name, size, 0);
+            var info = theme.lookup_icon (icon_name, size, 0);
+            if (info != null)
+              {
+                var filename = info.get_filename ();
+                ret = yield load_from_filepath (filename, size, image, key);
+              }
 
             if (ret is Pixbuf)
               {
@@ -140,6 +220,31 @@ namespace Unity
     }
 
     public async void set_image_from_gicon_string (Ctk.Image image,
+                                                   string data,
+                                                   int    size)
+    {
+      var key = hash_template.printf (data, size);
+      Pixbuf? ret = cache[key];
+
+      if (ret is Pixbuf)
+        {
+          image.set_from_pixbuf (ret);
+          return;
+        }
+
+      var task = new PixbufCacheTask ();
+      task.image = image;
+      task.data = data;
+      task.size = size;
+      task.type = PixbufRequestType.GICON_STRING;
+
+      queue.add (task);
+
+      if (queue_timeout == 0)
+        queue_timeout = Idle.add (load_iteration);
+    }
+
+    public async void set_image_from_gicon_string_real (Ctk.Image image,
                                                    string    gicon_as_string,
                                                    int       size)
     {
@@ -152,7 +257,7 @@ namespace Unity
           return;
         }
 
-      Idle.add (set_image_from_gicon.callback);
+      Idle.add (set_image_from_gicon_string_real.callback);
       yield;
 
       if (ret == null)
@@ -160,7 +265,7 @@ namespace Unity
           if (gicon_as_string[0] == '/')
             {
               try {
-                ret = new Gdk.Pixbuf.from_file (gicon_as_string);
+                ret = yield load_from_filepath (gicon_as_string, size, image, key);
               } catch (Error err) {
                 message (@"Unable to load $gicon_as_string as file: %s",
                          err.message);
@@ -173,7 +278,11 @@ namespace Unity
                 unowned GLib.Icon icon = GLib.Icon.new_for_string (gicon_as_string);
                 var info = theme.lookup_by_gicon (icon, size, 0);
                 if (info != null)
-                  ret = info.load_icon ();
+                  {
+                    var filename = info.get_filename ();
+
+                    ret = yield load_from_filepath (filename, size, image, key);
+                  }
 
                 if (ret == null)
                   {
@@ -188,7 +297,12 @@ namespace Unity
                         || gicon_as_string.has_suffix (".jpg"))
                       {
                         string real_name = gicon_as_string[0:gicon_as_string.length-4];
-                        ret = theme.load_icon (real_name, size, 0);
+                        info = theme.lookup_icon (real_name, size, 0);
+                        if (info != null)
+                          {
+                            var fname = info.get_filename ();
+                            ret = yield load_from_filepath (fname, size, image, key);
+                          }
                       }
                   }
 
@@ -213,8 +327,89 @@ namespace Unity
                                             GLib.Icon icon,
                                             int       size)
     {
-      yield set_image_from_gicon_string (image, icon.to_string (), size);
+      set_image_from_gicon_string (image, icon.to_string (), size);
     }
+
+    public async Gdk.Pixbuf? load_from_filepath (string filename, int size, Ctk.Image? image=null, string key)
+    {
+      
+      if (filename != null)
+        {
+          File datafile = File.new_for_path (filename);
+          try
+            {
+              var stream =  yield datafile.read_async (Priority.DEFAULT, null);
+
+              if (stream is FileInputStream)
+                {
+                  uchar[] buf = new uchar[16];
+                  void *data;
+                  size_t data_size;
+                  yield IO.read_stream_async (stream, buf, 16, Priority.DEFAULT,
+
+                                              null, out data, out data_size);
+                  string sdata = ((string)data).ndup(data_size);
+
+                  var loader = new Gdk.PixbufLoader ();
+                  loader.write ((uchar[])data, data_size);
+                  loader.close ();
+                  
+                  return loader.get_pixbuf ();
+                }
+            }
+          catch (Error ee)
+            {
+              warning ("Unable to load image file '%s': %s", filename, ee.message);
+            }
+        }
+
+      return null;
+    }
+
+    /*
+    private async void load_from_file_async (Ctk.Image i,
+                                             string f,
+                                             int    s,
+                                             string k)
+    {
+      unowned Ctk.Image image = i;
+      string filename = f;
+      int size = s;
+      string key = k;
+
+      if (filename != null)
+        {
+          File datafile = File.new_for_path (filename);
+          try
+            {
+              var stream =  yield datafile.read_async (Priority.DEFAULT, null);
+
+              if (stream is FileInputStream)
+                {
+                  uchar[] buf = new uchar[16];
+                  void *data;
+                  size_t data_size;
+                  yield IO.read_stream_async (stream, buf, 16, Priority.DEFAULT,
+
+                                              null, out data, out data_size);
+                  string sdata = ((string)data).ndup(data_size);
+
+                  var loader = new Gdk.PixbufLoader ();
+                  loader.write ((uchar[])data, data_size);
+                  loader.close ();
+                  
+                  image.set_from_pixbuf (loader.get_pixbuf ());
+
+                  cache[key] = loader.get_pixbuf ();
+                }
+            }
+          catch (Error ee)
+            {
+              warning ("Unable to load image file '%s': %s", filename, ee.message);
+            }
+        }
+    }
+    */
 
     /*
      * Private Methods

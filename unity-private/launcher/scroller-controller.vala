@@ -126,6 +126,7 @@ namespace Unity.Launcher
           else
             {
               ScrollerChild child = new ScrollerChild ();
+              child.group_type = ScrollerChild.GroupType.APPLICATION;
               controller = new ApplicationController (null, child);
               (controller as ApplicationController).attach_application (app);
               if (app.user_visible ())
@@ -134,9 +135,23 @@ namespace Unity.Launcher
               childcontrollers.add (controller);
               controller.request_removal.connect (on_scroller_controller_closed);
               controller.notify["hide"].connect (() => {
+
+                // weird logic here i know, basically more if's than needed because
+                // i don't want to access the controller as a subclass until
+                // i know it is of that subclass type.
                 if (controller.hide && controller.child in model)
-                  model.remove (controller.child);
-                if (!controller.hide && (controller.child in model) == false)
+                  {
+                    if (controller is ApplicationController)
+                      {
+                        if ((controller as ApplicationController).is_favorite == false)
+                          model.remove (controller.child);
+                      }
+                    else
+                      {
+                        model.remove (controller.child);
+                      }
+                  }
+                else if (!controller.hide && (controller.child in model) == false)
                   model.add (controller.child);
               });
             }
