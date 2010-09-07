@@ -96,7 +96,6 @@ unity_gesture_xcb_dispatcher_glue_init (GObject *object)
 
   /* Pots and */
   grail_mask_set (mask, GRAIL_TYPE_EDRAG);
-  grail_mask_set (mask, GRAIL_TYPE_MDRAG);
 
   if (set_mask (connection, 0, 0, mask_len, (uint32_t*)mask))
     {
