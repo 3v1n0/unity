@@ -64,6 +64,20 @@ namespace Unity
 
     construct
     {
+
+      // try to migrate favorites from desktop, old UNE and gnome-panel
+      var gconf_custom_dir = Environment.get_home_dir () + "/.gconf/desktop/unity";
+      var migration_script = "/usr/lib/unity/migrate_favorites.py";
+      if (!FileUtils.test(gconf_custom_dir, FileTest.IS_DIR) &&
+          FileUtils.test(migration_script, FileTest.IS_EXECUTABLE))
+        {
+          try
+            {
+              GLib.Process.spawn_command_line_sync(migration_script);
+            }
+          catch (SpawnError e) { } // no migration, don't bother
+        }
+
       client = GConf.Client.get_default ();
       notify_map = new HashMap<string, uint> ();
       favorite_added.connect (on_favorite_added);
