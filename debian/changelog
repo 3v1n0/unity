@@ -1,8 +1,13 @@
 unity (0.2.36-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream release:
+    - Fix width of home-button on panel, so groove aligns with right edge of
+      launcher, fixes (LP: #630031)
+    - migration script to transition first time new people to unity
+      (LP: #622146)
+    - Quicklist name disappearing (LP: #627666)
   * debian/unity.install:
     - install libexec in unity package (for migration tool)
-  * New upstream release.
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 09 Sep 2010 17:22:26 +0200
 
