@@ -91,5 +91,6 @@ for launcher_location in glob.glob('%s/*.desktop' % desktop_dir):
 client.set_list('/desktop/unity/launcher/favorites/favorites_list', gconf.VALUE_STRING, apps_list)
 #print apps_list
 client.clear_cache()
+# ugly workaround to force gconf client to actually dump its cache to gconfd
 loop = gobject.MainLoop(); gobject.idle_add(loop.quit); loop.run();
 
