@@ -1,4 +1,4 @@
-unity (0.2.36-0ubuntu1) UNRELEASED; urgency=low
+unity (0.2.36-0ubuntu1) maverick; urgency=low
 
   * New upstream release:
     - Fix width of home-button on panel, so groove aligns with right edge of
@@ -11,7 +11,7 @@ unity (0.2.36-0ubuntu1) UNRELEASED; urgency=low
   * debian/libunity0.symbols:
     - update symbol
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 09 Sep 2010 17:22:26 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 09 Sep 2010 19:13:29 +0200
 
 unity (0.2.34-0ubuntu1) maverick; urgency=low
 
