@@ -152,9 +152,9 @@ namespace Unity
       return queue.size != 0;
     }
 
-    public async void set_image_from_icon_name (Ctk.Image image,
-                                                string    icon_name,
-                                                int       size)
+    public void set_image_from_icon_name (Ctk.Image image,
+                                          string    icon_name,
+                                          int       size)
     {
       var key = hash_template.printf (icon_name, size);
       Pixbuf? ret = cache[key];
@@ -177,21 +177,20 @@ namespace Unity
         queue_timeout = Idle.add (load_iteration);
     }
 
-    public async void set_image_from_icon_name_real (Ctk.Image image,
-                                                string    icon_name,
-                                                int       size)
+    private async void set_image_from_icon_name_real (Ctk.Image image,
+                                                      string    icon_name,
+                                                      int       size)
     {
       var key = hash_template.printf (icon_name, size);
       Pixbuf? ret = cache[key];
 
+      /* We need a secondary cache check because the icon may have
+       * been cached while we where waiting in the queue */
       if (ret is Pixbuf)
         {
           image.set_from_pixbuf (ret);
           return;
         }
-
-      Idle.add (set_image_from_icon_name_real.callback);
-      yield;
       
       if (ret == null)
         {
@@ -200,7 +199,7 @@ namespace Unity
             if (info != null)
               {
                 var filename = info.get_filename ();
-                ret = yield load_from_filepath (filename, size, image, key);
+                ret = yield load_from_filepath (filename, size);
               }
 
             if (ret is Pixbuf)
@@ -219,7 +218,7 @@ namespace Unity
         }
     }
 
-    public async void set_image_from_gicon_string (Ctk.Image image,
+    public void set_image_from_gicon_string (Ctk.Image image,
                                                    string data,
                                                    int    size)
     {
@@ -244,28 +243,27 @@ namespace Unity
         queue_timeout = Idle.add (load_iteration);
     }
 
-    public async void set_image_from_gicon_string_real (Ctk.Image image,
-                                                   string    gicon_as_string,
-                                                   int       size)
+    private async void set_image_from_gicon_string_real (Ctk.Image image,
+                                                         string    gicon_as_string,
+                                                         int       size)
     {
       var key = hash_template.printf (gicon_as_string, size);
       Pixbuf? ret = cache[key];
 
+      /* We need a secondary cache check because the icon may have
+       * been cached while we where waiting in the queue */
       if (ret is Pixbuf)
         {
           image.set_from_pixbuf (ret);
           return;
         }
-
-      Idle.add (set_image_from_gicon_string_real.callback);
-      yield;
-
+      
       if (ret == null)
         {
           if (gicon_as_string[0] == '/')
             {
               try {
-                ret = yield load_from_filepath (gicon_as_string, size, image, key);
+                ret = yield load_from_filepath (gicon_as_string, size);
               } catch (Error err) {
                 message (@"Unable to load $gicon_as_string as file: %s",
                          err.message);
@@ -281,7 +279,7 @@ namespace Unity
                   {
                     var filename = info.get_filename ();
 
-                    ret = yield load_from_filepath (filename, size, image, key);
+                    ret = yield load_from_filepath (filename, size);
                   }
 
                 if (ret == null)
@@ -293,7 +291,7 @@ namespace Unity
                      */
                     if (gicon_as_string.has_suffix (".png")
                         || gicon_as_string.has_suffix (".xpm")
-                        || gicon_as_string.has_suffix (".gir")
+                        || gicon_as_string.has_suffix (".gif")
                         || gicon_as_string.has_suffix (".jpg"))
                       {
                         string real_name = gicon_as_string[0:gicon_as_string.length-4];
@@ -301,7 +299,7 @@ namespace Unity
                         if (info != null)
                           {
                             var fname = info.get_filename ();
-                            ret = yield load_from_filepath (fname, size, image, key);
+                            ret = yield load_from_filepath (fname, size);
                           }
                       }
                   }
@@ -330,29 +328,40 @@ namespace Unity
       set_image_from_gicon_string (image, icon.to_string (), size);
     }
 
-    public async Gdk.Pixbuf? load_from_filepath (string filename, int size, Ctk.Image? image=null, string key)
+    public async Gdk.Pixbuf? load_from_filepath (string filename, int size)
     {
       
       if (filename != null)
         {
           File datafile = File.new_for_path (filename);
+          FileInfo info = yield datafile.query_info_async (
+                                      FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE,
+                                      FileQueryInfoFlags.NONE,
+                                      Priority.LOW);
+          string mimetype = info.get_content_type ();
+          
           try
             {
               var stream =  yield datafile.read_async (Priority.DEFAULT, null);
 
               if (stream is FileInputStream)
                 {
-                  uchar[] buf = new uchar[16];
+                  /* TODO: Tweak buf size to optimize io */
+                  uchar[] buf = new uchar[1024];
                   void *data;
                   size_t data_size;
-                  yield IO.read_stream_async (stream, buf, 16, Priority.DEFAULT,
-
+                  yield IO.read_stream_async (stream, buf, buf.length, Priority.DEFAULT,
                                               null, out data, out data_size);
-                  string sdata = ((string)data).ndup(data_size);
 
-                  var loader = new Gdk.PixbufLoader ();
+                  /* Construct a loader for a given mimetype so it doesn't
+                   * have to do expensive second guesssing */
+                  var loader = new Gdk.PixbufLoader.with_mime_type(mimetype);
                   loader.write ((uchar[])data, data_size);
                   loader.close ();
+                  
+                  /* We must manually free the data block allocated by
+                   * IO.read_stream_async */
+                  g_free (data);
                   
                   return loader.get_pixbuf ();
                 }
@@ -366,53 +375,5 @@ namespace Unity
       return null;
     }
 
-    /*
-    private async void load_from_file_async (Ctk.Image i,
-                                             string f,
-                                             int    s,
-                                             string k)
-    {
-      unowned Ctk.Image image = i;
-      string filename = f;
-      int size = s;
-      string key = k;
-
-      if (filename != null)
-        {
-          File datafile = File.new_for_path (filename);
-          try
-            {
-              var stream =  yield datafile.read_async (Priority.DEFAULT, null);
-
-              if (stream is FileInputStream)
-                {
-                  uchar[] buf = new uchar[16];
-                  void *data;
-                  size_t data_size;
-                  yield IO.read_stream_async (stream, buf, 16, Priority.DEFAULT,
-
-                                              null, out data, out data_size);
-                  string sdata = ((string)data).ndup(data_size);
-
-                  var loader = new Gdk.PixbufLoader ();
-                  loader.write ((uchar[])data, data_size);
-                  loader.close ();
-                  
-                  image.set_from_pixbuf (loader.get_pixbuf ());
-
-                  cache[key] = loader.get_pixbuf ();
-                }
-            }
-          catch (Error ee)
-            {
-              warning ("Unable to load image file '%s': %s", filename, ee.message);
-            }
-        }
-    }
-    */
-
-    /*
-     * Private Methods
-     */
   }
 }
