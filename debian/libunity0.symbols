@@ -857,13 +857,7 @@ libunity.so.0 libunity0 #MINVER#
  unity_pixbuf_cache_set_image_from_gicon@Base 0.2.22
  unity_pixbuf_cache_set_image_from_gicon_finish@Base 0.2.22
  unity_pixbuf_cache_set_image_from_gicon_string@Base 0.2.22
- unity_pixbuf_cache_set_image_from_gicon_string_finish@Base 0.2.22
- unity_pixbuf_cache_set_image_from_gicon_string_real@Base 0.2.34
- unity_pixbuf_cache_set_image_from_gicon_string_real_finish@Base 0.2.34
  unity_pixbuf_cache_set_image_from_icon_name@Base 0.2.22
- unity_pixbuf_cache_set_image_from_icon_name_finish@Base 0.2.22
- unity_pixbuf_cache_set_image_from_icon_name_real@Base 0.2.34
- unity_pixbuf_cache_set_image_from_icon_name_real_finish@Base 0.2.34
  unity_pixbuf_cache_task_construct@Base 0.2.34
  unity_pixbuf_cache_task_get_type@Base 0.2.34
  unity_pixbuf_cache_task_new@Base 0.2.34

@@ -8,6 +8,8 @@ unity (0.2.36-0ubuntu1) UNRELEASED; urgency=low
     - Quicklist name disappearing (LP: #627666)
   * debian/unity.install:
     - install libexec in unity package (for migration tool)
+  * debian/libunity0.symbols:
+    - update symbol
 
  -- Didier Roche <didrocks@ubuntu.com>  Thu, 09 Sep 2010 17:22:26 +0200
 
