@@ -131,9 +131,14 @@ namespace Unity.Places
       title_box.show ();
 
       icon = new Ctk.Image (22);
-      icon.set_from_filename (Config.PKGDATADIR + "/favourites.png");
       title_box.pack (icon, false, false);
       icon.show ();
+      if (icon_hint != null && icon_hint != "")
+        PixbufCache.get_default().set_image_from_gicon_string (icon,
+                                                                 icon_hint,
+                                                                 22);
+      else
+        icon.set_from_filename (Config.PKGDATADIR + "/favourites.png");
 
       text = new Ctk.Text (display_name);
       text.set_markup ("<big>" + Markup.escape_text (display_name) + "</big>");
