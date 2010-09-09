@@ -1,3 +1,10 @@
+unity (0.2.34-0ubuntu2) UNRELEASED; urgency=low
+
+  * debian/unity.install:
+    - install libexec in unity package (for migration tool)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 09 Sep 2010 12:54:51 +0200
+
 unity (0.2.34-0ubuntu1) maverick; urgency=low
 
   * New upstream release:
