@@ -110,8 +110,10 @@ namespace Unity.Panel
       float       lwidth;
       float       pheight;
       Ctk.Padding pad = { 0 };
-
-      lwidth  = (float) shell.get_launcher_width_foobar ();
+ 
+      // 2.0f are added so the home-button groove aligns with the
+      // right edge of the launcher, this fixes LP: #630031
+      lwidth  = 2.0f + (float) shell.get_launcher_width_foobar ();
       pheight = (float) shell.get_panel_height_foobar ();
       theme_image.get_preferred_size (out cwidth, out cheight,
                                            out cwidth, out cheight);
@@ -178,8 +180,10 @@ namespace Unity.Panel
                                                out float min_width,
                                                out float nat_width)
     {
-      min_width = shell.get_launcher_width_foobar ();
-      nat_width = shell.get_launcher_width_foobar ();
+      // 2.0f are added so the home-button groove aligns with the
+      // right edge of the launcher, this fixes LP: #630031
+      min_width = 2.0f + shell.get_launcher_width_foobar ();
+      nat_width = 2.0f + shell.get_launcher_width_foobar ();
     }
 
     private void on_mode_changed (ShellMode mode)
