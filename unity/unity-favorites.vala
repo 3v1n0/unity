@@ -67,7 +67,7 @@ namespace Unity
 
       // try to migrate favorites from desktop, old UNE and gnome-panel
       var gconf_custom_dir = Environment.get_home_dir () + "/.gconf/desktop/unity";
-      var migration_script = "/usr/lib/unity/migrate_favorites.py";
+      var migration_script = Config.PREFIXDIR + "/lib/unity/migrate_favorites.py";
       if (!FileUtils.test(gconf_custom_dir, FileTest.IS_DIR) &&
           FileUtils.test(migration_script, FileTest.IS_EXECUTABLE))
         {
