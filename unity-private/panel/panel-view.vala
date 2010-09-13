@@ -33,6 +33,7 @@ namespace Unity.Panel
     Ctk.HBox              hbox;
     Background            bground;
     HomeButton            home_button;
+    Divider               divider;
     WindowButtons         window_buttons;
     MenuBar               menu_bar;
     SystemTray            system_tray;
@@ -67,6 +68,10 @@ namespace Unity.Panel
       home_button = new HomeButton (shell);
       hbox.pack (home_button, false, true);
       home_button.show ();
+
+      divider = new Divider ();
+      hbox.pack (divider, false, false);
+      divider.show ();
 
       window_buttons = new WindowButtons ();
       hbox.pack (window_buttons, false, true);
