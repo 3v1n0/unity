@@ -28,7 +28,6 @@ namespace Unity.Panel
     private Clutter.Texture bfb_bg_normal;
     private Clutter.Texture bfb_bg_prelight;
     private Clutter.Texture bfb_bg_active;
-    private bool search_shown;
 
     public HomeButton (Shell shell)
     {
@@ -98,8 +97,6 @@ namespace Unity.Panel
       set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
       set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
       set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bfb_bg_active);
-
-      search_shown = false;
     }
 
     private override void allocate (Clutter.ActorBox        box,
@@ -195,14 +192,12 @@ namespace Unity.Panel
           set_background_for_state (Ctk.ActorState.STATE_NORMAL, bfb_bg_normal);
           set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, bfb_bg_prelight);
           set_background_for_state (Ctk.ActorState.STATE_ACTIVE, bfb_bg_active);
-          search_shown = false;
         }
       else
         {
           set_background_for_state (Ctk.ActorState.STATE_NORMAL, null);
           set_background_for_state (Ctk.ActorState.STATE_PRELIGHT, null);
           set_background_for_state (Ctk.ActorState.STATE_ACTIVE, null);
-          search_shown = true;
         }
 
       do_queue_redraw ();
