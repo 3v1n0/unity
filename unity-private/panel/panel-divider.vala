@@ -22,11 +22,14 @@ namespace Unity.Panel
 {
   public class Divider : Ctk.Image
   {
+    public Shell shell { get; construct; }
     private Clutter.Texture bg;
 
-    public Divider ()
+    public Divider (Shell shell)
     {
-      Object (reactive:false);
+      Object (reactive:true, shell:shell);
+
+      shell.mode_changed.connect (on_mode_changed);
 
       Unity.Testing.ObjectRegistry.get_default ().register ("PanelDivider",
                                                             this);
@@ -59,5 +62,20 @@ namespace Unity.Panel
       min_width = 6.0f;
       nat_width = 6.0f;
     }
+
+    private void on_mode_changed (ShellMode mode)
+    {
+      if (mode == ShellMode.MINIMIZED)
+        {
+          set_background (bg);
+        }
+      else
+        {
+          set_background (null);
+        }
+
+      do_queue_redraw ();
+    }
+
   }
 }

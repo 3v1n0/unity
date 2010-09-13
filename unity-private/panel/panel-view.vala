@@ -69,7 +69,7 @@ namespace Unity.Panel
       hbox.pack (home_button, false, true);
       home_button.show ();
 
-      divider = new Divider ();
+      divider = new Divider (shell);
       hbox.pack (divider, false, false);
       divider.show ();
 
