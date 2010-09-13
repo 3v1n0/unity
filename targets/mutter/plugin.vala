@@ -163,6 +163,7 @@ namespace Unity
     private dynamic DBus.Object screensaver;
 
     public Gesture.Dispatcher gesture_dispatcher;
+    private Gesture.Type active_gesture_type = Gesture.Type.NONE;
 
     /* Pinch info */
     private float start_pinch_radius = 0.0f;
@@ -804,6 +805,22 @@ namespace Unity
 
     private void on_gesture_received (Gesture.Event event)
     {
+      if (active_gesture_type != Gesture.Type.NONE
+          && active_gesture_type != event.type
+          && event.state != Gesture.State.ENDED)
+        {
+          /* A new gesture is beginning */
+          if (event.state == Gesture.State.BEGAN)
+            {
+              active_gesture_type = event.type;
+            }
+          else
+            {
+              /* We don't want to handle it */
+              return;
+            }
+        }
+
       if (event.type == Gesture.Type.TAP &&
           expose_manager.expose_showing == false)
         {
@@ -1094,7 +1111,7 @@ namespace Unity
                   if (!Mutter.MetaWindow.is_maximized (win) && fullscreen == false)
                     {
                       if (start_pan_window.y == PANEL_HEIGHT
-                          && event.pan_event.delta_y < 0.0f)
+                          && event.pan_event.delta_y <= 0.0f)
                         {
                           if (start_frame_rect is Clutter.Rectangle == false)
                             {
@@ -1109,14 +1126,14 @@ namespace Unity
                                                   start_pan_window.y);
                               frame.show ();
 
-                             start_frame_rect = frame;
+                              start_frame_rect = frame;
 
-                              last_pan_maximised_x_root = event.root_x;
+                              last_pan_maximised_x_root = start_pan_window.x;
                             }
 
                           maximize_type = MaximizeType.FULL;
                           var MAX_DELTA = 50.0f;
-                          if (event.root_x < last_pan_maximised_x_root - MAX_DELTA)
+                          if (start_pan_window.x < last_pan_maximised_x_root - MAX_DELTA)
                             {
                               maximize_type = MaximizeType.LEFT;
                               start_frame_rect.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
@@ -1127,7 +1144,7 @@ namespace Unity
                                                         "height", stage.height - PANEL_HEIGHT);
 
                             }
-                          else if (event.root_x > last_pan_maximised_x_root + MAX_DELTA)
+                          else if (start_pan_window.x > last_pan_maximised_x_root + MAX_DELTA)
                             {
                               maximize_type = MaximizeType.RIGHT;
                               start_frame_rect.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
@@ -1150,11 +1167,6 @@ namespace Unity
                         }
                      else
                         {
-                          start_pan_window.x += Math.floorf (event.pan_event.delta_x + 0.5f);
-                          start_pan_window.y += Math.floorf (event.pan_event.delta_y + 0.5f);
-                          start_pan_window.x = float.max (start_pan_window.x, QUICKLAUNCHER_WIDTH);
-                          start_pan_window.y = float.max (start_pan_window.y, PANEL_HEIGHT);
-
                           if (start_frame_rect is Clutter.Rectangle)
                             {
                               if (start_frame_rect.opacity == 0)
@@ -1175,6 +1187,12 @@ namespace Unity
                                 }
                             }
                         }
+
+                      debug ("%f %f", start_pan_window.x, start_pan_window.y);
+                      start_pan_window.x += Math.floorf (event.pan_event.delta_x + 0.5f);
+                      start_pan_window.y += Math.floorf (event.pan_event.delta_y + 0.5f);
+                      start_pan_window.x = float.max (start_pan_window.x, QUICKLAUNCHER_WIDTH);
+                      start_pan_window.y = float.max (start_pan_window.y, PANEL_HEIGHT);
                     }
                   else
                     {
