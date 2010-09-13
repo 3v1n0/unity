@@ -821,7 +821,8 @@ namespace Unity
             }
         }
 
-      if (event.type == Gesture.Type.TAP)
+      if (event.type == Gesture.Type.TAP
+          && places_showing == false)
         {
           if (event.fingers == 3) /* Application-level window pick */
             {
@@ -889,10 +890,11 @@ namespace Unity
                 expose_manager.end_expose ();
             }
         }
-      else if (event.type == Gesture.Type.PINCH &&
-               places_showing == false)
+      else if (event.type == Gesture.Type.PINCH)
         {
-          if (event.fingers == 3)
+          if (event.fingers == 3
+              && places_showing == false
+              && expose_manager.expose_showing == false)
             {
               if (event.state == Gesture.State.ENDED)
                 {
@@ -924,7 +926,6 @@ namespace Unity
                                                           Mutter.MetaMaximizeFlags.HORIZONTAL |
                                                           Mutter.MetaMaximizeFlags.VERTICAL);
                             }
-  
                         }
                       else
                         {
@@ -1012,8 +1013,15 @@ namespace Unity
               print (@"$event\n");
               */
             }
-          else if (event.fingers == 4)
+          else if (event.fingers == 4
+                   && expose_manager.expose_showing == false
+                   && event.state == Gesture.State.BEGAN)
             {
+              if (places_showing == true)
+                hide_unity ();
+              else
+                show_unity ();
+              /*
               if (event.state == Gesture.State.BEGAN)
                 {
                   if (expose_manager.expose_showing)
@@ -1048,7 +1056,7 @@ namespace Unity
                         {
                           if (start_pinch_radius < 0)
                             {
-                              /* We're moving backward */
+                              // We're moving backward
                               I_JUST_PULLED_THIS_FROM_MY_FOO *= -1;
                             }
                         }
@@ -1056,7 +1064,7 @@ namespace Unity
                         {
                           if (start_pinch_radius >= 0)
                             {
-                              /* We're moving backward */
+                              // We're moving backward
                               I_JUST_PULLED_THIS_FROM_MY_FOO *= -1;
                             }
                         }
@@ -1126,6 +1134,7 @@ namespace Unity
                       clone.queue_relayout ();
                     }
                 }
+              */
             }
         }
       else if (event.type == Gesture.Type.PAN)
