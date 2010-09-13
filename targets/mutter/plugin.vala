@@ -1329,18 +1329,34 @@ namespace Unity
                           ny = start_pan_window.y; /* Kittens are dying */
                           nwidth = start_pan_window.width;
                           nheight = start_pan_window.height;
+                          nwidth = 0.0f;
+                          nheight = 0.0f;
                           move_resize = true;
 
                           print ("%d %d %d %d\n",wx, wy, rect.x, rect.y);
                         }
 
                       X.Window xwin = start_pan_window.get_x_window ();
-                      unowned Gdk.Window w = Gdk.Window.foreign_new ((Gdk.NativeWindow)xwin);
-                      if (w is Gdk.Window && move_resize)
+                      if (move_resize)
                         {
-                          Mutter.MetaWindow.move_resize (win, false, ((int)nx),
-                                                         ((int)ny),
-                                                         (int)nwidth, (int)nheight);
+                          if (nwidth > 0.0f && nheight > 0.0f)
+                            {
+                              Mutter.MetaWindow.move_resize (win, false, ((int)nx),
+                                                             ((int)ny),
+                                                             (int)nwidth, (int)nheight);
+                            }
+                          else
+                            {
+                              /* We use gdk_window_move because we don't want
+                               * to send in the width and height if we dont
+                               * need to, as otherwise we'll cause a resize
+                               * for no reason, and most likely get it
+                               * wrong (you need to take into account frame
+                               * size inside Mutter
+                               */
+                              unowned Gdk.Window w = Gdk.Window.foreign_new ((Gdk.NativeWindow)xwin);
+                              w.move ((int)nx, (int)ny);
+                            }
                         }
                     }
 
