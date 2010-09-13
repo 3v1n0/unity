@@ -30,8 +30,8 @@ namespace Unity.Places
     private PlaceSearchBarBackground bg;
 
     private PlaceSearchNavigation  navigation;
-    private PlaceSearchEntry       entry;
-    private PlaceSearchSectionsBar sections;
+    public  PlaceSearchEntry       entry;
+    public  PlaceSearchSectionsBar sections;
 
     public PlaceSearchBar ()
     {
