@@ -166,7 +166,7 @@ namespace Unity
     private Gesture.Type active_gesture_type = Gesture.Type.NONE;
 
     /* Pinch info */
-    private float start_pinch_radius = 0.0f;
+    /* private float start_pinch_radius = 0.0f; */
     private unowned Mutter.Window? resize_window = null;
     /*private float   resize_last_x1 = 0.0f;
     private float   resize_last_y1 = 0.0f;
@@ -1021,7 +1021,8 @@ namespace Unity
                 hide_unity ();
               else
                 show_unity ();
-              /*
+
+              /* FIXME: We'll come back to this awesomeness 
               if (event.state == Gesture.State.BEGAN)
                 {
                   if (expose_manager.expose_showing)
