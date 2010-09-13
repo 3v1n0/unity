@@ -938,6 +938,8 @@ namespace Unity
                                                              Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
                            }
                         }
+
+                      Mutter.MetaWindow.activate (win, get_current_time ());
                     }
                  }
 
@@ -1243,8 +1245,6 @@ namespace Unity
                                 }
                             }
                         }
-
-                      debug ("%f %f", start_pan_window.x, start_pan_window.y);
                       start_pan_window.x += Math.floorf (event.pan_event.delta_x + 0.5f);
                       start_pan_window.y += Math.floorf (event.pan_event.delta_y + 0.5f);
                       start_pan_window.x = float.max (start_pan_window.x, QUICKLAUNCHER_WIDTH);
@@ -1287,6 +1287,7 @@ namespace Unity
                             
                               Mutter.MetaWindow.maximize (win,
                                                           Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
+                              move_resize = false;
                             }
                           else if (maximize_type == MaximizeType.RIGHT)
                             {
