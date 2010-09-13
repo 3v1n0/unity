@@ -821,12 +821,16 @@ namespace Unity
             }
         }
 
-      if (event.type == Gesture.Type.TAP &&
-          expose_manager.expose_showing == false)
+      if (event.type == Gesture.Type.TAP)
         {
-          if (event.fingers == 3
-              && expose_manager.expose_showing == false) /* Application-level window pick */
+          if (event.fingers == 3) /* Application-level window pick */
             {
+              if (expose_manager.expose_showing == true)
+                {
+                  expose_manager.end_expose ();
+                  return;
+                }
+
               Mutter.Window? window = null;
 
               var actor = stage.get_actor_at_pos (Clutter.PickMode.ALL,
@@ -881,6 +885,8 @@ namespace Unity
                     }
                   expose_windows (windows,  get_launcher_width_foobar () + 10);
                 }
+              else
+                expose_manager.end_expose ();
             }
         }
       else if (event.type == Gesture.Type.PINCH &&
