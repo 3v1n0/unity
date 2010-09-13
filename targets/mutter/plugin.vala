@@ -824,13 +824,63 @@ namespace Unity
       if (event.type == Gesture.Type.TAP &&
           expose_manager.expose_showing == false)
         {
-          if (event.fingers == 3)
+          if (event.fingers == 3
+              && expose_manager.expose_showing == false) /* Application-level window pick */
             {
-              ;
+              Mutter.Window? window = null;
+
+              var actor = stage.get_actor_at_pos (Clutter.PickMode.ALL,
+                                                  (int)event.root_x,
+                                                  (int)event.root_y);
+              if (actor is Mutter.Window == false)
+                actor = actor.get_parent ();
+
+              if (actor is Mutter.Window)
+                {
+                  window = actor as Mutter.Window;
+
+                  if (start_pan_window.get_window_type () != Mutter.MetaCompWindowType.NORMAL &&
+                      start_pan_window.get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
+                      start_pan_window.get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG &&
+                      start_pan_window.get_window_type () != Mutter.MetaCompWindowType.UTILITY)
+                    window = null;
+                }
+
+              if (window is Mutter.Window)
+                {
+                  /* FIXME: bamf_matcher_get_application_for_xid () fails for
+                   * me in this case, so I had to use the slower method */
+                  var matcher = Bamf.Matcher.get_default ();
+                  var xwin = (uint32)Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
+
+                  foreach (Bamf.Application app in matcher.get_running_applications ())
+                    {
+                      Array<uint32> xids = app.get_xids ();
+                      for (int i = 0; i < xids.length; i++)
+                        {
+                          uint32 xid = xids.index (i);
+                          if (xwin == xid)
+                            {
+                              /* Found the right application, so pick it */
+                              expose_xids (xids);
+                              return;
+                            }
+                        }
+                    }
+                }
             }
-          else if (event.fingers == 4)
+          else if (event.fingers == 4) /* System-level window picker */
             {
-              show_unity ();
+              if (expose_manager.expose_showing == false)
+                {
+                  SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
+                  unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
+                  foreach (Mutter.Window w in mutter_windows)
+                    {
+                      windows.append (w);
+                    }
+                  expose_windows (windows,  get_launcher_width_foobar () + 10);
+                }
             }
         }
       else if (event.type == Gesture.Type.PINCH &&
