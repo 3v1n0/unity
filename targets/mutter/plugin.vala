@@ -1320,25 +1320,16 @@ namespace Unity
                         }
                       else
                         {
-                          /* FIXME: We need to somehow convince Mutter to tell
-                           * us the size of the frame. 27 = top + bottom frame
-                           * 1 = left frame
-                           * 24 = size of top frame
-                           */
                           nx = start_pan_window.x;
-                          ny = start_pan_window.y; /* Kittens are dying */
-                          nwidth = start_pan_window.width;
-                          nheight = start_pan_window.height;
+                          ny = start_pan_window.y;
                           nwidth = 0.0f;
                           nheight = 0.0f;
                           move_resize = true;
-
-                          print ("%d %d %d %d\n",wx, wy, rect.x, rect.y);
                         }
 
-                      X.Window xwin = start_pan_window.get_x_window ();
                       if (move_resize)
                         {
+                          X.Window xwin = start_pan_window.get_x_window ();
                           if (nwidth > 0.0f && nheight > 0.0f)
                             {
                               Mutter.MetaWindow.move_resize (win, false, ((int)nx),
