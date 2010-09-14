@@ -253,8 +253,7 @@ namespace Unity.Places
       }
     }
 
-    /* Private Methods */
-    private async void activate_fallback (string uri)
+    public static async void activate_fallback (string uri)
     {
       if (uri.has_prefix ("application://"))
         {
@@ -262,8 +261,12 @@ namespace Unity.Places
 
           AppInfo info;
           try {
-            var appinfos = AppInfoManager.get_instance ();
-            info = yield appinfos.lookup_async (id);
+            //var appinfos = AppInfoManager.get_instance ();
+            // FIXME: Use async IO with: yield appinfos.lookup_async (id);
+            // But this ^^ would cause the appinfo to be created without
+            // an id which causes the zeitgeist-gio module not to log the
+            // application launch event in Zeitgeist
+            info = new DesktopAppInfo (id);
           } catch (Error ee) {
             warning ("Unable to read .desktop file '%s': %s", uri, ee.message);
             return;
@@ -294,7 +297,8 @@ namespace Unity.Places
          warning ("Unable to launch: %s\n", eee.message);
        }
     }
-    
+   
+    /* Private Methods */
     private void on_service_entry_added (dynamic DBus.Object   dbus_object,
                                          ValueArray            info)
     {

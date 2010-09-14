@@ -86,6 +86,7 @@ am__objects_1 = libunity_private_la-gesture-dispatcher.lo \
 am__objects_2 = libunity_private_la-application.lo \
 	libunity_private_la-unity.lo libunity_private_la-utils.lo
 am__objects_3 = libunity_private_la-panel-background.lo \
+	libunity_private_la-panel-divider.lo \
 	libunity_private_la-panel-home-button.lo \
 	libunity_private_la-panel-indicator-background.lo \
 	libunity_private_la-panel-indicator-bar.lo \
@@ -413,6 +414,7 @@ private_sources = \
 
 panel_sources = \
   panel/panel-background.vala \
+  panel/panel-divider.vala \
   panel/panel-home-button.vala \
   panel/panel-indicator-background.vala \
   panel/panel-indicator-bar.vala \
@@ -584,6 +586,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-launcher.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-object-registry.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-background.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-divider.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-home-button.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-indicator-background.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-panel-indicator-bar.Plo@am__quote@
@@ -749,6 +752,14 @@ libunity_private_la-panel-background.lo: panel/panel-background.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='panel/panel-background.c' object='libunity_private_la-panel-background.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-panel-background.lo `test -f 'panel/panel-background.c' || echo '$(srcdir)/'`panel/panel-background.c
+
+libunity_private_la-panel-divider.lo: panel/panel-divider.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-panel-divider.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-panel-divider.Tpo -c -o libunity_private_la-panel-divider.lo `test -f 'panel/panel-divider.c' || echo '$(srcdir)/'`panel/panel-divider.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-panel-divider.Tpo $(DEPDIR)/libunity_private_la-panel-divider.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='panel/panel-divider.c' object='libunity_private_la-panel-divider.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-panel-divider.lo `test -f 'panel/panel-divider.c' || echo '$(srcdir)/'`panel/panel-divider.c
 
 libunity_private_la-panel-home-button.lo: panel/panel-home-button.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-panel-home-button.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-panel-home-button.Tpo -c -o libunity_private_la-panel-home-button.lo `test -f 'panel/panel-home-button.c' || echo '$(srcdir)/'`panel/panel-home-button.c

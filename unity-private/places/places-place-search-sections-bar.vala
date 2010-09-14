@@ -47,6 +47,7 @@ namespace Unity.Places
 
     private PlaceEntry? active_entry = null;
     private Section?    active_section = null;
+    public  uint        active_section_n = 0;
     private CairoCanvas bg;
 
     private unowned Dee.Model? sections_model = null;
@@ -81,7 +82,10 @@ namespace Unity.Places
       unowned Section? section = list.nth_data<unowned Clutter.Actor>(section_id) as Section;
 
       if (section is Section)
-        on_section_clicked_real (section);
+        {
+          on_section_clicked_real (section);
+          active_section_n = section_id;
+        }
     }
 
     public void set_active_entry (PlaceEntry entry)
@@ -190,6 +194,7 @@ namespace Unity.Places
           active_section = section;
           section.active = true;
           active_entry.set_active_section (0);
+          active_section_n = 0;
         }
   
       sort_children ((CompareFunc)sort_sections);
@@ -222,6 +227,7 @@ namespace Unity.Places
             {
               active_section = get_section_for_iter (model.get_first_iter ());
               active_entry.set_active_section (0);
+              active_section_n = 0;
             }
           section.start_destroy ();
         }
@@ -234,6 +240,7 @@ namespace Unity.Places
       active_section.active = true;
       var pos = active_section.model.get_position (active_section.iter);
       active_entry.set_active_section (pos);
+      active_section_n = pos;
 
       bg.update ();
     }

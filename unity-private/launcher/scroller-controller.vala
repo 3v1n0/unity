@@ -81,7 +81,15 @@ namespace Unity.Launcher
       Unity.global_shell.super_key_active = false;
 
       var childcontroller = get_controller_for_view (model[index]);
-      childcontroller.activate ();
+      if (childcontroller is ScrollerChildController)
+        { 
+          childcontroller.activate ();
+        }
+      else
+        {
+          // FIXME
+          warning ("get_controller_for_view() returned NULL\n");
+        }
     }
 
     uint super_key_source = 0;
@@ -205,18 +213,23 @@ namespace Unity.Launcher
     private void build_favorites ()
     {
       model.order_changed.disconnect (model_order_changed);
+      // build a list of favourites, so we need a list of favourites
+      string[] bamf_favorites_list = {};
+
       foreach (string uid in favorites.get_favorites ())
         {
           var type = favorites.get_string (uid, "type");
           if (type != "application")
             continue;
 
-          var desktop_file = favorites.get_string (uid, "desktop_file");
+          string desktop_file = favorites.get_string (uid, "desktop_file");
           if (!FileUtils.test (desktop_file, FileTest.EXISTS))
             {
               // no desktop file for this favorite or it does not exist
               continue;
             }
+
+          bamf_favorites_list += desktop_file;
 
           ApplicationController controller = find_controller_by_desktop_file (desktop_file);
           if (!(controller is ScrollerChildController))
@@ -232,6 +245,9 @@ namespace Unity.Launcher
       // need to sort the list now
       model.sort ((CompareFunc)compare_prioritys);
       model.order_changed.connect (model_order_changed);
+
+      // upload to bamf
+      matcher.register_favorites (bamf_favorites_list);
     }
 
     private void on_favorite_added (string uid)
@@ -351,7 +367,8 @@ namespace Unity.Launcher
 
           // if the actor is not in the model, add it. because its now in there!
           // find the index at this position
-          int model_index = view.get_model_index_at_y_pos_no_anim (y, true);
+
+          int model_index = view.get_model_index_at_y_pos_no_anim (y - 24, true);
           if (model_index < 0) return;
 
           //we have to check to see if we would still be over the index
