@@ -43,6 +43,7 @@ namespace Bamf {
 		public GLib.List<weak Bamf.Application> get_running_applications ();
 		public GLib.List<weak Bamf.View> get_tabs ();
 		public GLib.Array get_xids_for_application (string application);
+    public void register_favorites ([CCode (array_length = false)] string[] favorites);
 		public signal void active_application_changed (GLib.Object object, GLib.Object p0);
 		public signal void active_window_changed (GLib.Object object, GLib.Object p0);
 		public signal void view_closed (GLib.Object object);

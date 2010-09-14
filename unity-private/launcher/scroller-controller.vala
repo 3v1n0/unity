@@ -205,18 +205,23 @@ namespace Unity.Launcher
     private void build_favorites ()
     {
       model.order_changed.disconnect (model_order_changed);
+      // build a list of favourites, so we need a list of favourites
+      string[] bamf_favorites_list = {};
+
       foreach (string uid in favorites.get_favorites ())
         {
           var type = favorites.get_string (uid, "type");
           if (type != "application")
             continue;
 
-          var desktop_file = favorites.get_string (uid, "desktop_file");
+          string desktop_file = favorites.get_string (uid, "desktop_file");
           if (!FileUtils.test (desktop_file, FileTest.EXISTS))
             {
               // no desktop file for this favorite or it does not exist
               continue;
             }
+
+          bamf_favorites_list += desktop_file;
 
           ApplicationController controller = find_controller_by_desktop_file (desktop_file);
           if (!(controller is ScrollerChildController))
@@ -232,6 +237,9 @@ namespace Unity.Launcher
       // need to sort the list now
       model.sort ((CompareFunc)compare_prioritys);
       model.order_changed.connect (model_order_changed);
+
+      // upload to bamf
+      matcher.register_favorites (bamf_favorites_list);
     }
 
     private void on_favorite_added (string uid)
