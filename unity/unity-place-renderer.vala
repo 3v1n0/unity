@@ -30,6 +30,8 @@ namespace Unity.Place
                                      Dee.Model                   results,
                                      Gee.HashMap<string, string> hints);
 
+    public abstract void activate_default ();
+
     public signal void activated (string uri, string mimetype);
   }
 }

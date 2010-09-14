@@ -64,7 +64,7 @@ namespace Unity.Places
     private MoreResultsButton? more_results_button;
 
     /* Some caching to speed up lookups */
-    private uint          n_results = 0;
+    public  uint          n_results = 0;
     private bool          dirty = false;
 
     private bool          allow_expand = true;

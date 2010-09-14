@@ -253,8 +253,7 @@ namespace Unity.Places
       }
     }
 
-    /* Private Methods */
-    private async void activate_fallback (string uri)
+    public static async void activate_fallback (string uri)
     {
       if (uri.has_prefix ("application://"))
         {
@@ -298,7 +297,8 @@ namespace Unity.Places
          warning ("Unable to launch: %s\n", eee.message);
        }
     }
-    
+   
+    /* Private Methods */
     private void on_service_entry_added (dynamic DBus.Object   dbus_object,
                                          ValueArray            info)
     {
