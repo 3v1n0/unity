@@ -81,7 +81,14 @@ namespace Unity.Launcher
       Unity.global_shell.super_key_active = false;
 
       var childcontroller = get_controller_for_view (model[index]);
-      childcontroller.activate ();
+      if (childcontroller != null)
+        {
+          childcontroller.activate ();
+        }
+      else
+        {
+          print ("---=== childcontroller is NULL :( ===---\n");
+        }
     }
 
     uint super_key_source = 0;
@@ -435,6 +442,8 @@ namespace Unity.Launcher
 
     private ScrollerChildController? get_controller_for_view (ScrollerChild childview)
     {
+      print ("---=== get_controller_for_view(): size= %d ===---\n",
+             childcontrollers.size);
       foreach (ScrollerChildController childcontroller in childcontrollers)
         {
           if (childcontroller.child == childview)
