@@ -1171,10 +1171,11 @@ namespace Unity.Launcher
 
     private void do_anim_settle (Clutter.Timeline timeline, int msecs)
     {
-      var distance = settle_position - calculate_scroll_position ();
-      move_scroll_position (distance * 0.2f);
+      var distance = settle_position - scroll_position;
+      move_scroll_position (distance * 0.2f, false, 60.0f);
       if (Math.fabs (distance) < 1 )
         {
+          move_scroll_position (distance);
           current_phase = ScrollerPhase.NONE;
         }
 
