@@ -1,6 +1,20 @@
 unity (0.2.38-0ubuntu1) UNRELEASED; urgency=low
 
-  * New upstream release.
+  * New upstream release:
+    - Correct the offset of the quicklist so it doesn't jump to the right when
+      expanding from a tooltip. Fixes (LP: #631446)
+    - Log apps launched via unity-place-application (LP: #632203)
+    - Fix launcher does not contract if a menu is open (LP: #631452)
+    - Auto scroll speed is now corrected (LP: #633045)
+    - Removes jittering when rubber band is in use on the launcher (LP: #632991)
+    - Fix clicking on the right of the divider also triggers action on logo
+      (LP: #636602)
+    - Full i18n support (LP: #637128)
+    - Avoids the crash on Super-key-shortcuts with places. (LP: #632460)
+    - Pressing enter in search mode should activate the first result
+      (LP: #620945)
+    - Esc close the places view (LP: #599891)
+    - Launcher shouldn't 'fold' when hovering on a quicklist (LP: #632079)
   * update debian/libunity0.symbols
 
  -- Didier Roche <didrocks@ubuntu.com>  Tue, 14 Sep 2010 19:07:19 +0200
