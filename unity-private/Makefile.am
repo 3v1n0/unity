@@ -76,6 +76,7 @@ private_sources = \
 
 panel_sources = \
   panel/panel-background.vala \
+  panel/panel-divider.vala \
   panel/panel-home-button.vala \
   panel/panel-indicator-background.vala \
   panel/panel-indicator-bar.vala \
