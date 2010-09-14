@@ -663,36 +663,43 @@ namespace Unity.Launcher
     }
 
     // will move the scroller by the given pixels
+    private float calculate_scroll_position (bool check_bounds=false, float limit = 160.0f)
+    {
+      float new_scroll_position = scroll_position;
+      if (check_bounds)
+        {
+          new_scroll_position = Math.fminf (new_scroll_position, 0);
+          new_scroll_position = Math.fmaxf (new_scroll_position, - (get_total_children_height () - get_available_height ()));
+        }
+      else if (new_scroll_position > 0)
+        {
+          new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, new_scroll_position));
+        }
+      else if (get_total_children_height () < get_available_height () &&
+               new_scroll_position < 0)
+        {
+          new_scroll_position = -new_scroll_position;
+          new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, new_scroll_position));
+          new_scroll_position = -new_scroll_position;
+        }
+      else if (get_total_children_height () >= get_available_height () &&
+               new_scroll_position < -(get_total_children_height () - get_available_height ()))
+        {
+          float diff = new_scroll_position + (get_total_children_height () - get_available_height ());
+          new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, Math.fabsf (diff)));
+          new_scroll_position = -(get_total_children_height () - get_available_height ()) - new_scroll_position;
+        }
+
+      return new_scroll_position;
+    }
+
     private void move_scroll_position (float pixels, bool check_bounds=false, float limit = 160.0f)
     {
       scroll_position += pixels;
       float old_scroll_position = scroll_position;
-      if (check_bounds)
-        {
-          scroll_position = Math.fminf (scroll_position, 0);
-          scroll_position = Math.fmaxf (scroll_position, - (get_total_children_height () - get_available_height ()));
-        }
-      else if (scroll_position > 0)
-        {
-          float new_scroll_position = scroll_position;
-          new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, new_scroll_position));
-          scroll_position = new_scroll_position;
-        }
-      else if (get_total_children_height () < get_available_height () &&
-               scroll_position < 0)
-        {
-          float new_scroll_position = -scroll_position;
-          new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, new_scroll_position));
-          scroll_position = -new_scroll_position;
-        }
-      else if (get_total_children_height () >= get_available_height () &&
-               scroll_position < -(get_total_children_height () - get_available_height ()))
-        {
-          float diff = scroll_position + (get_total_children_height () - get_available_height ());
-          float new_scroll_position = limit * ( 1 - Math.powf ((limit - 1) / limit, Math.fabsf (diff)));
-          new_scroll_position = -(get_total_children_height () - get_available_height ()) - new_scroll_position;
-          scroll_position = new_scroll_position;
-        }
+
+      scroll_position = calculate_scroll_position (check_bounds, limit);
+
       order_children (true);
       queue_relayout ();
 
@@ -826,8 +833,9 @@ namespace Unity.Launcher
       if (autoscroll_anim_active == false && is_autoscrolling)
       {
         Timeout.add (33, () => {
-          float speed = 12.0f - autoscroll_mouse_pos_cache;
+          float speed = 12.0f - Math.fabsf (autoscroll_mouse_pos_cache);
           speed /= 12.0f;
+          speed *= 30;
           speed *= autoscroll_direction;
           move_scroll_position (speed, true);
           autoscroll_anim_active = is_autoscrolling;
@@ -1163,7 +1171,7 @@ namespace Unity.Launcher
 
     private void do_anim_settle (Clutter.Timeline timeline, int msecs)
     {
-      var distance = settle_position - scroll_position;
+      var distance = settle_position - calculate_scroll_position ();
       move_scroll_position (distance * 0.2f);
       if (Math.fabs (distance) < 1 )
         {
