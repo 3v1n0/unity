@@ -59,7 +59,7 @@ namespace Unity.Launcher
     construct
     {
       theme_file_path = new Unity.ThemeFilePath ();
-      name = "Bug Found, You Defeated Unity";
+      name = "Bug Found, You Defeated Unity, +20 exp";
       child.controller = this;
       child.button_press_event.connect (on_press_event);
       child.button_release_event.connect (on_release_event);
@@ -106,12 +106,12 @@ namespace Unity.Launcher
     private bool on_leave_event (Clutter.Event event)
     {
       button_down = false;
+      menu_state = ScrollerChildControllerMenuState.NO_MENU;
       if (menu_state != ScrollerChildControllerMenuState.MENU)
         {
-          menu_state = ScrollerChildControllerMenuState.NO_MENU;
+          ensure_menu_state ();
         }
 
-      ensure_menu_state ();
       return false;
     }
     private bool no_activate = false;
@@ -199,7 +199,7 @@ namespace Unity.Launcher
         {
           // there is a menu open already, attach to the destroy so we can
           // re-ensure later
-          QuicklistController.get_current_menu ().get_view ().destroy.connect (ensure_menu_state);
+          //QuicklistController.get_current_menu ().get_view ().destroy.connect (ensure_menu_state);
           return;
         }
 

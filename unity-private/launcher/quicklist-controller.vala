@@ -124,6 +124,9 @@ namespace Unity.Launcher
     private void new_menu ()
     {
       menu = new QuicklistMenu () as Ctk.MenuExpandable;
+      menu.destroy.connect (() => {
+        state = QuicklistControllerState.CLOSED;
+      });
       if (Unity.global_shell is Unity.Shell)
         {
           menu.destroy.connect (() => {
