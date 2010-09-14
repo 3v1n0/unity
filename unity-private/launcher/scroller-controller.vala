@@ -351,6 +351,7 @@ namespace Unity.Launcher
 
           // if the actor is not in the model, add it. because its now in there!
           // find the index at this position
+
           int model_index = view.get_model_index_at_y_pos_no_anim (y - 24, true);
           if (model_index < 0) return;
 
