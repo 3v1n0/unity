@@ -1,4 +1,4 @@
-unity (0.2.38-0ubuntu1) UNRELEASED; urgency=low
+unity (0.2.38-0ubuntu1) maverick; urgency=low
 
   * New upstream release:
     - Correct the offset of the quicklist so it doesn't jump to the right when
@@ -17,7 +17,7 @@ unity (0.2.38-0ubuntu1) UNRELEASED; urgency=low
     - Launcher shouldn't 'fold' when hovering on a quicklist (LP: #632079)
   * update debian/libunity0.symbols
 
- -- Didier Roche <didrocks@ubuntu.com>  Tue, 14 Sep 2010 19:07:19 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Tue, 14 Sep 2010 20:11:57 +0200
 
 unity (0.2.36-0ubuntu1) maverick; urgency=low
 
