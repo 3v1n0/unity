@@ -87,7 +87,8 @@ namespace Unity.Launcher
         }
       else
         {
-          print ("---=== childcontroller is NULL :( ===---\n");
+          // FIXME
+          warning ("get_controller_for_view() returned NULL\n");
         }
     }
 
@@ -442,8 +443,6 @@ namespace Unity.Launcher
 
     private ScrollerChildController? get_controller_for_view (ScrollerChild childview)
     {
-      print ("---=== get_controller_for_view(): size= %d ===---\n",
-             childcontrollers.size);
       foreach (ScrollerChildController childcontroller in childcontrollers)
         {
           if (childcontroller.child == childview)
