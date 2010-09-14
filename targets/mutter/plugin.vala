@@ -163,9 +163,10 @@ namespace Unity
     private dynamic DBus.Object screensaver;
 
     public Gesture.Dispatcher gesture_dispatcher;
+    private Gesture.Type active_gesture_type = Gesture.Type.NONE;
 
     /* Pinch info */
-    private float start_pinch_radius = 0.0f;
+    /* private float start_pinch_radius = 0.0f; */
     private unowned Mutter.Window? resize_window = null;
     /*private float   resize_last_x1 = 0.0f;
     private float   resize_last_y1 = 0.0f;
@@ -804,22 +805,96 @@ namespace Unity
 
     private void on_gesture_received (Gesture.Event event)
     {
-      if (event.type == Gesture.Type.TAP &&
-          expose_manager.expose_showing == false)
+      if (active_gesture_type != Gesture.Type.NONE
+          && active_gesture_type != event.type
+          && event.state != Gesture.State.ENDED)
         {
-          if (event.fingers == 3)
+          /* A new gesture is beginning */
+          if (event.state == Gesture.State.BEGAN)
             {
-              ;
+              active_gesture_type = event.type;
             }
-          else if (event.fingers == 4)
+          else
             {
-              show_unity ();
+              /* We don't want to handle it */
+              return;
             }
         }
-      else if (event.type == Gesture.Type.PINCH &&
-               places_showing == false)
+
+      if (event.type == Gesture.Type.TAP
+          && places_showing == false)
         {
-          if (event.fingers == 3)
+          if (event.fingers == 3) /* Application-level window pick */
+            {
+              if (expose_manager.expose_showing == true)
+                {
+                  expose_manager.end_expose ();
+                  return;
+                }
+
+              Mutter.Window? window = null;
+
+              var actor = stage.get_actor_at_pos (Clutter.PickMode.ALL,
+                                                  (int)event.root_x,
+                                                  (int)event.root_y);
+              if (actor is Mutter.Window == false)
+                actor = actor.get_parent ();
+
+              if (actor is Mutter.Window)
+                {
+                  window = actor as Mutter.Window;
+
+                  if (start_pan_window.get_window_type () != Mutter.MetaCompWindowType.NORMAL &&
+                      start_pan_window.get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
+                      start_pan_window.get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG &&
+                      start_pan_window.get_window_type () != Mutter.MetaCompWindowType.UTILITY)
+                    window = null;
+                }
+
+              if (window is Mutter.Window)
+                {
+                  /* FIXME: bamf_matcher_get_application_for_xid () fails for
+                   * me in this case, so I had to use the slower method */
+                  var matcher = Bamf.Matcher.get_default ();
+                  var xwin = (uint32)Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
+
+                  foreach (Bamf.Application app in matcher.get_running_applications ())
+                    {
+                      Array<uint32> xids = app.get_xids ();
+                      for (int i = 0; i < xids.length; i++)
+                        {
+                          uint32 xid = xids.index (i);
+                          if (xwin == xid)
+                            {
+                              /* Found the right application, so pick it */
+                              expose_xids (xids);
+                              return;
+                            }
+                        }
+                    }
+                }
+            }
+          else if (event.fingers == 4) /* System-level window picker */
+            {
+              if (expose_manager.expose_showing == false)
+                {
+                  SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
+                  unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
+                  foreach (Mutter.Window w in mutter_windows)
+                    {
+                      windows.append (w);
+                    }
+                  expose_windows (windows,  get_launcher_width_foobar () + 10);
+                }
+              else
+                expose_manager.end_expose ();
+            }
+        }
+      else if (event.type == Gesture.Type.PINCH)
+        {
+          if (event.fingers == 3
+              && places_showing == false
+              && expose_manager.expose_showing == false)
             {
               if (event.state == Gesture.State.ENDED)
                 {
@@ -851,7 +926,6 @@ namespace Unity
                                                           Mutter.MetaMaximizeFlags.HORIZONTAL |
                                                           Mutter.MetaMaximizeFlags.VERTICAL);
                             }
-  
                         }
                       else
                         {
@@ -865,6 +939,8 @@ namespace Unity
                                                              Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
                            }
                         }
+
+                      Mutter.MetaWindow.activate (win, get_current_time ());
                     }
                  }
 
@@ -937,8 +1013,16 @@ namespace Unity
               print (@"$event\n");
               */
             }
-          else if (event.fingers == 4)
+          else if (event.fingers == 4
+                   && expose_manager.expose_showing == false
+                   && event.state == Gesture.State.BEGAN)
             {
+              if (places_showing == true)
+                hide_unity ();
+              else
+                show_unity ();
+
+              /* FIXME: We'll come back to this awesomeness 
               if (event.state == Gesture.State.BEGAN)
                 {
                   if (expose_manager.expose_showing)
@@ -973,7 +1057,7 @@ namespace Unity
                         {
                           if (start_pinch_radius < 0)
                             {
-                              /* We're moving backward */
+                              // We're moving backward
                               I_JUST_PULLED_THIS_FROM_MY_FOO *= -1;
                             }
                         }
@@ -981,7 +1065,7 @@ namespace Unity
                         {
                           if (start_pinch_radius >= 0)
                             {
-                              /* We're moving backward */
+                              // We're moving backward
                               I_JUST_PULLED_THIS_FROM_MY_FOO *= -1;
                             }
                         }
@@ -1051,6 +1135,7 @@ namespace Unity
                       clone.queue_relayout ();
                     }
                 }
+              */
             }
         }
       else if (event.type == Gesture.Type.PAN)
@@ -1094,7 +1179,7 @@ namespace Unity
                   if (!Mutter.MetaWindow.is_maximized (win) && fullscreen == false)
                     {
                       if (start_pan_window.y == PANEL_HEIGHT
-                          && event.pan_event.delta_y < 0.0f)
+                          && event.pan_event.delta_y <= 0.0f)
                         {
                           if (start_frame_rect is Clutter.Rectangle == false)
                             {
@@ -1109,14 +1194,14 @@ namespace Unity
                                                   start_pan_window.y);
                               frame.show ();
 
-                             start_frame_rect = frame;
+                              start_frame_rect = frame;
 
-                              last_pan_maximised_x_root = event.root_x;
+                              last_pan_maximised_x_root = start_pan_window.x;
                             }
 
                           maximize_type = MaximizeType.FULL;
                           var MAX_DELTA = 50.0f;
-                          if (event.root_x < last_pan_maximised_x_root - MAX_DELTA)
+                          if (start_pan_window.x < last_pan_maximised_x_root - MAX_DELTA)
                             {
                               maximize_type = MaximizeType.LEFT;
                               start_frame_rect.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
@@ -1127,7 +1212,7 @@ namespace Unity
                                                         "height", stage.height - PANEL_HEIGHT);
 
                             }
-                          else if (event.root_x > last_pan_maximised_x_root + MAX_DELTA)
+                          else if (start_pan_window.x > last_pan_maximised_x_root + MAX_DELTA)
                             {
                               maximize_type = MaximizeType.RIGHT;
                               start_frame_rect.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
@@ -1150,11 +1235,6 @@ namespace Unity
                         }
                      else
                         {
-                          start_pan_window.x += Math.floorf (event.pan_event.delta_x + 0.5f);
-                          start_pan_window.y += Math.floorf (event.pan_event.delta_y + 0.5f);
-                          start_pan_window.x = float.max (start_pan_window.x, QUICKLAUNCHER_WIDTH);
-                          start_pan_window.y = float.max (start_pan_window.y, PANEL_HEIGHT);
-
                           if (start_frame_rect is Clutter.Rectangle)
                             {
                               if (start_frame_rect.opacity == 0)
@@ -1175,6 +1255,10 @@ namespace Unity
                                 }
                             }
                         }
+                      start_pan_window.x += Math.floorf (event.pan_event.delta_x + 0.5f);
+                      start_pan_window.y += Math.floorf (event.pan_event.delta_y + 0.5f);
+                      start_pan_window.x = float.max (start_pan_window.x, QUICKLAUNCHER_WIDTH);
+                      start_pan_window.y = float.max (start_pan_window.y, PANEL_HEIGHT);
                     }
                   else
                     {
@@ -1213,6 +1297,7 @@ namespace Unity
                             
                               Mutter.MetaWindow.maximize (win,
                                                           Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
+                              move_resize = false;
                             }
                           else if (maximize_type == MaximizeType.RIGHT)
                             {
@@ -1235,27 +1320,34 @@ namespace Unity
                         }
                       else
                         {
-                          /* FIXME: We need to somehow convince Mutter to tell
-                           * us the size of the frame. 27 = top + bottom frame
-                           * 1 = left frame
-                           * 24 = size of top frame
-                           */
                           nx = start_pan_window.x;
-                          ny = start_pan_window.y; /* Kittens are dying */
-                          nwidth = start_pan_window.width;
-                          nheight = start_pan_window.height;
+                          ny = start_pan_window.y;
+                          nwidth = 0.0f;
+                          nheight = 0.0f;
                           move_resize = true;
-
-                          print ("%d %d %d %d\n",wx, wy, rect.x, rect.y);
                         }
 
-                      X.Window xwin = start_pan_window.get_x_window ();
-                      unowned Gdk.Window w = Gdk.Window.foreign_new ((Gdk.NativeWindow)xwin);
-                      if (w is Gdk.Window && move_resize)
+                      if (move_resize)
                         {
-                          Mutter.MetaWindow.move_resize (win, false, ((int)nx),
-                                                         ((int)ny),
-                                                         (int)nwidth, (int)nheight);
+                          X.Window xwin = start_pan_window.get_x_window ();
+                          if (nwidth > 0.0f && nheight > 0.0f)
+                            {
+                              Mutter.MetaWindow.move_resize (win, false, ((int)nx),
+                                                             ((int)ny),
+                                                             (int)nwidth, (int)nheight);
+                            }
+                          else
+                            {
+                              /* We use gdk_window_move because we don't want
+                               * to send in the width and height if we dont
+                               * need to, as otherwise we'll cause a resize
+                               * for no reason, and most likely get it
+                               * wrong (you need to take into account frame
+                               * size inside Mutter
+                               */
+                              unowned Gdk.Window w = Gdk.Window.foreign_new ((Gdk.NativeWindow)xwin);
+                              w.move ((int)nx, (int)ny);
+                            }
                         }
                     }
 
