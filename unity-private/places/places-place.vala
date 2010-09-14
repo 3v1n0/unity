@@ -262,8 +262,12 @@ namespace Unity.Places
 
           AppInfo info;
           try {
-            var appinfos = AppInfoManager.get_instance ();
-            info = yield appinfos.lookup_async (id);
+            //var appinfos = AppInfoManager.get_instance ();
+            // FIXME: Use async IO with: yield appinfos.lookup_async (id);
+            // But this ^^ would cause the appinfo to be created without
+            // an id which causes the zeitgeist-gio module not to log the
+            // application launch event in Zeitgeist
+            info = new DesktopAppInfo (id);
           } catch (Error ee) {
             warning ("Unable to read .desktop file '%s': %s", uri, ee.message);
             return;
