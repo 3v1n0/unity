@@ -920,6 +920,12 @@ namespace Unity.Launcher
           queue_contract_launcher = 0;
         }
 
+      if (attached_menu is QuicklistController)
+        {
+          attached_menu.notify["status"].disconnect (on_menu_close);
+          attached_menu = null;
+        }
+
       expand_launcher (event.crossing.y);
       return false;
     }
@@ -941,12 +947,41 @@ namespace Unity.Launcher
       return false;
     }
 
+    QuicklistController? attached_menu = null;
+    private void on_menu_close ()
+    {
+      if (attached_menu is QuicklistController)
+        {
+          if (attached_menu.state != QuicklistControllerState.MENU)
+            {
+              if (last_known_pointer_x > get_width ())
+                do_queue_contract_launcher ();
+
+              attached_menu.notify["status"].disconnect (on_menu_close);
+              attached_menu = null;
+            }
+        }
+    }
+
     private bool on_leave_event (Clutter.Event event)
     {
       last_known_pointer_x = 200;
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging) return false;
       if (is_scrolling) return false;
+
+      // if a menu is open, don't fold the launcher, wait until its closed (if ever)
+      QuicklistController? menu = QuicklistController.get_current_menu ();
+      if (menu is QuicklistController)
+        {
+          if (menu.state == QuicklistControllerState.MENU)
+            {
+              attached_menu = menu;
+              attached_menu.notify["state"].connect (on_menu_close);
+              return false;
+            }
+          }
+
       do_queue_contract_launcher ();
 
       if (last_picked_actor is Clutter.Actor &&
