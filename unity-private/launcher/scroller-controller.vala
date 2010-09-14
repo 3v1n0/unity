@@ -81,7 +81,15 @@ namespace Unity.Launcher
       Unity.global_shell.super_key_active = false;
 
       var childcontroller = get_controller_for_view (model[index]);
-      childcontroller.activate ();
+      if (childcontroller is ScrollerChildController)
+        { 
+          childcontroller.activate ();
+        }
+      else
+        {
+          // FIXME
+          warning ("get_controller_for_view() returned NULL\n");
+        }
     }
 
     uint super_key_source = 0;
