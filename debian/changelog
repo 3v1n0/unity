@@ -1,6 +1,7 @@
 unity (0.2.38-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release.
+  * update debian/libunity0.symbols
 
  -- Didier Roche <didrocks@ubuntu.com>  Tue, 14 Sep 2010 19:07:19 +0200
 

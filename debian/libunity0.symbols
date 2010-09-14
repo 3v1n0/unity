@@ -260,6 +260,10 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_panel_background_construct@Base 0.2.22
  unity_panel_background_get_type@Base 0.2.22
  unity_panel_background_new@Base 0.2.22
+ unity_panel_divider_construct@Base 0.2.38
+ unity_panel_divider_get_shell@Base 0.2.38
+ unity_panel_divider_get_type@Base 0.2.38
+ unity_panel_divider_new@Base 0.2.38
  unity_panel_home_button_construct@Base 0.2.22
  unity_panel_home_button_get_shell@Base 0.2.22
  unity_panel_home_button_get_type@Base 0.2.22
@@ -409,6 +413,8 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_more_results_button_new@Base 0.2.22
  unity_places_more_results_button_set_count@Base 0.2.22
  unity_places_place_activate@Base 0.2.22
+ unity_places_place_activate_fallback@Base 0.2.38
+ unity_places_place_activate_fallback_finish@Base 0.2.38
  unity_places_place_bar_active_entry_name@Base 0.2.22
  unity_places_place_bar_background_construct@Base 0.2.22
  unity_places_place_bar_background_get_entry_position@Base 0.2.22
@@ -996,6 +1002,7 @@ libunity.so.0 libunity0 #MINVER#
  unity_place_entry_service_set_search@Base 0.2.22
  unity_place_param_spec_stack@Base 0.2.22
  unity_place_param_spec_state@Base 0.2.22
+ unity_place_renderer_activate_default@Base 0.2.38
  unity_place_renderer_get_type@Base 0.2.22
  unity_place_renderer_info_clear_hint@Base 0.2.22
  unity_place_renderer_info_clear_hints@Base 0.2.22
