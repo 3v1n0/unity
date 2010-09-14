@@ -26,6 +26,7 @@ namespace Unity.Places
 
     private Ctk.VBox box;
     private Dee.Model results_model;
+    private DefaultRendererGroup group;
 
     public FolderBrowserRenderer ()
     {
@@ -51,14 +52,24 @@ namespace Unity.Places
     {
       results_model = results;
 
-      var group = new DefaultRendererGroup (0,
-                                            "UnityFolderGroupRenderer",
-                                            "__you_cant_see_me__",
-                                            "gtk-apply",
-                                            results);
+      group = new DefaultRendererGroup (0,
+                                        "UnityFolderGroupRenderer",
+                                        "__you_cant_see_me__",
+                                        "gtk-apply",
+                                        results);
 
       group.activated.connect ((u, m) => { activated (u, m); } );
       box.pack (group, false, true);
+    }
+
+    public void activate_default ()
+    {
+      if (group.n_results > 0)
+        {
+          unowned Dee.ModelIter iter = results_model.get_first_iter ();
+          activated (results_model.get_string (iter, 0),
+                     results_model.get_string (iter, 3));
+        }
     }
   }
 }

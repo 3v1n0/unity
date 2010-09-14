@@ -341,6 +341,31 @@ namespace Unity.Places
 
     }
 
+    private void activate_default ()
+    {
+      var children = box.get_children ();
+      foreach (Clutter.Actor child in children)
+        {
+          DefaultRendererGroup group = child as DefaultRendererGroup;
+
+          if (group.n_results > 0)
+            {
+              unowned Dee.ModelIter iter = results_model.get_first_iter ();
+              while (!results_model.is_last (iter))
+                {
+                  if (results_model.get_uint (iter, 2) == group.group_id)
+                    {
+                      activated (results_model.get_string (iter, 0),
+                                 results_model.get_string (iter, 3));
+                      break;
+                    }
+                  iter = results_model.next (iter);
+                }
+              break;
+            }
+        }
+    }
+
     private void on_group_added (Dee.Model model, Dee.ModelIter iter)
     {
       string renderer = model.get_string (iter, 0);

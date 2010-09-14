@@ -128,6 +128,11 @@ namespace Unity.Places
 
     }
 
+    public void activate_default ()
+    {
+
+    }
+
     /*
      * Private Methods
      */

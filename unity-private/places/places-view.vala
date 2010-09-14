@@ -74,6 +74,10 @@ namespace Unity.Places
       content_box.pack (search_bar, false, true);
       search_bar.show ();
       search_bar.entry.text.captured_event.connect (on_stage_event_captured);
+      search_bar.entry.text.activatable = true;
+      search_bar.entry.text.activate.connect (() => {
+        renderer.activate_default ();                                        
+      });
 
       layered_bin = new LayeredBin ();
       content_box.pack (layered_bin, true, true);
@@ -179,6 +183,13 @@ namespace Unity.Places
 
     private void on_result_activated (string uri, string mimetype)
     {
+      if (active_entry.parent is Place == false)
+        {
+          Place.activate_fallback.begin (uri);
+          global_shell.hide_unity ();
+          return;
+        }
+
       ActivationStatus result = active_entry.parent.activate (uri, mimetype);
       
       switch (result)
