@@ -355,3 +355,4 @@ unity/unity-stripe-texture.c
 unity/unity-layered-bin.c
 unity-private/places/places-default-renderer-tiles.c
 unity-private/places/places-button.c
+unity-private/panel/panel-divider.c

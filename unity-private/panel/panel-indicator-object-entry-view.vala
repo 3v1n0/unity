@@ -34,6 +34,8 @@ namespace Unity.Panel.Indicators
     private float last_width = 0;
     private float last_height = 0;
 
+    public bool skip;
+
     public IndicatorObjectEntryView (Indicator.ObjectEntry _entry)
     {
       Object (entry:_entry,
@@ -66,6 +68,8 @@ namespace Unity.Panel.Indicators
       bg.opacity = 0;
       bg.show ();
 
+      skip = false;
+
       if (entry.image is Gtk.Image)
         {
           image = new Ctk.Image (22);
@@ -96,6 +100,41 @@ namespace Unity.Panel.Indicators
             {
               image.hide ();
             }
+
+          if ((entry.image.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
+            {
+              this.reactive = true;
+              this.skip = false;
+              image.opacity = 255;
+            }
+          else
+            {
+              this.reactive = false;
+              this.skip = true;
+              image.opacity = 64;
+            }
+
+          entry.image.notify["sensitive"].connect (() =>
+            {
+              if ((entry.image.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
+                {
+                  this.reactive = true;
+                  this.skip = false;
+                  image.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                 200,
+                                 "opacity",
+                                 255);
+                }
+              else
+                {
+                  this.reactive = false;
+                  this.skip = true;
+                  image.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                 200,
+                                 "opacity",
+                                 64);
+                }
+            });
 
           entry.image.notify["visible"].connect (() =>
             {
@@ -169,6 +208,41 @@ namespace Unity.Panel.Indicators
             {
               text.hide ();
             }
+
+          if ((entry.label.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
+            {
+              this.reactive = true;
+              this.skip = false;
+              text.opacity = 255;
+            }
+          else
+            {
+              this.reactive = false;
+              this.skip = true;
+              text.opacity = 64;
+            }
+
+          entry.label.notify["sensitive"].connect (() =>
+            {
+              if ((entry.label.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
+                {
+                  this.reactive = true;
+                  this.skip = false;
+                  text.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                200,
+                                "opacity",
+                                255);
+                }
+              else
+                {
+                  this.reactive = false;
+                  this.skip = true;
+                  text.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                200,
+                                "opacity",
+                                64);
+                }
+            });
 
           entry.label.notify["visible"].connect (() =>
             {
