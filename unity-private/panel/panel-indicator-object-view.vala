@@ -114,6 +114,25 @@ namespace Unity.Panel.Indicators
         }
 
       IndicatorObjectEntryView next_object_entry_view = this.indicator_entry_array.get (pos);
+      if (next_object_entry_view.skip)
+        {
+          if (type == Gtk.MenuDirectionType.PARENT)
+            {
+              if (pos == 0)
+                next_object_entry_view = this.indicator_entry_array.get (this.indicator_entry_array.size - 1);
+              else
+                next_object_entry_view = this.indicator_entry_array.get (pos-1);
+
+            }
+          else if (type == Gtk.MenuDirectionType.CHILD)
+            {
+              if (pos == this.indicator_entry_array.size - 1)
+                next_object_entry_view = this.indicator_entry_array.get (0);
+              else
+                next_object_entry_view = this.indicator_entry_array.get (pos+1);
+            }
+        }
+
       next_object_entry_view.show_menu ();
       /* Signal to be picked up by IndicatorBar */
       //this.menu_moved (type);
