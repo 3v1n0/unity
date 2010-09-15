@@ -99,10 +99,12 @@ namespace Unity.Panel.Indicators
 
           if ((entry.image.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
             {
+              this.reactive = true;
               image.opacity = 255;
             }
           else
             {
+              this.reactive = false;
               image.opacity = 64;
             }
 
@@ -110,6 +112,7 @@ namespace Unity.Panel.Indicators
             {
               if ((entry.image.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
                 {
+                  this.reactive = true;
                   image.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
                                  200,
                                  "opacity",
@@ -117,6 +120,7 @@ namespace Unity.Panel.Indicators
                 }
               else
                 {
+                  this.reactive = false;
                   image.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
                                  200,
                                  "opacity",
@@ -199,10 +203,12 @@ namespace Unity.Panel.Indicators
 
           if ((entry.label.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
             {
+              this.reactive = true;
               text.opacity = 255;
             }
           else
             {
+              this.reactive = false;
               text.opacity = 64;
             }
 
@@ -210,6 +216,7 @@ namespace Unity.Panel.Indicators
             {
               if ((entry.label.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
                 {
+                  this.reactive = true;
                   text.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
                                 200,
                                 "opacity",
@@ -217,6 +224,7 @@ namespace Unity.Panel.Indicators
                 }
               else
                 {
+                  this.reactive = false;
                   text.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
                                 200,
                                 "opacity",
