@@ -88,6 +88,17 @@ namespace Unity.Panel.Indicators
               image.size = 22;
             }
 
+          if ((entry.image.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
+            {
+              text.opacity = 255;
+              print ("---=== entry-image is sensitive ===---\n");
+            }
+          else
+            {
+              text.opacity = 64;
+              print ("---=== entry-image is insensitive ===---\n");
+            }
+
           if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
             {
               image.show ();
@@ -160,6 +171,17 @@ namespace Unity.Panel.Indicators
             {
               text.text = entry.label.label.replace ("_", "");
             });
+
+          if ((entry.label.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
+            {
+              text.opacity = 255;
+              print ("---=== entry-label is sensitive ===---\n");
+            }
+          else
+            {
+              text.opacity = 64;
+              print ("---=== entry-label is insensitive ===---\n");
+            }
 
           if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
             {
