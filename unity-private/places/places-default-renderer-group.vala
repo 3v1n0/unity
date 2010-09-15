@@ -284,6 +284,7 @@ namespace Unity.Places
                          results.get_string (iter, 5));
           button.iter = iter;
           cleanup_tiles.remove (button);
+          button.unref (); /* Because Vala holds references when it shouldn't*/;
         }
       else if (group_renderer == "UnityFileInfoRenderer")
         {
