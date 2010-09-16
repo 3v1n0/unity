@@ -144,7 +144,21 @@ namespace Unity.Places
         {
           /* The UnityExtraAction spec mandates that we send the special URI
            * "." when the extra action is triggered */
-          active_entry.parent.activate (".", "");
+          ActivationStatus result = active_entry.parent.activate (".", "");
+      
+          switch (result)
+          {
+            case ActivationStatus.ACTIVATED_SHOW_DASH:
+              break;
+            case ActivationStatus.NOT_ACTIVATED:
+            case ActivationStatus.ACTIVATED_HIDE_DASH:          
+            case ActivationStatus.ACTIVATED_FALLBACK:
+              global_shell.hide_unity ();
+              break;
+            default:
+              warning ("Unexpected activation status: %u", result);
+              break;
+          }
         }
     }
 
