@@ -488,8 +488,10 @@ namespace Unity.Launcher
     {
       uint target_opacity = 0;
       if (active)
+        target_opacity = 255;
+
+      if (active && running)
         {
-          target_opacity = 255;
           running_indicator_notify.animate (Clutter.AnimationMode.EASE_IN_QUAD,
                                             150,
                                             "opacity", 0x00);
