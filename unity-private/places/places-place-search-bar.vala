@@ -65,6 +65,11 @@ namespace Unity.Places
       sections = new PlaceSearchSectionsBar ();
       pack (sections, false, true);
       sections.show ();
+
+      /* We need a dummy to be able to space the action label */
+      var space = new Clutter.Rectangle.with_color ({255, 255, 255, 0});
+      pack (space, true, true);
+      space.show ();
       
       extra_action = new PlaceSearchExtraAction ();
       pack (extra_action, false, true);
