@@ -57,6 +57,7 @@ namespace Unity.Panel.Indicators
 
       indicator_object.entry_added.connect (this.on_entry_added);
       indicator_object.entry_removed.connect (this.remove_entry);
+      indicator_object.menu_show.connect (on_menu_show);
 
       unowned GLib.List<Indicator.ObjectEntry> list = indicator_object.get_entries ();
 
@@ -82,6 +83,19 @@ namespace Unity.Panel.Indicators
        * keys.
        * TODO
        */
+    }
+
+    public void on_menu_show (Indicator.ObjectEntry entry, uint timestamp)
+    {
+      foreach (IndicatorObjectEntryView view in indicator_entry_array)
+        {
+          var s = (view.entry.label is Gtk.Label) ? entry.label.label : "";
+          if (view.entry == entry)
+            {
+              view.show_menu ();
+              break;
+            }
+        }
     }
 
     private void on_menu_moved (IndicatorObjectEntryView object_entry_view, Gtk.MenuDirectionType type)
