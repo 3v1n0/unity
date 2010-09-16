@@ -95,10 +95,26 @@ namespace Unity.Panel.Indicators
           if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
             {
               image.show ();
+              if (entry.label != null)
+                {
+                  if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
+                    {
+                      text.show ();
+                      this.show ();
+                    }
+                }
             }
           else
             {
               image.hide ();
+              if (entry.label != null)
+                {
+                  if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) == 0)
+                    {
+                      text.hide ();
+                      this.hide ();
+                    }
+                }
             }
 
           if ((entry.image.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
@@ -143,10 +159,26 @@ namespace Unity.Panel.Indicators
                   if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
                     {
                       image.show ();
+                      if (entry.label != null)
+                        {
+                          if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
+                            {
+                              text.show ();
+                              this.show ();
+                            }
+                        }
                     }
                   else
                     {
                       image.hide ();
+                      if (entry.label != null)
+                        {
+                          if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) == 0)
+                            {
+                              text.hide ();
+                              this.hide ();
+                            }
+                        }
                     }
                 }
             });
@@ -203,10 +235,26 @@ namespace Unity.Panel.Indicators
           if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
             {
               text.show ();
+              if (entry.image != null)
+                {
+                  if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
+                    {
+                      image.show ();
+                      this.show ();
+                    }
+                }
             }
           else
             {
               text.hide ();
+              if (entry.image != null)
+                {
+                  if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) == 0)
+                    {
+                      image.hide ();
+                      this.hide ();
+                    }
+                }
             }
 
           if ((entry.label.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
@@ -251,10 +299,26 @@ namespace Unity.Panel.Indicators
                   if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
                     {
                       text.show ();
+                      if (entry.image != null)
+                        {
+                          if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
+                            {
+                              image.show ();
+                              this.show ();
+                            }
+                        }
                     }
                   else
                     {
                       text.hide ();
+                      if (entry.image != null)
+                        {
+                          if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) == 0)
+                            {
+                              image.hide ();
+                              this.hide ();
+                            }
+                        }
                     }
                 }
             });
