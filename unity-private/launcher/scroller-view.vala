@@ -304,6 +304,7 @@ namespace Unity.Launcher
         {
           // if picked_actor is null, then we want to send a leave event on the
           // previous actor
+
           Clutter.Event crossing_event =  { 0 };
           crossing_event.type = Clutter.EventType.LEAVE;
           crossing_event.crossing.x = x;
@@ -717,6 +718,7 @@ namespace Unity.Launcher
      */
     private void disable_animations_on_children (Clutter.Event event)
     {
+/*
       disable_child_events = true;
 
       Clutter.Event e = { 0 };
@@ -735,6 +737,7 @@ namespace Unity.Launcher
               child.do_event (e, false);
             }
         }
+*/
 
     }
 
@@ -847,7 +850,7 @@ namespace Unity.Launcher
           autoscroll_anim_active = is_autoscrolling;
 
           Clutter.Event motion_event =  { 0 };
-          motion_event.type = Clutter.EventType.LEAVE;
+          motion_event.type = Clutter.EventType.MOTION;
           motion_event.motion.x = last_known_x;
           motion_event.motion.y = last_known_y;
           motion_event.motion.stage = get_stage () as Clutter.Stage;
@@ -1182,7 +1185,7 @@ namespace Unity.Launcher
         cache.invalidate_texture_cache ();
 
       Clutter.Event motion_event =  { 0 };
-      motion_event.type = Clutter.EventType.LEAVE;
+      motion_event.type = Clutter.EventType.MOTION;
       motion_event.motion.x = last_known_x;
       motion_event.motion.y = last_known_y;
       motion_event.motion.stage = get_stage () as Clutter.Stage;

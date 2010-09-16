@@ -161,11 +161,13 @@ namespace Unity.Launcher
       if (Unity.global_shell is Unity.Shell)
         Unity.global_shell.remove_fullscreen_request (this);
 
-      if (state == QuicklistControllerState.CLOSED) return;
+      if (state == QuicklistControllerState.CLOSED)
+        {
+          return;
+        }
       if (menu == null)
         {
           new_menu ();
-          warning ("state change called on menu when menu does not exist");
         }
 
       if (state == QuicklistControllerState.LABEL)
@@ -190,6 +192,7 @@ namespace Unity.Launcher
           menu.compute_style_textures ();
           menu.set_expansion_size_factor (0.0f);
           menu.set_anchor_position (x + w - 4, y + h/2.0f, 0);
+
         }
       else if (state == QuicklistControllerState.MENU)
         {
