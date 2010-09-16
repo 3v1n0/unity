@@ -95,10 +95,34 @@ namespace Unity.Panel.Indicators
           if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
             {
               image.show ();
+              if (entry.label != null)
+                {
+                  if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
+                    {
+                      text.show ();
+                      this.show ();
+                    }
+                }
+              else
+                {
+                  this.show ();
+                }
             }
           else
             {
               image.hide ();
+              if (entry.label != null)
+                {
+                  if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) == 0)
+                    {
+                      text.hide ();
+                      this.hide ();
+                    }
+                }
+              else
+                {
+                  this.hide ();
+                }
             }
 
           if ((entry.image.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
@@ -143,10 +167,34 @@ namespace Unity.Panel.Indicators
                   if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
                     {
                       image.show ();
+                      if (entry.label != null)
+                        {
+                          if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
+                            {
+                              text.show ();
+                              this.show ();
+                            }
+                        }
+                      else
+                        {
+                          this.show ();
+                        }
                     }
                   else
                     {
                       image.hide ();
+                      if (entry.label != null)
+                        {
+                          if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) == 0)
+                            {
+                              text.hide ();
+                              this.hide ();
+                            }
+                        }
+                      else
+                        {
+                          this.hide ();
+                        }
                     }
                 }
             });
@@ -174,8 +222,8 @@ namespace Unity.Panel.Indicators
         {
           if (image.gicon is GLib.Icon)
             {
-            image.gicon = entry.image.gicon;
-            image.size = 22;
+              image.gicon = entry.image.gicon;
+              image.size = 22;
             }
         });
 
@@ -203,10 +251,34 @@ namespace Unity.Panel.Indicators
           if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
             {
               text.show ();
+              if (entry.image != null)
+                {
+                  if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
+                    {
+                      image.show ();
+                      this.show ();
+                    }
+                }
+              else
+                {
+                  this.show ();
+                }
             }
           else
             {
               text.hide ();
+              if (entry.image != null)
+                {
+                  if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) == 0)
+                    {
+                      image.hide ();
+                      this.hide ();
+                    }
+                }
+              else
+                {
+                  this.hide ();
+                }
             }
 
           if ((entry.label.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
@@ -251,10 +323,34 @@ namespace Unity.Panel.Indicators
                   if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
                     {
                       text.show ();
+                      if (entry.image != null)
+                        {
+                          if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
+                            {
+                              image.show ();
+                              this.show ();
+                            }
+                        }
+                      else
+                        {
+                          this.show ();
+                        }
                     }
                   else
                     {
                       text.hide ();
+                      if (entry.image != null)
+                        {
+                          if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) == 0)
+                            {
+                              image.hide ();
+                              this.hide ();
+                            }
+                        }
+                      else
+                        {
+                          this.hide ();
+                        }
                     }
                 }
             });
