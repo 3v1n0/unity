@@ -622,12 +622,22 @@ namespace Unity.Launcher
 
       Clutter.ActorBox child_box = Clutter.ActorBox ();
 
+      // if we are rotated negatively, we need to work 'backwards'
+      float midpoint = 0;
+
       //allocate the running indicator first
       float width, height, n_width, n_height;
       running_indicator.get_preferred_width (58, out n_width, out width);
       running_indicator.get_preferred_height (58, out n_height, out height);
+      midpoint = (processed_icon.stored_height - height) / 2.0f;
+      if (rotation > 0)
+        {
+          midpoint = box.get_height () - midpoint - processed_icon.stored_ymod;
+        }
+
       child_box.x1 = 0;
-      child_box.y1 = (box.get_height () - height) / 2.0f;
+      child_box.y1 = midpoint;
+      //child_box.y1 = (box.get_height () - height) / 2.0f;
       child_box.x2 = child_box.x1 + width;
       child_box.y2 = child_box.y1 + height;
       running_indicator.allocate (child_box, flags);
@@ -638,7 +648,7 @@ namespace Unity.Launcher
       processed_icon.get_preferred_width (48, out width, out n_width);
       processed_icon.get_preferred_height (48, out height, out n_height);
       child_box.x1 = grabbed_push + (box.get_width () - width) / 2.0f;
-      child_box.y1 = y;
+      child_box.y1 = 0;
       child_box.x2 = child_box.x1 + 48;
       child_box.y2 = child_box.y1 + height;
       processed_icon.allocate (child_box, flags);
@@ -646,8 +656,12 @@ namespace Unity.Launcher
       //allocate the active indicator
       active_indicator.get_preferred_width (48, out n_width, out width);
       active_indicator.get_preferred_height (48, out n_height, out height);
+      midpoint = (processed_icon.stored_height - height) / 2.0f;
+      if (rotation > 0)
+        midpoint = box.get_height () - midpoint - processed_icon.stored_ymod;
+
       child_box.x1 = box.get_width () - width;
-      child_box.y1 = (box.get_height () - height) / 2.0f;
+      child_box.y1 = midpoint;
       child_box.x2 = child_box.x1 + width;
       child_box.y2 = child_box.y1 + height;
       active_indicator.allocate (child_box, flags);

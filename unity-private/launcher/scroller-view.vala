@@ -1502,7 +1502,7 @@ namespace Unity.Launcher
           if (index >= index_start_flat && index < index_end_flat)
             {
               change_child_position_rotation (child, h, 0.0f, immediate);
-              h += nat_height + spacing;
+              h += 48 + spacing;
               num_children_handled++;
 
               if (index == index_start_flat)
