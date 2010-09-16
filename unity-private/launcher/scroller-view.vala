@@ -84,6 +84,9 @@ namespace Unity.Launcher
     private float last_known_pointer_x = 0.0f;
     private bool can_scroll = false;
 
+    private float last_known_x = 0;
+    private float last_known_y = 0;
+
     /*
      * scrolling variables
      */
@@ -264,6 +267,8 @@ namespace Unity.Launcher
 
       float x, y;
       event.get_coords (out x, out y);
+      last_known_x = x;
+      last_known_y = y;
       if (assume_on_launcher)
         x = 25;
 
@@ -325,6 +330,7 @@ namespace Unity.Launcher
         {
           get_stage ().motion_event.disconnect (on_motion_event);
         }
+
       Clutter.Actor picked_actor = handle_event (event, is_scrolling);
 
       if (picked_actor is Clutter.Actor)
@@ -839,6 +845,15 @@ namespace Unity.Launcher
           speed *= autoscroll_direction;
           move_scroll_position (speed, true);
           autoscroll_anim_active = is_autoscrolling;
+
+          Clutter.Event motion_event =  { 0 };
+          motion_event.type = Clutter.EventType.LEAVE;
+          motion_event.motion.x = last_known_x;
+          motion_event.motion.y = last_known_y;
+          motion_event.motion.stage = get_stage () as Clutter.Stage;
+          motion_event.motion.flags = Clutter.EventFlags.FLAG_SYNTHETIC;
+          passthrough_motion_event (motion_event);
+
           return is_autoscrolling;
         });
       }
@@ -1165,6 +1180,14 @@ namespace Unity.Launcher
         cache.update_texture_cache ();
       else
         cache.invalidate_texture_cache ();
+
+      Clutter.Event motion_event =  { 0 };
+      motion_event.type = Clutter.EventType.LEAVE;
+      motion_event.motion.x = last_known_x;
+      motion_event.motion.y = last_known_y;
+      motion_event.motion.stage = get_stage () as Clutter.Stage;
+      motion_event.motion.flags = Clutter.EventFlags.FLAG_SYNTHETIC;
+      passthrough_motion_event (motion_event);
 
       stored_delta = delta;
     }
