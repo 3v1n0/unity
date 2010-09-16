@@ -1413,9 +1413,6 @@ namespace Unity
                 bool fullscreen;
                 win.get ("fullscreen", out fullscreen);
                 
-                if (Mutter.MetaWindow.get_wm_class (win) == "npviewer.bin")
-                  return false;
-                
                 if (!decorated && !maximized)
                   {
                     window.set_data (UNDECORATED_HINT, "%s".printf ("true"));
