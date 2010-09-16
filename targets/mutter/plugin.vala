@@ -1407,16 +1407,22 @@ namespace Unity
           Idle.add (() => {
             if (win is Object)
               {
-                if (Utils.window_is_decorated (Mutter.MetaWindow.get_xwindow (win)) == false && Mutter.MetaWindow.is_maximized (win) == false)
+                bool decorated  = Utils.window_is_decorated (Mutter.MetaWindow.get_xwindow (win));
+                bool maximized  = Mutter.MetaWindow.is_maximized (win);
+                
+                bool fullscreen;
+                win.get ("fullscreen", out fullscreen);
+                
+                if (Mutter.MetaWindow.get_wm_class (win) == "npviewer.bin")
+                  return false;
+                
+                if (!decorated && !maximized)
                   {
                     window.set_data (UNDECORATED_HINT, "%s".printf ("true"));
                   }
-                else
+                else if (decorated && maximized && !fullscreen)
                   {
-                    if (Mutter.MetaWindow.is_maximized (win))
-                      {
-                        Utils.window_set_decorations (Mutter.MetaWindow.get_xwindow (win), 0);
-                      }
+                    Utils.window_set_decorations (Mutter.MetaWindow.get_xwindow (win), 0);
                   }
               }
 
