@@ -196,6 +196,16 @@ namespace Unity.Launcher
           if (Unity.global_shell is Unity.Shell)
             Unity.global_shell.add_fullscreen_request (this);
 
+          if(menu.get_num_items() == 0)
+            {
+              // It can happen that the quicklist menu is requested and the menu was not previously filled with a label. 
+              // In this case we fill the menu with the label first.
+              string label = attached_controller.name;
+              var menuitem = new QuicklistMenuItem.with_label (label);
+              menuitem.reactive = false;
+              menu.append (menuitem, false);
+            }
+            
           menu.close_on_leave = false;
           menu.set_detect_clicks (true);
           // grab the top menu
