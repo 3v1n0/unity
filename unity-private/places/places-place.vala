@@ -217,7 +217,9 @@ namespace Unity.Places
     {
       bool remote_activation = false;
     
-      if (uri_regex != null && uri_regex.match (uri))
+      if (uri == ".")
+        remote_activation = true;
+      else if (uri_regex != null && uri_regex.match (uri))
         remote_activation = true;
       else if (mime_regex != null && mime_regex.match (mimetype))
         remote_activation = true;
