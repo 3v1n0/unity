@@ -85,7 +85,7 @@ namespace Unity.Launcher
                 opacity);
     }
 
-    private UnityIcon processed_icon;
+    public UnityIcon processed_icon;
     private ThemeImage close_symbol;
     private ThemeImage active_indicator;
     private ThemeImage running_indicator_notify;
@@ -221,27 +221,27 @@ namespace Unity.Launcher
         }
     }
 
-  private bool previous_close_state = false;
-  private void on_enable_close_state_changed ()
-  {
-    if (enable_close_state == true && previous_close_state == false)
-      {
-        close_symbol.animate (Clutter.AnimationMode.EASE_OUT_CUBIC,
-                              300,
-                              "opacity", 0xff,
-                              "scale-x", 1.0,
-                              "scale-y", 1.0);
-      }
-    else if (enable_close_state == false && previous_close_state == true)
-      {
-        close_symbol.animate (Clutter.AnimationMode.EASE_OUT_CUBIC,
-                              300,
-                              "opacity", 0x00,
-                              "scale-x", 0.0,
-                              "scale-y", 0.0);
-      }
-    previous_close_state = enable_close_state;
-  }
+    private bool previous_close_state = false;
+    private void on_enable_close_state_changed ()
+    {
+      if (enable_close_state == true && previous_close_state == false)
+        {
+          close_symbol.animate (Clutter.AnimationMode.EASE_OUT_CUBIC,
+                                300,
+                                "opacity", 0xff,
+                                "scale-x", 1.0,
+                                "scale-y", 1.0);
+        }
+      else if (enable_close_state == false && previous_close_state == true)
+        {
+          close_symbol.animate (Clutter.AnimationMode.EASE_OUT_CUBIC,
+                                300,
+                                "opacity", 0x00,
+                                "scale-x", 0.0,
+                                "scale-y", 0.0);
+        }
+      previous_close_state = enable_close_state;
+    }
 
     /* alpha helpers */
     private static float get_ease_out_sine (float alpha)
@@ -465,7 +465,12 @@ namespace Unity.Launcher
           effect_drop_shadow.set_opacity (0.4f);
           this.effect_drop_shadow.set_margin (5);
           this.processed_icon.add_effect (effect_drop_shadow);
-
+          this.processed_icon.set_scale (0.0f, 0.0f);
+          this.processed_icon.scale_gravity = Clutter.Gravity.CENTER;
+          this.processed_icon.animate (Clutter.AnimationMode.EASE_OUT_CUBIC,
+                                       300,
+                                       "scale-x", 1.0,
+                                       "scale-y", 1.0);
           do_queue_redraw ();
         }
     }
@@ -631,9 +636,7 @@ namespace Unity.Launcher
       running_indicator.get_preferred_height (58, out n_height, out height);
       midpoint = (processed_icon.stored_height - height) / 2.0f;
       if (rotation > 0)
-        {
-          midpoint = box.get_height () - midpoint - processed_icon.stored_ymod;
-        }
+        midpoint = box.get_height () - midpoint - processed_icon.stored_ymod;
 
       child_box.x1 = 0;
       child_box.y1 = midpoint;

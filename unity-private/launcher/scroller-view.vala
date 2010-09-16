@@ -804,10 +804,30 @@ namespace Unity.Launcher
       child.set_parent (this);
 
       // we only animate if the added child is not at the end
-      if (model.index_of (child) == model.size -1)
-        order_children (true);
-      else
-        order_children (false);
+      float[] prev_positions = {};//new float [model.size];
+      float[] prev_rotations = {};//new float [model.size];
+
+      foreach (ScrollerChild modelchild in model)
+        {
+          prev_positions += modelchild.position;
+          prev_rotations += modelchild.rotation;
+        }
+      order_children (true);
+
+      int index = 0;
+      foreach (ScrollerChild modelchild in model)
+        {
+          if (child != modelchild)
+            {
+              change_child_position_rotation (modelchild,
+                                              prev_positions[index],
+                                              prev_rotations[index],
+                                              true);
+            }
+          index++;
+        }
+
+      order_children (false);
       queue_relayout ();
       child.notify["position"].connect (() => {
         queue_relayout ();
@@ -818,17 +838,30 @@ namespace Unity.Launcher
 
     private void model_child_removed (ScrollerChild child)
     {
-      child_refs.add (child); // we need to keep a reference on it for now
-      var anim = child.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
-                                SHORT_DELAY,
-                                "opacity", 0);
-      anim.completed.connect (() => {
-        child.unparent ();
-        child_refs.remove (child);
-      });
+      var drag_controller = Drag.Controller.get_default ();
+      if (drag_controller.is_dragging)
+        {
+          order_children (false);
+          queue_relayout ();
+        }
+      else
+        {
+          child_refs.add (child); // we need to keep a reference on it for now
+          var anim = child.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                    SHORT_DELAY,
+                                    "opacity", 0);
 
-      order_children (false);
-      queue_relayout ();
+          var icon_scale_anim = child.processed_icon.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                                              SHORT_DELAY,
+                                                              "scale-x", 0.0,
+                                                              "scale-y", 0.0);
+          anim.completed.connect (() => {
+            child.unparent ();
+            child_refs.remove (child);
+            order_children (false);
+            queue_relayout ();
+          });
+        }
     }
 
     private void model_order_changed ()

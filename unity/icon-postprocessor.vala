@@ -391,6 +391,8 @@ namespace Unity
     public static void paint_real (Clutter.Actor actor)
     {
       UnityIcon self = actor as UnityIcon;
+      if (self.icon is Clutter.Texture == false)
+        return;
       float p1_x, p1_y;
       float p2_x, p2_y;
       float p3_x, p3_y;

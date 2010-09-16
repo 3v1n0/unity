@@ -155,7 +155,6 @@ namespace Unity.Launcher
 
       children.remove (child);
       child_removed (tempchild);
-      order_changed ();
     }
 
     public void insert (ScrollerChild child, int i)
