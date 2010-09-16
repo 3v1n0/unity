@@ -99,9 +99,15 @@ namespace Unity.Panel.Indicators
                 {
                   if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
                     {
+                      print ("---=== show text/this 1 ===---\n");
                       text.show ();
                       this.show ();
                     }
+                }
+              else
+                {
+                  print ("---=== show this 2 ===---\n");
+                  this.show ();
                 }
             }
           else
@@ -111,9 +117,15 @@ namespace Unity.Panel.Indicators
                 {
                   if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) == 0)
                     {
+                      print ("---=== hide text/this 3 ===---\n");
                       text.hide ();
                       this.hide ();
                     }
+                }
+              else
+                {
+                  print ("---=== hide this 4 ===---\n");
+                  this.hide ();
                 }
             }
 
@@ -163,9 +175,15 @@ namespace Unity.Panel.Indicators
                         {
                           if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
                             {
+                              print ("---=== show text/this 5 ===---\n");
                               text.show ();
                               this.show ();
                             }
+                        }
+                      else
+                        {
+                          print ("---=== show this 6 ===---\n");
+                          this.show ();
                         }
                     }
                   else
@@ -175,9 +193,15 @@ namespace Unity.Panel.Indicators
                         {
                           if ((entry.label.get_flags () & Gtk.WidgetFlags.VISIBLE) == 0)
                             {
+                              print ("---=== hide text/this 7 ===---\n");
                               text.hide ();
                               this.hide ();
                             }
+                        }
+                      else
+                        {
+                          print ("---=== hide this 8 ===---\n");
+                          this.hide ();
                         }
                     }
                 }
@@ -206,8 +230,8 @@ namespace Unity.Panel.Indicators
         {
           if (image.gicon is GLib.Icon)
             {
-            image.gicon = entry.image.gicon;
-            image.size = 22;
+              image.gicon = entry.image.gicon;
+              image.size = 22;
             }
         });
 
@@ -239,9 +263,15 @@ namespace Unity.Panel.Indicators
                 {
                   if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
                     {
+                      print ("---=== show image/this 9 ===---\n");
                       image.show ();
                       this.show ();
                     }
+                }
+              else
+                {
+                  print ("---=== show this 10 ===---\n");
+                  this.show ();
                 }
             }
           else
@@ -251,9 +281,15 @@ namespace Unity.Panel.Indicators
                 {
                   if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) == 0)
                     {
+                      print ("---=== hide image/this 11 ===---\n");
                       image.hide ();
                       this.hide ();
                     }
+                }
+              else
+                {
+                  print ("---=== hide this 12 ===---\n");
+                  this.hide ();
                 }
             }
 
@@ -303,6 +339,7 @@ namespace Unity.Panel.Indicators
                         {
                           if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) != 0)
                             {
+                              print ("---=== show image/this 7 ===---\n");
                               image.show ();
                               this.show ();
                             }
@@ -315,6 +352,7 @@ namespace Unity.Panel.Indicators
                         {
                           if ((entry.image.get_flags () & Gtk.WidgetFlags.VISIBLE) == 0)
                             {
+                              print ("---=== hide image/this 8 ===---\n");
                               image.hide ();
                               this.hide ();
                             }
