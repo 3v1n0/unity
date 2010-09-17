@@ -332,8 +332,9 @@ namespace Unity.Places
                        x, height - radius);
           cr.close_path ();
 
-          cr.set_source_rgba (1.0, 1.0, 1.0, 0.5);
+          cr.set_source_rgba (1.0, 1.0, 1.0, 0.25);
           cr.fill_preserve ();
+          cr.set_source_rgba (1.0, 1.0, 1.0, 0.25);
           cr.stroke ();
 
           var chevron = 5;
@@ -348,7 +349,7 @@ namespace Unity.Places
                   cr.move_to (point - chevron, y);
                   cr.line_to (point + chevron, y + height/2);
                   cr.line_to (point - chevron, y + height);
-                  cr.set_source_rgba (1.0, 1.0, 1.0, 1.0);
+                  cr.set_source_rgba (1.0, 1.0, 1.0, 0.5);
                   cr.stroke ();
                 }
               point += SPACING/2;
