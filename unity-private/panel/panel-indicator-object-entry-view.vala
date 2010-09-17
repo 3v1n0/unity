@@ -533,6 +533,13 @@ namespace Unity.Panel.Indicators
       Cairo.Context cr;
       int width = (int)last_width;
       int height = (int)last_height;
+      int radius = 4;
+      double x = 0;
+      double y = 0;
+      double xos = 1.5;
+      double yos = 1.5;
+      /* FIXME */
+      double mpi = 3.14159265358979323846;
 
       bg.set_surface_size (width, height);
 
@@ -547,29 +554,39 @@ namespace Unity.Panel.Indicators
 
       cr.set_source_rgba (1.0, 1.0, 1.0, 0.2);
 
-      cr.move_to (1, height);
+      cr.move_to (x+xos+radius, y+yos);
+      cr.arc (x+xos+width-xos*2-radius, y+yos+radius, radius, mpi*1.5, mpi*2);
+      cr.line_to (x+xos+width-xos*2, y+yos+height-yos*2+2);
+      cr.line_to (x+xos, y+yos+height-yos*2+2);
+      cr.arc (x+xos+radius, y+yos+radius, radius, mpi, mpi*1.5);
 
-      cr.line_to (1, 7);
-
-      cr.curve_to (1, 2,
-                   1, 2,
-                   10, 2);
-
-      cr.line_to (width-10, 2);
-
-      cr.curve_to (width, 2,
-                   width, 2,
-                   width, 7);
-
-      cr.line_to (width, height);
-
-      cr.line_to (1, height);
-
-      var pat = new Cairo.Pattern.linear (1, 0, 1, height);
-      pat.add_color_stop_rgba (0.0, 248/255.0f, 134/255.0f, 87/255.0f, 1.0f);
-      pat.add_color_stop_rgba (1.0, 236/255.0f, 113/255.0f, 63/255.0f, 1.0f);
+      var pat = new Cairo.Pattern.linear (x+xos, y, x+xos, y+height-yos*2+2);
+      pat.add_color_stop_rgba (0.0, 83/255.0f, 82/255.0f, 78/255.0f, 1.0f);
+      pat.add_color_stop_rgba (1.0, 66/255.0f, 65/255.0f, 63/255.0f, 1.0f);
       cr.set_source (pat);
-      cr.fill ();
+      cr.fill_preserve ();
+
+      pat = new Cairo.Pattern.linear (x+xos, y, x+xos, y+height-yos*2+2);
+      pat.add_color_stop_rgba (0.0, 62/255.0f, 61/255.0f, 58/255.0f, 1.0f);
+      pat.add_color_stop_rgba (1.0, 54/255.0f, 54/255.0f, 52/255.0f, 1.0f);
+      cr.set_source (pat);
+      cr.stroke ();
+
+      xos++;
+      yos++;
+
+      /* enlarging the area to not draw the lightborder at bottom, ugly trick :P */
+      cr.move_to (x+radius+xos, y+yos);
+      cr.arc (x+xos+width-xos*2-radius, y+yos+radius, radius, mpi*1.5, mpi*2);
+      cr.line_to (x+xos+width-xos*2, y+yos+height-yos*2+3);
+      cr.line_to (x+xos, y+yos+height-yos*2+3);
+      cr.arc (x+xos+radius, y+yos+radius, radius, mpi, mpi*1.5);
+
+      pat = new Cairo.Pattern.linear (x+xos, y, x+xos, y+height-yos*2+3);
+      pat.add_color_stop_rgba (0.0, 92/255.0f, 90/255.0f, 85/255.0f, 1.0f);
+      pat.add_color_stop_rgba (1.0, 70/255.0f, 69/255.0f, 66/255.0f, 1.0f);
+      cr.set_source (pat);
+      cr.stroke ();
 
       return false;
     }
