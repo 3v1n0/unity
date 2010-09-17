@@ -1,6 +1,17 @@
 unity (0.2.40-0ubuntu1) UNRELEASED; urgency=low
 
-  * New upstream release.
+  * New upstream release:
+    - Fix inactive menus accessible (LP: #604505)
+    - Fix some more memory leaks (LP: #604777)
+    - Fix weird behaviors of quicklist (LP: #617339)
+    - Provide an "open this folder" button (LP: #633201)
+    - Hidden menu causing gap (LP: #600191)
+    - Cannot go fullscreen for flash videos (LP: #631381)
+    - Can't access menu items from the keyboard (LP: #636728)
+    - Don't register for MDRAGs since they aren't used (LP: #632613)
+    - Don't run indicator on special launchers (LP: #627488)
+    - Center arrows position in folded launcher tiles (LP: #633084)
+    - Launcher icons first appear as white upon login (LP: #601093)
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 17 Sep 2010 13:00:22 +0200
 
