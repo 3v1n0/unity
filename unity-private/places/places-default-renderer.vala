@@ -162,11 +162,14 @@ namespace Unity.Places
         }
       else if (slider_state == SLIDER_STATE_PRELIGHT)
         {
+          cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.1f);
+          cr.fill_preserve ();
+
           cr_stripes.set_operator (Cairo.Operator.CLEAR);
           cr_stripes.paint ();
           cr_stripes.scale (1.0f, 1.0f);
           cr_stripes.set_operator (Cairo.Operator.OVER);
-          cr_stripes.set_source_rgba (1.0f, 1.0f, 1.0f, 0.25f);
+          cr_stripes.set_source_rgba (1.0f, 1.0f, 1.0f, 0.15f);
           cr_stripes.rectangle (0.0f, 0.0f, 1.0f, 1.0f);
           cr_stripes.fill ();
           cr_stripes.rectangle (1.0f, 1.0f, 1.0f, 1.0f);
