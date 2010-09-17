@@ -159,7 +159,7 @@ namespace Unity.Places
           return;
         }
 
-      outline_func (cr, width, height);
+      outline_func (cr, width+1, height+1);
 
       if (state == Ctk.ActorState.STATE_NORMAL)
         {
