@@ -2,7 +2,7 @@ unity (0.2.40-0ubuntu1) UNRELEASED; urgency=low
 
   * New upstream release:
     - Fix inactive menus accessible (LP: #604505)
-    - Fix some more memory leaks (LP: #604777)
+    - Fix some more memory leaks (LP: #604777, #621690, #628144)
     - Fix weird behaviors of quicklist (LP: #617339)
     - Provide an "open this folder" button (LP: #633201)
     - Hidden menu causing gap (LP: #600191)
@@ -12,6 +12,13 @@ unity (0.2.40-0ubuntu1) UNRELEASED; urgency=low
     - Don't run indicator on special launchers (LP: #627488)
     - Center arrows position in folded launcher tiles (LP: #633084)
     - Launcher icons first appear as white upon login (LP: #601093)
+    - Removes jittering when rubber band is in use on the launcher (LP: #632991)
+    - Mutter restarts on closing almost any application (LP: #634701)
+    - Can't launch apps like synaptic with root privileges from launch bar
+      (LP: #599298)
+    - Launcher tile dragging shouldn't be masked (LP: #631443)
+    - Fix Carousel-ed icons have distorted perspective (LP: #607515)
+    - Use no longer sync call (LP: #620011)
   * update debian/libunity0.symbols
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 17 Sep 2010 13:00:22 +0200
