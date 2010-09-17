@@ -32,6 +32,7 @@ namespace Unity.Places
     private PlaceSearchNavigation  navigation;
     public  PlaceSearchEntry       entry;
     public  PlaceSearchSectionsBar sections;
+    public  PlaceSearchExtraAction extra_action;
 
     public PlaceSearchBar ()
     {
@@ -63,7 +64,17 @@ namespace Unity.Places
 
       sections = new PlaceSearchSectionsBar ();
       pack (sections, false, true);
-      entry.show ();
+      sections.show ();
+
+      /* We need a dummy to be able to space the action label */
+      var space = new Clutter.Rectangle.with_color ({255, 255, 255, 0});
+      pack (space, true, true);
+      space.show ();
+      
+      extra_action = new PlaceSearchExtraAction ();
+      pack (extra_action, false, true);
+      extra_action.hide (); /* hidden by default */
+      extra_action.activated.connect (on_extra_action_activated);
 
       bg = new PlaceSearchBarBackground (navigation, entry);
       set_background (bg);
@@ -126,6 +137,30 @@ namespace Unity.Places
           active_entry.set_search (text, hints);
         }
     }
+    
+    private void on_extra_action_activated ()
+    {
+      if (active_entry is PlaceEntry)
+        {
+          /* The UnityExtraAction spec mandates that we send the special URI
+           * "." when the extra action is triggered */
+          ActivationStatus result = active_entry.parent.activate (".", "");
+      
+          switch (result)
+          {
+            case ActivationStatus.ACTIVATED_SHOW_DASH:
+              break;
+            case ActivationStatus.NOT_ACTIVATED:
+            case ActivationStatus.ACTIVATED_HIDE_DASH:          
+            case ActivationStatus.ACTIVATED_FALLBACK:
+              global_shell.hide_unity ();
+              break;
+            default:
+              warning ("Unexpected activation status: %u", result);
+              break;
+          }
+        }
+    }
 
     /*
      * Public Methods
@@ -146,6 +181,18 @@ namespace Unity.Places
       navigation.set_active_entry (entry);
       this.entry.set_active_entry (entry);
       this.entry.text.grab_key_focus ();
+      
+      if (entry.hints != null)
+        {
+          if (entry.hints["UnityExtraAction"] != null)
+            {
+              extra_action.set_icon_from_gicon_string (
+                                               entry.hints["UnityExtraAction"]);
+              extra_action.show ();
+            }
+          else
+            extra_action.hide ();
+        }
     }
   }
 

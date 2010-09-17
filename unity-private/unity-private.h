@@ -667,6 +667,16 @@ typedef struct _UnityPlacesPlaceSearchEntryClass UnityPlacesPlaceSearchEntryClas
 typedef struct _UnityPlacesPlaceSearchSectionsBar UnityPlacesPlaceSearchSectionsBar;
 typedef struct _UnityPlacesPlaceSearchSectionsBarClass UnityPlacesPlaceSearchSectionsBarClass;
 
+#define UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION (unity_places_place_search_extra_action_get_type ())
+#define UNITY_PLACES_PLACE_SEARCH_EXTRA_ACTION(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION, UnityPlacesPlaceSearchExtraAction))
+#define UNITY_PLACES_PLACE_SEARCH_EXTRA_ACTION_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION, UnityPlacesPlaceSearchExtraActionClass))
+#define UNITY_PLACES_IS_PLACE_SEARCH_EXTRA_ACTION(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION))
+#define UNITY_PLACES_IS_PLACE_SEARCH_EXTRA_ACTION_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION))
+#define UNITY_PLACES_PLACE_SEARCH_EXTRA_ACTION_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION, UnityPlacesPlaceSearchExtraActionClass))
+
+typedef struct _UnityPlacesPlaceSearchExtraAction UnityPlacesPlaceSearchExtraAction;
+typedef struct _UnityPlacesPlaceSearchExtraActionClass UnityPlacesPlaceSearchExtraActionClass;
+
 #define UNITY_PLACES_TYPE_PLACE_SEARCH_BAR_BACKGROUND (unity_places_place_search_bar_background_get_type ())
 #define UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR_BACKGROUND, UnityPlacesPlaceSearchBarBackground))
 #define UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR_BACKGROUND, UnityPlacesPlaceSearchBarBackgroundClass))
@@ -688,6 +698,7 @@ typedef struct _UnityPlacesPlaceSearchBarBackgroundPrivate UnityPlacesPlaceSearc
 typedef struct _UnityPlacesPlaceSearchNavigation UnityPlacesPlaceSearchNavigation;
 typedef struct _UnityPlacesPlaceSearchNavigationClass UnityPlacesPlaceSearchNavigationClass;
 typedef struct _UnityPlacesPlaceSearchEntryPrivate UnityPlacesPlaceSearchEntryPrivate;
+typedef struct _UnityPlacesPlaceSearchExtraActionPrivate UnityPlacesPlaceSearchExtraActionPrivate;
 
 #define UNITY_PLACES_TYPE_PLACE_BROWSER_REMOTE (unity_places_place_browser_remote_get_type ())
 #define UNITY_PLACES_PLACE_BROWSER_REMOTE(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_BROWSER_REMOTE, UnityPlacesPlaceBrowserRemote))
@@ -1177,6 +1188,7 @@ struct _UnityPanelIndicatorsIndicatorObjectEntryView {
 	UnityPanelIndicatorsIndicatorObjectEntryViewPrivate * priv;
 	CtkImage* image;
 	CtkText* text;
+	gboolean skip;
 };
 
 struct _UnityPanelIndicatorsIndicatorObjectEntryViewClass {
@@ -1620,6 +1632,7 @@ struct _UnityPlacesPlaceSearchBar {
 	UnityPlacesPlaceSearchBarPrivate * priv;
 	UnityPlacesPlaceSearchEntry* entry;
 	UnityPlacesPlaceSearchSectionsBar* sections;
+	UnityPlacesPlaceSearchExtraAction* extra_action;
 };
 
 struct _UnityPlacesPlaceSearchBarClass {
@@ -1646,6 +1659,16 @@ struct _UnityPlacesPlaceSearchEntry {
 
 struct _UnityPlacesPlaceSearchEntryClass {
 	CtkBoxClass parent_class;
+};
+
+struct _UnityPlacesPlaceSearchExtraAction {
+	CtkBin parent_instance;
+	UnityPlacesPlaceSearchExtraActionPrivate * priv;
+	CtkImage* image;
+};
+
+struct _UnityPlacesPlaceSearchExtraActionClass {
+	CtkBinClass parent_class;
 };
 
 struct _UnityPlacesPlaceBrowserRemoteState {
@@ -1858,6 +1881,7 @@ struct _UnityLauncherScrollerChild {
 	gboolean do_not_render;
 	UnityLauncherScrollerChildController* controller;
 	float grabbed_push;
+	UnityUnityIcon* processed_icon;
 };
 
 struct _UnityLauncherScrollerChildClass {
@@ -2108,6 +2132,7 @@ IndicatorObjectEntry* unity_panel_indicators_indicator_object_entry_view_get_ent
 UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_object_view_new (IndicatorObject* _object);
 UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_object_view_construct (GType object_type, IndicatorObject* _object);
 void unity_panel_indicators_indicator_object_view_show_entry_menu (UnityPanelIndicatorsIndicatorObjectView* self, gint entry);
+void unity_panel_indicators_indicator_object_view_on_menu_show (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObjectEntry* entry, guint timestamp);
 void unity_panel_indicators_indicator_object_view_open_first_menu_entry (UnityPanelIndicatorsIndicatorObjectView* self);
 void unity_panel_indicators_indicator_object_view_open_last_menu_entry (UnityPanelIndicatorsIndicatorObjectView* self);
 gboolean unity_panel_indicators_indicator_object_view_find_entry (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObjectEntry* entry);
@@ -2390,6 +2415,7 @@ void unity_places_place_set_online (UnityPlacesPlace* self, gboolean value);
 GType unity_places_place_search_bar_get_type (void) G_GNUC_CONST;
 GType unity_places_place_search_entry_get_type (void) G_GNUC_CONST;
 GType unity_places_place_search_sections_bar_get_type (void) G_GNUC_CONST;
+GType unity_places_place_search_extra_action_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_new (void);
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_construct (GType object_type);
 void unity_places_place_search_bar_reset (UnityPlacesPlaceSearchBar* self);
@@ -2412,6 +2438,13 @@ void unity_places_place_search_entry_reset (UnityPlacesPlaceSearchEntry* self);
 void unity_places_place_search_entry_set_active_entry (UnityPlacesPlaceSearchEntry* self, UnityPlacesPlaceEntry* entry);
 float unity_places_place_search_entry_get_cursor_opacity (UnityPlacesPlaceSearchEntry* self);
 void unity_places_place_search_entry_set_cursor_opacity (UnityPlacesPlaceSearchEntry* self, float value);
+UnityPlacesPlaceSearchExtraAction* unity_places_place_search_extra_action_new (void);
+UnityPlacesPlaceSearchExtraAction* unity_places_place_search_extra_action_construct (GType object_type);
+void unity_places_place_search_extra_action_set_icon_from_gicon_string (UnityPlacesPlaceSearchExtraAction* self, const char* icon_string);
+float unity_places_place_search_extra_action_get_destroy_factor (UnityPlacesPlaceSearchExtraAction* self);
+void unity_places_place_search_extra_action_set_destroy_factor (UnityPlacesPlaceSearchExtraAction* self, float value);
+float unity_places_place_search_extra_action_get_resize_factor (UnityPlacesPlaceSearchExtraAction* self);
+void unity_places_place_search_extra_action_set_resize_factor (UnityPlacesPlaceSearchExtraAction* self, float value);
 UnityPlacesPlaceBrowserRemote* unity_places_place_browser_remote_dbus_proxy_new (DBusGConnection* connection, const char* name, const char* path);
 GType unity_places_place_browser_remote_state_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceBrowserRemoteState* unity_places_place_browser_remote_state_dup (const UnityPlacesPlaceBrowserRemoteState* self);

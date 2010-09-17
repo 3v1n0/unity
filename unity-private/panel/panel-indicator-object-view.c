@@ -29,6 +29,8 @@
 #include <libindicator/indicator.h>
 #include <libindicator/indicator-service.h>
 #include <libindicator/indicator-service-manager.h>
+#include <stdlib.h>
+#include <string.h>
 #include <clutter/clutter.h>
 #include <unity-utils.h>
 
@@ -54,6 +56,8 @@ typedef struct _UnityPanelIndicatorsIndicatorObjectViewPrivate UnityPanelIndicat
 typedef struct _UnityPanelIndicatorsIndicatorObjectEntryView UnityPanelIndicatorsIndicatorObjectEntryView;
 typedef struct _UnityPanelIndicatorsIndicatorObjectEntryViewClass UnityPanelIndicatorsIndicatorObjectEntryViewClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+#define _g_free0(var) (var = (g_free (var), NULL))
+typedef struct _UnityPanelIndicatorsIndicatorObjectEntryViewPrivate UnityPanelIndicatorsIndicatorObjectEntryViewPrivate;
 
 struct _UnityPanelIndicatorsIndicatorObjectView {
 	CtkBox parent_instance;
@@ -69,6 +73,18 @@ struct _UnityPanelIndicatorsIndicatorObjectViewPrivate {
 	GeeArrayList* indicator_entry_array;
 };
 
+struct _UnityPanelIndicatorsIndicatorObjectEntryView {
+	CtkBox parent_instance;
+	UnityPanelIndicatorsIndicatorObjectEntryViewPrivate * priv;
+	CtkImage* image;
+	CtkText* text;
+	gboolean skip;
+};
+
+struct _UnityPanelIndicatorsIndicatorObjectEntryViewClass {
+	CtkBoxClass parent_class;
+};
+
 
 static gpointer unity_panel_indicators_indicator_object_view_parent_class = NULL;
 
@@ -82,10 +98,11 @@ enum  {
 UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_object_view_new (IndicatorObject* _object);
 UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_object_view_construct (GType object_type, IndicatorObject* _object);
 void unity_panel_indicators_indicator_object_view_show_entry_menu (UnityPanelIndicatorsIndicatorObjectView* self, gint entry);
-static void unity_panel_indicators_indicator_object_view_on_menu_moved (UnityPanelIndicatorsIndicatorObjectView* self, UnityPanelIndicatorsIndicatorObjectEntryView* object_entry_view, GtkMenuDirectionType type);
-void unity_panel_indicators_indicator_object_entry_view_show_menu (UnityPanelIndicatorsIndicatorObjectEntryView* self);
-static void unity_panel_indicators_indicator_object_view_on_entry_added (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObject* object, IndicatorObjectEntry* indicator_object_entry);
+void unity_panel_indicators_indicator_object_view_on_menu_show (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObjectEntry* entry, guint timestamp);
 IndicatorObjectEntry* unity_panel_indicators_indicator_object_entry_view_get_entry (UnityPanelIndicatorsIndicatorObjectEntryView* self);
+void unity_panel_indicators_indicator_object_entry_view_show_menu (UnityPanelIndicatorsIndicatorObjectEntryView* self);
+static void unity_panel_indicators_indicator_object_view_on_menu_moved (UnityPanelIndicatorsIndicatorObjectView* self, UnityPanelIndicatorsIndicatorObjectEntryView* object_entry_view, GtkMenuDirectionType type);
+static void unity_panel_indicators_indicator_object_view_on_entry_added (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObject* object, IndicatorObjectEntry* indicator_object_entry);
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_entry_view_new (IndicatorObjectEntry* _entry);
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_entry_view_construct (GType object_type, IndicatorObjectEntry* _entry);
 static void _unity_panel_indicators_indicator_object_view_on_menu_moved_unity_panel_indicators_indicator_object_entry_view_menu_moved (UnityPanelIndicatorsIndicatorObjectEntryView* _sender, GtkMenuDirectionType type, gpointer self);
@@ -99,6 +116,7 @@ IndicatorObject* unity_panel_indicators_indicator_object_view_get_indicator_obje
 static void unity_panel_indicators_indicator_object_view_set_indicator_object (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObject* value);
 static void _unity_panel_indicators_indicator_object_view_on_entry_added_indicator_object_entry_added (IndicatorObject* _sender, IndicatorObjectEntry* entry, gpointer self);
 static void _unity_panel_indicators_indicator_object_view_remove_entry_indicator_object_entry_removed (IndicatorObject* _sender, IndicatorObjectEntry* entry, gpointer self);
+static void _unity_panel_indicators_indicator_object_view_on_menu_show_indicator_object_menu_show (IndicatorObject* _sender, IndicatorObjectEntry* entry, guint timestamp, gpointer self);
 static GObject * unity_panel_indicators_indicator_object_view_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_panel_indicators_indicator_object_view_finalize (GObject* obj);
 static void unity_panel_indicators_indicator_object_view_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -121,6 +139,41 @@ UnityPanelIndicatorsIndicatorObjectView* unity_panel_indicators_indicator_object
 
 void unity_panel_indicators_indicator_object_view_show_entry_menu (UnityPanelIndicatorsIndicatorObjectView* self, gint entry) {
 	g_return_if_fail (self != NULL);
+}
+
+
+void unity_panel_indicators_indicator_object_view_on_menu_show (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObjectEntry* entry, guint timestamp) {
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (entry != NULL);
+	{
+		GeeIterator* _view_it;
+		_view_it = gee_abstract_collection_iterator ((GeeAbstractCollection*) self->priv->indicator_entry_array);
+		while (TRUE) {
+			UnityPanelIndicatorsIndicatorObjectEntryView* view;
+			const char* _tmp0_;
+			char* s;
+			if (!gee_iterator_next (_view_it)) {
+				break;
+			}
+			view = (UnityPanelIndicatorsIndicatorObjectEntryView*) gee_iterator_get (_view_it);
+			_tmp0_ = NULL;
+			if (GTK_IS_LABEL (unity_panel_indicators_indicator_object_entry_view_get_entry (view)->label)) {
+				_tmp0_ = gtk_label_get_label (entry->label);
+			} else {
+				_tmp0_ = "";
+			}
+			s = g_strdup (_tmp0_);
+			if (unity_panel_indicators_indicator_object_entry_view_get_entry (view) == entry) {
+				unity_panel_indicators_indicator_object_entry_view_show_menu (view);
+				_g_free0 (s);
+				_g_object_unref0 (view);
+				break;
+			}
+			_g_free0 (s);
+			_g_object_unref0 (view);
+		}
+		_g_object_unref0 (_view_it);
+	}
 }
 
 
@@ -158,6 +211,27 @@ static void unity_panel_indicators_indicator_object_view_on_menu_moved (UnityPan
 		}
 	}
 	next_object_entry_view = (UnityPanelIndicatorsIndicatorObjectEntryView*) gee_abstract_list_get ((GeeAbstractList*) self->priv->indicator_entry_array, pos);
+	if (next_object_entry_view->skip) {
+		if (type == GTK_MENU_DIR_PARENT) {
+			if (pos == 0) {
+				UnityPanelIndicatorsIndicatorObjectEntryView* _tmp1_;
+				next_object_entry_view = (_tmp1_ = (UnityPanelIndicatorsIndicatorObjectEntryView*) gee_abstract_list_get ((GeeAbstractList*) self->priv->indicator_entry_array, gee_collection_get_size ((GeeCollection*) self->priv->indicator_entry_array) - 1), _g_object_unref0 (next_object_entry_view), _tmp1_);
+			} else {
+				UnityPanelIndicatorsIndicatorObjectEntryView* _tmp2_;
+				next_object_entry_view = (_tmp2_ = (UnityPanelIndicatorsIndicatorObjectEntryView*) gee_abstract_list_get ((GeeAbstractList*) self->priv->indicator_entry_array, pos - 1), _g_object_unref0 (next_object_entry_view), _tmp2_);
+			}
+		} else {
+			if (type == GTK_MENU_DIR_CHILD) {
+				if (pos == (gee_collection_get_size ((GeeCollection*) self->priv->indicator_entry_array) - 1)) {
+					UnityPanelIndicatorsIndicatorObjectEntryView* _tmp3_;
+					next_object_entry_view = (_tmp3_ = (UnityPanelIndicatorsIndicatorObjectEntryView*) gee_abstract_list_get ((GeeAbstractList*) self->priv->indicator_entry_array, 0), _g_object_unref0 (next_object_entry_view), _tmp3_);
+				} else {
+					UnityPanelIndicatorsIndicatorObjectEntryView* _tmp4_;
+					next_object_entry_view = (_tmp4_ = (UnityPanelIndicatorsIndicatorObjectEntryView*) gee_abstract_list_get ((GeeAbstractList*) self->priv->indicator_entry_array, pos + 1), _g_object_unref0 (next_object_entry_view), _tmp4_);
+				}
+			}
+		}
+	}
 	unity_panel_indicators_indicator_object_entry_view_show_menu (next_object_entry_view);
 	_g_object_unref0 (next_object_entry_view);
 }
@@ -370,6 +444,11 @@ static void _unity_panel_indicators_indicator_object_view_remove_entry_indicator
 }
 
 
+static void _unity_panel_indicators_indicator_object_view_on_menu_show_indicator_object_menu_show (IndicatorObject* _sender, IndicatorObjectEntry* entry, guint timestamp, gpointer self) {
+	unity_panel_indicators_indicator_object_view_on_menu_show (self, entry, timestamp);
+}
+
+
 static GObject * unity_panel_indicators_indicator_object_view_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties) {
 	GObject * obj;
 	GObjectClass * parent_class;
@@ -384,6 +463,7 @@ static GObject * unity_panel_indicators_indicator_object_view_constructor (GType
 		self->priv->indicator_entry_array = (_tmp0_ = gee_array_list_new (UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_ENTRY_VIEW, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL), _g_object_unref0 (self->priv->indicator_entry_array), _tmp0_);
 		g_signal_connect_object (self->priv->_indicator_object, "entry-added", (GCallback) _unity_panel_indicators_indicator_object_view_on_entry_added_indicator_object_entry_added, self, 0);
 		g_signal_connect_object (self->priv->_indicator_object, "entry-removed", (GCallback) _unity_panel_indicators_indicator_object_view_remove_entry_indicator_object_entry_removed, self, 0);
+		g_signal_connect_object (self->priv->_indicator_object, "menu-show", (GCallback) _unity_panel_indicators_indicator_object_view_on_menu_show_indicator_object_menu_show, self, 0);
 		list = indicator_object_get_entries (self->priv->_indicator_object);
 		{
 			gint i;

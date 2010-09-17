@@ -324,11 +324,11 @@ static void unity_places_place_search_navigation_real_get_preferred_width (Clutt
 static void unity_places_place_search_navigation_draw_back_arrow (UnityPlacesPlaceSearchNavigation* self, cairo_t* cr, gint width, gint height);
 static void unity_places_place_search_navigation_draw_forward_arrow (UnityPlacesPlaceSearchNavigation* self, cairo_t* cr, gint width, gint height);
 static void _unity_places_place_search_navigation_draw_back_arrow_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
-static gboolean _lambda36_ (UnityPlacesPlaceSearchNavigation* self);
-static gboolean __lambda36__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _lambda38_ (UnityPlacesPlaceSearchNavigation* self);
+static gboolean __lambda38__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static void _unity_places_place_search_navigation_draw_forward_arrow_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
-static gboolean _lambda37_ (UnityPlacesPlaceSearchNavigation* self);
-static gboolean __lambda37__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _lambda39_ (UnityPlacesPlaceSearchNavigation* self);
+static gboolean __lambda39__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static GObject * unity_places_place_search_navigation_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_place_search_navigation_finalize (GObject* obj);
 
@@ -2037,7 +2037,7 @@ static void _unity_places_place_search_navigation_draw_back_arrow_unity_cairo_ca
 }
 
 
-static gboolean _lambda36_ (UnityPlacesPlaceSearchNavigation* self) {
+static gboolean _lambda38_ (UnityPlacesPlaceSearchNavigation* self) {
 	gboolean result = FALSE;
 	gboolean _tmp0_ = FALSE;
 	if (self->priv->remote != NULL) {
@@ -2053,9 +2053,9 @@ static gboolean _lambda36_ (UnityPlacesPlaceSearchNavigation* self) {
 }
 
 
-static gboolean __lambda36__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean __lambda38__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
-	result = _lambda36_ (self);
+	result = _lambda38_ (self);
 	return result;
 }
 
@@ -2065,7 +2065,7 @@ static void _unity_places_place_search_navigation_draw_forward_arrow_unity_cairo
 }
 
 
-static gboolean _lambda37_ (UnityPlacesPlaceSearchNavigation* self) {
+static gboolean _lambda39_ (UnityPlacesPlaceSearchNavigation* self) {
 	gboolean result = FALSE;
 	gboolean _tmp0_ = FALSE;
 	if (self->priv->remote != NULL) {
@@ -2081,9 +2081,9 @@ static gboolean _lambda37_ (UnityPlacesPlaceSearchNavigation* self) {
 }
 
 
-static gboolean __lambda37__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean __lambda39__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
-	result = _lambda37_ (self);
+	result = _lambda39_ (self);
 	return result;
 }
 
@@ -2103,11 +2103,11 @@ static GObject * unity_places_place_search_navigation_constructor (GType type, g
 		ClutterColor _tmp4_;
 		self->priv->back = (_tmp0_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_place_search_navigation_draw_back_arrow_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->back), _tmp0_);
 		clutter_actor_set_reactive ((ClutterActor*) self->priv->back, TRUE);
-		g_signal_connect_object ((ClutterActor*) self->priv->back, "button-release-event", (GCallback) __lambda36__clutter_actor_button_release_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self->priv->back, "button-release-event", (GCallback) __lambda38__clutter_actor_button_release_event, self, 0);
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->back, TRUE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->back);
 		self->priv->forward = (_tmp1_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_place_search_navigation_draw_forward_arrow_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->forward), _tmp1_);
-		g_signal_connect_object ((ClutterActor*) self->priv->forward, "button-release-event", (GCallback) __lambda37__clutter_actor_button_release_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self->priv->forward, "button-release-event", (GCallback) __lambda39__clutter_actor_button_release_event, self, 0);
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->forward, TRUE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->forward);
 		self->priv->glow = (_tmp2_ = g_object_ref_sink ((CtkEffectGlow*) ctk_effect_glow_new ()), _g_object_unref0 (self->priv->glow), _tmp2_);

@@ -94,8 +94,6 @@ static gint unity_window_management_get_animation_speed (UnityWindowManagement* 
 MutterPlugin* unity_plugin_get_plugin (UnityPlugin* self);
 static void unity_window_management_window_minimized_completed (UnityWindowManagement* self, ClutterAnimation* anim);
 static void _unity_window_management_window_minimized_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
-static gboolean unity_window_management_force_activate (UnityWindowManagement* self);
-static gboolean _unity_window_management_force_activate_gsource_func (gpointer self);
 static void unity_window_management_window_mapped_completed (UnityWindowManagement* self, ClutterAnimation* anim);
 static void _unity_window_management_window_mapped_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static void unity_window_management_window_destroyed_completed (UnityWindowManagement* self, ClutterAnimation* anim);
@@ -281,28 +279,6 @@ static void unity_window_management_window_minimized_completed (UnityWindowManag
 }
 
 
-static gboolean unity_window_management_force_activate (UnityWindowManagement* self) {
-	gboolean result = FALSE;
-	g_return_val_if_fail (self != NULL, FALSE);
-	if (MUTTER_IS_WINDOW (self->priv->last_mapped)) {
-		MetaWindow* w;
-		MetaDisplay* d;
-		w = mutter_window_get_meta_window (self->priv->last_mapped);
-		d = meta_window_get_display (w);
-		meta_window_activate (mutter_window_get_meta_window (self->priv->last_mapped), meta_display_get_current_time (d));
-	}
-	result = FALSE;
-	return result;
-}
-
-
-static gboolean _unity_window_management_force_activate_gsource_func (gpointer self) {
-	gboolean result;
-	result = unity_window_management_force_activate (self);
-	return result;
-}
-
-
 static void _unity_window_management_window_mapped_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
 	unity_window_management_window_mapped_completed (self, _sender);
 }
@@ -351,7 +327,6 @@ static void unity_window_management_window_mapped (UnityWindowManagement* self, 
 	if (_tmp3_) {
 		meta_window_activate (mutter_window_get_meta_window (window), meta_window_get_user_time (mutter_window_get_meta_window (window)));
 		self->priv->last_mapped = window;
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_window_management_force_activate_gsource_func, g_object_ref (self), g_object_unref);
 	}
 	anim = NULL;
 	actor = _g_object_ref0 ((_tmp4_ = window, CLUTTER_IS_ACTOR (_tmp4_) ? ((ClutterActor*) _tmp4_) : NULL));

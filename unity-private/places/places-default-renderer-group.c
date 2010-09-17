@@ -271,26 +271,26 @@ const char* unity_places_default_renderer_group_get_group_renderer (UnityPlacesD
 UnityPlacesFileInfoTile* unity_places_file_info_tile_new (DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 UnityPlacesFileInfoTile* unity_places_file_info_tile_construct (GType object_type, DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 GType unity_places_file_info_tile_get_type (void) G_GNUC_CONST;
-static void _lambda47_ (const char* u, const char* m, UnityPlacesDefaultRendererGroup* self);
-static void __lambda47__unity_places_tile_activated (UnityPlacesTile* _sender, const char* uri, const char* mimetype, gpointer self);
+static void _lambda49_ (const char* u, const char* m, UnityPlacesDefaultRendererGroup* self);
+static void __lambda49__unity_places_tile_activated (UnityPlacesTile* _sender, const char* uri, const char* mimetype, gpointer self);
 UnityPlacesShowcaseTile* unity_places_showcase_tile_new (DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 UnityPlacesShowcaseTile* unity_places_showcase_tile_construct (GType object_type, DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 GType unity_places_showcase_tile_get_type (void) G_GNUC_CONST;
-static void _lambda49_ (const char* u, const char* m, UnityPlacesDefaultRendererGroup* self);
-static void __lambda49__unity_places_tile_activated (UnityPlacesTile* _sender, const char* uri, const char* mimetype, gpointer self);
+static void _lambda51_ (const char* u, const char* m, UnityPlacesDefaultRendererGroup* self);
+static void __lambda51__unity_places_tile_activated (UnityPlacesTile* _sender, const char* uri, const char* mimetype, gpointer self);
 UnityPlacesDefaultTile* unity_places_default_tile_new (DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 UnityPlacesDefaultTile* unity_places_default_tile_construct (GType object_type, DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 GType unity_places_default_tile_get_type (void) G_GNUC_CONST;
-static void _lambda51_ (const char* u, const char* m, UnityPlacesDefaultRendererGroup* self);
-static void __lambda51__unity_places_tile_activated (UnityPlacesTile* _sender, const char* uri, const char* mimetype, gpointer self);
+static void _lambda53_ (const char* u, const char* m, UnityPlacesDefaultRendererGroup* self);
+static void __lambda53__unity_places_tile_activated (UnityPlacesTile* _sender, const char* uri, const char* mimetype, gpointer self);
 void unity_places_tile_about_to_show (UnityPlacesTile* self);
 static void unity_places_default_renderer_group_add_to_n_results (UnityPlacesDefaultRendererGroup* self, gint i);
 static gboolean unity_places_default_renderer_group_cleanup_operation_callback (UnityPlacesDefaultRendererGroup* self);
 static void unity_places_default_renderer_group_on_result_removed (UnityPlacesDefaultRendererGroup* self, DeeModelIter* iter);
 DeeModelIter* unity_places_tile_get_iter (UnityPlacesTile* self);
 static gboolean _unity_places_default_renderer_group_cleanup_operation_callback_gsource_func (gpointer self);
-static gboolean _lambda52_ (UnityPlacesDefaultRendererGroup* self);
-static gboolean __lambda52__gsource_func (gpointer self);
+static gboolean _lambda54_ (UnityPlacesDefaultRendererGroup* self);
+static gboolean __lambda54__gsource_func (gpointer self);
 guint unity_places_default_renderer_group_get_group_id (UnityPlacesDefaultRendererGroup* self);
 void unity_places_more_results_button_set_count (UnityPlacesMoreResultsButton* self, guint value);
 static void unity_places_default_renderer_group_on_n_cols_changed (UnityPlacesDefaultRendererGroup* self);
@@ -307,20 +307,20 @@ UnityPlacesButton* unity_places_button_new (void);
 UnityPlacesButton* unity_places_button_construct (GType object_type);
 GType unity_places_button_normal_state_get_type (void) G_GNUC_CONST;
 void unity_places_button_set_normal_state (UnityPlacesButton* self, UnityPlacesButtonNormalState value);
-static void _lambda53_ (UnityPlacesDefaultRendererGroup* self);
-static void __lambda53__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _lambda55_ (UnityPlacesDefaultRendererGroup* self);
+static void __lambda55__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 UnityPlacesExpander* unity_places_expander_new (void);
 UnityPlacesExpander* unity_places_expander_construct (GType object_type);
-static void _lambda54_ (UnityPlacesDefaultRendererGroup* self);
+static void _lambda56_ (UnityPlacesDefaultRendererGroup* self);
 GType unity_places_expander_state_get_type (void) G_GNUC_CONST;
 void unity_places_expander_set_expanding_state (UnityPlacesExpander* self, UnityPlacesExpanderState value);
-static void __lambda54__ctk_button_clicked (CtkButton* _sender, gpointer self);
-static gboolean _lambda55_ (UnityPlacesDefaultRendererGroup* self);
-static gboolean __lambda55__clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static void __lambda56__ctk_button_clicked (CtkButton* _sender, gpointer self);
+static gboolean _lambda57_ (UnityPlacesDefaultRendererGroup* self);
+static gboolean __lambda57__clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static void _unity_places_default_renderer_group_on_n_cols_changed_g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 UnityPlacesMoreResultsButton* unity_places_more_results_button_new (void);
 UnityPlacesMoreResultsButton* unity_places_more_results_button_construct (GType object_type);
-static void _lambda56_ (UnityPlacesDefaultRendererGroup* self);
+static void _lambda58_ (UnityPlacesDefaultRendererGroup* self);
 gpointer unity_testing_object_registry_ref (gpointer instance);
 void unity_testing_object_registry_unref (gpointer instance);
 GParamSpec* unity_testing_param_spec_object_registry (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
@@ -335,7 +335,7 @@ GType unity_places_place_search_bar_get_type (void) G_GNUC_CONST;
 char* unity_places_place_search_bar_get_search_text (UnityPlacesPlaceSearchBar* self);
 void unity_places_controller_activate_entry (UnityPlacesController* self, const char* entry_name, gint section_id);
 void unity_places_place_search_bar_search (UnityPlacesPlaceSearchBar* self, const char* text);
-static void __lambda56__ctk_button_clicked (CtkButton* _sender, gpointer self);
+static void __lambda58__ctk_button_clicked (CtkButton* _sender, gpointer self);
 static void _unity_places_default_renderer_group_on_result_added_dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self);
 static void _unity_places_default_renderer_group_on_result_removed_dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self);
 static GObject * unity_places_default_renderer_group_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -366,8 +366,8 @@ static void unity_places_more_results_button_real_get_preferred_height (ClutterA
 static void unity_places_more_results_button_paint_bg (UnityPlacesMoreResultsButton* self, cairo_t* cr, gint width, gint height);
 guint unity_places_more_results_button_get_count (UnityPlacesMoreResultsButton* self);
 static void _unity_places_more_results_button_paint_bg_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
-static void _lambda44_ (UnityPlacesMoreResultsButton* self);
-static void __lambda44__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _lambda46_ (UnityPlacesMoreResultsButton* self);
+static void __lambda46__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static GObject * unity_places_more_results_button_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_more_results_button_finalize (GObject* obj);
 static void unity_places_more_results_button_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -441,18 +441,6 @@ static void unity_places_default_renderer_group_real_allocate (ClutterActor* bas
 }
 
 
-static void _lambda47_ (const char* u, const char* m, UnityPlacesDefaultRendererGroup* self) {
-	g_return_if_fail (u != NULL);
-	g_return_if_fail (m != NULL);
-	g_signal_emit_by_name (self, "activated", u, m);
-}
-
-
-static void __lambda47__unity_places_tile_activated (UnityPlacesTile* _sender, const char* uri, const char* mimetype, gpointer self) {
-	_lambda47_ (uri, mimetype, self);
-}
-
-
 static void _lambda49_ (const char* u, const char* m, UnityPlacesDefaultRendererGroup* self) {
 	g_return_if_fail (u != NULL);
 	g_return_if_fail (m != NULL);
@@ -477,6 +465,18 @@ static void __lambda51__unity_places_tile_activated (UnityPlacesTile* _sender, c
 }
 
 
+static void _lambda53_ (const char* u, const char* m, UnityPlacesDefaultRendererGroup* self) {
+	g_return_if_fail (u != NULL);
+	g_return_if_fail (m != NULL);
+	g_signal_emit_by_name (self, "activated", u, m);
+}
+
+
+static void __lambda53__unity_places_tile_activated (UnityPlacesTile* _sender, const char* uri, const char* mimetype, gpointer self) {
+	_lambda53_ (uri, mimetype, self);
+}
+
+
 static void unity_places_default_renderer_group_on_result_added (UnityPlacesDefaultRendererGroup* self, DeeModelIter* iter) {
 	UnityPlacesTile* button;
 	gboolean _tmp4_ = FALSE;
@@ -495,6 +495,8 @@ static void unity_places_default_renderer_group_on_result_added (UnityPlacesDefa
 		unity_places_tile_update_details (button, dee_model_get_string (self->priv->_results, iter, (guint) 0), dee_model_get_string (self->priv->_results, iter, (guint) 1), dee_model_get_string (self->priv->_results, iter, (guint) 3), dee_model_get_string (self->priv->_results, iter, (guint) 4), dee_model_get_string (self->priv->_results, iter, (guint) 5));
 		unity_places_tile_set_iter (button, iter);
 		self->priv->cleanup_tiles = g_list_remove (self->priv->cleanup_tiles, button);
+		g_object_unref ((GObject*) button);
+		;
 	} else {
 		if (_vala_strcmp0 (self->priv->_group_renderer, "UnityFileInfoRenderer") == 0) {
 			UnityPlacesTile* _tmp1_;
@@ -503,7 +505,7 @@ static void unity_places_default_renderer_group_on_result_added (UnityPlacesDefa
 			clutter_actor_show ((ClutterActor*) button);
 			g_object_unref ((GObject*) button);
 			;
-			g_signal_connect_object (button, "activated", (GCallback) __lambda47__unity_places_tile_activated, self, 0);
+			g_signal_connect_object (button, "activated", (GCallback) __lambda49__unity_places_tile_activated, self, 0);
 		} else {
 			if (_vala_strcmp0 (self->priv->_group_renderer, "UnityShowcaseRenderer") == 0) {
 				UnityPlacesTile* _tmp2_;
@@ -512,7 +514,7 @@ static void unity_places_default_renderer_group_on_result_added (UnityPlacesDefa
 				clutter_actor_show ((ClutterActor*) button);
 				g_object_unref ((GObject*) button);
 				;
-				g_signal_connect_object (button, "activated", (GCallback) __lambda49__unity_places_tile_activated, self, 0);
+				g_signal_connect_object (button, "activated", (GCallback) __lambda51__unity_places_tile_activated, self, 0);
 			} else {
 				UnityPlacesTile* _tmp3_;
 				button = (_tmp3_ = (UnityPlacesTile*) g_object_ref_sink (unity_places_default_tile_new (iter, dee_model_get_string (self->priv->_results, iter, (guint) 0), dee_model_get_string (self->priv->_results, iter, (guint) 1), dee_model_get_string (self->priv->_results, iter, (guint) 3), dee_model_get_string (self->priv->_results, iter, (guint) 4), dee_model_get_string (self->priv->_results, iter, (guint) 5))), _g_object_unref0 (button), _tmp3_);
@@ -520,7 +522,7 @@ static void unity_places_default_renderer_group_on_result_added (UnityPlacesDefa
 				clutter_actor_show ((ClutterActor*) button);
 				g_object_unref ((GObject*) button);
 				;
-				g_signal_connect_object (button, "activated", (GCallback) __lambda51__unity_places_tile_activated, self, 0);
+				g_signal_connect_object (button, "activated", (GCallback) __lambda53__unity_places_tile_activated, self, 0);
 			}
 		}
 	}
@@ -585,7 +587,7 @@ static gboolean _unity_places_default_renderer_group_cleanup_operation_callback_
 }
 
 
-static gboolean _lambda52_ (UnityPlacesDefaultRendererGroup* self) {
+static gboolean _lambda54_ (UnityPlacesDefaultRendererGroup* self) {
 	gboolean result = FALSE;
 	if (self->n_results < 1) {
 		unity_expanding_bin_set_bin_state ((UnityExpandingBin*) self, UNITY_EXPANDING_BIN_STATE_CLOSED);
@@ -596,9 +598,9 @@ static gboolean _lambda52_ (UnityPlacesDefaultRendererGroup* self) {
 }
 
 
-static gboolean __lambda52__gsource_func (gpointer self) {
+static gboolean __lambda54__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda52_ (self);
+	result = _lambda54_ (self);
 	return result;
 }
 
@@ -644,7 +646,7 @@ static void unity_places_default_renderer_group_on_result_removed (UnityPlacesDe
 		_tmp1_ = FALSE;
 	}
 	if (_tmp1_) {
-		g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 100, __lambda52__gsource_func, g_object_ref (self), g_object_unref);
+		g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 100, __lambda54__gsource_func, g_object_ref (self), g_object_unref);
 		self->priv->last_result_timeout = TRUE;
 	}
 	_g_list_free0 (children);
@@ -864,7 +866,7 @@ void unity_places_default_renderer_group_set_always_expanded (UnityPlacesDefault
 }
 
 
-static void _lambda53_ (UnityPlacesDefaultRendererGroup* self) {
+static void _lambda55_ (UnityPlacesDefaultRendererGroup* self) {
 	GSList* effects;
 	if (ctk_actor_get_state ((CtkActor*) self->priv->title_button) == CTK_STATE_ACTIVE) {
 		ClutterColor _tmp0_ = {0};
@@ -891,12 +893,12 @@ static void _lambda53_ (UnityPlacesDefaultRendererGroup* self) {
 }
 
 
-static void __lambda53__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda53_ (self);
+static void __lambda55__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda55_ (self);
 }
 
 
-static void _lambda54_ (UnityPlacesDefaultRendererGroup* self) {
+static void _lambda56_ (UnityPlacesDefaultRendererGroup* self) {
 	gboolean _tmp0_ = FALSE;
 	if (self->n_results <= ctk_icon_view_get_n_cols (self->priv->renderer)) {
 		_tmp0_ = TRUE;
@@ -916,12 +918,12 @@ static void _lambda54_ (UnityPlacesDefaultRendererGroup* self) {
 }
 
 
-static void __lambda54__ctk_button_clicked (CtkButton* _sender, gpointer self) {
-	_lambda54_ (self);
+static void __lambda56__ctk_button_clicked (CtkButton* _sender, gpointer self) {
+	_lambda56_ (self);
 }
 
 
-static gboolean _lambda55_ (UnityPlacesDefaultRendererGroup* self) {
+static gboolean _lambda57_ (UnityPlacesDefaultRendererGroup* self) {
 	gboolean result = FALSE;
 	gboolean _tmp0_ = FALSE;
 	if (self->priv->dirty) {
@@ -957,9 +959,9 @@ static gboolean _lambda55_ (UnityPlacesDefaultRendererGroup* self) {
 }
 
 
-static gboolean __lambda55__clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean __lambda57__clutter_actor_motion_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
-	result = _lambda55_ (self);
+	result = _lambda57_ (self);
 	return result;
 }
 
@@ -969,7 +971,7 @@ static void _unity_places_default_renderer_group_on_n_cols_changed_g_object_noti
 }
 
 
-static void _lambda56_ (UnityPlacesDefaultRendererGroup* self) {
+static void _lambda58_ (UnityPlacesDefaultRendererGroup* self) {
 	UnityTestingObjectRegistry* _tmp0_;
 	GeeArrayList* _tmp1_;
 	GObject* _tmp2_;
@@ -1000,8 +1002,8 @@ static void _lambda56_ (UnityPlacesDefaultRendererGroup* self) {
 }
 
 
-static void __lambda56__ctk_button_clicked (CtkButton* _sender, gpointer self) {
-	_lambda56_ (self);
+static void __lambda58__ctk_button_clicked (CtkButton* _sender, gpointer self) {
+	_lambda58_ (self);
 }
 
 
@@ -1063,7 +1065,7 @@ static GObject * unity_places_default_renderer_group_constructor (GType type, gu
 		ctk_actor_set_padding ((CtkActor*) self->priv->title_button, (_tmp5_ = (_tmp4_.top = 4.0f, _tmp4_.right = 6.0f, _tmp4_.bottom = 4.0f, _tmp4_.left = 6.0f, _tmp4_), &_tmp5_));
 		ctk_box_pack ((CtkBox*) self->priv->vbox, (ClutterActor*) self->priv->title_button, FALSE, FALSE);
 		clutter_actor_show ((ClutterActor*) self->priv->title_button);
-		g_signal_connect_object ((GObject*) self->priv->title_button, "notify::state", (GCallback) __lambda53__g_object_notify, self, 0);
+		g_signal_connect_object ((GObject*) self->priv->title_button, "notify::state", (GCallback) __lambda55__g_object_notify, self, 0);
 		glow = g_object_ref_sink ((CtkEffectGlow*) ctk_effect_glow_new ());
 		ctk_effect_glow_set_factor (glow, 1.0f);
 		ctk_effect_set_margin ((CtkEffect*) glow, 3);
@@ -1096,8 +1098,8 @@ static GObject * unity_places_default_renderer_group_constructor (GType type, gu
 		clutter_actor_set_opacity ((ClutterActor*) self->priv->expander, (guint8) 0);
 		ctk_box_pack ((CtkBox*) self->priv->title_box, (ClutterActor*) self->priv->expander, FALSE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->expander);
-		g_signal_connect_object ((CtkButton*) self->priv->title_button, "clicked", (GCallback) __lambda54__ctk_button_clicked, self, 0);
-		g_signal_connect_object ((ClutterActor*) self->priv->title_button, "motion-event", (GCallback) __lambda55__clutter_actor_motion_event, self, 0);
+		g_signal_connect_object ((CtkButton*) self->priv->title_button, "clicked", (GCallback) __lambda56__ctk_button_clicked, self, 0);
+		g_signal_connect_object ((ClutterActor*) self->priv->title_button, "motion-event", (GCallback) __lambda57__clutter_actor_motion_event, self, 0);
 		rend = g_object_ref_sink ((CtkIconView*) ctk_icon_view_new ());
 		self->priv->renderer = rend;
 		ctk_actor_set_padding ((CtkActor*) self->priv->renderer, (_tmp16_ = (_tmp15_.top = 12.0f, _tmp15_.right = 0.0f, _tmp15_.bottom = 0.0f, _tmp15_.left = 0.0f, _tmp15_), &_tmp16_));
@@ -1112,7 +1114,7 @@ static GObject * unity_places_default_renderer_group_constructor (GType type, gu
 			self->priv->more_results_button = (_tmp17_ = g_object_ref_sink (unity_places_more_results_button_new ()), _g_object_unref0 (self->priv->more_results_button), _tmp17_);
 			ctk_box_pack ((CtkBox*) self->priv->vbox, (ClutterActor*) self->priv->more_results_button, FALSE, FALSE);
 			clutter_actor_show ((ClutterActor*) self->priv->more_results_button);
-			g_signal_connect_object ((CtkButton*) self->priv->more_results_button, "clicked", (GCallback) __lambda56__ctk_button_clicked, self, 0);
+			g_signal_connect_object ((CtkButton*) self->priv->more_results_button, "clicked", (GCallback) __lambda58__ctk_button_clicked, self, 0);
 		}
 		pad = g_object_ref_sink ((CtkButton*) ctk_button_new (CTK_ORIENTATION_HORIZONTAL));
 		ctk_image_set_size (ctk_button_get_image (pad), (gint) UNITY_PLACES_DEFAULT_RENDERER_GROUP_PADDING);
@@ -1593,7 +1595,7 @@ static void _unity_places_more_results_button_paint_bg_unity_cairo_canvas_cairo_
 }
 
 
-static void _lambda44_ (UnityPlacesMoreResultsButton* self) {
+static void _lambda46_ (UnityPlacesMoreResultsButton* self) {
 	gboolean _tmp0_ = FALSE;
 	if (ctk_actor_get_state ((CtkActor*) self) == CTK_STATE_NORMAL) {
 		_tmp0_ = TRUE;
@@ -1616,8 +1618,8 @@ static void _lambda44_ (UnityPlacesMoreResultsButton* self) {
 }
 
 
-static void __lambda44__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda44_ (self);
+static void __lambda46__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda46_ (self);
 }
 
 
@@ -1644,7 +1646,7 @@ static GObject * unity_places_more_results_button_constructor (GType type, guint
 		self->priv->text = (_tmp3_ = g_object_ref_sink ((CtkText*) ctk_text_new ("")), _g_object_unref0 (self->priv->text), _tmp3_);
 		clutter_container_add_actor ((ClutterContainer*) box, (ClutterActor*) self->priv->text);
 		clutter_actor_show ((ClutterActor*) self->priv->text);
-		g_signal_connect_object ((GObject*) self, "notify::state", (GCallback) __lambda44__g_object_notify, self, 0);
+		g_signal_connect_object ((GObject*) self, "notify::state", (GCallback) __lambda46__g_object_notify, self, 0);
 		_g_object_unref0 (box);
 	}
 	return obj;

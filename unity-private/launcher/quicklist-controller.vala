@@ -161,11 +161,13 @@ namespace Unity.Launcher
       if (Unity.global_shell is Unity.Shell)
         Unity.global_shell.remove_fullscreen_request (this);
 
-      if (state == QuicklistControllerState.CLOSED) return;
+      if (state == QuicklistControllerState.CLOSED)
+        {
+          return;
+        }
       if (menu == null)
         {
           new_menu ();
-          warning ("state change called on menu when menu does not exist");
         }
 
       if (state == QuicklistControllerState.LABEL)
@@ -190,12 +192,23 @@ namespace Unity.Launcher
           menu.compute_style_textures ();
           menu.set_expansion_size_factor (0.0f);
           menu.set_anchor_position (x + w - 4, y + h/2.0f, 0);
+
         }
       else if (state == QuicklistControllerState.MENU)
         {
           if (Unity.global_shell is Unity.Shell)
             Unity.global_shell.add_fullscreen_request (this);
 
+          if(menu.get_num_items() == 0)
+            {
+              // It can happen that the quicklist menu is requested and the menu was not previously filled with a label. 
+              // In this case we fill the menu with the label first.
+              string label = attached_controller.name;
+              var menuitem = new QuicklistMenuItem.with_label (label);
+              menuitem.reactive = false;
+              menu.append (menuitem, false);
+            }
+            
           menu.close_on_leave = false;
           menu.set_detect_clicks (true);
           // grab the top menu

@@ -292,7 +292,6 @@ void unity_launcher_scroller_model_remove (UnityLauncherScrollerModel* self, Uni
 	}
 	gee_abstract_collection_remove ((GeeAbstractCollection*) self->priv->children, child);
 	g_signal_emit_by_name (self, "child-removed", tempchild);
-	g_signal_emit_by_name (self, "order-changed");
 	_g_object_unref0 (tempchild);
 }
 

@@ -84,6 +84,9 @@ namespace Unity.Launcher
     private float last_known_pointer_x = 0.0f;
     private bool can_scroll = false;
 
+    private float last_known_x = 0;
+    private float last_known_y = 0;
+
     /*
      * scrolling variables
      */
@@ -264,6 +267,8 @@ namespace Unity.Launcher
 
       float x, y;
       event.get_coords (out x, out y);
+      last_known_x = x;
+      last_known_y = y;
       if (assume_on_launcher)
         x = 25;
 
@@ -299,6 +304,7 @@ namespace Unity.Launcher
         {
           // if picked_actor is null, then we want to send a leave event on the
           // previous actor
+
           Clutter.Event crossing_event =  { 0 };
           crossing_event.type = Clutter.EventType.LEAVE;
           crossing_event.crossing.x = x;
@@ -325,6 +331,7 @@ namespace Unity.Launcher
         {
           get_stage ().motion_event.disconnect (on_motion_event);
         }
+
       Clutter.Actor picked_actor = handle_event (event, is_scrolling);
 
       if (picked_actor is Clutter.Actor)
@@ -711,6 +718,7 @@ namespace Unity.Launcher
      */
     private void disable_animations_on_children (Clutter.Event event)
     {
+/*
       disable_child_events = true;
 
       Clutter.Event e = { 0 };
@@ -729,6 +737,7 @@ namespace Unity.Launcher
               child.do_event (e, false);
             }
         }
+*/
 
     }
 
@@ -795,10 +804,30 @@ namespace Unity.Launcher
       child.set_parent (this);
 
       // we only animate if the added child is not at the end
-      if (model.index_of (child) == model.size -1)
-        order_children (true);
-      else
-        order_children (false);
+      float[] prev_positions = {};//new float [model.size];
+      float[] prev_rotations = {};//new float [model.size];
+
+      foreach (ScrollerChild modelchild in model)
+        {
+          prev_positions += modelchild.position;
+          prev_rotations += modelchild.rotation;
+        }
+      order_children (true);
+
+      int index = 0;
+      foreach (ScrollerChild modelchild in model)
+        {
+          if (child != modelchild)
+            {
+              change_child_position_rotation (modelchild,
+                                              prev_positions[index],
+                                              prev_rotations[index],
+                                              true);
+            }
+          index++;
+        }
+
+      order_children (false);
       queue_relayout ();
       child.notify["position"].connect (() => {
         queue_relayout ();
@@ -809,17 +838,30 @@ namespace Unity.Launcher
 
     private void model_child_removed (ScrollerChild child)
     {
-      child_refs.add (child); // we need to keep a reference on it for now
-      var anim = child.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
-                                SHORT_DELAY,
-                                "opacity", 0);
-      anim.completed.connect (() => {
-        child.unparent ();
-        child_refs.remove (child);
-      });
+      var drag_controller = Drag.Controller.get_default ();
+      if (drag_controller.is_dragging)
+        {
+          order_children (false);
+          queue_relayout ();
+        }
+      else
+        {
+          child_refs.add (child); // we need to keep a reference on it for now
+          var anim = child.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                    SHORT_DELAY,
+                                    "opacity", 0);
 
-      order_children (false);
-      queue_relayout ();
+          var icon_scale_anim = child.processed_icon.animate (Clutter.AnimationMode.EASE_OUT_QUAD,
+                                                              SHORT_DELAY,
+                                                              "scale-x", 0.0,
+                                                              "scale-y", 0.0);
+          anim.completed.connect (() => {
+            child.unparent ();
+            child_refs.remove (child);
+            order_children (false);
+            queue_relayout ();
+          });
+        }
     }
 
     private void model_order_changed ()
@@ -839,6 +881,15 @@ namespace Unity.Launcher
           speed *= autoscroll_direction;
           move_scroll_position (speed, true);
           autoscroll_anim_active = is_autoscrolling;
+
+          Clutter.Event motion_event =  { 0 };
+          motion_event.type = Clutter.EventType.MOTION;
+          motion_event.motion.x = last_known_x;
+          motion_event.motion.y = last_known_y;
+          motion_event.motion.stage = get_stage () as Clutter.Stage;
+          motion_event.motion.flags = Clutter.EventFlags.FLAG_SYNTHETIC;
+          passthrough_motion_event (motion_event);
+
           return is_autoscrolling;
         });
       }
@@ -1166,6 +1217,14 @@ namespace Unity.Launcher
       else
         cache.invalidate_texture_cache ();
 
+      Clutter.Event motion_event =  { 0 };
+      motion_event.type = Clutter.EventType.MOTION;
+      motion_event.motion.x = last_known_x;
+      motion_event.motion.y = last_known_y;
+      motion_event.motion.stage = get_stage () as Clutter.Stage;
+      motion_event.motion.flags = Clutter.EventFlags.FLAG_SYNTHETIC;
+      passthrough_motion_event (motion_event);
+
       stored_delta = delta;
     }
 
@@ -1476,7 +1535,7 @@ namespace Unity.Launcher
           if (index >= index_start_flat && index < index_end_flat)
             {
               change_child_position_rotation (child, h, 0.0f, immediate);
-              h += nat_height + spacing;
+              h += 48 + spacing;
               num_children_handled++;
 
               if (index == index_start_flat)

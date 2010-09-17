@@ -82,7 +82,6 @@ static void unity_launcher_quicklist_menu_item_real_get_preferred_width (Clutter
 #define UNITY_LAUNCHER_ITEM_INDENT_ABS 20.0f
 static void unity_launcher_quicklist_menu_item_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
 static gboolean _unity_launcher_quicklist_menu_item_update_item_background (UnityLauncherQuicklistMenuItem* self);
-static gboolean __unity_launcher_quicklist_menu_item_update_item_background_gsource_func (gpointer self);
 char* utils_strip_characters (const char* text, const char* replace_text, const char* match_regex, const char* replace_regex);
 static gboolean _unity_launcher_quicklist_menu_item_on_enter (UnityLauncherQuicklistMenuItem* self, ClutterEvent* event);
 static gboolean _unity_launcher_quicklist_menu_item_on_leave (UnityLauncherQuicklistMenuItem* self, ClutterEvent* event);
@@ -141,13 +140,6 @@ static void unity_launcher_quicklist_menu_item_real_get_preferred_width (Clutter
 }
 
 
-static gboolean __unity_launcher_quicklist_menu_item_update_item_background_gsource_func (gpointer self) {
-	gboolean result;
-	result = _unity_launcher_quicklist_menu_item_update_item_background (self);
-	return result;
-}
-
-
 static void unity_launcher_quicklist_menu_item_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags) {
 	UnityLauncherQuicklistMenuItem * self;
 	gint new_width;
@@ -169,7 +161,7 @@ static void unity_launcher_quicklist_menu_item_real_allocate (ClutterActor* base
 	}
 	self->priv->last_width = new_width;
 	self->priv->last_height = new_height;
-	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __unity_launcher_quicklist_menu_item_update_item_background_gsource_func, g_object_ref (self), g_object_unref);
+	_unity_launcher_quicklist_menu_item_update_item_background (self);
 }
 
 

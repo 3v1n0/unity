@@ -115,6 +115,16 @@ typedef struct _UnityPlacesPlaceSearchEntryClass UnityPlacesPlaceSearchEntryClas
 
 typedef struct _UnityPlacesPlaceSearchSectionsBar UnityPlacesPlaceSearchSectionsBar;
 typedef struct _UnityPlacesPlaceSearchSectionsBarClass UnityPlacesPlaceSearchSectionsBarClass;
+
+#define UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION (unity_places_place_search_extra_action_get_type ())
+#define UNITY_PLACES_PLACE_SEARCH_EXTRA_ACTION(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION, UnityPlacesPlaceSearchExtraAction))
+#define UNITY_PLACES_PLACE_SEARCH_EXTRA_ACTION_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION, UnityPlacesPlaceSearchExtraActionClass))
+#define UNITY_PLACES_IS_PLACE_SEARCH_EXTRA_ACTION(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION))
+#define UNITY_PLACES_IS_PLACE_SEARCH_EXTRA_ACTION_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION))
+#define UNITY_PLACES_PLACE_SEARCH_EXTRA_ACTION_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION, UnityPlacesPlaceSearchExtraActionClass))
+
+typedef struct _UnityPlacesPlaceSearchExtraAction UnityPlacesPlaceSearchExtraAction;
+typedef struct _UnityPlacesPlaceSearchExtraActionClass UnityPlacesPlaceSearchExtraActionClass;
 typedef struct _UnityPlacesPlaceSearchEntryPrivate UnityPlacesPlaceSearchEntryPrivate;
 #define _g_free0(var) (var = (g_free (var), NULL))
 
@@ -225,6 +235,7 @@ struct _UnityPlacesPlaceSearchBar {
 	UnityPlacesPlaceSearchBarPrivate * priv;
 	UnityPlacesPlaceSearchEntry* entry;
 	UnityPlacesPlaceSearchSectionsBar* sections;
+	UnityPlacesPlaceSearchExtraAction* extra_action;
 };
 
 struct _UnityPlacesPlaceSearchBarClass {
@@ -294,10 +305,11 @@ UnityPlacesPlaceSearchBar* unity_places_place_search_bar_new (void);
 UnityPlacesPlaceSearchBar* unity_places_place_search_bar_construct (GType object_type);
 GType unity_places_place_search_entry_get_type (void) G_GNUC_CONST;
 GType unity_places_place_search_sections_bar_get_type (void) G_GNUC_CONST;
+GType unity_places_place_search_extra_action_get_type (void) G_GNUC_CONST;
 static gboolean unity_places_view_on_stage_event_captured (UnityPlacesView* self, ClutterEvent* event);
 static gboolean _unity_places_view_on_stage_event_captured_clutter_actor_captured_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
-static void _lambda42_ (UnityPlacesView* self);
-static void __lambda42__clutter_text_activate (ClutterText* _sender, gpointer self);
+static void _lambda44_ (UnityPlacesView* self);
+static void __lambda44__clutter_text_activate (ClutterText* _sender, gpointer self);
 void unity_places_view_shown (UnityPlacesView* self);
 void unity_places_place_search_bar_reset (UnityPlacesPlaceSearchBar* self);
 void unity_places_view_on_entry_view_activated (UnityPlacesView* self, UnityPlacesPlaceEntry* entry, guint section_id);
@@ -306,8 +318,8 @@ void unity_places_place_entry_set_active (UnityPlacesPlaceEntry* self, gboolean 
 static void unity_places_view_on_entry_renderer_info_changed (UnityPlacesView* self, UnityPlacesPlaceEntry* entry);
 static void _unity_places_view_on_entry_renderer_info_changed_unity_places_place_entry_renderer_info_changed (UnityPlacesPlaceEntry* _sender, gpointer self);
 static void unity_places_view_update_views (UnityPlacesView* self, UnityPlacesPlaceEntry* entry, guint section_id);
-static void _lambda43_ (ClutterAnimation* a, UnityPlacesView* self);
-static void __lambda43__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
+static void _lambda45_ (ClutterAnimation* a, UnityPlacesView* self);
+static void __lambda45__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static UnityPlaceRenderer* unity_places_view_lookup_renderer (UnityPlacesView* self, UnityPlacesPlaceEntry* entry);
 DeeModel* unity_places_place_entry_get_entry_groups_model (UnityPlacesPlaceEntry* self);
 DeeModel* unity_places_place_entry_get_entry_results_model (UnityPlacesPlaceEntry* self);
@@ -364,13 +376,13 @@ static gboolean _unity_places_view_on_stage_event_captured_clutter_actor_capture
 }
 
 
-static void _lambda42_ (UnityPlacesView* self) {
+static void _lambda44_ (UnityPlacesView* self) {
 	unity_place_renderer_activate_default (self->priv->renderer);
 }
 
 
-static void __lambda42__clutter_text_activate (ClutterText* _sender, gpointer self) {
-	_lambda42_ (self);
+static void __lambda44__clutter_text_activate (ClutterText* _sender, gpointer self) {
+	_lambda44_ (self);
 }
 
 
@@ -395,7 +407,7 @@ void unity_places_view_about_to_show (UnityPlacesView* self) {
 	clutter_actor_show ((ClutterActor*) self->search_bar);
 	g_signal_connect_object ((ClutterActor*) self->search_bar->entry->text, "captured-event", (GCallback) _unity_places_view_on_stage_event_captured_clutter_actor_captured_event, self, 0);
 	clutter_text_set_activatable ((ClutterText*) self->search_bar->entry->text, TRUE);
-	g_signal_connect_object ((ClutterText*) self->search_bar->entry->text, "activate", (GCallback) __lambda42__clutter_text_activate, self, 0);
+	g_signal_connect_object ((ClutterText*) self->search_bar->entry->text, "activate", (GCallback) __lambda44__clutter_text_activate, self, 0);
 	self->priv->layered_bin = (_tmp5_ = g_object_ref_sink (unity_layered_bin_new ()), _g_object_unref0 (self->priv->layered_bin), _tmp5_);
 	ctk_box_pack ((CtkBox*) self->priv->content_box, (ClutterActor*) self->priv->layered_bin, TRUE, TRUE);
 	clutter_actor_show ((ClutterActor*) self->priv->layered_bin);
@@ -448,15 +460,15 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static void _lambda43_ (ClutterAnimation* a, UnityPlacesView* self) {
+static void _lambda45_ (ClutterAnimation* a, UnityPlacesView* self) {
 	GObject* _tmp0_;
 	g_return_if_fail (a != NULL);
 	clutter_actor_destroy ((_tmp0_ = clutter_animation_get_object (a), CLUTTER_IS_ACTOR (_tmp0_) ? ((ClutterActor*) _tmp0_) : NULL));
 }
 
 
-static void __lambda43__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
-	_lambda43_ (_sender, self);
+static void __lambda45__clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
+	_lambda45_ (_sender, self);
 }
 
 
@@ -472,7 +484,7 @@ static void unity_places_view_update_views (UnityPlacesView* self, UnityPlacesPl
 	if (CLUTTER_IS_ACTOR (self->priv->renderer)) {
 		ClutterAnimation* anim;
 		anim = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->renderer, (gulong) CLUTTER_EASE_OUT_QUAD, (guint) 300, "opacity", 0, NULL));
-		g_signal_connect_object (anim, "completed", (GCallback) __lambda43__clutter_animation_completed, self, 0);
+		g_signal_connect_object (anim, "completed", (GCallback) __lambda45__clutter_animation_completed, self, 0);
 		clutter_container_remove_actor ((ClutterContainer*) self->priv->layered_bin, (ClutterActor*) self->priv->renderer);
 		_g_object_unref0 (anim);
 	}

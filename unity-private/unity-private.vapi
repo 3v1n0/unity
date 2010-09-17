@@ -187,6 +187,7 @@ namespace Unity {
 			public bool do_not_render;
 			public float grabbed_push;
 			public Unity.Launcher.PinType pin_type;
+			public Unity.UnityIcon processed_icon;
 			public ScrollerChild ();
 			public override void allocate (Clutter.ActorBox box, Clutter.AllocationFlags flags);
 			public void force_rotation_jump (float degrees);
@@ -310,6 +311,7 @@ namespace Unity {
 			[CCode (cheader_filename = "unity-private.h")]
 			public class IndicatorObjectEntryView : Ctk.Box {
 				public Ctk.Image image;
+				public bool skip;
 				public Ctk.Text text;
 				public IndicatorObjectEntryView (Indicator.ObjectEntry _entry);
 				public bool is_open ();
@@ -327,6 +329,7 @@ namespace Unity {
 				public IndicatorObjectView (Indicator.Object _object);
 				public bool find_entry (Indicator.ObjectEntry entry);
 				public Unity.Panel.Indicators.IndicatorObjectEntryView? get_entry_view (Indicator.ObjectEntry entry);
+				public void on_menu_show (Indicator.ObjectEntry entry, uint timestamp);
 				public void open_first_menu_entry ();
 				public void open_last_menu_entry ();
 				public void remove_first_entry ();
@@ -617,6 +620,7 @@ namespace Unity {
 		[CCode (cheader_filename = "unity-private.h")]
 		public class PlaceSearchBar : Ctk.Box {
 			public Unity.Places.PlaceSearchEntry entry;
+			public Unity.Places.PlaceSearchExtraAction extra_action;
 			public Unity.Places.PlaceSearchSectionsBar sections;
 			public PlaceSearchBar ();
 			public string get_search_text ();
@@ -644,6 +648,15 @@ namespace Unity {
 			public void set_active_entry (Unity.Places.PlaceEntry entry);
 			public float cursor_opacity { get; set; }
 			public signal void text_changed (string? text);
+		}
+		[CCode (cheader_filename = "unity-private.h")]
+		public class PlaceSearchExtraAction : Ctk.Bin {
+			public Ctk.Image image;
+			public PlaceSearchExtraAction ();
+			public void set_icon_from_gicon_string (string icon_string);
+			public float destroy_factor { get; set; }
+			public float resize_factor { get; set; }
+			public signal void activated ();
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class PlaceSearchNavigation : Ctk.Box {

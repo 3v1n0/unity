@@ -32,8 +32,8 @@
 #include <float.h>
 #include <math.h>
 #include <clutk/clutk.h>
-#include <gdk-pixbuf/gdk-pixdata.h>
 #include <unity.h>
+#include <gdk-pixbuf/gdk-pixdata.h>
 #include <clutter/clutter.h>
 #include <clutter-gtk/clutter-gtk.h>
 
@@ -88,6 +88,7 @@ struct _UnityLauncherScrollerChild {
 	gboolean do_not_render;
 	UnityLauncherScrollerChildController* controller;
 	float grabbed_push;
+	UnityUnityIcon* processed_icon;
 };
 
 struct _UnityLauncherScrollerChildClass {
@@ -112,7 +113,6 @@ struct _UnityLauncherScrollerChildPrivate {
 	gboolean _enable_close_state;
 	UnityLauncherScrollerChildGroupType _group_type;
 	gboolean _is_dragging_state;
-	UnityUnityIcon* processed_icon;
 	UnityThemeImage* close_symbol;
 	UnityThemeImage* active_indicator;
 	UnityThemeImage* running_indicator_notify;
@@ -394,9 +394,9 @@ static void unity_launcher_scroller_child_load_textures (UnityLauncherScrollerCh
 		g_clear_error (&_inner_error_);
 		return;
 	}
-	self->priv->processed_icon = (_tmp6_ = g_object_ref_sink (unity_unity_icon_new (NULL, NULL)), _g_object_unref0 (self->priv->processed_icon), _tmp6_);
-	clutter_actor_set_size ((ClutterActor*) self->priv->processed_icon, (float) 48, (float) 48);
-	clutter_actor_set_parent ((ClutterActor*) self->priv->processed_icon, (ClutterActor*) self);
+	self->processed_icon = (_tmp6_ = g_object_ref_sink (unity_unity_icon_new (NULL, NULL)), _g_object_unref0 (self->processed_icon), _tmp6_);
+	clutter_actor_set_size ((ClutterActor*) self->processed_icon, (float) 48, (float) 48);
+	clutter_actor_set_parent ((ClutterActor*) self->processed_icon, (ClutterActor*) self);
 	g_signal_connect_object ((GObject*) self, "notify::icon", (GCallback) _unity_launcher_scroller_child_on_icon_changed_g_object_notify, self, 0);
 	g_signal_connect_object ((GObject*) self, "notify::running", (GCallback) _unity_launcher_scroller_child_on_running_changed_g_object_notify, self, 0);
 	g_signal_connect_object ((GObject*) self, "notify::active", (GCallback) _unity_launcher_scroller_child_on_active_changed_g_object_notify, self, 0);
@@ -495,10 +495,10 @@ void unity_launcher_scroller_child_force_rotation_jump (UnityLauncherScrollerChi
 	if (self->priv->_is_dragging_state) {
 		return;
 	}
-	if (CLUTTER_IS_ANIMATION (clutter_actor_get_animation ((ClutterActor*) self->priv->processed_icon))) {
-		clutter_animation_completed (clutter_actor_get_animation ((ClutterActor*) self->priv->processed_icon));
+	if (CLUTTER_IS_ANIMATION (clutter_actor_get_animation ((ClutterActor*) self->processed_icon))) {
+		clutter_animation_completed (clutter_actor_get_animation ((ClutterActor*) self->processed_icon));
 	}
-	unity_unity_icon_set_rotation (self->priv->processed_icon, degrees);
+	unity_unity_icon_set_rotation (self->processed_icon, degrees);
 	unity_launcher_scroller_child_set_rotation (self, degrees);
 	clutter_actor_queue_redraw ((ClutterActor*) self);
 }
@@ -531,7 +531,7 @@ static void unity_launcher_scroller_child_on_glow_timeline_new_frame (UnityLaunc
 			break;
 		}
 	}
-	clutter_actor_queue_redraw ((ClutterActor*) self->priv->processed_icon);
+	clutter_actor_queue_redraw ((ClutterActor*) self->processed_icon);
 }
 
 
@@ -556,7 +556,7 @@ static void unity_launcher_scroller_child_glow_anim_looping (UnityLauncherScroll
 	progress = 1.0f - unity_launcher_scroller_child_get_circular_alpha (progress);
 	ctk_effect_set_opacity ((CtkEffect*) self->priv->effect_icon_glow, progress);
 	self->priv->previous_glow_alpha = progress;
-	clutter_actor_queue_redraw ((ClutterActor*) self->priv->processed_icon);
+	clutter_actor_queue_redraw ((ClutterActor*) self->processed_icon);
 }
 
 
@@ -600,14 +600,14 @@ static void unity_launcher_scroller_child_on_wiggle_timeline_new_frame (UnityLau
 			break;
 		}
 	}
-	clutter_actor_queue_redraw ((ClutterActor*) self->priv->processed_icon);
+	clutter_actor_queue_redraw ((ClutterActor*) self->processed_icon);
 }
 
 
 static void unity_launcher_scroller_child_wiggle_anim_rising (UnityLauncherScrollerChild* self, float progress) {
 	g_return_if_fail (self != NULL);
 	progress = unity_launcher_scroller_child_get_ease_out_sine (progress);
-	clutter_actor_set_rotation ((ClutterActor*) self->priv->processed_icon, CLUTTER_Z_AXIS, (double) (progress * UNITY_LAUNCHER_WIGGLE_SIZE), 25.0f, 25.0f, 0.0f);
+	clutter_actor_set_rotation ((ClutterActor*) self->processed_icon, CLUTTER_Z_AXIS, (double) (progress * UNITY_LAUNCHER_WIGGLE_SIZE), 25.0f, 25.0f, 0.0f);
 	self->priv->previous_wiggle_alpha = progress;
 	if (progress >= 1.0) {
 		self->priv->wiggle_state = UNITY_LAUNCHER_ANIM_STATE_LOOPING;
@@ -632,8 +632,8 @@ static void unity_launcher_scroller_child_wiggle_anim_looping (UnityLauncherScro
 	frequency = UNITY_LAUNCHER_WIGGLE_FREQUENCY * (UNITY_LAUNCHER_WIGGLE_RUN_LENGTH / 1000);
 	progress = unity_launcher_scroller_child_get_circular_alpha (fmodf (progress * frequency, 1.0f));
 	progress = ((1.0f - progress) * 2.0f) - 1.0f;
-	clutter_actor_set_rotation ((ClutterActor*) self->priv->processed_icon, CLUTTER_Z_AXIS, (double) (progress * UNITY_LAUNCHER_WIGGLE_SIZE), 25.0f, 25.0f, 0.0f);
-	clutter_actor_queue_redraw ((ClutterActor*) self->priv->processed_icon);
+	clutter_actor_set_rotation ((ClutterActor*) self->processed_icon, CLUTTER_Z_AXIS, (double) (progress * UNITY_LAUNCHER_WIGGLE_SIZE), 25.0f, 25.0f, 0.0f);
+	clutter_actor_queue_redraw ((ClutterActor*) self->processed_icon);
 	self->priv->previous_wiggle_alpha = progress;
 }
 
@@ -671,7 +671,7 @@ static void unity_launcher_scroller_child_wiggle_anim_falling (UnityLauncherScro
 	g_return_if_fail (self != NULL);
 	alpha_length = self->priv->previous_wiggle_alpha;
 	angle = alpha_length - (progress * alpha_length);
-	clutter_actor_set_rotation ((ClutterActor*) self->priv->processed_icon, CLUTTER_Z_AXIS, (double) angle, 25.0f, 25.0f, 0.0f);
+	clutter_actor_set_rotation ((ClutterActor*) self->processed_icon, CLUTTER_Z_AXIS, (double) angle, 25.0f, 25.0f, 0.0f);
 	if (progress >= 1.0) {
 		self->priv->wiggle_state = UNITY_LAUNCHER_ANIM_STATE_STOPPED;
 		clutter_timeline_stop (self->priv->wiggle_timeline);
@@ -727,13 +727,16 @@ static void unity_launcher_scroller_child_on_icon_changed (UnityLauncherScroller
 		pixels[3] = (guchar) 255;
 		tex = _g_object_ref0 (gtk_clutter_texture_new_from_pixbuf (scaled_buf));
 		color = _g_object_ref0 (gtk_clutter_texture_new_from_pixbuf (color_buf));
-		self->priv->processed_icon = (_tmp6_ = g_object_ref_sink (unity_unity_icon_new ((_tmp4_ = tex, CLUTTER_IS_TEXTURE (_tmp4_) ? ((ClutterTexture*) _tmp4_) : NULL), (_tmp5_ = color, CLUTTER_IS_TEXTURE (_tmp5_) ? ((ClutterTexture*) _tmp5_) : NULL))), _g_object_unref0 (self->priv->processed_icon), _tmp6_);
-		clutter_actor_set_parent ((ClutterActor*) self->priv->processed_icon, (ClutterActor*) self);
-		unity_unity_icon_set_rotation (self->priv->processed_icon, self->priv->_rotation);
+		self->processed_icon = (_tmp6_ = g_object_ref_sink (unity_unity_icon_new ((_tmp4_ = tex, CLUTTER_IS_TEXTURE (_tmp4_) ? ((ClutterTexture*) _tmp4_) : NULL), (_tmp5_ = color, CLUTTER_IS_TEXTURE (_tmp5_) ? ((ClutterTexture*) _tmp5_) : NULL))), _g_object_unref0 (self->processed_icon), _tmp6_);
+		clutter_actor_set_parent ((ClutterActor*) self->processed_icon, (ClutterActor*) self);
+		unity_unity_icon_set_rotation (self->processed_icon, self->priv->_rotation);
 		self->priv->effect_drop_shadow = (_tmp7_ = g_object_ref_sink (ctk_effect_drop_shadow_new (5.0f, 0, 2)), _g_object_unref0 (self->priv->effect_drop_shadow), _tmp7_);
 		ctk_effect_set_opacity ((CtkEffect*) self->priv->effect_drop_shadow, 0.4f);
 		ctk_effect_set_margin ((CtkEffect*) self->priv->effect_drop_shadow, 5);
-		ctk_actor_add_effect ((CtkActor*) self->priv->processed_icon, (CtkEffect*) self->priv->effect_drop_shadow);
+		ctk_actor_add_effect ((CtkActor*) self->processed_icon, (CtkEffect*) self->priv->effect_drop_shadow);
+		clutter_actor_set_scale ((ClutterActor*) self->processed_icon, (double) 0.0f, (double) 0.0f);
+		g_object_set ((ClutterActor*) self->processed_icon, "scale-gravity", CLUTTER_GRAVITY_CENTER, NULL);
+		clutter_actor_animate ((ClutterActor*) self->processed_icon, (gulong) CLUTTER_EASE_OUT_CUBIC, (guint) 300, "scale-x", 1.0, "scale-y", 1.0, NULL);
 		clutter_actor_queue_redraw ((ClutterActor*) self);
 		_g_object_unref0 (color);
 		_g_object_unref0 (tex);
@@ -760,18 +763,26 @@ static void unity_launcher_scroller_child_on_running_changed (UnityLauncherScrol
 
 static void unity_launcher_scroller_child_on_active_changed (UnityLauncherScrollerChild* self) {
 	guint target_opacity;
-	ClutterAnimation* _tmp0_;
+	gboolean _tmp0_ = FALSE;
+	ClutterAnimation* _tmp1_;
 	g_return_if_fail (self != NULL);
 	target_opacity = (guint) 0;
 	if (self->priv->_active) {
 		target_opacity = (guint) 255;
+	}
+	if (self->priv->_active) {
+		_tmp0_ = self->priv->_running;
+	} else {
+		_tmp0_ = FALSE;
+	}
+	if (_tmp0_) {
 		clutter_actor_animate ((ClutterActor*) self->priv->running_indicator_notify, (gulong) CLUTTER_EASE_IN_QUAD, (guint) 150, "opacity", 0x00, NULL);
 		clutter_actor_animate ((ClutterActor*) self->priv->running_indicator, (gulong) CLUTTER_EASE_IN_QUAD, (guint) 150, "opacity", 0xff, NULL);
 	}
 	if (CLUTTER_IS_ANIMATION (self->priv->active_indicator_anim)) {
 		clutter_animation_completed (self->priv->active_indicator_anim);
 	}
-	self->priv->active_indicator_anim = (_tmp0_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->active_indicator, (gulong) CLUTTER_EASE_IN_OUT_SINE, UNITY_LAUNCHER_SHORT_DELAY, "opacity", target_opacity, NULL)), _g_object_unref0 (self->priv->active_indicator_anim), _tmp0_);
+	self->priv->active_indicator_anim = (_tmp1_ = _g_object_ref0 (clutter_actor_animate ((ClutterActor*) self->priv->active_indicator, (gulong) CLUTTER_EASE_IN_OUT_SINE, UNITY_LAUNCHER_SHORT_DELAY, "opacity", target_opacity, NULL)), _g_object_unref0 (self->priv->active_indicator_anim), _tmp1_);
 }
 
 
@@ -781,20 +792,20 @@ static void unity_launcher_scroller_child_on_rotation_changed (UnityLauncherScro
 	if (self->priv->_is_dragging_state) {
 		return;
 	}
-	self->priv->old_rotate_value = unity_unity_icon_get_rotation (self->priv->processed_icon);
-	if (CLUTTER_IS_ANIMATION (clutter_actor_get_animation ((ClutterActor*) self->priv->processed_icon))) {
-		clutter_animation_completed (clutter_actor_get_animation ((ClutterActor*) self->priv->processed_icon));
+	self->priv->old_rotate_value = unity_unity_icon_get_rotation (self->processed_icon);
+	if (CLUTTER_IS_ANIMATION (clutter_actor_get_animation ((ClutterActor*) self->processed_icon))) {
+		clutter_animation_completed (clutter_actor_get_animation ((ClutterActor*) self->processed_icon));
 	}
-	unity_unity_icon_set_rotation (self->priv->processed_icon, self->priv->old_rotate_value);
+	unity_unity_icon_set_rotation (self->processed_icon, self->priv->old_rotate_value);
 	if (self->priv->_rotation <= 1.0) {
 		_tmp0_ = self->priv->_rotation >= 0.0;
 	} else {
 		_tmp0_ = FALSE;
 	}
 	if (_tmp0_) {
-		clutter_actor_animate ((ClutterActor*) self->priv->processed_icon, (gulong) CLUTTER_EASE_IN_OUT_QUAD, (guint) 300, "rotation", self->priv->_rotation, NULL);
+		clutter_actor_animate ((ClutterActor*) self->processed_icon, (gulong) CLUTTER_EASE_IN_OUT_QUAD, (guint) 300, "rotation", self->priv->_rotation, NULL);
 	} else {
-		clutter_actor_animate ((ClutterActor*) self->priv->processed_icon, (gulong) CLUTTER_EASE_OUT_QUINT, (guint) 300, "rotation", self->priv->_rotation, NULL);
+		clutter_actor_animate ((ClutterActor*) self->processed_icon, (gulong) CLUTTER_EASE_OUT_QUINT, (guint) 300, "rotation", self->priv->_rotation, NULL);
 	}
 }
 
@@ -827,7 +838,7 @@ static void unity_launcher_scroller_child_on_activating_changed (UnityLauncherSc
 			c = (memset (&_tmp3_, 0, sizeof (ClutterColor)), _tmp3_.red = (guint8) 255, _tmp3_.green = (guint8) 255, _tmp3_.blue = (guint8) 255, _tmp3_.alpha = (guint8) 255, _tmp3_);
 			ctk_effect_glow_set_color (self->priv->effect_icon_glow, &c);
 			ctk_effect_set_opacity ((CtkEffect*) self->priv->effect_icon_glow, 1.0f);
-			ctk_actor_add_effect ((CtkActor*) self->priv->processed_icon, (CtkEffect*) self->priv->effect_icon_glow);
+			ctk_actor_add_effect ((CtkActor*) self->processed_icon, (CtkEffect*) self->priv->effect_icon_glow);
 			ctk_effect_set_margin ((CtkEffect*) self->priv->effect_icon_glow, 6);
 			clutter_timeline_set_duration (self->priv->glow_timeline, UNITY_LAUNCHER_SHORT_DELAY);
 			self->priv->glow_state = UNITY_LAUNCHER_ANIM_STATE_RISING;
@@ -876,7 +887,7 @@ static void unity_launcher_scroller_child_real_get_preferred_width (ClutterActor
 	float nat = 0.0F;
 	float min = 0.0F;
 	self = (UnityLauncherScrollerChild*) base;
-	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->processed_icon, for_height, &min, &nat);
+	clutter_actor_get_preferred_width ((ClutterActor*) self->processed_icon, for_height, &min, &nat);
 	*natural_width = nat;
 	*minimum_width = min;
 	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->running_indicator, for_height, &min, &nat);
@@ -899,6 +910,7 @@ static void unity_launcher_scroller_child_real_allocate (ClutterActor* base, con
 	float x = 0.0F;
 	float y = 0.0F;
 	ClutterActorBox child_box = {0};
+	float midpoint;
 	float width = 0.0F;
 	float height = 0.0F;
 	float n_width = 0.0F;
@@ -908,26 +920,35 @@ static void unity_launcher_scroller_child_real_allocate (ClutterActor* base, con
 	y = (float) 0;
 	CLUTTER_ACTOR_CLASS (unity_launcher_scroller_child_parent_class)->allocate ((ClutterActor*) CTK_ACTOR (self), box, flags);
 	memset (&child_box, 0, sizeof (ClutterActorBox));
+	midpoint = (float) 0;
 	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->running_indicator, (float) 58, &n_width, &width);
 	clutter_actor_get_preferred_height ((ClutterActor*) self->priv->running_indicator, (float) 58, &n_height, &height);
+	midpoint = (self->processed_icon->stored_height - height) / 2.0f;
+	if (self->priv->_rotation > 0) {
+		midpoint = (clutter_actor_box_get_height (box) - midpoint) - self->processed_icon->stored_ymod;
+	}
 	child_box.x1 = (float) 0;
-	child_box.y1 = (clutter_actor_box_get_height (box) - height) / 2.0f;
+	child_box.y1 = midpoint;
 	child_box.x2 = child_box.x1 + width;
 	child_box.y2 = child_box.y1 + height;
 	clutter_actor_allocate ((ClutterActor*) self->priv->running_indicator, &child_box, flags);
 	clutter_actor_allocate ((ClutterActor*) self->priv->running_indicator_notify, &child_box, flags);
 	x = x + clutter_actor_box_get_width (&child_box);
-	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->processed_icon, (float) 48, &width, &n_width);
-	clutter_actor_get_preferred_height ((ClutterActor*) self->priv->processed_icon, (float) 48, &height, &n_height);
+	clutter_actor_get_preferred_width ((ClutterActor*) self->processed_icon, (float) 48, &width, &n_width);
+	clutter_actor_get_preferred_height ((ClutterActor*) self->processed_icon, (float) 48, &height, &n_height);
 	child_box.x1 = self->grabbed_push + ((clutter_actor_box_get_width (box) - width) / 2.0f);
-	child_box.y1 = y;
+	child_box.y1 = (float) 0;
 	child_box.x2 = child_box.x1 + 48;
 	child_box.y2 = child_box.y1 + height;
-	clutter_actor_allocate ((ClutterActor*) self->priv->processed_icon, &child_box, flags);
+	clutter_actor_allocate ((ClutterActor*) self->processed_icon, &child_box, flags);
 	clutter_actor_get_preferred_width ((ClutterActor*) self->priv->active_indicator, (float) 48, &n_width, &width);
 	clutter_actor_get_preferred_height ((ClutterActor*) self->priv->active_indicator, (float) 48, &n_height, &height);
+	midpoint = (self->processed_icon->stored_height - height) / 2.0f;
+	if (self->priv->_rotation > 0) {
+		midpoint = (clutter_actor_box_get_height (box) - midpoint) - self->processed_icon->stored_ymod;
+	}
 	child_box.x1 = clutter_actor_box_get_width (box) - width;
-	child_box.y1 = (clutter_actor_box_get_height (box) - height) / 2.0f;
+	child_box.y1 = midpoint;
 	child_box.x2 = child_box.x1 + width;
 	child_box.y2 = child_box.y1 + height;
 	clutter_actor_allocate ((ClutterActor*) self->priv->active_indicator, &child_box, flags);
@@ -954,7 +975,7 @@ static void unity_launcher_scroller_child_real_paint (ClutterActor* base) {
 	clutter_actor_paint ((ClutterActor*) self->priv->active_indicator);
 	clutter_actor_paint ((ClutterActor*) self->priv->running_indicator_notify);
 	clutter_actor_paint ((ClutterActor*) self->priv->running_indicator);
-	clutter_actor_paint ((ClutterActor*) self->priv->processed_icon);
+	clutter_actor_paint ((ClutterActor*) self->processed_icon);
 	clutter_actor_paint ((ClutterActor*) self->priv->close_symbol);
 }
 
@@ -967,7 +988,7 @@ static void unity_launcher_scroller_child_real_map (ClutterActor* base) {
 	clutter_actor_map ((ClutterActor*) self->priv->running_indicator);
 	clutter_actor_map ((ClutterActor*) self->priv->active_indicator);
 	clutter_actor_map ((ClutterActor*) self->priv->running_indicator_notify);
-	clutter_actor_map ((ClutterActor*) self->priv->processed_icon);
+	clutter_actor_map ((ClutterActor*) self->processed_icon);
 }
 
 
@@ -979,7 +1000,7 @@ static void unity_launcher_scroller_child_real_unmap (ClutterActor* base) {
 	clutter_actor_unmap ((ClutterActor*) self->priv->running_indicator);
 	clutter_actor_unmap ((ClutterActor*) self->priv->active_indicator);
 	clutter_actor_unmap ((ClutterActor*) self->priv->running_indicator_notify);
-	clutter_actor_unmap ((ClutterActor*) self->priv->processed_icon);
+	clutter_actor_unmap ((ClutterActor*) self->processed_icon);
 }
 
 
@@ -1220,7 +1241,7 @@ static void unity_launcher_scroller_child_finalize (GObject* obj) {
 	}
 	_g_object_unref0 (self->priv->_icon);
 	_g_object_unref0 (self->controller);
-	_g_object_unref0 (self->priv->processed_icon);
+	_g_object_unref0 (self->processed_icon);
 	_g_object_unref0 (self->priv->close_symbol);
 	_g_object_unref0 (self->priv->active_indicator);
 	_g_object_unref0 (self->priv->running_indicator_notify);

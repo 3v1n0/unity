@@ -146,10 +146,6 @@ static char* unity_places_home_renderer_filename_for_icon (UnityPlacesHomeRender
 UnityPlacesHomeButton* unity_places_home_button_new (const char* name, const char* icon, const char* exec);
 UnityPlacesHomeButton* unity_places_home_button_construct (GType object_type, const char* name, const char* icon, const char* exec);
 GType unity_places_home_button_get_type (void) G_GNUC_CONST;
-static void _lambda58_ (UnityPlacesHomeRenderer* self);
-static void __lambda58__ctk_button_clicked (CtkButton* _sender, gpointer self);
-static void _lambda59_ (UnityPlacesHomeRenderer* self);
-static void __lambda59__ctk_button_clicked (CtkButton* _sender, gpointer self);
 static void _lambda60_ (UnityPlacesHomeRenderer* self);
 static void __lambda60__ctk_button_clicked (CtkButton* _sender, gpointer self);
 static void _lambda61_ (UnityPlacesHomeRenderer* self);
@@ -162,6 +158,10 @@ static void _lambda64_ (UnityPlacesHomeRenderer* self);
 static void __lambda64__ctk_button_clicked (CtkButton* _sender, gpointer self);
 static void _lambda65_ (UnityPlacesHomeRenderer* self);
 static void __lambda65__ctk_button_clicked (CtkButton* _sender, gpointer self);
+static void _lambda66_ (UnityPlacesHomeRenderer* self);
+static void __lambda66__ctk_button_clicked (CtkButton* _sender, gpointer self);
+static void _lambda67_ (UnityPlacesHomeRenderer* self);
+static void __lambda67__ctk_button_clicked (CtkButton* _sender, gpointer self);
 static GObject * unity_places_home_renderer_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_home_renderer_finalize (GObject* obj);
 #define UNITY_PLACES_HOME_BUTTON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_HOME_BUTTON, UnityPlacesHomeButtonPrivate))
@@ -282,7 +282,7 @@ static const char* string_to_string (const char* self) {
 }
 
 
-static void _lambda58_ (UnityPlacesHomeRenderer* self) {
+static void _lambda60_ (UnityPlacesHomeRenderer* self) {
 	GConfClient* client;
 	GError * _inner_error_ = NULL;
 	client = _g_object_ref0 (gconf_client_get_default ());
@@ -326,33 +326,13 @@ static void _lambda58_ (UnityPlacesHomeRenderer* self) {
 }
 
 
-static void __lambda58__ctk_button_clicked (CtkButton* _sender, gpointer self) {
-	_lambda58_ (self);
-}
-
-
-static void _lambda59_ (UnityPlacesHomeRenderer* self) {
-	unity_places_home_renderer_activate_place (self, UNITY_PLACES_HOME_RENDERER_APPS_PLACE, 4);
-}
-
-
-static void __lambda59__ctk_button_clicked (CtkButton* _sender, gpointer self) {
-	_lambda59_ (self);
-}
-
-
-static void _lambda60_ (UnityPlacesHomeRenderer* self) {
-	unity_places_home_renderer_activate_place (self, UNITY_PLACES_HOME_RENDERER_APPS_PLACE, 4);
-}
-
-
 static void __lambda60__ctk_button_clicked (CtkButton* _sender, gpointer self) {
 	_lambda60_ (self);
 }
 
 
 static void _lambda61_ (UnityPlacesHomeRenderer* self) {
-	unity_places_home_renderer_activate_place (self, UNITY_PLACES_HOME_RENDERER_APPS_PLACE, 2);
+	unity_places_home_renderer_activate_place (self, UNITY_PLACES_HOME_RENDERER_APPS_PLACE, 4);
 }
 
 
@@ -362,7 +342,7 @@ static void __lambda61__ctk_button_clicked (CtkButton* _sender, gpointer self) {
 
 
 static void _lambda62_ (UnityPlacesHomeRenderer* self) {
-	unity_places_home_renderer_activate_place (self, UNITY_PLACES_HOME_RENDERER_APPS_PLACE, 3);
+	unity_places_home_renderer_activate_place (self, UNITY_PLACES_HOME_RENDERER_APPS_PLACE, 4);
 }
 
 
@@ -372,7 +352,7 @@ static void __lambda62__ctk_button_clicked (CtkButton* _sender, gpointer self) {
 
 
 static void _lambda63_ (UnityPlacesHomeRenderer* self) {
-	unity_places_home_renderer_activate_place (self, UNITY_PLACES_HOME_RENDERER_APPS_PLACE, 5);
+	unity_places_home_renderer_activate_place (self, UNITY_PLACES_HOME_RENDERER_APPS_PLACE, 2);
 }
 
 
@@ -382,7 +362,7 @@ static void __lambda63__ctk_button_clicked (CtkButton* _sender, gpointer self) {
 
 
 static void _lambda64_ (UnityPlacesHomeRenderer* self) {
-	unity_places_home_renderer_activate_place (self, UNITY_PLACES_HOME_RENDERER_FILES_PLACE, 0);
+	unity_places_home_renderer_activate_place (self, UNITY_PLACES_HOME_RENDERER_APPS_PLACE, 3);
 }
 
 
@@ -392,6 +372,26 @@ static void __lambda64__ctk_button_clicked (CtkButton* _sender, gpointer self) {
 
 
 static void _lambda65_ (UnityPlacesHomeRenderer* self) {
+	unity_places_home_renderer_activate_place (self, UNITY_PLACES_HOME_RENDERER_APPS_PLACE, 5);
+}
+
+
+static void __lambda65__ctk_button_clicked (CtkButton* _sender, gpointer self) {
+	_lambda65_ (self);
+}
+
+
+static void _lambda66_ (UnityPlacesHomeRenderer* self) {
+	unity_places_home_renderer_activate_place (self, UNITY_PLACES_HOME_RENDERER_FILES_PLACE, 0);
+}
+
+
+static void __lambda66__ctk_button_clicked (CtkButton* _sender, gpointer self) {
+	_lambda66_ (self);
+}
+
+
+static void _lambda67_ (UnityPlacesHomeRenderer* self) {
 	GError * _inner_error_ = NULL;
 	{
 		g_spawn_command_line_async ("software-center", &_inner_error_);
@@ -422,8 +422,8 @@ static void _lambda65_ (UnityPlacesHomeRenderer* self) {
 }
 
 
-static void __lambda65__ctk_button_clicked (CtkButton* _sender, gpointer self) {
-	_lambda65_ (self);
+static void __lambda67__ctk_button_clicked (CtkButton* _sender, gpointer self) {
+	_lambda67_ (self);
 }
 
 
@@ -463,42 +463,42 @@ static GObject * unity_places_home_renderer_constructor (GType type, guint n_con
 		icon = (_tmp4_ = g_object_ref_sink (unity_places_home_button_new (_ ("Web"), _tmp3_ = unity_places_home_renderer_filename_for_icon (self, "web"), "")), _g_free0 (_tmp3_), _tmp4_);
 		clutter_container_add_actor ((ClutterContainer*) self->priv->icon_view, (ClutterActor*) icon);
 		clutter_actor_show ((ClutterActor*) icon);
-		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda58__ctk_button_clicked, self, 0);
+		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda60__ctk_button_clicked, self, 0);
 		icon = (_tmp6_ = g_object_ref_sink (unity_places_home_button_new (_ ("Music"), _tmp5_ = unity_places_home_renderer_filename_for_icon (self, "music"), "")), _g_object_unref0 (icon), _tmp6_);
 		_g_free0 (_tmp5_);
 		clutter_container_add_actor ((ClutterContainer*) self->priv->icon_view, (ClutterActor*) icon);
 		clutter_actor_show ((ClutterActor*) icon);
-		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda59__ctk_button_clicked, self, 0);
+		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda61__ctk_button_clicked, self, 0);
 		icon = (_tmp8_ = g_object_ref_sink (unity_places_home_button_new (_ ("Photos & Videos"), _tmp7_ = unity_places_home_renderer_filename_for_icon (self, "photos"), "")), _g_object_unref0 (icon), _tmp8_);
 		_g_free0 (_tmp7_);
 		clutter_container_add_actor ((ClutterContainer*) self->priv->icon_view, (ClutterActor*) icon);
 		clutter_actor_show ((ClutterActor*) icon);
-		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda60__ctk_button_clicked, self, 0);
+		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda62__ctk_button_clicked, self, 0);
 		icon = (_tmp10_ = g_object_ref_sink (unity_places_home_button_new (_ ("Games"), _tmp9_ = unity_places_home_renderer_filename_for_icon (self, "games"), "")), _g_object_unref0 (icon), _tmp10_);
 		_g_free0 (_tmp9_);
 		clutter_container_add_actor ((ClutterContainer*) self->priv->icon_view, (ClutterActor*) icon);
 		clutter_actor_show ((ClutterActor*) icon);
-		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda61__ctk_button_clicked, self, 0);
+		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda63__ctk_button_clicked, self, 0);
 		icon = (_tmp12_ = g_object_ref_sink (unity_places_home_button_new (_ ("Email & Chat"), _tmp11_ = unity_places_home_renderer_filename_for_icon (self, "email_and_chat"), "")), _g_object_unref0 (icon), _tmp12_);
 		_g_free0 (_tmp11_);
 		clutter_container_add_actor ((ClutterContainer*) self->priv->icon_view, (ClutterActor*) icon);
 		clutter_actor_show ((ClutterActor*) icon);
-		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda62__ctk_button_clicked, self, 0);
+		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda64__ctk_button_clicked, self, 0);
 		icon = (_tmp14_ = g_object_ref_sink (unity_places_home_button_new (_ ("Office"), _tmp13_ = unity_places_home_renderer_filename_for_icon (self, "work"), "")), _g_object_unref0 (icon), _tmp14_);
 		_g_free0 (_tmp13_);
 		clutter_container_add_actor ((ClutterContainer*) self->priv->icon_view, (ClutterActor*) icon);
 		clutter_actor_show ((ClutterActor*) icon);
-		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda63__ctk_button_clicked, self, 0);
+		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda65__ctk_button_clicked, self, 0);
 		icon = (_tmp16_ = g_object_ref_sink (unity_places_home_button_new (_ ("Files & Folders"), _tmp15_ = unity_places_home_renderer_filename_for_icon (self, "filesandfolders"), "")), _g_object_unref0 (icon), _tmp16_);
 		_g_free0 (_tmp15_);
 		clutter_container_add_actor ((ClutterContainer*) self->priv->icon_view, (ClutterActor*) icon);
 		clutter_actor_show ((ClutterActor*) icon);
-		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda64__ctk_button_clicked, self, 0);
+		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda66__ctk_button_clicked, self, 0);
 		icon = (_tmp18_ = g_object_ref_sink (unity_places_home_button_new (_ ("Get New Apps"), _tmp17_ = unity_places_home_renderer_filename_for_icon (self, "softwarecentre"), "")), _g_object_unref0 (icon), _tmp18_);
 		_g_free0 (_tmp17_);
 		clutter_container_add_actor ((ClutterContainer*) self->priv->icon_view, (ClutterActor*) icon);
 		clutter_actor_show ((ClutterActor*) icon);
-		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda65__ctk_button_clicked, self, 0);
+		g_signal_connect_object ((CtkButton*) icon, "clicked", (GCallback) __lambda67__ctk_button_clicked, self, 0);
 		_g_object_unref0 (icon);
 	}
 	return obj;

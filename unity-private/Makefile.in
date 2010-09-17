@@ -115,6 +115,7 @@ am__objects_4 = libunity_private_la-places-button.lo \
 	libunity_private_la-places-place.lo \
 	libunity_private_la-places-place-search-bar.lo \
 	libunity_private_la-places-place-search-entry.lo \
+	libunity_private_la-places-place-search-extra-action.lo \
 	libunity_private_la-places-place-search-navigation.lo \
 	libunity_private_la-places-place-search-sections-bar.lo \
 	libunity_private_la-places-trash-controller.lo \
@@ -445,6 +446,7 @@ places_sources = \
   places/places-place.vala \
   places/places-place-search-bar.vala \
   places/places-place-search-entry.vala \
+  places/places-place-search-extra-action.vala \
   places/places-place-search-navigation.vala \
   places/places-place-search-sections-bar.vala \
   places/places-trash-controller.vala \
@@ -614,6 +616,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-model.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-search-bar.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-search-entry.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-search-extra-action.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-search-navigation.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-search-sections-bar.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/libunity_private_la-places-place-view.Plo@am__quote@
@@ -984,6 +987,14 @@ libunity_private_la-places-place-search-entry.lo: places/places-place-search-ent
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='places/places-place-search-entry.c' object='libunity_private_la-places-place-search-entry.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-places-place-search-entry.lo `test -f 'places/places-place-search-entry.c' || echo '$(srcdir)/'`places/places-place-search-entry.c
+
+libunity_private_la-places-place-search-extra-action.lo: places/places-place-search-extra-action.c
+@am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-place-search-extra-action.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-place-search-extra-action.Tpo -c -o libunity_private_la-places-place-search-extra-action.lo `test -f 'places/places-place-search-extra-action.c' || echo '$(srcdir)/'`places/places-place-search-extra-action.c
+@am__fastdepCC_TRUE@	$(AM_V_at)$(am__mv) $(DEPDIR)/libunity_private_la-places-place-search-extra-action.Tpo $(DEPDIR)/libunity_private_la-places-place-search-extra-action.Plo
+@am__fastdepCC_FALSE@	$(AM_V_CC) @AM_BACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='places/places-place-search-extra-action.c' object='libunity_private_la-places-place-search-extra-action.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o libunity_private_la-places-place-search-extra-action.lo `test -f 'places/places-place-search-extra-action.c' || echo '$(srcdir)/'`places/places-place-search-extra-action.c
 
 libunity_private_la-places-place-search-navigation.lo: places/places-place-search-navigation.c
 @am__fastdepCC_TRUE@	$(AM_V_CC)$(LIBTOOL) $(AM_V_lt) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(libunity_private_la_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT libunity_private_la-places-place-search-navigation.lo -MD -MP -MF $(DEPDIR)/libunity_private_la-places-place-search-navigation.Tpo -c -o libunity_private_la-places-place-search-navigation.lo `test -f 'places/places-place-search-navigation.c' || echo '$(srcdir)/'`places/places-place-search-navigation.c
