@@ -12,6 +12,7 @@ unity (0.2.40-0ubuntu1) UNRELEASED; urgency=low
     - Don't run indicator on special launchers (LP: #627488)
     - Center arrows position in folded launcher tiles (LP: #633084)
     - Launcher icons first appear as white upon login (LP: #601093)
+  * update debian/libunity0.symbols
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 17 Sep 2010 13:00:22 +0200
 

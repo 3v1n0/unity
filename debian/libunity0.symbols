@@ -292,6 +292,7 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_panel_indicators_indicator_object_view_get_indicator_object@Base 0.2.22
  unity_panel_indicators_indicator_object_view_get_type@Base 0.2.22
  unity_panel_indicators_indicator_object_view_new@Base 0.2.22
+ unity_panel_indicators_indicator_object_view_on_menu_show@Base 0.2.40
  unity_panel_indicators_indicator_object_view_open_first_menu_entry@Base 0.2.22
  unity_panel_indicators_indicator_object_view_open_last_menu_entry@Base 0.2.22
  unity_panel_indicators_indicator_object_view_remove_first_entry@Base 0.2.22
@@ -585,6 +586,14 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_place_search_entry_reset@Base 0.2.22
  unity_places_place_search_entry_set_active_entry@Base 0.2.30
  unity_places_place_search_entry_set_cursor_opacity@Base 0.2.30
+ unity_places_place_search_extra_action_construct@Base 0.2.40
+ unity_places_place_search_extra_action_get_destroy_factor@Base 0.2.40
+ unity_places_place_search_extra_action_get_resize_factor@Base 0.2.40
+ unity_places_place_search_extra_action_get_type@Base 0.2.40
+ unity_places_place_search_extra_action_new@Base 0.2.40
+ unity_places_place_search_extra_action_set_destroy_factor@Base 0.2.40
+ unity_places_place_search_extra_action_set_icon_from_gicon_string@Base 0.2.40
+ unity_places_place_search_extra_action_set_resize_factor@Base 0.2.40
  unity_places_place_search_navigation_construct@Base 0.2.22
  unity_places_place_search_navigation_get_type@Base 0.2.22
  unity_places_place_search_navigation_new@Base 0.2.22
