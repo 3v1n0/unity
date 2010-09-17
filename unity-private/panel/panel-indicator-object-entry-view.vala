@@ -237,7 +237,7 @@ namespace Unity.Panel.Indicators
       if (entry.label is Gtk.Label)
         {
           text = new Ctk.Text ("");
-          text.color = { 233, 216, 200, 255 };
+          text.color = { 223, 219, 210, 255 };
           add_actor (text);
 
           /* FIXME: What about the __ case? Well, should that me in a menu? */
