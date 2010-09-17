@@ -136,15 +136,14 @@ namespace Unity.Places
       cr.paint ();
 
       cr.set_operator (Cairo.Operator.OVER);
-      cr.set_line_width (1.5);
-      cr.translate (0.5, 0.5);
+      cr.set_line_width (1.0);
 
       if (state == Ctk.ActorState.STATE_NORMAL)
         {
           if (_normal_state == NormalState.UNDERLINE)
             {
-              cr.move_to (x, height - 1);
-              cr.line_to (x + width, height - 1);
+              cr.move_to (x + 3, height - 1.5);
+              cr.line_to (x + width - 4, height - 1.5);
               cr.set_source_rgba (1.0, 1.0, 1.0, 0.3);
               cr.stroke ();
             }
@@ -153,8 +152,8 @@ namespace Unity.Places
       else if (state == Ctk.ActorState.STATE_PRELIGHT &&
                _prelight_state == PrelightState.UNDERLINE)
         {
-          cr.move_to (x, height - 1);
-          cr.line_to (x + width, height - 1);
+          cr.move_to (x + 3, height - 1.5);
+          cr.line_to (x + width - 4, height - 1.5);
           cr.set_source_rgba (1.0, 1.0, 1.0, 0.3);
           cr.stroke ();
           return;
@@ -164,7 +163,7 @@ namespace Unity.Places
 
       if (state == Ctk.ActorState.STATE_NORMAL)
         {
-         cr.set_source_rgba (1.0, 1.0, 1.0, 0.0);
+
         }
       else if (state == Ctk.ActorState.STATE_PRELIGHT)
         {
@@ -173,12 +172,15 @@ namespace Unity.Places
                                                4, 4);
           var context = new Cairo.Context (pattern);
           
+          cr.set_source_rgba (1.0, 1.0, 1.0, 0.1);
+          cr.fill_preserve ();
+      
           context.set_operator (Cairo.Operator.CLEAR);
           context.paint ();
 
           context.set_line_width (0.2);
           context.set_operator (Cairo.Operator.OVER);
-          context.set_source_rgba (1.0, 1.0, 1.0, 0.85);
+          context.set_source_rgba (1.0, 1.0, 1.0, 0.4);
 
           context.move_to (0, 0);
           context.line_to (4, 4);
@@ -188,12 +190,19 @@ namespace Unity.Places
           var pat = new Cairo.Pattern.for_surface (pattern);
           pat.set_extend (Cairo.Extend.REPEAT);
           cr.set_source (pat);
+
+          cr.fill ();
         }
       else
         {
-          cr.set_source_rgba (1.0, 1.0, 1.0, 1.0);
+         cr.set_source_rgba (1.0, 1.0, 1.0, 1.0);
+
+         cr.fill ();
         }
-      cr.fill_preserve ();
+
+      cr.translate (0.5, 0.5);
+
+      outline_func (cr, width, height);
 
       cr.set_source_rgba (1.0, 1.0, 1.0, 0.5);
       cr.stroke ();
