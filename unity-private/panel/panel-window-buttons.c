@@ -115,19 +115,19 @@ static void _unity_panel_window_buttons_on_last_view_destroyed_gweak_notify (gpo
 static void unity_panel_window_buttons_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width, float* nat_width);
 UnityPanelWindowButton* unity_panel_window_button_new (const char* filename);
 UnityPanelWindowButton* unity_panel_window_button_construct (GType object_type, const char* filename);
-static void _lambda7_ (UnityPanelWindowButtons* self);
-static void __lambda7__ctk_button_clicked (CtkButton* _sender, gpointer self);
-static void _lambda8_ (UnityPanelWindowButtons* self);
-static void __lambda8__ctk_button_clicked (CtkButton* _sender, gpointer self);
 static void _lambda9_ (UnityPanelWindowButtons* self);
 static void __lambda9__ctk_button_clicked (CtkButton* _sender, gpointer self);
-static void _unity_panel_window_buttons_on_active_window_changed_bamf_matcher_active_window_changed (BamfMatcher* _sender, GObject* object, GObject* p0, gpointer self);
 static void _lambda10_ (UnityPanelWindowButtons* self);
-static gboolean _lambda11_ (UnityPanelWindowButtons* self);
-static gboolean __lambda11__gsource_func (gpointer self);
-static void __lambda10__unity_shell_active_window_state_changed (UnityShell* _sender, gpointer self);
-static gboolean _lambda12_ (UnityPanelWindowButtons* self);
-static gboolean __lambda12__gsource_func (gpointer self);
+static void __lambda10__ctk_button_clicked (CtkButton* _sender, gpointer self);
+static void _lambda11_ (UnityPanelWindowButtons* self);
+static void __lambda11__ctk_button_clicked (CtkButton* _sender, gpointer self);
+static void _unity_panel_window_buttons_on_active_window_changed_bamf_matcher_active_window_changed (BamfMatcher* _sender, GObject* object, GObject* p0, gpointer self);
+static void _lambda12_ (UnityPanelWindowButtons* self);
+static gboolean _lambda13_ (UnityPanelWindowButtons* self);
+static gboolean __lambda13__gsource_func (gpointer self);
+static void __lambda12__unity_shell_active_window_state_changed (UnityShell* _sender, gpointer self);
+static gboolean _lambda14_ (UnityPanelWindowButtons* self);
+static gboolean __lambda14__gsource_func (gpointer self);
 static GObject * unity_panel_window_buttons_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_panel_window_buttons_finalize (GObject* obj);
 #define UNITY_PANEL_WINDOW_BUTTON_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PANEL_TYPE_WINDOW_BUTTON, UnityPanelWindowButtonPrivate))
@@ -274,33 +274,9 @@ static void unity_panel_window_buttons_real_get_preferred_width (ClutterActor* b
 }
 
 
-static void _lambda7_ (UnityPanelWindowButtons* self) {
-	if (self->priv->last_xid > 0) {
-		unity_shell_do_window_action (unity_global_shell, self->priv->last_xid, UNITY_WINDOW_ACTION_CLOSE);
-	}
-}
-
-
-static void __lambda7__ctk_button_clicked (CtkButton* _sender, gpointer self) {
-	_lambda7_ (self);
-}
-
-
-static void _lambda8_ (UnityPanelWindowButtons* self) {
-	if (self->priv->last_xid > 0) {
-		unity_shell_do_window_action (unity_global_shell, self->priv->last_xid, UNITY_WINDOW_ACTION_MINIMIZE);
-	}
-}
-
-
-static void __lambda8__ctk_button_clicked (CtkButton* _sender, gpointer self) {
-	_lambda8_ (self);
-}
-
-
 static void _lambda9_ (UnityPanelWindowButtons* self) {
 	if (self->priv->last_xid > 0) {
-		unity_shell_do_window_action (unity_global_shell, self->priv->last_xid, UNITY_WINDOW_ACTION_UNMAXIMIZE);
+		unity_shell_do_window_action (unity_global_shell, self->priv->last_xid, UNITY_WINDOW_ACTION_CLOSE);
 	}
 }
 
@@ -310,12 +286,36 @@ static void __lambda9__ctk_button_clicked (CtkButton* _sender, gpointer self) {
 }
 
 
+static void _lambda10_ (UnityPanelWindowButtons* self) {
+	if (self->priv->last_xid > 0) {
+		unity_shell_do_window_action (unity_global_shell, self->priv->last_xid, UNITY_WINDOW_ACTION_MINIMIZE);
+	}
+}
+
+
+static void __lambda10__ctk_button_clicked (CtkButton* _sender, gpointer self) {
+	_lambda10_ (self);
+}
+
+
+static void _lambda11_ (UnityPanelWindowButtons* self) {
+	if (self->priv->last_xid > 0) {
+		unity_shell_do_window_action (unity_global_shell, self->priv->last_xid, UNITY_WINDOW_ACTION_UNMAXIMIZE);
+	}
+}
+
+
+static void __lambda11__ctk_button_clicked (CtkButton* _sender, gpointer self) {
+	_lambda11_ (self);
+}
+
+
 static void _unity_panel_window_buttons_on_active_window_changed_bamf_matcher_active_window_changed (BamfMatcher* _sender, GObject* object, GObject* p0, gpointer self) {
 	unity_panel_window_buttons_on_active_window_changed (self, object, p0);
 }
 
 
-static gboolean _lambda11_ (UnityPanelWindowButtons* self) {
+static gboolean _lambda13_ (UnityPanelWindowButtons* self) {
 	gboolean result = FALSE;
 	BamfWindow* win;
 	BamfWindow* _tmp0_;
@@ -326,24 +326,24 @@ static gboolean _lambda11_ (UnityPanelWindowButtons* self) {
 }
 
 
-static gboolean __lambda11__gsource_func (gpointer self) {
+static gboolean __lambda13__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda11_ (self);
+	result = _lambda13_ (self);
 	return result;
 }
 
 
-static void _lambda10_ (UnityPanelWindowButtons* self) {
-	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda11__gsource_func, g_object_ref (self), g_object_unref);
+static void _lambda12_ (UnityPanelWindowButtons* self) {
+	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda13__gsource_func, g_object_ref (self), g_object_unref);
 }
 
 
-static void __lambda10__unity_shell_active_window_state_changed (UnityShell* _sender, gpointer self) {
-	_lambda10_ (self);
+static void __lambda12__unity_shell_active_window_state_changed (UnityShell* _sender, gpointer self) {
+	_lambda12_ (self);
 }
 
 
-static gboolean _lambda12_ (UnityPanelWindowButtons* self) {
+static gboolean _lambda14_ (UnityPanelWindowButtons* self) {
 	gboolean result = FALSE;
 	BamfWindow* win;
 	BamfWindow* _tmp0_;
@@ -354,9 +354,9 @@ static gboolean _lambda12_ (UnityPanelWindowButtons* self) {
 }
 
 
-static gboolean __lambda12__gsource_func (gpointer self) {
+static gboolean __lambda14__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda12_ (self);
+	result = _lambda14_ (self);
 	return result;
 }
 
@@ -380,18 +380,18 @@ static GObject * unity_panel_window_buttons_constructor (GType type, guint n_con
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->appname, TRUE, TRUE);
 		self->priv->close = (_tmp1_ = g_object_ref_sink (unity_panel_window_button_new ("close")), _g_object_unref0 (self->priv->close), _tmp1_);
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->close, FALSE, FALSE);
-		g_signal_connect_object ((CtkButton*) self->priv->close, "clicked", (GCallback) __lambda7__ctk_button_clicked, self, 0);
+		g_signal_connect_object ((CtkButton*) self->priv->close, "clicked", (GCallback) __lambda9__ctk_button_clicked, self, 0);
 		self->priv->minimize = (_tmp2_ = g_object_ref_sink (unity_panel_window_button_new ("minimize")), _g_object_unref0 (self->priv->minimize), _tmp2_);
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->minimize, FALSE, FALSE);
-		g_signal_connect_object ((CtkButton*) self->priv->minimize, "clicked", (GCallback) __lambda8__ctk_button_clicked, self, 0);
+		g_signal_connect_object ((CtkButton*) self->priv->minimize, "clicked", (GCallback) __lambda10__ctk_button_clicked, self, 0);
 		self->priv->unmaximize = (_tmp3_ = g_object_ref_sink (unity_panel_window_button_new ("unmaximize")), _g_object_unref0 (self->priv->unmaximize), _tmp3_);
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->unmaximize, FALSE, FALSE);
-		g_signal_connect_object ((CtkButton*) self->priv->unmaximize, "clicked", (GCallback) __lambda9__ctk_button_clicked, self, 0);
+		g_signal_connect_object ((CtkButton*) self->priv->unmaximize, "clicked", (GCallback) __lambda11__ctk_button_clicked, self, 0);
 		self->priv->appinfo = (_tmp4_ = unity_app_info_manager_get_instance (), _g_object_unref0 (self->priv->appinfo), _tmp4_);
 		self->priv->matcher = bamf_matcher_get_default ();
 		g_signal_connect_object (self->priv->matcher, "active-window-changed", (GCallback) _unity_panel_window_buttons_on_active_window_changed_bamf_matcher_active_window_changed, self, 0);
-		g_signal_connect_object (unity_global_shell, "active-window-state-changed", (GCallback) __lambda10__unity_shell_active_window_state_changed, self, 0);
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda12__gsource_func, g_object_ref (self), g_object_unref);
+		g_signal_connect_object (unity_global_shell, "active-window-state-changed", (GCallback) __lambda12__unity_shell_active_window_state_changed, self, 0);
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda14__gsource_func, g_object_ref (self), g_object_unref);
 	}
 	return obj;
 }

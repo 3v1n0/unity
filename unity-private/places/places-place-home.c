@@ -199,14 +199,14 @@ GeeArrayList* unity_places_place_get_entries (UnityPlacesPlace* self);
 DeeModel* unity_places_place_entry_get_entry_groups_model (UnityPlacesPlaceEntry* self);
 const char* unity_places_place_entry_get_name (UnityPlacesPlaceEntry* self);
 const char* unity_places_place_entry_get_icon (UnityPlacesPlaceEntry* self);
-static void _lambda33_ (Block4Data* _data4_);
+static void _lambda35_ (Block4Data* _data4_);
 DeeModel* unity_places_place_entry_get_global_results_model (UnityPlacesPlaceEntry* self);
-static void _lambda34_ (DeeModelIter* it, Block4Data* _data4_);
+static void _lambda36_ (DeeModelIter* it, Block4Data* _data4_);
 DeeModel* unity_places_place_entry_get_entry_results_model (UnityPlacesPlaceEntry* self);
-static void __lambda34__dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self);
-static void _lambda35_ (DeeModelIter* it, Block4Data* _data4_);
-static void __lambda35__dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self);
-static void __lambda33__unity_places_place_entry_updated (UnityPlacesPlaceEntry* _sender, gpointer self);
+static void __lambda36__dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self);
+static void _lambda37_ (DeeModelIter* it, Block4Data* _data4_);
+static void __lambda37__dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self);
+static void __lambda35__unity_places_place_entry_updated (UnityPlacesPlaceEntry* _sender, gpointer self);
 static Block4Data* block4_data_ref (Block4Data* _data4_);
 static void block4_data_unref (Block4Data* _data4_);
 static void unity_places_place_home_entry_real_connect (UnityPlacesPlaceEntry* base);
@@ -282,7 +282,7 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static void _lambda34_ (DeeModelIter* it, Block4Data* _data4_) {
+static void _lambda36_ (DeeModelIter* it, Block4Data* _data4_) {
 	UnityPlacesPlaceHomeEntry * self;
 	DeeModel* _model;
 	DeeModelIter* i;
@@ -299,12 +299,12 @@ static void _lambda34_ (DeeModelIter* it, Block4Data* _data4_) {
 }
 
 
-static void __lambda34__dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
-	_lambda34_ (iter, self);
+static void __lambda36__dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
+	_lambda36_ (iter, self);
 }
 
 
-static void _lambda35_ (DeeModelIter* it, Block4Data* _data4_) {
+static void _lambda37_ (DeeModelIter* it, Block4Data* _data4_) {
 	UnityPlacesPlaceHomeEntry * self;
 	DeeModel* _model;
 	char* uri;
@@ -335,21 +335,21 @@ static void _lambda35_ (DeeModelIter* it, Block4Data* _data4_) {
 }
 
 
-static void __lambda35__dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
-	_lambda35_ (iter, self);
+static void __lambda37__dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
+	_lambda37_ (iter, self);
 }
 
 
-static void _lambda33_ (Block4Data* _data4_) {
+static void _lambda35_ (Block4Data* _data4_) {
 	UnityPlacesPlaceHomeEntry * self;
 	self = _data4_->self;
-	g_signal_connect_data (unity_places_place_entry_get_global_results_model (_data4_->entry), "row-added", (GCallback) __lambda34__dee_model_row_added, block4_data_ref (_data4_), (GClosureNotify) block4_data_unref, 0);
-	g_signal_connect_data (unity_places_place_entry_get_global_results_model (_data4_->entry), "row-removed", (GCallback) __lambda35__dee_model_row_removed, block4_data_ref (_data4_), (GClosureNotify) block4_data_unref, 0);
+	g_signal_connect_data (unity_places_place_entry_get_global_results_model (_data4_->entry), "row-added", (GCallback) __lambda36__dee_model_row_added, block4_data_ref (_data4_), (GClosureNotify) block4_data_unref, 0);
+	g_signal_connect_data (unity_places_place_entry_get_global_results_model (_data4_->entry), "row-removed", (GCallback) __lambda37__dee_model_row_removed, block4_data_ref (_data4_), (GClosureNotify) block4_data_unref, 0);
 }
 
 
-static void __lambda33__unity_places_place_entry_updated (UnityPlacesPlaceEntry* _sender, gpointer self) {
-	_lambda33_ (self);
+static void __lambda35__unity_places_place_entry_updated (UnityPlacesPlaceEntry* _sender, gpointer self) {
+	_lambda35_ (self);
 }
 
 
@@ -388,7 +388,7 @@ static void unity_places_place_home_entry_on_place_added (UnityPlacesPlaceHomeEn
 			iter = NULL;
 			iter = dee_model_append (unity_places_place_entry_get_entry_groups_model ((UnityPlacesPlaceEntry*) self), 0, "UnityLinkGroupRenderer", 1, unity_places_place_entry_get_name (_data4_->entry), 2, unity_places_place_entry_get_icon (_data4_->entry), -1, NULL);
 			gee_abstract_map_set ((GeeAbstractMap*) self->priv->entry_group_map, _data4_->entry, GUINT_TO_POINTER ((guint) dee_model_get_position (unity_places_place_entry_get_entry_groups_model ((UnityPlacesPlaceEntry*) self), iter)));
-			g_signal_connect_data (_data4_->entry, "updated", (GCallback) __lambda33__unity_places_place_entry_updated, block4_data_ref (_data4_), (GClosureNotify) block4_data_unref, 0);
+			g_signal_connect_data (_data4_->entry, "updated", (GCallback) __lambda35__unity_places_place_entry_updated, block4_data_ref (_data4_), (GClosureNotify) block4_data_unref, 0);
 			block4_data_unref (_data4_);
 		}
 		_g_object_unref0 (_entry_it);

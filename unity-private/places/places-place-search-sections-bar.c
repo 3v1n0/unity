@@ -250,8 +250,8 @@ void unity_places_section_set_destroy_factor (UnityPlacesSection* self, float va
 float unity_places_section_get_resize_factor (UnityPlacesSection* self);
 void unity_places_section_set_resize_factor (UnityPlacesSection* self, float value);
 static void _unity_places_section_paint_bg_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
-static void _lambda40_ (UnityPlacesSection* self);
-static void __lambda40__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _lambda42_ (UnityPlacesSection* self);
+static void __lambda42__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static GObject * unity_places_section_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_section_finalize (GObject* obj);
 static void unity_places_section_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -1121,7 +1121,7 @@ static void _unity_places_section_paint_bg_unity_cairo_canvas_cairo_canvas_paint
 }
 
 
-static void _lambda40_ (UnityPlacesSection* self) {
+static void _lambda42_ (UnityPlacesSection* self) {
 	if (unity_places_section_get_active (self)) {
 		return;
 	}
@@ -1137,8 +1137,8 @@ static void _lambda40_ (UnityPlacesSection* self) {
 }
 
 
-static void __lambda40__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda40_ (self);
+static void __lambda42__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda42_ (self);
 }
 
 
@@ -1169,7 +1169,7 @@ static GObject * unity_places_section_constructor (GType type, guint n_construct
 		self->text = (_tmp6_ = g_object_ref_sink ((CtkText*) ctk_text_new (dee_model_get_string (self->priv->_model, self->priv->_iter, (guint) 0))), _g_object_unref0 (self->text), _tmp6_);
 		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->text);
 		clutter_actor_show ((ClutterActor*) self->text);
-		g_signal_connect_object ((GObject*) self, "notify::state", (GCallback) __lambda40__g_object_notify, self, 0);
+		g_signal_connect_object ((GObject*) self, "notify::state", (GCallback) __lambda42__g_object_notify, self, 0);
 	}
 	return obj;
 }

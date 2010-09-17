@@ -101,8 +101,8 @@ void unity_places_button_set_normal_state (UnityPlacesButton* self, UnityPlacesB
 UnityPlacesButtonPrelightState unity_places_button_get_prelight_state (UnityPlacesButton* self);
 void unity_places_button_set_prelight_state (UnityPlacesButton* self, UnityPlacesButtonPrelightState value);
 static void _unity_places_button_paint_bg_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
-static void _lambda16_ (UnityPlacesButton* self);
-static void __lambda16__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _lambda18_ (UnityPlacesButton* self);
+static void __lambda18__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static void _unity_places_button_rounded_rect_unity_places_button_button_outline_func (cairo_t* cr, gint width, gint height, gpointer self);
 static GObject * unity_places_button_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_button_finalize (GObject* obj);
@@ -281,7 +281,7 @@ static void _unity_places_button_paint_bg_unity_cairo_canvas_cairo_canvas_paint 
 }
 
 
-static void _lambda16_ (UnityPlacesButton* self) {
+static void _lambda18_ (UnityPlacesButton* self) {
 	unity_cairo_canvas_update (self->priv->bg);
 	if (CTK_IS_TEXT (ctk_button_get_text ((CtkButton*) self))) {
 		gboolean _tmp0_ = FALSE;
@@ -306,8 +306,8 @@ static void _lambda16_ (UnityPlacesButton* self) {
 }
 
 
-static void __lambda16__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda16_ (self);
+static void __lambda18__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda18_ (self);
 }
 
 
@@ -329,7 +329,7 @@ static GObject * unity_places_button_constructor (GType type, guint n_construct_
 		self->priv->bg = (_tmp0_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_button_paint_bg_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->bg), _tmp0_);
 		ctk_actor_set_background ((CtkActor*) self, (ClutterActor*) self->priv->bg);
 		clutter_actor_show ((ClutterActor*) self->priv->bg);
-		g_signal_connect_object ((GObject*) self, "notify::state", (GCallback) __lambda16__g_object_notify, self, 0);
+		g_signal_connect_object ((GObject*) self, "notify::state", (GCallback) __lambda18__g_object_notify, self, 0);
 		self->outline_func = (_tmp1_ = _unity_places_button_rounded_rect_unity_places_button_button_outline_func, ((self->outline_func_target_destroy_notify == NULL) ? NULL : (self->outline_func_target_destroy_notify (self->outline_func_target), NULL), self->outline_func = NULL, self->outline_func_target = NULL, self->outline_func_target_destroy_notify = NULL), self->outline_func_target = g_object_ref (self), self->outline_func_target_destroy_notify = g_object_unref, _tmp1_);
 	}
 	return obj;

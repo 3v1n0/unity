@@ -94,9 +94,9 @@ enum  {
 UnityTestingBackground* unity_testing_background_new (void);
 UnityTestingBackground* unity_testing_background_construct (GType object_type);
 static void _unity_testing_background_on_allocation_changed (UnityTestingBackground* self);
-static gboolean _lambda96_ (UnityTestingBackground* self);
+static gboolean _lambda98_ (UnityTestingBackground* self);
 static void _unity_testing_background_update_gradient (UnityTestingBackground* self);
-static gboolean __lambda96__gsource_func (gpointer self);
+static gboolean __lambda98__gsource_func (gpointer self);
 static void _unity_testing_background_on_gconf_changed (UnityTestingBackground* self, GConfClient* client, guint cxnid, GConfEntry* entry);
 static void __unity_testing_background_on_gconf_changed_gconf_client_notify_func (GConfClient* client, guint cnxn_id, GConfEntry* entry, gpointer self);
 static void __unity_testing_background_on_allocation_changed_clutter_actor_allocation_changed (ClutterActor* _sender, const ClutterActorBox* box, ClutterAllocationFlags flags, gpointer self);
@@ -118,7 +118,7 @@ UnityTestingBackground* unity_testing_background_new (void) {
 }
 
 
-static gboolean _lambda96_ (UnityTestingBackground* self) {
+static gboolean _lambda98_ (UnityTestingBackground* self) {
 	gboolean result = FALSE;
 	_unity_testing_background_update_gradient (self);
 	result = FALSE;
@@ -126,16 +126,16 @@ static gboolean _lambda96_ (UnityTestingBackground* self) {
 }
 
 
-static gboolean __lambda96__gsource_func (gpointer self) {
+static gboolean __lambda98__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda96_ (self);
+	result = _lambda98_ (self);
 	return result;
 }
 
 
 static void _unity_testing_background_on_allocation_changed (UnityTestingBackground* self) {
 	g_return_if_fail (self != NULL);
-	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda96__gsource_func, g_object_ref (self), g_object_unref);
+	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda98__gsource_func, g_object_ref (self), g_object_unref);
 }
 
 

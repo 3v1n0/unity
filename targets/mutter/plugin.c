@@ -1796,16 +1796,34 @@ static gboolean _lambda22_ (Block6Data* _data6_) {
 	gboolean result = FALSE;
 	self = _data6_->self;
 	if (G_IS_OBJECT (_data6_->win)) {
+		gboolean decorated;
+		gboolean maximized;
+		gboolean fullscreen = FALSE;
 		gboolean _tmp0_ = FALSE;
-		if (utils_window_is_decorated (meta_window_get_xwindow (_data6_->win)) == FALSE) {
-			_tmp0_ = meta_window_is_maximized (_data6_->win) == FALSE;
+		decorated = utils_window_is_decorated (meta_window_get_xwindow (_data6_->win));
+		maximized = meta_window_is_maximized (_data6_->win);
+		g_object_get ((GObject*) _data6_->win, "fullscreen", &fullscreen, NULL);
+		if (!decorated) {
+			_tmp0_ = !maximized;
 		} else {
 			_tmp0_ = FALSE;
 		}
 		if (_tmp0_) {
 			g_object_set_data_full ((GObject*) _data6_->window, UNITY_PLUGIN_UNDECORATED_HINT, g_strdup_printf ("%s", "true"), g_free);
 		} else {
-			if (meta_window_is_maximized (_data6_->win)) {
+			gboolean _tmp1_ = FALSE;
+			gboolean _tmp2_ = FALSE;
+			if (decorated) {
+				_tmp2_ = maximized;
+			} else {
+				_tmp2_ = FALSE;
+			}
+			if (_tmp2_) {
+				_tmp1_ = !fullscreen;
+			} else {
+				_tmp1_ = FALSE;
+			}
+			if (_tmp1_) {
 				utils_window_set_decorations (meta_window_get_xwindow (_data6_->win), (guint) 0);
 			}
 		}

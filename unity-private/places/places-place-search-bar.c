@@ -67,6 +67,16 @@ typedef struct _UnityPlacesPlaceSearchEntryClass UnityPlacesPlaceSearchEntryClas
 typedef struct _UnityPlacesPlaceSearchSectionsBar UnityPlacesPlaceSearchSectionsBar;
 typedef struct _UnityPlacesPlaceSearchSectionsBarClass UnityPlacesPlaceSearchSectionsBarClass;
 
+#define UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION (unity_places_place_search_extra_action_get_type ())
+#define UNITY_PLACES_PLACE_SEARCH_EXTRA_ACTION(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION, UnityPlacesPlaceSearchExtraAction))
+#define UNITY_PLACES_PLACE_SEARCH_EXTRA_ACTION_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION, UnityPlacesPlaceSearchExtraActionClass))
+#define UNITY_PLACES_IS_PLACE_SEARCH_EXTRA_ACTION(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION))
+#define UNITY_PLACES_IS_PLACE_SEARCH_EXTRA_ACTION_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION))
+#define UNITY_PLACES_PLACE_SEARCH_EXTRA_ACTION_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_EXTRA_ACTION, UnityPlacesPlaceSearchExtraActionClass))
+
+typedef struct _UnityPlacesPlaceSearchExtraAction UnityPlacesPlaceSearchExtraAction;
+typedef struct _UnityPlacesPlaceSearchExtraActionClass UnityPlacesPlaceSearchExtraActionClass;
+
 #define UNITY_PLACES_TYPE_PLACE_ENTRY (unity_places_place_entry_get_type ())
 #define UNITY_PLACES_PLACE_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY, UnityPlacesPlaceEntry))
 #define UNITY_PLACES_IS_PLACE_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_ENTRY))
@@ -118,6 +128,9 @@ typedef struct _UnityTestingObjectRegistryClass UnityTestingObjectRegistryClass;
 #define _unity_testing_object_registry_unref0(var) ((var == NULL) ? NULL : (var = (unity_testing_object_registry_unref (var), NULL)))
 typedef struct _UnityPlacesPlaceSearchEntryPrivate UnityPlacesPlaceSearchEntryPrivate;
 #define _g_hash_table_unref0(var) ((var == NULL) ? NULL : (var = (g_hash_table_unref (var), NULL)))
+
+#define UNITY_PLACES_TYPE_ACTIVATION_STATUS (unity_places_activation_status_get_type ())
+#define _g_free0(var) (var = (g_free (var), NULL))
 typedef struct _Block5Data Block5Data;
 typedef struct _UnityPlacesPlaceSearchBarBackgroundPrivate UnityPlacesPlaceSearchBarBackgroundPrivate;
 #define _cairo_destroy0(var) ((var == NULL) ? NULL : (var = (cairo_destroy (var), NULL)))
@@ -129,6 +142,7 @@ struct _UnityPlacesPlaceSearchBar {
 	UnityPlacesPlaceSearchBarPrivate * priv;
 	UnityPlacesPlaceSearchEntry* entry;
 	UnityPlacesPlaceSearchSectionsBar* sections;
+	UnityPlacesPlaceSearchExtraAction* extra_action;
 };
 
 struct _UnityPlacesPlaceSearchBarClass {
@@ -200,6 +214,13 @@ struct _UnityPlacesPlaceSearchEntryClass {
 	CtkBoxClass parent_class;
 };
 
+typedef enum  {
+	UNITY_PLACES_ACTIVATION_STATUS_NOT_ACTIVATED,
+	UNITY_PLACES_ACTIVATION_STATUS_ACTIVATED_FALLBACK,
+	UNITY_PLACES_ACTIVATION_STATUS_ACTIVATED_SHOW_DASH,
+	UNITY_PLACES_ACTIVATION_STATUS_ACTIVATED_HIDE_DASH
+} UnityPlacesActivationStatus;
+
 struct _Block5Data {
 	int _ref_count_;
 	UnityPlacesPlaceSearchBar * self;
@@ -233,6 +254,7 @@ static gpointer unity_places_place_search_bar_background_parent_class = NULL;
 GType unity_places_place_search_bar_get_type (void) G_GNUC_CONST;
 GType unity_places_place_search_entry_get_type (void) G_GNUC_CONST;
 GType unity_places_place_search_sections_bar_get_type (void) G_GNUC_CONST;
+GType unity_places_place_search_extra_action_get_type (void) G_GNUC_CONST;
 GType unity_places_place_get_type (void) G_GNUC_CONST;
 GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
 GType unity_places_place_search_bar_background_get_type (void) G_GNUC_CONST;
@@ -264,14 +286,20 @@ gboolean unity_places_place_search_bar_background_update_background (UnityPlaces
 static gboolean _unity_places_place_search_bar_background_update_background_gsource_func (gpointer self);
 static void unity_places_place_search_bar_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height, float* nat_height);
 void unity_places_place_entry_set_search (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints);
+static void unity_places_place_search_bar_on_extra_action_activated (UnityPlacesPlaceSearchBar* self);
+UnityPlacesPlace* unity_places_place_entry_get_parent (UnityPlacesPlaceEntry* self);
+GType unity_places_activation_status_get_type (void) G_GNUC_CONST;
+UnityPlacesActivationStatus unity_places_place_activate (UnityPlacesPlace* self, const char* uri, const char* mimetype);
 void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearchBar* self, UnityPlacesPlaceEntry* entry, gint x, guint section);
 void unity_places_place_search_bar_background_set_entry_position (UnityPlacesPlaceSearchBarBackground* self, gint value);
 void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSearchSectionsBar* self, UnityPlacesPlaceEntry* entry);
-static gboolean _lambda41_ (Block5Data* _data5_);
+static gboolean _lambda43_ (Block5Data* _data5_);
 void unity_places_place_search_sections_bar_set_active_section (UnityPlacesPlaceSearchSectionsBar* self, guint section_id);
-static gboolean __lambda41__gsource_func (gpointer self);
+static gboolean __lambda43__gsource_func (gpointer self);
 void unity_places_place_search_navigation_set_active_entry (UnityPlacesPlaceSearchNavigation* self, UnityPlacesPlaceEntry* entry);
 void unity_places_place_search_entry_set_active_entry (UnityPlacesPlaceSearchEntry* self, UnityPlacesPlaceEntry* entry);
+GeeHashMap* unity_places_place_entry_get_hints (UnityPlacesPlaceEntry* self);
+void unity_places_place_search_extra_action_set_icon_from_gicon_string (UnityPlacesPlaceSearchExtraAction* self, const char* icon_string);
 static Block5Data* block5_data_ref (Block5Data* _data5_);
 static void block5_data_unref (Block5Data* _data5_);
 UnityPlacesPlaceSearchNavigation* unity_places_place_search_navigation_new (void);
@@ -281,6 +309,9 @@ UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_construct (GType ob
 static void _unity_places_place_search_bar_on_search_text_changed_unity_places_place_search_entry_text_changed (UnityPlacesPlaceSearchEntry* _sender, const char* text, gpointer self);
 UnityPlacesPlaceSearchSectionsBar* unity_places_place_search_sections_bar_new (void);
 UnityPlacesPlaceSearchSectionsBar* unity_places_place_search_sections_bar_construct (GType object_type);
+UnityPlacesPlaceSearchExtraAction* unity_places_place_search_extra_action_new (void);
+UnityPlacesPlaceSearchExtraAction* unity_places_place_search_extra_action_construct (GType object_type);
+static void _unity_places_place_search_bar_on_extra_action_activated_unity_places_place_search_extra_action_activated (UnityPlacesPlaceSearchExtraAction* _sender, gpointer self);
 UnityPlacesPlaceSearchBarBackground* unity_places_place_search_bar_background_new (UnityPlacesPlaceSearchNavigation* nav, UnityPlacesPlaceSearchEntry* search_entry);
 UnityPlacesPlaceSearchBarBackground* unity_places_place_search_bar_background_construct (GType object_type, UnityPlacesPlaceSearchNavigation* nav, UnityPlacesPlaceSearchEntry* search_entry);
 static GObject * unity_places_place_search_bar_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -392,12 +423,39 @@ static void unity_places_place_search_bar_on_search_text_changed (UnityPlacesPla
 }
 
 
+static void unity_places_place_search_bar_on_extra_action_activated (UnityPlacesPlaceSearchBar* self) {
+	g_return_if_fail (self != NULL);
+	if (UNITY_PLACES_IS_PLACE_ENTRY (self->priv->active_entry)) {
+		UnityPlacesActivationStatus _result_;
+		_result_ = unity_places_place_activate (unity_places_place_entry_get_parent (self->priv->active_entry), ".", "");
+		switch (_result_) {
+			case UNITY_PLACES_ACTIVATION_STATUS_ACTIVATED_SHOW_DASH:
+			{
+				break;
+			}
+			case UNITY_PLACES_ACTIVATION_STATUS_NOT_ACTIVATED:
+			case UNITY_PLACES_ACTIVATION_STATUS_ACTIVATED_HIDE_DASH:
+			case UNITY_PLACES_ACTIVATION_STATUS_ACTIVATED_FALLBACK:
+			{
+				unity_shell_hide_unity (unity_global_shell);
+				break;
+			}
+			default:
+			{
+				g_warning ("places-place-search-bar.vala:159: Unexpected activation status: %u", (guint) _result_);
+				break;
+			}
+		}
+	}
+}
+
+
 static gpointer _g_object_ref0 (gpointer self) {
 	return self ? g_object_ref (self) : NULL;
 }
 
 
-static gboolean _lambda41_ (Block5Data* _data5_) {
+static gboolean _lambda43_ (Block5Data* _data5_) {
 	UnityPlacesPlaceSearchBar * self;
 	gboolean result = FALSE;
 	self = _data5_->self;
@@ -407,9 +465,9 @@ static gboolean _lambda41_ (Block5Data* _data5_) {
 }
 
 
-static gboolean __lambda41__gsource_func (gpointer self) {
+static gboolean __lambda43__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda41_ (self);
+	result = _lambda43_ (self);
 	return result;
 }
 
@@ -441,17 +499,34 @@ void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearch
 	unity_places_place_search_bar_background_set_entry_position (self->priv->bg, x);
 	unity_places_place_search_sections_bar_set_active_entry (self->sections, entry);
 	if (_data5_->section != 0) {
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda41__gsource_func, block5_data_ref (_data5_), block5_data_unref);
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda43__gsource_func, block5_data_ref (_data5_), block5_data_unref);
 	}
 	unity_places_place_search_navigation_set_active_entry (self->priv->navigation, entry);
 	unity_places_place_search_entry_set_active_entry (self->entry, entry);
 	clutter_actor_grab_key_focus ((ClutterActor*) self->entry->text);
+	if (unity_places_place_entry_get_hints (entry) != NULL) {
+		char* _tmp1_;
+		gboolean _tmp2_;
+		if ((_tmp2_ = (_tmp1_ = (char*) gee_abstract_map_get ((GeeAbstractMap*) unity_places_place_entry_get_hints (entry), "UnityExtraAction")) != NULL, _g_free0 (_tmp1_), _tmp2_)) {
+			char* _tmp3_;
+			unity_places_place_search_extra_action_set_icon_from_gicon_string (self->extra_action, _tmp3_ = (char*) gee_abstract_map_get ((GeeAbstractMap*) unity_places_place_entry_get_hints (entry), "UnityExtraAction"));
+			_g_free0 (_tmp3_);
+			clutter_actor_show ((ClutterActor*) self->extra_action);
+		} else {
+			clutter_actor_hide ((ClutterActor*) self->extra_action);
+		}
+	}
 	block5_data_unref (_data5_);
 }
 
 
 static void _unity_places_place_search_bar_on_search_text_changed_unity_places_place_search_entry_text_changed (UnityPlacesPlaceSearchEntry* _sender, const char* text, gpointer self) {
 	unity_places_place_search_bar_on_search_text_changed (self, text);
+}
+
+
+static void _unity_places_place_search_bar_on_extra_action_activated_unity_places_place_search_extra_action_activated (UnityPlacesPlaceSearchExtraAction* _sender, gpointer self) {
+	unity_places_place_search_bar_on_extra_action_activated (self);
 }
 
 
@@ -468,7 +543,11 @@ static GObject * unity_places_place_search_bar_constructor (GType type, guint n_
 		UnityPlacesPlaceSearchNavigation* _tmp2_;
 		UnityPlacesPlaceSearchEntry* _tmp3_;
 		UnityPlacesPlaceSearchSectionsBar* _tmp4_;
-		UnityPlacesPlaceSearchBarBackground* _tmp5_;
+		ClutterColor _tmp5_ = {0};
+		ClutterColor _tmp6_;
+		ClutterRectangle* space;
+		UnityPlacesPlaceSearchExtraAction* _tmp7_;
+		UnityPlacesPlaceSearchBarBackground* _tmp8_;
 		ctk_actor_set_padding ((CtkActor*) self, (_tmp1_ = (_tmp0_.top = UNITY_PLACES_PLACE_SEARCH_BAR_SPACING * 2.0f, _tmp0_.right = UNITY_PLACES_PLACE_SEARCH_BAR_SPACING * 1.0f, _tmp0_.bottom = UNITY_PLACES_PLACE_SEARCH_BAR_SPACING * 1.0f, _tmp0_.left = UNITY_PLACES_PLACE_SEARCH_BAR_SPACING * 1.0f, _tmp0_), &_tmp1_));
 		self->priv->navigation = (_tmp2_ = g_object_ref_sink (unity_places_place_search_navigation_new ()), _g_object_unref0 (self->priv->navigation), _tmp2_);
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->navigation, FALSE, TRUE);
@@ -479,10 +558,18 @@ static GObject * unity_places_place_search_bar_constructor (GType type, guint n_
 		g_signal_connect_object (self->entry, "text-changed", (GCallback) _unity_places_place_search_bar_on_search_text_changed_unity_places_place_search_entry_text_changed, self, 0);
 		self->sections = (_tmp4_ = g_object_ref_sink (unity_places_place_search_sections_bar_new ()), _g_object_unref0 (self->sections), _tmp4_);
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->sections, FALSE, TRUE);
-		clutter_actor_show ((ClutterActor*) self->entry);
-		self->priv->bg = (_tmp5_ = g_object_ref_sink (unity_places_place_search_bar_background_new (self->priv->navigation, self->entry)), _g_object_unref0 (self->priv->bg), _tmp5_);
+		clutter_actor_show ((ClutterActor*) self->sections);
+		space = g_object_ref_sink ((ClutterRectangle*) clutter_rectangle_new_with_color ((_tmp6_ = (_tmp5_.red = (guint8) 255, _tmp5_.green = (guint8) 255, _tmp5_.blue = (guint8) 255, _tmp5_.alpha = (guint8) 0, _tmp5_), &_tmp6_)));
+		ctk_box_pack ((CtkBox*) self, (ClutterActor*) space, TRUE, TRUE);
+		clutter_actor_show ((ClutterActor*) space);
+		self->extra_action = (_tmp7_ = g_object_ref_sink (unity_places_place_search_extra_action_new ()), _g_object_unref0 (self->extra_action), _tmp7_);
+		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->extra_action, FALSE, TRUE);
+		clutter_actor_hide ((ClutterActor*) self->extra_action);
+		g_signal_connect_object (self->extra_action, "activated", (GCallback) _unity_places_place_search_bar_on_extra_action_activated_unity_places_place_search_extra_action_activated, self, 0);
+		self->priv->bg = (_tmp8_ = g_object_ref_sink (unity_places_place_search_bar_background_new (self->priv->navigation, self->entry)), _g_object_unref0 (self->priv->bg), _tmp8_);
 		ctk_actor_set_background ((CtkActor*) self, (ClutterActor*) self->priv->bg);
 		clutter_actor_show ((ClutterActor*) self->priv->bg);
+		_g_object_unref0 (space);
 	}
 	return obj;
 }
@@ -512,6 +599,7 @@ static void unity_places_place_search_bar_finalize (GObject* obj) {
 	_g_object_unref0 (self->priv->navigation);
 	_g_object_unref0 (self->entry);
 	_g_object_unref0 (self->sections);
+	_g_object_unref0 (self->extra_action);
 	G_OBJECT_CLASS (unity_places_place_search_bar_parent_class)->finalize (obj);
 }
 
@@ -744,7 +832,7 @@ static GObject * unity_places_place_search_bar_background_constructor (GType typ
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("places-place-search-bar.vala:200: Unable to load dash background");
+				g_warning ("places-place-search-bar.vala:247: Unable to load dash background");
 				_g_error_free0 (e);
 			}
 		}

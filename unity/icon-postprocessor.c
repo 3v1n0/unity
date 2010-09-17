@@ -625,6 +625,10 @@ void unity_unity_icon_paint_real (ClutterActor* actor) {
 	guchar opacity;
 	g_return_if_fail (actor != NULL);
 	_self_ = _g_object_ref0 ((_tmp0_ = actor, UNITY_IS_UNITY_ICON (_tmp0_) ? ((UnityUnityIcon*) _tmp0_) : NULL));
+	if (CLUTTER_IS_TEXTURE (_self_->priv->_icon) == FALSE) {
+		_g_object_unref0 (_self_);
+		return;
+	}
 	memset (&box, 0, sizeof (ClutterActorBox));
 	ctk_actor_get_stored_allocation ((CtkActor*) _self_, &box);
 	cogl_matrix_init_identity (&modelview);

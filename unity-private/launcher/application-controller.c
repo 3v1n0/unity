@@ -183,6 +183,7 @@ struct _UnityLauncherScrollerChild {
 	gboolean do_not_render;
 	UnityLauncherScrollerChildController* controller;
 	float grabbed_push;
+	UnityUnityIcon* processed_icon;
 };
 
 struct _UnityLauncherScrollerChildClass {
@@ -250,26 +251,26 @@ UnityLauncherScrollerChild* unity_launcher_scroller_child_controller_get_child (
 GType unity_launcher_pin_type_get_type (void) G_GNUC_CONST;
 static void unity_launcher_application_controller_on_favorite_removed (UnityLauncherApplicationController* self, const char* uid);
 static void unity_launcher_application_controller_real_get_menu_actions (UnityLauncherScrollerChildController* base, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
-static void _lambda75_ (Block6Data* _data6_);
-static void _lambda76_ (Block8Data* _data8_);
-static void __lambda76__dbusmenu_menuitem_realized (DbusmenuMenuitem* _sender, gpointer self);
+static void _lambda77_ (Block6Data* _data6_);
+static void _lambda78_ (Block8Data* _data8_);
+static void __lambda78__dbusmenu_menuitem_realized (DbusmenuMenuitem* _sender, gpointer self);
 static Block8Data* block8_data_ref (Block8Data* _data8_);
 static void block8_data_unref (Block8Data* _data8_);
-static void __lambda75__dbusmenu_client_layout_updated (DbusmenuClient* _sender, gpointer self);
+static void __lambda77__dbusmenu_client_layout_updated (DbusmenuClient* _sender, gpointer self);
 static Block6Data* block6_data_ref (Block6Data* _data6_);
 static void block6_data_unref (Block6Data* _data6_);
 static void _g_list_free_g_object_unref (GList* self);
-static void _lambda77_ (guint timestamp, Block9Data* _data9_);
-static void __lambda77__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
+static void _lambda79_ (guint timestamp, Block9Data* _data9_);
+static void __lambda79__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
 static Block9Data* block9_data_ref (Block9Data* _data9_);
 static void block9_data_unref (Block9Data* _data9_);
 static Block7Data* block7_data_ref (Block7Data* _data7_);
 static void block7_data_unref (Block7Data* _data7_);
 static void unity_launcher_application_controller_real_get_menu_navigation (UnityLauncherScrollerChildController* base, UnityLauncherScrollerChildControllermenu_cb callback, void* callback_target);
-static void _lambda78_ (guint timestamp, UnityLauncherApplicationController* self);
-static void __lambda78__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
-static void _lambda79_ (guint timestamp, UnityLauncherApplicationController* self);
-static void __lambda79__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
+static void _lambda80_ (guint timestamp, UnityLauncherApplicationController* self);
+static void __lambda80__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
+static void _lambda81_ (guint timestamp, UnityLauncherApplicationController* self);
+static void __lambda81__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self);
 static gint unity_launcher_application_controller_order_app_windows (void* a, void* b);
 static void unity_launcher_application_controller_real_activate (UnityLauncherScrollerChildController* base);
 void unity_launcher_scroller_child_set_activating (UnityLauncherScrollerChild* self, gboolean value);
@@ -286,9 +287,9 @@ void unity_launcher_application_controller_detach_application (UnityLauncherAppl
 static void _unity_launcher_application_controller_detach_application_bamf_view_closed (BamfView* _sender, gpointer self);
 static void unity_launcher_application_controller_on_app_urgant_changed (UnityLauncherApplicationController* self, gboolean urgancy);
 static void _unity_launcher_application_controller_on_app_urgant_changed_bamf_view_urgent_changed (BamfView* _sender, gboolean object, gpointer self);
-static void _lambda80_ (gboolean value, UnityLauncherApplicationController* self);
+static void _lambda82_ (gboolean value, UnityLauncherApplicationController* self);
 void unity_launcher_scroller_child_controller_set_hide (UnityLauncherScrollerChildController* self, gboolean value);
-static void __lambda80__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self);
+static void __lambda82__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self);
 void unity_launcher_scroller_child_controller_set_name (UnityLauncherScrollerChildController* self, const char* value);
 const char* unity_launcher_scroller_child_controller_get_name (UnityLauncherScrollerChildController* self);
 void unity_launcher_scroller_child_controller_load_icon_from_icon_name (UnityLauncherScrollerChildController* self, const char* icon_name);
@@ -569,7 +570,7 @@ static const char* string_to_string (const char* self) {
 }
 
 
-static void _lambda76_ (Block8Data* _data8_) {
+static void _lambda78_ (Block8Data* _data8_) {
 	Block6Data* _data6_;
 	Block7Data* _data7_;
 	UnityLauncherApplicationController * self;
@@ -583,8 +584,8 @@ static void _lambda76_ (Block8Data* _data8_) {
 }
 
 
-static void __lambda76__dbusmenu_menuitem_realized (DbusmenuMenuitem* _sender, gpointer self) {
-	_lambda76_ (self);
+static void __lambda78__dbusmenu_menuitem_realized (DbusmenuMenuitem* _sender, gpointer self) {
+	_lambda78_ (self);
 }
 
 
@@ -603,7 +604,7 @@ static void block8_data_unref (Block8Data* _data8_) {
 }
 
 
-static void _lambda75_ (Block6Data* _data6_) {
+static void _lambda77_ (Block6Data* _data6_) {
 	Block7Data* _data7_;
 	UnityLauncherApplicationController * self;
 	Block8Data* _data8_;
@@ -631,7 +632,7 @@ static void _lambda75_ (Block6Data* _data6_) {
 			DbusmenuMenuitem* menuitem;
 			menuitem = _g_object_ref0 ((DbusmenuMenuitem*) menuitem_it->data);
 			{
-				g_signal_connect_data (menuitem, "realized", (GCallback) __lambda76__dbusmenu_menuitem_realized, block8_data_ref (_data8_), (GClosureNotify) block8_data_unref, 0);
+				g_signal_connect_data (menuitem, "realized", (GCallback) __lambda78__dbusmenu_menuitem_realized, block8_data_ref (_data8_), (GClosureNotify) block8_data_unref, 0);
 				_g_object_unref0 (menuitem);
 			}
 		}
@@ -640,8 +641,8 @@ static void _lambda75_ (Block6Data* _data6_) {
 }
 
 
-static void __lambda75__dbusmenu_client_layout_updated (DbusmenuClient* _sender, gpointer self) {
-	_lambda75_ (self);
+static void __lambda77__dbusmenu_client_layout_updated (DbusmenuClient* _sender, gpointer self) {
+	_lambda77_ (self);
 }
 
 
@@ -667,7 +668,7 @@ static void _g_list_free_g_object_unref (GList* self) {
 }
 
 
-static void _lambda77_ (guint timestamp, Block9Data* _data9_) {
+static void _lambda79_ (guint timestamp, Block9Data* _data9_) {
 	Block7Data* _data7_;
 	UnityLauncherApplicationController * self;
 	_data7_ = _data9_->_data7_;
@@ -676,8 +677,8 @@ static void _lambda77_ (guint timestamp, Block9Data* _data9_) {
 }
 
 
-static void __lambda77__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
-	_lambda77_ (object, self);
+static void __lambda79__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
+	_lambda79_ (object, self);
 }
 
 
@@ -749,7 +750,7 @@ static void unity_launcher_application_controller_real_get_menu_actions (UnityLa
 						_data6_->path = g_strdup (bamf_indicator_get_dbus_menu_path ((_tmp0_ = view, BAMF_IS_INDICATOR (_tmp0_) ? ((BamfIndicator*) _tmp0_) : NULL)));
 						_data6_->remote_address = g_strdup (bamf_indicator_get_remote_address ((_tmp1_ = view, BAMF_IS_INDICATOR (_tmp1_) ? ((BamfIndicator*) _tmp1_) : NULL)));
 						self->priv->menu_client = (_tmp2_ = dbusmenu_client_new (_data6_->remote_address, _data6_->path), _g_object_unref0 (self->priv->menu_client), _tmp2_);
-						g_signal_connect_data (self->priv->menu_client, "layout-updated", (GCallback) __lambda75__dbusmenu_client_layout_updated, block6_data_ref (_data6_), (GClosureNotify) block6_data_unref, 0);
+						g_signal_connect_data (self->priv->menu_client, "layout-updated", (GCallback) __lambda77__dbusmenu_client_layout_updated, block6_data_ref (_data6_), (GClosureNotify) block6_data_unref, 0);
 						block6_data_unref (_data6_);
 					}
 					_g_object_unref0 (view);
@@ -797,7 +798,7 @@ static void unity_launcher_application_controller_real_get_menu_actions (UnityLa
 				dbusmenu_menuitem_property_set (shortcut_item, DBUSMENU_MENUITEM_PROP_LABEL, local_name);
 				dbusmenu_menuitem_property_set_bool (shortcut_item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 				dbusmenu_menuitem_property_set_bool (shortcut_item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
-				g_signal_connect_data (shortcut_item, "item-activated", (GCallback) __lambda77__dbusmenu_menuitem_item_activated, block9_data_ref (_data9_), (GClosureNotify) block9_data_unref, 0);
+				g_signal_connect_data (shortcut_item, "item-activated", (GCallback) __lambda79__dbusmenu_menuitem_item_activated, block9_data_ref (_data9_), (GClosureNotify) block9_data_unref, 0);
 				dbusmenu_menuitem_child_append (root, shortcut_item);
 				_g_object_unref0 (shortcut_item);
 				_g_free0 (local_name);
@@ -812,17 +813,17 @@ static void unity_launcher_application_controller_real_get_menu_actions (UnityLa
 }
 
 
-static void _lambda78_ (guint timestamp, UnityLauncherApplicationController* self) {
+static void _lambda80_ (guint timestamp, UnityLauncherApplicationController* self) {
 	unity_launcher_application_controller_set_sticky (self, !unity_launcher_application_controller_is_sticky (self));
 }
 
 
-static void __lambda78__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
-	_lambda78_ (object, self);
+static void __lambda80__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
+	_lambda80_ (object, self);
 }
 
 
-static void _lambda79_ (guint timestamp, UnityLauncherApplicationController* self) {
+static void _lambda81_ (guint timestamp, UnityLauncherApplicationController* self) {
 	if (BAMF_IS_APPLICATION (self->priv->app)) {
 		GArray* xids;
 		xids = bamf_application_get_xids (self->priv->app);
@@ -832,8 +833,8 @@ static void _lambda79_ (guint timestamp, UnityLauncherApplicationController* sel
 }
 
 
-static void __lambda79__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
-	_lambda79_ (object, self);
+static void __lambda81__dbusmenu_menuitem_item_activated (DbusmenuMenuitem* _sender, guint object, gpointer self) {
+	_lambda81_ (object, self);
 }
 
 
@@ -865,7 +866,7 @@ static void unity_launcher_application_controller_real_get_menu_navigation (Unit
 		}
 		dbusmenu_menuitem_property_set_bool (pinning_item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 		dbusmenu_menuitem_property_set_bool (pinning_item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
-		g_signal_connect_object (pinning_item, "item-activated", (GCallback) __lambda78__dbusmenu_menuitem_item_activated, self, 0);
+		g_signal_connect_object (pinning_item, "item-activated", (GCallback) __lambda80__dbusmenu_menuitem_item_activated, self, 0);
 		dbusmenu_menuitem_child_append (root, pinning_item);
 		_g_object_unref0 (pinning_item);
 	}
@@ -875,7 +876,7 @@ static void unity_launcher_application_controller_real_get_menu_navigation (Unit
 		dbusmenu_menuitem_property_set (app_item, DBUSMENU_MENUITEM_PROP_LABEL, _ ("Quit"));
 		dbusmenu_menuitem_property_set_bool (app_item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 		dbusmenu_menuitem_property_set_bool (app_item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
-		g_signal_connect_object (app_item, "item-activated", (GCallback) __lambda79__dbusmenu_menuitem_item_activated, self, 0);
+		g_signal_connect_object (app_item, "item-activated", (GCallback) __lambda81__dbusmenu_menuitem_item_activated, self, 0);
 		dbusmenu_menuitem_child_append (root, app_item);
 		_g_object_unref0 (app_item);
 	}
@@ -1030,13 +1031,13 @@ static void _unity_launcher_application_controller_on_app_urgant_changed_bamf_vi
 }
 
 
-static void _lambda80_ (gboolean value, UnityLauncherApplicationController* self) {
+static void _lambda82_ (gboolean value, UnityLauncherApplicationController* self) {
 	unity_launcher_scroller_child_controller_set_hide ((UnityLauncherScrollerChildController*) self, !value);
 }
 
 
-static void __lambda80__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self) {
-	_lambda80_ (object, self);
+static void __lambda82__bamf_view_user_visible_changed (BamfView* _sender, gboolean object, gpointer self) {
+	_lambda82_ (object, self);
 }
 
 
@@ -1058,7 +1059,7 @@ void unity_launcher_application_controller_attach_application (UnityLauncherAppl
 	g_signal_connect_object ((BamfView*) self->priv->app, "active-changed", (GCallback) _unity_launcher_application_controller_on_app_active_changed_bamf_view_active_changed, self, 0);
 	g_signal_connect_object ((BamfView*) self->priv->app, "closed", (GCallback) _unity_launcher_application_controller_detach_application_bamf_view_closed, self, 0);
 	g_signal_connect_object ((BamfView*) self->priv->app, "urgent-changed", (GCallback) _unity_launcher_application_controller_on_app_urgant_changed_bamf_view_urgent_changed, self, 0);
-	g_signal_connect_object ((BamfView*) self->priv->app, "user-visible-changed", (GCallback) __lambda80__bamf_view_user_visible_changed, self, 0);
+	g_signal_connect_object ((BamfView*) self->priv->app, "user-visible-changed", (GCallback) __lambda82__bamf_view_user_visible_changed, self, 0);
 	unity_launcher_scroller_child_controller_set_name ((UnityLauncherScrollerChildController*) self, _tmp2_ = bamf_view_get_name ((BamfView*) self->priv->app));
 	_g_free0 (_tmp2_);
 	if (unity_launcher_scroller_child_controller_get_name ((UnityLauncherScrollerChildController*) self) == NULL) {

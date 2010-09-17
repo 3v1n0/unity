@@ -256,14 +256,14 @@ static void unity_testing_window_set_popup_height (UnityTestingWindow* self, gin
 UnityTestingWorkarea* unity_testing_workarea_new (void);
 UnityTestingWorkarea* unity_testing_workarea_construct (GType object_type);
 void unity_testing_workarea_update_net_workarea (UnityTestingWorkarea* self);
-static gboolean _lambda98_ (UnityTestingWindow* self);
-static gboolean __lambda98__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
-static gboolean _lambda99_ (UnityTestingWindow* self);
-static gboolean __lambda99__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
-static void _lambda100_ (GdkScreen* s, UnityTestingWindow* self);
-static void __lambda100__gdk_screen_size_changed (GdkScreen* _sender, gpointer self);
-static void _lambda101_ (GdkScreen* s, UnityTestingWindow* self);
-static void __lambda101__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self);
+static gboolean _lambda100_ (UnityTestingWindow* self);
+static gboolean __lambda100__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
+static gboolean _lambda101_ (UnityTestingWindow* self);
+static gboolean __lambda101__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self);
+static void _lambda102_ (GdkScreen* s, UnityTestingWindow* self);
+static void __lambda102__gdk_screen_size_changed (GdkScreen* _sender, gpointer self);
+static void _lambda103_ (GdkScreen* s, UnityTestingWindow* self);
+static void __lambda103__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self);
 static gboolean _unity_testing_window_on_stage_button_press_clutter_actor_button_press_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 UnityTestingBackground* unity_testing_background_new (void);
 UnityTestingBackground* unity_testing_background_construct (GType object_type);
@@ -279,8 +279,8 @@ static void _unity_testing_window_on_active_window_changed_wnck_screen_active_wi
 UnityGestureXCBDispatcher* unity_gesture_xcb_dispatcher_new (void);
 UnityGestureXCBDispatcher* unity_gesture_xcb_dispatcher_construct (GType object_type);
 GType unity_gesture_xcb_dispatcher_get_type (void) G_GNUC_CONST;
-static gboolean _lambda102_ (UnityTestingWindow* self);
-static gboolean __lambda102__gsource_func (gpointer self);
+static gboolean _lambda104_ (UnityTestingWindow* self);
+static gboolean __lambda104__gsource_func (gpointer self);
 static GObject * unity_testing_window_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_testing_window_finalize (GObject* obj);
 static void unity_testing_window_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -729,7 +729,7 @@ static void unity_testing_window_set_popup_height (UnityTestingWindow* self, gin
 }
 
 
-static gboolean _lambda98_ (UnityTestingWindow* self) {
+static gboolean _lambda100_ (UnityTestingWindow* self) {
 	gboolean result = FALSE;
 	gtk_main_quit ();
 	result = FALSE;
@@ -737,46 +737,46 @@ static gboolean _lambda98_ (UnityTestingWindow* self) {
 }
 
 
-static gboolean __lambda98__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
+static gboolean __lambda100__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
 	gboolean result;
-	result = _lambda98_ (self);
+	result = _lambda100_ (self);
 	return result;
 }
 
 
-static gboolean _lambda99_ (UnityTestingWindow* self) {
+static gboolean _lambda101_ (UnityTestingWindow* self) {
 	gboolean result = FALSE;
 	result = TRUE;
 	return result;
 }
 
 
-static gboolean __lambda99__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
+static gboolean __lambda101__gtk_widget_delete_event (GtkWidget* _sender, GdkEvent* event, gpointer self) {
 	gboolean result;
-	result = _lambda99_ (self);
+	result = _lambda101_ (self);
 	return result;
 }
 
 
-static void _lambda100_ (GdkScreen* s, UnityTestingWindow* self) {
+static void _lambda102_ (GdkScreen* s, UnityTestingWindow* self) {
 	g_return_if_fail (s != NULL);
 	unity_testing_window_relayout (self);
 }
 
 
-static void __lambda100__gdk_screen_size_changed (GdkScreen* _sender, gpointer self) {
-	_lambda100_ (_sender, self);
+static void __lambda102__gdk_screen_size_changed (GdkScreen* _sender, gpointer self) {
+	_lambda102_ (_sender, self);
 }
 
 
-static void _lambda101_ (GdkScreen* s, UnityTestingWindow* self) {
+static void _lambda103_ (GdkScreen* s, UnityTestingWindow* self) {
 	g_return_if_fail (s != NULL);
 	unity_testing_window_relayout (self);
 }
 
 
-static void __lambda101__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self) {
-	_lambda101_ (_sender, self);
+static void __lambda103__gdk_screen_monitors_changed (GdkScreen* _sender, gpointer self) {
+	_lambda103_ (_sender, self);
 }
 
 
@@ -792,7 +792,7 @@ static void _unity_testing_window_on_active_window_changed_wnck_screen_active_wi
 }
 
 
-static gboolean _lambda102_ (UnityTestingWindow* self) {
+static gboolean _lambda104_ (UnityTestingWindow* self) {
 	gboolean result = FALSE;
 	unity_shell_set_is_starting ((UnityShell*) self, FALSE);
 	result = FALSE;
@@ -800,9 +800,9 @@ static gboolean _lambda102_ (UnityTestingWindow* self) {
 }
 
 
-static gboolean __lambda102__gsource_func (gpointer self) {
+static gboolean __lambda104__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda102_ (self);
+	result = _lambda104_ (self);
 	return result;
 }
 
@@ -854,7 +854,7 @@ static GObject * unity_testing_window_constructor (GType type, guint n_construct
 			gtk_window_set_decorated ((GtkWindow*) self, TRUE);
 			gtk_window_set_skip_taskbar_hint ((GtkWindow*) self, FALSE);
 			gtk_window_set_skip_pager_hint ((GtkWindow*) self, FALSE);
-			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda98__gtk_widget_delete_event, self, 0);
+			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda100__gtk_widget_delete_event, self, 0);
 		} else {
 			gtk_window_set_type_hint ((GtkWindow*) self, GDK_WINDOW_TYPE_HINT_DESKTOP);
 			gtk_window_set_keep_below ((GtkWindow*) self, TRUE);
@@ -863,9 +863,9 @@ static GObject * unity_testing_window_constructor (GType type, guint n_construct
 			gtk_window_set_skip_pager_hint ((GtkWindow*) self, TRUE);
 			gtk_window_set_accept_focus ((GtkWindow*) self, FALSE);
 			g_object_set ((GtkWidget*) self, "can-focus", FALSE, NULL);
-			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda99__gtk_widget_delete_event, self, 0);
-			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "size-changed", (GCallback) __lambda100__gdk_screen_size_changed, self, 0);
-			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "monitors-changed", (GCallback) __lambda101__gdk_screen_monitors_changed, self, 0);
+			g_signal_connect_object ((GtkWidget*) self, "delete-event", (GCallback) __lambda101__gtk_widget_delete_event, self, 0);
+			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "size-changed", (GCallback) __lambda102__gdk_screen_size_changed, self, 0);
+			g_signal_connect_object (gtk_window_get_screen ((GtkWindow*) self), "monitors-changed", (GCallback) __lambda103__gdk_screen_monitors_changed, self, 0);
 		}
 		gtk_window_set_title ((GtkWindow*) self, "Unity");
 		gtk_window_set_icon_name ((GtkWindow*) self, "distributor-logo");
@@ -912,7 +912,7 @@ static GObject * unity_testing_window_constructor (GType type, guint n_construct
 			g_signal_connect_object (self->priv->wnck_screen, "active-window-changed", (GCallback) _unity_testing_window_on_active_window_changed_wnck_screen_active_window_changed, self, 0);
 		}
 		self->priv->gesture_dispatcher = (_tmp24_ = (UnityGestureDispatcher*) unity_gesture_xcb_dispatcher_new (), _g_object_unref0 (self->priv->gesture_dispatcher), _tmp24_);
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda102__gsource_func, g_object_ref (self), g_object_unref);
+		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda104__gsource_func, g_object_ref (self), g_object_unref);
 		END_FUNCTION ();
 		target_list = (g_free (target_list), NULL);
 	}

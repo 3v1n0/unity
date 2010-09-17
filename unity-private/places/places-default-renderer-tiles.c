@@ -244,11 +244,11 @@ static gboolean unity_places_file_info_tile_update_details_real (UnityPlacesFile
 static void unity_places_file_info_tile_real_about_to_show (UnityPlacesTile* base);
 GType unity_places_button_prelight_state_get_type (void) G_GNUC_CONST;
 void unity_places_button_set_prelight_state (UnityPlacesButton* self, UnityPlacesButtonPrelightState value);
-static void _lambda46_ (UnityPlacesFileInfoTile* self);
-static void __lambda46__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _lambda48_ (UnityPlacesFileInfoTile* self);
+static void __lambda48__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static gboolean _unity_places_file_info_tile_update_details_real_gsource_func (gpointer self);
-static void _lambda45_ (Block1Data* _data1_);
-static void __lambda45__ctk_button_clicked (CtkButton* _sender, gpointer self);
+static void _lambda47_ (Block1Data* _data1_);
+static void __lambda47__ctk_button_clicked (CtkButton* _sender, gpointer self);
 static Block1Data* block1_data_ref (Block1Data* _data1_);
 static void block1_data_unref (Block1Data* _data1_);
 static void unity_places_file_info_tile_set_icon (UnityPlacesFileInfoTile* self);
@@ -271,9 +271,9 @@ enum  {
 UnityPlacesShowcaseTile* unity_places_showcase_tile_new (DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 UnityPlacesShowcaseTile* unity_places_showcase_tile_construct (GType object_type, DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 static void unity_places_showcase_tile_real_about_to_show (UnityPlacesTile* base);
-static gboolean _lambda48_ (UnityPlacesShowcaseTile* self);
+static gboolean _lambda50_ (UnityPlacesShowcaseTile* self);
 static void unity_places_showcase_tile_set_icon (UnityPlacesShowcaseTile* self);
-static gboolean __lambda48__gsource_func (gpointer self);
+static gboolean __lambda50__gsource_func (gpointer self);
 static void unity_places_showcase_tile_real_update_details (UnityPlacesTile* base, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 static void unity_places_showcase_tile_real_get_preferred_width (ClutterActor* base, float for_height, float* mwidth, float* nwidth);
 static void unity_places_showcase_tile_real_clicked (CtkButton* base);
@@ -289,9 +289,9 @@ enum  {
 UnityPlacesDefaultTile* unity_places_default_tile_new (DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 UnityPlacesDefaultTile* unity_places_default_tile_construct (GType object_type, DeeModelIter* iter, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 static void unity_places_default_tile_real_about_to_show (UnityPlacesTile* base);
-static gboolean _lambda50_ (UnityPlacesDefaultTile* self);
+static gboolean _lambda52_ (UnityPlacesDefaultTile* self);
 static void unity_places_default_tile_set_icon (UnityPlacesDefaultTile* self);
-static gboolean __lambda50__gsource_func (gpointer self);
+static gboolean __lambda52__gsource_func (gpointer self);
 static void unity_places_default_tile_real_update_details (UnityPlacesTile* base, const char* uri, const char* icon_hint, const char* mimetype, const char* display_name, const char* comment);
 static void unity_places_default_tile_real_get_preferred_width (ClutterActor* base, float for_height, float* mwidth, float* nwidth);
 static void unity_places_default_tile_real_clicked (CtkButton* base);
@@ -575,7 +575,7 @@ static void unity_places_file_info_tile_real_update_details (UnityPlacesTile* ba
 }
 
 
-static void _lambda46_ (UnityPlacesFileInfoTile* self) {
+static void _lambda48_ (UnityPlacesFileInfoTile* self) {
 	gboolean _tmp0_ = FALSE;
 	if (ctk_actor_get_state ((CtkActor*) self) == CTK_STATE_NORMAL) {
 		_tmp0_ = TRUE;
@@ -606,8 +606,8 @@ static void _lambda46_ (UnityPlacesFileInfoTile* self) {
 }
 
 
-static void __lambda46__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda46_ (self);
+static void __lambda48__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda48_ (self);
 }
 
 
@@ -662,7 +662,7 @@ static void unity_places_file_info_tile_real_about_to_show (UnityPlacesTile* bas
 	clutter_text_set_ellipsize ((ClutterText*) self->priv->time, PANGO_ELLIPSIZE_MIDDLE);
 	clutter_actor_set_parent ((ClutterActor*) self->priv->time, (ClutterActor*) self);
 	clutter_actor_show ((ClutterActor*) self->priv->time);
-	g_signal_connect_object ((GObject*) self, "notify::state", (GCallback) __lambda46__g_object_notify, self, 0);
+	g_signal_connect_object ((GObject*) self, "notify::state", (GCallback) __lambda48__g_object_notify, self, 0);
 	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, _unity_places_file_info_tile_update_details_real_gsource_func, g_object_ref (self), g_object_unref);
 	clutter_actor_queue_relayout ((ClutterActor*) self);
 }
@@ -676,7 +676,7 @@ static const char* string_to_string (const char* self) {
 }
 
 
-static void _lambda45_ (Block1Data* _data1_) {
+static void _lambda47_ (Block1Data* _data1_) {
 	UnityPlacesFileInfoTile * self;
 	GError * _inner_error_ = NULL;
 	self = _data1_->self;
@@ -707,8 +707,8 @@ static void _lambda45_ (Block1Data* _data1_) {
 }
 
 
-static void __lambda45__ctk_button_clicked (CtkButton* _sender, gpointer self) {
-	_lambda45_ (self);
+static void __lambda47__ctk_button_clicked (CtkButton* _sender, gpointer self) {
+	_lambda47_ (self);
 }
 
 
@@ -743,7 +743,7 @@ static gboolean unity_places_file_info_tile_update_details_real (UnityPlacesFile
 			char* _tmp0_;
 			clutter_text_set_text ((ClutterText*) self->priv->folder, _tmp0_ = g_file_get_basename (_data1_->parent));
 			_g_free0 (_tmp0_);
-			g_signal_connect_data ((CtkButton*) self->priv->folder_button, "clicked", (GCallback) __lambda45__ctk_button_clicked, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
+			g_signal_connect_data ((CtkButton*) self->priv->folder_button, "clicked", (GCallback) __lambda47__ctk_button_clicked, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
 		} else {
 			clutter_text_set_text ((ClutterText*) self->priv->folder, "");
 		}
@@ -997,7 +997,7 @@ UnityPlacesShowcaseTile* unity_places_showcase_tile_new (DeeModelIter* iter, con
 }
 
 
-static gboolean _lambda48_ (UnityPlacesShowcaseTile* self) {
+static gboolean _lambda50_ (UnityPlacesShowcaseTile* self) {
 	gboolean result = FALSE;
 	ctk_button_set_label ((CtkButton*) self, unity_places_tile_get_display_name ((UnityPlacesTile*) self));
 	unity_places_showcase_tile_set_icon (self);
@@ -1006,9 +1006,9 @@ static gboolean _lambda48_ (UnityPlacesShowcaseTile* self) {
 }
 
 
-static gboolean __lambda48__gsource_func (gpointer self) {
+static gboolean __lambda50__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda48_ (self);
+	result = _lambda50_ (self);
 	return result;
 }
 
@@ -1020,7 +1020,7 @@ static void unity_places_showcase_tile_real_about_to_show (UnityPlacesTile* base
 		return;
 	}
 	self->priv->shown = TRUE;
-	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda48__gsource_func, g_object_ref (self), g_object_unref);
+	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda50__gsource_func, g_object_ref (self), g_object_unref);
 }
 
 
@@ -1163,7 +1163,7 @@ UnityPlacesDefaultTile* unity_places_default_tile_new (DeeModelIter* iter, const
 }
 
 
-static gboolean _lambda50_ (UnityPlacesDefaultTile* self) {
+static gboolean _lambda52_ (UnityPlacesDefaultTile* self) {
 	gboolean result = FALSE;
 	ctk_button_set_label ((CtkButton*) self, unity_places_tile_get_display_name ((UnityPlacesTile*) self));
 	unity_places_default_tile_set_icon (self);
@@ -1172,9 +1172,9 @@ static gboolean _lambda50_ (UnityPlacesDefaultTile* self) {
 }
 
 
-static gboolean __lambda50__gsource_func (gpointer self) {
+static gboolean __lambda52__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda50_ (self);
+	result = _lambda52_ (self);
 	return result;
 }
 
@@ -1186,7 +1186,7 @@ static void unity_places_default_tile_real_about_to_show (UnityPlacesTile* base)
 		return;
 	}
 	self->priv->shown = TRUE;
-	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda50__gsource_func, g_object_ref (self), g_object_unref);
+	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda52__gsource_func, g_object_ref (self), g_object_unref);
 }
 
 

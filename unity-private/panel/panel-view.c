@@ -203,11 +203,11 @@ gint unity_panel_view_get_indicators_width (UnityPanelView* self);
 void unity_panel_view_set_expanded (UnityPanelView* self, gboolean _expanded);
 gint unity_panel_view_get_panel_height (UnityPanelView* self);
 void unity_panel_view_set_indicator_mode (UnityPanelView* self, gboolean mode);
-static gboolean _lambda13_ (UnityPanelView* self);
-static gboolean __lambda13__gsource_func (gpointer self);
+static gboolean _lambda15_ (UnityPanelView* self);
+static gboolean __lambda15__gsource_func (gpointer self);
 GType unity_panel_indicators_indicator_object_view_get_type (void) G_GNUC_CONST;
-static gboolean _lambda14_ (UnityPanelView* self);
-static gboolean __lambda14__gsource_func (gpointer self);
+static gboolean _lambda16_ (UnityPanelView* self);
+static gboolean __lambda16__gsource_func (gpointer self);
 UnityShell* unity_panel_view_get_shell (UnityPanelView* self);
 static void unity_panel_view_set_shell (UnityPanelView* self, UnityShell* value);
 GType unity_panel_indicators_indicators_model_get_type (void) G_GNUC_CONST;
@@ -227,8 +227,8 @@ UnityPanelSystemTray* unity_panel_system_tray_construct (GType object_type);
 UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_new (void);
 UnityPanelIndicatorsIndicatorBar* unity_panel_indicators_indicator_bar_construct (GType object_type);
 static gboolean _unity_panel_view_on_button_release_event_clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
-static void _lambda15_ (UnityPanelView* self);
-static void __lambda15__clutter_actor_queue_redraw (ClutterActor* _sender, ClutterActor* origin, gpointer self);
+static void _lambda17_ (UnityPanelView* self);
+static void __lambda17__clutter_actor_queue_redraw (ClutterActor* _sender, ClutterActor* origin, gpointer self);
 static GObject * unity_panel_view_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_panel_view_finalize (GObject* obj);
 static void unity_panel_view_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -286,7 +286,7 @@ gint unity_panel_view_get_panel_height (UnityPanelView* self) {
 }
 
 
-static gboolean _lambda13_ (UnityPanelView* self) {
+static gboolean _lambda15_ (UnityPanelView* self) {
 	gboolean result = FALSE;
 	ctk_effect_cache_invalidate_texture_cache (self->cache);
 	clutter_actor_queue_redraw ((ClutterActor*) self);
@@ -295,14 +295,14 @@ static gboolean _lambda13_ (UnityPanelView* self) {
 }
 
 
-static gboolean __lambda13__gsource_func (gpointer self) {
+static gboolean __lambda15__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda13_ (self);
+	result = _lambda15_ (self);
 	return result;
 }
 
 
-static gboolean _lambda14_ (UnityPanelView* self) {
+static gboolean _lambda16_ (UnityPanelView* self) {
 	gboolean result = FALSE;
 	ctk_effect_cache_update_texture_cache (self->cache);
 	clutter_actor_queue_redraw ((ClutterActor*) self);
@@ -311,9 +311,9 @@ static gboolean _lambda14_ (UnityPanelView* self) {
 }
 
 
-static gboolean __lambda14__gsource_func (gpointer self) {
+static gboolean __lambda16__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda14_ (self);
+	result = _lambda16_ (self);
 	return result;
 }
 
@@ -321,7 +321,7 @@ static gboolean __lambda14__gsource_func (gpointer self) {
 void unity_panel_view_set_indicator_mode (UnityPanelView* self, gboolean mode) {
 	g_return_if_fail (self != NULL);
 	if (mode) {
-		g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda13__gsource_func, g_object_ref (self), g_object_unref);
+		g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda15__gsource_func, g_object_ref (self), g_object_unref);
 		if (CLUTTER_IS_ACTOR (self->priv->menu_bar->indicator_object_view)) {
 			clutter_actor_hide ((ClutterActor*) self->priv->menu_bar->indicator_object_view);
 		}
@@ -339,7 +339,7 @@ void unity_panel_view_set_indicator_mode (UnityPanelView* self, gboolean mode) {
 		clutter_actor_show ((ClutterActor*) self->priv->system_tray);
 		clutter_actor_set_reactive ((ClutterActor*) self, TRUE);
 		ctk_actor_remove_all_effects ((CtkActor*) self->priv->indicator_bar);
-		g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda14__gsource_func, g_object_ref (self), g_object_unref);
+		g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda16__gsource_func, g_object_ref (self), g_object_unref);
 	}
 }
 
@@ -372,15 +372,15 @@ static gboolean _unity_panel_view_on_button_release_event_clutter_actor_button_r
 }
 
 
-static void _lambda15_ (UnityPanelView* self) {
+static void _lambda17_ (UnityPanelView* self) {
 	if (clutter_actor_get_reactive ((ClutterActor*) self) == TRUE) {
 		ctk_effect_cache_update_texture_cache (self->cache);
 	}
 }
 
 
-static void __lambda15__clutter_actor_queue_redraw (ClutterActor* _sender, ClutterActor* origin, gpointer self) {
-	_lambda15_ (self);
+static void __lambda17__clutter_actor_queue_redraw (ClutterActor* _sender, ClutterActor* origin, gpointer self) {
+	_lambda17_ (self);
 }
 
 
@@ -434,7 +434,7 @@ static GObject * unity_panel_view_constructor (GType type, guint n_construct_pro
 		self->cache = (_tmp9_ = g_object_ref_sink ((CtkEffectCache*) ctk_effect_cache_new ()), _g_object_unref0 (self->cache), _tmp9_);
 		ctk_actor_add_effect ((CtkActor*) self, (CtkEffect*) self->cache);
 		ctk_effect_cache_update_texture_cache (self->cache);
-		g_signal_connect_object ((ClutterActor*) self->priv->hbox, "queue-redraw", (GCallback) __lambda15__clutter_actor_queue_redraw, self, 0);
+		g_signal_connect_object ((ClutterActor*) self->priv->hbox, "queue-redraw", (GCallback) __lambda17__clutter_actor_queue_redraw, self, 0);
 		END_FUNCTION ();
 	}
 	return obj;

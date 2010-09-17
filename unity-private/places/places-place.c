@@ -191,7 +191,7 @@ void _dynamic_EntryAdded5_connect (gpointer obj, const char * signal_name, GCall
 static void unity_places_place_on_service_entry_removed (UnityPlacesPlace* self, DBusGProxy* dbus_object, const char* entry_path);
 static void _unity_places_place_on_service_entry_removed_dynamic_EntryRemoved6_ (DBusGProxy* _sender, const char* entry_path, gpointer self);
 void _dynamic_EntryRemoved7_connect (gpointer obj, const char * signal_name, GCallback handler, gpointer data);
-static gboolean _lambda17_ (UnityPlacesPlace* self);
+static gboolean _lambda19_ (UnityPlacesPlace* self);
 static GValueArray** _dynamic_get_entries0 (DBusGProxy* self, int* result_length1, GError** error);
 GType unity_places_place_entry_dbus_get_type (void) G_GNUC_CONST;
 const char* unity_places_place_entry_dbus_get_dbus_path (UnityPlacesPlaceEntryDbus* self);
@@ -199,7 +199,7 @@ void unity_places_place_entry_dbus_update_info (UnityPlacesPlaceEntryDbus* self,
 void unity_places_place_entry_connect (UnityPlacesPlaceEntry* self);
 void unity_places_place_entry_set_parent (UnityPlacesPlaceEntry* self, UnityPlacesPlace* value);
 gboolean unity_places_place_entry_get_online (UnityPlacesPlaceEntry* self);
-static gboolean __lambda17__gsource_func (gpointer self);
+static gboolean __lambda19__gsource_func (gpointer self);
 void unity_places_place_set_online (UnityPlacesPlace* self, gboolean value);
 GType unity_places_activation_status_get_type (void) G_GNUC_CONST;
 UnityPlacesActivationStatus unity_places_place_activate (UnityPlacesPlace* self, const char* uri, const char* mimetype);
@@ -468,7 +468,7 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static gboolean _lambda17_ (UnityPlacesPlace* self) {
+static gboolean _lambda19_ (UnityPlacesPlace* self) {
 	gboolean result = FALSE;
 	gint entries_length1;
 	gint _entries_size_;
@@ -572,9 +572,9 @@ static gboolean _lambda17_ (UnityPlacesPlace* self) {
 }
 
 
-static gboolean __lambda17__gsource_func (gpointer self) {
+static gboolean __lambda19__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda17_ (self);
+	result = _lambda19_ (self);
 	return result;
 }
 
@@ -618,7 +618,7 @@ void unity_places_place_connect (UnityPlacesPlace* self) {
 	}
 	_dynamic_EntryAdded5_connect (self->priv->service, "EntryAdded", (GCallback) _unity_places_place_on_service_entry_added_dynamic_EntryAdded4_, self);
 	_dynamic_EntryRemoved7_connect (self->priv->service, "EntryRemoved", (GCallback) _unity_places_place_on_service_entry_removed_dynamic_EntryRemoved6_, self);
-	g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda17__gsource_func, g_object_ref (self), g_object_unref);
+	g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda19__gsource_func, g_object_ref (self), g_object_unref);
 	unity_places_place_set_online (self, TRUE);
 }
 
@@ -636,29 +636,33 @@ static guint32 _dynamic_activate1 (DBusGProxy* self, const char* param1, GError*
 UnityPlacesActivationStatus unity_places_place_activate (UnityPlacesPlace* self, const char* uri, const char* mimetype) {
 	UnityPlacesActivationStatus result = 0;
 	gboolean remote_activation;
-	gboolean _tmp0_ = FALSE;
 	guint32 _result_;
 	GError * _inner_error_ = NULL;
 	g_return_val_if_fail (self != NULL, 0);
 	g_return_val_if_fail (uri != NULL, 0);
 	g_return_val_if_fail (mimetype != NULL, 0);
 	remote_activation = FALSE;
-	if (self->uri_regex != NULL) {
-		_tmp0_ = g_regex_match (self->uri_regex, uri, 0, NULL);
-	} else {
-		_tmp0_ = FALSE;
-	}
-	if (_tmp0_) {
+	if (_vala_strcmp0 (uri, ".") == 0) {
 		remote_activation = TRUE;
 	} else {
-		gboolean _tmp1_ = FALSE;
-		if (self->mime_regex != NULL) {
-			_tmp1_ = g_regex_match (self->mime_regex, mimetype, 0, NULL);
+		gboolean _tmp0_ = FALSE;
+		if (self->uri_regex != NULL) {
+			_tmp0_ = g_regex_match (self->uri_regex, uri, 0, NULL);
 		} else {
-			_tmp1_ = FALSE;
+			_tmp0_ = FALSE;
 		}
-		if (_tmp1_) {
+		if (_tmp0_) {
 			remote_activation = TRUE;
+		} else {
+			gboolean _tmp1_ = FALSE;
+			if (self->mime_regex != NULL) {
+				_tmp1_ = g_regex_match (self->mime_regex, mimetype, 0, NULL);
+			} else {
+				_tmp1_ = FALSE;
+			}
+			if (_tmp1_) {
+				remote_activation = TRUE;
+			}
 		}
 	}
 	if (!remote_activation) {
@@ -695,7 +699,7 @@ UnityPlacesActivationStatus unity_places_place_activate (UnityPlacesPlace* self,
 		}
 		default:
 		{
-			g_warning ("places-place.vala:251: Illegal response from com.canonical.Unity.Activ" \
+			g_warning ("places-place.vala:253: Illegal response from com.canonical.Unity.Activ" \
 "ation.Activate: %u", (guint) _result_);
 			result = UNITY_PLACES_ACTIVATION_STATUS_NOT_ACTIVATED;
 			return result;
@@ -763,7 +767,7 @@ static gboolean unity_places_place_activate_fallback_co (UnityPlacesPlaceActivat
 			data->ee = data->_inner_error_;
 			data->_inner_error_ = NULL;
 			{
-				g_warning ("places-place.vala:271: Unable to read .desktop file '%s': %s", data->uri, data->ee->message);
+				g_warning ("places-place.vala:273: Unable to read .desktop file '%s': %s", data->uri, data->ee->message);
 				_g_error_free0 (data->ee);
 				_g_object_unref0 (data->info);
 				_g_free0 (data->id);
@@ -800,7 +804,7 @@ static gboolean unity_places_place_activate_fallback_co (UnityPlacesPlaceActivat
 				data->e = data->_inner_error_;
 				data->_inner_error_ = NULL;
 				{
-					g_warning ("places-place.vala:280: Unable to launch desktop file %s: %s\n", data->id, data->e->message);
+					g_warning ("places-place.vala:282: Unable to launch desktop file %s: %s\n", data->id, data->e->message);
 					_g_error_free0 (data->e);
 				}
 			}
@@ -813,7 +817,7 @@ static gboolean unity_places_place_activate_fallback_co (UnityPlacesPlaceActivat
 				return FALSE;
 			}
 		} else {
-			g_warning ("places-place.vala:287: %s is an invalid DesktopAppInfo id\n", data->id);
+			g_warning ("places-place.vala:289: %s is an invalid DesktopAppInfo id\n", data->id);
 		}
 		_g_object_unref0 (data->info);
 		_g_free0 (data->id);
@@ -841,7 +845,7 @@ static gboolean unity_places_place_activate_fallback_co (UnityPlacesPlaceActivat
 		data->eee = data->_inner_error_;
 		data->_inner_error_ = NULL;
 		{
-			g_warning ("places-place.vala:297: Unable to launch: %s\n", data->eee->message);
+			g_warning ("places-place.vala:299: Unable to launch: %s\n", data->eee->message);
 			_g_error_free0 (data->eee);
 		}
 	}
@@ -868,7 +872,7 @@ static void unity_places_place_on_service_entry_added (UnityPlacesPlace* self, D
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (dbus_object != NULL);
 	g_return_if_fail (info != NULL);
-	g_debug ("places-place.vala:305: EntryAdded %s", g_value_get_string (g_value_array_get_nth (info, (guint) 0)));
+	g_debug ("places-place.vala:307: EntryAdded %s", g_value_get_string (g_value_array_get_nth (info, (guint) 0)));
 	entry = unity_places_place_entry_dbus_new (self->priv->_dbus_name, g_value_get_string (g_value_array_get_nth (info, (guint) 0)));
 	unity_places_place_entry_dbus_update_info (entry, info);
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->entries_array, (UnityPlacesPlaceEntry*) entry);
@@ -884,7 +888,7 @@ static void unity_places_place_on_service_entry_removed (UnityPlacesPlace* self,
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (dbus_object != NULL);
 	g_return_if_fail (entry_path != NULL);
-	g_debug ("places-place.vala:318: %s", _tmp0_ = g_strconcat ("EntryRemoved: ", string_to_string (entry_path), NULL));
+	g_debug ("places-place.vala:320: %s", _tmp0_ = g_strconcat ("EntryRemoved: ", string_to_string (entry_path), NULL));
 	_g_free0 (_tmp0_);
 	entry = NULL;
 	{
@@ -1001,7 +1005,7 @@ static UnityPlacesPlaceEntry* unity_places_place_load_entry_from_keyfile (UnityP
 		}
 		if (_tmp2_) {
 			char* _tmp4_;
-			g_warning ("places-place.vala:374: %s", _tmp4_ = g_strconcat ("Cannot load entry '", string_to_string (group), "': Does not contain valid DBusObjectPath: ", string_to_string (path), NULL));
+			g_warning ("places-place.vala:376: %s", _tmp4_ = g_strconcat ("Cannot load entry '", string_to_string (group), "': Does not contain valid DBusObjectPath: ", string_to_string (path), NULL));
 			_g_free0 (_tmp4_);
 			result = NULL;
 			_g_free0 (desc);

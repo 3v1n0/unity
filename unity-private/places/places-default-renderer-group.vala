@@ -284,6 +284,7 @@ namespace Unity.Places
                          results.get_string (iter, 5));
           button.iter = iter;
           cleanup_tiles.remove (button);
+          button.unref (); /* Because Vala holds references when it shouldn't*/;
         }
       else if (group_renderer == "UnityFileInfoRenderer")
         {
@@ -296,7 +297,7 @@ namespace Unity.Places
 
           renderer.add_actor (button);
           button.show ();
-          button.unref (); /* Because Vala sucks and holds references when it shouldn't*/;
+          button.unref (); /* Because Vala holds references when it shouldn't*/;
           button.activated.connect ((u, m) => { activated (u, m); });
         }
       else if (group_renderer == "UnityShowcaseRenderer")
@@ -309,7 +310,7 @@ namespace Unity.Places
                                      results.get_string (iter, 5));
           renderer.add_actor (button);
           button.show ();
-          button.unref (); /* Because Vala sucks and holds references when it shouldn't*/;
+          button.unref (); /* Because Vala holds references when it shouldn't*/;
 
           button.activated.connect ((u, m) => { activated (u, m); });
         }
@@ -323,7 +324,7 @@ namespace Unity.Places
                                     results.get_string (iter, 5));
           renderer.add_actor (button);
           button.show ();
-          button.unref (); /* Because Vala sucks and holds references when it shouldn't*/;
+          button.unref (); /* Because Vala holds references when it shouldn't*/;
 
           button.activated.connect ((u, m) => { activated (u, m); });
         }

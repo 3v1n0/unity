@@ -57,6 +57,7 @@ namespace Unity.Panel.Indicators
 
       indicator_object.entry_added.connect (this.on_entry_added);
       indicator_object.entry_removed.connect (this.remove_entry);
+      indicator_object.menu_show.connect (on_menu_show);
 
       unowned GLib.List<Indicator.ObjectEntry> list = indicator_object.get_entries ();
 
@@ -82,6 +83,19 @@ namespace Unity.Panel.Indicators
        * keys.
        * TODO
        */
+    }
+
+    public void on_menu_show (Indicator.ObjectEntry entry, uint timestamp)
+    {
+      foreach (IndicatorObjectEntryView view in indicator_entry_array)
+        {
+          var s = (view.entry.label is Gtk.Label) ? entry.label.label : "";
+          if (view.entry == entry)
+            {
+              view.show_menu ();
+              break;
+            }
+        }
     }
 
     private void on_menu_moved (IndicatorObjectEntryView object_entry_view, Gtk.MenuDirectionType type)
@@ -114,6 +128,25 @@ namespace Unity.Panel.Indicators
         }
 
       IndicatorObjectEntryView next_object_entry_view = this.indicator_entry_array.get (pos);
+      if (next_object_entry_view.skip)
+        {
+          if (type == Gtk.MenuDirectionType.PARENT)
+            {
+              if (pos == 0)
+                next_object_entry_view = this.indicator_entry_array.get (this.indicator_entry_array.size - 1);
+              else
+                next_object_entry_view = this.indicator_entry_array.get (pos-1);
+
+            }
+          else if (type == Gtk.MenuDirectionType.CHILD)
+            {
+              if (pos == this.indicator_entry_array.size - 1)
+                next_object_entry_view = this.indicator_entry_array.get (0);
+              else
+                next_object_entry_view = this.indicator_entry_array.get (pos+1);
+            }
+        }
+
       next_object_entry_view.show_menu ();
       /* Signal to be picked up by IndicatorBar */
       //this.menu_moved (type);

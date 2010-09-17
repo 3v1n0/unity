@@ -107,6 +107,7 @@ places_sources = \
   places/places-place.vala \
   places/places-place-search-bar.vala \
   places/places-place-search-entry.vala \
+  places/places-place-search-extra-action.vala \
   places/places-place-search-navigation.vala \
   places/places-place-search-sections-bar.vala \
   places/places-trash-controller.vala \

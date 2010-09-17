@@ -59,7 +59,7 @@ namespace Unity.Launcher
     construct
     {
       theme_file_path = new Unity.ThemeFilePath ();
-      name = "Bug Found, You Defeated Unity, +20 exp";
+      name = "Bug Found, You Defeated Unity, +20,000 exp";
       child.controller = this;
       child.button_press_event.connect (on_press_event);
       child.button_release_event.connect (on_release_event);
