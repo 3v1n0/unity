@@ -156,9 +156,6 @@ namespace Unity.Testing
           this.bg_texture.show ();
         }
 
-      this.x = 0.0f;
-      this.y = 0.0f;
-
       this.gbg.get_color (out type, out primary, out secondary);
 
       this.bg_texture.set_surface_size ((uint) this.width,
