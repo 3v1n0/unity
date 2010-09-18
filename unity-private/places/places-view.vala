@@ -18,6 +18,7 @@
  *
  */
 using Unity;
+using Unity.Testing;
 
 namespace Unity.Places
 {
@@ -42,6 +43,8 @@ namespace Unity.Places
     public View (Shell shell, PlaceModel model)
     {
       Object (shell:shell, orientation:Ctk.Orientation.VERTICAL, model:model);
+
+      Testing.ObjectRegistry.get_default ().register ("UnityPlacesView", this);
     }
 
     construct
@@ -49,6 +52,8 @@ namespace Unity.Places
       about_to_show ();
 
       shell.get_stage ().captured_event.connect (on_stage_event_captured);
+
+
     }
 
     public void about_to_show ()
