@@ -260,12 +260,12 @@ namespace Unity
     private ExposeClone? last_selected_clone = null;
 
 
-    public ExposeManager (Plugin plugin, Launcher.Launcher launcher)
+    public ExposeManager (Plugin owner, Launcher.Launcher launcher)
     {
       this.launcher = launcher;
-      this.owner = plugin;
+      this.owner = owner;
       this.exposed_windows = new List<ExposeClone> ();
-      this.stage = (Clutter.Stage)plugin.get_stage ();
+      this.stage = (Clutter.Stage)owner.get_stage ();
 
       hovered_opacity = 255;
       unhovered_opacity = 255;
@@ -394,23 +394,23 @@ namespace Unity
     {
       Clutter.Actor last = null;
 
-      int middle_size = (int) (stage.width * 0.8f);
-      int width = (int) stage.width - left_buffer - right_buffer;
+      int middle_size = (int) (owner.primary_monitor.width * 0.8f);
+      int width = (int) owner.primary_monitor.width - left_buffer - right_buffer;
       int slice_width = width / 10;
 
-      int middle_y = (int) stage.height / 2;
+      int middle_y = (int) owner.primary_monitor.height / 2;
       int middle_x = left_buffer + width / 2;
 
       int middle_index = windows.index (active);
 
-      float scale = float.min (1f, (stage.height / 2) / float.max (active.height, active.width));
+      float scale = float.min (1f, (owner.primary_monitor.height / 2) / float.max (active.height, active.width));
       scale = 1f;
 
       active.set_anchor_point_from_gravity (Clutter.Gravity.CENTER);
       active.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
                       "x", (float) middle_x,
                       "y", (float) middle_y,
-                      "depth", stage.width * -0.7,
+                      "depth", owner.primary_monitor.width * -0.7,
                       "scale-x", scale,
                       "scale-y", scale,
                       "rotation-angle-y", 0f);
@@ -425,13 +425,13 @@ namespace Unity
           actor.set_anchor_point_from_gravity (Clutter.Gravity.CENTER);
           actor.lower (last);
 
-          scale = float.min (1f, (stage.height / 2) / float.max (actor.height, actor.width));
+          scale = float.min (1f, (owner.primary_monitor.height / 2) / float.max (actor.height, actor.width));
           scale = 1f;
 
           actor.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
                           "x", (float) current_x,
                           "y", (float) middle_y,
-                          "depth", stage.width * -0.7,
+                          "depth", owner.primary_monitor.width * -0.7,
                           "scale-x", scale,
                           "scale-y", scale,
                           "rotation-angle-y", 60f);
@@ -448,13 +448,13 @@ namespace Unity
           actor.set_anchor_point_from_gravity (Clutter.Gravity.CENTER);
           actor.lower (last);
 
-          scale = float.min (1f, (stage.height / 2) / float.max (actor.height, actor.width));
+          scale = float.min (1f, (owner.primary_monitor.height / 2) / float.max (actor.height, actor.width));
           scale = 1f;
 
           actor.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
                           "x", (float) current_x,
                           "y", (float) middle_y,
-                          "depth", stage.width * -0.7,
+                          "depth", owner.primary_monitor.width * -0.7,
                           "scale-x", scale,
                           "scale-y", scale,
                           "rotation-angle-y", -60f);
@@ -474,25 +474,32 @@ namespace Unity
 
     public void position_windows_on_grid (List<Clutter.Actor> _windows, int top_buffer, int left_buffer, int right_buffer, int bottom_buffer)
     {
+      if (_windows.length () < 1)
+        {
+          warning ("There are no windows to position on grid");
+          return;
+        }
+
       List<Clutter.Actor> windows = _windows.copy ();
       windows.sort ((CompareFunc) direct_comparison);
 
       int count = (int) windows.length ();
       int cols = (int) Math.ceil (Math.sqrt (count));
+      if (cols < 1) cols = 1;
       int rows = 1;
 
       while (cols * rows < count)
         rows++;
 
-      int boxWidth = (int) ((stage.width - left_buffer - right_buffer) / cols);
-      int boxHeight = (int) ((stage.height - top_buffer - bottom_buffer) / rows);
+      int boxWidth = (int) ((owner.primary_monitor.width - left_buffer - right_buffer) / cols);
+      int boxHeight = (int) ((owner.primary_monitor.height - top_buffer - bottom_buffer) / rows);
 
       for (int row = 0; row < rows; row++)
         {
           if (row == rows - 1)
             {
               /* Last row, time to perform centering as needed */
-              boxWidth = (int) ((stage.width - left_buffer - right_buffer) / windows.length ());
+              boxWidth = (int) ((owner.primary_monitor.width - left_buffer - right_buffer) / windows.length ());
             }
 
           for (int col = 0; col < cols; col++)

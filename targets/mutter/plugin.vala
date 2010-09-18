@@ -108,8 +108,6 @@ namespace Unity
     }
 
     public ExposeManager expose_manager { get; private set; }
-
-    public Background    background     { get; private set; }
     
     public bool menus_swallow_events { get { return false; } }
 
@@ -126,8 +124,8 @@ namespace Unity
     private static const int QUICKLAUNCHER_WIDTH = 58;
     private static const string UNDECORATED_HINT = "UNDECORATED_HINT";
 
-    private Gee.ArrayList<Background> backgrounds;
-    private Gdk.Rectangle primary_monitor;
+    public Gee.ArrayList<Background> backgrounds;
+    public Gdk.Rectangle primary_monitor;
 
     private Clutter.Stage    stage;
     private Application      app;
@@ -753,8 +751,8 @@ namespace Unity
           (this.plugin.get_window_group () as Clutter.Container).add_actor (this.dark_box);
           this.dark_box.raise (plugin.get_normal_window_group ());
 
-          this.dark_box.set_position (0, 0);
-          this.dark_box.set_size (this.stage.width, this.stage.height);
+          this.dark_box.set_position (primary_monitor.x, primary_monitor.y);
+          this.dark_box.set_size (primary_monitor.width, primary_monitor.height);
 
           this.dark_box.show ();
 
