@@ -111,6 +111,7 @@ namespace Unity.Places
 
     public void on_entry_view_activated (PlaceEntry entry, uint section_id)
     {
+      search_bar.reset ();
       if (active_entry is PlaceEntry)
         {
           active_entry.active = false;
