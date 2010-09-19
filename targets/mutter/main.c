@@ -174,16 +174,16 @@ on_restore_input_region (UnityPlugin *plugin, gboolean fullscreen)
       rects = g_new (XRectangle, 2);
 
       /* Panel first */
-      rects[0].x = 0;
-      rects[0].y = 0;
-      rects[0].width = width;
+      rects[0].x = plugin->primary_monitor.x;
+      rects[0].y = plugin->primary_monitor.y;
+      rects[0].width = plugin->primary_monitor.width;
       rects[0].height = unity_plugin_get_panel_height (plugin);
 
       /* Launcher */
-      rects[1].x = 0;
+      rects[1].x = plugin->primary_monitor.y;
       rects[1].y = rects[0].height;
       rects[1].width = unity_plugin_get_launcher_width (plugin) + 1;
-      rects[1].height = height - rects[0].height;
+      rects[1].height = plugin->primary_monitor.height - rects[0].height;
 
       /* Update region */
       region = XFixesCreateRegion (xdisplay, rects, 2);

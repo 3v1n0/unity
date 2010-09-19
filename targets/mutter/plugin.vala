@@ -538,21 +538,19 @@ namespace Unity
       this.launcher.get_container ().set_clip (0, 0,
                                    this.QUICKLAUNCHER_WIDTH,
                                    height-this.PANEL_HEIGHT);
+
       Utils.set_strut ((Gtk.Window)this.drag_dest,
-                       this.QUICKLAUNCHER_WIDTH, y, (uint32)y+height,
-                       PANEL_HEIGHT, x, (uint32)x+width);
+                       this.QUICKLAUNCHER_WIDTH, y, (uint32)height,
+                       PANEL_HEIGHT, x, (uint32)width);
 
       this.places.set_size (width - this.QUICKLAUNCHER_WIDTH, height);
       this.places.set_position (x + this.QUICKLAUNCHER_WIDTH, y);
 
-      this.panel.set_size (width, 24);
+      this.panel.set_size (width, PANEL_HEIGHT);
       this.panel.set_position (x, y);
 
-      /* Leaving this here to remind me that we need to use these when
-       * there are fullscreen windows etc
-       * this.plugin.set_stage_input_region (uint region);
-       * this.plugin.set_stage_reactive (true);
-       */
+      ensure_input_region ();
+
       END_FUNCTION ();
     }
 
