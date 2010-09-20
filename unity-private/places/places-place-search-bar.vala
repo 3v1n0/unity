@@ -184,11 +184,14 @@ namespace Unity.Places
       active_entry = entry;
       bg.entry_position = x;
       sections.set_active_entry (entry);
-      Idle.add (() => {
-        sections.set_active_section (section);
-        return false;
-      });
 
+      if (!(sections.style == SectionStyle.BREADCRUMB && section ==0))
+        {
+          Timeout.add (0, () => {
+            sections.set_active_section (section);
+            return false;
+          });
+        }
 
       navigation.set_active_entry (entry);
       this.entry.set_active_entry (entry);

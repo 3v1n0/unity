@@ -119,6 +119,7 @@ namespace Unity.Places
         shell.show_unity ();
       }
      view.on_entry_view_activated (cont.entry, section_id);
+     view.search_bar.reset ();
     }
   }
 }
