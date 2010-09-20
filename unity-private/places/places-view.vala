@@ -188,7 +188,7 @@ namespace Unity.Places
 
     private void on_result_activated (string uri, string mimetype)
     {
-      if (active_entry.parent is Place == false)
+      if (active_entry == null || active_entry.parent == null)
         {
           Place.activate_fallback.begin (uri);
           global_shell.hide_unity ();
