@@ -128,6 +128,8 @@ namespace Unity.Places
 
     private void update_views (PlaceEntry entry, uint section_id=0)
     {
+      search_bar.set_active_entry_view (entry, 0, section_id);
+
       /* Create the correct results view */
       if (renderer is Clutter.Actor)
         {
@@ -153,8 +155,6 @@ namespace Unity.Places
                            entry.entry_renderer_hints);
       renderer.show ();
       renderer.activated.connect (on_result_activated);
-
-      search_bar.set_active_entry_view (entry, 0, section_id);
     }
 
     private void on_entry_renderer_info_changed (PlaceEntry entry)

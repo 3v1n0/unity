@@ -138,6 +138,9 @@ namespace Unity.Places
 
     private async void refresh_states ()
     {
+      if (remote == null)
+        return;
+
       try {
         var states = yield remote.get_state ();
         back_sensitive = states[0].sensitive;
@@ -149,6 +152,9 @@ namespace Unity.Places
 
     private async void go_forward ()
     {
+      if (remote == null)
+        return;
+
       try {
         var states = yield remote.go_forward ();
         back_sensitive = states[0].sensitive;
@@ -160,6 +166,9 @@ namespace Unity.Places
 
     private async void go_back ()
     {
+      if (remote == null)
+        return;
+
       try {       
         var states = yield remote.go_back ();
         back_sensitive = states[0].sensitive;
