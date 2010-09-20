@@ -201,14 +201,14 @@ namespace Unity.Launcher
 
           if(menu.get_num_items() == 0)
             {
-              // It can happen that the quicklist menu is requested and the menu was not previously filled with a label. 
+              // It can happen that the quicklist menu is requested and the menu was not previously filled with a label.
               // In this case we fill the menu with the label first.
               string label = attached_controller.name;
               var menuitem = new QuicklistMenuItem.with_label (label);
               menuitem.reactive = false;
               menu.append (menuitem, false);
             }
-            
+
           menu.close_on_leave = false;
           menu.set_detect_clicks (true);
           // grab the top menu
@@ -282,6 +282,12 @@ namespace Unity.Launcher
 
     private Ctk.MenuItem? menu_item_from_dbusmenuitem (Dbusmenu.Menuitem dbusmenuitem)
     {
+      // we should really add the item anyway and make it hidden, but its late in
+      // the cycle and any action will close the menu anyway. hopefully this won't
+      // be to visible a problem
+      if (dbusmenuitem.property_get_bool (Dbusmenu.MENUITEM_PROP_VISIBLE) == false)
+        return null;
+
       string label = "UNDEFINED";
       label = dbusmenuitem.property_get (Dbusmenu.MENUITEM_PROP_LABEL);
       string type = "label";
