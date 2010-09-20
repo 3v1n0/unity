@@ -225,6 +225,43 @@ namespace Unity.Places
     {
 
     }
+
+    public unowned PlaceEntry? get_entry_for_uri (string uri)
+    {
+      int entry_id = -1;
+
+      unowned Dee.ModelIter iter = entry_results_model.get_first_iter ();
+      while (!entry_results_model.is_last (iter))
+        {
+          if (uri == entry_results_model.get_string (iter, 0))
+            {
+              entry_id = (int) entry_results_model.get_uint (iter, 2);
+              break;
+            }
+
+          iter = entry_results_model.next (iter);
+        }
+
+      if (entry_id >= 0)
+        {
+          unowned PlaceEntry? ent = null;
+
+          foreach (Gee.Map.Entry<PlaceEntry, uint> e in entry_group_map.entries)
+            {
+              PlaceEntry? entry = e.key;
+
+              if (entry != null && entry_id == e.value)
+                {
+                  ent = entry;
+                  break;
+                }
+            }
+
+          if (ent is PlaceEntry)
+            return ent;
+        }
+
+      return null;
+    }
   }
 }
-

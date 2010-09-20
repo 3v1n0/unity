@@ -72,7 +72,7 @@ namespace Unity.Places
     private bool last_result_timeout = false;
 
     public signal void activated (string uri, string mimetype);
-
+    
     private GLib.List<Tile?> cleanup_tiles = new GLib.List<Tile?> ();
     private uint cleanup_operation = 0;
 

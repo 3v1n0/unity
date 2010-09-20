@@ -188,14 +188,29 @@ namespace Unity.Places
 
     private void on_result_activated (string uri, string mimetype)
     {
-      if (active_entry == null || active_entry.parent == null)
+      ActivationStatus result;
+
+      if (active_entry is PlaceHomeEntry)
+        {
+          var e = (active_entry as PlaceHomeEntry).get_entry_for_uri (uri);
+
+          if (e is PlaceEntry)
+            result = e.parent.activate (uri, mimetype);
+          else
+            {
+              Place.activate_fallback.begin (uri);
+              result = ActivationStatus.ACTIVATED_FALLBACK;
+            }
+        }
+      else if (active_entry == null || active_entry.parent == null)
         {
           Place.activate_fallback.begin (uri);
-          global_shell.hide_unity ();
-          return;
+          result = ActivationStatus.ACTIVATED_FALLBACK;
         }
-
-      ActivationStatus result = active_entry.parent.activate (uri, mimetype);
+      else
+        {
+          result = active_entry.parent.activate (uri, mimetype);
+        }
       
       switch (result)
       {
