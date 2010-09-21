@@ -89,8 +89,18 @@ namespace Unity
       cache = new HashMap<string, Gdk.Pixbuf> ();
     }
 
-    private void on_shell_destroyed ()
+    ~PixbufCache ()
     {
+      /* Make sure we don't process icons after we're dead */
+      if (queue_timeout != 0)
+        {
+          Source.remove (queue_timeout);
+          queue_timeout = 0;
+        }
+    }
+
+    private void on_shell_destroyed ()
+    {    
       if (_pixbuf_cache == this)
         {
           _pixbuf_cache = null;
