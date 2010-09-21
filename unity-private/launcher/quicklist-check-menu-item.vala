@@ -203,7 +203,7 @@ namespace Unity.Launcher
       return true;
     }
 
-    ~QuicklistMenuItem ()
+    ~QuicklistCheckMenuItem ()
     {
       this.notify["label"].disconnect (this._on_label_changed);
       this.enter_event.disconnect (this._on_enter);
