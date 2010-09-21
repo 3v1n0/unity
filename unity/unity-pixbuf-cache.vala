@@ -37,7 +37,7 @@ namespace Unity
     }
   }
 
-  public enum PixbufRequestType
+  private enum PixbufRequestType
   {
     ICON_NAME,
     GICON_STRING
