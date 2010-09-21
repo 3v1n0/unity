@@ -271,7 +271,7 @@ namespace Unity.Launcher
             h = (attached_controller.child as Ctk.Actor).get_height();
             menu.compute_style_textures ();
             menu.set_expansion_size_factor (0.0f);
-            menu.set_anchor_position (x + w - 9, y + h/2.0f, 0);
+            menu.set_anchor_position (x + w - 4, y + h/2.0f, 0);
             menu.animate (Clutter.AnimationMode.LINEAR,
                          100,
                           "expansion-size-factor", 1.0f);
