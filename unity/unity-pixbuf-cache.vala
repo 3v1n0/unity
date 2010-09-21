@@ -23,7 +23,8 @@ using GLib;
 
 namespace Unity
 {
-  public class PixbufCacheTask
+  [Compact]
+  private class PixbufCacheTask
   {
     public string  data;
     public unowned Ctk.Image image;
