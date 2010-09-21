@@ -227,8 +227,14 @@ namespace Unity.Launcher
                 foreach (Dbusmenu.Menuitem menuitem in menu_items)
                   {
                     var view_menuitem = menu_item_from_dbusmenuitem (menuitem);
+                    
                     if (view_menuitem != null)
-                      get_view ().prepend (view_menuitem, false);
+                      {
+                        // Items returned from menu_item_from_dbusmenuitem have an extra reference
+                        // stopping them from being properly deleted. Remove that reference here.
+                        view_menuitem.unref ();
+                        get_view ().prepend (view_menuitem, false);
+                      }
                   }
                 menu_items.reverse ();
               }
@@ -251,10 +257,13 @@ namespace Unity.Launcher
                   foreach (Dbusmenu.Menuitem menuitem in menu_items)
                     {
                       var view_menuitem = menu_item_from_dbusmenuitem (menuitem);
+                      
                       if (view_menuitem != null)
                         {
-                          view_menuitem.unref();
-                          get_view ().append (view_menuitem as QuicklistMenuItem, false);
+                          // Items returned from menu_item_from_dbusmenuitem have an extra reference
+                          // stopping them from being properly deleted. Remove that reference here.
+                          view_menuitem.unref ();
+                          get_view ().append (view_menuitem, false);
                         }
                     }
                 }
