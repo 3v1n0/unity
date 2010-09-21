@@ -253,7 +253,8 @@ namespace Unity.Launcher
                       var view_menuitem = menu_item_from_dbusmenuitem (menuitem);
                       if (view_menuitem != null)
                         {
-                          get_view ().append (view_menuitem, false);
+                          view_menuitem.unref();
+                          get_view ().append (view_menuitem as QuicklistMenuItem, false);
                         }
                     }
                 }
