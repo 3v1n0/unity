@@ -838,6 +838,9 @@ namespace Unity.Launcher
 
     private void model_child_removed (ScrollerChild child)
     {
+      if (child in draw_btf) draw_btf.remove (child);
+      if (child in draw_ftb) draw_ftb.remove (child);
+
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging)
         {
