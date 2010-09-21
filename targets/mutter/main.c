@@ -66,6 +66,7 @@ MUTTER_PLUGIN_DECLARE(UnityMutter, unity_mutter);
 
 static void unity_mutter_constructed (GObject *object);
 
+static void change_user_session (const char *session_name);
 static gboolean session_logout_success (void);
 static gboolean rendering_available (void);
 
@@ -136,7 +137,8 @@ unity_mutter_constructed (GObject *object)
 
   if (!rendering_available ())
     {
-      g_warning ("No rendering avaible for unity, prompting for changing session\n");
+      g_warning ("No rendering avaible for unity, prompting for changing session");
+      change_user_session ("gnome");
       // if we can't logout, fallback to trying to run unity...
       if (session_logout_success ())
         exit (0); // 0 or will be respawn as required_component
@@ -147,6 +149,48 @@ unity_mutter_constructed (GObject *object)
                     G_CALLBACK (on_restore_input_region), self);
 
   unity_plugin_set_plugin (self->plugin, MUTTER_PLUGIN (self));
+}
+
+static void
+change_user_session (const char *session_name)
+{
+
+  GKeyFile *key_file;
+  GError   *error;
+  char     *filename;
+  gsize     length;
+  gchar    *contents;
+
+  filename = g_build_filename (g_get_home_dir(), ".dmrc", NULL);
+  error = NULL;
+
+  key_file = g_key_file_new ();
+  g_key_file_load_from_file (key_file, filename,
+                             G_KEY_FILE_KEEP_COMMENTS |
+                             G_KEY_FILE_KEEP_TRANSLATIONS,
+                             NULL);
+  g_key_file_set_string (key_file, "Desktop", "Session",
+                         session_name);
+
+  contents = g_key_file_to_data (key_file, &length, &error);
+  if (contents == NULL)
+    {
+      g_debug ("Can't create content for .dmrc file: %s", error->message);
+      g_key_file_free (key_file);
+      g_free (filename);
+      return;
+    }
+
+  if (!g_file_set_contents (filename, contents, length, &error))
+    {
+      g_debug ("Can't update .dmrc file: %s", error->message);
+      g_error_free (error);
+    }
+
+   g_free (contents);
+   g_key_file_free (key_file);
+   g_free (filename);
+
 }
 
 static gboolean
