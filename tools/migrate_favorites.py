@@ -36,6 +36,9 @@ def get_desktop_dir():
 
 def register_new_app(client, launcher_location, apps_list, priority_position):
     key_name = 'app-%s' % launcher_location.split('/')[-1]
+    # remove forbidden key in gconf:
+    for val in [' ', '+', '\'', '"', '\\', '`', '[', ']', '(', ')', '°', '#', '~', '|', '&']:
+        key_name = key_name.replace(val, '_')
     # default distribution launcher don't begin with / and don't have a desktop file in ~/.gnome2
     if os.path.exists(launcher_location) and key_name not in apps_list:
         apps_list.append(key_name)
