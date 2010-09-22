@@ -51,6 +51,7 @@ libunity_mutter_la_VALAFLAGS = \
   --pkg unity-const \
   --pkg unity \
   --pkg unity-private \
+  --pkg gconf-2.0 \
   $(MAINTAINER_VALAFLAGS)
 
 libunity_mutter_la_LIBADD = \
