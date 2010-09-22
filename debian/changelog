@@ -1,4 +1,4 @@
-unity (0.2.42-0ubuntu1) UNRELEASED; urgency=low
+unity (0.2.42-0ubuntu1) maverick; urgency=low
 
   * New upstream release:
     - "Applications" and "Files & Folders" tooltips are not translatable
@@ -57,12 +57,13 @@ unity (0.2.42-0ubuntu1) UNRELEASED; urgency=low
       (LP: #645066)
     - Fix new windows don't get focus (LP: #642994)
     - Fix cropping an image in shotwell crashes unity (LP: #641554)
+    - Some fixes on matching user icons (LP: #622146)
   * debian/control:
     - depends on latest libindicator-dev for ABI change transition
   * debian/libunity0.symbols:
     - update to track internal ABI symbols (only used by places)
 
- -- Didier Roche <didrocks@ubuntu.com>  Wed, 22 Sep 2010 20:47:35 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Wed, 22 Sep 2010 22:36:00 +0200
 
 unity (0.2.40-0ubuntu1) maverick; urgency=low
 
