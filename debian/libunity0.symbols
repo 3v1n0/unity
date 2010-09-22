@@ -555,6 +555,7 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_place_get_online@Base 0.2.22
  unity_places_place_get_type@Base 0.2.22
  unity_places_place_home_entry_construct@Base 0.2.22
+ unity_places_place_home_entry_get_entry_for_uri@Base 0.2.42
  unity_places_place_home_entry_get_place_model@Base 0.2.22
  unity_places_place_home_entry_get_shell@Base 0.2.22
  unity_places_place_home_entry_get_type@Base 0.2.22
@@ -567,18 +568,22 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_place_search_bar_background_construct@Base 0.2.22
  unity_places_place_search_bar_background_get_entry_position@Base 0.2.22
  unity_places_place_search_bar_background_get_navigation@Base 0.2.22
+ unity_places_place_search_bar_background_get_search_empty@Base 0.2.42
  unity_places_place_search_bar_background_get_search_entry@Base 0.2.22
  unity_places_place_search_bar_background_get_type@Base 0.2.22
  unity_places_place_search_bar_background_new@Base 0.2.22
  unity_places_place_search_bar_background_set_entry_position@Base 0.2.22
+ unity_places_place_search_bar_background_set_search_empty@Base 0.2.42
  unity_places_place_search_bar_background_update_background@Base 0.2.22
  unity_places_place_search_bar_construct@Base 0.2.22
+ unity_places_place_search_bar_get_search_fail@Base 0.2.42
  unity_places_place_search_bar_get_search_text@Base 0.2.22
  unity_places_place_search_bar_get_type@Base 0.2.22
  unity_places_place_search_bar_new@Base 0.2.22
  unity_places_place_search_bar_reset@Base 0.2.22
  unity_places_place_search_bar_search@Base 0.2.22
  unity_places_place_search_bar_set_active_entry_view@Base 0.2.22
+ unity_places_place_search_bar_set_search_fail@Base 0.2.42
  unity_places_place_search_entry_construct@Base 0.2.22
  unity_places_place_search_entry_get_cursor_opacity@Base 0.2.30
  unity_places_place_search_entry_get_type@Base 0.2.22
@@ -864,9 +869,6 @@ libunity.so.0 libunity0 #MINVER#
  unity_pixbuf_cache_get_default@Base 0.2.22
  unity_pixbuf_cache_get_size@Base 0.2.22
  unity_pixbuf_cache_get_type@Base 0.2.22
- unity_pixbuf_cache_load_from_filepath@Base 0.2.34
- unity_pixbuf_cache_load_from_filepath_finish@Base 0.2.34
- unity_pixbuf_cache_load_iteration@Base 0.2.34
  unity_pixbuf_cache_new@Base 0.2.22
  unity_pixbuf_cache_set@Base 0.2.22
  unity_pixbuf_cache_set_image_from_gicon@Base 0.2.22

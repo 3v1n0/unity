@@ -59,6 +59,8 @@ unity (0.2.42-0ubuntu1) UNRELEASED; urgency=low
     - Fix cropping an image in shotwell crashes unity (LP: #641554)
   * debian/control:
     - depends on latest libindicator-dev for ABI change transition
+  * debian/libunity0.symbols:
+    - update to track internal ABI symbols (only used by places)
 
  -- Didier Roche <didrocks@ubuntu.com>  Wed, 22 Sep 2010 20:47:35 +0200
 
