@@ -523,11 +523,20 @@ namespace Unity.Launcher
 
       processed_icon.rotation = old_rotate_value;
       if (rotation <= 1.0 && rotation >= 0.0)
-        processed_icon.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD, 300,
-                                "rotation", rotation);
+        {
+          processed_icon.animate (Clutter.AnimationMode.EASE_IN_OUT_QUAD, 300,
+                                  "rotation", rotation);
+        }
       else
-        processed_icon.animate (Clutter.AnimationMode.EASE_OUT_QUINT, 300,
-                                "rotation", rotation);
+        {
+          processed_icon.animate (Clutter.AnimationMode.EASE_OUT_QUINT, 300,
+                                  "rotation", rotation);
+          if (activating)
+            {
+              debug ("stopping glow ");
+              activating = false;
+            }
+        }
     }
 
     private void on_activating_changed ()
