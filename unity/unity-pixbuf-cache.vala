@@ -163,7 +163,7 @@ namespace Unity
       queue_source = 0;
     }
 
-    public void process_icon_queue ()
+    private void process_icon_queue ()
     {
       if (queue_source == 0)
         {
