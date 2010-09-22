@@ -370,7 +370,7 @@ namespace Unity {
             }
         }
 
-      ExposeClone background_clone = new ExposeClone (plugin.background);
+      ExposeClone background_clone = new ExposeClone (plugin.backgrounds.get (0));
       background_clone.fade_on_close = false;
 
       wsp.add_actor (background_clone);

@@ -43,6 +43,7 @@ libunity_mutter_la_VALAFLAGS = \
   --pkg Dbusmenu-Glib-0.2 \
   --pkg dee-1.0 \
   --pkg gtk+-2.0 \
+  --pkg gdk-x11-2.0 \
   --pkg gee-1.0 \
   --pkg indicator \
   --pkg mutter-2.28 \
