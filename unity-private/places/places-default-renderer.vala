@@ -17,6 +17,8 @@
  *
  */
 
+using Unity.Testing;
+
 namespace Unity.Places
 {
   public class DefaultRenderer : LayeredBin, Unity.Place.Renderer
@@ -40,6 +42,7 @@ namespace Unity.Places
     private Ctk.VBox          box;
     private Dee.Model         groups_model;
     private Dee.Model         results_model;
+    private Places.View       place_view;
 
     private string[] expanded = null;
 
@@ -285,6 +288,8 @@ namespace Unity.Places
       box.homogeneous = false;
       scroll.add_actor (box);
       box.show ();
+
+      place_view = ObjectRegistry.get_default ().lookup ("UnityPlacesView")[0] as View;
     }
 
     /*
@@ -342,6 +347,8 @@ namespace Unity.Places
                             300,
                             "opacity", groups_box_opacity);
 
+      place_view.search_bar.search_fail = section_empty.active
+                                          || search_empty.active;
     }
 
     private void activate_default ()
@@ -687,4 +694,3 @@ namespace Unity.Places
     }
   }
 }
-

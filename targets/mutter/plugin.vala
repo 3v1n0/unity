@@ -947,10 +947,10 @@ namespace Unity
                 {
                   window = actor as Mutter.Window;
 
-                  if (start_pan_window.get_window_type () != Mutter.MetaCompWindowType.NORMAL &&
-                      start_pan_window.get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
-                      start_pan_window.get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG &&
-                      start_pan_window.get_window_type () != Mutter.MetaCompWindowType.UTILITY)
+                  if (window.get_window_type () != Mutter.MetaCompWindowType.NORMAL &&
+                      window.get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
+                      window.get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG &&
+                      window.get_window_type () != Mutter.MetaCompWindowType.UTILITY)
                     window = null;
                 }
 

@@ -183,7 +183,7 @@ namespace Unity.Places
     }
   }
 
-  public class HomeButton : Ctk.Button
+  public class HomeButton : Button
   {
     static const int ICON_SIZE = 128;
 
@@ -201,6 +201,7 @@ namespace Unity.Places
 
     construct
     {
+      padding = { 0.0f, 0.0f, 8.0f, 0.0f };
       get_image ().size = 128;
       get_image ().filename = icon;
       get_text ().text = name;

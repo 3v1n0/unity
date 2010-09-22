@@ -66,7 +66,7 @@ namespace Unity
       if (theme.has_icon (icon_name))
         {
           var info = theme.lookup_icon (icon_name,
-                                             48,
+                                             32,
                                              0);
           if (info != null)
             {
