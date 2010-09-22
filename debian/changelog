@@ -1,3 +1,10 @@
+unity (0.2.40-0ubuntu2) UNRELEASED; urgency=low
+
+  * debian/control:
+    - depends on latest libindicator-dev for ABI change transition (LP: #637692)
+
+ -- Didier Roche <didrocks@ubuntu.com>  Wed, 22 Sep 2010 18:42:06 +0200
+
 unity (0.2.40-0ubuntu1) maverick; urgency=low
 
   * New upstream release:
