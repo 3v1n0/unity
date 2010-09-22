@@ -62,9 +62,9 @@ namespace Unity
 
     public uint size { get { return cache.size; } }
 
-    private PriorityQueue<PixbufCacheTask> queue;
+    private Gee.Queue<PixbufCacheTask> queue;
 
-    private uint queue_timeout = 0;
+    private uint queue_source = 0;
 
     /*
      * Construction
@@ -83,19 +83,9 @@ namespace Unity
 
     construct
     {
-      queue = new PriorityQueue<PixbufCacheTask> ();
+      queue = new LinkedList<PixbufCacheTask> ();
       theme = Gtk.IconTheme.get_default ();
       cache = new HashMap<string, Gdk.Pixbuf> ();
-    }
-
-    ~PixbufCache ()
-    {
-      /* Make sure we don't process icons after we're dead */
-      if (queue_timeout != 0)
-        {
-          Source.remove (queue_timeout);
-          queue_timeout = 0;
-        }
     }
 
     private void on_shell_destroyed ()
@@ -136,18 +126,19 @@ namespace Unity
       cache.clear ();
     }
 
-    private async void process_icon_queue ()
+    private async void process_icon_queue_async ()
     {
       /* Hardcoded numbers make gord cry - but so be it - we are taking
        * a second guess of the inode size here, for the better of mankind */
       uchar[] buf = new uchar[4096];
-    
-      while (queue.size > 0)
+      int count = 0;
+      var timer = new Timer ();
+      PixbufCacheTask task;
+      
+      while ((task = queue.poll()) != null)
         {
-          var task = queue.poll ();
-
           if (task.image is Ctk.Image)
-            {              
+            {
               switch (task.type)
                 {
                   case PixbufRequestType.ICON_NAME:
@@ -161,19 +152,42 @@ namespace Unity
                               task.type);
                     break;
                 }
-            }
+            }          
+          count++;
         }
+        
+      timer.stop ();
+      debug ("Loaded %i icons in %fms", count, timer.elapsed()*1000);
       
-      /* Open the queue for further processing requests */  
-      queue_timeout = 0;
+      /* Queue depleted */
+      queue_source = 0;
     }
 
-    private bool process_icon_queue_dispatcher ()
+    public void process_icon_queue ()
     {
-      /* The queue_timeout source id is reset in process_icon_queue() when
-       * all icons have been processed */
-      process_icon_queue.begin ();
-      return false;
+      if (queue_source == 0)
+        {
+          /* queue_source is set to 0 by process_icon_queue_async()
+           * when the queue is depleted.
+           * It's important that we dispatch in an idle call here since
+           * it gives clients a chance to queue more icons before we
+           * hammer the IO */
+          queue_source = Idle.add (dispatch_process_icon_queue_async);          
+        }
+    }
+    
+    private bool dispatch_process_icon_queue_async ()
+    {
+      /* Run three processings in "parallel". While we are not multithreaded,
+       * it still makes sense to do since one branch may be waiting in
+       * 'yield' for async IO, while the other can be parsing image data.
+       * The number of parallel workers has been chosen by best perceived
+       * responsiveness for bringing up the Applications place */
+       process_icon_queue_async.begin ();
+       process_icon_queue_async.begin ();
+       process_icon_queue_async.begin ();
+       
+       return false;
     }
 
     /**
@@ -205,10 +219,9 @@ namespace Unity
       task.size = size;
       task.type = PixbufRequestType.ICON_NAME;
 
-      queue.add (task);
+      queue.offer (task);
 
-      if (queue_timeout == 0)
-        queue_timeout = Idle.add (process_icon_queue_dispatcher);
+      process_icon_queue ();
     }
 
     private async void set_image_from_icon_name_real (PixbufCacheTask task,
@@ -277,10 +290,9 @@ namespace Unity
       task.size = size;
       task.type = PixbufRequestType.GICON_STRING;
 
-      queue.add (task);
+      queue.offer (task);
 
-      if (queue_timeout == 0)
-        queue_timeout = Idle.add (process_icon_queue_dispatcher);
+      process_icon_queue ();
     }
 
     private async void set_image_from_gicon_string_real (PixbufCacheTask task,

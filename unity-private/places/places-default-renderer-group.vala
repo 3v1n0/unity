@@ -426,10 +426,6 @@ namespace Unity.Places
               more_results_button.count = 0;
             }
         }
-
-      // FIXME: WHy was this call ever here?
-      //if (n_results == 1)
-      //  PixbufCache.get_default ().load_iteration ();
     }
 
     private void on_n_cols_changed ()
