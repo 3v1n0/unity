@@ -133,6 +133,21 @@ namespace Unity
       window.hide ();
       this.plugin.plugin.minimize_completed (window);
     }
+    
+    private bool force_activate ()
+    {
+      if (this.last_mapped is Mutter.Window)
+        {
+          unowned Mutter.MetaWindow w = this.last_mapped.get_meta_window ();
+          unowned Mutter.MetaDisplay d = Mutter.MetaWindow.get_display (w);
+
+          Mutter.MetaWindow.activate (this.last_mapped.get_meta_window (),
+                                      Mutter.MetaDisplay.get_current_time (d));
+        }
+
+      return false;
+    }
+
 
     private void window_mapped (Plugin plugin, Mutter.Window window)
     {
@@ -155,6 +170,7 @@ namespace Unity
                                       Mutter.MetaWindow.get_user_time (
                                             window.get_meta_window ()));
           this.last_mapped = window;
+          Timeout.add (0, this.force_activate);
         }
 
       Clutter.Animation anim = null;
