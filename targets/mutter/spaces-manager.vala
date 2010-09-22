@@ -69,50 +69,50 @@ namespace Unity {
 
     public override bool can_drag ()
     {
-      return true;
+      return false;
     }
 
   }
-  
+
   public class WorkspaceClone : Clutter.Group
   {
     bool gridded;
     Unity.Plugin plugin;
     public unowned Mutter.MetaWorkspace workspace { get; private set; }
-    
+
     public WorkspaceClone (Mutter.MetaWorkspace wsp, Unity.Plugin plugin)
     {
       workspace = wsp;
       this.plugin = plugin;
-      
+
       actor_added.connect (() => {
         if (gridded)
           grid ();
       });
-      
+
       actor_removed.connect (() => {
         if (gridded)
           grid ();
       });
     }
-    
+
     private List<Clutter.Actor> toplevel_windows ()
     {
       List<Clutter.Actor> windows = new List<Clutter.Actor> ();
-      
+
       foreach (Clutter.Actor actor in get_children ())
         if (actor is ExposeClone && (actor as ExposeClone).source is Mutter.Window)
           windows.prepend (actor);
-      
+
       return windows;
     }
-        
+
     public void grid ()
     {
       gridded = true;
       plugin.expose_manager.position_windows_on_grid (toplevel_windows (), 50, 50, 50, 50);
     }
-    
+
     public void ungrid ()
     {
       gridded = false;
@@ -193,13 +193,13 @@ namespace Unity {
 
       if (background is Clutter.Actor)
         background.destroy ();
-        
+
       if (selector_group is Clutter.Actor)
         selector_group.destroy ();
 
       background = new Clutter.Rectangle.with_color ({0, 0, 0, 255});
       selector_group = new Clutter.Group ();
-      
+
       unowned Mutter.MetaScreen screen = plugin.plugin.get_screen ();
       unowned GLib.List<Mutter.MetaWorkspace> workspaces = Mutter.MetaScreen.get_workspaces (screen);
       unowned Clutter.Container window_group = plugin.plugin.get_normal_window_group() as Clutter.Container;
@@ -222,28 +222,28 @@ namespace Unity {
           clone.raise_top ();
           clone.show ();
           clone.opacity = 200;
-          
+
           unowned Mutter.MetaWorkspace cpy = workspace;
-          clone.button_release_event.connect (() => { 
+          clone.button_release_event.connect (() => {
             select_workspace (cpy);
-            return true; 
+            return true;
           });
-          
-          clone.enter_event.connect (() => { 
+
+          clone.enter_event.connect (() => {
             clone.opacity = 255;
             clone.raise_top ();
-            return true; 
+            return true;
           });
-          
-          clone.leave_event.connect (() => { 
-            clone.opacity = 200; 
-            return true; 
+
+          clone.leave_event.connect (() => {
+            clone.opacity = 200;
+            return true;
           });
         }
 
       window_group.add_actor (selector_group);
       selector_group.raise_top ();
-      
+
       layout_workspaces (clones, screen);
 
       unowned GLib.List<Mutter.Window> windows = plugin.plugin.get_windows ();
@@ -272,7 +272,7 @@ namespace Unity {
 
       return false;
     }
-    
+
     private void select_workspace (Mutter.MetaWorkspace? workspace) {
       if (workspace == null)
         {
@@ -289,7 +289,7 @@ namespace Unity {
 
       global_shell.get_stage ().captured_event.disconnect (on_stage_capture_event);
     }
-    
+
     private Clutter.Actor workspace_clone (Mutter.MetaWorkspace workspace) {
       WorkspaceClone wsp;
       unowned GLib.List<Mutter.Window> windows;
@@ -314,10 +314,10 @@ namespace Unity {
               clone.reactive = true;
               clone.darken = 25;
               clone.enable_dnd = true;
-              
+
               clone.drag_dropped.connect ((t) => {
                 WorkspaceClone new_parent = clone.pre_drag_parent as WorkspaceClone;
-                
+
                 while (!(t is Clutter.Stage))
                   {
                     if (t is WorkspaceClone)
@@ -327,20 +327,20 @@ namespace Unity {
                       }
                     t = t.get_parent ();
                   }
-             
+
                 float x, y;
-                        
+
                 clone.move_anchor_point_from_gravity (Clutter.Gravity.CENTER);
                 new_parent.transform_stage_point (clone.x, clone.y, out x, out y);
-                        
+
                 clone.set_scale (clone.pre_drag_scale_x, clone.pre_drag_scale_y);
                 clone.set_position (x, y);
-                        
+
                 clone.move_anchor_point_from_gravity (Clutter.Gravity.NORTH_WEST);
 
                 clone.reparent (new_parent);
-                        
-                Mutter.MetaWindow.change_workspace_by_index ((clone.source as Mutter.Window).get_meta_window (), 
+
+                Mutter.MetaWindow.change_workspace_by_index ((clone.source as Mutter.Window).get_meta_window (),
                                                              Mutter.MetaWorkspace.index (new_parent.workspace),
                                                              true,
                                                              plugin.get_current_time ());
@@ -350,7 +350,7 @@ namespace Unity {
 
               clone.set_size (window.width, window.height);
               clone.set_position (window.x, window.y);
-              
+
               clone.button_release_event.connect (() => {
                 uint32 time_;
 
@@ -360,7 +360,7 @@ namespace Unity {
                 time_ = Mutter.MetaDisplay.get_current_time (Mutter.MetaWindow.get_display (meta));
                 Mutter.MetaWorkspace.activate (Mutter.MetaWindow.get_workspace (meta), time_);
                 Mutter.MetaWindow.activate (meta, time_);
-                
+
                 GLib.Timeout.add (250, () => { Mutter.MetaWindow.activate (meta, time_); return false; });
 
                 return false;
@@ -376,9 +376,9 @@ namespace Unity {
       wsp.add_actor (background_clone);
       background_clone.lower_bottom ();
       background_clone.show ();
-      
+
       wsp.grid ();
-      
+
       wsp.set_size (background_clone.width, background_clone.height);
 
       return wsp;
@@ -411,7 +411,7 @@ namespace Unity {
                       "y", (float) yoffset,
                       "scale-x", 1.0f,
                       "scale-y", 1.0f);
-              
+
               (clone as WorkspaceClone).ungrid ();
 
               anim.completed.connect (() => {

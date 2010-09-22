@@ -16,12 +16,12 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
- 
+
 using Unity.Launcher;
- 
+
 namespace Unity.Places
 {
-  
+
   public class PlaceEntryScrollerChildController : ScrollerChildController
   {
     public PlaceEntry entry { get; construct; }
@@ -49,7 +49,7 @@ namespace Unity.Places
     private bool get_sections ()
     {
       Dee.Model sections;
-      
+
       /* We do this so the sections model actually populates with something
        * before we show it
        */
@@ -59,7 +59,7 @@ namespace Unity.Places
 
       return false;
     }
-    
+
     public override void activate ()
     {
       clicked (0);
@@ -77,7 +77,7 @@ namespace Unity.Places
 
       Dee.Model             sections = entry.sections_model;
       unowned Dee.ModelIter iter = sections.get_first_iter ();
-     
+
       while (iter != null && !sections.is_last (iter))
         {
           var name = sections.get_string (iter, 0);
@@ -91,7 +91,7 @@ namespace Unity.Places
             clicked (item.property_get_int ("section-id"));
           });
           root.child_append (item);
-         
+
           iter = sections.next (iter);
         }
 
@@ -100,7 +100,7 @@ namespace Unity.Places
 
     public override bool can_drag ()
     {
-      return true;
+      return false;
     }
   }
 }
