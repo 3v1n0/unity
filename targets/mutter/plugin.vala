@@ -16,6 +16,8 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
+
+using GConf;
 using Unity;
 using Unity.Testing;
 
@@ -106,6 +108,11 @@ namespace Unity
       get { return _plugin; }
       set { _plugin = value; Idle.add (real_construct); }
     }
+    private bool _super_key_enable=true;
+    public bool super_key_enable {
+      get { return _super_key_enable; }
+      set { _super_key_enable = value; }
+    }
 
     public ExposeManager expose_manager { get; private set; }
     
@@ -187,7 +194,11 @@ namespace Unity
       RIGHT
     }
     private MaximizeType maximize_type = MaximizeType.NONE;
-      
+
+    /* const */
+    private const string GCONF_DIR = "/desktop/unity/launcher";
+    private const string GCONF_SUPER_KEY_ENABLE_KEY = "super_key_enable";
+
     construct
     {
       is_starting = true;
@@ -225,7 +236,7 @@ namespace Unity
           this.screensaver = this.screensaver_conn.get_object ("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
           this.screensaver.ActiveChanged.connect (got_screensaver_changed);
         }
-      catch (Error e)
+      catch (GLib.Error e)
         {
           warning (e.message);
         }
@@ -273,9 +284,26 @@ namespace Unity
       /* we need to hook into the super key bound by mutter for g-shell.
          don't ask me why mutter binds things for g-shell explictly...
          */
+      var gc = GConf.Client.get_default();
       Mutter.MetaDisplay display = Mutter.MetaScreen.get_display (plugin.get_screen ());
+
+      try {
+      	  super_key_enable = gc.get_bool(GCONF_DIR + "/" + GCONF_SUPER_KEY_ENABLE_KEY);
+      } catch (GLib.Error e) {
+          super_key_enable = true;
+          warning("Cannot find super_key_enable gconf key");
+      }
+      try {
+          gc.add_dir(GCONF_DIR, GConf.ClientPreloadType.ONELEVEL);
+      	  gc.notify_add(GCONF_DIR + "/" + GCONF_SUPER_KEY_ENABLE_KEY, this.gconf_super_key_enable_cb);
+      } catch (GLib.Error e) {
+          warning("Cannot set gconf callback function of super_key_enable");
+      }
+
       display.overlay_key_down.connect (() => {
-          super_key_active = true;
+          if (super_key_enable) {
+              super_key_active = true;
+          }
       });
 
       display.overlay_key.connect (() => {
@@ -287,7 +315,9 @@ namespace Unity
       });
 
       display.overlay_key_with_modifier_down.connect ((keysym) => {
-        super_key_modifier_press (keysym);
+          if (super_key_enable) {
+            super_key_modifier_press (keysym);
+          }
       });
 
       /* Setup the backgrounds */
@@ -359,6 +389,16 @@ namespace Unity
       GLib.Idle.add (() => { is_starting = false; return false; });
       return false;
       
+    }
+
+    private void gconf_super_key_enable_cb(GConf.Client gc, uint cxnid, GConf.Entry entry) {
+      bool new_value = true;
+      try {
+          new_value = gc.get_bool(GCONF_DIR + "/" + GCONF_SUPER_KEY_ENABLE_KEY);
+      } catch (GLib.Error e) {
+          new_value = true;
+      }
+      super_key_enable = new_value;
     }
 
     private void on_focus_window_changed ()
