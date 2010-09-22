@@ -211,6 +211,7 @@ namespace Unity.Launcher
       //on drag start we need to disengage our own drag attempts
       var drag_controller = Drag.Controller.get_default ();
       drag_controller.drag_start.connect (() => {
+        Unity.global_shell.remove_fullscreen_request (this);
         is_scrolling = false;
         button_down = false;
         Unity.Launcher.disable_quicklists = true;
