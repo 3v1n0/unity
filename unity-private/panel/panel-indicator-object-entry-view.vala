@@ -23,6 +23,7 @@ namespace Unity.Panel.Indicators
   {
     public unowned Indicator.ObjectEntry entry { get; construct; }
     public signal void menu_moved (Gtk.MenuDirectionType type);
+    public signal void entry_shown ();
 
     private Clutter.CairoTexture bg;
     public  Ctk.Image     image;
@@ -469,6 +470,8 @@ namespace Unity.Panel.Indicators
           entry.menu.move_current.connect (menu_key_moved);
           entry.menu.notify["visible"].connect (menu_vis_changed);
           bg.opacity = 255;
+
+          entry_shown ();
         }
     }
 
