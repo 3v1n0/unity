@@ -176,6 +176,15 @@ namespace Unity
       return false;
     }
 
+    /**
+     * If the icon is already cached then set it immediately on @image. Otherwise
+     * does async IO to load and cache the icon, then setting it on @image.
+     *
+     * Note that this means that you should treat this method as an async
+     * operation for all intents and purposes. You can not count on
+     * image.pixbuf != null when this method call returns. That may just as well
+     * happen in a subsequent idle call.
+     */
     public void set_image_from_icon_name (Ctk.Image image,
                                           string    icon_name,
                                           int       size)
@@ -239,6 +248,15 @@ namespace Unity
         }
     }
 
+    /**
+     * If the icon is already cached then set it immediately on @image. Otherwise
+     * does async IO to load and cache the icon, then setting it on @image.
+     *
+     * Note that this means that you should treat this method as an async
+     * operation for all intents and purposes. You can not count on
+     * image.pixbuf != null when this method call returns. That may just as well
+     * happen in a subsequent idle call.
+     */
     public void set_image_from_gicon_string (Ctk.Image image,
                                              string    gicon_as_string,
                                              int       size)
@@ -333,6 +351,15 @@ namespace Unity
         }
     }
 
+    /**
+     * If @icon is already cached then set it immediately on @image. Otherwise
+     * does async IO to load and cache the icon, then setting it on @image.
+     *
+     * Note that this means that you should treat this method as an async
+     * operation for all intents and purposes. You can not count on
+     * image.pixbuf != null when this method call returns. That may just as well
+     * happen in a subsequent idle call.
+     */
     public async void set_image_from_gicon (Ctk.Image image,
                                             GLib.Icon icon,
                                             int       size)
