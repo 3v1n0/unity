@@ -427,8 +427,9 @@ namespace Unity.Places
             }
         }
 
-      if (n_results == 1)
-        PixbufCache.get_default ().load_iteration ();
+      // FIXME: WHy was this call ever here?
+      //if (n_results == 1)
+      //  PixbufCache.get_default ().load_iteration ();
     }
 
     private void on_n_cols_changed ()
