@@ -43,6 +43,34 @@ namespace Unity.Panel.Indicators
               spacing:3,
               homogeneous:false,
               reactive:true);
+
+      if (entry.label != null)
+        {
+          if ((entry.label.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
+            {
+              this.reactive = true;
+              this.skip = false;
+            }
+          else
+            {
+              this.reactive = false;
+              this.skip = true;
+            }
+        }
+
+      if (entry.image != null)
+        {
+          if ((entry.image.get_flags () & Gtk.WidgetFlags.SENSITIVE) != 0)
+            {
+              this.reactive = true;
+              this.skip = false;
+            }
+          else
+            {
+              this.reactive = false;
+              this.skip = true;
+            }
+        }
     }
 
     ~IndicatorObjectEntryView ()
