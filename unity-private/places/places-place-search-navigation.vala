@@ -138,10 +138,14 @@ namespace Unity.Places
 
     private async void refresh_states ()
     {
+      if (remote == null)
+        return;
+
       try {
         var states = yield remote.get_state ();
         back_sensitive = states[0].sensitive;
         forward_sensitive = states[1].sensitive;
+
       } catch (DBus.Error e) {
         warning (@"Unable to refresh browser navigation state: $(e.message)");
       }
@@ -149,6 +153,9 @@ namespace Unity.Places
 
     private async void go_forward ()
     {
+      if (remote == null)
+        return;
+
       try {
         var states = yield remote.go_forward ();
         back_sensitive = states[0].sensitive;
@@ -160,6 +167,9 @@ namespace Unity.Places
 
     private async void go_back ()
     {
+      if (remote == null)
+        return;
+
       try {       
         var states = yield remote.go_back ();
         back_sensitive = states[0].sensitive;
@@ -188,7 +198,7 @@ namespace Unity.Places
       cr.set_line_width (1.0f);
       cr.translate (-0.5f, -0.5f);
 
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, back_sensitive ? 1.0f : 0.5f);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, back_sensitive ? 1.0f : 0.125f);
 
       cr.move_to (width/2 - ARROW_SIZE, height/2);
       cr.line_to (width/2 + ARROW_SIZE, height/2 - ARROW_SIZE);
@@ -209,7 +219,7 @@ namespace Unity.Places
       cr.set_line_width (1.0f);
       cr.translate (0.5f, -0.5f);
 
-      cr.set_source_rgba (1.0f, 1.0f, 1.0f, forward_sensitive ? 1.0f : 0.5f);
+      cr.set_source_rgba (1.0f, 1.0f, 1.0f, forward_sensitive ? 1.0f : 0.125f);
 
       cr.move_to (width/2 + ARROW_SIZE, height/2);
       cr.line_to (width/2 - ARROW_SIZE, height/2 - ARROW_SIZE);

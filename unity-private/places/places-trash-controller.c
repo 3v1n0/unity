@@ -404,7 +404,7 @@ static void unity_places_trash_controller_real_get_menu_navigation (UnityLaunche
 	dbusmenu_menuitem_set_root (root, TRUE);
 	item = NULL;
 	item = (_tmp0_ = dbusmenu_menuitem_new (), _g_object_unref0 (item), _tmp0_);
-	dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_LABEL, "Open");
+	dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_LABEL, _ ("Open"));
 	dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 	dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
 	dbusmenu_menuitem_child_append (root, item);
@@ -412,7 +412,7 @@ static void unity_places_trash_controller_real_get_menu_navigation (UnityLaunche
 	if (self->priv->n_items != 0) {
 		DbusmenuMenuitem* _tmp1_;
 		item = (_tmp1_ = dbusmenu_menuitem_new (), _g_object_unref0 (item), _tmp1_);
-		dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_LABEL, "Empty Trash");
+		dbusmenu_menuitem_property_set (item, DBUSMENU_MENUITEM_PROP_LABEL, _ ("Empty Trash"));
 		dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_ENABLED, TRUE);
 		dbusmenu_menuitem_property_set_bool (item, DBUSMENU_MENUITEM_PROP_VISIBLE, TRUE);
 		dbusmenu_menuitem_child_append (root, item);
@@ -588,7 +588,7 @@ static gboolean unity_places_trash_controller_real_can_drag (UnityLauncherScroll
 	UnityPlacesTrashController * self;
 	gboolean result = FALSE;
 	self = (UnityPlacesTrashController*) base;
-	result = TRUE;
+	result = FALSE;
 	return result;
 }
 

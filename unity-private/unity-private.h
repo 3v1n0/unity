@@ -1574,12 +1574,12 @@ struct _UnityPlacesHomeRendererClass {
 };
 
 struct _UnityPlacesHomeButton {
-	CtkButton parent_instance;
+	UnityPlacesButton parent_instance;
 	UnityPlacesHomeButtonPrivate * priv;
 };
 
 struct _UnityPlacesHomeButtonClass {
-	CtkButtonClass parent_class;
+	UnityPlacesButtonClass parent_class;
 };
 
 struct _UnityPlacesPlaceModel {
@@ -2166,7 +2166,6 @@ UnityPanelWindowButtons* unity_panel_window_buttons_new (void);
 UnityPanelWindowButtons* unity_panel_window_buttons_construct (GType object_type);
 GType unity_panel_window_button_get_type (void) G_GNUC_CONST;
 #define UNITY_PANEL_WINDOW_BUTTON_AMBIANCE "/usr/share/themes/Ambiance/metacity-1"
-#define UNITY_PANEL_WINDOW_BUTTON_AMBIANCE_BETA "/usr/share/themes/Ambiance-maverick-beta/metacity-1"
 UnityPanelWindowButton* unity_panel_window_button_new (const char* filename);
 UnityPanelWindowButton* unity_panel_window_button_construct (GType object_type, const char* filename);
 const char* unity_panel_window_button_get_filename (UnityPanelWindowButton* self);
@@ -2373,6 +2372,7 @@ void unity_places_place_entry_dbus_place_entry_info_destroy (UnityPlacesPlaceEnt
 GType unity_places_place_home_entry_get_type (void) G_GNUC_CONST;
 UnityPlacesPlaceHomeEntry* unity_places_place_home_entry_new (UnityShell* shell, UnityPlacesPlaceModel* model);
 UnityPlacesPlaceHomeEntry* unity_places_place_home_entry_construct (GType object_type, UnityShell* shell, UnityPlacesPlaceModel* model);
+UnityPlacesPlaceEntry* unity_places_place_home_entry_get_entry_for_uri (UnityPlacesPlaceHomeEntry* self, const char* uri);
 UnityShell* unity_places_place_home_entry_get_shell (UnityPlacesPlaceHomeEntry* self);
 UnityPlacesPlaceModel* unity_places_place_home_entry_get_place_model (UnityPlacesPlaceHomeEntry* self);
 void unity_places_place_home_entry_set_place_model (UnityPlacesPlaceHomeEntry* self, UnityPlacesPlaceModel* value);
@@ -2422,6 +2422,8 @@ void unity_places_place_search_bar_reset (UnityPlacesPlaceSearchBar* self);
 void unity_places_place_search_bar_search (UnityPlacesPlaceSearchBar* self, const char* text);
 char* unity_places_place_search_bar_get_search_text (UnityPlacesPlaceSearchBar* self);
 void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearchBar* self, UnityPlacesPlaceEntry* entry, gint x, guint section);
+gboolean unity_places_place_search_bar_get_search_fail (UnityPlacesPlaceSearchBar* self);
+void unity_places_place_search_bar_set_search_fail (UnityPlacesPlaceSearchBar* self, gboolean value);
 GType unity_places_place_search_bar_background_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_BG "/usr/share/unity/dash_background.png"
 GType unity_places_place_search_navigation_get_type (void) G_GNUC_CONST;
@@ -2430,6 +2432,8 @@ UnityPlacesPlaceSearchBarBackground* unity_places_place_search_bar_background_co
 gboolean unity_places_place_search_bar_background_update_background (UnityPlacesPlaceSearchBarBackground* self);
 gint unity_places_place_search_bar_background_get_entry_position (UnityPlacesPlaceSearchBarBackground* self);
 void unity_places_place_search_bar_background_set_entry_position (UnityPlacesPlaceSearchBarBackground* self, gint value);
+gboolean unity_places_place_search_bar_background_get_search_empty (UnityPlacesPlaceSearchBarBackground* self);
+void unity_places_place_search_bar_background_set_search_empty (UnityPlacesPlaceSearchBarBackground* self, gboolean value);
 UnityPlacesPlaceSearchNavigation* unity_places_place_search_bar_background_get_navigation (UnityPlacesPlaceSearchBarBackground* self);
 UnityPlacesPlaceSearchEntry* unity_places_place_search_bar_background_get_search_entry (UnityPlacesPlaceSearchBarBackground* self);
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_new (void);

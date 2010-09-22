@@ -46,8 +46,7 @@ struct _UnityIoReadStreamAsyncData {
 	GAsyncResult* _res_;
 	GSimpleAsyncResult* _async_result;
 	GInputStream* input;
-	guchar* buffer;
-	gint buffer_length1;
+	void* buffer;
 	gsize buffer_lenght;
 	gint io_priority;
 	GCancellable* cancellable;
@@ -109,12 +108,12 @@ static gint _unity_io_system_data_dirs_size_ = 0;
 
 static void unity_io_read_stream_async_data_free (gpointer _data);
 static void unity_io_read_stream_async_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
-void unity_io_read_stream_async (GInputStream* input, guchar* buffer, int buffer_length1, gsize buffer_lenght, gint io_priority, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
+void unity_io_read_stream_async (GInputStream* input, void* buffer, gsize buffer_lenght, gint io_priority, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void unity_io_read_stream_finish (GAsyncResult* _res_, void** data, gsize* size, GError** error);
 static gboolean unity_io_read_stream_async_co (UnityIoReadStreamAsyncData* data);
 static void* _g_realloc_grealloc_func (void* data, gsize size);
 static void unity_io_open_from_dirs_data_free (gpointer _data);
-static char** _vala_array_dup2 (char** self, int length);
+static char** _vala_array_dup1 (char** self, int length);
 static void unity_io_open_from_dirs_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 void unity_io_open_from_dirs (const char* filename, char** dirs, int dirs_length1, GAsyncReadyCallback _callback_, gpointer _user_data_);
 GFileInputStream* unity_io_open_from_dirs_finish (GAsyncResult* _res_, GError** error);
@@ -125,7 +124,7 @@ void unity_io_open_from_data_dirs (const char* filename, GAsyncReadyCallback _ca
 GFileInputStream* unity_io_open_from_data_dirs_finish (GAsyncResult* _res_, GError** error);
 static gboolean unity_io_open_from_data_dirs_co (UnityIoOpenFromDataDirsData* data);
 char** unity_io_get_system_data_dirs (int* result_length1);
-static char** _vala_array_dup3 (char** self, int length);
+static char** _vala_array_dup2 (char** self, int length);
 static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static gint _vala_array_length (gpointer array);
@@ -136,7 +135,6 @@ static void unity_io_read_stream_async_data_free (gpointer _data) {
 	UnityIoReadStreamAsyncData* data;
 	data = _data;
 	_g_object_unref0 (data->input);
-	data->buffer = (g_free (data->buffer), NULL);
 	_g_object_unref0 (data->cancellable);
 	g_slice_free (UnityIoReadStreamAsyncData, data);
 }
@@ -147,14 +145,13 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-void unity_io_read_stream_async (GInputStream* input, guchar* buffer, int buffer_length1, gsize buffer_lenght, gint io_priority, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_) {
+void unity_io_read_stream_async (GInputStream* input, void* buffer, gsize buffer_lenght, gint io_priority, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_) {
 	UnityIoReadStreamAsyncData* _data_;
 	_data_ = g_slice_new0 (UnityIoReadStreamAsyncData);
 	_data_->_async_result = g_simple_async_result_new (g_object_newv (G_TYPE_OBJECT, 0, NULL), _callback_, _user_data_, unity_io_read_stream_async);
 	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, unity_io_read_stream_async_data_free);
 	_data_->input = _g_object_ref0 (input);
 	_data_->buffer = buffer;
-	_data_->buffer_length1 = buffer_length1;
 	_data_->buffer_lenght = buffer_lenght;
 	_data_->io_priority = io_priority;
 	_data_->cancellable = _g_object_ref0 (cancellable);
@@ -216,7 +213,6 @@ static gboolean unity_io_read_stream_async_co (UnityIoReadStreamAsyncData* data)
 			g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
 			g_error_free (data->_inner_error_);
 			_g_object_unref0 (data->output);
-			data->buffer = (g_free (data->buffer), NULL);
 			{
 				if (data->_state_ == 0) {
 					g_simple_async_result_complete_in_idle (data->_async_result);
@@ -236,7 +232,6 @@ static gboolean unity_io_read_stream_async_co (UnityIoReadStreamAsyncData* data)
 			g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
 			g_error_free (data->_inner_error_);
 			_g_object_unref0 (data->output);
-			data->buffer = (g_free (data->buffer), NULL);
 			{
 				if (data->_state_ == 0) {
 					g_simple_async_result_complete_in_idle (data->_async_result);
@@ -256,7 +251,6 @@ static gboolean unity_io_read_stream_async_co (UnityIoReadStreamAsyncData* data)
 		g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
 		g_error_free (data->_inner_error_);
 		_g_object_unref0 (data->output);
-		data->buffer = (g_free (data->buffer), NULL);
 		{
 			if (data->_state_ == 0) {
 				g_simple_async_result_complete_in_idle (data->_async_result);
@@ -268,7 +262,6 @@ static gboolean unity_io_read_stream_async_co (UnityIoReadStreamAsyncData* data)
 		}
 	}
 	_g_object_unref0 (data->output);
-	data->buffer = (g_free (data->buffer), NULL);
 	{
 		if (data->_state_ == 0) {
 			g_simple_async_result_complete_in_idle (data->_async_result);
@@ -291,7 +284,7 @@ static void unity_io_open_from_dirs_data_free (gpointer _data) {
 }
 
 
-static char** _vala_array_dup2 (char** self, int length) {
+static char** _vala_array_dup1 (char** self, int length) {
 	char** result;
 	int i;
 	result = g_new0 (char*, length + 1);
@@ -309,7 +302,7 @@ void unity_io_open_from_dirs (const char* filename, char** dirs, int dirs_length
 	_data_->_async_result = g_simple_async_result_new (g_object_newv (G_TYPE_OBJECT, 0, NULL), _callback_, _user_data_, unity_io_open_from_dirs);
 	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, unity_io_open_from_dirs_data_free);
 	_data_->filename = g_strdup (filename);
-	_data_->dirs = (_tmp0_ = dirs, (_tmp0_ == NULL) ? ((gpointer) _tmp0_) : _vala_array_dup2 (_tmp0_, dirs_length1));
+	_data_->dirs = (_tmp0_ = dirs, (_tmp0_ == NULL) ? ((gpointer) _tmp0_) : _vala_array_dup1 (_tmp0_, dirs_length1));
 	_data_->dirs_length1 = dirs_length1;
 	unity_io_open_from_dirs_co (_data_);
 }
@@ -618,7 +611,7 @@ static gboolean unity_io_open_from_data_dirs_co (UnityIoOpenFromDataDirsData* da
 }
 
 
-static char** _vala_array_dup3 (char** self, int length) {
+static char** _vala_array_dup2 (char** self, int length) {
 	char** result;
 	int i;
 	result = g_new0 (char*, length + 1);
@@ -638,7 +631,7 @@ char** unity_io_get_system_data_dirs (int* result_length1) {
 		char** _tmp1_;
 		unity_io_system_data_dirs = (_tmp1_ = _tmp0_ = g_strsplit (g_getenv ("XDG_DATA_DIRS"), ":", 0), unity_io_system_data_dirs = (_vala_array_free (unity_io_system_data_dirs, unity_io_system_data_dirs_length1, (GDestroyNotify) g_free), NULL), unity_io_system_data_dirs_length1 = _vala_array_length (_tmp0_), _unity_io_system_data_dirs_size_ = unity_io_system_data_dirs_length1, _tmp1_);
 	}
-	result = (_tmp3_ = (_tmp2_ = unity_io_system_data_dirs, (_tmp2_ == NULL) ? ((gpointer) _tmp2_) : _vala_array_dup3 (_tmp2_, unity_io_system_data_dirs_length1)), *result_length1 = unity_io_system_data_dirs_length1, _tmp3_);
+	result = (_tmp3_ = (_tmp2_ = unity_io_system_data_dirs, (_tmp2_ == NULL) ? ((gpointer) _tmp2_) : _vala_array_dup2 (_tmp2_, unity_io_system_data_dirs_length1)), *result_length1 = unity_io_system_data_dirs_length1, _tmp3_);
 	return result;
 }
 

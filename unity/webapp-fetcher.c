@@ -599,8 +599,8 @@ static gboolean unity_webapp_fetch_file_read_something_async_co (UnityWebappFetc
 		goto _state_0;
 		default:
 		g_assert_not_reached ();
-		case 18:
-		goto _state_18;
+		case 20:
+		goto _state_20;
 	}
 	_state_0:
 	data->size = (gssize) 1024;
@@ -616,10 +616,10 @@ static gboolean unity_webapp_fetch_file_read_something_async_co (UnityWebappFetc
 			}
 			data->_tmp1_ = FALSE;
 			{
-				data->_state_ = 18;
+				data->_state_ = 20;
 				g_input_stream_read_async ((GInputStream*) data->self->priv->stream, data->buffer, (gsize) data->size, G_PRIORITY_DEFAULT, NULL, unity_webapp_fetch_file_read_something_async_ready, data);
 				return FALSE;
-				_state_18:
+				_state_20:
 				data->_tmp2_ = g_input_stream_read_finish ((GInputStream*) data->self->priv->stream, data->_res_, &data->_inner_error_);
 				if (data->_inner_error_ != NULL) {
 					goto __catch47_g_error;

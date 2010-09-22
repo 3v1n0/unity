@@ -31,7 +31,6 @@
 #include <gio/gio.h>
 #include <float.h>
 #include <math.h>
-#include <glib/gstdio.h>
 
 
 #define UNITY_PANEL_TYPE_WINDOW_BUTTONS (unity_panel_window_buttons_get_type ())
@@ -91,7 +90,6 @@ struct _UnityPanelWindowButtonClass {
 
 struct _UnityPanelWindowButtonPrivate {
 	char* _filename;
-	gboolean using_beta;
 	gint icon_size;
 	char* directory;
 };
@@ -136,7 +134,6 @@ enum  {
 	UNITY_PANEL_WINDOW_BUTTON_FILENAME
 };
 #define UNITY_PANEL_WINDOW_BUTTON_AMBIANCE "/usr/share/themes/Ambiance/metacity-1"
-#define UNITY_PANEL_WINDOW_BUTTON_AMBIANCE_BETA "/usr/share/themes/Ambiance-maverick-beta/metacity-1"
 static void unity_panel_window_button_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width, float* nat_width);
 static void unity_panel_window_button_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height, float* nat_height);
 const char* unity_panel_window_button_get_filename (UnityPanelWindowButton* self);
@@ -500,40 +497,35 @@ static GObject * unity_panel_window_button_constructor (GType type, guint n_cons
 	self = UNITY_PANEL_WINDOW_BUTTON (obj);
 	_inner_error_ = NULL;
 	{
-		if (self->priv->using_beta = g_file_test (UNITY_PANEL_WINDOW_BUTTON_AMBIANCE_BETA, G_FILE_TEST_EXISTS)) {
-			char* _tmp0_;
-			self->priv->icon_size = 19;
-			self->priv->directory = (_tmp0_ = g_strdup (UNITY_PANEL_WINDOW_BUTTON_AMBIANCE_BETA), _g_free0 (self->priv->directory), _tmp0_);
-		}
 		{
+			char* _tmp0_;
 			char* _tmp1_;
 			char* _tmp2_;
-			char* _tmp3_;
-			ClutterActor* _tmp4_;
+			ClutterActor* _tmp3_;
+			char* _tmp4_;
 			char* _tmp5_;
 			char* _tmp6_;
-			char* _tmp7_;
-			ClutterActor* _tmp8_;
+			ClutterActor* _tmp7_;
+			char* _tmp8_;
 			char* _tmp9_;
 			char* _tmp10_;
-			char* _tmp11_;
-			ClutterActor* _tmp12_;
-			self->bg = (_tmp4_ = (ClutterActor*) g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) self->priv->icon_size, _tmp3_ = g_strconcat (_tmp2_ = g_strconcat (_tmp1_ = g_strconcat (self->priv->directory, "/", NULL), self->priv->_filename, NULL), ".png", NULL))), _g_object_unref0 (self->bg), _tmp4_);
-			_g_free0 (_tmp3_);
+			ClutterActor* _tmp11_;
+			self->bg = (_tmp3_ = (ClutterActor*) g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) self->priv->icon_size, _tmp2_ = g_strconcat (_tmp1_ = g_strconcat (_tmp0_ = g_strconcat (self->priv->directory, "/", NULL), self->priv->_filename, NULL), ".png", NULL))), _g_object_unref0 (self->bg), _tmp3_);
 			_g_free0 (_tmp2_);
 			_g_free0 (_tmp1_);
+			_g_free0 (_tmp0_);
 			ctk_actor_set_background_for_state ((CtkActor*) self, CTK_STATE_NORMAL, self->bg);
 			clutter_actor_show (self->bg);
-			self->bg = (_tmp8_ = (ClutterActor*) g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) self->priv->icon_size, _tmp7_ = g_strconcat (_tmp6_ = g_strconcat (_tmp5_ = g_strconcat (self->priv->directory, "/", NULL), self->priv->_filename, NULL), "_focused_prelight.png", NULL))), _g_object_unref0 (self->bg), _tmp8_);
-			_g_free0 (_tmp7_);
+			self->bg = (_tmp7_ = (ClutterActor*) g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) self->priv->icon_size, _tmp6_ = g_strconcat (_tmp5_ = g_strconcat (_tmp4_ = g_strconcat (self->priv->directory, "/", NULL), self->priv->_filename, NULL), "_focused_prelight.png", NULL))), _g_object_unref0 (self->bg), _tmp7_);
 			_g_free0 (_tmp6_);
 			_g_free0 (_tmp5_);
+			_g_free0 (_tmp4_);
 			ctk_actor_set_background_for_state ((CtkActor*) self, CTK_STATE_PRELIGHT, self->bg);
 			clutter_actor_show (self->bg);
-			self->bg = (_tmp12_ = (ClutterActor*) g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) self->priv->icon_size, _tmp11_ = g_strconcat (_tmp10_ = g_strconcat (_tmp9_ = g_strconcat (self->priv->directory, "/", NULL), self->priv->_filename, NULL), "_focused_pressed.png", NULL))), _g_object_unref0 (self->bg), _tmp12_);
-			_g_free0 (_tmp11_);
+			self->bg = (_tmp11_ = (ClutterActor*) g_object_ref_sink ((CtkImage*) ctk_image_new_from_filename ((guint) self->priv->icon_size, _tmp10_ = g_strconcat (_tmp9_ = g_strconcat (_tmp8_ = g_strconcat (self->priv->directory, "/", NULL), self->priv->_filename, NULL), "_focused_pressed.png", NULL))), _g_object_unref0 (self->bg), _tmp11_);
 			_g_free0 (_tmp10_);
 			_g_free0 (_tmp9_);
+			_g_free0 (_tmp8_);
 			ctk_actor_set_background_for_state ((CtkActor*) self, CTK_STATE_ACTIVE, self->bg);
 			clutter_actor_show (self->bg);
 		}
@@ -544,9 +536,9 @@ static GObject * unity_panel_window_button_constructor (GType type, guint n_cons
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				char* _tmp13_;
-				g_warning ("panel-window-buttons.vala:247: %s", _tmp13_ = g_strconcat ("Unable to load window button theme: You need Ambiance installed: ", string_to_string (e->message), NULL));
-				_g_free0 (_tmp13_);
+				char* _tmp12_;
+				g_warning ("panel-window-buttons.vala:240: %s", _tmp12_ = g_strconcat ("Unable to load window button theme: You need Ambiance installed: ", string_to_string (e->message), NULL));
+				_g_free0 (_tmp12_);
 				_g_error_free0 (e);
 			}
 		}
@@ -575,8 +567,7 @@ static void unity_panel_window_button_class_init (UnityPanelWindowButtonClass * 
 
 static void unity_panel_window_button_instance_init (UnityPanelWindowButton * self) {
 	self->priv = UNITY_PANEL_WINDOW_BUTTON_GET_PRIVATE (self);
-	self->priv->using_beta = FALSE;
-	self->priv->icon_size = 18;
+	self->priv->icon_size = 19;
 	self->priv->directory = g_strdup (UNITY_PANEL_WINDOW_BUTTON_AMBIANCE);
 }
 

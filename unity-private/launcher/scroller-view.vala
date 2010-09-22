@@ -100,6 +100,8 @@ namespace Unity.Launcher
 
     public Clutter.Timeline fling_timeline;
 
+    public Clutter.Timeline autoscroll_timeline;
+
     private float previous_y_position = 0.0f; // the last known y position of the pointer
     private uint previous_y_time = 0; // the time (ms) that previous_y_position was set
     private uint stored_delta = 0;
@@ -191,9 +193,25 @@ namespace Unity.Launcher
         });
       });
 
+      // set a timeline for our auto-scroll animation
+      autoscroll_timeline = new Clutter.Timeline (1000);
+      autoscroll_timeline.loop = true;
+      autoscroll_timeline.new_frame.connect (this.on_autoscroll_frame);
+      autoscroll_timeline.started.connect (() => {
+        cache.invalidate_texture_cache ();
+      });
+
+      autoscroll_timeline.completed.connect (() => {
+        Timeout.add (0, () => {
+          cache.update_texture_cache ();
+          return false;
+        });
+      });
+
       //on drag start we need to disengage our own drag attempts
       var drag_controller = Drag.Controller.get_default ();
       drag_controller.drag_start.connect (() => {
+        Unity.global_shell.remove_fullscreen_request (this);
         is_scrolling = false;
         button_down = false;
         Unity.Launcher.disable_quicklists = true;
@@ -838,6 +856,9 @@ namespace Unity.Launcher
 
     private void model_child_removed (ScrollerChild child)
     {
+      if (child in draw_btf) draw_btf.remove (child);
+      if (child in draw_ftb) draw_ftb.remove (child);
+
       var drag_controller = Drag.Controller.get_default ();
       if (drag_controller.is_dragging)
         {
@@ -870,29 +891,57 @@ namespace Unity.Launcher
       queue_relayout ();
     }
 
-    private void on_auto_scrolling_state_change ()
+    private uint autoscroll_stored_delta = 0;
+    private void on_autoscroll_frame (Clutter.Timeline timeline, int msecs)
     {
-      if (autoscroll_anim_active == false && is_autoscrolling)
-      {
-        Timeout.add (33, () => {
-          float speed = 12.0f - Math.fabsf (autoscroll_mouse_pos_cache);
+      /* using a clutter animation to handle auto-scroll now
+       * doesn't fit the formula from design properly but thats just a fact
+       * of the animation systems being different
+       */
+      uint delta = timeline.get_delta ();
+      delta += autoscroll_stored_delta;
+      if (delta <= 16)
+        {
+          autoscroll_stored_delta = delta;
+          return;
+        }
+
+      while (delta > 33)
+        {
+          delta -= 33;
+          float speed = 0.0f;
+          if (autoscroll_mouse_pos_cache < 0)
+            speed = Math.fabsf (-12 - autoscroll_mouse_pos_cache);
+          else
+            speed = 12.0f - Math.fabsf (autoscroll_mouse_pos_cache);
+
           speed /= 12.0f;
           speed *= 30;
           speed *= autoscroll_direction;
           move_scroll_position (speed, true);
-          autoscroll_anim_active = is_autoscrolling;
+        }
 
-          Clutter.Event motion_event =  { 0 };
-          motion_event.type = Clutter.EventType.MOTION;
-          motion_event.motion.x = last_known_x;
-          motion_event.motion.y = last_known_y;
-          motion_event.motion.stage = get_stage () as Clutter.Stage;
-          motion_event.motion.flags = Clutter.EventFlags.FLAG_SYNTHETIC;
-          passthrough_motion_event (motion_event);
+        Clutter.Event motion_event =  { 0 };
+        motion_event.type = Clutter.EventType.MOTION;
+        motion_event.motion.x = last_known_x;
+        motion_event.motion.y = last_known_y;
+        motion_event.motion.stage = get_stage () as Clutter.Stage;
+        motion_event.motion.flags = Clutter.EventFlags.FLAG_SYNTHETIC;
+        passthrough_motion_event (motion_event);
 
-          return is_autoscrolling;
-        });
-      }
+        autoscroll_stored_delta = delta;
+    }
+
+    private void on_auto_scrolling_state_change ()
+    {
+      if (autoscroll_timeline.is_playing () == false && is_autoscrolling)
+        {
+          autoscroll_timeline.start ();
+        }
+      else if (autoscroll_timeline.is_playing () && is_autoscrolling == false)
+        {
+          autoscroll_timeline.stop ();
+        }
     }
 
     /*

@@ -323,7 +323,7 @@ static gboolean unity_theme_file_path_path_from_theme_co (UnityThemeFilePathPath
 	_state_2:
 	;
 	if (gtk_icon_theme_has_icon (data->theme, data->icon_name)) {
-		data->info = gtk_icon_theme_lookup_icon (data->theme, data->icon_name, 48, 0);
+		data->info = gtk_icon_theme_lookup_icon (data->theme, data->icon_name, 32, 0);
 		if (data->info != NULL) {
 			data->filename = g_strdup (gtk_icon_info_get_filename (data->info));
 			if (g_file_test (data->filename, G_FILE_TEST_IS_REGULAR)) {

@@ -94,9 +94,9 @@ enum  {
 UnityTestingBackground* unity_testing_background_new (void);
 UnityTestingBackground* unity_testing_background_construct (GType object_type);
 static void _unity_testing_background_on_allocation_changed (UnityTestingBackground* self);
-static gboolean _lambda98_ (UnityTestingBackground* self);
+static gboolean _lambda100_ (UnityTestingBackground* self);
 static void _unity_testing_background_update_gradient (UnityTestingBackground* self);
-static gboolean __lambda98__gsource_func (gpointer self);
+static gboolean __lambda100__gsource_func (gpointer self);
 static void _unity_testing_background_on_gconf_changed (UnityTestingBackground* self, GConfClient* client, guint cxnid, GConfEntry* entry);
 static void __unity_testing_background_on_gconf_changed_gconf_client_notify_func (GConfClient* client, guint cnxn_id, GConfEntry* entry, gpointer self);
 static void __unity_testing_background_on_allocation_changed_clutter_actor_allocation_changed (ClutterActor* _sender, const ClutterActorBox* box, ClutterAllocationFlags flags, gpointer self);
@@ -118,7 +118,7 @@ UnityTestingBackground* unity_testing_background_new (void) {
 }
 
 
-static gboolean _lambda98_ (UnityTestingBackground* self) {
+static gboolean _lambda100_ (UnityTestingBackground* self) {
 	gboolean result = FALSE;
 	_unity_testing_background_update_gradient (self);
 	result = FALSE;
@@ -126,16 +126,16 @@ static gboolean _lambda98_ (UnityTestingBackground* self) {
 }
 
 
-static gboolean __lambda98__gsource_func (gpointer self) {
+static gboolean __lambda100__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda98_ (self);
+	result = _lambda100_ (self);
 	return result;
 }
 
 
 static void _unity_testing_background_on_allocation_changed (UnityTestingBackground* self) {
 	g_return_if_fail (self != NULL);
-	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda98__gsource_func, g_object_ref (self), g_object_unref);
+	g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda100__gsource_func, g_object_ref (self), g_object_unref);
 }
 
 
@@ -148,8 +148,6 @@ static void _unity_testing_background_update_gradient (UnityTestingBackground* s
 		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->priv->bg_texture);
 		clutter_actor_show ((ClutterActor*) self->priv->bg_texture);
 	}
-	clutter_actor_set_x ((ClutterActor*) self, 0.0f);
-	clutter_actor_set_y ((ClutterActor*) self, 0.0f);
 	gnome_bg_get_color (self->priv->gbg, &type, &primary, &secondary);
 	clutter_cairo_texture_set_surface_size (self->priv->bg_texture, (guint) clutter_actor_get_width ((ClutterActor*) self), (guint) clutter_actor_get_height ((ClutterActor*) self));
 	{

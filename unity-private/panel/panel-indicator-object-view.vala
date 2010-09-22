@@ -68,6 +68,7 @@ namespace Unity.Panel.Indicators
           IndicatorObjectEntryView object_entry_view = new IndicatorObjectEntryView (indicator_object_entry);
 
           object_entry_view.menu_moved.connect (this.on_menu_moved);
+          object_entry_view.entry_shown.connect (on_entry_shown);
 
           this.indicator_entry_array.add (object_entry_view);
           this.add_actor (object_entry_view);
@@ -167,10 +168,17 @@ namespace Unity.Panel.Indicators
       IndicatorObjectEntryView object_entry_view = new IndicatorObjectEntryView (indicator_object_entry);
 
       object_entry_view.menu_moved.connect (this.on_menu_moved);
+      object_entry_view.entry_shown.connect (on_entry_shown);
 
       this.indicator_entry_array.add (object_entry_view);
       this.add_actor (object_entry_view);
 
+    }
+
+    private void on_entry_shown (IndicatorObjectEntryView view)
+    {
+      indicator_object.entry_activate (view.entry,
+                                       global_shell.get_current_time ());
     }
 
     private void remove_entry (Indicator.ObjectEntry entry)

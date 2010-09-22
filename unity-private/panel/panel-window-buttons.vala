@@ -197,13 +197,11 @@ namespace Unity.Panel
   public class WindowButton : Ctk.Button
   {
     public static const string AMBIANCE = "/usr/share/themes/Ambiance/metacity-1";
-    public static const string AMBIANCE_BETA = "/usr/share/themes/Ambiance-maverick-beta/metacity-1";
 
     public string filename { get; construct; }
     public Clutter.Actor bg;
 
-    private bool using_beta = false;
-    private int  icon_size = 18;
+    private int  icon_size = 19;
     private string directory = AMBIANCE;
 
     public WindowButton (string filename)
@@ -213,11 +211,6 @@ namespace Unity.Panel
 
     construct
     {
-      if (using_beta = FileUtils.test (AMBIANCE_BETA, FileTest.EXISTS))
-        {
-          icon_size = 19;
-          directory = AMBIANCE_BETA;
-        }
       try {
         bg = new Ctk.Image.from_filename (icon_size,
                                           directory +

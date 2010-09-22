@@ -16,6 +16,8 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
+
+using GConf;
 using Unity;
 using Unity.Testing;
 
@@ -34,7 +36,7 @@ namespace Unity
 
     construct
     {
-      ;
+      this.set_accept_focus (false);
     }
   }
 
@@ -106,10 +108,14 @@ namespace Unity
       get { return _plugin; }
       set { _plugin = value; Idle.add (real_construct); }
     }
+    private bool _super_key_enable=true;
+    public bool super_key_enable {
+      get { return _super_key_enable; }
+      set { _super_key_enable = value; }
+    }
 
     public ExposeManager expose_manager { get; private set; }
-    public Background    background     { get; private set; }
-
+    
     public bool menus_swallow_events { get { return false; } }
 
     private bool _super_key_active = false;
@@ -124,6 +130,9 @@ namespace Unity
     private static const int PANEL_HEIGHT        =  24;
     private static const int QUICKLAUNCHER_WIDTH = 58;
     private static const string UNDECORATED_HINT = "UNDECORATED_HINT";
+
+    public Gee.ArrayList<Background> backgrounds;
+    public Gdk.Rectangle primary_monitor;
 
     private Clutter.Stage    stage;
     private Application      app;
@@ -185,7 +194,11 @@ namespace Unity
       RIGHT
     }
     private MaximizeType maximize_type = MaximizeType.NONE;
-      
+
+    /* const */
+    private const string GCONF_DIR = "/desktop/unity/launcher";
+    private const string GCONF_SUPER_KEY_ENABLE_KEY = "super_key_enable";
+
     construct
     {
       is_starting = true;
@@ -223,13 +236,15 @@ namespace Unity
           this.screensaver = this.screensaver_conn.get_object ("org.gnome.ScreenSaver", "/org/gnome/ScreenSaver", "org.gnome.ScreenSaver");
           this.screensaver.ActiveChanged.connect (got_screensaver_changed);
         }
-      catch (Error e)
+      catch (GLib.Error e)
         {
           warning (e.message);
         }
 
       this.wm = new WindowManagement (this);
       this.maximus = new Maximus ();
+
+      (Clutter.Stage.get_default () as Clutter.Stage).color = { 0, 0, 0, 255 };
 
       END_FUNCTION ();
     }
@@ -269,9 +284,26 @@ namespace Unity
       /* we need to hook into the super key bound by mutter for g-shell.
          don't ask me why mutter binds things for g-shell explictly...
          */
+      var gc = GConf.Client.get_default();
       Mutter.MetaDisplay display = Mutter.MetaScreen.get_display (plugin.get_screen ());
+
+      try {
+      	  super_key_enable = gc.get_bool(GCONF_DIR + "/" + GCONF_SUPER_KEY_ENABLE_KEY);
+      } catch (GLib.Error e) {
+          super_key_enable = true;
+          warning("Cannot find super_key_enable gconf key");
+      }
+      try {
+          gc.add_dir(GCONF_DIR, GConf.ClientPreloadType.ONELEVEL);
+      	  gc.notify_add(GCONF_DIR + "/" + GCONF_SUPER_KEY_ENABLE_KEY, this.gconf_super_key_enable_cb);
+      } catch (GLib.Error e) {
+          warning("Cannot set gconf callback function of super_key_enable");
+      }
+
       display.overlay_key_down.connect (() => {
-          super_key_active = true;
+          if (super_key_enable) {
+              super_key_active = true;
+          }
       });
 
       display.overlay_key.connect (() => {
@@ -283,13 +315,18 @@ namespace Unity
       });
 
       display.overlay_key_with_modifier_down.connect ((keysym) => {
-        super_key_modifier_press (keysym);
+          if (super_key_enable) {
+            super_key_modifier_press (keysym);
+          }
       });
 
-      this.background = new Background ();
-      this.stage.add_actor (background);
-      this.background.lower_bottom ();
-      this.background.show ();
+      /* Setup the backgrounds */
+      unowned Gdk.Screen screen = Gdk.Screen.get_default ();
+      backgrounds = new Gee.ArrayList<Background> ();
+
+      /* Connect to interestng signals */
+      screen.monitors_changed.connect (relayout);
+      screen.size_changed.connect (relayout);
 
       this.launcher = new Launcher.Launcher (this);
       this.launcher.get_view ().opacity = 0;
@@ -352,6 +389,16 @@ namespace Unity
       GLib.Idle.add (() => { is_starting = false; return false; });
       return false;
       
+    }
+
+    private void gconf_super_key_enable_cb(GConf.Client gc, uint cxnid, GConf.Entry entry) {
+      bool new_value = true;
+      try {
+          new_value = gc.get_bool(GCONF_DIR + "/" + GCONF_SUPER_KEY_ENABLE_KEY);
+      } catch (GLib.Error e) {
+          new_value = true;
+      }
+      super_key_enable = new_value;
     }
 
     private void on_focus_window_changed ()
@@ -453,41 +500,97 @@ namespace Unity
         }
     }
 
+    private void refresh_n_backgrounds (int n_monitors)
+    {
+      int size = backgrounds.size;
+
+      if (size == n_monitors)
+        return;
+      else if (size < n_monitors)
+        {
+          for (int i = 0; i < n_monitors - size; i++)
+            {
+              var bg = new Background ();
+              backgrounds.add (bg);
+              stage.add_actor (bg);
+              bg.lower_bottom ();
+              bg.opacity = 0;
+              bg.show ();
+              bg.animate (Clutter.AnimationMode.EASE_IN_QUAD, 2000,
+                          "opacity", 255);
+            }
+        }
+      else
+        {
+          for (int i = 0; i < size - n_monitors; i++)
+            {
+              var bg = backgrounds.get (0);
+              if (bg is Clutter.Actor)
+                {
+                  backgrounds.remove (bg);
+                  stage.remove_actor (bg);
+                }
+            }
+        }
+    }
     private void relayout ()
     {
       START_FUNCTION ();
-      float width, height;
 
-      this.stage.get_size (out width, out height);
+      unowned Gdk.Screen screen = Gdk.Screen.get_default ();
+      int x, y, width, height;
 
-      this.drag_dest.resize (this.QUICKLAUNCHER_WIDTH,
-                             (int)height - this.PANEL_HEIGHT);
-      this.drag_dest.move (0, this.PANEL_HEIGHT);
+      /* Figure out what should be the right size and location of Unity */
+      /* FIXME: This needs to always be monitor 0 right now as it doesn't
+       * seem possible to have panels on a vertical edge of a monitor unless
+       * it's the first or last monitor :(
+       */
+      screen.get_monitor_geometry (0, // Should be screen.get_primary_monitor()
+                                   out primary_monitor);
+      x = primary_monitor.x;
+      y = primary_monitor.y;
+      width = primary_monitor.width;
+      height = primary_monitor.height;
 
-      this.background.set_size (width, height);
-      this.background.set_position (0, 0);
+      /* The drag-n-drop region */
+      drag_dest.resize (QUICKLAUNCHER_WIDTH,
+                        height - PANEL_HEIGHT);
+      drag_dest.move (x, y + PANEL_HEIGHT);
+
+      /* We're responsible for painting the backgrounds on all the monitors */
+      refresh_n_backgrounds (screen.get_n_monitors ());
+      for (int i = 0; i < screen.get_n_monitors (); i++)
+        {
+          var bg = backgrounds.get (i);
+          if (bg is Background)
+            {
+              Gdk.Rectangle rect;
+              screen.get_monitor_geometry (i, out rect);
+
+              bg.set_position (rect.x, rect.y);
+              bg.set_size (rect.width, rect.height);
+            }
+        }   
 
       this.launcher.get_container ().set_size (this.QUICKLAUNCHER_WIDTH,
                                    (height-this.PANEL_HEIGHT));
-      this.launcher.get_container ().set_position (0, this.PANEL_HEIGHT);
+      this.launcher.get_container ().set_position (x, y + this.PANEL_HEIGHT);
       this.launcher.get_container ().set_clip (0, 0,
                                    this.QUICKLAUNCHER_WIDTH,
                                    height-this.PANEL_HEIGHT);
+
       Utils.set_strut ((Gtk.Window)this.drag_dest,
-                       this.QUICKLAUNCHER_WIDTH, 0, (uint32)height,
-                       PANEL_HEIGHT, 0, (uint32)width);
+                       this.QUICKLAUNCHER_WIDTH, y, (uint32)height,
+                       PANEL_HEIGHT, x, (uint32)width);
 
       this.places.set_size (width - this.QUICKLAUNCHER_WIDTH, height);
-      this.places.set_position (this.QUICKLAUNCHER_WIDTH, 0);
+      this.places.set_position (x + this.QUICKLAUNCHER_WIDTH, y);
 
-      this.panel.set_size (width, 24);
-      this.panel.set_position (0, 0);
+      this.panel.set_size (width, PANEL_HEIGHT);
+      this.panel.set_position (x, y);
 
-      /* Leaving this here to remind me that we need to use these when
-       * there are fullscreen windows etc
-       * this.plugin.set_stage_input_region (uint region);
-       * this.plugin.set_stage_reactive (true);
-       */
+      ensure_input_region ();
+
       END_FUNCTION ();
     }
 
@@ -686,8 +789,8 @@ namespace Unity
           (this.plugin.get_window_group () as Clutter.Container).add_actor (this.dark_box);
           this.dark_box.raise (plugin.get_normal_window_group ());
 
-          this.dark_box.set_position (0, 0);
-          this.dark_box.set_size (this.stage.width, this.stage.height);
+          this.dark_box.set_position (primary_monitor.x, primary_monitor.y);
+          this.dark_box.set_size (primary_monitor.width, primary_monitor.height);
 
           this.dark_box.show ();
 
@@ -844,10 +947,10 @@ namespace Unity
                 {
                   window = actor as Mutter.Window;
 
-                  if (start_pan_window.get_window_type () != Mutter.MetaCompWindowType.NORMAL &&
-                      start_pan_window.get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
-                      start_pan_window.get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG &&
-                      start_pan_window.get_window_type () != Mutter.MetaCompWindowType.UTILITY)
+                  if (window.get_window_type () != Mutter.MetaCompWindowType.NORMAL &&
+                      window.get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
+                      window.get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG &&
+                      window.get_window_type () != Mutter.MetaCompWindowType.UTILITY)
                     window = null;
                 }
 
@@ -1425,6 +1528,13 @@ namespace Unity
 
             return false;
           });
+        }
+      else if (window.get_window_type () == Mutter.MetaCompWindowType.DOCK)
+        {
+          if (win.get_xwindow (win) == Gdk.x11_drawable_get_xid (drag_dest.window))
+            {
+              window.opacity = 0;
+            }
         }
 
       this.maximus.process_window (window);

@@ -32,7 +32,7 @@ namespace Unity {
 		[CCode (cheader_filename = "unity.h")]
 		public static async GLib.FileInputStream? open_from_dirs (string filename, string[] dirs) throws GLib.Error;
 		[CCode (cheader_filename = "unity.h")]
-		public static async void read_stream_async (GLib.InputStream input, owned uchar[] buffer, size_t buffer_lenght, int io_priority, GLib.Cancellable? cancellable, out void* data, out size_t size) throws GLib.Error;
+		public static async void read_stream_async (GLib.InputStream input, void* buffer, size_t buffer_lenght, int io_priority, GLib.Cancellable? cancellable, out void* data, out size_t size) throws GLib.Error;
 	}
 	[CCode (cprefix = "UnityPlace", lower_case_cprefix = "unity_place_")]
 	namespace Place {
@@ -306,22 +306,11 @@ namespace Unity {
 		public void clear ();
 		public Gdk.Pixbuf? @get (string icon_id, int size);
 		public static Unity.PixbufCache get_default ();
-		public async Gdk.Pixbuf? load_from_filepath (string filename, int size);
-		public bool load_iteration ();
 		public void @set (string icon_id, Gdk.Pixbuf pixbuf, int size);
 		public async void set_image_from_gicon (Ctk.Image image, GLib.Icon icon, int size);
-		public void set_image_from_gicon_string (Ctk.Image image, string data, int size);
+		public void set_image_from_gicon_string (Ctk.Image image, string gicon_as_string, int size);
 		public void set_image_from_icon_name (Ctk.Image image, string icon_name, int size);
 		public uint size { get; }
-	}
-	[CCode (ref_function = "unity_pixbuf_cache_task_ref", unref_function = "unity_pixbuf_cache_task_unref", cheader_filename = "unity.h")]
-	public class PixbufCacheTask {
-		public string data;
-		public weak Ctk.Image image;
-		public string key;
-		public int size;
-		public Unity.PixbufRequestType type;
-		public PixbufCacheTask ();
 	}
 	[CCode (cheader_filename = "unity.h")]
 	public class StripeTexture : Unity.CairoCanvas {
@@ -400,11 +389,6 @@ namespace Unity {
 		CLOSED,
 		UNEXPANDED,
 		EXPANDED
-	}
-	[CCode (cprefix = "UNITY_PIXBUF_REQUEST_TYPE_", cheader_filename = "unity.h")]
-	public enum PixbufRequestType {
-		ICON_NAME,
-		GICON_STRING
 	}
 	[CCode (cprefix = "UNITY_SHELL_MODE_", cheader_filename = "unity.h")]
 	public enum ShellMode {

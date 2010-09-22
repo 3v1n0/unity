@@ -209,6 +209,7 @@ static gboolean _unity_launcher_scroller_child_check_continue_wiggle_gsource_fun
 GdkPixbuf* unity_launcher_scroller_child_get_icon (UnityLauncherScrollerChild* self);
 float unity_launcher_scroller_child_get_rotation (UnityLauncherScrollerChild* self);
 gboolean unity_launcher_scroller_child_get_activating (UnityLauncherScrollerChild* self);
+void unity_launcher_scroller_child_set_activating (UnityLauncherScrollerChild* self, gboolean value);
 static void unity_launcher_scroller_child_real_get_preferred_width (ClutterActor* base, float for_height, float* minimum_width, float* natural_width);
 static void unity_launcher_scroller_child_real_get_preferred_height (ClutterActor* base, float for_width, float* minimum_height, float* natural_height);
 static void unity_launcher_scroller_child_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
@@ -221,7 +222,6 @@ void unity_launcher_scroller_child_set_position (UnityLauncherScrollerChild* sel
 void unity_launcher_scroller_child_set_running (UnityLauncherScrollerChild* self, gboolean value);
 void unity_launcher_scroller_child_set_active (UnityLauncherScrollerChild* self, gboolean value);
 void unity_launcher_scroller_child_set_needs_attention (UnityLauncherScrollerChild* self, gboolean value);
-void unity_launcher_scroller_child_set_activating (UnityLauncherScrollerChild* self, gboolean value);
 void unity_launcher_scroller_child_set_enable_close_state (UnityLauncherScrollerChild* self, gboolean value);
 UnityLauncherScrollerChildGroupType unity_launcher_scroller_child_get_group_type (UnityLauncherScrollerChild* self);
 void unity_launcher_scroller_child_set_group_type (UnityLauncherScrollerChild* self, UnityLauncherScrollerChildGroupType value);
@@ -806,6 +806,10 @@ static void unity_launcher_scroller_child_on_rotation_changed (UnityLauncherScro
 		clutter_actor_animate ((ClutterActor*) self->processed_icon, (gulong) CLUTTER_EASE_IN_OUT_QUAD, (guint) 300, "rotation", self->priv->_rotation, NULL);
 	} else {
 		clutter_actor_animate ((ClutterActor*) self->processed_icon, (gulong) CLUTTER_EASE_OUT_QUINT, (guint) 300, "rotation", self->priv->_rotation, NULL);
+		if (self->priv->_activating) {
+			g_debug ("scrollerchild.vala:536: stopping glow ");
+			unity_launcher_scroller_child_set_activating (self, FALSE);
+		}
 	}
 }
 

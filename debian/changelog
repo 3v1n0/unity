@@ -1,9 +1,66 @@
-unity (0.2.40-0ubuntu2) UNRELEASED; urgency=low
+unity (0.2.42-0ubuntu1) UNRELEASED; urgency=low
 
+  * New upstream release:
+    - "Applications" and "Files & Folders" tooltips are not translatable
+      (LP: #644215)
+    - Fix inactive menus are accessible on switching to a window (LP: #604505)
+    - Fix wrong launcher tile label/quicklist x position (LP: #631446)
+    - Fix highlighted items in quicklist have different widths (LP: #643315)
+    - In migration tool, being safe when people are using crazy caracters in
+      desktop file (LP: #644114, #635156)
+    - Detect if 3D acceleration support is provided. Otherwise, prompt for
+      logout and change default session (LP: #614088)
+    - Fix quicklist shows hidden menu items (LP: #641543)
+    - Fix removing launchers via dnd fails (LP: #643434)
+    - Better launcher auto-scroll performances (LP: #640560)
+    - Make the insensitive state of the forward- and back-button more obvious by
+      decreasing their opacity, thus users don't assume they are actually
+      clickable. (LP: #638285)
+    - Fix some dialogs aren't maximized but are undecorated (LP: #628822)
+    - Fix some menus don't go away when window closes (LP: #640557)
+    - Fixes bug where the wrong icon where at times associated with a tile in
+      the places view. (LP: #642935)
+    - Speedup icon loading (LP: #641246)
+    - Make trash menu items in Unity are either not translatable or translations
+      are not loaded (LP: #645038)
+    - Fix using dnd on launcher makes focus not work out of the unity ui
+      (LP: #637123)
+    - Multi-monitor support (LP: #637123)
+    - Enable/disable super key by a gconf key (LP: #632581)
+    - Remove glow on fold (LP: #619344)
+    - Ensure we dont map windows when expose is active (LP: #599766)
+    - take new indicator API for action for top-level dropdown menu item not
+      activated (LP: #637692)
+    - Make the home buttons reactive (LP: #638857)
+    - Add red tint when search fails (LP: #607821)
+    - New (and final!) UI adjustement, but UNE isn't in the doc as seen with
+      the doc team (LP: #627009)
+    - Single-touches on the launcher are usually interpreted as a drag
+      (LP: #641328)
+    - URI activation in global view (LP: #612562)
+    - Clicking a Place icon while viewing the same place in the Dash should
+      return to the Home screen of that place and clear the search (LP: #607829)
+    - Fix mutter crashed with SIGSEGV in g_type_check_instance() (LP: #641561)
+    - Fix panel and menu item font colors don't match (LP: #637480)
+    - Fix indicators have orange color (LP: #632975)
+    - Fix inactive menus are accessible on switching to a window (LP: #604505)
+    - Use semi-transparent rectangle around launcher-icon (LP: #643388)
+    - Fix mutter crashes when closing pop-up dialog (LP: #642669)
+    - Change launcher icon reference size loading (LP: #641669)
+    - Fix mutter crashing in mumble start (LP: #641335)
+    - Fix clicking on a category from CoFs does not directly take you to the
+      desired category (LP: #638402)
+    - Fix some menus don't go away when window closes (LP: #640557)
+    - Launchers should act like if the application was not focussed in the place
+      views (LP: #637136)
+    - Fix mutter crashed with SIGSEGV in mutter_window_get_window_type()
+      (LP: #645066)
+    - Fix new windows don't get focus (LP: #642994)
+    - Fix cropping an image in shotwell crashes unity (LP: #641554)
   * debian/control:
-    - depends on latest libindicator-dev for ABI change transition (LP: #637692)
+    - depends on latest libindicator-dev for ABI change transition
 
- -- Didier Roche <didrocks@ubuntu.com>  Wed, 22 Sep 2010 18:42:06 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Wed, 22 Sep 2010 20:47:35 +0200
 
 unity (0.2.40-0ubuntu1) maverick; urgency=low
 

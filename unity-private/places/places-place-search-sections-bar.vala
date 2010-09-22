@@ -332,8 +332,9 @@ namespace Unity.Places
                        x, height - radius);
           cr.close_path ();
 
-          cr.set_source_rgba (1.0, 1.0, 1.0, 0.5);
+          cr.set_source_rgba (1.0, 1.0, 1.0, 0.25);
           cr.fill_preserve ();
+          cr.set_source_rgba (1.0, 1.0, 1.0, 0.25);
           cr.stroke ();
 
           var chevron = 5;
@@ -348,7 +349,7 @@ namespace Unity.Places
                   cr.move_to (point - chevron, y);
                   cr.line_to (point + chevron, y + height/2);
                   cr.line_to (point - chevron, y + height);
-                  cr.set_source_rgba (1.0, 1.0, 1.0, 1.0);
+                  cr.set_source_rgba (1.0, 1.0, 1.0, 0.5);
                   cr.stroke ();
                 }
               point += SPACING/2;
@@ -521,16 +522,12 @@ namespace Unity.Places
       cr.paint ();
 
       cr.set_operator (Cairo.Operator.OVER);
-      cr.set_line_width (1.5);
+      cr.set_line_width (1.0);
       cr.set_source_rgba (1.0, 1.0, 1.0, 0.0);
-
-      cr.translate (0.5, 0.5);
 
       var x = 0;
       var y = 0;
-      width -= 1;
-      height -= 1;
-      var radius = 10;
+      var radius = 7;
 
       if ((get_parent () as PlaceSearchSectionsBar).style == SectionStyle.BUTTONS)
         {
@@ -555,6 +552,8 @@ namespace Unity.Places
           if (active || state == Ctk.ActorState.STATE_SELECTED)
             {
               cr.set_source_rgba (1.0, 1.0, 1.0, 1.0);
+
+              cr.fill ();
             }
           else if (state == Ctk.ActorState.STATE_PRELIGHT)
             {
@@ -562,7 +561,10 @@ namespace Unity.Places
                                                    Cairo.Content.COLOR_ALPHA,
                                                    4, 4);
               var context = new Cairo.Context (pattern);
-              
+
+              cr.set_source_rgba (1.0, 1.0, 1.0, 0.1);
+              cr.fill_preserve ();
+      
               context.set_operator (Cairo.Operator.CLEAR);
               context.paint ();
 
@@ -578,16 +580,39 @@ namespace Unity.Places
               var pat = new Cairo.Pattern.for_surface (pattern);
               pat.set_extend (Cairo.Extend.REPEAT);
               cr.set_source (pat);
+
+              cr.fill ();
             }
           else
             {
-              cr.set_source_rgba (1.0, 1.0, 1.0, 0.0);
+
             }
 
-          cr.fill_preserve ();
+          cr.translate (0.5, 0.5);
+
+          width -= 1;
+          height -= 1;
+
+          cr.move_to  (x, y + radius);
+          cr.curve_to (x, y,
+                       x, y,
+                       x + radius, y);
+          cr.line_to  (width - radius, y);
+          cr.curve_to (width, y,
+                       width, y,
+                       width, y + radius);
+          cr.line_to  (width, height - radius);
+          cr.curve_to (width, height,
+                       width, height,
+                       width - radius, height);
+          cr.line_to  (x + radius, height);
+          cr.curve_to (x, height,
+                       x, height,
+                       x, height - radius);
+          cr.close_path ();
 
           cr.set_source_rgba (1.0, 1.0, 1.0,
-                              state == Ctk.ActorState.STATE_NORMAL ? 0.0 : 0.5);
+                              !active && state == Ctk.ActorState.STATE_NORMAL ? 0.0 : 0.5);
           cr.stroke ();            
         }
       else

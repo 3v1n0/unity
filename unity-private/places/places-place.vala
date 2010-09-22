@@ -377,9 +377,9 @@ namespace Unity.Places
               return null;
             }
 
-          name = file.get_string (group, "Name");
-          icon = file.get_string (group, "Icon");
-          desc = file.get_string (group, "Description");
+          name = file.get_locale_string (group, "Name", null);
+          icon = file.get_locale_string (group, "Icon", null);
+          desc = file.get_locale_string (group, "Description", null);
       } catch (Error e) {
         warning (@"Cannot load entry '$group': %s", e.message);
         return null;

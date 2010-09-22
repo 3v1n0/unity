@@ -679,11 +679,6 @@ static void unity_places_default_renderer_group_add_to_n_results (UnityPlacesDef
 			unity_places_more_results_button_set_count (self->priv->more_results_button, (guint) 0);
 		}
 	}
-	if (self->n_results == 1) {
-		UnityPixbufCache* _tmp0_;
-		unity_pixbuf_cache_load_iteration (_tmp0_ = unity_pixbuf_cache_get_default ());
-		_g_object_unref0 (_tmp0_);
-	}
 }
 
 

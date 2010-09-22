@@ -17,6 +17,8 @@
  *
  */
 
+using Unity.Testing;
+
 namespace Unity.Places
 {
   public class DefaultRenderer : LayeredBin, Unity.Place.Renderer
@@ -40,6 +42,7 @@ namespace Unity.Places
     private Ctk.VBox          box;
     private Dee.Model         groups_model;
     private Dee.Model         results_model;
+    private Places.View       place_view;
 
     private string[] expanded = null;
 
@@ -162,11 +165,14 @@ namespace Unity.Places
         }
       else if (slider_state == SLIDER_STATE_PRELIGHT)
         {
+          cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.1f);
+          cr.fill_preserve ();
+
           cr_stripes.set_operator (Cairo.Operator.CLEAR);
           cr_stripes.paint ();
           cr_stripes.scale (1.0f, 1.0f);
           cr_stripes.set_operator (Cairo.Operator.OVER);
-          cr_stripes.set_source_rgba (1.0f, 1.0f, 1.0f, 0.25f);
+          cr_stripes.set_source_rgba (1.0f, 1.0f, 1.0f, 0.15f);
           cr_stripes.rectangle (0.0f, 0.0f, 1.0f, 1.0f);
           cr_stripes.fill ();
           cr_stripes.rectangle (1.0f, 1.0f, 1.0f, 1.0f);
@@ -282,6 +288,8 @@ namespace Unity.Places
       box.homogeneous = false;
       scroll.add_actor (box);
       box.show ();
+
+      place_view = ObjectRegistry.get_default ().lookup ("UnityPlacesView")[0] as View;
     }
 
     /*
@@ -339,6 +347,8 @@ namespace Unity.Places
                             300,
                             "opacity", groups_box_opacity);
 
+      place_view.search_bar.search_fail = section_empty.active
+                                          || search_empty.active;
     }
 
     private void activate_default ()
@@ -609,8 +619,7 @@ namespace Unity.Places
       cr.paint ();
 
       cr.set_operator (Cairo.Operator.OVER);
-      cr.translate (0.5, 0.5);
-      cr.set_line_width (1.5);
+      cr.set_line_width (1.0);
 
       var radius = 7;
       float twidth, theight;
@@ -641,7 +650,27 @@ namespace Unity.Places
       cr.close_path ();
 
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.1f);
-      cr.fill_preserve ();
+      cr.fill ();
+
+      cr.translate (0.5, 0.5);
+
+      cr.move_to (x, y + radius);
+      cr.curve_to (x, y,
+                   x, y,
+                   x + radius, y);
+      cr.line_to (x + w - radius, y);
+      cr.curve_to (x + w, y,
+                   x + w, y,
+                   x + w, y + radius);
+      cr.line_to (x + w, y + h - radius);
+      cr.curve_to (x + w, y + h,
+                   x + w, y + h,
+                   x + w - radius, y + h);
+      cr.line_to (x + radius, y + h);
+      cr.curve_to (x, y + h,
+                   x, y + h,
+                   x, y + h - radius);
+      cr.close_path ();
 
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.5f);
       cr.stroke ();
@@ -665,4 +694,3 @@ namespace Unity.Places
     }
   }
 }
-

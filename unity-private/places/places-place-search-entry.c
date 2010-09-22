@@ -165,8 +165,8 @@ UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_construct (GType ob
 static void unity_places_place_search_entry_real_get_preferred_height (ClutterActor* base, float for_width, float* min_height, float* nat_height);
 static void unity_places_place_search_entry_real_get_preferred_width (ClutterActor* base, float for_height, float* min_width, float* nat_width);
 static void unity_places_place_search_entry_on_text_changed (UnityPlacesPlaceSearchEntry* self);
-static gboolean _lambda40_ (UnityPlacesPlaceSearchEntry* self);
-static gboolean __lambda40__gsource_func (gpointer self);
+static gboolean _lambda39_ (UnityPlacesPlaceSearchEntry* self);
+static gboolean __lambda39__gsource_func (gpointer self);
 static void unity_places_place_search_entry_real_allocate (ClutterActor* base, const ClutterActorBox* box, ClutterAllocationFlags flags);
 static void unity_places_place_search_entry_real_paint (ClutterActor* base);
 static void unity_places_place_search_entry_real_map (ClutterActor* base);
@@ -186,8 +186,8 @@ static void _unity_places_place_search_entry_on_text_changed_clutter_text_text_c
 static void _unity_places_place_search_entry_on_key_focus_in_clutter_actor_key_focus_in (ClutterActor* _sender, gpointer self);
 static void _unity_places_place_search_entry_on_key_focus_out_clutter_actor_key_focus_out (ClutterActor* _sender, gpointer self);
 static void _unity_places_place_search_entry_paint_right_icon_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
-static gboolean _lambda41_ (UnityPlacesPlaceSearchEntry* self);
-static gboolean __lambda41__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static gboolean _lambda40_ (UnityPlacesPlaceSearchEntry* self);
+static gboolean __lambda40__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static GObject * unity_places_place_search_entry_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_place_search_entry_finalize (GObject* obj);
 static void unity_places_place_search_entry_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -241,7 +241,7 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static gboolean _lambda40_ (UnityPlacesPlaceSearchEntry* self) {
+static gboolean _lambda39_ (UnityPlacesPlaceSearchEntry* self) {
 	gboolean result = FALSE;
 	g_signal_emit_by_name (self, "text-changed", clutter_text_get_text ((ClutterText*) self->text));
 	self->priv->live_search_timeout = (guint) 0;
@@ -250,9 +250,9 @@ static gboolean _lambda40_ (UnityPlacesPlaceSearchEntry* self) {
 }
 
 
-static gboolean __lambda40__gsource_func (gpointer self) {
+static gboolean __lambda39__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda40_ (self);
+	result = _lambda39_ (self);
 	return result;
 }
 
@@ -282,7 +282,7 @@ static void unity_places_place_search_entry_on_text_changed (UnityPlacesPlaceSea
 	if (self->priv->live_search_timeout != 0) {
 		g_source_remove (self->priv->live_search_timeout);
 	}
-	self->priv->live_search_timeout = g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) UNITY_PLACES_PLACE_SEARCH_ENTRY_LIVE_SEARCH_TIMEOUT, __lambda40__gsource_func, g_object_ref (self), g_object_unref);
+	self->priv->live_search_timeout = g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) UNITY_PLACES_PLACE_SEARCH_ENTRY_LIVE_SEARCH_TIMEOUT, __lambda39__gsource_func, g_object_ref (self), g_object_unref);
 }
 
 
@@ -476,7 +476,7 @@ static void _unity_places_place_search_entry_paint_right_icon_unity_cairo_canvas
 }
 
 
-static gboolean _lambda41_ (UnityPlacesPlaceSearchEntry* self) {
+static gboolean _lambda40_ (UnityPlacesPlaceSearchEntry* self) {
 	gboolean result = FALSE;
 	clutter_text_set_text ((ClutterText*) self->text, "");
 	g_signal_emit_by_name (self, "text-changed", "");
@@ -485,9 +485,9 @@ static gboolean _lambda41_ (UnityPlacesPlaceSearchEntry* self) {
 }
 
 
-static gboolean __lambda41__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean __lambda40__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
-	result = _lambda41_ (self);
+	result = _lambda40_ (self);
 	return result;
 }
 
@@ -540,7 +540,7 @@ static GObject * unity_places_place_search_entry_constructor (GType type, guint 
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->right_icon, FALSE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->right_icon);
 		clutter_actor_set_reactive ((ClutterActor*) self->right_icon, TRUE);
-		g_signal_connect_object ((ClutterActor*) self->right_icon, "button-release-event", (GCallback) __lambda41__clutter_actor_button_release_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self->right_icon, "button-release-event", (GCallback) __lambda40__clutter_actor_button_release_event, self, 0);
 	}
 	return obj;
 }

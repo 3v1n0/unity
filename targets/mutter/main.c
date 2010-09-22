@@ -22,6 +22,9 @@
 #include <glib.h>
 #include <gdk/gdk.h>
 #include <gdk/gdkx.h>
+#include <dbus/dbus-glib.h>
+
+#include <GL/gl.h>
 #include <clutter/x11/clutter-x11.h>
 
 #include "unity-mutter.h"
@@ -62,6 +65,10 @@ struct _UnityMutterClass
 MUTTER_PLUGIN_DECLARE(UnityMutter, unity_mutter);
 
 static void unity_mutter_constructed (GObject *object);
+
+static void change_user_session (const char *session_name);
+static gboolean session_logout_success (void);
+static gboolean rendering_available (void);
 
 static void unity_mutter_minimize    (MutterPlugin *self,
                                       MutterWindow *window);
@@ -128,11 +135,142 @@ unity_mutter_constructed (GObject *object)
 {
   UnityMutter          *self = UNITY_MUTTER (object);
 
+  if (!rendering_available ())
+    {
+      g_warning ("No rendering avaible for unity, prompting for changing session");
+      change_user_session ("gnome");
+      // if we can't logout, fallback to trying to run unity...
+      if (session_logout_success ())
+        exit (0); // 0 or will be respawn as required_component
+    }
+
   self->plugin = unity_plugin_new ();
   g_signal_connect (self->plugin, "restore-input-region",
                     G_CALLBACK (on_restore_input_region), self);
 
   unity_plugin_set_plugin (self->plugin, MUTTER_PLUGIN (self));
+}
+
+static void
+change_user_session (const char *session_name)
+{
+
+  GKeyFile *key_file;
+  GError   *error;
+  char     *filename;
+  gsize     length;
+  gchar    *contents;
+
+  filename = g_build_filename (g_get_home_dir(), ".dmrc", NULL);
+  error = NULL;
+
+  key_file = g_key_file_new ();
+  g_key_file_load_from_file (key_file, filename,
+                             G_KEY_FILE_KEEP_COMMENTS |
+                             G_KEY_FILE_KEEP_TRANSLATIONS,
+                             NULL);
+  g_key_file_set_string (key_file, "Desktop", "Session",
+                         session_name);
+
+  contents = g_key_file_to_data (key_file, &length, &error);
+  if (contents == NULL)
+    {
+      g_debug ("Can't create content for .dmrc file: %s", error->message);
+      g_key_file_free (key_file);
+      g_free (filename);
+      return;
+    }
+
+  if (!g_file_set_contents (filename, contents, length, &error))
+    {
+      g_debug ("Can't update .dmrc file: %s", error->message);
+      g_error_free (error);
+    }
+
+   g_free (contents);
+   g_key_file_free (key_file);
+   g_free (filename);
+
+}
+
+static gboolean
+session_logout_success (void)
+{
+  GtkWidget* dialog_warn_logout;
+  gint response;
+
+  dialog_warn_logout = gtk_message_dialog_new (NULL,
+                                               GTK_DIALOG_MODAL,
+                                               GTK_MESSAGE_WARNING,
+                                               GTK_BUTTONS_OK,
+                                               _("No required driver detected for unity."),
+                                               NULL);
+  gtk_message_dialog_format_secondary_markup (GTK_MESSAGE_DIALOG(dialog_warn_logout),
+                                              _("You will need to choose the Ubuntu Desktop session once you select your user name."));
+  response = gtk_dialog_run (GTK_DIALOG(dialog_warn_logout));
+  gtk_widget_destroy (dialog_warn_logout);
+
+  if (response == GTK_RESPONSE_OK || response == GTK_RESPONSE_DELETE_EVENT)
+    {
+      DBusGConnection * sbus;
+      DBusGProxy * sm_proxy;
+      GError * error = NULL;
+      gboolean res = FALSE;
+
+      sbus = dbus_g_bus_get(DBUS_BUS_SESSION, NULL); 
+      if (sbus == NULL)
+        {
+          g_warning ("Unable to get DBus session bus.");
+          return FALSE;
+        }
+      sm_proxy = dbus_g_proxy_new_for_name_owner (sbus,
+                                                  "org.gnome.SessionManager",
+                                                  "/org/gnome/SessionManager",
+                                                  "org.gnome.SessionManager",
+                                                  &error);
+      if (sm_proxy == NULL)
+        {
+            g_warning ("Unable to get DBus proxy to SessionManager interface: %s", error->message);
+            g_error_free (error);
+            return FALSE;
+        }               
+      g_clear_error (&error);
+
+      res = dbus_g_proxy_call_with_timeout (sm_proxy, "Logout", INT_MAX, &error, 
+                                            G_TYPE_UINT, 1, G_TYPE_INVALID, G_TYPE_INVALID);
+      if (!res)
+        {
+          if (error != NULL)
+            g_warning ("SessionManager action failed: %s", error->message);
+          else
+            g_warning ("SessionManager action failed: unknown error");
+
+          g_object_unref(sm_proxy);
+          g_error_free(error);
+          return FALSE;
+         }
+
+    g_object_unref(sm_proxy);
+    g_warning ("logout");
+    return TRUE;
+  }
+  g_warning ("Logout denied, trying to start unity");
+  return FALSE;
+}
+
+/* take an optimistic approach: only return FALSE when we are sure it's FALSE */
+static gboolean
+rendering_available (void)
+{
+  gchar *renderer = NULL;
+  const char *glRenderer = (const char *) glGetString(GL_RENDERER);
+  renderer = g_ascii_strdown (glRenderer, -1);
+  g_debug ("OpenGL renderer string: %s\n", glRenderer);
+
+  if (renderer && strstr (renderer, "software"))
+    return FALSE;
+
+  return TRUE;
 }
 
 static void
@@ -174,16 +312,16 @@ on_restore_input_region (UnityPlugin *plugin, gboolean fullscreen)
       rects = g_new (XRectangle, 2);
 
       /* Panel first */
-      rects[0].x = 0;
-      rects[0].y = 0;
-      rects[0].width = width;
+      rects[0].x = plugin->primary_monitor.x;
+      rects[0].y = plugin->primary_monitor.y;
+      rects[0].width = plugin->primary_monitor.width;
       rects[0].height = unity_plugin_get_panel_height (plugin);
 
       /* Launcher */
-      rects[1].x = 0;
+      rects[1].x = plugin->primary_monitor.y;
       rects[1].y = rects[0].height;
       rects[1].width = unity_plugin_get_launcher_width (plugin) + 1;
-      rects[1].height = height - rects[0].height;
+      rects[1].height = plugin->primary_monitor.height - rects[0].height;
 
       /* Update region */
       region = XFixesCreateRegion (xdisplay, rects, 2);

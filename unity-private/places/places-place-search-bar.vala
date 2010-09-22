@@ -34,6 +34,19 @@ namespace Unity.Places
     public  PlaceSearchSectionsBar sections;
     public  PlaceSearchExtraAction extra_action;
 
+    private bool _search_fail = false;
+    public bool search_fail {
+      get { return _search_fail; }
+      set {
+        if (_search_fail != value)
+          {
+            _search_fail = value;
+            bg.search_empty = _search_fail;
+            bg.update_background ();
+          }
+      }
+    }
+
     public PlaceSearchBar ()
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
@@ -83,6 +96,7 @@ namespace Unity.Places
 
     public void reset ()
     {
+      search_fail = false;
       entry.reset ();
     }
 
@@ -170,9 +184,10 @@ namespace Unity.Places
       active_entry = entry;
       bg.entry_position = x;
       sections.set_active_entry (entry);
-      if (section != 0)
+
+      if (!(sections.style == SectionStyle.BREADCRUMB && section ==0))
         {
-          Idle.add (() => {
+          Timeout.add (0, () => {
             sections.set_active_section (section);
             return false;
           });
@@ -224,6 +239,8 @@ namespace Unity.Places
     private Clutter.CairoTexture texture;
     private Ctk.EffectGlow       glow;
 
+    public bool search_empty { get; set; }
+
     public PlaceSearchNavigation navigation { get; construct; }
     public PlaceSearchEntry search_entry { get; construct; }
 
@@ -257,6 +274,8 @@ namespace Unity.Places
       glow.set_factor (1.0f);
       glow.set_margin (5);
       add_effect (glow);
+
+      search_empty = false;
     }
 
     private override void allocate (Clutter.ActorBox        box,
@@ -407,6 +426,13 @@ namespace Unity.Places
       cr.fill_preserve ();
 
       cr.set_operator  (Cairo.Operator.OVER);
+      
+      if (search_empty)
+        {
+          cr.set_source_rgba (1.0f, 0.0f, 0.0f, 0.3f);
+          cr.fill_preserve ();
+        }
+
       cr.set_source_rgba (1.0f, 1.0f, 1.0f, 0.6f);
       cr.stroke ();
 

@@ -41,6 +41,17 @@
       </locale>
     </schema>
 
+    <schema>
+      <key>/schemas/desktop/unity/launcher/super_key_enable</key>
+      <applyto>/desktop/unity/launcher/super_key_enable</applyto>
+      <owner>unity</owner>
+      <type>bool</type>
+      <default>1</default>
+      <locale name="C">
+        <short>Enable super key or not</short>
+        <long>Enable/disable super key. If this is False, super key will not function.</long>
+      </locale>
+    </schema>
+
   </schemalist>
 </gconfschemafile>
-
