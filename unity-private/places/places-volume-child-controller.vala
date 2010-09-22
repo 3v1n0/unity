@@ -16,10 +16,10 @@
  * Authored by Neil Jagdish Patel <neil.patel@canonical.com>
  *
  */
- 
+
 using Unity.Launcher;
 using Unity.Testing;
- 
+
 namespace Unity.Places
 {
   public class VolumeChildController : ScrollerChildController
@@ -48,7 +48,7 @@ namespace Unity.Places
     private void on_volume_removed ()
     {
       ScrollerModel s;
-      
+
       s = ObjectRegistry.get_default ().lookup ("UnityScrollerModel")[0] as ScrollerModel;
       s.remove (this.child);
 
@@ -116,7 +116,7 @@ namespace Unity.Places
     {
       Dbusmenu.Menuitem root = new Dbusmenu.Menuitem ();
       root.set_root (true);
-      
+
       Dbusmenu.Menuitem item;
 
       item = new Dbusmenu.Menuitem ();
@@ -151,7 +151,7 @@ namespace Unity.Places
 
     public override bool can_drag ()
     {
-      return true;
+      return false;
     }
   }
 }

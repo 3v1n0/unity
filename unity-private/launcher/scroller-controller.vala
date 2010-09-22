@@ -82,7 +82,7 @@ namespace Unity.Launcher
 
       var childcontroller = get_controller_for_view (model[index]);
       if (childcontroller is ScrollerChildController)
-        { 
+        {
           childcontroller.activate ();
         }
       else
@@ -344,7 +344,6 @@ namespace Unity.Launcher
         {
           if (retcont is ScrollerChild)
             {
-
               if (retcont.enable_close_state == true)
                 {
                   retcont.enable_close_state = false;
@@ -370,6 +369,8 @@ namespace Unity.Launcher
 
           int model_index = view.get_model_index_at_y_pos_no_anim (y - 24, true);
           if (model_index < 0) return;
+          if (model[model_index].group_type != ScrollerChild.GroupType.APPLICATION)
+            return;
 
           //we have to check to see if we would still be over the index
           //if it was done animating

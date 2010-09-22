@@ -191,7 +191,7 @@ namespace Unity.Places
 
     public override bool can_drag ()
     {
-      return true;
+      return false;
     }
   }
 }
