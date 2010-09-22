@@ -34,7 +34,7 @@ namespace Unity
 
     construct
     {
-      ;
+      this.set_accept_focus (false);
     }
   }
 

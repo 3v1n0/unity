@@ -201,14 +201,14 @@ namespace Unity.Launcher
 
           if(menu.get_num_items() == 0)
             {
-              // It can happen that the quicklist menu is requested and the menu was not previously filled with a label. 
+              // It can happen that the quicklist menu is requested and the menu was not previously filled with a label.
               // In this case we fill the menu with the label first.
               string label = attached_controller.name;
               var menuitem = new QuicklistMenuItem.with_label (label);
               menuitem.reactive = false;
               menu.append (menuitem, false);
             }
-            
+
           menu.close_on_leave = false;
           menu.set_detect_clicks (true);
           // grab the top menu
@@ -227,8 +227,14 @@ namespace Unity.Launcher
                 foreach (Dbusmenu.Menuitem menuitem in menu_items)
                   {
                     var view_menuitem = menu_item_from_dbusmenuitem (menuitem);
+                    
                     if (view_menuitem != null)
-                      get_view ().prepend (view_menuitem, false);
+                      {
+                        get_view ().prepend (view_menuitem, false);
+                        // Items returned from menu_item_from_dbusmenuitem have an extra reference
+                        // stopping them from being properly deleted. Remove that reference here.
+                        view_menuitem.unref ();
+                      }
                   }
                 menu_items.reverse ();
               }
@@ -251,9 +257,13 @@ namespace Unity.Launcher
                   foreach (Dbusmenu.Menuitem menuitem in menu_items)
                     {
                       var view_menuitem = menu_item_from_dbusmenuitem (menuitem);
+                      
                       if (view_menuitem != null)
                         {
                           get_view ().append (view_menuitem, false);
+                          // Items returned from menu_item_from_dbusmenuitem have an extra reference
+                          // stopping them from being properly deleted. Remove that reference here.
+                          view_menuitem.unref ();
                         }
                     }
                 }
@@ -271,7 +281,7 @@ namespace Unity.Launcher
             h = (attached_controller.child as Ctk.Actor).get_height();
             menu.compute_style_textures ();
             menu.set_expansion_size_factor (0.0f);
-            menu.set_anchor_position (x + w - 9, y + h/2.0f, 0);
+            menu.set_anchor_position (x + w - 4, y + h/2.0f, 0);
             menu.animate (Clutter.AnimationMode.LINEAR,
                          100,
                           "expansion-size-factor", 1.0f);
@@ -282,6 +292,12 @@ namespace Unity.Launcher
 
     private Ctk.MenuItem? menu_item_from_dbusmenuitem (Dbusmenu.Menuitem dbusmenuitem)
     {
+      // we should really add the item anyway and make it hidden, but its late in
+      // the cycle and any action will close the menu anyway. hopefully this won't
+      // be to visible a problem
+      if (dbusmenuitem.property_get_bool (Dbusmenu.MENUITEM_PROP_VISIBLE) == false)
+        return null;
+
       string label = "UNDEFINED";
       label = dbusmenuitem.property_get (Dbusmenu.MENUITEM_PROP_LABEL);
       string type = "label";

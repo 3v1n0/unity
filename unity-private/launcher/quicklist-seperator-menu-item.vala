@@ -122,6 +122,12 @@ namespace Unity.Launcher
       return false;
     }
 
+    ~QuicklistMenuSeperator ()
+    {
+      if (this.seperator_background is Clutter.Actor)
+        this.seperator_background.unparent ();
+    }
+    
     construct
     {
       Ctk.Padding padding = Ctk.Padding () {
