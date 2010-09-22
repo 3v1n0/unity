@@ -18,6 +18,7 @@
  *
  */
 using Unity;
+using Unity.Testing;
 
 namespace Unity.Places
 {
@@ -42,6 +43,8 @@ namespace Unity.Places
     public View (Shell shell, PlaceModel model)
     {
       Object (shell:shell, orientation:Ctk.Orientation.VERTICAL, model:model);
+
+      Testing.ObjectRegistry.get_default ().register ("UnityPlacesView", this);
     }
 
     construct
@@ -49,6 +52,8 @@ namespace Unity.Places
       about_to_show ();
 
       shell.get_stage ().captured_event.connect (on_stage_event_captured);
+
+
     }
 
     public void about_to_show ()
@@ -123,6 +128,8 @@ namespace Unity.Places
 
     private void update_views (PlaceEntry entry, uint section_id=0)
     {
+      search_bar.set_active_entry_view (entry, 0, section_id);
+
       /* Create the correct results view */
       if (renderer is Clutter.Actor)
         {
@@ -148,8 +155,6 @@ namespace Unity.Places
                            entry.entry_renderer_hints);
       renderer.show ();
       renderer.activated.connect (on_result_activated);
-
-      search_bar.set_active_entry_view (entry, 0, section_id);
     }
 
     private void on_entry_renderer_info_changed (PlaceEntry entry)
@@ -183,14 +188,29 @@ namespace Unity.Places
 
     private void on_result_activated (string uri, string mimetype)
     {
-      if (active_entry.parent is Place == false)
+      ActivationStatus result;
+
+      if (active_entry is PlaceHomeEntry)
+        {
+          var e = (active_entry as PlaceHomeEntry).get_entry_for_uri (uri);
+
+          if (e is PlaceEntry)
+            result = e.parent.activate (uri, mimetype);
+          else
+            {
+              Place.activate_fallback.begin (uri);
+              result = ActivationStatus.ACTIVATED_FALLBACK;
+            }
+        }
+      else if (active_entry == null || active_entry.parent == null)
         {
           Place.activate_fallback.begin (uri);
-          global_shell.hide_unity ();
-          return;
+          result = ActivationStatus.ACTIVATED_FALLBACK;
         }
-
-      ActivationStatus result = active_entry.parent.activate (uri, mimetype);
+      else
+        {
+          result = active_entry.parent.activate (uri, mimetype);
+        }
       
       switch (result)
       {

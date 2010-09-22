@@ -17,6 +17,7 @@
  *
  */
 using Unity;
+using Unity.Testing;
 
 namespace Unity.Places
 {
@@ -62,6 +63,7 @@ namespace Unity.Places
     public PlaceModel place_model { get; set construct; }
 
     private Gee.HashMap<PlaceEntry?, uint> entry_group_map;
+    private Places.View place_view = null;
 
     public PlaceHomeEntry (Shell shell, PlaceModel model)
     {
@@ -131,6 +133,7 @@ namespace Unity.Places
                                           5, _model.get_string (it, 5),
                                           -1);
 
+            update_search_failed ();
             });
 
             entry.global_results_model.row_removed.connect ((it) => {
@@ -149,8 +152,25 @@ namespace Unity.Places
 
                 i = _model.next (i);
               }
+            
+            update_search_failed ();
             });
           });
+        }
+    }
+
+    private void update_search_failed ()
+    {
+      if (place_view == null)
+        place_view = ObjectRegistry.get_default ().lookup ("UnityPlacesView")[0] as View;
+        
+      if (entry_results_model.get_n_rows () > 0)
+        {
+          place_view.search_bar.search_fail = false;
+        }
+      else
+        {
+          place_view.search_bar.search_fail = true;
         }
     }
 
@@ -168,7 +188,10 @@ namespace Unity.Places
 
       if (search == "" || search == null)
         {
+          if (place_view == null)
+            place_view = ObjectRegistry.get_default ().lookup ("UnityPlacesView")[0] as View;
           entry_renderer_name = "UnityHomeScreen";
+          place_view.search_bar.search_fail = false;
         }
       else
         {
@@ -202,6 +225,43 @@ namespace Unity.Places
     {
 
     }
+
+    public unowned PlaceEntry? get_entry_for_uri (string uri)
+    {
+      int entry_id = -1;
+
+      unowned Dee.ModelIter iter = entry_results_model.get_first_iter ();
+      while (!entry_results_model.is_last (iter))
+        {
+          if (uri == entry_results_model.get_string (iter, 0))
+            {
+              entry_id = (int) entry_results_model.get_uint (iter, 2);
+              break;
+            }
+
+          iter = entry_results_model.next (iter);
+        }
+
+      if (entry_id >= 0)
+        {
+          unowned PlaceEntry? ent = null;
+
+          foreach (Gee.Map.Entry<PlaceEntry, uint> e in entry_group_map.entries)
+            {
+              PlaceEntry? entry = e.key;
+
+              if (entry != null && entry_id == e.value)
+                {
+                  ent = entry;
+                  break;
+                }
+            }
+
+          if (ent is PlaceEntry)
+            return ent;
+        }
+
+      return null;
+    }
   }
 }
-

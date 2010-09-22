@@ -27,6 +27,7 @@ namespace Indicator {
 		[NoWrapper]
 		public virtual unowned Gtk.Menu get_menu ();
 		[NoWrapper]
+    public virtual void entry_activate (Indicator.ObjectEntry entry, uint timestamp);
 		public virtual void indicator_object_reserved_1 ();
 		public virtual signal void entry_added (Indicator.ObjectEntry entry);
 		public virtual signal void entry_moved (Indicator.ObjectEntry entry, uint old_pos, uint new_pos);

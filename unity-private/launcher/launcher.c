@@ -134,6 +134,7 @@ struct _UnityLauncherScrollerView {
 	float friction;
 	gboolean is_animating;
 	ClutterTimeline* fling_timeline;
+	ClutterTimeline* autoscroll_timeline;
 };
 
 struct _UnityLauncherScrollerViewClass {
@@ -184,8 +185,8 @@ UnityLauncherScrollerView* unity_launcher_scroller_view_new (UnityLauncherScroll
 UnityLauncherScrollerView* unity_launcher_scroller_view_construct (GType object_type, UnityLauncherScrollerModel* _model, CtkEffectCache* _cache);
 UnityLauncherScrollerController* unity_launcher_scroller_controller_new (UnityLauncherScrollerModel* _model, UnityLauncherScrollerView* _view);
 UnityLauncherScrollerController* unity_launcher_scroller_controller_construct (GType object_type, UnityLauncherScrollerModel* _model, UnityLauncherScrollerView* _view);
-static void _lambda97_ (UnityLauncherLauncher* self);
-static void __lambda97__clutter_actor_queue_redraw (ClutterActor* _sender, ClutterActor* origin, gpointer self);
+static void _lambda99_ (UnityLauncherLauncher* self);
+static void __lambda99__clutter_actor_queue_redraw (ClutterActor* _sender, ClutterActor* origin, gpointer self);
 static GObject * unity_launcher_launcher_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_launcher_launcher_finalize (GObject* obj);
 static void unity_launcher_launcher_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -368,15 +369,15 @@ static void unity_launcher_launcher_set_model (UnityLauncherLauncher* self, Unit
 }
 
 
-static void _lambda97_ (UnityLauncherLauncher* self) {
+static void _lambda99_ (UnityLauncherLauncher* self) {
 	if (clutter_timeline_is_playing (self->priv->view->fling_timeline) == FALSE) {
 		ctk_effect_cache_update_texture_cache (self->priv->launcher_container->cache);
 	}
 }
 
 
-static void __lambda97__clutter_actor_queue_redraw (ClutterActor* _sender, ClutterActor* origin, gpointer self) {
-	_lambda97_ (self);
+static void __lambda99__clutter_actor_queue_redraw (ClutterActor* _sender, ClutterActor* origin, gpointer self) {
+	_lambda99_ (self);
 }
 
 
@@ -397,7 +398,7 @@ static GObject * unity_launcher_launcher_constructor (GType type, guint n_constr
 		self->priv->launcher_container = (_tmp1_ = g_object_ref_sink (unity_launcher_launcher_container_new ()), _g_object_unref0 (self->priv->launcher_container), _tmp1_);
 		self->priv->view = (_tmp2_ = g_object_ref_sink (unity_launcher_scroller_view_new (self->priv->_model, self->priv->launcher_container->cache)), _g_object_unref0 (self->priv->view), _tmp2_);
 		self->priv->controller = (_tmp3_ = unity_launcher_scroller_controller_new (self->priv->_model, self->priv->view), _g_object_unref0 (self->priv->controller), _tmp3_);
-		g_signal_connect_object ((ClutterActor*) self->priv->view, "queue-redraw", (GCallback) __lambda97__clutter_actor_queue_redraw, self, 0);
+		g_signal_connect_object ((ClutterActor*) self->priv->view, "queue-redraw", (GCallback) __lambda99__clutter_actor_queue_redraw, self, 0);
 	}
 	return obj;
 }

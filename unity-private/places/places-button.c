@@ -181,12 +181,11 @@ static void unity_places_button_paint_bg (UnityPlacesButton* self, cairo_t* cr, 
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
 	cairo_paint (cr);
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_set_line_width (cr, 1.5);
-	cairo_translate (cr, 0.5, 0.5);
+	cairo_set_line_width (cr, 1.0);
 	if (ctk_actor_get_state ((CtkActor*) self) == CTK_STATE_NORMAL) {
 		if (self->priv->_normal_state == UNITY_PLACES_BUTTON_NORMAL_STATE_UNDERLINE) {
-			cairo_move_to (cr, (double) x, (double) (height - 1));
-			cairo_line_to (cr, (double) (x + width), (double) (height - 1));
+			cairo_move_to (cr, (double) (x + 3), height - 1.5);
+			cairo_line_to (cr, (double) ((x + width) - 4), height - 1.5);
 			cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.3);
 			cairo_stroke (cr);
 		}
@@ -199,16 +198,15 @@ static void unity_places_button_paint_bg (UnityPlacesButton* self, cairo_t* cr, 
 			_tmp0_ = FALSE;
 		}
 		if (_tmp0_) {
-			cairo_move_to (cr, (double) x, (double) (height - 1));
-			cairo_line_to (cr, (double) (x + width), (double) (height - 1));
+			cairo_move_to (cr, (double) (x + 3), height - 1.5);
+			cairo_line_to (cr, (double) ((x + width) - 4), height - 1.5);
 			cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.3);
 			cairo_stroke (cr);
 			return;
 		}
 	}
-	self->outline_func (cr, width, height, self->outline_func_target);
+	self->outline_func (cr, width + 1, height + 1, self->outline_func_target);
 	if (ctk_actor_get_state ((CtkActor*) self) == CTK_STATE_NORMAL) {
-		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.0);
 	} else {
 		if (ctk_actor_get_state ((CtkActor*) self) == CTK_STATE_PRELIGHT) {
 			cairo_surface_t* pattern;
@@ -216,25 +214,30 @@ static void unity_places_button_paint_bg (UnityPlacesButton* self, cairo_t* cr, 
 			cairo_pattern_t* pat;
 			pattern = cairo_surface_create_similar (cairo_get_target (cr), CAIRO_CONTENT_COLOR_ALPHA, 4, 4);
 			context = cairo_create (pattern);
+			cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.1);
+			cairo_fill_preserve (cr);
 			cairo_set_operator (context, CAIRO_OPERATOR_CLEAR);
 			cairo_paint (context);
 			cairo_set_line_width (context, 0.2);
 			cairo_set_operator (context, CAIRO_OPERATOR_OVER);
-			cairo_set_source_rgba (context, 1.0, 1.0, 1.0, 0.85);
+			cairo_set_source_rgba (context, 1.0, 1.0, 1.0, 0.4);
 			cairo_move_to (context, (double) 0, (double) 0);
 			cairo_line_to (context, (double) 4, (double) 4);
 			cairo_stroke (context);
 			pat = cairo_pattern_create_for_surface (pattern);
 			cairo_pattern_set_extend (pat, CAIRO_EXTEND_REPEAT);
 			cairo_set_source (cr, pat);
+			cairo_fill (cr);
 			_cairo_pattern_destroy0 (pat);
 			_cairo_destroy0 (context);
 			_cairo_surface_destroy0 (pattern);
 		} else {
 			cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+			cairo_fill (cr);
 		}
 	}
-	cairo_fill_preserve (cr);
+	cairo_translate (cr, 0.5, 0.5);
+	self->outline_func (cr, width, height, self->outline_func_target);
 	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.5);
 	cairo_stroke (cr);
 }

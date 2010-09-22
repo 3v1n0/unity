@@ -151,6 +151,27 @@ typedef struct _UnityPlacesPlaceEntryScrollerChildControllerClass UnityPlacesPla
 
 typedef struct _UnityLauncherScrollerChild UnityLauncherScrollerChild;
 typedef struct _UnityLauncherScrollerChildClass UnityLauncherScrollerChildClass;
+typedef struct _UnityPlacesViewPrivate UnityPlacesViewPrivate;
+
+#define UNITY_PLACES_TYPE_PLACE_HOME_ENTRY (unity_places_place_home_entry_get_type ())
+#define UNITY_PLACES_PLACE_HOME_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_HOME_ENTRY, UnityPlacesPlaceHomeEntry))
+#define UNITY_PLACES_PLACE_HOME_ENTRY_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_HOME_ENTRY, UnityPlacesPlaceHomeEntryClass))
+#define UNITY_PLACES_IS_PLACE_HOME_ENTRY(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_HOME_ENTRY))
+#define UNITY_PLACES_IS_PLACE_HOME_ENTRY_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_HOME_ENTRY))
+#define UNITY_PLACES_PLACE_HOME_ENTRY_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_HOME_ENTRY, UnityPlacesPlaceHomeEntryClass))
+
+typedef struct _UnityPlacesPlaceHomeEntry UnityPlacesPlaceHomeEntry;
+typedef struct _UnityPlacesPlaceHomeEntryClass UnityPlacesPlaceHomeEntryClass;
+
+#define UNITY_PLACES_TYPE_PLACE_SEARCH_BAR (unity_places_place_search_bar_get_type ())
+#define UNITY_PLACES_PLACE_SEARCH_BAR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR, UnityPlacesPlaceSearchBar))
+#define UNITY_PLACES_PLACE_SEARCH_BAR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR, UnityPlacesPlaceSearchBarClass))
+#define UNITY_PLACES_IS_PLACE_SEARCH_BAR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR))
+#define UNITY_PLACES_IS_PLACE_SEARCH_BAR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR))
+#define UNITY_PLACES_PLACE_SEARCH_BAR_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR, UnityPlacesPlaceSearchBarClass))
+
+typedef struct _UnityPlacesPlaceSearchBar UnityPlacesPlaceSearchBar;
+typedef struct _UnityPlacesPlaceSearchBarClass UnityPlacesPlaceSearchBarClass;
 
 #define UNITY_PLACES_TYPE_PLACE_FILE_MODEL (unity_places_place_file_model_get_type ())
 #define UNITY_PLACES_PLACE_FILE_MODEL(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_FILE_MODEL, UnityPlacesPlaceFileModel))
@@ -234,6 +255,17 @@ struct _UnityPlacesPlaceEntryIface {
 	void (*set_parent) (UnityPlacesPlaceEntry* self, UnityPlacesPlace* value);
 };
 
+struct _UnityPlacesView {
+	CtkBox parent_instance;
+	UnityPlacesViewPrivate * priv;
+	UnityPlacesPlaceHomeEntry* home_entry;
+	UnityPlacesPlaceSearchBar* search_bar;
+};
+
+struct _UnityPlacesViewClass {
+	CtkBoxClass parent_class;
+};
+
 
 static gpointer unity_places_controller_parent_class = NULL;
 
@@ -284,6 +316,9 @@ static void unity_places_controller_on_entry_clicked (UnityPlacesController* sel
 static void _unity_places_controller_on_entry_clicked_unity_places_place_entry_scroller_child_controller_clicked (UnityPlacesPlaceEntryScrollerChildController* _sender, guint section_id, gpointer self);
 UnityShell* unity_places_controller_get_shell (UnityPlacesController* self);
 UnityPlacesPlaceEntry* unity_places_place_entry_scroller_child_controller_get_entry (UnityPlacesPlaceEntryScrollerChildController* self);
+GType unity_places_place_home_entry_get_type (void) G_GNUC_CONST;
+GType unity_places_place_search_bar_get_type (void) G_GNUC_CONST;
+void unity_places_place_search_bar_reset (UnityPlacesPlaceSearchBar* self);
 static void unity_places_controller_set_shell (UnityPlacesController* self, UnityShell* value);
 void unity_places_controller_set_model (UnityPlacesController* self, UnityPlacesPlaceModel* value);
 UnityPlacesVolumeController* unity_places_controller_get_volumes (UnityPlacesController* self);
@@ -446,6 +481,7 @@ static void unity_places_controller_on_entry_clicked (UnityPlacesController* sel
 		unity_shell_show_unity (self->priv->_shell);
 	}
 	unity_places_view_on_entry_view_activated (self->priv->view, unity_places_place_entry_scroller_child_controller_get_entry (cont), section_id);
+	unity_places_place_search_bar_reset (self->priv->view->search_bar);
 }
 
 

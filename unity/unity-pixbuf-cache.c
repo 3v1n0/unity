@@ -72,6 +72,8 @@ typedef struct _UnityShellIface UnityShellIface;
 
 #define UNITY_TYPE_WINDOW_ACTION (unity_window_action_get_type ())
 #define _unity_pixbuf_cache_task_unref0(var) ((var == NULL) ? NULL : (var = (unity_pixbuf_cache_task_unref (var), NULL)))
+#define _g_timer_destroy0(var) ((var == NULL) ? NULL : (var = (g_timer_destroy (var), NULL)))
+typedef struct _UnityPixbufCacheProcessIconQueueAsyncData UnityPixbufCacheProcessIconQueueAsyncData;
 #define _gtk_icon_info_free0(var) ((var == NULL) ? NULL : (var = (gtk_icon_info_free (var), NULL)))
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
 typedef struct _UnityPixbufCacheSetImageFromIconNameRealData UnityPixbufCacheSetImageFromIconNameRealData;
@@ -117,8 +119,8 @@ struct _UnityPixbufCachePrivate {
 	GtkIconTheme* theme;
 	GeeHashMap* cache;
 	gboolean autodispose;
-	GeePriorityQueue* queue;
-	guint queue_timeout;
+	GeeQueue* queue;
+	guint queue_source;
 };
 
 typedef enum  {
@@ -162,19 +164,34 @@ struct _UnityShellIface {
 	void (*set_is_starting) (UnityShell* self, gboolean value);
 };
 
+struct _UnityPixbufCacheProcessIconQueueAsyncData {
+	int _state_;
+	GAsyncResult* _res_;
+	GSimpleAsyncResult* _async_result;
+	UnityPixbufCache* self;
+	guchar* buf;
+	gint buf_length1;
+	gint _buf_size_;
+	guchar* _tmp0_;
+	gint count;
+	GTimer* timer;
+	UnityPixbufCacheTask* task;
+	UnityPixbufCacheTask* _tmp1_;
+};
+
 struct _UnityPixbufCacheSetImageFromIconNameRealData {
 	int _state_;
 	GAsyncResult* _res_;
 	GSimpleAsyncResult* _async_result;
 	UnityPixbufCache* self;
-	CtkImage* image;
-	char* icon_name;
-	gint size;
-	char* key;
+	UnityPixbufCacheTask* task;
+	void* buf;
+	gsize buf_length;
 	GdkPixbuf* ret;
 	GtkIconInfo* info;
 	char* filename;
 	GdkPixbuf* _tmp0_;
+	GdkPixbuf* _tmp1_;
 	GError * e;
 	GError * _inner_error_;
 };
@@ -184,26 +201,28 @@ struct _UnityPixbufCacheSetImageFromGiconStringRealData {
 	GAsyncResult* _res_;
 	GSimpleAsyncResult* _async_result;
 	UnityPixbufCache* self;
-	CtkImage* image;
-	char* gicon_as_string;
-	gint size;
-	char* key;
+	UnityPixbufCacheTask* task;
+	void* buf;
+	gsize buf_length;
 	GdkPixbuf* ret;
 	GdkPixbuf* _tmp0_;
-	char* _tmp1_;
+	GdkPixbuf* _tmp1_;
+	char* _tmp2_;
 	GError * err;
 	GIcon* icon;
 	GtkIconInfo* info;
 	char* filename;
-	GdkPixbuf* _tmp2_;
-	gboolean _tmp3_;
-	gboolean _tmp4_;
+	GdkPixbuf* _tmp3_;
+	GdkPixbuf* _tmp4_;
 	gboolean _tmp5_;
+	gboolean _tmp6_;
+	gboolean _tmp7_;
 	char* real_name;
-	GtkIconInfo* _tmp6_;
+	GtkIconInfo* _tmp8_;
 	char* fname;
-	GdkPixbuf* _tmp7_;
-	char* _tmp8_;
+	GdkPixbuf* _tmp9_;
+	GdkPixbuf* _tmp10_;
+	char* _tmp11_;
 	GError * e;
 	GError * _inner_error_;
 };
@@ -226,18 +245,15 @@ struct _UnityPixbufCacheLoadFromFilepathData {
 	UnityPixbufCache* self;
 	char* filename;
 	gint size;
+	void* buf;
+	gsize buf_length;
 	GdkPixbuf* result;
 	GFile* datafile;
 	GFileInfo* info;
 	char* mimetype;
 	GFileInputStream* stream;
-	guchar* buf;
-	gint buf_length1;
-	gint _buf_size_;
-	guchar* _tmp0_;
 	void* data;
 	gsize data_size;
-	guchar* _tmp1_;
 	GdkPixbufLoader* loader;
 	GError * ee;
 	GError * _inner_error_;
@@ -282,19 +298,25 @@ UnityPixbufCache* unity_pixbuf_cache_get_default (void);
 void unity_pixbuf_cache_set (UnityPixbufCache* self, const char* icon_id, GdkPixbuf* pixbuf, gint size);
 GdkPixbuf* unity_pixbuf_cache_get (UnityPixbufCache* self, const char* icon_id, gint size);
 void unity_pixbuf_cache_clear (UnityPixbufCache* self);
-gboolean unity_pixbuf_cache_load_iteration (UnityPixbufCache* self);
-static void unity_pixbuf_cache_set_image_from_icon_name_real (UnityPixbufCache* self, CtkImage* image, const char* icon_name, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_);
+static void unity_pixbuf_cache_process_icon_queue_async_data_free (gpointer _data);
+static void unity_pixbuf_cache_process_icon_queue_async_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
+static void unity_pixbuf_cache_process_icon_queue_async (UnityPixbufCache* self, GAsyncReadyCallback _callback_, gpointer _user_data_);
+static void unity_pixbuf_cache_process_icon_queue_finish (UnityPixbufCache* self, GAsyncResult* _res_);
+static gboolean unity_pixbuf_cache_process_icon_queue_async_co (UnityPixbufCacheProcessIconQueueAsyncData* data);
+static void unity_pixbuf_cache_set_image_from_icon_name_real (UnityPixbufCache* self, UnityPixbufCacheTask* task, void* buf, gsize buf_length, GAsyncReadyCallback _callback_, gpointer _user_data_);
 static void unity_pixbuf_cache_set_image_from_icon_name_real_finish (UnityPixbufCache* self, GAsyncResult* _res_);
-static void unity_pixbuf_cache_set_image_from_gicon_string_real (UnityPixbufCache* self, CtkImage* image, const char* gicon_as_string, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_);
+static void unity_pixbuf_cache_set_image_from_gicon_string_real (UnityPixbufCache* self, UnityPixbufCacheTask* task, void* buf, gsize buf_length, GAsyncReadyCallback _callback_, gpointer _user_data_);
 static void unity_pixbuf_cache_set_image_from_gicon_string_real_finish (UnityPixbufCache* self, GAsyncResult* _res_);
+static void unity_pixbuf_cache_process_icon_queue (UnityPixbufCache* self);
+static gboolean unity_pixbuf_cache_dispatch_process_icon_queue_async (UnityPixbufCache* self);
+static gboolean _unity_pixbuf_cache_dispatch_process_icon_queue_async_gsource_func (gpointer self);
 void unity_pixbuf_cache_set_image_from_icon_name (UnityPixbufCache* self, CtkImage* image, const char* icon_name, gint size);
-static gboolean _unity_pixbuf_cache_load_iteration_gsource_func (gpointer self);
 static void unity_pixbuf_cache_set_image_from_icon_name_real_data_free (gpointer _data);
 static void unity_pixbuf_cache_set_image_from_icon_name_real_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 static gboolean unity_pixbuf_cache_set_image_from_icon_name_real_co (UnityPixbufCacheSetImageFromIconNameRealData* data);
-void unity_pixbuf_cache_load_from_filepath (UnityPixbufCache* self, const char* filename, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_);
-GdkPixbuf* unity_pixbuf_cache_load_from_filepath_finish (UnityPixbufCache* self, GAsyncResult* _res_);
-void unity_pixbuf_cache_set_image_from_gicon_string (UnityPixbufCache* self, CtkImage* image, const char* data, gint size);
+static void unity_pixbuf_cache_load_from_filepath (UnityPixbufCache* self, const char* filename, gint size, void* buf, gsize buf_length, GAsyncReadyCallback _callback_, gpointer _user_data_);
+static GdkPixbuf* unity_pixbuf_cache_load_from_filepath_finish (UnityPixbufCache* self, GAsyncResult* _res_, GError** error);
+void unity_pixbuf_cache_set_image_from_gicon_string (UnityPixbufCache* self, CtkImage* image, const char* gicon_as_string, gint size);
 static void unity_pixbuf_cache_set_image_from_gicon_string_real_data_free (gpointer _data);
 static void unity_pixbuf_cache_set_image_from_gicon_string_real_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 static gboolean unity_pixbuf_cache_set_image_from_gicon_string_real_co (UnityPixbufCacheSetImageFromGiconStringRealData* data);
@@ -306,9 +328,8 @@ static gboolean unity_pixbuf_cache_set_image_from_gicon_co (UnityPixbufCacheSetI
 static void unity_pixbuf_cache_load_from_filepath_data_free (gpointer _data);
 static void unity_pixbuf_cache_load_from_filepath_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 static gboolean unity_pixbuf_cache_load_from_filepath_co (UnityPixbufCacheLoadFromFilepathData* data);
-void unity_io_read_stream_async (GInputStream* input, guchar* buffer, int buffer_length1, gsize buffer_lenght, gint io_priority, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
+void unity_io_read_stream_async (GInputStream* input, void* buffer, gsize buffer_lenght, gint io_priority, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void unity_io_read_stream_finish (GAsyncResult* _res_, void** data, gsize* size, GError** error);
-static guchar* _vala_array_dup4 (guchar* self, int length);
 guint unity_pixbuf_cache_get_size (UnityPixbufCache* self);
 static GObject * unity_pixbuf_cache_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_pixbuf_cache_finalize (GObject* obj);
@@ -578,55 +599,146 @@ void unity_pixbuf_cache_clear (UnityPixbufCache* self) {
 }
 
 
-gboolean unity_pixbuf_cache_load_iteration (UnityPixbufCache* self) {
-	gboolean result = FALSE;
-	gint i;
-	g_return_val_if_fail (self != NULL, FALSE);
-	i = 0;
+static void unity_pixbuf_cache_process_icon_queue_async_data_free (gpointer _data) {
+	UnityPixbufCacheProcessIconQueueAsyncData* data;
+	data = _data;
+	g_object_unref (data->self);
+	g_slice_free (UnityPixbufCacheProcessIconQueueAsyncData, data);
+}
+
+
+static void unity_pixbuf_cache_process_icon_queue_async (UnityPixbufCache* self, GAsyncReadyCallback _callback_, gpointer _user_data_) {
+	UnityPixbufCacheProcessIconQueueAsyncData* _data_;
+	_data_ = g_slice_new0 (UnityPixbufCacheProcessIconQueueAsyncData);
+	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, unity_pixbuf_cache_process_icon_queue_async);
+	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, unity_pixbuf_cache_process_icon_queue_async_data_free);
+	_data_->self = g_object_ref (self);
+	unity_pixbuf_cache_process_icon_queue_async_co (_data_);
+}
+
+
+static void unity_pixbuf_cache_process_icon_queue_finish (UnityPixbufCache* self, GAsyncResult* _res_) {
+	UnityPixbufCacheProcessIconQueueAsyncData* _data_;
+	_data_ = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (_res_));
+}
+
+
+static void unity_pixbuf_cache_process_icon_queue_async_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_) {
+	UnityPixbufCacheProcessIconQueueAsyncData* data;
+	data = _user_data_;
+	data->_res_ = _res_;
+	unity_pixbuf_cache_process_icon_queue_async_co (data);
+}
+
+
+static gboolean unity_pixbuf_cache_process_icon_queue_async_co (UnityPixbufCacheProcessIconQueueAsyncData* data) {
+	switch (data->_state_) {
+		case 0:
+		goto _state_0;
+		default:
+		g_assert_not_reached ();
+		case 10:
+		goto _state_10;
+		case 11:
+		goto _state_11;
+	}
+	_state_0:
+	data->buf = (data->_tmp0_ = g_new0 (guchar, 4096), data->buf_length1 = 4096, data->_buf_size_ = data->buf_length1, data->_tmp0_);
+	data->count = 0;
+	data->timer = g_timer_new ();
 	while (TRUE) {
-		gboolean _tmp0_ = FALSE;
-		UnityPixbufCacheTask* task;
-		if (gee_collection_get_size ((GeeCollection*) self->priv->queue) > 0) {
-			_tmp0_ = i < 10;
-		} else {
-			_tmp0_ = FALSE;
-		}
-		if (!_tmp0_) {
+		if (!((data->task = (data->_tmp1_ = (UnityPixbufCacheTask*) gee_queue_poll (data->self->priv->queue), _unity_pixbuf_cache_task_unref0 (data->task), data->_tmp1_)) != NULL)) {
 			break;
 		}
-		task = (UnityPixbufCacheTask*) gee_abstract_queue_poll ((GeeAbstractQueue*) self->priv->queue);
-		if (CTK_IS_IMAGE (task->image)) {
-			if (task->type == UNITY_PIXBUF_REQUEST_TYPE_ICON_NAME) {
-				unity_pixbuf_cache_set_image_from_icon_name_real (self, task->image, task->data, task->size, NULL, NULL);
-			} else {
-				if (task->type == UNITY_PIXBUF_REQUEST_TYPE_GICON_STRING) {
-					unity_pixbuf_cache_set_image_from_gicon_string_real (self, task->image, task->data, task->size, NULL, NULL);
+		if (CTK_IS_IMAGE (data->task->image)) {
+			switch (data->task->type) {
+				case UNITY_PIXBUF_REQUEST_TYPE_ICON_NAME:
+				{
+					data->_state_ = 10;
+					unity_pixbuf_cache_set_image_from_icon_name_real (data->self, data->task, data->buf, (gsize) data->buf_length1, unity_pixbuf_cache_process_icon_queue_async_ready, data);
+					return FALSE;
+					_state_10:
+					unity_pixbuf_cache_set_image_from_icon_name_real_finish (data->self, data->_res_);
+					break;
+				}
+				case UNITY_PIXBUF_REQUEST_TYPE_GICON_STRING:
+				{
+					data->_state_ = 11;
+					unity_pixbuf_cache_set_image_from_gicon_string_real (data->self, data->task, data->buf, (gsize) data->buf_length1, unity_pixbuf_cache_process_icon_queue_async_ready, data);
+					return FALSE;
+					_state_11:
+					unity_pixbuf_cache_set_image_from_gicon_string_real_finish (data->self, data->_res_);
+					break;
+				}
+				default:
+				{
+					g_critical ("unity-pixbuf-cache.vala:151: Internal error. Unknown PixbufRequestType" \
+": %u", (guint) data->task->type);
+					break;
 				}
 			}
 		}
-		i++;
-		_unity_pixbuf_cache_task_unref0 (task);
+		data->count++;
 	}
-	if (gee_collection_get_size ((GeeCollection*) self->priv->queue) == 0) {
-		self->priv->queue_timeout = (guint) 0;
+	g_timer_stop (data->timer);
+	g_debug ("unity-pixbuf-cache.vala:160: Loaded %i icons in %fms", data->count, g_timer_elapsed (data->timer, NULL) * 1000);
+	data->self->priv->queue_source = (guint) 0;
+	_unity_pixbuf_cache_task_unref0 (data->task);
+	_g_timer_destroy0 (data->timer);
+	data->buf = (g_free (data->buf), NULL);
+	{
+		if (data->_state_ == 0) {
+			g_simple_async_result_complete_in_idle (data->_async_result);
+		} else {
+			g_simple_async_result_complete (data->_async_result);
+		}
+		g_object_unref (data->_async_result);
+		return FALSE;
 	}
-	result = gee_collection_get_size ((GeeCollection*) self->priv->queue) != 0;
-	return result;
 }
 
 
-static gboolean _unity_pixbuf_cache_load_iteration_gsource_func (gpointer self) {
+static gboolean _unity_pixbuf_cache_dispatch_process_icon_queue_async_gsource_func (gpointer self) {
 	gboolean result;
-	result = unity_pixbuf_cache_load_iteration (self);
+	result = unity_pixbuf_cache_dispatch_process_icon_queue_async (self);
 	return result;
 }
 
 
+static void unity_pixbuf_cache_process_icon_queue (UnityPixbufCache* self) {
+	g_return_if_fail (self != NULL);
+	if (self->priv->queue_source == 0) {
+		self->priv->queue_source = g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_pixbuf_cache_dispatch_process_icon_queue_async_gsource_func, g_object_ref (self), g_object_unref);
+	}
+}
+
+
+static gboolean unity_pixbuf_cache_dispatch_process_icon_queue_async (UnityPixbufCache* self) {
+	gboolean result = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	unity_pixbuf_cache_process_icon_queue_async (self, NULL, NULL);
+	unity_pixbuf_cache_process_icon_queue_async (self, NULL, NULL);
+	unity_pixbuf_cache_process_icon_queue_async (self, NULL, NULL);
+	result = FALSE;
+	return result;
+}
+
+
+/**
+     * If the icon is already cached then set it immediately on @image. Otherwise
+     * does async IO to load and cache the icon, then setting it on @image.
+     *
+     * Note that this means that you should treat this method as an async
+     * operation for all intents and purposes. You can not count on
+     * image.pixbuf != null when this method call returns. That may just as well
+     * happen in a subsequent idle call.
+     */
 void unity_pixbuf_cache_set_image_from_icon_name (UnityPixbufCache* self, CtkImage* image, const char* icon_name, gint size) {
 	char* key;
 	GdkPixbuf* ret;
 	UnityPixbufCacheTask* task;
 	char* _tmp0_;
+	char* _tmp1_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (image != NULL);
 	g_return_if_fail (icon_name != NULL);
@@ -639,14 +751,13 @@ void unity_pixbuf_cache_set_image_from_icon_name (UnityPixbufCache* self, CtkIma
 		return;
 	}
 	task = unity_pixbuf_cache_task_new ();
-	task->data = (_tmp0_ = g_strdup (icon_name), _g_free0 (task->data), _tmp0_);
+	task->key = (_tmp0_ = g_strdup (key), _g_free0 (task->key), _tmp0_);
+	task->data = (_tmp1_ = g_strdup (icon_name), _g_free0 (task->data), _tmp1_);
 	task->image = image;
 	task->size = size;
 	task->type = UNITY_PIXBUF_REQUEST_TYPE_ICON_NAME;
-	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->queue, task);
-	if (self->priv->queue_timeout == 0) {
-		self->priv->queue_timeout = g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_pixbuf_cache_load_iteration_gsource_func, g_object_ref (self), g_object_unref);
-	}
+	gee_queue_offer (self->priv->queue, task);
+	unity_pixbuf_cache_process_icon_queue (self);
 	_unity_pixbuf_cache_task_unref0 (task);
 	_g_object_unref0 (ret);
 	_g_free0 (key);
@@ -656,22 +767,26 @@ void unity_pixbuf_cache_set_image_from_icon_name (UnityPixbufCache* self, CtkIma
 static void unity_pixbuf_cache_set_image_from_icon_name_real_data_free (gpointer _data) {
 	UnityPixbufCacheSetImageFromIconNameRealData* data;
 	data = _data;
-	_g_object_unref0 (data->image);
-	_g_free0 (data->icon_name);
+	_unity_pixbuf_cache_task_unref0 (data->task);
 	g_object_unref (data->self);
 	g_slice_free (UnityPixbufCacheSetImageFromIconNameRealData, data);
 }
 
 
-static void unity_pixbuf_cache_set_image_from_icon_name_real (UnityPixbufCache* self, CtkImage* image, const char* icon_name, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_) {
+static gpointer _unity_pixbuf_cache_task_ref0 (gpointer self) {
+	return self ? unity_pixbuf_cache_task_ref (self) : NULL;
+}
+
+
+static void unity_pixbuf_cache_set_image_from_icon_name_real (UnityPixbufCache* self, UnityPixbufCacheTask* task, void* buf, gsize buf_length, GAsyncReadyCallback _callback_, gpointer _user_data_) {
 	UnityPixbufCacheSetImageFromIconNameRealData* _data_;
 	_data_ = g_slice_new0 (UnityPixbufCacheSetImageFromIconNameRealData);
 	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, unity_pixbuf_cache_set_image_from_icon_name_real);
 	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, unity_pixbuf_cache_set_image_from_icon_name_real_data_free);
 	_data_->self = g_object_ref (self);
-	_data_->image = _g_object_ref0 (image);
-	_data_->icon_name = g_strdup (icon_name);
-	_data_->size = size;
+	_data_->task = _unity_pixbuf_cache_task_ref0 (task);
+	_data_->buf = buf;
+	_data_->buf_length = buf_length;
 	unity_pixbuf_cache_set_image_from_icon_name_real_co (_data_);
 }
 
@@ -696,16 +811,14 @@ static gboolean unity_pixbuf_cache_set_image_from_icon_name_real_co (UnityPixbuf
 		goto _state_0;
 		default:
 		g_assert_not_reached ();
-		case 10:
-		goto _state_10;
+		case 12:
+		goto _state_12;
 	}
 	_state_0:
-	data->key = g_strdup_printf (UNITY_hash_template, data->icon_name, data->size);
-	data->ret = (GdkPixbuf*) gee_abstract_map_get ((GeeAbstractMap*) data->self->priv->cache, data->key);
+	data->ret = (GdkPixbuf*) gee_abstract_map_get ((GeeAbstractMap*) data->self->priv->cache, data->task->key);
 	if (GDK_IS_PIXBUF (data->ret)) {
-		ctk_image_set_from_pixbuf (data->image, data->ret);
+		ctk_image_set_from_pixbuf (data->task->image, data->ret);
 		_g_object_unref0 (data->ret);
-		_g_free0 (data->key);
 		{
 			if (data->_state_ == 0) {
 				g_simple_async_result_complete_in_idle (data->_async_result);
@@ -716,47 +829,49 @@ static gboolean unity_pixbuf_cache_set_image_from_icon_name_real_co (UnityPixbuf
 			return FALSE;
 		}
 	}
-	if (data->ret == NULL) {
-		{
-			data->info = gtk_icon_theme_lookup_icon (data->self->priv->theme, data->icon_name, data->size, 0);
-			if (data->info != NULL) {
-				data->filename = g_strdup (gtk_icon_info_get_filename (data->info));
-				data->_state_ = 10;
-				unity_pixbuf_cache_load_from_filepath (data->self, data->filename, data->size, unity_pixbuf_cache_set_image_from_icon_name_real_ready, data);
-				return FALSE;
-				_state_10:
-				data->ret = (data->_tmp0_ = unity_pixbuf_cache_load_from_filepath_finish (data->self, data->_res_), _g_object_unref0 (data->ret), data->_tmp0_);
-				_g_free0 (data->filename);
-			}
-			if (GDK_IS_PIXBUF (data->ret)) {
-				gee_abstract_map_set ((GeeAbstractMap*) data->self->priv->cache, data->key, data->ret);
-			}
-			_gtk_icon_info_free0 (data->info);
-		}
-		goto __finally34;
-		__catch34_g_error:
-		{
-			data->e = data->_inner_error_;
-			data->_inner_error_ = NULL;
-			{
-				g_warning ("unity-pixbuf-cache.vala:211: Unable to load icon_name: %s", data->e->message);
-				_g_error_free0 (data->e);
-			}
-		}
-		__finally34:
-		if (data->_inner_error_ != NULL) {
-			_g_object_unref0 (data->ret);
-			_g_free0 (data->key);
-			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
-			g_clear_error (&data->_inner_error_);
+	{
+		data->info = gtk_icon_theme_lookup_icon (data->self->priv->theme, data->task->data, data->task->size, 0);
+		if (data->info != NULL) {
+			data->filename = g_strdup (gtk_icon_info_get_filename (data->info));
+			data->_state_ = 12;
+			unity_pixbuf_cache_load_from_filepath (data->self, data->filename, data->task->size, data->buf, data->buf_length, unity_pixbuf_cache_set_image_from_icon_name_real_ready, data);
 			return FALSE;
+			_state_12:
+			data->_tmp0_ = unity_pixbuf_cache_load_from_filepath_finish (data->self, data->_res_, &data->_inner_error_);
+			if (data->_inner_error_ != NULL) {
+				_g_free0 (data->filename);
+				_gtk_icon_info_free0 (data->info);
+				goto __catch34_g_error;
+			}
+			data->ret = (data->_tmp1_ = data->_tmp0_, _g_object_unref0 (data->ret), data->_tmp1_);
+			_g_free0 (data->filename);
 		}
+		if (GDK_IS_PIXBUF (data->ret)) {
+			gee_abstract_map_set ((GeeAbstractMap*) data->self->priv->cache, data->task->key, data->ret);
+		}
+		_gtk_icon_info_free0 (data->info);
+	}
+	goto __finally34;
+	__catch34_g_error:
+	{
+		data->e = data->_inner_error_;
+		data->_inner_error_ = NULL;
+		{
+			g_warning ("unity-pixbuf-cache.vala:255: Unable to load icon_name: %s", data->e->message);
+			_g_error_free0 (data->e);
+		}
+	}
+	__finally34:
+	if (data->_inner_error_ != NULL) {
+		_g_object_unref0 (data->ret);
+		g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
+		g_clear_error (&data->_inner_error_);
+		return FALSE;
 	}
 	if (GDK_IS_PIXBUF (data->ret)) {
-		ctk_image_set_from_pixbuf (data->image, data->ret);
+		ctk_image_set_from_pixbuf (data->task->image, data->ret);
 	}
 	_g_object_unref0 (data->ret);
-	_g_free0 (data->key);
 	{
 		if (data->_state_ == 0) {
 			g_simple_async_result_complete_in_idle (data->_async_result);
@@ -769,15 +884,25 @@ static gboolean unity_pixbuf_cache_set_image_from_icon_name_real_co (UnityPixbuf
 }
 
 
-void unity_pixbuf_cache_set_image_from_gicon_string (UnityPixbufCache* self, CtkImage* image, const char* data, gint size) {
+/**
+     * If the icon is already cached then set it immediately on @image. Otherwise
+     * does async IO to load and cache the icon, then setting it on @image.
+     *
+     * Note that this means that you should treat this method as an async
+     * operation for all intents and purposes. You can not count on
+     * image.pixbuf != null when this method call returns. That may just as well
+     * happen in a subsequent idle call.
+     */
+void unity_pixbuf_cache_set_image_from_gicon_string (UnityPixbufCache* self, CtkImage* image, const char* gicon_as_string, gint size) {
 	char* key;
 	GdkPixbuf* ret;
 	UnityPixbufCacheTask* task;
 	char* _tmp0_;
+	char* _tmp1_;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (image != NULL);
-	g_return_if_fail (data != NULL);
-	key = g_strdup_printf (UNITY_hash_template, data, size);
+	g_return_if_fail (gicon_as_string != NULL);
+	key = g_strdup_printf (UNITY_hash_template, gicon_as_string, size);
 	ret = (GdkPixbuf*) gee_abstract_map_get ((GeeAbstractMap*) self->priv->cache, key);
 	if (GDK_IS_PIXBUF (ret)) {
 		ctk_image_set_from_pixbuf (image, ret);
@@ -786,14 +911,13 @@ void unity_pixbuf_cache_set_image_from_gicon_string (UnityPixbufCache* self, Ctk
 		return;
 	}
 	task = unity_pixbuf_cache_task_new ();
+	task->key = (_tmp0_ = g_strdup (key), _g_free0 (task->key), _tmp0_);
 	task->image = image;
-	task->data = (_tmp0_ = g_strdup (data), _g_free0 (task->data), _tmp0_);
+	task->data = (_tmp1_ = g_strdup (gicon_as_string), _g_free0 (task->data), _tmp1_);
 	task->size = size;
 	task->type = UNITY_PIXBUF_REQUEST_TYPE_GICON_STRING;
-	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->queue, task);
-	if (self->priv->queue_timeout == 0) {
-		self->priv->queue_timeout = g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, _unity_pixbuf_cache_load_iteration_gsource_func, g_object_ref (self), g_object_unref);
-	}
+	gee_queue_offer (self->priv->queue, task);
+	unity_pixbuf_cache_process_icon_queue (self);
 	_unity_pixbuf_cache_task_unref0 (task);
 	_g_object_unref0 (ret);
 	_g_free0 (key);
@@ -803,22 +927,21 @@ void unity_pixbuf_cache_set_image_from_gicon_string (UnityPixbufCache* self, Ctk
 static void unity_pixbuf_cache_set_image_from_gicon_string_real_data_free (gpointer _data) {
 	UnityPixbufCacheSetImageFromGiconStringRealData* data;
 	data = _data;
-	_g_object_unref0 (data->image);
-	_g_free0 (data->gicon_as_string);
+	_unity_pixbuf_cache_task_unref0 (data->task);
 	g_object_unref (data->self);
 	g_slice_free (UnityPixbufCacheSetImageFromGiconStringRealData, data);
 }
 
 
-static void unity_pixbuf_cache_set_image_from_gicon_string_real (UnityPixbufCache* self, CtkImage* image, const char* gicon_as_string, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_) {
+static void unity_pixbuf_cache_set_image_from_gicon_string_real (UnityPixbufCache* self, UnityPixbufCacheTask* task, void* buf, gsize buf_length, GAsyncReadyCallback _callback_, gpointer _user_data_) {
 	UnityPixbufCacheSetImageFromGiconStringRealData* _data_;
 	_data_ = g_slice_new0 (UnityPixbufCacheSetImageFromGiconStringRealData);
 	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, unity_pixbuf_cache_set_image_from_gicon_string_real);
 	g_simple_async_result_set_op_res_gpointer (_data_->_async_result, _data_, unity_pixbuf_cache_set_image_from_gicon_string_real_data_free);
 	_data_->self = g_object_ref (self);
-	_data_->image = _g_object_ref0 (image);
-	_data_->gicon_as_string = g_strdup (gicon_as_string);
-	_data_->size = size;
+	_data_->task = _unity_pixbuf_cache_task_ref0 (task);
+	_data_->buf = buf;
+	_data_->buf_length = buf_length;
 	unity_pixbuf_cache_set_image_from_gicon_string_real_co (_data_);
 }
 
@@ -892,20 +1015,18 @@ static gboolean unity_pixbuf_cache_set_image_from_gicon_string_real_co (UnityPix
 		goto _state_0;
 		default:
 		g_assert_not_reached ();
-		case 11:
-		goto _state_11;
-		case 12:
-		goto _state_12;
 		case 13:
 		goto _state_13;
+		case 14:
+		goto _state_14;
+		case 15:
+		goto _state_15;
 	}
 	_state_0:
-	data->key = g_strdup_printf (UNITY_hash_template, data->gicon_as_string, data->size);
-	data->ret = (GdkPixbuf*) gee_abstract_map_get ((GeeAbstractMap*) data->self->priv->cache, data->key);
+	data->ret = (GdkPixbuf*) gee_abstract_map_get ((GeeAbstractMap*) data->self->priv->cache, data->task->key);
 	if (GDK_IS_PIXBUF (data->ret)) {
-		ctk_image_set_from_pixbuf (data->image, data->ret);
+		ctk_image_set_from_pixbuf (data->task->image, data->ret);
 		_g_object_unref0 (data->ret);
-		_g_free0 (data->key);
 		{
 			if (data->_state_ == 0) {
 				g_simple_async_result_complete_in_idle (data->_async_result);
@@ -916,113 +1037,123 @@ static gboolean unity_pixbuf_cache_set_image_from_gicon_string_real_co (UnityPix
 			return FALSE;
 		}
 	}
-	if (data->ret == NULL) {
-		if (g_utf8_get_char (g_utf8_offset_to_pointer (data->gicon_as_string, 0)) == '/') {
-			{
-				data->_state_ = 11;
-				unity_pixbuf_cache_load_from_filepath (data->self, data->gicon_as_string, data->size, unity_pixbuf_cache_set_image_from_gicon_string_real_ready, data);
-				return FALSE;
-				_state_11:
-				data->ret = (data->_tmp0_ = unity_pixbuf_cache_load_from_filepath_finish (data->self, data->_res_), _g_object_unref0 (data->ret), data->_tmp0_);
-			}
-			goto __finally35;
-			__catch35_g_error:
-			{
-				data->err = data->_inner_error_;
-				data->_inner_error_ = NULL;
-				{
-					g_message (data->_tmp1_ = g_strconcat ("Unable to load ", string_to_string (data->gicon_as_string), " as file: %s", NULL), data->err->message);
-					_g_free0 (data->_tmp1_);
-					_g_error_free0 (data->err);
-				}
-			}
-			__finally35:
+	if (g_utf8_get_char (g_utf8_offset_to_pointer (data->task->data, 0)) == '/') {
+		{
+			data->_state_ = 13;
+			unity_pixbuf_cache_load_from_filepath (data->self, data->task->data, data->task->size, data->buf, data->buf_length, unity_pixbuf_cache_set_image_from_gicon_string_real_ready, data);
+			return FALSE;
+			_state_13:
+			data->_tmp0_ = unity_pixbuf_cache_load_from_filepath_finish (data->self, data->_res_, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
-				_g_object_unref0 (data->ret);
-				_g_free0 (data->key);
-				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
-				g_clear_error (&data->_inner_error_);
-				return FALSE;
+				goto __catch35_g_error;
+			}
+			data->ret = (data->_tmp1_ = data->_tmp0_, _g_object_unref0 (data->ret), data->_tmp1_);
+		}
+		goto __finally35;
+		__catch35_g_error:
+		{
+			data->err = data->_inner_error_;
+			data->_inner_error_ = NULL;
+			{
+				g_message (data->_tmp2_ = g_strconcat ("Unable to load ", string_to_string (data->task->data), " as file: %s", NULL), data->err->message);
+				_g_free0 (data->_tmp2_);
+				_g_error_free0 (data->err);
 			}
 		}
-		if (data->ret == NULL) {
-			{
-				data->icon = g_icon_new_for_string (data->gicon_as_string, &data->_inner_error_);
+		__finally35:
+		if (data->_inner_error_ != NULL) {
+			_g_object_unref0 (data->ret);
+			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
+			g_clear_error (&data->_inner_error_);
+			return FALSE;
+		}
+	}
+	if (data->ret == NULL) {
+		{
+			data->icon = g_icon_new_for_string (data->task->data, &data->_inner_error_);
+			if (data->_inner_error_ != NULL) {
+				goto __catch36_g_error;
+			}
+			data->info = gtk_icon_theme_lookup_by_gicon (data->self->priv->theme, data->icon, data->task->size, 0);
+			if (data->info != NULL) {
+				data->filename = g_strdup (gtk_icon_info_get_filename (data->info));
+				data->_state_ = 14;
+				unity_pixbuf_cache_load_from_filepath (data->self, data->filename, data->task->size, data->buf, data->buf_length, unity_pixbuf_cache_set_image_from_gicon_string_real_ready, data);
+				return FALSE;
+				_state_14:
+				data->_tmp3_ = unity_pixbuf_cache_load_from_filepath_finish (data->self, data->_res_, &data->_inner_error_);
 				if (data->_inner_error_ != NULL) {
+					_g_free0 (data->filename);
+					_gtk_icon_info_free0 (data->info);
 					goto __catch36_g_error;
 				}
-				data->info = gtk_icon_theme_lookup_by_gicon (data->self->priv->theme, data->icon, data->size, 0);
-				if (data->info != NULL) {
-					data->filename = g_strdup (gtk_icon_info_get_filename (data->info));
-					data->_state_ = 12;
-					unity_pixbuf_cache_load_from_filepath (data->self, data->filename, data->size, unity_pixbuf_cache_set_image_from_gicon_string_real_ready, data);
-					return FALSE;
-					_state_12:
-					data->ret = (data->_tmp2_ = unity_pixbuf_cache_load_from_filepath_finish (data->self, data->_res_), _g_object_unref0 (data->ret), data->_tmp2_);
-					_g_free0 (data->filename);
+				data->ret = (data->_tmp4_ = data->_tmp3_, _g_object_unref0 (data->ret), data->_tmp4_);
+				_g_free0 (data->filename);
+			}
+			if (data->ret == NULL) {
+				if (g_str_has_suffix (data->task->data, ".png")) {
+					data->_tmp7_ = TRUE;
+				} else {
+					data->_tmp7_ = g_str_has_suffix (data->task->data, ".xpm");
 				}
-				if (data->ret == NULL) {
-					if (g_str_has_suffix (data->gicon_as_string, ".png")) {
-						data->_tmp5_ = TRUE;
-					} else {
-						data->_tmp5_ = g_str_has_suffix (data->gicon_as_string, ".xpm");
-					}
-					if (data->_tmp5_) {
-						data->_tmp4_ = TRUE;
-					} else {
-						data->_tmp4_ = g_str_has_suffix (data->gicon_as_string, ".gif");
-					}
-					if (data->_tmp4_) {
-						data->_tmp3_ = TRUE;
-					} else {
-						data->_tmp3_ = g_str_has_suffix (data->gicon_as_string, ".jpg");
-					}
-					if (data->_tmp3_) {
-						data->real_name = string_slice (data->gicon_as_string, (glong) 0, string_get_length (data->gicon_as_string) - 4);
-						data->info = (data->_tmp6_ = gtk_icon_theme_lookup_icon (data->self->priv->theme, data->real_name, data->size, 0), _gtk_icon_info_free0 (data->info), data->_tmp6_);
-						if (data->info != NULL) {
-							data->fname = g_strdup (gtk_icon_info_get_filename (data->info));
-							data->_state_ = 13;
-							unity_pixbuf_cache_load_from_filepath (data->self, data->fname, data->size, unity_pixbuf_cache_set_image_from_gicon_string_real_ready, data);
-							return FALSE;
-							_state_13:
-							data->ret = (data->_tmp7_ = unity_pixbuf_cache_load_from_filepath_finish (data->self, data->_res_), _g_object_unref0 (data->ret), data->_tmp7_);
+				if (data->_tmp7_) {
+					data->_tmp6_ = TRUE;
+				} else {
+					data->_tmp6_ = g_str_has_suffix (data->task->data, ".gif");
+				}
+				if (data->_tmp6_) {
+					data->_tmp5_ = TRUE;
+				} else {
+					data->_tmp5_ = g_str_has_suffix (data->task->data, ".jpg");
+				}
+				if (data->_tmp5_) {
+					data->real_name = string_slice (data->task->data, (glong) 0, string_get_length (data->task->data) - 4);
+					data->info = (data->_tmp8_ = gtk_icon_theme_lookup_icon (data->self->priv->theme, data->real_name, data->task->size, 0), _gtk_icon_info_free0 (data->info), data->_tmp8_);
+					if (data->info != NULL) {
+						data->fname = g_strdup (gtk_icon_info_get_filename (data->info));
+						data->_state_ = 15;
+						unity_pixbuf_cache_load_from_filepath (data->self, data->fname, data->task->size, data->buf, data->buf_length, unity_pixbuf_cache_set_image_from_gicon_string_real_ready, data);
+						return FALSE;
+						_state_15:
+						data->_tmp9_ = unity_pixbuf_cache_load_from_filepath_finish (data->self, data->_res_, &data->_inner_error_);
+						if (data->_inner_error_ != NULL) {
 							_g_free0 (data->fname);
+							_g_free0 (data->real_name);
+							_gtk_icon_info_free0 (data->info);
+							goto __catch36_g_error;
 						}
-						_g_free0 (data->real_name);
+						data->ret = (data->_tmp10_ = data->_tmp9_, _g_object_unref0 (data->ret), data->_tmp10_);
+						_g_free0 (data->fname);
 					}
+					_g_free0 (data->real_name);
 				}
-				_gtk_icon_info_free0 (data->info);
 			}
-			goto __finally36;
-			__catch36_g_error:
+			_gtk_icon_info_free0 (data->info);
+		}
+		goto __finally36;
+		__catch36_g_error:
+		{
+			data->e = data->_inner_error_;
+			data->_inner_error_ = NULL;
 			{
-				data->e = data->_inner_error_;
-				data->_inner_error_ = NULL;
-				{
-					g_warning (data->_tmp8_ = g_strconcat ("Unable to load icon ", string_to_string (data->gicon_as_string), ": '%s'", NULL), data->e->message);
-					_g_free0 (data->_tmp8_);
-					_g_error_free0 (data->e);
-				}
-			}
-			__finally36:
-			if (data->_inner_error_ != NULL) {
-				_g_object_unref0 (data->ret);
-				_g_free0 (data->key);
-				g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
-				g_clear_error (&data->_inner_error_);
-				return FALSE;
+				g_warning (data->_tmp11_ = g_strconcat ("Unable to load icon ", string_to_string (data->task->data), ": '%s'", NULL), data->e->message);
+				_g_free0 (data->_tmp11_);
+				_g_error_free0 (data->e);
 			}
 		}
-		if (GDK_IS_PIXBUF (data->ret)) {
-			gee_abstract_map_set ((GeeAbstractMap*) data->self->priv->cache, data->key, data->ret);
+		__finally36:
+		if (data->_inner_error_ != NULL) {
+			_g_object_unref0 (data->ret);
+			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
+			g_clear_error (&data->_inner_error_);
+			return FALSE;
 		}
 	}
 	if (GDK_IS_PIXBUF (data->ret)) {
-		ctk_image_set_from_pixbuf (data->image, data->ret);
+		gee_abstract_map_set ((GeeAbstractMap*) data->self->priv->cache, data->task->key, data->ret);
+		ctk_image_set_from_pixbuf (data->task->image, data->ret);
 	}
 	_g_object_unref0 (data->ret);
-	_g_free0 (data->key);
 	{
 		if (data->_state_ == 0) {
 			g_simple_async_result_complete_in_idle (data->_async_result);
@@ -1072,6 +1203,15 @@ static void unity_pixbuf_cache_set_image_from_gicon_ready (GObject* source_objec
 }
 
 
+/**
+     * If @icon is already cached then set it immediately on @image. Otherwise
+     * does async IO to load and cache the icon, then setting it on @image.
+     *
+     * Note that this means that you should treat this method as an async
+     * operation for all intents and purposes. You can not count on
+     * image.pixbuf != null when this method call returns. That may just as well
+     * happen in a subsequent idle call.
+     */
 static gboolean unity_pixbuf_cache_set_image_from_gicon_co (UnityPixbufCacheSetImageFromGiconData* data) {
 	switch (data->_state_) {
 		case 0:
@@ -1104,7 +1244,7 @@ static void unity_pixbuf_cache_load_from_filepath_data_free (gpointer _data) {
 }
 
 
-void unity_pixbuf_cache_load_from_filepath (UnityPixbufCache* self, const char* filename, gint size, GAsyncReadyCallback _callback_, gpointer _user_data_) {
+static void unity_pixbuf_cache_load_from_filepath (UnityPixbufCache* self, const char* filename, gint size, void* buf, gsize buf_length, GAsyncReadyCallback _callback_, gpointer _user_data_) {
 	UnityPixbufCacheLoadFromFilepathData* _data_;
 	_data_ = g_slice_new0 (UnityPixbufCacheLoadFromFilepathData);
 	_data_->_async_result = g_simple_async_result_new (G_OBJECT (self), _callback_, _user_data_, unity_pixbuf_cache_load_from_filepath);
@@ -1112,13 +1252,18 @@ void unity_pixbuf_cache_load_from_filepath (UnityPixbufCache* self, const char* 
 	_data_->self = g_object_ref (self);
 	_data_->filename = g_strdup (filename);
 	_data_->size = size;
+	_data_->buf = buf;
+	_data_->buf_length = buf_length;
 	unity_pixbuf_cache_load_from_filepath_co (_data_);
 }
 
 
-GdkPixbuf* unity_pixbuf_cache_load_from_filepath_finish (UnityPixbufCache* self, GAsyncResult* _res_) {
+static GdkPixbuf* unity_pixbuf_cache_load_from_filepath_finish (UnityPixbufCache* self, GAsyncResult* _res_, GError** error) {
 	GdkPixbuf* result;
 	UnityPixbufCacheLoadFromFilepathData* _data_;
+	if (g_simple_async_result_propagate_error (G_SIMPLE_ASYNC_RESULT (_res_), error)) {
+		return NULL;
+	}
 	_data_ = g_simple_async_result_get_op_res_gpointer (G_SIMPLE_ASYNC_RESULT (_res_));
 	result = _data_->result;
 	_data_->result = NULL;
@@ -1134,84 +1279,81 @@ static void unity_pixbuf_cache_load_from_filepath_ready (GObject* source_object,
 }
 
 
-static guchar* _vala_array_dup4 (guchar* self, int length) {
-	return g_memdup (self, length * sizeof (guchar));
-}
-
-
 static gboolean unity_pixbuf_cache_load_from_filepath_co (UnityPixbufCacheLoadFromFilepathData* data) {
 	switch (data->_state_) {
 		case 0:
 		goto _state_0;
 		default:
 		g_assert_not_reached ();
-		case 14:
-		goto _state_14;
-		case 15:
-		goto _state_15;
 		case 16:
 		goto _state_16;
+		case 17:
+		goto _state_17;
+		case 18:
+		goto _state_18;
 	}
 	_state_0:
 	if (data->filename != NULL) {
 		data->datafile = g_file_new_for_path (data->filename);
-		data->_state_ = 14;
+		data->_state_ = 16;
 		g_file_query_info_async (data->datafile, G_FILE_ATTRIBUTE_STANDARD_CONTENT_TYPE, G_FILE_QUERY_INFO_NONE, G_PRIORITY_LOW, NULL, unity_pixbuf_cache_load_from_filepath_ready, data);
 		return FALSE;
-		_state_14:
+		_state_16:
 		data->info = g_file_query_info_finish (data->datafile, data->_res_, &data->_inner_error_);
 		if (data->_inner_error_ != NULL) {
+			g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
+			g_error_free (data->_inner_error_);
 			_g_object_unref0 (data->datafile);
-			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
-			g_clear_error (&data->_inner_error_);
-			return FALSE;
+			{
+				if (data->_state_ == 0) {
+					g_simple_async_result_complete_in_idle (data->_async_result);
+				} else {
+					g_simple_async_result_complete (data->_async_result);
+				}
+				g_object_unref (data->_async_result);
+				return FALSE;
+			}
 		}
 		data->mimetype = g_strdup (g_file_info_get_content_type (data->info));
 		{
-			data->_state_ = 15;
+			data->_state_ = 17;
 			g_file_read_async (data->datafile, G_PRIORITY_DEFAULT, NULL, unity_pixbuf_cache_load_from_filepath_ready, data);
 			return FALSE;
-			_state_15:
+			_state_17:
 			data->stream = g_file_read_finish (data->datafile, data->_res_, &data->_inner_error_);
 			if (data->_inner_error_ != NULL) {
 				goto __catch37_g_error;
 			}
 			if (G_IS_FILE_INPUT_STREAM (data->stream)) {
-				data->buf = (data->_tmp0_ = g_new0 (guchar, 1024), data->buf_length1 = 1024, data->_buf_size_ = data->buf_length1, data->_tmp0_);
-				data->_state_ = 16;
-				unity_io_read_stream_async ((GInputStream*) data->stream, (data->_tmp1_ = data->buf, (data->_tmp1_ == NULL) ? ((gpointer) data->_tmp1_) : _vala_array_dup4 (data->_tmp1_, data->buf_length1)), data->buf_length1, (gsize) data->buf_length1, G_PRIORITY_DEFAULT, NULL, unity_pixbuf_cache_load_from_filepath_ready, data);
+				data->_state_ = 18;
+				unity_io_read_stream_async ((GInputStream*) data->stream, data->buf, data->buf_length, G_PRIORITY_DEFAULT, NULL, unity_pixbuf_cache_load_from_filepath_ready, data);
 				return FALSE;
-				_state_16:
+				_state_18:
 				unity_io_read_stream_finish (data->_res_, &data->data, &data->data_size, &data->_inner_error_);
 				if (data->_inner_error_ != NULL) {
-					data->buf = (g_free (data->buf), NULL);
 					_g_object_unref0 (data->stream);
 					goto __catch37_g_error;
 				}
 				data->loader = gdk_pixbuf_loader_new_with_mime_type (data->mimetype, &data->_inner_error_);
 				if (data->_inner_error_ != NULL) {
-					data->buf = (g_free (data->buf), NULL);
 					_g_object_unref0 (data->stream);
 					goto __catch37_g_error;
 				}
 				gdk_pixbuf_loader_write (data->loader, (guchar*) data->data, data->data_size, &data->_inner_error_);
 				if (data->_inner_error_ != NULL) {
 					_g_object_unref0 (data->loader);
-					data->buf = (g_free (data->buf), NULL);
 					_g_object_unref0 (data->stream);
 					goto __catch37_g_error;
 				}
 				gdk_pixbuf_loader_close (data->loader, &data->_inner_error_);
 				if (data->_inner_error_ != NULL) {
 					_g_object_unref0 (data->loader);
-					data->buf = (g_free (data->buf), NULL);
 					_g_object_unref0 (data->stream);
 					goto __catch37_g_error;
 				}
 				g_free (data->data);
 				data->result = _g_object_ref0 (gdk_pixbuf_loader_get_pixbuf (data->loader));
 				_g_object_unref0 (data->loader);
-				data->buf = (g_free (data->buf), NULL);
 				_g_object_unref0 (data->stream);
 				_g_free0 (data->mimetype);
 				_g_object_unref0 (data->info);
@@ -1226,7 +1368,6 @@ static gboolean unity_pixbuf_cache_load_from_filepath_co (UnityPixbufCacheLoadFr
 					return FALSE;
 				}
 				_g_object_unref0 (data->loader);
-				data->buf = (g_free (data->buf), NULL);
 			}
 			_g_object_unref0 (data->stream);
 		}
@@ -1236,18 +1377,26 @@ static gboolean unity_pixbuf_cache_load_from_filepath_co (UnityPixbufCacheLoadFr
 			data->ee = data->_inner_error_;
 			data->_inner_error_ = NULL;
 			{
-				g_warning ("unity-pixbuf-cache.vala:371: Unable to load image file '%s': %s", data->filename, data->ee->message);
+				g_warning ("unity-pixbuf-cache.vala:422: Unable to load image file '%s': %s", data->filename, data->ee->message);
 				_g_error_free0 (data->ee);
 			}
 		}
 		__finally37:
 		if (data->_inner_error_ != NULL) {
+			g_simple_async_result_set_from_error (data->_async_result, data->_inner_error_);
+			g_error_free (data->_inner_error_);
 			_g_free0 (data->mimetype);
 			_g_object_unref0 (data->info);
 			_g_object_unref0 (data->datafile);
-			g_critical ("file %s: line %d: uncaught error: %s (%s, %d)", __FILE__, __LINE__, data->_inner_error_->message, g_quark_to_string (data->_inner_error_->domain), data->_inner_error_->code);
-			g_clear_error (&data->_inner_error_);
-			return FALSE;
+			{
+				if (data->_state_ == 0) {
+					g_simple_async_result_complete_in_idle (data->_async_result);
+				} else {
+					g_simple_async_result_complete (data->_async_result);
+				}
+				g_object_unref (data->_async_result);
+				return FALSE;
+			}
 		}
 		_g_free0 (data->mimetype);
 		_g_object_unref0 (data->info);
@@ -1291,9 +1440,9 @@ static GObject * unity_pixbuf_cache_constructor (GType type, guint n_construct_p
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_PIXBUF_CACHE (obj);
 	{
-		GeePriorityQueue* _tmp0_;
+		GeeQueue* _tmp0_;
 		GeeHashMap* _tmp1_;
-		self->priv->queue = (_tmp0_ = gee_priority_queue_new (UNITY_TYPE_PIXBUF_CACHE_TASK, (GBoxedCopyFunc) unity_pixbuf_cache_task_ref, unity_pixbuf_cache_task_unref, NULL), _g_object_unref0 (self->priv->queue), _tmp0_);
+		self->priv->queue = (_tmp0_ = (GeeQueue*) gee_linked_list_new (UNITY_TYPE_PIXBUF_CACHE_TASK, (GBoxedCopyFunc) unity_pixbuf_cache_task_ref, unity_pixbuf_cache_task_unref, NULL), _g_object_unref0 (self->priv->queue), _tmp0_);
 		self->priv->theme = gtk_icon_theme_get_default ();
 		self->priv->cache = (_tmp1_ = gee_hash_map_new (G_TYPE_STRING, (GBoxedCopyFunc) g_strdup, g_free, GDK_TYPE_PIXBUF, (GBoxedCopyFunc) g_object_ref, g_object_unref, NULL, NULL, NULL), _g_object_unref0 (self->priv->cache), _tmp1_);
 	}
@@ -1314,7 +1463,7 @@ static void unity_pixbuf_cache_class_init (UnityPixbufCacheClass * klass) {
 static void unity_pixbuf_cache_instance_init (UnityPixbufCache * self) {
 	self->priv = UNITY_PIXBUF_CACHE_GET_PRIVATE (self);
 	self->priv->autodispose = FALSE;
-	self->priv->queue_timeout = (guint) 0;
+	self->priv->queue_source = (guint) 0;
 }
 
 

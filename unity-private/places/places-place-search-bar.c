@@ -130,6 +130,8 @@ typedef struct _UnityPlacesPlaceSearchEntryPrivate UnityPlacesPlaceSearchEntryPr
 #define _g_hash_table_unref0(var) ((var == NULL) ? NULL : (var = (g_hash_table_unref (var), NULL)))
 
 #define UNITY_PLACES_TYPE_ACTIVATION_STATUS (unity_places_activation_status_get_type ())
+
+#define UNITY_PLACES_TYPE_SECTION_STYLE (unity_places_section_style_get_type ())
 #define _g_free0(var) (var = (g_free (var), NULL))
 typedef struct _Block5Data Block5Data;
 typedef struct _UnityPlacesPlaceSearchBarBackgroundPrivate UnityPlacesPlaceSearchBarBackgroundPrivate;
@@ -199,6 +201,7 @@ struct _UnityPlacesPlaceSearchBarPrivate {
 	UnityPlacesPlaceEntry* active_entry;
 	UnityPlacesPlaceSearchBarBackground* bg;
 	UnityPlacesPlaceSearchNavigation* navigation;
+	gboolean _search_fail;
 };
 
 struct _UnityPlacesPlaceSearchEntry {
@@ -220,6 +223,11 @@ typedef enum  {
 	UNITY_PLACES_ACTIVATION_STATUS_ACTIVATED_SHOW_DASH,
 	UNITY_PLACES_ACTIVATION_STATUS_ACTIVATED_HIDE_DASH
 } UnityPlacesActivationStatus;
+
+typedef enum  {
+	UNITY_PLACES_SECTION_STYLE_BUTTONS,
+	UNITY_PLACES_SECTION_STYLE_BREADCRUMB
+} UnityPlacesSectionStyle;
 
 struct _Block5Data {
 	int _ref_count_;
@@ -243,6 +251,7 @@ struct _UnityPlacesPlaceSearchBarBackgroundPrivate {
 	gint _entry_position;
 	ClutterCairoTexture* texture;
 	CtkEffectGlow* glow;
+	gboolean _search_empty;
 	UnityPlacesPlaceSearchNavigation* _navigation;
 	UnityPlacesPlaceSearchEntry* _search_entry;
 };
@@ -261,7 +270,8 @@ GType unity_places_place_search_bar_background_get_type (void) G_GNUC_CONST;
 GType unity_places_place_search_navigation_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_SEARCH_BAR_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR, UnityPlacesPlaceSearchBarPrivate))
 enum  {
-	UNITY_PLACES_PLACE_SEARCH_BAR_DUMMY_PROPERTY
+	UNITY_PLACES_PLACE_SEARCH_BAR_DUMMY_PROPERTY,
+	UNITY_PLACES_PLACE_SEARCH_BAR_SEARCH_FAIL
 };
 #define UNITY_PLACES_PLACE_SEARCH_BAR_SPACING 8
 #define UNITY_PLACES_PLACE_SEARCH_BAR_RANDOM_TEXT_WIDTH 400
@@ -277,6 +287,7 @@ GType unity_testing_object_registry_get_type (void) G_GNUC_CONST;
 UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void);
 void unity_testing_object_registry_register (UnityTestingObjectRegistry* self, const char* name, GObject* object);
 void unity_places_place_search_bar_reset (UnityPlacesPlaceSearchBar* self);
+void unity_places_place_search_bar_set_search_fail (UnityPlacesPlaceSearchBar* self, gboolean value);
 void unity_places_place_search_entry_reset (UnityPlacesPlaceSearchEntry* self);
 void unity_places_place_search_bar_search (UnityPlacesPlaceSearchBar* self, const char* text);
 static void unity_places_place_search_bar_on_search_text_changed (UnityPlacesPlaceSearchBar* self, const char* text);
@@ -293,15 +304,19 @@ UnityPlacesActivationStatus unity_places_place_activate (UnityPlacesPlace* self,
 void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearchBar* self, UnityPlacesPlaceEntry* entry, gint x, guint section);
 void unity_places_place_search_bar_background_set_entry_position (UnityPlacesPlaceSearchBarBackground* self, gint value);
 void unity_places_place_search_sections_bar_set_active_entry (UnityPlacesPlaceSearchSectionsBar* self, UnityPlacesPlaceEntry* entry);
-static gboolean _lambda43_ (Block5Data* _data5_);
+GType unity_places_section_style_get_type (void) G_GNUC_CONST;
+UnityPlacesSectionStyle unity_places_place_search_sections_bar_get_style (UnityPlacesPlaceSearchSectionsBar* self);
+static gboolean _lambda42_ (Block5Data* _data5_);
 void unity_places_place_search_sections_bar_set_active_section (UnityPlacesPlaceSearchSectionsBar* self, guint section_id);
-static gboolean __lambda43__gsource_func (gpointer self);
+static gboolean __lambda42__gsource_func (gpointer self);
 void unity_places_place_search_navigation_set_active_entry (UnityPlacesPlaceSearchNavigation* self, UnityPlacesPlaceEntry* entry);
 void unity_places_place_search_entry_set_active_entry (UnityPlacesPlaceSearchEntry* self, UnityPlacesPlaceEntry* entry);
 GeeHashMap* unity_places_place_entry_get_hints (UnityPlacesPlaceEntry* self);
 void unity_places_place_search_extra_action_set_icon_from_gicon_string (UnityPlacesPlaceSearchExtraAction* self, const char* icon_string);
 static Block5Data* block5_data_ref (Block5Data* _data5_);
 static void block5_data_unref (Block5Data* _data5_);
+gboolean unity_places_place_search_bar_get_search_fail (UnityPlacesPlaceSearchBar* self);
+void unity_places_place_search_bar_background_set_search_empty (UnityPlacesPlaceSearchBarBackground* self, gboolean value);
 UnityPlacesPlaceSearchNavigation* unity_places_place_search_navigation_new (void);
 UnityPlacesPlaceSearchNavigation* unity_places_place_search_navigation_construct (GType object_type);
 UnityPlacesPlaceSearchEntry* unity_places_place_search_entry_new (void);
@@ -316,10 +331,13 @@ UnityPlacesPlaceSearchBarBackground* unity_places_place_search_bar_background_ne
 UnityPlacesPlaceSearchBarBackground* unity_places_place_search_bar_background_construct (GType object_type, UnityPlacesPlaceSearchNavigation* nav, UnityPlacesPlaceSearchEntry* search_entry);
 static GObject * unity_places_place_search_bar_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_place_search_bar_finalize (GObject* obj);
+static void unity_places_place_search_bar_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
+static void unity_places_place_search_bar_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
 #define UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR_BACKGROUND, UnityPlacesPlaceSearchBarBackgroundPrivate))
 enum  {
 	UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_DUMMY_PROPERTY,
 	UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_ENTRY_POSITION,
+	UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_SEARCH_EMPTY,
 	UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_NAVIGATION,
 	UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_SEARCH_ENTRY
 };
@@ -328,6 +346,7 @@ static void unity_places_place_search_bar_background_real_allocate (ClutterActor
 gint unity_places_place_search_bar_background_get_entry_position (UnityPlacesPlaceSearchBarBackground* self);
 UnityPlacesPlaceSearchNavigation* unity_places_place_search_bar_background_get_navigation (UnityPlacesPlaceSearchBarBackground* self);
 UnityPlacesPlaceSearchEntry* unity_places_place_search_bar_background_get_search_entry (UnityPlacesPlaceSearchBarBackground* self);
+gboolean unity_places_place_search_bar_background_get_search_empty (UnityPlacesPlaceSearchBarBackground* self);
 static void unity_places_place_search_bar_background_set_navigation (UnityPlacesPlaceSearchBarBackground* self, UnityPlacesPlaceSearchNavigation* value);
 static void unity_places_place_search_bar_background_set_search_entry (UnityPlacesPlaceSearchBarBackground* self, UnityPlacesPlaceSearchEntry* value);
 static GObject * unity_places_place_search_bar_background_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
@@ -354,6 +373,7 @@ UnityPlacesPlaceSearchBar* unity_places_place_search_bar_new (void) {
 
 void unity_places_place_search_bar_reset (UnityPlacesPlaceSearchBar* self) {
 	g_return_if_fail (self != NULL);
+	unity_places_place_search_bar_set_search_fail (self, FALSE);
 	unity_places_place_search_entry_reset (self->entry);
 }
 
@@ -442,7 +462,7 @@ static void unity_places_place_search_bar_on_extra_action_activated (UnityPlaces
 			}
 			default:
 			{
-				g_warning ("places-place-search-bar.vala:159: Unexpected activation status: %u", (guint) _result_);
+				g_warning ("places-place-search-bar.vala:173: Unexpected activation status: %u", (guint) _result_);
 				break;
 			}
 		}
@@ -455,7 +475,7 @@ static gpointer _g_object_ref0 (gpointer self) {
 }
 
 
-static gboolean _lambda43_ (Block5Data* _data5_) {
+static gboolean _lambda42_ (Block5Data* _data5_) {
 	UnityPlacesPlaceSearchBar * self;
 	gboolean result = FALSE;
 	self = _data5_->self;
@@ -465,9 +485,9 @@ static gboolean _lambda43_ (Block5Data* _data5_) {
 }
 
 
-static gboolean __lambda43__gsource_func (gpointer self) {
+static gboolean __lambda42__gsource_func (gpointer self) {
 	gboolean result;
-	result = _lambda43_ (self);
+	result = _lambda42_ (self);
 	return result;
 }
 
@@ -489,6 +509,7 @@ static void block5_data_unref (Block5Data* _data5_) {
 void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearchBar* self, UnityPlacesPlaceEntry* entry, gint x, guint section) {
 	Block5Data* _data5_;
 	UnityPlacesPlaceEntry* _tmp0_;
+	gboolean _tmp1_ = FALSE;
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (entry != NULL);
 	_data5_ = g_slice_new0 (Block5Data);
@@ -498,25 +519,49 @@ void unity_places_place_search_bar_set_active_entry_view (UnityPlacesPlaceSearch
 	self->priv->active_entry = (_tmp0_ = _g_object_ref0 (entry), _g_object_unref0 (self->priv->active_entry), _tmp0_);
 	unity_places_place_search_bar_background_set_entry_position (self->priv->bg, x);
 	unity_places_place_search_sections_bar_set_active_entry (self->sections, entry);
-	if (_data5_->section != 0) {
-		g_idle_add_full (G_PRIORITY_DEFAULT_IDLE, __lambda43__gsource_func, block5_data_ref (_data5_), block5_data_unref);
+	if (unity_places_place_search_sections_bar_get_style (self->sections) == UNITY_PLACES_SECTION_STYLE_BREADCRUMB) {
+		_tmp1_ = _data5_->section == 0;
+	} else {
+		_tmp1_ = FALSE;
+	}
+	if (!_tmp1_) {
+		g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, __lambda42__gsource_func, block5_data_ref (_data5_), block5_data_unref);
 	}
 	unity_places_place_search_navigation_set_active_entry (self->priv->navigation, entry);
 	unity_places_place_search_entry_set_active_entry (self->entry, entry);
 	clutter_actor_grab_key_focus ((ClutterActor*) self->entry->text);
 	if (unity_places_place_entry_get_hints (entry) != NULL) {
-		char* _tmp1_;
-		gboolean _tmp2_;
-		if ((_tmp2_ = (_tmp1_ = (char*) gee_abstract_map_get ((GeeAbstractMap*) unity_places_place_entry_get_hints (entry), "UnityExtraAction")) != NULL, _g_free0 (_tmp1_), _tmp2_)) {
-			char* _tmp3_;
-			unity_places_place_search_extra_action_set_icon_from_gicon_string (self->extra_action, _tmp3_ = (char*) gee_abstract_map_get ((GeeAbstractMap*) unity_places_place_entry_get_hints (entry), "UnityExtraAction"));
-			_g_free0 (_tmp3_);
+		char* _tmp2_;
+		gboolean _tmp3_;
+		if ((_tmp3_ = (_tmp2_ = (char*) gee_abstract_map_get ((GeeAbstractMap*) unity_places_place_entry_get_hints (entry), "UnityExtraAction")) != NULL, _g_free0 (_tmp2_), _tmp3_)) {
+			char* _tmp4_;
+			unity_places_place_search_extra_action_set_icon_from_gicon_string (self->extra_action, _tmp4_ = (char*) gee_abstract_map_get ((GeeAbstractMap*) unity_places_place_entry_get_hints (entry), "UnityExtraAction"));
+			_g_free0 (_tmp4_);
 			clutter_actor_show ((ClutterActor*) self->extra_action);
 		} else {
 			clutter_actor_hide ((ClutterActor*) self->extra_action);
 		}
 	}
 	block5_data_unref (_data5_);
+}
+
+
+gboolean unity_places_place_search_bar_get_search_fail (UnityPlacesPlaceSearchBar* self) {
+	gboolean result;
+	g_return_val_if_fail (self != NULL, FALSE);
+	result = self->priv->_search_fail;
+	return result;
+}
+
+
+void unity_places_place_search_bar_set_search_fail (UnityPlacesPlaceSearchBar* self, gboolean value) {
+	g_return_if_fail (self != NULL);
+	if (self->priv->_search_fail != value) {
+		self->priv->_search_fail = value;
+		unity_places_place_search_bar_background_set_search_empty (self->priv->bg, self->priv->_search_fail);
+		unity_places_place_search_bar_background_update_background (self->priv->bg);
+	}
+	g_object_notify ((GObject *) self, "search-fail");
 }
 
 
@@ -580,14 +625,18 @@ static void unity_places_place_search_bar_class_init (UnityPlacesPlaceSearchBarC
 	g_type_class_add_private (klass, sizeof (UnityPlacesPlaceSearchBarPrivate));
 	CLUTTER_ACTOR_CLASS (klass)->allocate = unity_places_place_search_bar_real_allocate;
 	CLUTTER_ACTOR_CLASS (klass)->get_preferred_height = unity_places_place_search_bar_real_get_preferred_height;
+	G_OBJECT_CLASS (klass)->get_property = unity_places_place_search_bar_get_property;
+	G_OBJECT_CLASS (klass)->set_property = unity_places_place_search_bar_set_property;
 	G_OBJECT_CLASS (klass)->constructor = unity_places_place_search_bar_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_places_place_search_bar_finalize;
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_SEARCH_BAR_SEARCH_FAIL, g_param_spec_boolean ("search-fail", "search-fail", "search-fail", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 }
 
 
 static void unity_places_place_search_bar_instance_init (UnityPlacesPlaceSearchBar * self) {
 	self->priv = UNITY_PLACES_PLACE_SEARCH_BAR_GET_PRIVATE (self);
 	self->priv->active_entry = NULL;
+	self->priv->_search_fail = FALSE;
 }
 
 
@@ -613,6 +662,34 @@ GType unity_places_place_search_bar_get_type (void) {
 		g_once_init_leave (&unity_places_place_search_bar_type_id__volatile, unity_places_place_search_bar_type_id);
 	}
 	return unity_places_place_search_bar_type_id__volatile;
+}
+
+
+static void unity_places_place_search_bar_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec) {
+	UnityPlacesPlaceSearchBar * self;
+	self = UNITY_PLACES_PLACE_SEARCH_BAR (object);
+	switch (property_id) {
+		case UNITY_PLACES_PLACE_SEARCH_BAR_SEARCH_FAIL:
+		g_value_set_boolean (value, unity_places_place_search_bar_get_search_fail (self));
+		break;
+		default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+		break;
+	}
+}
+
+
+static void unity_places_place_search_bar_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec) {
+	UnityPlacesPlaceSearchBar * self;
+	self = UNITY_PLACES_PLACE_SEARCH_BAR (object);
+	switch (property_id) {
+		case UNITY_PLACES_PLACE_SEARCH_BAR_SEARCH_FAIL:
+		unity_places_place_search_bar_set_search_fail (self, g_value_get_boolean (value));
+		break;
+		default:
+		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+		break;
+	}
 }
 
 
@@ -743,6 +820,10 @@ gboolean unity_places_place_search_bar_background_update_background (UnityPlaces
 	cairo_close_path (cr);
 	cairo_fill_preserve (cr);
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
+	if (self->priv->_search_empty) {
+		cairo_set_source_rgba (cr, (double) 1.0f, (double) 0.0f, (double) 0.0f, (double) 0.3f);
+		cairo_fill_preserve (cr);
+	}
 	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) 0.6f);
 	cairo_stroke (cr);
 	ctk_effect_set_invalidate_effect_cache ((CtkEffect*) self->priv->glow, TRUE);
@@ -767,6 +848,21 @@ void unity_places_place_search_bar_background_set_entry_position (UnityPlacesPla
 		unity_places_place_search_bar_background_update_background (self);
 	}
 	g_object_notify ((GObject *) self, "entry-position");
+}
+
+
+gboolean unity_places_place_search_bar_background_get_search_empty (UnityPlacesPlaceSearchBarBackground* self) {
+	gboolean result;
+	g_return_val_if_fail (self != NULL, FALSE);
+	result = self->priv->_search_empty;
+	return result;
+}
+
+
+void unity_places_place_search_bar_background_set_search_empty (UnityPlacesPlaceSearchBarBackground* self, gboolean value) {
+	g_return_if_fail (self != NULL);
+	self->priv->_search_empty = value;
+	g_object_notify ((GObject *) self, "search-empty");
 }
 
 
@@ -832,7 +928,7 @@ static GObject * unity_places_place_search_bar_background_constructor (GType typ
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("places-place-search-bar.vala:247: Unable to load dash background");
+				g_warning ("places-place-search-bar.vala:264: Unable to load dash background");
 				_g_error_free0 (e);
 			}
 		}
@@ -849,6 +945,7 @@ static GObject * unity_places_place_search_bar_background_constructor (GType typ
 		ctk_effect_glow_set_factor (self->priv->glow, 1.0f);
 		ctk_effect_set_margin ((CtkEffect*) self->priv->glow, 5);
 		ctk_actor_add_effect ((CtkActor*) self, (CtkEffect*) self->priv->glow);
+		unity_places_place_search_bar_background_set_search_empty (self, FALSE);
 	}
 	return obj;
 }
@@ -863,6 +960,7 @@ static void unity_places_place_search_bar_background_class_init (UnityPlacesPlac
 	G_OBJECT_CLASS (klass)->constructor = unity_places_place_search_bar_background_constructor;
 	G_OBJECT_CLASS (klass)->finalize = unity_places_place_search_bar_background_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_ENTRY_POSITION, g_param_spec_int ("entry-position", "entry-position", "entry-position", G_MININT, G_MAXINT, 0, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
+	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_SEARCH_EMPTY, g_param_spec_boolean ("search-empty", "search-empty", "search-empty", FALSE, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_NAVIGATION, g_param_spec_object ("navigation", "navigation", "navigation", UNITY_PLACES_TYPE_PLACE_SEARCH_NAVIGATION, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_SEARCH_ENTRY, g_param_spec_object ("search-entry", "search-entry", "search-entry", UNITY_PLACES_TYPE_PLACE_SEARCH_ENTRY, G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 }
@@ -908,6 +1006,9 @@ static void unity_places_place_search_bar_background_get_property (GObject * obj
 		case UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_ENTRY_POSITION:
 		g_value_set_int (value, unity_places_place_search_bar_background_get_entry_position (self));
 		break;
+		case UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_SEARCH_EMPTY:
+		g_value_set_boolean (value, unity_places_place_search_bar_background_get_search_empty (self));
+		break;
 		case UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_NAVIGATION:
 		g_value_set_object (value, unity_places_place_search_bar_background_get_navigation (self));
 		break;
@@ -927,6 +1028,9 @@ static void unity_places_place_search_bar_background_set_property (GObject * obj
 	switch (property_id) {
 		case UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_ENTRY_POSITION:
 		unity_places_place_search_bar_background_set_entry_position (self, g_value_get_int (value));
+		break;
+		case UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_SEARCH_EMPTY:
+		unity_places_place_search_bar_background_set_search_empty (self, g_value_get_boolean (value));
 		break;
 		case UNITY_PLACES_PLACE_SEARCH_BAR_BACKGROUND_NAVIGATION:
 		unity_places_place_search_bar_background_set_navigation (self, g_value_get_object (value));

@@ -24,7 +24,7 @@ namespace Unity {
 	[CCode (cheader_filename = "unity-mutter.h")]
 	public class ExposeManager : GLib.Object {
 		public GLib.List<Unity.ExposeClone> exposed_windows;
-		public ExposeManager (Unity.Plugin plugin, Unity.Launcher.Launcher launcher);
+		public ExposeManager (Unity.Plugin owner, Unity.Launcher.Launcher launcher);
 		public void end_expose ();
 		public void position_windows_on_grid (GLib.List<Clutter.Actor> _windows, int top_buffer, int left_buffer, int right_buffer, int bottom_buffer);
 		public void start_expose (GLib.SList<Clutter.Actor> windows);
@@ -46,7 +46,9 @@ namespace Unity {
 	}
 	[CCode (cheader_filename = "unity-mutter.h")]
 	public class Plugin : GLib.Object, Unity.Shell {
+		public Gee.ArrayList<Unity.Testing.Background> backgrounds;
 		public Unity.Gesture.Dispatcher gesture_dispatcher;
+		public Gdk.Rectangle primary_monitor;
 		public Plugin ();
 		public void destroy (Mutter.Window window);
 		public void expose_windows (GLib.SList<Clutter.Actor> windows, int left_buffer = 75);
@@ -59,10 +61,10 @@ namespace Unity {
 		public void on_kill_window_effects (Mutter.Window window);
 		public void switch_workspace (int from, int to, int direction);
 		public void unmaximize (Mutter.Window window, int x, int y, int width, int height);
-		public Unity.Testing.Background background { get; set; }
 		public Unity.ExposeManager expose_manager { get; set; }
 		public bool expose_showing { get; }
 		public Mutter.Plugin? plugin { get; set; }
+		public bool super_key_enable { get; set; }
 		public signal void kill_switch_workspace (Unity.Plugin plugin);
 		public signal void kill_window_effects (Unity.Plugin plugin, Mutter.Window window);
 		public signal void restore_input_region (bool fullscreen);

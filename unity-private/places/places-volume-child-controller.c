@@ -443,7 +443,7 @@ static gboolean unity_places_volume_child_controller_real_can_drag (UnityLaunche
 	UnityPlacesVolumeChildController * self;
 	gboolean result = FALSE;
 	self = (UnityPlacesVolumeChildController*) base;
-	result = TRUE;
+	result = FALSE;
 	return result;
 }
 

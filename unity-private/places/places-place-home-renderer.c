@@ -34,6 +34,7 @@
 #include <math.h>
 #include <glib/gi18n-lib.h>
 #include <gconf/gconf-client.h>
+#include <cairo.h>
 
 
 #define UNITY_PLACES_TYPE_HOME_RENDERER (unity_places_home_renderer_get_type ())
@@ -71,6 +72,16 @@ typedef struct _UnityPlacesControllerClass UnityPlacesControllerClass;
 #define _g_list_free0(var) ((var == NULL) ? NULL : (var = (g_list_free (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 
+#define UNITY_PLACES_TYPE_BUTTON (unity_places_button_get_type ())
+#define UNITY_PLACES_BUTTON(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_BUTTON, UnityPlacesButton))
+#define UNITY_PLACES_BUTTON_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_BUTTON, UnityPlacesButtonClass))
+#define UNITY_PLACES_IS_BUTTON(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_BUTTON))
+#define UNITY_PLACES_IS_BUTTON_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_BUTTON))
+#define UNITY_PLACES_BUTTON_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_BUTTON, UnityPlacesButtonClass))
+
+typedef struct _UnityPlacesButton UnityPlacesButton;
+typedef struct _UnityPlacesButtonClass UnityPlacesButtonClass;
+
 #define UNITY_PLACES_TYPE_HOME_BUTTON (unity_places_home_button_get_type ())
 #define UNITY_PLACES_HOME_BUTTON(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_HOME_BUTTON, UnityPlacesHomeButton))
 #define UNITY_PLACES_HOME_BUTTON_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_HOME_BUTTON, UnityPlacesHomeButtonClass))
@@ -81,6 +92,7 @@ typedef struct _UnityPlacesControllerClass UnityPlacesControllerClass;
 typedef struct _UnityPlacesHomeButton UnityPlacesHomeButton;
 typedef struct _UnityPlacesHomeButtonClass UnityPlacesHomeButtonClass;
 #define _g_error_free0(var) ((var == NULL) ? NULL : (var = (g_error_free (var), NULL)))
+typedef struct _UnityPlacesButtonPrivate UnityPlacesButtonPrivate;
 typedef struct _UnityPlacesHomeButtonPrivate UnityPlacesHomeButtonPrivate;
 
 struct _UnityPlacesHomeRenderer {
@@ -97,13 +109,26 @@ struct _UnityPlacesHomeRendererPrivate {
 	CtkIconView* icon_view;
 };
 
-struct _UnityPlacesHomeButton {
+typedef void (*UnityPlacesButtonButtonOutlineFunc) (cairo_t* cr, gint width, gint height, void* user_data);
+struct _UnityPlacesButton {
 	CtkButton parent_instance;
+	UnityPlacesButtonPrivate * priv;
+	UnityPlacesButtonButtonOutlineFunc outline_func;
+	gpointer outline_func_target;
+	GDestroyNotify outline_func_target_destroy_notify;
+};
+
+struct _UnityPlacesButtonClass {
+	CtkButtonClass parent_class;
+};
+
+struct _UnityPlacesHomeButton {
+	UnityPlacesButton parent_instance;
 	UnityPlacesHomeButtonPrivate * priv;
 };
 
 struct _UnityPlacesHomeButtonClass {
-	CtkButtonClass parent_class;
+	UnityPlacesButtonClass parent_class;
 };
 
 struct _UnityPlacesHomeButtonPrivate {
@@ -145,6 +170,7 @@ static void unity_places_home_renderer_real_allocate (ClutterActor* base, const 
 static char* unity_places_home_renderer_filename_for_icon (UnityPlacesHomeRenderer* self, const char* icon);
 UnityPlacesHomeButton* unity_places_home_button_new (const char* name, const char* icon, const char* exec);
 UnityPlacesHomeButton* unity_places_home_button_construct (GType object_type, const char* name, const char* icon, const char* exec);
+GType unity_places_button_get_type (void) G_GNUC_CONST;
 GType unity_places_home_button_get_type (void) G_GNUC_CONST;
 static void _lambda60_ (UnityPlacesHomeRenderer* self);
 static void __lambda60__ctk_button_clicked (CtkButton* _sender, gpointer self);
@@ -631,6 +657,9 @@ static GObject * unity_places_home_button_constructor (GType type, guint n_const
 	obj = parent_class->constructor (type, n_construct_properties, construct_properties);
 	self = UNITY_PLACES_HOME_BUTTON (obj);
 	{
+		CtkPadding _tmp0_ = {0};
+		CtkPadding _tmp1_;
+		ctk_actor_set_padding ((CtkActor*) self, (_tmp1_ = (_tmp0_.top = 0.0f, _tmp0_.right = 0.0f, _tmp0_.bottom = 8.0f, _tmp0_.left = 0.0f, _tmp0_), &_tmp1_));
 		ctk_image_set_size (ctk_button_get_image ((CtkButton*) self), 128);
 		g_object_set (ctk_button_get_image ((CtkButton*) self), "filename", self->priv->_icon, NULL);
 		clutter_text_set_text ((ClutterText*) ctk_button_get_text ((CtkButton*) self), self->priv->_name);
@@ -673,7 +702,7 @@ GType unity_places_home_button_get_type (void) {
 	if (g_once_init_enter (&unity_places_home_button_type_id__volatile)) {
 		static const GTypeInfo g_define_type_info = { sizeof (UnityPlacesHomeButtonClass), (GBaseInitFunc) NULL, (GBaseFinalizeFunc) NULL, (GClassInitFunc) unity_places_home_button_class_init, (GClassFinalizeFunc) NULL, NULL, sizeof (UnityPlacesHomeButton), 0, (GInstanceInitFunc) unity_places_home_button_instance_init, NULL };
 		GType unity_places_home_button_type_id;
-		unity_places_home_button_type_id = g_type_register_static (CTK_TYPE_BUTTON, "UnityPlacesHomeButton", &g_define_type_info, 0);
+		unity_places_home_button_type_id = g_type_register_static (UNITY_PLACES_TYPE_BUTTON, "UnityPlacesHomeButton", &g_define_type_info, 0);
 		g_once_init_leave (&unity_places_home_button_type_id__volatile, unity_places_home_button_type_id);
 	}
 	return unity_places_home_button_type_id__volatile;

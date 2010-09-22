@@ -592,6 +592,7 @@ static void _lambda26_ (DbusmenuMenuitem* top_menu, UnityLauncherApplicationQuic
 						view_menuitem = unity_launcher_application_quicklist_controller_menu_item_from_dbusmenuitem (self, menuitem);
 						if (view_menuitem != NULL) {
 							ctk_menu_prepend ((CtkMenu*) unity_launcher_quicklist_controller_get_view ((UnityLauncherQuicklistController*) self), (ClutterActor*) view_menuitem, FALSE);
+							g_object_unref ((GObject*) view_menuitem);
 						}
 						_g_object_unref0 (view_menuitem);
 						_g_object_unref0 (menuitem);
@@ -600,7 +601,7 @@ static void _lambda26_ (DbusmenuMenuitem* top_menu, UnityLauncherApplicationQuic
 			}
 			menu_items = g_list_reverse (menu_items);
 		} else {
-			g_warning ("quicklist-controller.vala:237: menu given not a root item");
+			g_warning ("quicklist-controller.vala:243: menu given not a root item");
 		}
 	}
 }
@@ -638,6 +639,7 @@ static void _lambda33_ (DbusmenuMenuitem* bottom_menu, UnityLauncherApplicationQ
 						view_menuitem = unity_launcher_application_quicklist_controller_menu_item_from_dbusmenuitem (self, menuitem);
 						if (view_menuitem != NULL) {
 							ctk_menu_append ((CtkMenu*) unity_launcher_quicklist_controller_get_view ((UnityLauncherQuicklistController*) self), (ClutterActor*) view_menuitem, FALSE);
+							g_object_unref ((GObject*) view_menuitem);
 						}
 						_g_object_unref0 (view_menuitem);
 						_g_object_unref0 (menuitem);
@@ -646,7 +648,7 @@ static void _lambda33_ (DbusmenuMenuitem* bottom_menu, UnityLauncherApplicationQ
 			}
 			_g_object_unref0 (separator);
 		} else {
-			g_warning ("quicklist-controller.vala:262: menu given not a root item");
+			g_warning ("quicklist-controller.vala:272: menu given not a root item");
 		}
 	}
 	clutter_actor_get_transformed_position ((ClutterActor*) (_tmp0_ = unity_launcher_scroller_child_controller_get_child (unity_launcher_quicklist_controller_get_attached_controller ((UnityLauncherQuicklistController*) self)), CTK_IS_ACTOR (_tmp0_) ? ((CtkActor*) _tmp0_) : NULL), &x, &y);
@@ -654,7 +656,7 @@ static void _lambda33_ (DbusmenuMenuitem* bottom_menu, UnityLauncherApplicationQ
 	h = clutter_actor_get_height ((ClutterActor*) (_tmp2_ = unity_launcher_scroller_child_controller_get_child (unity_launcher_quicklist_controller_get_attached_controller ((UnityLauncherQuicklistController*) self)), CTK_IS_ACTOR (_tmp2_) ? ((CtkActor*) _tmp2_) : NULL));
 	ctk_menu_expandable_compute_style_textures (((UnityLauncherQuicklistController*) self)->menu);
 	ctk_menu_expandable_set_expansion_size_factor (((UnityLauncherQuicklistController*) self)->menu, 0.0f);
-	ctk_menu_expandable_set_anchor_position (((UnityLauncherQuicklistController*) self)->menu, (x + w) - 9, y + (h / 2.0f), 0);
+	ctk_menu_expandable_set_anchor_position (((UnityLauncherQuicklistController*) self)->menu, (x + w) - 4, y + (h / 2.0f), 0);
 	clutter_actor_animate ((ClutterActor*) ((UnityLauncherQuicklistController*) self)->menu, (gulong) CLUTTER_LINEAR, (guint) 100, "expansion-size-factor", 1.0f, NULL);
 }
 
@@ -858,6 +860,11 @@ static CtkMenuItem* unity_launcher_application_quicklist_controller_menu_item_fr
 	_data10_->_ref_count_ = 1;
 	_data10_->self = g_object_ref (self);
 	_data10_->dbusmenuitem = _g_object_ref0 (dbusmenuitem);
+	if (dbusmenu_menuitem_property_get_bool (_data10_->dbusmenuitem, DBUSMENU_MENUITEM_PROP_VISIBLE) == FALSE) {
+		result = NULL;
+		block10_data_unref (_data10_);
+		return result;
+	}
 	label = g_strdup ("UNDEFINED");
 	label = (_tmp0_ = g_strdup (dbusmenu_menuitem_property_get (_data10_->dbusmenuitem, DBUSMENU_MENUITEM_PROP_LABEL)), _g_free0 (label), _tmp0_);
 	type = g_strdup ("label");
@@ -910,7 +917,7 @@ static CtkMenuItem* unity_launcher_application_quicklist_controller_menu_item_fr
 				CtkMenuItem* _tmp11_;
 				_data10_->menuitem = (_tmp11_ = (CtkMenuItem*) g_object_ref_sink (unity_launcher_quicklist_menu_seperator_new ()), _g_object_unref0 (_data10_->menuitem), _tmp11_);
 			} else {
-				g_warning ("quicklist-controller.vala:354: not a menu item we understand, %s", dbusmenu_menuitem_property_get (_data10_->dbusmenuitem, "type"));
+				g_warning ("quicklist-controller.vala:370: not a menu item we understand, %s", dbusmenu_menuitem_property_get (_data10_->dbusmenuitem, "type"));
 				result = NULL;
 				_g_free0 (check_type);
 				_g_free0 (type);

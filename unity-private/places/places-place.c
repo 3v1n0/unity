@@ -1014,17 +1014,17 @@ static UnityPlacesPlaceEntry* unity_places_place_load_entry_from_keyfile (UnityP
 			_g_free0 (path);
 			return result;
 		}
-		_tmp5_ = g_key_file_get_string (file, group, "Name", &_inner_error_);
+		_tmp5_ = g_key_file_get_locale_string (file, group, "Name", NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch30_g_error;
 		}
 		name = (_tmp6_ = _tmp5_, _g_free0 (name), _tmp6_);
-		_tmp7_ = g_key_file_get_string (file, group, "Icon", &_inner_error_);
+		_tmp7_ = g_key_file_get_locale_string (file, group, "Icon", NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch30_g_error;
 		}
 		icon = (_tmp8_ = _tmp7_, _g_free0 (icon), _tmp8_);
-		_tmp9_ = g_key_file_get_string (file, group, "Description", &_inner_error_);
+		_tmp9_ = g_key_file_get_locale_string (file, group, "Description", NULL, &_inner_error_);
 		if (_inner_error_ != NULL) {
 			goto __catch30_g_error;
 		}

@@ -92,7 +92,6 @@ struct _UnityAppInfoManagerLookupAsyncData {
 	char* path;
 	GFileInputStream* _tmp2_;
 	GFileInputStream* _tmp3_;
-	guchar* _tmp4_;
 	GError * e;
 	GKeyFile* keyfile;
 	GError * ee;
@@ -125,9 +124,8 @@ GAppInfo* unity_app_info_manager_lookup_finish (UnityAppInfoManager* self, GAsyn
 static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLookupAsyncData* data);
 void unity_io_open_from_data_dirs (const char* filename, GAsyncReadyCallback _callback_, gpointer _user_data_);
 GFileInputStream* unity_io_open_from_data_dirs_finish (GAsyncResult* _res_, GError** error);
-void unity_io_read_stream_async (GInputStream* input, guchar* buffer, int buffer_length1, gsize buffer_lenght, gint io_priority, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
+void unity_io_read_stream_async (GInputStream* input, void* buffer, gsize buffer_lenght, gint io_priority, GCancellable* cancellable, GAsyncReadyCallback _callback_, gpointer _user_data_);
 void unity_io_read_stream_finish (GAsyncResult* _res_, void** data, gsize* size, GError** error);
-static guchar* _vala_array_dup1 (guchar* self, int length);
 void unity_app_info_manager_clear (UnityAppInfoManager* self);
 static void unity_app_info_manager_finalize (GObject* obj);
 static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
@@ -576,11 +574,6 @@ static void unity_app_info_manager_lookup_async_ready (GObject* source_object, G
      * If the AppInfo is not already cached this method will do asynchronous
      * IO to look it up.
      */
-static guchar* _vala_array_dup1 (guchar* self, int length) {
-	return g_memdup (self, length * sizeof (guchar));
-}
-
-
 static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLookupAsyncData* data) {
 	switch (data->_state_) {
 		case 0:
@@ -726,7 +719,7 @@ static gboolean unity_app_info_manager_lookup_async_co (UnityAppInfoManagerLooku
 	}
 	{
 		data->_state_ = 5;
-		unity_io_read_stream_async ((GInputStream*) data->input, (data->_tmp4_ = data->self->priv->buffer, (data->_tmp4_ == NULL) ? ((gpointer) data->_tmp4_) : _vala_array_dup1 (data->_tmp4_, data->self->priv->buffer_length1)), data->self->priv->buffer_length1, data->self->priv->buffer_size, G_PRIORITY_DEFAULT, NULL, unity_app_info_manager_lookup_async_ready, data);
+		unity_io_read_stream_async ((GInputStream*) data->input, data->self->priv->buffer, data->self->priv->buffer_size, G_PRIORITY_DEFAULT, NULL, unity_app_info_manager_lookup_async_ready, data);
 		return FALSE;
 		_state_5:
 		unity_io_read_stream_finish (data->_res_, &data->data, &data->data_size, &data->_inner_error_);

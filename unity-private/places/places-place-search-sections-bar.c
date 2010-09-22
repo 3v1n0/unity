@@ -250,8 +250,8 @@ void unity_places_section_set_destroy_factor (UnityPlacesSection* self, float va
 float unity_places_section_get_resize_factor (UnityPlacesSection* self);
 void unity_places_section_set_resize_factor (UnityPlacesSection* self, float value);
 static void _unity_places_section_paint_bg_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
-static void _lambda42_ (UnityPlacesSection* self);
-static void __lambda42__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
+static void _lambda41_ (UnityPlacesSection* self);
+static void __lambda41__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self);
 static GObject * unity_places_section_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_section_finalize (GObject* obj);
 static void unity_places_section_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
@@ -692,8 +692,9 @@ static void unity_places_place_search_sections_bar_paint_bg (UnityPlacesPlaceSea
 		cairo_line_to (cr, (double) (x + radius), (double) height);
 		cairo_curve_to (cr, (double) x, (double) height, (double) x, (double) height, (double) x, (double) (height - radius));
 		cairo_close_path (cr);
-		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.5);
+		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.25);
 		cairo_fill_preserve (cr);
+		cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.25);
 		cairo_stroke (cr);
 		chevron = 5;
 		children = clutter_container_get_children ((ClutterContainer*) self);
@@ -711,7 +712,7 @@ static void unity_places_place_search_sections_bar_paint_bg (UnityPlacesPlaceSea
 						cairo_move_to (cr, (double) (point - chevron), (double) y);
 						cairo_line_to (cr, (double) (point + chevron), (double) (y + (height / 2)));
 						cairo_line_to (cr, (double) (point - chevron), (double) (y + height));
-						cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+						cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.5);
 						cairo_stroke (cr);
 					}
 					point = point + (UNITY_PLACES_PLACE_SEARCH_SECTIONS_BAR_SPACING / 2);
@@ -946,17 +947,15 @@ static void unity_places_section_paint_bg (UnityPlacesSection* self, cairo_t* cr
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
 	cairo_paint (cr);
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
-	cairo_set_line_width (cr, 1.5);
+	cairo_set_line_width (cr, 1.0);
 	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.0);
-	cairo_translate (cr, 0.5, 0.5);
 	x = 0;
 	y = 0;
-	width = width - 1;
-	height = height - 1;
-	radius = 10;
+	radius = 7;
 	if (unity_places_place_search_sections_bar_get_style ((_tmp0_ = clutter_actor_get_parent ((ClutterActor*) self), UNITY_PLACES_IS_PLACE_SEARCH_SECTIONS_BAR (_tmp0_) ? ((UnityPlacesPlaceSearchSectionsBar*) _tmp0_) : NULL)) == UNITY_PLACES_SECTION_STYLE_BUTTONS) {
 		gboolean _tmp1_ = FALSE;
 		double _tmp2_ = 0.0;
+		gboolean _tmp3_ = FALSE;
 		cairo_move_to (cr, (double) x, (double) (y + radius));
 		cairo_curve_to (cr, (double) x, (double) y, (double) x, (double) y, (double) (x + radius), (double) y);
 		cairo_line_to (cr, (double) (width - radius), (double) y);
@@ -973,6 +972,7 @@ static void unity_places_section_paint_bg (UnityPlacesSection* self, cairo_t* cr
 		}
 		if (_tmp1_) {
 			cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 1.0);
+			cairo_fill (cr);
 		} else {
 			if (ctk_actor_get_state ((CtkActor*) self) == CTK_STATE_PRELIGHT) {
 				cairo_surface_t* pattern;
@@ -980,6 +980,8 @@ static void unity_places_section_paint_bg (UnityPlacesSection* self, cairo_t* cr
 				cairo_pattern_t* pat;
 				pattern = cairo_surface_create_similar (cairo_get_target (cr), CAIRO_CONTENT_COLOR_ALPHA, 4, 4);
 				context = cairo_create (pattern);
+				cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.1);
+				cairo_fill_preserve (cr);
 				cairo_set_operator (context, CAIRO_OPERATOR_CLEAR);
 				cairo_paint (context);
 				cairo_set_line_width (context, 0.2);
@@ -991,15 +993,31 @@ static void unity_places_section_paint_bg (UnityPlacesSection* self, cairo_t* cr
 				pat = cairo_pattern_create_for_surface (pattern);
 				cairo_pattern_set_extend (pat, CAIRO_EXTEND_REPEAT);
 				cairo_set_source (cr, pat);
+				cairo_fill (cr);
 				_cairo_pattern_destroy0 (pat);
 				_cairo_destroy0 (context);
 				_cairo_surface_destroy0 (pattern);
 			} else {
-				cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.0);
 			}
 		}
-		cairo_fill_preserve (cr);
-		if (ctk_actor_get_state ((CtkActor*) self) == CTK_STATE_NORMAL) {
+		cairo_translate (cr, 0.5, 0.5);
+		width = width - 1;
+		height = height - 1;
+		cairo_move_to (cr, (double) x, (double) (y + radius));
+		cairo_curve_to (cr, (double) x, (double) y, (double) x, (double) y, (double) (x + radius), (double) y);
+		cairo_line_to (cr, (double) (width - radius), (double) y);
+		cairo_curve_to (cr, (double) width, (double) y, (double) width, (double) y, (double) width, (double) (y + radius));
+		cairo_line_to (cr, (double) width, (double) (height - radius));
+		cairo_curve_to (cr, (double) width, (double) height, (double) width, (double) height, (double) (width - radius), (double) height);
+		cairo_line_to (cr, (double) (x + radius), (double) height);
+		cairo_curve_to (cr, (double) x, (double) height, (double) x, (double) height, (double) x, (double) (height - radius));
+		cairo_close_path (cr);
+		if (!unity_places_section_get_active (self)) {
+			_tmp3_ = ctk_actor_get_state ((CtkActor*) self) == CTK_STATE_NORMAL;
+		} else {
+			_tmp3_ = FALSE;
+		}
+		if (_tmp3_) {
 			_tmp2_ = 0.0;
 		} else {
 			_tmp2_ = 0.5;
@@ -1121,7 +1139,7 @@ static void _unity_places_section_paint_bg_unity_cairo_canvas_cairo_canvas_paint
 }
 
 
-static void _lambda42_ (UnityPlacesSection* self) {
+static void _lambda41_ (UnityPlacesSection* self) {
 	if (unity_places_section_get_active (self)) {
 		return;
 	}
@@ -1137,8 +1155,8 @@ static void _lambda42_ (UnityPlacesSection* self) {
 }
 
 
-static void __lambda42__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
-	_lambda42_ (self);
+static void __lambda41__g_object_notify (GObject* _sender, GParamSpec* pspec, gpointer self) {
+	_lambda41_ (self);
 }
 
 
@@ -1169,7 +1187,7 @@ static GObject * unity_places_section_constructor (GType type, guint n_construct
 		self->text = (_tmp6_ = g_object_ref_sink ((CtkText*) ctk_text_new (dee_model_get_string (self->priv->_model, self->priv->_iter, (guint) 0))), _g_object_unref0 (self->text), _tmp6_);
 		clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->text);
 		clutter_actor_show ((ClutterActor*) self->text);
-		g_signal_connect_object ((GObject*) self, "notify::state", (GCallback) __lambda42__g_object_notify, self, 0);
+		g_signal_connect_object ((GObject*) self, "notify::state", (GCallback) __lambda41__g_object_notify, self, 0);
 	}
 	return obj;
 }

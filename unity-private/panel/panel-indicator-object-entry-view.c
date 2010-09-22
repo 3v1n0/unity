@@ -108,9 +108,9 @@ enum  {
 };
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_entry_view_new (IndicatorObjectEntry* _entry);
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_entry_view_construct (GType object_type, IndicatorObjectEntry* _entry);
+IndicatorObjectEntry* unity_panel_indicators_indicator_object_entry_view_get_entry (UnityPanelIndicatorsIndicatorObjectEntryView* self);
 static void unity_panel_indicators_indicator_object_entry_view_position_menu (UnityPanelIndicatorsIndicatorObjectEntryView* self, GtkMenu* menu, gint* x, gint* y, gboolean* push_in);
 void unity_panel_indicators_indicator_object_entry_view_show_menu (UnityPanelIndicatorsIndicatorObjectEntryView* self);
-IndicatorObjectEntry* unity_panel_indicators_indicator_object_entry_view_get_entry (UnityPanelIndicatorsIndicatorObjectEntryView* self);
 GType menu_manager_get_type (void) G_GNUC_CONST;
 MenuManager* menu_manager_get_default (void);
 void menu_manager_register_visible_menu (MenuManager* self, GtkMenu* menu);
@@ -166,6 +166,24 @@ UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_o
 	UnityPanelIndicatorsIndicatorObjectEntryView * self;
 	g_return_val_if_fail (_entry != NULL, NULL);
 	self = (UnityPanelIndicatorsIndicatorObjectEntryView*) g_object_new (object_type, "entry", _entry, "orientation", CTK_ORIENTATION_HORIZONTAL, "spacing", 3, "homogeneous", FALSE, "reactive", TRUE, NULL);
+	if (self->priv->_entry->label != NULL) {
+		if ((GTK_WIDGET_FLAGS ((GtkWidget*) self->priv->_entry->label) & GTK_SENSITIVE) != 0) {
+			clutter_actor_set_reactive ((ClutterActor*) self, TRUE);
+			self->skip = FALSE;
+		} else {
+			clutter_actor_set_reactive ((ClutterActor*) self, FALSE);
+			self->skip = TRUE;
+		}
+	}
+	if (self->priv->_entry->image != NULL) {
+		if ((GTK_WIDGET_FLAGS ((GtkWidget*) self->priv->_entry->image) & GTK_SENSITIVE) != 0) {
+			clutter_actor_set_reactive ((ClutterActor*) self, TRUE);
+			self->skip = FALSE;
+		} else {
+			clutter_actor_set_reactive ((ClutterActor*) self, FALSE);
+			self->skip = TRUE;
+		}
+	}
 	return self;
 }
 
@@ -289,6 +307,7 @@ void unity_panel_indicators_indicator_object_entry_view_menu_shown (UnityPanelIn
 		g_signal_connect_object ((GtkMenuShell*) self->priv->_entry->menu, "move-current", (GCallback) _unity_panel_indicators_indicator_object_entry_view_menu_key_moved_gtk_menu_shell_move_current, self, 0);
 		g_signal_connect_object ((GObject*) self->priv->_entry->menu, "notify::visible", (GCallback) _unity_panel_indicators_indicator_object_entry_view_menu_vis_changed_g_object_notify, self, 0);
 		clutter_actor_set_opacity ((ClutterActor*) self->priv->bg, (guint8) 255);
+		g_signal_emit_by_name (self, "entry-shown");
 	}
 }
 
@@ -418,12 +437,26 @@ static gboolean unity_panel_indicators_indicator_object_entry_view_update_bg (Un
 	cairo_t* cr;
 	gint width;
 	gint height;
+	gint radius;
+	double x;
+	double y;
+	double xos;
+	double yos;
+	double mpi;
 	cairo_t* _tmp0_;
 	cairo_pattern_t* pat;
+	cairo_pattern_t* _tmp1_;
+	cairo_pattern_t* _tmp2_;
 	g_return_val_if_fail (self != NULL, FALSE);
 	cr = NULL;
 	width = (gint) self->priv->last_width;
 	height = (gint) self->priv->last_height;
+	radius = 4;
+	x = (double) 0;
+	y = (double) 0;
+	xos = 1.5;
+	yos = 1.5;
+	mpi = 3.14159265358979323846;
 	clutter_cairo_texture_set_surface_size (self->priv->bg, (guint) width, (guint) height);
 	cr = (_tmp0_ = clutter_cairo_texture_create (self->priv->bg), _cairo_destroy0 (cr), _tmp0_);
 	cairo_set_operator (cr, CAIRO_OPERATOR_CLEAR);
@@ -431,18 +464,33 @@ static gboolean unity_panel_indicators_indicator_object_entry_view_update_bg (Un
 	cairo_set_operator (cr, CAIRO_OPERATOR_OVER);
 	cairo_set_line_width (cr, 1.0);
 	cairo_set_source_rgba (cr, 1.0, 1.0, 1.0, 0.2);
-	cairo_move_to (cr, (double) 1, (double) height);
-	cairo_line_to (cr, (double) 1, (double) 7);
-	cairo_curve_to (cr, (double) 1, (double) 2, (double) 1, (double) 2, (double) 10, (double) 2);
-	cairo_line_to (cr, (double) (width - 10), (double) 2);
-	cairo_curve_to (cr, (double) width, (double) 2, (double) width, (double) 2, (double) width, (double) 7);
-	cairo_line_to (cr, (double) width, (double) height);
-	cairo_line_to (cr, (double) 1, (double) height);
-	pat = cairo_pattern_create_linear ((double) 1, (double) 0, (double) 1, (double) height);
-	cairo_pattern_add_color_stop_rgba (pat, 0.0, (double) (248 / 255.0f), (double) (134 / 255.0f), (double) (87 / 255.0f), (double) 1.0f);
-	cairo_pattern_add_color_stop_rgba (pat, 1.0, (double) (236 / 255.0f), (double) (113 / 255.0f), (double) (63 / 255.0f), (double) 1.0f);
+	cairo_move_to (cr, (x + xos) + radius, y + yos);
+	cairo_arc (cr, (((x + xos) + width) - (xos * 2)) - radius, (y + yos) + radius, (double) radius, mpi * 1.5, mpi * 2);
+	cairo_line_to (cr, ((x + xos) + width) - (xos * 2), (((y + yos) + height) - (yos * 2)) + 2);
+	cairo_line_to (cr, x + xos, (((y + yos) + height) - (yos * 2)) + 2);
+	cairo_arc (cr, (x + xos) + radius, (y + yos) + radius, (double) radius, mpi, mpi * 1.5);
+	pat = cairo_pattern_create_linear (x + xos, y, x + xos, ((y + height) - (yos * 2)) + 2);
+	cairo_pattern_add_color_stop_rgba (pat, 0.0, (double) (83 / 255.0f), (double) (82 / 255.0f), (double) (78 / 255.0f), (double) 1.0f);
+	cairo_pattern_add_color_stop_rgba (pat, 1.0, (double) (66 / 255.0f), (double) (65 / 255.0f), (double) (63 / 255.0f), (double) 1.0f);
 	cairo_set_source (cr, pat);
-	cairo_fill (cr);
+	cairo_fill_preserve (cr);
+	pat = (_tmp1_ = cairo_pattern_create_linear (x + xos, y, x + xos, ((y + height) - (yos * 2)) + 2), _cairo_pattern_destroy0 (pat), _tmp1_);
+	cairo_pattern_add_color_stop_rgba (pat, 0.0, (double) (62 / 255.0f), (double) (61 / 255.0f), (double) (58 / 255.0f), (double) 1.0f);
+	cairo_pattern_add_color_stop_rgba (pat, 1.0, (double) (54 / 255.0f), (double) (54 / 255.0f), (double) (52 / 255.0f), (double) 1.0f);
+	cairo_set_source (cr, pat);
+	cairo_stroke (cr);
+	xos++;
+	yos++;
+	cairo_move_to (cr, (x + radius) + xos, y + yos);
+	cairo_arc (cr, (((x + xos) + width) - (xos * 2)) - radius, (y + yos) + radius, (double) radius, mpi * 1.5, mpi * 2);
+	cairo_line_to (cr, ((x + xos) + width) - (xos * 2), (((y + yos) + height) - (yos * 2)) + 3);
+	cairo_line_to (cr, x + xos, (((y + yos) + height) - (yos * 2)) + 3);
+	cairo_arc (cr, (x + xos) + radius, (y + yos) + radius, (double) radius, mpi, mpi * 1.5);
+	pat = (_tmp2_ = cairo_pattern_create_linear (x + xos, y, x + xos, ((y + height) - (yos * 2)) + 3), _cairo_pattern_destroy0 (pat), _tmp2_);
+	cairo_pattern_add_color_stop_rgba (pat, 0.0, (double) (92 / 255.0f), (double) (90 / 255.0f), (double) (85 / 255.0f), (double) 1.0f);
+	cairo_pattern_add_color_stop_rgba (pat, 1.0, (double) (70 / 255.0f), (double) (69 / 255.0f), (double) (66 / 255.0f), (double) 1.0f);
+	cairo_set_source (cr, pat);
+	cairo_stroke (cr);
 	result = FALSE;
 	_cairo_pattern_destroy0 (pat);
 	_cairo_destroy0 (cr);
@@ -832,7 +880,7 @@ static GObject * unity_panel_indicators_indicator_object_entry_view_constructor 
 			ClutterColor _tmp23_;
 			char* _tmp24_;
 			self->text = (_tmp21_ = g_object_ref_sink ((CtkText*) ctk_text_new ("")), _g_object_unref0 (self->text), _tmp21_);
-			clutter_text_set_color ((ClutterText*) self->text, (_tmp23_ = (_tmp22_.red = (guint8) 233, _tmp22_.green = (guint8) 216, _tmp22_.blue = (guint8) 200, _tmp22_.alpha = (guint8) 255, _tmp22_), &_tmp23_));
+			clutter_text_set_color ((ClutterText*) self->text, (_tmp23_ = (_tmp22_.red = (guint8) 223, _tmp22_.green = (guint8) 219, _tmp22_.blue = (guint8) 210, _tmp22_.alpha = (guint8) 255, _tmp22_), &_tmp23_));
 			clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) self->text);
 			clutter_text_set_text ((ClutterText*) self->text, _tmp24_ = string_replace (gtk_label_get_label (self->priv->_entry->label), "_", ""));
 			_g_free0 (_tmp24_);
@@ -888,6 +936,7 @@ static void unity_panel_indicators_indicator_object_entry_view_class_init (Unity
 	G_OBJECT_CLASS (klass)->finalize = unity_panel_indicators_indicator_object_entry_view_finalize;
 	g_object_class_install_property (G_OBJECT_CLASS (klass), UNITY_PANEL_INDICATORS_INDICATOR_OBJECT_ENTRY_VIEW_ENTRY, g_param_spec_pointer ("entry", "entry", "entry", G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK | G_PARAM_STATIC_BLURB | G_PARAM_READABLE | G_PARAM_WRITABLE | G_PARAM_CONSTRUCT_ONLY));
 	g_signal_new ("menu_moved", UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_ENTRY_VIEW, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__ENUM, G_TYPE_NONE, 1, GTK_TYPE_MENU_DIRECTION_TYPE);
+	g_signal_new ("entry_shown", UNITY_PANEL_INDICATORS_TYPE_INDICATOR_OBJECT_ENTRY_VIEW, G_SIGNAL_RUN_LAST, 0, NULL, NULL, g_cclosure_marshal_VOID__VOID, G_TYPE_NONE, 0);
 }
 
 

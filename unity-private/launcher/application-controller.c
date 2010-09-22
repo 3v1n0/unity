@@ -947,13 +947,14 @@ static void unity_launcher_application_controller_real_activate (UnityLauncherSc
 	UnityLauncherApplicationController * self;
 	GError * _inner_error_ = NULL;
 	self = (UnityLauncherApplicationController*) base;
-	unity_shell_hide_unity (unity_global_shell);
 	if (BAMF_IS_APPLICATION (self->priv->app)) {
 		if (bamf_view_is_active ((BamfView*) self->priv->app)) {
-			GArray* xids;
-			xids = bamf_application_get_xids (self->priv->app);
-			unity_shell_expose_xids (unity_global_shell, xids);
-			_g_array_free0 (xids);
+			if (unity_shell_get_mode (unity_global_shell) == UNITY_SHELL_MODE_MINIMIZED) {
+				GArray* xids;
+				xids = bamf_application_get_xids (self->priv->app);
+				unity_shell_expose_xids (unity_global_shell, xids);
+				_g_array_free0 (xids);
+			}
 		} else {
 			if (bamf_view_is_running ((BamfView*) self->priv->app)) {
 				GList* windows;
@@ -986,7 +987,7 @@ static void unity_launcher_application_controller_real_activate (UnityLauncherSc
 			e = _inner_error_;
 			_inner_error_ = NULL;
 			{
-				g_warning ("application-controller.vala:384: %s", e->message);
+				g_warning ("application-controller.vala:388: %s", e->message);
 				_g_error_free0 (e);
 			}
 		}
@@ -999,6 +1000,7 @@ static void unity_launcher_application_controller_real_activate (UnityLauncherSc
 		}
 		_g_object_unref0 (context);
 	}
+	unity_shell_hide_unity (unity_global_shell);
 }
 
 
@@ -1069,7 +1071,7 @@ void unity_launcher_application_controller_attach_application (UnityLauncherAppl
 	}
 	if (_tmp3_) {
 		char* _tmp4_;
-		g_warning ("application-controller.vala:411: %s", _tmp4_ = g_strconcat ("Bamf returned null for app.get_name (): ", string_to_string (self->priv->_desktop_file), NULL));
+		g_warning ("application-controller.vala:416: %s", _tmp4_ = g_strconcat ("Bamf returned null for app.get_name (): ", string_to_string (self->priv->_desktop_file), NULL));
 		_g_free0 (_tmp4_);
 	}
 	self->priv->icon_name = (_tmp5_ = bamf_view_get_icon ((BamfView*) self->priv->app), _g_free0 (self->priv->icon_name), _tmp5_);
@@ -1147,7 +1149,7 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("application-controller.vala:463: could not load desktop file: %s", e->message);
+			g_warning ("application-controller.vala:468: could not load desktop file: %s", e->message);
 			_g_error_free0 (e);
 		}
 	}
@@ -1174,7 +1176,7 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("application-controller.vala:473: could not load icon name from desktop" \
+			g_warning ("application-controller.vala:478: could not load icon name from desktop" \
 " file: %s", e->message);
 			_g_error_free0 (e);
 		}
@@ -1202,7 +1204,7 @@ static void unity_launcher_application_controller_load_desktop_file_info (UnityL
 		e = _inner_error_;
 		_inner_error_ = NULL;
 		{
-			g_warning ("application-controller.vala:482: could not load name from desktop file" \
+			g_warning ("application-controller.vala:487: could not load name from desktop file" \
 ": %s", e->message);
 			_g_error_free0 (e);
 		}

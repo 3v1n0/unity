@@ -322,6 +322,7 @@ namespace Unity {
 				public bool on_motion_event (Clutter.Event e);
 				public void show_menu ();
 				public Indicator.ObjectEntry entry { get; construct; }
+				public signal void entry_shown ();
 				public signal void menu_moved (Gtk.MenuDirectionType type);
 			}
 			[CCode (cheader_filename = "unity-private.h")]
@@ -401,7 +402,6 @@ namespace Unity {
 		public class WindowButton : Ctk.Button {
 			public Clutter.Actor bg;
 			public const string AMBIANCE;
-			public const string AMBIANCE_BETA;
 			public WindowButton (string filename);
 			public string filename { get; construct; }
 		}
@@ -502,7 +502,7 @@ namespace Unity {
 			public FolderBrowserRenderer ();
 		}
 		[CCode (cheader_filename = "unity-private.h")]
-		public class HomeButton : Ctk.Button {
+		public class HomeButton : Unity.Places.Button {
 			public HomeButton (string name, string icon, string exec);
 			public string exec { get; construct; }
 			public string icon { get; construct; }
@@ -609,6 +609,7 @@ namespace Unity {
 		[CCode (cheader_filename = "unity-private.h")]
 		public class PlaceHomeEntry : GLib.Object, Unity.Places.PlaceEntry {
 			public PlaceHomeEntry (Unity.Shell shell, Unity.Places.PlaceModel model);
+			public unowned Unity.Places.PlaceEntry? get_entry_for_uri (string uri);
 			public Unity.Places.PlaceModel place_model { get; set construct; }
 			public Unity.Shell shell { get; construct; }
 		}
@@ -627,6 +628,7 @@ namespace Unity {
 			public void reset ();
 			public void search (string text);
 			public void set_active_entry_view (Unity.Places.PlaceEntry entry, int x, uint section = 0);
+			public bool search_fail { get; set; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]
 		public class PlaceSearchBarBackground : Ctk.Bin {
@@ -635,6 +637,7 @@ namespace Unity {
 			public bool update_background ();
 			public int entry_position { get; set; }
 			public Unity.Places.PlaceSearchNavigation navigation { get; construct; }
+			public bool search_empty { get; set; }
 			public Unity.Places.PlaceSearchEntry search_entry { get; construct; }
 		}
 		[CCode (cheader_filename = "unity-private.h")]

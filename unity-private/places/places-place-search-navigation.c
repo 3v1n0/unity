@@ -324,11 +324,11 @@ static void unity_places_place_search_navigation_real_get_preferred_width (Clutt
 static void unity_places_place_search_navigation_draw_back_arrow (UnityPlacesPlaceSearchNavigation* self, cairo_t* cr, gint width, gint height);
 static void unity_places_place_search_navigation_draw_forward_arrow (UnityPlacesPlaceSearchNavigation* self, cairo_t* cr, gint width, gint height);
 static void _unity_places_place_search_navigation_draw_back_arrow_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
+static gboolean _lambda37_ (UnityPlacesPlaceSearchNavigation* self);
+static gboolean __lambda37__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
+static void _unity_places_place_search_navigation_draw_forward_arrow_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
 static gboolean _lambda38_ (UnityPlacesPlaceSearchNavigation* self);
 static gboolean __lambda38__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
-static void _unity_places_place_search_navigation_draw_forward_arrow_unity_cairo_canvas_cairo_canvas_paint (cairo_t* cr, gint width, gint height, gpointer self);
-static gboolean _lambda39_ (UnityPlacesPlaceSearchNavigation* self);
-static gboolean __lambda39__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static GObject * unity_places_place_search_navigation_constructor (GType type, guint n_construct_properties, GObjectConstructParam * construct_properties);
 static void unity_places_place_search_navigation_finalize (GObject* obj);
 
@@ -1753,6 +1753,17 @@ static gboolean unity_places_place_search_navigation_refresh_states_co (UnityPla
 		goto _state_3;
 	}
 	_state_0:
+	if (data->self->priv->remote == NULL) {
+		{
+			if (data->_state_ == 0) {
+				g_simple_async_result_complete_in_idle (data->_async_result);
+			} else {
+				g_simple_async_result_complete (data->_async_result);
+			}
+			g_object_unref (data->_async_result);
+			return FALSE;
+		}
+	}
 	{
 		data->_state_ = 3;
 		unity_places_place_browser_remote_get_state (data->self->priv->remote, unity_places_place_search_navigation_refresh_states_ready, data);
@@ -1777,7 +1788,7 @@ static gboolean unity_places_place_search_navigation_refresh_states_co (UnityPla
 		data->e = data->_inner_error_;
 		data->_inner_error_ = NULL;
 		{
-			g_warning ("places-place-search-navigation.vala:146: %s", data->_tmp2_ = g_strconcat ("Unable to refresh browser navigation state: ", string_to_string (data->e->message), NULL));
+			g_warning ("places-place-search-navigation.vala:150: %s", data->_tmp2_ = g_strconcat ("Unable to refresh browser navigation state: ", string_to_string (data->e->message), NULL));
 			_g_free0 (data->_tmp2_);
 			_g_error_free0 (data->e);
 		}
@@ -1842,6 +1853,17 @@ static gboolean unity_places_place_search_navigation_go_forward_co (UnityPlacesP
 		goto _state_4;
 	}
 	_state_0:
+	if (data->self->priv->remote == NULL) {
+		{
+			if (data->_state_ == 0) {
+				g_simple_async_result_complete_in_idle (data->_async_result);
+			} else {
+				g_simple_async_result_complete (data->_async_result);
+			}
+			g_object_unref (data->_async_result);
+			return FALSE;
+		}
+	}
 	{
 		data->_state_ = 4;
 		unity_places_place_browser_remote_go_forward (data->self->priv->remote, unity_places_place_search_navigation_go_forward_ready, data);
@@ -1866,7 +1888,7 @@ static gboolean unity_places_place_search_navigation_go_forward_co (UnityPlacesP
 		data->e = data->_inner_error_;
 		data->_inner_error_ = NULL;
 		{
-			g_warning ("places-place-search-navigation.vala:157: %s", data->_tmp2_ = g_strconcat ("Unable to go forward in browser view: ", string_to_string (data->e->message), NULL));
+			g_warning ("places-place-search-navigation.vala:164: %s", data->_tmp2_ = g_strconcat ("Unable to go forward in browser view: ", string_to_string (data->e->message), NULL));
 			_g_free0 (data->_tmp2_);
 			_g_error_free0 (data->e);
 		}
@@ -1931,6 +1953,17 @@ static gboolean unity_places_place_search_navigation_go_back_co (UnityPlacesPlac
 		goto _state_5;
 	}
 	_state_0:
+	if (data->self->priv->remote == NULL) {
+		{
+			if (data->_state_ == 0) {
+				g_simple_async_result_complete_in_idle (data->_async_result);
+			} else {
+				g_simple_async_result_complete (data->_async_result);
+			}
+			g_object_unref (data->_async_result);
+			return FALSE;
+		}
+	}
 	{
 		data->_state_ = 5;
 		unity_places_place_browser_remote_go_back (data->self->priv->remote, unity_places_place_search_navigation_go_back_ready, data);
@@ -1955,7 +1988,7 @@ static gboolean unity_places_place_search_navigation_go_back_co (UnityPlacesPlac
 		data->e = data->_inner_error_;
 		data->_inner_error_ = NULL;
 		{
-			g_warning ("places-place-search-navigation.vala:168: %s", data->_tmp2_ = g_strconcat ("Unable to go back in browser view: ", string_to_string (data->e->message), NULL));
+			g_warning ("places-place-search-navigation.vala:178: %s", data->_tmp2_ = g_strconcat ("Unable to go back in browser view: ", string_to_string (data->e->message), NULL));
 			_g_free0 (data->_tmp2_);
 			_g_error_free0 (data->e);
 		}
@@ -1998,7 +2031,7 @@ static void unity_places_place_search_navigation_draw_back_arrow (UnityPlacesPla
 	if (self->priv->back_sensitive) {
 		_tmp0_ = 1.0f;
 	} else {
-		_tmp0_ = 0.5f;
+		_tmp0_ = 0.125f;
 	}
 	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) _tmp0_);
 	cairo_move_to (cr, (double) ((width / 2) - UNITY_PLACES_PLACE_SEARCH_NAVIGATION_ARROW_SIZE), (double) (height / 2));
@@ -2021,7 +2054,7 @@ static void unity_places_place_search_navigation_draw_forward_arrow (UnityPlaces
 	if (self->priv->forward_sensitive) {
 		_tmp0_ = 1.0f;
 	} else {
-		_tmp0_ = 0.5f;
+		_tmp0_ = 0.125f;
 	}
 	cairo_set_source_rgba (cr, (double) 1.0f, (double) 1.0f, (double) 1.0f, (double) _tmp0_);
 	cairo_move_to (cr, (double) ((width / 2) + UNITY_PLACES_PLACE_SEARCH_NAVIGATION_ARROW_SIZE), (double) (height / 2));
@@ -2037,7 +2070,7 @@ static void _unity_places_place_search_navigation_draw_back_arrow_unity_cairo_ca
 }
 
 
-static gboolean _lambda38_ (UnityPlacesPlaceSearchNavigation* self) {
+static gboolean _lambda37_ (UnityPlacesPlaceSearchNavigation* self) {
 	gboolean result = FALSE;
 	gboolean _tmp0_ = FALSE;
 	if (self->priv->remote != NULL) {
@@ -2053,9 +2086,9 @@ static gboolean _lambda38_ (UnityPlacesPlaceSearchNavigation* self) {
 }
 
 
-static gboolean __lambda38__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean __lambda37__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
-	result = _lambda38_ (self);
+	result = _lambda37_ (self);
 	return result;
 }
 
@@ -2065,7 +2098,7 @@ static void _unity_places_place_search_navigation_draw_forward_arrow_unity_cairo
 }
 
 
-static gboolean _lambda39_ (UnityPlacesPlaceSearchNavigation* self) {
+static gboolean _lambda38_ (UnityPlacesPlaceSearchNavigation* self) {
 	gboolean result = FALSE;
 	gboolean _tmp0_ = FALSE;
 	if (self->priv->remote != NULL) {
@@ -2081,9 +2114,9 @@ static gboolean _lambda39_ (UnityPlacesPlaceSearchNavigation* self) {
 }
 
 
-static gboolean __lambda39__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
+static gboolean __lambda38__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self) {
 	gboolean result;
-	result = _lambda39_ (self);
+	result = _lambda38_ (self);
 	return result;
 }
 
@@ -2103,11 +2136,11 @@ static GObject * unity_places_place_search_navigation_constructor (GType type, g
 		ClutterColor _tmp4_;
 		self->priv->back = (_tmp0_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_place_search_navigation_draw_back_arrow_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->back), _tmp0_);
 		clutter_actor_set_reactive ((ClutterActor*) self->priv->back, TRUE);
-		g_signal_connect_object ((ClutterActor*) self->priv->back, "button-release-event", (GCallback) __lambda38__clutter_actor_button_release_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self->priv->back, "button-release-event", (GCallback) __lambda37__clutter_actor_button_release_event, self, 0);
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->back, TRUE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->back);
 		self->priv->forward = (_tmp1_ = g_object_ref_sink (unity_cairo_canvas_new (_unity_places_place_search_navigation_draw_forward_arrow_unity_cairo_canvas_cairo_canvas_paint, self)), _g_object_unref0 (self->priv->forward), _tmp1_);
-		g_signal_connect_object ((ClutterActor*) self->priv->forward, "button-release-event", (GCallback) __lambda39__clutter_actor_button_release_event, self, 0);
+		g_signal_connect_object ((ClutterActor*) self->priv->forward, "button-release-event", (GCallback) __lambda38__clutter_actor_button_release_event, self, 0);
 		ctk_box_pack ((CtkBox*) self, (ClutterActor*) self->priv->forward, TRUE, TRUE);
 		clutter_actor_show ((ClutterActor*) self->priv->forward);
 		self->priv->glow = (_tmp2_ = g_object_ref_sink ((CtkEffectGlow*) ctk_effect_glow_new ()), _g_object_unref0 (self->priv->glow), _tmp2_);

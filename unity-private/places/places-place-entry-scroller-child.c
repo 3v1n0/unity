@@ -401,7 +401,7 @@ static gboolean unity_places_place_entry_scroller_child_controller_real_can_drag
 	UnityPlacesPlaceEntryScrollerChildController * self;
 	gboolean result = FALSE;
 	self = (UnityPlacesPlaceEntryScrollerChildController*) base;
-	result = TRUE;
+	result = FALSE;
 	return result;
 }
 

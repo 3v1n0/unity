@@ -41,7 +41,7 @@ namespace Unity.IO {
    * Important: The passed back data must be manually freed using g_free()
    */
   public async void read_stream_async (InputStream input,
-                                       owned uchar[] buffer,
+                                       void* buffer,
                                        size_t buffer_lenght,
                                        int io_priority,
                                        Cancellable? cancellable,

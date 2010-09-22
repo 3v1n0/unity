@@ -76,7 +76,6 @@ struct _UnityTestsUnitIoSuiteDoTestAsyncFindAndLoadData {
 	guchar* _tmp2_;
 	void* data;
 	gsize data_size;
-	guchar* _tmp3_;
 	char* sdata;
 	GError * e;
 	GError * _inner_error_;
@@ -110,7 +109,6 @@ void unity_tests_unit_io_suite_do_test_async_find_and_load_finish (GAsyncResult*
 static void unity_tests_unit_io_suite_do_test_async_find_and_load_data_free (gpointer _data);
 static void unity_tests_unit_io_suite_do_test_async_find_and_load_ready (GObject* source_object, GAsyncResult* _res_, gpointer _user_data_);
 static gboolean unity_tests_unit_io_suite_do_test_async_find_and_load_co (UnityTestsUnitIoSuiteDoTestAsyncFindAndLoadData* data);
-static guchar* _vala_array_dup1 (guchar* self, int length);
 static void unity_tests_unit_io_suite_finalize (UnityTestsUnitIOSuite* obj);
 static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
@@ -182,11 +180,6 @@ static void unity_tests_unit_io_suite_do_test_async_find_and_load_ready (GObject
 }
 
 
-static guchar* _vala_array_dup1 (guchar* self, int length) {
-	return g_memdup (self, length * sizeof (guchar));
-}
-
-
 static gboolean unity_tests_unit_io_suite_do_test_async_find_and_load_co (UnityTestsUnitIoSuiteDoTestAsyncFindAndLoadData* data) {
 	switch (data->_state_) {
 		case 0:
@@ -213,7 +206,7 @@ static gboolean unity_tests_unit_io_suite_do_test_async_find_and_load_co (UnityT
 		g_assert (G_IS_FILE_INPUT_STREAM (data->input));
 		data->buf = (data->_tmp2_ = g_new0 (guchar, 16), data->buf_length1 = 16, data->_buf_size_ = data->buf_length1, data->_tmp2_);
 		data->_state_ = 2;
-		unity_io_read_stream_async ((GInputStream*) data->input, (data->_tmp3_ = data->buf, (data->_tmp3_ == NULL) ? ((gpointer) data->_tmp3_) : _vala_array_dup1 (data->_tmp3_, data->buf_length1)), data->buf_length1, (gsize) 16, G_PRIORITY_DEFAULT, NULL, unity_tests_unit_io_suite_do_test_async_find_and_load_ready, data);
+		unity_io_read_stream_async ((GInputStream*) data->input, data->buf, (gsize) 16, G_PRIORITY_DEFAULT, NULL, unity_tests_unit_io_suite_do_test_async_find_and_load_ready, data);
 		return FALSE;
 		_state_2:
 		unity_io_read_stream_finish (data->_res_, &data->data, &data->data_size, &data->_inner_error_);

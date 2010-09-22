@@ -133,6 +133,21 @@ namespace Unity
       window.hide ();
       this.plugin.plugin.minimize_completed (window);
     }
+    
+    private bool force_activate ()
+    {
+      if (this.last_mapped is Mutter.Window)
+        {
+          unowned Mutter.MetaWindow w = this.last_mapped.get_meta_window ();
+          unowned Mutter.MetaDisplay d = Mutter.MetaWindow.get_display (w);
+
+          Mutter.MetaWindow.activate (this.last_mapped.get_meta_window (),
+                                      Mutter.MetaDisplay.get_current_time (d));
+        }
+
+      return false;
+    }
+
 
     private void window_mapped (Plugin plugin, Mutter.Window window)
     {
@@ -147,6 +162,13 @@ namespace Unity
           this.plugin.plugin.map_completed (window);
           return;
         }
+      
+      if (plugin.expose_manager.expose_showing)
+        {
+          window.opacity = 0;
+          this.plugin.plugin.map_completed (window);
+          return;
+        }
 
       if (type == Mutter.MetaWindowType.NORMAL ||
           type == Mutter.MetaWindowType.DIALOG)
@@ -155,13 +177,14 @@ namespace Unity
                                       Mutter.MetaWindow.get_user_time (
                                             window.get_meta_window ()));
           this.last_mapped = window;
+          Timeout.add (0, this.force_activate);
         }
 
       Clutter.Animation anim = null;
       Clutter.Actor actor = window as Clutter.Actor;
       actor.opacity = 0;
       window.show ();
-
+      
       int speed = get_animation_speed (window);
 
       Mutter.MetaRectangle rect = {0, 0, 0, 0};

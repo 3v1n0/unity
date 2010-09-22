@@ -153,11 +153,23 @@ static gboolean unity_maximus_window_is_excluded (UnityMaximus* self, MutterWind
 		gboolean _tmp1_ = FALSE;
 		gboolean _tmp2_ = FALSE;
 		gboolean _tmp3_ = FALSE;
+		gboolean _tmp4_ = FALSE;
+		gboolean _tmp5_ = FALSE;
 		stage = _g_object_ref0 (clutter_stage_get_default ());
 		if (clutter_actor_get_width ((ClutterActor*) window) < (clutter_actor_get_width (stage) * 0.6)) {
+			_tmp5_ = TRUE;
+		} else {
+			_tmp5_ = clutter_actor_get_width ((ClutterActor*) window) > clutter_actor_get_width (stage);
+		}
+		if (_tmp5_) {
+			_tmp4_ = TRUE;
+		} else {
+			_tmp4_ = clutter_actor_get_height ((ClutterActor*) window) < (clutter_actor_get_height (stage) * 0.6);
+		}
+		if (_tmp4_) {
 			_tmp3_ = TRUE;
 		} else {
-			_tmp3_ = clutter_actor_get_height ((ClutterActor*) window) < (clutter_actor_get_height (stage) * 0.6);
+			_tmp3_ = clutter_actor_get_height ((ClutterActor*) window) > clutter_actor_get_height (stage);
 		}
 		if (_tmp3_) {
 			_tmp2_ = TRUE;

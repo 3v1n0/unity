@@ -23,7 +23,7 @@ using GLib;
 
 namespace Unity
 {
-  public class PixbufCacheTask
+  private class PixbufCacheTask
   {
     public string  data;
     public unowned Ctk.Image image;
@@ -36,7 +36,7 @@ namespace Unity
     }
   }
 
-  public enum PixbufRequestType
+  private enum PixbufRequestType
   {
     ICON_NAME,
     GICON_STRING
@@ -62,9 +62,9 @@ namespace Unity
 
     public uint size { get { return cache.size; } }
 
-    private PriorityQueue<PixbufCacheTask> queue;
+    private Gee.Queue<PixbufCacheTask> queue;
 
-    private uint queue_timeout = 0;
+    private uint queue_source = 0;
 
     /*
      * Construction
@@ -83,14 +83,13 @@ namespace Unity
 
     construct
     {
-      queue = new PriorityQueue<PixbufCacheTask> ();
-
+      queue = new LinkedList<PixbufCacheTask> ();
       theme = Gtk.IconTheme.get_default ();
       cache = new HashMap<string, Gdk.Pixbuf> ();
     }
 
     private void on_shell_destroyed ()
-    {
+    {    
       if (_pixbuf_cache == this)
         {
           _pixbuf_cache = null;
@@ -127,31 +126,79 @@ namespace Unity
       cache.clear ();
     }
 
-    public bool load_iteration ()
+    private async void process_icon_queue_async ()
     {
-      int i = 0;
-
-      while (queue.size > 0 && i < 10)
+      /* Hardcoded numbers make gord cry - but so be it - we are taking
+       * a second guess of the inode size here, for the better of mankind */
+      uchar[] buf = new uchar[4096];
+      int count = 0;
+      var timer = new Timer ();
+      PixbufCacheTask task;
+      
+      while ((task = queue.poll()) != null)
         {
-          var task = queue.poll ();
-
           if (task.image is Ctk.Image)
             {
-              if (task.type == PixbufRequestType.ICON_NAME)
-                set_image_from_icon_name_real (task.image, task.data, task.size);
-              else if (task.type == PixbufRequestType.GICON_STRING)
-                set_image_from_gicon_string_real (task.image, task.data, task.size);
-            }
-
-          i++;
+              switch (task.type)
+                {
+                  case PixbufRequestType.ICON_NAME:
+                    yield set_image_from_icon_name_real (task, buf, buf.length);
+                    break;
+                  case PixbufRequestType.GICON_STRING:
+                    yield set_image_from_gicon_string_real (task, buf, buf.length);
+                    break;
+                  default:
+                    critical ("Internal error. Unknown PixbufRequestType: %u",
+                              task.type);
+                    break;
+                }
+            }          
+          count++;
         }
-
-      if (queue.size == 0)
-        queue_timeout = 0;
-
-      return queue.size != 0;
+        
+      timer.stop ();
+      debug ("Loaded %i icons in %fms", count, timer.elapsed()*1000);
+      
+      /* Queue depleted */
+      queue_source = 0;
     }
 
+    private void process_icon_queue ()
+    {
+      if (queue_source == 0)
+        {
+          /* queue_source is set to 0 by process_icon_queue_async()
+           * when the queue is depleted.
+           * It's important that we dispatch in an idle call here since
+           * it gives clients a chance to queue more icons before we
+           * hammer the IO */
+          queue_source = Idle.add (dispatch_process_icon_queue_async);          
+        }
+    }
+    
+    private bool dispatch_process_icon_queue_async ()
+    {
+      /* Run three processings in "parallel". While we are not multithreaded,
+       * it still makes sense to do since one branch may be waiting in
+       * 'yield' for async IO, while the other can be parsing image data.
+       * The number of parallel workers has been chosen by best perceived
+       * responsiveness for bringing up the Applications place */
+       process_icon_queue_async.begin ();
+       process_icon_queue_async.begin ();
+       process_icon_queue_async.begin ();
+       
+       return false;
+    }
+
+    /**
+     * If the icon is already cached then set it immediately on @image. Otherwise
+     * does async IO to load and cache the icon, then setting it on @image.
+     *
+     * Note that this means that you should treat this method as an async
+     * operation for all intents and purposes. You can not count on
+     * image.pixbuf != null when this method call returns. That may just as well
+     * happen in a subsequent idle call.
+     */
     public void set_image_from_icon_name (Ctk.Image image,
                                           string    icon_name,
                                           int       size)
@@ -166,63 +213,68 @@ namespace Unity
         }
 
       var task = new PixbufCacheTask ();
+      task.key = key;
       task.data = icon_name;
       task.image = image;
       task.size = size;
       task.type = PixbufRequestType.ICON_NAME;
 
-      queue.add (task);
+      queue.offer (task);
 
-      if (queue_timeout == 0)
-        queue_timeout = Idle.add (load_iteration);
+      process_icon_queue ();
     }
 
-    private async void set_image_from_icon_name_real (Ctk.Image image,
-                                                      string    icon_name,
-                                                      int       size)
+    private async void set_image_from_icon_name_real (PixbufCacheTask task,
+                                                      void* buf,
+                                                      size_t buf_length)
     {
-      var key = hash_template.printf (icon_name, size);
-      Pixbuf? ret = cache[key];
+      Pixbuf? ret = cache[task.key];
 
       /* We need a secondary cache check because the icon may have
        * been cached while we where waiting in the queue */
       if (ret is Pixbuf)
         {
-          image.set_from_pixbuf (ret);
+          task.image.set_from_pixbuf (ret);
           return;
         }
       
-      if (ret == null)
-        {
-          try {
-            var info = theme.lookup_icon (icon_name, size, 0);
-            if (info != null)
-              {
-                var filename = info.get_filename ();
-                ret = yield load_from_filepath (filename, size);
-              }
-
-            if (ret is Pixbuf)
-              {
-                cache[key] = ret;
-              }
-
-          } catch (Error e) {
-            warning ("Unable to load icon_name: %s", e.message);
+      try {
+        var info = theme.lookup_icon (task.data, task.size, 0);
+        if (info != null)
+          {
+            var filename = info.get_filename ();
+            ret = yield load_from_filepath (filename, task.size, buf, buf_length);
           }
-        }
+
+        if (ret is Pixbuf)
+          {
+            cache[task.key] = ret;
+          }
+
+      } catch (Error e) {
+        warning ("Unable to load icon_name: %s", e.message);
+      }
 
       if (ret is Pixbuf)
         {
-          image.set_from_pixbuf (ret);
+          task.image.set_from_pixbuf (ret);
         }
     }
 
+    /**
+     * If the icon is already cached then set it immediately on @image. Otherwise
+     * does async IO to load and cache the icon, then setting it on @image.
+     *
+     * Note that this means that you should treat this method as an async
+     * operation for all intents and purposes. You can not count on
+     * image.pixbuf != null when this method call returns. That may just as well
+     * happen in a subsequent idle call.
+     */
     public void set_image_from_gicon_string (Ctk.Image image,
-                                                   string data,
-                                                   int    size)
+                                             string    gicon_as_string,
+                                             int       size)
     {
-      var key = hash_template.printf (data, size);
+      var key = hash_template.printf (gicon_as_string, size);
       Pixbuf? ret = cache[key];
 
       if (ret is Pixbuf)
@@ -232,95 +284,94 @@ namespace Unity
         }
 
       var task = new PixbufCacheTask ();
+      task.key = key;
       task.image = image;
-      task.data = data;
+      task.data = gicon_as_string;
       task.size = size;
       task.type = PixbufRequestType.GICON_STRING;
 
-      queue.add (task);
+      queue.offer (task);
 
-      if (queue_timeout == 0)
-        queue_timeout = Idle.add (load_iteration);
+      process_icon_queue ();
     }
 
-    private async void set_image_from_gicon_string_real (Ctk.Image image,
-                                                         string    gicon_as_string,
-                                                         int       size)
+    private async void set_image_from_gicon_string_real (PixbufCacheTask task,
+                                                         void* buf, 
+                                                         size_t buf_length)
     {
-      var key = hash_template.printf (gicon_as_string, size);
-      Pixbuf? ret = cache[key];
+      Pixbuf? ret = cache[task.key];
 
       /* We need a secondary cache check because the icon may have
        * been cached while we where waiting in the queue */
       if (ret is Pixbuf)
         {
-          image.set_from_pixbuf (ret);
+          task.image.set_from_pixbuf (ret);
           return;
         }
       
+      if (task.data[0] == '/')
+        {
+          try {
+            ret = yield load_from_filepath (task.data, task.size, buf, buf_length);
+          } catch (Error err) {
+            message (@"Unable to load $(task.data) as file: %s",
+                     err.message);
+          }
+        }
+
       if (ret == null)
         {
-          if (gicon_as_string[0] == '/')
-            {
-              try {
-                ret = yield load_from_filepath (gicon_as_string, size);
-              } catch (Error err) {
-                message (@"Unable to load $gicon_as_string as file: %s",
-                         err.message);
+          try {
+            unowned GLib.Icon icon = GLib.Icon.new_for_string (task.data);
+            var info = theme.lookup_by_gicon (icon, task.size, 0);
+            if (info != null)
+              {
+                var filename = info.get_filename ();
+                ret = yield load_from_filepath (filename, task.size, buf, buf_length);
               }
-            }
 
-          if (ret == null)
-            {
-              try {
-                unowned GLib.Icon icon = GLib.Icon.new_for_string (gicon_as_string);
-                var info = theme.lookup_by_gicon (icon, size, 0);
-                if (info != null)
-                  {
-                    var filename = info.get_filename ();
-
-                    ret = yield load_from_filepath (filename, size);
-                  }
-
-                if (ret == null)
-                  {
-                    /* There is some funkiness in some programs where they install
-                     * their icon to /usr/share/icons/hicolor/apps/, but they
-                     * name the Icon= key as `foo.$extension` which breaks loading
-                     * So we can try and work around that here.
-                     */
-                    if (gicon_as_string.has_suffix (".png")
-                        || gicon_as_string.has_suffix (".xpm")
-                        || gicon_as_string.has_suffix (".gif")
-                        || gicon_as_string.has_suffix (".jpg"))
-                      {
-                        string real_name = gicon_as_string[0:gicon_as_string.length-4];
-                        info = theme.lookup_icon (real_name, size, 0);
-                        if (info != null)
-                          {
-                            var fname = info.get_filename ();
-                            ret = yield load_from_filepath (fname, size);
-                          }
-                      }
-                  }
-
-              } catch (Error e) {
-                warning (@"Unable to load icon $gicon_as_string: '%s'", e.message);
+            if (ret == null)
+              {
+                /* There is some funkiness in some programs where they install
+                 * their icon to /usr/share/icons/hicolor/apps/, but they
+                 * name the Icon= key as `foo.$extension` which breaks loading
+                 * So we can try and work around that here.
+                 */
+                 if (task.data.has_suffix (".png")
+                     || task.data.has_suffix (".xpm")
+                     || task.data.has_suffix (".gif")
+                     || task.data.has_suffix (".jpg"))
+                   {
+                     string real_name = task.data[0:task.data.length-4];
+                     info = theme.lookup_icon (real_name, task.size, 0);
+                     if (info != null)
+                       {
+                         var fname = info.get_filename ();
+                         ret = yield load_from_filepath (fname, task.size, buf, buf_length);
+                       }
+                   }
               }
-            }
-
-          if (ret is Pixbuf)
-            {
-              cache[key] = ret;
-            }
+          } catch (Error e) {
+            warning (@"Unable to load icon $(task.data): '%s'", e.message);
+          }
         }
 
       if (ret is Pixbuf)
         {
-          image.set_from_pixbuf (ret);
+          cache[task.key] = ret;
+          task.image.set_from_pixbuf (ret);
         }
     }
 
+    /**
+     * If @icon is already cached then set it immediately on @image. Otherwise
+     * does async IO to load and cache the icon, then setting it on @image.
+     *
+     * Note that this means that you should treat this method as an async
+     * operation for all intents and purposes. You can not count on
+     * image.pixbuf != null when this method call returns. That may just as well
+     * happen in a subsequent idle call.
+     */
     public async void set_image_from_gicon (Ctk.Image image,
                                             GLib.Icon icon,
                                             int       size)
@@ -328,7 +379,8 @@ namespace Unity
       set_image_from_gicon_string (image, icon.to_string (), size);
     }
 
-    public async Gdk.Pixbuf? load_from_filepath (string filename, int size)
+    private async Gdk.Pixbuf? load_from_filepath (string filename, int size,
+                                                  void* buf, size_t buf_length) throws Error
     {
       
       if (filename != null)
@@ -347,10 +399,9 @@ namespace Unity
               if (stream is FileInputStream)
                 {
                   /* TODO: Tweak buf size to optimize io */
-                  uchar[] buf = new uchar[1024];
                   void *data;
                   size_t data_size;
-                  yield IO.read_stream_async (stream, buf, buf.length, Priority.DEFAULT,
+                  yield IO.read_stream_async (stream, buf, buf_length, Priority.DEFAULT,
                                               null, out data, out data_size);
 
                   /* Construct a loader for a given mimetype so it doesn't
@@ -374,6 +425,5 @@ namespace Unity
 
       return null;
     }
-
   }
 }

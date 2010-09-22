@@ -32,6 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <clutter/clutter.h>
+#include <unity.h>
 #include <unity-utils.h>
 
 
@@ -106,13 +107,15 @@ static void unity_panel_indicators_indicator_object_view_on_entry_added (UnityPa
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_entry_view_new (IndicatorObjectEntry* _entry);
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_entry_view_construct (GType object_type, IndicatorObjectEntry* _entry);
 static void _unity_panel_indicators_indicator_object_view_on_menu_moved_unity_panel_indicators_indicator_object_entry_view_menu_moved (UnityPanelIndicatorsIndicatorObjectEntryView* _sender, GtkMenuDirectionType type, gpointer self);
+static void unity_panel_indicators_indicator_object_view_on_entry_shown (UnityPanelIndicatorsIndicatorObjectView* self, UnityPanelIndicatorsIndicatorObjectEntryView* view);
+static void _unity_panel_indicators_indicator_object_view_on_entry_shown_unity_panel_indicators_indicator_object_entry_view_entry_shown (UnityPanelIndicatorsIndicatorObjectEntryView* _sender, gpointer self);
+IndicatorObject* unity_panel_indicators_indicator_object_view_get_indicator_object (UnityPanelIndicatorsIndicatorObjectView* self);
 static void unity_panel_indicators_indicator_object_view_remove_entry (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObjectEntry* entry);
 void unity_panel_indicators_indicator_object_view_open_first_menu_entry (UnityPanelIndicatorsIndicatorObjectView* self);
 void unity_panel_indicators_indicator_object_view_open_last_menu_entry (UnityPanelIndicatorsIndicatorObjectView* self);
 gboolean unity_panel_indicators_indicator_object_view_find_entry (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObjectEntry* entry);
 UnityPanelIndicatorsIndicatorObjectEntryView* unity_panel_indicators_indicator_object_view_get_entry_view (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObjectEntry* entry);
 void unity_panel_indicators_indicator_object_view_remove_first_entry (UnityPanelIndicatorsIndicatorObjectView* self);
-IndicatorObject* unity_panel_indicators_indicator_object_view_get_indicator_object (UnityPanelIndicatorsIndicatorObjectView* self);
 static void unity_panel_indicators_indicator_object_view_set_indicator_object (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObject* value);
 static void _unity_panel_indicators_indicator_object_view_on_entry_added_indicator_object_entry_added (IndicatorObject* _sender, IndicatorObjectEntry* entry, gpointer self);
 static void _unity_panel_indicators_indicator_object_view_remove_entry_indicator_object_entry_removed (IndicatorObject* _sender, IndicatorObjectEntry* entry, gpointer self);
@@ -242,6 +245,11 @@ static void _unity_panel_indicators_indicator_object_view_on_menu_moved_unity_pa
 }
 
 
+static void _unity_panel_indicators_indicator_object_view_on_entry_shown_unity_panel_indicators_indicator_object_entry_view_entry_shown (UnityPanelIndicatorsIndicatorObjectEntryView* _sender, gpointer self) {
+	unity_panel_indicators_indicator_object_view_on_entry_shown (self, _sender);
+}
+
+
 static void unity_panel_indicators_indicator_object_view_on_entry_added (UnityPanelIndicatorsIndicatorObjectView* self, IndicatorObject* object, IndicatorObjectEntry* indicator_object_entry) {
 	UnityPanelIndicatorsIndicatorObjectEntryView* object_entry_view;
 	g_return_if_fail (self != NULL);
@@ -274,9 +282,18 @@ static void unity_panel_indicators_indicator_object_view_on_entry_added (UnityPa
 	}
 	object_entry_view = g_object_ref_sink (unity_panel_indicators_indicator_object_entry_view_new (indicator_object_entry));
 	g_signal_connect_object (object_entry_view, "menu-moved", (GCallback) _unity_panel_indicators_indicator_object_view_on_menu_moved_unity_panel_indicators_indicator_object_entry_view_menu_moved, self, 0);
+	g_signal_connect_object (object_entry_view, "entry-shown", (GCallback) _unity_panel_indicators_indicator_object_view_on_entry_shown_unity_panel_indicators_indicator_object_entry_view_entry_shown, self, 0);
 	gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->indicator_entry_array, object_entry_view);
 	clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) object_entry_view);
 	_g_object_unref0 (object_entry_view);
+}
+
+
+static void unity_panel_indicators_indicator_object_view_on_entry_shown (UnityPanelIndicatorsIndicatorObjectView* self, UnityPanelIndicatorsIndicatorObjectEntryView* view) {
+	IndicatorObject* _tmp0_;
+	g_return_if_fail (self != NULL);
+	g_return_if_fail (view != NULL);
+	INDICATOR_OBJECT_GET_CLASS (_tmp0_ = self->priv->_indicator_object)->entry_activate (_tmp0_, unity_panel_indicators_indicator_object_entry_view_get_entry (view), (guint) unity_shell_get_current_time (unity_global_shell));
 }
 
 
@@ -484,6 +501,7 @@ static GObject * unity_panel_indicators_indicator_object_view_constructor (GType
 					indicator_object_entry = (IndicatorObjectEntry*) ((IndicatorObjectEntry*) g_list_nth_data (list, (guint) i));
 					object_entry_view = g_object_ref_sink (unity_panel_indicators_indicator_object_entry_view_new (indicator_object_entry));
 					g_signal_connect_object (object_entry_view, "menu-moved", (GCallback) _unity_panel_indicators_indicator_object_view_on_menu_moved_unity_panel_indicators_indicator_object_entry_view_menu_moved, self, 0);
+					g_signal_connect_object (object_entry_view, "entry-shown", (GCallback) _unity_panel_indicators_indicator_object_view_on_entry_shown_unity_panel_indicators_indicator_object_entry_view_entry_shown, self, 0);
 					gee_abstract_collection_add ((GeeAbstractCollection*) self->priv->indicator_entry_array, object_entry_view);
 					clutter_container_add_actor ((ClutterContainer*) self, (ClutterActor*) object_entry_view);
 					_g_object_unref0 (object_entry_view);

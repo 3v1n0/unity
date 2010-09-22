@@ -27,6 +27,7 @@
 #include <gee.h>
 #include <dee.h>
 #include <unity.h>
+#include <clutk/clutk.h>
 
 
 #define UNITY_PLACES_TYPE_PLACE_ENTRY (unity_places_place_entry_get_type ())
@@ -67,9 +68,41 @@ typedef struct _UnityPlacesPlaceHomeEntryPrivate UnityPlacesPlaceHomeEntryPrivat
 
 typedef struct _UnityPlacesPlaceModel UnityPlacesPlaceModel;
 typedef struct _UnityPlacesPlaceModelClass UnityPlacesPlaceModelClass;
+
+#define UNITY_PLACES_TYPE_VIEW (unity_places_view_get_type ())
+#define UNITY_PLACES_VIEW(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_VIEW, UnityPlacesView))
+#define UNITY_PLACES_VIEW_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_VIEW, UnityPlacesViewClass))
+#define UNITY_PLACES_IS_VIEW(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_VIEW))
+#define UNITY_PLACES_IS_VIEW_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_VIEW))
+#define UNITY_PLACES_VIEW_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_VIEW, UnityPlacesViewClass))
+
+typedef struct _UnityPlacesView UnityPlacesView;
+typedef struct _UnityPlacesViewClass UnityPlacesViewClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 #define _g_free0(var) (var = (g_free (var), NULL))
 typedef struct _Block4Data Block4Data;
+
+#define UNITY_TESTING_TYPE_OBJECT_REGISTRY (unity_testing_object_registry_get_type ())
+#define UNITY_TESTING_OBJECT_REGISTRY(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TESTING_TYPE_OBJECT_REGISTRY, UnityTestingObjectRegistry))
+#define UNITY_TESTING_OBJECT_REGISTRY_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TESTING_TYPE_OBJECT_REGISTRY, UnityTestingObjectRegistryClass))
+#define UNITY_TESTING_IS_OBJECT_REGISTRY(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TESTING_TYPE_OBJECT_REGISTRY))
+#define UNITY_TESTING_IS_OBJECT_REGISTRY_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TESTING_TYPE_OBJECT_REGISTRY))
+#define UNITY_TESTING_OBJECT_REGISTRY_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TESTING_TYPE_OBJECT_REGISTRY, UnityTestingObjectRegistryClass))
+
+typedef struct _UnityTestingObjectRegistry UnityTestingObjectRegistry;
+typedef struct _UnityTestingObjectRegistryClass UnityTestingObjectRegistryClass;
+#define _unity_testing_object_registry_unref0(var) ((var == NULL) ? NULL : (var = (unity_testing_object_registry_unref (var), NULL)))
+typedef struct _UnityPlacesViewPrivate UnityPlacesViewPrivate;
+
+#define UNITY_PLACES_TYPE_PLACE_SEARCH_BAR (unity_places_place_search_bar_get_type ())
+#define UNITY_PLACES_PLACE_SEARCH_BAR(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR, UnityPlacesPlaceSearchBar))
+#define UNITY_PLACES_PLACE_SEARCH_BAR_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR, UnityPlacesPlaceSearchBarClass))
+#define UNITY_PLACES_IS_PLACE_SEARCH_BAR(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR))
+#define UNITY_PLACES_IS_PLACE_SEARCH_BAR_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR))
+#define UNITY_PLACES_PLACE_SEARCH_BAR_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_PLACES_TYPE_PLACE_SEARCH_BAR, UnityPlacesPlaceSearchBarClass))
+
+typedef struct _UnityPlacesPlaceSearchBar UnityPlacesPlaceSearchBar;
+typedef struct _UnityPlacesPlaceSearchBarClass UnityPlacesPlaceSearchBarClass;
 
 struct _UnityPlacesPlaceEntryIface {
 	GTypeInterface parent_iface;
@@ -151,12 +184,24 @@ struct _UnityPlacesPlaceHomeEntryPrivate {
 	GeeHashMap* _global_renderer_hints;
 	UnityPlacesPlaceModel* _place_model;
 	GeeHashMap* entry_group_map;
+	UnityPlacesView* place_view;
 };
 
 struct _Block4Data {
 	int _ref_count_;
 	UnityPlacesPlaceHomeEntry * self;
 	UnityPlacesPlaceEntry* entry;
+};
+
+struct _UnityPlacesView {
+	CtkBox parent_instance;
+	UnityPlacesViewPrivate * priv;
+	UnityPlacesPlaceHomeEntry* home_entry;
+	UnityPlacesPlaceSearchBar* search_bar;
+};
+
+struct _UnityPlacesViewClass {
+	CtkBoxClass parent_class;
 };
 
 
@@ -167,6 +212,7 @@ GType unity_places_place_get_type (void) G_GNUC_CONST;
 GType unity_places_place_entry_get_type (void) G_GNUC_CONST;
 GType unity_places_place_home_entry_get_type (void) G_GNUC_CONST;
 GType unity_places_place_model_get_type (void) G_GNUC_CONST;
+GType unity_places_view_get_type (void) G_GNUC_CONST;
 #define UNITY_PLACES_PLACE_HOME_ENTRY_GET_PRIVATE(o) (G_TYPE_INSTANCE_GET_PRIVATE ((o), UNITY_PLACES_TYPE_PLACE_HOME_ENTRY, UnityPlacesPlaceHomeEntryPrivate))
 enum  {
 	UNITY_PLACES_PLACE_HOME_ENTRY_DUMMY_PROPERTY,
@@ -203,12 +249,24 @@ static void _lambda35_ (Block4Data* _data4_);
 DeeModel* unity_places_place_entry_get_global_results_model (UnityPlacesPlaceEntry* self);
 static void _lambda36_ (DeeModelIter* it, Block4Data* _data4_);
 DeeModel* unity_places_place_entry_get_entry_results_model (UnityPlacesPlaceEntry* self);
+static void unity_places_place_home_entry_update_search_failed (UnityPlacesPlaceHomeEntry* self);
 static void __lambda36__dee_model_row_added (DeeModel* _sender, DeeModelIter* iter, gpointer self);
-static void _lambda37_ (DeeModelIter* it, Block4Data* _data4_);
-static void __lambda37__dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self);
+static void _lambda43_ (DeeModelIter* it, Block4Data* _data4_);
+static void __lambda43__dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self);
 static void __lambda35__unity_places_place_entry_updated (UnityPlacesPlaceEntry* _sender, gpointer self);
 static Block4Data* block4_data_ref (Block4Data* _data4_);
 static void block4_data_unref (Block4Data* _data4_);
+gpointer unity_testing_object_registry_ref (gpointer instance);
+void unity_testing_object_registry_unref (gpointer instance);
+GParamSpec* unity_testing_param_spec_object_registry (const gchar* name, const gchar* nick, const gchar* blurb, GType object_type, GParamFlags flags);
+void unity_testing_value_set_object_registry (GValue* value, gpointer v_object);
+void unity_testing_value_take_object_registry (GValue* value, gpointer v_object);
+gpointer unity_testing_value_get_object_registry (const GValue* value);
+GType unity_testing_object_registry_get_type (void) G_GNUC_CONST;
+UnityTestingObjectRegistry* unity_testing_object_registry_get_default (void);
+GeeArrayList* unity_testing_object_registry_lookup (UnityTestingObjectRegistry* self, const char* name);
+GType unity_places_place_search_bar_get_type (void) G_GNUC_CONST;
+void unity_places_place_search_bar_set_search_fail (UnityPlacesPlaceSearchBar* self, gboolean value);
 static void unity_places_place_home_entry_real_connect (UnityPlacesPlaceEntry* base);
 void unity_places_place_entry_set_online (UnityPlacesPlaceEntry* self, gboolean value);
 static void unity_places_place_home_entry_real_set_search (UnityPlacesPlaceEntry* base, const char* search, GHashTable* hints);
@@ -217,6 +275,7 @@ void unity_places_place_entry_set_entry_renderer_name (UnityPlacesPlaceEntry* se
 void unity_places_place_entry_set_global_search (UnityPlacesPlaceEntry* self, const char* search, GHashTable* hints);
 static void unity_places_place_home_entry_real_set_active_section (UnityPlacesPlaceEntry* base, guint section_id);
 static void unity_places_place_home_entry_real_set_global_search (UnityPlacesPlaceEntry* base, const char* search, GHashTable* hints);
+UnityPlacesPlaceEntry* unity_places_place_home_entry_get_entry_for_uri (UnityPlacesPlaceHomeEntry* self, const char* uri);
 UnityShell* unity_places_place_home_entry_get_shell (UnityPlacesPlaceHomeEntry* self);
 static void unity_places_place_home_entry_set_shell (UnityPlacesPlaceHomeEntry* self, UnityShell* value);
 static char** _vala_array_dup3 (char** self, int length);
@@ -295,6 +354,7 @@ static void _lambda36_ (DeeModelIter* it, Block4Data* _data4_) {
 		return;
 	}
 	dee_model_append (unity_places_place_entry_get_entry_results_model ((UnityPlacesPlaceEntry*) self), 0, dee_model_get_string (_model, it, (guint) 0), 1, dee_model_get_string (_model, it, (guint) 1), 2, GPOINTER_TO_UINT (gee_abstract_map_get ((GeeAbstractMap*) self->priv->entry_group_map, _data4_->entry)), 3, dee_model_get_string (_model, it, (guint) 3), 4, dee_model_get_string (_model, it, (guint) 4), 5, dee_model_get_string (_model, it, (guint) 5), -1, NULL);
+	unity_places_place_home_entry_update_search_failed (self);
 	_g_object_unref0 (_model);
 }
 
@@ -304,7 +364,7 @@ static void __lambda36__dee_model_row_added (DeeModel* _sender, DeeModelIter* it
 }
 
 
-static void _lambda37_ (DeeModelIter* it, Block4Data* _data4_) {
+static void _lambda43_ (DeeModelIter* it, Block4Data* _data4_) {
 	UnityPlacesPlaceHomeEntry * self;
 	DeeModel* _model;
 	char* uri;
@@ -330,13 +390,14 @@ static void _lambda37_ (DeeModelIter* it, Block4Data* _data4_) {
 		}
 		i = dee_model_next (_model, i);
 	}
+	unity_places_place_home_entry_update_search_failed (self);
 	_g_free0 (uri);
 	_g_object_unref0 (_model);
 }
 
 
-static void __lambda37__dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
-	_lambda37_ (iter, self);
+static void __lambda43__dee_model_row_removed (DeeModel* _sender, DeeModelIter* iter, gpointer self) {
+	_lambda43_ (iter, self);
 }
 
 
@@ -344,7 +405,7 @@ static void _lambda35_ (Block4Data* _data4_) {
 	UnityPlacesPlaceHomeEntry * self;
 	self = _data4_->self;
 	g_signal_connect_data (unity_places_place_entry_get_global_results_model (_data4_->entry), "row-added", (GCallback) __lambda36__dee_model_row_added, block4_data_ref (_data4_), (GClosureNotify) block4_data_unref, 0);
-	g_signal_connect_data (unity_places_place_entry_get_global_results_model (_data4_->entry), "row-removed", (GCallback) __lambda37__dee_model_row_removed, block4_data_ref (_data4_), (GClosureNotify) block4_data_unref, 0);
+	g_signal_connect_data (unity_places_place_entry_get_global_results_model (_data4_->entry), "row-removed", (GCallback) __lambda43__dee_model_row_removed, block4_data_ref (_data4_), (GClosureNotify) block4_data_unref, 0);
 }
 
 
@@ -396,6 +457,25 @@ static void unity_places_place_home_entry_on_place_added (UnityPlacesPlaceHomeEn
 }
 
 
+static void unity_places_place_home_entry_update_search_failed (UnityPlacesPlaceHomeEntry* self) {
+	g_return_if_fail (self != NULL);
+	if (self->priv->place_view == NULL) {
+		UnityTestingObjectRegistry* _tmp0_;
+		GeeArrayList* _tmp1_;
+		GObject* _tmp2_;
+		UnityPlacesView* _tmp3_;
+		self->priv->place_view = (_tmp3_ = (_tmp2_ = (GObject*) gee_abstract_list_get ((GeeAbstractList*) (_tmp1_ = unity_testing_object_registry_lookup (_tmp0_ = unity_testing_object_registry_get_default (), "UnityPlacesView")), 0), UNITY_PLACES_IS_VIEW (_tmp2_) ? ((UnityPlacesView*) _tmp2_) : NULL), _g_object_unref0 (self->priv->place_view), _tmp3_);
+		_g_object_unref0 (_tmp1_);
+		_unity_testing_object_registry_unref0 (_tmp0_);
+	}
+	if (dee_model_get_n_rows (unity_places_place_entry_get_entry_results_model ((UnityPlacesPlaceEntry*) self)) > 0) {
+		unity_places_place_search_bar_set_search_fail (self->priv->place_view->search_bar, FALSE);
+	} else {
+		unity_places_place_search_bar_set_search_fail (self->priv->place_view->search_bar, TRUE);
+	}
+}
+
+
 static void unity_places_place_home_entry_real_connect (UnityPlacesPlaceEntry* base) {
 	UnityPlacesPlaceHomeEntry * self;
 	self = (UnityPlacesPlaceHomeEntry*) base;
@@ -417,14 +497,24 @@ static void unity_places_place_home_entry_real_set_search (UnityPlacesPlaceEntry
 		_tmp0_ = search == NULL;
 	}
 	if (_tmp0_) {
+		if (self->priv->place_view == NULL) {
+			UnityTestingObjectRegistry* _tmp1_;
+			GeeArrayList* _tmp2_;
+			GObject* _tmp3_;
+			UnityPlacesView* _tmp4_;
+			self->priv->place_view = (_tmp4_ = (_tmp3_ = (GObject*) gee_abstract_list_get ((GeeAbstractList*) (_tmp2_ = unity_testing_object_registry_lookup (_tmp1_ = unity_testing_object_registry_get_default (), "UnityPlacesView")), 0), UNITY_PLACES_IS_VIEW (_tmp3_) ? ((UnityPlacesView*) _tmp3_) : NULL), _g_object_unref0 (self->priv->place_view), _tmp4_);
+			_g_object_unref0 (_tmp2_);
+			_unity_testing_object_registry_unref0 (_tmp1_);
+		}
 		unity_places_place_entry_set_entry_renderer_name ((UnityPlacesPlaceEntry*) self, "UnityHomeScreen");
+		unity_places_place_search_bar_set_search_fail (self->priv->place_view->search_bar, FALSE);
 	} else {
 		unity_places_place_entry_set_entry_renderer_name ((UnityPlacesPlaceEntry*) self, "UnityHomeResultsRenderer");
 		{
-			GeeSet* _tmp1_;
-			GeeIterator* _tmp2_;
+			GeeSet* _tmp5_;
+			GeeIterator* _tmp6_;
 			GeeIterator* _e_it;
-			_e_it = (_tmp2_ = gee_iterable_iterator ((GeeIterable*) (_tmp1_ = gee_map_get_entries ((GeeMap*) self->priv->entry_group_map))), _g_object_unref0 (_tmp1_), _tmp2_);
+			_e_it = (_tmp6_ = gee_iterable_iterator ((GeeIterable*) (_tmp5_ = gee_map_get_entries ((GeeMap*) self->priv->entry_group_map))), _g_object_unref0 (_tmp5_), _tmp6_);
 			while (TRUE) {
 				GeeMapEntry* e;
 				UnityPlacesPlaceEntry* entry;
@@ -461,6 +551,67 @@ static void unity_places_place_home_entry_real_set_global_search (UnityPlacesPla
 	self = (UnityPlacesPlaceHomeEntry*) base;
 	g_return_if_fail (search != NULL);
 	g_return_if_fail (hints != NULL);
+}
+
+
+UnityPlacesPlaceEntry* unity_places_place_home_entry_get_entry_for_uri (UnityPlacesPlaceHomeEntry* self, const char* uri) {
+	UnityPlacesPlaceEntry* result = NULL;
+	gint entry_id;
+	DeeModelIter* iter;
+	g_return_val_if_fail (self != NULL, NULL);
+	g_return_val_if_fail (uri != NULL, NULL);
+	entry_id = -1;
+	iter = dee_model_get_first_iter (unity_places_place_entry_get_entry_results_model ((UnityPlacesPlaceEntry*) self));
+	while (TRUE) {
+		if (!(!dee_model_is_last (unity_places_place_entry_get_entry_results_model ((UnityPlacesPlaceEntry*) self), iter))) {
+			break;
+		}
+		if (_vala_strcmp0 (uri, dee_model_get_string (unity_places_place_entry_get_entry_results_model ((UnityPlacesPlaceEntry*) self), iter, (guint) 0)) == 0) {
+			entry_id = (gint) dee_model_get_uint (unity_places_place_entry_get_entry_results_model ((UnityPlacesPlaceEntry*) self), iter, (guint) 2);
+			break;
+		}
+		iter = dee_model_next (unity_places_place_entry_get_entry_results_model ((UnityPlacesPlaceEntry*) self), iter);
+	}
+	if (entry_id >= 0) {
+		UnityPlacesPlaceEntry* ent;
+		ent = NULL;
+		{
+			GeeSet* _tmp0_;
+			GeeIterator* _tmp1_;
+			GeeIterator* _e_it;
+			_e_it = (_tmp1_ = gee_iterable_iterator ((GeeIterable*) (_tmp0_ = gee_map_get_entries ((GeeMap*) self->priv->entry_group_map))), _g_object_unref0 (_tmp0_), _tmp1_);
+			while (TRUE) {
+				GeeMapEntry* e;
+				UnityPlacesPlaceEntry* entry;
+				gboolean _tmp2_ = FALSE;
+				if (!gee_iterator_next (_e_it)) {
+					break;
+				}
+				e = (GeeMapEntry*) gee_iterator_get (_e_it);
+				entry = _g_object_ref0 ((UnityPlacesPlaceEntry*) gee_map_entry_get_key (e));
+				if (entry != NULL) {
+					_tmp2_ = entry_id == GPOINTER_TO_UINT (gee_map_entry_get_value (e));
+				} else {
+					_tmp2_ = FALSE;
+				}
+				if (_tmp2_) {
+					ent = entry;
+					_g_object_unref0 (entry);
+					_g_object_unref0 (e);
+					break;
+				}
+				_g_object_unref0 (entry);
+				_g_object_unref0 (e);
+			}
+			_g_object_unref0 (_e_it);
+		}
+		if (UNITY_PLACES_IS_PLACE_ENTRY (ent)) {
+			result = ent;
+			return result;
+		}
+	}
+	result = NULL;
+	return result;
 }
 
 
@@ -973,6 +1124,7 @@ static void unity_places_place_home_entry_unity_places_place_entry_interface_ini
 
 static void unity_places_place_home_entry_instance_init (UnityPlacesPlaceHomeEntry * self) {
 	self->priv = UNITY_PLACES_PLACE_HOME_ENTRY_GET_PRIVATE (self);
+	self->priv->place_view = NULL;
 }
 
 
@@ -996,6 +1148,7 @@ static void unity_places_place_home_entry_finalize (GObject* obj) {
 	_g_object_unref0 (self->priv->_global_renderer_hints);
 	_g_object_unref0 (self->priv->_place_model);
 	_g_object_unref0 (self->priv->entry_group_map);
+	_g_object_unref0 (self->priv->place_view);
 	G_OBJECT_CLASS (unity_places_place_home_entry_parent_class)->finalize (obj);
 }
 

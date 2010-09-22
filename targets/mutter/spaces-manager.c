@@ -29,6 +29,8 @@
 #include <unity.h>
 #include <float.h>
 #include <math.h>
+#include <gee.h>
+#include <gdk/gdk.h>
 
 
 #define UNITY_TYPE_SPACES_BUTTON_CONTROLLER (unity_spaces_button_controller_get_type ())
@@ -99,6 +101,7 @@ typedef struct _UnitySpacesManagerPrivate UnitySpacesManagerPrivate;
 typedef struct _Block2Data Block2Data;
 typedef struct _Block4Data Block4Data;
 typedef struct _Block3Data Block3Data;
+typedef struct _UnityPluginPrivate UnityPluginPrivate;
 typedef struct _Block5Data Block5Data;
 
 struct _UnitySpacesButtonController {
@@ -171,6 +174,18 @@ struct _Block3Data {
 	int _ref_count_;
 	UnitySpacesManager * self;
 	UnityExposeClone* clone;
+};
+
+struct _UnityPlugin {
+	GObject parent_instance;
+	UnityPluginPrivate * priv;
+	GeeArrayList* backgrounds;
+	GdkRectangle primary_monitor;
+	UnityGestureDispatcher* gesture_dispatcher;
+};
+
+struct _UnityPluginClass {
+	GObjectClass parent_class;
 };
 
 struct _Block5Data {
@@ -291,7 +306,6 @@ static void block4_data_unref (Block4Data* _data4_);
 static gboolean __lambda11__clutter_actor_button_release_event (ClutterActor* _sender, ClutterEvent* event, gpointer self);
 static Block3Data* block3_data_ref (Block3Data* _data3_);
 static void block3_data_unref (Block3Data* _data3_);
-UnityTestingBackground* unity_plugin_get_background (UnityPlugin* self);
 static void _lambda9_ (Block5Data* _data5_);
 static void __lambda9__clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static Block5Data* block5_data_ref (Block5Data* _data5_);
@@ -376,7 +390,7 @@ static gboolean unity_spaces_button_controller_real_can_drag (UnityLauncherScrol
 	UnitySpacesButtonController * self;
 	gboolean result = FALSE;
 	self = (UnitySpacesButtonController*) base;
-	result = TRUE;
+	result = FALSE;
 	return result;
 }
 
@@ -1060,6 +1074,8 @@ static ClutterActor* unity_spaces_manager_workspace_clone (UnitySpacesManager* s
 	UnityWorkspaceClone* wsp;
 	GList* windows;
 	UnityWorkspaceClone* _tmp0_;
+	UnityTestingBackground* _tmp5_;
+	UnityExposeClone* _tmp6_;
 	UnityExposeClone* background_clone;
 	g_return_val_if_fail (self != NULL, NULL);
 	g_return_val_if_fail (workspace != NULL, NULL);
@@ -1126,7 +1142,7 @@ static ClutterActor* unity_spaces_manager_workspace_clone (UnitySpacesManager* s
 			}
 		}
 	}
-	background_clone = g_object_ref_sink (unity_expose_clone_new ((ClutterActor*) unity_plugin_get_background (self->priv->plugin)));
+	background_clone = (_tmp6_ = g_object_ref_sink (unity_expose_clone_new ((ClutterActor*) (_tmp5_ = (UnityTestingBackground*) gee_abstract_list_get ((GeeAbstractList*) self->priv->plugin->backgrounds, 0)))), _g_object_unref0 (_tmp5_), _tmp6_);
 	unity_expose_clone_set_fade_on_close (background_clone, FALSE);
 	clutter_container_add_actor ((ClutterContainer*) wsp, (ClutterActor*) background_clone);
 	clutter_actor_lower_bottom ((ClutterActor*) background_clone);

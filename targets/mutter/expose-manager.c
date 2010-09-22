@@ -28,6 +28,8 @@
 #include <mutter-plugins.h>
 #include <unity-private.h>
 #include <unity.h>
+#include <gee.h>
+#include <gdk/gdk.h>
 
 
 #define UNITY_TYPE_EXPOSE_CLONE (unity_expose_clone_get_type ())
@@ -65,6 +67,7 @@ typedef struct _UnityPlugin UnityPlugin;
 typedef struct _UnityPluginClass UnityPluginClass;
 #define __g_list_free_g_object_unref0(var) ((var == NULL) ? NULL : (var = (_g_list_free_g_object_unref (var), NULL)))
 #define _g_list_free0(var) ((var == NULL) ? NULL : (var = (g_list_free (var), NULL)))
+typedef struct _UnityPluginPrivate UnityPluginPrivate;
 
 struct _UnityExposeClone {
 	ClutterGroup parent_instance;
@@ -126,6 +129,18 @@ struct _UnityExposeManagerPrivate {
 	guint8 _darken;
 	guint coverflow_index;
 	UnityExposeClone* last_selected_clone;
+};
+
+struct _UnityPlugin {
+	GObject parent_instance;
+	UnityPluginPrivate * priv;
+	GeeArrayList* backgrounds;
+	GdkRectangle primary_monitor;
+	UnityGestureDispatcher* gesture_dispatcher;
+};
+
+struct _UnityPluginClass {
+	GObjectClass parent_class;
 };
 
 
@@ -202,8 +217,8 @@ enum  {
 	UNITY_EXPOSE_MANAGER_DARKEN
 };
 static void _g_list_free_g_object_unref (GList* self);
-UnityExposeManager* unity_expose_manager_new (UnityPlugin* plugin, UnityLauncherLauncher* launcher);
-UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlugin* plugin, UnityLauncherLauncher* launcher);
+UnityExposeManager* unity_expose_manager_new (UnityPlugin* owner, UnityLauncherLauncher* launcher);
+UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlugin* owner, UnityLauncherLauncher* launcher);
 void unity_expose_manager_set_hovered_opacity (UnityExposeManager* self, guint8 value);
 void unity_expose_manager_set_unhovered_opacity (UnityExposeManager* self, guint8 value);
 void unity_expose_manager_set_darken (UnityExposeManager* self, guint8 value);
@@ -803,19 +818,19 @@ static void _g_list_free_g_object_unref (GList* self) {
 }
 
 
-UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlugin* plugin, UnityLauncherLauncher* launcher) {
+UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlugin* owner, UnityLauncherLauncher* launcher) {
 	UnityExposeManager * self;
 	UnityLauncherLauncher* _tmp0_;
 	UnityPlugin* _tmp1_;
 	GList* _tmp2_;
 	ClutterStage* _tmp3_;
-	g_return_val_if_fail (plugin != NULL, NULL);
+	g_return_val_if_fail (owner != NULL, NULL);
 	g_return_val_if_fail (launcher != NULL, NULL);
 	self = (UnityExposeManager*) g_object_new (object_type, NULL);
 	self->priv->launcher = (_tmp0_ = _g_object_ref0 (launcher), _g_object_unref0 (self->priv->launcher), _tmp0_);
-	self->priv->owner = (_tmp1_ = _g_object_ref0 (plugin), _g_object_unref0 (self->priv->owner), _tmp1_);
+	self->priv->owner = (_tmp1_ = _g_object_ref0 (owner), _g_object_unref0 (self->priv->owner), _tmp1_);
 	self->exposed_windows = (_tmp2_ = NULL, __g_list_free_g_object_unref0 (self->exposed_windows), _tmp2_);
-	self->priv->stage = (_tmp3_ = CLUTTER_STAGE (unity_shell_get_stage ((UnityShell*) plugin)), _g_object_unref0 (self->priv->stage), _tmp3_);
+	self->priv->stage = (_tmp3_ = CLUTTER_STAGE (unity_shell_get_stage ((UnityShell*) owner)), _g_object_unref0 (self->priv->stage), _tmp3_);
 	unity_expose_manager_set_hovered_opacity (self, (guint8) 255);
 	unity_expose_manager_set_unhovered_opacity (self, (guint8) 255);
 	unity_expose_manager_set_darken (self, (guint8) 0);
@@ -823,8 +838,8 @@ UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlug
 }
 
 
-UnityExposeManager* unity_expose_manager_new (UnityPlugin* plugin, UnityLauncherLauncher* launcher) {
-	return unity_expose_manager_construct (UNITY_TYPE_EXPOSE_MANAGER, plugin, launcher);
+UnityExposeManager* unity_expose_manager_new (UnityPlugin* owner, UnityLauncherLauncher* launcher) {
+	return unity_expose_manager_construct (UNITY_TYPE_EXPOSE_MANAGER, owner, launcher);
 }
 
 
@@ -1050,16 +1065,16 @@ static void unity_expose_manager_position_windows_coverflow (UnityExposeManager*
 	g_return_if_fail (self != NULL);
 	g_return_if_fail (active != NULL);
 	last = NULL;
-	middle_size = (gint) (clutter_actor_get_width ((ClutterActor*) self->priv->stage) * 0.8f);
-	width = (((gint) clutter_actor_get_width ((ClutterActor*) self->priv->stage)) - self->priv->_left_buffer) - self->priv->_right_buffer;
+	middle_size = (gint) (self->priv->owner->primary_monitor.width * 0.8f);
+	width = (((gint) self->priv->owner->primary_monitor.width) - self->priv->_left_buffer) - self->priv->_right_buffer;
 	slice_width = width / 10;
-	middle_y = ((gint) clutter_actor_get_height ((ClutterActor*) self->priv->stage)) / 2;
+	middle_y = ((gint) self->priv->owner->primary_monitor.height) / 2;
 	middle_x = self->priv->_left_buffer + (width / 2);
 	middle_index = g_list_index (windows, active);
-	scale = MIN (1.f, (clutter_actor_get_height ((ClutterActor*) self->priv->stage) / 2) / MAX (clutter_actor_get_height (active), clutter_actor_get_width (active)));
+	scale = MIN (1.f, (self->priv->owner->primary_monitor.height / 2) / MAX (clutter_actor_get_height (active), clutter_actor_get_width (active)));
 	scale = 1.f;
 	clutter_actor_set_anchor_point_from_gravity (active, CLUTTER_GRAVITY_CENTER);
-	clutter_actor_animate (active, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "x", (float) middle_x, "y", (float) middle_y, "depth", clutter_actor_get_width ((ClutterActor*) self->priv->stage) * (-0.7), "scale-x", scale, "scale-y", scale, "rotation-angle-y", 0.f, NULL);
+	clutter_actor_animate (active, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "x", (float) middle_x, "y", (float) middle_y, "depth", self->priv->owner->primary_monitor.width * (-0.7), "scale-x", scale, "scale-y", scale, "rotation-angle-y", 0.f, NULL);
 	clutter_actor_raise_top (active);
 	last = (_tmp0_ = _g_object_ref0 (active), _g_object_unref0 (last), _tmp0_);
 	current_x = middle_x - middle_size;
@@ -1082,9 +1097,9 @@ static void unity_expose_manager_position_windows_coverflow (UnityExposeManager*
 				actor = _g_object_ref0 ((ClutterActor*) g_list_nth_data (windows, (guint) i));
 				clutter_actor_set_anchor_point_from_gravity (actor, CLUTTER_GRAVITY_CENTER);
 				clutter_actor_lower (actor, last);
-				scale = MIN (1.f, (clutter_actor_get_height ((ClutterActor*) self->priv->stage) / 2) / MAX (clutter_actor_get_height (actor), clutter_actor_get_width (actor)));
+				scale = MIN (1.f, (self->priv->owner->primary_monitor.height / 2) / MAX (clutter_actor_get_height (actor), clutter_actor_get_width (actor)));
 				scale = 1.f;
-				clutter_actor_animate (actor, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "x", (float) current_x, "y", (float) middle_y, "depth", clutter_actor_get_width ((ClutterActor*) self->priv->stage) * (-0.7), "scale-x", scale, "scale-y", scale, "rotation-angle-y", 60.f, NULL);
+				clutter_actor_animate (actor, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "x", (float) current_x, "y", (float) middle_y, "depth", self->priv->owner->primary_monitor.width * (-0.7), "scale-x", scale, "scale-y", scale, "rotation-angle-y", 60.f, NULL);
 				current_x = current_x - slice_width;
 				last = (_tmp2_ = _g_object_ref0 (actor), _g_object_unref0 (last), _tmp2_);
 				_g_object_unref0 (actor);
@@ -1112,9 +1127,9 @@ static void unity_expose_manager_position_windows_coverflow (UnityExposeManager*
 				actor = _g_object_ref0 ((ClutterActor*) g_list_nth_data (windows, (guint) i));
 				clutter_actor_set_anchor_point_from_gravity (actor, CLUTTER_GRAVITY_CENTER);
 				clutter_actor_lower (actor, last);
-				scale = MIN (1.f, (clutter_actor_get_height ((ClutterActor*) self->priv->stage) / 2) / MAX (clutter_actor_get_height (actor), clutter_actor_get_width (actor)));
+				scale = MIN (1.f, (self->priv->owner->primary_monitor.height / 2) / MAX (clutter_actor_get_height (actor), clutter_actor_get_width (actor)));
 				scale = 1.f;
-				clutter_actor_animate (actor, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "x", (float) current_x, "y", (float) middle_y, "depth", clutter_actor_get_width ((ClutterActor*) self->priv->stage) * (-0.7), "scale-x", scale, "scale-y", scale, "rotation-angle-y", -60.f, NULL);
+				clutter_actor_animate (actor, (gulong) CLUTTER_EASE_IN_OUT_SINE, (guint) 250, "x", (float) current_x, "y", (float) middle_y, "depth", self->priv->owner->primary_monitor.width * (-0.7), "scale-x", scale, "scale-y", scale, "rotation-angle-y", -60.f, NULL);
 				current_x = current_x + slice_width;
 				last = (_tmp5_ = _g_object_ref0 (actor), _g_object_unref0 (last), _tmp5_);
 				_g_object_unref0 (actor);
@@ -1150,10 +1165,17 @@ void unity_expose_manager_position_windows_on_grid (UnityExposeManager* self, GL
 	gint boxWidth;
 	gint boxHeight;
 	g_return_if_fail (self != NULL);
+	if (g_list_length (_windows) < 1) {
+		g_warning ("expose-manager.vala:479: There are no windows to position on grid");
+		return;
+	}
 	windows = g_list_copy (_windows);
 	windows = g_list_sort (windows, (GCompareFunc) unity_expose_manager_direct_comparison);
 	count = (gint) g_list_length (windows);
 	cols = (gint) ceil (sqrt ((double) count));
+	if (cols < 1) {
+		cols = 1;
+	}
 	rows = 1;
 	while (TRUE) {
 		if (!((cols * rows) < count)) {
@@ -1161,8 +1183,8 @@ void unity_expose_manager_position_windows_on_grid (UnityExposeManager* self, GL
 		}
 		rows++;
 	}
-	boxWidth = (gint) (((clutter_actor_get_width ((ClutterActor*) self->priv->stage) - left_buffer) - right_buffer) / cols);
-	boxHeight = (gint) (((clutter_actor_get_height ((ClutterActor*) self->priv->stage) - top_buffer) - bottom_buffer) / rows);
+	boxWidth = (gint) (((self->priv->owner->primary_monitor.width - left_buffer) - right_buffer) / cols);
+	boxHeight = (gint) (((self->priv->owner->primary_monitor.height - top_buffer) - bottom_buffer) / rows);
 	{
 		gint row;
 		row = 0;
@@ -1178,7 +1200,7 @@ void unity_expose_manager_position_windows_on_grid (UnityExposeManager* self, GL
 					break;
 				}
 				if (row == (rows - 1)) {
-					boxWidth = (gint) (((clutter_actor_get_width ((ClutterActor*) self->priv->stage) - left_buffer) - right_buffer) / g_list_length (windows));
+					boxWidth = (gint) (((self->priv->owner->primary_monitor.width - left_buffer) - right_buffer) / g_list_length (windows));
 				}
 				{
 					gint col;

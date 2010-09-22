@@ -232,6 +232,11 @@ static void unity_launcher_quicklist_menu_seperator_instance_init (UnityLauncher
 static void unity_launcher_quicklist_menu_seperator_finalize (GObject* obj) {
 	UnityLauncherQuicklistMenuSeperator * self;
 	self = UNITY_LAUNCHER_QUICKLIST_MENU_SEPERATOR (obj);
+	{
+		if (CLUTTER_IS_ACTOR (self->priv->seperator_background)) {
+			clutter_actor_unparent ((ClutterActor*) self->priv->seperator_background);
+		}
+	}
 	_g_object_unref0 (self->priv->seperator_background);
 	G_OBJECT_CLASS (unity_launcher_quicklist_menu_seperator_parent_class)->finalize (obj);
 }

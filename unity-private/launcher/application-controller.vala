@@ -349,14 +349,18 @@ namespace Unity.Launcher
 
     public override void activate ()
     {
-      global_shell.hide_unity ();
-
       if (app is Bamf.Application)
         {
           if (app.is_active ())
             {
-              Array<uint32> xids = app.get_xids ();
-              global_shell.expose_xids (xids);
+              /* We only want to do expose if the window was _actually_
+               * active i.e. the dash wasn't showing.
+               */
+              if (global_shell.get_mode () == ShellMode.MINIMIZED)
+                {
+                  Array<uint32> xids = app.get_xids ();
+                  global_shell.expose_xids (xids);
+                }
             }
           else if (app.is_running ())
             {
@@ -384,6 +388,7 @@ namespace Unity.Launcher
               warning (e.message);
             }
         }
+      global_shell.hide_unity ();
     }
 
     private bool on_launch_timeout ()

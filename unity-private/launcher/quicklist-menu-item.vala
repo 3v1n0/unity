@@ -84,8 +84,7 @@ namespace Unity.Launcher
       last_width  = new_width;
       last_height = new_height;
 
-      _update_item_background (); // removed the timeout because it was causing a frame of lag
-      //Timeout.add (0, _update_item_background);
+      Timeout.add (0, _update_item_background);
     }
 
     private bool

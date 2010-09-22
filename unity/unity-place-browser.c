@@ -258,13 +258,13 @@ static void unity_place_browser_service_impl_set_dbus_path (UnityPlaceBrowserSer
 static void unity_place_browser_service_impl_set_browsing_state (UnityPlaceBrowserServiceImpl* self, UnityPlace_BrowsingState* value, int value_length1);
 static UnityPlace_BrowsingState* unity_place_browser_service_impl_real_go_back (UnityPlaceBrowserService* base, int* result_length1, GError** error);
 UnityPlace_BrowsingState* unity_place_browser_service_impl_get_browsing_state (UnityPlaceBrowserServiceImpl* self, int* result_length1);
-static UnityPlace_BrowsingState* _vala_array_dup9 (UnityPlace_BrowsingState* self, int length);
+static UnityPlace_BrowsingState* _vala_array_dup7 (UnityPlace_BrowsingState* self, int length);
 static UnityPlace_BrowsingState* unity_place_browser_service_impl_real_go_forward (UnityPlaceBrowserService* base, int* result_length1, GError** error);
-static UnityPlace_BrowsingState* _vala_array_dup10 (UnityPlace_BrowsingState* self, int length);
+static UnityPlace_BrowsingState* _vala_array_dup8 (UnityPlace_BrowsingState* self, int length);
 static UnityPlace_BrowsingState* unity_place_browser_service_impl_real_get_state (UnityPlaceBrowserService* base, int* result_length1, GError** error);
-static UnityPlace_BrowsingState* _vala_array_dup11 (UnityPlace_BrowsingState* self, int length);
+static UnityPlace_BrowsingState* _vala_array_dup9 (UnityPlace_BrowsingState* self, int length);
 const char* unity_place_browser_service_impl_get_dbus_path (UnityPlaceBrowserServiceImpl* self);
-static UnityPlace_BrowsingState* _vala_array_dup12 (UnityPlace_BrowsingState* self, int length);
+static UnityPlace_BrowsingState* _vala_array_dup10 (UnityPlace_BrowsingState* self, int length);
 void unity_place_browser_service_impl_dbus_register_object (DBusConnection* connection, const char* path, void* object);
 void _unity_place_browser_service_impl_dbus_unregister (DBusConnection* connection, void* _user_data_);
 DBusHandlerResult unity_place_browser_service_impl_dbus_message (DBusConnection* connection, DBusMessage* message, void* object);
@@ -1535,7 +1535,7 @@ UnityPlaceBrowserServiceImpl* unity_place_browser_service_impl_new (const char* 
 }
 
 
-static UnityPlace_BrowsingState* _vala_array_dup9 (UnityPlace_BrowsingState* self, int length) {
+static UnityPlace_BrowsingState* _vala_array_dup7 (UnityPlace_BrowsingState* self, int length) {
 	UnityPlace_BrowsingState* result;
 	int i;
 	UnityPlace_BrowsingState _tmp0_ = {0};
@@ -1555,12 +1555,12 @@ static UnityPlace_BrowsingState* unity_place_browser_service_impl_real_go_back (
 	UnityPlace_BrowsingState* _tmp2_;
 	self = (UnityPlaceBrowserServiceImpl*) base;
 	g_signal_emit_by_name (self, "back");
-	result = (_tmp2_ = (_tmp1_ = unity_place_browser_service_impl_get_browsing_state (self, &_tmp0_), (_tmp1_ == NULL) ? ((gpointer) _tmp1_) : _vala_array_dup9 (_tmp1_, _tmp0_)), *result_length1 = _tmp0_, _tmp2_);
+	result = (_tmp2_ = (_tmp1_ = unity_place_browser_service_impl_get_browsing_state (self, &_tmp0_), (_tmp1_ == NULL) ? ((gpointer) _tmp1_) : _vala_array_dup7 (_tmp1_, _tmp0_)), *result_length1 = _tmp0_, _tmp2_);
 	return result;
 }
 
 
-static UnityPlace_BrowsingState* _vala_array_dup10 (UnityPlace_BrowsingState* self, int length) {
+static UnityPlace_BrowsingState* _vala_array_dup8 (UnityPlace_BrowsingState* self, int length) {
 	UnityPlace_BrowsingState* result;
 	int i;
 	UnityPlace_BrowsingState _tmp0_ = {0};
@@ -1580,12 +1580,12 @@ static UnityPlace_BrowsingState* unity_place_browser_service_impl_real_go_forwar
 	UnityPlace_BrowsingState* _tmp2_;
 	self = (UnityPlaceBrowserServiceImpl*) base;
 	g_signal_emit_by_name (self, "forward");
-	result = (_tmp2_ = (_tmp1_ = unity_place_browser_service_impl_get_browsing_state (self, &_tmp0_), (_tmp1_ == NULL) ? ((gpointer) _tmp1_) : _vala_array_dup10 (_tmp1_, _tmp0_)), *result_length1 = _tmp0_, _tmp2_);
+	result = (_tmp2_ = (_tmp1_ = unity_place_browser_service_impl_get_browsing_state (self, &_tmp0_), (_tmp1_ == NULL) ? ((gpointer) _tmp1_) : _vala_array_dup8 (_tmp1_, _tmp0_)), *result_length1 = _tmp0_, _tmp2_);
 	return result;
 }
 
 
-static UnityPlace_BrowsingState* _vala_array_dup11 (UnityPlace_BrowsingState* self, int length) {
+static UnityPlace_BrowsingState* _vala_array_dup9 (UnityPlace_BrowsingState* self, int length) {
 	UnityPlace_BrowsingState* result;
 	int i;
 	UnityPlace_BrowsingState _tmp0_ = {0};
@@ -1604,7 +1604,7 @@ static UnityPlace_BrowsingState* unity_place_browser_service_impl_real_get_state
 	UnityPlace_BrowsingState* _tmp1_;
 	UnityPlace_BrowsingState* _tmp2_;
 	self = (UnityPlaceBrowserServiceImpl*) base;
-	result = (_tmp2_ = (_tmp1_ = unity_place_browser_service_impl_get_browsing_state (self, &_tmp0_), (_tmp1_ == NULL) ? ((gpointer) _tmp1_) : _vala_array_dup11 (_tmp1_, _tmp0_)), *result_length1 = _tmp0_, _tmp2_);
+	result = (_tmp2_ = (_tmp1_ = unity_place_browser_service_impl_get_browsing_state (self, &_tmp0_), (_tmp1_ == NULL) ? ((gpointer) _tmp1_) : _vala_array_dup9 (_tmp1_, _tmp0_)), *result_length1 = _tmp0_, _tmp2_);
 	return result;
 }
 
@@ -1634,7 +1634,7 @@ UnityPlace_BrowsingState* unity_place_browser_service_impl_get_browsing_state (U
 }
 
 
-static UnityPlace_BrowsingState* _vala_array_dup12 (UnityPlace_BrowsingState* self, int length) {
+static UnityPlace_BrowsingState* _vala_array_dup10 (UnityPlace_BrowsingState* self, int length) {
 	UnityPlace_BrowsingState* result;
 	int i;
 	UnityPlace_BrowsingState _tmp0_ = {0};
@@ -1650,7 +1650,7 @@ static void unity_place_browser_service_impl_set_browsing_state (UnityPlaceBrows
 	UnityPlace_BrowsingState* _tmp0_;
 	UnityPlace_BrowsingState* _tmp1_;
 	g_return_if_fail (self != NULL);
-	self->priv->_browsing_state = (_tmp1_ = (_tmp0_ = value, (_tmp0_ == NULL) ? ((gpointer) _tmp0_) : _vala_array_dup12 (_tmp0_, value_length1)), self->priv->_browsing_state = (_vala_UnityPlace_BrowsingState_array_free (self->priv->_browsing_state, self->priv->_browsing_state_length1), NULL), self->priv->_browsing_state_length1 = value_length1, self->priv->__browsing_state_size_ = self->priv->_browsing_state_length1, _tmp1_);
+	self->priv->_browsing_state = (_tmp1_ = (_tmp0_ = value, (_tmp0_ == NULL) ? ((gpointer) _tmp0_) : _vala_array_dup10 (_tmp0_, value_length1)), self->priv->_browsing_state = (_vala_UnityPlace_BrowsingState_array_free (self->priv->_browsing_state, self->priv->_browsing_state_length1), NULL), self->priv->_browsing_state_length1 = value_length1, self->priv->__browsing_state_size_ = self->priv->_browsing_state_length1, _tmp1_);
 }
 
 

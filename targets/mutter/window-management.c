@@ -52,6 +52,16 @@ typedef struct _UnityPlugin UnityPlugin;
 typedef struct _UnityPluginClass UnityPluginClass;
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
 
+#define UNITY_TYPE_EXPOSE_MANAGER (unity_expose_manager_get_type ())
+#define UNITY_EXPOSE_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_CAST ((obj), UNITY_TYPE_EXPOSE_MANAGER, UnityExposeManager))
+#define UNITY_EXPOSE_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_CAST ((klass), UNITY_TYPE_EXPOSE_MANAGER, UnityExposeManagerClass))
+#define UNITY_IS_EXPOSE_MANAGER(obj) (G_TYPE_CHECK_INSTANCE_TYPE ((obj), UNITY_TYPE_EXPOSE_MANAGER))
+#define UNITY_IS_EXPOSE_MANAGER_CLASS(klass) (G_TYPE_CHECK_CLASS_TYPE ((klass), UNITY_TYPE_EXPOSE_MANAGER))
+#define UNITY_EXPOSE_MANAGER_GET_CLASS(obj) (G_TYPE_INSTANCE_GET_CLASS ((obj), UNITY_TYPE_EXPOSE_MANAGER, UnityExposeManagerClass))
+
+typedef struct _UnityExposeManager UnityExposeManager;
+typedef struct _UnityExposeManagerClass UnityExposeManagerClass;
+
 struct _UnityWindowManagement {
 	GObject parent_instance;
 	UnityWindowManagementPrivate * priv;
@@ -94,6 +104,11 @@ static gint unity_window_management_get_animation_speed (UnityWindowManagement* 
 MutterPlugin* unity_plugin_get_plugin (UnityPlugin* self);
 static void unity_window_management_window_minimized_completed (UnityWindowManagement* self, ClutterAnimation* anim);
 static void _unity_window_management_window_minimized_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
+static gboolean unity_window_management_force_activate (UnityWindowManagement* self);
+GType unity_expose_manager_get_type (void) G_GNUC_CONST;
+UnityExposeManager* unity_plugin_get_expose_manager (UnityPlugin* self);
+gboolean unity_expose_manager_get_expose_showing (UnityExposeManager* self);
+static gboolean _unity_window_management_force_activate_gsource_func (gpointer self);
 static void unity_window_management_window_mapped_completed (UnityWindowManagement* self, ClutterAnimation* anim);
 static void _unity_window_management_window_mapped_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self);
 static void unity_window_management_window_destroyed_completed (UnityWindowManagement* self, ClutterAnimation* anim);
@@ -279,6 +294,28 @@ static void unity_window_management_window_minimized_completed (UnityWindowManag
 }
 
 
+static gboolean unity_window_management_force_activate (UnityWindowManagement* self) {
+	gboolean result = FALSE;
+	g_return_val_if_fail (self != NULL, FALSE);
+	if (MUTTER_IS_WINDOW (self->priv->last_mapped)) {
+		MetaWindow* w;
+		MetaDisplay* d;
+		w = mutter_window_get_meta_window (self->priv->last_mapped);
+		d = meta_window_get_display (w);
+		meta_window_activate (mutter_window_get_meta_window (self->priv->last_mapped), meta_display_get_current_time (d));
+	}
+	result = FALSE;
+	return result;
+}
+
+
+static gboolean _unity_window_management_force_activate_gsource_func (gpointer self) {
+	gboolean result;
+	result = unity_window_management_force_activate (self);
+	return result;
+}
+
+
 static void _unity_window_management_window_mapped_completed_clutter_animation_completed (ClutterAnimation* _sender, gpointer self) {
 	unity_window_management_window_mapped_completed (self, _sender);
 }
@@ -319,6 +356,11 @@ static void unity_window_management_window_mapped (UnityWindowManagement* self, 
 		mutter_plugin_map_completed (unity_plugin_get_plugin (self->priv->plugin), window);
 		return;
 	}
+	if (unity_expose_manager_get_expose_showing (unity_plugin_get_expose_manager (plugin))) {
+		clutter_actor_set_opacity ((ClutterActor*) window, (guint8) 0);
+		mutter_plugin_map_completed (unity_plugin_get_plugin (self->priv->plugin), window);
+		return;
+	}
 	if (type == META_WINDOW_NORMAL) {
 		_tmp3_ = TRUE;
 	} else {
@@ -327,6 +369,7 @@ static void unity_window_management_window_mapped (UnityWindowManagement* self, 
 	if (_tmp3_) {
 		meta_window_activate (mutter_window_get_meta_window (window), meta_window_get_user_time (mutter_window_get_meta_window (window)));
 		self->priv->last_mapped = window;
+		g_timeout_add_full (G_PRIORITY_DEFAULT, (guint) 0, _unity_window_management_force_activate_gsource_func, g_object_ref (self), g_object_unref);
 	}
 	anim = NULL;
 	actor = _g_object_ref0 ((_tmp4_ = window, CLUTTER_IS_ACTOR (_tmp4_) ? ((ClutterActor*) _tmp4_) : NULL));

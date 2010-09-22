@@ -13,6 +13,8 @@
 #include <mutter-plugins.h>
 #include <gtk/gtk.h>
 #include <unity.h>
+#include <gee.h>
+#include <gdk/gdk.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -185,6 +187,8 @@ typedef enum  {
 struct _UnityPlugin {
 	GObject parent_instance;
 	UnityPluginPrivate * priv;
+	GeeArrayList* backgrounds;
+	GdkRectangle primary_monitor;
 	UnityGestureDispatcher* gesture_dispatcher;
 };
 
@@ -231,8 +235,8 @@ gboolean unity_expose_clone_get_enable_dnd (UnityExposeClone* self);
 void unity_expose_clone_set_enable_dnd (UnityExposeClone* self, gboolean value);
 GType unity_expose_manager_get_type (void) G_GNUC_CONST;
 GType unity_plugin_get_type (void) G_GNUC_CONST;
-UnityExposeManager* unity_expose_manager_new (UnityPlugin* plugin, UnityLauncherLauncher* launcher);
-UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlugin* plugin, UnityLauncherLauncher* launcher);
+UnityExposeManager* unity_expose_manager_new (UnityPlugin* owner, UnityLauncherLauncher* launcher);
+UnityExposeManager* unity_expose_manager_construct (GType object_type, UnityPlugin* owner, UnityLauncherLauncher* launcher);
 void unity_expose_manager_start_expose (UnityExposeManager* self, GSList* windows);
 void unity_expose_manager_end_expose (UnityExposeManager* self);
 void unity_expose_manager_position_windows_on_grid (UnityExposeManager* self, GList* _windows, gint top_buffer, gint left_buffer, gint right_buffer, gint bottom_buffer);
@@ -299,8 +303,9 @@ UnityPlugin* unity_plugin_new (void);
 UnityPlugin* unity_plugin_construct (GType object_type);
 MutterPlugin* unity_plugin_get_plugin (UnityPlugin* self);
 void unity_plugin_set_plugin (UnityPlugin* self, MutterPlugin* value);
+gboolean unity_plugin_get_super_key_enable (UnityPlugin* self);
+void unity_plugin_set_super_key_enable (UnityPlugin* self, gboolean value);
 UnityExposeManager* unity_plugin_get_expose_manager (UnityPlugin* self);
-UnityTestingBackground* unity_plugin_get_background (UnityPlugin* self);
 gboolean unity_plugin_get_expose_showing (UnityPlugin* self);
 GType unity_maximus_get_type (void) G_GNUC_CONST;
 extern char* unity_maximus_user_unmaximize_hint;

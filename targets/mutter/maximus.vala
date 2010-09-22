@@ -78,10 +78,10 @@ namespace Unity
       {
         Clutter.Actor stage = Clutter.Stage.get_default ();
 
-        if (window.width < stage.width * 0.6 ||
-            window.height < stage.height * 0.6 ||
-            (window.width/window.height) < 0.6 ||
-            (window.width/window.height) > 2.0)
+        if (window.width < stage.width * 0.6 || window.width > stage.width ||
+            window.height < stage.height * 0.6 || window.height > stage.height ||
+            window.width / window.height < 0.6 ||
+            window.width / window.height > 2.0)
           {
             return true;
           }

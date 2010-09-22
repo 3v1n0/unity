@@ -72,7 +72,7 @@ namespace Unity.Places
     private bool last_result_timeout = false;
 
     public signal void activated (string uri, string mimetype);
-
+    
     private GLib.List<Tile?> cleanup_tiles = new GLib.List<Tile?> ();
     private uint cleanup_operation = 0;
 
@@ -426,9 +426,6 @@ namespace Unity.Places
               more_results_button.count = 0;
             }
         }
-
-      if (n_results == 1)
-        PixbufCache.get_default ().load_iteration ();
     }
 
     private void on_n_cols_changed ()

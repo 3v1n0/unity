@@ -103,7 +103,7 @@ namespace Unity.Places
       Dbusmenu.Menuitem item;
 
       item = new Dbusmenu.Menuitem ();
-      item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Open");
+      item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Open"));
       item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
       item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
       root.child_append (item);
@@ -118,7 +118,7 @@ namespace Unity.Places
       if (n_items != 0)
         {
           item = new Dbusmenu.Menuitem ();
-          item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, "Empty Trash");
+          item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, _("Empty Trash"));
           item.property_set_bool (Dbusmenu.MENUITEM_PROP_ENABLED, true);
           item.property_set_bool (Dbusmenu.MENUITEM_PROP_VISIBLE, true);
           root.child_append (item);
@@ -191,7 +191,7 @@ namespace Unity.Places
 
     public override bool can_drag ()
     {
-      return true;
+      return false;
     }
   }
 }
