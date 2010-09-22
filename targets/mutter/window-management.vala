@@ -162,6 +162,13 @@ namespace Unity
           this.plugin.plugin.map_completed (window);
           return;
         }
+      
+      if (plugin.expose_manager.expose_showing)
+        {
+          window.opacity = 0;
+          this.plugin.plugin.map_completed (window);
+          return;
+        }
 
       if (type == Mutter.MetaWindowType.NORMAL ||
           type == Mutter.MetaWindowType.DIALOG)
@@ -177,7 +184,7 @@ namespace Unity
       Clutter.Actor actor = window as Clutter.Actor;
       actor.opacity = 0;
       window.show ();
-
+      
       int speed = get_animation_speed (window);
 
       Mutter.MetaRectangle rect = {0, 0, 0, 0};
