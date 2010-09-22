@@ -168,7 +168,7 @@ namespace Unity
       queue_timeout = 0;
     }
 
-    public bool load_iteration ()
+    private bool process_icon_queue_dispatcher ()
     {
       /* The queue_timeout source id is reset in process_icon_queue() when
        * all icons have been processed */
@@ -199,7 +199,7 @@ namespace Unity
       queue.add (task);
 
       if (queue_timeout == 0)
-        queue_timeout = Idle.add (load_iteration);
+        queue_timeout = Idle.add (process_icon_queue_dispatcher);
     }
 
     private async void set_image_from_icon_name_real (PixbufCacheTask task,
@@ -262,7 +262,7 @@ namespace Unity
       queue.add (task);
 
       if (queue_timeout == 0)
-        queue_timeout = Idle.add (load_iteration);
+        queue_timeout = Idle.add (process_icon_queue_dispatcher);
     }
 
     private async void set_image_from_gicon_string_real (PixbufCacheTask task,
