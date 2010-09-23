@@ -1,9 +1,9 @@
-unity (0.2.42-0ubuntu3) UNRELEASED; urgency=low
+unity (0.2.42-0ubuntu3) maverick; urgency=low
 
   * we need the .c file too (not automatically rebuilt) to fix crash on system
     indicators (LP: #645923)
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 23 Sep 2010 18:47:05 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 23 Sep 2010 19:06:59 +0200
 
 unity (0.2.42-0ubuntu2) maverick; urgency=low
 
