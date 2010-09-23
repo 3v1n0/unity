@@ -1,9 +1,9 @@
-unity (0.2.42-0ubuntu2) UNRELEASED; urgency=low
+unity (0.2.42-0ubuntu2) maverick; urgency=low
 
   * Cherry pick from upstream bzr to avoid crash when clicking on system
     indicators (LP: #645923)
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 23 Sep 2010 14:01:07 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 23 Sep 2010 14:27:39 +0200
 
 unity (0.2.42-0ubuntu1) maverick; urgency=low
 
