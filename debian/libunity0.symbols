@@ -89,10 +89,12 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_launcher_application_controller_debug_is_application_attached@Base 0.2.22
  unity_launcher_application_controller_detach_application@Base 0.2.22
  unity_launcher_application_controller_get_desktop_file@Base 0.2.22
+ unity_launcher_application_controller_get_fav_id@Base 0.2.44
  unity_launcher_application_controller_get_priority@Base 0.2.22
  unity_launcher_application_controller_get_type@Base 0.2.22
  unity_launcher_application_controller_is_sticky@Base 0.2.22
  unity_launcher_application_controller_new@Base 0.2.22
+ unity_launcher_application_controller_set_fav_id@Base 0.2.44
  unity_launcher_application_controller_set_priority@Base 0.2.22
  unity_launcher_application_controller_set_sticky@Base 0.2.22
  unity_launcher_application_quicklist_controller_construct@Base 0.2.22

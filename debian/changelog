@@ -10,6 +10,8 @@ unity (0.2.44-0ubuntu1) UNRELEASED; urgency=low
   * debian/control:
     - depend on latest unity-asset-pool
   * backport fix to respect workspace layout
+  * debian/libunity0.symbols:
+    - updated
 
  -- Didier Roche <didrocks@ubuntu.com>  Fri, 24 Sep 2010 18:51:42 +0200
 
