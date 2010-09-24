@@ -924,11 +924,16 @@ namespace Unity
             }
         }
 
-      if (event.type == Gesture.Type.TAP
-          && places_showing == false)
+      if (event.type == Gesture.Type.TAP)
         {
-          if (event.fingers == 3) /* Application-level window pick */
+          if (event.fingers == 4
+              && !expose_manager.expose_showing)
             {
+              if (places_showing == true)
+                hide_unity ();
+              else
+                show_unity ();
+              /*
               if (expose_manager.expose_showing == true)
                 {
                   expose_manager.end_expose ();
@@ -956,8 +961,6 @@ namespace Unity
 
               if (window is Mutter.Window)
                 {
-                  /* FIXME: bamf_matcher_get_application_for_xid () fails for
-                   * me in this case, so I had to use the slower method */
                   var matcher = Bamf.Matcher.get_default ();
                   var xwin = (uint32)Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
 
@@ -969,16 +972,16 @@ namespace Unity
                           uint32 xid = xids.index (i);
                           if (xwin == xid)
                             {
-                              /* Found the right application, so pick it */
+                              // Found the right application, so pick it
                               expose_xids (xids);
                               return;
                             }
                         }
                     }
                 }
+             */
             }
-          else if (event.fingers == 4) /* System-level window picker */
-            {
+              /*
               if (expose_manager.expose_showing == false)
                 {
                   SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
@@ -991,7 +994,7 @@ namespace Unity
                 }
               else
                 expose_manager.end_expose ();
-            }
+              */
         }
       else if (event.type == Gesture.Type.PINCH)
         {
@@ -1120,10 +1123,6 @@ namespace Unity
                    && expose_manager.expose_showing == false
                    && event.state == Gesture.State.BEGAN)
             {
-              if (places_showing == true)
-                hide_unity ();
-              else
-                show_unity ();
 
               /* FIXME: We'll come back to this awesomeness 
               if (event.state == Gesture.State.BEGAN)
