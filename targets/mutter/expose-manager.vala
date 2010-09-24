@@ -280,15 +280,20 @@ namespace Unity
     {
       exposed_windows = new List<ExposeClone> ();
 
-      if (expose_group != null)
-        expose_group.destroy ();
-      expose_group = new Clutter.Group ();
+      if (!expose_showing)
+        {
+          if (expose_group != null)
+            expose_group.destroy ();
+          expose_group = new Clutter.Group ();
 
-      Clutter.Actor window_group = owner.plugin.get_window_group ();
+          Clutter.Actor window_group = owner.plugin.get_window_group ();
 
-      (window_group as Clutter.Container).add_actor (expose_group);
-      expose_group.raise_top ();
-      expose_group.show ();
+          (window_group as Clutter.Container).add_actor (expose_group);
+          expose_group.raise_top ();
+          expose_group.show ();
+        }
+
+      var children = expose_group.get_children ();
 
       foreach (Clutter.Actor actor in windows)
         {
@@ -297,8 +302,19 @@ namespace Unity
                 (actor as Mutter.Window).get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
                 (actor as Mutter.Window).get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG))
             continue;
-
-          ExposeClone clone = new ExposeClone (actor);
+          ExposeClone? clone = null;
+          foreach (Clutter.Actor c in children)
+            {
+              ExposeClone _clone = c as ExposeClone;
+              if (_clone.source == actor)
+                {
+                  clone = _clone;
+                  break;
+                }
+            }
+          
+          if (clone == null)
+            clone = new ExposeClone (actor);
           clone.fade_on_close = true;
           clone.set_position (actor.x, actor.y);
           clone.set_size (actor.width, actor.height);
@@ -331,10 +347,13 @@ namespace Unity
       else
         position_windows_on_grid (exposed_windows, top_buffer, left_buffer, right_buffer, bottom_buffer);
 
-      expose_showing = true;
+      if (!expose_showing)
+        {
+          expose_showing = true;
 
-      owner.add_fullscreen_request (this);
-      stage.captured_event.connect (on_stage_captured_event);
+          owner.add_fullscreen_request (this);
+          stage.captured_event.connect (on_stage_captured_event);
+        }
     }
 
     private void on_clone_destroyed ()
