@@ -1,4 +1,4 @@
-unity (0.2.44-0ubuntu1) UNRELEASED; urgency=low
+unity (0.2.44-0ubuntu1) maverick; urgency=low
 
   * New upstream release:
     - refine launcher tile super key overlay aesthetic (LP: #633069)
@@ -13,7 +13,7 @@ unity (0.2.44-0ubuntu1) UNRELEASED; urgency=low
   * debian/libunity0.symbols:
     - updated
 
- -- Didier Roche <didrocks@ubuntu.com>  Fri, 24 Sep 2010 18:51:42 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Fri, 24 Sep 2010 19:57:46 +0200
 
 unity (0.2.42-0ubuntu3) maverick; urgency=low
 
