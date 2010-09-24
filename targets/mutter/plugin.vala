@@ -934,51 +934,6 @@ namespace Unity
               else
                 show_unity ();
               /*
-              if (expose_manager.expose_showing == true)
-                {
-                  expose_manager.end_expose ();
-                  return;
-                }
-
-              Mutter.Window? window = null;
-
-              var actor = stage.get_actor_at_pos (Clutter.PickMode.ALL,
-                                                  (int)event.root_x,
-                                                  (int)event.root_y);
-              if (actor is Mutter.Window == false)
-                actor = actor.get_parent ();
-
-              if (actor is Mutter.Window)
-                {
-                  window = actor as Mutter.Window;
-
-                  if (window.get_window_type () != Mutter.MetaCompWindowType.NORMAL &&
-                      window.get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
-                      window.get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG &&
-                      window.get_window_type () != Mutter.MetaCompWindowType.UTILITY)
-                    window = null;
-                }
-
-              if (window is Mutter.Window)
-                {
-                  var matcher = Bamf.Matcher.get_default ();
-                  var xwin = (uint32)Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
-
-                  foreach (Bamf.Application app in matcher.get_running_applications ())
-                    {
-                      Array<uint32> xids = app.get_xids ();
-                      for (int i = 0; i < xids.length; i++)
-                        {
-                          uint32 xid = xids.index (i);
-                          if (xwin == xid)
-                            {
-                              // Found the right application, so pick it
-                              expose_xids (xids);
-                              return;
-                            }
-                        }
-                    }
-                }
              */
             }
               /*
@@ -999,66 +954,17 @@ namespace Unity
       else if (event.type == Gesture.Type.PINCH)
         {
           if (event.fingers == 3
-              && places_showing == false
-              && expose_manager.expose_showing == false)
+              && places_showing == false)
             {
               if (event.state == Gesture.State.ENDED)
                 {
-                  var actor = stage.get_actor_at_pos (Clutter.PickMode.ALL,
-                                                      (int)event.root_x,
-                                                      (int)event.root_y);
-                  
-                  while (!(actor is Mutter.Window) && actor != null && actor != stage)
-                    actor = actor.get_parent ();
-
-                  if (actor is Mutter.Window)
+                  if (expose_manager.expose_showing == true)
                     {
-                      unowned Mutter.MetaWindow win = (actor as Mutter.Window).get_meta_window ();
-                      bool fullscreen = false;
-
-                      (win as Object).get ("fullscreen", out fullscreen);
-
-                      if (event.pinch_event.radius_delta >= 0.0f)
-                        {
-                          if (Mutter.MetaWindow.is_maximized (win))
-                            {
-                              /* Fullscreen */
-                              Mutter.MetaWindow.make_fullscreen (win);
-                            }
-                          else
-                            {
-                              /* Maximize */
-                              Mutter.MetaWindow.maximize (win,
-                                                          Mutter.MetaMaximizeFlags.HORIZONTAL |
-                                                          Mutter.MetaMaximizeFlags.VERTICAL);
-                            }
-                        }
-                      else
-                        {
-                          if (fullscreen)
-                           {
-                             Mutter.MetaWindow.unmake_fullscreen (win);
-                           }
-                         else if (Mutter.MetaWindow.is_maximized (win))
-                           {
-                             Mutter.MetaWindow.unmaximize (win,
-                                                             Mutter.MetaMaximizeFlags.HORIZONTAL | Mutter.MetaMaximizeFlags.VERTICAL);
-                           }
-                        }
-
-                      Mutter.MetaWindow.activate (win, get_current_time ());
+                      expose_manager.end_expose ();
+                      return;
                     }
-                 }
 
-              /* FIXME: This can't work with the current information we are getting */
-              /*
-              debug ("Resize Window");
-              if (true == true)
-                return;
-
-              if (event.state == Gesture.State.BEGAN)
-                {
-                  resize_window = null;
+                  Mutter.Window? window = null;
 
                   var actor = stage.get_actor_at_pos (Clutter.PickMode.ALL,
                                                       (int)event.root_x,
@@ -1068,176 +974,36 @@ namespace Unity
 
                   if (actor is Mutter.Window)
                     {
-                      resize_window = actor as Mutter.Window;
-                      resize_last_x1 = event.pinch_event.bounding_box_x1;
-                      resize_last_y1 = event.pinch_event.bounding_box_y1;
-                      resize_last_x2 = event.pinch_event.bounding_box_x2;
-                      resize_last_y2 = event.pinch_event.bounding_box_y2;
+                      window = actor as Mutter.Window;
+
+                      if (window.get_window_type () != Mutter.MetaCompWindowType.NORMAL &&
+                          window.get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
+                          window.get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG &&
+                          window.get_window_type () != Mutter.MetaCompWindowType.UTILITY)
+                        window = null;
                     }
-                }
-              else if (event.state == Gesture.State.CONTINUED)
-                {
-                  if (resize_window is Mutter.Window == false)
-                    return;
 
-                  print ("RESIZE: %f %f %f %f\n",
-                         resize_last_x1 - event.pinch_event.bounding_box_x1,
-                         resize_last_y1 - event.pinch_event.bounding_box_y1,
-                         resize_last_x2 - event.pinch_event.bounding_box_x2,
-                         resize_last_y2 - event.pinch_event.bounding_box_y2);
-
-                  var nx = resize_window.x;
-                  var ny = resize_window.y;
-                  var nwidth = resize_window.width;
-                  var nheight = resize_window.height;
-
-                  nx += (resize_last_x1 - event.pinch_event.bounding_box_x1) * event.pinch_event.radius_delta;
-                  ny += (resize_last_y1 - event.pinch_event.bounding_box_y1) * event.pinch_event.radius_delta;
-                  nwidth += (resize_last_x2 - event.pinch_event.bounding_box_x2) * event.pinch_event.radius_delta;
-                  nheight += (resize_last_y2 - event.pinch_event.bounding_box_y2) * event.pinch_event.radius_delta;
-
-                  Mutter.MetaWindow.move_resize (resize_window.get_meta_window (),
-                                                 false,
-                                                 (int)nx,
-                                                 (int)ny,
-                                                 (int)nwidth,
-                                                 (int)nheight);
-                                                 
- 
-                  resize_last_x1 = event.pinch_event.bounding_box_x1;
-                  resize_last_y1 = event.pinch_event.bounding_box_y1;
-                  resize_last_x2 = event.pinch_event.bounding_box_x2;
-                  resize_last_y2 = event.pinch_event.bounding_box_y2;
-                }
-              else if (event.state == Gesture.State.ENDED)
-                {
-                  if (resize_window is Mutter.Window == false)
-                    return;
-
-                  resize_window = null;
-                }
-              print (@"$event\n");
-              */
-            }
-          else if (event.fingers == 4
-                   && expose_manager.expose_showing == false
-                   && event.state == Gesture.State.BEGAN)
-            {
-
-              /* FIXME: We'll come back to this awesomeness 
-              if (event.state == Gesture.State.BEGAN)
-                {
-                  if (expose_manager.expose_showing)
+                  if (window is Mutter.Window)
                     {
-                      expose_manager.end_expose ();
-                    }
-                  else
-                    {
-                      SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
-                      unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
-                      foreach (Mutter.Window w in mutter_windows)
+                      var matcher = Bamf.Matcher.get_default ();
+                      var xwin = (uint32)Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
+
+                      foreach (Bamf.Application app in matcher.get_running_applications ())
                         {
-                          windows.append (w);
-                        }
-                      expose_windows (windows,  get_launcher_width_foobar () + 10);
-                    }
-
-                  foreach (ExposeClone clone in expose_manager.exposed_windows)
-                    {
-                      clone.get_animation ().get_timeline ().pause ();
-                    }
-
-                  start_pinch_radius = event.pinch_event.radius_delta;
-                }
-              else if (event.state == Gesture.State.CONTINUED)
-                {
-                  foreach (ExposeClone clone in expose_manager.exposed_windows)
-                    {
-                      int I_JUST_PULLED_THIS_FROM_MY_FOO = 5;
-
-                      if (event.pinch_event.radius_delta >= 0)
-                        {
-                          if (start_pinch_radius < 0)
+                          Array<uint32> xids = app.get_xids ();
+                          for (int i = 0; i < xids.length; i++)
                             {
-                              // We're moving backward
-                              I_JUST_PULLED_THIS_FROM_MY_FOO *= -1;
+                              uint32 xid = xids.index (i);
+                              if (xwin == xid)
+                                {
+                                  // Found the right application, so pick it
+                                  expose_xids (xids);
+                                  return;
+                                }
                             }
                         }
-                      else
-                        {
-                          if (start_pinch_radius >= 0)
-                            {
-                              // We're moving backward
-                              I_JUST_PULLED_THIS_FROM_MY_FOO *= -1;
-                            }
-                        }
-
-                      var tl = clone.get_animation ().get_timeline ();
-                      tl.advance (tl.get_elapsed_time ()
-                                  + I_JUST_PULLED_THIS_FROM_MY_FOO);
-                     
-                      float factor = (float)tl.get_elapsed_time () /
-                                     (float)tl.get_duration ();
-                      
-                      Value v = Value (typeof (float));
-                      
-                      var interval = clone.get_animation ().get_interval ("x");
-                      interval.compute_value (factor, v);
-                      clone.x = v.get_float ();
-
-                      interval = clone.get_animation ().get_interval ("y");
-                      interval.compute_value (factor, v);
-                      clone.y = v.get_float ();
-
-                      double scalex, scaley;
-                      clone.get_scale (out scalex, out scaley);
-
-                      v = Value (typeof (double));
-
-                      interval = clone.get_animation ().get_interval ("scale-x");
-                      interval.compute_value (factor, v);
-                      scalex = v.get_double ();
-
-                      interval = clone.get_animation ().get_interval ("scale-y");
-                      interval.compute_value (factor, v);
-                      scaley = v.get_double ();
-
-                      clone.set_scale (scalex, scaley);
-                    }
-                 }
-              else if (event.state == Gesture.State.ENDED)
-                {
-                  foreach (ExposeClone clone in expose_manager.exposed_windows)
-                    {
-                      var anim = clone.get_animation ();
-                      
-                      Value v = Value (typeof (float));
-                      
-                      var interval = anim.get_interval ("x");
-                      v.set_float (clone.x);
-                      interval.set_initial_value (v);
-
-                      interval = anim.get_interval ("y");
-                      v.set_float (clone.y);
-                      interval.set_initial_value (v);
-
-                      v = Value (typeof (double));
-                      double scalex, scaley;
-                      clone.get_scale (out scalex, out scaley);
-
-                      interval = anim.get_interval ("scale-x");
-                      v.set_double (scalex);
-                      interval.set_initial_value (v);
-
-                      interval = anim.get_interval ("scale-y");
-                      v.set_double (scaley);
-                      interval.set_initial_value (v);
-
-                      clone.get_animation ().get_timeline ().start ();
-                      clone.queue_relayout ();
                     }
                 }
-              */
             }
         }
       else if (event.type == Gesture.Type.PAN)
