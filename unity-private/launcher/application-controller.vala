@@ -37,6 +37,20 @@ namespace Unity.Launcher
     private Dbusmenu.Client menu_client;
     private Dbusmenu.Menuitem cached_menu;
     private int menu_items_realized_counter;
+    private string _fav_id = "";
+    public string fav_id {
+      get
+        {
+          if (_fav_id == "" || _fav_id == null &&
+              desktop_file != "" && desktop_file != null)
+            {
+              var filepath = desktop_file.split ("/");
+              _fav_id = "app-" + filepath[filepath.length - 1];
+            }
+          return _fav_id;
+        }
+      set { _fav_id = value; }
+    }
 
     public bool is_favorite = false;
 
@@ -90,22 +104,15 @@ namespace Unity.Launcher
 
       var favorites = Unity.Favorites.get_default ();
 
-      string uid = favorites.find_uid_for_desktop_file (desktop_file);
-      if (uid == "" || uid == null)
-        {
-          var filepath = desktop_file.split ("/");
-          uid = "app-" + filepath[filepath.length - 1];
-        }
-
       if (is_sticky)
         {
-          favorites.set_string (uid, "type", "application");
-          favorites.set_string (uid, "desktop_file", desktop_file);
-          favorites.add_favorite (uid);
+          favorites.set_string (fav_id, "type", "application");
+          favorites.set_string (fav_id, "desktop_file", desktop_file);
+          favorites.add_favorite (fav_id);
         }
       else
         {
-          favorites.remove_favorite (uid);
+          favorites.remove_favorite (fav_id);
         }
     }
 
@@ -115,11 +122,7 @@ namespace Unity.Launcher
         return false;
 
       var favorites = Unity.Favorites.get_default ();
-      string uid = favorites.find_uid_for_desktop_file (desktop_file);
-      if (uid == null || uid == "")
-        return false;
-      else
-        return true;
+      return favorites.is_favorite (fav_id);
     }
 
     public void close_windows ()
@@ -136,9 +139,8 @@ namespace Unity.Launcher
       if (desktop_file == "" || desktop_file == null)
         return;
 
-      string uid = "app-" + Path.get_basename (desktop_file);
       var favorites = Unity.Favorites.get_default ();
-      favorites.set_float (uid, "priority", priority);
+      favorites.set_float (fav_id, "priority", priority);
     }
 
     public float get_priority () throws AppTypeError
@@ -146,17 +148,14 @@ namespace Unity.Launcher
       if (desktop_file == "" || desktop_file == null)
         throw new AppTypeError.NO_DESKTOP_FILE("There is no desktop file for this app, can't get priority");
 
-      string uid = "app-" + Path.get_basename (desktop_file);
       var favorites = Unity.Favorites.get_default ();
-      return favorites.get_float (uid, "priority");
+      return favorites.get_float (fav_id, "priority");
     }
 
     private void on_favorite_added (string uid)
     {
       //check to see if we are the favorite
-      var favorites = Unity.Favorites.get_default ();
-      var desktop_filename = favorites.get_string (uid, "desktop_file");
-      if (desktop_filename == desktop_file)
+      if (uid == fav_id)
         {
           is_favorite = true;
           child.pin_type = PinType.PINNED;
@@ -165,15 +164,13 @@ namespace Unity.Launcher
 
     private void on_favorite_removed (string uid)
     {
-      var favorites = Unity.Favorites.get_default ();
-      var desktop_filename = favorites.get_string (uid, "desktop_file");
-      if (desktop_filename == desktop_file)
+      if (uid == fav_id)
         {
           is_favorite = false;
           child.pin_type = PinType.UNPINNED;
           closed ();
-          if (".local" in desktop_filename)
-           FileUtils.remove (desktop_filename);
+          if (".local" in desktop_file)
+           FileUtils.remove (desktop_file);
         }
     }
 
