@@ -195,6 +195,14 @@ namespace Unity
     }
     private MaximizeType maximize_type = MaximizeType.NONE;
 
+    private enum ExposeType {
+      NONE,
+      APPLICATION,
+      WINDOWS,
+      WORKSPACE
+    }
+    private ExposeType expose_type = ExposeType.NONE;
+
     /* const */
     private const string GCONF_DIR = "/desktop/unity/launcher";
     private const string GCONF_SUPER_KEY_ENABLE_KEY = "super_key_enable";
@@ -933,19 +941,10 @@ namespace Unity
                 hide_unity ();
               else
                 show_unity ();
-              /*
-             */
             }
               /*
               if (expose_manager.expose_showing == false)
                 {
-                  SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
-                  unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
-                  foreach (Mutter.Window w in mutter_windows)
-                    {
-                      windows.append (w);
-                    }
-                  expose_windows (windows,  get_launcher_width_foobar () + 10);
                 }
               else
                 expose_manager.end_expose ();
@@ -958,49 +957,100 @@ namespace Unity
             {
               if (event.state == Gesture.State.ENDED)
                 {
-                  if (expose_manager.expose_showing == true)
+                  if (event.pinch_event.radius_delta < 0)
                     {
-                      expose_manager.end_expose ();
-                      return;
-                    }
-
-                  Mutter.Window? window = null;
-
-                  var actor = stage.get_actor_at_pos (Clutter.PickMode.ALL,
-                                                      (int)event.root_x,
-                                                      (int)event.root_y);
-                  if (actor is Mutter.Window == false)
-                    actor = actor.get_parent ();
-
-                  if (actor is Mutter.Window)
-                    {
-                      window = actor as Mutter.Window;
-
-                      if (window.get_window_type () != Mutter.MetaCompWindowType.NORMAL &&
-                          window.get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
-                          window.get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG &&
-                          window.get_window_type () != Mutter.MetaCompWindowType.UTILITY)
-                        window = null;
-                    }
-
-                  if (window is Mutter.Window)
-                    {
-                      var matcher = Bamf.Matcher.get_default ();
-                      var xwin = (uint32)Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
-
-                      foreach (Bamf.Application app in matcher.get_running_applications ())
+                      /* Pinch */
+                      if (expose_type == ExposeType.NONE || !expose_manager.expose_showing)
                         {
-                          Array<uint32> xids = app.get_xids ();
-                          for (int i = 0; i < xids.length; i++)
+                          Mutter.Window? window = null;
+
+                          var actor = stage.get_actor_at_pos (Clutter.PickMode.ALL,
+                                                              (int)event.root_x,
+                                                              (int)event.root_y);
+                          if (actor is Mutter.Window == false)
+                            actor = actor.get_parent ();
+
+                          if (actor is Mutter.Window)
                             {
-                              uint32 xid = xids.index (i);
-                              if (xwin == xid)
+                              window = actor as Mutter.Window;
+
+                              if (window.get_window_type () != Mutter.MetaCompWindowType.NORMAL &&
+                                  window.get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
+                                  window.get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG &&
+                                  window.get_window_type () != Mutter.MetaCompWindowType.UTILITY)
+                                window = null;
+                            }
+
+                          if (window is Mutter.Window)
+                            {
+                              var matcher = Bamf.Matcher.get_default ();
+                              var xwin = (uint32)Mutter.MetaWindow.get_xwindow (window.get_meta_window ());
+
+                              foreach (Bamf.Application app in matcher.get_running_applications ())
                                 {
-                                  // Found the right application, so pick it
-                                  expose_xids (xids);
-                                  return;
+                                  Array<uint32> xids = app.get_xids ();
+                                  for (int i = 0; i < xids.length; i++)
+                                    {
+                                      uint32 xid = xids.index (i);
+                                      if (xwin == xid)
+                                        {
+                                          // Found the right application, so pick it
+                                          expose_xids (xids);
+                                          expose_type = ExposeType.APPLICATION;  
+                                          return;
+                                        }
+                                    }
                                 }
                             }
+
+                          /* If we're here we didnt find window, so lets do window expose */
+                          SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
+                          unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
+                          foreach (Mutter.Window w in mutter_windows)
+                            {
+                              windows.append (w);
+                            }
+                          expose_windows (windows,  get_launcher_width_foobar () + 10);
+                          
+                          expose_type = ExposeType.WINDOWS;
+
+                        }
+                      else if (expose_type == ExposeType.APPLICATION)
+                        {
+                          SList<Clutter.Actor> windows = new SList<Clutter.Actor> ();
+                          unowned GLib.List<Mutter.Window> mutter_windows = plugin.get_windows ();
+                          foreach (Mutter.Window w in mutter_windows)
+                            {
+                              windows.append (w);
+                            }
+                          expose_windows (windows,  get_launcher_width_foobar () + 10);
+                          
+                          expose_type = ExposeType.WINDOWS;
+                        }
+                      else if (expose_type == ExposeType.WINDOWS)
+                        {
+                          expose_type = ExposeType.WORKSPACE;
+                        }
+                    }
+                  else
+                    {
+                      /* Spread */
+                      if (expose_type == ExposeType.NONE || !expose_manager.expose_showing)
+                        {
+                          expose_manager.end_expose ();
+                          expose_type = ExposeType.NONE;
+                        }
+                      else if (expose_type == ExposeType.APPLICATION)
+                        {
+                          expose_type = ExposeType.NONE;
+                        }
+                      else if (expose_type == ExposeType.WINDOWS)
+                        {
+                          expose_type = ExposeType.APPLICATION;
+                        }
+                      else if (expose_type == ExposeType.WORKSPACE)
+                        {
+                          expose_type = ExposeType.WINDOWS;
                         }
                     }
                 }
