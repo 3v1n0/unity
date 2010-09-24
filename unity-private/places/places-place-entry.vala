@@ -148,7 +148,11 @@ namespace Unity.Places
         if (_active != value)
           {
             _active = value;
-            remote.set_active.begin (_active);
+            if (remote != null)
+              remote.set_active.begin (_active);
+            else
+              warning ("Unable to set PlaceEntry as active. " +
+                       "No contact remote PlaceEntry");
           }
       }
     }
@@ -409,38 +413,51 @@ namespace Unity.Places
          * a ValueArray, but not the async stuff. 
          *
          * So basically we need both right now and every new place kills a
-         * thousand kittens.
+         * thousand kittens (per hour).
          */
         service = connection.get_object (dbus_name,
                                          dbus_path,
                                          "com.canonical.Unity.PlaceEntry");
-
+        
+        service.RendererInfoChanged.connect (on_renderer_info_changed);
+        service.PlaceEntryInfoChanged.connect (on_place_entry_info_changed);
+        
+        online = true;
+        
       } catch (Error e) {
         warning (@"Unable to connect to $dbus_path on $dbus_name: %s",
                  e.message);
+        online = false;
         return;
-      }
-
-      service.RendererInfoChanged.connect (on_renderer_info_changed);
-      service.PlaceEntryInfoChanged.connect (on_place_entry_info_changed);
-
-      online = true;
+      }            
     }
 
     public void set_search (string search, HashTable<string, string> hints)
     {
-      remote.set_search.begin (search, hints);
+      if (remote != null)
+        remote.set_search.begin (search, hints);
+      else
+        warning ("Unable to set search '%s'. " +
+                 "No connection to remote PlaceEntry", search);
     }
 
     public void set_active_section (uint section_id)
     {
-      remote.set_active_section.begin (section_id);
+      if (remote != null)
+        remote.set_active_section.begin (section_id);
+      else
+        warning ("Unable to set active section %u. " +
+                 "No connection to remote PlaceEntry", section_id);
     }
 
     public void set_global_search (string                    search,
                                    HashTable<string, string> hints)
     {
-      remote.set_global_search.begin (search, hints);
+      if (remote != null)
+        remote.set_global_search.begin (search, hints);
+      else
+        warning ("Unable to set global search '%s'. " +
+                 "No connection to remote PlaceEntry", search);
     }
 
     /*

@@ -82,8 +82,8 @@ namespace Unity.Places
       if (n_items != 0)
         {
           Dbusmenu.Menuitem item;
-          /* i18n: This is the number of items in the Trash folder */
-          string label = ngettext("%d item", "%d items", n_items);
+          /* i18n: Sorry for the inelegant formulation, but ngettext() doesn't want to play for some reason */
+          string label = _("Files in trash: %d");
 
           item = new Dbusmenu.Menuitem ();
           item.property_set (Dbusmenu.MENUITEM_PROP_LABEL, label.printf (n_items));

@@ -1,6 +1,6 @@
 m4_define([unity_major], [0])
 m4_define([unity_minor], [2])
-m4_define([unity_micro], [42])
+m4_define([unity_micro], [44])
 
 m4_define([unity_api],
           [unity_major.unity_minor])
@@ -112,7 +112,7 @@ PKG_CHECK_MODULES(BASE,
                   gee-1.0
                   gconf-2.0
                   gnome-desktop-2.0
-                  indicator
+                  indicator >= 0.3.14
                   libbamf >= 0.2
                   libgnomeui-2.0
                   pango >= 1.6.0

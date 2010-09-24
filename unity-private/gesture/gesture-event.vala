@@ -83,6 +83,7 @@ namespace Unity.Gesture
           ret += "\tVelocityY  : %f\n".printf (pan_event.velocity_y);
           ret += "\tX          : %f\n".printf (pan_event.x);
           ret += "\tY          : %f\n".printf (pan_event.y);
+          ret += "\tCurNFingers: %f\n".printf (pan_event.current_n_fingers);
           break;
         case Type.PINCH:
           ret += "\tRadiusDelta: %f\n".printf (pinch_event.radius_delta);
@@ -142,6 +143,7 @@ namespace Unity.Gesture
     public float velocity_y;
     public float x;
     public float y;
+    public float current_n_fingers; /* For 3-to-2 drags, for example */
   }
 
   public class PinchEvent

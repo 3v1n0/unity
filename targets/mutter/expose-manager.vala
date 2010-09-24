@@ -36,6 +36,7 @@ namespace Unity
     public float pre_drag_scale_y { get; private set; }
     
     public bool fade_on_close { get; set; }
+    public bool dirty;
 
     public unowned Clutter.Actor source { get; private set; }
     
@@ -280,15 +281,25 @@ namespace Unity
     {
       exposed_windows = new List<ExposeClone> ();
 
-      if (expose_group != null)
-        expose_group.destroy ();
-      expose_group = new Clutter.Group ();
+      if (!expose_showing)
+        {
+          if (expose_group != null)
+            expose_group.destroy ();
+          expose_group = new Clutter.Group ();
 
-      Clutter.Actor window_group = owner.plugin.get_window_group ();
+          Clutter.Actor window_group = owner.plugin.get_window_group ();
 
-      (window_group as Clutter.Container).add_actor (expose_group);
-      expose_group.raise_top ();
-      expose_group.show ();
+          (window_group as Clutter.Container).add_actor (expose_group);
+          expose_group.raise_top ();
+          expose_group.show ();
+        }
+
+      var children = expose_group.get_children ();
+      foreach (Clutter.Actor c in children)
+        {
+          ExposeClone _clone = c as ExposeClone;
+          _clone.dirty = true;
+        }
 
       foreach (Clutter.Actor actor in windows)
         {
@@ -297,11 +308,31 @@ namespace Unity
                 (actor as Mutter.Window).get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
                 (actor as Mutter.Window).get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG))
             continue;
+      
+          ExposeClone? clone = null;
+          bool was_existing = false;
+          
+          foreach (Clutter.Actor c in children)
+            {
+              ExposeClone _clone = c as ExposeClone;
+              if (_clone.source == actor)
+                {
+                  clone = _clone;
+                  was_existing = true;
+                  _clone.dirty = false;
+                  break;
+                }
+            }
+          
+          if (clone == null)
+            clone = new ExposeClone (actor);
 
-          ExposeClone clone = new ExposeClone (actor);
           clone.fade_on_close = true;
-          clone.set_position (actor.x, actor.y);
-          clone.set_size (actor.width, actor.height);
+          if (!was_existing)
+            {
+              clone.set_position (actor.x, actor.y);
+              clone.set_size (actor.width, actor.height);
+            }
           exposed_windows.append (clone);
           clone.reactive = true;
 
@@ -311,8 +342,23 @@ namespace Unity
 
           clone.hovered_opacity = hovered_opacity;
           clone.unhovered_opacity = unhovered_opacity;
-          clone.opacity = unhovered_opacity;
+          if (!was_existing)
+            clone.opacity = expose_showing ? 0 : unhovered_opacity;
           clone.darken = darken;
+        }
+
+      foreach (Clutter.Actor c in children)
+        {
+          ExposeClone _clone = c as ExposeClone;
+
+          if (_clone.dirty)
+            {
+              var anim = _clone.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
+                                         "scale-x", 0.0f,
+                                         "scale-y", 0.0f,
+                                         "opacity", 0);
+              anim.completed.connect (() => {_clone.destroy ();});
+            }
         }
 
       unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();
@@ -331,10 +377,13 @@ namespace Unity
       else
         position_windows_on_grid (exposed_windows, top_buffer, left_buffer, right_buffer, bottom_buffer);
 
-      expose_showing = true;
+      if (!expose_showing)
+        {
+          expose_showing = true;
 
-      owner.add_fullscreen_request (this);
-      stage.captured_event.connect (on_stage_captured_event);
+          stage.captured_event.connect (on_stage_captured_event);
+          owner.add_fullscreen_request (this);
+        }
     }
 
     private void on_clone_destroyed ()
@@ -545,7 +594,8 @@ namespace Unity
                                                  "x", (float) windowX,
                                                  "y", (float) windowY,
                                                  "scale-x", scale,
-                                                 "scale-y", scale);
+                                                 "scale-y", scale,
+                                                 "opacity", unhovered_opacity);
             }
         }
     }
