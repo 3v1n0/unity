@@ -39,7 +39,7 @@ namespace Unity.Panel
 
     construct
     {
-      theme_image = new Ctk.Image.from_filename (22, "/usr/share/icons/unity-icon-theme/places/22/distributor-logo.png");
+      theme_image = new Ctk.Image.from_filename (24, "/usr/share/icons/unity-icon-theme/places/24/distributor-logo.png");
 
       add_actor (theme_image);
       theme_image.show ();
