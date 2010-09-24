@@ -36,6 +36,7 @@ namespace Unity
     public float pre_drag_scale_y { get; private set; }
     
     public bool fade_on_close { get; set; }
+    public bool dirty;
 
     public unowned Clutter.Actor source { get; private set; }
     
@@ -294,6 +295,11 @@ namespace Unity
         }
 
       var children = expose_group.get_children ();
+      foreach (Clutter.Actor c in children)
+        {
+          ExposeClone _clone = c as ExposeClone;
+          _clone.dirty = true;
+        }
 
       foreach (Clutter.Actor actor in windows)
         {
@@ -313,6 +319,7 @@ namespace Unity
                 {
                   clone = _clone;
                   was_existing = true;
+                  _clone.dirty = false;
                   break;
                 }
             }
@@ -338,6 +345,20 @@ namespace Unity
           if (!was_existing)
             clone.opacity = expose_showing ? 0 : unhovered_opacity;
           clone.darken = darken;
+        }
+
+      foreach (Clutter.Actor c in children)
+        {
+          ExposeClone _clone = c as ExposeClone;
+
+          if (_clone.dirty)
+            {
+              var anim = _clone.animate (Clutter.AnimationMode.EASE_IN_OUT_SINE, 250,
+                                         "scale-x", 0.0f,
+                                         "scale-y", 0.0f,
+                                         "opacity", 0);
+              anim.completed.connect (() => {_clone.destroy ();});
+            }
         }
 
       unowned GLib.List<Mutter.Window> mutter_windows = owner.plugin.get_windows ();

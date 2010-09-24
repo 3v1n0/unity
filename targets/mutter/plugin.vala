@@ -202,6 +202,7 @@ namespace Unity
       WORKSPACE
     }
     private ExposeType expose_type = ExposeType.NONE;
+    private unowned Mutter.Window? start_pinch_window = null;
 
     /* const */
     private const string GCONF_DIR = "/desktop/unity/launcher";
@@ -981,6 +982,8 @@ namespace Unity
                                 window = null;
                             }
 
+                          start_pinch_window = null;
+
                           if (window is Mutter.Window)
                             {
                               var matcher = Bamf.Matcher.get_default ();
@@ -988,15 +991,16 @@ namespace Unity
 
                               foreach (Bamf.Application app in matcher.get_running_applications ())
                                 {
-                                  Array<uint32> xids = app.get_xids ();
-                                  for (int i = 0; i < xids.length; i++)
+                                  Array<uint32> last_pinch_xids = app.get_xids ();
+                                  for (int i = 0; i < last_pinch_xids.length; i++)
                                     {
-                                      uint32 xid = xids.index (i);
+                                      uint32 xid = last_pinch_xids.index (i);
                                       if (xwin == xid)
                                         {
                                           // Found the right application, so pick it
-                                          expose_xids (xids);
-                                          expose_type = ExposeType.APPLICATION;  
+                                          expose_xids (last_pinch_xids);
+                                          expose_type = ExposeType.APPLICATION;
+                                          start_pinch_window = window;
                                           return;
                                         }
                                     }
@@ -1042,11 +1046,31 @@ namespace Unity
                         }
                       else if (expose_type == ExposeType.APPLICATION)
                         {
+                          expose_manager.end_expose ();
                           expose_type = ExposeType.NONE;
                         }
                       else if (expose_type == ExposeType.WINDOWS)
                         {
-                          expose_type = ExposeType.APPLICATION;
+                          var matcher = Bamf.Matcher.get_default ();
+                          var xwin = (uint32)Mutter.MetaWindow.get_xwindow (start_pinch_window.get_meta_window ());
+
+                          foreach (Bamf.Application app in matcher.get_running_applications ())
+                            {
+                              Array<uint32> last_pinch_xids = app.get_xids ();
+                              for (int i = 0; i < last_pinch_xids.length; i++)
+                                {
+                                  uint32 xid = last_pinch_xids.index (i);
+                                  if (xwin == xid)
+                                    {
+                                      // Found the right application, so pick it
+                                      expose_xids (last_pinch_xids);
+                                      expose_type = ExposeType.APPLICATION;
+                                      return;
+                                    }
+                                }
+                            }
+                          expose_manager.end_expose ();
+                          expose_type = ExposeType.NONE;
                         }
                       else if (expose_type == ExposeType.WORKSPACE)
                         {
