@@ -240,6 +240,7 @@ namespace Unity.Launcher
               childcontrollers.add (controller);
               controller.request_removal.connect (on_scroller_controller_closed);
             }
+          controller.fav_id = uid;
         }
 
       // need to sort the list now
