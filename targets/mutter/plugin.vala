@@ -1245,9 +1245,11 @@ namespace Unity
         {
           if (resize_window is Mutter.Window)
             return;
+
           if (event.fingers == 3)
             {
-              if (event.state == Gesture.State.BEGAN)
+              if (event.state == Gesture.State.BEGAN
+                  && event.pan_event.current_n_fingers == 2)
                 {
                   start_pan_window = null;
 
@@ -1268,7 +1270,8 @@ namespace Unity
                         start_pan_window = null;
                     }
                 }
-              else if (event.state == Gesture.State.CONTINUED)
+              else if (event.state == Gesture.State.CONTINUED
+                       && event.pan_event.current_n_fingers == 2)
                 {
                   if (start_pan_window is Mutter.Window == false)
                     return;
