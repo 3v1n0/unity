@@ -34,7 +34,7 @@ Architecture: any
 Depends: ${shlibs:Depends},
          ${misc:Depends},
          mutter (>= 2.31.5),
-         unity-asset-pool
+         unity-asset-pool (>= 0.8.18)
 Provides: indicator-renderer
 Recommends: unity-place-applications,
             unity-place-files,
