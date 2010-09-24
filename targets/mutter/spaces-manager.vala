@@ -155,7 +155,21 @@ namespace Unity {
       this.plugin = plugin;
       this.plugin.workspace_switch_event.connect (this.workspace_switched);
       
-      set_desktop_layout (2, 2, 2 * 2);
+      int num_workspaces = Mutter.meta_prefs_get_num_workspaces ();
+      
+      if (num_workspaces <= 4)
+        {
+          set_desktop_layout (2, 2, 2 * 2);
+        }
+      else
+        {
+          int width  = (int) Math.ceil  (Math.sqrt ((double) num_workspaces));
+          int height = 1;
+          while (width * height < num_workspaces)
+            height++;
+          
+          set_desktop_layout (width, height, num_workspaces);
+        }      
     }
 
     void set_desktop_layout (int columns, int rows, int num_workspace)
