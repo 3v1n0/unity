@@ -222,6 +222,30 @@ unity_gesture_xcb_dispatcher_glue_main_iteration (XCBSource *source)
           ev->velocity_y = properties[GRAIL_PROP_DRAG_VY];
           ev->x = properties[GRAIL_PROP_DRAG_X];
           ev->y = properties[GRAIL_PROP_DRAG_Y];
+
+          /* FIXME: grail needs to provide API better than
+           * this
+           */
+          if (gesture_event->num_props == 13)
+            {
+              ev->current_n_fingers = 1;
+            }
+          else if (gesture_event->num_props == 16)
+            {
+              ev->current_n_fingers = 2;
+            }
+          else if (gesture_event->num_props == 19)
+            {
+              ev->current_n_fingers = 3;
+            }
+          else if (gesture_event->num_props == 22)
+            {
+              ev->current_n_fingers = 4;
+            }
+          else
+            {
+              ev->current_n_fingers = dispatch_event->fingers;
+            }
         }
       else if (dispatch_event->type == UNITY_GESTURE_TYPE_PINCH &&
                gesture_event->num_props >= 7)
