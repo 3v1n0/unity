@@ -1010,7 +1010,7 @@ namespace Unity
                             {
                               windows.append (w);
                             }
-                          expose_windows (windows,  get_launcher_width_foobar () + 10);
+                          expose_windows (windows, get_launcher_width_foobar () + 10);
                           
                           expose_type = ExposeType.WINDOWS;
 
@@ -1023,7 +1023,7 @@ namespace Unity
                             {
                               windows.append (w);
                             }
-                          expose_windows (windows,  get_launcher_width_foobar () + 10);
+                          expose_windows (windows, get_launcher_width_foobar () + 10);
                           
                           expose_type = ExposeType.WINDOWS;
                         }

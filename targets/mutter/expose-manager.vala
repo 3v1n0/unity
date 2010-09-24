@@ -302,22 +302,30 @@ namespace Unity
                 (actor as Mutter.Window).get_window_type () != Mutter.MetaCompWindowType.DIALOG &&
                 (actor as Mutter.Window).get_window_type () != Mutter.MetaCompWindowType.MODAL_DIALOG))
             continue;
+      
           ExposeClone? clone = null;
+          bool was_existing = false;
+          
           foreach (Clutter.Actor c in children)
             {
               ExposeClone _clone = c as ExposeClone;
               if (_clone.source == actor)
                 {
                   clone = _clone;
+                  was_existing = true;
                   break;
                 }
             }
           
           if (clone == null)
             clone = new ExposeClone (actor);
+
           clone.fade_on_close = true;
-          clone.set_position (actor.x, actor.y);
-          clone.set_size (actor.width, actor.height);
+          if (!was_existing)
+            {
+              clone.set_position (actor.x, actor.y);
+              clone.set_size (actor.width, actor.height);
+            }
           exposed_windows.append (clone);
           clone.reactive = true;
 
@@ -327,7 +335,8 @@ namespace Unity
 
           clone.hovered_opacity = hovered_opacity;
           clone.unhovered_opacity = unhovered_opacity;
-          clone.opacity = unhovered_opacity;
+          if (!was_existing)
+            clone.opacity = expose_showing ? 0 : unhovered_opacity;
           clone.darken = darken;
         }
 
@@ -351,8 +360,8 @@ namespace Unity
         {
           expose_showing = true;
 
-          owner.add_fullscreen_request (this);
           stage.captured_event.connect (on_stage_captured_event);
+          owner.add_fullscreen_request (this);
         }
     }
 
@@ -564,7 +573,8 @@ namespace Unity
                                                  "x", (float) windowX,
                                                  "y", (float) windowY,
                                                  "scale-x", scale,
-                                                 "scale-y", scale);
+                                                 "scale-y", scale,
+                                                 "opacity", unhovered_opacity);
             }
         }
     }
