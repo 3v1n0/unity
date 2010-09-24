@@ -218,10 +218,6 @@ namespace Unity.Launcher
 
       foreach (string uid in favorites.get_favorites ())
         {
-          var type = favorites.get_string (uid, "type");
-          if (type != "application")
-            continue;
-
           string desktop_file = favorites.get_string (uid, "desktop_file");
           if (!FileUtils.test (desktop_file, FileTest.EXISTS))
             {
