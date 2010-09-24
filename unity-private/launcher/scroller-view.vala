@@ -592,27 +592,31 @@ namespace Unity.Launcher
       double y = 0;
       double w = 10;
       double h = 10;
-      double r = Ctk.em_to_pixel (1);
+      double r = Ctk.em_to_pixel (0.7f);
 
+      Pango.Layout layout = Pango.cairo_create_layout (cr);
       Gtk.Settings settings = Gtk.Settings.get_default ();
       Pango.FontDescription desc = Pango.FontDescription.from_string (settings.gtk_font_name);
+      desc.set_weight (Pango.Weight.NORMAL);
+      layout.set_font_description (desc);
+      layout.set_text (text, -1);
+      Pango.Context pango_context = layout.get_context ();
+      Gdk.Screen screen = Gdk.Screen.get_default ();
+      Pango.cairo_context_set_font_options (pango_context,
+                                            screen.get_font_options ());
+      Pango.cairo_context_set_resolution (pango_context,
+                                          (float) settings.gtk_xft_dpi /
+                                          (float) Pango.SCALE);
+      layout.context_changed ();
+      int text_width;
+      int text_height;
+      Pango.Rectangle log_rect;
+      layout.get_extents (null, out log_rect);
+      text_width  = log_rect.width / Pango.SCALE;
+      text_height = log_rect.height / Pango.SCALE;
 
-      cr.select_font_face (desc.get_family (),
-                           Cairo.FontSlant.NORMAL,
-                           Cairo.FontWeight.NORMAL);
-      double size;
-      size = Ctk.em_to_pixel (1) * 0.9;
-      cr.set_font_size (size);
-
-
-      Cairo.TextExtents extents = Cairo.TextExtents ();
-      cr.text_extents ("2", out extents);
-
-      Cairo.TextExtents real_extents = Cairo.TextExtents ();
-      cr.text_extents (text, out extents);
-
-      w += extents.width;
-      h += extents.height;
+      w += text_width;
+      h += text_height;
       cr.set_source_rgba (0.07, 0.07, 0.07, 0.8);
 
       cr.move_to(x+r,y);                      // Move to A
@@ -627,11 +631,12 @@ namespace Unity.Launcher
 
       cr.fill ();
 
-      //x = (extents.width - real_extents.width) / 2.0;
-      y = 0;//(extents.height - real_extents.height) / 2.0;
       cr.set_source_rgba (1, 1, 1, 1);
-      cr.move_to (x + 5 - (real_extents.width * 0.5), y+5+extents.height);
-      cr.show_text (text);
+
+      // draw text
+      cr.move_to (x + (w - text_width) * 0.5,
+                  y + (h - text_height) * 0.5);
+      Pango.cairo_show_layout (cr, layout);
     }
 
     /*
