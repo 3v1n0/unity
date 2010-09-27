@@ -88,7 +88,9 @@ for candidate in lucid_favorites_list:
 # get GNOME desktop launchers
 desktop_dir = get_desktop_dir()
 for launcher_location in glob.glob('%s/*.desktop' % desktop_dir):
-    (apps_list, priority_position) = register_new_app(client, launcher_location, apps_list, priority_position)
+    # blacklist ubiquity as will have two ubiquity in the netbook live session then
+    if not "ubiquity" in launcher_location:
+        (apps_list, priority_position) = register_new_app(client, launcher_location, apps_list, priority_position)
 
 # set list of default and new favorites and write everything!
 client.set_list('/desktop/unity/launcher/favorites/favorites_list', gconf.VALUE_STRING, apps_list)
