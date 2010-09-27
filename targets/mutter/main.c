@@ -267,7 +267,7 @@ rendering_available (void)
   renderer = g_ascii_strdown (glRenderer, -1);
   g_debug ("OpenGL renderer string: %s\n", glRenderer);
 
-  if (renderer && strstr (renderer, "software"))
+  if (renderer && (strstr (renderer, "software") != NULL))
     return FALSE;
 
   return TRUE;
