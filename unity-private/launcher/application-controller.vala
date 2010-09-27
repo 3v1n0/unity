@@ -44,8 +44,8 @@ namespace Unity.Launcher
           if (_fav_id == "" || _fav_id == null &&
               desktop_file != "" && desktop_file != null)
             {
-              var filepath = desktop_file.split ("/");
-              _fav_id = "app-" + filepath[filepath.length - 1];
+              var filepath = Path.get_basename (desktop_file);
+              _fav_id = "app-" + filepath;
             }
           return _fav_id;
         }
