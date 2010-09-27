@@ -26,13 +26,13 @@
 #include <glib/gi18n-lib.h>
 #include <clutter/clutter.h>
 #include <mutter-plugins.h>
+#include <math.h>
+#include <float.h>
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
 #include <X11/Xregion.h>
 #include <unity.h>
-#include <float.h>
-#include <math.h>
 #include <gee.h>
 #include <gdk/gdk.h>
 
@@ -698,11 +698,27 @@ static void _unity_spaces_manager_workspace_switched_unity_plugin_workspace_swit
 UnitySpacesManager* unity_spaces_manager_construct (GType object_type, UnityPlugin* plugin) {
 	UnitySpacesManager * self;
 	UnityPlugin* _tmp0_;
+	gint num_workspaces;
 	g_return_val_if_fail (plugin != NULL, NULL);
 	self = (UnitySpacesManager*) g_object_new (object_type, NULL);
 	self->priv->plugin = (_tmp0_ = _g_object_ref0 (plugin), _g_object_unref0 (self->priv->plugin), _tmp0_);
 	g_signal_connect_object (self->priv->plugin, "workspace-switch-event", (GCallback) _unity_spaces_manager_workspace_switched_unity_plugin_workspace_switch_event, self, 0);
-	unity_spaces_manager_set_desktop_layout (self, 2, 2, 2 * 2);
+	num_workspaces = meta_prefs_get_num_workspaces ();
+	if (num_workspaces <= 4) {
+		unity_spaces_manager_set_desktop_layout (self, 2, 2, 2 * 2);
+	} else {
+		gint width;
+		gint height;
+		width = (gint) ceil (sqrt ((double) num_workspaces));
+		height = 1;
+		while (TRUE) {
+			if (!((width * height) < num_workspaces)) {
+				break;
+			}
+			height++;
+		}
+		unity_spaces_manager_set_desktop_layout (self, width, height, num_workspaces);
+	}
 	return self;
 }
 

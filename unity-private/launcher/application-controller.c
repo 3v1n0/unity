@@ -305,8 +305,6 @@ static GObject * unity_launcher_application_controller_constructor (GType type, 
 static void unity_launcher_application_controller_finalize (GObject* obj);
 static void unity_launcher_application_controller_get_property (GObject * object, guint property_id, GValue * value, GParamSpec * pspec);
 static void unity_launcher_application_controller_set_property (GObject * object, guint property_id, const GValue * value, GParamSpec * pspec);
-static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func);
-static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func);
 static gint _vala_array_length (gpointer array);
 static int _vala_strcmp0 (const char * str1, const char * str2);
 
@@ -1225,15 +1223,11 @@ const char* unity_launcher_application_controller_get_fav_id (UnityLauncherAppli
 		_tmp0_ = _tmp1_;
 	}
 	if (_tmp0_) {
-		gint filepath_length1;
-		gint _filepath_size_;
-		char** _tmp4_;
-		char** _tmp3_;
-		char** filepath;
-		char* _tmp5_;
-		filepath = (_tmp4_ = _tmp3_ = g_strsplit (self->priv->_desktop_file, "/", 0), filepath_length1 = _vala_array_length (_tmp3_), _filepath_size_ = filepath_length1, _tmp4_);
-		self->priv->_fav_id = (_tmp5_ = g_strconcat ("app-", filepath[filepath_length1 - 1], NULL), _g_free0 (self->priv->_fav_id), _tmp5_);
-		filepath = (_vala_array_free (filepath, filepath_length1, (GDestroyNotify) g_free), NULL);
+		char* filepath;
+		char* _tmp3_;
+		filepath = g_path_get_basename (self->priv->_desktop_file);
+		self->priv->_fav_id = (_tmp3_ = g_strconcat ("app-", filepath, NULL), _g_free0 (self->priv->_fav_id), _tmp3_);
+		_g_free0 (filepath);
 	}
 	result = self->priv->_fav_id;
 	return result;
@@ -1364,24 +1358,6 @@ static void unity_launcher_application_controller_set_property (GObject * object
 		G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
 		break;
 	}
-}
-
-
-static void _vala_array_destroy (gpointer array, gint array_length, GDestroyNotify destroy_func) {
-	if ((array != NULL) && (destroy_func != NULL)) {
-		int i;
-		for (i = 0; i < array_length; i = i + 1) {
-			if (((gpointer*) array)[i] != NULL) {
-				destroy_func (((gpointer*) array)[i]);
-			}
-		}
-	}
-}
-
-
-static void _vala_array_free (gpointer array, gint array_length, GDestroyNotify destroy_func) {
-	_vala_array_destroy (array, array_length, destroy_func);
-	g_free (array);
 }
 
 
