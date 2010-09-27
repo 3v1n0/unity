@@ -1,4 +1,4 @@
-unity (0.2.46-0ubuntu1) UNRELEASED; urgency=low
+unity (0.2.46-0ubuntu1) maverick; urgency=low
 
   * New upstream release:
     - use get_basename instead of silly str manipulating, should fix (LP: #648625)
@@ -7,7 +7,7 @@ unity (0.2.46-0ubuntu1) UNRELEASED; urgency=low
     - Fix duplicate ubiquity entry in UNE live session (was importing it from
       the GNOME desktop) (LP: #648827)
 
- -- Didier Roche <didrocks@ubuntu.com>  Mon, 27 Sep 2010 20:56:54 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Mon, 27 Sep 2010 21:24:05 +0200
 
 unity (0.2.44-0ubuntu1) maverick; urgency=low
 
