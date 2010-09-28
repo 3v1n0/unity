@@ -344,6 +344,36 @@ namespace Unity.Launcher
     }
 
 
+    private void launch_desktop_file ()
+    {
+      Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
+      try
+        {
+          var appinfo = new DesktopAppInfo.from_filename (desktop_file);
+          context.set_screen (Gdk.Display.get_default ().get_default_screen ());
+          context.set_timestamp (Gdk.CURRENT_TIME);
+
+          appinfo.launch (null, context);
+          child.activating = true;
+          // timeout after eight seconds
+          GLib.Timeout.add_seconds (8, on_launch_timeout);
+        }
+      catch (Error e)
+        {
+          warning (e.message);
+        }
+    }
+
+    private bool app_has_visable_window ()
+      requires (app is Bamf.Application)
+    {
+      foreach (Bamf.Window window in app.get_windows ())
+        {
+          if (window.user_visible ()) return true;
+        }
+      return false;
+    }
+
     public override void activate ()
     {
       if (app is Bamf.Application)
@@ -359,31 +389,20 @@ namespace Unity.Launcher
                   global_shell.expose_xids (xids);
                 }
             }
-          else if (app.is_running ())
+          else if (app.is_running () && app_has_visable_window ())
             {
               unowned List<Bamf.Window> windows = app.get_windows ();
               windows.sort ((CompareFunc)order_app_windows);
               Unity.global_shell.show_window (windows.nth_data (windows.length ()-1).get_xid ());
             }
+          else
+            {
+              launch_desktop_file ();
+            }
         }
       else
         {
-          Gdk.AppLaunchContext context = new Gdk.AppLaunchContext ();
-          try
-            {
-              var appinfo = new DesktopAppInfo.from_filename (desktop_file);
-              context.set_screen (Gdk.Display.get_default ().get_default_screen ());
-              context.set_timestamp (Gdk.CURRENT_TIME);
-
-              appinfo.launch (null, context);
-              child.activating = true;
-              // timeout after eight seconds
-              GLib.Timeout.add_seconds (8, on_launch_timeout);
-            }
-          catch (Error e)
-            {
-              warning (e.message);
-            }
+          launch_desktop_file ();
         }
       global_shell.hide_unity ();
     }
