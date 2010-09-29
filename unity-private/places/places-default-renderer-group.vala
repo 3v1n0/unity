@@ -73,7 +73,7 @@ namespace Unity.Places
 
     public signal void activated (string uri, string mimetype);
     
-    private GLib.List<Tile?> cleanup_tiles = new GLib.List<Tile?> ();
+    private Gee.Queue<Tile> cleanup_tiles = new Gee.LinkedList<Tile> ();
     private uint cleanup_operation = 0;
     
     private TileFactory tile_factory;
@@ -107,27 +107,21 @@ namespace Unity.Places
         allow_expand = false;
       else if (group_renderer == "UnityFolderGroupRenderer")
         bin_state = ExpandingBinState.EXPANDED;
-
+      
+      /* Find the right tile factory for our rendering mode
+       * IMPORANT: The file_factory must *not* point to a lambda or
+       * non-static method on 'this'. That leads to self-refs (aka leaks) */
       if (group_renderer == "UnityFileInfoRenderer")
         {
-          tile_factory = (iter, uri, icon_hint, mimetype, display_name, comment) => {
-            return new FileInfoTile (iter, uri, icon_hint, mimetype,
-                                     display_name, comment);
-          };
+          tile_factory = file_info_tile_factory;
         }
       else if (group_renderer == "UnityShowcaseRenderer")
         {
-          tile_factory = (iter, uri, icon_hint, mimetype, display_name, comment) => {
-            return new ShowcaseTile (iter, uri, icon_hint, mimetype,
-                                     display_name, comment);
-          };
+          tile_factory = showcase_tile_factory;
         }
       else
         {
-          tile_factory = (iter, uri, icon_hint, mimetype, display_name, comment) => {
-            return new DefaultTile (iter, uri, icon_hint, mimetype,
-                                    display_name, comment);
-          };
+          tile_factory = default_tile_factory;
         }
 
       vbox = new Ctk.VBox (SPACING);
@@ -295,6 +289,40 @@ namespace Unity.Places
     /*
      * Private Methods
      */
+    
+    /* This method *must* be static in order to avoid self refs */
+    private static Tile file_info_tile_factory (Dee.ModelIter iter,
+                                                string uri,
+                                                string icon_hint,
+                                                string mimetype,
+                                                string display_name,
+                                                string comment)
+    {
+      return new FileInfoTile (iter, uri, icon_hint, mimetype, display_name, comment);
+    }
+    
+    /* This method *must* be static in order to avoid self refs */
+    private static Tile showcase_tile_factory (Dee.ModelIter iter,
+                                               string uri,
+                                               string icon_hint,
+                                               string mimetype,
+                                               string display_name,
+                                               string comment)
+    {
+      return new ShowcaseTile (iter, uri, icon_hint, mimetype, display_name, comment);
+    }
+    
+    /* This method *must* be static in order to avoid self refs */
+    private static Tile default_tile_factory (Dee.ModelIter iter,
+                                              string uri,
+                                              string icon_hint,
+                                              string mimetype,
+                                              string display_name,
+                                              string comment)
+    {
+      return new DefaultTile (iter, uri, icon_hint, mimetype, display_name, comment);
+    }
+     
     private void on_result_added (Dee.ModelIter iter)
     {
       if (!interesting (iter))
@@ -303,22 +331,19 @@ namespace Unity.Places
       if (n_results == OMG_FOOTEL_SUCKS_CANT_HANDLE_MANY_TEXTURES)
         return;
       
-      Tile button;
+      /* Try to reuse a tile from the cleanup queue. We are guaranteed
+       * that it's the right type because all tiles are created from the same
+       * tile_factory instance */
+      Tile? button = cleanup_tiles.poll ();
       
-      if (cleanup_tiles.length () > 0)
+      if (button is Tile)
         {
-          /* Reuse a tile from the cleanup queue. We are guaranteed that
-           * it's the right type because all tiles are created from our
-           * tile_factory instance */
-          button = cleanup_tiles.nth_data (0);
           button.update_details (results.get_string (iter, 0),
                          results.get_string (iter, 1),
                          results.get_string (iter, 3),
                          results.get_string (iter, 4),
                          results.get_string (iter, 5));
           button.iter = iter;
-          cleanup_tiles.remove (button);
-          button.unref (); /* Because Vala holds references when it shouldn't*/;
         }
       else
         {
@@ -328,10 +353,8 @@ namespace Unity.Places
                                  results.get_string (iter, 3),
                                  results.get_string (iter, 4),
                                  results.get_string (iter, 5));
-
           renderer.add_actor (button);
-          button.show ();
-          button.unref (); /* Because Vala holds references when it shouldn't*/;
+          button.show ();          
           button.activated.connect ((u, m) => { activated (u, m); });
         }
       
@@ -356,13 +379,14 @@ namespace Unity.Places
 
     private bool cleanup_operation_callback ()
     {
-      foreach (Tile? tile in cleanup_tiles)
+      Tile? tile;
+      
+      while ((tile = cleanup_tiles.poll ()) != null)
         {
           renderer.remove_actor (tile);
         }
 
-      cleanup_tiles = null;
-      cleanup_tiles = new GLib.List<Tile?> ();
+      cleanup_tiles = new Gee.LinkedList<Tile> ();
 
       cleanup_operation = 0;
       return false;
@@ -380,7 +404,7 @@ namespace Unity.Places
 
           if (tile.iter == iter)
             {
-              cleanup_tiles.append (tile);
+              cleanup_tiles.offer (tile);
               if (cleanup_operation == 0)
                 cleanup_operation = Timeout.add (200, cleanup_operation_callback);
 

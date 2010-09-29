@@ -35,16 +35,16 @@ namespace Unity
                                                    int           width,
                                                    int           height);
 
-    public float radius { get; construct set; }
-
     public StripeTextureOutlineFunc outline_paint_func;
 
     private Cairo.Surface? pattern;
 
     public StripeTexture (StripeTextureOutlineFunc? func)
     {
-      Object (radius:10.0f);
-
+      Object ();
+      
+      /* Must not point to a lambda or non-static method on 'this'.
+       * It causes self-refs if it does */
       outline_paint_func = rounded_outline;
       if (func != null)
         outline_paint_func = func;
@@ -55,8 +55,10 @@ namespace Unity
       paint_func = paint_bg;
     }
 
-    public void rounded_outline (Cairo.Context cr, int width, int height)
+    /* This method must be static in order to avoid self refs */
+    public static void rounded_outline (Cairo.Context cr, int width, int height)
     {
+      float radius = 10;
       var x = 0;
       var y = 0;
       width -= 1;
