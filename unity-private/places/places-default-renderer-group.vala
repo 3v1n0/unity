@@ -75,6 +75,15 @@ namespace Unity.Places
     
     private GLib.List<Tile?> cleanup_tiles = new GLib.List<Tile?> ();
     private uint cleanup_operation = 0;
+    
+    private TileFactory tile_factory;
+    
+    private delegate Tile TileFactory (Dee.ModelIter iter,
+                                       string uri,
+                                       string icon_hint,
+                                       string mimetype,
+                                       string display_name,
+                                       string comment);
 
     public DefaultRendererGroup (uint      group_id,
                                  string    group_renderer,
@@ -98,6 +107,28 @@ namespace Unity.Places
         allow_expand = false;
       else if (group_renderer == "UnityFolderGroupRenderer")
         bin_state = ExpandingBinState.EXPANDED;
+
+      if (group_renderer == "UnityFileInfoRenderer")
+        {
+          tile_factory = (iter, uri, icon_hint, mimetype, display_name, comment) => {
+            return new FileInfoTile (iter, uri, icon_hint, mimetype,
+                                     display_name, comment);
+          };
+        }
+      else if (group_renderer == "UnityShowcaseRenderer")
+        {
+          tile_factory = (iter, uri, icon_hint, mimetype, display_name, comment) => {
+            return new ShowcaseTile (iter, uri, icon_hint, mimetype,
+                                     display_name, comment);
+          };
+        }
+      else
+        {
+          tile_factory = (iter, uri, icon_hint, mimetype, display_name, comment) => {
+            return new DefaultTile (iter, uri, icon_hint, mimetype,
+                                    display_name, comment);
+          };
+        }
 
       vbox = new Ctk.VBox (SPACING);
       vbox.spacing = SPACING;
@@ -276,6 +307,9 @@ namespace Unity.Places
       
       if (cleanup_tiles.length () > 0)
         {
+          /* Reuse a tile from the cleanup queue. We are guaranteed that
+           * it's the right type because all tiles are created from our
+           * tile_factory instance */
           button = cleanup_tiles.nth_data (0);
           button.update_details (results.get_string (iter, 0),
                          results.get_string (iter, 1),
@@ -286,49 +320,21 @@ namespace Unity.Places
           cleanup_tiles.remove (button);
           button.unref (); /* Because Vala holds references when it shouldn't*/;
         }
-      else if (group_renderer == "UnityFileInfoRenderer")
-        {
-          button = new FileInfoTile (iter,
-                                     results.get_string (iter, 0),
-                                     results.get_string (iter, 1),
-                                     results.get_string (iter, 3),
-                                     results.get_string (iter, 4),
-                                     results.get_string (iter, 5));
-
-          renderer.add_actor (button);
-          button.show ();
-          button.unref (); /* Because Vala holds references when it shouldn't*/;
-          button.activated.connect ((u, m) => { activated (u, m); });
-        }
-      else if (group_renderer == "UnityShowcaseRenderer")
-        {
-          button = new ShowcaseTile (iter,
-                                     results.get_string (iter, 0),
-                                     results.get_string (iter, 1),
-                                     results.get_string (iter, 3),
-                                     results.get_string (iter, 4),
-                                     results.get_string (iter, 5));
-          renderer.add_actor (button);
-          button.show ();
-          button.unref (); /* Because Vala holds references when it shouldn't*/;
-
-          button.activated.connect ((u, m) => { activated (u, m); });
-        }
       else
         {
-          button = new DefaultTile (iter,
-                                    results.get_string (iter, 0),
-                                    results.get_string (iter, 1),
-                                    results.get_string (iter, 3),
-                                    results.get_string (iter, 4),
-                                    results.get_string (iter, 5));
+          button = tile_factory (iter,
+                                 results.get_string (iter, 0),
+                                 results.get_string (iter, 1),
+                                 results.get_string (iter, 3),
+                                 results.get_string (iter, 4),
+                                 results.get_string (iter, 5));
+
           renderer.add_actor (button);
           button.show ();
           button.unref (); /* Because Vala holds references when it shouldn't*/;
-
           button.activated.connect ((u, m) => { activated (u, m); });
         }
-
+      
       if (bin_state == ExpandingBinState.EXPANDED || _always_expanded)
         {
           button.about_to_show ();
