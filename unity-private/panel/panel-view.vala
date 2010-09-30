@@ -92,12 +92,18 @@ namespace Unity.Panel
       button_release_event.connect (on_button_release_event);
 
       cache = new Ctk.EffectCache ();
+
       add_effect (cache);
       cache.update_texture_cache ();
       hbox.queue_redraw.connect (() => {
       if (reactive == true)
         cache.update_texture_cache ();
       });
+
+	  string? disable_cache = Environment.get_variable ("UNITY_DISABLE_CACHE");
+	  if (disable_cache != null) {
+		  remove_effect (cache);
+	  }
 
       END_FUNCTION ();
     }

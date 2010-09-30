@@ -32,8 +32,13 @@ namespace Unity.Launcher
 
       this.cache = new Ctk.EffectCache ();
       this.add_effect (this.cache);
-
       this.cache.update_texture_cache ();
+
+	  string? disable_cache = Environment.get_variable ("UNITY_DISABLE_CACHE");
+	  if (disable_cache != null) {
+		  this.remove_effect (cache);
+	  }
+
     }
 
     construct
