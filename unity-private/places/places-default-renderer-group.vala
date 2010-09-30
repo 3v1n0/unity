@@ -95,7 +95,7 @@ namespace Unity.Places
               group_renderer:group_renderer,
               display_name:display_name,
               icon_hint:icon_hint,
-              results:results);
+              results:results);      
     }
 
     construct
@@ -330,7 +330,7 @@ namespace Unity.Places
 
       if (n_results == OMG_FOOTEL_SUCKS_CANT_HANDLE_MANY_TEXTURES)
         return;
-      
+
       /* Try to reuse a tile from the cleanup queue. We are guaranteed
        * that it's the right type because all tiles are created from the same
        * tile_factory instance */
@@ -357,7 +357,7 @@ namespace Unity.Places
           button.show ();          
           button.activated.connect ((u, m) => { activated (u, m); });
         }
-      
+
       if (bin_state == ExpandingBinState.EXPANDED || _always_expanded)
         {
           button.about_to_show ();

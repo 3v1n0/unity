@@ -51,8 +51,15 @@ namespace Unity.Places
       Object ();
     }
 
-    ~DefaultRenderer ()
+    /* For some reason we must manually drop these in dispose() otherwise
+     * they end up leaked... And please note that finalize is not good enough
+     * either - so there is probably a ref cycle somewhere caused by all the
+     * actor.animate() calls... */
+    private override void dispose ()
     {
+      remove_actor (scroll);
+      remove_actor (search_empty);
+      remove_actor (section_empty);
     }
 
     private static double
@@ -418,6 +425,7 @@ namespace Unity.Places
                   group.always_expanded = true;
                 }
             }
+          
         }
     }
 
