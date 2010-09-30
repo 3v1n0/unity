@@ -60,6 +60,9 @@ namespace Unity.Places
       remove_actor (scroll);
       remove_actor (search_empty);
       remove_actor (section_empty);
+      
+      /* Chain up */
+      base.dispose ();
     }
 
     private static double

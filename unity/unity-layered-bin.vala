@@ -42,11 +42,14 @@ namespace Unity
     private override void dispose ()
     {
       foreach (Clutter.Actor child in _children)
-        {          
+        {
           child.unparent ();
         }
 
       _children.clear ();
+      
+      /* Chain up */
+      base.dispose ();
     }
 
     construct
