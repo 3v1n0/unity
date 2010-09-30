@@ -1,10 +1,10 @@
-unity (0.2.46-0ubuntu3) UNRELEASED; urgency=low
+unity (0.2.46-0ubuntu3) maverick; urgency=low
 
   * Cherry pick from upstream:
     - Finally load the right translations from .place files for
       "Applications" and "Files & Folders" tooltips (LP: #644215)
 
- -- Didier Roche <didrocks@ubuntu.com>  Thu, 30 Sep 2010 16:11:27 +0200
+ -- Didier Roche <didrocks@ubuntu.com>  Thu, 30 Sep 2010 16:33:54 +0200
 
 unity (0.2.46-0ubuntu2) maverick; urgency=low
 
