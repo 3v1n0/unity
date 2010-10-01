@@ -37,6 +37,18 @@ namespace Unity.Places
     public Ctk.Text  text;
     public CairoCanvas right_icon;
 
+    public bool _small_mode = false;
+    public bool small_mode {
+      get {
+        return _small_mode;;
+      }
+      set {
+        _small_mode = value;
+        hint_text.set_markup ("<i>" + _("Search") + "</i>");
+        queue_relayout ();
+      }
+    }
+
     private uint _cursor_blink_count = 0;
 
     private bool upward = true;
@@ -88,7 +100,8 @@ namespace Unity.Places
     {
       Object (orientation:Ctk.Orientation.HORIZONTAL,
               homogeneous:false,
-              spacing:0);
+              spacing:0,
+              small_mode:false);
     }
 
     ~PlaceSearchEntry ()
@@ -157,8 +170,16 @@ namespace Unity.Places
                                                out float nat_width)
     {
       /* FIXME: Make these dependant on size of screen & font */
-      min_width = 270.0f;
-      nat_width = 270.0f;
+      if (small_mode)
+        {
+          min_width = 135.0f;
+          nat_width = 135.0f;
+        }
+      else
+        {
+          min_width = 270.0f;
+          nat_width = 270.0f;
+        }
     }
 
     private void on_text_changed ()
@@ -253,7 +274,7 @@ namespace Unity.Places
     {
       string name = "";
 
-      if (entry is PlaceHomeEntry == false)
+      if (entry is PlaceHomeEntry == false && _small_mode == false)
         name = entry.name;
 
       hint_text.set_markup ("<i>" +

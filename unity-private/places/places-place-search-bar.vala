@@ -32,6 +32,7 @@ namespace Unity.Places
     private PlaceSearchNavigation  navigation;
     public  PlaceSearchEntry       entry;
     public  PlaceSearchSectionsBar sections;
+    public  Clutter.Rectangle      space;
     public  PlaceSearchExtraAction extra_action;
 
     private bool _search_fail = false;
@@ -80,7 +81,7 @@ namespace Unity.Places
       sections.show ();
 
       /* We need a dummy to be able to space the action label */
-      var space = new Clutter.Rectangle.with_color ({255, 255, 255, 0});
+      space = new Clutter.Rectangle.with_color ({255, 255, 255, 0});
       pack (space, true, true);
       space.show ();
       
@@ -111,6 +112,27 @@ namespace Unity.Places
       return entry.text.text;
     }
 
+    private bool update_broken_views ()
+    {
+      sections.small_mode = true;
+      entry.small_mode = true;
+
+      sections.ref ();
+      extra_action.ref ();
+
+      remove_actor (sections);
+      remove_actor (space);
+      remove_actor (extra_action);
+
+      pack (sections, true, true);
+      pack (extra_action, false, true);
+     
+      extra_action.unref ();
+      sections.unref ();
+
+      return false;
+    }
+
     private override void allocate (Clutter.ActorBox        box,
                                     Clutter.AllocationFlags flags)
     {
@@ -118,6 +140,16 @@ namespace Unity.Places
       float ewidth = entry.width;
 
       base.allocate (box, flags);
+
+      float children_width = navigation.width + SPACING +
+                             entry.width + SPACING +
+                             sections.width + SPACING;
+      if (box.x2 - box.x1 < children_width)
+        {
+          /* Basically sections is too big */
+          if (sections.small_mode == false)
+            Timeout.add (0, update_broken_views);
+        }
 
       if (entry.x != ex || entry.width != ewidth)
         {
@@ -139,6 +171,7 @@ namespace Unity.Places
       float mheight, nheight;
 
       entry.get_preferred_height (RANDOM_TEXT_WIDTH, out mheight, out nheight);
+
       min_height = mheight + SPACING * 3;
       nat_height = nheight + SPACING * 3;
     }
@@ -181,6 +214,27 @@ namespace Unity.Places
      */
     public void set_active_entry_view (PlaceEntry entry, int x, uint section=0)
     {
+      if (sections.small_mode)
+        {
+          extra_action.ref ();
+
+          remove_actor (sections);
+          remove_actor (extra_action);
+          
+          sections = new PlaceSearchSectionsBar ();
+          pack (sections, false, true);
+          sections.show ();
+
+          /* We need a dummy to be able to space the action label */
+          space = new Clutter.Rectangle.with_color ({255, 255, 255, 0});
+          pack (space, true, true);
+          space.show ();
+      
+          pack (extra_action, false, true);
+         
+          extra_action.unref ();
+        }
+
       active_entry = entry;
       bg.entry_position = x;
       sections.set_active_entry (entry);
@@ -400,8 +454,11 @@ namespace Unity.Places
       /* Cut out the search entry */
       cr.set_operator (Cairo.Operator.CLEAR);
 
-      x = (int)search_entry.x;
-      y = (int)(search_entry.y) - 1;
+      if (search_entry.x < 1.0f)
+        x += width + 12;
+      else
+        x = (int)search_entry.x;
+      //y = (int)(search_entry.y) - 1;
       width = x + (int)search_entry.width;
       height = y + (int)search_entry.height +1;
 
