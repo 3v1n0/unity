@@ -45,6 +45,40 @@ namespace Unity.Places
       }
     }
 
+    private bool _small_mode = false;
+    public bool small_mode {
+      get { return _small_mode; }
+      set {
+        if (_small_mode != value)
+          {
+            _small_mode = value;
+            
+            if (_small_mode)
+              {
+                padding = { 0.0f, 0.0f, 0.0f, 0.0f };
+
+                var secs = get_children ();
+                foreach (Clutter.Actor s in secs)
+                  {
+                    (s as Section).text.ellipsize = Pango.EllipsizeMode.END;
+                  }
+              }
+            else
+              {
+                padding = { 0.0f, PADDING, 0.0f, PADDING };
+                var secs = get_children ();
+                foreach (Clutter.Actor s in secs)
+                  {
+                    (s as Section).text.ellipsize = Pango.EllipsizeMode.NONE;
+                    s.queue_relayout ();
+                  }
+              }
+
+            bg.update ();
+          }
+       }
+    }
+
     private PlaceEntry? active_entry = null;
     private Section?    active_section = null;
     public  uint        active_section_n = 0;
@@ -123,7 +157,6 @@ namespace Unity.Places
           (actor as Section).dirty = true;
         }
 
-
       active_entry = entry;
       var model = active_entry.sections_model;
       sections_model = model;
@@ -173,6 +206,8 @@ namespace Unity.Places
       model.row_added.connect (on_section_added);
       model.row_changed.connect (on_section_changed);
       model.row_removed.connect (on_section_removed);
+
+      bg.update ();
     }
 
     private static int sort_sections (Section asec, Section bsec)
@@ -184,7 +219,9 @@ namespace Unity.Places
     private void on_section_added (Dee.Model model, Dee.ModelIter iter)
     {
       var section = new Section (model, iter);
-      pack (section, false, true);
+      if (small_mode)
+        section.text.ellipsize = Pango.EllipsizeMode.END;
+      pack (section, false,  true);
       section.show ();
 
       section.button_release_event.connect (on_section_clicked);
@@ -464,6 +501,17 @@ namespace Unity.Places
      float mw, nw;
 
      base.get_preferred_width (for_height, out mw, out nw);
+
+     if (text.ellipsize != Pango.EllipsizeMode.NONE)
+       {
+         debug ("%d", text.ellipsize);
+         if (mw < 10.0f || nw < 10.0f)
+           {
+             min_width = 100.0f;
+             nat_width = 100.0f;
+           }
+         return;
+       }
 
      min_width = (mw + padding.right + padding.left) * _destroy_factor;
      nat_width = (nw + padding.right + padding.left) * _destroy_factor;
