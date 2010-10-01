@@ -588,11 +588,13 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_place_search_bar_set_search_fail@Base 0.2.42
  unity_places_place_search_entry_construct@Base 0.2.22
  unity_places_place_search_entry_get_cursor_opacity@Base 0.2.30
+ unity_places_place_search_entry_get_small_mode@Base 0.2.46-0ubuntu4
  unity_places_place_search_entry_get_type@Base 0.2.22
  unity_places_place_search_entry_new@Base 0.2.22
  unity_places_place_search_entry_reset@Base 0.2.22
  unity_places_place_search_entry_set_active_entry@Base 0.2.30
  unity_places_place_search_entry_set_cursor_opacity@Base 0.2.30
+ unity_places_place_search_entry_set_small_mode@Base 0.2.46-0ubuntu4
  unity_places_place_search_extra_action_construct@Base 0.2.40
  unity_places_place_search_extra_action_get_destroy_factor@Base 0.2.40
  unity_places_place_search_extra_action_get_resize_factor@Base 0.2.40
@@ -606,11 +608,13 @@ libunity-private.so.0 libunity0 #MINVER#
  unity_places_place_search_navigation_new@Base 0.2.22
  unity_places_place_search_navigation_set_active_entry@Base 0.2.22
  unity_places_place_search_sections_bar_construct@Base 0.2.22
+ unity_places_place_search_sections_bar_get_small_mode@Base 0.2.46-0ubuntu4
  unity_places_place_search_sections_bar_get_style@Base 0.2.22
  unity_places_place_search_sections_bar_get_type@Base 0.2.22
  unity_places_place_search_sections_bar_new@Base 0.2.22
  unity_places_place_search_sections_bar_set_active_entry@Base 0.2.22
  unity_places_place_search_sections_bar_set_active_section@Base 0.2.22
+ unity_places_place_search_sections_bar_set_small_mode@Base 0.2.46-0ubuntu4
  unity_places_place_search_sections_bar_set_style@Base 0.2.22
  unity_places_place_set_online@Base 0.2.22
  unity_places_place_view_construct@Base 0.2.22
