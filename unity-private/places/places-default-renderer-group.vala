@@ -59,7 +59,10 @@ namespace Unity.Places
     private Ctk.Image     icon;
     private Ctk.Text      text;
     private Expander      expander;
-    private unowned Ctk.IconView  renderer;
+    
+    /* If renderer is null it indicates that we have been disposed,
+     * and that all changes to the results should be ignored */
+    private unowned Ctk.IconView?  renderer;
 
     private MoreResultsButton? more_results_button;
 
@@ -265,6 +268,26 @@ namespace Unity.Places
       results.row_removed.connect (on_result_removed);
 
     }
+    
+    private override void dispose ()
+    {
+      if (renderer != null)
+        {           
+          /* Drop refs to renderer since we have a cycle:
+           * self->renderer vs self->vbox->renderer */
+          renderer = null;
+          remove_actor (vbox);
+          
+          /* Disconnect signals, so we don't start doing funky stuff
+           * after we've been disposed */
+          results.row_added.disconnect (on_result_added);
+          results.row_removed.disconnect (on_result_removed);
+          
+          /* Drain the cleanup queue */
+          cleanup_tiles.clear ();
+        }
+      
+    }
 
     private override void allocate (Clutter.ActorBox        box,
                                     Clutter.AllocationFlags flags)
@@ -325,6 +348,10 @@ namespace Unity.Places
      
     private void on_result_added (Dee.ModelIter iter)
     {
+      /* Ignore result set changes if we are disposed */
+      if (renderer == null)
+        return;
+    
       if (!interesting (iter))
         return;
 
@@ -381,12 +408,13 @@ namespace Unity.Places
     {
       Tile? tile;
       
+      /* Drain the cleanup queue */
       while ((tile = cleanup_tiles.poll ()) != null)
         {
-          renderer.remove_actor (tile);
+          /* If we are disposed renderer will be null */
+          if (renderer == null)
+            renderer.remove_actor (tile);
         }
-
-      cleanup_tiles = new Gee.LinkedList<Tile> ();
 
       cleanup_operation = 0;
       return false;
@@ -394,7 +422,11 @@ namespace Unity.Places
 
     private void on_result_removed (Dee.ModelIter iter)
     {
-     if (!interesting (iter))
+      /* Ignore result set changes if we are disposed */
+      if (renderer == null)
+        return;
+     
+      if (!interesting (iter))
         return;
 
       var children = renderer.get_children ();
@@ -432,6 +464,10 @@ namespace Unity.Places
 
     private void add_to_n_results (int i)
     {
+      /* Ignore result set changes if we are disposed */
+      if (renderer == null)
+        return;
+      
       n_results += i;
 
       if (n_results > renderer.get_n_cols ())
@@ -460,6 +496,10 @@ namespace Unity.Places
 
     private void on_n_cols_changed ()
     {
+      /* Ignore result set changes if we are disposed */
+      if (renderer == null)
+        return;
+    
       var n_cols = renderer.get_n_cols ();
 
       if (bin_state == ExpandingBinState.UNEXPANDED)
