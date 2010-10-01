@@ -60,6 +60,7 @@ namespace Unity.Places
                 var secs = get_children ();
                 foreach (Clutter.Actor s in secs)
                   {
+                    (s as Section).full_alloc_size = s.width;
                     (s as Section).text.ellipsize = Pango.EllipsizeMode.END;
                   }
               }
@@ -451,6 +452,8 @@ namespace Unity.Places
     private float _last_width = 0.0f;
     private float _resize_width = 0.0f;
 
+    public float full_alloc_size = 0.0f;
+
     public Section (Dee.Model model, Dee.ModelIter iter)
     {
       Object (reactive:true,
@@ -504,11 +507,16 @@ namespace Unity.Places
 
      if (text.ellipsize != Pango.EllipsizeMode.NONE)
        {
-         debug ("%d", text.ellipsize);
-         if (mw < 10.0f || nw < 10.0f)
+         if (full_alloc_size < 10.0f || full_alloc_size > 75.0f)
+           {    
+             min_width = 75.0f;
+             nat_width = 75.0f;
+           }
+         else
            {
-             min_width = 100.0f;
-             nat_width = 100.0f;
+             text.ellipsize = Pango.EllipsizeMode.NONE;
+             min_width = full_alloc_size;
+             nat_width = full_alloc_size;
            }
          return;
        }
